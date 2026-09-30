@@ -4,6 +4,7 @@ import HavokPhysics from "@babylonjs/havok";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
 import { DEF, Enemy, pickWeighted, spawnTable, type Kind } from "./enemies";
+import { engineSfx, engineStop, initAudio, SFX, toggleMute } from "./sfx";
 import { clearFx, debris, FX, initFx, mark, tickFx } from "./fx";
 import { input, isTouch, padPressed, pollInput, setupTouch } from "./input";
 import { cyl, initModels, PAINTS, RIMS, sph, template, type CarKind } from "./models";
@@ -52,8 +53,9 @@ initHud();
 // ---------- Estado de la partida ----------
 type Gem = { m: B.InstancedMesh; xp: number; pull: boolean };
 type Pickup = { m: B.Mesh; type: "pila" | "iman" | "cofre" };
+type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number };
 
-let state: "menu" | "play" | "level" | "over" = "menu";
+let state: "menu" | "play" | "level" | "pause" | "over" = "menu";
 let car: Car | null = null;
 let weapons: Weapon[] = [];
 let passives: Partial<Record<PassiveId, number>> = {};
@@ -64,18 +66,20 @@ let time = 0, kills = 0, runScrap = 0;
 let enemies: Enemy[] = [];
 let gems: Gem[] = [];
 let pickups: Pickup[] = [];
+let spits: Spit[] = [];
+const spitTpl = () => template("spit", () => [sph(0.55, pbr("acid", { color: "#b5e61d", rough: 0.1, emissive: "#6b8f00", alpha: 0.9 }), [0, 0, 0])]);
 let spawnAcc = 0, swarmT = 60, chestT = 100, ballT = 75, bossIdx = 0;
 let shake = 0, camYaw = 0, dustT = 0;
 let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number } | null = null;
 let offers: Offer[] = [];
 let offerSel = 0;
 
-const xpNeed = (l: number) => Math.floor(5 + l * 4 + l * l * 0.35);
+const xpNeed = (l: number) => Math.floor(4 + l * 2.5 + l * l * 0.3);
 
 let hitStop = 0, smokeT = 0, skidT = 0, lastHpFrac = 1, smashCd = 0;
 
 // Macetas rotas sueltan tuercas y a veces una pila
-const smashed = (pots: B.Vector3[]) => { for (const p of pots) { dropGems(p, 8); if (Math.random() < 0.35) dropPickup(p, "pila"); shake = Math.max(shake, 0.5); } };
+const smashed = (pots: B.Vector3[]) => { for (const p of pots) { SFX.break(); dropGems(p, 8); if (Math.random() < 0.35) dropPickup(p, "pila"); shake = Math.max(shake, 0.5); } };
 
 // ---------- Plantillas de recolectables ----------
 const gemTpl = (v: 1 | 5 | 20) => template("gem" + v, () => [
@@ -138,6 +142,8 @@ function clearRun() {
   for (const w of weapons) w.dispose();
   for (const g of gems) g.m.dispose();
   for (const p of pickups) p.m.dispose();
+  for (const s of spits) s.m.dispose();
+  spits = [];
   if (ball) { ball.agg.dispose(); ball.m.dispose(); ball = null; }
   preview?.dispose();
   preview = null;
@@ -148,6 +154,7 @@ function clearRun() {
 }
 
 function startRun() {
+  initAudio();
   clearRun();
   car = new Car(scene, save.car, save.paint || undefined, save.rim || undefined);
   lastHpFrac = 1;
@@ -170,6 +177,7 @@ function startRun() {
 
 function endRun(win: boolean, why: string) {
   state = "over";
+  engineStop();
   runScrap += Math.floor(time / 20) + Math.floor(kills / 25);
   save.scrap += runScrap;
   save.best = Math.max(save.best, Math.floor(time));
@@ -181,6 +189,8 @@ function endRun(win: boolean, why: string) {
 }
 
 function toMenu() {
+  engineStop();
+  $("pause").classList.add("hidden");
   clearRun();
   state = "menu";
   scene.physicsEnabled = true;
@@ -202,6 +212,8 @@ function openOffers(list: Offer[], title: string) {
   scene.physicsEnabled = false;
   offers = list;
   offerSel = 0;
+  SFX.levelUp();
+  engineStop();
   showOffers(title, list, 0, choose, previewOffer);
 }
 
@@ -226,7 +238,16 @@ function openChest() {
   openOffers(evo ? [evo] : levelOffers(weapons, passives, 3), evo ? "Cofre · Evolución" : "Cofre");
 }
 
+function togglePause() {
+  if (state === "play") { state = "pause"; scene.physicsEnabled = false; engineStop(); $("pause").classList.remove("hidden"); }
+  else if (state === "pause") { state = "play"; scene.physicsEnabled = true; $("pause").classList.add("hidden"); }
+}
+$("resume").onclick = togglePause;
+$("quit").onclick = toMenu;
+
 addEventListener("keydown", (e) => {
+  if (e.code === "Escape" || e.code === "KeyP") togglePause();
+  if (e.code === "KeyM") $("muted").classList.toggle("hidden", !toggleMute());
   if (state === "level" && /^Digit[1-3]$/.test(e.code)) { const i = +e.code.slice(5) - 1; if (i < offers.length) pickOffer(i); }
   if (e.code === "Enter") { if (state === "menu") startRun(); else if (state === "over") toMenu(); else if (state === "level") pickOffer(offerSel); }
 });
@@ -295,6 +316,7 @@ renderMenu();
 const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.IdentityReadOnly, scene.getTransformMatrix(), cam.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
 function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
   e.hp -= dmg;
+  if (dmg >= 4) SFX.hit();
   if (dmg >= 5) {
     const sp = toScreen(e.pos.add(new B.Vector3(0, e.def.size[1] + 0.3, 0)));
     const k = innerWidth / engine.getRenderWidth();
@@ -307,6 +329,7 @@ function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
 
 function explode(pos: B.Vector3, r: number, dmg: number) {
   FX.explosion(pos.add(new B.Vector3(0, 0.5, 0)), r);
+  SFX.explosion();
   mark("scorch", pos.x, pos.z, Math.random() * 6, r * 0.55, 14);
   smashed(hitBreakables(pos, r, dmg));
   shake = Math.max(shake, 0.25);
@@ -318,6 +341,7 @@ function explode(pos: B.Vector3, r: number, dmg: number) {
 
 function kill(e: Enemy) {
   kills++;
+  SFX.kill();
   FX.death(e.pos.add(new B.Vector3(0, 0.5, 0)), e.def.boss);
   debris(e.pos, e.def.color, e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
   if (e.def.xp) dropGems(e.pos, e.def.xp);
@@ -366,6 +390,7 @@ function update(dt: number) {
     grip: input.drift ? 1.3 : c.def.grip,
   });
   c.animate(dt, steer, r.fs, maxSpeed);
+  engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * 1.55)), throttle, boosting);
   lastKmh = r.fs * 3.6; lastMaxKmh = c.def.speed * st.speedMul * 1.55 * 3.6;
   // Marcas de neumático al derrapar / patinar
   if (r.grounded && (Math.abs(r.ls) > 3.5 || (input.drift && Math.abs(r.fs) > 5)) && (skidT -= dt) <= 0) {
@@ -388,9 +413,12 @@ function update(dt: number) {
 
   // --- Aparición de enemigos ---
   const maxAlive = Math.min(low ? 110 : 180, 25 + time / 2.2);
+  // Aparecen sesgados hacia donde vas: manejar no es escapar gratis
+  const cvel = c.body.getLinearVelocity();
+  const ahead = c.pos.add(new B.Vector3(cvel.x, 0, cvel.z).scale(1.6));
   spawnAcc += (1 + time / 20) * dt;
   const normals = enemies.filter((e) => !e.def.boss).length;
-  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time)), spawnPoint(c.pos, 28, 40)); }
+  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time)), spawnPoint(ahead, 24, 36)); }
   if ((swarmT -= dt) <= 0) {
     swarmT = 60;
     banner("ENJAMBRE", 1.4);
@@ -401,6 +429,7 @@ function update(dt: number) {
     spawnEnemy(kind, spawnPoint(c.pos, 30, 36));
     banner(DEF[kind].name, 2.5);
     hudBoss(DEF[kind].name, 1);
+    SFX.boss();
   }
 
   // --- Enemigos ---
@@ -409,6 +438,14 @@ function update(dt: number) {
   let contactDps = 0;
   for (const e of enemies) {
     const ev = e.update(dt, c.pos);
+    if (ev === "spit") {
+      // Apunta adonde vas a estar (predicción simple): esquivar = cambiar de rumbo
+      const cvl = c.body.getLinearVelocity(), from = e.pos.add(new B.Vector3(0, 0.6, 0));
+      const t = B.Vector3.Distance(from, c.pos) / 16, aim = c.pos.add(new B.Vector3(cvl.x, 0, cvl.z).scale(t * 0.8));
+      const m = spitTpl().createInstance("sp");
+      m.position.copyFrom(from);
+      spits.push({ m, v: aim.subtract(from).normalize().scale(16), life: 2.2 });
+    }
     e.animate(dt);
     if (ev === "slam") {
       FX.slam(e.pos, 10);
@@ -428,13 +465,19 @@ function update(dt: number) {
         const dmg = rel * c.def.ram * (1 + 0.35 * (lanza?.lv ?? 0)) * (boosting ? 1.3 : 1) * st.dmg * (lanza?.evolved ? 1.5 : 1);
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(new B.Vector3(0, rel * 0.2, 0)), true);
         FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0)));
+        SFX.ram(rel);
         e.ramCd = 0.3;
         shake = Math.max(shake, 0.25);
         if (ariete) explode(e.pos, 4, dmg * 0.5);
+        // Embestir algo más pesado que vos tiene costo: rebote y daño (salvo Ariete)
+        if (e.def.mass > c.def.mass * st.mass * 1.8 && !ariete) {
+          hurt(e.def.dmg * 0.6);
+          c.body.applyImpulse(dir.scale(-rel * 0.9 * c.def.mass).addInPlace(new B.Vector3(0, 1.5, 0)), c.pos);
+        }
       } else if (rel <= 5 && !(ariete && boosting)) contactDps += e.def.dmg;
     }
   }
-  if (contactDps) hurt(contactDps * dt, true);
+  if (contactDps) { hurt(contactDps * dt, true); SFX.hurt(); }
   for (const e of enemies.filter((x) => x.hp <= 0)) {
     enemies.splice(enemies.indexOf(e), 1);
     if (e.hp < -1e8) e.dispose(); else kill(e);
@@ -442,6 +485,16 @@ function update(dt: number) {
   }
   const boss = enemies.find((e) => e.def.boss);
   if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp));
+
+  // --- Ácido de escupidoras ---
+  for (let i = spits.length - 1; i >= 0; i--) {
+    const s = spits[i];
+    s.m.position.addInPlace(s.v.scale(dt));
+    s.v.y -= 3 * dt;
+    let dead = (s.life -= dt) <= 0 || s.m.position.y < 0.1;
+    if (B.Vector3.Distance(s.m.position, c.pos) < carR + 0.3) { hurt(10); FX.hit(s.m.position); dead = true; }
+    if (dead) { mark("scorch", s.m.position.x, s.m.position.z, Math.random() * 6, 0.6, 5); s.m.dispose(); spits.splice(i, 1); }
+  }
 
   // --- Armas ---
   const ctx: Ctx = { scene, car: c, enemies, dt, st, fs: r.fs, damage, explode };
@@ -455,11 +508,12 @@ function update(dt: number) {
     if (d2 < mag2) g.pull = true;
     g.m.rotation.y += dt * 2;
     if (g.pull) { const d = Math.sqrt(d2), sp = Math.min(d, (18 + 20 / (d + 0.5)) * dt); g.m.position.x += (dx / d) * sp; g.m.position.z += (dz / d) * sp; }
-    if (d2 < 1.2) { gainXp(g.xp); if (g.xp > 1) FX.xp(g.m.position); g.m.dispose(); gems.splice(i, 1); }
+    if (d2 < 1.2) { gainXp(g.xp); SFX.gem(); if (g.xp > 1) FX.xp(g.m.position); g.m.dispose(); gems.splice(i, 1); }
   }
   for (const p of [...pickups]) {
     p.m.rotation.y += dt * 2;
     if (B.Vector3.Distance(p.m.position, c.pos) < 2.2) {
+      SFX.pickup();
       if (p.type === "pila") hp = Math.min(maxHp, hp + 30);
       else if (p.type === "iman") for (const g of gems) g.pull = true;
       else openChest();
@@ -532,6 +586,7 @@ scene.onBeforeRenderObservable.add(() => {
     if (padPressed(15)) { offerSel = (offerSel + 1) % offers.length; selectOffer(offerSel); }
     if (padPressed(0)) pickOffer(offerSel);
   } else if ((state === "menu" || state === "over") && padPressed(9)) state === "menu" ? startRun() : toMenu();
+  else if ((state === "play" || state === "pause") && padPressed(9)) togglePause();
 
   if (state === "play") {
     // Hit-stop: congela el mundo un par de cuadros en los golpes fuertes

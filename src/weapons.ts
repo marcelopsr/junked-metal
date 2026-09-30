@@ -2,6 +2,7 @@ import * as B from "@babylonjs/core";
 import type { Car } from "./car";
 import type { Enemy } from "./enemies";
 import { FX } from "./fx";
+import { SFX } from "./sfx";
 import { box, cyl, merge, sph, template, tor } from "./models";
 import { M, pbr } from "./render";
 
@@ -19,7 +20,7 @@ export const PASSIVES: Record<PassiveId, { name: string; desc: string }> = {
 export function passiveStats(p: Partial<Record<PassiveId, number>>, perm: { hp: number; dmg: number; spd: number; mag: number }) {
   const l = (id: PassiveId) => p[id] ?? 0;
   return {
-    magnet: 4 * (1 + 0.3 * l("iman")) * (1 + 0.1 * perm.mag),
+    magnet: 6 * (1 + 0.3 * l("iman")) * (1 + 0.1 * perm.mag),
     area: 1 + 0.12 * l("resorte"),
     speedMul: (1 + 0.06 * l("turbo")) * (1 + 0.04 * perm.spd),
     boostRegen: 14 * (1 + 0.25 * l("turbo")),
@@ -224,6 +225,7 @@ class Tesla extends Weapon {
           let bd = 6;
           for (const e of c.enemies) if (!hit.has(e)) { const d = B.Vector3.Distance(e.pos, from.pos); if (d < bd) { bd = d; cur = e; } }
         }
+        SFX.zap();
         const m = B.MeshBuilder.CreateLines("bolt", { points: pts }, c.scene);
         m.color = new B.Color3(0.6, 0.9, 1).scale(3);
         m.isPickable = false;

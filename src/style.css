@@ -82,6 +82,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #87a96b; fon
 #dmg span { position: absolute; font: 700 15px/1 var(--data); color: #fff; font-variant-numeric: tabular-nums; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; will-change: transform, opacity; }
 #dmg span.crit { font-size: 24px; color: var(--r-evo); }
 
+#muted { position: fixed; top: 64px; right: 16px; font: 700 11px var(--data); letter-spacing: .12em; color: var(--dim); background: var(--shell); border: 1px solid var(--line); padding: 5px 8px; border-radius: 3px; pointer-events: none; }
 #banner { position: fixed; top: 26%; width: 100%; text-align: center; font: 400 clamp(26px, 5.5vw, 50px)/1.1 var(--display); color: #fff; text-shadow: 0 3px 0 #000, 0 0 2px #000; pointer-events: none; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1); }
 
 /* ---------- Pantallas ---------- */

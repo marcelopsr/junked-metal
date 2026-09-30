@@ -1,13 +1,14 @@
 import * as B from "@babylonjs/core";
 import { enemyTemplate, legTemplate, LEGS } from "./models";
 
-export type Kind = "hormiga" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro";
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro";
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; scale?: number; color: string };
 export const DEF: Record<Kind, Def> = {
-  hormiga: { name: "Hormiga", hp: 8, speed: 7.5, dmg: 8, size: [0.9, 0.6, 1.7], mass: 0.4, xp: 1, color: "#2a150c" },
-  friccion: { name: "Autito a fricción", hp: 18, speed: 11, dmg: 10, size: [0.9, 0.6, 1.6], mass: 0.7, xp: 2, color: "#f97316" },
-  robot: { name: "Robot a cuerda", hp: 40, speed: 17, dmg: 14, size: [1.2, 1.7, 1], mass: 1.3, xp: 3, color: "#b91c1c" },
+  hormiga: { name: "Hormiga", hp: 8, speed: 8, dmg: 8, size: [0.9, 0.6, 1.7], mass: 0.4, xp: 1, color: "#2a150c" },
+  escupidora: { name: "Hormiga escupidora", hp: 22, speed: 7, dmg: 8, size: [1.1, 0.8, 2], mass: 0.7, xp: 3, color: "#7a1f0f" },
+  friccion: { name: "Autito a fricción", hp: 18, speed: 12.5, dmg: 10, size: [0.9, 0.6, 1.6], mass: 0.7, xp: 2, color: "#f97316" },
+  robot: { name: "Robot a cuerda", hp: 40, speed: 21, dmg: 14, size: [1.2, 1.7, 1], mass: 1.3, xp: 3, color: "#b91c1c" },
   escarabajo: { name: "Escarabajo", hp: 90, speed: 4.5, dmg: 18, size: [1.7, 1.1, 2.3], mass: 3, xp: 6, color: "#2f7d4a" },
   rey: { name: "ESCARABAJO REY", hp: 1800, speed: 6, dmg: 30, size: [6, 3.8, 8], mass: 40, xp: 60, boss: true, scale: 3.5, color: "#d4a017" },
   cortadora: { name: "CORTADORA DE CÉSPED", hp: 3500, speed: 15, dmg: 45, size: [7, 4.5, 6.4], mass: 80, xp: 120, boss: true, color: "#dc2626" },
@@ -100,6 +101,12 @@ export class Enemy {
       else { move = fwd; turn = 0.3; if (this.timer <= 0) { this.state = 0; this.timer = this.kind === "robot" ? 1 : 1.4; } }
     }
 
+    if (this.kind === "escupidora") {
+      // Se frena a distancia, te apunta y escupe ácido
+      this.timer -= dt;
+      if (dist < 16) { speed = 0; turn = 5; if (this.timer <= 0 && Math.abs(diff) < 0.4) { this.timer = 2.6; this.body.setAngularVelocity(B.Vector3.Zero()); return "spit"; } }
+    }
+
     if (this.kind === "perro") {
       this.timer -= dt;
       if (this.airborne) {
@@ -130,6 +137,7 @@ export function spawnTable(t: number): [Kind, number][] {
   const m = t / 60;
   const tab: [Kind, number][] = [["hormiga", 10]];
   if (m > 0.5) tab.push(["friccion", 4 + m]);
+  if (m > 1) tab.push(["escupidora", 2 + m * 0.7]);
   if (m > 1.5) tab.push(["robot", 2 + m * 0.6]);
   if (m > 3.5) tab.push(["escarabajo", 1 + m * 0.5]);
   return tab;

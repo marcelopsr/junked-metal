@@ -160,6 +160,18 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         cyl(0.03, 0.03, 0.6, m, [-0.12, 0.6, 0.75], [0.7, 0, -0.3], 4),
       ];
     }
+    if (kind === "escupidora") {
+      const m = M.plastic("#5a160a");
+      return [
+        sph(1.0, pbr("acidSac", { color: "#9acd32", rough: 0.2, emissive: "#2a3a00", alpha: 0.9 }), [0, 0.45, -0.7], [1, 0.85, 1.2]),
+        sph(0.45, m, [0, 0.35, 0]),
+        sph(0.6, m, [0, 0.42, 0.5]),
+        cyl(0.05, 0.12, 0.35, m, [0.12, 0.35, 0.85], [1.4, 0, 0], 5),
+        cyl(0.05, 0.12, 0.35, m, [-0.12, 0.35, 0.85], [1.4, 0, 0], 5),
+        cyl(0.03, 0.03, 0.7, m, [0.14, 0.75, 0.8], [0.6, 0, 0.3], 4),
+        cyl(0.03, 0.03, 0.7, m, [-0.14, 0.75, 0.8], [0.6, 0, -0.3], 4),
+      ];
+    }
     if (kind === "escarabajo" || kind === "rey") {
       const shell = kind === "rey" ? M.metal("#d4a017") : pbr("beetle", { color: "#2f7d4a", rough: 0.25, metal: 0.7 });
       const dark = M.plastic("#111");
@@ -230,6 +242,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
 // Pata del lado derecho: cadera en el origen, fémur hacia arriba y afuera, tibia hasta el piso.
 export const LEGS: Record<string, { hips: [number, number, number][]; len: number; r: number; color: string; scale: number }> = {
   hormiga: { hips: [[0.16, 0.3, -0.18], [0.16, 0.3, 0], [0.16, 0.3, 0.18]], len: 0.8, r: 0.035, color: "#2a150c", scale: 1 },
+  escupidora: { hips: [[0.18, 0.34, -0.2], [0.18, 0.34, 0], [0.18, 0.34, 0.2]], len: 0.9, r: 0.04, color: "#5a160a", scale: 1 },
   escarabajo: { hips: [[0.5, 0.38, -0.5], [0.5, 0.38, 0], [0.5, 0.38, 0.5]], len: 1.0, r: 0.06, color: "#111111", scale: 1 },
   rey: { hips: [[0.5, 0.38, -0.5], [0.5, 0.38, 0], [0.5, 0.38, 0.5]], len: 1.0, r: 0.06, color: "#111111", scale: 3.5 },
 };
