@@ -1,0 +1,140 @@
+/* RC Fight — HUD de telemetría de radio. Paleta en docs/ART_DIRECTION.md */
+:root {
+  --shell: #16181b; --panel: #23272c; --line: #3a4048; --txt: #e8eaed; --dim: #8b939c;
+  --lcd: #9fb08a; --lcd-ink: #1f2a18; --sig: #35d0ff; --ok: #7ddc4a; --low: #ff4a3d; --turbo: #ff9a1f;
+  --r-comun: #b8c0c8; --r-rara: #35d0ff; --r-epica: #c46bff; --r-evo: #ffc83d;
+  --data: "Chakra Petch", sans-serif; --display: "Bungee", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #87a96b; font-family: var(--data); color: var(--txt); user-select: none; touch-action: none; }
+#c { width: 100%; height: 100%; display: block; outline: none; }
+.hidden { display: none !important; }
+.ico { display: block; }
+
+/* ---------- HUD ---------- */
+#hud { position: fixed; inset: 0; pointer-events: none; }
+.panel { position: absolute; background: var(--shell); border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; box-shadow: 0 2px 0 #000, inset 0 1px 0 #ffffff10; }
+.ptitle { font: 600 10px/1 var(--data); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin: 2px 0 5px; }
+.read { display: flex; align-items: baseline; gap: 8px; margin: 5px 0 8px; }
+.read b { font: 700 22px/1 var(--data); font-variant-numeric: tabular-nums; }
+.read span { font: 500 11px/1 var(--data); color: var(--dim); font-variant-numeric: tabular-nums; }
+.read.r { flex-direction: column; align-items: flex-end; gap: 3px; margin: 0; }
+.track { position: relative; height: 8px; background: #0c0d0f; border: 1px solid var(--line); overflow: hidden; }
+.track > div { height: 100%; width: 0; transition: width .12s linear; }
+
+/* Señal / XP: barra segmentada arriba */
+#signal { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); width: min(560px, 70vw); display: flex; align-items: center; gap: 8px; }
+#signal .lbl { color: var(--sig); }
+#signal .track { flex: 1; height: 10px; }
+#xp { background: var(--sig); background-image: repeating-linear-gradient(90deg, transparent 0 9px, #0c0d0f 9px 11px); }
+#lvl { font: 700 13px/1 var(--data); letter-spacing: .08em; min-width: 48px; text-align: right; text-shadow: 0 1px 0 #000; }
+
+/* Reloj LCD */
+#lcd { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 20px); left: 50%; transform: translateX(-50%); background: var(--lcd); color: var(--lcd-ink); border: 3px solid var(--shell); border-radius: 3px; padding: 3px 12px 4px; text-align: center; box-shadow: inset 0 0 0 1px #0003, inset 2px 2px 6px #0002; }
+#timer { display: block; font: 700 26px/1 var(--data); letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+#lcd .sub { font: 600 10px/1 var(--data); letter-spacing: .12em; opacity: .75; }
+
+/* Jefe */
+#bossbar { position: absolute; top: 96px; left: 50%; transform: translateX(-50%); width: min(520px, 80vw); text-align: center; }
+#bossName { font: 400 18px/1 var(--display); color: #fff; text-shadow: 0 2px 0 #000, 0 0 1px #000; margin-bottom: 5px; letter-spacing: .02em; }
+#bossbar .track { height: 12px; border-color: #000; }
+#bossHp { background: var(--low); transition: width .2s; }
+
+/* Transmisor izquierdo: batería + turbo */
+#txl { left: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 190px; }
+#lipo { display: flex; gap: 3px; height: 26px; padding: 3px; background: #0c0d0f; border: 1px solid var(--line); position: relative; }
+#lipo::after { content: ""; position: absolute; right: -6px; top: 7px; width: 4px; height: 10px; background: var(--line); }
+#lipo i { flex: 1; background: var(--ok); }
+#lipo i.half { background: linear-gradient(90deg, var(--ok) var(--p), #1a1d20 var(--p)); }
+#lipo i.off { background: #1a1d20; }
+#txl.low #lipo i:not(.off) { background: var(--low); }
+#txl.low #volt { color: var(--low); animation: blink .5s steps(2) infinite; }
+.boost > div { background: var(--turbo); }
+
+/* Velocímetro */
+#txr { right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 170px; }
+#speedo { width: 100%; display: block; }
+#speedo .arc { fill: none; stroke: #0c0d0f; stroke-width: 8; }
+#speedo .arc.on { stroke: var(--turbo); stroke-dasharray: 0 400; }
+#speedo #ticks line { stroke: var(--dim); stroke-width: 1.5; }
+#needle { stroke: var(--txt); stroke-width: 2.5; stroke-linecap: round; transform-origin: 60px 62px; transition: transform .08s linear; }
+#speedo circle { fill: var(--txt); }
+
+/* Slots de armas */
+#slots { position: absolute; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
+#slots .row { display: flex; gap: 5px; }
+.slot { position: relative; width: 46px; height: 46px; background: var(--shell); border: 1px solid var(--line); border-radius: 4px; display: grid; place-items: center; color: var(--txt); overflow: hidden; }
+.slot.small { width: 32px; height: 32px; color: var(--dim); }
+.slot.evo { border-color: var(--r-evo); color: var(--r-evo); }
+.slot .cd { position: absolute; inset: 0; background: conic-gradient(#000a calc(var(--cd, 0) * 360deg), transparent 0); }
+.slot .pips { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }
+.slot .pips i { width: 4px; height: 2px; background: #ffffff25; }
+.slot .pips i.on { background: var(--sig); }
+.slot.small .pips { bottom: 2px; }
+
+/* Flechas de borde */
+#arrows .arw { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; display: grid; place-items: center; color: #fff; filter: drop-shadow(0 2px 0 #000); }
+#arrows .arw .chev { position: absolute; inset: 0; }
+#arrows .arw.jefe { color: var(--low); }
+#arrows .arw.cofre { color: var(--r-evo); }
+
+/* Números de daño */
+#dmg span { position: absolute; font: 700 15px/1 var(--data); color: #fff; font-variant-numeric: tabular-nums; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; will-change: transform, opacity; }
+#dmg span.crit { font-size: 24px; color: var(--r-evo); }
+
+#banner { position: fixed; top: 26%; width: 100%; text-align: center; font: 400 clamp(26px, 5.5vw, 50px)/1.1 var(--display); color: #fff; text-shadow: 0 3px 0 #000, 0 0 2px #000; pointer-events: none; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1); }
+
+/* ---------- Pantallas ---------- */
+.overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: rgba(10, 11, 13, .82); padding: 16px; text-align: center; overflow-y: auto; }
+.brand { font: 400 clamp(44px, 10vw, 92px)/1 var(--display); color: #fff; text-shadow: 0 5px 0 #000; letter-spacing: .01em; }
+.tag { color: var(--dim); font-size: 14px; max-width: 520px; }
+.sect { font: 600 11px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; color: var(--dim); margin-top: 8px; }
+.sect span { color: var(--txt); letter-spacing: .04em; }
+.help { font-size: 12px; color: var(--dim); max-width: 600px; line-height: 1.5; }
+.hint { font-size: 11px; color: var(--dim); letter-spacing: .1em; }
+.otitle { font: 400 clamp(24px, 4vw, 36px)/1 var(--display); color: #fff; text-shadow: 0 3px 0 #000; }
+button { font: 700 14px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; padding: 12px 22px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--txt); cursor: pointer; box-shadow: 0 3px 0 #000; }
+button:hover:not(:disabled) { border-color: var(--txt); }
+button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
+button:disabled { opacity: .35; cursor: default; }
+button.primary { background: var(--turbo); color: #111; border-color: #000; font-size: 16px; padding: 14px 30px; }
+.q { font-size: 12px; color: var(--dim); letter-spacing: .08em; text-transform: uppercase; }
+select { font: 600 13px var(--data); padding: 5px 8px; border-radius: 3px; background: var(--panel); color: var(--txt); border: 1px solid var(--line); margin-left: 6px; }
+
+#cars, #shop, #offers { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+#shop button { font-size: 11px; padding: 9px 12px; }
+.carc { width: 190px; background: var(--shell); border: 1px solid var(--line); border-radius: 4px; padding: 12px; cursor: pointer; text-align: left; font-size: 12px; color: var(--dim); }
+.carc b { display: block; font: 700 16px/1.2 var(--data); color: var(--txt); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.carc .st { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; margin-top: 8px; font-size: 11px; }
+.carc .st i { display: block; height: 5px; margin-top: 4px; background: var(--sig); }
+.carc.sel { border-color: var(--turbo); box-shadow: 0 0 0 1px var(--turbo); }
+.carc.locked { opacity: .55; }
+.carc .price { margin-top: 8px; color: var(--r-evo); font-weight: 700; }
+
+/* Cartas de mejora */
+.offer { --rc: var(--r-comun); position: relative; width: 210px; min-height: 250px; background: var(--shell); border: 1px solid var(--line); border-top: 4px solid var(--rc); border-radius: 4px; padding: 14px; cursor: pointer; text-align: left; font-size: 13px; color: var(--dim); display: flex; flex-direction: column; gap: 8px; animation: deal .4s cubic-bezier(.2, 1.3, .4, 1) both; animation-delay: calc(var(--i) * 70ms); transition: transform .12s, border-color .12s; }
+.offer:hover, .offer.sel { transform: translateY(-6px); border-color: var(--rc); }
+.offer .art { width: 76px; height: 76px; margin: 4px auto 6px; display: grid; place-items: center; color: var(--rc); background: #0c0d0f; border: 1px solid var(--line); border-radius: 50%; }
+.offer b { font: 700 16px/1.15 var(--data); color: var(--txt); text-transform: uppercase; letter-spacing: .03em; }
+.offer .kind { font: 700 10px/1 var(--data); letter-spacing: .16em; color: var(--rc); text-transform: uppercase; }
+.offer .pips { display: flex; gap: 3px; margin-top: auto; }
+.offer .pips i { flex: 1; height: 4px; background: #ffffff18; }
+.offer .pips i.on { background: var(--rc); }
+.offer.rara { --rc: var(--r-rara); } .offer.epica { --rc: var(--r-epica); } .offer.evo { --rc: var(--r-evo); background: #221d10; }
+.offer.picked { animation: fly .38s cubic-bezier(.5, 0, .9, .4) forwards; }
+.offer.gone { animation: fade .25s forwards; }
+
+/* Táctil */
+#touch { position: fixed; inset: 0; pointer-events: none; }
+#stickZone { position: absolute; left: 0; bottom: 0; width: 55%; height: 65%; pointer-events: auto; }
+#stickBase { position: absolute; left: 40px; bottom: 150px; width: 130px; height: 130px; border-radius: 50%; border: 2px solid #ffffff55; background: #0003; }
+#stickKnob { position: absolute; left: 40px; top: 40px; width: 50px; height: 50px; border-radius: 50%; background: #e8eaedcc; border: 2px solid #000; }
+#tBoost, #tDrift { position: absolute; pointer-events: auto; border-radius: 50%; width: 84px; height: 84px; padding: 0; font-size: 11px; }
+#tBoost { right: 24px; bottom: 170px; background: var(--turbo); color: #111; }
+#tDrift { right: 122px; bottom: 150px; }
+
+@keyframes deal { from { opacity: 0; transform: translateY(60px) rotate(-8deg) scale(.9); } }
+@keyframes fly { 30% { transform: translateY(-14px) scale(1.06); } to { transform: translateY(70vh) scale(.2); opacity: 0; } }
+@keyframes fade { to { opacity: 0; transform: scale(.9); } }
+@keyframes stamp { from { transform: scale(1.6); opacity: 0; } }
+@keyframes blink { 50% { opacity: .3; } }

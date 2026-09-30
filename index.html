@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>RC Fight</title>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="signal">
+      <span class="lbl" id="sigIco"></span>
+      <div class="track"><div id="xp"></div></div>
+      <span id="lvl">NV 01</span>
+    </div>
+
+    <div id="lcd"><span id="timer">00:00</span><span class="sub"><span id="kills">0000</span> BAJAS</span></div>
+
+    <div id="bossbar" class="hidden">
+      <div id="bossName"></div>
+      <div class="track"><div id="bossHp"></div></div>
+    </div>
+
+    <div id="txl" class="panel">
+      <div class="ptitle">LiPo 3S</div>
+      <div id="lipo"><i></i><i></i><i></i></div>
+      <div class="read"><b id="volt">12.6V</b><span id="hpTxt">100 / 100</span></div>
+      <div class="ptitle">Turbo</div>
+      <div class="track boost"><div id="boost"></div></div>
+    </div>
+
+    <div id="slots"></div>
+
+    <div id="txr" class="panel">
+      <svg id="speedo" viewBox="0 0 120 80">
+        <path class="arc" d="M14 70 A50 50 0 1 1 106 70" />
+        <path id="spdArc" class="arc on" d="M14 70 A50 50 0 1 1 106 70" />
+        <g id="ticks"></g>
+        <line id="needle" x1="60" y1="62" x2="60" y2="22" />
+        <circle cx="60" cy="62" r="4" />
+      </svg>
+      <div class="read r"><b id="kmh">0</b><span>KM/H · ESCALA 1:10</span></div>
+    </div>
+
+    <div id="arrows"></div>
+    <div id="dmg"></div>
+  </div>
+
+  <div id="banner" class="hidden"></div>
+
+  <div id="levelup" class="overlay hidden">
+    <div class="otitle" id="luTitle">Nivel</div>
+    <div id="offers"></div>
+    <div class="hint">1 · 2 · 3 o clic — Enter confirma</div>
+  </div>
+
+  <div id="menu" class="overlay">
+    <div class="brand">RC FIGHT</div>
+    <div class="tag">Sobreviví 10 minutos en el patio. Derrotá al Perro.</div>
+    <div class="sect">Vehículo</div>
+    <div id="cars"></div>
+    <button id="play" class="primary">Encender y jugar</button>
+    <div class="sect">Taller <span id="bank"></span></div>
+    <div id="shop"></div>
+    <label class="q">Gráficos
+      <select id="quality">
+        <option value="auto">Auto — FSR dinámico</option>
+        <option value="ultra">Ultra — nativo</option>
+        <option value="calidad">Calidad — FSR 1.3×</option>
+        <option value="equilibrado">Equilibrado — FSR 1.5×</option>
+        <option value="rendimiento">Rendimiento — FSR 1.8×</option>
+      </select>
+    </label>
+    <div class="help">
+      Teclado: W/S acelerar · A/D girar · Espacio turbo · Shift derrape<br />
+      Gamepad: stick hacia donde querés ir · A turbo · B derrape — Las armas disparan solas. Embestir rápido destroza.
+    </div>
+  </div>
+
+  <div id="over" class="overlay hidden">
+    <div class="brand" id="overTitle"></div>
+    <div class="tag" id="overTxt"></div>
+    <button id="again" class="primary">Volver al taller</button>
+  </div>
+
+  <div id="touch" class="hidden">
+    <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
+    <button id="tDrift">DERRAPE</button>
+    <button id="tBoost">TURBO</button>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
