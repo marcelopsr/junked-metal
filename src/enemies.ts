@@ -43,7 +43,7 @@ export class Enemy {
     this.agg = new B.PhysicsAggregate(this.node, B.PhysicsShapeType.BOX,
       { mass: d.mass, friction: 0.3, restitution: 0.1, extents: new B.Vector3(w, h, l), center: new B.Vector3(0, h / 2, 0) }, this.node.getScene());
     this.body = this.agg.body;
-    this.body.setMassProperties({ mass: d.mass, inertia: new B.Vector3(0, d.mass, 0), centerOfMass: new B.Vector3(0, h * 0.3, 0) });
+    this.body.setMassProperties({ mass: d.mass, inertia: new B.Vector3(0, d.mass, 0), centerOfMass: new B.Vector3(0, h / 2, 0) }); // = centro de la forma (ver Car.setMass)
 
     const L = LEGS[kind];
     if (L) {

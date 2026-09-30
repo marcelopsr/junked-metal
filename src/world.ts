@@ -7,7 +7,9 @@ import { canvasTex, M, pbr, shadows, TEX } from "./render";
 export const HALF = 100;
 
 let scene: B.Scene;
-const stat = (m: B.Mesh, shape: B.PhysicsShapeType, o: Partial<B.PhysicsAggregateParameters> = {}) => {
+// El cuerpo toma la pose de la malla al crearse: posicionar SIEMPRE antes (at), nunca después.
+const stat = (m: B.Mesh, shape: B.PhysicsShapeType, o: Partial<B.PhysicsAggregateParameters> = {}, at?: [number, number, number, number?]) => {
+  if (at) { m.position.set(at[0], at[1], at[2]); if (at[3] !== undefined) m.rotation.y = at[3]; }
   new B.PhysicsAggregate(m, shape, { mass: 0, friction: 0.6, ...o }, scene);
   shadows.addShadowCaster(m);
   m.receiveShadows = true;
@@ -118,8 +120,7 @@ export function buildWorld(s: B.Scene, low: boolean) {
       cyl(5 * sc, 4 * sc, 4 * sc, M.matte("#c2410c"), [0, 2 * sc, 0], undefined, 16),
       cyl(5.4 * sc, 5.4 * sc, 0.6 * sc, M.matte("#9a3412"), [0, 3.9 * sc, 0], undefined, 16),
       cyl(4.6 * sc, 4.6 * sc, 0.2 * sc, M.matte("#4a3420"), [0, 4.1 * sc, 0], undefined, 16),
-    ]), B.PhysicsShapeType.CYLINDER);
-    pot.position.set(x, 0, z);
+    ]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z]);
     const extras: B.Mesh[] = [];
     breakable(pot, 120 * sc, 2.6 * sc, "#c2410c", true, extras);
     for (let k = 0; k < 7; k++) {
@@ -158,9 +159,7 @@ export function buildWorld(s: B.Scene, low: boolean) {
       cyl(0.1, 2.6, 2.4, M.plastic("#f8fafc"), [0, 3.6, 0.8], [Math.PI - 0.3, 0, 0], 10),
       cyl(0.05, 2.6, 3.4, M.plastic("#dc2626"), [0, 7, 0], [-0.2, 0, 0], 12),
       sph(0.6, M.plastic("#f59e9e"), [0, 5, 1.15]),
-    ]), B.PhysicsShapeType.CYLINDER);
-    g.position.set(x, 0, z);
-    g.rotation.y = ry;
+    ]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z, ry]);
     bare.push({ x, z, r: 2.5 });
   }
 
@@ -182,8 +181,7 @@ export function buildWorld(s: B.Scene, low: boolean) {
     cyl(5, 5, 6, M.metal("#15803d"), [0, 3, 0], undefined, 16),
     tube([[0, 2, 2.4], [0, 5, 5], [0, 6.5, 6.5]], 0.35, M.metal("#15803d")),
     tor(4, 0.4, M.metal("#15803d"), [0, 6.8, -1], [0, Math.PI / 2, Math.PI / 2], 12),
-  ]), B.PhysicsShapeType.CYLINDER);
-  can.position.set(-70, 0, -40);
+  ]), B.PhysicsShapeType.CYLINDER, {}, [-70, 0, -40]);
   bare.push({ x: -70, z: -40, r: 3 });
 
   // Objetos empujables: bloques, ladrillos, pelota

@@ -113,7 +113,7 @@ function recompute() {
   const newMax = car!.def.hp + st.maxHp;
   hp += Math.max(0, newMax - maxHp);
   maxHp = newMax;
-  car!.body.setMassProperties({ mass: car!.def.mass * st.mass });
+  car!.setMass(car!.def.mass * st.mass);
   // Cada arma se ve montada en el auto y crece con el nivel
   for (const w of weapons) {
     if (!w.mount) { w.mount = mountFor(w.id, car!); shadows.addShadowCaster(w.mount); }
@@ -581,4 +581,6 @@ if (import.meta.env.DEV) Object.assign(window, {
   __god: () => (hp = maxHp = 1e6),
   __info: () => ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps() }),
   __car: () => car && { p: car.pos, f: car.root.forward },
+  __scene: scene,
+  __carObj: () => car,
 });

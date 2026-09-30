@@ -64,8 +64,14 @@ export class Car {
     this.agg = new B.PhysicsAggregate(this.root, B.PhysicsShapeType.BOX,
       { mass: d.mass, friction: 0.2, restitution: 0.1, extents: new B.Vector3(w, h, l) }, scene);
     this.body = this.agg.body;
-    // inercia 0 en X/Z: nunca vuelca (arcade)
-    this.body.setMassProperties({ mass: d.mass, inertia: new B.Vector3(0, d.mass, 0), centerOfMass: new B.Vector3(0, -h / 2, 0) });
+    this.setMass(d.mass);
+  }
+
+  // Havok reemplaza TODAS las propiedades de masa en cada llamada: siempre mandar la inercia.
+  // Inercia 0 en X/Z: nunca vuelca (arcade). El centro de masa NO se desplaza: combinado con
+  // setLinearVelocity por frame (drive) hace que Havok resuelva mal el contacto y el auto se hunde.
+  setMass(mass: number) {
+    this.body.setMassProperties({ mass, inertia: new B.Vector3(0, mass, 0), centerOfMass: B.Vector3.Zero() });
   }
 
   get pos() { return this.root.position; }
