@@ -173,6 +173,11 @@ function startRun() {
   $("hud").classList.remove("hidden");
   hudBoss(null);
   banner("SOBREVIVÍ");
+  // Guía de controles los primeros segundos (se va sola)
+  const hint = $("hint");
+  hint.classList.remove("hidden", "fade");
+  setTimeout(() => hint.classList.add("fade"), 9000);
+  setTimeout(() => hint.classList.add("hidden"), 9700);
 }
 
 function endRun(win: boolean, why: string) {
@@ -547,7 +552,9 @@ function update(dt: number) {
   if (pendingLevels > 0 && state === "play") { pendingLevels--; openOffers(levelOffers(weapons, passives, 3), `Nivel ${level - pendingLevels}`); }
 }
 
+let god = false; // solo dev
 function hurt(n: number, continuous = false) {
+  if (god) return;
   hp -= n * (1 - st.armor);
   if (!continuous) shake = Math.max(shake, 0.5);
 }
@@ -633,7 +640,8 @@ if (import.meta.env.DEV) Object.assign(window, {
   __killAll: () => enemies.forEach((e) => { if (!e.def.boss) e.hp = 0; }),
   __time: (s: number) => (time = s),
   __xp: (n: number) => gainXp(n),
-  __god: () => (hp = maxHp = 1e6),
+  __god: () => (god = true),
+  __killBoss: () => enemies.forEach((e) => { if (e.def.boss) e.hp = 0; }),
   __info: () => ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps() }),
   __car: () => car && { p: car.pos, f: car.root.forward },
   __scene: scene,

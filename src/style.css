@@ -82,6 +82,11 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #87a96b; fon
 #dmg span { position: absolute; font: 700 15px/1 var(--data); color: #fff; font-variant-numeric: tabular-nums; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; will-change: transform, opacity; }
 #dmg span.crit { font-size: 24px; color: var(--r-evo); }
 
+#hint { position: absolute; left: 50%; top: 120px; transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, auto); gap: 6px 18px; align-items: center; background: var(--shell); border: 1px solid var(--line); border-radius: 4px; padding: 10px 14px; font: 600 12px var(--data); color: var(--txt); box-shadow: 0 2px 0 #000; transition: opacity .6s; }
+#hint.fade { opacity: 0; }
+#hint .tip { grid-column: 1 / -1; color: var(--dim); font-weight: 500; text-align: center; }
+kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-right: 3px; font: 700 11px var(--data); text-align: center; color: var(--txt); background: var(--panel); border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 3px; }
+@media (pointer: coarse) { #hint { display: none !important; } }
 #muted { position: fixed; top: 64px; right: 16px; font: 700 11px var(--data); letter-spacing: .12em; color: var(--dim); background: var(--shell); border: 1px solid var(--line); padding: 5px 8px; border-radius: 3px; pointer-events: none; }
 #banner { position: fixed; top: 26%; width: 100%; text-align: center; font: 400 clamp(26px, 5.5vw, 50px)/1.1 var(--display); color: #fff; text-shadow: 0 3px 0 #000, 0 0 2px #000; pointer-events: none; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1); }
 
