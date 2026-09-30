@@ -5,6 +5,7 @@ import { FX } from "./fx";
 import { SFX } from "./sfx";
 import { box, cyl, merge, sph, template, tor } from "./models";
 import { M, pbr } from "./render";
+import { rng } from "./rng";
 
 // ---------- Pasivas ----------
 export type PassiveId = "iman" | "resorte" | "turbo" | "litio" | "capacitor" | "lego";
@@ -25,7 +26,7 @@ export function passiveStats(p: Partial<Record<PassiveId, number>>, perm: { hp: 
     speedMul: (1 + 0.06 * l("turbo")) * (1 + 0.04 * perm.spd),
     boostRegen: 14 * (1 + 0.25 * l("turbo")),
     maxHp: 20 * l("litio") + 10 * perm.hp,
-    regen: 0.4 * l("litio"),
+    regen: 1 + 0.5 * l("litio"),
     cooldown: Math.pow(0.92, l("capacitor")),
     armor: 1 - Math.pow(0.92, l("lego")),
     mass: 1 + 0.1 * l("lego"),
@@ -179,7 +180,7 @@ class Petardos extends Weapon {
       for (let i = 0; i < n; i++) {
         const near = c.enemies.filter((e) => B.Vector3.Distance(e.pos, c.car.pos) < 18);
         if (!near.length) break;
-        const t = near[(Math.random() * near.length) | 0];
+        const t = near[(rng() * near.length) | 0];
         const m = this.tpl.createInstance("p");
         this.flying.push({ m, from: c.car.pos.clone(), to: t.pos.clone(), t: 0 });
       }
@@ -285,7 +286,7 @@ export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>
     const l = ps[id] ?? 0;
     if ((l || owned < 6) && l < 5) pool.push({ kind: "passive", id, title: PASSIVES[id].name, icon: id, desc: PASSIVES[id].desc, lv: l + 1 });
   }
-  pool.sort(() => Math.random() - 0.5);
+  pool.sort(() => rng() - 0.5);
   const out = pool.slice(0, n);
   while (out.length < n) out.push({ kind: "heal", id: "heal", title: "Reparación", icon: "heal", desc: "Recuperás 40 de vida" });
   return out;

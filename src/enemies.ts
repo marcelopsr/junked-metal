@@ -1,18 +1,19 @@
 import * as B from "@babylonjs/core";
 import { enemyTemplate, legTemplate, LEGS } from "./models";
+import { rng } from "./rng";
 
 export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro";
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; scale?: number; color: string };
 export const DEF: Record<Kind, Def> = {
-  hormiga: { name: "Hormiga", hp: 8, speed: 8, dmg: 8, size: [0.9, 0.6, 1.7], mass: 0.4, xp: 1, color: "#2a150c" },
+  hormiga: { name: "Hormiga", hp: 8, speed: 8, dmg: 6, size: [0.9, 0.6, 1.7], mass: 0.4, xp: 1, color: "#2a150c" },
   escupidora: { name: "Hormiga escupidora", hp: 22, speed: 7, dmg: 8, size: [1.1, 0.8, 2], mass: 0.7, xp: 3, color: "#7a1f0f" },
-  friccion: { name: "Autito a fricción", hp: 18, speed: 12.5, dmg: 10, size: [0.9, 0.6, 1.6], mass: 0.7, xp: 2, color: "#f97316" },
-  robot: { name: "Robot a cuerda", hp: 40, speed: 21, dmg: 14, size: [1.2, 1.7, 1], mass: 1.3, xp: 3, color: "#b91c1c" },
-  escarabajo: { name: "Escarabajo", hp: 90, speed: 4.5, dmg: 18, size: [1.7, 1.1, 2.3], mass: 3, xp: 6, color: "#2f7d4a" },
+  friccion: { name: "Autito a fricción", hp: 18, speed: 12.5, dmg: 7, size: [0.9, 0.6, 1.6], mass: 0.7, xp: 2, color: "#f97316" },
+  robot: { name: "Robot a cuerda", hp: 40, speed: 18, dmg: 10, size: [1.2, 1.7, 1], mass: 1.3, xp: 3, color: "#b91c1c" },
+  escarabajo: { name: "Escarabajo", hp: 90, speed: 4.5, dmg: 12, size: [1.7, 1.1, 2.3], mass: 3, xp: 6, color: "#2f7d4a" },
   rey: { name: "ESCARABAJO REY", hp: 1800, speed: 6, dmg: 30, size: [6, 3.8, 8], mass: 40, xp: 60, boss: true, scale: 3.5, color: "#d4a017" },
   cortadora: { name: "CORTADORA DE CÉSPED", hp: 3500, speed: 15, dmg: 45, size: [7, 4.5, 6.4], mass: 80, xp: 120, boss: true, color: "#dc2626" },
-  perro: { name: "EL PERRO", hp: 7000, speed: 9, dmg: 40, size: [3.2, 8, 8], mass: 100, xp: 0, boss: true, color: "#a0673a" },
+  perro: { name: "EL PERRO", hp: 8000, speed: 9, dmg: 40, size: [3.2, 8, 8], mass: 100, xp: 0, boss: true, color: "#a0673a" },
 };
 
 const UP = B.Vector3.Up();
@@ -27,11 +28,12 @@ export class Enemy {
   radius: number;
   ramCd = 0;
   hitCd = 0; // cooldown genérico para armas de contacto (clips)
+  touchCd = 0; // cada enemigo te pega como mucho una vez por intervalo
   state = 0; // máquina de estados para cargas / saltos
-  timer = 1 + Math.random();
+  timer = 1 + rng();
   airborne = false;
   legs: { m: B.InstancedMesh; base: number; phase: number }[] = [];
-  walk = Math.random() * 6;
+  walk = rng() * 6;
 
   constructor(public kind: Kind, pos: B.Vector3, hpMul: number) {
     const d = (this.def = DEF[kind]);
@@ -40,7 +42,7 @@ export class Enemy {
     this.radius = Math.max(w, l) / 2;
     this.node = enemyTemplate(kind, d.scale).createInstance(kind);
     this.node.position.copyFrom(pos);
-    this.node.rotation.y = Math.random() * 6.3;
+    this.node.rotation.y = rng() * 6.3;
     this.agg = new B.PhysicsAggregate(this.node, B.PhysicsShapeType.BOX,
       { mass: d.mass, friction: 0.3, restitution: 0.1, extents: new B.Vector3(w, h, l), center: new B.Vector3(0, h / 2, 0) }, this.node.getScene());
     this.body = this.agg.body;
@@ -84,6 +86,7 @@ export class Enemy {
     const d = this.def;
     this.ramCd -= dt;
     this.hitCd -= dt;
+    this.touchCd -= dt;
     const v = this.body.getLinearVelocity();
     const to = target.subtract(this.pos); to.y = 0;
     const dist = to.length();
@@ -133,18 +136,15 @@ export class Enemy {
 }
 
 // Qué aparece según el minuto de la partida: [tipo, peso]
-export function spawnTable(t: number): [Kind, number][] {
+// La plaga de la partida multiplica pesos y puede adelantar la llegada (minuto) de cada tipo
+export function spawnTable(t: number, plague?: { mult: Partial<Record<Kind, number>>; from: Partial<Record<Kind, number>> }): [Kind, number][] {
   const m = t / 60;
-  const tab: [Kind, number][] = [["hormiga", 10]];
-  if (m > 0.5) tab.push(["friccion", 4 + m]);
-  if (m > 1) tab.push(["escupidora", 2 + m * 0.7]);
-  if (m > 1.5) tab.push(["robot", 2 + m * 0.6]);
-  if (m > 3.5) tab.push(["escarabajo", 1 + m * 0.5]);
-  return tab;
+  const base: [Kind, number, number][] = [["hormiga", 0, 10], ["friccion", 0.5, 4 + m], ["escupidora", 1.5, 1 + m * 0.6], ["robot", 1.5, 2 + m * 0.6], ["escarabajo", 3.5, 1 + m * 0.5]];
+  return base.filter(([k, from]) => m >= (plague?.from[k] ?? from)).map(([k, , w]) => [k, w * (plague?.mult[k] ?? 1)]);
 }
 
 export function pickWeighted<T>(tab: [T, number][]) {
-  let r = Math.random() * tab.reduce((a, [, w]) => a + w, 0);
+  let r = rng() * tab.reduce((a, [, w]) => a + w, 0);
   for (const [k, w] of tab) if ((r -= w) <= 0) return k;
   return tab[0][0];
 }

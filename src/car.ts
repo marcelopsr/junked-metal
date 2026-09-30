@@ -5,9 +5,9 @@ import { shadows } from "./render";
 const UP = B.Vector3.Up();
 
 export const CARS: Record<CarKind, { name: string; desc: string; cost: number; hp: number; speed: number; accel: number; turn: number; grip: number; ram: number; mass: number; size: [number, number, number] }> = {
-  buggy: { name: "Buggy", desc: "Equilibrado. Salta bien, gira rápido.", cost: 0, hp: 100, speed: 15, accel: 32, turn: 3.2, grip: 10, ram: 3, mass: 1, size: [1.3, 0.7, 2.3] },
-  monster: { name: "Monster Truck", desc: "Lento y tanque. Embestir hace +50%.", cost: 120, hp: 150, speed: 12.5, accel: 26, turn: 2.7, grip: 12, ram: 4.5, mass: 1.8, size: [1.8, 1.1, 2.4] },
-  formula: { name: "Fórmula", desc: "Rapidísimo pero frágil.", cost: 200, hp: 70, speed: 19, accel: 40, turn: 3.6, grip: 14, ram: 2.4, mass: 0.8, size: [1.3, 0.55, 2.8] },
+  buggy: { name: "Buggy", desc: "Equilibrado. Salta bien, gira rápido.", cost: 0, hp: 150, speed: 15, accel: 32, turn: 3.2, grip: 10, ram: 3, mass: 1, size: [1.3, 0.7, 2.3] },
+  monster: { name: "Monster Truck", desc: "Lento y tanque. Embestir hace +50%.", cost: 120, hp: 220, speed: 12.5, accel: 26, turn: 2.7, grip: 12, ram: 4.5, mass: 1.8, size: [1.8, 1.1, 2.4] },
+  formula: { name: "Fórmula", desc: "Rapidísimo pero frágil.", cost: 200, hp: 110, speed: 19, accel: 40, turn: 3.6, grip: 14, ram: 2.4, mass: 0.8, size: [1.3, 0.55, 2.8] },
 };
 
 // Manejo arcade sobre un cuerpo Havok: la física resuelve choques,

@@ -4,6 +4,28 @@ import * as B from "@babylonjs/core";
 
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
+let sun: B.DirectionalLight, hemi: B.HemisphericLight, skyTex: B.DynamicTexture, probe: B.ReflectionProbe;
+
+function paintSky(c4: [string, string, string, string]) {
+  const c = skyTex.getContext() as unknown as CanvasRenderingContext2D;
+  const g = c.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, c4[0]); g.addColorStop(0.45, c4[1]); g.addColorStop(0.52, c4[2]); g.addColorStop(1, c4[3]);
+  c.fillStyle = g; c.fillRect(0, 0, 256, 256);
+  skyTex.update();
+}
+
+// Clima de la partida: sol, cielo, luz ambiente, exposición y reflejos (la sonda se vuelve a capturar)
+export function applyClimate(k: { sun: [number, number, number]; sunColor: string; sunI: number; hemiI: number; sky: [string, string, string, string]; exposure: number }) {
+  sun.direction = new B.Vector3(...k.sun).normalize();
+  sun.diffuse = B.Color3.FromHexString(k.sunColor);
+  sun.intensity = k.sunI;
+  hemi.intensity = k.hemiI;
+  hemi.diffuse = B.Color3.FromHexString(k.sky[1]);
+  paintSky(k.sky);
+  scene.clearColor = B.Color4.FromHexString(k.sky[1] + "ff");
+  scene.imageProcessingConfiguration.exposure = k.exposure;
+  probe.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
+}
 
 export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   scene = s;
@@ -17,24 +39,22 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   const sky = B.MeshBuilder.CreateSphere("sky", { diameter: 1200, segments: 16, sideOrientation: B.Mesh.BACKSIDE }, scene);
   const skyMat = new B.StandardMaterial("skyMat", scene);
   skyMat.disableLighting = true;
-  skyMat.emissiveTexture = canvasTex(256, (c) => {
-    const g = c.createLinearGradient(0, 0, 0, 256);
-    g.addColorStop(0, "#3d8bd9"); g.addColorStop(0.45, "#a8d4ff"); g.addColorStop(0.52, "#f2f0e6"); g.addColorStop(1, "#7a8f5a");
-    c.fillStyle = g; c.fillRect(0, 0, 256, 256);
-  });
+  skyTex = new B.DynamicTexture("sky", 256, scene, true);
+  paintSky(["#3d8bd9", "#a8d4ff", "#f2f0e6", "#7a8f5a"]);
+  skyMat.emissiveTexture = skyTex;
   sky.material = skyMat;
   sky.infiniteDistance = true;
   sky.isPickable = false;
-  const probe = new B.ReflectionProbe("probe", 128, scene);
+  probe = new B.ReflectionProbe("probe", 128, scene);
   probe.renderList!.push(sky);
   probe.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
   scene.environmentTexture = probe.cubeTexture;
   scene.environmentIntensity = 0.9;
 
-  const hemi = new B.HemisphericLight("hemi", new B.Vector3(0, 1, 0), scene);
+  hemi = new B.HemisphericLight("hemi", new B.Vector3(0, 1, 0), scene);
   hemi.intensity = 0.35;
   hemi.groundColor = B.Color3.FromHexString("#5d6b3a");
-  const sun = new B.DirectionalLight("sun", new B.Vector3(-0.45, -1, 0.35).normalize(), scene);
+  sun = new B.DirectionalLight("sun", new B.Vector3(-0.45, -1, 0.35).normalize(), scene);
   sun.intensity = 3.2;
   sun.diffuse = B.Color3.FromHexString("#fff4e0");
   shadows = new B.CascadedShadowGenerator(low ? 1024 : 2048, sun);

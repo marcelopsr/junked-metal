@@ -8,12 +8,16 @@ import { engineSfx, engineStop, initAudio, SFX, toggleMute } from "./sfx";
 import { clearFx, debris, FX, initFx, mark, tickFx } from "./fx";
 import { input, isTouch, padPressed, pollInput, setupTouch } from "./input";
 import { cyl, initModels, PAINTS, RIMS, sph, template, type CarKind } from "./models";
-import { M, pbr, setQuality, setupRender, shadows, type Quality } from "./render";
+import { applyClimate, M, pbr, setQuality, setupRender, shadows, type Quality } from "./render";
 import { evoOffer, levelOffers, makeWeapon, mountFor, passiveStats, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
-import { buildWorld, HALF, hitBreakables, setWind, spawnPoint } from "./world";
+import { buildLayout, buildWorld, HALF, hitBreakables, obstacles, setWind, spawnPoint } from "./world";
+import { makeProfile, type Profile } from "./run";
+import { newSeed, rng, seedRng } from "./rng";
 
 const $ = (id: string) => document.getElementById(id)!;
-const RUN_BOSSES: [number, Kind][] = [[180, "rey"], [360, "cortadora"], [540, "perro"]];
+// Partida de 10 minutos: dos minijefes (sueltan cofres de evolución) y el jefe final a las 10:00
+let RUN_BOSSES: [number, Kind][] = [];
+let warned = false;
 
 // ---------- Guardado ----------
 type Save = { scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number }; cars: CarKind[]; car: CarKind; quality: Quality; paint: string; rim: string };
@@ -45,7 +49,9 @@ cam.maxZ = 1500;
 setupRender(scene, cam, low);
 initModels(scene);
 initFx(scene, low);
+seedRng(20260929); // el patio es siempre el mismo
 buildWorld(scene, low);
+buildLayout(); // patio del menú (semilla fija)
 setQuality(save.quality);
 if (isTouch) setupTouch();
 initHud();
@@ -63,6 +69,9 @@ let st: PStats = passiveStats({}, save.perm);
 let hp = 100, maxHp = 100, boost = 100;
 let xp = 0, level = 1, pendingLevels = 0;
 let time = 0, kills = 0, runScrap = 0;
+let runSeed = 0;
+let profile: Profile;
+let simulating = false; // true durante __sim: sin DOM ni efectos caros
 let enemies: Enemy[] = [];
 let gems: Gem[] = [];
 let pickups: Pickup[] = [];
@@ -70,16 +79,16 @@ let spits: Spit[] = [];
 const spitTpl = () => template("spit", () => [sph(0.55, pbr("acid", { color: "#b5e61d", rough: 0.1, emissive: "#6b8f00", alpha: 0.9 }), [0, 0, 0])]);
 let spawnAcc = 0, swarmT = 60, chestT = 100, ballT = 75, bossIdx = 0;
 let shake = 0, camYaw = 0, dustT = 0;
-let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number } | null = null;
+let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number; hit?: boolean } | null = null;
 let offers: Offer[] = [];
 let offerSel = 0;
 
 const xpNeed = (l: number) => Math.floor(4 + l * 2.5 + l * l * 0.3);
 
-let hitStop = 0, smokeT = 0, skidT = 0, lastHpFrac = 1, smashCd = 0;
+let touchIFrame = 0, hitStop = 0, smokeT = 0, skidT = 0, lastHpFrac = 1, smashCd = 0;
 
 // Macetas rotas sueltan tuercas y a veces una pila
-const smashed = (pots: B.Vector3[]) => { for (const p of pots) { SFX.break(); dropGems(p, 8); if (Math.random() < 0.35) dropPickup(p, "pila"); shake = Math.max(shake, 0.5); } };
+const smashed = (pots: B.Vector3[]) => { for (const p of pots) { SFX.break(); dropGems(p, 8); if (rng() < 0.35) dropPickup(p, "pila"); shake = Math.max(shake, 0.5); } };
 
 // ---------- Plantillas de recolectables ----------
 const gemTpl = (v: 1 | 5 | 20) => template("gem" + v, () => [
@@ -93,7 +102,7 @@ function dropGems(pos: B.Vector3, amount: number) {
     const v: 1 | 5 | 20 = amount >= 20 ? 20 : amount >= 5 ? 5 : 1;
     amount -= v;
     const m = gemTpl(v).createInstance("gem");
-    m.position.set(pos.x + (Math.random() - 0.5) * 1.5, 0, pos.z + (Math.random() - 0.5) * 1.5);
+    m.position.set(pos.x + (rng() - 0.5) * 1.5, 0, pos.z + (rng() - 0.5) * 1.5);
     gems.push({ m, xp: v, pull: false });
   }
 }
@@ -156,6 +165,14 @@ function clearRun() {
 function startRun() {
   initAudio();
   clearRun();
+  // Semilla de la partida: ?seed=N la fija (reproducible), si no, una nueva
+  runSeed = Number(new URLSearchParams(location.search).get("seed")) || newSeed();
+  seedRng(runSeed);
+  // Perfil de la partida: clima, plaga, orden de minijefes, ritmo de eventos y un patio distinto
+  profile = makeProfile(runSeed);
+  applyClimate(profile.climate);
+  buildLayout();
+  RUN_BOSSES = [[200, profile.minis[0]], [400, profile.minis[1]], [600, "perro"]];
   car = new Car(scene, save.car, save.paint || undefined, save.rim || undefined);
   lastHpFrac = 1;
   passives = {};
@@ -165,14 +182,14 @@ function startRun() {
   hp = maxHp; boost = 100;
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0;
-  spawnAcc = 0; swarmT = 60; chestT = 100; ballT = 75; bossIdx = 0;
+  spawnAcc = 0; swarmT = 90 + profile.swarmEvery * 0.5; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false;
   camYaw = 0;
   state = "play";
   scene.physicsEnabled = true;
   for (const id of ["menu", "over", "levelup"]) $(id).classList.add("hidden");
   $("hud").classList.remove("hidden");
   hudBoss(null);
-  banner("SOBREVIVÍ");
+  banner(`${profile.climate.name} · ${profile.plague.name}`, 3);
   // Guía de controles los primeros segundos (se va sola)
   const hint = $("hint");
   hint.classList.remove("hidden", "fade");
@@ -188,7 +205,7 @@ function endRun(win: boolean, why: string) {
   save.best = Math.max(save.best, Math.floor(time));
   persist();
   $("overTitle").textContent = win ? "¡VICTORIA!" : "FIN DE LA PARTIDA";
-  $("overTxt").innerHTML = `${why}<br>${fmt(time)} · Nivel ${level} · ${kills} enemigos · +${runScrap} chatarra`;
+  $("overTxt").innerHTML = `${why}<br>${fmt(time)} · Nivel ${level} · ${kills} enemigos · +${runScrap} chatarra<br><span class="seed">${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}</span>`;
   $("over").classList.remove("hidden");
   $("hud").classList.add("hidden");
 }
@@ -244,7 +261,7 @@ function openChest() {
 }
 
 function togglePause() {
-  if (state === "play") { state = "pause"; scene.physicsEnabled = false; engineStop(); $("pause").classList.remove("hidden"); }
+  if (state === "play") { state = "pause"; scene.physicsEnabled = false; engineStop(); $("pauseSeed").textContent = `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`; $("pause").classList.remove("hidden"); }
   else if (state === "pause") { state = "play"; scene.physicsEnabled = true; $("pause").classList.add("hidden"); }
 }
 $("resume").onclick = togglePause;
@@ -267,7 +284,7 @@ function renderMenu() {
   $("cars").innerHTML = (Object.keys(CARS) as CarKind[]).map((k) => {
     const c = CARS[k], own = save.cars.includes(k);
     const bar = (v: number, max: number) => `<i style="width:${(v / max) * 100}%"></i>`;
-    return `<div class="carc ${save.car === k ? "sel" : ""} ${own ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><span>Carrocería</span>${bar(c.hp, 150)}<span>Velocidad</span>${bar(c.speed, 19)}<span>Embestida</span>${bar(c.ram, 4.5)}</div>${own ? "" : `<div class="price">Bloqueado · ${c.cost} tornillos</div>`}</div>`;
+    return `<div class="carc ${save.car === k ? "sel" : ""} ${own ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><span>Carrocería</span>${bar(c.hp, 220)}<span>Velocidad</span>${bar(c.speed, 19)}<span>Embestida</span>${bar(c.ram, 4.5)}</div>${own ? "" : `<div class="price">Bloqueado · ${c.cost} tornillos</div>`}</div>`;
   }).join("");
   $("shop").innerHTML = SHOP.map((s) => {
     const l = save.perm[s.k], cost = shopCost(l);
@@ -322,7 +339,7 @@ const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.IdentityReadOnl
 function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
   e.hp -= dmg;
   if (dmg >= 4) SFX.hit();
-  if (dmg >= 5) {
+  if (dmg >= 5 && !simulating) {
     const sp = toScreen(e.pos.add(new B.Vector3(0, e.def.size[1] + 0.3, 0)));
     const k = innerWidth / engine.getRenderWidth();
     if (sp.z < 1) damageNumber(sp.x * k, sp.y * k, dmg, crit);
@@ -357,15 +374,15 @@ function kill(e: Enemy) {
     dropPickup(e.pos, "cofre");
     hudBoss(null);
   } else {
-    const r = Math.random();
-    if (r < 0.012) dropPickup(e.pos, "pila");
-    else if (r < 0.016) dropPickup(e.pos, "iman");
+    const r = rng();
+    if (r < 0.035) dropPickup(e.pos, "pila");
+    else if (r < 0.041) dropPickup(e.pos, "iman");
   }
   e.dispose();
 }
 
 function spawnEnemy(kind: Kind, p: B.Vector3) {
-  enemies.push(new Enemy(kind, p, 1 + time / 100));
+  enemies.push(new Enemy(kind, p, 1 + time / 200));
 }
 
 // ---------- Update ----------
@@ -417,18 +434,20 @@ function update(dt: number) {
   if (Math.abs(c.pos.x) > HALF + 5 || Math.abs(c.pos.z) > HALF + 5 || c.pos.y < -5) hp = 0;
 
   // --- Aparición de enemigos ---
-  const maxAlive = Math.min(low ? 110 : 180, 25 + time / 2.2);
+  const maxAlive = Math.min(low ? 110 : 180, 25 + time / 3.5);
   // Aparecen sesgados hacia donde vas: manejar no es escapar gratis
   const cvel = c.body.getLinearVelocity();
   const ahead = c.pos.add(new B.Vector3(cvel.x, 0, cvel.z).scale(1.6));
-  spawnAcc += (1 + time / 20) * dt;
+  spawnAcc += (1 + time / 32) * dt;
   const normals = enemies.filter((e) => !e.def.boss).length;
-  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time)), spawnPoint(ahead, 24, 36)); }
+  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time, profile.plague)), spawnPoint(ahead, 24, 36)); }
   if ((swarmT -= dt) <= 0) {
-    swarmT = 60;
+    swarmT = profile.swarmEvery;
     banner("ENJAMBRE", 1.4);
-    for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * 22, 1, c.pos.z + Math.sin(a) * 22); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
+    const ns = Math.round(10 + time / 20); // el enjambre crece con la partida
+    for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * 22, 1, c.pos.z + Math.sin(a) * 22); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
+  if (!warned && time >= 570) { warned = true; banner("EL PERRO SE ACERCA", 3); }
   if (bossIdx < RUN_BOSSES.length && time >= RUN_BOSSES[bossIdx][0]) {
     const kind = RUN_BOSSES[bossIdx++][1];
     spawnEnemy(kind, spawnPoint(c.pos, 30, 36));
@@ -440,7 +459,7 @@ function update(dt: number) {
   // --- Enemigos ---
   const cv = c.body.getLinearVelocity();
   const carR = Math.max(c.def.size[0], c.def.size[2]) / 2;
-  let contactDps = 0;
+  let contactHit = 0;
   for (const e of enemies) {
     const ev = e.update(dt, c.pos);
     if (ev === "spit") {
@@ -456,7 +475,7 @@ function update(dt: number) {
       FX.slam(e.pos, 10);
       mark("scorch", e.pos.x, e.pos.z, 0, 7, 10);
       shake = 1.2;
-      if (B.Vector3.Distance(e.pos, c.pos) < 11) hurt(35);
+      if (B.Vector3.Distance(e.pos, c.pos) < 11) hurt(25, false, "salto perro");
       for (const o of enemies) if (o !== e && B.Vector3.Distance(o.pos, e.pos) < 10) damage(o, 999);
     }
     const dist = Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z);
@@ -476,13 +495,20 @@ function update(dt: number) {
         if (ariete) explode(e.pos, 4, dmg * 0.5);
         // Embestir algo más pesado que vos tiene costo: rebote y daño (salvo Ariete)
         if (e.def.mass > c.def.mass * st.mass * 1.8 && !ariete) {
-          hurt(e.def.dmg * 0.6);
+          if (e.touchCd <= 0) { hurt(e.def.dmg * 0.4, false, "rebote " + e.kind); e.touchCd = 0.8; }
           c.body.applyImpulse(dir.scale(-rel * 0.9 * c.def.mass).addInPlace(new B.Vector3(0, 1.5, 0)), c.pos);
         }
-      } else if (rel <= 5 && !(ariete && boosting)) contactDps += e.def.dmg;
+      } else if (rel <= 5 && !(ariete && boosting) && e.touchCd <= 0) {
+        contactHit = Math.max(contactHit, e.def.dmg * 0.4); // el golpe más fuerte, no la suma
+        dmgBy["contacto " + e.kind] = (dmgBy["contacto " + e.kind] ?? 0) + e.def.dmg * 0.6;
+        e.touchCd = 0.8;
+        // Un jefe te despide lejos: nunca quedás atrapado contra él
+        if (e.def.boss) c.body.applyImpulse(dir.scale(-14 * c.def.mass).addInPlace(new B.Vector3(0, 4 * c.def.mass, 0)), c.pos);
+      }
     }
   }
-  if (contactDps) { hurt(contactDps * dt, true); SFX.hurt(); }
+  // Invulnerabilidad de contacto: como mucho un golpe cada 0,5 s aunque te rodeen
+  if ((touchIFrame -= dt) <= 0 && contactHit) { hurt(contactHit, true, "_contacto"); SFX.hurt(); touchIFrame = 0.6; }
   for (const e of enemies.filter((x) => x.hp <= 0)) {
     enemies.splice(enemies.indexOf(e), 1);
     if (e.hp < -1e8) e.dispose(); else kill(e);
@@ -497,7 +523,7 @@ function update(dt: number) {
     s.m.position.addInPlace(s.v.scale(dt));
     s.v.y -= 3 * dt;
     let dead = (s.life -= dt) <= 0 || s.m.position.y < 0.1;
-    if (B.Vector3.Distance(s.m.position, c.pos) < carR + 0.3) { hurt(10); FX.hit(s.m.position); dead = true; }
+    if (B.Vector3.Distance(s.m.position, c.pos) < carR + 0.3) { hurt(7, false, "ácido"); FX.hit(s.m.position); dead = true; }
     if (dead) { mark("scorch", s.m.position.x, s.m.position.z, Math.random() * 6, 0.6, 5); s.m.dispose(); spits.splice(i, 1); }
   }
 
@@ -529,10 +555,10 @@ function update(dt: number) {
   }
 
   // --- Eventos del patio ---
-  if ((chestT -= dt) <= 0) { chestT = 120; dropPickup(spawnPoint(c.pos, 20, 35), "cofre"); banner("COFRE EN EL PATIO", 1.6); }
+  if ((chestT -= dt) <= 0) { chestT = profile.chestEvery; dropPickup(spawnPoint(c.pos, 20, 35), "cofre"); banner("COFRE EN EL PATIO", 1.6); }
   if ((ballT -= dt) <= 0 && !ball) {
     // Una pelota gigante cruza el patio aplastando todo
-    ballT = 80;
+    ballT = profile.ballEvery;
     const from = spawnPoint(c.pos, 40, 45);
     const m = sph(8, pbr("bigball", { color: "#f97316", rough: 0.45 }), [from.x, 4, from.z], undefined, 16);
     shadows.addShadowCaster(m);
@@ -543,7 +569,7 @@ function update(dt: number) {
   }
   if (ball) {
     for (const e of enemies) if (!e.def.boss && B.Vector3.Distance(e.pos, ball.m.position) < 4 + e.radius) damage(e, 999);
-    if (B.Vector3.Distance(c.pos, ball.m.position) < 4 + carR) hurt(20);
+    if (!ball.hit && B.Vector3.Distance(c.pos, ball.m.position) < 4 + carR) { ball.hit = true; hurt(20, false, "pelota"); }
     if ((ball.life -= dt) <= 0) { ball.agg.dispose(); ball.m.dispose(); ball = null; }
   }
 
@@ -553,8 +579,10 @@ function update(dt: number) {
 }
 
 let god = false; // solo dev
-function hurt(n: number, continuous = false) {
+const dmgBy: Record<string, number> = {}; // solo dev: de dónde viene el daño
+function hurt(n: number, continuous = false, src = "?") {
   if (god) return;
+  dmgBy[src] = (dmgBy[src] ?? 0) + n * (1 - st.armor);
   hp -= n * (1 - st.armor);
   if (!continuous) shake = Math.max(shake, 0.5);
 }
@@ -635,12 +663,42 @@ engine.runRenderLoop(() => scene.render());
 addEventListener("resize", () => engine.resize());
 
 // Solo dev: avanzar frames a mano y atajos de prueba (pestaña oculta = sin requestAnimationFrame)
+if (import.meta.env.DEV) import("./devbot").then((m) => Object.assign(window, {
+  __bot: m.bot,
+  // Adelantar el tiempo: simula la partida con paso fijo y SIN dibujar, conducida por el bot.
+  // Determinista: misma semilla (?seed=N) = mismo resultado. Devuelve un resumen.
+  __sim: (secs: number, dt = 1 / 60) => {
+    const pe = scene.getPhysicsEngine() as unknown as { _step(d: number): void };
+    const w0 = performance.now(), end = time + secs;
+    simulating = true;
+    m.resetBot();
+    while (time < end && (state === "play" || state === "level") && performance.now() - w0 < 35000) {
+      if (state === "level") {
+        // Como una persona: evolución primero; con poca vida, supervivencia; si no, armas nuevas
+        const low = hp < maxHp * 0.6, pref = (o: Offer) => o.kind === "evo" ? 3 : low && (o.id === "litio" || o.id === "lego" || o.kind === "heal") ? 2 : o.kind === "weapon" ? 1 : 0;
+        choose(offers.reduce((b, o, i) => (pref(o) > pref(offers[b]) ? i : b), 0));
+        continue;
+      }
+      car!.root.computeWorldMatrix(true);
+      for (const e of enemies) e.node.computeWorldMatrix(true);
+      Object.assign(input, m.botSteer(car!, enemies.map((e) => e.pos), obstacles()), { move: false, drift: false });
+      update(dt);
+      pe._step(dt);
+      tickFx(dt);
+    }
+    simulating = false;
+    $("levelup").classList.add("hidden");
+    const boss = enemies.find((e) => e.def.boss);
+    return `${fmt(time)} nv${level} hp${Math.round(hp)}/${maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
+  },
+}));
 if (import.meta.env.DEV) Object.assign(window, {
   __tick: (n: number) => { const g = engine.getDeltaTime; engine.getDeltaTime = () => 1000 / 60; for (let i = 0; i < n; i++) { engine.beginFrame(); scene.render(); engine.endFrame(); } engine.getDeltaTime = g; },
   __killAll: () => enemies.forEach((e) => { if (!e.def.boss) e.hp = 0; }),
   __time: (s: number) => (time = s),
   __xp: (n: number) => gainXp(n),
   __god: () => (god = true),
+  __dmg: () => { const r = JSON.stringify(dmgBy); for (const k in dmgBy) delete dmgBy[k]; return r; },
   __killBoss: () => enemies.forEach((e) => { if (e.def.boss) e.hp = 0; }),
   __info: () => ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps() }),
   __car: () => car && { p: car.pos, f: car.root.forward },
