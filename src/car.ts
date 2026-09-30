@@ -44,7 +44,9 @@ export class Car {
   def;
   private lastFs = 0;
 
-  constructor(scene: B.Scene, public kind: CarKind) {
+  private paintBase: B.Color3;
+
+  constructor(scene: B.Scene, public kind: CarKind, paint?: string, rim?: string) {
     const d = (this.def = CARS[kind]);
     const [w, h, l] = d.size;
     this.root = B.MeshBuilder.CreateBox("car", { width: w, height: h, depth: l }, scene);
@@ -52,7 +54,8 @@ export class Car {
     this.root.position.set(0, h / 2 + 0.3, 0);
     this.vis = new B.TransformNode("carVis", scene);
     this.vis.parent = this.root;
-    this.model = carModel(kind);
+    this.model = carModel(kind, paint, rim);
+    this.paintBase = this.model.paint.albedoColor.clone();
     this.model.body.parent = this.vis;
     const r = Math.max(...this.model.wheels.map((x) => x.r));
     this.model.body.position.y = r - h / 2;
@@ -66,6 +69,13 @@ export class Car {
   }
 
   get pos() { return this.root.position; }
+
+  // Desgaste: la pintura se opaca y ensucia a medida que pierde vida (0..1)
+  wear(hpFrac: number) {
+    const w = 1 - Math.max(0, hpFrac);
+    B.Color3.LerpToRef(this.paintBase, new B.Color3(0.03, 0.028, 0.025), w * 0.55, this.model.paint.albedoColor);
+    this.model.paint.roughness = 0.22 + w * 0.6;
+  }
 
   // Solo visual: ruedas que giran y doblan, carrocería que se inclina
   animate(dt: number, steer: number, fs: number, maxSpeed: number) {

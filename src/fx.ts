@@ -75,7 +75,7 @@ export function debris(pos: B.Vector3, color: string, n: number, power = 6, size
 }
 
 // ---------- Marcas en el piso (quemaduras, neumáticos) ----------
-type Mark = { m: B.InstancedMesh; life: number; max: number; s: number };
+type Mark = { m: B.InstancedMesh; life: number; s: number };
 const marks: Mark[] = [];
 const markTpl = (kind: "scorch" | "skid") => template(kind, () => {
   const d = kind === "scorch"
@@ -92,7 +92,7 @@ export function mark(kind: "scorch" | "skid", x: number, z: number, rotY: number
   m.position.set(x, 0.03 + marks.length * 0.00002, z);
   m.rotation.y = rotY;
   m.scaling.setAll(s);
-  marks.push({ m, life, max: life, s });
+  marks.push({ m, life, s });
 }
 
 export function tickFx(dt: number) {

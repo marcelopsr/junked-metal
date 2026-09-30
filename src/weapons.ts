@@ -2,7 +2,7 @@ import * as B from "@babylonjs/core";
 import type { Car } from "./car";
 import type { Enemy } from "./enemies";
 import { FX } from "./fx";
-import { box, cyl, sph, template, tor } from "./models";
+import { box, cyl, merge, sph, template, tor } from "./models";
 import { M, pbr } from "./render";
 
 // ---------- Pasivas ----------
@@ -21,7 +21,6 @@ export function passiveStats(p: Partial<Record<PassiveId, number>>, perm: { hp: 
   return {
     magnet: 4 * (1 + 0.3 * l("iman")) * (1 + 0.1 * perm.mag),
     area: 1 + 0.12 * l("resorte"),
-    projSpeed: 1 + 0.12 * l("resorte"),
     speedMul: (1 + 0.06 * l("turbo")) * (1 + 0.04 * perm.spd),
     boostRegen: 14 * (1 + 0.25 * l("turbo")),
     maxHp: 20 * l("litio") + 10 * perm.hp,
@@ -61,15 +60,16 @@ export abstract class Weapon {
   evolved = false;
   cd = 0.5;
   cdMax = 1; // para el indicador circular del HUD
+  mount?: B.Mesh; // pieza visible montada en el auto
   get cdFrac() { return Math.max(0, Math.min(1, this.cd / this.cdMax)); }
   constructor(public id: WeaponId) {}
   abstract update(c: Ctx): void;
   dispose() {}
 }
 
-const nearest = (c: Ctx, range: number, skip?: Set<Enemy>) => {
+const nearest = (pos: B.Vector3, enemies: Enemy[], range: number, skip?: Set<Enemy>) => {
   let best: Enemy | null = null, bd = range;
-  for (const e of c.enemies) { if (skip?.has(e)) continue; const d = B.Vector3.Distance(e.pos, c.car.pos); if (d < bd) { bd = d; best = e; } }
+  for (const e of enemies) { if (skip?.has(e)) continue; const d = B.Vector3.Distance(e.pos, pos); if (d < bd) { bd = d; best = e; } }
   return best;
 };
 
@@ -78,7 +78,7 @@ class Gomitas extends Weapon {
   tpl = template("gomita", () => [sph(0.45, pbr("gummy", { color: "#ff3d7f", rough: 0.15, alpha: 0.85, emissive: "#5a0020" }), [0, 0, 0], [1, 0.8, 1.2])]);
   update(c: Ctx) {
     if ((this.cd -= c.dt) <= 0) {
-      const t = nearest(c, 22);
+      const t = nearest(c.car.pos, c.enemies, 22);
       if (t) {
         this.cd = this.cdMax = (1.1 * c.st.cooldown) / (1 + 0.12 * (this.lv - 1)) / (this.evolved ? 1.5 : 1);
         const n = this.evolved ? 5 : 1 + Math.floor((this.lv - 1) / 2);
@@ -93,14 +93,14 @@ class Gomitas extends Weapon {
     }
     const dmg = (10 + 4 * this.lv) * c.st.dmg * (this.evolved ? 1.4 : 1);
     for (const s of [...this.shots]) {
-      s.m.position.addInPlace(s.dir.scale(30 * c.st.projSpeed * c.dt));
+      s.m.position.addInPlace(s.dir.scale(30 * c.st.area * c.dt));
       s.m.rotation.y += c.dt * 10;
       let dead = (s.life -= c.dt) <= 0;
       for (const e of c.enemies) if (!s.hit.has(e) && B.Vector3.Distance(s.m.position, e.pos.add(new B.Vector3(0, 0.4, 0))) < e.radius + 0.35) {
         c.damage(e, dmg, s.dir.scale(2));
         s.hit.add(e);
         if (s.bounces-- > 0) {
-          const nx = nearest({ ...c, car: { pos: e.pos } as Car }, 12, s.hit);
+          const nx = nearest(e.pos, c.enemies, 12, s.hit);
           if (nx) { s.dir = nx.pos.subtract(s.m.position); s.dir.y = 0; s.dir.normalize(); s.life = 0.8; break; }
         }
         dead = true;
@@ -205,7 +205,7 @@ class Tesla extends Weapon {
   bolts: { m: B.LinesMesh; life: number }[] = [];
   update(c: Ctx) {
     if ((this.cd -= c.dt) <= 0) {
-      const first = nearest(c, 9);
+      const first = nearest(c.car.pos, c.enemies, 9);
       if (first) {
         this.cd = this.cdMax = (this.evolved ? 0.45 : Math.max(0.5, 1.4 - 0.1 * this.lv)) * c.st.cooldown;
         const chain = this.evolved ? 10 : 2 + this.lv;
@@ -236,17 +236,31 @@ class Tesla extends Weapon {
 }
 
 class Lanza extends Weapon {
-  mesh?: B.Mesh;
-  update(c: Ctx) {
-    if (!this.mesh) {
-      this.mesh = cyl(0.14, 0.14, 1.8, M.plastic("#facc15"), [0, 0.35, 1.8], [Math.PI / 2, 0, 0], 6);
-      const tip = cyl(0, 0.14, 0.4, M.matte("#f1c27d"), [0, 1.1, 0], undefined, 6);
-      tip.parent = this.mesh;
-      this.mesh.parent = c.car.vis;
-    }
-    this.mesh.scaling.setAll(this.evolved ? 1.6 : 1 + this.lv * 0.08);
-  }
-  dispose() { this.mesh?.dispose(); }
+  update() {} // pasiva: su efecto vive en la embestida (main.ts)
+}
+
+// Pieza visible de cada arma, montada sobre el auto (también se usa como vista previa en las cartas)
+export function mountFor(id: WeaponId, car: Car): B.Mesh {
+  const [, h, l] = car.def.size;
+  const top = h * 0.5 + 0.3, rear = -l * 0.42, nose = l * 0.5;
+  const parts: Record<WeaponId, () => B.Mesh[]> = {
+    gomitas: () => [
+      box(0.36, 0.2, 0.42, M.metal("#2b2d31"), [0, top, 0.05]),
+      cyl(0.1, 0.1, 0.55, M.metal("#111"), [0, top + 0.02, 0.45], [Math.PI / 2, 0, 0], 8),
+      sph(0.3, pbr("gummy", { color: "#ff3d7f", rough: 0.15, alpha: 0.85, emissive: "#5a0020" }), [0, top + 0.2, -0.05]),
+    ],
+    clips: () => [box(0.5, 0.12, 0.12, M.plastic("#ef4444"), [0, h * 0.2, nose + 0.05]), box(0.12, 0.12, 0.22, M.metal(), [0.2, h * 0.2, nose + 0.15]), box(0.12, 0.12, 0.22, M.metal(), [-0.2, h * 0.2, nose + 0.15])],
+    chispero: () => [-1, 1].flatMap((s) => [
+      cyl(0.13, 0.13, 0.5, M.metal("#9ca3af"), [s * 0.25, h * 0.1, rear - 0.1], [Math.PI / 2, 0, 0], 8),
+      cyl(0.1, 0.1, 0.06, M.glow("#ff6a00"), [s * 0.25, h * 0.1, rear - 0.36], [Math.PI / 2, 0, 0], 8),
+    ]),
+    petardos: () => [box(0.55, 0.08, 0.35, M.metal("#374151"), [0, top - 0.05, rear + 0.25]), ...[-0.18, 0, 0.18].map((x) => cyl(0.13, 0.13, 0.45, M.plastic("#dc2626"), [x, top + 0.12, rear + 0.25], [-0.7, 0, 0], 8))],
+    tesla: () => [cyl(0.14, 0.18, 0.5, M.metal("#b87333"), [-0.35, top + 0.1, -0.35], undefined, 8), ...[0, 1, 2].map((i) => tor(0.3, 0.05, M.metal("#b87333"), [-0.35, top + 0.02 + i * 0.13, -0.35], undefined, 10)), sph(0.18, M.glow("#35d0ff"), [-0.35, top + 0.42, -0.35])],
+    lanza: () => [cyl(0.14, 0.14, 1.8, M.plastic("#facc15"), [0, h * 0.15, nose + 0.8], [Math.PI / 2, 0, 0], 6), cyl(0, 0.14, 0.4, M.matte("#f1c27d"), [0, h * 0.15, nose + 1.9], [Math.PI / 2, 0, 0], 6)],
+  };
+  const m = merge("mount_" + id, parts[id]());
+  m.parent = car.vis;
+  return m;
 }
 
 export function makeWeapon(id: WeaponId): Weapon {

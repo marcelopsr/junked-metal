@@ -3,15 +3,15 @@ import { enemyTemplate, legTemplate, LEGS } from "./models";
 
 export type Kind = "hormiga" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro";
 
-type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; scale?: number; tpl?: string };
+type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; scale?: number; color: string };
 export const DEF: Record<Kind, Def> = {
-  hormiga: { name: "Hormiga", hp: 8, speed: 7.5, dmg: 8, size: [0.9, 0.6, 1.7], mass: 0.4, xp: 1 },
-  friccion: { name: "Autito a fricción", hp: 18, speed: 11, dmg: 10, size: [0.9, 0.6, 1.6], mass: 0.7, xp: 2 },
-  robot: { name: "Robot a cuerda", hp: 40, speed: 17, dmg: 14, size: [1.2, 1.7, 1], mass: 1.3, xp: 3 },
-  escarabajo: { name: "Escarabajo", hp: 90, speed: 4.5, dmg: 18, size: [1.7, 1.1, 2.3], mass: 3, xp: 6 },
-  rey: { name: "ESCARABAJO REY", hp: 1800, speed: 6, dmg: 30, size: [6, 3.8, 8], mass: 40, xp: 60, boss: true, scale: 3.5 },
-  cortadora: { name: "CORTADORA DE CÉSPED", hp: 3500, speed: 15, dmg: 45, size: [7, 4.5, 6.4], mass: 80, xp: 120, boss: true },
-  perro: { name: "EL PERRO", hp: 7000, speed: 9, dmg: 40, size: [3.2, 8, 8], mass: 100, xp: 0, boss: true },
+  hormiga: { name: "Hormiga", hp: 8, speed: 7.5, dmg: 8, size: [0.9, 0.6, 1.7], mass: 0.4, xp: 1, color: "#2a150c" },
+  friccion: { name: "Autito a fricción", hp: 18, speed: 11, dmg: 10, size: [0.9, 0.6, 1.6], mass: 0.7, xp: 2, color: "#f97316" },
+  robot: { name: "Robot a cuerda", hp: 40, speed: 17, dmg: 14, size: [1.2, 1.7, 1], mass: 1.3, xp: 3, color: "#b91c1c" },
+  escarabajo: { name: "Escarabajo", hp: 90, speed: 4.5, dmg: 18, size: [1.7, 1.1, 2.3], mass: 3, xp: 6, color: "#2f7d4a" },
+  rey: { name: "ESCARABAJO REY", hp: 1800, speed: 6, dmg: 30, size: [6, 3.8, 8], mass: 40, xp: 60, boss: true, scale: 3.5, color: "#d4a017" },
+  cortadora: { name: "CORTADORA DE CÉSPED", hp: 3500, speed: 15, dmg: 45, size: [7, 4.5, 6.4], mass: 80, xp: 120, boss: true, color: "#dc2626" },
+  perro: { name: "EL PERRO", hp: 7000, speed: 9, dmg: 40, size: [3.2, 8, 8], mass: 100, xp: 0, boss: true, color: "#a0673a" },
 };
 
 const UP = B.Vector3.Up();

@@ -6,17 +6,17 @@ import { Car, CARS, drive } from "./car";
 import { DEF, Enemy, pickWeighted, spawnTable, type Kind } from "./enemies";
 import { clearFx, debris, FX, initFx, mark, tickFx } from "./fx";
 import { input, isTouch, padPressed, pollInput, setupTouch } from "./input";
-import { cyl, initModels, sph, template, type CarKind } from "./models";
+import { cyl, initModels, PAINTS, RIMS, sph, template, type CarKind } from "./models";
 import { M, pbr, setQuality, setupRender, shadows, type Quality } from "./render";
-import { evoOffer, levelOffers, makeWeapon, passiveStats, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
-import { buildWorld, HALF, spawnPoint } from "./world";
+import { evoOffer, levelOffers, makeWeapon, mountFor, passiveStats, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
+import { buildWorld, HALF, hitBreakables, setWind, spawnPoint } from "./world";
 
 const $ = (id: string) => document.getElementById(id)!;
 const RUN_BOSSES: [number, Kind][] = [[180, "rey"], [360, "cortadora"], [540, "perro"]];
 
 // ---------- Guardado ----------
-type Save = { scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number }; cars: CarKind[]; car: CarKind; quality: Quality };
-const DEFAULT: Save = { scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0 }, cars: ["buggy"], car: "buggy", quality: "auto" };
+type Save = { scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number }; cars: CarKind[]; car: CarKind; quality: Quality; paint: string; rim: string };
+const DEFAULT: Save = { scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0 }, cars: ["buggy"], car: "buggy", quality: "auto", paint: "", rim: "" };
 const save: Save = (() => {
   try { const s = JSON.parse(localStorage.getItem("rcfight2") ?? "{}"); return { ...DEFAULT, ...s, perm: { ...DEFAULT.perm, ...s.perm } }; }
   catch { return structuredClone(DEFAULT); }
@@ -72,8 +72,10 @@ let offerSel = 0;
 
 const xpNeed = (l: number) => Math.floor(5 + l * 4 + l * l * 0.35);
 
-let hitStop = 0, smokeT = 0, skidT = 0;
-const CHUNK: Partial<Record<Kind, string>> = { hormiga: "#2a150c", friccion: "#f97316", robot: "#b91c1c", escarabajo: "#2f7d4a", rey: "#d4a017", cortadora: "#dc2626", perro: "#a0673a" };
+let hitStop = 0, smokeT = 0, skidT = 0, lastHpFrac = 1, smashCd = 0;
+
+// Macetas rotas sueltan tuercas y a veces una pila
+const smashed = (pots: B.Vector3[]) => { for (const p of pots) { dropGems(p, 8); if (Math.random() < 0.35) dropPickup(p, "pila"); shake = Math.max(shake, 0.5); } };
 
 // ---------- Plantillas de recolectables ----------
 const gemTpl = (v: 1 | 5 | 20) => template("gem" + v, () => [
@@ -112,6 +114,23 @@ function recompute() {
   hp += Math.max(0, newMax - maxHp);
   maxHp = newMax;
   car!.body.setMassProperties({ mass: car!.def.mass * st.mass });
+  // Cada arma se ve montada en el auto y crece con el nivel
+  for (const w of weapons) {
+    if (!w.mount) { w.mount = mountFor(w.id, car!); shadows.addShadowCaster(w.mount); }
+    w.mount.scaling.setAll(1 + (w.lv - 1) * 0.06 + (w.evolved ? 0.25 : 0));
+  }
+}
+
+// Vista previa en las cartas: la pieza aparece montada en el auto mientras la mirás
+let preview: B.Mesh | null = null;
+function previewOffer(i: number) {
+  preview?.dispose();
+  preview = null;
+  const o = offers[i];
+  if (!car || !o || (o.kind !== "weapon" && o.kind !== "evo")) return;
+  const owned = weapons.find((w) => w.id === o.id);
+  if (!owned) preview = mountFor(o.id as WeaponId, car);
+  else if (owned.mount) owned.mount.scaling.setAll(1.25 + (o.kind === "evo" ? 0.2 : 0));
 }
 
 function clearRun() {
@@ -120,6 +139,8 @@ function clearRun() {
   for (const g of gems) g.m.dispose();
   for (const p of pickups) p.m.dispose();
   if (ball) { ball.agg.dispose(); ball.m.dispose(); ball = null; }
+  preview?.dispose();
+  preview = null;
   enemies = []; weapons = []; gems = []; pickups = [];
   clearFx();
   car?.dispose();
@@ -128,7 +149,8 @@ function clearRun() {
 
 function startRun() {
   clearRun();
-  car = new Car(scene, save.car);
+  car = new Car(scene, save.car, save.paint || undefined, save.rim || undefined);
+  lastHpFrac = 1;
   passives = {};
   weapons = [makeWeapon("gomitas")];
   maxHp = car.def.hp;
@@ -180,11 +202,13 @@ function openOffers(list: Offer[], title: string) {
   scene.physicsEnabled = false;
   offers = list;
   offerSel = 0;
-  showOffers(title, list, 0, choose);
+  showOffers(title, list, 0, choose, previewOffer);
 }
 
 function choose(i: number) {
   if (state !== "level") return;
+  preview?.dispose();
+  preview = null;
   const o = offers[i];
   if (o.kind === "weapon") {
     const w = weapons.find((x) => x.id === o.id);
@@ -211,6 +235,7 @@ addEventListener("keydown", (e) => {
 const SHOP: { k: keyof Save["perm"]; name: string }[] = [
   { k: "hp", name: "+10 vida" }, { k: "dmg", name: "+10% daño" }, { k: "spd", name: "+4% velocidad" }, { k: "mag", name: "+10% imán" },
 ];
+const shopCost = (l: number) => 15 * (l + 1);
 function renderMenu() {
   $("bank").textContent = `· ${save.scrap} tornillos · récord ${fmt(save.best)}`;
   $("cars").innerHTML = (Object.keys(CARS) as CarKind[]).map((k) => {
@@ -219,10 +244,13 @@ function renderMenu() {
     return `<div class="carc ${save.car === k ? "sel" : ""} ${own ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><span>Carrocería</span>${bar(c.hp, 150)}<span>Velocidad</span>${bar(c.speed, 19)}<span>Embestida</span>${bar(c.ram, 4.5)}</div>${own ? "" : `<div class="price">Bloqueado · ${c.cost} tornillos</div>`}</div>`;
   }).join("");
   $("shop").innerHTML = SHOP.map((s) => {
-    const l = save.perm[s.k], cost = 15 * (l + 1);
+    const l = save.perm[s.k], cost = shopCost(l);
     return `<button data-k="${s.k}" ${save.scrap < cost || l >= 5 ? "disabled" : ""}>${s.name} (${l}/5) — ${l >= 5 ? "MAX" : cost}</button>`;
   }).join("");
   ($("quality") as HTMLSelectElement).value = save.quality;
+  const cur = save.paint || PAINTS[0], rim = save.rim || RIMS[0];
+  $("paint").innerHTML = `<span>Pintura</span>${PAINTS.map((c) => `<button class="sw ${c === cur ? "on" : ""}" data-paint="${c}" style="background:${c}"></button>`).join("")}`
+    + `<span>Llantas</span>${RIMS.map((c) => `<button class="sw rim ${c === rim ? "on" : ""}" data-rim="${c}" style="background:${c}"></button>`).join("")}`;
 }
 $("cars").addEventListener("click", (e) => {
   const k = ((e.target as HTMLElement).closest(".carc") as HTMLElement | null)?.dataset.k as CarKind | undefined;
@@ -239,7 +267,7 @@ $("cars").addEventListener("click", (e) => {
 $("shop").addEventListener("click", (e) => {
   const k = (e.target as HTMLElement).dataset.k as keyof Save["perm"] | undefined;
   if (!k) return;
-  const cost = 15 * (save.perm[k] + 1);
+  const cost = shopCost(save.perm[k]);
   if (save.scrap < cost || save.perm[k] >= 5) return;
   save.scrap -= cost;
   save.perm[k]++;
@@ -250,6 +278,14 @@ $("quality").addEventListener("change", (e) => {
   save.quality = (e.target as HTMLSelectElement).value as Quality;
   setQuality(save.quality);
   persist();
+});
+$("paint").addEventListener("click", (e) => {
+  const d = (e.target as HTMLElement).dataset;
+  if (d.paint) save.paint = d.paint;
+  else if (d.rim) save.rim = d.rim;
+  else return;
+  persist();
+  renderMenu();
 });
 $("play").onclick = startRun;
 $("again").onclick = toMenu;
@@ -272,6 +308,7 @@ function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
 function explode(pos: B.Vector3, r: number, dmg: number) {
   FX.explosion(pos.add(new B.Vector3(0, 0.5, 0)), r);
   mark("scorch", pos.x, pos.z, Math.random() * 6, r * 0.55, 14);
+  smashed(hitBreakables(pos, r, dmg));
   shake = Math.max(shake, 0.25);
   for (const e of enemies) {
     const d = B.Vector3.Distance(e.pos, pos);
@@ -282,7 +319,7 @@ function explode(pos: B.Vector3, r: number, dmg: number) {
 function kill(e: Enemy) {
   kills++;
   FX.death(e.pos.add(new B.Vector3(0, 0.5, 0)), e.def.boss);
-  debris(e.pos, CHUNK[e.kind] ?? "#333333", e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
+  debris(e.pos, e.def.color, e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
   if (e.def.xp) dropGems(e.pos, e.def.xp);
   if (e.def.boss) {
     shake = 1.5;
@@ -344,6 +381,9 @@ function update(dt: number) {
     if (hp < maxHp * 0.25 && Math.random() < 0.3) FX.sparks(p);
   }
   if ((dustT -= dt) <= 0 && r.grounded && (Math.abs(r.ls) > 3 || boosting)) { dustT = 0.05; FX.dust(c.pos.add(c.root.forward.scale(-1.1))); }
+  // Embestir objetos del patio los rompe
+  const spd = Math.abs(r.fs);
+  if (spd > 9 && (smashCd -= dt) <= 0) { const pots = hitBreakables(c.pos, 1.3, spd * c.def.ram * 1.5); if (pots.length) smashCd = 0.3; smashed(pots); }
   if (Math.abs(c.pos.x) > HALF + 5 || Math.abs(c.pos.z) > HALF + 5 || c.pos.y < -5) hp = 0;
 
   // --- Aparición de enemigos ---
@@ -473,6 +513,11 @@ function updateHud(dt: number) {
   hudArrows(out);
   if ((hudT -= dt) > 0) return;
   hudT = 0.05;
+  // Daño visible: pintura gastada y piezas que saltan al cruzar 50% y 25%
+  const frac = Math.max(0, hp / maxHp);
+  car!.wear(frac);
+  for (const t of [0.5, 0.25]) if (lastHpFrac > t && frac <= t) { debris(car!.pos, save.paint || "#d62828", 8, 7, 0.8); FX.sparks(car!.pos); shake = Math.max(shake, 0.6); }
+  lastHpFrac = frac;
   hudUpdate({ hp, maxHp, boost, xp, need: xpNeed(level), level, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh });
 }
 
@@ -500,16 +545,20 @@ scene.onBeforeRenderObservable.add(() => {
   // Cámara 3/4 elevada. Con teclado sigue el rumbo del auto; con stick queda fija
   // (si rotara, la dirección del stick cambiaría mientras girás).
   const k = 1 - Math.exp(-5 * dt);
+  setWind(performance.now() / 1000, car?.pos ?? null);
   if (car) {
     if (!input.move && state === "play") {
       const f = car.root.forward;
       const target = Math.atan2(f.x, f.z);
       camYaw += Math.atan2(Math.sin(target - camYaw), Math.cos(target - camYaw)) * (1 - Math.exp(-2 * dt));
     }
-    const back = new B.Vector3(Math.sin(camYaw), 0, Math.cos(camYaw));
-    const want = car.pos.subtract(back.scale(15)).addInPlace(new B.Vector3(0, 13, 0));
-    cam.position = B.Vector3.Lerp(cam.position, want, k);
-    B.Vector3.LerpToRef(camTarget, car.pos.add(back.scale(3)), k * 1.5, camTarget);
+    // Al elegir mejoras la cámara se acerca y gira a 3/4 frontal para ver la pieza montada
+    const close = state === "level";
+    const yaw = close ? camYaw + 2.5 : camYaw;
+    const back = new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+    const want = car.pos.subtract(back.scale(close ? 5.5 : 15)).addInPlace(new B.Vector3(0, close ? 3.2 : 13, 0));
+    cam.position = B.Vector3.Lerp(cam.position, want, close ? 1 - Math.exp(-8 * dt) : k);
+    B.Vector3.LerpToRef(camTarget, close ? car.pos.add(new B.Vector3(0, -1.4, 0)) : car.pos.add(back.scale(3)), close ? 0.2 : k * 1.5, camTarget);
   } else {
     const t = performance.now() / 9000;
     cam.position.set(Math.sin(t) * 45, 22, Math.cos(t) * 45);

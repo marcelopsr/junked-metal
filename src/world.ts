@@ -1,5 +1,6 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph, template, tor, tube } from "./models";
+import { debris } from "./fx";
 import { canvasTex, M, pbr, shadows, TEX } from "./render";
 
 // Patio de 200x200. Un auto RC mide ~2 unidades: una maceta es un edificio.
@@ -18,6 +19,28 @@ const dyn = (m: B.Mesh, shape: B.PhysicsShapeType, mass: number) => {
   m.receiveShadows = true;
   return m;
 };
+
+// ---------- Objetos rompibles ----------
+export type Breakable = { m: B.Mesh; hp: number; r: number; color: string; extras: B.Mesh[]; pot: boolean };
+export const breakables: Breakable[] = [];
+const breakable = (m: B.Mesh, hp: number, r: number, color: string, pot = false, extras: B.Mesh[] = []) => (breakables.push({ m, hp, r, color, extras, pot }), m);
+
+// Daño en área a objetos del patio. Devuelve dónde se rompieron macetas (sueltan premios).
+export function hitBreakables(pos: B.Vector3, r: number, dmg: number) {
+  const pots: B.Vector3[] = [];
+  for (let i = breakables.length - 1; i >= 0; i--) {
+    const b = breakables[i];
+    if (B.Vector3.Distance(b.m.getAbsolutePosition(), pos) > r + b.r || (b.hp -= dmg) > 0) continue;
+    const p = b.m.getAbsolutePosition().clone();
+    debris(p, b.color, b.pot ? 16 : 6, b.pot ? 9 : 6, b.pot ? 1.6 : 1);
+    if (b.pot) { debris(p, "#4a3420", 10, 6, 1.2); debris(p.add(new B.Vector3(0, 4, 0)), "#3f8f2f", 8, 5, 1.4); pots.push(p); }
+    b.m.physicsBody?.dispose();
+    b.m.dispose();
+    for (const x of b.extras) x.dispose();
+    breakables.splice(i, 1);
+  }
+  return pots;
+}
 
 // Zonas sin pasto (para no plantar matas encima)
 const bare: { x: number; z: number; r: number }[] = [];
@@ -97,13 +120,18 @@ export function buildWorld(s: B.Scene, low: boolean) {
       cyl(4.6 * sc, 4.6 * sc, 0.2 * sc, M.matte("#4a3420"), [0, 4.1 * sc, 0], undefined, 16),
     ]), B.PhysicsShapeType.CYLINDER);
     pot.position.set(x, 0, z);
+    const extras: B.Mesh[] = [];
+    breakable(pot, 120 * sc, 2.6 * sc, "#c2410c", true, extras);
     for (let k = 0; k < 7; k++) {
       const a = (k / 7) * Math.PI * 2;
       const leaf = sph(3 * sc, M.matte(k % 2 ? "#3f8f2f" : "#4ea83a"), [x + Math.cos(a) * 1.3 * sc, 5.5 * sc, z + Math.sin(a) * 1.3 * sc], [0.4, 0.2, 1.4]);
       leaf.rotation.set(0.6, -a + Math.PI / 2, 0);
       shadows.addShadowCaster(leaf);
+      extras.push(leaf);
     }
-    shadows.addShadowCaster(sph(1.2 * sc, M.plastic(["#f43f5e", "#facc15", "#a855f7"][Math.floor(Math.random() * 3)]), [x, 7 * sc, z]));
+    const flower = sph(1.2 * sc, M.plastic(["#f43f5e", "#facc15", "#a855f7"][Math.floor(Math.random() * 3)]), [x, 7 * sc, z]);
+    shadows.addShadowCaster(flower);
+    extras.push(flower);
     bare.push({ x, z, r: 3 * sc });
   }
 
@@ -160,8 +188,21 @@ export function buildWorld(s: B.Scene, low: boolean) {
 
   // Objetos empujables: bloques, ladrillos, pelota
   const colors = ["#ef4444", "#3b82f6", "#facc15", "#22c55e", "#a855f7"];
-  for (let i = 0; i < 14; i++) dyn(box(2, 2, 2, M.plastic(colors[i % 5]), [-8 + (i % 5) * 2.2, 1 + Math.floor(i / 5) * 2.05, -35]), B.PhysicsShapeType.BOX, 0.6);
-  for (let i = 0; i < 8; i++) dyn(box(3, 1.4, 1.5, M.matte("#b45309"), [18 + (i % 4) * 3.1, 0.7 + Math.floor(i / 4) * 1.45, 20]), B.PhysicsShapeType.BOX, 1.2);
+  for (let i = 0; i < 14; i++) breakable(dyn(box(2, 2, 2, M.plastic(colors[i % 5]), [-8 + (i % 5) * 2.2, 1 + Math.floor(i / 5) * 2.05, -35]), B.PhysicsShapeType.BOX, 0.6), 40, 1.2, colors[i % 5]);
+  for (let i = 0; i < 8; i++) breakable(dyn(box(3, 1.4, 1.5, M.matte("#b45309"), [18 + (i % 4) * 3.1, 0.7 + Math.floor(i / 4) * 1.45, 20]), B.PhysicsShapeType.BOX, 1.2), 60, 1.5, "#b45309");
+
+  // Charcos: espejos de agua en el pasto
+  for (let i = 0; i < 7; i++) {
+    const x = (Math.random() - 0.5) * 170, z = (Math.random() - 0.5) * 170;
+    if (isBare(x, z) || Math.hypot(x, z) < 12) continue;
+    const pd = B.MeshBuilder.CreateDisc("puddle", { radius: 1, tessellation: 20 }, scene);
+    pd.rotation.x = Math.PI / 2;
+    pd.scaling.set(3 + Math.random() * 4, 2 + Math.random() * 3, 1);
+    pd.position.set(x, 0.035, z);
+    pd.material = pbr("puddle", { color: "#3b4a52", rough: 0.03, metal: 0.2, alpha: 0.85 });
+    pd.receiveShadows = true;
+    bare.push({ x, z, r: pd.scaling.x });
+  }
   const ballTex = canvasTex(256, (c, s) => { c.fillStyle = "#fafafa"; c.fillRect(0, 0, s, s); c.fillStyle = "#111"; for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) { c.beginPath(); c.arc(i * 32 + 16, j * 64 + 32, 12, 0, 7); c.fill(); } });
   dyn(sph(5, pbr("ball", { color: "#ffffff", rough: 0.4, tex: ballTex }), [10, 2.5, 10], undefined, 16), B.PhysicsShapeType.SPHERE, 2);
 
@@ -212,12 +253,42 @@ function grassTuft() {
   B.VertexData.ComputeNormals(pos, ind, vd.normals);
   vd.applyToMesh(m);
   const mat = pbr("tuftMat", { color: "#ffffff", rough: 0.9 });
+  new WindPlugin(mat);
   mat.backFaceCulling = false;
   mat.twoSidedLighting = true;
   m.material = mat;
   m.receiveShadows = true;
   m.isPickable = false;
   return m;
+}
+
+// ---------- Viento + pasto que se aplasta al pasar el auto (shader de vértices) ----------
+let windT = 0;
+const windCar = new B.Vector3(0, -100, 0);
+export function setWind(t: number, car: B.Vector3 | null) { windT = t; if (car) windCar.copyFrom(car); }
+
+class WindPlugin extends B.MaterialPluginBase {
+  constructor(m: B.Material) { super(m, "Wind", 200, { WIND: false }); this._enable(true); }
+  getClassName() { return "WindPlugin"; }
+  prepareDefines(d: B.MaterialDefines) { d["WIND"] = true; }
+  getUniforms() {
+    return { ubo: [{ name: "windTime", size: 1, type: "float" }, { name: "windCar", size: 3, type: "vec3" }], vertex: "uniform float windTime;\nuniform vec3 windCar;" };
+  }
+  bindForSubMesh(ubo: B.UniformBuffer) { ubo.updateFloat("windTime", windT); ubo.updateVector3("windCar", windCar); }
+  getCustomCode(type: string) {
+    if (type !== "vertex") return null;
+    return {
+      CUSTOM_VERTEX_UPDATE_WORLDPOS: `
+        float gh = max(worldPos.y, 0.0);
+        float gw = sin(windTime * 1.7 + worldPos.x * 0.33 + worldPos.z * 0.21) + 0.45 * sin(windTime * 3.3 + worldPos.z * 0.9);
+        worldPos.xz += vec2(0.8, 0.5) * gw * gh * 0.16;
+        vec2 gd = worldPos.xz - windCar.xz;
+        float gp = 1.0 - smoothstep(0.7, 2.4, length(gd));
+        worldPos.xz += normalize(gd + vec2(0.0001)) * gp * gh * 0.9;
+        worldPos.y = mix(worldPos.y, worldPos.y * 0.15, gp);
+      `,
+    };
+  }
 }
 
 // Punto de aparición aleatorio en un anillo alrededor del jugador, dentro del patio

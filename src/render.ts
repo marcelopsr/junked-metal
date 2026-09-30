@@ -141,7 +141,7 @@ export const TEX = {
 // ---------- Escalado: AMD FSR 1 (open source, incluido en Babylon) + resolución dinámica ----------
 // Renderiza a menos píxeles y reescala con el filtro EASU/RCAS de FSR. Si el FPS cae,
 // sube el factor (menos resolución interna); si sobra, lo baja.
-export let fsr: B.FSR1RenderingPipeline | null = null;
+let fsr: B.FSR1RenderingPipeline | null = null;
 export const QUALITY = { ultra: 1, calidad: 1.3, equilibrado: 1.5, rendimiento: 1.8 } as const;
 export type Quality = keyof typeof QUALITY | "auto";
 let quality: Quality = "auto";

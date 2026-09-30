@@ -60,7 +60,6 @@ export function template(name: string, build: () => B.Mesh[], scale = 1) {
     t = merge(name, build());
     if (scale !== 1) { t.scaling.setAll(scale); t.bakeCurrentTransformIntoVertices(); }
     t.position.y = -500; // la fuente queda escondida; se dibujan las instancias
-    t.alwaysSelectAsActiveMesh = false;
     shadows.addShadowCaster(t);
     templates.set(name, t);
   }
@@ -78,18 +77,23 @@ export function wheel(d: number, w: number, rim: string) {
 }
 
 // ---------- Autos del jugador ----------
-export type CarModel = { body: B.Mesh; wheels: { m: B.Mesh; front: boolean; r: number }[] };
+export type CarModel = { body: B.Mesh; wheels: { m: B.Mesh; front: boolean; r: number }[]; paint: B.PBRMaterial };
 export type CarKind = "buggy" | "monster" | "formula";
 
-export function carModel(kind: CarKind): CarModel {
+// Paletas del taller
+export const PAINTS = ["#d62828", "#1d4ed8", "#16a34a", "#f59e0b", "#e5e7eb", "#18181b", "#7c3aed", "#ea580c"];
+export const RIMS = ["#ffc300", "#c0c0c0", "#18181b", "#ef4444"];
+
+export function carModel(kind: CarKind, paintHex?: string, rimHex?: string): CarModel {
   const ws: { pos: V3; d: number; w: number }[] = [];
   let parts: B.Mesh[];
   let rim: string;
+  const paint = pbr("paint" + kind + paintHex, { color: paintHex ?? { buggy: "#d62828", monster: "#1d4ed8", formula: "#16a34a" }[kind], rough: 0.22 });
   if (kind === "buggy") {
     rim = "#ffc300";
     parts = [
       box(1.05, 0.1, 2.1, M.matte("#2b2d31"), [0, 0.02, 0]),
-      extrude([[-1.05, 0.05], [1.0, 0.05], [1.12, 0.2], [0.6, 0.36], [0.1, 0.42], [-0.45, 0.52], [-1.0, 0.46], [-1.1, 0.25]], 0.95, M.plastic("#d62828"), [0, 0.05, 0]),
+      extrude([[-1.05, 0.05], [1.0, 0.05], [1.12, 0.2], [0.6, 0.36], [0.1, 0.42], [-0.45, 0.52], [-1.0, 0.46], [-1.1, 0.25]], 0.95, paint, [0, 0.05, 0]),
       sph(0.62, M.glass(), [0, 0.52, 0.12], [1, 0.55, 1.4]),
       tube([[-0.42, 0.45, -0.5], [-0.38, 0.95, -0.3], [0.38, 0.95, -0.3], [0.42, 0.45, -0.5]], 0.035, M.metal("#222")),
       tube([[-0.42, 0.45, 0.45], [-0.3, 0.8, 0.1], [0.3, 0.8, 0.1], [0.42, 0.45, 0.45]], 0.035, M.metal("#222")),
@@ -106,7 +110,7 @@ export function carModel(kind: CarKind): CarModel {
     rim = "#c0c0c0";
     parts = [
       box(1.0, 0.14, 1.9, M.matte("#2b2d31"), [0, 0.35, 0]),
-      extrude([[-1.0, 0], [1.05, 0], [1.1, 0.3], [0.55, 0.35], [0.3, 0.75], [-0.6, 0.75], [-0.8, 0.4], [-1.05, 0.35]], 1.15, M.plastic("#1d4ed8"), [0, 0.45, 0]),
+      extrude([[-1.0, 0], [1.05, 0], [1.1, 0.3], [0.55, 0.35], [0.3, 0.75], [-0.6, 0.75], [-0.8, 0.4], [-1.05, 0.35]], 1.15, paint, [0, 0.45, 0]),
       box(1.0, 0.3, 0.05, M.glass(), [0, 0.95, 0.42], [-0.5, 0, 0]),
       box(1.3, 0.1, 0.3, M.metal(), [0, 0.5, 1.12]),
       box(1.3, 0.1, 0.3, M.metal(), [0, 0.5, -1.12]),
@@ -118,9 +122,9 @@ export function carModel(kind: CarKind): CarModel {
   } else {
     rim = "#e5e7eb";
     parts = [
-      extrude([[-1.25, 0], [1.3, 0], [1.4, 0.08], [0.8, 0.18], [0.2, 0.25], [-0.2, 0.42], [-0.8, 0.38], [-1.2, 0.2]], 0.7, M.plastic("#16a34a"), [0, 0.0, 0]),
+      extrude([[-1.25, 0], [1.3, 0], [1.4, 0.08], [0.8, 0.18], [0.2, 0.25], [-0.2, 0.42], [-0.8, 0.38], [-1.2, 0.2]], 0.7, paint, [0, 0.0, 0]),
       box(1.4, 0.04, 0.3, M.plastic("#111"), [0, 0.02, 1.35]),
-      box(1.2, 0.05, 0.3, M.plastic("#16a34a"), [0, 0.62, -1.15]),
+      box(1.2, 0.05, 0.3, paint, [0, 0.62, -1.15]),
       box(0.05, 0.3, 0.3, M.plastic("#111"), [0.55, 0.47, -1.15]),
       box(0.05, 0.3, 0.3, M.plastic("#111"), [-0.55, 0.47, -1.15]),
       sph(0.34, M.plastic("#fbbf24"), [0, 0.4, -0.05]),
@@ -131,6 +135,7 @@ export function carModel(kind: CarKind): CarModel {
   }
   // Antena, siempre: es un auto RC
   parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#ff4d6d"), [0.38, 1.6, -0.7]));
+  if (rimHex) rim = rimHex;
   const body = merge("carBody", parts);
   const wheels = ws.map((w) => {
     const m = wheel(w.d, w.w, rim);
@@ -138,7 +143,7 @@ export function carModel(kind: CarKind): CarModel {
     m.parent = body;
     return { m, front: w.pos[2] > 0, r: w.d / 2 };
   });
-  return { body, wheels };
+  return { body, wheels, paint };
 }
 
 // ---------- Enemigos ----------

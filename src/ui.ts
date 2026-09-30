@@ -128,9 +128,11 @@ const rarity = (o: Offer) => (o.kind === "evo" ? "evo" : o.lv === 5 ? "epica" : 
 const kindLabel = (o: Offer) => (o.kind === "evo" ? "Evolución" : o.kind === "heal" ? "Reparación" : o.lv === 1 ? (o.kind === "weapon" ? "Arma nueva" : "Pieza nueva") : `${o.kind === "weapon" ? "Arma" : "Pieza"} · nivel ${o.lv}`);
 
 let pickCb: ((i: number) => void) | null = null;
+let hoverCb: ((i: number) => void) | null = null;
 let busy = false;
-export function showOffers(title: string, offers: Offer[], sel: number, onPick: (i: number) => void) {
+export function showOffers(title: string, offers: Offer[], sel: number, onPick: (i: number) => void, onHover?: (i: number) => void) {
   pickCb = onPick;
+  hoverCb = onHover ?? null;
   busy = false;
   bannerT = 0;
   $("banner").classList.add("hidden");
@@ -144,9 +146,11 @@ export function showOffers(title: string, offers: Offer[], sel: number, onPick: 
       ${o.lv ? `<span class="pips">${Array.from({ length: 5 }, (_, k) => `<i class="${k < o.lv! ? "on" : ""}"></i>`).join("")}</span>` : ""}
     </div>`).join("");
   $("levelup").classList.remove("hidden");
+  hoverCb?.(sel);
 }
 export function selectOffer(sel: number) {
   $("offers").querySelectorAll(".offer").forEach((c, i) => c.classList.toggle("sel", i === sel));
+  hoverCb?.(sel);
 }
 // La elegida "vuela" hacia el auto; el resto se desvanece. Después se aplica.
 export function pickOffer(i: number) {
@@ -156,6 +160,10 @@ export function pickOffer(i: number) {
   const cb = pickCb;
   setTimeout(() => { $("levelup").classList.add("hidden"); cb(i); }, 380);
 }
+$("offers").addEventListener("mouseover", (e) => {
+  const c = (e.target as HTMLElement).closest(".offer") as HTMLElement | null;
+  if (c && !busy) selectOffer(+c.dataset.i!);
+});
 $("offers").addEventListener("click", (e) => {
   const c = (e.target as HTMLElement).closest(".offer") as HTMLElement | null;
   if (c) pickOffer(+c.dataset.i!);
