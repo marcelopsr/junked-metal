@@ -8,3 +8,4 @@ graphify-out/.graphify_*
 graphify-out/
 .claude/
 CLAUDE.md
+.gitattributes
