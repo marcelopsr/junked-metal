@@ -193,6 +193,9 @@ function setupPixels(cam: B.Camera, low: boolean) {
   applyScale();
 }
 
+/** Suavizado del escalado: sin él (pixelated) los píxeles internos se ven como una grilla irregular. */
+export function setSmooth(on: boolean) { scene.getEngine().getRenderingCanvas()!.style.imageRendering = on ? "auto" : "pixelated"; }
+
 export function setQuality(q: Quality) {
   target = QUALITY[q === "auto" ? (lowQ ? "equilibrado" : "calidad") : q];
   applyScale();

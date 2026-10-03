@@ -156,7 +156,6 @@
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 1 0 0 0 0 .4 0 0 0 1.6 -.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
 
 #hud::after { content: none; } /* sin CRT de pantalla completa: molestaba */
-#hud::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, #0000 0 2px, #0006 2px 3px); animation: h-flick 7s steps(1) infinite; }
 
 @keyframes h-blink { 50% { opacity: .25; } }
 @keyframes h-pulse { 50% { opacity: .25; } }
