@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 1.05, desat: 1.3, ca: 0.01, pal: 0.2, outline: 0.55, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.8 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 1.3, ca: 0.01, pal: 0.2, outline: 0.3, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.8 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -47,7 +47,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   scene.imageProcessingConfiguration.toneMappingEnabled = true;
   scene.imageProcessingConfiguration.toneMappingType = B.ImageProcessingConfiguration.TONEMAPPING_ACES;
   scene.imageProcessingConfiguration.exposure = 1.1;
-  scene.imageProcessingConfiguration.contrast = 1.25;
+  scene.imageProcessingConfiguration.contrast = 1.05;
 
   // Cielo: esfera con gradiente, capturada una vez en una sonda de reflejos
   const sky = B.MeshBuilder.CreateSphere("sky", { diameter: 1200, segments: 16, sideOrientation: B.Mesh.BACKSIDE }, scene);
@@ -283,18 +283,18 @@ const noise = (c: CanvasRenderingContext2D, s: number, base: string, cols: strin
 
 export const TEX = {
   grass: () => canvasTex(512, (c, s) => {
-    noise(c, s, "#5c8a32", ["#50822c", "#659636", "#4a7a28", "#6b9c3c"], 2500, 5);
+    noise(c, s, "#6fb33a", ["#66aa34", "#7bc044", "#5fa22f", "#84c94c"], 2500, 5);
     // Parches de pasto seco y tierra pelada: el patio deja de ser un solo verde
     for (let i = 0; i < 24; i++) {
       const x = rnd() * s, y = rnd() * s, r = 20 + rnd() * 70, dry = rnd() < 0.6;
       // Se dibuja también corrido ±s: el parche que cruza el borde reaparece del otro lado y las baldosas no se notan
       for (const dx of [-s, 0, s]) for (const dy of [-s, 0, s]) {
         const g = c.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r);
-        g.addColorStop(0, dry ? "rgba(140,128,64,.5)" : "rgba(92,68,44,.5)"); g.addColorStop(1, "rgba(0,0,0,0)");
+        g.addColorStop(0, dry ? "rgba(196,184,96,.45)" : "rgba(150,112,70,.4)"); g.addColorStop(1, "rgba(0,0,0,0)");
         c.fillStyle = g; c.fillRect(x + dx - r, y + dy - r, r * 2, r * 2);
       }
     }
-    for (let i = 0; i < 300; i++) { c.strokeStyle = rnd() < 0.5 ? "#86b852" : "#3d6620"; c.globalAlpha = 0.3; c.beginPath(); const x = rnd() * s, y = rnd() * s; c.moveTo(x, y); c.lineTo(x + (rnd() - 0.5) * 4, y - 4 - rnd() * 6); c.stroke(); }
+    for (let i = 0; i < 300; i++) { c.strokeStyle = rnd() < 0.5 ? "#a0d860" : "#4f8a28"; c.globalAlpha = 0.3; c.beginPath(); const x = rnd() * s, y = rnd() * s; c.moveTo(x, y); c.lineTo(x + (rnd() - 0.5) * 4, y - 4 - rnd() * 6); c.stroke(); }
     c.globalAlpha = 1;
   }, 14),
   dirt: () => canvasTex(512, (c, s) => noise(c, s, "#7a5a3a", ["#5e4329", "#8f6b45", "#a07a52", "#4a3420"], 14000, 4), 8),

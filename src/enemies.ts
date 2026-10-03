@@ -8,17 +8,17 @@ export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; scale?: number; color: string };
 export const DEF: Record<Kind, Def> = {
-  hormiga: { name: "Hormiga", hp: 8, speed: 8, dmg: 6, size: [0.9, 0.6, 1.7], mass: 0.4, xp: 1, color: "#2a150c" },
-  escupidora: { name: "Hormiga escupidora", hp: 22, speed: 7, dmg: 8, size: [1.1, 0.8, 2], mass: 0.7, xp: 3, color: "#7a1f0f" },
+  hormiga: { name: "Hormiga", hp: 8, speed: 8, dmg: 6, size: [0.9, 0.6, 1.7], mass: 0.4, xp: 1, color: "#a0522d" },
+  escupidora: { name: "Hormiga escupidora", hp: 22, speed: 7, dmg: 8, size: [1.1, 0.8, 2], mass: 0.7, xp: 3, color: "#d2381c" },
   friccion: { name: "Autito a fricción", hp: 18, speed: 12.5, dmg: 7, size: [0.9, 0.6, 1.6], mass: 0.7, xp: 2, color: "#f97316" },
-  robot: { name: "Robot a cuerda", hp: 40, speed: 18, dmg: 10, size: [1.2, 1.7, 1], mass: 1.3, xp: 3, color: "#b91c1c" },
-  polilla: { name: "Polilla", hp: 12, speed: 11, dmg: 5, size: [1.4, 0.5, 1.1], mass: 0.3, xp: 2, color: "#8a7a5a" },
+  robot: { name: "Robot a cuerda", hp: 40, speed: 18, dmg: 10, size: [1.2, 1.7, 1], mass: 1.3, xp: 3, color: "#ef4444" },
+  polilla: { name: "Polilla", hp: 12, speed: 11, dmg: 5, size: [1.4, 0.5, 1.1], mass: 0.3, xp: 2, color: "#d8c690" },
   escarabajo: { name: "Escarabajo", hp: 90, speed: 4.5, dmg: 12, size: [1.7, 1.1, 2.3], mass: 3, xp: 6, color: "#2f7d4a" },
   rey: { name: "ESCARABAJO REY", hp: 1800, speed: 6, dmg: 30, size: [6, 3.8, 8], mass: 40, xp: 60, boss: true, scale: 3.5, color: "#d4a017" },
   cortadora: { name: "CORTADORA DE CÉSPED", hp: 3500, speed: 15, dmg: 45, size: [7, 4.5, 6.4], mass: 80, xp: 120, boss: true, color: "#dc2626" },
-  tarantula: { name: "TARÁNTULA", hp: 2600, speed: 7, dmg: 35, size: [6, 2.6, 6.5], mass: 50, xp: 100, boss: true, scale: 3, color: "#3a2a20" },
+  tarantula: { name: "TARÁNTULA", hp: 2600, speed: 7, dmg: 35, size: [6, 2.6, 6.5], mass: 50, xp: 100, boss: true, scale: 3, color: "#7a55a8" },
   perro: { name: "EL PERRO", hp: 8000, speed: 9, dmg: 40, size: [3.2, 8, 8], mass: 100, xp: 0, boss: true, color: "#a0673a" },
-  aspiradora: { name: "LA ASPIRADORA ROBOT", hp: 7500, speed: 7, dmg: 35, size: [6.4, 1.6, 6.4], mass: 90, xp: 0, boss: true, color: "#3a3f46" },
+  aspiradora: { name: "LA ASPIRADORA ROBOT", hp: 7500, speed: 7, dmg: 35, size: [6.4, 1.6, 6.4], mass: 90, xp: 0, boss: true, color: "#7a8fa6" },
   cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", hp: 7000, speed: 8, dmg: 40, size: [3, 2.4, 9], mass: 80, xp: 0, boss: true, color: "#e0a030" },
 };
 

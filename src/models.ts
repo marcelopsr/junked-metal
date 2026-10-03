@@ -361,7 +361,7 @@ export function pilotParts(id: string): B.Mesh[] {
 export function enemyTemplate(kind: string, scale = 1): B.Mesh {
   return template(kind, () => {
     if (kind === "hormiga") {
-      const m = M.plastic("#2a150c");
+      const m = M.plastic("#a0522d");
       return [
         sph(0.75, m, [0, 0.3, -0.55], [1, 0.8, 1.25]),
         sph(0.42, m, [0, 0.3, 0]),
@@ -373,7 +373,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
       ];
     }
     if (kind === "escupidora") {
-      const m = M.plastic("#5a160a");
+      const m = M.plastic("#d2381c");
       return [
         sph(1.0, pbr("acidSac", { color: "#9acd32", rough: 0.2, emissive: "#2a3a00", alpha: 0.9 }), [0, 0.45, -0.7], [1, 0.85, 1.2]),
         sph(0.45, m, [0, 0.35, 0]),
@@ -408,7 +408,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
       ];
     }
     if (kind === "robot") {
-      const tin = M.metal("#b91c1c");
+      const tin = M.metal("#ef4444");
       return [
         box(0.9, 0.8, 0.7, tin, [0, 0.55, 0]),
         box(0.6, 0.45, 0.5, M.metal(), [0, 1.2, 0]),
@@ -428,7 +428,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
       return [
         cyl(5.6, 6, 1.2, M.metal("#9ca3af"), [0, 0.9, 0], undefined, 20),
         extrude([[-3, 0], [3, 0], [3, 0.8], [1.5, 1.6], [-2.5, 1.6], [-3, 1]], 4.6, red, [0, 1.3, 0]),
-        cyl(1.6, 1.8, 1.6, M.metal("#374151"), [0, 3.6, 0.3], undefined, 12),
+        cyl(1.6, 1.8, 1.6, M.metal("#6b7f99"), [0, 3.6, 0.3], undefined, 12),
         box(3, 0.4, 0.6, M.matte("#111"), [0, 3.1, -2.6]),
         tube([[-1.8, 2.2, -2.8], [-1.8, 5, -5], [-1.8, 7.5, -6.2], [1.8, 7.5, -6.2], [1.8, 5, -5], [1.8, 2.2, -2.8]], 0.16, M.metal("#111")),
         ...[[-2.8, 2.4], [2.8, 2.4], [-2.8, -2.4], [2.8, -2.4]].map(([x, z]) => cyl(1.8, 1.8, 0.7, M.rubber(), [x, 0.9, z], [0, 0, Math.PI / 2], 16)),
@@ -437,7 +437,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
     }
     if (kind === "polilla") {
       // Cuerpo peludo y antenas plumosas; las alas van aparte (wingTemplate) para aletear
-      const fur = M.matte("#8a7a5a");
+      const fur = M.matte("#d8c690");
       return [
         sph(0.5, fur, [0, 0, -0.35], [0.8, 0.75, 1.5]),
         sph(0.42, M.matte("#a8966c"), [0, 0.02, 0.08]),
@@ -450,13 +450,13 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
     }
     if (kind === "tarantula") {
       // Cefalotórax + abdomen peludo con banda, quelíceros y racimo de ojos; las 8 patas van aparte (LEGS)
-      const hair = M.matte("#3a2a20"), dark = M.matte("#1e1510");
+      const hair = M.matte("#7a55a8"), dark = M.matte("#6b4a3a");
       return [
         sph(1.3, hair, [0, 0.55, -0.75], [1, 0.8, 1.15], 10),
         sph(0.8, M.matte("#8a4a22"), [0, 0.86, -0.85], [1, 0.35, 1], 8),
         sph(0.95, dark, [0, 0.45, 0.3], [1, 0.6, 1.15], 10),
-        cyl(0.05, 0.16, 0.35, M.plastic("#0c0806"), [0.13, 0.25, 0.85], [2.6, 0, 0], 5),
-        cyl(0.05, 0.16, 0.35, M.plastic("#0c0806"), [-0.13, 0.25, 0.85], [2.6, 0, 0], 5),
+        cyl(0.05, 0.16, 0.35, M.plastic("#4a2a1a"), [0.13, 0.25, 0.85], [2.6, 0, 0], 5),
+        cyl(0.05, 0.16, 0.35, M.plastic("#4a2a1a"), [-0.13, 0.25, 0.85], [2.6, 0, 0], 5),
         cyl(0.07, 0.09, 0.5, dark, [0.25, 0.35, 0.8], [1.2, 0, -0.4], 5),
         cyl(0.07, 0.09, 0.5, dark, [-0.25, 0.35, 0.8], [1.2, 0, 0.4], 5),
         sph(0.14, M.glow("#ff4fd8"), [0.09, 0.66, 0.68]),
@@ -466,10 +466,10 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
     }
     if (kind === "aspiradora") {
       // Disco robot con paragolpes, torreta láser, boca de succión y cepillos laterales; sensores rojos al frente
-      const shell = M.plastic("#3a3f46"), dark = M.matte("#111");
+      const shell = M.plastic("#7a8fa6"), dark = M.matte("#111");
       return [
         cyl(6.1, 6.4, 1.1, shell, [0, 0.7, 0], undefined, 24),
-        cyl(5.2, 5.6, 0.25, M.metal("#2a2d33"), [0, 1.35, 0], undefined, 24),
+        cyl(5.2, 5.6, 0.25, M.metal("#6b7a8a"), [0, 1.35, 0], undefined, 24),
         tor(6.3, 0.32, M.rubber(), [0, 0.5, 0], undefined, 24),
         cyl(1.2, 1.35, 0.5, dark, [0, 1.7, -0.9], undefined, 12),
         cyl(1.1, 1.1, 0.1, M.plastic("#c8ccd2"), [0, 1.5, 1.1], undefined, 16),
@@ -509,8 +509,8 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
       sph(0.6, M.plastic("#111"), [0, 6.9, 6.3]),
       sph(0.35, M.glow("#ff2a1a"), [0.65, 7.8, 5.1]),
       sph(0.35, M.glow("#ff2a1a"), [-0.65, 7.8, 5.1]),
-      box(0.5, 1.8, 1, M.matte("#6b3f1d"), [1.3, 7.6, 3.4], [0, 0, -0.4]),
-      box(0.5, 1.8, 1, M.matte("#6b3f1d"), [-1.3, 7.6, 3.4], [0, 0, 0.4]),
+      box(0.5, 1.8, 1, M.matte("#c27a3a"), [1.3, 7.6, 3.4], [0, 0, -0.4]),
+      box(0.5, 1.8, 1, M.matte("#c27a3a"), [-1.3, 7.6, 3.4], [0, 0, 0.4]),
       ...[[-1, 2.4], [1, 2.4], [-1, -2.4], [1, -2.4]].map(([x, z]) => box(1, 4, 1, fur, [x, 2, z])),
       ...[[-1, 2.6], [1, 2.6], [-1, -2.2], [1, -2.2]].map(([x, z]) => box(1.2, 0.5, 1.5, light, [x, 0.25, z])),
       box(0.5, 0.5, 2.8, fur, [0, 6.8, -4.2], [-0.6, 0, 0]),
@@ -523,7 +523,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
 // Pata del lado derecho: cadera en el origen, fémur hacia arriba y afuera, tibia hasta el piso.
 // yaw (opcional): abre cada pata hacia adelante/atrás (lado derecho; el izquierdo se espeja)
 export const LEGS: Record<string, { hips: [number, number, number][]; len: number; r: number; color: string; scale: number; yaw?: number[] }> = {
-  hormiga: { hips: [[0.16, 0.3, -0.18], [0.16, 0.3, 0], [0.16, 0.3, 0.18]], len: 0.8, r: 0.035, color: "#2a150c", scale: 1 },
+  hormiga: { hips: [[0.16, 0.3, -0.18], [0.16, 0.3, 0], [0.16, 0.3, 0.18]], len: 0.8, r: 0.035, color: "#a0522d", scale: 1 },
   escupidora: { hips: [[0.18, 0.34, -0.2], [0.18, 0.34, 0], [0.18, 0.34, 0.2]], len: 0.9, r: 0.04, color: "#5a160a", scale: 1 },
   escarabajo: { hips: [[0.5, 0.38, -0.5], [0.5, 0.38, 0], [0.5, 0.38, 0.5]], len: 1.0, r: 0.06, color: "#111111", scale: 1 },
   rey: { hips: [[0.5, 0.38, -0.5], [0.5, 0.38, 0], [0.5, 0.38, 0.5]], len: 1.0, r: 0.06, color: "#111111", scale: 3.5 },
