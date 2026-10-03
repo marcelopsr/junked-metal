@@ -26,7 +26,7 @@ type Save = {
   scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number }; cars: CarKind[]; car: CarKind;
   pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; quality: Quality; paint: string; rim: string; zoom: number;
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
-  bloom: boolean; outline: boolean; retro: number; shake: boolean;
+  bloom: boolean; outline: boolean; retro: number; clean: boolean; shake: boolean;
   keys: Partial<Record<Action, string>>; pad: { dead: number; sens: number }; rumble: boolean; touch: number;
   hud: number; calm: boolean; dmgNums: boolean;
   decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
@@ -39,7 +39,7 @@ const DEFAULT: Save = {
   intro: false,
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, quality: "auto", paint: "", rim: "", zoom: 1.35,
-  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, bloom: true, outline: true, retro: 1, shake: true,
+  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, bloom: true, outline: true, retro: 1, clean: true, shake: true,
   keys: {}, pad: { dead: 0.15, sens: 1 }, rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
@@ -107,7 +107,7 @@ function importSave() {
 // ---------- Ajustes ----------
 type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void };
 let api: Api;
-let L0 = { grain: 0, scan: 0, ca: 0, outline: 0 }; // look de fábrica: la perilla "post retro" lo escala
+let L0 = { grain: 0, scan: 0, ca: 0, pal: 0, outline: 0 }; // look de fábrica: la perilla "post retro" lo escala
 
 export function applySettings() {
   setQuality(save.quality);
@@ -115,7 +115,8 @@ export function applySettings() {
   if (glow) glow.isEnabled = save.bloom;
   const pipe = api.scene.postProcessRenderPipelineManager.supportedPipelines.find((p) => p.name === "pipe") as DefaultRenderingPipeline | undefined;
   if (pipe) pipe.bloomEnabled = save.bloom;
-  look({ grain: L0.grain * save.retro, scan: L0.scan * save.retro, ca: L0.ca * save.retro, outline: save.outline ? L0.outline : 0 });
+  const rk = save.clean ? 0 : save.retro;
+  look({ grain: L0.grain * rk, scan: L0.scan * rk, ca: L0.ca * rk, pal: L0.pal * rk, outline: save.outline ? L0.outline : 0 });
   setAudio({ ...save.vol, mute: save.mute });
   $("muted").classList.toggle("hidden", !save.mute);
   for (const a of Object.keys(save.keys) as Action[]) if (KEYS[a]) KEYS[a][0] = save.keys[a]!;
@@ -438,9 +439,9 @@ const focusSel = (q: string) => { const e = document.querySelector<HTMLButtonEle
 type Row = [label: string, kind: "range", path: string, min: number, max: number, step: number, unit?: "%" | "x"] | [label: string, kind: "tog", path: string] | [label: string, kind: "sel", path: string, opts: [string, string][]] | [label: string, kind: "bind", action: Action] | [label: string, kind: "note"] | [label: string, kind: "btn", act: string];
 const TABS: Record<string, { name: string; rows: Row[] }> = {
   gfx: { name: "Gráficos", rows: [
-    ["Calidad", "sel", "quality", [["auto", "Auto"], ["ultra", "Ultra 720p"], ["calidad", "Calidad 600p"], ["equilibrado", "Equilibrado 480p"], ["rendimiento", "Rendimiento 360p"]]],
-    ["Bloom", "tog", "bloom"], ["Contornos", "tog", "outline"],
-    ["Post retro (grano, scanlines, aberración)", "range", "retro", 0, 1.5, 0.1, "%"],
+    ["Calidad", "sel", "quality", [["auto", "Auto"], ["ultra", "Ultra 1440p"], ["calidad", "Calidad 1080p"], ["equilibrado", "Equilibrado 720p"], ["rendimiento", "Rendimiento 540p"]]],
+    ["Bloom", "tog", "bloom"], ["Contornos", "tog", "outline"], ["Look limpio (sin grano, scanlines ni paleta)", "tog", "clean"],
+    ["Look retro (grano, scanlines, aberración, paleta; 0% = limpio)", "range", "retro", 0, 1.5, 0.1, "%"],
     ["Zoom de cámara", "range", "zoom", 0.8, 2, 0.05, "x"], ["Temblor de pantalla", "tog", "shake"],
   ] },
   audio: { name: "Audio", rows: [
@@ -584,7 +585,7 @@ addEventListener("ctl", ctlTexts);
 // ---------- Arranque ----------
 export function initMenu(a: Api) {
   api = a;
-  L0 = { grain: LOOK.grain, scan: LOOK.scan, ca: LOOK.ca, outline: LOOK.outline };
+  L0 = { grain: LOOK.grain, scan: LOOK.scan, ca: LOOK.ca, pal: LOOK.pal, outline: LOOK.outline };
   applySettings();
   ctlTexts();
   $("tPause").addEventListener("click", () => (current() === "pause" ? api.resume() : api.pause())); // botón táctil: igual que Esc/Start

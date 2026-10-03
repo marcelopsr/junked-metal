@@ -114,7 +114,7 @@ export function buildWorld(s: B.Scene, low: boolean, id: ZoneId = "patio") {
   tuft = grassTuft(); // primero, como siempre: el orden de rng() del mundo no cambia entre zonas
   Z = ZONES[id] ?? ZONES.patio; zoneId = ZONES[id] ? id : "patio";
   HALF = Z.half;
-  tuftCount = Math.round((low ? 12000 : 45000) * Z.grass * (HALF / 160) ** 2); // 45000 en el patio de 320
+  tuftCount = Math.round((low ? 4000 : 12000) * Z.grass * (HALF / 160) ** 2); // 12000 en el patio de 320
   occluders.length = 0;
   bare.length = 0;
   Z.build();
@@ -783,14 +783,14 @@ function grassTuft() {
   const pos: number[] = [], ind: number[] = [], col: number[] = [];
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2 + rng();
-    const r = rng() * 0.25, w = 0.07, h = 0.25 + rng() * 0.3; // bajo: no tapar enemigos de 0.6
+    const r = rng() * 0.25, w = 0.07, h = 0.15 + rng() * 0.2; // bajo: no tapar enemigos de 0.6
     const bx = Math.cos(a) * r, bz = Math.sin(a) * r, lean = 0.2 + rng() * 0.2;
     const px = -Math.sin(a) * w, pz = Math.cos(a) * w;
     const b = pos.length / 3;
     pos.push(bx - px, 0, bz - pz, bx + px, 0, bz + pz, bx + Math.cos(a) * lean, h, bz + Math.sin(a) * lean);
     ind.push(b, b + 1, b + 2);
     const g = 0.75 + rng() * 0.25;
-    col.push(0.16 * g, 0.2 * g, 0.1 * g, 1, 0.16 * g, 0.2 * g, 0.1 * g, 1, 0.36 * g, 0.38 * g, 0.2 * g, 1); // pasto seco, apagado
+    col.push(0.16 * g, 0.2 * g, 0.1 * g, 1, 0.16 * g, 0.2 * g, 0.1 * g, 1, 0.26 * g, 0.29 * g, 0.16 * g, 1); // pasto seco, apagado
   }
   const m = new B.Mesh("tuft", scene);
   const vd = new B.VertexData();

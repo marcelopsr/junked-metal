@@ -20,11 +20,11 @@ function place(m: B.Mesh, mat: B.Material, pos: V3, rot?: V3, scl?: V3) {
 }
 export const box = (w: number, h: number, d: number, mat: B.Material, pos: V3, rot?: V3) =>
   place(B.MeshBuilder.CreateBox("p", { width: w, height: h, depth: d }, scene), mat, pos, rot);
-export const cyl = (top: number, bot: number, h: number, mat: B.Material, pos: V3, rot?: V3, tess = 12) =>
+export const cyl = (top: number, bot: number, h: number, mat: B.Material, pos: V3, rot?: V3, tess = 8) =>
   place(B.MeshBuilder.CreateCylinder("p", { diameterTop: top, diameterBottom: bot, height: h, tessellation: tess }, scene), mat, pos, rot);
-export const sph = (d: number, mat: B.Material, pos: V3, scl?: V3, seg = 8) =>
+export const sph = (d: number, mat: B.Material, pos: V3, scl?: V3, seg = 6) =>
   place(B.MeshBuilder.CreateSphere("p", { diameter: d, segments: seg }, scene), mat, pos, undefined, scl);
-export const tor = (d: number, t: number, mat: B.Material, pos: V3, rot?: V3, tess = 16) =>
+export const tor = (d: number, t: number, mat: B.Material, pos: V3, rot?: V3, tess = 10) =>
   place(B.MeshBuilder.CreateTorus("p", { diameter: d, thickness: t, tessellation: tess }, scene), mat, pos, rot);
 export const tube = (path: V3[], r: number, mat: B.Material) => {
   const m = B.MeshBuilder.CreateTube("p", { path: path.map(v), radius: r, tessellation: 6 }, scene);

@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.04, scan: 0.06, vig: 1.05, desat: 0.8, ca: 0.03, pal: 0.35, outline: 0.55, snap: 1, lampI: 10, glowI: 2.2, cone: 1.15, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 1 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 1.05, desat: 0.8, ca: 0.01, pal: 0.2, outline: 0.55, snap: 1, lampI: 10, glowI: 2.2, cone: 1.15, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 1 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -165,7 +165,7 @@ export function setDark(k: number) {
 }
 
 // Render a baja resolución interna (altura objetivo) escalado sin filtrar. ponytail: altura fija por calidad, sin ajuste dinámico; la resolución baja ya es el ahorro.
-export const QUALITY = { ultra: 720, calidad: 600, equilibrado: 480, rendimiento: 360 } as const;
+export const QUALITY = { ultra: 1440, calidad: 1080, equilibrado: 720, rendimiento: 540 } as const;
 export type Quality = keyof typeof QUALITY | "auto";
 let target: number = QUALITY.calidad;
 let depth: B.DepthRenderer;
@@ -281,15 +281,15 @@ const noise = (c: CanvasRenderingContext2D, s: number, base: string, cols: strin
 
 export const TEX = {
   grass: () => canvasTex(512, (c, s) => {
-    noise(c, s, "#5c8a32", ["#4a7a28", "#6fa03c", "#3f6b22", "#7db048"], 9000, 3);
+    noise(c, s, "#5c8a32", ["#50822c", "#659636", "#4a7a28", "#6b9c3c"], 2500, 5);
     // Parches de pasto seco y tierra pelada: el patio deja de ser un solo verde
     for (let i = 0; i < 14; i++) {
       const x = rnd() * s, y = rnd() * s, r = 20 + rnd() * 70, dry = rnd() < 0.6;
       const g = c.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, dry ? "rgba(140,128,64,.75)" : "rgba(92,68,44,.85)"); g.addColorStop(1, "rgba(0,0,0,0)");
+      g.addColorStop(0, dry ? "rgba(140,128,64,.5)" : "rgba(92,68,44,.5)"); g.addColorStop(1, "rgba(0,0,0,0)");
       c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
     }
-    for (let i = 0; i < 2500; i++) { c.strokeStyle = rnd() < 0.5 ? "#86b852" : "#3d6620"; c.globalAlpha = 0.5; c.beginPath(); const x = rnd() * s, y = rnd() * s; c.moveTo(x, y); c.lineTo(x + (rnd() - 0.5) * 4, y - 4 - rnd() * 6); c.stroke(); }
+    for (let i = 0; i < 300; i++) { c.strokeStyle = rnd() < 0.5 ? "#86b852" : "#3d6620"; c.globalAlpha = 0.3; c.beginPath(); const x = rnd() * s, y = rnd() * s; c.moveTo(x, y); c.lineTo(x + (rnd() - 0.5) * 4, y - 4 - rnd() * 6); c.stroke(); }
     c.globalAlpha = 1;
   }, 14),
   dirt: () => canvasTex(512, (c, s) => noise(c, s, "#7a5a3a", ["#5e4329", "#8f6b45", "#a07a52", "#4a3420"], 14000, 4), 8),

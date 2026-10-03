@@ -19,7 +19,7 @@ ni "tu/te". Créditos sin tecnologías: historia breve y "Creado por TheDuende".
   (noche de luna, niebla, farol ámbar, madrugada). El Perro llega de noche. Mañana y nublado existen solo para el lab. (src/run.ts: `mixClimate`, `nightfall`)
 - **Paleta propia por clima** (`ramp`: sombra, medio, luz) que el post mezcla con el color: cada clima tiene identidad de color.
 - **Faro del auto** (SpotLight, `setLamp`) + resplandor; el turbo hace destellar y abrir el cono.
-- **Render PSX:** resolución interna baja (Calidad 600p, Ultra 720p, Equilibrado 480p, Rendimiento 360p) escalada sin filtrar;
+- **Render PSX:** resolución interna baja (Calidad 1080p, Ultra 1440p, Equilibrado 720p, Rendimiento 540p) escalada sin filtrar;
   texturas procedurales ≤96 px NEAREST; temblor de vértices PS1 suave (`SnapPlugin`, `LOOK.snap`).
 - **Post retro (shader `retro`):** contornos de 1 px por profundidad (sin pasto), paleta del clima, dither Bayer 4x4 + 32 niveles (15 bits),
   grano, scanlines, viñeta, aberración. Perillas en `LOOK` (render.ts), ajustables en vivo con el modo lab.
