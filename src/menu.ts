@@ -116,7 +116,7 @@ export function applySettings() {
   const pipe = api.scene.postProcessRenderPipelineManager.supportedPipelines.find((p) => p.name === "pipe") as DefaultRenderingPipeline | undefined;
   if (pipe) pipe.bloomEnabled = save.bloom;
   const rk = save.clean ? 0 : save.retro;
-  look({ grain: L0.grain * rk, scan: L0.scan * rk, ca: L0.ca * rk, pal: L0.pal * rk, snap: save.clean ? 0 : 1, outline: save.outline ? L0.outline : 0 });
+  look({ grain: L0.grain * rk, scan: L0.scan * rk, ca: L0.ca * rk, pal: L0.pal * rk, snap: save.clean ? 0 : 1, levels: save.clean ? 255 : 32, outline: save.outline ? L0.outline : 0 });
   setAudio({ ...save.vol, mute: save.mute });
   $("muted").classList.toggle("hidden", !save.mute);
   for (const a of Object.keys(save.keys) as Action[]) if (KEYS[a]) KEYS[a][0] = save.keys[a]!;

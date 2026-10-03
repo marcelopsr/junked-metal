@@ -77,15 +77,17 @@ export const FX = {
   death: (p: B.Vector3, big = false) => burst(p, { n: big ? 80 : 14, color: "#ffb347", color2: "#ff5a36", size: big ? [0.6, 1.6] : [0.2, 0.5], power: big ? [8, 18] : [3, 8], life: [0.3, 0.7] }),
   explosion: (p: B.Vector3, r: number) => {
     burst(p, { n: 60, color: "#ffd166", color2: "#ff4d00", size: [0.5 * r, 1.2 * r], power: [r * 2, r * 5], life: [0.2, 0.5], gravity: 2 });
-    burst(p, { n: 25, color: "#555555", size: [0.8 * r, 1.6 * r], power: [1, r * 2], life: [0.6, 1.2], gravity: 3, add: false });
+    burst(p, { n: 25, color: "#ececec", size: [0.8 * r, 1.6 * r], power: [1, r * 2], life: [0.6, 1.2], gravity: 3, add: false });
   },
-  dust: (p: B.Vector3) => burst(p, { n: 2, color: "#b8a27a", size: [0.3, 0.7], power: [0.5, 1.5], life: [0.4, 0.8], gravity: 1, add: false }),
+  dust: (p: B.Vector3) => burst(p, { n: 2, color: "#ffffff", size: [0.3, 0.7], power: [0.5, 1.5], life: [0.4, 0.8], gravity: 1, add: false }),
   xp: (p: B.Vector3) => burst(p, { n: 5, color: "#9be7ff", size: [0.1, 0.25], power: [1, 3], life: [0.2, 0.4] }),
-  smoke: (p: B.Vector3, dark = false) => burst(p, { n: 2, color: dark ? "#2b2b2b" : "#8a8a8a", size: [0.5, 1.1], power: [0.5, 1.5], life: [0.8, 1.4], gravity: 3, add: false }),
+  smoke: (p: B.Vector3, dark = false) => burst(p, { n: 2, color: dark ? "#a8a8a8" : "#f4f4f4", size: [0.5, 1.1], power: [0.5, 1.5], life: [0.8, 1.4], gravity: 3, add: false }),
+  // Estela de proyectil: una voluta chica que se apaga rápido (llamar con probabilidad, no cada cuadro)
+  trail: (p: B.Vector3, color = "#ffe27a") => burst(p, { n: 1, color, size: [0.22, 0.38], power: [0, 0.3], life: [0.2, 0.32], gravity: 0 }),
   sparks: (p: B.Vector3) => burst(p, { n: 8, color: "#ffd27a", size: [0.05, 0.14], power: [4, 9], life: [0.2, 0.45], gravity: -20 }),
   // Destello blanco breve sobre el enemigo golpeado
   flash: (p: B.Vector3, s: number) => burst(p, { n: 1, color: "#ffffff", size: [s * 0.9, s * 1.1], power: [0, 0], life: [0.05, 0.07], gravity: 0 }),
-  slam: (p: B.Vector3, r: number) => burst(p, { n: 120, color: "#c9b38a", size: [1, 2.5], power: [r * 1.5, r * 3], life: [0.5, 1], gravity: 2, add: false }),
+  slam: (p: B.Vector3, r: number) => burst(p, { n: 120, color: "#f6f6f6", size: [1, 2.5], power: [r * 1.5, r * 3], life: [0.5, 1], gravity: 2, add: false }),
 };
 
 // ---------- Restos con física simple (sin Havok: son decorativos) ----------

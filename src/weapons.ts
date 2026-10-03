@@ -123,6 +123,7 @@ class Gomitas extends Weapon {
     for (const s of [...this.shots]) {
       s.m.position.addInPlace(s.dir.scale(30 * c.st.area * c.dt));
       s.m.rotation.y += c.dt * 10;
+      if (Math.random() < c.dt * 18) FX.trail(s.m.position, "#ff9bd4");
       let dead = (s.life -= c.dt) <= 0;
       for (const e of c.enemies) if (!s.hit.has(e) && B.Vector3.Distance(s.m.position, e.pos.add(new B.Vector3(0, 0.4, 0))) < e.radius + 0.35) {
         c.damage(e, dmg, s.dir.scale(2));
@@ -221,6 +222,7 @@ class Petardos extends Weapon {
       p.y += Math.sin(Math.PI * f.t) * 5;
       f.m.position.copyFrom(p);
       f.m.rotation.x += c.dt * 12;
+      if (Math.random() < c.dt * 18) FX.trail(f.m.position, "#ffb347");
       if (f.t >= 1) {
         const r = (3 + 0.3 * this.lv) * c.st.area, dmg = (30 + 15 * this.lv) * c.st.dmg;
         c.explode(f.to, r, dmg);
@@ -430,6 +432,7 @@ class Bengalas extends Weapon {
       p.y += Math.sin(Math.PI * Math.min(1, f.t)) * 6;
       f.m.position.copyFrom(p);
       f.m.rotation.x += c.dt * 10;
+      if (Math.random() < c.dt * 18) FX.trail(f.m.position, "#ff6b6b");
       if (f.t >= 1) {
         const r = (ev ? 3 : 1.8 + 0.2 * this.lv) * c.st.area * (this.steam ? 1.3 : 1), life = ev ? 5.5 : 3 + 0.4 * this.lv;
         const m = this.zoneTpl.createInstance("z");
