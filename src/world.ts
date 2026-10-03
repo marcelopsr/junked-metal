@@ -792,7 +792,7 @@ function grassTuft() {
     pos.push(bx - px, 0, bz - pz, bx + px, 0, bz + pz, bx + Math.cos(a) * lean, h, bz + Math.sin(a) * lean);
     ind.push(b, b + 1, b + 2);
     const g = 0.75 + rng() * 0.25;
-    col.push(0.16 * g, 0.2 * g, 0.1 * g, 1, 0.16 * g, 0.2 * g, 0.1 * g, 1, 0.26 * g, 0.29 * g, 0.16 * g, 1); // pasto seco, apagado
+    col.push(0.2 * g, 0.4 * g, 0.12 * g, 1, 0.2 * g, 0.4 * g, 0.12 * g, 1, 0.42 * g, 0.65 * g, 0.2 * g, 1); // pasto seco, apagado
   }
   const m = new B.Mesh("tuft", scene);
   const vd = new B.VertexData();

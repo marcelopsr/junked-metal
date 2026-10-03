@@ -4,21 +4,23 @@ import { rng } from "./rng";
 // Perfil de una partida: todo sale de la semilla. Cada eje cambia cómo se VE y cómo se JUEGA,
 // para que dos partidas nunca se sientan iguales aunque el patio sea reconocible.
 
-export type Climate = { id: string; name: string; sun: [number, number, number]; sunColor: string; sunI: number; hemiI: number; sky: [string, string, string, string]; exposure: number; fog: number; ramp: [string, string, string] };
+export type Climate = { id: string; name: string; sun: [number, number, number]; sunColor: string; sunI: number; hemiI: number; sky: [string, string, string, string]; exposure: number; fog: number; ramp: [string, string, string]; day?: boolean };
 // Noches luminosas y días, todos con el mismo post retro. "ramp" = paleta del clima (sombra, medio, luz) que el post mezcla con el color.
 export const CLIMATES: Climate[] = [
   { id: "noche", name: "NOCHE DE LUNA", sun: [-0.4, -1, 0.3], sunColor: "#7f9bd6", sunI: 2.25, hemiI: 0.7, sky: ["#04060c", "#0a101c", "#111a2a", "#05070a"], exposure: 1.1, fog: 0.01, ramp: ["#0b1020", "#3a5a70", "#e8e0c0"] },
   { id: "niebla", name: "NIEBLA", sun: [-0.3, -1, 0.3], sunColor: "#9fb5a6", sunI: 1.75, hemiI: 0.9, sky: ["#0c1311", "#1a2622", "#26332d", "#0a0f0d"], exposure: 1.15, fog: 0.022, ramp: ["#0f1a16", "#5a7a66", "#d8e8d0"] },
   { id: "farol", name: "FAROL ÁMBAR", sun: [0.6, -0.8, -0.3], sunColor: "#ff9b3d", sunI: 3.25, hemiI: 0.55, sky: ["#080504", "#1a0f08", "#2a1a0c", "#070402"], exposure: 1.1, fog: 0.013, ramp: ["#1a0c06", "#8a4a1a", "#ffd890"] },
   { id: "madrugada", name: "MADRUGADA", sun: [-0.7, -0.5, 0.4], sunColor: "#6fb3c4", sunI: 3, hemiI: 0.8, sky: ["#0a1822", "#1c3340", "#2e4a52", "#0a1210"], exposure: 1.1, fog: 0.015, ramp: ["#08161c", "#3a7a80", "#e0f4f0"] },
-  { id: "manana", name: "MAÑANA", sun: [-0.7, -0.6, 0.4], sunColor: "#ffe2b8", sunI: 2.6, hemiI: 0.5, sky: ["#4a8fd8", "#b9dcff", "#fff1dc", "#7a8f5a"], exposure: 1, fog: 0.004, ramp: ["#1c2430", "#7a9a60", "#fff4dc"] },
-  { id: "atardecer", name: "ATARDECER", sun: [0.85, -0.3, -0.35], sunColor: "#ffa060", sunI: 2.4, hemiI: 0.35, sky: ["#34407a", "#e58a5a", "#ffd08a", "#5a5a40"], exposure: 1.05, fog: 0.006, ramp: ["#2a1428", "#c06040", "#ffe0a0"] },
-  { id: "nublado", name: "NUBLADO", sun: [-0.3, -1, 0.3], sunColor: "#e8ecf0", sunI: 1.2, hemiI: 0.9, sky: ["#8a96a3", "#b8c2cc", "#d7dde2", "#6f7a5c"], exposure: 1.1, fog: 0.008, ramp: ["#1a1e22", "#6a7a70", "#eef0f0"] },
+  { id: "manana", name: "MAÑANA", day: true, sun: [-0.7, -0.6, 0.4], sunColor: "#fff0d0", sunI: 3.2, hemiI: 0.95, sky: ["#3b86e0", "#8cc4ff", "#d6eeff", "#8fbf5a"], exposure: 1.1, fog: 0.002, ramp: ["#1c2430", "#7a9a60", "#fff4dc"] },
+  { id: "mediodia", name: "MEDIODÍA", day: true, sun: [-0.25, -1, 0.2], sunColor: "#fffaf0", sunI: 3.6, hemiI: 1, sky: ["#2f7ae0", "#7dbcff", "#cfe9ff", "#8fbf5a"], exposure: 1.1, fog: 0.0015, ramp: ["#1c2430", "#7a9a60", "#fff4dc"] },
+  { id: "atardecer", name: "ATARDECER", day: true, sun: [0.85, -0.3, -0.35], sunColor: "#ffa060", sunI: 2.4, hemiI: 0.35, sky: ["#34407a", "#e58a5a", "#ffd08a", "#5a5a40"], exposure: 1.05, fog: 0.006, ramp: ["#2a1428", "#c06040", "#ffe0a0"] },
+  { id: "nublado", name: "NUBLADO", day: true, sun: [-0.3, -1, 0.3], sunColor: "#e8ecf0", sunI: 1.2, hemiI: 0.9, sky: ["#8a96a3", "#b8c2cc", "#d7dde2", "#6f7a5c"], exposure: 1.1, fog: 0.008, ramp: ["#1a1e22", "#6a7a70", "#eef0f0"] },
 ];
 
 // La partida va del atardecer (DUSK) a la noche de la semilla: anochece a mitad de partida y El Perro llega a medianoche.
-export const DUSK = CLIMATES.find((c) => c.id === "atardecer")!;
-export const NIGHTS = CLIMATES.filter((c) => ["noche", "niebla", "farol", "madrugada"].includes(c.id));
+// Megabonk: toda la partida es de día. DUSK = clima de arranque (mañana); NIGHTS = climas finales posibles (los nocturnos quedan para el lab).
+export const DUSK = CLIMATES.find((c) => c.id === "manana")!;
+export const NIGHTS = CLIMATES.filter((c) => ["mediodia", "atardecer", "nublado", "manana"].includes(c.id));
 const lerp = (a: number, b: number, s: number) => a + (b - a) * s;
 const lerpHex = (a: string, b: string, s: number) => {
   const x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16);

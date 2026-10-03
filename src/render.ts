@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 1.05, desat: 0.8, ca: 0.01, pal: 0.2, outline: 0.55, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 1 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 1.05, desat: 1.3, ca: 0.01, pal: 0.2, outline: 0.55, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.8 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -23,7 +23,8 @@ function paintSky(c4: [string, string, string, string]) {
 }
 
 // Clima de la partida: sol, cielo, luz ambiente, exposición y reflejos (la sonda se vuelve a capturar)
-export function applyClimate(k: { sun: [number, number, number]; sunColor: string; sunI: number; hemiI: number; sky: [string, string, string, string]; exposure: number; fog: number; ramp: [string, string, string] }) {
+export function applyClimate(k: { sun: [number, number, number]; sunColor: string; sunI: number; hemiI: number; sky: [string, string, string, string]; exposure: number; fog: number; ramp: [string, string, string]; day?: boolean }) {
+  lampK = k.day ? 0.08 : 1;
   k.ramp.forEach((h, i) => ramp[i].copyFrom(B.Color3.FromHexString(h)));
   sun.direction = new B.Vector3(...k.sun).normalize();
   sun.diffuse = B.Color3.FromHexString(k.sunColor);
@@ -112,12 +113,13 @@ export function look(p: Partial<typeof LOOK>) {
 }
 
 // El faro y el resplandor siguen al auto
-let flare = 0;
+let flare = 0, lampK = 1;
 export function setLamp(pos: B.Vector3, fwd: B.Vector3, boost = false, dt = 0) {
   // Turbo: el faro destella y abre el cono; vuelve suave al soltar
   flare += ((boost ? 1 : 0) - flare) * Math.min(1, dt * (boost ? 14 : 4));
-  lamp.intensity = LOOK.lampI * (1 + flare * 1.2);
+  lamp.intensity = LOOK.lampI * lampK * (1 + flare * 1.2);
   lamp.angle = LOOK.cone + flare * 0.45;
+  glow.intensity = LOOK.glowI * lampK;
   lamp.position.set(pos.x, pos.y + 1.2, pos.z);
   lamp.direction.set(fwd.x, -0.28, fwd.z).normalize();
   glow.position.set(pos.x, pos.y + 2.2, pos.z);

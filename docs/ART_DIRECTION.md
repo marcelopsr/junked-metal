@@ -73,3 +73,7 @@ fósforo verde sobre negro, bordes rectos, scanlines con parpadeo sobre todo el 
 | Batería OK / baja | `#7fbf5a` / `#d12a1c` |
 | Turbo | `#e0a030` |
 | Rareza: común / rara / épica / evolución | `#8a9a82` / `#6fb3c4` / `#9a6fb5` / `#e0a030` |
+
+## Giro a Megabonk (2026-10-03)
+Las partidas son **de día**: sol alto, cielo azul, colores saturados (desat 1.3), low-poly con texturas pixeladas y contornos suaves.
+Los climas nocturnos siguen en `CLIMATES` solo para el lab. El faro del auto queda casi apagado de día (`day` en `Climate`). Esta sección reemplaza lo de "noche" y "un solo foco duro" de arriba.

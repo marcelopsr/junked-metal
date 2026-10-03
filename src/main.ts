@@ -877,7 +877,7 @@ function titleArt(on: boolean) {
     return;
   }
   if (art) return;
-  applyClimate(zoneClimate() ?? mixClimate(DUSK, CLIMATES[0], 0.35)); // más atardecer que noche: que se lean los bichos del fondo
+  applyClimate(zoneClimate() ?? DUSK);
   const L = (scene.getLightByName("sun") as B.DirectionalLight).direction;
   const v = new B.Vector3(-L.x, 0, -L.z).normalize(), side = new B.Vector3(v.z, 0, -v.x); // v: hacia la luna (contraluz)
   const cp = v.scale(-4.4).addInPlace(side.scale(1.7));
