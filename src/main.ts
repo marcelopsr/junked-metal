@@ -6,9 +6,9 @@ import { Car, CARS, drive } from "./car";
 import { DEF, Enemy, pickWeighted, spawnTable, type Kind } from "./enemies";
 import { engineSfx, engineStop, initAudio, music, musicDuck, SFX } from "./sfx";
 import { ambient, clearFx, corpse, debris, FX, initFx, mark, splat, tickFx } from "./fx";
-import { input, isTouch, padPressed, padSnap, pollInput, setupTouch } from "./input";
+import { input, isTouch, KEYS, padPressed, padSnap, pollInput, setupTouch } from "./input";
 import { carModel, cyl, initModels, sph, template } from "./models";
-import { carOpts, current, dailySeed, fmt, initMenu, today, menuPad, openOver, openPause, persist, reset, save } from "./menu";
+import { carOpts, current, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save } from "./menu";
 import { pilotStats, startWeapons } from "./pilots";
 import { applyClimate, glitchHit, look, M, pbr, setDark, setLamp, setQuality, setupRender, shadows } from "./render";
 import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
@@ -198,6 +198,7 @@ function startRun(d = false) {
   banner(`${profile.climate.name} · ${profile.plague.name}`, 3);
   // Guía de controles los primeros segundos (se va sola)
   const hint = $("hint");
+  for (const k of hint.querySelectorAll<HTMLElement>("kbd[data-k]")) k.textContent = keyName(KEYS[k.dataset.k as keyof typeof KEYS][0]); // teclas reasignadas
   hint.classList.remove("hidden", "fade");
   setTimeout(() => hint.classList.add("fade"), 9000);
   setTimeout(() => hint.classList.add("hidden"), 9700);

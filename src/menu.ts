@@ -362,7 +362,7 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
 let tab = "gfx";
 const ref = (p: string) => { const k = p.split("."); let o = save as unknown as Record<string, unknown>; while (k.length > 1) o = o[k.shift()!] as Record<string, unknown>; return [o, k[0]] as const; };
 const val = (p: string) => { const [o, k] = ref(p); return o[k]; };
-const keyName = (c?: string) => (c ?? "").replace(/^Key|^Digit/, "").replace("Left", " izq").replace("Right", " der").replace("Space", "Espacio").replace(/^Arrow/, "Flecha ").toUpperCase();
+export const keyName = (c?: string) => (c ?? "").replace(/^Key|^Digit/, "").replace("Left", " izq").replace("Right", " der").replace("Space", "Espacio").replace(/^Arrow/, "Flecha ").toUpperCase();
 const show2 = (v: number, u?: string) => (u === "%" ? `${Math.round(v * 100)}%` : `${v.toFixed(2)}x`);
 function renderConfig() {
   $("tabs").innerHTML = Object.entries(TABS).map(([id, t]) => `<button class="tab ${id === tab ? "on" : ""}" data-tab="${id}">${t.name}</button>`).join("");
