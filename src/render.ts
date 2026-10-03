@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 1.02, ca: 0.01, pal: 0.2, outline: 0.3, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.8 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 1.02, ca: 0.01, pal: 0.2, outline: 0.85, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.8 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -97,7 +97,8 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   glow.intensity = 2.2;
 
   const pipe = new B.DefaultRenderingPipeline("pipe", true, scene, [cam]);
-  pipe.fxaaEnabled = false; // el borde duro es parte del look
+  pipe.fxaaEnabled = true; // bordes suaves (el look duro ya no va)
+  if (!low) pipe.samples = 4;
   pipe.bloomEnabled = true;
   pipe.bloomThreshold = 0.8;
   pipe.bloomWeight = 0.35;
@@ -147,7 +148,8 @@ void main() {
   vec2 px = floor(vUV * screen), e = 1. / screen;
   float d = texture2D(depthSampler, vUV).r;
   float dn = min(min(texture2D(depthSampler, vUV + vec2(e.x, 0.)).r, texture2D(depthSampler, vUV - vec2(e.x, 0.)).r), min(texture2D(depthSampler, vUV + vec2(0., e.y)).r, texture2D(depthSampler, vUV - vec2(0., e.y)).r));
-  col *= 1. - outline * step(.06, (d - dn) / max(d, 1e-4));
+  // Contorno fino de 1 px, en un violeta oscuro cálido (no negro): se funde con las sombras y recorta las siluetas
+  col = mix(col, vec3(.13, .09, .2), outline * step(.012, (d - dn) / max(d, 1e-4)));
   col += (h(px + fract(t) * 97.) - .5) * grain;
   col *= 1. - scan * step(1.5, mod(px.y, 3.));
   col = floor(col * levels + b4(px)) / levels;
