@@ -4,14 +4,15 @@ import HavokPhysics from "@babylonjs/havok";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
 import { DEF, Enemy, pickWeighted, spawnTable, type Kind } from "./enemies";
-import { engineSfx, engineStop, initAudio, SFX } from "./sfx";
+import { engineSfx, engineStop, initAudio, music, musicDuck, SFX } from "./sfx";
 import { ambient, clearFx, corpse, debris, FX, initFx, mark, splat, tickFx } from "./fx";
-import { input, isTouch, padPressed, pollInput, setupTouch } from "./input";
+import { input, isTouch, padPressed, padSnap, pollInput, setupTouch } from "./input";
 import { carModel, cyl, initModels, sph, template } from "./models";
-import { current, initMenu, menuPad, openOver, openPause, persist, reset, save } from "./menu";
+import { carOpts, current, dailySeed, fmt, initMenu, today, menuPad, openOver, openPause, persist, reset, save } from "./menu";
+import { pilotStats, startWeapons } from "./pilots";
 import { applyClimate, glitchHit, look, M, pbr, setDark, setLamp, setQuality, setupRender, shadows } from "./render";
-import { evoOffer, levelOffers, makeWeapon, mountFor, passiveStats, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
-import { buildLayout, buildWorld, HALF, hitBreakables, obstacles, setWind, spawnPoint } from "./world";
+import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
+import { buildLayout, buildWorld, HALF, hitBreakables, obstacles, occluders, setWind, spawnPoint, underRoof } from "./world";
 import { CLIMATES, DUSK, makeProfile, mixClimate, nightfall, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 
@@ -46,9 +47,9 @@ initFx(scene, low);
 seedRng(20260929); // el patio es siempre el mismo
 buildWorld(scene, low);
 buildLayout(); // patio del menú (semilla fija)
-applyClimate(mixClimate(DUSK, DUSK, 0));
+applyClimate(DUSK);
 setQuality(save.quality);
-if (isTouch) setupTouch();
+if (isTouch) setupTouch((k) => zoomBy(1 / k)); // pellizco: abrir los dedos acerca
 initHud();
 
 // ---------- Estado de la partida ----------
@@ -64,6 +65,7 @@ let st: PStats = passiveStats({}, save.perm);
 let hp = 100, maxHp = 100, boost = 100;
 let xp = 0, level = 1, pendingLevels = 0;
 let time = 0, kills = 0, runScrap = 0;
+let rerolls = 0, revives = 0, offerTitle = ""; // del taller: Dado cargado y Batería de reserva
 let runSeed = 0;
 let profile: Profile;
 let simulating = false; // true durante __sim: sin DOM ni efectos caros
@@ -73,9 +75,9 @@ let pickups: Pickup[] = [];
 let spits: Spit[] = [];
 const spitTpl = () => template("spit", () => [sph(0.55, pbr("acid", { color: "#ff3a1f", rough: 0.1, emissive: "#c01800", alpha: 0.9 }), [0, 0, 0])]);
 let cycleS = -1; // tramo del ciclo atardecer → noche ya aplicado
-let darkK = 1, apagon = false;
+let darkK = 1, apagon = false, musicS = "", musicT = 0; // musicS/T: estado musical y reloj de refresco
 let spawnAcc = 0, swarmT = 60, chestT = 100, ballT = 75, bossIdx = 0;
-let shake = 0, camYaw = 0, dustT = 0;
+let shake = 0, camYaw = 0, dustT = 0, roofK = 0;
 let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number; hit?: boolean } | null = null;
 let offers: Offer[] = [];
 let offerSel = 0;
@@ -119,7 +121,7 @@ function dropPickup(pos: B.Vector3, type: Pickup["type"]) {
 
 // ---------- Flujo ----------
 function recompute() {
-  st = passiveStats(passives, save.perm);
+  st = pilotStats(passiveStats(passives, save.perm), save.pilot);
   const newMax = car!.def.hp + st.maxHp;
   hp += Math.max(0, newMax - maxHp);
   maxHp = newMax;
@@ -157,25 +159,28 @@ function clearRun() {
   clearFx();
   car?.dispose();
   car = null;
-  applyClimate(mixClimate(DUSK, DUSK, 0)); setDark(1); // al volver al menú, atardecer
+  applyClimate(DUSK); // al volver al menú, atardecer
 }
 
-function startRun() {
-  initAudio();
+let daily = false;
+function startRun(d = false) {
+  daily = d;
+  initAudio(); music("run", 0); musicS = "run";
   titleArt(false); // ?lab arranca desde el título
   clearRun();
   // Semilla de la partida: ?seed=N la fija (reproducible), si no, una nueva
-  runSeed = Number(new URLSearchParams(location.search).get("seed")) || newSeed();
+  runSeed = Number(new URLSearchParams(location.search).get("seed")) || (daily ? dailySeed() : newSeed());
   seedRng(runSeed);
   // Perfil de la partida: clima, plaga, orden de minijefes, ritmo de eventos y un patio distinto
   profile = makeProfile(runSeed);
   cycleS = -1;
   buildLayout();
   RUN_BOSSES = [[200, profile.minis[0]], [400, profile.minis[1]], [600, "perro"]];
-  car = new Car(scene, save.car, save.paint || undefined, save.rim || undefined);
+  car = new Car(scene, save.car, carOpts());
   lastHpFrac = 1;
   passives = {};
-  weapons = [makeWeapon("gomitas")];
+  weapons = startWeapons(save.pilot, save.perm.extra).map(makeWeapon);
+  rerolls = save.perm.reroll; revives = save.perm.revive;
   maxHp = car.def.hp;
   recompute();
   hp = maxHp; boost = 100;
@@ -200,20 +205,24 @@ function startRun() {
 
 function endRun(win: boolean, why: string) {
   state = "over";
-  engineStop();
+  engineStop(); music("over");
   runScrap += Math.floor(time / 20) + Math.floor(kills / 25);
-  save.scrap += runScrap;
   const record = Math.floor(time) > save.best;
-  save.best = Math.max(save.best, Math.floor(time));
-  // Top 5 por tiempo (y bajas para desempatar)
-  save.runs = [...save.runs, { t: Math.floor(time), kills, lv: level, seed: runSeed, win }].sort((a, b) => b.t - a.t || b.kills - a.kills).slice(0, 5);
-  persist();
+  if (!simulating && !LAB.on) { // las pruebas de dev no tocan el guardado real
+    save.scrap += runScrap;
+    save.best = Math.max(save.best, Math.floor(time));
+    // Top 5 por tiempo (y bajas para desempatar)
+    if (daily) save.daily = { day: today(), best: Math.max(save.daily.day === today() ? save.daily.best : 0, Math.floor(time)) };
+    save.runs = [...save.runs, { t: Math.floor(time), kills, lv: level, seed: runSeed, win }].sort((a, b) => b.t - a.t || b.kills - a.kills).slice(0, 5);
+    persist();
+  }
   $("hud").classList.add("hidden");
   openOver({ win, why, time, kills, level, scrap: runScrap, record, dmg: { ...dmgOut }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}` });
 }
 
 function toMenu() {
-  engineStop();
+  if (LAB.on) { LAB.on = false; god = false; }
+  engineStop(); music("menu");
   persist(); // bestiario visto en la partida abandonada
   clearRun();
   state = "menu";
@@ -222,11 +231,10 @@ function toMenu() {
   reset("main");
 }
 
-const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 // ---------- Nivel / cofre ----------
 function gainXp(n: number) {
-  xp += n;
+  xp += n * st.xp;
   while (xp >= xpNeed(level)) { xp -= xpNeed(level); level++; pendingLevels++; }
 }
 
@@ -238,6 +246,18 @@ function openOffers(list: Offer[], title: string) {
   SFX.levelUp();
   engineStop();
   showOffers(title, list, 0, choose, previewOffer);
+  offerTitle = title;
+  const can = rerolls > 0 && list[0]?.kind !== "evo";
+  $("luHint").textContent = `${list.map((_, i) => i + 1).join(" · ")} o clic — Enter confirma${can ? ` · R o Y re-sortea (${rerolls})` : ""}`;
+  $("luHint").onclick = can ? reroll : null;
+}
+// Re-sorteo de cartas (Dado cargado): mismas reglas, cartas nuevas. Las evoluciones no se re-sortean.
+function reroll() {
+  if (state !== "level" || rerolls <= 0 || offers[0]?.kind === "evo" || document.querySelector("#offers .picked")) return;
+  rerolls--;
+  preview?.dispose();
+  preview = null;
+  openOffers(levelOffers(weapons, passives, 3 + save.perm.cards), offerTitle);
 }
 
 function choose(i: number) {
@@ -250,6 +270,7 @@ function choose(i: number) {
     if (w) w.lv++; else weapons.push(makeWeapon(o.id as WeaponId));
   } else if (o.kind === "passive") passives[o.id as PassiveId] = o.lv!;
   else if (o.kind === "evo") { weapons.find((x) => x.id === o.id)!.evolved = true; banner(o.title.toUpperCase()); }
+  else if (o.kind === "fusion") { weapons = fuse(weapons, o.id as WeaponId); banner(o.title.toUpperCase()); }
   else hp = Math.min(maxHp, hp + 40);
   recompute();
   state = "play";
@@ -258,12 +279,12 @@ function choose(i: number) {
 
 function openChest() {
   const evo = evoOffer(weapons, passives);
-  openOffers(evo ? [evo] : levelOffers(weapons, passives, 3), evo ? "Cofre · Evolución" : "Cofre");
+  openOffers(evo ? [evo] : levelOffers(weapons, passives, 3 + save.perm.cards), evo ? (evo.kind === "fusion" ? "Cofre · Fusión" : "Cofre · Evolución") : "Cofre");
 }
 
 function pause() {
   if (state !== "play") return;
-  state = "pause"; scene.physicsEnabled = false; engineStop();
+  state = "pause"; scene.physicsEnabled = false; engineStop(); musicDuck(true);
   openPause({
     weapons: weapons.map((w) => ({ id: w.id, lv: w.lv, evolved: w.evolved })),
     passives: (Object.entries(passives) as [PassiveId, number][]).map(([id, lv]) => ({ id, lv })),
@@ -273,15 +294,17 @@ function pause() {
 }
 function resume() {
   if (state !== "pause") return;
-  state = "play"; scene.physicsEnabled = true; reset(null);
+  state = "play"; scene.physicsEnabled = true; reset(null); musicDuck(false);
 }
 
 // Esc / P / M y la navegación de menús viven en menu.ts; acá solo las cartas de mejora
 addEventListener("keydown", (e) => {
-  if (state === "level" && /^Digit[1-3]$/.test(e.code)) { const i = +e.code.slice(5) - 1; if (i < offers.length) pickOffer(i); }
+  if (state === "level" && /^Digit[1-4]$/.test(e.code)) { const i = +e.code.slice(5) - 1; if (i < offers.length) pickOffer(i); }
   if (e.code === "Enter" && state === "level") pickOffer(offerSel);
+  if (e.code === "KeyR" && state === "level") reroll();
 });
 initMenu({ scene, play: startRun, resume, quit: toMenu, pause });
+music("menu"); // suena cuando haya primer gesto (initAudio)
 
 // ---------- Combate ----------
 const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.IdentityReadOnly, scene.getTransformMatrix(), cam.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
@@ -297,7 +320,7 @@ function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
     const k = innerWidth / engine.getRenderWidth();
     if (sp.z < 1) damageNumber(sp.x * k, sp.y * k, dmg, crit);
   }
-  if (crit || e.def.boss && dmg >= 20) hitStop = Math.max(hitStop, crit ? 0.06 : 0.035);
+  if (dmg >= 60 || e.def.boss && dmg >= 20) hitStop = Math.max(hitStop, crit ? 0.06 : 0.035);
   if (dmg >= 4 && !simulating) FX.flash(e.pos.add(new B.Vector3(0, e.def.size[1] * 0.5, 0)), Math.max(e.def.size[0], e.def.size[2]) * (e.def.scale ?? 1));
   if (dmg >= 4 && Math.random() < 0.5) FX.hit(e.pos.add(new B.Vector3(0, 0.6, 0)));
   if (knock && !e.def.boss) e.body.applyImpulse(knock.scale(e.def.mass), e.pos);
@@ -316,11 +339,11 @@ function explode(pos: B.Vector3, r: number, dmg: number) {
 }
 
 // Color del charco de cada insecto = color de sus ojos (models.ts)
-const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora: "#ffb020", escarabajo: "#9acd32" };
+const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora: "#ffb020", escarabajo: "#9acd32", polilla: "#c9a0ff" };
 function kill(e: Enemy) {
   kills++;
   hudKill();
-  save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
+  if (!simulating && !LAB.on) save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
   SFX.kill();
   FX.death(e.pos.add(new B.Vector3(0, 0.5, 0)), e.def.boss);
   debris(e.pos, e.def.color, e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
@@ -354,7 +377,7 @@ function update(dt: number) {
   time += dt;
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
   const s = nightfall(LAB.on ? LAB.t : time / 600);
-  if (Math.abs(s - cycleS) > 0.01) { cycleS = s; applyClimate(mixClimate(DUSK, profile.climate, s)); }
+  if (!simulating && Math.abs(s - cycleS) > 0.01) { cycleS = s; applyClimate(mixClimate(DUSK, profile.climate, s)); }
 
   // --- Manejo ---
   let throttle = input.throttle, steer = input.steer;
@@ -407,7 +430,9 @@ function update(dt: number) {
   const ahead = c.pos.add(new B.Vector3(cvel.x, 0, cvel.z).scale(1.6));
   spawnAcc += (1 + time / 32) * dt;
   const normals = enemies.filter((e) => !e.def.boss).length;
-  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time, profile.plague)), spawnPoint(ahead, 24, 36)); }
+  // Con la cámara más alejada que el zoom por defecto (1.35) el anillo de aparición se abre igual, para no verlos nacer
+  const zs = Math.max(1, save.zoom / 1.35);
+  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time, profile.plague)), spawnPoint(ahead, 24 * zs, 36 * zs)); }
   if ((swarmT -= dt) <= 0) {
     swarmT = profile.swarmEvery;
     banner("ENJAMBRE", 1.4);
@@ -450,7 +475,7 @@ function update(dt: number) {
       FX.slam(e.pos, 10);
       mark("scorch", e.pos.x, e.pos.z, 0, 7, 10);
       shake = 1.2;
-      if (B.Vector3.Distance(e.pos, c.pos) < 11) hurt(25, false, "salto perro");
+      if (B.Vector3.Distance(e.pos, c.pos) < 11) hurt(25, false, "salto " + e.kind);
       for (const o of enemies) if (o !== e && B.Vector3.Distance(o.pos, e.pos) < 10) damage(o, 999);
     }
     const dist = Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z);
@@ -493,6 +518,7 @@ function update(dt: number) {
   }
   const boss = enemies.find((e) => e.def.boss);
   if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp));
+  { const ms = boss ? "boss" : apagon ? "blackout" : "run"; if (!simulating && (ms !== musicS || (musicT -= dt) <= 0)) { musicS = ms; musicT = 1; music(ms, time / 600); } } // música: cambio de estado al instante, intensidad cada ~1 s
 
   // --- Ácido de escupidoras ---
   for (let i = spits.length - 1; i >= 0; i--) {
@@ -554,15 +580,17 @@ function update(dt: number) {
   }
 
   hp = Math.min(maxHp, hp + st.regen * dt);
+  if (hp <= 0 && revives > 0) { revives--; hp = maxHp * 0.5; explode(c.pos, 9, 150); banner("BATERÍA DE RESERVA", 2); }
   if (hp <= 0) return endRun(false, "El auto quedó destrozado.");
-  if (pendingLevels > 0 && state === "play") { pendingLevels--; openOffers(levelOffers(weapons, passives, 3), `Nivel ${level - pendingLevels}`); }
+  if (pendingLevels > 0 && state === "play") { pendingLevels--; openOffers(levelOffers(weapons, passives, 3 + save.perm.cards), `Nivel ${level - pendingLevels}`); }
 }
 
 let god = false; // solo dev
 let lampBoost = false, moteT = 0, flyT = 0;
 // Zoom de cámara: rueda del mouse o teclas - / = (0.8 cerca … 2 lejos), se guarda
-addEventListener("wheel", (ev) => { save.zoom = Math.min(2, Math.max(0.8, save.zoom * (ev.deltaY > 0 ? 1.08 : 1 / 1.08))); persist(); }, { passive: true });
-addEventListener("keydown", (ev) => { if (ev.key === "-" || ev.key === "=" || ev.key === "+") { save.zoom = Math.min(2, Math.max(0.8, save.zoom * (ev.key === "-" ? 1.1 : 1 / 1.1))); persist(); } });
+const zoomBy = (k: number) => { save.zoom = Math.min(2, Math.max(0.8, save.zoom * k)); persist(); };
+addEventListener("wheel", (ev) => state === "play" && zoomBy(ev.deltaY > 0 ? 1.08 : 1 / 1.08), { passive: true });
+addEventListener("keydown", (ev) => { if (ev.key === "-" || ev.key === "=" || ev.key === "+") zoomBy(ev.key === "-" ? 1.1 : 1 / 1.1); });
 const LAB = { on: false, back: 15, up: 13, t: 1 }; // modo lab (solo dev): mundo congelado para probar el look
 const dmgBy: Record<string, number> = {}; // solo dev: de dónde viene el daño
 function hurt(n: number, continuous = false, src = "?") {
@@ -620,11 +648,11 @@ function titleArt(on: boolean) {
     for (const e of art.bugs) e.dispose();
     art.rock.dispose();
     art = null;
-    applyClimate(mixClimate(DUSK, DUSK, 0));
+    applyClimate(DUSK);
     return;
   }
   if (art) return;
-  applyClimate(mixClimate(DUSK, CLIMATES[0], 0.6)); // entre atardecer y noche de luna
+  applyClimate(mixClimate(DUSK, CLIMATES[0], 0.35)); // más atardecer que noche: que se lean los bichos del fondo
   const L = (scene.getLightByName("sun") as B.DirectionalLight).direction;
   const v = new B.Vector3(-L.x, 0, -L.z).normalize(), side = new B.Vector3(v.z, 0, -v.x); // v: hacia la luna (contraluz)
   const cp = v.scale(-4.4).addInPlace(side.scale(1.7));
@@ -639,8 +667,12 @@ function titleArt(on: boolean) {
   const rp = cp.add(v.scale(1.9)).addInPlace(side.scale(-2.1));
   const rock = sph(1.5, M.matte("#120e0b"), [rp.x, 0.05, rp.z], [1.3, 0.45, 1]);
   art = { bugs, rock, yaw: Math.atan2(-v.x, -v.z) - 1.3 };
+  // La portada aparece ya encuadrada (sin viajar desde la cámara inicial, que pasa sobre la mesa)
+  cam.position.set(SHOTS.title[0], SHOTS.title[1], SHOTS.title[2]);
+  camTarget.set(SHOTS.title[3], SHOTS.title[4], SHOTS.title[5]);
 }
 scene.onBeforeRenderObservable.add(() => {
+  padSnap();
   const dt = Math.min(engine.getDeltaTime() / 1000, 0.05);
   pollInput();
 
@@ -648,6 +680,7 @@ scene.onBeforeRenderObservable.add(() => {
     if (padPressed(14)) { offerSel = (offerSel + offers.length - 1) % offers.length; selectOffer(offerSel); }
     if (padPressed(15)) { offerSel = (offerSel + 1) % offers.length; selectOffer(offerSel); }
     if (padPressed(0)) pickOffer(offerSel);
+    if (padPressed(3)) reroll();
   } else if (state === "play") { if (padPressed(9)) pause(); }
   else menuPad(dt);
 
@@ -687,10 +720,24 @@ scene.onBeforeRenderObservable.add(() => {
       ambient("fly", new B.Vector3(car.pos.x + Math.cos(a) * r, 0.5 + Math.random() * 2.5, car.pos.z + Math.sin(a) * r));
     }
     const back = new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
-    const want = car.pos.subtract(back.scale(close ? 5.5 : LAB.back * (LAB.on ? 1 : save.zoom))).addInPlace(new B.Vector3(0, close ? 3.2 : LAB.up * (LAB.on ? 1 : save.zoom), 0));
+    // Bajo la mesa la cámara baja y se acerca (roofK suaviza entrar y salir); afuera vuelve al zoom del usuario
+    roofK += ((underRoof(car.pos) ? 1 : 0) - roofK) * (1 - Math.exp(-3 * dt));
+    const zm = LAB.on ? 1 : save.zoom, zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
+    const want = car.pos.subtract(back.scale(close ? 5.5 : LAB.back * zb)).addInPlace(new B.Vector3(0, close ? 3.2 : LAB.up * zu, 0));
     cam.position = B.Vector3.Lerp(cam.position, want, close ? 1 - Math.exp(-8 * dt) : k);
     B.Vector3.LerpToRef(camTarget, close ? car.pos.add(new B.Vector3(0, -1.4, 0)) : car.pos.add(back.scale(3)), close ? 0.2 : k * 1.5, camTarget);
+    // Lo que queda entre cámara y auto se tramea (screen-door en render.ts) mientras tapa
+    if (!simulating) {
+      const to = car.pos.add(new B.Vector3(0, 0.6, 0)).subtractInPlace(cam.position), len = to.length();
+      const ray = new B.Ray(cam.position, to.scaleInPlace(1 / len), len);
+      for (const m of occluders) m.visibility = ray.intersectsMesh(m, true).hit ? 0.999 : 1;
+    }
   } else {
+    { // en el menú también: lo que tape el encuadre (la mesa al viajar entre pantallas) se tramea
+      const to = camTarget.subtract(cam.position), len = to.length();
+      const ray = new B.Ray(cam.position, to.scaleInPlace(1 / Math.max(len, 1e-3)), len);
+      for (const m of occluders) m.visibility = ray.intersectsMesh(m, true).hit ? 0.999 : 1;
+    }
     // Diorama: cada pantalla del menú tiene su encuadre; la cámara viaja con lerp suave y se mece un poco
     const scr = current() ?? "main", t = performance.now() / 1000;
     titleArt(scr === "title");
@@ -700,10 +747,10 @@ scene.onBeforeRenderObservable.add(() => {
     B.Vector3.LerpToRef(camTarget, new B.Vector3(tx, ty, tz), kk, camTarget);
     // Título y garaje: el auto elegido en el centro del patio (reusa `preview`, que clearRun libera)
     if (scr === "garage" || scr === "title") {
-      const key = save.car + save.paint + save.rim;
+      const key = save.car + JSON.stringify(carOpts());
       if (!preview || previewKey !== key) {
         preview?.dispose();
-        const m = carModel(save.car, save.paint || undefined, save.rim || undefined);
+        const m = carModel(save.car, carOpts());
         preview = m.body;
         previewR = Math.max(...m.wheels.map((w) => w.r));
         preview.position.y = previewR;
@@ -745,7 +792,7 @@ if (import.meta.env.DEV) import("./devbot").then((m) => Object.assign(window, {
     while (time < end && (state === "play" || state === "level") && performance.now() - w0 < 35000) {
       if (state === "level") {
         // Como una persona: evolución primero; con poca vida, supervivencia; si no, armas nuevas
-        const low = hp < maxHp * 0.6, pref = (o: Offer) => o.kind === "evo" ? 3 : low && (o.id === "litio" || o.id === "lego" || o.kind === "heal") ? 2 : o.kind === "weapon" ? 1 : 0;
+        const low = hp < maxHp * 0.6, pref = (o: Offer) => o.kind === "evo" || o.kind === "fusion" ? 3 : low && (o.id === "litio" || o.id === "lego" || o.kind === "heal") ? 2 : o.kind === "weapon" ? 1 : 0;
         choose(offers.reduce((b, o, i) => (pref(o) > pref(offers[b]) ? i : b), 0));
         continue;
       }
@@ -770,6 +817,7 @@ if (import.meta.env.DEV) Object.assign(window, {
   __xp: (n: number) => gainXp(n),
   __god: () => (god = true),
   __dmg: () => { const r = JSON.stringify(dmgBy); for (const k in dmgBy) delete dmgBy[k]; return r; },
+  __out: () => JSON.stringify(Object.fromEntries(Object.entries(dmgOut).map(([k, v]) => [k, Math.round(v)]))), // daño infligido por arma
   __killBoss: () => enemies.forEach((e) => { if (e.def.boss) e.hp = 0; }),
   __info: () => ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps() }),
   __car: () => car && { p: car.pos, f: car.root.forward },

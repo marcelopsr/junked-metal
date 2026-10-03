@@ -4,8 +4,9 @@ import { debris } from "./fx";
 import { canvasTex, M, pbr, shadows, TEX } from "./render";
 import { rng } from "./rng";
 
-// Patio de 200x200. Un auto RC mide ~2 unidades: una maceta es un edificio.
-export const HALF = 100;
+// Patio de 320x320. Un auto RC mide ~2 unidades: una maceta es un edificio.
+export const HALF = 160;
+const K = HALF / 100; // escala de lo que se diseñó para el patio de 200
 
 let scene: B.Scene;
 // El cuerpo toma la pose de la malla al crearse: posicionar SIEMPRE antes (at), nunca después.
@@ -45,22 +46,34 @@ export function hitBreakables(pos: B.Vector3, r: number, dmg: number) {
   return pots;
 }
 
+// Mallas fijas que pueden tapar al auto: la cámara las tramea (main.ts). Las copas quedan fuera: están por encima de la cámara.
+export const occluders: B.Mesh[] = [];
+// ¿Está bajo la tapa de la mesa? (34x30 centrada en 0,-30, a 16 de alto)
+export const underRoof = (p: B.Vector3) => Math.abs(p.x) < 17 && Math.abs(p.z + 30) < 15 && p.y < 16;
+
 // Zonas sin pasto (para no plantar matas encima)
 const bare: { x: number; z: number; r: number }[] = [];
 const isBare = (x: number, z: number) => bare.some((b) => Math.hypot(x - b.x, z - b.z) < b.r) || (Math.abs(x) < 24 && Math.abs(z + 30) < 17) || (Math.abs(x - 50) < 21 && Math.abs(z - 45) < 16);
 
 export function buildWorld(s: B.Scene, low: boolean) {
   scene = s;
-  tuftCount = low ? 6000 : 22000;
+  tuftCount = low ? 12000 : 45000; // ~80% de la densidad del patio de 200 (2,56x de área)
   tuft = grassTuft();
 
-  // ponytail: sin la mesa de jardín gigante (su tapa tapaba la cámara alejada); vuelve cuando haya cámara que esquive techos
+  // Mesa de jardín gigante: la cámara se mete abajo (underRoof) y la tapa se tramea si tapa el auto (occluders)
+  occluders.length = 0;
+  for (const [x, z] of [[-14, -18], [14, -18], [-14, -42], [14, -42]]) occluders.push(stat(cyl(1.4, 1.4, 16, M.metal("#f1f5f9"), [x, 8, z], undefined, 10), B.PhysicsShapeType.CYLINDER));
+  const top = box(34, 0.8, 30, M.matte("#f1f5f9"), [0, 16.4, -30]);
+  shadows.addShadowCaster(top);
+  occluders.push(top);
 
   // Suelo: césped + baldosas + huerta
-  const ground = B.MeshBuilder.CreateGround("ground", { width: 260, height: 260 }, scene);
-  ground.material = pbr("grass", { color: "#ffffff", rough: 0.95, tex: TEX.grass() });
+  const GS = HALF * 2 + 60, gtex = TEX.grass();
+  gtex.uScale = gtex.vScale = (14 * GS) / 260; // misma densidad de texel que en el patio de 200
+  const ground = B.MeshBuilder.CreateGround("ground", { width: GS, height: GS }, scene);
+  ground.material = pbr("grass", { color: "#ffffff", rough: 0.95, tex: gtex });
   ground.receiveShadows = true;
-  const gcol = B.MeshBuilder.CreateBox("gcol", { width: 260, height: 2, depth: 260 }, scene);
+  const gcol = B.MeshBuilder.CreateBox("gcol", { width: GS, height: 2, depth: GS }, scene);
   gcol.position.y = -1;
   gcol.isVisible = false;
   new B.PhysicsAggregate(gcol, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.7 }, scene);
@@ -72,9 +85,11 @@ export function buildWorld(s: B.Scene, low: boolean) {
   dirt.position.set(50, 0.02, 45);
   dirt.material = pbr("dirt", { color: "#ffffff", rough: 1, tex: TEX.dirt() });
   dirt.receiveShadows = true;
+  // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
+  for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirt.material!, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   for (let r = 0; r < 4; r++) for (let i = 0; i < 7; i++) {
     const x = 34 + i * 5.3, z = 35 + r * 7;
-    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte("#3f8f2f"), [x + Math.cos(k * 1.6) * 0.7, 0.5, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8]); l.rotation.y = k * 1.6; shadows.addShadowCaster(l); }
+    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte("#3f8f2f"), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8]); l.rotation.y = k * 1.6; shadows.addShadowCaster(l); }
   }
 
   // Cerca de madera (instancias) + paredes físicas
@@ -85,7 +100,7 @@ export function buildWorld(s: B.Scene, low: boolean) {
     p.rotation.y = ry;
     p.scaling.y = 0.9 + rng() * 0.2;
   }
-  for (const [x, z, w, d] of [[0, HALF, 210, 2], [0, -HALF, 210, 2], [HALF, 0, 2, 210], [-HALF, 0, 2, 210]]) {
+  for (const [x, z, w, d] of [[0, HALF, HALF * 2 + 10, 2], [0, -HALF, HALF * 2 + 10, 2], [HALF, 0, 2, HALF * 2 + 10], [-HALF, 0, 2, HALF * 2 + 10]]) {
     const wall = B.MeshBuilder.CreateBox("wall", { width: w, height: 20, depth: d }, scene);
     wall.position.set(x, 10, z);
     wall.isVisible = false;
@@ -94,20 +109,21 @@ export function buildWorld(s: B.Scene, low: boolean) {
 
   // Casa al fondo (da escala)
   const house = merge("house", [
-    box(260, 90, 6, M.matte("#efe6d8"), [0, 45, HALF + 14]),
-    box(260, 3, 10, M.matte("#8a5a44"), [0, 1.5, HALF + 12]),
-    ...[-70, -25, 45, 90].map((x, i) => box(26, 30, 1, i === 1 ? M.glass() : M.glow(i % 2 ? "#ffb15c" : "#ffcf8a"), [x, 42, HALF + 10.6])),
+    box(GS, 90, 6, M.matte("#efe6d8"), [0, 45, HALF + 14]),
+    box(GS, 3, 10, M.matte("#8a5a44"), [0, 1.5, HALF + 12]),
+    ...[-70, -25, 45, 90].map((x, i) => box(26, 30, 1, i === 1 ? M.glass() : M.glow(i % 2 ? "#ffb15c" : "#ffcf8a"), [x * K, 42, HALF + 10.6])),
     // Siluetas en las ventanas encendidas (alguien mirando el patio)
-    box(7, 14, 0.4, M.matte("#1a1410"), [-66, 36, HALF + 10]), sph(6, M.matte("#1a1410"), [-66, 46, HALF + 10], [1, 1, 0.2], 6),
-    box(5, 10, 0.4, M.matte("#1a1410"), [84, 34, HALF + 10]),
-    ...[-70, -25, 45, 90].map((x) => box(29, 33, 0.6, M.matte("#ffffff"), [x, 42, HALF + 10.9])),
-    box(22, 40, 1, pbr("door", { color: "#ffffff", rough: 0.6, tex: TEX.wood() }), [10, 20, HALF + 10.6]),
+    box(7, 14, 0.4, M.matte("#1a1410"), [-66 * K, 36, HALF + 10]), sph(6, M.matte("#1a1410"), [-66 * K, 46, HALF + 10], [1, 1, 0.2], 6),
+    box(5, 10, 0.4, M.matte("#1a1410"), [84 * K, 34, HALF + 10]),
+    ...[-70, -25, 45, 90].map((x) => box(29, 33, 0.6, M.matte("#ffffff"), [x * K, 42, HALF + 10.9])),
+    box(22, 40, 1, pbr("door", { color: "#ffffff", rough: 0.6, tex: TEX.wood() }), [10 * K, 20, HALF + 10.6]),
   ]);
   house.receiveShadows = true;
+  occluders.push(house);
 
   // Árboles: troncos enormes, copa fuera de cuadro (sombras de hojas igual)
-  for (const [x, z] of [[-75, -70], [78, -60], [-80, 70], [70, 85]]) {
-    stat(cyl(7, 9, 70, pbr("bark", { color: "#ffffff", rough: 0.95, tex: TEX.bark() }), [x, 35, z]), B.PhysicsShapeType.CYLINDER);
+  for (const [x, z] of [[-75, -70], [78, -60], [-80, 70], [70, 85]].map(([x, z]) => [x * K, z * K])) {
+    occluders.push(stat(cyl(7, 9, 70, pbr("bark", { color: "#ffffff", rough: 0.95, tex: TEX.bark() }), [x, 35, z]), B.PhysicsShapeType.CYLINDER));
     for (let k = 0; k < 5; k++) shadows.addShadowCaster(sph(40, M.matte("#2f6b2a"), [x + (rng() - 0.5) * 30, 72 + rng() * 10, z + (rng() - 0.5) * 30], [1, 0.7, 1], 6));
     bare.push({ x, z, r: 6 });
   }
@@ -119,14 +135,36 @@ let layoutMeshes: B.AbstractMesh[] = [];
 let tuft: B.Mesh;
 let tuftCount = 22000;
 let staticBare = 0;
-const clear = (x: number, z: number, r: number) => !isBare(x, z) && !bare.some((b) => Math.hypot(x - b.x, z - b.z) < b.r + r) && Math.hypot(x, z) > 14 && Math.abs(x) < HALF - 10 && Math.abs(z) < HALF - 10;
+const clear = (x: number, z: number, r: number, m: number) => !isBare(x, z) && !bare.some((b) => Math.hypot(x - b.x, z - b.z) < b.r + r) && Math.hypot(x, z) > 14 + r && Math.abs(x) < HALF - m && Math.abs(z) < HALF - m;
 // Busca un lugar libre al azar (con semilla). null si no encuentra.
-function freeSpot(r: number): [number, number] | null {
-  for (let i = 0; i < 40; i++) { const x = (rng() - 0.5) * 180, z = (rng() - 0.5) * 180; if (clear(x, z, r)) return [x, z]; }
+// m: margen a la cerca
+function freeSpot(r: number, m = 10): [number, number] | null {
+  for (let i = 0; i < 40; i++) { const x = (rng() - 0.5) * (HALF - m) * 2, z = (rng() - 0.5) * (HALF - m) * 2; if (clear(x, z, r, m)) return [x, z]; }
   return null;
 }
 const between = (a: number, b: number) => a + rng() * (b - a);
 const int = (a: number, b: number) => Math.floor(between(a, b + 1));
+
+// Rampa maciza (prisma): sube L hasta H, meseta T, baja Lb (0 = corte vertical: borde de salto). Ancho W.
+// Local: el pie en z=0, sube hacia +z. Se posa ANTES del aggregate (trampa de Havok).
+function ramp(mat: B.Material, x: number, z: number, ry: number, W: number, L: number, H: number, T = 0, Lb = 0, y = 0, deco: B.Mesh[] = []) {
+  const pr = [[0, 0], [L, H], ...(T ? [[L + T, H]] : []), [L + T + Lb, 0]];
+  const n = pr.length, pos: number[] = [], ind: number[] = [];
+  for (const sx of [-W / 2, W / 2]) for (const [pz, py] of pr) pos.push(sx, py, pz);
+  for (let i = 1; i < n - 1; i++) ind.push(0, i, i + 1, n, n + i + 1, n + i); // caras laterales
+  for (let i = 0; i < n; i++) { const j = (i + 1) % n; ind.push(i, n + j, j, i, n + i, n + j); } // contorno
+  const m = new B.Mesh("ramp", scene), vd = new B.VertexData();
+  vd.positions = pos; vd.indices = ind;
+  vd.applyToMesh(m);
+  m.convertToFlatShadedMesh();
+  m.material = mat;
+  stat(m, B.PhysicsShapeType.CONVEX_HULL, { friction: 0.5 }, [x, y, z, ry]);
+  const len = L + T + Lb;
+  bare.push({ x: x + (Math.sin(ry) * len) / 2, z: z + (Math.cos(ry) * len) / 2, r: len / 2 + 1 });
+  if (deco.length) { const d = merge("rampDeco", deco); d.position.set(x, y, z); d.rotation.y = ry; shadows.addShadowCaster(d); } // solo visual: se posa después sin problema
+}
+// Tablón apoyado sobre la subida de una rampa (adorno, coordenadas locales de ramp)
+const slopeBoard = (W: number, L: number, H: number, mat: B.Material, th = 0.3) => box(W, th, Math.hypot(L, H), mat, [0, H / 2 + th / 2, L / 2], [-Math.atan2(H, L), 0, 0]);
 
 export function clearLayout() {
   for (const m of layoutMeshes) { m.physicsBody?.dispose(); m.dispose(); }
@@ -140,7 +178,7 @@ export function buildLayout() {
   const before = new Set(scene.meshes);
 
   // Pileta inflable: en una de varias esquinas del patio
-  const [px, pz] = [[-48, 38], [55, -20], [-50, -55], [-60, 5]][int(0, 3)];
+  const [px, pz] = [[-48, 38], [55, -20], [-50, -55], [-60, 5]][int(0, 3)].map((v) => v * K);
   const pool = merge("pool", [
     tor(26, 3.4, M.plastic("#38bdf8"), [0, 1.7, 0], undefined, 32),
     tor(26, 3.4, M.plastic("#f8fafc"), [0, 4.6, 0], undefined, 32),
@@ -149,6 +187,86 @@ export function buildLayout() {
   pool.position.set(px, 0, pz);
   stat(pool, B.PhysicsShapeType.MESH);
   bare.push({ x: px, z: pz, r: 16 });
+  // Mismas mallas ya creadas en buildWorld (pbr cachea por nombre: no se rehace la textura)
+  const wood = pbr("wood", { color: "#ffffff" }), dirtM = pbr("dirt", { color: "#ffffff" }), brick = M.matte("#b45309");
+
+  // TRAMO: puente angosto de tablones sobre la pileta (rampas de 7 m y tablero de 3,2 de ancho).
+  // Caerse = al agua: piso invisible a 3 m y dos tablas de natación para saltar afuera por encima del borde.
+  const bry = rng() * Math.PI, bdx = Math.sin(bry), bdz = Math.cos(bry);
+  for (const s of [-1, 1]) ramp(brick, px + bdx * 31 * s, pz + bdz * 31 * s, s < 0 ? bry : bry + Math.PI, 3.2, 16, 7, 0, 0, 0, [slopeBoard(3.6, 16, 7, wood)]);
+  stat(box(3.6, 0.5, 30.4, wood, [px, 6.75, pz], [0, bry, 0]), B.PhysicsShapeType.BOX);
+  stat(cyl(23, 23, 3, M.matte("#4fb3e8"), [px, 1.5, pz], undefined, 16), B.PhysicsShapeType.CYLINDER).isVisible = false;
+  for (const s of [-1, 1]) { const ry = bry + (s * Math.PI) / 2; ramp(M.plastic("#facc15"), px + Math.sin(ry) * 4, pz + Math.cos(ry) * 4, ry, 3, 7.3, 3.8, 0, 0, 3); }
+
+  // Rampas de juguete: 3 a 5 por partida, tipo/lugar/rumbo según la semilla
+  const orange = M.plastic("#f97316"), rail = M.plastic("#c2410c");
+  for (let i = 0, n = int(3, 5), off = int(0, 3); i < n; i++) {
+    const sp = freeSpot(16, 30); if (!sp) continue; // lejos de la cerca: la pista curva y el aterrizaje ocupan ~25 m
+    const ry = Math.atan2(-sp[0], -sp[1]) + (rng() - 0.5) * 1.6, dx = Math.sin(ry), dz = Math.cos(ry); // saltan hacia el medio del patio
+    const kind = (off + i) % 4;
+    if (kind === 0) {
+      // Tabla sobre una pila de ladrillos: salto corto y seco
+      ramp(brick, sp[0] - dx * 6.5, sp[1] - dz * 6.5, ry, 4, 10, 2.6, 0, 3, 0, [slopeBoard(4.4, 10, 2.6, wood)]);
+    } else if (kind === 1) {
+      // Pista de autitos de plástico: curva en el piso que termina en un trampolín naranja
+      const sg = rng() < 0.5 ? -1 : 1, R = 14, deco: B.Mesh[] = [];
+      for (let k = 0; k < 12; k++) {
+        const a0 = (k / 12) * 1.6, a1 = ((k + 1) / 12) * 1.6;
+        const p0 = [sg * (R - R * Math.cos(a0)), -R * Math.sin(a0)], p1 = [sg * (R - R * Math.cos(a1)), -R * Math.sin(a1)];
+        const mx = (p0[0] + p1[0]) / 2, mz = (p0[1] + p1[1]) / 2, yaw = Math.atan2(p1[0] - p0[0], p1[1] - p0[1]), len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) + 0.1;
+        deco.push(box(3.4, 0.1, len, orange, [mx, 0.05, mz], [0, yaw, 0]));
+        for (const e of [-1.8, 1.8]) deco.push(box(0.25, 0.35, len, rail, [mx + Math.cos(yaw) * e, 0.17, mz - Math.sin(yaw) * e], [0, yaw, 0]));
+      }
+      for (const e of [-1.8, 1.8]) { const b = slopeBoard(0.25, 8, 2.2, rail, 0.35); b.position.x = e; b.position.y += 0.15; deco.push(b); }
+      const fx = sp[0] - dx * 6, fz = sp[1] - dz * 6;
+      ramp(orange, fx, fz, ry, 3.4, 8, 2.2, 0, 4, 0, deco);
+      for (let k = 1; k < 4; k++) { const a = (k / 4) * 1.6, lx = sg * (R - R * Math.cos(a)), lz = -R * Math.sin(a); bare.push({ x: fx + lx * Math.cos(ry) + lz * dx, z: fz - lx * Math.sin(ry) + lz * dz, r: 3 }); }
+    } else if (kind === 2) {
+      // Tobogán caído: rampa larga con plataforma arriba, la escalera tirada al costado
+      const deco = [slopeBoard(3, 14, 4, M.plastic("#ef4444"), 0.2)];
+      for (const e of [-1.7, 1.7]) { const b = slopeBoard(0.3, 14, 4, M.plastic("#ef4444"), 0.7); b.position.x = e; b.position.y += 0.3; deco.push(b); }
+      for (const e of [3.4, 5]) deco.push(cyl(0.4, 0.4, 9, M.metal("#94a3b8"), [e, 0.2, 6], [Math.PI / 2, 0, 0], 6));
+      for (let k = 0; k < 5; k++) deco.push(cyl(0.25, 0.25, 1.6, M.metal("#94a3b8"), [4.2, 0.2, 2.5 + k * 1.8], [0, 0, Math.PI / 2], 6));
+      ramp(M.plastic("#facc15"), sp[0] - dx * 9.75, sp[1] - dz * 9.75, ry, 3.6, 14, 4, 1.5, 4, 0, deco);
+    } else {
+      // Montículos de tierra en fila: lomas que hacen volar al auto con turbo
+      for (let k = -1; k <= 1; k++) {
+        const x = sp[0] + dx * k * 10, z = sp[1] + dz * k * 10;
+        stat(sph(14, dirtM, [x, -1.5, z], [1, 0.46, 1], 12), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
+        bare.push({ x, z, r: 6 });
+      }
+    }
+  }
+
+  // TRAMO: pasillo entre macetas de cemento (no se rompen ni dan premio: es un desfiladero, no un cofre)
+  if (rng() < 0.75) {
+    const sp = freeSpot(20);
+    if (sp) {
+      const ry = rng() * Math.PI, dx = Math.sin(ry), dz = Math.cos(ry), parts: B.Mesh[] = [];
+      for (let k = 0; k < 8; k++) for (const e of [-3.6, 3.6]) {
+        const t = (k - 3.5) * 4.4, x = sp[0] + dx * t + dz * e, z = sp[1] + dz * t - dx * e;
+        stat(cyl(3.2, 3.2, 2.6, M.matte("#8a8f94"), [x, 1.3, z], undefined, 10), B.PhysicsShapeType.CYLINDER).isVisible = false;
+        parts.push(cyl(3.2, 2.6, 2.6, M.matte("#8a8f94"), [x, 1.3, z], undefined, 10), cyl(2.8, 2.8, 0.2, M.matte("#4a3420"), [x, 2.55, z], undefined, 10));
+        for (let l = 0; l < 3; l++) { const a = l * 2.1 + k; const lf = sph(2, M.matte(l % 2 ? "#3f8f2f" : "#4ea83a"), [x + Math.cos(a) * 0.6, 3.3, z + Math.sin(a) * 0.6], [0.4, 0.2, 1.4]); lf.rotation.set(0.6, -a + Math.PI / 2, 0); parts.push(lf); }
+        bare.push({ x, z, r: 1.8 });
+      }
+      shadows.addShadowCaster(merge("planters", parts));
+    }
+  }
+
+  // TRAMO: juguetes desparramados (bloques y pelotitas sueltas que hacen patinar)
+  if (rng() < 0.75) {
+    const sp = freeSpot(13);
+    if (sp) {
+      const toy = ["#ef4444", "#3b82f6", "#facc15", "#22c55e", "#a855f7"];
+      for (let k = 0; k < 26; k++) {
+        const a = rng() * 6.3, r = Math.sqrt(rng()) * 11, s = between(0.7, 1.5), c = toy[int(0, 4)];
+        breakable(dyn(box(s, s * between(0.6, 1), s * between(1, 2), M.plastic(c), [sp[0] + Math.cos(a) * r, s / 2, sp[1] + Math.sin(a) * r], [0, rng() * 6.3, 0]), B.PhysicsShapeType.BOX, 0.3), 25, s * 0.7, c);
+      }
+      for (let k = 0; k < 5; k++) { const a = rng() * 6.3, r = Math.sqrt(rng()) * 10; dyn(sph(1.4, M.plastic(toy[k]), [sp[0] + Math.cos(a) * r, 0.7, sp[1] + Math.sin(a) * r], undefined, 10), B.PhysicsShapeType.SPHERE, 0.4); }
+      bare.push({ x: sp[0], z: sp[1], r: 12 });
+    }
+  }
 
   // Macetas con plantas: cantidad, lugar y tamaño según la semilla
   const pots: [number, number, number][] = [];
@@ -265,7 +383,7 @@ export function buildLayout() {
   const q = new B.Quaternion(), sc = new B.Vector3(), p = new B.Vector3(), m = new B.Matrix();
   let k = 0;
   for (let tries = 0; k < n && tries < n * 3; tries++) {
-    const x = (rng() - 0.5) * 198, z = (rng() - 0.5) * 198;
+    const x = (rng() - 0.5) * (HALF - 1) * 2, z = (rng() - 0.5) * (HALF - 1) * 2;
     if (isBare(x, z)) continue;
     const s = 0.6 + rng() * 0.9;
     sc.set(s, s * (0.7 + rng() * 0.8), s);

@@ -49,13 +49,17 @@ export const PLAGUES: Plague[] = [
 
 export type Profile = { seed: number; climate: Climate; plague: Plague; minis: Kind[]; swarmEvery: number; ballEvery: number; chestEvery: number };
 
+// Los dos minijefes de la partida: 2 de 3 en orden, con UNA sola tirada (no corre el resto del perfil de la semilla)
+const MINIS: Kind[] = ["rey", "cortadora", "tarantula"];
+const pickMinis = (r: number): Kind[] => { const i = Math.floor(r * 6), a = i % 3; return [MINIS[a], MINIS[(a + 1 + (i >= 3 ? 1 : 0)) % 3]]; };
+
 export function makeProfile(seed: number): Profile {
   const pick = <T>(a: T[]) => a[Math.floor(rng() * a.length)];
   return {
     seed,
     climate: pick(NIGHTS),
     plague: pick(PLAGUES),
-    minis: rng() < 0.5 ? ["rey", "cortadora"] : ["cortadora", "rey"],
+    minis: pickMinis(rng()),
     swarmEvery: 45 + rng() * 35,
     ballEvery: 60 + rng() * 45,
     chestEvery: 95 + rng() * 50,

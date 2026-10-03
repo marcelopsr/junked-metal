@@ -2,7 +2,7 @@
 :root {
   --shell: #0b0d0a; --panel: #141813; --line: #2c3a28; --txt: #b9d3a4; --dim: #5f7355;
   --lcd: #10170d; --lcd-ink: #8dff6a; --sig: #6fb3c4; --ok: #7fbf5a; --low: #d12a1c; --turbo: #e0a030;
-  --r-comun: #8a9a82; --r-rara: #6fb3c4; --r-epica: #9a6fb5; --r-evo: #e0a030;
+  --r-comun: #8a9a82; --r-rara: #6fb3c4; --r-epica: #9a6fb5; --r-evo: #e0a030; --r-fusion: #c8d84a;
   --data: "VT323", monospace; --display: "Silkscreen", monospace;
 }
 * { box-sizing: border-box; }
@@ -21,7 +21,6 @@ kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-right: 3p
 .tag { color: var(--dim); font-size: 14px; max-width: 520px; }
 .sect { font: 600 11px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; color: var(--dim); margin-top: 8px; }
 .sect span { color: var(--txt); letter-spacing: .04em; }
-.help { font-size: 12px; color: var(--dim); max-width: 600px; line-height: 1.5; }
 .hint { font-size: 11px; color: var(--dim); letter-spacing: .1em; }
 .otitle { font: 400 clamp(24px, 4vw, 36px)/1 var(--display); color: #d6e8c8; text-shadow: 0 3px 0 #000; }
 button { font: 700 14px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; padding: 12px 22px; border: 1px solid var(--line); border-radius: 0; background: var(--panel); color: var(--txt); cursor: pointer; box-shadow: 0 3px 0 #000; }
@@ -60,7 +59,7 @@ select { font: 600 13px var(--data); padding: 5px 8px; border-radius: 0; backgro
 .offer .pips { display: flex; gap: 3px; margin-top: auto; }
 .offer .pips i { flex: 1; height: 4px; background: #ffffff18; }
 .offer .pips i.on { background: var(--rc); }
-.offer.rara { --rc: var(--r-rara); } .offer.epica { --rc: var(--r-epica); } .offer.evo { --rc: var(--r-evo); background: #221d10; }
+.offer.rara { --rc: var(--r-rara); } .offer.epica { --rc: var(--r-epica); } .offer.evo { --rc: var(--r-evo); background: #221d10; } .offer.fusion { --rc: var(--r-fusion); background: #1b1f0e; }
 .offer.picked { animation: fly .38s cubic-bezier(.5, 0, .9, .4) forwards; }
 .offer.gone { animation: off .28s steps(5, end) forwards; }
 

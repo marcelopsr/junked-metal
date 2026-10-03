@@ -175,7 +175,9 @@ function applyScale() {
   e.setHardwareScalingLevel(Math.max(1, (e.getRenderingCanvas()!.clientHeight * (devicePixelRatio || 1)) / target));
 }
 
+let lowQ = false;
 function setupPixels(cam: B.Camera, low: boolean) {
+  lowQ = low;
   target = low ? QUALITY.equilibrado : QUALITY.calidad;
   // Profundidad lineal para los contornos; sin pasto (llenaría todo de bordes) ni cielo
   depth = scene.enableDepthRenderer(cam, false);
@@ -190,7 +192,7 @@ function setupPixels(cam: B.Camera, low: boolean) {
 }
 
 export function setQuality(q: Quality) {
-  target = QUALITY[q === "auto" ? "calidad" : q];
+  target = QUALITY[q === "auto" ? (lowQ ? "equilibrado" : "calidad") : q];
   applyScale();
 }
 
@@ -225,8 +227,10 @@ class SnapPlugin extends B.MaterialPluginBase {
     const e = scene.getEngine(), k = LOOK.snap > 0 ? 0.5 / LOOK.snap : 1e5;
     ubo.updateFloat2("snapGrid", e.getRenderWidth() * k, e.getRenderHeight() * k);
   }
-  getCustomCode(type: string) {
-    return type === "vertex" ? { CUSTOM_VERTEX_MAIN_END: "gl_Position.xy = floor(gl_Position.xy / gl_Position.w * snapGrid + .5) / snapGrid * gl_Position.w;" } : null;
+  getCustomCode(type: string): Record<string, string> {
+    // Trama tipo screen-door: una malla con visibility < 1 (p. ej. lo que tapa al auto) descarta medio damero de píxeles
+    return type === "vertex" ? { CUSTOM_VERTEX_MAIN_END: "gl_Position.xy = floor(gl_Position.xy / gl_Position.w * snapGrid + .5) / snapGrid * gl_Position.w;" }
+      : { CUSTOM_FRAGMENT_MAIN_BEGIN: "if (visibility < 1. && mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.) < 1.) discard;" };
   }
 }
 

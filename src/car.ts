@@ -1,13 +1,16 @@
 import * as B from "@babylonjs/core";
-import { carModel, type CarKind, type CarModel } from "./models";
+import { carModel, type CarKind, type CarModel, type CarOpts } from "./models";
 import { shadows } from "./render";
 
 const UP = B.Vector3.Up();
+const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
 
 export const CARS: Record<CarKind, { name: string; desc: string; cost: number; hp: number; speed: number; accel: number; turn: number; grip: number; ram: number; mass: number; size: [number, number, number] }> = {
   buggy: { name: "Buggy", desc: "Equilibrado. Salta bien, gira rápido.", cost: 0, hp: 150, speed: 15, accel: 32, turn: 3.2, grip: 10, ram: 3, mass: 1, size: [1.3, 0.7, 2.3] },
   monster: { name: "Monster Truck", desc: "Lento y tanque. Embestir hace +50%.", cost: 120, hp: 220, speed: 12.5, accel: 26, turn: 2.7, grip: 12, ram: 4.5, mass: 1.8, size: [1.8, 1.1, 2.4] },
   formula: { name: "Fórmula", desc: "Rapidísimo pero frágil.", cost: 200, hp: 110, speed: 19, accel: 40, turn: 3.6, grip: 14, ram: 2.4, mass: 0.8, size: [1.3, 0.55, 2.8] },
+  tanque: { name: "Tanque de juguete", desc: "Blindado y pesado. Lento, pero embiste como un ladrillo.", cost: 350, hp: 300, speed: 10, accel: 18, turn: 2.3, grip: 18, ram: 5.5, mass: 2.6, size: [1.75, 0.9, 2.4] },
+  carrera: { name: "Autito a fricción", desc: "Liviano y nervioso. Acelera como un resorte y derrapa en cada curva.", cost: 280, hp: 85, speed: 21, accel: 48, turn: 4.2, grip: 6, ram: 1.8, mass: 0.55, size: [1.1, 0.5, 2.1] },
 };
 
 // Manejo arcade sobre un cuerpo Havok: la física resuelve choques,
@@ -19,7 +22,11 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
   const right = B.Vector3.Cross(UP, fwd);
   let fs = B.Vector3.Dot(v, fwd);
   let ls = B.Vector3.Dot(v, right);
-  if (Math.abs(v.y) > 4) return { fs, ls, grounded: false }; // en el aire no hay control
+  // En el aire no hay control. Rayo corto hacia abajo (no v.y: subiendo una rampa v.y es grande y hay que poder doblar)
+  const hh = mesh.getBoundingInfo().boundingBox.extendSize.y;
+  rayFrom.copyFrom(mesh.position); rayTo.copyFrom(rayFrom); rayTo.y -= hh + 0.9; // en rampa el centro queda más alto que hh
+  (mesh.getScene().getPhysicsEngine() as B.PhysicsEngineV2).raycastToRef(rayFrom, rayTo, ray, { ignoreBody: body });
+  if (!ray.hasHit) return { fs, ls, grounded: false };
 
   const t = o.throttle;
   if (t > 0) { if (fs < o.speed * t) fs = Math.min(fs + o.accel * t * dt, o.speed * t); }
@@ -46,7 +53,7 @@ export class Car {
 
   private paintBase: B.Color3;
 
-  constructor(scene: B.Scene, public kind: CarKind, paint?: string, rim?: string) {
+  constructor(scene: B.Scene, public kind: CarKind, opts: CarOpts = {}) {
     const d = (this.def = CARS[kind]);
     const [w, h, l] = d.size;
     this.root = B.MeshBuilder.CreateBox("car", { width: w, height: h, depth: l }, scene);
@@ -54,7 +61,7 @@ export class Car {
     this.root.position.set(0, h / 2 + 0.3, 0);
     this.vis = new B.TransformNode("carVis", scene);
     this.vis.parent = this.root;
-    this.model = carModel(kind, paint, rim);
+    this.model = carModel(kind, opts);
     this.paintBase = this.model.paint.albedoColor.clone();
     this.model.body.parent = this.vis;
     const r = Math.max(...this.model.wheels.map((x) => x.r));
@@ -93,7 +100,9 @@ export class Car {
     this.lastFs = fs;
     const k = 1 - Math.exp(-8 * dt);
     this.vis.rotation.z = B.Scalar.Lerp(this.vis.rotation.z, -steer * B.Scalar.Clamp(fs / maxSpeed, -1, 1) * 0.1, k);
-    this.vis.rotation.x = B.Scalar.Lerp(this.vis.rotation.x, B.Scalar.Clamp(-acc * 0.004, -0.08, 0.08), k);
+    // Cabeceo según la trayectoria (rampas y saltos): el colisionador no vuelca, la carrocería sí apunta hacia donde va
+    const vy = this.body.getLinearVelocity().y, pitch = Math.abs(fs) > 2 ? B.Scalar.Clamp(-Math.atan(vy / fs), -0.5, 0.5) : 0;
+    this.vis.rotation.x = B.Scalar.Lerp(this.vis.rotation.x, B.Scalar.Clamp(-acc * 0.004, -0.08, 0.08) + pitch, k);
   }
 
   dispose() { this.agg.dispose(); this.root.dispose(); }

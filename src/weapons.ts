@@ -8,7 +8,7 @@ import { M, pbr } from "./render";
 import { rng } from "./rng";
 
 // ---------- Pasivas ----------
-export type PassiveId = "iman" | "resorte" | "turbo" | "litio" | "capacitor" | "lego";
+export type PassiveId = "iman" | "resorte" | "turbo" | "litio" | "capacitor" | "lego" | "lupa";
 export const PASSIVES: Record<PassiveId, { name: string; desc: string }> = {
   iman: { name: "Imán de heladera", desc: "+30% radio de recolección" },
   resorte: { name: "Resorte", desc: "+12% área y velocidad de proyectiles" },
@@ -16,9 +16,10 @@ export const PASSIVES: Record<PassiveId, { name: string; desc: string }> = {
   litio: { name: "Pila de litio", desc: "+20 vida máxima y regeneración" },
   capacitor: { name: "Capacitor", desc: "-8% tiempo de recarga de armas" },
   lego: { name: "Paragolpes LEGO", desc: "-8% daño recibido, más peso" },
+  lupa: { name: "Lupa", desc: "+8% daño de todas las armas" },
 };
 
-export function passiveStats(p: Partial<Record<PassiveId, number>>, perm: { hp: number; dmg: number; spd: number; mag: number }) {
+export function passiveStats(p: Partial<Record<PassiveId, number>>, perm: { hp: number; dmg: number; spd: number; mag: number; xp?: number }) {
   const l = (id: PassiveId) => p[id] ?? 0;
   return {
     magnet: 6 * (1 + 0.3 * l("iman")) * (1 + 0.1 * perm.mag),
@@ -30,7 +31,8 @@ export function passiveStats(p: Partial<Record<PassiveId, number>>, perm: { hp: 
     cooldown: Math.pow(0.92, l("capacitor")),
     armor: 1 - Math.pow(0.92, l("lego")),
     mass: 1 + 0.1 * l("lego"),
-    dmg: 1 + 0.1 * perm.dmg,
+    dmg: (1 + 0.1 * perm.dmg) * (1 + 0.08 * l("lupa")),
+    xp: 1 + 0.05 * (perm.xp ?? 0),
   };
 }
 export type PStats = ReturnType<typeof passiveStats>;
@@ -47,7 +49,8 @@ export interface Ctx {
   explode(pos: B.Vector3, r: number, dmg: number): void;
 }
 
-export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza";
+export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza" | "agua" | FusionId;
+export type FusionId = "chispazo" | "globos" | "anillo";
 export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: PassiveId; evoName: string; evoDesc: string }> = {
   gomitas: { name: "Lanza-gomitas", desc: "Dispara gomitas al enemigo más cercano", evo: "resorte", evoName: "Gomitas Saltarinas", evoDesc: "5 gomitas que rebotan entre enemigos" },
   clips: { name: "Clips orbitales", desc: "Clips que giran alrededor del auto", evo: "iman", evoName: "Tornado de Clips", evoDesc: "8 clips enormes en órbita amplia" },
@@ -55,7 +58,21 @@ export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: Passiv
   petardos: { name: "Petardos", desc: "Lanza petardos que explotan en área", evo: "litio", evoName: "Bomba de Racimo", evoDesc: "Cada explosión suelta 4 más" },
   tesla: { name: "Antena Tesla", desc: "Rayo que salta entre enemigos", evo: "capacitor", evoName: "Tormenta Eléctrica", evoDesc: "Cadenas de 10, casi sin recarga" },
   lanza: { name: "Lápiz-lanza", desc: "+35% daño al embestir por nivel", evo: "lego", evoName: "Ariete", evoDesc: "Invulnerable con turbo; embestir genera onda expansiva" },
+  agua: { name: "Pistola de agua", desc: "Chorro en cono que empuja y frena a los enemigos", evo: "lupa", evoName: "Hidrolavadora", evoDesc: "Chorro ancho, largo y casi continuo que frena en seco" },
+  // Fusiones: nunca salen sueltas en las cartas (ver FUSIONS); evoName = nombre porque nacen evolucionadas
+  chispazo: { name: "Petardos eléctricos", desc: "", evo: "capacitor", evoName: "Petardos eléctricos", evoDesc: "" },
+  globos: { name: "Globos de agua", desc: "", evo: "resorte", evoName: "Globos de agua", evoDesc: "" },
+  anillo: { name: "Anillo de fuego", desc: "", evo: "iman", evoName: "Anillo de fuego", evoDesc: "" },
 };
+
+// Fusiones: dos armas a nivel 5 (o evolucionadas) se combinan en una sola, que nace evolucionada y libera un lugar.
+// La fusión conserva lo evolucionado de ambas y suma una sinergia (ver class Fusion).
+export const FUSIONS: { id: FusionId; from: [WeaponId, WeaponId]; desc: string }[] = [
+  { id: "chispazo", from: ["petardos", "tesla"], desc: "Racimo de petardos y tormenta eléctrica; cada explosión suelta un rayo en cadena" },
+  { id: "globos", from: ["gomitas", "agua"], desc: "Gomitas saltarinas e hidrolavadora; cada gomita revienta y empapa en área" },
+  { id: "anillo", from: ["clips", "chispero"], desc: "Tornado de clips y estela infernal; los clips encendidos dejan fuego en su órbita" },
+];
+const isFusion = (id: WeaponId): id is FusionId => FUSIONS.some((f) => f.id === id);
 
 export abstract class Weapon {
   lv = 1;
@@ -77,6 +94,7 @@ const nearest = (pos: B.Vector3, enemies: Enemy[], range: number, skip?: Set<Ene
 
 class Gomitas extends Weapon {
   shots: { m: B.InstancedMesh; dir: B.Vector3; life: number; bounces: number; hit: Set<Enemy> }[] = [];
+  onHit?: (c: Ctx, e: Enemy) => void; // sinergia de fusión (Globos de agua)
   tpl = template("gomita", () => [sph(0.45, pbr("gummy", { color: "#b6ff6a", rough: 0.15, alpha: 0.85, emissive: "#3a8a00" }), [0, 0, 0], [1, 0.8, 1.2])]);
   update(c: Ctx) {
     if ((this.cd -= c.dt) <= 0) {
@@ -100,6 +118,7 @@ class Gomitas extends Weapon {
       let dead = (s.life -= c.dt) <= 0;
       for (const e of c.enemies) if (!s.hit.has(e) && B.Vector3.Distance(s.m.position, e.pos.add(new B.Vector3(0, 0.4, 0))) < e.radius + 0.35) {
         c.damage(e, dmg, s.dir.scale(2));
+        this.onHit?.(c, e);
         s.hit.add(e);
         if (s.bounces-- > 0) {
           const nx = nearest(e.pos, c.enemies, 12, s.hit);
@@ -153,11 +172,7 @@ class Chispero extends Weapon {
     const r = (this.evolved ? 1.7 : 0.8 + 0.08 * this.lv) * c.st.area;
     if (Math.abs(c.fs) > 4 && (this.t -= c.dt) <= 0) {
       this.t = 0.09;
-      const m = this.tpl.createInstance("f");
-      m.position.set(c.car.pos.x, 0.03, c.car.pos.z);
-      m.scaling.setAll(r);
-      this.fires.push({ m, life: this.evolved ? 4 : 1.2 + 0.3 * this.lv, r });
-      if (Math.random() < 0.4) FX.hit(m.position);
+      this.drop(c.car.pos, r, this.evolved ? 4 : 1.2 + 0.3 * this.lv);
     }
     const dps = (this.evolved ? 50 : 10 + 6 * this.lv) * c.st.dmg;
     for (const f of [...this.fires]) {
@@ -166,6 +181,13 @@ class Chispero extends Weapon {
       for (const e of c.enemies) if (Math.hypot(e.pos.x - f.m.position.x, e.pos.z - f.m.position.z) < f.r + e.radius * 0.5) c.damage(e, dps * c.dt);
       if (f.life <= 0) { f.m.dispose(); this.fires.splice(this.fires.indexOf(f), 1); }
     }
+  }
+  drop(p: B.Vector3, r: number, life: number) {
+    const m = this.tpl.createInstance("f");
+    m.position.set(p.x, 0.03, p.z);
+    m.scaling.setAll(r);
+    this.fires.push({ m, life, r });
+    if (Math.random() < 0.4) FX.hit(m.position);
   }
   dispose() { for (const f of this.fires) f.m.dispose(); }
 }
@@ -207,39 +229,121 @@ class Tesla extends Weapon {
   bolts: { m: B.LinesMesh; life: number }[] = [];
   update(c: Ctx) {
     if ((this.cd -= c.dt) <= 0) {
-      const first = nearest(c.car.pos, c.enemies, 9);
-      if (first) {
+      if (this.zap(c, c.car.pos, c.car.pos.add(new B.Vector3(0.4, 1.6, -0.7)), this.evolved ? 10 : 2 + this.lv, (18 + 8 * this.lv) * c.st.dmg * (this.evolved ? 1.5 : 1)))
         this.cd = this.cdMax = (this.evolved ? 0.45 : Math.max(0.5, 1.4 - 0.1 * this.lv)) * c.st.cooldown;
-        const chain = this.evolved ? 10 : 2 + this.lv;
-        const dmg = (18 + 8 * this.lv) * c.st.dmg * (this.evolved ? 1.5 : 1);
-        const hit = new Set<Enemy>();
-        const pts = [c.car.pos.add(new B.Vector3(0.4, 1.6, -0.7))];
-        let cur: Enemy | null = first;
-        while (cur && hit.size < chain) {
-          hit.add(cur);
-          c.damage(cur, dmg);
-          const a = pts[pts.length - 1], b = cur.pos.add(new B.Vector3(0, 0.6, 0));
-          for (let k = 1; k <= 3; k++) pts.push(B.Vector3.Lerp(a, b, k / 4).addInPlace(new B.Vector3((Math.random() - 0.5) * 0.8, (Math.random() - 0.5) * 0.8, (Math.random() - 0.5) * 0.8)));
-          pts.push(b);
-          const from: Enemy = cur;
-          cur = null;
-          let bd = 6;
-          for (const e of c.enemies) if (!hit.has(e)) { const d = B.Vector3.Distance(e.pos, from.pos); if (d < bd) { bd = d; cur = e; } }
-        }
-        SFX.zap();
-        const m = B.MeshBuilder.CreateLines("bolt", { points: pts }, c.scene);
-        m.color = new B.Color3(0.6, 0.9, 1).scale(3);
-        m.isPickable = false;
-        this.bolts.push({ m, life: 0.12 });
-      }
     }
     for (const b of [...this.bolts]) if ((b.life -= c.dt) <= 0) { b.m.dispose(); this.bolts.splice(this.bolts.indexOf(b), 1); }
+  }
+  // Rayo en cadena desde "from" (busca en 9 m) dibujado desde "start"; devuelve si pegó
+  zap(c: Ctx, from: B.Vector3, start: B.Vector3, chain: number, dmg: number) {
+    let cur = nearest(from, c.enemies, 9);
+    if (!cur) return false;
+    const hit = new Set<Enemy>();
+    const pts = [start];
+    while (cur && hit.size < chain) {
+      hit.add(cur);
+      c.damage(cur, dmg);
+      const a = pts[pts.length - 1], b = cur.pos.add(new B.Vector3(0, 0.6, 0));
+      for (let k = 1; k <= 3; k++) pts.push(B.Vector3.Lerp(a, b, k / 4).addInPlace(new B.Vector3((Math.random() - 0.5) * 0.8, (Math.random() - 0.5) * 0.8, (Math.random() - 0.5) * 0.8)));
+      pts.push(b);
+      const prev: Enemy = cur;
+      cur = null;
+      let bd = 6;
+      for (const e of c.enemies) if (!hit.has(e)) { const d = B.Vector3.Distance(e.pos, prev.pos); if (d < bd) { bd = d; cur = e; } }
+    }
+    SFX.zap();
+    const m = B.MeshBuilder.CreateLines("bolt", { points: pts }, c.scene);
+    m.color = new B.Color3(0.6, 0.9, 1).scale(3);
+    m.isPickable = false;
+    this.bolts.push({ m, life: 0.12 });
+    return true;
   }
   dispose() { for (const b of this.bolts) b.m.dispose(); }
 }
 
 class Lanza extends Weapon {
   update() {} // pasiva: su efecto vive en la embestida (main.ts)
+}
+
+// Chorro en cono hacia el enemigo más cercano: daño bajo por tick, empuja y deja empapado (lento) a todo lo que toca.
+// El cono decide el daño (determinista); las gotas son solo visuales.
+class Agua extends Weapon {
+  drops: { m: B.InstancedMesh; v: B.Vector3; life: number }[] = [];
+  spray = 0;
+  tick = 0;
+  dir = new B.Vector3(0, 0, 1);
+  tpl = template("gota", () => [sph(0.3, pbr("water", { color: "#9dffc8", rough: 0.05, alpha: 0.7, emissive: "#1f7a4a" }), [0, 0, 0], [1, 1, 1.8], 6)]);
+  update(c: Ctx) {
+    const R = (this.evolved ? 13 : 8 + 0.6 * this.lv) * c.st.area, half = this.evolved ? 0.5 : 0.3;
+    if (this.spray <= 0 && (this.cd -= c.dt) <= 0) {
+      const t = nearest(c.car.pos, c.enemies, R);
+      if (t) {
+        this.spray = this.evolved ? 1.2 : 0.5 + 0.05 * this.lv;
+        this.cd = this.cdMax = (this.evolved ? 0.4 : Math.max(0.9, 1.9 - 0.15 * this.lv)) * c.st.cooldown;
+        this.dir.set(t.pos.x - c.car.pos.x, 0, t.pos.z - c.car.pos.z).normalize();
+      }
+    }
+    if (this.spray > 0) {
+      this.spray -= c.dt;
+      if ((this.tick -= c.dt) <= 0) {
+        this.tick = 0.1;
+        const dmg = (3 + 1.5 * this.lv) * c.st.dmg * (this.evolved ? 1.6 : 1), push = this.evolved ? 5 : 3;
+        for (const e of c.enemies) {
+          const dx = e.pos.x - c.car.pos.x, dz = e.pos.z - c.car.pos.z, d = Math.hypot(dx, dz);
+          if (d < 0.01 || d > R + e.radius) continue;
+          if (Math.acos(B.Scalar.Clamp((dx * this.dir.x + dz * this.dir.z) / d, -1, 1)) > half + e.radius / d) continue;
+          c.damage(e, dmg, new B.Vector3((dx / d) * push, 0.3, (dz / d) * push));
+          e.slow = Math.max(e.slow, this.evolved ? 2 : 1.2);
+        }
+      }
+      for (let k = 0; k < 3 && this.drops.length < 70; k++) {
+        const a = Math.atan2(this.dir.x, this.dir.z) + (Math.random() - 0.5) * half * 1.6, sp = 22 + Math.random() * 8;
+        const m = this.tpl.createInstance("w");
+        m.position.set(c.car.pos.x, c.car.pos.y + 0.8, c.car.pos.z);
+        m.rotation.y = a;
+        this.drops.push({ m, v: new B.Vector3(Math.sin(a) * sp, 2 + Math.random() * 2, Math.cos(a) * sp), life: R / sp });
+      }
+    }
+    for (let i = this.drops.length - 1; i >= 0; i--) {
+      const g = this.drops[i];
+      g.m.position.addInPlace(g.v.scale(c.dt));
+      g.v.y -= 12 * c.dt;
+      if ((g.life -= c.dt) <= 0 || g.m.position.y < 0.05) { g.m.dispose(); this.drops.splice(i, 1); }
+    }
+  }
+  dispose() { for (const g of this.drops) g.m.dispose(); }
+}
+
+// Fusión: corre las dos armas de origen ya evolucionadas (nivel 5) y les agrega la sinergia de la tabla FUSIONS
+class Fusion extends Weapon {
+  parts: Weapon[];
+  t = 0;
+  constructor(id: FusionId) {
+    super(id);
+    this.parts = FUSIONS.find((f) => f.id === id)!.from.map((p) => { const w = makeWeapon(p); w.lv = 5; w.evolved = true; return w; });
+    if (id === "globos") (this.parts[0] as Gomitas).onHit = (c, e) => {
+      // La gomita revienta: empapa, empuja y salpica en 3 m
+      for (const o of c.enemies) {
+        const d = B.Vector3.Distance(o.pos, e.pos);
+        if (d < 3 * c.st.area + o.radius) { o.slow = Math.max(o.slow, 2); if (o !== e) c.damage(o, 8 * c.st.dmg, o.pos.subtract(e.pos).normalize().scale(3)); }
+      }
+    };
+  }
+  get cdFrac() { return this.parts[0].cdFrac; }
+  update(c: Ctx) {
+    this.t -= c.dt;
+    const [a, b] = this.parts;
+    if (this.id === "chispazo") {
+      // Cada explosión (como mucho 4 por segundo) suelta un rayo en cadena de 4 enemigos
+      a.update({ ...c, explode: (p, r, dmg) => { c.explode(p, r, dmg); if (this.t <= 0) { this.t = 0.25; (b as Tesla).zap(c, p, p.add(new B.Vector3(0, 1, 0)), 4, dmg * 0.35); } } });
+    } else a.update(c);
+    b.update(c);
+    if (this.id === "anillo" && this.t <= 0) {
+      this.t = 0.3;
+      for (const m of (a as Clips).ms) (b as Chispero).drop(m.position, 1.1 * c.st.area, 1.5);
+    }
+  }
+  dispose() { for (const p of this.parts) p.dispose(); }
 }
 
 // Pieza visible de cada arma, montada sobre el auto (también se usa como vista previa en las cartas)
@@ -260,6 +364,14 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
     petardos: () => [box(0.55, 0.08, 0.35, M.metal("#374151"), [0, top - 0.05, rear + 0.25]), ...[-0.18, 0, 0.18].map((x) => cyl(0.13, 0.13, 0.45, M.plastic("#dc2626"), [x, top + 0.12, rear + 0.25], [-0.7, 0, 0], 8))],
     tesla: () => [cyl(0.14, 0.18, 0.5, M.metal("#b87333"), [-0.35, top + 0.1, -0.35], undefined, 8), ...[0, 1, 2].map((i) => tor(0.3, 0.05, M.metal("#b87333"), [-0.35, top + 0.02 + i * 0.13, -0.35], undefined, 10)), sph(0.18, M.glow("#35d0ff"), [-0.35, top + 0.42, -0.35])],
     lanza: () => [cyl(0.14, 0.14, 1.8, M.plastic("#facc15"), [0, h * 0.15, nose + 0.8], [Math.PI / 2, 0, 0], 6), cyl(0, 0.14, 0.4, M.matte("#f1c27d"), [0, h * 0.15, nose + 1.9], [Math.PI / 2, 0, 0], 6)],
+    agua: () => [
+      cyl(0.34, 0.34, 0.45, pbr("waterTank", { color: "#9dffc8", rough: 0.1, alpha: 0.6, emissive: "#0f4a2a" }), [0.32, top + 0.12, -0.15], undefined, 8),
+      box(0.16, 0.16, 0.6, M.plastic("#f59e0b"), [0.32, top - 0.06, 0.25]),
+      cyl(0.07, 0.1, 0.25, M.plastic("#1d4ed8"), [0.32, top - 0.06, 0.65], [Math.PI / 2, 0, 0], 6),
+    ],
+    chispazo: () => [...parts.petardos(), ...parts.tesla()],
+    globos: () => [...parts.gomitas(), ...parts.agua()],
+    anillo: () => [...parts.clips(), ...parts.chispero()],
   };
   const m = merge("mount_" + id, parts[id]());
   m.parent = car.vis;
@@ -267,16 +379,18 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
 }
 
 export function makeWeapon(id: WeaponId): Weapon {
-  const C = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza }[id];
+  if (isFusion(id)) return new Fusion(id);
+  const C = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza, agua: Agua }[id];
   return new C(id);
 }
 
 // ---------- Opciones al subir de nivel ----------
-export type Offer = { kind: "weapon" | "passive" | "evo" | "heal"; id: string; title: string; icon: string; desc: string; lv?: number };
+export type Offer = { kind: "weapon" | "passive" | "evo" | "fusion" | "heal"; id: string; title: string; icon: string; desc: string; lv?: number };
 
 export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>, n = 3): Offer[] {
   const pool: Offer[] = [];
   for (const id of Object.keys(WEAPONS) as WeaponId[]) {
+    if (isFusion(id)) continue;
     const w = ws.find((x) => x.id === id);
     if (!w && ws.length < 6) pool.push({ kind: "weapon", id, title: WEAPONS[id].name, icon: id, desc: WEAPONS[id].desc, lv: 1 });
     else if (w && w.lv < 5 && !w.evolved) pool.push({ kind: "weapon", id, title: WEAPONS[id].name, icon: id, desc: `Nivel ${w.lv + 1}: más daño y alcance`, lv: w.lv + 1 });
@@ -288,11 +402,29 @@ export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>
   }
   pool.sort(() => rng() - 0.5);
   const out = pool.slice(0, n);
+  const fu = fusionOffer(ws);
+  if (fu) out[0] = fu; // si hay fusión disponible, siempre es la primera carta
   while (out.length < n) out.push({ kind: "heal", id: "heal", title: "Reparación", icon: "heal", desc: "Recupera 40 de vida" });
   return out;
 }
 
 export function evoOffer(ws: Weapon[], ps: Partial<Record<PassiveId, number>>): Offer | null {
   const w = ws.find((x) => x.lv >= 5 && !x.evolved && (ps[WEAPONS[x.id].evo] ?? 0) > 0);
-  return w ? { kind: "evo", id: w.id, title: WEAPONS[w.id].evoName, icon: "evo", desc: WEAPONS[w.id].evoDesc } : null;
+  return w ? { kind: "evo", id: w.id, title: WEAPONS[w.id].evoName, icon: "evo", desc: WEAPONS[w.id].evoDesc } : fusionOffer(ws);
+}
+
+// Primera fusión cuyas dos armas están a nivel 5 o evolucionadas
+export function fusionOffer(ws: Weapon[]): Offer | null {
+  const ready = (id: WeaponId) => ws.some((w) => w.id === id && (w.lv >= 5 || w.evolved));
+  const f = FUSIONS.find((x) => ready(x.from[0]) && ready(x.from[1]));
+  return f ? { kind: "fusion", id: f.id, title: WEAPONS[f.id].name, icon: f.id, desc: `${WEAPONS[f.from[0]].name} + ${WEAPONS[f.from[1]].name}. ${f.desc}` } : null;
+}
+
+// Aplica una fusión: saca las dos armas de origen (y sus piezas montadas) y agrega la nueva
+export function fuse(ws: Weapon[], id: WeaponId): Weapon[] {
+  const from = FUSIONS.find((f) => f.id === id)!.from;
+  const out = ws.filter((w) => { if (!from.includes(w.id)) return true; w.dispose(); w.mount?.dispose(); return false; });
+  const n = makeWeapon(id); n.lv = 5; n.evolved = true;
+  out.push(n);
+  return out;
 }

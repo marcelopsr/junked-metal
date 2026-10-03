@@ -5,6 +5,7 @@ import "./style.css";
 import "./hud.css";
 import { icon } from "./icons";
 import type { Offer } from "./weapons";
+import { HALF } from "./world";
 
 const $ = (id: string) => document.getElementById(id)!;
 const el = <T extends HTMLElement = HTMLElement>(id: string) => $(id) as T;
@@ -152,9 +153,9 @@ function drawRadar() {
   const g = rCtx, u = rCar.up, c = Math.cos(u), s = Math.sin(u);
   g.globalAlpha = 1; g.drawImage(rBg, 0, 0);
   g.save(); g.beginPath(); g.arc(RH, RH, RH - 1, 0, 7); g.clip();
-  // Borde del patio (200x200)
+  // Borde del patio
   g.strokeStyle = "#e0a030"; g.globalAlpha = 0.5; g.beginPath();
-  [[-100, -100], [100, -100], [100, 100], [-100, 100], [-100, -100]].forEach(([px, pz], i) => {
+  [[-HALF, -HALF], [HALF, -HALF], [HALF, HALF], [-HALF, HALF], [-HALF, -HALF]].forEach(([px, pz], i) => {
     const dx = px - rCar.x, dz = pz - rCar.z, X = RH + (dx * c - dz * s) * RK, Y = RH - (dx * s + dz * c) * RK;
     i ? g.lineTo(X, Y) : g.moveTo(X, Y);
   });
@@ -236,8 +237,8 @@ export function hudArrows(list: { x: number; y: number; kind: "jefe" | "cofre" }
 }
 
 // ---------- Cartas de mejora ----------
-const rarity = (o: Offer) => (o.kind === "evo" ? "evo" : o.lv === 5 ? "epica" : o.kind === "weapon" && o.lv === 1 ? "rara" : "comun");
-const kindLabel = (o: Offer) => (o.kind === "evo" ? "Evolución" : o.kind === "heal" ? "Reparación" : o.lv === 1 ? (o.kind === "weapon" ? "Arma nueva" : "Pieza nueva") : `${o.kind === "weapon" ? "Arma" : "Pieza"} · nivel ${o.lv}`);
+const rarity = (o: Offer) => (o.kind === "evo" ? "evo" : o.kind === "fusion" ? "fusion" : o.lv === 5 ? "epica" : o.kind === "weapon" && o.lv === 1 ? "rara" : "comun");
+const kindLabel = (o: Offer) => (o.kind === "evo" ? "Evolución" : o.kind === "fusion" ? "Fusión" : o.kind === "heal" ? "Reparación" : o.lv === 1 ? (o.kind === "weapon" ? "Arma nueva" : "Pieza nueva") : `${o.kind === "weapon" ? "Arma" : "Pieza"} · nivel ${o.lv}`);
 
 let pickCb: ((i: number) => void) | null = null;
 let hoverCb: ((i: number) => void) | null = null;

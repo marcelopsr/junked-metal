@@ -5,37 +5,46 @@ import type { DefaultRenderingPipeline, Scene } from "@babylonjs/core";
 import { CARS } from "./car";
 import { DEF, type Kind } from "./enemies";
 import { KEYS, PAD, padPressed, type Action } from "./input";
-import { PAINTS, RIMS, type CarKind } from "./models";
+import { PAINTS, PARTS, RIMS, type CarKind, type CarOpts, type Slot } from "./models";
+import { PILOTS, type PilotId } from "./pilots";
 import { LOOK, look, setQuality, type Quality } from "./render";
 import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 
 const $ = (id: string) => document.getElementById(id)!;
-const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+export const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 // ---------- Guardado ----------
 export type RunRec = { t: number; kills: number; lv: number; seed: number; win: boolean };
 type Save = {
-  scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number }; cars: CarKind[]; car: CarKind; quality: Quality; paint: string; rim: string; zoom: number;
-  mute: boolean; vol: { master: number; sfx: number; engine: number };
+  scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number }; cars: CarKind[]; car: CarKind;
+  pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; quality: Quality; paint: string; rim: string; zoom: number;
+  mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
   bloom: boolean; outline: boolean; retro: number; shake: boolean;
   keys: Partial<Record<Action, string>>; pad: { dead: number; sens: number }; rumble: boolean; touch: number;
   hud: number; calm: boolean; dmgNums: boolean;
-  seen: Kind[]; slain: Partial<Record<Kind, number>>; runs: RunRec[];
+  seen: Kind[]; slain: Partial<Record<Kind, number>>; runs: RunRec[]; daily: { day: string; best: number };
 };
 const DEFAULT: Save = {
-  scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0 }, cars: ["buggy"], car: "buggy", quality: "auto", paint: "", rim: "", zoom: 1.35,
-  mute: false, vol: { master: 1, sfx: 1, engine: 1 }, bloom: true, outline: true, retro: 1, shake: true,
+  scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
+  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, quality: "auto", paint: "", rim: "", zoom: 1.35,
+  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, bloom: true, outline: true, retro: 1, shake: true,
   keys: {}, pad: { dead: 0.15, sens: 1 }, rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
-  seen: [], slain: {}, runs: [],
+  seen: [], slain: {}, runs: [], daily: { day: "", best: 0 },
 };
 export const save: Save = (() => {
   try {
     const s = JSON.parse(localStorage.getItem("rcfight2") ?? "{}");
-    return { ...structuredClone(DEFAULT), ...s, perm: { ...DEFAULT.perm, ...s.perm }, vol: { ...DEFAULT.vol, ...s.vol }, pad: { ...DEFAULT.pad, ...s.pad } };
+    for (const k of ["seen", "runs", "cars", "unlocked"] as const) if (k in s && !Array.isArray(s[k])) delete s[k]; // import malformado: se ignora el campo
+    if (typeof s.keys !== "object" || !s.keys) delete s.keys;
+    return { ...structuredClone(DEFAULT), ...s, perm: { ...DEFAULT.perm, ...s.perm }, kit: { ...DEFAULT.kit, ...s.kit }, vol: { ...DEFAULT.vol, ...s.vol }, pad: { ...DEFAULT.pad, ...s.pad } };
   } catch { return structuredClone(DEFAULT); }
 })();
-export const persist = () => { const j = JSON.stringify(save); try { localStorage.setItem("rcfight2", j); } catch { /* sin storage */ } idb("put", j); };
+// Se escribe 300 ms después del último cambio (sliders y rueda disparan muchos seguidos)
+let persistT = 0;
+const flush = () => { clearTimeout(persistT); const j = JSON.stringify(save); try { localStorage.setItem("rcfight2", j); } catch { /* sin storage */ } void idb("put", j); };
+export const persist = () => { clearTimeout(persistT); persistT = setTimeout(flush, 300) as unknown as number; };
+addEventListener("pagehide", () => { if (persistT) flush(); });
 
 // Respaldo del guardado en IndexedDB + pedido de almacenamiento persistente (el navegador no lo borra por espacio;
 // instalado como app, Safari tampoco a los 7 días). Si localStorage quedó vacío y hay respaldo, se restaura y recarga.
@@ -44,13 +53,15 @@ function idb(op: "put" | "get", j?: string): Promise<string | undefined> {
     try {
       const r = indexedDB.open("junkedmetal", 1);
       r.onupgradeneeded = () => r.result.createObjectStore("kv");
-      r.onsuccess = () => { const st = r.result.transaction("kv", op === "put" ? "readwrite" : "readonly").objectStore("kv"), q = op === "put" ? st.put(j, "save") : st.get("save"); q.onsuccess = () => ok(q.result as string | undefined); q.onerror = () => ok(undefined); };
+      r.onsuccess = () => { const st = r.result.transaction("kv", op === "put" ? "readwrite" : "readonly").objectStore("kv"), q = op === "put" ? st.put(j, "save") : st.get("save"); q.onsuccess = () => { ok(q.result as string | undefined); r.result.close(); }; q.onerror = () => { ok(undefined); r.result.close(); }; };
       r.onerror = () => ok(undefined);
     } catch { ok(undefined); }
   });
 }
 void navigator.storage?.persist?.().catch(() => {});
-if (!localStorage.getItem("rcfight2")) void idb("get").then((j) => { if (j) { try { localStorage.setItem("rcfight2", j); location.reload(); } catch { /* sin storage */ } } });
+let hasLocal = true;
+try { hasLocal = !!localStorage.getItem("rcfight2"); } catch { /* almacenamiento bloqueado */ }
+if (!hasLocal) void idb("get").then((j) => { if (j) { try { localStorage.setItem("rcfight2", j); location.reload(); } catch { /* sin storage */ } } });
 
 // Exportar / importar la partida como archivo .json
 function exportSave() {
@@ -74,7 +85,7 @@ function importSave() {
 }
 
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(): void; resume(): void; quit(): void; pause(): void };
+type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void };
 let api: Api;
 let L0 = { grain: 0, scan: 0, ca: 0, outline: 0 }; // look de fábrica: la perilla "post retro" lo escala
 
@@ -87,7 +98,7 @@ export function applySettings() {
   look({ grain: L0.grain * save.retro, scan: L0.scan * save.retro, ca: L0.ca * save.retro, outline: save.outline ? L0.outline : 0 });
   setAudio({ ...save.vol, mute: save.mute });
   $("muted").classList.toggle("hidden", !save.mute);
-  for (const a of Object.keys(save.keys) as Action[]) KEYS[a][0] = save.keys[a]!;
+  for (const a of Object.keys(save.keys) as Action[]) if (KEYS[a]) KEYS[a][0] = save.keys[a]!;
   Object.assign(PAD, save.pad);
   const root = document.documentElement.style;
   root.setProperty("--hud-scale", String(save.hud));
@@ -102,7 +113,10 @@ const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
 
+let shownAt = 0;
 function show() {
+  binding = null; // una reasignación a medias no sobrevive al cambio de pantalla
+  shownAt = performance.now();
   const s = current();
   $("fe").classList.toggle("hidden", !s);
   $("fe").classList.toggle("ingame", stack[0] === "pause" || stack[0] === "over"); // en partida: velo oscuro también en Configuración
@@ -171,7 +185,8 @@ function move(dx: number, dy: number) {
   }
   best?.focus();
 }
-const activate = () => { const el = document.activeElement as HTMLElement; if (el?.closest("#fe") && !(el instanceof HTMLInputElement)) el.click(); };
+const activate = () => { if (performance.now() - shownAt < 400) return; // un turbo/A mantenido no salta la pantalla recién abierta
+  const el = document.activeElement as HTMLElement; if (el?.closest("#fe") && !(el instanceof HTMLInputElement)) el.click(); };
 
 // ---------- Teclado ----------
 let binding: Action | null = null;
@@ -215,33 +230,105 @@ export function menuPad(dt: number) {
 }
 
 // ---------- Pantallas ----------
+// Desafío diario: misma semilla para todos ese día (fecha local), récord propio que se reinicia cada día
+export const today = () => new Date().toLocaleDateString("sv"); // AAAA-MM-DD
+export const dailySeed = () => Number(today().replaceAll("-", ""));
 function renderMain() {
   $("mainInfo").textContent = `${save.scrap} tornillos · récord ${fmt(save.best)}`;
+  const b = save.daily.day === today() ? save.daily.best : 0;
+  $("dailyBtn").textContent = b ? `Desafío diario · ${fmt(b)}` : "Desafío diario";
 }
 
-const SHOP: { k: keyof Save["perm"]; name: string; desc: string }[] = [
-  { k: "hp", name: "Chasis reforzado", desc: "+10 vida" }, { k: "dmg", name: "Piñón afilado", desc: "+10% daño" },
-  { k: "spd", name: "Motor rebobinado", desc: "+4% velocidad" }, { k: "mag", name: "Imán de parlante", desc: "+10% imán" },
+// ---------- Taller y garaje ----------
+// Mejoras permanentes: el precio de cada nivel está en `cost` (su largo es el máximo). Chasis: los 5 primeros niveles
+// cuestan lo de siempre; del 6 al 10 se encarecen fuerte. Equipo: cambian cómo se juega cada partida.
+type PermK = keyof Save["perm"];
+const CH = Array.from({ length: 10 }, (_, l) => Math.round(15 * (l + 1) * (l < 5 ? 1 : 1.5 + (l - 5) * 0.35)));
+const PERKS: { k: PermK; cat: "chasis" | "equipo"; name: string; desc: string; cost: number[] }[] = [
+  { k: "hp", cat: "chasis", name: "Chasis reforzado", desc: "+10 vida", cost: CH }, { k: "dmg", cat: "chasis", name: "Piñón afilado", desc: "+10% daño", cost: CH },
+  { k: "spd", cat: "chasis", name: "Motor rebobinado", desc: "+4% velocidad", cost: CH }, { k: "mag", cat: "chasis", name: "Imán de parlante", desc: "+10% imán", cost: CH },
+  { k: "xp", cat: "equipo", name: "Contador de tuercas", desc: "+5% XP por nivel", cost: [100, 200, 320, 480] },
+  { k: "reroll", cat: "equipo", name: "Dado cargado", desc: "+1 re-sorteo de cartas por partida (R o botón Y)", cost: [120, 260, 450] },
+  { k: "extra", cat: "equipo", name: "Caja de repuestos", desc: "Arranca con un arma extra al azar", cost: [400] },
+  { k: "revive", cat: "equipo", name: "Batería de reserva", desc: "Revive una vez por partida con media vida", cost: [550, 1200] },
+  { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: [700] },
 ];
-const shopCost = (l: number) => 15 * (l + 1);
+const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;
+// Desbloqueables: car:<auto>, pilot:<piloto>, part:<ranura>:<opción>. Los pilotos con logro no se compran.
+type Unlock = { id: string; name: string; desc: string; cost: number; ach?: string };
+const UNLOCKS = {
+  autos: () => (Object.keys(CARS) as CarKind[]).filter((k) => CARS[k].cost).map((k): Unlock => ({ id: "car:" + k, name: CARS[k].name, desc: CARS[k].desc, cost: CARS[k].cost })),
+  pilotos: () => (Object.keys(PILOTS) as PilotId[]).filter((k) => PILOTS[k].cost || PILOTS[k].ach).map((k): Unlock => {
+    const p = PILOTS[k];
+    return { id: "pilot:" + k, name: p.name, desc: `${p.pros.join(" · ")} · Contra: ${p.con}`, cost: p.cost, ach: p.ach?.txt };
+  }),
+  piezas: () => (Object.keys(PARTS) as Slot[]).flatMap((sl) => Object.entries(opts(sl)).filter(([, [, c]]) => c).map(([o, [n, c]]): Unlock => ({ id: `part:${sl}:${o}`, name: n, desc: PARTS[sl].name, cost: c }))),
+};
+function owns(id: string) {
+  const [t, k, o] = id.split(":");
+  if (t === "car") return save.cars.includes(k as CarKind);
+  if (t === "pilot") { const p = PILOTS[k as PilotId]; return !!p && (p.ach ? p.ach.ok(save) : !p.cost || save.unlocked.includes(id)); }
+  return opts(k as Slot)?.[o]?.[1] === 0 || save.unlocked.includes(id);
+}
+function priceOf(id: string) {
+  const [t, k, o] = id.split(":");
+  if (t === "car") return CARS[k as CarKind]?.cost;
+  if (t === "pilot") { const p = PILOTS[k as PilotId]; return p && !p.ach ? p.cost : undefined; }
+  return opts(k as Slot)?.[o]?.[1];
+}
+function buy(id: string) {
+  const c = priceOf(id);
+  if (owns(id) || c === undefined || save.scrap < c) return false;
+  save.scrap -= c;
+  if (id.startsWith("car:")) save.cars.push(id.slice(4) as CarKind); else save.unlocked.push(id);
+  persist();
+  return true;
+}
+/** Lo que hay que mostrar sobre el auto (garaje, portada y partida). */
+export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, rim: save.rim || undefined, ...save.kit, pilot: save.pilot });
+
 const bar = (v: number, max: number) => `<i style="width:${Math.min(100, (v / max) * 100)}%"></i>`;
+const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" data-${attr}="${id}">${n}</button>`).join("");
+const STABS = { chasis: "Chasis", equipo: "Equipo de partida", autos: "Autos", pilotos: "Pilotos", piezas: "Piezas" };
+let stab: keyof typeof STABS = "chasis";
 function renderShop() {
   $("bank").textContent = `${save.scrap} tornillos`;
-  $("shop").innerHTML = SHOP.map((s) => {
-    const l = save.perm[s.k], cost = shopCost(l);
-    return `<button class="carc perk" data-k="${s.k}" ${save.scrap < cost || l >= 5 ? "disabled" : ""}><b>${s.name}</b>${s.desc}<div class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(5 - l)}</div><div class="price">${l >= 5 ? "MÁXIMO" : `${cost} tornillos`}</div></button>`;
-  }).join("");
+  $("stabs").innerHTML = tabsHtml(STABS, stab, "stab");
+  $("shop").innerHTML = stab === "chasis" || stab === "equipo"
+    ? PERKS.filter((p) => p.cat === stab).map((p) => {
+      const l = save.perm[p.k], max = p.cost.length, cost = p.cost[l];
+      return `<button class="carc perk" data-k="${p.k}" ${l >= max || save.scrap < cost ? "disabled" : ""}><b>${p.name}</b>${p.desc}<div class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(max - l)}</div><div class="price">${l >= max ? "MÁXIMO" : `${cost} tornillos`}</div></button>`;
+    }).join("")
+    : UNLOCKS[stab]().map((u) => {
+      const own = owns(u.id);
+      return `<button class="carc perk" data-buy="${u.id}" ${own || u.ach || save.scrap < u.cost ? "disabled" : ""}><b>${u.name}</b>${u.desc}<div class="price">${own ? "EN EL GARAJE" : u.ach ? `Logro: ${u.ach}` : `${u.cost} tornillos`}</div></button>`;
+    }).join("");
 }
+const GTABS = { auto: "Auto", piloto: "Piloto", pintura: "Pintura", piezas: "Piezas" };
+let gtab: keyof typeof GTABS = "auto";
 function renderGarage() {
   $("bankG").textContent = `${save.scrap} tornillos`;
-  $("cars").innerHTML = (Object.keys(CARS) as CarKind[]).map((k) => {
-    const c = CARS[k], own = save.cars.includes(k);
-    return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${own ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><span>Carrocería</span>${bar(c.hp, 220)}<span>Velocidad</span>${bar(c.speed, 19)}<span>Embestida</span>${bar(c.ram, 4.5)}</div>${own ? "" : `<div class="price">Bloqueado · ${c.cost} tornillos</div>`}</div>`;
+  $("gtabs").innerHTML = tabsHtml(GTABS, gtab, "gtab");
+  $("paint").classList.toggle("hidden", gtab !== "pintura");
+  $("cars").classList.toggle("hidden", gtab === "pintura");
+  const lock = (id: string, ach?: string) => (owns(id) ? "" : `<div class="price">${ach ? `Logro: ${ach}` : `Bloqueado · ${priceOf(id)} tornillos`}</div>`);
+  if (gtab === "auto") $("cars").innerHTML = (Object.keys(CARS) as CarKind[]).map((k) => {
+    const c = CARS[k];
+    return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><span>Carrocería</span>${bar(c.hp, 300)}<span>Velocidad</span>${bar(c.speed, 21)}<span>Embestida</span>${bar(c.ram, 5.5)}</div>${lock("car:" + k)}</div>`;
   }).join("");
+  else if (gtab === "piloto") $("cars").innerHTML = (Object.keys(PILOTS) as PilotId[]).map((k) => {
+    const p = PILOTS[k], id = "pilot:" + k;
+    return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div>${lock(id, p.ach?.txt)}</div>`;
+  }).join("");
+  else if (gtab === "piezas") $("cars").innerHTML = (Object.keys(PARTS) as Slot[]).map((sl) => `<div class="slot"><span>${PARTS[sl].name}</span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
+    const own = owns(`part:${sl}:${o}`);
+    return `<button class="opt ${save.kit[sl] === o ? "on" : ""} ${own ? "" : "locked"}" data-part="${sl}:${o}">${n}${own ? "" : ` · ${c}`}</button>`;
+  }).join("")}</div>`).join("");
   const cur = save.paint || PAINTS[0], rim = save.rim || RIMS[0];
   $("paint").innerHTML = `<span>Pintura</span>${PAINTS.map((c) => `<button class="sw ${c === cur ? "on" : ""}" data-paint="${c}" style="background:${c}" aria-label="pintura ${c}"></button>`).join("")}`
     + `<span>Llantas</span>${RIMS.map((c) => `<button class="sw rim ${c === rim ? "on" : ""}" data-rim="${c}" style="background:${c}" aria-label="llantas ${c}"></button>`).join("")}`;
 }
+const focusSel = (q: string) => { const e = document.querySelector<HTMLButtonElement>(q); (e && !e.disabled ? e : focusables()[0])?.focus(); };
 
 // Configuración: filas generadas desde datos. data-set = número (perilla o lista), data-tog = sí/no
 type Row = [label: string, kind: "range", path: string, min: number, max: number, step: number, unit?: "%" | "x"] | [label: string, kind: "tog", path: string] | [label: string, kind: "sel", path: string, opts: [string, string][]] | [label: string, kind: "bind", action: Action] | [label: string, kind: "note"] | [label: string, kind: "btn", act: string];
@@ -254,7 +341,7 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
   ] },
   audio: { name: "Audio", rows: [
     ["Volumen general", "range", "vol.master", 0, 1, 0.05, "%"], ["Efectos", "range", "vol.sfx", 0, 1, 0.05, "%"], ["Motor", "range", "vol.engine", 0, 1, 0.05, "%"],
-    ["Silencio (M)", "tog", "mute"], ["Todavía no hay música: el canal llega cuando haya pistas.", "note"],
+    ["Música", "range", "vol.music", 0, 1, 0.05, "%"], ["Silencio (M)", "tog", "mute"],
   ] },
   ctl: { name: "Controles", rows: [
     ["Acelerar", "bind", "up"], ["Frenar / atrás", "bind", "down"], ["Girar izquierda", "bind", "left"], ["Girar derecha", "bind", "right"],
@@ -341,12 +428,13 @@ export function initMenu(a: Api) {
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind]") as HTMLElement | null)?.dataset;
+    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-buy],[data-pilot],[data-part]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
     if (!d) return;
     SFX.accept();
     if (d.go) go(d.go as Scr);
     else if (d.act === "play") api.play();
+    else if (d.act === "daily") api.play(true);
     else if (d.act === "back") back();
     else if (d.act === "export") exportSave();
     else if (d.act === "import") importSave();
@@ -357,16 +445,25 @@ export function initMenu(a: Api) {
     else if (d.tog) { const [o, k] = ref(d.tog); o[k] = !o[k]; commit(); renderConfig(); (document.querySelector(`[data-tog="${d.tog}"]`) as HTMLElement).focus(); }
     else if (d.bind) { binding = d.bind as Action; renderConfig(); (document.querySelector(`[data-bind="${d.bind}"]`) as HTMLElement).focus(); }
     else if (d.paint || d.rim) { if (d.paint) save.paint = d.paint; else save.rim = d.rim!; persist(); renderGarage(); (document.querySelector(`[data-${d.paint ? "paint" : "rim"}="${d.paint ?? d.rim}"]`) as HTMLElement).focus(); }
-    else if (d.k && current() === "garage") {
+    else if (d.gtab) { gtab = d.gtab as typeof gtab; renderGarage(); focusSel(`[data-gtab="${gtab}"]`); }
+    else if (d.stab) { stab = d.stab as typeof stab; renderShop(); focusSel(`[data-stab="${stab}"]`); }
+    else if (d.buy) { if (!buy(d.buy)) return; renderShop(); focusSel(`[data-buy="${d.buy}"]`); }
+    else if (d.pilot) {
+      const id = "pilot:" + d.pilot;
+      if (!owns(id) && !buy(id)) return;
+      save.pilot = d.pilot as PilotId; persist(); renderGarage(); focusSel(`[data-pilot="${d.pilot}"]`);
+    } else if (d.part) {
+      const [sl, o] = d.part.split(":") as [Slot, string];
+      if (!owns("part:" + d.part) && !buy("part:" + d.part)) return;
+      save.kit[sl] = o; persist(); renderGarage(); focusSel(`[data-part="${d.part}"]`);
+    } else if (d.k && current() === "garage") {
       const k = d.k as CarKind;
-      if (!save.cars.includes(k)) { if (save.scrap < CARS[k].cost) return; save.scrap -= CARS[k].cost; save.cars.push(k); }
-      save.car = k; persist(); renderGarage(); (document.querySelector(`.carc[data-k="${k}"]`) as HTMLElement).focus();
+      if (!owns("car:" + k) && !buy("car:" + k)) return;
+      save.car = k; persist(); renderGarage(); focusSel(`.carc[data-k="${k}"]`);
     } else if (d.k && current() === "shop") {
-      const k = d.k as keyof Save["perm"], cost = shopCost(save.perm[k]);
-      if (save.scrap < cost || save.perm[k] >= 5) return;
-      save.scrap -= cost; save.perm[k]++; persist(); renderShop();
-      const b = document.querySelector<HTMLButtonElement>(`#shop [data-k="${k}"]`)!;
-      (b.disabled ? focusables()[0] : b)?.focus();
+      const p = PERKS.find((x) => x.k === d.k)!, cost = p.cost[save.perm[p.k]];
+      if (cost === undefined || save.scrap < cost) return;
+      save.scrap -= cost; save.perm[p.k]++; persist(); renderShop(); focusSel(`#shop [data-k="${p.k}"]`);
     }
   });
   fe.addEventListener("input", (e) => {

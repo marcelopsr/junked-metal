@@ -1,3 +1,5 @@
+import { HALF } from "./world";
+
 // Solo dev: bot de playtest. Juega sin trampas (sin god ni saltos de tiempo): orbita el patio
 // esquivando macetas, se destraba con marcha atrás y elige mejoras (evolución > arma nueva > primera).
 // Uso en consola (con ?mute): await __bot(60) → resumen. Correr en tandas: el tool del navegador corta a los ~40 s.
@@ -25,7 +27,7 @@ export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVel
       for (const e of threats) { const ex = e.x - c.pos.x, ez = e.z - c.pos.z, d = Math.hypot(ex, ez); if (d < 22) sc -= ((ex * dx + ez * dz) / d) * (22 - d) / 6; }
       for (const o of obs!) { for (const t of [4, 9]) { const px = c.pos.x + dx * t, pz = c.pos.z + dz * t; if (Math.hypot(px - o.x, pz - o.z) < o.r + 2) sc -= 12 / t; } }
       const fx = c.pos.x + dx * 14, fz = c.pos.z + dz * 14;
-      if (Math.abs(fx) > 88 || Math.abs(fz) > 88) sc -= 8;
+      if (Math.abs(fx) > HALF - 12 || Math.abs(fz) > HALF - 12) sc -= 8;
       if (sc > best) { best = sc; want = a; }
     }
   } else {

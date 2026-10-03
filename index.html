@@ -32,7 +32,7 @@
     <div id="radar" class="h-panel"><span class="h-tape">RADAR</span><canvas id="radarC" width="64" height="64"></canvas></div>
 
     <div id="txl" class="h-panel">
-      <div class="h-ptitle"><span class="h-tape">LiPo 3S</span><span class="h-tape warn">BATERIA BAJA</span></div>
+      <div class="h-ptitle"><span class="h-tape">LiPo 3S</span><span class="h-tape warn">BATERÍA BAJA</span></div>
       <div id="lipo"><i></i><i></i><i></i></div>
       <div class="h-read"><b id="volt">12.6V</b><span id="hpTxt">100 / 100</span></div>
       <div class="h-ptitle"><span class="h-tape">TURBO</span></div>
@@ -72,7 +72,7 @@
   <div id="levelup" class="overlay hidden">
     <div class="otitle" id="luTitle">Nivel</div>
     <div id="offers"></div>
-    <div class="hint">1 · 2 · 3 o clic — Enter confirma</div>
+    <div class="hint" id="luHint">1 · 2 · 3 o clic — Enter confirma</div>
   </div>
 
   <!-- Front-end: pantallas manejadas por src/menu.ts (una visible por vez) -->
@@ -87,6 +87,7 @@
       <div class="brand small">JUNKED METAL</div>
       <nav class="list">
         <button data-act="play" class="primary">Jugar</button>
+        <button data-act="daily" id="dailyBtn">Desafío diario</button>
         <button data-go="garage">Garaje</button>
         <button data-go="shop">Taller</button>
         <button data-go="config">Configuración</button>
@@ -100,7 +101,8 @@
 
     <section id="scr-garage" class="scr side">
       <div class="otitle">Garaje</div>
-      <div class="sect">Vehículo <span id="bankG"></span></div>
+      <div class="sect">Banco <span id="bankG"></span></div>
+      <div id="gtabs" class="tabs"></div>
       <div id="cars"></div>
       <div id="paint"></div>
       <div class="btns"><button data-act="back">Volver</button><button data-act="play" class="primary">Encender y jugar</button></div>
@@ -108,7 +110,8 @@
 
     <section id="scr-shop" class="scr">
       <div class="otitle">Taller</div>
-      <div class="sect">Mejoras permanentes <span id="bank"></span></div>
+      <div class="sect">Banco <span id="bank"></span></div>
+      <div id="stabs" class="tabs"></div>
       <div id="shop"></div>
       <div class="btns"><button data-act="back">Volver</button></div>
     </section>

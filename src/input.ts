@@ -16,7 +16,8 @@ addEventListener("blur", () => keys.clear());
 const touch = { x: 0, y: 0, boost: false, drift: false };
 export const isTouch = matchMedia("(pointer: coarse)").matches;
 
-export function setupTouch() {
+// onPinch(k): k > 1 = abrir los dedos (acercar). Solo cuenta dedos apoyados sobre el canvas, así el stick y los botones no interfieren.
+export function setupTouch(onPinch?: (k: number) => void) {
   document.getElementById("touch")!.classList.remove("hidden");
   const zone = document.getElementById("stickZone")!;
   const base = document.getElementById("stickBase")!;
@@ -44,6 +45,19 @@ export function setupTouch() {
   };
   hold("tBoost", "boost");
   hold("tDrift", "drift");
+  // Pellizco de dos dedos sobre el juego = zoom
+  const cv = document.getElementById("c")!, pts = new Map<number, [number, number]>();
+  let pd = 0;
+  const gap = () => { const [a, b] = [...pts.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]); };
+  cv.addEventListener("pointerdown", (e) => { pts.set(e.pointerId, [e.clientX, e.clientY]); if (pts.size === 2) pd = gap(); });
+  cv.addEventListener("pointermove", (e) => {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pts.size !== 2) return;
+    const d = gap();
+    if (pd > 20 && d > 20 && Math.abs(d / pd - 1) > 0.02) { onPinch?.(d / pd); pd = d; }
+  });
+  for (const ev of ["pointerup", "pointercancel"]) cv.addEventListener(ev, (e) => { pts.delete((e as PointerEvent).pointerId); pd = 0; });
 }
 
 const dz = (v: number) => (Math.abs(v) < PAD.dead ? 0 : Math.max(-1, Math.min(1, v * PAD.sens)));
@@ -72,12 +86,10 @@ export function pollInput() {
   Object.assign(input, { throttle, steer, boost, drift, moveX, moveY, move: !!(moveX || moveY) });
 }
 
-// Botones de menú del gamepad (para elegir cartas sin mouse)
-let prevPad: boolean[] = [];
-export function padPressed(i: number) {
-  const gp = navigator.getGamepads?.()[0];
-  const now = !!gp?.buttons[i]?.pressed;
-  const was = prevPad[i];
-  prevPad[i] = now;
-  return now && !was;
+// Botones de menú del gamepad: una foto por cuadro (padSnap) para que un botón mantenido desde el juego no "aprete" en el menú
+let prevPad: boolean[] = [], curPad: boolean[] = [];
+export function padSnap() {
+  prevPad = curPad;
+  curPad = (navigator.getGamepads?.()[0]?.buttons ?? []).map((b) => b.pressed);
 }
+export const padPressed = (i: number) => !!curPad[i] && !prevPad[i];
