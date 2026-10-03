@@ -145,7 +145,8 @@ export function setZone(id: string) {
 // ---------- Piezas comunes del mundo ----------
 // Suelo visible + colisionador. La textura repite con la misma densidad de texel que el patio original.
 function floor(key: string, color: string, t: () => B.Texture, rough = 0.95) {
-  const GS = HALF * 2 + 60, tx = tex(key, t);
+  const GS = HALF * 2 + 700, // el suelo sigue más allá del patio: el horizonte se pierde en la niebla
+     tx = tex(key, t);
   tx.uScale = tx.vScale = (14 * GS) / 260;
   const ground = B.MeshBuilder.CreateGround("ground", { width: GS, height: GS }, scene);
   ground.material = pbr(key, { color, rough, tex: tx });

@@ -268,8 +268,8 @@ export function canvasTex(size: number, draw: (c: CanvasRenderingContext2D, s: n
   const big = document.createElement("canvas");
   big.width = big.height = size;
   draw(big.getContext("2d")!, size);
-  const px = Math.min(size, 96);
-  const t = new B.DynamicTexture("tex", px, scene, true, B.Texture.NEAREST_NEAREST_MIPLINEAR);
+  const px = Math.min(size, 256);
+  const t = new B.DynamicTexture("tex", px, scene, true, B.Texture.TRILINEAR_SAMPLINGMODE);
   (t.getContext() as unknown as CanvasRenderingContext2D).drawImage(big, 0, 0, px, px);
   t.update();
   t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE;
