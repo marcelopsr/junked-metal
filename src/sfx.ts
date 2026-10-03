@@ -1,8 +1,9 @@
 // Audio 100% procedural con WebAudio (sin archivos). Se enciende con el primer gesto del usuario.
 let ctx: AudioContext | null = null;
-let master: GainNode;
+let master: GainNode, fxBus: GainNode, engBus: GainNode;
 let noise: AudioBuffer;
-let muted = false;
+// Volúmenes 0..1 (Configuración → Audio). El motor va por su propio canal.
+const vol = { master: 1, sfx: 1, engine: 1, mute: false };
 let eng: { o1: OscillatorNode; o2: OscillatorNode; f: BiquadFilterNode; g: GainNode } | null = null;
 
 // ?mute en la URL: sin audio en absoluto (pruebas automáticas)
@@ -13,7 +14,9 @@ export function initAudio() {
   if (ctx) { void ctx.resume(); return; }
   ctx = new AudioContext();
   master = ctx.createGain();
-  master.gain.value = 0.5;
+  fxBus = ctx.createGain(); engBus = ctx.createGain();
+  fxBus.connect(master); engBus.connect(master);
+  setAudio(vol);
   const comp = ctx.createDynamicsCompressor(); // evita saturar con 100 golpes a la vez
   master.connect(comp).connect(ctx.destination);
   noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
@@ -25,15 +28,17 @@ export function initAudio() {
   o2.detune.value = 14;
   f.type = "lowpass";
   g.gain.value = 0;
-  o1.connect(f); o2.connect(f); f.connect(g).connect(master);
+  o1.connect(f); o2.connect(f); f.connect(g).connect(engBus);
   o1.start(); o2.start();
   eng = { o1, o2, f, g };
 }
 
-export function toggleMute() {
-  muted = !muted;
-  if (ctx) master.gain.setTargetAtTime(muted ? 0 : 0.5, ctx.currentTime, 0.05);
-  return muted;
+export function setAudio(o: Partial<typeof vol>) {
+  Object.assign(vol, o);
+  if (!ctx) return;
+  master.gain.setTargetAtTime(vol.mute ? 0 : vol.master * 0.5, ctx.currentTime, 0.05);
+  fxBus.gain.setTargetAtTime(vol.sfx, ctx.currentTime, 0.05);
+  engBus.gain.setTargetAtTime(vol.engine, ctx.currentTime, 0.05);
 }
 
 // Llamar cada frame: el tono sigue a la velocidad, el volumen al acelerador
@@ -65,7 +70,7 @@ function tone(type: OscillatorType, f0: number, f1: number, dur: number, vol: nu
   o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(master);
+  o.connect(g).connect(fxBus);
   o.start(t);
   o.stop(t + dur + 0.02);
 }
@@ -79,7 +84,7 @@ function hiss(filter: BiquadFilterType, f0: number, f1: number, dur: number, vol
   fl.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(fl).connect(g).connect(master);
+  s.connect(fl).connect(g).connect(fxBus);
   s.start(t, Math.random() * 0.5);
   s.stop(t + dur + 0.02);
 }
@@ -106,4 +111,9 @@ export const SFX = {
   boss: () => { tone("sawtooth", 70, 40, 1.2, 0.3); hiss("lowpass", 600, 80, 1.2, 0.25); },
   break: () => { hiss("bandpass", 1600, 300, 0.25, 0.3); tone("triangle", 300, 120, 0.15, 0.15); },
   click: () => tone("square", 900, 900, 0.03, 0.05),
+  // Interfaz: bip de foco, clic de radio al aceptar, estática al cambiar de pantalla
+  blip: () => gate("blip", 25) && tone("square", 1320, 1320, 0.025, 0.035),
+  accept: () => { hiss("bandpass", 3200, 1800, 0.04, 0.2); tone("square", 520, 260, 0.05, 0.05, 0.02); },
+  back: () => tone("square", 440, 220, 0.06, 0.04),
+  static: () => hiss("bandpass", 5000, 1200, 0.22, 0.09),
 };

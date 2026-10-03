@@ -2,6 +2,12 @@
 // move: dirección deseada en pantalla (táctil/stick). Si está activa, el auto gira solo hacia ahí.
 export const input = { throttle: 0, steer: 0, boost: false, drift: false, moveX: 0, moveY: 0, move: false };
 
+// Teclas por acción: la primera es reasignable (Configuración → Controles), las flechas quedan siempre
+export const KEYS = { up: ["KeyW", "ArrowUp"], down: ["KeyS", "ArrowDown"], left: ["KeyA", "ArrowLeft"], right: ["KeyD", "ArrowRight"], boost: ["Space"], drift: ["ShiftLeft", "ShiftRight"] };
+export type Action = keyof typeof KEYS;
+// Gamepad: zona muerta y sensibilidad del stick
+export const PAD = { dead: 0.15, sens: 1 };
+
 const keys = new Set<string>();
 addEventListener("keydown", (e) => keys.add(e.code));
 addEventListener("keyup", (e) => keys.delete(e.code));
@@ -40,14 +46,14 @@ export function setupTouch() {
   hold("tDrift", "drift");
 }
 
-const dz = (v: number) => (Math.abs(v) < 0.15 ? 0 : v);
+const dz = (v: number) => (Math.abs(v) < PAD.dead ? 0 : Math.max(-1, Math.min(1, v * PAD.sens)));
 
 export function pollInput() {
   const k = (...c: string[]) => c.some((x) => keys.has(x));
-  let throttle = (k("KeyW", "ArrowUp") ? 1 : 0) - (k("KeyS", "ArrowDown") ? 1 : 0);
-  let steer = (k("KeyD", "ArrowRight") ? 1 : 0) - (k("KeyA", "ArrowLeft") ? 1 : 0);
-  let boost = k("Space");
-  let drift = k("ShiftLeft", "ShiftRight");
+  let throttle = (k(...KEYS.up) ? 1 : 0) - (k(...KEYS.down) ? 1 : 0);
+  let steer = (k(...KEYS.right) ? 1 : 0) - (k(...KEYS.left) ? 1 : 0);
+  let boost = k(...KEYS.boost);
+  let drift = k(...KEYS.drift);
 
   let moveX = 0, moveY = 0;
   const gp = navigator.getGamepads?.()[0];

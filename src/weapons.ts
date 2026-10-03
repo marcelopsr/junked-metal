@@ -50,8 +50,8 @@ export interface Ctx {
 export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza";
 export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: PassiveId; evoName: string; evoDesc: string }> = {
   gomitas: { name: "Lanza-gomitas", desc: "Dispara gomitas al enemigo más cercano", evo: "resorte", evoName: "Gomitas Saltarinas", evoDesc: "5 gomitas que rebotan entre enemigos" },
-  clips: { name: "Clips orbitales", desc: "Clips que giran a tu alrededor", evo: "iman", evoName: "Tornado de Clips", evoDesc: "8 clips enormes en órbita amplia" },
-  chispero: { name: "Chispero", desc: "Dejás fuego al manejar", evo: "turbo", evoName: "Estela Infernal", evoDesc: "Fuego ancho, largo y devastador" },
+  clips: { name: "Clips orbitales", desc: "Clips que giran alrededor del auto", evo: "iman", evoName: "Tornado de Clips", evoDesc: "8 clips enormes en órbita amplia" },
+  chispero: { name: "Chispero", desc: "Deja fuego al manejar", evo: "turbo", evoName: "Estela Infernal", evoDesc: "Fuego ancho, largo y devastador" },
   petardos: { name: "Petardos", desc: "Lanza petardos que explotan en área", evo: "litio", evoName: "Bomba de Racimo", evoDesc: "Cada explosión suelta 4 más" },
   tesla: { name: "Antena Tesla", desc: "Rayo que salta entre enemigos", evo: "capacitor", evoName: "Tormenta Eléctrica", evoDesc: "Cadenas de 10, casi sin recarga" },
   lanza: { name: "Lápiz-lanza", desc: "+35% daño al embestir por nivel", evo: "lego", evoName: "Ariete", evoDesc: "Invulnerable con turbo; embestir genera onda expansiva" },
@@ -77,7 +77,7 @@ const nearest = (pos: B.Vector3, enemies: Enemy[], range: number, skip?: Set<Ene
 
 class Gomitas extends Weapon {
   shots: { m: B.InstancedMesh; dir: B.Vector3; life: number; bounces: number; hit: Set<Enemy> }[] = [];
-  tpl = template("gomita", () => [sph(0.45, pbr("gummy", { color: "#ff3d7f", rough: 0.15, alpha: 0.85, emissive: "#5a0020" }), [0, 0, 0], [1, 0.8, 1.2])]);
+  tpl = template("gomita", () => [sph(0.45, pbr("gummy", { color: "#b6ff6a", rough: 0.15, alpha: 0.85, emissive: "#3a8a00" }), [0, 0, 0], [1, 0.8, 1.2])]);
   update(c: Ctx) {
     if ((this.cd -= c.dt) <= 0) {
       const t = nearest(c.car.pos, c.enemies, 22);
@@ -250,7 +250,7 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
     gomitas: () => [
       box(0.36, 0.2, 0.42, M.metal("#2b2d31"), [0, top, 0.05]),
       cyl(0.1, 0.1, 0.55, M.metal("#111"), [0, top + 0.02, 0.45], [Math.PI / 2, 0, 0], 8),
-      sph(0.3, pbr("gummy", { color: "#ff3d7f", rough: 0.15, alpha: 0.85, emissive: "#5a0020" }), [0, top + 0.2, -0.05]),
+      sph(0.3, pbr("gummy", { color: "#b6ff6a", rough: 0.15, alpha: 0.85, emissive: "#3a8a00" }), [0, top + 0.2, -0.05]),
     ],
     clips: () => [box(0.5, 0.12, 0.12, M.plastic("#ef4444"), [0, h * 0.2, nose + 0.05]), box(0.12, 0.12, 0.22, M.metal(), [0.2, h * 0.2, nose + 0.15]), box(0.12, 0.12, 0.22, M.metal(), [-0.2, h * 0.2, nose + 0.15])],
     chispero: () => [-1, 1].flatMap((s) => [
@@ -288,7 +288,7 @@ export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>
   }
   pool.sort(() => rng() - 0.5);
   const out = pool.slice(0, n);
-  while (out.length < n) out.push({ kind: "heal", id: "heal", title: "Reparación", icon: "heal", desc: "Recuperás 40 de vida" });
+  while (out.length < n) out.push({ kind: "heal", id: "heal", title: "Reparación", icon: "heal", desc: "Recupera 40 de vida" });
   return out;
 }
 

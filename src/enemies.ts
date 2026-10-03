@@ -34,6 +34,7 @@ export class Enemy {
   airborne = false;
   legs: { m: B.InstancedMesh; base: number; phase: number }[] = [];
   walk = rng() * 6;
+  pose = 0; // stop-motion: las patas cambian de pose a 10 fps
 
   constructor(public kind: Kind, pos: B.Vector3, hpMul: number) {
     const d = (this.def = DEF[kind]);
@@ -71,6 +72,8 @@ export class Enemy {
     const v = this.body.getLinearVelocity();
     const sp = Math.hypot(v.x, v.z);
     this.walk += dt * Math.min(28, 4 + sp * 3.2) / (this.def.scale ?? 1);
+    if ((this.pose += dt) < 0.1) return;
+    this.pose = 0;
     const amp = Math.min(0.55, 0.12 + sp * 0.06);
     for (const l of this.legs) {
       const s = Math.sin(this.walk + l.phase);

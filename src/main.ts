@@ -1,17 +1,18 @@
-import { banner, damageNumber, hudArrows, hudBoss, hudSlots, hudUpdate, initHud, pickOffer, selectOffer, showOffers, uiTick } from "./ui";
+import { banner, damageNumber, hudArrows, hudBoss, hudSlots, hudKill, hudRadar, hudUpdate, initHud, pickOffer, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import HavokPhysics from "@babylonjs/havok";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
 import { DEF, Enemy, pickWeighted, spawnTable, type Kind } from "./enemies";
-import { engineSfx, engineStop, initAudio, SFX, toggleMute } from "./sfx";
-import { clearFx, debris, FX, initFx, mark, tickFx } from "./fx";
+import { engineSfx, engineStop, initAudio, SFX } from "./sfx";
+import { ambient, clearFx, corpse, debris, FX, initFx, mark, splat, tickFx } from "./fx";
 import { input, isTouch, padPressed, pollInput, setupTouch } from "./input";
-import { cyl, initModels, PAINTS, RIMS, sph, template, type CarKind } from "./models";
-import { applyClimate, M, pbr, setQuality, setupRender, shadows, type Quality } from "./render";
+import { carModel, cyl, initModels, sph, template } from "./models";
+import { current, initMenu, menuPad, openOver, openPause, persist, reset, save } from "./menu";
+import { applyClimate, glitchHit, look, M, pbr, setDark, setLamp, setQuality, setupRender, shadows } from "./render";
 import { evoOffer, levelOffers, makeWeapon, mountFor, passiveStats, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
 import { buildLayout, buildWorld, HALF, hitBreakables, obstacles, setWind, spawnPoint } from "./world";
-import { makeProfile, type Profile } from "./run";
+import { CLIMATES, DUSK, makeProfile, mixClimate, nightfall, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -19,14 +20,7 @@ const $ = (id: string) => document.getElementById(id)!;
 let RUN_BOSSES: [number, Kind][] = [];
 let warned = false;
 
-// ---------- Guardado ----------
-type Save = { scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number }; cars: CarKind[]; car: CarKind; quality: Quality; paint: string; rim: string };
-const DEFAULT: Save = { scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0 }, cars: ["buggy"], car: "buggy", quality: "auto", paint: "", rim: "" };
-const save: Save = (() => {
-  try { const s = JSON.parse(localStorage.getItem("rcfight2") ?? "{}"); return { ...DEFAULT, ...s, perm: { ...DEFAULT.perm, ...s.perm } }; }
-  catch { return structuredClone(DEFAULT); }
-})();
-const persist = () => { try { localStorage.setItem("rcfight2", JSON.stringify(save)); } catch { /* sin storage */ } };
+// Guardado (localStorage "rcfight2"): type Save y DEFAULT viven en menu.ts
 
 // ---------- Motor (WebGL2 por defecto, WebGPU con ?webgpu) ----------
 const canvas = $("c") as HTMLCanvasElement;
@@ -52,6 +46,7 @@ initFx(scene, low);
 seedRng(20260929); // el patio es siempre el mismo
 buildWorld(scene, low);
 buildLayout(); // patio del menú (semilla fija)
+applyClimate(mixClimate(DUSK, DUSK, 0));
 setQuality(save.quality);
 if (isTouch) setupTouch();
 initHud();
@@ -76,7 +71,9 @@ let enemies: Enemy[] = [];
 let gems: Gem[] = [];
 let pickups: Pickup[] = [];
 let spits: Spit[] = [];
-const spitTpl = () => template("spit", () => [sph(0.55, pbr("acid", { color: "#b5e61d", rough: 0.1, emissive: "#6b8f00", alpha: 0.9 }), [0, 0, 0])]);
+const spitTpl = () => template("spit", () => [sph(0.55, pbr("acid", { color: "#ff3a1f", rough: 0.1, emissive: "#c01800", alpha: 0.9 }), [0, 0, 0])]);
+let cycleS = -1; // tramo del ciclo atardecer → noche ya aplicado
+let darkK = 1, apagon = false;
 let spawnAcc = 0, swarmT = 60, chestT = 100, ballT = 75, bossIdx = 0;
 let shake = 0, camYaw = 0, dustT = 0;
 let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number; hit?: boolean } | null = null;
@@ -92,7 +89,7 @@ const smashed = (pots: B.Vector3[]) => { for (const p of pots) { SFX.break(); dr
 
 // ---------- Plantillas de recolectables ----------
 const gemTpl = (v: 1 | 5 | 20) => template("gem" + v, () => [
-  cyl(0.5, 0.5, 0.22, M.metal(v === 1 ? "#cbd5e1" : v === 5 ? "#facc15" : "#38bdf8"), [0, 0.3, 0], [0.4, 0, 0], 6),
+  cyl(0.5, 0.5, 0.22, pbr("gem" + v, { color: v === 1 ? "#cbd5e1" : v === 5 ? "#facc15" : "#38bdf8", rough: 0.3, metal: 0.6, emissive: v === 1 ? "#5a6878" : v === 5 ? "#c09010" : "#1890c8" }), [0, 0.3, 0], [0.4, 0, 0], 6),
   cyl(0.22, 0.22, 0.24, M.matte("#1e293b"), [0, 0.3, 0], [0.4, 0, 0], 6),
 ], v === 20 ? 1.5 : 1);
 
@@ -160,17 +157,19 @@ function clearRun() {
   clearFx();
   car?.dispose();
   car = null;
+  applyClimate(mixClimate(DUSK, DUSK, 0)); setDark(1); // al volver al menú, atardecer
 }
 
 function startRun() {
   initAudio();
+  titleArt(false); // ?lab arranca desde el título
   clearRun();
   // Semilla de la partida: ?seed=N la fija (reproducible), si no, una nueva
   runSeed = Number(new URLSearchParams(location.search).get("seed")) || newSeed();
   seedRng(runSeed);
   // Perfil de la partida: clima, plaga, orden de minijefes, ritmo de eventos y un patio distinto
   profile = makeProfile(runSeed);
-  applyClimate(profile.climate);
+  cycleS = -1;
   buildLayout();
   RUN_BOSSES = [[200, profile.minis[0]], [400, profile.minis[1]], [600, "perro"]];
   car = new Car(scene, save.car, save.paint || undefined, save.rim || undefined);
@@ -182,11 +181,13 @@ function startRun() {
   hp = maxHp; boost = 100;
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0;
-  spawnAcc = 0; swarmT = 90 + profile.swarmEvery * 0.5; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false;
+  spawnAcc = 0; swarmT = 90 + profile.swarmEvery * 0.5; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false; apagon = false;
   camYaw = 0;
   state = "play";
   scene.physicsEnabled = true;
-  for (const id of ["menu", "over", "levelup"]) $(id).classList.add("hidden");
+  reset(null);
+  $("levelup").classList.add("hidden");
+  for (const k in dmgOut) delete dmgOut[k];
   $("hud").classList.remove("hidden");
   hudBoss(null);
   banner(`${profile.climate.name} · ${profile.plague.name}`, 3);
@@ -202,23 +203,23 @@ function endRun(win: boolean, why: string) {
   engineStop();
   runScrap += Math.floor(time / 20) + Math.floor(kills / 25);
   save.scrap += runScrap;
+  const record = Math.floor(time) > save.best;
   save.best = Math.max(save.best, Math.floor(time));
+  // Top 5 por tiempo (y bajas para desempatar)
+  save.runs = [...save.runs, { t: Math.floor(time), kills, lv: level, seed: runSeed, win }].sort((a, b) => b.t - a.t || b.kills - a.kills).slice(0, 5);
   persist();
-  $("overTitle").textContent = win ? "¡VICTORIA!" : "FIN DE LA PARTIDA";
-  $("overTxt").innerHTML = `${why}<br>${fmt(time)} · Nivel ${level} · ${kills} enemigos · +${runScrap} chatarra<br><span class="seed">${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}</span>`;
-  $("over").classList.remove("hidden");
   $("hud").classList.add("hidden");
+  openOver({ win, why, time, kills, level, scrap: runScrap, record, dmg: { ...dmgOut }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}` });
 }
 
 function toMenu() {
   engineStop();
-  $("pause").classList.add("hidden");
+  persist(); // bestiario visto en la partida abandonada
   clearRun();
   state = "menu";
   scene.physicsEnabled = true;
-  $("over").classList.add("hidden");
-  $("menu").classList.remove("hidden");
-  renderMenu();
+  $("hud").classList.add("hidden");
+  reset("main");
 }
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -260,91 +261,44 @@ function openChest() {
   openOffers(evo ? [evo] : levelOffers(weapons, passives, 3), evo ? "Cofre · Evolución" : "Cofre");
 }
 
-function togglePause() {
-  if (state === "play") { state = "pause"; scene.physicsEnabled = false; engineStop(); $("pauseSeed").textContent = `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`; $("pause").classList.remove("hidden"); }
-  else if (state === "pause") { state = "play"; scene.physicsEnabled = true; $("pause").classList.add("hidden"); }
+function pause() {
+  if (state !== "play") return;
+  state = "pause"; scene.physicsEnabled = false; engineStop();
+  openPause({
+    weapons: weapons.map((w) => ({ id: w.id, lv: w.lv, evolved: w.evolved })),
+    passives: (Object.entries(passives) as [PassiveId, number][]).map(([id, lv]) => ({ id, lv })),
+    stats: [["Carrocería", `${Math.ceil(hp)} / ${maxHp}`], ["Velocidad", `${Math.round(car!.def.speed * st.speedMul * 3.6)} km/h`], ["Embestida", `x${car!.def.ram}`], ["Daño", `${Math.round(st.dmg * 100)}%`], ["Blindaje", `${Math.round(st.armor * 100)}%`], ["Imán", `${st.magnet.toFixed(1)} m`]],
+    seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`,
+  });
 }
-$("resume").onclick = togglePause;
-$("quit").onclick = toMenu;
+function resume() {
+  if (state !== "pause") return;
+  state = "play"; scene.physicsEnabled = true; reset(null);
+}
 
+// Esc / P / M y la navegación de menús viven en menu.ts; acá solo las cartas de mejora
 addEventListener("keydown", (e) => {
-  if (e.code === "Escape" || e.code === "KeyP") togglePause();
-  if (e.code === "KeyM") $("muted").classList.toggle("hidden", !toggleMute());
   if (state === "level" && /^Digit[1-3]$/.test(e.code)) { const i = +e.code.slice(5) - 1; if (i < offers.length) pickOffer(i); }
-  if (e.code === "Enter") { if (state === "menu") startRun(); else if (state === "over") toMenu(); else if (state === "level") pickOffer(offerSel); }
+  if (e.code === "Enter" && state === "level") pickOffer(offerSel);
 });
-
-// ---------- Menú ----------
-const SHOP: { k: keyof Save["perm"]; name: string }[] = [
-  { k: "hp", name: "+10 vida" }, { k: "dmg", name: "+10% daño" }, { k: "spd", name: "+4% velocidad" }, { k: "mag", name: "+10% imán" },
-];
-const shopCost = (l: number) => 15 * (l + 1);
-function renderMenu() {
-  $("bank").textContent = `· ${save.scrap} tornillos · récord ${fmt(save.best)}`;
-  $("cars").innerHTML = (Object.keys(CARS) as CarKind[]).map((k) => {
-    const c = CARS[k], own = save.cars.includes(k);
-    const bar = (v: number, max: number) => `<i style="width:${(v / max) * 100}%"></i>`;
-    return `<div class="carc ${save.car === k ? "sel" : ""} ${own ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><span>Carrocería</span>${bar(c.hp, 220)}<span>Velocidad</span>${bar(c.speed, 19)}<span>Embestida</span>${bar(c.ram, 4.5)}</div>${own ? "" : `<div class="price">Bloqueado · ${c.cost} tornillos</div>`}</div>`;
-  }).join("");
-  $("shop").innerHTML = SHOP.map((s) => {
-    const l = save.perm[s.k], cost = shopCost(l);
-    return `<button data-k="${s.k}" ${save.scrap < cost || l >= 5 ? "disabled" : ""}>${s.name} (${l}/5) — ${l >= 5 ? "MAX" : cost}</button>`;
-  }).join("");
-  ($("quality") as HTMLSelectElement).value = save.quality;
-  const cur = save.paint || PAINTS[0], rim = save.rim || RIMS[0];
-  $("paint").innerHTML = `<span>Pintura</span>${PAINTS.map((c) => `<button class="sw ${c === cur ? "on" : ""}" data-paint="${c}" style="background:${c}"></button>`).join("")}`
-    + `<span>Llantas</span>${RIMS.map((c) => `<button class="sw rim ${c === rim ? "on" : ""}" data-rim="${c}" style="background:${c}"></button>`).join("")}`;
-}
-$("cars").addEventListener("click", (e) => {
-  const k = ((e.target as HTMLElement).closest(".carc") as HTMLElement | null)?.dataset.k as CarKind | undefined;
-  if (!k) return;
-  if (!save.cars.includes(k)) {
-    if (save.scrap < CARS[k].cost) return;
-    save.scrap -= CARS[k].cost;
-    save.cars.push(k);
-  }
-  save.car = k;
-  persist();
-  renderMenu();
-});
-$("shop").addEventListener("click", (e) => {
-  const k = (e.target as HTMLElement).dataset.k as keyof Save["perm"] | undefined;
-  if (!k) return;
-  const cost = shopCost(save.perm[k]);
-  if (save.scrap < cost || save.perm[k] >= 5) return;
-  save.scrap -= cost;
-  save.perm[k]++;
-  persist();
-  renderMenu();
-});
-$("quality").addEventListener("change", (e) => {
-  save.quality = (e.target as HTMLSelectElement).value as Quality;
-  setQuality(save.quality);
-  persist();
-});
-$("paint").addEventListener("click", (e) => {
-  const d = (e.target as HTMLElement).dataset;
-  if (d.paint) save.paint = d.paint;
-  else if (d.rim) save.rim = d.rim;
-  else return;
-  persist();
-  renderMenu();
-});
-$("play").onclick = startRun;
-$("again").onclick = toMenu;
-renderMenu();
+initMenu({ scene, play: startRun, resume, quit: toMenu, pause });
 
 // ---------- Combate ----------
 const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.IdentityReadOnly, scene.getTransformMatrix(), cam.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
+// Daño infligido por fuente (pantalla de resultados): dmgSrc = arma que está actuando
+const dmgOut: Record<string, number> = {};
+let dmgSrc = "";
 function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
+  if (dmgSrc) dmgOut[dmgSrc] = (dmgOut[dmgSrc] ?? 0) + Math.min(dmg, Math.max(0, e.hp));
   e.hp -= dmg;
   if (dmg >= 4) SFX.hit();
-  if (dmg >= 5 && !simulating) {
+  if (dmg >= 5 && !simulating && save.dmgNums) {
     const sp = toScreen(e.pos.add(new B.Vector3(0, e.def.size[1] + 0.3, 0)));
     const k = innerWidth / engine.getRenderWidth();
     if (sp.z < 1) damageNumber(sp.x * k, sp.y * k, dmg, crit);
   }
-  if (dmg >= 60 || e.def.boss && dmg >= 20) hitStop = Math.max(hitStop, crit ? 0.07 : 0.035);
+  if (crit || e.def.boss && dmg >= 20) hitStop = Math.max(hitStop, crit ? 0.06 : 0.035);
+  if (dmg >= 4 && !simulating) FX.flash(e.pos.add(new B.Vector3(0, e.def.size[1] * 0.5, 0)), Math.max(e.def.size[0], e.def.size[2]) * (e.def.scale ?? 1));
   if (dmg >= 4 && Math.random() < 0.5) FX.hit(e.pos.add(new B.Vector3(0, 0.6, 0)));
   if (knock && !e.def.boss) e.body.applyImpulse(knock.scale(e.def.mass), e.pos);
 }
@@ -361,16 +315,23 @@ function explode(pos: B.Vector3, r: number, dmg: number) {
   }
 }
 
+// Color del charco de cada insecto = color de sus ojos (models.ts)
+const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora: "#ffb020", escarabajo: "#9acd32" };
 function kill(e: Enemy) {
   kills++;
+  hudKill();
+  save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
   SFX.kill();
   FX.death(e.pos.add(new B.Vector3(0, 0.5, 0)), e.def.boss);
   debris(e.pos, e.def.color, e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
+  const juice = !simulating && !e.def.boss;
+  if (juice && BUG_GOO[e.kind]) splat(e.pos.x, e.pos.z, BUG_GOO[e.kind]!, Math.max(e.def.size[0], e.def.size[2]) * 0.55);
+  if (juice && (e.kind === "friccion" || e.kind === "robot")) { debris(e.pos, "#b8bcc2", 5, 8, 0.45); debris(e.pos, "#d4a017", 3, 9, 0.35); FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0))); }
   if (e.def.xp) dropGems(e.pos, e.def.xp);
   if (e.def.boss) {
     shake = 1.5;
     runScrap += 25;
-    if (e.kind === "perro") { e.dispose(); return endRun(true, "¡Derrotaste al Perro!"); }
+    if (e.kind === "perro") { e.dispose(); return endRun(true, "¡El Perro fue derrotado!"); }
     dropPickup(e.pos, "cofre");
     hudBoss(null);
   } else {
@@ -378,17 +339,22 @@ function kill(e: Enemy) {
     if (r < 0.035) dropPickup(e.pos, "pila");
     else if (r < 0.041) dropPickup(e.pos, "iman");
   }
-  e.dispose();
+  // Los insectos quedan patas arriba unos segundos; el resto desaparece
+  if (juice && BUG_GOO[e.kind]) { e.agg.dispose(); corpse(e.node, e.def.size[1] * (e.def.scale ?? 1)); } else e.dispose();
 }
 
 function spawnEnemy(kind: Kind, p: B.Vector3) {
   enemies.push(new Enemy(kind, p, 1 + time / 200));
+  if (!LAB.on && !save.seen.includes(kind)) save.seen.push(kind); // bestiario
 }
 
 // ---------- Update ----------
 function update(dt: number) {
   const c = car!;
   time += dt;
+  // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
+  const s = nightfall(LAB.on ? LAB.t : time / 600);
+  if (Math.abs(s - cycleS) > 0.01) { cycleS = s; applyClimate(mixClimate(DUSK, profile.climate, s)); }
 
   // --- Manejo ---
   let throttle = input.throttle, steer = input.steer;
@@ -403,6 +369,7 @@ function update(dt: number) {
   }
   const ariete = weapons.some((w) => w.id === "lanza" && w.evolved);
   const boosting = input.boost && boost > 3 && throttle >= 0;
+  lampBoost = boosting;
   boost = boosting ? boost - 40 * dt : Math.min(100, boost + st.boostRegen * dt);
   const maxSpeed = c.def.speed * st.speedMul * (boosting ? 1.55 : 1);
   const r = drive(c.body, c.root, dt, {
@@ -448,7 +415,15 @@ function update(dt: number) {
     for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * 22, 1, c.pos.z + Math.sin(a) * 22); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
   if (!warned && time >= 570) { warned = true; banner("EL PERRO SE ACERCA", 3); }
+  // Apagón: 4 s antes de cada jefe se apagan luna y ambiente (queda el faro); vuelve en 3 s tras la entrada
+  if (!simulating) {
+    const next = RUN_BOSSES[bossIdx]?.[0] ?? Infinity, prev = RUN_BOSSES[bossIdx - 1]?.[0] ?? -Infinity;
+    const d = Math.max(Math.min(1, Math.max(0, (time - next + 4) / 1.5)), Math.max(0, 1 - (time - prev) / 3));
+    if (d > 0 || darkK < 1) { darkK = 1 - 0.88 * d; setDark(darkK); }
+    if (!apagon && time >= next - 4) { apagon = true; banner("APAGÓN", 2); }
+  }
   if (bossIdx < RUN_BOSSES.length && time >= RUN_BOSSES[bossIdx][0]) {
+    apagon = false;
     const kind = RUN_BOSSES[bossIdx++][1];
     spawnEnemy(kind, spawnPoint(c.pos, 30, 36));
     banner(DEF[kind].name, 2.5);
@@ -487,12 +462,14 @@ function update(dt: number) {
       if (rel > 5 && e.ramCd <= 0) {
         const lanza = weapons.find((w) => w.id === "lanza");
         const dmg = rel * c.def.ram * (1 + 0.35 * (lanza?.lv ?? 0)) * (boosting ? 1.3 : 1) * st.dmg * (lanza?.evolved ? 1.5 : 1);
+        dmgSrc = "embestida";
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(new B.Vector3(0, rel * 0.2, 0)), true);
         FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0)));
         SFX.ram(rel);
         e.ramCd = 0.3;
         shake = Math.max(shake, 0.25);
         if (ariete) explode(e.pos, 4, dmg * 0.5);
+        dmgSrc = "";
         // Embestir algo más pesado que vos tiene costo: rebote y daño (salvo Ariete)
         if (e.def.mass > c.def.mass * st.mass * 1.8 && !ariete) {
           if (e.touchCd <= 0) { hurt(e.def.dmg * 0.4, false, "rebote " + e.kind); e.touchCd = 0.8; }
@@ -529,7 +506,8 @@ function update(dt: number) {
 
   // --- Armas ---
   const ctx: Ctx = { scene, car: c, enemies, dt, st, fs: r.fs, damage, explode };
-  for (const w of weapons) w.update(ctx);
+  for (const w of weapons) { dmgSrc = w.id; w.update(ctx); }
+  dmgSrc = "";
 
   // --- Recolección ---
   const mag2 = st.magnet * st.magnet;
@@ -568,23 +546,34 @@ function update(dt: number) {
     banner("¡PELOTA!", 1.2);
   }
   if (ball) {
+    dmgSrc = "pelota";
     for (const e of enemies) if (!e.def.boss && B.Vector3.Distance(e.pos, ball.m.position) < 4 + e.radius) damage(e, 999);
+    dmgSrc = "";
     if (!ball.hit && B.Vector3.Distance(c.pos, ball.m.position) < 4 + carR) { ball.hit = true; hurt(20, false, "pelota"); }
     if ((ball.life -= dt) <= 0) { ball.agg.dispose(); ball.m.dispose(); ball = null; }
   }
 
   hp = Math.min(maxHp, hp + st.regen * dt);
-  if (hp <= 0) return endRun(false, "Tu auto quedó destrozado.");
+  if (hp <= 0) return endRun(false, "El auto quedó destrozado.");
   if (pendingLevels > 0 && state === "play") { pendingLevels--; openOffers(levelOffers(weapons, passives, 3), `Nivel ${level - pendingLevels}`); }
 }
 
 let god = false; // solo dev
+let lampBoost = false, moteT = 0, flyT = 0;
+// Zoom de cámara: rueda del mouse o teclas - / = (0.8 cerca … 2 lejos), se guarda
+addEventListener("wheel", (ev) => { save.zoom = Math.min(2, Math.max(0.8, save.zoom * (ev.deltaY > 0 ? 1.08 : 1 / 1.08))); persist(); }, { passive: true });
+addEventListener("keydown", (ev) => { if (ev.key === "-" || ev.key === "=" || ev.key === "+") { save.zoom = Math.min(2, Math.max(0.8, save.zoom * (ev.key === "-" ? 1.1 : 1 / 1.1))); persist(); } });
+const LAB = { on: false, back: 15, up: 13, t: 1 }; // modo lab (solo dev): mundo congelado para probar el look
 const dmgBy: Record<string, number> = {}; // solo dev: de dónde viene el daño
 function hurt(n: number, continuous = false, src = "?") {
   if (god) return;
   dmgBy[src] = (dmgBy[src] ?? 0) + n * (1 - st.armor);
   hp -= n * (1 - st.armor);
-  if (!continuous) shake = Math.max(shake, 0.5);
+  if (!continuous) {
+    shake = Math.max(shake, 0.5);
+    if (!simulating && !save.calm) glitchHit();
+    if (!simulating && save.rumble) void navigator.getGamepads?.()[0]?.vibrationActuator?.playEffect("dual-rumble", { duration: 140, strongMagnitude: 0.6, weakMagnitude: 0.4 });
+  }
 }
 
 let hudT = 0, lastKmh = 0, lastMaxKmh = 80;
@@ -602,6 +591,10 @@ function updateHud(dt: number) {
   hudArrows(out);
   if ((hudT -= dt) > 0) return;
   hudT = 0.05;
+  hudRadar(
+    { x: car!.pos.x, z: car!.pos.z, yaw: Math.atan2(car!.root.forward.x, car!.root.forward.z), up: camYaw },
+    [...enemies.map((e) => ({ x: e.pos.x, z: e.pos.z, kind: e.def.boss ? ("jefe" as const) : ("enemigo" as const) })),
+     ...pickups.filter((p) => p.type === "cofre").map((p) => ({ x: p.m.position.x, z: p.m.position.z, kind: "cofre" as const }))]);
   // Daño visible: pintura gastada y piezas que saltan al cruzar 50% y 25%
   const frac = Math.max(0, hp / maxHp);
   car!.wear(frac);
@@ -612,6 +605,41 @@ function updateHud(dt: number) {
 
 // ---------- Loop ----------
 const camTarget = new B.Vector3();
+// Encuadres del menú: [cámara x, y, z, mira x, y, z]. Casa al fondo en z ≈ 110, auto del garaje en el origen.
+const SHOTS: Record<string, number[]> = {
+  title: [0, 48, -95, 0, 4, 20], main: [32, 15, -40, 0, 2, 0], garage: [0, 2.1, -6.2, 1.7, 0.7, 0], shop: [7, 2.6, -8, -2, 1.2, 6],
+  config: [-34, 9, -22, 0, 1, 30], bestiary: [6, 9, 55, 0, 30, 110], credits: [0, 4, -24, 10, 38, 90],
+};
+let previewKey = "", previewR = 0;
+// Portada del título: auto en primer plano a ras del pasto mirando a la luna, bichos acechando al fondo, roca oscura delante.
+// Se arma al entrar al título y se desarma al salir. Los bichos son Enemy normales sin IA (solo animate).
+let art: { bugs: Enemy[]; rock: B.Mesh; yaw: number } | null = null;
+function titleArt(on: boolean) {
+  if (!on) {
+    if (!art) return;
+    for (const e of art.bugs) e.dispose();
+    art.rock.dispose();
+    art = null;
+    applyClimate(mixClimate(DUSK, DUSK, 0));
+    return;
+  }
+  if (art) return;
+  applyClimate(mixClimate(DUSK, CLIMATES[0], 0.6)); // entre atardecer y noche de luna
+  const L = (scene.getLightByName("sun") as B.DirectionalLight).direction;
+  const v = new B.Vector3(-L.x, 0, -L.z).normalize(), side = new B.Vector3(v.z, 0, -v.x); // v: hacia la luna (contraluz)
+  const cp = v.scale(-4.4).addInPlace(side.scale(1.7));
+  SHOTS.title = [cp.x, 0.42, cp.z, v.x * 3 - side.x * 0.5, 0.8, v.z * 3 - side.z * 0.5];
+  const bugs = ([["escarabajo", 7, -4.2], ["hormiga", 5, 3.4], ["hormiga", 6.5, 5], ["robot", 10, -7]] as [Kind, number, number][]).map(([kind, d, sd]) => {
+    const p = v.scale(d).addInPlace(side.scale(sd));
+    const e = new Enemy(kind, new B.Vector3(p.x, 0.1, p.z), 1);
+    e.body.disablePreStep = false; // quietos y mirando al auto: el cuerpo sigue a la malla
+    e.node.rotationQuaternion = B.Quaternion.RotationYawPitchRoll(Math.atan2(-p.x, -p.z), 0, 0);
+    return e;
+  });
+  const rp = cp.add(v.scale(1.9)).addInPlace(side.scale(-2.1));
+  const rock = sph(1.5, M.matte("#120e0b"), [rp.x, 0.05, rp.z], [1.3, 0.45, 1]);
+  art = { bugs, rock, yaw: Math.atan2(-v.x, -v.z) - 1.3 };
+}
 scene.onBeforeRenderObservable.add(() => {
   const dt = Math.min(engine.getDeltaTime() / 1000, 0.05);
   pollInput();
@@ -620,13 +648,13 @@ scene.onBeforeRenderObservable.add(() => {
     if (padPressed(14)) { offerSel = (offerSel + offers.length - 1) % offers.length; selectOffer(offerSel); }
     if (padPressed(15)) { offerSel = (offerSel + 1) % offers.length; selectOffer(offerSel); }
     if (padPressed(0)) pickOffer(offerSel);
-  } else if ((state === "menu" || state === "over") && padPressed(9)) state === "menu" ? startRun() : toMenu();
-  else if ((state === "play" || state === "pause") && padPressed(9)) togglePause();
+  } else if (state === "play") { if (padPressed(9)) pause(); }
+  else menuPad(dt);
 
   if (state === "play") {
     // Hit-stop: congela el mundo un par de cuadros en los golpes fuertes
     if (hitStop > 0) { hitStop -= dt; scene.physicsEnabled = false; }
-    else { scene.physicsEnabled = true; update(dt); }
+    else { scene.physicsEnabled = true; update(LAB.on ? 1e-4 : dt); }
     updateHud(dt);
   }
   tickFx(dt);
@@ -645,17 +673,59 @@ scene.onBeforeRenderObservable.add(() => {
     // Al elegir mejoras la cámara se acerca y gira a 3/4 frontal para ver la pieza montada
     const close = state === "level";
     const yaw = close ? camYaw + 2.5 : camYaw;
+    setLamp(car.pos, car.root.forward, lampBoost, dt);
+    // Polvo que flota dentro del haz del faro
+    if (!simulating && (moteT -= dt) <= 0) {
+      moteT = 0.09;
+      const f = car.root.forward, d = 3 + Math.random() * 11, sd = (Math.random() - 0.5) * d * 0.9;
+      ambient("mote", new B.Vector3(car.pos.x + f.x * d + f.z * sd, 0.4 + Math.random() * 2.2, car.pos.z + f.z * d - f.x * sd));
+    }
+    // Luciérnagas alrededor del auto cuando ya anocheció
+    if (!simulating && cycleS > 0.5 && (flyT -= dt) <= 0) {
+      flyT = 0.12 / cycleS;
+      const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 22;
+      ambient("fly", new B.Vector3(car.pos.x + Math.cos(a) * r, 0.5 + Math.random() * 2.5, car.pos.z + Math.sin(a) * r));
+    }
     const back = new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
-    const want = car.pos.subtract(back.scale(close ? 5.5 : 15)).addInPlace(new B.Vector3(0, close ? 3.2 : 13, 0));
+    const want = car.pos.subtract(back.scale(close ? 5.5 : LAB.back * (LAB.on ? 1 : save.zoom))).addInPlace(new B.Vector3(0, close ? 3.2 : LAB.up * (LAB.on ? 1 : save.zoom), 0));
     cam.position = B.Vector3.Lerp(cam.position, want, close ? 1 - Math.exp(-8 * dt) : k);
     B.Vector3.LerpToRef(camTarget, close ? car.pos.add(new B.Vector3(0, -1.4, 0)) : car.pos.add(back.scale(3)), close ? 0.2 : k * 1.5, camTarget);
   } else {
-    const t = performance.now() / 9000;
-    cam.position.set(Math.sin(t) * 45, 22, Math.cos(t) * 45);
-    camTarget.set(0, 2, 0);
+    // Diorama: cada pantalla del menú tiene su encuadre; la cámara viaja con lerp suave y se mece un poco
+    const scr = current() ?? "main", t = performance.now() / 1000;
+    titleArt(scr === "title");
+    const [px, py, pz, tx, ty, tz] = SHOTS[scr] ?? SHOTS.main;
+    const sw = scr === "garage" ? 0.15 : scr === "title" ? 0.12 : 2.5, kk = 1 - Math.exp(-2.2 * dt);
+    B.Vector3.LerpToRef(cam.position, new B.Vector3(px + Math.sin(t * 0.13) * sw, py + Math.sin(t * 0.21) * sw * 0.3, pz + Math.cos(t * 0.11) * sw), kk, cam.position);
+    B.Vector3.LerpToRef(camTarget, new B.Vector3(tx, ty, tz), kk, camTarget);
+    // Título y garaje: el auto elegido en el centro del patio (reusa `preview`, que clearRun libera)
+    if (scr === "garage" || scr === "title") {
+      const key = save.car + save.paint + save.rim;
+      if (!preview || previewKey !== key) {
+        preview?.dispose();
+        const m = carModel(save.car, save.paint || undefined, save.rim || undefined);
+        preview = m.body;
+        previewR = Math.max(...m.wheels.map((w) => w.r));
+        preview.position.y = previewR;
+        shadows.addShadowCaster(preview, true);
+        previewKey = key;
+      }
+      if (scr === "garage") { preview.rotation.y += dt * 0.6; preview.rotation.z = 0; preview.position.y = previewR; }
+      else if (art) {
+        // Portada: vaivén de suspensión, faro que titila, polvo en el haz y luciérnagas
+        preview.rotation.y = art.yaw;
+        preview.position.y = previewR + Math.sin(t * 2.3) * 0.012;
+        preview.rotation.z = Math.sin(t * 1.7) * 0.012;
+        const f = new B.Vector3(Math.sin(art.yaw), 0, Math.cos(art.yaw));
+        setLamp(preview.position, f, Math.random() < 0.025, dt);
+        if ((moteT -= dt) <= 0) { moteT = 0.06; const d = 1.5 + Math.random() * 7, sd = (Math.random() - 0.5) * d * 0.7; ambient("mote", new B.Vector3(f.x * d + f.z * sd, 0.3 + Math.random() * 1.2, f.z * d - f.x * sd)); }
+        if ((flyT -= dt) <= 0) { flyT = 0.18; const a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 12; ambient("fly", new B.Vector3(Math.cos(a) * r, 0.4 + Math.random() * 2, Math.sin(a) * r)); }
+        for (const e of art.bugs) e.animate(dt);
+      }
+    } else if (preview) { preview.dispose(); preview = null; }
   }
   shake = Math.max(0, shake - dt * 2);
-  const s = shake * shake * 0.8;
+  const s = save.shake ? shake * shake * 0.8 : 0;
   cam.setTarget(camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0)));
 });
 
@@ -692,6 +762,7 @@ if (import.meta.env.DEV) import("./devbot").then((m) => Object.assign(window, {
     return `${fmt(time)} nv${level} hp${Math.round(hp)}/${maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
   },
 }));
+if (import.meta.env.DEV && location.search.includes("lab")) setTimeout(() => (window as unknown as { __lab(o: object): void }).__lab({ climate: new URLSearchParams(location.search).get("climate") ?? undefined, t: Number(new URLSearchParams(location.search).get("t") ?? 1), boss: location.search.includes("boss") }), 800);
 if (import.meta.env.DEV) Object.assign(window, {
   __tick: (n: number) => { const g = engine.getDeltaTime; engine.getDeltaTime = () => 1000 / 60; for (let i = 0; i < n; i++) { engine.beginFrame(); scene.render(); engine.endFrame(); } engine.getDeltaTime = g; },
   __killAll: () => enemies.forEach((e) => { if (!e.def.boss) e.hp = 0; }),
@@ -702,6 +773,24 @@ if (import.meta.env.DEV) Object.assign(window, {
   __killBoss: () => enemies.forEach((e) => { if (e.def.boss) e.hp = 0; }),
   __info: () => ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps() }),
   __car: () => car && { p: car.pos, f: car.root.forward },
+  __look: look,
+  // Modo lab: arranca una partida congelada con una fila de cada enemigo delante del auto y la cámara a mano.
+  // t = momento del ciclo (0 atardecer … 1 noche). __lab({ climate: "niebla", t: 0.4, boss: true, back: 15, up: 13, look: { lampI: 8 } }) ; ?lab en la URL lo corre solo.
+  __lab: (o: { climate?: string; t?: number; boss?: boolean; back?: number; up?: number; look?: Parameters<typeof look>[0]; frames?: number } = {}) => {
+    if (state !== "menu") toMenu();
+    startRun();
+    god = true; LAB.on = true; LAB.back = o.back ?? 15; LAB.up = o.up ?? 13;
+    $("hint").classList.add("hidden");
+    const k = CLIMATES.find((c) => c.id === o.climate); if (k) profile.climate = k;
+    LAB.t = o.t ?? 1; cycleS = -1;
+    if (o.look) look(o.look);
+    const kinds = (Object.keys(DEF) as Kind[]).filter((x) => o.boss || !DEF[x].boss);
+    const f = car!.root.forward, r = new B.Vector3(f.z, 0, -f.x);
+    kinds.forEach((kd, i) => spawnEnemy(kd, car!.pos.add(f.scale(8 + (i % 2) * 5)).addInPlace(r.scale((i - (kinds.length - 1) / 2) * 5.5)).addInPlace(new B.Vector3(0, 1, 0))));
+    for (let i = 0; i < (o.frames ?? 90); i++) { engine.beginFrame(); scene.render(); engine.endFrame(); }
+    $("banner").classList.add("hidden");
+    return `lab: ${profile.climate.name} · ${kinds.join(",")}`;
+  },
   __scene: scene,
   __carObj: () => car,
 });

@@ -54,9 +54,7 @@ export function buildWorld(s: B.Scene, low: boolean) {
   tuftCount = low ? 6000 : 22000;
   tuft = grassTuft();
 
-  // Mesa de jardín gigante sobre el patio (fija: referencia del lugar; solo las patas colisionan)
-  for (const [x, z] of [[-14, -18], [14, -18], [-14, -42], [14, -42]]) stat(cyl(1.4, 1.4, 16, M.metal("#f1f5f9"), [x, 8, z], undefined, 10), B.PhysicsShapeType.CYLINDER);
-  shadows.addShadowCaster(box(34, 0.8, 30, M.matte("#f1f5f9"), [0, 16.4, -30]));
+  // ponytail: sin la mesa de jardín gigante (su tapa tapaba la cámara alejada); vuelve cuando haya cámara que esquive techos
 
   // Suelo: césped + baldosas + huerta
   const ground = B.MeshBuilder.CreateGround("ground", { width: 260, height: 260 }, scene);
@@ -98,7 +96,10 @@ export function buildWorld(s: B.Scene, low: boolean) {
   const house = merge("house", [
     box(260, 90, 6, M.matte("#efe6d8"), [0, 45, HALF + 14]),
     box(260, 3, 10, M.matte("#8a5a44"), [0, 1.5, HALF + 12]),
-    ...[-70, -25, 45, 90].map((x) => box(26, 30, 1, M.glass(), [x, 42, HALF + 10.6])),
+    ...[-70, -25, 45, 90].map((x, i) => box(26, 30, 1, i === 1 ? M.glass() : M.glow(i % 2 ? "#ffb15c" : "#ffcf8a"), [x, 42, HALF + 10.6])),
+    // Siluetas en las ventanas encendidas (alguien mirando el patio)
+    box(7, 14, 0.4, M.matte("#1a1410"), [-66, 36, HALF + 10]), sph(6, M.matte("#1a1410"), [-66, 46, HALF + 10], [1, 1, 0.2], 6),
+    box(5, 10, 0.4, M.matte("#1a1410"), [84, 34, HALF + 10]),
     ...[-70, -25, 45, 90].map((x) => box(29, 33, 0.6, M.matte("#ffffff"), [x, 42, HALF + 10.9])),
     box(22, 40, 1, pbr("door", { color: "#ffffff", rough: 0.6, tex: TEX.wood() }), [10, 20, HALF + 10.6]),
   ]);
@@ -288,14 +289,14 @@ function grassTuft() {
   const pos: number[] = [], ind: number[] = [], col: number[] = [];
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2 + rng();
-    const r = rng() * 0.25, w = 0.07, h = 0.5 + rng() * 0.6;
+    const r = rng() * 0.25, w = 0.07, h = 0.25 + rng() * 0.3; // bajo: no tapar enemigos de 0.6
     const bx = Math.cos(a) * r, bz = Math.sin(a) * r, lean = 0.2 + rng() * 0.2;
     const px = -Math.sin(a) * w, pz = Math.cos(a) * w;
     const b = pos.length / 3;
     pos.push(bx - px, 0, bz - pz, bx + px, 0, bz + pz, bx + Math.cos(a) * lean, h, bz + Math.sin(a) * lean);
     ind.push(b, b + 1, b + 2);
     const g = 0.75 + rng() * 0.25;
-    col.push(0.2 * g, 0.38 * g, 0.1 * g, 1, 0.2 * g, 0.38 * g, 0.1 * g, 1, 0.45 * g, 0.7 * g, 0.25 * g, 1);
+    col.push(0.16 * g, 0.2 * g, 0.1 * g, 1, 0.16 * g, 0.2 * g, 0.1 * g, 1, 0.36 * g, 0.38 * g, 0.2 * g, 1); // pasto seco, apagado
   }
   const m = new B.Mesh("tuft", scene);
   const vd = new B.VertexData();

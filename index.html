@@ -3,71 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>RC Fight</title>
+  <title>Junked Metal</title>
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-  <meta name="theme-color" content="#16181b" />
+  <meta name="theme-color" content="#0b0d0a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
 </head>
 <body>
   <canvas id="c"></canvas>
 
   <div id="hud" class="hidden">
-    <div id="signal">
+    <div id="signal" class="h-panel">
       <span class="lbl" id="sigIco"></span>
-      <div class="track"><div id="xp"></div></div>
-      <span id="lvl">NV 01</span>
+      <div class="h-track"><div id="xp"></div></div>
+      <span id="lvl" class="h-scr">NV 01</span>
     </div>
 
-    <div id="lcd"><span id="timer">00:00</span><span class="sub"><span id="kills">0000</span> BAJAS</span></div>
+    <div id="lcd" class="h-scr"><span id="timer" class="h-g" data-g="88:88">00:00</span><span class="sub"><span id="kills" class="h-g" data-g="8888">0000</span> BAJAS</span></div>
 
-    <div id="bossbar" class="hidden">
+    <div id="bossbar" class="h-panel hidden">
       <div id="bossName"></div>
-      <div class="track"><div id="bossHp"></div></div>
+      <div class="h-track"><div id="bossHp"></div></div>
     </div>
 
-    <div id="txl" class="panel">
-      <div class="ptitle">LiPo 3S</div>
+    <div id="combo" class="hidden"><span class="h-tape" id="comboLbl">RACHA</span><b id="comboN">x3</b><i id="comboBar"></i></div>
+
+    <div id="radar" class="h-panel"><span class="h-tape">RADAR</span><canvas id="radarC" width="64" height="64"></canvas></div>
+
+    <div id="txl" class="h-panel">
+      <div class="h-ptitle"><span class="h-tape">LiPo 3S</span><span class="h-tape warn">BATERIA BAJA</span></div>
       <div id="lipo"><i></i><i></i><i></i></div>
-      <div class="read"><b id="volt">12.6V</b><span id="hpTxt">100 / 100</span></div>
-      <div class="ptitle">Turbo</div>
-      <div class="track boost"><div id="boost"></div></div>
+      <div class="h-read"><b id="volt">12.6V</b><span id="hpTxt">100 / 100</span></div>
+      <div class="h-ptitle"><span class="h-tape">TURBO</span></div>
+      <div class="h-track h-boost"><div id="boost"></div></div>
     </div>
 
     <div id="slots"></div>
 
-    <div id="txr" class="panel">
-      <svg id="speedo" viewBox="0 0 120 80">
-        <path class="arc" d="M14 70 A50 50 0 1 1 106 70" />
-        <path id="spdArc" class="arc on" d="M14 70 A50 50 0 1 1 106 70" />
+    <div id="txr" class="h-panel">
+      <svg id="speedo" viewBox="0 4 120 80">
+        <path class="arc" d="M20.2 79A46 46 0 1 1 99.8 79" />
+        <path id="spdArc" class="arc on" d="M20.2 79A46 46 0 1 1 99.8 79" />
         <g id="ticks"></g>
-        <line id="needle" x1="60" y1="62" x2="60" y2="22" />
-        <circle cx="60" cy="62" r="4" />
+        <line id="needle" x1="60" y1="56" x2="60" y2="26" />
+        <circle cx="60" cy="56" r="4" />
       </svg>
-      <div class="read r"><b id="kmh">0</b><span>KM/H · ESCALA 1:10</span></div>
+      <div class="h-read r"><b id="kmh" class="h-g h-scr" data-g="888">0</b><span>KM/H · ESCALA 1:10</span></div>
     </div>
 
-    <div id="hint" class="hidden">
+    <div id="hint" class="h-panel hidden">
       <div><kbd>W</kbd><kbd>S</kbd> acelerar / frenar</div>
       <div><kbd>A</kbd><kbd>D</kbd> girar</div>
       <div><kbd>Espacio</kbd> turbo</div>
       <div><kbd>Shift</kbd> derrape</div>
-      <div class="tip">Las armas disparan solas. Embestí rápido, juntá tuercas, sobreviví 10 minutos.</div>
+      <div class="tip">Las armas disparan solas. Embiste rápido, junta tuercas y sobrevive 10 minutos.</div>
     </div>
     <div id="arrows"></div>
     <div id="dmg"></div>
   </div>
 
-  <div id="banner" class="hidden"></div>
-  <div id="muted" class="hidden">SONIDO APAGADO · M</div>
-
-  <div id="pause" class="overlay hidden">
-    <div class="brand">PAUSA</div>
-    <button id="resume" class="primary">Seguir</button>
-    <button id="quit">Abandonar y volver al taller</button>
-    <div class="help">Esc / P pausa · M sonido · <span id="pauseSeed"></span></div>
+  <div id="banner" class="hidden">
+    <div class="rxh"><span>RX 72.410 MHZ</span><span>CANAL 07</span><i></i></div>
+    <div id="bannerTxt"><span class="gh"></span><span class="ty"></span></div>
   </div>
+  <div id="muted" class="hidden">SONIDO APAGADO · M</div>
 
   <div id="levelup" class="overlay hidden">
     <div class="otitle" id="luTitle">Nivel</div>
@@ -75,34 +75,100 @@
     <div class="hint">1 · 2 · 3 o clic — Enter confirma</div>
   </div>
 
-  <div id="menu" class="overlay">
-    <div class="brand">RC FIGHT</div>
-    <div class="tag">Sobreviví 10 minutos en el patio. A las 10:00 llega el Perro.</div>
-    <div class="sect">Vehículo</div>
-    <div id="cars"></div>
-    <div id="paint"></div>
-    <button id="play" class="primary">Encender y jugar</button>
-    <div class="sect">Taller <span id="bank"></span></div>
-    <div id="shop"></div>
-    <label class="q">Gráficos
-      <select id="quality">
-        <option value="auto">Auto — FSR dinámico</option>
-        <option value="ultra">Ultra — nativo</option>
-        <option value="calidad">Calidad — FSR 1.3×</option>
-        <option value="equilibrado">Equilibrado — FSR 1.5×</option>
-        <option value="rendimiento">Rendimiento — FSR 1.8×</option>
-      </select>
-    </label>
-    <div class="help">
-      Teclado: W/S acelerar · A/D girar · Espacio turbo · Shift derrape · Esc pausa · M sonido<br />
-      Gamepad: stick hacia donde querés ir · A turbo · B derrape — Las armas disparan solas. Embestir rápido destroza.
-    </div>
-  </div>
+  <!-- Front-end: pantallas manejadas por src/menu.ts (una visible por vez) -->
+  <div id="fe" class="overlay">
+    <section id="scr-title" class="scr">
+      <div class="brand">JUNKED METAL</div>
+      <div class="tag">Un auto RC, un patio y diez minutos hasta que llega el Perro.</div>
+      <div class="press">PRESIONA CUALQUIER TECLA</div>
+    </section>
 
-  <div id="over" class="overlay hidden">
-    <div class="brand" id="overTitle"></div>
-    <div class="tag" id="overTxt"></div>
-    <button id="again" class="primary">Volver al taller</button>
+    <section id="scr-main" class="scr">
+      <div class="brand small">JUNKED METAL</div>
+      <nav class="list">
+        <button data-act="play" class="primary">Jugar</button>
+        <button data-go="garage">Garaje</button>
+        <button data-go="shop">Taller</button>
+        <button data-go="config">Configuración</button>
+        <button data-go="bestiary">Bestiario</button>
+        <button data-go="credits">Créditos</button>
+        <button data-act="install" id="install" class="hidden">Instalar</button>
+      </nav>
+      <div class="foot" id="mainInfo"></div>
+      <div class="foot hidden" id="iosHint">Para instalar: Compartir → Agregar a inicio</div>
+    </section>
+
+    <section id="scr-garage" class="scr side">
+      <div class="otitle">Garaje</div>
+      <div class="sect">Vehículo <span id="bankG"></span></div>
+      <div id="cars"></div>
+      <div id="paint"></div>
+      <div class="btns"><button data-act="back">Volver</button><button data-act="play" class="primary">Encender y jugar</button></div>
+    </section>
+
+    <section id="scr-shop" class="scr">
+      <div class="otitle">Taller</div>
+      <div class="sect">Mejoras permanentes <span id="bank"></span></div>
+      <div id="shop"></div>
+      <div class="btns"><button data-act="back">Volver</button></div>
+    </section>
+
+    <section id="scr-config" class="scr">
+      <div class="otitle">Configuración</div>
+      <div id="tabs"></div>
+      <div id="opts"></div>
+      <div class="btns"><button data-act="back">Volver</button></div>
+    </section>
+
+    <section id="scr-bestiary" class="scr wide">
+      <div class="otitle">Bestiario</div>
+      <div id="beasts"></div>
+      <div class="sect">Mejores partidas</div>
+      <table id="records"></table>
+      <div class="btns"><button data-act="back">Volver</button></div>
+    </section>
+
+    <section id="scr-credits" class="scr">
+      <div class="otitle">Créditos</div>
+      <div class="roll">
+        <p><b>JUNKED METAL</b></p>
+        <p>Cada noche, cuando la casa se apaga, el patio cambia de dueño. Bajo el pasto viven hormigas, escarabajos y cosas peores que nadie quiere nombrar.</p>
+        <p>Los juguetes olvidados aprendieron a defenderse. Un auto a control remoto, armado con chatarra, lápices y gomitas, sale a resistir hasta el amanecer.</p>
+        <p>Diez minutos. Tres jefes. Y al final, siempre, el Perro.</p>
+        <p>Creado por <b>TheDuende</b></p>
+        <p class="dim">Ningún insecto real fue lastimado. Los juguetes sí.</p>
+      </div>
+      <div class="btns"><button data-act="back">Volver</button></div>
+    </section>
+
+    <section id="scr-pause" class="scr">
+      <div class="brand small">PAUSA</div>
+      <div class="kit">
+        <div><div class="sect">Armas</div><ul id="kitW"></ul></div>
+        <div><div class="sect">Pasivas</div><ul id="kitP"></ul></div>
+        <div><div class="sect">Auto</div><ul id="kitS"></ul></div>
+      </div>
+      <nav class="list row3">
+        <button data-act="resume" class="primary">Seguir</button>
+        <button data-go="config">Configuración</button>
+        <button data-act="quit">Abandonar</button>
+      </nav>
+      <div class="foot"><span id="pauseSeed"></span> · Esc sigue · M sonido</div>
+    </section>
+
+    <section id="scr-over" class="scr">
+      <div class="brand small" id="overTitle"></div>
+      <div class="tag" id="overTxt"></div>
+      <div class="stamp hidden" id="overRec">RÉCORD NUEVO</div>
+      <ul class="kit stats" id="overStats"></ul>
+      <div class="sect">Daño infligido por fuente</div>
+      <ul id="overDmg"></ul>
+      <div class="foot" id="overSeed"></div>
+      <nav class="list row3">
+        <button data-act="quit" class="primary">Volver al menú</button>
+        <button data-act="play">Otra partida</button>
+      </nav>
+    </section>
   </div>
 
   <div id="touch" class="hidden">
