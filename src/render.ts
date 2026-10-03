@@ -84,7 +84,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   shadows.normalBias = 0.02;
 
   // Faro del auto: el único foco duro de la escena. Sin sombras propias (ponytail: sombras solo de la luna; si hace falta, ShadowGenerator sobre el spot).
-  lamp = new B.SpotLight("lamp", B.Vector3.Zero(), B.Vector3.Forward(), 1.15, 6, scene);
+  lamp = new B.SpotLight("lamp", B.Vector3.Zero(), B.Vector3.Forward(), 1.15, 8, scene);
   lamp.diffuse = B.Color3.FromHexString("#ffe9c2");
   lamp.falloffType = B.Light.FALLOFF_STANDARD;
   lamp.range = 70;

@@ -760,6 +760,8 @@ export function buildLayout() {
   for (let tries = 0; k < n && tries < n * 3; tries++) {
     const x = (rng() - 0.5) * (HALF - 1) * 2, z = (rng() - 0.5) * (HALF - 1) * 2;
     if (isBare(x, z)) continue;
+    // Mechones: ruido de baja frecuencia deja claros sin pasto (el 20% se salva para que no queden pelados)
+    if (Math.sin(x * 0.11) + Math.sin(z * 0.13) + Math.sin((x + z) * 0.07) < -0.4 && rng() > 0.2) continue;
     const s = 0.6 + rng() * 0.9;
     sc.set(s, s * (0.7 + rng() * 0.8) * Z.grassH, s);
     B.Quaternion.RotationYawPitchRollToRef(rng() * 6.3, 0, 0, q);

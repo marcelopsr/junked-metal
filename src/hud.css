@@ -11,6 +11,7 @@
 
 /* ---------- Piezas comunes ---------- */
 #hud { position: fixed; inset: 0; pointer-events: none; }
+#hud .h-panel { opacity: .8; } /* HUD discreto: deja ver el campo detrás */
 #signal, #lcd, #bossbar, #combo, #drv, #radar, #txl, #txr, #slots, #hint { position: absolute; scale: var(--hud-scale); }
 #signal, #lcd, #bossbar, #hint { left: 50%; translate: -50% 0; transform-origin: 50% 0; }
 
@@ -74,7 +75,7 @@
 #combo.t3 .h-tape { background: var(--turbo); }
 
 /* ---------- Radar ---------- */
-#radar { top: max(10px, env(safe-area-inset-top)); right: 14px; transform-origin: 100% 0; padding: 20px 9px 9px; rotate: .8deg; --rs: 2; }
+#radar { top: max(10px, env(safe-area-inset-top)); right: 14px; transform-origin: 100% 0; padding: 20px 9px 9px; rotate: .8deg; --rs: 1.7; }
 #radar .h-tape { position: absolute; top: 5px; left: 50%; translate: -50% 0; }
 #radarC { display: block; width: calc(64px * var(--rs)); aspect-ratio: 1; image-rendering: pixelated; border: 1px solid #000; background: var(--scr); }
 
