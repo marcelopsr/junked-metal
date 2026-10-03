@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 1.3, ca: 0.01, pal: 0.2, outline: 0.3, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.8 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 1.02, ca: 0.01, pal: 0.2, outline: 0.3, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.8 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
