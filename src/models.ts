@@ -78,7 +78,7 @@ export function wheel(d: number, w: number, rim: string) {
 
 // ---------- Autos del jugador ----------
 export type CarModel = { body: B.Mesh; wheels: { m: B.Mesh; front: boolean; r: number }[]; paint: B.PBRMaterial };
-export type CarKind = "buggy" | "monster" | "formula" | "tanque" | "carrera";
+export type CarKind = "buggy" | "monster" | "formula" | "tanque" | "carrera" | "axel" | "helado" | "combi";
 
 // Paletas del taller
 export const PAINTS = ["#d62828", "#1d4ed8", "#16a34a", "#f59e0b", "#e5e7eb", "#18181b", "#7c3aed", "#ea580c"];
@@ -106,7 +106,7 @@ export const validDecal = (s: unknown): s is string => typeof s === "string" && 
 // Buggy y Fórmula: el plato del alerón de serie. Monster: el techo de la cabina. Tanque: la cubierta trasera. Autito: la cola, que mira a la cámara.
 // Con un alerón elegido (alto/doble) el calco va sobre su plato, porque tapa la cubierta o la cola (ver carModel); el techo del Monster no lo tapa.
 const SPOT: Record<CarKind, [number, number, number, number]> = {
-  buggy: [0.933, -1.0, 0.34, 0.12], monster: [1.212, -0.2, 0.54, 0], formula: [0.653, -1.15, 0.28, 0], tanque: [0.512, -0.8, 0.34, 0], carrera: [0.352, -0.72, 0.4, -0.38],
+  buggy: [0.933, -1.0, 0.34, 0.12], monster: [1.212, -0.2, 0.54, 0], formula: [0.653, -1.15, 0.28, 0], tanque: [0.512, -0.8, 0.34, 0], carrera: [0.352, -0.72, 0.4, -0.38], axel: [0.66, -0.3, 0.34, 0], helado: [0.97, 0.55, 0.34, 0], combi: [1.04, -0.1, 0.4, 0],
 };
 
 // Dónde va cada cosa en cada auto: deck = [y, z] del alerón, side = calco lateral [x, y, z], exh = [y, z] del escape,
@@ -117,6 +117,9 @@ const ANCH: Record<CarKind, { deck: [number, number]; side: V3; exh: [number, nu
   formula: { deck: [0.32, -1.15], side: [0.355, 0.13, 0.55], exh: [0.15, -1.25], seat: [0, 0.2, -0.05, 0.75], lamps: [[0.18, 0.08, 1.3, 0.08]], paint: "#16a34a", rim: "#e5e7eb" },
   tanque: { deck: [0.5, -0.92], side: [0.56, 0.3, 0.15], exh: [0.32, -1.02], seat: [0, 0.8, -0.2, 0.85], lamps: [[0.38, 0.42, 1.02, 0.12]], paint: "#6b7a3a", rim: "#3a3f2a" },
   carrera: { deck: [0.36, -0.82], side: [0.405, 0.2, 0.35], exh: [0.14, -1.02], seat: [0, 0.26, -0.3, 0.75], lamps: [[0.25, 0.2, 1.0, 0.12]], paint: "#2a9d8f", rim: "#e5e7eb" },
+  axel: { deck: [0.6, -0.5], side: [0.46, 0.15, 0], exh: [0.1, -0.85], seat: [0, 0.2, 0, 0.8], lamps: [[0.28, 0.3, 0.7, 0.16]], paint: "#e8e4d4", rim: "#b8321f" },
+  helado: { deck: [0.95, -1.0], side: [0.56, 0.5, -0.4], exh: [0.2, -1.1], seat: [0, 0.5, 0.72, 0.7], lamps: [[0.4, 0.4, 1.22, 0.14]], paint: "#f08dbd", rim: "#f3ead2" },
+  combi: { deck: [1.0, -0.95], side: [0.54, 0.55, -0.1], exh: [0.2, -1.15], seat: [0, 0.42, 0.45, 0.7], lamps: [[0.4, 0.4, 1.2, 0.18]], paint: "#4cc3c9", rim: "#e5e7eb" },
 };
 
 export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
@@ -183,6 +186,44 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       box(0.5, 0.06, 0.16, M.matte("#e0a030"), [0, 0.52, 1.0]),
     ];
     for (const z of [-0.6, -0.2, 0.2, 0.6]) for (const x of [-0.72, 0.72]) ws.push({ pos: [x, 0.02, z], d: 0.36, w: 0.34, steer: false });
+  } else if (kind === "axel") {
+    // Axel (Twisted Metal): dos ruedas gigantes con una jaula-cabina colgando del eje; el piloto va en el centro
+    const steel = M.metal("#444a52"), red = M.plastic("#b8321f");
+    parts = [
+      cyl(0.16, 0.16, 1.9, steel, [0, 0, 0], [0, 0, Math.PI / 2], 8),
+      box(0.95, 0.12, 1.25, M.matte("#2b2d31"), [0, -0.12, 0]),
+      extrude([[-0.65, -0.1], [0.65, -0.1], [0.72, 0.1], [0.45, 0.28], [-0.6, 0.3], [-0.7, 0.1]], 0.9, paint, [0, 0.0, 0]),
+      tube([[-0.42, 0.28, -0.55], [-0.42, 0.78, -0.2], [0.42, 0.78, -0.2], [0.42, 0.28, -0.55]], 0.04, steel),
+      tube([[-0.42, 0.28, 0.5], [-0.42, 0.75, 0.2], [0.42, 0.75, 0.2], [0.42, 0.28, 0.5]], 0.04, steel),
+      tube([[-0.42, 0.78, -0.2], [-0.42, 0.75, 0.2]], 0.04, steel), tube([[0.42, 0.78, -0.2], [0.42, 0.75, 0.2]], 0.04, steel),
+      ...[-1, 1].flatMap((s) => [cyl(0.5, 0.5, 0.06, red, [s * 0.98, 0, 0], [0, 0, Math.PI / 2], 8), cyl(0, 0.16, 0.2, steel, [s * 1.1, 0, 0], [0, 0, -s * Math.PI / 2], 6)]),
+    ];
+    for (const x of [-0.82, 0.82]) ws.push({ pos: [x, 0, 0], d: 1.6, w: 0.42, steer: false });
+  } else if (kind === "helado") {
+    // Camioncito de helados: cabina rosa, caja crema con ventanilla de atención, toldo y un cucurucho gigante en el techo
+    const cream = M.matte("#f3ead2"), pink = M.plastic("#f08dbd");
+    parts = [
+      box(1.0, 0.14, 2.3, M.matte("#2b2d31"), [0, 0.05, 0]),
+      box(1.1, 0.95, 1.45, cream, [0, 0.58, -0.4]),
+      extrude([[0.3, 0.1], [1.15, 0.1], [1.2, 0.3], [1.1, 0.55], [0.82, 0.9], [0.3, 0.9]], 1.1, paint, [0, 0, 0]),
+      box(1.0, 0.3, 0.04, M.glass(), [0, 0.7, 0.85], [-0.6, 0, 0]),
+      ...[-1, 1].flatMap((s) => [box(0.02, 0.4, 0.75, M.glass(), [s * 0.56, 0.72, -0.4]), box(0.18, 0.05, 0.85, s > 0 ? pink : cream, [s * 0.63, 0.97, -0.4], [0, 0, -s * 0.35]), box(0.04, 0.12, 0.85, paint, [s * 0.56, 0.3, -0.4])]),
+      cyl(0.46, 0.02, 0.62, M.matte("#d9a15a"), [0, 1.37, -0.4], undefined, 6),
+      sph(0.5, pink, [0, 1.8, -0.4], undefined, 6), sph(0.4, cream, [0, 2.1, -0.4], undefined, 6), sph(0.14, M.plastic("#c1121f"), [0, 2.34, -0.4], undefined, 4),
+    ];
+    for (const [x, z] of [[-0.62, 0.78], [0.62, 0.78], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
+  } else if (kind === "combi") {
+    // Combi (furgoneta hippie): carrocería de dos tonos, techo crema, ventanas laterales y luces redondas
+    const cream = M.matte("#f3ead2");
+    parts = [
+      box(1.0, 0.12, 2.3, M.matte("#2b2d31"), [0, 0.05, 0]),
+      extrude([[-1.12, 0.05], [1.12, 0.05], [1.22, 0.25], [1.17, 0.6], [0.98, 1.0], [-0.98, 1.05], [-1.14, 0.9]], 1.08, paint, [0, 0, 0]),
+      box(1.1, 0.07, 2.0, cream, [0, 1.04, -0.02]),
+      box(0.9, 0.34, 0.04, M.glass(), [0, 0.8, 0.98], [-0.55, 0, 0]),
+      ...[-1, 1].flatMap((s) => [box(0.02, 0.32, 0.5, M.glass(), [s * 0.55, 0.78, 0.7]), box(0.02, 0.32, 0.6, M.glass(), [s * 0.55, 0.78, -0.05]), box(0.02, 0.32, 0.6, M.glass(), [s * 0.55, 0.78, -0.75]), box(0.03, 0.14, 2.2, cream, [s * 0.55, 0.42, -0.05])]),
+      box(0.5, 0.06, 0.04, cream, [0, 0.4, 1.23]), box(1.1, 0.1, 0.12, M.metal(), [0, 0.12, 1.2]), box(1.1, 0.1, 0.12, M.metal(), [0, 0.12, -1.18]),
+    ];
+    for (const [x, z] of [[-0.62, 0.75], [0.62, 0.75], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
   } else {
     // Autito de carreras a fricción: carrocería redonda de lata, ruedas finas, paragolpes cromados
     parts = [

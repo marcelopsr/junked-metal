@@ -11,6 +11,9 @@ export const CARS: Record<CarKind, { name: string; desc: string; cost: number; h
   formula: { name: "Fórmula", desc: "Rapidísimo pero frágil.", cost: 550, hp: 110, speed: 19, accel: 40, turn: 3.6, grip: 14, ram: 2.4, mass: 0.8, size: [1.3, 0.55, 2.8] },
   tanque: { name: "Tanque de juguete", desc: "Blindado y pesado. Lento, pero embiste como un ladrillo.", cost: 800, hp: 300, speed: 10, accel: 18, turn: 2.3, grip: 18, ram: 5.5, mass: 2.6, size: [1.75, 0.9, 2.4] },
   carrera: { name: "Autito a fricción", desc: "Liviano y nervioso. Acelera como un resorte y derrapa en cada curva.", cost: 650, hp: 85, speed: 21, accel: 48, turn: 4.2, grip: 6, ram: 1.8, mass: 0.55, size: [1.1, 0.5, 2.1] },
+  axel: { name: "Axel", desc: "Dos ruedas gigantes y una jaula en el medio. Rápido y ágil, pero frágil.", cost: 700, hp: 120, speed: 20, accel: 38, turn: 3.8, grip: 8, ram: 4, mass: 1.2, size: [1.9, 1.0, 1.7] },
+  helado: { name: "Camión de helados", desc: "Lento y simpático. Suena su melodía mientras reparte golpes fríos.", cost: 650, hp: 180, speed: 13, accel: 24, turn: 2.8, grip: 11, ram: 3, mass: 1.4, size: [1.3, 0.95, 2.4] },
+  combi: { name: "Combi", desc: "La furgoneta de la familia: mucho aguante, poca prisa y más tuercas por viaje.", cost: 900, hp: 280, speed: 11, accel: 20, turn: 2.4, grip: 14, ram: 4, mass: 2.2, size: [1.45, 1.0, 2.4] },
 };
 
 // Manejo arcade sobre un cuerpo Havok: la física resuelve choques,
