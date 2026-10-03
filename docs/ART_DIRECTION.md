@@ -48,6 +48,9 @@ ni "tu/te". Créditos sin tecnologías: historia breve y "Creado por TheDuende".
 ## Combate (agregado 2026-10-03)
 - Flash blanco breve en cada golpe; hit-stop solo en críticos y jefes.
 - Insectos muertos quedan patas arriba unos segundos con un charco del color de sus ojos; juguetes sueltan tornillos, resortes y chispas.
+- Feedback de impacto por arma (`fx.ts` `IMPACT`, `sfx.ts` `SFX.impact`): chispas del color del arma (verde fósforo = propias), pedazos del caparazón, squash de 3 pasos en el bicho, sacudida y sonido propios. Con "Reducir parpadeos" no hay destello ni chispas.
+- Final de partida: ~5 s de cámara lenta (0,2x) con barras de cine y la cámara orbitando el auto; luego los resultados con una foto polaroid (zona, tiempo, bajas, auto) que se puede guardar como PNG.
+- Intro de 4 cuadros pixelados (casa que apaga la luz, bichos en el pasto, el auto se enciende entre juguetes, logo); solo en el primer arranque y desde Créditos.
 
 ## HUD: terminal gastada del transmisor
 Misma telemetría RC (batería por celdas, señal/XP, reloj, turbo, velocímetro, armas, flechas), vista como equipo de campo viejo en un monitor CRT:

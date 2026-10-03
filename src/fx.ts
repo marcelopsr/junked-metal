@@ -105,6 +105,44 @@ export function debris(pos: B.Vector3, color: string, n: number, power = 6, size
   }
 }
 
+// ---------- Impacto: chispas, pedazos y deformación breve, según la fuente del daño ----------
+// Clave = dmgSrc de main.ts (arma, "embestida", "pelota" o "" = genérico). Verde fósforo = disparos propios; el rojo queda para el enemigo.
+// shake va a camera shake (main lo eleva al cuadrado: 0.1 casi no se nota, 0.25 ya es un golpe); squash 0..1 = cuánto se aplasta el bicho.
+const IMPACT: Record<string, { spark: string; chips: number; shake: number; squash: number }> = {
+  "": { spark: "#ffe08a", chips: 1, shake: 0.08, squash: 0.5 },
+  gomitas: { spark: "#8dff6a", chips: 1, shake: 0.1, squash: 0.6 },
+  clips: { spark: "#d6e8c8", chips: 1, shake: 0.12, squash: 0.5 },
+  tesla: { spark: "#9be7ff", chips: 0, shake: 0.18, squash: 0.4 },
+  chispazo: { spark: "#9be7ff", chips: 1, shake: 0.18, squash: 0.5 },
+  agua: { spark: "#9be7ff", chips: 0, shake: 0, squash: 0.3 },
+  globos: { spark: "#9be7ff", chips: 0, shake: 0.1, squash: 0.5 },
+  chispero: { spark: "#ffb347", chips: 0, shake: 0, squash: 0.2 },
+  anillo: { spark: "#ffb347", chips: 0, shake: 0, squash: 0.2 },
+  petardos: { spark: "#ffb347", chips: 2, shake: 0.12, squash: 0.8 },
+  embestida: { spark: "#ffd27a", chips: 3, shake: 0.25, squash: 1 },
+  pelota: { spark: "#ffd27a", chips: 4, shake: 0.4, squash: 1 },
+};
+const SQ_T = 0.18;
+const squashes = new Map<B.AbstractMesh, { t: number; k: number; b: B.Vector3 }>(); // b = escala de base del nodo
+const calm = () => document.body.classList.contains("calm"); // "Reducir parpadeos": sin chispas ni destello
+
+/** Golpe a un bicho: devuelve la sacudida de cámara que le corresponde al arma. */
+export function impact(m: B.AbstractMesh, at: B.Vector3, color: string, size: number, src: string, crit: boolean, boss: boolean): number {
+  const o = IMPACT[src] ?? IMPACT[""];
+  squashes.set(m, { t: SQ_T, k: o.squash * (crit ? 1.4 : 1) * (boss ? 0.2 : 1), b: squashes.get(m)?.b ?? m.scaling.clone() }); // los jefes casi no se inmutan
+  if (!calm()) {
+    FX.flash(at, size);
+    if (crit || Math.random() < 0.4) burst(at, { n: crit ? 10 : 5, color: o.spark, size: [0.06, 0.16], power: [3, 8], life: [0.15, 0.35], gravity: -18 });
+  }
+  // Pedazos del caparazón: pocos y solo si no hay ya muchos en el aire (hordas)
+  const n = crit ? o.chips + 2 : o.chips;
+  if (n && (src === "embestida" || src === "pelota" || (Math.random() < 0.35 && chunks.length < 140))) debris(at, color, n, 4 + o.shake * 14, 0.4);
+  return o.shake * (crit ? 1.4 : 1) * (boss ? 1.3 : 1);
+}
+
+/** Cámara lenta: las partículas del pool avanzan a k veces su velocidad (1 = normal). */
+export function fxSpeed(k: number) { for (const ps of [...pool, motes, flies]) ps.updateSpeed = 0.01 * k; }
+
 // ---------- Marcas en el piso (quemaduras, neumáticos) ----------
 type Mark = { m: B.InstancedMesh; life: number; s: number };
 const marks: Mark[] = [];
@@ -153,6 +191,14 @@ export function corpse(m: B.InstancedMesh, h: number) {
 }
 
 export function tickFx(dt: number) {
+  // Deformación: aplasta y estira, y vuelve a la forma en 3 pasos (a pocos cuadros, como el resto de la animación)
+  for (const [m, q] of squashes) {
+    if (m.isDisposed()) { squashes.delete(m); continue; }
+    q.t -= dt;
+    const p = q.t > 0 ? Math.ceil((q.t / SQ_T) * 3) / 3 : 0;
+    m.scaling.set(q.b.x * (1 + 0.22 * q.k * p), q.b.y * (1 - 0.32 * q.k * p), q.b.z * (1 + 0.22 * q.k * p));
+    if (q.t <= 0) squashes.delete(m);
+  }
   for (let i = corpses.length - 1; i >= 0; i--) {
     const k = corpses[i];
     if ((k.life -= dt) < 1) k.m.scaling.setAll(Math.max(0.01, k.life));
@@ -262,5 +308,6 @@ export function clearFx() {
   for (const k of marks) k.m.dispose();
   for (const k of corpses) k.m.dispose();
   corpses.length = 0;
+  squashes.clear();
   chunks.length = marks.length = 0;
 }

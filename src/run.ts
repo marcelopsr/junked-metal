@@ -56,7 +56,8 @@ export const RAIN = {
   wetSecs: 60,        // segundos de lluvia hasta el suelo empapado y los charcos al máximo
 };
 
-export type Profile = { seed: number; climate: Climate; plague: Plague; minis: Kind[]; swarmEvery: number; ballEvery: number; chestEvery: number; rainAt: number };
+export type Elite = "rapida" | "blindada";
+export type Profile = { seed: number; climate: Climate; plague: Plague; minis: Kind[]; swarmEvery: number; ballEvery: number; chestEvery: number; rainAt: number; final: Kind; elites: [number, Elite][] };
 
 // Los dos minijefes de la partida: 2 de 3 en orden, con UNA sola tirada (no corre el resto del perfil de la semilla)
 const MINIS: Kind[] = ["rey", "cortadora", "tarantula"];
@@ -65,6 +66,22 @@ const pickMinis = (r: number): Kind[] => { const i = Math.floor(r * 6), a = i % 
 // Lluvia derivada de la semilla SIN gastar rng(): así el patio, la plaga y el resto de cada semilla existente no cambian.
 // Un solo valor reparte ambas cosas: r < chance = llueve, y r/chance (uniforme) elige cuándo empieza. Infinity = no llueve.
 const rainAt = (seed: number) => { const r = (seed * 0.6180339887) % 1; return r < RAIN.chance ? RAIN.from[0] + (r / RAIN.chance) * (RAIN.from[1] - RAIN.from[0]) : Infinity; };
+
+// Jefe final de las 10:00: uno de 3, con UNA tirada derivada de la semilla (sin gastar rng(), como la lluvia).
+export const FINALS: Kind[] = ["perro", "aspiradora", "cortacercos"];
+export const FINAL_WIN: Partial<Record<Kind, string>> = {
+  perro: "¡El Perro fue derrotado!",
+  aspiradora: "¡La aspiradora robot quedó sin batería!",
+  cortacercos: "¡El cortacercos eléctrico hizo cortocircuito!",
+};
+const frac = (x: number) => x - Math.floor(x);
+const pickFinal = (seed: number) => FINALS[Math.floor(frac(seed * 0.7548776662) * FINALS.length)];
+
+// Élites (2 o 3 por partida) entre 1:40 y 9:20, una por tramo; momento y variante también salen de la semilla sin rng()
+const pickElites = (seed: number): [number, Elite][] => {
+  const n = 2 + Math.floor(frac(seed * 0.5698402910) * 2), span = 460 / n;
+  return Array.from({ length: n }, (_, i) => [100 + span * (i + 0.15 + 0.7 * frac(seed * (0.3247 + 0.1 * i))), frac(seed * (0.8191 + 0.07 * i)) < 0.5 ? "rapida" : "blindada"]);
+};
 
 export function makeProfile(seed: number): Profile {
   const pick = <T>(a: T[]) => a[Math.floor(rng() * a.length)];
@@ -77,5 +94,7 @@ export function makeProfile(seed: number): Profile {
     ballEvery: 60 + rng() * 45,
     chestEvery: 95 + rng() * 50,
     rainAt: rainAt(seed),
+    final: pickFinal(seed),
+    elites: pickElites(seed),
   };
 }

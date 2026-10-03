@@ -100,6 +100,19 @@ export const SFX = {
   explosion: () => gate("boom", 8) && (hiss("lowpass", 1400, 60, 0.6, 0.45), tone("sine", 90, 30, 0.45, 0.35)),
   zap: () => gate("zap", 10) && hiss("highpass", 6000, 2500, 0.1, 0.12),
   hurt: () => gate("hurt", 6) && tone("square", 140, 70, 0.14, 0.12),
+  // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
+  impact: (src: string, crit = false) => {
+    if (crit) tone("square", 880, 440, 0.05, 0.06);
+    switch (src) {
+      case "gomitas": return gate("i-gom", 16) && (tone("sine", 520, 190, 0.07, 0.14), hiss("bandpass", 1500, 700, 0.04, 0.1)); // pop de goma
+      case "clips": return gate("i-clip", 16) && (tone("triangle", 2100, 1500, 0.05, 0.1), hiss("highpass", 7000, 4000, 0.04, 0.12)); // tintineo de metal
+      case "agua": case "globos": return gate("i-agua", 10) && hiss("bandpass", 1100, 500, 0.09, 0.14); // chapoteo
+      case "chispero": case "anillo": return gate("i-fire", 8) && hiss("lowpass", 2200, 500, 0.12, 0.12); // chisporroteo
+      case "pelota": return gate("i-ball", 6) && tone("sine", 110, 40, 0.16, 0.3); // golpe sordo
+      case "petardos": case "chispazo": case "tesla": case "embestida": return; // ya suenan explosion / zap / ram
+      default: return gate("hit", 18) && hiss("bandpass", 2400, 900, 0.06, 0.18);
+    }
+  },
   gem: () => {
     if (!gate("gem", 30)) return;
     const now = performance.now();

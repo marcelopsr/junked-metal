@@ -74,6 +74,13 @@ select { font: 600 13px var(--data); padding: 5px 8px; border-radius: 0; backgro
 #tBoost, #tDrift { position: absolute; pointer-events: auto; border-radius: 50%; width: 84px; height: 84px; padding: 0; font-size: 11px; }
 #tBoost { right: 24px; bottom: 170px; background: var(--turbo); color: #111; }
 #tDrift { right: 122px; bottom: 150px; }
+/* Habilidad: más chica, sobre TURBO (apaisado) o a su izquierda (vertical, donde DERRAPE ocupa el lugar de arriba).
+   --cd (main.ts) oscurece la parte que falta enfriar */
+#tAbil { position: absolute; pointer-events: auto; border-radius: 50%; width: 64px; height: 64px; padding: 0; font-size: 10px; scale: var(--touch-scale, 1); transform-origin: right bottom;
+  right: 34px; bottom: calc(170px + 84px * var(--touch-scale, 1) + 14px); color: var(--lcd-ink); border-color: var(--lcd-ink);
+  background: conic-gradient(#000c calc(var(--cd, 0) * 360deg), #10170d 0); }
+#tAbil.on { background: var(--lcd-ink); color: #10170d; }
+@media (orientation: portrait) { #tAbil { right: calc(24px + 84px * var(--touch-scale, 1) + 16px); bottom: 180px; } }
 /* Pausa táctil: tecla chica de terminal junto al radar (#touch solo se ve en partida y en táctil) */
 #tPause { position: absolute; pointer-events: auto; top: max(10px, env(safe-area-inset-top)); right: 112px; width: 44px; height: 44px; padding: 0;
   font: 400 14px/1 var(--display); letter-spacing: .1em; color: var(--lcd-ink); background: var(--shell); border: 1px solid var(--line); box-shadow: inset 0 0 8px #000, 0 2px 0 #000; }

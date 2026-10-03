@@ -109,6 +109,27 @@ function tickBanner(dt: number) {
   }
 }
 
+// ---------- Habilidad activa: nombre, tecla y barra que se llena al enfriarse (frac 1 = lista) ----------
+export function hudAbility(name: string, key: string, frac: number, on: boolean) {
+  txt("abName", name); txt("abKey", key);
+  bar("abil", (on ? 1 : frac) * 100);
+  const st = on ? "on" : frac >= 1 ? "ready" : "";
+  if (ch("abSt", st)) { $("txl").classList.toggle("ab-on", on); $("txl").classList.toggle("ab-ready", st === "ready"); $("tAbil").classList.toggle("on", on); }
+  const cd = (on || frac >= 1 ? 0 : 1 - frac).toFixed(2);
+  if (ch("abCd", cd)) $("tAbil").style.setProperty("--cd", cd);
+}
+
+// ---------- Combo de manejo: multiplicador de XP; la cinta nombra la última maniobra un momento ----------
+let drvT = 0;
+export function hudDrive(mul: number, trick?: string) {
+  const show = mul > 1.001;
+  if (ch("drvOn", +show)) $("drv").classList.toggle("hidden", !show);
+  txt("drvN", `x${mul.toFixed(1)}`);
+  if (ch("drvMax", +(mul >= 2))) $("drv").classList.toggle("max", mul >= 2);
+  if (trick) { drvT = 1.2; $("drvLbl").textContent = trick; const d = $("drv"); d.classList.remove("pop"); void d.offsetWidth; d.classList.add("pop"); }
+}
+function tickDrive(dt: number) { if (drvT > 0 && (drvT -= dt) <= 0) $("drvLbl").textContent = "MANEJO"; }
+
 // ---------- Racha de bajas: se corta a los 2 s sin matar; crece y tiembla con la racha ----------
 const COMBO = ["RACHA", "BUEN RITMO", "A FONDO", "SOBRECARGA"];
 let streak = 0, streakT = 0, pop = 0, cDirty = false, cShown = false, cTier = -1, cShake = 0, sx = 0, sy = 0;
@@ -194,6 +215,7 @@ function drawRadar() {
 export function uiTick(dt: number) {
   tickBanner(dt);
   tickCombo(dt);
+  tickDrive(dt);
   tickNumbers(dt);
   if ((rAge += dt) < 1) { rSweep = (rSweep + dt * 2.6) % 6.2832; if ((rAcc += dt) > 1 / 30) { rAcc = 0; drawRadar(); } } // ponytail: solo dibuja mientras main la alimenta
 }

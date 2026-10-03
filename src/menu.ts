@@ -5,42 +5,59 @@ import type { DefaultRenderingPipeline, Scene } from "@babylonjs/core";
 import { CARS } from "./car";
 import { DEF, type Kind } from "./enemies";
 import { ctl, KEYS, PAD, padPressed, type Action } from "./input";
-import { PAINTS, PARTS, RIMS, type CarKind, type CarOpts, type Slot } from "./models";
+import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { PILOTS, type PilotId } from "./pilots";
 import { LOOK, look, setQuality, type Quality } from "./render";
 import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { ZONES, type ZoneId } from "./world";
 import { ACH, type AchId } from "./achievements";
+import { ABILITIES, CURSES, type AbilityId, type CurseId } from "./abilities";
 
 const $ = (id: string) => document.getElementById(id)!;
 export const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 // ---------- Guardado ----------
 export type RunRec = { t: number; kills: number; lv: number; seed: number; win: boolean };
+// Totales históricos de carrera (Bestiario → Estadísticas): se suman en endRun (main.ts). Las bajas por tipo viven en save.slain.
+export type Stats = { runs: number; wins: number; time: number; dist: number; dmg: Record<string, number>; zone: Partial<Record<ZoneId, { t: number; kills: number }>> };
 type Save = {
+  intro: boolean; // ya se vio la intro del primer arranque
   scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number }; cars: CarKind[]; car: CarKind;
   pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; quality: Quality; paint: string; rim: string; zoom: number;
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
   bloom: boolean; outline: boolean; retro: number; shake: boolean;
   keys: Partial<Record<Action, string>>; pad: { dead: number; sens: number }; rumble: boolean; touch: number;
   hud: number; calm: boolean; dmgNums: boolean;
+  decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
+  stats: Stats;
   seen: Kind[]; slain: Partial<Record<Kind, number>>; runs: RunRec[]; daily: { day: string; best: number }; zone: ZoneId;
   ach: AchId[];
+  ability: AbilityId; curses: CurseId[]; endless: number; // habilidad activa elegida, maldiciones de la próxima partida y récord del modo sin fin (s)
 };
 const DEFAULT: Save = {
+  intro: false,
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, quality: "auto", paint: "", rim: "", zoom: 1.35,
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, bloom: true, outline: true, retro: 1, shake: true,
   keys: {}, pad: { dead: 0.15, sens: 1 }, rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
+  decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
+  ability: "bombardeo", curses: [], endless: 0,
 };
 export const save: Save = (() => {
   try {
     const s = JSON.parse(localStorage.getItem("rcfight2") ?? "{}");
     for (const k of ["seen", "runs", "cars", "unlocked", "ach"] as const) if (k in s && !Array.isArray(s[k])) delete s[k]; // import malformado: se ignora el campo
     if (typeof s.keys !== "object" || !s.keys) delete s.keys;
-    return { ...structuredClone(DEFAULT), ...s, perm: { ...DEFAULT.perm, ...s.perm }, kit: { ...DEFAULT.kit, ...s.kit }, vol: { ...DEFAULT.vol, ...s.vol }, pad: { ...DEFAULT.pad, ...s.pad } };
+    if (!(s.ability in ABILITIES)) delete s.ability;
+    s.curses = Array.isArray(s.curses) ? s.curses.filter((c: string) => c in CURSES) : [];
+    if (typeof s.stats !== "object" || !s.stats) delete s.stats;
+    // Calcos: siempre 3 ranuras y solo diseños válidos; el aplicado debe apuntar a una ranura con diseño
+    const decals = [0, 1, 2].map((i) => (validDecal(s.decals?.[i]) ? s.decals[i] : ""));
+    const decalSel = Number.isInteger(s.decalSel) && decals[s.decalSel] ? s.decalSel : -1;
+    return { ...structuredClone(DEFAULT), ...s, decals, decalSel, perm: { ...DEFAULT.perm, ...s.perm }, kit: { ...DEFAULT.kit, ...s.kit }, vol: { ...DEFAULT.vol, ...s.vol }, pad: { ...DEFAULT.pad, ...s.pad },
+      stats: { ...DEFAULT.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };
   } catch { return structuredClone(DEFAULT); }
 })();
 // Se escribe 300 ms después del último cambio (sliders y rueda disparan muchos seguidos)
@@ -88,7 +105,7 @@ function importSave() {
 }
 
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void };
+type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void };
 let api: Api;
 let L0 = { grain: 0, scan: 0, ca: 0, outline: 0 }; // look de fábrica: la perilla "post retro" lo escala
 
@@ -150,6 +167,7 @@ function back() {
   SFX.back();
   if (s === "pause") return api.resume();
   if (s === "over") return api.quit();
+  if (s === "garage" && editing) { editing = false; renderGarage(); return focusSel('[data-dact="edit"]'); } // Esc / B: sale del editor, no del garaje
   stack.pop();
   show();
 }
@@ -167,6 +185,8 @@ const SCROLL = "#cars, #shop, #opts"; // listas con scroll propio
 function move(dx: number, dy: number) {
   const cur = document.activeElement as HTMLElement, els = focusables();
   if (!els.includes(cur)) return els[0]?.focus();
+  // Grilla del editor de calcos: el cursor recorre las celdas; en el borde el foco sigue de largo
+  if (cur.id === "dgrid") { const x = dcx + dx, y = dcy + dy; if (x >= 0 && x < DECAL_N && y >= 0 && y < DECAL_N) { dcx = x; dcy = y; drawGrid(); return SFX.blip(); } }
   // Perillas: izquierda/derecha cambian el valor en vez de mover el foco
   if (dx && cur instanceof HTMLInputElement && cur.type === "range") { dx > 0 ? cur.stepUp() : cur.stepDown(); cur.dispatchEvent(new Event("input", { bubbles: true })); return SFX.blip(); }
   if (dx && cur instanceof HTMLSelectElement) { cur.selectedIndex = (cur.selectedIndex + dx + cur.length) % cur.length; cur.dispatchEvent(new Event("change", { bubbles: true })); return SFX.blip(); }
@@ -222,6 +242,8 @@ addEventListener("keydown", (e) => {
   const s = current();
   if (!s) { if (e.code === "Escape" || e.code === "KeyP") api.pause(); return; }
   if (s === "title") { if (!e.repeat && !/^(Shift|Control|Alt|Meta)/.test(e.code)) { e.preventDefault(); SFX.accept(); go("main"); } return; }
+  if (s === "garage" && editing && (e.ctrlKey || e.metaKey) && e.code === "KeyZ") { e.preventDefault(); return undo(); }
+  if (s === "garage" && document.activeElement?.id === "dgrid" && /^Digit[0-8]$/.test(e.code)) { e.preventDefault(); return setCol(+e.code[5]); }
   const dir: Record<string, [number, number]> = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
   if (dir[e.code]) { e.preventDefault(); move(...dir[e.code]); }
   else if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); if (!e.repeat) activate(); }
@@ -238,6 +260,8 @@ export function menuPad(dt: number) {
   if (btn[0]) activate();
   if (btn[1]) back();
   if (btn[2] && s === "pause") back();
+  if (s === "garage" && document.activeElement?.id === "dgrid") { if (padPressed(4)) setCol((dcol + 8) % 9); if (padPressed(5)) setCol((dcol + 1) % 9); } // LB / RB: color
+  if (s === "garage" && editing && padPressed(2)) undo(); // X: deshacer
   const gp = navigator.getGamepads?.()[0];
   const ax = gp?.axes[0] ?? 0, ay = gp?.axes[1] ?? 0;
   const d = btn[3] || ay < -0.5 ? "u" : btn[4] || ay > 0.5 ? "d" : btn[5] || ax < -0.5 ? "l" : btn[6] || ax > 0.5 ? "r" : "";
@@ -250,12 +274,17 @@ export function menuPad(dt: number) {
 // Desafío diario: misma semilla para todos ese día (fecha local), récord propio que se reinicia cada día
 export const today = () => new Date().toLocaleDateString("sv"); // AAAA-MM-DD
 export const dailySeed = () => Number(today().replaceAll("-", ""));
+// Maldiciones: +30% tornillos cada una (se suman). El desafío diario las ignora.
+const CURSE_SETS: CurseId[][] = [[], ["horda"], ["sinrep"], ["horda", "sinrep"]];
+const curseTxt = () => save.curses.length ? `${save.curses.length > 1 ? "Maldiciones" : "Maldición"} · ${save.curses.map((c) => `${CURSES[c].name} (${CURSES[c].short})`).join(" y ")} · +${save.curses.length * 30}% tornillos` : "Maldiciones · Ninguna";
 function renderMain() {
   $("mainInfo").textContent = `${save.scrap} tornillos · récord ${fmt(save.best)}`;
   const b = save.daily.day === today() ? save.daily.best : 0;
   $("dailyBtn").textContent = b ? `Desafío diario · ${fmt(b)}` : "Desafío diario";
   if (!owns("zone:" + save.zone)) save.zone = "patio"; // guardado importado con una zona sin comprar
   $("zoneBtn").textContent = `Zona · ${ZONES[save.zone].short}`;
+  $("curseBtn").textContent = curseTxt();
+  if (save.endless) $("mainInfo").textContent += ` · sin fin +${fmt(save.endless)}`;
 }
 
 // ---------- Taller y garaje ----------
@@ -312,7 +341,7 @@ function buy(id: string) {
   return true;
 }
 /** Lo que hay que mostrar sobre el auto (garaje, portada y partida). */
-export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, rim: save.rim || undefined, ...save.kit, pilot: save.pilot });
+export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, rim: save.rim || undefined, ...save.kit, pilot: save.pilot, sticker: save.decals[save.decalSel] || undefined });
 
 const bar = (v: number, max: number) => `<i style="width:${Math.min(100, (v / max) * 100)}%"></i>`;
 const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" data-${attr}="${id}">${n}</button>`).join("");
@@ -331,9 +360,11 @@ function renderShop() {
       return `<button class="carc perk" data-buy="${u.id}" ${own || u.ach || save.scrap < u.cost ? "disabled" : ""}><b>${u.name}</b>${u.desc}<div class="price">${own ? "EN EL GARAJE" : u.ach ? `Logro: ${u.ach}` : `${u.cost} tornillos`}</div></button>`;
     }).join("");
 }
-const GTABS = { auto: "Auto", piloto: "Piloto", pintura: "Pintura", piezas: "Piezas" };
+const GTABS = { auto: "Auto", piloto: "Piloto", habilidad: "Habilidad", pintura: "Pintura", piezas: "Piezas" };
 let gtab: keyof typeof GTABS = "auto";
 function renderGarage() {
+  if (gtab !== "piezas") editing = false;
+  $("scr-garage").classList.toggle("editing", editing); // modo edición: solo el editor, con toda la altura
   $("bankG").textContent = `${save.scrap} tornillos`;
   $("gtabs").innerHTML = tabsHtml(GTABS, gtab, "gtab");
   $("paint").classList.toggle("hidden", gtab !== "pintura");
@@ -347,14 +378,60 @@ function renderGarage() {
     const p = PILOTS[k], id = "pilot:" + k;
     return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div>${lock(id, p.ach?.txt)}</div>`;
   }).join("");
-  else if (gtab === "piezas") $("cars").innerHTML = (Object.keys(PARTS) as Slot[]).map((sl) => `<div class="slot"><span>${PARTS[sl].name}</span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
+  else if (gtab === "habilidad") $("cars").innerHTML = (Object.keys(ABILITIES) as AbilityId[]).map((k) => {
+    const a = ABILITIES[k];
+    return `<div tabindex="0" class="carc pilot ${save.ability === k ? "sel" : ""}" data-abil="${k}"><b>${a.name}</b>${a.desc}<div class="price">Enfriamiento ${a.cd} s</div></div>`;
+  }).join("");
+  else if (gtab === "piezas") $("cars").innerHTML = editing ? "" : (Object.keys(PARTS) as Slot[]).map((sl) => `<div class="slot"><span>${PARTS[sl].name}</span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
     const own = owns(`part:${sl}:${o}`);
     return `<button class="opt ${save.kit[sl] === o ? "on" : ""} ${own ? "" : "locked"}" data-part="${sl}:${o}">${n}${own ? "" : ` · ${c}`}</button>`;
   }).join("")}</div>`).join("");
+  if (gtab === "piezas") { $("cars").insertAdjacentHTML("beforeend", decalHtml()); drawGrid(); }
   const cur = save.paint || PAINTS[0], rim = save.rim || RIMS[0];
   $("paint").innerHTML = `<span>Pintura</span>${PAINTS.map((c) => `<button class="sw ${c === cur ? "on" : ""}" data-paint="${c}" style="background:${c}" aria-label="pintura ${c}"></button>`).join("")}`
     + `<span>Llantas</span>${RIMS.map((c) => `<button class="sw rim ${c === rim ? "on" : ""}" data-rim="${c}" style="background:${c}" aria-label="llantas ${c}"></button>`).join("")}`;
 }
+// ---------- Editor de calcos (garaje → Piezas): grilla DECAL_N², 8 colores de DECAL_PAL, 3 diseños ----------
+// Se edita un borrador (`draft`); Guardar lo escribe en la ranura `eslot` y lo aplica al capó. Cursor de celdas para teclado y gamepad.
+// ponytail: deshacer sin rehacer (60 pasos); el borrador sin guardar se pierde al cambiar de diseño.
+let hist: string[] = [], strokeSnap = false; // historial para deshacer: borradores previos, uno por trazo
+let editing = false, eslot = Math.max(0, save.decalSel), draft = save.decals[eslot] || DECAL_BLANK, dcol = 4, dcx = 0, dcy = 0, stroke = false, erasing = false;
+const dirty = () => draft !== (save.decals[eslot] || DECAL_BLANK);
+const DHINT = { keys: "Clic o arrastre pinta, clic derecho borra · Flechas mueven el cursor, Enter pinta · 1 a 8 cambian el color, 0 borra · Ctrl+Z o Cmd+Z deshace", pad: "Stick o cruceta mueven el cursor · A pinta · LB y RB cambian el color · X deshace", touch: "Arrastra el dedo sobre la grilla para pintar" };
+function decalHtml() {
+  const slots = [0, 1, 2].map((i) => `<button class="opt ${save.decalSel === i ? "on" : ""} ${eslot === i ? "edit" : ""} ${save.decals[i] ? "" : "locked"}" data-dsel="${i}">Diseño ${i + 1}</button>`).join("");
+  return `<div class="slot"><span>Calco de capó</span><button class="opt ${save.decalSel < 0 ? "on" : ""}" data-dsel="-1">Sin calco</button>${slots}${editing ? "" : `<button class="opt" data-dact="edit">Editar</button>`}</div>`
+    + (!editing ? "" : `<div class="dedit"><canvas id="dgrid" tabindex="0" width="256" height="256" aria-label="Grilla del calco"></canvas><div class="dside">`
+    + `<div class="dpal">${DECAL_PAL.map((c, k) => `<button class="sw ${dcol === k + 1 ? "on" : ""}" data-dcol="${k + 1}" style="background:${c}" aria-label="color ${k + 1}"></button>`).join("")}</div>`
+    + `<div class="dbtn"><button class="opt ${dcol === 0 ? "on" : ""}" data-dcol="0">Borrar</button><button class="opt" data-dact="undo">Deshacer</button><button class="opt" data-dact="clear">Vaciar</button><button class="opt" data-dact="save">Guardar</button><button class="opt" data-dact="done">Listo</button></div>`
+    + `<div id="dstat"></div></div></div><div class="note">${DHINT[ctl]}</div>`);
+}
+function drawGrid() {
+  const cv = document.getElementById("dgrid") as HTMLCanvasElement | null;
+  if (!cv) return;
+  const c = cv.getContext("2d")!, k = cv.width / DECAL_N;
+  for (let i = 0; i < draft.length; i++) {
+    const x = i % DECAL_N, y = (i / DECAL_N) | 0, n = +draft[i];
+    c.fillStyle = n ? DECAL_PAL[n - 1] : (x + y) % 2 ? "#2a3326" : "#1f271c"; // damero = transparente
+    c.fillRect(x * k, y * k, k, k);
+  }
+  c.strokeStyle = "#0b0d0a66"; c.lineWidth = 1; c.beginPath();
+  for (let i = 0; i <= DECAL_N; i++) { c.moveTo(i * k + 0.5, 0); c.lineTo(i * k + 0.5, cv.height); c.moveTo(0, i * k + 0.5); c.lineTo(cv.width, i * k + 0.5); }
+  c.stroke();
+  if (document.activeElement === cv) { c.strokeStyle = "#8dff6a"; c.lineWidth = 2; c.setLineDash([4, 3]); c.strokeRect(dcx * k + 1, dcy * k + 1, k - 2, k - 2); c.setLineDash([]); }
+  $("dstat").textContent = `Diseño ${eslot + 1}${dirty() ? " · sin guardar" : ""}`;
+}
+function setCell(x: number, y: number, n: number) {
+  dcx = x; dcy = y;
+  const i = y * DECAL_N + x;
+  if (draft[i] !== String(n)) { if (strokeSnap || !stroke) snap(); strokeSnap = false; draft = draft.slice(0, i) + n + draft.slice(i + 1); }
+  drawGrid();
+}
+const snap = () => { if (hist.at(-1) !== draft) { hist.push(draft); if (hist.length > 60) hist.shift(); } };
+function undo() { const p = hist.pop(); if (p === undefined) return; draft = p; drawGrid(); SFX.back(); }
+const setCol = (n: number) => { dcol = n; for (const b of document.querySelectorAll<HTMLElement>("[data-dcol]")) b.classList.toggle("on", +b.dataset.dcol! === n); };
+const cellOf = (e: PointerEvent, cv: HTMLElement) => { const r = cv.getBoundingClientRect(), f = (v: number, o: number, s: number) => Math.min(DECAL_N - 1, Math.max(0, Math.floor(((v - o) / s) * DECAL_N))); return [f(e.clientX, r.left, r.width), f(e.clientY, r.top, r.height)] as const; };
+
 const focusSel = (q: string) => { const e = document.querySelector<HTMLButtonElement>(q); (e && !e.disabled ? e : focusables()[0])?.focus(); };
 
 // Configuración: filas generadas desde datos. data-set = número (perilla o lista), data-tog = sí/no
@@ -372,11 +449,11 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
   ] },
   ctl: { name: "Controles", rows: [
     ["Acelerar", "bind", "up"], ["Frenar / atrás", "bind", "down"], ["Girar izquierda", "bind", "left"], ["Girar derecha", "bind", "right"],
-    ["Turbo", "bind", "boost"], ["Derrape", "bind", "drift"],
+    ["Turbo", "bind", "boost"], ["Derrape", "bind", "drift"], ["Habilidad", "bind", "ability"],
     ["Flechas también manejan. Esc pausa · M sonido · rueda o - / = zoom", "note"],
     ["Zona muerta del stick", "range", "pad.dead", 0.05, 0.4, 0.01, "%"], ["Sensibilidad del stick", "range", "pad.sens", 0.5, 2, 0.05, "x"],
     ["Vibración", "tog", "rumble"], ["Tamaño de controles táctiles", "range", "touch", 0.7, 1.4, 0.05, "x"],
-    ["Gamepad: stick hacia donde se quiere ir · A turbo · B derrape · gatillos acelerar/frenar", "note"],
+    ["Gamepad: stick hacia donde se quiere ir · A turbo · B derrape · X habilidad · gatillos acelerar/frenar", "note"],
   ] },
   a11y: { name: "Accesibilidad", rows: [
     ["Tamaño de texto del HUD", "range", "hud", 0.8, 1.5, 0.05, "x"], ["Reducir parpadeos y glitch", "tog", "calm"], ["Números de daño", "tog", "dmgNums"],
@@ -417,14 +494,32 @@ const LORE: Partial<Record<Kind, string>> = {
   cortadora: "Despertó un domingo a las siete de la mañana y decidió que el pasto no alcanzaba.",
   tarantula: "Ocho patas, cero paciencia. Teje redes por pasatiempo y emboscadas por oficio.",
   perro: "El verdadero dueño del patio. Ladra a la nada, entierra juguetes y no negocia.",
+  aspiradora: "Programada para limpiar la casa, se escapó por la gatera. Considera que todo el patio es una pelusa.",
+  cortacercos: "Lo dejaron enchufado después de podar el ligustro. Desde entonces, todo le parece un cerco.",
 };
-const BTABS = { bichos: "Bichos", pilotos: "Pilotos", logros: "Logros" };
+const BTABS = { bichos: "Bichos", pilotos: "Pilotos", logros: "Logros", stats: "Estadísticas" };
 let btab: keyof typeof BTABS = "bichos";
 /** Nombre visible de un premio de logro (part:<ranura>:<opción> o pilot:<id>). */
 const rewardName = (id: string) => { const [t, k, o] = id.split(":"); return t === "pilot" ? PILOTS[k as PilotId].name : `${PARTS[k as Slot].name} ${opts(k as Slot)[o][0]}`; };
+/** Tiempo largo legible: "2 h 05 min" o "7 min 12 s". */
+const longTime = (s: number) => { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return h ? `${h} h ${String(m).padStart(2, "0")} min` : `${m} min ${String(Math.floor(s % 60)).padStart(2, "0")} s`; };
+/** Estadísticas de carrera: fichas con los totales históricos (save.stats y save.slain). */
+function statsHtml() {
+  const s = save.stats, kv = (a: string, b: string | number) => `<div class="kv"><span>${a}</span><b>${b}</b></div>`;
+  const card = (title: string, big: string, extra = "") => `<div tabindex="0" class="carc ficha"><b>${title}</b><div class="big">${big}</div>${extra}</div>`;
+  const fav = Object.entries(s.dmg).filter(([id]) => id in WEAPONS).sort((a, b) => b[1] - a[1])[0];
+  const kinds = (Object.keys(DEF) as Kind[]).filter((k) => (save.slain[k] ?? 0) > 0);
+  const total = kinds.reduce((n, k) => n + save.slain[k]!, 0);
+  return card("Partidas", String(s.runs), s.runs ? `${s.wins} ${s.wins === 1 ? "ganada" : "ganadas"} · ${Math.round((s.wins / s.runs) * 100)}%` : "Sin partidas completas todavía.")
+    + card("Tiempo jugado", longTime(s.time))
+    + card("Recorrido", `${(s.dist / 1000).toFixed(1).replace(".", ",")} km`, "Distancia total manejada.")
+    + card("Arma favorita", fav ? WEAPONS[fav[0] as WeaponId].name : "Sin datos", fav ? `${Math.round(fav[1])} de daño acumulado` : "Se define con el daño de cada partida.")
+    + `<div tabindex="0" class="carc ficha"><b>Bajas por tipo</b><div class="big">${total}</div>${kinds.map((k) => kv(DEF[k].name, save.slain[k]!)).join("") || "Sin bajas todavía."}</div>`
+    + `<div tabindex="0" class="carc ficha"><b>Mejores marcas por zona</b>${(Object.keys(ZONES) as ZoneId[]).map((z) => { const r = s.zone[z]; return kv(ZONES[z].short, r ? `${fmt(r.t)} · ${r.kills} bajas` : "—"); }).join("")}</div>`;
+}
 function renderBestiary() {
   $("btabs").innerHTML = tabsHtml(BTABS, btab, "btab");
-  $("beasts").innerHTML = btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
+  $("beasts").innerHTML = btab === "stats" ? statsHtml() : btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
     const a: { name: string; txt: string; reward?: string; scrap?: number } = ACH[k], ok = save.ach.includes(k);
     return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b>${a.name}</b>${a.txt}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}</div>` : ""}</div>`;
   }).join("")
@@ -452,8 +547,9 @@ export function openPause(k: Kit) {
   $("pauseSeed").textContent = k.seed;
   reset("pause");
 }
-export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; seed: string }) {
-  $("overTitle").textContent = r.win ? "VICTORIA" : "FIN DE LA PARTIDA";
+export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; seed: string; more?: boolean; title?: string }) {
+  $("overEndless").classList.toggle("hidden", !r.more); // venció al jefe final: puede seguir en modo sin fin
+  $("overTitle").textContent = r.title ?? (r.win ? "VICTORIA" : "FIN DE LA PARTIDA");
   $("overTxt").textContent = r.why;
   $("overStats").innerHTML = [["Tiempo", fmt(r.time)], ["Bajas", r.kills], ["Nivel", r.level], ["Tornillos", "+" + r.scrap]].map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("overRec").classList.toggle("hidden", !r.record);
@@ -497,13 +593,19 @@ export function initMenu(a: Api) {
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part]") as HTMLElement | null)?.dataset;
+    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-dsel],[data-dcol],[data-dact]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
+    if (t.id === "dgrid") { if (!e.detail) setCell(dcx, dcy, dcol); return; } // Enter / A sobre la grilla (el mouse y el dedo pintan en pointerdown)
     if (!d) return;
     SFX.accept();
     if (d.go) go(d.go as Scr);
     else if (d.act === "play") api.play();
     else if (d.act === "daily") api.play(true);
+    else if (d.act === "endless") api.endless();
+    else if (d.act === "curse") { // ciclo: ninguna → Horda → Sin reparaciones → ambas
+      const all = CURSE_SETS.map((c) => c.join()), i = all.indexOf(save.curses.join());
+      save.curses = [...CURSE_SETS[(i + 1) % CURSE_SETS.length]]; persist(); renderMain();
+    }
     else if (d.act === "zone") { // el fondo cambia en el loop del menú (main.ts); estática como al cambiar de canal
       const zs = ownedZones(); save.zone = zs[(zs.indexOf(save.zone) + 1) % zs.length]; persist(); renderMain();
       fe.classList.remove("zap"); void fe.offsetWidth; fe.classList.add("zap"); SFX.static();
@@ -517,11 +619,28 @@ export function initMenu(a: Api) {
     else if (d.tab) { tab = d.tab; renderConfig(); $("opts").scrollTop = 0; (document.querySelector(`[data-tab="${tab}"]`) as HTMLElement).focus(); }
     else if (d.tog) { const [o, k] = ref(d.tog); o[k] = !o[k]; commit(); renderConfig(); (document.querySelector(`[data-tog="${d.tog}"]`) as HTMLElement).focus(); }
     else if (d.bind) { binding = d.bind as Action; renderConfig(); (document.querySelector(`[data-bind="${d.bind}"]`) as HTMLElement).focus(); }
+    else if (d.dsel !== undefined) { // elegir diseño: se edita y, si ya tiene dibujo, se aplica al capó
+      const n = +d.dsel;
+      if (n < 0) save.decalSel = -1;
+      else { eslot = n; draft = save.decals[n] || DECAL_BLANK; hist = []; if (save.decals[n]) save.decalSel = n; }
+      persist(); renderGarage(); focusSel(`[data-dsel="${n}"]`);
+    }
+    else if (d.dcol !== undefined) setCol(+d.dcol);
+    else if (d.dact === "save") { // guarda el borrador en la ranura y lo aplica; un borrador vacío libera la ranura
+      save.decals[eslot] = draft === DECAL_BLANK ? "" : draft;
+      if (save.decals[eslot]) save.decalSel = eslot; else if (save.decalSel === eslot) save.decalSel = -1;
+      persist(); renderGarage(); focusSel(`[data-dact="save"]`);
+    }
+    else if (d.dact === "clear") { snap(); draft = DECAL_BLANK; drawGrid(); }
+    else if (d.dact === "undo") undo();
+    else if (d.dact === "edit") { editing = true; renderGarage(); focusSel("#dgrid"); }
+    else if (d.dact === "done") { editing = false; renderGarage(); focusSel('[data-dact="edit"]'); }
     else if (d.paint || d.rim) { if (d.paint) save.paint = d.paint; else save.rim = d.rim!; persist(); renderGarage(); (document.querySelector(`[data-${d.paint ? "paint" : "rim"}="${d.paint ?? d.rim}"]`) as HTMLElement).focus(); }
     else if (d.gtab) { gtab = d.gtab as typeof gtab; renderGarage(); $("cars").scrollTop = 0; focusSel(`[data-gtab="${gtab}"]`); }
     else if (d.btab) { btab = d.btab as typeof btab; renderBestiary(); focusSel(`[data-btab="${btab}"]`); }
     else if (d.stab) { stab = d.stab as typeof stab; renderShop(); $("shop").scrollTop = 0; focusSel(`[data-stab="${stab}"]`); }
     else if (d.buy) { if (!buy(d.buy)) return; renderShop(); focusSel(`[data-buy="${d.buy}"]`); }
+    else if (d.abil) { save.ability = d.abil as AbilityId; persist(); renderGarage(); focusSel(`[data-abil="${d.abil}"]`); }
     else if (d.pilot) {
       const id = "pilot:" + d.pilot;
       if (!owns(id) && !buy(id)) return;
@@ -540,6 +659,24 @@ export function initMenu(a: Api) {
       save.scrap -= cost; save.perm[p.k]++; persist(); renderShop(); focusSel(`#shop [data-k="${p.k}"]`);
     }
   });
+  // Grilla de calcos con puntero (mouse y táctil): arrastrar pinta, clic derecho borra; el cursor sigue al puntero
+  const onGrid = (e: PointerEvent) => ((e.target as HTMLElement).id === "dgrid" ? (e.target as HTMLElement) : null);
+  fe.addEventListener("pointerdown", (e) => {
+    const cv = onGrid(e);
+    if (!cv) return;
+    cv.setPointerCapture(e.pointerId); cv.focus();
+    stroke = true; strokeSnap = true; erasing = e.button === 2;
+    setCell(...cellOf(e, cv), erasing ? 0 : dcol);
+  });
+  fe.addEventListener("pointermove", (e) => {
+    const cv = onGrid(e);
+    if (!cv) return;
+    const [x, y] = cellOf(e, cv);
+    if (stroke) setCell(x, y, erasing ? 0 : dcol); else if (x !== dcx || y !== dcy) { dcx = x; dcy = y; drawGrid(); }
+  });
+  for (const ev of ["pointerup", "pointercancel"]) fe.addEventListener(ev, () => { stroke = false; strokeSnap = false; });
+  fe.addEventListener("contextmenu", (e) => { if (onGrid(e as PointerEvent)) e.preventDefault(); });
+  fe.addEventListener("focusin", drawGrid); fe.addEventListener("focusout", () => setTimeout(drawGrid)); // el cursor se ve solo con foco
   fe.addEventListener("input", (e) => {
     const t = e.target as HTMLInputElement;
     if (!t.dataset.set || t.type !== "range") return;

@@ -12,7 +12,7 @@ let stuck = 0, back = 0;
 export const resetBot = () => { stuck = back = 0; };
 type P = { x: number; z: number };
 export type BotBoss = { x: number; z: number; kind: string; fx: number; fz: number; charge: boolean; ram: boolean };
-const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14 };
+const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14, aspiradora: 22, cortacercos: 14 };
 export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVelocity(): P } }, threats?: P[], obs?: { x: number; z: number; r: number }[], boss?: BotBoss | null, zones: { x: number; z: number; r: number }[] = []) {
   const v = c.body.getLinearVelocity();
   stuck = Math.hypot(v.x, v.z) < 2 ? stuck + 1 : 0;

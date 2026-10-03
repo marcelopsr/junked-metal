@@ -56,6 +56,21 @@ body.calm .scr.on { animation-duration: .05s; }
 .slot .opt:nth-child(odd) { rotate: -.7deg; } .slot .opt:nth-child(even) { rotate: .5deg; }
 .slot .opt.on { border-color: var(--turbo); color: var(--turbo); }
 .slot .opt.locked { color: var(--dim); border-style: dashed; }
+.slot .opt.edit { text-decoration: underline dashed; text-underline-offset: 4px; } /* diseño que se está editando */
+/* Editor de calcos del capó (Piezas): grilla 16x16 a la izquierda, paleta y botones a la derecha */
+.dedit { width: 100%; display: flex; gap: 12px; align-items: flex-start; justify-content: flex-end; flex-wrap: wrap; padding: 8px 0; }
+#dgrid { width: min(256px, 100%, 58vh); aspect-ratio: 1; image-rendering: pixelated; border: 2px solid var(--line); background: #000; cursor: crosshair; touch-action: none; }
+.dside { display: flex; flex-direction: column; gap: 8px; flex: 1 1 150px; min-width: 150px; max-width: 190px; }
+.dbtn { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dside .opt { font-size: 12px; padding: 7px 10px; letter-spacing: .04em; box-shadow: none; }
+.dside .opt.on { border-color: var(--turbo); color: var(--turbo); }
+.dpal { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.dpal .sw { aspect-ratio: 1; min-height: 0; padding: 0; border: 2px solid #000; box-shadow: none; }
+.dpal .sw.on { outline: 2px solid var(--txt); outline-offset: 1px; }
+#dstat { color: var(--dim); font-size: 15px; }
+/* Modo edición (botón Editar): solo el editor, con toda la altura; Esc / B o Listo vuelven a las piezas */
+#scr-garage.editing > :is(.otitle, .sect, #gtabs, #paint, .btns) { display: none; }
+.scr.side.editing > #cars { width: min(520px, 94vw); max-height: none; overflow: visible; }
 
 /* Taller y bestiario: fichas .carc */
 button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform: none; box-shadow: none; color: var(--dim); }
@@ -76,6 +91,10 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   box-shadow: inset 0 0 0 3px #0000, inset 0 0 0 4px var(--turbo); opacity: .9; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1) both;
   mask: radial-gradient(circle at 30% 70%, #0000 0 1px, #000 1.5px) 0 0 / 7px 9px; } /* tinta mordida: puntitos sin entintar */
 .ficha.logro.locked .sello { border: 2px dashed var(--dim); box-shadow: none; color: var(--dim); rotate: 8deg; animation: none; mask: none; opacity: .6; }
+/* Estadísticas de carrera: fichas con una cifra grande y filas clave/valor */
+.ficha .big { font: 400 34px/1 var(--data); color: var(--lcd-ink); margin: 4px 0 6px; }
+.ficha .kv { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; padding: 2px 0; border-bottom: 1px dashed var(--line); }
+.ficha .kv b { display: inline; margin: 0; font-size: 15px; letter-spacing: 0; text-transform: none; color: var(--lcd-ink); }
 #records { border-collapse: collapse; font-size: 17px; }
 #records th { color: var(--dim); font-weight: 400; letter-spacing: .1em; text-transform: uppercase; font-size: 13px; }
 #records td, #records th { padding: 3px 14px; border-bottom: 1px solid var(--line); }
@@ -133,6 +152,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   .tab, .slot .opt, #opts .row, #opts .row select, .btns button, .list button { min-height: 44px; }
   #opts .row input[type=range] { height: 44px; }
   #paint .sw { width: 44px; height: 44px; }
+  .dside .opt, .dpal .sw { min-height: 44px; }
 }
 
 @media (max-width: 640px) {

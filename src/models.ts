@@ -94,7 +94,20 @@ export const PARTS = {
 export type Slot = keyof typeof PARTS;
 // Faro: [emisivo de las ópticas, luz del SpotLight]. Nada rojo ni verde (código de amenaza y disparos propios).
 const LAMPS: Record<string, [string, string]> = { calido: ["#fff3b0", "#ffe9c2"], ambar: ["#ffb347", "#ffc77a"], cian: ["#9be7ff", "#bdefff"], violeta: ["#c9a7ff", "#d8c2ff"] };
-export type CarOpts = { paint?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; pilot?: string };
+export type CarOpts = { paint?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; pilot?: string; sticker?: string };
+
+// Calco propio del capó (editor del garaje): grilla DECAL_N × DECAL_N, un carácter por celda: "0" = transparente, "1".."8" = DECAL_PAL[n-1].
+// Colores de la paleta de UI (docs/ART_DIRECTION.md); sin el rojo de amenaza.
+export const DECAL_N = 16;
+export const DECAL_PAL = ["#0b0d0a", "#b9d3a4", "#5f7355", "#8dff6a", "#6fb3c4", "#e0a030", "#9a6fb5", "#c8d84a"];
+export const DECAL_BLANK = "0".repeat(DECAL_N * DECAL_N);
+export const validDecal = (s: unknown): s is string => typeof s === "string" && /^[0-8]+$/.test(s) && s.length === DECAL_N * DECAL_N;
+// Dónde va el calco en cada auto: [y, z, lado, cabeceo], sobre la superficie superior que más ve la cámara de partida (detrás y arriba, ~40°).
+// Buggy y Fórmula: el plato del alerón de serie. Monster: el techo de la cabina. Tanque: la cubierta trasera. Autito: la cola, que mira a la cámara.
+// Con un alerón elegido (alto/doble) el calco va sobre su plato, porque tapa la cubierta o la cola (ver carModel); el techo del Monster no lo tapa.
+const SPOT: Record<CarKind, [number, number, number, number]> = {
+  buggy: [0.933, -1.0, 0.34, 0.12], monster: [1.212, -0.2, 0.54, 0], formula: [0.653, -1.15, 0.28, 0], tanque: [0.512, -0.8, 0.34, 0], carrera: [0.352, -0.72, 0.4, -0.38],
+};
 
 // Dónde va cada cosa en cada auto: deck = [y, z] del alerón, side = calco lateral [x, y, z], exh = [y, z] del escape,
 // seat = cadera del piloto + escala, lamps = ópticas [x, y, z, diámetro] (se espejan en x salvo x = 0).
@@ -210,6 +223,29 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     if (o.decal === "numero") parts.push(cyl(0.3, 0.3, 0.02, M.plastic("#e8e4d4"), [x, sy, sz], [0, 0, Math.PI / 2], 14), box(0.03, 0.16, 0.05, M.plastic("#111"), [x + s * 0.005, sy, sz]), box(0.03, 0.04, 0.08, M.plastic("#111"), [x + s * 0.005, sy + 0.07, sz + 0.03]));
     else if (o.decal === "rayo") parts.push(...([[0.12, 0.05, 0.22, 0.5], [0.0, 0.0, 0.2, -0.4], [-0.12, -0.05, 0.22, 0.5]] as const).map(([dz2, dy2, len, r]) => box(0.02, 0.06, len, M.plastic("#e0a030"), [x, sy + dy2, sz + dz2], [r, 0, 0])));
     else if (o.decal === "damero") for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++) parts.push(box(0.02, 0.07, 0.07, M.plastic((i + j) % 2 ? "#e8e4d4" : "#111"), [x, sy - 0.035 + j * 0.07, sz - 0.14 + i * 0.07]));
+  }
+
+  // Calco propio (textura NEAREST 16x16 con alfa; el material se reusa por diseño)
+  if (validDecal(o.sticker) && o.sticker !== DECAL_BLANK) {
+    const onWing = kind !== "monster" && (o.wing === "alto" || o.wing === "doble"); // plato del alerón: top = el mismo de arriba, +0,033 = medio grosor y holgura
+    const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : SPOT[kind];
+    const mat = pbr("calco" + o.sticker, { color: "#ffffff", rough: 0.4 });
+    if (!mat.albedoTexture) {
+      const t = new B.DynamicTexture("calco", DECAL_N, scene, false, B.Texture.NEAREST_SAMPLINGMODE);
+      const c = t.getContext() as unknown as CanvasRenderingContext2D;
+      for (let i = 0; i < o.sticker.length; i++) { const n = +o.sticker[i]; if (n) { c.fillStyle = DECAL_PAL[n - 1]; c.fillRect(i % DECAL_N, (i / DECAL_N) | 0, 1, 1); } }
+      t.update();
+      t.hasAlpha = true;
+      mat.albedoTexture = t;
+      mat.emissiveTexture = t; mat.emissiveColor = new B.Color3(0.3, 0.3, 0.3); // autoiluminado a medias: de noche y lejos del faro igual se lee
+      mat.useAlphaFromAlbedoTexture = true;
+      mat.transparencyMode = B.Material.MATERIAL_ALPHATEST;
+    }
+    const p = B.MeshBuilder.CreatePlane("calco", { size: hs }, scene);
+    p.rotation.x = Math.PI / 2 + hp;
+    p.position.set(0, hy, hz);
+    p.material = mat;
+    parts.push(p);
   }
 
   // Escape
@@ -387,6 +423,40 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         ...[[0.2, 0.62, 0.6], [-0.2, 0.62, 0.6], [0.14, 0.7, 0.52], [-0.14, 0.7, 0.52]].map((p) => sph(0.07, M.glow("#ff4fd8"), p as V3, undefined, 4)),
       ];
     }
+    if (kind === "aspiradora") {
+      // Disco robot con paragolpes, torreta láser, boca de succión y cepillos laterales; sensores rojos al frente
+      const shell = M.plastic("#3a3f46"), dark = M.matte("#111");
+      return [
+        cyl(6.1, 6.4, 1.1, shell, [0, 0.7, 0], undefined, 24),
+        cyl(5.2, 5.6, 0.25, M.metal("#2a2d33"), [0, 1.35, 0], undefined, 24),
+        tor(6.3, 0.32, M.rubber(), [0, 0.5, 0], undefined, 24),
+        cyl(1.2, 1.35, 0.5, dark, [0, 1.7, -0.9], undefined, 12),
+        cyl(1.1, 1.1, 0.1, M.plastic("#c8ccd2"), [0, 1.5, 1.1], undefined, 16),
+        box(3, 0.3, 0.4, M.matte("#0b0b0b"), [0, 0.35, 2.9]),
+        sph(0.45, M.glow("#ff2a1a"), [0.9, 0.95, 2.95]),
+        sph(0.45, M.glow("#ff2a1a"), [-0.9, 0.95, 2.95]),
+        ...[-1, 1].flatMap((s) => [
+          cyl(1.5, 1.5, 0.06, M.matte("#555"), [s * 2.5, 0.12, 2.3], undefined, 6),
+          ...[0, 1, 2].map((k) => box(0.08, 0.05, 1.9, M.matte("#888"), [s * 2.5, 0.16, 2.3], [0, k * 1.05, 0])),
+        ]),
+      ];
+    }
+    if (kind === "cortacercos") {
+      // Motor naranja con manija en D, espada con dientes y el cable de alimentación saliendo de atrás; LED rojo de encendido
+      const body = M.plastic("#e0a030"), dark = M.matte("#1a1a1a"), steel = M.metal("#9ca3af");
+      return [
+        box(2.4, 1.5, 3, body, [0, 1.15, -2.6]),
+        sph(2.6, body, [0, 1.8, -2.6], [1, 0.45, 1.2], 10),
+        box(2.5, 0.5, 2.4, dark, [0, 0.45, -2.6]),
+        tor(2.2, 0.22, dark, [0, 2.1, -0.9], [Math.PI / 2, 0, 0], 14),
+        tube([[0, 1.6, -4.1], [0, 2.6, -4.6], [0, 2.4, -5.1], [0, 1.3, -4.9]], 0.18, dark),
+        box(0.7, 0.18, 5.6, steel, [0, 0.9, 2.6]),
+        ...Array.from({ length: 10 }, (_, i) => [-1, 1].map((s) => box(0.35, 0.12, 0.2, M.metal("#d6dbe1"), [s * 0.48, 0.9, 0.2 + i * 0.55]))).flat(),
+        sph(0.3, M.glow("#ff2a1a"), [0.6, 1.95, -1.3]),
+        sph(0.3, M.glow("#ff2a1a"), [-0.6, 1.95, -1.3]),
+        tube([[0, 0.9, -4.1], [0, 0.3, -4.7], [0.6, 0.1, -5.4]], 0.12, dark),
+      ];
+    }
     // perro: jefe final
     const fur = M.matte("#a0673a");
     const light = M.matte("#e8c9a0");
@@ -443,3 +513,37 @@ export function teleTemplate() {
   shadows.removeShadowCaster(t); // es luz en el piso, no un objeto
   return t;
 }
+// Sector de 120° (barrido del cortacercos), radio 1, centrado en +z: misma lógica que teleTemplate
+export function sectorTemplate() {
+  const t = template("teleArc", () => {
+    const d = B.MeshBuilder.CreateDisc("p", { radius: 1, tessellation: 24, arc: 1 / 3 }, scene);
+    d.rotation.z = Math.PI / 6; d.bakeCurrentTransformIntoVertices(); // arco de 30° a 150°: centro en +y
+    d.rotation.x = Math.PI / 2; d.bakeCurrentTransformIntoVertices(); // acostado: centro en +z
+    d.material = pbr("teleFill", { color: "#ff2a1a", rough: 1, emissive: "#a01008", alpha: 0.22 });
+    const edge: V3[] = [[0, 0.01, 0], ...Array.from({ length: 13 }, (_, i) => { const a = -Math.PI / 3 + (i * Math.PI) / 18; return [Math.sin(a), 0.01, Math.cos(a)] as V3; }), [0, 0.01, 0]];
+    return [d, tube(edge, 0.02, M.glow("#ff2a1a"))];
+  });
+  shadows.removeShadowCaster(t);
+  return t;
+}
+// Aura de élite (radio 1, se escala por instancia): aro en el piso + halo emisivo tenue. Amarilla = rápida, gris metálica = blindada
+export function auraTemplate(t: string) {
+  const c = t === "rapida" ? "#ffd84a" : "#b8c0c8";
+  const a = template("aura_" + t, () => [
+    tor(2, 0.07, M.glow(c), [0, 0.06, 0], undefined, 20),
+    sph(2.1, pbr("aura_" + t, { color: c, rough: 0.3, metal: t === "rapida" ? 0 : 0.9, emissive: t === "rapida" ? "#8a6a00" : "#4a5058", alpha: 0.18 }), [0, 0.55, 0], [1, 0.7, 1], 10),
+  ]);
+  shadows.removeShadowCaster(a);
+  return a;
+}
+// Cable del cortacercos tirado en el piso (7 m a lo largo de z) con chispas rojas: es ataque enemigo
+export function cableTemplate() {
+  const t = template("cable", () => [
+    cyl(0.18, 0.18, 7, M.matte("#141414"), [0, 0, 0], [Math.PI / 2, 0, 0], 6),
+    ...[-3.4, -1.7, 0, 1.7, 3.4].map((z) => sph(0.24, M.glow("#ff2a1a"), [0, 0.06, z], undefined, 4)),
+  ]);
+  shadows.removeShadowCaster(t);
+  return t;
+}
+// Tuerca roja que dispara la aspiradora (ataque enemigo)
+export const nutTemplate = () => template("tuerca", () => [tor(0.6, 0.22, pbr("nutRed", { color: "#ff3a1f", rough: 0.3, metal: 0.6, emissive: "#c01800" }), [0, 0, 0], [Math.PI / 2, 0, 0], 6)]);

@@ -1,8 +1,10 @@
 import * as B from "@babylonjs/core";
-import { enemyTemplate, legTemplate, LEGS, teleTemplate, wingTemplate } from "./models";
+import { auraTemplate, cableTemplate, enemyTemplate, legTemplate, LEGS, sectorTemplate, teleTemplate, wingTemplate } from "./models";
+import { FX } from "./fx";
 import { rng } from "./rng";
+import type { Elite } from "./run";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "polilla" | "tarantula";
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "polilla" | "tarantula" | "aspiradora" | "cortacercos";
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; scale?: number; color: string };
 export const DEF: Record<Kind, Def> = {
@@ -16,6 +18,8 @@ export const DEF: Record<Kind, Def> = {
   cortadora: { name: "CORTADORA DE CÉSPED", hp: 3500, speed: 15, dmg: 45, size: [7, 4.5, 6.4], mass: 80, xp: 120, boss: true, color: "#dc2626" },
   tarantula: { name: "TARÁNTULA", hp: 2600, speed: 7, dmg: 35, size: [6, 2.6, 6.5], mass: 50, xp: 100, boss: true, scale: 3, color: "#3a2a20" },
   perro: { name: "EL PERRO", hp: 8000, speed: 9, dmg: 40, size: [3.2, 8, 8], mass: 100, xp: 0, boss: true, color: "#a0673a" },
+  aspiradora: { name: "LA ASPIRADORA ROBOT", hp: 7500, speed: 7, dmg: 35, size: [6.4, 1.6, 6.4], mass: 90, xp: 0, boss: true, color: "#3a3f46" },
+  cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", hp: 7000, speed: 8, dmg: 40, size: [3, 2.4, 9], mass: 80, xp: 0, boss: true, color: "#e0a030" },
 };
 
 const UP = B.Vector3.Up();
@@ -41,8 +45,17 @@ export class Enemy {
   land = new B.Vector3(); // tarántula: dónde va a caer el salto
   shots = 0; // tarántula: escupitajos que quedan en la ráfaga
   slow = 0; // segundos de ralentización (Pistola de agua)
+  stun = 0; // segundos aturdido (Pulso EMP): main.ts no corre su IA ni su golpe de contacto
   lastT: B.Vector3 | null = null; // polilla: posición anterior del auto (estima hacia dónde apunta el faro)
   walk = rng() * 6;
+  elite: Elite | "" = ""; // variante rara de un enemigo común (makeElite)
+  spd = 1; // multiplicador de velocidad (élite rápida)
+  aura?: B.InstancedMesh;
+  pull = 0; // aspiradora: aceleración (m/s²) con la que succiona al auto mientras dura; main.ts la aplica
+  fan: B.Vector3[] = []; // aspiradora: direcciones de la ráfaga de tuercas del evento "fan"
+  cables: { m: B.InstancedMesh; a: B.Vector3; b: B.Vector3; life: number }[] = []; // cortacercos: cables con chispas en el piso
+  shockCd = 0;
+  aim = 0; // cortacercos: rumbo fijo del barrido anunciado
   pose = 0; // stop-motion: las patas cambian de pose a 10 fps
 
   constructor(public kind: Kind, pos: B.Vector3, hpMul: number) {
@@ -83,6 +96,12 @@ export class Enemy {
         this.wings.push(w);
       }
     }
+    if (kind === "aspiradora" || kind === "cortacercos") {
+      // Mismo par zona + relleno que la tarántula; el cortacercos usa un sector (su barrido) en vez de un aro
+      const tpl = kind === "aspiradora" ? teleTemplate() : sectorTemplate();
+      for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
+      this.timer = 2.5;
+    }
     if (kind === "tarantula") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
@@ -94,6 +113,7 @@ export class Enemy {
     for (const t of this.tele) t.isVisible = !!p;
     if (!p) return;
     const [zone, fill] = this.tele;
+    zone.rotation.y = fill.rotation.y = this.aim; // solo importa en el sector del cortacercos
     zone.position.set(p.x, p.y + 0.06, p.z); zone.scaling.set(r, 1, r);
     const f = Math.max(0.05, r * k);
     fill.position.set(p.x, p.y + 0.07, p.z); fill.scaling.set(f, 1, f);
@@ -146,7 +166,7 @@ export class Enemy {
     const fwd = this.node.forward.clone(); fwd.y = 0; fwd.normalize();
     const diff = Math.atan2(B.Vector3.Cross(fwd, to).y, B.Vector3.Dot(fwd, to));
     let move = to;
-    let speed = d.speed;
+    let speed = d.speed * this.spd;
     let turn = 6;
     if (this.slow > 0) { this.slow -= dt; speed *= d.boss ? 0.8 : 0.45; } // empapado: se arrastra
 
@@ -176,7 +196,7 @@ export class Enemy {
       if (!dive) goal.addInPlace(new B.Vector3(Math.sin(this.walk * 0.11) * 1.6, 0, Math.cos(this.walk * 0.07) * 1.6));
       const g = goal.subtract(this.pos); g.y = 0;
       const gd = g.length();
-      const sp = (dive ? d.speed * 1.7 : Math.min(d.speed, gd * 3)) * (this.slow > 0 ? 0.45 : 1);
+      const sp = (dive ? d.speed * 1.7 : Math.min(d.speed, gd * 3)) * this.spd * (this.slow > 0 ? 0.45 : 1);
       const want = gd > 0.01 ? g.scaleInPlace(sp / gd) : g;
       const floor = this.groundY(4) ?? this.pos.y - 1.7; // vuela a altura fija sobre el piso (montículos, rampas)
       const hy = floor + (dive ? 0.5 : 1.7 + Math.sin(this.walk * 0.05) * 0.3) - this.pos.y;
@@ -226,6 +246,67 @@ export class Enemy {
       }
     }
 
+    if (this.kind === "aspiradora") {
+      // Ciclo: anda hacia el auto → aro rojo de succión que se llena (1,4 s) → succiona 2,6 s → aro chico (0,8 s) → 3 ráfagas de tuercas en abanico
+      this.timer -= dt;
+      this.pull = 0;
+      if (this.state === 0) {
+        this.showTele(null);
+        if (this.timer <= 0) { this.state = 1; this.timer = 1.4; }
+      } else if (this.state === 1 || this.state === 2) {
+        speed = this.state === 2 ? 2 : 0; turn = 2;
+        this.showTele(this.pos, 20, this.state === 1 ? 1 - this.timer / 1.4 : 1);
+        if (this.state === 2) {
+          this.pull = dist < 20 ? 9 + 12 * (1 - dist / 20) : 0;
+          if (Math.random() < dt * 25) { const a = Math.random() * 6.3, r = 5 + Math.random() * 14; FX.dust(this.pos.add(new B.Vector3(Math.sin(a) * r, 0.3, Math.cos(a) * r))); } // solo visual
+        }
+        if (this.timer <= 0) { if (this.state === 1) { this.state = 2; this.timer = 2.6; } else { this.state = 3; this.timer = 0.8; } }
+      } else if (this.state === 3) {
+        speed = 0; turn = 5;
+        this.showTele(this.pos, 5, 1 - this.timer / 0.8);
+        if (this.timer <= 0) { this.state = 4; this.shots = 3; this.timer = 0; }
+      } else if (this.timer <= 0) {
+        speed = 0;
+        this.timer = 0.3;
+        if (this.shots-- > 0) {
+          const base = Math.atan2(to.x, to.z) + (this.shots - 1) * 0.09; // cada ráfaga corrida un poco: hay huecos para pasar
+          this.fan = Array.from({ length: 7 }, (_, i) => { const a = base + (i - 3) * 0.2; return new B.Vector3(Math.sin(a), 0.12, Math.cos(a)).normalize(); });
+          this.body.setAngularVelocity(B.Vector3.Zero());
+          return "fan";
+        }
+        this.state = 0; this.timer = 3.5; this.showTele(null);
+      } else speed = 0;
+    }
+
+    if (this.kind === "cortacercos") {
+      // Persigue y cada tanto anuncia un barrido en arco (sector rojo de 10 m que se llena en 1 s); al barrer deja un cable con chispas
+      this.timer -= dt;
+      this.shockCd -= dt;
+      for (let i = this.cables.length - 1; i >= 0; i--) {
+        const cb = this.cables[i];
+        if (Math.random() < dt * 2) FX.sparks(B.Vector3.Lerp(cb.a, cb.b, Math.random())); // solo visual
+        if ((cb.life -= dt) <= 0) { cb.m.dispose(); this.cables.splice(i, 1); }
+      }
+      if (this.state === 0) {
+        this.showTele(null);
+        if (this.timer <= 0 && dist < 16) { this.state = 1; this.timer = 1; this.aim = Math.atan2(to.x, to.z); }
+        else if (this.timer <= -4) { this.dropCable(); this.timer = 0; } // lejos: igual va sembrando cables
+      } else {
+        speed = 0; turn = 0;
+        this.showTele(this.pos, 10, 1 - this.timer / 1);
+        if (this.timer <= 0) {
+          this.state = 0; this.timer = 2.2; this.showTele(null);
+          this.dropCable();
+          for (let k = -2; k <= 2; k++) { const a = this.aim + k * 0.5; FX.sparks(this.pos.add(new B.Vector3(Math.sin(a) * 8, 0.6, Math.cos(a) * 8))); }
+          // ¿El auto quedó dentro del sector (±60°, 10 m)?
+          const off = Math.atan2(Math.sin(Math.atan2(to.x, to.z) - this.aim), Math.cos(Math.atan2(to.x, to.z) - this.aim));
+          if (dist < 10 + 1 && Math.abs(off) < Math.PI / 3) return "slash";
+          return "swing";
+        }
+      }
+      if (this.shockCd <= 0 && this.onCable(target)) { this.shockCd = 0.5; return "shock"; }
+    }
+
     if (this.kind === "perro") {
       this.timer -= dt;
       if (this.airborne) {
@@ -248,7 +329,40 @@ export class Enemy {
     this.body.setAngularVelocity(new B.Vector3(0, B.Scalar.Clamp(diff * turn, -turn, turn), 0));
   }
 
-  dispose() { this.agg.dispose(); this.node.dispose(); for (const t of this.tele) t.dispose(); }
+  // Élite: rápida (doble velocidad, 60% de vida) o blindada (triple vida, 5 veces más pesada: casi no se la empuja).
+  // El aura es una instancia hija (aro en el piso + halo emisivo); el cofre al morir lo suelta main.ts (kill)
+  makeElite(t: Elite) {
+    this.elite = t;
+    if (t === "rapida") { this.spd = 2; this.hp = this.maxHp *= 0.6; }
+    else {
+      this.hp = this.maxHp *= 3;
+      const m = this.def.mass * 5, h = this.def.size[1];
+      this.body.setMassProperties({ mass: m, inertia: new B.Vector3(0, m, 0), centerOfMass: new B.Vector3(0, h / 2, 0) }); // masa + inercia juntas
+    }
+    const a = (this.aura = auraTemplate(t).createInstance("aura"));
+    a.parent = this.node;
+    a.scaling.setAll(this.radius * 1.25);
+  }
+
+  // Cortacercos: un cable de 7 m tirado en el piso detrás suyo (dura 14 s, como mucho 8)
+  private dropCable() {
+    const back = this.node.forward.scale(-this.def.size[2] * 0.55), side = this.node.right.scale(3.5);
+    const c = this.pos.add(back); c.y = (this.groundY(3) ?? this.pos.y) + 0.08;
+    const m = cableTemplate().createInstance("cable");
+    m.position.copyFrom(c);
+    m.rotation.y = Math.atan2(side.x, side.z);
+    this.cables.push({ m, a: c.subtract(side), b: c.add(side), life: 14 });
+    if (this.cables.length > 8) this.cables.shift()!.m.dispose();
+  }
+  // ¿El punto p está sobre algún cable? (distancia a cada segmento en el plano)
+  onCable(p: B.Vector3) {
+    return this.cables.some(({ a, b }) => {
+      const abx = b.x - a.x, abz = b.z - a.z, t = B.Scalar.Clamp(((p.x - a.x) * abx + (p.z - a.z) * abz) / (abx * abx + abz * abz), 0, 1);
+      return Math.hypot(p.x - a.x - abx * t, p.z - a.z - abz * t) < 1;
+    });
+  }
+
+  dispose() { this.agg.dispose(); this.node.dispose(); for (const t of this.tele) t.dispose(); for (const c of this.cables) c.m.dispose(); }
 }
 
 // Qué aparece según el minuto de la partida: [tipo, peso]

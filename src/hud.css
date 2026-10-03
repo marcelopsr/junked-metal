@@ -11,7 +11,7 @@
 
 /* ---------- Piezas comunes ---------- */
 #hud { position: fixed; inset: 0; pointer-events: none; }
-#signal, #lcd, #bossbar, #combo, #radar, #txl, #txr, #slots, #hint { position: absolute; scale: var(--hud-scale); }
+#signal, #lcd, #bossbar, #combo, #drv, #radar, #txl, #txr, #slots, #hint { position: absolute; scale: var(--hud-scale); }
 #signal, #lcd, #bossbar, #hint { left: 50%; translate: -50% 0; transform-origin: 50% 0; }
 
 /* Carcasa de plástico: 4 tornillos, borde mordido */
@@ -132,7 +132,7 @@
 #dmg span.crit { font-size: 32px; color: var(--r-evo); }
 
 /* ---------- Ayuda de controles ---------- */
-#hint { top: calc(max(10px, env(safe-area-inset-top)) + 170px); display: grid; grid-template-columns: repeat(4, auto); gap: 6px 18px; align-items: center; padding: 10px 16px; font: 400 15px var(--data); color: var(--txt); transition: opacity .6s; }
+#hint { top: calc(max(10px, env(safe-area-inset-top)) + 170px); display: grid; grid-template-columns: repeat(5, auto); gap: 6px 18px; align-items: center; padding: 10px 16px; font: 400 15px var(--data); color: var(--txt); transition: opacity .6s; }
 #hint.fade { opacity: 0; }
 #hint .tip { grid-column: 1 / -1; color: var(--dim); text-align: center; }
 @media (pointer: coarse) { #hint { display: none !important; } }
@@ -193,6 +193,23 @@
   #slots .slot { width: 36px; height: 36px; } #slots .slot.small { width: 26px; height: 26px; }
   #slots .slot svg { width: 20px; height: 20px; } #slots .slot.small svg { width: 14px; height: 14px; }
   #muted { top: calc(max(10px, env(safe-area-inset-top)) + 118px); right: 8px; }
+}
+
+/* ---------- Habilidad activa (dentro del transmisor, bajo el turbo): se llena al enfriarse, parpadea lista ---------- */
+.h-ptitle.h-abil { margin-top: 9px; align-items: center; }
+#abKey { margin-left: auto; font: 400 14px/1 var(--data); color: var(--dim); }
+.h-track.h-abil > div { background: repeating-linear-gradient(90deg, var(--ink) 0 5px, #0000 5px 7px); transition: none; }
+#txl.ab-ready #abName { background: var(--ink); color: #10170d; animation: h-blink 1s steps(2) infinite; }
+#txl.ab-on .h-track.h-abil > div { background: repeating-linear-gradient(90deg, var(--txt) 0 3px, #0000 3px 4px); animation: h-blink .25s steps(2) infinite; }
+
+/* ---------- Combo de manejo: multiplicador de XP bajo la racha ---------- */
+#drv { top: calc(max(10px, env(safe-area-inset-top)) + 92px); left: 14px; transform-origin: 0 0; rotate: 1deg; display: flex; align-items: center; gap: 6px; }
+#drv b { font: 400 30px/1 var(--data); color: var(--sig); text-shadow: 0 2px 0 #000, 0 0 8px #6fb3c466; font-variant-numeric: tabular-nums; }
+#drv.pop { animation: h-pop .3s steps(3) both; }
+#drv.max b { color: var(--turbo); text-shadow: 0 2px 0 #000, 0 0 10px #e0a03088; }
+@media (pointer: coarse), (max-width: 720px) {
+  #drv { left: 8px; top: calc(max(10px, env(safe-area-inset-top)) + 72px); } #drv b { font-size: 24px; }
+  .h-ptitle.h-abil { margin-top: 6px; } #abKey { display: none; }
 }
 
 /* Accesibilidad: "Reducir parpadeos" (menu.ts pone body.calm) */

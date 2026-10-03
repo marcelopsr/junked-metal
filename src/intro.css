@@ -1,0 +1,16 @@
+/* Intro de 4 cuadros (src/intro.ts): pantalla completa sobre todo, con el mismo encendido de tubo (@keyframes tune/off de style.css) */
+#intro { position: fixed; inset: 0; z-index: 60; background: #050605; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2.4vh; padding: 0 2vw; }
+#intro .i-stage { position: relative; width: min(96vw, calc((100vh - 130px) * 16 / 9)); aspect-ratio: 16 / 9; overflow: hidden; box-shadow: 0 0 0 2px var(--line), 0 0 40px #000; }
+#intro canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+#intro .i-stage::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, #0000 0 2px, #0006 2px 3px), radial-gradient(ellipse at center, #0000 55%, #000c 100%); }
+#intro .i-stage.tune { animation: tune .45s steps(9, end) both; }
+#intro.off { animation: off .4s steps(5, end) forwards; }
+#intro .i-logo { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; padding-top: 7%; gap: 10px; text-align: center; z-index: 1; }
+#intro .i-logo.on { display: flex; }
+#intro .i-logo .brand { font-size: clamp(30px, 8vw, 84px); }
+#intro .i-logo .tag { max-width: 80%; font-size: clamp(15px, 2.2vw, 24px); color: var(--txt); text-shadow: 2px 2px 0 #000; }
+#intro .i-cap { min-height: 2.5em; max-width: min(820px, 92vw); font: 400 clamp(19px, 3vw, 30px)/1.2 var(--data); color: var(--txt); text-align: center; text-shadow: 2px 2px 0 #000; }
+#intro .i-cap.typing::after { content: "█"; margin-left: 2px; color: var(--lcd-ink); animation: blink .6s steps(2) infinite; }
+#intro .i-skip { position: absolute; right: 3vw; bottom: 2.4vh; font: 400 clamp(14px, 1.8vw, 18px)/1 var(--data); letter-spacing: .1em; color: var(--dim); }
+body.calm #intro .i-stage.tune, body.calm #intro.off, body.calm #intro .i-cap.typing::after { animation: none; }
+@media (max-height: 500px) { #intro .i-cap { min-height: 1.3em; } #intro { gap: 1vh; } #intro .i-stage { width: min(96vw, calc((100vh - 70px) * 16 / 9)); } }

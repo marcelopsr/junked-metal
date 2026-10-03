@@ -27,6 +27,8 @@
       <div class="h-track"><div id="bossHp"></div></div>
     </div>
 
+    <div id="drv" class="hidden"><span class="h-tape" id="drvLbl">MANEJO</span><b id="drvN">x1.0</b></div>
+
     <div id="combo" class="hidden"><span class="h-tape" id="comboLbl">RACHA</span><b id="comboN">x3</b><i id="comboBar"></i></div>
 
     <div id="radar" class="h-panel"><span class="h-tape">RADAR</span><canvas id="radarC" width="64" height="64"></canvas></div>
@@ -37,6 +39,8 @@
       <div class="h-read"><b id="volt">12.6V</b><span id="hpTxt">100 / 100</span></div>
       <div class="h-ptitle"><span class="h-tape">TURBO</span></div>
       <div class="h-track h-boost"><div id="boost"></div></div>
+      <div class="h-ptitle h-abil"><span class="h-tape" id="abName">HABILIDAD</span><b id="abKey"></b></div>
+      <div class="h-track h-abil"><div id="abil"></div></div>
     </div>
 
     <div id="slots"></div>
@@ -57,6 +61,7 @@
       <div><kbd data-k="left">A</kbd><kbd data-k="right">D</kbd> girar</div>
       <div><kbd data-k="boost">Espacio</kbd> turbo</div>
       <div><kbd data-k="drift">Shift</kbd> derrape</div>
+      <div><kbd data-k="ability">E</kbd> habilidad</div>
       <div class="tip">Las armas disparan solas. Embiste rápido, junta tuercas y sobrevive 10 minutos.</div>
     </div>
     <div id="arrows"></div>
@@ -68,6 +73,7 @@
     <div id="bannerTxt"><span class="gh"></span><span class="ty"></span></div>
   </div>
   <div id="muted" class="hidden">SONIDO APAGADO · M</div>
+  <div id="outro" class="hidden"><span class="o-tag">CÁMARA LENTA</span><span class="o-skip" id="outroSkip"></span></div>
 
   <div id="levelup" class="overlay hidden">
     <div class="otitle" id="luTitle">Nivel</div>
@@ -87,6 +93,7 @@
       <div class="brand small">JUNKED METAL</div>
       <nav class="list">
         <button data-act="play" class="primary">Jugar</button>
+        <button data-act="curse" id="curseBtn">Maldiciones</button>
         <button data-act="zone" id="zoneBtn">Zona</button>
         <button data-act="daily" id="dailyBtn">Desafío diario</button>
         <button data-go="garage">Garaje</button>
@@ -143,7 +150,7 @@
         <p>Creado por <b>TheDuende</b></p>
         <p class="dim">Ningún insecto real fue lastimado. Los juguetes sí.</p>
       </div>
-      <div class="btns"><button data-act="back">Volver</button></div>
+      <div class="btns"><button data-act="back">Volver</button><button id="introBtn">Ver intro</button></div>
     </section>
 
     <section id="scr-pause" class="scr">
@@ -166,13 +173,19 @@
       <div class="tag" id="overTxt"></div>
       <div class="stamp hidden" id="overRec">RÉCORD NUEVO</div>
       <div class="tag hidden" id="overShop">Alcanza para algo nuevo en el Taller</div>
-      <ul class="kit stats" id="overStats"></ul>
-      <div class="sect">Daño infligido por fuente</div>
-      <ul id="overDmg"></ul>
+      <div class="overRow">
+        <figure id="overPhoto" class="polaroid hidden"><img id="overPhotoImg" alt="Foto del último momento de la partida" /><button id="overPhotoBtn">Guardar foto</button></figure>
+        <div class="overCol">
+          <ul class="kit stats" id="overStats"></ul>
+          <div class="sect">Daño infligido por fuente</div>
+          <ul id="overDmg"></ul>
+        </div>
+      </div>
       <div class="foot" id="overSeed"></div>
       <nav class="list row3">
         <button data-act="quit" class="primary">Volver al menú</button>
         <button data-act="play">Otra partida</button>
+        <button data-act="endless" id="overEndless" class="hidden">Seguir jugando</button>
       </nav>
     </section>
   </div>
@@ -181,6 +194,7 @@
     <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
     <button id="tDrift">DERRAPE</button>
     <button id="tBoost">TURBO</button>
+    <button id="tAbil">HAB</button>
     <button id="tPause" aria-label="Pausa">II</button>
   </div>
 

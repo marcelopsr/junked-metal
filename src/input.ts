@@ -1,9 +1,9 @@
 // Teclado + gamepad + táctil unificados en un solo estado.
 // move: dirección deseada en pantalla (táctil/stick). Si está activa, el auto gira solo hacia ahí.
-export const input = { throttle: 0, steer: 0, boost: false, drift: false, moveX: 0, moveY: 0, move: false };
+export const input = { throttle: 0, steer: 0, boost: false, drift: false, ability: false, moveX: 0, moveY: 0, move: false };
 
 // Teclas por acción: la primera es reasignable (Configuración → Controles), las flechas quedan siempre
-export const KEYS = { up: ["KeyW", "ArrowUp"], down: ["KeyS", "ArrowDown"], left: ["KeyA", "ArrowLeft"], right: ["KeyD", "ArrowRight"], boost: ["Space"], drift: ["ShiftLeft", "ShiftRight"] };
+export const KEYS = { up: ["KeyW", "ArrowUp"], down: ["KeyS", "ArrowDown"], left: ["KeyA", "ArrowLeft"], right: ["KeyD", "ArrowRight"], boost: ["Space"], drift: ["ShiftLeft", "ShiftRight"], ability: ["KeyE"] };
 export type Action = keyof typeof KEYS;
 // Gamepad: zona muerta y sensibilidad del stick
 export const PAD = { dead: 0.15, sens: 1 };
@@ -13,7 +13,7 @@ addEventListener("keydown", (e) => keys.add(e.code));
 addEventListener("keyup", (e) => keys.delete(e.code));
 addEventListener("blur", () => keys.clear());
 
-const touch = { x: 0, y: 0, boost: false, drift: false };
+const touch = { x: 0, y: 0, boost: false, drift: false, ability: false };
 export const isTouch = matchMedia("(pointer: coarse)").matches;
 
 // Último control usado: los textos de ayuda se adaptan (menu.ts escucha el evento "ctl" en window)
@@ -45,13 +45,14 @@ export function setupTouch(onPinch?: (k: number) => void) {
   const end = (e: PointerEvent) => { if (e.pointerId !== id) return; id = -1; touch.x = touch.y = 0; knob.style.transform = ""; };
   zone.addEventListener("pointerup", end);
   zone.addEventListener("pointercancel", end);
-  const hold = (elId: string, k: "boost" | "drift") => {
+  const hold = (elId: string, k: "boost" | "drift" | "ability") => {
     const el = document.getElementById(elId)!;
     el.addEventListener("pointerdown", () => (touch[k] = true));
     for (const ev of ["pointerup", "pointercancel", "pointerleave"]) el.addEventListener(ev, () => (touch[k] = false));
   };
   hold("tBoost", "boost");
   hold("tDrift", "drift");
+  hold("tAbil", "ability");
   // Pellizco de dos dedos sobre el juego = zoom
   const cv = document.getElementById("c")!, pts = new Map<number, [number, number]>();
   let pd = 0;
@@ -75,6 +76,7 @@ export function pollInput() {
   let steer = (k(...KEYS.right) ? 1 : 0) - (k(...KEYS.left) ? 1 : 0);
   let boost = k(...KEYS.boost);
   let drift = k(...KEYS.drift);
+  let ability = k(...KEYS.ability);
 
   let moveX = 0, moveY = 0;
   const gp = navigator.getGamepads?.()[0];
@@ -83,14 +85,16 @@ export function pollInput() {
     if (trig) { throttle = trig; if (dz(gp.axes[0])) steer = dz(gp.axes[0]); }
     else { moveX = dz(gp.axes[0]); moveY = -dz(gp.axes[1]); }
     boost ||= !!gp.buttons[0]?.pressed;
-    drift ||= !!(gp.buttons[1]?.pressed || gp.buttons[2]?.pressed);
+    drift ||= !!gp.buttons[1]?.pressed;
+    ability ||= !!gp.buttons[2]?.pressed; // X
   }
 
   if (touch.x || touch.y) { moveX = touch.x; moveY = -touch.y; }
   boost ||= touch.boost;
   drift ||= touch.drift;
+  ability ||= touch.ability;
 
-  Object.assign(input, { throttle, steer, boost, drift, moveX, moveY, move: !!(moveX || moveY) });
+  Object.assign(input, { throttle, steer, boost, drift, ability, moveX, moveY, move: !!(moveX || moveY) });
 }
 
 // Botones de menú del gamepad: una foto por cuadro (padSnap) para que un botón mantenido desde el juego no "aprete" en el menú
