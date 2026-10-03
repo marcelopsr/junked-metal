@@ -116,7 +116,7 @@ export function applySettings() {
   const pipe = api.scene.postProcessRenderPipelineManager.supportedPipelines.find((p) => p.name === "pipe") as DefaultRenderingPipeline | undefined;
   if (pipe) pipe.bloomEnabled = save.bloom;
   const rk = save.clean ? 0 : save.retro;
-  look({ grain: L0.grain * rk, scan: L0.scan * rk, ca: L0.ca * rk, pal: L0.pal * rk, outline: save.outline ? L0.outline : 0 });
+  look({ grain: L0.grain * rk, scan: L0.scan * rk, ca: L0.ca * rk, pal: L0.pal * rk, snap: save.clean ? 0 : 1, outline: save.outline ? L0.outline : 0 });
   setAudio({ ...save.vol, mute: save.mute });
   $("muted").classList.toggle("hidden", !save.mute);
   for (const a of Object.keys(save.keys) as Action[]) if (KEYS[a]) KEYS[a][0] = save.keys[a]!;
@@ -440,7 +440,7 @@ type Row = [label: string, kind: "range", path: string, min: number, max: number
 const TABS: Record<string, { name: string; rows: Row[] }> = {
   gfx: { name: "Gráficos", rows: [
     ["Calidad", "sel", "quality", [["auto", "Auto"], ["ultra", "Ultra 1440p"], ["calidad", "Calidad 1080p"], ["equilibrado", "Equilibrado 720p"], ["rendimiento", "Rendimiento 540p"]]],
-    ["Bloom", "tog", "bloom"], ["Contornos", "tog", "outline"], ["Look limpio (sin grano, scanlines ni paleta)", "tog", "clean"],
+    ["Bloom", "tog", "bloom"], ["Contornos", "tog", "outline"], ["Look limpio (sin grano, scanlines, paleta ni temblor)", "tog", "clean"],
     ["Look retro (grano, scanlines, aberración, paleta; 0% = limpio)", "range", "retro", 0, 1.5, 0.1, "%"],
     ["Zoom de cámara", "range", "zoom", 0.8, 2, 0.05, "x"], ["Temblor de pantalla", "tog", "shake"],
   ] },

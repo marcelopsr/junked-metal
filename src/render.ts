@@ -283,11 +283,14 @@ export const TEX = {
   grass: () => canvasTex(512, (c, s) => {
     noise(c, s, "#5c8a32", ["#50822c", "#659636", "#4a7a28", "#6b9c3c"], 2500, 5);
     // Parches de pasto seco y tierra pelada: el patio deja de ser un solo verde
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 24; i++) {
       const x = rnd() * s, y = rnd() * s, r = 20 + rnd() * 70, dry = rnd() < 0.6;
-      const g = c.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, dry ? "rgba(140,128,64,.5)" : "rgba(92,68,44,.5)"); g.addColorStop(1, "rgba(0,0,0,0)");
-      c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2);
+      // Se dibuja también corrido ±s: el parche que cruza el borde reaparece del otro lado y las baldosas no se notan
+      for (const dx of [-s, 0, s]) for (const dy of [-s, 0, s]) {
+        const g = c.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r);
+        g.addColorStop(0, dry ? "rgba(140,128,64,.5)" : "rgba(92,68,44,.5)"); g.addColorStop(1, "rgba(0,0,0,0)");
+        c.fillStyle = g; c.fillRect(x + dx - r, y + dy - r, r * 2, r * 2);
+      }
     }
     for (let i = 0; i < 300; i++) { c.strokeStyle = rnd() < 0.5 ? "#86b852" : "#3d6620"; c.globalAlpha = 0.3; c.beginPath(); const x = rnd() * s, y = rnd() * s; c.moveTo(x, y); c.lineTo(x + (rnd() - 0.5) * 4, y - 4 - rnd() * 6); c.stroke(); }
     c.globalAlpha = 1;
