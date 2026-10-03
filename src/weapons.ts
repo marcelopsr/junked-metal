@@ -392,7 +392,7 @@ export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>
   for (const id of Object.keys(WEAPONS) as WeaponId[]) {
     if (isFusion(id)) continue;
     const w = ws.find((x) => x.id === id);
-    if (!w && ws.length < 6) pool.push({ kind: "weapon", id, title: WEAPONS[id].name, icon: id, desc: WEAPONS[id].desc, lv: 1 });
+    if (!w && ws.length < 6 && !fusedFrom(ws, id)) pool.push({ kind: "weapon", id, title: WEAPONS[id].name, icon: id, desc: WEAPONS[id].desc, lv: 1 });
     else if (w && w.lv < 5 && !w.evolved) pool.push({ kind: "weapon", id, title: WEAPONS[id].name, icon: id, desc: `Nivel ${w.lv + 1}: más daño y alcance`, lv: w.lv + 1 });
   }
   const owned = Object.keys(ps).length;
@@ -416,9 +416,12 @@ export function evoOffer(ws: Weapon[], ps: Partial<Record<PassiveId, number>>): 
 // Primera fusión cuyas dos armas están a nivel 5 o evolucionadas
 export function fusionOffer(ws: Weapon[]): Offer | null {
   const ready = (id: WeaponId) => ws.some((w) => w.id === id && (w.lv >= 5 || w.evolved));
-  const f = FUSIONS.find((x) => ready(x.from[0]) && ready(x.from[1]));
+  const f = FUSIONS.find((x) => !ws.some((w) => w.id === x.id) && ready(x.from[0]) && ready(x.from[1])); // cada fusión, una sola vez
   return f ? { kind: "fusion", id: f.id, title: WEAPONS[f.id].name, icon: f.id, desc: `${WEAPONS[f.from[0]].name} + ${WEAPONS[f.from[1]].name}. ${f.desc}` } : null;
 }
+
+// Arma que ya se gastó en una fusión que se tiene: no vuelve a ofrecerse (si no, se repetiría la fusión)
+const fusedFrom = (ws: Weapon[], id: WeaponId) => FUSIONS.some((f) => f.from.includes(id) && ws.some((w) => w.id === f.id));
 
 // Aplica una fusión: saca las dos armas de origen (y sus piezas montadas) y agrega la nueva
 export function fuse(ws: Weapon[], id: WeaponId): Weapon[] {

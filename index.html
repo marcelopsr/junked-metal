@@ -87,6 +87,7 @@
       <div class="brand small">JUNKED METAL</div>
       <nav class="list">
         <button data-act="play" class="primary">Jugar</button>
+        <button data-act="zone" id="zoneBtn">Zona</button>
         <button data-act="daily" id="dailyBtn">Desafío diario</button>
         <button data-go="garage">Garaje</button>
         <button data-go="shop">Taller</button>
@@ -125,6 +126,7 @@
 
     <section id="scr-bestiary" class="scr wide">
       <div class="otitle">Bestiario</div>
+      <div id="btabs" class="tabs"></div>
       <div id="beasts"></div>
       <div class="sect">Mejores partidas</div>
       <table id="records"></table>
@@ -156,13 +158,14 @@
         <button data-go="config">Configuración</button>
         <button data-act="quit">Abandonar</button>
       </nav>
-      <div class="foot"><span id="pauseSeed"></span> · Esc sigue · M sonido</div>
+      <div class="foot"><span id="pauseSeed"></span><span id="pauseHint"> · Esc sigue · M sonido</span></div>
     </section>
 
     <section id="scr-over" class="scr">
       <div class="brand small" id="overTitle"></div>
       <div class="tag" id="overTxt"></div>
       <div class="stamp hidden" id="overRec">RÉCORD NUEVO</div>
+      <div class="tag hidden" id="overShop">Alcanza para algo nuevo en el Taller</div>
       <ul class="kit stats" id="overStats"></ul>
       <div class="sect">Daño infligido por fuente</div>
       <ul id="overDmg"></ul>
@@ -178,6 +181,7 @@
     <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
     <button id="tDrift">DERRAPE</button>
     <button id="tBoost">TURBO</button>
+    <button id="tPause" aria-label="Pausa">II</button>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

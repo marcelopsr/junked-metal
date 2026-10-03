@@ -85,7 +85,10 @@ export function hudBoss(name: string | null, pct = 1) {
 // ---------- Aviso de radio: entra con interferencia y el texto se va tecleando ----------
 const STATIC = "#%/\\&@0123456789"; // el último carácter tecleado llega como estática
 let bannerT = 0, bannerMsg = "", bannerN = 0, bannerShown = -1;
+// Avisos en cola: si hay uno en pantalla, el nuevo espera su turno (máx. 3 en espera; repetidos se ignoran)
+const bannerQ: [string, number][] = [];
 export function banner(txt: string, secs = 2) {
+  if (bannerT > 0) { if (txt !== bannerMsg && !bannerQ.some((q) => q[0] === txt) && bannerQ.length < 3) bannerQ.push([txt, secs]); return; }
   const b = $("banner");
   bannerMsg = txt; bannerN = 0; bannerShown = -1; bannerT = secs;
   b.querySelector(".gh")!.textContent = txt;
@@ -95,7 +98,7 @@ export function banner(txt: string, secs = 2) {
 }
 function hideBanner() { bannerT = 0; $("banner").classList.add("hidden"); }
 function tickBanner(dt: number) {
-  if (bannerT <= 0) return;
+  if (bannerT <= 0) { if (bannerQ.length && $("levelup").classList.contains("hidden")) banner(...bannerQ.shift()!); return; } // siguiente en cola, no sobre las cartas
   if ((bannerT -= dt) <= 0) return hideBanner();
   if (bannerT < 0.3) $("banner").classList.add("out");
   bannerN += dt * 36;
@@ -109,7 +112,7 @@ function tickBanner(dt: number) {
 // ---------- Racha de bajas: se corta a los 2 s sin matar; crece y tiembla con la racha ----------
 const COMBO = ["RACHA", "BUEN RITMO", "A FONDO", "SOBRECARGA"];
 let streak = 0, streakT = 0, pop = 0, cDirty = false, cShown = false, cTier = -1, cShake = 0, sx = 0, sy = 0;
-export function hudKill() { streak++; streakT = 2; pop = 1; cDirty = true; }
+export function hudKill() { streak++; streakT = 2; pop = 1; cDirty = true; return streak; } // devuelve la racha (logro de 100)
 function tickCombo(dt: number) {
   if ((streakT -= dt) <= 0) streak = 0;
   const show = streak >= 3;

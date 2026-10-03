@@ -7,10 +7,10 @@ const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new
 
 export const CARS: Record<CarKind, { name: string; desc: string; cost: number; hp: number; speed: number; accel: number; turn: number; grip: number; ram: number; mass: number; size: [number, number, number] }> = {
   buggy: { name: "Buggy", desc: "Equilibrado. Salta bien, gira rápido.", cost: 0, hp: 150, speed: 15, accel: 32, turn: 3.2, grip: 10, ram: 3, mass: 1, size: [1.3, 0.7, 2.3] },
-  monster: { name: "Monster Truck", desc: "Lento y tanque. Embestir hace +50%.", cost: 120, hp: 220, speed: 12.5, accel: 26, turn: 2.7, grip: 12, ram: 4.5, mass: 1.8, size: [1.8, 1.1, 2.4] },
-  formula: { name: "Fórmula", desc: "Rapidísimo pero frágil.", cost: 200, hp: 110, speed: 19, accel: 40, turn: 3.6, grip: 14, ram: 2.4, mass: 0.8, size: [1.3, 0.55, 2.8] },
-  tanque: { name: "Tanque de juguete", desc: "Blindado y pesado. Lento, pero embiste como un ladrillo.", cost: 350, hp: 300, speed: 10, accel: 18, turn: 2.3, grip: 18, ram: 5.5, mass: 2.6, size: [1.75, 0.9, 2.4] },
-  carrera: { name: "Autito a fricción", desc: "Liviano y nervioso. Acelera como un resorte y derrapa en cada curva.", cost: 280, hp: 85, speed: 21, accel: 48, turn: 4.2, grip: 6, ram: 1.8, mass: 0.55, size: [1.1, 0.5, 2.1] },
+  monster: { name: "Monster Truck", desc: "Lento y tanque. Embestir hace +50%.", cost: 400, hp: 220, speed: 12.5, accel: 26, turn: 2.7, grip: 12, ram: 4.5, mass: 1.8, size: [1.8, 1.1, 2.4] },
+  formula: { name: "Fórmula", desc: "Rapidísimo pero frágil.", cost: 550, hp: 110, speed: 19, accel: 40, turn: 3.6, grip: 14, ram: 2.4, mass: 0.8, size: [1.3, 0.55, 2.8] },
+  tanque: { name: "Tanque de juguete", desc: "Blindado y pesado. Lento, pero embiste como un ladrillo.", cost: 800, hp: 300, speed: 10, accel: 18, turn: 2.3, grip: 18, ram: 5.5, mass: 2.6, size: [1.75, 0.9, 2.4] },
+  carrera: { name: "Autito a fricción", desc: "Liviano y nervioso. Acelera como un resorte y derrapa en cada curva.", cost: 650, hp: 85, speed: 21, accel: 48, turn: 4.2, grip: 6, ram: 1.8, mass: 0.55, size: [1.1, 0.5, 2.1] },
 };
 
 // Manejo arcade sobre un cuerpo Havok: la física resuelve choques,

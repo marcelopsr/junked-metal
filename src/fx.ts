@@ -1,9 +1,11 @@
 import * as B from "@babylonjs/core";
 import { box, template } from "./models";
-import { M, pbr, TEX } from "./render";
+import { M, pbr, TEX, wetGround } from "./render";
+import { RAIN } from "./run";
 
 // Partículas con un pool de sistemas reutilizables (cero creación por golpe).
 let scene: B.Scene;
+let lowFx = false;
 let tex: B.Texture;
 const pool: B.ParticleSystem[] = [];
 let next = 0;
@@ -29,6 +31,7 @@ export function ambient(kind: "mote" | "fly", p: B.Vector3) {
 
 export function initFx(s: B.Scene, low: boolean) {
   scene = s;
+  lowFx = low;
   tex = TEX.dot();
   tex.hasAlpha = true;
   for (let i = 0; i < (low ? 10 : 20); i++) {
@@ -172,7 +175,89 @@ export function tickFx(dt: number) {
   }
 }
 
+// ---------- Lluvia ----------
+// Tres thin instances (una malla c/u, sin crear nada por gota): gotas = cajas finitas con material que recibe luz (solo brillan donde
+// pega el faro o la luna), salpicaduras = discos que se abren al caer, charcos = discos oscuros que crecen con la humedad y se reciclan delante del auto.
+const AREA = 18, TOP = 14, FALL = 24;
+type Thin = { m: B.Mesh; buf: Float32Array; n: number };
+let drops: Thin, splashes: Thin, puddles: Thin;
+let dPos: Float32Array, sLife: Float32Array, sNext = 0, pData: Float32Array; // pData por charco: x, z, radio, umbral, aspecto
+let wet = 0, rainUp = false;
+
+function thin(geo: B.Mesh, mat: B.Material, n: number): Thin {
+  const buf = new Float32Array(n * 16);
+  for (let i = 0; i < n; i++) buf[i * 16] = buf[i * 16 + 5] = buf[i * 16 + 10] = buf[i * 16 + 15] = 1;
+  geo.material = mat;
+  geo.isPickable = false;
+  geo.alwaysSelectAsActiveMesh = true; // las instancias se mueven fuera de la caja original
+  geo.thinInstanceSetBuffer("matrix", buf, 16, false);
+  geo.thinInstanceCount = 0;
+  return { m: geo, buf, n };
+}
+const flatDisc = (name: string, tess: number) => { const d = B.MeshBuilder.CreateDisc(name, { radius: 1, tessellation: tess }, scene); d.rotation.x = Math.PI / 2; d.bakeCurrentTransformIntoVertices(); return d; };
+const put = (t: Thin, i: number, x: number, y: number, z: number, sx = 1, sz = sx) => { const b = t.buf, o = i * 16; b[o] = sx; b[o + 10] = sz; b[o + 12] = x; b[o + 13] = y; b[o + 14] = z; };
+
+function rainInit() {
+  const nd = lowFx ? 120 : 260;
+  drops = thin(B.MeshBuilder.CreateBox("rain", { width: 0.05, height: 0.7, depth: 0.05 }, scene), pbr("rainDrop", { color: "#dbe8f0", rough: 0.3, alpha: 0.55 }), nd);
+  dPos = new Float32Array(nd * 3).fill(1e9);
+  splashes = thin(flatDisc("splash", 8), pbr("rainSplash", { color: "#cfe0ea", rough: 0.3, alpha: 0.5 }), 40);
+  for (let i = 0; i < splashes.n; i++) put(splashes, i, 0, -9, 0, 0);
+  sLife = new Float32Array(splashes.n);
+  puddles = thin(flatDisc("rainPuddle", 14), pbr("rainPuddle", { color: "#2a3640", rough: 0.03, metal: 0.2, alpha: 0.8 }), 18);
+  pData = new Float32Array(puddles.n * 5).fill(1e9);
+}
+
+/** Llamar cada cuadro con la intensidad k 0..1 (0 = no llueve). p = auto, fwd = hacia dónde mira (la lluvia cae más adelante, donde pega el faro). */
+export function tickRain(dt: number, p: B.Vector3, fwd: B.Vector3, k: number) {
+  if (k < 0.01) { if (rainUp) rainHide(); return; }
+  if (!drops) rainInit();
+  rainUp = true;
+  const prevWet = wet;
+  wet = Math.min(1, wet + (dt * k) / RAIN.wetSecs);
+  if (Math.abs(wet - prevWet) > 0.004) wetGround(wet);
+  const cx = p.x + fwd.x * 6, cz = p.z + fwd.z * 6, n = Math.floor(drops.n * k);
+  for (let i = 0; i < n; i++) {
+    let x = dPos[i * 3], y = dPos[i * 3 + 1] - FALL * dt, z = dPos[i * 3 + 2];
+    if (y < 0.35 || Math.abs(x - cx) > AREA || Math.abs(z - cz) > AREA) {
+      // Al tocar el piso cerca del auto, a veces salpica; después renace arriba (también si quedó fuera del área)
+      if (y < 0.35 && Math.abs(x - p.x) < 12 && Math.abs(z - p.z) < 12 && Math.random() < 0.12) { const j = sNext++ % splashes.n; sLife[j] = 0.25; put(splashes, j, x, 0.07, z, 0.05); }
+      x = cx + (Math.random() * 2 - 1) * AREA; z = cz + (Math.random() * 2 - 1) * AREA; y = TOP * (0.5 + Math.random() * 0.5);
+    }
+    dPos[i * 3] = x; dPos[i * 3 + 1] = y; dPos[i * 3 + 2] = z;
+    put(drops, i, x, y, z);
+  }
+  drops.m.thinInstanceCount = n;
+  drops.m.thinInstanceBufferUpdated("matrix");
+  for (let j = 0; j < splashes.n; j++) {
+    if (sLife[j] <= 0) continue;
+    sLife[j] -= dt;
+    const b = splashes.buf, o = j * 16, s = sLife[j] > 0 ? 0.3 * Math.sin(Math.PI * (1 - sLife[j] / 0.25)) : 0; // se abre y se cierra
+    put(splashes, j, b[o + 12], 0.07, b[o + 14], s);
+  }
+  splashes.m.thinInstanceCount = splashes.n;
+  splashes.m.thinInstanceBufferUpdated("matrix");
+  // Charcos: cada uno aparece al pasar su umbral de humedad y crece hasta su radio; los que quedan lejos se mudan delante del auto
+  const yaw = Math.atan2(fwd.x, fwd.z);
+  for (let i = 0; i < puddles.n; i++) {
+    const o = i * 5;
+    if (Math.hypot(pData[o] - p.x, pData[o + 1] - p.z) > 55) {
+      const a = pData[o] > 1e8 ? Math.random() * 6.3 : yaw + (Math.random() - 0.5) * 2.2, d = pData[o] > 1e8 ? 8 + Math.random() * 40 : 25 + Math.random() * 25;
+      pData[o] = p.x + Math.sin(a) * d; pData[o + 1] = p.z + Math.cos(a) * d; pData[o + 2] = 1.2 + Math.random() * 2.3; pData[o + 3] = Math.random() * 0.6; pData[o + 4] = 0.6 + Math.random() * 0.4;
+    }
+    const s = pData[o + 2] * Math.min(1, Math.max(0, (wet - pData[o + 3]) / 0.4));
+    put(puddles, i, pData[o], 0.045, pData[o + 1], s, s * pData[o + 4]);
+  }
+  puddles.m.thinInstanceCount = puddles.n;
+  puddles.m.thinInstanceBufferUpdated("matrix");
+}
+function rainHide() { rainUp = false; for (const t of [drops, splashes, puddles]) t.m.thinInstanceCount = 0; }
+/** Humedad inicial (lab): 0 seco .. 1 empapado, con charcos al máximo. */
+export const rainWet = (w: number) => { wet = w; wetGround(w); };
+
 export function clearFx() {
+  if (drops) { rainHide(); pData.fill(1e9); }
+  wet = 0; wetGround(0);
   for (const c of chunks) c.m.dispose();
   for (const k of marks) k.m.dispose();
   for (const k of corpses) k.m.dispose();

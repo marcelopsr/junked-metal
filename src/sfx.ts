@@ -120,6 +120,24 @@ export const SFX = {
   static: () => hiss("bandpass", 5000, 1200, 0.22, 0.09),
 };
 
+// Lluvia: ruido filtrado en bucle por el canal de efectos (respeta volumen y mute); k 0..1, 0 = silencio
+let rainG: GainNode | null = null;
+export function rainSfx(k: number) {
+  if (!ctx || (!rainG && k <= 0)) return;
+  if (!rainG) {
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), lp = ctx.createBiquadFilter();
+    s.buffer = buf; s.loop = true;
+    hp.type = "highpass"; hp.frequency.value = 900;
+    lp.type = "lowpass"; lp.frequency.value = 6500;
+    rainG = ctx.createGain(); rainG.gain.value = 0;
+    s.connect(hp).connect(lp).connect(rainG).connect(fxBus);
+    s.start();
+  }
+  rainG.gain.setTargetAtTime(k * 0.1, ctx.currentTime, 0.5);
+}
+
 // ---------- Música ----------
 // Synthwave lo-fi sintetizado en vivo. Una grilla de 64 pasos (4 compases de semicorcheas) corre siempre:
 // los estados no la reinician, solo encienden y apagan capas (crossfade), así el tempo no se corta.
@@ -135,7 +153,7 @@ const MIX: Record<MusicState, number[]> = {
   blackout: [0,   0.9,  0,    0,   0,   0,   1],
   over:     [0,   0,    0,    0,   0,   0,   0],
 };
-const BPM: Record<MusicState, number> = { menu: 100, run: 100, boss: 120, blackout: 100, over: 100 };
+const BPM: Record<MusicState, number> = { menu: 100, run: 100, boss: 100, blackout: 100, over: 100 };
 // [raíz MIDI, tercera]: la partida va por Am-F-C-G; el jefe por Am-Bb-Am-E (frigio, tenso)
 const CALM = [[33, 3], [29, 4], [36, 4], [31, 4]], TENSE = [[33, 3], [34, 4], [33, 3], [40, 4]];
 const ARP = [0, 2, 1, 3, 2, 4, 3, 5, 4, 3, 2, 3, 1, 2, 0, 1]; // índices sobre los tonos del acorde (2 octavas)

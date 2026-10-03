@@ -16,6 +16,13 @@ addEventListener("blur", () => keys.clear());
 const touch = { x: 0, y: 0, boost: false, drift: false };
 export const isTouch = matchMedia("(pointer: coarse)").matches;
 
+// Último control usado: los textos de ayuda se adaptan (menu.ts escucha el evento "ctl" en window)
+export type Ctl = "keys" | "pad" | "touch";
+export let ctl: Ctl = isTouch ? "touch" : "keys";
+const setCtl = (c: Ctl) => { if (c !== ctl) { ctl = c; dispatchEvent(new Event("ctl")); } };
+addEventListener("keydown", () => setCtl("keys"));
+addEventListener("pointerdown", (e) => setCtl(e.pointerType === "mouse" ? "keys" : "touch"));
+
 // onPinch(k): k > 1 = abrir los dedos (acercar). Solo cuenta dedos apoyados sobre el canvas, así el stick y los botones no interfieren.
 export function setupTouch(onPinch?: (k: number) => void) {
   document.getElementById("touch")!.classList.remove("hidden");
@@ -90,6 +97,10 @@ export function pollInput() {
 let prevPad: boolean[] = [], curPad: boolean[] = [];
 export function padSnap() {
   prevPad = curPad;
-  curPad = (navigator.getGamepads?.()[0]?.buttons ?? []).map((b) => b.pressed);
+  const gp = navigator.getGamepads?.()[0];
+  curPad = (gp?.buttons ?? []).map((b) => b.pressed);
+  // El stick también cuenta como cruceta (12-15 = arriba, abajo, izquierda, derecha): así navega las cartas de mejora
+  if (gp) { const [x, y] = gp.axes; curPad[12] ||= y < -0.5; curPad[13] ||= y > 0.5; curPad[14] ||= x < -0.5; curPad[15] ||= x > 0.5; }
+  if (curPad.some(Boolean)) setCtl("pad");
 }
 export const padPressed = (i: number) => !!curPad[i] && !prevPad[i];

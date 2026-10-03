@@ -4,12 +4,14 @@ import "./menu.css";
 import type { DefaultRenderingPipeline, Scene } from "@babylonjs/core";
 import { CARS } from "./car";
 import { DEF, type Kind } from "./enemies";
-import { KEYS, PAD, padPressed, type Action } from "./input";
+import { ctl, KEYS, PAD, padPressed, type Action } from "./input";
 import { PAINTS, PARTS, RIMS, type CarKind, type CarOpts, type Slot } from "./models";
 import { PILOTS, type PilotId } from "./pilots";
 import { LOOK, look, setQuality, type Quality } from "./render";
 import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
+import { ZONES, type ZoneId } from "./world";
+import { ACH, type AchId } from "./achievements";
 
 const $ = (id: string) => document.getElementById(id)!;
 export const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -23,19 +25,20 @@ type Save = {
   bloom: boolean; outline: boolean; retro: number; shake: boolean;
   keys: Partial<Record<Action, string>>; pad: { dead: number; sens: number }; rumble: boolean; touch: number;
   hud: number; calm: boolean; dmgNums: boolean;
-  seen: Kind[]; slain: Partial<Record<Kind, number>>; runs: RunRec[]; daily: { day: string; best: number };
+  seen: Kind[]; slain: Partial<Record<Kind, number>>; runs: RunRec[]; daily: { day: string; best: number }; zone: ZoneId;
+  ach: AchId[];
 };
 const DEFAULT: Save = {
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, quality: "auto", paint: "", rim: "", zoom: 1.35,
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, bloom: true, outline: true, retro: 1, shake: true,
   keys: {}, pad: { dead: 0.15, sens: 1 }, rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
-  seen: [], slain: {}, runs: [], daily: { day: "", best: 0 },
+  seen: [], slain: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
 };
 export const save: Save = (() => {
   try {
     const s = JSON.parse(localStorage.getItem("rcfight2") ?? "{}");
-    for (const k of ["seen", "runs", "cars", "unlocked"] as const) if (k in s && !Array.isArray(s[k])) delete s[k]; // import malformado: se ignora el campo
+    for (const k of ["seen", "runs", "cars", "unlocked", "ach"] as const) if (k in s && !Array.isArray(s[k])) delete s[k]; // import malformado: se ignora el campo
     if (typeof s.keys !== "object" || !s.keys) delete s.keys;
     return { ...structuredClone(DEFAULT), ...s, perm: { ...DEFAULT.perm, ...s.perm }, kit: { ...DEFAULT.kit, ...s.kit }, vol: { ...DEFAULT.vol, ...s.vol }, pad: { ...DEFAULT.pad, ...s.pad } };
   } catch { return structuredClone(DEFAULT); }
@@ -160,6 +163,7 @@ export function reset(s: Scr | null) {
 
 // ---------- Foco: navegación espacial ----------
 const focusables = () => [...document.querySelectorAll<HTMLElement>(`#scr-${current()} :is(button:not(:disabled), select, input, [tabindex])`)].filter((e) => e.offsetParent);
+const SCROLL = "#cars, #shop, #opts"; // listas con scroll propio
 function move(dx: number, dy: number) {
   const cur = document.activeElement as HTMLElement, els = focusables();
   if (!els.includes(cur)) return els[0]?.focus();
@@ -171,17 +175,30 @@ function move(dx: number, dy: number) {
     const r = (e.closest(".row") ?? e) as HTMLElement;
     let x = 0, y = 0;
     for (let n: HTMLElement | null = r; n; n = n.offsetParent as HTMLElement | null) { x += n.offsetLeft - n.scrollLeft; y += n.offsetTop - n.scrollTop; }
+    const c = r.closest<HTMLElement>(SCROLL); // offsetTop no descuenta el scroll de una lista que no es offsetParent
+    if (c) { x -= c.scrollLeft; y -= c.scrollTop; }
     return { x, y, width: r.offsetWidth, height: r.offsetHeight };
   };
   const a = box(cur), ax = a.x + a.width / 2, ay = a.y + a.height / 2;
+  // Listas con scroll propio (garaje, taller, opciones): primero se recorre la lista; para entrar desde afuera solo cuenta lo visible
+  const home = cur.closest<HTMLElement>(SCROLL);
+  const shown = (el: HTMLElement) => {
+    const c = el.closest<HTMLElement>(SCROLL);
+    if (!c || c === home) return true;
+    const e = el.getBoundingClientRect(), r = c.getBoundingClientRect();
+    return e.bottom > r.top + 4 && e.top < r.bottom - 4;
+  };
   let best: HTMLElement | null = null, bs = Infinity;
-  for (const el of els) {
-    if (el === cur) continue;
-    const b = box(el), x = b.x + b.width / 2 - ax, y = b.y + b.height / 2 - ay;
-    const along = x * dx + y * dy;
-    if (along <= 2) continue;
-    const sc = along + Math.abs(x * dy - y * dx) * 2.5;
-    if (sc < bs) { bs = sc; best = el; }
+  for (const [inList, pool] of [[true, home ? els.filter((e) => home.contains(e)) : []], [false, els.filter((e) => !home?.contains(e) && shown(e))]] as const) {
+    for (const el of pool) {
+      if (el === cur) continue;
+      const b = box(el), x = b.x + b.width / 2 - ax, y = b.y + b.height / 2 - ay;
+      const along = x * dx + y * dy, side = Math.abs(x * dy - y * dx);
+      if (along <= 2 || (inList && side > along)) continue; // dentro de la lista, solo hacia adelante (45 grados)
+      const sc = along + side * 2.5;
+      if (sc < bs) { bs = sc; best = el; }
+    }
+    if (best) break;
   }
   best?.focus();
 }
@@ -237,21 +254,24 @@ function renderMain() {
   $("mainInfo").textContent = `${save.scrap} tornillos · récord ${fmt(save.best)}`;
   const b = save.daily.day === today() ? save.daily.best : 0;
   $("dailyBtn").textContent = b ? `Desafío diario · ${fmt(b)}` : "Desafío diario";
+  if (!owns("zone:" + save.zone)) save.zone = "patio"; // guardado importado con una zona sin comprar
+  $("zoneBtn").textContent = `Zona · ${ZONES[save.zone].short}`;
 }
 
 // ---------- Taller y garaje ----------
-// Mejoras permanentes: el precio de cada nivel está en `cost` (su largo es el máximo). Chasis: los 5 primeros niveles
-// cuestan lo de siempre; del 6 al 10 se encarecen fuerte. Equipo: cambian cómo se juega cada partida.
+// Mejoras permanentes: el precio de cada nivel está en `cost` (su largo es el máximo). Equipo: cambian cómo se juega cada partida.
+// Curva (partida típica ≈ 100 tornillos): chasis 1-5 de 20 a 100 (una mejora por partida al empezar), 6-10 de 180 a 660
+// (una línea completa ≈ 23 partidas); autos, pilotos y zonas 400-1000 (4-10 partidas); revivir 2 y cuarta ranura 1800-2200 (20+).
 type PermK = keyof Save["perm"];
-const CH = Array.from({ length: 10 }, (_, l) => Math.round(15 * (l + 1) * (l < 5 ? 1 : 1.5 + (l - 5) * 0.35)));
+const CH = Array.from({ length: 10 }, (_, l) => Math.round((20 * (l + 1) * (l < 5 ? 1 : 1.5 + (l - 5) * 0.45)) / 5) * 5);
 const PERKS: { k: PermK; cat: "chasis" | "equipo"; name: string; desc: string; cost: number[] }[] = [
   { k: "hp", cat: "chasis", name: "Chasis reforzado", desc: "+10 vida", cost: CH }, { k: "dmg", cat: "chasis", name: "Piñón afilado", desc: "+10% daño", cost: CH },
   { k: "spd", cat: "chasis", name: "Motor rebobinado", desc: "+4% velocidad", cost: CH }, { k: "mag", cat: "chasis", name: "Imán de parlante", desc: "+10% imán", cost: CH },
-  { k: "xp", cat: "equipo", name: "Contador de tuercas", desc: "+5% XP por nivel", cost: [100, 200, 320, 480] },
-  { k: "reroll", cat: "equipo", name: "Dado cargado", desc: "+1 re-sorteo de cartas por partida (R o botón Y)", cost: [120, 260, 450] },
-  { k: "extra", cat: "equipo", name: "Caja de repuestos", desc: "Arranca con un arma extra al azar", cost: [400] },
-  { k: "revive", cat: "equipo", name: "Batería de reserva", desc: "Revive una vez por partida con media vida", cost: [550, 1200] },
-  { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: [700] },
+  { k: "xp", cat: "equipo", name: "Contador de tuercas", desc: "+5% XP por nivel", cost: [80, 180, 320, 500] },
+  { k: "reroll", cat: "equipo", name: "Dado cargado", desc: "+1 re-sorteo de cartas por partida (R o botón Y)", cost: [100, 250, 450] },
+  { k: "extra", cat: "equipo", name: "Caja de repuestos", desc: "Arranca con un arma extra al azar", cost: [500] },
+  { k: "revive", cat: "equipo", name: "Batería de reserva", desc: "Revive una vez por partida con media vida", cost: [600, 1800] },
+  { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: [2200] },
 ];
 const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;
 // Desbloqueables: car:<auto>, pilot:<piloto>, part:<ranura>:<opción>. Los pilotos con logro no se compran.
@@ -262,20 +282,27 @@ const UNLOCKS = {
     const p = PILOTS[k];
     return { id: "pilot:" + k, name: p.name, desc: `${p.pros.join(" · ")} · Contra: ${p.con}`, cost: p.cost, ach: p.ach?.txt };
   }),
+  zonas: () => (Object.keys(ZONES) as ZoneId[]).filter((k) => ZONES[k].cost).map((k): Unlock => ({ id: "zone:" + k, name: ZONES[k].name, desc: ZONES[k].desc, cost: ZONES[k].cost })),
   piezas: () => (Object.keys(PARTS) as Slot[]).flatMap((sl) => Object.entries(opts(sl)).filter(([, [, c]]) => c).map(([o, [n, c]]): Unlock => ({ id: `part:${sl}:${o}`, name: n, desc: PARTS[sl].name, cost: c }))),
 };
 function owns(id: string) {
   const [t, k, o] = id.split(":");
   if (t === "car") return save.cars.includes(k as CarKind);
+  if (t === "zone") return k in ZONES && (!ZONES[k as ZoneId].cost || save.unlocked.includes(id));
   if (t === "pilot") { const p = PILOTS[k as PilotId]; return !!p && (p.ach ? p.ach.ok(save) : !p.cost || save.unlocked.includes(id)); }
   return opts(k as Slot)?.[o]?.[1] === 0 || save.unlocked.includes(id);
 }
+const ownedZones = () => (Object.keys(ZONES) as ZoneId[]).filter((k) => owns("zone:" + k));
 function priceOf(id: string) {
   const [t, k, o] = id.split(":");
   if (t === "car") return CARS[k as CarKind]?.cost;
+  if (t === "zone") return ZONES[k as ZoneId]?.cost;
   if (t === "pilot") { const p = PILOTS[k as PilotId]; return p && !p.ach ? p.cost : undefined; }
   return opts(k as Slot)?.[o]?.[1];
 }
+// ¿Alcanzan los tornillos para algo del Taller? (mejoras, autos, pilotos, piezas o zonas)
+const canBuy = () => PERKS.some((p) => (p.cost[save.perm[p.k]] ?? Infinity) <= save.scrap)
+  || Object.values(UNLOCKS).some((f) => f().some((u) => !u.ach && !owns(u.id) && u.cost <= save.scrap));
 function buy(id: string) {
   const c = priceOf(id);
   if (owns(id) || c === undefined || save.scrap < c) return false;
@@ -289,7 +316,7 @@ export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, rim: sa
 
 const bar = (v: number, max: number) => `<i style="width:${Math.min(100, (v / max) * 100)}%"></i>`;
 const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" data-${attr}="${id}">${n}</button>`).join("");
-const STABS = { chasis: "Chasis", equipo: "Equipo de partida", autos: "Autos", pilotos: "Pilotos", piezas: "Piezas" };
+const STABS = { chasis: "Chasis", equipo: "Equipo de partida", autos: "Autos", pilotos: "Pilotos", piezas: "Piezas", zonas: "Zonas" };
 let stab: keyof typeof STABS = "chasis";
 function renderShop() {
   $("bank").textContent = `${save.scrap} tornillos`;
@@ -366,7 +393,8 @@ export const keyName = (c?: string) => (c ?? "").replace(/^Key|^Digit/, "").repl
 const show2 = (v: number, u?: string) => (u === "%" ? `${Math.round(v * 100)}%` : `${v.toFixed(2)}x`);
 function renderConfig() {
   $("tabs").innerHTML = Object.entries(TABS).map(([id, t]) => `<button class="tab ${id === tab ? "on" : ""}" data-tab="${id}">${t.name}</button>`).join("");
-  $("opts").innerHTML = TABS[tab].rows.map((r) => {
+  // En táctil, Controles deja solo lo táctil (sin teclas ni gamepad)
+  $("opts").innerHTML = TABS[tab].rows.filter((r) => tab !== "ctl" || ctl !== "touch" || r[2] === "touch").map((r) => {
     if (r[1] === "note") return `<div class="note">${r[0]}</div>`;
     if (r[1] === "btn") return `<button class="row" data-act="${r[2]}"><span>${r[0]}</span><b>&gt;</b></button>`;
     if (r[1] === "bind") return `<button class="row" data-bind="${r[2]}"><span>${r[0]}</span><b>${binding === r[2] ? "PRESIONA UNA TECLA" : keyName(KEYS[r[2]][0])}</b></button>`;
@@ -377,12 +405,38 @@ function renderConfig() {
   }).join("");
 }
 
+// Trasfondo de cada bicho (el de los pilotos vive en pilots.ts)
+const LORE: Partial<Record<Kind, string>> = {
+  hormiga: "Trabaja en equipo, cobra en migas y jura que el patio es suyo desde antes que la casa.",
+  escupidora: "Probó el jugo de limón una vez y desde entonces escupe por principio.",
+  friccion: "Un solo cambio: adelante. Frenar nunca figuró en el manual.",
+  robot: "Le dieron cuerda hace años y todavía no terminó de enojarse.",
+  polilla: "Viene por el faro y se queda por la pelea. Nadie le explicó que la luz no se come.",
+  escarabajo: "Blindado de fábrica, lento por convicción. Considera que embestir es una forma de saludar.",
+  rey: "Se coronó solo, con una tapita de gaseosa. Exige reverencias y migas de galleta.",
+  cortadora: "Despertó un domingo a las siete de la mañana y decidió que el pasto no alcanzaba.",
+  tarantula: "Ocho patas, cero paciencia. Teje redes por pasatiempo y emboscadas por oficio.",
+  perro: "El verdadero dueño del patio. Ladra a la nada, entierra juguetes y no negocia.",
+};
+const BTABS = { bichos: "Bichos", pilotos: "Pilotos", logros: "Logros" };
+let btab: keyof typeof BTABS = "bichos";
+/** Nombre visible de un premio de logro (part:<ranura>:<opción> o pilot:<id>). */
+const rewardName = (id: string) => { const [t, k, o] = id.split(":"); return t === "pilot" ? PILOTS[k as PilotId].name : `${PARTS[k as Slot].name} ${opts(k as Slot)[o][0]}`; };
 function renderBestiary() {
-  $("beasts").innerHTML = (Object.keys(DEF) as Kind[]).map((k) => {
-    const d = DEF[k], seen = save.seen.includes(k), n = save.slain[k] ?? 0;
-    if (!seen) return `<div tabindex="0" class="carc ficha locked"><b>???</b>Sin datos. Todavía no apareció en el patio.</div>`;
-    return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}"><b>${d.name}</b>${d.boss ? "Jefe" : "Plaga"} · ${n} ${n === 1 ? "baja" : "bajas"}<div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} tuercas de XP` : "Fin de la partida"}</div></div>`;
-  }).join("");
+  $("btabs").innerHTML = tabsHtml(BTABS, btab, "btab");
+  $("beasts").innerHTML = btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
+    const a: { name: string; txt: string; reward?: string; scrap?: number } = ACH[k], ok = save.ach.includes(k);
+    return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b>${a.name}</b>${a.txt}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}</div>` : ""}</div>`;
+  }).join("")
+    : btab === "pilotos" ? (Object.keys(PILOTS) as PilotId[]).map((k) => {
+      const p = PILOTS[k];
+      return `<div tabindex="0" class="carc ficha pilot ${owns("pilot:" + k) ? "" : "locked"}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="lore">${p.lore}</div></div>`;
+    }).join("")
+    : (Object.keys(DEF) as Kind[]).map((k) => {
+      const d = DEF[k], seen = save.seen.includes(k), n = save.slain[k] ?? 0;
+      if (!seen) return `<div tabindex="0" class="carc ficha locked"><b>???</b>Sin datos. Todavía no apareció en el patio.</div>`;
+      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}"><b>${d.name}</b>${d.boss ? "Jefe" : "Plaga"} · ${n} ${n === 1 ? "baja" : "bajas"}${LORE[k] ? `<div class="lore">${LORE[k]}</div>` : ""}<div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} tuercas de XP` : "Fin de la partida"}</div></div>`;
+    }).join("");
   $("records").innerHTML = save.runs.length
     ? `<tr><th>#</th><th>Tiempo</th><th>Bajas</th><th>Nivel</th><th>Semilla</th></tr>` + save.runs.map((r, i) => `<tr><td>${i + 1}</td><td>${fmt(r.t)}${r.win ? " V" : ""}</td><td>${r.kills}</td><td>${r.lv}</td><td>${r.seed}</td></tr>`).join("")
     : `<tr><td>Sin partidas todavía.</td></tr>`;
@@ -403,6 +457,7 @@ export function openOver(r: { win: boolean; why: string; time: number; kills: nu
   $("overTxt").textContent = r.why;
   $("overStats").innerHTML = [["Tiempo", fmt(r.time)], ["Bajas", r.kills], ["Nivel", r.level], ["Tornillos", "+" + r.scrap]].map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("overRec").classList.toggle("hidden", !r.record);
+  $("overShop").classList.toggle("hidden", !canBuy());
   const rows = Object.entries(r.dmg).sort((a, b) => b[1] - a[1]), top = rows[0]?.[1] || 1;
   const name = (id: string) => (id in WEAPONS ? WEAPONS[id as WeaponId].name : id[0].toUpperCase() + id.slice(1));
   $("overDmg").innerHTML = rows.map(([id, v]) => `<li><span>${name(id)}</span><i style="width:${(v / top) * 100}%"></i><b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño infligido</span></li>";
@@ -418,35 +473,54 @@ addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEv =
 addEventListener("appinstalled", () => { installEv = null; $("install").classList.add("hidden"); });
 if (!standalone && /iP(hone|ad|od)/.test(navigator.userAgent)) $("iosHint").classList.remove("hidden");
 
+// ---------- Textos según el último control usado ----------
+const CTL_TXT = { keys: ["PRESIONA CUALQUIER TECLA", " · Esc sigue · M sonido"], pad: ["PRESIONA A", " · Start sigue"], touch: ["TOCA LA PANTALLA", " · el botón de pausa sigue"] };
+let ctlShown = ctl;
+function ctlTexts() {
+  const [press, hint] = CTL_TXT[ctl];
+  document.querySelector("#scr-title .press")!.textContent = press;
+  $("pauseHint").textContent = hint;
+  if (current() === "config" && tab === "ctl" && (ctl === "touch") !== (ctlShown === "touch")) renderConfig();
+  ctlShown = ctl;
+}
+addEventListener("ctl", ctlTexts);
+
 // ---------- Arranque ----------
 export function initMenu(a: Api) {
   api = a;
   L0 = { grain: LOOK.grain, scan: LOOK.scan, ca: LOOK.ca, outline: LOOK.outline };
   applySettings();
+  ctlTexts();
+  $("tPause").addEventListener("click", () => (current() === "pause" ? api.resume() : api.pause())); // botón táctil: igual que Esc/Start
   const fe = $("fe");
   fe.addEventListener("focusin", () => SFX.blip());
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-buy],[data-pilot],[data-part]") as HTMLElement | null)?.dataset;
+    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
     if (!d) return;
     SFX.accept();
     if (d.go) go(d.go as Scr);
     else if (d.act === "play") api.play();
     else if (d.act === "daily") api.play(true);
+    else if (d.act === "zone") { // el fondo cambia en el loop del menú (main.ts); estática como al cambiar de canal
+      const zs = ownedZones(); save.zone = zs[(zs.indexOf(save.zone) + 1) % zs.length]; persist(); renderMain();
+      fe.classList.remove("zap"); void fe.offsetWidth; fe.classList.add("zap"); SFX.static();
+    }
     else if (d.act === "back") back();
     else if (d.act === "export") exportSave();
     else if (d.act === "import") importSave();
     else if (d.act === "resume") api.resume();
     else if (d.act === "quit") api.quit();
     else if (d.act === "install") void installEv?.prompt().finally(() => { installEv = null; $("install").classList.add("hidden"); }); // el evento sirve una sola vez
-    else if (d.tab) { tab = d.tab; renderConfig(); (document.querySelector(`[data-tab="${tab}"]`) as HTMLElement).focus(); }
+    else if (d.tab) { tab = d.tab; renderConfig(); $("opts").scrollTop = 0; (document.querySelector(`[data-tab="${tab}"]`) as HTMLElement).focus(); }
     else if (d.tog) { const [o, k] = ref(d.tog); o[k] = !o[k]; commit(); renderConfig(); (document.querySelector(`[data-tog="${d.tog}"]`) as HTMLElement).focus(); }
     else if (d.bind) { binding = d.bind as Action; renderConfig(); (document.querySelector(`[data-bind="${d.bind}"]`) as HTMLElement).focus(); }
     else if (d.paint || d.rim) { if (d.paint) save.paint = d.paint; else save.rim = d.rim!; persist(); renderGarage(); (document.querySelector(`[data-${d.paint ? "paint" : "rim"}="${d.paint ?? d.rim}"]`) as HTMLElement).focus(); }
-    else if (d.gtab) { gtab = d.gtab as typeof gtab; renderGarage(); focusSel(`[data-gtab="${gtab}"]`); }
-    else if (d.stab) { stab = d.stab as typeof stab; renderShop(); focusSel(`[data-stab="${stab}"]`); }
+    else if (d.gtab) { gtab = d.gtab as typeof gtab; renderGarage(); $("cars").scrollTop = 0; focusSel(`[data-gtab="${gtab}"]`); }
+    else if (d.btab) { btab = d.btab as typeof btab; renderBestiary(); focusSel(`[data-btab="${btab}"]`); }
+    else if (d.stab) { stab = d.stab as typeof stab; renderShop(); $("shop").scrollTop = 0; focusSel(`[data-stab="${stab}"]`); }
     else if (d.buy) { if (!buy(d.buy)) return; renderShop(); focusSel(`[data-buy="${d.buy}"]`); }
     else if (d.pilot) {
       const id = "pilot:" + d.pilot;

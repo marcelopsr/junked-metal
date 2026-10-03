@@ -6,28 +6,53 @@ import { HALF } from "./world";
 type W = { __info(): { time: number; state: string; level: number; hp: number; enemies: number; weapons: string[] }; __carObj(): { pos: { x: number; z: number }; root: { forward: { x: number; z: number } }; body: { getLinearVelocity(): { x: number; z: number } } } | null; __tick(n: number): void };
 
 // Decisión de manejo del bot (la usan __bot y __sim): órbita amplia con turbo en rectas y destrabe.
+// Con jefe: lo rodea a distancia de combate (las armas le pegan), sale de los aros rojos y de la línea de carga.
+// Sin trampas: solo usa lo que una persona ve (telegráficos, el jefe en el aire, hacia dónde mira la cortadora).
 let stuck = 0, back = 0;
 export const resetBot = () => { stuck = back = 0; };
 type P = { x: number; z: number };
-export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVelocity(): P } }, threats?: P[], obs?: { x: number; z: number; r: number }[]) {
+export type BotBoss = { x: number; z: number; kind: string; fx: number; fz: number; charge: boolean; ram: boolean };
+const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14 };
+export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVelocity(): P } }, threats?: P[], obs?: { x: number; z: number; r: number }[], boss?: BotBoss | null, zones: { x: number; z: number; r: number }[] = []) {
   const v = c.body.getLinearVelocity();
   stuck = Math.hypot(v.x, v.z) < 2 ? stuck + 1 : 0;
   if (stuck > 50) { back = 40; stuck = 0; }
   if (back > 0) { back--; return { throttle: -1, steer: 1, boost: false }; }
   const have = Math.atan2(c.root.forward.x, c.root.forward.z);
-  let want = have;
+  let want = have, escaping = false;
   if (threats) {
-    // Evalúa 12 rumbos: lejos de la horda, sin obstáculos ni bordes, preferir seguir derecho
-    // Kiting: preferir el rumbo tangente a un círculo amplio (radio 55) alrededor del centro
-    const ang = Math.atan2(c.pos.z, c.pos.x) + 0.35, orbit = Math.atan2(Math.cos(ang) * 55 - c.pos.x, Math.sin(ang) * 55 - c.pos.z);
+    // Kiting: rumbo tangente a un círculo; sin jefe, radio 55 alrededor del centro; con jefe, alrededor de él
+    const cl = (u: number) => Math.max(-(HALF - 22), Math.min(HALF - 22, u));
+    const cx = boss ? boss.x : 0, cz = boss ? boss.z : 0, R = boss ? ORBIT_R[boss.kind] ?? 12 : 55;
+    const ang = Math.atan2(c.pos.z - cz, c.pos.x - cx) + (boss ? 0.6 : 0.35);
+    const orbit = boss?.ram ? Math.atan2(boss.x - c.pos.x, boss.z - c.pos.z) // Ariete: embestir de frente
+      : Math.atan2(cl(cx + Math.cos(ang) * R) - c.pos.x, cl(cz + Math.sin(ang) * R) - c.pos.z); // punto de órbita siempre lejos del borde
+    const inZone = zones.find((zn) => Math.hypot(c.pos.x - zn.x, c.pos.z - zn.z) < zn.r + 1.5);
+    // Rodeado y frenado: turbo hacia el hueco (una persona no se queda empujando la horda)
+    const crowd = threats.filter((e) => Math.hypot(e.x - c.pos.x, e.z - c.pos.z) < 5).length;
+    escaping = !!inZone || !!boss?.charge || (crowd >= 3 && Math.hypot(v.x, v.z) < 8);
     let best = -Infinity;
-    for (let k = 0; k < 12; k++) {
-      const a = (k / 12) * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a);
+    for (let k = 0; k < 16; k++) {
+      const a = (k / 16) * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a);
       let sc = Math.cos(a - have) * 1.2 + Math.cos(a - orbit) * 2.5;
-      for (const e of threats) { const ex = e.x - c.pos.x, ez = e.z - c.pos.z, d = Math.hypot(ex, ez); if (d < 22) sc -= ((ex * dx + ez * dz) / d) * (22 - d) / 6; }
+      for (const e of threats) { const ex = e.x - c.pos.x, ez = e.z - c.pos.z, d = Math.hypot(ex, ez), dot = (ex * dx + ez * dz) / d; if (d < 22) sc -= dot * (22 - d) / 6; if (d < 6 && dot > 0.6) sc -= 2.5; } // muro de bichos pegado: buscar el hueco
       for (const o of obs!) { for (const t of [4, 9]) { const px = c.pos.x + dx * t, pz = c.pos.z + dz * t; if (Math.hypot(px - o.x, pz - o.z) < o.r + 2) sc -= 12 / t; } }
-      const fx = c.pos.x + dx * 14, fz = c.pos.z + dz * 14;
-      if (Math.abs(fx) > HALF - 12 || Math.abs(fz) > HALF - 12) sc -= 8;
+      // Bordes del patio: acorralarse contra la pared es la muerte (la horda empuja y no hay salida)
+      for (const [t, pen] of [[5, 30], [14, 10]]) { const fx = c.pos.x + dx * t, fz = c.pos.z + dz * t; if (Math.abs(fx) > HALF - 10 || Math.abs(fz) > HALF - 10) sc -= pen; }
+      if (Math.abs(c.pos.x) > HALF - 25 || Math.abs(c.pos.z) > HALF - 25) sc -= (dx * Math.sign(c.pos.x) * +(Math.abs(c.pos.x) > HALF - 25) + dz * Math.sign(c.pos.z) * +(Math.abs(c.pos.z) > HALF - 25)) * 4; // cerca del borde: volver hacia adentro
+      // Aros rojos y caídas de salto: no entrar, y si ya está adentro, salir por el lado más corto
+      for (const zn of zones) for (const t of [3, 7, 12]) { const px = c.pos.x + dx * t, pz = c.pos.z + dz * t; if (Math.hypot(px - zn.x, pz - zn.z) < zn.r + 2) sc -= 30 / t; }
+      if (inZone) { const ox = c.pos.x - inZone.x, oz = c.pos.z - inZone.z, od = Math.hypot(ox, oz) || 1; sc += ((ox * dx + oz * dz) / od) * 6; }
+      if (boss && !boss.ram) {
+        const bx = c.pos.x - boss.x, bz = c.pos.z - boss.z, bd = Math.hypot(bx, bz) || 1, R = ORBIT_R[boss.kind] ?? 12;
+        // Nunca pegarse al jefe: tocarlo duele (y embestirlo rebota) salvo con Ariete
+        if (bd < R + 4) sc += ((bx * dx + bz * dz) / bd) * (R + 4 - bd) * 0.8;
+        // Cortadora: mientras apunta o carga, salir de su línea (moverse de costado respecto de su frente)
+        if (boss.kind === "cortadora" && bd < 45) {
+          sc += Math.abs(dx * boss.fz - dz * boss.fx) * (boss.charge ? 6 : 2.5);
+          for (const t of [0, 4, 9]) { const px = bx + dx * t, pz = bz + dz * t, along = px * boss.fx + pz * boss.fz; if (along > -2 && Math.abs(px * boss.fz - pz * boss.fx) < 6) sc -= (boss.charge ? 24 : 8) / (t + 2); }
+        }
+      }
       if (sc > best) { best = sc; want = a; }
     }
   } else {
@@ -35,7 +60,7 @@ export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVel
     want = Math.atan2(Math.cos(a) * 44 + 8 - c.pos.x, Math.sin(a) * 44 - 12 - c.pos.z);
   }
   const d = Math.atan2(Math.sin(want - have), Math.cos(want - have));
-  return { throttle: 1, steer: Math.max(-1, Math.min(1, d * 3)), boost: Math.abs(d) < 0.2 && Math.sin(c.pos.x * 0.3 + c.pos.z * 0.2) > 0.4 };
+  return { throttle: 1, steer: Math.max(-1, Math.min(1, d * 3)), boost: escaping || (Math.abs(d) < 0.35 && (!!boss?.ram || Math.sin(c.pos.x * 0.3 + c.pos.z * 0.2) > 0.4)) };
 }
 
 export async function bot(secs: number) {

@@ -107,17 +107,17 @@
 /* ---------- Armas y piezas ---------- */
 #slots { bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; translate: -50% 0; transform-origin: 50% 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 #slots .row { display: flex; gap: 5px; }
-.slot { position: relative; width: 46px; height: 46px; display: grid; place-items: center; overflow: hidden; color: var(--txt);
+#slots .slot { position: relative; width: 46px; height: 46px; display: grid; place-items: center; overflow: hidden; color: var(--txt);
   background: linear-gradient(#171b14, #0c0f0a); border: 1px solid var(--line); box-shadow: inset 0 0 0 1px #000, inset 0 -3px 0 #0006;
   clip-path: polygon(0 4px, 4px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%); }
-.slot:nth-child(odd) { rotate: -1deg; } .slot:nth-child(even) { rotate: .8deg; }
-.slot.small { width: 32px; height: 32px; color: var(--dim); }
-.slot.evo { border-color: var(--r-evo); color: var(--r-evo); animation: h-glow 1.6s steps(3) infinite; }
-.slot .cd { position: absolute; inset: 0; background: conic-gradient(#000b calc(var(--cd, 0) * 360deg), transparent 0); }
-.slot .pips { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }
-.slot .pips i { width: 4px; height: 3px; background: #1d261a; }
-.slot .pips i.on { background: var(--sig); box-shadow: 0 0 4px var(--sig); }
-.slot.small .pips { bottom: 2px; }
+#slots .slot:nth-child(odd) { rotate: -1deg; } #slots .slot:nth-child(even) { rotate: .8deg; }
+#slots .slot.small { width: 32px; height: 32px; color: var(--dim); }
+#slots .slot.evo { border-color: var(--r-evo); color: var(--r-evo); animation: h-glow 1.6s steps(3) infinite; }
+#slots .slot .cd { position: absolute; inset: 0; background: conic-gradient(#000b calc(var(--cd, 0) * 360deg), transparent 0); }
+#slots .slot .pips { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }
+#slots .slot .pips i { width: 4px; height: 3px; background: #1d261a; }
+#slots .slot .pips i.on { background: var(--sig); box-shadow: 0 0 4px var(--sig); }
+#slots .slot.small .pips { bottom: 2px; }
 
 /* ---------- Flechas de borde: ficha con ícono + punta que orbita hacia el objetivo ---------- */
 #arrows .arw { position: absolute; left: 0; top: 0; width: 0; height: 0; color: #d6e8c8; }
@@ -190,8 +190,8 @@
   #txr { right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); width: 112px; padding: 7px 8px; }
   #kmh { font-size: 20px; } #txr .h-read.r span { display: none; }
   #slots { bottom: max(8px, env(safe-area-inset-bottom)); gap: 4px; }
-  .slot { width: 36px; height: 36px; } .slot.small { width: 26px; height: 26px; }
-  .slot svg { width: 20px; height: 20px; } .slot.small svg { width: 14px; height: 14px; }
+  #slots .slot { width: 36px; height: 36px; } #slots .slot.small { width: 26px; height: 26px; }
+  #slots .slot svg { width: 20px; height: 20px; } #slots .slot.small svg { width: 14px; height: 14px; }
   #muted { top: calc(max(10px, env(safe-area-inset-top)) + 118px); right: 8px; }
 }
 

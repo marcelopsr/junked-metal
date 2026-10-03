@@ -47,11 +47,24 @@ export const PLAGUES: Plague[] = [
   { name: "PATIO MIXTO", mult: { hormiga: 0.8, friccion: 1.3, robot: 1.3, escupidora: 1.3 }, from: { robot: 1, escupidora: 1 } },
 ];
 
-export type Profile = { seed: number; climate: Climate; plague: Plague; minis: Kind[]; swarmEvery: number; ballEvery: number; chestEvery: number };
+// Lluvia: modificador de clima que activan algunas semillas. DISEÑO: valores a decidir por el usuario.
+export const RAIN = {
+  chance: 0.25,       // fracción de semillas con lluvia
+  from: [0.5, 0.7],   // empieza entre estas fracciones de la partida (0 = inicio, 1 = 10:00)
+  grip: 0.8,          // multiplicador del agarre lateral con lluvia plena (1 = sin efecto; menos = el auto patina más)
+  ramp: 0.4,          // 1/s: qué tan rápido sube la intensidad al empezar (0,4 = ~6 s)
+  wetSecs: 60,        // segundos de lluvia hasta el suelo empapado y los charcos al máximo
+};
+
+export type Profile = { seed: number; climate: Climate; plague: Plague; minis: Kind[]; swarmEvery: number; ballEvery: number; chestEvery: number; rainAt: number };
 
 // Los dos minijefes de la partida: 2 de 3 en orden, con UNA sola tirada (no corre el resto del perfil de la semilla)
 const MINIS: Kind[] = ["rey", "cortadora", "tarantula"];
 const pickMinis = (r: number): Kind[] => { const i = Math.floor(r * 6), a = i % 3; return [MINIS[a], MINIS[(a + 1 + (i >= 3 ? 1 : 0)) % 3]]; };
+
+// Lluvia derivada de la semilla SIN gastar rng(): así el patio, la plaga y el resto de cada semilla existente no cambian.
+// Un solo valor reparte ambas cosas: r < chance = llueve, y r/chance (uniforme) elige cuándo empieza. Infinity = no llueve.
+const rainAt = (seed: number) => { const r = (seed * 0.6180339887) % 1; return r < RAIN.chance ? RAIN.from[0] + (r / RAIN.chance) * (RAIN.from[1] - RAIN.from[0]) : Infinity; };
 
 export function makeProfile(seed: number): Profile {
   const pick = <T>(a: T[]) => a[Math.floor(rng() * a.length)];
@@ -63,5 +76,6 @@ export function makeProfile(seed: number): Profile {
     swarmEvery: 45 + rng() * 35,
     ballEvery: 60 + rng() * 45,
     chestEvery: 95 + rng() * 50,
+    rainAt: rainAt(seed),
   };
 }

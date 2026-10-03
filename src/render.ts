@@ -234,6 +234,19 @@ class SnapPlugin extends B.MaterialPluginBase {
   }
 }
 
+// Lluvia: suelo y pasto más oscuros y brillantes (k 0 = seco .. 1 = empapado). Los valores secos se guardan la primera vez.
+const dry = new Map<string, { r: number; c: B.Color3 }>();
+export function wetGround(k: number) {
+  for (const key of ["grass", "tuftMat", "tiles", "dirt"]) {
+    const m = mats.get(key);
+    if (!m) continue;
+    let d = dry.get(key);
+    if (!d) dry.set(key, (d = { r: m.roughness ?? 0.9, c: m.albedoColor.clone() }));
+    m.roughness = d.r * (1 - 0.6 * k);
+    d.c.scaleToRef(1 - 0.4 * k, m.albedoColor);
+  }
+}
+
 // Paleta de materiales de "juguete"
 export const M = {
   plastic: (c: string) => pbr("pl" + c, { color: c, rough: 0.32 }),

@@ -4,16 +4,17 @@ import HavokPhysics from "@babylonjs/havok";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
 import { DEF, Enemy, pickWeighted, spawnTable, type Kind } from "./enemies";
-import { engineSfx, engineStop, initAudio, music, musicDuck, SFX } from "./sfx";
-import { ambient, clearFx, corpse, debris, FX, initFx, mark, splat, tickFx } from "./fx";
+import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, SFX } from "./sfx";
+import { ambient, clearFx, corpse, debris, FX, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { input, isTouch, KEYS, padPressed, padSnap, pollInput, setupTouch } from "./input";
 import { carModel, cyl, initModels, sph, template } from "./models";
 import { carOpts, current, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save } from "./menu";
 import { pilotStats, startWeapons } from "./pilots";
+import { ACH, type AchId } from "./achievements";
 import { applyClimate, glitchHit, look, M, pbr, setDark, setLamp, setQuality, setupRender, shadows } from "./render";
-import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
-import { buildLayout, buildWorld, HALF, hitBreakables, obstacles, occluders, setWind, spawnPoint, underRoof } from "./world";
-import { CLIMATES, DUSK, makeProfile, mixClimate, nightfall, type Profile } from "./run";
+import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
+import { buildLayout, buildWorld, HALF, hitBreakables, obstacles, occluders, setWind, setZone, spawnPoint, underRoof, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
+import { CLIMATES, DUSK, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -46,7 +47,7 @@ initModels(scene);
 initFx(scene, low);
 seedRng(20260929); // el patio es siempre el mismo
 buildWorld(scene, low);
-buildLayout(); // patio del menú (semilla fija)
+buildLayout(); // patio del menú (semilla fija); el loop del menú pasa a la zona elegida (save.zone)
 applyClimate(DUSK);
 setQuality(save.quality);
 if (isTouch) setupTouch((k) => zoomBy(1 / k)); // pellizco: abrir los dedos acerca
@@ -157,9 +158,10 @@ function clearRun() {
   preview = null;
   enemies = []; weapons = []; gems = []; pickups = [];
   clearFx();
+  rainK = 0; rainBanner = false; rainSfx(0);
   car?.dispose();
   car = null;
-  applyClimate(DUSK); // al volver al menú, atardecer
+  applyClimate(zoneClimate() ?? DUSK); // al volver al menú, atardecer (o el tubo del garaje)
 }
 
 let daily = false;
@@ -169,10 +171,13 @@ function startRun(d = false) {
   titleArt(false); // ?lab arranca desde el título
   clearRun();
   // Semilla de la partida: ?seed=N la fija (reproducible), si no, una nueva
+  // Zona: el diario siempre en el patio; ?zone=garaje|jardin (solo dev) la fuerza. Se arma antes de sembrar: no toca la semilla.
+  setZone(daily ? "patio" : (import.meta.env.DEV && new URLSearchParams(location.search).get("zone")) || save.zone);
   runSeed = Number(new URLSearchParams(location.search).get("seed")) || (daily ? dailySeed() : newSeed());
   seedRng(runSeed);
   // Perfil de la partida: clima, plaga, orden de minijefes, ritmo de eventos y un patio distinto
   profile = makeProfile(runSeed);
+  profile.climate = zoneClimate() ?? profile.climate; // interior (garaje): luz fija
   cycleS = -1;
   buildLayout();
   RUN_BOSSES = [[200, profile.minis[0]], [400, profile.minis[1]], [600, "perro"]];
@@ -185,7 +190,7 @@ function startRun(d = false) {
   recompute();
   hp = maxHp; boost = 100;
   xp = 0; level = 1; pendingLevels = 0;
-  time = 0; kills = 0; runScrap = 0;
+  time = 0; kills = 0; runScrap = 0; runAch = []; hitAt = 0;
   spawnAcc = 0; swarmT = 90 + profile.swarmEvery * 0.5; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false; apagon = false;
   camYaw = 0;
   state = "play";
@@ -204,9 +209,30 @@ function startRun(d = false) {
   setTimeout(() => hint.classList.add("hidden"), 9700);
 }
 
+// Logros (achievements.ts): las pruebas de dev (__sim, lab, god) no otorgan nada ni tocan el guardado
+let runAch: string[] = [], hitAt = 0; // logros de esta partida (pantalla final) y último golpe recibido
+function grant(id: AchId) {
+  if (simulating || LAB.on || god || save.ach.includes(id)) return;
+  save.ach.push(id);
+  const a: { name: string; reward?: string; scrap?: number } = ACH[id];
+  if (a.scrap) runScrap += a.scrap; // endRun lo suma al guardado y se ve en "Tornillos" de la pantalla final
+  if (a.reward?.startsWith("part:") && !save.unlocked.includes(a.reward)) save.unlocked.push(a.reward);
+  runAch.push(a.name);
+  persist();
+  // ponytail: aviso diferido 1,5 s para no pisar el cartel del evento que lo disparó (fusión, jefe); sin cola de carteles
+  setTimeout(() => state === "play" && banner(`LOGRO · ${a.name.toUpperCase()}`, 2.5), 1500);
+}
+// Guardados anteriores a los logros: minijefes ya derrotados y récord de 10 minutos cuentan (sin aviso)
+for (const k of ["rey", "cortadora", "tarantula"] as const) if (save.slain[k] && !save.ach.includes(k)) save.ach.push(k);
+if (save.best >= 600 && !save.ach.includes("diez")) save.ach.push("diez");
+
 function endRun(win: boolean, why: string) {
+  if (win) grant(`gana_${save.car}`);
+  if (win && daily) grant("diario");
+  if (time >= 600) grant("diez");
+  if (runAch.length) why += ` Logros: ${runAch.join(", ")}.`;
   state = "over";
-  engineStop(); music("over");
+  engineStop(); music("over"); rainSfx(0);
   runScrap += Math.floor(time / 20) + Math.floor(kills / 25);
   const record = Math.floor(time) > save.best;
   if (!simulating && !LAB.on) { // las pruebas de dev no tocan el guardado real
@@ -271,7 +297,7 @@ function choose(i: number) {
     if (w) w.lv++; else weapons.push(makeWeapon(o.id as WeaponId));
   } else if (o.kind === "passive") passives[o.id as PassiveId] = o.lv!;
   else if (o.kind === "evo") { weapons.find((x) => x.id === o.id)!.evolved = true; banner(o.title.toUpperCase()); }
-  else if (o.kind === "fusion") { weapons = fuse(weapons, o.id as WeaponId); banner(o.title.toUpperCase()); }
+  else if (o.kind === "fusion") { weapons = fuse(weapons, o.id as WeaponId); banner(o.title.toUpperCase()); grant(o.id as AchId); }
   else hp = Math.min(maxHp, hp + 40);
   recompute();
   state = "play";
@@ -343,7 +369,7 @@ function explode(pos: B.Vector3, r: number, dmg: number) {
 const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora: "#ffb020", escarabajo: "#9acd32", polilla: "#c9a0ff" };
 function kill(e: Enemy) {
   kills++;
-  hudKill();
+  if (hudKill() >= 100) grant("racha");
   if (!simulating && !LAB.on) save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
   SFX.kill();
   FX.death(e.pos.add(new B.Vector3(0, 0.5, 0)), e.def.boss);
@@ -355,6 +381,7 @@ function kill(e: Enemy) {
   if (e.def.boss) {
     shake = 1.5;
     runScrap += 25;
+    if (e.kind === "rey" || e.kind === "cortadora" || e.kind === "tarantula") grant(e.kind);
     if (e.kind === "perro") { e.dispose(); return endRun(true, "¡El Perro fue derrotado!"); }
     dropPickup(e.pos, "cofre");
     hudBoss(null);
@@ -377,8 +404,12 @@ function update(dt: number) {
   const c = car!;
   time += dt;
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
+  // Lluvia: empieza a la fracción profile.rainAt de la partida; la intensidad sube suave
+  const raining = time / 600 >= profile.rainAt;
+  if (raining && !rainBanner) { rainBanner = true; banner("LLUVIA", 2); }
+  rainK = LAB.on && raining ? 1 : rainK + ((raining ? 1 : 0) - rainK) * Math.min(1, dt * RAIN.ramp);
   const s = nightfall(LAB.on ? LAB.t : time / 600);
-  if (!simulating && Math.abs(s - cycleS) > 0.01) { cycleS = s; applyClimate(mixClimate(DUSK, profile.climate, s)); }
+  if (!simulating && Math.abs(s - cycleS) > 0.01) { cycleS = s; applyClimate(zoneClimate() ?? mixClimate(DUSK, profile.climate, s)); }
 
   // --- Manejo ---
   let throttle = input.throttle, steer = input.steer;
@@ -400,9 +431,10 @@ function update(dt: number) {
     throttle: boosting ? 1 : throttle, steer, speed: maxSpeed,
     accel: c.def.accel * (boosting ? 1.8 : 1),
     turn: c.def.turn * (input.drift ? 1.4 : 1),
-    grip: input.drift ? 1.3 : c.def.grip,
+    grip: (input.drift ? 1.3 : c.def.grip) * (1 - (1 - RAIN.grip) * rainK), // mojado: el auto agarra menos
   });
   c.animate(dt, steer, r.fs, maxSpeed);
+  { const zp = zoneTick(dt, c.pos); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
   engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * 1.55)), throttle, boosting);
   lastKmh = r.fs * 3.6; lastMaxKmh = c.def.speed * st.speedMul * 1.55 * 3.6;
   // Marcas de neumático al derrapar / patinar
@@ -425,21 +457,24 @@ function update(dt: number) {
   if (Math.abs(c.pos.x) > HALF + 5 || Math.abs(c.pos.z) > HALF + 5 || c.pos.y < -5) hp = 0;
 
   // --- Aparición de enemigos ---
-  const maxAlive = Math.min(low ? 110 : 180, 25 + time / 3.5);
+  // Tope de vivos y ritmo: con el bot que pelea jefes (devbot.ts) quedó en ~50% de victorias (__sim, 40 semillas).
+  // ponytail: más densidad casi no baja la tasa (más bichos = más XP); el techo real está en las fusiones repetidas
+  const maxAlive = Math.min(low ? 110 : 200, 25 + time / 2.2); // tope 200 en compu, 110 en táctil, por rendimiento
   // Aparecen sesgados hacia donde vas: manejar no es escapar gratis
   const cvel = c.body.getLinearVelocity();
   const ahead = c.pos.add(new B.Vector3(cvel.x, 0, cvel.z).scale(1.6));
-  spawnAcc += (1 + time / 32) * dt;
+  spawnAcc += (1 + time / 16) * dt;
   const normals = enemies.filter((e) => !e.def.boss).length;
   // Con la cámara más alejada que el zoom por defecto (1.35) el anillo de aparición se abre igual, para no verlos nacer
-  const zs = Math.max(1, save.zoom / 1.35);
-  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time, profile.plague)), spawnPoint(ahead, 24 * zs, 36 * zs)); }
+  // Anillo fijo, fuera de cuadro aun con el zoom máximo (2): la partida no cambia según el zoom elegido
+  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time, profile.plague)), spawnPoint(ahead, 36, 54)); }
   if ((swarmT -= dt) <= 0) {
     swarmT = profile.swarmEvery;
     banner("ENJAMBRE", 1.4);
-    const ns = Math.round(10 + time / 20); // el enjambre crece con la partida
+    const ns = Math.round(16 + time / 12); // el enjambre crece con la partida
     for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * 22, 1, c.pos.z + Math.sin(a) * 22); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
+  if (time - Math.max(hitAt, 300) >= 60) grant("intacto"); // 60 s sin daño, contando desde el minuto 5
   if (!warned && time >= 570) { warned = true; banner("EL PERRO SE ACERCA", 3); }
   // Apagón: 4 s antes de cada jefe se apagan luna y ambiente (queda el faro); vuelve en 3 s tras la entrada
   if (!simulating) {
@@ -588,6 +623,7 @@ function update(dt: number) {
 
 let god = false; // solo dev
 let lampBoost = false, moteT = 0, flyT = 0;
+let rainK = 0, rainBanner = false; // lluvia: intensidad 0..1 y aviso ya mostrado
 // Zoom de cámara: rueda del mouse o teclas - / = (0.8 cerca … 2 lejos), se guarda
 const zoomBy = (k: number) => { save.zoom = Math.min(2, Math.max(0.8, save.zoom * k)); persist(); };
 addEventListener("wheel", (ev) => state === "play" && zoomBy(ev.deltaY > 0 ? 1.08 : 1 / 1.08), { passive: true });
@@ -596,6 +632,7 @@ const LAB = { on: false, back: 15, up: 13, t: 1 }; // modo lab (solo dev): mundo
 const dmgBy: Record<string, number> = {}; // solo dev: de dónde viene el daño
 function hurt(n: number, continuous = false, src = "?") {
   if (god) return;
+  hitAt = time;
   dmgBy[src] = (dmgBy[src] ?? 0) + n * (1 - st.armor);
   hp -= n * (1 - st.armor);
   if (!continuous) {
@@ -639,6 +676,12 @@ const SHOTS: Record<string, number[]> = {
   title: [0, 48, -95, 0, 4, 20], main: [32, 15, -40, 0, 2, 0], garage: [0, 2.1, -6.2, 1.7, 0.7, 0], shop: [7, 2.6, -8, -2, 1.2, 6],
   config: [-34, 9, -22, 0, 1, 30], bestiary: [6, 9, 55, 0, 30, 110], credits: [0, 4, -24, 10, 38, 90],
 };
+// Encuadres propios de cada zona (lo que falta sale de SHOTS). Garaje: el auto real ocupa x 10..50 y la casa no existe.
+const ZSHOTS: Record<string, Record<string, number[]>> = {
+  garaje: { main: [-30, 14, -45, 8, 4, 12], config: [-12, 9, -30, 12, 3, 22], bestiary: [-45, 14, -30, -45, 28, -80], credits: [18, 6, -32, 38, 26, -80] },
+  jardin: { bestiary: [6, 9, 45, 0, 30, 140], credits: [0, 4, -24, 10, 38, 130] },
+};
+const shot = (scr: string) => ZSHOTS[zoneId]?.[scr] ?? SHOTS[scr] ?? SHOTS.main;
 let previewKey = "", previewR = 0;
 // Portada del título: auto en primer plano a ras del pasto mirando a la luna, bichos acechando al fondo, roca oscura delante.
 // Se arma al entrar al título y se desarma al salir. Los bichos son Enemy normales sin IA (solo animate).
@@ -649,11 +692,11 @@ function titleArt(on: boolean) {
     for (const e of art.bugs) e.dispose();
     art.rock.dispose();
     art = null;
-    applyClimate(DUSK);
+    applyClimate(zoneClimate() ?? DUSK);
     return;
   }
   if (art) return;
-  applyClimate(mixClimate(DUSK, CLIMATES[0], 0.35)); // más atardecer que noche: que se lean los bichos del fondo
+  applyClimate(zoneClimate() ?? mixClimate(DUSK, CLIMATES[0], 0.35)); // más atardecer que noche: que se lean los bichos del fondo
   const L = (scene.getLightByName("sun") as B.DirectionalLight).direction;
   const v = new B.Vector3(-L.x, 0, -L.z).normalize(), side = new B.Vector3(v.z, 0, -v.x); // v: hacia la luna (contraluz)
   const cp = v.scale(-4.4).addInPlace(side.scale(1.7));
@@ -708,14 +751,20 @@ scene.onBeforeRenderObservable.add(() => {
     const close = state === "level";
     const yaw = close ? camYaw + 2.5 : camYaw;
     setLamp(car.pos, car.root.forward, lampBoost, dt);
+    if (!simulating) { tickRain(dt, car.pos, car.root.forward, rainK); rainSfx(rainK); }
     // Polvo que flota dentro del haz del faro
     if (!simulating && (moteT -= dt) <= 0) {
       moteT = 0.09;
       const f = car.root.forward, d = 3 + Math.random() * 11, sd = (Math.random() - 0.5) * d * 0.9;
       ambient("mote", new B.Vector3(car.pos.x + f.x * d + f.z * sd, 0.4 + Math.random() * 2.2, car.pos.z + f.z * d - f.x * sd));
     }
-    // Luciérnagas alrededor del auto cuando ya anocheció
-    if (!simulating && cycleS > 0.5 && (flyT -= dt) <= 0) {
+    // Luciérnagas alrededor del auto cuando ya anocheció; en el garaje, polvo bajo los tubos
+    const dust = zoneDust();
+    if (!simulating && dust && (flyT -= dt) <= 0) {
+      flyT = 0.05;
+      const [x, z, w, d] = dust[Math.floor(Math.random() * dust.length)];
+      ambient("mote", new B.Vector3(x + (Math.random() - 0.5) * w, 0.5 + Math.random() * 12, z + (Math.random() - 0.5) * d));
+    } else if (!simulating && !dust && cycleS > 0.5 && (flyT -= dt) <= 0) {
       flyT = 0.12 / cycleS;
       const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 22;
       ambient("fly", new B.Vector3(car.pos.x + Math.cos(a) * r, 0.5 + Math.random() * 2.5, car.pos.z + Math.sin(a) * r));
@@ -741,8 +790,14 @@ scene.onBeforeRenderObservable.add(() => {
     }
     // Diorama: cada pantalla del menú tiene su encuadre; la cámara viaja con lerp suave y se mece un poco
     const scr = current() ?? "main", t = performance.now() / 1000;
+    // Fondo = zona elegida: al cambiarla se rehace el mundo y la cámara salta al encuadre nuevo (sin viajar atravesando paredes)
+    if (setZone(save.zone)) {
+      applyClimate(zoneClimate() ?? DUSK);
+      const [x, y, z, a, b, c] = shot(scr);
+      cam.position.set(x, y, z); camTarget.set(a, b, c);
+    }
     titleArt(scr === "title");
-    const [px, py, pz, tx, ty, tz] = SHOTS[scr] ?? SHOTS.main;
+    const [px, py, pz, tx, ty, tz] = shot(scr);
     const sw = scr === "garage" ? 0.15 : scr === "title" ? 0.12 : 2.5, kk = 1 - Math.exp(-2.2 * dt);
     B.Vector3.LerpToRef(cam.position, new B.Vector3(px + Math.sin(t * 0.13) * sw, py + Math.sin(t * 0.21) * sw * 0.3, pz + Math.cos(t * 0.11) * sw), kk, cam.position);
     B.Vector3.LerpToRef(camTarget, new B.Vector3(tx, ty, tz), kk, camTarget);
@@ -767,7 +822,7 @@ scene.onBeforeRenderObservable.add(() => {
         const f = new B.Vector3(Math.sin(art.yaw), 0, Math.cos(art.yaw));
         setLamp(preview.position, f, Math.random() < 0.025, dt);
         if ((moteT -= dt) <= 0) { moteT = 0.06; const d = 1.5 + Math.random() * 7, sd = (Math.random() - 0.5) * d * 0.7; ambient("mote", new B.Vector3(f.x * d + f.z * sd, 0.3 + Math.random() * 1.2, f.z * d - f.x * sd)); }
-        if ((flyT -= dt) <= 0) { flyT = 0.18; const a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 12; ambient("fly", new B.Vector3(Math.cos(a) * r, 0.4 + Math.random() * 2, Math.sin(a) * r)); }
+        if (!zoneDust() && (flyT -= dt) <= 0) { flyT = 0.18; const a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 12; ambient("fly", new B.Vector3(Math.cos(a) * r, 0.4 + Math.random() * 2, Math.sin(a) * r)); }
         for (const e of art.bugs) e.animate(dt);
       }
     } else if (preview) { preview.dispose(); preview = null; }
@@ -792,14 +847,25 @@ if (import.meta.env.DEV) import("./devbot").then((m) => Object.assign(window, {
     m.resetBot();
     while (time < end && (state === "play" || state === "level") && performance.now() - w0 < 35000) {
       if (state === "level") {
-        // Como una persona: evolución primero; con poca vida, supervivencia; si no, armas nuevas
-        const low = hp < maxHp * 0.6, pref = (o: Offer) => o.kind === "evo" || o.kind === "fusion" ? 3 : low && (o.id === "litio" || o.id === "lego" || o.kind === "heal") ? 2 : o.kind === "weapon" ? 1 : 0;
+        // Como una persona competente: evolución/fusión; con poca vida, supervivencia; subir armas propias hacia la evolución,
+        // la pasiva que evoluciona un arma propia, armas nuevas hasta 4 (el Lápiz-lanza solo rinde embistiendo), daño y recarga
+        const low = hp < maxHp * 0.6, evoP = new Set(weapons.filter((w) => !w.evolved).map((w) => WEAPONS[w.id].evo as string));
+        const pref = (o: Offer) => o.kind === "evo" || o.kind === "fusion" ? 9 : low && (o.id === "litio" || o.id === "lego" || o.kind === "heal") ? 8
+          : o.kind === "weapon" && weapons.some((w) => w.id === o.id) ? 7 : o.kind === "passive" && evoP.has(o.id) && !passives[o.id as PassiveId] ? 6
+          : o.kind === "weapon" && o.id !== "lanza" && weapons.length < 4 ? 5 : o.id === "lupa" || o.id === "capacitor" ? 4
+          : o.kind === "passive" && evoP.has(o.id) ? 3 : o.kind === "weapon" && o.id !== "lanza" ? 2 : o.kind === "passive" ? 1 : 0;
         choose(offers.reduce((b, o, i) => (pref(o) > pref(offers[b]) ? i : b), 0));
         continue;
       }
       car!.root.computeWorldMatrix(true);
       for (const e of enemies) e.node.computeWorldMatrix(true);
-      Object.assign(input, m.botSteer(car!, enemies.map((e) => e.pos), obstacles()), { move: false, drift: false });
+      // Lo que una persona ve del jefe: aros rojos de la tarántula, el perro en el aire (cae cerca de su sombra), la cortadora cargando, ácido en vuelo
+      const b = enemies.find((e) => e.def.boss), zones: { x: number; z: number; r: number }[] = [];
+      if (b?.tele[0]?.isVisible) zones.push({ x: b.tele[0].position.x, z: b.tele[0].position.z, r: b.tele[0].scaling.x });
+      if (b?.kind === "perro" && b.airborne) { const bv = b.body.getLinearVelocity(), t = (bv.y + Math.sqrt(Math.max(0, bv.y * bv.y + 50 * b.pos.y))) / 25; zones.push({ x: b.pos.x + bv.x * t, z: b.pos.z + bv.z * t, r: 11 }); }
+      for (const s of spits) zones.push({ x: s.m.position.x + s.v.x * 0.3, z: s.m.position.z + s.v.z * 0.3, r: 1.2 });
+      const bb = b && { x: b.pos.x, z: b.pos.z, kind: b.kind, fx: b.node.forward.x, fz: b.node.forward.z, charge: b.kind === "cortadora" && b.state === 1, ram: weapons.some((w) => w.id === "lanza" && w.evolved) };
+      Object.assign(input, m.botSteer(car!, enemies.filter((e) => !e.def.boss).map((e) => e.pos), obstacles(), bb, zones), { move: false, drift: false });
       update(dt);
       pe._step(dt);
       tickFx(dt);
@@ -807,10 +873,10 @@ if (import.meta.env.DEV) import("./devbot").then((m) => Object.assign(window, {
     simulating = false;
     $("levelup").classList.add("hidden");
     const boss = enemies.find((e) => e.def.boss);
-    return `${fmt(time)} nv${level} hp${Math.round(hp)}/${maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
+    return `${fmt(time)} nv${level} hp${Math.round(hp)}/${maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed} · tornillos ${runScrap + (state === "over" ? 0 : Math.floor(time / 20) + Math.floor(kills / 25))} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
   },
 }));
-if (import.meta.env.DEV && location.search.includes("lab")) setTimeout(() => (window as unknown as { __lab(o: object): void }).__lab({ climate: new URLSearchParams(location.search).get("climate") ?? undefined, t: Number(new URLSearchParams(location.search).get("t") ?? 1), boss: location.search.includes("boss") }), 800);
+if (import.meta.env.DEV && location.search.includes("lab")) setTimeout(() => (window as unknown as { __lab(o: object): void }).__lab({ climate: new URLSearchParams(location.search).get("climate") ?? undefined, t: Number(new URLSearchParams(location.search).get("t") ?? 1), boss: location.search.includes("boss"), rain: location.search.includes("rain") }), 800);
 if (import.meta.env.DEV) Object.assign(window, {
   __tick: (n: number) => { const g = engine.getDeltaTime; engine.getDeltaTime = () => 1000 / 60; for (let i = 0; i < n; i++) { engine.beginFrame(); scene.render(); engine.endFrame(); } engine.getDeltaTime = g; },
   __killAll: () => enemies.forEach((e) => { if (!e.def.boss) e.hp = 0; }),
@@ -825,13 +891,14 @@ if (import.meta.env.DEV) Object.assign(window, {
   __look: look,
   // Modo lab: arranca una partida congelada con una fila de cada enemigo delante del auto y la cámara a mano.
   // t = momento del ciclo (0 atardecer … 1 noche). __lab({ climate: "niebla", t: 0.4, boss: true, back: 15, up: 13, look: { lampI: 8 } }) ; ?lab en la URL lo corre solo.
-  __lab: (o: { climate?: string; t?: number; boss?: boolean; back?: number; up?: number; look?: Parameters<typeof look>[0]; frames?: number } = {}) => {
+  __lab: (o: { climate?: string; t?: number; boss?: boolean; back?: number; up?: number; look?: Parameters<typeof look>[0]; frames?: number; rain?: boolean } = {}) => {
     if (state !== "menu") toMenu();
     startRun();
     god = true; LAB.on = true; LAB.back = o.back ?? 15; LAB.up = o.up ?? 13;
     $("hint").classList.add("hidden");
     const k = CLIMATES.find((c) => c.id === o.climate); if (k) profile.climate = k;
     LAB.t = o.t ?? 1; cycleS = -1;
+    if (o.rain) { profile.rainAt = 0; rainWet(0.8); }
     if (o.look) look(o.look);
     const kinds = (Object.keys(DEF) as Kind[]).filter((x) => o.boss || !DEF[x].boss);
     const f = car!.root.forward, r = new B.Vector3(f.z, 0, -f.x);
