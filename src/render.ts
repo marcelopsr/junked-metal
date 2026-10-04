@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 0.95, ca: 0.01, pal: 0.2, outline: 1, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1.6, moonMul: 0.6, exposure: 0.85 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0, desat: 1, ca: 0.01, pal: 0.2, outline: 1, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1.6, moonMul: 0.6, exposure: 0.85 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -62,7 +62,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   sky.infiniteDistance = true;
   sky.isPickable = false;
   // Bloom moderno sobre lo emisivo (faro, ojos, tuercas, ventanas); el cielo no. Fuera en táctil.
-  if (!low) { const gl = new B.GlowLayer("bloom", scene, { mainTextureRatio: 0.5, blurKernelSize: 48 }); gl.intensity = 0.7; gl.addExcludedMesh(sky); }
+  if (!low) { const gl = new B.GlowLayer("bloom", scene, { mainTextureRatio: 0.75, blurKernelSize: 24 }); gl.intensity = 0.35; gl.addExcludedMesh(sky); }
   probe = new B.ReflectionProbe("probe", 128, scene);
   probe.renderList!.push(sky);
   probe.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
@@ -100,11 +100,11 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
 
   mainCam = cam;
   const pipe = new B.DefaultRenderingPipeline("pipe", true, scene, [cam]);
-  pipe.fxaaEnabled = true; // bordes suaves (el look duro ya no va)
+  pipe.fxaaEnabled = low; // con MSAA x4 el FXAA solo emborrona la imagen: queda para el celular
   if (!low) pipe.samples = 4;
   pipe.bloomEnabled = true;
-  pipe.bloomThreshold = 0.8;
-  pipe.bloomWeight = 0.35;
+  pipe.bloomThreshold = 0.95;
+  pipe.bloomWeight = 0.18; // brillo discreto: antes velaba todo el día
   pipe.bloomKernel = 32;
   setupPixels(cam, low);
 }
@@ -155,7 +155,7 @@ void main() {
   col = mix(col, l < .5 ? mix(p0, p1, l * 2.) : mix(p1, p2, l * 2. - 1.), pal);
   vec2 px = floor(vUV * screen);
   float d = texture2D(depthSampler, vUV).r;
-  float edge = smoothstep(.012, .045, max(lapAt(1.6 / screen, d), lapAt(3.2 / screen, d) * .75) / max(d, 1e-4)); // tinta gruesa y suave: dos radios, borde con antialias
+  float edge = smoothstep(.03, .07, lapAt(1. / screen, d) / max(d, 1e-4)); // línea fina de 1 px: más gruesa se come a los bichos chicos
   // Contorno fino de 1 px, en un violeta oscuro cálido (no negro): se funde con las sombras y recorta las siluetas
   col = mix(col, vec3(.1, .07, .16), outline * edge * (1. - smoothstep(.03, .06, d))); // solo cerca: en el horizonte el salto de profundidad pintaba una banda
   col += (h(px + fract(t) * 97.) - .5) * grain;
