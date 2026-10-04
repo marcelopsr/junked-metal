@@ -215,6 +215,8 @@
 /* Accesibilidad: "Reducir parpadeos" (menu.ts pone body.calm) */
 body.calm #hud *, body.calm #hud::after, body.calm #hud *::before, body.calm #hud *::after { animation: none !important; }
 
+/* ponytail: de aquí hasta el final hay 4 capas de override (Megabonk → compacto → moderno → v3) sobre la estética de terminal de arriba.
+   Techo: cuesta leer y duplica reglas; limpieza = reescribir este archivo con solo el estilo de vidrio (/ponytail-audit). */
 /* ---------- Giro Megabonk: HUD limpio y colorido (de día); pisa la estética de terminal gastada de arriba ---------- */
 :root { --scr: #1d2b3a; --ink: #7dffb0; --sig: #35c9ff; --ok: #5bd65b; --turbo: #ffb02e; --low: #ff4d4d; }
 .h-panel { clip-path: none; border: 3px solid var(--line); border-radius: 12px; box-shadow: 0 4px 0 var(--line); background: var(--panel); }
