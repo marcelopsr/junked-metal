@@ -1,6 +1,6 @@
 // Intro de 4 cuadros, la previa de una pelea: 1) el cartel de la liga, 2) los rivales posan, 3) el auto RC entra y frena, 4) logo.
 // Ilustración en canvas 2D de 192x108 escalada sin filtrar (píxel visible, como el resto del juego), dibujada por código: cero assets.
-// Solo en el primer arranque (save.intro) y desde Créditos → "Ver intro". Cualquier tecla, botón o toque la salta.
+// En cada carga de la página (main.ts) y desde Créditos → "Ver intro". Cualquier tecla, botón o toque la salta.
 import "./intro.css";
 import { persist, save } from "./menu";
 import { initAudio, SFX } from "./sfx";

@@ -499,8 +499,8 @@ void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
 initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); }, load: (label, zone, go) => { void launch([worldTask(() => zone), T_EFECTOS], label, go, () => afterFrames(2), true); } }); // la luz del menú la pone menuTick
 initMenu({ scene, play: launchRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true) });
 music("menu"); // suena cuando haya primer gesto (initAudio)
-// Intro de 4 cuadros: solo en el primer arranque (save.intro); ?intro la fuerza, ?mute y ?lab (pruebas) no la muestran
-{ const force = /[?&]intro\b/.test(location.search); if (force || (!save.intro && !/[?&](mute|lab)\b/.test(location.search))) playIntro(!force); }
+// Intro de 4 cuadros: en cada carga de la página o apertura de la app instalada (cualquier tecla la salta); ?mute y ?lab (pruebas) no la muestran, ?intro la fuerza
+{ const force = /[?&]intro\b/.test(location.search); if (force || !/[?&](mute|lab)\b/.test(location.search)) playIntro(!force); }
 
 // ---------- Combate ----------
 const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.IdentityReadOnly, scene.getTransformMatrix(), cam.viewport.toGlobal(engine.getRenderWidth(), engine.getRenderHeight()));
