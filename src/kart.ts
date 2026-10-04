@@ -234,14 +234,16 @@ function ensureDom() {
     <canvas id="rmap" width="160" height="160"></canvas>
     <div id="rcount"></div>
     <div id="rtab"></div>
+    <div id="rpause" class="hidden"><div class="rtitle">PAUSA</div><nav><button data-r="resume" class="primary">Seguir</button><button data-r="restart">Reiniciar</button><button data-r="exit">Salir al menú</button></nav></div>
     <div id="rres" class="hidden"><div class="rtitle"></div><table></table><nav><button data-r="next" class="primary">Siguiente carrera</button><button data-r="again">Revancha</button><button data-r="exit">Menú</button></nav></div>`;
   document.body.appendChild(dom);
   mapCv = $r("#rmap") as HTMLCanvasElement; mapCtx = mapCv.getContext("2d")!;
-  $r("#rres nav").addEventListener("click", (e) => {
+  dom.addEventListener("click", (e) => {
     const k = (e.target as HTMLElement).dataset.r;
     if (k === "next") nextRace(); else if (k === "again") { cup = {}; raceNo = 1; startRace(true); } else if (k === "exit") exitRace();
+    else if (k === "resume") setPause(false); else if (k === "restart") { setPause(false); startRace(true); }
   });
-  addEventListener("keydown", (e) => { if (active && e.code === "Escape" && !resultsOn) exitRace(); });
+  addEventListener("keydown", (e) => { if (active && e.code === "Escape" && !resultsOn) setPause(!paused); });
 }
 
 export function startRace(keepCup = false) {
@@ -278,6 +280,7 @@ export function startRace(keepCup = false) {
 function fwdOf(r: Racer) { const f = r.car.root.forward; return new B.Vector3(f.x, 0, f.z).normalize(); }
 
 export function endRace(silent = false) {
+  paused = false; D.scene.physicsEnabled = true; dom?.querySelector("#rpause")?.classList.add("hidden");
   if (!active && silent) { cleanup(); return; }
   cleanup();
   active = false;
@@ -560,8 +563,23 @@ function showResults() {
 const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, "0")}`;
 
 // ---------- Cuadro a cuadro ----------
+let paused = false;
+/** Gamepad en las pantallas de la carrera: Start pausa; A acciona el botón enfocado; izquierda/derecha cambian el foco. */
+export const racePause = () => { if (active && !resultsOn) setPause(!paused); };
+export function racePadMenu(dir: number) {
+  const btns = [...dom!.querySelectorAll<HTMLElement>("#rres button, #rpause button")].filter((b) => b.offsetParent);
+  if (!btns.length) return;
+  const i = btns.indexOf(document.activeElement as HTMLElement);
+  btns[(i + dir + btns.length) % btns.length].focus();
+}
+export const raceClick = () => { if (resultsOn || paused) (document.activeElement as HTMLElement)?.click(); };
+function setPause(on: boolean) {
+  paused = on; D.scene.physicsEnabled = !on;
+  $r("#rpause").classList.toggle("hidden", !on);
+  if (on) { engineStop(); ($r("#rpause button") as HTMLElement).focus(); }
+}
 export function raceTick(dt: number) {
-  if (!active) return;
+  if (!active || paused) return;
   for (let i = relink.length - 1; i >= 0; i--) { if (--relink[i].f <= 0) { relink[i].c.body.disablePreStep = true; relink.splice(i, 1); } }
   if (countdown > 0) {
     const was = Math.ceil(countdown);
@@ -585,6 +603,7 @@ if (import.meta.env.DEV) Object.assign(window, {
     auto: (on = true) => { for (const h of humans) h.auto = on; },
     info: () => ({ t, countdown, lap: humans.map((h) => h.lap), idx: humans.map((h) => h.idx), place: humans.map((h) => placeOf(h)), fin: racers.map((r) => Math.round(r.fin)), resultsOn, item: humans.map((h) => h.item), speeds: racers.map((r) => Math.round(r.fs)) }),
     give: (it: Item) => { for (const h of humans) { h.item = it; h.useAt = 1e9; } },
+    use: () => { for (const h of humans) useItem(h); },
     skip: () => { for (const r of racers) { r.lap = raceCfg.laps; } },
   },
 });

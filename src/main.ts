@@ -19,7 +19,7 @@ import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, ty
 import { newSeed, rng, seedRng } from "./rng";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
-import { initKart, raceCfg, raceTick, setRaceCar, startRace } from "./kart";
+import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startRace } from "./kart";
 
 const $ = (id: string) => document.getElementById(id)!;
 // Partida de 10 minutos: dos minijefes (sueltan cofres de evolución) y el jefe final a las 10:00
@@ -932,7 +932,7 @@ scene.onBeforeRenderObservable.add(() => {
     if (padPressed(3)) reroll();
   } else if (state === "play") { if (padPressed(9)) pause(); }
   else if (state === "outro") outroTick(dt);
-  else if (state === "race") raceTick(dt);
+  else if (state === "race") { if (padPressed(9)) racePause(); if (padPressed(0)) raceClick(); if (padPressed(14)) racePadMenu(-1); if (padPressed(15)) racePadMenu(1); raceTick(dt); }
   else if (!introOn()) menuPad(dt); // con la intro encima el menú no escucha el gamepad
 
   if (state === "play") {
