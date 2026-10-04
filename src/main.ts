@@ -561,7 +561,7 @@ function kill(e: Enemy) {
     shake = 1.5;
     runScrap += R.tornillos_jefe;
     if (e.kind === "rey" || e.kind === "cortadora" || e.kind === "tarantula" || e.kind === "gato") grant(e.kind);
-    if (e.kind === finalKind && !endless) { outroAt = e.pos.clone(); leave(e); return endRun(true, FINAL_WIN[finalKind] ?? "El jefe final quedó fuera de combate."); }
+    if (e.kind === finalKind && !endless) { outroAt = e.pos.clone(); leave(e); return endRun(true, FINAL_WIN[finalKind] ?? "El jefe final quedó fuera de combate. Su seguro ya fue notificado."); }
     dropPickup(e.pos, "cofre");
     hudBoss(null);
   } else {
@@ -700,13 +700,13 @@ function update(dt: number) {
     for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * R.enjambre_radio, 1, c.pos.z + Math.sin(a) * R.enjambre_radio); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
   if (time - Math.max(hitAt, 300) >= 60) grant("intacto"); // 60 s sin daño, contando desde el minuto 5
-  if (!warned && time >= 570) { warned = true; banner(`${DEF[finalKind].name} SE ACERCA`, 3); }
+  if (!warned && time >= 570) { warned = true; banner(`${DEF[finalKind].name} LLEGA SIN CITA PREVIA`, 3); }
   // Apagón: 4 s antes de cada jefe se apagan luna y ambiente (queda el faro); vuelve en 3 s tras la entrada
   if (!simulating) {
     const next = RUN_BOSSES[bossIdx]?.[0] ?? Infinity, prev = RUN_BOSSES[bossIdx - 1]?.[0] ?? -Infinity;
     const d = Math.max(Math.min(1, Math.max(0, (time - next + 4) / 1.5)), Math.max(0, 1 - (time - prev) / 3));
     if (d > 0 || darkK < 1) { darkK = 1 - 0.88 * d; setDark(darkK); }
-    if (!apagon && time >= next - 4) { apagon = true; banner("APAGÓN", 2); }
+    if (!apagon && time >= next - 4) { apagon = true; banner("APAGÓN, SIN SERVICIO", 2); }
   }
   if (bossIdx < RUN_BOSSES.length && time >= RUN_BOSSES[bossIdx][0]) {
     apagon = false;
@@ -745,7 +745,7 @@ function update(dt: number) {
       spits.push({ m, v: aim.subtract(from).normalize().scale(ATK.acido_vel), life: 2.2, k: e.kind });
     }
     if (e.stun <= 0) e.animate(wdt);
-    if (e.phaseUp) { e.phaseUp = false; banner(`${e.def.name} SE ENFURECE`, 2); shake = Math.max(shake, 1); SFX.boss(); }
+    if (e.phaseUp) { e.phaseUp = false; banner(`${e.def.name} PIERDE LA PACIENCIA`, 2); shake = Math.max(shake, 1); SFX.boss(); }
     if (ev === "meow") { // Eulalio llama polillas alrededor suyo
       banner("¡MIAU!", 1.2);
       for (let i = 0; i < 4; i++) { const a = (i / 4) * 6.28 + rng(); spawnEnemy("polilla", e.pos.add(new B.Vector3(Math.sin(a) * 6, 0, Math.cos(a) * 6))); }
@@ -846,7 +846,7 @@ function update(dt: number) {
   }
 
   // --- Eventos del patio ---
-  if ((chestT -= dt) <= 0) { chestT = profile.chestEvery; dropPickup(spawnPoint(c.pos, 20, 35), "cofre"); banner("COFRE EN EL PATIO", 1.6); }
+  if ((chestT -= dt) <= 0) { chestT = profile.chestEvery; dropPickup(spawnPoint(c.pos, 20, 35), "cofre"); banner("COFRE SIN DUEÑO EN EL PATIO", 1.6); }
   if ((ballT -= dt) <= 0 && !ball) {
     // Una pelota gigante cruza el patio aplastando todo
     ballT = profile.ballEvery;
@@ -867,8 +867,8 @@ function update(dt: number) {
   }
 
   hp = Math.min(maxHp, hp + st.regen * dt);
-  if (hp <= 0 && revives > 0) { revives--; hp = maxHp * 0.5; explode(c.pos, 9, 150); banner("BATERÍA DE RESERVA", 2); }
-  if (hp <= 0) return endless ? endRun(true, "El auto quedó destrozado en el modo sin fin.") : endRun(false, "El auto quedó destrozado.");
+  if (hp <= 0 && revives > 0) { revives--; hp = maxHp * 0.5; explode(c.pos, 9, 150); banner("PRÓRROGA: BATERÍA DE RESERVA", 2); }
+  if (hp <= 0) return endless ? endRun(true, "El auto quedó destrozado en el modo sin fin. Las horas extra no se pagan.") : endRun(false, "El auto quedó destrozado. Se aceptan reclamos, pero nadie los lee.");
   if (pendingLevels > 0 && state === "play") { pendingLevels--; openOffers(offersFor(), `Nivel ${level - pendingLevels}`); }
 }
 
@@ -947,7 +947,7 @@ function goEndless() {
   music("run", 1); musicS = "run";
   $("hud").classList.remove("hidden");
   RUN_BOSSES.push([time + R.sinfin_cada_s, RUN_BOSSES[RUN_BOSSES.length % 3][1]]);
-  banner("MODO SIN FIN", 2.5);
+  banner("MODO SIN FIN: HORAS EXTRA", 2.5);
 }
 
 let hudT = 0, lastKmh = 0, lastMaxKmh = 80;

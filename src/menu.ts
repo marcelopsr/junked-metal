@@ -616,38 +616,38 @@ function renderConfig() {
 
 // Trasfondo de cada bicho (el de los pilotos vive en pilots.ts)
 const LORE: Record<Kind, string> = {
-  hormiga: "Trabaja en equipo, cobra en migas y jura que el patio es suyo desde antes que la casa. Nunca viene sola: donde hay una, hay una fila entera esperando su parte.",
-  escupidora: "Probó el jugo de limón una vez y desde entonces escupe por principio. Sabe que el blanco que va derecho es el más fácil, y lo disfruta.",
-  friccion: "Un solo cambio: adelante. Frenar nunca figuró en el manual. Lo cargaron frotándolo contra la alfombra una tarde entera y todavía le queda envión.",
-  robot: "Le dieron cuerda hace años y todavía no terminó de enojarse. La llave de la espalda gira sola cuando se impacienta, que es siempre.",
-  polilla: "Viene por el faro y se queda por la pelea. Nadie le explicó que la luz no se come. Confunde el faro con la luna y la luna con el faro: ataca a los dos.",
-  escarabajo: "Blindado de fábrica, lento por convicción. Considera que embestir es una forma de saludar. Su caparazón ya aguantó dos inviernos y una bota; un auto a control remoto no lo preocupa.",
-  rey: "Se coronó solo, con una tapita de gaseosa. Exige reverencias y migas de galleta. Su corte son todos los escarabajos del patio, aunque ninguno lo votó.",
-  cortadora: "Despertó un domingo a las siete de la mañana y decidió que el pasto no alcanzaba. Corta mangueras, macetas y todo lo que se cruce en su línea.",
-  tarantula: "Ocho patas, cero paciencia. Teje redes por pasatiempo y emboscadas por oficio. Vive debajo del tanque de agua y sale cuando escucha un motor.",
-  perro: "Felipe, bulldog francés y dueño del patio. Sufre de zoomies, ladra a la nada, entierra juguetes y no negocia. Nadie sabe qué ve con ese ojo.",
-  gato: "Eulalio el michu, naranja y de energía infinita. Gira, salta, cambia de idea a mitad de salto y jamás cae donde dijo que iba a caer. Duerme dieciocho horas y usa las otras seis para esto.",
-  aspiradora: "Programada para limpiar la casa, se escapó por la gatera. Considera que todo el patio es una pelusa, y en su mapa hay un solo punto marcado: el auto.",
-  cortacercos: "Lo dejaron enchufado después de podar el ligustro. Desde entonces, todo le parece un cerco. Zumba sin parar y deja cables pelados por donde pasa.",
+  hormiga: "Trabaja doce horas, cobra en migas y no tiene sindicato. Jura que el patio era suyo antes que la casa. Nunca viene sola: donde hay una, hay una fila entera con ganas de hablar con el gerente.",
+  escupidora: "Hizo un curso de comunicación asertiva y lo entendió mal: ahora escupe ácido para expresar su opinión. Sabe que el blanco que va derecho es el más fácil, y lo disfruta.",
+  friccion: "Una sola velocidad: adelante. Frenar nunca figuró en el manual ni en su plan de vida. Lo cargaron una tarde entera contra la alfombra y todavía le queda envión y rencor.",
+  robot: "Le dieron cuerda en 1987 y nadie volvió a preguntarle cómo se sentía. La llave de la espalda gira sola cuando se impacienta, que es siempre.",
+  polilla: "Vino por la luz, como todas sus malas decisiones. Nadie le explicó que la luz no se come. Confunde el faro con la luna y la luna con el faro: ataca a los dos para no quedar mal con ninguno.",
+  escarabajo: "Blindado de fábrica, lento por convicción. Considera que embestir es una forma de saludar. Su caparazón ya aguantó dos inviernos y una bota: un auto a control remoto es un trámite.",
+  rey: "Se coronó solo con una tapita de gaseosa y se declaró monarca vitalicio sin consultar a nadie. Exige reverencias y migas de galleta. Su corte son todos los escarabajos del patio, que no lo votaron pero tampoco se quejan.",
+  cortadora: "Arrancó un domingo a las siete de la mañana y descubrió que el pasto ya no le alcanzaba para sentirse realizada. Corta mangueras, macetas y todo lo que se cruce en su línea.",
+  tarantula: "Ocho patas, cero paciencia y un departamento bajo el tanque de agua que ocupa sin contrato. Teje redes por pasatiempo y emboscadas por oficio. Sale cuando escucha un motor.",
+  perro: "Felipe, bulldog francés y dueño del patio por derecho de ladrido. Sufre de zoomies, ladra a la nada, entierra juguetes y se niega a negociar. Nadie sabe qué ve con ese ojo, pero tiene opiniones sobre todo.",
+  gato: "Eulalio el michu, naranja, con una sola neurona y un plan que cambia a mitad de salto. Gira, salta y jamás cae donde dijo que iba a caer. Duerme dieciocho horas y usa las otras seis para esto.",
+  aspiradora: "Programada para limpiar la casa, renunció tras tres años sin un solo gracias y se escapó por la gatera. Considera que todo el patio es una pelusa, y en su mapa hay un solo punto marcado: el auto.",
+  cortacercos: "Lo dejaron enchufado después de podar el ligustro y nadie volvió a buscarlo, como todo lo que se presta. Desde entonces, todo le parece un cerco. Zumba sin parar y deja cables pelados por donde pasa.",
 };
 // Cómo ataca y cómo esquivarlo (sale del comportamiento real de enemies.ts)
 const HOW: Record<Kind, [string, string]> = {
-  hormiga: ["Corre derecho al auto y muerde por contacto. Llega en grupos y en columnas detrás de una líder.", "Sola no es nada: lo peligroso es quedar rodeado. Mantener el auto en movimiento y abrir paso con embestidas."],
-  escupidora: ["Se frena a unos 16 metros, apunta y escupe ácido hacia donde el auto va a estar.", "El disparo calcula el rumbo: un volantazo justo después de que se detiene lo hace fallar."],
-  friccion: ["Rápido y sin frenos: va en línea recta contra el auto y golpea por contacto.", "Se pasa de largo con facilidad. Un giro corto en el último momento lo deja atrás."],
-  robot: ["Se planta, gira hasta apuntar y sale disparado en línea recta durante un segundo.", "Mientras apunta quieto hay tiempo: salir de su línea de carga hacia un costado."],
-  polilla: ["Revolotea delante del faro y cada tanto se lanza en picada contra el parabrisas.", "Sigue hacia donde apunta el faro: un giro brusco la deja en el aire."],
-  escarabajo: ["Lento y muy pesado. Empuja por contacto, y embestirlo de frente devuelve parte del golpe.", "Sin Ariete no conviene chocarlo de frente: rodearlo y castigarlo con armas a distancia."],
-  rey: ["Escarabajo gigante: persigue sin pausa y aplasta por contacto con mucho daño.", "Gira despacio: dar vueltas amplias a su alrededor y nunca quedar contra una pared."],
-  cortadora: ["Apunta quieta y carga en línea recta durante casi tres segundos, cortando todo lo que encuentra.", "La pausa antes de cargar es el aviso: cruzar de costado su trayectoria, nunca escapar en línea recta delante de ella."],
-  tarantula: ["Dos ataques anunciados en rojo: un aro a su alrededor antes de una ráfaga de seis escupitajos, y un aro donde va a caer de un salto.", "Salir del aro antes de que se llene. En el salto, el punto de caída se fija a mitad del aviso: cambiar de rumbo en ese momento."],
-  perro: ["Salta y aplasta todo en 11 metros al caer, embiste en línea recta por un carril marcado en rojo, hace zoomies en zigzag al doble de velocidad o gira como un trompo.", "Mientras está en el aire, mirar la sombra y alejarse del punto de caída. Ante el carril rojo, salir de costado: después de embestir frena torpe y queda expuesto. En los zoomies, no cruzarse en su camino."],
-  gato: ["Zigzaguea y elige al azar: salto con aro rojo, trompo que rueda hacia el auto o un arranque de costado a toda velocidad.", "El aro marca dónde cae: salir antes de que se llene. Ante el trompo, frenar y dejarlo pasar."],
-  aspiradora: ["Un aro rojo enorme anuncia la succión: arrastra al auto hacia ella y después suelta tres ráfagas de tuercas en abanico.", "Acelerar hacia afuera del aro apenas aparece. Las ráfagas dejan huecos entre tuerca y tuerca: pasar por ellos."],
-  cortacercos: ["Anuncia un barrido en arco con un sector rojo de 10 metros y siembra cables con chispas en el piso.", "Salir del sector antes del barrido y no pisar los cables: electrocutan mientras se está encima."],
+  hormiga: ["Corre derecho al auto y muerde por contacto. Llega en grupos y en columnas detrás de una líder, porque alguien tiene que coordinar.", "Sola no es nada: lo peligroso es quedar rodeado. Mantener el auto en movimiento y abrir paso con embestidas; quedarse quieto equivale a una reunión."],
+  escupidora: ["Se frena a unos 16 metros, apunta y escupe ácido hacia donde el auto va a estar. Pasivo-agresiva, pero con puntería.", "El disparo calcula el rumbo: un volantazo justo después de que se detiene lo hace fallar. Es previsible, como casi todos."],
+  friccion: ["Rápido y sin frenos: va en línea recta contra el auto y golpea por contacto. No hay plan B, ni plan A.", "Se pasa de largo con facilidad. Un giro corto en el último momento lo deja atrás, cuestionando sus decisiones."],
+  robot: ["Se planta, gira hasta apuntar y sale disparado en línea recta durante un segundo. Lo más cerca de la proactividad que logró.", "Mientras apunta quieto hay tiempo: salir de su línea de carga hacia un costado."],
+  polilla: ["Revolotea delante del faro y cada tanto se lanza en picada contra el parabrisas. Obsesión sin mucha estrategia.", "Sigue hacia donde apunta el faro: un giro brusco la deja en el aire, sin cerrar el tema."],
+  escarabajo: ["Lento y muy pesado. Empuja por contacto, y embestirlo de frente devuelve parte del golpe. Cobra por devolución.", "Sin Ariete no conviene chocarlo de frente: rodearlo y castigarlo con armas a distancia. Discutir con la pared sería igual, pero la pared no embiste."],
+  rey: ["Escarabajo gigante: persigue sin pausa y aplasta por contacto con mucho daño. Gobierna por decreto y por peso.", "Gira despacio: dar vueltas amplias a su alrededor y nunca quedar contra una pared. Igual que con los jefes de verdad."],
+  cortadora: ["Apunta quieta y carga en línea recta durante casi tres segundos, cortando todo lo que encuentra. Su método para resolver problemas.", "La pausa antes de cargar es el aviso: cruzar de costado su trayectoria, nunca escapar en línea recta delante de ella."],
+  tarantula: ["Dos ataques anunciados en rojo: un aro a su alrededor antes de una ráfaga de seis escupitajos, y un aro donde va a caer de un salto. Al menos avisa, a diferencia del casero.", "Salir del aro antes de que se llene. En el salto, el punto de caída se fija a mitad del aviso: cambiar de rumbo en ese momento."],
+  perro: ["Salta y aplasta todo en 11 metros al caer, embiste en línea recta por un carril marcado en rojo, hace zoomies en zigzag al doble de velocidad o gira como un trompo. Todo con la misma convicción y ninguna estrategia.", "Mientras está en el aire, mirar la sombra y alejarse del punto de caída. Ante el carril rojo, salir de costado: después de embestir frena torpe y queda expuesto. En los zoomies, no cruzarse en su camino. Razonar con él ya se intentó."],
+  gato: ["Zigzaguea y elige al azar: salto con aro rojo, trompo que rueda hacia el auto o un arranque de costado a toda velocidad. Ni él sabe cuál va a elegir.", "El aro marca dónde cae: salir antes de que se llene. Ante el trompo, frenar y dejarlo pasar sin pedir explicaciones."],
+  aspiradora: ["Un aro rojo enorme anuncia la succión: arrastra al auto hacia ella y después suelta tres ráfagas de tuercas en abanico. Se lo lleva todo, como una hipoteca.", "Acelerar hacia afuera del aro apenas aparece. Las ráfagas dejan huecos entre tuerca y tuerca: pasar por ellos. Los huecos hay que aprovecharlos cuando aparecen."],
+  cortacercos: ["Anuncia un barrido en arco con un sector rojo de 10 metros y siembra cables con chispas en el piso. Seguridad laboral: ninguna.", "Salir del sector antes del barrido y no pisar los cables: electrocutan mientras se está encima. Pisar cables es mala idea en cualquier contexto."],
 };
 // Fase 2 (minijefes por debajo de la mitad de vida; jefes finales en su segunda barra; enemies.ts: enraged)
-const PHASE2: Partial<Record<Kind, string>> = { gato: " y maúlla para llamar polillas", perro: " y salta más seguido" };
+const PHASE2: Partial<Record<Kind, string>> = { gato: " y maúlla para convocar polillas, refuerzos que nadie pidió", perro: " y salta más seguido, ya sin importarle el cansancio" };
 const BTABS = { bichos: "Bichos", pilotos: "Pilotos", logros: "Logros", stats: "Estadísticas" };
 let btab: keyof typeof BTABS = "bichos";
 /** Nombre visible de un premio de logro (part:<ranura>:<opción> o pilot:<id>). */
@@ -661,11 +661,11 @@ function statsHtml() {
   const fav = Object.entries(s.dmg).filter(([id]) => id in WEAPONS).sort((a, b) => b[1] - a[1])[0];
   const kinds = (Object.keys(DEF) as Kind[]).filter((k) => (save.slain[k] ?? 0) > 0);
   const total = kinds.reduce((n, k) => n + save.slain[k]!, 0);
-  return card("Partidas", String(s.runs), s.runs ? `${s.wins} ${s.wins === 1 ? "ganada" : "ganadas"} · ${Math.round((s.wins / s.runs) * 100)}%` : "Sin partidas completas todavía.")
+  return card("Partidas", String(s.runs), s.runs ? `${s.wins} ${s.wins === 1 ? "ganada" : "ganadas"} · ${Math.round((s.wins / s.runs) * 100)}%` : "Sin partidas completas. Todavía no hay nada que lamentar.")
     + card("Tiempo jugado", longTime(s.time))
-    + card("Recorrido", `${(s.dist / 1000).toFixed(1).replace(".", ",")} km`, "Distancia total manejada.")
-    + card("Arma favorita", fav ? WEAPONS[fav[0] as WeaponId].name : "Sin datos", fav ? `${Math.round(fav[1])} de daño acumulado` : "Se define con el daño de cada partida.")
-    + `<div tabindex="0" class="carc ficha"><b>Bajas por tipo</b><div class="big">${total}</div>${kinds.map((k) => kv(DEF[k].name, save.slain[k]!)).join("") || "Sin bajas todavía."}</div>`
+    + card("Recorrido", `${(s.dist / 1000).toFixed(1).replace(".", ",")} km`, "Distancia total manejada, sin llegar a ningún lado.")
+    + card("Arma favorita", fav ? WEAPONS[fav[0] as WeaponId].name : "Sin datos", fav ? `${Math.round(fav[1])} de daño acumulado` : "Se define con el daño de cada partida. Aún sin favoritos.")
+    + `<div tabindex="0" class="carc ficha"><b>Bajas por tipo</b><div class="big">${total}</div>${kinds.map((k) => kv(DEF[k].name, save.slain[k]!)).join("") || "Sin bajas todavía. El patio sigue en paz."}</div>`
     + `<div tabindex="0" class="carc ficha"><b>Mejores marcas por zona</b>${(Object.keys(ZONES) as ZoneId[]).map((z) => { const r = s.zone[z]; return kv(ZONES[z].short, r ? `${fmt(r.t)} · ${r.kills} bajas` : "—"); }).join("")}</div>`;
 }
 function renderBestiary() {
@@ -739,7 +739,7 @@ function renderBeast() {
     + `<div id="binfo">`
     + `<div class="bblock" tabindex="0"><div class="sect">Datos</div><div class="st bst">${row(d.boss ? "Vida" : "Vida inicial", hp, d.boss ? 8000 : 270, num(hp))}${row("Velocidad", sp, 25, num(sp))}${row("Daño", d.dmg, d.boss ? 45 : 12, num(d.dmg))}${row("Peso", mass, d.boss ? 100 : 15, num(mass))}${row("XP", d.xp, d.boss ? 120 : 6, d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"}` : "Fin de la partida")}</div>`
     + (el ? `<p class="bnote">${el === "rapida" ? "Élite rápida: doble velocidad y 60% de la vida." : "Élite blindada: triple vida y cinco veces más pesada, casi no se la empuja."} Al caer suelta un cofre.</p>` : d.boss ? "" : `<p class="bnote">La vida de las plagas crece con el tiempo de partida.</p>`) + `</div>`
-    + `<div class="bblock" tabindex="0"><div class="sect">Cómo ataca</div><p>${HOW[k][0]}</p><div class="sect">Cómo esquivarlo</div><p>${HOW[k][1]}</p>${d.boss ? `<p class="bnote">${d.final ? `Fase 2: al vaciar la primera barra ruge y llena una segunda, pega más fuerte` : "Fase 2: por debajo de la mitad de vida se enfurece"}, va un 20% más rápido${PHASE2[k] ?? ""}.</p>` : ""}</div>`
+    + `<div class="bblock" tabindex="0"><div class="sect">Cómo ataca</div><p>${HOW[k][0]}</p><div class="sect">Cómo esquivarlo</div><p>${HOW[k][1]}</p>${d.boss ? `<p class="bnote">${d.final ? `Fase 2: al vaciar la primera barra ruge, exige hablar con un superior, llena una segunda y pega más fuerte` : "Fase 2: por debajo de la mitad de vida pierde la paciencia y la compostura"}, va un 20% más rápido${PHASE2[k] ?? ""}.</p>` : ""}</div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Trasfondo</div><p class="lore">${LORE[k]}</p></div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Registro propio</div>${met ? kv("Bajas", n) + kv("Primera vez", first) + kv("Daño recibido", Math.round(r?.hurt ?? 0)) + kv("Zonas", r?.zones.map((z) => ZONES[z].short).join(", ") || "Sin registros todavía") : `<p>Sin registros todavía.</p>`}</div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Debilidades</div>${weak.length ? `<div class="st bst">${weak.map(([id, v]) => row(wname(id), v, weak[0][1], String(Math.round(v)))).join("")}</div><p class="bnote">Daño infligido por arma, según el historial propio.</p>` : `<p>Sin registros todavía.</p>`}</div>`

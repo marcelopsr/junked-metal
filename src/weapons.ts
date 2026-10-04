@@ -15,13 +15,13 @@ const cant = (w: { n_base: number; n_cada: number; n_desde: number }, lv: number
 // ---------- Pasivas ----------
 export type PassiveId = "iman" | "resorte" | "turbo" | "litio" | "capacitor" | "lego" | "lupa";
 export const PASSIVES: Record<PassiveId, { name: string; desc: string }> = {
-  iman: { name: "Imán de heladera", desc: "+30% radio de recolección" },
-  resorte: { name: "Resorte", desc: "+12% área y velocidad de proyectiles" },
-  turbo: { name: "Motor turbo", desc: "+6% velocidad, turbo se recarga más rápido" },
-  litio: { name: "Pila de litio", desc: "+20 vida máxima y regeneración" },
-  capacitor: { name: "Capacitor", desc: "-8% tiempo de recarga de armas" },
-  lego: { name: "Paragolpes LEGO", desc: "-8% daño recibido, más peso" },
-  lupa: { name: "Lupa", desc: "+8% daño de todas las armas" },
+  iman: { name: "Imán de heladera", desc: "+30% radio de recolección. Atrae tuercas y nada más, por una vez" },
+  resorte: { name: "Resorte", desc: "+12% área y velocidad de proyectiles. Rebota, como el ánimo" },
+  turbo: { name: "Motor turbo", desc: "+6% velocidad, turbo se recarga más rápido. Llegar antes a ningún lado" },
+  litio: { name: "Pila de litio", desc: "+20 vida máxima y regeneración. Dura más que cualquier relación" },
+  capacitor: { name: "Capacitor", desc: "-8% tiempo de recarga de armas. Menos espera, como si existiera" },
+  lego: { name: "Paragolpes LEGO", desc: "-8% daño recibido, más peso. Pisarlo duele, y no solo en los pies" },
+  lupa: { name: "Lupa", desc: "+8% daño de todas las armas. Se usa para leer la letra chica" },
 };
 
 export function passiveStats(p: Partial<Record<PassiveId, number>>, perm: { hp: number; dmg: number; spd: number; mag: number; xp?: number }) {
@@ -58,20 +58,20 @@ export interface Ctx {
 export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza" | "agua" | "yoyo" | "bengalas" | "regla" | "helado" | "bocina" | "trompo" | FusionId;
 export type FusionId = "chispazo" | "globos" | "anillo" | "yoyoelec" | "vapor";
 export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: PassiveId; evoName: string; evoDesc: string }> = {
-  gomitas: { name: "Lanza-gomitas", desc: "Dispara gomitas al enemigo más cercano", evo: "resorte", evoName: "Gomitas Saltarinas", evoDesc: "5 gomitas que rebotan entre enemigos" },
-  clips: { name: "Clips orbitales", desc: "Clips que giran alrededor del auto", evo: "iman", evoName: "Tornado de Clips", evoDesc: "8 clips enormes en órbita amplia" },
-  chispero: { name: "Chispero", desc: "Deja fuego al manejar", evo: "turbo", evoName: "Estela Infernal", evoDesc: "Fuego ancho, largo y devastador" },
-  petardos: { name: "Petardos", desc: "Lanza petardos que explotan en área", evo: "litio", evoName: "Bomba de Racimo", evoDesc: "Cada explosión suelta 4 más" },
-  tesla: { name: "Antena Tesla", desc: "Rayo que salta entre enemigos", evo: "capacitor", evoName: "Tormenta Eléctrica", evoDesc: "Cadenas de 10, casi sin recarga" },
-  lanza: { name: "Lápiz-lanza", desc: "+35% daño al embestir por nivel", evo: "lego", evoName: "Ariete", evoDesc: "Invulnerable con turbo; embestir genera onda expansiva" },
-  agua: { name: "Pistola de agua", desc: "Chorro en cono que empuja y frena a los enemigos", evo: "lupa", evoName: "Hidrolavadora", evoDesc: "Chorro ancho, largo y casi continuo que frena en seco" },
+  gomitas: { name: "Lanza-gomitas", desc: "Dispara gomitas al enemigo más cercano. Artillería de papelería", evo: "resorte", evoName: "Gomitas Saltarinas", evoDesc: "5 gomitas que rebotan entre enemigos. Culpa repartida" },
+  clips: { name: "Clips orbitales", desc: "Clips que giran alrededor del auto. Burocracia en órbita", evo: "iman", evoName: "Tornado de Clips", evoDesc: "8 clips enormes en órbita amplia. Ya no es papeleo, es un expediente" },
+  chispero: { name: "Chispero", desc: "Deja fuego al manejar. Responsabilidad civil no incluida", evo: "turbo", evoName: "Estela Infernal", evoDesc: "Fuego ancho, largo y devastador. El seguro del hogar ya no cubre" },
+  petardos: { name: "Petardos", desc: "Lanza petardos que explotan en área. Sin permiso municipal", evo: "litio", evoName: "Bomba de Racimo", evoDesc: "Cada explosión suelta 4 más. Efecto dominó, versión barrio" },
+  tesla: { name: "Antena Tesla", desc: "Rayo que salta entre enemigos. Networking, versión eléctrica", evo: "capacitor", evoName: "Tormenta Eléctrica", evoDesc: "Cadenas de 10, casi sin recarga. Contactos de sobra" },
+  lanza: { name: "Lápiz-lanza", desc: "+35% daño al embestir por nivel. Resolver diferencias a golpes", evo: "lego", evoName: "Ariete", evoDesc: "Invulnerable con turbo; embestir genera onda expansiva. Sin consecuencias legales" },
+  agua: { name: "Pistola de agua", desc: "Chorro en cono que empuja y frena a los enemigos. Hidratación forzosa", evo: "lupa", evoName: "Hidrolavadora", evoDesc: "Chorro ancho, largo y casi continuo que frena en seco. Lavado de imagen" },
   // Una pasiva puede evolucionar más de un arma: evoOffer busca por arma (WEAPONS[id].evo)
-  yoyo: { name: "Yo-yo", desc: "Va y vuelve en línea atravesando enemigos; pega más fuerte a la vuelta", evo: "resorte", evoName: "Doble yo-yo", evoDesc: "Dos yo-yos en órbita que salen y vuelven sin parar" },
-  bengalas: { name: "Bengalas", desc: "Dejan zonas en llamas donde caen", evo: "litio", evoName: "Lluvia de bengalas", evoDesc: "Seis bengalas por tanda; zonas grandes y duraderas" },
-  regla: { name: "Bumerán de regla", desc: "Una regla escolar que vuela en arco y vuelve, atravesando todo", evo: "iman", evoName: "Bumerán triple", evoDesc: "Tres reglas en abanico, más largas y rápidas" },
-  helado: { name: "Helado congelante", desc: "Bochas de helado que ralentizan a lo que tocan", evo: "capacitor", evoName: "Cono triple", evoDesc: "Tres bochas en abanico que congelan y enfrían en área" },
-  bocina: { name: "Bocina", desc: "Onda sonora en cono que empuja y aturde", evo: "turbo", evoName: "Sirena", evoDesc: "Onda circular enorme que aturde a todo lo cercano" },
-  trompo: { name: "Trompo", desc: "Un trompo que rebota entre enemigos dejando una estela cortante", evo: "iman", evoName: "Ciclón", evoDesc: "Dos trompos orbitan el auto y barren todo a su paso" },
+  yoyo: { name: "Yo-yo", desc: "Va y vuelve en línea atravesando enemigos; pega más fuerte a la vuelta, como un ex", evo: "resorte", evoName: "Doble yo-yo", evoDesc: "Dos yo-yos en órbita que salen y vuelven sin parar. Relación tóxica, pero funcional" },
+  bengalas: { name: "Bengalas", desc: "Dejan zonas en llamas donde caen. Celebración sin motivo", evo: "litio", evoName: "Lluvia de bengalas", evoDesc: "Seis bengalas por tanda; zonas grandes y duraderas. Fiesta de fin de año" },
+  regla: { name: "Bumerán de regla", desc: "Una regla escolar que vuela en arco y vuelve, atravesando todo. Disciplina a distancia", evo: "iman", evoName: "Bumerán triple", evoDesc: "Tres reglas en abanico, más largas y rápidas. Año escolar completo" },
+  helado: { name: "Helado congelante", desc: "Bochas de helado que ralentizan a lo que tocan. Sin gluten, sin piedad", evo: "capacitor", evoName: "Cono triple", evoDesc: "Tres bochas en abanico que congelan y enfrían en área. Frialdad corporativa" },
+  bocina: { name: "Bocina", desc: "Onda sonora en cono que empuja y aturde. Para quien toca bocina en el semáforo", evo: "turbo", evoName: "Sirena", evoDesc: "Onda circular enorme que aturde a todo lo cercano. Tráfico a las seis de la tarde" },
+  trompo: { name: "Trompo", desc: "Un trompo que rebota entre enemigos dejando una estela cortante. Da vueltas sin resolver nada", evo: "iman", evoName: "Ciclón", evoDesc: "Dos trompos orbitan el auto y barren todo a su paso. Mucho movimiento, ningún progreso" },
   // Fusiones: nunca salen sueltas en las cartas (ver FUSIONS); evoName = nombre porque nacen evolucionadas
   chispazo: { name: "Petardos eléctricos", desc: "", evo: "capacitor", evoName: "Petardos eléctricos", evoDesc: "" },
   globos: { name: "Globos de agua", desc: "", evo: "resorte", evoName: "Globos de agua", evoDesc: "" },
@@ -83,11 +83,11 @@ export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: Passiv
 // Fusiones: dos armas a nivel 5 (o evolucionadas) se combinan en una sola, que nace evolucionada y libera un lugar.
 // La fusión conserva lo evolucionado de ambas y suma una sinergia (ver class Fusion).
 export const FUSIONS: { id: FusionId; from: [WeaponId, WeaponId]; desc: string }[] = [
-  { id: "chispazo", from: ["petardos", "tesla"], desc: "Racimo de petardos y tormenta eléctrica; cada explosión suelta un rayo en cadena" },
-  { id: "globos", from: ["gomitas", "agua"], desc: "Gomitas saltarinas e hidrolavadora; cada gomita revienta y empapa en área" },
-  { id: "anillo", from: ["clips", "chispero"], desc: "Tornado de clips y estela infernal; los clips encendidos dejan fuego en su órbita" },
-  { id: "yoyoelec", from: ["yoyo", "tesla"], desc: "Doble yo-yo y tormenta eléctrica; cada golpe del yo-yo suelta un rayo en cadena" },
-  { id: "vapor", from: ["bengalas", "agua"], desc: "Lluvia de bengalas e hidrolavadora; las zonas en llamas largan vapor que quema más, ocupa más y frena" },
+  { id: "chispazo", from: ["petardos", "tesla"], desc: "Racimo de petardos y tormenta eléctrica; cada explosión suelta un rayo en cadena. Fiesta con riesgo eléctrico" },
+  { id: "globos", from: ["gomitas", "agua"], desc: "Gomitas saltarinas e hidrolavadora; cada gomita revienta y empapa en área. Cumpleaños infantil, versión bélica" },
+  { id: "anillo", from: ["clips", "chispero"], desc: "Tornado de clips y estela infernal; los clips encendidos dejan fuego en su órbita. Compromiso eterno, con llamas" },
+  { id: "yoyoelec", from: ["yoyo", "tesla"], desc: "Doble yo-yo y tormenta eléctrica; cada golpe del yo-yo suelta un rayo en cadena. Juguete con mala reputación" },
+  { id: "vapor", from: ["bengalas", "agua"], desc: "Lluvia de bengalas e hidrolavadora; las zonas en llamas largan vapor que quema más, ocupa más y frena. Sauna con malas intenciones" },
 ];
 const isFusion = (id: WeaponId): id is FusionId => FUSIONS.some((f) => f.id === id);
 
@@ -747,7 +747,7 @@ export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>
     if (isFusion(id)) continue;
     const w = ws.find((x) => x.id === id);
     if (!w && ws.length < 6 && !fusedFrom(ws, id)) pool.push({ kind: "weapon", id, title: WEAPONS[id].name, icon: id, desc: WEAPONS[id].desc, lv: 1 });
-    else if (w && w.lv < NMAX && !w.evolved) pool.push({ kind: "weapon", id, title: WEAPONS[id].name, icon: id, desc: `Nivel ${w.lv + 1}: más daño y alcance`, lv: w.lv + 1 });
+    else if (w && w.lv < NMAX && !w.evolved) pool.push({ kind: "weapon", id, title: WEAPONS[id].name, icon: id, desc: `Nivel ${w.lv + 1}: más daño y alcance, sin aumento de sueldo`, lv: w.lv + 1 });
   }
   const owned = Object.keys(ps).length;
   for (const id of Object.keys(PASSIVES) as PassiveId[]) {
@@ -758,7 +758,7 @@ export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>
   const out = pool.slice(0, n);
   const fu = fusionOffer(ws);
   if (fu) out[0] = fu; // si hay fusión disponible, siempre es la primera carta
-  while (out.length < n) out.push({ kind: "heal", id: "heal", title: "Reparación", icon: "heal", desc: "Recupera 40 de vida" });
+  while (out.length < n) out.push({ kind: "heal", id: "heal", title: "Reparación", icon: "heal", desc: "Recupera 40 de vida. Cinta aislante y buenos deseos" });
   return out;
 }
 

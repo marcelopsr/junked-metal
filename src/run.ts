@@ -73,9 +73,9 @@ const rainAt = (seed: number) => { const r = (seed * 0.6180339887) % 1; return r
 // Jefe final de las 10:00: uno de 3, con UNA tirada derivada de la semilla (sin gastar rng(), como la lluvia).
 export const FINALS: Kind[] = ["perro", "aspiradora", "cortacercos"];
 export const FINAL_WIN: Partial<Record<Kind, string>> = {
-  perro: "¡Felipe fue derrotado!",
-  aspiradora: "¡La aspiradora robot quedó sin batería!",
-  cortacercos: "¡El cortacercos eléctrico hizo cortocircuito!",
+  perro: "¡Felipe fue derrotado! Pasará la tarde ofendido.",
+  aspiradora: "¡La aspiradora robot quedó sin batería y sin propósito de vida!",
+  cortacercos: "¡El cortacercos eléctrico hizo cortocircuito! Nadie presentó una queja.",
 };
 const frac = (x: number) => x - Math.floor(x);
 const pickFinal = (seed: number) => FINALS[Math.floor(frac(seed * 0.7548776662) * FINALS.length)];

@@ -96,15 +96,15 @@ const TUBO: Climate = { id: "tubo", name: "TUBO FLUORESCENTE", sun: [0.4, -1, 0.
 // ponytail: precios provisorios (Taller → Zonas), a calibrar con el balance de tornillos
 export const ZONE_COST = { garaje: precio("zona_garaje"), jardin: precio("zona_jardin") }; // curva de precios: como un auto o algo más (menu.ts, Taller)
 export const ZONES: Record<ZoneId, Zone> = {
-  patio: { name: "Patio trasero", short: "Patio", desc: "Pileta, mesa de jardín y la huerta.", half: 160, cost: 0, grass: 1, grassH: 1,
+  patio: { name: "Patio trasero", short: "Patio", desc: "Pileta, mesa de jardín y una huerta abandonada junto con los buenos propósitos.", half: 160, cost: 0, grass: 1, grassH: 1,
     rects: [[0, -30, 24, 17], [50, 45, 21, 16]],
     roof: (p) => Math.abs(p.x) < 17 && Math.abs(p.z + 30) < 15 && p.y < 16, // tapa de la mesa: 34x30 en (0,-30), a 16 de alto
     build: patioBuild, layout: patioLayout },
-  garaje: { name: "Garaje de la casa", short: "Garaje", desc: "Cemento con aceite, un auto en caballetes y el tubo que parpadea.", half: 80, cost: ZONE_COST.garaje, grass: 0, grassH: 1,
+  garaje: { name: "Garaje de la casa", short: "Garaje", desc: "Cemento con aceite, un auto en caballetes y un tubo que parpadea desde el divorcio.", half: 80, cost: ZONE_COST.garaje, grass: 0, grassH: 1,
     rects: [[30, 0, 22, 50], [-45, -72, 26, 9], [38, -75, 19, 6], [-75, 40, 6, 36], [-68, -50, 11, 11]],
     roof: (p) => (Math.abs(p.x - 30) < 20 && Math.abs(p.z) < 48 && p.y < 9) || (Math.abs(p.x + 45) < 25 && Math.abs(p.z + 72) < 7 && p.y < 18),
     climate: TUBO, dust: [[-20, 25, 8, 32], [-20, -25, 8, 32], [-45, -76, 28, 6]], build: garageBuild, layout: garageLayout },
-  jardin: { name: "Jardín delantero", short: "Jardín", desc: "Césped cortado, aspersores que empujan y la calle de límite.", half: 140, cost: ZONE_COST.jardin, grass: 1.3, grassH: 0.5,
+  jardin: { name: "Jardín delantero", short: "Jardín", desc: "Césped cortado, aspersores que empujan y la calle de límite. Se ve bien desde afuera, como todo.", half: 140, cost: ZONE_COST.jardin, grass: 1.3, grassH: 0.5,
     rects: [[12, 8, 5, 132], [0, -132, 220, 8], [-55, 35, 25, 8]],
     build: frontBuild, layout: frontLayout },
 };
