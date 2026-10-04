@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph, template, tor, tube } from "./models";
 import { debris, splat } from "./fx";
-import { canvasTex, M, pbr, shadows, TEX } from "./render";
+import { canvasTex, G, M, pbr, shadows, TEX } from "./render";
 import { rng, seedRng } from "./rng";
 import { precio } from "./balance";
 import type { Climate } from "./run";
@@ -29,7 +29,16 @@ const dyn = (m: B.Mesh, shape: B.PhysicsShapeType, mass: number) => {
 };
 // Texturas procedurales: una por clave (cambiar de zona no las vuelve a dibujar)
 const texs: Record<string, B.Texture> = {};
-const tex = (k: string, f: () => B.Texture) => (texs[k] ??= f());
+const texGen: Record<string, () => B.Texture> = {};
+const tex = (k: string, f: () => B.Texture) => { texGen[k] = f; return (texs[k] ??= f()); };
+/** Texturas 256/512 (Configuración → Imagen): al cambiar el tope se redibujan y se cambian en los materiales, que las referencian. Corre al armar la próxima partida. */
+function retex() {
+  for (const k of Object.keys(texs)) {
+    const o = texs[k], n = texGen[k]();
+    for (const m of scene.materials) if (m instanceof B.PBRMaterial && m.albedoTexture === o) m.albedoTexture = n;
+    o.dispose(); texs[k] = n;
+  }
+}
 const woodM = () => pbr("wood", { color: "#ffffff", rough: 0.75, tex: tex("wood", TEX.wood) });
 
 // ---------- Objetos rompibles ----------
@@ -120,7 +129,7 @@ export function buildWorld(s: B.Scene, low: boolean, id: ZoneId = "patio") {
   tuft = grassTuft(); // primero, como siempre: el orden de rng() del mundo no cambia entre zonas
   Z = ZONES[id] ?? ZONES.patio; zoneId = ZONES[id] ? id : "patio";
   HALF = Z.half;
-  tuftCount = Math.round((low ? 4000 : 12000) * Z.grass * (HALF / 160) ** 2); // 12000 en el patio de 320
+  tuftCount = Math.round(12000 * Z.grass * (HALF / 160) ** 2); // 12000 en el patio de 320: base fija, el Detalle (G.grass) recorta o agrega después sin tocar rng()
   occluders.length = 0;
   bare.length = 0;
   Z.build();
@@ -135,8 +144,14 @@ export function buildWorld(s: B.Scene, low: boolean, id: ZoneId = "patio") {
   worldMeshes = scene.meshes.filter((m) => !before.has(m));
 }
 
-/** Cambia de zona: rehace mundo y layout (semilla fija del mundo). Devuelve false si ya era la zona actual. */
-export function setZone(id: string) {
+/** ¿Ya está armado el mundo de esta zona? (la precarga de main.ts lo arma en los menús) */
+export const worldReady = (id: string) => built && zoneId === id;
+/** Cambia de zona: rehace mundo y layout (semilla fija del mundo). Devuelve false si ya era la zona actual.
+ *  layout = false: solo el mundo (quien llama arma después su propio layout con semilla: partida y carrera lo rehacen siempre). */
+let texBuilt = 0; // tope de texturas con el que se dibujaron las actuales
+export function setZone(id: string, layout = true) {
+  if (Object.keys(texs).length && texBuilt !== G.texCap) retex();
+  texBuilt = G.texCap;
   if ((built && id === zoneId) || !(id in ZONES)) return false;
   built = true;
   clearLayout();
@@ -145,8 +160,19 @@ export function setZone(id: string) {
   undo = [];
   seedRng(20260929);
   buildWorld(scene, lowQ, id as ZoneId);
-  buildLayout();
+  if (layout) buildLayout();
+  setDrawDist(G.draw);
   return true;
+}
+
+/** Detalle del mundo: distancia de dibujo de los props (0 = sin límite). Un LOD vacío esconde la malla cuando ni su punto más cercano entra en la distancia;
+ *  las mallas fusionadas (su esfera abarca todo el patio) y el pasto (thin instances) no se recortan. */
+export function setDrawDist(d: number) {
+  for (const m of [...worldMeshes, ...layoutMeshes]) {
+    if (!(m instanceof B.Mesh) || m.isDisposed() || m.alwaysSelectAsActiveMesh || m.thinInstanceCount) continue;
+    m.removeLODLevel(null);
+    if (d) { m.computeWorldMatrix(true); m.addLODLevel(d + m.getBoundingInfo().boundingSphere.radiusWorld, null); }
+  }
 }
 
 // ---------- Piezas comunes del mundo ----------
@@ -781,26 +807,38 @@ export function buildLayout() {
   const before = new Set(scene.meshes);
   Z.layout();
   layoutMeshes = scene.meshes.filter((m) => !before.has(m));
+  buildGrass();
+}
 
-  // Pasto: miles de matas como thin instances de una sola malla (evita lo que ocupa el layout)
-  const n = tuftCount;
-  const mats = new Float32Array(Math.max(1, n) * 16);
+/** Pasto de la zona (thin instances de la malla `tuft`, que arma buildWorld). La carrera lo pide sin el layout de la partida. */
+export function buildGrass() {
+  // Pasto: miles de matas como thin instances de una sola malla (evita lo que ocupa el layout).
+  // La base (tuftCount) consume rng() siempre igual: el Detalle de Configuración no cambia el resultado de la partida (ni el diario entre dispositivos).
+  // Con Detalle menor se usa solo parte de esa base; con Ultra se suman matas con un azar aparte (solo visual).
+  const mats = new Float32Array(Math.max(1, Math.ceil(tuftCount * 1.5)) * 16);
   const q = new B.Quaternion(), sc = new B.Vector3(), p = new B.Vector3(), m = new B.Matrix();
-  let k = 0;
-  for (let tries = 0; k < n && tries < n * 3; tries++) {
-    const x = (rng() - 0.5) * (HALF - 1) * 2, z = (rng() - 0.5) * (HALF - 1) * 2;
-    if (isBare(x, z)) continue;
-    // Mechones: ruido de baja frecuencia deja claros sin pasto (el 20% se salva para que no queden pelados)
-    if (Math.sin(x * 0.11) + Math.sin(z * 0.13) + Math.sin((x + z) * 0.07) < -0.4 && rng() > 0.2) continue;
-    const s = 0.6 + rng() * 0.9;
-    sc.set(s, s * (0.7 + rng() * 0.8) * Z.grassH, s);
-    B.Quaternion.RotationYawPitchRollToRef(rng() * 6.3, 0, 0, q);
-    p.set(x, 0, z);
-    B.Matrix.ComposeToRef(sc, q, p, m);
-    m.copyToArray(mats, k++ * 16);
-  }
+  const scatter = (r: () => number, n: number, k0: number) => {
+    let k = k0;
+    for (let tries = 0; k - k0 < n && tries < n * 3; tries++) {
+      const x = (r() - 0.5) * (HALF - 1) * 2, z = (r() - 0.5) * (HALF - 1) * 2;
+      if (isBare(x, z)) continue;
+      // Mechones: ruido de baja frecuencia deja claros sin pasto (el 20% se salva para que no queden pelados)
+      if (Math.sin(x * 0.11) + Math.sin(z * 0.13) + Math.sin((x + z) * 0.07) < -0.4 && r() > 0.2) continue;
+      const s = 0.6 + r() * 0.9;
+      sc.set(s, s * (0.7 + r() * 0.8) * Z.grassH, s);
+      B.Quaternion.RotationYawPitchRollToRef(r() * 6.3, 0, 0, q);
+      p.set(x, 0, z);
+      B.Matrix.ComposeToRef(sc, q, p, m);
+      m.copyToArray(mats, k++ * 16);
+    }
+    return k;
+  };
+  let k = scatter(rng, tuftCount, 0);
+  const want = Math.round(k * G.grass);
+  k = want > k ? scatter(Math.random, want - k, k) : want;
   tuft.isVisible = k > 0;
   if (k) { tuft.thinInstanceSetBuffer("matrix", mats.subarray(0, k * 16), 16, true); tuft.alwaysSelectAsActiveMesh = true; } // la caja original queda en el origen: sin esto el pasto se descarta al mirar lejos
+  setDrawDist(G.draw);
 }
 
 function water() {

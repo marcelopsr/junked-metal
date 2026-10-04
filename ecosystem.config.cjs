@@ -19,6 +19,7 @@ const base = {
 module.exports = {
   apps: [
     { ...base, name: "rc-dev", args: "--port 5173 --strictPort --host localhost", out_file: "logs/rc-dev.out.log", error_file: "logs/rc-dev.err.log" },
+    { ...base, name: "rc-test", args: "--config vite.test.config.ts", out_file: "logs/rc-test.out.log", error_file: "logs/rc-test.err.log" },
     { ...base, name: "rc-demo", args: "preview --port 4173 --strictPort --host localhost", out_file: "logs/rc-demo.out.log", error_file: "logs/rc-demo.err.log", env: { ...base.env, NODE_ENV: "production" } },
   ],
 };

@@ -4,8 +4,8 @@ import { M, pbr, shadows } from "./render";
 
 // Bichos importados de GLB con esqueleto. La animación se hornea en una textura (VAT: una matriz por hueso y cuadro) y
 // cada enemigo es una instancia que solo elige su cuadro: cientos animados con los mismos draw calls que uno.
-// Los bichos de GLB (hoy la hormiga) no tienen modelo procedural: main.ts espera loadGlbs() antes de crear cualquier
-// enemigo (portada, menús, bestiario, lab, __sim, partida). Si un GLB no carga, queda un error claro en consola.
+// Los bichos de GLB (hoy la hormiga) no tienen modelo procedural: main.ts no crea ninguno hasta que la tarea "bichos"
+// termina (bestiario, partida; en dev, lab y __sim esperan a __ready). Si un GLB no carga, queda un error claro en consola.
 //
 // Qué espera este sistema de un GLB (ejemplo: assets-src/ant/export_clean.py):
 // - Una malla con esqueleto, triangulada, pesos normalizados y como máximo 4 huesos por vértice.
@@ -37,9 +37,11 @@ const tpls = new Map<Kind, B.Mesh>();
 export const glbTpl = (k: Kind) => tpls.get(k);
 export const glbStats: Record<string, { loadMs: number; bakeMs: number; vatBytes: number; tris: number; bones: number }> = {};
 
-// Precarga todo antes de la primera partida (main.ts). No rechaza (el arranque sigue): cada falla o demora (8 s) va a la consola.
+// Precarga todo en segundo plano desde la portada (tarea "bichos" de main.ts); launch() espera lo que falte antes de la partida. No rechaza (el arranque sigue): cada falla o demora (8 s) va a la consola.
+let settled = 0; // GLB ya resueltos (cargados o fallidos): progreso real de la pantalla de carga
+export const glbProgress = () => settled / Object.keys(GLB).length;
 export function loadGlbs(scene: B.Scene) {
-  const all = Promise.all((Object.keys(GLB) as Kind[]).map((k) => load(scene, k).catch((e) => console.error(`GLB ${k}: no cargó models/${GLB[k]!.file}.glb; ese bicho no se puede crear`, e))));
+  const all = Promise.all((Object.keys(GLB) as Kind[]).map((k) => load(scene, k).catch((e) => console.error(`GLB ${k}: no cargó models/${GLB[k]!.file}.glb; ese bicho no se puede crear`, e)).finally(() => settled++)));
   const late = new Promise<void>((r) => setTimeout(() => { const f = (Object.keys(GLB) as Kind[]).filter((k) => !tpls.has(k)); if (f.length) console.error("GLB: tardan más de 8 s, el juego arranca sin", f); r(); }, 8000));
   return Promise.race([all, late]);
 }

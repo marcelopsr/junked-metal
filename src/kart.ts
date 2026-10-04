@@ -11,7 +11,7 @@ import { box, cyl, merge, pilotParts, sph, type CarKind, type CarOpts } from "./
 import { applyClimate, canvasTex, M, pbr, setSplit, setLamp, shadows } from "./render";
 import { rng, seedRng } from "./rng";
 import { engineSfx, engineStop, music, SFX } from "./sfx";
-import { buildLayout, clearLayout, setZone, zoneClimate } from "./world";
+import { buildGrass, buildLayout, clearLayout, setZone, zoneClimate } from "./world";
 import { CLIMATES } from "./run";
 
 // ---------- Configuración (se guarda aparte del guardado del juego) ----------
@@ -42,7 +42,7 @@ function recordTime(i: number, rec: TimeRec) {
   saveTimes();
   return l[0] === rec;
 }
-type Deps = { scene: B.Scene; cam: B.FreeCamera; onExit(): void };
+type Deps = { scene: B.Scene; cam: B.FreeCamera; onExit(): void; load?(label: string, zone: string, go: () => void): void }; // load: pantalla de carga entre carreras (main.ts)
 let D: Deps;
 let cam2: B.FreeCamera | null = null;
 export function initKart(d: Deps) { D = d; }
@@ -382,7 +382,7 @@ export function startRace(keepCup = false) {
   ensureDom();
   endRace(true);
   mode = "race";
-  setZone(TRACKS[raceCfg.cup ? (raceNo - 1) % TRACKS.length : raceCfg.track].zone); clearLayout();
+  setZone(TRACKS[raceCfg.cup ? (raceNo - 1) % TRACKS.length : raceCfg.track].zone, false); clearLayout(); buildGrass(); // sin el layout de la partida (se tiraba enseguida), pero con pasto
   D.scene.physicsEnabled = true;
   if (!keepCup) { cup = {}; raceNo = 1; }
   trackNo = raceCfg.cup ? (raceNo - 1) % TRACKS.length : raceCfg.track;
@@ -401,7 +401,7 @@ export function startBattle() {
   ensureDom();
   endRace(true);
   mode = "battle";
-  setZone("patio"); clearLayout();
+  setZone("patio", false); clearLayout(); buildGrass();
   D.scene.physicsEnabled = true;
   cup = {}; raceNo = 1; battleT = 150;
   applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
@@ -459,7 +459,11 @@ export function exitRace() {
   seedRng(20260929); buildLayout();
   D.onExit();
 }
-function nextRace() { raceNo++; startRace(true); }
+function nextRace() {
+  raceNo++;
+  const t = TRACKS[raceCfg.cup ? (raceNo - 1) % TRACKS.length : raceCfg.track];
+  if (D.load) D.load(`Siguiente: ${t.name}`, t.zone, () => startRace(true)); else startRace(true);
+}
 
 // ---------- IA y manejo ----------
 const clamp = B.Scalar.Clamp;

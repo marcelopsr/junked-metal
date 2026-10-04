@@ -1,6 +1,6 @@
 import * as B from "@babylonjs/core";
 import { box, template } from "./models";
-import { M, pbr, TEX, wetGround } from "./render";
+import { G, M, pbr, TEX, wetGround } from "./render";
 import { RAIN } from "./run";
 
 // Partículas con un pool de sistemas reutilizables (cero creación por golpe).
@@ -23,10 +23,12 @@ function ambientPs(cap: number, size: [number, number], life: [number, number], 
   ps.start();
   return ps;
 }
+/** Detalle del mundo (Configuración → Imagen): cantidad de partículas escalada por G.fx. Los decimales se sortean (visual: Math.random, no toca la semilla). */
+const share = (n: number) => Math.floor(n) + (Math.random() < n % 1 ? 1 : 0);
 export function ambient(kind: "mote" | "fly" | "petal", p: B.Vector3) {
   const ps = kind === "mote" ? motes : kind === "petal" ? petals : flies;
   (ps.emitter as B.Vector3).copyFrom(p);
-  ps.manualEmitCount = kind === "mote" ? 2 : 1;
+  ps.manualEmitCount = share((kind === "mote" ? 2 : 1) * Math.min(G.fx, 1)); // el techo de cada sistema (capacidad) no sube; con Detalle bajo emite menos
 }
 
 export function initFx(s: B.Scene, low: boolean) {
@@ -75,7 +77,7 @@ export function burst(pos: B.Vector3, o: BurstOpts) {
   [ps.minLifeTime, ps.maxLifeTime] = o.life;
   ps.gravity.y = o.gravity ?? -18;
   ps.blendMode = o.add === false ? B.ParticleSystem.BLENDMODE_STANDARD : B.ParticleSystem.BLENDMODE_ADD;
-  ps.manualEmitCount = o.n;
+  ps.manualEmitCount = share(o.n * G.fx);
 }
 
 export const FX = {
@@ -105,7 +107,7 @@ const chunkTpl = (c: string) => template("chunk" + c, () => [box(0.3, 0.14, 0.24
 
 export function debris(pos: B.Vector3, color: string, n: number, power = 6, size = 1) {
   const tpl = chunkTpl(color);
-  for (let i = 0; i < n && chunks.length < 240; i++) {
+  for (let i = 0, cap = Math.round(240 * Math.min(G.fx, 1)); i < n && chunks.length < cap; i++) {
     const m = tpl.createInstance("ch");
     m.position.set(pos.x, pos.y + 0.4, pos.z);
     m.scaling.setAll(size * (0.6 + Math.random() * 0.8));
@@ -277,7 +279,7 @@ export function tickRain(dt: number, p: B.Vector3, fwd: B.Vector3, k: number) {
   const prevWet = wet;
   wet = Math.min(1, wet + (dt * k) / RAIN.wetSecs);
   if (Math.abs(wet - prevWet) > 0.004) wetGround(wet);
-  const cx = p.x + fwd.x * 6, cz = p.z + fwd.z * 6, n = Math.floor(drops.n * k);
+  const cx = p.x + fwd.x * 6, cz = p.z + fwd.z * 6, n = Math.floor(drops.n * k * Math.min(G.fx, 1));
   for (let i = 0; i < n; i++) {
     let x = dPos[i * 3], y = dPos[i * 3 + 1] - FALL * dt, z = dPos[i * 3 + 2];
     if (y < 0.35 || Math.abs(x - cx) > AREA || Math.abs(z - cz) > AREA) {

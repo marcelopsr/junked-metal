@@ -35,7 +35,7 @@ export function applyClimate(k: { sun: [number, number, number]; sunColor: strin
   hemi.groundColor = B.Color3.FromHexString(k.ground ?? (k.day ? "#7a9a5a" : "#0b0f0a")); // rebote del pasto: las sombras de día no quedan azul marino
   paintSky(k.sky);
   scene.clearColor = B.Color4.FromHexString(k.sky[1] + "ff");
-  scene.imageProcessingConfiguration.exposure = k.exposure * LOOK.exposure;
+  scene.imageProcessingConfiguration.exposure = k.exposure * LOOK.exposure * cur.bright;
   scene.fogColor = B.Color3.FromHexString(k.sky[1]);
   scene.fogDensity = k.fog * LOOK.fogMul;
   probe.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
@@ -75,13 +75,13 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   sun = new B.DirectionalLight("sun", new B.Vector3(-0.45, -1, 0.35).normalize(), scene);
   sun.intensity = 0.5;
   sun.diffuse = B.Color3.FromHexString("#7f9bd6");
-  shadows = new B.CascadedShadowGenerator(low ? 1024 : 3072, sun);
-  shadows.numCascades = low ? 2 : 3;
+  shadows = new B.CascadedShadowGenerator(SHADOW.mid[0], sun); // applyGfx (menu.ts) lo reajusta al nivel guardado
+  shadows.numCascades = SHADOW.mid[1];
   shadows.shadowMaxZ = 90;
   shadows.lambda = 0.85;
   shadows.stabilizeCascades = true;
   shadows.usePercentageCloserFiltering = true;
-  shadows.filteringQuality = low ? B.ShadowGenerator.QUALITY_LOW : B.ShadowGenerator.QUALITY_MEDIUM;
+  shadows.filteringQuality = SHADOW.mid[2];
   shadows.darkness = 0.5; // sombras suaves: que den volumen sin ensuciar el suelo
   shadows.bias = 0.004;
   shadows.normalBias = 0.02;
@@ -100,7 +100,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
 
   mainCam = cam;
   const pipe = pipeline = new B.DefaultRenderingPipeline("pipe", true, scene, [cam]);
-  pipe.fxaaEnabled = false; pipe.samples = 1; // el suavizado de bordes lo elige el jugador (Configuración → Gráficos → setAA)
+  pipe.fxaaEnabled = false; pipe.samples = 1; // el suavizado de bordes lo elige el jugador (Configuración → Imagen → applyGfx)
   pipe.bloomEnabled = true;
   pipe.bloomThreshold = 0.95;
   pipe.bloomWeight = 0.18; // brillo discreto: antes velaba todo el día
@@ -161,65 +161,121 @@ export function setDark(k: number) {
   hemi.intensity = clim.hemiI * LOOK.ambMul * k;
 }
 
-// Render a baja resolución interna (altura objetivo) escalado sin filtrar. Con calidad Auto hay escalado dinámico (adaptQuality).
-export const QUALITY = { ultra: 1440, calidad: 1080, equilibrado: 720, rendimiento: 540 } as const;
-export type Quality = keyof typeof QUALITY | "auto";
-let target: number = QUALITY.calidad;
-let adaptK = 1, adaptOn = true, adaptT = 0, adaptOk = 0; // escalado dinámico: factor sobre la altura objetivo (0,6..1)
-let mainCam: B.Camera, pipeline: B.DefaultRenderingPipeline;
-export type AA = "none" | "fxaa" | "msaa2" | "msaa4";
-/** Sombras del sol: apagarlas rinde mucho más en equipos modestos. */
-export function setShadows(on: boolean) { if (sun) sun.shadowEnabled = on; }
-/** Suavizado de bordes: sin nada, FXAA (barato, algo borroso) o MSAA x2/x4 (más nítido, más costoso). */
-export function setAA(m: AA) {
-  if (!pipeline) return;
-  pipeline.fxaaEnabled = m === "fxaa";
-  pipeline.samples = m === "msaa2" ? 2 : m === "msaa4" ? 4 : 1;
+// ---------- Imagen (Configuración → Imagen) ----------
+// Cuatro ejes independientes: resolución (escala manual o FSR 1), calidad (sombras, detalle, texturas, filtrado), suavizado y pantalla (brillo, gamma).
+// Todo entra por applyGfx(): compara con lo último aplicado y solo toca lo que cambió (se llama en cada cambio de cualquier opción).
+export type Fsr = "off" | "ultra" | "calidad" | "equilibrado" | "rendimiento";
+/** Factor de reducción de AMD por modo: se renderiza a 1/factor de la resolución nativa y EASU sube a nativa (Ultra 77%, Calidad 67%, Equilibrado 59%, Rendimiento 50%). */
+export const FSR_K = { ultra: 1.3, calidad: 1.5, equilibrado: 1.7, rendimiento: 2 } as const;
+export const FSR_NAME = { ultra: "Ultra calidad", calidad: "Calidad", equilibrado: "Equilibrado", rendimiento: "Rendimiento" } as const;
+export type AA = "none" | "fxaa" | "msaa2" | "msaa4" | "msaa8";
+export type ShadowQ = "off" | "low" | "mid" | "high";
+export type Detail = "bajo" | "medio" | "alto" | "ultra";
+export type Gfx = { scale: number; fsr: Fsr; fsrSharp: number; aa: AA; sharpen: number; shadowQ: ShadowQ; detail: Detail; texRes: number; aniso: number; bright: number; gamma: number };
+
+/** Sombras del sol: [mapa, cascadas, filtrado]. "off" apaga la luz de sombras. */
+const SHADOW = { low: [1024, 2, B.ShadowGenerator.QUALITY_LOW], mid: [2048, 3, B.ShadowGenerator.QUALITY_MEDIUM], high: [4096, 4, B.ShadowGenerator.QUALITY_MEDIUM] } as const;
+/** Detalle del mundo: densidad de pasto (x el patio base; pide partida nueva), partículas y restos (x), y distancia de dibujo de props (0 = sin límite). */
+export const DETAIL = { bajo: { grass: 0.33, fx: 0.35, draw: 110 }, medio: { grass: 0.66, fx: 0.65, draw: 170 }, alto: { grass: 1, fx: 1, draw: 260 }, ultra: { grass: 1.5, fx: 1.4, draw: 0 } } as const;
+/** Preajustes de Calidad: fijan de una vez los cuatro ajustes de abajo. */
+export const PRESETS = {
+  bajo: { shadowQ: "off", detail: "bajo", texRes: 256, aniso: 1 },
+  medio: { shadowQ: "mid", detail: "medio", texRes: 512, aniso: 2 },
+  alto: { shadowQ: "high", detail: "alto", texRes: 512, aniso: 8 },
+  ultra: { shadowQ: "high", detail: "ultra", texRes: 512, aniso: 16 },
+} as const satisfies Record<string, Pick<Gfx, "shadowQ" | "detail" | "texRes" | "aniso">>;
+export type Preset = keyof typeof PRESETS;
+/** Preajuste que coincide exacto con los ajustes, o "custom". */
+export const presetOf = (g: Pick<Gfx, "shadowQ" | "detail" | "texRes" | "aniso">): Preset | "custom" => (Object.keys(PRESETS) as Preset[]).find((k) => (Object.keys(PRESETS[k]) as (keyof typeof PRESETS.bajo)[]).every((f) => PRESETS[k][f] === g[f])) ?? "custom";
+
+/** Lo que leen otros módulos: pasto y texturas se aplican al armar el mundo (world.ts), partículas al instante (fx.ts). */
+export const G = { grass: DETAIL.medio.grass, fx: DETAIL.medio.fx, draw: DETAIL.medio.draw as number, texCap: 512 as number };
+const cur: Gfx = { scale: 1, fsr: "off", fsrSharp: 0.9, aa: "none", sharpen: 0, shadowQ: "mid", detail: "medio", texRes: 512, aniso: 0, bright: 1, gamma: 1 }; // aniso 0: la primera vez siempre se aplica
+let mainCam: B.Camera, pipeline: B.DefaultRenderingPipeline, lowQ = false;
+let fsrP: B.FSR1RenderingPipeline | null = null, split: B.Camera | null = null;
+let anisoHook: B.Nullable<B.Observer<B.BaseTexture>> = null;
+const cams = () => (split ? [mainCam, split] : [mainCam]);
+/** MSAA que admite la tarjeta (1 = ninguno). */
+export const maxMsaa = () => Math.max(1, scene.getEngine().getCaps().maxMSAASamples || 1);
+
+/** La cadena de postproceso de la cámara es FSR → "pipe": FSR necesita ser la primera etapa (recibe la escena a baja resolución). */
+function chain(edit: () => void) {
+  const m = scene.postProcessRenderPipelineManager;
+  m.detachCamerasFromRenderPipeline("pipe", cams());
+  edit();
+  m.attachCamerasToRenderPipeline("pipe", cams());
 }
 
+/** FSR es una cadena de una sola cámara: en pantalla dividida (carrera de 2) se apagan y vale la escala manual. */
+const fsrEff = (): Fsr => (split ? "off" : cur.fsr);
+let fsrApplied: Fsr = "off";
 function applyScale() {
   const e = scene.getEngine();
-  e.setHardwareScalingLevel(Math.max(1, (e.getRenderingCanvas()!.clientHeight * (devicePixelRatio || 1)) / (target * adaptK)));
+  e.setHardwareScalingLevel(1 / ((devicePixelRatio || 1) * (fsrEff() === "off" ? cur.scale : 1))); // FSR: el canvas es nativo y la escena se dibuja a 1/FSR_K dentro del pipeline
 }
 
-let lowQ = false;
+export function applyGfx(g: Gfx) {
+  if (!scene) return;
+  const eng = scene.getEngine();
+  const was = { ...cur };
+  Object.assign(cur, g);
+  // Resolución: FSR reemplaza a la escala manual
+  const eff = fsrEff();
+  if (eff !== fsrApplied || (eff !== "off" && FSR_K[eff] !== fsrP?.scaleFactor)) {
+    fsrApplied = eff;
+    chain(() => {
+      if (eff === "off") { fsrP?.dispose(); fsrP = null; }
+      else { fsrP ??= new B.FSR1RenderingPipeline("fsr", scene, cams()); fsrP.scaleFactor = FSR_K[eff]; }
+    });
+  }
+  applyScale();
+  if (fsrP) fsrP.sharpnessStops = 2 * (1 - cur.fsrSharp); // RCAS: 0 paradas = nitidez máxima
+  // Suavizado: FXAA y MSAA van en "pipe" (o MSAA en la escena baja de FSR); la nitidez es del DefaultRenderingPipeline y sirve con cualquiera
+  const msaa = cur.aa.startsWith("msaa") ? Math.min(+cur.aa.slice(4), maxMsaa()) : 1;
+  pipeline.fxaaEnabled = cur.aa === "fxaa";
+  pipeline.samples = fsrP ? 1 : msaa;
+  if (fsrP) fsrP.samples = msaa;
+  pipeline.sharpenEnabled = cur.sharpen > 0;
+  pipeline.sharpen.edgeAmount = cur.sharpen * 0.8;
+  // Calidad
+  const sh = SHADOW[cur.shadowQ === "off" ? "low" : cur.shadowQ];
+  sun.shadowEnabled = cur.shadowQ !== "off";
+  if (cur.shadowQ !== "off" && cur.shadowQ !== was.shadowQ) { // recrear el mapa es caro: solo si cambió el nivel
+    shadows.numCascades = sh[1]; shadows.mapSize = sh[0]; shadows.filteringQuality = sh[2];
+  }
+  const d = DETAIL[cur.detail];
+  Object.assign(G, { grass: d.grass, fx: d.fx, draw: d.draw, texCap: cur.texRes });
+  if (cur.aniso !== was.aniso) {
+    const lvl = Math.min(cur.aniso, eng.getCaps().maxAnisotropy || 1);
+    for (const t of scene.textures) if (!t.isRenderTarget) t.anisotropicFilteringLevel = lvl;
+    anisoHook ??= scene.onNewTextureAddedObservable.add((t) => { if (!t.isRenderTarget) t.anisotropicFilteringLevel = Math.min(cur.aniso, eng.getCaps().maxAnisotropy || 1); });
+  }
+  // Pantalla: el brillo escala la exposición; el gamma sube o baja los medios tonos (curva de color de Babylon, sin tocar negros ni blancos)
+  if (cur.bright !== was.bright && clim) scene.imageProcessingConfiguration.exposure = clim.exposure * LOOK.exposure * cur.bright;
+  if (cur.gamma !== was.gamma) {
+    const ip = scene.imageProcessingConfiguration;
+    ip.colorCurvesEnabled = cur.gamma !== 1;
+    if (cur.gamma !== 1) { ip.colorCurves ??= new B.ColorCurves(); ip.colorCurves.midtonesExposure = (cur.gamma - 1) * 100; }
+  }
+}
+
+/** Resolución real de dibujo y modo, para las estadísticas en pantalla. */
+export function gfxInfo() {
+  const e = scene.getEngine(), w = e.getRenderWidth(), h = e.getRenderHeight(), k = fsrP ? FSR_K[fsrApplied as Exclude<Fsr, "off">] : 1;
+  return { w: Math.round(w / k), h: Math.round(h / k), nw: w, nh: h, mode: fsrP ? `FSR ${FSR_NAME[fsrApplied as Exclude<Fsr, "off">]} ${Math.round(100 / k)}%` : `escala ${Math.round(cur.scale * 100)}%` };
+}
+
 function setupPixels(cam: B.Camera, low: boolean) {
   lowQ = low;
-  target = low ? QUALITY.equilibrado : QUALITY.calidad;
-  // Profundidad lineal para los contornos; sin pasto (llenaría todo de bordes) ni cielo
-  scene.getEngine().getRenderingCanvas()!.style.imageRendering = "pixelated";
+  scene.getEngine().getRenderingCanvas()!.style.imageRendering = "auto"; // escalas bajo 100%: el navegador suaviza el salto a pantalla
   addEventListener("resize", applyScale);
   applyScale();
 }
 
-/** Suavizado del escalado: sin él (pixelated) los píxeles internos se ven como una grilla irregular. */
-export function setSmooth(on: boolean) { scene.getEngine().getRenderingCanvas()!.style.imageRendering = on ? "auto" : "pixelated"; }
-
-/** Escalado dinámico: si el fps cae bajo 54 baja la resolución interna por pasos (hasta 60%); si sobra, la recupera. Solo con calidad Auto. */
-export function adaptQuality(fps: number, dt: number) {
-  if (!adaptOn) return;
-  adaptT += dt;
-  if (adaptT < 1.5) return;
-  adaptT = 0;
-  if (fps < 54 && adaptK > 0.6) { adaptK = Math.max(0.6, adaptK - 0.1); adaptOk = 0; applyScale(); }
-  else if (fps > 62 && adaptK < 1 && ++adaptOk >= 4) { adaptK = Math.min(1, adaptK + 0.1); adaptOk = 0; applyScale(); }
-}
-
-/** Pantalla dividida (carrera para 2): la segunda cámara comparte bloom/FXAA; el post retro (contorno, viñeta) se apaga en ambas para que las dos mitades se vean iguales. */
+/** Pantalla dividida (carrera para 2): la segunda cámara comparte el postproceso "pipe" (addCamera: el pipeline se reconstruye solo con las cámaras que conoce); FSR se apaga mientras dure (fsrEff). */
 export function setSplit(cam2: B.Camera | null, on: boolean) {
-  const mgr = scene.postProcessRenderPipelineManager;
-  if (on && cam2) {
-    mgr.attachCamerasToRenderPipeline("pipe", cam2);
-  } else {
-    if (cam2) mgr.detachCamerasFromRenderPipeline("pipe", cam2);
-    if (!mainCam.getEngine) return;
-  }
-}
-
-export function setQuality(q: Quality) {
-  adaptOn = q === "auto"; if (!adaptOn) adaptK = 1;
-  target = QUALITY[q === "auto" ? (lowQ ? "equilibrado" : "calidad") : q];
-  applyScale();
+  if (on && cam2) { split = cam2; applyGfx(cur); pipeline.addCamera(cam2); }
+  else if (cam2) { pipeline.removeCamera(cam2); split = null; applyGfx(cur); }
 }
 
 // ---------- Materiales ----------
@@ -251,8 +307,9 @@ class SnapPlugin extends B.MaterialPluginBase {
   prepareDefines(d: B.MaterialDefines) { d["SNAP"] = true; }
   getUniforms() { return { ubo: [{ name: "snapGrid", size: 2, type: "vec2" }], vertex: "uniform vec2 snapGrid;" }; }
   bindForSubMesh(ubo: B.UniformBuffer) {
-    const e = scene.getEngine(), k = LOOK.snap > 0 ? 0.5 / LOOK.snap : 1e5;
-    ubo.updateFloat2("snapGrid", e.getRenderWidth() * k, e.getRenderHeight() * k);
+    // Grilla de la resolución de dibujo (con FSR, la baja)
+    const e = scene.getEngine(), k = LOOK.snap > 0 ? 0.5 / LOOK.snap : 1e5, f = fsrP ? FSR_K[fsrApplied as Exclude<Fsr, "off">] : 1;
+    ubo.updateFloat2("snapGrid", (e.getRenderWidth() / f) * k, (e.getRenderHeight() / f) * k);
   }
   getCustomCode(type: string): Record<string, string> {
     // Trama tipo screen-door: una malla con visibility < 1 (p. ej. lo que tapa al auto) descarta medio damero de píxeles
@@ -290,7 +347,7 @@ export function canvasTex(size: number, draw: (c: CanvasRenderingContext2D, s: n
   const big = document.createElement("canvas");
   big.width = big.height = size;
   draw(big.getContext("2d")!, size);
-  const px = Math.min(size, 512);
+  const px = Math.min(size, G.texCap); // Texturas 256/512 (Configuración → Imagen): solo achica las de 512 (suelo, tierra, baldosas)
   const t = new B.DynamicTexture("tex", px, scene, true, B.Texture.TRILINEAR_SAMPLINGMODE);
   (t.getContext() as unknown as CanvasRenderingContext2D).drawImage(big, 0, 0, px, px);
   t.update();

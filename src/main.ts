@@ -1,28 +1,28 @@
 import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudSlots, hudKill, hudRadar, hudUpdate, initHud, pickOffer, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
-import HavokPhysics from "@babylonjs/havok";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
 import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineKind, SFX } from "./sfx";
 import { ambient, burst, clearFx, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { ctl, input, isTouch, KEYS, padPressed, padSnap, pollInput, setupTouch } from "./input";
-import { GLB, glbStats, loadGlbs } from "./glb";
-import { carModel, cyl, initModels, nutTemplate as nutTpl, sph, template } from "./models";
-import { beastRec, BV, carOpts, current, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
+import { GLB, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
+import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
+import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
+import { applySettings, beastRec, BV, carOpts, current, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
 import { ABILITIES, type AbilityId } from "./abilities";
 import { pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
-import { adaptQuality, applyClimate, glitchHit, look, M, pbr, setDark, setLamp, setQuality, setupRender, shadows } from "./render";
+import { applyClimate, gfxInfo, glitchHit, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setupRender, shadows } from "./render";
 import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
-import { buildLayout, HALF, initWorld, hitBreakables, obstacles, occluders, setWind, setZone, spawnPoint, underRoof, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
+import { buildLayout, HALF, initWorld, hitBreakables, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 import { BAL } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
-import { CAR_YAW, carSpot, menuOff, menuTick, SHOTS } from "./menuscene";
-import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace } from "./kart";
+import { CAR_YAW, carSpot, flatten, menuOff, menuTick, SHOTS } from "./menuscene";
+import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace, TRACKS } from "./kart";
 
 const $ = (id: string) => document.getElementById(id)!;
 const R = BAL.ritmo, ATK = BAL.ataques; // balance.json: ritmo de la partida y ataques de bichos y jefes
@@ -35,16 +35,21 @@ let warned = false;
 // ---------- Motor (WebGL2 por defecto, WebGPU con ?webgpu) ----------
 const canvas = $("c") as HTMLCanvasElement;
 const low = isTouch;
+// Havok (JS + wasm de 2 MB) sale del paquete de arranque: se baja y compila en paralelo con el motor y la escena
+const havok = import("@babylonjs/havok").then((m) => m.default({ locateFile: () => havokWasm }));
+const GPU = location.search.includes("webgpu") ? (await import("@babylonjs/core/Engines/webgpuEngine.js")).WebGPUEngine : null; // WebGPU solo a pedido: no entra al paquete de arranque
 let engine: B.AbstractEngine;
-if (location.search.includes("webgpu") && (await B.WebGPUEngine.IsSupportedAsync)) {
-  const gpu = new B.WebGPUEngine(canvas, { antialias: true, stencil: true });
+if (GPU && (await GPU.IsSupportedAsync)) {
+  const gpu = new GPU(canvas, { antialias: true, stencil: true });
   await gpu.initAsync();
   engine = gpu;
 } else engine = new B.Engine(canvas, true, { stencil: true }, true);
+boot("Iniciando el motor", 0.15);
 const scene = new B.Scene(engine);
-scene.enablePhysics(new B.Vector3(0, -25, 0), new B.HavokPlugin(true, await HavokPhysics({ locateFile: () => havokWasm })));
+scene.enablePhysics(new B.Vector3(0, -25, 0), new B.HavokPlugin(true, await havok));
 scene.skipPointerMovePicking = true;
 
+boot("Preparando la escena", 0.4);
 const cam = new B.FreeCamera("cam", new B.Vector3(0, 30, -40), scene);
 cam.fov = 0.85;
 cam.minZ = 1; // más cerca el z-buffer pierde precisión y los decales del piso parpadean
@@ -52,12 +57,11 @@ cam.maxZ = 1500;
 
 setupRender(scene, cam, low);
 initModels(scene);
-await loadGlbs(scene); // bichos importados con VAT (glb.ts), antes de la primera partida; si uno falla queda su procedural
+// Los bichos importados (glb.ts) y el resto de lo pesado se precargan en segundo plano desde la portada (tareas más abajo)
 initFx(scene, low);
 seedRng(20260929); // el patio es siempre el mismo
 initWorld(scene, low); // el patio se arma recién al jugar (setZone): los menús tienen escenas propias (menuscene.ts)
 applyClimate(DUSK);
-setQuality(save.quality);
 if (isTouch) setupTouch((k) => zoomBy(1 / k)); // pellizco: abrir los dedos acerca
 initHud();
 
@@ -196,6 +200,7 @@ function clearRun() {
 }
 
 let daily = false;
+const zoneFor = (d: boolean) => d ? "patio" : (import.meta.env.DEV && new URLSearchParams(location.search).get("zone")) || save.zone;
 function startRun(d = false) {
   daily = d;
   initAudio(); music("run", 0); musicS = "run";
@@ -203,7 +208,7 @@ function startRun(d = false) {
   clearRun();
   // Semilla de la partida: ?seed=N la fija (reproducible), si no, una nueva
   // Zona: el diario siempre en el patio; ?zone=garaje|jardin (solo dev) la fuerza. Se arma antes de sembrar: no toca la semilla.
-  setZone(daily ? "patio" : (import.meta.env.DEV && new URLSearchParams(location.search).get("zone")) || save.zone);
+  setZone(zoneFor(daily)); // ya armado por la precarga (tarea "patio") salvo que cambie la zona o el tope de texturas
   runSeed = forceSeed || Number(new URLSearchParams(location.search).get("seed")) || (daily ? dailySeed() : newSeed());
   seedRng(runSeed);
   // Perfil de la partida: clima, plaga, orden de minijefes, ritmo de eventos y un patio distinto
@@ -436,7 +441,50 @@ addEventListener("keydown", (e) => {
   if (e.code === "Enter" && state === "level") pickOffer(offerSel);
   if (e.code === "KeyR" && state === "level") reroll();
 });
+// ---------- Carga (loading.ts) ----------
+// Tareas pesadas que se hacen solas en los menús (un hueco libre por vez) y que launch() completa tras Jugar / Carrera con pantalla de carga.
+// Peso (w) ~ ms de la tarea en una PC rápida, redondeado; el orden de la cola es el de la precarga.
+let bichosOk = false, plantillasOk = false, efectosOk = false, fxN = 0, fxTotal = 1;
+const T_BICHOS: Task = { id: "bichos", label: "Cargando bichos", w: 3, done: () => bichosOk, run: async () => { await loadGlbs(scene); bichosOk = true; }, prog: glbProgress };
+// Plantillas instanciadas que la partida crearía al vuelo (un hipo al primer bicho, tuerca o pila): se arman antes, de a una por hueco libre
+const T_PLANTILLAS: Task = { id: "plantillas", label: "Cargando bichos", w: 2, done: () => plantillasOk, prog: () => fxN / fxTotal, run: async () => {
+  const jobs: (() => unknown)[] = [() => gemTpl(1), () => gemTpl(5), () => gemTpl(20), pilaTpl, imanTpl, spitTpl, nutTpl];
+  for (const k of Object.keys(DEF) as Kind[]) if (!GLB[k]) jobs.push(() => enemyTemplate(k, DEF[k].scale), () => LEGS[k] && legTemplate(k), () => k === "polilla" && wingTemplate());
+  fxTotal = jobs.length;
+  for (fxN = 0; fxN < jobs.length; fxN++) { jobs[fxN](); await idle(); }
+  plantillasOk = true;
+} };
+/** Mundo de una zona (sin el layout con semilla, que arma cada partida). En los menús queda escondido (showWorld). */
+const worldTask = (zone: () => string): Task => ({ id: "patio", label: "Armando el patio", w: 5, done: () => worldReady(zone()), run: () => { setZone(zone(), false); if (state === "menu") showWorld(false); } });
+// Compila los shaders de todos los materiales ya creados (en paralelo si el navegador puede) para que el primer cuadro de partida no se trabe
+// ponytail: solo los materiales que existen al correr (no los de armas ni de una zona que se arma después); techo: precompilar con los defines de cada plantilla de arma
+const T_EFECTOS: Task = { id: "efectos", label: "Preparando efectos", w: 3, done: () => efectosOk, prog: () => fxN / fxTotal, run: async () => {
+  const jobs: [B.Material, B.Mesh][] = [], seen = new Set<B.Material>();
+  for (const m of scene.meshes) {
+    if (!(m instanceof B.Mesh) || !m.getTotalVertices()) continue;
+    for (const mat of m.material instanceof B.MultiMaterial ? m.material.subMaterials : [m.material]) if (mat && !seen.has(mat)) { seen.add(mat); jobs.push([mat, m]); }
+  }
+  fxTotal = jobs.length;
+  for (fxN = 0; fxN < jobs.length; fxN += 6) { await Promise.all(jobs.slice(fxN, fxN + 6).map(([mat, m]) => mat.forceCompilationAsync(m, { useInstances: m.position.y < -400 }).catch(() => undefined))); await idle(); } // las plantillas viven en y = -500
+  fxN = fxTotal; efectosOk = true;
+} };
+preload([T_BICHOS, T_PLANTILLAS, worldTask(() => zoneFor(false)), T_EFECTOS], () => state === "menu");
+/** Espera n cuadros dibujados (con tope de 1,5 s: con la pestaña oculta no hay cuadros). */
+const afterFrames = (n: number) => new Promise<void>((r) => {
+  let k = 0;
+  const done = () => { scene.onAfterRenderObservable.remove(o); clearTimeout(t); r(); };
+  const o = scene.onAfterRenderObservable.add(() => { if (++k >= n) done(); }), t = setTimeout(done, 1500);
+});
+function launchRun(d = false) {
+  initAudio(); // el gesto del jugador es este clic: el audio se activa acá, no tras la carga
+  void launch([T_BICHOS, T_PLANTILLAS, worldTask(() => zoneFor(d)), T_EFECTOS], "Encendiendo el auto", () => startRun(d), () => afterFrames(2));
+}
+const raceZone = (battle: boolean) => battle ? "patio" : TRACKS[raceCfg.cup ? 0 : raceCfg.track].zone;
 function goRace(battle = false) {
+  initAudio();
+  void launch([worldTask(() => raceZone(battle)), T_EFECTOS], battle ? "Inflando los globos" : "Preparando la largada", () => enterRace(battle), () => afterFrames(2));
+}
+function enterRace(battle: boolean) {
   initAudio(); clearRun(); menuOff();
   state = "race"; reset(null);
   $("hud").classList.add("hidden");
@@ -444,8 +492,13 @@ function goRace(battle = false) {
   if (battle) startBattle(); else startRace();
 }
 if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2") { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
-initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); } }); // la luz del menú la pone menuTick
-initMenu({ scene, play: startRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true) });
+// Portada: fuentes del menú, dos cuadros dibujados (arma la escena del estante) y recién ahí se cierra la pantalla de carga; la precarga arranca con la portada ya a la vista
+boot("Cargando fuentes", 0.7);
+await Promise.race([Promise.all(['500 16px Rajdhani', '700 16px Rajdhani'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 1500))]);
+boot("Armando el menú", 0.9);
+void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
+initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); }, load: (label, zone, go) => { void launch([worldTask(() => zone), T_EFECTOS], label, go, () => afterFrames(2), true); } }); // la luz del menú la pone menuTick
+initMenu({ scene, play: launchRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true) });
 music("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: solo en el primer arranque (save.intro); ?intro la fuerza, ?mute y ?lab (pruebas) no la muestran
 { const force = /[?&]intro\b/.test(location.search); if (force || (!save.intro && !/[?&](mute|lab)\b/.test(location.search))) playIntro(!force); }
@@ -536,7 +589,6 @@ function spawnEnemy(kind: Kind, p: B.Vector3) {
 
 // ---------- Update ----------
 function update(dt: number) {
-  if (!simulating && !document.hidden) adaptQuality(engine.getFps(), dt);
   const c = car!;
   time += dt;
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
@@ -954,6 +1006,7 @@ function beastTick(dt: number, on: boolean) {
   const key = on && BV.kind ? BV.kind + BV.elite : "";
   if (beast && beast.key !== key) { beast.e.dispose(); beast.ped.dispose(); beast = null; }
   if (!key) return null;
+  if (GLB[BV.kind!] && !glbTpl(BV.kind!)) { void ensure(T_BICHOS); return null; } // bicho importado todavía sin cargar: aparece solo al terminar
   const kind = BV.kind!, d = DEF[kind], span = Math.max(d.size[0], d.size[2]);
   if (!beast) {
     const e = new Enemy(kind, new B.Vector3(0, PED_H, 0), 1);
@@ -1026,7 +1079,7 @@ function beastTick(dt: number, on: boolean) {
 
 scene.onBeforeRenderObservable.add(() => {
   padSnap();
-  const dt = Math.min(engine.getDeltaTime() / 1000, 0.05);
+  const dt = Math.min((frameAcc || engine.getDeltaTime()) / 1000, 0.05);
   pollInput();
 
   if (state === "level") {
@@ -1047,7 +1100,11 @@ scene.onBeforeRenderObservable.add(() => {
   }
   tickFx(dt * ts);
   uiTick(dt);
-  if (save.fps && (fpsT -= dt) <= 0) { fpsT = 0.5; $("fps").textContent = `${Math.round(engine.getFps())} fps`; }
+  if (save.fps && (fpsT -= dt) <= 0) { // estadísticas: fps y ms de los cuadros dibujados (no los del navegador), resolución interna real y escala o modo FSR
+    fpsT = 0.5;
+    const g = gfxInfo();
+    $("fps").textContent = `${Math.round(1000 / frameMs)} fps · ${frameMs.toFixed(1).replace(".", ",")} ms\nInterna ${g.w}x${g.h} · ${g.mode}`;
+  }
 
   // Cámara 3/4 elevada. Con teclado sigue el rumbo del auto; con stick queda fija
   // (si rotara, la dirección del stick cambiaría mientras girás).
@@ -1087,6 +1144,7 @@ scene.onBeforeRenderObservable.add(() => {
       const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 22;
       ambient("fly", new B.Vector3(car.pos.x + Math.cos(a) * r, 0.5 + Math.random() * 2.5, car.pos.z + Math.sin(a) * r));
     }
+    cam.fov = (save.fov * Math.PI) / 180; // Campo de visión (Configuración → Imagen): solo en partida; los encuadres de los menús usan el de fábrica
     const back = new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
     // Bajo la mesa la cámara baja y se acerca (roofK suaviza entrar y salir); afuera vuelve al zoom del usuario
     roofK += ((underRoof(car.pos) ? 1 : 0) - roofK) * (1 - Math.exp(-3 * dt));
@@ -1102,6 +1160,7 @@ scene.onBeforeRenderObservable.add(() => {
       for (const m of occluders) m.visibility = ray.intersectsMesh(m, true).hit ? 0.999 : 1;
     }
   } else {
+    cam.fov = 0.85;
     // Diorama: cada pantalla del menú tiene su encuadre en su escena; la cámara viaja con lerp suave y se mece un poco
     const scr = current() ?? "main", t = performance.now() / 1000;
     // Escena de la pantalla (estante o mesa) con su luz y foco; al cambiar de escena la cámara corta al encuadre nuevo
@@ -1134,6 +1193,7 @@ scene.onBeforeRenderObservable.add(() => {
         preview?.dispose();
         const m = carModel(save.car, carOpts());
         preview = m.body;
+        flatten(m.body); for (const w of m.wheels) flatten(w.m); // menos submallas = menos draws en cada pasada
         previewR = Math.max(...m.wheels.map((w) => w.r));
         shadows.addShadowCaster(preview, true);
         previewKey = key;
@@ -1153,7 +1213,16 @@ scene.onBeforeRenderObservable.add(() => {
   if (state !== "race") cam.setTarget(camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0)));
 });
 
-engine.runRenderLoop(() => scene.render());
+// Límite de FPS (Configuración → Imagen): el navegador no deja fijar la tasa, así que se saltan cuadros del bucle y su tiempo se suma al dt del siguiente
+let frameAcc = 0, frameMs = 16.7, skipMs = 0;
+engine.runRenderLoop(() => {
+  skipMs += engine.getDeltaTime();
+  const cap = state === "menu" && save.menuFps ? save.menuFps : save.fpsCap; // en los menús manda su propio tope (Configuración → Imagen → FPS de los menús)
+  if (cap && skipMs < 1000 / cap - 2) return;
+  frameAcc = skipMs; frameMs += (skipMs - frameMs) * 0.1; skipMs = 0;
+  scene.render();
+  frameAcc = 0;
+});
 addEventListener("resize", () => engine.resize());
 
 // Equipos del minuto 10 del bot (__sim con semillas 1, 4, 5, 7, 8, 9 y 10; solo cuentan las partidas que llegan vivas al jefe final, ~50%): los usa __bossDuel.
@@ -1199,7 +1268,9 @@ function botStep(m: typeof import("./devbot"), dt: number) {
 }
 
 // Solo dev: avanzar frames a mano y atajos de prueba (pestaña oculta = sin requestAnimationFrame)
-if (import.meta.env.DEV) import("./devbot").then((m) => Object.assign(window, {
+// Los atajos aparecen con todo precargado (como cuando el arranque esperaba los GLB); ?lazy no espera, para probar la precarga real en segundo plano
+const devReady = () => /[?&]lazy\b/.test(location.search) ? Promise.resolve() : ensureAll();
+if (import.meta.env.DEV) import("./devbot").then((m) => devReady().then(() => Object.assign(window, {
   __bot: m.bot,
   // Adelantar el tiempo: simula la partida con paso fijo y SIN dibujar, conducida por el bot.
   // Determinista: misma semilla (?seed=N) = mismo resultado. Devuelve un resumen.
@@ -1237,8 +1308,8 @@ if (import.meta.env.DEV) import("./devbot").then((m) => Object.assign(window, {
     $("levelup").classList.add("hidden");
     return { kind, seed: runSeed, segundos: +(time - t0).toFixed(1), ganó: boss.hp <= 0, vidaRestante: Math.max(0, Math.round(boss.hp)), auto: Math.round(hp), real: +((performance.now() - w0) / 1000).toFixed(2) };
   },
-}));
-if (import.meta.env.DEV && location.search.includes("lab")) setTimeout(() => (window as unknown as { __lab(o: object): void }).__lab({ climate: new URLSearchParams(location.search).get("climate") ?? undefined, t: Number(new URLSearchParams(location.search).get("t") ?? 1), boss: location.search.includes("boss"), rain: location.search.includes("rain") }), 800);
+})));
+if (import.meta.env.DEV && location.search.includes("lab")) void devReady().then(() => (window as unknown as { __lab(o: object): void }).__lab({ climate: new URLSearchParams(location.search).get("climate") ?? undefined, t: Number(new URLSearchParams(location.search).get("t") ?? 1), boss: location.search.includes("boss"), rain: location.search.includes("rain") }));
 if (import.meta.env.DEV) Object.assign(window, {
   __tick: (n: number) => { const g = engine.getDeltaTime; engine.getDeltaTime = () => 1000 / 60; for (let i = 0; i < n; i++) { engine.beginFrame(); scene.render(); engine.endFrame(); } engine.getDeltaTime = g; },
   __killAll: () => enemies.forEach((e) => { if (!e.def.boss) e.hp = 0; }),
@@ -1256,9 +1327,12 @@ if (import.meta.env.DEV) Object.assign(window, {
   __info: () => ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps(), abil, abilCd, abilOn, worldK, stun: enemies.filter((e) => e.stun > 0).length, driveMul, endless, next: RUN_BOSSES[bossIdx] }),
   __car: () => car && { p: car.pos, f: car.root.forward },
   __look: look,
+  // Opciones de Imagen sin pasar por el menú ni guardar: __cfg({ fsr: "rendimiento" }) o __cfg({ preset: "ultra" }); sin argumentos devuelve el estado
+  __cfg: (o: Record<string, unknown> = {}) => { const { preset, ...rest } = o; Object.assign(save, preset ? PRESETS_DEV[preset as keyof typeof PRESETS_DEV] : {}, rest); save.preset = presetOf(save); applySettings(); return { preset: save.preset, aa: save.aa, ...gfxInfo() }; },
   // Modo lab: arranca una partida congelada con una fila de cada enemigo delante del auto y la cámara a mano.
   // t = momento del ciclo (0 atardecer … 1 noche). __lab({ climate: "niebla", t: 0.4, boss: true, back: 15, up: 13, look: { lampI: 8 } }) ; ?lab en la URL lo corre solo.
   __lab: (o: { climate?: string; t?: number; boss?: boolean; back?: number; up?: number; look?: Parameters<typeof look>[0]; frames?: number; rain?: boolean } = {}) => {
+    if (!bichosOk) return "espera a __ready (la precarga sigue)";
     if (state !== "menu") toMenu();
     startRun();
     god = true; LAB.on = true; LAB.back = o.back ?? 15; LAB.up = o.up ?? 13;
@@ -1278,6 +1352,7 @@ if (import.meta.env.DEV) Object.assign(window, {
   __spawn: (kd: Kind, dist = 20) => { LAB.on = false; const f = car!.root.forward; spawnEnemy(kd, car!.pos.add(f.scale(dist)).addInPlace(new B.Vector3(0, 1, 0))); return enemies.length; },
   __minis: (a: Kind, b: Kind) => { RUN_BOSSES[0][1] = a; RUN_BOSSES[1][1] = b; }, // fuerza los dos minijefes de la partida (probar jefes con __sim)
   __scene: scene,
+  __ready: ensureAll, __loadTimes: times, // precarga: promesa de que todo está listo y ms por tarea
   __glbStats: glbStats,
   // n hormigas en grilla delante del auto, quietas en modo lab, para medir el render: __ants(300)
   __ants: (n = 300) => { const f = car!.root.forward, r = new B.Vector3(f.z, 0, -f.x), w = Math.ceil(Math.sqrt(n)); for (let i = 0; i < n; i++) spawnEnemy("hormiga", car!.pos.add(f.scale(6 + Math.floor(i / w) * 1.8)).addInPlace(r.scale((i % w - w / 2) * 1.5)).addInPlace(new B.Vector3(0, 0.4, 0))); return enemies.length; },

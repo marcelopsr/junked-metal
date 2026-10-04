@@ -194,6 +194,9 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #opts .sect:first-child { margin-top: 0; }
 #opts .row .lb { display: flex; flex-direction: column; gap: 3px; text-align: left; min-width: 0; }
 #opts .row .lb small { font: 500 13px/1.25 "Rajdhani", system-ui, sans-serif; color: var(--dim); letter-spacing: .02em; text-transform: none; }
+#opts .row .lb small.why { color: #f0b45a; }
+#opts .row.off { opacity: .6; }
+#opts > * { flex-shrink: 0; } /* con descripciones largas la lista scrollea en vez de apretar las filas unas sobre otras */
 #opts .note { font: 500 14px/1.35 "Rajdhani", system-ui, sans-serif; color: var(--dim); padding: 4px 10px; }
 #opts .row { min-height: 46px; }
 #opts .row { font: 700 18px/1.1 "Rajdhani", system-ui, sans-serif; letter-spacing: .02em; text-transform: none; }

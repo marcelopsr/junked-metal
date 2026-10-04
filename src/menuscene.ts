@@ -199,13 +199,58 @@ function transmitter(): B.Mesh[] {
 }
 const place = (m: B.Mesh, pos: V3, rot: V3) => { m.position.set(...pos); m.rotation.set(...rot); return m; };
 
+// Aplana colores de una malla fusionada: cada pieza pintada (sin textura, emisivo ni transparencia) pasa a color de vértice y los materiales
+// de una misma clase (rugosidad, metal, barniz) se funden en uno. Baja ~25 submallas a ~6: un draw por submalla y por pasada (cuarto, sombras x3, profundidad, brillo). Mismo look.
+export function flatten(m: B.Mesh) {
+  const multi = m.material;
+  if (!(multi instanceof B.MultiMaterial)) return;
+  const nv = m.getTotalVertices(), idx = m.getIndices()!, col = new Float32Array(nv * 4).fill(1);
+  const groups = new Map<B.Material, B.SubMesh[]>();
+  for (const sm of m.subMeshes) {
+    let mat = multi.subMaterials[sm.materialIndex]!;
+    if (mat instanceof B.PBRMaterial && !mat.albedoTexture && mat.emissiveColor.equals(B.Color3.Black()) && mat.alpha === 1 && !mat.name.startsWith("vc")) {
+      const c = mat.albedoColor, k = mat.clearCoat.isEnabled ? mat.clearCoat.intensity : 0;
+      for (let v = sm.verticesStart * 4, e = (sm.verticesStart + sm.verticesCount) * 4; v < e; v += 4) { col[v] = c.r; col[v + 1] = c.g; col[v + 2] = c.b; }
+      mat = pbr(`vc${mat.roughness}|${mat.metallic}|${k}`, { color: "#ffffff", rough: mat.roughness ?? 0.5, metal: mat.metallic ?? 0, coat: k });
+    }
+    (groups.get(mat) ?? groups.set(mat, []).get(mat)!).push(sm);
+  }
+  const out = new Uint32Array(idx.length), mats: B.Material[] = [], ranges: [number, number][] = [];
+  let n = 0;
+  for (const [mat, subs] of groups) {
+    const a = n;
+    for (const sm of subs) for (let i = 0; i < sm.indexCount; i++) out[n++] = idx[sm.indexStart + i];
+    mats.push(mat); ranges.push([a, n - a]);
+  }
+  const nm = new B.MultiMaterial(m.name + "_vc", m.getScene());
+  nm.subMaterials = mats;
+  m.setVerticesData(B.VertexBuffer.ColorKind, col, false, 4);
+  m.setIndices(out, nv);
+  m.releaseSubMeshes();
+  ranges.forEach(([a, c], i) => new B.SubMesh(i, 0, nv, a, c, m));
+  m.material = nm;
+  multi.dispose();
+}
+
+// Sombras del menú: la luna solo debe proyectar lo que se ve. Las plantillas de bichos, gemas y proyectiles viven escondidas en y = -500, pero
+// siguen en la lista de proyectores y se dibujan en las 3 cascadas (los 5 GLB: ~22 submallas y ~18.000 triángulos por cascada). Se sacan de la
+// lista mientras no tengan instancias (la ficha del bestiario sí las usa) y vuelven al salir del menú.
+const hidden = new Set<B.Mesh>();
+function trimCasters() {
+  const rl = shadows.getShadowMap()!.renderList!;
+  for (let i = rl.length - 1; i >= 0; i--) { const m = rl[i] as B.Mesh; if (m.position.y < -400 && !m.instances?.length) { rl.splice(i, 1); hidden.add(m); } }
+  for (const m of hidden) if (m.instances.length) { rl.push(m); hidden.delete(m); }
+}
+
 let cur: Id | null = null, fade = 1, moteT = 0;
 const WARM = B.Color3.FromHexString("#ffc890");
 const built: Partial<Record<Id, B.Mesh[]>> = {};
 function build(id: Id, low: boolean) {
   const [room, props] = id === "shelf" ? shelfBuild(low) : benchBuild(low);
   const r = merge("menu_" + id + "_room", room), p = merge("menu_" + id + "_props", props);
+  flatten(r); flatten(p);
   r.isPickable = p.isPickable = false;
+  r.freezeWorldMatrix(); p.freezeWorldMatrix(); // estáticos: sin recalcular la matriz ni el volumen cada cuadro
   shadows.addShadowCaster(p);
   return [r, p];
 }
@@ -221,6 +266,7 @@ export function menuTick(scr: string, cam: B.Camera, focus: B.Vector3, dt: numbe
     cur = id; fade = 0;
     applyClimate(CLIM[id]);
   }
+  trimCasters();
   const sc = lamp.getScene(), L = LAMP[id];
   fade = Math.min(1, fade + dt * 2.5);
   sc.imageProcessingConfiguration.exposure = CLIM[id].exposure * LOOK.exposure * (0.15 + 0.85 * fade * fade);
@@ -239,6 +285,9 @@ export function menuTick(scr: string, cam: B.Camera, focus: B.Vector3, dt: numbe
 /** Sale de los menús (partida o carrera): apaga las escenas, la profundidad de campo y la luz de lámpara; el mundo vuelve a verse. */
 export function menuOff() {
   if (!cur) return;
+  const rl = shadows.getShadowMap()!.renderList!;
+  for (const m of hidden) rl.push(m);
+  hidden.clear();
   for (const k of Object.keys(built) as Id[]) for (const m of built[k]!) m.setEnabled(false);
   cur = null;
   menuLights(false);

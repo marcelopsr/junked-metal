@@ -9,10 +9,10 @@ import { ctl, KEYS, PAD, padPressed, type Action } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { PILOTS, type PilotId } from "./pilots";
 import { icon } from "./icons";
-import { setAA, setQuality, setShadows, setSmooth, type AA, type Quality } from "./render";
+import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
 import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
-import { ZONES, type ZoneId } from "./world";
+import { setDrawDist, ZONES, type ZoneId } from "./world";
 import { isTouch, padsConnected } from "./input";
 import { bestRace, MEDAL, medalOf, raceCfg, saveRaceCfg, TRACKS, trackName } from "./kart";
 import { ACH, type AchId } from "./achievements";
@@ -31,10 +31,13 @@ export type Stats = { runs: number; wins: number; time: number; dist: number; dm
 type Save = {
   intro: boolean; // ya se vio la intro del primer arranque
   scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number }; cars: CarKind[]; car: CarKind;
-  pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; quality: Quality; paint: string; rim: string; zoom: number;
+  pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; paint: string; rim: string; zoom: number;
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
-  aa: AA; bloom: boolean; lookv: number; shake: boolean;
-  shadows: boolean; fps: boolean; hudSolid: boolean; hint: boolean;
+  bloom: boolean; lookv: number; shake: boolean; fps: boolean; hudSolid: boolean; hint: boolean;
+  // Imagen (render.ts, Gfx): resolución (escala manual o FSR), suavizado, calidad (preset = el que coincide con los cuatro ajustes, o "custom") y pantalla.
+  gfxv: number; scale: number; fsr: Fsr; fsrSharp: number; aa: AA; sharpen: number;
+  preset: Preset | "custom"; shadowQ: ShadowQ; detail: Detail; texRes: number; aniso: number;
+  fpsCap: number; menuFps: number; fov: number; bright: number; gamma: number; // menuFps: tope de cuadros solo en los menús (0 = el mismo que el juego)
   keys: Partial<Record<Action, string>>; pad: { dead: number; sens: number }; rumble: boolean; touch: number;
   hud: number; calm: boolean; dmgNums: boolean;
   decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
@@ -43,11 +46,14 @@ type Save = {
   ach: AchId[];
   ability: AbilityId; curses: CurseId[]; endless: number; // habilidad activa elegida, maldiciones de la próxima partida y récord del modo sin fin (s)
 };
+// Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
+const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (innerHeight * (devicePixelRatio || 1))) * 20) / 20));
 const DEFAULT: Save = {
   intro: false,
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
-  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, quality: "auto", paint: "", rim: "", zoom: 1.35,
-  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, aa: "none", bloom: true, lookv: 6, shake: true, shadows: true, fps: false, hudSolid: false, hint: true,
+  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, paint: "", rim: "", zoom: 1.35,
+  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, bloom: true, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
+  gfxv: 1, scale: SCALE0, fsr: "off", fsrSharp: 0.9, aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: {}, pad: { dead: 0.15, sens: 1 }, rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
@@ -75,6 +81,18 @@ export const save: Save = (() => {
     const decals = [0, 1, 2].map((i) => (validDecal(s.decals?.[i]) ? s.decals[i] : ""));
     const decalSel = Number.isInteger(s.decalSel) && decals[s.decalSel] ? s.decalSel : -1;
     if (s.lookv !== 6) { s.aa = "none"; delete s.outline; delete s.clean; delete s.retro; delete s.visual; s.lookv = 6; } // estilo cartoon fijo: sin contorno ni looks retro (una vez)
+    // Imagen v1 (una vez): la vieja "Calidad" (solo resolución, con Auto) y el interruptor de sombras se reemplazan por Escala/FSR y Sombras por niveles; en táctil FXAA era el mínimo forzado
+    if (s.gfxv !== 1) { if (s.shadows === false) s.shadowQ = "off"; if (isTouch && (s.aa ?? "none") === "none") s.aa = "fxaa"; delete s.quality; delete s.shadows; s.gfxv = 1; }
+    // Valores de imagen: enumerados y rangos se validan (un respaldo viejo o editado a mano no debe romper el render)
+    const num = (v: unknown, lo: number, hi: number, d: number) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
+    const one = <T,>(v: unknown, list: readonly T[], d: T): T => ((list as readonly unknown[]).includes(v) ? (v as T) : d);
+    s.scale = num(s.scale, 0.5, 1, DEFAULT.scale); s.fsrSharp = num(s.fsrSharp, 0, 1, DEFAULT.fsrSharp); s.sharpen = num(s.sharpen, 0, 1, DEFAULT.sharpen);
+    s.fov = num(s.fov, 40, 70, DEFAULT.fov); s.bright = num(s.bright, 0.6, 1.4, 1); s.gamma = num(s.gamma, 0.7, 1.4, 1);
+    s.fsr = one(s.fsr, ["off", "ultra", "calidad", "equilibrado", "rendimiento"], "off"); if (s.aa === "taa") s.aa = "fxaa"; // TAA se quitó: quien lo tenía guardado pasa a FXAA
+    s.aa = one(s.aa, ["none", "fxaa", "msaa2", "msaa4", "msaa8"], DEFAULT.aa);
+    s.shadowQ = one(s.shadowQ, ["off", "low", "mid", "high"], DEFAULT.shadowQ); s.detail = one(s.detail, ["bajo", "medio", "alto", "ultra"], DEFAULT.detail);
+    s.texRes = one(s.texRes, [256, 512], DEFAULT.texRes); s.aniso = one(s.aniso, [1, 2, 4, 8, 16], DEFAULT.aniso); s.fpsCap = one(s.fpsCap, [0, 30, 60, 120], 0); s.menuFps = one(s.menuFps, [0, 30, 60], DEFAULT.menuFps);
+    s.preset = presetOf({ shadowQ: s.shadowQ, detail: s.detail, texRes: s.texRes, aniso: s.aniso });
     return { ...structuredClone(DEFAULT), ...s, decals, decalSel, perm: { ...DEFAULT.perm, ...s.perm }, kit: { ...DEFAULT.kit, ...s.kit }, vol: { ...DEFAULT.vol, ...s.vol }, pad: { ...DEFAULT.pad, ...s.pad },
       stats: { ...DEFAULT.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };
   } catch { return structuredClone(DEFAULT); }
@@ -160,9 +178,10 @@ type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): 
 let api: Api;
 
 export function applySettings() {
-  setQuality(save.quality);
-  setSmooth(true); setShadows(save.shadows);
-  setAA(isTouch ? (save.aa === "none" ? "fxaa" : save.aa) : save.aa);
+  const msaa = maxMsaa();
+  if (save.aa.startsWith("msaa") && +save.aa.slice(4) > msaa) save.aa = msaa >= 4 ? "msaa4" : msaa >= 2 ? "msaa2" : "fxaa"; // un guardado de otra tarjeta: lo máximo que admite esta
+  applyGfx(save);
+  setDrawDist(G.draw);
   const glow = api.scene.getGlowLayerByName("bloom");
   if (glow) glow.isEnabled = save.bloom;
   const pipe = api.scene.postProcessRenderPipelineManager.supportedPipelines.find((p) => p.name === "pipe") as DefaultRenderingPipeline | undefined;
@@ -178,12 +197,12 @@ export function applySettings() {
   root.setProperty("--touch-scale", String(save.touch));
   document.body.classList.toggle("calm", save.calm);
 }
-const commit = () => { persist(); applySettings(); };
+const commit = () => { save.preset = presetOf(save); persist(); applySettings(); };
 const KEYS0 = Object.fromEntries(Object.entries(KEYS).map(([a, v]) => [a, v[0]])) as Record<Action, string>;
 /** Vuelve las opciones (imagen, audio, controles, accesibilidad) a los valores de fábrica; el progreso no se toca. */
 function resetCfg() {
   const D = structuredClone(DEFAULT);
-  Object.assign(save, { quality: D.quality, aa: D.aa, bloom: D.bloom, shadows: D.shadows, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: {} });
+  Object.assign(save, { scale: D.scale, fsr: D.fsr, fsrSharp: D.fsrSharp, aa: D.aa, sharpen: D.sharpen, preset: D.preset, shadowQ: D.shadowQ, detail: D.detail, texRes: D.texRes, aniso: D.aniso, fpsCap: D.fpsCap, menuFps: D.menuFps, fov: D.fov, bright: D.bright, gamma: D.gamma, bloom: D.bloom, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: {} });
   for (const a of Object.keys(KEYS0) as Action[]) KEYS[a][0] = KEYS0[a];
   commit();
 }
@@ -244,7 +263,7 @@ export function reset(s: Scr | null) {
 }
 
 // ---------- Foco: navegación espacial ----------
-const focusables = () => [...document.querySelectorAll<HTMLElement>(`#scr-${current()} :is(button:not(:disabled), select, input, [tabindex])`)].filter((e) => e.offsetParent);
+const focusables = () => [...document.querySelectorAll<HTMLElement>(`#scr-${current()} :is(button:not(:disabled), select:not(:disabled), input:not(:disabled), [tabindex])`)].filter((e) => e.offsetParent);
 const SCROLL = "#cars, #shop, #opts, #binfo"; // listas con scroll propio
 function move(dx: number, dy: number) {
   const cur = document.activeElement as HTMLElement, els = focusables();
@@ -253,7 +272,7 @@ function move(dx: number, dy: number) {
   if (cur.id === "dgrid") { const x = dcx + dx, y = dcy + dy; if (x >= 0 && x < DECAL_N && y >= 0 && y < DECAL_N) { dcx = x; dcy = y; drawGrid(); return SFX.blip(); } }
   // Perillas: izquierda/derecha cambian el valor en vez de mover el foco
   if (dx && cur instanceof HTMLInputElement && cur.type === "range") { dx > 0 ? cur.stepUp() : cur.stepDown(); cur.dispatchEvent(new Event("input", { bubbles: true })); return SFX.blip(); }
-  if (dx && cur instanceof HTMLSelectElement) { cur.selectedIndex = (cur.selectedIndex + dx + cur.length) % cur.length; cur.dispatchEvent(new Event("change", { bubbles: true })); return SFX.blip(); }
+  if (dx && cur instanceof HTMLSelectElement) { let i = cur.selectedIndex, n = cur.length; do i = (i + dx + cur.length) % cur.length; while (cur.options[i].disabled && n-- > 0); cur.selectedIndex = i; cur.dispatchEvent(new Event("change", { bubbles: true })); return SFX.blip(); }
   // Posición de layout (sin transformaciones: el encendido de tubo aplasta la pantalla al entrar). En Configuración cuenta la fila entera.
   const box = (e: HTMLElement) => {
     const r = (e.closest(".row") ?? e) as HTMLElement;
@@ -505,13 +524,25 @@ const focusSel = (q: string) => { const e = document.querySelector<HTMLButtonEle
 
 // Configuración: filas generadas desde datos. data-set = número (perilla o lista), data-tog = sí/no.
 // Cada pestaña agrupa por tema con títulos de sección ("sect"); DESC explica en una línea lo que no se entiende solo.
-type Row = [label: string, kind: "range", path: string, min: number, max: number, step: number, unit?: "%" | "x"] | [label: string, kind: "tog", path: string] | [label: string, kind: "sel", path: string, opts: [string, string][]] | [label: string, kind: "bind", action: Action] | [label: string, kind: "note"] | [label: string, kind: "btn", act: string] | [label: string, kind: "sect"];
+type Row = [label: string, kind: "range", path: string, min: number, max: number, step: number, unit?: "%" | "x" | "°"] | [label: string, kind: "tog", path: string] | [label: string, kind: "sel", path: string, opts: [string, string][]] | [label: string, kind: "bind", action: Action] | [label: string, kind: "note"] | [label: string, kind: "btn", act: string] | [label: string, kind: "sect"];
 const DESC: Record<string, string> = {
-  quality: "Resolución interna del juego. Más alta se ve más nítida pero pide más a la tarjeta gráfica; Auto baja sola si no llega a 60 fps.",
-  aa: "Suaviza los bordes dentados. Ninguno es lo más nítido y liviano; MSAA es el más suave y el más pesado.",
-  shadows: "Sombras del sol sobre el piso. Apagarlas sube mucho los fps en equipos modestos.",
+  scale: "Porcentaje de la resolución de la pantalla con que se dibuja el juego (100% es la nativa). Menos escala sube los fps a costa de nitidez.",
+  fsr: "Escalado FSR 1 de AMD: dibuja a menor resolución y sube a la nativa con un filtro que conserva los bordes. Reemplaza a la escala manual.",
+  fsrSharp: "Nitidez del paso final de FSR (RCAS). Más alta marca más los bordes; demasiada deja halos.",
+  preset: "Fija de una vez sombras, detalle del mundo, texturas y filtrado. Cambiar cualquiera de esos cuatro pasa a Personalizado.",
+  shadowQ: "Sombras del sol: resolución del mapa y cascadas. Apagadas rinde mucho más en equipos modestos.",
+  detail: "Densidad del pasto, cantidad de partículas y restos, y distancia de dibujo de los objetos. El pasto se aplica al empezar la próxima partida.",
+  texRes: "Resolución de las texturas del suelo, la tierra y las baldosas. Se aplica al empezar la próxima partida.",
+  aniso: "Mantiene nítidas las texturas vistas en ángulo, como el suelo lejano. x16 es lo más nítido.",
+  aa: "Suaviza los bordes dentados. FXAA es liviano; MSAA es más nítido y más pesado.",
+  sharpen: "Realza el detalle fino. Funciona con cualquier suavizado, también con Ninguno.",
+  fpsCap: "Tope de cuadros por segundo. Un tope bajo ahorra batería y calor; Sin límite sigue la tasa de la pantalla.",
+  menuFps: "Tope de cuadros por segundo solo en los menús, la portada y el bestiario (la partida usa el límite de arriba). 30 ahorra batería y calor; Igual que el juego usa el mismo límite.",
+  fov: "Ángulo de visión de la cámara en partida. Más ancho muestra más patio y achica todo.",
+  bright: "Brillo general de la imagen.",
+  gamma: "Aclara u oscurece los medios tonos sin tocar los negros ni los blancos.",
   bloom: "Resplandor suave en luces y objetos brillantes.",
-  fps: "Muestra los cuadros por segundo en una esquina.",
+  fps: "Muestra en la parte superior los fps, los ms por cuadro, la resolución interna real y la escala o el modo FSR.",
   fullscreen: "Pasa el juego a pantalla completa (también con F11).",
   zoom: "Qué tan lejos se ve el auto. También con la rueda del mouse o - / =.",
   shake: "Sacudida de cámara al recibir o dar golpes fuertes.",
@@ -527,12 +558,26 @@ const DESC: Record<string, string> = {
 };
 const TABS: Record<string, { name: string; rows: Row[] }> = {
   gfx: { name: "Imagen", rows: [
-    ["Rendimiento", "sect"],
-    ["Calidad", "sel", "quality", [["auto", "Auto"], ["ultra", "Ultra 1440p"], ["calidad", "Calidad 1080p"], ["equilibrado", "Equilibrado 720p"], ["rendimiento", "Rendimiento 540p"]]],
-    ["Suavizado de bordes", "sel", "aa", [["none", "Ninguno (más nítido)"], ["fxaa", "FXAA"], ["msaa2", "MSAA x2"], ["msaa4", "MSAA x4"]]],
-    ["Sombras", "tog", "shadows"], ["Mostrar FPS", "tog", "fps"], ["Pantalla completa", "btn", "fullscreen"],
-    ["Estilo", "sect"],
-    ["Bloom", "tog", "bloom"],
+    ["Resolución", "sect"],
+    ["Escala de render", "range", "scale", 0.5, 1, 0.05, "%"],
+    ["Escalado FSR", "sel", "fsr", [["off", "Apagado"], ["ultra", "Ultra calidad (77%)"], ["calidad", "Calidad (67%)"], ["equilibrado", "Equilibrado (59%)"], ["rendimiento", "Rendimiento (50%)"]]],
+    ["Nitidez de FSR", "range", "fsrSharp", 0, 1, 0.05, "%"],
+    ["Calidad", "sect"],
+    ["Preajuste", "sel", "preset", [["bajo", "Bajo"], ["medio", "Medio"], ["alto", "Alto"], ["ultra", "Ultra"], ["custom", "Personalizado"]]],
+    ["Sombras", "sel", "shadowQ", [["off", "Apagadas"], ["low", "Bajas (1024, 2 cascadas)"], ["mid", "Medias (2048, 3 cascadas)"], ["high", "Altas (4096, 4 cascadas)"]]],
+    ["Detalle del mundo", "sel", "detail", [["bajo", "Bajo"], ["medio", "Medio"], ["alto", "Alto"], ["ultra", "Ultra"]]],
+    ["Texturas", "sel", "texRes", [["256", "256 px"], ["512", "512 px"]]],
+    ["Filtrado anisótropo", "sel", "aniso", [["1", "x1"], ["2", "x2"], ["4", "x4"], ["8", "x8"], ["16", "x16"]]],
+    ["Suavizado", "sect"],
+    ["Suavizado de bordes", "sel", "aa", [["none", "Ninguno (más nítido)"], ["fxaa", "FXAA"], ["msaa2", "MSAA x2"], ["msaa4", "MSAA x4"], ["msaa8", "MSAA x8"]]],
+    ["Nitidez", "range", "sharpen", 0, 1, 0.05, "%"],
+    ["Pantalla", "sect"],
+    ["Límite de FPS", "sel", "fpsCap", [["30", "30"], ["60", "60"], ["120", "120"], ["0", "Sin límite"]]],
+    ["FPS de los menús", "sel", "menuFps", [["30", "30"], ["60", "60"], ["0", "Igual que el juego"]]],
+    ["Mostrar estadísticas", "tog", "fps"],
+    ["Campo de visión", "range", "fov", 40, 70, 1, "°"],
+    ["Brillo", "range", "bright", 0.6, 1.4, 0.05, "%"], ["Gamma", "range", "gamma", 0.7, 1.4, 0.05, "x"],
+    ["Bloom", "tog", "bloom"], ["Pantalla completa", "btn", "fullscreen"],
   ] },
   game: { name: "Juego", rows: [
     ["Cámara", "sect"],
@@ -577,22 +622,30 @@ let resetArmed = false;
 const ref = (p: string) => { const k = p.split("."); let o = save as unknown as Record<string, unknown>; while (k.length > 1) o = o[k.shift()!] as Record<string, unknown>; return [o, k[0]] as const; };
 const val = (p: string) => { const [o, k] = ref(p); return o[k]; };
 export const keyName = (c?: string) => (c ?? "").replace(/^Key|^Digit/, "").replace("Left", " izq").replace("Right", " der").replace("Space", "Espacio").replace(/^Arrow/, "Flecha ").toUpperCase();
-const show2 = (v: number, u?: string) => (u === "%" ? `${Math.round(v * 100)}%` : `${v.toFixed(2)}x`);
+const show2 = (v: number, u?: string) => (u === "%" ? `${Math.round(v * 100)}%` : u === "°" ? `${Math.round(v)}°` : `${v.toFixed(2)}x`);
+/** Opciones que no se pueden usar con los ajustes actuales: motivo en texto (la fila queda apagada) o "" si está disponible. */
+const unavailable = (path: string) => (path === "scale" && save.fsr !== "off" ? "FSR está activo y reemplaza a la escala manual." : path === "fsrSharp" && save.fsr === "off" ? "Solo con el escalado FSR activo." : "");
+/** Lista de una opción con lo que admite este dispositivo (MSAA hasta el máximo de la tarjeta). */
+const choices = (path: string, list: [string, string][]): [string, string, boolean][] => list.map(([v, n]) => {
+  if (path === "aa" && v.startsWith("msaa") && +v.slice(4) > maxMsaa()) return null;
+  if (path === "preset" && v === "custom" && save.preset !== "custom") return null;
+  return [v, n, false] as [string, string, boolean];
+}).filter((o): o is [string, string, boolean] => !!o);
 function renderConfig() {
   $("tabs").innerHTML = Object.entries(TABS).map(([id, t]) => `<button class="tab ${id === tab ? "on" : ""}" data-tab="${id}">${t.name}</button>`).join("");
   // En táctil, Controles deja solo lo táctil (sin teclas ni gamepad)
   const touchOnly = tab === "ctl" && ctl === "touch";
   const rows = TABS[tab].rows.filter((r) => (touchOnly ? (r[1] === "sect" ? r[0] === "Táctil" : r[2] === "touch") : true));
-  const d = (path: string) => (DESC[path] ? `<small>${DESC[path]}</small>` : "");
+  const d = (path: string) => (DESC[path] ? `<small>${DESC[path]}</small>` : "") + (unavailable(path) ? `<small class="why">${unavailable(path)}</small>` : "");
   $("opts").innerHTML = rows.map((r) => {
     if (r[1] === "sect") return `<div class="sect">${r[0]}</div>`;
     if (r[1] === "note") return `<div class="note">${r[0]}</div>`;
     if (r[1] === "btn") return `<button class="row" data-act="${r[2]}"><span class="lb">${r[2] === "resetcfg" && resetArmed ? "¿Seguro? Pulsa otra vez para restablecer" : r[0]}${d(r[2])}</span><b>&gt;</b></button>`;
     if (r[1] === "bind") return `<button class="row" data-bind="${r[2]}"><span class="lb">${r[0]}</span><b>${binding === r[2] ? "PRESIONA UNA TECLA" : keyName(KEYS[r[2]][0])}</b></button>`;
     if (r[1] === "tog") return `<button class="row" data-tog="${r[2]}"><span class="lb">${r[0]}${d(r[2])}</span><b>${val(r[2]) ? "SÍ" : "NO"}</b></button>`;
-    if (r[1] === "sel") return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><select data-set="${r[2]}">${r[3].map(([v, n]) => `<option value="${v}" ${val(r[2]) === v ? "selected" : ""}>${n}</option>`).join("")}</select></label>`;
+    if (r[1] === "sel") return `<label class="row ${unavailable(r[2]) ? "off" : ""}"><span class="lb">${r[0]}${d(r[2])}</span><select data-set="${r[2]}" ${unavailable(r[2]) ? "disabled" : ""}>${choices(r[2], r[3]).map(([v, n, no]) => `<option value="${v}" ${String(val(r[2])) === v ? "selected" : ""} ${no ? "disabled" : ""}>${n}</option>`).join("")}</select></label>`;
     const v = val(r[2]) as number;
-    return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><input type="range" data-set="${r[2]}" data-u="${r[6]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${v}"><output>${show2(v, r[6])}</output></label>`;
+    return `<label class="row ${unavailable(r[2]) ? "off" : ""}"><span class="lb">${r[0]}${d(r[2])}</span><input type="range" data-set="${r[2]}" data-u="${r[6]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${v}" ${unavailable(r[2]) ? "disabled" : ""}><output>${show2(v, r[6])}</output></label>`;
   }).join("");
 }
 
@@ -924,8 +977,11 @@ export function initMenu(a: Api) {
     const t = e.target as HTMLSelectElement;
     if (t.tagName !== "SELECT" || !t.dataset.set) return;
     const [o, k] = ref(t.dataset.set);
-    o[k] = t.value;
+    if (t.selectedOptions[0]?.disabled) { renderConfig(); return focusSel(`select[data-set="${t.dataset.set}"]`); } // opción no disponible: se ignora
+    if (k === "preset") { if (t.value in PRESETS) Object.assign(save, PRESETS[t.value as Preset]); } // el preajuste fija de una vez sus cuatro ajustes
+    else o[k] = typeof o[k] === "number" ? +t.value : t.value;
     commit();
+    renderConfig(); focusSel(`select[data-set="${t.dataset.set}"]`); // otras filas dependen de esta (preajuste, FSR)
   });
   reset("title");
 }

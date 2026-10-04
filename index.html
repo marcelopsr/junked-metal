@@ -9,9 +9,35 @@
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
   <meta name="theme-color" content="#0b0d0a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="stylesheet" href="./src/load.css" /><!-- pantalla de carga: se pinta antes que el resto del JS -->
 </head>
 <body>
   <canvas id="c"></canvas>
+
+  <!-- Pantalla de carga (src/loading.ts): visible desde el primer cuadro; el JS la cierra al llegar a la portada -->
+  <div id="load" role="status" aria-live="polite">
+    <div class="ld-bg"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="ld-box">
+      <div class="ld-brand">JUNKED METAL</div>
+      <div class="ld-road">
+        <svg class="ld-car" viewBox="0 0 132 58" aria-hidden="true">
+          <ellipse cx="66" cy="56" rx="54" ry="2.5" fill="#0006"/>
+          <g class="ld-body">
+            <path d="M10 40 L14 30 Q18 25 30 25 L52 25 L64 13 Q68 10 74 10 L90 10 Q96 10 100 15 L108 26 Q122 27 124 35 L124 42 L10 42 Z" fill="var(--paint)"/>
+            <path d="M68 14 L88 14 L96 25 L58 25 Z" fill="#1a2530" opacity=".85"/>
+            <rect x="6" y="14" width="20" height="3" rx="1.5" fill="#fff1cf"/><rect x="12" y="17" width="3" height="9" fill="#0008"/>
+            <rect x="117" y="30" width="8" height="5" rx="2" fill="#ffe9a8"/>
+          </g>
+          <g class="ld-wheel"><circle cx="32" cy="46" r="11" fill="#1c1c1c"/><circle cx="32" cy="46" r="5.5" fill="var(--rim)"/><path d="M32 40.5v11M26.5 46h11" stroke="#0008" stroke-width="2"/></g>
+          <g class="ld-wheel"><circle cx="100" cy="46" r="11" fill="#1c1c1c"/><circle cx="100" cy="46" r="5.5" fill="var(--rim)"/><path d="M100 40.5v11M94.5 46h11" stroke="#0008" stroke-width="2"/></g>
+        </svg>
+        <div class="ld-lane"></div>
+      </div>
+      <div class="ld-bar"><i id="ldBar"></i></div>
+      <div class="ld-row"><span id="ldStep">Iniciando</span><span class="ld-pct" id="ldPct">0%</span></div>
+      <div class="ld-tip"><b>Consejo</b><span id="ldTip"></span></div>
+    </div>
+  </div>
 
   <div id="hud" class="hidden">
     <div id="signal" class="h-panel">
