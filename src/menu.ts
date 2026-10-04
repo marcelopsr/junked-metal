@@ -8,11 +8,11 @@ import { ctl, KEYS, PAD, padPressed, type Action } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { PILOTS, type PilotId } from "./pilots";
 import { icon } from "./icons";
-import { LOOK, look, setQuality, setSmooth, type Quality } from "./render";
+import { LOOK, look, setAA, setQuality, setSmooth, type AA, type Quality } from "./render";
 import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { ZONES, type ZoneId } from "./world";
-import { padsConnected } from "./input";
+import { isTouch, padsConnected } from "./input";
 import { bestRace, MEDAL, medalOf, raceCfg, saveRaceCfg, TRACKS, trackName } from "./kart";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, CURSES, type AbilityId, type CurseId } from "./abilities";
@@ -29,7 +29,7 @@ type Save = {
   scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number }; cars: CarKind[]; car: CarKind;
   pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; quality: Quality; paint: string; rim: string; zoom: number;
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
-  bloom: boolean; outline: boolean; retro: number; clean: boolean; lookv: number; shake: boolean;
+  aa: AA; bloom: boolean; outline: boolean; retro: number; clean: boolean; lookv: number; shake: boolean;
   keys: Partial<Record<Action, string>>; pad: { dead: number; sens: number }; rumble: boolean; touch: number;
   hud: number; calm: boolean; dmgNums: boolean;
   decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
@@ -42,7 +42,7 @@ const DEFAULT: Save = {
   intro: false,
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, quality: "auto", paint: "", rim: "", zoom: 1.35,
-  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, bloom: true, outline: true, retro: 1, clean: true, lookv: 3, shake: true,
+  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, aa: "none", bloom: true, outline: true, retro: 1, clean: true, lookv: 4, shake: true,
   keys: {}, pad: { dead: 0.15, sens: 1 }, rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
@@ -59,7 +59,7 @@ export const save: Save = (() => {
     // Calcos: siempre 3 ranuras y solo diseños válidos; el aplicado debe apuntar a una ranura con diseño
     const decals = [0, 1, 2].map((i) => (validDecal(s.decals?.[i]) ? s.decals[i] : ""));
     const decalSel = Number.isInteger(s.decalSel) && decals[s.decalSel] ? s.decalSel : -1;
-    if (s.lookv !== 3) { s.clean = true; s.outline = true; s.lookv = 3; } // giro de día y estilo cartoon: look limpio y contorno de tinta (una vez)
+    if (s.lookv !== 4) { s.clean = true; s.outline = true; s.aa = "none"; s.lookv = 4; } // giro de día y estilo cartoon: look limpio y contorno de tinta (una vez)
     return { ...structuredClone(DEFAULT), ...s, decals, decalSel, perm: { ...DEFAULT.perm, ...s.perm }, kit: { ...DEFAULT.kit, ...s.kit }, vol: { ...DEFAULT.vol, ...s.vol }, pad: { ...DEFAULT.pad, ...s.pad },
       stats: { ...DEFAULT.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };
   } catch { return structuredClone(DEFAULT); }
@@ -146,6 +146,7 @@ let L0 = { grain: 0, scan: 0, ca: 0, pal: 0, outline: 0 }; // look de fábrica: 
 export function applySettings() {
   setQuality(save.quality);
   setSmooth(save.clean);
+  setAA(isTouch ? (save.aa === "none" ? "fxaa" : save.aa) : save.aa);
   const glow = api.scene.getGlowLayerByName("bloom");
   if (glow) glow.isEnabled = save.bloom;
   const pipe = api.scene.postProcessRenderPipelineManager.supportedPipelines.find((p) => p.name === "pipe") as DefaultRenderingPipeline | undefined;
@@ -477,6 +478,7 @@ type Row = [label: string, kind: "range", path: string, min: number, max: number
 const TABS: Record<string, { name: string; rows: Row[] }> = {
   gfx: { name: "Gráficos", rows: [
     ["Calidad", "sel", "quality", [["auto", "Auto"], ["ultra", "Ultra 1440p"], ["calidad", "Calidad 1080p"], ["equilibrado", "Equilibrado 720p"], ["rendimiento", "Rendimiento 540p"]]],
+    ["Suavizado de bordes", "sel", "aa", [["none", "Ninguno (más nítido)"], ["fxaa", "FXAA"], ["msaa2", "MSAA x2"], ["msaa4", "MSAA x4"]]],
     ["Bloom", "tog", "bloom"], ["Contornos", "tog", "outline"], ["Look limpio (sin grano, scanlines, paleta ni temblor)", "tog", "clean"],
     ["Look retro (grano, scanlines, aberración, paleta; 0% = limpio)", "range", "retro", 0, 1.5, 0.1, "%"],
     ["Zoom de cámara", "range", "zoom", 0.8, 2, 0.05, "x"], ["Temblor de pantalla", "tog", "shake"],

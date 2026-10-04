@@ -99,9 +99,8 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   glow.intensity = 2.2;
 
   mainCam = cam;
-  const pipe = new B.DefaultRenderingPipeline("pipe", true, scene, [cam]);
-  pipe.fxaaEnabled = low; // con MSAA x4 el FXAA solo emborrona la imagen: queda para el celular
-  if (!low) pipe.samples = 4;
+  const pipe = pipeline = new B.DefaultRenderingPipeline("pipe", true, scene, [cam]);
+  pipe.fxaaEnabled = false; pipe.samples = 1; // el suavizado de bordes lo elige el jugador (Configuración → Gráficos → setAA)
   pipe.bloomEnabled = true;
   pipe.bloomThreshold = 0.95;
   pipe.bloomWeight = 0.18; // brillo discreto: antes velaba todo el día
@@ -181,7 +180,14 @@ export const QUALITY = { ultra: 1440, calidad: 1080, equilibrado: 720, rendimien
 export type Quality = keyof typeof QUALITY | "auto";
 let target: number = QUALITY.calidad;
 let adaptK = 1, adaptOn = true, adaptT = 0, adaptOk = 0; // escalado dinámico: factor sobre la altura objetivo (0,6..1)
-let depth: B.DepthRenderer, retro: B.PostProcess, mainCam: B.Camera;
+let depth: B.DepthRenderer, retro: B.PostProcess, mainCam: B.Camera, pipeline: B.DefaultRenderingPipeline;
+export type AA = "none" | "fxaa" | "msaa2" | "msaa4";
+/** Suavizado de bordes: sin nada, FXAA (barato, algo borroso) o MSAA x2/x4 (más nítido, más costoso). */
+export function setAA(m: AA) {
+  if (!pipeline) return;
+  pipeline.fxaaEnabled = m === "fxaa";
+  pipeline.samples = m === "msaa2" ? 2 : m === "msaa4" ? 4 : 1;
+}
 
 function applyScale() {
   const e = scene.getEngine();
