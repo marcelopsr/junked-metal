@@ -93,7 +93,10 @@ function hiss(filter: BiquadFilterType, f0: number, f1: number, dur: number, vol
 
 // ---------- Sonidos del juego ----------
 let combo = 0, comboT = 0;
+// Melodía del camioncito de helados (ponytail: notas fijas, onda triangular; ~6 s)
+const JINGLE: [number, number][] = [[392, 0], [392, 0.22], [440, 0.44], [494, 0.66], [392, 0.88], [494, 1.1], [440, 1.32], [294, 1.76], [392, 2.2], [392, 2.42], [440, 2.64], [494, 2.86], [392, 3.08], [392, 3.3], [330, 3.52], [392, 3.96]];
 export const SFX = {
+  jingle: () => JINGLE.forEach(([f, d]) => tone("triangle", f, f * 0.995, 0.2, 0.07, d)),
   hit: () => gate("hit", 18) && hiss("bandpass", 2400, 900, 0.06, 0.18),
   kill: () => gate("kill", 14) && (tone("triangle", 420, 140, 0.09, 0.12), hiss("lowpass", 3000, 400, 0.08, 0.1)),
   ram: (power: number) => { tone("sine", 160, 45, 0.18, Math.min(0.5, 0.2 + power * 0.01)); hiss("lowpass", 1800, 200, 0.12, 0.25); },

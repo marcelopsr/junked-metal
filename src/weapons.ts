@@ -100,10 +100,13 @@ const nearest = (pos: B.Vector3, enemies: Enemy[], range: number, skip?: Set<Ene
   return best;
 };
 
+// Camión de helados: sus "gomitas" son bochas de helado (misma arma, otra malla)
+let scoop = false;
+export const setScoop = (on: boolean) => { scoop = on; };
 class Gomitas extends Weapon {
   shots: { m: B.InstancedMesh; dir: B.Vector3; life: number; bounces: number; hit: Set<Enemy> }[] = [];
   onHit?: (c: Ctx, e: Enemy) => void; // sinergia de fusión (Globos de agua)
-  tpl = template("gomita", () => [sph(0.45, pbr("gummy", { color: "#b6ff6a", rough: 0.15, alpha: 0.85, emissive: "#3a8a00" }), [0, 0, 0], [1, 0.8, 1.2])]);
+  tpl = scoop ? template("scoop", () => [sph(0.55, pbr("scoopMat", { color: "#f7a8cf", rough: 0.5, emissive: "#6a2a44" }), [0, 0, 0]), sph(0.3, pbr("scoopTop", { color: "#fff1d0", rough: 0.5, emissive: "#5a5040" }), [0, 0.28, 0], undefined, 5)]) : template("gomita", () => [sph(0.45, pbr("gummy", { color: "#b6ff6a", rough: 0.15, alpha: 0.85, emissive: "#3a8a00" }), [0, 0, 0], [1, 0.8, 1.2])]);
   update(c: Ctx) {
     if ((this.cd -= c.dt) <= 0) {
       const t = nearest(c.car.pos, c.enemies, 22);

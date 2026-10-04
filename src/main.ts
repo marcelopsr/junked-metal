@@ -13,7 +13,7 @@ import { ABILITIES, type AbilityId } from "./abilities";
 import { pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
 import { applyClimate, glitchHit, look, M, pbr, setDark, setLamp, setQuality, setupRender, shadows } from "./render";
-import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
+import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
 import { buildLayout, buildWorld, HALF, hitBreakables, obstacles, occluders, setWind, setZone, spawnPoint, underRoof, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
@@ -66,7 +66,7 @@ let car: Car | null = null;
 let weapons: Weapon[] = [];
 let passives: Partial<Record<PassiveId, number>> = {};
 let st: PStats = passiveStats({}, save.perm);
-let hp = 100, maxHp = 100, boost = 100;
+let hp = 100, maxHp = 100, boost = 100, jingleT = 0;
 let xp = 0, level = 1, pendingLevels = 0;
 let time = 0, kills = 0, runScrap = 0;
 let runDist = 0; // metros manejados en la partida (estadísticas de carrera)
@@ -206,7 +206,10 @@ function startRun(d = false) {
   car = new Car(scene, save.car, carOpts());
   lastHpFrac = 1;
   passives = {};
+  setScoop(save.car === "helado");
   weapons = startWeapons(save.pilot, save.perm.extra).map(makeWeapon);
+  if (save.car === "helado" && !weapons.some((w) => w.id === "gomitas")) weapons.unshift(makeWeapon("gomitas")); // arma de partida del camión: bochas de helado
+  jingleT = 2;
   rerolls = save.perm.reroll; revives = save.perm.revive;
   maxHp = car.def.hp;
   recompute();
@@ -537,6 +540,7 @@ function update(dt: number) {
   c.animate(dt, steer, r.fs, maxSpeed);
   { const zp = zoneTick(dt, c.pos); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
   engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * 1.55)), throttle, boosting);
+  if (c.kind === "helado" && (jingleT -= dt) <= 0) { SFX.jingle(); jingleT = 16; }
   runDist += Math.abs(r.fs) * dt;
   // Combo de manejo: derrape largo, salto y aterrizaje limpio suben el multiplicador de XP (tope x2); un golpe lo corta (hurt)
   if (r.grounded) {
@@ -647,7 +651,7 @@ function update(dt: number) {
       const rel = B.Vector3.Dot(cv, dir); // solo cuenta TU velocidad hacia el enemigo
       if (rel > 5 && e.ramCd <= 0) {
         const lanza = weapons.find((w) => w.id === "lanza");
-        const dmg = rel * c.def.ram * (1 + 0.35 * (lanza?.lv ?? 0)) * (boosting ? 1.3 : 1) * st.dmg * (lanza?.evolved ? 1.5 : 1);
+        const dmg = rel * c.def.ram * (1 + 0.35 * (lanza?.lv ?? 0)) * (boosting ? (c.kind === "axel" ? 1.6 : 1.3) : 1) * st.dmg * (lanza?.evolved ? 1.5 : 1);
         dmgSrc = "embestida";
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(new B.Vector3(0, rel * 0.2, 0)), true);
         FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0)));
