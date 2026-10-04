@@ -199,3 +199,16 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #opts .row { font: 700 18px/1.1 "Rajdhani", system-ui, sans-serif; letter-spacing: .02em; text-transform: none; }
 #opts .row output, #opts .row b { font: 700 18px "Rajdhani", system-ui, sans-serif; }
 #opts .sect { margin-top: 18px; }
+
+/* Menú principal en cuadrícula: lo principal grande, las opciones de partida como fichas chicas */
+.mainGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(560px, 92vw); }
+.mainGrid .wide { grid-column: 1 / -1; }
+.mainGrid .primary { font-size: 24px; padding: 18px 22px; text-align: center; }
+.mainGrid button { text-align: center; min-height: 52px; font-size: 18px; }
+.mainGrid .chip { min-height: 38px; font-size: 14px; letter-spacing: .02em; opacity: .9; }
+.mainGrid .ghost { background: transparent; border-color: rgba(255, 255, 255, .12); min-height: 40px; font-size: 15px; box-shadow: none; }
+.tag { color: #f4f7fa; text-shadow: 0 2px 6px rgba(0, 0, 0, .55); font-weight: 600; letter-spacing: .04em; }
+.mainGrid .ghost { color: #dbe6ee; }
+.foot { color: #eaf1f7; text-shadow: 0 2px 5px rgba(0, 0, 0, .6); }
+#opts { padding-top: 14px; }
+#opts .note { background: rgba(8, 16, 26, .55); border: 0; border-radius: 10px; color: #cfdbe6; }

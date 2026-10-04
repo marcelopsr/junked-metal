@@ -92,18 +92,18 @@
 
     <section id="scr-main" class="scr">
       <div class="brand small">JUNKED METAL</div>
-      <nav class="list">
-        <button data-act="play" class="primary">Jugar</button>
-        <button data-act="curse" id="curseBtn">Maldiciones</button>
-        <button data-act="zone" id="zoneBtn">Zona</button>
-        <button data-act="daily" id="dailyBtn">Desafío diario</button>
+      <nav class="list mainGrid">
+        <button data-act="play" class="primary wide">Jugar</button>
         <button data-go="race">Carrera</button>
+        <button data-act="daily" id="dailyBtn">Desafío diario</button>
+        <button data-act="zone" id="zoneBtn" class="chip">Zona</button>
+        <button data-act="curse" id="curseBtn" class="chip">Maldiciones</button>
         <button data-go="garage">Garaje</button>
         <button data-go="shop">Taller</button>
-        <button data-go="config">Configuración</button>
         <button data-go="bestiary">Bestiario</button>
-        <button data-go="credits">Créditos</button>
-        <button data-act="install" id="install" class="hidden">Instalar</button>
+        <button data-go="config">Configuración</button>
+        <button data-go="credits" class="wide ghost">Créditos</button>
+        <button data-act="install" id="install" class="hidden wide">Instalar</button>
       </nav>
       <div class="foot" id="mainInfo"></div>
       <div class="foot hidden" id="iosHint">Para instalar: Compartir → Agregar a inicio</div>

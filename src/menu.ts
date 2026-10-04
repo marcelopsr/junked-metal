@@ -540,7 +540,7 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
     ["Lectura", "sect"],
     ["Tamaño del HUD", "range", "hud", 0.8, 1.5, 0.05, "x"], ["HUD con fondo sólido", "tog", "hudSolid"], ["Números de daño", "tog", "dmgNums"],
     ["Movimiento", "sect"],
-    ["Reducir parpadeos y glitch", "tog", "calm"], ["Temblor de pantalla", "tog", "shake"],
+    ["Reducir parpadeos y destellos", "tog", "calm"], ["Temblor de pantalla", "tog", "shake"],
   ] },
   data: { name: "Datos", rows: [
     ["El progreso se guarda en este navegador. Un archivo de respaldo permite llevarlo a otro dispositivo.", "note"],
