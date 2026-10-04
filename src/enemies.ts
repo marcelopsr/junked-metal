@@ -64,6 +64,8 @@ export class Enemy {
   phaseUp = false; // main.ts lo apaga tras mostrar el aviso de fase
   dir = 0; // Eulalio: rumbo del dash / giro
   meowCd = 6;
+  leader: Enemy | null = null; // formación: sigue a su líder en vez de ir directo al auto
+  slot = new B.Vector3(); // lugar en la formación (x a la derecha del líder, z hacia atrás)
 
   constructor(public kind: Kind, pos: B.Vector3, hpMul: number) {
     const d = (this.def = DEF[kind]);

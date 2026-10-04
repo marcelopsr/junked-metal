@@ -84,7 +84,7 @@ const spitTpl = () => template("spit", () => [sph(0.55, pbr("acid", { color: "#f
 let fpsT = 0;
 let cycleS = -1; // tramo del ciclo atardecer → noche ya aplicado
 let darkK = 1, apagon = false, musicS = "", musicT = 0; // musicS/T: estado musical y reloj de refresco
-let spawnAcc = 0, swarmT = 60, chestT = 100, ballT = 75, bossIdx = 0;
+let spawnAcc = 0, groupT = 0, swarmT = 60, chestT = 100, ballT = 75, bossIdx = 0;
 let shake = 0, camYaw = 0, dustT = 0, roofK = 0;
 let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number; hit?: boolean } | null = null;
 let offers: Offer[] = [];
@@ -220,7 +220,7 @@ function startRun(d = false) {
   hp = maxHp; boost = 100;
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
-  spawnAcc = 0; swarmT = 90 + profile.swarmEvery * 0.5; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false; apagon = false;
+  spawnAcc = 0; groupT = 0; swarmT = 90 + profile.swarmEvery * 0.5; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false; apagon = false;
   camYaw = 0; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1);
   state = "play";
   scene.physicsEnabled = true;
@@ -603,6 +603,21 @@ function update(dt: number) {
   // Con la cámara más alejada que el zoom por defecto (1.35) el anillo de aparición se abre igual, para no verlos nacer
   // Anillo fijo, fuera de cuadro aun con el zoom máximo (2): la partida no cambia según el zoom elegido
   while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time, profile.plague)), spawnPoint(ahead, 36, 54)); }
+  // Formaciones: columna de hormigas (ordenadas tras una líder) o escarabajo con escolta de autitos a fricción
+  if (time > 50 && (groupT -= dt) <= 0 && normals < maxAlive - 12) {
+    groupT = 26 + rng() * 10;
+    const p0 = spawnPoint(ahead, 36, 54), ant = time < 150 || rng() < 0.6;
+    spawnEnemy(ant ? "hormiga" : "escarabajo", p0);
+    const lead = enemies[enemies.length - 1];
+    const n = ant ? 6 + Math.floor(time / 60) : 4;
+    for (let i = 1; i <= n; i++) {
+      const a = (i / n) * 6.28, slot = ant ? new B.Vector3(0, 0, 1.8 * i) : new B.Vector3(Math.sin(a) * 4.5, 0, Math.cos(a) * 4.5);
+      spawnEnemy(ant ? "hormiga" : "friccion", p0.add(new B.Vector3(slot.x, 0, -slot.z)));
+      const f = enemies[enemies.length - 1];
+      f.leader = lead; f.slot.copyFrom(slot); f.spd = 1.2;
+    }
+    if (!simulating) banner(ant ? "COLUMNA" : "ESCOLTA", 1.2);
+  }
   if ((swarmT -= dt) <= 0) {
     swarmT = profile.swarmEvery;
     banner("ENJAMBRE", 1.4);
@@ -641,7 +656,11 @@ function update(dt: number) {
   const carR = Math.max(c.def.size[0], c.def.size[2]) / 2;
   let contactHit = 0;
   for (const e of enemies) {
-    const ev = e.stun > 0 ? stunned(e, wdt) : e.update(wdt, c.pos);
+    // En formación va al lugar que le toca junto a su líder; cerca del auto (o sin líder) ataca por su cuenta
+    const ld = e.leader && e.leader.hp > 0 && Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) > 14 ? e.leader : null;
+    if (e.leader && !ld && Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) <= 14) e.leader = null;
+    const tgt = ld ? ld.pos.add(ld.node.right.scale(e.slot.x)).addInPlace(ld.node.forward.scale(-e.slot.z)) : c.pos;
+    const ev = e.stun > 0 ? stunned(e, wdt) : e.update(wdt, tgt);
     if (ev === "spit") {
       // Apunta adonde vas a estar (predicción simple): esquivar = cambiar de rumbo
       const cvl = c.body.getLinearVelocity(), from = e.pos.add(new B.Vector3(0, 0.6, 0));
