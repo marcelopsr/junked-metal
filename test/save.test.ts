@@ -11,7 +11,7 @@ const D = {
   scrap: 0, cars: ["buggy"], ach: [], keys: { up: ["KeyW", "ArrowUp"], boost: ["Space", ""], pause: ["Escape", "KeyP"] }, ability: "bombardeo", beast: {}, preset: "medio",
 } as unknown as Save;
 const deps: SaveDeps = {
-  abilities: { bombardeo: 1, emp: 1 }, curses: { horda: 1 }, kinds: ["hormiga", "gato"], zones: { patio: 1, garaje: 1 }, isTouch: false,
+  abilities: { bombardeo: 1, emp: 1 }, weapons: ["gomitas", "clips"], curses: { horda: 1 }, kinds: ["hormiga", "gato"], zones: { patio: 1, garaje: 1 }, isTouch: false,
   validDecal: (d) => typeof d === "string" && /^[0-8]{4}$/.test(d), presetOf: ({ shadowQ }) => (shadowQ === "off" ? "bajo" : "medio"),
   presets: { bajo: { shadowQ: "off", texRes: 128, bloom: false }, medio: { shadowQ: "mid", texRes: 256, bloom: true } },
 };
@@ -93,5 +93,11 @@ describe("parseSave", () => {
     expect(s.profiles[0]).toMatchObject({ name: "Sillón con nombre mu", touch: 1.2, keys: { up: ["KeyO", "ArrowUp"] }, pad: D.pad });
     expect(s.profiles[1]).toBeNull(); expect(s.profiles[2]!.name).toBe("Perfil 3");
     expect(load({}).profiles).toEqual([null, null, null]);
+  });
+  it("Taller: niveles de mejoras y habilidades enteros de 0 a 10, arma inicial solo del arsenal", () => {
+    const s = load({ perm: { hp: 3, dmg: -1, inventada: 4 }, abilLv: { emp: 2.5, bombardeo: 99, x: 1 }, weapon: "clips" });
+    expect(s.perm).toEqual({ hp: 3, dmg: 0 }); expect(s.abilLv).toEqual({ bombardeo: 10 }); expect(s.weapon).toBe("clips");
+    expect(load({ weapon: "chispazo" }).weapon).toBeUndefined(); // fusión o id inventado: se descarta (el defecto de este test no trae weapon)
+    expect(load({ perm: "x", abilLv: null })).toMatchObject({ perm: { hp: 0, dmg: 0 }, abilLv: {} });
   });
 });

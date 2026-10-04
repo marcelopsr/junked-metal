@@ -15,7 +15,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const JSON_PATH = resolve(dirname(fileURLToPath(import.meta.url)), "../src/balance.json");
 const IGNORADAS = new Set(["Leeme", "Golpes para matar", "Tiempo jefe", "Partidas para comprar"]);
-const TIPOS = { enemigos: ["bicho", "minijefe", "jefe_final"], precios: ["mejora", "zona", "pieza"] }; // columna tipo: valores permitidos
+const TIPOS = { enemigos: ["bicho", "minijefe", "jefe_final"], precios: ["mejora", "habilidad", "arma", "zona", "pieza"] }; // columna tipo: valores permitidos
 
 // Una fila por línea: diffs legibles en git (mismo formato que generó el JSON)
 export const fmt = (data) => "{\n" + Object.entries(data).map(([k, rows]) => `  ${JSON.stringify(k)}: [\n${rows.map((r) => "    " + JSON.stringify(r)).join(",\n")}\n  ]`).join(",\n") + "\n}\n";

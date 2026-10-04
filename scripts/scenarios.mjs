@@ -39,6 +39,10 @@ const lab = (o) => async (p) => { await wait(p, () => window.__lab); await p.eva
 const partida = (secs) => async (p) => { await p.evaluate((s) => { window.__play(3); window.__god(); window.__sim(s); }, secs); await tick(p, 45); }; // semilla 3; god: la captura no depende de que el bot sobreviva; 45 cuadros para que la cámara alcance al auto
 const labAnts = async (p) => { await p.evaluate(() => { window.__lab({ frames: 2 }); window.__ants(300); }); };
 
+const PIEZAS = ["wing:alto", "exhaust:chimenea", "bumper:cano", "bumper:antivuelco", "bumper:laterales", "tires:oruga", "tires:todoterreno", "tires:rayos", "acc:pelotita", "acc:banderita", "acc:matafuego"].map((x) => "part:" + x);
+const garajePiezas = (car, kit) => async (p) => { await p.evaluate(([car, kit, unlocked]) => window.__cfg({ car, cars: ["buggy", car], unlocked, kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", ...kit } }), [car, kit, PIEZAS]);
+  await view("garage")(p); await p.dispatchEvent('[data-gtab="piezas"]', "click"); await tick(p, 150); await p.waitForTimeout(100); }; // 150 cuadros: la cámara viaja desde el Taller
+
 export const sessions = [
   { id: "menu", query: "?mute&seed=3", shots: [
     { id: "carga", act: carga, perf: false },
@@ -54,6 +58,17 @@ export const sessions = [
     { id: "bestiario", act: async (p) => { await view("bestiary")(p); } },
     { id: "ficha", act: async (p) => { await p.dispatchEvent("#beasts [data-beast]", "click"); await wait(p, () => document.querySelector("#scr-beast.on")); await p.waitForTimeout(500); } },
     { id: "creditos", act: view("credits") },
+  ] },
+  // Taller y garaje con compras: __cfg escribe el guardado en memoria (sin persistir) y la pantalla se vuelve a abrir para redibujarla
+  { id: "taller", query: "?mute&seed=3", shots: [
+    { id: "chasis-vista-previa", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ scrap: 260, perm: { hp: 3, dmg: 1, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0, arm: 2, reg: 0, tur: 1, ram: 0, cdr: 0 } }));
+      await view("shop")(p); await p.focus('#shop [data-k="arm"]'); await p.waitForTimeout(100); } },
+    ...["habilidades", "arsenal"].map((t) => ({ id: t, perf: false, act: async (p) => { await p.dispatchEvent(`[data-stab="${t}"]`, "click"); await p.focus("#shop .perk"); await p.waitForTimeout(100); } })),
+    { id: "piezas-comprables-precio", perf: false, act: async (p) => { await p.dispatchEvent('[data-stab="piezas"]', "click"); await p.dispatchEvent('[data-sf="comprables"]', "click"); await p.dispatchEvent("[data-ss]", "click"); await p.waitForTimeout(100); } },
+    { id: "garaje-piezas", perf: false, act: garajePiezas("buggy", { wing: "alto", bumper: "antivuelco", tires: "todoterreno", acc: "pelotita" }) },
+    { id: "garaje-piezas-2", perf: false, act: garajePiezas("monster", { exhaust: "chimenea", bumper: "cano", tires: "oruga", acc: "banderita" }) },
+    { id: "garaje-piezas-3", perf: false, act: garajePiezas("formula", { bumper: "laterales", tires: "rayos", acc: "matafuego" }) },
+    { id: "garaje-arma", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ pilot: "robot", unlocked: ["arma:clips"], weapon: "clips" })); await view("garage")(p); await p.dispatchEvent('[data-gtab="arma"]', "click"); await p.waitForTimeout(150); } },
   ] },
   { id: "controles", query: "?mute&seed=3", vps: ["pc"], shots: [
     { id: "probar-control", perf: false, act: async (p) => { await ctlTab(p); await fakePad(p); await tick(p, 3); await p.evaluate(() => document.getElementById("ptest").scrollIntoView({ block: "center" })); await tick(p, 2); await p.waitForTimeout(100); } },

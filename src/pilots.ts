@@ -30,9 +30,14 @@ export const PILOTS: Record<PilotId, { name: string; pros: string[]; con: string
 
 export const pilotStats = (st: PStats, id: PilotId) => { (PILOTS[id] ?? PILOTS.soldadito).mod(st); return st; };
 
-/** Armas con las que arranca la partida: la del piloto y, con la Caja de repuestos, otra al azar (de la semilla). */
-export function startWeapons(id: PilotId, extra: number): WeaponId[] {
-  const w = [(PILOTS[id] ?? PILOTS.soldadito).start];
+/** Arsenal inicial (Taller → Arsenal, Garaje → Arma): Gomitas de serie y las armas base con fila arma_<id> en precios. Sin fusiones ni Lápiz-lanza (no dispara). */
+export const ARSENAL: WeaponId[] = ["gomitas", ...Object.keys(BAL.precios).filter((k) => k.startsWith("arma_")).map((k) => k.slice(5) as WeaponId)];
+
+/** Armas con las que arranca la partida: UNA inicial y, con la Caja de repuestos, otra al azar (de la semilla).
+ *  La inicial es la elegida en el garaje (`pick`); con Gomitas (la de serie) arranca con la del piloto.
+ *  ponytail: provisorio hasta que se decida si el arma propia del piloto (Robot, Mega Macho) se suma o se reemplaza. */
+export function startWeapons(id: PilotId, extra: number, pick: WeaponId = "gomitas"): WeaponId[] {
+  const w = [pick === "gomitas" ? (PILOTS[id] ?? PILOTS.soldadito).start : pick];
   if (extra > 0) {
     const pool = (Object.keys(WEAPONS) as WeaponId[]).filter((k) => k !== "lanza" && !w.includes(k));
     w.push(pool[Math.floor(rng() * pool.length)]);

@@ -10,8 +10,8 @@ import { GLB, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
 import { CAM_MODES, CAM_NAMES, type CamMode } from "./savefmt";
-import { applySettings, beastRec, BV, carOpts, current, shownCar, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
-import { ABILITIES, type AbilityId } from "./abilities";
+import { applySettings, beastRec, BV, carOpts, current, shownCar, startPick, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
+import { ABILITIES, abilCd as abilCdOf, abilK, type AbilityId } from "./abilities";
 import { pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
 import { applyClimate, gfxInfo, glitchHit, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setupRender, shadows } from "./render";
@@ -116,7 +116,7 @@ let offerSel = 0;
 
 
 // Habilidad activa (abilities.ts): enfriamiento, segundos activa, petardos por caer y ritmo del mundo (cámara lenta)
-let abil: AbilityId = "bombardeo", abilCd = 0, abilOn = 0, worldK = 1, bombs = 0, bombT = 0;
+let abil: AbilityId = "bombardeo", abilLv = 0, abilCd = 0, abilOn = 0, worldK = 1, bombs = 0, bombT = 0;
 let shieldM: B.Mesh | null = null; // burbuja del escudo, hija del auto (se libera con él)
 // Combo de manejo: multiplicador de XP (x1 a x2) que se pierde al recibir daño
 let driveMul = 1, driftT = 0, airT = 0, airHit = false, trickT = 0; // trickT: segundos desde el último truco
@@ -236,14 +236,14 @@ function startRun(d = false) {
   const curses: typeof save.curses = [];
   horde = curses.includes("horda") ? R.maldicion_horda : 1; noRepair = curses.includes("sinrep"); curseK = 1 + R.maldicion_tornillos * curses.length;
   endless = false; bank = null;
-  abil = save.ability; abilCd = abilOn = bombs = 0; worldK = 1; shieldM = null;
+  abil = save.ability; abilLv = save.abilLv[abil] ?? 0; abilCd = abilOn = bombs = 0; worldK = 1; shieldM = null;
   driveMul = 1; driftT = airT = trickT = 0; hudDrive(1);
   car = new Car(scene, save.car, carOpts());
   lastHpFrac = 1;
   passives = {};
   bestStreak = bestHit = bossKills = 0;
   setScoop(save.car === "helado"); setEngineKind(save.car);
-  weapons = startWeapons(save.pilot, save.perm.extra).map(makeWeapon);
+  weapons = startWeapons(save.pilot, save.perm.extra, startPick()).map(makeWeapon);
   if (save.car === "helado" && !weapons.some((w) => w.id === "gomitas")) weapons.unshift(makeWeapon("gomitas")); // arma de partida del camión: bochas de helado
   jingleT = 2;
   rerolls = save.perm.reroll; revives = save.perm.revive;
@@ -640,7 +640,7 @@ function update(dt: number) {
   const ariete = weapons.some((w) => w.id === "lanza" && w.evolved);
   const boosting = input.boost && boost > R.turbo_umbral && throttle >= 0;
   lampBoost = boosting;
-  boost = boosting ? boost - R.turbo_gasto * dt : Math.min(100, boost + st.boostRegen * dt);
+  boost = boosting ? boost - R.turbo_gasto * st.boostUse * dt : Math.min(100, boost + st.boostRegen * dt);
   const maxSpeed = c.def.speed * st.speedMul * (boosting ? R.turbo_vel : 1);
   const r = drive(c.body, c.root, dt, {
     throttle: boosting ? 1 : throttle, steer, speed: maxSpeed,
@@ -786,7 +786,7 @@ function update(dt: number) {
       const rel = B.Vector3.Dot(cv, dir); // solo cuenta TU velocidad hacia el enemigo
       if (rel > R.embestida_vel_min && e.ramCd <= 0) {
         const lanza = weapons.find((w) => w.id === "lanza");
-        const dmg = rel * c.def.ram * (1 + BAL.armas.lanza.dano_nivel * (lanza?.lv ?? 0)) * (boosting ? (c.kind === "axel" ? R.embestida_turbo_axel : R.embestida_turbo) : 1) * st.dmg * (lanza?.evolved ? BAL.armas.lanza.dano_evo_mult : 1);
+        const dmg = rel * c.def.ram * (1 + BAL.armas.lanza.dano_nivel * (lanza?.lv ?? 0)) * (boosting ? (c.kind === "axel" ? R.embestida_turbo_axel : R.embestida_turbo) : 1) * st.dmg * st.ram * (lanza?.evolved ? BAL.armas.lanza.dano_evo_mult : 1);
         dmgSrc = "embestida";
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(new B.Vector3(0, rel * 0.2, 0)), true);
         FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0)));
@@ -920,14 +920,15 @@ function hurt(n: number, continuous = false, src = "?", by?: Kind) {
 // ---------- Habilidad activa ----------
 function useAbility(c: Car) {
   const a = ABILITIES[abil];
-  abilCd = a.cd; abilOn = a.dur;
-  if (abil === "bombardeo") { bombs = R.bombardeo_petardos; bombT = 0; }
+  const k = abilK(abilLv); // nivel del Taller: más petardos, más segundos de escudo y de cámara lenta, más aturdido
+  abilCd = abilCdOf(abil, abilLv); abilOn = a.dur * (abil === "escudo" || abil === "lenta" ? k : 1);
+  if (abil === "bombardeo") { bombs = Math.round(R.bombardeo_petardos * k); bombT = 0; }
   else if (abil === "escudo") {
     if (!shieldM) { shieldM = sph(Math.max(...c.def.size) * 1.5, pbr("escudo", { color: "#8dff6a", emissive: "#3f9a2a", alpha: 0.18 }), [0, 0.2, 0]); shieldM.parent = c.root; shieldM.isPickable = false; }
     shieldM.isVisible = true;
     SFX.pickup();
   } else if (abil === "emp") {
-    for (const e of enemies) if (!e.def.boss && !e.airborne && B.Vector3.Distance(e.pos, c.pos) < R.emp_radio + e.radius) e.stun = R.emp_aturde_s;
+    for (const e of enemies) if (!e.def.boss && !e.airborne && B.Vector3.Distance(e.pos, c.pos) < R.emp_radio + e.radius) e.stun = R.emp_aturde_s * k;
     if (!simulating) burst(c.pos.add(new B.Vector3(0, 0.6, 0)), { n: 90, color: "#8dff6a", color2: "#6fb3c4", size: [0.2, 0.6], power: [14, 22], life: [0.25, 0.5], gravity: 0 });
     SFX.zap(); shake = Math.max(shake, 0.4);
   } else { worldK = R.lenta_mundo; fxSpeed(R.lenta_mundo); }
@@ -994,7 +995,7 @@ function updateHud(dt: number) {
   for (const t of [0.5, 0.25]) if (lastHpFrac > t && frac <= t) { debris(car!.pos, save.paint || "#d62828", 8, 7, 0.8); FX.sparks(car!.pos); shake = Math.max(shake, 0.6); }
   lastHpFrac = frac;
   hudUpdate({ hp, maxHp, boost, xp, need: xpNeed(level), level, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh });
-  hudAbility(ABILITIES[abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / ABILITIES[abil].cd, abilOn > 0);
+  hudAbility(ABILITIES[abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / abilCdOf(abil, abilLv), abilOn > 0);
 }
 
 // ---------- Loop ----------
@@ -1355,7 +1356,7 @@ if (import.meta.env.DEV) Object.assign(window, {
   __god: () => (god = true),
   __w: (id: string, lv = 1, evolved = false) => { const w = makeWeapon(id as WeaponId); w.lv = lv; w.evolved = evolved; weapons = weapons.filter((x) => x.id !== id); weapons.push(w); recompute(); return weapons.map((x) => x.id + x.lv + (x.evolved ? "E" : "")); }, // solo dev: da un arma
   // Dispara una habilidad sin enfriamiento (no toca el guardado): __abil("emp")
-  __abil: (id?: AbilityId) => { if (!car || state !== "play") return "sin partida"; if (id) abil = id; abilCd = 0; useAbility(car); return abil; },
+  __abil: (id?: AbilityId) => { if (!car || state !== "play") return "sin partida"; if (id) { abil = id; abilLv = save.abilLv[id] ?? 0; } abilCd = 0; useAbility(car); return abil; },
   __endless: () => { goEndless(); return { endless, next: RUN_BOSSES.at(-1) }; },
   __dmg: () => { const r = JSON.stringify(dmgBy); for (const k in dmgBy) delete dmgBy[k]; return r; },
   __out: () => JSON.stringify(Object.fromEntries(Object.entries(dmgOut).map(([k, v]) => [k, Math.round(v)]))), // daño infligido por arma

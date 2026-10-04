@@ -55,8 +55,8 @@ const DESC = {
     xp_mult: "Multiplicador de XP", arma_inicial: "Arma con la que arranca (id de la hoja armas)",
   },
   precios: {
-    id: "Identificador (no cambiar)", tipo: "mejora, zona o pieza (referencia)", nombre: "Nombre (referencia)",
-    efecto: "Efecto por nivel de la mejora: Chasis +vida, Piñón +fracción de daño, Motor +fracción de velocidad, Imán +fracción, Contador de tuercas +fracción de XP (0 = fijo)",
+    id: "Identificador (no cambiar)", tipo: "mejora, habilidad, arma, zona o pieza (referencia)", nombre: "Nombre (referencia)",
+    efecto: "Efecto por nivel de la mejora: Chasis +vida, Piñón +fracción de daño, Motor +fracción de velocidad, Imán +fracción, Contador de tuercas +fracción de XP, Placa de lata +fracción de blindaje, Cinta aisladora +vida/s, Nafta de encendedor +fracción de turbo (recarga y duración), Paragolpes de fierro +fracción de daño al embestir, Gatillo engrasado −fracción de recarga de armas (0 = fijo; habilidades: ver ritmo habilidad_cd_nivel y habilidad_efecto_nivel)",
     ...Object.fromEntries(Array.from({ length: 10 }, (_, i) => ["nivel" + (i + 1), `Precio en tornillos del nivel ${i + 1} (vacío = ese nivel no existe)`])),
   },
   plagas: {
@@ -175,7 +175,7 @@ for (const t of Object.keys(DESC)) {
   const ws = wb.addWorksheet("Partidas para comprar");
   ws.getCell("A1").value = "Partidas para comprar"; ws.getCell("A1").font = { bold: true, size: 14 };
   ws.getCell("A2").value = "Precio ÷ tornillos promedio por partida, por cada nivel de mejora, auto, piloto, zona y pieza. Se recalcula con las hojas precios, autos, pilotos y ritmo.";
-  ws.getCell("A4").value = "Tornillos promedio por partida (editable; el taller se calibró con ≈ 100)"; ws.getCell("B4").value = 100; ws.getCell("B4").fill = INPUT;
+  ws.getCell("A4").value = "Tornillos promedio por partida (sale de ritmo tornillos_partida_tipica; el taller lo usa para decir cuántas partidas faltan)"; ws.getCell("B4").value = { formula: R("tornillos_partida_tipica") }; ws.getCell("B4").fill = CALC;
   ws.getCell("A5").value = "Referencia: tiempo medio sobrevivido (s)"; ws.getCell("B5").value = 420; ws.getCell("B5").fill = INPUT;
   ws.getCell("A6").value = "Referencia: bajas medias por partida"; ws.getCell("B6").value = 600; ws.getCell("B6").fill = INPUT;
   ws.getCell("A7").value = "Referencia: jefes derrotados por partida"; ws.getCell("B7").value = 1; ws.getCell("B7").fill = INPUT;

@@ -4,7 +4,7 @@ import type { Save } from "./menu";
 
 /** Lo que `sanitize` necesita saber del juego: qué ids son válidos y cómo validar calcos y presets. */
 export type SaveDeps = {
-  abilities: object; curses: object; kinds: string[]; zones: object; isTouch: boolean;
+  abilities: object; weapons: string[]; curses: object; kinds: string[]; zones: object; isTouch: boolean;
   validDecal: (d: unknown) => boolean;
   presetOf: (o: { shadowQ: Save["shadowQ"]; detail: Save["detail"]; texRes: number; aniso: number; bloom: boolean }) => Save["preset"];
   presets: Record<string, object>;
@@ -52,6 +52,12 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     Object.assign(s, ctlPart(s, D)); // controles: teclas, joystick, carrera y táctil (también los guarda cada perfil)
     s.profiles = [0, 1, 2].map((i) => { const p = Array.isArray(s.profiles) ? s.profiles[i] : null; return p && typeof p === "object" ? { name: typeof p.name === "string" && p.name.trim() ? p.name.trim().slice(0, 20) : `Perfil ${i + 1}`, ...ctlPart(p, D) } : null; });
     if (!(s.ability in deps.abilities)) delete s.ability;
+    if (!deps.weapons.includes(s.weapon)) delete s.weapon; // arma inicial: solo del arsenal (si no está comprada, la partida usa Gomitas)
+    // Niveles comprados (mejoras del Taller y de habilidades): enteros de 0 a 10; lo demás se descarta
+    const lvl = (v: unknown) => (Number.isInteger(v) && (v as number) >= 0 ? Math.min(10, v as number) : undefined);
+    const lvls = (o: unknown, keys: string[]) => Object.fromEntries(keys.flatMap((k) => { const v = lvl((o as Record<string, unknown>)?.[k]); return v === undefined ? [] : [[k, v]]; }));
+    s.perm = lvls(s.perm, Object.keys(D.perm));
+    s.abilLv = lvls(s.abilLv, Object.keys(deps.abilities));
     s.curses = Array.isArray(s.curses) ? s.curses.filter((c: string) => c in deps.curses) : [];
     if (typeof s.stats !== "object" || !s.stats) delete s.stats;
     // Registro por bicho: solo tipos conocidos, números finitos y zonas que existen

@@ -123,15 +123,22 @@ export function template(name: string, build: () => B.Mesh[], scale = 1) {
   return t;
 }
 
-export function wheel(d: number, w: number, rim: string) {
+// Estilo de rueda (garaje → Ruedas): "" de serie, oruga (tacos chatos; la banda va en la carrocería), todoterreno (tacos grandes),
+// lisa (de carrera: ancha y sin flancos) y rayos (8 rayos finos de colores). Todo en la misma malla: sigue siendo una instancia por rueda.
+const SPOKES = ["#ef4444", "#f59e0b", "#facc15", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#14b8a6"];
+export function wheel(d: number, w: number, rim: string, style = "") {
+  const around = (n: number, f: (a: number) => B.Mesh) => Array.from({ length: n }, (_, k) => f((k * Math.PI * 2) / n));
+  const lisa = style === "lisa", W = lisa ? w * 1.25 : w;
   return merge("wheel", [
-    cyl(d, d, w, M.rubber(), [0, 0, 0], [0, 0, Math.PI / 2], 16),
-    tor(d * 0.98, w * 0.35, M.rubber(), [w * 0.3, 0, 0], [0, 0, Math.PI / 2], 16),
-    tor(d * 0.98, w * 0.35, M.rubber(), [-w * 0.3, 0, 0], [0, 0, Math.PI / 2], 16),
-    cyl(d * 0.62, d * 0.62, w * 1.04, M.metal(rim), [0, 0, 0], [0, 0, Math.PI / 2], 20),
-    cyl(d * 0.48, d * 0.48, w * 1.08, M.matte("#1d2026"), [0, 0, 0], [0, 0, Math.PI / 2], 20), // fondo oscuro de la llanta
-    ...[0, 1, 2, 3, 4].map((k) => box(w * 1.1, d * 0.46, d * 0.07, M.metal(rim), [0, 0, 0], [(k * Math.PI * 2) / 5, 0, 0])), // 5 rayos
-    cyl(d * 0.2, d * 0.2, w * 1.14, M.metal(), [0, 0, 0], [0, 0, Math.PI / 2], 14),
+    cyl(d, d, W, M.rubber(), [0, 0, 0], [0, 0, Math.PI / 2], 16),
+    ...(lisa ? [] : [-1, 1].map((sd) => tor(d * 0.98, w * 0.35, M.rubber(), [sd * w * 0.3, 0, 0], [0, 0, Math.PI / 2], 16))),
+    ...(style === "todoterreno" ? around(10, (a) => box(w * 1.2, d * 0.12, d * 0.17, M.rubber(), [0, Math.sin(a) * d * 0.5, Math.cos(a) * d * 0.5], [a, 0, 0])) : []),
+    ...(style === "oruga" ? around(14, (a) => box(w * 1.1, d * 0.06, d * 0.09, M.rubber(), [0, Math.sin(a) * d * 0.5, Math.cos(a) * d * 0.5], [a, 0, 0])) : []),
+    cyl(d * 0.62, d * 0.62, W * 1.04, M.metal(style === "rayos" ? "#e5e7eb" : rim), [0, 0, 0], [0, 0, Math.PI / 2], 20),
+    cyl(d * 0.48, d * 0.48, W * 1.08, M.matte("#1d2026"), [0, 0, 0], [0, 0, Math.PI / 2], 20), // fondo oscuro de la llanta
+    ...(style === "rayos" ? around(8, (a) => box(W * 1.1, d * 0.46, d * 0.04, M.plastic(SPOKES[Math.round((a / Math.PI / 2) * 8) % 8]), [0, 0, 0], [a, 0, 0]))
+      : around(5, (a) => box(W * 1.1, d * 0.46, d * 0.07, M.metal(rim), [0, 0, 0], [a, 0, 0]))), // 5 rayos
+    cyl(d * 0.2, d * 0.2, W * 1.14, M.metal(), [0, 0, 0], [0, 0, Math.PI / 2], 14),
   ]);
 }
 
@@ -161,11 +168,11 @@ function shadowProxy(m: B.Mesh) {
 // Las ruedas de todos los autos son instancias de una fuente por (diámetro, ancho, llanta): Babylon dibuja todas juntas en una sola llamada por submalla
 // (40 ruedas de la carrera = 3 dibujos por pasada en vez de 160). Se arman con la teselación de los autos (tessK) y quedan en caché.
 const wheelSrc = new Map<string, B.Mesh>(), wheelSh = new Map<string, B.Mesh | null>(); // fuentes por (diámetro, ancho, llanta); gemelas de sombra por (diámetro, ancho): la silueta no depende de la llanta
-function wheelInst(d: number, w: number, rim: string) {
-  const k = `${d}|${w}`;
+function wheelInst(d: number, w: number, rim: string, style = "") {
+  const k = `${d}|${w}|${style}`;
   let m = wheelSrc.get(`${k}|${rim}`);
   if (!m) {
-    m = wheel(d, w, rim);
+    m = wheel(d, w, rim, style);
     m.position.y = -500; // la fuente queda escondida, como las plantillas: se dibujan las instancias
     m.isPickable = false;
     wheelSrc.set(`${k}|${rim}`, m);
@@ -192,11 +199,14 @@ export const PARTS = {
   decal: { name: "Calcos", opts: { nada: ["Sin calcos", 0], numero: ["Número", precio("pieza_decal_numero")], rayo: ["Rayo", precio("pieza_decal_rayo")], damero: ["Damero", precio("pieza_decal_damero")] } },
   lamp: { name: "Faro", opts: { calido: ["Cálido", 0], ambar: ["Ámbar", precio("pieza_lamp_ambar")], cian: ["Cian", precio("pieza_lamp_cian")], violeta: ["Violeta", precio("pieza_lamp_violeta")] } },
   exhaust: { name: "Escape", opts: { nada: ["Sin escape", 0], doble: ["Doble caño", precio("pieza_exhaust_doble")], chimenea: ["Chimeneas", precio("pieza_exhaust_chimenea")] } },
+  bumper: { name: "Defensas", opts: { nada: ["De serie", 0], cano: ["Paragolpes de caño", precio("pieza_bumper_cano")], antivuelco: ["Barra antivuelco", precio("pieza_bumper_antivuelco")], laterales: ["Defensas laterales", precio("pieza_bumper_laterales")] } },
+  tires: { name: "Ruedas", opts: { serie: ["De serie", 0], oruga: ["Orugas", precio("pieza_tires_oruga")], todoterreno: ["Todoterreno", precio("pieza_tires_todoterreno")], lisas: ["Lisas de carrera", precio("pieza_tires_lisas")], rayos: ["Rayos de colores", precio("pieza_tires_rayos")] } },
+  acc: { name: "Accesorio", opts: { nada: ["Ninguno", 0], pelotita: ["Antena con pelotita", precio("pieza_acc_pelotita")], bocina: ["Bocina de payaso", precio("pieza_acc_bocina")], matafuego: ["Matafuego", precio("pieza_acc_matafuego")], dados: ["Dados de peluche", precio("pieza_acc_dados")], banderita: ["Banderita", precio("pieza_acc_banderita")] } },
 } as const satisfies Record<string, { name: string; opts: Record<string, readonly [string, number]> }>;
 export type Slot = keyof typeof PARTS;
 // Faro: [emisivo de las ópticas, luz del SpotLight]. Nada rojo ni verde (código de amenaza y disparos propios).
 const LAMPS: Record<string, [string, string]> = { calido: ["#fff3b0", "#ffe9c2"], ambar: ["#ffb347", "#ffc77a"], cian: ["#9be7ff", "#bdefff"], violeta: ["#c9a7ff", "#d8c2ff"] };
-export type CarOpts = { paint?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; pilot?: string; sticker?: string; fixed?: boolean }; // fixed: la pintura no se gasta (carrera, garaje): se hornea y ahorra una submalla
+export type CarOpts = { paint?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; bumper?: string; tires?: string; acc?: string; pilot?: string; sticker?: string; fixed?: boolean }; // fixed: la pintura no se gasta (carrera, garaje): se hornea y ahorra una submalla
 
 // Calco propio del capó (editor del garaje): grilla DECAL_N × DECAL_N, un carácter por celda: "0" = transparente, "1".."8" = DECAL_PAL[n-1].
 // Colores de la paleta de UI (docs/ART_DIRECTION.md); sin el rojo de amenaza.
@@ -418,8 +428,26 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   if (o.exhaust === "doble") for (const x of [-0.22, 0.22]) parts.push(cyl(0.11, 0.11, 0.34, M.metal("#d0d0d0"), [x, ey, ez - 0.05], [Math.PI / 2, 0, 0], 8), cyl(0.07, 0.07, 0.02, M.matte("#111"), [x, ey, ez - 0.23], [Math.PI / 2, 0, 0], 8));
   else if (o.exhaust === "chimenea") for (const x of [-0.3, 0.3]) parts.push(cyl(0.09, 0.11, 0.6, M.metal("#d0d0d0"), [x, ey + 0.3, ez + 0.12], undefined, 8), cyl(0.08, 0.08, 0.03, M.glow("#ff8a3d"), [x, ey + 0.61, ez + 0.12], undefined, 8));
 
-  // Piloto sentado (o asomado por la escotilla del tanque)
+  // Defensas, accesorios y banda de las orugas: piezas del garaje, fusionadas con la carrocería (cero dibujos extra). Anclas: tamaño del auto, asiento y alerón.
   const [px, py, pz, ps] = A.seat;
+  {
+    const [bw, bh, bl] = CARS_SIZE[kind], tubeM = M.metal("#c9ccd1"), dark = M.matte("#1b1e24");
+    if (o.bumper === "cano") parts.push(cyl(0.07, 0.07, bw * 0.95, tubeM, [0, bh * 0.32, bl * 0.5 + 0.12], [0, 0, Math.PI / 2], 8), ...[-1, 1].map((sd) => cyl(0.06, 0.06, 0.2, tubeM, [sd * bw * 0.3, bh * 0.32, bl * 0.5 + 0.03], [Math.PI / 2, 0, 0], 6)));
+    else if (o.bumper === "antivuelco") { const h = py + 0.55 * ps, x = bw * 0.36, z = pz - 0.3 * ps; parts.push(tube([[-x, py - 0.1, z], [-x, h, z], [x, h, z], [x, py - 0.1, z]], 0.035, tubeM), cyl(0.05, 0.05, x * 2, dark, [0, h, z], [0, 0, Math.PI / 2], 6)); }
+    else if (o.bumper === "laterales") for (const sd of [-1, 1]) parts.push(cyl(0.06, 0.06, bl * 0.55, tubeM, [sd * (bw / 2 + 0.07), bh * 0.22, 0], [Math.PI / 2, 0, 0], 8), ...[-1, 1].map((e) => box(0.1, 0.04, 0.04, tubeM, [sd * (bw / 2 + 0.02), bh * 0.22, e * bl * 0.22])));
+    if (o.tires === "oruga") for (const sd of [-1, 1]) { // banda de goma por lado, de la rueda delantera a la trasera
+      const side = ws.filter((w) => Math.sign(w.pos[0]) === sd); if (side.length < 2) continue;
+      const zs = side.map((w) => w.pos[2]), d = Math.max(...side.map((w) => w.d)), ww = side[0].w * 1.15;
+      for (const up of [1, -1]) parts.push(box(ww, d * 0.1, Math.max(...zs) - Math.min(...zs) + d * 0.6, M.rubber(), [side[0].pos[0], side[0].pos[1] + up * d * 0.5, (Math.max(...zs) + Math.min(...zs)) / 2]));
+    }
+    if (o.acc === "pelotita") parts.push(cyl(0.025, 0.025, 0.5, M.metal("#111"), [-0.38, 1.0, -0.7], undefined, 4), sph(0.3, M.plastic("#ffd23f"), [-0.38, 1.35, -0.7]), tor(0.3, 0.04, M.plastic("#ff4d6d"), [-0.38, 1.35, -0.7], undefined, 6));
+    else if (o.acc === "bocina") { const x = bw * 0.3, y = bh * 0.7, z = bl * 0.25; parts.push(sph(0.2, M.plastic("#e11d48"), [x, y, z - 0.12]), cyl(0.04, 0.16, 0.24, M.metal("#d4a72c"), [x, y, z + 0.06], [Math.PI / 2, 0, 0], 8)); }
+    else if (o.acc === "matafuego") { const x = bw / 2 + 0.02, z = -bl * 0.18; parts.push(cyl(0.13, 0.13, 0.32, M.plastic("#d62828"), [x, bh * 0.45, z], undefined, 8), cyl(0.06, 0.06, 0.06, M.matte("#111"), [x, bh * 0.45 + 0.19, z], undefined, 6), box(0.03, 0.03, 0.12, M.matte("#111"), [x, bh * 0.45 + 0.22, z + 0.05])); }
+    else if (o.acc === "dados") for (const [dx, r] of [[-0.07, 0.4], [0.07, -0.3]] as const) parts.push(box(0.1, 0.1, 0.1, M.plastic("#f9a8d4"), [px + 0.2 + dx, py + 0.5 * ps, pz + 0.35 * ps], [r, r, 0]), box(0.11, 0.025, 0.025, M.plastic("#111"), [px + 0.2 + dx, py + 0.5 * ps, pz + 0.35 * ps], [r, r, 0]));
+    else if (o.acc === "banderita") { const x = -bw * 0.38, z = -bl * 0.42; parts.push(cyl(0.025, 0.025, 1.0, M.metal("#e5e7eb"), [x, bh * 0.5 + 0.5, z], undefined, 4), box(0.02, 0.2, 0.32, M.plastic("#f97316"), [x, bh * 0.5 + 0.88, z - 0.16])); }
+  }
+
+  // Piloto sentado (o asomado por la escotilla del tanque)
   for (const m of pilotParts(o.pilot ?? "soldadito")) { m.position.scaleInPlace(ps).addInPlaceFromFloats(px, py, pz); m.scaling.scaleInPlace(ps); parts.push(m); }
 
   // Antena, siempre: es un auto RC
@@ -431,7 +459,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   if (bodySh) bodySh.parent = body;
   cast.push(bodySh ?? body);
   const wheels = ws.map((w) => {
-    const { inst: m, cast: c } = wheelInst(w.d, w.w, rim);
+    const { inst: m, cast: c } = wheelInst(w.d, w.w, rim, o.tires === "serie" ? "" : o.tires === "lisas" ? "lisa" : o.tires ?? "");
     m.position = v(w.pos);
     m.parent = body;
     cast.push(c);

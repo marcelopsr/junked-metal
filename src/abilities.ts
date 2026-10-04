@@ -11,6 +11,11 @@ export const ABILITIES: Record<AbilityId, { name: string; short: string; desc: s
   lenta: { name: "Cámara lenta", short: "LENTA", desc: "El mundo va al 40% durante 3 s, como cualquier trámite. El auto no se frena.", cd: R.habilidad_lenta_cd, dur: R.habilidad_lenta_dur },
 };
 
+// Nivel de cada habilidad (Taller → Habilidades, save.abilLv: 0 = de fábrica, hasta costos("hab_<id>").length):
+// menos enfriamiento y más efecto (petardos, segundos de escudo, aturdido del EMP, segundos de cámara lenta). Números en ritmo.
+export const abilCd = (id: AbilityId, lv: number) => ABILITIES[id].cd * (1 - R.habilidad_cd_nivel * lv);
+export const abilK = (lv: number) => 1 + R.habilidad_efecto_nivel * lv;
+
 // Maldiciones opcionales antes de jugar (fila del menú principal). Combinables; el desafío diario no las permite.
 export type CurseId = "horda" | "sinrep";
 export const CURSES: Record<CurseId, { name: string; short: string; desc: string }> = {

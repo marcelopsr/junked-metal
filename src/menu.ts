@@ -3,11 +3,11 @@
 import "./menu.css";
 import type { Scene } from "@babylonjs/core";
 import { CARS } from "./car";
-import { costos } from "./balance";
+import { BAL, costos, precio } from "./balance";
 import { DEF, type Kind } from "./enemies";
 import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
-import { PILOTS, type PilotId } from "./pilots";
+import { ARSENAL, PILOTS, type PilotId } from "./pilots";
 import { icon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
 import { engineTest, initAudio, setAudio, SFX } from "./sfx";
@@ -16,7 +16,7 @@ import { setDrawDist, ZONES, type ZoneId } from "./world";
 import { camCycle, isTouch, padsConnected } from "./input";
 import { bestRace, MEDAL, medalOf, raceCfg, saveRaceCfg, TRACKS, trackName, type RaceCtl } from "./kart";
 import { ACH, type AchId } from "./achievements";
-import { ABILITIES, CURSES, type AbilityId, type CurseId } from "./abilities";
+import { ABILITIES, abilCd, abilK, CURSES, type AbilityId, type CurseId } from "./abilities";
 import { FINALS, type Elite } from "./run";
 import { CAM_MODES, CAM_NAMES, parseSave } from "./savefmt";
 
@@ -32,7 +32,7 @@ export type BeastRec = { first?: string; hurt: number; by: Record<string, number
 export type Stats = { runs: number; wins: number; time: number; dist: number; dmg: Record<string, number>; zone: Partial<Record<ZoneId, { t: number; kills: number }>> };
 export type Save = {
   intro: boolean; // ya se vio la intro del primer arranque
-  scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number }; cars: CarKind[]; car: CarKind;
+  scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number; arm: number; reg: number; tur: number; ram: number; cdr: number }; cars: CarKind[]; car: CarKind;
   pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; paint: string; rim: string; zoom: number; camMode: (typeof CAM_MODES)[number];
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
   bloom: boolean; lookv: number; shake: boolean; fps: boolean; hudSolid: boolean; hint: boolean;
@@ -49,22 +49,23 @@ export type Save = {
   seen: Kind[]; slain: Partial<Record<Kind, number>>; beast: Partial<Record<Kind, BeastRec>>; runs: RunRec[]; daily: { day: string; best: number }; zone: ZoneId;
   ach: AchId[];
   ability: AbilityId; curses: CurseId[]; endless: number; // habilidad activa elegida, maldiciones de la próxima partida y récord del modo sin fin (s)
+  abilLv: Partial<Record<AbilityId, number>>; weapon: WeaponId; // nivel de cada habilidad (Taller) y arma inicial elegida en el garaje (Arsenal)
 };
 // Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
 const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (innerHeight * (devicePixelRatio || 1))) * 20) / 20));
 const DEFAULT: Save = {
   intro: false,
-  scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
-  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, paint: "", rim: "", zoom: 1.35, camMode: "actual",
+  scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0, arm: 0, reg: 0, tur: 0, ram: 0, cdr: 0 }, cars: ["buggy"], car: "buggy",
+  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", rim: "", zoom: 1.35, camMode: "actual",
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
-  ability: "bombardeo", curses: [], endless: 0,
+  ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego
-export const save: Save = parseSave((() => { try { return localStorage.getItem("rcfight2"); } catch { return null; } })(), DEFAULT, { abilities: ABILITIES, curses: CURSES, kinds: Object.keys(DEF), zones: ZONES, isTouch, validDecal, presetOf, presets: PRESETS });
+export const save: Save = parseSave((() => { try { return localStorage.getItem("rcfight2"); } catch { return null; } })(), DEFAULT, { abilities: ABILITIES, weapons: ARSENAL, curses: CURSES, kinds: Object.keys(DEF), zones: ZONES, isTouch, validDecal, presetOf, presets: PRESETS });
 /** Registro de un bicho (lo crea vacío la primera vez); lo llena main.ts fuera de las pruebas de dev. */
 export const beastRec = (k: Kind) => (save.beast[k] ??= { hurt: 0, by: {}, zones: [] });
 // Se escribe 300 ms después del último cambio (sliders y rueda disparan muchos seguidos)
@@ -350,20 +351,33 @@ function renderMain() {
 // Curva (partida típica ≈ 100 tornillos): chasis 1-5 de 20 a 100 (una mejora por partida al empezar), 6-10 de 180 a 660
 // (una línea completa ≈ 23 partidas); autos, pilotos y zonas 400-1000 (4-10 partidas); revivir 2 y cuarta ranura 1800-2200 (20+).
 type PermK = keyof Save["perm"];
-// Los precios por nivel están en balance.json (tabla precios; el chasis sigue 20 x nivel y después x1,5 con +0,45 por nivel, redondeado a 5)
-const PERKS: { k: PermK; cat: "chasis" | "equipo"; name: string; desc: string; cost: number[] }[] = [
-  { k: "hp", cat: "chasis", name: "Chasis reforzado", desc: "+10 vida", cost: costos("hp") }, { k: "dmg", cat: "chasis", name: "Piñón afilado", desc: "+10% daño", cost: costos("dmg") },
-  { k: "spd", cat: "chasis", name: "Motor rebobinado", desc: "+4% velocidad", cost: costos("spd") }, { k: "mag", cat: "chasis", name: "Imán de parlante", desc: "+10% imán", cost: costos("mag") },
-  { k: "xp", cat: "equipo", name: "Contador de tuercas", desc: "+5% XP por nivel", cost: costos("xp") },
-  { k: "reroll", cat: "equipo", name: "Dado cargado", desc: "+1 re-sorteo de cartas por partida (R o botón Y)", cost: costos("reroll") },
-  { k: "extra", cat: "equipo", name: "Caja de repuestos", desc: "Arranca con un arma extra al azar", cost: costos("extra") },
-  { k: "revive", cat: "equipo", name: "Batería de reserva", desc: "Revive una vez por partida con media vida", cost: costos("revive") },
-  { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: costos("cards") },
+// Los precios por nivel están en balance.json (tabla precios; el chasis sigue 20 x nivel y después x1,5 con +0,45 por nivel, redondeado a 5).
+// fx = [qué cambia, valor con l niveles comprados]: la vista previa del Taller muestra el nivel actual → el siguiente.
+const T = BAL.precios, n1 = (x: number) => String(Math.round(x * 10) / 10).replace(".", ",");
+const pct = (k: PermK) => (l: number) => `${Math.round((1 + T[k].efecto * l) * 100)}%`;
+const PERKS: { k: PermK; cat: "chasis" | "equipo"; name: string; desc: string; cost: number[]; fx: [string, (l: number) => string] }[] = [
+  { k: "hp", cat: "chasis", name: "Chasis reforzado", desc: "+10 vida", cost: costos("hp"), fx: ["Vida", (l) => `${CARS[save.car].hp + T.hp.efecto * l}`] },
+  { k: "dmg", cat: "chasis", name: "Piñón afilado", desc: "+10% daño", cost: costos("dmg"), fx: ["Daño", pct("dmg")] },
+  { k: "spd", cat: "chasis", name: "Motor rebobinado", desc: "+4% velocidad", cost: costos("spd"), fx: ["Velocidad", pct("spd")] },
+  { k: "mag", cat: "chasis", name: "Imán de parlante", desc: "+10% imán", cost: costos("mag"), fx: ["Imán", pct("mag")] },
+  { k: "arm", cat: "chasis", name: "Placa de lata", desc: "-2% daño recibido. Abollada pero digna", cost: costos("arm"), fx: ["Daño recibido", (l) => `${Math.round(Math.pow(1 - T.arm.efecto, l) * 100)}%`] },
+  { k: "reg", cat: "chasis", name: "Cinta aisladora", desc: "+0,1 vida por segundo. Lo arregla todo, mal", cost: costos("reg"), fx: ["Regeneración", (l) => `${n1(T.reg.efecto * l)} vida/s`] },
+  { k: "tur", cat: "chasis", name: "Nafta de encendedor", desc: "+6% turbo: dura más y se recarga antes", cost: costos("tur"), fx: ["Turbo", pct("tur")] },
+  { k: "ram", cat: "chasis", name: "Paragolpes de fierro", desc: "+8% daño al embestir. Seguro no cubre", cost: costos("ram"), fx: ["Embestida", pct("ram")] },
+  { k: "cdr", cat: "chasis", name: "Gatillo engrasado", desc: "-2% tiempo de recarga de todas las armas", cost: costos("cdr"), fx: ["Tiempo de recarga", (l) => `${Math.round(Math.pow(1 - T.cdr.efecto, l) * 100)}%`] },
+  { k: "xp", cat: "equipo", name: "Contador de tuercas", desc: "+5% XP por nivel", cost: costos("xp"), fx: ["XP", pct("xp")] },
+  { k: "reroll", cat: "equipo", name: "Dado cargado", desc: "+1 re-sorteo de cartas por partida (R o botón Y)", cost: costos("reroll"), fx: ["Re-sorteos", (l) => `${l}`] },
+  { k: "extra", cat: "equipo", name: "Caja de repuestos", desc: "Arranca con un arma extra al azar, además de la elegida", cost: costos("extra"), fx: ["Armas extra", (l) => `${l}`] },
+  { k: "revive", cat: "equipo", name: "Batería de reserva", desc: "Revive una vez por partida con media vida", cost: costos("revive"), fx: ["Revividas", (l) => `${l}`] },
+  { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: costos("cards"), fx: ["Opciones por carta", (l) => `${3 + l}`] },
 ];
-const PERK_ICON: Record<PermK, string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", reroll: "resorte", extra: "cofre", revive: "heal", cards: "evo" };
+// Íconos: también los usará la mesa de taller 3D para mostrar cada mejora como pieza (id = clave de perm, hab:<habilidad>, arma:<arma>)
+export const PERK_ICON: Record<PermK, string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", reroll: "resorte", extra: "cofre", revive: "heal", cards: "evo", arm: "lego", reg: "heal", tur: "turbo", ram: "lanza", cdr: "capacitor" };
+export const ABIL_ICON: Record<AbilityId, string> = { bombardeo: "petardos", escudo: "heal", emp: "tesla", lenta: "senal" };
+const abilCost = (k: AbilityId) => costos("hab_" + k);
 const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;
 // Desbloqueables: car:<auto>, pilot:<piloto>, part:<ranura>:<opción>. Los pilotos con logro no se compran.
-type Unlock = { id: string; name: string; desc: string; cost: number; ach?: string };
+type Unlock = { id: string; name: string; desc: string; cost: number; ach?: string; icon?: string };
 const UNLOCKS = {
   autos: () => (Object.keys(CARS) as CarKind[]).filter((k) => CARS[k].cost).map((k): Unlock => ({ id: "car:" + k, name: CARS[k].name, desc: CARS[k].desc, cost: CARS[k].cost })),
   pilotos: () => (Object.keys(PILOTS) as PilotId[]).filter((k) => PILOTS[k].cost || PILOTS[k].ach).map((k): Unlock => {
@@ -371,6 +385,7 @@ const UNLOCKS = {
     return { id: "pilot:" + k, name: p.name, desc: `${p.pros.join(" · ")} · Contra: ${p.con}`, cost: p.cost, ach: p.ach?.txt };
   }),
   zonas: () => (Object.keys(ZONES) as ZoneId[]).filter((k) => ZONES[k].cost).map((k): Unlock => ({ id: "zone:" + k, name: ZONES[k].name, desc: ZONES[k].desc, cost: ZONES[k].cost })),
+  arsenal: () => ARSENAL.filter((k) => k !== "gomitas").map((k): Unlock => ({ id: "arma:" + k, name: WEAPONS[k].name, desc: WEAPONS[k].desc, cost: precio("arma_" + k), icon: k })),
   piezas: () => (Object.keys(PARTS) as Slot[]).flatMap((sl) => Object.entries(opts(sl)).filter(([, [, c]]) => c).map(([o, [n, c]]): Unlock => ({ id: `part:${sl}:${o}`, name: n, desc: PARTS[sl].name, cost: c }))),
 };
 function owns(id: string) {
@@ -378,6 +393,7 @@ function owns(id: string) {
   if (t === "car") return save.cars.includes(k as CarKind);
   if (t === "zone") return k in ZONES && (!ZONES[k as ZoneId].cost || save.unlocked.includes(id));
   if (t === "pilot") { const p = PILOTS[k as PilotId]; return !!p && (p.ach ? p.ach.ok(save) : !p.cost || save.unlocked.includes(id)); }
+  if (t === "arma") return k === "gomitas" || save.unlocked.includes(id);
   return opts(k as Slot)?.[o]?.[1] === 0 || save.unlocked.includes(id);
 }
 const ownedZones = () => (Object.keys(ZONES) as ZoneId[]).filter((k) => owns("zone:" + k));
@@ -386,10 +402,12 @@ function priceOf(id: string) {
   if (t === "car") return CARS[k as CarKind]?.cost;
   if (t === "zone") return ZONES[k as ZoneId]?.cost;
   if (t === "pilot") { const p = PILOTS[k as PilotId]; return p && !p.ach ? p.cost : undefined; }
+  if (t === "arma") return ARSENAL.includes(k as WeaponId) && k !== "gomitas" ? precio("arma_" + k) : undefined;
   return opts(k as Slot)?.[o]?.[1];
 }
 // ¿Alcanzan los tornillos para algo del Taller? (mejoras, autos, pilotos, piezas o zonas)
 const canBuy = () => PERKS.some((p) => (p.cost[save.perm[p.k]] ?? Infinity) <= save.scrap)
+  || (Object.keys(ABILITIES) as AbilityId[]).some((k) => (abilCost(k)[save.abilLv[k] ?? 0] ?? Infinity) <= save.scrap)
   || Object.values(UNLOCKS).some((f) => f().some((u) => !u.ach && !owns(u.id) && u.cost <= save.scrap));
 function buy(id: string) {
   const c = priceOf(id);
@@ -399,12 +417,16 @@ function buy(id: string) {
   persist();
   return true;
 }
+/** Arma inicial de la partida: la elegida en el garaje si está comprada (si no, Gomitas). Ver startWeapons (pilots.ts). */
+export const startPick = (): WeaponId => (owns("arma:" + save.weapon) ? save.weapon : "gomitas");
 /** Lo que hay que mostrar sobre el auto (garaje, portada y partida). */
 // Vista previa en el garaje: con el foco (mouse, teclado o control) sobre algo bloqueado, el modelo lo muestra sin comprarlo
 export const peek: { car?: CarKind; pilot?: PilotId; part?: [Slot, string] } = {};
 export const shownCar = (): CarKind => peek.car ?? save.car;
 export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, rim: save.rim || undefined, ...save.kit, ...(peek.part ? { [peek.part[0]]: peek.part[1] } : {}), pilot: peek.pilot ?? save.pilot, sticker: save.decals[save.decalSel] || undefined });
 addEventListener("focusin", (e) => {
+  const inf = (e.target as HTMLElement).closest?.("#shop [data-info]") as HTMLElement | null; // vista previa del Taller: antes → después y partidas que faltan
+  if (inf) $("sinfo").textContent = inf.dataset.info!;
   const el = (e.target as HTMLElement).closest?.(".locked[data-k],.locked[data-pilot],.locked[data-part]") as HTMLElement | null;
   peek.car = peek.pilot = peek.part = undefined;
   if (!el || current() !== "garage") return;
@@ -414,22 +436,43 @@ addEventListener("focusin", (e) => {
 
 const bar = (v: number, max: number) => `<i style="width:${Math.min(100, (v / max) * 100)}%"></i>`;
 const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" data-${attr}="${id}">${n}</button>`).join("");
-const STABS = { chasis: "Chasis", equipo: "Equipo de partida", autos: "Autos", pilotos: "Pilotos", piezas: "Piezas", zonas: "Zonas" };
+const STABS = { chasis: "Chasis", equipo: "Equipo de partida", habilidades: "Habilidades", arsenal: "Arsenal", autos: "Autos", pilotos: "Pilotos", piezas: "Piezas", zonas: "Zonas" };
 let stab: keyof typeof STABS = "chasis";
+// Filtro y orden del Taller (valen para todas las pestañas)
+const SFILT = { todo: "Todo", comprables: "Comprables ahora", bloqueadas: "Bloqueadas", compradas: "Compradas" };
+const SSORT = ["Orden de fábrica", "Precio: menor primero", "Precio: mayor primero"];
+let sfilt: keyof typeof SFILT = "todo", ssort = 0;
+// Fila del Taller: attr = cómo la reconoce el clic; cost = precio de lo siguiente (undefined si está completa); fx = vista previa antes → después
+type ShopItem = { attr: string; name: string; desc: string; ico?: string; lv?: number; max?: number; cost?: number; ach?: string; bought: boolean; fx?: string };
+const tipicas = (c: number) => { const n = Math.ceil((c - save.scrap) / BAL.ritmo.tornillos_partida_tipica); return n <= 0 ? "Alcanza ahora" : `Falta${n === 1 ? "" : "n"} ${n} partida${n === 1 ? "" : "s"} típica${n === 1 ? "" : "s"}`; };
+function shopItems(): ShopItem[] {
+  if (stab === "chasis" || stab === "equipo") return PERKS.filter((p) => p.cat === stab).map((p) => {
+    const l = save.perm[p.k], max = p.cost.length, [lab, f] = p.fx;
+    return { attr: `data-k="${p.k}"`, name: p.name, desc: p.desc, ico: PERK_ICON[p.k], lv: l, max, cost: p.cost[l], bought: l > 0, fx: `${lab} ${f(l)}${l < max ? ` → ${f(l + 1)}` : ""}` };
+  });
+  if (stab === "habilidades") return (Object.keys(ABILITIES) as AbilityId[]).map((k) => {
+    const l = save.abilLv[k] ?? 0, c = abilCost(k), max = c.length, a = ABILITIES[k];
+    const fx = (x: number) => `Enfriamiento ${n1(abilCd(k, x))} s · efecto ${Math.round(abilK(x) * 100)}%`;
+    return { attr: `data-hab="${k}"`, name: a.name, desc: `Nivel ${l + 1}. Menos espera, más efecto`, ico: ABIL_ICON[k], lv: l, max, cost: c[l], bought: l > 0, fx: l < max ? `${fx(l)} → ${fx(l + 1)}` : fx(l) };
+  });
+  return UNLOCKS[stab]().map((u) => { const own = owns(u.id); return { attr: `data-buy="${u.id}"`, name: u.name, desc: u.desc, ico: u.icon, cost: own || u.ach ? undefined : u.cost, ach: u.ach, bought: own }; });
+}
 function renderShop() {
   $("bank").textContent = `${save.scrap} tornillos`;
   $("stabs").innerHTML = tabsHtml(STABS, stab, "stab");
-  $("shop").innerHTML = stab === "chasis" || stab === "equipo"
-    ? PERKS.filter((p) => p.cat === stab).map((p) => {
-      const l = save.perm[p.k], max = p.cost.length, cost = p.cost[l];
-      return `<button class="carc perk" data-k="${p.k}" ${l >= max || save.scrap < cost ? "disabled" : ""}><b class="wi">${icon(PERK_ICON[p.k], 22)}${p.name}</b>${p.desc}<div class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(max - l)}</div><div class="price">${l >= max ? "MÁXIMO" : `${cost} tornillos`}</div></button>`;
-    }).join("")
-    : UNLOCKS[stab]().map((u) => {
-      const own = owns(u.id);
-      return `<button class="carc perk" data-buy="${u.id}" ${own || u.ach || save.scrap < u.cost ? "disabled" : ""}><b>${u.name}</b>${u.desc}<div class="price">${own ? "EN EL GARAJE" : u.ach ? `Logro: ${u.ach}` : `${u.cost} tornillos`}</div></button>`;
-    }).join("");
+  $("sfilt").innerHTML = tabsHtml(SFILT, sfilt, "sf") + `<button class="tab" data-ss="1">${SSORT[ssort]}</button>`;
+  const ok = (i: ShopItem) => i.cost !== undefined && i.cost <= save.scrap;
+  let items = shopItems().filter((i) => sfilt === "todo" || (sfilt === "comprables" ? ok(i) : sfilt === "compradas" ? i.bought : i.cost !== undefined ? !ok(i) : !!i.ach && !i.bought));
+  if (ssort) items = items.sort((x, y) => ((x.cost ?? Infinity) - (y.cost ?? Infinity)) * (ssort === 1 ? 1 : -1) || 0);
+  $("shop").innerHTML = items.map((i) => {
+    const done = i.cost === undefined, info = [i.fx, done ? (i.ach && !i.bought ? `Se gana con un logro: ${i.ach}` : i.max ? "Nivel máximo" : "Ya está en el garaje") : tipicas(i.cost!)].filter(Boolean).join(" · ");
+    const pips = i.max ? `<div class="pips">${"<i class=on></i>".repeat(i.lv!)}${"<i></i>".repeat(i.max - i.lv!)}</div>` : "";
+    const price = done ? (i.max ? "MÁXIMO" : i.ach && !i.bought ? `Logro: ${i.ach}` : "EN EL GARAJE") : `${i.cost} tornillos`;
+    return `<button class="carc perk ${ok(i) ? "" : "no"}" ${i.attr} data-info="${info}" aria-disabled="${!ok(i)}"><b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${pips}<div class="price">${price}</div></button>`;
+  }).join("") || `<div class="note">Nada por acá con este filtro. El patio no regala nada.</div>`;
+  $("sinfo").textContent = "Enfoca una mejora para ver qué cambia y cuánto falta.";
 }
-const GTABS = { auto: "Auto", piloto: "Piloto", habilidad: "Habilidad", pintura: "Pintura", piezas: "Piezas" };
+const GTABS = { auto: "Auto", piloto: "Piloto", arma: "Arma", habilidad: "Habilidad", pintura: "Pintura", piezas: "Piezas" };
 let gtab: keyof typeof GTABS = "auto";
 function renderGarage() {
   if (gtab !== "piezas") editing = false;
@@ -449,8 +492,16 @@ function renderGarage() {
   }).join("");
   else if (gtab === "habilidad") $("cars").innerHTML = (Object.keys(ABILITIES) as AbilityId[]).map((k) => {
     const a = ABILITIES[k];
-    return `<div tabindex="0" class="carc pilot ${save.ability === k ? "sel" : ""}" data-abil="${k}"><b>${a.name}</b>${a.desc}<div class="price">Enfriamiento ${a.cd} s</div></div>`;
+    const l = save.abilLv[k] ?? 0;
+    return `<div tabindex="0" class="carc pilot ${save.ability === k ? "sel" : ""}" data-abil="${k}"><b>${a.name}</b>${a.desc}<div class="price">Nivel ${l + 1} · Enfriamiento ${n1(abilCd(k, l))} s</div></div>`;
   }).join("");
+  else if (gtab === "arma") { // Arsenal: una sola arma inicial; Gomitas siempre está. Elegir otra reemplaza la del piloto (ver startWeapons)
+    const own = PILOTS[save.pilot].start, first = startPick() === "gomitas" ? own : startPick();
+    $("cars").innerHTML = `<div class="note">Arranca con: ${WEAPONS[first].name}${first !== own ? ` (en lugar de ${WEAPONS[own].name}, la del piloto)` : ""}</div>` + ARSENAL.map((k) => {
+      const id = "arma:" + k, w = WEAPONS[k];
+      return `<div tabindex="0" class="carc pilot ${startPick() === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-arma="${k}"><b class="wi">${icon(k, 22)}${w.name}</b>${k === "gomitas" ? "De serie. Piloto con arma propia: arranca con la suya" : w.desc}${lock(id)}</div>`;
+    }).join("");
+  }
   else if (gtab === "piezas") $("cars").innerHTML = editing ? "" : (Object.keys(PARTS) as Slot[]).map((sl) => `<div class="slot"><span>${PARTS[sl].name}</span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
     const own = owns(`part:${sl}:${o}`);
     return `<button class="opt ${save.kit[sl] === o ? "on" : ""} ${own ? "" : "locked"}" data-part="${sl}:${o}">${n}${own ? "" : ` · ${c}`}</button>`;
@@ -985,7 +1036,7 @@ export function initMenu(a: Api) {
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
+    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
     if (t.id === "dgrid") { if (!e.detail) setCell(dcx, dcy, dcol); return; } // Enter / A sobre la grilla (el mouse y el dedo pintan en pointerdown)
     if (binding && d?.bind !== binding) { cancelBind(); if (!d?.bind) return; } // un clic fuera cancela la captura
@@ -1053,6 +1104,17 @@ export function initMenu(a: Api) {
     else if (d.btab) { btab = d.btab as typeof btab; renderBestiary(); focusSel(`[data-btab="${btab}"]`); }
     else if (d.stab) { stab = d.stab as typeof stab; renderShop(); $("shop").scrollTop = 0; focusSel(`[data-stab="${stab}"]`); }
     else if (d.buy) { if (!buy(d.buy)) return; renderShop(); focusSel(`[data-buy="${d.buy}"]`); }
+    else if (d.sf) { sfilt = d.sf as typeof sfilt; renderShop(); focusSel(`[data-sf="${sfilt}"]`); }
+    else if (d.ss) { ssort = (ssort + 1) % SSORT.length; renderShop(); focusSel("[data-ss]"); }
+    else if (d.hab) {
+      const k = d.hab as AbilityId, l = save.abilLv[k] ?? 0, cost = abilCost(k)[l];
+      if (cost === undefined || save.scrap < cost) return;
+      save.scrap -= cost; save.abilLv[k] = l + 1; persist(); renderShop(); focusSel(`[data-hab="${k}"]`);
+    }
+    else if (d.arma) {
+      if (!owns("arma:" + d.arma) && !buy("arma:" + d.arma)) return;
+      save.weapon = d.arma as WeaponId; persist(); renderGarage(); focusSel(`[data-arma="${d.arma}"]`);
+    }
     else if (d.abil) { save.ability = d.abil as AbilityId; persist(); renderGarage(); focusSel(`[data-abil="${d.abil}"]`); }
     else if (d.pilot) {
       const id = "pilot:" + d.pilot;
