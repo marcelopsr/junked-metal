@@ -1,5 +1,5 @@
 /* Front-end (src/menu.ts). Reusa .brand/.otitle/.sect/.carc de style.css y sus keyframes tune, blink y stamp. */
-#fe { background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(58, 40, 92, .24)); } /* viñeta lavanda suave: las escenas del menú (menuscene.ts) ya separan fondo y menú con el desenfoque */
+#fe { background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(10, 30, 34, .3)); } /* viñeta petróleo: las escenas del menú (menuscene.ts) ya separan fondo y menú con el desenfoque */
 #fe.ingame { background: rgba(8, 16, 26, .72); }
 .scr { display: none; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 980px; margin: auto; }
 .scr.on { display: flex; animation: tune .45s steps(9, end) both; }

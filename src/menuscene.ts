@@ -37,10 +37,10 @@ export const CAR_YAW = 0.95; // estante: el auto mira hacia la cámara en 3/4
 // Luz de cada escena: luna (sol de la escena, con sombras) lavanda, ambiente pastel y rebote durazno
 type Clim = Parameters<typeof applyClimate>[0];
 const CLIM: Record<Id, Clim> = {
-  shelf: { sun: [0.35, -0.6, 0.72], sunColor: "#b9b0ff", sunI: 1.6, hemiI: 0.42, amb: "#c8b8f0", ground: "#f2c4a6",
-    sky: ["#2a285a", "#6c5fa8", "#f2b8aa", "#3a3060"], exposure: 1, fog: 0.004, ramp: ["#000000", "#808080", "#ffffff"] },
-  bench: { sun: [-0.3, -0.85, -0.45], sunColor: "#c9c2ff", sunI: 1.1, hemiI: 0.5, amb: "#f4dccb", ground: "#c4b2e6",
-    sky: ["#3a2f55", "#d9b4a6", "#ecc6b4", "#3a2f55"], exposure: 1, fog: 0.005, ramp: ["#000000", "#808080", "#ffffff"] },
+  shelf: { sun: [0.35, -0.6, 0.72], sunColor: "#bfe0e0", sunI: 1.6, hemiI: 0.42, amb: "#a8c8c4", ground: "#c98a5a",
+    sky: ["#0f2a30", "#b5582a", "#d08a5a", "#16353a"], exposure: 1, fog: 0.004, ramp: ["#000000", "#808080", "#ffffff"] },
+  bench: { sun: [-0.3, -0.85, -0.45], sunColor: "#cfe4e2", sunI: 1.1, hemiI: 0.5, amb: "#e0c8b0", ground: "#5f8a88",
+    sky: ["#16353a", "#c98a5a", "#e0b090", "#16353a"], exposure: 1, fog: 0.005, ramp: ["#000000", "#808080", "#ffffff"] },
 };
 const DOF: Record<Id, number> = { shelf: 0.8, bench: 0.65 }; // cuánto se desenfoca el fondo lejano
 // Lámpara de cada escena: foco (de dónde, hacia dónde) y resplandor cálido (la pantalla de la lámpara / la bombita del flexo)
@@ -49,7 +49,7 @@ const LAMP: Record<Id, { spot: B.Vector3; to: B.Vector3; glow: B.Vector3; spotI:
   bench: { spot: new B.Vector3(...(b(2.5, 6.4, -1) as V3)), to: new B.Vector3(...(b(-0.5, 0, 1.5) as V3)), glow: new B.Vector3(...(b(3, 8.5, -1.5) as V3)), spotI: 7, glowI: 1.4, cone: 1.2 },
 };
 
-const PAST = ["#c7b3ec", "#f6c1a8", "#a9d8f0", "#b8e6c9", "#f7e3a1", "#f3b0c3", "#9fb4e8"];
+const PAST = ["#c98a5a", "#8a5a3a", "#5f8a9a", "#6f8f7a", "#c9a14a", "#a0452a", "#7f9a9c"];
 const W = (c: string) => M.matte(c), P = (c: string) => M.plastic(c);
 const unfog = (key: string, c: string) => { const m = pbr(key, { color: c, emissive: c }); m.fogEnabled = false; return m; };
 
@@ -66,18 +66,18 @@ function books(x0: number, y: number, z: number, n: number, i0 = 0): B.Mesh[] {
 }
 
 function shelfBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
-  const wall = W("#b6a6dc"), trim = W("#f4e6d4"), wood = W("#e0b98c"), woodD = W("#cfa77c");
+  const wall = W("#3c5a5c"), trim = W("#f4e6d4"), wood = W("#e0b98c"), woodD = W("#cfa77c");
   // Cuarto: piso, techo, pared del fondo con ventana (hueco x -32..-2, y -2..30), laterales, zócalo, alfombra
   const room = [
-    box(200, 1, 160, W("#c99f7c"), [0, -26.5, 0]), box(200, 2, 160, W("#8f83bd"), [0, 51, 0]),
+    box(200, 1, 160, W("#c99f7c"), [0, -26.5, 0]), box(200, 2, 160, W("#2a4446"), [0, 51, 0]),
     box(68, 78, 2, wall, [-66, 12, -61]), box(98, 78, 2, wall, [47, 12, -61]), box(30, 24, 2, wall, [-17, -14, -61]), box(30, 21, 2, wall, [-17, 40.5, -61]),
     box(2, 78, 160, wall, [-100, 12, 0]), box(2, 78, 160, wall, [96, 12, 0]), box(196, 3, 0.6, trim, [0, -24.5, -59.8]),
-    cyl(56, 56, 0.3, W("#f3c2cf"), [0, -25.9, -24], undefined, 10),
+    cyl(56, 56, 0.3, W("#8a4a2a"), [0, -25.9, -24], undefined, 10),
     // marco, cruz y alféizar de la ventana
     box(32, 1.2, 1.4, trim, [-17, 30.6, -60]), box(32, 1.2, 1.4, trim, [-17, -2.6, -60]), box(1.2, 34, 1.4, trim, [-32.6, 14, -60]), box(1.2, 34, 1.4, trim, [-1.4, 14, -60]),
     box(0.8, 32, 0.8, trim, [-17, 14, -60]), box(30, 0.8, 0.8, trim, [-17, 14, -60]), box(36, 1, 4, trim, [-17, -3.2, -58.5]),
     // cortinas durazno a los costados
-    ...[-38.5, 4.5].flatMap((x) => [0, 1, 2, 3].map((i) => cyl(2.3, 2.9, 42, W(i % 2 ? "#f6c1a8" : "#f9cfb8"), [x + i * 1.7, 11, -58.2], undefined, 8))),
+    ...[-38.5, 4.5].flatMap((x) => [0, 1, 2, 3].map((i) => cyl(2.3, 2.9, 42, W(i % 2 ? "#8a5a3a" : "#9a6844"), [x + i * 1.7, 11, -58.2], undefined, 8))),
     box(46, 0.8, 0.8, W("#d8b48a"), [-17, 32.5, -58]),
     // luna y estrellas afuera (sin niebla, para que se lean a lo lejos)
     sph(30, unfog("moonM", "#fff3d6"), [-62, 92, -330], undefined, 10),
@@ -85,19 +85,19 @@ function shelfBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
   ];
   if (!low) {
     // cama en el rincón (manta menta, almohada) y póster de un auto
-    room.push(box(38, 6, 40, woodD, [-62, -23, -38]), box(36, 3, 38, W("#fbf1e2"), [-62, -18.5, -38]), box(37, 1.4, 26, W("#b8e6c9"), [-62, -16.4, -31]),
+    room.push(box(38, 6, 40, woodD, [-62, -23, -38]), box(36, 3, 38, W("#fbf1e2"), [-62, -18.5, -38]), box(37, 1.4, 26, W("#6f8f7a"), [-62, -16.4, -31]),
       sph(9, W("#fbf1e2"), [-62, -15.5, -53], [1.6, 0.5, 0.8]), box(38, 16, 2, woodD, [-62, -14, -58.6]),
-      box(15, 19, 0.3, W("#a9d8f0"), [32, 18, -59.8]), box(9, 2.6, 0.2, W("#f6c1a8"), [32, 15, -59.6]), cyl(2.2, 2.2, 0.2, W("#6c5fa8"), [29, 13.6, -59.5], [Math.PI / 2, 0, 0], 8), cyl(2.2, 2.2, 0.2, W("#6c5fa8"), [35, 13.6, -59.5], [Math.PI / 2, 0, 0], 8));
+      box(15, 19, 0.3, W("#5f8a9a"), [32, 18, -59.8]), box(9, 2.6, 0.2, W("#8a5a3a"), [32, 15, -59.6]), cyl(2.2, 2.2, 0.2, W("#b5582a"), [29, 13.6, -59.5], [Math.PI / 2, 0, 0], 8), cyl(2.2, 2.2, 0.2, W("#b5582a"), [35, 13.6, -59.5], [Math.PI / 2, 0, 0], 8));
   }
   // Guirnalda de luces sobre la pared del fondo (bokeh con la profundidad de campo)
-  const step = low ? 9 : 4.5, lights = ["#ffd6a0", "#ffb3c8", "#b8f0d8", "#bfe0ff", "#fff1a8"];
+  const step = low ? 9 : 4.5, lights = ["#ffd6a0", "#ffb070", "#b8f0d8", "#bfe0ff", "#fff1a8"];
   const sag = (x: number) => 37 - 5 * Math.cos(((x + 90) / 60) * Math.PI) ** 2;
   const path: V3[] = [];
   for (let x = -92, i = 0; x <= 92; x += step, i++) {
     path.push([x, sag(x) + 0.5, -59.3]);
     room.push(sph(1.1, M.glow(lights[i % lights.length]), [x, sag(x) - 0.4, -59], [1, 1.3, 1]));
   }
-  room.push(tube(path, 0.08, W("#5a4f7a")));
+  room.push(tube(path, 0.08, W("#3a4a4c")));
 
   // Estante (utilería: proyecta sombras). Tabla de arriba en y = 0, de x -26 a 26 y de z -6 a 5; sin fondo: se ve el cuarto detrás
   const props = [
@@ -105,18 +105,18 @@ function shelfBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     box(1.4, 44, 11, woodD, [-27.7, -4, -0.5]), box(1.4, 44, 11, woodD, [27.7, -4, -0.5]),
     // libros parados a la izquierda y uno inclinado
     ...books(-26.8, 0, -2.5, 10),
-    box(1.2, 6, 4.4, W("#9fb4e8"), [-13.2, 2.9, -2.5], [0, 0, -0.32]),
+    box(1.2, 6, 4.4, W("#7f9a9c"), [-13.2, 2.9, -2.5], [0, 0, -0.32]),
     // la guía de bichos abierta con la lupa (pantalla del bestiario)
-    box(7, 0.2, 4.8, W("#8f7bc0"), [-9.5, 0.1, 1.4]), box(3.3, 0.3, 4.4, W("#fbf1e2"), [-11.1, 0.32, 1.4], [0, 0, 0.07]), box(3.3, 0.3, 4.4, W("#fbf1e2"), [-7.9, 0.32, 1.4], [0, 0, -0.07]),
-    box(1.6, 0.05, 1.2, W("#b8e6c9"), [-7.6, 0.5, 0.6]), box(2, 0.05, 0.3, W("#c7b3ec"), [-11, 0.5, 0.4]), box(1.6, 0.05, 0.3, W("#c7b3ec"), [-11.2, 0.5, 1.2]),
-    tor(2.3, 0.32, P("#6c5fa8"), [-8.2, 0.75, 2.6], undefined, 10), cyl(2.1, 2.1, 0.06, M.glass(), [-8.2, 0.75, 2.6], undefined, 10),
-    cyl(0.45, 0.45, 2.8, P("#6c5fa8"), [-6.2, 0.7, 3.8], [Math.PI / 2, -0.9, 0], 6),
+    box(7, 0.2, 4.8, W("#4f6e70"), [-9.5, 0.1, 1.4]), box(3.3, 0.3, 4.4, W("#fbf1e2"), [-11.1, 0.32, 1.4], [0, 0, 0.07]), box(3.3, 0.3, 4.4, W("#fbf1e2"), [-7.9, 0.32, 1.4], [0, 0, -0.07]),
+    box(1.6, 0.05, 1.2, W("#6f8f7a"), [-7.6, 0.5, 0.6]), box(2, 0.05, 0.3, W("#c98a5a"), [-11, 0.5, 0.4]), box(1.6, 0.05, 0.3, W("#c98a5a"), [-11.2, 0.5, 1.2]),
+    tor(2.3, 0.32, P("#b5582a"), [-8.2, 0.75, 2.6], undefined, 10), cyl(2.1, 2.1, 0.06, M.glass(), [-8.2, 0.75, 2.6], undefined, 10),
+    cyl(0.45, 0.45, 2.8, P("#b5582a"), [-6.2, 0.7, 3.8], [Math.PI / 2, -0.9, 0], 6),
     // cono de tránsito de juguete
     box(2.2, 0.3, 2.2, P("#ffb38a"), [-15.5, 0.15, 3]), cyl(0.3, 1.7, 2.6, P("#ffb38a"), [-15.5, 1.6, 3], undefined, 8), cyl(0.95, 1.2, 0.45, P("#fbf1e2"), [-15.5, 1.7, 3], undefined, 8),
     // cubos de madera
-    box(1.9, 1.9, 1.9, P("#a9d8f0"), [9.5, 0.95, 1.8]), box(1.9, 1.9, 1.9, P("#f7e3a1"), [11.6, 0.95, 1.2], [0, 0.35, 0]), box(1.9, 1.9, 1.9, P("#f3b0c3"), [10.5, 2.85, 1.5], [0, 0.7, 0]),
+    box(1.9, 1.9, 1.9, P("#5f8a9a"), [9.5, 0.95, 1.8]), box(1.9, 1.9, 1.9, P("#c9a14a"), [11.6, 0.95, 1.2], [0, 0.35, 0]), box(1.9, 1.9, 1.9, P("#a0452a"), [10.5, 2.85, 1.5], [0, 0.7, 0]),
     // trompo acostado
-    cyl(1.8, 0.1, 1.8, P("#c7b3ec"), [6.8, 0.75, 3.2], [0, 0, 1.2], 8), cyl(0.25, 0.25, 0.8, W("#d8b48a"), [6, 1.1, 3.2], [0, 0, 1.2], 6),
+    cyl(1.8, 0.1, 1.8, P("#c98a5a"), [6.8, 0.75, 3.2], [0, 0, 1.2], 8), cyl(0.25, 0.25, 0.8, W("#d8b48a"), [6, 1.1, 3.2], [0, 0, 1.2], 6),
     // osito sentado
     sph(3.4, W("#e0b08a"), [17, 1.8, -2.6], [1, 1.1, 0.9]), sph(2.7, W("#e0b08a"), [17, 4.4, -2.4]), sph(1.1, W("#e0b08a"), [16, 5.5, -2.5]), sph(1.1, W("#e0b08a"), [18, 5.5, -2.5]),
     sph(1.2, W("#f6dcc0"), [17, 4.1, -1.2], [1, 0.8, 0.8]), sph(0.3, W("#3a2f45"), [16.5, 4.8, -1.2]), sph(0.3, W("#3a2f45"), [17.5, 4.8, -1.2]), sph(0.35, W("#3a2f45"), [17, 4.25, -0.65]),
@@ -125,12 +125,12 @@ function shelfBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     cyl(2.2, 2.7, 0.6, P("#fbf1e2"), [22.5, 0.3, -3], undefined, 10), cyl(0.8, 0.9, 3.4, P("#fbf1e2"), [22.5, 2.2, -3], undefined, 8),
     sph(5, M.glow("#ffcf96"), [22.5, 4.6, -3], [1, 0.55, 1], 10),
     // repisa de arriba: maceta con suculenta y frasco de botones
-    cyl(3, 2.4, 2.8, P("#f6c1a8"), [-18, 19.4, -2], undefined, 8), sph(2.4, W("#9fd3a8"), [-18, 21.4, -2], [1, 0.8, 1]), sph(1.6, W("#b8e6c9"), [-17, 22.3, -1.6]),
-    cyl(2.6, 2.6, 3.4, M.glass(), [12, 19.7, -2], undefined, 10), cyl(2.7, 2.7, 0.5, P("#c7b3ec"), [12, 21.6, -2], undefined, 10),
+    cyl(3, 2.4, 2.8, P("#8a5a3a"), [-18, 19.4, -2], undefined, 8), sph(2.4, W("#9fd3a8"), [-18, 21.4, -2], [1, 0.8, 1]), sph(1.6, W("#6f8f7a"), [-17, 22.3, -1.6]),
+    cyl(2.6, 2.6, 3.4, M.glass(), [12, 19.7, -2], undefined, 10), cyl(2.7, 2.7, 0.5, P("#c98a5a"), [12, 21.6, -2], undefined, 10),
   ];
   if (!low) props.push(
     // repisa de abajo: más libros y una caja de juguetes
-    ...books(-26.5, -12.8, -2, 16, 5), box(11, 5, 7, P("#a9d8f0"), [19.5, -10.3, -1.5]), box(11.2, 0.6, 7.2, P("#fbf1e2"), [19.5, -7.7, -1.5]),
+    ...books(-26.5, -12.8, -2, 16, 5), box(11, 5, 7, P("#5f8a9a"), [19.5, -10.3, -1.5]), box(11.2, 0.6, 7.2, P("#fbf1e2"), [19.5, -7.7, -1.5]),
   );
   return [room, props];
 }
@@ -143,7 +143,7 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
   const mat = pbr("cutmat", { color: "#ffffff", rough: 0.85, tex: tx("#86c9a6", (c, s) => { c.strokeStyle = "#b4e2c8"; c.lineWidth = 1.5; c.strokeRect(0, 0, s, s); }, 16, 11) });
   // Cuarto: piso, techo, pared con el tablero perforado, laterales
   const room = [
-    box(180, 1, 140, W("#b98f6e"), [0, -30.5, 0]), box(180, 2, 140, W("#c4b2e6"), [0, 50, 0]),
+    box(180, 1, 140, W("#b98f6e"), [0, -30.5, 0]), box(180, 2, 140, W("#5f8a88"), [0, 50, 0]),
     box(180, 82, 2, peach, [0, 10, -18]), box(2, 82, 140, peach, [-70, 10, 0]), box(2, 82, 140, peach, [70, 10, 0]),
     box(68, 30, 0.6, peg, [0, 15.5, -16.6]),
     box(70, 1, 1, woodD, [0, 31, -16.4]), box(70, 1, 1, woodD, [0, 0.4, -16.4]),
@@ -155,16 +155,16 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     box(16, 0.08, 11, mat, [0, 0.04, 1.5]),
     // herramientas colgadas: llave, destornilladores, martillo, pinza, rollos de cable y cinta
     box(0.9, 8, 0.4, metal, [-26, 15.5, -16]), tor(2.4, 0.7, metal, [-26, 20.4, -16], [Math.PI / 2, 0, 0], 8),
-    ...[["#f3b0c3", -21], ["#a9d8f0", -19], ["#f7e3a1", -17]].flatMap(([c, x]) => [cyl(1.1, 1.1, 3.2, P(c as string), [x as number, 20.5, -15.8], undefined, 6), cyl(0.3, 0.3, 4.4, metal, [x as number, 16.7, -15.8], undefined, 6)]),
+    ...[["#a0452a", -21], ["#5f8a9a", -19], ["#c9a14a", -17]].flatMap(([c, x]) => [cyl(1.1, 1.1, 3.2, P(c as string), [x as number, 20.5, -15.8], undefined, 6), cyl(0.3, 0.3, 4.4, metal, [x as number, 16.7, -15.8], undefined, 6)]),
     box(0.8, 8, 0.6, woodD, [-11, 15.5, -15.8]), box(4.2, 1.5, 1.5, M.metal("#9aa0ab"), [-11, 20, -15.8]),
     box(0.5, 6, 0.4, metal, [-5.6, 17, -15.8], [0, 0, 0.18]), box(0.5, 6, 0.4, metal, [-4.4, 17, -15.8], [0, 0, -0.18]),
-    box(0.9, 3, 0.6, P("#c7b3ec"), [-6.2, 13.6, -15.7], [0, 0, 0.18]), box(0.9, 3, 0.6, P("#c7b3ec"), [-3.8, 13.6, -15.7], [0, 0, -0.18]),
-    tor(3.8, 1.3, P("#f3b0c3"), [5, 20, -15.6], [Math.PI / 2, 0, 0], 10), tor(2.6, 1.1, P("#a9d8f0"), [11, 19.6, -15.6], [Math.PI / 2, 0, 0], 10),
+    box(0.9, 3, 0.6, P("#c98a5a"), [-6.2, 13.6, -15.7], [0, 0, 0.18]), box(0.9, 3, 0.6, P("#c98a5a"), [-3.8, 13.6, -15.7], [0, 0, -0.18]),
+    tor(3.8, 1.3, P("#a0452a"), [5, 20, -15.6], [Math.PI / 2, 0, 0], 10), tor(2.6, 1.1, P("#5f8a9a"), [11, 19.6, -15.6], [Math.PI / 2, 0, 0], 10),
     // repisa con frascos de piezas
     box(20, 0.8, 4, wood, [24, 24, -14.5]),
     ...[0, 1, 2, 3].flatMap((i) => [cyl(2.2, 2.2, 3, M.glass(), [17.5 + i * 4.3, 25.9, -14.5], undefined, 8), cyl(1.9, 1.9, 1.6, P(PAST[i + 2]), [17.5 + i * 4.3, 25.2, -14.5], undefined, 8), cyl(2.3, 2.3, 0.5, P("#fbf1e2"), [17.5 + i * 4.3, 27.6, -14.5], undefined, 8)]),
     // cajonera lavanda de 3x3 (pantalla del taller)
-    box(14, 8.4, 6, P("#c7b3ec"), [22, 4.2, -10]),
+    box(14, 8.4, 6, P("#c98a5a"), [22, 4.2, -10]),
     ...[0, 1, 2].flatMap((r) => [0, 1, 2].flatMap((k) => [box(4, 2.3, 0.3, P(PAST[(r * 3 + k) % PAST.length]), [17.6 + k * 4.4, 1.5 + r * 2.7, -6.9]), sph(0.5, M.metal(), [17.6 + k * 4.4, 1.5 + r * 2.7, -6.6])])),
     // flexo celeste: base, brazos, resorte y pantalla con la bombita
     cyl(3.4, 3.8, 0.8, P("#9ccfe8"), [9, 0.4, -6], undefined, 10),
@@ -174,23 +174,23 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     // transmisor del auto (pantalla de configuración): cuerpo durazno, dos palancas, antena, pantallita
     ...transmitter(),
     // repuestos: dos ruedas, batería con cables, tornillos y tuercas, frascos de pintura, destornillador suelto, taza
-    place(wheel(2, 1, "#f6c1a8"), [6.5, 0.5, 6.5], [0, 0.4, Math.PI / 2]), place(wheel(2, 1, "#a9d8f0"), [8.6, 1.0, 4.4], [0, -0.3, 0]),
-    box(3.6, 1.4, 1.7, P("#a9d8f0"), [-14, 0.7, 4.5]), box(3.62, 0.5, 1.72, P("#fbf1e2"), [-14, 0.9, 4.5]),
-    tube([[-12.2, 0.6, 4.2], [-10.8, 0.2, 5.6], [-9, 0.2, 5.8]], 0.12, P("#f3b0c3")), tube([[-12.2, 0.6, 4.8], [-11, 0.2, 6.6], [-9.4, 0.2, 7]], 0.12, P("#3a2f45")),
+    place(wheel(2, 1, "#8a5a3a"), [6.5, 0.5, 6.5], [0, 0.4, Math.PI / 2]), place(wheel(2, 1, "#5f8a9a"), [8.6, 1.0, 4.4], [0, -0.3, 0]),
+    box(3.6, 1.4, 1.7, P("#5f8a9a"), [-14, 0.7, 4.5]), box(3.62, 0.5, 1.72, P("#fbf1e2"), [-14, 0.9, 4.5]),
+    tube([[-12.2, 0.6, 4.2], [-10.8, 0.2, 5.6], [-9, 0.2, 5.8]], 0.12, P("#a0452a")), tube([[-12.2, 0.6, 4.8], [-11, 0.2, 6.6], [-9.4, 0.2, 7]], 0.12, P("#3a2f45")),
     ...[[3, 8], [4.2, 8.8], [-5, 7.5], [10.5, 8], [-6.8, 6.4]].map(([x, z], i) => (i % 2 ? tor(0.6, 0.24, metal, [x, 0.12, z], undefined, 6) : cyl(0.28, 0.28, 1.2, metal, [x, 0.14, z], [0, i, Math.PI / 2], 6))),
     ...[0, 1, 2, 3].flatMap((i) => [cyl(1.5, 1.5, 1.7, P(PAST[i]), [-21 + i * 1.9, 0.85, 7.5 - (i % 2) * 1.2], undefined, 8), cyl(1.6, 1.6, 0.35, P("#fbf1e2"), [-21 + i * 1.9, 1.85, 7.5 - (i % 2) * 1.2], undefined, 8)]),
-    cyl(0.9, 0.9, 2.6, P("#f7e3a1"), [3.4, 0.45, 9.8], [0, 0.5, Math.PI / 2], 6), cyl(0.25, 0.25, 3, metal, [5.8, 0.45, 8.4], [0, 0.5, Math.PI / 2], 6),
+    cyl(0.9, 0.9, 2.6, P("#c9a14a"), [3.4, 0.45, 9.8], [0, 0.5, Math.PI / 2], 6), cyl(0.25, 0.25, 3, metal, [5.8, 0.45, 8.4], [0, 0.5, Math.PI / 2], 6),
   ];
-  if (!low) props.push(cyl(2.6, 2.4, 3, P("#f3b0c3"), [-25, 1.5, -3], undefined, 10), tor(1.6, 0.35, P("#f3b0c3"), [-23.6, 1.6, -3], [Math.PI / 2, 0, 0], 8), cyl(2.2, 2.2, 0.1, W("#a0705a"), [-25, 2.95, -3], undefined, 10));
+  if (!low) props.push(cyl(2.6, 2.4, 3, P("#a0452a"), [-25, 1.5, -3], undefined, 10), tor(1.6, 0.35, P("#a0452a"), [-23.6, 1.6, -3], [Math.PI / 2, 0, 0], 8), cyl(2.2, 2.2, 0.1, W("#a0705a"), [-25, 2.95, -3], undefined, 10));
   for (const m of [...room, ...props]) m.position.addInPlace(BENCH);
   return [room, props];
 }
 function transmitter(): B.Mesh[] {
   const parts = [
-    box(5.2, 1.6, 3.2, P("#f6c1a8"), [0, 0.9, 0]), box(5.4, 0.4, 3.4, P("#fbf1e2"), [0, 0.2, 0]),
-    cyl(0.25, 0.25, 1.3, W("#3a2f45"), [-1.4, 2.2, 0.3], undefined, 6), sph(0.6, P("#c7b3ec"), [-1.4, 2.9, 0.3]),
-    cyl(0.25, 0.25, 1.3, W("#3a2f45"), [1.4, 2.2, 0.3], [0.25, 0, 0], 6), sph(0.6, P("#c7b3ec"), [1.4, 2.85, 0.45]),
-    cyl(0.12, 0.25, 6.5, M.metal(), [2.1, 4.6, -1.2], [-0.15, 0, -0.12], 6), sph(0.35, P("#f3b0c3"), [2.5, 7.8, -1.7]),
+    box(5.2, 1.6, 3.2, P("#8a5a3a"), [0, 0.9, 0]), box(5.4, 0.4, 3.4, P("#fbf1e2"), [0, 0.2, 0]),
+    cyl(0.25, 0.25, 1.3, W("#3a2f45"), [-1.4, 2.2, 0.3], undefined, 6), sph(0.6, P("#c98a5a"), [-1.4, 2.9, 0.3]),
+    cyl(0.25, 0.25, 1.3, W("#3a2f45"), [1.4, 2.2, 0.3], [0.25, 0, 0], 6), sph(0.6, P("#c98a5a"), [1.4, 2.85, 0.45]),
+    cyl(0.12, 0.25, 6.5, M.metal(), [2.1, 4.6, -1.2], [-0.15, 0, -0.12], 6), sph(0.35, P("#a0452a"), [2.5, 7.8, -1.7]),
     box(1.8, 0.06, 0.8, M.glow("#b8ffd8"), [0, 1.73, 1.05]),
   ];
   const t = merge("tx", parts);

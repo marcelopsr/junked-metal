@@ -66,7 +66,7 @@ function eyes(g: CanvasRenderingContext2D, x: number, y: number, c: string, t: n
 // ---------- Cuadro 1: la casa apaga la luz ----------
 const WINS: [number, number][] = [[64, 50], [116, 50], [62, 66], [122, 66]], OFF = [1.3, 1.9, 2.5, 3.0];
 function house(g: CanvasRenderingContext2D, t: number) {
-  sky(g, "#070b14", "#1c2840", 88);
+  sky(g, "#061214", "#173a3e", 88);
   stars(g, t, 28, 40); moon(g, 160, 20);
   for (let x = 0; x < 46; x += 8) { R(g, x, 74, 6, 14, "#0a0f12"); R(g, x + 1, 72, 4, 2, "#0a0f12"); R(g, x + 2, 71, 2, 1, "#0a0f12"); } // cerca
   R(g, 0, 78, 46, 2, "#0a0f12"); R(g, 0, 85, 46, 2, "#0a0f12");
@@ -88,8 +88,7 @@ function house(g: CanvasRenderingContext2D, t: number) {
   if (lamp) { g.globalAlpha = 0.12; R(g, 85, 59, 8, 8, "#ffd27a"); g.globalAlpha = 1; R(g, 88, 62, 2, 3, "#ffd27a"); } else R(g, 88, 62, 2, 3, "#1a2236");
   grassStrip(g, t, 86, "#0b160d", "#153018", 5);
   // Ojos rojos en el pasto, recién cuando todo quedó a oscuras
-  if (t > 3.5) eyes(g, 30, 94, "#ff3020", t, ease((t - 3.5) / 0.4));
-  g.globalAlpha = 0.5 * ease((t - 3.0) / 1.2); R(g, 0, 0, W, H, "#02040a"); g.globalAlpha = 1;
+  g.globalAlpha = 0.25 * ease((t - 3.0) / 1.2); R(g, 0, 0, W, H, "#02080a"); g.globalAlpha = 1;
 }
 
 // ---------- Cuadro 2: los bichos salen del pasto ----------
@@ -106,7 +105,7 @@ function head(g: CanvasRenderingContext2D, x: number, y: number, t: number, eye:
   for (let i = 1; i < 8; i++) { const sw = Math.sin(t * 3 + i * 0.4) * i * 0.25; P(3 - i * 1.1 + sw, -i * 1.6, 1, 2, c); P(10 + i * 1.1 + sw, -i * 1.6, 1, 2, c); }
 }
 function bugs(g: CanvasRenderingContext2D, t: number) {
-  sky(g, "#05070d", "#25384f", 76);
+  sky(g, "#051012", "#1f4a4e", 76);
   R(g, 0, 76, W, H - 76, "#0a140c"); stars(g, t, 22, 30); moon(g, 30, 18);
   for (let x = 0; x < W; x += 2) blade(g, x, 100, 14 + hash(x + 1) * 16, Math.sin(t * 1.3 + x * 0.2) * 0.8, "#0c1a0e"); // pasto del fondo
   for (const [x, y, c, at] of EYES) if (t > at) eyes(g, x, y, c, t, ease((t - at) / 0.3));
@@ -127,7 +126,7 @@ const TOYS: Toy[] = [
   (g, lit) => { const b = lit ? "#9aa4ad" : dk; R(g, 172, 66, 12, 14, b); R(g, 174, 58, 8, 7, lit ? "#b8c0c8" : dk); R(g, 177, 53, 2, 5, b); R(g, 176, 52, 4, 2, lit ? "#e0a030" : dk); R(g, 170, 68, 2, 8, b); R(g, 184, 68, 2, 8, b); if (lit) { R(g, 175, 60, 2, 2, "#e0a030"); R(g, 179, 60, 2, 2, "#e0a030"); R(g, 174, 70, 8, 4, "#5f6a72"); } else R(g, 172, 66, 12, 1, ed); },
 ];
 function toys(g: CanvasRenderingContext2D, t: number) {
-  sky(g, "#070b14", "#18243a", 66);
+  sky(g, "#061214", "#16363a", 66);
   stars(g, t, 24, 36); moon(g, 24, 18);
   R(g, 0, 56, W, 12, "#0a0e12"); for (let x = 0; x < W; x += 7) { R(g, x, 52, 5, 16, "#0a0e12"); R(g, x + 1, 50, 3, 2, "#0a0e12"); } // cerca al fondo
   R(g, 0, 66, W, 42, "#0e150f"); for (let x = 0; x < W; x += 4) blade(g, x, 70, 3 + hash(x) * 4, Math.sin(t + x) * 0.6, "#142a17");
@@ -169,9 +168,9 @@ function logo(g: CanvasRenderingContext2D, t: number) {
 
 // ---------- Guion ----------
 const FRAMES: { text: string; dur: number; draw: (g: CanvasRenderingContext2D, t: number) => void }[] = [
-  { text: "Cada noche, cuando la casa se apaga, el patio cambia de dueño.", dur: 4.6, draw: house },
-  { text: "Bajo el pasto viven hormigas, escarabajos y cosas peores.", dur: 4.2, draw: bugs },
-  { text: "Un auto a control remoto, armado con chatarra, se enciende entre los juguetes olvidados.", dur: 4.8, draw: toys },
+  { text: "Once de la noche. Los humanos duermen. Arranca la liga más ilegal del barrio.", dur: 4.6, draw: house },
+  { text: "En esta esquina: hormigas, escarabajos y un gato con serios problemas de actitud.", dur: 4.2, draw: bugs },
+  { text: "En la otra: un auto a control remoto, tres pilas recicladas y cero sentido común.", dur: 4.8, draw: toys },
   { text: "", dur: 4.4, draw: logo },
 ];
 
