@@ -148,7 +148,7 @@ function floor(key: string, color: string, t: () => B.Texture, rough = 0.95) {
   const GS = HALF * 2 + 700, // el suelo sigue más allá del patio: el horizonte se pierde en la niebla
      tx = tex(key, t);
   tx.uScale = tx.vScale = (14 * GS) / 260;
-  const ground = B.MeshBuilder.CreateGround("ground", { width: GS, height: GS }, scene);
+  const ground = B.MeshBuilder.CreateGround("ground", { width: GS, height: GS, subdivisions: 80 }, scene); // subdividido: dos triángulos enormes interpolan mal la profundidad y los decales se hunden en el piso
   ground.material = pbr(key, { color, rough, tex: tx });
   ground.receiveShadows = true;
   const gcol = B.MeshBuilder.CreateBox("gcol", { width: GS, height: 2, depth: GS }, scene);

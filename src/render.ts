@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 0.95, ca: 0.01, pal: 0.2, outline: 1, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.85 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 0.95, ca: 0.01, pal: 0.2, outline: 0, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.85 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -67,7 +67,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   probe.renderList!.push(sky);
   probe.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
   scene.environmentTexture = probe.cubeTexture;
-  scene.environmentIntensity = 0.35;
+  scene.environmentIntensity = 0.55;
 
   hemi = new B.HemisphericLight("hemi", new B.Vector3(0, 1, 0), scene);
   hemi.intensity = 0.14;
@@ -235,7 +235,7 @@ export function setQuality(q: Quality) {
 
 // ---------- Materiales ----------
 const mats = new Map<string, B.PBRMaterial>();
-export type MatOpts = { color: string; rough?: number; metal?: number; tex?: B.Texture; emissive?: string; alpha?: number };
+export type MatOpts = { coat?: number; color: string; rough?: number; metal?: number; tex?: B.Texture; emissive?: string; alpha?: number };
 
 export function pbr(key: string, o: MatOpts) {
   let m = mats.get(key);
@@ -247,6 +247,7 @@ export function pbr(key: string, o: MatOpts) {
   if (o.tex) m.albedoTexture = o.tex;
   if (o.emissive) m.emissiveColor = B.Color3.FromHexString(o.emissive);
   if (o.alpha !== undefined) m.alpha = o.alpha;
+  if (o.coat) { m.clearCoat.isEnabled = true; m.clearCoat.intensity = o.coat; m.clearCoat.roughness = 0.08; } // barniz de plástico: reflejo suave del cielo
   new SnapPlugin(m);
   m.realTimeFiltering = true;
   m.realTimeFilteringQuality = B.Constants.TEXTURE_FILTERING_QUALITY_LOW;
@@ -286,7 +287,7 @@ export function wetGround(k: number) {
 
 // Paleta de materiales de "juguete"
 export const M = {
-  plastic: (c: string) => pbr("pl" + c, { color: c, rough: 0.32 }),
+  plastic: (c: string) => pbr("pl" + c, { color: c, rough: 0.32, coat: 0.5 }),
   matte: (c: string) => pbr("mt" + c, { color: c, rough: 0.8 }),
   rubber: () => pbr("rubber", { color: "#1c1c1c", rough: 0.92 }),
   metal: (c = "#c9ccd1") => pbr("me" + c, { color: c, rough: 0.28, metal: 1 }),

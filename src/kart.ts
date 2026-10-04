@@ -54,9 +54,9 @@ const DS = 3.2; // separación entre muestras
 // Circuitos: la zona define el escenario fijo (el layout se limpia). La salida es el primer punto; delante hay recta para la parrilla.
 type TrackDef = { name: string; zone: "patio" | "jardin" | "garaje"; w: number; gap: number; extra: number; crowd: boolean; pts: [number, number][] };
 export const TRACKS: TrackDef[] = [
-  { name: "Circuito del Patio", zone: "patio", w: 9, gap: 7, extra: 0, crowd: true, pts: [[0, -110], [60, -112], [108, -88], [126, -32], [116, 22], [100, 80], [60, 118], [0, 126], [-60, 116], [-108, 84], [-126, 26], [-118, -34], [-98, -84], [-50, -110]] },
+  { name: "Circuito del Patio", zone: "patio", w: 9, gap: 7, extra: 0, crowd: true, pts: [[0, -110], [60, -112], [104, -84], [128, -40], [122, 10], [96, 36], [118, 66], [96, 98], [52, 120], [0, 128], [-55, 118], [-100, 92], [-128, 48], [-102, 14], [-126, -26], [-112, -70], [-60, -102]] },
   // Jardín: el cantero elevado (-55,35), el árbol (78,70) y el buzón quedan dentro o fuera de la pista
-  { name: "Circuito del Jardín", zone: "jardin", w: 9, gap: 7, extra: 0, crowd: true, pts: [[0, -100], [60, -104], [100, -70], [112, -20], [112, 36], [95, 100], [45, 118], [-10, 122], [-65, 108], [-108, 70], [-118, 10], [-110, -50], [-60, -100]] },
+  { name: "Circuito del Jardín", zone: "jardin", w: 9, gap: 7, extra: 0, crowd: true, pts: [[0, -100], [60, -104], [102, -72], [116, -24], [94, -2], [118, 28], [114, 74], [92, 108], [40, 122], [-14, 124], [-66, 110], [-106, 76], [-102, 34], [-124, 4], [-112, -52], [-60, -100]] },
   // Garaje: pista angosta con un tramo BAJO el auto de la casa (x = 30), vuelta corta (+2 vueltas)
   { name: "Circuito del Garaje", zone: "garaje", w: 6, gap: 5, extra: 2, crowd: false, pts: [[-48, 45], [-48, -30], [-38, -54], [-5, -58], [30, -48], [30, 0], [30, 45], [24, 62], [-10, 68], [-42, 64]] },
 ];
@@ -149,10 +149,12 @@ function ribbon(off0: number, off1: number, y: number, vScale: number, colorFn?:
 
 function buildTrack() {
   const road = ribbon(-W, W, 0.05, 14);
-  road.material = pbr("raceRoad", { color: "#ffffff", rough: 0.92, tex: roadTex() });
+  const rm = road.material = pbr("raceRoad", { color: "#ffffff", rough: 0.92, tex: roadTex() });
+  rm.zOffset = -2;
   const curb = (a: number, b: number) => {
     const m = ribbon(a, b, 0.07, 6, (i) => (Math.floor(i / 2) % 2 ? [0.95, 0.95, 0.95, 1] : [0.86, 0.14, 0.14, 1]));
-    m.material = pbr("raceCurb", { color: "#ffffff", rough: 0.7 });
+    const cm = m.material = pbr("raceCurb", { color: "#ffffff", rough: 0.7 });
+    cm.zOffset = -3;
   };
   curb(-W - 1.8, -W); curb(W, W + 1.8);
   // Línea de salida: tablero a cuadros + arco
@@ -161,7 +163,8 @@ function buildTrack() {
   line.rotation.x = Math.PI / 2; line.position.set(s0.x, 0.09, s0.z); line.rotation.y = yaw;
   line.rotation = new B.Vector3(Math.PI / 2, yaw, 0);
   const chk = canvasTex(128, (c, s) => { const n = 8; for (let i = 0; i < n * 2; i++) for (let j = 0; j < 2; j++) { c.fillStyle = (i + j) % 2 ? "#111" : "#fff"; c.fillRect((i * s) / (n * 2), (j * s) / 2, s / (n * 2) + 1, s / 2 + 1); } });
-  line.material = pbr("raceLine", { color: "#ffffff", rough: 0.7, tex: chk });
+  const lm = line.material = pbr("raceLine", { color: "#ffffff", rough: 0.7, tex: chk });
+  lm.zOffset = -4;
   mesh.push(line);
   const arch: B.Mesh[] = [];
   for (const sd of [-1, 1]) arch.push(cyl(1.2, 1.2, 12, M.plastic("#f4f7fa"), [s0.x + R[0].x * sd * (W + 3), 6, s0.z + R[0].z * sd * (W + 3)], undefined, 8));
@@ -183,6 +186,7 @@ function buildTrack() {
   // Placas de turbo
   const ch = canvasTex(128, (c, s) => { c.fillStyle = "#ffb02e"; c.fillRect(0, 0, s, s); c.fillStyle = "#fff"; for (let k = 0; k < 3; k++) { c.beginPath(); c.moveTo(s * 0.15, s * (0.9 - k * 0.3)); c.lineTo(s * 0.5, s * (0.6 - k * 0.3)); c.lineTo(s * 0.85, s * (0.9 - k * 0.3)); c.lineTo(s * 0.85, s * (0.78 - k * 0.3)); c.lineTo(s * 0.5, s * (0.48 - k * 0.3)); c.lineTo(s * 0.15, s * (0.78 - k * 0.3)); c.fill(); } });
   const pm = pbr("racePad", { color: "#ffffff", rough: 0.5, tex: ch, emissive: "#a05a00" });
+  pm.zOffset = -4;
   for (const [f, o] of [[0.17, 3], [0.47, -3], [0.77, 3]] as const) {
     const i = Math.floor(f * trk.N), at = P[i].add(R[i].scale(o));
     const m = B.MeshBuilder.CreatePlane("pad", { width: 5, height: 7 }, D.scene);
@@ -216,7 +220,7 @@ function buildArena() {
   const floorTex = canvasTex(256, (g, sz) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.fillStyle = (i + j) % 2 ? "#8a8f9a" : "#6f7480"; g.fillRect((i * sz) / 8, (j * sz) / 8, sz / 8 + 1, sz / 8 + 1); } g.strokeStyle = "#ffd84d"; g.lineWidth = 6; g.beginPath(); g.arc(sz / 2, sz / 2, sz * 0.18, 0, 7); g.stroke(); });
   const fl = B.MeshBuilder.CreateDisc("arenaFloor", { radius: r, tessellation: 48 }, D.scene);
   fl.rotation.x = Math.PI / 2; fl.position.set(c.x, 0.06, c.z); fl.receiveShadows = true; fl.isPickable = false;
-  fl.material = pbr("arenaFloor", { color: "#ffffff", rough: 0.9, tex: floorTex }); mesh.push(fl);
+  const am = fl.material = pbr("arenaFloor", { color: "#ffffff", rough: 0.9, tex: floorTex }); am.zOffset = -2; mesh.push(fl);
   // Muro: bloques rotados ANTES del PhysicsAggregate (el cuerpo toma la pose de la malla al crearse)
   const seg = 36, len = (2 * Math.PI * (r + 1.5)) / seg + 0.4;
   for (let k = 0; k < seg; k++) {
@@ -268,6 +272,25 @@ function decorate(crowd: boolean) {
   // Globos en el arco
   const bl = merge("balloons", [0, 1, 2, 3, 4, 5].map((k) => sph(2.2, M.plastic(colors[k % 4]), [Math.cos(k * 1.1) * 1.4, 14.5 + (k % 3) * 1.2, Math.sin(k * 1.1) * 1.4], [1, 1.2, 1], 6)));
   place(bl, [-1, 1].map((sd) => { const q = P[0].add(R[0].scale(sd * (W + 3))); return mat(q.x, 0, q.z, 0); }));
+  // Carteles de curva (amarillo con flechas, como en Mario Kart): uno por curva cerrada, a la salida de la recta, mirando al que llega
+  const sign = (dirRight: boolean) => canvasTex(128, (g, sz) => {
+    g.fillStyle = "#ffc24d"; g.fillRect(0, 0, sz, sz); g.strokeStyle = "#1a1a1a"; g.lineWidth = 10; g.strokeRect(5, 5, sz - 10, sz - 10);
+    g.fillStyle = "#1a1a1a"; for (let k = 0; k < 2; k++) { const x0 = sz * (0.2 + k * 0.28); g.beginPath(); if (dirRight) { g.moveTo(x0, sz * 0.2); g.lineTo(x0 + sz * 0.24, sz * 0.5); g.lineTo(x0, sz * 0.8); g.lineTo(x0 + sz * 0.1, sz * 0.5); } else { g.moveTo(sz - x0, sz * 0.2); g.lineTo(sz - x0 - sz * 0.24, sz * 0.5); g.lineTo(sz - x0, sz * 0.8); g.lineTo(sz - x0 - sz * 0.1, sz * 0.5); } g.closePath(); g.fill(); }
+  });
+  const signMat = [sign(false), sign(true)].map((tx, k) => pbr("raceSign" + k, { color: "#ffffff", rough: 0.6, tex: tx, emissive: "#6a4a00" }));
+  let lastSign = -99;
+  for (let i = 4; i < N - 4; i++) {
+    const a = angleAhead(i);
+    if (Math.abs(a) > 0.55 && i - lastSign > 14 && Math.abs(angleAhead(i - 3)) <= Math.abs(a) * 0.7) {
+      lastSign = i;
+      const turnRight = a < 0, out = turnRight ? -1 : 1; // lado exterior de la curva
+      const j = (i - 6 + N) % N, q = P[j].add(R[j].scale(out * (W + 4)));
+      const post = cyl(0.25, 0.25, 3, M.metal("#e8edf2"), [q.x, 1.5, q.z], undefined, 6);
+      const pl = B.MeshBuilder.CreatePlane("curveSign", { width: 4.4, height: 2.8 }, D.scene);
+      pl.position.set(q.x, 3.6, q.z); pl.rotation.y = Math.atan2(T[j].x, T[j].z) + Math.PI; pl.material = signMat[turnRight ? 1 : 0]; pl.isPickable = false;
+      shadows.addShadowCaster(pl); mesh.push(post, pl);
+    }
+  }
   // Neumáticos apilados fuera de las curvas más cerradas
   const tire = merge("tires", [0, 1, 2].map((k) => B.MeshBuilder.CreateTorus("t", { diameter: 2.2, thickness: 0.8, tessellation: 10 }, D.scene)).map((m, k) => { m.position.y = 0.4 + k * 0.8; m.material = M.rubber(); return m; }));
   const tms: B.Matrix[] = [];
@@ -891,6 +914,14 @@ export function raceTick(dt: number) {
 if (import.meta.env.DEV) Object.assign(window, {
   __race: {
     auto: (on = true) => { for (const h of humans) h.auto = on; },
+    sim: (secs: number) => { // avanza la carrera sin dibujar (paso fijo); corta a los ~30 s reales
+      const pe = D.scene.getPhysicsEngine() as unknown as { _step(d: number): void }, w0 = performance.now(), end = t + secs + (countdown > 0 ? countdown : 0);
+      while ((t < end || countdown > 0) && performance.now() - w0 < 30000 && !resultsOn) { for (const r of racers) r.car.root.computeWorldMatrix(true); raceTick(1 / 60); pe._step(1 / 60); }
+      return { t: Math.round(t), results: resultsOn, order: [...racers].sort((a, b) => placeOf(a) - placeOf(b)).map((r) => `${r.name}:${r.lap}.${r.idx}${r.fin ? "F" + Math.round(r.fin) : ""}`).join(" "), laki: racers.map((r) => r.laki + "/" + r.hits).join(" ") };
+    },
+    dbg: () => { const m = D.scene.getMeshByName("ribbon"); const v = m?.getVerticesData("position") ?? []; return { n: v.length / 3, nan: v.some((x) => !Number.isFinite(x)), vis: m?.isVisible, en: m?.isEnabled(), N: trk.N, y: v[1], mat: m?.material?.name, alpha: m?.material?.alpha, bb: m?.getBoundingInfo().boundingBox.extendSizeWorld.asArray() }; },
+    fix: (y: number, z: number) => { for (const m of D.scene.meshes) if (m.name === "ribbon") { m.position.y = y; if (m.material) m.material.zOffset = z; } },
+    ground: () => D.scene.meshes.filter((m) => m.name === "ground" || m.name === "patio" || m.name === "cloud").map((m) => m.name + " y=" + m.position.y.toFixed(3) + " zo=" + (m.material?.zOffset ?? "-") + " dw=" + (m.material as unknown as { disableDepthWrite?: boolean })?.disableDepthWrite),
     stuck: () => stuckLog,
     laki: () => racers.map((r) => r.laki + "/" + r.hits),
     info: () => ({ t, countdown, lap: humans.map((h) => h.lap), idx: humans.map((h) => h.idx), place: humans.map((h) => placeOf(h)), fin: racers.map((r) => Math.round(r.fin)), resultsOn, item: humans.map((h) => h.item), speeds: racers.map((r) => Math.round(r.fs)) }),

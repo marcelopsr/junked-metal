@@ -71,8 +71,10 @@ export function wheel(d: number, w: number, rim: string) {
     cyl(d, d, w, M.rubber(), [0, 0, 0], [0, 0, Math.PI / 2], 16),
     tor(d * 0.98, w * 0.35, M.rubber(), [w * 0.3, 0, 0], [0, 0, Math.PI / 2], 16),
     tor(d * 0.98, w * 0.35, M.rubber(), [-w * 0.3, 0, 0], [0, 0, Math.PI / 2], 16),
-    cyl(d * 0.6, d * 0.6, w * 1.04, M.metal(rim), [0, 0, 0], [0, 0, Math.PI / 2], 10),
-    cyl(d * 0.2, d * 0.2, w * 1.12, M.metal(), [0, 0, 0], [0, 0, Math.PI / 2], 6),
+    cyl(d * 0.62, d * 0.62, w * 1.04, M.metal(rim), [0, 0, 0], [0, 0, Math.PI / 2], 20),
+    cyl(d * 0.48, d * 0.48, w * 1.08, M.matte("#1d2026"), [0, 0, 0], [0, 0, Math.PI / 2], 20), // fondo oscuro de la llanta
+    ...[0, 1, 2, 3, 4].map((k) => box(w * 1.1, d * 0.46, d * 0.07, M.metal(rim), [0, 0, 0], [(k * Math.PI * 2) / 5, 0, 0])), // 5 rayos
+    cyl(d * 0.2, d * 0.2, w * 1.14, M.metal(), [0, 0, 0], [0, 0, Math.PI / 2], 14),
   ]);
 }
 
@@ -127,7 +129,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   const ws: { pos: V3; d: number; w: number; steer?: boolean }[] = [];
   let parts: B.Mesh[];
   let stock: B.Mesh[] = []; // alerón de serie (se reemplaza si se elige otro)
-  const paint = pbr("paint" + kind + o.paint, { color: o.paint ?? A.paint, rough: 0.5 });
+  const paint = pbr("paint" + kind + o.paint, { color: o.paint ?? A.paint, rough: 0.4, coat: 0.8 });
   if (kind === "buggy") {
     parts = [
       box(1.05, 0.1, 2.1, M.matte("#2b2d31"), [0, 0.02, 0]),
