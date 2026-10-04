@@ -13,7 +13,7 @@ export const resetBot = () => { stuck = back = 0; };
 type P = { x: number; z: number };
 export type BotBoss = { x: number; z: number; kind: string; fx: number; fz: number; charge: boolean; ram: boolean };
 const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14, gato: 12, aspiradora: 6, cortacercos: 14 }; // aspiradora: de cerca, como la juega una persona (a 22 m las armas no llegan y el duelo dura ~85 s en vez de ~11 s)
-export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVelocity(): P } }, threats?: P[], obs?: { x: number; z: number; r: number }[], boss?: BotBoss | null, zones: { x: number; z: number; r: number }[] = []) {
+export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVelocity(): P } }, threats?: P[], obs?: { x: number; z: number; r: number }[], boss?: BotBoss | null, zones: { x: number; z: number; r: number }[] = [], gems: P[] = []) {
   const v = c.body.getLinearVelocity();
   stuck = Math.hypot(v.x, v.z) < 2 ? stuck + 1 : 0;
   if (stuck > 50) { back = 40; stuck = 0; }
@@ -33,10 +33,15 @@ export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVel
     escaping = !!inZone || !!boss?.charge || (crowd >= 3 && Math.hypot(v.x, v.z) < 8);
     // Solo cuentan los bichos a menos de 22 m (más lejos no suman a ningún término): se miden una vez, no 16 veces
     const near = threats.map((e) => { const ex = e.x - c.pos.x, ez = e.z - c.pos.z; return { ex, ez, d: Math.hypot(ex, ez) }; }).filter((t) => t.d < 22);
+    // Gemas cerca (como una persona: desvía la órbita para juntar XP); sin jefe. Vector suma pesado por cercanía
+    let gx = 0, gz = 0;
+    if (!boss) for (const g of gems) { const ex = g.x - c.pos.x, ez = g.z - c.pos.z, d = Math.hypot(ex, ez); if (d > 1 && d < 30) { gx += ex / (d * d); gz += ez / (d * d); } }
+    const gem = Math.hypot(gx, gz) > 0.02 ? Math.atan2(gx, gz) : null;
     let best = -Infinity;
     for (let k = 0; k < 16; k++) {
       const a = (k / 16) * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a);
       let sc = Math.cos(a - have) * 1.2 + Math.cos(a - orbit) * 2.5;
+      if (gem !== null) sc += Math.cos(a - gem) * 2;
       for (const { ex, ez, d } of near) { const dot = (ex * dx + ez * dz) / d; sc -= dot * (22 - d) / 6; if (d < 6 && dot > 0.6) sc -= 2.5; } // muro de bichos pegado: buscar el hueco
       for (const o of obs!) { for (const t of [4, 9]) { const px = c.pos.x + dx * t, pz = c.pos.z + dz * t; if (Math.hypot(px - o.x, pz - o.z) < o.r + 2) sc -= 12 / t; } }
       // Bordes del patio: acorralarse contra la pared es la muerte (la horda empuja y no hay salida)

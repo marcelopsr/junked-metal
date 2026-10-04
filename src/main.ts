@@ -1261,7 +1261,7 @@ function botStep(m: typeof import("./devbot"), dt: number) {
   for (const s of spits) zones.push({ x: s.m.position.x + s.v.x * 0.3, z: s.m.position.z + s.v.z * 0.3, r: 1.2 });
   for (const cb of b?.cables ?? []) zones.push({ x: (cb.a.x + cb.b.x) / 2, z: (cb.a.z + cb.b.z) / 2, r: 3.5 }); // cables del cortacercos
   const bb = b && { x: b.pos.x, z: b.pos.z, kind: b.kind, fx: b.node.forward.x, fz: b.node.forward.z, charge: b.kind === "cortadora" && b.state === 1, ram: weapons.some((w) => w.id === "lanza" && w.evolved) };
-  Object.assign(input, m.botSteer(car!, enemies.filter((e) => !e.def.boss).map((e) => e.pos), obstacles(), bb, zones), { move: false, drift: false });
+  Object.assign(input, m.botSteer(car!, enemies.filter((e) => !e.def.boss).map((e) => e.pos), obstacles(), bb, zones, gems.map((g) => g.m.position)), { move: false, drift: false });
   update(dt);
   pe._step(dt);
   tickFx(dt);
