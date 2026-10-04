@@ -201,7 +201,8 @@ function startRun(d = false) {
   buildLayout();
   RUN_BOSSES = [[200, profile.minis[0]], [400, profile.minis[1]], [600, profile.final]];
   finalKind = RUN_BOSSES[RUN_BOSSES.length - 1][1]; // jefe final: vencerlo gana la partida
-  const curses = daily ? [] : save.curses; // el desafío diario no admite maldiciones
+  // ponytail: maldiciones ocultas por ahora (decisión del usuario); volver a `daily ? [] : save.curses` y mostrar #curseBtn para reactivarlas
+  const curses: typeof save.curses = [];
   horde = curses.includes("horda") ? 1.5 : 1; noRepair = curses.includes("sinrep"); curseK = 1 + 0.3 * curses.length;
   endless = false; bank = null;
   abil = save.ability; abilCd = abilOn = bombs = 0; worldK = 1; shieldM = null;
