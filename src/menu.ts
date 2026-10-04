@@ -222,7 +222,19 @@ export function go(s: Scr) {
   stack.push(s);
   show();
 }
+// Confirmación de compra: toda compra (taller, garaje, arsenal, habilidades, chasis) pasa por acá antes de gastar tornillos
+let askFn: (() => void) | null = null, askBack: HTMLElement | null = null;
+function askBuy(name: string, cost: number, then: () => void) {
+  if (save.scrap < cost) return; // no alcanza: no hay nada que confirmar
+  askFn = then; askBack = document.activeElement as HTMLElement;
+  $("askD").textContent = `¿Comprar ${name} por ${cost} tornillos? Después de la compra quedan ${save.scrap - cost}.`;
+  $("ask").classList.remove("hidden");
+  ($("ask").querySelector('[data-act="askyes"]') as HTMLElement).focus();
+}
+function askClose() { $("ask").classList.add("hidden"); askFn = null; askBack?.focus(); }
+
 function back() {
+  if (askFn) return askClose(); // Esc / B cierran la confirmación sin comprar
   const s = current();
   if (!s || s === "title" || s === "main") return;
   SFX.back();
@@ -1045,6 +1057,10 @@ export function initMenu(a: Api) {
   fe.addEventListener("click", (e) => {
     const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
+    if (d?.act === "askyes") { const f = askFn; askClose(); SFX.accept(); f?.(); return; }
+    if (d?.act === "askno") { askClose(); return; }
+    if (askFn) return; // con la confirmación abierta no se toca nada más
+    const nm = (t.closest("[data-buy],[data-pilot],[data-part],[data-arma],[data-hab],[data-k]")?.querySelector("b")?.textContent ?? "esto").trim();
     if (t.id === "dgrid") { if (!e.detail) setCell(dcx, dcy, dcol); return; } // Enter / A sobre la grilla (el mouse y el dedo pintan en pointerdown)
     if (binding && d?.bind !== binding) { cancelBind(); if (!d?.bind) return; } // un clic fuera cancela la captura
     if (!d) return;
@@ -1110,35 +1126,34 @@ export function initMenu(a: Api) {
     else if (d.belite !== undefined) { BV.elite = d.belite as Elite | ""; BV.anim = ""; renderBeast(); }
     else if (d.btab) { btab = d.btab as typeof btab; renderBestiary(); focusSel(`[data-btab="${btab}"]`); }
     else if (d.stab) { stab = d.stab as typeof stab; renderShop(); $("shop").scrollTop = 0; focusSel(`[data-stab="${stab}"]`); }
-    else if (d.buy) { if (!buy(d.buy)) return; renderShop(); focusSel(`[data-buy="${d.buy}"]`); }
+    else if (d.buy) { const id = d.buy, c = priceOf(id); if (owns(id) || c === undefined) return; askBuy(nm, c, () => { if (!buy(id)) return; renderShop(); focusSel(`[data-buy="${id}"]`); }); }
     else if (d.sf) { sfilt = d.sf as typeof sfilt; renderShop(); focusSel(`[data-sf="${sfilt}"]`); }
     else if (d.ss) { ssort = (ssort + 1) % SSORT.length; renderShop(); focusSel("[data-ss]"); }
     else if (d.hab) {
       const k = d.hab as AbilityId, l = save.abilLv[k] ?? 0, cost = abilCost(k)[l];
       if (cost === undefined || save.scrap < cost) return;
-      save.scrap -= cost; save.abilLv[k] = l + 1; persist(); renderShop(); focusSel(`[data-hab="${k}"]`);
+      askBuy(`${nm} nivel ${l + 1}`, cost, () => { save.scrap -= cost; save.abilLv[k] = l + 1; persist(); renderShop(); focusSel(`[data-hab="${k}"]`); });
     }
     else if (d.arma) {
-      if (!owns("arma:" + d.arma) && !buy("arma:" + d.arma)) return;
-      save.weapon = d.arma as WeaponId; persist(); renderGarage(); focusSel(`[data-arma="${d.arma}"]`);
+      const a = d.arma, use = () => { save.weapon = a as WeaponId; persist(); renderGarage(); focusSel(`[data-arma="${a}"]`); };
+      if (owns("arma:" + a)) use(); else { const c = priceOf("arma:" + a); if (c !== undefined) askBuy(nm, c, () => { if (buy("arma:" + a)) use(); }); }
     }
     else if (d.abil) { save.ability = d.abil as AbilityId; persist(); renderGarage(); focusSel(`[data-abil="${d.abil}"]`); }
     else if (d.pilot) {
-      const id = "pilot:" + d.pilot;
-      if (!owns(id) && !buy(id)) return;
-      save.pilot = d.pilot as PilotId; persist(); renderGarage(); focusSel(`[data-pilot="${d.pilot}"]`);
+      const id = "pilot:" + d.pilot, pk = d.pilot, use = () => { save.pilot = pk as PilotId; persist(); renderGarage(); focusSel(`[data-pilot="${pk}"]`); };
+      if (owns(id)) use(); else { const c = priceOf(id); if (c !== undefined) askBuy(nm, c, () => { if (buy(id)) use(); }); }
     } else if (d.part) {
       const [sl, o] = d.part.split(":") as [Slot, string];
-      if (!owns("part:" + d.part) && !buy("part:" + d.part)) return;
-      save.kit[sl] = o; persist(); renderGarage(); focusSel(`[data-part="${d.part}"]`);
+      const pp = d.part, use = () => { save.kit[sl] = o; persist(); renderGarage(); focusSel(`[data-part="${pp}"]`); };
+      if (owns("part:" + pp)) use(); else { const c = priceOf("part:" + pp); if (c !== undefined) askBuy(nm, c, () => { if (buy("part:" + pp)) use(); }); }
     } else if (d.k && current() === "garage") {
       const k = d.k as CarKind;
-      if (!owns("car:" + k) && !buy("car:" + k)) return;
-      save.car = k; persist(); renderGarage(); focusSel(`.carc[data-k="${k}"]`);
+      const use = () => { save.car = k; persist(); renderGarage(); focusSel(`.carc[data-k="${k}"]`); };
+      if (owns("car:" + k)) use(); else { const c = priceOf("car:" + k); if (c !== undefined) askBuy(nm, c, () => { if (buy("car:" + k)) use(); }); }
     } else if (d.k && current() === "shop") {
       const p = PERKS.find((x) => x.k === d.k)!, cost = p.cost[save.perm[p.k]];
       if (cost === undefined || save.scrap < cost) return;
-      save.scrap -= cost; save.perm[p.k]++; persist(); renderShop(); focusSel(`#shop [data-k="${p.k}"]`);
+      askBuy(`${nm} nivel ${save.perm[p.k] + 1}`, cost, () => { save.scrap -= cost; save.perm[p.k]++; persist(); renderShop(); focusSel(`#shop [data-k="${p.k}"]`); });
     }
   });
   // Grilla de calcos con puntero (mouse y táctil): arrastrar pinta, clic derecho borra; el cursor sigue al puntero
