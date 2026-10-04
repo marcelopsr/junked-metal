@@ -66,6 +66,12 @@ const DEFAULT: Save = {
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego
 export const save: Save = parseSave((() => { try { return localStorage.getItem("rcfight2"); } catch { return null; } })(), DEFAULT, { abilities: ABILITIES, weapons: ARSENAL, curses: CURSES, kinds: Object.keys(DEF), zones: ZONES, isTouch, validDecal, presetOf, presets: PRESETS });
+// Solo en la Mac del autor (localhost): ?tornillos=N fija los tornillos del guardado y se limpia de la dirección. La versión publicada no lo atiende.
+{ const q = new URLSearchParams(location.search), t = Number(q.get("tornillos"));
+  if (["localhost", "127.0.0.1"].includes(location.hostname) && Number.isFinite(t) && t >= 0 && q.has("tornillos")) {
+    save.scrap = Math.floor(t); try { localStorage.setItem("rcfight2", JSON.stringify(save)); } catch { /* sin almacenamiento */ }
+    q.delete("tornillos"); history.replaceState(null, "", location.pathname + (q.size ? "?" + q : "") + location.hash);
+  } }
 /** Registro de un bicho (lo crea vacío la primera vez); lo llena main.ts fuera de las pruebas de dev. */
 export const beastRec = (k: Kind) => (save.beast[k] ??= { hurt: 0, by: {}, zones: [] });
 // Se escribe 300 ms después del último cambio (sliders y rueda disparan muchos seguidos)
