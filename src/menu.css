@@ -304,3 +304,9 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam)::after { co
   text-shadow: -1px -1px 0 #0b141c, 1px -1px 0 #0b141c, -1px 1px 0 #0b141c, 1px 1px 0 #0b141c, 0 2px 6px rgba(0, 0, 0, .7);
 }
 #fe .roll .dim { color: #c9d6e2; }
+
+/* Bestiario: encabezado y Volver siempre a la vista; solo la grilla se desplaza. Historia recortada a 2 líneas (completa en la ficha 3D). */
+#scr-bestiary #beasts { max-height: min(60vh, calc(100vh - 300px)); overflow-y: auto; overscroll-behavior: contain; padding: 4px 8px 4px 2px; align-content: start; }
+#scr-bestiary #records { max-height: 18vh; overflow-y: auto; display: block; }
+#beasts .ficha .lore { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+#beasts .ficha { padding-top: 10px; padding-bottom: 10px; }
