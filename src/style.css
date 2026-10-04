@@ -125,15 +125,15 @@ select { font: 600 13px var(--data); padding: 5px 8px; border-radius: 0; backgro
 .carc, .offer { clip-path: none; rotate: none !important; background: rgba(14, 24, 36, .82); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, .18); border-radius: 18px; box-shadow: 0 12px 30px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .1); color: #f4f7fa; }
 .carc::before, .offer::before { display: none; }
 .offer:hover, .offer.sel { transform: translateY(-8px); box-shadow: 0 16px 34px rgba(0, 0, 0, .4), 0 0 0 2px var(--rc); }
-.offer b, .carc b { font: 800 15px/1.2 ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif; color: #fff; text-transform: none; letter-spacing: 0; text-shadow: none; }
-.offer .kind { font: 800 10px/1 ui-rounded, system-ui, sans-serif; letter-spacing: .12em; color: var(--rc); }
-.offer, .offer p, .offer span, .carc, .carc p { font-family: ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif; color: #dbe6ee; }
+.offer b, .carc b { font: 800 15px/1.2 "Rajdhani", system-ui, sans-serif; color: #fff; text-transform: none; letter-spacing: 0; text-shadow: none; }
+.offer .kind { font: 800 10px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .12em; color: var(--rc); }
+.offer, .offer p, .offer span, .carc, .carc p { font-family: "Rajdhani", system-ui, sans-serif; color: #dbe6ee; }
 .offer .art { background: rgba(255, 255, 255, .08); border: 0; border-radius: 14px; box-shadow: none; }
 .offer .pips i { height: 5px; border-radius: 99px; background: rgba(255, 255, 255, .16); }
 .offer.evo, .offer.fusion { background: rgba(60, 44, 10, .85); }
 
 /* Botones y menús modernos */
-button, select { font: 700 14px/1 ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .04em; border-radius: 12px; clip-path: none !important; background: rgba(14, 24, 36, .78); color: #f4f7fa; border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 6px 16px rgba(0, 0, 0, .28); text-shadow: none; }
+button, select { font: 700 14px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .04em; border-radius: 12px; clip-path: none !important; background: rgba(14, 24, 36, .78); color: #f4f7fa; border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 6px 16px rgba(0, 0, 0, .28); text-shadow: none; }
 button:hover { background: rgba(30, 48, 68, .9); }
 .list button { text-transform: none; font-size: 16px; padding: 14px 22px; text-align: left; }
 .list button:focus { background: linear-gradient(135deg, #35c9ff, #7dffb0); color: #08202c; box-shadow: 0 8px 22px rgba(53, 201, 255, .35); }

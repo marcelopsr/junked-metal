@@ -1,4 +1,6 @@
 import "@fontsource/vt323/400.css";
+import "@fontsource/rajdhani/500.css";
+import "@fontsource/rajdhani/700.css";
 import "@fontsource/silkscreen/400.css";
 import "@fontsource/silkscreen/700.css";
 import "./style.css";
