@@ -27,7 +27,7 @@
 #rcount.on { opacity: 1; animation: r-count 1s ease-out infinite; } #rcount.go { color: #7dffb0; animation: r-go 1.2s ease-out both; }
 @keyframes r-count { 0% { transform: scale(1.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: scale(.9); } }
 @keyframes r-go { 0% { transform: scale(.6); } 30% { transform: scale(1.2); } 100% { transform: scale(1.5); opacity: 0; } }
-#rres { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(8, 16, 26, .8); backdrop-filter: blur(8px); pointer-events: auto; }
+#rres { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 14px; padding-right: 3vw; background: linear-gradient(90deg, transparent 30%, rgba(8, 16, 26, .82) 70%); pointer-events: auto; }
 #rres.hidden, #rpause.hidden { display: none; }
 #rpause { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(8, 16, 26, .75); backdrop-filter: blur(8px); pointer-events: auto; }
 #rpause .rtitle { font: 700 40px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .1em; } #rpause nav { display: flex; gap: 10px; }
@@ -37,3 +37,9 @@
 #rres td { background: rgba(255, 255, 255, .08); padding: 8px 12px; } #rres td:first-child { border-radius: 10px 0 0 10px; width: 36px; color: #ffd84d; font-weight: 700; } #rres td:last-child { border-radius: 0 10px 10px 0; }
 #rres tr.me td { background: rgba(255, 216, 77, .22); } #rres td i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
 #rres nav { display: flex; gap: 10px; margin-top: 8px; }
+
+#rflash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 4; }
+#rflash.on { animation: r-flash .7s ease-out; }
+@keyframes r-flash { 0% { opacity: .9; } 100% { opacity: 0; } }
+
+#race.podium #rmap, #race.podium #rtab, #race.podium .rp { display: none; }

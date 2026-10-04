@@ -7,7 +7,7 @@ import { Car, CARS, drive } from "./car";
 import { burst, FX, mark } from "./fx";
 import { icon } from "./icons";
 import { padsConnected, pollPlayer, type PlayerCtl } from "./input";
-import { cyl, sph, type CarKind, type CarOpts } from "./models";
+import { box, cyl, merge, pilotParts, sph, type CarKind, type CarOpts } from "./models";
 import { applyClimate, canvasTex, M, pbr, setSplit, setLamp, shadows } from "./render";
 import { rng, seedRng } from "./rng";
 import { engineSfx, engineStop, music, SFX } from "./sfx";
@@ -64,7 +64,8 @@ type Racer = {
   idx: number; lap: number; frac: number; fin: number; place: number; points: number;
   item: Item | null; itemAt: number; useAt: number; prevItemBtn: boolean;
   boost: number; slow: number; spin: number; shield: number; inv: number; spinRot: number;
-  drifting: number; charge: number; offT: number; stuckT: number; camYaw: number; camPos: B.Vector3; fs: number; lastLap: number; auto: boolean;
+  drifting: number; charge: number; offT: number; stuckT: number; camYaw: number; camPos: B.Vector3; fs: number; lastLap: number; auto: boolean; laki: number; hits: number;
+  aggr: number; drifter: boolean; early: boolean; bubble?: B.Mesh; boxT: number;
 };
 type Proj = { m: B.Mesh; kind: "petardo" | "misil"; owner: Racer; v: B.Vector3; life: number; target?: Racer };
 type Chicle = { m: B.Mesh; owner: Racer; life: number; arm: number };
@@ -76,7 +77,7 @@ let racers: Racer[] = [];
 let humans: Racer[] = [];
 let projs: Proj[] = [], chicles: Chicle[] = [], boxes: Box[] = [], pads: Pad[] = [], ants: Ant[] = [];
 let mesh: B.AbstractMesh[] = [];
-let active = false, t = 0, countdown = 3.4, finishedAt = -1, resultsOn = false, variant = 0, raceNo = 1;
+let podiumOn = false, active = false, t = 0, countdown = 3.4, finishedAt = -1, resultsOn = false, variant = 0, raceNo = 1;
 let cup: Record<number, number> = {};
 let mapCv: HTMLCanvasElement, mapCtx: CanvasRenderingContext2D;
 
@@ -85,6 +86,8 @@ export const raceActive = () => active;
 const POINTS = [15, 12, 10, 8, 7, 6, 5, 3, 2, 1];
 const NAMES = ["Soldadito", "Muñeca", "Robot", "Dino", "Figura", "Chispa", "Tuerca", "Pistón", "Resorte", "Gomita"];
 const PAINTS = ["#d62828", "#1d4ed8", "#16a34a", "#e0a030", "#9a6fb5", "#2a9d8f", "#f08dbd", "#ff7a3a", "#35c9ff", "#b6ff6a"];
+// Personalidad de la IA: [agresividad 0..1 (ataca antes y se pega a los rivales), usa derrape de mini-turbo]
+const PERSONA: [number, boolean][] = [[0.9, true], [0.3, false], [0.6, true], [0.8, false], [0.2, true], [0.5, false], [1, true], [0.4, true], [0.7, false], [0.1, false]];
 const PILOT_IDS = ["soldadito", "muneca", "robot", "dino", "figura"];
 // Estadísticas de carrera por auto: [velocidad máx, aceleración, giro, agarre en derrape]
 const KSTAT: Record<CarKind, [number, number, number, number]> = {
@@ -171,7 +174,45 @@ function buildTrack() {
     ants.push({ m, c: P[i].clone(), n: R[i].clone(), ph, sp: 0.5 + (ph % 3) * 0.12, hit: 0 });
     mesh.push(m);
   }
-  // Pasto bajo y árboles ya existen en el patio; el patio queda de fondo
+  decorate();
+}
+
+// Pista viva: banderines, público de juguetes en la salida, globos y pilas de neumáticos en las curvas
+function decorate() {
+  const { P, T, R, N } = trk;
+  const place = (base: B.Mesh, mats: B.Matrix[]) => {
+    const buf = new Float32Array(mats.length * 16); mats.forEach((m, i) => m.copyToArray(buf, i * 16));
+    base.thinInstanceSetBuffer("matrix", buf, 16, true); base.isPickable = false; base.alwaysSelectAsActiveMesh = true; mesh.push(base);
+  };
+  const mat = (x: number, y: number, z: number, yaw: number, s = 1) => B.Matrix.Compose(new B.Vector3(s, s, s), B.Quaternion.FromEulerAngles(0, yaw, 0), new B.Vector3(x, y, z));
+  // Banderines de 4 colores a ambos lados cada ~13 m
+  const colors = ["#ef4444", "#ffd84d", "#35c9ff", "#7dffb0"];
+  colors.forEach((c, k) => {
+    const base = merge("flag", [cyl(0.18, 0.18, 5, M.metal("#e8edf2"), [0, 2.5, 0], undefined, 5), box(0.08, 1, 1.5, M.plastic(c), [0, 4.4, 0.8])]);
+    const ms: B.Matrix[] = [];
+    for (let i = k * 4; i < N; i += 16) for (const sd of [-1, 1]) { const p = P[i].add(R[i].scale(sd * (W + 3.6))); ms.push(mat(p.x, 0, p.z, Math.atan2(T[i].x, T[i].z) + (sd > 0 ? 0 : Math.PI))); }
+    place(base, ms);
+  });
+  // Público: figuritas gigantes en dos filas a cada lado de la recta de salida
+  const ms: Record<string, B.Matrix[]> = {};
+  for (let n = -7; n <= 7; n++) for (const sd of [-1, 1]) for (const row of [0, 1]) {
+    const i = (n * 2 + N) % N, p = P[i].add(R[i].scale(sd * (W + 8 + row * 4.5))), id = PILOT_IDS[(n + 7 + row * 2 + (sd > 0 ? 1 : 0)) % PILOT_IDS.length];
+    (ms[id] ??= []).push(mat(p.x, 1.2 + row * 1.2, p.z, Math.atan2(-sd * R[i].x, -sd * R[i].z), 3.2));
+  }
+  for (const id of PILOT_IDS) if (ms[id]) place(merge("crowd", pilotParts(id)), ms[id]);
+  // Tribunas bajas detrás del público
+  for (const sd of [-1, 1]) {
+    const i = 0, p = P[i].add(R[i].scale(sd * (W + 8 + 7))), b = box(3, 3, 52, M.plastic(sd > 0 ? "#3b6fd8" : "#d85a3b"), [p.x, 1.5, p.z], [0, Math.atan2(T[i].x, T[i].z), 0]);
+    b.isPickable = false; mesh.push(b);
+  }
+  // Globos en el arco
+  const bl = merge("balloons", [0, 1, 2, 3, 4, 5].map((k) => sph(2.2, M.plastic(colors[k % 4]), [Math.cos(k * 1.1) * 1.4, 14.5 + (k % 3) * 1.2, Math.sin(k * 1.1) * 1.4], [1, 1.2, 1], 6)));
+  place(bl, [-1, 1].map((sd) => { const q = P[0].add(R[0].scale(sd * (W + 3))); return mat(q.x, 0, q.z, 0); }));
+  // Neumáticos apilados fuera de las curvas más cerradas
+  const tire = merge("tires", [0, 1, 2].map((k) => B.MeshBuilder.CreateTorus("t", { diameter: 2.2, thickness: 0.8, tessellation: 10 }, D.scene)).map((m, k) => { m.position.y = 0.4 + k * 0.8; m.material = M.rubber(); return m; }));
+  const tms: B.Matrix[] = [];
+  for (let i = 0; i < N; i += 3) { const a = angleAhead(i); if (Math.abs(a) > 0.5) { const out = -Math.sign(a); for (let k = 0; k < 3; k++) { const p = P[i].add(R[(i + k * 2) % N].scale(out * (W + 3.5 + k * 0.4))); tms.push(mat(p.x, 0, p.z, 0)); } } }
+  if (tms.length) place(tire, tms);
 }
 let roadTx: B.Texture | null = null;
 const roadTex = () => roadTx ??= canvasTex(256, (c, s) => {
@@ -203,12 +244,13 @@ function makeRacers() {
     const p = trk.P[idx].add(trk.R[idx].scale(side * 3.6)), yaw = Math.atan2(trk.T[idx].x, trk.T[idx].z);
     const opts: CarOpts = { paint: PAINTS[i % PAINTS.length], pilot: PILOT_IDS[i % PILOT_IDS.length], lamp: "calido" };
     const car = new Car(D.scene, kind, opts, { x: p.x, z: p.z, yaw });
-    car.setMass(CARS[kind].mass * 1.2);
+    car.setMass(1 + (CARS[kind].mass - 1) * 0.4); // masas parecidas: los choques empujan sin que el tanque arrase
     const r: Racer = {
       id: i, name: human >= 0 ? `Jugador ${human + 1}` : NAMES[i % NAMES.length], car, human, ctl: human === 0 ? ctl1 : human === 1 ? ctl2 : undefined, color: PAINTS[i % PAINTS.length],
       top: ks[0], acc: ks[1], turn: ks[2], grip: ks[3], skill: 0.9 + rng() * 0.16, lane: (rng() - 0.5) * 8,
       idx, lap: 0, frac: 0, fin: 0, place: grid + 1, points: 0, item: null, itemAt: 0, useAt: 0, prevItemBtn: false,
-      boost: 0, slow: 0, spin: 0, shield: 0, inv: 0, spinRot: 0, drifting: 0, charge: 0, offT: 0, stuckT: 0, camYaw: yaw, camPos: new B.Vector3(), fs: 0, lastLap: 0, auto: false,
+      boost: 0, slow: 0, spin: 0, shield: 0, inv: 0, spinRot: 0, drifting: 0, charge: 0, offT: 0, stuckT: 0, camYaw: yaw, camPos: new B.Vector3(), fs: 0, lastLap: 0, auto: false, laki: 0, hits: 0,
+      aggr: PERSONA[i % PERSONA.length][0], drifter: PERSONA[i % PERSONA.length][1], early: false, boxT: 0,
     };
     racers.push(r);
     if (human >= 0) humans.push(r);
@@ -232,6 +274,7 @@ function ensureDom() {
     <div class="rp" data-p="0"><div class="rpos"><b>1</b><i>/10</i></div><div class="rlap"></div><div class="ritem"></div><div class="rspd"></div><div class="rmsg"></div></div>
     <div class="rp" data-p="1"><div class="rpos"><b>1</b><i>/10</i></div><div class="rlap"></div><div class="ritem"></div><div class="rspd"></div><div class="rmsg"></div></div>
     <canvas id="rmap" width="160" height="160"></canvas>
+    <div id="rflash"></div>
     <div id="rcount"></div>
     <div id="rtab"></div>
     <div id="rpause" class="hidden"><div class="rtitle">PAUSA</div><nav><button data-r="resume" class="primary">Seguir</button><button data-r="restart">Reiniciar</button><button data-r="exit">Salir al menú</button></nav></div>
@@ -270,7 +313,7 @@ export function startRace(keepCup = false) {
   D.cam.fov = 0.95;
   for (const r of racers) { r.camPos = r.car.pos.clone(); }
   dom!.classList.remove("hidden");
-  dom!.classList.toggle("split", split);
+  dom!.classList.toggle("split", split); dom!.classList.remove("podium");
   $r("#rres").classList.add("hidden");
   document.getElementById("fe")?.classList.add("hidden");
   music("run", 0.7);
@@ -295,6 +338,8 @@ function cleanup() {
   for (const p of projs) p.m.dispose();
   for (const c of chicles) c.m.dispose();
   for (const m of mesh) { m.physicsBody?.dispose(); m.dispose(); }
+  for (const g of rings) g.m.dispose();
+  rings.length = 0; podiumOn = false;
   racers = []; humans = []; projs = []; chicles = []; boxes = []; pads = []; ants = []; mesh = [];
 }
 export function exitRace() {
@@ -338,10 +383,18 @@ function useItem(r: Racer) {
     chicles.push({ m, owner: r, life: 40, arm: 0.6 });
   } else if (it === "rayo") {
     for (const o of racers) if (o !== r) { if (o.shield > 0) o.shield = 0; else { o.slow = 4.5; hurtRacer(o, 1.0); } }
-    SFX.boss();
+    SFX.boss(); flash();
   }
   SFX.click();
 }
+// Onda expansiva: disco que crece y se desvanece
+const rings: { m: B.Mesh; life: number }[] = [];
+function ring(p: B.Vector3) {
+  const m = B.MeshBuilder.CreateTorus("ring", { diameter: 2, thickness: 0.25, tessellation: 20 }, D.scene);
+  m.position.set(p.x, 0.3, p.z); m.material = pbr("raceRing", { color: "#fff3a0", rough: 0.3, emissive: "#ffd84d", alpha: 0.8 }); m.isPickable = false;
+  rings.push({ m, life: 0.5 });
+}
+function flash() { const el = $r("#rflash"); el.classList.remove("on"); void el.offsetWidth; el.classList.add("on"); }
 function spawnProj(owner: Racer, kind: "petardo" | "misil", at: B.Vector3, v: B.Vector3, target?: Racer) {
   const m = kind === "petardo" ? cyl(0.5, 0.5, 1.1, pbr("raceShell", { color: "#ef4444", rough: 0.4, emissive: "#6a1010" }), [at.x, at.y, at.z], [Math.PI / 2, 0, 0], 8)
     : cyl(0.0, 0.6, 1.8, pbr("raceMissile", { color: "#ffb02e", rough: 0.4, emissive: "#a05a00" }), [at.x, at.y, at.z], [Math.PI / 2, 0, 0], 8);
@@ -349,10 +402,13 @@ function spawnProj(owner: Racer, kind: "petardo" | "misil", at: B.Vector3, v: B.
 }
 function hurtRacer(r: Racer, dur: number) {
   if (r.inv > 0) return;
+  r.hits++;
   if (r.shield > 0) { r.shield = 0; SFX.break(); return; }
   r.spin = dur; r.spinRot = 0; r.boost = 0; r.drifting = 0; r.charge = 0;
   r.car.body.setLinearVelocity(r.car.body.getLinearVelocity().scale(0.35));
-  burst(r.car.pos.add(new B.Vector3(0, 0.6, 0)), { n: 18, color: "#ffd84d", color2: "#ff7a3a", size: [0.2, 0.5], power: [4, 10], life: [0.3, 0.6] });
+  burst(r.car.pos.add(new B.Vector3(0, 0.6, 0)), { n: 28, color: "#ffd84d", color2: "#ff7a3a", size: [0.3, 0.7], power: [5, 12], life: [0.3, 0.7] });
+  FX.explosion(r.car.pos.add(new B.Vector3(0, 0.4, 0)), 0.9);
+  ring(r.car.pos);
   if (r.human >= 0) SFX.hurt();
 }
 
@@ -368,10 +424,26 @@ function aiInput(r: Racer, dt: number) {
   // Esquivar chicles y hormigas cercanas
   for (const c of chicles) if (c.owner !== r) { const d = B.Vector3.Distance(c.m.position, pos); if (d < 12 && (c.m.position.subtract(pos).x * f.x + c.m.position.subtract(pos).z * f.z) > 0) r.lane += (pos.x - c.m.position.x) * 0.01 * dt * 60; }
   r.lane = clamp(r.lane, -W + 2.5, W - 2.5);
-  // Uso de objetos con un retardo humano
+  // Los agresivos buscan al rival de adelante cuando está cerca y se le pegan
+  if (r.aggr > 0.5) {
+    const ahead = racers.filter((o) => o !== r && prog(o) > prog(r) && B.Vector3.DistanceSquared(o.car.pos, pos) < 28 * 28).sort((a, b) => prog(a) - prog(b))[0];
+    if (ahead) { const dl = (ahead.car.pos.x - pos.x) * trk.R[r.idx].x + (ahead.car.pos.z - pos.z) * trk.R[r.idx].z; r.lane = clamp(r.lane + dl * 0.02 * dt * 60 * r.aggr, -W + 2.5, W - 2.5); }
+  }
+  // Derrape en las curvas fuertes (los que saben) para cargar mini-turbo
+  const curve = angleAhead(r.idx);
+  const wantDrift = r.drifter && Math.abs(curve) > 0.42 && r.fs > 14 && r.spin <= 0;
+  // Objetos: ofensivos solo con un blanco cerca (según agresividad), turbo en la recta, escudo cuando hay proyectil, chicle con alguien detrás
   let item = false;
-  if (r.item && t > r.useAt) item = true;
-  return { throttle: thr, steer, drift: false, item };
+  if (r.item && t > r.useAt) {
+    const behind = racers.some((o) => o !== r && prog(o) < prog(r) && B.Vector3.DistanceSquared(o.car.pos, pos) < 22 * 22);
+    const near = racers.some((o) => o !== r && prog(o) > prog(r) && B.Vector3.DistanceSquared(o.car.pos, pos) < (16 + 16 * r.aggr) ** 2);
+    if (r.item === "turbo") item = Math.abs(curve) < 0.25;
+    else if (r.item === "escudo") item = projs.some((p) => p.owner !== r && B.Vector3.DistanceSquared(p.m.position, pos) < 400) || t > r.useAt + 6;
+    else if (r.item === "chicle") item = behind || t > r.useAt + 8;
+    else if (r.item === "rayo") item = r.aggr > 0.4 || t > r.useAt + 4;
+    else item = near || t > r.useAt + 7 - r.aggr * 4;
+  }
+  return { throttle: thr, steer: wantDrift ? Math.sign(steer || curve) * Math.max(0.5, Math.abs(steer)) : steer, drift: wantDrift, item };
 }
 function angleAhead(i: number) { const a = trk.T[i], b = trk.T[(i + 8) % trk.N]; return Math.atan2(a.x * b.z - a.z * b.x, a.x * b.x + a.z * b.z); }
 
@@ -390,11 +462,16 @@ function stepRacer(r: Racer, dt: number) {
   r.offT = off ? r.offT + dt : Math.max(0, r.offT - dt * 2);
   r.boost = Math.max(0, r.boost - dt); r.slow = Math.max(0, r.slow - dt); r.shield = Math.max(0, r.shield - dt); r.inv = Math.max(0, r.inv - dt);
   c.root.visibility = r.inv > 0 ? (Math.floor(t * 12) % 2 ? 0.4 : 1) : 1;
+  if (r.shield > 0 && !r.bubble) { r.bubble = sph(3.4, pbr("raceBubble", { color: "#7de8ff", rough: 0.1, emissive: "#2a8ab0", alpha: 0.32 }), [0, 0.5, 0], undefined, 8); r.bubble.parent = c.root; }
+  if (r.bubble) { r.bubble.setEnabled(r.shield > 0); r.bubble.scaling.setAll(1 + Math.sin(t * 8) * 0.04); }
 
   let inp: { throttle: number; steer: number; drift: boolean; item: boolean };
   const frozen = countdown > 0 || r.spin > 0;
   if (r.human >= 0 && !r.auto) inp = pollPlayer(r.ctl!);
   else inp = aiInput(r, dt);
+  // Salida con cohete: acelerar justo en el último segundo de la cuenta da turbo; antes de tiempo, el motor se ahoga
+  if (countdown > 0 && r.human >= 0 && !r.auto) { if (inp.throttle > 0 && countdown > 0.9) r.early = true; }
+  if (countdown <= 0 && t < 0.05 && r.human >= 0 && !r.auto) { if (!r.early && inp.throttle > 0) { r.boost = 1.1; say(r.human, "¡SALIDA TURBO!"); } else if (r.early) { r.slow = 0.8; } }
   if (r.fin > 0) inp = aiInput(r, dt), r.auto = true;
   // Objeto
   if (inp.item && !r.prevItemBtn && r.item && !frozen) useItem(r);
@@ -438,6 +515,7 @@ function rubber(r: Racer) {
   return gap > 60 ? 0.9 : gap < -45 ? 1.12 : 1;
 }
 function lakitu(r: Racer) {
+  r.laki++;
   const i = r.idx, p = trk.P[i], yaw = Math.atan2(trk.T[i].x, trk.T[i].z), c = r.car;
   c.body.disablePreStep = false;
   c.root.position.set(p.x, c.def.size[1] / 2 + 0.6, p.z);
@@ -483,6 +561,7 @@ function stepWorld(dt: number) {
     a.hit = Math.max(0, a.hit - dt);
     for (const r of racers) if (a.hit <= 0 && B.Vector3.DistanceSquared(r.car.pos, a.m.position) < 3.2) { a.hit = 1; hurtRacer(r, 0.9); FX.death(a.m.position.add(new B.Vector3(0, 0.3, 0)), false); }
   }
+  for (const g of [...rings]) { g.life -= dt; g.m.scaling.setAll(1 + (0.5 - g.life) * 12); g.m.visibility = Math.max(0, g.life * 2); if (g.life <= 0) { g.m.dispose(); rings.splice(rings.indexOf(g), 1); } }
   for (const c of [...chicles]) {
     c.life -= dt; c.arm -= dt;
     let gone = c.life <= 0;
@@ -508,6 +587,12 @@ const prog = (r: Racer) => r.lap * trk.N + r.idx + r.frac;
 
 // ---------- Cámaras y HUD ----------
 function camFor(r: Racer, c: B.FreeCamera, dt: number) {
+  if (r.fin > 0 && !podiumOn) { // cámara de victoria: orbita despacio alrededor del auto que cruzó la meta
+    const a = (t - r.fin) * 0.9 + r.camYaw + Math.PI, p = r.car.pos;
+    c.position.copyFrom(new B.Vector3(p.x + Math.sin(a) * 9, p.y + 3.2, p.z + Math.cos(a) * 9));
+    c.setTarget(p.add(new B.Vector3(0, 1, 0)));
+    return;
+  }
   const f = fwdOf(r), target = Math.atan2(f.x, f.z);
   r.camYaw += Math.atan2(Math.sin(target - r.camYaw), Math.cos(target - r.camYaw)) * (1 - Math.exp(-(r.drifting ? 3 : 7) * dt));
   const back = new B.Vector3(Math.sin(r.camYaw), 0, Math.cos(r.camYaw));
@@ -557,8 +642,33 @@ function showResults() {
   $r("#rres table").innerHTML = `<tr><th>#</th><th>Corredor</th><th>Tiempo</th><th>Pts</th><th>Total</th></tr>${tb}`;
   ($r("#rres [data-r=next]") as HTMLElement).style.display = last ? "none" : "";
   if (last && raceCfg.cup) { const champ = Object.entries(cup).sort((a, b) => b[1] - a[1])[0]; const r = racers.find((x) => x.id === +champ[0])!; $r("#rres .rtitle").textContent = `COPA: gana ${r.name} con ${champ[1]} puntos`; }
+  buildPodium(order);
   $r("#rres").classList.remove("hidden");
   (($r("#rres button:not([style*='none'])")) as HTMLElement)?.focus();
+}
+// Podio 3D junto a la salida: los tres primeros en bloques de oro/plata/bronce, los demás se ocultan; cámara que orbita
+let podiumBase = new B.Vector3(), podiumDir = new B.Vector3(0, 0, 1);
+function buildPodium(order: Racer[]) {
+  const p0 = trk.P[0].add(trk.R[0].scale(W + 30)), dir = trk.R[0].scale(-1).normalize();
+  podiumBase.copyFrom(p0); podiumDir.copyFrom(dir);
+  const yaw = Math.atan2(dir.x, dir.z), right = new B.Vector3(dir.z, 0, -dir.x);
+  const slots: [number, number, string][] = [[0, 3.4, "#ffc24d"], [-5.6, 2.2, "#d0d7de"], [5.6, 1.4, "#c47a3e"]];
+  slots.forEach(([off, h, col], i) => {
+    const b = box(5, h, 5, M.plastic(col), [p0.x + right.x * off, h / 2, p0.z + right.z * off], [0, yaw, 0]);
+    b.isPickable = false; shadows.addShadowCaster(b); mesh.push(b);
+    const r = order[i]; if (!r) return;
+    r.car.agg.dispose(); // sin física: el auto es solo una malla sobre el bloque
+    r.car.root.position.set(p0.x + right.x * off, h + r.car.def.size[1] / 2 + 0.3, p0.z + right.z * off);
+    r.car.root.rotationQuaternion = B.Quaternion.FromEulerAngles(0, yaw, 0);
+    r.car.vis.rotation.set(0, 0, 0); r.car.root.visibility = 1;
+    r.spin = 0; r.bubble?.setEnabled(false);
+    burst(r.car.root.position.add(new B.Vector3(0, 1.5, 0)), { n: 40, color: "#ffd84d", color2: "#ff9bd4", size: [0.2, 0.5], power: [3, 9], life: [0.8, 1.6], gravity: -6 });
+  });
+  for (const r of order.slice(3)) r.car.root.setEnabled(false);
+  podiumOn = true;
+  D.cam.viewport = new B.Viewport(0, 0, 1, 1); D.scene.activeCameras = null; D.scene.activeCamera = D.cam;
+  if (cam2) setSplit(cam2, false);
+  dom!.classList.remove("split"); dom!.classList.add("podium");
 }
 const fmt = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, "0")}`;
 
@@ -587,6 +697,15 @@ export function raceTick(dt: number) {
     if (countdown > 0 && Math.ceil(countdown) !== was && countdown < 3) SFX.blip();
     if (countdown <= 0) { SFX.accept(); t = 0; }
   } else t += dt;
+  if (podiumOn) {
+    const a = Math.sin(t * 0.45) * 0.55, front = podiumDir.clone(), side = new B.Vector3(podiumDir.z, 0, -podiumDir.x);
+    D.cam.position.set(podiumBase.x + front.x * 33 * Math.cos(a) + side.x * 33 * Math.sin(a), 8, podiumBase.z + front.z * 33 * Math.cos(a) + side.z * 33 * Math.sin(a));
+    D.cam.setTarget(podiumBase.add(new B.Vector3(0, 2.5, 0)).add(side.scale(-9)));
+    D.cam.fov = 0.8;
+    for (const r of racers) if (r.place <= 3) r.car.vis.rotation.y += dt * 0.7;
+    hud();
+    return;
+  }
   for (const r of racers) stepRacer(r, dt);
   if (countdown <= 0) stepWorld(dt);
   // Fin de carrera: cuando terminan todos los humanos (o 25 s después del primero)
@@ -601,6 +720,7 @@ export function raceTick(dt: number) {
 if (import.meta.env.DEV) Object.assign(window, {
   __race: {
     auto: (on = true) => { for (const h of humans) h.auto = on; },
+    laki: () => racers.map((r) => r.laki + "/" + r.hits),
     info: () => ({ t, countdown, lap: humans.map((h) => h.lap), idx: humans.map((h) => h.idx), place: humans.map((h) => placeOf(h)), fin: racers.map((r) => Math.round(r.fin)), resultsOn, item: humans.map((h) => h.item), speeds: racers.map((r) => Math.round(r.fs)) }),
     give: (it: Item) => { for (const h of humans) { h.item = it; h.useAt = 1e9; } },
     use: () => { for (const h of humans) useItem(h); },
