@@ -309,10 +309,10 @@ export const TEX = {
     const n = 4, w = s / n;
     for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
       const l = 45 + rnd() * 10;
-      c.fillStyle = `hsl(18, 55%, ${l}%)`; c.fillRect(i * w, j * w, w, w);
+      c.fillStyle = `hsl(20, 38%, ${l + 6}%)`; c.fillRect(i * w, j * w, w, w);
       for (let k = 0; k < 300; k++) { c.fillStyle = `hsla(18, 50%, ${l + (rnd() - 0.5) * 16}%, .5)`; c.fillRect(i * w + rnd() * w, j * w + rnd() * w, 2, 2); }
     }
-    c.strokeStyle = "#cfc6b8"; c.lineWidth = 6;
+    c.strokeStyle = "#b9ab9a"; c.lineWidth = 3;
     for (let i = 0; i <= n; i++) { c.beginPath(); c.moveTo(i * w, 0); c.lineTo(i * w, s); c.stroke(); c.beginPath(); c.moveTo(0, i * w); c.lineTo(s, i * w); c.stroke(); }
   }, 6),
   wood: () => canvasTex(256, (c, s) => {

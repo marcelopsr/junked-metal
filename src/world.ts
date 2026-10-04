@@ -814,7 +814,29 @@ function grassTuft() {
 // ---------- Viento + pasto que se aplasta al pasar el auto (shader de vértices) ----------
 let windT = 0;
 const windCar = new B.Vector3(0, -100, 0);
-export function setWind(t: number, car: B.Vector3 | null) { windT = t; if (car) windCar.copyFrom(car); }
+// Sombras de nubes: discos suaves que cruzan el piso, siempre alrededor del auto (solo de día; ponytail: 5 discos, sin forma real de nube)
+let clouds: B.Mesh[] = [];
+function cloudShadows(t: number, c: B.Vector3) {
+  if (!clouds.length) {
+    const mat = pbr("cloudShade", { color: "#102010", rough: 1, alpha: 0.2 });
+    mat.disableLighting = true;
+    const t = new B.DynamicTexture("cloudTex", 64, scene, false);
+    const c = t.getContext() as unknown as CanvasRenderingContext2D, g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, "#fff"); g.addColorStop(1, "#000"); c.fillStyle = g; c.fillRect(0, 0, 64, 64); t.update();
+    t.getAlphaFromRGB = true; mat.opacityTexture = t; // borde difuso
+    clouds = Array.from({ length: 5 }, (_, i) => {
+      const d = B.MeshBuilder.CreateDisc("cloud", { radius: 22 + i * 5, tessellation: 20 }, scene);
+      d.rotation.x = Math.PI / 2; d.material = mat; d.isPickable = false; d.position.y = 0.06 + i * 0.001;
+      return d;
+    });
+  }
+  const W = 260;
+  clouds.forEach((d, i) => {
+    d.position.x = ((((i * 97 + t * (2 + i * 0.4) - c.x) % W) + W) % W) - W / 2 + c.x;
+    d.position.z = ((((i * 151 + t * 0.8 - c.z) % W) + W) % W) - W / 2 + c.z;
+  });
+}
+export function setWind(t: number, car: B.Vector3 | null) { windT = t; if (car) { windCar.copyFrom(car); if (zoneId === "patio" || zoneId === "jardin") cloudShadows(t, car); } }
 
 class WindPlugin extends B.MaterialPluginBase {
   constructor(m: B.Material) { super(m, "Wind", 200, { WIND: false }); this._enable(true); }
