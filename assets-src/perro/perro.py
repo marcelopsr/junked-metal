@@ -84,27 +84,26 @@ q.keep_on_body(ob, ao, [k + "_" + n for k in ("arm", "thigh") for n in "RL"], 0.
 q.add_rigid(ob, S, "head", eye, [((s * 0.92, 6.28, 5.95), (0.36, 0.36, 0.33), 12, 8) for s in (1, -1)])
 q.tidy_weights(ob)
 
-# ---------- Animaciones ----------
+# ---------- Animaciones (patas con IK: los pies apoyados no se hunden ni patinan) ----------
 def idle(f):  # 48 cuadros: respira, mira a los costados, mueve la cola y sacude una oreja
     p = f / 48
     P = {}
-    put(P, "hips", loc=(0, 0.04 * math.sin(2 * math.pi * 2 * p), 0))
+    put(P, "hips", loc=(0, 0.05 * math.sin(2 * math.pi * 2 * p), 0))
     put(P, "chest", b.nose_up(0.025 * math.sin(2 * math.pi * 2 * p)))
     put(P, "neck", b.yaw_fwd(1, 0.18 * math.sin(2 * math.pi * p)))
     put(P, "head", b.lift(1, 0.12 * math.sin(2 * math.pi * p) ** 3))
     put(P, "tail", b.yaw_fwd(1, 0.5 * math.sin(2 * math.pi * 6 * p)))
     tw = max(0.0, math.sin(2 * math.pi * (p * 4 - 2.2))) if 0.55 < p < 0.68 else 0
     put(P, "ear_R", b.nose_up(0.5 * tw))
-    for s, fr in LEGS:
-        leg(P, s, fr, 0, 0)
+    q.feet(P, (0, 0, 0), (0, 0, 0))
     return P
 
 
 def walk(f):  # 32 cuadros, paso lateral: trasera izq., delantera izq., trasera der., delantera der.
     p = f / 32
     P = {}
-    gait(P, p, {(-1, False): 0, (-1, True): 0.25, (1, False): 0.5, (1, True): 0.75}, 0.62, 0.32)
-    put(P, "hips", b.lift(1, 0.03 * math.sin(2 * math.pi * p)), (0, 0.07 * math.cos(4 * math.pi * p), 0))
+    gait(P, p, {(-1, False): 0, (-1, True): 0.25, (1, False): 0.5, (1, True): 0.75}, 0.62, 0.9, 0.9)
+    put(P, "hips", b.lift(1, 0.03 * math.sin(2 * math.pi * p)), (0, 0.08 * math.cos(4 * math.pi * p) - 0.04, 0))
     put(P, "spine", b.yaw_fwd(1, 0.04 * math.sin(2 * math.pi * p)))
     put(P, "head", b.nose_up(0.04 * math.sin(4 * math.pi * p)))
     put(P, "tail", b.yaw_fwd(1, 0.35 * math.sin(2 * math.pi * 2 * p)))
@@ -113,13 +112,14 @@ def walk(f):  # 32 cuadros, paso lateral: trasera izq., delantera izq., trasera 
 
 def run(f):  # 16 cuadros, galope: traseras juntas contra delanteras juntas, la columna se recoge y se estira
     p = f / 16
+    w = 2 * math.pi * p
     P = {}
-    gait(P, p, {(-1, False): 0, (1, False): 0.07, (-1, True): 0.5, (1, True): 0.57}, 0.42, 0.62, 1.2)
-    c = math.cos(2 * math.pi * p)
-    put(P, "hips", b.nose_up(-0.12 * math.sin(2 * math.pi * p)), (0, 0.45 * max(0, math.sin(2 * math.pi * p + 1.2)), 0))
+    gait(P, p, {(-1, False): 0, (1, False): 0.07, (-1, True): 0.5, (1, True): 0.57}, 0.42, 1.7, 1.5, (1.3, 0.5))
+    c = math.cos(w)
+    put(P, "hips", b.nose_up(-0.1 * math.sin(w)), (0, 0.35 * max(0, math.sin(w + 1.2)) - 0.1, 0))
     put(P, "spine", b.nose_up(-0.12 * c))
     put(P, "chest", b.nose_up(0.1 * c))
-    put(P, "head", b.nose_up(0.08 * math.sin(2 * math.pi * p)))
+    put(P, "head", b.nose_up(0.08 * math.sin(w)))
     put(P, "ear_R", b.nose_up(0.3))
     put(P, "ear_L", b.nose_up(0.3))
     put(P, "tail", b.nose_up(-0.3 * c))
@@ -127,59 +127,63 @@ def run(f):  # 16 cuadros, galope: traseras juntas contra delanteras juntas, la 
 
 
 def attack_pose(v):
-    """v: altura, cabeceo, avance z, barrido/elevación delanteras, barrido/elevación traseras, cabeza, mandíbula, abiertas."""
-    y, pitch, z, fa, fu, ha, hu, hd, jaw, spl = v
+    """v: altura, cabeceo y avance del cuerpo; pies delanteros y traseros (dz, dy en el mundo); cabeza, mandíbula, abiertas."""
+    y, pitch, z, fz, fy, hz, hy, hd, jaw, spl = v
     P = {}
     put(P, "hips", b.nose_up(pitch), (0, y, z))
-    for s, fr in LEGS:
-        put(P, ("arm_" if fr else "thigh_") + side(s), b.lift(s, -spl))
-        leg(P, s, fr, fa if fr else ha, fu if fr else hu, base=-pitch)
+    for s in (1, -1):
+        put(P, "arm_" + side(s), b.lift(s, -spl))
+        put(P, "thigh_" + side(s), b.lift(s, -spl * 0.5))
+    q.feet(P, (fz, fy, 0.9 * min(1, max(0, fy))), (hz, hy, 0.4 * min(1, max(0, hy))))
     put(P, "neck", b.nose_up(hd * 0.5))
     put(P, "head", b.nose_up(hd * 0.5))
     put(P, "jaw", b.nose_up(-jaw))
     return P
 
 
-#            y     pitch   z    fa    fu    ha    hu    head  jaw  splay
+#            y     pitch   z    fz    fy    hz    hy    head  jaw  splay
 JUMP = {0: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-        8: (-0.8, -0.08, -0.2, -0.15, 0.5, 0.35, 0.55, -0.25, 0, 0.05),     # se agacha
-        12: (0.6, 0.35, 0.3, 0.7, 0.7, -0.8, 0, 0.15, 0.2, 0),               # despega estirado
-        19: (1.1, 0.05, 0.6, 0.35, 1.0, 0.45, 1.0, 0.1, 0.35, 0),             # arriba, patas recogidas
-        25: (0.2, -0.3, 0.7, 0.6, 0.1, -0.2, 0.3, -0.2, 0.4, 0.15),           # cae de manos
-        28: (-1.0, -0.12, 0.7, 0.1, 0.75, 0.3, 0.7, -0.35, 0.5, 0.35),        # golpe: aplasta y abre las patas
-        31: (-0.7, -0.08, 0.7, 0.1, 0.6, 0.3, 0.6, -0.25, 0.3, 0.3),
+        8: (-0.9, -0.08, -0.2, 0, 0, 0, 0, -0.25, 0, 0.05),           # se agacha, pies plantados
+        12: (0.7, 0.35, 0.3, 1.2, 1.9, -0.4, 0, 0.15, 0.2, 0),         # despega: manos arriba, patas de atrás empujan
+        19: (1.4, 0.05, 0.6, 1.2, 2.6, 0.7, 2.4, 0.1, 0.35, 0),        # arriba, todo recogido
+        25: (0.3, -0.3, 0.75, 1.5, 0.4, 0.9, 1.4, -0.2, 0.4, 0.15),    # cae de manos
+        28: (-1.0, -0.12, 0.75, 1.4, 0, 0.8, 0, -0.35, 0.5, 0.35),     # golpe: aplasta y abre las patas
+        31: (-0.75, -0.08, 0.75, 1.4, 0, 0.8, 0, -0.25, 0.3, 0.3),
         40: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0)}
 CHARGE = {0: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-          7: (-0.35, -0.06, -0.7, -0.25, 0.15, 0.4, 0.4, -0.45, 0, 0.08),     # retrocede y baja la cabeza
-          12: (0.15, -0.12, 1.7, 0.65, 0.45, -0.65, 0, -0.35, 0.35, 0),       # embiste
-          16: (0.05, 0.05, 2.0, 0.3, 0.2, -0.3, 0.2, 0.35, 0.25, 0),          # revolea la cabeza para arriba
+          7: (-0.4, -0.06, -0.7, 0, 0, 0, 0, -0.45, 0, 0.08),           # retrocede y baja la cabeza
+          12: (0.15, -0.12, 1.7, 2.6, 0.6, 0.3, 0, -0.35, 0.35, 0),     # embiste: manos adelante, atrás empuja
+          16: (0.05, 0.05, 2.0, 2.7, 0, 1.4, 0.6, 0.35, 0.25, 0),       # revolea la cabeza para arriba
           26: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0)}
 
 
 def rage(f):  # 40 cuadros en bucle: se planta abierto, cabeza gacha, lomo arqueado, gruñe y tiembla
     p = f / 40
     P = {}
-    put(P, "hips", b.nose_up(0.07), (0.03 * math.sin(2 * math.pi * 10 * p), -0.12, 0))
-    put(P, "chest", b.nose_up(-0.12))
+    put(P, "hips", b.nose_up(0.07), (0.03 * math.sin(2 * math.pi * 10 * p), -0.3, 0))
+    put(P, "chest", b.nose_up(-0.14))
     put(P, "neck", b.nose_up(-0.18) @ b.yaw_fwd(1, 0.05 * math.sin(2 * math.pi * 2 * p)))
-    put(P, "head", b.nose_up(0.1 + 0.03 * math.sin(2 * math.pi * 8 * p)))
+    put(P, "head", b.nose_up(0.12 + 0.03 * math.sin(2 * math.pi * 8 * p)))
     put(P, "jaw", b.nose_up(-(0.22 + 0.08 * math.sin(2 * math.pi * 6 * p))))
     put(P, "tail", b.nose_up(0.5))
-    for s, fr in LEGS:
-        put(P, ("arm_" if fr else "thigh_") + side(s), b.lift(s, -0.12))
-        leg(P, s, fr, 0.1 if fr else -0.08, 0.15, base=0.05 if fr else -0.07)
+    for s in (1, -1):
+        put(P, "arm_" + side(s), b.lift(s, -0.12))
+        put(P, "thigh_" + side(s), b.lift(s, -0.08))
         put(P, "ear_" + side(s), b.nose_up(-0.25))
+    q.feet(P, (0.25, 0, 0), (-0.2, 0, 0))
     return P
 
 
 #        y     roll  pitch  head  jaw  legs
 DEATH = {0: (0, 0, 0, 0, 0, 0),
-         8: (-0.2, -0.15, 0.05, -0.3, 0.2, 0.2),    # tambalea
-         16: (-0.9, 0.1, -0.2, -0.5, 0.3, 0.5),    # se le doblan las manos
-         27: (-2.0, 1.48, -0.05, -0.2, 0.35, 0.1),  # cae de costado
-         31: (-1.85, 1.38, -0.05, -0.25, 0.4, 0.1),  # rebote
-         36: (-2.0, 1.48, -0.05, -0.15, 0.45, 0),
-         48: (-2.0, 1.5, -0.05, -0.1, 0.45, 0)}
+         8: (-0.25, -0.12, 0.05, -0.3, 0.2, 0),       # tambalea (pies plantados con IK hasta el cuadro 22)
+         16: (-0.75, 0.1, -0.15, -0.5, 0.3, 0),       # se le doblan las manos
+         22: (-1.2, 0.3, -0.1, -0.4, 0.3, 1.0),       # agachado del todo, empieza a irse de costado
+         25: (-1.0, 1.15, -0.05, -0.3, 0.35, 0.8),    # cae con las patas recogidas
+         27: (-1.45, 1.48, -0.05, -0.2, 0.35, 0.5),
+         31: (-1.3, 1.38, -0.05, -0.25, 0.4, 0.3),    # rebote
+         36: (-1.55, 1.48, -0.05, -0.15, 0.45, 0.1),
+         48: (-1.55, 1.5, -0.05, -0.1, 0.45, 0.1)}
 
 
 def death(f):
@@ -189,8 +193,14 @@ def death(f):
     put(P, "neck", b.nose_up(hd * 0.5))
     put(P, "head", b.nose_up(hd * 0.5) @ b.lift(1, -roll * 0.25))
     put(P, "jaw", b.nose_up(-jaw))
-    for s, fr in LEGS:
-        leg(P, s, fr, (0.25 if fr else -0.2) * (1 - lg), lg)
+    if f <= 22:
+        q.feet(P, (0.1 * min(1, f / 16), 0, 0), (0, 0, 0))
+    else:
+        for s, fr in LEGS:
+            leg(P, s, fr, 0.15 if fr else -0.1, lg, 1.8)
+            if fr:
+                P["fpaw_" + side(s)]["rot"] = swing(0.3 * lg)  # la mano no se clava en el piso
+    for s in (1, -1):
         put(P, "ear_" + side(s), b.lift(s, -0.3 * roll / 1.5))
     put(P, "tail", b.nose_up(-0.3 * roll))
     return P
@@ -200,7 +210,7 @@ acts = {"idle": (range(0, 49, 2), idle), "walk": (range(0, 33, 2), walk), "run":
         "jump_slam": (range(0, 41), lambda f: attack_pose(curve(JUMP, f))),
         "charge": (range(0, 27), lambda f: attack_pose(curve(CHARGE, f))),
         "rage": (range(0, 41), rage), "death": (range(0, 49), death)}
-act = {k: b.action(ao, k, fr, fn) for k, (fr, fn) in acts.items()}
+act = {k: q.action(ao, k, fr, fn) for k, (fr, fn) in acts.items()}
 q.ground_report(ao, ob, act)
 if A.get("export", "1") != "0":
     b.export(ao, ob, "perro", os.path.dirname(os.path.abspath(__file__)))

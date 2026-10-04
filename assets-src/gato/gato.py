@@ -140,7 +140,7 @@ def walk(f):  # 32 cuadros, paso lateral, cola alta
     p = f / 32
     w = 2 * math.pi * p
     P = {}
-    gait(P, p, {(-1, False): 0, (-1, True): 0.25, (1, False): 0.5, (1, True): 0.75}, 0.6, 0.36)
+    gait(P, p, {(-1, False): 0, (-1, True): 0.25, (1, False): 0.5, (1, True): 0.75}, 0.6, 0.85, 0.7)
     put(P, "hips", b.lift(1, 0.04 * math.sin(w)), (0, 0.05 * math.cos(2 * w), 0))
     put(P, "spine", b.yaw_fwd(1, 0.05 * math.sin(w)))
     put(P, "head", b.nose_up(-0.03 * math.sin(2 * w)))
@@ -152,7 +152,7 @@ def run(f):  # 16 cuadros, galope: la columna se dobla mucho (gato), la cola atr
     p = f / 16
     w = 2 * math.pi * p
     P = {}
-    gait(P, p, {(-1, False): 0, (1, False): 0.06, (-1, True): 0.5, (1, True): 0.56}, 0.38, 0.72, 1.25)
+    gait(P, p, {(-1, False): 0, (1, False): 0.06, (-1, True): 0.5, (1, True): 0.56}, 0.38, 1.8, 1.2, (1.2, 0.5))
     c = math.cos(w)
     put(P, "hips", b.nose_up(-0.16 * math.sin(w)), (0, 0.35 * max(0, math.sin(w + 1.2)), 0))
     put(P, "spine", b.nose_up(-0.2 * c))
@@ -275,7 +275,7 @@ def death(f):
 acts = {"idle": (range(0, 49, 2), idle), "walk": (range(0, 33, 2), walk), "run": (range(0, 17), run),
         "jump": (range(0, 39), jump), "spin": (range(0, 25), spin), "swipe": (range(0, 21), swipe),
         "rage": (range(0, 41), rage), "death": (range(0, 49), death)}
-act = {k: b.action(ao, k, fr, fn) for k, (fr, fn) in acts.items()}
+act = {k: q.action(ao, k, fr, fn) for k, (fr, fn) in acts.items()}
 q.ground_report(ao, ob, act)
 if A.get("export", "1") != "0":
     b.export(ao, ob, "gato", os.path.dirname(os.path.abspath(__file__)))
