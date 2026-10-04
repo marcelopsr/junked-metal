@@ -12,7 +12,7 @@ import { carOpts, current, dailySeed, fmt, initMenu, keyName, today, menuPad, op
 import { ABILITIES, type AbilityId } from "./abilities";
 import { pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
-import { applyClimate, glitchHit, look, M, pbr, setDark, setLamp, setQuality, setupRender, shadows } from "./render";
+import { adaptQuality, applyClimate, glitchHit, look, M, pbr, setDark, setLamp, setQuality, setupRender, shadows } from "./render";
 import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
 import { buildLayout, buildWorld, HALF, hitBreakables, obstacles, occluders, setWind, setZone, spawnPoint, underRoof, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
@@ -498,6 +498,7 @@ function spawnEnemy(kind: Kind, p: B.Vector3) {
 
 // ---------- Update ----------
 function update(dt: number) {
+  if (!simulating && !document.hidden) adaptQuality(engine.getFps(), dt);
   const c = car!;
   time += dt;
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)

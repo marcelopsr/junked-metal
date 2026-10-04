@@ -170,15 +170,16 @@ export function setDark(k: number) {
   hemi.intensity = clim.hemiI * LOOK.ambMul * k;
 }
 
-// Render a baja resolución interna (altura objetivo) escalado sin filtrar. ponytail: altura fija por calidad, sin ajuste dinámico; la resolución baja ya es el ahorro.
+// Render a baja resolución interna (altura objetivo) escalado sin filtrar. Con calidad Auto hay escalado dinámico (adaptQuality).
 export const QUALITY = { ultra: 1440, calidad: 1080, equilibrado: 720, rendimiento: 540 } as const;
 export type Quality = keyof typeof QUALITY | "auto";
 let target: number = QUALITY.calidad;
+let adaptK = 1, adaptOn = true, adaptT = 0, adaptOk = 0; // escalado dinámico: factor sobre la altura objetivo (0,6..1)
 let depth: B.DepthRenderer;
 
 function applyScale() {
   const e = scene.getEngine();
-  e.setHardwareScalingLevel(Math.max(1, (e.getRenderingCanvas()!.clientHeight * (devicePixelRatio || 1)) / target));
+  e.setHardwareScalingLevel(Math.max(1, (e.getRenderingCanvas()!.clientHeight * (devicePixelRatio || 1)) / (target * adaptK)));
 }
 
 let lowQ = false;
@@ -200,7 +201,18 @@ function setupPixels(cam: B.Camera, low: boolean) {
 /** Suavizado del escalado: sin él (pixelated) los píxeles internos se ven como una grilla irregular. */
 export function setSmooth(on: boolean) { scene.getEngine().getRenderingCanvas()!.style.imageRendering = on ? "auto" : "pixelated"; }
 
+/** Escalado dinámico: si el fps cae bajo 54 baja la resolución interna por pasos (hasta 60%); si sobra, la recupera. Solo con calidad Auto. */
+export function adaptQuality(fps: number, dt: number) {
+  if (!adaptOn) return;
+  adaptT += dt;
+  if (adaptT < 1.5) return;
+  adaptT = 0;
+  if (fps < 54 && adaptK > 0.6) { adaptK = Math.max(0.6, adaptK - 0.1); adaptOk = 0; applyScale(); }
+  else if (fps > 62 && adaptK < 1 && ++adaptOk >= 4) { adaptK = Math.min(1, adaptK + 0.1); adaptOk = 0; applyScale(); }
+}
+
 export function setQuality(q: Quality) {
+  adaptOn = q === "auto"; if (!adaptOn) adaptK = 1;
   target = QUALITY[q === "auto" ? (lowQ ? "equilibrado" : "calidad") : q];
   applyScale();
 }
