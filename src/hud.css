@@ -22,7 +22,7 @@
 .h-track { position: relative; height: 8px; background: rgba(255, 255, 255, .14); border-radius: 99px; }
 .h-track > div { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #35c9ff, #7dffb0); transition: width .3s cubic-bezier(.2, .8, .2, 1), background .3s; }
 .h-boost > div { background: linear-gradient(90deg, #ff9d2e, #ffd84d); }
-.h-abil > div { background: linear-gradient(90deg, #b783ff, #ff8ad8); }
+.h-abil > div { background: linear-gradient(90deg, #c9692a, #f0a030); }
 /* Ícono a la izquierda de cada barra (corazón, rayo, estrella) */
 .h-track::before, #lipo::before { content: ""; position: absolute; left: -27px; top: 50%; translate: 0 -50%; width: 19px; height: 19px; background: center / contain no-repeat; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
 #lipo::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235be37a'%3E%3Cpath d='M12 21s-8-5.3-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.7-8 11-8 11z'/%3E%3C/svg%3E"); }

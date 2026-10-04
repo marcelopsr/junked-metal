@@ -1,20 +1,20 @@
 /* Pantalla de carga (index.html #load, lógica en src/loading.ts). Se enlaza desde el HTML para pintarse antes que el resto del JS.
    Mismo vidrio oscuro que los menús (menu.css) sobre los colores del estante, desenfocados. Las fuentes llevan respaldo: style.css llega después. */
 #load { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; overflow: hidden; color: #eaf1f7;
-  font-family: var(--data, "Rajdhani", system-ui, sans-serif); background: linear-gradient(#2a285a, #3a3060 52%, #6c5fa8); transition: opacity .2s ease-out; }
+  font-family: var(--data, "Rajdhani", system-ui, sans-serif); background: linear-gradient(#0b2226, #12302f 52%, #3f7476); transition: opacity .2s ease-out; }
 #load.hidden { display: none; }
 #load.out { opacity: 0; pointer-events: none; }
 #load.in { animation: ld-in .12s ease-out both; }
 @keyframes ld-in { from { opacity: 0; } }
 
-/* Fondo: el estante (lámpara, pared lavanda, madera y lomos de libros) hecho manchas de color desenfocadas */
+/* Fondo: el estante (lámpara, pared petróleo, madera y lomos de libros) hecho manchas de color desenfocadas */
 #load .ld-bg { position: absolute; inset: -6%; filter: blur(22px) saturate(1.1); background:
-  radial-gradient(34% 40% at 80% 22%, #ffcf96d0, transparent 72%), radial-gradient(40% 50% at 10% 34%, #8f83bdcc, transparent 72%), radial-gradient(70% 34% at 50% 104%, #e0b98cf0, transparent 74%); }
+  radial-gradient(34% 40% at 80% 22%, #ffcf96d0, transparent 72%), radial-gradient(40% 50% at 10% 34%, #2f5c62cc, transparent 72%), radial-gradient(70% 34% at 50% 104%, #e0b98cf0, transparent 74%); }
 #load .ld-bg i { position: absolute; bottom: 8%; width: 7%; border-radius: 6px 6px 0 0; }
-#load .ld-bg i:nth-child(1) { left: 6%; height: 30%; background: #c7b3ec; } #load .ld-bg i:nth-child(2) { left: 13.5%; height: 36%; background: #f6c1a8; }
-#load .ld-bg i:nth-child(3) { left: 21%; height: 27%; background: #a9d8f0; } #load .ld-bg i:nth-child(4) { left: 28.5%; height: 33%; background: #b8e6c9; }
-#load .ld-bg i:nth-child(5) { left: 66%; height: 24%; background: #f7e3a1; } #load .ld-bg i:nth-child(6) { left: 73.5%; height: 31%; background: #f3b0c3; }
-#load .ld-bg i:nth-child(7) { left: 81%; height: 26%; background: #9fb4e8; }
+#load .ld-bg i:nth-child(1) { left: 6%; height: 30%; background: #c98a5a; } #load .ld-bg i:nth-child(2) { left: 13.5%; height: 36%; background: #8a5a3a; }
+#load .ld-bg i:nth-child(3) { left: 21%; height: 27%; background: #5f8a9a; } #load .ld-bg i:nth-child(4) { left: 28.5%; height: 33%; background: #6f8f7a; }
+#load .ld-bg i:nth-child(5) { left: 66%; height: 24%; background: #c9a14a; } #load .ld-bg i:nth-child(6) { left: 73.5%; height: 31%; background: #a0452a; }
+#load .ld-bg i:nth-child(7) { left: 81%; height: 26%; background: #7f9a9c; }
 
 #load .ld-box { position: relative; width: min(460px, 100%); display: flex; flex-direction: column; align-items: stretch; gap: 14px; padding: 22px 24px 20px;
   background: rgba(14, 24, 36, .72); border: 1px solid rgba(255, 255, 255, .16); border-radius: 18px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 12px 30px rgba(0, 0, 0, .35); }
