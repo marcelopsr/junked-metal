@@ -12,6 +12,8 @@ import { LOOK, look, setQuality, setSmooth, type Quality } from "./render";
 import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { ZONES, type ZoneId } from "./world";
+import { padsConnected } from "./input";
+import { raceCfg, saveRaceCfg } from "./kart";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, CURSES, type AbilityId, type CurseId } from "./abilities";
 
@@ -106,8 +108,34 @@ function importSave() {
   i.click();
 }
 
+// ---------- Carrera (kart.ts): opciones de la largada ----------
+const nextOf = <T,>(a: T[], v: T) => a[(a.indexOf(v) + 1) % a.length];
+function cycleRace(k: string) {
+  const c = raceCfg;
+  if (k === "players") c.players = c.players === 1 ? 2 : 1;
+  else if (k === "p1") c.p1 = nextOf(["kbd", "pad0", "pad1"], c.p1);
+  else if (k === "p2") c.p2 = nextOf(["pad0", "pad1", "kbd2"], c.p2);
+  else if (k === "cc") c.cc = nextOf([50, 100, 150] as const, c.cc);
+  else if (k === "laps") c.laps = c.laps === 3 ? 5 : 3;
+  else if (k === "cup") c.cup = !c.cup;
+  else if (k === "car2") { const o = save.cars.length ? save.cars : (["buggy"] as CarKind[]); c.car2 = nextOf(o, o.includes(c.car2) ? c.car2 : o[0]); }
+  saveRaceCfg();
+}
+function renderRace() {
+  const c = raceCfg, ctl = { kbd: "Teclado", pad0: "Joystick 1", pad1: "Joystick 2", kbd2: "Teclado (flechas)" };
+  $("rcPlayers").textContent = `Jugadores · ${c.players}${c.players === 2 ? " (pantalla dividida)" : ""}`;
+  $("rcP1").textContent = `Control J1 · ${ctl[c.p1]}`;
+  $("rcP2").textContent = `Control J2 · ${ctl[c.p2]}`;
+  $("rcCar2").textContent = `Auto J2 · ${CARS[c.car2]?.name ?? c.car2}`;
+  for (const id of ["rcP2", "rcCar2"]) $(id).classList.toggle("hidden", c.players === 1);
+  $("rcCC").textContent = `Cilindrada · ${c.cc}cc ${c.cc === 50 ? "(fácil)" : c.cc === 100 ? "(medio)" : "(difícil)"}`;
+  $("rcLaps").textContent = `Vueltas · ${c.laps}`;
+  $("rcCup").textContent = c.cup ? "Modo · Copa de 3 carreras" : "Modo · Carrera suelta";
+  $("rcHelp").textContent = `J1: auto del Garaje (${CARS[save.car].name}). Joysticks conectados: ${padsConnected()}. Teclado J1: W A S D, Espacio derrapa, E usa objeto. Flechas: J2 con Shift derecha y Enter.`;
+}
+
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void };
+type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void };
 let api: Api;
 let L0 = { grain: 0, scan: 0, ca: 0, pal: 0, outline: 0 }; // look de fábrica: la perilla "post retro" lo escala
 
@@ -132,7 +160,7 @@ export function applySettings() {
 const commit = () => { persist(); applySettings(); };
 
 // ---------- Pila de pantallas ----------
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "credits" | "pause" | "over";
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "credits" | "pause" | "over" | "race";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -149,6 +177,7 @@ function show() {
   if (s === "garage") renderGarage();
   if (s === "shop") renderShop();
   if (s === "main") renderMain();
+  if (s === "race") renderRace();
   if (s === "bestiary") renderBestiary();
   if (s === "config") renderConfig();
   // Cambio de canal: estática breve + encendido de tubo (keyframes tune de style.css)
@@ -604,12 +633,14 @@ export function initMenu(a: Api) {
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-dsel],[data-dcol],[data-dact]") as HTMLElement | null)?.dataset;
+    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-dsel],[data-dcol],[data-dact]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
     if (t.id === "dgrid") { if (!e.detail) setCell(dcx, dcy, dcol); return; } // Enter / A sobre la grilla (el mouse y el dedo pintan en pointerdown)
     if (!d) return;
     SFX.accept();
     if (d.go) go(d.go as Scr);
+    else if (d.rc) { cycleRace(d.rc); renderRace(); }
+    else if (d.act === "race") api.race();
     else if (d.act === "play") api.play();
     else if (d.act === "daily") api.play(true);
     else if (d.act === "endless") api.endless();

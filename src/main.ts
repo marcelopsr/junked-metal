@@ -19,6 +19,7 @@ import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, ty
 import { newSeed, rng, seedRng } from "./rng";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
+import { initKart, raceCfg, raceTick, setRaceCar, startRace } from "./kart";
 
 const $ = (id: string) => document.getElementById(id)!;
 // Partida de 10 minutos: dos minijefes (sueltan cofres de evolución) y el jefe final a las 10:00
@@ -61,7 +62,7 @@ type Gem = { m: B.InstancedMesh; xp: number; pull: boolean; vy: number };
 type Pickup = { m: B.Mesh; type: "pila" | "iman" | "cofre" };
 type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number };
 
-let state: "menu" | "play" | "level" | "pause" | "over" | "outro" = "menu";
+let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" = "menu";
 let car: Car | null = null;
 let weapons: Weapon[] = [];
 let passives: Partial<Record<PassiveId, number>> = {};
@@ -421,7 +422,16 @@ addEventListener("keydown", (e) => {
   if (e.code === "Enter" && state === "level") pickOffer(offerSel);
   if (e.code === "KeyR" && state === "level") reroll();
 });
-initMenu({ scene, play: startRun, resume, quit: toMenu, pause, endless: goEndless });
+function goRace() {
+  initAudio(); clearRun(); titleArt(false);
+  state = "race"; reset(null);
+  $("hud").classList.add("hidden");
+  setRaceCar(save.car);
+  startRace();
+}
+if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2") { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } goRace(); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
+initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); applyClimate(zoneClimate() ?? DUSK); reset("main"); } });
+initMenu({ scene, play: startRun, resume, quit: toMenu, pause, endless: goEndless, race: goRace });
 music("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: solo en el primer arranque (save.intro); ?intro la fuerza, ?mute y ?lab (pruebas) no la muestran
 { const force = /[?&]intro\b/.test(location.search); if (force || (!save.intro && !/[?&](mute|lab)\b/.test(location.search))) playIntro(!force); }
@@ -922,6 +932,7 @@ scene.onBeforeRenderObservable.add(() => {
     if (padPressed(3)) reroll();
   } else if (state === "play") { if (padPressed(9)) pause(); }
   else if (state === "outro") outroTick(dt);
+  else if (state === "race") raceTick(dt);
   else if (!introOn()) menuPad(dt); // con la intro encima el menú no escucha el gamepad
 
   if (state === "play") {
@@ -937,7 +948,9 @@ scene.onBeforeRenderObservable.add(() => {
   // (si rotara, la dirección del stick cambiaría mientras girás).
   const k = 1 - Math.exp(-5 * dt);
   setWind(performance.now() / 1000, car?.pos ?? null);
-  if (car) {
+  if (state === "race") {
+    // la carrera maneja sus propias cámaras (kart.ts)
+  } else if (car) {
     if (!input.move && state === "play") {
       const f = car.root.forward;
       const target = Math.atan2(f.x, f.z);
@@ -1030,7 +1043,7 @@ scene.onBeforeRenderObservable.add(() => {
   }
   shake = Math.max(0, shake - dt * 2);
   const s = save.shake ? shake * shake * 0.8 : 0;
-  cam.setTarget(camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0)));
+  if (state !== "race") cam.setTarget(camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0)));
 });
 
 engine.runRenderLoop(() => scene.render());

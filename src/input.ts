@@ -108,3 +108,25 @@ export function padSnap() {
   if (curPad.some(Boolean)) setCtl("pad");
 }
 export const padPressed = (i: number) => !!curPad[i] && !prevPad[i];
+
+// ---------- Carrera (kart.ts): un control por jugador ----------
+// "kbd1" = WASD (+ flechas si nadie más usa el teclado), "kbd2" = flechas; { pad: n } = n-ésimo joystick conectado
+export type PlayerCtl = "kbd1" | "kbd1+arrows" | "kbd2" | { pad: number };
+const SCHEMES = {
+  kbd1: { up: ["KeyW"], down: ["KeyS"], left: ["KeyA"], right: ["KeyD"], drift: ["Space", "ShiftLeft"], item: ["KeyE", "KeyQ"] },
+  "kbd1+arrows": { up: ["KeyW", "ArrowUp"], down: ["KeyS", "ArrowDown"], left: ["KeyA", "ArrowLeft"], right: ["KeyD", "ArrowRight"], drift: ["Space", "ShiftLeft", "ShiftRight"], item: ["KeyE", "KeyQ", "Enter"] },
+  kbd2: { up: ["ArrowUp"], down: ["ArrowDown"], left: ["ArrowLeft"], right: ["ArrowRight"], drift: ["ShiftRight", "Period", "Numpad0"], item: ["Enter", "Comma", "ControlRight"] },
+};
+export const padsConnected = () => [...(navigator.getGamepads?.() ?? [])].filter((g): g is Gamepad => !!g).length;
+export function pollPlayer(c: PlayerCtl) {
+  if (typeof c === "string") {
+    const S = SCHEMES[c], k = (...a: string[]) => a.some((x) => keys.has(x));
+    return { throttle: (k(...S.up) ? 1 : 0) - (k(...S.down) ? 1 : 0), steer: (k(...S.right) ? 1 : 0) - (k(...S.left) ? 1 : 0), drift: k(...S.drift), item: k(...S.item) };
+  }
+  const gp = [...(navigator.getGamepads?.() ?? [])].filter((g): g is Gamepad => !!g)[c.pad];
+  if (!gp) return { throttle: 0, steer: 0, drift: false, item: false };
+  const b = (i: number) => !!gp.buttons[i]?.pressed;
+  const acc = Math.max(gp.buttons[7]?.value ?? 0, b(0) ? 1 : 0), brk = Math.max(gp.buttons[6]?.value ?? 0, b(1) ? 1 : 0);
+  const steer = dz(gp.axes[0]) || (b(15) ? 1 : 0) - (b(14) ? 1 : 0);
+  return { throttle: acc - brk, steer, drift: b(5) || b(2), item: b(3) || b(4) };
+}

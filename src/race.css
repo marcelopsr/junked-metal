@@ -1,0 +1,37 @@
+/* Modo Carrera (src/kart.ts): HUD de cada jugador, cuenta regresiva, mini-mapa y resultados. Mismo vidrio oscuro que el HUD de partida. */
+#race { position: fixed; inset: 0; pointer-events: none; z-index: 3; font-family: "Rajdhani", system-ui, sans-serif; color: #f4f7fa; --g-bg: rgba(12, 20, 30, .55); --g-line: rgba(255, 255, 255, .16); }
+#race.hidden { display: none; }
+#race .rp { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+#race.split .rp[data-p="0"] { right: 50%; } #race.split .rp[data-p="1"] { left: 50%; display: block; }
+#race:not(.split) .rp[data-p="1"] { display: none; }
+#race.split::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1.5px; background: #0c141e; }
+.rp .rpos { position: absolute; left: 16px; bottom: 16px; display: flex; align-items: baseline; gap: 4px; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 16px; padding: 4px 16px 6px; backdrop-filter: blur(10px); }
+.rp .rpos b { font: 700 64px/1 "Rajdhani", system-ui, sans-serif; color: #ffd84d; text-shadow: 0 4px 0 rgba(0, 0, 0, .35); }
+.rp .rpos i { font: 600 22px/1 "Rajdhani", system-ui, sans-serif; font-style: normal; color: #a9b8c6; }
+.rp .rlap { position: absolute; left: 16px; top: 14px; font: 700 24px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .08em; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 12px; padding: 8px 14px; backdrop-filter: blur(10px); }
+.rp .ritem { position: absolute; left: 50%; top: 14px; translate: -50% 0; min-width: 84px; min-height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--g-bg); border: 2px solid var(--g-line); border-radius: 18px; backdrop-filter: blur(10px); }
+.rp .ritem:empty::after { content: "?"; font: 700 44px/1 "Rajdhani", system-ui, sans-serif; color: rgba(255, 255, 255, .25); }
+.rp .ritem span { font: 700 13px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #a9b8c6; }
+.rp .rspd { position: absolute; right: 16px; bottom: 16px; font: 700 28px/1 "Rajdhani", system-ui, sans-serif; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 12px; padding: 8px 14px; backdrop-filter: blur(10px); }
+.rp .rmsg { position: absolute; left: 0; right: 0; top: 32%; text-align: center; font: 700 clamp(30px, 5vw, 56px)/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; opacity: 0; text-shadow: 0 4px 0 rgba(0, 0, 0, .4), 0 0 24px rgba(0, 0, 0, .35); }
+.rp .rmsg.on { animation: r-msg 2s ease-out both; }
+@keyframes r-msg { 0% { opacity: 0; transform: scale(.7); } 12% { opacity: 1; transform: scale(1.1); } 20% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+.rp.drift { box-shadow: inset 0 0 70px 6px rgba(74, 168, 255, .35); } .rp.drift2 { box-shadow: inset 0 0 70px 6px rgba(255, 157, 46, .45); }
+#rmap { position: absolute; right: 14px; top: 14px; width: 130px; height: 130px; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 16px; backdrop-filter: blur(10px); }
+#race.split #rmap { left: 50%; right: auto; top: auto; bottom: 14px; translate: -50% 0; width: 110px; height: 110px; }
+#rtab { position: absolute; right: 14px; top: 156px; display: flex; flex-direction: column; gap: 3px; font: 600 16px/1 "Rajdhani", system-ui, sans-serif; }
+#race.split #rtab { display: none; }
+#rtab div { display: flex; align-items: center; gap: 8px; background: var(--g-bg); border-radius: 8px; padding: 4px 10px; min-width: 130px; }
+#rtab div.me { outline: 2px solid #ffd84d; } #rtab i { width: 10px; height: 10px; border-radius: 50%; } #rtab b { width: 14px; color: #ffd84d; }
+#rcount { position: absolute; left: 0; right: 0; top: 18%; text-align: center; font: 700 clamp(90px, 18vw, 220px)/1 "Rajdhani", system-ui, sans-serif; color: #fff; text-shadow: 0 8px 0 rgba(0, 0, 0, .35); opacity: 0; }
+#rcount.on { opacity: 1; animation: r-count 1s ease-out infinite; } #rcount.go { color: #7dffb0; animation: r-go 1.2s ease-out both; }
+@keyframes r-count { 0% { transform: scale(1.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: scale(.9); } }
+@keyframes r-go { 0% { transform: scale(.6); } 30% { transform: scale(1.2); } 100% { transform: scale(1.5); opacity: 0; } }
+#rres { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(8, 16, 26, .8); backdrop-filter: blur(8px); pointer-events: auto; }
+#rres.hidden { display: none; }
+#rres .rtitle { font: 700 32px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .08em; }
+#rres table { border-collapse: separate; border-spacing: 0 4px; min-width: min(560px, 92vw); font: 600 20px/1 "Rajdhani", system-ui, sans-serif; }
+#rres th { text-align: left; color: #a9b8c6; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; padding: 0 12px; }
+#rres td { background: rgba(255, 255, 255, .08); padding: 8px 12px; } #rres td:first-child { border-radius: 10px 0 0 10px; width: 36px; color: #ffd84d; font-weight: 700; } #rres td:last-child { border-radius: 0 10px 10px 0; }
+#rres tr.me td { background: rgba(255, 216, 77, .22); } #rres td i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+#rres nav { display: flex; gap: 10px; margin-top: 8px; }

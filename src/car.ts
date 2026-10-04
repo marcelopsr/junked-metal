@@ -56,12 +56,13 @@ export class Car {
 
   private paintBase: B.Color3;
 
-  constructor(scene: B.Scene, public kind: CarKind, opts: CarOpts = {}) {
+  constructor(scene: B.Scene, public kind: CarKind, opts: CarOpts = {}, at?: { x: number; z: number; yaw: number }) {
     const d = (this.def = CARS[kind]);
     const [w, h, l] = d.size;
     this.root = B.MeshBuilder.CreateBox("car", { width: w, height: h, depth: l }, scene);
     this.root.isVisible = false;
-    this.root.position.set(0, h / 2 + 0.3, 0);
+    this.root.position.set(at?.x ?? 0, h / 2 + 0.3, at?.z ?? 0);
+    if (at) this.root.rotationQuaternion = B.Quaternion.FromEulerAngles(0, at.yaw, 0); // antes del PhysicsAggregate (el cuerpo toma la pose de la malla al crearse)
     this.vis = new B.TransformNode("carVis", scene);
     this.vis.parent = this.root;
     this.model = carModel(kind, opts);

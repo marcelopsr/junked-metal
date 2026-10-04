@@ -98,6 +98,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   glow.range = 14;
   glow.intensity = 2.2;
 
+  mainCam = cam;
   const pipe = new B.DefaultRenderingPipeline("pipe", true, scene, [cam]);
   pipe.fxaaEnabled = true; // bordes suaves (el look duro ya no va)
   if (!low) pipe.samples = 4;
@@ -176,7 +177,7 @@ export const QUALITY = { ultra: 1440, calidad: 1080, equilibrado: 720, rendimien
 export type Quality = keyof typeof QUALITY | "auto";
 let target: number = QUALITY.calidad;
 let adaptK = 1, adaptOn = true, adaptT = 0, adaptOk = 0; // escalado dinámico: factor sobre la altura objetivo (0,6..1)
-let depth: B.DepthRenderer;
+let depth: B.DepthRenderer, retro: B.PostProcess, mainCam: B.Camera;
 
 function applyScale() {
   const e = scene.getEngine();
@@ -191,7 +192,7 @@ function setupPixels(cam: B.Camera, low: boolean) {
   depth = scene.enableDepthRenderer(cam, false);
   depth.getDepthMap().renderListPredicate = (m) => m.name !== "tuft" && m.name !== "sky";
   if (low) LOOK.outline = 0;
-  const pp = new B.PostProcess("retro", "retro", ["screen", "t", "glitch", "levels", "grain", "scan", "vig", "desat", "ca", "pal", "outline", "p0", "p1", "p2"], ["depthSampler"], 1, cam, B.Texture.NEAREST_SAMPLINGMODE);
+  const pp = retro = new B.PostProcess("retro", "retro", ["screen", "t", "glitch", "levels", "grain", "scan", "vig", "desat", "ca", "pal", "outline", "p0", "p1", "p2"], ["depthSampler"], 1, cam, B.Texture.NEAREST_SAMPLINGMODE);
   pp.onApply = (ef) => { ef.setFloat2("screen", pp.width, pp.height); ef.setFloat("t", performance.now() / 1000); ef.setFloat("glitch", Math.max(0, 1 - (performance.now() - glitchAt) / 260)); ef.setFloat("levels", LOOK.levels); ef.setFloat("grain", LOOK.grain); ef.setFloat("scan", LOOK.scan); ef.setFloat("vig", LOOK.vig); ef.setFloat("desat", LOOK.desat); ef.setFloat("ca", LOOK.ca); ef.setFloat("pal", LOOK.pal); ef.setFloat("outline", LOOK.outline);
     ef.setColor3("p0", ramp[0]); ef.setColor3("p1", ramp[1]); ef.setColor3("p2", ramp[2]); ef.setTexture("depthSampler", depth.getDepthMap()); };
   scene.getEngine().getRenderingCanvas()!.style.imageRendering = "pixelated";
@@ -210,6 +211,20 @@ export function adaptQuality(fps: number, dt: number) {
   adaptT = 0;
   if (fps < 54 && adaptK > 0.6) { adaptK = Math.max(0.6, adaptK - 0.1); adaptOk = 0; applyScale(); }
   else if (fps > 62 && adaptK < 1 && ++adaptOk >= 4) { adaptK = Math.min(1, adaptK + 0.1); adaptOk = 0; applyScale(); }
+}
+
+/** Pantalla dividida (carrera para 2): la segunda cámara comparte bloom/FXAA; el post retro (contorno, viñeta) se apaga en ambas para que las dos mitades se vean iguales. */
+export function setSplit(cam2: B.Camera | null, on: boolean) {
+  const mgr = scene.postProcessRenderPipelineManager;
+  if (on && cam2) {
+    mainCam.detachPostProcess(retro); scene.disableDepthRenderer(mainCam);
+    mgr.attachCamerasToRenderPipeline("pipe", cam2);
+  } else {
+    if (cam2) mgr.detachCamerasFromRenderPipeline("pipe", cam2);
+    if (!mainCam.getEngine) return;
+    mainCam.attachPostProcess(retro); depth = scene.enableDepthRenderer(mainCam, false);
+    depth.getDepthMap().renderListPredicate = (m) => m.name !== "tuft" && m.name !== "sky";
+  }
 }
 
 export function setQuality(q: Quality) {
