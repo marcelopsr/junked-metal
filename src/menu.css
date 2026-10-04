@@ -297,3 +297,10 @@ body.tedit #stickZone { outline: 1px dashed #ffffff44; }
 body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam) { outline: 2px dashed var(--turbo); outline-offset: 3px; touch-action: none; }
 body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam)::after { content: ""; position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px; background: var(--turbo); }
 @media (max-width: 500px) { #opts .row.prof .lb { display: none; } #opts .row.prof input { flex: 1 1 auto; } }
+
+/* Legibilidad sobre la escena 3D: contorno oscuro (4 sombras duras + halo) en todo texto que va directo sobre el fondo
+   del menú, no dentro de un panel. El gris "dim" se aclara para que no se pierda sobre paredes claras. */
+#fe .roll p, #fe .tag, #fe .foot, #fe .sect, #fe .otitle, #fe .hint, #fe .note {
+  text-shadow: -1px -1px 0 #0b141c, 1px -1px 0 #0b141c, -1px 1px 0 #0b141c, 1px 1px 0 #0b141c, 0 2px 6px rgba(0, 0, 0, .7);
+}
+#fe .roll .dim { color: #c9d6e2; }
