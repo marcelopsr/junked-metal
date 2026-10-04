@@ -112,6 +112,14 @@ let Z: Zone = ZONES.patio;
 export let zoneId: ZoneId = "patio";
 /** Luz fija de la zona (garaje) o undefined: la partida sigue el ciclo de la semilla. */
 export const zoneClimate = () => Z.climate;
+/** Piso bajo un punto (ruido de ruedas en sfx.ts). Copia a mano los decals de cada build: si se mueven, actualizar acá. */
+export type Floor = "pasto" | "baldosa" | "tierra" | "cemento";
+export function floorAt(x: number, z: number): Floor {
+  if (zoneId === "garaje") return "cemento";
+  if (zoneId === "jardin") return z < -HALF + 16 || Math.abs(x - 12) < 4 ? "baldosa" : "pasto"; // vereda y camino de lajas
+  if (Math.abs(x) < 24 && Math.abs(z + 30) < 17) return "baldosa";
+  return Math.abs(x - 50) < 21 && Math.abs(z - 45) < 16 ? "tierra" : "pasto";
+}
 /** Columnas de polvo bajo los tubos del garaje [x, z, ancho, largo] (reemplazan a las luciérnagas) o undefined. */
 export const zoneDust = () => Z.dust;
 

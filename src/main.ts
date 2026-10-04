@@ -15,7 +15,7 @@ import { pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
 import { applyClimate, gfxInfo, glitchHit, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setupRender, shadows } from "./render";
 import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
-import { buildLayout, HALF, initWorld, hitBreakables, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
+import { buildLayout, floorAt, HALF, initWorld, hitBreakables, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
@@ -544,10 +544,11 @@ const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora:
 const CONFETI = ["#ffd84d", "#ff9bd4", "#7de8ff", "#b6ff6a", "#ffa05a"];
 function kill(e: Enemy) {
   kills++;
-  bestStreak = Math.max(bestStreak, hudKill()); if (e.def.boss) bossKills++;
-  if (hudKill() > 0 && hudKill() % 10 === 0) SFX.streak(hudKill());
-  if (!simulating && hudKill() > 0 && hudKill() % 25 === 0) banner(`RACHA x${hudKill()}`, 1.2);
-  if (hudKill() >= 100) grant("racha");
+  const s = hudKill(); // una sola llamada: cada hudKill() suma una baja (antes se llamaba 5 veces y el cartel mostraba otro número)
+  bestStreak = Math.max(bestStreak, s); if (e.def.boss) bossKills++;
+  if (s % 10 === 0) SFX.streak(s);
+  if (!simulating && (s === 50 || s % 100 === 0)) banner(`RACHA x${s}`, 1.2); // cartel central solo en hitos
+  if (s >= 100) grant("racha");
   if (!simulating && !LAB.on) save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
   SFX.kill();
   FX.death(e.pos.add(new B.Vector3(0, 0.5, 0)), e.def.boss);
@@ -634,7 +635,7 @@ function update(dt: number) {
   });
   c.animate(dt, steer, r.fs, maxSpeed);
   { const zp = zoneTick(dt, c.pos); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
-  engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * R.turbo_vel)), throttle, boosting);
+  engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * R.turbo_vel)), throttle, boosting, input.drift, floorAt(c.pos.x, c.pos.z));
   if (c.kind === "helado" && (jingleT -= dt) <= 0) { SFX.jingle(); jingleT = 16; }
   runDist += Math.abs(r.fs) * dt;
   // Combo de manejo: derrape largo, salto y aterrizaje limpio suben el multiplicador de XP (tope x2); un golpe lo corta (hurt)
@@ -1099,7 +1100,7 @@ scene.onBeforeRenderObservable.add(() => {
     updateHud(dt);
   }
   tickFx(dt * ts);
-  uiTick(dt);
+  uiTick(dt, state === "play");
   if (save.fps && (fpsT -= dt) <= 0) { // estadísticas: fps y ms de los cuadros dibujados (no los del navegador), resolución interna real y escala o modo FSR
     fpsT = 0.5;
     const g = gfxInfo();

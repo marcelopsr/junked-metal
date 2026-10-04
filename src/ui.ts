@@ -135,9 +135,10 @@ function tickDrive(dt: number) { if (drvT > 0 && (drvT -= dt) <= 0) $("drvLbl").
 // ---------- Racha de bajas: se corta a los 2 s sin matar; crece y tiembla con la racha ----------
 const COMBO = ["RACHA", "BUEN RITMO", "A FONDO", "SOBRECARGA"];
 let streak = 0, streakT = 0, pop = 0, cDirty = false, cShown = false, cTier = -1, cShake = 0, sx = 0, sy = 0;
-export function hudKill() { streak++; streakT = 2; pop = 1; cDirty = true; return streak; } // devuelve la racha (logro de 100)
-function tickCombo(dt: number) {
-  if ((streakT -= dt) <= 0) streak = 0;
+export function hudKill() { streak++; streakT = 2; pop = 1; cDirty = true; return streak; } // suma una baja y devuelve la racha: llamar UNA vez por baja
+// live = la partida corre: con cartas, cofre, pausa o menús el reloj de la racha queda congelado
+function tickCombo(dt: number, live: boolean) {
+  if (live && (streakT -= dt) <= 0) streak = 0;
   const show = streak >= 3;
   if (show !== cShown) { cShown = show; $("combo").classList.toggle("hidden", !show); cTier = -1; }
   if (!show) return;
@@ -214,9 +215,9 @@ function drawRadar() {
   g.restore();
 }
 
-export function uiTick(dt: number) {
+export function uiTick(dt: number, live = true) {
   tickBanner(dt);
-  tickCombo(dt);
+  tickCombo(dt, live);
   tickDrive(dt);
   tickNumbers(dt);
   if ((rAge += dt) < 1) { rSweep = (rSweep + dt * 2.6) % 6.2832; if ((rAcc += dt) > 1 / 30) { rAcc = 0; drawRadar(); } } // ponytail: solo dibuja mientras main la alimenta

@@ -4,7 +4,7 @@ let master: GainNode, fxBus: GainNode, engBus: GainNode, musicBus: GainNode;
 let noise: AudioBuffer;
 // Volúmenes 0..1 (Configuración → Audio). El motor va por su propio canal.
 const vol = { master: 1, sfx: 1, engine: 1, music: 0.7, mute: false };
-let eng: { o1: OscillatorNode; o2: OscillatorNode; f: BiquadFilterNode; g: GainNode } | null = null;
+let eng: { o1: OscillatorNode; o2: OscillatorNode; f: BiquadFilterNode; g: GainNode; tf: BiquadFilterNode; tg: GainNode } | null = null;
 
 // ?mute en la URL: sin audio en absoluto (pruebas automáticas)
 const silent = new URLSearchParams(location.search).has("mute");
@@ -22,15 +22,18 @@ export function initAudio() {
   noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
   const d = noise.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  // Motor eléctrico RC: dos sierras desafinadas por un pasabajos
+  // Motor eléctrico RC: tono + sub-octava (cuerpo) por un pasabajos blando; ruedas: ruido filtrado según el piso
   const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
   o1.type = o2.type = "sawtooth";
-  o2.detune.value = 14;
-  f.type = "lowpass";
+  o2.detune.value = 9;
+  f.type = "lowpass"; f.Q.value = 0.5;
   g.gain.value = 0;
   o1.connect(f); o2.connect(f); f.connect(g).connect(engBus);
   o1.start(); o2.start();
-  eng = { o1, o2, f, g };
+  const tn = ctx.createBufferSource(), tf = ctx.createBiquadFilter(), tg = ctx.createGain();
+  tn.buffer = noise; tn.loop = true; tf.type = "bandpass"; tg.gain.value = 0;
+  tn.connect(tf).connect(tg).connect(engBus); tn.start();
+  eng = { o1, o2, f, g, tf, tg };
   if (mState) startMusic(); // música pedida antes del primer gesto
 }
 
@@ -51,16 +54,37 @@ export function setEngineKind(kind: string) {
   engMul = mul;
   if (eng) eng.o1.type = eng.o2.type = type;
 }
-// Llamar cada frame: el tono sigue a la velocidad, el volumen al acelerador
-export function engineSfx(speed01: number, throttle: number, boosting: boolean) {
+// Ruido de ruedas por piso: [frecuencia del pasabanda, Q, volumen a tope, brillo del motor]
+const FLOORS: Record<string, [number, number, number, number]> = {
+  pasto: [700, 0.6, 0.016, 0.85], // roce sordo
+  tierra: [320, 0.5, 0.022, 0.8], // rumor grave
+  baldosa: [2200, 1.4, 0.010, 1.05], // traqueteo fino
+  cemento: [1500, 2.5, 0.008, 1.1], // siseo
+};
+let steadyT = 0, avg = 0, lastThr = 0, lastT = 0;
+// Llamar cada frame: el tono sigue a la velocidad (poco), el volumen al acelerador y baja solo si nada cambia
+export function engineSfx(speed01: number, throttle: number, boosting: boolean, drift = false, floor = "pasto") {
   if (!ctx || !eng) return;
-  const t = ctx.currentTime, hz = (55 + speed01 * 170 + (boosting ? 40 : 0)) * engMul;
-  eng.o1.frequency.setTargetAtTime(hz, t, 0.05);
-  eng.o2.frequency.setTargetAtTime(hz * 1.5, t, 0.05);
-  eng.f.frequency.setTargetAtTime(400 + speed01 * 1800 + (boosting ? 900 : 0), t, 0.05);
-  eng.g.gain.setTargetAtTime(0.025 + Math.abs(throttle) * 0.035 + (boosting ? 0.03 : 0), t, 0.08);
+  const t = ctx.currentTime, dt = Math.min(0.1, t - lastT); lastT = t;
+  const [ff, fq, fv, bright] = FLOORS[floor] ?? FLOORS.pasto;
+  // Cansancio: a velocidad pareja, sin turbo ni derrape, el motor baja hasta la mitad en ~4 s (tras 2 s); vuelve al cambiar algo
+  avg += (speed01 - avg) * Math.min(1, dt * 1.5);
+  const steady = !boosting && !drift && throttle >= 0 && Math.abs(speed01 - avg) < 0.04 && Math.abs(throttle - lastThr) < 0.2;
+  lastThr = throttle;
+  steadyT = steady ? steadyT + dt : 0;
+  const tired = 1 - 0.5 * Math.min(1, Math.max(0, (steadyT - 2) / 4));
+  // Variación lenta de timbre (dos senos sin período común) para que no sea un zumbido fijo
+  const wob = Math.sin(t * 0.37) * Math.sin(t * 0.13 + 1);
+  const hz = (45 + speed01 * 70 + (boosting ? 20 : 0)) * engMul;
+  eng.o1.frequency.setTargetAtTime(hz, t, 0.08);
+  eng.o2.frequency.setTargetAtTime(hz * 0.5, t, 0.08); // sub-octava: cuerpo sin chillar
+  eng.o1.detune.setTargetAtTime(wob * 12, t, 0.3);
+  eng.f.frequency.setTargetAtTime((250 + speed01 * 650 + (boosting ? 400 : 0)) * bright * (1 + wob * 0.08), t, 0.08);
+  eng.g.gain.setTargetAtTime((0.02 + Math.abs(throttle) * 0.025 + (boosting ? 0.02 : 0)) * tired, t, steady ? 0.8 : 0.08);
+  eng.tf.frequency.setTargetAtTime(ff * (0.8 + speed01 * 0.4), t, 0.1); eng.tf.Q.value = fq;
+  eng.tg.gain.setTargetAtTime(fv * speed01 * (drift ? 2 : 1) * (0.75 + 0.25 * tired), t, 0.1);
 }
-export function engineStop() { if (ctx && eng) eng.g.gain.setTargetAtTime(0, ctx.currentTime, 0.1); }
+export function engineStop() { if (ctx && eng) { eng.g.gain.setTargetAtTime(0, ctx.currentTime, 0.1); eng.tg.gain.setTargetAtTime(0, ctx.currentTime, 0.1); } }
 
 // ---------- Primitivas ----------
 const recent = new Map<string, number>();
