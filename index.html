@@ -120,7 +120,7 @@
       <div class="brand small">JUNKED METAL</div>
       <nav class="list mainGrid">
         <button data-act="play" class="primary wide">Jugar</button>
-        <button data-act="daily" id="dailyBtn">Desafío diario</button>
+        <button data-go="daily" id="dailyBtn">Desafío diario</button>
         <button data-go="race">Carrera</button>
         <button data-act="zone" id="zoneBtn" class="chip">Zona</button>
         <button data-act="curse" id="curseBtn" class="chip hidden">Maldiciones</button><!-- maldiciones ocultas por ahora (decisión del usuario 2026-10-04) -->
@@ -160,7 +160,7 @@
       <div id="gtabs" class="tabs"></div>
       <div id="cars"></div>
       <div id="paint"></div>
-      <div class="btns"><button data-act="back">Volver</button><button data-act="play" class="primary">Encender y jugar</button></div>
+      <div class="btns"><button data-act="back" class="primary">Guardar</button></div>
     </section>
 
     <section id="scr-shop" class="scr">
@@ -190,6 +190,16 @@
     <section id="scr-beast" class="scr">
       <div id="bstage"><div id="bmsg"></div></div>
       <div id="bpanel"></div>
+    </section>
+
+    <section id="scr-daily" class="scr">
+      <div class="otitle">Desafío diario</div>
+      <div class="roll">
+        <p>Hoy todo el mundo juega exactamente la misma partida: mismo patio, mismo clima, mismos bichos en el mismo orden. La única variable es quien maneja.</p>
+        <p>Se juega en el Patio, sin maldiciones y sin excusas. El mejor tiempo del día queda como récord; mañana, otra partida y otra oportunidad de quedar mal.</p>
+        <p id="dailyInfo" class="dim"></p>
+      </div>
+      <div class="btns"><button data-act="back">Rechazar</button><button data-act="daily" class="primary">Aceptar</button></div>
     </section>
 
     <section id="scr-credits" class="scr">

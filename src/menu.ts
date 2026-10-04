@@ -178,7 +178,7 @@ function resetCfg() {
 }
 
 // ---------- Pila de pantallas ----------
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "pause" | "over" | "race";
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -195,6 +195,7 @@ function show() {
   if (s === "garage") renderGarage();
   if (s === "shop") renderShop();
   if (s === "main") renderMain();
+  if (s === "daily") { const b = save.daily.day === today() ? save.daily.best : 0; $("dailyInfo").textContent = b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy."; }
   if (s === "race") renderRace();
   if (s === "bestiary") renderBestiary();
   if (s === "beast") renderBeast();
