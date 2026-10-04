@@ -124,6 +124,8 @@ const ANCH: Record<CarKind, { deck: [number, number]; side: V3; exh: [number, nu
   combi: { deck: [1.0, -0.95], side: [0.54, 0.55, -0.1], exh: [0.2, -1.15], seat: [0, 0.42, 0.45, 0.7], lamps: [[0.4, 0.4, 1.2, 0.18]], paint: "#4cc3c9", rim: "#e5e7eb" },
 };
 
+// Tamaño [ancho, alto, largo] de cada auto (el mismo de CARS en car.ts; se repite aquí para no crear un import circular)
+const CARS_SIZE: Record<CarKind, [number, number, number]> = { buggy: [1.3, 0.7, 2.3], monster: [1.8, 1.1, 2.4], formula: [1.3, 0.55, 2.8], tanque: [1.75, 0.9, 2.4], carrera: [1.1, 0.5, 2.1], axel: [1.9, 1.0, 1.7], helado: [1.3, 0.95, 2.4], combi: [1.45, 1.0, 2.4] };
 export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   const A = ANCH[kind];
   const ws: { pos: V3; d: number; w: number; steer?: boolean }[] = [];
@@ -237,6 +239,25 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       cyl(0.08, 0.08, 0.14, M.metal("#e5e7eb"), [0.43, 0.18, -0.2], [0, 0, Math.PI / 2], 8), // llave de cuerda
     ];
     for (const [x, z] of [[-0.46, 0.66], [0.46, 0.66], [-0.46, -0.66], [0.46, -0.66]]) ws.push({ pos: [x, 0, z], d: 0.52, w: 0.18 });
+  }
+
+  // Detalle de juguete realista (todos los autos): aros cromados en los faros, luces traseras, espejos, parrilla y escapes
+  {
+    const [bw, bh, bl] = CARS_SIZE[kind], chrome = M.metal("#e6e9ee"), tail = M.glow("#ff3a2a");
+    for (const [x, y, z, d] of A.lamps) for (const s of x ? [1, -1] : [1]) parts.push(tor(d * 1.35, d * 0.22, chrome, [x * s, y, z - d * 0.1], [Math.PI / 2, 0, 0], 12));
+    if (kind !== "axel" && kind !== "tanque") {
+      for (const sd of [-1, 1]) parts.push(box(0.16, 0.07, 0.04, tail, [sd * bw * 0.34, bh * 0.55, -bl * 0.5 + 0.02])); // luces traseras
+      parts.push(box(bw * 0.7, 0.06, 0.05, chrome, [0, bh * 0.28, bl * 0.5 - 0.02])); // paragolpes cromado
+    }
+    if (kind === "buggy" || kind === "monster" || kind === "helado" || kind === "combi") {
+      const my = kind === "monster" ? bh * 1.1 : kind === "buggy" ? bh * 0.85 : bh * 0.78;
+      for (const sd of [-1, 1]) parts.push(box(0.16, 0.06, 0.1, M.plastic("#1b1e24"), [sd * (bw / 2 + 0.1), my, bl * 0.12]), cyl(0.03, 0.03, 0.16, M.metal("#9aa0a6"), [sd * (bw / 2 + 0.04), my - 0.05, bl * 0.12], [0, 0, Math.PI / 2], 6)); // espejos
+    }
+    if (kind === "monster" || kind === "helado" || kind === "combi") {
+      parts.push(box(bw * 0.5, 0.2, 0.04, M.matte("#14171c"), [0, bh * 0.38, bl * 0.5 + 0.01]));
+      for (let k = 0; k < 4; k++) parts.push(box(bw * 0.46, 0.015, 0.05, chrome, [0, bh * 0.3 + k * 0.045, bl * 0.5 + 0.03])); // parrilla con rejilla
+    }
+    if (kind !== "axel") for (const sd of [-1, 1]) parts.push(cyl(0.07, 0.07, 0.2, chrome, [sd * bw * 0.22, 0.14, -bl * 0.5 - 0.04], [Math.PI / 2, 0, 0], 12), cyl(0.045, 0.045, 0.22, M.matte("#101010"), [sd * bw * 0.22, 0.14, -bl * 0.5 - 0.05], [Math.PI / 2, 0, 0], 10)); // escapes
   }
 
   // Ópticas del faro (color elegido) + luz del faro en la escena

@@ -75,7 +75,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   sun = new B.DirectionalLight("sun", new B.Vector3(-0.45, -1, 0.35).normalize(), scene);
   sun.intensity = 0.5;
   sun.diffuse = B.Color3.FromHexString("#7f9bd6");
-  shadows = new B.CascadedShadowGenerator(low ? 1024 : 2048, sun);
+  shadows = new B.CascadedShadowGenerator(low ? 1024 : 3072, sun);
   shadows.numCascades = low ? 2 : 3;
   shadows.shadowMaxZ = 90;
   shadows.lambda = 0.85;
@@ -301,7 +301,7 @@ export function canvasTex(size: number, draw: (c: CanvasRenderingContext2D, s: n
   const big = document.createElement("canvas");
   big.width = big.height = size;
   draw(big.getContext("2d")!, size);
-  const px = Math.min(size, 256);
+  const px = Math.min(size, 512);
   const t = new B.DynamicTexture("tex", px, scene, true, B.Texture.TRILINEAR_SAMPLINGMODE);
   (t.getContext() as unknown as CanvasRenderingContext2D).drawImage(big, 0, 0, px, px);
   t.update();
