@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import type { Car } from "./car";
 import type { Enemy } from "./enemies";
-import { FX } from "./fx";
+import { burst, FX } from "./fx";
 import { SFX } from "./sfx";
 import { box, cyl, merge, sph, template, tor } from "./models";
 import { M, pbr } from "./render";
@@ -49,7 +49,7 @@ export interface Ctx {
   explode(pos: B.Vector3, r: number, dmg: number): void;
 }
 
-export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza" | "agua" | "yoyo" | "bengalas" | "regla" | FusionId;
+export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza" | "agua" | "yoyo" | "bengalas" | "regla" | "helado" | "bocina" | "trompo" | FusionId;
 export type FusionId = "chispazo" | "globos" | "anillo" | "yoyoelec" | "vapor";
 export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: PassiveId; evoName: string; evoDesc: string }> = {
   gomitas: { name: "Lanza-gomitas", desc: "Dispara gomitas al enemigo más cercano", evo: "resorte", evoName: "Gomitas Saltarinas", evoDesc: "5 gomitas que rebotan entre enemigos" },
@@ -63,6 +63,9 @@ export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: Passiv
   yoyo: { name: "Yo-yo", desc: "Va y vuelve en línea atravesando enemigos; pega más fuerte a la vuelta", evo: "resorte", evoName: "Doble yo-yo", evoDesc: "Dos yo-yos en órbita que salen y vuelven sin parar" },
   bengalas: { name: "Bengalas", desc: "Dejan zonas en llamas donde caen", evo: "litio", evoName: "Lluvia de bengalas", evoDesc: "Seis bengalas por tanda; zonas grandes y duraderas" },
   regla: { name: "Bumerán de regla", desc: "Una regla escolar que vuela en arco y vuelve, atravesando todo", evo: "iman", evoName: "Bumerán triple", evoDesc: "Tres reglas en abanico, más largas y rápidas" },
+  helado: { name: "Helado congelante", desc: "Bochas de helado que ralentizan a lo que tocan", evo: "capacitor", evoName: "Cono triple", evoDesc: "Tres bochas en abanico que congelan y enfrían en área" },
+  bocina: { name: "Bocina", desc: "Onda sonora en cono que empuja y aturde", evo: "turbo", evoName: "Sirena", evoDesc: "Onda circular enorme que aturde a todo lo cercano" },
+  trompo: { name: "Trompo", desc: "Un trompo que rebota entre enemigos dejando una estela cortante", evo: "iman", evoName: "Ciclón", evoDesc: "Dos trompos orbitan el auto y barren todo a su paso" },
   // Fusiones: nunca salen sueltas en las cartas (ver FUSIONS); evoName = nombre porque nacen evolucionadas
   chispazo: { name: "Petardos eléctricos", desc: "", evo: "capacitor", evoName: "Petardos eléctricos", evoDesc: "" },
   globos: { name: "Globos de agua", desc: "", evo: "resorte", evoName: "Globos de agua", evoDesc: "" },
@@ -502,6 +505,141 @@ class Regla extends Weapon {
   dispose() { for (const r of this.rs) r.m.dispose(); }
 }
 
+// Helado congelante: bochas que ralentizan (lv) y, evolucionadas, congelan a los tocados y enfrían un área.
+class Helado extends Weapon {
+  shots: { m: B.InstancedMesh; dir: B.Vector3; life: number; hit: Set<Enemy> }[] = [];
+  tpl = template("helado_w", () => [sph(0.55, pbr("scoopW", { color: "#f7a8cf", rough: 0.5, emissive: "#6a2a44" }), [0, 0, 0]), sph(0.32, pbr("scoopWTop", { color: "#9be3ff", rough: 0.5, emissive: "#1a4a66" }), [0, 0.3, 0], undefined, 5)]);
+  update(c: Ctx) {
+    if ((this.cd -= c.dt) <= 0) {
+      const t = nearest(c.car.pos, c.enemies, 24);
+      if (t) {
+        this.cd = this.cdMax = (1.4 * c.st.cooldown) / (1 + 0.1 * (this.lv - 1)) / (this.evolved ? 1.3 : 1);
+        const base = Math.atan2(t.pos.x - c.car.pos.x, t.pos.z - c.car.pos.z), angs = this.evolved ? [-0.28, 0, 0.28] : this.lv >= 4 ? [-0.1, 0.1] : [0];
+        for (const o of angs) {
+          const m = this.tpl.createInstance("h");
+          m.position.set(c.car.pos.x, c.car.pos.y + 0.6, c.car.pos.z);
+          this.shots.push({ m, dir: new B.Vector3(Math.sin(base + o), 0, Math.cos(base + o)), life: 1.3, hit: new Set() });
+        }
+        SFX.click();
+      }
+    }
+    const dmg = (8 + 3 * this.lv) * c.st.dmg * (this.evolved ? 1.3 : 1);
+    for (let i = this.shots.length - 1; i >= 0; i--) {
+      const s = this.shots[i];
+      s.m.position.addInPlace(s.dir.scale(26 * c.st.area * c.dt));
+      s.m.rotation.y += c.dt * 8;
+      if (Math.random() < c.dt * 14) FX.trail(s.m.position, "#9be3ff");
+      let dead = (s.life -= c.dt) <= 0;
+      for (const e of c.enemies) if (!s.hit.has(e) && Math.hypot(s.m.position.x - e.pos.x, s.m.position.z - e.pos.z) < e.radius + 0.6) {
+        s.hit.add(e);
+        c.damage(e, dmg, s.dir.scale(1.5));
+        e.slow = Math.max(e.slow, 1.6 + 0.4 * this.lv);
+        if (this.evolved) { // congela al golpeado y enfría a los de alrededor
+          e.stun = Math.max(e.stun, 1.0);
+          for (const o of c.enemies) if (o !== e && Math.hypot(o.pos.x - e.pos.x, o.pos.z - e.pos.z) < 4.5 * c.st.area) o.slow = Math.max(o.slow, 2.5);
+          burst(e.pos.add(new B.Vector3(0, 0.6, 0)), { n: 12, color: "#cfefff", size: [0.15, 0.4], power: [2, 6], life: [0.3, 0.6], gravity: -4 });
+        }
+        dead = true;
+        break;
+      }
+      if (dead) { s.m.dispose(); this.shots.splice(i, 1); }
+    }
+  }
+  dispose() { for (const s of this.shots) s.m.dispose(); }
+}
+
+// Bocina: cada tanto lanza una onda en cono hacia el enemigo más cercano; empuja y (desde nivel 3) aturde.
+// Evolución (Sirena): onda circular enorme.
+class Bocina extends Weapon {
+  waves: { m: B.InstancedMesh; t: number; dir: B.Vector3; R: number; full: boolean; hit: Set<Enemy> }[] = [];
+  tpl = template("onda", () => [tor(2, 0.22, pbr("wave", { color: "#ffe27a", rough: 0.3, emissive: "#a06a00", alpha: 0.75 }), [0, 0, 0], undefined, 24)]);
+  update(c: Ctx) {
+    if ((this.cd -= c.dt) <= 0) {
+      const R = (this.evolved ? 17 : 8 + 0.8 * this.lv) * c.st.area, t = nearest(c.car.pos, c.enemies, R);
+      if (t) {
+        this.cd = this.cdMax = (this.evolved ? 2.2 : Math.max(1.4, 2.6 - 0.2 * this.lv)) * c.st.cooldown;
+        const m = this.tpl.createInstance("o");
+        m.position.set(c.car.pos.x, 0.5, c.car.pos.z);
+        this.waves.push({ m, t: 0, dir: new B.Vector3(t.pos.x - c.car.pos.x, 0, t.pos.z - c.car.pos.z).normalize(), R, full: this.evolved, hit: new Set() });
+        SFX.boss();
+      }
+    }
+    const dmg = (9 + 4 * this.lv) * c.st.dmg * (this.evolved ? 1.5 : 1);
+    for (let i = this.waves.length - 1; i >= 0; i--) {
+      const w = this.waves[i];
+      w.t += c.dt / 0.45;
+      const r = w.R * Math.min(1, w.t);
+      w.m.position.set(c.car.pos.x, 0.5, c.car.pos.z);
+      w.m.scaling.setAll(Math.max(0.1, r / 1.1));
+      w.m.visibility = Math.max(0, 1 - w.t);
+      for (const e of c.enemies) {
+        if (w.hit.has(e)) continue;
+        const dx = e.pos.x - c.car.pos.x, dz = e.pos.z - c.car.pos.z, d = Math.hypot(dx, dz);
+        if (d > r + e.radius || d < 0.01) continue;
+        if (!w.full && dx * w.dir.x + dz * w.dir.z < d * 0.5) continue; // cono de unos 120°
+        w.hit.add(e);
+        c.damage(e, dmg, new B.Vector3((dx / d) * 6, 0.4, (dz / d) * 6));
+        if (this.lv >= 3 || this.evolved) e.stun = Math.max(e.stun, this.evolved ? 1.5 : 0.6);
+      }
+      if (w.t >= 1) { w.m.dispose(); this.waves.splice(i, 1); }
+    }
+  }
+  dispose() { for (const w of this.waves) w.m.dispose(); }
+}
+
+// Trompo: rebota de enemigo en enemigo y deja una estela cortante. Evolución (Ciclón): dos trompos en órbita permanente.
+class Trompo extends Weapon {
+  tops: { m: B.InstancedMesh; target: Enemy | null; life: number; ang: number; trail: number }[] = [];
+  blades: { m: B.InstancedMesh; life: number }[] = [];
+  tpl = template("trompo_w", () => [cyl(0.9, 0.05, 0.8, pbr("topBody", { color: "#b783ff", rough: 0.3, emissive: "#3a1a66" }), [0, 0.3, 0], undefined, 10), cyl(1.1, 1.1, 0.1, M.metal("#e6e9ee"), [0, 0.65, 0], undefined, 12)]);
+  bladeTpl = template("estela", () => [tor(1.6, 0.14, pbr("blade", { color: "#7de8ff", rough: 0.2, emissive: "#2a8ab0", alpha: 0.8 }), [0, 0, 0], undefined, 18)]);
+  update(c: Ctx) {
+    const ev = this.evolved;
+    if (ev) { // órbita fija
+      while (this.tops.length < 2) this.tops.push({ m: this.tpl.createInstance("t"), target: null, life: 1e9, ang: this.tops.length * Math.PI, trail: 0 });
+    } else if (!this.tops.length && (this.cd -= c.dt) <= 0) {
+      const t = nearest(c.car.pos, c.enemies, 22);
+      if (t) {
+        this.cd = this.cdMax = Math.max(1.2, 3 - 0.3 * this.lv) * c.st.cooldown;
+        const m = this.tpl.createInstance("t");
+        m.position.set(c.car.pos.x, 0.6, c.car.pos.z);
+        this.tops.push({ m, target: t, life: 2.2 + 0.4 * this.lv, ang: 0, trail: 0 });
+      }
+    }
+    const dmg = (10 + 4 * this.lv) * c.st.dmg * (ev ? 1.4 : 1);
+    for (let i = this.tops.length - 1; i >= 0; i--) {
+      const tp = this.tops[i];
+      tp.m.rotation.y += c.dt * 25;
+      if (ev) {
+        tp.ang += c.dt * 3.2;
+        const R = 7 * c.st.area;
+        tp.m.position.set(c.car.pos.x + Math.cos(tp.ang) * R, 0.6, c.car.pos.z + Math.sin(tp.ang) * R);
+      } else {
+        if (!tp.target || tp.target.hp <= 0) tp.target = nearest(tp.m.position, c.enemies, 26);
+        if (!tp.target || (tp.life -= c.dt) <= 0) { tp.m.dispose(); this.tops.splice(i, 1); continue; }
+        const to = new B.Vector3(tp.target.pos.x - tp.m.position.x, 0, tp.target.pos.z - tp.m.position.z), d = to.length();
+        tp.m.position.addInPlace(to.scale((24 * c.dt) / Math.max(d, 0.01)));
+        if (d < tp.target.radius + 0.8) { c.damage(tp.target, dmg, to.scale(2 / Math.max(d, 0.01))); tp.target = nearest(tp.m.position, c.enemies.filter((e) => e !== tp.target), 26); }
+      }
+      for (const e of c.enemies) if (ev && Math.hypot(tp.m.position.x - e.pos.x, tp.m.position.z - e.pos.z) < e.radius + 1.1 && Math.random() < c.dt * 6) { c.damage(e, dmg * 0.5, e.pos.subtract(tp.m.position).normalize().scale(2)); }
+      if ((tp.trail -= c.dt) <= 0) { // estela: un disco que corta un rato
+        tp.trail = 0.14;
+        const b = this.bladeTpl.createInstance("b");
+        b.position.set(tp.m.position.x, 0.12, tp.m.position.z); b.rotation.x = Math.PI / 2;
+        this.blades.push({ m: b, life: 0.7 });
+      }
+    }
+    for (let i = this.blades.length - 1; i >= 0; i--) {
+      const b = this.blades[i];
+      b.life -= c.dt;
+      b.m.visibility = Math.max(0, b.life / 0.7); b.m.rotation.z += c.dt * 10;
+      for (const e of c.enemies) if (Math.hypot(b.m.position.x - e.pos.x, b.m.position.z - e.pos.z) < e.radius + 0.9 && Math.random() < c.dt * 8) c.damage(e, dmg * 0.35);
+      if (b.life <= 0) { b.m.dispose(); this.blades.splice(i, 1); }
+    }
+  }
+  dispose() { for (const t of this.tops) t.m.dispose(); for (const b of this.blades) b.m.dispose(); }
+}
+
 // Fusión: corre las dos armas de origen ya evolucionadas (nivel 5) y les agrega la sinergia de la tabla FUSIONS
 class Fusion extends Weapon {
   parts: Weapon[];
@@ -563,6 +701,9 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
     yoyo: () => [cyl(0.08, 0.08, 0.4, M.metal("#2b2d31"), [0.3, top + 0.1, 0.2], undefined, 6), cyl(0.4, 0.4, 0.12, M.plastic("#1f6f8b"), [0.3, top + 0.35, 0.2], [0, 0, Math.PI / 2], 10), tor(0.36, 0.04, M.glow("#8dff6a"), [0.37, top + 0.35, 0.2], [0, 0, Math.PI / 2], 10)],
     bengalas: () => [box(0.5, 0.1, 0.4, M.metal("#374151"), [-0.25, top - 0.04, rear + 0.3]), ...[-0.38, -0.12].map((x) => cyl(0.14, 0.14, 0.5, M.plastic("#2c3a28"), [x, top + 0.15, rear + 0.3], [-0.6, 0, 0], 6)), sph(0.12, M.glow("#8dff6a"), [-0.25, top + 0.38, rear + 0.48])],
     regla: () => [box(0.28, 0.05, 1.3, pbr("regla", { color: "#e8d48a", rough: 0.5, emissive: "#2a5a10" }), [0, top - 0.02, -0.1]), box(0.1, 0.06, 0.1, M.glow("#8dff6a"), [0.07, top + 0.01, 0.4])],
+    helado: () => [cyl(0.34, 0.02, 0.5, M.matte("#d9a15a"), [-0.3, top + 0.3, 0.1], undefined, 8), sph(0.4, M.plastic("#f7a8cf"), [-0.3, top + 0.6, 0.1]), sph(0.26, M.plastic("#9be3ff"), [-0.3, top + 0.85, 0.1])],
+    bocina: () => [box(0.3, 0.2, 0.3, M.metal("#2b2d31"), [0, top, 0.1]), cyl(0.12, 0.5, 0.6, M.plastic("#ffc24d"), [0, top + 0.1, 0.55], [Math.PI / 2, 0, 0], 12)],
+    trompo: () => [cyl(0.42, 0.04, 0.4, M.plastic("#b783ff"), [0.3, top + 0.2, -0.1], undefined, 10), cyl(0.5, 0.5, 0.06, M.metal("#e6e9ee"), [0.3, top + 0.42, -0.1], undefined, 12)],
     yoyoelec: () => [...parts.yoyo(), ...parts.tesla()],
     vapor: () => [...parts.bengalas(), ...parts.agua()],
     chispazo: () => [...parts.petardos(), ...parts.tesla()],
@@ -576,7 +717,7 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
 
 export function makeWeapon(id: WeaponId): Weapon {
   if (isFusion(id)) return new Fusion(id);
-  const C = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza, agua: Agua, yoyo: Yoyo, bengalas: Bengalas, regla: Regla }[id];
+  const C = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza, agua: Agua, yoyo: Yoyo, bengalas: Bengalas, regla: Regla, helado: Helado, bocina: Bocina, trompo: Trompo }[id];
   return new C(id);
 }
 

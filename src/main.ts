@@ -1103,6 +1103,7 @@ if (import.meta.env.DEV) Object.assign(window, {
   __time: (s: number) => (time = s),
   __xp: (n: number) => gainXp(n),
   __god: () => (god = true),
+  __w: (id: string, lv = 1, evolved = false) => { const w = makeWeapon(id as WeaponId); w.lv = lv; w.evolved = evolved; weapons = weapons.filter((x) => x.id !== id); weapons.push(w); recompute(); return weapons.map((x) => x.id + x.lv + (x.evolved ? "E" : "")); }, // solo dev: da un arma
   // Dispara una habilidad sin enfriamiento (no toca el guardado): __abil("emp")
   __abil: (id?: AbilityId) => { if (!car || state !== "play") return "sin partida"; if (id) abil = id; abilCd = 0; useAbility(car); return abil; },
   __endless: () => { goEndless(); return { endless, next: RUN_BOSSES.at(-1) }; },

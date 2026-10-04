@@ -13,6 +13,9 @@ const P: Record<string, string> = {
   yoyo: `<path d="M12 2.5v5"/><circle cx="12" cy="14" r="6.5"/><circle cx="12" cy="14" r="1.8"/><path d="M7.6 11.2a5 5 0 0 1 2.2-2.1M16.4 16.8a5 5 0 0 1-2.2 2.1"/>`,
   bengalas: `<path d="M4.5 19.5l8.2-8.2 2 2-8.2 8.2Z"/><circle cx="16" cy="8" r="1.6"/><path d="M16 3v1.8M21 8h-1.8M19.5 4.5l-1.3 1.3M19.5 11.5l-1.3-1.3M12.5 4.5l1.3 1.3"/>`,
   regla: `<g transform="rotate(-35 12 13)"><rect x="3" y="10.5" width="18" height="5" rx=".6"/><path d="M6 10.5v2M9 10.5v1.3M12 10.5v2M15 10.5v1.3M18 10.5v2"/></g><path d="M4 7.5a10 10 0 0 1 9-4.5"/><path d="M11.2 1.8 13 3l-1.3 1.7"/>`,
+  helado: `<path d="M7.5 11 12 21.5 16.5 11"/><circle cx="12" cy="8" r="4.6"/><path d="M9.6 6.4a3 3 0 0 1 2.6-1.4M8.2 11.2l7.6 0"/>`,
+  bocina: `<path d="M4 9.5v5h3.5L13 19V5L7.5 9.5H4Z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>`,
+  trompo: `<path d="M12 2.5v3"/><path d="M5 8h14l-5.2 10h-3.6Z"/><path d="M12 18v3.5M8 11.5h8"/>`,
   // Fusiones
   yoyoelec: `<path d="M9.5 2.5v5"/><circle cx="9.5" cy="14" r="6"/><circle cx="9.5" cy="14" r="1.6"/><path d="M19.5 3 16.5 8.5h3.5l-3 5.5"/>`,
   vapor: `<path d="M12 21c-3.4 0-5.7-2.3-5.7-5.3 0-2.8 2.1-4.4 3-7 .8 1.1 1 2.3.9 3.3 1.3-1.9 2.3-4.7 1.8-6.8 3 1.9 5.7 5.3 5.7 10.5 0 3-2.3 5.3-5.7 5.3Z"/><path d="M4 6c1-1 1-2 0-3M20 7c1-1 1-2 0-3M17.5 3.5c.8-.8.8-1.6 0-2.4"/>`,
@@ -39,6 +42,7 @@ const P: Record<string, string> = {
 const COL: Record<string, [string, string]> = {
   gomitas: ["#b6ff6a", "#3ed87a"], clips: ["#f0f5fa", "#9bb0c2"], chispero: ["#ffd84d", "#ff5a36"], petardos: ["#ff8a6b", "#ff3a3a"], tesla: ["#9bf0ff", "#4a8bff"],
   lanza: ["#ffe27a", "#ff9d2e"], agua: ["#9be3ff", "#3a8bff"], yoyo: ["#ff9bd4", "#b783ff"], bengalas: ["#ffd84d", "#ff5a5a"], regla: ["#ffe9a0", "#f0a030"],
+  helado: ["#ff9bd4", "#9be3ff"], bocina: ["#ffe27a", "#ff7a3a"], trompo: ["#b783ff", "#35c9ff"],
   yoyoelec: ["#ff9bd4", "#7de8ff"], vapor: ["#ffffff", "#ff9d6b"], chispazo: ["#ffd84d", "#7de8ff"], globos: ["#9be3ff", "#ff9bd4"], anillo: ["#ffd84d", "#ff7a3a"],
   iman: ["#ff7a7a", "#7d9bff"], resorte: ["#d9b8ff", "#8a6bff"], turbo: ["#ffe27a", "#ffa02e"], litio: ["#9bff9b", "#2fcf6a"], capacitor: ["#9bf0ff", "#4a8bff"], lego: ["#ffa07a", "#ff4d4d"], lupa: ["#fff0a0", "#6bd8ff"],
   heal: ["#9bff9b", "#2fcf6a"], evo: ["#fff0a0", "#ffb02e"], cofre: ["#ffe27a", "#c47a2e"], jefe: ["#ff9b9b", "#ff4d4d"], senal: ["#9bf0ff", "#7dffb0"],
