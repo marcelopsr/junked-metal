@@ -1,12 +1,12 @@
 import * as B from "@babylonjs/core";
 
 // Look retro (Lethal Company / Buckshot Roulette, pero luminoso): render a baja resolución con píxeles visibles,
-// texturas chicas sin filtrar, temblor PS1 suave, contornos de 1 px y un post retro con paleta propia por clima.
+// (historia: el look retro ya no existe; hoy el juego es cartoon limpio y las perillas de LOOK quedan para la luz).
 
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0, desat: 1, ca: 0.01, pal: 0.2, outline: 1, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1.6, moonMul: 0.6, exposure: 0.85 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0, desat: 1, ca: 0.01, pal: 0.2, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1.6, moonMul: 0.6, exposure: 0.85 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -128,45 +128,8 @@ export function setLamp(pos: B.Vector3, fwd: B.Vector3, boost = false, dt = 0) {
   glow.position.set(pos.x, pos.y + 2.2, pos.z);
 }
 
-// ---------- Post retro: contornos por profundidad, paleta del clima, dither Bayer + cuantización, grano, scanlines, viñeta, aberración ----------
-B.Effect.ShadersStore["retroFragmentShader"] = `
-precision highp float;
-varying vec2 vUV; uniform sampler2D textureSampler; uniform vec2 screen; uniform float t; uniform float glitch, levels, grain, scan, vig, desat, ca, pal, outline; uniform vec3 p0, p1, p2; uniform sampler2D depthSampler;
-float b2(vec2 p) { p = floor(mod(p, 2.)); return mod(p.x * 2. + p.y * 3., 4.); }
-float b4(vec2 p) { return (b2(p) * 4. + b2(floor(p / 2.))) / 16.; }
-float h(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
-// Segunda derivada de la profundidad a distancia e: un borde de objeto la dispara, una pendiente suave (suelo rasante) no
-float lapAt(vec2 e, float d) {
-  float dl = texture2D(depthSampler, vUV - vec2(e.x, 0.)).r, dr = texture2D(depthSampler, vUV + vec2(e.x, 0.)).r, du = texture2D(depthSampler, vUV + vec2(0., e.y)).r, dd = texture2D(depthSampler, vUV - vec2(0., e.y)).r;
-  return abs(dl + dr - 2. * d) + abs(du + dd - 2. * d);
-}
-void main() {
-  vec2 c = vUV - .5;
-  float rr = dot(c, c);
-  vec2 uv = vUV;
-  // Glitch VHS al recibir daño: bandas horizontales corridas + más aberración
-  float band = floor(vUV.y * 24. + t * 31.);
-  uv.x += glitch * (h(vec2(band, floor(t * 20.))) - .5) * .06 * step(.6, h(vec2(band * 1.7, floor(t * 14.))));
-  vec2 o = c * rr * ca + vec2(glitch * .012, 0.);
-  vec3 col = vec3(texture2D(textureSampler, uv - o).r, texture2D(textureSampler, uv).g, texture2D(textureSampler, uv + o).b);
-  float l = dot(col, vec3(.299, .587, .114));
-  col = mix(vec3(l), col, desat);
-  col = mix(col, l < .5 ? mix(p0, p1, l * 2.) : mix(p1, p2, l * 2. - 1.), pal);
-  vec2 px = floor(vUV * screen);
-  float d = texture2D(depthSampler, vUV).r;
-  float edge = smoothstep(.03, .07, lapAt(1. / screen, d) / max(d, 1e-4)); // línea fina de 1 px: más gruesa se come a los bichos chicos
-  // Contorno fino de 1 px, en un violeta oscuro cálido (no negro): se funde con las sombras y recorta las siluetas
-  col = mix(col, vec3(.1, .07, .16), outline * edge * (1. - smoothstep(.03, .06, d))); // solo cerca: en el horizonte el salto de profundidad pintaba una banda
-  col += (h(px + fract(t) * 97.) - .5) * grain;
-  col *= 1. - scan * step(1.5, mod(px.y, 3.));
-  col = floor(col * levels + b4(px)) / levels;
-  col *= smoothstep(.95, .25, sqrt(rr) * vig);
-  gl_FragColor = vec4(col, 1.);
-}`;
-
-let glitchAt = -1e9;
-/** Dispara el glitch VHS (dura ~0,26 s). */
-export function glitchHit() { if (LOOK.grain === 0 && LOOK.ca === 0) return; glitchAt = performance.now(); } // el glitch VHS es parte del look retro: con "Look limpio" no se dispara
+/** Antes disparaba el glitch VHS al recibir daño; el look retro ya no existe y queda como no-op para no tocar a los llamadores. */
+export function glitchHit() { /* sin efecto */ }
 
 /** Apagón: escala la luna y el ambiente (1 = normal, 0 = negro; el faro no se toca). */
 export function setDark(k: number) {
@@ -180,8 +143,10 @@ export const QUALITY = { ultra: 1440, calidad: 1080, equilibrado: 720, rendimien
 export type Quality = keyof typeof QUALITY | "auto";
 let target: number = QUALITY.calidad;
 let adaptK = 1, adaptOn = true, adaptT = 0, adaptOk = 0; // escalado dinámico: factor sobre la altura objetivo (0,6..1)
-let depth: B.DepthRenderer, retro: B.PostProcess, mainCam: B.Camera, pipeline: B.DefaultRenderingPipeline;
+let mainCam: B.Camera, pipeline: B.DefaultRenderingPipeline;
 export type AA = "none" | "fxaa" | "msaa2" | "msaa4";
+/** Sombras del sol: apagarlas rinde mucho más en equipos modestos. */
+export function setShadows(on: boolean) { if (sun) sun.shadowEnabled = on; }
 /** Suavizado de bordes: sin nada, FXAA (barato, algo borroso) o MSAA x2/x4 (más nítido, más costoso). */
 export function setAA(m: AA) {
   if (!pipeline) return;
@@ -199,12 +164,6 @@ function setupPixels(cam: B.Camera, low: boolean) {
   lowQ = low;
   target = low ? QUALITY.equilibrado : QUALITY.calidad;
   // Profundidad lineal para los contornos; sin pasto (llenaría todo de bordes) ni cielo
-  depth = scene.enableDepthRenderer(cam, false);
-  depth.getDepthMap().renderListPredicate = (m) => m.name !== "tuft" && m.name !== "sky";
-  if (low) LOOK.outline = 0;
-  const pp = retro = new B.PostProcess("retro", "retro", ["screen", "t", "glitch", "levels", "grain", "scan", "vig", "desat", "ca", "pal", "outline", "p0", "p1", "p2"], ["depthSampler"], 1, cam, B.Texture.NEAREST_SAMPLINGMODE);
-  pp.onApply = (ef) => { ef.setFloat2("screen", pp.width, pp.height); ef.setFloat("t", performance.now() / 1000); ef.setFloat("glitch", Math.max(0, 1 - (performance.now() - glitchAt) / 260)); ef.setFloat("levels", LOOK.levels); ef.setFloat("grain", LOOK.grain); ef.setFloat("scan", LOOK.scan); ef.setFloat("vig", LOOK.vig); ef.setFloat("desat", LOOK.desat); ef.setFloat("ca", LOOK.ca); ef.setFloat("pal", LOOK.pal); ef.setFloat("outline", LOOK.outline);
-    ef.setColor3("p0", ramp[0]); ef.setColor3("p1", ramp[1]); ef.setColor3("p2", ramp[2]); ef.setTexture("depthSampler", depth.getDepthMap()); };
   scene.getEngine().getRenderingCanvas()!.style.imageRendering = "pixelated";
   addEventListener("resize", applyScale);
   applyScale();
@@ -227,13 +186,10 @@ export function adaptQuality(fps: number, dt: number) {
 export function setSplit(cam2: B.Camera | null, on: boolean) {
   const mgr = scene.postProcessRenderPipelineManager;
   if (on && cam2) {
-    mainCam.detachPostProcess(retro); scene.disableDepthRenderer(mainCam);
     mgr.attachCamerasToRenderPipeline("pipe", cam2);
   } else {
     if (cam2) mgr.detachCamerasFromRenderPipeline("pipe", cam2);
     if (!mainCam.getEngine) return;
-    mainCam.attachPostProcess(retro); depth = scene.enableDepthRenderer(mainCam, false);
-    depth.getDepthMap().renderListPredicate = (m) => m.name !== "tuft" && m.name !== "sky";
   }
 }
 

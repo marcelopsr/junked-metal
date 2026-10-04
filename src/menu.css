@@ -188,3 +188,14 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #scr-over .kit.stats, #scr-over .kv, #scr-over .card ul { background: none; border: 0; box-shadow: none; clip-path: none; }
 .wi { display: inline-flex; align-items: center; gap: 6px; } .wi .ico { flex: none; }
 .locked .ico { filter: grayscale(1) opacity(.5); } .carc b.wi { display: flex; }
+
+/* Configuración: secciones y descripciones */
+#opts .sect { align-self: stretch; margin: 14px 4px 2px; font: 700 13px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .18em; text-transform: uppercase; color: var(--lcd-ink); border-bottom: 1px solid rgba(255, 255, 255, .14); padding-bottom: 5px; }
+#opts .sect:first-child { margin-top: 0; }
+#opts .row .lb { display: flex; flex-direction: column; gap: 3px; text-align: left; min-width: 0; }
+#opts .row .lb small { font: 500 13px/1.25 "Rajdhani", system-ui, sans-serif; color: var(--dim); letter-spacing: .02em; text-transform: none; }
+#opts .note { font: 500 14px/1.35 "Rajdhani", system-ui, sans-serif; color: var(--dim); padding: 4px 10px; }
+#opts .row { min-height: 46px; }
+#opts .row { font: 700 18px/1.1 "Rajdhani", system-ui, sans-serif; letter-spacing: .02em; text-transform: none; }
+#opts .row output, #opts .row b { font: 700 18px "Rajdhani", system-ui, sans-serif; }
+#opts .sect { margin-top: 18px; }

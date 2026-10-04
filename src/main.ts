@@ -81,6 +81,7 @@ let gems: Gem[] = [];
 let pickups: Pickup[] = [];
 let spits: Spit[] = [];
 const spitTpl = () => template("spit", () => [sph(0.55, pbr("acid", { color: "#ff3a1f", rough: 0.1, emissive: "#c01800", alpha: 0.9 }), [0, 0, 0])]);
+let fpsT = 0;
 let cycleS = -1; // tramo del ciclo atardecer → noche ya aplicado
 let darkK = 1, apagon = false, musicS = "", musicT = 0; // musicS/T: estado musical y reloj de refresco
 let spawnAcc = 0, swarmT = 60, chestT = 100, ballT = 75, bossIdx = 0;
@@ -232,7 +233,7 @@ function startRun(d = false) {
   // Guía de controles los primeros segundos (se va sola)
   const hint = $("hint");
   for (const k of hint.querySelectorAll<HTMLElement>("kbd[data-k]")) k.textContent = keyName(KEYS[k.dataset.k as keyof typeof KEYS][0]); // teclas reasignadas
-  hint.classList.remove("hidden", "fade");
+  if (save.hint) hint.classList.remove("hidden", "fade"); else hint.classList.add("hidden");
   setTimeout(() => hint.classList.add("fade"), 9000);
   setTimeout(() => hint.classList.add("hidden"), 9700);
 }
@@ -943,6 +944,7 @@ scene.onBeforeRenderObservable.add(() => {
   }
   tickFx(dt * ts);
   uiTick(dt);
+  if (save.fps && (fpsT -= dt) <= 0) { fpsT = 0.5; $("fps").textContent = `${Math.round(engine.getFps())} fps`; }
 
   // Cámara 3/4 elevada. Con teclado sigue el rumbo del auto; con stick queda fija
   // (si rotara, la dirección del stick cambiaría mientras girás).

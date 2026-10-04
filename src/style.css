@@ -3,10 +3,10 @@
   --shell: #0f1a28; --panel: #17283a; --line: rgba(255, 255, 255, .2); --txt: #eaf1f7; --dim: #9bb0c2;
   --lcd: #0f1a28; --lcd-ink: #7dffb0; --sig: #35c9ff; --ok: #5bd65b; --low: #ff4d4d; --turbo: #ffb02e;
   --r-comun: #8a9a82; --r-rara: #6fb3c4; --r-epica: #9a6fb5; --r-evo: #e0a030; --r-fusion: #c8d84a;
-  --data: "VT323", monospace; --display: "Silkscreen", monospace;
+  --data: "Rajdhani", system-ui, sans-serif; --display: "Rajdhani", system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; overflow: hidden; background: #05070a; font-family: var(--data); font-size-adjust: .6; color: var(--txt); user-select: none; touch-action: none; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #05070a; font-family: var(--data); font-size-adjust: .52; color: var(--txt); user-select: none; touch-action: none; }
 #c { width: 100%; height: 100%; display: block; outline: none; }
 .hidden { display: none !important; }
 .ico { display: block; }
@@ -150,3 +150,7 @@ button:hover { background: rgba(30, 48, 68, .9); }
 .offer.sel .art svg, .offer:hover .art svg { animation: ico-bounce .5s cubic-bezier(.3, 1.6, .5, 1) 1, ico-float 2.4s ease-in-out .5s infinite; }
 @keyframes ico-float { 50% { transform: translateY(-3px); } }
 @keyframes ico-bounce { 0% { transform: scale(.8); } 100% { transform: scale(1.1); } }
+
+/* Títulos redondeados y gruesos (sin tipografía pixelada) */
+.brand, .otitle { font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.brand { font-size: clamp(48px, 10vw, 96px); }

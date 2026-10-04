@@ -8,7 +8,7 @@ import { ctl, KEYS, PAD, padPressed, type Action } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { PILOTS, type PilotId } from "./pilots";
 import { icon } from "./icons";
-import { LOOK, look, setAA, setQuality, setSmooth, type AA, type Quality } from "./render";
+import { setAA, setQuality, setShadows, setSmooth, type AA, type Quality } from "./render";
 import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { ZONES, type ZoneId } from "./world";
@@ -29,7 +29,8 @@ type Save = {
   scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number }; cars: CarKind[]; car: CarKind;
   pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; quality: Quality; paint: string; rim: string; zoom: number;
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
-  aa: AA; bloom: boolean; outline: boolean; retro: number; clean: boolean; lookv: number; shake: boolean;
+  aa: AA; bloom: boolean; lookv: number; shake: boolean;
+  shadows: boolean; fps: boolean; hudSolid: boolean; hint: boolean;
   keys: Partial<Record<Action, string>>; pad: { dead: number; sens: number }; rumble: boolean; touch: number;
   hud: number; calm: boolean; dmgNums: boolean;
   decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
@@ -42,7 +43,7 @@ const DEFAULT: Save = {
   intro: false,
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, quality: "auto", paint: "", rim: "", zoom: 1.35,
-  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, aa: "none", bloom: true, outline: true, retro: 1, clean: true, lookv: 4, shake: true,
+  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, aa: "none", bloom: true, lookv: 6, shake: true, shadows: true, fps: false, hudSolid: false, hint: true,
   keys: {}, pad: { dead: 0.15, sens: 1 }, rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
@@ -59,7 +60,7 @@ export const save: Save = (() => {
     // Calcos: siempre 3 ranuras y solo diseños válidos; el aplicado debe apuntar a una ranura con diseño
     const decals = [0, 1, 2].map((i) => (validDecal(s.decals?.[i]) ? s.decals[i] : ""));
     const decalSel = Number.isInteger(s.decalSel) && decals[s.decalSel] ? s.decalSel : -1;
-    if (s.lookv !== 4) { s.clean = true; s.outline = true; s.aa = "none"; s.lookv = 4; } // giro de día y estilo cartoon: look limpio y contorno de tinta (una vez)
+    if (s.lookv !== 6) { s.aa = "none"; delete s.outline; delete s.clean; delete s.retro; delete s.visual; s.lookv = 6; } // estilo cartoon fijo: sin contorno ni looks retro (una vez)
     return { ...structuredClone(DEFAULT), ...s, decals, decalSel, perm: { ...DEFAULT.perm, ...s.perm }, kit: { ...DEFAULT.kit, ...s.kit }, vol: { ...DEFAULT.vol, ...s.vol }, pad: { ...DEFAULT.pad, ...s.pad },
       stats: { ...DEFAULT.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };
   } catch { return structuredClone(DEFAULT); }
@@ -141,18 +142,17 @@ function renderRace() {
 // ---------- Ajustes ----------
 type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void };
 let api: Api;
-let L0 = { grain: 0, scan: 0, ca: 0, pal: 0, outline: 0 }; // look de fábrica: la perilla "post retro" lo escala
 
 export function applySettings() {
   setQuality(save.quality);
-  setSmooth(save.clean);
+  setSmooth(true); setShadows(save.shadows);
   setAA(isTouch ? (save.aa === "none" ? "fxaa" : save.aa) : save.aa);
   const glow = api.scene.getGlowLayerByName("bloom");
   if (glow) glow.isEnabled = save.bloom;
   const pipe = api.scene.postProcessRenderPipelineManager.supportedPipelines.find((p) => p.name === "pipe") as DefaultRenderingPipeline | undefined;
   if (pipe) pipe.bloomEnabled = save.bloom;
-  const rk = save.clean ? 0 : save.retro;
-  look({ grain: L0.grain * rk, scan: L0.scan * rk, ca: L0.ca * rk, pal: L0.pal * rk, snap: save.clean ? 0 : 1, levels: save.clean ? 255 : 32, outline: save.outline ? L0.outline : 0 });
+  $("fps").classList.toggle("hidden", !save.fps);
+  document.body.classList.toggle("hud-solid", save.hudSolid);
   setAudio({ ...save.vol, mute: save.mute });
   $("muted").classList.toggle("hidden", !save.mute);
   for (const a of Object.keys(save.keys) as Action[]) if (KEYS[a]) KEYS[a][0] = save.keys[a]!;
@@ -163,6 +163,14 @@ export function applySettings() {
   document.body.classList.toggle("calm", save.calm);
 }
 const commit = () => { persist(); applySettings(); };
+const KEYS0 = Object.fromEntries(Object.entries(KEYS).map(([a, v]) => [a, v[0]])) as Record<Action, string>;
+/** Vuelve las opciones (imagen, audio, controles, accesibilidad) a los valores de fábrica; el progreso no se toca. */
+function resetCfg() {
+  const D = structuredClone(DEFAULT);
+  Object.assign(save, { quality: D.quality, aa: D.aa, bloom: D.bloom, shadows: D.shadows, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: {} });
+  for (const a of Object.keys(KEYS0) as Action[]) KEYS[a][0] = KEYS0[a];
+  commit();
+}
 
 // ---------- Pila de pantallas ----------
 export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "credits" | "pause" | "over" | "race";
@@ -473,37 +481,77 @@ const cellOf = (e: PointerEvent, cv: HTMLElement) => { const r = cv.getBoundingC
 
 const focusSel = (q: string) => { const e = document.querySelector<HTMLButtonElement>(q); (e && !e.disabled ? e : focusables()[0])?.focus(); };
 
-// Configuración: filas generadas desde datos. data-set = número (perilla o lista), data-tog = sí/no
-type Row = [label: string, kind: "range", path: string, min: number, max: number, step: number, unit?: "%" | "x"] | [label: string, kind: "tog", path: string] | [label: string, kind: "sel", path: string, opts: [string, string][]] | [label: string, kind: "bind", action: Action] | [label: string, kind: "note"] | [label: string, kind: "btn", act: string];
+// Configuración: filas generadas desde datos. data-set = número (perilla o lista), data-tog = sí/no.
+// Cada pestaña agrupa por tema con títulos de sección ("sect"); DESC explica en una línea lo que no se entiende solo.
+type Row = [label: string, kind: "range", path: string, min: number, max: number, step: number, unit?: "%" | "x"] | [label: string, kind: "tog", path: string] | [label: string, kind: "sel", path: string, opts: [string, string][]] | [label: string, kind: "bind", action: Action] | [label: string, kind: "note"] | [label: string, kind: "btn", act: string] | [label: string, kind: "sect"];
+const DESC: Record<string, string> = {
+  quality: "Resolución interna del juego. Más alta se ve más nítida pero pide más a la tarjeta gráfica; Auto baja sola si no llega a 60 fps.",
+  aa: "Suaviza los bordes dentados. Ninguno es lo más nítido y liviano; MSAA es el más suave y el más pesado.",
+  shadows: "Sombras del sol sobre el piso. Apagarlas sube mucho los fps en equipos modestos.",
+  bloom: "Resplandor suave en luces y objetos brillantes.",
+  fps: "Muestra los cuadros por segundo en una esquina.",
+  fullscreen: "Pasa el juego a pantalla completa (también con F11).",
+  zoom: "Qué tan lejos se ve el auto. También con la rueda del mouse o - / =.",
+  shake: "Sacudida de cámara al recibir o dar golpes fuertes.",
+  dmgNums: "Cifras de daño flotando sobre los enemigos.",
+  hint: "Muestra la guía de teclas al empezar cada partida.",
+  hud: "Escala de todo el HUD (barras, reloj, radar).",
+  hudSolid: "Fondo casi opaco en el HUD para leerlo mejor sobre pasto claro.",
+  calm: "Quita parpadeos, destellos y sacudidas que molestan.",
+  "pad.dead": "Cuánto hay que mover el stick antes de que cuente.",
+  "pad.sens": "Qué tan rápido responde el stick.",
+  rumble: "Vibración del mando en golpes.",
+  touch: "Tamaño del stick y los botones en pantalla.",
+};
 const TABS: Record<string, { name: string; rows: Row[] }> = {
-  gfx: { name: "Gráficos", rows: [
+  gfx: { name: "Imagen", rows: [
+    ["Rendimiento", "sect"],
     ["Calidad", "sel", "quality", [["auto", "Auto"], ["ultra", "Ultra 1440p"], ["calidad", "Calidad 1080p"], ["equilibrado", "Equilibrado 720p"], ["rendimiento", "Rendimiento 540p"]]],
     ["Suavizado de bordes", "sel", "aa", [["none", "Ninguno (más nítido)"], ["fxaa", "FXAA"], ["msaa2", "MSAA x2"], ["msaa4", "MSAA x4"]]],
-    ["Bloom", "tog", "bloom"], ["Contornos", "tog", "outline"], ["Look limpio (sin grano, scanlines, paleta ni temblor)", "tog", "clean"],
-    ["Look retro (grano, scanlines, aberración, paleta; 0% = limpio)", "range", "retro", 0, 1.5, 0.1, "%"],
+    ["Sombras", "tog", "shadows"], ["Mostrar FPS", "tog", "fps"], ["Pantalla completa", "btn", "fullscreen"],
+    ["Estilo", "sect"],
+    ["Bloom", "tog", "bloom"],
+  ] },
+  game: { name: "Juego", rows: [
+    ["Cámara", "sect"],
     ["Zoom de cámara", "range", "zoom", 0.8, 2, 0.05, "x"], ["Temblor de pantalla", "tog", "shake"],
+    ["Pantalla", "sect"],
+    ["Tamaño del HUD", "range", "hud", 0.8, 1.5, 0.05, "x"], ["Números de daño", "tog", "dmgNums"], ["Guía de controles al empezar", "tog", "hint"],
   ] },
   audio: { name: "Audio", rows: [
-    ["Volumen general", "range", "vol.master", 0, 1, 0.05, "%"], ["Efectos", "range", "vol.sfx", 0, 1, 0.05, "%"], ["Motor", "range", "vol.engine", 0, 1, 0.05, "%"],
-    ["Música", "range", "vol.music", 0, 1, 0.05, "%"], ["Silencio (M)", "tog", "mute"],
+    ["Volumen general", "range", "vol.master", 0, 1, 0.05, "%"],
+    ["Mezcla", "sect"],
+    ["Efectos", "range", "vol.sfx", 0, 1, 0.05, "%"], ["Motor", "range", "vol.engine", 0, 1, 0.05, "%"], ["Música", "range", "vol.music", 0, 1, 0.05, "%"],
+    ["Silencio (M)", "tog", "mute"],
   ] },
   ctl: { name: "Controles", rows: [
+    ["Teclado", "sect"],
     ["Acelerar", "bind", "up"], ["Frenar / atrás", "bind", "down"], ["Girar izquierda", "bind", "left"], ["Girar derecha", "bind", "right"],
     ["Turbo", "bind", "boost"], ["Derrape", "bind", "drift"], ["Habilidad", "bind", "ability"],
-    ["Flechas también manejan. Esc pausa · M sonido · rueda o - / = zoom", "note"],
-    ["Zona muerta del stick", "range", "pad.dead", 0.05, 0.4, 0.01, "%"], ["Sensibilidad del stick", "range", "pad.sens", 0.5, 2, 0.05, "x"],
-    ["Vibración", "tog", "rumble"], ["Tamaño de controles táctiles", "range", "touch", 0.7, 1.4, 0.05, "x"],
-    ["Gamepad: stick hacia donde se quiere ir · A turbo · B derrape · X habilidad · gatillos acelerar/frenar", "note"],
+    ["Las flechas también manejan. Esc pausa · M sonido · rueda o - / = zoom.", "note"],
+    ["Carrera: J1 con W A S D, Espacio derrapa, E usa el objeto. J2 con flechas, Shift derecha y Enter.", "note"],
+    ["Joystick", "sect"],
+    ["Zona muerta del stick", "range", "pad.dead", 0.05, 0.4, 0.01, "%"], ["Sensibilidad del stick", "range", "pad.sens", 0.5, 2, 0.05, "x"], ["Vibración", "tog", "rumble"],
+    ["Stick hacia donde se quiere ir · A turbo · B derrape · X habilidad · gatillos acelerar y frenar. En carrera: A/gatillo derecho acelera, B/gatillo izquierdo frena, RB o X derrapa, Y o LB usa el objeto.", "note"],
+    ["Táctil", "sect"],
+    ["Tamaño de controles táctiles", "range", "touch", 0.7, 1.4, 0.05, "x"],
   ] },
   a11y: { name: "Accesibilidad", rows: [
-    ["Tamaño de texto del HUD", "range", "hud", 0.8, 1.5, 0.05, "x"], ["Reducir parpadeos y glitch", "tog", "calm"], ["Números de daño", "tog", "dmgNums"],
+    ["Lectura", "sect"],
+    ["Tamaño del HUD", "range", "hud", 0.8, 1.5, 0.05, "x"], ["HUD con fondo sólido", "tog", "hudSolid"], ["Números de daño", "tog", "dmgNums"],
+    ["Movimiento", "sect"],
+    ["Reducir parpadeos y glitch", "tog", "calm"], ["Temblor de pantalla", "tog", "shake"],
   ] },
-  data: { name: "Partida", rows: [
+  data: { name: "Datos", rows: [
     ["El progreso se guarda en este navegador. Un archivo de respaldo permite llevarlo a otro dispositivo.", "note"],
+    ["Respaldo", "sect"],
     ["Exportar partida", "btn", "export"], ["Importar partida", "btn", "import"],
+    ["Opciones", "sect"],
+    ["Restablecer opciones de imagen, audio y controles", "btn", "resetcfg"],
   ] },
 };
 let tab = "gfx";
+let resetArmed = false;
 const ref = (p: string) => { const k = p.split("."); let o = save as unknown as Record<string, unknown>; while (k.length > 1) o = o[k.shift()!] as Record<string, unknown>; return [o, k[0]] as const; };
 const val = (p: string) => { const [o, k] = ref(p); return o[k]; };
 export const keyName = (c?: string) => (c ?? "").replace(/^Key|^Digit/, "").replace("Left", " izq").replace("Right", " der").replace("Space", "Espacio").replace(/^Arrow/, "Flecha ").toUpperCase();
@@ -511,14 +559,18 @@ const show2 = (v: number, u?: string) => (u === "%" ? `${Math.round(v * 100)}%` 
 function renderConfig() {
   $("tabs").innerHTML = Object.entries(TABS).map(([id, t]) => `<button class="tab ${id === tab ? "on" : ""}" data-tab="${id}">${t.name}</button>`).join("");
   // En táctil, Controles deja solo lo táctil (sin teclas ni gamepad)
-  $("opts").innerHTML = TABS[tab].rows.filter((r) => tab !== "ctl" || ctl !== "touch" || r[2] === "touch").map((r) => {
+  const touchOnly = tab === "ctl" && ctl === "touch";
+  const rows = TABS[tab].rows.filter((r) => (touchOnly ? (r[1] === "sect" ? r[0] === "Táctil" : r[2] === "touch") : true));
+  const d = (path: string) => (DESC[path] ? `<small>${DESC[path]}</small>` : "");
+  $("opts").innerHTML = rows.map((r) => {
+    if (r[1] === "sect") return `<div class="sect">${r[0]}</div>`;
     if (r[1] === "note") return `<div class="note">${r[0]}</div>`;
-    if (r[1] === "btn") return `<button class="row" data-act="${r[2]}"><span>${r[0]}</span><b>&gt;</b></button>`;
-    if (r[1] === "bind") return `<button class="row" data-bind="${r[2]}"><span>${r[0]}</span><b>${binding === r[2] ? "PRESIONA UNA TECLA" : keyName(KEYS[r[2]][0])}</b></button>`;
-    if (r[1] === "tog") return `<button class="row" data-tog="${r[2]}"><span>${r[0]}</span><b>${val(r[2]) ? "SÍ" : "NO"}</b></button>`;
-    if (r[1] === "sel") return `<label class="row"><span>${r[0]}</span><select data-set="${r[2]}">${r[3].map(([v, n]) => `<option value="${v}" ${val(r[2]) === v ? "selected" : ""}>${n}</option>`).join("")}</select></label>`;
+    if (r[1] === "btn") return `<button class="row" data-act="${r[2]}"><span class="lb">${r[2] === "resetcfg" && resetArmed ? "¿Seguro? Pulsa otra vez para restablecer" : r[0]}${d(r[2])}</span><b>&gt;</b></button>`;
+    if (r[1] === "bind") return `<button class="row" data-bind="${r[2]}"><span class="lb">${r[0]}</span><b>${binding === r[2] ? "PRESIONA UNA TECLA" : keyName(KEYS[r[2]][0])}</b></button>`;
+    if (r[1] === "tog") return `<button class="row" data-tog="${r[2]}"><span class="lb">${r[0]}${d(r[2])}</span><b>${val(r[2]) ? "SÍ" : "NO"}</b></button>`;
+    if (r[1] === "sel") return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><select data-set="${r[2]}">${r[3].map(([v, n]) => `<option value="${v}" ${val(r[2]) === v ? "selected" : ""}>${n}</option>`).join("")}</select></label>`;
     const v = val(r[2]) as number;
-    return `<label class="row"><span>${r[0]}</span><input type="range" data-set="${r[2]}" data-u="${r[6]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${v}"><output>${show2(v, r[6])}</output></label>`;
+    return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><input type="range" data-set="${r[2]}" data-u="${r[6]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${v}"><output>${show2(v, r[6])}</output></label>`;
   }).join("");
 }
 
@@ -630,7 +682,6 @@ addEventListener("ctl", ctlTexts);
 // ---------- Arranque ----------
 export function initMenu(a: Api) {
   api = a;
-  L0 = { grain: LOOK.grain, scan: LOOK.scan, ca: LOOK.ca, pal: LOOK.pal, outline: LOOK.outline };
   applySettings();
   ctlTexts();
   $("tPause").addEventListener("click", () => (current() === "pause" ? api.resume() : api.pause())); // botón táctil: igual que Esc/Start
@@ -660,6 +711,11 @@ export function initMenu(a: Api) {
       fe.classList.remove("zap"); void fe.offsetWidth; fe.classList.add("zap"); SFX.static();
     }
     else if (d.act === "back") back();
+    else if (d.act === "fullscreen") { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.(); }
+    else if (d.act === "resetcfg") { // dos pasos: el primer clic pide confirmar (se desarma solo a los 4 s)
+      if (!resetArmed) { resetArmed = true; renderConfig(); focusSel('[data-act="resetcfg"]'); setTimeout(() => { if (resetArmed) { resetArmed = false; if (current() === "config") renderConfig(); } }, 4000); }
+      else { resetArmed = false; resetCfg(); renderConfig(); focusSel('[data-act="resetcfg"]'); }
+    }
     else if (d.act === "export") exportSave();
     else if (d.act === "import") importSave();
     else if (d.act === "resume") api.resume();
