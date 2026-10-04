@@ -43,10 +43,18 @@ export function setAudio(o: Partial<typeof vol>) {
   musicBus.gain.setTargetAtTime(vol.music * 0.45 * (duck ? 0.25 : 1), ctx.currentTime, duck ? 0.15 : 0.4);
 }
 
+// Timbre del motor por auto: [forma de onda, multiplicador de tono]
+const ENGINES: Record<string, [OscillatorType, number]> = { axel: ["sine", 1.5], helado: ["triangle", 1.15], combi: ["sawtooth", 0.7], tanque: ["sawtooth", 0.6], formula: ["sawtooth", 1.4], carrera: ["triangle", 1.3] };
+let engMul = 1;
+export function setEngineKind(kind: string) {
+  const [type, mul] = ENGINES[kind] ?? ["sawtooth", 1];
+  engMul = mul;
+  if (eng) eng.o1.type = eng.o2.type = type;
+}
 // Llamar cada frame: el tono sigue a la velocidad, el volumen al acelerador
 export function engineSfx(speed01: number, throttle: number, boosting: boolean) {
   if (!ctx || !eng) return;
-  const t = ctx.currentTime, hz = 55 + speed01 * 170 + (boosting ? 40 : 0);
+  const t = ctx.currentTime, hz = (55 + speed01 * 170 + (boosting ? 40 : 0)) * engMul;
   eng.o1.frequency.setTargetAtTime(hz, t, 0.05);
   eng.o2.frequency.setTargetAtTime(hz * 1.5, t, 0.05);
   eng.f.frequency.setTargetAtTime(400 + speed01 * 1800 + (boosting ? 900 : 0), t, 0.05);
@@ -96,13 +104,15 @@ let combo = 0, comboT = 0;
 // Melodía del camioncito de helados (ponytail: notas fijas, onda triangular; ~6 s)
 const JINGLE: [number, number][] = [[392, 0], [392, 0.22], [440, 0.44], [494, 0.66], [392, 0.88], [494, 1.1], [440, 1.32], [294, 1.76], [392, 2.2], [392, 2.42], [440, 2.64], [494, 2.86], [392, 3.08], [392, 3.3], [330, 3.52], [392, 3.96]];
 export const SFX = {
+  // Racha de bajas: tono ascendente según el tamaño de la racha; fanfarria corta al superar 50
+  streak: (n: number) => { const f = 523 * 2 ** (Math.min(n, 100) / 100); tone("triangle", f, f * 1.25, 0.14, 0.1); if (n % 50 === 0) [1, 1.25, 1.5, 2].forEach((m, i) => tone("square", 523 * m, 523 * m, 0.12, 0.06, i * 0.07)); },
   jingle: () => JINGLE.forEach(([f, d]) => tone("triangle", f, f * 0.995, 0.2, 0.07, d)),
-  hit: () => gate("hit", 18) && hiss("bandpass", 2400, 900, 0.06, 0.18),
-  kill: () => gate("kill", 14) && (tone("triangle", 420, 140, 0.09, 0.12), hiss("lowpass", 3000, 400, 0.08, 0.1)),
+  hit: () => gate("hit", 18) && (tone("sine", 700, 320, 0.05, 0.12), hiss("bandpass", 2400, 900, 0.04, 0.08)),
+  kill: () => gate("kill", 14) && (tone("sine", 520, 180, 0.1, 0.14), tone("triangle", 260, 90, 0.12, 0.08)), // boing
   ram: (power: number) => { tone("sine", 160, 45, 0.18, Math.min(0.5, 0.2 + power * 0.01)); hiss("lowpass", 1800, 200, 0.12, 0.25); },
   explosion: () => gate("boom", 8) && (hiss("lowpass", 1400, 60, 0.6, 0.45), tone("sine", 90, 30, 0.45, 0.35)),
   zap: () => gate("zap", 10) && hiss("highpass", 6000, 2500, 0.1, 0.12),
-  hurt: () => gate("hurt", 6) && tone("square", 140, 70, 0.14, 0.12),
+  hurt: () => gate("hurt", 6) && (tone("square", 300, 120, 0.16, 0.1), tone("triangle", 150, 70, 0.16, 0.12)), // chirrido de juguete
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {
     if (crit) tone("square", 880, 440, 0.05, 0.06);
@@ -146,7 +156,7 @@ export function rainSfx(k: number) {
     const s = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), lp = ctx.createBiquadFilter();
     s.buffer = buf; s.loop = true;
     hp.type = "highpass"; hp.frequency.value = 900;
-    lp.type = "lowpass"; lp.frequency.value = 6500;
+    lp.type = "lowpass"; lp.frequency.value = 9500;
     rainG = ctx.createGain(); rainG.gain.value = 0;
     s.connect(hp).connect(lp).connect(rainG).connect(fxBus);
     s.start();
@@ -169,9 +179,9 @@ const MIX: Record<MusicState, number[]> = {
   blackout: [0,   0.9,  0,    0,   0,   0,   1],
   over:     [0,   0,    0,    0,   0,   0,   0],
 };
-const BPM: Record<MusicState, number> = { menu: 100, run: 100, boss: 100, blackout: 100, over: 100 };
-// [raíz MIDI, tercera]: la partida va por Am-F-C-G; el jefe por Am-Bb-Am-E (frigio, tenso)
-const CALM = [[33, 3], [29, 4], [36, 4], [31, 4]], TENSE = [[33, 3], [34, 4], [33, 3], [40, 4]];
+const BPM: Record<MusicState, number> = { menu: 104, run: 122, boss: 136, blackout: 100, over: 100 };
+// [raíz MIDI, tercera]: la partida va por C-Am-F-G (mayor, alegre); el jefe por Am-Bb-Am-E (frigio, tenso)
+const CALM = [[36, 4], [33, 3], [29, 4], [31, 4]], TENSE = [[33, 3], [34, 4], [33, 3], [40, 4]];
 const ARP = [0, 2, 1, 3, 2, 4, 3, 5, 4, 3, 2, 3, 1, 2, 0, 1]; // índices sobre los tonos del acorde (2 octavas)
 const hz = (n: number) => 440 * 2 ** ((n - 69) / 12);
 
@@ -184,7 +194,7 @@ function startMusic() {
   if (!mixIn) {
     mixIn = ctx.createGain();
     const sat = ctx.createWaveShaper(), curve = new Float32Array(1025);
-    for (let i = 0; i < 1025; i++) curve[i] = Math.tanh((i / 512 - 1) * 2.2);
+    for (let i = 0; i < 1025; i++) curve[i] = Math.tanh((i / 512 - 1) * 1.4);
     sat.curve = curve;
     const lp = ctx.createBiquadFilter(), dl = ctx.createDelay(0.05);
     lp.type = "lowpass"; lp.frequency.value = 6500;
@@ -273,22 +283,22 @@ function mStepPlay(s: number, t0: number, sd: number) {
   const t = t0 + (k & 1 ? sd * 0.1 : 0); // swing flojo: se siente a mano
   const bar = sd * 16;
   if (k === 0 && on("pad")) for (const n of [root + 12, root + 12 + third, root + 19]) {
-    mv("pad", "sawtooth", hz(n), t, bar * 1.05, 0.06, st === "menu" ? 900 : 1400, bar * 0.4, -9);
-    mv("pad", "sawtooth", hz(n), t, bar * 1.05, 0.06, st === "menu" ? 900 : 1400, bar * 0.4, 9);
+    mv("pad", "triangle", hz(n), t, bar * 1.05, 0.07, st === "menu" ? 1200 : 2200, bar * 0.3, -7);
+    mv("pad", "triangle", hz(n), t, bar * 1.05, 0.07, st === "menu" ? 1200 : 2200, bar * 0.3, 7);
   }
   if (on("bass")) {
     if (st === "blackout") { if (k === 0) mv("bass", "sine", hz(root), t, bar, 0.5, 0, 0.3); }
     else if (st === "menu") { if (k % 8 === 0) mv("bass", "triangle", hz(root), t, sd * 7.5, 0.35, 500); }
-    else if (big < 0.3) { if (k % 8 === 0) mv("bass", "sawtooth", hz(root), t, sd * 5, 0.3, 380); }
-    else if (big < 0.6) { if (k % 2 === 0) mv("bass", "sawtooth", hz(root + (k % 8 === 6 ? 12 : 0)), t, sd * 1.8, 0.3, 420); }
-    else mv("bass", "sawtooth", hz(root + (k % 4 === 3 ? 12 : k % 8 === 6 ? 7 : 0)), t, sd * 1.5, k % 4 ? 0.22 : 0.32, 450);
+    else if (st === "boss") mv("bass", "sawtooth", hz(root + (k % 4 === 3 ? 12 : k % 8 === 6 ? 7 : 0)), t, sd * 1.5, k % 4 ? 0.22 : 0.32, 450);
+    else if (big < 0.3) { if (k % 4 === 0) mv("bass", "square", hz(root + (k % 8 === 4 ? 7 : 0)), t, sd * 2.6, 0.2, 700); } // raíz-quinta saltarina
+    else { if (k % 2 === 0) mv("bass", "square", hz(root + [0, 12, 7, 12][(k >> 1) % 4]), t, sd * 1.7, 0.2, 800); }
   }
   if (on("arp") && (st !== "run" || big > 0.12)) {
     const every = st === "menu" ? 4 : st === "boss" || big >= 0.5 ? 1 : 2;
     if (k % every === 0) {
       const ch = [0, third, 7, 12, 12 + third, 19][ARP[k]];
       if (st === "menu") mv("arp", "triangle", hz(root + 24 + ch), t, sd * 4, 0.1);
-      else mv("arp", "square", hz(root + 24 + ch), t, sd * 1.4, 0.07, 1900);
+      else mv("arp", st === "boss" ? "square" : "triangle", hz(root + 24 + ch), t, sd * 1.4, st === "boss" ? 0.07 : 0.14, 2600);
     }
   }
   if (play) {

@@ -4,7 +4,7 @@ import HavokPhysics from "@babylonjs/havok";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
 import { DEF, Enemy, pickWeighted, spawnTable, type Kind } from "./enemies";
-import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, SFX } from "./sfx";
+import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineKind, SFX } from "./sfx";
 import { ambient, burst, clearFx, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { ctl, input, isTouch, KEYS, padPressed, padSnap, pollInput, setupTouch } from "./input";
 import { carModel, cyl, initModels, nutTemplate as nutTpl, sph, template } from "./models";
@@ -208,7 +208,7 @@ function startRun(d = false) {
   lastHpFrac = 1;
   passives = {};
   bestStreak = bestHit = bossKills = 0;
-  setScoop(save.car === "helado");
+  setScoop(save.car === "helado"); setEngineKind(save.car);
   weapons = startWeapons(save.pilot, save.perm.extra).map(makeWeapon);
   if (save.car === "helado" && !weapons.some((w) => w.id === "gomitas")) weapons.unshift(makeWeapon("gomitas")); // arma de partida del camión: bochas de helado
   jingleT = 2;
@@ -464,6 +464,7 @@ const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora:
 function kill(e: Enemy) {
   kills++;
   bestStreak = Math.max(bestStreak, hudKill()); if (e.def.boss) bossKills++;
+  if (hudKill() > 0 && hudKill() % 10 === 0) SFX.streak(hudKill());
   if (hudKill() >= 100) grant("racha");
   if (!simulating && !LAB.on) save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
   SFX.kill();
