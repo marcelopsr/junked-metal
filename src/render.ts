@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 1.02, ca: 0.01, pal: 0.2, outline: 0.85, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.8 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 1.02, ca: 0.01, pal: 0.2, outline: 1, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.85 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -47,7 +47,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   scene.imageProcessingConfiguration.toneMappingEnabled = true;
   scene.imageProcessingConfiguration.toneMappingType = B.ImageProcessingConfiguration.TONEMAPPING_ACES;
   scene.imageProcessingConfiguration.exposure = 1.1;
-  scene.imageProcessingConfiguration.contrast = 1.05;
+  scene.imageProcessingConfiguration.contrast = 1.15;
 
   // Cielo: esfera con gradiente, capturada una vez en una sonda de reflejos
   const sky = B.MeshBuilder.CreateSphere("sky", { diameter: 1200, segments: 16, sideOrientation: B.Mesh.BACKSIDE }, scene);
@@ -145,7 +145,7 @@ void main() {
   float l = dot(col, vec3(.299, .587, .114));
   col = mix(vec3(l), col, desat);
   col = mix(col, l < .5 ? mix(p0, p1, l * 2.) : mix(p1, p2, l * 2. - 1.), pal);
-  vec2 px = floor(vUV * screen), e = 1. / screen;
+  vec2 px = floor(vUV * screen), e = 1.5 / screen;
   float d = texture2D(depthSampler, vUV).r;
   float dn = min(min(texture2D(depthSampler, vUV + vec2(e.x, 0.)).r, texture2D(depthSampler, vUV - vec2(e.x, 0.)).r), min(texture2D(depthSampler, vUV + vec2(0., e.y)).r, texture2D(depthSampler, vUV - vec2(0., e.y)).r));
   // Contorno fino de 1 px, en un violeta oscuro cálido (no negro): se funde con las sombras y recorta las siluetas
