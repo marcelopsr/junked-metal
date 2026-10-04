@@ -57,7 +57,7 @@ if (isTouch) setupTouch((k) => zoomBy(1 / k)); // pellizco: abrir los dedos acer
 initHud();
 
 // ---------- Estado de la partida ----------
-type Gem = { m: B.InstancedMesh; xp: number; pull: boolean };
+type Gem = { m: B.InstancedMesh; xp: number; pull: boolean; vy: number };
 type Pickup = { m: B.Mesh; type: "pila" | "iman" | "cofre" };
 type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number };
 
@@ -118,7 +118,7 @@ function dropGems(pos: B.Vector3, amount: number) {
     amount -= v;
     const m = gemTpl(v).createInstance("gem");
     m.position.set(pos.x + (rng() - 0.5) * 1.5, 0, pos.z + (rng() - 0.5) * 1.5);
-    gems.push({ m, xp: v, pull: false });
+    gems.push({ m, xp: v, pull: false, vy: 5 + Math.random() * 4 }); // salta al caer (visual: Math.random, no toca la semilla)
   }
 }
 
@@ -461,15 +461,18 @@ function explode(pos: B.Vector3, r: number, dmg: number) {
 
 // Color del charco de cada insecto = color de sus ojos (models.ts)
 const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora: "#ffb020", escarabajo: "#9acd32", polilla: "#c9a0ff" };
+const CONFETI = ["#ffd84d", "#ff9bd4", "#7de8ff", "#b6ff6a", "#ffa05a"];
 function kill(e: Enemy) {
   kills++;
   bestStreak = Math.max(bestStreak, hudKill()); if (e.def.boss) bossKills++;
   if (hudKill() > 0 && hudKill() % 10 === 0) SFX.streak(hudKill());
+  if (!simulating && hudKill() > 0 && hudKill() % 25 === 0) banner(`RACHA x${hudKill()}`, 1.2);
   if (hudKill() >= 100) grant("racha");
   if (!simulating && !LAB.on) save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
   SFX.kill();
   FX.death(e.pos.add(new B.Vector3(0, 0.5, 0)), e.def.boss);
   debris(e.pos, e.def.color, e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
+  if (!simulating) debris(e.pos, CONFETI[Math.floor(Math.random() * CONFETI.length)], e.def.boss ? 14 : 3, e.def.boss ? 12 : 7, e.def.boss ? 1.2 : 0.5); // confeti de color: cada baja se ve festiva
   const juice = !simulating && !e.def.boss;
   if (juice && BUG_GOO[e.kind]) splat(e.pos.x, e.pos.z, BUG_GOO[e.kind]!, Math.max(e.def.size[0], e.def.size[2]) * 0.55);
   if (juice && (e.kind === "friccion" || e.kind === "robot")) { debris(e.pos, "#b8bcc2", 5, 8, 0.45); debris(e.pos, "#d4a017", 3, 9, 0.35); FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0))); }
@@ -713,6 +716,7 @@ function update(dt: number) {
     const dx = c.pos.x - g.m.position.x, dz = c.pos.z - g.m.position.z, d2 = dx * dx + dz * dz;
     if (d2 < mag2) g.pull = true;
     g.m.rotation.y += dt * 2;
+    if (g.vy !== 0 || g.m.position.y > 0) { g.vy -= 22 * dt; g.m.position.y = Math.max(0, g.m.position.y + g.vy * dt); if (g.m.position.y === 0) g.vy = g.vy < -4 ? -g.vy * 0.35 : 0; } // rebota una o dos veces
     if (g.pull) { const d = Math.sqrt(d2), sp = Math.min(d, (18 + 20 / (d + 0.5)) * dt); g.m.position.x += (dx / d) * sp; g.m.position.z += (dz / d) * sp; }
     if (d2 < 1.2) { gainXp(g.xp); SFX.gem(); if (g.xp > 1) FX.xp(g.m.position); g.m.dispose(); gems.splice(i, 1); }
   }
