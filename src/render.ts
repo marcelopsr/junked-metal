@@ -32,6 +32,7 @@ export function applyClimate(k: { sun: [number, number, number]; sunColor: strin
   sun.intensity = k.sunI * LOOK.moonMul;
   hemi.intensity = k.hemiI * LOOK.ambMul;
   hemi.diffuse = B.Color3.FromHexString(k.sky[1]);
+  hemi.groundColor = B.Color3.FromHexString(k.day ? "#7a9a5a" : "#0b0f0a"); // rebote del pasto: las sombras de día no quedan azul marino
   paintSky(k.sky);
   scene.clearColor = B.Color4.FromHexString(k.sky[1] + "ff");
   scene.imageProcessingConfiguration.exposure = k.exposure * LOOK.exposure;
@@ -150,7 +151,7 @@ void main() {
   float d = texture2D(depthSampler, vUV).r;
   float dn = min(min(texture2D(depthSampler, vUV + vec2(e.x, 0.)).r, texture2D(depthSampler, vUV - vec2(e.x, 0.)).r), min(texture2D(depthSampler, vUV + vec2(0., e.y)).r, texture2D(depthSampler, vUV - vec2(0., e.y)).r));
   // Contorno fino de 1 px, en un violeta oscuro cálido (no negro): se funde con las sombras y recorta las siluetas
-  col = mix(col, vec3(.13, .09, .2), outline * step(.012, (d - dn) / max(d, 1e-4)));
+  col = mix(col, vec3(.13, .09, .2), outline * step(.012, (d - dn) / max(d, 1e-4)) * (1. - smoothstep(.03, .06, d))); // solo cerca: en el horizonte el salto de profundidad pintaba una banda
   col += (h(px + fract(t) * 97.) - .5) * grain;
   col *= 1. - scan * step(1.5, mod(px.y, 3.));
   col = floor(col * levels + b4(px)) / levels;
@@ -292,11 +293,11 @@ export const TEX = {
     noise(c, s, "#628f3a", ["#5a8634", "#6c9c42", "#547f30", "#74a64a"], 2500, 5);
     // Parches de pasto seco y tierra pelada: el patio deja de ser un solo verde
     for (let i = 0; i < 24; i++) {
-      const x = rnd() * s, y = rnd() * s, r = 20 + rnd() * 70, dry = rnd() < 0.6;
+      const x = rnd() * s, y = rnd() * s, r = 30 + rnd() * 80, dry = rnd() < 0.85;
       // Se dibuja también corrido ±s: el parche que cruza el borde reaparece del otro lado y las baldosas no se notan
       for (const dx of [-s, 0, s]) for (const dy of [-s, 0, s]) {
         const g = c.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r);
-        g.addColorStop(0, dry ? "rgba(196,184,96,.45)" : "rgba(150,112,70,.4)"); g.addColorStop(1, "rgba(0,0,0,0)");
+        g.addColorStop(0, dry ? "rgba(176,170,96,.3)" : "rgba(130,110,70,.2)"); g.addColorStop(1, "rgba(0,0,0,0)");
         c.fillStyle = g; c.fillRect(x + dx - r, y + dy - r, r * 2, r * 2);
       }
     }

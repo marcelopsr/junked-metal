@@ -1,6 +1,6 @@
 /* Front-end (src/menu.ts). Reusa .brand/.otitle/.sect/.carc de style.css y sus keyframes tune, blink y stamp. */
-#fe { background: radial-gradient(ellipse at 50% 45%, rgba(255, 241, 207, .05), rgba(70, 120, 200, .55) 80%); }
-#fe.ingame { background: rgba(40, 70, 120, .78); }
+#fe { background: radial-gradient(ellipse at 50% 45%, rgba(255, 241, 207, .05), rgba(70, 120, 200, .28) 80%); }
+#fe.ingame { background: rgba(40, 70, 120, .6); }
 .scr { display: none; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 980px; margin: auto; }
 .scr.on { display: flex; animation: tune .45s steps(9, end) both; }
 

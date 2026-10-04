@@ -150,10 +150,10 @@ type Mark = { m: B.InstancedMesh; life: number; s: number };
 const marks: Mark[] = [];
 const markTpl = (kind: "scorch" | "skid") => template(kind, () => {
   const d = kind === "scorch"
-    ? B.MeshBuilder.CreateDisc("s", { radius: 1, tessellation: 14 })
+    ? B.MeshBuilder.CreateDisc("s", { radius: 1, tessellation: 20 })
     : B.MeshBuilder.CreatePlane("s", { width: 0.22, height: 0.5 });
   d.rotation.x = Math.PI / 2;
-  d.material = pbr(kind + "Mat", { color: kind === "scorch" ? "#0d0b09" : "#1a1714", rough: 1, alpha: kind === "scorch" ? 0.75 : 0.55 });
+  d.material = pbr(kind + "Mat", { color: kind === "scorch" ? "#3a3026" : "#4a4136", rough: 1, alpha: kind === "scorch" ? 0.4 : 0.3 });
   return [d];
 });
 

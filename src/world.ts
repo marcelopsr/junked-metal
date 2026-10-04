@@ -177,7 +177,7 @@ const plankTpl = () => template("plank", () => [box(2, 7, 0.4, woodM(), [0, 3.5,
 function house() {
   const GS = HALF * 2 + 60, K = HALF / 100;
   const h = merge("house", [
-    box(GS, 90, 6, M.matte("#efe6d8"), [0, 45, HALF + 14]),
+    box(GS, 90, 6, pbr("houseWall", { color: "#efe6d8", rough: 0.9, emissive: "#6a6050" }), [0, 45, HALF + 14]), // emisivo: da la espalda al sol y quedaba azul marino
     box(GS, 3, 10, M.matte("#8a5a44"), [0, 1.5, HALF + 12]),
     ...[-70, -25, 45, 90].map((x, i) => box(26, 30, 1, i === 1 ? M.glass() : M.glow(i % 2 ? "#ffb15c" : "#ffcf8a"), [x * K, 42, HALF + 10.6])),
     // Siluetas en las ventanas encendidas (alguien mirando afuera)

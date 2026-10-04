@@ -227,3 +227,20 @@ body.calm #hud *, body.calm #hud::after, body.calm #hud *::before, body.calm #hu
 #xp { background: var(--sig); }
 #signal .lbl, #hud .h-panel .sect { color: var(--dim); }
 #hud .h-panel { opacity: .95; }
+
+/* ---------- HUD compacto: todo junto en dos esquinas (arriba-izquierda: progreso, abajo-izquierda: auto), radar chico a la derecha ---------- */
+#signal { left: 14px; translate: none; transform-origin: 0 0; width: min(250px, 55vw); padding: 5px 8px; }
+#lcd { left: 14px; translate: none; transform-origin: 0 0; top: calc(max(10px, env(safe-area-inset-top)) + 42px); display: flex; align-items: baseline; gap: 10px; padding: 2px 10px 3px; text-align: left; }
+#timer { font-size: 28px; }
+#lcd .sub { font-size: 13px; }
+#combo { top: calc(max(10px, env(safe-area-inset-top)) + 84px); }
+#combo b { font-size: 40px; }
+#radar { --rs: 1.1; padding: 16px 6px 6px; right: 10px; }
+#txl { width: 168px; left: 10px; padding: 8px 10px; }
+#txr { width: 118px; left: 188px; right: auto; transform-origin: 0 100%; padding: 6px 8px; }
+#txr .h-read.r span { display: none; }
+#hint { top: auto; bottom: 120px; left: 50%; }
+#slots .slot { width: 40px; height: 40px; }
+@media (max-width: 700px) {
+  #signal { width: min(200px, 50vw); } #radar { --rs: .9; } #txr { display: none; }
+}
