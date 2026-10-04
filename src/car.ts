@@ -91,7 +91,7 @@ export class Car {
   wear(hpFrac: number) {
     const w = 1 - Math.max(0, hpFrac);
     B.Color3.LerpToRef(this.paintBase, new B.Color3(0.03, 0.028, 0.025), w * 0.55, this.model.paint.albedoColor);
-    this.model.paint.roughness = 0.22 + w * 0.6;
+    this.model.paint.roughness = 0.5 + w * 0.4;
   }
 
   // Solo visual: ruedas que giran y doblan, carrocería que se inclina

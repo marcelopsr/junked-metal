@@ -46,7 +46,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   scene.clearColor = B.Color4.FromHexString("#0a101cff");
   scene.fogMode = B.Scene.FOGMODE_EXP2;
   scene.imageProcessingConfiguration.toneMappingEnabled = true;
-  scene.imageProcessingConfiguration.toneMappingType = B.ImageProcessingConfiguration.TONEMAPPING_ACES;
+  scene.imageProcessingConfiguration.toneMappingType = B.ImageProcessingConfiguration.TONEMAPPING_STANDARD;
   scene.imageProcessingConfiguration.exposure = 1.1;
   scene.imageProcessingConfiguration.contrast = 1.15;
 

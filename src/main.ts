@@ -43,7 +43,7 @@ scene.skipPointerMovePicking = true;
 
 const cam = new B.FreeCamera("cam", new B.Vector3(0, 30, -40), scene);
 cam.fov = 0.85;
-cam.minZ = 0.3;
+cam.minZ = 1; // más cerca el z-buffer pierde precisión y los decales del piso parpadean
 cam.maxZ = 1500;
 
 setupRender(scene, cam, low);
@@ -1011,7 +1011,10 @@ scene.onBeforeRenderObservable.add(() => {
       cam.position.set(x, y, z); camTarget.set(a, b, c);
     }
     titleArt(scr === "title");
-    const [px, py, pz, tx, ty, tz] = shot(scr);
+    const [px, py0, pz0, tx0, ty, tz] = shot(scr);
+    // Garaje: los autos grandes (tanque, monster, combi, helado) giran sobre su eje; la cámara se aleja según su tamaño para que no se corten
+    const gz = scr === "garage" ? CARS[save.car].size : null, extra = gz ? Math.max(0, Math.max(gz[0] * 1.3, gz[2], gz[1] * 2) - 2.4) : 0;
+    const py = py0 + extra * 0.6, pz = pz0 - extra * 2.2, tx = tx0 + extra * 0.5;
     const sw = scr === "garage" ? 0.15 : scr === "title" ? 0.12 : 2.5, kk = 1 - Math.exp(-2.2 * dt);
     B.Vector3.LerpToRef(cam.position, new B.Vector3(px + Math.sin(t * 0.13) * sw, py + Math.sin(t * 0.21) * sw * 0.3, pz + Math.cos(t * 0.11) * sw), kk, cam.position);
     B.Vector3.LerpToRef(camTarget, new B.Vector3(tx, ty, tz), kk, camTarget);

@@ -20,12 +20,12 @@ function place(m: B.Mesh, mat: B.Material, pos: V3, rot?: V3, scl?: V3) {
 }
 export const box = (w: number, h: number, d: number, mat: B.Material, pos: V3, rot?: V3) =>
   place(B.MeshBuilder.CreateBox("p", { width: w, height: h, depth: d }, scene), mat, pos, rot);
-export const cyl = (top: number, bot: number, h: number, mat: B.Material, pos: V3, rot?: V3, tess = 8) =>
-  place(B.MeshBuilder.CreateCylinder("p", { diameterTop: top, diameterBottom: bot, height: h, tessellation: tess }, scene), mat, pos, rot);
-export const sph = (d: number, mat: B.Material, pos: V3, scl?: V3, seg = 6) =>
-  place(B.MeshBuilder.CreateSphere("p", { diameter: d, segments: seg }, scene), mat, pos, undefined, scl);
-export const tor = (d: number, t: number, mat: B.Material, pos: V3, rot?: V3, tess = 10) =>
-  place(B.MeshBuilder.CreateTorus("p", { diameter: d, thickness: t, tessellation: tess }, scene), mat, pos, rot);
+export const cyl = (top: number, bot: number, h: number, mat: B.Material, pos: V3, rot?: V3, tess = 12) =>
+  place(B.MeshBuilder.CreateCylinder("p", { diameterTop: top, diameterBottom: bot, height: h, tessellation: tess <= 6 ? tess : Math.min(32, tess * 2) }, scene), mat, pos, rot); // calidad: el doble de lados salvo formas hexagonales a propósito
+export const sph = (d: number, mat: B.Material, pos: V3, scl?: V3, seg = 8) =>
+  place(B.MeshBuilder.CreateSphere("p", { diameter: d, segments: seg <= 4 ? seg : Math.min(24, seg * 2) }, scene), mat, pos, undefined, scl);
+export const tor = (d: number, t: number, mat: B.Material, pos: V3, rot?: V3, tess = 14) =>
+  place(B.MeshBuilder.CreateTorus("p", { diameter: d, thickness: t, tessellation: tess <= 6 ? tess : Math.min(40, tess * 2) }, scene), mat, pos, rot);
 export const tube = (path: V3[], r: number, mat: B.Material) => {
   const m = B.MeshBuilder.CreateTube("p", { path: path.map(v), radius: r, tessellation: 6 }, scene);
   m.material = mat;
@@ -127,7 +127,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   const ws: { pos: V3; d: number; w: number; steer?: boolean }[] = [];
   let parts: B.Mesh[];
   let stock: B.Mesh[] = []; // alerón de serie (se reemplaza si se elige otro)
-  const paint = pbr("paint" + kind + o.paint, { color: o.paint ?? A.paint, rough: 0.22 });
+  const paint = pbr("paint" + kind + o.paint, { color: o.paint ?? A.paint, rough: 0.5 });
   if (kind === "buggy") {
     parts = [
       box(1.05, 0.1, 2.1, M.matte("#2b2d31"), [0, 0.02, 0]),

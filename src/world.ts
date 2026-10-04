@@ -160,6 +160,7 @@ const decal = (name: string, w: number, h: number, x: number, z: number, mat: B.
   const g = B.MeshBuilder.CreateGround(name, { width: w, height: h }, scene);
   g.position.set(x, y, z);
   g.material = mat;
+  mat.zOffset = -2; // decalcomanía: siempre por encima del piso, sin z-fighting a distancia
   g.receiveShadows = true;
   return g;
 };
@@ -274,7 +275,7 @@ function bushes() {
     B.Matrix.ComposeToRef(sc, q, p, m);
     mats.push(...m.toArray());
   }
-  base.thinInstanceSetBuffer("matrix", new Float32Array(mats), 16, true);
+  base.thinInstanceSetBuffer("matrix", new Float32Array(mats), 16, true); base.alwaysSelectAsActiveMesh = true;
   base.receiveShadows = true;
 }
 
@@ -740,6 +741,7 @@ function brickWalls(n: number) {
 }
 // Charcos (agua o aceite): espejos en el piso
 function puddles(n: number, mat: B.Material) {
+  mat.zOffset = -3; mat.disableDepthWrite = true;
   for (let i = 0; i < n; i++) {
     const spot = freeSpot(5); if (!spot) continue;
     const [x, z] = spot;
@@ -791,7 +793,7 @@ export function buildLayout() {
     m.copyToArray(mats, k++ * 16);
   }
   tuft.isVisible = k > 0;
-  if (k) tuft.thinInstanceSetBuffer("matrix", mats.subarray(0, k * 16), 16, true);
+  if (k) { tuft.thinInstanceSetBuffer("matrix", mats.subarray(0, k * 16), 16, true); tuft.alwaysSelectAsActiveMesh = true; } // la caja original queda en el origen: sin esto el pasto se descarta al mirar lejos
 }
 
 function water() {
@@ -839,7 +841,7 @@ let clouds: B.Mesh[] = [];
 function cloudShadows(t: number, c: B.Vector3) {
   if (!clouds.length) {
     const mat = pbr("cloudShade", { color: "#102010", rough: 1, alpha: 0.2 });
-    mat.disableLighting = true;
+    mat.disableLighting = true; mat.zOffset = -3; mat.disableDepthWrite = true;
     const t = new B.DynamicTexture("cloudTex", 64, scene, false);
     const c = t.getContext() as unknown as CanvasRenderingContext2D, g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
     g.addColorStop(0, "#fff"); g.addColorStop(1, "#000"); c.fillStyle = g; c.fillRect(0, 0, 64, 64); t.update();

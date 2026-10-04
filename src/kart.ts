@@ -372,7 +372,7 @@ function begin() {
   t = 0; countdown = 3.4; finishedAt = -1; resultsOn = false; active = true;
   const split = raceCfg.players === 2;
   if (split) {
-    if (!cam2) { cam2 = new B.FreeCamera("cam2", new B.Vector3(0, 10, -10), D.scene); cam2.minZ = 0.3; cam2.maxZ = 1500; }
+    if (!cam2) { cam2 = new B.FreeCamera("cam2", new B.Vector3(0, 10, -10), D.scene); cam2.minZ = 1; cam2.maxZ = 1500; }
     cam2.fov = 0.95; D.cam.viewport = new B.Viewport(0, 0, 0.5, 1); cam2.viewport = new B.Viewport(0.5, 0, 0.5, 1);
     D.scene.activeCameras = [D.cam, cam2];
     setSplit(cam2, true);
@@ -619,6 +619,7 @@ function stepRacer(r: Racer, dt: number) {
   if (r.boost > 0 && Math.random() < 0.7) FX.sparks(pos.subtract(fwdOf(r).scale(1.2)).add(new B.Vector3(0, 0.3, 0)));
   // Lakitu: se salió demasiado, se cayó o quedó trabado
   r.stuckT = Math.abs(out.fs) < 1.2 && countdown <= 0 && r.fin === 0 ? r.stuckT + dt : 0;
+  if (import.meta.env.DEV && r.stuckT > 1.5 && r.stuckT - dt <= 1.5) stuckLog.push({ n: r.name, idx: r.idx, x: Math.round(pos.x), z: Math.round(pos.z), t: Math.round(t) });
   if (mode === "battle") {
     if (r.stuckT > 4 || pos.y < -3 || (c.root.up.y < 0.3 && r.spin <= 0)) lakitu(r);
     return;
@@ -649,6 +650,7 @@ function lakitu(r: Racer) {
   if (r.human >= 0) { say(r.human, "¡Lakitu al rescate!"); SFX.back(); }
 }
 const relink: { c: Car; f: number }[] = [];
+const stuckLog: { n: string; idx: number; x: number; z: number; t: number }[] = [];
 
 function onLap(r: Racer) {
   if (r.lap > LAPS) {
@@ -854,6 +856,7 @@ export function raceTick(dt: number) {
 if (import.meta.env.DEV) Object.assign(window, {
   __race: {
     auto: (on = true) => { for (const h of humans) h.auto = on; },
+    stuck: () => stuckLog,
     laki: () => racers.map((r) => r.laki + "/" + r.hits),
     info: () => ({ t, countdown, lap: humans.map((h) => h.lap), idx: humans.map((h) => h.idx), place: humans.map((h) => placeOf(h)), fin: racers.map((r) => Math.round(r.fin)), resultsOn, item: humans.map((h) => h.item), speeds: racers.map((r) => Math.round(r.fs)) }),
     give: (it: Item) => { for (const h of humans) { h.item = it; h.useAt = 1e9; } },

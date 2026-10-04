@@ -159,7 +159,8 @@ const markTpl = (kind: "scorch" | "skid") => template(kind, () => {
     ? B.MeshBuilder.CreateDisc("s", { radius: 1, tessellation: 20 })
     : B.MeshBuilder.CreatePlane("s", { width: 0.22, height: 0.5 });
   d.rotation.x = Math.PI / 2;
-  d.material = pbr(kind + "Mat", { color: kind === "scorch" ? "#3a3026" : "#4a4136", rough: 1, alpha: kind === "scorch" ? 0.4 : 0.3 });
+  const mm = d.material = pbr(kind + "Mat", { color: kind === "scorch" ? "#3a3026" : "#4a4136", rough: 1, alpha: kind === "scorch" ? 0.4 : 0.3 });
+  mm.zOffset = -4; mm.disableDepthWrite = true; // las marcas se apilan a 0,00002 de distancia: sin escribir profundidad no pelean entre sí ni con el piso
   return [d];
 });
 
@@ -176,7 +177,8 @@ export function mark(kind: "scorch" | "skid", x: number, z: number, rotY: number
 const splatTpl = (c: string) => template("splat" + c, () => {
   const d = B.MeshBuilder.CreateDisc("s", { radius: 1, tessellation: 9 });
   d.rotation.x = Math.PI / 2;
-  d.material = pbr("splat" + c, { color: c, rough: 0.2, emissive: B.Color3.FromHexString(c).scale(0.25).toHexString(), alpha: 0.8 });
+  const sm = d.material = pbr("splat" + c, { color: c, rough: 0.2, emissive: B.Color3.FromHexString(c).scale(0.25).toHexString(), alpha: 0.8 });
+  sm.zOffset = -4; sm.disableDepthWrite = true;
   return [d];
 });
 export function splat(x: number, z: number, color: string, s: number) {
