@@ -111,10 +111,10 @@ export function debris(pos: B.Vector3, color: string, n: number, power = 6, size
 // Clave = dmgSrc de main.ts (arma, "embestida", "pelota" o "" = genérico). Verde fósforo = disparos propios; el rojo queda para el enemigo.
 // shake va a camera shake (main lo eleva al cuadrado: 0.1 casi no se nota, 0.25 ya es un golpe); squash 0..1 = cuánto se aplasta el bicho.
 const IMPACT: Record<string, { spark: string; chips: number; shake: number; squash: number }> = {
-  "": { spark: "#ffe08a", chips: 1, shake: 0.08, squash: 0.5 },
-  gomitas: { spark: "#8dff6a", chips: 1, shake: 0.1, squash: 0.6 },
-  clips: { spark: "#d6e8c8", chips: 1, shake: 0.12, squash: 0.5 },
-  tesla: { spark: "#9be7ff", chips: 0, shake: 0.18, squash: 0.4 },
+  "": { spark: "#ffe45c", chips: 1, shake: 0.08, squash: 0.5 },
+  gomitas: { spark: "#ff9bd4", chips: 1, shake: 0.1, squash: 0.6 },
+  clips: { spark: "#ffffff", chips: 1, shake: 0.12, squash: 0.5 },
+  tesla: { spark: "#7de8ff", chips: 0, shake: 0.18, squash: 0.4 },
   chispazo: { spark: "#9be7ff", chips: 1, shake: 0.18, squash: 0.5 },
   agua: { spark: "#9be7ff", chips: 0, shake: 0, squash: 0.3 },
   globos: { spark: "#9be7ff", chips: 0, shake: 0.1, squash: 0.5 },
@@ -134,7 +134,7 @@ export function impact(m: B.AbstractMesh, at: B.Vector3, color: string, size: nu
   squashes.set(m, { t: SQ_T, k: o.squash * (crit ? 1.4 : 1) * (boss ? 0.2 : 1), b: squashes.get(m)?.b ?? m.scaling.clone() }); // los jefes casi no se inmutan
   if (!calm()) {
     FX.flash(at, size);
-    if (crit || Math.random() < 0.4) burst(at, { n: crit ? 10 : 5, color: o.spark, size: [0.06, 0.16], power: [3, 8], life: [0.15, 0.35], gravity: -18 });
+    if (crit || Math.random() < 0.4) burst(at, { n: crit ? 16 : 7, color: o.spark, size: [0.12, 0.3], power: [4, 10], life: [0.2, 0.42], gravity: -18 });
   }
   // Pedazos del caparazón: pocos y solo si no hay ya muchos en el aire (hordas)
   const n = crit ? o.chips + 2 : o.chips;

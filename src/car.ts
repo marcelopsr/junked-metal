@@ -94,6 +94,7 @@ export class Car {
   }
 
   // Solo visual: ruedas que giran y doblan, carrocería que se inclina
+  private lastVy = 0; private bounce = 0; private bT = 0;
   animate(dt: number, steer: number, fs: number, maxSpeed: number) {
     for (const wh of this.model.wheels) {
       wh.m.rotation.x += (fs * dt) / wh.r;
@@ -102,10 +103,16 @@ export class Car {
     const acc = (fs - this.lastFs) / Math.max(dt, 1e-3);
     this.lastFs = fs;
     const k = 1 - Math.exp(-8 * dt);
-    this.vis.rotation.z = B.Scalar.Lerp(this.vis.rotation.z, -steer * B.Scalar.Clamp(fs / maxSpeed, -1, 1) * 0.1, k);
+    this.vis.rotation.z = B.Scalar.Lerp(this.vis.rotation.z, -steer * B.Scalar.Clamp(fs / maxSpeed, -1, 1) * 0.16, k);
     // Cabeceo según la trayectoria (rampas y saltos): el colisionador no vuelca, la carrocería sí apunta hacia donde va
     const vy = this.body.getLinearVelocity().y, pitch = Math.abs(fs) > 2 ? B.Scalar.Clamp(-Math.atan(vy / fs), -0.5, 0.5) : 0;
     this.vis.rotation.x = B.Scalar.Lerp(this.vis.rotation.x, B.Scalar.Clamp(-acc * 0.004, -0.08, 0.08) + pitch, k);
+    // Rebote al aterrizar: se aplasta y recupera con un resorte amortiguado
+    if (this.lastVy < -4 && vy > -1) { this.bounce = Math.min(0.3, -this.lastVy * 0.03); this.bT = 0; }
+    this.lastVy = vy;
+    this.bT += dt; this.bounce *= Math.exp(-5 * dt);
+    const sq = this.bounce * Math.cos(this.bT * 18);
+    this.vis.scaling.set(1 + sq * 0.5, 1 - sq, 1 + sq * 0.5);
   }
 
   dispose() { this.agg.dispose(); this.root.dispose(); }

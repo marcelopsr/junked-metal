@@ -337,3 +337,7 @@ body.calm #hud *, body.calm #hud::after, body.calm #hud *::before, body.calm #hu
 #bannerTxt { font: 700 clamp(20px, 4.4vw, 36px)/1.1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, .45); }
 #bannerTxt .ty::after { display: none; }
 #bannerTxt .gh::after { display: none; }
+
+/* Números de daño cartoon: blancos con borde oscuro grueso; crítico grande y amarillo */
+#dmg span { font: 700 28px/1 "Rajdhani", system-ui, sans-serif; color: #fff; -webkit-text-stroke: 4px #1a2230; paint-order: stroke fill; text-shadow: 0 3px 0 #1a2230; letter-spacing: .02em; }
+#dmg span.crit { font-size: 48px; color: #ffd84d; -webkit-text-stroke: 5px #3a1c00; }
