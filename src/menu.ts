@@ -13,12 +13,12 @@ import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr
 import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { setDrawDist, ZONES, type ZoneId } from "./world";
-import { isTouch, padsConnected } from "./input";
+import { camCycle, isTouch, padsConnected } from "./input";
 import { bestRace, MEDAL, medalOf, raceCfg, saveRaceCfg, TRACKS, trackName, type RaceCtl } from "./kart";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, CURSES, type AbilityId, type CurseId } from "./abilities";
 import { FINALS, type Elite } from "./run";
-import { parseSave } from "./savefmt";
+import { CAM_MODES, CAM_NAMES, parseSave } from "./savefmt";
 
 const $ = (id: string) => document.getElementById(id)!;
 export const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -33,7 +33,7 @@ export type Stats = { runs: number; wins: number; time: number; dist: number; dm
 export type Save = {
   intro: boolean; // ya se vio la intro del primer arranque
   scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number }; cars: CarKind[]; car: CarKind;
-  pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; paint: string; rim: string; zoom: number;
+  pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; paint: string; rim: string; zoom: number; camMode: (typeof CAM_MODES)[number];
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
   bloom: boolean; lookv: number; shake: boolean; fps: boolean; hudSolid: boolean; hint: boolean;
   // Imagen (render.ts, Gfx): resolución (escala manual o FSR), suavizado, calidad (preset = el que coincide con los cuatro ajustes, o "custom") y pantalla.
@@ -55,7 +55,7 @@ const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (i
 const DEFAULT: Save = {
   intro: false,
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
-  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, paint: "", rim: "", zoom: 1.35,
+  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, paint: "", rim: "", zoom: 1.35, camMode: "actual",
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
@@ -173,7 +173,7 @@ const commit = () => { save.preset = presetOf(save); persist(); saveRaceCfg(); a
 /** Vuelve las opciones (imagen, audio, controles, accesibilidad) a los valores de fábrica; el progreso no se toca. */
 function resetCfg() {
   const D = structuredClone(DEFAULT);
-  Object.assign(save, { scaler: D.scaler, scale: D.scale, fsr: D.fsr, aa: D.aa, sharpen: D.sharpen, preset: D.preset, shadowQ: D.shadowQ, detail: D.detail, texRes: D.texRes, aniso: D.aniso, fpsCap: D.fpsCap, menuFps: D.menuFps, fov: D.fov, bright: D.bright, gamma: D.gamma, bloom: D.bloom, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: D.keys, race: D.race, tlay: D.tlay });
+  Object.assign(save, { scaler: D.scaler, scale: D.scale, fsr: D.fsr, aa: D.aa, sharpen: D.sharpen, preset: D.preset, shadowQ: D.shadowQ, detail: D.detail, texRes: D.texRes, aniso: D.aniso, fpsCap: D.fpsCap, menuFps: D.menuFps, fov: D.fov, bright: D.bright, gamma: D.gamma, bloom: D.bloom, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, camMode: D.camMode, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: D.keys, race: D.race, tlay: D.tlay });
   commit();
 }
 
@@ -524,6 +524,7 @@ const DESC: Record<string, string> = {
   bloom: "Resplandor suave en luces y objetos brillantes. Lo fija el preajuste.",
   fps: "Muestra en la parte superior los fps, los ms por cuadro, la resolución interna real y la escala o el modo FSR.",
   fullscreen: "Pasa el juego a pantalla completa (también con F11).",
+  camMode: "Encuadre de la partida. En partida se alterna con Cambiar cámara (C, View/Select o el botón CAM).",
   zoom: "Qué tan lejos se ve el auto. También con la rueda del mouse o - / =.",
   shake: "Sacudida de cámara al recibir o dar golpes fuertes.",
   dmgNums: "Cifras de daño flotando sobre los enemigos.",
@@ -564,6 +565,7 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
   ] },
   game: { name: "Juego", rows: [
     ["Cámara", "sect"],
+    ["Modo de cámara", "sel", "camMode", CAM_MODES.map((m) => [m, CAM_NAMES[m]])],
     ["Zoom de cámara", "range", "zoom", 0.8, 2, 0.05, "x"], ["Temblor de pantalla", "tog", "shake"],
     ["Pantalla", "sect"],
     ["Tamaño del HUD", "range", "hud", 0.8, 1.5, 0.05, "x"], ["Números de daño", "tog", "dmgNums"], ["Guía de controles al empezar", "tog", "hint"],
@@ -973,6 +975,7 @@ export function initMenu(a: Api) {
   $("teReset").addEventListener("click", () => { save.tlay = { v: {}, h: {} }; persist(); applySettings(); editTouch(true, {}, save.touch, (l) => { save.tlay[orient()] = l; persist(); }); }); // restablece las dos orientaciones
   $("teDone").addEventListener("click", () => tedit(false));
   $("tPause").addEventListener("click", () => (current() === "pause" ? api.resume() : api.pause())); // botón táctil: igual que Esc/Start
+  $("tCam").addEventListener("click", camCycle); // botón táctil: igual que C / View
   const fe = $("fe");
   fe.addEventListener("focusin", () => SFX.blip());
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)

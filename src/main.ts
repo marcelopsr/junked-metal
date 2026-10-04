@@ -9,6 +9,7 @@ import { activePad, btnName, camCycle, ctl, input, isTouch, keyHit, KEYS, padPre
 import { GLB, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
+import { CAM_MODES, CAM_NAMES, type CamMode } from "./savefmt";
 import { applySettings, beastRec, BV, carOpts, current, shownCar, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
 import { ABILITIES, type AbilityId } from "./abilities";
 import { pilotStats, startWeapons } from "./pilots";
@@ -94,7 +95,21 @@ let fpsT = 0;
 let cycleS = -1; // tramo del ciclo atardecer → noche ya aplicado
 let darkK = 1, apagon = false, musicS = "", musicT = 0; // musicS/T: estado musical y reloj de refresco
 let spawnAcc = 0, groupT = 0, swarmT = 60, chestT = 100, ballT = 75, bossIdx = 0;
-let shake = 0, camYaw = 0, dustT = 0, roofK = 0;
+let shake = 0, camYaw = 0, dustT = 0, roofK = 0, dynK = 1;
+// Modos de cámara de partida (Configuración → Juego, se alternan con Cambiar cámara). back/up = metros detrás y arriba (por el zoom del usuario),
+// look = cuánto mira por delante del auto, yaw fijo = no gira con el auto (el stick sigue siendo "hacia dónde ir" en pantalla)
+const CAMS: Record<CamMode, { back: number; up: number; look: number; yaw?: number }> = {
+  actual: { back: 15, up: 13, look: 3 },
+  cenital: { back: 2, up: 24, look: 0, yaw: 0 }, // casi vertical: norte (+z) arriba; ×1,8 en pantalla vertical (angosta); la altura se acota para que el anillo de aparición quede fuera de cuadro
+  iso: { back: 12, up: 19, look: 0, yaw: Math.PI / 4 }, // diagonal 45° en planta, inclinada 58° hacia abajo (a 45° veía hasta el horizonte)
+  baja: { back: 8, up: 4.5, look: 6 },
+  dinamica: { back: 15, up: 13, look: 3 }, // la de persecución, multiplicada por dynK (más bichos cerca o más velocidad = más lejos)
+};
+addEventListener("camcycle", () => {
+  if (state !== "play") return; // la carrera maneja sus propias cámaras (kart.ts)
+  save.camMode = CAM_MODES[(CAM_MODES.indexOf(save.camMode) + 1) % CAM_MODES.length]; persist();
+  banner(`CÁMARA · ${CAM_NAMES[save.camMode].toUpperCase()}`, 1.2);
+});
 let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number; hit?: boolean } | null = null;
 let offers: Offer[] = [];
 let offerSel = 0;
@@ -238,7 +253,7 @@ function startRun(d = false) {
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
   spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false; apagon = false;
-  camYaw = 0; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1);
+  camYaw = 0; dynK = 1; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1);
   state = "play";
   scene.physicsEnabled = true;
   reset(null);
@@ -1117,7 +1132,9 @@ scene.onBeforeRenderObservable.add(() => {
   if (state === "race") {
     // la carrera maneja sus propias cámaras (kart.ts)
   } else if (car) {
-    if (!input.move && state === "play") {
+    const cm = CAMS[save.camMode];
+    if (cm.yaw !== undefined) camYaw = cm.yaw;
+    else if (!input.move && state === "play") {
       const f = car.root.forward;
       const target = Math.atan2(f.x, f.z);
       camYaw += Math.atan2(Math.sin(target - camYaw), Math.cos(target - camYaw)) * (1 - Math.exp(-2 * dt));
@@ -1152,11 +1169,28 @@ scene.onBeforeRenderObservable.add(() => {
     const back = new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
     // Bajo la mesa la cámara baja y se acerca (roofK suaviza entrar y salir); afuera vuelve al zoom del usuario
     roofK += ((underRoof(car.pos) ? 1 : 0) - roofK) * (1 - Math.exp(-3 * dt));
-    const zm = (LAB.on ? 1 : save.zoom) * outroZ, zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
+    // Dinámica: se aleja con bichos cerca (18 m) o a velocidad; muy lenta para no marear
+    if (save.camMode === "dinamica" && state === "play") {
+      let n = 0; for (const e of enemies) if (B.Vector3.DistanceSquared(e.pos, car.pos) < 324) n++;
+      const v = car.body.getLinearVelocity().length() / car.def.speed;
+      dynK += (1 + 0.4 * Math.min(1, n / 25) + 0.15 * Math.min(1, v) - dynK) * (1 - Math.exp(-0.8 * dt));
+    }
+    // Bajo techo todos los modos se funden hacia la persecución (con el yaw del modo): desde arriba se vería la mesa
+    // Persecución baja en teléfono: pantalla chica, se aleja y sube algo más (vertical, más: el ancho visible es poco) y mira menos adelante
+    const cm2 = save.camMode === "baja" && isTouch ? (engine.getAspectRatio(cam) < 1 ? { back: 14, up: 9, look: 1 } : { back: 9.5, up: 5.5, look: 5 }) : cm;
+    const lab = LAB.on && save.camMode === "actual", P = CAMS.actual;
+    const gb = B.Scalar.Lerp(lab ? LAB.back : cm2.back, P.back, roofK), gl = B.Scalar.Lerp(cm2.look, P.look, roofK);
+    let gu = B.Scalar.Lerp(lab ? LAB.up : cm2.up, P.up, roofK);
+    const zm = (LAB.on ? 1 : save.zoom) * outroZ * (save.camMode === "dinamica" ? dynK : 1), zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
+    gu *= zu;
+    if (save.camMode === "cenital") { // la esquina del cuadro (a ras del piso) no pasa del anillo de aparición menos 3 m, con cualquier zoom, FOV y aspecto
+      const th = Math.tan(cam.fov / 2), asp = engine.getAspectRatio(cam);
+      gu = Math.min(gu * (asp < 1 ? 1.8 : 1), (R.spawn_anillo_min - 3) / Math.hypot(th, th * asp));
+    }
     const fp = state === "outro" && outroAt ? outroAt : car.pos; // foco de la cámara
-    const want = fp.subtract(back.scale(close ? 5.5 : LAB.back * zb)).addInPlace(new B.Vector3(0, close ? 3.2 : LAB.up * zu, 0));
+    const want = fp.subtract(back.scale(close ? 5.5 : gb * zb)).addInPlace(new B.Vector3(0, close ? 3.2 : gu, 0));
     cam.position = B.Vector3.Lerp(cam.position, want, close ? 1 - Math.exp(-8 * dt) : k);
-    B.Vector3.LerpToRef(camTarget, close ? car.pos.add(new B.Vector3(0, -1.4, 0)) : fp.add(back.scale(3)), close ? 0.2 : k * 1.5, camTarget);
+    B.Vector3.LerpToRef(camTarget, close ? car.pos.add(new B.Vector3(0, -1.4, 0)) : fp.add(back.scale(gl)), close ? 0.2 : k * 1.5, camTarget);
     // Lo que queda entre cámara y auto se tramea (screen-door en render.ts) mientras tapa
     if (!simulating) {
       const to = car.pos.add(new B.Vector3(0, 0.6, 0)).subtractInPlace(cam.position), len = to.length();

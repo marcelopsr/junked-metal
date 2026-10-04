@@ -294,6 +294,6 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 body.tedit #fe { visibility: hidden; }
 body.tedit #touch > * { display: block !important; }
 body.tedit #stickZone { outline: 1px dashed #ffffff44; }
-body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause) { outline: 2px dashed var(--turbo); outline-offset: 3px; touch-action: none; }
-body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause)::after { content: ""; position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px; background: var(--turbo); }
+body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam) { outline: 2px dashed var(--turbo); outline-offset: 3px; touch-action: none; }
+body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam)::after { content: ""; position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px; background: var(--turbo); }
 @media (max-width: 500px) { #opts .row.prof .lb { display: none; } #opts .row.prof input { flex: 1 1 auto; } }

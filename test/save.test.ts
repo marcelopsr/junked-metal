@@ -5,7 +5,7 @@ import type { Save } from "../src/menu";
 
 // Valores por defecto mínimos: lo que parseSave toca y lo que se mezcla (el resto del tipo no importa acá)
 const D = {
-  scaler: "simple", scale: 0.75, fsr: "calidad", sharpen: 0, bloom: true, fov: 49, aa: "none", shadowQ: "mid", detail: "medio", texRes: 512, aniso: 4, menuFps: 60,
+  scaler: "simple", scale: 0.75, fsr: "calidad", sharpen: 0, bloom: true, fov: 49, camMode: "actual", aa: "none", shadowQ: "mid", detail: "medio", texRes: 512, aniso: 4, menuFps: 60,
   perm: { hp: 0, dmg: 0 }, kit: { wing: "serie", decal: "nada" }, vol: { master: 1, sfx: 1 }, pad: { dead: 0.15, sens: 1, invX: false, invY: false, stick: "left", mode: "trig", btn: { boost: [0], cam: [8], ok: [0] } },
   race: { kb1: { up: ["KeyW", ""], drift: ["Space", "ShiftLeft"] }, kb2: { up: ["ArrowUp", ""] }, pad: { accel: [7, 0] } }, touch: 1, stats: { runs: 0, dmg: {}, zone: {} },
   scrap: 0, cars: ["buggy"], ach: [], keys: { up: ["KeyW", "ArrowUp"], boost: ["Space", ""], pause: ["Escape", "KeyP"] }, ability: "bombardeo", beast: {}, preset: "medio",
@@ -39,6 +39,12 @@ describe("parseSave", () => {
     const s = load({ lookv: 6, gfxv: 1, scale: 9, fov: -5, bright: 0, gamma: "x", aa: "taa", fsr: "raro", shadowQ: "x", texRes: 1024, aniso: 3, fpsCap: 59 });
     expect([s.scale, s.fov, s.bright, s.gamma]).toEqual([1, 40, 0.6, 1]);
     expect(s.aa).toBe("fxaa"); expect(s.fsr).toBe("calidad"); expect(s.shadowQ).toBe("mid"); expect(s.texRes).toBe(512); expect(s.aniso).toBe(4); expect(s.fpsCap).toBe(0);
+  });
+  it("modo de cámara: solo los conocidos, lo demás vuelve a Persecución", () => {
+    expect(load({ camMode: "cenital" }).camMode).toBe("cenital");
+    expect(load({ camMode: "drone" }).camMode).toBe("actual");
+    expect(load({ camMode: 3 }).camMode).toBe("actual");
+    expect(load({}).camMode).toBe("actual");
   });
   it("registro por bicho: solo tipos conocidos, números positivos y zonas existentes", () => {
     const s = load({ beast: { hormiga: { first: "2026-10-04", hurt: -3, by: { gomitas: 5, clips: -1, x: "a" }, zones: ["patio", "luna"] }, dragon: { hurt: 9 }, gato: { first: "ayer" } } });

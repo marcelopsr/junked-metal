@@ -10,6 +10,11 @@ export type SaveDeps = {
   presets: Record<string, object>;
 };
 
+/** Modos de cámara de partida (Configuración → Juego; se alternan en partida con Cambiar cámara). Los parámetros viven en main.ts (CAMS). */
+export const CAM_MODES = ["actual", "cenital", "iso", "baja", "dinamica"] as const;
+export type CamMode = (typeof CAM_MODES)[number];
+export const CAM_NAMES: Record<CamMode, string> = { actual: "Persecución", cenital: "Cenital fija", iso: "Isométrica", baja: "Persecución baja", dinamica: "Dinámica" };
+
 // ---------- Controles ----------
 const isCode = (v: unknown): v is string => typeof v === "string" && v.length < 32 && /^[A-Za-z0-9]*$/.test(v);
 const isBtn = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= -1 && (v as number) <= 16;
@@ -23,7 +28,7 @@ export function binds<T>(v: unknown, d: Record<string, T[]>, ok: (x: unknown) =>
     return [a, Array.isArray(x) && x.length === def.length && x.every(ok) ? [...x] : [...def]];
   }));
 }
-const TCTL = ["stick", "boost", "drift", "abil", "pause"];
+const TCTL = ["stick", "boost", "drift", "abil", "pause", "cam"];
 /** Lo que define los controles (lo de la partida y lo de cada perfil), validado contra los defectos de `D`. */
 export function ctlPart(o: Record<string, any>, D: Save) {
   const num = (v: unknown, lo: number, hi: number, d: number) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
@@ -83,7 +88,8 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     s.scaler = one(s.scaler, ["simple", "fsr"], D.scaler); s.fsr = one(s.fsr, ["ultra", "calidad", "equilibrado", "rendimiento"], D.fsr); if (typeof s.bloom !== "boolean") s.bloom = D.bloom; if (s.aa === "taa") s.aa = "fxaa"; // TAA se quitó: quien lo tenía guardado pasa a FXAA
     s.aa = one(s.aa, ["none", "fxaa", "msaa2", "msaa4", "msaa8"], D.aa);
     s.shadowQ = one(s.shadowQ, ["off", "low", "mid", "high"], D.shadowQ); s.detail = one(s.detail, ["bajo", "medio", "alto", "ultra"], D.detail);
-    s.texRes = one(s.texRes, [128, 256, 512], D.texRes); s.aniso = one(s.aniso, [1, 2, 4, 8, 16], D.aniso); s.fpsCap = one(s.fpsCap, [0, 30, 60, 120], 0); s.menuFps = one(s.menuFps, [0, 30, 60], D.menuFps);
+    s.texRes = one(s.texRes, [128, 256, 512], D.texRes); s.aniso = one(s.aniso, [1, 2, 4, 8, 16], D.aniso); s.camMode = one(s.camMode, CAM_MODES, D.camMode);
+    s.fpsCap = one(s.fpsCap, [0, 30, 60, 120], 0); s.menuFps = one(s.menuFps, [0, 30, 60], D.menuFps);
     s.preset = deps.presetOf({ shadowQ: s.shadowQ, detail: s.detail, texRes: s.texRes, aniso: s.aniso, bloom: s.bloom });
     return { ...structuredClone(D), ...s, decals, decalSel, perm: { ...D.perm, ...s.perm }, kit: { ...D.kit, ...s.kit }, vol: { ...D.vol, ...s.vol },
       stats: { ...D.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };

@@ -74,6 +74,11 @@ export const sessions = [
     { id: "hormigas300", act: labAnts, shot: false }, // solo medición: 300 instancias
     { id: "preset-bajo", act: async (p) => { await p.evaluate(() => { window.__cfg({ preset: "bajo" }); window.__lab({}); }); } }, // preajuste Bajo (lo demás corre en Medio, el de fábrica)
     { id: "fsr-fxaa", act: async (p) => { await p.evaluate(() => { window.__cfg({ preset: "medio", scaler: "fsr", fsr: "rendimiento", aa: "fxaa", sharpen: 0.6 }); window.__lab({}); }); } }, // FXAA antes del agrandado de FSR
+    // Modos de cámara (Configuración → Juego), al final de la sesión: __cfg cambia el modo sin guardar y __lab rearma la escena. En cel solo los fijos
+    ...["actual", "cenital", "iso", "baja", "dinamica"].map((m) => ({ id: "cam-" + m, perf: false, vps: m === "actual" || m === "dinamica" ? ["pc"] : undefined,
+      act: async (p) => { await p.evaluate((m) => { window.__cfg({ preset: "medio", scaler: "simple", aa: "none", sharpen: 0, camMode: m }); window.__lab({}); }, m); } })),
+    // Teléfono apaisado (último: deja el viewport girado para el resto de la sesión)
+    { id: "cam-baja-apaisado", perf: false, vps: ["cel"], act: async (p) => { await p.setViewportSize({ width: 844, height: 390 }); await p.waitForTimeout(100); await p.evaluate(() => { window.__cfg({ camMode: "baja" }); window.__lab({}); }); } },
   ] },
   { id: "partida", query: "?mute&seed=3", shots: [
     { id: "curso", act: partida(90) },

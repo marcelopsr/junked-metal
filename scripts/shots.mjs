@@ -35,7 +35,7 @@ try {
   for (const vp of a.vp ? [a.vp] : ["pc", "cel"]) {
     for (const s of sessions) {
       if (s.vps && !s.vps.includes(vp)) continue;
-      const shots = s.shots.filter((sh) => sh.shot !== false && (!only || only.some((o) => `${vp}-${s.id}-${sh.id}`.includes(o))));
+      const shots = s.shots.filter((sh) => sh.shot !== false && (!sh.vps || sh.vps.includes(vp)) && (!only || only.some((o) => `${vp}-${s.id}-${sh.id}`.includes(o))));
       if (!shots.length) continue;
       const page = await open(browser, s.query, vp, { freeze: true });
       for (const sh of s.shots) { // los pasos que no se capturan igual corren: el estado de la sesión depende de ellos
