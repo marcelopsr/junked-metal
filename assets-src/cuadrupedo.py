@@ -118,6 +118,28 @@ def paint(ob, S, mats, region):
     print("CARAS por material", {m.name: k for m, k in zip(mats, n)})
 
 
+def refine(ob, S, region, rounds=1, keep=7400):
+    """Contornos de las manchas/rayas más finos: parte en dos las aristas de los triángulos que tocan otro material
+    (la forma no cambia, solo se reparte el color con más resolución). Una ronda que pasaría de `keep` triángulos
+    (deja margen para los ojos, que se agregan después) no se aplica. Va después de paint() y antes de rig()."""
+    for _ in range(rounds):
+        bm = bmesh.new()
+        bm.from_mesh(ob.data)
+        edges = {e for f in bm.faces for e in f.edges if any(o.material_index != f.material_index for o in e.link_faces)}
+        bmesh.ops.subdivide_edges(bm, edges=list(edges), cuts=1, use_grid_fill=True)
+        bmesh.ops.triangulate(bm, faces=bm.faces)
+        if len(bm.faces) > keep:
+            bm.free()
+            break
+        for f in bm.faces:
+            f.smooth = True
+        bm.to_mesh(ob.data)
+        bm.free()
+        for f in ob.data.polygons:
+            f.material_index = region(J(f.center) / S, J(f.normal))
+    print("TRIS tras refine", sum(len(p.vertices) - 2 for p in ob.data.polygons))
+
+
 def rig(ob, ao):
     """Pesos por calor; los vértices que el calor no alcanza toman el hueso más cercano."""
     bpy.ops.object.select_all(action="DESELECT")

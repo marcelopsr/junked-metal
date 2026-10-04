@@ -1,5 +1,6 @@
 import type { Kind } from "./enemies";
 import { rng } from "./rng";
+import { BAL } from "./balance";
 
 // Perfil de una partida: todo sale de la semilla. Cada eje cambia cómo se VE y cómo se JUEGA,
 // para que dos partidas nunca se sientan iguales aunque el patio sea reconocible.
@@ -41,21 +42,20 @@ export const nightfall = (p: number) => { const x = Math.min(1, Math.max(0, (p -
 
 // Plaga: cambia la mezcla de enemigos (multiplicador de peso) y adelanta la llegada de algunos (minuto)
 export type Plague = { name: string; mult: Partial<Record<Kind, number>>; from: Partial<Record<Kind, number>> };
-export const PLAGUES: Plague[] = [
-  { name: "PLAGA DE HORMIGAS", mult: { hormiga: 1.6, friccion: 0.8 }, from: {} },
-  { name: "INVASIÓN DE JUGUETES", mult: { friccion: 2, robot: 1.8, hormiga: 0.6 }, from: { robot: 0.8 } },
-  { name: "LLUVIA DE ÁCIDO", mult: { escupidora: 2.4 }, from: { escupidora: 0.6 } },
-  { name: "ESCARABAJOS TEMPRANOS", mult: { escarabajo: 1.5 }, from: { escarabajo: 2.5 } },
-  { name: "PATIO MIXTO", mult: { hormiga: 0.8, friccion: 1.3, robot: 1.3, escupidora: 1.3 }, from: { robot: 1, escupidora: 1 } },
-];
+// Los valores salen de la tabla plagas de balance.json: mult_<bicho> = multiplicador de peso (1 = igual), desde_<bicho> = minuto de llegada (-1 = el de siempre)
+export const PLAGUES: Plague[] = BAL.plagas.map((p) => {
+  const r = p as unknown as Record<string, number>, mult: Plague["mult"] = {}, from: Plague["from"] = {};
+  for (const k of ["hormiga", "friccion", "escupidora", "robot", "polilla", "escarabajo"] as const) { mult[k] = r["mult_" + k]; if (r["desde_" + k] >= 0) from[k] = r["desde_" + k]; }
+  return { name: p.nombre, mult, from };
+});
 
 // Lluvia: modificador de clima que activan algunas semillas. DISEÑO: valores a decidir por el usuario.
 export const RAIN = {
-  chance: 0.25,       // fracción de semillas con lluvia
-  from: [0.5, 0.7],   // empieza entre estas fracciones de la partida (0 = inicio, 1 = 10:00)
-  grip: 0.8,          // multiplicador del agarre lateral con lluvia plena (1 = sin efecto; menos = el auto patina más)
-  ramp: 0.4,          // 1/s: qué tan rápido sube la intensidad al empezar (0,4 = ~6 s)
-  wetSecs: 60,        // segundos de lluvia hasta el suelo empapado y los charcos al máximo
+  chance: BAL.ritmo.lluvia_prob,       // fracción de semillas con lluvia
+  from: [BAL.ritmo.lluvia_desde_min, BAL.ritmo.lluvia_desde_max],   // empieza entre estas fracciones de la partida (0 = inicio, 1 = 10:00)
+  grip: BAL.ritmo.lluvia_agarre,          // multiplicador del agarre lateral con lluvia plena (1 = sin efecto; menos = el auto patina más)
+  ramp: BAL.ritmo.lluvia_subida,          // 1/s: qué tan rápido sube la intensidad al empezar (0,4 = ~6 s)
+  wetSecs: BAL.ritmo.lluvia_empapa_s,        // segundos de lluvia hasta el suelo empapado y los charcos al máximo
 };
 
 export type Elite = "rapida" | "blindada";
@@ -82,8 +82,8 @@ const pickFinal = (seed: number) => FINALS[Math.floor(frac(seed * 0.7548776662) 
 
 // Élites (2 o 3 por partida) entre 1:40 y 9:20, una por tramo; momento y variante también salen de la semilla sin rng()
 const pickElites = (seed: number): [number, Elite][] => {
-  const n = 2 + Math.floor(frac(seed * 0.5698402910) * 2), span = 460 / n;
-  return Array.from({ length: n }, (_, i) => [100 + span * (i + 0.15 + 0.7 * frac(seed * (0.3247 + 0.1 * i))), frac(seed * (0.8191 + 0.07 * i)) < 0.5 ? "rapida" : "blindada"]);
+  const n = BAL.ritmo.elite_cantidad_min + Math.floor(frac(seed * 0.5698402910) * BAL.ritmo.elite_cantidad_rango), span = BAL.ritmo.elite_tramo_s / n;
+  return Array.from({ length: n }, (_, i) => [BAL.ritmo.elite_desde_s + span * (i + 0.15 + 0.7 * frac(seed * (0.3247 + 0.1 * i))), frac(seed * (0.8191 + 0.07 * i)) < 0.5 ? "rapida" : "blindada"]);
 };
 
 export function makeProfile(seed: number): Profile {
@@ -93,9 +93,9 @@ export function makeProfile(seed: number): Profile {
     climate: pick(NIGHTS),
     plague: pick(PLAGUES),
     minis: pickMinis(rng()),
-    swarmEvery: 45 + rng() * 35,
-    ballEvery: 60 + rng() * 45,
-    chestEvery: 95 + rng() * 50,
+    swarmEvery: BAL.ritmo.enjambre_cada_min + rng() * BAL.ritmo.enjambre_cada_rango,
+    ballEvery: BAL.ritmo.pelota_cada_min + rng() * BAL.ritmo.pelota_cada_rango,
+    chestEvery: BAL.ritmo.cofre_cada_min + rng() * BAL.ritmo.cofre_cada_rango,
     rainAt: rainAt(seed),
     final: pickFinal(seed),
     elites: pickElites(seed),

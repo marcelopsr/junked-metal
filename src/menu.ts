@@ -3,6 +3,7 @@
 import "./menu.css";
 import type { DefaultRenderingPipeline, Scene } from "@babylonjs/core";
 import { CARS } from "./car";
+import { costos } from "./balance";
 import { DEF, type Kind } from "./enemies";
 import { ctl, KEYS, PAD, padPressed, type Action } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
@@ -359,15 +360,15 @@ function renderMain() {
 // Curva (partida típica ≈ 100 tornillos): chasis 1-5 de 20 a 100 (una mejora por partida al empezar), 6-10 de 180 a 660
 // (una línea completa ≈ 23 partidas); autos, pilotos y zonas 400-1000 (4-10 partidas); revivir 2 y cuarta ranura 1800-2200 (20+).
 type PermK = keyof Save["perm"];
-const CH = Array.from({ length: 10 }, (_, l) => Math.round((20 * (l + 1) * (l < 5 ? 1 : 1.5 + (l - 5) * 0.45)) / 5) * 5);
+// Los precios por nivel están en balance.json (tabla precios; el chasis sigue 20 x nivel y después x1,5 con +0,45 por nivel, redondeado a 5)
 const PERKS: { k: PermK; cat: "chasis" | "equipo"; name: string; desc: string; cost: number[] }[] = [
-  { k: "hp", cat: "chasis", name: "Chasis reforzado", desc: "+10 vida", cost: CH }, { k: "dmg", cat: "chasis", name: "Piñón afilado", desc: "+10% daño", cost: CH },
-  { k: "spd", cat: "chasis", name: "Motor rebobinado", desc: "+4% velocidad", cost: CH }, { k: "mag", cat: "chasis", name: "Imán de parlante", desc: "+10% imán", cost: CH },
-  { k: "xp", cat: "equipo", name: "Contador de tuercas", desc: "+5% XP por nivel", cost: [80, 180, 320, 500] },
-  { k: "reroll", cat: "equipo", name: "Dado cargado", desc: "+1 re-sorteo de cartas por partida (R o botón Y)", cost: [100, 250, 450] },
-  { k: "extra", cat: "equipo", name: "Caja de repuestos", desc: "Arranca con un arma extra al azar", cost: [500] },
-  { k: "revive", cat: "equipo", name: "Batería de reserva", desc: "Revive una vez por partida con media vida", cost: [600, 1800] },
-  { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: [2200] },
+  { k: "hp", cat: "chasis", name: "Chasis reforzado", desc: "+10 vida", cost: costos("hp") }, { k: "dmg", cat: "chasis", name: "Piñón afilado", desc: "+10% daño", cost: costos("dmg") },
+  { k: "spd", cat: "chasis", name: "Motor rebobinado", desc: "+4% velocidad", cost: costos("spd") }, { k: "mag", cat: "chasis", name: "Imán de parlante", desc: "+10% imán", cost: costos("mag") },
+  { k: "xp", cat: "equipo", name: "Contador de tuercas", desc: "+5% XP por nivel", cost: costos("xp") },
+  { k: "reroll", cat: "equipo", name: "Dado cargado", desc: "+1 re-sorteo de cartas por partida (R o botón Y)", cost: costos("reroll") },
+  { k: "extra", cat: "equipo", name: "Caja de repuestos", desc: "Arranca con un arma extra al azar", cost: costos("extra") },
+  { k: "revive", cat: "equipo", name: "Batería de reserva", desc: "Revive una vez por partida con media vida", cost: costos("revive") },
+  { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: costos("cards") },
 ];
 const PERK_ICON: Record<PermK, string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", reroll: "resorte", extra: "cofre", revive: "heal", cards: "evo" };
 const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;

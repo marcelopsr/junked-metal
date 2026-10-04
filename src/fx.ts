@@ -193,10 +193,12 @@ export function splat(x: number, z: number, color: string, s: number) {
 }
 
 // Cadáveres patas arriba: el propio nodo del enemigo (con sus patas hijas) sin física, que se encoge al final
-type Corpse = { m: B.InstancedMesh; life: number };
+type Corpse = { m: B.InstancedMesh; life: number; anim?: (dt: number) => void };
 const corpses: Corpse[] = [];
-export function corpse(m: B.InstancedMesh, h: number) {
+// anim (jefes GLB): el cadáver no se voltea, su propia animación de muerte (Enemy.animate) corre cada cuadro
+export function corpse(m: B.InstancedMesh, h: number, anim?: (dt: number) => void) {
   if (corpses.length > 60) corpses.shift()!.m.dispose();
+  if (anim) { corpses.push({ m, life: 6, anim }); return; }
   m.rotationQuaternion = (m.rotationQuaternion ?? B.Quaternion.Identity()).multiply(B.Quaternion.RotationAxis(B.Axis.Z, Math.PI));
   m.position.y = h;
   corpses.push({ m, life: 5 + Math.random() * 2 });
@@ -213,6 +215,7 @@ export function tickFx(dt: number) {
   }
   for (let i = corpses.length - 1; i >= 0; i--) {
     const k = corpses[i];
+    k.anim?.(dt);
     if ((k.life -= dt) < 1) k.m.scaling.setAll(Math.max(0.01, k.life));
     if (k.life <= 0) { k.m.dispose(); corpses.splice(i, 1); }
   }

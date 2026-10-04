@@ -7,7 +7,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "demo": "vite preview --port 4173 --strictPort"
+    "demo": "vite preview --port 4173 --strictPort",
+    "balance:xlsx": "node scripts/balance-xlsx.mjs",
+    "balance:import": "node scripts/balance-import.mjs",
+    "balance:check": "node scripts/balance-check.mjs",
+    "pm2:start": "pm2 start ecosystem.config.cjs && pm2 save",
+    "pm2:status": "pm2 status rc-dev rc-demo",
+    "pm2:logs": "pm2 logs rc-dev rc-demo --lines 50",
+    "demo:refresh": "npm run build && pm2 restart rc-demo"
   },
   "keywords": [],
   "type": "module",
@@ -23,6 +30,7 @@
   "devDependencies": {
     "@gltf-transform/cli": "^4.5.1",
     "@types/earcut": "^3.0.0",
+    "exceljs": "^4.4.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.1"
   }

@@ -25,8 +25,8 @@ export const SHOTS: Record<string, number[]> = {
   garage: [...b(2, 4, 11), ...b(-2.2, 2.2, 1)],
   shop: [...b(-4, 8, 14), ...b(10, 9, -14)],
   config: [...b(10, 4.2, 11), ...b(14.5, 1, 3.5)],
-  // Celular vertical (_v): el auto centrado y más lejos; en principal y garaje queda arriba, sobre el menú
-  title_v: [3.9, 1.7, 8, 0, 0.75, 0], main_v: [3.6, 1.2, 9.5, 0, 2.6, 0], garage_v: [...b(2.6, 2.8, 12), ...b(0, 2.6, 1)],
+  // Celular vertical (_v): el auto centrado y más lejos; en el principal queda abajo, en la franja libre bajo los botones; en garaje, arriba sobre el menú
+  title_v: [3.9, 1.7, 8, 0, 0.75, 0], main_v: [5.4, 1.4, 14, 0, 4.8, 0], garage_v: [...b(2.6, 2.8, 12), ...b(0, 2.6, 1)],
 };
 const SCENE: Record<string, Id> = { garage: "bench", shop: "bench", config: "bench" }; // el resto, estante
 const sceneOf = (scr: string): Id => SCENE[scr] ?? "shelf";

@@ -9,3 +9,4 @@ graphify-out/
 .claude/
 CLAUDE.md
 .gitattributes
+logs/

@@ -3,6 +3,7 @@ import { box, cyl, merge, sph, template, tor, tube } from "./models";
 import { debris, splat } from "./fx";
 import { canvasTex, M, pbr, shadows, TEX } from "./render";
 import { rng, seedRng } from "./rng";
+import { precio } from "./balance";
 import type { Climate } from "./run";
 
 // Zonas de juego. Un auto RC mide ~2 unidades (1 u ≈ 4,5 cm): una maceta es un edificio, un auto real es una montaña.
@@ -84,7 +85,7 @@ type Zone = {
 const TUBO: Climate = { id: "tubo", name: "TUBO FLUORESCENTE", sun: [0.4, -1, 0.3], sunColor: "#dff2e6", sunI: 3, hemiI: 1.2, sky: ["#0b0d0d", "#121615", "#161b1a", "#0b0d0d"], exposure: 1.1, fog: 0.005, ramp: ["#0c1214", "#4a6a62", "#eef6e8"] };
 
 // ponytail: precios provisorios (Taller → Zonas), a calibrar con el balance de tornillos
-export const ZONE_COST = { garaje: 700, jardin: 1000 }; // curva de precios: como un auto o algo más (menu.ts, Taller)
+export const ZONE_COST = { garaje: precio("zona_garaje"), jardin: precio("zona_jardin") }; // curva de precios: como un auto o algo más (menu.ts, Taller)
 export const ZONES: Record<ZoneId, Zone> = {
   patio: { name: "Patio trasero", short: "Patio", desc: "Pileta, mesa de jardín y la huerta.", half: 160, cost: 0, grass: 1, grassH: 1,
     rects: [[0, -30, 24, 17], [50, 45, 21, 16]],

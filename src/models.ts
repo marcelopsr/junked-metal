@@ -1,5 +1,6 @@
 import * as B from "@babylonjs/core";
 import earcut from "earcut";
+import { precio } from "./balance";
 import { M, pbr, shadows } from "./render";
 
 // Modelos procedurales. Las piezas se fusionan en una sola malla (con multi-material)
@@ -107,10 +108,10 @@ export const RIMS = ["#ffc300", "#c0c0c0", "#18181b", "#ef4444"];
 
 // Piezas visuales del garaje: [nombre, precio en tornillos]. La primera opción de cada ranura viene de fábrica.
 export const PARTS = {
-  wing: { name: "Alerón", opts: { serie: ["De serie", 0], alto: ["Alerón alto", 60], doble: ["Biplano", 110] } },
-  decal: { name: "Calcos", opts: { nada: ["Sin calcos", 0], numero: ["Número", 40], rayo: ["Rayo", 60], damero: ["Damero", 90] } },
-  lamp: { name: "Faro", opts: { calido: ["Cálido", 0], ambar: ["Ámbar", 50], cian: ["Cian", 80], violeta: ["Violeta", 120] } },
-  exhaust: { name: "Escape", opts: { nada: ["Sin escape", 0], doble: ["Doble caño", 60], chimenea: ["Chimeneas", 100] } },
+  wing: { name: "Alerón", opts: { serie: ["De serie", 0], alto: ["Alerón alto", precio("pieza_wing_alto")], doble: ["Biplano", precio("pieza_wing_doble")] } },
+  decal: { name: "Calcos", opts: { nada: ["Sin calcos", 0], numero: ["Número", precio("pieza_decal_numero")], rayo: ["Rayo", precio("pieza_decal_rayo")], damero: ["Damero", precio("pieza_decal_damero")] } },
+  lamp: { name: "Faro", opts: { calido: ["Cálido", 0], ambar: ["Ámbar", precio("pieza_lamp_ambar")], cian: ["Cian", precio("pieza_lamp_cian")], violeta: ["Violeta", precio("pieza_lamp_violeta")] } },
+  exhaust: { name: "Escape", opts: { nada: ["Sin escape", 0], doble: ["Doble caño", precio("pieza_exhaust_doble")], chimenea: ["Chimeneas", precio("pieza_exhaust_chimenea")] } },
 } as const satisfies Record<string, { name: string; opts: Record<string, readonly [string, number]> }>;
 export type Slot = keyof typeof PARTS;
 // Faro: [emisivo de las ópticas, luz del SpotLight]. Nada rojo ni verde (código de amenaza y disparos propios).
@@ -404,7 +405,7 @@ export function pilotParts(id: string): B.Mesh[] {
 
 export function enemyTemplate(kind: string, scale = 1): B.Mesh {
   return template(kind, () => {
-    // hormiga, escupidora y escarabajo no están acá: son GLB animados (glb.ts, public/models/)
+    // hormiga, escupidora, escarabajo, Felipe (perro) y Eulalio (gato) no están acá: son GLB animados (glb.ts, public/models/)
     if (kind === "rey") {
       const shell = M.metal("#d4a017");
       const dark = M.plastic("#111");
@@ -517,49 +518,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         tube([[0, 0.9, -4.1], [0, 0.3, -4.7], [0.6, 0.1, -5.4]], 0.12, dark),
       ];
     }
-    if (kind === "gato") {
-      // Eulalio: gato naranja atigrado, ojos verdes enormes, cola en S
-      const fur = M.plastic("#f28c28"), stripe = M.matte("#c96a12"), cream = M.matte("#ffe3b8"), pink = M.plastic("#ff9bb3");
-      return [
-        sph(3.6, fur, [0, 2.5, -0.2], [1, 0.85, 1.55], 14),
-        ...[-1.6, -0.6, 0.5, 1.5].map((z) => box(3.1, 0.35, 0.4, stripe, [0, 4.1, z], [0.05, 0, 0])),
-        sph(2.5, cream, [0, 1.6, 1.4], [0.8, 0.5, 1], 10),
-        sph(2.7, fur, [0, 3.4, 3.3], [1.1, 1, 1], 14),
-        ...[-0.5, 0, 0.5].map((x) => box(0.18, 0.7, 0.2, stripe, [x, 4.7, 3.9])),
-        ...[-1, 1].flatMap((s) => [
-          cyl(0, 1.2, 1.5, fur, [s * 1.2, 5.1, 3.1], [0, 0, -s * 0.2], 8), cyl(0, 0.8, 1.1, pink, [s * 1.2, 5.0, 3.3], [0, 0, -s * 0.2], 8),
-          sph(0.95, M.glow("#a8ff3a"), [s * 0.85, 3.7, 4.55]), box(0.18, 0.85, 0.12, M.plastic("#111"), [s * 0.85, 3.7, 5.0]),
-          box(1.1, 0.07, 0.07, M.matte("#fff7e8"), [s * 1.5, 3.05, 5.0], [0, 0, s * 0.18]), box(1.1, 0.07, 0.07, M.matte("#fff7e8"), [s * 1.5, 2.85, 5.0], [0, 0, -s * 0.18]),
-          cyl(0.55, 0.6, 2.4, fur, [s * 1.1, 1.2, 2.4], undefined, 10), sph(0.9, cream, [s * 1.1, 0.2, 2.7], [1, 0.6, 1.3], 8),
-          cyl(0.55, 0.6, 2.4, fur, [s * 1.1, 1.2, -2.4], undefined, 10), sph(0.9, cream, [s * 1.1, 0.2, -2.1], [1, 0.6, 1.3], 8),
-        ]),
-        sph(0.5, pink, [0, 3.0, 5.2], [1.3, 0.8, 0.8], 6),
-        tube([[0, 2.5, -3.6], [0, 2.2, -5.2], [0.8, 3.6, -6.0], [0.2, 5.4, -5.6], [-0.6, 6.4, -5.0]], 0.38, fur),
-        sph(0.8, stripe, [-0.6, 6.5, -5.0], undefined, 8),
-      ];
-    }
-    // Felipe: bulldog francés (jefe final) — cabezón, orejas de murciélago, hocico chato, lengua afuera y los ojos desparejos
-    const fur = M.plastic("#d9b38a"), mask = M.matte("#4a3426"), white = M.plastic("#fffdf5"), pink = M.plastic("#ff7aa0"), brown = M.matte("#c9a273");
-    return [
-      sph(5.2, fur, [0, 3.5, -0.4], [0.92, 0.82, 1.35], 14),
-      sph(3.2, white, [0, 3.0, 2.2], [0.8, 0.9, 0.5], 10),
-      sph(4.2, fur, [0, 5.4, 3.6], [1.25, 1, 1], 14),
-      sph(2.6, mask, [0, 4.9, 5.5], [1.3, 0.75, 0.7], 10),
-      box(1.1, 0.7, 0.4, M.plastic("#111"), [0, 5.3, 6.15]),
-      ...[-1, 1].map((s) => box(0.07, 0.8, 0.07, mask, [s * 0.35, 4.55, 6.1])),
-      ...[0, 1, 2].map((k) => tor(2.4 - k * 0.3, 0.14, brown, [0, 6.5 + k * 0.4, 4.8 - k * 0.3], [Math.PI / 2.6, 0, 0], 14)),
-      ...[-1, 1].flatMap((s) => [
-        cyl(1.0, 1.5, 3.2, fur, [s * 2.0, 8.0, 3.1], [-0.15, 0, -s * 0.28], 14), cyl(0.6, 1.0, 2.5, pink, [s * 2.0, 7.95, 3.3], [-0.15, 0, -s * 0.28], 12),
-        cyl(1.1, 1.2, 2.2, fur, [s * 1.5, 1.1, 2.6], undefined, 12), sph(1.5, white, [s * 1.5, 0.4, 3.0], [1, 0.55, 1.3], 8),
-        cyl(1.1, 1.2, 2.2, fur, [s * 1.5, 1.1, -2.6], undefined, 12), sph(1.5, white, [s * 1.5, 0.4, -2.2], [1, 0.55, 1.3], 8),
-      ]),
-      // ojos desparejos: uno enorme con la pupila arriba, otro chico con la pupila abajo y de costado
-      sph(1.7, white, [1.25, 6.4, 5.1], undefined, 12), sph(0.7, M.plastic("#111"), [1.4, 6.9, 5.85], undefined, 8), sph(0.28, M.glow("#ff2a1a"), [1.0, 7.1, 6.3], undefined, 6),
-      sph(1.1, white, [-1.35, 6.2, 5.2], undefined, 12), sph(0.5, M.plastic("#111"), [-1.0, 5.8, 5.85], undefined, 8),
-      box(1.1, 0.25, 2.0, pink, [0.2, 4.1, 6.4], [0.5, 0, 0.12]), sph(0.6, pink, [0.3, 3.4, 7.3], [1, 0.4, 1.3], 8),
-      box(5.6, 0.7, 0.9, M.plastic("#dc2626"), [0, 4.1, 2.4]), sph(0.6, M.metal("#ffd24d"), [0, 3.5, 3.0], [1, 1.2, 0.3], 8),
-      sph(1.2, fur, [0, 4.0, -4.1], undefined, 8),
-    ];
+    throw new Error(`enemyTemplate: ${kind} no tiene modelo procedural (los GLB van por glb.ts)`);
   }, scale);
 }
 

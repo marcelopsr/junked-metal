@@ -3,7 +3,7 @@ import * as B from "@babylonjs/core";
 import HavokPhysics from "@babylonjs/havok";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
-import { DEF, Enemy, pickWeighted, spawnTable, type Kind } from "./enemies";
+import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
 import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineKind, SFX } from "./sfx";
 import { ambient, burst, clearFx, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { ctl, input, isTouch, KEYS, padPressed, padSnap, pollInput, setupTouch } from "./input";
@@ -18,12 +18,14 @@ import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setSco
 import { buildLayout, HALF, initWorld, hitBreakables, obstacles, occluders, setWind, setZone, spawnPoint, underRoof, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
+import { BAL } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
 import { CAR_YAW, carSpot, menuOff, menuTick, SHOTS } from "./menuscene";
 import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace } from "./kart";
 
 const $ = (id: string) => document.getElementById(id)!;
+const R = BAL.ritmo, ATK = BAL.ataques; // balance.json: ritmo de la partida y ataques de bichos y jefes
 // Partida de 10 minutos: dos minijefes (sueltan cofres de evolución) y el jefe final a las 10:00
 let RUN_BOSSES: [number, Kind][] = [];
 let warned = false;
@@ -78,6 +80,7 @@ let rerolls = 0, revives = 0, offerTitle = ""; // del taller: Dado cargado y Bat
 let runSeed = 0;
 let profile: Profile;
 let simulating = false; // true durante __sim: sin DOM ni efectos caros
+let duel = -1, forceSeed = 0; // solo dev (__bossDuel): tope de bichos normales vivos (-1 = partida normal) y semilla forzada
 let enemies: Enemy[] = [];
 let gems: Gem[] = [];
 let pickups: Pickup[] = [];
@@ -92,7 +95,7 @@ let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number; hit?: boolean } | 
 let offers: Offer[] = [];
 let offerSel = 0;
 
-const xpNeed = (l: number) => Math.floor(4 + l * 2.5 + l * l * 0.3);
+const xpNeed = (l: number) => Math.floor(R.xp_nivel_base + l * R.xp_nivel_lineal + l * l * R.xp_nivel_cuad);
 
 // Habilidad activa (abilities.ts): enfriamiento, segundos activa, petardos por caer y ritmo del mundo (cámara lenta)
 let abil: AbilityId = "bombardeo", abilCd = 0, abilOn = 0, worldK = 1, bombs = 0, bombT = 0;
@@ -107,7 +110,7 @@ let bank: { t: number; scrap: number; dmg: Record<string, number>; rec?: RunRec 
 let touchIFrame = 0, hitStop = 0, smokeT = 0, skidT = 0, lastHpFrac = 1, smashCd = 0;
 
 // Macetas rotas sueltan tuercas y a veces una pila
-const smashed = (pots: B.Vector3[]) => { for (const p of pots) { SFX.break(); dropGems(p, 8); if (rng() < 0.35) dropPickup(p, "pila"); shake = Math.max(shake, 0.5); } };
+const smashed = (pots: B.Vector3[]) => { for (const p of pots) { SFX.break(); dropGems(p, R.maceta_xp); if (rng() < R.maceta_pila_prob) dropPickup(p, "pila"); shake = Math.max(shake, 0.5); } };
 
 // ---------- Plantillas de recolectables ----------
 const gemTpl = (v: 1 | 5 | 20) => template("gem" + v, () => [
@@ -116,7 +119,7 @@ const gemTpl = (v: 1 | 5 | 20) => template("gem" + v, () => [
 ], v === 20 ? 1.5 : 1);
 
 function dropGems(pos: B.Vector3, amount: number) {
-  if (gems.length > 350) { gainXp(amount); return; } // tope: se absorbe directo
+  if (gems.length > R.gemas_tope) { gainXp(amount); return; } // tope: se absorbe directo
   while (amount > 0) {
     const v: 1 | 5 | 20 = amount >= 20 ? 20 : amount >= 5 ? 5 : 1;
     amount -= v;
@@ -126,7 +129,7 @@ function dropGems(pos: B.Vector3, amount: number) {
   }
 }
 
-const PICKUP_CAP = 40; // por tipo; sin tope, a los 7-9 min había cientos en el piso (mallas + sombras) y la pestaña se caía
+const PICKUP_CAP = R.pickups_tope; // por tipo; sin tope, a los 7-9 min había cientos en el piso (mallas + sombras) y la pestaña se caía
 const pilaTpl = () => template("pila", () => [cyl(0.8, 0.8, 1.6, M.plastic("#22c55e"), [0, 0, 0], [0, 0, Math.PI / 2], 12)]);
 const imanTpl = () => template("iman", () => [sph(1.2, M.plastic("#ef4444"), [0, 0, 0])]);
 function dropPickup(pos: B.Vector3, type: Pickup["type"]) {
@@ -201,18 +204,18 @@ function startRun(d = false) {
   // Semilla de la partida: ?seed=N la fija (reproducible), si no, una nueva
   // Zona: el diario siempre en el patio; ?zone=garaje|jardin (solo dev) la fuerza. Se arma antes de sembrar: no toca la semilla.
   setZone(daily ? "patio" : (import.meta.env.DEV && new URLSearchParams(location.search).get("zone")) || save.zone);
-  runSeed = Number(new URLSearchParams(location.search).get("seed")) || (daily ? dailySeed() : newSeed());
+  runSeed = forceSeed || Number(new URLSearchParams(location.search).get("seed")) || (daily ? dailySeed() : newSeed());
   seedRng(runSeed);
   // Perfil de la partida: clima, plaga, orden de minijefes, ritmo de eventos y un patio distinto
   profile = makeProfile(runSeed);
   profile.climate = zoneClimate() ?? profile.climate; // interior (garaje): luz fija
   cycleS = -1;
   buildLayout();
-  RUN_BOSSES = [[200, profile.minis[0]], [400, profile.minis[1]], [600, profile.final]];
+  RUN_BOSSES = [[R.jefe1_s, profile.minis[0]], [R.jefe2_s, profile.minis[1]], [R.jefe_final_s, profile.final]];
   finalKind = RUN_BOSSES[RUN_BOSSES.length - 1][1]; // jefe final: vencerlo gana la partida
   // ponytail: maldiciones ocultas por ahora (decisión del usuario); volver a `daily ? [] : save.curses` y mostrar #curseBtn para reactivarlas
   const curses: typeof save.curses = [];
-  horde = curses.includes("horda") ? 1.5 : 1; noRepair = curses.includes("sinrep"); curseK = 1 + 0.3 * curses.length;
+  horde = curses.includes("horda") ? R.maldicion_horda : 1; noRepair = curses.includes("sinrep"); curseK = 1 + R.maldicion_tornillos * curses.length;
   endless = false; bank = null;
   abil = save.ability; abilCd = abilOn = bombs = 0; worldK = 1; shieldM = null;
   driveMul = 1; driftT = airT = trickT = 0; hudDrive(1);
@@ -230,7 +233,7 @@ function startRun(d = false) {
   hp = maxHp; boost = 100;
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
-  spawnAcc = 0; groupT = 0; swarmT = 90 + profile.swarmEvery * 0.5; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false; apagon = false;
+  spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false; apagon = false;
   camYaw = 0; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1);
   state = "play";
   scene.physicsEnabled = true;
@@ -277,7 +280,7 @@ function endRun(win: boolean, why: string) {
   state = simulating ? "over" : "outro"; // el cierre en cámara lenta (outroTick) abre los resultados
   engineStop(); music("over"); rainSfx(0);
   // Tornillos: los de la partida más tiempo y bajas, con el extra de las maldiciones (+30% cada una)
-  const earned = Math.floor((runScrap + Math.floor(time / 20) + Math.floor(kills / 25)) * curseK);
+  const earned = Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK);
   const prevBest = save.best, record = Math.floor(time) > save.best;
   const rec: RunRec = { t: Math.floor(time), kills, lv: level, seed: runSeed, win };
   if (!simulating && !LAB.on) { // las pruebas de dev no tocan el guardado real
@@ -401,7 +404,7 @@ function choose(i: number) {
   } else if (o.kind === "passive") passives[o.id as PassiveId] = o.lv!;
   else if (o.kind === "evo") { weapons.find((x) => x.id === o.id)!.evolved = true; banner(o.title.toUpperCase()); }
   else if (o.kind === "fusion") { weapons = fuse(weapons, o.id as WeaponId); banner(o.title.toUpperCase()); if (o.id in ACH) grant(o.id as AchId); }
-  else hp = Math.min(maxHp, hp + 40);
+  else hp = Math.min(maxHp, hp + R.carta_reparacion);
   recompute();
   state = "play";
   scene.physicsEnabled = true;
@@ -501,26 +504,32 @@ function kill(e: Enemy) {
   const juice = !simulating && !e.def.boss;
   if (juice && BUG_GOO[e.kind]) splat(e.pos.x, e.pos.z, BUG_GOO[e.kind]!, Math.max(e.def.size[0], e.def.size[2]) * 0.55);
   if (juice && (e.kind === "friccion" || e.kind === "robot")) { debris(e.pos, "#b8bcc2", 5, 8, 0.45); debris(e.pos, "#d4a017", 3, 9, 0.35); FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0))); }
-  if (e.def.xp) dropGems(e.pos, e.def.xp);
+  if (e.def.xp) dropGems(e.pos, e.def.xp * (e.def.boss ? 1 : TOUGH.xp));
   if (e.def.boss) {
     shake = 1.5;
-    runScrap += 25;
+    runScrap += R.tornillos_jefe;
     if (e.kind === "rey" || e.kind === "cortadora" || e.kind === "tarantula" || e.kind === "gato") grant(e.kind);
-    if (e.kind === finalKind && !endless) { outroAt = e.pos.clone(); e.dispose(); return endRun(true, FINAL_WIN[finalKind] ?? "El jefe final quedó fuera de combate."); }
+    if (e.kind === finalKind && !endless) { outroAt = e.pos.clone(); leave(e); return endRun(true, FINAL_WIN[finalKind] ?? "El jefe final quedó fuera de combate."); }
     dropPickup(e.pos, "cofre");
     hudBoss(null);
   } else {
     const r = rng();
-    if (r < 0.035) dropPickup(e.pos, "pila");
-    else if (r < 0.041) dropPickup(e.pos, "iman");
+    if (r < R.drop_pila_prob) dropPickup(e.pos, "pila");
+    else if (r < R.drop_pila_prob + R.drop_iman_prob) dropPickup(e.pos, "iman");
   }
   if (e.elite) { dropPickup(e.pos, "cofre"); e.aura?.dispose(); } // la élite suelta cofre; el aura no queda en el cadáver
   // Los insectos quedan patas arriba unos segundos; el resto desaparece
-  if (juice && BUG_GOO[e.kind]) { e.agg.dispose(); corpse(e.node, e.def.size[1] * (e.def.scale ?? 1)); } else e.dispose();
+  if (juice && BUG_GOO[e.kind]) { e.agg.dispose(); corpse(e.node, e.def.size[1] * (e.def.scale ?? 1)); } else leave(e);
+}
+// Jefes GLB con clips (Felipe, Eulalio): quedan en el piso reproduciendo su muerte; el resto de los jefes desaparece
+function leave(e: Enemy) {
+  if (GLB[e.kind]?.clips) { e.die(); corpse(e.node, 0, (dt) => e.animate(dt)); } else e.dispose();
 }
 
+// Juego de autos: menos bichos pero más duros, para esquivarlos manejando (decisión del usuario 2026-10-04)
+const TOUGH = { count: R.dureza_cantidad, hp: R.dureza_vida, dmg: R.dureza_dano, xp: R.dureza_xp };
 function spawnEnemy(kind: Kind, p: B.Vector3) {
-  enemies.push(new Enemy(kind, p, 1 + time / 200));
+  enemies.push(new Enemy(kind, p, (1 + time / R.vida_escala_seg) * TOUGH.hp)); // los jefes ignoran hpMul
   if (!LAB.on && !save.seen.includes(kind)) save.seen.push(kind); // bestiario
   if (!LAB.on && !simulating) { const b = beastRec(kind); b.first ??= today(); if (!b.zones.includes(zoneId)) b.zones.push(zoneId); } // registro propio
 }
@@ -542,11 +551,11 @@ function update(dt: number) {
   abilCd -= dt;
   if (input.ability && abilCd <= 0) useAbility(c);
   if (abilOn > 0 && (abilOn -= dt) <= 0) { worldK = 1; fxSpeed(1); if (shieldM) shieldM.isVisible = false; }
-  if (abil === "escudo" && abilOn > 0) hp = Math.min(maxHp, hp + maxHp * 0.1 * dt); // 30% en 3 s
+  if (abil === "escudo" && abilOn > 0) hp = Math.min(maxHp, hp + maxHp * R.escudo_cura_s * dt); // 30% en 3 s
   if (bombs > 0 && (bombT -= dt) <= 0) {
-    bombs--; bombT = 0.12;
+    bombs--; bombT = R.bombardeo_intervalo_s;
     const a = rng() * Math.PI * 2, d = 3 + rng() * 11;
-    dmgSrc = "bombardeo"; explode(new B.Vector3(c.pos.x + Math.cos(a) * d, 0, c.pos.z + Math.sin(a) * d), 3.5, 30 * st.dmg); dmgSrc = "";
+    dmgSrc = "bombardeo"; explode(new B.Vector3(c.pos.x + Math.cos(a) * d, 0, c.pos.z + Math.sin(a) * d), R.bombardeo_radio, R.bombardeo_dano * st.dmg); dmgSrc = "";
   }
   const wdt = dt * worldK;
 
@@ -562,31 +571,31 @@ function update(dt: number) {
     throttle = Math.min(1, want.length());
   }
   const ariete = weapons.some((w) => w.id === "lanza" && w.evolved);
-  const boosting = input.boost && boost > 3 && throttle >= 0;
+  const boosting = input.boost && boost > R.turbo_umbral && throttle >= 0;
   lampBoost = boosting;
-  boost = boosting ? boost - 40 * dt : Math.min(100, boost + st.boostRegen * dt);
-  const maxSpeed = c.def.speed * st.speedMul * (boosting ? 1.55 : 1);
+  boost = boosting ? boost - R.turbo_gasto * dt : Math.min(100, boost + st.boostRegen * dt);
+  const maxSpeed = c.def.speed * st.speedMul * (boosting ? R.turbo_vel : 1);
   const r = drive(c.body, c.root, dt, {
     throttle: boosting ? 1 : throttle, steer, speed: maxSpeed,
-    accel: c.def.accel * (boosting ? 1.8 : 1),
-    turn: c.def.turn * (input.drift ? 1.4 : 1),
-    grip: (input.drift ? 1.3 : c.def.grip) * (1 - (1 - RAIN.grip) * rainK), // mojado: el auto agarra menos
+    accel: c.def.accel * (boosting ? R.turbo_acel : 1),
+    turn: c.def.turn * (input.drift ? R.derrape_giro : 1),
+    grip: (input.drift ? R.derrape_agarre : c.def.grip) * (1 - (1 - RAIN.grip) * rainK), // mojado: el auto agarra menos
   });
   c.animate(dt, steer, r.fs, maxSpeed);
   { const zp = zoneTick(dt, c.pos); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
-  engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * 1.55)), throttle, boosting);
+  engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * R.turbo_vel)), throttle, boosting);
   if (c.kind === "helado" && (jingleT -= dt) <= 0) { SFX.jingle(); jingleT = 16; }
   runDist += Math.abs(r.fs) * dt;
   // Combo de manejo: derrape largo, salto y aterrizaje limpio suben el multiplicador de XP (tope x2); un golpe lo corta (hurt)
   if (r.grounded) {
-    if (airT >= 0.5 && !airHit) trick(Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? "SALTO LIMPIO" : "SALTO", Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? 0.2 : 0.1);
+    if (airT >= 0.5 && !airHit) trick(Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? "SALTO LIMPIO" : "SALTO", Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? R.combo_salto_limpio : R.combo_salto);
     airT = 0; airHit = false;
     driftT = input.drift && Math.hypot(r.fs, r.ls) > 6 ? driftT + dt : 0; // velocidad total: derrapando casi toda va de costado
-    if (driftT >= 1.5) { driftT = 0; trick("DERRAPE LARGO", 0.1); }
+    if (driftT >= R.combo_derrape_s) { driftT = 0; trick("DERRAPE LARGO", R.combo_derrape); }
   } else airT += dt;
   // Sin trucos por 8 s el multiplicador baja solo, 0,1 por segundo hasta x1
-  if ((trickT += dt) > 8 && driveMul > 1) { driveMul = Math.max(1, driveMul - 0.1 * dt); if (!simulating) hudDrive(driveMul); }
-  lastKmh = r.fs * 3.6; lastMaxKmh = c.def.speed * st.speedMul * 1.55 * 3.6;
+  if ((trickT += dt) > R.combo_espera_s && driveMul > 1) { driveMul = Math.max(1, driveMul - R.combo_baja_s * dt); if (!simulating) hudDrive(driveMul); }
+  lastKmh = r.fs * 3.6; lastMaxKmh = c.def.speed * st.speedMul * R.turbo_vel * 3.6;
   // Marcas de neumático al derrapar / patinar
   if (r.grounded && (Math.abs(r.ls) > 3.5 || (input.drift && Math.abs(r.fs) > 5)) && (skidT -= dt) <= 0) {
     skidT = 0.025;
@@ -609,35 +618,35 @@ function update(dt: number) {
   // --- Aparición de enemigos ---
   // Tope de vivos y ritmo: con el bot que pelea jefes (devbot.ts) quedó en ~50% de victorias (__sim, 40 semillas).
   // ponytail: más densidad casi no baja la tasa (más bichos = más XP); el techo real está en las fusiones repetidas
-  const maxAlive = Math.min(low ? 110 : 200, (25 + time / 2.2) * horde); // Horda: +50%. Tope 200 en compu, 110 en táctil, por rendimiento
+  const maxAlive = duel >= 0 ? duel : Math.min(low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + time / R.tope_vivos_seg) * horde * TOUGH.count); // Horda: +50%. Tope 100 en compu, 60 en táctil
   // Aparecen sesgados hacia donde vas: manejar no es escapar gratis
   const cvel = c.body.getLinearVelocity();
-  const ahead = c.pos.add(new B.Vector3(cvel.x, 0, cvel.z).scale(1.6));
-  spawnAcc += (1 + time / 16) * wdt * horde;
+  const ahead = c.pos.add(new B.Vector3(cvel.x, 0, cvel.z).scale(R.spawn_adelanto_s));
+  spawnAcc += (R.spawn_base + time / R.spawn_seg) * wdt * horde * TOUGH.count;
   const normals = enemies.filter((e) => !e.def.boss).length;
   // Con la cámara más alejada que el zoom por defecto (1.35) el anillo de aparición se abre igual, para no verlos nacer
   // Anillo fijo, fuera de cuadro aun con el zoom máximo (2): la partida no cambia según el zoom elegido
-  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time, profile.plague)), spawnPoint(ahead, 36, 54)); }
+  while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time, profile.plague)), spawnPoint(ahead, R.spawn_anillo_min, R.spawn_anillo_max)); }
   // Formaciones: columna de hormigas (ordenadas tras una líder) o escarabajo con escolta de autitos a fricción
-  if (time > 50 && (groupT -= dt) <= 0 && normals < maxAlive - 12) {
-    groupT = 26 + rng() * 10;
-    const p0 = spawnPoint(ahead, 36, 54), ant = time < 150 || rng() < 0.6;
+  if (time > R.formacion_desde_s && (groupT -= dt) <= 0 && normals < maxAlive - R.formacion_margen) {
+    groupT = R.formacion_cada_min + rng() * R.formacion_cada_rango;
+    const p0 = spawnPoint(ahead, R.spawn_anillo_min, R.spawn_anillo_max), ant = time < R.formacion_hormiga_hasta_s || rng() < R.formacion_hormiga_prob;
     spawnEnemy(ant ? "hormiga" : "escarabajo", p0);
     const lead = enemies[enemies.length - 1];
-    const n = ant ? 6 + Math.floor(time / 60) : 4;
+    const n = ant ? R.formacion_hormigas_base + Math.floor(time / R.formacion_hormigas_seg) : R.formacion_escolta;
     for (let i = 1; i <= n; i++) {
       const a = (i / n) * 6.28, slot = ant ? new B.Vector3(0, 0, 1.8 * i) : new B.Vector3(Math.sin(a) * 4.5, 0, Math.cos(a) * 4.5);
       spawnEnemy(ant ? "hormiga" : "friccion", p0.add(new B.Vector3(slot.x, 0, -slot.z)));
       const f = enemies[enemies.length - 1];
-      f.leader = lead; f.slot.copyFrom(slot); f.spd = 1.2;
+      f.leader = lead; f.slot.copyFrom(slot); f.spd = R.formacion_vel;
     }
     if (!simulating) banner(ant ? "COLUMNA" : "ESCOLTA", 1.2);
   }
   if ((swarmT -= dt) <= 0) {
     swarmT = profile.swarmEvery;
     banner("ENJAMBRE", 1.4);
-    const ns = Math.round((16 + time / 12) * horde); // el enjambre crece con la partida
-    for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * 22, 1, c.pos.z + Math.sin(a) * 22); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
+    const ns = Math.round((R.enjambre_base + time / R.enjambre_seg) * horde * TOUGH.count); // el enjambre crece con la partida
+    for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * R.enjambre_radio, 1, c.pos.z + Math.sin(a) * R.enjambre_radio); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
   if (time - Math.max(hitAt, 300) >= 60) grant("intacto"); // 60 s sin daño, contando desde el minuto 5
   if (!warned && time >= 570) { warned = true; banner(`${DEF[finalKind].name} SE ACERCA`, 3); }
@@ -653,8 +662,8 @@ function update(dt: number) {
     const kind = RUN_BOSSES[bossIdx++][1];
     spawnEnemy(kind, spawnPoint(c.pos, 30, 36));
     if (endless) { // modo sin fin: otro jefe repetido en 2 min (rotan los tres de la partida) y cada vez con más vida
-      RUN_BOSSES.push([time + 120, RUN_BOSSES[RUN_BOSSES.length % 3][1]]);
-      const b = enemies[enemies.length - 1]; b.hp = b.maxHp *= time / 600;
+      RUN_BOSSES.push([time + R.sinfin_cada_s, RUN_BOSSES[RUN_BOSSES.length % 3][1]]);
+      const b = enemies[enemies.length - 1]; b.hp = b.maxHp *= time / R.sinfin_vida_div;
     }
     banner(DEF[kind].name, 2.5);
     hudBoss(DEF[kind].name, 1);
@@ -679,10 +688,10 @@ function update(dt: number) {
     if (ev === "spit") {
       // Apunta adonde vas a estar (predicción simple): esquivar = cambiar de rumbo
       const cvl = c.body.getLinearVelocity(), from = e.pos.add(new B.Vector3(0, 0.6, 0));
-      const t = B.Vector3.Distance(from, c.pos) / 16, aim = c.pos.add(new B.Vector3(cvl.x, 0, cvl.z).scale(t * 0.8));
+      const t = B.Vector3.Distance(from, c.pos) / ATK.acido_vel, aim = c.pos.add(new B.Vector3(cvl.x, 0, cvl.z).scale(t * 0.8));
       const m = spitTpl().createInstance("sp");
       m.position.copyFrom(from);
-      spits.push({ m, v: aim.subtract(from).normalize().scale(16), life: 2.2, k: e.kind });
+      spits.push({ m, v: aim.subtract(from).normalize().scale(ATK.acido_vel), life: 2.2, k: e.kind });
     }
     if (e.stun <= 0) e.animate(wdt);
     if (e.phaseUp) { e.phaseUp = false; banner(`${e.def.name} SE ENFURECE`, 2); shake = Math.max(shake, 1); SFX.boss(); }
@@ -694,48 +703,49 @@ function update(dt: number) {
       FX.slam(e.pos, 10);
       mark("scorch", e.pos.x, e.pos.z, 0, 7, 10);
       shake = 1.2;
-      if (B.Vector3.Distance(e.pos, c.pos) < 11) hurt(25, false, "salto " + e.kind, e.kind);
-      for (const o of enemies) if (o !== e && B.Vector3.Distance(o.pos, e.pos) < 10) damage(o, 999);
+      if (B.Vector3.Distance(e.pos, c.pos) < ATK.salto_radio) hurt(ATK.salto_dano, false, "salto " + e.kind, e.kind);
+      for (const o of enemies) if (o !== e && B.Vector3.Distance(o.pos, e.pos) < ATK.salto_aplasta_radio) damage(o, 999);
     }
     // Jefes finales nuevos (enemies.ts): tuercas en abanico, barrido en arco, cables y succión
-    if (ev === "fan") for (const d of e.fan) { const m = nutTpl().createInstance("nut"); m.position.copyFrom(e.pos).addInPlace(new B.Vector3(d.x * 3.4, 0.7, d.z * 3.4)); spits.push({ m, v: d.scale(16), life: 2.2, k: e.kind }); }
-    if (ev === "slash") { hurt(28, false, "barrido " + e.kind, e.kind); FX.sparks(c.pos); }
-    if (ev === "shock") { hurt(6, false, "cables", e.kind); FX.sparks(c.pos); }
+    if (ev === "fan") for (const d of e.fan) { const m = nutTpl().createInstance("nut"); m.position.copyFrom(e.pos).addInPlace(new B.Vector3(d.x * 3.4, 0.7, d.z * 3.4)); spits.push({ m, v: d.scale(ATK.acido_vel), life: 2.2, k: e.kind }); }
+    if (ev === "slash") { hurt(ATK.cortacercos_barrido_dano, false, "barrido " + e.kind, e.kind); FX.sparks(c.pos); }
+    if (ev === "shock") { hurt(ATK.cortacercos_cable_dano, false, "cables", e.kind); FX.sparks(c.pos); }
     if (e.pull && e.stun <= 0) { const d = new B.Vector3(e.pos.x - c.pos.x, 0, e.pos.z - c.pos.z).normalize().scaleInPlace(e.pull * wdt); c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(d)); }
     const dist = Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z);
-    if (!e.def.boss && !e.elite && dist > 75) { e.hp = -1e9; continue; } // muy lejos: se recicla (la élite no: lleva cofre)
+    if (!e.def.boss && !e.elite && dist > R.reciclar_distancia) { e.hp = -1e9; continue; } // muy lejos: se recicla (la élite no: lleva cofre)
     if (e.kind === "cortadora" && e.stun <= 0) for (const o of enemies) if (o !== e && !o.def.boss && B.Vector3.Distance(o.pos, e.pos) < e.radius + 0.5) damage(o, 999); // corta todo
     if (dist < e.radius + carR && c.pos.y - e.pos.y < e.def.size[1] + 0.5) {
       const dir = new B.Vector3(e.pos.x - c.pos.x, 0, e.pos.z - c.pos.z).normalize();
       const rel = B.Vector3.Dot(cv, dir); // solo cuenta TU velocidad hacia el enemigo
-      if (rel > 5 && e.ramCd <= 0) {
+      if (rel > R.embestida_vel_min && e.ramCd <= 0) {
         const lanza = weapons.find((w) => w.id === "lanza");
-        const dmg = rel * c.def.ram * (1 + 0.35 * (lanza?.lv ?? 0)) * (boosting ? (c.kind === "axel" ? 1.6 : 1.3) : 1) * st.dmg * (lanza?.evolved ? 1.5 : 1);
+        const dmg = rel * c.def.ram * (1 + BAL.armas.lanza.dano_nivel * (lanza?.lv ?? 0)) * (boosting ? (c.kind === "axel" ? R.embestida_turbo_axel : R.embestida_turbo) : 1) * st.dmg * (lanza?.evolved ? BAL.armas.lanza.dano_evo_mult : 1);
         dmgSrc = "embestida";
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(new B.Vector3(0, rel * 0.2, 0)), true);
         FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0)));
         SFX.ram(rel);
-        e.ramCd = 0.3;
+        e.ramCd = R.embestida_recarga_s;
         shake = Math.max(shake, 0.25);
-        if (ariete) explode(e.pos, 4, dmg * 0.5);
+        if (ariete) explode(e.pos, BAL.armas.lanza.area_evo, dmg * BAL.armasExtra.lanza_ariete_dano);
         dmgSrc = "";
         // Embestir algo más pesado que vos tiene costo: rebote y daño (salvo Ariete)
-        if (e.def.mass > c.def.mass * st.mass * 1.8 && !ariete) {
-          if (e.touchCd <= 0) { hurt(e.def.dmg * 0.4, false, "rebote " + e.kind, e.kind); e.touchCd = 0.8; }
+        if (e.def.mass > c.def.mass * st.mass * R.embestida_rebote_masa && !ariete) {
+          if (e.touchCd <= 0) { hurt(e.def.dmg * R.contacto_dano * TOUGH.dmg, false, "rebote " + e.kind, e.kind); e.touchCd = R.contacto_recarga_s; }
           c.body.applyImpulse(dir.scale(-rel * 0.9 * c.def.mass).addInPlace(new B.Vector3(0, 1.5, 0)), c.pos);
         }
-      } else if (rel <= 5 && !(ariete && boosting) && e.touchCd <= 0 && e.stun <= 0) {
-        if (e.def.dmg * 0.4 > contactHit) contactBy = e.kind;
-        contactHit = Math.max(contactHit, e.def.dmg * 0.4); // el golpe más fuerte, no la suma
+      } else if (rel <= R.embestida_vel_min && !(ariete && boosting) && e.touchCd <= 0 && e.stun <= 0) {
+        const cd = e.def.dmg * R.contacto_dano * (e.def.boss ? 1 : TOUGH.dmg);
+        if (cd > contactHit) contactBy = e.kind;
+        contactHit = Math.max(contactHit, cd); // el golpe más fuerte, no la suma
         dmgBy["contacto " + e.kind] = (dmgBy["contacto " + e.kind] ?? 0) + e.def.dmg * 0.6;
-        e.touchCd = 0.8;
+        e.touchCd = R.contacto_recarga_s;
         // Un jefe te despide lejos: nunca quedás atrapado contra él
-        if (e.def.boss) c.body.applyImpulse(dir.scale(-14 * c.def.mass).addInPlace(new B.Vector3(0, 4 * c.def.mass, 0)), c.pos);
+        if (e.def.boss) c.body.applyImpulse(dir.scale(-R.contacto_jefe_empuje * c.def.mass).addInPlace(new B.Vector3(0, 4 * c.def.mass, 0)), c.pos);
       }
     }
   }
   // Invulnerabilidad de contacto: como mucho un golpe cada 0,5 s aunque te rodeen
-  if ((touchIFrame -= dt) <= 0 && contactHit) { hurt(contactHit, true, "_contacto", contactBy); SFX.hurt(); touchIFrame = 0.6; }
+  if ((touchIFrame -= dt) <= 0 && contactHit) { hurt(contactHit, true, "_contacto", contactBy); SFX.hurt(); touchIFrame = R.contacto_invuln_s; }
   for (const e of enemies.filter((x) => x.hp <= 0)) {
     enemies.splice(enemies.indexOf(e), 1);
     if (e.hp < -1e8) e.dispose(); else kill(e);
@@ -751,7 +761,7 @@ function update(dt: number) {
     s.m.position.addInPlace(s.v.scale(wdt));
     s.v.y -= 3 * wdt;
     let dead = (s.life -= wdt) <= 0 || s.m.position.y < 0.1;
-    if (B.Vector3.Distance(s.m.position, c.pos) < carR + 0.3) { hurt(7, false, "ácido", s.k); FX.hit(s.m.position); dead = true; }
+    if (B.Vector3.Distance(s.m.position, c.pos) < carR + 0.3) { hurt(ATK.acido_dano, false, "ácido", s.k); FX.hit(s.m.position); dead = true; }
     if (dead) { mark("scorch", s.m.position.x, s.m.position.z, Math.random() * 6, 0.6, 5); s.m.dispose(); spits.splice(i, 1); }
   }
 
@@ -775,7 +785,7 @@ function update(dt: number) {
     p.m.rotation.y += dt * 2;
     if (B.Vector3.Distance(p.m.position, c.pos) < 2.2) {
       SFX.pickup();
-      if (p.type === "pila") hp = Math.min(maxHp, hp + 30);
+      if (p.type === "pila") hp = Math.min(maxHp, hp + R.pila_cura);
       else if (p.type === "iman") for (const g of gems) g.pull = true;
       else openChest();
       p.m.dispose();
@@ -790,18 +800,18 @@ function update(dt: number) {
     // Una pelota gigante cruza el patio aplastando todo
     ballT = profile.ballEvery;
     const from = spawnPoint(c.pos, 40, 45);
-    const m = sph(8, pbr("bigball", { color: "#f97316", rough: 0.45 }), [from.x, 4, from.z], undefined, 16);
+    const m = sph(R.pelota_diametro, pbr("bigball", { color: "#f97316", rough: 0.45 }), [from.x, 4, from.z], undefined, 16);
     shadows.addShadowCaster(m);
-    const agg = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: 30, restitution: 0.5 }, scene);
-    agg.body.setLinearVelocity(c.pos.subtract(from).normalize().scale(26));
-    ball = { m, agg, life: 7 };
+    const agg = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: R.pelota_masa, restitution: 0.5 }, scene);
+    agg.body.setLinearVelocity(c.pos.subtract(from).normalize().scale(R.pelota_vel));
+    ball = { m, agg, life: R.pelota_vida_s };
     banner("¡PELOTA!", 1.2);
   }
   if (ball) {
     dmgSrc = "pelota";
-    for (const e of enemies) if (!e.def.boss && B.Vector3.Distance(e.pos, ball.m.position) < 4 + e.radius) damage(e, 999);
+    for (const e of enemies) if (!e.def.boss && B.Vector3.Distance(e.pos, ball.m.position) < R.pelota_diametro / 2 + e.radius) damage(e, 999);
     dmgSrc = "";
-    if (!ball.hit && B.Vector3.Distance(c.pos, ball.m.position) < 4 + carR) { ball.hit = true; hurt(20, false, "pelota"); }
+    if (!ball.hit && B.Vector3.Distance(c.pos, ball.m.position) < R.pelota_diametro / 2 + carR) { ball.hit = true; hurt(R.pelota_dano, false, "pelota"); }
     if ((ball.life -= wdt) <= 0) { ball.agg.dispose(); ball.m.dispose(); ball = null; }
   }
 
@@ -840,16 +850,16 @@ function hurt(n: number, continuous = false, src = "?", by?: Kind) {
 function useAbility(c: Car) {
   const a = ABILITIES[abil];
   abilCd = a.cd; abilOn = a.dur;
-  if (abil === "bombardeo") { bombs = 10; bombT = 0; }
+  if (abil === "bombardeo") { bombs = R.bombardeo_petardos; bombT = 0; }
   else if (abil === "escudo") {
     if (!shieldM) { shieldM = sph(Math.max(...c.def.size) * 1.5, pbr("escudo", { color: "#8dff6a", emissive: "#3f9a2a", alpha: 0.18 }), [0, 0.2, 0]); shieldM.parent = c.root; shieldM.isPickable = false; }
     shieldM.isVisible = true;
     SFX.pickup();
   } else if (abil === "emp") {
-    for (const e of enemies) if (!e.def.boss && !e.airborne && B.Vector3.Distance(e.pos, c.pos) < 14 + e.radius) e.stun = 2;
+    for (const e of enemies) if (!e.def.boss && !e.airborne && B.Vector3.Distance(e.pos, c.pos) < R.emp_radio + e.radius) e.stun = R.emp_aturde_s;
     if (!simulating) burst(c.pos.add(new B.Vector3(0, 0.6, 0)), { n: 90, color: "#8dff6a", color2: "#6fb3c4", size: [0.2, 0.6], power: [14, 22], life: [0.25, 0.5], gravity: 0 });
     SFX.zap(); shake = Math.max(shake, 0.4);
-  } else { worldK = 0.4; fxSpeed(0.4); }
+  } else { worldK = R.lenta_mundo; fxSpeed(R.lenta_mundo); }
 }
 // Aturdido (Pulso EMP): sin IA ni ataques, se frena en el lugar y chisporrotea; los enfriamientos siguen corriendo
 function stunned(e: Enemy, dt: number) {
@@ -875,7 +885,7 @@ function stunned(e: Enemy, dt: number) {
   };
 }
 // Combo de manejo: cada maniobra suma al multiplicador de XP, con tope x2
-function trick(name: string, k: number) { trickT = 0; driveMul = Math.min(2, driveMul + k); if (!simulating) hudDrive(driveMul, name); }
+function trick(name: string, k: number) { trickT = 0; driveMul = Math.min(R.combo_tope, driveMul + k); if (!simulating) hudDrive(driveMul, name); }
 
 // ---------- Modo sin fin: "Seguir jugando" en los resultados tras vencer al jefe final ----------
 function goEndless() {
@@ -884,7 +894,7 @@ function goEndless() {
   state = "play"; scene.physicsEnabled = true; reset(null);
   music("run", 1); musicS = "run";
   $("hud").classList.remove("hidden");
-  RUN_BOSSES.push([time + 120, RUN_BOSSES[RUN_BOSSES.length % 3][1]]);
+  RUN_BOSSES.push([time + R.sinfin_cada_s, RUN_BOSSES[RUN_BOSSES.length % 3][1]]);
   banner("MODO SIN FIN", 2.5);
 }
 
@@ -924,15 +934,21 @@ let previewKey = "", previewR = 0;
 // ---------- Ficha del bestiario: el bicho sobre un pedestal en el centro del patio (origen, donde gira el auto del garaje) ----------
 // Es un Enemy real (modelo, patas, aura de élite, telegráficos) sin IA: el cuerpo pasa a ANIMATED y sigue a la malla.
 // Se crea al abrir la ficha o cambiar de bicho / variante y se libera al cerrarla. Las animaciones son guiones cortos con los mismos avisos y efectos del juego.
-const pedTpl = () => template("pedestal", () => [cyl(1, 1.1, 1, M.matte("#34404c"), [0, 0.5, 0], undefined, 16), cyl(1.03, 1.03, 0.06, M.matte("#d8cfa8"), [0, 0.98, 0], undefined, 16)]);
-const PED_H = 0.35;
+// Carrete de hilo: dos discos de madera clara, el cilindro del medio con hilo enrollado (vueltas más oscuras) y el disco de arriba a 1 de altura (donde se para el bicho)
+const pedTpl = () => template("pedestal", () => {
+  const wood = M.matte("#dcb77a"), thread = M.matte("#d6334f"), turn = M.matte("#9a2c44");
+  return [cyl(1, 1, 0.1, wood, [0, 0.05, 0], undefined, 20), cyl(1, 1, 0.1, wood, [0, 0.95, 0], undefined, 20), cyl(0.8, 0.8, 0.8, thread, [0, 0.5, 0], undefined, 20),
+    ...[0.25, 0.4, 0.55, 0.7, 0.85].map(y => cyl(0.82, 0.82, 0.04, turn, [0, y, 0], undefined, 20))];
+});
+const PED_H = 0.8; // alto del carrete (el bicho se para arriba)
 // Ataque de cada bicho: aviso (aro propio, aro de caída o sector, con su radio real), duración del aviso y golpe (embestida, salto, escupida, succión)
 const BATK: Partial<Record<Kind, { tele?: "self" | "land" | "arc"; r?: number; wind: number; hit: "lunge" | "hop" | "spit" | "dive" | "suck" | "swing" }>> = {
   escupidora: { wind: GLB.escupidora!.atk! * GLB.escupidora!.hit!, hit: "spit" }, escarabajo: { wind: GLB.escarabajo!.atk! * GLB.escarabajo!.hit!, hit: "lunge" }, robot: { wind: 0.9, hit: "lunge" }, cortadora: { wind: 1.2, hit: "lunge" }, polilla: { wind: 0.4, hit: "dive" },
-  tarantula: { tele: "self", r: 5, wind: 1.1, hit: "spit" }, gato: { tele: "land", r: 11, wind: 1, hit: "hop" }, perro: { wind: 0.5, hit: "hop" },
-  aspiradora: { tele: "self", r: 20, wind: 1.4, hit: "suck" }, cortacercos: { tele: "arc", r: 10, wind: 1, hit: "swing" },
+  tarantula: { tele: "self", r: ATK.tarantula_rafaga_radio, wind: ATK.tarantula_rafaga_aviso_s, hit: "spit" }, gato: { tele: "land", r: ATK.salto_radio, wind: ATK.gato_salto_aviso_s, hit: "hop" }, perro: { wind: 0.5, hit: "hop" }, // perro: ver DOG_LANE (alterna con la embestida)
+  aspiradora: { tele: "self", r: ATK.aspiradora_radio, wind: ATK.aspiradora_aviso_s, hit: "suck" }, cortacercos: { tele: "arc", r: ATK.cortacercos_radio, wind: ATK.cortacercos_aviso_s, hit: "swing" },
 };
-const TAR_JUMP = { tele: "land" as const, r: 11, wind: 1.3, hit: "hop" as const }; // segundo ataque de la tarántula: salto con aro de caída
+const DOG_LANE = { lane: true as const, tele: undefined, r: undefined, wind: DOG_RAM.wind, hit: "lunge" as const }; // segundo ataque de Felipe: la embestida con su carril rojo
+const TAR_JUMP = { tele: "land" as const, r: ATK.salto_radio, wind: ATK.tarantula_salto_aviso_s, hit: "hop" as const }; // segundo ataque de la tarántula: salto con aro de caída
 let beast: { e: Enemy; ped: B.InstancedMesh; key: string; seq: number; t: number; vel: B.Vector3; fx: number; atk: number } | null = null; // atk: ataques pedidos (la tarántula alterna ráfaga y salto)
 function beastTick(dt: number, on: boolean) {
   const key = on && BV.kind ? BV.kind + BV.elite : "";
@@ -955,16 +971,18 @@ function beastTick(dt: number, on: boolean) {
   if (b.seq !== BV.seq) { b.seq = BV.seq; b.t = 0; b.fx = 0; n.setEnabled(true); n.scaling.setAll(1); if (BV.anim === "attack") b.atk++; }
   b.t += dt;
   if (performance.now() - BV.touched > 2500) BV.yaw += dt * 0.35; // giro lento si nadie lo toca
-  const t = b.t, A = BV.anim, at = kind === "tarantula" && b.atk % 2 === 0 ? TAR_JUMP : BATK[kind] ?? { wind: 0.35, hit: "lunge" as const };
+  const t = b.t, A = BV.anim, at = kind === "tarantula" && b.atk % 2 === 0 ? TAR_JUMP : kind === "perro" && b.atk % 2 === 0 ? DOG_LANE : BATK[kind] ?? { wind: 0.35, hit: "lunge" as const };
   const fwd = new B.Vector3(Math.sin(BV.yaw), 0, Math.cos(BV.yaw)), top = new B.Vector3(0, PED_H, 0);
   let lift = 0, push = 0, pitch = 0, roll = 0, sp = 0;
-  e.showTele(null); e.touchCd = 0; e.atk = -1;
+  e.showTele(null); e.touchCd = 0; e.atk = -1; e.play = null;
   if (A === "walk" || A === "phase") sp = d.speed * (A === "phase" ? 1.2 * 1.6 : 1) * (BV.elite === "rapida" ? 2 : 1);
+  if (A === "phase" && t < ROAR) { sp = 0; if (GLB[kind]?.clips) e.play = ["rage", t]; } // ruge quieto antes de salir corriendo, como en partida
   if (A === "phase") { roll = Math.sin(t * 40) * 0.03 * Math.max(0, 1 - t / 2.2); if (t < dt * 1.5) { SFX.boss(); shake = Math.max(shake, 0.6); } e.vapor(dt); }
   e.setRage(A === "phase"); // tinte rojo de fase 2, como en partida
   if (A === "attack" && t < at.wind + 1.4) {
     const w = at.wind, k = Math.min(1, t / w), s = t - w; // s: segundos desde el golpe
-    if (at.tele && t < w) e.showTele(at.tele === "land" ? top.add(fwd.scale(span * 0.4)) : top.clone(), at.r!, k);
+    if ("lane" in at && t < w) e.showLane(fwd, k);
+    else if (at.tele && t < w) e.showTele(at.tele === "land" ? top.add(fwd.scale(span * 0.4)) : top.clone(), at.r!, k);
     e.aim = BV.yaw;
     if (t < w) { pitch = -0.12 * k; roll = Math.sin(t * 50) * 0.02 * k; } // se carga: echa el peso atrás y tiembla
     else if (at.hit === "lunge" || at.hit === "swing") { push = Math.sin(Math.min(1, s / 0.5) * Math.PI) * span * 0.35; pitch = 0.1 * Math.max(0, 1 - s / 0.5); sp = s < 0.5 ? d.speed : 0; }
@@ -987,13 +1005,16 @@ function beastTick(dt: number, on: boolean) {
     }
     if (at.hit === "suck" && s >= 1.2 && b.fx < 4) { b.fx++; for (let j = -3; j <= 3; j++) { const a = BV.yaw + j * 0.2; FX.sparks(top.add(new B.Vector3(Math.sin(a) * 4, 0.7, Math.cos(a) * 4))); } } // ráfagas de tuercas
     if (at.hit === "hop" && s >= 1.1 && b.fx === 1) { b.fx = 2; FX.slam(top, 10); shake = Math.max(shake, 0.8); }
+    // Felipe y Eulalio (clips de Blender): la acción sigue los mismos tramos del aviso y del golpe
+    if (GLB[kind]?.clips) e.play = at.hit === "hop" ? e.seq("jump", t < w ? 0 : s < 1.1 ? 1 : 2, t < w ? k : s < 1.1 ? s / 1.1 : (s - 1.1) / 0.4) : kind === "perro" ? e.seq("ram", t < w ? 0 : s < 0.5 ? 1 : 2, t < w ? k : s < 0.5 ? s / 0.5 : (s - 0.5) / 0.9) : null;
   }
   if (A === "hit" && t < dt * 1.5) { shake = Math.max(shake, impact(n, top.add(new B.Vector3(0, d.size[1] * 0.5, 0)), d.color, span * (d.scale ?? 1), "embestida", true, !!d.boss)); SFX.impact("embestida", true); }
   if (A === "die") {
-    if (t < 0.45) { roll = (t / 0.45) * Math.PI * (d.boss ? 0.5 : 1); lift = Math.sin((t / 0.45) * Math.PI) * span * 0.3; } // vuelca (los insectos, patas arriba)
+    if (GLB[kind]?.clips && t < 3) { e.play = ["death", t]; if (t > 2.2 && b.fx === 0) { b.fx = 1; FX.death(top.add(new B.Vector3(0, 0.5, 0)), true); SFX.kill(); } n.scaling.setAll(t > 2.6 ? Math.max(0.01, (3 - t) / 0.4) : 1); } // juega su "death" y se achica
+    else if (t < 0.45) { roll = (t / 0.45) * Math.PI * (d.boss ? 0.5 : 1); lift = Math.sin((t / 0.45) * Math.PI) * span * 0.3; } // vuelca (los insectos, patas arriba)
     else if (b.fx === 0) { b.fx = 1; FX.death(top.add(new B.Vector3(0, 0.5, 0)), !!d.boss); debris(top, d.color, d.boss ? 30 : 7, d.boss ? 14 : 6, d.scale ?? (d.boss ? 3 : 1)); SFX.kill(); n.setEnabled(false); }
     else if (t > 1.8 && !n.isEnabled()) { n.setEnabled(true); n.scaling.setAll(0.01); }
-    if (t > 1.8) { const k = Math.min(1, (t - 1.8) / 0.25); n.scaling.setAll(k < 1 ? k * 1.1 : 1); roll = 0; }
+    if (t > 1.8 && !(GLB[kind]?.clips && t < 3)) { const k = Math.min(1, (t - 1.8) / 0.25); n.scaling.setAll(k < 1 ? k * 1.1 : 1); roll = 0; }
   }
   if (kind === "polilla") lift += 1.2 + Math.sin(performance.now() / 600) * 0.15; // vuela
   b.vel.copyFrom(fwd.scale(sp));
@@ -1135,46 +1156,86 @@ scene.onBeforeRenderObservable.add(() => {
 engine.runRenderLoop(() => scene.render());
 addEventListener("resize", () => engine.resize());
 
+// Equipos del minuto 10 del bot (__sim con semillas 1, 4, 5, 7, 8, 9 y 10; solo cuentan las partidas que llegan vivas al jefe final, ~50%): los usa __bossDuel.
+// Armas [id, nivel, evolucionada/fusión], pasivas por nivel y nivel de piloto (__team() devuelve esta forma para anotar uno nuevo).
+type DuelTeam = { level: number; weapons: [WeaponId, number, boolean][]; passives: Partial<Record<PassiveId, number>> };
+const DUEL_TEAMS: DuelTeam[] = [
+  { level: 51, weapons: [["helado", 5, true], ["yoyo", 5, false], ["globos", 5, true], ["trompo", 5, false], ["chispazo", 5, true], ["bengalas", 4, false]], passives: { resorte: 2, litio: 1, capacitor: 3, lupa: 3, iman: 1 } },
+  { level: 50, weapons: [["gomitas", 5, true], ["clips", 5, false], ["bocina", 5, false], ["bengalas", 5, false], ["chispazo", 5, true], ["trompo", 5, false]], passives: { resorte: 1, iman: 3, turbo: 4, litio: 2, lupa: 4, lego: 1 } },
+  { level: 58, weapons: [["gomitas", 5, true], ["petardos", 5, true], ["bengalas", 5, true], ["trompo", 5, true], ["chispero", 5, false], ["helado", 5, false]], passives: { resorte: 3, iman: 5, litio: 5, lupa: 5, capacitor: 5, turbo: 5 } },
+  { level: 55, weapons: [["gomitas", 5, true], ["trompo", 5, true], ["clips", 5, true], ["petardos", 5, true], ["bengalas", 5, false], ["yoyo", 5, false]], passives: { iman: 5, litio: 5, capacitor: 5, resorte: 5, lupa: 5, turbo: 1 } },
+  { level: 50, weapons: [["chispero", 5, true], ["bocina", 5, false], ["yoyo", 5, false], ["bengalas", 5, false], ["globos", 5, true], ["clips", 5, false]], passives: { capacitor: 4, turbo: 2, resorte: 3, lupa: 4, lego: 1, litio: 1 } },
+  { level: 56, weapons: [["trompo", 5, true], ["bocina", 5, false], ["globos", 5, true], ["chispazo", 5, true], ["anillo", 5, true]], passives: { resorte: 2, iman: 2, capacitor: 5, litio: 1, lupa: 3, turbo: 1 } },
+  { level: 45, weapons: [["gomitas", 5, true], ["chispero", 5, false], ["petardos", 5, false], ["regla", 5, false], ["yoyoelec", 5, true]], passives: { resorte: 1, lupa: 2, litio: 5, iman: 3, capacitor: 2, turbo: 1 } },
+];
+
+// Un paso de la simulación sin dibujar, conducida por el bot (solo dev): elige mejora al subir de nivel o maneja un tick. Lo usan __sim y __bossDuel.
+function botStep(m: typeof import("./devbot"), dt: number) {
+  const pe = scene.getPhysicsEngine() as unknown as { _step(d: number): void };
+  if (state === "level") {
+    // Como una persona competente: evolución/fusión; con poca vida, supervivencia; subir armas propias hacia la evolución,
+    // la pasiva que evoluciona un arma propia, armas nuevas hasta 4 (el Lápiz-lanza solo rinde embistiendo), daño y recarga
+    const low = hp < maxHp * 0.6, evoP = new Set(weapons.filter((w) => !w.evolved).map((w) => WEAPONS[w.id].evo as string));
+    const pref = (o: Offer) => o.kind === "evo" || o.kind === "fusion" ? 9 : low && (o.id === "litio" || o.id === "lego" || o.kind === "heal") ? 8
+      : o.kind === "weapon" && weapons.some((w) => w.id === o.id) ? 7 : o.kind === "passive" && evoP.has(o.id) && !passives[o.id as PassiveId] ? 6
+      : o.kind === "weapon" && o.id !== "lanza" && weapons.length < 4 ? 5 : o.id === "lupa" || o.id === "capacitor" ? 4
+      : o.kind === "passive" && evoP.has(o.id) ? 3 : o.kind === "weapon" && o.id !== "lanza" ? 2 : o.kind === "passive" ? 1 : 0;
+    choose(offers.reduce((b, o, i) => (pref(o) > pref(offers[b]) ? i : b), 0));
+    return;
+  }
+  car!.root.computeWorldMatrix(true);
+  for (const e of enemies) e.node.computeWorldMatrix(true);
+  // Lo que una persona ve del jefe: aros rojos de la tarántula, el perro en el aire (cae cerca de su sombra), la cortadora cargando, ácido en vuelo
+  const b = enemies.find((e) => e.def.boss), zones: { x: number; z: number; r: number }[] = [];
+  if (b?.tele[0]?.isVisible && b.kind !== "aspiradora") zones.push({ x: b.tele[0].position.x, z: b.tele[0].position.z, r: Math.max(b.tele[0].scaling.x, b.tele[0].scaling.z) }); // el carril de Felipe es una elipse: se evita entero // el aro de la aspiradora es solo succión (sin daño): el bot se queda adentro, como una persona
+  if (b?.kind === "perro" && b.airborne) { const bv = b.body.getLinearVelocity(), t = (bv.y + Math.sqrt(Math.max(0, bv.y * bv.y + 50 * b.pos.y))) / 25; zones.push({ x: b.pos.x + bv.x * t, z: b.pos.z + bv.z * t, r: 11 }); }
+  for (const s of spits) zones.push({ x: s.m.position.x + s.v.x * 0.3, z: s.m.position.z + s.v.z * 0.3, r: 1.2 });
+  for (const cb of b?.cables ?? []) zones.push({ x: (cb.a.x + cb.b.x) / 2, z: (cb.a.z + cb.b.z) / 2, r: 3.5 }); // cables del cortacercos
+  const bb = b && { x: b.pos.x, z: b.pos.z, kind: b.kind, fx: b.node.forward.x, fz: b.node.forward.z, charge: b.kind === "cortadora" && b.state === 1, ram: weapons.some((w) => w.id === "lanza" && w.evolved) };
+  Object.assign(input, m.botSteer(car!, enemies.filter((e) => !e.def.boss).map((e) => e.pos), obstacles(), bb, zones), { move: false, drift: false });
+  update(dt);
+  pe._step(dt);
+  tickFx(dt);
+}
+
 // Solo dev: avanzar frames a mano y atajos de prueba (pestaña oculta = sin requestAnimationFrame)
 if (import.meta.env.DEV) import("./devbot").then((m) => Object.assign(window, {
   __bot: m.bot,
   // Adelantar el tiempo: simula la partida con paso fijo y SIN dibujar, conducida por el bot.
   // Determinista: misma semilla (?seed=N) = mismo resultado. Devuelve un resumen.
   __sim: (secs: number, dt = 1 / 60) => {
-    const pe = scene.getPhysicsEngine() as unknown as { _step(d: number): void };
     const w0 = performance.now(), end = time + secs;
     simulating = true;
     m.resetBot();
-    while (time < end && (state === "play" || state === "level") && performance.now() - w0 < 35000) {
-      if (state === "level") {
-        // Como una persona competente: evolución/fusión; con poca vida, supervivencia; subir armas propias hacia la evolución,
-        // la pasiva que evoluciona un arma propia, armas nuevas hasta 4 (el Lápiz-lanza solo rinde embistiendo), daño y recarga
-        const low = hp < maxHp * 0.6, evoP = new Set(weapons.filter((w) => !w.evolved).map((w) => WEAPONS[w.id].evo as string));
-        const pref = (o: Offer) => o.kind === "evo" || o.kind === "fusion" ? 9 : low && (o.id === "litio" || o.id === "lego" || o.kind === "heal") ? 8
-          : o.kind === "weapon" && weapons.some((w) => w.id === o.id) ? 7 : o.kind === "passive" && evoP.has(o.id) && !passives[o.id as PassiveId] ? 6
-          : o.kind === "weapon" && o.id !== "lanza" && weapons.length < 4 ? 5 : o.id === "lupa" || o.id === "capacitor" ? 4
-          : o.kind === "passive" && evoP.has(o.id) ? 3 : o.kind === "weapon" && o.id !== "lanza" ? 2 : o.kind === "passive" ? 1 : 0;
-        choose(offers.reduce((b, o, i) => (pref(o) > pref(offers[b]) ? i : b), 0));
-        continue;
-      }
-      car!.root.computeWorldMatrix(true);
-      for (const e of enemies) e.node.computeWorldMatrix(true);
-      // Lo que una persona ve del jefe: aros rojos de la tarántula, el perro en el aire (cae cerca de su sombra), la cortadora cargando, ácido en vuelo
-      const b = enemies.find((e) => e.def.boss), zones: { x: number; z: number; r: number }[] = [];
-      if (b?.tele[0]?.isVisible) zones.push({ x: b.tele[0].position.x, z: b.tele[0].position.z, r: Math.max(b.tele[0].scaling.x, b.tele[0].scaling.z) }); // el carril de Felipe es una elipse: se evita entero
-      if (b?.kind === "perro" && b.airborne) { const bv = b.body.getLinearVelocity(), t = (bv.y + Math.sqrt(Math.max(0, bv.y * bv.y + 50 * b.pos.y))) / 25; zones.push({ x: b.pos.x + bv.x * t, z: b.pos.z + bv.z * t, r: 11 }); }
-      for (const s of spits) zones.push({ x: s.m.position.x + s.v.x * 0.3, z: s.m.position.z + s.v.z * 0.3, r: 1.2 });
-      for (const cb of b?.cables ?? []) zones.push({ x: (cb.a.x + cb.b.x) / 2, z: (cb.a.z + cb.b.z) / 2, r: 3.5 }); // cables del cortacercos
-      const bb = b && { x: b.pos.x, z: b.pos.z, kind: b.kind, fx: b.node.forward.x, fz: b.node.forward.z, charge: b.kind === "cortadora" && b.state === 1, ram: weapons.some((w) => w.id === "lanza" && w.evolved) };
-      Object.assign(input, m.botSteer(car!, enemies.filter((e) => !e.def.boss).map((e) => e.pos), obstacles(), bb, zones), { move: false, drift: false });
-      update(dt);
-      pe._step(dt);
-      tickFx(dt);
-    }
+    while (time < end && (state === "play" || state === "level") && performance.now() - w0 < 35000) botStep(m, dt);
     simulating = false;
     $("levelup").classList.add("hidden");
     const boss = enemies.find((e) => e.def.boss);
-    return `${fmt(time)} nv${level} hp${Math.round(hp)}/${maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed} · tornillos ${Math.floor((runScrap + Math.floor(time / 20) + Math.floor(kills / 25)) * curseK)} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
+    return `${fmt(time)} nv${level} hp${Math.round(hp)}/${maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed} · tornillos ${Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK)} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
+  },
+  // Arranca una partida normal desde la consola (para __sim sin pasar por el menú): __play(3)
+  __play: (seed = 1) => { if (state !== "menu") toMenu(); forceSeed = seed; startRun(); forceSeed = 0; return runSeed; },
+  __team: () => ({ level, weapons: weapons.map((w) => [w.id, w.lv, w.evolved]), passives }), // el equipo actual con la forma de DUEL_TEAMS (para anotar equipos de __sim)
+  // Duelo barato contra un jefe final: equipo del minuto 10 (DUEL_TEAMS; sin `team` rota con la semilla), el jefe con hasta `adds` bichos normales vivos (100 por defecto; en la partida real hay ~170-200 al minuto 10, 0 = duelo a solas) y el bot conduciendo sin dibujar.
+  // __bossDuel("perro", { seed, god, adds, max }) → { segundos hasta vencerlo o morir, ganó, vidaRestante del jefe, auto }. god = el auto no muere (mide solo el tiempo de baja).
+  __bossDuel: (kind: Kind, o: { seed?: number; god?: boolean; adds?: number; max?: number; team?: number | DuelTeam; dt?: number } = {}) => {
+    const w0 = performance.now(), dt = o.dt ?? 1 / 60, seed = o.seed ?? 1, tm = typeof o.team === "object" ? o.team : DUEL_TEAMS[o.team ?? seed % DUEL_TEAMS.length]; // sin `team`, el equipo rota con la semilla
+    if (state !== "menu") toMenu();
+    forceSeed = seed; startRun(); forceSeed = 0;
+    god = !!o.god; duel = o.adds ?? 100;
+    for (const w of weapons) w.dispose();
+    weapons = tm.weapons.map(([id, lv, evolved]) => { const w = makeWeapon(id); w.lv = lv; w.evolved = evolved; return w; });
+    passives = { ...tm.passives }; level = tm.level;
+    recompute(); hp = maxHp;
+    time = 600; bossIdx = RUN_BOSSES.length; swarmT = groupT = chestT = ballT = Infinity; warned = true; // minuto 10, sin jefes programados ni eventos
+    finalKind = kind;
+    spawnEnemy(kind, spawnPoint(car!.pos, 30, 36));
+    const boss = enemies[enemies.length - 1], t0 = time, lim = t0 + (o.max ?? 180);
+    simulating = true; m.resetBot();
+    while ((state === "play" || state === "level") && time < lim && performance.now() - w0 < 60000) botStep(m, dt);
+    simulating = false; duel = -1; god = false;
+    $("levelup").classList.add("hidden");
+    return { kind, seed: runSeed, segundos: +(time - t0).toFixed(1), ganó: boss.hp <= 0, vidaRestante: Math.max(0, Math.round(boss.hp)), auto: Math.round(hp), real: +((performance.now() - w0) / 1000).toFixed(2) };
   },
 }));
 if (import.meta.env.DEV && location.search.includes("lab")) setTimeout(() => (window as unknown as { __lab(o: object): void }).__lab({ climate: new URLSearchParams(location.search).get("climate") ?? undefined, t: Number(new URLSearchParams(location.search).get("t") ?? 1), boss: location.search.includes("boss"), rain: location.search.includes("rain") }), 800);

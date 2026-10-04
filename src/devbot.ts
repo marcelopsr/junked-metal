@@ -12,7 +12,7 @@ let stuck = 0, back = 0;
 export const resetBot = () => { stuck = back = 0; };
 type P = { x: number; z: number };
 export type BotBoss = { x: number; z: number; kind: string; fx: number; fz: number; charge: boolean; ram: boolean };
-const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14, gato: 12, aspiradora: 22, cortacercos: 14 };
+const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14, gato: 12, aspiradora: 6, cortacercos: 14 }; // aspiradora: de cerca, como la juega una persona (a 22 m las armas no llegan y el duelo dura ~85 s en vez de ~11 s)
 export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVelocity(): P } }, threats?: P[], obs?: { x: number; z: number; r: number }[], boss?: BotBoss | null, zones: { x: number; z: number; r: number }[] = []) {
   const v = c.body.getLinearVelocity();
   stuck = Math.hypot(v.x, v.z) < 2 ? stuck + 1 : 0;
@@ -31,11 +31,13 @@ export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVel
     // Rodeado y frenado: turbo hacia el hueco (una persona no se queda empujando la horda)
     const crowd = threats.filter((e) => Math.hypot(e.x - c.pos.x, e.z - c.pos.z) < 5).length;
     escaping = !!inZone || !!boss?.charge || (crowd >= 3 && Math.hypot(v.x, v.z) < 8);
+    // Solo cuentan los bichos a menos de 22 m (más lejos no suman a ningún término): se miden una vez, no 16 veces
+    const near = threats.map((e) => { const ex = e.x - c.pos.x, ez = e.z - c.pos.z; return { ex, ez, d: Math.hypot(ex, ez) }; }).filter((t) => t.d < 22);
     let best = -Infinity;
     for (let k = 0; k < 16; k++) {
       const a = (k / 16) * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a);
       let sc = Math.cos(a - have) * 1.2 + Math.cos(a - orbit) * 2.5;
-      for (const e of threats) { const ex = e.x - c.pos.x, ez = e.z - c.pos.z, d = Math.hypot(ex, ez), dot = (ex * dx + ez * dz) / d; if (d < 22) sc -= dot * (22 - d) / 6; if (d < 6 && dot > 0.6) sc -= 2.5; } // muro de bichos pegado: buscar el hueco
+      for (const { ex, ez, d } of near) { const dot = (ex * dx + ez * dz) / d; sc -= dot * (22 - d) / 6; if (d < 6 && dot > 0.6) sc -= 2.5; } // muro de bichos pegado: buscar el hueco
       for (const o of obs!) { for (const t of [4, 9]) { const px = c.pos.x + dx * t, pz = c.pos.z + dz * t; if (Math.hypot(px - o.x, pz - o.z) < o.r + 2) sc -= 12 / t; } }
       // Bordes del patio: acorralarse contra la pared es la muerte (la horda empuja y no hay salida)
       for (const [t, pen] of [[5, 30], [14, 10]]) { const fx = c.pos.x + dx * t, fz = c.pos.z + dz * t; if (Math.abs(fx) > HALF - 10 || Math.abs(fz) > HALF - 10) sc -= pen; }

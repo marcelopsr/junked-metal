@@ -13,19 +13,26 @@ import { M, pbr, shadows } from "./render";
 //   cuadros; opcional: sin ella ataca con la caminata). Exportar con export_force_sampling=False (solo los huesos animados).
 // - Orientación: en Blender Z arriba y la cabeza hacia +Y. El punto más bajo de la pose de reposo se apoya en y = 0.
 // - Escala: GLB[kind].scale (metros del juego por unidad de Blender). El colisionador sigue siendo DEF[kind].size.
-// - Materiales: "Body" se pinta con DEF[kind].color (M.plastic), "Eye..." emisivo (M.glow con GLB[kind].eye o rojo),
+// - Materiales: "Body" se pinta con DEF[kind].color (M.plastic; los jefes con clips usan el color del propio GLB), "Eye..." emisivo (M.glow con GLB[kind].eye o rojo),
 //   cualquier otro M.plastic con su color base del GLB (p. ej. el saco de ácido de la escupidora).
 // - Archivo: public/models/<file>.glb, comprimido con `gltf-transform optimize --compress quantize` (sin meshopt ni
 //   draco: Babylon baja sus decodificadores de un CDN).
+// clips (opcional; jefes con muchas acciones, hoy Felipe y Eulalio): se hornean TODAS las acciones del GLB (nombre = nombre de la
+// acción en Blender, a 24 cuadros por segundo; ciclan idle, walk, run y rage, el resto queda en su último cuadro) y enemies.ts
+// elige cuál mostrar con glbPlay. El valor son los m/s de suelo a los que el ciclo walk y el run no patinan (la zancada del modelo).
 // atk/hit (opcional): el bicho dispara su propio ataque (enemies.ts) y la animación dura atk segundos; el golpe (escupida,
 // arremetida) sale en la fracción hit de ella. Sin atk ataca al tocar al auto (touchCd), como la hormiga.
-export const GLB: Partial<Record<Kind, { file: string; scale: number; eye?: string; atk?: number; hit?: number }>> = {
+export const GLB: Partial<Record<Kind, { file: string; scale: number; eye?: string; atk?: number; hit?: number; clips?: [walk: number, run: number] }>> = {
   hormiga: { file: "ant", scale: 2 },
   escupidora: { file: "escupidora", scale: 1, eye: "#ffb020", atk: 0.83, hit: 0.65 }, // assets-src/escupidora
   escarabajo: { file: "escarabajo", scale: 1, eye: "#d0ff60", atk: 1, hit: 0.33 }, // assets-src/escarabajo
+  perro: { file: "perro", scale: 1, eye: "#3a2418", clips: [2.3, 13] }, // assets-src/perro (Felipe)
+  gato: { file: "gato", scale: 1.1, eye: "#a8ff3a", clips: [2.3, 15.4] }, // assets-src/gato (Eulalio)
 };
 
 const WALK = 10, ATTACK = 6; // cuadros horneados: walk 0..9, attack 10..15
+const CLIP_FPS = 24, LOOPS = ["idle", "walk", "run", "rage"];
+const clips = new Map<Kind, Record<string, { from: number; n: number; loop: boolean }>>();
 const tpls = new Map<Kind, B.Mesh>();
 export const glbTpl = (k: Kind) => tpls.get(k);
 export const glbStats: Record<string, { loadMs: number; bakeMs: number; vatBytes: number; tris: number; bones: number }> = {};
@@ -66,9 +73,19 @@ async function load(scene: B.Scene, kind: Kind) {
     g.stop();
   };
   for (const g of c.animationGroups) g.stop();
-  const walk = c.animationGroups.find((a) => a.name === "walk")!;
-  bake(walk, WALK, true);
-  bake(c.animationGroups.find((a) => a.name === "attack") ?? walk, ATTACK, false);
+  if (o.clips) {
+    const tab: Record<string, { from: number; n: number; loop: boolean }> = {};
+    for (const g of c.animationGroups) {
+      const fps = g.targetedAnimations[0].animation.framePerSecond, loop = LOOPS.includes(g.name), n = Math.max(2, Math.round((g.to - g.from) / fps * CLIP_FPS)) + (loop ? 0 : 1); // las de ida incluyen el último cuadro: el índice = el cuadro de Blender
+      tab[g.name] = { from: frames.length, n, loop };
+      bake(g, n, loop);
+    }
+    clips.set(kind, tab);
+  } else {
+    const walk = c.animationGroups.find((a) => a.name === "walk")!;
+    bake(walk, WALK, true);
+    bake(c.animationGroups.find((a) => a.name === "attack") ?? walk, ATTACK, false);
+  }
   const data = new Float32Array(frames.length * frames[0].length);
   frames.forEach((f, i) => data.set(f, i * f.length));
 
@@ -80,8 +97,9 @@ async function load(scene: B.Scene, kind: Kind) {
   mesh.numBoneInfluencers = 4;
   const mat = (m: B.Material | null) => {
     if (m?.name.startsWith("Eye")) return M.glow(o.eye ?? "#ff3020");
-    if (!m || m.name === "Body") return M.plastic(DEF[kind].color);
+    if (!m || (m.name === "Body" && !o.clips)) return M.plastic(DEF[kind].color);
     const p = m as B.PBRMaterial, hex = p.albedoColor.toGammaSpace().toHexString();
+    if (o.clips) return pbr("fur" + hex + p.roughness, { color: hex, rough: p.roughness ?? 0.8 }); // jefes de pelo: mate, con el color y la rugosidad del GLB (Body incluido)
     if (p.alpha >= 1) return pbr("pl" + hex, { color: hex, rough: 0.32, coat: 0.5 }); // = M.plastic(hex)
     // translúcido (saco de ácido de la escupidora): conserva alpha y emisivo del GLB
     return pbr("pl" + hex + p.alpha, { color: hex, rough: 0.2, coat: 0.5, alpha: p.alpha, emissive: p.emissiveColor.toGammaSpace().toHexString() });
@@ -106,6 +124,13 @@ async function load(scene: B.Scene, kind: Kind) {
 // decide el CPU con el desfase (z), así la cadencia sigue la velocidad real del bicho sin saltos de fase.
 export function glbVat(node: B.InstancedMesh) {
   return (node.instancedBuffers.bakedVertexAnimationSettingsInstanced = new B.Vector4(0, WALK - 1, Math.random() * WALK, 0)) as B.Vector4;
+}
+
+// Jefes con clips: la instancia en el segundo t de la acción name (las cíclicas dan la vuelta, el resto queda en su último cuadro)
+// ponytail: sin fundido entre acciones (VAT elige un solo cuadro); si el salto entre dos se nota, hornear cuadros de transición
+export function glbPlay(v: B.Vector4, kind: Kind, name: string, t: number) {
+  const c = clips.get(kind)![name], f = Math.max(0, t) * CLIP_FPS;
+  v.set(c.from, c.from + c.n - 1, c.loop ? f % c.n : Math.min(c.n - 1, f), 0);
 }
 
 // Camina a cuadros según la velocidad; ataca (una vez, de ida) mientras attacking, o en el punto k (0..1) de su ataque

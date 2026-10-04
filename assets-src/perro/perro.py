@@ -29,7 +29,7 @@ BONES = [("hips", (0, 3.9, -2.4), (0, 3.9, -0.6), None),
          ("tail", (0, 4.3, -3.8), (0, 4.15, -4.8), "hips")]
 for s in (1, -1):
     n = side(s)
-    BONES += [("ear_" + n, (s * 1.0, 7.3, 4.65), (s * 1.6, 9.1, 4.5), "head"),
+    BONES += [("ear_" + n, (s * 1.0, 7.3, 4.65), (s * 1.65, 9.2, 4.45), "head"),
               ("arm_" + n, (s * 1.55, 3.9, 2.5), (s * 1.6, 2.3, 2.1), "chest"),
               ("forearm_" + n, (s * 1.6, 2.3, 2.1), (s * 1.55, 0.6, 2.35), "arm_" + n),
               ("fpaw_" + n, (s * 1.55, 0.6, 2.35), (s * 1.55, 0.05, 3.1), "forearm_" + n),
@@ -44,7 +44,7 @@ m = q.Shape(S, T)
 m.loft([((0, 4.15, -4.0), 0.9, 0.8), ((0, 4.15, -3.4), 1.55, 1.4), ((0, 4.1, -2.4), 1.75, 1.55),
         ((0, 4.15, -1.2), 1.6, 1.25), ((0, 3.95, 0.1), 1.85, 1.6), ((0, 3.8, 1.4), 2.05, 1.85),
         ((0, 3.85, 2.5), 2.0, 1.85), ((0, 4.15, 3.25), 1.7, 1.65), ((0, 4.9, 3.8), 1.45, 1.4), ((0, 5.6, 4.4), 1.3, 1.25)])
-m.ell((0, 6.35, 4.75), (1.85, 1.45, 1.5))          # cráneo ancho
+m.ell((0, 6.35, 4.75), (1.95, 1.5, 1.55))          # cráneo ancho
 m.ell((0, 6.75, 5.55), (1.2, 0.45, 0.55))          # frente/arco ciliar
 for s in (1, -1):
     m.ell((s * 1.05, 5.75, 5.2), (0.95, 0.95, 0.95))  # cachetes
@@ -52,9 +52,9 @@ for s in (1, -1):
     m.ell((s * 1.2, 3.75, 2.2), (0.75, 1.1, 0.95))   # paletas
     m.ell((s * 1.15, 3.45, -2.3), (0.85, 1.35, 1.2))  # muslos
     # oreja de murciélago: tres óvalos chatos de la base a la punta redonda, abiertos hacia afuera
-    m.ell((s * 1.1, 7.5, 4.6), (0.85, 0.7, 0.3))
-    m.ell((s * 1.38, 8.25, 4.55), (0.75, 0.62, 0.25))
-    m.ell((s * 1.62, 8.85, 4.5), (0.58, 0.5, 0.21))
+    m.ell((s * 1.1, 7.45, 4.6), (1.0, 0.85, 0.32))
+    m.ell((s * 1.4, 8.15, 4.55), (1.02, 0.82, 0.28))
+    m.ell((s * 1.6, 8.75, 4.5), (0.82, 0.62, 0.24))
     m.tube([(s * 1.55, 3.9, 2.45), (s * 1.62, 2.3, 2.1), (s * 1.55, 0.55, 2.4)], [0.95, 0.62, 0.5])
     m.ell((s * 1.55, 0.38, 2.8), (0.66, 0.4, 0.85))   # mano
     m.tube([(s * 1.35, 3.6, -2.4), (s * 1.5, 2.3, -1.75), (s * 1.45, 1.2, -3.05), (s * 1.45, 0.4, -2.85)], [1.0, 0.7, 0.45, 0.45])
@@ -63,14 +63,14 @@ m.ell((0, 5.6, 6.05), (1.05, 0.78, 0.65))          # hocico chato
 m.ell((0, 5.95, 6.62), (0.42, 0.3, 0.22))          # trufa
 m.ell((0, 4.95, 5.6), (0.95, 0.45, 0.85))          # mandíbula
 m.tube([(0, 4.35, -3.75), (0, 4.3, -4.45), (0, 4.05, -4.8)], [0.45, 0.36, 0.18])  # cola corta
-ob = m.skin("Perro", voxel=0.05, tris=7200, smooth=(0.6, 8))
+ob = m.skin("Perro", voxel=0.05, tris=5800, smooth=(0.6, 8))
 
 
 def region(p, n):
     ax, ay = abs(p.x), p.y
     if ((p.x / 0.5) ** 2 + ((p.y - 5.95) / 0.38) ** 2 + ((p.z - 6.62) / 0.32) ** 2) < 1:
         return 2
-    if ay > 7.65 and ax > 0.6 and n.z > 0.3 and q.seg_dist(Vector((ax, ay, 0)), Vector((1.1, 7.6, 0)), Vector((1.58, 9.0, 0))) < 0.4:
+    if ay > 7.6 and ax > 0.6 and n.z > 0.3 and q.seg_dist(Vector((ax, ay, 0)), Vector((1.1, 7.6, 0)), Vector((1.6, 9.0, 0))) < 0.58:
         return 3
     wob = 0.12 * math.sin(p.x * 5.0 + p.y * 3.0)
     if p.z > 1.6 and n.z > 0.1 and (p.x / 1.05) ** 2 + ((ay - 3.4) / 1.5) ** 2 < 1 + wob:
@@ -79,9 +79,10 @@ def region(p, n):
 
 
 q.paint(ob, S, mats, region)
+q.refine(ob, S, region, rounds=2)
 q.rig(ob, ao)
 q.keep_on_body(ob, ao, [k + "_" + n for k in ("arm", "thigh") for n in "RL"], 0.2, 0.9)
-q.add_rigid(ob, S, "head", eye, [((s * 0.92, 6.28, 5.95), (0.36, 0.36, 0.33), 12, 8) for s in (1, -1)])
+q.add_rigid(ob, S, "head", eye, [((s * 0.92, 6.28, 5.95), (0.38, 0.38, 0.35), 12, 8) for s in (1, -1)])
 q.tidy_weights(ob)
 
 # ---------- Animaciones (patas con IK: los pies apoyados no se hunden ni patinan) ----------
@@ -151,39 +152,41 @@ JUMP = {0: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
         31: (-0.75, -0.08, 0.75, 1.4, 0, 0.8, 0, -0.25, 0.3, 0.3),
         40: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0)}
 CHARGE = {0: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-          7: (-0.4, -0.06, -0.7, 0, 0, 0, 0, -0.45, 0, 0.08),           # retrocede y baja la cabeza
+          7: (-0.65, -0.12, -0.9, 0, 0, 0, 0, -0.7, 0.1, 0.1),            # retrocede, se agacha y baja la cabeza
           12: (0.15, -0.12, 1.7, 2.6, 0.6, 0.3, 0, -0.35, 0.35, 0),     # embiste: manos adelante, atrás empuja
           16: (0.05, 0.05, 2.0, 2.7, 0, 1.4, 0.6, 0.35, 0.25, 0),       # revolea la cabeza para arriba
           26: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0)}
 
 
-def rage(f):  # 40 cuadros en bucle: se planta abierto, cabeza gacha, lomo arqueado, gruñe y tiembla
+def rage(f):  # 40 cuadros en bucle: planta las patas abiertas, cabeza gacha, lomo arqueado, gruñe con la boca bien abierta y tiembla
     p = f / 40
+    w = 2 * math.pi * p
     P = {}
-    put(P, "hips", b.nose_up(0.07), (0.03 * math.sin(2 * math.pi * 10 * p), -0.3, 0))
-    put(P, "chest", b.nose_up(-0.14))
-    put(P, "neck", b.nose_up(-0.18) @ b.yaw_fwd(1, 0.05 * math.sin(2 * math.pi * 2 * p)))
-    put(P, "head", b.nose_up(0.12 + 0.03 * math.sin(2 * math.pi * 8 * p)))
-    put(P, "jaw", b.nose_up(-(0.22 + 0.08 * math.sin(2 * math.pi * 6 * p))))
-    put(P, "tail", b.nose_up(0.5))
+    put(P, "hips", b.nose_up(0.1), (0.07 * math.sin(10 * w), -0.45 + 0.05 * math.sin(4 * w), 0))
+    put(P, "spine", b.yaw_fwd(1, 0.04 * math.sin(2 * w)))
+    put(P, "chest", b.nose_up(-0.2 + 0.04 * math.sin(4 * w)))  # el pecho late al respirar
+    put(P, "neck", b.nose_up(-0.4) @ b.yaw_fwd(1, 0.12 * math.sin(2 * w)))
+    put(P, "head", b.nose_up(0.35 + 0.04 * math.sin(8 * w)) @ b.yaw_fwd(1, 0.1 * math.sin(3 * w)))
+    put(P, "jaw", b.nose_up(-(0.5 + 0.12 * math.sin(6 * w))))
+    put(P, "tail", b.nose_up(0.6 + 0.1 * math.sin(5 * w)))
     for s in (1, -1):
-        put(P, "arm_" + side(s), b.lift(s, -0.12))
-        put(P, "thigh_" + side(s), b.lift(s, -0.08))
-        put(P, "ear_" + side(s), b.nose_up(-0.25))
-    q.feet(P, (0.25, 0, 0), (-0.2, 0, 0))
+        put(P, "arm_" + side(s), b.lift(s, -0.16))
+        put(P, "thigh_" + side(s), b.lift(s, -0.1))
+        put(P, "ear_" + side(s), b.nose_up(-0.5) @ b.lift(s, -0.2))
+    q.feet(P, (0.35, 0, 0), (-0.3, 0, 0))
     return P
 
 
 #        y     roll  pitch  head  jaw  legs
 DEATH = {0: (0, 0, 0, 0, 0, 0),
-         8: (-0.25, -0.12, 0.05, -0.3, 0.2, 0),       # tambalea (pies plantados con IK hasta el cuadro 22)
+         8: (-0.25, -0.12, 0.05, -0.3, 0.2, 0),       # tambalea (pies plantados con IK)
          16: (-0.75, 0.1, -0.15, -0.5, 0.3, 0),       # se le doblan las manos
-         22: (-1.2, 0.3, -0.1, -0.4, 0.3, 1.0),       # agachado del todo, empieza a irse de costado
-         25: (-1.0, 1.15, -0.05, -0.3, 0.35, 0.8),    # cae con las patas recogidas
-         27: (-1.45, 1.48, -0.05, -0.2, 0.35, 0.5),
-         31: (-1.3, 1.38, -0.05, -0.25, 0.4, 0.3),    # rebote
-         36: (-1.55, 1.48, -0.05, -0.15, 0.45, 0.1),
-         48: (-1.55, 1.5, -0.05, -0.1, 0.45, 0.1)}
+         22: (-1.3, 0.3, -0.1, -0.4, 0.3, 0),         # agachado del todo, empieza a irse de costado
+         25: (-1.25, 1.15, -0.05, -0.3, 0.35, 0.6),    # cae con las patas recogiéndose
+         27: (-1.45, 1.48, -0.05, -0.2, 0.35, 1.0),
+         31: (-1.3, 1.38, -0.05, -0.25, 0.4, 1.0),    # rebote
+         36: (-1.55, 1.48, -0.05, -0.15, 0.45, 1.0),
+         48: (-1.55, 1.5, -0.05, -0.1, 0.45, 1.0)}
 
 
 def death(f):
@@ -193,13 +196,8 @@ def death(f):
     put(P, "neck", b.nose_up(hd * 0.5))
     put(P, "head", b.nose_up(hd * 0.5) @ b.lift(1, -roll * 0.25))
     put(P, "jaw", b.nose_up(-jaw))
-    if f <= 22:
-        q.feet(P, (0.1 * min(1, f / 16), 0, 0), (0, 0, 0))
-    else:
-        for s, fr in LEGS:
-            leg(P, s, fr, 0.15 if fr else -0.1, lg, 1.8)
-            if fr:
-                P["fpaw_" + side(s)]["rot"] = swing(0.3 * lg)  # la mano no se clava en el piso
+    # patas siempre con IK (pies plantados al caer; recogidos al irse de costado): pasar de IK a FK en un cuadro daba un salto
+    q.feet(P, (0.1 * min(1, f / 16) + 0.2 * lg, 1.8 * lg, 0.9 * lg), (-0.1 * lg, 1.5 * lg, 0.5 * lg))
     for s in (1, -1):
         put(P, "ear_" + side(s), b.lift(s, -0.3 * roll / 1.5))
     put(P, "tail", b.nose_up(-0.3 * roll))

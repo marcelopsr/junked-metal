@@ -2,37 +2,50 @@ import * as B from "@babylonjs/core";
 import { auraTemplate, cableTemplate, enemyTemplate, legTemplate, LEGS, sectorTemplate, teleTemplate, wingTemplate } from "./models";
 import { FX } from "./fx";
 import { rng } from "./rng";
+import { BAL } from "./balance";
 import type { Elite } from "./run";
-import { GLB, glbAnimate, glbTpl, glbVat } from "./glb";
+import { GLB, glbAnimate, glbPlay, glbTpl, glbVat } from "./glb";
 
 export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos";
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; scale?: number; color: string };
+const ATK = BAL.ataques;
+// Vida, velocidad, daño, peso y XP salen de balance.json (tabla enemigos)
+const stats = (k: Kind) => { const e = BAL.enemigos[k]; return { hp: e.vida, speed: e.velocidad, dmg: e.dano, mass: e.peso, xp: e.xp }; };
 export const DEF: Record<Kind, Def> = {
-  hormiga: { name: "Hormiga", hp: 8, speed: 8, dmg: 6, size: [0.9, 0.6, 1.7], mass: 0.4, xp: 1, color: "#a0522d" },
-  escupidora: { name: "Hormiga escupidora", hp: 22, speed: 7, dmg: 8, size: [1.1, 0.8, 2], mass: 0.7, xp: 3, color: "#d2381c" },
-  friccion: { name: "Autito a fricción", hp: 18, speed: 12.5, dmg: 7, size: [0.9, 0.6, 1.6], mass: 0.7, xp: 2, color: "#f97316" },
-  robot: { name: "Robot a cuerda", hp: 40, speed: 18, dmg: 10, size: [1.2, 1.7, 1], mass: 1.3, xp: 3, color: "#ef4444" },
-  polilla: { name: "Polilla", hp: 12, speed: 11, dmg: 5, size: [1.4, 0.5, 1.1], mass: 0.3, xp: 2, color: "#d8c690" },
-  escarabajo: { name: "Escarabajo", hp: 90, speed: 4.5, dmg: 12, size: [1.7, 1.1, 2.3], mass: 3, xp: 6, color: "#2f7d4a" },
-  rey: { name: "ESCARABAJO REY", hp: 1800, speed: 6, dmg: 30, size: [6, 3.8, 8], mass: 40, xp: 60, boss: true, scale: 3.5, color: "#d4a017" },
-  cortadora: { name: "CORTADORA DE CÉSPED", hp: 3500, speed: 15, dmg: 45, size: [7, 4.5, 6.4], mass: 80, xp: 120, boss: true, color: "#dc2626" },
-  tarantula: { name: "TARÁNTULA", hp: 2600, speed: 7, dmg: 35, size: [6, 2.6, 6.5], mass: 50, xp: 100, boss: true, scale: 3, color: "#7a55a8" },
-  perro: { name: "FELIPE", hp: 8000, speed: 9, dmg: 40, size: [3.2, 8, 8], mass: 100, xp: 0, boss: true, color: "#d9b38a" },
-  gato: { name: "EULALIO EL GATO", hp: 2900, speed: 11, dmg: 32, size: [3.4, 3.6, 6.4], mass: 60, xp: 110, boss: true, color: "#f28c28" },
-  aspiradora: { name: "LA ASPIRADORA ROBOT", hp: 7500, speed: 7, dmg: 35, size: [6.4, 1.6, 6.4], mass: 90, xp: 0, boss: true, color: "#7a8fa6" },
-  cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", hp: 7000, speed: 8, dmg: 40, size: [3, 2.4, 9], mass: 80, xp: 0, boss: true, color: "#e0a030" },
+  // ponytail: vida de los jefes finales perro / aspiradora / cortacercos (20000 / 40000 / 30000) calibrada con __bossDuel (equipo del minuto 10, 8 semillas, ~45-60 s). Medido: cortacercos 30000 y perro 24000; perro 20000 y aspiradora 40000 son interpolados (sin corrida de verificación). Remedir con __bossDuel antes de darlos por cerrados.
+  hormiga: { name: "Hormiga", ...stats("hormiga"), size: [0.9, 0.6, 1.7], color: "#a0522d" },
+  escupidora: { name: "Hormiga escupidora", ...stats("escupidora"), size: [1.1, 0.8, 2], color: "#d2381c" },
+  friccion: { name: "Autito a fricción", ...stats("friccion"), size: [0.9, 0.6, 1.6], color: "#f97316" },
+  robot: { name: "Robot a cuerda", ...stats("robot"), size: [1.2, 1.7, 1], color: "#ef4444" },
+  polilla: { name: "Polilla", ...stats("polilla"), size: [1.4, 0.5, 1.1], color: "#d8c690" },
+  escarabajo: { name: "Escarabajo", ...stats("escarabajo"), size: [1.7, 1.1, 2.3], color: "#2f7d4a" },
+  rey: { name: "ESCARABAJO REY", ...stats("rey"), size: [6, 3.8, 8], boss: true, scale: 3.5, color: "#d4a017" },
+  cortadora: { name: "CORTADORA DE CÉSPED", ...stats("cortadora"), size: [7, 4.5, 6.4], boss: true, color: "#dc2626" },
+  tarantula: { name: "TARÁNTULA", ...stats("tarantula"), size: [6, 2.6, 6.5], boss: true, scale: 3, color: "#7a55a8" },
+  perro: { name: "FELIPE EL DOGO", ...stats("perro"), size: [3.2, 8, 8], boss: true, color: "#6e7279" },
+  gato: { name: "EULALIO EL MICHU", ...stats("gato"), size: [3.4, 3.6, 6.4], boss: true, color: "#d9782a" },
+  aspiradora: { name: "LA ASPIRADORA ROBOT", ...stats("aspiradora"), size: [6.4, 1.6, 6.4], boss: true, color: "#7a8fa6" },
+  cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", ...stats("cortacercos"), size: [3, 2.4, 9], boss: true, color: "#e0a030" },
 };
 
 const UP = B.Vector3.Up();
+export const ROAR = ATK.fase2_rugido_s; // segundos que un jefe ruge, quieto, al entrar en fase 2
 // Embestida de Felipe: segundos apuntando (normal / enfurecido), velocidad y largo de la carga (m), ancho del carril, segundos de frenada
-const DOG_RAM = { wind: 1, windRage: 0.75, speed: 30, len: 26, width: 2.6, brake: 0.9 };
+export const DOG_RAM = { wind: ATK.perro_embestida_aviso_s, windRage: ATK.perro_embestida_aviso_furia_s, speed: ATK.perro_embestida_vel, len: ATK.perro_embestida_largo, width: ATK.perro_embestida_ancho, brake: ATK.perro_embestida_frenada_s };
 // Fase 2 visible: color por instancia (multiplica el albedo) sobre las plantillas de los jefes; blanco = sin tinte
 const WHITE = new B.Color4(1, 1, 1, 1), RAGE = new B.Color4(1, 0.3, 0.24, 1);
 const IC = B.VertexBuffer.ColorInstanceKind; // "instanceColor": el que los materiales leen como color por instancia
 const tintable = (m: B.Mesh) => { if (!m.instancedBuffers?.[IC]) { m.registerInstancedBuffer(IC, 4); m.instancedBuffers[IC] = WHITE; } }; // antes de la primera instancia: las nuevas copian el blanco
 const rot = (v: B.Vector3, a: number) => new B.Vector3(v.x * Math.cos(a) + v.z * Math.sin(a), 0, -v.x * Math.sin(a) + v.z * Math.cos(a));
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
+
+// Secuencias de los jefes GLB (Blender, 24 cuadros/s): acción y cuadros donde cambia el tramo (hasta el despegue o el aviso, hasta el
+// golpe, hasta el final). Las usa Enemy.seq con el reloj del juego (aviso, caída) en vez del de la acción, así el cuadro cae con el cuerpo.
+const SEQ: Partial<Record<Kind, Record<string, [string, number[]]>>> = {
+  perro: { jump: ["jump_slam", [0, 12, 28, 40]], ram: ["charge", [0, 7, 16, 26]] }, // salto: despega en el 12, aplasta en el 28; embestida: agacha, carga, frena
+  gato: { jump: ["jump", [0, 19, 29, 38]], spin: ["spin", [0, 4, 20, 24]] }, // trompo: se agacha, una vuelta entera en ciclo (agachado), se para
+};
 
 export class Enemy {
   node: B.InstancedMesh;
@@ -75,6 +88,11 @@ export class Enemy {
   leader: Enemy | null = null; // formación: sigue a su líder en vez de ir directo al auto
   slot = new B.Vector3(); // lugar en la formación (x a la derecha del líder, z hacia atrás)
   vat?: B.Vector4; // bicho importado (glb.ts): cuadro de la animación horneada de esta instancia
+  play: [string, number] | null = null; // jefe GLB con clips: acción forzada (nombre, segundo); la ficha del bestiario la fija
+  deathT = -1; // jefe GLB: segundos desde que murió (reproduce "death"); -1 = vivo
+  roar = 0; // fase 2: segundos que le quedan rugiendo, quieto (-1 = espera a estar en reposo para empezar)
+  landD = 0.4; recSeq = "jump"; // duración y secuencia de la recuperación (landT) tras el salto o el trompo
+  vy0 = 0; landT = 0; clipT = 0; // jefe GLB: velocidad vertical al despegar, recuperación tras aterrizar y reloj del ciclo de patas
   atk = -1; // segundos dentro de su propio ataque (GLB[kind].atk: escupida, embestida); -1 = no ataca
 
   constructor(public kind: Kind, pos: B.Vector3, hpMul: number) {
@@ -85,7 +103,7 @@ export class Enemy {
     const glb = glbTpl(kind); // modelo importado con VAT (glb.ts); los demás bichos usan su procedural de models.ts
     if (!glb && GLB[kind]) throw new Error(`Enemy ${kind}: falta su modelo GLB (models/${GLB[kind]!.file}.glb); ver el error de carga más arriba en la consola`);
     const tpl0 = glb ?? enemyTemplate(kind, d.scale);
-    if (d.boss && !glb) tintable(tpl0); // los GLB (glb.ts) tienen su propio shader de animación: sin tinte
+    if (d.boss) tintable(tpl0); // también los GLB (glb.ts): el color por instancia convive con el shader de animación
     this.node = tpl0.createInstance(kind);
     if (glb) this.vat = glbVat(this.node);
     this.node.position.copyFrom(pos);
@@ -164,6 +182,7 @@ export class Enemy {
       for (const w of this.wings) w.rotation.z = a * 0.9; // con rotation.y = PI el ala izquierda ya queda espejada
       return;
     }
+    if (this.vat && GLB[this.kind]!.clips) return this.bossClip(dt);
     if (this.vat) { // ataque propio (atk) o, sin él, justo después de golpear (main.ts carga touchCd)
       const v = this.body.getLinearVelocity(), a = GLB[this.kind]!.atk;
       glbAnimate(this.vat, Math.hypot(v.x, v.z), dt, !a && this.touchCd > 0.5, a && this.atk >= 0 ? this.atk / a : -1);
@@ -181,6 +200,48 @@ export class Enemy {
       l.m.rotation.y = l.base + s * amp;
       l.m.rotation.z = l.side * Math.max(0, Math.cos(this.walk + l.phase)) * amp * 0.5; // levanta al avanzar
     }
+  }
+
+  // Fotograma de una secuencia del jefe (SEQ): tramo phase (0..2) en su fracción p (0..1)
+  seq(name: string, phase: number, p: number): [string, number] {
+    const [clip, f] = SEQ[this.kind]![name];
+    return [clip, B.Scalar.Lerp(f[phase], f[phase + 1], B.Scalar.Clamp(p, 0, 1)) / 24];
+  }
+
+  // Jefe con todas las acciones horneadas (glb.ts): la acción sale de lo que está haciendo (estado, salto, contacto); al caminar o
+  // correr el ciclo avanza a la velocidad real del cuerpo (GLB.clips = m/s de suelo a los que el ciclo no patina)
+  private bossClip(dt: number) {
+    let c = this.play;
+    if (this.deathT >= 0) c = ["death", (this.deathT += dt)]; // el cuerpo físico ya no existe (die)
+    else {
+      const [w, r] = GLB[this.kind]!.clips!, v = this.body.getLinearVelocity(), sp = Math.hypot(v.x, v.z), s = this.state, dog = this.kind === "perro";
+      if (!this.airborne) this.vy0 = 0;
+      if (c) { /* acción forzada */ }
+      else if (this.roar > 0) c = ["rage", ROAR - this.roar] // rugido de fase 2
+      else if (this.airborne) { // salto: la acción cae justo cuando el cuerpo cae (por la velocidad vertical)
+        this.vy0 ||= Math.max(v.y, 1); this.landT = this.landD = 0.4; this.recSeq = "jump";
+        c = this.seq("jump", 1, (this.vy0 - v.y) / (2 * this.vy0));
+      } else if (this.landT > 0) c = this.seq(this.recSeq, 2, 1 - (this.landT -= dt) / this.landD); // recuperación tras aterrizar o tras el trompo
+      else if (dog && s >= 3) c = this.seq("ram", s - 3, 1 - Math.max(0, this.timer) / [this.enraged ? DOG_RAM.windRage : DOG_RAM.wind, DOG_RAM.len / DOG_RAM.speed, DOG_RAM.brake][s - 3]);
+      else if (!dog && s === 1) c = this.seq("jump", 0, 1 - this.timer); // agazapado: el aviso de 1 s
+      else if (!dog && s === 2) c = this.seq("spin", 0, 1 - this.timer / 0.6); // trompo: se agacha (aviso de 0,6 s)
+      else if (!dog && s === 3) c = this.seq("spin", 1, ((1 - this.timer / 1.8) * 4) % 1); // 4 vueltas enteras en 1,8 s: la acción gira, el cuerpo no
+      else if (!dog && this.touchCd > 0) c = ["swipe", 0.8 - this.touchCd]; // zarpazo al tocar al auto (main.ts carga touchCd = 0,8)
+      else {
+        const clip = sp < 0.4 ? (this.enraged ? "rage" : "idle") : sp < Math.sqrt(w * r) ? "walk" : "run";
+        c = [clip, (this.clipT += dt * (clip === "walk" ? sp / w : clip === "run" ? sp / r : 1))];
+      }
+    }
+    glbPlay(this.vat!, this.kind, c![0], c![1]);
+  }
+
+  // Muerte de un jefe GLB: se libera el cuerpo físico y la malla queda reproduciendo "death" (fx.corpse llama a animate)
+  die() {
+    this.agg.dispose();
+    this.setRage(false);
+    for (const t of this.tele) t.dispose();
+    this.tele = [];
+    this.deathT = 0;
   }
 
   get pos() { return this.node.position; }
@@ -209,16 +270,22 @@ export class Enemy {
     let move = to;
     let speed = d.speed * this.spd;
     let turn = 6;
-    if (this.slow > 0) { this.slow -= dt; speed *= d.boss ? 0.8 : 0.45; } // empapado: se arrastra
+    if (this.slow > 0) { this.slow -= dt; speed *= d.boss ? ATK.jefe_lento_mult : ATK.bicho_lento_mult; } // empapado: se arrastra
     this.clock += dt;
-    if (d.boss && !this.enraged && this.hp < this.maxHp * 0.5) { this.enraged = true; this.phaseUp = true; this.setRage(true); } // fase 2: aviso en main.ts
-    if (this.enraged) { speed *= 1.2; this.vapor(dt); }
+    if (d.boss && !this.enraged && this.hp < this.maxHp * ATK.fase2_vida) { this.enraged = true; this.phaseUp = true; this.setRage(true); this.roar = -1; } // fase 2: aviso en main.ts
+    if (this.enraged) { speed *= ATK.fase2_vel; this.vapor(dt); }
+    if (this.roar < 0 && !this.airborne && this.state === 0) this.roar = ROAR; // espera a que termine el ataque en curso
+    if (this.roar > 0) { // ruge quieto (sigue recibiendo daño); frenarlo cada cuadro anula empujes
+      this.roar = Math.max(0, this.roar - dt);
+      this.body.setLinearVelocity(new B.Vector3(0, v.y, 0)); this.body.setAngularVelocity(B.Vector3.Zero());
+      return;
+    }
 
     if (this.kind === "robot" || this.kind === "cortadora") {
       // Apunta quieto, después sale disparado en línea recta
       this.timer -= dt;
-      if (this.state === 0) { speed = 0; turn = this.kind === "robot" ? 5 : 2; if (this.timer <= 0) { this.state = 1; this.timer = this.kind === "robot" ? 1.2 : 2.6; } }
-      else { move = fwd; turn = 0.3; if (this.timer <= 0) { this.state = 0; this.timer = this.kind === "robot" ? 1 : 1.4; } }
+      if (this.state === 0) { speed = 0; turn = this.kind === "robot" ? 5 : 2; if (this.timer <= 0) { this.state = 1; this.timer = this.kind === "robot" ? ATK.robot_carga_s : ATK.cortadora_carga_s; } }
+      else { move = fwd; turn = 0.3; if (this.timer <= 0) { this.state = 0; this.timer = this.kind === "robot" ? ATK.robot_pausa_s : ATK.cortadora_pausa_s; } }
     }
 
     if (this.kind === "escupidora") {
@@ -230,7 +297,7 @@ export class Enemy {
         const a0 = this.atk;
         if ((this.atk += dt) >= g.atk!) this.atk = -1;
         if (a0 < at && a0 + dt >= at) { this.body.setAngularVelocity(B.Vector3.Zero()); return "spit"; }
-      } else if (dist < 16) { speed = 0; turn = 5; if (this.timer <= 0 && Math.abs(diff) < 0.4) { this.timer = 2.6; this.atk = 0; } }
+      } else if (dist < ATK.escupidora_distancia) { speed = 0; turn = 5; if (this.timer <= 0 && Math.abs(diff) < 0.4) { this.timer = ATK.escupidora_cada_s; this.atk = 0; } }
     }
 
     if (this.kind === "escarabajo") {
@@ -238,9 +305,9 @@ export class Enemy {
       const g = GLB.escarabajo!;
       if (this.atk >= 0) {
         const k = (this.atk += dt) / g.atk!;
-        if (k < g.hit!) { speed = 0; turn = 4; } else if (k < g.hit! + 0.17) { move = fwd; speed *= 3; turn = 0.5; } else speed *= 0.3;
-        if (k >= 1) { this.atk = -1; this.timer = 1.5; }
-      } else if ((this.timer -= dt) <= 0 && dist < 4 && Math.abs(diff) < 0.5) this.atk = 0;
+        if (k < g.hit!) { speed = 0; turn = 4; } else if (k < g.hit! + 0.17) { move = fwd; speed *= ATK.escarabajo_vel_mult; turn = 0.5; } else speed *= 0.3;
+        if (k >= 1) { this.atk = -1; this.timer = ATK.escarabajo_espera_s; }
+      } else if ((this.timer -= dt) <= 0 && dist < ATK.escarabajo_distancia && Math.abs(diff) < 0.5) this.atk = 0;
     }
 
     if (this.kind === "polilla") {
@@ -250,13 +317,13 @@ export class Enemy {
       cv.y = 0;
       const cs = cv.length();
       this.timer -= dt;
-      if (this.timer <= 0) { this.state = 1 - this.state; this.timer = this.state ? 0.7 : 3 + rng() * 3; }
+      if (this.timer <= 0) { this.state = 1 - this.state; this.timer = this.state ? ATK.polilla_picada_s : ATK.polilla_vuelo_min + rng() * ATK.polilla_vuelo_rango; }
       const dive = this.state === 1;
       const goal = dive ? target.clone() : target.add(cs > 2 ? cv.scaleInPlace(4.5 / cs) : this.pos.subtract(target).normalize().scaleInPlace(3.5));
       if (!dive) goal.addInPlace(new B.Vector3(Math.sin(this.walk * 0.11) * 1.6, 0, Math.cos(this.walk * 0.07) * 1.6));
       const g = goal.subtract(this.pos); g.y = 0;
       const gd = g.length();
-      const sp = (dive ? d.speed * 1.7 : Math.min(d.speed, gd * 3)) * this.spd * (this.slow > 0 ? 0.45 : 1);
+      const sp = (dive ? d.speed * ATK.polilla_picada_vel : Math.min(d.speed, gd * 3)) * this.spd * (this.slow > 0 ? 0.45 : 1);
       const want = gd > 0.01 ? g.scaleInPlace(sp / gd) : g;
       const floor = this.groundY(4) ?? this.pos.y - 1.7; // vuela a altura fija sobre el piso (montículos, rampas)
       const hy = floor + (dive ? 0.5 : 1.7 + Math.sin(this.walk * 0.05) * 0.3) - this.pos.y;
@@ -271,31 +338,31 @@ export class Enemy {
       // ráfaga (aro alrededor suyo, después 6 escupitajos) y salto (aro donde va a caer, radio del golpe = 11 en main.ts)
       this.timer -= dt;
       if (this.airborne) {
-        this.showTele(this.land, 11, 1);
-        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; this.state = 0; this.timer = 2.5; this.showTele(null); return "slam"; }
+        this.showTele(this.land, ATK.salto_radio, 1);
+        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; this.state = 0; this.timer = ATK.tarantula_salto_descanso_s; this.showTele(null); return "slam"; }
         return;
       }
       if (this.state === 0) {
         this.showTele(null);
         if (this.timer <= 0) {
-          this.state = rng() < 0.5 ? 1 : 3;
-          this.timer = this.state === 1 ? 1.1 : 1.3;
+          this.state = rng() < ATK.tarantula_prob_rafaga ? 1 : 3;
+          this.timer = this.state === 1 ? ATK.tarantula_rafaga_aviso_s : ATK.tarantula_salto_aviso_s;
         }
       } else if (this.state === 1 || this.state === 2) {
         speed = 0; turn = 5;
         if (this.state === 1) {
-          this.showTele(this.pos, 5, 1 - this.timer / 1.1);
-          if (this.timer <= 0) { this.state = 2; this.shots = 6; this.timer = 0; }
+          this.showTele(this.pos, ATK.tarantula_rafaga_radio, 1 - this.timer / ATK.tarantula_rafaga_aviso_s);
+          if (this.timer <= 0) { this.state = 2; this.shots = ATK.tarantula_rafaga_n; this.timer = 0; }
         } else if (this.timer <= 0) {
-          this.timer = 0.16;
+          this.timer = ATK.tarantula_rafaga_intervalo_s;
           if (this.shots-- > 0) return "spit";
-          this.state = 0; this.timer = 3; this.showTele(null);
+          this.state = 0; this.timer = ATK.tarantula_rafaga_descanso_s; this.showTele(null);
         }
       } else if (this.state === 3) {
         speed = 0; turn = 4;
         // Apunta durante la primera mitad y después fija el punto: quedarse quieto = recibir el golpe
-        if (this.timer > 0.65) { const reach = Math.min(dist, 22); this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
-        this.showTele(this.land, 11, 1 - this.timer / 1.3);
+        if (this.timer > 0.65) { const reach = Math.min(dist, ATK.tarantula_salto_alcance); this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
+        this.showTele(this.land, ATK.salto_radio, 1 - this.timer / ATK.tarantula_salto_aviso_s);
         if (this.timer <= 0) {
           const T = (2 * 14) / 25; // vuelo con vy = 14 y gravedad 25
           const j = this.land.subtract(this.pos); j.y = 0;
@@ -312,29 +379,30 @@ export class Enemy {
       this.pull = 0;
       if (this.state === 0) {
         this.showTele(null);
-        if (this.timer <= 0) { this.state = 1; this.timer = 1.4; }
+        if (this.timer <= 0) { this.state = 1; this.timer = ATK.aspiradora_aviso_s; }
       } else if (this.state === 1 || this.state === 2) {
-        speed = this.state === 2 ? 2 : 0; turn = 2;
-        this.showTele(this.pos, 20, this.state === 1 ? 1 - this.timer / 1.4 : 1);
+        speed = this.state === 2 ? ATK.aspiradora_succion_vel : 0; turn = 2;
+        this.showTele(this.pos, ATK.aspiradora_radio, this.state === 1 ? 1 - this.timer / ATK.aspiradora_aviso_s : 1);
         if (this.state === 2) {
-          this.pull = dist < 20 ? 9 + 12 * (1 - dist / 20) : 0;
+          this.pull = dist < ATK.aspiradora_radio ? ATK.aspiradora_succion_min + ATK.aspiradora_succion_extra * (1 - dist / ATK.aspiradora_radio) : 0;
           if (Math.random() < dt * 25) { const a = Math.random() * 6.3, r = 5 + Math.random() * 14; FX.dust(this.pos.add(new B.Vector3(Math.sin(a) * r, 0.3, Math.cos(a) * r))); } // solo visual
         }
-        if (this.timer <= 0) { if (this.state === 1) { this.state = 2; this.timer = 2.6; } else { this.state = 3; this.timer = 0.8; } }
+        if (this.timer <= 0) { if (this.state === 1) { this.state = 2; this.timer = ATK.aspiradora_succion_s; } else { this.state = 3; this.timer = ATK.aspiradora_tuercas_aviso_s; } }
       } else if (this.state === 3) {
         speed = 0; turn = 5;
-        this.showTele(this.pos, 5, 1 - this.timer / 0.8);
-        if (this.timer <= 0) { this.state = 4; this.shots = 3; this.timer = 0; }
+        this.showTele(this.pos, 5, 1 - this.timer / ATK.aspiradora_tuercas_aviso_s);
+        if (this.timer <= 0) { this.state = 4; this.shots = ATK.aspiradora_rafagas; this.timer = 0; }
       } else if (this.timer <= 0) {
         speed = 0;
-        this.timer = 0.3;
+        this.timer = ATK.aspiradora_rafaga_intervalo_s;
         if (this.shots-- > 0) {
           const base = Math.atan2(to.x, to.z) + (this.shots - 1) * 0.09; // cada ráfaga corrida un poco: hay huecos para pasar
-          this.fan = Array.from({ length: 7 }, (_, i) => { const a = base + (i - 3) * 0.2; return new B.Vector3(Math.sin(a), 0.12, Math.cos(a)).normalize(); });
+          const nf = ATK.aspiradora_abanico_n;
+          this.fan = Array.from({ length: nf }, (_, i) => { const a = base + (i - (nf - 1) / 2) * ATK.aspiradora_abanico_ang; return new B.Vector3(Math.sin(a), 0.12, Math.cos(a)).normalize(); });
           this.body.setAngularVelocity(B.Vector3.Zero());
           return "fan";
         }
-        this.state = 0; this.timer = 3.5; this.showTele(null);
+        this.state = 0; this.timer = ATK.aspiradora_descanso_s; this.showTele(null);
       } else speed = 0;
     }
 
@@ -349,22 +417,22 @@ export class Enemy {
       }
       if (this.state === 0) {
         this.showTele(null);
-        if (this.timer <= 0 && dist < 16) { this.state = 1; this.timer = 1; this.aim = Math.atan2(to.x, to.z); }
-        else if (this.timer <= -4) { this.dropCable(); this.timer = 0; } // lejos: igual va sembrando cables
+        if (this.timer <= 0 && dist < ATK.cortacercos_distancia) { this.state = 1; this.timer = ATK.cortacercos_aviso_s; this.aim = Math.atan2(to.x, to.z); }
+        else if (this.timer <= -ATK.cortacercos_siembra_s) { this.dropCable(); this.timer = 0; } // lejos: igual va sembrando cables
       } else {
         speed = 0; turn = 0;
-        this.showTele(this.pos, 10, 1 - this.timer / 1);
+        this.showTele(this.pos, ATK.cortacercos_radio, 1 - this.timer / ATK.cortacercos_aviso_s);
         if (this.timer <= 0) {
-          this.state = 0; this.timer = 2.2; this.showTele(null);
+          this.state = 0; this.timer = ATK.cortacercos_descanso_s; this.showTele(null);
           this.dropCable();
           for (let k = -2; k <= 2; k++) { const a = this.aim + k * 0.5; FX.sparks(this.pos.add(new B.Vector3(Math.sin(a) * 8, 0.6, Math.cos(a) * 8))); }
           // ¿El auto quedó dentro del sector (±60°, 10 m)?
           const off = Math.atan2(Math.sin(Math.atan2(to.x, to.z) - this.aim), Math.cos(Math.atan2(to.x, to.z) - this.aim));
-          if (dist < 10 + 1 && Math.abs(off) < Math.PI / 3) return "slash";
+          if (dist < ATK.cortacercos_radio + 1 && Math.abs(off) < Math.PI / 3) return "slash";
           return "swing";
         }
       }
-      if (this.shockCd <= 0 && this.onCable(target)) { this.shockCd = 0.5; return "shock"; }
+      if (this.shockCd <= 0 && this.onCable(target)) { this.shockCd = ATK.cortacercos_cable_recarga_s; return "shock"; }
     }
 
     if (this.kind === "gato") {
@@ -372,24 +440,24 @@ export class Enemy {
       // Fase 2: maúlla y llama polillas
       this.timer -= dt;
       if (this.airborne) {
-        this.showTele(this.land, 11, 1);
-        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; this.state = 0; this.timer = 1.2; this.showTele(null); return "slam"; }
+        this.showTele(this.land, ATK.salto_radio, 1);
+        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; this.state = 0; this.timer = ATK.gato_salto_descanso_s; this.showTele(null); return "slam"; }
         return;
       }
       if (this.state === 0) {
         const w = Math.sin(this.clock * 2.3) * 0.9 + Math.sin(this.clock * 5.1) * 0.35;
         move = rot(to, w); speed *= 0.7 + 0.5 * Math.sin(this.clock * 1.7 + 1) ** 2 * 1.6;
-        if (this.enraged && (this.meowCd -= dt) <= 0) { this.meowCd = 10; return "meow"; }
-        if (this.timer <= 0 && dist < 45) {
+        if (this.enraged && (this.meowCd -= dt) <= 0) { this.meowCd = ATK.gato_maullido_cada_s; return "meow"; }
+        if (this.timer <= 0 && dist < ATK.gato_distancia) {
           const r = rng();
-          if (r < 0.4) { this.state = 1; this.timer = 1.0; }
-          else if (r < 0.75) { this.state = 2; this.timer = 0.6; }
-          else { this.state = 4; this.timer = 0.55; this.dir = (rng() < 0.5 ? -1 : 1) * (0.6 + rng() * 0.9); }
+          if (r < ATK.gato_prob_salto) { this.state = 1; this.timer = ATK.gato_salto_aviso_s; }
+          else if (r < ATK.gato_prob_salto + ATK.gato_prob_trompo) { this.state = 2; this.timer = ATK.gato_trompo_aviso_s; }
+          else { this.state = 4; this.timer = ATK.gato_arranque_aviso_s; this.dir = (rng() < 0.5 ? -1 : 1) * (0.6 + rng() * 0.9); }
         }
       } else if (this.state === 1) { // salto anunciado
         speed = 0; turn = 5;
-        if (this.timer > 0.4) { const reach = Math.min(dist, 24); this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
-        this.showTele(this.land, 11, 1 - this.timer / 1);
+        if (this.timer > 0.4) { const reach = Math.min(dist, ATK.gato_salto_alcance); this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
+        this.showTele(this.land, ATK.salto_radio, 1 - this.timer / ATK.gato_salto_aviso_s);
         if (this.timer <= 0) {
           const T = (2 * 14) / 25;
           const j = this.land.subtract(this.pos); j.y = 0;
@@ -399,18 +467,18 @@ export class Enemy {
         }
       } else if (this.state === 2 || this.state === 3) { // trompo: se frena girando y sale rodando hacia el auto
         if (this.state === 2) {
-          speed = 0; this.body.setAngularVelocity(new B.Vector3(0, 16, 0));
-          if (this.timer <= 0) { this.state = 3; this.timer = 1.8; }
+          speed = 0; this.body.setAngularVelocity(B.Vector3.Zero()); // el giro lo hace la acción spin (no el cuerpo)
+          if (this.timer <= 0) { this.state = 3; this.timer = ATK.gato_trompo_s; }
           return;
         }
-        move = rot(to, Math.sin(this.clock * 3) * 0.35); speed = 17;
+        move = rot(to, Math.sin(this.clock * 3) * 0.35); speed = ATK.gato_trompo_vel;
         this.body.setLinearVelocity(new B.Vector3(v.x + (move.x * speed - v.x) * Math.min(1, dt * 5), v.y, v.z + (move.z * speed - v.z) * Math.min(1, dt * 5)));
-        this.body.setAngularVelocity(new B.Vector3(0, 16, 0));
-        if (this.timer <= 0) { this.state = 0; this.timer = 1.5 + rng() * 1.5; }
+        this.body.setAngularVelocity(B.Vector3.Zero());
+        if (this.timer <= 0) { this.state = 0; this.timer = ATK.gato_trompo_pausa_min + rng() * ATK.gato_trompo_pausa_rango; this.landT = this.landD = 0.17; this.recSeq = "spin"; }
         return;
       } else { // arranque: se tira de costado a toda velocidad (a veces hacia el auto, a veces no)
-        move = rot(to, this.dir); speed = 26; turn = 12;
-        if (this.timer <= 0) { this.state = 0; this.timer = 1.2 + rng() * 1.5; }
+        move = rot(to, this.dir); speed = ATK.gato_arranque_vel; turn = 12;
+        if (this.timer <= 0) { this.state = 0; this.timer = ATK.gato_arranque_pausa_min + rng() * ATK.gato_arranque_pausa_rango; }
       }
     }
 
@@ -422,13 +490,13 @@ export class Enemy {
         return;
       }
       if (this.state === 1) { // zoomies
-        move = rot(to, Math.sin(this.clock * 4.2) * 1.2 + Math.sin(this.clock * 9) * 0.4); speed *= 2.1; turn = 10;
-        if (this.timer <= 0) { this.state = 0; this.timer = 1.2; }
+        move = rot(to, Math.sin(this.clock * 4.2) * 1.2 + Math.sin(this.clock * 9) * 0.4); speed *= ATK.perro_zoomies_vel; turn = 10;
+        if (this.timer <= 0) { this.state = 0; this.timer = ATK.perro_pausa_s; }
       } else if (this.state === 2) { // giro
         speed *= 0.9; this.body.setAngularVelocity(new B.Vector3(0, 14, 0));
         const want = to.scale(speed), k = Math.min(1, dt * 4);
         this.body.setLinearVelocity(new B.Vector3(v.x + (want.x - v.x) * k, v.y, v.z + (want.z - v.z) * k));
-        if (this.timer <= 0) { this.state = 0; this.timer = 1.2; }
+        if (this.timer <= 0) { this.state = 0; this.timer = ATK.perro_pausa_s; }
         return;
       } else if (this.state >= 3) { // embestida: apunta con el carril en rojo, carga en línea recta y frena torpe
         const dir = new B.Vector3(Math.sin(this.aim), 0, Math.cos(this.aim));
@@ -451,19 +519,19 @@ export class Enemy {
         const s = this.timer / DOG_RAM.brake;
         this.body.setLinearVelocity(new B.Vector3(dir.x * DOG_RAM.speed * 0.5 * s, v.y, dir.z * DOG_RAM.speed * 0.5 * s));
         this.body.setAngularVelocity(new B.Vector3(0, Math.sin(this.clock * 18) * 6 * s, 0));
-        if (this.timer <= 0) { this.state = 0; this.timer = 1.4; }
+        if (this.timer <= 0) { this.state = 0; this.timer = ATK.perro_embestida_pausa_s; }
         return;
-      } else if (this.timer <= 0 && dist < 40) {
-        const r = rng();
-        if (r >= 0.35 && r < 0.6) { this.state = 3; this.timer = this.enraged ? DOG_RAM.windRage : DOG_RAM.wind; this.aim = Math.atan2(to.x, to.z); return; }
-        if (r < 0.35) {
-          this.timer = this.enraged ? 2.6 : 3.8;
+      } else if (this.timer <= 0 && dist < ATK.perro_distancia) {
+        const r = rng(), p1 = ATK.perro_prob_salto, p2 = p1 + ATK.perro_prob_embestida;
+        if (r >= p1 && r < p2) { this.state = 3; this.timer = this.enraged ? DOG_RAM.windRage : DOG_RAM.wind; this.aim = Math.atan2(to.x, to.z); return; }
+        if (r < p1) {
+          this.timer = this.enraged ? ATK.perro_salto_descanso_furia_s : ATK.perro_salto_descanso_s;
           this.airborne = true;
-          const jump = to.scale(Math.min(dist, 25) * 1.1).addInPlace(UP.scale(22));
+          const jump = to.scale(Math.min(dist, ATK.perro_salto_alcance) * 1.1).addInPlace(UP.scale(22));
           this.body.setLinearVelocity(jump);
           return;
         }
-        this.state = r < 0.85 ? 1 : 2; this.timer = this.state === 1 ? 2.6 : 1.6;
+        this.state = r < p2 + ATK.perro_prob_zoomies ? 1 : 2; this.timer = this.state === 1 ? ATK.perro_zoomies_s : ATK.perro_giro_s;
       }
     }
 
@@ -478,10 +546,10 @@ export class Enemy {
   // El aura es una instancia hija (aro en el piso + halo emisivo); el cofre al morir lo suelta main.ts (kill)
   makeElite(t: Elite) {
     this.elite = t;
-    if (t === "rapida") { this.spd = 2; this.hp = this.maxHp *= 0.6; }
+    if (t === "rapida") { this.spd = BAL.ritmo.elite_rapida_vel; this.hp = this.maxHp *= BAL.ritmo.elite_rapida_vida; }
     else {
-      this.hp = this.maxHp *= 3;
-      const m = this.def.mass * 5, h = this.def.size[1];
+      this.hp = this.maxHp *= BAL.ritmo.elite_blindada_vida;
+      const m = this.def.mass * BAL.ritmo.elite_blindada_masa, h = this.def.size[1];
       this.body.setMassProperties({ mass: m, inertia: new B.Vector3(0, m, 0), centerOfMass: new B.Vector3(0, h / 2, 0) }); // masa + inercia juntas
     }
     const a = (this.aura = auraTemplate(t).createInstance("aura"));
@@ -492,6 +560,7 @@ export class Enemy {
 
   // Fase 2: tinte rojo en cuerpo y patas (solo jefes con plantilla procedural) y vapor que sale del lomo
   setRage(on: boolean) {
+    this.enraged = on; // la ficha del bestiario solo llama a esto (el juego lo fija en update)
     const c = on ? RAGE : WHITE;
     for (const m of [this.node, ...this.legs.map((l) => l.m)]) if (m.instancedBuffers?.[IC]) m.instancedBuffers[IC] = c;
     if (on && !this.rageHalo) {
@@ -524,8 +593,8 @@ export class Enemy {
     const m = cableTemplate().createInstance("cable");
     m.position.copyFrom(c);
     m.rotation.y = Math.atan2(side.x, side.z);
-    this.cables.push({ m, a: c.subtract(side), b: c.add(side), life: 14 });
-    if (this.cables.length > 8) this.cables.shift()!.m.dispose();
+    this.cables.push({ m, a: c.subtract(side), b: c.add(side), life: ATK.cortacercos_cable_vida_s });
+    if (this.cables.length > ATK.cortacercos_cables_max) this.cables.shift()!.m.dispose();
   }
   // ¿El punto p está sobre algún cable? (distancia a cada segmento en el plano)
   onCable(p: B.Vector3) {
@@ -542,7 +611,7 @@ export class Enemy {
 // La plaga de la partida multiplica pesos y puede adelantar la llegada (minuto) de cada tipo
 export function spawnTable(t: number, plague?: { mult: Partial<Record<Kind, number>>; from: Partial<Record<Kind, number>> }): [Kind, number][] {
   const m = t / 60;
-  const base: [Kind, number, number][] = [["hormiga", 0, 10], ["friccion", 0.5, 4 + m], ["escupidora", 1.5, 1 + m * 0.6], ["robot", 1.5, 2 + m * 0.6], ["escarabajo", 3.5, 1 + m * 0.5], ["polilla", 2.5, 1 + m * 0.4]];
+  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla"] as const).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
   return base.filter(([k, from]) => m >= (plague?.from[k] ?? from)).map(([k, , w]) => [k, w * (plague?.mult[k] ?? 1)]);
 }
 

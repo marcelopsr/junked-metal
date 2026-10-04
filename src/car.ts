@@ -1,19 +1,23 @@
 import * as B from "@babylonjs/core";
 import { carModel, type CarKind, type CarModel, type CarOpts } from "./models";
 import { shadows } from "./render";
+import { BAL } from "./balance";
+
+// Precio y manejo de cada auto salen de balance.json (tabla autos)
+const stats = (k: CarKind) => { const a = BAL.autos[k]; return { cost: a.precio, hp: a.vida, speed: a.velocidad, accel: a.aceleracion, turn: a.giro, grip: a.agarre, ram: a.embestida, mass: a.masa }; };
 
 const UP = B.Vector3.Up();
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
 
 export const CARS: Record<CarKind, { name: string; desc: string; cost: number; hp: number; speed: number; accel: number; turn: number; grip: number; ram: number; mass: number; size: [number, number, number] }> = {
-  buggy: { name: "Buggy", desc: "Equilibrado. Salta bien, gira rápido.", cost: 0, hp: 150, speed: 15, accel: 32, turn: 3.2, grip: 10, ram: 3, mass: 1, size: [1.3, 0.7, 2.3] },
-  monster: { name: "Monster Truck", desc: "Lento y tanque. Embestir hace +50%.", cost: 400, hp: 220, speed: 12.5, accel: 26, turn: 2.7, grip: 12, ram: 4.5, mass: 1.8, size: [1.8, 1.1, 2.4] },
-  formula: { name: "Fórmula", desc: "Rapidísimo pero frágil.", cost: 550, hp: 110, speed: 19, accel: 40, turn: 3.6, grip: 14, ram: 2.4, mass: 0.8, size: [1.3, 0.55, 2.8] },
-  tanque: { name: "Tanque de juguete", desc: "Blindado y pesado. Lento, pero embiste como un ladrillo.", cost: 800, hp: 300, speed: 10, accel: 18, turn: 2.3, grip: 18, ram: 5.5, mass: 2.6, size: [1.75, 0.9, 2.4] },
-  carrera: { name: "Autito a fricción", desc: "Liviano y nervioso. Acelera como un resorte y derrapa en cada curva.", cost: 650, hp: 85, speed: 21, accel: 48, turn: 4.2, grip: 6, ram: 1.8, mass: 0.55, size: [1.1, 0.5, 2.1] },
-  axel: { name: "Axel", desc: "Dos ruedas gigantes y una jaula en el medio. Rápido y ágil, pero frágil.", cost: 700, hp: 120, speed: 20, accel: 38, turn: 3.8, grip: 8, ram: 4, mass: 1.2, size: [1.9, 1.0, 1.7] },
-  helado: { name: "Camión de helados", desc: "Lento y simpático. Suena su melodía mientras reparte golpes fríos.", cost: 650, hp: 180, speed: 13, accel: 24, turn: 2.8, grip: 11, ram: 3, mass: 1.4, size: [1.3, 0.95, 2.4] },
-  combi: { name: "Combi", desc: "La furgoneta de la familia: mucho aguante, poca prisa y más tuercas por viaje.", cost: 900, hp: 280, speed: 11, accel: 20, turn: 2.4, grip: 14, ram: 4, mass: 2.2, size: [1.45, 1.0, 2.4] },
+  buggy: { name: "Buggy", desc: "Equilibrado. Salta bien, gira rápido.", ...stats("buggy"), size: [1.3, 0.7, 2.3] },
+  monster: { name: "Monster Truck", desc: "Lento y tanque. Embestir hace +50%.", ...stats("monster"), size: [1.8, 1.1, 2.4] },
+  formula: { name: "Fórmula", desc: "Rapidísimo pero frágil.", ...stats("formula"), size: [1.3, 0.55, 2.8] },
+  tanque: { name: "Tanque de juguete", desc: "Blindado y pesado. Lento, pero embiste como un ladrillo.", ...stats("tanque"), size: [1.75, 0.9, 2.4] },
+  carrera: { name: "Autito a fricción", desc: "Liviano y nervioso. Acelera como un resorte y derrapa en cada curva.", ...stats("carrera"), size: [1.1, 0.5, 2.1] },
+  axel: { name: "Axel", desc: "Dos ruedas gigantes y una jaula en el medio. Rápido y ágil, pero frágil.", ...stats("axel"), size: [1.9, 1.0, 1.7] },
+  helado: { name: "Camión de helados", desc: "Lento y simpático. Suena su melodía mientras reparte golpes fríos.", ...stats("helado"), size: [1.3, 0.95, 2.4] },
+  combi: { name: "Combi", desc: "La furgoneta de la familia: mucho aguante, poca prisa y más tuercas por viaje.", ...stats("combi"), size: [1.45, 1.0, 2.4] },
 };
 
 // Manejo arcade sobre un cuerpo Havok: la física resuelve choques,
