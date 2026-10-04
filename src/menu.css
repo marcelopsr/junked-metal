@@ -161,3 +161,28 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   .scr.side { align-items: center; padding-right: 0; }
   #records td, #records th { padding: 3px 6px; } /* la tabla de 5 columnas desbordaba a lo ancho en celular vertical */
 }
+
+/* Reporte de fin de partida (pantalla completa, vidrio oscuro) */
+#scr-over { max-width: 1100px; gap: 14px; }
+#scr-over .kit.stats { grid-template-columns: repeat(4, 1fr); width: min(900px, 94vw); }
+#scr-over .kit.stats li { background: rgba(14, 24, 36, .7); border: 1px solid rgba(255, 255, 255, .16); border-radius: 14px; align-items: center; }
+#scr-over .kit.stats em { display: block; font: 700 14px/1 "Rajdhani", system-ui, sans-serif; font-style: normal; margin-top: 2px; }
+#scr-over em.up { color: #7dffb0; } #scr-over em.dn { color: #ff8a8a; }
+.overGrid { align-items: stretch; gap: 16px; }
+.overGrid .card { flex: 1 1 300px; max-width: 420px; align-items: stretch; padding: 14px 16px; background: rgba(14, 24, 36, .7); border: 1px solid rgba(255, 255, 255, .16); border-radius: 16px; backdrop-filter: blur(10px); }
+.overGrid .card ul { list-style: none; margin: 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 6px; }
+#overDmg { width: 100%; }
+#overDmg li { grid-template-columns: 110px 1fr 56px; }
+.kv li { display: flex; justify-content: space-between; font-size: 18px; }
+.kv li span { color: var(--dim); }
+.overGrid .polaroid { flex: 0 1 240px; margin: 0; }
+.overGrid .polaroid img { rotate: 0deg; border-radius: 12px; image-rendering: auto; box-shadow: 0 10px 24px rgba(0, 0, 0, .4); }
+.overGrid .polaroid::before { display: none; }
+@media (max-width: 700px) { #scr-over .kit.stats { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 701px) { .overGrid { flex-wrap: nowrap; } .overGrid .card { min-width: 0; flex: 1 1 0; } .overGrid .polaroid { flex: 0 0 170px; width: 170px; } }
+#overDmg li { grid-template-columns: 120px 1fr 48px; font-size: 16px; }
+#overDmg li span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.overGrid .polaroid figcaption, .overGrid .polaroid button { font-size: 12px; }
+#scr-over { gap: 10px; }
+#scr-over .kit.stats li b { font-size: 26px; }
+#scr-over .kit.stats, #scr-over .kv, #scr-over .card ul { background: none; border: 0; box-shadow: none; clip-path: none; }

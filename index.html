@@ -173,18 +173,25 @@
       <div class="tag" id="overTxt"></div>
       <div class="stamp hidden" id="overRec">RÉCORD NUEVO</div>
       <div class="tag hidden" id="overShop">Alcanza para algo nuevo en el Taller</div>
-      <div class="overRow">
-        <figure id="overPhoto" class="polaroid hidden"><img id="overPhotoImg" alt="Foto del último momento de la partida" /><button id="overPhotoBtn">Guardar foto</button></figure>
-        <div class="overCol">
-          <ul class="kit stats" id="overStats"></ul>
-          <div class="sect">Daño infligido por fuente</div>
+      <ul class="kit stats" id="overStats"></ul>
+      <div class="overRow overGrid">
+        <div class="overCol card">
+          <div class="sect">Daño por fuente</div>
           <ul id="overDmg"></ul>
         </div>
+        <div class="overCol card">
+          <div class="sect">Mejores momentos</div>
+          <ul class="kv" id="overBest"></ul>
+          <div class="sect">Recompensas</div>
+          <ul class="kv" id="overRew"></ul>
+        </div>
+        <figure id="overPhoto" class="polaroid hidden"><img id="overPhotoImg" alt="Foto del último momento de la partida" /><button id="overPhotoBtn">Guardar foto</button></figure>
       </div>
       <div class="foot" id="overSeed"></div>
       <nav class="list row3">
-        <button data-act="quit" class="primary">Volver al menú</button>
-        <button data-act="play">Otra partida</button>
+        <button data-act="play" class="primary" id="overRepeat">Repetir</button>
+        <button data-go="shop">Ir al Taller</button>
+        <button data-act="quit">Menú</button>
         <button data-act="endless" id="overEndless" class="hidden">Seguir jugando</button>
       </nav>
     </section>

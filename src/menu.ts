@@ -550,11 +550,17 @@ export function openPause(k: Kit) {
   $("pauseSeed").textContent = k.seed;
   reset("pause");
 }
-export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; seed: string; more?: boolean; title?: string }) {
+export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; seed: string; more?: boolean; title?: string; prevBest?: number; bestStreak?: number; bestHit?: number; bossKills?: number; ach?: string[]; car?: string }) {
   $("overEndless").classList.toggle("hidden", !r.more); // venció al jefe final: puede seguir en modo sin fin
   $("overTitle").textContent = r.title ?? (r.win ? "VICTORIA" : "FIN DE LA PARTIDA");
   $("overTxt").textContent = r.why;
-  $("overStats").innerHTML = [["Tiempo", fmt(r.time)], ["Bajas", r.kills], ["Nivel", r.level], ["Tornillos", "+" + r.scrap]].map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
+  // Comparación con el récord de tiempo: ▲ mejor, ▼ peor
+  const dT = r.prevBest ? Math.floor(r.time) - r.prevBest : 0, dTxt = r.prevBest ? `<em class="${dT >= 0 ? "up" : "dn"}">${dT >= 0 ? "▲" : "▼"} ${fmt(Math.abs(dT))}</em>` : "";
+  $("overStats").innerHTML = [["Tiempo", fmt(r.time) + dTxt], ["Bajas", r.kills], ["Nivel", r.level], ["Tornillos", "+" + r.scrap]].map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
+  const best = [["Racha más larga", "x" + (r.bestStreak ?? 0)], ["Golpe más fuerte", String(r.bestHit ?? 0)], ["Jefes derrotados", String(r.bossKills ?? 0)]];
+  $("overBest").innerHTML = best.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
+  $("overRew").innerHTML = [`<li><span>Tornillos</span><b>+${r.scrap}</b></li>`, ...(r.ach ?? []).map((a) => `<li><span>Logro</span><b>${a}</b></li>`)].join("");
+  $("overRepeat").textContent = "Repetir";
   $("overRec").classList.toggle("hidden", !r.record);
   $("overShop").classList.toggle("hidden", !canBuy());
   const rows = Object.entries(r.dmg).sort((a, b) => b[1] - a[1]), top = rows[0]?.[1] || 1;

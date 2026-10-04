@@ -67,6 +67,7 @@ let weapons: Weapon[] = [];
 let passives: Partial<Record<PassiveId, number>> = {};
 let st: PStats = passiveStats({}, save.perm);
 let hp = 100, maxHp = 100, boost = 100, jingleT = 0;
+let bestStreak = 0, bestHit = 0, bossKills = 0; // mejores momentos de la partida (pantalla final)
 let xp = 0, level = 1, pendingLevels = 0;
 let time = 0, kills = 0, runScrap = 0;
 let runDist = 0; // metros manejados en la partida (estadísticas de carrera)
@@ -206,6 +207,7 @@ function startRun(d = false) {
   car = new Car(scene, save.car, carOpts());
   lastHpFrac = 1;
   passives = {};
+  bestStreak = bestHit = bossKills = 0;
   setScoop(save.car === "helado");
   weapons = startWeapons(save.pilot, save.perm.extra).map(makeWeapon);
   if (save.car === "helado" && !weapons.some((w) => w.id === "gomitas")) weapons.unshift(makeWeapon("gomitas")); // arma de partida del camión: bochas de helado
@@ -264,7 +266,7 @@ function endRun(win: boolean, why: string) {
   engineStop(); music("over"); rainSfx(0);
   // Tornillos: los de la partida más tiempo y bajas, con el extra de las maldiciones (+30% cada una)
   const earned = Math.floor((runScrap + Math.floor(time / 20) + Math.floor(kills / 25)) * curseK);
-  const record = Math.floor(time) > save.best;
+  const prevBest = save.best, record = Math.floor(time) > save.best;
   const rec: RunRec = { t: Math.floor(time), kills, lv: level, seed: runSeed, win };
   if (!simulating && !LAB.on) { // las pruebas de dev no tocan el guardado real
     save.scrap += earned - (bank?.scrap ?? 0); // al terminar el modo sin fin, solo lo que faltaba cobrar
@@ -284,7 +286,7 @@ function endRun(win: boolean, why: string) {
   $("hud").classList.add("hidden");
   const more = win && !endless; // venció al jefe final: los resultados ofrecen "Seguir jugando"
   bank = { t: time, scrap: earned, dmg: { ...dmgOut }, rec };
-  const res = { win, title: endless ? "FIN DEL SIN FIN" : undefined, why, time, kills, level, scrap: earned, record, more, dmg: { ...dmgOut }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}` };
+  const res = { win, title: endless ? "FIN DEL SIN FIN" : undefined, why, time, kills, level, scrap: earned, record, more, dmg: { ...dmgOut }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`, prevBest, bestStreak, bestHit: Math.round(bestHit), bossKills, ach: [...runAch], car: save.car };
   if (simulating) openOver(res); else startOutro(res);
 }
 
@@ -432,6 +434,7 @@ let dmgSrc = "";
 function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
   if (dmgSrc) dmgOut[dmgSrc] = (dmgOut[dmgSrc] ?? 0) + Math.min(dmg, Math.max(0, e.hp));
   e.hp -= dmg;
+  bestHit = Math.max(bestHit, dmg);
   if (dmg >= 4) SFX.impact(dmgSrc, crit);
   if (dmg >= 5 && !simulating && save.dmgNums) {
     const sp = toScreen(e.pos.add(new B.Vector3(0, e.def.size[1] + 0.3, 0)));
@@ -460,6 +463,7 @@ function explode(pos: B.Vector3, r: number, dmg: number) {
 const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora: "#ffb020", escarabajo: "#9acd32", polilla: "#c9a0ff" };
 function kill(e: Enemy) {
   kills++;
+  bestStreak = Math.max(bestStreak, hudKill()); if (e.def.boss) bossKills++;
   if (hudKill() >= 100) grant("racha");
   if (!simulating && !LAB.on) save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
   SFX.kill();
