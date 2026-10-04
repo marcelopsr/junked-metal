@@ -7,18 +7,20 @@ import { DEF, Enemy, pickWeighted, spawnTable, type Kind } from "./enemies";
 import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineKind, SFX } from "./sfx";
 import { ambient, burst, clearFx, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { ctl, input, isTouch, KEYS, padPressed, padSnap, pollInput, setupTouch } from "./input";
+import { GLB, glbStats, loadGlbs } from "./glb";
 import { carModel, cyl, initModels, nutTemplate as nutTpl, sph, template } from "./models";
-import { carOpts, current, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
+import { beastRec, BV, carOpts, current, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
 import { ABILITIES, type AbilityId } from "./abilities";
 import { pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
 import { adaptQuality, applyClimate, glitchHit, look, M, pbr, setDark, setLamp, setQuality, setupRender, shadows } from "./render";
 import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
-import { buildLayout, buildWorld, HALF, hitBreakables, obstacles, occluders, setWind, setZone, spawnPoint, underRoof, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
+import { buildLayout, HALF, initWorld, hitBreakables, obstacles, occluders, setWind, setZone, spawnPoint, underRoof, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
+import { CAR_YAW, carSpot, menuOff, menuTick, SHOTS } from "./menuscene";
 import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace } from "./kart";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -48,10 +50,10 @@ cam.maxZ = 1500;
 
 setupRender(scene, cam, low);
 initModels(scene);
+await loadGlbs(scene); // bichos importados con VAT (glb.ts), antes de la primera partida; si uno falla queda su procedural
 initFx(scene, low);
 seedRng(20260929); // el patio es siempre el mismo
-buildWorld(scene, low);
-buildLayout(); // patio del menú (semilla fija); el loop del menú pasa a la zona elegida (save.zone)
+initWorld(scene, low); // el patio se arma recién al jugar (setZone): los menús tienen escenas propias (menuscene.ts)
 applyClimate(DUSK);
 setQuality(save.quality);
 if (isTouch) setupTouch((k) => zoomBy(1 / k)); // pellizco: abrir los dedos acerca
@@ -59,8 +61,8 @@ initHud();
 
 // ---------- Estado de la partida ----------
 type Gem = { m: B.InstancedMesh; xp: number; pull: boolean; vy: number };
-type Pickup = { m: B.Mesh; type: "pila" | "iman" | "cofre" };
-type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number };
+type Pickup = { m: B.AbstractMesh; type: "pila" | "iman" | "cofre" };
+type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number; k?: Kind }; // k: quién lo tiró (daño recibido por tipo)
 
 let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" = "menu";
 let car: Car | null = null;
@@ -124,17 +126,24 @@ function dropGems(pos: B.Vector3, amount: number) {
   }
 }
 
+const PICKUP_CAP = 40; // por tipo; sin tope, a los 7-9 min había cientos en el piso (mallas + sombras) y la pestaña se caía
+const pilaTpl = () => template("pila", () => [cyl(0.8, 0.8, 1.6, M.plastic("#22c55e"), [0, 0, 0], [0, 0, Math.PI / 2], 12)]);
+const imanTpl = () => template("iman", () => [sph(1.2, M.plastic("#ef4444"), [0, 0, 0])]);
 function dropPickup(pos: B.Vector3, type: Pickup["type"]) {
   if (type === "pila" && noRepair) return; // Sin reparaciones: tampoco caen pilas
-  let m: B.Mesh;
-  if (type === "pila") m = cyl(0.8, 0.8, 1.6, M.plastic("#22c55e"), [pos.x, 0.8, pos.z], [0, 0, Math.PI / 2], 12);
-  else if (type === "iman") m = sph(1.2, M.plastic("#ef4444"), [pos.x, 0.8, pos.z]);
-  else {
+  let m: B.AbstractMesh;
+  // Pilas e imanes: instancias de plantilla (caen de a cientos) con tope; al pasarlo se va la más vieja de su tipo
+  if (type !== "cofre") {
+    const old = pickups.filter((p) => p.type === type);
+    if (old.length >= PICKUP_CAP) { old[0].m.dispose(); pickups.splice(pickups.indexOf(old[0]), 1); }
+    m = (type === "pila" ? pilaTpl() : imanTpl()).createInstance(type);
+    m.position.set(pos.x, 0.8, pos.z);
+  } else {
     m = cyl(2.2, 2.2, 1.6, M.metal("#d4a017"), [pos.x, 0.8, pos.z], undefined, 6);
     const beam = cyl(1.4, 1.4, 60, pbr("beam", { color: "#fde68a", emissive: "#fbbf24", alpha: 0.25 }), [0, 30, 0], undefined, 8);
     beam.parent = m;
+    shadows.addShadowCaster(m as B.Mesh); // las instancias ya proyectan sombra por su plantilla
   }
-  shadows.addShadowCaster(m);
   pickups.push({ m, type });
 }
 
@@ -187,7 +196,7 @@ let daily = false;
 function startRun(d = false) {
   daily = d;
   initAudio(); music("run", 0); musicS = "run";
-  titleArt(false); // ?lab arranca desde el título
+  menuOff(); // ?lab arranca desde el título
   clearRun();
   // Semilla de la partida: ?seed=N la fija (reproducible), si no, una nueva
   // Zona: el diario siempre en el patio; ?zone=garaje|jardin (solo dev) la fuerza. Se arma antes de sembrar: no toca la semilla.
@@ -425,14 +434,14 @@ addEventListener("keydown", (e) => {
   if (e.code === "KeyR" && state === "level") reroll();
 });
 function goRace(battle = false) {
-  initAudio(); clearRun(); titleArt(false);
+  initAudio(); clearRun(); menuOff();
   state = "race"; reset(null);
   $("hud").classList.add("hidden");
   setRaceCar(save.car);
   if (battle) startBattle(); else startRace();
 }
 if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2") { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
-initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); applyClimate(zoneClimate() ?? DUSK); reset("main"); } });
+initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); } }); // la luz del menú la pone menuTick
 initMenu({ scene, play: startRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true) });
 music("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: solo en el primer arranque (save.intro); ?intro la fuerza, ?mute y ?lab (pruebas) no la muestran
@@ -444,7 +453,11 @@ const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.IdentityReadOnl
 const dmgOut: Record<string, number> = {};
 let dmgSrc = "";
 function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
-  if (dmgSrc) dmgOut[dmgSrc] = (dmgOut[dmgSrc] ?? 0) + Math.min(dmg, Math.max(0, e.hp));
+  if (dmgSrc) {
+    const eff = Math.min(dmg, Math.max(0, e.hp));
+    dmgOut[dmgSrc] = (dmgOut[dmgSrc] ?? 0) + eff;
+    if (!simulating && !LAB.on) { const by = beastRec(e.kind).by; by[dmgSrc] = (by[dmgSrc] ?? 0) + eff; } // debilidades (ficha del bestiario)
+  }
   e.hp -= dmg;
   bestHit = Math.max(bestHit, dmg);
   if (dmg >= 4) SFX.impact(dmgSrc, crit);
@@ -509,6 +522,7 @@ function kill(e: Enemy) {
 function spawnEnemy(kind: Kind, p: B.Vector3) {
   enemies.push(new Enemy(kind, p, 1 + time / 200));
   if (!LAB.on && !save.seen.includes(kind)) save.seen.push(kind); // bestiario
+  if (!LAB.on && !simulating) { const b = beastRec(kind); b.first ??= today(); if (!b.zones.includes(zoneId)) b.zones.push(zoneId); } // registro propio
 }
 
 // ---------- Update ----------
@@ -655,7 +669,7 @@ function update(dt: number) {
   // --- Enemigos ---
   const cv = c.body.getLinearVelocity();
   const carR = Math.max(c.def.size[0], c.def.size[2]) / 2;
-  let contactHit = 0;
+  let contactHit = 0, contactBy: Kind | undefined;
   for (const e of enemies) {
     // En formación va al lugar que le toca junto a su líder; cerca del auto (o sin líder) ataca por su cuenta
     const ld = e.leader && e.leader.hp > 0 && Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) > 14 ? e.leader : null;
@@ -668,7 +682,7 @@ function update(dt: number) {
       const t = B.Vector3.Distance(from, c.pos) / 16, aim = c.pos.add(new B.Vector3(cvl.x, 0, cvl.z).scale(t * 0.8));
       const m = spitTpl().createInstance("sp");
       m.position.copyFrom(from);
-      spits.push({ m, v: aim.subtract(from).normalize().scale(16), life: 2.2 });
+      spits.push({ m, v: aim.subtract(from).normalize().scale(16), life: 2.2, k: e.kind });
     }
     if (e.stun <= 0) e.animate(wdt);
     if (e.phaseUp) { e.phaseUp = false; banner(`${e.def.name} SE ENFURECE`, 2); shake = Math.max(shake, 1); SFX.boss(); }
@@ -680,13 +694,13 @@ function update(dt: number) {
       FX.slam(e.pos, 10);
       mark("scorch", e.pos.x, e.pos.z, 0, 7, 10);
       shake = 1.2;
-      if (B.Vector3.Distance(e.pos, c.pos) < 11) hurt(25, false, "salto " + e.kind);
+      if (B.Vector3.Distance(e.pos, c.pos) < 11) hurt(25, false, "salto " + e.kind, e.kind);
       for (const o of enemies) if (o !== e && B.Vector3.Distance(o.pos, e.pos) < 10) damage(o, 999);
     }
     // Jefes finales nuevos (enemies.ts): tuercas en abanico, barrido en arco, cables y succión
-    if (ev === "fan") for (const d of e.fan) { const m = nutTpl().createInstance("nut"); m.position.copyFrom(e.pos).addInPlace(new B.Vector3(d.x * 3.4, 0.7, d.z * 3.4)); spits.push({ m, v: d.scale(16), life: 2.2 }); }
-    if (ev === "slash") { hurt(28, false, "barrido " + e.kind); FX.sparks(c.pos); }
-    if (ev === "shock") { hurt(6, false, "cables"); FX.sparks(c.pos); }
+    if (ev === "fan") for (const d of e.fan) { const m = nutTpl().createInstance("nut"); m.position.copyFrom(e.pos).addInPlace(new B.Vector3(d.x * 3.4, 0.7, d.z * 3.4)); spits.push({ m, v: d.scale(16), life: 2.2, k: e.kind }); }
+    if (ev === "slash") { hurt(28, false, "barrido " + e.kind, e.kind); FX.sparks(c.pos); }
+    if (ev === "shock") { hurt(6, false, "cables", e.kind); FX.sparks(c.pos); }
     if (e.pull && e.stun <= 0) { const d = new B.Vector3(e.pos.x - c.pos.x, 0, e.pos.z - c.pos.z).normalize().scaleInPlace(e.pull * wdt); c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(d)); }
     const dist = Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z);
     if (!e.def.boss && !e.elite && dist > 75) { e.hp = -1e9; continue; } // muy lejos: se recicla (la élite no: lleva cofre)
@@ -707,10 +721,11 @@ function update(dt: number) {
         dmgSrc = "";
         // Embestir algo más pesado que vos tiene costo: rebote y daño (salvo Ariete)
         if (e.def.mass > c.def.mass * st.mass * 1.8 && !ariete) {
-          if (e.touchCd <= 0) { hurt(e.def.dmg * 0.4, false, "rebote " + e.kind); e.touchCd = 0.8; }
+          if (e.touchCd <= 0) { hurt(e.def.dmg * 0.4, false, "rebote " + e.kind, e.kind); e.touchCd = 0.8; }
           c.body.applyImpulse(dir.scale(-rel * 0.9 * c.def.mass).addInPlace(new B.Vector3(0, 1.5, 0)), c.pos);
         }
       } else if (rel <= 5 && !(ariete && boosting) && e.touchCd <= 0 && e.stun <= 0) {
+        if (e.def.dmg * 0.4 > contactHit) contactBy = e.kind;
         contactHit = Math.max(contactHit, e.def.dmg * 0.4); // el golpe más fuerte, no la suma
         dmgBy["contacto " + e.kind] = (dmgBy["contacto " + e.kind] ?? 0) + e.def.dmg * 0.6;
         e.touchCd = 0.8;
@@ -720,7 +735,7 @@ function update(dt: number) {
     }
   }
   // Invulnerabilidad de contacto: como mucho un golpe cada 0,5 s aunque te rodeen
-  if ((touchIFrame -= dt) <= 0 && contactHit) { hurt(contactHit, true, "_contacto"); SFX.hurt(); touchIFrame = 0.6; }
+  if ((touchIFrame -= dt) <= 0 && contactHit) { hurt(contactHit, true, "_contacto", contactBy); SFX.hurt(); touchIFrame = 0.6; }
   for (const e of enemies.filter((x) => x.hp <= 0)) {
     enemies.splice(enemies.indexOf(e), 1);
     if (e.hp < -1e8) e.dispose(); else kill(e);
@@ -736,7 +751,7 @@ function update(dt: number) {
     s.m.position.addInPlace(s.v.scale(wdt));
     s.v.y -= 3 * wdt;
     let dead = (s.life -= wdt) <= 0 || s.m.position.y < 0.1;
-    if (B.Vector3.Distance(s.m.position, c.pos) < carR + 0.3) { hurt(7, false, "ácido"); FX.hit(s.m.position); dead = true; }
+    if (B.Vector3.Distance(s.m.position, c.pos) < carR + 0.3) { hurt(7, false, "ácido", s.k); FX.hit(s.m.position); dead = true; }
     if (dead) { mark("scorch", s.m.position.x, s.m.position.z, Math.random() * 6, 0.6, 5); s.m.dispose(); spits.splice(i, 1); }
   }
 
@@ -805,8 +820,9 @@ addEventListener("wheel", (ev) => state === "play" && zoomBy(ev.deltaY > 0 ? 1.0
 addEventListener("keydown", (ev) => { if (ev.key === "-" || ev.key === "=" || ev.key === "+") zoomBy(ev.key === "-" ? 1.1 : 1 / 1.1); });
 const LAB = { on: false, back: 15, up: 13, t: 1 }; // modo lab (solo dev): mundo congelado para probar el look
 const dmgBy: Record<string, number> = {}; // solo dev: de dónde viene el daño
-function hurt(n: number, continuous = false, src = "?") {
+function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   if (god || (abil === "escudo" && abilOn > 0)) return; // escudo: invulnerable
+  if (by && !simulating && !LAB.on) beastRec(by).hurt += n * (1 - st.armor); // daño recibido por tipo (ficha del bestiario)
   airHit = true;
   if (driveMul > 1) { driveMul = 1; hudDrive(1); } // el combo de manejo cae con cualquier golpe
   hitAt = time;
@@ -902,50 +918,91 @@ function updateHud(dt: number) {
 
 // ---------- Loop ----------
 const camTarget = new B.Vector3();
-// Encuadres del menú: [cámara x, y, z, mira x, y, z]. Casa al fondo en z ≈ 110, auto del garaje en el origen.
-const SHOTS: Record<string, number[]> = {
-  title: [0, 48, -95, 0, 4, 20], main: [32, 15, -40, 0, 2, 0], garage: [0, 2.1, -6.2, 1.7, 0.7, 0], shop: [7, 2.6, -8, -2, 1.2, 6],
-  config: [-34, 9, -22, 0, 1, 30], bestiary: [6, 9, 55, 0, 30, 110], credits: [0, 4, -24, 10, 38, 90],
-};
-// Encuadres propios de cada zona (lo que falta sale de SHOTS). Garaje: el auto real ocupa x 10..50 y la casa no existe.
-const ZSHOTS: Record<string, Record<string, number[]>> = {
-  garaje: { main: [-30, 14, -45, 8, 4, 12], config: [-12, 9, -30, 12, 3, 22], bestiary: [-45, 14, -30, -45, 28, -80], credits: [18, 6, -32, 38, 26, -80] },
-  jardin: { bestiary: [6, 9, 45, 0, 30, 140], credits: [0, 4, -24, 10, 38, 130] },
-};
-const shot = (scr: string) => ZSHOTS[zoneId]?.[scr] ?? SHOTS[scr] ?? SHOTS.main;
+// Encuadres del menú: SHOTS (menuscene.ts), uno por pantalla dentro de su escena (estante o mesa de taller)
+const shot = (scr: string) => (engine.getAspectRatio(cam) < 1 && SHOTS[scr + "_v"]) || SHOTS[scr] || SHOTS.main; // _v: encuadre de celular vertical
 let previewKey = "", previewR = 0;
-// Portada del título: auto en primer plano a ras del pasto mirando a la luna, bichos acechando al fondo, roca oscura delante.
-// Se arma al entrar al título y se desarma al salir. Los bichos son Enemy normales sin IA (solo animate).
-let art: { bugs: Enemy[]; rock: B.Mesh; yaw: number } | null = null;
-function titleArt(on: boolean) {
-  if (!on) {
-    if (!art) return;
-    for (const e of art.bugs) e.dispose();
-    art.rock.dispose();
-    art = null;
-    applyClimate(zoneClimate() ?? DUSK);
-    return;
+// ---------- Ficha del bestiario: el bicho sobre un pedestal en el centro del patio (origen, donde gira el auto del garaje) ----------
+// Es un Enemy real (modelo, patas, aura de élite, telegráficos) sin IA: el cuerpo pasa a ANIMATED y sigue a la malla.
+// Se crea al abrir la ficha o cambiar de bicho / variante y se libera al cerrarla. Las animaciones son guiones cortos con los mismos avisos y efectos del juego.
+const pedTpl = () => template("pedestal", () => [cyl(1, 1.1, 1, M.matte("#34404c"), [0, 0.5, 0], undefined, 16), cyl(1.03, 1.03, 0.06, M.matte("#d8cfa8"), [0, 0.98, 0], undefined, 16)]);
+const PED_H = 0.35;
+// Ataque de cada bicho: aviso (aro propio, aro de caída o sector, con su radio real), duración del aviso y golpe (embestida, salto, escupida, succión)
+const BATK: Partial<Record<Kind, { tele?: "self" | "land" | "arc"; r?: number; wind: number; hit: "lunge" | "hop" | "spit" | "dive" | "suck" | "swing" }>> = {
+  escupidora: { wind: GLB.escupidora!.atk! * GLB.escupidora!.hit!, hit: "spit" }, escarabajo: { wind: GLB.escarabajo!.atk! * GLB.escarabajo!.hit!, hit: "lunge" }, robot: { wind: 0.9, hit: "lunge" }, cortadora: { wind: 1.2, hit: "lunge" }, polilla: { wind: 0.4, hit: "dive" },
+  tarantula: { tele: "self", r: 5, wind: 1.1, hit: "spit" }, gato: { tele: "land", r: 11, wind: 1, hit: "hop" }, perro: { wind: 0.5, hit: "hop" },
+  aspiradora: { tele: "self", r: 20, wind: 1.4, hit: "suck" }, cortacercos: { tele: "arc", r: 10, wind: 1, hit: "swing" },
+};
+const TAR_JUMP = { tele: "land" as const, r: 11, wind: 1.3, hit: "hop" as const }; // segundo ataque de la tarántula: salto con aro de caída
+let beast: { e: Enemy; ped: B.InstancedMesh; key: string; seq: number; t: number; vel: B.Vector3; fx: number; atk: number } | null = null; // atk: ataques pedidos (la tarántula alterna ráfaga y salto)
+function beastTick(dt: number, on: boolean) {
+  const key = on && BV.kind ? BV.kind + BV.elite : "";
+  if (beast && beast.key !== key) { beast.e.dispose(); beast.ped.dispose(); beast = null; }
+  if (!key) return null;
+  const kind = BV.kind!, d = DEF[kind], span = Math.max(d.size[0], d.size[2]);
+  if (!beast) {
+    const e = new Enemy(kind, new B.Vector3(0, PED_H, 0), 1);
+    e.body.setMotionType(B.PhysicsMotionType.ANIMATED);
+    e.body.disablePreStep = false; // el cuerpo sigue a la malla (no cae ni empuja)
+    if (BV.elite) e.makeElite(BV.elite);
+    const vel = new B.Vector3();
+    e.body.getLinearVelocity = () => vel; // ponytail: animate() mide la marcha con la velocidad del cuerpo; acá se la dicta la ficha
+    const ped = pedTpl().createInstance("ped");
+    ped.position.setAll(0); // la instancia nace donde está la plantilla escondida
+    ped.scaling.set(span * 0.62 + 0.4, PED_H, span * 0.62 + 0.4);
+    beast = { e, ped, key, seq: BV.seq, t: 9, vel, fx: 0, atk: 0 };
   }
-  if (art) return;
-  applyClimate(zoneClimate() ?? DUSK);
-  const L = (scene.getLightByName("sun") as B.DirectionalLight).direction;
-  const v = new B.Vector3(-L.x, 0, -L.z).normalize(), side = new B.Vector3(v.z, 0, -v.x); // v: hacia la luna (contraluz)
-  const cp = v.scale(-4.4).addInPlace(side.scale(1.7));
-  SHOTS.title = [cp.x, 0.42, cp.z, v.x * 3 - side.x * 0.5, 0.8, v.z * 3 - side.z * 0.5];
-  const bugs = ([["escarabajo", 7, -4.2], ["hormiga", 5, 3.4], ["hormiga", 6.5, 5], ["robot", 10, -7]] as [Kind, number, number][]).map(([kind, d, sd]) => {
-    const p = v.scale(d).addInPlace(side.scale(sd));
-    const e = new Enemy(kind, new B.Vector3(p.x, 0.1, p.z), 1);
-    e.body.disablePreStep = false; // quietos y mirando al auto: el cuerpo sigue a la malla
-    e.node.rotationQuaternion = B.Quaternion.RotationYawPitchRoll(Math.atan2(-p.x, -p.z), 0, 0);
-    return e;
-  });
-  const rp = cp.add(v.scale(1.9)).addInPlace(side.scale(-2.1));
-  const rock = sph(1.5, M.matte("#120e0b"), [rp.x, 0.05, rp.z], [1.3, 0.45, 1]);
-  art = { bugs, rock, yaw: Math.atan2(-v.x, -v.z) - 1.3 };
-  // La portada aparece ya encuadrada (sin viajar desde la cámara inicial, que pasa sobre la mesa)
-  cam.position.set(SHOTS.title[0], SHOTS.title[1], SHOTS.title[2]);
-  camTarget.set(SHOTS.title[3], SHOTS.title[4], SHOTS.title[5]);
+  const b = beast, e = b.e, n = e.node;
+  if (b.seq !== BV.seq) { b.seq = BV.seq; b.t = 0; b.fx = 0; n.setEnabled(true); n.scaling.setAll(1); if (BV.anim === "attack") b.atk++; }
+  b.t += dt;
+  if (performance.now() - BV.touched > 2500) BV.yaw += dt * 0.35; // giro lento si nadie lo toca
+  const t = b.t, A = BV.anim, at = kind === "tarantula" && b.atk % 2 === 0 ? TAR_JUMP : BATK[kind] ?? { wind: 0.35, hit: "lunge" as const };
+  const fwd = new B.Vector3(Math.sin(BV.yaw), 0, Math.cos(BV.yaw)), top = new B.Vector3(0, PED_H, 0);
+  let lift = 0, push = 0, pitch = 0, roll = 0, sp = 0;
+  e.showTele(null); e.touchCd = 0; e.atk = -1;
+  if (A === "walk" || A === "phase") sp = d.speed * (A === "phase" ? 1.2 * 1.6 : 1) * (BV.elite === "rapida" ? 2 : 1);
+  if (A === "phase") { roll = Math.sin(t * 40) * 0.03 * Math.max(0, 1 - t / 2.2); if (t < dt * 1.5) { SFX.boss(); shake = Math.max(shake, 0.6); } e.vapor(dt); }
+  e.setRage(A === "phase"); // tinte rojo de fase 2, como en partida
+  if (A === "attack" && t < at.wind + 1.4) {
+    const w = at.wind, k = Math.min(1, t / w), s = t - w; // s: segundos desde el golpe
+    if (at.tele && t < w) e.showTele(at.tele === "land" ? top.add(fwd.scale(span * 0.4)) : top.clone(), at.r!, k);
+    e.aim = BV.yaw;
+    if (t < w) { pitch = -0.12 * k; roll = Math.sin(t * 50) * 0.02 * k; } // se carga: echa el peso atrás y tiembla
+    else if (at.hit === "lunge" || at.hit === "swing") { push = Math.sin(Math.min(1, s / 0.5) * Math.PI) * span * 0.35; pitch = 0.1 * Math.max(0, 1 - s / 0.5); sp = s < 0.5 ? d.speed : 0; }
+    else if (at.hit === "hop") { const h = Math.max(0, s * (1.1 - s)) * 4 * span * 0.5; lift = h; if (s < 1.1) pitch = -0.2 * Math.sin(s / 1.1 * Math.PI); }
+    else if (at.hit === "dive") { push = Math.sin(Math.min(1, s / 0.4) * Math.PI) * span * 0.6; lift = -push * 0.3; pitch = 0.4 * Math.sin(Math.min(1, s / 0.4) * Math.PI); }
+    else if (at.hit === "spit") pitch = 0.15 * Math.max(0, 1 - s / 0.3);
+    else if (at.hit === "suck") { roll = Math.sin(t * 30) * 0.015; if (s < 1.2 && Math.random() < dt * 25) { const a = Math.random() * 6.3, r = 5 + Math.random() * 14; FX.dust(new B.Vector3(Math.sin(a) * r, 0.3, Math.cos(a) * r)); } } // como la succión real
+    e.touchCd = t > w && s < 0.5 ? 1 : 0; // la hormiga GLB (glb.ts) muerde con touchCd
+    if (GLB[kind]?.atk) { if (t < GLB[kind]!.atk!) e.atk = t; push = 0; } // escupidora y escarabajo: su animación de ataque (golpe en w; la arremetida ya la trae)
+    // Efectos del golpe, una vez por paso (b.fx cuenta los que ya salieron)
+    const front = top.add(fwd.scale(span * 0.6 + 0.6)).addInPlace(new B.Vector3(0, d.size[1] * 0.4, 0));
+    if (s >= 0 && b.fx === 0) {
+      b.fx = 1;
+      if (at.hit === "lunge" || at.hit === "dive") { FX.sparks(front); FX.hit(front); }
+      if (at.hit === "swing") for (let j = -2; j <= 2; j++) { const a = BV.yaw + j * 0.5; FX.sparks(new B.Vector3(Math.sin(a) * 8, 0.6, Math.cos(a) * 8)); }
+    }
+    if (at.hit === "spit" && s >= 0 && b.fx <= (kind === "tarantula" ? 6 : 1) && s >= (b.fx - 1) * 0.16) { // 1 escupida, o la ráfaga de 6 de la tarántula
+      b.fx++;
+      burst(front, { n: 10, color: "#ff3a1f", size: [0.25, 0.55], power: [6, 11], life: [0.25, 0.45], gravity: -8 });
+    }
+    if (at.hit === "suck" && s >= 1.2 && b.fx < 4) { b.fx++; for (let j = -3; j <= 3; j++) { const a = BV.yaw + j * 0.2; FX.sparks(top.add(new B.Vector3(Math.sin(a) * 4, 0.7, Math.cos(a) * 4))); } } // ráfagas de tuercas
+    if (at.hit === "hop" && s >= 1.1 && b.fx === 1) { b.fx = 2; FX.slam(top, 10); shake = Math.max(shake, 0.8); }
+  }
+  if (A === "hit" && t < dt * 1.5) { shake = Math.max(shake, impact(n, top.add(new B.Vector3(0, d.size[1] * 0.5, 0)), d.color, span * (d.scale ?? 1), "embestida", true, !!d.boss)); SFX.impact("embestida", true); }
+  if (A === "die") {
+    if (t < 0.45) { roll = (t / 0.45) * Math.PI * (d.boss ? 0.5 : 1); lift = Math.sin((t / 0.45) * Math.PI) * span * 0.3; } // vuelca (los insectos, patas arriba)
+    else if (b.fx === 0) { b.fx = 1; FX.death(top.add(new B.Vector3(0, 0.5, 0)), !!d.boss); debris(top, d.color, d.boss ? 30 : 7, d.boss ? 14 : 6, d.scale ?? (d.boss ? 3 : 1)); SFX.kill(); n.setEnabled(false); }
+    else if (t > 1.8 && !n.isEnabled()) { n.setEnabled(true); n.scaling.setAll(0.01); }
+    if (t > 1.8) { const k = Math.min(1, (t - 1.8) / 0.25); n.scaling.setAll(k < 1 ? k * 1.1 : 1); roll = 0; }
+  }
+  if (kind === "polilla") lift += 1.2 + Math.sin(performance.now() / 600) * 0.15; // vuela
+  b.vel.copyFrom(fwd.scale(sp));
+  n.position.set(fwd.x * push, PED_H + lift, fwd.z * push);
+  n.rotationQuaternion = B.Quaternion.RotationYawPitchRoll(BV.yaw, pitch, roll);
+  if (n.isEnabled()) e.animate(A === "phase" ? dt * 1.5 : dt);
+  return span;
 }
+
 scene.onBeforeRenderObservable.add(() => {
   padSnap();
   const dt = Math.min(engine.getDeltaTime() / 1000, 0.05);
@@ -1024,50 +1081,49 @@ scene.onBeforeRenderObservable.add(() => {
       for (const m of occluders) m.visibility = ray.intersectsMesh(m, true).hit ? 0.999 : 1;
     }
   } else {
-    { // en el menú también: lo que tape el encuadre (la mesa al viajar entre pantallas) se tramea
-      const to = camTarget.subtract(cam.position), len = to.length();
-      const ray = new B.Ray(cam.position, to.scaleInPlace(1 / Math.max(len, 1e-3)), len);
-      for (const m of occluders) m.visibility = ray.intersectsMesh(m, true).hit ? 0.999 : 1;
-    }
-    // Diorama: cada pantalla del menú tiene su encuadre; la cámara viaja con lerp suave y se mece un poco
+    // Diorama: cada pantalla del menú tiene su encuadre en su escena; la cámara viaja con lerp suave y se mece un poco
     const scr = current() ?? "main", t = performance.now() / 1000;
-    // Fondo = zona elegida: al cambiarla se rehace el mundo y la cámara salta al encuadre nuevo (sin viajar atravesando paredes)
-    if (setZone(save.zone)) {
-      applyClimate(zoneClimate() ?? DUSK);
+    // Escena de la pantalla (estante o mesa) con su luz y foco; al cambiar de escena la cámara corta al encuadre nuevo
+    if (menuTick(scr, cam, scr === "beast" ? new B.Vector3(0, PED_H + 1, 0) : carSpot(scr)?.addInPlaceFromFloats(0, 0.6, 0) ?? camTarget, dt, low)) { // foco: el bicho, el auto o lo que mira la cámara
       const [x, y, z, a, b, c] = shot(scr);
       cam.position.set(x, y, z); camTarget.set(a, b, c);
     }
-    titleArt(scr === "title");
-    const [px, py0, pz0, tx0, ty, tz] = shot(scr);
-    // Garaje: los autos grandes (tanque, monster, combi, helado) giran sobre su eje; la cámara se aleja según su tamaño para que no se corten
-    const gz = scr === "garage" ? CARS[save.car].size : null, extra = gz ? Math.max(0, Math.max(gz[0] * 1.3, gz[2], gz[1] * 2) - 2.4) : 0;
-    const py = py0 + extra * 0.6, pz = pz0 - extra * 2.2, tx = tx0 + extra * 0.5;
-    const sw = scr === "garage" ? 0.15 : scr === "title" ? 0.12 : 2.5, kk = 1 - Math.exp(-2.2 * dt);
+    // Ficha del bestiario: cámara propia según el tamaño del bicho; queda a la izquierda (o arriba en celular vertical) y la info al otro lado
+    const bspan = beastTick(dt, scr === "beast");
+    if (bspan !== null) {
+      const d = DEF[BV.kind!], asp = engine.getAspectRatio(cam), th = Math.tan(cam.fov / 2), tall = asp < 1;
+      const h = d.size[1], need = Math.max(bspan, d.size[2], h * 1.2) * (d.boss ? 1.9 : 1.5) + 1.5; // los jefes abren patas y cola más allá de su caja
+      const dist = Math.max(need / (2 * th * asp * (tall ? 0.7 : 0.45)), (h + 1.5) / (2 * th * (tall ? 0.3 : 0.65))) * BV.zoom;
+      const W = dist * th * asp, H = dist * th, ty0 = PED_H + h * 0.45;
+      SHOTS.beast = [tall ? 0 : -W * 0.42, ty0 + dist * 0.36, dist, tall ? 0 : -W * 0.42, ty0 - (tall ? H * 0.58 : 0), 0]; // desde +z: del otro lado queda la mesa del patio
+      setLamp(new B.Vector3(dist * 0.3, ty0, dist * 0.6), new B.Vector3(-0.3, 0, -0.6).normalize(), false, dt); // el faro alumbra la vitrina de frente
+    }
+    const [px0, py0, pz0, tx, ty, tz] = shot(scr);
+    // Garaje: los autos grandes giran sobre su eje; la cámara se aleja según su tamaño para que no se corten
+    const gz = scr === "garage" ? CARS[save.car].size : null, extra = gz ? Math.max(0, Math.max(gz[0] * 1.3, gz[2], gz[1] * 2) - 2.4) : 0, pull = 1 + extra * 0.4;
+    const px = tx + (px0 - tx) * pull, py = ty + (py0 - ty) * pull, pz = tz + (pz0 - tz) * pull;
+    const sw = scr === "beast" ? 0.05 : Math.hypot(px - tx, py - ty, pz - tz) * (scr === "garage" || scr === "title" ? 0.02 : 0.04), kk = 1 - Math.exp(-2.2 * dt);
     B.Vector3.LerpToRef(cam.position, new B.Vector3(px + Math.sin(t * 0.13) * sw, py + Math.sin(t * 0.21) * sw * 0.3, pz + Math.cos(t * 0.11) * sw), kk, cam.position);
     B.Vector3.LerpToRef(camTarget, new B.Vector3(tx, ty, tz), kk, camTarget);
-    // Título y garaje: el auto elegido en el centro del patio (reusa `preview`, que clearRun libera)
-    if (scr === "garage" || scr === "title") {
+    // Título, principal y garaje: el auto elegido sobre el estante o la mesa (reusa `preview`, que clearRun libera)
+    const spot = carSpot(scr);
+    if (spot) {
       const key = save.car + JSON.stringify(carOpts());
       if (!preview || previewKey !== key) {
         preview?.dispose();
         const m = carModel(save.car, carOpts());
         preview = m.body;
         previewR = Math.max(...m.wheels.map((w) => w.r));
-        preview.position.y = previewR;
         shadows.addShadowCaster(preview, true);
         previewKey = key;
+        preview.rotation.y = CAR_YAW;
       }
-      if (scr === "garage") { preview.rotation.y += dt * 0.6; preview.rotation.z = 0; preview.position.y = previewR; }
-      else if (art) {
-        // Portada: vaivén de suspensión, faro que titila, polvo en el haz y luciérnagas
-        preview.rotation.y = art.yaw;
-        preview.position.y = previewR + Math.sin(t * 2.3) * 0.012;
+      preview.position.set(spot.x, spot.y + previewR, spot.z);
+      if (scr === "garage") { preview.rotation.y += dt * 0.6; preview.rotation.z = 0; }
+      else { // estante: vaivén de suspensión, como en marcha lenta
+        preview.rotation.y = CAR_YAW;
+        preview.position.y += Math.sin(t * 2.3) * 0.012;
         preview.rotation.z = Math.sin(t * 1.7) * 0.012;
-        const f = new B.Vector3(Math.sin(art.yaw), 0, Math.cos(art.yaw));
-        setLamp(preview.position, f, Math.random() < 0.025, dt);
-        if ((moteT -= dt) <= 0) { moteT = 0.06; const d = 1.5 + Math.random() * 7, sd = (Math.random() - 0.5) * d * 0.7; ambient("mote", new B.Vector3(f.x * d + f.z * sd, 0.3 + Math.random() * 1.2, f.z * d - f.x * sd)); }
-        if (!zoneDust() && (flyT -= dt) <= 0) { flyT = 0.18; const a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 12; ambient("fly", new B.Vector3(Math.cos(a) * r, 0.4 + Math.random() * 2, Math.sin(a) * r)); }
-        for (const e of art.bugs) e.animate(dt);
       }
     } else if (preview) { preview.dispose(); preview = null; }
   }
@@ -1105,7 +1161,7 @@ if (import.meta.env.DEV) import("./devbot").then((m) => Object.assign(window, {
       for (const e of enemies) e.node.computeWorldMatrix(true);
       // Lo que una persona ve del jefe: aros rojos de la tarántula, el perro en el aire (cae cerca de su sombra), la cortadora cargando, ácido en vuelo
       const b = enemies.find((e) => e.def.boss), zones: { x: number; z: number; r: number }[] = [];
-      if (b?.tele[0]?.isVisible) zones.push({ x: b.tele[0].position.x, z: b.tele[0].position.z, r: b.tele[0].scaling.x });
+      if (b?.tele[0]?.isVisible) zones.push({ x: b.tele[0].position.x, z: b.tele[0].position.z, r: Math.max(b.tele[0].scaling.x, b.tele[0].scaling.z) }); // el carril de Felipe es una elipse: se evita entero
       if (b?.kind === "perro" && b.airborne) { const bv = b.body.getLinearVelocity(), t = (bv.y + Math.sqrt(Math.max(0, bv.y * bv.y + 50 * b.pos.y))) / 25; zones.push({ x: b.pos.x + bv.x * t, z: b.pos.z + bv.z * t, r: 11 }); }
       for (const s of spits) zones.push({ x: s.m.position.x + s.v.x * 0.3, z: s.m.position.z + s.v.z * 0.3, r: 1.2 });
       for (const cb of b?.cables ?? []) zones.push({ x: (cb.a.x + cb.b.x) / 2, z: (cb.a.z + cb.b.z) / 2, r: 3.5 }); // cables del cortacercos
@@ -1161,5 +1217,8 @@ if (import.meta.env.DEV) Object.assign(window, {
   __spawn: (kd: Kind, dist = 20) => { LAB.on = false; const f = car!.root.forward; spawnEnemy(kd, car!.pos.add(f.scale(dist)).addInPlace(new B.Vector3(0, 1, 0))); return enemies.length; },
   __minis: (a: Kind, b: Kind) => { RUN_BOSSES[0][1] = a; RUN_BOSSES[1][1] = b; }, // fuerza los dos minijefes de la partida (probar jefes con __sim)
   __scene: scene,
+  __glbStats: glbStats,
+  // n hormigas en grilla delante del auto, quietas en modo lab, para medir el render: __ants(300)
+  __ants: (n = 300) => { const f = car!.root.forward, r = new B.Vector3(f.z, 0, -f.x), w = Math.ceil(Math.sqrt(n)); for (let i = 0; i < n; i++) spawnEnemy("hormiga", car!.pos.add(f.scale(6 + Math.floor(i / w) * 1.8)).addInPlace(r.scale((i % w - w / 2) * 1.5)).addInPlace(new B.Vector3(0, 0.4, 0))); return enemies.length; },
   __carObj: () => car,
 });

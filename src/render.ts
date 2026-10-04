@@ -11,7 +11,7 @@ const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
 
-let lamp: B.SpotLight, glow: B.PointLight;
+export let lamp: B.SpotLight, glow: B.PointLight; // exportadas: los menús (menuscene.ts) las ubican a mano
 let sun: B.DirectionalLight, hemi: B.HemisphericLight, skyTex: B.DynamicTexture, probe: B.ReflectionProbe;
 
 function paintSky(c4: [string, string, string, string]) {
@@ -23,7 +23,7 @@ function paintSky(c4: [string, string, string, string]) {
 }
 
 // Clima de la partida: sol, cielo, luz ambiente, exposición y reflejos (la sonda se vuelve a capturar)
-export function applyClimate(k: { sun: [number, number, number]; sunColor: string; sunI: number; hemiI: number; sky: [string, string, string, string]; exposure: number; fog: number; ramp: [string, string, string]; day?: boolean }) {
+export function applyClimate(k: { sun: [number, number, number]; sunColor: string; sunI: number; hemiI: number; sky: [string, string, string, string]; exposure: number; fog: number; ramp: [string, string, string]; day?: boolean; amb?: string; ground?: string }) {
   lampK = k.day ? 0.08 : 1;
   k.ramp.forEach((h, i) => ramp[i].copyFrom(B.Color3.FromHexString(h)));
   sun.direction = new B.Vector3(...k.sun).normalize();
@@ -31,8 +31,8 @@ export function applyClimate(k: { sun: [number, number, number]; sunColor: strin
   clim = k;
   sun.intensity = k.sunI * LOOK.moonMul;
   hemi.intensity = k.hemiI * LOOK.ambMul;
-  hemi.diffuse = B.Color3.FromHexString(k.day ? "#eef4e0" : k.sky[1]); // de día el ambiente es casi blanco: el cielo azul teñía las sombras de índigo
-  hemi.groundColor = B.Color3.FromHexString(k.day ? "#7a9a5a" : "#0b0f0a"); // rebote del pasto: las sombras de día no quedan azul marino
+  hemi.diffuse = B.Color3.FromHexString(k.amb ?? (k.day ? "#eef4e0" : k.sky[1])); // de día el ambiente es casi blanco: el cielo azul teñía las sombras de índigo
+  hemi.groundColor = B.Color3.FromHexString(k.ground ?? (k.day ? "#7a9a5a" : "#0b0f0a")); // rebote del pasto: las sombras de día no quedan azul marino
   paintSky(k.sky);
   scene.clearColor = B.Color4.FromHexString(k.sky[1] + "ff");
   scene.imageProcessingConfiguration.exposure = k.exposure * LOOK.exposure;
@@ -126,6 +126,29 @@ export function setLamp(pos: B.Vector3, fwd: B.Vector3, boost = false, dt = 0) {
   lamp.position.set(pos.x, pos.y + 1.2, pos.z);
   lamp.direction.set(fwd.x, -0.28, fwd.z).normalize();
   glow.position.set(pos.x, pos.y + 2.2, pos.z);
+}
+
+// ---------- Menús (menuscene.ts) ----------
+/** Luz de lámpara cálida en los menús (true) o faro del auto de la partida (false; el auto vuelve a pintar el foco con su faro en carModel). */
+export function menuLights(on: boolean) {
+  lamp.diffuse = B.Color3.FromHexString(on ? "#ffc890" : "#ffe9c2");
+  glow.diffuse = B.Color3.FromHexString(on ? "#ffb27a" : "#ff8a3d");
+  glow.range = on ? 45 : 14;
+}
+/** Profundidad de campo de los menús: foco a `focus` unidades de la cámara (0 = apagada). `k` = desenfoque del fondo lejano (0..1).
+ *  En táctil el desenfoque es el barato (Low). Al apagarla se libera el depth renderer: en partida no cuesta nada. */
+export function setDof(focus: number, k = 0.7) {
+  const on = focus > 0;
+  if (pipeline.depthOfFieldEnabled !== on) {
+    if (on) pipeline.depthOfFieldBlurLevel = lowQ ? B.DepthOfFieldEffectBlurLevel.Low : B.DepthOfFieldEffectBlurLevel.Medium;
+    pipeline.depthOfFieldEnabled = on;
+    if (!on) scene.disableDepthRenderer(mainCam);
+  }
+  if (!on) return;
+  // CoC de Babylon: k = apertura · focal / (foco − focal), con apertura = lente / f. Se despeja la focal para que el desenfoque no dependa de la distancia.
+  const d = pipeline.depthOfField, F = focus * 1000, ap = d.lensSize / d.fStop;
+  d.focusDistance = F;
+  d.focalLength = (k * F) / (ap + k);
 }
 
 /** Antes disparaba el glitch VHS al recibir daño; el look retro ya no existe y queda como no-op para no tocar a los llamadores. */

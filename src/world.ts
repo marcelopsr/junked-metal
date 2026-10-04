@@ -106,6 +106,11 @@ export const zoneClimate = () => Z.climate;
 export const zoneDust = () => Z.dust;
 
 let worldMeshes: B.AbstractMesh[] = [];
+// El mundo se arma recién en la primera partida (setZone): los menús tienen escenas propias (menuscene.ts) y no lo cargan.
+let built = false;
+export const initWorld = (s: B.Scene, low: boolean) => { scene = s; lowQ = low; };
+/** Menús: esconde (o vuelve a mostrar) el mundo de juego ya armado; los cuerpos físicos quedan donde están. */
+export function showWorld(on: boolean) { for (const m of [...worldMeshes, ...layoutMeshes, ...clouds]) m.setEnabled(on); }
 let undo: (() => void)[] = [];
 export function buildWorld(s: B.Scene, low: boolean, id: ZoneId = "patio") {
   scene = s; lowQ = low;
@@ -131,7 +136,8 @@ export function buildWorld(s: B.Scene, low: boolean, id: ZoneId = "patio") {
 
 /** Cambia de zona: rehace mundo y layout (semilla fija del mundo). Devuelve false si ya era la zona actual. */
 export function setZone(id: string) {
-  if (id === zoneId || !(id in ZONES)) return false;
+  if ((built && id === zoneId) || !(id in ZONES)) return false;
+  built = true;
   clearLayout();
   for (const m of worldMeshes) { m.physicsBody?.dispose(); m.dispose(); }
   for (const f of undo) f();
@@ -244,7 +250,7 @@ function patioBuild() {
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirt.material!, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   for (let r = 0; r < 4; r++) for (let i = 0; i < 7; i++) {
     const x = 34 + i * 5.3, z = 35 + r * 7;
-    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte("#3f8f2f"), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8]); l.rotation.y = k * 1.6; shadows.addShadowCaster(l); }
+    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte("#3f8f2f"), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4); l.rotation.y = k * 1.6; shadows.addShadowCaster(l); }
   }
 
   // Cerca de madera (instancias)

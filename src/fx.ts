@@ -93,6 +93,8 @@ export const FX = {
   sparks: (p: B.Vector3) => burst(p, { n: 8, color: "#ffd27a", size: [0.05, 0.14], power: [4, 9], life: [0.2, 0.45], gravity: -20 }),
   // Destello blanco breve sobre el enemigo golpeado
   flash: (p: B.Vector3, s: number) => burst(p, { n: 1, color: "#ffffff", size: [s * 0.9, s * 1.1], power: [0, 0], life: [0.05, 0.07], gravity: 0 }),
+  // Vapor de jefe enfurecido (fase 2): bocanadas rosadas que suben; s = tamaño según el jefe
+  vapor: (p: B.Vector3, s = 1) => burst(p, { n: 3, color: "#ffe2da", color2: "#ff6a50", size: [0.8 * s, 1.7 * s], power: [0.8, 2.2], life: [0.7, 1.2], gravity: 5, add: false }),
   slam: (p: B.Vector3, r: number) => burst(p, { n: 120, color: "#f6f6f6", size: [1, 2.5], power: [r * 1.5, r * 3], life: [0.5, 1], gravity: 2, add: false }),
 };
 

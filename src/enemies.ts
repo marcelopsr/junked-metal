@@ -3,6 +3,7 @@ import { auraTemplate, cableTemplate, enemyTemplate, legTemplate, LEGS, sectorTe
 import { FX } from "./fx";
 import { rng } from "./rng";
 import type { Elite } from "./run";
+import { GLB, glbAnimate, glbTpl, glbVat } from "./glb";
 
 export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos";
 
@@ -24,6 +25,12 @@ export const DEF: Record<Kind, Def> = {
 };
 
 const UP = B.Vector3.Up();
+// Embestida de Felipe: segundos apuntando (normal / enfurecido), velocidad y largo de la carga (m), ancho del carril, segundos de frenada
+const DOG_RAM = { wind: 1, windRage: 0.75, speed: 30, len: 26, width: 2.6, brake: 0.9 };
+// Fase 2 visible: color por instancia (multiplica el albedo) sobre las plantillas de los jefes; blanco = sin tinte
+const WHITE = new B.Color4(1, 1, 1, 1), RAGE = new B.Color4(1, 0.3, 0.24, 1);
+const IC = B.VertexBuffer.ColorInstanceKind; // "instanceColor": el que los materiales leen como color por instancia
+const tintable = (m: B.Mesh) => { if (!m.instancedBuffers?.[IC]) { m.registerInstancedBuffer(IC, 4); m.instancedBuffers[IC] = WHITE; } }; // antes de la primera instancia: las nuevas copian el blanco
 const rot = (v: B.Vector3, a: number) => new B.Vector3(v.x * Math.cos(a) + v.z * Math.sin(a), 0, -v.x * Math.sin(a) + v.z * Math.cos(a));
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
 
@@ -53,11 +60,12 @@ export class Enemy {
   elite: Elite | "" = ""; // variante rara de un enemigo común (makeElite)
   spd = 1; // multiplicador de velocidad (élite rápida)
   aura?: B.InstancedMesh;
+  rageHalo?: B.InstancedMesh; // fase 2: halo rojo emisivo (hijo del nodo, no toca la malla: sirve también para jefes GLB)
   pull = 0; // aspiradora: aceleración (m/s²) con la que succiona al auto mientras dura; main.ts la aplica
   fan: B.Vector3[] = []; // aspiradora: direcciones de la ráfaga de tuercas del evento "fan"
   cables: { m: B.InstancedMesh; a: B.Vector3; b: B.Vector3; life: number }[] = []; // cortacercos: cables con chispas en el piso
   shockCd = 0;
-  aim = 0; // cortacercos: rumbo fijo del barrido anunciado
+  aim = 0; // cortacercos y Felipe: rumbo fijo del barrido o la embestida anunciados
   pose = 0; // stop-motion: las patas cambian de pose a 10 fps
   clock = 0; // reloj propio para los zigzags de Eulalio y Felipe
   enraged = false; // jefe por debajo de la mitad de vida: más rápido y más agresivo
@@ -66,13 +74,20 @@ export class Enemy {
   meowCd = 6;
   leader: Enemy | null = null; // formación: sigue a su líder en vez de ir directo al auto
   slot = new B.Vector3(); // lugar en la formación (x a la derecha del líder, z hacia atrás)
+  vat?: B.Vector4; // bicho importado (glb.ts): cuadro de la animación horneada de esta instancia
+  atk = -1; // segundos dentro de su propio ataque (GLB[kind].atk: escupida, embestida); -1 = no ataca
 
   constructor(public kind: Kind, pos: B.Vector3, hpMul: number) {
     const d = (this.def = DEF[kind]);
     this.hp = this.maxHp = d.hp * (d.boss ? 1 : hpMul);
     const [w, h, l] = d.size;
     this.radius = Math.max(w, l) / 2;
-    this.node = enemyTemplate(kind, d.scale).createInstance(kind);
+    const glb = glbTpl(kind); // modelo importado con VAT (glb.ts); los demás bichos usan su procedural de models.ts
+    if (!glb && GLB[kind]) throw new Error(`Enemy ${kind}: falta su modelo GLB (models/${GLB[kind]!.file}.glb); ver el error de carga más arriba en la consola`);
+    const tpl0 = glb ?? enemyTemplate(kind, d.scale);
+    if (d.boss && !glb) tintable(tpl0); // los GLB (glb.ts) tienen su propio shader de animación: sin tinte
+    this.node = tpl0.createInstance(kind);
+    if (glb) this.vat = glbVat(this.node);
     this.node.position.copyFrom(pos);
     this.node.rotation.y = rng() * 6.3;
     this.agg = new B.PhysicsAggregate(this.node, B.PhysicsShapeType.BOX,
@@ -80,9 +95,10 @@ export class Enemy {
     this.body = this.agg.body;
     this.body.setMassProperties({ mass: d.mass, inertia: new B.Vector3(0, d.mass, 0), centerOfMass: new B.Vector3(0, h / 2, 0) }); // = centro de la forma (ver Car.setMass)
 
-    const L = LEGS[kind];
+    const L = this.vat ? undefined : LEGS[kind];
     if (L) {
       const tpl = legTemplate(kind);
+      if (d.boss) tintable(tpl);
       L.hips.forEach(([x, y, z], i) => {
         for (const side of [1, -1]) {
           const m = tpl.createInstance("leg");
@@ -111,6 +127,7 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
+    if (kind === "perro") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida
     if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
@@ -119,7 +136,7 @@ export class Enemy {
   }
 
   // Telegráfico en el piso: zona de radio r centrada en p; k = 0..1 cuánto falta (el aro interior crece hasta el borde)
-  private showTele(p: B.Vector3 | null, r = 0, k = 0) {
+  showTele(p: B.Vector3 | null, r = 0, k = 0) { // público: la ficha del bestiario (main.ts) muestra el aviso real
     for (const t of this.tele) t.isVisible = !!p;
     if (!p) return;
     const [zone, fill] = this.tele;
@@ -129,6 +146,15 @@ export class Enemy {
     fill.position.set(p.x, p.y + 0.07, p.z); fill.scaling.set(f, 1, f);
   }
 
+  // Carril de la embestida de Felipe: el aro del telegráfico estirado a lo largo (elipse), el relleno crece desde el perro.
+  // ponytail: elipse en vez de un rectángulo propio; si se lee mal, plantilla de carril en models.ts
+  showLane(dir: B.Vector3, k: number) {
+    this.showTele(this.pos, 1, 0);
+    const [zone, fill] = this.tele, h = DOG_RAM.len / 2, f = Math.max(0.05, h * k), y = this.pos.y + 0.06;
+    zone.position.set(this.pos.x + dir.x * h, y, this.pos.z + dir.z * h); zone.scaling.set(DOG_RAM.width, 1, h);
+    fill.position.set(this.pos.x + dir.x * f, y + 0.01, this.pos.z + dir.z * f); fill.scaling.set(DOG_RAM.width, 1, f);
+  }
+
   // Animación de caminata: amplitud y frecuencia según la velocidad real
   animate(dt: number) {
     if (this.wings.length) {
@@ -136,6 +162,11 @@ export class Enemy {
       this.walk += dt * 22;
       const a = Math.round(Math.sin(this.walk) * 3) / 3;
       for (const w of this.wings) w.rotation.z = a * 0.9; // con rotation.y = PI el ala izquierda ya queda espejada
+      return;
+    }
+    if (this.vat) { // ataque propio (atk) o, sin él, justo después de golpear (main.ts carga touchCd)
+      const v = this.body.getLinearVelocity(), a = GLB[this.kind]!.atk;
+      glbAnimate(this.vat, Math.hypot(v.x, v.z), dt, !a && this.touchCd > 0.5, a && this.atk >= 0 ? this.atk / a : -1);
       return;
     }
     if (!this.legs.length) return;
@@ -180,8 +211,8 @@ export class Enemy {
     let turn = 6;
     if (this.slow > 0) { this.slow -= dt; speed *= d.boss ? 0.8 : 0.45; } // empapado: se arrastra
     this.clock += dt;
-    if (d.boss && !this.enraged && this.hp < this.maxHp * 0.5) { this.enraged = true; this.phaseUp = true; } // fase 2: aviso en main.ts
-    if (this.enraged) speed *= 1.2;
+    if (d.boss && !this.enraged && this.hp < this.maxHp * 0.5) { this.enraged = true; this.phaseUp = true; this.setRage(true); } // fase 2: aviso en main.ts
+    if (this.enraged) { speed *= 1.2; this.vapor(dt); }
 
     if (this.kind === "robot" || this.kind === "cortadora") {
       // Apunta quieto, después sale disparado en línea recta
@@ -191,9 +222,25 @@ export class Enemy {
     }
 
     if (this.kind === "escupidora") {
-      // Se frena a distancia, te apunta y escupe ácido
+      // Se frena a distancia, te apunta y arranca su animación de ataque: escupe en el cuadro del latigazo (GLB hit)
       this.timer -= dt;
-      if (dist < 16) { speed = 0; turn = 5; if (this.timer <= 0 && Math.abs(diff) < 0.4) { this.timer = 2.6; this.body.setAngularVelocity(B.Vector3.Zero()); return "spit"; } }
+      const g = GLB.escupidora!, at = g.atk! * g.hit!;
+      if (this.atk >= 0) {
+        speed = 0; turn = 5;
+        const a0 = this.atk;
+        if ((this.atk += dt) >= g.atk!) this.atk = -1;
+        if (a0 < at && a0 + dt >= at) { this.body.setAngularVelocity(B.Vector3.Zero()); return "spit"; }
+      } else if (dist < 16) { speed = 0; turn = 5; if (this.timer <= 0 && Math.abs(diff) < 0.4) { this.timer = 2.6; this.atk = 0; } }
+    }
+
+    if (this.kind === "escarabajo") {
+      // Embestida al compás de su animación: se agacha apuntando, arremete (el golpe es el contacto) y se recupera
+      const g = GLB.escarabajo!;
+      if (this.atk >= 0) {
+        const k = (this.atk += dt) / g.atk!;
+        if (k < g.hit!) { speed = 0; turn = 4; } else if (k < g.hit! + 0.17) { move = fwd; speed *= 3; turn = 0.5; } else speed *= 0.3;
+        if (k >= 1) { this.atk = -1; this.timer = 1.5; }
+      } else if ((this.timer -= dt) <= 0 && dist < 4 && Math.abs(diff) < 0.5) this.atk = 0;
     }
 
     if (this.kind === "polilla") {
@@ -368,7 +415,7 @@ export class Enemy {
     }
 
     if (this.kind === "perro") {
-      // Felipe: bulldog francés desquiciado. Salta, hace zoomies (corre zigzagueando al doble de velocidad) o gira como loco
+      // Felipe: bulldog francés desquiciado. Salta, embiste en línea recta, hace zoomies (corre zigzagueando al doble de velocidad) o gira como loco
       this.timer -= dt;
       if (this.airborne) {
         if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; return "slam"; }
@@ -383,16 +430,40 @@ export class Enemy {
         this.body.setLinearVelocity(new B.Vector3(v.x + (want.x - v.x) * k, v.y, v.z + (want.z - v.z) * k));
         if (this.timer <= 0) { this.state = 0; this.timer = 1.2; }
         return;
+      } else if (this.state >= 3) { // embestida: apunta con el carril en rojo, carga en línea recta y frena torpe
+        const dir = new B.Vector3(Math.sin(this.aim), 0, Math.cos(this.aim));
+        if (this.state === 3) {
+          const w = this.enraged ? DOG_RAM.windRage : DOG_RAM.wind, k = 1 - Math.max(0, this.timer) / w;
+          this.showLane(dir, k);
+          const a = Math.atan2(B.Vector3.Cross(fwd, dir).y, B.Vector3.Dot(fwd, dir));
+          this.body.setLinearVelocity(new B.Vector3(v.x * 0.8, v.y, v.z * 0.8));
+          this.body.setAngularVelocity(new B.Vector3(0, B.Scalar.Clamp(a * 8, -8, 8), 0));
+          if (this.timer <= 0) { this.state = 4; this.timer = DOG_RAM.len / DOG_RAM.speed; }
+          return;
+        }
+        if (this.state === 4) { // carga: no dobla
+          this.body.setLinearVelocity(new B.Vector3(dir.x * DOG_RAM.speed, v.y, dir.z * DOG_RAM.speed));
+          this.body.setAngularVelocity(B.Vector3.Zero());
+          if (this.timer <= 0) { this.state = 5; this.timer = DOG_RAM.brake; this.showTele(null); }
+          return;
+        }
+        // frenada: patina con las patas, culea de un lado al otro y recién después vuelve a perseguir
+        const s = this.timer / DOG_RAM.brake;
+        this.body.setLinearVelocity(new B.Vector3(dir.x * DOG_RAM.speed * 0.5 * s, v.y, dir.z * DOG_RAM.speed * 0.5 * s));
+        this.body.setAngularVelocity(new B.Vector3(0, Math.sin(this.clock * 18) * 6 * s, 0));
+        if (this.timer <= 0) { this.state = 0; this.timer = 1.4; }
+        return;
       } else if (this.timer <= 0 && dist < 40) {
         const r = rng();
-        if (r < 0.45) {
+        if (r >= 0.35 && r < 0.6) { this.state = 3; this.timer = this.enraged ? DOG_RAM.windRage : DOG_RAM.wind; this.aim = Math.atan2(to.x, to.z); return; }
+        if (r < 0.35) {
           this.timer = this.enraged ? 2.6 : 3.8;
           this.airborne = true;
           const jump = to.scale(Math.min(dist, 25) * 1.1).addInPlace(UP.scale(22));
           this.body.setLinearVelocity(jump);
           return;
         }
-        this.state = r < 0.8 ? 1 : 2; this.timer = this.state === 1 ? 2.6 : 1.6;
+        this.state = r < 0.85 ? 1 : 2; this.timer = this.state === 1 ? 2.6 : 1.6;
       }
     }
 
@@ -415,7 +486,35 @@ export class Enemy {
     }
     const a = (this.aura = auraTemplate(t).createInstance("aura"));
     a.parent = this.node;
+    a.position.setAll(0); // la instancia nace donde está la plantilla escondida (y -500)
     a.scaling.setAll(this.radius * 1.25);
+  }
+
+  // Fase 2: tinte rojo en cuerpo y patas (solo jefes con plantilla procedural) y vapor que sale del lomo
+  setRage(on: boolean) {
+    const c = on ? RAGE : WHITE;
+    for (const m of [this.node, ...this.legs.map((l) => l.m)]) if (m.instancedBuffers?.[IC]) m.instancedBuffers[IC] = c;
+    if (on && !this.rageHalo) {
+      const a = (this.rageHalo = auraTemplate("rabia").createInstance("rabia"));
+      a.parent = this.node;
+      a.position.setAll(0); // la instancia nace donde está la plantilla escondida
+      a.scaling.setAll(this.radius * 1.3); // un poco más grande que el aura de élite
+    } else if (!on && this.rageHalo) { this.rageHalo.dispose(); this.rageHalo = undefined; }
+  }
+  // Vapor y latido del halo (se llama cada cuadro mientras dura la fase 2, en partida y en la ficha)
+  vapor(dt: number) {
+    if (this.rageHalo) {
+      // Latido acelerado (~140 por minuto): golpe doble "lub-dub". Con "Reducir parpadeos", pulso de tamaño mínimo y sin brillo
+      const p = (performance.now() / 1000) % 0.43, k = Math.max(Math.exp(-((p / 0.05) ** 2)), 0.6 * Math.exp(-(((p - 0.14) / 0.05) ** 2)));
+      const calm = document.body.classList.contains("calm");
+      this.rageHalo.scaling.setAll(this.radius * 1.3 * (1 + k * (calm ? 0.02 : 0.12)));
+      // ponytail: el brillo va en el material compartido de los halos (laten a la vez); hay un solo jefe por vez
+      const mat = this.node.getScene().getMaterialByName("aura_rabia") as B.PBRMaterial | null;
+      if (mat) mat.emissiveIntensity = calm ? 1 : 1 + k * 1.4;
+    }
+    if (Math.random() > dt * 9) return; // solo visual
+    const [w, h, l] = this.def.size;
+    FX.vapor(this.pos.add(new B.Vector3((Math.random() - 0.5) * w * 0.7, h * 0.85, (Math.random() - 0.5) * l * 0.7)), Math.max(w, l) * 0.12);
   }
 
   // Cortacercos: un cable de 7 m tirado en el piso detrás suyo (dura 14 s, como mucho 8)

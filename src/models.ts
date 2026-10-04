@@ -20,12 +20,30 @@ function place(m: B.Mesh, mat: B.Material, pos: V3, rot?: V3, scl?: V3) {
 }
 export const box = (w: number, h: number, d: number, mat: B.Material, pos: V3, rot?: V3) =>
   place(B.MeshBuilder.CreateBox("p", { width: w, height: h, depth: d }, scene), mat, pos, rot);
+// Teselación según el tamaño en pantalla (antes duplicaba todos los lados: una esfera de 16 segmentos = 1.296 triángulos, un neumático 4.096).
+// D = medida × tessK (escala de la plantilla que se arma, o 2,5 en los autos, que se ven de cerca en el garaje) → lados por tramo [<0,3 · <0,6 · <1,5 · <4 · más].
+// Los lados que pide quien arma la pieza (tess ≤ 6, esfera ≤ 4) son a propósito y no se tocan.
+let tessK = 1;
+const tier = (D: number, a: number[]) => a[D < 0.3 ? 0 : D < 0.6 ? 1 : D < 1.5 ? 2 : D < 4 ? 3 : 4];
 export const cyl = (top: number, bot: number, h: number, mat: B.Material, pos: V3, rot?: V3, tess = 12) =>
-  place(B.MeshBuilder.CreateCylinder("p", { diameterTop: top, diameterBottom: bot, height: h, tessellation: tess <= 6 ? tess : Math.min(32, tess * 2) }, scene), mat, pos, rot); // calidad: el doble de lados salvo formas hexagonales a propósito
+  place(B.MeshBuilder.CreateCylinder("p", { diameterTop: top, diameterBottom: bot, height: h, tessellation: tess <= 6 ? tess : Math.min(tess * 2, tier(Math.max(top, bot) * tessK, [8, 12, 16, 24, 32])) }, scene), mat, pos, rot);
 export const sph = (d: number, mat: B.Material, pos: V3, scl?: V3, seg = 8) =>
-  place(B.MeshBuilder.CreateSphere("p", { diameter: d, segments: seg <= 4 ? seg : Math.min(24, seg * 2) }, scene), mat, pos, undefined, scl);
+  place(B.MeshBuilder.CreateSphere("p", { diameter: d, segments: seg <= 4 ? seg : Math.min(seg * 2, tier(d * tessK * (scl ? Math.max(...scl) : 1), [4, 6, 8, 10, 12])) }, scene), mat, pos, undefined, scl);
+// Toro propio: `na` lados alrededor y `nc` en el corte del tubo (el de Babylon usa los mismos para ambos: un aro fino de 40 → 3.200 triángulos)
+function ring(R: number, r: number, na: number, nc: number) {
+  const P: number[] = [], N: number[] = [], U: number[] = [], I: number[] = [];
+  for (let i = 0; i <= na; i++) for (let j = 0; j <= nc; j++) {
+    const a = (i / na) * 2 * Math.PI, b = (j / nc) * 2 * Math.PI, ca = Math.cos(a), sa = Math.sin(a), nx = Math.cos(b), ny = Math.sin(b);
+    P.push((R + r * nx) * ca, r * ny, (R + r * nx) * sa); N.push(nx * ca, ny, nx * sa); U.push(i / na, j / nc);
+    if (i < na && j < nc) { const k = i * (nc + 1) + j; I.push(k, k + nc + 1, k + 1, k + 1, k + nc + 1, k + nc + 2); }
+  }
+  const m = new B.Mesh("p", scene), vd = new B.VertexData();
+  Object.assign(vd, { positions: P, normals: N, uvs: U, indices: I });
+  vd.applyToMesh(m);
+  return m;
+}
 export const tor = (d: number, t: number, mat: B.Material, pos: V3, rot?: V3, tess = 14) =>
-  place(B.MeshBuilder.CreateTorus("p", { diameter: d, thickness: t, tessellation: tess <= 6 ? tess : Math.min(40, tess * 2) }, scene), mat, pos, rot);
+  place(ring(d / 2, t / 2, tess <= 6 ? tess : Math.min(tess * 2, tier(d * tessK, [10, 16, 24, 40, 40])), tess <= 6 ? tess : tier(t * tessK, [4, 6, 6, 8, 10])), mat, pos, rot);
 export const tube = (path: V3[], r: number, mat: B.Material) => {
   const m = B.MeshBuilder.CreateTube("p", { path: path.map(v), radius: r, tessellation: 6 }, scene);
   m.material = mat;
@@ -57,7 +75,8 @@ const templates = new Map<string, B.Mesh>();
 export function template(name: string, build: () => B.Mesh[], scale = 1) {
   let t = templates.get(name);
   if (!t) {
-    t = merge(name, build());
+    tessK = scale;
+    try { t = merge(name, build()); } finally { tessK = 1; }
     if (scale !== 1) { t.scaling.setAll(scale); t.bakeCurrentTransformIntoVertices(); }
     t.position.y = -500; // la fuente queda escondida; se dibujan las instancias
     shadows.addShadowCaster(t);
@@ -128,6 +147,7 @@ const ANCH: Record<CarKind, { deck: [number, number]; side: V3; exh: [number, nu
 const CARS_SIZE: Record<CarKind, [number, number, number]> = { buggy: [1.3, 0.7, 2.3], monster: [1.8, 1.1, 2.4], formula: [1.3, 0.55, 2.8], tanque: [1.75, 0.9, 2.4], carrera: [1.1, 0.5, 2.1], axel: [1.9, 1.0, 1.7], helado: [1.3, 0.95, 2.4], combi: [1.45, 1.0, 2.4] };
 export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   const A = ANCH[kind];
+  tessK = 2.5;
   const ws: { pos: V3; d: number; w: number; steer?: boolean }[] = [];
   let parts: B.Mesh[];
   let stock: B.Mesh[] = []; // alerón de serie (se reemplaza si se elige otro)
@@ -331,6 +351,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     m.parent = body;
     return { m, front: w.steer !== false && w.pos[2] > 0, r: w.d / 2 };
   });
+  tessK = 1;
   return { body, wheels, paint };
 }
 
@@ -383,34 +404,9 @@ export function pilotParts(id: string): B.Mesh[] {
 
 export function enemyTemplate(kind: string, scale = 1): B.Mesh {
   return template(kind, () => {
-    if (kind === "hormiga") {
-      const m = M.plastic("#a0522d");
-      return [
-        sph(0.75, m, [0, 0.3, -0.55], [1, 0.8, 1.25]),
-        sph(0.42, m, [0, 0.3, 0]),
-        sph(0.5, m, [0, 0.35, 0.45]),
-        cyl(0.03, 0.03, 0.6, m, [0.12, 0.6, 0.75], [0.7, 0, 0.3], 4),
-        cyl(0.03, 0.03, 0.6, m, [-0.12, 0.6, 0.75], [0.7, 0, -0.3], 4),
-        sph(0.13, M.glow("#ff3020"), [0.13, 0.42, 0.66]),
-        sph(0.13, M.glow("#ff3020"), [-0.13, 0.42, 0.66]),
-      ];
-    }
-    if (kind === "escupidora") {
-      const m = M.plastic("#d2381c");
-      return [
-        sph(1.0, pbr("acidSac", { color: "#9acd32", rough: 0.2, emissive: "#2a3a00", alpha: 0.9 }), [0, 0.45, -0.7], [1, 0.85, 1.2]),
-        sph(0.45, m, [0, 0.35, 0]),
-        sph(0.6, m, [0, 0.42, 0.5]),
-        cyl(0.05, 0.12, 0.35, m, [0.12, 0.35, 0.85], [1.4, 0, 0], 5),
-        cyl(0.05, 0.12, 0.35, m, [-0.12, 0.35, 0.85], [1.4, 0, 0], 5),
-        cyl(0.03, 0.03, 0.7, m, [0.14, 0.75, 0.8], [0.6, 0, 0.3], 4),
-        cyl(0.03, 0.03, 0.7, m, [-0.14, 0.75, 0.8], [0.6, 0, -0.3], 4),
-        sph(0.27, M.glow("#ffb020"), [0.17, 0.55, 0.74]),
-        sph(0.27, M.glow("#ffb020"), [-0.17, 0.55, 0.74]),
-      ];
-    }
-    if (kind === "escarabajo" || kind === "rey") {
-      const shell = kind === "rey" ? M.metal("#d4a017") : pbr("beetle", { color: "#2f7d4a", rough: 0.25, metal: 0.7 });
+    // hormiga, escupidora y escarabajo no están acá: son GLB animados (glb.ts, public/models/)
+    if (kind === "rey") {
+      const shell = M.metal("#d4a017");
       const dark = M.plastic("#111");
       return [
         sph(1.6, shell, [0, 0.5, -0.15], [1, 0.6, 1.3], 10),
@@ -571,9 +567,6 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
 // Pata del lado derecho: cadera en el origen, fémur hacia arriba y afuera, tibia hasta el piso.
 // yaw (opcional): abre cada pata hacia adelante/atrás (lado derecho; el izquierdo se espeja)
 export const LEGS: Record<string, { hips: [number, number, number][]; len: number; r: number; color: string; scale: number; yaw?: number[] }> = {
-  hormiga: { hips: [[0.16, 0.3, -0.18], [0.16, 0.3, 0], [0.16, 0.3, 0.18]], len: 0.8, r: 0.035, color: "#a0522d", scale: 1 },
-  escupidora: { hips: [[0.18, 0.34, -0.2], [0.18, 0.34, 0], [0.18, 0.34, 0.2]], len: 0.9, r: 0.04, color: "#5a160a", scale: 1 },
-  escarabajo: { hips: [[0.5, 0.38, -0.5], [0.5, 0.38, 0], [0.5, 0.38, 0.5]], len: 1.0, r: 0.06, color: "#111111", scale: 1 },
   rey: { hips: [[0.5, 0.38, -0.5], [0.5, 0.38, 0], [0.5, 0.38, 0.5]], len: 1.0, r: 0.06, color: "#111111", scale: 3.5 },
   tarantula: { hips: [[0.32, 0.45, -0.05], [0.36, 0.45, 0.18], [0.36, 0.45, 0.4], [0.3, 0.45, 0.6]], len: 1.5, r: 0.09, color: "#2a1d16", scale: 3, yaw: [0.75, 0.25, -0.25, -0.7] },
 };
@@ -582,7 +575,7 @@ export function legTemplate(kind: string) {
   const hy = L.hips[0][1];
   return template("leg_" + kind, () => [
     tube([[0, 0, 0], [L.len * 0.45, L.len * 0.35, 0], [L.len * 0.95, -hy, 0]], L.r, M.plastic(L.color)),
-    sph(L.r * 3, M.plastic(L.color), [L.len * 0.45, L.len * 0.35, 0], undefined, 4),
+    sph(L.r * 3, M.plastic(L.color), [L.len * 0.45, L.len * 0.35, 0], undefined, 3), // rodilla: 8 patas por jefe, 6 por bicho
   ], L.scale);
 }
 
@@ -616,11 +609,12 @@ export function sectorTemplate() {
   return t;
 }
 // Aura de élite (radio 1, se escala por instancia): aro en el piso + halo emisivo tenue. Amarilla = rápida, gris metálica = blindada
+// "rabia" = halo rojo de la fase 2 de los jefes (enemies.ts setRage)
 export function auraTemplate(t: string) {
-  const c = t === "rapida" ? "#ffd84a" : "#b8c0c8";
+  const c = t === "rapida" ? "#ffd84a" : t === "rabia" ? "#ff3a2a" : "#b8c0c8";
   const a = template("aura_" + t, () => [
     tor(2, 0.07, M.glow(c), [0, 0.06, 0], undefined, 20),
-    sph(2.1, pbr("aura_" + t, { color: c, rough: 0.3, metal: t === "rapida" ? 0 : 0.9, emissive: t === "rapida" ? "#8a6a00" : "#4a5058", alpha: 0.18 }), [0, 0.55, 0], [1, 0.7, 1], 10),
+    sph(2.1, pbr("aura_" + t, { color: c, rough: 0.3, metal: t === "blindada" ? 0.9 : 0, emissive: t === "rapida" ? "#8a6a00" : t === "rabia" ? "#c01808" : "#4a5058", alpha: t === "rabia" ? 0.24 : 0.18 }), [0, 0.55, 0], [1, 0.7, 1], 10),
   ]);
   shadows.removeShadowCaster(a);
   return a;
