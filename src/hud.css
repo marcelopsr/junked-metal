@@ -298,3 +298,34 @@ body.calm #hud *, body.calm #hud::after, body.calm #hud *::before, body.calm #hu
 #hud #hint { font: 500 17px/1.3 var(--hf); color: var(--g-txt); }
 #hud #hint .tip { color: var(--g-dim); }
 #hud kbd { background: rgba(255, 255, 255, .14); border: 1px solid var(--g-line); border-bottom-width: 2px; border-radius: 6px; color: var(--g-txt); font: 700 11px var(--hf); }
+
+/* ---------- HUD v3: estado al centro abajo, íconos, velocímetro de arco, barras animadas ---------- */
+#hud .h-track { overflow: visible; }
+#hud .h-track > div, #hud #lipo i { transition: width .3s cubic-bezier(.2, .8, .2, 1), background .3s; }
+#hud .h-track::before, #hud #lipo::before { content: ""; position: absolute; left: -27px; top: 50%; translate: 0 -50%; width: 19px; height: 19px; background: center / contain no-repeat; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
+#hud #lipo { position: relative; }
+#hud #lipo::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235be37a'%3E%3Cpath d='M12 21s-8-5.3-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.7-8 11-8 11z'/%3E%3C/svg%3E"); }
+#hud .h-boost::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffc24d'%3E%3Cpath d='M13 2 4 14h6l-1 8 9-12h-6z'/%3E%3C/svg%3E"); }
+#hud .h-abil::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23c79bff'%3E%3Cpath d='m12 2 2.6 6.6L21 9.3l-5 4.4 1.6 6.8L12 17l-5.600 3.500L8 13.700 3 9.300l6.400-.7z'/%3E%3C/svg%3E"); }
+#hud .h-abil.h-ptitle, #hud .h-abil.h-ptitle * { display: none; }
+#hud #txl { left: 50%; translate: -50% 0; transform-origin: 50% 100%; width: min(300px, 70vw); padding: 10px 16px 10px 40px; bottom: max(14px, env(safe-area-inset-bottom)); flex-direction: column; gap: 7px; }
+#hud #txl .h-read { order: -1; justify-content: space-between; }
+#hud #txl .h-read span { margin-left: auto; }
+#hud #slots { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 108px); }
+/* Velocímetro de arco, a la derecha de la barra de estado */
+#hud #txr { left: auto; right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); transform-origin: 100% 100%; width: 128px; padding: 8px 8px 6px; }
+#hud #speedo { display: block; width: 100%; margin: 0; }
+#hud #speedo .arc { stroke: rgba(255, 255, 255, .16); stroke-width: 8; stroke-linecap: round; }
+#hud #speedo .arc.on { stroke: #ffd84d; filter: drop-shadow(0 0 4px rgba(255, 216, 77, .6)); transition: stroke-dasharray .15s linear; }
+#hud #speedo #ticks, #hud #needle, #hud #speedo circle { display: none; }
+#hud #txr .h-read.r { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; }
+#hud #kmh { font-size: 32px; }
+#hud #txr .h-read.r span { font-size: 12px; letter-spacing: .14em; }
+/* Subir de nivel: pulso suave en vez de parpadeo duro */
+#hud #signal.up { animation: g-pop .7s ease-out both; }
+@keyframes g-pop { 0% { box-shadow: 0 0 0 0 rgba(125, 255, 176, .8); scale: 1.12; } 100% { box-shadow: 0 0 0 18px rgba(125, 255, 176, 0); scale: 1; } }
+@media (max-width: 700px) { #hud #txr { display: block; width: 96px; } #hud #txl { width: min(250px, 58vw); } }
+#hud #slots { left: 14px; bottom: max(14px, env(safe-area-inset-bottom)); translate: none; transform-origin: 0 100%; flex-direction: row; align-items: flex-end; }
+#hud #txr .h-read.r span { font-size: 0; }
+#hud #txr .h-read.r span::after { content: "KM/H"; font-size: 12px; letter-spacing: .14em; color: var(--g-dim); }
+#hud #txr { width: 118px; }
