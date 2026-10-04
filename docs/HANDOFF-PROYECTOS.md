@@ -61,7 +61,7 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 ## 4. Cómo correr y probar
 
 - **pm2** (`ecosystem.config.cjs`): `rc-dev` :5173 (desarrollo con recarga), `rc-test` :5174 (pruebas, sin recarga: `pm2 restart rc-test` tras cambios), `rc-demo` :4173 (build). Logs en `logs/`. Tras reiniciar la Mac: `npm run pm2:start`.
-- **App en la Mac:** `/Applications/RC Fight.app` abre la demo (la levanta con pm2 si está apagada). Actualizar: `npm run demo:refresh`.
+- **App en la Mac:** `/Applications/Junked Metal.app` abre la demo (la levanta con pm2 si está apagada). Actualizar: `npm run demo:refresh`.
 - **Herramientas headless** (las usan el asistente y los encargos; el usuario no corre comandos):
   - `npm test` — pruebas de lógica (Vitest), <1 s.
   - `npm run sim -- --seeds 1,2 --secs 600` / `--duel perro` — simulación con bot, sin dibujar, repetible por semilla.
@@ -75,8 +75,9 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 ## 5. Pendiente y decisiones abiertas
 
 **Pendiente de implementar (ya decidido por el usuario):**
-- **Segunda barra de los jefes finales:** primera barra con la vida original, segunda barra al 50 % y el jefe pega más fuerte en esa fase. Solo jefes finales (no minijefes). Agregar sus columnas a la planilla de balance. Hoy la vida está subida provisoriamente (Felipe 20.000, Aspiradora 40.000, Cortacercos 30.000) y debe volver a la original al implementar las dos barras.
 - **Planilla en Drive:** subir `balance.xlsx` y dejarla como referencia.
+
+**Hecho el 2026-10-04:** segunda barra de los jefes finales (vida original 8.000 / 7.500 / 7.000 + segunda barra al 50 % con daño ×1,5, `ataques.segunda_barra_*`), texto de Eulalio, app de la Mac renombrada, CI con `npm test` y README.
 
 **Abierto (preguntar al usuario antes de tocar):**
 - Daño base del arma inicial (que la hormiga muera en 3 golpes y no 2): el usuario cortó la pregunta; quedó sin decidir.
@@ -84,8 +85,6 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 - Menús: portada con o sin bichos de juguete; posición del auto en el menú principal.
 - Configuración de imagen: gamma como curva de medios tonos; FSR apagado en carrera de 2 jugadores; recorte por distancia de props.
 - Rendimiento: ~1.600 draw calls en partida y ~3.200 en carrera a 2 jugadores (posible cuello de botella en celulares).
-- Trasfondo de Eulalio en el bestiario todavía dice "gato" (el nombre ya es "EULALIO EL MICHU").
-- Renombrar la app de la Mac de "RC Fight" a "Junked Metal".
 
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 

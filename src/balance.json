@@ -10,9 +10,9 @@
     {"id":"cortadora","nombre":"CORTADORA DE CÉSPED","tipo":"minijefe","vida":3500,"velocidad":15,"dano":45,"peso":80,"xp":120,"aparece_min":0,"peso_base":0,"peso_por_min":0},
     {"id":"tarantula","nombre":"TARÁNTULA","tipo":"minijefe","vida":2600,"velocidad":7,"dano":35,"peso":50,"xp":100,"aparece_min":0,"peso_base":0,"peso_por_min":0},
     {"id":"gato","nombre":"EULALIO EL MICHU","tipo":"minijefe","vida":2900,"velocidad":11,"dano":32,"peso":60,"xp":110,"aparece_min":0,"peso_base":0,"peso_por_min":0},
-    {"id":"perro","nombre":"FELIPE EL DOGO","tipo":"jefe_final","vida":20000,"velocidad":9,"dano":40,"peso":100,"xp":0,"aparece_min":0,"peso_base":0,"peso_por_min":0},
-    {"id":"aspiradora","nombre":"LA ASPIRADORA ROBOT","tipo":"jefe_final","vida":40000,"velocidad":7,"dano":35,"peso":90,"xp":0,"aparece_min":0,"peso_base":0,"peso_por_min":0},
-    {"id":"cortacercos","nombre":"EL CORTACERCOS ELÉCTRICO","tipo":"jefe_final","vida":30000,"velocidad":8,"dano":40,"peso":80,"xp":0,"aparece_min":0,"peso_base":0,"peso_por_min":0}
+    {"id":"perro","nombre":"FELIPE EL DOGO","tipo":"jefe_final","vida":8000,"velocidad":9,"dano":40,"peso":100,"xp":0,"aparece_min":0,"peso_base":0,"peso_por_min":0},
+    {"id":"aspiradora","nombre":"LA ASPIRADORA ROBOT","tipo":"jefe_final","vida":7500,"velocidad":7,"dano":35,"peso":90,"xp":0,"aparece_min":0,"peso_base":0,"peso_por_min":0},
+    {"id":"cortacercos","nombre":"EL CORTACERCOS ELÉCTRICO","tipo":"jefe_final","vida":7000,"velocidad":8,"dano":40,"peso":80,"xp":0,"aparece_min":0,"peso_base":0,"peso_por_min":0}
   ],
   "armas": [
     {"id":"gomitas","nombre":"Lanza-gomitas","unidad_dano":"por impacto","dano_base":10,"dano_nivel":4,"dano_evo_mult":1.4,"dano_evo_fijo":0,"recarga_base":1.1,"recarga_min":0,"recarga_nivel":0,"recarga_div":0.12,"recarga_evo":0,"recarga_evo_div":1.5,"alcance":22,"alcance_evo":0,"area_base":0,"area_nivel":0,"area_evo":0,"n_base":1,"n_cada":2,"n_desde":1,"n_evo":5,"duracion_base":1.2,"duracion_nivel":0,"duracion_evo":0,"velocidad":30},
@@ -228,6 +228,8 @@
     {"id":"bicho_lento_mult","valor":0.45,"descripcion":"Velocidad de un bicho normal empapado o enfriado (multiplicador)"},
     {"id":"jefe_lento_mult","valor":0.8,"descripcion":"Velocidad de un jefe empapado o enfriado (multiplicador)"},
     {"id":"fase2_vida","valor":0.5,"descripcion":"Un jefe pasa a fase 2 con menos de esta fracción de su vida"},
+    {"id":"segunda_barra_vida","valor":0.5,"descripcion":"Jefe final: al vaciar la primera barra ruge y se llena una segunda con esta fracción de su vida"},
+    {"id":"segunda_barra_dano","valor":1.5,"descripcion":"Jefe final en la segunda barra: multiplicador del daño que hace al auto"},
     {"id":"fase2_vel","valor":1.2,"descripcion":"Fase 2: multiplicador de velocidad"},
     {"id":"fase2_rugido_s","valor":1.7,"descripcion":"Fase 2: segundos que ruge quieto"},
     {"id":"acido_dano","valor":7,"descripcion":"Daño de un escupitajo o una tuerca al auto"},

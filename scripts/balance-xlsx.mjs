@@ -154,13 +154,13 @@ for (const t of Object.keys(DESC)) {
   ws.getCell("A1").value = "Tiempo para matar a cada jefe"; ws.getCell("A1").font = { bold: true, size: 14 };
   ws.getCell("A2").value = "Segundos estimados = vida ÷ (DPS supuesto × presencia). El DPS es un SUPUESTO por jefe (calibrar con __bossDuel: ver CLAUDE.md); no sale de la hoja armas.";
   ws.getCell("A4").value = "Presencia: fracción del tiempo en que el equipo logra pegarle al jefe (0 a 1)"; ws.getCell("B4").value = 0.8; ws.getCell("B4").fill = INPUT;
-  ["id", "nombre", "tipo", "vida", "DPS supuesto del equipo", "segundos para matarlo", "minutos"].forEach((h, i) => { const c = ws.getCell(6, 1 + i); c.value = h; head(c); });
+  ["id", "nombre", "tipo", "vida (con segunda barra)", "DPS supuesto del equipo", "segundos para matarlo", "minutos"].forEach((h, i) => { const c = ws.getCell(6, 1 + i); c.value = h; head(c); });
   bal.enemigos.filter((e) => e.tipo !== "bicho").forEach((e, i) => {
     const r = 7 + i, ID = `$A${r}`;
     ws.getCell(r, 1).value = e.id;
     ws.getCell(r, 2).value = { formula: look("enemigos", "nombre", ID) };
     ws.getCell(r, 3).value = { formula: look("enemigos", "tipo", ID) };
-    ws.getCell(r, 4).value = { formula: look("enemigos", "vida", ID) };
+    ws.getCell(r, 4).value = { formula: `${look("enemigos", "vida", ID)}*IF($C${r}="jefe_final",1+${look("ataques", "valor", '"segunda_barra_vida"')},1)` }; // jefe final: las dos barras
     ws.getCell(r, 5).value = e.tipo === "jefe_final" ? 600 : 200; ws.getCell(r, 5).fill = INPUT; // supuesto: equipo del minuto 10 / del minuto 3 a 7
     ws.getCell(r, 6).value = { formula: `IF($E${r}*$B$4>0,$D${r}/($E${r}*$B$4),"-")` };
     ws.getCell(r, 7).value = { formula: `IF(ISNUMBER($F${r}),$F${r}/60,"-")` };

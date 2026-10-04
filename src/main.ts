@@ -797,7 +797,7 @@ function update(dt: number) {
   }
   // Invulnerabilidad de contacto: como mucho un golpe cada 0,5 s aunque te rodeen
   if ((touchIFrame -= dt) <= 0 && contactHit) { hurt(contactHit, true, "_contacto", contactBy); SFX.hurt(); touchIFrame = R.contacto_invuln_s; }
-  for (const e of enemies.filter((x) => x.hp <= 0)) {
+  for (const e of enemies.filter((x) => x.hp <= 0 && !x.rearm())) { // jefe final: la primera barra vacía no lo mata
     enemies.splice(enemies.indexOf(e), 1);
     if (e.hp < -1e8) e.dispose(); else kill(e);
     if (state !== "play") return;
@@ -883,6 +883,7 @@ const LAB = { on: false, back: 15, up: 13, t: 1 }; // modo lab (solo dev): mundo
 const dmgBy: Record<string, number> = {}; // solo dev: de dónde viene el daño
 function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   if (god || (abil === "escudo" && abilOn > 0)) return; // escudo: invulnerable
+  if (by && DEF[by].final && enemies.some((e) => e.kind === by && e.enraged)) n *= ATK.segunda_barra_dano; // segunda barra: pega más fuerte
   if (by && !simulating && !LAB.on) beastRec(by).hurt += n * (1 - st.armor); // daño recibido por tipo (ficha del bestiario)
   airHit = true;
   if (driveMul > 1) { driveMul = 1; hudDrive(1); } // el combo de manejo cae con cualquier golpe

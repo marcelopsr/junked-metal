@@ -8,12 +8,12 @@ import { GLB, glbAnimate, glbPlay, glbTpl, glbVat } from "./glb";
 
 export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos";
 
-type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; scale?: number; color: string };
+type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; final?: boolean; scale?: number; color: string };
 const ATK = BAL.ataques;
 // Vida, velocidad, daño, peso y XP salen de balance.json (tabla enemigos)
-const stats = (k: Kind) => { const e = BAL.enemigos[k]; return { hp: e.vida, speed: e.velocidad, dmg: e.dano, mass: e.peso, xp: e.xp }; };
+const stats = (k: Kind) => { const e = BAL.enemigos[k]; return { hp: e.vida, speed: e.velocidad, dmg: e.dano, mass: e.peso, xp: e.xp, final: e.tipo === "jefe_final" }; };
 export const DEF: Record<Kind, Def> = {
-  // ponytail: vida de los jefes finales perro / aspiradora / cortacercos (20000 / 40000 / 30000) calibrada con __bossDuel (equipo del minuto 10, 8 semillas, ~45-60 s). Medido: cortacercos 30000 y perro 24000; perro 20000 y aspiradora 40000 son interpolados (sin corrida de verificación). Remedir con __bossDuel antes de darlos por cerrados.
+  // Jefes finales (tipo jefe_final): dos barras. Al vaciar la primera ruge y se llena la segunda (rearm); ver ataques.segunda_barra_*
   hormiga: { name: "Hormiga", ...stats("hormiga"), size: [0.9, 0.6, 1.7], color: "#a0522d" },
   escupidora: { name: "Hormiga escupidora", ...stats("escupidora"), size: [1.1, 0.8, 2], color: "#d2381c" },
   friccion: { name: "Autito a fricción", ...stats("friccion"), size: [0.9, 0.6, 1.6], color: "#f97316" },
@@ -94,6 +94,14 @@ export class Enemy {
   landD = 0.4; recSeq = "jump"; // duración y secuencia de la recuperación (landT) tras el salto o el trompo
   vy0 = 0; landT = 0; clipT = 0; // jefe GLB: velocidad vertical al despegar, recuperación tras aterrizar y reloj del ciclo de patas
   atk = -1; // segundos dentro de su propio ataque (GLB[kind].atk: escupida, embestida); -1 = no ataca
+
+  // Jefe final sin vida en la primera barra: entra en fase 2 con la segunda llena (true = no muere). Un reciclado (-1e9) no cuenta.
+  rearm() {
+    if (!this.def.final || this.enraged || this.hp < -1e8) return false;
+    this.hp = this.maxHp *= ATK.segunda_barra_vida;
+    this.enraged = true; this.phaseUp = true; this.setRage(true); this.roar = -1;
+    return true;
+  }
 
   constructor(public kind: Kind, pos: B.Vector3, hpMul: number) {
     const d = (this.def = DEF[kind]);
@@ -272,7 +280,7 @@ export class Enemy {
     let turn = 6;
     if (this.slow > 0) { this.slow -= dt; speed *= d.boss ? ATK.jefe_lento_mult : ATK.bicho_lento_mult; } // empapado: se arrastra
     this.clock += dt;
-    if (d.boss && !this.enraged && this.hp < this.maxHp * ATK.fase2_vida) { this.enraged = true; this.phaseUp = true; this.setRage(true); this.roar = -1; } // fase 2: aviso en main.ts
+    if (d.boss && !d.final && !this.enraged && this.hp < this.maxHp * ATK.fase2_vida) { this.enraged = true; this.phaseUp = true; this.setRage(true); this.roar = -1; } // fase 2: aviso en main.ts
     if (this.enraged) { speed *= ATK.fase2_vel; this.vapor(dt); }
     if (this.roar < 0 && !this.airborne && this.state === 0) this.roar = ROAR; // espera a que termine el ataque en curso
     if (this.roar > 0) { // ruge quieto (sigue recibiendo daño); frenarlo cada cuadro anula empujes

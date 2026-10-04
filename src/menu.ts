@@ -626,7 +626,7 @@ const LORE: Record<Kind, string> = {
   cortadora: "Despertó un domingo a las siete de la mañana y decidió que el pasto no alcanzaba. Corta mangueras, macetas y todo lo que se cruce en su línea.",
   tarantula: "Ocho patas, cero paciencia. Teje redes por pasatiempo y emboscadas por oficio. Vive debajo del tanque de agua y sale cuando escucha un motor.",
   perro: "Felipe, bulldog francés y dueño del patio. Sufre de zoomies, ladra a la nada, entierra juguetes y no negocia. Nadie sabe qué ve con ese ojo.",
-  gato: "Eulalio, gato naranja de energía infinita. Gira, salta, cambia de idea a mitad de salto y jamás cae donde dijo que iba a caer. Duerme dieciocho horas y usa las otras seis para esto.",
+  gato: "Eulalio el michu, naranja y de energía infinita. Gira, salta, cambia de idea a mitad de salto y jamás cae donde dijo que iba a caer. Duerme dieciocho horas y usa las otras seis para esto.",
   aspiradora: "Programada para limpiar la casa, se escapó por la gatera. Considera que todo el patio es una pelusa, y en su mapa hay un solo punto marcado: el auto.",
   cortacercos: "Lo dejaron enchufado después de podar el ligustro. Desde entonces, todo le parece un cerco. Zumba sin parar y deja cables pelados por donde pasa.",
 };
@@ -646,7 +646,7 @@ const HOW: Record<Kind, [string, string]> = {
   aspiradora: ["Un aro rojo enorme anuncia la succión: arrastra al auto hacia ella y después suelta tres ráfagas de tuercas en abanico.", "Acelerar hacia afuera del aro apenas aparece. Las ráfagas dejan huecos entre tuerca y tuerca: pasar por ellos."],
   cortacercos: ["Anuncia un barrido en arco con un sector rojo de 10 metros y siembra cables con chispas en el piso.", "Salir del sector antes del barrido y no pisar los cables: electrocutan mientras se está encima."],
 };
-// Fase 2 (jefes por debajo de la mitad de vida, enemies.ts: enraged)
+// Fase 2 (minijefes por debajo de la mitad de vida; jefes finales en su segunda barra; enemies.ts: enraged)
 const PHASE2: Partial<Record<Kind, string>> = { gato: " y maúlla para llamar polillas", perro: " y salta más seguido" };
 const BTABS = { bichos: "Bichos", pilotos: "Pilotos", logros: "Logros", stats: "Estadísticas" };
 let btab: keyof typeof BTABS = "bichos";
@@ -739,7 +739,7 @@ function renderBeast() {
     + `<div id="binfo">`
     + `<div class="bblock" tabindex="0"><div class="sect">Datos</div><div class="st bst">${row(d.boss ? "Vida" : "Vida inicial", hp, d.boss ? 8000 : 270, num(hp))}${row("Velocidad", sp, 25, num(sp))}${row("Daño", d.dmg, d.boss ? 45 : 12, num(d.dmg))}${row("Peso", mass, d.boss ? 100 : 15, num(mass))}${row("XP", d.xp, d.boss ? 120 : 6, d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"}` : "Fin de la partida")}</div>`
     + (el ? `<p class="bnote">${el === "rapida" ? "Élite rápida: doble velocidad y 60% de la vida." : "Élite blindada: triple vida y cinco veces más pesada, casi no se la empuja."} Al caer suelta un cofre.</p>` : d.boss ? "" : `<p class="bnote">La vida de las plagas crece con el tiempo de partida.</p>`) + `</div>`
-    + `<div class="bblock" tabindex="0"><div class="sect">Cómo ataca</div><p>${HOW[k][0]}</p><div class="sect">Cómo esquivarlo</div><p>${HOW[k][1]}</p>${d.boss ? `<p class="bnote">Fase 2: por debajo de la mitad de vida se enfurece, va un 20% más rápido${PHASE2[k] ?? ""}.</p>` : ""}</div>`
+    + `<div class="bblock" tabindex="0"><div class="sect">Cómo ataca</div><p>${HOW[k][0]}</p><div class="sect">Cómo esquivarlo</div><p>${HOW[k][1]}</p>${d.boss ? `<p class="bnote">${d.final ? `Fase 2: al vaciar la primera barra ruge y llena una segunda, pega más fuerte` : "Fase 2: por debajo de la mitad de vida se enfurece"}, va un 20% más rápido${PHASE2[k] ?? ""}.</p>` : ""}</div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Trasfondo</div><p class="lore">${LORE[k]}</p></div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Registro propio</div>${met ? kv("Bajas", n) + kv("Primera vez", first) + kv("Daño recibido", Math.round(r?.hurt ?? 0)) + kv("Zonas", r?.zones.map((z) => ZONES[z].short).join(", ") || "Sin registros todavía") : `<p>Sin registros todavía.</p>`}</div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Debilidades</div>${weak.length ? `<div class="st bst">${weak.map(([id, v]) => row(wname(id), v, weak[0][1], String(Math.round(v)))).join("")}</div><p class="bnote">Daño infligido por arma, según el historial propio.</p>` : `<p>Sin registros todavía.</p>`}</div>`
