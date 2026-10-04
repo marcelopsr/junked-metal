@@ -6,7 +6,7 @@
 
 /* Cambio de canal: estática breve encima de todo */
 #fe::after { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: 0; z-index: 5;
-  background: #fff1cf; }
+  background: #0c141e; }
 #fe.zap::after { animation: zap .24s steps(4, end); }
 @keyframes zap { 0% { opacity: .95; background-position: 0 0, 0 0; } 40% { opacity: .7; background-position: 0 9px, 17px 0; } 70% { opacity: .35; background-position: 0 3px, 5px 0; } 100% { opacity: 0; } }
 body.calm #fe.zap::after, body.calm .press { animation: none; }

@@ -329,3 +329,11 @@ body.calm #hud *, body.calm #hud::after, body.calm #hud *::before, body.calm #hu
 #hud #txr .h-read.r span { font-size: 0; }
 #hud #txr .h-read.r span::after { content: "KM/H"; font-size: 12px; letter-spacing: .14em; color: var(--g-dim); }
 #hud #txr { width: 118px; }
+
+/* Banner de avisos moderno */
+#banner { background: rgba(12, 20, 30, .62); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, .18); border-radius: 16px; box-shadow: 0 10px 28px rgba(0, 0, 0, .3); clip-path: none; padding: 12px 26px 14px; text-align: center; }
+#banner::after { content: none; }
+#banner .rxh { display: none; }
+#bannerTxt { font: 700 clamp(20px, 4.4vw, 36px)/1.1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, .45); }
+#bannerTxt .ty::after { display: none; }
+#bannerTxt .gh::after { display: none; }
