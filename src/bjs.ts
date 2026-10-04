@@ -19,6 +19,7 @@ export { DirectionalLight } from "@babylonjs/core/Lights/directionalLight.js";
 export { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture.js";
 export { Engine } from "@babylonjs/core/Engines/engine.js";
 export { FSR1RenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/fsr1RenderingPipeline.js";
+export { FxaaPostProcess } from "@babylonjs/core/PostProcesses/fxaaPostProcess.js";
 export { FreeCamera } from "@babylonjs/core/Cameras/freeCamera.js";
 export { GlowLayer } from "@babylonjs/core/Layers/glowLayer.js";
 export { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin.js";

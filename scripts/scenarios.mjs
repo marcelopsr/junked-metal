@@ -36,7 +36,9 @@ export const sessions = [
     { id: "garaje-vista-previa", act: async (p) => { await view("garage")(p); await p.focus('.carc.locked[data-k="tanque"]'); await p.waitForTimeout(400); } },
     { id: "taller", act: view("shop") },
     { id: "config", act: view("config") },
-    { id: "bestiario", act: view("bestiary") },
+    // Imagen con Escalado FSR: la escala % se oculta y aparece el modo FSR (fila dependiente)
+    { id: "config-fsr", act: async (p) => { await p.evaluate(() => { const s = document.querySelector('select[data-set="scaler"]'); s.value = "fsr"; s.dispatchEvent(new Event("change", { bubbles: true })); }); await p.waitForTimeout(150); } },
+    { id: "bestiario", act: async (p) => { await p.evaluate(() => window.__cfg({ scaler: "simple" })); await view("bestiary")(p); } },
     { id: "ficha", act: async (p) => { await p.dispatchEvent("#beasts [data-beast]", "click"); await wait(p, () => document.querySelector("#scr-beast.on")); await p.waitForTimeout(500); } },
     { id: "creditos", act: view("credits") },
   ] },
@@ -46,6 +48,8 @@ export const sessions = [
     { id: "niebla", act: lab({ climate: "niebla" }) },
     { id: "farol", act: lab({ climate: "farol" }) },
     { id: "hormigas300", act: labAnts, shot: false }, // solo medición: 300 instancias
+    { id: "preset-bajo", act: async (p) => { await p.evaluate(() => { window.__cfg({ preset: "bajo" }); window.__lab({}); }); } }, // preajuste Bajo (lo demás corre en Medio, el de fábrica)
+    { id: "fsr-fxaa", act: async (p) => { await p.evaluate(() => { window.__cfg({ preset: "medio", scaler: "fsr", fsr: "rendimiento", aa: "fxaa", sharpen: 0.6 }); window.__lab({}); }); } }, // FXAA antes del agrandado de FSR
   ] },
   { id: "partida", query: "?mute&seed=3", shots: [
     { id: "curso", act: partida(90) },
