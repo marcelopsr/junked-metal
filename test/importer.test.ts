@@ -21,18 +21,18 @@ describe("importDump", () => {
     expect(r.next).toEqual(bal);
   });
   it("un número cambiado (con coma decimal) se informa como diferencia", () => {
-    const t = dump().replace(/\nhormiga\t([^\t]*)\tbicho\t8\t/, "\nhormiga\t$1\tbicho\t9,5\t");
+    const t = dump().replace(/\nhormiga\t([^\t]*)\tbicho\t11\t/, "\nhormiga\t$1\tbicho\t9,5\t");
     const r = importDump(t, bal);
-    expect(r.diffs).toEqual(["enemigos.hormiga.vida: 8 -> 9.5"]);
+    expect(r.diffs).toEqual(["enemigos.hormiga.vida: 11 -> 9.5"]);
     expect(r.errors).toEqual([]);
   });
   it("detecta texto en columna numérica, id inexistente y columna faltante", () => {
-    expect(importDump(dump().replace(/\nhormiga\t([^\t]*)\tbicho\t8\t/, "\nhormiga\t$1\tbicho\tocho\t"), bal).errors.join()).toMatch(/no es un número/);
+    expect(importDump(dump().replace(/\nhormiga\t([^\t]*)\tbicho\t11\t/, "\nhormiga\t$1\tbicho\tocho\t"), bal).errors.join()).toMatch(/no es un número/);
     expect(importDump(dump().replace(/\nhormiga\t/, "\nhormigaa\t"), bal).errors.join()).toMatch(/no existe/);
     expect(importDump(dump().replace("\tvelocidad\tdano\t", "\tdano\t"), bal).errors.join()).toMatch(/faltan: velocidad/);
   });
   it("un negativo donde ninguna fila lo es se rechaza (error de tipeo)", () => {
-    const t = dump().replace(/\nhormiga\t([^\t]*)\tbicho\t8\t/, "\nhormiga\t$1\tbicho\t-8\t");
+    const t = dump().replace(/\nhormiga\t([^\t]*)\tbicho\t11\t/, "\nhormiga\t$1\tbicho\t-8\t");
     expect(importDump(t, bal).errors.join()).toMatch(/negativo/);
   });
   it("con un error el JSON nuevo no se considera válido: hay errores para mostrar", () => {

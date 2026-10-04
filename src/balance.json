@@ -1,6 +1,6 @@
 {
   "enemigos": [
-    {"id":"hormiga","nombre":"Hormiga","tipo":"bicho","vida":8,"velocidad":8,"dano":6,"peso":0.4,"xp":1,"aparece_min":0,"peso_base":10,"peso_por_min":0},
+    {"id":"hormiga","nombre":"Hormiga","tipo":"bicho","vida":11,"velocidad":8,"dano":6,"peso":0.4,"xp":1,"aparece_min":0,"peso_base":10,"peso_por_min":0},
     {"id":"escupidora","nombre":"Hormiga escupidora","tipo":"bicho","vida":22,"velocidad":7,"dano":8,"peso":0.7,"xp":3,"aparece_min":1.5,"peso_base":1,"peso_por_min":0.6},
     {"id":"friccion","nombre":"Autito a fricción","tipo":"bicho","vida":18,"velocidad":12.5,"dano":7,"peso":0.7,"xp":2,"aparece_min":0.5,"peso_base":4,"peso_por_min":1},
     {"id":"robot","nombre":"Robot a cuerda","tipo":"bicho","vida":40,"velocidad":18,"dano":10,"peso":1.3,"xp":3,"aparece_min":1.5,"peso_base":2,"peso_por_min":0.6},
