@@ -62,7 +62,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   sky.infiniteDistance = true;
   sky.isPickable = false;
   // Bloom moderno sobre lo emisivo (faro, ojos, tuercas, ventanas); el cielo no. Fuera en táctil.
-  if (!low) { const gl = new B.GlowLayer("bloom", scene, { mainTextureRatio: 0.75, blurKernelSize: 24 }); gl.intensity = 0.35; gl.addExcludedMesh(sky); }
+  if (!low) { const gl = glowL = new B.GlowLayer("bloom", scene, { mainTextureRatio: 0.75, blurKernelSize: 24 }); gl.intensity = 0.35; gl.addExcludedMesh(sky); }
   probe = new B.ReflectionProbe("probe", 128, scene);
   probe.renderList!.push(sky);
   probe.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
@@ -75,9 +75,11 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   sun = new B.DirectionalLight("sun", new B.Vector3(-0.45, -1, 0.35).normalize(), scene);
   sun.intensity = 0.5;
   sun.diffuse = B.Color3.FromHexString("#7f9bd6");
+  // ponytail: Babylon pide 2 cascadas como mínimo; con 1 el shader anda igual (bucle sobre SHADOWCSMNUM_CASCADES). Si una versión lo rompe, volver a 2 en "low"/"mid".
+  B.CascadedShadowGenerator.MIN_CASCADES_COUNT = 1;
   shadows = new B.CascadedShadowGenerator(SHADOW.mid[0], sun); // applyGfx (menu.ts) lo reajusta al nivel guardado
   shadows.numCascades = SHADOW.mid[1];
-  shadows.shadowMaxZ = 90;
+  shadows.shadowMaxZ = SHADOW.mid[3];
   shadows.lambda = 0.85;
   shadows.stabilizeCascades = true;
   shadows.usePercentageCloserFiltering = true;
@@ -113,6 +115,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
 // siempre, tengan instancias o no). Acá cada cascada recibe solo lo que cae dentro de su caja ortográfica (esfera del volumen contra x/y de la matriz de la cascada,
 // con holgura para el filtrado PCF y la mezcla entre cascadas: lo que queda fuera lo recortaría la GPU igual, así que el mapa de sombras sale idéntico)
 // y las plantillas solo si tienen alguna instancia viva. Con instancias, la esfera de la fuente no sirve (las instancias están en cualquier lado): se dejan pasar.
+// ponytail: esfera del volumen (conservadora); las mallas muy largas (setos, calle, casa) casi nunca se podan. Techo: probar la AABB mundial si pesaran en las cascadas.
 const castList: B.AbstractMesh[] = [];
 const SHADOW_PAD = 0.12;
 function shadowList(layer: number, list: B.Nullable<readonly B.AbstractMesh[]>, len: number) {
@@ -123,7 +126,7 @@ function shadowList(layer: number, list: B.Nullable<readonly B.AbstractMesh[]>, 
   castList.length = 0;
   for (let i = 0; i < len; i++) {
     const m = list[i];
-    if (!m.isEnabled() || !m.isVisible) continue;
+    if (m.isDisposed() || !m.isEnabled() || !m.isVisible) continue;
     if (m.position.y < -400) { // plantilla: la fuente está escondida, solo importan sus instancias
       const ins = (m as B.Mesh).instances;
       if (!ins?.length || !ins.some((x) => x.isEnabled() && x.isVisible)) continue;
@@ -199,29 +202,30 @@ export const FSR_NAME = { ultra: "Ultra calidad", calidad: "Calidad", equilibrad
 export type AA = "none" | "fxaa" | "msaa2" | "msaa4" | "msaa8";
 export type ShadowQ = "off" | "low" | "mid" | "high";
 export type Detail = "bajo" | "medio" | "alto" | "ultra";
-export type Gfx = { scale: number; fsr: Fsr; fsrSharp: number; aa: AA; sharpen: number; shadowQ: ShadowQ; detail: Detail; texRes: number; aniso: number; bright: number; gamma: number };
+/** scaler: "simple" usa la escala manual; "fsr" usa el modo `fsr` (nunca "off" en el guardado). sharpen: una sola nitidez (RCAS con FSR, sharpen común sin FSR). */
+export type Gfx = { scaler: "simple" | "fsr"; scale: number; fsr: Exclude<Fsr, "off">; aa: AA; sharpen: number; shadowQ: ShadowQ; detail: Detail; texRes: number; aniso: number; bloom: boolean; bright: number; gamma: number };
 
-/** Sombras del sol: [mapa, cascadas, filtrado]. "off" apaga la luz de sombras. */
-const SHADOW = { low: [1024, 2, B.ShadowGenerator.QUALITY_LOW], mid: [2048, 3, B.ShadowGenerator.QUALITY_MEDIUM], high: [4096, 4, B.ShadowGenerator.QUALITY_MEDIUM] } as const;
+/** Sombras del sol: [mapa, cascadas, filtrado, distancia]. Con 1 cascada el mapa cubre solo lo cercano al auto. "off" apaga la luz de sombras. */
+const SHADOW = { low: [128, 1, B.ShadowGenerator.QUALITY_LOW, 28], mid: [256, 1, B.ShadowGenerator.QUALITY_LOW, 36], high: [1024, 2, B.ShadowGenerator.QUALITY_MEDIUM, 80] } as const;
 /** Detalle del mundo: densidad de pasto (x el patio base; pide partida nueva), partículas y restos (x), y distancia de dibujo de props (0 = sin límite). */
 export const DETAIL = { bajo: { grass: 0.33, fx: 0.35, draw: 110 }, medio: { grass: 0.66, fx: 0.65, draw: 170 }, alto: { grass: 1, fx: 1, draw: 260 }, ultra: { grass: 1.5, fx: 1.4, draw: 0 } } as const;
-/** Preajustes de Calidad: fijan de una vez los cuatro ajustes de abajo. */
+/** Preajustes de Calidad: fijan de una vez los cinco ajustes de abajo. */
 export const PRESETS = {
-  bajo: { shadowQ: "off", detail: "bajo", texRes: 256, aniso: 1 },
-  medio: { shadowQ: "mid", detail: "medio", texRes: 512, aniso: 2 },
-  alto: { shadowQ: "high", detail: "alto", texRes: 512, aniso: 8 },
-  ultra: { shadowQ: "high", detail: "ultra", texRes: 512, aniso: 16 },
-} as const satisfies Record<string, Pick<Gfx, "shadowQ" | "detail" | "texRes" | "aniso">>;
+  bajo: { shadowQ: "off", detail: "bajo", texRes: 128, aniso: 1, bloom: false },
+  medio: { shadowQ: "mid", detail: "medio", texRes: 256, aniso: 2, bloom: true },
+  alto: { shadowQ: "high", detail: "alto", texRes: 512, aniso: 8, bloom: true },
+  ultra: { shadowQ: "high", detail: "ultra", texRes: 512, aniso: 16, bloom: true },
+} as const satisfies Record<string, Pick<Gfx, "shadowQ" | "detail" | "texRes" | "aniso" | "bloom">>;
 export type Preset = keyof typeof PRESETS;
 /** Preajuste que coincide exacto con los ajustes, o "custom". */
-export const presetOf = (g: Pick<Gfx, "shadowQ" | "detail" | "texRes" | "aniso">): Preset | "custom" => (Object.keys(PRESETS) as Preset[]).find((k) => (Object.keys(PRESETS[k]) as (keyof typeof PRESETS.bajo)[]).every((f) => PRESETS[k][f] === g[f])) ?? "custom";
+export const presetOf = (g: Pick<Gfx, "shadowQ" | "detail" | "texRes" | "aniso" | "bloom">): Preset | "custom" => (Object.keys(PRESETS) as Preset[]).find((k) => (Object.keys(PRESETS[k]) as (keyof typeof PRESETS.bajo)[]).every((f) => PRESETS[k][f] === g[f])) ?? "custom";
 
 /** Lo que leen otros módulos: pasto y texturas se aplican al armar el mundo (world.ts), partículas al instante (fx.ts). */
 export const G = { grass: DETAIL.medio.grass, fx: DETAIL.medio.fx, draw: DETAIL.medio.draw as number, texCap: 512 as number };
-const cur: Gfx = { scale: 1, fsr: "off", fsrSharp: 0.9, aa: "none", sharpen: 0, shadowQ: "mid", detail: "medio", texRes: 512, aniso: 0, bright: 1, gamma: 1 }; // aniso 0: la primera vez siempre se aplica
+const cur: Gfx = { scaler: "simple", scale: 1, fsr: "calidad", aa: "none", sharpen: 0, shadowQ: "mid", detail: "medio", texRes: 256, aniso: 0, bloom: true, bright: 1, gamma: 1 }; // aniso 0: la primera vez siempre se aplica
 let mainCam: B.Camera, pipeline: B.DefaultRenderingPipeline, lowQ = false;
 let fsrP: B.FSR1RenderingPipeline | null = null, split: B.Camera | null = null;
-let anisoHook: B.Nullable<B.Observer<B.BaseTexture>> = null;
+let anisoHook: B.Nullable<B.Observer<B.BaseTexture>> = null, glowL: B.GlowLayer | null = null;
 const cams = () => (split ? [mainCam, split] : [mainCam]);
 /** MSAA que admite la tarjeta (1 = ninguno). */
 export const maxMsaa = () => Math.max(1, scene.getEngine().getCaps().maxMSAASamples || 1);
@@ -235,8 +239,8 @@ function chain(edit: () => void) {
 }
 
 /** FSR es una cadena de una sola cámara: en pantalla dividida (carrera de 2) se apagan y vale la escala manual. */
-const fsrEff = (): Fsr => (split ? "off" : cur.fsr);
-let fsrApplied: Fsr = "off";
+const fsrEff = (): Fsr => (split || cur.scaler !== "fsr" ? "off" : cur.fsr);
+let fsrApplied: Fsr = "off", fxaaLoOn = false, fxaaLo: B.FxaaPostProcess | null = null;
 function applyScale() {
   const e = scene.getEngine();
   e.setHardwareScalingLevel(1 / ((devicePixelRatio || 1) * (fsrEff() === "off" ? cur.scale : 1))); // FSR: el canvas es nativo y la escena se dibuja a 1/FSR_K dentro del pipeline
@@ -249,28 +253,37 @@ export function applyGfx(g: Gfx) {
   Object.assign(cur, g);
   // Resolución: FSR reemplaza a la escala manual
   const eff = fsrEff();
-  if (eff !== fsrApplied || (eff !== "off" && FSR_K[eff] !== fsrP?.scaleFactor)) {
-    fsrApplied = eff;
+  // FSR 1 es solo espacial: como pide AMD, el suavizado va ANTES del agrandado EASU. MSAA va en la escena baja (fsrP.samples o el FXAA);
+  // FXAA es una etapa propia a 1/FSR_K pegada antes de FSR (el orden en la cámara es el orden de creación: se rehacen las dos juntas).
+  const lo = eff !== "off" && cur.aa === "fxaa";
+  if (eff !== fsrApplied || lo !== fxaaLoOn || (eff !== "off" && FSR_K[eff] !== fsrP?.scaleFactor)) {
+    fsrApplied = eff; fxaaLoOn = lo;
     chain(() => {
-      if (eff === "off") { fsrP?.dispose(); fsrP = null; }
-      else { fsrP ??= new B.FSR1RenderingPipeline("fsr", scene, cams()); fsrP.scaleFactor = FSR_K[eff]; }
+      fxaaLo?.dispose(mainCam); fxaaLo = null; fsrP?.dispose(); fsrP = null;
+      if (eff === "off") return;
+      if (lo) fxaaLo = new B.FxaaPostProcess("fxaaLo", 1 / FSR_K[eff], mainCam);
+      fsrP = new B.FSR1RenderingPipeline("fsr", scene, cams()); fsrP.scaleFactor = FSR_K[eff];
     });
   }
   applyScale();
-  if (fsrP) fsrP.sharpnessStops = 2 * (1 - cur.fsrSharp); // RCAS: 0 paradas = nitidez máxima
-  // Suavizado: FXAA y MSAA van en "pipe" (o MSAA en la escena baja de FSR); la nitidez es del DefaultRenderingPipeline y sirve con cualquiera
+  // Una sola nitidez: con FSR la hace RCAS (0 paradas = máxima), sin FSR el sharpen del DefaultRenderingPipeline
+  if (fsrP) fsrP.sharpnessStops = 2 * (1 - cur.sharpen);
+  // Suavizado: FXAA y MSAA van en "pipe" (o MSAA en la escena baja de FSR)
   const msaa = cur.aa.startsWith("msaa") ? Math.min(+cur.aa.slice(4), maxMsaa()) : 1;
-  pipeline.fxaaEnabled = cur.aa === "fxaa";
+  pipeline.fxaaEnabled = cur.aa === "fxaa" && !fsrP;
   pipeline.samples = fsrP ? 1 : msaa;
   if (fsrP) fsrP.samples = msaa;
-  pipeline.sharpenEnabled = cur.sharpen > 0;
+  if (fxaaLo) fxaaLo.samples = 1;
+  pipeline.sharpenEnabled = !fsrP && cur.sharpen > 0;
   pipeline.sharpen.edgeAmount = cur.sharpen * 0.8;
   // Calidad
   const sh = SHADOW[cur.shadowQ === "off" ? "low" : cur.shadowQ];
   sun.shadowEnabled = cur.shadowQ !== "off";
   if (cur.shadowQ !== "off" && cur.shadowQ !== was.shadowQ) { // recrear el mapa es caro: solo si cambió el nivel
-    shadows.numCascades = sh[1]; shadows.mapSize = sh[0]; shadows.filteringQuality = sh[2];
+    shadows.numCascades = sh[1]; shadows.mapSize = sh[0]; shadows.filteringQuality = sh[2]; shadows.shadowMaxZ = sh[3];
   }
+  pipeline.bloomEnabled = cur.bloom;
+  if (glowL) glowL.isEnabled = cur.bloom;
   const d = DETAIL[cur.detail];
   Object.assign(G, { grass: d.grass, fx: d.fx, draw: d.draw, texCap: cur.texRes });
   if (cur.aniso !== was.aniso) {
@@ -375,7 +388,7 @@ export function canvasTex(size: number, draw: (c: CanvasRenderingContext2D, s: n
   const big = document.createElement("canvas");
   big.width = big.height = size;
   draw(big.getContext("2d")!, size);
-  const px = Math.min(size, G.texCap); // Texturas 256/512 (Configuración → Imagen): solo achica las de 512 (suelo, tierra, baldosas)
+  const px = Math.min(size, G.texCap); // Texturas 128/256/512 (Configuración → Imagen): solo achica las de 512 (suelo, tierra, baldosas)
   const t = new B.DynamicTexture("tex", px, scene, true, B.Texture.TRILINEAR_SAMPLINGMODE);
   (t.getContext() as unknown as CanvasRenderingContext2D).drawImage(big, 0, 0, px, px);
   t.update();

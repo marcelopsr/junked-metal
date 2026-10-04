@@ -169,8 +169,8 @@ function wheelInst(d: number, w: number, rim: string) {
     m.position.y = -500; // la fuente queda escondida, como las plantillas: se dibujan las instancias
     m.isPickable = false;
     wheelSrc.set(`${k}|${rim}`, m);
-    if (!wheelSh.has(k)) { const sh = shadowProxy(m); if (sh) sh.position.y = -500; wheelSh.set(k, sh); shadows.addShadowCaster(sh ?? m); }
-    else if (!wheelSh.get(k)) shadows.addShadowCaster(m);
+    if (!wheelSh.has(k)) { const sh = shadowProxy(m); if (sh) sh.position.y = -500; wheelSh.set(k, sh); if (sh) shadows.addShadowCaster(sh); }
+    if (!wheelSh.get(k)) shadows.addShadowCaster(m); // sin gemela (una sola submalla): la fuente misma proyecta
   }
   const inst = m.createInstance("wheel"), shi = wheelSh.get(k)?.createInstance("wheelSh");
   if (shi) { shi.parent = inst; shi.layerMask = SHADOW_ONLY; }
@@ -196,7 +196,7 @@ export const PARTS = {
 export type Slot = keyof typeof PARTS;
 // Faro: [emisivo de las ópticas, luz del SpotLight]. Nada rojo ni verde (código de amenaza y disparos propios).
 const LAMPS: Record<string, [string, string]> = { calido: ["#fff3b0", "#ffe9c2"], ambar: ["#ffb347", "#ffc77a"], cian: ["#9be7ff", "#bdefff"], violeta: ["#c9a7ff", "#d8c2ff"] };
-export type CarOpts = { paint?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; pilot?: string; sticker?: string };
+export type CarOpts = { paint?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; pilot?: string; sticker?: string; fixed?: boolean }; // fixed: la pintura no se gasta (carrera, garaje): se hornea y ahorra una submalla
 
 // Calco propio del capó (editor del garaje): grilla DECAL_N × DECAL_N, un carácter por celda: "0" = transparente, "1".."8" = DECAL_PAL[n-1].
 // Colores de la paleta de UI (docs/ART_DIRECTION.md); sin el rojo de amenaza.
@@ -425,7 +425,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   // Antena, siempre: es un auto RC
   parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#ff4d6d"), [0.38, 1.6, -0.7]));
   const rim = o.rim ?? A.rim;
-  const body = merge("carBody", parts, [paint]); // la pintura queda aparte: se gasta con el daño (Car.wear)
+  const body = merge("carBody", parts, o.fixed ? [] : [paint]); // la pintura queda aparte si se gasta con el daño (Car.wear)
   const cast: B.AbstractMesh[] = [];
   const bodySh = shadowProxy(body);
   if (bodySh) bodySh.parent = body;

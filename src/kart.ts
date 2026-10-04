@@ -329,7 +329,7 @@ function makeRacers() {
       idx = (trk.N - Math.round(back / DS) + trk.N) % trk.N;
       p = trk.P[idx].add(trk.R[idx].scale(side * 3.6)); yaw = Math.atan2(trk.T[idx].x, trk.T[idx].z);
     }
-    const opts: CarOpts = { paint: PAINTS[i % PAINTS.length], pilot: PILOT_IDS[i % PILOT_IDS.length], lamp: "calido" };
+    const opts: CarOpts = { paint: PAINTS[i % PAINTS.length], pilot: PILOT_IDS[i % PILOT_IDS.length], lamp: "calido", fixed: true };
     const car = new Car(D.scene, kind, opts, { x: p.x, z: p.z, yaw });
     car.setMass(1 + (CARS[kind].mass - 1) * 0.4); // masas parecidas: los choques empujan sin que el tanque arrase
     const r: Racer = {

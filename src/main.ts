@@ -490,7 +490,7 @@ function enterRace(battle: boolean) {
   setRaceCar(save.car);
   if (battle) startBattle(); else startRace();
 }
-if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2") { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
+if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2" && !isTouch) { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
 // Portada: fuentes del menú, dos cuadros dibujados (arma la escena del estante) y recién ahí se cierra la pantalla de carga; la precarga arranca con la portada ya a la vista
 boot("Cargando fuentes", 0.7);
 await Promise.race([Promise.all(['500 16px Rajdhani', '700 16px Rajdhani'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 1500))]);
@@ -1191,7 +1191,7 @@ scene.onBeforeRenderObservable.add(() => {
       const key = shownCar() + JSON.stringify(carOpts());
       if (!preview || previewKey !== key) {
         preview?.dispose();
-        const m = carModel(shownCar(), carOpts());
+        const m = carModel(shownCar(), { ...carOpts(), fixed: true });
         preview = m.body;
         previewR = Math.max(...m.wheels.map((w) => w.r));
         for (const c of m.cast) shadows.addShadowCaster(c);
