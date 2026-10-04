@@ -217,15 +217,15 @@ function carSprite(g: CanvasRenderingContext2D, t: number, tx: number, brake: bo
   for (const wx of [30, 53]) { R(g, wx - 5, cy + 7, 10, 10, "#0a0a0a"); R(g, wx - 4, cy + 6, 8, 12, "#0a0a0a"); R(g, wx - 2, cy + 10, 4, 4, "#5f6a72"); R(g, wx - 2 + (((tx * 0.5) | 0) & 3), cy + 11, 1, 2, "#0a0a0a"); }
   R(g, 30, cy - 12, 1, 12, "#5f6a72"); R(g, 29, cy - 14, 3, 3, !calm() && ((t * 4) | 0) % 2 ? "#e0a030" : "#2a2418");
 }
-const CAR_Y = 62;
+const CAR_Y = 62, CK = 1.5; // escala del auto en el cuadro 3
 const carX = (t: number) => Math.round(-150 + 176 * (1 - (1 - clamp((t - 0.2) / 1.9)) ** 2)); // frena de golpe: entra rápido y llega despacio
 function car(g: CanvasRenderingContext2D, t: number) {
   backdrop(g, t, 70, [24, 14]);
   garland(g, t, 0, 36, W, 36, 12, 16, 0, 0.55);
   const tx = carX(t), p = clamp((t - 0.2) / 1.9), brake = p > 0.4 && p < 1, v = 1 - p, hop = t > 2.1 && t < 2.3 ? -1 : 0;
-  const shake = t > 2.5 && !calm() ? ((t * 30) | 0) % 2 : 0, ty = CAR_Y + hop + shake;
+  const shake = t > 2.5 && !calm() ? ((t * 30) | 0) % 2 : 0, ty = CAR_Y + 9 + hop + shake, ox = 21; // escala CK: centrado y apoyado en el mismo piso que a 2x
   // Haz del faro, ya encendido al entrar
-  const lx = tx + 122, ly = ty + 16, len = 150, lampOn = t > 0.2;
+  const lx = tx + ox + 61 * CK, ly = ty + 8 * CK, len = 150, lampOn = t > 0.2;
   if (lampOn) {
     g.save(); g.beginPath(); g.moveTo(lx, ly); g.lineTo(lx + len, ly - 28); g.lineTo(lx + len, ly + 34); g.closePath(); g.clip();
     const gr = g.createLinearGradient(lx, 0, lx + len, 0); gr.addColorStop(0, "rgba(255,233,194,.5)"); gr.addColorStop(1, "rgba(255,233,194,.05)");
@@ -238,18 +238,18 @@ function car(g: CanvasRenderingContext2D, t: number) {
   for (let i = 0; i < 60; i++) {
     const age = t - (0.15 + i * 0.09);
     if (age < 0 || age > 0.9) continue;
-    g.globalAlpha = 0.45 * (1 - age / 0.9); ell(g, carX(0.15 + i * 0.09) + 48 - age * 14, ty + 16 - age * 12, 2 + Math.round(age * 4), 2 + Math.round(age * 3), "#7a8478"); g.globalAlpha = 1;
+    g.globalAlpha = 0.45 * (1 - age / 0.9); ell(g, carX(0.15 + i * 0.09) + ox + 24 * CK - age * 14, ty + 8 * CK - age * 12, 2 + Math.round(age * 4), 2 + Math.round(age * 3), "#7a8478"); g.globalAlpha = 1;
   }
   // Chispas del chasis al frenar
   for (let j = 0; j < 18; j++) {
     const tb = 0.95 + j * 0.05, age = t - tb;
     if (age < 0 || age > 0.4) continue;
-    R(g, carX(tb) + 58 + (hash(j) - 0.5) * 14 - age * 24, ty + 34 - age * 34 * hash(j + 7) + age * age * 110, 3, 2, j % 2 ? "#ffd27a" : "#ff8a30");
+    R(g, carX(tb) + ox + 29 * CK + (hash(j) - 0.5) * 14 - age * 24, ty + 17 * CK - age * 34 * hash(j + 7) + age * age * 110, 3, 2, j % 2 ? "#ffd27a" : "#ff8a30");
   }
-  g.save(); g.translate(tx, ty); g.scale(2, 2); carSprite(g, t, tx, brake); g.restore();
+  g.save(); g.translate(Math.round(tx + ox), ty); g.scale(CK, CK); carSprite(g, t, tx, brake); g.restore();
   // Destello en el parabrisas ya detenido
   const sp = clamp((t - 2.6) / 0.4);
-  if (sp > 0 && sp < 1 || calm() && t > 2.6) { const s = calm() ? 2 : 1 + Math.round(2 * Math.sin(sp * Math.PI)), x = tx + 2 * 48, y = ty + 6; R(g, x - s, y, 2 * s + 1, 1, "#fff"); R(g, x, y - s, 1, 2 * s + 1, "#fff"); }
+  if (sp > 0 && sp < 1 || calm() && t > 2.6) { const s = calm() ? 2 : 1 + Math.round(2 * Math.sin(sp * Math.PI)), x = Math.round(tx + ox + CK * 48), y = Math.round(ty + 3 * CK); R(g, x - s, y, 2 * s + 1, 1, "#fff"); R(g, x, y - s, 1, 2 * s + 1, "#fff"); }
 }
 
 // ---------- Cuadro 4: logo ----------
