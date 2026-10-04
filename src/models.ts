@@ -105,10 +105,10 @@ export const DECAL_PAL = ["#0b0d0a", "#b9d3a4", "#5f7355", "#8dff6a", "#6fb3c4",
 export const DECAL_BLANK = "0".repeat(DECAL_N * DECAL_N);
 export const validDecal = (s: unknown): s is string => typeof s === "string" && /^[0-8]+$/.test(s) && s.length === DECAL_N * DECAL_N;
 // Dónde va el calco en cada auto: [y, z, lado, cabeceo], sobre la superficie superior que más ve la cámara de partida (detrás y arriba, ~40°).
-// Buggy y Fórmula: el plato del alerón de serie. Monster: el techo de la cabina. Tanque: la cubierta trasera. Autito: la cola, que mira a la cámara.
+// Buggy y Fórmula: el plato del alerón de serie. Monster: el techo de la cabina. Tanque: arriba de la torreta (la escotilla tapa el centro). Autito: la cola, que mira a la cámara.
 // Con un alerón elegido (alto/doble) el calco va sobre su plato, porque tapa la cubierta o la cola (ver carModel); el techo del Monster no lo tapa.
 const SPOT: Record<CarKind, [number, number, number, number]> = {
-  buggy: [0.933, -1.0, 0.34, 0.12], monster: [1.212, -0.2, 0.54, 0], formula: [0.653, -1.15, 0.28, 0], tanque: [0.512, -0.8, 0.34, 0], carrera: [0.352, -0.72, 0.4, -0.38], axel: [0.66, -0.3, 0.34, 0], helado: [0.97, 0.55, 0.34, 0], combi: [1.04, -0.1, 0.4, 0],
+  buggy: [0.933, -1.0, 0.34, 0.12], monster: [1.212, -0.2, 0.54, 0], formula: [0.653, -1.15, 0.28, 0], tanque: [0.825, -0.15, 0.6, 0], carrera: [0.352, -0.72, 0.4, -0.38], axel: [0.66, -0.3, 0.34, 0], helado: [0.97, 0.55, 0.34, 0], combi: [1.04, -0.1, 0.4, 0],
 };
 
 // Dónde va cada cosa en cada auto: deck = [y, z] del alerón, side = calco lateral [x, y, z], exh = [y, z] del escape,
