@@ -100,4 +100,10 @@ describe("parseSave", () => {
     expect(load({ weapon: "chispazo" }).weapon).toBeUndefined(); // fusión o id inventado: se descarta (el defecto de este test no trae weapon)
     expect(load({ perm: "x", abilLv: null })).toMatchObject({ perm: { hp: 0, dmg: 0 }, abilLv: {} });
   });
+  it("colores por zona: el guardado viejo conserva pintura y llantas, detalles nace de fábrica y lo inválido se descarta", () => {
+    expect(load({ paint: "#1D4ED8", rim: "#ffc300" })).toMatchObject({ paint: "#1d4ed8", rim: "#ffc300", trim: "" });
+    expect(load({})).toMatchObject({ paint: "", rim: "", trim: "" });
+    expect(load({ paint: "red", trim: '#000" onclick="x', rim: 5 })).toMatchObject({ paint: "", trim: "", rim: "" });
+    expect(load({ paint: "#aabbcc", trim: "#112233", rim: "#445566" })).toMatchObject({ paint: "#aabbcc", trim: "#112233", rim: "#445566" });
+  });
 });

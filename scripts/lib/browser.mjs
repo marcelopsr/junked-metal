@@ -16,7 +16,8 @@ export async function launch() {
   return chromium.launch({ headless: true, args: ARGS });
 }
 
-export const VIEWPORTS = { pc: { width: 1280, height: 720 }, cel: { width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 1 } };
+export const VIEWPORTS = { pc: { width: 1280, height: 720 }, cel: { width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },
+  celh: { width: 844, height: 390, isMobile: true, hasTouch: true, deviceScaleFactor: 1 } }; // celh: celular apaisado, solo a pedido (--vp celh)
 
 /**
  * Pestaña limpia (contexto nuevo = localStorage vacío y partida desde cero) en `query` (p. ej. "?mute&seed=3").

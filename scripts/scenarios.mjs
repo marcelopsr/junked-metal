@@ -68,6 +68,11 @@ export const sessions = [
     { id: "garaje-piezas", perf: false, act: garajePiezas("buggy", { wing: "alto", bumper: "antivuelco", tires: "todoterreno", acc: "pelotita" }) },
     { id: "garaje-piezas-2", perf: false, act: garajePiezas("monster", { exhaust: "chimenea", bumper: "cano", tires: "oruga", acc: "banderita" }) },
     { id: "garaje-piezas-3", perf: false, act: garajePiezas("formula", { bumper: "laterales", tires: "rayos", acc: "matafuego" }) },
+    // Pintura por zona: paleta, selector libre (perillas de tono/saturación/brillo) y detalles + llantas sobre piezas que los muestran
+    { id: "garaje-pintura", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ car: "buggy", paint: "#4cc3c9", trim: "", rim: "" })); await view("garage")(p); await p.dispatchEvent('[data-gtab="pintura"]', "click"); await tick(p, 150); await p.waitForTimeout(100); } },
+    { id: "garaje-pintura-libre", perf: false, act: async (p) => { await p.evaluate(() => { for (const [k, v] of [["h", 280], ["s", 70], ["v", 85]]) { const i = document.querySelector(`[data-hsv="${k}"]`); i.value = v; i.dispatchEvent(new Event("input", { bubbles: true })); i.dispatchEvent(new Event("change", { bubbles: true })); } document.querySelector('[data-hsv="s"]').focus(); }); await tick(p, 5); await p.waitForTimeout(100); } },
+    { id: "garaje-pintura-zonas", perf: false, act: async (p) => { await p.evaluate((u) => window.__cfg({ unlocked: u, kit: { wing: "alto", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "cano", tires: "serie", acc: "pelotita" }, paint: "#1d4ed8", trim: "#d4af37", rim: "#ff4fa3" }), PIEZAS);
+      await view("garage")(p); await p.dispatchEvent('[data-gtab="pintura"]', "click"); await p.dispatchEvent('[data-pz="trim"]', "click"); await tick(p, 150); await p.waitForTimeout(100); } },
     { id: "garaje-arma", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ pilot: "robot", unlocked: ["arma:clips"], weapon: "clips" })); await view("garage")(p); await p.dispatchEvent('[data-gtab="arma"]', "click"); await p.waitForTimeout(150); } },
   ] },
   { id: "controles", query: "?mute&seed=3", vps: ["pc"], shots: [

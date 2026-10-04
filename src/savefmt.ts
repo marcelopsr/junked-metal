@@ -96,6 +96,8 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     s.shadowQ = one(s.shadowQ, ["off", "low", "mid", "high"], D.shadowQ); s.detail = one(s.detail, ["bajo", "medio", "alto", "ultra"], D.detail);
     s.texRes = one(s.texRes, [128, 256, 512], D.texRes); s.aniso = one(s.aniso, [1, 2, 4, 8, 16], D.aniso); s.camMode = one(s.camMode, CAM_MODES, D.camMode);
     s.fpsCap = one(s.fpsCap, [0, 30, 60, 120], 0); s.menuFps = one(s.menuFps, [0, 30, 60], D.menuFps);
+    // Colores del auto por zona: solo "#rrggbb" (un color libre llega al HTML del garaje); el guardado viejo ya trae paint y rim, trim (detalles) es nuevo
+    for (const k of ["paint", "trim", "rim"]) s[k] = typeof s[k] === "string" && /^#[0-9a-f]{6}$/i.test(s[k]) ? s[k].toLowerCase() : "";
     s.preset = deps.presetOf({ shadowQ: s.shadowQ, detail: s.detail, texRes: s.texRes, aniso: s.aniso, bloom: s.bloom });
     return { ...structuredClone(D), ...s, decals, decalSel, perm: { ...D.perm, ...s.perm }, kit: { ...D.kit, ...s.kit }, vol: { ...D.vol, ...s.vol },
       stats: { ...D.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };

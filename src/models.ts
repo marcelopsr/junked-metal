@@ -190,8 +190,11 @@ export type CarModel = { body: B.Mesh; wheels: { m: B.AbstractMesh; front: boole
 export type CarKind = "buggy" | "monster" | "formula" | "tanque" | "carrera" | "axel" | "helado" | "combi";
 
 // Paletas del taller
-export const PAINTS = ["#d62828", "#1d4ed8", "#16a34a", "#f59e0b", "#e5e7eb", "#18181b", "#7c3aed", "#ea580c"];
-export const RIMS = ["#ffc300", "#c0c0c0", "#18181b", "#ef4444"];
+// Una sola paleta para las tres zonas (carrocería, detalles, llantas): vivos, pasteles y tonos metálicos. Los primeros 8 son los de siempre.
+export const PAINTS = ["#d62828", "#1d4ed8", "#16a34a", "#f59e0b", "#e5e7eb", "#18181b", "#7c3aed", "#ea580c",
+  "#ffc300", "#2a9d8f", "#ff4fa3", "#6b7a3a", "#0f3d3e", "#4cc3c9",
+  "#f4a6c1", "#a8d8ea", "#b8e0b0", "#fde68a", "#c9b6e4", "#ffc8a2",
+  "#c0c0c0", "#d4af37", "#b87333", "#5b6470"];
 
 // Piezas visuales del garaje: [nombre, precio en tornillos]. La primera opción de cada ranura viene de fábrica.
 export const PARTS = {
@@ -206,7 +209,7 @@ export const PARTS = {
 export type Slot = keyof typeof PARTS;
 // Faro: [emisivo de las ópticas, luz del SpotLight]. Nada rojo ni verde (código de amenaza y disparos propios).
 const LAMPS: Record<string, [string, string]> = { calido: ["#fff3b0", "#ffe9c2"], ambar: ["#ffb347", "#ffc77a"], cian: ["#9be7ff", "#bdefff"], violeta: ["#c9a7ff", "#d8c2ff"] };
-export type CarOpts = { paint?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; bumper?: string; tires?: string; acc?: string; pilot?: string; sticker?: string; fixed?: boolean }; // fixed: la pintura no se gasta (carrera, garaje): se hornea y ahorra una submalla
+export type CarOpts = { paint?: string; trim?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; bumper?: string; tires?: string; acc?: string; pilot?: string; sticker?: string; fixed?: boolean }; // fixed: la pintura no se gasta (carrera, garaje): se hornea y ahorra una submalla
 
 // Calco propio del capó (editor del garaje): grilla DECAL_N × DECAL_N, un carácter por celda: "0" = transparente, "1".."8" = DECAL_PAL[n-1].
 // Colores de la paleta de UI (docs/ART_DIRECTION.md); sin el rojo de amenaza.
@@ -233,6 +236,8 @@ const ANCH: Record<CarKind, { deck: [number, number]; side: V3; exh: [number, nu
   helado: { deck: [0.95, -1.0], side: [0.56, 0.5, -0.4], exh: [0.2, -1.1], seat: [0, 0.5, 0.72, 0.7], lamps: [[0.4, 0.4, 1.22, 0.14]], paint: "#f08dbd", rim: "#f3ead2" },
   combi: { deck: [1.0, -0.95], side: [0.54, 0.55, -0.1], exh: [0.2, -1.15], seat: [0, 0.42, 0.45, 0.7], lamps: [[0.4, 0.4, 1.2, 0.18]], paint: "#4cc3c9", rim: "#e5e7eb" },
 };
+/** Colores de fábrica por zona (el garaje arranca el selector libre desde acá cuando no hay uno elegido). */
+export const factoryColor = (k: CarKind) => ({ paint: ANCH[k].paint, trim: "#c9ccd1", rim: ANCH[k].rim });
 
 // Tamaño [ancho, alto, largo] de cada auto (el mismo de CARS en car.ts; se repite aquí para no crear un import circular)
 const CARS_SIZE: Record<CarKind, [number, number, number]> = { buggy: [1.3, 0.7, 2.3], monster: [1.8, 1.1, 2.4], formula: [1.3, 0.55, 2.8], tanque: [1.75, 0.9, 2.4], carrera: [1.1, 0.5, 2.1], axel: [1.9, 1.0, 1.7], helado: [1.3, 0.95, 2.4], combi: [1.45, 1.0, 2.4] };
@@ -380,12 +385,12 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   // Alerón
   const [dy, dz] = A.deck, small = kind === "carrera", wingW = kind === "monster" || kind === "tanque" ? 1.2 : small ? 0.85 : 1.1;
   if (o.wing === "alto" || o.wing === "doble") {
-    const plate = o.wing === "alto" ? paint : M.plastic("#18181b");
+    const fin = M.plastic(o.trim ?? "#18181b"), plate = o.wing === "alto" ? paint : fin; // detalles: aletas (alto) o planos (biplano)
     const top = (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1);
     parts.push(
       ...[-0.3, 0.3].map((x) => box(0.05, top, 0.12, M.matte("#222"), [x, dy + top / 2, dz])),
       box(wingW, 0.05, 0.4, plate, [0, dy + top, dz - 0.04], [0.14, 0, 0]),
-      ...[-1, 1].map((s) => box(0.04, o.wing === "alto" ? 0.2 : 0.36, 0.44, o.wing === "alto" ? M.plastic("#18181b") : paint, [s * wingW / 2, dy + top - (o.wing === "alto" ? 0.04 : 0.12), dz - 0.04])),
+      ...[-1, 1].map((s) => box(0.04, o.wing === "alto" ? 0.2 : 0.36, 0.44, o.wing === "alto" ? fin : paint, [s * wingW / 2, dy + top - (o.wing === "alto" ? 0.04 : 0.12), dz - 0.04])),
     );
     if (o.wing === "doble") parts.push(box(wingW, 0.05, 0.34, plate, [0, dy + top - 0.24, dz - 0.02], [0.1, 0, 0]));
     stock.forEach((m) => m.dispose());
@@ -431,7 +436,8 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   // Defensas, accesorios y banda de las orugas: piezas del garaje, fusionadas con la carrocería (cero dibujos extra). Anclas: tamaño del auto, asiento y alerón.
   const [px, py, pz, ps] = A.seat;
   {
-    const [bw, bh, bl] = CARS_SIZE[kind], tubeM = M.metal("#c9ccd1"), dark = M.matte("#1b1e24");
+    const [bw, bh, bl] = CARS_SIZE[kind], tubeM = M.metal(o.trim ?? "#c9ccd1"), dark = M.matte("#1b1e24");
+    const acc = (c: string) => M.plastic(o.trim ?? c); // color principal de cada accesorio: el de detalles si hay uno elegido
     if (o.bumper === "cano") parts.push(cyl(0.07, 0.07, bw * 0.95, tubeM, [0, bh * 0.32, bl * 0.5 + 0.12], [0, 0, Math.PI / 2], 8), ...[-1, 1].map((sd) => cyl(0.06, 0.06, 0.2, tubeM, [sd * bw * 0.3, bh * 0.32, bl * 0.5 + 0.03], [Math.PI / 2, 0, 0], 6)));
     else if (o.bumper === "antivuelco") { const h = py + 0.55 * ps, x = bw * 0.36, z = pz - 0.3 * ps; parts.push(tube([[-x, py - 0.1, z], [-x, h, z], [x, h, z], [x, py - 0.1, z]], 0.035, tubeM), cyl(0.05, 0.05, x * 2, dark, [0, h, z], [0, 0, Math.PI / 2], 6)); }
     else if (o.bumper === "laterales") for (const sd of [-1, 1]) parts.push(cyl(0.06, 0.06, bl * 0.55, tubeM, [sd * (bw / 2 + 0.07), bh * 0.22, 0], [Math.PI / 2, 0, 0], 8), ...[-1, 1].map((e) => box(0.1, 0.04, 0.04, tubeM, [sd * (bw / 2 + 0.02), bh * 0.22, e * bl * 0.22])));
@@ -440,11 +446,11 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       const zs = side.map((w) => w.pos[2]), d = Math.max(...side.map((w) => w.d)), ww = side[0].w * 1.15;
       for (const up of [1, -1]) parts.push(box(ww, d * 0.1, Math.max(...zs) - Math.min(...zs) + d * 0.6, M.rubber(), [side[0].pos[0], side[0].pos[1] + up * d * 0.5, (Math.max(...zs) + Math.min(...zs)) / 2]));
     }
-    if (o.acc === "pelotita") parts.push(cyl(0.025, 0.025, 0.5, M.metal("#111"), [-0.38, 1.0, -0.7], undefined, 4), sph(0.3, M.plastic("#ffd23f"), [-0.38, 1.35, -0.7]), tor(0.3, 0.04, M.plastic("#ff4d6d"), [-0.38, 1.35, -0.7], undefined, 6));
-    else if (o.acc === "bocina") { const x = bw * 0.3, y = bh * 0.7, z = bl * 0.25; parts.push(sph(0.2, M.plastic("#e11d48"), [x, y, z - 0.12]), cyl(0.04, 0.16, 0.24, M.metal("#d4a72c"), [x, y, z + 0.06], [Math.PI / 2, 0, 0], 8)); }
-    else if (o.acc === "matafuego") { const x = bw / 2 + 0.02, z = -bl * 0.18; parts.push(cyl(0.13, 0.13, 0.32, M.plastic("#d62828"), [x, bh * 0.45, z], undefined, 8), cyl(0.06, 0.06, 0.06, M.matte("#111"), [x, bh * 0.45 + 0.19, z], undefined, 6), box(0.03, 0.03, 0.12, M.matte("#111"), [x, bh * 0.45 + 0.22, z + 0.05])); }
-    else if (o.acc === "dados") for (const [dx, r] of [[-0.07, 0.4], [0.07, -0.3]] as const) parts.push(box(0.1, 0.1, 0.1, M.plastic("#f9a8d4"), [px + 0.2 + dx, py + 0.5 * ps, pz + 0.35 * ps], [r, r, 0]), box(0.11, 0.025, 0.025, M.plastic("#111"), [px + 0.2 + dx, py + 0.5 * ps, pz + 0.35 * ps], [r, r, 0]));
-    else if (o.acc === "banderita") { const x = -bw * 0.38, z = -bl * 0.42; parts.push(cyl(0.025, 0.025, 1.0, M.metal("#e5e7eb"), [x, bh * 0.5 + 0.5, z], undefined, 4), box(0.02, 0.2, 0.32, M.plastic("#f97316"), [x, bh * 0.5 + 0.88, z - 0.16])); }
+    if (o.acc === "pelotita") parts.push(cyl(0.025, 0.025, 0.5, M.metal("#111"), [-0.38, 1.0, -0.7], undefined, 4), sph(0.3, acc("#ffd23f"), [-0.38, 1.35, -0.7]), tor(0.3, 0.04, M.plastic("#ff4d6d"), [-0.38, 1.35, -0.7], undefined, 6));
+    else if (o.acc === "bocina") { const x = bw * 0.3, y = bh * 0.7, z = bl * 0.25; parts.push(sph(0.2, acc("#e11d48"), [x, y, z - 0.12]), cyl(0.04, 0.16, 0.24, M.metal("#d4a72c"), [x, y, z + 0.06], [Math.PI / 2, 0, 0], 8)); }
+    else if (o.acc === "matafuego") { const x = bw / 2 + 0.02, z = -bl * 0.18; parts.push(cyl(0.13, 0.13, 0.32, acc("#d62828"), [x, bh * 0.45, z], undefined, 8), cyl(0.06, 0.06, 0.06, M.matte("#111"), [x, bh * 0.45 + 0.19, z], undefined, 6), box(0.03, 0.03, 0.12, M.matte("#111"), [x, bh * 0.45 + 0.22, z + 0.05])); }
+    else if (o.acc === "dados") for (const [dx, r] of [[-0.07, 0.4], [0.07, -0.3]] as const) parts.push(box(0.1, 0.1, 0.1, acc("#f9a8d4"), [px + 0.2 + dx, py + 0.5 * ps, pz + 0.35 * ps], [r, r, 0]), box(0.11, 0.025, 0.025, M.plastic("#111"), [px + 0.2 + dx, py + 0.5 * ps, pz + 0.35 * ps], [r, r, 0]));
+    else if (o.acc === "banderita") { const x = -bw * 0.38, z = -bl * 0.42; parts.push(cyl(0.025, 0.025, 1.0, M.metal("#e5e7eb"), [x, bh * 0.5 + 0.5, z], undefined, 4), box(0.02, 0.2, 0.32, acc("#f97316"), [x, bh * 0.5 + 0.88, z - 0.16])); }
   }
 
   // Piloto sentado (o asomado por la escotilla del tanque)

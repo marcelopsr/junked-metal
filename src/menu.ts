@@ -6,7 +6,7 @@ import { CARS } from "./car";
 import { BAL, costos, precio } from "./balance";
 import { DEF, type Kind } from "./enemies";
 import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
-import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
+import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { ARSENAL, PILOTS, type PilotId } from "./pilots";
 import { icon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
@@ -33,7 +33,7 @@ export type Stats = { runs: number; wins: number; time: number; dist: number; dm
 export type Save = {
   intro: boolean; // ya se vio la intro del primer arranque
   scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number; arm: number; reg: number; tur: number; ram: number; cdr: number }; cars: CarKind[]; car: CarKind;
-  pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; paint: string; rim: string; zoom: number; camMode: (typeof CAM_MODES)[number];
+  pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; paint: string; trim: string; rim: string; zoom: number; camMode: (typeof CAM_MODES)[number]; // paint/trim/rim: colores por zona (carrocería, detalles, llantas), "#rrggbb" o "" = el de fábrica
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
   bloom: boolean; lookv: number; shake: boolean; fps: boolean; hudSolid: boolean; hint: boolean;
   // Imagen (render.ts, Gfx): resolución (escala manual o FSR), suavizado, calidad (preset = el que coincide con los cuatro ajustes, o "custom") y pantalla.
@@ -56,7 +56,7 @@ const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (i
 const DEFAULT: Save = {
   intro: false,
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0, arm: 0, reg: 0, tur: 0, ram: 0, cdr: 0 }, cars: ["buggy"], car: "buggy",
-  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", rim: "", zoom: 1.35, camMode: "actual",
+  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", trim: "", rim: "", zoom: 1.35, camMode: "actual",
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
@@ -262,7 +262,7 @@ function move(dx: number, dy: number) {
   // Grilla del editor de calcos: el cursor recorre las celdas; en el borde el foco sigue de largo
   if (cur.id === "dgrid") { const x = dcx + dx, y = dcy + dy; if (x >= 0 && x < DECAL_N && y >= 0 && y < DECAL_N) { dcx = x; dcy = y; drawGrid(); return SFX.blip(); } }
   // Perillas: izquierda/derecha cambian el valor en vez de mover el foco
-  if (dx && cur instanceof HTMLInputElement && cur.type === "range") { dx > 0 ? cur.stepUp() : cur.stepDown(); cur.dispatchEvent(new Event("input", { bubbles: true })); return SFX.blip(); }
+  if (dx && cur instanceof HTMLInputElement && cur.type === "range") { dx > 0 ? cur.stepUp() : cur.stepDown(); cur.dispatchEvent(new Event("input", { bubbles: true })); if (cur.dataset.hsv) cur.dispatchEvent(new Event("change", { bubbles: true })); return SFX.blip(); }
   if (dx && cur instanceof HTMLSelectElement) { let i = cur.selectedIndex, n = cur.length; do i = (i + dx + cur.length) % cur.length; while (cur.options[i].disabled && n-- > 0); cur.selectedIndex = i; cur.dispatchEvent(new Event("change", { bubbles: true })); return SFX.blip(); }
   // Posición de layout (sin transformaciones: el encendido de tubo aplasta la pantalla al entrar). En Configuración cuenta la fila entera.
   const box = (e: HTMLElement) => {
@@ -441,7 +441,7 @@ export const startPick = (): WeaponId => (owns("arma:" + save.weapon) ? save.wea
 // Vista previa en el garaje: con el foco (mouse, teclado o control) sobre algo bloqueado, el modelo lo muestra sin comprarlo
 export const peek: { car?: CarKind; pilot?: PilotId; part?: [Slot, string] } = {};
 export const shownCar = (): CarKind => peek.car ?? save.car;
-export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, rim: save.rim || undefined, ...save.kit, ...(peek.part ? { [peek.part[0]]: peek.part[1] } : {}), pilot: peek.pilot ?? save.pilot, sticker: save.decals[save.decalSel] || undefined });
+export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, trim: save.trim || undefined, rim: save.rim || undefined, ...save.kit, ...(peek.part ? { [peek.part[0]]: peek.part[1] } : {}), pilot: peek.pilot ?? save.pilot, sticker: save.decals[save.decalSel] || undefined });
 addEventListener("focusin", (e) => {
   const inf = (e.target as HTMLElement).closest?.("#shop [data-info]") as HTMLElement | null; // vista previa del Taller: antes → después y partidas que faltan
   if (inf) $("sinfo").textContent = inf.dataset.info!;
@@ -526,10 +526,44 @@ function renderGarage() {
     return `<button class="opt ${save.kit[sl] === o ? "on" : ""} ${own ? "" : "locked"}" data-part="${sl}:${o}">${n}${own ? "" : ` · ${c}`}</button>`;
   }).join("")}</div>`).join("");
   if (gtab === "piezas") { $("cars").insertAdjacentHTML("beforeend", decalHtml()); drawGrid(); }
-  const cur = save.paint || PAINTS[0], rim = save.rim || RIMS[0];
-  $("paint").innerHTML = `<span>Pintura</span>${PAINTS.map((c) => `<button class="sw ${c === cur ? "on" : ""}" data-paint="${c}" style="background:${c}" aria-label="pintura ${c}"></button>`).join("")}`
-    + `<span>Llantas</span>${RIMS.map((c) => `<button class="sw rim ${c === rim ? "on" : ""}" data-rim="${c}" style="background:${c}" aria-label="llantas ${c}"></button>`).join("")}`;
+  if (gtab === "pintura") renderPaint();
 }
+// ---------- Pintura por zona (garaje → Pintura): paleta + selector libre (tono, saturación, brillo) ----------
+// Las perillas son <input type="range">: mouse, dedo, flechas y el stick (move() ya las mueve) sin código propio. Gratis: los colores no cuestan tornillos.
+const PZ = { paint: "Carrocería", trim: "Detalles", rim: "Llantas" };
+let pz: keyof typeof PZ = "paint";
+const zoneColor = () => save[pz] || factoryColor(shownCar())[pz];
+const hex2hsv = (h: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255), mx = Math.max(r, g, b), d = mx - Math.min(r, g, b);
+  const hue = !d ? 0 : mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [Math.round(hue * 60), mx ? Math.round((d / mx) * 100) : 0, Math.round(mx * 100)];
+};
+const hsv2hex = (h: number, s: number, v: number) => "#" + [5, 3, 1].map((n) => { const k = (n + h / 60) % 6; return Math.round((v / 100) * (1 - (s / 100) * Math.max(0, Math.min(k, 4 - k, 1))) * 255).toString(16).padStart(2, "0"); }).join("");
+// Fondos de las barras: cada una muestra hacia dónde va el color con las otras dos fijas
+function hsvBars(h: number, sat: number, v: number) {
+  const el = $("paint");
+  el.style.setProperty("--hue", hsv2hex(h, 100, 100)); el.style.setProperty("--sat0", hsv2hex(h, 0, v)); el.style.setProperty("--sat1", hsv2hex(h, 100, v)); el.style.setProperty("--val1", hsv2hex(h, sat, 100));
+  const c = hsv2hex(h, sat, v), chip = document.getElementById("pzchip");
+  if (chip) { chip.style.background = c; chip.textContent = c.toUpperCase(); }
+}
+function renderPaint() {
+  const cur = zoneColor(), [h, sat, v] = hex2hsv(cur), mine = !!save[pz];
+  const bar = (k: string, lab: string, max: number, val: number) => `<label class="hrow"><span>${lab}</span><input type="range" data-hsv="${k}" min="0" max="${max}" step="${k === "h" ? 5 : 2}" value="${val}" aria-label="${lab}"></label>`;
+  $("paint").innerHTML = `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
+    + `<div class="pal">${PAINTS.map((c) => `<button class="sw ${mine && c === cur ? "on" : ""}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
+    + `<div class="hsv"><div class="hsvt"><span>Color libre</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
+    + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
+    + `<div class="note">${pz === "trim" ? "Detalles: alerón, paragolpes, defensas y accesorios." : pz === "rim" ? "Llantas de las cuatro ruedas (o de las que haya)." : "Carrocería: la chapa entera."} Pintar es gratis: el patio cobra en otras cosas.</div>`;
+  hsvBars(h, sat, v);
+}
+// Perillas: mientras se arrastra solo cambia la muestra; al soltar (change) se aplica al auto (rearmar el modelo en cada paso crearía un material por tono)
+const hsvNow = () => { const g = (k: string) => +(document.querySelector<HTMLInputElement>(`[data-hsv="${k}"]`)?.value ?? 0); return [g("h"), g("s"), g("v")] as const; };
+addEventListener("input", (e) => { if ((e.target as HTMLElement).dataset?.hsv) hsvBars(...hsvNow()); });
+addEventListener("change", (e) => {
+  if (!(e.target as HTMLElement).dataset?.hsv) return;
+  save[pz] = hsv2hex(...hsvNow()); persist();
+  document.querySelectorAll("#paint .pal .sw.on, #paint [data-pdef]").forEach((b) => b.classList.remove("on"));
+});
 // ---------- Editor de calcos (garaje → Piezas): grilla DECAL_N², 8 colores de DECAL_PAL, 3 diseños ----------
 // Se edita un borrador (`draft`); Guardar lo escribe en la ranura `eslot` y lo aplica al capó. Cursor de celdas para teclado y gamepad.
 // ponytail: deshacer sin rehacer (60 pasos); el borrador sin guardar se pierde al cambiar de diseño.
@@ -1055,7 +1089,7 @@ export function initMenu(a: Api) {
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
+    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-act],[data-k],[data-sw],[data-pdef],[data-pz],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
     if (d?.act === "askyes") { const f = askFn; askClose(); SFX.accept(); f?.(); return; }
     if (d?.act === "askno") { askClose(); return; }
@@ -1113,7 +1147,8 @@ export function initMenu(a: Api) {
     else if (d.dact === "undo") undo();
     else if (d.dact === "edit") { editing = true; renderGarage(); focusSel("#dgrid"); }
     else if (d.dact === "done") { editing = false; renderGarage(); focusSel('[data-dact="edit"]'); }
-    else if (d.paint || d.rim) { if (d.paint) save.paint = d.paint; else save.rim = d.rim!; persist(); renderGarage(); (document.querySelector(`[data-${d.paint ? "paint" : "rim"}="${d.paint ?? d.rim}"]`) as HTMLElement).focus(); }
+    else if (d.sw || d.pdef) { save[pz] = d.sw ?? ""; persist(); renderPaint(); focusSel(d.sw ? `[data-sw="${d.sw}"]` : "[data-pdef]"); }
+    else if (d.pz) { pz = d.pz as typeof pz; renderPaint(); focusSel(`[data-pz="${pz}"]`); }
     else if (d.gtab) { gtab = d.gtab as typeof gtab; renderGarage(); $("cars").scrollTop = 0; focusSel(`[data-gtab="${gtab}"]`); }
     else if (d.beast) openBeast(d.beast as Kind);
     else if (d.bnav) beastStep(+d.bnav);

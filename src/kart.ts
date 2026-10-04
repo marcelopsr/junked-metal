@@ -13,6 +13,7 @@ import { rng, seedRng } from "./rng";
 import { engineSfx, engineStop, music, SFX } from "./sfx";
 import { buildGrass, buildLayout, clearLayout, setZone, zoneClimate } from "./world";
 import { CLIMATES } from "./run";
+import { carOpts } from "./menu"; // import circular (menu importa kart): solo se usa dentro de funciones
 
 // ---------- Configuración (se guarda aparte del guardado del juego) ----------
 export type RaceCtl = "kbd" | "kbd2" | "pad0" | "pad1";
@@ -331,11 +332,12 @@ function makeRacers() {
       idx = (trk.N - Math.round(back / DS) + trk.N) % trk.N;
       p = trk.P[idx].add(trk.R[idx].scale(side * 3.6)); yaw = Math.atan2(trk.T[idx].x, trk.T[idx].z);
     }
-    const opts: CarOpts = { paint: PAINTS[i % PAINTS.length], pilot: PILOT_IDS[i % PILOT_IDS.length], lamp: "calido", fixed: true };
+    const own = human === 0 ? carOpts() : {}; // jugador 1: los colores por zona del garaje (sin elegir, el de su número de largada)
+    const opts: CarOpts = { paint: own.paint ?? PAINTS[i % PAINTS.length], trim: own.trim, rim: own.rim, pilot: PILOT_IDS[i % PILOT_IDS.length], lamp: "calido", fixed: true };
     const car = new Car(D.scene, kind, opts, { x: p.x, z: p.z, yaw });
     car.setMass(1 + (CARS[kind].mass - 1) * 0.4); // masas parecidas: los choques empujan sin que el tanque arrase
     const r: Racer = {
-      id: i, name: human >= 0 ? `Jugador ${human + 1}` : NAMES[i % NAMES.length], car, human, ctl: human === 0 ? ctl1 : human === 1 ? ctl2 : undefined, color: PAINTS[i % PAINTS.length],
+      id: i, name: human >= 0 ? `Jugador ${human + 1}` : NAMES[i % NAMES.length], car, human, ctl: human === 0 ? ctl1 : human === 1 ? ctl2 : undefined, color: opts.paint!,
       top: ks[0], acc: ks[1], turn: ks[2], grip: ks[3], skill: 0.9 + rng() * 0.16, lane: (rng() - 0.5) * 8,
       idx, lap: 0, frac: 0, fin: 0, place: grid + 1, points: 0, item: null, itemAt: 0, useAt: 0, prevItemBtn: false,
       boost: 0, slow: 0, spin: 0, shield: 0, inv: 0, spinRot: 0, drifting: 0, charge: 0, offT: 0, stuckT: 0, camYaw: yaw, camPos: new B.Vector3(), fs: 0, lastLap: 0, auto: false, laki: 0, hits: 0,
