@@ -8,6 +8,20 @@ export type Action = keyof typeof KEYS;
 // Gamepad: zona muerta y sensibilidad del stick
 export const PAD = { dead: 0.15, sens: 1 };
 
+// Joysticks: cualquier ranura (Bluetooth o USB pueden caer en la 1, 2 o 3; el navegador deja huecos al desconectar).
+// El que se usó último manda en la partida y en los menús; la carrera asigna uno por jugador (pollPlayer).
+export const pads = () => [...(navigator.getGamepads?.() ?? [])].filter((g): g is Gamepad => !!g && g.connected);
+export const activePad = (): Gamepad | undefined => pads().reduce<Gamepad | undefined>((a, g) => (!a || g.timestamp > a.timestamp ? g : a), undefined);
+// Aviso al conectar o desconectar (el navegador recién lo expone al apretar un botón del control)
+let toastT = 0;
+function padToast(txt: string) {
+  let el = document.getElementById("padToast");
+  if (!el) { el = document.createElement("div"); el.id = "padToast"; document.body.appendChild(el); }
+  el.textContent = txt; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el!.classList.remove("on"), 2600) as unknown as number;
+}
+addEventListener("gamepadconnected", (e) => padToast(`CONTROL ${pads().length} CONECTADO · ${(e as GamepadEvent).gamepad.id.replace(/\(.*\)/, "").trim().slice(0, 32) || "joystick"}`));
+addEventListener("gamepaddisconnected", () => padToast(`CONTROL DESCONECTADO · ${pads().length} conectado${pads().length === 1 ? "" : "s"}`));
+
 const keys = new Set<string>();
 addEventListener("keydown", (e) => keys.add(e.code));
 addEventListener("keyup", (e) => keys.delete(e.code));
@@ -79,11 +93,12 @@ export function pollInput() {
   let ability = k(...KEYS.ability);
 
   let moveX = 0, moveY = 0;
-  const gp = navigator.getGamepads?.()[0];
+  const gp = activePad();
   if (gp) {
+    const b = (i: number) => +!!gp.buttons[i]?.pressed;
     const trig = (gp.buttons[7]?.value ?? 0) - (gp.buttons[6]?.value ?? 0);
     if (trig) { throttle = trig; if (dz(gp.axes[0])) steer = dz(gp.axes[0]); }
-    else { moveX = dz(gp.axes[0]); moveY = -dz(gp.axes[1]); }
+    else { moveX = dz(gp.axes[0]) || b(15) - b(14); moveY = -dz(gp.axes[1]) || b(12) - b(13); } // stick o cruceta
     boost ||= !!gp.buttons[0]?.pressed;
     drift ||= !!gp.buttons[1]?.pressed;
     ability ||= !!gp.buttons[2]?.pressed; // X
@@ -101,10 +116,13 @@ export function pollInput() {
 let prevPad: boolean[] = [], curPad: boolean[] = [];
 export function padSnap() {
   prevPad = curPad;
-  const gp = navigator.getGamepads?.()[0];
-  curPad = (gp?.buttons ?? []).map((b) => b.pressed);
-  // El stick también cuenta como cruceta (12-15 = arriba, abajo, izquierda, derecha): así navega las cartas de mejora
-  if (gp) { const [x, y] = gp.axes; curPad[12] ||= y < -0.5; curPad[13] ||= y > 0.5; curPad[14] ||= x < -0.5; curPad[15] ||= x > 0.5; }
+  // Cualquier control conectado navega los menús (se suman los botones de todos)
+  curPad = [];
+  for (const gp of pads()) {
+    gp.buttons.forEach((b, i) => { curPad[i] ||= b.pressed; });
+    // El stick también cuenta como cruceta (12-15 = arriba, abajo, izquierda, derecha): así navega las cartas de mejora
+    const [x = 0, y = 0] = gp.axes; curPad[12] ||= y < -0.5; curPad[13] ||= y > 0.5; curPad[14] ||= x < -0.5; curPad[15] ||= x > 0.5;
+  }
   if (curPad.some(Boolean)) setCtl("pad");
 }
 export const padPressed = (i: number) => !!curPad[i] && !prevPad[i];
@@ -117,16 +135,16 @@ const SCHEMES = {
   "kbd1+arrows": { up: ["KeyW", "ArrowUp"], down: ["KeyS", "ArrowDown"], left: ["KeyA", "ArrowLeft"], right: ["KeyD", "ArrowRight"], drift: ["Space", "ShiftLeft", "ShiftRight"], item: ["KeyE", "KeyQ", "Enter"] },
   kbd2: { up: ["ArrowUp"], down: ["ArrowDown"], left: ["ArrowLeft"], right: ["ArrowRight"], drift: ["ShiftRight", "Period", "Numpad0"], item: ["Enter", "Comma", "ControlRight"] },
 };
-export const padsConnected = () => [...(navigator.getGamepads?.() ?? [])].filter((g): g is Gamepad => !!g).length;
+export const padsConnected = () => pads().length;
 export function pollPlayer(c: PlayerCtl) {
   if (typeof c === "string") {
     const S = SCHEMES[c], k = (...a: string[]) => a.some((x) => keys.has(x));
     return { throttle: (k(...S.up) ? 1 : 0) - (k(...S.down) ? 1 : 0), steer: (k(...S.right) ? 1 : 0) - (k(...S.left) ? 1 : 0), drift: k(...S.drift), item: k(...S.item) };
   }
-  const gp = [...(navigator.getGamepads?.() ?? [])].filter((g): g is Gamepad => !!g)[c.pad];
+  const gp = pads()[c.pad];
   if (!gp) return { throttle: 0, steer: 0, drift: false, item: false };
   const b = (i: number) => !!gp.buttons[i]?.pressed;
   const acc = Math.max(gp.buttons[7]?.value ?? 0, b(0) ? 1 : 0), brk = Math.max(gp.buttons[6]?.value ?? 0, b(1) ? 1 : 0);
-  const steer = dz(gp.axes[0]) || (b(15) ? 1 : 0) - (b(14) ? 1 : 0);
+  const steer = dz(gp.axes[0] ?? 0) || (b(15) ? 1 : 0) - (b(14) ? 1 : 0);
   return { throttle: acc - brk, steer, drift: b(5) || b(2), item: b(3) || b(4) };
 }

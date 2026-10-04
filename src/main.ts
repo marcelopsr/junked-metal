@@ -5,7 +5,7 @@ import { Car, CARS, drive } from "./car";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
 import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineKind, SFX } from "./sfx";
 import { ambient, burst, clearFx, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
-import { ctl, input, isTouch, KEYS, padPressed, padSnap, pollInput, setupTouch } from "./input";
+import { activePad, ctl, input, isTouch, KEYS, padPressed, padSnap, pollInput, setupTouch } from "./input";
 import { GLB, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
@@ -894,7 +894,7 @@ function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   if (!continuous) {
     shake = Math.max(shake, 0.5);
     if (!simulating && !save.calm) glitchHit();
-    if (!simulating && save.rumble) void navigator.getGamepads?.()[0]?.vibrationActuator?.playEffect("dual-rumble", { duration: 140, strongMagnitude: 0.6, weakMagnitude: 0.4 });
+    if (!simulating && save.rumble) void activePad()?.vibrationActuator?.playEffect("dual-rumble", { duration: 140, strongMagnitude: 0.6, weakMagnitude: 0.4 });
   }
 }
 

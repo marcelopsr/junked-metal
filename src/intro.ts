@@ -5,6 +5,7 @@ import "./intro.css";
 import { persist, save } from "./menu";
 import { initAudio, SFX } from "./sfx";
 import { skipHint } from "./replay";
+import { activePad } from "./input";
 
 const W = 192, H = 108;
 let on = false;
@@ -309,7 +310,7 @@ export function playIntro(auto = false, done?: () => void) {
   const loop = () => {
     if (out) return;
     const now = seek ?? (performance.now() - t0) / 1000;
-    const pad = (navigator.getGamepads?.()[0]?.buttons ?? []).map((b) => b.pressed);
+    const pad = (activePad()?.buttons ?? []).map((b) => b.pressed);
     if (pad.some((p, i) => p && !prevPad[i])) skip();
     prevPad = pad;
     if (now >= total) return finish();

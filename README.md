@@ -17,7 +17,7 @@ Hecho con Babylon.js, física Havok, TypeScript y Vite. Creado por TheDuende.
 | Habilidad | E | X | Botón en pantalla |
 | Pausa | Esc | Start | Botón de pausa |
 
-Las armas disparan solas: hay que moverse, juntar las gemas de experiencia y elegir una mejora en cada nivel. Las teclas se pueden cambiar en Configuración → Controles.
+Las armas disparan solas: hay que moverse, juntar las gemas de experiencia y elegir una mejora en cada nivel. Las teclas se pueden cambiar en Configuración → Controles. Joystick: conectarlo (USB o Bluetooth) y presionar cualquier botón para que el navegador lo detecte; aparece un aviso "CONTROL CONECTADO". Sirve cualquier joystick y varios a la vez (en Carrera, uno por jugador).
 
 ## Desarrollo
 

@@ -5,7 +5,7 @@ import type { DefaultRenderingPipeline, Scene } from "@babylonjs/core";
 import { CARS } from "./car";
 import { costos } from "./balance";
 import { DEF, type Kind } from "./enemies";
-import { ctl, KEYS, PAD, padPressed, type Action } from "./input";
+import { activePad, ctl, KEYS, PAD, padPressed, type Action } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { PILOTS, type PilotId } from "./pilots";
 import { icon } from "./icons";
@@ -314,7 +314,7 @@ export function menuPad(dt: number) {
   if (s === "beast") beastPad(dt);
   if (s === "garage" && document.activeElement?.id === "dgrid") { if (padPressed(4)) setCol((dcol + 8) % 9); if (padPressed(5)) setCol((dcol + 1) % 9); } // LB / RB: color
   if (s === "garage" && editing && padPressed(2)) undo(); // X: deshacer
-  const gp = navigator.getGamepads?.()[0];
+  const gp = activePad();
   const ax = gp?.axes[0] ?? 0, ay = gp?.axes[1] ?? 0;
   const d = btn[3] || ay < -0.5 ? "u" : btn[4] || ay > 0.5 ? "d" : btn[5] || ax < -0.5 ? "l" : btn[6] || ax > 0.5 ? "r" : "";
   if (!d) { padDir = ""; return; }
@@ -708,7 +708,7 @@ function beastStep(dir: number) {
 function beastPad(dt: number) {
   if (padPressed(4)) beastStep(-1);
   if (padPressed(5)) beastStep(1);
-  const gp = navigator.getGamepads?.()[0];
+  const gp = activePad();
   if (!gp) return;
   const rx = gp.axes[2] ?? 0;
   if (Math.abs(rx) > 0.2) { BV.yaw += rx * dt * 3; BV.touched = performance.now(); }
