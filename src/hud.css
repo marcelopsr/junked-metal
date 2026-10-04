@@ -216,7 +216,7 @@
 body.calm #hud *, body.calm #hud::after, body.calm #hud *::before, body.calm #hud *::after { animation: none !important; }
 
 /* ---------- Giro Megabonk: HUD limpio y colorido (de día); pisa la estética de terminal gastada de arriba ---------- */
-:root { --panel: #fff1cf; --line: #3a2a1c; --txt: #3a2a1c; --dim: #8a7458; --scr: #1d2b3a; --ink: #7dffb0; --sig: #35c9ff; --ok: #5bd65b; --turbo: #ffb02e; --low: #ff4d4d; }
+:root { --scr: #1d2b3a; --ink: #7dffb0; --sig: #35c9ff; --ok: #5bd65b; --turbo: #ffb02e; --low: #ff4d4d; }
 .h-panel { clip-path: none; border: 3px solid var(--line); border-radius: 12px; box-shadow: 0 4px 0 var(--line); background: var(--panel); }
 .h-scr { background: var(--scr); text-shadow: none; box-shadow: inset 0 0 0 2px #0006; border-radius: 8px; }
 .h-tape { background: var(--turbo); color: #3a2a1c; clip-path: none; border-radius: 6px; rotate: 0deg; border: 2px solid var(--line); }
@@ -244,3 +244,57 @@ body.calm #hud *, body.calm #hud::after, body.calm #hud *::before, body.calm #hu
 @media (max-width: 700px) {
   #signal { width: min(200px, 50vw); } #radar { --rs: .9; } #txr { display: none; }
 }
+
+/* ---------- HUD moderno: vidrio oscuro translúcido, tipografía limpia, barras con degradado (pisa todo lo anterior) ---------- */
+#hud { --g-bg: rgba(12, 20, 30, .55); --g-line: rgba(255, 255, 255, .16); --g-txt: #f4f7fa; --g-dim: #a9b8c6; --hf: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif; font-family: var(--hf); color: var(--g-txt); }
+#hud .h-panel, #hud #lcd, #hud #lvl { background: var(--g-bg); backdrop-filter: blur(10px) saturate(1.3); -webkit-backdrop-filter: blur(10px) saturate(1.3); border: 1px solid var(--g-line); border-radius: 14px; box-shadow: 0 8px 22px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .08); color: var(--g-txt); opacity: 1; text-shadow: none; }
+#hud .h-tape { display: none; }
+#hud .h-ptitle { display: none; }
+#hud .h-track { height: 8px; background: rgba(255, 255, 255, .14); border: 0; border-radius: 99px; outline: 0; }
+#hud .h-track > div { border-radius: 99px; background: linear-gradient(90deg, #35c9ff, #7dffb0); }
+#hud #xp { background: linear-gradient(90deg, #35c9ff, #7dffb0); }
+#hud .h-boost > div { background: linear-gradient(90deg, #ff9d2e, #ffd84d); }
+#hud .h-abil > div { background: linear-gradient(90deg, #b783ff, #ff8ad8); }
+#hud #bossHp { background: linear-gradient(90deg, #ff4d4d, #ff9d6b); }
+#hud #bossName { font: 800 15px/1 var(--hf); letter-spacing: .12em; color: var(--g-txt); text-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
+#hud #bossbar .h-track { height: 12px; }
+/* Progreso */
+#hud #signal { display: flex; align-items: center; gap: 10px; padding: 8px 12px; width: min(280px, 55vw); }
+#hud #signal .lbl { display: none; }
+#hud #lvl { font: 800 13px/1 var(--hf); letter-spacing: .06em; min-width: 0; padding: 5px 9px; border-radius: 99px; background: linear-gradient(135deg, #35c9ff, #7dffb0); color: #08202c; border: 0; box-shadow: none; }
+#hud #lcd { display: flex; align-items: baseline; gap: 12px; padding: 7px 14px; }
+#hud #timer { font: 800 26px/1 var(--hf); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+#hud #lcd .sub { font: 700 12px/1 var(--hf); letter-spacing: .08em; color: var(--g-dim); opacity: 1; }
+#hud #lcd .sub::before { display: none; }
+#hud .h-g::before { display: none; }
+/* Racha */
+#hud #combo b { font: 900 38px/1 var(--hf); color: #fff; text-shadow: 0 3px 10px rgba(0, 0, 0, .45); }
+#hud #combo i { height: 4px; border-radius: 99px; background: #fff; }
+#hud #combo.t1 b { color: #7dffb0; } #hud #combo.t2 b, #hud #combo.t3 b { color: #ffc24d; }
+#hud #combo.t1 i { background: #7dffb0; } #hud #combo.t2 i, #hud #combo.t3 i { background: #ffc24d; }
+/* Radar */
+#hud #radar { padding: 6px; border-radius: 50%; }
+#hud #radarC { border: 0; border-radius: 50%; background: rgba(8, 16, 12, .6); }
+/* Vida y turbo */
+#hud #txl { width: 210px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+#hud #lipo { height: 14px; padding: 0; gap: 3px; background: none; border: 0; outline: 0; margin: 0; }
+#hud #lipo::after { display: none; }
+#hud #lipo i { border-radius: 99px; background: linear-gradient(90deg, #5be37a var(--p, 100%), rgba(255, 255, 255, .14) var(--p, 100%)); }
+#hud #lipo i::after { display: none; }
+#hud #txl.low #lipo i { background: linear-gradient(90deg, #ff4d4d var(--p, 100%), rgba(255, 255, 255, .14) var(--p, 100%)); }
+#hud .h-read { margin: 0; align-items: baseline; gap: 8px; }
+#hud #volt { font: 800 20px/1 var(--hf); }
+#hud .h-read span { font: 600 12px/1 var(--hf); color: var(--g-dim); }
+/* Velocidad: solo el número */
+#hud #txr { width: auto; min-width: 84px; padding: 8px 14px; left: 244px; text-align: center; }
+#hud #speedo { display: none; }
+#hud #kmh { font: 900 28px/1 var(--hf); background: none; border: 0; box-shadow: none; padding: 0; color: #fff; }
+#hud #txr .h-read.r { align-items: center; }
+#hud #txr .h-read.r span { display: block; font-size: 10px; letter-spacing: .12em; }
+/* Ranuras de armas */
+#hud #slots .slot { background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 12px; clip-path: none; box-shadow: 0 6px 16px rgba(0, 0, 0, .25); color: var(--g-txt); backdrop-filter: blur(8px); }
+#hud #slots .slot.evo { border-color: #ffc24d; color: #ffc24d; }
+/* Ayuda */
+#hud #hint { font: 600 14px/1.3 var(--hf); color: var(--g-txt); }
+#hud #hint .tip { color: var(--g-dim); }
+#hud kbd { background: rgba(255, 255, 255, .14); border: 1px solid var(--g-line); border-bottom-width: 2px; border-radius: 6px; color: var(--g-txt); font: 700 11px var(--hf); }

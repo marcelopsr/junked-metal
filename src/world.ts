@@ -255,7 +255,27 @@ function patioBuild() {
     p.scaling.y = 0.9 + rng() * 0.2;
   }
   house();
+  bushes();
   for (const [x, z] of [[-75, -70], [78, -60], [-80, 70], [70, 85]]) tree(x * K, z * K);
+}
+
+// Arbustos a lo largo de la cerca: un solo mesh con thin instances, sin física (la cerca ya frena al auto)
+function bushes() {
+  const g = M.matte("#4f9a3c"), g2 = M.matte("#3f8a34"), fl = M.plastic("#ff8fb8");
+  const base = merge("bush", [sph(5, g, [0, 2.2, 0], [1.3, 0.9, 1.1], 6), sph(4, g2, [2.4, 1.8, 0.8], undefined, 6), sph(3.6, g, [-2.4, 1.6, -0.6], undefined, 6), sph(1.1, fl, [1.5, 3.6, 1.8], undefined, 4), sph(1.1, fl, [-1.8, 3.2, 1.6], undefined, 4)]);
+  base.isPickable = false;
+  const mats: number[] = [];
+  const m = new B.Matrix(), sc = new B.Vector3(), p = new B.Vector3(), q = new B.Quaternion();
+  for (let i = -HALF + 8; i < HALF - 8; i += 14 + rng() * 10) for (const [x, z] of [[i, HALF - 5], [i, -HALF + 5], [HALF - 5, i], [-HALF + 5, i]] as const) {
+    if (rng() < 0.35) continue;
+    const k = 0.7 + rng() * 0.7;
+    sc.set(k, k, k); p.set(x + (rng() - 0.5) * 3, 0, z + (rng() - 0.5) * 3);
+    B.Quaternion.RotationYawPitchRollToRef(rng() * 6.3, 0, 0, q);
+    B.Matrix.ComposeToRef(sc, q, p, m);
+    mats.push(...m.toArray());
+  }
+  base.thinInstanceSetBuffer("matrix", new Float32Array(mats), 16, true);
+  base.receiveShadows = true;
 }
 
 function patioLayout() {
