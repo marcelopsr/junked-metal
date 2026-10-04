@@ -42,7 +42,7 @@ const DEFAULT: Save = {
   intro: false,
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, quality: "auto", paint: "", rim: "", zoom: 1.35,
-  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, bloom: true, outline: true, retro: 1, clean: true, lookv: 2, shake: true,
+  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, bloom: true, outline: true, retro: 1, clean: true, lookv: 3, shake: true,
   keys: {}, pad: { dead: 0.15, sens: 1 }, rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
@@ -59,7 +59,7 @@ export const save: Save = (() => {
     // Calcos: siempre 3 ranuras y solo diseños válidos; el aplicado debe apuntar a una ranura con diseño
     const decals = [0, 1, 2].map((i) => (validDecal(s.decals?.[i]) ? s.decals[i] : ""));
     const decalSel = Number.isInteger(s.decalSel) && decals[s.decalSel] ? s.decalSel : -1;
-    if (s.lookv !== 2) { s.clean = true; s.lookv = 2; } // giro de día: todos arrancan con el look limpio (una vez)
+    if (s.lookv !== 3) { s.clean = true; s.outline = true; s.lookv = 3; } // giro de día y estilo cartoon: look limpio y contorno de tinta (una vez)
     return { ...structuredClone(DEFAULT), ...s, decals, decalSel, perm: { ...DEFAULT.perm, ...s.perm }, kit: { ...DEFAULT.kit, ...s.kit }, vol: { ...DEFAULT.vol, ...s.vol }, pad: { ...DEFAULT.pad, ...s.pad },
       stats: { ...DEFAULT.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };
   } catch { return structuredClone(DEFAULT); }

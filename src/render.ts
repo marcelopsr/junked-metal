@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 0.95, ca: 0.01, pal: 0.2, outline: 0, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.85 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 0.95, ca: 0.01, pal: 0.2, outline: 1, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1.6, moonMul: 0.6, exposure: 0.85 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -136,6 +136,11 @@ varying vec2 vUV; uniform sampler2D textureSampler; uniform vec2 screen; uniform
 float b2(vec2 p) { p = floor(mod(p, 2.)); return mod(p.x * 2. + p.y * 3., 4.); }
 float b4(vec2 p) { return (b2(p) * 4. + b2(floor(p / 2.))) / 16.; }
 float h(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+// Segunda derivada de la profundidad a distancia e: un borde de objeto la dispara, una pendiente suave (suelo rasante) no
+float lapAt(vec2 e, float d) {
+  float dl = texture2D(depthSampler, vUV - vec2(e.x, 0.)).r, dr = texture2D(depthSampler, vUV + vec2(e.x, 0.)).r, du = texture2D(depthSampler, vUV + vec2(0., e.y)).r, dd = texture2D(depthSampler, vUV - vec2(0., e.y)).r;
+  return abs(dl + dr - 2. * d) + abs(du + dd - 2. * d);
+}
 void main() {
   vec2 c = vUV - .5;
   float rr = dot(c, c);
@@ -148,12 +153,11 @@ void main() {
   float l = dot(col, vec3(.299, .587, .114));
   col = mix(vec3(l), col, desat);
   col = mix(col, l < .5 ? mix(p0, p1, l * 2.) : mix(p1, p2, l * 2. - 1.), pal);
-  vec2 px = floor(vUV * screen), e = 1.2 / screen;
+  vec2 px = floor(vUV * screen);
   float d = texture2D(depthSampler, vUV).r;
-  float dl = texture2D(depthSampler, vUV - vec2(e.x, 0.)).r, dr = texture2D(depthSampler, vUV + vec2(e.x, 0.)).r, du = texture2D(depthSampler, vUV + vec2(0., e.y)).r, dd = texture2D(depthSampler, vUV - vec2(0., e.y)).r;
-  float lap = abs(dl + dr - 2. * d) + abs(du + dd - 2. * d); // segunda derivada: una pendiente suave (suelo rasante) vale ~0, un borde de objeto no
+  float edge = smoothstep(.012, .045, max(lapAt(1.6 / screen, d), lapAt(3.2 / screen, d) * .75) / max(d, 1e-4)); // tinta gruesa y suave: dos radios, borde con antialias
   // Contorno fino de 1 px, en un violeta oscuro cálido (no negro): se funde con las sombras y recorta las siluetas
-  col = mix(col, vec3(.13, .09, .2), outline * step(.02, lap / max(d, 1e-4)) * (1. - smoothstep(.03, .06, d))); // solo cerca: en el horizonte el salto de profundidad pintaba una banda
+  col = mix(col, vec3(.1, .07, .16), outline * edge * (1. - smoothstep(.03, .06, d))); // solo cerca: en el horizonte el salto de profundidad pintaba una banda
   col += (h(px + fract(t) * 97.) - .5) * grain;
   col *= 1. - scan * step(1.5, mod(px.y, 3.));
   col = floor(col * levels + b4(px)) / levels;
@@ -163,7 +167,7 @@ void main() {
 
 let glitchAt = -1e9;
 /** Dispara el glitch VHS (dura ~0,26 s). */
-export function glitchHit() { glitchAt = performance.now(); }
+export function glitchHit() { if (LOOK.grain === 0 && LOOK.ca === 0) return; glitchAt = performance.now(); } // el glitch VHS es parte del look retro: con "Look limpio" no se dispara
 
 /** Apagón: escala la luna y el ambiente (1 = normal, 0 = negro; el faro no se toca). */
 export function setDark(k: number) {
