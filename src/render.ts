@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 1.02, ca: 0.01, pal: 0.2, outline: 1, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.85 };
+export const LOOK = { levels: 32, grain: 0.02, scan: 0.02, vig: 0.6, desat: 0.95, ca: 0.01, pal: 0.2, outline: 1, snap: 1, lampI: 16, glowI: 2.2, cone: 1.25, fogMul: 1, ambMul: 1, moonMul: 1, exposure: 0.85 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -81,6 +81,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   shadows.stabilizeCascades = true;
   shadows.usePercentageCloserFiltering = true;
   shadows.filteringQuality = low ? B.ShadowGenerator.QUALITY_LOW : B.ShadowGenerator.QUALITY_MEDIUM;
+  shadows.darkness = 0.35; // sombras suaves: que den volumen sin ensuciar el suelo
   shadows.bias = 0.004;
   shadows.normalBias = 0.02;
 
@@ -145,7 +146,7 @@ void main() {
   float l = dot(col, vec3(.299, .587, .114));
   col = mix(vec3(l), col, desat);
   col = mix(col, l < .5 ? mix(p0, p1, l * 2.) : mix(p1, p2, l * 2. - 1.), pal);
-  vec2 px = floor(vUV * screen), e = 1.5 / screen;
+  vec2 px = floor(vUV * screen), e = 1.2 / screen;
   float d = texture2D(depthSampler, vUV).r;
   float dn = min(min(texture2D(depthSampler, vUV + vec2(e.x, 0.)).r, texture2D(depthSampler, vUV - vec2(e.x, 0.)).r), min(texture2D(depthSampler, vUV + vec2(0., e.y)).r, texture2D(depthSampler, vUV - vec2(0., e.y)).r));
   // Contorno fino de 1 px, en un violeta oscuro cálido (no negro): se funde con las sombras y recorta las siluetas
@@ -288,7 +289,7 @@ const noise = (c: CanvasRenderingContext2D, s: number, base: string, cols: strin
 
 export const TEX = {
   grass: () => canvasTex(512, (c, s) => {
-    noise(c, s, "#6fb33a", ["#66aa34", "#7bc044", "#5fa22f", "#84c94c"], 2500, 5);
+    noise(c, s, "#628f3a", ["#5a8634", "#6c9c42", "#547f30", "#74a64a"], 2500, 5);
     // Parches de pasto seco y tierra pelada: el patio deja de ser un solo verde
     for (let i = 0; i < 24; i++) {
       const x = rnd() * s, y = rnd() * s, r = 20 + rnd() * 70, dry = rnd() < 0.6;

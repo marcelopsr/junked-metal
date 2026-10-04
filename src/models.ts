@@ -214,7 +214,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     for (const [x, z] of [[-0.62, 0.78], [0.62, 0.78], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
   } else if (kind === "combi") {
     // Combi (furgoneta hippie): carrocería de dos tonos, techo crema, ventanas laterales y luces redondas
-    const cream = M.matte("#f3ead2");
+    const cream = M.matte("#d9cba6");
     parts = [
       box(1.0, 0.12, 2.3, M.matte("#2b2d31"), [0, 0.05, 0]),
       extrude([[-1.12, 0.05], [1.12, 0.05], [1.22, 0.25], [1.17, 0.6], [0.98, 1.0], [-0.98, 1.05], [-1.14, 0.9]], 1.08, paint, [0, 0, 0]),
