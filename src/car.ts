@@ -10,14 +10,14 @@ const UP = B.Vector3.Up();
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
 
 export const CARS: Record<CarKind, { name: string; desc: string; cost: number; hp: number; speed: number; accel: number; turn: number; grip: number; ram: number; mass: number; size: [number, number, number] }> = {
-  buggy: { name: "Buggy", desc: "Equilibrado. Salta bien, gira rápido.", ...stats("buggy"), size: [1.3, 0.7, 2.3] },
-  monster: { name: "Monster Truck", desc: "Lento y tanque. Embestir hace +50%.", ...stats("monster"), size: [1.8, 1.1, 2.4] },
-  formula: { name: "Fórmula", desc: "Rapidísimo pero frágil.", ...stats("formula"), size: [1.3, 0.55, 2.8] },
-  tanque: { name: "Tanque de juguete", desc: "Blindado y pesado. Lento, pero embiste como un ladrillo.", ...stats("tanque"), size: [1.75, 0.9, 2.4] },
-  carrera: { name: "Autito a fricción", desc: "Liviano y nervioso. Acelera como un resorte y derrapa en cada curva.", ...stats("carrera"), size: [1.1, 0.5, 2.1] },
-  axel: { name: "Axel", desc: "Dos ruedas gigantes y una jaula en el medio. Rápido y ágil, pero frágil.", ...stats("axel"), size: [1.9, 1.0, 1.7] },
-  helado: { name: "Camión de helados", desc: "Lento y simpático. Suena su melodía mientras reparte golpes fríos.", ...stats("helado"), size: [1.3, 0.95, 2.4] },
-  combi: { name: "Combi", desc: "La furgoneta de la familia: mucho aguante, poca prisa y más tuercas por viaje.", ...stats("combi"), size: [1.45, 1.0, 2.4] },
+  buggy: { name: "El Divorciado", desc: "Equilibrado. Salta bien, gira rápido.", ...stats("buggy"), size: [1.3, 0.7, 2.3] },
+  monster: { name: "Crisis de los 40", desc: "Lento y tanque. Embestir hace +50%.", ...stats("monster"), size: [1.8, 1.1, 2.4] },
+  formula: { name: "Multa Pendiente", desc: "Rapidísimo pero frágil.", ...stats("formula"), size: [1.3, 0.55, 2.8] },
+  tanque: { name: "Política Exterior", desc: "Blindado y pesado. Lento, pero embiste como un ladrillo.", ...stats("tanque"), size: [1.75, 0.9, 2.4] },
+  carrera: { name: "Sin Seguro", desc: "Liviano y nervioso. Acelera como un resorte y derrapa en cada curva.", ...stats("carrera"), size: [1.1, 0.5, 2.1] },
+  axel: { name: "Axel Sin Licencia", desc: "Dos ruedas gigantes y una jaula en el medio. Rápido y ágil, pero frágil.", ...stats("axel"), size: [1.9, 1.0, 1.7] },
+  helado: { name: "Diabetes Tipo Turbo", desc: "Lento y simpático. Suena su melodía mientras reparte golpes fríos.", ...stats("helado"), size: [1.3, 0.95, 2.4] },
+  combi: { name: "La Combi del Tío Raro", desc: "La furgoneta de la familia: mucho aguante, poca prisa y más tuercas por viaje.", ...stats("combi"), size: [1.45, 1.0, 2.4] },
 };
 
 // Manejo arcade sobre un cuerpo Havok: la física resuelve choques,

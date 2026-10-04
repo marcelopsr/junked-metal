@@ -318,21 +318,21 @@
     {"id":"perro_embestida_pausa_s","valor":1.4,"descripcion":"Felipe: segundos de pausa tras frenar"}
   ],
   "autos": [
-    {"id":"buggy","nombre":"Buggy","precio":0,"vida":150,"velocidad":15,"aceleracion":32,"giro":3.2,"agarre":10,"embestida":3,"masa":1},
-    {"id":"monster","nombre":"Monster Truck","precio":400,"vida":220,"velocidad":12.5,"aceleracion":26,"giro":2.7,"agarre":12,"embestida":4.5,"masa":1.8},
-    {"id":"formula","nombre":"Fórmula","precio":550,"vida":110,"velocidad":19,"aceleracion":40,"giro":3.6,"agarre":14,"embestida":2.4,"masa":0.8},
-    {"id":"tanque","nombre":"Tanque de juguete","precio":800,"vida":300,"velocidad":10,"aceleracion":18,"giro":2.3,"agarre":18,"embestida":5.5,"masa":2.6},
-    {"id":"carrera","nombre":"Autito a fricción","precio":650,"vida":85,"velocidad":21,"aceleracion":48,"giro":4.2,"agarre":6,"embestida":1.8,"masa":0.55},
-    {"id":"axel","nombre":"Axel","precio":700,"vida":120,"velocidad":20,"aceleracion":38,"giro":3.8,"agarre":8,"embestida":4,"masa":1.2},
-    {"id":"helado","nombre":"Camión de helados","precio":650,"vida":180,"velocidad":13,"aceleracion":24,"giro":2.8,"agarre":11,"embestida":3,"masa":1.4},
-    {"id":"combi","nombre":"Combi","precio":900,"vida":280,"velocidad":11,"aceleracion":20,"giro":2.4,"agarre":14,"embestida":4,"masa":2.2}
+    {"id":"buggy","nombre":"El Divorciado","precio":0,"vida":150,"velocidad":15,"aceleracion":32,"giro":3.2,"agarre":10,"embestida":3,"masa":1},
+    {"id":"monster","nombre":"Crisis de los 40","precio":400,"vida":220,"velocidad":12.5,"aceleracion":26,"giro":2.7,"agarre":12,"embestida":4.5,"masa":1.8},
+    {"id":"formula","nombre":"Multa Pendiente","precio":550,"vida":110,"velocidad":19,"aceleracion":40,"giro":3.6,"agarre":14,"embestida":2.4,"masa":0.8},
+    {"id":"tanque","nombre":"Política Exterior","precio":800,"vida":300,"velocidad":10,"aceleracion":18,"giro":2.3,"agarre":18,"embestida":5.5,"masa":2.6},
+    {"id":"carrera","nombre":"Sin Seguro","precio":650,"vida":85,"velocidad":21,"aceleracion":48,"giro":4.2,"agarre":6,"embestida":1.8,"masa":0.55},
+    {"id":"axel","nombre":"Axel Sin Licencia","precio":700,"vida":120,"velocidad":20,"aceleracion":38,"giro":3.8,"agarre":8,"embestida":4,"masa":1.2},
+    {"id":"helado","nombre":"Diabetes Tipo Turbo","precio":650,"vida":180,"velocidad":13,"aceleracion":24,"giro":2.8,"agarre":11,"embestida":3,"masa":1.4},
+    {"id":"combi","nombre":"La Combi del Tío Raro","precio":900,"vida":280,"velocidad":11,"aceleracion":20,"giro":2.4,"agarre":14,"embestida":4,"masa":2.2}
   ],
   "pilotos": [
-    {"id":"soldadito","nombre":"Soldadito de plástico","precio":0,"dano_mult":1.1,"vida_mas":10,"iman_mult":0.9,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":0,"velocidad_mult":1,"peso_mult":1,"recarga_mult":1,"xp_mult":1,"arma_inicial":"gomitas"},
-    {"id":"muneca","nombre":"Muñeca de trapo","precio":450,"dano_mult":1,"vida_mas":-20,"iman_mult":1.25,"regen_mas":1,"blindaje_mult":1,"blindaje_mas":0,"velocidad_mult":1,"peso_mult":1,"recarga_mult":1,"xp_mult":1,"arma_inicial":"gomitas"},
-    {"id":"robot","nombre":"Robot de lata","precio":650,"dano_mult":1,"vida_mas":0,"iman_mult":1,"regen_mas":0,"blindaje_mult":0.88,"blindaje_mas":0,"velocidad_mult":0.92,"peso_mult":1,"recarga_mult":1,"xp_mult":1,"arma_inicial":"tesla"},
-    {"id":"dino","nombre":"Dinosaurio","precio":0,"dano_mult":1,"vida_mas":40,"iman_mult":1,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":0,"velocidad_mult":1,"peso_mult":1.25,"recarga_mult":1.1,"xp_mult":1,"arma_inicial":"gomitas"},
-    {"id":"figura","nombre":"Figura de acción","precio":0,"dano_mult":1,"vida_mas":0,"iman_mult":1,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":-0.1,"velocidad_mult":1.06,"peso_mult":1,"recarga_mult":1,"xp_mult":1.15,"arma_inicial":"petardos"}
+    {"id":"soldadito","nombre":"Sargento Sin Pensión","precio":0,"dano_mult":1.1,"vida_mas":10,"iman_mult":0.9,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":0,"velocidad_mult":1,"peso_mult":1,"recarga_mult":1,"xp_mult":1,"arma_inicial":"gomitas"},
+    {"id":"muneca","nombre":"Doña Trapo, Divorciada","precio":450,"dano_mult":1,"vida_mas":-20,"iman_mult":1.25,"regen_mas":1,"blindaje_mult":1,"blindaje_mas":0,"velocidad_mult":1,"peso_mult":1,"recarga_mult":1,"xp_mult":1,"arma_inicial":"gomitas"},
+    {"id":"robot","nombre":"Robot en Crisis Existencial","precio":650,"dano_mult":1,"vida_mas":0,"iman_mult":1,"regen_mas":0,"blindaje_mult":0.88,"blindaje_mas":0,"velocidad_mult":0.92,"peso_mult":1,"recarga_mult":1,"xp_mult":1,"arma_inicial":"tesla"},
+    {"id":"dino","nombre":"Rex, Ya No Tan Temible","precio":0,"dano_mult":1,"vida_mas":40,"iman_mult":1,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":0,"velocidad_mult":1,"peso_mult":1.25,"recarga_mult":1.1,"xp_mult":1,"arma_inicial":"gomitas"},
+    {"id":"figura","nombre":"Mega Macho Sin Articulaciones","precio":0,"dano_mult":1,"vida_mas":0,"iman_mult":1,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":-0.1,"velocidad_mult":1.06,"peso_mult":1,"recarga_mult":1,"xp_mult":1.15,"arma_inicial":"petardos"}
   ],
   "precios": [
     {"id":"hp","tipo":"mejora","nombre":"Chasis reforzado","efecto":10,"nivel1":20,"nivel2":40,"nivel3":60,"nivel4":80,"nivel5":100,"nivel6":180,"nivel7":275,"nivel8":385,"nivel9":515,"nivel10":660},
