@@ -4,7 +4,7 @@ import { FX } from "./fx";
 import { rng } from "./rng";
 import type { Elite } from "./run";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "polilla" | "tarantula" | "aspiradora" | "cortacercos";
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos";
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; scale?: number; color: string };
 export const DEF: Record<Kind, Def> = {
@@ -17,12 +17,14 @@ export const DEF: Record<Kind, Def> = {
   rey: { name: "ESCARABAJO REY", hp: 1800, speed: 6, dmg: 30, size: [6, 3.8, 8], mass: 40, xp: 60, boss: true, scale: 3.5, color: "#d4a017" },
   cortadora: { name: "CORTADORA DE CÉSPED", hp: 3500, speed: 15, dmg: 45, size: [7, 4.5, 6.4], mass: 80, xp: 120, boss: true, color: "#dc2626" },
   tarantula: { name: "TARÁNTULA", hp: 2600, speed: 7, dmg: 35, size: [6, 2.6, 6.5], mass: 50, xp: 100, boss: true, scale: 3, color: "#7a55a8" },
-  perro: { name: "EL PERRO", hp: 8000, speed: 9, dmg: 40, size: [3.2, 8, 8], mass: 100, xp: 0, boss: true, color: "#a0673a" },
+  perro: { name: "FELIPE", hp: 8000, speed: 9, dmg: 40, size: [3.2, 8, 8], mass: 100, xp: 0, boss: true, color: "#d9b38a" },
+  gato: { name: "EULALIO EL GATO", hp: 2900, speed: 11, dmg: 32, size: [3.4, 3.6, 6.4], mass: 60, xp: 110, boss: true, color: "#f28c28" },
   aspiradora: { name: "LA ASPIRADORA ROBOT", hp: 7500, speed: 7, dmg: 35, size: [6.4, 1.6, 6.4], mass: 90, xp: 0, boss: true, color: "#7a8fa6" },
   cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", hp: 7000, speed: 8, dmg: 40, size: [3, 2.4, 9], mass: 80, xp: 0, boss: true, color: "#e0a030" },
 };
 
 const UP = B.Vector3.Up();
+const rot = (v: B.Vector3, a: number) => new B.Vector3(v.x * Math.cos(a) + v.z * Math.sin(a), 0, -v.x * Math.sin(a) + v.z * Math.cos(a));
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
 
 export class Enemy {
@@ -57,6 +59,11 @@ export class Enemy {
   shockCd = 0;
   aim = 0; // cortacercos: rumbo fijo del barrido anunciado
   pose = 0; // stop-motion: las patas cambian de pose a 10 fps
+  clock = 0; // reloj propio para los zigzags de Eulalio y Felipe
+  enraged = false; // jefe por debajo de la mitad de vida: más rápido y más agresivo
+  phaseUp = false; // main.ts lo apaga tras mostrar el aviso de fase
+  dir = 0; // Eulalio: rumbo del dash / giro
+  meowCd = 6;
 
   constructor(public kind: Kind, pos: B.Vector3, hpMul: number) {
     const d = (this.def = DEF[kind]);
@@ -102,9 +109,10 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
-    if (kind === "tarantula") {
+    if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
+      if (kind === "gato") { this.state = 0; this.timer = 2; }
     }
   }
 
@@ -169,6 +177,9 @@ export class Enemy {
     let speed = d.speed * this.spd;
     let turn = 6;
     if (this.slow > 0) { this.slow -= dt; speed *= d.boss ? 0.8 : 0.45; } // empapado: se arrastra
+    this.clock += dt;
+    if (d.boss && !this.enraged && this.hp < this.maxHp * 0.5) { this.enraged = true; this.phaseUp = true; } // fase 2: aviso en main.ts
+    if (this.enraged) speed *= 1.2;
 
     if (this.kind === "robot" || this.kind === "cortadora") {
       // Apunta quieto, después sale disparado en línea recta
@@ -307,18 +318,79 @@ export class Enemy {
       if (this.shockCd <= 0 && this.onCable(target)) { this.shockCd = 0.5; return "shock"; }
     }
 
+    if (this.kind === "gato") {
+      // Eulalio: errático. Zigzaguea a ritmo cambiante y cada tanto elige al azar entre salto (aro rojo), trompo o arranque.
+      // Fase 2: maúlla y llama polillas
+      this.timer -= dt;
+      if (this.airborne) {
+        this.showTele(this.land, 11, 1);
+        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; this.state = 0; this.timer = 1.2; this.showTele(null); return "slam"; }
+        return;
+      }
+      if (this.state === 0) {
+        const w = Math.sin(this.clock * 2.3) * 0.9 + Math.sin(this.clock * 5.1) * 0.35;
+        move = rot(to, w); speed *= 0.7 + 0.5 * Math.sin(this.clock * 1.7 + 1) ** 2 * 1.6;
+        if (this.enraged && (this.meowCd -= dt) <= 0) { this.meowCd = 10; return "meow"; }
+        if (this.timer <= 0 && dist < 45) {
+          const r = rng();
+          if (r < 0.4) { this.state = 1; this.timer = 1.0; }
+          else if (r < 0.75) { this.state = 2; this.timer = 0.6; }
+          else { this.state = 4; this.timer = 0.55; this.dir = (rng() < 0.5 ? -1 : 1) * (0.6 + rng() * 0.9); }
+        }
+      } else if (this.state === 1) { // salto anunciado
+        speed = 0; turn = 5;
+        if (this.timer > 0.4) { const reach = Math.min(dist, 24); this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
+        this.showTele(this.land, 11, 1 - this.timer / 1);
+        if (this.timer <= 0) {
+          const T = (2 * 14) / 25;
+          const j = this.land.subtract(this.pos); j.y = 0;
+          this.body.setLinearVelocity(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)));
+          this.airborne = true;
+          return;
+        }
+      } else if (this.state === 2 || this.state === 3) { // trompo: se frena girando y sale rodando hacia el auto
+        if (this.state === 2) {
+          speed = 0; this.body.setAngularVelocity(new B.Vector3(0, 16, 0));
+          if (this.timer <= 0) { this.state = 3; this.timer = 1.8; }
+          return;
+        }
+        move = rot(to, Math.sin(this.clock * 3) * 0.35); speed = 17;
+        this.body.setLinearVelocity(new B.Vector3(v.x + (move.x * speed - v.x) * Math.min(1, dt * 5), v.y, v.z + (move.z * speed - v.z) * Math.min(1, dt * 5)));
+        this.body.setAngularVelocity(new B.Vector3(0, 16, 0));
+        if (this.timer <= 0) { this.state = 0; this.timer = 1.5 + rng() * 1.5; }
+        return;
+      } else { // arranque: se tira de costado a toda velocidad (a veces hacia el auto, a veces no)
+        move = rot(to, this.dir); speed = 26; turn = 12;
+        if (this.timer <= 0) { this.state = 0; this.timer = 1.2 + rng() * 1.5; }
+      }
+    }
+
     if (this.kind === "perro") {
+      // Felipe: bulldog francés desquiciado. Salta, hace zoomies (corre zigzagueando al doble de velocidad) o gira como loco
       this.timer -= dt;
       if (this.airborne) {
         if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; return "slam"; }
         return;
       }
-      if (this.timer <= 0 && dist < 40) {
-        this.timer = 5;
-        this.airborne = true;
-        const jump = to.scale(Math.min(dist, 25) * 1.1).addInPlace(UP.scale(22));
-        this.body.setLinearVelocity(jump);
+      if (this.state === 1) { // zoomies
+        move = rot(to, Math.sin(this.clock * 4.2) * 1.2 + Math.sin(this.clock * 9) * 0.4); speed *= 2.1; turn = 10;
+        if (this.timer <= 0) { this.state = 0; this.timer = 1.2; }
+      } else if (this.state === 2) { // giro
+        speed *= 0.9; this.body.setAngularVelocity(new B.Vector3(0, 14, 0));
+        const want = to.scale(speed), k = Math.min(1, dt * 4);
+        this.body.setLinearVelocity(new B.Vector3(v.x + (want.x - v.x) * k, v.y, v.z + (want.z - v.z) * k));
+        if (this.timer <= 0) { this.state = 0; this.timer = 1.2; }
         return;
+      } else if (this.timer <= 0 && dist < 40) {
+        const r = rng();
+        if (r < 0.45) {
+          this.timer = this.enraged ? 2.6 : 3.8;
+          this.airborne = true;
+          const jump = to.scale(Math.min(dist, 25) * 1.1).addInPlace(UP.scale(22));
+          this.body.setLinearVelocity(jump);
+          return;
+        }
+        this.state = r < 0.8 ? 1 : 2; this.timer = this.state === 1 ? 2.6 : 1.6;
       }
     }
 

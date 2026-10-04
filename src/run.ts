@@ -17,7 +17,7 @@ export const CLIMATES: Climate[] = [
   { id: "nublado", name: "NUBLADO", day: true, sun: [-0.3, -1, 0.3], sunColor: "#e8ecf0", sunI: 1.8, hemiI: 0.8, sky: ["#8a96a3", "#b8c2cc", "#d7dde2", "#6f7a5c"], exposure: 1.1, fog: 0.008, ramp: ["#1a1e22", "#6a7a70", "#eef0f0"] },
 ];
 
-// La partida va del atardecer (DUSK) a la noche de la semilla: anochece a mitad de partida y El Perro llega a medianoche.
+// La partida va del atardecer (DUSK) a la noche de la semilla: anochece a mitad de partida y Felipe llega a medianoche.
 // Megabonk: toda la partida es de día. DUSK = clima de arranque (mañana); NIGHTS = climas finales posibles (los nocturnos quedan para el lab).
 export const DUSK = CLIMATES.find((c) => c.id === "manana")!;
 export const NIGHTS = CLIMATES.filter((c) => ["mediodia", "atardecer", "nublado", "manana"].includes(c.id));
@@ -62,8 +62,9 @@ export type Elite = "rapida" | "blindada";
 export type Profile = { seed: number; climate: Climate; plague: Plague; minis: Kind[]; swarmEvery: number; ballEvery: number; chestEvery: number; rainAt: number; final: Kind; elites: [number, Elite][] };
 
 // Los dos minijefes de la partida: 2 de 3 en orden, con UNA sola tirada (no corre el resto del perfil de la semilla)
-const MINIS: Kind[] = ["rey", "cortadora", "tarantula"];
-const pickMinis = (r: number): Kind[] => { const i = Math.floor(r * 6), a = i % 3; return [MINIS[a], MINIS[(a + 1 + (i >= 3 ? 1 : 0)) % 3]]; };
+const MINIS: Kind[] = ["rey", "cortadora", "tarantula", "gato"];
+// Dos minijefes distintos entre cuatro (12 combinaciones ordenadas)
+const pickMinis = (r: number): Kind[] => { const i = Math.floor(r * 12), a = i % 4; return [MINIS[a], MINIS[(a + 1 + Math.floor(i / 4)) % 4]]; };
 
 // Lluvia derivada de la semilla SIN gastar rng(): así el patio, la plaga y el resto de cada semilla existente no cambian.
 // Un solo valor reparte ambas cosas: r < chance = llueve, y r/chance (uniforme) elige cuándo empieza. Infinity = no llueve.
@@ -72,7 +73,7 @@ const rainAt = (seed: number) => { const r = (seed * 0.6180339887) % 1; return r
 // Jefe final de las 10:00: uno de 3, con UNA tirada derivada de la semilla (sin gastar rng(), como la lluvia).
 export const FINALS: Kind[] = ["perro", "aspiradora", "cortacercos"];
 export const FINAL_WIN: Partial<Record<Kind, string>> = {
-  perro: "¡El Perro fue derrotado!",
+  perro: "¡Felipe fue derrotado!",
   aspiradora: "¡La aspiradora robot quedó sin batería!",
   cortacercos: "¡El cortacercos eléctrico hizo cortocircuito!",
 };

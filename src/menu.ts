@@ -585,7 +585,8 @@ const LORE: Partial<Record<Kind, string>> = {
   rey: "Se coronó solo, con una tapita de gaseosa. Exige reverencias y migas de galleta.",
   cortadora: "Despertó un domingo a las siete de la mañana y decidió que el pasto no alcanzaba.",
   tarantula: "Ocho patas, cero paciencia. Teje redes por pasatiempo y emboscadas por oficio.",
-  perro: "El verdadero dueño del patio. Ladra a la nada, entierra juguetes y no negocia.",
+  perro: "Felipe, bulldog francés y dueño del patio. Sufre de zoomies, ladra a la nada, entierra juguetes y no negocia. Nadie sabe qué ve con ese ojo.",
+  gato: "Eulalio, gato naranja de energía infinita. Gira, salta, cambia de idea a mitad de salto y jamás cae de pie donde dijo que iba a caer.",
   aspiradora: "Programada para limpiar la casa, se escapó por la gatera. Considera que todo el patio es una pelusa.",
   cortacercos: "Lo dejaron enchufado después de podar el ligustro. Desde entonces, todo le parece un cerco.",
 };

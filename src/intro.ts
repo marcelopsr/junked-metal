@@ -182,7 +182,7 @@ export function playIntro(auto = false, done?: () => void) {
   if (auto) { save.intro = true; persist(); }
   const el = document.createElement("div");
   el.id = "intro";
-  el.innerHTML = `<div class="i-stage"><canvas width="${W}" height="${H}"></canvas><div class="i-logo"><div class="brand">JUNKED METAL</div><div class="tag">Diez minutos. Tres jefes. Y al final, siempre, el Perro.</div></div></div><div class="i-cap"></div><div class="i-skip">${skipHint()}</div>`;
+  el.innerHTML = `<div class="i-stage"><canvas width="${W}" height="${H}"></canvas><div class="i-logo"><div class="brand">JUNKED METAL</div><div class="tag">Diez minutos. Tres jefes. Y al final, siempre, Felipe.</div></div></div><div class="i-cap"></div><div class="i-skip">${skipHint()}</div>`;
   document.body.append(el);
   const stage = el.querySelector<HTMLElement>(".i-stage")!, cap = el.querySelector<HTMLElement>(".i-cap")!, logoEl = el.querySelector<HTMLElement>(".i-logo")!;
   const g = el.querySelector("canvas")!.getContext("2d")!;

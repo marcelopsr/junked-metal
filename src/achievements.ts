@@ -12,6 +12,7 @@ export const ACH = {
   rey: { name: "Regicidio", txt: "Derrota al Escarabajo Rey", reward: "pilot:dino" },
   cortadora: { name: "Pasto largo", txt: "Derrota a la Cortadora de césped", reward: "pilot:dino" },
   tarantula: { name: "Sin telarañas", txt: "Derrota a la Tarántula", reward: "pilot:dino" },
+  gato: { name: "Siete vidas", txt: "Derrota a Eulalio el gato", scrap: 60 },
   chispazo: { name: "Cortocircuito", txt: "Fusiona Petardos y Antena Tesla", reward: "part:lamp:cian" },
   globos: { name: "Guerra de agua", txt: "Fusiona Lanza-gomitas y Pistola de agua", reward: "part:lamp:ambar" },
   anillo: { name: "Anillo de fuego", txt: "Fusiona Clips orbitales y Chispero", reward: "part:wing:doble" },

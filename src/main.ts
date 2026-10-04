@@ -252,7 +252,7 @@ function grant(id: AchId) {
   setTimeout(() => state === "play" && banner(`LOGRO · ${a.name.toUpperCase()}`, 2.5), 1500);
 }
 // Guardados anteriores a los logros: minijefes ya derrotados y récord de 10 minutos cuentan (sin aviso)
-for (const k of ["rey", "cortadora", "tarantula"] as const) if (save.slain[k] && !save.ach.includes(k)) save.ach.push(k);
+for (const k of ["rey", "cortadora", "tarantula", "gato"] as const) if (save.slain[k] && !save.ach.includes(k)) save.ach.push(k);
 if (save.best >= 600 && !save.ach.includes("diez")) save.ach.push("diez");
 
 function endRun(win: boolean, why: string) {
@@ -491,7 +491,7 @@ function kill(e: Enemy) {
   if (e.def.boss) {
     shake = 1.5;
     runScrap += 25;
-    if (e.kind === "rey" || e.kind === "cortadora" || e.kind === "tarantula") grant(e.kind);
+    if (e.kind === "rey" || e.kind === "cortadora" || e.kind === "tarantula" || e.kind === "gato") grant(e.kind);
     if (e.kind === finalKind && !endless) { outroAt = e.pos.clone(); e.dispose(); return endRun(true, FINAL_WIN[finalKind] ?? "El jefe final quedó fuera de combate."); }
     dropPickup(e.pos, "cofre");
     hudBoss(null);
@@ -651,6 +651,11 @@ function update(dt: number) {
       spits.push({ m, v: aim.subtract(from).normalize().scale(16), life: 2.2 });
     }
     if (e.stun <= 0) e.animate(wdt);
+    if (e.phaseUp) { e.phaseUp = false; banner(`${e.def.name} SE ENFURECE`, 2); shake = Math.max(shake, 1); SFX.boss(); }
+    if (ev === "meow") { // Eulalio llama polillas alrededor suyo
+      banner("¡MIAU!", 1.2);
+      for (let i = 0; i < 4; i++) { const a = (i / 4) * 6.28 + rng(); spawnEnemy("polilla", e.pos.add(new B.Vector3(Math.sin(a) * 6, 0, Math.cos(a) * 6))); }
+    }
     if (ev === "slam") {
       FX.slam(e.pos, 10);
       mark("scorch", e.pos.x, e.pos.z, 0, 7, 10);
@@ -1132,6 +1137,9 @@ if (import.meta.env.DEV) Object.assign(window, {
     $("banner").classList.add("hidden");
     return `lab: ${profile.climate.name} · ${kinds.join(",")}`;
   },
+  // Un enemigo suelto delante del auto, sale del modo lab y corre su IA (probar jefes sin el resto): __spawn('gato', 20)
+  __spawn: (kd: Kind, dist = 20) => { LAB.on = false; const f = car!.root.forward; spawnEnemy(kd, car!.pos.add(f.scale(dist)).addInPlace(new B.Vector3(0, 1, 0))); return enemies.length; },
+  __minis: (a: Kind, b: Kind) => { RUN_BOSSES[0][1] = a; RUN_BOSSES[1][1] = b; }, // fuerza los dos minijefes de la partida (probar jefes con __sim)
   __scene: scene,
   __carObj: () => car,
 });
