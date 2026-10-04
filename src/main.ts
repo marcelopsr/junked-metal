@@ -9,7 +9,7 @@ import { activePad, ctl, input, isTouch, KEYS, padPressed, padSnap, pollInput, s
 import { GLB, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
-import { applySettings, beastRec, BV, carOpts, current, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
+import { applySettings, beastRec, BV, carOpts, current, shownCar, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
 import { ABILITIES, type AbilityId } from "./abilities";
 import { pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
@@ -1180,7 +1180,7 @@ scene.onBeforeRenderObservable.add(() => {
     }
     const [px0, py0, pz0, tx, ty, tz] = shot(scr);
     // Garaje: los autos grandes giran sobre su eje; la cámara se aleja según su tamaño para que no se corten
-    const gz = scr === "garage" ? CARS[save.car].size : null, extra = gz ? Math.max(0, Math.max(gz[0] * 1.3, gz[2], gz[1] * 2) - 2.4) : 0, pull = 1 + extra * 0.4;
+    const gz = scr === "garage" ? CARS[shownCar()].size : null, extra = gz ? Math.max(0, Math.max(gz[0] * 1.3, gz[2], gz[1] * 2) - 2.4) : 0, pull = 1 + extra * 0.4;
     const px = tx + (px0 - tx) * pull, py = ty + (py0 - ty) * pull, pz = tz + (pz0 - tz) * pull;
     const sw = scr === "beast" ? 0.05 : Math.hypot(px - tx, py - ty, pz - tz) * (scr === "garage" || scr === "title" ? 0.02 : 0.04), kk = 1 - Math.exp(-2.2 * dt);
     B.Vector3.LerpToRef(cam.position, new B.Vector3(px + Math.sin(t * 0.13) * sw, py + Math.sin(t * 0.21) * sw * 0.3, pz + Math.cos(t * 0.11) * sw), kk, cam.position);
@@ -1188,10 +1188,10 @@ scene.onBeforeRenderObservable.add(() => {
     // Título, principal y garaje: el auto elegido sobre el estante o la mesa (reusa `preview`, que clearRun libera)
     const spot = carSpot(scr);
     if (spot) {
-      const key = save.car + JSON.stringify(carOpts());
+      const key = shownCar() + JSON.stringify(carOpts());
       if (!preview || previewKey !== key) {
         preview?.dispose();
-        const m = carModel(save.car, carOpts());
+        const m = carModel(shownCar(), carOpts());
         preview = m.body;
         flatten(m.body); for (const w of m.wheels) flatten(w.m); // menos submallas = menos draws en cada pasada
         previewR = Math.max(...m.wheels.map((w) => w.r));

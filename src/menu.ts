@@ -202,6 +202,7 @@ function show() {
   (f && f.isConnected && f.offsetParent ? f : focusables()[0])?.focus({ preventScroll: false });
 }
 export function go(s: Scr) {
+  peek.car = peek.pilot = peek.part = undefined; // la vista previa no sale del garaje
   const top = current();
   if (top && document.activeElement instanceof HTMLElement) ret.set(top, document.activeElement);
   ret.delete(s);
@@ -394,7 +395,17 @@ function buy(id: string) {
   return true;
 }
 /** Lo que hay que mostrar sobre el auto (garaje, portada y partida). */
-export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, rim: save.rim || undefined, ...save.kit, pilot: save.pilot, sticker: save.decals[save.decalSel] || undefined });
+// Vista previa en el garaje: con el foco (mouse, teclado o control) sobre algo bloqueado, el modelo lo muestra sin comprarlo
+export const peek: { car?: CarKind; pilot?: PilotId; part?: [Slot, string] } = {};
+export const shownCar = (): CarKind => peek.car ?? save.car;
+export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, rim: save.rim || undefined, ...save.kit, ...(peek.part ? { [peek.part[0]]: peek.part[1] } : {}), pilot: peek.pilot ?? save.pilot, sticker: save.decals[save.decalSel] || undefined });
+addEventListener("focusin", (e) => {
+  const el = (e.target as HTMLElement).closest?.(".locked[data-k],.locked[data-pilot],.locked[data-part]") as HTMLElement | null;
+  peek.car = peek.pilot = peek.part = undefined;
+  if (!el || current() !== "garage") return;
+  const d = el.dataset;
+  if (d.k) peek.car = d.k as CarKind; else if (d.pilot) peek.pilot = d.pilot as PilotId; else if (d.part) peek.part = d.part.split(":") as [Slot, string];
+});
 
 const bar = (v: number, max: number) => `<i style="width:${Math.min(100, (v / max) * 100)}%"></i>`;
 const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" data-${attr}="${id}">${n}</button>`).join("");

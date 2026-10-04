@@ -33,6 +33,7 @@ export const sessions = [
     { id: "portada", act: sinCarga },
     { id: "principal", act: async (p) => { await p.dispatchEvent("#scr-title", "click"); await wait(p, () => document.querySelector("#scr-main.on")); await p.waitForTimeout(150); } },
     { id: "garaje", act: view("garage") },
+    { id: "garaje-vista-previa", act: async (p) => { await view("garage")(p); await p.focus('.carc.locked[data-k="tanque"]'); await p.waitForTimeout(400); } },
     { id: "taller", act: view("shop") },
     { id: "config", act: view("config") },
     { id: "bestiario", act: view("bestiary") },
