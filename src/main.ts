@@ -19,7 +19,7 @@ import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, ty
 import { newSeed, rng, seedRng } from "./rng";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
-import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startRace } from "./kart";
+import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace } from "./kart";
 
 const $ = (id: string) => document.getElementById(id)!;
 // Partida de 10 minutos: dos minijefes (sueltan cofres de evolución) y el jefe final a las 10:00
@@ -422,16 +422,16 @@ addEventListener("keydown", (e) => {
   if (e.code === "Enter" && state === "level") pickOffer(offerSel);
   if (e.code === "KeyR" && state === "level") reroll();
 });
-function goRace() {
+function goRace(battle = false) {
   initAudio(); clearRun(); titleArt(false);
   state = "race"; reset(null);
   $("hud").classList.add("hidden");
   setRaceCar(save.car);
-  startRace();
+  if (battle) startBattle(); else startRace();
 }
-if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2") { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
+if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2") { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
 initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); applyClimate(zoneClimate() ?? DUSK); reset("main"); } });
-initMenu({ scene, play: startRun, resume, quit: toMenu, pause, endless: goEndless, race: goRace });
+initMenu({ scene, play: startRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true) });
 music("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: solo en el primer arranque (save.intro); ?intro la fuerza, ?mute y ?lab (pruebas) no la muestran
 { const force = /[?&]intro\b/.test(location.search); if (force || (!save.intro && !/[?&](mute|lab)\b/.test(location.search))) playIntro(!force); }

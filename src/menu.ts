@@ -138,7 +138,7 @@ function renderRace() {
 }
 
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void };
+type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void };
 let api: Api;
 let L0 = { grain: 0, scan: 0, ca: 0, pal: 0, outline: 0 }; // look de fábrica: la perilla "post retro" lo escala
 
@@ -644,6 +644,7 @@ export function initMenu(a: Api) {
     if (d.go) go(d.go as Scr);
     else if (d.rc) { cycleRace(d.rc); renderRace(); }
     else if (d.act === "race") api.race();
+    else if (d.act === "battle") api.battle();
     else if (d.act === "play") api.play();
     else if (d.act === "daily") api.play(true);
     else if (d.act === "endless") api.endless();

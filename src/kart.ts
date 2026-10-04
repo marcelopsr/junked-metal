@@ -74,6 +74,7 @@ type Racer = {
   boost: number; slow: number; spin: number; shield: number; inv: number; spinRot: number;
   drifting: number; charge: number; offT: number; stuckT: number; camYaw: number; camPos: B.Vector3; fs: number; lastLap: number; auto: boolean; laki: number; hits: number;
   aggr: number; drifter: boolean; early: boolean; bubble?: B.Mesh; boxT: number;
+  balloons: number; out: boolean; balls: B.Mesh[]; wp: B.Vector3 | null; wpT: number;
 };
 type Proj = { m: B.Mesh; kind: "petardo" | "misil"; owner: Racer; v: B.Vector3; life: number; target?: Racer };
 type Chicle = { m: B.Mesh; owner: Racer; life: number; arm: number };
@@ -85,6 +86,9 @@ let racers: Racer[] = [];
 let humans: Racer[] = [];
 let projs: Proj[] = [], chicles: Chicle[] = [], boxes: Box[] = [], pads: Pad[] = [], ants: Ant[] = [];
 let mesh: B.AbstractMesh[] = [];
+let mode: "race" | "battle" = "race";
+const ARENA = { c: new B.Vector3(-70, 0, 50), r: 46 };
+let battleT = 150;
 let podiumOn = false, active = false, t = 0, countdown = 3.4, finishedAt = -1, resultsOn = false, trackNo = 0, raceNo = 1;
 let cup: Record<number, number> = {};
 let mapCv: HTMLCanvasElement, mapCtx: CanvasRenderingContext2D;
@@ -185,6 +189,33 @@ function buildTrack() {
   decorate(TRACKS[trackNo].crowd);
 }
 
+// Arena de batalla: suelo de damero, muro circular físico de bloques rojos y blancos, cajas de objetos repartidas
+function buildArena() {
+  const { c, r } = ARENA;
+  const floorTex = canvasTex(256, (g, sz) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.fillStyle = (i + j) % 2 ? "#8a8f9a" : "#6f7480"; g.fillRect((i * sz) / 8, (j * sz) / 8, sz / 8 + 1, sz / 8 + 1); } g.strokeStyle = "#ffd84d"; g.lineWidth = 6; g.beginPath(); g.arc(sz / 2, sz / 2, sz * 0.18, 0, 7); g.stroke(); });
+  const fl = B.MeshBuilder.CreateDisc("arenaFloor", { radius: r, tessellation: 48 }, D.scene);
+  fl.rotation.x = Math.PI / 2; fl.position.set(c.x, 0.06, c.z); fl.receiveShadows = true; fl.isPickable = false;
+  fl.material = pbr("arenaFloor", { color: "#ffffff", rough: 0.9, tex: floorTex }); mesh.push(fl);
+  // Muro: bloques rotados ANTES del PhysicsAggregate (el cuerpo toma la pose de la malla al crearse)
+  const seg = 36, len = (2 * Math.PI * (r + 1.5)) / seg + 0.4;
+  for (let k = 0; k < seg; k++) {
+    const a = (k / seg) * Math.PI * 2, b = B.MeshBuilder.CreateBox("arenaWall", { width: len, height: 3.2, depth: 2 }, D.scene);
+    b.position.set(c.x + Math.cos(a) * (r + 1.5), 1.6, c.z + Math.sin(a) * (r + 1.5)); b.rotation.y = -a + Math.PI / 2;
+    b.material = M.plastic(k % 2 ? "#f4f7fa" : "#ef4444"); shadows.addShadowCaster(b);
+    new B.PhysicsAggregate(b, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.1, restitution: 0.6 }, D.scene);
+    mesh.push(b);
+  }
+  // Cajas de objetos: anillo interior + centro
+  const qt = canvasTex(128, (g, sz) => { g.fillStyle = "#35c9ff"; g.fillRect(0, 0, sz, sz); g.strokeStyle = "#fff"; g.lineWidth = 8; g.strokeRect(6, 6, sz - 12, sz - 12); g.fillStyle = "#fff"; g.font = "bold 100px sans-serif"; g.textAlign = "center"; g.fillText("?", sz / 2, sz * 0.76); });
+  const qm = pbr("raceBox", { color: "#ffffff", rough: 0.3, tex: qt, emissive: "#1a5a7a" });
+  const ring = (n: number, k0: number): [number, number][] => Array.from({ length: n }, (_, k) => [Math.cos((k / n) * 6.283 + k0) * r * (n > 6 ? 0.68 : 0.32), Math.sin((k / n) * 6.283 + k0) * r * (n > 6 ? 0.68 : 0.32)]);
+  const spots: [number, number][] = [[0, 0], ...ring(5, 0.4), ...ring(9, 0)];
+  for (const [dx, dz] of spots) {
+    const at = new B.Vector3(c.x + dx, 1.5, c.z + dz), m = B.MeshBuilder.CreateBox("itemBox", { size: 1.8 }, D.scene);
+    m.position.copyFrom(at); m.material = qm; m.isPickable = false; boxes.push({ m, at, t: 0 }); mesh.push(m);
+  }
+}
+
 // Pista viva: banderines, público de juguetes en la salida, globos y pilas de neumáticos en las curvas
 function decorate(crowd: boolean) {
   const { P, T, R, N } = trk;
@@ -247,9 +278,13 @@ function makeRacers() {
   for (let i = 0; i < 10; i++) {
     const human = i < nH ? i : -1, grid = human >= 0 ? humanSlots[human] : aiSlots[ai++];
     const kind = picks[i], ks = KSTAT[kind];
-    const row = Math.floor(grid / 2), side = grid % 2 ? 1 : -1, back = 6 + row * gridGap + (side > 0 ? gridGap / 2 : 0);
-    const idx = (trk.N - Math.round(back / DS) + trk.N) % trk.N;
-    const p = trk.P[idx].add(trk.R[idx].scale(side * 3.6)), yaw = Math.atan2(trk.T[idx].x, trk.T[idx].z);
+    let idx = 0, p: B.Vector3, yaw: number;
+    if (mode === "battle") { const a = (i / 10) * Math.PI * 2 + 0.3; p = new B.Vector3(ARENA.c.x + Math.cos(a) * (ARENA.r - 12), 0, ARENA.c.z + Math.sin(a) * (ARENA.r - 12)); yaw = Math.atan2(-Math.cos(a), -Math.sin(a)) + 0; yaw = Math.atan2(ARENA.c.x - p.x, ARENA.c.z - p.z); }
+    else {
+      const row = Math.floor(grid / 2), side = grid % 2 ? 1 : -1, back = 6 + row * gridGap + (side > 0 ? gridGap / 2 : 0);
+      idx = (trk.N - Math.round(back / DS) + trk.N) % trk.N;
+      p = trk.P[idx].add(trk.R[idx].scale(side * 3.6)); yaw = Math.atan2(trk.T[idx].x, trk.T[idx].z);
+    }
     const opts: CarOpts = { paint: PAINTS[i % PAINTS.length], pilot: PILOT_IDS[i % PILOT_IDS.length], lamp: "calido" };
     const car = new Car(D.scene, kind, opts, { x: p.x, z: p.z, yaw });
     car.setMass(1 + (CARS[kind].mass - 1) * 0.4); // masas parecidas: los choques empujan sin que el tanque arrase
@@ -259,7 +294,9 @@ function makeRacers() {
       idx, lap: 0, frac: 0, fin: 0, place: grid + 1, points: 0, item: null, itemAt: 0, useAt: 0, prevItemBtn: false,
       boost: 0, slow: 0, spin: 0, shield: 0, inv: 0, spinRot: 0, drifting: 0, charge: 0, offT: 0, stuckT: 0, camYaw: yaw, camPos: new B.Vector3(), fs: 0, lastLap: 0, auto: false, laki: 0, hits: 0,
       aggr: PERSONA[i % PERSONA.length][0], drifter: PERSONA[i % PERSONA.length][1], early: false, boxT: 0,
+      balloons: 3, out: false, balls: [], wp: null, wpT: 0,
     };
+    if (mode === "battle") for (let k = 0; k < 3; k++) { const b = sph(1.1, pbr("balloon" + r.color, { color: r.color, rough: 0.25, emissive: r.color }), [(k - 1) * 0.6, 2.3 + (k === 1 ? 0.35 : 0), 0], [1, 1.2, 1], 6); b.parent = car.root; r.balls.push(b); }
     racers.push(r);
     if (human >= 0) humans.push(r);
   }
@@ -291,8 +328,8 @@ function ensureDom() {
   mapCv = $r("#rmap") as HTMLCanvasElement; mapCtx = mapCv.getContext("2d")!;
   dom.addEventListener("click", (e) => {
     const k = (e.target as HTMLElement).dataset.r;
-    if (k === "next") nextRace(); else if (k === "again") { cup = {}; raceNo = 1; startRace(true); } else if (k === "exit") exitRace();
-    else if (k === "resume") setPause(false); else if (k === "restart") { setPause(false); startRace(true); }
+    if (k === "next") nextRace(); else if (k === "again") { cup = {}; raceNo = 1; if (mode === "battle") startBattle(); else startRace(true); } else if (k === "exit") exitRace();
+    else if (k === "resume") setPause(false); else if (k === "restart") { setPause(false); if (mode === "battle") startBattle(); else startRace(true); }
   });
   addEventListener("keydown", (e) => { if (active && e.code === "Escape" && !resultsOn) setPause(!paused); });
 }
@@ -300,6 +337,7 @@ function ensureDom() {
 export function startRace(keepCup = false) {
   ensureDom();
   endRace(true);
+  mode = "race";
   setZone(TRACKS[raceCfg.cup ? (raceNo - 1) % TRACKS.length : raceCfg.track].zone); clearLayout();
   D.scene.physicsEnabled = true;
   if (!keepCup) { cup = {}; raceNo = 1; }
@@ -310,6 +348,25 @@ export function startRace(keepCup = false) {
   applyClimate(zoneClimate() ?? CLIMATES.find((c) => c.id === "mediodia")!);
   seedRng(20261003 + raceNo);
   buildTrack();
+  begin();
+}
+
+/** Modo batalla: arena cerrada en el patio, 3 globos por corredor, el último en pie gana. */
+export function startBattle() {
+  ensureDom();
+  endRace(true);
+  mode = "battle";
+  setZone("patio"); clearLayout();
+  D.scene.physicsEnabled = true;
+  cup = {}; raceNo = 1; battleT = 150;
+  applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
+  seedRng(20261004);
+  buildArena();
+  trk = buildTrackData(TRACKS[0]); // muestras mínimas para helpers de ranking; no se dibuja
+  begin();
+}
+
+function begin() {
   humanCar(0); // asegura la clave
   makeRacers();
   t = 0; countdown = 3.4; finishedAt = -1; resultsOn = false; active = true;
@@ -344,7 +401,7 @@ export function endRace(silent = false) {
   dom?.classList.remove("split");
 }
 function cleanup() {
-  for (const r of racers) r.car.dispose();
+  for (const r of racers) { try { r.car.dispose(); } catch { /* el cuerpo ya se liberó (podio o eliminado) */ } }
   for (const p of projs) p.m.dispose();
   for (const c of chicles) c.m.dispose();
   for (const m of mesh) { m.physicsBody?.dispose(); m.dispose(); }
@@ -386,13 +443,15 @@ function useItem(r: Racer) {
   else if (it === "escudo") { r.shield = 7; SFX.pickup(); }
   else if (it === "petardo") spawnProj(r, "petardo", pos.add(f.scale(2.4)).add(new B.Vector3(0, 0.6, 0)), f.scale(52));
   else if (it === "misil") {
-    const ahead = racers.filter((o) => o !== r && o.lap * trk.N + o.idx > r.lap * trk.N + r.idx).sort((a, b) => (a.lap * trk.N + a.idx) - (b.lap * trk.N + b.idx))[0];
+    const ahead = mode === "battle"
+      ? racers.filter((o) => o !== r && !o.out).sort((a, b) => B.Vector3.DistanceSquared(a.car.pos, pos) - B.Vector3.DistanceSquared(b.car.pos, pos))[0]
+      : racers.filter((o) => o !== r && o.lap * trk.N + o.idx > r.lap * trk.N + r.idx).sort((a, b) => (a.lap * trk.N + a.idx) - (b.lap * trk.N + b.idx))[0];
     spawnProj(r, "misil", pos.add(f.scale(2.4)).add(new B.Vector3(0, 0.8, 0)), f.scale(42), ahead);
   } else if (it === "chicle") {
     const m = sph(1.3, pbr("raceGum", { color: "#ff6ec7", rough: 0.2, emissive: "#6a1050" }), [pos.x - f.x * 3, 0.6, pos.z - f.z * 3], [1, 0.5, 1], 6);
     chicles.push({ m, owner: r, life: 40, arm: 0.6 });
   } else if (it === "rayo") {
-    for (const o of racers) if (o !== r) { if (o.shield > 0) o.shield = 0; else { o.slow = 4.5; hurtRacer(o, 1.0); } }
+    for (const o of racers) if (o !== r && !o.out) { if (o.shield > 0) o.shield = 0; else { o.slow = 4.5; hurtRacer(o, 1.0); } }
     SFX.boss(); flash();
   }
   SFX.click();
@@ -411,9 +470,11 @@ function spawnProj(owner: Racer, kind: "petardo" | "misil", at: B.Vector3, v: B.
   projs.push({ m, kind, owner, v, life: kind === "misil" ? 6 : 4, target });
 }
 function hurtRacer(r: Racer, dur: number) {
-  if (r.inv > 0) return;
+  if (r.out || r.inv > 0) return;
   r.hits++;
   if (r.shield > 0) { r.shield = 0; SFX.break(); return; }
+  if (mode === "battle" && dur >= 1.05) popBalloon(r);
+  if (r.out) return; // el último globo: el auto ya salió de la física
   r.spin = dur; r.spinRot = 0; r.boost = 0; r.drifting = 0; r.charge = 0;
   r.car.body.setLinearVelocity(r.car.body.getLinearVelocity().scale(0.35));
   burst(r.car.pos.add(new B.Vector3(0, 0.6, 0)), { n: 28, color: "#ffd84d", color2: "#ff7a3a", size: [0.3, 0.7], power: [5, 12], life: [0.3, 0.7] });
@@ -422,7 +483,48 @@ function hurtRacer(r: Racer, dur: number) {
   if (r.human >= 0) SFX.hurt();
 }
 
+function battleAi(r: Racer, dt: number) {
+  const pos = r.car.pos, f = fwdOf(r);
+  const foes = racers.filter((o) => o !== r && !o.out);
+  const foe = foes.sort((a, b) => B.Vector3.DistanceSquared(a.car.pos, pos) - B.Vector3.DistanceSquared(b.car.pos, pos))[0];
+  const armed = r.item === "petardo" || r.item === "misil" || r.item === "chicle" || r.item === "rayo";
+  let goal: B.Vector3 | null = null;
+  if (armed && foe) goal = foe.car.pos;
+  else if (!r.item) { // a buscar una caja
+    const bx = boxes.filter((b) => b.t <= 0).sort((a, b) => B.Vector3.DistanceSquared(a.at, pos) - B.Vector3.DistanceSquared(b.at, pos))[0];
+    if (bx) goal = bx.at;
+  }
+  if (!goal) { r.wpT -= dt; if (!r.wp || r.wpT <= 0 || B.Vector3.DistanceSquared(r.wp, pos) < 100) { const a = Math.random() * 6.283, d = Math.random() * (ARENA.r - 10); r.wp = new B.Vector3(ARENA.c.x + Math.cos(a) * d, 0, ARENA.c.z + Math.sin(a) * d); r.wpT = 4; } goal = r.wp; }
+  const toC = ARENA.c.subtract(pos); toC.y = 0;
+  if (toC.length() > ARENA.r - 7) goal = ARENA.c; // lejos del muro
+  const dx = goal.x - pos.x, dz = goal.z - pos.z, ang = Math.atan2(f.x * dz - f.z * dx, f.x * dx + f.z * dz), dist = Math.hypot(dx, dz);
+  let item = false;
+  if (r.item && t > r.useAt) {
+    if (r.item === "petardo") item = !!foe && (Math.abs(ang) < 0.3 && dist < 50 || t > r.useAt + 3);
+    else if (r.item === "misil") item = !!foe && dist < 70;
+    else if (r.item === "chicle") item = !!foe && dist < 24;
+    else if (r.item === "rayo") item = true;
+    else item = true;
+    if (t > r.useAt + 8) item = true;
+  }
+  return { throttle: Math.abs(ang) > 1.2 ? 0.4 : 1, steer: clamp(-ang * 2.6, -1, 1), drift: false, item };
+}
+
+function popBalloon(r: Racer) {
+  if (r.out) return;
+  r.balloons--;
+  r.balls[r.balloons]?.setEnabled(false);
+  burst(r.car.pos.add(new B.Vector3(0, 2.4, 0)), { n: 14, color: r.color, size: [0.2, 0.5], power: [3, 8], life: [0.3, 0.7] });
+  if (r.balloons <= 0) {
+    r.out = true; r.fin = t;
+    FX.explosion(r.car.pos, 1.4); SFX.explosion();
+    r.car.agg.dispose(); r.car.root.setEnabled(false); r.car.root.position.set(0, -500, 0); // fuera de juego: ningún objeto lo alcanza
+    if (r.human >= 0) say(r.human, "¡Sin globos!");
+  } else if (r.human >= 0) say(r.human, `${r.balloons} globo${r.balloons > 1 ? "s" : ""}`);
+}
+
 function aiInput(r: Racer, dt: number) {
+  if (mode === "battle") return battleAi(r, dt);
   const { P, R, N } = trk;
   const look = Math.round(5 + Math.abs(r.fs) * 0.22 * (r.skill));
   const j = (r.idx + look) % N, tg = P[j].add(R[j].scale(r.lane * clamp(1 - Math.abs(angleAhead(r.idx)) * 2, 0.2, 1)));
@@ -460,16 +562,20 @@ function angleAhead(i: number) { const a = trk.T[i], b = trk.T[(i + 8) % trk.N];
 function cc() { return raceCfg.cc === 50 ? 0.82 : raceCfg.cc === 100 ? 0.95 : 1.1; }
 
 function stepRacer(r: Racer, dt: number) {
+  if (r.out) return;
   const c = r.car, pos = c.pos;
   // Progreso en el circuito
-  const prev = r.idx;
-  r.idx = nearestIdx(r);
-  const N = trk.N;
-  if (prev > N * 0.75 && r.idx < N * 0.25 && r.fin === 0) { r.lap++; onLap(r); }
-  else if (prev < N * 0.25 && r.idx > N * 0.75) r.lap--;
-  const d = pos.subtract(trk.P[r.idx]), lat = d.x * trk.R[r.idx].x + d.z * trk.R[r.idx].z;
-  const off = Math.abs(lat) > W + 1.2;
-  r.offT = off ? r.offT + dt : Math.max(0, r.offT - dt * 2);
+  let off = false;
+  if (mode === "race") {
+    const prev = r.idx;
+    r.idx = nearestIdx(r);
+    const N = trk.N;
+    if (prev > N * 0.75 && r.idx < N * 0.25 && r.fin === 0) { r.lap++; onLap(r); }
+    else if (prev < N * 0.25 && r.idx > N * 0.75) r.lap--;
+    const d = pos.subtract(trk.P[r.idx]), lat = d.x * trk.R[r.idx].x + d.z * trk.R[r.idx].z;
+    off = Math.abs(lat) > W + 1.2;
+    r.offT = off ? r.offT + dt : Math.max(0, r.offT - dt * 2);
+  }
   r.boost = Math.max(0, r.boost - dt); r.slow = Math.max(0, r.slow - dt); r.shield = Math.max(0, r.shield - dt); r.inv = Math.max(0, r.inv - dt);
   c.root.visibility = r.inv > 0 ? (Math.floor(t * 12) % 2 ? 0.4 : 1) : 1;
   if (r.shield > 0 && !r.bubble) { r.bubble = sph(3.4, pbr("raceBubble", { color: "#7de8ff", rough: 0.1, emissive: "#2a8ab0", alpha: 0.32 }), [0, 0.5, 0], undefined, 8); r.bubble.parent = c.root; }
@@ -482,14 +588,14 @@ function stepRacer(r: Racer, dt: number) {
   // Salida con cohete: acelerar justo en el último segundo de la cuenta da turbo; antes de tiempo, el motor se ahoga
   if (countdown > 0 && r.human >= 0 && !r.auto) { if (inp.throttle > 0 && countdown > 0.9) r.early = true; }
   if (countdown <= 0 && t < 0.05 && r.human >= 0 && !r.auto) { if (!r.early && inp.throttle > 0) { r.boost = 1.1; say(r.human, "¡SALIDA TURBO!"); } else if (r.early) { r.slow = 0.8; } }
-  if (r.fin > 0) inp = aiInput(r, dt), r.auto = true;
+  if (r.fin > 0 && mode === "race") inp = aiInput(r, dt), r.auto = true;
   // Objeto
   if (inp.item && !r.prevItemBtn && r.item && !frozen) useItem(r);
   r.prevItemBtn = inp.item;
   if (r.item === null && r.itemAt > 0 && t > r.itemAt) { /* ruleta terminada */ }
 
   // Velocidad máxima según estado
-  const mul = cc() * (r.human >= 0 ? 1 : 0.97 * r.skill * rubber(r));
+  const mul = cc() * (r.human >= 0 ? 1 : 0.97 * r.skill * (mode === "race" ? rubber(r) : 1));
   let top = r.top * mul * (off ? 0.5 : 1) * (r.boost > 0 ? 1.45 : 1) * (r.slow > 0 ? 0.55 : 1);
   // Derrape con mini-turbo
   const sp = r.fs;
@@ -513,6 +619,10 @@ function stepRacer(r: Racer, dt: number) {
   if (r.boost > 0 && Math.random() < 0.7) FX.sparks(pos.subtract(fwdOf(r).scale(1.2)).add(new B.Vector3(0, 0.3, 0)));
   // Lakitu: se salió demasiado, se cayó o quedó trabado
   r.stuckT = Math.abs(out.fs) < 1.2 && countdown <= 0 && r.fin === 0 ? r.stuckT + dt : 0;
+  if (mode === "battle") {
+    if (r.stuckT > 4 || pos.y < -3 || (c.root.up.y < 0.3 && r.spin <= 0)) lakitu(r);
+    return;
+  }
   if (r.offT > 3 || r.stuckT > 4 || pos.y < -3 || (c.root.up.y < 0.3 && r.spin <= 0)) lakitu(r);
   // Posición fina para rankear
   const T = trk.T[r.idx]; r.frac = clamp((pos.x - trk.P[r.idx].x) * T.x + (pos.z - trk.P[r.idx].z) * T.z, 0, DS) / DS;
@@ -526,7 +636,9 @@ function rubber(r: Racer) {
 }
 function lakitu(r: Racer) {
   r.laki++;
-  const i = r.idx, p = trk.P[i], yaw = Math.atan2(trk.T[i].x, trk.T[i].z), c = r.car;
+  const i = r.idx, c = r.car;
+  const p = mode === "battle" ? new B.Vector3(ARENA.c.x + (Math.random() - 0.5) * 20, 0, ARENA.c.z + (Math.random() - 0.5) * 20) : trk.P[i];
+  const yaw = mode === "battle" ? Math.random() * 6.28 : Math.atan2(trk.T[i].x, trk.T[i].z);
   c.body.disablePreStep = false;
   c.root.position.set(p.x, c.def.size[1] / 2 + 0.6, p.z);
   c.root.rotationQuaternion = B.Quaternion.FromEulerAngles(0, yaw, 0);
@@ -558,7 +670,7 @@ function stepWorld(dt: number) {
     b.m.rotation.y += dt * 2; b.m.position.y = b.at.y + Math.sin(spinT * 3 + b.at.x) * 0.25;
     for (const r of racers) if (!r.item && B.Vector3.DistanceSquared(r.car.pos, b.at) < 6) {
       r.item = weightedItem(placeOf(r)); r.itemAt = t; r.useAt = t + 1.5 + Math.random() * 3.5;
-      b.t = 3.5; b.m.isVisible = false;
+      b.t = mode === "battle" ? 2.2 : 3.5; b.m.isVisible = false;
       if (r.human >= 0) SFX.pickup();
       burst(b.at, { n: 8, color: "#7de8ff", size: [0.2, 0.4], power: [3, 7], life: [0.3, 0.5], gravity: 0 });
     }
@@ -592,12 +704,17 @@ function stepWorld(dt: number) {
     if (gone) { p.m.dispose(); projs.splice(projs.indexOf(p), 1); }
   }
 }
-const placeOf = (r: Racer) => 1 + racers.filter((o) => o !== r && ((o.fin > 0 && r.fin === 0) || (o.fin > 0 && r.fin > 0 && o.fin < r.fin) || (o.fin === 0 && r.fin === 0 && prog(o) > prog(r)))).length;
+const battleScore = (r: Racer) => (r.out ? -1000 + r.fin : r.balloons * 100 + 50);
+const placeOf = (r: Racer) => mode === "battle" ? 1 + racers.filter((o) => o !== r && battleScore(o) > battleScore(r)).length : 1 + racers.filter((o) => o !== r && ((o.fin > 0 && r.fin === 0) || (o.fin > 0 && r.fin > 0 && o.fin < r.fin) || (o.fin === 0 && r.fin === 0 && prog(o) > prog(r)))).length;
 const prog = (r: Racer) => r.lap * trk.N + r.idx + r.frac;
 
 // ---------- Cámaras y HUD ----------
 function camFor(r: Racer, c: B.FreeCamera, dt: number) {
-  if (r.fin > 0 && !podiumOn) { // cámara de victoria: orbita despacio alrededor del auto que cruzó la meta
+  if (mode === "battle" && r.out && !podiumOn) { // eliminado: la cámara mira la arena desde arriba
+    const a = t * 0.3;
+    c.position.set(ARENA.c.x + Math.sin(a) * 60, 42, ARENA.c.z + Math.cos(a) * 60); c.setTarget(ARENA.c); return;
+  }
+  if (mode === "race" && r.fin > 0 && !podiumOn) { // cámara de victoria: orbita despacio alrededor del auto que cruzó la meta
     const a = (t - r.fin) * 0.9 + r.camYaw + Math.PI, p = r.car.pos;
     c.position.copyFrom(new B.Vector3(p.x + Math.sin(a) * 9, p.y + 3.2, p.z + Math.cos(a) * 9));
     c.setTarget(p.add(new B.Vector3(0, 1, 0)));
@@ -616,8 +733,9 @@ function camFor(r: Racer, c: B.FreeCamera, dt: number) {
 function hud() {
   for (const h of humans) {
     const p = dom!.querySelector(`.rp[data-p="${h.human}"]`) as HTMLElement;
-    p.querySelector(".rpos b")!.textContent = String(placeOf(h));
-    p.querySelector(".rlap")!.textContent = `VUELTA ${clamp(h.lap, 1, LAPS)}/${LAPS}`;
+    p.querySelector(".rpos b")!.textContent = String(mode === "battle" ? racers.filter((o) => !o.out).length : placeOf(h));
+    p.querySelector(".rpos i")!.textContent = mode === "battle" ? "/10 en pie" : "/10";
+    p.querySelector(".rlap")!.textContent = mode === "battle" ? (h.out ? "ELIMINADO" : "●".repeat(h.balloons) + " " + Math.max(0, Math.ceil(battleT - t)) + " s") : `VUELTA ${clamp(h.lap, 1, LAPS)}/${LAPS}`;
     p.querySelector(".rspd")!.textContent = `${Math.round(Math.abs(h.fs) * 3.6)} km/h`;
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; }
@@ -630,9 +748,10 @@ function hud() {
     const s = 160, k = s / 290;
     mapCtx.clearRect(0, 0, s, s);
     mapCtx.lineWidth = 7; mapCtx.strokeStyle = "rgba(255,255,255,.55)"; mapCtx.beginPath();
+    if (mode === "battle") { const kk = (s * 0.42) / ARENA.r; mapCtx.arc(s / 2, s / 2, ARENA.r * kk, 0, 7); } else
     trk.P.forEach((p, i) => { const x = s / 2 + p.x * k, y = s / 2 - p.z * k; i ? mapCtx.lineTo(x, y) : mapCtx.moveTo(x, y); });
     mapCtx.closePath(); mapCtx.stroke();
-    for (const r of racers) { const p = r.car.pos; mapCtx.fillStyle = r.human >= 0 ? "#ffd84d" : r.color; mapCtx.beginPath(); mapCtx.arc(s / 2 + p.x * k, s / 2 - p.z * k, r.human >= 0 ? 5 : 3.2, 0, 7); mapCtx.fill(); }
+    for (const r of racers) { if (r.out) continue; const p = mode === "battle" ? r.car.pos.subtract(ARENA.c).scale((s * 0.42) / ARENA.r / k) : r.car.pos; mapCtx.fillStyle = r.human >= 0 ? "#ffd84d" : r.color; mapCtx.beginPath(); mapCtx.arc(s / 2 + p.x * k, s / 2 - p.z * k, r.human >= 0 ? 5 : 3.2, 0, 7); mapCtx.fill(); }
   }
   const cdEl = $r("#rcount");
   cdEl.textContent = countdown > 0 ? (countdown > 3 ? "" : String(Math.ceil(countdown))) : t < 1.2 ? "¡YA!" : "";
@@ -644,14 +763,14 @@ function hud() {
 
 function showResults() {
   resultsOn = true;
-  const order = [...racers].sort((a, b) => (a.fin || 1e9) - (b.fin || 1e9) || prog(b) - prog(a));
+  const order = mode === "battle" ? [...racers].sort((a, b) => battleScore(b) - battleScore(a)) : [...racers].sort((a, b) => (a.fin || 1e9) - (b.fin || 1e9) || prog(b) - prog(a));
   order.forEach((r, i) => { r.place = i + 1; cup[r.id] = (cup[r.id] ?? 0) + POINTS[i]; });
-  const last = !raceCfg.cup || raceNo >= 3;
-  const tb = order.map((r, i) => `<tr class="${r.human >= 0 ? "me" : ""}"><td>${i + 1}</td><td><i style="background:${r.color}"></i>${r.name}</td><td>${r.fin ? fmt(r.fin) : "—"}</td><td>+${POINTS[i]}</td><td>${cup[r.id]}</td></tr>`).join("");
-  $r("#rres .rtitle").textContent = `${TRACKS[trackNo].name} · carrera ${raceNo}${raceCfg.cup ? "/3" : ""}`;
+  const last = mode === "battle" || !raceCfg.cup || raceNo >= 3;
+  const tb = order.map((r, i) => `<tr class="${r.human >= 0 ? "me" : ""}"><td>${i + 1}</td><td><i style="background:${r.color}"></i>${r.name}</td><td>${mode === "battle" ? (r.out ? "fuera " + fmt(r.fin) : "●".repeat(r.balloons)) : r.fin ? fmt(r.fin) : "—"}</td><td>+${POINTS[i]}</td><td>${cup[r.id]}</td></tr>`).join("");
+  $r("#rres .rtitle").textContent = mode === "battle" ? "Batalla de globos" : `${TRACKS[trackNo].name} · carrera ${raceNo}${raceCfg.cup ? "/3" : ""}`;
   $r("#rres table").innerHTML = `<tr><th>#</th><th>Corredor</th><th>Tiempo</th><th>Pts</th><th>Total</th></tr>${tb}`;
   ($r("#rres [data-r=next]") as HTMLElement).style.display = last ? "none" : "";
-  if (last && raceCfg.cup) { const champ = Object.entries(cup).sort((a, b) => b[1] - a[1])[0]; const r = racers.find((x) => x.id === +champ[0])!; $r("#rres .rtitle").textContent = `COPA: gana ${r.name} con ${champ[1]} puntos`; }
+  if (last && raceCfg.cup && mode === "race") { const champ = Object.entries(cup).sort((a, b) => b[1] - a[1])[0]; const r = racers.find((x) => x.id === +champ[0])!; $r("#rres .rtitle").textContent = `COPA: gana ${r.name} con ${champ[1]} puntos`; }
   buildPodium(order);
   $r("#rres").classList.remove("hidden");
   (($r("#rres button:not([style*='none'])")) as HTMLElement)?.focus();
@@ -718,8 +837,13 @@ export function raceTick(dt: number) {
   }
   for (const r of racers) stepRacer(r, dt);
   if (countdown <= 0) stepWorld(dt);
+  // Fin de la batalla: queda uno en pie, cayeron todos los humanos o se acabó el tiempo
+  if (mode === "battle" && !resultsOn && countdown <= 0) {
+    const alive = racers.filter((o) => !o.out);
+    if (alive.length <= 1 || t > battleT || humans.every((h) => h.out) && t - Math.max(...humans.map((h) => h.fin)) > 3) { if (alive[0]) alive[0].fin = alive[0].fin || t; showResults(); }
+  }
   // Fin de carrera: cuando terminan todos los humanos (o 25 s después del primero)
-  if (!resultsOn && humans.length && (humans.every((h) => h.fin > 0) && t - Math.max(...humans.map((h) => h.fin)) > 2.5 || finishedAt > 0 && t - finishedAt > 25)) showResults();
+  if (mode === "race" && !resultsOn && humans.length && (humans.every((h) => h.fin > 0) && t - Math.max(...humans.map((h) => h.fin)) > 2.5 || finishedAt > 0 && t - finishedAt > 25)) showResults();
   const h0 = humans[0];
   if (h0) { camFor(h0, D.cam, dt); engineSfx(clamp(Math.abs(h0.fs) / 30, 0, 1), 1, h0.boost > 0); setLamp(h0.car.pos, h0.car.root.forward, false, dt); }
   if (humans[1] && cam2) camFor(humans[1], cam2, dt);
