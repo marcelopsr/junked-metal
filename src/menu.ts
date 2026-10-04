@@ -444,7 +444,8 @@ const SSORT = ["Orden de fábrica", "Precio: menor primero", "Precio: mayor prim
 let sfilt: keyof typeof SFILT = "todo", ssort = 0;
 // Fila del Taller: attr = cómo la reconoce el clic; cost = precio de lo siguiente (undefined si está completa); fx = vista previa antes → después
 type ShopItem = { attr: string; name: string; desc: string; ico?: string; lv?: number; max?: number; cost?: number; ach?: string; bought: boolean; fx?: string };
-const tipicas = (c: number) => { const n = Math.ceil((c - save.scrap) / BAL.ritmo.tornillos_partida_tipica); return n <= 0 ? "Alcanza ahora" : `Falta${n === 1 ? "" : "n"} ${n} partida${n === 1 ? "" : "s"} típica${n === 1 ? "" : "s"}`; };
+// Texto de costo: si ya se puede comprar, o cuántos tornillos faltan y unas cuántas partidas son (estimado)
+const tipicas = (c: number) => { const f = c - save.scrap, n = Math.ceil(f / BAL.ritmo.tornillos_partida_tipica); return f <= 0 ? "Se puede comprar ahora" : `Faltan ${f} tornillos (${n === 1 ? "una partida" : `unas ${n} partidas`})`; };
 function shopItems(): ShopItem[] {
   if (stab === "chasis" || stab === "equipo") return PERKS.filter((p) => p.cat === stab).map((p) => {
     const l = save.perm[p.k], max = p.cost.length, [lab, f] = p.fx;
