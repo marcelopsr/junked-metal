@@ -226,7 +226,9 @@ function house() {
 // Árbol: tronco enorme, copa fuera de cuadro (sombras de hojas igual)
 function tree(x: number, z: number) {
   occluders.push(stat(cyl(7, 9, 70, pbr("bark", { color: "#ffffff", rough: 0.95, tex: tex("bark", TEX.bark) }), [x, 35, z]), B.PhysicsShapeType.CYLINDER));
-  for (let k = 0; k < 5; k++) shadows.addShadowCaster(sph(40, M.matte("#2f6b2a"), [x + (rng() - 0.5) * 30, 72 + rng() * 10, z + (rng() - 0.5) * 30], [1, 0.7, 1], 6));
+  const crown = M.matte("#2f6b2a"), lobes: B.Mesh[] = [];
+  for (let k = 0; k < 5; k++) lobes.push(sph(40, crown, [x + (rng() - 0.5) * 30, 72 + rng() * 10, z + (rng() - 0.5) * 30], [1, 0.7, 1], 6));
+  shadows.addShadowCaster(merge("crown", lobes)); // una sola malla por copa: 5 mallas = 5 dibujos por pasada (cada cascada de sombra incluida)
   bare.push({ x, z, r: 6 });
 }
 // Auto real (1 u ≈ 4,5 cm: 96 de largo). lift = altura del piso de la carrocería; en caballetes el RC pasa por abajo.
@@ -275,10 +277,12 @@ function patioBuild() {
   const dirt = decal("dirt", 42, 32, 50, 45, pbr("dirt", { color: "#ffffff", rough: 1, tex: tex("dirt", TEX.dirt) }));
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirt.material!, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
+  const crops: B.Mesh[] = [];
   for (let r = 0; r < 4; r++) for (let i = 0; i < 7; i++) {
     const x = 34 + i * 5.3, z = 35 + r * 7;
-    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte("#3f8f2f"), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4); l.rotation.y = k * 1.6; shadows.addShadowCaster(l); }
+    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte("#3f8f2f"), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4); l.rotation.y = k * 1.6; crops.push(l); }
   }
+  shadows.addShadowCaster(merge("huerta", crops)); // 112 hojas sueltas = 112 dibujos por pasada; fusionadas, una
 
   // Cerca de madera (instancias)
   const plank = plankTpl();
@@ -660,18 +664,17 @@ function pots(n: number) {
       cyl(5.4 * sc, 5.4 * sc, 0.6 * sc, M.matte("#9a3412"), [0, 3.9 * sc, 0], undefined, 16),
       cyl(4.6 * sc, 4.6 * sc, 0.2 * sc, M.matte("#4a3420"), [0, 4.1 * sc, 0], undefined, 16),
     ]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z]);
-    const extras: B.Mesh[] = [];
-    breakable(pot, 120 * sc, 2.6 * sc, "#c2410c", true, extras);
+    const plant: B.Mesh[] = []; // hojas y flor en una sola malla (se rompe junto con la maceta: extras)
     for (let k = 0; k < 7; k++) {
       const a = (k / 7) * Math.PI * 2;
       const leaf = sph(3 * sc, M.matte(k % 2 ? "#3f8f2f" : "#4ea83a"), [x + Math.cos(a) * 1.3 * sc, 5.5 * sc, z + Math.sin(a) * 1.3 * sc], [0.4, 0.2, 1.4]);
       leaf.rotation.set(0.6, -a + Math.PI / 2, 0);
-      shadows.addShadowCaster(leaf);
-      extras.push(leaf);
+      plant.push(leaf);
     }
-    const flower = sph(1.2 * sc, M.plastic(["#f43f5e", "#facc15", "#a855f7"][Math.floor(rng() * 3)]), [x, 7 * sc, z]);
-    shadows.addShadowCaster(flower);
-    extras.push(flower);
+    plant.push(sph(1.2 * sc, M.plastic(["#f43f5e", "#facc15", "#a855f7"][Math.floor(rng() * 3)]), [x, 7 * sc, z]));
+    const leaves = merge("plant", plant);
+    shadows.addShadowCaster(leaves);
+    breakable(pot, 120 * sc, 2.6 * sc, "#c2410c", true, [leaves]);
   }
 }
 // Latas de pintura (los cofres del garaje): al romperse salpican su color
@@ -775,6 +778,7 @@ function brickWalls(n: number) {
 // Charcos (agua o aceite): espejos en el piso
 function puddles(n: number, mat: B.Material) {
   mat.zOffset = -3; mat.disableDepthWrite = true;
+  const discs: B.Mesh[] = [];
   for (let i = 0; i < n; i++) {
     const spot = freeSpot(5); if (!spot) continue;
     const [x, z] = spot;
@@ -783,9 +787,10 @@ function puddles(n: number, mat: B.Material) {
     pd.scaling.set(3 + rng() * 4, 2 + rng() * 3, 1);
     pd.position.set(x, 0.035, z);
     pd.material = mat;
-    pd.receiveShadows = true;
+    discs.push(pd);
     bare.push({ x, z, r: pd.scaling.x });
   }
+  if (discs.length) merge("puddles", discs); // todos comparten material: un solo dibujo
 }
 function ball() {
   const ballTex = tex("ball", () => canvasTex(256, (c, s) => { c.fillStyle = "#fafafa"; c.fillRect(0, 0, s, s); c.fillStyle = "#111"; for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) { c.beginPath(); c.arc(i * 32 + 16, j * 64 + 32, 12, 0, 7); c.fill(); } }));

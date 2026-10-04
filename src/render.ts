@@ -85,6 +85,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   shadows.darkness = 0.5; // sombras suaves: que den volumen sin ensuciar el suelo
   shadows.bias = 0.004;
   shadows.normalBias = 0.02;
+  scene.onBeforeRenderObservable.add(() => { const rt = shadows.getShadowMap(); if (rt && rt.getCustomRenderList !== shadowList) rt.getCustomRenderList = shadowList; }); // applyGfx recrea el mapa al cambiar el nivel: se vuelve a enganchar
 
   // Faro del auto: el único foco duro de la escena. Sin sombras propias (ponytail: sombras solo de la luna; si hace falta, ShadowGenerator sobre el spot).
   lamp = new B.SpotLight("lamp", B.Vector3.Zero(), B.Vector3.Forward(), 1.15, 8, scene);
@@ -106,6 +107,33 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   pipe.bloomWeight = 0.18; // brillo discreto: antes velaba todo el día
   pipe.bloomKernel = 32;
   setupPixels(cam, low);
+}
+
+// Lista de proyectores de CADA cascada: Babylon dibuja todos los de la lista en todas las cascadas, aunque estén lejos o escondidos (y las plantillas de y = -500
+// siempre, tengan instancias o no). Acá cada cascada recibe solo lo que cae dentro de su caja ortográfica (esfera del volumen contra x/y de la matriz de la cascada,
+// con holgura para el filtrado PCF y la mezcla entre cascadas: lo que queda fuera lo recortaría la GPU igual, así que el mapa de sombras sale idéntico)
+// y las plantillas solo si tienen alguna instancia viva. Con instancias, la esfera de la fuente no sirve (las instancias están en cualquier lado): se dejan pasar.
+const castList: B.AbstractMesh[] = [];
+const SHADOW_PAD = 0.12;
+function shadowList(layer: number, list: B.Nullable<readonly B.AbstractMesh[]>, len: number) {
+  const M4 = shadows.getCascadeTransformMatrix(layer);
+  if (!list || !M4) return null;
+  const mt = M4.m;
+  const sx = Math.hypot(mt[0], mt[4], mt[8]), sy = Math.hypot(mt[1], mt[5], mt[9]);
+  castList.length = 0;
+  for (let i = 0; i < len; i++) {
+    const m = list[i];
+    if (!m.isEnabled() || !m.isVisible) continue;
+    if (m.position.y < -400) { // plantilla: la fuente está escondida, solo importan sus instancias
+      const ins = (m as B.Mesh).instances;
+      if (!ins?.length || !ins.some((x) => x.isEnabled() && x.isVisible)) continue;
+    } else if (!(m as B.Mesh).hasInstances && !(m as B.Mesh).thinInstanceCount) {
+      const b = m.getBoundingInfo().boundingSphere, c = b.centerWorld, r = b.radiusWorld;
+      if (Math.abs(c.x * mt[0] + c.y * mt[4] + c.z * mt[8] + mt[12]) > 1 + SHADOW_PAD + r * sx || Math.abs(c.x * mt[1] + c.y * mt[5] + c.z * mt[9] + mt[13]) > 1 + SHADOW_PAD + r * sy) continue;
+    }
+    castList.push(m);
+  }
+  return castList;
 }
 
 export function look(p: Partial<typeof LOOK>) {

@@ -74,7 +74,7 @@ export class Car {
     this.model.body.parent = this.vis;
     const r = Math.max(...this.model.wheels.map((x) => x.r));
     this.model.body.position.y = r - h / 2;
-    shadows.addShadowCaster(this.model.body, true);
+    for (const c of this.model.cast) shadows.addShadowCaster(c);
 
     this.agg = new B.PhysicsAggregate(this.root, B.PhysicsShapeType.BOX,
       { mass: d.mass, friction: 0.2, restitution: 0.1, extents: new B.Vector3(w, h, l) }, scene);

@@ -64,11 +64,48 @@ export function extrude(profile: [number, number][], width: number, mat: B.Mater
   return m;
 }
 
-export function merge(name: string, parts: B.Mesh[]) {
+/** Fusiona piezas en una malla y aplana sus colores (flatten): una submalla = un dibujo por pasada (cámara, brillo y cada cascada de sombra). `keep`: materiales que se animan y no se hornean. */
+export function merge(name: string, parts: B.Mesh[], keep?: B.Material[]) {
+  // Piezas ya aplanadas (con color de vértice) mezcladas con otras sin él: Babylon no fusiona atributos distintos; las que faltan reciben blanco
+  if (parts.some((p) => p.isVerticesDataPresent(B.VertexBuffer.ColorKind))) for (const p of parts) if (!p.isVerticesDataPresent(B.VertexBuffer.ColorKind)) p.setVerticesData(B.VertexBuffer.ColorKind, new Float32Array(p.getTotalVertices() * 4).fill(1), false, 4);
   const m = B.Mesh.MergeMeshes(parts, true, true, undefined, false, true)!;
   m.name = name;
   m.receiveShadows = true;
+  flatten(m, keep);
   return m;
+}
+
+// Aplana colores de una malla fusionada: cada pieza pintada (sin textura, emisivo ni transparencia) pasa a color de vértice y los materiales
+// de una misma clase (rugosidad, metal, barniz) se funden en uno. Baja ~25 submallas a ~6: un draw por submalla y por pasada (cuarto, sombras x3, profundidad, brillo). Mismo look. `keep`: materiales que se animan en juego (la pintura que se gasta) y no se pueden hornear.
+export function flatten(m: B.Mesh, keep: B.Material[] = []) {
+  const multi = m.material;
+  if (!(multi instanceof B.MultiMaterial)) return;
+  const nv = m.getTotalVertices(), idx = m.getIndices()!, old = m.getVerticesData(B.VertexBuffer.ColorKind), col = old ? Float32Array.from(old) : new Float32Array(nv * 4).fill(1); // si ya estaba aplanada (pieza de otra fusión) conserva sus colores
+  const groups = new Map<B.Material, B.SubMesh[]>();
+  for (const sm of m.subMeshes) {
+    let mat = multi.subMaterials[sm.materialIndex]!;
+    if (mat instanceof B.PBRMaterial && !mat.albedoTexture && mat.emissiveColor.equals(B.Color3.Black()) && mat.alpha === 1 && !mat.name.startsWith("vc") && !keep.includes(mat)) {
+      const c = mat.albedoColor, k = mat.clearCoat.isEnabled ? mat.clearCoat.intensity : 0;
+      for (let v = sm.verticesStart * 4, e = (sm.verticesStart + sm.verticesCount) * 4; v < e; v += 4) { col[v] = c.r; col[v + 1] = c.g; col[v + 2] = c.b; }
+      mat = pbr(`vc${mat.roughness}|${mat.metallic}|${k}`, { color: "#ffffff", rough: mat.roughness ?? 0.5, metal: mat.metallic ?? 0, coat: k });
+    }
+    (groups.get(mat) ?? groups.set(mat, []).get(mat)!).push(sm);
+  }
+  const out = new Uint32Array(idx.length), mats: B.Material[] = [], ranges: [number, number][] = [];
+  let n = 0;
+  for (const [mat, subs] of groups) {
+    const a = n;
+    for (const sm of subs) for (let i = 0; i < sm.indexCount; i++) out[n++] = idx[sm.indexStart + i];
+    mats.push(mat); ranges.push([a, n - a]);
+  }
+  const nm = new B.MultiMaterial(m.name + "_vc", m.getScene());
+  nm.subMaterials = mats;
+  m.setVerticesData(B.VertexBuffer.ColorKind, col, false, 4);
+  m.setIndices(out, nv);
+  m.releaseSubMeshes();
+  ranges.forEach(([a, c], i) => new B.SubMesh(i, 0, nv, a, c, m));
+  m.material = nm;
+  multi.dispose();
 }
 
 // ---------- Plantillas instanciables ----------
@@ -98,8 +135,51 @@ export function wheel(d: number, w: number, rim: string) {
   ]);
 }
 
+// Sombras de los autos: la carrocería (y cada rueda) tiene varias submallas, una por material, y cada cascada de sombra las dibuja todas aunque el mapa solo
+// guarda la silueta. Una malla gemela de UNA submalla (los triángulos opacos: el vidrio no proyectaba, sigue igual) hace ese trabajo: es hija de la original (misma pose),
+// vive en una capa que ninguna cámara dibuja y es la única que entra a la lista de proyectores (ver `cast` en CarModel).
+const SHADOW_ONLY = 0x10000000;
+let proxyMat: B.StandardMaterial | undefined;
+function shadowProxy(m: B.Mesh) {
+  const multi = m.material;
+  if (!(multi instanceof B.MultiMaterial)) return null;
+  const idx = m.getIndices()!, ind: number[] = [];
+  for (const sm of m.subMeshes) {
+    const mat = multi.subMaterials[sm.materialIndex];
+    if (mat && mat.alpha < 1) continue;
+    for (let i = 0; i < sm.indexCount; i++) ind.push(idx[sm.indexStart + i]);
+  }
+  const p = new B.Mesh(m.name + "Sh", scene), vd = new B.VertexData();
+  vd.positions = m.getVerticesData(B.VertexBuffer.PositionKind)!; vd.normals = m.getVerticesData(B.VertexBuffer.NormalKind)!; vd.indices = ind;
+  vd.applyToMesh(p);
+  p.material = proxyMat ??= new B.StandardMaterial("shadowOnly", scene);
+  p.layerMask = SHADOW_ONLY;
+  p.isPickable = false;
+  return p;
+}
+
+// Las ruedas de todos los autos son instancias de una fuente por (diámetro, ancho, llanta): Babylon dibuja todas juntas en una sola llamada por submalla
+// (40 ruedas de la carrera = 3 dibujos por pasada en vez de 160). Se arman con la teselación de los autos (tessK) y quedan en caché.
+const wheelSrc = new Map<string, B.Mesh>(), wheelSh = new Map<string, B.Mesh | null>(); // fuentes por (diámetro, ancho, llanta); gemelas de sombra por (diámetro, ancho): la silueta no depende de la llanta
+function wheelInst(d: number, w: number, rim: string) {
+  const k = `${d}|${w}`;
+  let m = wheelSrc.get(`${k}|${rim}`);
+  if (!m) {
+    m = wheel(d, w, rim);
+    m.position.y = -500; // la fuente queda escondida, como las plantillas: se dibujan las instancias
+    m.isPickable = false;
+    wheelSrc.set(`${k}|${rim}`, m);
+    if (!wheelSh.has(k)) { const sh = shadowProxy(m); if (sh) sh.position.y = -500; wheelSh.set(k, sh); shadows.addShadowCaster(sh ?? m); }
+    else if (!wheelSh.get(k)) shadows.addShadowCaster(m);
+  }
+  const inst = m.createInstance("wheel"), shi = wheelSh.get(k)?.createInstance("wheelSh");
+  if (shi) { shi.parent = inst; shi.layerMask = SHADOW_ONLY; }
+  return { inst, cast: shi ?? inst };
+}
+
 // ---------- Autos del jugador ----------
-export type CarModel = { body: B.Mesh; wheels: { m: B.Mesh; front: boolean; r: number }[]; paint: B.PBRMaterial };
+/** `cast`: lo que entra a la lista de proyectores de sombra (gemelas de una submalla; ver shadowProxy), en vez de la carrocería y las ruedas. */
+export type CarModel = { body: B.Mesh; wheels: { m: B.AbstractMesh; front: boolean; r: number }[]; paint: B.PBRMaterial; cast: B.AbstractMesh[] };
 export type CarKind = "buggy" | "monster" | "formula" | "tanque" | "carrera" | "axel" | "helado" | "combi";
 
 // Paletas del taller
@@ -345,15 +425,20 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   // Antena, siempre: es un auto RC
   parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#ff4d6d"), [0.38, 1.6, -0.7]));
   const rim = o.rim ?? A.rim;
-  const body = merge("carBody", parts);
+  const body = merge("carBody", parts, [paint]); // la pintura queda aparte: se gasta con el daño (Car.wear)
+  const cast: B.AbstractMesh[] = [];
+  const bodySh = shadowProxy(body);
+  if (bodySh) bodySh.parent = body;
+  cast.push(bodySh ?? body);
   const wheels = ws.map((w) => {
-    const m = wheel(w.d, w.w, rim);
+    const { inst: m, cast: c } = wheelInst(w.d, w.w, rim);
     m.position = v(w.pos);
     m.parent = body;
+    cast.push(c);
     return { m, front: w.steer !== false && w.pos[2] > 0, r: w.d / 2 };
   });
   tessK = 1;
-  return { body, wheels, paint };
+  return { body, wheels, paint, cast };
 }
 
 // Figuritas de juguete que manejan: cadera en el origen, ~0,5 de alto, mirando a +z

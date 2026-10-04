@@ -21,7 +21,7 @@ import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
-import { CAR_YAW, carSpot, flatten, menuOff, menuTick, SHOTS } from "./menuscene";
+import { CAR_YAW, carSpot, menuOff, menuTick, SHOTS } from "./menuscene";
 import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace, TRACKS } from "./kart";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -1193,9 +1193,8 @@ scene.onBeforeRenderObservable.add(() => {
         preview?.dispose();
         const m = carModel(shownCar(), carOpts());
         preview = m.body;
-        flatten(m.body); for (const w of m.wheels) flatten(w.m); // menos submallas = menos draws en cada pasada
         previewR = Math.max(...m.wheels.map((w) => w.r));
-        shadows.addShadowCaster(preview, true);
+        for (const c of m.cast) shadows.addShadowCaster(c);
         previewKey = key;
         preview.rotation.y = CAR_YAW;
       }

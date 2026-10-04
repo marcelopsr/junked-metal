@@ -1,5 +1,6 @@
 import * as B from "@babylonjs/core";
 import { DEF, type Kind } from "./enemies";
+import { flatten } from "./models";
 import { M, pbr, shadows } from "./render";
 
 // Bichos importados de GLB con esqueleto. La animación se hornea en una textura (VAT: una matriz por hueso y cuadro) y
@@ -108,6 +109,7 @@ async function load(scene: B.Scene, kind: Kind) {
   };
   if (mesh.material instanceof B.MultiMaterial) mesh.material.subMaterials = mesh.material.subMaterials.map(mat);
   else mesh.material = mat(mesh.material);
+  flatten(mesh); // colores de material a color de vértice: menos submallas = menos dibujos por pasada
   for (const n of c.transformNodes) if (!n.parent) n.dispose(); // __root__ y huesos ya no se dibujan ni se actualizan
   for (const m of c.materials) if (!scene.meshes.some((x) => x.material === m)) m.dispose();
   const vat = new B.BakedVertexAnimationManager(scene);
