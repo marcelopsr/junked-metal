@@ -22,6 +22,18 @@ const carga = async (p) => p.evaluate(() => {
 });
 const sinCarga = (p) => p.evaluate(() => { document.getElementById("load").classList.add("hidden"); document.getElementById("load").classList.remove("in"); });
 
+// Configuración → Controles
+const ctlTab = async (p) => { await view("config")(p); await p.dispatchEvent('[data-tab="ctl"]', "click");
+  await p.evaluate(() => matchMedia("(pointer: coarse)").matches && dispatchEvent(new PointerEvent("pointerdown", { pointerType: "touch" }))); // en cel el último control es el dedo
+  await tick(p, 2); await p.waitForTimeout(150); };
+// Joystick simulado (Xbox): sticks corridos, gatillos a medias, Y y RB apretados. Ninguno navega ni acepta en el menú.
+const fakePad = (p) => p.evaluate(() => {
+  const b = (on, v = on ? 1 : 0) => ({ pressed: on, touched: on, value: v });
+  const pad = { id: "Xbox Wireless Controller (STANDARD GAMEPAD Vendor: 045e Product: 0b13)", index: 0, connected: true, mapping: "standard", timestamp: 1,
+    axes: [0.42, -0.31, 0.06, 0.03], buttons: Array.from({ length: 17 }, (_, i) => (i === 7 ? b(true, 0.7) : i === 6 ? b(false, 0.2) : b(i === 3 || i === 5))) };
+  navigator.getGamepads = () => [pad, null, null, null];
+});
+
 // ---------- partida ----------
 const lab = (o) => async (p) => { await wait(p, () => window.__lab); await p.evaluate((o) => window.__lab(o), o); };
 const partida = (secs) => async (p) => { await p.evaluate((s) => { window.__play(3); window.__god(); window.__sim(s); }, secs); await tick(p, 45); }; // semilla 3; god: la captura no depende de que el bot sobreviva; 45 cuadros para que la cámara alcance al auto
@@ -38,9 +50,21 @@ export const sessions = [
     { id: "config", act: view("config") },
     // Imagen con Escalado FSR: la escala % se oculta y aparece el modo FSR (fila dependiente)
     { id: "config-fsr", act: async (p) => { await p.evaluate(() => { const s = document.querySelector('select[data-set="scaler"]'); s.value = "fsr"; s.dispatchEvent(new Event("change", { bubbles: true })); }); await p.waitForTimeout(150); } },
-    { id: "bestiario", act: async (p) => { await p.evaluate(() => window.__cfg({ scaler: "simple" })); await view("bestiary")(p); } },
+    { id: "controles", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ scaler: "simple" })); await ctlTab(p); } },
+    { id: "bestiario", act: async (p) => { await view("bestiary")(p); } },
     { id: "ficha", act: async (p) => { await p.dispatchEvent("#beasts [data-beast]", "click"); await wait(p, () => document.querySelector("#scr-beast.on")); await p.waitForTimeout(500); } },
     { id: "creditos", act: view("credits") },
+  ] },
+  { id: "controles", query: "?mute&seed=3", vps: ["pc"], shots: [
+    { id: "probar-control", perf: false, act: async (p) => { await ctlTab(p); await fakePad(p); await tick(p, 3); await p.evaluate(() => document.getElementById("ptest").scrollIntoView({ block: "center" })); await tick(p, 2); await p.waitForTimeout(100); } },
+  ] },
+  { id: "tactil", query: "?mute&seed=3", vps: ["cel"], shots: [
+    { id: "editar", perf: false, act: async (p) => { await ctlTab(p); await p.dispatchEvent('[data-act="tedit"]', "click"); await wait(p, () => document.body.classList.contains("tedit")); await p.waitForTimeout(100); } },
+    // Arrastrar TURBO hacia arriba a la izquierda y agrandar DERRAPE desde su esquina
+    { id: "editar-movido", perf: false, act: async (p) => {
+      const drag = async (sel, fx, fy, dx, dy) => { const r = await p.evaluate((s) => { const b = document.querySelector(s).getBoundingClientRect(); return [b.left, b.top, b.width, b.height]; }, sel);
+        const x = r[0] + r[2] * fx, y = r[1] + r[3] * fy; await p.mouse.move(x, y); await p.mouse.down(); await p.mouse.move(x + dx, y + dy, { steps: 4 }); await p.mouse.up(); };
+      await drag("#tBoost", 0.4, 0.4, -120, -160); await drag("#tDrift", 0.9, 0.9, 30, 30); await p.waitForTimeout(100); } },
   ] },
   { id: "lab", query: "?mute&seed=3&lab", shots: [
     { id: "noche", act: async (p) => { await wait(p, () => window.__lab); await p.evaluate(() => window.__lab({})); } }, // se rearma a mano: el arranque solo del ?lab corre con tiempo real

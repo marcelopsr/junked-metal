@@ -5,7 +5,7 @@ import type { Scene } from "@babylonjs/core";
 import { CARS } from "./car";
 import { costos } from "./balance";
 import { DEF, type Kind } from "./enemies";
-import { activePad, ctl, KEYS, PAD, padPressed, type Action } from "./input";
+import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { PILOTS, type PilotId } from "./pilots";
 import { icon } from "./icons";
@@ -14,7 +14,7 @@ import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { setDrawDist, ZONES, type ZoneId } from "./world";
 import { isTouch, padsConnected } from "./input";
-import { bestRace, MEDAL, medalOf, raceCfg, saveRaceCfg, TRACKS, trackName } from "./kart";
+import { bestRace, MEDAL, medalOf, raceCfg, saveRaceCfg, TRACKS, trackName, type RaceCtl } from "./kart";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, CURSES, type AbilityId, type CurseId } from "./abilities";
 import { FINALS, type Elite } from "./run";
@@ -24,6 +24,7 @@ const $ = (id: string) => document.getElementById(id)!;
 export const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 // ---------- Guardado ----------
+export type Profile = { name: string } & Pick<Save, "keys" | "pad" | "race" | "tlay" | "touch">;
 export type RunRec = { t: number; kills: number; lv: number; seed: number; win: boolean };
 // Totales históricos de carrera (Bestiario → Estadísticas): se suman en endRun (main.ts). Las bajas por tipo viven en save.slain.
 // Registro propio de cada bicho (ficha del Bestiario): primera vista (AAAA-MM-DD), daño recibido de ese tipo, daño infligido por arma y zonas
@@ -39,7 +40,9 @@ export type Save = {
   gfxv: number; scaler: "simple" | "fsr"; scale: number; fsr: Exclude<Fsr, "off">; aa: AA; sharpen: number;
   preset: Preset | "custom"; shadowQ: ShadowQ; detail: Detail; texRes: number; aniso: number;
   fpsCap: number; menuFps: number; fov: number; bright: number; gamma: number; // menuFps: tope de cuadros solo en los menús (0 = el mismo que el juego)
-  keys: Partial<Record<Action, string>>; pad: { dead: number; sens: number }; rumble: boolean; touch: number;
+  // Controles (input.ts): teclas [principal, alternativa], joystick, carrera, disposición táctil y 3 perfiles con nombre (null = vacío)
+  keys: Record<Action, string[]>; pad: typeof PAD0; race: { kb1: Binds<string>; kb2: Binds<string>; pad: Binds<number> }; tlay: TLays; rumble: boolean; touch: number;
+  profiles: (Profile | null)[];
   hud: number; calm: boolean; dmgNums: boolean;
   decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
   stats: Stats;
@@ -55,7 +58,7 @@ const DEFAULT: Save = {
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada" }, paint: "", rim: "", zoom: 1.35,
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
-  keys: {}, pad: { dead: 0.15, sens: 1 }, rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
+  keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0,
@@ -113,8 +116,11 @@ const nextOf = <T,>(a: T[], v: T) => a[(a.indexOf(v) + 1) % a.length];
 function cycleRace(k: string) {
   const c = raceCfg;
   if (k === "players") c.players = c.players === 1 ? 2 : 1;
-  else if (k === "p1") c.p1 = nextOf(["kbd", "pad0", "pad1"], c.p1);
-  else if (k === "p2") c.p2 = nextOf(["pad0", "pad1", "kbd2"], c.p2);
+  else if (k === "p1" || k === "p2") { // con dos jugadores no se repite el control del otro
+    const o = k === "p1" ? c.p2 : c.p1; let v = c[k];
+    do v = nextOf(Object.keys(CTL_NAME) as RaceCtl[], v); while (c.players === 2 && v === o);
+    c[k] = v;
+  }
   else if (k === "cc") c.cc = nextOf([50, 100, 150] as const, c.cc);
   else if (k === "laps") c.laps = c.laps === 3 ? 5 : 3;
   else if (k === "cup") c.cup = !c.cup;
@@ -122,9 +128,12 @@ function cycleRace(k: string) {
   else if (k === "car2") { const o = save.cars.length ? save.cars : (["buggy"] as CarKind[]); c.car2 = nextOf(o, o.includes(c.car2) ? c.car2 : o[0]); }
   saveRaceCfg();
 }
+export const CTL_NAME: Record<RaceCtl, string> = { kbd: "Teclado 1", kbd2: "Teclado 2", pad0: "Joystick 1", pad1: "Joystick 2" };
+const k2 = (a: string[]) => a.filter(Boolean).map(keyName).join(" o ") || "—";
+const raceKeys = (t: "kb1" | "kb2") => { const r = RACE[t]; return `${t === "kb1" ? "Teclado 1" : "Teclado 2"}: ${[r.up, r.left, r.down, r.right].map((x) => keyName(x[0])).join(" ")} maneja, ${k2(r.drift)} derrapa, ${k2(r.item)} usa el objeto.`; };
 function renderRace() {
   if (isTouch) raceCfg.players = 1; // en el teléfono no hay pantalla dividida (una pantalla chica y un solo control táctil)
-  const c = raceCfg, ctl = { kbd: "Teclado", pad0: "Joystick 1", pad1: "Joystick 2", kbd2: "Teclado (flechas)" };
+  const c = raceCfg, ctl = CTL_NAME;
   $("rcPlayers").textContent = `Jugadores · ${c.players}${c.players === 2 ? " (pantalla dividida)" : ""}`;
   $("rcP1").textContent = `Control J1 · ${ctl[c.p1]}`;
   $("rcP2").textContent = `Control J2 · ${ctl[c.p2]}`;
@@ -137,7 +146,7 @@ function renderRace() {
   $("rcTrack").textContent = `Pista · ${trackName(c.track)}`;
   $("rcTrack").classList.toggle("hidden", c.cup);
   const rec = TRACKS.map((tk, i) => { const b = bestRace(i); return `${tk.zone === "patio" ? "Patio" : tk.zone === "jardin" ? "Jardín" : "Garaje"} ${b ? fmt(b.t) + " " + (MEDAL[medalOf(i, c.laps, b.cc, b.t)] || "") : "—"}`; }).join(" · ");
-  $("rcHelp").textContent = `Récords: ${rec}. J1: auto del Garaje (${CARS[save.car].name}). Joysticks conectados: ${padsConnected()}. Teclado J1: W A S D, Espacio derrapa, E usa objeto. Flechas: J2 con Shift derecha y Enter.`;
+  $("rcHelp").textContent = `Récords: ${rec}. J1: auto del Garaje (${CARS[save.car].name}). Joysticks conectados: ${padsConnected()}. ${raceKeys("kb1")} ${raceKeys("kb2")} Se cambian en Configuración → Controles.`;
 }
 
 // ---------- Ajustes ----------
@@ -153,20 +162,18 @@ export function applySettings() {
   document.body.classList.toggle("hud-solid", save.hudSolid);
   setAudio({ ...save.vol, mute: save.mute });
   $("muted").classList.toggle("hidden", !save.mute);
-  for (const a of Object.keys(save.keys) as Action[]) if (KEYS[a]) KEYS[a][0] = save.keys[a]!;
-  Object.assign(PAD, save.pad);
+  Object.assign(KEYS, save.keys); Object.assign(PAD, save.pad); Object.assign(RACE, save.race); // mismas listas: lo que cambia el menú en save ya rige
   const root = document.documentElement.style;
   root.setProperty("--hud-scale", String(save.hud));
   root.setProperty("--touch-scale", String(save.touch));
+  applyTouchLayouts(save.tlay, save.touch);
   document.body.classList.toggle("calm", save.calm);
 }
-const commit = () => { save.preset = presetOf(save); persist(); applySettings(); };
-const KEYS0 = Object.fromEntries(Object.entries(KEYS).map(([a, v]) => [a, v[0]])) as Record<Action, string>;
+const commit = () => { save.preset = presetOf(save); persist(); saveRaceCfg(); applySettings(); };
 /** Vuelve las opciones (imagen, audio, controles, accesibilidad) a los valores de fábrica; el progreso no se toca. */
 function resetCfg() {
   const D = structuredClone(DEFAULT);
-  Object.assign(save, { scaler: D.scaler, scale: D.scale, fsr: D.fsr, aa: D.aa, sharpen: D.sharpen, preset: D.preset, shadowQ: D.shadowQ, detail: D.detail, texRes: D.texRes, aniso: D.aniso, fpsCap: D.fpsCap, menuFps: D.menuFps, fov: D.fov, bright: D.bright, gamma: D.gamma, bloom: D.bloom, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: {} });
-  for (const a of Object.keys(KEYS0) as Action[]) KEYS[a][0] = KEYS0[a];
+  Object.assign(save, { scaler: D.scaler, scale: D.scale, fsr: D.fsr, aa: D.aa, sharpen: D.sharpen, preset: D.preset, shadowQ: D.shadowQ, detail: D.detail, texRes: D.texRes, aniso: D.aniso, fpsCap: D.fpsCap, menuFps: D.menuFps, fov: D.fov, bright: D.bright, gamma: D.gamma, bloom: D.bloom, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: D.keys, race: D.race, tlay: D.tlay });
   commit();
 }
 
@@ -178,7 +185,7 @@ export const current = () => stack.at(-1) ?? null;
 
 let shownAt = 0;
 function show() {
-  binding = null; // una reasignación a medias no sobrevive al cambio de pantalla
+  binding = null; dup = null; // una reasignación a medias no sobrevive al cambio de pantalla
   shownAt = performance.now();
   const s = current();
   $("fe").classList.toggle("hidden", !s);
@@ -239,7 +246,7 @@ function move(dx: number, dy: number) {
   if (dx && cur instanceof HTMLSelectElement) { let i = cur.selectedIndex, n = cur.length; do i = (i + dx + cur.length) % cur.length; while (cur.options[i].disabled && n-- > 0); cur.selectedIndex = i; cur.dispatchEvent(new Event("change", { bubbles: true })); return SFX.blip(); }
   // Posición de layout (sin transformaciones: el encendido de tubo aplasta la pantalla al entrar). En Configuración cuenta la fila entera.
   const box = (e: HTMLElement) => {
-    const r = (e.closest(".row") ?? e) as HTMLElement;
+    const r = (e.closest(".row:not(.multi)") ?? e) as HTMLElement; // filas con varios botones (teclas, perfiles): cuenta cada botón
     let x = 0, y = 0;
     for (let n: HTMLElement | null = r; n; n = n.offsetParent as HTMLElement | null) { x += n.offsetLeft - n.scrollLeft; y += n.offsetTop - n.scrollTop; }
     const c = r.closest<HTMLElement>(SCROLL); // offsetTop no descuenta el scroll de una lista que no es offsetParent
@@ -275,21 +282,17 @@ const activate = () => { if (performance.now() - shownAt < 400) return; // un tu
   const el = document.activeElement as HTMLElement; if (el?.closest("#fe") && !(el instanceof HTMLInputElement)) el.click(); };
 
 // ---------- Teclado ----------
-let binding: Action | null = null;
 addEventListener("pointerdown", () => initAudio());
 addEventListener("keydown", (e) => {
   initAudio();
-  if (binding) { // reasignar tecla
-    e.preventDefault();
-    if (e.code !== "Escape") { save.keys[binding] = e.code; commit(); }
-    const b = binding;
-    binding = null;
-    renderConfig();
-    return (document.querySelector(`[data-bind="${b}"]`) as HTMLElement).focus();
-  }
-  if (e.code === "KeyM") { save.mute = !save.mute; return commit(); }
+  if (bindKey(e)) return; // reasignando una tecla o un botón
+  if (document.body.classList.contains("tedit")) { if (e.code === "Escape" || e.code === "Enter") { e.preventDefault(); tedit(false); } return; }
+  const txt = e.target instanceof HTMLInputElement && e.target.type === "text"; // nombre de perfil: se escribe; solo flechas arriba/abajo y Esc salen
+  if (txt && !/^(ArrowUp|ArrowDown|Escape|Enter)$/.test(e.code)) return;
+  if (txt && e.code === "Enter") { e.preventDefault(); return move(0, 1); }
+  if (keyHit("mute", e.code)) { save.mute = !save.mute; return commit(); }
   const s = current();
-  if (!s) { if (e.code === "Escape" || e.code === "KeyP") api.pause(); return; }
+  if (!s) { if (keyHit("pause", e.code)) api.pause(); return; }
   if (s === "title") { if (!e.repeat && !/^(Shift|Control|Alt|Meta)/.test(e.code)) { e.preventDefault(); SFX.accept(); go("main"); } return; }
   if (s === "garage" && editing && (e.ctrlKey || e.metaKey) && e.code === "KeyZ") { e.preventDefault(); return undo(); }
   if (s === "garage" && document.activeElement?.id === "dgrid" && /^Digit[0-8]$/.test(e.code)) { e.preventDefault(); return setCol(+e.code[5]); }
@@ -297,7 +300,7 @@ addEventListener("keydown", (e) => {
   const dir: Record<string, [number, number]> = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] };
   if (dir[e.code]) { e.preventDefault(); move(...dir[e.code]); }
   else if (e.code === "Enter" || e.code === "Space") { e.preventDefault(); if (!e.repeat) activate(); }
-  else if (e.code === "Escape" || e.code === "Backspace" || (e.code === "KeyP" && s === "pause")) { e.preventDefault(); back(); }
+  else if (e.code === "Escape" || e.code === "Backspace" || (keyHit("pause", e.code) && s === "pause")) { e.preventDefault(); back(); }
 });
 
 // ---------- Gamepad (llamar cada frame mientras haya menú) ----------
@@ -305,7 +308,10 @@ let padRep = 0, padDir = "";
 export function menuPad(dt: number) {
   const s = current();
   if (!s) return;
-  const btn = [0, 1, 9, 12, 13, 14, 15].map((i) => padPressed(i)); // A, B, Start, dpad
+  if (s === "config") padTest();
+  if (bindPad()) return; // esperando un botón: el resto del menú no escucha
+  if (document.body.classList.contains("tedit")) { if (padPressed(pb("back")) || padPressed(pb("ok"))) tedit(false); return; }
+  const btn = [pb("ok"), pb("back"), pb("pause"), 12, 13, 14, 15].map((i) => padPressed(i)); // aceptar, volver, pausa, cruceta
   if (s === "title") { if (btn.some(Boolean)) { initAudio(); SFX.accept(); go("main"); } return; }
   if (btn[0]) activate();
   if (btn[1]) back();
@@ -459,14 +465,14 @@ function renderGarage() {
 let hist: string[] = [], strokeSnap = false; // historial para deshacer: borradores previos, uno por trazo
 let editing = false, eslot = Math.max(0, save.decalSel), draft = save.decals[eslot] || DECAL_BLANK, dcol = 4, dcx = 0, dcy = 0, stroke = false, erasing = false;
 const dirty = () => draft !== (save.decals[eslot] || DECAL_BLANK);
-const DHINT = { keys: "Clic o arrastre pinta, clic derecho borra · Flechas mueven el cursor, Enter pinta · 1 a 8 cambian el color, 0 borra · Ctrl+Z o Cmd+Z deshace", pad: "Stick o cruceta mueven el cursor · A pinta · LB y RB cambian el color · X deshace", touch: "Arrastra el dedo sobre la grilla para pintar" };
+const DHINT = { keys: () => "Clic o arrastre pinta, clic derecho borra · Flechas mueven el cursor, Enter pinta · 1 a 8 cambian el color, 0 borra · Ctrl+Z o Cmd+Z deshace", pad: () => `Stick o cruceta mueven el cursor · ${btnChip(pb("ok"))} pinta · ${btnChip(4)} y ${btnChip(5)} cambian el color · ${btnChip(2)} deshace`, touch: () => "Arrastra el dedo sobre la grilla para pintar" };
 function decalHtml() {
   const slots = [0, 1, 2].map((i) => `<button class="opt ${save.decalSel === i ? "on" : ""} ${eslot === i ? "edit" : ""} ${save.decals[i] ? "" : "locked"}" data-dsel="${i}">Diseño ${i + 1}</button>`).join("");
   return `<div class="slot"><span>Calco de capó</span><button class="opt ${save.decalSel < 0 ? "on" : ""}" data-dsel="-1">Sin calco</button>${slots}${editing ? "" : `<button class="opt" data-dact="edit">Editar</button>`}</div>`
     + (!editing ? "" : `<div class="dedit"><canvas id="dgrid" tabindex="0" width="256" height="256" aria-label="Grilla del calco"></canvas><div class="dside">`
     + `<div class="dpal">${DECAL_PAL.map((c, k) => `<button class="sw ${dcol === k + 1 ? "on" : ""}" data-dcol="${k + 1}" style="background:${c}" aria-label="color ${k + 1}"></button>`).join("")}</div>`
     + `<div class="dbtn"><button class="opt ${dcol === 0 ? "on" : ""}" data-dcol="0">Borrar</button><button class="opt" data-dact="undo">Deshacer</button><button class="opt" data-dact="clear">Vaciar</button><button class="opt" data-dact="save">Guardar</button><button class="opt" data-dact="done">Listo</button></div>`
-    + `<div id="dstat"></div></div></div><div class="note">${DHINT[ctl]}</div>`);
+    + `<div id="dstat"></div></div></div><div class="note">${DHINT[ctl]()}</div>`);
 }
 function drawGrid() {
   const cv = document.getElementById("dgrid") as HTMLCanvasElement | null;
@@ -498,7 +504,7 @@ const focusSel = (q: string) => { const e = document.querySelector<HTMLButtonEle
 
 // Configuración: filas generadas desde datos. data-set = número (perilla o lista), data-tog = sí/no.
 // Cada pestaña agrupa por tema con títulos de sección ("sect"); DESC explica en una línea lo que no se entiende solo.
-type Row = [label: string, kind: "range", path: string, min: number, max: number, step: number, unit?: "%" | "x" | "°"] | [label: string, kind: "tog", path: string] | [label: string, kind: "sel", path: string, opts: [string, string][]] | [label: string, kind: "bind", action: Action] | [label: string, kind: "note"] | [label: string, kind: "btn", act: string] | [label: string, kind: "sect"];
+type Row = [label: string, kind: "range", path: string, min: number, max: number, step: number, unit?: "%" | "x" | "°"] | [label: string, kind: "tog", path: string] | [label: string, kind: "sel", path: string, opts: [string, string][]] | [label: string, kind: "bind", path: string] | [label: string, kind: "padtest"] | [label: string, kind: "prof", i: number] | [label: string, kind: "note"] | [label: string, kind: "btn", act: string] | [label: string, kind: "sect"];
 const DESC: Record<string, string> = {
   scale: "Porcentaje de la resolución de la pantalla con que se dibuja el juego (100% es la nativa). Menos escala sube los fps a costa de nitidez.",
   scaler: "Simple dibuja a un porcentaje fijo de la pantalla. FSR 1 de AMD dibuja más chico y reconstruye los bordes al subir a la nativa. En pantalla dividida de carrera FSR se apaga y vale la escala simple.",
@@ -569,16 +575,39 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
     ["Silencio (M)", "tog", "mute"],
   ] },
   ctl: { name: "Controles", rows: [
+    ["Perfiles", "sect"],
+    ["Tres perfiles con nombre guardan teclado, joystick, carrera y táctil juntos. Guardar copia lo actual; Usar lo carga.", "note"],
+    ["Perfil 1", "prof", 0], ["Perfil 2", "prof", 1], ["Perfil 3", "prof", 2],
     ["Teclado", "sect"],
-    ["Acelerar", "bind", "up"], ["Frenar / atrás", "bind", "down"], ["Girar izquierda", "bind", "left"], ["Girar derecha", "bind", "right"],
-    ["Turbo", "bind", "boost"], ["Derrape", "bind", "drift"], ["Habilidad", "bind", "ability"],
-    ["Las flechas también manejan. Esc pausa · M sonido · rueda o - / = zoom.", "note"],
-    ["Carrera: J1 con W A S D, Espacio derrapa, E usa el objeto. J2 con flechas, Shift derecha y Enter.", "note"],
+    ["Dos teclas por acción: principal y alternativa. Los menús siguen con flechas, Enter y Esc; la rueda del mouse también hace zoom.", "note"],
+    ["Acelerar", "bind", "k.up"], ["Frenar / atrás", "bind", "k.down"], ["Girar izquierda", "bind", "k.left"], ["Girar derecha", "bind", "k.right"],
+    ["Turbo", "bind", "k.boost"], ["Derrape", "bind", "k.drift"], ["Habilidad", "bind", "k.ability"], ["Cambiar cámara", "bind", "k.cam"], ["Re-sortear cartas", "bind", "k.reroll"],
+    ["Pausa", "bind", "k.pause"], ["Sonido", "bind", "k.mute"], ["Acercar", "bind", "k.zoomIn"], ["Alejar", "bind", "k.zoomOut"],
+    ["Restablecer teclado", "btn", "reset:keys"],
     ["Joystick", "sect"],
+    ["Modo de manejo", "sel", "pad.mode", [["trig", "Gatillos acelerar y frenar"], ["stick", "Stick hacia donde ir"]]],
+    ["Stick que maneja", "sel", "pad.stick", [["left", "Izquierdo"], ["right", "Derecho"]]],
+    ["Invertir eje horizontal", "tog", "pad.invX"], ["Invertir eje vertical", "tog", "pad.invY"],
     ["Zona muerta del stick", "range", "pad.dead", 0.05, 0.4, 0.01, "%"], ["Sensibilidad del stick", "range", "pad.sens", 0.5, 2, 0.05, "x"], ["Vibración", "tog", "rumble"],
-    ["Stick hacia donde se quiere ir · A turbo · B derrape · X habilidad · gatillos acelerar y frenar. En carrera: A/gatillo derecho acelera, B/gatillo izquierdo frena, RB o X derrapa, Y o LB usa el objeto.", "note"],
+    ["Acelerar", "bind", "p.accel"], ["Frenar", "bind", "p.brake"], ["Turbo", "bind", "p.boost"], ["Derrape", "bind", "p.drift"], ["Habilidad", "bind", "p.ability"],
+    ["Re-sortear cartas", "bind", "p.reroll"], ["Cambiar cámara", "bind", "p.cam"], ["Pausa", "bind", "p.pause"], ["Menú: aceptar", "bind", "p.ok"], ["Menú: volver", "bind", "p.back"],
+    ["Restablecer joystick", "btn", "reset:pad"],
+    ["Probar control", "sect"],
+    ["", "padtest"],
+    ["Calibrar zona muerta con los sticks sueltos", "btn", "calib"],
+    ["Carrera y batalla", "sect"],
+    ["Control J1", "sel", "rc.p1", Object.entries(CTL_NAME)], ["Control J2", "sel", "rc.p2", Object.entries(CTL_NAME)],
+    ["Teclado 1", "note"],
+    ["Acelerar", "bind", "r1.up"], ["Frenar / atrás", "bind", "r1.down"], ["Girar izquierda", "bind", "r1.left"], ["Girar derecha", "bind", "r1.right"], ["Derrape", "bind", "r1.drift"], ["Usar objeto", "bind", "r1.item"],
+    ["Teclado 2", "note"],
+    ["Acelerar", "bind", "r2.up"], ["Frenar / atrás", "bind", "r2.down"], ["Girar izquierda", "bind", "r2.left"], ["Girar derecha", "bind", "r2.right"], ["Derrape", "bind", "r2.drift"], ["Usar objeto", "bind", "r2.item"],
+    ["Joystick (gira con el stick elegido o la cruceta)", "note"],
+    ["Acelerar", "bind", "rp.accel"], ["Frenar / atrás", "bind", "rp.brake"], ["Derrape", "bind", "rp.drift"], ["Usar objeto", "bind", "rp.item"],
+    ["Restablecer carrera", "btn", "reset:race"],
     ["Táctil", "sect"],
     ["Tamaño de controles táctiles", "range", "touch", 0.7, 1.4, 0.05, "x"],
+    ["Editar controles táctiles", "btn", "tedit"],
+    ["Restablecer táctil", "btn", "reset:touch"],
   ] },
   a11y: { name: "Accesibilidad", rows: [
     ["Lectura", "sect"],
@@ -595,10 +624,12 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
   ] },
 };
 let tab = "gfx";
-let resetArmed = false;
-const ref = (p: string) => { const k = p.split("."); let o = save as unknown as Record<string, unknown>; while (k.length > 1) o = o[k.shift()!] as Record<string, unknown>; return [o, k[0]] as const; };
+let armed: string | null = null; // botón de dos pasos esperando el segundo clic (restablecer, sobrescribir perfil)
+const ref = (p: string) => { const k = p.split("."); let o = (k[0] === "rc" ? (k.shift(), raceCfg) : save) as unknown as Record<string, unknown>; while (k.length > 1) o = o[k.shift()!] as Record<string, unknown>; return [o, k[0]] as const; };
 const val = (p: string) => { const [o, k] = ref(p); return o[k]; };
-export const keyName = (c?: string) => (c ?? "").replace(/^Key|^Digit/, "").replace("Left", " izq").replace("Right", " der").replace("Space", "Espacio").replace(/^Arrow/, "Flecha ").toUpperCase();
+const KN: Record<string, string> = { ArrowUp: "Flecha arriba", ArrowDown: "Flecha abajo", ArrowLeft: "Flecha izq", ArrowRight: "Flecha der", Space: "Espacio", Escape: "Esc", Equal: "=", Minus: "-", Period: ".", Comma: ",", Enter: "Enter",
+  NumpadAdd: "Num +", NumpadSubtract: "Num -" };
+export const keyName = (c?: string) => (KN[c ?? ""] ?? (c ?? "").replace(/^Key|^Digit/, "").replace(/^Numpad/, "Num ").replace("Left", " izq").replace("Right", " der")).toUpperCase();
 const show2 = (v: number, u?: string) => (u === "%" ? `${Math.round(v * 100)}%` : u === "°" ? `${Math.round(v)}°` : `${v.toFixed(2)}x`);
 /** Fila que no aplica con el modo de escalado elegido: no se dibuja (tampoco recibe foco con teclado o mando). */
 const hiddenRow = (path: string) => (path === "scale" && save.scaler === "fsr") || (path === "fsr" && save.scaler !== "fsr");
@@ -618,19 +649,129 @@ const choices = (path: string, list: [string, string][]): [string, string, boole
 function renderConfig() {
   $("tabs").innerHTML = Object.entries(TABS).map(([id, t]) => `<button class="tab ${id === tab ? "on" : ""}" data-tab="${id}">${t.name}</button>`).join("");
   // En táctil, Controles deja solo lo táctil (sin teclas ni gamepad)
+  // (y Perfiles); el editor táctil solo existe con pantalla táctil y J2 nunca en teléfono
   const touchOnly = tab === "ctl" && ctl === "touch";
-  const rows = TABS[tab].rows.filter((r) => (touchOnly ? (r[1] === "sect" ? r[0] === "Táctil" : r[2] === "touch") : !(typeof r[2] === "string" && hiddenRow(r[2]))));
+  let sec = "";
+  const rows = TABS[tab].rows.filter((r) => {
+    if (r[1] === "sect") sec = r[0];
+    if (touchOnly && sec !== "Táctil" && sec !== "Perfiles") return false;
+    if ((r[2] === "tedit" && !isTouch) || (r[2] === "rc.p2" && isTouch)) return false;
+    return !(typeof r[2] === "string" && hiddenRow(r[2]));
+  });
+  const fa = document.activeElement as HTMLElement | null; // el foco sobrevive al redibujo (cambio de control, captura)
+  const fk = fa?.closest("#opts") ? ["data-bind", "data-act", "data-tog", "data-set", "data-pname"].map((k) => fa.getAttribute(k) !== null && `[${k}="${fa.getAttribute(k)}"]`).find(Boolean) : null;
   const d = (path: string) => (DESC[path] ? `<small>${DESC[path]}</small>` : "") + (warn(path) ? `<small class="why">${warn(path)}</small>` : "");
   $("opts").innerHTML = rows.map((r) => {
     if (r[1] === "sect") return `<div class="sect">${r[0]}</div>`;
     if (r[1] === "note") return `<div class="note">${r[0]}</div>`;
-    if (r[1] === "btn") return `<button class="row" data-act="${r[2]}"><span class="lb">${r[2] === "resetcfg" && resetArmed ? "¿Seguro? Pulsa otra vez para restablecer" : r[0]}${d(r[2])}</span><b>&gt;</b></button>`;
-    if (r[1] === "bind") return `<button class="row" data-bind="${r[2]}"><span class="lb">${r[0]}</span><b>${binding === r[2] ? "PRESIONA UNA TECLA" : keyName(KEYS[r[2]][0])}</b></button>`;
+    if (r[1] === "btn") return `<button class="row" data-act="${r[2]}"><span class="lb">${armed === r[2] ? "¿Seguro? Pulsa otra vez para restablecer" : r[0]}${d(r[2])}</span><b>&gt;</b></button>`;
+    if (r[1] === "bind") return bindRow(r[0], r[2]);
+    if (r[1] === "padtest") return padTestHtml();
+    if (r[1] === "prof") { const p = save.profiles[r[2]], a = `psave:${r[2]}`;
+      return `<div class="row multi prof"><input type="text" data-pname="${r[2]}" maxlength="20" value="${esc(p?.name ?? r[0])}" aria-label="Nombre del perfil ${r[2] + 1}"><span class="lb"><small>${p ? "Guardado" : "Vacío"}</small></span>`
+        + `<button data-act="${a}">${armed === a ? "¿Sobrescribir?" : "Guardar"}</button><button data-act="pload:${r[2]}" ${p ? "" : "disabled"}>Usar</button></div>`; }
     if (r[1] === "tog") return `<button class="row" data-tog="${r[2]}"><span class="lb">${r[0]}${d(r[2])}</span><b>${val(r[2]) ? "SÍ" : "NO"}</b></button>`;
     if (r[1] === "sel") return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><select data-set="${r[2]}">${choices(r[2], r[3]).map(([v, n, no]) => `<option value="${v}" ${String(val(r[2])) === v ? "selected" : ""} ${no ? "disabled" : ""}>${n}</option>`).join("")}</select></label>`;
     const v = val(r[2]) as number;
     return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><input type="range" data-set="${r[2]}" data-u="${r[6]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${v}"><output>${show2(v, r[6])}</output></label>`;
   }).join("");
+  if (fk) document.querySelector<HTMLElement>(`#opts ${fk}`)?.focus({ preventScroll: true });
+}
+
+// ---------- Controles: asignaciones ----------
+// Ruta de una ranura: "<tabla>.<acción>.<n>". Tablas: k teclado, p joystick, r1/r2 teclados de carrera, rp joystick de carrera.
+type Slots = Record<string, (string | number)[]>;
+const TBL: Record<string, () => Slots> = { k: () => save.keys, p: () => save.pad.btn, r1: () => save.race.kb1, r2: () => save.race.kb2, rp: () => save.race.pad };
+const isPad = (path: string) => /^(p|rp)\./.test(path);
+const NAV = ["ok", "back"]; // aceptar/volver son del menú: no chocan con los botones de manejo
+const slotOf = (path: string) => { const [t, a, i] = path.split("."); return [TBL[t]()[a], +i] as const; };
+const LABEL = Object.fromEntries(TABS.ctl.rows.filter((r) => r[1] === "bind").map((r) => [r[2], r[0]]));
+const slotTxt = (path: string, v: string | number) => (isPad(path) ? (v === -1 ? "—" : btnChip(v as number)) : v ? keyName(v as string) : "—");
+const esc = (t: string) => t.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+let binding: string | null = null, bindT = 0; // ranura esperando tecla o botón y cuándo empezó (6 s sin nada cancela)
+let dup: { path: string; other: string; prev: string | number } | null = null; // repetida recién asignada: se ofrece intercambiar
+/** Otra ranura del mismo grupo con el mismo valor (los dos teclados de carrera chocan entre sí). */
+function dupOf(path: string) {
+  const [t, a] = path.split("."), [arr, i] = slotOf(path), v = arr[i];
+  if (v === "" || v === -1) return null;
+  for (const u of t === "r1" || t === "r2" ? ["r1", "r2"] : [t])
+    for (const [b, vs] of Object.entries(TBL[u]())) {
+      if (t === "p" && NAV.includes(a) !== NAV.includes(b)) continue;
+      const j = vs.indexOf(v);
+      if (j >= 0 && `${u}.${b}.${j}` !== path) return `${u}.${b}.${j}`;
+    }
+  return null;
+}
+function setSlot(path: string, v: string | number) {
+  const [arr, i] = slotOf(path), prev = arr[i];
+  arr[i] = v; binding = null;
+  const other = dupOf(path);
+  dup = other ? { path, other, prev } : null;
+  commit(); renderConfig(); focusSel(`[data-bind="${path}"]`);
+}
+const cancelBind = () => { const b = binding; binding = null; renderConfig(); if (b) focusSel(`[data-bind="${b}"]`); };
+function bindRow(label: string, path: string) {
+  const [t, a] = path.split("."), vs = TBL[t]()[a];
+  let h = `<div class="row multi bind"><span class="lb">${label}</span>${vs.map((v, i) => `<button class="slot2" data-bind="${path}.${i}">${binding === `${path}.${i}` ? "…" : slotTxt(path, v)}</button>`).join("")}</div>`;
+  if (binding?.startsWith(path + ".")) h += `<div class="note bindnote">${isPad(path) ? `Presiona un botón del joystick para «${label}» · Esc, un clic o 6 s sin tocar nada cancela`
+    : `Presiona una tecla para «${label}» · ${a === "pause" ? "Esc queda asignada; un clic o 6 s sin tocar nada cancela" : "Esc cancela · Retroceso deja la ranura vacía"}`}</div>`;
+  if (dup?.path.startsWith(path + ".")) { const [arr, i] = slotOf(dup.path);
+    h += `<div class="row multi dup"><span class="lb"><small class="why">${isPad(path) ? btnName(arr[i] as number) : keyName(arr[i] as string)} también está en «${LABEL[dup.other.split(".").slice(0, 2).join(".")]}»${dup.other.startsWith("r") && dup.other[1] !== path[1] ? ` (${dup.other.startsWith("r1") ? "Teclado 1" : "Teclado 2"})` : ""}.</small></span>`
+      + `<button data-act="swap">Intercambiar</button><button data-act="keepdup">Dejar repetida</button></div>`; }
+  return h;
+}
+/** Captura de tecla (keydown de menu.ts); devuelve true si la consumió. */
+function bindKey(e: KeyboardEvent) {
+  if (!binding) return false;
+  e.preventDefault();
+  if (e.repeat) return true; // la tecla que abrió la captura sigue apretada
+  if (isPad(binding)) { if (e.code === "Escape") cancelBind(); return true; }
+  if (e.code === "Escape" && !binding.startsWith("k.pause.")) cancelBind();
+  else setSlot(binding, e.code === "Backspace" || e.code === "Delete" ? "" : e.code);
+  return true;
+}
+/** Captura de botón (menuPad, cada cuadro); devuelve true mientras espera. */
+function bindPad() {
+  if (!binding) return false;
+  if (performance.now() - bindT > 6000) { cancelBind(); return true; }
+  if (isPad(binding)) { const i = padAny(); if (i >= 0) setSlot(binding, i); }
+  return true;
+}
+function ctlAct(act: string) {
+  const [a, x] = act.split(":"), again = armed === act;
+  armed = null;
+  if (a === "swap" && dup) { const [arr, i] = slotOf(dup.other); arr[i] = dup.prev; const p = dup.path; dup = null; commit(); renderConfig(); return focusSel(`[data-bind="${p}"]`); }
+  if (a === "keepdup") { const p = dup?.path; dup = null; renderConfig(); return focusSel(`[data-bind="${p}"]`); }
+  const twoStep = a === "reset" || (a === "psave" && save.profiles[+x]);
+  if (twoStep && !again) { // primer clic: pide confirmar (se desarma solo a los 4 s)
+    armed = act; renderConfig(); focusSel(`[data-act="${act}"]`);
+    return void setTimeout(() => { if (armed === act) { armed = null; if (current() === "config") { renderConfig(); focusSel(`[data-act="${act}"]`); } } }, 4000);
+  }
+  const D = structuredClone(DEFAULT);
+  if (a === "reset") Object.assign(save, x === "keys" ? { keys: D.keys } : x === "pad" ? { pad: D.pad, rumble: D.rumble } : x === "race" ? { race: D.race } : { tlay: D.tlay, touch: D.touch });
+  if (a === "reset" && x === "race") Object.assign(raceCfg, { p1: "kbd", p2: "pad0" });
+  if (a === "psave") { const name = (document.querySelector<HTMLInputElement>(`[data-pname="${x}"]`)?.value.trim() || `Perfil ${+x + 1}`).slice(0, 20);
+    save.profiles[+x] = structuredClone({ name, keys: save.keys, pad: save.pad, race: save.race, tlay: save.tlay, touch: save.touch }); }
+  if (a === "pload" && save.profiles[+x]) { const { name: _, ...p } = structuredClone(save.profiles[+x]!); Object.assign(save, p); }
+  if (a === "calib") { const gp = activePad(); if (gp) save.pad.dead = Math.min(0.4, Math.max(0.05, Math.ceil((Math.max(Math.hypot(gp.axes[0] ?? 0, gp.axes[1] ?? 0), Math.hypot(gp.axes[2] ?? 0, gp.axes[3] ?? 0)) + 0.04) * 100) / 100)); }
+  dup = null; commit(); renderConfig(); focusSel(`[data-act="${act}"]`);
+}
+// Probar control: sticks con su zona muerta, gatillos y botones en vivo (padTest corre cada cuadro desde menuPad)
+const padTestHtml = () => `<div class="ptest" id="ptest"><div class="pt-id"></div><div class="pt-row">${[0, 1].map((k) => `<div class="pt-st"><div class="pt-ring"><i class="dz"></i><i class="dot"></i></div><span>Stick ${k ? "derecho" : "izquierdo"}</span><em></em></div>`).join("")}`
+  + `<div class="pt-tr">${[6, 7].map((i) => `<div>${btnName(i)}<b><i></i></b></div>`).join("")}</div></div><div class="pt-bt">${[...Array(17).keys()].map((i) => `<kbd class="pb ${famOf()}" data-b="${i}">${btnName(i)}</kbd>`).join("")}</div></div>`;
+function padTest() {
+  const el = document.getElementById("ptest");
+  if (!el?.offsetParent) return;
+  const gp = activePad(), ax = (i: number) => gp?.axes[i] ?? 0;
+  el.querySelector(".pt-id")!.textContent = gp ? `${FAM_NAME[famOf()]} · ${gp.id.replace(/\(.*\)/, "").trim().slice(0, 40) || "joystick"}` : "Sin joystick: presionar un botón del control para que el navegador lo detecte";
+  el.querySelectorAll<HTMLElement>(".pt-st").forEach((st, k) => {
+    const x = ax(k * 2), y = ax(k * 2 + 1), m = Math.hypot(x, y);
+    st.style.cssText = `--dz:${PAD.dead};--x:${x};--y:${y}`;
+    st.classList.toggle("in", m < PAD.dead); st.classList.toggle("drive", (PAD.stick === "right") === !!k);
+    st.querySelector("em")!.textContent = m.toFixed(2);
+  });
+  el.querySelectorAll<HTMLElement>(".pt-tr i").forEach((b, k) => b.style.width = `${(gp?.buttons[6 + k]?.value ?? 0) * 100}%`);
+  el.querySelectorAll<HTMLElement>(".pt-bt kbd").forEach((b, i) => b.classList.toggle("on", !!gp?.buttons[i]?.pressed));
 }
 
 // Trasfondo de cada bicho (el de los pilotos vive en pilots.ts)
@@ -734,7 +875,7 @@ function beastPad(dt: number) {
   const z = (gp.buttons[6]?.value ?? 0) - (gp.buttons[7]?.value ?? 0);
   if (Math.abs(z) > 0.05) zoomBeast(1 + z * dt * 1.5);
 }
-const BHINT = { keys: "Arrastrar gira · Rueda acerca · Q y E (o las flechas en el borde) cambian de bicho · Esc vuelve", pad: "Stick derecho gira · Gatillos acercan · LB y RB cambian de bicho · B vuelve", touch: "Arrastrar gira · Pellizcar acerca · Deslizar la ficha cambia de bicho" };
+const BHINT = { keys: () => "Arrastrar gira · Rueda acerca · Q y E (o las flechas en el borde) cambian de bicho · Esc vuelve", pad: () => `Stick derecho gira · ${btnChip(6)} y ${btnChip(7)} acercan · ${btnChip(4)} y ${btnChip(5)} cambian de bicho · ${btnChip(pb("back"))} vuelve`, touch: () => "Arrastrar gira · Pellizcar acerca · Deslizar la ficha cambia de bicho" };
 function renderBeast() {
   const k = BV.kind;
   if (!k) return;
@@ -762,7 +903,7 @@ function renderBeast() {
     + `<div class="bblock" tabindex="0"><div class="sect">Trasfondo</div><p class="lore">${LORE[k]}</p></div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Registro propio</div>${met ? kv("Bajas", n) + kv("Primera vez", first) + kv("Daño recibido", Math.round(r?.hurt ?? 0)) + kv("Zonas", r?.zones.map((z) => ZONES[z].short).join(", ") || "Sin registros todavía") : `<p>Sin registros todavía.</p>`}</div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Debilidades</div>${weak.length ? `<div class="st bst">${weak.map(([id, v]) => row(wname(id), v, weak[0][1], String(Math.round(v)))).join("")}</div><p class="bnote">Daño infligido por arma, según el historial propio.</p>` : `<p>Sin registros todavía.</p>`}</div>`
-    + `</div><div class="bfoot"><div class="hint">${BHINT[ctl]}</div><button data-act="back">Volver</button></div>`;
+    + `</div><div class="bfoot"><div class="hint">${BHINT[ctl]()}</div><button data-act="back">Volver</button></div>`;
   if (wasSel) focusSel(wasSel);
 }
 
@@ -805,23 +946,32 @@ addEventListener("appinstalled", () => { installEv = null; $("install").classLis
 if (!standalone && /iP(hone|ad|od)/.test(navigator.userAgent)) $("iosHint").classList.remove("hidden");
 
 // ---------- Textos según el último control usado ----------
-const CTL_TXT = { keys: ["PRESIONA CUALQUIER TECLA", " · Esc sigue · M sonido"], pad: ["PRESIONA A", " · Start sigue"], touch: ["TOCA LA PANTALLA", " · el botón de pausa sigue"] };
+const CTL_TXT = { keys: () => ["PRESIONA CUALQUIER TECLA", ` · ${keyName(KEYS.pause[0])} sigue · ${keyName(KEYS.mute[0])} sonido`], pad: () => [`PRESIONA ${btnName(pb("ok"))}`, ` · ${btnName(pb("pause"))} sigue`], touch: () => ["TOCA LA PANTALLA", " · el botón de pausa sigue"] };
 let ctlShown = ctl;
 function ctlTexts() {
-  const [press, hint] = CTL_TXT[ctl];
+  const [press, hint] = CTL_TXT[ctl]();
   document.querySelector("#scr-title .press")!.textContent = press;
   $("pauseHint").textContent = hint;
-  if (current() === "config" && tab === "ctl" && (ctl === "touch") !== (ctlShown === "touch")) renderConfig();
+  if (current() === "config" && tab === "ctl" && !binding) renderConfig(); // filas táctiles y nombres de botones según el control
   if (current() === "beast" && ctl !== ctlShown) renderBeast(); // la guía de controles de la ficha
   ctlShown = ctl;
 }
 addEventListener("ctl", ctlTexts);
+
+// Editor táctil: los controles en pantalla se arrastran (input.ts editTouch); Listo, Esc o el botón de volver lo cierran
+function tedit(on: boolean) {
+  editTouch(on, save.tlay[orient()], save.touch, (l) => { save.tlay[orient()] = l; persist(); }); // edita la orientación actual (la otra se edita girando el teléfono)
+  $("tedit").classList.toggle("hidden", !on);
+  if (!on) { applySettings(); focusSel('[data-act="tedit"]'); }
+}
 
 // ---------- Arranque ----------
 export function initMenu(a: Api) {
   api = a;
   applySettings();
   ctlTexts();
+  $("teReset").addEventListener("click", () => { save.tlay = { v: {}, h: {} }; persist(); applySettings(); editTouch(true, {}, save.touch, (l) => { save.tlay[orient()] = l; persist(); }); }); // restablece las dos orientaciones
+  $("teDone").addEventListener("click", () => tedit(false));
   $("tPause").addEventListener("click", () => (current() === "pause" ? api.resume() : api.pause())); // botón táctil: igual que Esc/Start
   const fe = $("fe");
   fe.addEventListener("focusin", () => SFX.blip());
@@ -831,6 +981,7 @@ export function initMenu(a: Api) {
     const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-act],[data-k],[data-paint],[data-rim],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
     if (t.id === "dgrid") { if (!e.detail) setCell(dcx, dcy, dcol); return; } // Enter / A sobre la grilla (el mouse y el dedo pintan en pointerdown)
+    if (binding && d?.bind !== binding) { cancelBind(); if (!d?.bind) return; } // un clic fuera cancela la captura
     if (!d) return;
     SFX.accept();
     if (d.go) go(d.go as Scr);
@@ -851,9 +1002,11 @@ export function initMenu(a: Api) {
     else if (d.act === "back") back();
     else if (d.act === "fullscreen") { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.(); }
     else if (d.act === "resetcfg") { // dos pasos: el primer clic pide confirmar (se desarma solo a los 4 s)
-      if (!resetArmed) { resetArmed = true; renderConfig(); focusSel('[data-act="resetcfg"]'); setTimeout(() => { if (resetArmed) { resetArmed = false; if (current() === "config") renderConfig(); } }, 4000); }
-      else { resetArmed = false; resetCfg(); renderConfig(); focusSel('[data-act="resetcfg"]'); }
+      if (armed !== "resetcfg") { armed = "resetcfg"; renderConfig(); focusSel('[data-act="resetcfg"]'); setTimeout(() => { if (armed === "resetcfg") { armed = null; if (current() === "config") renderConfig(); } }, 4000); }
+      else { armed = null; resetCfg(); renderConfig(); focusSel('[data-act="resetcfg"]'); }
     }
+    else if (d.act === "tedit") tedit(true);
+    else if (d.act && /^(reset:|psave:|pload:|swap|keepdup|calib)/.test(d.act)) ctlAct(d.act);
     else if (d.act === "export") exportSave();
     else if (d.act === "import") importSave();
     else if (d.act === "resume") api.resume();
@@ -861,7 +1014,7 @@ export function initMenu(a: Api) {
     else if (d.act === "install") void installEv?.prompt().finally(() => { installEv = null; $("install").classList.add("hidden"); }); // el evento sirve una sola vez
     else if (d.tab) { tab = d.tab; renderConfig(); $("opts").scrollTop = 0; (document.querySelector(`[data-tab="${tab}"]`) as HTMLElement).focus(); }
     else if (d.tog) { const [o, k] = ref(d.tog); o[k] = !o[k]; commit(); renderConfig(); (document.querySelector(`[data-tog="${d.tog}"]`) as HTMLElement).focus(); }
-    else if (d.bind) { binding = d.bind as Action; renderConfig(); (document.querySelector(`[data-bind="${d.bind}"]`) as HTMLElement).focus(); }
+    else if (d.bind) { binding = binding === d.bind ? null : d.bind; bindT = performance.now(); dup = null; renderConfig(); focusSel(`[data-bind="${d.bind}"]`); }
     else if (d.dsel !== undefined) { // elegir diseño: se edita y, si ya tiene dibujo, se aplica al capó
       const n = +d.dsel;
       if (n < 0) save.decalSel = -1;
@@ -961,6 +1114,8 @@ export function initMenu(a: Api) {
     if (lb) { lb.querySelector(".why")?.remove(); if (warn("aa")) lb.insertAdjacentHTML("beforeend", `<small class="why">${warn("aa")}</small>`); }
   });
   fe.addEventListener("change", (e) => {
+    const n = (e.target as HTMLElement).dataset.pname; // renombrar un perfil ya guardado
+    if (n !== undefined && save.profiles[+n]) { save.profiles[+n]!.name = (e.target as HTMLInputElement).value.trim().slice(0, 20) || `Perfil ${+n + 1}`; persist(); return; }
     const t = e.target as HTMLSelectElement;
     if (t.tagName !== "SELECT" || !t.dataset.set) return;
     const [o, k] = ref(t.dataset.set);

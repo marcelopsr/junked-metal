@@ -6,7 +6,7 @@ import "./race.css";
 import { Car, CARS, drive } from "./car";
 import { burst, FX, mark } from "./fx";
 import { icon } from "./icons";
-import { padsConnected, pollPlayer, type PlayerCtl } from "./input";
+import { keyHit, padsConnected, pollPlayer, type PlayerCtl } from "./input";
 import { box, cyl, merge, pilotParts, sph, type CarKind, type CarOpts } from "./models";
 import { applyClimate, canvasTex, M, pbr, setSplit, setLamp, shadows } from "./render";
 import { rng, seedRng } from "./rng";
@@ -15,7 +15,8 @@ import { buildGrass, buildLayout, clearLayout, setZone, zoneClimate } from "./wo
 import { CLIMATES } from "./run";
 
 // ---------- Configuración (se guarda aparte del guardado del juego) ----------
-export type RaceCfg = { players: 1 | 2; p1: "kbd" | "pad0" | "pad1"; p2: "pad0" | "pad1" | "kbd2"; cc: 50 | 100 | 150; laps: 3 | 5; cup: boolean; car2: CarKind; track: 0 | 1 | 2 };
+export type RaceCtl = "kbd" | "kbd2" | "pad0" | "pad1";
+export type RaceCfg = { players: 1 | 2; p1: RaceCtl; p2: RaceCtl; cc: 50 | 100 | 150; laps: 3 | 5; cup: boolean; car2: CarKind; track: 0 | 1 | 2 };
 const CFG_KEY = "rcfight-race";
 export const raceCfg: RaceCfg = { players: 1, p1: "kbd", p2: "pad0", cc: 100, laps: 3, cup: true, car2: "formula", track: 0 };
 try { Object.assign(raceCfg, JSON.parse(localStorage.getItem(CFG_KEY) ?? "{}")); } catch { /* sin storage */ }
@@ -309,8 +310,9 @@ function makeRacers() {
   racers = []; humans = [];
   const kinds = Object.keys(CARS) as CarKind[];
   const nH = raceCfg.players;
-  const ctl1: PlayerCtl = raceCfg.p1 === "kbd" ? (nH === 2 && raceCfg.p2 === "kbd2" ? "kbd1" : nH === 2 ? "kbd1" : "kbd1+arrows") : { pad: raceCfg.p1 === "pad0" ? 0 : 1 };
-  const ctl2: PlayerCtl = raceCfg.p2 === "kbd2" ? "kbd2" : { pad: raceCfg.p2 === "pad0" ? 0 : 1 };
+  // Un solo jugador con Teclado 1: también maneja con Teclado 2 (las flechas)
+  const pc = (c: RaceCtl): PlayerCtl => (c.startsWith("pad") ? { pad: +c[3] } : c === "kbd" && nH === 1 ? "kbd+2" : (c as "kbd" | "kbd2"));
+  const ctl1 = pc(raceCfg.p1), ctl2 = pc(raceCfg.p2);
   const picks: CarKind[] = [];
   for (let i = 0; i < 10; i++) picks.push(i === 0 ? humanCar(0) : i === 1 && nH === 2 ? raceCfg.car2 : kinds[(i * 3 + raceNo) % kinds.length]);
   // Parrilla: los humanos salen atrás (como arrancando en el fondo) y la IA se reparte
@@ -375,7 +377,7 @@ function ensureDom() {
     if (k === "next") nextRace(); else if (k === "again") { cup = {}; raceNo = 1; if (mode === "battle") startBattle(); else startRace(true); } else if (k === "exit") exitRace();
     else if (k === "resume") setPause(false); else if (k === "restart") { setPause(false); if (mode === "battle") startBattle(); else startRace(true); }
   });
-  addEventListener("keydown", (e) => { if (active && e.code === "Escape" && !resultsOn) setPause(!paused); });
+  addEventListener("keydown", (e) => { if (active && keyHit("pause", e.code) && !resultsOn) setPause(!paused); });
 }
 
 export function startRace(keepCup = false) {

@@ -10,12 +10,42 @@ export type SaveDeps = {
   presets: Record<string, object>;
 };
 
+// ---------- Controles ----------
+const isCode = (v: unknown): v is string => typeof v === "string" && v.length < 32 && /^[A-Za-z0-9]*$/.test(v);
+const isBtn = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= -1 && (v as number) <= 16;
+/** Tabla de asignaciones: cada acción conocida con tantas ranuras como el defecto; lo inválido vuelve al defecto.
+ *  Un valor suelto (formato viejo: solo la tecla principal) se toma como principal y conserva la alternativa de fábrica (vacía si quedaría repetida). */
+export function binds<T>(v: unknown, d: Record<string, T[]>, ok: (x: unknown) => x is T): Record<string, T[]> {
+  const o = (typeof v === "object" && v ? v : {}) as Record<string, unknown>;
+  return Object.fromEntries(Object.entries(d).map(([a, def]) => {
+    const x = o[a];
+    if (ok(x)) return [a, [x, ...def.slice(1).map((y) => (y === x ? ("" as T) : y))]];
+    return [a, Array.isArray(x) && x.length === def.length && x.every(ok) ? [...x] : [...def]];
+  }));
+}
+const TCTL = ["stick", "boost", "drift", "abil", "pause"];
+/** Lo que define los controles (lo de la partida y lo de cada perfil), validado contra los defectos de `D`. */
+export function ctlPart(o: Record<string, any>, D: Save) {
+  const num = (v: unknown, lo: number, hi: number, d: number) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);
+  const lay = (l: any) => Object.fromEntries(TCTL.filter((k) => l?.[k] && typeof l[k] === "object").map((k) => [k, { x: num(l[k].x, 0, 1, 0.5), y: num(l[k].y, 0, 1, 0.5), s: num(l[k].s, 0.6, 2, 1) }]));
+  const p = typeof o.pad === "object" && o.pad ? o.pad : {}, r = typeof o.race === "object" && o.race ? o.race : {}, t = typeof o.tlay === "object" && o.tlay ? o.tlay : {};
+  return {
+    keys: binds(o.keys, D.keys, isCode) as Save["keys"],
+    pad: { dead: num(p.dead, 0.05, 0.4, D.pad.dead), sens: num(p.sens, 0.5, 2, D.pad.sens), invX: p.invX === true, invY: p.invY === true,
+      stick: p.stick === "right" ? "right" : "left", mode: p.mode === "stick" ? "stick" : "trig", btn: binds(p.btn, D.pad.btn, isBtn) } as Save["pad"],
+    race: { kb1: binds(r.kb1, D.race.kb1, isCode), kb2: binds(r.kb2, D.race.kb2, isCode), pad: binds(r.pad, D.race.pad, isBtn) },
+    tlay: { v: lay(t.v), h: lay(t.h) } as Save["tlay"], // una por orientación (vertical / apaisado); el modo viejo "mix" pasa a gatillos arriba
+    touch: num(o.touch, 0.7, 1.4, D.touch),
+  };
+}
+
 /** `raw` = texto guardado (o null) -> Save completo: lo ausente o inválido toma el valor de `D`; JSON roto devuelve `D` entero. */
 export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
   try {
     const s = JSON.parse(raw ?? "{}");
     for (const k of ["seen", "runs", "cars", "unlocked", "ach"] as const) if (k in s && !Array.isArray(s[k])) delete s[k]; // import malformado: se ignora el campo
-    if (typeof s.keys !== "object" || !s.keys) delete s.keys;
+    Object.assign(s, ctlPart(s, D)); // controles: teclas, joystick, carrera y táctil (también los guarda cada perfil)
+    s.profiles = [0, 1, 2].map((i) => { const p = Array.isArray(s.profiles) ? s.profiles[i] : null; return p && typeof p === "object" ? { name: typeof p.name === "string" && p.name.trim() ? p.name.trim().slice(0, 20) : `Perfil ${i + 1}`, ...ctlPart(p, D) } : null; });
     if (!(s.ability in deps.abilities)) delete s.ability;
     s.curses = Array.isArray(s.curses) ? s.curses.filter((c: string) => c in deps.curses) : [];
     if (typeof s.stats !== "object" || !s.stats) delete s.stats;
@@ -55,7 +85,7 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     s.shadowQ = one(s.shadowQ, ["off", "low", "mid", "high"], D.shadowQ); s.detail = one(s.detail, ["bajo", "medio", "alto", "ultra"], D.detail);
     s.texRes = one(s.texRes, [128, 256, 512], D.texRes); s.aniso = one(s.aniso, [1, 2, 4, 8, 16], D.aniso); s.fpsCap = one(s.fpsCap, [0, 30, 60, 120], 0); s.menuFps = one(s.menuFps, [0, 30, 60], D.menuFps);
     s.preset = deps.presetOf({ shadowQ: s.shadowQ, detail: s.detail, texRes: s.texRes, aniso: s.aniso, bloom: s.bloom });
-    return { ...structuredClone(D), ...s, decals, decalSel, perm: { ...D.perm, ...s.perm }, kit: { ...D.kit, ...s.kit }, vol: { ...D.vol, ...s.vol }, pad: { ...D.pad, ...s.pad },
+    return { ...structuredClone(D), ...s, decals, decalSel, perm: { ...D.perm, ...s.perm }, kit: { ...D.kit, ...s.kit }, vol: { ...D.vol, ...s.vol },
       stats: { ...D.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };
   } catch { return structuredClone(D); }
 }

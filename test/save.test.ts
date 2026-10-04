@@ -6,8 +6,9 @@ import type { Save } from "../src/menu";
 // Valores por defecto mínimos: lo que parseSave toca y lo que se mezcla (el resto del tipo no importa acá)
 const D = {
   scaler: "simple", scale: 0.75, fsr: "calidad", sharpen: 0, bloom: true, fov: 49, aa: "none", shadowQ: "mid", detail: "medio", texRes: 512, aniso: 4, menuFps: 60,
-  perm: { hp: 0, dmg: 0 }, kit: { wing: "serie", decal: "nada" }, vol: { master: 1, sfx: 1 }, pad: { dead: 0.15, sens: 1 }, stats: { runs: 0, dmg: {}, zone: {} },
-  scrap: 0, cars: ["buggy"], ach: [], keys: {}, ability: "bombardeo", beast: {}, preset: "medio",
+  perm: { hp: 0, dmg: 0 }, kit: { wing: "serie", decal: "nada" }, vol: { master: 1, sfx: 1 }, pad: { dead: 0.15, sens: 1, invX: false, invY: false, stick: "left", mode: "trig", btn: { boost: [0], cam: [8], ok: [0] } },
+  race: { kb1: { up: ["KeyW", ""], drift: ["Space", "ShiftLeft"] }, kb2: { up: ["ArrowUp", ""] }, pad: { accel: [7, 0] } }, touch: 1, stats: { runs: 0, dmg: {}, zone: {} },
+  scrap: 0, cars: ["buggy"], ach: [], keys: { up: ["KeyW", "ArrowUp"], boost: ["Space", ""], pause: ["Escape", "KeyP"] }, ability: "bombardeo", beast: {}, preset: "medio",
 } as unknown as Save;
 const deps: SaveDeps = {
   abilities: { bombardeo: 1, emp: 1 }, curses: { horda: 1 }, kinds: ["hormiga", "gato"], zones: { patio: 1, garaje: 1 }, isTouch: false,
@@ -27,7 +28,7 @@ describe("parseSave", () => {
   });
   it("descarta campos con el tipo equivocado", () => {
     const s = load({ cars: "buggy", ach: {}, keys: 5, stats: null, runs: 7 });
-    expect(s.cars).toEqual(["buggy"]); expect(s.ach).toEqual([]); expect(s.keys).toEqual({}); expect(s.stats).toMatchObject({ runs: 0 });
+    expect(s.cars).toEqual(["buggy"]); expect(s.ach).toEqual([]); expect(s.keys).toEqual(D.keys); expect(s.stats).toMatchObject({ runs: 0 });
     expect(s.runs).toBeUndefined(); // el default de este test no trae runs: lo importante es que el 7 inválido no pasó
   });
   it("habilidad y maldiciones: solo ids conocidos", () => {
@@ -64,5 +65,27 @@ describe("parseSave", () => {
     expect(load({ ...v1, preset: "medio", shadowQ: "mid", texRes: 512, bloom: false })).toMatchObject({ texRes: 256, bloom: true, preset: "medio" });
     expect(load({ ...v1, preset: "custom", shadowQ: "high", texRes: 512, bloom: false })).toMatchObject({ shadowQ: "high", texRes: 512, bloom: false });
     expect(load({ lookv: 6, gfxv: 2, scaler: "raro", texRes: 128, bloom: "x" })).toMatchObject({ scaler: "simple", texRes: 128, bloom: true }); // ya migrado: solo se valida
+  });
+  it("controles viejos: la tecla principal reasignada se conserva y gana la alternativa de fábrica", () => {
+    const s = load({ keys: { up: "KeyI", boost: "KeyJ", inventada: "KeyZ" }, pad: { dead: 0.3, sens: 1.5 } });
+    expect(s.keys).toEqual({ up: ["KeyI", "ArrowUp"], boost: ["KeyJ", ""], pause: ["Escape", "KeyP"] });
+    expect(s.pad).toEqual({ ...D.pad, dead: 0.3, sens: 1.5 });
+    expect(load({ keys: { up: "ArrowUp" } }).keys.up).toEqual(["ArrowUp", ""]); // no queda repetida
+  });
+  it("controles nuevos: ranuras válidas, botones en rango, enumerados y disposición táctil acotada", () => {
+    const s = load({ keys: { up: ["KeyI", ""], boost: ["<b>", "x"], pause: ["Escape"] },
+      pad: { dead: 9, invX: true, invY: "si", stick: "right", mode: "raro", btn: { boost: [3], cam: [99], ok: "a" } },
+      race: { kb1: { up: ["KeyI", "KeyK"] }, pad: { accel: [5, -1] } }, tlay: { v: { boost: { x: 2, y: 0.3, s: 9 }, inventado: { x: 0 }, stick: 3 }, h: 5 }, touch: 0.1 });
+    expect(s.keys).toEqual({ up: ["KeyI", ""], boost: ["Space", ""], pause: ["Escape", "KeyP"] });
+    expect(s.pad).toMatchObject({ dead: 0.4, invX: true, invY: false, stick: "right", mode: "trig", btn: { boost: [3], cam: [8], ok: [0] } });
+    expect(s.race).toEqual({ kb1: { up: ["KeyI", "KeyK"], drift: ["Space", "ShiftLeft"] }, kb2: { up: ["ArrowUp", ""] }, pad: { accel: [5, -1] } });
+    expect(s.tlay).toEqual({ v: { boost: { x: 1, y: 0.3, s: 2 } }, h: {} }); expect(load({ pad: { mode: "mix" } }).pad.mode).toBe("trig"); // Mixto se quitó expect(s.touch).toBe(0.7);
+  });
+  it("perfiles: siempre tres ranuras, nombre acotado y controles validados como los de la partida", () => {
+    const s = load({ profiles: [{ name: "  Sillón con nombre muy largo de verdad  ", keys: { up: "KeyO" }, touch: 1.2 }, "x", { name: "" }, { name: "cuarto" }] });
+    expect(s.profiles).toHaveLength(3);
+    expect(s.profiles[0]).toMatchObject({ name: "Sillón con nombre mu", touch: 1.2, keys: { up: ["KeyO", "ArrowUp"] }, pad: D.pad });
+    expect(s.profiles[1]).toBeNull(); expect(s.profiles[2]!.name).toBe("Perfil 3");
+    expect(load({}).profiles).toEqual([null, null, null]);
   });
 });

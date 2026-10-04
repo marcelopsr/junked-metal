@@ -5,7 +5,7 @@ import { Car, CARS, drive } from "./car";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
 import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineKind, SFX } from "./sfx";
 import { ambient, burst, clearFx, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
-import { activePad, ctl, input, isTouch, KEYS, padPressed, padSnap, pollInput, setupTouch } from "./input";
+import { activePad, btnName, camCycle, ctl, input, isTouch, keyHit, KEYS, padPressed, padSnap, pb, pollInput, setupTouch } from "./input";
 import { GLB, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
@@ -385,7 +385,7 @@ function openOffers(list: Offer[], title: string) {
   showOffers(title, list, 0, choose, previewOffer);
   offerTitle = title;
   const can = rerolls > 0 && list[0]?.kind !== "evo";
-  $("luHint").textContent = `${list.map((_, i) => i + 1).join(" · ")} o clic — Enter confirma${can ? ` · R o Y re-sortea (${rerolls})` : ""}`;
+  $("luHint").textContent = `${list.map((_, i) => i + 1).join(" · ")} o clic — Enter confirma${can ? ` · ${keyName(KEYS.reroll[0])} o ${btnName(pb("reroll"))} re-sortea (${rerolls})` : ""}`;
   $("luHint").onclick = can ? reroll : null;
 }
 // Re-sorteo de cartas (Dado cargado): mismas reglas, cartas nuevas. Las evoluciones no se re-sortean.
@@ -438,7 +438,7 @@ function resume() {
 addEventListener("keydown", (e) => {
   if (state === "level" && /^Digit[1-4]$/.test(e.code)) { const i = +e.code.slice(5) - 1; if (i < offers.length) pickOffer(i); }
   if (e.code === "Enter" && state === "level") pickOffer(offerSel);
-  if (e.code === "KeyR" && state === "level") reroll();
+  if (keyHit("reroll", e.code) && state === "level") reroll();
 });
 // ---------- Carga (loading.ts) ----------
 // Tareas pesadas que se hacen solas en los menús (un hueco libre por vez) y que launch() completa tras Jugar / Carrera con pantalla de carga.
@@ -879,7 +879,10 @@ let rainK = 0, rainBanner = false; // lluvia: intensidad 0..1 y aviso ya mostrad
 // Zoom de cámara: rueda del mouse o teclas - / = (0.8 cerca … 2 lejos), se guarda
 const zoomBy = (k: number) => { save.zoom = Math.min(2, Math.max(0.8, save.zoom * k)); persist(); };
 addEventListener("wheel", (ev) => state === "play" && zoomBy(ev.deltaY > 0 ? 1.08 : 1 / 1.08), { passive: true });
-addEventListener("keydown", (ev) => { if (ev.key === "-" || ev.key === "=" || ev.key === "+") zoomBy(ev.key === "-" ? 1.1 : 1 / 1.1); });
+addEventListener("keydown", (ev) => {
+  if (keyHit("zoomOut", ev.code)) zoomBy(1.1); else if (keyHit("zoomIn", ev.code)) zoomBy(1 / 1.1);
+  if (!ev.repeat && (state === "play" || state === "race") && keyHit("cam", ev.code)) camCycle(); // cambiar cámara: solo el evento (input.ts)
+});
 const LAB = { on: false, back: 15, up: 13, t: 1 }; // modo lab (solo dev): mundo congelado para probar el look
 const dmgBy: Record<string, number> = {}; // solo dev: de dónde viene el daño
 function hurt(n: number, continuous = false, src = "?", by?: Kind) {
@@ -976,7 +979,7 @@ function updateHud(dt: number) {
   for (const t of [0.5, 0.25]) if (lastHpFrac > t && frac <= t) { debris(car!.pos, save.paint || "#d62828", 8, 7, 0.8); FX.sparks(car!.pos); shake = Math.max(shake, 0.6); }
   lastHpFrac = frac;
   hudUpdate({ hp, maxHp, boost, xp, need: xpNeed(level), level, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh });
-  hudAbility(ABILITIES[abil].short, ctl === "pad" ? "X" : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / ABILITIES[abil].cd, abilOn > 0);
+  hudAbility(ABILITIES[abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / ABILITIES[abil].cd, abilOn > 0);
 }
 
 // ---------- Loop ----------
@@ -1086,11 +1089,11 @@ scene.onBeforeRenderObservable.add(() => {
   if (state === "level") {
     if (padPressed(14)) { offerSel = (offerSel + offers.length - 1) % offers.length; selectOffer(offerSel); }
     if (padPressed(15)) { offerSel = (offerSel + 1) % offers.length; selectOffer(offerSel); }
-    if (padPressed(0)) pickOffer(offerSel);
-    if (padPressed(3)) reroll();
-  } else if (state === "play") { if (padPressed(9)) pause(); }
+    if (padPressed(pb("ok"))) pickOffer(offerSel);
+    if (padPressed(pb("reroll"))) reroll();
+  } else if (state === "play") { if (padPressed(pb("pause"))) pause(); else if (padPressed(pb("cam"))) camCycle(); }
   else if (state === "outro") outroTick(dt);
-  else if (state === "race") { if (padPressed(9)) racePause(); if (padPressed(0)) raceClick(); if (padPressed(14)) racePadMenu(-1); if (padPressed(15)) racePadMenu(1); raceTick(dt); }
+  else if (state === "race") { if (padPressed(pb("pause"))) racePause(); if (padPressed(pb("ok"))) raceClick(); if (padPressed(pb("cam"))) camCycle(); if (padPressed(14)) racePadMenu(-1); if (padPressed(15)) racePadMenu(1); raceTick(dt); }
   else if (!introOn()) menuPad(dt); // con la intro encima el menú no escucha el gamepad
 
   if (state === "play") {

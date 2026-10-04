@@ -255,3 +255,45 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 /* Botones de menú casi opacos (pedido del usuario): se leen sobre cualquier escena */
 #fe button:not(.primary):not(:focus) { background: rgba(14, 32, 36, .94); border-color: rgba(201, 105, 42, .35); backdrop-filter: none; -webkit-backdrop-filter: none; }
 .mainGrid .chip { opacity: 1; }
+
+/* Controles: ranuras de teclas y botones, aviso de repetidas, perfiles y prueba del joystick (menu.ts) */
+#opts .row.multi { padding: 6px 8px 6px 12px; }
+#opts .row.multi .lb { flex: 1; }
+#opts .row .slot2 { min-width: 112px; margin: 0; padding: 6px 10px; font: 400 15px/1.1 var(--data); color: var(--lcd-ink); background: var(--lcd); border: 1px solid var(--line); box-shadow: none; text-transform: none; }
+#opts .row .slot2:focus-visible, #opts .row .slot2:focus { border-color: var(--turbo); }
+#opts .row.dup button, #opts .row.prof button { margin: 0; padding: 6px 10px; font-size: 14px; box-shadow: none; }
+#opts .row.prof input { flex: 0 1 190px; min-width: 0; padding: 6px 8px; font: 400 16px var(--data); color: var(--txt); background: var(--lcd); border: 1px solid var(--line); border-radius: 0; user-select: text; }
+#opts .row.prof input:focus { outline: none; border-color: var(--turbo); }
+#opts .bindnote { color: var(--turbo); border-left: 3px solid var(--turbo); animation: blink 1s steps(2, end) infinite; }
+.pb { min-width: 26px; color: #10170d; background: var(--lcd-ink); border-color: #0008; }
+.pb.ps { background: #9ec5ff; } .pb.switch { background: #ff8f8f; } .pb.gen { background: #d6dde4; }
+.ptest { display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; background: var(--shell); border: 1px solid var(--line); }
+.pt-id { font: 500 14px/1.2 "Rajdhani", system-ui, sans-serif; color: var(--dim); }
+.pt-row { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.pt-st { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; color: var(--dim); }
+.pt-st.drive span { color: var(--lcd-ink); }
+.pt-st em { font-style: normal; color: var(--txt); }
+.pt-st.in em { color: var(--dim); }
+.pt-ring { position: relative; width: 96px; height: 96px; border-radius: 50%; border: 1px solid var(--line); background: var(--lcd); }
+.pt-ring .dz { position: absolute; inset: 0; margin: auto; width: calc(var(--dz) * 100%); height: calc(var(--dz) * 100%); border-radius: 50%; background: #ffb02e33; border: 1px dashed var(--turbo); }
+.pt-ring .dot { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px; border-radius: 50%; background: var(--lcd-ink); translate: calc(var(--x) * 46px) calc(var(--y) * 46px); }
+.pt-st.in .dot { background: var(--dim); }
+.pt-tr { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 120px; font-size: 13px; color: var(--dim); }
+.pt-tr b { display: block; height: 10px; margin-top: 3px; background: var(--lcd); border: 1px solid var(--line); }
+.pt-tr i { display: block; height: 100%; width: 0; background: var(--turbo); }
+.pt-bt { display: flex; flex-wrap: wrap; gap: 4px; }
+.pt-bt kbd { opacity: .35; }
+.pt-bt kbd.on { opacity: 1; outline: 2px solid var(--turbo); }
+
+/* Editor de controles táctiles: el menú se oculta, los controles se ven con marco y la esquina de agrandar */
+#tedit { position: fixed; left: 50%; top: max(10px, env(safe-area-inset-top)); translate: -50% 0; z-index: 60; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center;
+  width: min(560px, 94vw); padding: 8px 10px; font: 500 14px/1.2 "Rajdhani", system-ui, sans-serif; color: var(--txt); background: #050605e6; border: 1px solid var(--turbo); }
+#tedit.hidden { display: none; }
+#tedit span { flex: 1 1 100%; text-align: center; }
+#tedit button { margin: 0; padding: 8px 14px; min-height: 44px; }
+body.tedit #fe { visibility: hidden; }
+body.tedit #touch > * { display: block !important; }
+body.tedit #stickZone { outline: 1px dashed #ffffff44; }
+body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause) { outline: 2px dashed var(--turbo); outline-offset: 3px; touch-action: none; }
+body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause)::after { content: ""; position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px; background: var(--turbo); }
+@media (max-width: 500px) { #opts .row.prof .lb { display: none; } #opts .row.prof input { flex: 1 1 auto; } }
