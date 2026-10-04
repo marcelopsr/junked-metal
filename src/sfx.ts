@@ -4,7 +4,7 @@ let master: GainNode, fxBus: GainNode, engBus: GainNode, musicBus: GainNode;
 let noise: AudioBuffer;
 // Volúmenes 0..1 (Configuración → Audio). El motor va por su propio canal.
 const vol = { master: 1, sfx: 1, engine: 1, music: 0.7, mute: false };
-let eng: { o1: OscillatorNode; o2: OscillatorNode; f: BiquadFilterNode; g: GainNode; tf: BiquadFilterNode; tg: GainNode } | null = null;
+let eng: { src: AudioBufferSourceNode; f: BiquadFilterNode; g: GainNode; tf: BiquadFilterNode; tg: GainNode; duck: GainNode } | null = null;
 
 // ?mute en la URL: sin audio en absoluto (pruebas automáticas)
 const silent = new URLSearchParams(location.search).has("mute");
@@ -22,18 +22,18 @@ export function initAudio() {
   noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
   const d = noise.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  // Motor eléctrico RC: tono + sub-octava (cuerpo) por un pasabajos blando; ruedas: ruido filtrado según el piso
-  const o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-  o1.type = o2.type = "sawtooth";
-  o2.detune.value = 9;
-  f.type = "lowpass"; f.Q.value = 0.5;
+  // Motor nafta de juguete: bucle de explosiones precalculado (ver cycleBuf) -> pasabajos -> recorte de medios-agudos -> duck -> canal
+  const f = ctx.createBiquadFilter(), notch = ctx.createBiquadFilter(), g = ctx.createGain(), duck = ctx.createGain();
+  f.type = "lowpass"; f.Q.value = 0.4;
+  notch.type = "peaking"; notch.frequency.value = 2500; notch.Q.value = 0.8; notch.gain.value = -9; // hueco para disparos y golpes
   g.gain.value = 0;
-  o1.connect(f); o2.connect(f); f.connect(g).connect(engBus);
-  o1.start(); o2.start();
+  f.connect(notch).connect(g).connect(duck).connect(engBus);
+  const src = ctx.createBufferSource();
   const tn = ctx.createBufferSource(), tf = ctx.createBiquadFilter(), tg = ctx.createGain();
   tn.buffer = noise; tn.loop = true; tf.type = "bandpass"; tg.gain.value = 0;
-  tn.connect(tf).connect(tg).connect(engBus); tn.start();
-  eng = { o1, o2, f, g, tf, tg };
+  tn.connect(tf).connect(tg).connect(duck); tn.start();
+  eng = { src, f, g, tf, tg, duck };
+  setEngineKind(engKind);
   if (mState) startMusic(); // música pedida antes del primer gesto
 }
 
@@ -46,13 +46,63 @@ export function setAudio(o: Partial<typeof vol>) {
   musicBus.gain.setTargetAtTime(vol.music * 0.45 * (duck ? 0.25 : 1), ctx.currentTime, duck ? 0.15 : 0.4);
 }
 
-// Timbre del motor por auto: [forma de onda, multiplicador de tono]
-const ENGINES: Record<string, [OscillatorType, number]> = { axel: ["sine", 1.5], helado: ["triangle", 1.15], combi: ["sawtooth", 0.7], tanque: ["sawtooth", 0.6], formula: ["sawtooth", 1.4], carrera: ["triangle", 1.3] };
-let engMul = 1;
+// Timbre por auto: [multiplicador de rpm, Hz del cuerpo de cada explosión, mezcla de ruido 0..1, irregularidad 0..1]
+const ENGINES: Record<string, [number, number, number, number]> = {
+  buggy: [1, 95, 0.45, 0.25], monster: [0.75, 70, 0.4, 0.35], formula: [1.35, 120, 0.55, 0.15], tanque: [0.6, 60, 0.35, 0.4],
+  carrera: [1.25, 110, 0.6, 0.2], axel: [1.45, 130, 0.5, 0.2], helado: [0.9, 85, 0.3, 0.3], combi: [0.7, 75, 0.4, 0.45],
+};
+const BASE_HZ = 40; // frecuencia de encendido con la que se graba el bucle; playbackRate la lleva a las rpm reales
+const bufs = new Map<string, AudioBuffer>();
+// ponytail: 48 explosiones fijas en bucle (~1,2 s) en vez de un AudioWorklet; el jitter se repite cada 1,2 s, imperceptible bajo el wobble de rpm
+function cycleBuf(kind: string) {
+  const c = ctx!, [, body, nmix, rough] = ENGINES[kind] ?? ENGINES.buggy, sr = c.sampleRate, n = 48, per = sr / BASE_HZ;
+  const b = c.createBuffer(1, Math.round(n * per), sr), d = b.getChannelData(0);
+  let lp = 0;
+  for (let k = 0; k < n; k++) {
+    const t0 = Math.round(k * per + (Math.random() - 0.5) * per * 0.3 * rough); // jitter de tiempo
+    const amp = (k % 7 === 3 && Math.random() < rough) ? 0.25 : 0.7 + Math.random() * 0.3; // a veces "falla" una explosión
+    const len = Math.round(per * 0.9);
+    for (let i = 0; i < len; i++) {
+      const j = (t0 + i + d.length) % d.length, x = i / sr;
+      const env = Math.exp(-x * 90); // golpe corto (~11 ms)
+      lp += ((Math.random() * 2 - 1) - lp) * 0.25; // ruido ya oscurecido
+      d[j] += amp * env * ((1 - nmix) * Math.sin(2 * Math.PI * body * x) * Math.exp(-x * 40) + nmix * lp * 2.2);
+    }
+  }
+  let mx = 0; for (const v of d) mx = Math.max(mx, Math.abs(v));
+  for (let i = 0; i < d.length; i++) d[i] /= mx;
+  return b;
+}
+let engMul = 1, engKind = "buggy";
 export function setEngineKind(kind: string) {
-  const [type, mul] = ENGINES[kind] ?? ["sawtooth", 1];
-  engMul = mul;
-  if (eng) eng.o1.type = eng.o2.type = type;
+  engKind = kind; engMul = (ENGINES[kind] ?? ENGINES.buggy)[0];
+  if (!ctx || !eng) return;
+  if (!bufs.has(kind)) bufs.set(kind, cycleBuf(kind));
+  const s = ctx.createBufferSource(); // cambiar de buffer exige otro nodo (solo al elegir auto)
+  s.buffer = bufs.get(kind)!; s.loop = true; s.playbackRate.value = eng.src.playbackRate.value || 1;
+  s.connect(eng.f); s.start();
+  if (eng.src.buffer) eng.src.stop();
+  eng.src = s;
+}
+// Petardeo: 2-3 chasquidos graves al soltar el acelerador o derrapando (raro: nodos sueltos solo ahí)
+function backfire() {
+  if (!ctx || !eng || !gate("bf", 1.5)) return;
+  const t0 = ctx.currentTime;
+  for (let i = 0, n = 2 + (Math.random() < 0.4 ? 1 : 0); i < n; i++) {
+    const t = t0 + i * (0.05 + Math.random() * 0.06), s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = noise; fl.type = "lowpass"; fl.frequency.value = 900 + Math.random() * 500;
+    g.gain.setValueAtTime(0.09 * (1 - i * 0.25), t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    s.connect(fl).connect(g).connect(eng.duck); s.start(t, Math.random() * 0.5); s.stop(t + 0.08);
+  }
+}
+let duckT = 0;
+// Disparos y golpes bajan el motor un poco y por poco tiempo (sidechain leve)
+function duckEngine() {
+  if (!ctx || !eng || ctx.currentTime - duckT < 0.05) return;
+  duckT = ctx.currentTime;
+  eng.duck.gain.cancelScheduledValues(duckT);
+  eng.duck.gain.setTargetAtTime(0.55, duckT, 0.01);
+  eng.duck.gain.setTargetAtTime(1, duckT + 0.06, 0.18);
 }
 // Ruido de ruedas por piso: [frecuencia del pasabanda, Q, volumen a tope, brillo del motor]
 const FLOORS: Record<string, [number, number, number, number]> = {
@@ -70,19 +120,34 @@ export function engineSfx(speed01: number, throttle: number, boosting: boolean, 
   // Cansancio: a velocidad pareja, sin turbo ni derrape, el motor baja hasta la mitad en ~4 s (tras 2 s); vuelve al cambiar algo
   avg += (speed01 - avg) * Math.min(1, dt * 1.5);
   const steady = !boosting && !drift && throttle >= 0 && Math.abs(speed01 - avg) < 0.04 && Math.abs(throttle - lastThr) < 0.2;
-  lastThr = throttle;
   steadyT = steady ? steadyT + dt : 0;
   const tired = 1 - 0.5 * Math.min(1, Math.max(0, (steadyT - 2) / 4));
-  // Variación lenta de timbre (dos senos sin período común) para que no sea un zumbido fijo
+  // Variación lenta (dos senos sin período común): las rpm nunca quedan clavadas
   const wob = Math.sin(t * 0.37) * Math.sin(t * 0.13 + 1);
-  const hz = (45 + speed01 * 70 + (boosting ? 20 : 0)) * engMul;
-  eng.o1.frequency.setTargetAtTime(hz, t, 0.08);
-  eng.o2.frequency.setTargetAtTime(hz * 0.5, t, 0.08); // sub-octava: cuerpo sin chillar
-  eng.o1.detune.setTargetAtTime(wob * 12, t, 0.3);
-  eng.f.frequency.setTargetAtTime((250 + speed01 * 650 + (boosting ? 400 : 0)) * bright * (1 + wob * 0.08), t, 0.08);
-  eng.g.gain.setTargetAtTime((0.02 + Math.abs(throttle) * 0.025 + (boosting ? 0.02 : 0)) * tired, t, steady ? 0.8 : 0.08);
+  if (lastThr > 0.6 && throttle < 0.15 && speed01 > 0.3 && Math.random() < 0.7) backfire(); // soltar el acelerador
+  if (drift && speed01 > 0.4 && Math.random() < dt * 0.8) backfire();
+  lastThr = throttle;
+  const hz = (22 + speed01 * 48 + Math.max(0, throttle) * 10 + (boosting ? 14 : 0)) * engMul * (1 + wob * 0.03); // encendidos/s: ralentí ~22, a fondo ~80
+  eng.src.playbackRate.setTargetAtTime(hz / BASE_HZ, t, 0.12);
+  eng.f.frequency.setTargetAtTime((380 + speed01 * 700 + (boosting ? 350 : 0)) * bright, t, 0.1); // nunca pasa de ~1,5 kHz: sin zumbido agudo
+  eng.g.gain.setTargetAtTime((0.04 + Math.abs(throttle) * 0.03 + (boosting ? 0.02 : 0)) * tired, t, steady ? 0.8 : 0.1);
   eng.tf.frequency.setTargetAtTime(ff * (0.8 + speed01 * 0.4), t, 0.1); eng.tf.Q.value = fq;
   eng.tg.gain.setTargetAtTime(fv * speed01 * (drift ? 2 : 1) * (0.75 + 0.25 * tired), t, 0.1);
+}
+// Prueba de sonido (Configuración → Audio): guion simulado sin jugar, ~14 s. [hasta s, velocidad, acelerador, turbo, derrape]
+const TEST: [number, number, number, boolean, boolean][] = [[2, 0, 0, false, false], [4, 0.6, 1, false, false], [8, 0.6, 0.6, false, false], [10, 1, 1, true, false], [11, 0.8, 0, false, false], [12.5, 0.7, 1, false, true], [14, 0.1, -1, false, false]];
+let testT = 0;
+export function engineTest(kind: string) {
+  if (!ctx) return;
+  setEngineKind(kind); clearInterval(testT);
+  const t0 = ctx.currentTime;
+  let sp = 0;
+  testT = window.setInterval(() => {
+    const e = ctx!.currentTime - t0, st = TEST.find((x) => e < x[0]);
+    if (!st) { clearInterval(testT); engineStop(); return; }
+    sp += (st[1] - sp) * 0.06; // la velocidad sigue al guion con inercia
+    engineSfx(sp, st[2], st[3], st[4], "pasto");
+  }, 33);
 }
 export function engineStop() { if (ctx && eng) { eng.g.gain.setTargetAtTime(0, ctx.currentTime, 0.1); eng.tg.gain.setTargetAtTime(0, ctx.currentTime, 0.1); } }
 
@@ -104,7 +169,7 @@ function tone(type: OscillatorType, f0: number, f1: number, dur: number, vol: nu
   o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(fxBus);
+  o.connect(g).connect(fxBus); duckEngine();
   o.start(t);
   o.stop(t + dur + 0.02);
 }
@@ -118,7 +183,7 @@ function hiss(filter: BiquadFilterType, f0: number, f1: number, dur: number, vol
   fl.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(fl).connect(g).connect(fxBus);
+  s.connect(fl).connect(g).connect(fxBus); duckEngine();
   s.start(t, Math.random() * 0.5);
   s.stop(t + dur + 0.02);
 }

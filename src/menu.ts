@@ -10,7 +10,7 @@ import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type 
 import { PILOTS, type PilotId } from "./pilots";
 import { icon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
-import { initAudio, setAudio, SFX } from "./sfx";
+import { engineTest, initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { setDrawDist, ZONES, type ZoneId } from "./world";
 import { camCycle, isTouch, padsConnected } from "./input";
@@ -576,6 +576,9 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
     ["Mezcla", "sect"],
     ["Efectos", "range", "vol.sfx", 0, 1, 0.05, "%"], ["Motor", "range", "vol.engine", 0, 1, 0.05, "%"], ["Música", "range", "vol.music", 0, 1, 0.05, "%"],
     ["Silencio (M)", "tog", "mute"],
+    ["Prueba de sonido", "sect"],
+    ["Ralentí, aceleración, velocidad pareja, turbo, derrape y frenada con el auto elegido en el Garaje (~14 s).", "note"],
+    ["Probar motor", "btn", "engtest"],
   ] },
   ctl: { name: "Controles", rows: [
     ["Perfiles", "sect"],
@@ -1009,6 +1012,7 @@ export function initMenu(a: Api) {
       if (armed !== "resetcfg") { armed = "resetcfg"; renderConfig(); focusSel('[data-act="resetcfg"]'); setTimeout(() => { if (armed === "resetcfg") { armed = null; if (current() === "config") renderConfig(); } }, 4000); }
       else { armed = null; resetCfg(); renderConfig(); focusSel('[data-act="resetcfg"]'); }
     }
+    else if (d.act === "engtest") { initAudio(); engineTest(save.car); }
     else if (d.act === "tedit") tedit(true);
     else if (d.act && /^(reset:|psave:|pload:|swap|keepdup|calib)/.test(d.act)) ctlAct(d.act);
     else if (d.act === "export") exportSave();
