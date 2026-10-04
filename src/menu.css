@@ -186,3 +186,4 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #scr-over { gap: 10px; }
 #scr-over .kit.stats li b { font-size: 26px; }
 #scr-over .kit.stats, #scr-over .kv, #scr-over .card ul { background: none; border: 0; box-shadow: none; clip-path: none; }
+.wi { display: inline-flex; align-items: center; gap: 6px; } .wi .ico { flex: none; }

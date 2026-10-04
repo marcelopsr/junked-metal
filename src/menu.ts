@@ -7,6 +7,7 @@ import { DEF, type Kind } from "./enemies";
 import { ctl, KEYS, PAD, padPressed, type Action } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, PAINTS, PARTS, RIMS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { PILOTS, type PilotId } from "./pilots";
+import { icon } from "./icons";
 import { LOOK, look, setQuality, setSmooth, type Quality } from "./render";
 import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
@@ -544,8 +545,8 @@ function renderBestiary() {
 type Kit = { weapons: { id: WeaponId; lv: number; evolved: boolean }[]; passives: { id: PassiveId; lv: number }[]; stats: [string, string][]; seed: string };
 const pips = (l: number) => `<span class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(Math.max(0, 5 - l))}</span>`;
 export function openPause(k: Kit) {
-  $("kitW").innerHTML = k.weapons.map((w) => `<li><span>${w.evolved ? WEAPONS[w.id].evoName : WEAPONS[w.id].name}</span>${w.evolved ? "<b>EVO</b>" : pips(w.lv)}</li>`).join("");
-  $("kitP").innerHTML = k.passives.map((p) => `<li><span>${PASSIVES[p.id].name}</span>${pips(p.lv)}</li>`).join("") || "<li><span>Ninguna</span></li>";
+  $("kitW").innerHTML = k.weapons.map((w) => `<li><span class="wi">${icon(w.id, 20)}${w.evolved ? WEAPONS[w.id].evoName : WEAPONS[w.id].name}</span>${w.evolved ? "<b>EVO</b>" : pips(w.lv)}</li>`).join("");
+  $("kitP").innerHTML = k.passives.map((p) => `<li><span class="wi">${icon(p.id, 20)}${PASSIVES[p.id].name}</span>${pips(p.lv)}</li>`).join("") || "<li><span>Ninguna</span></li>";
   $("kitS").innerHTML = k.stats.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("pauseSeed").textContent = k.seed;
   reset("pause");
@@ -565,7 +566,7 @@ export function openOver(r: { win: boolean; why: string; time: number; kills: nu
   $("overShop").classList.toggle("hidden", !canBuy());
   const rows = Object.entries(r.dmg).sort((a, b) => b[1] - a[1]), top = rows[0]?.[1] || 1;
   const name = (id: string) => (id in WEAPONS ? WEAPONS[id as WeaponId].name : id[0].toUpperCase() + id.slice(1));
-  $("overDmg").innerHTML = rows.map(([id, v]) => `<li><span>${name(id)}</span><i style="width:${(v / top) * 100}%"></i><b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño infligido</span></li>";
+  $("overDmg").innerHTML = rows.map(([id, v]) => `<li><span class="wi">${id in WEAPONS ? icon(id, 18) : ""}${name(id)}</span><i style="width:${(v / top) * 100}%"></i><b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño infligido</span></li>";
   $("overSeed").textContent = r.seed;
   reset("over");
 }

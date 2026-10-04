@@ -286,23 +286,8 @@ export function showOffers(title: string, offers: Offer[], sel: number, onPick: 
     </div>`).join("");
   $("levelup").classList.remove("hidden");
   hoverCb?.(sel);
-  $("offers").querySelectorAll<HTMLElement>(".art").forEach(pixelateIcon);
 }
 
-// Ícono pixelado de verdad: el SVG se rasteriza a 24 px y se muestra escalado sin filtrar (ver .art canvas)
-function pixelateIcon(art: HTMLElement) {
-  const svg = art.querySelector("svg");
-  if (!svg) return;
-  const col = getComputedStyle(art).color;
-  const img = new Image();
-  img.onload = () => {
-    const cv = document.createElement("canvas");
-    cv.width = cv.height = 24;
-    cv.getContext("2d")!.drawImage(img, 0, 0, 24, 24);
-    svg.replaceWith(cv);
-  };
-  img.src = "data:image/svg+xml," + encodeURIComponent(new XMLSerializer().serializeToString(svg).replaceAll("currentColor", col));
-}
 export function selectOffer(sel: number) {
   $("offers").querySelectorAll(".offer").forEach((c, i) => c.classList.toggle("sel", i === sel));
   hoverCb?.(sel);

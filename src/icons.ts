@@ -35,5 +35,15 @@ const P: Record<string, string> = {
   senal: `<path d="M5 19v-2M9 19v-5M13 19v-8M17 19V8M21 19V5"/>`,
 };
 
-export const icon = (id: string, size = 24) =>
-  `<svg class="ico" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[id] ?? P.evo}</svg>`;
+// Colores por ícono (degradado del trazo): armas cálidas, pasivas variadas, fusiones lima. Por defecto, plata.
+const COL: Record<string, [string, string]> = {
+  gomitas: ["#b6ff6a", "#3ed87a"], clips: ["#f0f5fa", "#9bb0c2"], chispero: ["#ffd84d", "#ff5a36"], petardos: ["#ff8a6b", "#ff3a3a"], tesla: ["#9bf0ff", "#4a8bff"],
+  lanza: ["#ffe27a", "#ff9d2e"], agua: ["#9be3ff", "#3a8bff"], yoyo: ["#ff9bd4", "#b783ff"], bengalas: ["#ffd84d", "#ff5a5a"], regla: ["#ffe9a0", "#f0a030"],
+  yoyoelec: ["#ff9bd4", "#7de8ff"], vapor: ["#ffffff", "#ff9d6b"], chispazo: ["#ffd84d", "#7de8ff"], globos: ["#9be3ff", "#ff9bd4"], anillo: ["#ffd84d", "#ff7a3a"],
+  iman: ["#ff7a7a", "#7d9bff"], resorte: ["#d9b8ff", "#8a6bff"], turbo: ["#ffe27a", "#ffa02e"], litio: ["#9bff9b", "#2fcf6a"], capacitor: ["#9bf0ff", "#4a8bff"], lego: ["#ffa07a", "#ff4d4d"], lupa: ["#fff0a0", "#6bd8ff"],
+  heal: ["#9bff9b", "#2fcf6a"], evo: ["#fff0a0", "#ffb02e"], cofre: ["#ffe27a", "#c47a2e"], jefe: ["#ff9b9b", "#ff4d4d"], senal: ["#9bf0ff", "#7dffb0"],
+};
+export const icon = (id: string, size = 24) => {
+  const [a, b] = COL[id] ?? ["#ffffff", "#9bb0c2"], g = "ig-" + id;
+  return `<svg class="ico" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="url(#${g})" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="3" y1="3" x2="21" y2="21"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>${P[id] ?? P.evo}</svg>`;
+};
