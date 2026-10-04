@@ -545,7 +545,7 @@ function battleAi(r: Racer, dt: number) {
     const bx = boxes.filter((b) => b.t <= 0).sort((a, b) => B.Vector3.DistanceSquared(a.at, pos) - B.Vector3.DistanceSquared(b.at, pos))[0];
     if (bx) goal = bx.at;
   }
-  if (!goal) { r.wpT -= dt; if (!r.wp || r.wpT <= 0 || B.Vector3.DistanceSquared(r.wp, pos) < 100) { const a = Math.random() * 6.283, d = Math.random() * (ARENA.r - 10); r.wp = new B.Vector3(ARENA.c.x + Math.cos(a) * d, 0, ARENA.c.z + Math.sin(a) * d); r.wpT = 4; } goal = r.wp; }
+  if (!goal) { r.wpT -= dt; if (!r.wp || r.wpT <= 0 || B.Vector3.DistanceSquared(r.wp, pos) < 100) { const a = rng() * 6.283, d = rng() * (ARENA.r - 10); r.wp = new B.Vector3(ARENA.c.x + Math.cos(a) * d, 0, ARENA.c.z + Math.sin(a) * d); r.wpT = 4; } goal = r.wp; }
   const toC = ARENA.c.subtract(pos); toC.y = 0;
   if (toC.length() > ARENA.r - 7) goal = ARENA.c; // lejos del muro
   const dx = goal.x - pos.x, dz = goal.z - pos.z, ang = Math.atan2(f.x * dz - f.z * dx, f.x * dx + f.z * dz), dist = Math.hypot(dx, dz);
@@ -689,8 +689,8 @@ function rubber(r: Racer) {
 function lakitu(r: Racer) {
   r.laki++;
   const i = r.idx, c = r.car;
-  const p = mode === "battle" ? new B.Vector3(ARENA.c.x + (Math.random() - 0.5) * 20, 0, ARENA.c.z + (Math.random() - 0.5) * 20) : trk.P[i];
-  const yaw = mode === "battle" ? Math.random() * 6.28 : Math.atan2(trk.T[i].x, trk.T[i].z);
+  const p = mode === "battle" ? new B.Vector3(ARENA.c.x + (rng() - 0.5) * 20, 0, ARENA.c.z + (rng() - 0.5) * 20) : trk.P[i];
+  const yaw = mode === "battle" ? rng() * 6.28 : Math.atan2(trk.T[i].x, trk.T[i].z);
   c.body.disablePreStep = false;
   c.root.position.set(p.x, c.def.size[1] / 2 + 0.6, p.z);
   c.root.rotationQuaternion = B.Quaternion.FromEulerAngles(0, yaw, 0);
@@ -724,7 +724,7 @@ function stepWorld(dt: number) {
     if (b.t > 0) { b.t -= dt; b.m.isVisible = b.t <= 0; if (b.t > 0) continue; }
     b.m.rotation.y += dt * 2; b.m.position.y = b.at.y + Math.sin(spinT * 3 + b.at.x) * 0.25;
     for (const r of racers) if (!r.item && B.Vector3.DistanceSquared(r.car.pos, b.at) < 6) {
-      r.item = weightedItem(placeOf(r)); r.itemAt = t; r.useAt = t + 1.5 + Math.random() * 3.5;
+      r.item = weightedItem(placeOf(r)); r.itemAt = t; r.useAt = t + 1.5 + rng() * 3.5;
       b.t = mode === "battle" ? 2.2 : 3.5; b.m.isVisible = false;
       if (r.human >= 0) SFX.pickup();
       burst(b.at, { n: 8, color: "#7de8ff", size: [0.2, 0.4], power: [3, 7], life: [0.3, 0.5], gravity: 0 });

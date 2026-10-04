@@ -30,3 +30,6 @@ export const costos = (id: string): number[] => {
 };
 // Precio de una sola compra (zona, pieza)
 export const precio = (id: string) => BAL.precios[id].nivel1;
+
+// Experiencia para pasar de `l` al nivel siguiente (ritmo.xp_nivel_*): piso(base + l × lineal + l² × cuad)
+export const xpNeed = (l: number) => Math.floor(BAL.ritmo.xp_nivel_base + l * BAL.ritmo.xp_nivel_lineal + l * l * BAL.ritmo.xp_nivel_cuad);

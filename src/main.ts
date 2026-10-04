@@ -18,7 +18,7 @@ import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setSco
 import { buildLayout, HALF, initWorld, hitBreakables, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
-import { BAL } from "./balance";
+import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
 import { CAR_YAW, carSpot, flatten, menuOff, menuTick, SHOTS } from "./menuscene";
@@ -99,7 +99,6 @@ let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number; hit?: boolean } | 
 let offers: Offer[] = [];
 let offerSel = 0;
 
-const xpNeed = (l: number) => Math.floor(R.xp_nivel_base + l * R.xp_nivel_lineal + l * l * R.xp_nivel_cuad);
 
 // Habilidad activa (abilities.ts): enfriamiento, segundos activa, petardos por caer y ritmo del mundo (cámara lenta)
 let abil: AbilityId = "bombardeo", abilCd = 0, abilOn = 0, worldK = 1, bombs = 0, bombT = 0;

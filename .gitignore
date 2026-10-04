@@ -10,3 +10,7 @@ graphify-out/
 CLAUDE.md
 .gitattributes
 logs/
+
+# Resultados de las herramientas de prueba (npm run shots / perf)
+.shots/
+.perf/

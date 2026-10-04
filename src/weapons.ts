@@ -326,11 +326,11 @@ class Agua extends Weapon {
         }
       }
       for (let k = 0; k < 3 && this.drops.length < 70; k++) {
-        const a = Math.atan2(this.dir.x, this.dir.z) + (Math.random() - 0.5) * half * 1.6, sp = 22 + Math.random() * 8;
+        const a = Math.atan2(this.dir.x, this.dir.z) + (rng() - 0.5) * half * 1.6, sp = 22 + rng() * 8;
         const m = this.tpl.createInstance("w");
         m.position.set(c.car.pos.x, c.car.pos.y + 0.8, c.car.pos.z);
         m.rotation.y = a;
-        this.drops.push({ m, v: new B.Vector3(Math.sin(a) * sp, 2 + Math.random() * 2, Math.cos(a) * sp), life: R / sp });
+        this.drops.push({ m, v: new B.Vector3(Math.sin(a) * sp, 2 + rng() * 2, Math.cos(a) * sp), life: R / sp });
       }
     }
     for (let i = this.drops.length - 1; i >= 0; i--) {
@@ -638,7 +638,7 @@ class Trompo extends Weapon {
         tp.m.position.addInPlace(to.scale((cfg.velocidad * c.dt) / Math.max(d, 0.01)));
         if (d < tp.target.radius + 0.8) { c.damage(tp.target, dmg, to.scale(X.trompo_empuje / Math.max(d, 0.01))); tp.target = nearest(tp.m.position, c.enemies.filter((e) => e !== tp.target), X.trompo_retarget); }
       }
-      for (const e of c.enemies) if (ev && Math.hypot(tp.m.position.x - e.pos.x, tp.m.position.z - e.pos.z) < e.radius + 1.1 && Math.random() < c.dt * 6) { c.damage(e, dmg * X.trompo_evo_contacto_mult, e.pos.subtract(tp.m.position).normalize().scale(X.trompo_empuje)); }
+      for (const e of c.enemies) if (ev && Math.hypot(tp.m.position.x - e.pos.x, tp.m.position.z - e.pos.z) < e.radius + 1.1 && rng() < c.dt * 6) { c.damage(e, dmg * X.trompo_evo_contacto_mult, e.pos.subtract(tp.m.position).normalize().scale(X.trompo_empuje)); }
       if ((tp.trail -= c.dt) <= 0) { // estela: un disco que corta un rato
         tp.trail = 0.14;
         const b = this.bladeTpl.createInstance("b");
@@ -650,7 +650,7 @@ class Trompo extends Weapon {
       const b = this.blades[i];
       b.life -= c.dt;
       b.m.rotation.z += c.dt * 10; // el desvanecido por visibility no hace nada en instancias (Babylon avisa por consola en cada llamada)
-      for (const e of c.enemies) if (Math.hypot(b.m.position.x - e.pos.x, b.m.position.z - e.pos.z) < e.radius + 0.9 && Math.random() < c.dt * 8) c.damage(e, dmg * X.trompo_estela_mult);
+      for (const e of c.enemies) if (Math.hypot(b.m.position.x - e.pos.x, b.m.position.z - e.pos.z) < e.radius + 0.9 && rng() < c.dt * 8) c.damage(e, dmg * X.trompo_estela_mult);
       if (b.life <= 0) { b.m.dispose(); this.blades.splice(i, 1); }
     }
   }
