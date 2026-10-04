@@ -346,10 +346,21 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam)::after { co
 .askbox { max-width: min(460px, 92vw); padding: 22px 24px; border-radius: 16px; background: rgba(14, 24, 32, .96); border: 1px solid rgba(255, 255, 255, .12); text-align: center; box-shadow: 0 10px 40px rgba(0, 0, 0, .5); }
 .askbox p { font-size: 18px; margin: 10px 0 18px; }
 /* Garaje en celular apaisado: panel angosto a la derecha con la altura de la pantalla y scroll propio; el auto queda libre a la izquierda */
-@media (orientation: landscape) and (max-height: 500px) {
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
   #scr-garage.on { height: 100%; margin: 0 0 0 auto; padding: 8px 12px 8px 0; box-sizing: border-box; gap: 6px; }
   #scr-garage > * { width: min(400px, 47vw); }
   #scr-garage .otitle { font-size: 22px; }
   #scr-garage:not(.editing) :is(#cars, #paint) { flex: 1 1 auto; min-height: 0; max-height: none; overflow: hidden auto; flex-wrap: nowrap; }
   #paint .pal { grid-template-columns: repeat(8, 1fr); } #paint .pal .sw { height: 34px; }
+}
+  /* Encabezado compacto: título y banco en una línea chica, pestañas en un renglón con scroll lateral; la lista se queda con el alto */
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  #scr-garage.on { height: 100vh; height: 100dvh; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto minmax(0, 1fr) auto; justify-items: end; justify-content: end; column-gap: 10px; row-gap: 6px; }
+  #scr-garage > * { grid-column: 1 / -1; }
+  #scr-garage .otitle { grid-column: 1; font-size: 18px; margin: 0; align-self: center; justify-self: start; }
+  #scr-garage .sect { grid-column: 2; margin: 0; font-size: 11px; align-self: center; width: auto; }
+  #scr-garage:not(.editing) :is(#cars, #paint) { align-self: start; height: 100%; }
+  #scr-garage #gtabs { flex-wrap: nowrap; overflow: auto hidden; justify-content: flex-start; scrollbar-width: none; }
+  #scr-garage #gtabs .tab { flex: none; }
+  #scr-garage .btns button { min-height: 40px; padding-block: 6px; }
 }
