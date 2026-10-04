@@ -429,7 +429,7 @@ function goRace() {
   setRaceCar(save.car);
   startRace();
 }
-if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2") { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } goRace(); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
+if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2") { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
 initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); applyClimate(zoneClimate() ?? DUSK); reset("main"); } });
 initMenu({ scene, play: startRun, resume, quit: toMenu, pause, endless: goEndless, race: goRace });
 music("menu"); // suena cuando haya primer gesto (initAudio)

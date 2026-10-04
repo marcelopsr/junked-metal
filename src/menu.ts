@@ -13,7 +13,7 @@ import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { ZONES, type ZoneId } from "./world";
 import { padsConnected } from "./input";
-import { raceCfg, saveRaceCfg } from "./kart";
+import { raceCfg, saveRaceCfg, trackName } from "./kart";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, CURSES, type AbilityId, type CurseId } from "./abilities";
 
@@ -118,6 +118,7 @@ function cycleRace(k: string) {
   else if (k === "cc") c.cc = nextOf([50, 100, 150] as const, c.cc);
   else if (k === "laps") c.laps = c.laps === 3 ? 5 : 3;
   else if (k === "cup") c.cup = !c.cup;
+  else if (k === "track") c.track = ((c.track + 1) % 3) as 0 | 1 | 2;
   else if (k === "car2") { const o = save.cars.length ? save.cars : (["buggy"] as CarKind[]); c.car2 = nextOf(o, o.includes(c.car2) ? c.car2 : o[0]); }
   saveRaceCfg();
 }
@@ -130,7 +131,9 @@ function renderRace() {
   for (const id of ["rcP2", "rcCar2"]) $(id).classList.toggle("hidden", c.players === 1);
   $("rcCC").textContent = `Cilindrada · ${c.cc}cc ${c.cc === 50 ? "(fácil)" : c.cc === 100 ? "(medio)" : "(difícil)"}`;
   $("rcLaps").textContent = `Vueltas · ${c.laps}`;
-  $("rcCup").textContent = c.cup ? "Modo · Copa de 3 carreras" : "Modo · Carrera suelta";
+  $("rcCup").textContent = c.cup ? "Modo · Copa de 3 pistas" : "Modo · Carrera suelta";
+  $("rcTrack").textContent = `Pista · ${trackName(c.track)}`;
+  $("rcTrack").classList.toggle("hidden", c.cup);
   $("rcHelp").textContent = `J1: auto del Garaje (${CARS[save.car].name}). Joysticks conectados: ${padsConnected()}. Teclado J1: W A S D, Espacio derrapa, E usa objeto. Flechas: J2 con Shift derecha y Enter.`;
 }
 

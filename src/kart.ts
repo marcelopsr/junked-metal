@@ -11,13 +11,13 @@ import { box, cyl, merge, pilotParts, sph, type CarKind, type CarOpts } from "./
 import { applyClimate, canvasTex, M, pbr, setSplit, setLamp, shadows } from "./render";
 import { rng, seedRng } from "./rng";
 import { engineSfx, engineStop, music, SFX } from "./sfx";
-import { buildLayout, clearLayout, setZone } from "./world";
+import { buildLayout, clearLayout, setZone, zoneClimate } from "./world";
 import { CLIMATES } from "./run";
 
 // ---------- Configuración (se guarda aparte del guardado del juego) ----------
-export type RaceCfg = { players: 1 | 2; p1: "kbd" | "pad0" | "pad1"; p2: "pad0" | "pad1" | "kbd2"; cc: 50 | 100 | 150; laps: 3 | 5; cup: boolean; car2: CarKind };
+export type RaceCfg = { players: 1 | 2; p1: "kbd" | "pad0" | "pad1"; p2: "pad0" | "pad1" | "kbd2"; cc: 50 | 100 | 150; laps: 3 | 5; cup: boolean; car2: CarKind; track: 0 | 1 | 2 };
 const CFG_KEY = "rcfight-race";
-export const raceCfg: RaceCfg = { players: 1, p1: "kbd", p2: "pad0", cc: 100, laps: 3, cup: true, car2: "formula" };
+export const raceCfg: RaceCfg = { players: 1, p1: "kbd", p2: "pad0", cc: 100, laps: 3, cup: true, car2: "formula", track: 0 };
 try { Object.assign(raceCfg, JSON.parse(localStorage.getItem(CFG_KEY) ?? "{}")); } catch { /* sin storage */ }
 export const saveRaceCfg = () => { try { localStorage.setItem(CFG_KEY, JSON.stringify(raceCfg)); } catch { /* sin storage */ } };
 
@@ -27,16 +27,24 @@ let cam2: B.FreeCamera | null = null;
 export function initKart(d: Deps) { D = d; }
 
 // ---------- Circuito ----------
-const W = 9; // medio ancho de la pista
+let W = 9; // medio ancho de la pista (cambia por circuito)
+let LAPS = 3, gridGap = 7;
 const DS = 3.2; // separación entre muestras
-const BASE: [number, number][] = [[0, -110], [60, -112], [108, -88], [126, -32], [116, 22], [100, 80], [60, 118], [0, 126], [-60, 116], [-108, 84], [-126, 26], [-118, -34], [-98, -84], [-50, -110]];
-const VARIANTS = ["Circuito del Patio", "Patio al revés", "Patio espejo"];
+// Circuitos: la zona define el escenario fijo (el layout se limpia). La salida es el primer punto; delante hay recta para la parrilla.
+type TrackDef = { name: string; zone: "patio" | "jardin" | "garaje"; w: number; gap: number; extra: number; crowd: boolean; pts: [number, number][] };
+export const TRACKS: TrackDef[] = [
+  { name: "Circuito del Patio", zone: "patio", w: 9, gap: 7, extra: 0, crowd: true, pts: [[0, -110], [60, -112], [108, -88], [126, -32], [116, 22], [100, 80], [60, 118], [0, 126], [-60, 116], [-108, 84], [-126, 26], [-118, -34], [-98, -84], [-50, -110]] },
+  // Jardín: el cantero elevado (-55,35), el árbol (78,70) y el buzón quedan dentro o fuera de la pista
+  { name: "Circuito del Jardín", zone: "jardin", w: 9, gap: 7, extra: 0, crowd: true, pts: [[0, -100], [60, -104], [100, -70], [112, -20], [112, 36], [95, 100], [45, 118], [-10, 122], [-65, 108], [-108, 70], [-118, 10], [-110, -50], [-60, -100]] },
+  // Garaje: pista angosta con un tramo BAJO el auto de la casa (x = 30), vuelta corta (+2 vueltas)
+  { name: "Circuito del Garaje", zone: "garaje", w: 6, gap: 5, extra: 2, crowd: false, pts: [[-48, 45], [-48, -30], [-38, -54], [-5, -58], [30, -48], [30, 0], [30, 45], [24, 62], [-10, 68], [-42, 64]] },
+];
+export const trackName = (i: number) => TRACKS[i].name;
 type Track = { P: B.Vector3[]; T: B.Vector3[]; R: B.Vector3[]; N: number; len: number };
 let trk: Track;
 
-function buildTrackData(variant: number): Track {
-  let pts = BASE.map(([x, z]) => new B.Vector3(variant === 2 ? -x : x, 0, z));
-  if (variant === 1) pts = pts.reverse();
+function buildTrackData(def: TrackDef): Track {
+  const pts = def.pts.map(([x, z]) => new B.Vector3(x, 0, z));
   // Catmull-Rom cerrada → polilínea densa → muestras a distancia pareja
   const dense: B.Vector3[] = [], n = pts.length;
   for (let i = 0; i < n; i++) for (let s = 0; s < 24; s++) dense.push(B.Vector3.CatmullRom(pts[(i + n - 1) % n], pts[i], pts[(i + 1) % n], pts[(i + 2) % n], s / 24));
@@ -77,7 +85,7 @@ let racers: Racer[] = [];
 let humans: Racer[] = [];
 let projs: Proj[] = [], chicles: Chicle[] = [], boxes: Box[] = [], pads: Pad[] = [], ants: Ant[] = [];
 let mesh: B.AbstractMesh[] = [];
-let podiumOn = false, active = false, t = 0, countdown = 3.4, finishedAt = -1, resultsOn = false, variant = 0, raceNo = 1;
+let podiumOn = false, active = false, t = 0, countdown = 3.4, finishedAt = -1, resultsOn = false, trackNo = 0, raceNo = 1;
 let cup: Record<number, number> = {};
 let mapCv: HTMLCanvasElement, mapCtx: CanvasRenderingContext2D;
 
@@ -159,7 +167,7 @@ function buildTrack() {
   // Rampitas en dos rectas (el cuerpo toma la pose de la malla al crearse: se inclina ANTES del PhysicsAggregate)
   for (const f of [0.34, 0.84]) {
     const i = Math.floor(f * trk.N), p = P[i];
-    const r = B.MeshBuilder.CreateBox("ramp", { width: 9, height: 0.5, depth: 9 }, D.scene);
+    const r = B.MeshBuilder.CreateBox("ramp", { width: W * 1.2, height: 0.5, depth: 9 }, D.scene);
     r.position.set(p.x, 0.5, p.z); r.rotation = new B.Vector3(-0.2, Math.atan2(T[i].x, T[i].z), 0);
     r.material = pbr("raceRamp", { color: "#ffc24d", rough: 0.6 });
     new B.PhysicsAggregate(r, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.4 }, D.scene);
@@ -174,11 +182,11 @@ function buildTrack() {
     ants.push({ m, c: P[i].clone(), n: R[i].clone(), ph, sp: 0.5 + (ph % 3) * 0.12, hit: 0 });
     mesh.push(m);
   }
-  decorate();
+  decorate(TRACKS[trackNo].crowd);
 }
 
 // Pista viva: banderines, público de juguetes en la salida, globos y pilas de neumáticos en las curvas
-function decorate() {
+function decorate(crowd: boolean) {
   const { P, T, R, N } = trk;
   const place = (base: B.Mesh, mats: B.Matrix[]) => {
     const buf = new Float32Array(mats.length * 16); mats.forEach((m, i) => m.copyToArray(buf, i * 16));
@@ -195,13 +203,13 @@ function decorate() {
   });
   // Público: figuritas gigantes en dos filas a cada lado de la recta de salida
   const ms: Record<string, B.Matrix[]> = {};
-  for (let n = -7; n <= 7; n++) for (const sd of [-1, 1]) for (const row of [0, 1]) {
+  if (crowd) for (let n = -7; n <= 7; n++) for (const sd of [-1, 1]) for (const row of [0, 1]) {
     const i = (n * 2 + N) % N, p = P[i].add(R[i].scale(sd * (W + 8 + row * 4.5))), id = PILOT_IDS[(n + 7 + row * 2 + (sd > 0 ? 1 : 0)) % PILOT_IDS.length];
     (ms[id] ??= []).push(mat(p.x, 1.2 + row * 1.2, p.z, Math.atan2(-sd * R[i].x, -sd * R[i].z), 3.2));
   }
-  for (const id of PILOT_IDS) if (ms[id]) place(merge("crowd", pilotParts(id)), ms[id]);
+  for (const id of PILOT_IDS) if (crowd && ms[id]) place(merge("crowd", pilotParts(id)), ms[id]);
   // Tribunas bajas detrás del público
-  for (const sd of [-1, 1]) {
+  if (crowd) for (const sd of [-1, 1]) {
     const i = 0, p = P[i].add(R[i].scale(sd * (W + 8 + 7))), b = box(3, 3, 52, M.plastic(sd > 0 ? "#3b6fd8" : "#d85a3b"), [p.x, 1.5, p.z], [0, Math.atan2(T[i].x, T[i].z), 0]);
     b.isPickable = false; mesh.push(b);
   }
@@ -239,7 +247,7 @@ function makeRacers() {
   for (let i = 0; i < 10; i++) {
     const human = i < nH ? i : -1, grid = human >= 0 ? humanSlots[human] : aiSlots[ai++];
     const kind = picks[i], ks = KSTAT[kind];
-    const row = Math.floor(grid / 2), side = grid % 2 ? 1 : -1, back = 6 + row * 7 + (side > 0 ? 3.5 : 0);
+    const row = Math.floor(grid / 2), side = grid % 2 ? 1 : -1, back = 6 + row * gridGap + (side > 0 ? gridGap / 2 : 0);
     const idx = (trk.N - Math.round(back / DS) + trk.N) % trk.N;
     const p = trk.P[idx].add(trk.R[idx].scale(side * 3.6)), yaw = Math.atan2(trk.T[idx].x, trk.T[idx].z);
     const opts: CarOpts = { paint: PAINTS[i % PAINTS.length], pilot: PILOT_IDS[i % PILOT_IDS.length], lamp: "calido" };
@@ -292,12 +300,14 @@ function ensureDom() {
 export function startRace(keepCup = false) {
   ensureDom();
   endRace(true);
-  setZone("patio"); clearLayout();
+  setZone(TRACKS[raceCfg.cup ? (raceNo - 1) % TRACKS.length : raceCfg.track].zone); clearLayout();
   D.scene.physicsEnabled = true;
   if (!keepCup) { cup = {}; raceNo = 1; }
-  variant = (raceNo - 1) % VARIANTS.length;
-  trk = buildTrackData(variant);
-  applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
+  trackNo = raceCfg.cup ? (raceNo - 1) % TRACKS.length : raceCfg.track;
+  const def = TRACKS[trackNo];
+  W = def.w; gridGap = def.gap; LAPS = raceCfg.laps + def.extra;
+  trk = buildTrackData(def);
+  applyClimate(zoneClimate() ?? CLIMATES.find((c) => c.id === "mediodia")!);
   seedRng(20261003 + raceNo);
   buildTrack();
   humanCar(0); // asegura la clave
@@ -529,12 +539,12 @@ function lakitu(r: Racer) {
 const relink: { c: Car; f: number }[] = [];
 
 function onLap(r: Racer) {
-  if (r.lap > raceCfg.laps) {
+  if (r.lap > LAPS) {
     r.fin = t; r.place = racers.filter((o) => o.fin > 0).length;
     if (r.human >= 0) { say(r.human, `¡Llegaste ${r.place}º!`); SFX.levelUp(); if (finishedAt < 0) finishedAt = t; }
   } else if (r.human >= 0 && r.lap >= 1) {
-    say(r.human, r.lap === raceCfg.laps ? "¡ÚLTIMA VUELTA!" : `VUELTA ${r.lap}`);
-    if (r.lap === raceCfg.laps) music("boss", 1);
+    say(r.human, r.lap === LAPS ? "¡ÚLTIMA VUELTA!" : `VUELTA ${r.lap}`);
+    if (r.lap === LAPS) music("boss", 1);
   }
 }
 const msgT: number[] = [0, 0];
@@ -607,7 +617,7 @@ function hud() {
   for (const h of humans) {
     const p = dom!.querySelector(`.rp[data-p="${h.human}"]`) as HTMLElement;
     p.querySelector(".rpos b")!.textContent = String(placeOf(h));
-    p.querySelector(".rlap")!.textContent = `VUELTA ${clamp(h.lap, 1, raceCfg.laps)}/${raceCfg.laps}`;
+    p.querySelector(".rlap")!.textContent = `VUELTA ${clamp(h.lap, 1, LAPS)}/${LAPS}`;
     p.querySelector(".rspd")!.textContent = `${Math.round(Math.abs(h.fs) * 3.6)} km/h`;
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; }
@@ -638,7 +648,7 @@ function showResults() {
   order.forEach((r, i) => { r.place = i + 1; cup[r.id] = (cup[r.id] ?? 0) + POINTS[i]; });
   const last = !raceCfg.cup || raceNo >= 3;
   const tb = order.map((r, i) => `<tr class="${r.human >= 0 ? "me" : ""}"><td>${i + 1}</td><td><i style="background:${r.color}"></i>${r.name}</td><td>${r.fin ? fmt(r.fin) : "—"}</td><td>+${POINTS[i]}</td><td>${cup[r.id]}</td></tr>`).join("");
-  $r("#rres .rtitle").textContent = `${VARIANTS[variant]} · carrera ${raceNo}${raceCfg.cup ? "/3" : ""}`;
+  $r("#rres .rtitle").textContent = `${TRACKS[trackNo].name} · carrera ${raceNo}${raceCfg.cup ? "/3" : ""}`;
   $r("#rres table").innerHTML = `<tr><th>#</th><th>Corredor</th><th>Tiempo</th><th>Pts</th><th>Total</th></tr>${tb}`;
   ($r("#rres [data-r=next]") as HTMLElement).style.display = last ? "none" : "";
   if (last && raceCfg.cup) { const champ = Object.entries(cup).sort((a, b) => b[1] - a[1])[0]; const r = racers.find((x) => x.id === +champ[0])!; $r("#rres .rtitle").textContent = `COPA: gana ${r.name} con ${champ[1]} puntos`; }
@@ -724,6 +734,6 @@ if (import.meta.env.DEV) Object.assign(window, {
     info: () => ({ t, countdown, lap: humans.map((h) => h.lap), idx: humans.map((h) => h.idx), place: humans.map((h) => placeOf(h)), fin: racers.map((r) => Math.round(r.fin)), resultsOn, item: humans.map((h) => h.item), speeds: racers.map((r) => Math.round(r.fs)) }),
     give: (it: Item) => { for (const h of humans) { h.item = it; h.useAt = 1e9; } },
     use: () => { for (const h of humans) useItem(h); },
-    skip: () => { for (const r of racers) { r.lap = raceCfg.laps; } },
+    skip: () => { for (const r of racers) { r.lap = LAPS; } },
   },
 });
