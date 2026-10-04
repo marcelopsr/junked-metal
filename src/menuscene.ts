@@ -37,8 +37,8 @@ export const CAR_YAW = 0.95; // estante: el auto mira hacia la cámara en 3/4
 // Luz de cada escena: luna (sol de la escena, con sombras) lavanda, ambiente pastel y rebote durazno
 type Clim = Parameters<typeof applyClimate>[0];
 const CLIM: Record<Id, Clim> = {
-  shelf: { sun: [0.35, -0.6, 0.72], sunColor: "#bfe0e0", sunI: 1.6, hemiI: 0.42, amb: "#a8c8c4", ground: "#c98a5a",
-    sky: ["#0f2a30", "#b5582a", "#d08a5a", "#16353a"], exposure: 1, fog: 0.004, ramp: ["#000000", "#808080", "#ffffff"] },
+  shelf: { sun: [0.35, -0.6, 0.72], sunColor: "#bfe0e0", sunI: 1.6, hemiI: 0.42, amb: "#a8c8c4", ground: "#5f7f7c",
+    sky: ["#0b2226", "#1f4a50", "#3f7476", "#12302f"], exposure: 1, fog: 0.004, ramp: ["#000000", "#808080", "#ffffff"] },
   bench: { sun: [-0.3, -0.85, -0.45], sunColor: "#cfe4e2", sunI: 1.1, hemiI: 0.5, amb: "#e0c8b0", ground: "#5f8a88",
     sky: ["#16353a", "#c98a5a", "#e0b090", "#16353a"], exposure: 1, fog: 0.005, ramp: ["#000000", "#808080", "#ffffff"] },
 };
@@ -72,12 +72,12 @@ function shelfBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     box(200, 1, 160, W("#c99f7c"), [0, -26.5, 0]), box(200, 2, 160, W("#2a4446"), [0, 51, 0]),
     box(68, 78, 2, wall, [-66, 12, -61]), box(98, 78, 2, wall, [47, 12, -61]), box(30, 24, 2, wall, [-17, -14, -61]), box(30, 21, 2, wall, [-17, 40.5, -61]),
     box(2, 78, 160, wall, [-100, 12, 0]), box(2, 78, 160, wall, [96, 12, 0]), box(196, 3, 0.6, trim, [0, -24.5, -59.8]),
-    cyl(56, 56, 0.3, W("#8a4a2a"), [0, -25.9, -24], undefined, 10),
+    cyl(56, 56, 0.3, W("#2a4a4c"), [0, -25.9, -24], undefined, 10),
     // marco, cruz y alféizar de la ventana
     box(32, 1.2, 1.4, trim, [-17, 30.6, -60]), box(32, 1.2, 1.4, trim, [-17, -2.6, -60]), box(1.2, 34, 1.4, trim, [-32.6, 14, -60]), box(1.2, 34, 1.4, trim, [-1.4, 14, -60]),
     box(0.8, 32, 0.8, trim, [-17, 14, -60]), box(30, 0.8, 0.8, trim, [-17, 14, -60]), box(36, 1, 4, trim, [-17, -3.2, -58.5]),
     // cortinas durazno a los costados
-    ...[-38.5, 4.5].flatMap((x) => [0, 1, 2, 3].map((i) => cyl(2.3, 2.9, 42, W(i % 2 ? "#8a5a3a" : "#9a6844"), [x + i * 1.7, 11, -58.2], undefined, 8))),
+    ...[-38.5, 4.5].flatMap((x) => [0, 1, 2, 3].map((i) => cyl(2.3, 2.9, 42, W(i % 2 ? "#24484c" : "#2f5a5e"), [x + i * 1.7, 11, -58.2], undefined, 8))),
     box(46, 0.8, 0.8, W("#d8b48a"), [-17, 32.5, -58]),
     // luna y estrellas afuera (sin niebla, para que se lean a lo lejos)
     sph(30, unfog("moonM", "#fff3d6"), [-62, 92, -330], undefined, 10),
