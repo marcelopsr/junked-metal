@@ -154,3 +154,11 @@ button:hover { background: rgba(30, 48, 68, .9); }
 /* Títulos redondeados y gruesos (sin tipografía pixelada) */
 .brand, .otitle { font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .brand { font-size: clamp(48px, 10vw, 96px); }
+.sect { font: 700 14px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .14em; color: #dbe9f4; text-shadow: 0 2px 4px rgba(0, 0, 0, .55); }
+/* Fichas del taller y bestiario: texto más grande y barras de nivel visibles */
+.carc { font-size: 15px; }
+.carc b { font-size: 18px; }
+.carc .pips { display: flex; gap: 4px; margin-top: 8px; }
+.carc .pips i { flex: 1; height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .16); }
+.carc .pips i.on { background: linear-gradient(90deg, #35c9ff, #7dffb0); }
+.carc .price { margin-top: 6px; font-weight: 700; color: #ffc24d; }
