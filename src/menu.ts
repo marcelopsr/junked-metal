@@ -123,12 +123,14 @@ function cycleRace(k: string) {
   saveRaceCfg();
 }
 function renderRace() {
+  if (isTouch) raceCfg.players = 1; // en el teléfono no hay pantalla dividida (una pantalla chica y un solo control táctil)
   const c = raceCfg, ctl = { kbd: "Teclado", pad0: "Joystick 1", pad1: "Joystick 2", kbd2: "Teclado (flechas)" };
   $("rcPlayers").textContent = `Jugadores · ${c.players}${c.players === 2 ? " (pantalla dividida)" : ""}`;
   $("rcP1").textContent = `Control J1 · ${ctl[c.p1]}`;
   $("rcP2").textContent = `Control J2 · ${ctl[c.p2]}`;
   $("rcCar2").textContent = `Auto J2 · ${CARS[c.car2]?.name ?? c.car2}`;
   for (const id of ["rcP2", "rcCar2"]) $(id).classList.toggle("hidden", c.players === 1);
+  $("rcPlayers").classList.toggle("hidden", isTouch);
   $("rcCC").textContent = `Cilindrada · ${c.cc}cc ${c.cc === 50 ? "(fácil)" : c.cc === 100 ? "(medio)" : "(difícil)"}`;
   $("rcLaps").textContent = `Vueltas · ${c.laps}`;
   $("rcCup").textContent = c.cup ? "Modo · Copa de 3 pistas" : "Modo · Carrera suelta";
