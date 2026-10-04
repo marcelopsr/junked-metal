@@ -203,11 +203,11 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #opts .row output, #opts .row b { font: 700 18px "Rajdhani", system-ui, sans-serif; }
 #opts .sect { margin-top: 18px; }
 
-/* Menú principal en cuadrícula: lo principal grande, las opciones de partida como fichas chicas */
-.mainGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(560px, 92vw); }
+/* Menú principal en una sola columna: con el control se recorre solo arriba / abajo, sin saltos en diagonal */
+.mainGrid { display: grid; grid-template-columns: 1fr; gap: 8px; width: min(420px, 92vw); }
 .mainGrid .wide { grid-column: 1 / -1; }
 .mainGrid .primary { font-size: 24px; padding: 18px 22px; text-align: center; }
-.mainGrid button { text-align: center; min-height: 52px; font-size: 18px; }
+.mainGrid button { text-align: center; min-height: 46px; font-size: 18px; }
 .mainGrid .chip { min-height: 38px; font-size: 14px; letter-spacing: .02em; opacity: .9; }
 .mainGrid .ghost { background: transparent; border-color: rgba(255, 255, 255, .12); min-height: 40px; font-size: 15px; box-shadow: none; }
 .tag { color: #f4f7fa; text-shadow: 0 2px 6px rgba(0, 0, 0, .55); font-weight: 600; letter-spacing: .04em; }
@@ -251,3 +251,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   .bctl .slot > span { min-width: 0; width: 100%; }
 }
 @media (max-height: 500px) { #scr-beast.on { padding: 8px; } #bpanel { padding: 8px 12px; gap: 6px; } }
+
+/* Botones de menú casi opacos (pedido del usuario): se leen sobre cualquier escena */
+#fe button:not(.primary):not(:focus) { background: rgba(14, 32, 36, .94); border-color: rgba(201, 105, 42, .35); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.mainGrid .chip { opacity: 1; }
