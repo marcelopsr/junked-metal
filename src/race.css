@@ -43,3 +43,8 @@
 @keyframes r-flash { 0% { opacity: .9; } 100% { opacity: 0; } }
 
 #race.podium #rmap, #race.podium #rtab, #race.podium .rp { display: none; }
+
+.rp .rtime { position: absolute; left: 16px; top: 62px; font: 600 17px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; color: #cfe3f2; text-shadow: 0 2px 4px rgba(0, 0, 0, .5); }
+#race.split .rp .rtime { top: 62px; }
+#rinfo { font: 600 17px/1.4 "Rajdhani", system-ui, sans-serif; text-align: right; max-width: 560px; } #rinfo small { color: #a9b8c6; font-size: 14px; } #rinfo em { color: #ffd84d; font-style: normal; font-weight: 700; }
+.medal { font-weight: 700; padding: 1px 8px; border-radius: 99px; } .medal.m3 { background: #ffc24d; color: #3a2a00; } .medal.m2 { background: #d0d7de; color: #1a2230; } .medal.m1 { background: #c47a3e; color: #fff; } .medal.m0 { background: rgba(255, 255, 255, .15); }

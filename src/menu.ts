@@ -13,7 +13,7 @@ import { initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { ZONES, type ZoneId } from "./world";
 import { padsConnected } from "./input";
-import { raceCfg, saveRaceCfg, trackName } from "./kart";
+import { bestRace, MEDAL, medalOf, raceCfg, saveRaceCfg, TRACKS, trackName } from "./kart";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, CURSES, type AbilityId, type CurseId } from "./abilities";
 
@@ -134,7 +134,8 @@ function renderRace() {
   $("rcCup").textContent = c.cup ? "Modo · Copa de 3 pistas" : "Modo · Carrera suelta";
   $("rcTrack").textContent = `Pista · ${trackName(c.track)}`;
   $("rcTrack").classList.toggle("hidden", c.cup);
-  $("rcHelp").textContent = `J1: auto del Garaje (${CARS[save.car].name}). Joysticks conectados: ${padsConnected()}. Teclado J1: W A S D, Espacio derrapa, E usa objeto. Flechas: J2 con Shift derecha y Enter.`;
+  const rec = TRACKS.map((tk, i) => { const b = bestRace(i); return `${tk.zone === "patio" ? "Patio" : tk.zone === "jardin" ? "Jardín" : "Garaje"} ${b ? fmt(b.t) + " " + (MEDAL[medalOf(i, c.laps, b.cc, b.t)] || "") : "—"}`; }).join(" · ");
+  $("rcHelp").textContent = `Récords: ${rec}. J1: auto del Garaje (${CARS[save.car].name}). Joysticks conectados: ${padsConnected()}. Teclado J1: W A S D, Espacio derrapa, E usa objeto. Flechas: J2 con Shift derecha y Enter.`;
 }
 
 // ---------- Ajustes ----------

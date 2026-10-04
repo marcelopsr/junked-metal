@@ -106,6 +106,16 @@ const JINGLE: [number, number][] = [[392, 0], [392, 0.22], [440, 0.44], [494, 0.
 export const SFX = {
   // Racha de bajas: tono ascendente según el tamaño de la racha; fanfarria corta al superar 50
   streak: (n: number) => { const f = 523 * 2 ** (Math.min(n, 100) / 100); tone("triangle", f, f * 1.25, 0.14, 0.1); if (n % 50 === 0) [1, 1.25, 1.5, 2].forEach((m, i) => tone("square", 523 * m, 523 * m, 0.12, 0.06, i * 0.07)); },
+  // Carrera: cuenta regresiva (bocina corta y una larga y aguda al largar), objetos, vueltas y Lakitu
+  countBeep: (go: boolean) => go ? (tone("square", 880, 880, 0.55, 0.12), tone("triangle", 1320, 1320, 0.55, 0.08)) : tone("square", 440, 440, 0.18, 0.1),
+  whoosh: () => hiss("bandpass", 900, 3600, 0.22, 0.2),
+  splat: () => { hiss("lowpass", 1200, 300, 0.18, 0.25); tone("sine", 220, 90, 0.16, 0.2); },
+  boing: () => { tone("sine", 160, 520, 0.18, 0.2); tone("triangle", 520, 140, 0.3, 0.14, 0.12); },
+  shield: () => { tone("triangle", 600, 1200, 0.2, 0.12); tone("triangle", 900, 1800, 0.2, 0.08, 0.08); },
+  miniTurbo: () => { hiss("highpass", 4000, 9000, 0.3, 0.16); tone("square", 500, 1400, 0.25, 0.07); },
+  lap: () => [660, 880, 1100].forEach((f, i) => tone("triangle", f, f, 0.14, 0.09, i * 0.08)),
+  lakitu: () => { tone("sine", 900, 300, 0.5, 0.12); tone("triangle", 450, 150, 0.5, 0.08); },
+  finish: () => [523, 659, 784, 1047, 1318].forEach((f, i) => tone("square", f, f, 0.18, 0.08, i * 0.09)),
   jingle: () => JINGLE.forEach(([f, d]) => tone("triangle", f, f * 0.995, 0.2, 0.07, d)),
   hit: () => gate("hit", 18) && (tone("sine", 700, 320, 0.05, 0.12), hiss("bandpass", 2400, 900, 0.04, 0.08)),
   kill: () => gate("kill", 14) && (tone("sine", 520, 180, 0.1, 0.14), tone("triangle", 260, 90, 0.12, 0.08)), // boing
@@ -168,7 +178,7 @@ export function rainSfx(k: number) {
 // Synthwave lo-fi sintetizado en vivo. Una grilla de 64 pasos (4 compases de semicorcheas) corre siempre:
 // los estados no la reinician, solo encienden y apagan capas (crossfade), así el tempo no se corta.
 // Cinta: saturación suave + pasabajos + retardo modulado (wow lento y flutter rápido) + swing flojo.
-export type MusicState = "menu" | "run" | "boss" | "blackout" | "over";
+export type MusicState = "menu" | "run" | "boss" | "blackout" | "over" | "race" | "battle";
 const LAYERS = ["pad", "bass", "arp", "kick", "snare", "hat", "heart"] as const;
 type Layer = (typeof LAYERS)[number];
 //                           pad  bass  arp  kick snare hat  heart
@@ -178,8 +188,10 @@ const MIX: Record<MusicState, number[]> = {
   boss:     [0.45, 1,   0.75, 1,   1,   0.7, 0],
   blackout: [0,   0.9,  0,    0,   0,   0,   1],
   over:     [0,   0,    0,    0,   0,   0,   0],
+  race:     [0.35, 0.9, 0.85, 1,   0.9, 0.85, 0],
+  battle:   [0.45, 1,   0.8,  1,   1,   0.9,  0],
 };
-const BPM: Record<MusicState, number> = { menu: 104, run: 122, boss: 136, blackout: 100, over: 100 };
+const BPM: Record<MusicState, number> = { menu: 104, run: 122, boss: 136, blackout: 100, over: 100, race: 140, battle: 150 };
 // [raíz MIDI, tercera]: la partida va por C-Am-F-G (mayor, alegre); el jefe por Am-Bb-Am-E (frigio, tenso)
 const CALM = [[36, 4], [33, 3], [29, 4], [31, 4]], TENSE = [[33, 3], [34, 4], [33, 3], [40, 4]];
 const ARP = [0, 2, 1, 3, 2, 4, 3, 5, 4, 3, 2, 3, 1, 2, 0, 1]; // índices sobre los tonos del acorde (2 octavas)
@@ -277,9 +289,9 @@ function outro() {
 
 // Un paso de 16avo. Arreglo según estado e intensidad; los patrones se vuelven más densos al subir `big`
 function mStepPlay(s: number, t0: number, sd: number) {
-  const st = mState!, g = MIX[st], k = s & 15, [root, third] = (st === "boss" ? TENSE : CALM)[s >> 4];
+  const st = mState!, g = MIX[st], k = s & 15, [root, third] = (st === "boss" || st === "battle" ? TENSE : CALM)[s >> 4];
   const on = (l: Layer) => g[LAYERS.indexOf(l)] > 0.02;
-  const big = st === "boss" ? 1 : mInt, play = st === "run" || st === "boss";
+  const racing = st === "race" || st === "battle", big = st === "boss" || racing ? 1 : mInt, play = st === "run" || st === "boss" || racing;
   const t = t0 + (k & 1 ? sd * 0.1 : 0); // swing flojo: se siente a mano
   const bar = sd * 16;
   if (k === 0 && on("pad")) for (const n of [root + 12, root + 12 + third, root + 19]) {

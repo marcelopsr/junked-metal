@@ -21,6 +21,27 @@ export const raceCfg: RaceCfg = { players: 1, p1: "kbd", p2: "pad0", cc: 100, la
 try { Object.assign(raceCfg, JSON.parse(localStorage.getItem(CFG_KEY) ?? "{}")); } catch { /* sin storage */ }
 export const saveRaceCfg = () => { try { localStorage.setItem(CFG_KEY, JSON.stringify(raceCfg)); } catch { /* sin storage */ } };
 
+// ---------- Mejores tiempos y medallas (se guardan aparte, por pista) ----------
+type TimeRec = { t: number; lap: number; car: string; cc: number };
+const TIMES_KEY = "rcfight-times";
+const times: Record<string, TimeRec[]> = (() => { try { return JSON.parse(localStorage.getItem(TIMES_KEY) ?? "{}"); } catch { return {}; } })();
+const saveTimes = () => { try { localStorage.setItem(TIMES_KEY, JSON.stringify(times)); } catch { /* sin storage */ } };
+export const MEDAL = ["", "BRONCE", "PLATA", "ORO"] as const;
+/** Tiempos objetivo para una carrera de `laps` vueltas en la pista `i`: oro / plata / bronce (segundos). Se calculan con el largo del circuito. */
+export function medalTimes(i: number, laps: number, cc: number) {
+  const def = TRACKS[i], len = trackLen(def), t0 = (laps + def.extra) * len / (26 * (cc / 0.95 > 1 ? 1.1 : 1));
+  return [t0 * 1.06, t0 * 1.18, t0 * 1.35];
+}
+const lenCache: Record<string, number> = {};
+function trackLen(def: TrackDef) { return lenCache[def.name] ??= buildTrackData(def).len; }
+export function medalOf(i: number, laps: number, cc: number, t: number) { const m = medalTimes(i, laps, cc); return t <= m[0] ? 3 : t <= m[1] ? 2 : t <= m[2] ? 1 : 0; }
+export const bestRace = (i: number) => times[String(i)]?.[0];
+function recordTime(i: number, rec: TimeRec) {
+  const l = (times[String(i)] ??= []);
+  l.push(rec); l.sort((a, b) => a.t - b.t); times[String(i)] = l.slice(0, 5);
+  saveTimes();
+  return l[0] === rec;
+}
 type Deps = { scene: B.Scene; cam: B.FreeCamera; onExit(): void };
 let D: Deps;
 let cam2: B.FreeCamera | null = null;
@@ -74,7 +95,7 @@ type Racer = {
   boost: number; slow: number; spin: number; shield: number; inv: number; spinRot: number;
   drifting: number; charge: number; offT: number; stuckT: number; camYaw: number; camPos: B.Vector3; fs: number; lastLap: number; auto: boolean; laki: number; hits: number;
   aggr: number; drifter: boolean; early: boolean; bubble?: B.Mesh; boxT: number;
-  balloons: number; out: boolean; balls: B.Mesh[]; wp: B.Vector3 | null; wpT: number;
+  balloons: number; out: boolean; balls: B.Mesh[]; wp: B.Vector3 | null; wpT: number; lapT: number; lapBest: number;
 };
 type Proj = { m: B.Mesh; kind: "petardo" | "misil"; owner: Racer; v: B.Vector3; life: number; target?: Racer };
 type Chicle = { m: B.Mesh; owner: Racer; life: number; arm: number };
@@ -294,7 +315,7 @@ function makeRacers() {
       idx, lap: 0, frac: 0, fin: 0, place: grid + 1, points: 0, item: null, itemAt: 0, useAt: 0, prevItemBtn: false,
       boost: 0, slow: 0, spin: 0, shield: 0, inv: 0, spinRot: 0, drifting: 0, charge: 0, offT: 0, stuckT: 0, camYaw: yaw, camPos: new B.Vector3(), fs: 0, lastLap: 0, auto: false, laki: 0, hits: 0,
       aggr: PERSONA[i % PERSONA.length][0], drifter: PERSONA[i % PERSONA.length][1], early: false, boxT: 0,
-      balloons: 3, out: false, balls: [], wp: null, wpT: 0,
+      balloons: 3, out: false, balls: [], wp: null, wpT: 0, lapT: 0, lapBest: 0,
     };
     if (mode === "battle") for (let k = 0; k < 3; k++) { const b = sph(1.1, pbr("balloon" + r.color, { color: r.color, rough: 0.25, emissive: r.color }), [(k - 1) * 0.6, 2.3 + (k === 1 ? 0.35 : 0), 0], [1, 1.2, 1], 6); b.parent = car.root; r.balls.push(b); }
     racers.push(r);
@@ -316,14 +337,14 @@ function ensureDom() {
   dom.id = "race";
   dom.className = "hidden";
   dom.innerHTML = `
-    <div class="rp" data-p="0"><div class="rpos"><b>1</b><i>/10</i></div><div class="rlap"></div><div class="ritem"></div><div class="rspd"></div><div class="rmsg"></div></div>
-    <div class="rp" data-p="1"><div class="rpos"><b>1</b><i>/10</i></div><div class="rlap"></div><div class="ritem"></div><div class="rspd"></div><div class="rmsg"></div></div>
+    <div class="rp" data-p="0"><div class="rpos"><b>1</b><i>/10</i></div><div class="rlap"></div><div class="rtime"></div><div class="ritem"></div><div class="rspd"></div><div class="rmsg"></div></div>
+    <div class="rp" data-p="1"><div class="rpos"><b>1</b><i>/10</i></div><div class="rlap"></div><div class="rtime"></div><div class="ritem"></div><div class="rspd"></div><div class="rmsg"></div></div>
     <canvas id="rmap" width="160" height="160"></canvas>
     <div id="rflash"></div>
     <div id="rcount"></div>
     <div id="rtab"></div>
     <div id="rpause" class="hidden"><div class="rtitle">PAUSA</div><nav><button data-r="resume" class="primary">Seguir</button><button data-r="restart">Reiniciar</button><button data-r="exit">Salir al menú</button></nav></div>
-    <div id="rres" class="hidden"><div class="rtitle"></div><table></table><nav><button data-r="next" class="primary">Siguiente carrera</button><button data-r="again">Revancha</button><button data-r="exit">Menú</button></nav></div>`;
+    <div id="rres" class="hidden"><div class="rtitle"></div><table></table><div id="rinfo"></div><nav><button data-r="next" class="primary">Siguiente carrera</button><button data-r="again">Revancha</button><button data-r="exit">Menú</button></nav></div>`;
   document.body.appendChild(dom);
   mapCv = $r("#rmap") as HTMLCanvasElement; mapCtx = mapCv.getContext("2d")!;
   dom.addEventListener("click", (e) => {
@@ -348,6 +369,7 @@ export function startRace(keepCup = false) {
   applyClimate(zoneClimate() ?? CLIMATES.find((c) => c.id === "mediodia")!);
   seedRng(20261003 + raceNo);
   buildTrack();
+  music("race");
   begin();
 }
 
@@ -362,6 +384,7 @@ export function startBattle() {
   applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
   seedRng(20261004);
   buildArena();
+  music("battle");
   trk = buildTrackData(TRACKS[0]); // muestras mínimas para helpers de ranking; no se dibuja
   begin();
 }
@@ -383,7 +406,6 @@ function begin() {
   dom!.classList.toggle("split", split); dom!.classList.remove("podium");
   $r("#rres").classList.add("hidden");
   document.getElementById("fe")?.classList.add("hidden");
-  music("run", 0.7);
   for (const r of humans) { r.camPos = r.car.pos.subtract(fwdOf(r).scale(9)).add(new B.Vector3(0, 5, 0)); }
 }
 
@@ -418,6 +440,7 @@ function nextRace() { raceNo++; startRace(true); }
 
 // ---------- IA y manejo ----------
 const clamp = B.Scalar.Clamp;
+const hear = (r: Racer) => r.human >= 0 || (humans[0] ? B.Vector3.DistanceSquared(humans[0].car.pos, r.car.pos) < 1600 : false);
 function nearestIdx(r: Racer) {
   const p = r.car.pos, { P, N } = trk;
   let best = r.idx, bd = 1e9;
@@ -439,22 +462,23 @@ function useItem(r: Racer) {
   const it = r.item; if (!it) return;
   r.item = null;
   const f = fwdOf(r), pos = r.car.pos;
-  if (it === "turbo") { r.boost = Math.max(r.boost, 1.6); SFX.levelUp(); }
-  else if (it === "escudo") { r.shield = 7; SFX.pickup(); }
-  else if (it === "petardo") spawnProj(r, "petardo", pos.add(f.scale(2.4)).add(new B.Vector3(0, 0.6, 0)), f.scale(52));
+  if (it === "turbo") { r.boost = Math.max(r.boost, 1.6); if (hear(r)) SFX.miniTurbo(); }
+  else if (it === "escudo") { r.shield = 7; if (hear(r)) SFX.shield(); }
+  else if (it === "petardo") { if (hear(r)) SFX.whoosh(); spawnProj(r, "petardo", pos.add(f.scale(2.4)).add(new B.Vector3(0, 0.6, 0)), f.scale(52)); }
   else if (it === "misil") {
+    if (hear(r)) SFX.whoosh();
     const ahead = mode === "battle"
       ? racers.filter((o) => o !== r && !o.out).sort((a, b) => B.Vector3.DistanceSquared(a.car.pos, pos) - B.Vector3.DistanceSquared(b.car.pos, pos))[0]
       : racers.filter((o) => o !== r && o.lap * trk.N + o.idx > r.lap * trk.N + r.idx).sort((a, b) => (a.lap * trk.N + a.idx) - (b.lap * trk.N + b.idx))[0];
     spawnProj(r, "misil", pos.add(f.scale(2.4)).add(new B.Vector3(0, 0.8, 0)), f.scale(42), ahead);
   } else if (it === "chicle") {
     const m = sph(1.3, pbr("raceGum", { color: "#ff6ec7", rough: 0.2, emissive: "#6a1050" }), [pos.x - f.x * 3, 0.6, pos.z - f.z * 3], [1, 0.5, 1], 6);
-    chicles.push({ m, owner: r, life: 40, arm: 0.6 });
+    chicles.push({ m, owner: r, life: 40, arm: 0.6 }); if (hear(r)) SFX.splat();
   } else if (it === "rayo") {
     for (const o of racers) if (o !== r && !o.out) { if (o.shield > 0) o.shield = 0; else { o.slow = 4.5; hurtRacer(o, 1.0); } }
     SFX.boss(); flash();
   }
-  SFX.click();
+  if (hear(r) && it !== "rayo") SFX.click();
 }
 // Onda expansiva: disco que crece y se desvanece
 const rings: { m: B.Mesh; life: number }[] = [];
@@ -480,7 +504,7 @@ function hurtRacer(r: Racer, dur: number) {
   burst(r.car.pos.add(new B.Vector3(0, 0.6, 0)), { n: 28, color: "#ffd84d", color2: "#ff7a3a", size: [0.3, 0.7], power: [5, 12], life: [0.3, 0.7] });
   FX.explosion(r.car.pos.add(new B.Vector3(0, 0.4, 0)), 0.9);
   ring(r.car.pos);
-  if (r.human >= 0) SFX.hurt();
+  if (hear(r)) SFX.boing();
 }
 
 function battleAi(r: Racer, dt: number) {
@@ -602,7 +626,7 @@ function stepRacer(r: Racer, dt: number) {
   if (!frozen && inp.drift && sp > 9 && Math.abs(inp.steer) > 0.25 && r.drifting === 0) r.drifting = Math.sign(inp.steer);
   if (r.drifting !== 0) {
     if (!inp.drift || sp < 7) {
-      if (r.charge > 1.5) { r.boost = Math.max(r.boost, 1.2); SFX.levelUp(); } else if (r.charge > 0.75) r.boost = Math.max(r.boost, 0.6);
+      if (r.charge > 1.5) { r.boost = Math.max(r.boost, 1.2); if (hear(r)) SFX.miniTurbo(); } else if (r.charge > 0.75) { r.boost = Math.max(r.boost, 0.6); if (hear(r)) SFX.miniTurbo(); }
       r.drifting = 0; r.charge = 0;
     } else { if (Math.sign(inp.steer) === r.drifting || inp.steer === 0) r.charge += dt * (Math.abs(inp.steer) > 0.4 ? 1 : 0.5); }
   }
@@ -647,17 +671,19 @@ function lakitu(r: Racer) {
   relink.push({ c, f: 3 });
   r.offT = r.stuckT = 0; r.inv = 1.8; r.spin = 0; r.drifting = 0; r.boost = 0;
   c.vis.rotation.set(0, 0, 0);
-  if (r.human >= 0) { say(r.human, "¡Lakitu al rescate!"); SFX.back(); }
+  if (r.human >= 0) { say(r.human, "¡Lakitu al rescate!"); SFX.lakitu(); }
 }
 const relink: { c: Car; f: number }[] = [];
 const stuckLog: { n: string; idx: number; x: number; z: number; t: number }[] = [];
 
 function onLap(r: Racer) {
+  if (r.lap >= 2) { const lt = t - r.lapT; if (!r.lapBest || lt < r.lapBest) r.lapBest = lt; }
+  r.lapT = t;
   if (r.lap > LAPS) {
     r.fin = t; r.place = racers.filter((o) => o.fin > 0).length;
     if (r.human >= 0) { say(r.human, `¡Llegaste ${r.place}º!`); SFX.levelUp(); if (finishedAt < 0) finishedAt = t; }
   } else if (r.human >= 0 && r.lap >= 1) {
-    say(r.human, r.lap === LAPS ? "¡ÚLTIMA VUELTA!" : `VUELTA ${r.lap}`);
+    say(r.human, r.lap === LAPS ? "¡ÚLTIMA VUELTA!" : `VUELTA ${r.lap}`); SFX.lap();
     if (r.lap === LAPS) music("boss", 1);
   }
 }
@@ -738,6 +764,7 @@ function hud() {
     p.querySelector(".rpos b")!.textContent = String(mode === "battle" ? racers.filter((o) => !o.out).length : placeOf(h));
     p.querySelector(".rpos i")!.textContent = mode === "battle" ? "/10 en pie" : "/10";
     p.querySelector(".rlap")!.textContent = mode === "battle" ? (h.out ? "ELIMINADO" : "●".repeat(h.balloons) + " " + Math.max(0, Math.ceil(battleT - t)) + " s") : `VUELTA ${clamp(h.lap, 1, LAPS)}/${LAPS}`;
+    if (mode === "race") p.querySelector(".rtime")!.textContent = `${fmt(Math.max(0, t - h.lapT))}${h.lapBest ? "  ·  MEJOR " + fmt(h.lapBest) : ""}`; else p.querySelector(".rtime")!.textContent = "";
     p.querySelector(".rspd")!.textContent = `${Math.round(Math.abs(h.fs) * 3.6)} km/h`;
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; }
@@ -764,7 +791,7 @@ function hud() {
 }
 
 function showResults() {
-  resultsOn = true;
+  resultsOn = true; music("menu"); SFX.finish();
   const order = mode === "battle" ? [...racers].sort((a, b) => battleScore(b) - battleScore(a)) : [...racers].sort((a, b) => (a.fin || 1e9) - (b.fin || 1e9) || prog(b) - prog(a));
   order.forEach((r, i) => { r.place = i + 1; cup[r.id] = (cup[r.id] ?? 0) + POINTS[i]; });
   const last = mode === "battle" || !raceCfg.cup || raceNo >= 3;
@@ -773,6 +800,14 @@ function showResults() {
   $r("#rres table").innerHTML = `<tr><th>#</th><th>Corredor</th><th>Tiempo</th><th>Pts</th><th>Total</th></tr>${tb}`;
   ($r("#rres [data-r=next]") as HTMLElement).style.display = last ? "none" : "";
   if (last && raceCfg.cup && mode === "race") { const champ = Object.entries(cup).sort((a, b) => b[1] - a[1])[0]; const r = racers.find((x) => x.id === +champ[0])!; $r("#rres .rtitle").textContent = `COPA: gana ${r.name} con ${champ[1]} puntos`; }
+  const info: string[] = [];
+  if (mode === "race") for (const h of humans) if (h.fin > 0) {
+    const medal = medalOf(trackNo, raceCfg.laps, raceCfg.cc, h.fin), isBest = recordTime(trackNo, { t: h.fin, lap: h.lapBest, car: h.car.kind, cc: raceCfg.cc });
+    const mt = medalTimes(trackNo, raceCfg.laps, raceCfg.cc);
+    info.push(`<b>${h.name}</b>: ${fmt(h.fin)} · mejor vuelta ${h.lapBest ? fmt(h.lapBest) : "—"}${isBest ? " · <em>¡RÉCORD!</em>" : ""} · <span class="medal m${medal}">${medal ? "MEDALLA DE " + MEDAL[medal] : "sin medalla"}</span><br><small>Objetivos: oro ${fmt(mt[0])} · plata ${fmt(mt[1])} · bronce ${fmt(mt[2])}</small>`);
+  }
+  if (mode === "race" && times[String(trackNo)]) info.push(`<small>Mejores de la pista: ${times[String(trackNo)].map((x, i) => `${i + 1}. ${fmt(x.t)}`).join(" · ")}</small>`);
+  $r("#rinfo").innerHTML = info.join("<br>");
   buildPodium(order);
   $r("#rres").classList.remove("hidden");
   (($r("#rres button:not([style*='none'])")) as HTMLElement)?.focus();
@@ -825,8 +860,8 @@ export function raceTick(dt: number) {
   if (countdown > 0) {
     const was = Math.ceil(countdown);
     countdown -= dt;
-    if (countdown > 0 && Math.ceil(countdown) !== was && countdown < 3) SFX.blip();
-    if (countdown <= 0) { SFX.accept(); t = 0; }
+    if (countdown > 0 && Math.ceil(countdown) !== was && countdown < 3) SFX.countBeep(false);
+    if (countdown <= 0) { SFX.countBeep(true); t = 0; }
   } else t += dt;
   if (podiumOn) {
     const a = Math.sin(t * 0.45) * 0.55, front = podiumDir.clone(), side = new B.Vector3(podiumDir.z, 0, -podiumDir.x);
