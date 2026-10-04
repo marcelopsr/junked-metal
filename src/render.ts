@@ -31,7 +31,7 @@ export function applyClimate(k: { sun: [number, number, number]; sunColor: strin
   clim = k;
   sun.intensity = k.sunI * LOOK.moonMul;
   hemi.intensity = k.hemiI * LOOK.ambMul;
-  hemi.diffuse = B.Color3.FromHexString(k.sky[1]);
+  hemi.diffuse = B.Color3.FromHexString(k.day ? "#eef4e0" : k.sky[1]); // de día el ambiente es casi blanco: el cielo azul teñía las sombras de índigo
   hemi.groundColor = B.Color3.FromHexString(k.day ? "#7a9a5a" : "#0b0f0a"); // rebote del pasto: las sombras de día no quedan azul marino
   paintSky(k.sky);
   scene.clearColor = B.Color4.FromHexString(k.sky[1] + "ff");
@@ -82,7 +82,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   shadows.stabilizeCascades = true;
   shadows.usePercentageCloserFiltering = true;
   shadows.filteringQuality = low ? B.ShadowGenerator.QUALITY_LOW : B.ShadowGenerator.QUALITY_MEDIUM;
-  shadows.darkness = 0.35; // sombras suaves: que den volumen sin ensuciar el suelo
+  shadows.darkness = 0.5; // sombras suaves: que den volumen sin ensuciar el suelo
   shadows.bias = 0.004;
   shadows.normalBias = 0.02;
 
@@ -149,9 +149,10 @@ void main() {
   col = mix(col, l < .5 ? mix(p0, p1, l * 2.) : mix(p1, p2, l * 2. - 1.), pal);
   vec2 px = floor(vUV * screen), e = 1.2 / screen;
   float d = texture2D(depthSampler, vUV).r;
-  float dn = min(min(texture2D(depthSampler, vUV + vec2(e.x, 0.)).r, texture2D(depthSampler, vUV - vec2(e.x, 0.)).r), min(texture2D(depthSampler, vUV + vec2(0., e.y)).r, texture2D(depthSampler, vUV - vec2(0., e.y)).r));
+  float dl = texture2D(depthSampler, vUV - vec2(e.x, 0.)).r, dr = texture2D(depthSampler, vUV + vec2(e.x, 0.)).r, du = texture2D(depthSampler, vUV + vec2(0., e.y)).r, dd = texture2D(depthSampler, vUV - vec2(0., e.y)).r;
+  float lap = abs(dl + dr - 2. * d) + abs(du + dd - 2. * d); // segunda derivada: una pendiente suave (suelo rasante) vale ~0, un borde de objeto no
   // Contorno fino de 1 px, en un violeta oscuro cálido (no negro): se funde con las sombras y recorta las siluetas
-  col = mix(col, vec3(.13, .09, .2), outline * step(.012, (d - dn) / max(d, 1e-4)) * (1. - smoothstep(.03, .06, d))); // solo cerca: en el horizonte el salto de profundidad pintaba una banda
+  col = mix(col, vec3(.13, .09, .2), outline * step(.02, lap / max(d, 1e-4)) * (1. - smoothstep(.03, .06, d))); // solo cerca: en el horizonte el salto de profundidad pintaba una banda
   col += (h(px + fract(t) * 97.) - .5) * grain;
   col *= 1. - scan * step(1.5, mod(px.y, 3.));
   col = floor(col * levels + b4(px)) / levels;

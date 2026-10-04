@@ -956,6 +956,10 @@ scene.onBeforeRenderObservable.add(() => {
       flyT = 0.05;
       const [x, z, w, d] = dust[Math.floor(Math.random() * dust.length)];
       ambient("mote", new B.Vector3(x + (Math.random() - 0.5) * w, 0.5 + Math.random() * 12, z + (Math.random() - 0.5) * d));
+    } else if (!simulating && !dust && profile.climate.day && (flyT -= dt) <= 0) {
+      flyT = 0.15; // de día: pétalos y mariposas en vez de luciérnagas
+      const a = Math.random() * Math.PI * 2, r = 5 + Math.random() * 24;
+      ambient("petal", new B.Vector3(car.pos.x + Math.cos(a) * r, 0.4 + Math.random() * 3, car.pos.z + Math.sin(a) * r));
     } else if (!simulating && !dust && cycleS > 0.5 && (flyT -= dt) <= 0) {
       flyT = 0.12 / cycleS;
       const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 22;

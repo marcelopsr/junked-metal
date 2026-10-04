@@ -10,7 +10,7 @@ let tex: B.Texture;
 const pool: B.ParticleSystem[] = [];
 let next = 0;
 // Ambiente (polvo en el haz, luciérnagas): sistemas propios, fuera del pool de golpes
-let motes: B.ParticleSystem, flies: B.ParticleSystem;
+let motes: B.ParticleSystem, flies: B.ParticleSystem, petals: B.ParticleSystem;
 function ambientPs(cap: number, size: [number, number], life: [number, number], power: [number, number], gravity: number) {
   const ps = new B.ParticleSystem("amb", cap, scene);
   ps.particleTexture = tex;
@@ -23,8 +23,8 @@ function ambientPs(cap: number, size: [number, number], life: [number, number], 
   ps.start();
   return ps;
 }
-export function ambient(kind: "mote" | "fly", p: B.Vector3) {
-  const ps = kind === "mote" ? motes : flies;
+export function ambient(kind: "mote" | "fly" | "petal", p: B.Vector3) {
+  const ps = kind === "mote" ? motes : kind === "petal" ? petals : flies;
   (ps.emitter as B.Vector3).copyFrom(p);
   ps.manualEmitCount = kind === "mote" ? 2 : 1;
 }
@@ -49,6 +49,12 @@ export function initFx(s: B.Scene, low: boolean) {
   motes = ambientPs(low ? 80 : 160, [0.04, 0.09], [0.8, 1.3], [0.1, 0.4], 0.15);
   motes.color1 = motes.color2 = B.Color4.FromHexString("#8a8068ff");
   motes.colorDead = new B.Color4(0, 0, 0, 0);
+  // Pétalos y mariposas de día: rosas, amarillos y blancos que flotan lento
+  petals = ambientPs(low ? 30 : 90, [0.3, 0.5], [3, 5], [0.3, 0.8], -0.25);
+  petals.blendMode = B.ParticleSystem.BLENDMODE_STANDARD;
+  petals.color1 = B.Color4.FromHexString("#ffb3d1ff"); petals.color2 = B.Color4.FromHexString("#fff3a0ff");
+  petals.colorDead = new B.Color4(1, 1, 1, 0);
+  petals.minAngularSpeed = -2; petals.maxAngularSpeed = 2;
   // Luciérnagas: parpadean con un gradiente de color a lo largo de su vida
   flies = ambientPs(low ? 40 : 90, [0.1, 0.18], [2.5, 4], [0.2, 0.6], 0.25);
   const on = B.Color4.FromHexString("#e8ff70ff"), off = new B.Color4(0.9, 1, 0.45, 0);
@@ -143,7 +149,7 @@ export function impact(m: B.AbstractMesh, at: B.Vector3, color: string, size: nu
 }
 
 /** Cámara lenta: las partículas del pool avanzan a k veces su velocidad (1 = normal). */
-export function fxSpeed(k: number) { for (const ps of [...pool, motes, flies]) ps.updateSpeed = 0.01 * k; }
+export function fxSpeed(k: number) { for (const ps of [...pool, motes, flies, petals]) ps.updateSpeed = 0.01 * k; }
 
 // ---------- Marcas en el piso (quemaduras, neumáticos) ----------
 type Mark = { m: B.InstancedMesh; life: number; s: number };

@@ -306,6 +306,7 @@ const PERKS: { k: PermK; cat: "chasis" | "equipo"; name: string; desc: string; c
   { k: "revive", cat: "equipo", name: "Batería de reserva", desc: "Revive una vez por partida con media vida", cost: [600, 1800] },
   { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: [2200] },
 ];
+const PERK_ICON: Record<PermK, string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", reroll: "resorte", extra: "cofre", revive: "heal", cards: "evo" };
 const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;
 // Desbloqueables: car:<auto>, pilot:<piloto>, part:<ranura>:<opción>. Los pilotos con logro no se compran.
 type Unlock = { id: string; name: string; desc: string; cost: number; ach?: string };
@@ -357,7 +358,7 @@ function renderShop() {
   $("shop").innerHTML = stab === "chasis" || stab === "equipo"
     ? PERKS.filter((p) => p.cat === stab).map((p) => {
       const l = save.perm[p.k], max = p.cost.length, cost = p.cost[l];
-      return `<button class="carc perk" data-k="${p.k}" ${l >= max || save.scrap < cost ? "disabled" : ""}><b>${p.name}</b>${p.desc}<div class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(max - l)}</div><div class="price">${l >= max ? "MÁXIMO" : `${cost} tornillos`}</div></button>`;
+      return `<button class="carc perk" data-k="${p.k}" ${l >= max || save.scrap < cost ? "disabled" : ""}><b class="wi">${icon(PERK_ICON[p.k], 22)}${p.name}</b>${p.desc}<div class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(max - l)}</div><div class="price">${l >= max ? "MÁXIMO" : `${cost} tornillos`}</div></button>`;
     }).join("")
     : UNLOCKS[stab]().map((u) => {
       const own = owns(u.id);
@@ -525,7 +526,7 @@ function renderBestiary() {
   $("btabs").innerHTML = tabsHtml(BTABS, btab, "btab");
   $("beasts").innerHTML = btab === "stats" ? statsHtml() : btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
     const a: { name: string; txt: string; reward?: string; scrap?: number } = ACH[k], ok = save.ach.includes(k);
-    return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b>${a.name}</b>${a.txt}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}</div>` : ""}</div>`;
+    return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b class="wi">${icon("evo", 22)}${a.name}</b>${a.txt}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}</div>` : ""}</div>`;
   }).join("")
     : btab === "pilotos" ? (Object.keys(PILOTS) as PilotId[]).map((k) => {
       const p = PILOTS[k];
@@ -534,7 +535,7 @@ function renderBestiary() {
     : (Object.keys(DEF) as Kind[]).map((k) => {
       const d = DEF[k], seen = save.seen.includes(k), n = save.slain[k] ?? 0;
       if (!seen) return `<div tabindex="0" class="carc ficha locked"><b>???</b>Sin datos. Todavía no apareció en el patio.</div>`;
-      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}"><b>${d.name}</b>${d.boss ? "Jefe" : "Plaga"} · ${n} ${n === 1 ? "baja" : "bajas"}${LORE[k] ? `<div class="lore">${LORE[k]}</div>` : ""}<div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} tuercas de XP` : "Fin de la partida"}</div></div>`;
+      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}"><b class="wi">${d.boss ? icon("jefe", 22) : ""}${d.name}</b>${d.boss ? "Jefe" : "Plaga"} · ${n} ${n === 1 ? "baja" : "bajas"}${LORE[k] ? `<div class="lore">${LORE[k]}</div>` : ""}<div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} tuercas de XP` : "Fin de la partida"}</div></div>`;
     }).join("");
   $("records").innerHTML = save.runs.length
     ? `<tr><th>#</th><th>Tiempo</th><th>Bajas</th><th>Nivel</th><th>Semilla</th></tr>` + save.runs.map((r, i) => `<tr><td>${i + 1}</td><td>${fmt(r.t)}${r.win ? " V" : ""}</td><td>${r.kills}</td><td>${r.lv}</td><td>${r.seed}</td></tr>`).join("")
