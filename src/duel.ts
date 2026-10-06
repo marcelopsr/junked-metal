@@ -44,7 +44,11 @@ const $d = (id: string) => document.getElementById(id)!;
 
 const ARENA = 25, HALF = ARENA / 2;
 const WORKBENCH_TABLE_TOP = 0.78;
-const WORKBENCH_ROBOT_Y = WORKBENCH_TABLE_TOP + 0.14;
+const WORKBENCH_TABLE_SURFACE = WORKBENCH_TABLE_TOP + 0.055; // centro del tablero + mitad de espesor
+/** Raíz del robot: malla con offset +0.15; ruedas en y≈0 local → apoyar en la mesa. */
+const WORKBENCH_ROBOT_Y = WORKBENCH_TABLE_SURFACE - 0.15;
+/** Cámara fija en armado (sin órbita). */
+const ARMADO_CAM = { yaw: 0.38, dist: 3.85, height: 2.45, targetY: WORKBENCH_TABLE_SURFACE + 0.22 };
 type PieceCat = "chassis" | "wheels" | "weapon";
 const PIECE_CAT_KEY: Record<PieceCat, "c" | "w" | "a"> = { chassis: "c", wheels: "w", weapon: "a" };
 const PIECE_CAT_IDS: Record<PieceCat, readonly string[]> = { chassis: CH, wheels: WH, weapon: AR };
@@ -78,8 +82,20 @@ let playerPaint = loadDuelPaint();
 let paintSlot: PaintSlot = "chassis_body";
 let flipCd = 0;
 let pendingPiece: { cat: PieceCat; id: string } | null = null;
-let armadoCamYaw = 0.55;
 let shotCamFrozen = false;
+
+function dismissLoadOverlay() {
+  const el = document.getElementById("load");
+  if (!el) return;
+  el.classList.add("hidden", "out");
+  el.classList.remove("in");
+}
+
+function applyArmadoCam() {
+  const { yaw, dist, height, targetY } = ARMADO_CAM;
+  deps.cam.position.set(Math.sin(yaw) * dist, height, Math.cos(yaw) * dist);
+  deps.cam.setTarget(new B.Vector3(0, targetY, 0));
+}
 
 export function initDuel(d: Deps) { deps = d; ensureUi(); }
 
@@ -219,7 +235,10 @@ function cleanup() {
   lastHit.clear();
 }
 
-function wireWorkbenchUi() {
+let wbTrayWired = false;
+function wireWorkbenchTray() {
+  if (wbTrayWired) return;
+  wbTrayWired = true;
   const tray = ui.querySelector(".duel-wb-tray")!;
   tray.addEventListener("dragstart", (e) => {
     const ev = e as DragEvent;
@@ -236,7 +255,16 @@ function wireWorkbenchUi() {
     chip?.setAttribute("aria-grabbed", "false");
     ui.querySelectorAll(".duel-drop.drag-over").forEach((el) => el.classList.remove("drag-over"));
   });
-  ui.querySelectorAll(".duel-drop").forEach((zone) => {
+  tray.addEventListener("click", (e) => {
+    const chip = (e.target as HTMLElement).closest("[data-piece]") as HTMLElement | null;
+    if (!chip) return;
+    const [cat, id] = chip.dataset.piece!.split(":") as [PieceCat, string];
+    setPiece(cat, id);
+  });
+}
+
+function wireWorkbenchDropCols() {
+  ui.querySelectorAll<HTMLElement>(".duel-tray-col[data-slot]").forEach((zone) => {
     zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("drag-over"); });
     zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
     zone.addEventListener("drop", (e) => {
@@ -245,35 +273,8 @@ function wireWorkbenchUi() {
       const raw = (e as DragEvent).dataTransfer?.getData("text/plain");
       if (!raw) return;
       const [cat, id] = raw.split(":") as [PieceCat, string];
-      if ((zone as HTMLElement).dataset.slot !== cat) return;
+      if (zone.dataset.slot !== cat) return;
       setPiece(cat, id);
-    });
-    zone.addEventListener("click", () => {
-      if (!pendingPiece) return;
-      const slot = (zone as HTMLElement).dataset.slot as PieceCat;
-      if (pendingPiece.cat !== slot) return;
-      setPiece(slot, pendingPiece.id);
-    });
-    zone.addEventListener("keydown", (e) => {
-      const ke = e as KeyboardEvent;
-      if (ke.key !== "Enter" && ke.key !== " ") return;
-      ke.preventDefault();
-      (zone as HTMLElement).click();
-    });
-  });
-  tray.addEventListener("click", (e) => {
-    const chip = (e.target as HTMLElement).closest("[data-piece]") as HTMLElement | null;
-    if (!chip) return;
-    const [cat, id] = chip.dataset.piece!.split(":") as [PieceCat, string];
-    pendingPiece = { cat, id };
-    ui.querySelectorAll(".duel-chip").forEach((c) => { c.classList.remove("pending"); c.setAttribute("aria-pressed", c.classList.contains("on") ? "true" : "false"); });
-    chip.classList.add("pending");
-    chip.setAttribute("aria-pressed", "true");
-    ui.querySelectorAll(".duel-drop").forEach((z) => {
-      const el = z as HTMLElement;
-      const on = el.dataset.slot === cat;
-      el.classList.toggle("pick-target", on);
-      el.setAttribute("aria-label", on ? `Zona ${el.dataset.slot}, pieza seleccionada` : `Zona ${el.dataset.slot}`);
     });
   });
 }
@@ -284,22 +285,19 @@ function trayGroup(cat: PieceCat, lab: string, cur: string) {
     const on = id === cur;
     return `<button type="button" class="duel-chip${on ? " on" : ""}" draggable="true" role="listitem" data-piece="${cat}:${id}" aria-pressed="${on}" aria-grabbed="false" title="${p.lore}">${p.label}</button>`;
   }).join("");
-  return `<div class="duel-tray-col"><span class="duel-tray-lab">${lab}</span><div class="duel-tray-chips" role="list">${chips}</div></div>`;
+  return `<div class="duel-tray-col" data-slot="${cat}"><span class="duel-tray-lab">${lab}</span><div class="duel-tray-chips" role="list">${chips}</div></div>`;
 }
 
 function ensureUi() {
   if (ui) return;
   ui = document.createElement("div");
   ui.id = "duel-ui";
-  ui.innerHTML = `<div id="duel-arm" class="duel-wb"><header class="duel-wb-head"><h1>ARMADO</h1><p class="duel-wb-hint">Arrastre cada pieza al robot</p><p class="duel-wb-fallback">O seleccione pieza y zona en el robot</p></header>
+  ui.innerHTML = `<div id="duel-arm" class="duel-wb"><header class="duel-wb-head"><h1>ARMADO</h1><p class="duel-wb-hint">Toque una pieza para equiparla en el robot</p><p class="duel-wb-fallback">También puede arrastrar la pieza a su columna</p></header>
 <div class="duel-wb-main"><aside class="duel-wb-side" aria-labelledby="duel-sec-stats"><h2 id="duel-sec-stats" class="duel-sec-h">Telemetría</h2><div class="duel-bars" role="group" aria-label="Estimación del robot"></div>
 <details class="duel-paint-wrap" id="duel-paint-details"><summary class="duel-paint-sum">Pintura <span class="duel-opt">(opcional)</span></summary><div class="duel-paint" id="duel-paint"></div></details>
 <p class="duel-warn" id="duel-warn" role="status" aria-live="polite"></p></aside>
-<div class="duel-wb-stage" aria-hidden="false"><div class="duel-wb-zones">
-<div class="duel-drop" data-slot="chassis" tabindex="0" role="button" aria-label="Zona chasis"><span class="duel-drop-lab">Chasis</span><span class="duel-drop-val" id="duel-slot-c"></span></div>
-<div class="duel-drop" data-slot="wheels" tabindex="0" role="button" aria-label="Zona ruedas"><span class="duel-drop-lab">Ruedas</span><span class="duel-drop-val" id="duel-slot-w"></span></div>
-<div class="duel-drop" data-slot="weapon" tabindex="0" role="button" aria-label="Zona arma"><span class="duel-drop-lab">Arma</span><span class="duel-drop-val" id="duel-slot-a"></span></div>
-</div></div></div>
+<div class="duel-wb-stage" aria-hidden="true"></div></div>
+<p class="duel-equip" id="duel-equip" aria-live="polite"></p>
 <section class="duel-wb-tray-wrap" aria-labelledby="duel-sec-tray"><h2 id="duel-sec-tray" class="duel-sec-h">Piezas</h2><div class="duel-wb-tray"></div></section>
 <button type="button" class="duel-cta" id="duel-confirm">Confirmar armado</button></div>
 <div id="duel-hud"><div class="duel-hp-row"><span id="duel-en">RIVAL</span><span id="duel-you">TÚ</span></div><div class="duel-hp-row"><div class="duel-hp enemy"><i id="duel-hpE"></i></div><div class="duel-hp you"><i id="duel-hpP"></i></div></div><div class="duel-score" id="duel-score"></div></div>
@@ -311,7 +309,7 @@ function ensureUi() {
   pause.id = "duel-pause";
   pause.innerHTML = `<p>PAUSA</p><button type="button" id="duel-resume">REANUDAR</button><button type="button" id="duel-quit">ABANDONAR</button>`;
   document.body.appendChild(pause);
-  wireWorkbenchUi();
+  wireWorkbenchTray();
   $d("duel-confirm").onclick = () => { if (comboCheck(cfg) !== "ban") beginMatch(); };
   $d("duel-next").onclick = () => startRound();
   $d("duel-again").onclick = () => { score = [0, 0]; round = 0; showArmado(); };
@@ -370,16 +368,10 @@ function syncArmado() {
   cfg = { chassis: CH[idx.c], wheels: WH[idx.w], weapon: AR[idx.a] };
   const cc = comboCheck(cfg);
   const ch = CH[idx.c], wh = WH[idx.w], ar = AR[idx.a];
-  ($d("duel-slot-c") as HTMLElement).textContent = PIECE[ch].label;
-  ($d("duel-slot-w") as HTMLElement).textContent = PIECE[wh].label;
-  ($d("duel-slot-a") as HTMLElement).textContent = PIECE[ar].label;
   ui.querySelector(".duel-wb-tray")!.innerHTML = trayGroup("chassis", "Chasis", ch) + trayGroup("wheels", "Ruedas", wh) + trayGroup("weapon", "Arma", ar);
-  ui.querySelectorAll(".duel-drop").forEach((z) => {
-    const el = z as HTMLElement;
-    const match = pendingPiece && el.dataset.slot === pendingPiece.cat;
-    el.classList.toggle("pick-target", !!match);
-    el.classList.toggle("equipped", true);
-  });
+  wireWorkbenchDropCols();
+  const eq = $d("duel-equip");
+  eq.textContent = `${PIECE[ch].label} · ${PIECE[wh].label} · ${PIECE[ar].label}`;
   const m = massOf(cfg), st = statsOf(cfg, cc === "warn");
   const bars = ui.querySelector(".duel-bars")!;
   const norm = (v: number, max: number) => Math.round(100 * v / max);
@@ -407,13 +399,15 @@ function previewArmado() {
 function showArmado() {
   ensureUi(); cleanup(); phase = "armado";
   pendingPiece = null;
-  armadoCamYaw = 0.55;
+  dismissLoadOverlay();
   showWorld(false); clearLayout();
   applyClimate(CLIMATES.find((c) => c.id === "farol")!);
   buildWorkbench();
   deps.scene.physicsEnabled = true;
   ui.className = "on armado";
   syncArmado();
+  applyArmadoCam();
+  shotCamFrozen = true;
   document.getElementById("fe")?.classList.add("hidden");
   document.getElementById("touch")?.classList.add("hidden");
 }
@@ -430,6 +424,7 @@ function rivalCfg(): RobotConfig {
 }
 
 function beginMatch() {
+  shotCamFrozen = false;
   loadoutWarn = comboCheck(cfg) === "warn";
   matchDmg = { dealt: 0, taken: 0 };
   cleanup();
@@ -668,15 +663,7 @@ export function duelTick(dt: number) {
   if (!active || paused) return;
   if (phase === "inter" || phase === "results") return;
   if (flipCd > 0) flipCd = Math.max(0, flipCd - dt);
-  if (phase === "armado") {
-    if (!shotCamFrozen) {
-      armadoCamYaw += dt * 0.22;
-      const r = 5.2, h = 3.35, ty = WORKBENCH_ROBOT_Y - 0.15;
-      deps.cam.position.set(Math.sin(armadoCamYaw) * r, h, Math.cos(armadoCamYaw) * r);
-      deps.cam.setTarget(new B.Vector3(0, ty, 0));
-    }
-    return;
-  }
+  if (phase === "armado") return;
   if (phase === "countdown") {
     countdown -= dt;
     if (countdown <= 0) phase = "fight";
@@ -700,11 +687,8 @@ export function duelTick(dt: number) {
 }
 
 function setShotCamPose() {
-  if (phase === "armado") {
-    const r = 5.2, h = 3.35, ty = WORKBENCH_ROBOT_Y - 0.15, yaw = 0.55;
-    deps.cam.position.set(Math.sin(yaw) * r, h, Math.cos(yaw) * r);
-    deps.cam.setTarget(new B.Vector3(0, ty, 0));
-  } else {
+  if (phase === "armado") applyArmadoCam();
+  else {
     deps.cam.position.set(-6, 7.5, -11);
     deps.cam.setTarget(new B.Vector3(0, 0.6, 0));
   }

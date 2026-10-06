@@ -129,11 +129,9 @@ export const sessions = [
         return !!hit?.closest("[data-piece]");
       });
       await p.locator('[data-piece="chassis:cuna"]').click();
-      await p.locator('[data-slot="chassis"]').click();
       const cfg = await p.evaluate(() => window.__duel.info().cfg);
       if (cfg.chassis !== "cuna") throw new Error(`armado: cfg.chassis=${cfg.chassis}`);
       await p.locator('[data-piece="wheels:gigantes"]').click();
-      await p.locator('[data-slot="wheels"]').click();
       const cfg2 = await p.evaluate(() => window.__duel.info().cfg);
       if (cfg2.wheels !== "gigantes") throw new Error(`armado: cfg.wheels=${cfg2.wheels}`);
       await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
