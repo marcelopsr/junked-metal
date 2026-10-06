@@ -16,6 +16,7 @@ Metodología `orquestar` (skill de usuario): la sesión principal reparte, encar
 3. **Verificar** siempre: `npx tsc --noEmit -p .`, `npm test` y `npm run build`; después probar con las herramientas headless (`npm run shots`, `sim`, `perf`: ver "Herramientas de prueba"), no con el panel del navegador a mano.
 4. **Mantener el grafo**: `graphify update .` tras cambios de código (el hook de git lo hace en cada commit). Cambios en docs → `/graphify --update`.
 5. **Loop con AskUserQuestion (toolbox)** — regla `.cursor/rules/loop-colaboracion.mdc`: solo para dudas reales de diseño, balance o prioridad (preferir 1-3 preguntas por ronda); al cerrar una tanda, otra ronda si hay decisiones abiertas. No preguntas sueltas en el chat. Herramientas del proyecto y de la Mac: usar sin pedir permiso. **Git:** commit local tras cada tanda con cambios; push a `origin/master` sin preguntar al terminar una tanda significativa o al cerrar sesión (usuario autorizó). Nunca AskUserQuestion sobre commit/push salvo que el usuario lo pida explícitamente.
+6. **Plan antes de feature** — regla `.cursor/rules/plan-antes-de-feature.mdc`: features nuevas, modos o cambios que crucen módulos exigen plan en `docs/` + rondas de toolbox hasta cerrar las decisiones, antes de cualquier código (ejemplo: `docs/BATTLE_RC_PLAN.md`).
 
 ## Mapa del código (`src/`)
 
