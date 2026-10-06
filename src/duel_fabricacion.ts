@@ -81,7 +81,10 @@ export function mountFabricacion(
 <div class="duel-fab-grid-row">
 <div class="duel-fab-layers-rail" aria-labelledby="duel-fab-layers-title">
 <p id="duel-fab-layers-title" class="duel-fab-layers-title">${icon("fab_layers", 14)} Perfil Y</p>
+<div class="duel-fab-prof-wrap">
+<div class="duel-fab-prof-ticks" id="duel-fab-prof-ticks" aria-hidden="true"></div>
 <div class="duel-fab-profile" id="duel-fab-profile" aria-hidden="true"></div>
+</div>
 <div class="duel-fab-layers" id="duel-fab-layers" role="tablist" aria-label="Alturas del robot"></div>
 </div>
 <div class="duel-fab-grid-main">
@@ -158,22 +161,46 @@ export function mountFabricacion(
     return `${y}`;
   }
 
+  /** Celdas XZ ocupadas en un plano Y (0–1 respecto al área de rejilla). */
+  function layerFillRatio(y: number): number {
+    const half = D.grid_half_xz;
+    const span = half * 2 + 1;
+    const maxCells = span * span;
+    const keys = new Set<string>();
+    for (const c of build.cells) {
+      const { sx, sy, sz } = footprint(blockDef(c.blockId), c.rot);
+      for (let dy = 0; dy < sy; dy++) {
+        if (c.y + dy !== y) continue;
+        for (let dx = 0; dx < sx; dx++) for (let dz = 0; dz < sz; dz++) keys.add(`${c.x + dx},${c.z + dz}`);
+      }
+    }
+    return keys.size / maxCells;
+  }
+
   function syncLayers() {
     const maxY = D.grid_max_y;
     const btns: string[] = [];
     const prof: string[] = [];
+    const ticks: string[] = [];
     for (let y = maxY; y >= 0; y--) {
       const has = layerHasBlocks(y);
       const on = y === layerY;
-      prof.push(`<div class="duel-fab-prof-seg${on ? " on" : ""}${has ? " has" : ""}" title="Plano ${layerPlanoLabel(y, maxY)}"></div>`);
+      const fill = has ? layerFillRatio(y) : 0;
+      const pct = Math.round(fill * 100);
+      const dense = fill >= 0.45 ? " dense" : "";
+      prof.push(`<div class="duel-fab-prof-seg${on ? " on" : ""}${has ? " has" : ""}${dense}" style="--ly-fill:${pct}%" title="Plano ${layerPlanoLabel(y, maxY)}${has ? ` · ${pct}% rejilla` : ""}"></div>`);
+      ticks.push(`<span class="duel-fab-prof-tick${on ? " on" : ""}">${y}</span>`);
     }
     for (let y = 0; y <= maxY; y++) {
       const has = layerHasBlocks(y);
       const tag = layerTag(y, maxY);
-      btns.push(`<button type="button" role="tab" class="duel-fab-ly${y === layerY ? " on" : ""}${has ? " has" : ""}" data-ly="${y}" aria-selected="${y === layerY}" aria-label="${layerPlanoLabel(y, maxY)}${has ? ", con piezas" : ""}"><span class="duel-fab-ly-n">Y${y}</span><span class="duel-fab-ly-t">${tag}</span></button>`);
+      const fill = has ? layerFillRatio(y) : 0;
+      const pct = Math.round(fill * 100);
+      btns.push(`<button type="button" role="tab" class="duel-fab-ly${y === layerY ? " on" : ""}${has ? " has" : ""}" data-ly="${y}" aria-selected="${y === layerY}" aria-label="${layerPlanoLabel(y, maxY)}${has ? `, ${pct}% de la rejilla ocupada` : ""}"><span class="duel-fab-ly-fill" style="--ly-fill:${pct}%"></span><span class="duel-fab-ly-n">Y${y}</span><span class="duel-fab-ly-t">${tag}</span></button>`);
     }
     $("duel-fab-layers").innerHTML = btns.join("");
     $("duel-fab-profile").innerHTML = prof.join("");
+    $("duel-fab-prof-ticks").innerHTML = ticks.join("");
     $("duel-fab-ydim").textContent = `Altura ${layerY} de ${maxY}`;
   }
 

@@ -358,10 +358,14 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
   /** Chapa troquelada: cuerpo + labio y cantos biselados (se fusiona en merge). */
   const pushChapaStamp = (
     w: number, h: number, d: number, px: number, py: number, pz: number,
-    body = wBody, edge = wEdge,
+    body = wBody, edge = wEdge, lite = false,
   ) => {
     parts.push(box(w * 0.9, h * 0.88, d * 0.9, body, [px, py, pz]));
     parts.push(box(w * 1.01, h * 0.1, d * 1.01, edge, [px, py + h * 0.42, pz]));
+    if (lite) {
+      parts.push(box(w * 1.01, h * 0.05, d * 0.18, edge, [px, py - h * 0.36, pz]));
+      return;
+    }
     parts.push(box(w * 1.01, h * 0.06, d * 0.22, edge, [px, py - h * 0.38, pz]));
     const cham = Math.min(w, d, h) * 0.11;
     for (const [ox, oz, sx, sz] of [
@@ -408,21 +412,33 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
     } else if (def.cat === "arma") {
       if (c.blockId === "trompo") {
         pushChapaStamp(g * 0.55, g * 0.22, g * 0.55, px, py - g * 0.06, pz);
+        pushChapaStamp(g * 0.42, g * 0.08, g * 0.42, px, py + g * 0.02, pz, wEdge, wBody, true);
         parts.push(cyl(g * 0.36, g * 0.36, g * 0.18, wEdge, [px, py + g * 0.08, pz]));
         parts.push(box(g * 0.12, g * 0.06, g * 0.12, weld, [px, py + g * 0.2, pz]));
       } else if (c.blockId === "sierra") {
         pushChapaStamp(g * 0.22, g * 0.38, g * 0.62, px - g * 0.08, py, pz);
+        pushChapaStamp(g * 0.18, g * 0.28, g * 0.2, px - g * 0.02, py - g * 0.04, pz, weld, wBody, true);
         parts.push(cyl(g * 0.28, g * 0.28, g * 0.07, wEdge, [px + g * 0.26, py, pz], [0, 0, Math.PI / 2]));
         parts.push(box(g * 0.04, g * 0.32, g * 0.32, wEdge, [px + g * 0.26, py, pz], [0, 0, Math.PI / 2]));
+        for (let i = -2; i <= 2; i++) {
+          parts.push(box(g * 0.025, g * 0.26, g * 0.04, wEdge, [px + g * 0.26, py + i * g * 0.1, pz + g * 0.17], [0, 0, Math.PI / 2]));
+        }
       } else if (c.blockId === "pala") {
         pushChapaStamp(w * 0.35, h * 0.55, d * 0.28, px - w * 0.12, py, pz);
         pushChapaStamp(w * 0.55, h * 0.75, d * 0.12, px + w * 0.18, py + h * 0.05, pz, wEdge, wBody);
-      } else pushChapaStamp(w, h * 0.85, d * 0.35, px, py, pz);
+        pushChapaStamp(w * 0.2, h * 0.35, d * 0.22, px - w * 0.02, py - h * 0.08, pz, weld, wEdge, true);
+      } else {
+        pushChapaStamp(w * 0.55, h * 0.35, d * 0.55, px, py - h * 0.22, pz, weld, wBody, true);
+        pushChapaStamp(w, h * 0.85, d * 0.35, px, py, pz);
+      }
     } else if (c.blockId === "asiento_rc") {
       pushChapaStamp(w * 0.88, h * 0.22, d * 0.88, px, py - h * 0.32, pz, mb, weld);
+      pushChapaStamp(w * 0.22, h * 0.45, d * 0.7, px - w * 0.34, py, pz, mt, weld, true);
+      pushChapaStamp(w * 0.22, h * 0.45, d * 0.7, px + w * 0.34, py, pz, mt, weld, true);
       parts.push(box(w * 0.7, h * 0.5, d * 0.7, mt, [px, py * 0.85, pz]));
       parts.push(box(w * 0.55, h * 0.35, d * 0.25, M.matte("#1a1e18"), [px, py + h * 0.15, pz - d * 0.15]));
     } else if (c.blockId === "muneco") {
+      pushChapaStamp(g * 0.38, g * 0.12, g * 0.38, px, py - g * 0.2, pz, mb, weld, true);
       parts.push(cyl(g * 0.12, g * 0.12, g * 0.35, M.matte("#c4a574"), [px, py, pz]));
       parts.push(cyl(g * 0.14, g * 0.14, g * 0.14, M.matte("#2a2d28"), [px, py + g * 0.22, pz]));
     } else if (c.blockId === "puerta") {
