@@ -247,13 +247,15 @@
 
     <section id="scr-pause" class="scr">
       <div class="brand small">PAUSA</div>
-      <div class="kit">
+      <div class="kit kit4">
         <div><div class="sect">Armas</div><ul id="kitW"></ul></div>
         <div><div class="sect">Pasivas</div><ul id="kitP"></ul></div>
         <div><div class="sect">Auto</div><ul id="kitS"></ul></div>
+        <div><div class="sect">Partida</div><ul id="kitR"></ul></div>
       </div>
       <nav class="list row3">
         <button data-act="resume" class="primary">Seguir</button>
+        <button data-act="controls">Controles</button>
         <button data-go="config">Configuración</button>
         <button data-act="quit">Abandonar</button>
       </nav>
@@ -268,8 +270,10 @@
       <ul class="kit stats" id="overStats"></ul>
       <div class="overRow overGrid">
         <div class="overCol card">
-          <div class="sect">Daño por fuente</div>
+          <div class="sect">Daño infligido</div>
           <ul id="overDmg"></ul>
+          <div class="sect">Daño recibido</div>
+          <ul id="overHurt"></ul>
         </div>
         <div class="overCol card">
           <div class="sect">Mejores momentos</div>

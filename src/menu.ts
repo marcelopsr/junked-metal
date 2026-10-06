@@ -1018,23 +1018,25 @@ function renderBeast() {
 }
 
 // ---------- Pausa y resultados (los datos los arma main.ts) ----------
-type Kit = { weapons: { id: WeaponId; lv: number; evolved: boolean }[]; passives: { id: PassiveId; lv: number }[]; stats: [string, string][]; seed: string };
+type Kit = { weapons: { id: WeaponId; lv: number; evolved: boolean }[]; passives: { id: PassiveId; lv: number }[]; stats: [string, string][]; run: [string, string][]; seed: string };
 const pips = (l: number) => `<span class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(Math.max(0, 5 - l))}</span>`;
 export function openPause(k: Kit) {
   $("kitW").innerHTML = k.weapons.map((w) => `<li><span class="wi">${icon(w.id, 20)}${w.evolved ? WEAPONS[w.id].evoName : WEAPONS[w.id].name}</span>${w.evolved ? "<b>EVO</b>" : pips(w.lv)}</li>`).join("");
   $("kitP").innerHTML = k.passives.map((p) => `<li><span class="wi">${icon(p.id, 20)}${PASSIVES[p.id].name}</span>${pips(p.lv)}</li>`).join("") || "<li><span>Ninguna</span></li>";
   $("kitS").innerHTML = k.stats.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
+  $("kitR").innerHTML = k.run.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("pauseSeed").textContent = k.seed;
   reset("pause");
 }
-export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; seed: string; more?: boolean; title?: string; prevBest?: number; bestStreak?: number; bestHit?: number; bossKills?: number; ach?: string[]; car?: string }) {
+export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; hurt?: Record<string, number>; seed: string; more?: boolean; title?: string; prevBest?: number; bestStreak?: number; bestHit?: number; bestDrive?: number; bossKills?: number; evos?: string[]; ach?: string[]; car?: string }) {
   $("overEndless").classList.toggle("hidden", !r.more); // venció al jefe final: puede seguir en modo sin fin
   $("overTitle").textContent = r.title ?? (r.win ? "VICTORIA" : "FIN DE LA PARTIDA");
   $("overTxt").textContent = r.why;
   // Comparación con el récord de tiempo: ▲ mejor, ▼ peor
   const dT = r.prevBest ? Math.floor(r.time) - r.prevBest : 0, dTxt = r.prevBest ? `<em class="${dT >= 0 ? "up" : "dn"}">${dT >= 0 ? "▲" : "▼"} ${fmt(Math.abs(dT))}</em>` : "";
   $("overStats").innerHTML = [["Tiempo", fmt(r.time) + dTxt], ["Bajas", r.kills], ["Nivel", r.level], ["Tornillos", "+" + r.scrap]].map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
-  const best = [["Racha más larga", "x" + (r.bestStreak ?? 0)], ["Golpe más fuerte", String(r.bestHit ?? 0)], ["Jefes derrotados", String(r.bossKills ?? 0)]];
+  const best = [["Racha más larga", "x" + (r.bestStreak ?? 0)], ["Pico de manejo", `×${(r.bestDrive ?? 1).toFixed(2)}`], ["Golpe más fuerte", String(r.bestHit ?? 0)], ["Jefes derrotados", String(r.bossKills ?? 0)]];
+  if (r.evos?.length) best.push(["Evoluciones", r.evos.join(" · ")]);
   $("overBest").innerHTML = best.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("overRew").innerHTML = [`<li><span>Tornillos</span><b>+${r.scrap}</b></li>`, ...(r.ach ?? []).map((a) => `<li><span>Logro</span><b>${a}</b></li>`)].join("");
   $("overRepeat").textContent = "Repetir";
@@ -1043,6 +1045,9 @@ export function openOver(r: { win: boolean; why: string; time: number; kills: nu
   const rows = Object.entries(r.dmg).sort((a, b) => b[1] - a[1]), top = rows[0]?.[1] || 1;
   const name = (id: string) => (id in WEAPONS ? WEAPONS[id as WeaponId].name : id[0].toUpperCase() + id.slice(1));
   $("overDmg").innerHTML = rows.map(([id, v]) => `<li><span class="wi">${id in WEAPONS ? icon(id, 18) : ""}${name(id)}</span><i style="width:${(v / top) * 100}%"></i><b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño infligido</span></li>";
+  const hurt = Object.entries(r.hurt ?? {}).sort((a, b) => b[1] - a[1]), hurtTop = hurt[0]?.[1] || 1;
+  const hurtName = (id: string) => id.startsWith("contacto ") ? `Contacto · ${DEF[id.slice(9) as Kind]?.name ?? id.slice(9)}` : id[0].toUpperCase() + id.slice(1);
+  $("overHurt").innerHTML = hurt.map(([id, v]) => `<li><span>${hurtName(id)}</span><i style="width:${(v / hurtTop) * 100}%"></i><b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño recibido</span></li>";
   $("overSeed").textContent = r.seed;
   reset("over");
 }
@@ -1126,6 +1131,7 @@ export function initMenu(a: Api) {
     else if (d.act && /^(reset:|psave:|pload:|swap|keepdup|calib)/.test(d.act)) ctlAct(d.act);
     else if (d.act === "export") exportSave();
     else if (d.act === "import") importSave();
+    else if (d.act === "controls") { tab = "ctl"; go("config"); }
     else if (d.act === "resume") api.resume();
     else if (d.act === "quit") api.quit();
     else if (d.act === "install") void installEv?.prompt().finally(() => { installEv = null; $("install").classList.add("hidden"); }); // el evento sirve una sola vez

@@ -1,4 +1,4 @@
-import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
+import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
@@ -20,7 +20,7 @@ import { buildLayout, floorAt, HALF, initWorld, hitBreakables, obstacles, occlud
 import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
-import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap } from "./replay";
+import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
 import { CAR_YAW, carSpot, menuOff, menuTick, SHOTS } from "./menuscene";
 import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace, TRACKS } from "./kart";
@@ -30,7 +30,7 @@ const $ = (id: string) => document.getElementById(id)!;
 const R = BAL.ritmo, ATK = BAL.ataques; // balance.json: ritmo de la partida y ataques de bichos y jefes
 // Partida de 10 minutos: dos minijefes (sueltan cofres de evolución) y el jefe final a las 10:00
 let RUN_BOSSES: [number, Kind][] = [];
-let warned = false;
+let wasGrounded = true, coyoteT = 0;
 
 // Guardado (localStorage "rcfight2"): type Save y DEFAULT viven en menu.ts
 
@@ -78,7 +78,7 @@ let weapons: Weapon[] = [];
 let passives: Partial<Record<PassiveId, number>> = {};
 let st: PStats = passiveStats({}, save.perm);
 let hp = 100, maxHp = 100, boost = 100, jingleT = 0;
-let bestStreak = 0, bestHit = 0, bossKills = 0; // mejores momentos de la partida (pantalla final)
+let bestStreak = 0, bestHit = 0, bossKills = 0, bestDriveMul = 1; // mejores momentos de la partida (pantalla final)
 let xp = 0, level = 1, pendingLevels = 0;
 let time = 0, kills = 0, runScrap = 0;
 let runDist = 0; // metros manejados en la partida (estadísticas de carrera)
@@ -155,8 +155,8 @@ function dropGems(pos: B.Vector3, amount: number) {
 }
 
 const PICKUP_CAP = R.pickups_tope; // por tipo; sin tope, a los 7-9 min había cientos en el piso (mallas + sombras) y la pestaña se caía
-const pilaTpl = () => template("pila", () => [cyl(0.8, 0.8, 1.6, M.plastic("#22c55e"), [0, 0, 0], [0, 0, Math.PI / 2], 12)]);
-const imanTpl = () => template("iman", () => [sph(1.2, M.plastic("#ef4444"), [0, 0, 0])]);
+const pilaTpl = () => template("pila", () => [cyl(0.8, 0.8, 1.6, pbr("pila", { color: "#22c55e", rough: 0.45, emissive: "#1a8040" }), [0, 0, 0], [0, 0, Math.PI / 2], 12)]);
+const imanTpl = () => template("iman", () => [sph(1.2, pbr("iman", { color: "#ef4444", rough: 0.35, metal: 0.35, emissive: "#c02020" }), [0, 0, 0])]);
 function dropPickup(pos: B.Vector3, type: Pickup["type"]) {
   if (type === "pila" && noRepair) return; // Sin reparaciones: tampoco caen pilas
   let m: B.AbstractMesh;
@@ -216,7 +216,7 @@ function clearRun() {
   enemies = []; weapons = []; gems = []; pickups = [];
   clearFx();
   rainK = 0; rainBanner = false; rainSfx(0);
-  evtPre = { swarm: false, ball: false, rain: false, elites: new Set() };
+  evtPre = { swarm: false, ball: false, rain: false, elites: new Set(), boss: new Set() };
   car?.dispose();
   car = null;
   applyClimate(zoneClimate() ?? DUSK); // al volver al menú, atardecer (o el tubo del garaje)
@@ -250,7 +250,7 @@ function startRun(d = false) {
   car = new Car(scene, save.car, carOpts());
   lastHpFrac = 1;
   passives = {};
-  bestStreak = bestHit = bossKills = 0;
+  bestStreak = bestHit = bossKills = 0; bestDriveMul = 1;
   setScoop(save.car === "helado"); setEngineKind(save.car);
   weapons = startWeapons(save.pilot, save.perm.extra, startPick()).map(makeWeapon);
   if (save.car === "helado" && !weapons.some((w) => w.id === "gomitas")) weapons.unshift(makeWeapon("gomitas")); // arma de partida del camión: bochas de helado
@@ -261,13 +261,14 @@ function startRun(d = false) {
   hp = maxHp; boost = 100;
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
-  spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; warned = false; apagon = false;
+  spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; wasGrounded = true; coyoteT = 0; apagon = false;
   camYaw = 0; dynK = 1; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1);
   state = "play";
   scene.physicsEnabled = true;
   reset(null);
   $("levelup").classList.add("hidden");
   for (const k in dmgOut) delete dmgOut[k];
+  for (const k in dmgBy) delete dmgBy[k];
   $("hud").classList.remove("hidden");
   hudBoss(null);
   hudWorkshop(save.perm);
@@ -330,7 +331,8 @@ function endRun(win: boolean, why: string) {
   $("hud").classList.add("hidden");
   const more = win && !endless; // venció al jefe final: los resultados ofrecen "Seguir jugando"
   bank = { t: time, scrap: earned, dmg: { ...dmgOut }, rec };
-  const res = { win, title: endless ? "FIN DEL SIN FIN" : undefined, why, time, kills, level, scrap: earned, record, more, dmg: { ...dmgOut }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`, prevBest, bestStreak, bestHit: Math.round(bestHit), bossKills, ach: [...runAch], car: save.car };
+  const evos = weapons.filter((w) => w.evolved).map((w) => WEAPONS[w.id].evoName);
+  const res = { win, title: endless ? "FIN DEL SIN FIN" : undefined, why, time, kills, level, scrap: earned, record, more, dmg: { ...dmgOut }, hurt: { ...dmgBy }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`, prevBest, bestStreak, bestHit: Math.round(bestHit), bestDrive: bestDriveMul, bossKills, evos, ach: [...runAch], car: save.car };
   if (simulating) openOver(res); else startOutro(res);
 }
 
@@ -349,7 +351,7 @@ function startOutro(res: NonNullable<typeof outroRes>) {
     debris(car.pos, save.paint || "#d62828", 14, 9, 0.9);
     SFX.explosion();
   }
-  outroUi(true, `${fmt(time)} · ${kills} bajas · NV ${level}`);
+  outroUi(true, outroStatLine({ time: fmt(time), kills, level, drive: res.bestDrive ?? 1, evos: res.evos ?? [] }));
 }
 function outroTick(dt: number) {
   outroT += dt;
@@ -465,10 +467,12 @@ function openChest() {
 function pause() {
   if (state !== "play") return;
   state = "pause"; scene.physicsEnabled = false; engineStop(); musicDuck(true);
+  const evoLine = weapons.filter((w) => w.evolved).map((w) => WEAPONS[w.id].evoName).join(" · ");
   openPause({
     weapons: weapons.map((w) => ({ id: w.id, lv: w.lv, evolved: w.evolved })),
     passives: (Object.entries(passives) as [PassiveId, number][]).map(([id, lv]) => ({ id, lv })),
     stats: [["Carrocería", `${Math.ceil(hp)} / ${maxHp}`], ["Velocidad", `${Math.round(car!.def.speed * st.speedMul * 3.6)} km/h`], ["Embestida", `x${car!.def.ram}`], ["Daño", `${Math.round(st.dmg * 100)}%`], ["Blindaje", `${Math.round(st.armor * 100)}%`], ["Imán", `${st.magnet.toFixed(1)} m`]],
+    run: [["Nivel", `NV ${level}${pendingLevels ? ` (+${pendingLevels} pend.)` : ""}`], ["Tiempo", fmt(time)], ["Combo manejo", `×${driveMul.toFixed(2)} (pico ×${bestDriveMul.toFixed(2)})`], ["Re-sorteos", String(rerolls)], ...(evoLine ? [["Evoluciones", evoLine] as [string, string]] : [])],
     seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`,
   });
 }
@@ -602,11 +606,12 @@ function kill(e: Enemy) {
   kills++;
   const s = hudKill(); // una sola llamada: cada hudKill() suma una baja (antes se llamaba 5 veces y el cartel mostraba otro número)
   bestStreak = Math.max(bestStreak, s); if (e.def.boss) bossKills++;
-  if (s % 10 === 0) SFX.streak(s);
+  if (s >= 20 && s % 20 === 0) SFX.streak(s);
+  else if (s < 20 && s % 10 === 0) SFX.streak(s);
   if (!simulating && (s === 50 || s % 100 === 0)) banner(`RACHA x${s}`, 1.2); // cartel central solo en hitos
   if (s >= 100) grant("racha");
   if (!simulating && !LAB.on) save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
-  SFX.kill();
+  SFX.kill(s);
   FX.death(e.pos.add(new B.Vector3(0, 0.5, 0)), e.def.boss);
   debris(e.pos, e.def.color, e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
   if (!simulating) debris(e.pos, CONFETI[Math.floor(Math.random() * CONFETI.length)], e.def.boss ? 14 : 3, e.def.boss ? 12 : 7, e.def.boss ? 1.2 : 0.5); // confeti de color: cada baja se ve festiva
@@ -700,13 +705,19 @@ function update(dt: number) {
   });
   c.animate(dt, steer, r.fs, maxSpeed);
   if (jumpCd > 0) jumpCd -= dt;
-  if (input.jump && r.grounded && jumpCd <= 0) {
+  if (r.grounded) coyoteT = R.salto_coyote_s;
+  else coyoteT = Math.max(0, coyoteT - dt);
+  const canJump = (r.grounded || coyoteT > 0) && jumpCd <= 0;
+  if (input.jump && canJump) {
     jumpCd = R.salto_cd_s;
+    coyoteT = 0;
     const m = c.body.getMassProperties().mass || c.def.mass;
-    const fwd = c.root.forward; fwd.y = 0;
+    const fwd = c.root.forward.clone(); fwd.y = 0;
     if (fwd.lengthSquared() > 1e-6) fwd.normalize();
-    const hx = Math.abs(r.fs) * R.salto_horiz * m;
-    c.body.applyImpulse(new B.Vector3(fwd.x * hx, R.salto_impulso_v * m, fwd.z * hx), c.pos);
+    const ramp = r.slope ?? 0;
+    const hx = Math.abs(r.fs) * R.salto_horiz * (1 + ramp * R.salto_rampa_h) * m;
+    const vy = R.salto_impulso_v * (1 + ramp * R.salto_rampa_v) * m;
+    c.body.applyImpulse(new B.Vector3(fwd.x * hx, vy, fwd.z * hx), c.pos);
     if (!simulating) { SFX.boing(); const rear = c.pos.add(c.root.forward.scale(-0.8)); FX.dust(rear); shake = Math.max(shake, 0.18); }
   }
   { const zp = zoneTick(dt, c.pos); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
@@ -715,11 +726,18 @@ function update(dt: number) {
   runDist += Math.abs(r.fs) * dt;
   // Combo de manejo: derrape largo, salto y aterrizaje limpio suben el multiplicador de XP (tope x2); un golpe lo corta (hurt)
   if (r.grounded) {
+    const landing = !wasGrounded && airT >= 0.12;
+    if (landing && !simulating) {
+      const land = c.pos.add(c.root.forward.scale(-0.6));
+      FX.dust(land);
+      if (airT > 0.55) shake = Math.max(shake, Math.min(0.45, 0.12 + airT * 0.25));
+    }
     if (airT >= 0.5 && !airHit) trick(Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? "SALTO LIMPIO" : "SALTO", Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? R.combo_salto_limpio : R.combo_salto);
     airT = 0; airHit = false;
     driftT = input.drift && Math.hypot(r.fs, r.ls) > 6 ? driftT + dt : 0; // velocidad total: derrapando casi toda va de costado
     if (driftT >= R.combo_derrape_s) { driftT = 0; trick("DERRAPE LARGO", R.combo_derrape); }
   } else airT += dt;
+  wasGrounded = r.grounded;
   // Sin trucos por 8 s el multiplicador baja solo, 0,1 por segundo hasta x1
   if ((trickT += dt) > R.combo_espera_s && driveMul > 1) { driveMul = Math.max(1, driveMul - R.combo_baja_s * dt); if (!simulating) hudDrive(driveMul); }
   lastKmh = r.fs * 3.6; lastMaxKmh = c.def.speed * st.speedMul * R.turbo_vel * 3.6;
@@ -780,7 +798,15 @@ function update(dt: number) {
     for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * R.enjambre_radio, 1, c.pos.z + Math.sin(a) * R.enjambre_radio); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
   if (time - Math.max(hitAt, 300) >= 60) grant("intacto"); // 60 s sin daño, contando desde el minuto 5
-  if (!warned && time >= 570) { warned = true; banner(`${DEF[finalKind].name} LLEGA SIN CITA PREVIA`, 3); }
+  const bossWarnS = R.aviso_jefe_s;
+  for (let bi = bossIdx; bi < RUN_BOSSES.length; bi++) {
+    const [bt, bk] = RUN_BOSSES[bi];
+    if (!evtPre.boss.has(bi) && time >= bt - bossWarnS && time < bt) {
+      evtPre.boss.add(bi);
+      const fin = !endless && bi === RUN_BOSSES.length - 1 && bk === finalKind;
+      if (!simulating) radioBoss("pre", DEF[bk].name, fin);
+    }
+  }
   // Apagón: 4 s antes de cada jefe se apagan luna y ambiente (queda el faro); vuelve en 3 s tras la entrada
   if (!simulating) {
     const next = RUN_BOSSES[bossIdx]?.[0] ?? Infinity, prev = RUN_BOSSES[bossIdx - 1]?.[0] ?? -Infinity;
@@ -796,8 +822,11 @@ function update(dt: number) {
       RUN_BOSSES.push([time + R.sinfin_cada_s, RUN_BOSSES[RUN_BOSSES.length % 3][1]]);
       const b = enemies[enemies.length - 1]; b.hp = b.maxHp *= time / R.sinfin_vida_div;
     }
-    banner(DEF[kind].name, 2.5);
-    hudBoss(DEF[kind].name, 1);
+    const bname = DEF[kind].name;
+    const fin = !endless && kind === finalKind;
+    if (!simulating) radioBoss("now", bname, fin);
+    banner(bname, 2.5);
+    hudBoss(bname, 1);
     SFX.boss();
   }
   for (let ei = 0; ei < profile.elites.length; ei++) {
@@ -952,13 +981,20 @@ function update(dt: number) {
 
   // --- Recolección ---
   const mag2 = st.magnet * st.magnet;
+  const fwdFlat = c.root.forward.clone(); fwdFlat.y = 0;
+  if (fwdFlat.lengthSquared() > 1e-6) fwdFlat.normalize();
   for (let i = gems.length - 1; i >= 0; i--) {
     const g = gems[i];
     const dx = c.pos.x - g.m.position.x, dz = c.pos.z - g.m.position.z, d2 = dx * dx + dz * dz;
     if (d2 < mag2) g.pull = true;
     g.m.rotation.y += dt * 2;
     if (g.vy !== 0 || g.m.position.y > 0) { g.vy -= 22 * dt; g.m.position.y = Math.max(0, g.m.position.y + g.vy * dt); if (g.m.position.y === 0) g.vy = g.vy < -4 ? -g.vy * 0.35 : 0; } // rebota una o dos veces
-    if (g.pull) { const d = Math.sqrt(d2) || 0.01, sp = Math.min(d, (20 + 24 / (d + 0.5)) * dt); g.m.position.x += (dx / d) * sp; g.m.position.z += (dz / d) * sp; }
+    if (g.pull) { const d = Math.sqrt(d2) || 0.01, sp = Math.min(d, (22 + 28 / (d + 0.5)) * dt); g.m.position.x += (dx / d) * sp; g.m.position.z += (dz / d) * sp; }
+    if (!simulating) {
+      const gl = Math.sqrt(d2), lampK = gl > 0.4 && gl < 20 && fwdFlat.lengthSquared() > 0 ? Math.max(0, (fwdFlat.x * (-dx) + fwdFlat.z * (-dz)) / gl) * (1 - gl / 20) : 0;
+      const base = g.xp === 20 ? 1.5 : g.xp === 5 ? 1.05 : 0.95;
+      g.m.scaling.setAll(base * (1 + lampK * 0.24 + (g.pull ? 0.08 : 0)));
+    }
     if (d2 < 1.2) { gainXp(g.xp); SFX.gem(); if (g.xp > 1) FX.xp(g.m.position); g.m.dispose(); gems.splice(i, 1); }
   }
   for (let i = pickups.length - 1; i >= 0; i--) {
@@ -1007,7 +1043,7 @@ function update(dt: number) {
 let god = false; // solo dev
 let lampBoost = false, moteT = 0, flyT = 0;
 let rainK = 0, rainBanner = false; // lluvia: intensidad 0..1 y aviso ya mostrado
-let evtPre = { swarm: false, ball: false, rain: false, elites: new Set<number>() };
+let evtPre = { swarm: false, ball: false, rain: false, elites: new Set<number>(), boss: new Set<number>() };
 // Zoom de cámara: rueda del mouse o teclas - / = (0.8 cerca … 2 lejos), se guarda
 const zoomBy = (k: number) => { save.zoom = Math.min(2, Math.max(0.8, save.zoom * k)); persist(); };
 addEventListener("wheel", (ev) => state === "play" && zoomBy(ev.deltaY > 0 ? 1.08 : 1 / 1.08), { passive: true });
@@ -1075,7 +1111,7 @@ function stunned(e: Enemy, dt: number) {
   };
 }
 // Combo de manejo: cada maniobra suma al multiplicador de XP, con tope x2
-function trick(name: string, k: number) { trickT = 0; driveMul = Math.min(R.combo_tope, driveMul + k); if (!simulating) hudDrive(driveMul, name); }
+function trick(name: string, k: number) { trickT = 0; driveMul = Math.min(R.combo_tope, driveMul + k); bestDriveMul = Math.max(bestDriveMul, driveMul); if (!simulating) hudDrive(driveMul, name); }
 
 // ---------- Modo sin fin: "Seguir jugando" en los resultados tras vencer al jefe final ----------
 function goEndless() {
@@ -1104,11 +1140,12 @@ function updateHud(dt: number) {
   if ((hudT -= dt) > 0) return;
   hudT = 0.05;
   const gemBlips = gems.length <= 40 ? gems.map((g) => ({ x: g.m.position.x, z: g.m.position.z, kind: "gema" as const })) : [];
+  const recBlips = pickups.length <= 24 ? pickups.filter((p) => p.type !== "cofre").map((p) => ({ x: p.m.position.x, z: p.m.position.z, kind: "rec" as const })) : [];
   hudRadar(
     { x: car!.pos.x, z: car!.pos.z, yaw: Math.atan2(car!.root.forward.x, car!.root.forward.z), up: camYaw },
     [...enemies.map((e) => ({ x: e.pos.x, z: e.pos.z, kind: e.def.boss ? ("jefe" as const) : e.elite ? ("elite" as const) : ("enemigo" as const) })),
      ...pickups.filter((p) => p.type === "cofre").map((p) => ({ x: p.m.position.x, z: p.m.position.z, kind: "cofre" as const })),
-     ...gemBlips]);
+     ...gemBlips, ...recBlips]);
   // Daño visible: pintura gastada y piezas que saltan al cruzar 50% y 25%
   const frac = Math.max(0, hp / maxHp);
   car!.wear(frac);
@@ -1458,7 +1495,7 @@ if (import.meta.env.DEV) import("./devbot").then((m) => devReady().then(() => Ob
     weapons = tm.weapons.map(([id, lv, evolved]) => { const w = makeWeapon(id); w.lv = lv; w.evolved = evolved; return w; });
     passives = { ...tm.passives }; level = tm.level;
     recompute(); hp = maxHp;
-    time = 600; bossIdx = RUN_BOSSES.length; swarmT = groupT = chestT = ballT = Infinity; warned = true; // minuto 10, sin jefes programados ni eventos
+    time = 600; bossIdx = RUN_BOSSES.length; swarmT = groupT = chestT = ballT = Infinity; evtPre.boss = new Set(RUN_BOSSES.map((_, i) => i)); // minuto 10, sin jefes programados ni eventos
     finalKind = kind;
     spawnEnemy(kind, spawnPoint(car!.pos, 30, 36));
     const boss = enemies[enemies.length - 1], t0 = time, lim = t0 + (o.max ?? 180);

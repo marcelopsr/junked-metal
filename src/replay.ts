@@ -25,6 +25,13 @@ export function outroUi(on: boolean, stat = "") {
   s.classList.toggle("hidden", !stat);
 }
 
+/** Línea breve bajo el aviso de salto (tiempo, bajas, nivel, pico de manejo, evoluciones). */
+export function outroStatLine(o: { time: string; kills: number; level: number; drive: number; evos: string[] }) {
+  const drv = o.drive > 1.05 ? ` · manejo ×${o.drive.toFixed(1)}` : "";
+  const evo = o.evos.length ? ` · ${o.evos.join(" · ")}` : "";
+  return `${o.time} · ${o.kills} ${o.kills === 1 ? "baja" : "bajas"} · NV ${o.level}${drv}${evo}`;
+}
+
 // ---------- Foto final ----------
 let raw: HTMLCanvasElement | null = null;
 /** Pide copiar el próximo cuadro dibujado (el búfer del canvas WebGL solo se puede leer al terminar el cuadro). */

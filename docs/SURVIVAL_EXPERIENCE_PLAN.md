@@ -126,6 +126,43 @@ JSON: PC `.perf/2026-10-06-1837.json` · cel `.perf/2026-10-06-1838.json` (más 
 
 **Sim @300 s (semillas 1–3):** nv **11** (muerte 4:16), **16** (muerte 4:44), **12** (vivo @5:00) — estados over/over/play; bajas 198 / 329 / 226.
 
+### Sim @300 s (semillas 1–10, bot estándar, 2026-10-06 tanda meta)
+
+| Semilla | Resultado @300 s | Nv | Bajas | Notas |
+|--------:|-------------------|---:|------:|-------|
+| 1 | vivo | 10 | 202 | — |
+| 2 | vivo | 7 | 140 | — |
+| 3 | vivo | 8 | 146 | — |
+| 4 | vivo | 12 | 194 | — |
+| 5 | vivo | 12 | 261 | — |
+| 6 | vivo | 10 | 215 | — |
+| 7 | **muerte 260.2 s** | 8 | 123 | única muerte de la tanda |
+| 8 | vivo | 14 | 276 | — |
+| 9 | vivo | 16 | 248 | — |
+| 10 | vivo | 8 | 70 | poco farm, pero vivo |
+
+**Rango nv @5 min (vivos):** 7–16 (objetivo ronda 2: **12–15**; semillas 2, 3, 7, 10 por debajo; 9 por encima).
+
+### Perf cel `partida_llena` (2026-10-06 tanda meta)
+
+JSON: `.perf/2026-10-06-1847.json` (180 cuadros, `--vp cel`).
+
+| Métrica | Baseline post-salto | Medición tanda meta | Umbral regresión |
+|---------|--------------------:|--------------------:|------------------|
+| ms/cuadro | 6.8 | **7.3** (+7 %) | +20 % → **8.2** |
+| p95 | 9.7 | **9.5** | — |
+| draws | 163 | **99** | — |
+
+Sin recorte en `fx.ts`: ms y p95 dentro del techo; draws mejor que baseline.
+
+Re-medición tras tanda in-run (`.perf/2026-10-06-1848.json`): **5.4** ms/cuadro, p95 **10.0**, **97** draws (ruido ±15 % en ms; draws estables).
+
+### In-run (salto, pickups, jefes — tanda 2026-10-06)
+
+- Salto: coyote (`salto_coyote_s`), bonus en rampa (`salto_rampa_*` + `slope` en `drive()`), polvo al aterrizar.
+- Pickups: tuercas bajo faro; pilas/imán en radar; gates SFX en rachas.
+- Jefes: aviso ~30 s (`aviso_jefe_s`) + `radioBoss`; bossbar alineada con radio.
+
 ### Sim @600 s (semillas 1–5, commit `450b6fb`)
 
 Bot estándar, sin god. Tres supervivencias completas; dos muertes tempranas (semillas 3 y 5).
@@ -154,6 +191,7 @@ Bot estándar, sin god. Tres supervivencias completas; dos muertes tempranas (se
 - **Radio eventos (`450b6fb`):** `radioEvent()` — copy METEO/RADAR/SEÑAL, ícono, duración tras tipeo.
 - **Eventos:** avisos ~6 s antes (enjambre, élite, lluvia, pelota) vía `aviso_evento_s`; élites en radar (blip violeta).
 - **UX:** `NV 05 +2` con niveles pendientes; subtítulo en cartas con presión cercana; outro con tiempo/bajas/nivel.
+- **Meta/métricas (tanda meta):** outro con `outroStatLine` (manejo ×, evos); resultados con daño por fuente; pausa con telemetría de partida y atajo a Controles.
 - **Gráficos:** ajuste `LOOK` (faro, niebla, exposición) para lectura nocturna en partida.
 
 ### Fase 1 hecha (2026-10-06)
@@ -176,7 +214,7 @@ Bot estándar, sin god. Tres supervivencias completas; dos muertes tempranas (se
 
 ## Checklist decisiones pendientes (ronda 3+)
 
-- [ ] Umbral de regresión perf cel (% ms/cuadro) — default plan: +20 % en `partida_llena`.
+- [x] Umbral de regresión perf cel: **+20 % ms/cuadro** en `partida_llena` vs baseline post-salto (6.8 → **8.2** máx.); p95/draws solo informativos salvo regresión grosera.
 - [ ] Detalle textos radio / gráficos Fase 5.
 
 ---

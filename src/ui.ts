@@ -142,6 +142,13 @@ export function banner(txt: string, secs = 2, opts?: BannerOpts) {
 export type RadioEvent =
   | "lluvia_pre" | "lluvia" | "enjambre_pre" | "enjambre" | "pelota_pre" | "pelota"
   | "elite_rapida_pre" | "elite_blindada_pre" | "elite_rapida" | "elite_blindada" | "cofre";
+/** Minijefe / jefe final: el nombre coincide con la barra superior (hudBoss). */
+export function radioBoss(phase: "pre" | "now", name: string, final = false) {
+  const line = phase === "pre"
+    ? (final ? `JEFE FINAL · ${name} · ENTRADA ~30 S` : `MINIJEFE · ${name} · ENTRADA ~30 S`)
+    : `${name} · EN CAMPO`;
+  banner(line, phase === "pre" ? 3.6 : 2.8, { tag: "SEÑAL", ico: "jefe", tone: phase === "pre" ? "warn" : "now" });
+}
 const RADIO: Record<RadioEvent, { line: string; secs: number; tag: string; ico: string; tone: "warn" | "now" }> = {
   lluvia_pre: { tag: "METEO", line: "HUMEDAD AL SUBIR · AVISO ~6 S", secs: 3.4, ico: "agua", tone: "warn" },
   lluvia: { tag: "METEO", line: "LLUVIA · PATIO RESBALADIZO", secs: 2.4, ico: "agua", tone: "now" },
@@ -248,7 +255,7 @@ function tickCombo(dt: number, live: boolean) {
 
 // ---------- Radar de la radio: barrido, estela y blips (lienzo de 64 px escalado sin filtrar) ----------
 const RS = 64, RH = RS / 2, RR = 50, RK = (RH - 1) / RR; // lado, centro, alcance en metros, píxeles por metro
-type Blip = { x: number; z: number; kind: "enemigo" | "elite" | "jefe" | "cofre" | "gema" };
+type Blip = { x: number; z: number; kind: "enemigo" | "elite" | "jefe" | "cofre" | "gema" | "rec" };
 let rCtx: CanvasRenderingContext2D, rBg: HTMLCanvasElement;
 let rCar = { x: 0, z: 0, yaw: 0, up: 0 }, rBlips: Blip[] = [], rAge = 9, rSweep = 0, rAcc = 0;
 function initRadar() {
@@ -291,13 +298,14 @@ function drawRadar() {
     const rx = (b.x - rCar.x) * c - (b.z - rCar.z) * s, ry = (b.x - rCar.x) * s + (b.z - rCar.z) * c;
     let d = Math.hypot(rx, ry) * RK;
     const far = d > RH - 3;
-    if (far && (b.kind === "enemigo" || b.kind === "gema")) continue;
+    if (far && (b.kind === "enemigo" || b.kind === "gema" || b.kind === "rec")) continue;
     const k = far ? (RH - 3) / d : 1; // jefe y cofre fuera de alcance se pegan al borde
     const x = Math.round(RH + rx * RK * k), y = Math.round(RH - ry * RK * k);
     const age = (((rSweep - Math.atan2(rx, ry)) % 6.2832) + 6.2832) % 6.2832 / 6.2832;
     if (b.kind === "jefe") { if (blink) { g.globalAlpha = 1; g.fillStyle = "#ff4a38"; g.fillRect(x - 1, y - 1, 3, 3); } }
     else if (b.kind === "elite") { g.globalAlpha = 1; g.fillStyle = "#e8b0ff"; g.fillRect(x, y, 2, 2); }
     else if (b.kind === "cofre") { g.globalAlpha = 1; g.fillStyle = "#e0a030"; g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3); }
+    else if (b.kind === "rec") { g.globalAlpha = 1 - age * 0.5; g.fillStyle = "#b9d3a4"; g.fillRect(x, y, 2, 2); }
     else { g.globalAlpha = 1 - age * 0.8; g.fillStyle = b.kind === "gema" ? "#6fb3c4" : "#d6e8c8"; g.fillRect(x, y, 1, 1); }
   }
   // El auto: flecha en el centro

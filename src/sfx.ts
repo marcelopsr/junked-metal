@@ -207,7 +207,7 @@ export const SFX = {
   finish: () => [523, 659, 784, 1047, 1318].forEach((f, i) => tone("square", f, f, 0.18, 0.08, i * 0.09)),
   jingle: () => JINGLE.forEach(([f, d]) => tone("triangle", f, f * 0.995, 0.2, 0.07, d)),
   hit: () => gate("hit", 18) && (tone("sine", 700, 320, 0.05, 0.12), hiss("bandpass", 2400, 900, 0.04, 0.08)),
-  kill: () => gate("kill", 14) && (tone("sine", 520, 180, 0.1, 0.14), tone("triangle", 260, 90, 0.12, 0.08)), // boing
+  kill: (racha = 0) => gate("kill", racha >= 25 ? 22 : 14) && (tone("sine", 520, 180, 0.1, 0.14), tone("triangle", 260, 90, 0.12, 0.08)), // boing
   ram: (power: number) => { tone("sine", 160, 45, 0.18, Math.min(0.5, 0.2 + power * 0.01)); hiss("lowpass", 1800, 200, 0.12, 0.25); },
   explosion: () => gate("boom", 8) && (hiss("lowpass", 1400, 60, 0.6, 0.45), tone("sine", 90, 30, 0.45, 0.35)),
   zap: () => gate("zap", 10) && hiss("highpass", 6000, 2500, 0.1, 0.12),
@@ -226,14 +226,14 @@ export const SFX = {
     }
   },
   gem: () => {
-    if (!gate("gem", 30)) return;
+    if (!gate("gem", 42)) return;
     const now = performance.now();
     combo = now - comboT < 350 ? Math.min(combo + 1, 24) : 0;
     comboT = now;
     const f = 660 * Math.pow(2, combo / 24); // cada tuerca seguida sube el tono
     tone("sine", f, f * 1.5, 0.07, 0.07);
   },
-  pickup: () => { tone("triangle", 520, 1040, 0.12, 0.15); tone("triangle", 780, 1560, 0.12, 0.1, 0.06); },
+  pickup: () => gate("pickup", 12) && (tone("triangle", 520, 1040, 0.12, 0.15), tone("triangle", 780, 1560, 0.12, 0.1, 0.06)),
   levelUp: () => [523, 659, 784, 1047].forEach((f, i) => tone("square", f, f, 0.12, 0.07, i * 0.07)),
   boss: () => { tone("sawtooth", 70, 40, 1.2, 0.3); hiss("lowpass", 600, 80, 1.2, 0.25); },
   break: () => { hiss("bandpass", 1600, 300, 0.25, 0.3); tone("triangle", 300, 120, 0.15, 0.15); },

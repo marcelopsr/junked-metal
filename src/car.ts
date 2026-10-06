@@ -33,7 +33,10 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
   const hh = mesh.getBoundingInfo().boundingBox.extendSize.y;
   rayFrom.copyFrom(mesh.position); rayTo.copyFrom(rayFrom); rayTo.y -= hh + 0.9; // en rampa el centro queda más alto que hh
   (mesh.getScene().getPhysicsEngine() as B.PhysicsEngineV2).raycastToRef(rayFrom, rayTo, ray, { ignoreBody: body });
-  if (!ray.hasHit) return { fs, ls, grounded: false };
+  if (!ray.hasHit) return { fs, ls, grounded: false, slope: 0 };
+
+  const ny = ray.hitNormal.y;
+  const slope = Math.min(1, Math.sqrt(Math.max(0, 1 - ny * ny))); // 0 = plano, ~1 = rampa empinada
 
   const t = o.throttle;
   if (t > 0) { if (fs < o.speed * t) fs = Math.min(fs + o.accel * t * dt, o.speed * t); }
@@ -46,7 +49,7 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
   nv.y = v.y;
   body.setLinearVelocity(nv);
   body.setAngularVelocity(new B.Vector3(0, o.steer * o.turn * B.Scalar.Clamp(fs / 4, -1, 1), 0));
-  return { fs, ls, grounded: true };
+  return { fs, ls, grounded: true, slope };
 }
 
 export class Car {

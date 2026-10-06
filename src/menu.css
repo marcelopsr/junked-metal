@@ -137,6 +137,11 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 
 /* Pausa y resultados */
 .kit { display: grid; grid-template-columns: repeat(3, minmax(200px, 1fr)); gap: 14px; width: min(880px, 94vw); text-align: left; }
+.kit.kit4 { grid-template-columns: repeat(4, minmax(180px, 1fr)); width: min(960px, 94vw); }
+#overHurt { width: 100%; margin-top: 10px; }
+#overHurt li { display: grid; grid-template-columns: 120px 1fr 48px; font-size: 16px; }
+#overHurt li span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#overHurt li i { height: 8px; background: #ff8a8a88; }
 #fe ul { list-style: none; margin: 0; padding: 8px 12px; background: var(--shell); border: 1px solid var(--line); clip-path: polygon(0 1%, 30% 0, 100% 1.5%, 99.4% 100%, 50% 99%, 0 100%); }
 #fe li { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 17px; padding: 3px 0; }
 #fe li b { color: var(--lcd-ink); font-weight: 400; }
@@ -168,7 +173,8 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 }
 
 /* Celular vertical en pausa: armas y pasivas dejan libre el ancho del botón táctil «II» (style.css #tPause, right 8 px) */
-@media (orientation: portrait) and (pointer: coarse) { #fe #kitW, #fe #kitP { margin-right: 44px; } } /* #fe: le gana a "#fe ul { margin: 0 }" */
+@media (orientation: portrait) and (pointer: coarse) { #fe #kitW, #fe #kitP, #fe #kitR { margin-right: 44px; } } /* #fe: le gana a "#fe ul { margin: 0 }" */
+@media (max-width: 900px) { .kit.kit4 { grid-template-columns: repeat(2, 1fr); } }
 
 /* Dedo: todo lo tocable mide al menos 44 px */
 @media (pointer: coarse) {
