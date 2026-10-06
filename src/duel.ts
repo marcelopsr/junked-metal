@@ -119,9 +119,10 @@ function paintRobot(c: RobotConfig, paint: DuelPaintState) {
     parts.push(box(0.12, 0.18, 1.6, rim, [-0.75, 0.22, 0]), box(0.12, 0.18, 1.6, rim, [0.75, 0.22, 0]));
   } else {
     const d = c.wheels === "gigantes" ? 0.55 : 0.38, lift = BAL.dueloRuedas[c.wheels].lift_m;
+    const wy = d * 0.5 + lift;
     for (const x of [-0.7, 0.7]) for (const zpos of [-0.65, 0.65]) {
       const wh = wheel(d, 0.22, paint.zones.wheel_rim.color, c.wheels === "gigantes" ? "todoterreno" : "");
-      wh.position.set(x, lift, zpos); wh.rotation.z = Math.PI / 2;
+      wh.position.set(x, wy, zpos); wh.rotation.z = Math.PI / 2;
       parts.push(wh);
     }
   }
@@ -185,7 +186,11 @@ function ensureUi() {
   if (ui) return;
   ui = document.createElement("div");
   ui.id = "duel-ui";
-  ui.innerHTML = `<div id="duel-arm"><h1>ARMADO</h1><p class="sub">Arena de acero, mejor de tres. Solo melee: chasis, ruedas y un arma.</p><p class="sub">Sin proyectiles. El rival no perdona combos torpes.</p><div class="duel-cols"></div><p class="duel-lore" id="duel-lore"></p><div class="duel-bars"></div><div class="duel-paint" id="duel-paint"></div><p class="duel-warn" id="duel-warn"></p><button type="button" id="duel-confirm">CONFIRMAR</button></div>
+  ui.innerHTML = `<div id="duel-arm"><header class="duel-arm-head"><h1>ARMADO</h1><p class="sub">Arena de acero, mejor de tres. Solo cuerpo a cuerpo: elige chasis, ruedas y un arma. Sin proyectiles.</p></header>
+<section class="duel-sec" aria-labelledby="duel-sec-pieces"><h2 id="duel-sec-pieces" class="duel-sec-h">1 · Piezas</h2><div class="duel-cols"></div></section>
+<section class="duel-sec" aria-labelledby="duel-sec-stats"><h2 id="duel-sec-stats" class="duel-sec-h">2 · Telemetría</h2><div class="duel-bars" role="group" aria-label="Estimación del robot"></div></section>
+<details class="duel-paint-wrap" id="duel-paint-details"><summary class="duel-paint-sum">3 · Pintura <span class="duel-opt">(opcional)</span></summary><div class="duel-paint" id="duel-paint"></div></details>
+<p class="duel-warn" id="duel-warn" role="status" aria-live="polite"></p><button type="button" class="duel-cta" id="duel-confirm">Confirmar armado</button></div>
 <div id="duel-hud"><div class="duel-hp-row"><span id="duel-en">RIVAL</span><span id="duel-you">TÚ</span></div><div class="duel-hp-row"><div class="duel-hp enemy"><i id="duel-hpE"></i></div><div class="duel-hp you"><i id="duel-hpP"></i></div></div><div class="duel-score" id="duel-score"></div></div>
 <div id="duel-inter"><p id="duel-inter-t"></p><button type="button" id="duel-next">SIGUIENTE ASALTO</button></div>
 <div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
@@ -211,6 +216,7 @@ function ensureUi() {
   $d("duel-flip").onclick = () => flipPlayer();
   $d("duel-resume").onclick = () => { paused = false; $d("duel-pause").classList.remove("on"); };
   $d("duel-quit").onclick = () => { score = [0, 2]; endMatch(true); };
+  ui.querySelector("#duel-paint-details")!.addEventListener("toggle", () => syncPaintUi());
   ui.querySelector("#duel-paint")!.addEventListener("click", (e) => {
     const t = e.target as HTMLElement;
     const slot = t.closest("[data-pzone]") as HTMLElement | null;
@@ -234,12 +240,27 @@ function ensureUi() {
 
 function persistPaint() { saveDuelPaint(playerPaint); }
 
+const SWATCH_NAMES: Record<string, string> = {
+  "#d62828": "Rojo", "#1d4ed8": "Azul", "#2a9d8f": "Verde azulado", "#e85d04": "Naranja",
+  "#4a5058": "Gris", "#e5e7eb": "Blanco", "#ffc300": "Amarillo", "#6b7a3a": "Oliva",
+};
+
 function syncPaintUi() {
   const el = $d("duel-paint");
+  const open = ($d("duel-paint-details") as HTMLDetailsElement).open;
   const z = playerPaint.zones[paintSlot];
-  const tabs = PAINT_SLOTS.map((s) => `<button type="button" class="pz${s === paintSlot ? " on" : ""}" data-pzone="${s}">${SLOT_LABEL[s]}</button>`).join("");
-  const sw = SWATCHES.map((c) => `<button type="button" class="sw${c === z.color ? " on" : ""}" data-sw="${c}" style="background:${c}"></button>`).join("");
-  el.innerHTML = `<p class="duel-paint-h">Pintura · Q color · R material</p><div class="duel-pzones">${tabs}</div><div class="duel-sw">${sw}</div><p class="duel-paint-meta">${PRESET_LABEL[z.preset]} · <button type="button" data-preset>Siguiente material</button></p>`;
+  const tabs = PAINT_SLOTS.map((s) => `<button type="button" class="pz${s === paintSlot ? " on" : ""}" data-pzone="${s}" aria-pressed="${s === paintSlot}">${SLOT_LABEL[s]}</button>`).join("");
+  const sw = SWATCHES.map((c) => {
+    const name = SWATCH_NAMES[c] ?? c;
+    const on = c === z.color;
+    return `<button type="button" class="sw${on ? " on" : ""}" data-sw="${c}" style="background:${c}" aria-label="Color ${name}" aria-pressed="${on}"></button>`;
+  }).join("");
+  el.innerHTML = open
+    ? `<p class="duel-paint-hint"><span class="duel-paint-hint-lab">Atajos:</span> <kbd>Q</kbd> color anterior · <kbd>R</kbd> siguiente material</p>
+<fieldset class="duel-fs"><legend>Zona a pintar</legend><div class="duel-pzones">${tabs}</div></fieldset>
+<fieldset class="duel-fs"><legend>Color</legend><div class="duel-sw">${sw}</div></fieldset>
+<p class="duel-paint-meta"><span class="duel-paint-mat-lab">Material:</span> <strong>${PRESET_LABEL[z.preset]}</strong> · <button type="button" data-preset>Siguiente material</button></p>`
+    : "";
 }
 
 function syncArmado() {
@@ -247,29 +268,44 @@ function syncArmado() {
   const cc = comboCheck(cfg);
   const cols = ui.querySelector(".duel-cols")!;
   const ch = CH[idx.c], wh = WH[idx.w], ar = AR[idx.a];
-  cols.innerHTML = [
-    ["CHASIS", "c", PIECE[ch].label],
-    ["RUEDAS", "w", PIECE[wh].label],
-    ["ARMA", "a", PIECE[ar].label],
-  ].map(([lab, col, nom]) => `<div class="duel-col"><b>${lab}</b><div class="name">${nom}</div><button type="button" data-duel="${col}:m">‹</button> <button type="button" data-duel="${col}:p">›</button></div>`).join("");
-  $d("duel-lore").textContent = `${PIECE[ch].lore} · ${PIECE[wh].lore} · ${PIECE[ar].lore}`;
+  const pieceRows: [string, "c" | "w" | "a", string, string][] = [
+    ["Chasis", "c", PIECE[ch].label, PIECE[ch].lore],
+    ["Ruedas", "w", PIECE[wh].label, PIECE[wh].lore],
+    ["Arma", "a", PIECE[ar].label, PIECE[ar].lore],
+  ];
+  cols.innerHTML = pieceRows.map(([lab, col, nom, lore]) => `<div class="duel-col">
+<span class="duel-col-lab">${lab}</span>
+<div class="name" id="duel-piece-${col}">${nom}</div>
+<p class="duel-col-lore">${lore}</p>
+<div class="duel-col-nav" role="group" aria-label="${lab}">
+<button type="button" class="duel-step" data-duel="${col}:m" aria-label="${lab} anterior">‹</button>
+<button type="button" class="duel-step" data-duel="${col}:p" aria-label="${lab} siguiente">›</button>
+</div></div>`).join("");
   const m = massOf(cfg), st = statsOf(cfg, cc === "warn");
   const bars = ui.querySelector(".duel-bars")!;
-  const norm = (v: number, max: number) => `${Math.round(100 * v / max)}%`;
-  bars.innerHTML = `<div class="duel-bar">Masa<i><span style="width:${norm(m, 5.5)}"></span></i></div><div class="duel-bar">Vel<i><span style="width:${norm(st.maxSpd, 16)}"></span></i></div><div class="duel-bar">Vida<i><span style="width:${norm(hpMaxOf(cfg), 130)}"></span></i></div>`;
+  const norm = (v: number, max: number) => Math.round(100 * v / max);
+  const bar = (lab: string, pct: number) => `<div class="duel-bar"><span class="duel-bar-lab">${lab}</span><i role="presentation"><span style="width:${pct}%"></span></i><span class="duel-bar-pct" aria-hidden="true">${pct}%</span></div>`;
+  bars.innerHTML = bar("Masa", norm(m, 5.5)) + bar("Velocidad", norm(st.maxSpd, 16)) + bar("Vida", norm(hpMaxOf(cfg), 130));
   const w = $d("duel-warn");
   w.className = "duel-warn" + (cc === "ban" ? " ban" : "");
-  w.textContent = cc === "ban" ? "Combo inválido: cambiá las ruedas." : cc === "warn" ? "Advertencia: tracción −5% en este combo." : "";
+  w.textContent = cc === "ban" ? "Combo inválido: cambia las ruedas." : cc === "warn" ? "Advertencia: tracción −5% en este combo." : "";
   ($d("duel-confirm") as HTMLButtonElement).disabled = cc === "ban";
   syncPaintUi();
   previewArmado();
 }
 
 let previewBot: Bot | null = null;
+/** Altura del colisionador sobre el pasto (y=0); sin simular en armado para que shots y preview no deriven. */
+const ARMADO_PREVIEW_Y = 0.38;
 function previewArmado() {
   previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
-  previewBot = makeBot(9, true, cfg, new B.Vector3(0, 0.5, 0), "Preview", playerPaint, comboCheck(cfg) === "warn");
-  deps.cam.setTarget(new B.Vector3(0, 0.5, 0));
+  const at = new B.Vector3(0, ARMADO_PREVIEW_Y, 0);
+  previewBot = makeBot(9, true, cfg, at, "Preview", playerPaint, comboCheck(cfg) === "warn");
+  // ponytail: Havok + pasto en armado: un cuerpo dinámico sin input aún se auto-endereza y vibra entre cuadros
+  previewBot.body.setMotionType(B.PhysicsMotionType.STATIC);
+  previewBot.body.setLinearVelocity(B.Vector3.Zero());
+  previewBot.body.setAngularVelocity(B.Vector3.Zero());
+  deps.cam.setTarget(new B.Vector3(0, 0.55, 0));
   deps.cam.position.set(0, 4, -7);
 }
 
@@ -530,7 +566,7 @@ export function duelTick(dt: number) {
   if (!active || paused) return;
   if (phase === "inter" || phase === "results") return;
   if (flipCd > 0) flipCd = Math.max(0, flipCd - dt);
-  if (phase === "armado") { deps.scene.physicsEnabled = true; previewBot && stepDuelPhysics(previewBot, dt, 0, 0, false); return; }
+  if (phase === "armado") return;
   if (phase === "countdown") {
     countdown -= dt;
     if (countdown <= 0) phase = "fight";
