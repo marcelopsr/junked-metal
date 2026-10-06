@@ -7,6 +7,10 @@ import { burst, impact } from "./fx";
 import { input, padPressed, pb } from "./input";
 import { box, cyl, merge, wheel } from "./models";
 import { applyClimate, canvasTex, M, pbr, shadows } from "./render";
+import {
+  cycleColor, cyclePreset, duelMat, loadDuelPaint, PAINT_SLOTS, PRESET_LABEL, rivalPaintFromBalance,
+  saveDuelPaint, SLOT_LABEL, SWATCHES, type DuelPaintState, type PaintSlot,
+} from "./duel_paint";
 import { save } from "./menu";
 import { engineStop, music, SFX } from "./sfx";
 import { buildGrass, clearLayout, setZone } from "./world";
@@ -41,6 +45,7 @@ const $d = (id: string) => document.getElementById(id)!;
 const ARENA = 25, HALF = ARENA / 2;
 const UP = B.Vector3.Up();
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
+const fFwd = new B.Vector3(), fRight = new B.Vector3(), fForce = new B.Vector3(), fTorque = new B.Vector3(), fVel = new B.Vector3();
 
 type Bot = {
   id: number; human: boolean; name: string; cfg: RobotConfig;
@@ -64,6 +69,9 @@ let loadoutWarn = false;
 let lastHit = new Map<string, number>();
 let matchDmg = { dealt: 0, taken: 0 };
 let camShake = 0;
+let playerPaint = loadDuelPaint();
+let paintSlot: PaintSlot = "chassis_body";
+let flipCd = 0;
 
 export function initDuel(d: Deps) { deps = d; ensureUi(); }
 
@@ -97,34 +105,35 @@ function statsOf(c: RobotConfig, warn: boolean) {
   };
 }
 
-function paintRobot(c: RobotConfig, colors?: { body: string; trim: string }) {
-  // ponytail: pintura por zona §34 (duel_paint) pendiente; variación mínima por tipo de pieza
-  const tint: Record<ChassisId, string> = { caja: "#4a5058", cuna: "#3d4550", plancha: "#5a6068" };
-  const body = colors?.body ?? tint[c.chassis], trim = colors?.trim ?? "#e85d04";
+function paintRobot(c: RobotConfig, paint: DuelPaintState) {
+  const z = paint.zones;
   const parts: B.Mesh[] = [];
-  const mb = M.matte(body), mt = M.metal(trim);
+  const mb = duelMat(z.chassis_body), mt = duelMat(z.chassis_trim);
+  const tire = duelMat(z.wheel_tire), rim = duelMat(z.wheel_rim);
+  const wBody = duelMat(z.weapon_body), wEdge = duelMat(z.weapon_edge);
   if (c.chassis === "caja") parts.push(box(1.4, 0.55, 2, mb, [0, 0.35, 0]));
   else if (c.chassis === "cuna") parts.push(box(1.2, 0.35, 2.1, mb, [0, 0.28, 0.1]), box(1.3, 0.08, 0.5, mt, [0, 0.15, 1.05]));
   else parts.push(box(1.5, 0.18, 2.2, mb, [0, 0.2, 0]));
   if (c.wheels === "orugas") {
-    parts.push(box(0.35, 0.25, 1.8, M.rubber(), [-0.75, 0.2, 0]), box(0.35, 0.25, 1.8, M.rubber(), [0.75, 0.2, 0]));
+    parts.push(box(0.35, 0.25, 1.8, tire, [-0.75, 0.2, 0]), box(0.35, 0.25, 1.8, tire, [0.75, 0.2, 0]));
+    parts.push(box(0.12, 0.18, 1.6, rim, [-0.75, 0.22, 0]), box(0.12, 0.18, 1.6, rim, [0.75, 0.22, 0]));
   } else {
     const d = c.wheels === "gigantes" ? 0.55 : 0.38, lift = BAL.dueloRuedas[c.wheels].lift_m;
-    for (const x of [-0.7, 0.7]) for (const z of [-0.65, 0.65]) {
-      const wh = wheel(d, 0.22, "#333", c.wheels === "gigantes" ? "todoterreno" : "");
-      wh.position.set(x, lift, z); wh.rotation.z = Math.PI / 2;
+    for (const x of [-0.7, 0.7]) for (const zpos of [-0.65, 0.65]) {
+      const wh = wheel(d, 0.22, paint.zones.wheel_rim.color, c.wheels === "gigantes" ? "todoterreno" : "");
+      wh.position.set(x, lift, zpos); wh.rotation.z = Math.PI / 2;
       parts.push(wh);
     }
   }
-  if (c.weapon === "trompo") parts.push(cyl(0.45, 0.45, 0.12, mt, [0, 0.45, 0.85]));
-  else if (c.weapon === "sierra") parts.push(box(0.08, 0.35, 0.7, M.metal("#888"), [0.55, 0.4, 0.6]), cyl(0.35, 0.35, 0.04, M.metal("#ccc"), [0.85, 0.38, 0.6], [0, 0, Math.PI / 2]));
-  else parts.push(box(0.9, 0.45, 0.15, mt, [0, 0.35, 1.05]));
+  if (c.weapon === "trompo") parts.push(cyl(0.45, 0.45, 0.12, wEdge, [0, 0.45, 0.85]));
+  else if (c.weapon === "sierra") parts.push(box(0.08, 0.35, 0.7, wBody, [0.55, 0.4, 0.6]), cyl(0.35, 0.35, 0.04, wEdge, [0.85, 0.38, 0.6], [0, 0, Math.PI / 2]));
+  else parts.push(box(0.9, 0.45, 0.15, wBody, [0, 0.35, 1.05]), box(0.85, 0.08, 0.12, wEdge, [0, 0.52, 1.05]));
   return merge("duelBot", parts);
 }
 
-function makeBot(id: number, human: boolean, c: RobotConfig, at: B.Vector3, name: string, colors?: { body: string; trim: string }, warn = false): Bot {
+function makeBot(id: number, human: boolean, c: RobotConfig, at: B.Vector3, name: string, paint: DuelPaintState, warn = false): Bot {
   const scene = deps.scene;
-  const m = paintRobot(c, colors);
+  const m = paintRobot(c, paint);
   const root = B.MeshBuilder.CreateBox("duelCol", { width: 1.4, height: 0.5, depth: 2 }, scene);
   root.isVisible = false;
   root.position.copyFrom(at);
@@ -176,7 +185,7 @@ function ensureUi() {
   if (ui) return;
   ui = document.createElement("div");
   ui.id = "duel-ui";
-  ui.innerHTML = `<div id="duel-arm"><h1>ARMADO</h1><p class="sub">Arena de acero, mejor de tres. Solo melee: chasis, ruedas y un arma.</p><p class="sub">Sin proyectiles. El rival no perdona combos torpes.</p><div class="duel-cols"></div><p class="duel-lore" id="duel-lore"></p><div class="duel-bars"></div><p class="duel-warn" id="duel-warn"></p><button type="button" id="duel-confirm">CONFIRMAR</button></div>
+  ui.innerHTML = `<div id="duel-arm"><h1>ARMADO</h1><p class="sub">Arena de acero, mejor de tres. Solo melee: chasis, ruedas y un arma.</p><p class="sub">Sin proyectiles. El rival no perdona combos torpes.</p><div class="duel-cols"></div><p class="duel-lore" id="duel-lore"></p><div class="duel-bars"></div><div class="duel-paint" id="duel-paint"></div><p class="duel-warn" id="duel-warn"></p><button type="button" id="duel-confirm">CONFIRMAR</button></div>
 <div id="duel-hud"><div class="duel-hp-row"><span id="duel-en">RIVAL</span><span id="duel-you">TÚ</span></div><div class="duel-hp-row"><div class="duel-hp enemy"><i id="duel-hpE"></i></div><div class="duel-hp you"><i id="duel-hpP"></i></div></div><div class="duel-score" id="duel-score"></div></div>
 <div id="duel-inter"><p id="duel-inter-t"></p><button type="button" id="duel-next">SIGUIENTE ASALTO</button></div>
 <div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
@@ -202,6 +211,35 @@ function ensureUi() {
   $d("duel-flip").onclick = () => flipPlayer();
   $d("duel-resume").onclick = () => { paused = false; $d("duel-pause").classList.remove("on"); };
   $d("duel-quit").onclick = () => { score = [0, 2]; endMatch(true); };
+  ui.querySelector("#duel-paint")!.addEventListener("click", (e) => {
+    const t = e.target as HTMLElement;
+    const slot = t.closest("[data-pzone]") as HTMLElement | null;
+    if (slot?.dataset.pzone) { paintSlot = slot.dataset.pzone as PaintSlot; syncPaintUi(); return; }
+    const sw = t.closest("[data-sw]") as HTMLElement | null;
+    if (sw?.dataset.sw) {
+      playerPaint.zones[paintSlot] = { ...playerPaint.zones[paintSlot], color: sw.dataset.sw };
+      persistPaint(); syncArmado(); return;
+    }
+    if (t.closest("[data-preset]")) {
+      playerPaint.zones[paintSlot] = cyclePreset(playerPaint.zones[paintSlot], 1);
+      persistPaint(); syncArmado();
+    }
+  });
+  addEventListener("keydown", (e) => {
+    if (!active || phase !== "armado") return;
+    if (e.key === "q" || e.key === "Q") { playerPaint.zones[paintSlot] = cycleColor(playerPaint.zones[paintSlot], -1); persistPaint(); syncArmado(); }
+    if (e.key === "r" || e.key === "R") { playerPaint.zones[paintSlot] = cyclePreset(playerPaint.zones[paintSlot], 1); persistPaint(); syncArmado(); }
+  });
+}
+
+function persistPaint() { saveDuelPaint(playerPaint); }
+
+function syncPaintUi() {
+  const el = $d("duel-paint");
+  const z = playerPaint.zones[paintSlot];
+  const tabs = PAINT_SLOTS.map((s) => `<button type="button" class="pz${s === paintSlot ? " on" : ""}" data-pzone="${s}">${SLOT_LABEL[s]}</button>`).join("");
+  const sw = SWATCHES.map((c) => `<button type="button" class="sw${c === z.color ? " on" : ""}" data-sw="${c}" style="background:${c}"></button>`).join("");
+  el.innerHTML = `<p class="duel-paint-h">Pintura · Q color · R material</p><div class="duel-pzones">${tabs}</div><div class="duel-sw">${sw}</div><p class="duel-paint-meta">${PRESET_LABEL[z.preset]} · <button type="button" data-preset>Siguiente material</button></p>`;
 }
 
 function syncArmado() {
@@ -223,13 +261,14 @@ function syncArmado() {
   w.className = "duel-warn" + (cc === "ban" ? " ban" : "");
   w.textContent = cc === "ban" ? "Combo inválido: cambiá las ruedas." : cc === "warn" ? "Advertencia: tracción −5% en este combo." : "";
   ($d("duel-confirm") as HTMLButtonElement).disabled = cc === "ban";
+  syncPaintUi();
   previewArmado();
 }
 
 let previewBot: Bot | null = null;
 function previewArmado() {
   previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
-  previewBot = makeBot(9, true, cfg, new B.Vector3(0, 0.5, 0), "Preview", undefined, comboCheck(cfg) === "warn");
+  previewBot = makeBot(9, true, cfg, new B.Vector3(0, 0.5, 0), "Preview", playerPaint, comboCheck(cfg) === "warn");
   deps.cam.setTarget(new B.Vector3(0, 0.5, 0));
   deps.cam.position.set(0, 4, -7);
 }
@@ -246,6 +285,7 @@ function showArmado() {
 
 export function startDuel() {
   active = true; score = [0, 0]; round = 0; loadoutWarn = comboCheck(cfg) === "warn";
+  playerPaint = loadDuelPaint();
   showArmado();
 }
 
@@ -269,8 +309,8 @@ function startRound() {
   bots = []; lastHit.clear();
   round++;
   const r = BAL.dueloRival.cuna_industrial;
-  bots.push(makeBot(0, true, cfg, new B.Vector3(-4, 0.6, 0), "TÚ", undefined, loadoutWarn));
-  bots.push(makeBot(1, false, rivalCfg(), new B.Vector3(4, 0.6, 0), r.nombre, { body: r.cuerpo_color, trim: r.bandas_color }));
+  bots.push(makeBot(0, true, cfg, new B.Vector3(-4, 0.6, 0), playerPaint.name || "TÚ", playerPaint, loadoutWarn));
+  bots.push(makeBot(1, false, rivalCfg(), new B.Vector3(4, 0.6, 0), r.nombre, rivalPaintFromBalance(r), false));
   for (const b of bots) { b.hp = b.hpMax; b.rpm = 0; b.flipped = false; b.hitAt = 0; }
   phase = "countdown"; countdown = 3.4; t = 0;
   ui.className = "on fight";
@@ -285,30 +325,64 @@ function grounded(body: B.PhysicsBody, mesh: B.Mesh) {
   return ray.hasHit;
 }
 
-function stepBot(b: Bot, dt: number, throttle: number, steer: number, weaponBtn: boolean) {
+function stepDuelPhysics(b: Bot, dt: number, throttle: number, steer: number, weaponBtn: boolean) {
   const mesh = b.root;
   mesh.computeWorldMatrix(true);
-  const fwd = mesh.forward.clone(); fwd.y = 0; if (fwd.lengthSquared() < 1e-4) fwd.set(0, 0, 1); else fwd.normalize();
-  const right = B.Vector3.Cross(UP, fwd);
-  if (!grounded(b.body, mesh)) {
-    b.flipped = B.Vector3.Dot(mesh.up, UP) < 0.35;
-    return;
-  }
-  b.flipped = false;
+  const upDot = B.Vector3.Dot(mesh.up, UP);
+  b.flipped = upDot < 0.45;
+  const onGround = grounded(b.body, mesh);
   if (b.cfg.weapon === "trompo" && weaponBtn) b.rpm = Math.min(1, b.rpm + dt / BAL.dueloArmas.trompo.rpm_carga_s);
   else b.rpm = Math.max(0, b.rpm - dt * 0.8);
-  // ponytail: fuerzas Havok simplificadas vía velocidad objetivo (estable en web); subir a applyForce si el playtest lo pide
-  const v = b.body.getLinearVelocity();
-  let fs = B.Vector3.Dot(v, fwd), ls = B.Vector3.Dot(v, right);
+
+  fFwd.copyFrom(mesh.forward); fFwd.y = 0;
+  if (fFwd.lengthSquared() < 1e-4) fFwd.set(0, 0, 1); else fFwd.normalize();
+  B.Vector3.CrossToRef(UP, fFwd, fRight);
   const s = b.stats;
-  if (throttle > 0) fs = Math.min(fs + s.accel * throttle * dt, s.maxSpd * throttle);
-  else if (throttle < 0) fs = fs > 0 ? fs - s.accel * 1.4 * dt : Math.max(fs + s.accel * throttle * dt, -s.maxSpd * 0.45);
-  else fs *= 1 - Math.min(1, 2 * dt);
-  ls *= Math.max(0, 1 - s.grip * dt);
-  const nv = fwd.scale(fs).addInPlace(right.scale(ls)); nv.y = v.y;
-  b.body.setLinearVelocity(nv);
-  b.body.setAngularVelocity(new B.Vector3(0, steer * s.turn * B.Scalar.Clamp(fs / 5, -1, 1), 0));
-  if (b.cfg.weapon === "trompo" && b.rpm > 0.2) b.body.applyTorque(new B.Vector3(0, b.rpm * b.mass * 0.4, 0));
+  const driveMul = b.flipped ? 0.15 : 1;
+  const pos = mesh.getAbsolutePosition();
+
+  b.body.getLinearVelocityToRef(fVel);
+  const fs = B.Vector3.Dot(fVel, fFwd), ls = B.Vector3.Dot(fVel, fRight);
+
+  if (onGround && Math.abs(throttle) > 0.01) {
+    const acc = throttle > 0 ? s.accel * throttle : throttle * s.accel * 1.35;
+    fForce.copyFrom(fFwd).scaleInPlace(acc * b.mass * driveMul);
+    b.body.applyForce(fForce, pos);
+  } else if (onGround && Math.abs(fs) > 0.2) {
+    fForce.copyFrom(fFwd).scaleInPlace(-fs * s.grip * b.mass * 1.2 * driveMul);
+    b.body.applyForce(fForce, pos);
+  }
+  if (onGround && Math.abs(ls) > 0.05) {
+    fForce.copyFrom(fRight).scaleInPlace(-ls * s.grip * b.mass * 3.5);
+    b.body.applyForce(fForce, pos);
+  }
+  if (onGround && fs > s.maxSpd) {
+    fForce.copyFrom(fFwd).scaleInPlace(-(fs - s.maxSpd) * b.mass * 4);
+    b.body.applyForce(fForce, pos);
+  }
+
+  if (onGround && !b.flipped) {
+    const steerK = B.Scalar.Clamp(Math.abs(fs) / 5, 0.25, 1);
+    fTorque.set(0, steer * s.turn * b.mass * 1.1 * steerK, 0);
+    b.body.applyTorque(fTorque);
+    const av = b.body.getAngularVelocity();
+    fTorque.set(-av.x * b.mass * 2.8, 0, -av.z * b.mass * 2.8);
+    b.body.applyTorque(fTorque);
+  } else if (!onGround) {
+    const av = b.body.getAngularVelocity();
+    fTorque.set(-av.x * b.mass * 0.6, steer * s.turn * b.mass * 0.15, -av.z * b.mass * 0.6);
+    b.body.applyTorque(fTorque);
+    if (Math.abs(throttle) > 0.01) {
+      fForce.copyFrom(fFwd).scaleInPlace(throttle * s.accel * b.mass * 0.12);
+      b.body.applyForce(fForce, pos);
+    }
+  }
+
+  if (b.cfg.weapon === "trompo" && b.rpm > 0.2) b.body.applyTorque(new B.Vector3(0, b.rpm * b.mass * 0.35, 0));
+  if (upDot < 0.25 && onGround) {
+    fTorque.set(mesh.right.x * b.mass * 3, 0, mesh.right.z * b.mass * 3);
+    b.body.applyTorque(fTorque);
+  }
 }
 
 function aiStep(b: Bot, dt: number, target: Bot) {
@@ -319,7 +393,7 @@ function aiStep(b: Bot, dt: number, target: Bot) {
   const steer = B.Scalar.Clamp(cross * 0.8, -1, 1);
   const aggr = 0.55 + round * 0.12;
   const throttle = dist > 3 ? aggr : dist < 1.8 ? -0.5 : 0.3;
-  stepBot(b, dt, throttle, steer, dist < 2.5);
+  stepDuelPhysics(b, dt, throttle, steer, dist < 2.5);
 }
 
 function contactDamage() {
@@ -359,12 +433,18 @@ function contactDamage() {
 }
 
 function flipPlayer() {
+  if (flipCd > 0) return;
   const p = bots.find((b) => b.human);
-  if (!p?.flipped) return;
-  p.root.rotationQuaternion = B.Quaternion.FromEulerAngles(0, p.root.rotation.y, 0);
+  if (!p || B.Vector3.Dot(p.root.up, UP) > 0.55) return;
+  const yaw = Math.atan2(p.root.forward.x, p.root.forward.z);
+  const pos = p.root.position.clone();
+  p.root.rotationQuaternion = B.Quaternion.FromEulerAngles(0, yaw, 0);
+  p.root.position.copyFrom(pos);
   p.body.setLinearVelocity(B.Vector3.Zero());
   p.body.setAngularVelocity(B.Vector3.Zero());
+  p.body.applyImpulse(new B.Vector3(0, p.mass * 2, 0), p.root.getAbsolutePosition());
   p.flipped = false;
+  flipCd = D.flip_cd_s;
 }
 
 function roundWinner(): number | null {
@@ -410,7 +490,8 @@ function updateHud() {
   $d("duel-en").textContent = e.name;
   $d("duel-you").textContent = p.name;
   $d("duel-score").textContent = `ASALTOS ${score[0]} – ${score[1]}`;
-  ui.classList.toggle("flipped", !!p.flipped);
+  ui.classList.toggle("flipped", !!p.flipped && flipCd <= 0);
+  ($d("duel-flip") as HTMLButtonElement).disabled = flipCd > 0;
 }
 
 function camFollow(b: Bot, dt: number) {
@@ -429,7 +510,8 @@ function camFollow(b: Bot, dt: number) {
 export function duelTick(dt: number) {
   if (!active || paused) return;
   if (phase === "inter" || phase === "results") return;
-  if (phase === "armado") { deps.scene.physicsEnabled = true; previewBot && stepBot(previewBot, dt, 0, 0, false); return; }
+  if (flipCd > 0) flipCd = Math.max(0, flipCd - dt);
+  if (phase === "armado") { deps.scene.physicsEnabled = true; previewBot && stepDuelPhysics(previewBot, dt, 0, 0, false); return; }
   if (phase === "countdown") {
     countdown -= dt;
     if (countdown <= 0) phase = "fight";
@@ -442,7 +524,7 @@ export function duelTick(dt: number) {
     let throttle = 0, steer = 0;
     const e = bots.find((b) => !b.human)!;
     if (autoPlayer) aiStep(p, dt, e);
-    else stepBot(p, dt, input.move ? input.moveY : input.throttle, input.move ? -input.moveX : input.steer, input.ability || padPressed(pb("ability")));
+    else stepDuelPhysics(p, dt, input.move ? input.moveY : input.throttle, input.move ? -input.moveX : input.steer, input.ability || padPressed(pb("ability")));
     aiStep(e, dt, p);
     contactDamage();
     updateHud();

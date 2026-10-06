@@ -406,7 +406,8 @@
     {"id":"melee_masa_coef","valor":0.08,"descripcion":"Término de masa: (masa_atacante_kg / 5) × este coeficiente"},
     {"id":"warn_traccion_mul","valor":0.95,"descripcion":"Multiplicador de tracción si el loadout confirmado estaba en WARN"},
     {"id":"asalto_objetivo_s","valor":120,"descripcion":"Duración objetivo de un asalto (tuning; no es límite duro)"},
-    {"id":"volcado_vuln_mul","valor":1.25,"descripcion":"Multiplicador de daño recibido mientras el robot está volcado"}
+    {"id":"volcado_vuln_mul","valor":1.25,"descripcion":"Multiplicador de daño recibido mientras el robot está volcado"},
+    {"id":"flip_cd_s","valor":1.25,"descripcion":"Cooldown del botón enderezar tras volcado (modo Demolición)"}
   ],
   "duelo_chasis": [
     {"id":"caja","nombre":"Caja","masa_kg":3,"hp_bonus":30,"traccion_mul":1,"vel_max_mul":0.92,"cog_y_m":0.4},

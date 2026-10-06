@@ -13,7 +13,8 @@
 
 **Estado actual:** vertical slice v1 en master (`c7c98e4`, 2026-10-06). GDD aprobado (`DEMOLICION_GDD.md` §26).
 
-- **Limitaciones ponytail (v1):** manejo arcade con `drive()` (fallback §0.1; sin fuerzas/torques Havok ni CdG desplazado); materiales y pipeline de assets §34 no completos.
+- **Fase 0 (2026-10-06):** `stepDuelPhysics` en `duel.ts` — empuje con `applyForce`/`applyTorque`, CdG por chasis, volcado sin fin de asalto; sin `drive()`. ponytail: tope de velocidad por fuerza (no drag Havok puro); cosméticos §35 y GLB §36 pendientes.
+- **§34 v1:** `duel_paint.ts` — presets metal/plástico/pintura/óxido, 6 zonas, `localStorage` `duel_paint`, UI armado + Q/R.
 
 ---
 

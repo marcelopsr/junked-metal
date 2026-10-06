@@ -18,8 +18,8 @@ todos:
     content: "src/duel.ts: armado 3×3, arena, mejor de 3, menú, ?duel, shots duel"
     status: completed
   - id: phase-0-physics
-    content: "Fase 0: fuerzas/torques Havok reales (hoy arcade drive() en duel.ts)"
-    status: pending
+    content: "Fase 0: fuerzas/torques Havok reales (stepDuelPhysics en duel.ts)"
+    status: completed
   - id: phase-2-playtest-balance
     content: "Fase 2: playtest humano — feel asalto ~2 min, IA asaltos 2–3, combos WARN"
     status: pending
@@ -27,7 +27,7 @@ todos:
     content: "Fase 2: SFX metal dedicados, presets armado, cosméticos §35"
     status: pending
   - id: phase-2-playtest-materials
-    content: "Fase 2: editor pintura por zona §34 (localStorage duel_paint)"
+    content: "Fase 2: pulir pintura §34 (HSV garaje, cosméticos §35; base duel_paint v1 hecha)"
     status: pending
 ---
 

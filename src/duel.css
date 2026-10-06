@@ -14,6 +14,16 @@
 .duel-bar { flex: 1; min-width: 5rem; }
 .duel-bar i { display: block; height: 6px; background: #10170d; border: 1px solid #2c3a28; margin-top: 2px; }
 .duel-bar i span { display: block; height: 100%; background: #7fbf5a; }
+.duel-paint { margin: 0.75rem 0; padding: 0.5rem; border: 1px solid #2c3a28; background: #10170d; }
+.duel-paint-h { font-size: 0.65rem; color: #5f7355; margin: 0 0 0.35rem; letter-spacing: 0.06em; }
+.duel-pzones { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 0.35rem; }
+.duel-pzones .pz { font: inherit; font-size: 0.6rem; padding: 0.25rem 0.35rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #6fb3c4; cursor: pointer; }
+.duel-pzones .pz.on { border-color: #7fbf5a; color: #b9d3a4; }
+.duel-sw { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.35rem; }
+.duel-sw .sw { width: 26px; height: 26px; border: 2px solid #000; padding: 0; cursor: pointer; }
+.duel-sw .sw.on { outline: 2px solid #b9d3a4; outline-offset: 1px; }
+.duel-paint-meta { font-size: 0.65rem; color: #5f7355; margin: 0; }
+.duel-paint-meta button { font: inherit; font-size: inherit; color: #6fb3c4; background: none; border: none; cursor: pointer; text-decoration: underline; }
 .duel-warn { color: #e0a030; font-size: 0.75rem; min-height: 1.2em; margin: 0.5rem 0; }
 .duel-warn.ban { color: #d12a1c; }
 #duel-confirm { width: 100%; margin-top: 0.75rem; padding: 0.65rem; background: #2c3a28; border: 1px solid #5f7355; color: #b9d3a4; font: inherit; cursor: pointer; }
