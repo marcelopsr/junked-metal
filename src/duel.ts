@@ -100,6 +100,7 @@ let shotCamFrozen = false;
 let previewFabRoot: B.TransformNode | null = null;
 /** Offsets de cámara en fabricación (arrastre en viewport; sin órbita automática). */
 let fabCamOff = { yaw: 0, pitch: 0 };
+let fabCamDistMul = 1;
 const fabCamTarget = new B.Vector3(0, ARMADO_CAM.targetY, 0);
 let fabCamUnbind: (() => void) | null = null;
 let fabVpObs: ResizeObserver | null = null;
@@ -203,7 +204,7 @@ function applyFabricarCam() {
   const { yaw, dist, height, targetY } = ARMADO_CAM;
   const a = yaw + fabCamOff.yaw;
   const p = fabCamOff.pitch;
-  const d = dist * Math.cos(p);
+  const d = dist * fabCamDistMul * Math.cos(p);
   const lift = height - targetY + Math.sin(p) * dist * 0.85;
   const t = fabCamTarget;
   deps.cam.position.set(t.x + Math.sin(a) * d, t.y + lift, t.z + Math.cos(a) * d);
@@ -246,11 +247,20 @@ function bindFabCamDrag(el: HTMLElement | null) {
   el.addEventListener("pointermove", onMove);
   el.addEventListener("pointerup", end);
   el.addEventListener("pointercancel", end);
+  const onWheel = (e: WheelEvent) => {
+    if (shotCamFrozen || phase !== "fabricar") return;
+    e.preventDefault();
+    const k = e.deltaY > 0 ? 1.07 : 0.93;
+    fabCamDistMul = Math.max(0.52, Math.min(1.38, fabCamDistMul * k));
+    applyFabricarCam();
+  };
+  el.addEventListener("wheel", onWheel, { passive: false });
   fabCamUnbind = () => {
     el.removeEventListener("pointerdown", onDown);
     el.removeEventListener("pointermove", onMove);
     el.removeEventListener("pointerup", end);
     el.removeEventListener("pointercancel", end);
+    el.removeEventListener("wheel", onWheel);
   };
 }
 
@@ -482,7 +492,29 @@ function buildWorkbench() {
     for (let i = 0; i < 80; i++) { g.fillStyle = i % 3 ? "#353a32" : "#222620"; g.fillRect(Math.random() * s, Math.random() * s, 2 + Math.random() * 4, 1); }
   }) });
   mesh.push(floor);
-  const top = box(3.4, 0.11, 2.6, pbr("wbTop", { color: "#7a5c3a", rough: 0.78, tex: TEX.wood() }), [0, WORKBENCH_TABLE_TOP, 0]);
+  const blueprint = canvasTex(256, (g, s) => {
+    g.fillStyle = "#152238";
+    g.fillRect(0, 0, s, s);
+    const step = s / 20;
+    g.strokeStyle = "#2a4a6e";
+    g.lineWidth = 1;
+    for (let i = 0; i <= 20; i++) {
+      g.beginPath(); g.moveTo(i * step, 0); g.lineTo(i * step, s); g.stroke();
+      g.beginPath(); g.moveTo(0, i * step); g.lineTo(s, i * step); g.stroke();
+    }
+    g.strokeStyle = "#4a8ab8";
+    g.setLineDash([5, 4]);
+    g.strokeRect(step * 2, step * 2, step * 16, step * 12);
+    g.setLineDash([]);
+    g.fillStyle = "#6fb3c4";
+    g.font = "bold 11px monospace";
+    g.fillText("PLANO · 1200×900 mm", step * 2, step * 1.5);
+    g.strokeStyle = "#3d6a94";
+    g.beginPath(); g.moveTo(step * 2, step * 16); g.lineTo(step * 18, step * 16);
+    g.moveTo(step * 18, step * 14); g.lineTo(step * 18, step * 16); g.stroke();
+    g.fillText("1200", step * 9, step * 17.2);
+  });
+  const top = box(3.4, 0.11, 2.6, pbr("wbTop", { color: "#1a3050", rough: 0.92, tex: blueprint }), [0, WORKBENCH_TABLE_TOP, 0]);
   top.receiveShadows = true; shadows.addShadowCaster(top); mesh.push(top);
   for (const [x, z] of [[-1.45, -1], [1.45, -1], [-1.45, 1], [1.45, 1]] as const) {
     mesh.push(box(0.14, WORKBENCH_TABLE_TOP - 0.05, 0.14, M.metal("#4a4e54"), [x, (WORKBENCH_TABLE_TOP - 0.05) / 2, z]));
@@ -844,12 +876,14 @@ function showFabricar() {
   fab = mountFabricacion(ui, {
     onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); previewFabricacion(); refreshFabricarCam(); },
     onConfirm: () => beginMatch(),
+    onLayout: () => refreshFabricarCam(),
   });
   fab.setBuild(playerBuild.cells.length ? playerBuild : defaultBuild());
   playerBuild = fab.getBuild();
   cfg = cfgFromBuild(playerBuild);
   ui.className = "on fabricar";
   fabCamOff = { yaw: 0, pitch: 0 };
+  fabCamDistMul = 1;
   previewFabricacion();
   shotCamFrozen = false;
   bindFabricarViewportSync();

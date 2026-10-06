@@ -359,6 +359,7 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
         const diam = c.blockId === "rueda_gig" ? g * 0.95 : g * 0.7;
         const wh = wheel(diam, g * 0.35, z.wheel_rim.color, c.blockId === "rueda_gig" ? "todoterreno" : "");
         wh.position.set(px, diam * 0.5, pz);
+        wh.rotation.y = c.rot * (Math.PI / 2);
         wh.rotation.z = Math.PI / 2;
         parts.push(wh);
       }
