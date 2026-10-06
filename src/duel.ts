@@ -969,7 +969,8 @@ function updateFabPaintPreview() {
     const a = playerPaint.zones.chassis_body.color;
     const b = playerPaint.zones.chassis_trim.color;
     chip.hidden = false;
-    chip.style.background = `linear-gradient(135deg, ${a} 0%, ${a} 48%, ${b} 52%, ${b} 100%)`;
+    chip.style.setProperty("--chip-a", a);
+    chip.style.setProperty("--chip-b", b);
   }
 }
 

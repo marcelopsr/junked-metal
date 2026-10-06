@@ -279,7 +279,9 @@
   pointer-events: none;
 }
 .duel-fab-cell.dim { opacity: 0.42; }
-.duel-fab-cell.filled { border-style: solid; border-color: rgba(125, 255, 176, .5); background: rgba(20, 40, 32, .68); color: #b9d3a4; }
+.duel-fab-cell.filled { border-style: solid; border-color: rgba(125, 255, 176, .5); background: rgba(20, 40, 32, .68); color: #b9d3a4; cursor: pointer; }
+.duel-fab-cell.picked { border-color: var(--fab-sig); box-shadow: 0 0 0 2px rgba(53, 201, 255, .45); background: rgba(24, 48, 56, .82); }
+.duel-fab-cell.foot.can { animation: duel-drop-pulse 1.2s ease-in-out infinite; }
 .duel-fab.erase-mode .duel-fab-cell.filled { border-color: rgba(255, 77, 77, .45); cursor: pointer; }
 .duel-fab.erase-mode .duel-fab-cell.filled:hover,
 .duel-fab.erase-mode .duel-fab-cell.filled:focus-visible {
@@ -288,7 +290,7 @@
   box-shadow: 0 0 0 2px rgba(255, 77, 77, .35);
 }
 .duel-fab.erase-mode .duel-fab-cell:not(.filled) { opacity: 0.35; pointer-events: none; }
-.duel-fab-cell.can { border-color: var(--fab-accent); background: rgba(20, 40, 32, .88); animation: duel-drop-pulse 1.2s ease-in-out infinite; }
+.duel-fab-cell.foot { border-color: var(--fab-accent); background: rgba(20, 40, 32, .88); }
 .duel-fab-cell.pin:not(.filled) { box-shadow: inset 0 0 0 1px rgba(53, 201, 255, .55); }
 .duel-fab-cell.no-can {
   border-color: var(--fab-ban);
@@ -327,15 +329,38 @@
 .duel-fab-pv-sw { display: flex; gap: 0.28rem; flex-wrap: wrap; }
 .duel-fab-pv-s {
   width: 1.35rem; height: 1.35rem; border-radius: 4px;
-  background: var(--pv); border: 1px solid rgba(255, 255, 255, .22);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35);
+  background: var(--pv);
+  border: 1px solid var(--g-line);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, .55),
+    inset 0 0 0 1px rgba(255, 255, 255, .2);
 }
 .duel-fab-paint-chip {
   position: absolute; top: 0.45rem; right: 4.5rem; z-index: 2;
-  width: 2.1rem; height: 1.1rem; border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, .28);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+  box-sizing: border-box;
+  width: 2.4rem; height: 1.35rem; padding: 3px; border-radius: 6px;
+  background: var(--g-bg);
+  border: 1px solid var(--g-line);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, .7),
+    0 2px 12px rgba(0, 0, 0, .55);
   pointer-events: none;
+}
+.duel-fab-paint-chip::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(
+    135deg,
+    var(--chip-a, #4a5058) 0%,
+    var(--chip-a, #4a5058) 48%,
+    var(--chip-b, #e5e7eb) 52%,
+    var(--chip-b, #e5e7eb) 100%
+  );
+  border: 1px solid rgba(0, 0, 0, .5);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .24);
 }
 
 .duel-fab-drawer { display: flex; flex-direction: column; min-height: 0; padding: 0; overflow: hidden; }
