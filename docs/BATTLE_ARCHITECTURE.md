@@ -1,8 +1,9 @@
 > **⚠ REFERENCIA OBLIGATORIA antes de implementar:**
-> - `.claude/trabajo/SPEC-modo-robots.md` — especificación completa del modo (fuente de verdad)
-> - `docs/BATTLE_RC_PLAN.md` — plan de ejecución cuando exista
+> - **`docs/DEMOLICION_GDD.md`** — fuente de verdad de diseño (reglas, armado, balance, assets)
+> - `.claude/trabajo/SPEC-modo-robots.md` — toolbox histórico (puede quedar atrás del GDD)
+> - `docs/BATTLE_RC_PLAN.md` — plan de ejecución / checklist
 >
-> Este documento describe la arquitectura interna de `src/duel.ts`. Si hay contradicción con la SPEC, la SPEC manda.
+> Este documento describe la arquitectura interna de `src/duel.ts`. Si hay contradicción con el **GDD**, el GDD manda.
 
 # Arquitectura de módulo `duel.ts` – Modo combate melee (BattleBots)
 
@@ -10,7 +11,7 @@
 
 **Nombre interno:** `duel` (`src/duel.ts`). El nombre `battle` ya está tomado por el modo de globos de `kart.ts` (`startBattle()`, L404); no reutilizarlo ni confundirlo.
 
-**Estado actual:** Especificación lista (SPEC-modo-robots.md). Sin código todavía.
+**Estado actual:** GDD cerrado en diseño (sin «aprobado, implementar»). Sin `src/duel.ts` todavía.
 
 ---
 
@@ -25,7 +26,9 @@
 | Enemigos | 10 autos IA genéricos | 1 enemigo IA con barra de vida y tipo fijo |
 | Armado | Auto fijo del garaje | 3 ranuras: chasis / ruedas / arma melee |
 | Número de jugadores | 1-2 (split-screen en escritorio) | 1 jugador vs 1 IA (MVP) |
-| Modo en menú | `api.battle()` (L160, menu.ts) | `?duel` en dev; sin entrada en menú principal en fase 1 |
+| Modo en menú | `api.battle()` (L160, menu.ts) | Entrada **Demolición** en menú + `?duel` en dev (GDD §3) |
+| Formato partida | Una ronda | **Mejor de 3 asaltos**; HP reset por asalto (GDD §2) |
+| Volcado | — | **No** pierde asalto; vulnerable + enderezar (GDD §2) |
 
 ### 0.1 Por qué fuerzas Havok y no `drive()`
 
@@ -48,10 +51,12 @@ Si durante el prototipo las fuerzas resultan inestables, el fallback es arcade (
 - **Diferencia clave:** `duel.ts` **no llama `drive()`**; aplica fuerzas directamente sobre `car.body`.
 - **`setMass()`:** Llamar con masa + inercia correctos según chasis elegido; nunca setear masa sola.
 
-### 1.2 Primitivas de modelos (`models.ts`)
-- **Exportados útiles:** `box()`, `cyl()`, `sph()`, `merge()`, `place()`, `wheel()`, `pbr()`, `PARTS`.
-- **Por qué:** Las piezas del robot se construyen proceduralmente. `PARTS` ya tiene orugas, defensas, ruedas todoterreno reutilizables como mallas de ranura.
-- **`carModel()` no sirve directo:** el robot se arma por piezas, no por `CarKind`.
+### 1.2 Modelos del robot (`models.ts` + opcional `glb.ts`)
+- **Procedural:** `box()`, `cyl()`, `sph()`, `merge()`, `place()`, `wheel()`, `PARTS` — ver GDD §31.
+- **Importados (GDD §36):** mismo pipeline que bichos (`src/glb.ts`, `public/models/*.glb`, `assets-src/*/LICENSE.txt`). Prioridad **open source**; retocar en Blender; procedural como respaldo o capa de tinte (§34).
+- **`merge()` + zonas de material:** metadata por sub-malla para pintura por zona; una plantilla instanciada por tipo de pieza.
+- **`carModel()` no sirve directo:** el robot se arma por ranuras, no por `CarKind`.
+- **Atribución:** `docs/ATTRIBUTIONS.md` + bloque Recursos en Créditos.
 
 ### 1.3 Ciclo de entrada (`input.ts`)
 - **Exportado:** `pollPlayer(ctl): { throttle, steer, drift, item }`
@@ -125,7 +130,7 @@ daño = base_arma × vel_relativa_norm × factor_masa
 - **Knockback:** impulso proporcional al daño sobre el punto de contacto. Sierra: agrega componente vertical. Trompo: impulso lateral + freno propio (conservación "de mentira" pero legible).
 - **Detección:** Eventos de colisión Havok o chequeo de distancia por frame (decidir en prototipo; el cooldown amortigua ráfagas).
 - **Victoria:** Vida enemigo → 0 → humo + piezas desprendidas (`wear()` de Car como referencia).
-- **Derrota:** Vida propia → 0 **o** robot volcado/inmovilizado 10 s continuos (cuenta regresiva visible).
+- **Derrota de asalto:** Vida propia → 0 (GDD §2). Volcado = vulnerable + multiplicador de daño (`volcado_vuln_mul`); enderezar con botón, **no** fin de asalto por tiempo.
 
 ---
 
@@ -182,26 +187,21 @@ export function duelActive(): boolean;
 
 ---
 
-## 5. Pantalla de armado
+## 5. Pantalla de armado (GDD §35, §37)
 
-```
-ARMADO
-┌─────────────────────────────────────────────────────┐
-│  [Vista 3D del robot — gira en tiempo real]          │
-│                                                     │
-│  CHASIS:  [Caja ▸]  [Cuña]  [Plancha]               │
-│  RUEDAS:  [Estándar ▸]  [Gigantes]  [Orugas]         │
-│  ARMA:    [Trompo ▸]  [Sierra]  [Pala]               │
-│                                                     │
-│  Masa: ██████░░  Vel: ████░░░░  Vida: ████████       │
-│                                                     │
-│            [  A PELEAR  ]                           │
-└─────────────────────────────────────────────────────┘
-```
+**Flujo:** Menú Demolición → armado 3 columnas (chasis | ruedas | arma) + 2 cosméticos + preview 3D → CONFIRMAR → arena.
 
-- Vive en `duel.ts` (pantalla propia, `Scr`-like) o como `Scr` nueva en `menu.ts` (decisión de usuario).
-- Vista 3D = malla del robot ensamblada en escena offline, rotando (misma escena BJS, cámara separada).
-- Los stats (masa, velocidad, vida) leen de `BAL.duelo` en `balance.json`.
+**PC:** tres columnas con ‹ ›; barras Masa/Vel/Vida; detalle + lore; presets Tanque/Veloz/Trompo; pintura §34 en la misma pantalla.
+
+**Celular:** preview ~40 % arriba; tabs Chasis | Ruedas | Arma | Pintura debajo.
+
+**Umbrales:** `comboCheck()` → OK / WARN (confirmable, `warn_traccion_mul`) / BAN (GDD §29).
+
+**Preview mesa:** gravedad local, empuje lateral, inclinación 5° (GDD §30); escena compartida con armado.
+
+- Implementación: pantalla propia en `duel.ts` o `Scr` en `menu.ts` (mínimo acoplamiento con survivor).
+- Stats y tablas: `BAL.duelo_*` según borrador GDD §37 (`duelo_chasis`, `duelo_ruedas`, `duelo_armas`, `duelo_rival_cuña`).
+- Persistencia: `localStorage` loadout + `duel_paint` + nombre robot (GDD §34).
 
 ---
 
@@ -236,13 +236,16 @@ __duel.kill()         // mata al enemigo (prueba victoria)
 ### 7.2 `kart.ts`
 - **No modificar.** `battle` en kart.ts sigue siendo los globos. No renombrar nada ahí.
 
-### 7.3 `models.ts`
-- Sin cambios. `cyl()`, `box()`, `pbr()` ya son `export`.
+### 7.3 `models.ts` / `glb.ts` / assets
+- Procedural §31; piezas GLB opcionales vía extensión de `glb.ts` o mapa `duelGlb` (GDD §36).
+- Cada import: `assets-src/<pieza>/LICENSE.txt`, GLB optimizado en `public/models/`.
+- Post-proceso arte: texturas ≤96 px NEAREST (`ART_DIRECTION.md`).
 
 ### 7.4 `balance.json` / `balance.ts`
-- Agregar tabla `duelo` con filas por chasis, ruedas y arma (vida, masa, daño base, vel, RPM_max).
-- Agregar descripciones en `DESC` de `scripts/balance-xlsx.mjs`.
-- **No hardcodear** ningún número de balance en `duel.ts`.
+- Tablas: `duelo`, `duelo_chasis`, `duelo_ruedas`, `duelo_armas`, `duelo_rival_cuña` (números en GDD §37).
+- `comboCheck` puede leer reglas BAN/WARN de `balance.duelo_combos` en v2; v1 puede ser función + tabla GDD §29.
+- Descripciones en `DESC` de `scripts/balance-xlsx.mjs`.
+- **No hardcodear** números de balance en `duel.ts`.
 
 ### 7.5 `scripts/scenarios.mjs`
 - Agregar escenario `duel` para `shots` y `perf` (entrada `?duel`, verificar armado + pelea).
@@ -291,16 +294,25 @@ npm run perf  -- --only duel
 
 ---
 
-## 9.5 Profundidad de armado (remisión a GDD §27–§33)
+## 9.5 Remisión al GDD (armado, balance, assets)
 
-El detalle de puntos de anclaje, reglas de CoG por combo, tabla de stats por pieza, sistema de umbrales de combos (BAN / WARN), pruebas físicas de la preview mesa, reutilización de primitivas de `models.ts` y candidatos de ampliación viven en **`docs/DEMOLICION_GDD.md` §27–§32**. Este documento no los repite; referirse al GDD como fuente de verdad antes de implementar la pantalla de armado y `comboCheck()`.
+| Tema | GDD |
+|------|-----|
+| Anclajes, CoG, piezas §28 | §27–§28 |
+| BAN / WARN, preview mesa | §29–§30 |
+| Mallas procedural vs GLB | §31, **§36** |
+| Materiales / color / texturas | **§34** |
+| UI armado + balance base | **§37** |
+| Atribuciones | `docs/ATTRIBUTIONS.md` |
+
+No duplicar tablas numéricas aquí; importar desde GDD §37 al crear filas en `balance.json`.
 
 ---
 
 ## 10. Puntos de integración futuros (solo anotados, fuera de alcance fase 1)
 
 - `Save`: campos `duel: { chassis, wheels, weapon }` + desbloqueos por tornillos.
-- Pintura por zona del garaje aplicada al robot (`CarOpts.paint/trim/rim`).
+- Sincronizar pintura con garaje survivor (v2); v1 = `duel_paint` local (GDD §34).
 - Entrada en menú principal junto a Carrera, con precarga vía `launch()`.
 - Más arenas (más entradas tipo `TRACKS` de kart.ts).
 - Más enemigos IA, cada uno con tipo de arma distinto.
@@ -314,7 +326,7 @@ El detalle de puntos de anclaje, reglas de CoG por combo, tabla de stats por pie
 |---|---|---|---|
 | **Clase Car (visual)** | ✅ SÍ | `car.ts` | Sin llamar `drive()` |
 | **`drive()`** | ❌ NO | `car.ts` | Reemplazar por fuerzas Havok |
-| **Primitivas models** | ✅ SÍ | `models.ts` | `box`, `cyl`, `PARTS`, etc. |
+| **Primitivas / GLB** | ✅ SÍ | `models.ts`, `glb.ts` | OS primero (§36), luego editar |
 | **Input unificado** | ✅ SÍ | `input.ts` | Ignorar campo `item` |
 | **FX pool** | ✅ SÍ | `fx.ts` | Sin cambios |
 | **Audio** | ✅ PARCIAL | `sfx.ts` | `music("battle")` + explosiones; no miniturbo/shield |
@@ -329,6 +341,6 @@ El detalle de puntos de anclaje, reglas de CoG por combo, tabla de stats por pie
 
 ---
 
-**Actualizado:** 2026-10-06 — alineado con `SPEC-modo-robots.md`
+**Actualizado:** 2026-10-06 — alineado con `DEMOLICION_GDD.md` §34–§37 y `ATTRIBUTIONS.md`
 **Módulo:** `src/duel.ts` (antes descrito erróneamente como `battle.ts`)
 **Estado:** Documento de arquitectura, sin código

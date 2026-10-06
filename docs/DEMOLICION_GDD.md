@@ -180,12 +180,16 @@ Trompo, sierra, pala — comportamiento §2.
 | Audio | ✅ usuario (música) |
 | Resultados | ✅ usuario |
 | Edge cases | ✅ + defaults |
-| Balance numérico | ⏳ tuning en implementación |
+| Balance numérico | ✅ §37 (base); tuning fino en implementación |
+| UI armado (flujo + cel) | ✅ §37 |
 | Shots / perf | ⏳ post-UI |
 | Accesibilidad (texto tamaño, color) | default = mismos que juego global |
 | Meta / logros / tutorial | ✅ H |
 | Paredes / luz / HP ratio | ✅ I |
 | Resultados / menú / post | ✅ J |
+| Materiales/color/texturas piezas | ✅ §34 |
+| Armado Q/R (cosméticos, presets UI) | ✅ §35 |
+| Assets open source / importación | ✅ §36 |
 | Frases / spawn / cámara menú | ✅ K |
 | HP 100 / IA escala / QA / fallback | ✅ L |
 | Building / combinaciones | ✅ M |
@@ -455,7 +459,7 @@ Para que la migración no requiera reescribir la lógica de composición:
 | Nivel | Acción en UI | Criterio |
 |-------|-------------|---------|
 | **BAN** | El botón "A PELEAR" aparece desactivado; tooltip explica el motivo. | Combo que rompe la física o hace el match injugable (volcado permanente, colisión de geometría de arma con el chasis, clearance < 0). |
-| **WARN** | Mensaje de advertencia naranja bajo las barras de stats; el jugador puede igualmente confirmar. | Combo que funciona pero tiene desventaja estructural severa o comportamiento contraintuitivo. |
+| **WARN** | Ícono + texto ámbar bajo las barras; **se puede confirmar**; penalidad ligera en pelea (`balance.duelo.warn_traccion_mul`, default **0,95**). | Combo jugable con desventaja estructural o feel contraintuitivo. |
 | **OK** | Sin aviso. | Todo lo demás. |
 
 ### Tabla de combos v1
@@ -502,7 +506,7 @@ La **mesa de taller** en la pantalla de armado no es solo estética: ejecuta tre
 
 ## 31. Mallas procedurales — reutilización de `models.ts`
 
-Cada pieza del robot se construye con las primitivas ya exportadas de `src/models.ts`. **No se crean mallas sueltas por entidad** (regla de rendimiento del proyecto).
+Cada pieza del robot se construye con las primitivas ya exportadas de `src/models.ts`, **salvo que §36 decida importar un GLB** para esa pieza (mismo merge + instancias). **No se crean mallas sueltas por entidad** en arena (regla de rendimiento del proyecto).
 
 ### Chasis
 
@@ -658,7 +662,8 @@ El jugador puede combinar **preset + color** (paleta o selector HSV reutilizando
 
 ### Texturas
 
-- **Solo procedurales** `canvasTex` / NEAREST (como patio y autos); **sin bitmaps externos** en v1.
+- **Base:** procedurales `canvasTex` / NEAREST (como patio y autos); siempre disponibles y tintables por color del jugador.
+- **Mejora opcional (§36):** texturas **open source** (CC0, CC-BY, etc.) cuando superen al procedural en metal/óxido/concreto; reescalar ≤96 px y filtro NEAREST para encajar en `ART_DIRECTION.md`.
 - Variantes por preset: rayado metal, grano plástico, flake pintura, manchas óxido.
 
 ### Persistencia
@@ -701,4 +706,168 @@ El jugador puede combinar **preset + color** (paleta o selector HSV reutilizando
 | Lore | 1 línea picante por pieza en panel detalle |
 
 *(Color/material: ver §34 — reemplaza “gris fijo”.)*
+
+---
+
+## 36. Assets — open source, importación y criterio “lo mejor que convenga”
+
+**Decisión usuario (2026-10-06):** priorizar recursos **libres de usar** (open source, dominio público, licencias con crédito). **Primero** buscar/importar lo open source que encaje; **después** retocar en Blender o generar procedural propio para que calce con PSX, pintura por zona (§34) y física. Procedural no es el default de arte: es el **plan B** o la **capa de personalización** encima de mallas base.
+
+### Jerarquía por pieza o elemento
+
+| Prioridad | Fuente | Cuándo |
+|-----------|--------|--------|
+| 1 | **Importar** GLB/OBJ/kit con licencia clara (OGA, Kenney, Poly Haven, CC0, CC-BY) | Siempre que exista pieza usable con poco retoque de escala/orientación |
+| 2 | **Editar** el asset importado (Blender, `assets-src/`) | Ajustar silueta, low-poly, zonas de material, tornillos visibles |
+| 3 | **Reusar** pipeline `glb.ts` + instancias + `merge()` | Integración en juego (misma regla que bichos) |
+| 4 | **Textura bitmap libre** | Metal/óxido/concreto si el pack CC0 gana al canvas procedural |
+| 5 | **Procedural** (`models.ts`, `canvasTex`) | Sin candidato OS razonable, cosméticos simples, o máscaras de tinte sobre malla importada |
+
+Mezcla permitida: **chasis GLB + ruedas `wheel()` + arma procedural**, etc. Un solo `merge()` + zonas de material (§34).
+
+### Licencias aceptadas (con registro obligatorio)
+
+- **CC0**, **CC-BY** (y variantes que exijan atribución), **MIT**, **Apache 2.0**, **OFL** (fuentes), licencias explícitas de **OpenGameArt**, **Poly Haven**, **Kenney**, y assets **propios** del repo.
+- **Prohibido** en build sin revisión legal: NC, SA que impida uso comercial del juego web, o fuentes sin licencia.
+- Cada import vive en `assets-src/<nombre>/` con **`LICENSE.txt`** (URL, autor, fecha, licencia) — mismo patrón que `assets-src/ant/LICENSE.txt`.
+- GLB de juego: `public/models/…` optimizado con `gltf-transform optimize --compress quantize` (ver comentarios en `src/glb.ts`).
+
+### Ajuste a dirección de arte
+
+Todo asset importado pasa por el mismo “filtro Junked Metal”:
+
+- Low-poly legible; sin high-poly que dependa de normal maps pesados.
+- Texturas **≤96 px**, **NEAREST**, paleta coherente con clima día de Demolición (arena acero).
+- Materiales re-mapeados a `pbr()` / `M.*` donde haga falta para **zonas pintables** y presets §34.
+- `SnapPlugin` / post retro aplican igual que al resto de la escena.
+
+### Sprites y UI
+
+- **HUD / íconos de piezas:** seguir **SVG propios** (`icons.ts`) — coherencia terminal RC.
+- **Sprites 2D** (intro, polaroid decor, stickers): permitidos si son libres; preferir pocas piezas grandes antes que muchos PNG sueltos.
+- No emojis ni packs genéricos de UI (ver `ART_DIRECTION.md`).
+
+### Créditos y atribución
+
+- `ART_DIRECTION.md` pide créditos sin listar el stack técnico; las **obras de terceros** van en **`docs/ATTRIBUTIONS.md`** (versionado) y un bloque **“Recursos”** en pantalla Créditos (autor + licencia, enlace opcional).
+- CC-BY: nombre del autor como exige la licencia; CC0: entrada opcional por cortesía.
+
+### Demolición — candidatos concretos (no bloquean v1)
+
+| Elemento | Procedural v1 | Import si aparece asset ideal |
+|----------|---------------|-------------------------------|
+| Chasis cuña/caja/plancha | `box` / `extrude` §31 | GLB chasis modular industrial |
+| Trompo / sierra / pala | `cyl` + `box` §31 | GLB arma de OGA / modelo propio Blender |
+| Orugas | bandas `box` | banda de kit CC0 |
+| Arena acero | `world.ts` / plano + procedural rayado | textura metal CC0 en suelo |
+| Cosméticos | primitivas + decals procedurales | mesh pequeño CC0 (antena, bandera) |
+| Rival CUÑA | mismo pipeline que jugador | mismas reglas; paleta fija en balance |
+
+### Implementación (referencia)
+
+- Piezas importadas: tabla `GLB` estilo `src/glb.ts` o submapa `duelGlb` en `duel.ts` / módulo `duel_models.ts`.
+- **Instancias:** una plantilla fusionada por tipo de pieza; no un GLB por robot en pantalla.
+- `ponytail:` no añadir dependencia npm de assets; solo archivos en `public/` + LICENSE en repo.
+
+### Checklist
+
+| Ítem | Estado |
+|------|--------|
+| Licencia + LICENSE.txt por import | ✅ política |
+| Procedural siempre disponible | ✅ |
+| Import GLB/textura cuando convenga | ✅ |
+| Atribución en docs + Créditos | ✅ (crear `ATTRIBUTIONS.md` al primer import nuevo) |
+| Coherencia PSX (tex ≤96, NEAREST) | ✅ |
+
+---
+
+## 37. UI de armado y balance base (toolbox 2026-10-06)
+
+### Flujo de pantallas
+
+1. Menú principal → **Demolición**.
+2. **Armado** en **3 columnas** fijas: chasis | ruedas | arma; debajo **2 cosméticos**; **preview 3D** siempre visible.
+3. Flechas **‹ ›** por columna; barras Masa / Vel / Vida + panel detalle + lore (§35).
+4. Presets **Tanque / Veloz / Trompo** como atajos que rellenan las 3 ranuras (editables después).
+5. Pintura y materiales por zona en la misma pantalla (§34), no pantalla separada en v1.
+6. **CONFIRMAR** → arena (cuenta regresiva 3-2-1-GO). Sin splash rival obligatorio antes del armado.
+
+### Celular (390×844)
+
+- **Preview 3D arriba ~40 %** de la altura útil.
+- Debajo: **tabs o acordeón** Chasis | Ruedas | Arma | Pintura (Pintura agrupa presets material + color por zona).
+- Misma lógica ‹ › y CONFIRMAR que en PC; tipografía y contraste = `ART_DIRECTION.md` + HUD survivor.
+
+### Balance numérico v1 (tabla `balance.duelo`)
+
+| Clave | Valor inicial | Notas |
+|-------|---------------|--------|
+| `hp_base` | **100** | + bonus chasis (`duelo_piezas`) |
+| `asalto_objetivo_s` | **120** | Objetivo de feel ~2 min; no hard cap |
+| `melee_cd_s` | **0,5** | Por par atacante–víctima |
+| `warn_traccion_mul` | **0,95** | Solo si combo en WARN al confirmar |
+| Masas / traction / `hp_bonus` | por fila en `duelo_piezas` | §28; sin literales en `duel.ts` |
+
+Daño melee: fórmula en implementación (vel. relativa × coef. arma); coeficientes en `balance.duelo` / `duelo_armas`, no en código.
+
+### Tablas `balance.json` (borrador para import)
+
+**`duelo`** (una fila o claves en objeto raíz de tabla):
+
+| id / clave | valor | descripción |
+|------------|-------|-------------|
+| `hp_base` | 100 | Vida antes de bonus de chasis |
+| `melee_cd_s` | 0.5 | Cooldown por par atacante–víctima |
+| `melee_vel_coef` | 1.15 | Escala daño vs velocidad relativa normalizada (0–1) |
+| `melee_masa_coef` | 0.08 | `(masa_atacante_kg / 5) × coef` sumado al multiplicador |
+| `warn_traccion_mul` | 0.95 | Tracción si el loadout confirmado estaba en WARN |
+| `asalto_objetivo_s` | 120 | Objetivo de duración (tuning, no timer) |
+| `volcado_vuln_mul` | 1.25 | Daño recibido mientras volcado (§2) |
+
+**`duelo_chasis`**
+
+| id | masa_kg | hp_bonus | traccion_mul | vel_max_mul | cog_y_m |
+|----|---------|----------|--------------|-------------|---------|
+| `caja` | 3.0 | 30 | 1.00 | 0.92 | 0.40 |
+| `cuña` | 2.2 | −10 | 1.10 | 1.00 | 0.22 |
+| `plancha` | 1.8 | −20 | 0.95 | 1.05 | 0.28 |
+
+**`duelo_ruedas`**
+
+| id | masa_kg | vel_max_mul | traccion_mul | lift_m |
+|----|---------|-------------|--------------|--------|
+| `estandar` | 0.4 | 1.00 | 1.00 | 0.00 |
+| `gigantes` | 0.9 | 0.90 | 1.20 | 0.15 |
+| `orugas` | 1.1 | 0.80 | 1.35 | 0.00 |
+
+**`duelo_armas`**
+
+| id | masa_kg | dano_base | push_mul | rpm_max | rpm_carga_s | notas |
+|----|---------|-----------|----------|---------|-------------|--------|
+| `trompo` | 0.8 | 5 | 0.6 | 1.0 | 0.35 | Daño × `(0.35 + 0.65 × rpm/rpm_max)` |
+| `sierra` | 0.7 | 7 | 0.3 | — | — | `knock_up_n` 2.2 en tabla o fila aparte |
+| `pala` | 1.2 | 2 | 2.4 | — | — | Empuje Havok priorizado |
+
+**`duelo_rival_cuña`** (loadout + pintura fija, no editable):
+
+| campo | valor |
+|-------|--------|
+| chasis / ruedas / arma | `cuña` / `orugas` / `pala` |
+| preset cuerpo | metal cepillado `#2a2d32` |
+| bandas | pintura brillante `#e85d04` |
+| pala | metal cepillado `#8a9098` |
+
+**Vida máxima ejemplo (jugador):** `hp_base + hp_bonus(chasis)` → caja 130, cuña 90, plancha 80 (ruedas/arma no suman HP en v1).
+
+**Masa total ejemplo:** suma `masa_kg` de las tres piezas + cosméticos (~0,05 kg c/u) para Havok.
+
+### Assets (recordatorio)
+
+Prioridad **open source → editar → procedural** (§36); el vertical slice puede mezclar piezas importadas y tinte procedural por zona.
+
+---
+
+## 33 bis. Nota sobre §33 (formulario histórico)
+
+Las preguntas 3–4 de §33 quedan **obsoletas** respecto a decisiones cerradas: estilo **industrial + personalización §34**, montaje **tornillos + VFX pro §35**. Conservar §33 solo como registro del toolbox original; no volver a preguntar esos ítems.
 
