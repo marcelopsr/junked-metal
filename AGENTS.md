@@ -6,6 +6,8 @@ HUD de telemetría RC como terminal gastada, **nada de emojis ni UI genérica**)
 
 ## Cómo trabajamos (CLI o chat, mismo flujo)
 
+**Modelo en Cursor:** solo `composer-2.5` (sesión y subagentes); ver `.cursor/rules/composer-solo.mdc`.
+
 Metodología `orquestar` (skill de usuario): la sesión principal reparte, encarga, integra y verifica; los encargos a subagentes son autocontenidos. Guía para este juego: `.Codex/trabajo/ARRANQUE.md`.
 
 1. **Entender con graphify primero** (ver sección graphify abajo): `graphify query`, `path`, `explain` antes de grep o de leer archivos enteros.

@@ -1,0 +1,10 @@
+---
+description: Solo Composer 2.5 en sesión y subagentes Task
+alwaysApply: true
+---
+
+# Modelo obligatorio: Composer
+
+- La sesión principal y **todos** los subagentes lanzados con **Task** usan únicamente **`composer-2.5`**.
+- **Prohibido:** `composer-2.5-fast`, `haiku-*`, `sonnet-*`, `opus-*`, `fable-*`, `gemini-*`, `gpt-*`, `grok-*`, `muse-*`, y `inherit` cuando el resultado no sea Composer.
+- Si el usuario o un encargo piden otro modelo, informarlo y seguir con **`composer-2.5`**.
