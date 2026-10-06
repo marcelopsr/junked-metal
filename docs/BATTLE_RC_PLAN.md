@@ -1,6 +1,6 @@
 # Battle RC — Plan maestro del modo de duelo melee
 
-> **Decisiones de diseño cerradas en [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md).**
+> **Decisiones de diseño cerradas en [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md)** (incl. §34–37 materiales, UI, balance; §36 assets OS + [`ATTRIBUTIONS.md`](./ATTRIBUTIONS.md)).
 > Este documento es histórico y sirve como checklist de rondas de decisión; el GDD manda en caso de contradicción.
 
 Estado: **BORRADOR — sin aprobar. Prohibido implementar hasta cerrar las decisiones del checklist.**

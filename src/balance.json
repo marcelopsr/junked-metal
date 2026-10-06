@@ -398,5 +398,32 @@
     {"id":"plaga_acido","nombre":"LLUVIA DE ÁCIDO","mult_hormiga":1,"mult_friccion":1,"mult_escupidora":2.4,"mult_robot":1,"mult_polilla":1,"mult_escarabajo":1,"desde_hormiga":-1,"desde_friccion":-1,"desde_escupidora":0.6,"desde_robot":-1,"desde_polilla":-1,"desde_escarabajo":-1},
     {"id":"plaga_escarabajos","nombre":"ESCARABAJOS TEMPRANOS","mult_hormiga":1,"mult_friccion":1,"mult_escupidora":1,"mult_robot":1,"mult_polilla":1,"mult_escarabajo":1.5,"desde_hormiga":-1,"desde_friccion":-1,"desde_escupidora":-1,"desde_robot":-1,"desde_polilla":-1,"desde_escarabajo":2.5},
     {"id":"plaga_mixto","nombre":"PATIO MIXTO","mult_hormiga":0.8,"mult_friccion":1.3,"mult_escupidora":1.3,"mult_robot":1.3,"mult_polilla":1,"mult_escarabajo":1,"desde_hormiga":-1,"desde_friccion":-1,"desde_escupidora":1,"desde_robot":1,"desde_polilla":-1,"desde_escarabajo":-1}
+  ],
+  "duelo": [
+    {"id":"hp_base","valor":100,"descripcion":"Vida base antes del bonus de chasis (modo Demolición)"},
+    {"id":"melee_cd_s","valor":0.5,"descripcion":"Segundos de cooldown por par atacante–víctima"},
+    {"id":"melee_vel_coef","valor":1.15,"descripcion":"Multiplicador de daño por velocidad relativa normalizada (0–1)"},
+    {"id":"melee_masa_coef","valor":0.08,"descripcion":"Término de masa: (masa_atacante_kg / 5) × este coeficiente"},
+    {"id":"warn_traccion_mul","valor":0.95,"descripcion":"Multiplicador de tracción si el loadout confirmado estaba en WARN"},
+    {"id":"asalto_objetivo_s","valor":120,"descripcion":"Duración objetivo de un asalto (tuning; no es límite duro)"},
+    {"id":"volcado_vuln_mul","valor":1.25,"descripcion":"Multiplicador de daño recibido mientras el robot está volcado"}
+  ],
+  "duelo_chasis": [
+    {"id":"caja","nombre":"Caja","masa_kg":3,"hp_bonus":30,"traccion_mul":1,"vel_max_mul":0.92,"cog_y_m":0.4},
+    {"id":"cuna","nombre":"Cuña","masa_kg":2.2,"hp_bonus":-10,"traccion_mul":1.1,"vel_max_mul":1,"cog_y_m":0.22},
+    {"id":"plancha","nombre":"Plancha","masa_kg":1.8,"hp_bonus":-20,"traccion_mul":0.95,"vel_max_mul":1.05,"cog_y_m":0.28}
+  ],
+  "duelo_ruedas": [
+    {"id":"estandar","nombre":"Estándar","masa_kg":0.4,"vel_max_mul":1,"traccion_mul":1,"lift_m":0},
+    {"id":"gigantes","nombre":"Gigantes","masa_kg":0.9,"vel_max_mul":0.9,"traccion_mul":1.2,"lift_m":0.15},
+    {"id":"orugas","nombre":"Orugas","masa_kg":1.1,"vel_max_mul":0.8,"traccion_mul":1.35,"lift_m":0}
+  ],
+  "duelo_armas": [
+    {"id":"trompo","nombre":"Trompo","masa_kg":0.8,"dano_base":5,"push_mul":0.6,"rpm_max":1,"rpm_carga_s":0.35,"knock_up_n":0},
+    {"id":"sierra","nombre":"Sierra","masa_kg":0.7,"dano_base":7,"push_mul":0.3,"rpm_max":0,"rpm_carga_s":0,"knock_up_n":2.2},
+    {"id":"pala","nombre":"Pala","masa_kg":1.2,"dano_base":2,"push_mul":2.4,"rpm_max":0,"rpm_carga_s":0,"knock_up_n":0}
+  ],
+  "duelo_rival": [
+    {"id":"cuna_industrial","nombre":"CUÑA INDUSTRIAL","chasis_id":"cuna","ruedas_id":"orugas","arma_id":"pala","cuerpo_color":"#2a2d32","bandas_color":"#e85d04","pala_color":"#8a9098"}
   ]
 }

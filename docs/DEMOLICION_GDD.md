@@ -180,7 +180,7 @@ Trompo, sierra, pala — comportamiento §2.
 | Audio | ✅ usuario (música) |
 | Resultados | ✅ usuario |
 | Edge cases | ✅ + defaults |
-| Balance numérico | ✅ §37 (base); tuning fino en implementación |
+| Balance numérico | ✅ §37 + `balance.json` duelo_* |
 | UI armado (flujo + cel) | ✅ §37 |
 | Shots / perf | ⏳ post-UI |
 | Accesibilidad (texto tamaño, color) | default = mismos que juego global |
@@ -501,6 +501,16 @@ La **mesa de taller** en la pantalla de armado no es solo estética: ejecuta tre
 | **Reset pose** | Devuelve el robot a la posición inicial centrada y nivelada. | Botón "RESET" o al cambiar cualquier pieza. | Transición suave (lerp de posición/rotación en 0.3 s). |
 
 **Nota de implementación:** estas pruebas corren en la misma escena Babylon.js de la pantalla de armado, con una cámara de órbita separada. No requieren una escena nueva; solo suspender la gravedad del patio y crear un plano-mesa temporal.
+
+### Decisión v1 (toolbox preview, 2026-10-06)
+
+| Prueba | Jugador en producción |
+|--------|------------------------|
+| **Caída** | Siempre al cambiar pieza (automático). |
+| **Reset pose** | Siempre al cambiar pieza (lerp 0,3 s); sin botón obligatorio. |
+| **Empuje lateral** | Botón **EMPUJAR** visible (opcional; tooltip “simular golpe lateral”). |
+| **Inclinación 5°** | **Automática** al entrar en estado WARN (una vez por combo); botón **INCLINAR MESA** solo en dev (`?duel` / debug). |
+| **BAN** | No inclina: el botón CONFIRMAR queda deshabilitado (§29). |
 
 ---
 
@@ -848,11 +858,11 @@ Daño melee: fórmula en implementación (vel. relativa × coef. arma); coeficie
 | `sierra` | 0.7 | 7 | 0.3 | — | — | `knock_up_n` 2.2 en tabla o fila aparte |
 | `pala` | 1.2 | 2 | 2.4 | — | — | Empuje Havok priorizado |
 
-**`duelo_rival_cuña`** (loadout + pintura fija, no editable):
+**`duelo_rival`** (loadout + pintura fija, no editable; fila `cuna_industrial`):
 
 | campo | valor |
 |-------|--------|
-| chasis / ruedas / arma | `cuña` / `orugas` / `pala` |
+| chasis / ruedas / arma | `cuna` / `orugas` / `pala` (ids en `balance.json`) |
 | preset cuerpo | metal cepillado `#2a2d32` |
 | bandas | pintura brillante `#e85d04` |
 | pala | metal cepillado `#8a9098` |

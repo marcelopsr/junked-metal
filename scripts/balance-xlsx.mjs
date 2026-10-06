@@ -64,6 +64,30 @@ const DESC = {
     ...Object.fromEntries(["hormiga", "friccion", "escupidora", "robot", "polilla", "escarabajo"].flatMap((k) => [["mult_" + k, `Multiplicador del peso de aparición: ${k}`], ["desde_" + k, `Minuto desde el que aparece ${k} (−1 = su minuto normal)`]])),
   },
   armas_extra: LISTA, ritmo: LISTA, ataques: LISTA,
+  duelo: LISTA,
+  duelo_chasis: {
+    id: "Identificador (no cambiar)", nombre: "Nombre en UI (referencia)",
+    masa_kg: "Masa del chasis (kg) para física y barras", hp_bonus: "Vida extra sumada a duelo.hp_base",
+    traccion_mul: "Multiplicador de tracción (1 = referencia)", vel_max_mul: "Multiplicador de velocidad máxima",
+    cog_y_m: "Centro de gravedad Y (m) para preview y física",
+  },
+  duelo_ruedas: {
+    id: "Identificador (no cambiar)", nombre: "Nombre en UI (referencia)",
+    masa_kg: "Masa (kg)", vel_max_mul: "Multiplicador de velocidad máxima",
+    traccion_mul: "Multiplicador de tracción", lift_m: "Metros que eleva el chasis (gigantes)",
+  },
+  duelo_armas: {
+    id: "Identificador (no cambiar)", nombre: "Nombre en UI (referencia)",
+    masa_kg: "Masa (kg)", dano_base: "Daño base melee antes de velocidad/RPM",
+    push_mul: "Multiplicador de empuje Havok", rpm_max: "RPM máxima (0 = no aplica)",
+    rpm_carga_s: "Segundos para cargar de 0 a RPM máx (trompo; 0 = no aplica)",
+    knock_up_n: "Impulso vertical en sierra (0 = no aplica)",
+  },
+  duelo_rival: {
+    id: "Identificador del rival (no cambiar)", nombre: "Nombre en UI",
+    chasis_id: "Id en duelo_chasis", ruedas_id: "Id en duelo_ruedas", arma_id: "Id en duelo_armas",
+    cuerpo_color: "Color hex cuerpo", bandas_color: "Color hex bandas/orugas", pala_color: "Color hex del arma",
+  },
 };
 
 // ---------- utilidades ----------
@@ -83,7 +107,7 @@ const head = (cell) => { cell.fill = HEAD; cell.font = { bold: true, color: { ar
 const info = wb.addWorksheet("Leeme");
 [
   "Balance de Junked Metal. Esta planilla se genera desde src/balance.json (npm run balance:xlsx) y vuelve al juego con npm run balance:import.",
-  "Hojas de datos (se importan): enemigos, armas, armas_extra, pasivas, ritmo, ataques, autos, pilotos, precios, plagas. Fila 1 = columnas, fila 2 = qué significa cada una.",
+  "Hojas de datos (se importan): enemigos, armas, armas_extra, pasivas, ritmo, ataques, autos, pilotos, precios, plagas, duelo, duelo_chasis, duelo_ruedas, duelo_armas, duelo_rival. Fila 1 = columnas, fila 2 = qué significa cada una.",
   "Se editan SOLO los números. No cambiar los id, no agregar ni borrar filas ni columnas (el importador lo rechaza). Las columnas nombre y tipo son referencia.",
   "Hojas calculadas (no se importan): Golpes para matar, Tiempo jefe, Partidas para comprar. Se actualizan solas. Las celdas amarillas son supuestos editables solo de la hoja calculada.",
   "Para volver al juego: Archivo > Descargar > Valores separados por tabulaciones (.tsv) de cada hoja de datos, juntar en un .txt con una línea '### nombre_hoja' antes de cada una y correr npm run balance:import -- archivo.txt.",
