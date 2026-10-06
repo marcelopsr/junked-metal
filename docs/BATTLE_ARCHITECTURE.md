@@ -11,7 +11,9 @@
 
 **Nombre interno:** `duel` (`src/duel.ts`). El nombre `battle` ya está tomado por el modo de globos de `kart.ts` (`startBattle()`, L404); no reutilizarlo ni confundirlo.
 
-**Estado actual:** GDD aprobado para implementación (2026-10-06, `DEMOLICION_GDD.md` §26). `src/duel.ts` en curso según este documento.
+**Estado actual:** vertical slice v1 en master (`c7c98e4`, 2026-10-06). GDD aprobado (`DEMOLICION_GDD.md` §26).
+
+- **Limitaciones ponytail (v1):** manejo arcade con `drive()` (fallback §0.1; sin fuerzas/torques Havok ni CdG desplazado); materiales y pipeline de assets §34 no completos.
 
 ---
 
