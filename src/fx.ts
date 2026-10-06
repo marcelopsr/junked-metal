@@ -133,6 +133,9 @@ const IMPACT: Record<string, { spark: string; chips: number; shake: number; squa
   petardos: { spark: "#ffb347", chips: 2, shake: 0.12, squash: 0.8 },
   embestida: { spark: "#ffd27a", chips: 3, shake: 0.25, squash: 1 },
   pelota: { spark: "#ffd27a", chips: 4, shake: 0.4, squash: 1 },
+  trompo: { spark: "#d8dde8", chips: 2, shake: 0.2, squash: 0.55 },
+  sierra: { spark: "#ffb347", chips: 2, shake: 0.22, squash: 0.5 },
+  pala: { spark: "#ffd27a", chips: 3, shake: 0.28, squash: 0.85 },
 };
 const SQ_T = 0.18;
 const squashes = new Map<B.AbstractMesh, { t: number; k: number; b: B.Vector3 }>(); // b = escala de base del nodo

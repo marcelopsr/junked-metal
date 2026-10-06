@@ -7,6 +7,7 @@ import { burst, impact } from "./fx";
 import { input, padPressed, pb } from "./input";
 import { box, cyl, merge, wheel } from "./models";
 import { applyClimate, canvasTex, M, pbr, shadows } from "./render";
+import { save } from "./menu";
 import { engineStop, music, SFX } from "./sfx";
 import { buildGrass, clearLayout, setZone } from "./world";
 import { CLIMATES } from "./run";
@@ -19,6 +20,19 @@ export type ChassisId = (typeof CH)[number];
 export type WheelsId = (typeof WH)[number];
 export type WeaponId = (typeof AR)[number];
 export type RobotConfig = { chassis: ChassisId; wheels: WheelsId; weapon: WeaponId };
+
+/** Nombres y lore de pieza (§35); balance numérico sigue en balance.json. */
+const PIECE: Record<ChassisId | WheelsId | WeaponId, { label: string; lore: string }> = {
+  caja: { label: "Caja blindada", lore: "Chapa doble: aguanta el abrazo y el remordimiento." },
+  cuna: { label: "Cuña baja", lore: "Punta afilada para besar el chasis rival sin pedir permiso." },
+  plancha: { label: "Plancha veloz", lore: "Aerodinámica de cartón: vuela… hacia el piso." },
+  estandar: { label: "Ruedas estándar", lore: "Goma de supermercado; agarre honesto, sin letra chica." },
+  gigantes: { label: "Ruedas gigantes", lore: "Aplastan bordillos y la autoestima del rival." },
+  orugas: { label: "Orugas", lore: "Tracción de tanque de juguete; el giro se rinde." },
+  trompo: { label: "Trompo", lore: "RPM arriba, dignidad abajo: el filo no negocia." },
+  sierra: { label: "Sierra", lore: "Chispas, alboroto y un filo que pide disculpas tarde." },
+  pala: { label: "Pala", lore: "Empuje primero; el daño es un efecto secundario educado." },
+};
 
 type Deps = { scene: B.Scene; cam: B.FreeCamera; onExit(): void };
 let deps: Deps;
@@ -34,6 +48,7 @@ type Bot = {
   hp: number; hpMax: number; hitAt: number; rpm: number; flipped: boolean;
   camYaw: number; camPos: B.Vector3; stats: { maxSpd: number; accel: number; turn: number; grip: number; push: number; dano: number; knock: number };
   mass: number; warnMul: number;
+  dmgOut: number; dmgIn: number;
 };
 
 let active = false;
@@ -47,6 +62,8 @@ let score = [0, 0], round = 0, t = 0, countdown = 0, paused = false;
 let autoPlayer = false, god = false;
 let loadoutWarn = false;
 let lastHit = new Map<string, number>();
+let matchDmg = { dealt: 0, taken: 0 };
+let camShake = 0;
 
 export function initDuel(d: Deps) { deps = d; ensureUi(); }
 
@@ -81,7 +98,9 @@ function statsOf(c: RobotConfig, warn: boolean) {
 }
 
 function paintRobot(c: RobotConfig, colors?: { body: string; trim: string }) {
-  const body = colors?.body ?? "#4a5058", trim = colors?.trim ?? "#e85d04";
+  // ponytail: pintura por zona §34 (duel_paint) pendiente; variación mínima por tipo de pieza
+  const tint: Record<ChassisId, string> = { caja: "#4a5058", cuna: "#3d4550", plancha: "#5a6068" };
+  const body = colors?.body ?? tint[c.chassis], trim = colors?.trim ?? "#e85d04";
   const parts: B.Mesh[] = [];
   const mb = M.matte(body), mt = M.metal(trim);
   if (c.chassis === "caja") parts.push(box(1.4, 0.55, 2, mb, [0, 0.35, 0]));
@@ -123,6 +142,7 @@ function makeBot(id: number, human: boolean, c: RobotConfig, at: B.Vector3, name
   return {
     id, human, name, cfg: c, root, vis, body, agg, hp: hpMaxOf(c), hpMax: hpMaxOf(c), hitAt: 0, rpm: 0, flipped: false,
     camYaw: 0, camPos: at.clone().add(new B.Vector3(0, 6, -10)), stats: statsOf(c, warn), mass, warnMul: warn ? D.warn_traccion_mul : 1,
+    dmgOut: 0, dmgIn: 0,
   };
 }
 
@@ -156,10 +176,10 @@ function ensureUi() {
   if (ui) return;
   ui = document.createElement("div");
   ui.id = "duel-ui";
-  ui.innerHTML = `<div id="duel-arm"><h1>ARMADO</h1><p class="sub">Tres piezas. Un rival. Cero balas.</p><div class="duel-cols"></div><div class="duel-bars"></div><p class="duel-warn" id="duel-warn"></p><button type="button" id="duel-confirm">CONFIRMAR</button></div>
+  ui.innerHTML = `<div id="duel-arm"><h1>ARMADO</h1><p class="sub">Arena de acero, mejor de tres. Solo melee: chasis, ruedas y un arma.</p><p class="sub">Sin proyectiles. El rival no perdona combos torpes.</p><div class="duel-cols"></div><p class="duel-lore" id="duel-lore"></p><div class="duel-bars"></div><p class="duel-warn" id="duel-warn"></p><button type="button" id="duel-confirm">CONFIRMAR</button></div>
 <div id="duel-hud"><div class="duel-hp-row"><span id="duel-en">RIVAL</span><span id="duel-you">TÚ</span></div><div class="duel-hp-row"><div class="duel-hp enemy"><i id="duel-hpE"></i></div><div class="duel-hp you"><i id="duel-hpP"></i></div></div><div class="duel-score" id="duel-score"></div></div>
 <div id="duel-inter"><p id="duel-inter-t"></p><button type="button" id="duel-next">SIGUIENTE ASALTO</button></div>
-<div id="duel-res"><p id="duel-res-t"></p><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
+<div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
 <button type="button" id="duel-flip">ENDEREZAR</button>`;
   document.body.appendChild(ui);
   const pause = document.createElement("div");
@@ -188,11 +208,13 @@ function syncArmado() {
   cfg = { chassis: CH[idx.c], wheels: WH[idx.w], weapon: AR[idx.a] };
   const cc = comboCheck(cfg);
   const cols = ui.querySelector(".duel-cols")!;
+  const ch = CH[idx.c], wh = WH[idx.w], ar = AR[idx.a];
   cols.innerHTML = [
-    ["CHASIS", "c", CH[idx.c], BAL.dueloChasis[CH[idx.c]].nombre],
-    ["RUEDAS", "w", WH[idx.w], BAL.dueloRuedas[WH[idx.w]].nombre],
-    ["ARMA", "a", AR[idx.a], BAL.dueloArmas[AR[idx.a]].nombre],
-  ].map(([lab, col, , nom]) => `<div class="duel-col"><b>${lab}</b><div class="name">${nom}</div><button type="button" data-duel="${col}:m">‹</button> <button type="button" data-duel="${col}:p">›</button></div>`).join("");
+    ["CHASIS", "c", PIECE[ch].label],
+    ["RUEDAS", "w", PIECE[wh].label],
+    ["ARMA", "a", PIECE[ar].label],
+  ].map(([lab, col, nom]) => `<div class="duel-col"><b>${lab}</b><div class="name">${nom}</div><button type="button" data-duel="${col}:m">‹</button> <button type="button" data-duel="${col}:p">›</button></div>`).join("");
+  $d("duel-lore").textContent = `${PIECE[ch].lore} · ${PIECE[wh].lore} · ${PIECE[ar].lore}`;
   const m = massOf(cfg), st = statsOf(cfg, cc === "warn");
   const bars = ui.querySelector(".duel-bars")!;
   const norm = (v: number, max: number) => `${Math.round(100 * v / max)}%`;
@@ -234,6 +256,7 @@ function rivalCfg(): RobotConfig {
 
 function beginMatch() {
   loadoutWarn = comboCheck(cfg) === "warn";
+  matchDmg = { dealt: 0, taken: 0 };
   previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
   cleanup(); buildArena();
   music("battle");
@@ -318,9 +341,12 @@ function contactDamage() {
       if (vic.flipped) dmg *= D.volcado_vuln_mul;
       if (god && vic.human) dmg = 0;
       vic.hp -= dmg; vic.hitAt = now;
+      if (atk.human) { atk.dmgOut += dmg; matchDmg.dealt += dmg; }
+      if (vic.human) { vic.dmgIn += dmg; matchDmg.taken += dmg; }
       if (dmg >= 3) {
         SFX.impact(atk.cfg.weapon, false);
-        impact(vic.vis.getChildMeshes()[0] ?? vic.root, vic.root.position, "#b9d3a4", 1, atk.cfg.weapon, false, false);
+        const sh = impact(vic.vis.getChildMeshes()[0] ?? vic.root, vic.root.position, vic.human ? "#b9d3a4" : "#d12a1c", 1, atk.cfg.weapon, dmg >= 8, false);
+        camShake = Math.max(camShake, sh * 2.2);
         if (vic.human || atk.human) damageNumber(innerWidth / 2 + (vic.human ? -40 : 40), 120, Math.round(dmg), false);
       }
       if (atk.stats.knock > 0 && rel > 4) vic.body.applyImpulse(new B.Vector3(0, atk.stats.knock * atk.mass * 0.15, 0), vic.root.getAbsolutePosition());
@@ -364,7 +390,15 @@ function endMatch(forfeit: boolean) {
   if (forfeit) score = [0, 2];
   ui.className = "on results";
   const win = score[0] >= 2;
-  $d("duel-res-t").textContent = win ? "MEJOR DE TRES: VICTORIA" : forfeit ? "ABANDONO · DERROTA 2–0" : "MEJOR DE TRES: DERROTA";
+  const r = BAL.dueloRival.cuna_industrial;
+  $d("duel-res-t").textContent = win ? "MEJOR DE TRES · VICTORIA" : forfeit ? "ABANDONO · DERROTA 2–0" : "MEJOR DE TRES · DERROTA";
+  $d("duel-res-stats").innerHTML = [
+    ["Marcador", `${score[0]} – ${score[1]}`],
+    ["Daño infligido", `${Math.round(matchDmg.dealt)}`],
+    ["Daño recibido", `${Math.round(matchDmg.taken)}`],
+    ["Rival", r.nombre],
+    ["Loadout", `${PIECE[cfg.chassis].label} / ${PIECE[cfg.wheels].label} / ${PIECE[cfg.weapon].label}`],
+  ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
   engineStop(); music("menu");
 }
 
@@ -386,7 +420,9 @@ function camFollow(b: Bot, dt: number) {
   const back = new B.Vector3(Math.sin(b.camYaw), 0, Math.cos(b.camYaw));
   const want = b.root.position.subtract(back.scale(10)).add(new B.Vector3(0, 5.5, 0));
   B.Vector3.LerpToRef(b.camPos, want, 1 - Math.exp(-8 * dt), b.camPos);
-  deps.cam.position.copyFrom(b.camPos);
+  camShake = Math.max(0, camShake - dt * 2);
+  const s = save.shake ? camShake * camShake * 0.8 : 0;
+  deps.cam.position.copyFrom(b.camPos).addInPlace(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0));
   deps.cam.setTarget(b.root.position.add(new B.Vector3(0, 0.8, 0)));
 }
 

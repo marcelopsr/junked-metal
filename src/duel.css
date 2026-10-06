@@ -3,7 +3,8 @@
 #duel-ui.armado { background: linear-gradient(180deg, #0b0d0acc 0%, #0b0d0aee 55%, #0b0d0af2 100%); }
 #duel-arm { max-width: 720px; margin: 0 auto; padding: 1rem 1rem 5rem; }
 #duel-arm h1 { font-size: 1.1rem; letter-spacing: 0.08em; margin: 0 0 0.25rem; color: #e0a030; }
-#duel-arm .sub { font-size: 0.75rem; color: #5f7355; margin-bottom: 1rem; }
+#duel-arm .sub { font-size: 0.75rem; color: #5f7355; margin: 0 0 0.35rem; }
+.duel-lore { font-size: 0.7rem; color: #6fb3c4; line-height: 1.35; margin: 0.75rem 0; min-height: 2.6em; }
 .duel-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; }
 .duel-col { background: #141813; border: 1px solid #2c3a28; padding: 0.5rem; }
 .duel-col b { display: block; font-size: 0.65rem; color: #5f7355; margin-bottom: 0.35rem; }
@@ -25,7 +26,12 @@
 .duel-hp.you i { background: #7fbf5a; }
 .duel-hp i { display: block; height: 100%; width: 100%; transform-origin: left; }
 .duel-score { text-align: center; font-size: 0.8rem; color: #6fb3c4; margin-top: 0.25rem; }
-#duel-inter, #duel-res { max-width: 420px; margin: 20vh auto; padding: 1.5rem; background: #141813; border: 1px solid #2c3a28; text-align: center; display: none; }
+#duel-inter, #duel-res { max-width: 420px; margin: 12vh auto; padding: 1.5rem; background: #141813; border: 1px solid #2c3a28; text-align: center; display: none; }
+.duel-polaroid { background: #cfc8b0; color: #1b2418; padding: 0.75rem 0.85rem 1rem; margin-bottom: 1rem; text-align: left; box-shadow: 0 6px 0 #0006, 0 12px 18px #0008; rotate: -1.5deg; }
+.duel-polaroid #duel-res-t { font-size: 0.85rem; color: #1b2418; margin: 0 0 0.5rem; letter-spacing: 0.04em; }
+#duel-res-stats { margin: 0; font-size: 0.72rem; display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.65rem; font-family: VT323, monospace; }
+#duel-res-stats dt { color: #5a5a40; }
+#duel-res-stats dd { margin: 0; text-align: right; }
 #duel-ui.inter #duel-inter, #duel-ui.results #duel-res { display: block; pointer-events: auto; }
 #duel-pause { position: fixed; inset: 0; background: #0b0d0ae6; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 0.75rem; z-index: 50; }
 #duel-pause.on { display: flex; pointer-events: auto; }
