@@ -290,7 +290,7 @@ function ensureUi() {
   if (ui) return;
   ui = document.createElement("div");
   ui.id = "duel-ui";
-  ui.innerHTML = `<div id="duel-arm" class="duel-wb"><header class="duel-wb-head"><h1>ARMADO</h1><p class="duel-wb-hint">Arrastrar cada pieza al robot</p><p class="duel-wb-fallback">O elegir pieza y tocar la zona en el robot</p></header>
+  ui.innerHTML = `<div id="duel-arm" class="duel-wb"><header class="duel-wb-head"><h1>ARMADO</h1><p class="duel-wb-hint">Arrastre cada pieza al robot</p><p class="duel-wb-fallback">O seleccione pieza y zona en el robot</p></header>
 <div class="duel-wb-main"><aside class="duel-wb-side" aria-labelledby="duel-sec-stats"><h2 id="duel-sec-stats" class="duel-sec-h">Telemetría</h2><div class="duel-bars" role="group" aria-label="Estimación del robot"></div>
 <details class="duel-paint-wrap" id="duel-paint-details"><summary class="duel-paint-sum">Pintura <span class="duel-opt">(opcional)</span></summary><div class="duel-paint" id="duel-paint"></div></details>
 <p class="duel-warn" id="duel-warn" role="status" aria-live="polite"></p></aside>
@@ -386,7 +386,7 @@ function syncArmado() {
   bars.innerHTML = bar("Masa", norm(m, 5.5)) + bar("Velocidad", norm(st.maxSpd, 16)) + bar("Vida", norm(hpMaxOf(cfg), 130));
   const w = $d("duel-warn");
   w.className = "duel-warn" + (cc === "ban" ? " ban" : "");
-  w.textContent = cc === "ban" ? "Combo inválido: cambia las ruedas." : cc === "warn" ? "Advertencia: tracción −5% en este combo." : "";
+  w.textContent = cc === "ban" ? "Combo inválido: cambie las ruedas." : cc === "warn" ? "Advertencia: tracción −5% en este combo." : "";
   ($d("duel-confirm") as HTMLButtonElement).disabled = cc === "ban";
   syncPaintUi();
   previewArmado();
