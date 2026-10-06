@@ -103,6 +103,8 @@ export const sessions = [
   { id: "partida", query: "?mute&seed=3", shots: [
     { id: "curso", act: partida(90) },
     { id: "cartas", act: async (p) => { await p.evaluate(() => window.__xp(9999)); await tick(p, 4); await wait(p, () => !document.getElementById("levelup").classList.contains("hidden")); await p.waitForTimeout(300); } },
+    { id: "pausa", vps: ["pc"], act: async (p) => { await p.evaluate(() => window.__play(3)); await tick(p, 90); await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },
+    // ponytail: shot de resultados/outro pendiente (revive + outro en headless); cubrir con escenario `over` en otra tanda
   ] },
   // partida_llena: 300 s de sim (partida avanzada, t=5 min) → mide el estado con armas evolucionadas y oleadas densas.
   // Medido: ~168 draws PC (thin-instances agrupan por tipo; menos que partida-curso/90 s por diferente mezcla de proyectiles).

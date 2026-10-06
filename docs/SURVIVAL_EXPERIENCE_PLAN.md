@@ -215,6 +215,7 @@ Bot estándar, sin god. Tres supervivencias completas; dos muertes tempranas (se
 ## Checklist decisiones pendientes (ronda 3+)
 
 - [x] Umbral de regresión perf cel: **+20 % ms/cuadro** en `partida_llena` vs baseline post-salto (6.8 → **8.2** máx.); p95/draws solo informativos salvo regresión grosera.
+- [ ] Shot headless `partida-pausa` OK; **resultados/outro** pendiente (hook `__over` o escenario dedicado).
 - [ ] Detalle textos radio / gráficos Fase 5.
 
 ---
