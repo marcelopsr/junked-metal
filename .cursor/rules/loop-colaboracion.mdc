@@ -1,0 +1,40 @@
+---
+description: Loop de trabajo Junked Metal — siempre AskUserQuestion; herramientas sin pedir permiso
+alwaysApply: true
+---
+
+# Loop de colaboración (Junked Metal)
+
+## Preguntas obligatorias (toolbox)
+
+- Usar la herramienta **AskUserQuestion** en cada turno donde se avance o se cierre trabajo en este repo.
+- **No** sustituir por preguntas sueltas en el texto del chat ("¿seguimos?", "¿te parece?", listas A/B en prosa).
+- Hasta **4 preguntas × 4 opciones** por ronda; opción **(Recomendado)** primero; **selección múltiple** cuando las opciones no se excluyen.
+- Cubrir en una ronda todo lo abierto (foco, decisiones de diseño, verificación, siguiente paso).
+
+Excepción mínima: el usuario escribió una orden **literal y completa** ("hacé exactamente X") sin ambigüedad; aun así, al **terminar** esa tanda volver al loop con AskUserQuestion para el siguiente paso.
+
+## Loop de sesión
+
+1. **AskUserQuestion** → foco y decisiones.
+2. Ejecutar (código, sim, perf, shots, pm2, shell, MCP, browser headless) **sin pedir permiso**: el usuario autorizó uso pleno de la Mac y herramientas del proyecto.
+3. Resumen breve de lo hecho + evidencia (números de sim, etc.).
+4. **AskUserQuestion** de nuevo: siguiente tanda, ajustes, o pausa.
+
+No arrancar una tanda grande de implementación sin la ronda 1. No cerrar un mensaje de trabajo sin la ronda 4 (salvo que el usuario diga "solo configurá" o equivalente).
+
+## Git
+
+Tras cada tanda con cambios en disco: **commit local** (mensaje claro, sin push salvo que el usuario lo pida).
+
+## Qué va en AskUserQuestion vs qué no
+
+| AskUserQuestion | Ejecutar directo |
+|-----------------|------------------|
+| Diseño, balance, textos, arte, prioridades, git push | `tsc`, `npm test`, `build`, `sim`, `perf`, `shots` |
+| Elegir entre enfoques técnicos con tradeoff de producto | `pm2 restart rc-test`, graphify, leer código |
+| ¿Seguir / cambiar foco / commit? | Subagentes y plugins cuando encaje orquestar |
+
+## Idioma
+
+Responder en español. Textos del juego: neutro, sin voseo (`docs/ART_DIRECTION.md`).
