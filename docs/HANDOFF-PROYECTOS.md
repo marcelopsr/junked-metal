@@ -32,7 +32,7 @@ Este documento es autocontenido: alcanza para retomar el proyecto sin el histori
 3. **Encargos con Sonnet** (bajo/medio/alto según dificultad); la sesión principal dirige, integra y verifica.
 4. **Probar en tanda:** hacer todos los cambios y probar UNA vez al final, no pedacito por pedacito.
 5. **Sin servidores ni puertos propios:** usar los de pm2 (ver §4). Un solo navegador liviano y cerrado al terminar.
-6. **Publicar solo si el usuario lo pide** (push a `master` = publica). Por defecto: commit local.
+6. **Git automático:** commit local tras cada tanda con cambios; push a `origin/master` sin preguntar al terminar una tanda significativa o al cerrar sesión. Solo pausar si el usuario dice "no push" o pregunta sobre publicación.
 7. **Decisiones tomadas no se vuelven a preguntar.** Descartado explícitamente: enemigos que temen el faro. Maldiciones: ocultas por ahora (código intacto).
 
 ---
@@ -67,6 +67,7 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
   - `npm run sim -- --seeds 1,2 --secs 600` / `--duel perro` — simulación con bot, sin dibujar, repetible por semilla.
   - `npm run shots [-- --diff | --update]` — 35 capturas (compu y celular) con un Chromium headless sobre Metal, y comparación contra referencias locales.
   - `npm run perf` — ms por cuadro, draw calls, triángulos, memoria por escenario; compara con la medición anterior.
+    - **Ojo:** el escenario `partida` (90 s de sim, modo god) mide draw calls bajos (~300-400); `partida_llena` (300 s de sim, máximo de enemigos) da el número real cercano a producción (~1.600 draws). No confundir uno con otro al comparar rendimiento.
 - **Verificación mínima antes de commit:** `npx tsc --noEmit -p .` + `npm run build` + la herramienta que corresponda.
 - **Balance:** la planilla de Google Sheets es la referencia ("biblia"). `npm run balance:xlsx` genera `balance.xlsx`; para traer cambios: exportar las hojas a TSV y `npm run balance:import -- archivo.txt`. El usuario todavía no subió la planilla a su Drive (pendiente: subir `balance.xlsx` y convertirla a Hojas de cálculo de Google).
 

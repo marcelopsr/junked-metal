@@ -7,12 +7,12 @@ alwaysApply: true
 
 ## Preguntas obligatorias (toolbox)
 
-- Usar la herramienta **AskUserQuestion** en cada turno donde se avance o se cierre trabajo en este repo.
+- Usar la herramienta **AskUserQuestion** solo para dudas reales de diseño, balance, arte o prioridad.
 - **No** sustituir por preguntas sueltas en el texto del chat ("¿seguimos?", "¿te parece?", listas A/B en prosa).
-- Hasta **4 preguntas × 4 opciones** por ronda; opción **(Recomendado)** primero; **selección múltiple** cuando las opciones no se excluyen.
-- Cubrir en una ronda todo lo abierto (foco, decisiones de diseño, verificación, siguiente paso).
+- Preferir **1-3 preguntas por ronda**; hasta 4×4 solo si hay varias decisiones genuinamente abiertas; opción **(Recomendado)** primero; **selección múltiple** cuando las opciones no se excluyen.
+- No preguntar sobre lo que ya está decidido ni sobre acciones técnicas que se ejecutan directo.
 
-Excepción mínima: el usuario escribió una orden **literal y completa** ("hacé exactamente X") sin ambigüedad; aun así, al **terminar** esa tanda volver al loop con AskUserQuestion para el siguiente paso.
+Excepción mínima: el usuario escribió una orden **literal y completa** ("hacé exactamente X") sin ambigüedad; aun así, al **terminar** esa tanda volver al loop con AskUserQuestion para el siguiente paso si hay decisiones abiertas.
 
 ## Loop de sesión
 
@@ -25,15 +25,15 @@ No arrancar una tanda grande de implementación sin la ronda 1. No cerrar un men
 
 ## Git
 
-Tras cada tanda con cambios en disco: **commit local** (mensaje claro, sin push salvo que el usuario lo pida).
+Tras cada tanda con cambios en disco: **commit local** (mensaje claro). **Push a `origin/master` sin preguntar** al terminar una tanda significativa o al cerrar la sesión; el usuario autorizó el push automático. Solo pausar si el usuario dijo explícitamente "no push" o pregunta sobre estrategia de publicación. **Nunca** usar AskUserQuestion para commit, push o cuándo hacer uno.
 
 ## Qué va en AskUserQuestion vs qué no
 
 | AskUserQuestion | Ejecutar directo |
 |-----------------|------------------|
-| Diseño, balance, textos, arte, prioridades, git push | `tsc`, `npm test`, `build`, `sim`, `perf`, `shots` |
+| Diseño, balance, textos, arte, prioridades | `tsc`, `npm test`, `build`, `sim`, `perf`, `shots` |
 | Elegir entre enfoques técnicos con tradeoff de producto | `pm2 restart rc-test`, graphify, leer código |
-| ¿Seguir / cambiar foco / commit? | Subagentes y plugins cuando encaje orquestar |
+| ¿Seguir / cambiar foco? | Subagentes, plugins, commit, push a master |
 
 ## Idioma
 

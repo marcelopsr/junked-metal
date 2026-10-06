@@ -15,7 +15,7 @@ Metodología `orquestar` (skill de usuario): la sesión principal reparte, encar
    - `/ponytail-debt` para listar los `ponytail:` pendientes.
 3. **Verificar** siempre: `npx tsc --noEmit -p .`, `npm test` y `npm run build`; después probar con las herramientas headless (`npm run shots`, `sim`, `perf`: ver "Herramientas de prueba"), no con el panel del navegador a mano.
 4. **Mantener el grafo**: `graphify update .` tras cambios de código (el hook de git lo hace en cada commit). Cambios en docs → `/graphify --update`.
-5. **Loop con AskUserQuestion (toolbox)** — regla `.cursor/rules/loop-colaboracion.mdc`: en cada turno de trabajo, preguntar con la herramienta (hasta 4×4, recomendada primero, multiselección cuando aplique); al cerrar una tanda, otra ronda para el siguiente paso. No preguntas sueltas en el chat. Herramientas del proyecto y de la Mac: usar sin pedir permiso; las decisiones de diseño/balance/publicación sí van en el toolbox.
+5. **Loop con AskUserQuestion (toolbox)** — regla `.cursor/rules/loop-colaboracion.mdc`: solo para dudas reales de diseño, balance o prioridad (preferir 1-3 preguntas por ronda); al cerrar una tanda, otra ronda si hay decisiones abiertas. No preguntas sueltas en el chat. Herramientas del proyecto y de la Mac: usar sin pedir permiso. **Git:** commit local tras cada tanda con cambios; push a `origin/master` sin preguntar al terminar una tanda significativa o al cerrar sesión (usuario autorizó). Nunca AskUserQuestion sobre commit/push salvo que el usuario lo pida explícitamente.
 
 ## Mapa del código (`src/`)
 
