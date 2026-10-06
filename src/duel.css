@@ -109,6 +109,21 @@
 #duel-ui.inter #duel-confirm,
 #duel-ui.results #duel-confirm { display: none; }
 #duel-ui.fight #duel-hud { display: block; }
+#duel-count.duel-count {
+  position: fixed; left: 0; right: 0; top: 18%;
+  text-align: center; pointer-events: none; z-index: 45;
+  font: 700 clamp(72px, 16vw, 200px)/1 "Rajdhani", system-ui, sans-serif;
+  color: #f4f7fa; text-shadow: 0 8px 0 rgba(0, 0, 0, .35);
+  opacity: 0; letter-spacing: 0.06em;
+}
+#duel-count.duel-count.on { opacity: 1; animation: duel-count-pulse 1s ease-out infinite; }
+#duel-count.duel-count.go { color: #7dffb0; animation: duel-count-go 1.2s ease-out both; }
+@keyframes duel-count-pulse { 0% { transform: scale(1.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: scale(.9); } }
+@keyframes duel-count-go { 0% { transform: scale(.6); } 30% { transform: scale(1.2); } 100% { transform: scale(1.5); opacity: 0; } }
+#duel-ui.fabricar #duel-count,
+#duel-ui.armado #duel-count,
+#duel-ui.inter #duel-count,
+#duel-ui.results #duel-count { display: none; }
 .duel-hp-row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.62rem; margin-bottom: 0.32rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
 .duel-hud-lab.enemy { color: var(--fab-ban, #ff4d4d); }
 .duel-hud-lab.you { color: var(--fab-accent, #7dffb0); }

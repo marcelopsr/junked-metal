@@ -17,7 +17,8 @@
     "demo:refresh": "npm run build && pm2 restart rc-demo",
     "sim": "node scripts/sim.mjs",
     "shots": "node scripts/shots.mjs",
-    "perf": "node scripts/perf.mjs"
+    "perf": "node scripts/perf.mjs",
+    "playtest:duel": "node scripts/duel-playtest.mjs"
   },
   "keywords": [],
   "type": "module",

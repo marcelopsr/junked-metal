@@ -130,11 +130,33 @@ export const sessions = [
       await p.evaluate(() => window.__duel.shotCam(true));
       await tick(p, 15);
     } },
+    { id: "countdown", act: async (p) => {
+      await p.evaluate(() => { window.__duel.confirm(); window.__duel.shotCam(true); });
+      await tick(p, 55);
+    } },
     { id: "pelea", act: async (p) => {
-      await p.evaluate(() => { window.__duel.confirm(); window.__duel.auto(true); window.__duel.shotCam(true); });
-      // freeze: el countdown solo avanza con __tick (~3.4 s)
+      await p.evaluate(() => {
+        const ph = window.__duel.info().phase;
+        if (ph === "fabricar" || ph === "armado") window.__duel.confirm();
+        window.__duel.auto(true);
+        window.__duel.shotCam(true);
+      });
       await tick(p, 220);
       await tick(p, 90);
+    } },
+  ] },
+  { id: "duel_menu", query: "?mute", vps: ["pc"], shots: [
+    { id: "fabricar", act: async (p) => {
+      await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
+      if (await p.evaluate(() => document.getElementById("scr-title")?.classList.contains("on"))) await p.keyboard.press("Space");
+      await toMain(p);
+      await p.click('#scr-main [data-go="duel"]');
+      await wait(p, () => document.getElementById("scr-duel")?.classList.contains("on"));
+      await p.click('#scr-duel [data-act="duelgo"]');
+      await wait(p, () => document.getElementById("duel-ui")?.classList.contains("fabricar") && !!document.getElementById("duel-fab-grid"));
+      await p.evaluate(() => window.__duel.loadTemplate("cuna"));
+      await p.evaluate(() => window.__duel.refreshGhost?.());
+      await tick(p, 12);
     } },
   ] },
 ];

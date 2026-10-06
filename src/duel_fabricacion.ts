@@ -32,6 +32,7 @@ export type FabApi = {
   getBuild(): RobotBuild;
   setBuild(b: RobotBuild): void;
   sync(): void;
+  refreshGhost(): void;
   openDrawer(on?: boolean): void;
   destroy(): void;
 };
@@ -55,6 +56,7 @@ export function mountFabricacion(
   let drawerOpen = !isTouch;
   let placedFlash: string | null = null;
   let placedFlashT = 0;
+  let ghostPin: { x: number; z: number } | null = null;
   const undo: RobotBuild[] = [];
 
   const root = document.createElement("div");
@@ -283,6 +285,30 @@ export function mountFabricacion(
       `<button type="button" class="duel-fab-btn" data-tpl="${id}">${t.label}</button>`).join("");
   }
 
+  function firstCanProbe(): Cell | null {
+    const half = D.grid_half_xz;
+    for (let z = half; z >= -half; z--) {
+      for (let x = -half; x <= half; x++) {
+        const probe: Cell = { x, y: layerY, z, rot, blockId: selected };
+        if (canPlace(build, probe)) return probe;
+      }
+    }
+    return null;
+  }
+
+  function refreshGhost() {
+    if (erase) { opts.onHoverCell?.(null); return; }
+    if (ghostPin) {
+      const probe: Cell = { x: ghostPin.x, y: layerY, z: ghostPin.z, rot, blockId: selected };
+      const can = canPlace(build, probe);
+      opts.onHoverCell?.({ probe, can, erase: false });
+      return;
+    }
+    const probe = firstCanProbe();
+    if (probe) opts.onHoverCell?.({ probe, can: true, erase: false });
+    else opts.onHoverCell?.(null);
+  }
+
   function sync() {
     syncDrawer();
     syncInv();
@@ -290,6 +316,7 @@ export function mountFabricacion(
     syncGrid();
     syncBars();
     syncTpl();
+    refreshGhost();
   }
 
   function onKey(e: KeyboardEvent) {
@@ -311,18 +338,24 @@ export function mountFabricacion(
     opts.onHoverCell?.({ probe, can, erase });
   };
   gridEl.addEventListener("mouseover", (e) => {
-    emitHover((e.target as HTMLElement).closest(".duel-fab-cell") as HTMLElement | null);
+    const cell = (e.target as HTMLElement).closest(".duel-fab-cell") as HTMLElement | null;
+    if (cell?.dataset.x != null) ghostPin = { x: +cell.dataset.x, z: +cell.dataset.z! };
+    emitHover(cell);
   });
-  gridEl.addEventListener("mouseleave", () => opts.onHoverCell?.(null));
+  gridEl.addEventListener("mouseleave", () => { ghostPin = null; refreshGhost(); });
+  gridEl.addEventListener("pointerdown", (e) => {
+    const cell = (e.target as HTMLElement).closest(".duel-fab-cell") as HTMLElement | null;
+    if (cell?.dataset.x != null) { ghostPin = { x: +cell.dataset.x, z: +cell.dataset.z! }; refreshGhost(); }
+  }, { passive: true });
 
   root.addEventListener("click", (e) => {
     const t = e.target as HTMLElement;
     const ly = t.closest("[data-ly]") as HTMLElement | null;
-    if (ly?.dataset.ly != null) { layerY = +ly.dataset.ly; syncGrid(); syncBars(); return; }
+    if (ly?.dataset.ly != null) { layerY = +ly.dataset.ly; ghostPin = null; syncGrid(); syncBars(); refreshGhost(); return; }
     const tab = t.closest("[data-cat]") as HTMLElement | null;
-    if (tab?.dataset.cat) { cat = tab.dataset.cat as BlockCat; const first = blocksByCat(cat)[0]; if (first) selected = first.id; erase = false; sync(); return; }
+    if (tab?.dataset.cat) { cat = tab.dataset.cat as BlockCat; const first = blocksByCat(cat)[0]; if (first) selected = first.id; erase = false; ghostPin = null; sync(); return; }
     const blk = t.closest("[data-blk]") as HTMLElement | null;
-    if (blk?.dataset.blk) { selected = blk.dataset.blk; erase = false; sync(); return; }
+    if (blk?.dataset.blk) { selected = blk.dataset.blk; erase = false; ghostPin = null; sync(); return; }
     const cell = t.closest(".duel-fab-cell") as HTMLElement | null;
     if (cell?.dataset.x != null) {
       const x = +cell.dataset.x!, z = +cell.dataset.z!;
@@ -390,6 +423,7 @@ export function mountFabricacion(
     getBuild: () => build,
     setBuild: (b) => { build = structuredClone(b); sync(); opts.onChange(build); },
     sync,
+    refreshGhost,
     openDrawer: (on = true) => { drawerOpen = on; syncDrawer(); },
     destroy: () => {
       removeEventListener("keydown", onKey);

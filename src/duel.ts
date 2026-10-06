@@ -899,7 +899,8 @@ function ensureUi() {
 <div id="duel-hud" class="duel-hud h-panel"><div class="duel-hp-row"><span id="duel-en" class="duel-hud-lab enemy">RIVAL</span><span id="duel-you" class="duel-hud-lab you">PROPIO</span></div><div class="duel-hp-row duel-hp-bars"><div class="duel-hp-wrap enemy"><div class="h-track duel-hp-track enemy" role="presentation"><div id="duel-hpE"></div></div></div><div class="duel-hp-wrap you"><div class="h-track duel-hp-track you" role="presentation"><div id="duel-hpP"></div></div></div></div><div id="duel-part-wear" class="duel-part-wear hidden" aria-live="polite"><span id="duel-part-label">PIEZA</span><div class="h-track duel-hp-track part" role="presentation"><div id="duel-part-hp"></div></div></div><div class="duel-score" id="duel-score"></div></div>
 <div id="duel-inter"><p id="duel-inter-t"></p><button type="button" id="duel-next">SIGUIENTE ASALTO</button></div>
 <div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
-<button type="button" id="duel-flip">ENDEREZAR</button>`;
+<button type="button" id="duel-flip">ENDEREZAR</button>
+<div id="duel-count" class="duel-count" aria-live="polite"></div>`;
   document.body.appendChild(ui);
   const pause = document.createElement("div");
   pause.id = "duel-pause";
@@ -1074,7 +1075,7 @@ function showFabricar() {
   if (conf) conf.style.display = "none";
   fab?.destroy();
   fab = mountFabricacion(ui, {
-    onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); clearFabPlaceGhost(); previewFabricacion(); refreshFabricarCam(); },
+    onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); previewFabricacion(); refreshFabricarCam(); fab?.refreshGhost(); },
     onConfirm: () => beginMatch(),
     onLayout: () => refreshFabricarCam(),
     onZoom: (mul) => {
@@ -1156,6 +1157,7 @@ function startRound() {
   ui.className = "on fight";
   syncDuelTouch();
   updateHud();
+  updateCountdownUi();
 }
 
 function grounded(body: B.PhysicsBody, mesh: B.Mesh) {
@@ -1382,6 +1384,24 @@ function updateHud() {
   ($d("duel-flip") as HTMLButtonElement).disabled = flipCd > 0;
 }
 
+/** Cuenta atrás de salida (misma lógica que kart.ts / #rcount). */
+function updateCountdownUi() {
+  const el = $d("duel-count");
+  if (phase === "countdown") {
+    const show = countdown > 0 && countdown <= 3;
+    el.textContent = show ? String(Math.ceil(countdown)) : "";
+    el.className = "duel-count" + (show ? " on" : "");
+    return;
+  }
+  if (phase === "fight" && t < 1.2) {
+    el.textContent = "¡YA!";
+    el.className = "duel-count go on";
+    return;
+  }
+  el.textContent = "";
+  el.className = "duel-count";
+}
+
 function camFollow(b: Bot, dt: number) {
   const fwd = b.root.forward; fwd.y = 0; fwd.normalize();
   const target = Math.atan2(fwd.x, fwd.z);
@@ -1402,12 +1422,21 @@ export function duelTick(dt: number) {
   if (phase === "armado") return;
   if (phase === "fabricar") return;
   if (phase === "countdown") {
+    const was = Math.ceil(countdown);
     countdown -= dt;
-    if (countdown <= 0) { phase = "fight"; syncDuelTouch(); }
+    if (countdown > 0 && Math.ceil(countdown) !== was && countdown < 3) SFX.countBeep(false);
+    if (countdown <= 0) {
+      SFX.countBeep(true);
+      phase = "fight";
+      syncDuelTouch();
+      t = 0;
+    }
+    updateCountdownUi();
     return;
   }
   if (phase === "fight") {
     t += dt;
+    updateCountdownUi();
     if (padPressed(pb("pause"))) { paused = true; $d("duel-pause").classList.add("on"); return; }
     const p = bots.find((b) => b.human)!;
     let throttle = 0, steer = 0;
@@ -1462,9 +1491,11 @@ export const duelDev = {
   /** Pose fija para capturas headless (sin órbita ni follow). */
   shotCam: (on = true) => { shotCamFrozen = on; if (on) setShotCamPose(); },
   info: () => ({
-    active, phase, score, round, cfg, pendingPiece, build: playerBuild,
+    active, phase, score, round, cfg, pendingPiece, build: playerBuild, ghost3d: !!fabPlaceGhost,
+    countdown: phase === "countdown" ? countdown : undefined,
     bots: bots.map((b) => ({ name: b.name, hp: b.hp, rpm: b.rpm, flipped: b.flipped })),
   }),
+  refreshGhost: () => fab?.refreshGhost(),
   /** Equipa por API (headless / regresión legado). */
   equip: (cat: PieceCat, id: string) => setPiece(cat, id),
   openDrawer: (on = true) => {
