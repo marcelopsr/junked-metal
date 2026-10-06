@@ -291,6 +291,12 @@ npm run perf  -- --only duel
 
 ---
 
+## 9.5 Profundidad de armado (remisión a GDD §27–§33)
+
+El detalle de puntos de anclaje, reglas de CoG por combo, tabla de stats por pieza, sistema de umbrales de combos (BAN / WARN), pruebas físicas de la preview mesa, reutilización de primitivas de `models.ts` y candidatos de ampliación viven en **`docs/DEMOLICION_GDD.md` §27–§32**. Este documento no los repite; referirse al GDD como fuente de verdad antes de implementar la pantalla de armado y `comboCheck()`.
+
+---
+
 ## 10. Puntos de integración futuros (solo anotados, fuera de alcance fase 1)
 
 - `Save`: campos `duel: { chassis, wheels, weapon }` + desbloqueos por tornillos.
