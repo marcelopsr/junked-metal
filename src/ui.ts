@@ -102,29 +102,92 @@ export function hudBoss(name: string | null, pct = 1) {
 
 // ---------- Aviso de radio: entra con interferencia y el texto se va tecleando ----------
 const STATIC = "#%/\\&@0123456789"; // el último carácter tecleado llega como estática
-let bannerT = 0, bannerMsg = "", bannerN = 0, bannerShown = -1;
-// Avisos en cola: si hay uno en pantalla, el nuevo espera su turno (máx. 3 en espera; repetidos se ignoran)
-const bannerQ: [string, number][] = [];
-export function banner(txt: string, secs = 2) {
-  if (bannerT > 0) { if (txt !== bannerMsg && !bannerQ.some((q) => q[0] === txt) && bannerQ.length < 3) bannerQ.push([txt, secs]); return; }
+type BannerOpts = { tag?: string; ico?: string; tone?: "warn" | "now" };
+type BannerQ = { txt: string; secs: number; opts?: BannerOpts };
+let bannerOn = false, bannerTyping = false, bannerHold = 0, bannerMsg = "", bannerN = 0, bannerShown = -1, bannerTone: BannerOpts["tone"];
+const bannerQ: BannerQ[] = [];
+function applyBannerSkin(b: HTMLElement, opts?: BannerOpts) {
+  const ico = el("bannerIco");
+  b.classList.remove("evt-warn", "evt-now");
+  if (opts?.tone) {
+    b.classList.add(opts.tone === "warn" ? "evt-warn" : "evt-now");
+    b.querySelector(".rx-tag")!.textContent = opts.tag ?? "RADIO";
+    ico.classList.remove("hidden");
+    ico.innerHTML = icon(opts.ico ?? "senal", 28);
+    bannerTone = opts.tone;
+  } else {
+    bannerTone = undefined;
+    ico.classList.add("hidden");
+    ico.innerHTML = "";
+  }
+}
+function showBanner(txt: string, secs: number, opts?: BannerOpts) {
   const b = $("banner");
-  bannerMsg = txt; bannerN = 0; bannerShown = -1; bannerT = secs;
+  bannerMsg = txt; bannerN = 0; bannerShown = -1; bannerOn = true; bannerTyping = true; bannerHold = secs;
+  applyBannerSkin(b, opts);
   b.querySelector(".gh")!.textContent = txt;
   b.querySelector(".ty")!.textContent = "";
   b.classList.remove("hidden", "out");
-  b.style.animation = "none"; void b.offsetWidth; b.style.animation = ""; // reinicia la entrada
+  b.style.animation = "none"; void b.offsetWidth; b.style.animation = "";
 }
-function hideBanner() { bannerT = 0; $("banner").classList.add("hidden"); }
-function tickBanner(dt: number) {
-  if (bannerT <= 0) { if (bannerQ.length && $("levelup").classList.contains("hidden")) banner(...bannerQ.shift()!); return; } // siguiente en cola, no sobre las cartas
-  if ((bannerT -= dt) <= 0) return hideBanner();
-  if (bannerT < 0.3) $("banner").classList.add("out");
-  bannerN += dt * 36;
-  const n = Math.min(bannerMsg.length, bannerN | 0), typing = n < bannerMsg.length;
-  if (typing || n !== bannerShown) {
-    bannerShown = n;
-    $("banner").querySelector(".ty")!.textContent = bannerMsg.slice(0, n) + (typing ? STATIC[(Math.random() * STATIC.length) | 0] : "");
+export function banner(txt: string, secs = 2, opts?: BannerOpts) {
+  const q: BannerQ = { txt, secs, opts };
+  if (bannerOn) {
+    if (txt !== bannerMsg && !bannerQ.some((x) => x.txt === txt) && bannerQ.length < 3) bannerQ.push(q);
+    return;
   }
+  showBanner(txt, secs, opts);
+}
+/** Avisos de patio (enjambre, élite, lluvia, pelota, cofre): copy y duración fijos para lectura en ~6 s de anticipación. */
+export type RadioEvent =
+  | "lluvia_pre" | "lluvia" | "enjambre_pre" | "enjambre" | "pelota_pre" | "pelota"
+  | "elite_rapida_pre" | "elite_blindada_pre" | "elite_rapida" | "elite_blindada" | "cofre";
+const RADIO: Record<RadioEvent, { line: string; secs: number; tag: string; ico: string; tone: "warn" | "now" }> = {
+  lluvia_pre: { tag: "METEO", line: "HUMEDAD AL SUBIR · AVISO ~6 S", secs: 3.4, ico: "agua", tone: "warn" },
+  lluvia: { tag: "METEO", line: "LLUVIA · PATIO RESBALADIZO", secs: 2.4, ico: "agua", tone: "now" },
+  enjambre_pre: { tag: "RADAR", line: "ENJAMBRE · CIERRE EN ~6 S", secs: 3.4, ico: "gomitas", tone: "warn" },
+  enjambre: { tag: "RADAR", line: "ENJAMBRE · OLEADA CERRADA", secs: 2.2, ico: "gomitas", tone: "now" },
+  pelota_pre: { tag: "RADAR", line: "OBJETO PESADO · TRAYECTORIA FIJADA", secs: 3.2, ico: "globos", tone: "warn" },
+  pelota: { tag: "ALERTA", line: "PELOTA · CRUCE DEL PATIO", secs: 2.2, ico: "globos", tone: "now" },
+  elite_rapida_pre: { tag: "SEÑAL", line: "ÉLITE VELOZ · ENTRADA ~6 S", secs: 3.2, ico: "jefe", tone: "warn" },
+  elite_blindada_pre: { tag: "SEÑAL", line: "ÉLITE BLINDADA · ENTRADA ~6 S", secs: 3.2, ico: "jefe", tone: "warn" },
+  elite_rapida: { tag: "SEÑAL", line: "ÉLITE ACTIVA · VELOZ", secs: 2.2, ico: "jefe", tone: "now" },
+  elite_blindada: { tag: "SEÑAL", line: "ÉLITE ACTIVA · BLINDADA", secs: 2.2, ico: "jefe", tone: "now" },
+  cofre: { tag: "RADAR", line: "COFRE · SIN CUSTODIA", secs: 2.6, ico: "cofre", tone: "now" },
+};
+export function radioEvent(id: RadioEvent) {
+  const e = RADIO[id];
+  banner(e.line, e.secs, { tag: e.tag, ico: e.ico, tone: e.tone });
+}
+function hideBanner() {
+  bannerOn = false; bannerTyping = false; bannerHold = 0;
+  const b = $("banner");
+  b.classList.add("hidden");
+  b.classList.remove("out", "evt-warn", "evt-now");
+  el("bannerIco").classList.add("hidden");
+}
+function tickBanner(dt: number) {
+  if (!bannerOn) {
+    if (bannerQ.length && $("levelup").classList.contains("hidden")) {
+      const n = bannerQ.shift()!;
+      showBanner(n.txt, n.secs, n.opts);
+    }
+    return;
+  }
+  const ty = $("banner").querySelector(".ty")!;
+  const cps = bannerTone ? 26 : 36;
+  if (bannerTyping) {
+    bannerN += dt * cps;
+    const n = Math.min(bannerMsg.length, bannerN | 0), typing = n < bannerMsg.length;
+    if (typing || n !== bannerShown) {
+      bannerShown = n;
+      ty.textContent = bannerMsg.slice(0, n) + (typing ? STATIC[(Math.random() * STATIC.length) | 0] : "");
+    }
+    if (!typing) { bannerTyping = false; ty.textContent = bannerMsg; }
+    return;
+  }
+  if ((bannerHold -= dt) <= 0) return hideBanner();
+  if (bannerHold < 0.35) $("banner").classList.add("out");
 }
 
 // ---------- Salto del auto: CD en botón táctil y mini barra en teclado ----------

@@ -550,6 +550,10 @@ export class Enemy {
     }
 
     // Velocidad objetivo directa (hordas: barato y legible); la física separa a los enemigos
+    if (!d.boss && !this.elite && dist > 0.05) {
+      const stand = this.radius + 0.55;
+      if (dist < stand) speed *= Math.max(0.42, (dist - 0.12) / (stand - 0.12));
+    }
     const want = move.scale(speed);
     const k = Math.min(1, dt * (this.kind === "hormiga" ? 6 : 4));
     this.body.setLinearVelocity(new B.Vector3(v.x + (want.x - v.x) * k, v.y, v.z + (want.z - v.z) * k));

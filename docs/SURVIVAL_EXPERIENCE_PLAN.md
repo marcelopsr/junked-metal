@@ -110,6 +110,22 @@ Regla: `.cursor/rules/plan-antes-de-feature.mdc`
 | draws | ~129 | ~240 | ~99 |
 | Nivel bot @5 min (semillas 1–3) | — | — | **12 / 10 / 13** tras Fase 1 (antes ~7 / 17 / 13) |
 
+### Baseline 2026-10-06 post-salto
+
+Medición tras reinicio `rc-test`; commit `028ec97`. Perf: `partida_llena`, 180 cuadros. Sim: `--secs 300` (5 min juego).
+
+| Métrica | PC `partida_llena` | Cel `partida_llena` |
+|---------|--------------------|---------------------|
+| ms/cuadro | **8.4** (p95 14.7) | **6.8** (p95 9.7) |
+| draws | **233** | **163** |
+| triángulos (k) | **421.4** | **245.4** |
+| heap MB | **90.5** | **95.1** |
+| mallas | 1326 | 1514 |
+
+JSON: PC `.perf/2026-10-06-1837.json` · cel `.perf/2026-10-06-1838.json` (más reciente cel).
+
+**Sim @300 s (semillas 1–3):** nv **11** (muerte 4:16), **16** (muerte 4:44), **12** (vivo @5:00) — estados over/over/play; bajas 198 / 329 / 226.
+
 ### Mecánica (tanda 2026-10-06, antes de UI)
 
 - Contacto: empuje al auto (`contacto_empuje_auto`) al recibir golpe de contacto.

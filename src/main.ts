@@ -1,4 +1,4 @@
-import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, selectOffer, showOffers, uiTick } from "./ui";
+import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
@@ -650,9 +650,9 @@ function update(dt: number) {
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
   // Lluvia: empieza a la fracción profile.rainAt de la partida; la intensidad sube suave
   const rainAtS = profile.rainAt * 600, warnS = R.aviso_evento_s;
-  if (!rainBanner && !evtPre.rain && time >= rainAtS - warnS && time < rainAtS) { evtPre.rain = true; banner("RADAR · HUMEDAD EN SUBIDA", 2); }
+  if (!rainBanner && !evtPre.rain && time >= rainAtS - warnS && time < rainAtS) { evtPre.rain = true; radioEvent("lluvia_pre"); }
   const raining = time >= rainAtS;
-  if (raining && !rainBanner) { rainBanner = true; banner("LLUVIA", 2); }
+  if (raining && !rainBanner) { rainBanner = true; radioEvent("lluvia"); }
   rainK = LAB.on && raining ? 1 : rainK + ((raining ? 1 : 0) - rainK) * Math.min(1, dt * RAIN.ramp);
   const s = nightfall(LAB.on ? LAB.t : time / 600);
   if (!simulating && Math.abs(s - cycleS) > 0.01) { cycleS = s; applyClimate(zoneClimate() ?? mixClimate(DUSK, profile.climate, s)); }
@@ -771,11 +771,11 @@ function update(dt: number) {
     }
     if (!simulating) banner(ant ? "COLUMNA" : "ESCOLTA", 1.2);
   }
-  if (!evtPre.swarm && swarmT > 0 && swarmT <= warnS) { evtPre.swarm = true; banner("RADAR · ENJAMBRE INMINENTE", 1.8); }
+  if (!evtPre.swarm && swarmT > 0 && swarmT <= warnS) { evtPre.swarm = true; radioEvent("enjambre_pre"); }
   if ((swarmT -= dt) <= 0) {
     evtPre.swarm = false;
     swarmT = profile.swarmEvery;
-    banner("ENJAMBRE", 1.4);
+    radioEvent("enjambre");
     const ns = Math.round((R.enjambre_base + time / R.enjambre_seg) * horde * TOUGH.count); // el enjambre crece con la partida
     for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * R.enjambre_radio, 1, c.pos.z + Math.sin(a) * R.enjambre_radio); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
@@ -804,7 +804,7 @@ function update(dt: number) {
     const [t, k] = profile.elites[ei];
     if (!evtPre.elites.has(ei) && time >= t - warnS && time < t) {
       evtPre.elites.add(ei);
-      banner(k === "rapida" ? "SEÑAL · ÉLITE RÁPIDA" : "SEÑAL · ÉLITE BLINDADA", 2);
+      radioEvent(k === "rapida" ? "elite_rapida_pre" : "elite_blindada_pre");
     }
   }
   // Élites (run.ts: 2-3 por partida, sin rng): la aparición común más reciente (mejor si no es hormiga) se vuelve élite
@@ -817,7 +817,7 @@ function update(dt: number) {
       if (x.kind !== "hormiga") { e = x; break; }
     }
     e ??= fallback;
-    if (e) { e.makeElite(k); banner(k === "rapida" ? "ÉLITE RÁPIDA" : "ÉLITE BLINDADA", 2); }
+    if (e) { e.makeElite(k); radioEvent(k === "rapida" ? "elite_rapida" : "elite_blindada"); }
   }
 
   // --- Enemigos ---
@@ -901,8 +901,11 @@ function update(dt: number) {
       px += c.pos.x - e.pos.x; pz += c.pos.z - e.pos.z; n++;
     }
     if (n > 0) {
-      const len = Math.hypot(px, pz) || 1, imp = R.contacto_empuje_auto * c.def.mass;
-      c.body.applyImpulse(new B.Vector3((px / len) * imp, 0, (pz / len) * imp), c.pos);
+      const len = Math.hypot(px, pz) || 1, ux = px / len, uz = pz / len;
+      const imp = R.contacto_empuje_auto * c.def.mass * (1 + 0.15 * Math.min(n - 1, 6));
+      c.body.applyImpulse(new B.Vector3(ux * imp, 0, uz * imp), c.pos);
+      const vel = c.body.getLinearVelocity(), inward = -(vel.x * ux + vel.z * uz);
+      if (inward > 0) c.body.setLinearVelocity(new B.Vector3(vel.x + ux * inward * 0.45, vel.y, vel.z + uz * inward * 0.45));
     }
     touchIFrame = R.contacto_invuln_s;
   }
@@ -916,7 +919,7 @@ function update(dt: number) {
       if (b.def.boss || b.elite || b.hp <= 0) continue;
       const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d2 = dx * dx + dz * dz;
       if (d2 < 1e-4 || d2 > sepR2) continue;
-      const d = Math.sqrt(d2), k = ((sepR - d) / sepR) * 10 * wdt;
+      const d = Math.sqrt(d2), k = ((sepR - d) / sepR) * 12 * wdt;
       a.body.applyImpulse(new B.Vector3(-(dx / d) * k * a.def.mass, 0, -(dz / d) * k * a.def.mass), a.pos);
       b.body.applyImpulse(new B.Vector3((dx / d) * k * b.def.mass, 0, (dz / d) * k * b.def.mass), b.pos);
     }
@@ -973,8 +976,8 @@ function update(dt: number) {
   }
 
   // --- Eventos del patio ---
-  if ((chestT -= dt) <= 0) { chestT = profile.chestEvery; dropPickup(spawnPoint(c.pos, 20, 35), "cofre"); banner("COFRE SIN DUEÑO EN EL PATIO", 1.6); }
-  if (!evtPre.ball && !ball && ballT > 0 && ballT <= warnS) { evtPre.ball = true; banner("RADAR · PELOTA EN CAMINO", 1.6); }
+  if ((chestT -= dt) <= 0) { chestT = profile.chestEvery; dropPickup(spawnPoint(c.pos, 20, 35), "cofre"); radioEvent("cofre"); }
+  if (!evtPre.ball && !ball && ballT > 0 && ballT <= warnS) { evtPre.ball = true; radioEvent("pelota_pre"); }
   if ((ballT -= dt) <= 0 && !ball) {
     evtPre.ball = false;
     // Una pelota gigante cruza el patio aplastando todo
@@ -985,7 +988,7 @@ function update(dt: number) {
     const agg = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: R.pelota_masa, restitution: 0.5 }, scene);
     agg.body.setLinearVelocity(c.pos.subtract(from).normalize().scale(R.pelota_vel));
     ball = { m, agg, life: R.pelota_vida_s };
-    banner("¡PELOTA!", 1.2);
+    radioEvent("pelota");
   }
   if (ball) {
     dmgSrc = "pelota";
