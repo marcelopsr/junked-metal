@@ -156,7 +156,11 @@ export function impact(m: B.AbstractMesh, at: B.Vector3, color: string, size: nu
 }
 
 /** Cámara lenta: las partículas del pool avanzan a k veces su velocidad (1 = normal). */
-export function fxSpeed(k: number) { for (const ps of [...pool, motes, flies, petals]) ps.updateSpeed = 0.01 * k; }
+export function fxSpeed(k: number) {
+  const s = 0.01 * k;
+  for (const ps of pool) ps.updateSpeed = s;
+  motes.updateSpeed = flies.updateSpeed = petals.updateSpeed = s;
+}
 
 // ---------- Marcas en el piso (quemaduras, neumáticos) ----------
 type Mark = { m: B.InstancedMesh; life: number; s: number };

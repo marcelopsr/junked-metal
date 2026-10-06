@@ -9,6 +9,7 @@ import { rng } from "./rng";
 import { BAL } from "./balance";
 
 const W = BAL.armas, X = BAL.armasExtra, NMAX = BAL.ritmo.nivel_max; // balance.json: tablas armas y armas_extra; nivel máximo de armas y pasivas
+const _hitPt = new B.Vector3(); // centro de golpe de proyectil (evita Vector3 por par enemigo×disparo)
 // Proyectiles (o saltos, clips...) de un arma según su nivel: base + piso((nivel - desde) / cada)
 const cant = (w: { n_base: number; n_cada: number; n_desde: number }, lv: number) => w.n_base + Math.floor((lv - w.n_desde) / w.n_cada);
 
@@ -136,12 +137,16 @@ class Gomitas extends Weapon {
       }
     }
     const dmg = (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1);
-    for (const s of [...this.shots]) {
+    for (let i = this.shots.length - 1; i >= 0; i--) {
+      const s = this.shots[i];
       s.m.position.addInPlace(s.dir.scale(cfg.velocidad * c.st.area * c.dt));
       s.m.rotation.y += c.dt * 10;
       if (Math.random() < c.dt * 18) FX.trail(s.m.position, "#ff9bd4");
       let dead = (s.life -= c.dt) <= 0;
-      for (const e of c.enemies) if (!s.hit.has(e) && B.Vector3.Distance(s.m.position, e.pos.add(new B.Vector3(0, 0.4, 0))) < e.radius + 0.35) {
+      for (const e of c.enemies) {
+        if (s.hit.has(e)) continue;
+        _hitPt.copyFrom(e.pos); _hitPt.y += 0.4;
+        if (B.Vector3.Distance(s.m.position, _hitPt) >= e.radius + 0.35) continue;
         c.damage(e, dmg, s.dir.scale(X.gomitas_empuje));
         this.onHit?.(c, e);
         s.hit.add(e);
@@ -152,7 +157,7 @@ class Gomitas extends Weapon {
         dead = true;
         break;
       }
-      if (dead) { s.m.dispose(); this.shots.splice(this.shots.indexOf(s), 1); }
+      if (dead) { s.m.dispose(); this.shots.splice(i, 1); }
     }
   }
   dispose() { for (const s of this.shots) s.m.dispose(); }
@@ -202,11 +207,12 @@ class Chispero extends Weapon {
       this.drop(c.car.pos, r, this.evolved ? cfg.duracion_evo : cfg.duracion_base + cfg.duracion_nivel * this.lv);
     }
     const dps = (this.evolved ? cfg.dano_evo_fijo : cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg;
-    for (const f of [...this.fires]) {
+    for (let i = this.fires.length - 1; i >= 0; i--) {
+      const f = this.fires[i];
       f.life -= c.dt;
       f.m.scaling.setAll(f.r * Math.min(1, f.life * 2) * (0.9 + Math.random() * 0.2));
       for (const e of c.enemies) if (Math.hypot(e.pos.x - f.m.position.x, e.pos.z - f.m.position.z) < f.r + e.radius * 0.5) c.damage(e, dps * c.dt);
-      if (f.life <= 0) { f.m.dispose(); this.fires.splice(this.fires.indexOf(f), 1); }
+      if (f.life <= 0) { f.m.dispose(); this.fires.splice(i, 1); }
     }
   }
   drop(p: B.Vector3, r: number, life: number) {
@@ -235,7 +241,8 @@ class Petardos extends Weapon {
         this.flying.push({ m, from: c.car.pos.clone(), to: t.pos.clone(), t: 0 });
       }
     }
-    for (const f of [...this.flying]) {
+    for (let i = this.flying.length - 1; i >= 0; i--) {
+      const f = this.flying[i];
       f.t += c.dt / cfg.duracion_base;
       const p = B.Vector3.Lerp(f.from, f.to, f.t);
       p.y += Math.sin(Math.PI * f.t) * 5;
@@ -248,7 +255,7 @@ class Petardos extends Weapon {
         const nr = X.petardos_racimo_n;
         if (this.evolved) for (let k = 0; k < nr; k++) { const a = (k / nr) * Math.PI * 2; c.explode(f.to.add(new B.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)), r * X.petardos_racimo_radio, dmg * X.petardos_racimo_dano); }
         f.m.dispose();
-        this.flying.splice(this.flying.indexOf(f), 1);
+        this.flying.splice(i, 1);
       }
     }
   }
@@ -263,7 +270,7 @@ class Tesla extends Weapon {
       if (this.zap(c, c.car.pos, c.car.pos.add(new B.Vector3(0.4, 1.6, -0.7)), this.evolved ? cfg.n_evo : cant(cfg, this.lv), (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1)))
         this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv)) * c.st.cooldown;
     }
-    for (const b of [...this.bolts]) if ((b.life -= c.dt) <= 0) { b.m.dispose(); this.bolts.splice(this.bolts.indexOf(b), 1); }
+    for (let i = this.bolts.length - 1; i >= 0; i--) { const b = this.bolts[i]; if ((b.life -= c.dt) > 0) continue; b.m.dispose(); this.bolts.splice(i, 1); }
   }
   // Rayo en cadena desde "from" (busca en 9 m) dibujado desde "start"; devuelve si pegó
   zap(c: Ctx, from: B.Vector3, start: B.Vector3, chain: number, dmg: number) {
