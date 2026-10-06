@@ -119,7 +119,24 @@ export const sessions = [
   ] },
   { id: "duel", query: "?mute&duel", shots: [
     { id: "armado", act: async (p) => {
-      await wait(p, () => document.getElementById("duel-ui")?.classList.contains("armado") && document.getElementById("load")?.classList.contains("hidden"));
+      await wait(p, () => {
+        if (!document.getElementById("duel-ui")?.classList.contains("armado")) return false;
+        const chip = document.querySelector('[data-piece="chassis:cuna"]');
+        if (!chip) return false;
+        const r = chip.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2) return false;
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+        return !!hit?.closest("[data-piece]");
+      });
+      await p.locator('[data-piece="chassis:cuna"]').click();
+      await p.locator('[data-slot="chassis"]').click();
+      const cfg = await p.evaluate(() => window.__duel.info().cfg);
+      if (cfg.chassis !== "cuna") throw new Error(`armado: cfg.chassis=${cfg.chassis}`);
+      await p.locator('[data-piece="wheels:gigantes"]').click();
+      await p.locator('[data-slot="wheels"]').click();
+      const cfg2 = await p.evaluate(() => window.__duel.info().cfg);
+      if (cfg2.wheels !== "gigantes") throw new Error(`armado: cfg.wheels=${cfg2.wheels}`);
+      await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
       await p.evaluate(() => window.__duel.shotCam(true));
       await tick(p, 15);
     } },

@@ -61,9 +61,9 @@ function show() {
 }
 async function hide() {
   if (!shown) return;
-  await sleep(Math.max(0, shownAt + HOLD - performance.now()));
   const el = $("load");
-  el.classList.add("out");
+  el.classList.add("out"); // deja usar la UI debajo mientras termina el HOLD / fade
+  await sleep(Math.max(0, shownAt + HOLD - performance.now()));
   hideT = window.setTimeout(() => { el.classList.add("hidden"); el.classList.remove("in"); shown = false; }, FADE);
 }
 function set(label: string, f: number) {
@@ -144,6 +144,7 @@ export async function launch(need: Task[], goLabel: string, go: () => void, fram
     go();
     await frames();
     set(goLabel, 1);
+    $("load").classList.add("out");
   } finally {
     rushed = false; busy = false;
     void hide();

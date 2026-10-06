@@ -518,7 +518,7 @@ function enterDuel() {
   initAudio(); clearRun(); menuOff();
   state = "duel"; reset(null);
   $("hud").classList.add("hidden");
-  if (isTouch) document.getElementById("touch")?.classList.remove("hidden");
+  document.getElementById("touch")?.classList.add("hidden");
   startDuel();
 }
 function goDuel() {

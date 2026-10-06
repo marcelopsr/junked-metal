@@ -4,7 +4,7 @@ import "./duel.css";
 import { BAL } from "./balance";
 import { damageNumber } from "./ui";
 import { impact } from "./fx";
-import { input, padPressed, pb } from "./input";
+import { input, isTouch, padPressed, pb } from "./input";
 import { box, cyl, merge, wheel } from "./models";
 import { applyClimate, canvasTex, M, pbr, shadows, TEX } from "./render";
 import {
@@ -415,6 +415,7 @@ function showArmado() {
   ui.className = "on armado";
   syncArmado();
   document.getElementById("fe")?.classList.add("hidden");
+  document.getElementById("touch")?.classList.add("hidden");
 }
 
 export function startDuel() {
@@ -451,6 +452,7 @@ function startRound() {
   for (const b of bots) { b.hp = b.hpMax; b.rpm = 0; b.flipped = false; b.hitAt = 0; }
   phase = "countdown"; countdown = 3.4; t = 0;
   ui.className = "on fight";
+  if (isTouch) document.getElementById("touch")?.classList.remove("hidden");
   updateHud();
 }
 
@@ -726,5 +728,7 @@ export const duelDev = {
   kill: () => { const e = bots.find((b) => !b.human); if (e) e.hp = 0; },
   /** Pose fija para capturas headless (sin órbita ni follow). */
   shotCam: (on = true) => { shotCamFrozen = on; if (on) setShotCamPose(); },
-  info: () => ({ active, phase, score, round, cfg, bots: bots.map((b) => ({ name: b.name, hp: b.hp, rpm: b.rpm, flipped: b.flipped })) }),
+  info: () => ({ active, phase, score, round, cfg, pendingPiece, bots: bots.map((b) => ({ name: b.name, hp: b.hp, rpm: b.rpm, flipped: b.flipped })) }),
+  /** Equipa por API (headless / regresión). */
+  equip: (cat: PieceCat, id: string) => setPiece(cat, id),
 };
