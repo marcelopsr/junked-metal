@@ -134,15 +134,60 @@ function applyArmadoCam() {
   deps.cam.setTarget(new B.Vector3(0, targetY, 0));
 }
 
+function syncFabCamTargetFromPreview() {
+  if (!previewFabRoot) {
+    fabCamTarget.set(0, ARMADO_CAM.targetY, 0);
+    return;
+  }
+  const vis = previewFabRoot.getChildTransformNodes()[0];
+  const m = vis?.getChildMeshes()[0];
+  if (!m) return;
+  previewFabRoot.computeWorldMatrix(true);
+  m.computeWorldMatrix(true);
+  fabCamTarget.copyFrom(m.getBoundingInfo().boundingBox.centerWorld);
+}
+
+/** Desplaza solo la cámara para que `look` (centro del robot) caiga en #duel-fab-viewport. */
+function panFabCamForViewport(look: B.Vector3, camPos: B.Vector3): B.Vector3 {
+  const el = document.getElementById("duel-fab-viewport");
+  const canvas = deps.scene.getEngine().getRenderingCanvas();
+  if (!el || !canvas) return camPos;
+  const vr = el.getBoundingClientRect();
+  const cr = canvas.getBoundingClientRect();
+  const eng = deps.scene.getEngine();
+  const rw = eng.getRenderWidth(), rh = eng.getRenderHeight();
+  const wantX = ((vr.left + vr.width * 0.5 - cr.left) / cr.width) * rw;
+  const wantY = ((vr.top + vr.height * 0.5 - cr.top) / cr.height) * rh;
+  const transform = deps.scene.getTransformMatrix();
+  const viewport = deps.cam.viewport.toGlobal(rw, rh);
+  const cur = B.Vector3.Project(look, B.Matrix.IdentityReadOnly, transform, viewport);
+  const dx = wantX - cur.x, dy = wantY - cur.y;
+  if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return camPos;
+  const dist = B.Vector3.Distance(camPos, look);
+  const fov = deps.cam.fov ?? 0.8;
+  const aspect = eng.getAspectRatio(deps.cam);
+  const wppX = (2 * dist * Math.tan(fov / 2) * aspect) / rw;
+  const wppY = (2 * dist * Math.tan(fov / 2)) / rh;
+  const fwd = look.clone().subtract(camPos).normalize();
+  const right = B.Vector3.Cross(fwd, UP).normalize();
+  const up = B.Vector3.Cross(right, fwd).normalize();
+  return camPos.add(right.scale(-dx * wppX)).add(up.scale(dy * wppY));
+}
+
 function applyFabricarCam() {
+  syncFabCamTargetFromPreview();
   const { yaw, dist, height, targetY } = ARMADO_CAM;
   const a = yaw + fabCamOff.yaw;
   const p = fabCamOff.pitch;
   const d = dist * Math.cos(p);
   const lift = height - targetY + Math.sin(p) * dist * 0.85;
-  const t = fabCamTarget;
-  deps.cam.position.set(t.x + Math.sin(a) * d, t.y + lift, t.z + Math.cos(a) * d);
-  deps.cam.setTarget(t);
+  const look = fabCamTarget;
+  const pos = panFabCamForViewport(
+    look,
+    new B.Vector3(look.x + Math.sin(a) * d, look.y + lift, look.z + Math.cos(a) * d),
+  );
+  deps.cam.position.copyFrom(pos);
+  deps.cam.setTarget(new B.Vector3(look.x, look.y, look.z));
 }
 
 function unbindFabCamDrag() {
@@ -393,8 +438,9 @@ function previewFabricacion() {
   }
   const scene = deps.scene;
   const pivot = visualPivotOffset(playerBuild);
+  const aabb = aabbOfBuild(playerBuild);
   const root = new B.TransformNode("fabPreview", scene);
-  root.position.set(0, WORKBENCH_TABLE_SURFACE, 0);
+  root.position.set(0, WORKBENCH_TABLE_SURFACE - aabb.min.y, 0);
   const vis = new B.TransformNode("fabVis", scene);
   vis.parent = root;
   vis.position.set(-pivot.x, -pivot.y, -pivot.z);
@@ -403,9 +449,7 @@ function previewFabricacion() {
   m.position.copyFrom(pivot);
   shadows.addShadowCaster(m);
   previewFabRoot = root;
-  m.computeWorldMatrix(true);
-  const c = m.getBoundingInfo().boundingBox.centerWorld;
-  fabCamTarget.set(c.x, c.y, c.z);
+  syncFabCamTargetFromPreview();
   if (phase === "fabricar") applyFabricarCam();
 }
 

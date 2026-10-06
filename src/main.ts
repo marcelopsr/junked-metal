@@ -1286,7 +1286,7 @@ scene.onBeforeRenderObservable.add(() => {
   }
   shake = Math.max(0, shake - dt * 2);
   const s = save.shake ? shake * shake * 0.8 : 0;
-  if (state !== "race") cam.setTarget(camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0)));
+  if (state !== "race" && state !== "duel") cam.setTarget(camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0)));
 });
 
 // Límite de FPS (Configuración → Imagen): el navegador no deja fijar la tasa, así que se saltan cuadros del bucle y su tiempo se suma al dt del siguiente
