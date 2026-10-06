@@ -107,7 +107,7 @@ export const sessions = [
   // partida_llena: 300 s de sim (partida avanzada, t=5 min) → mide el estado con armas evolucionadas y oleadas densas.
   // Medido: ~168 draws PC (thin-instances agrupan por tipo; menos que partida-curso/90 s por diferente mezcla de proyectiles).
   // Solo pc y solo medición de perf (shot: false); usar --only partida_llena para medir sin el resto.
-  { id: "partida_llena", query: "?mute&seed=3", vps: ["pc"], shots: [
+  { id: "partida_llena", query: "?mute&seed=3", vps: ["pc", "cel"], shots: [
     { id: "llena", perf: true, shot: false, act: async (p) => { await p.evaluate(() => { window.__play(3); window.__god(); window.__sim(300); }); await tick(p, 45); } },
   ] },
   { id: "carrera", query: "?mute&race", shots: [

@@ -83,6 +83,11 @@ describe("habilidades y arsenal", async () => {
 });
 
 describe("balance supervivencia", () => {
+  it("salto del auto: cd e impulso positivos en balance", () => {
+    expect(BAL.ritmo.salto_cd_s).toBeGreaterThan(0.3);
+    expect(BAL.ritmo.salto_impulso_v).toBeGreaterThan(5);
+    expect(BAL.ritmo.salto_horiz).toBeGreaterThan(0);
+  });
   it("gomita nv1 mata hormiga en 3 impactos (vida con dureza, sin pasivas)", () => {
     const hp = BAL.enemigos.hormiga.vida * BAL.ritmo.dureza_vida;
     const hit = BAL.armas.gomitas.dano_base + BAL.armas.gomitas.dano_nivel;

@@ -28,7 +28,7 @@ export function binds<T>(v: unknown, d: Record<string, T[]>, ok: (x: unknown) =>
     return [a, Array.isArray(x) && x.length === def.length && x.every(ok) ? [...x] : [...def]];
   }));
 }
-const TCTL = ["stick", "boost", "drift", "abil", "pause", "cam"];
+const TCTL = ["stick", "boost", "drift", "jump", "abil", "pause", "cam"];
 /** Lo que define los controles (lo de la partida y lo de cada perfil), validado contra los defectos de `D`. */
 export function ctlPart(o: Record<string, any>, D: Save) {
   const num = (v: unknown, lo: number, hi: number, d: number) => (typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : d);

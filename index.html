@@ -48,6 +48,8 @@
 
     <div id="lcd" class="h-scr"><span id="timer" class="h-g" data-g="88:88">00:00</span><span class="sub"><span id="kills" class="h-g" data-g="8888">0000</span> BAJAS</span></div>
 
+    <div id="wshop" class="h-panel hidden" aria-label="Mejoras del taller"></div>
+
     <div id="bossbar" class="h-panel hidden">
       <div id="bossName"></div>
       <div class="h-track"><div id="bossHp"></div></div>
@@ -67,6 +69,8 @@
       <div class="h-track h-boost"><div id="boost"></div></div>
       <div class="h-ptitle h-abil"><span class="h-tape" id="abName">HABILIDAD</span><b id="abKey"></b></div>
       <div class="h-track h-abil"><div id="abil"></div></div>
+      <div class="h-ptitle h-jump hidden" id="jumpRow"><span class="h-tape">SALTO</span><b id="jumpKey"></b></div>
+      <div class="h-track h-jump hidden" id="jumpTrack"><div id="jumpBar"></div></div>
     </div>
 
     <div id="slots"></div>
@@ -87,6 +91,7 @@
       <div><kbd data-k="left">A</kbd><kbd data-k="right">D</kbd> girar</div>
       <div><kbd data-k="boost">Espacio</kbd> turbo</div>
       <div><kbd data-k="drift">Shift</kbd> derrape</div>
+      <div><kbd data-k="jump">F</kbd> salto</div>
       <div><kbd data-k="ability">E</kbd> habilidad</div>
       <div class="tip">Las armas disparan solas. Embiste rápido, junta tuercas y sobrevive 10 minutos.</div>
     </div>
@@ -100,10 +105,17 @@
   </div>
   <div id="fps" class="hidden">-- fps</div>
   <div id="muted" class="hidden">SONIDO APAGADO · M</div>
-  <div id="outro" class="hidden"><span class="o-tag">CÁMARA LENTA</span><span class="o-skip" id="outroSkip"></span></div>
+  <div id="outro" class="hidden"><span class="o-tag">CÁMARA LENTA</span><span class="o-stat" id="outroStat"></span><span class="o-skip" id="outroSkip"></span></div>
 
   <div id="levelup" class="overlay hidden">
-    <div class="otitle" id="luTitle">Nivel</div>
+    <div class="lu-head">
+      <div class="otitle" id="luTitle">Nivel</div>
+      <div class="lu-meta">
+        <p class="lu-sub" id="luSub"></p>
+        <div class="lu-hp" id="luHp"><span class="lu-hp-l">VIDA</span><div class="lu-hp-bar"><i id="luHpFill"></i></div><span class="lu-hp-n" id="luHpN"></span></div>
+      </div>
+      <button type="button" id="luReroll" class="lu-reroll hidden">Re-sortear</button>
+    </div>
     <div id="offers"></div>
     <div class="hint" id="luHint">1 · 2 · 3 o clic — Enter confirma</div>
   </div>
@@ -277,6 +289,7 @@
   <div id="touch" class="hidden">
     <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
     <button id="tDrift">DERRAPE</button>
+    <button id="tJump">SALTO</button>
     <button id="tBoost">TURBO</button>
     <button id="tAbil">HAB</button>
     <button id="tPause" aria-label="Pausa">II</button>

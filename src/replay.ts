@@ -16,9 +16,13 @@ export const slowScale = (t: number) => 0.2 + 0.8 * Math.max(0, 1 - t / 0.4) ** 
 const SKIP = { keys: "CUALQUIER TECLA SALTA", pad: "CUALQUIER BOTÓN SALTA", touch: "TOCAR LA PANTALLA SALTA" };
 /** Texto de "cómo saltar" según el último control usado (también lo usa la intro). */
 export const skipHint = () => SKIP[ctl];
-export function outroUi(on: boolean) {
+export function outroUi(on: boolean, stat = "") {
   $("outro").classList.toggle("hidden", !on);
-  if (on) $("outroSkip").textContent = skipHint();
+  if (!on) return;
+  $("outroSkip").textContent = skipHint();
+  const s = $("outroStat");
+  s.textContent = stat;
+  s.classList.toggle("hidden", !stat);
 }
 
 // ---------- Foto final ----------

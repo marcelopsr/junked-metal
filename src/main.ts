@@ -1,4 +1,4 @@
-import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, selectOffer, showOffers, uiTick } from "./ui";
+import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
@@ -126,7 +126,7 @@ let offerSel = 0;
 let abil: AbilityId = "bombardeo", abilLv = 0, abilCd = 0, abilOn = 0, worldK = 1, bombs = 0, bombT = 0;
 let shieldM: B.Mesh | null = null; // burbuja del escudo, hija del auto (se libera con él)
 // Combo de manejo: multiplicador de XP (x1 a x2) que se pierde al recibir daño
-let driveMul = 1, driftT = 0, airT = 0, airHit = false, trickT = 0; // trickT: segundos desde el último truco
+let driveMul = 1, driftT = 0, airT = 0, airHit = false, trickT = 0, jumpCd = 0; // trickT: segundos desde el último truco
 // Maldiciones (horde = multiplicador de enemigos, curseK = de tornillos) y modo sin fin
 let horde = 1, curseK = 1, noRepair = false, endless = false, finalKind: Kind = "perro";
 // Lo ya cobrado en el endRun anterior (vencer al jefe final y seguir en modo sin fin): el siguiente suma solo la diferencia
@@ -246,7 +246,7 @@ function startRun(d = false) {
   horde = curses.includes("horda") ? R.maldicion_horda : 1; noRepair = curses.includes("sinrep"); curseK = 1 + R.maldicion_tornillos * curses.length;
   endless = false; bank = null;
   abil = save.ability; abilLv = save.abilLv[abil] ?? 0; abilCd = abilOn = bombs = 0; worldK = 1; shieldM = null;
-  driveMul = 1; driftT = airT = trickT = 0; hudDrive(1);
+  driveMul = 1; driftT = airT = trickT = 0; jumpCd = 0; hudDrive(1);
   car = new Car(scene, save.car, carOpts());
   lastHpFrac = 1;
   passives = {};
@@ -416,12 +416,20 @@ function openOffers(list: Offer[], title: string) {
     if (e.def.boss) bossNear = true;
     else near++;
   }
-  const sub = bossNear ? "Amenaza crítica: jefe en radio corto" : near ? `Presión en radio: ${near} contacto${near === 1 ? "" : "s"} cercano${near === 1 ? "" : "s"}` : "";
-  showOffers(title, list, 0, choose, previewOffer, sub);
+  const threat = bossNear ? "boss" : near ? "near" : "";
+  const sub = bossNear ? "Jefe en radio corto" : near ? `${near} contacto${near === 1 ? "" : "s"} en radio` : "";
+  showOffers(title, list, 0, choose, previewOffer, sub, threat);
   offerTitle = title;
+  const frac = hp / maxHp;
+  $("luHpFill").style.width = `${frac * 100}%`;
+  $("luHpN").textContent = `${Math.ceil(hp)}/${maxHp}`;
+  $("luHp").classList.toggle("lu-hp--low", frac < 0.35);
   const can = rerolls > 0 && list[0]?.kind !== "evo";
-  $("luHint").textContent = `${list.map((_, i) => i + 1).join(" · ")} o clic — Enter confirma${can ? ` · ${keyName(KEYS.reroll[0])} o ${btnName(pb("reroll"))} re-sortea (${rerolls})` : ""}`;
-  $("luHint").onclick = can ? reroll : null;
+  const rr = $("luReroll");
+  rr.classList.toggle("hidden", !can);
+  if (can) { rr.textContent = `Re-sortear (${rerolls})`; rr.onclick = () => reroll(); } else rr.onclick = null;
+  $("luHint").textContent = `${list.map((_, i) => i + 1).join(" · ")} o clic — Enter confirma${can ? ` · ${keyName(KEYS.reroll[0])} o ${btnName(pb("reroll"))}` : ""}`;
+  $("luHint").onclick = null;
 }
 // Re-sorteo de cartas (Dado cargado): mismas reglas, cartas nuevas. Las evoluciones no se re-sortean.
 function reroll() {
@@ -691,6 +699,16 @@ function update(dt: number) {
     })(),
   });
   c.animate(dt, steer, r.fs, maxSpeed);
+  if (jumpCd > 0) jumpCd -= dt;
+  if (input.jump && r.grounded && jumpCd <= 0) {
+    jumpCd = R.salto_cd_s;
+    const m = c.body.getMassProperties().mass || c.def.mass;
+    const fwd = c.root.forward; fwd.y = 0;
+    if (fwd.lengthSquared() > 1e-6) fwd.normalize();
+    const hx = Math.abs(r.fs) * R.salto_horiz * m;
+    c.body.applyImpulse(new B.Vector3(fwd.x * hx, R.salto_impulso_v * m, fwd.z * hx), c.pos);
+    if (!simulating) { SFX.boing(); const rear = c.pos.add(c.root.forward.scale(-0.8)); FX.dust(rear); shake = Math.max(shake, 0.18); }
+  }
   { const zp = zoneTick(dt, c.pos); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
   engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * R.turbo_vel)), throttle, boosting, input.drift, floorAt(c.pos.x, c.pos.z));
   if (c.kind === "helado" && (jingleT -= dt) <= 0) { SFX.jingle(); jingleT = 16; }
@@ -1095,6 +1113,7 @@ function updateHud(dt: number) {
   lastHpFrac = frac;
   hudUpdate({ hp, maxHp, boost, xp, need: xpNeed(level), level, pending: pendingLevels, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh });
   hudAbility(ABILITIES[abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / abilCdOf(abil, abilLv), abilOn > 0);
+  if (!simulating) hudJump(jumpCd <= 0 ? 1 : 1 - jumpCd / R.salto_cd_s);
 }
 
 // ---------- Loop ----------

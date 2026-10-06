@@ -305,7 +305,13 @@ export class Enemy {
         const a0 = this.atk;
         if ((this.atk += dt) >= g.atk!) this.atk = -1;
         if (a0 < at && a0 + dt >= at) { this.body.setAngularVelocity(B.Vector3.Zero()); return "spit"; }
-      } else if (dist < ATK.escupidora_distancia) { speed = 0; turn = 5; if (this.timer <= 0 && Math.abs(diff) < 0.4) { this.timer = ATK.escupidora_cada_s; this.atk = 0; } }
+      } else if (dist < ATK.escupidora_distancia) {
+        speed = 0; turn = 5;
+        if (this.timer <= 0 && Math.abs(diff) < 0.4) {
+          this.timer = ATK.escupidora_cada_s;
+          if (this.atk < 0) { this.atk = 0; return "spit_aim"; }
+        }
+      }
     }
 
     if (this.kind === "escarabajo") {

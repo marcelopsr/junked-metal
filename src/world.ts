@@ -343,7 +343,9 @@ function patioLayout() {
   stat(cyl(23, 23, 3, M.matte("#4fb3e8"), [px, 1.5, pz], undefined, 16), B.PhysicsShapeType.CYLINDER).isVisible = false;
   for (const s of [-1, 1]) { const ry = bry + (s * Math.PI) / 2; ramp(M.plastic("#facc15"), px + Math.sin(ry) * 4, pz + Math.cos(ry) * 4, ry, 3, 7.3, 3.8, 0, 0, 3); }
 
-  toyRamps(int(3, 5), [0, 1, 2, 3]);
+  toyRamps(1, [1]); // pista curva + trampolín en cada partida
+  toyRamps(int(3, 5), [0, 2, 3]);
+  jumpScrap(int(2, 4));
   if (rng() < 0.75) planterAlley();
   if (rng() < 0.75) toyScatter();
   pots(int(5, 10));
@@ -566,7 +568,7 @@ const int = (a: number, b: number) => Math.floor(between(a, b + 1));
 // Rampa maciza (prisma): sube L hasta H, meseta T, baja Lb (0 = corte vertical: borde de salto). Ancho W.
 // Local: el pie en z=0, sube hacia +z. Se posa ANTES del aggregate (trampa de Havok).
 function ramp(mat: B.Material, x: number, z: number, ry: number, W: number, L: number, H: number, T = 0, Lb = 0, y = 0, deco: B.Mesh[] = []) {
-  const pr = [[0, 0], [L, H], ...(T ? [[L + T, H]] : []), [L + T + Lb, 0]];
+  const pr = [[0, -0.06], [L, H], ...(T ? [[L + T, H]] : []), [L + T + Lb, 0]]; // pie enterrado: evita labio con el suelo (gcol y=0)
   const n = pr.length, pos: number[] = [], ind: number[] = [];
   for (const sx of [-W / 2, W / 2]) for (const [pz, py] of pr) pos.push(sx, py, pz);
   for (let i = 1; i < n - 1; i++) ind.push(0, i, i + 1, n, n + i + 1, n + i); // caras laterales
@@ -576,7 +578,7 @@ function ramp(mat: B.Material, x: number, z: number, ry: number, W: number, L: n
   vd.applyToMesh(m);
   m.convertToFlatShadedMesh();
   m.material = mat;
-  stat(m, B.PhysicsShapeType.CONVEX_HULL, { friction: 0.5 }, [x, y, z, ry]);
+  stat(m, B.PhysicsShapeType.MESH, { friction: 0.5 }, [x, y, z, ry]); // hull redondeaba la unión con tablones y el borde de salto
   const len = L + T + Lb;
   bare.push({ x: x + (Math.sin(ry) * len) / 2, z: z + (Math.cos(ry) * len) / 2, r: len / 2 + 1 });
   if (deco.length) { const d = merge("rampDeco", deco); d.position.set(x, y, z); d.rotation.y = ry; shadows.addShadowCaster(d); } // solo visual: se posa después sin problema
@@ -587,8 +589,9 @@ const slopeBoard = (W: number, L: number, H: number, mat: B.Material, th = 0.3) 
 // Puente angosto de tablones: dos rampas de 7 de alto y un tablero de 3,2 de ancho y 30 de largo, centrado en (px, pz)
 function plankBridge(px: number, pz: number, bry: number, rampMat: B.Material = M.matte("#b45309")) {
   const wood = woodM(), bdx = Math.sin(bry), bdz = Math.cos(bry);
-  for (const s of [-1, 1]) ramp(rampMat, px + bdx * 31 * s, pz + bdz * 31 * s, s < 0 ? bry : bry + Math.PI, 3.2, 16, 7, 0, 0, 0, [slopeBoard(3.6, 16, 7, wood)]);
-  stat(box(3.6, 0.5, 30.4, wood, [px, 6.75, pz], [0, bry, 0]), B.PhysicsShapeType.BOX);
+  const bridgeHalf = 15.2, rampL = 16, foot = bridgeHalf + rampL; // 31 dejaba 0,2 m de hueco: el auto chocaba el canto del tablero
+  for (const s of [-1, 1]) ramp(rampMat, px + bdx * foot * s, pz + bdz * foot * s, s < 0 ? bry : bry + Math.PI, 3.2, rampL, 7, 0, 0, 0, [slopeBoard(3.6, rampL, 7, wood)]);
+  stat(box(3.6, 0.5, bridgeHalf * 2, wood, [px, 6.75, pz], [0, bry, 0]), B.PhysicsShapeType.BOX);
   bare.push({ x: px, z: pz, r: 16 });
 }
 
@@ -604,16 +607,18 @@ function toyRamps(n: number, kinds: number[]) {
       ramp(brick, sp[0] - dx * 6.5, sp[1] - dz * 6.5, ry, 4, 10, 2.6, 0, 3, 0, [slopeBoard(4.4, 10, 2.6, wood)]);
     } else if (kind === 1) {
       // Pista de autitos de plástico: curva en el piso que termina en un trampolín naranja
-      const sg = rng() < 0.5 ? -1 : 1, R = 14, deco: B.Mesh[] = [];
+      const sg = rng() < 0.5 ? -1 : 1, R = 14, deco: B.Mesh[] = [], trackCol: B.Mesh[] = [];
+      const fx = sp[0] - dx * 6, fz = sp[1] - dz * 6;
       for (let k = 0; k < 12; k++) {
         const a0 = (k / 12) * 1.6, a1 = ((k + 1) / 12) * 1.6;
         const p0 = [sg * (R - R * Math.cos(a0)), -R * Math.sin(a0)], p1 = [sg * (R - R * Math.cos(a1)), -R * Math.sin(a1)];
         const mx = (p0[0] + p1[0]) / 2, mz = (p0[1] + p1[1]) / 2, yaw = Math.atan2(p1[0] - p0[0], p1[1] - p0[1]), len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) + 0.1;
-        deco.push(box(3.4, 0.1, len, orange, [mx, 0.05, mz], [0, yaw, 0]));
+        deco.push(box(3.4, 0.08, len, orange, [mx, 0.04, mz], [0, yaw, 0]));
+        trackCol.push(box(3.4, 0.08, len, orange, [mx, 0.04, mz], [0, yaw, 0]));
         for (const e of [-1.8, 1.8]) deco.push(box(0.25, 0.35, len, rail, [mx + Math.cos(yaw) * e, 0.17, mz - Math.sin(yaw) * e], [0, yaw, 0]));
       }
+      if (trackCol.length) stat(merge("toyTrack", trackCol), B.PhysicsShapeType.MESH, { friction: 0.5 }, [fx, 0, fz, ry]);
       for (const e of [-1.8, 1.8]) { const b = slopeBoard(0.25, 8, 2.2, rail, 0.35); b.position.x = e; b.position.y += 0.15; deco.push(b); }
-      const fx = sp[0] - dx * 6, fz = sp[1] - dz * 6;
       ramp(orange, fx, fz, ry, 3.4, 8, 2.2, 0, 4, 0, deco);
       for (let k = 1; k < 4; k++) { const a = (k / 4) * 1.6, lx = sg * (R - R * Math.cos(a)), lz = -R * Math.sin(a); bare.push({ x: fx + lx * Math.cos(ry) + lz * dx, z: fz - lx * Math.sin(ry) + lz * dz, r: 3 }); }
     } else if (kind === 2) {
@@ -631,6 +636,24 @@ function toyRamps(n: number, kinds: number[]) {
         bare.push({ x, z, r: 6 });
       }
     }
+  }
+}
+
+// Tablones, neumáticos y cajas estáticas para saltar (no cofres: solo geometría de patio)
+function jumpScrap(n: number) {
+  const wood = woodM(), carton = M.matte("#9a3412");
+  for (let i = 0; i < n; i++) {
+    const sp = freeSpot(12, 28); if (!sp) continue;
+    const [x, z] = sp, ry = rng() * Math.PI, roll = int(0, 2);
+    if (roll === 0) {
+      const layers = int(2, 4);
+      for (let k = 0; k < layers; k++) stat(box(3.2, 0.22, 4.2, wood, [x, 0.11 + k * 0.2, z], [0, ry + k * 0.08, 0]), B.PhysicsShapeType.BOX, { friction: 0.55 });
+    } else if (roll === 1) {
+      stat(tor(2.4, 0.85, M.rubber(), [x, 0.85, z], [Math.PI / 2, ry, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
+    } else {
+      for (let k = 0; k < int(2, 3); k++) stat(box(2.4, 2.2, 2.4, carton, [x, 1.1 + k * 2.05, z], [0, ry, 0]), B.PhysicsShapeType.BOX, { friction: 0.45 });
+    }
+    bare.push({ x, z, r: 5 });
   }
 }
 

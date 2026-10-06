@@ -47,6 +47,24 @@ select { font: 600 13px var(--data); padding: 5px 8px; border-radius: 0; backgro
 
 /* Cartas de mejora */
 #levelup { justify-content: flex-end; padding-bottom: 7vh; background: linear-gradient(transparent 0 35%, rgba(10, 11, 13, .88) 62%); }
+#levelup .lu-head { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 4px; max-width: 96vw; }
+#levelup .lu-meta { display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(420px, 92vw); }
+#levelup .lu-sub { margin: 0; font: 600 13px/1.35 var(--data); letter-spacing: .08em; color: var(--dim); text-align: center; min-height: 1.35em; text-transform: uppercase; }
+#levelup .lu-sub:empty { display: none; }
+#levelup .lu-sub--near { color: #c9a85a; }
+#levelup .lu-sub--boss { color: var(--warn, #ff8a6a); text-shadow: 0 0 12px rgba(255, 120, 80, .35); }
+#levelup .lu-sub--near::before { content: "RADAR · "; opacity: .85; }
+#levelup .lu-sub--boss::before { content: "ALERTA · "; font-weight: 700; }
+#levelup .lu-hp { display: flex; align-items: center; gap: 8px; width: 100%; font: 600 11px/1 var(--data); letter-spacing: .12em; color: var(--dim); }
+#levelup .lu-hp-l { flex: 0 0 auto; }
+#levelup .lu-hp-bar { flex: 1; height: 6px; background: #ffffff12; border: 1px solid var(--line); box-shadow: inset 0 0 8px #000; }
+#levelup .lu-hp-bar i { display: block; height: 100%; width: 50%; background: linear-gradient(90deg, #3d8f5a, #7dff9a); transition: width .2s; }
+#levelup .lu-hp--low .lu-hp-bar i { background: linear-gradient(90deg, #8f3d3d, #ff9a7d); }
+#levelup .lu-hp-n { flex: 0 0 auto; font-variant-numeric: tabular-nums; color: var(--txt); }
+#levelup .lu-reroll { margin: 2px 0 6px; padding: 8px 14px; font: 700 11px/1 var(--data); letter-spacing: .14em; text-transform: uppercase; color: var(--txt); background: #0b100a; border: 1px solid var(--line); cursor: pointer; box-shadow: inset 0 0 16px #000; }
+#levelup .lu-reroll:hover { border-color: var(--accent); color: var(--accent); }
+#levelup #offers { gap: 14px; margin-bottom: 6px; }
+#levelup .offer > span:not(.kind):not(.pips) { line-height: 1.45; font-size: 12px; }
 /* Cada carta es un monitor CRT: carcasa de plástico, pantalla de fósforo con scanlines, se "sintoniza" al aparecer */
 .offer { --rc: var(--r-comun); position: relative; width: 210px; min-height: 250px; background: #050705; border: 6px solid var(--panel); border-top-color: #1d231b; border-bottom-color: #0a0c09; outline: 1px solid #000; padding: 14px; cursor: pointer; text-align: left; font-size: 13px; color: var(--dim); display: flex; flex-direction: column; gap: 8px; box-shadow: inset 0 0 28px #000, inset 0 3px 0 var(--rc), 0 6px 14px #000c; animation: tune .55s steps(9, end) both; animation-delay: calc(var(--i) * 90ms); transition: transform .12s, box-shadow .12s; }
 .offer::after { content: none; }
@@ -67,6 +85,7 @@ select { font: 600 13px var(--data); padding: 5px 8px; border-radius: 0; backgro
 #touch { position: fixed; inset: 0; pointer-events: none; }
 /* Demolición pelea: reutilizar stick + ARMA; sin turbo/derrape/cámara del survivor */
 body.duel-fight #tDrift,
+body.duel-fight #tJump,
 body.duel-fight #tBoost,
 body.duel-fight #tCam { display: none !important; }
 body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px; bottom: 170px; }
@@ -79,9 +98,11 @@ body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px
 #stickZone { position: absolute; left: 0; bottom: 0; width: 55%; height: max(65%, 340px); pointer-events: auto; } /* 340 px: cubre el stick entero (150 + 130 x 1,4) en apaisado */
 #stickBase { position: absolute; left: 40px; bottom: 150px; width: 130px; height: 130px; border-radius: 50%; border: 2px solid #ffffff55; background: #0003; }
 #stickKnob { position: absolute; left: 40px; top: 40px; width: 50px; height: 50px; border-radius: 50%; background: #e8eaedcc; border: 2px solid #000; }
-#tBoost, #tDrift { position: absolute; pointer-events: auto; border-radius: 50%; width: 84px; height: 84px; padding: 0; font-size: 11px; }
+#tBoost, #tDrift, #tJump { position: absolute; pointer-events: auto; border-radius: 50%; width: 84px; height: 84px; padding: 0; font-size: 11px; }
 #tBoost { right: 24px; bottom: 170px; background: var(--turbo); color: #111; }
 #tDrift { right: 122px; bottom: 150px; }
+#tJump { right: 24px; bottom: 268px; color: var(--lcd-ink); border: 1px solid var(--line);
+  background: conic-gradient(#000c calc(var(--cd, 0) * 360deg), var(--shell) 0); }
 /* Habilidad: más chica, sobre TURBO (apaisado) o a su izquierda (vertical, donde DERRAPE ocupa el lugar de arriba).
    --cd (main.ts) oscurece la parte que falta enfriar */
 #tAbil { position: absolute; pointer-events: auto; border-radius: 50%; width: 64px; height: 64px; padding: 0; font-size: 10px; scale: var(--touch-scale, 1); transform-origin: right bottom;

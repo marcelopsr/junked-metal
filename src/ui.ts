@@ -6,6 +6,11 @@ import "@fontsource/silkscreen/700.css";
 import "./style.css";
 import "./hud.css";
 import { icon } from "./icons";
+import { isTouch, KEYS } from "./input";
+
+const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram", "cdr"] as const;
+// ponytail: copia de menu.PERK_ICON (ui no puede importar menu: kart ↔ menu)
+const WSHOP_ICON: Record<(typeof WSHOP_KEYS)[number], string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", arm: "lego", reg: "heal", tur: "turbo", ram: "lanza", cdr: "capacitor" };
 import type { Offer } from "./weapons";
 import { HALF } from "./world";
 
@@ -33,7 +38,17 @@ const ch = (k: string, v: string | number) => memo[k] !== (memo[k] = v);
 const txt = (id: string, v: string) => { if (ch(id, v)) $(id).textContent = v; };
 const bar = (id: string, pct: number) => { const w = `${Math.round(pct * 10) / 10}%`; if (ch(id, w)) el(id).style.width = w; };
 
-export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; time: number; kills: number; kmh: number; maxKmh: number }) {
+export function hudWorkshop(perm: Partial<Record<(typeof WSHOP_KEYS)[number], number>>) {
+  const items = WSHOP_KEYS.filter((k) => (perm[k] ?? 0) > 0);
+  const box = $("wshop");
+  if (!items.length) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  const key = items.map((k) => `${k}:${perm[k]}`).join(",");
+  if (!ch("wshop", key)) return;
+  box.innerHTML = `<span class="h-tape">TALLER</span><div class="ws">${items.map((k) => `<span class="ws-i">${icon(WSHOP_ICON[k], 16)}<b>${perm[k]}</b></span>`).join("")}</div>`;
+}
+
+export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number }) {
   const p = Math.max(0, d.hp / d.maxHp);
   // 3 celdas LiPo: se vacían de derecha a izquierda
   Array.from($("lipo").children).forEach((c, i) => {
@@ -46,10 +61,11 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   bar("boost", d.boost);
   bar("xp", Math.min(1, d.xp / d.need) * 100);
-  const lv = memo.lvl as number | undefined;
-  if (ch("lvl", d.level)) {
-    $("lvl").textContent = `NV ${pad(d.level, 2)}`;
-    if (lv && d.level > lv) { const s = $("signal"); s.classList.remove("up"); void s.offsetWidth; s.classList.add("up"); } // destello al subir (evento raro)
+  const prevLv = memo.lvN as number | undefined;
+  const lvTxt = `NV ${pad(d.level, 2)}${d.pending ? ` +${d.pending}` : ""}`;
+  if (ch("lvlTxt", lvTxt)) $("lvl").textContent = lvTxt;
+  if (ch("lvN", d.level) && prevLv !== undefined && d.level > prevLv) {
+    const s = $("signal"); s.classList.remove("up"); void s.offsetWidth; s.classList.add("up");
   }
   txt("timer", `${pad(d.time / 60, 2)}:${pad(d.time % 60, 2)}`);
   txt("kills", pad(d.kills, 4));
@@ -111,7 +127,19 @@ function tickBanner(dt: number) {
   }
 }
 
-// ---------- Habilidad activa: nombre, tecla y barra que se llena al enfriarse (frac 1 = lista) ----------
+// ---------- Salto del auto: CD en botón táctil y mini barra en teclado ----------
+export function hudJump(ready: number) {
+  const cd = ready >= 1 ? 0 : 1 - ready;
+  const cdS = cd.toFixed(3);
+  if (ch("jmpCd", cdS)) {
+    $("tJump").style.setProperty("--cd", cdS);
+    const on = cd > 0.02;
+    $("jumpRow").classList.toggle("hidden", !on || isTouch);
+    $("jumpTrack").classList.toggle("hidden", !on || isTouch);
+    if (on && !isTouch) { const k = KEYS.jump[0]; txt("jumpKey", k.startsWith("Key") ? k.slice(3) : k); bar("jumpBar", ready * 100); }
+  }
+}
+
 export function hudAbility(name: string, key: string, frac: number, on: boolean) {
   txt("abName", name); txt("abKey", key);
   bar("abil", (on ? 1 : frac) * 100);
@@ -157,7 +185,7 @@ function tickCombo(dt: number, live: boolean) {
 
 // ---------- Radar de la radio: barrido, estela y blips (lienzo de 64 px escalado sin filtrar) ----------
 const RS = 64, RH = RS / 2, RR = 50, RK = (RH - 1) / RR; // lado, centro, alcance en metros, píxeles por metro
-type Blip = { x: number; z: number; kind: "enemigo" | "jefe" | "cofre" | "gema" };
+type Blip = { x: number; z: number; kind: "enemigo" | "elite" | "jefe" | "cofre" | "gema" };
 let rCtx: CanvasRenderingContext2D, rBg: HTMLCanvasElement;
 let rCar = { x: 0, z: 0, yaw: 0, up: 0 }, rBlips: Blip[] = [], rAge = 9, rSweep = 0, rAcc = 0;
 function initRadar() {
@@ -205,6 +233,7 @@ function drawRadar() {
     const x = Math.round(RH + rx * RK * k), y = Math.round(RH - ry * RK * k);
     const age = (((rSweep - Math.atan2(rx, ry)) % 6.2832) + 6.2832) % 6.2832 / 6.2832;
     if (b.kind === "jefe") { if (blink) { g.globalAlpha = 1; g.fillStyle = "#ff4a38"; g.fillRect(x - 1, y - 1, 3, 3); } }
+    else if (b.kind === "elite") { g.globalAlpha = 1; g.fillStyle = "#e8b0ff"; g.fillRect(x, y, 2, 2); }
     else if (b.kind === "cofre") { g.globalAlpha = 1; g.fillStyle = "#e0a030"; g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3); }
     else { g.globalAlpha = 1 - age * 0.8; g.fillStyle = b.kind === "gema" ? "#6fb3c4" : "#d6e8c8"; g.fillRect(x, y, 1, 1); }
   }
@@ -271,12 +300,15 @@ const kindLabel = (o: Offer) => (o.kind === "evo" ? "Evolución" : o.kind === "f
 let pickCb: ((i: number) => void) | null = null;
 let hoverCb: ((i: number) => void) | null = null;
 let busy = false;
-export function showOffers(title: string, offers: Offer[], sel: number, onPick: (i: number) => void, onHover?: (i: number) => void) {
+export function showOffers(title: string, offers: Offer[], sel: number, onPick: (i: number) => void, onHover?: (i: number) => void, sub = "", threat: "" | "boss" | "near" = "") {
   pickCb = onPick;
   hoverCb = onHover ?? null;
   busy = false;
   hideBanner();
   $("luTitle").textContent = title;
+  const subEl = $("luSub");
+  subEl.textContent = sub;
+  subEl.className = threat ? `lu-sub lu-sub--${threat}` : "lu-sub";
   $("offers").innerHTML = offers.map((o, i) => `
     <div class="offer ${rarity(o)} ${i === sel ? "sel" : ""}" data-i="${i}" style="--i:${i}">
       <span class="kind">${kindLabel(o)}</span>

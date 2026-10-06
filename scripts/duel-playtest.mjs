@@ -109,7 +109,22 @@ async function playFab(page, label) {
     fightClass: document.getElementById("duel-ui")?.classList.contains("fight"),
   }));
 
-  return { issues, info, hud, logs: page.logs };
+  const inter = await page.evaluate(() => {
+    window.__duel.god();
+    window.__duel.kill();
+    for (let i = 0; i < 600; i++) window.__tick(1);
+    const phase = window.__duel.info().phase;
+    const pips = document.getElementById("duel-inter-pips")?.textContent ?? "";
+    const tip = document.getElementById("duel-inter-tip")?.textContent ?? "";
+    const uiInter = document.getElementById("duel-ui")?.classList.contains("inter");
+    return { phase, pips, tip, uiInter };
+  });
+  if (inter.phase !== "inter") issues.push(`${label}: sin pantalla inter (phase=${inter.phase})`);
+  if (!inter.uiInter) issues.push(`${label}: duel-ui sin clase inter`);
+  if (!inter.pips.includes("●")) issues.push(`${label}: pips vacíos ("${inter.pips}")`);
+  if (!inter.tip.trim()) issues.push(`${label}: sin tip inter-asalto`);
+
+  return { issues, info, hud, inter, logs: page.logs };
 }
 
 async function main() {

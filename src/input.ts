@@ -1,12 +1,12 @@
 // Teclado + gamepad + táctil unificados en un solo estado.
 // move: dirección deseada en pantalla (táctil/stick). Si está activa, el auto gira solo hacia ahí.
-export const input = { throttle: 0, steer: 0, boost: false, drift: false, ability: false, moveX: 0, moveY: 0, move: false };
+export const input = { throttle: 0, steer: 0, boost: false, drift: false, ability: false, jump: false, moveX: 0, moveY: 0, move: false };
 
 // Teclado: dos teclas por acción [principal, alternativa] ("" = vacía). Todo reasignable en Configuración → Controles (menu.ts).
 // Los menús siguen con flechas, Enter y Esc fijos.
 export const KEYS0 = {
   up: ["KeyW", "ArrowUp"], down: ["KeyS", "ArrowDown"], left: ["KeyA", "ArrowLeft"], right: ["KeyD", "ArrowRight"],
-  boost: ["Space", ""], drift: ["ShiftLeft", "ShiftRight"], ability: ["KeyE", ""], cam: ["KeyC", ""], reroll: ["KeyR", ""],
+  boost: ["Space", ""], drift: ["ShiftLeft", "ShiftRight"], jump: ["KeyF", ""], ability: ["KeyE", ""], cam: ["KeyC", ""], reroll: ["KeyR", ""],
   pause: ["Escape", "KeyP"], mute: ["KeyM", ""], zoomIn: ["Equal", "NumpadAdd"], zoomOut: ["Minus", "NumpadSubtract"],
 } satisfies Record<string, [string, string]>;
 export type Action = keyof typeof KEYS0;
@@ -17,7 +17,7 @@ export const keyHit = (a: Action, code: string) => KEYS[a].includes(code);
 // Joystick (mapeo estándar del navegador: 0 abajo, 1 derecha, 2 izquierda, 3 arriba, 4/5 hombros, 6/7 gatillos, 8 select/view, 9 start/menu,
 // 10/11 sticks presionados, 12-15 cruceta, 16 guía). Un botón por acción; -1 = sin asignar.
 // Cambiar cámara va en View/Select (8): en el juego estaba libre.
-export const PADB0 = { accel: [7], brake: [6], boost: [0], drift: [1], ability: [2], reroll: [3], cam: [8], pause: [9], ok: [0], back: [1] };
+export const PADB0 = { accel: [7], brake: [6], boost: [0], drift: [1], ability: [2], jump: [4], reroll: [3], cam: [8], pause: [9], ok: [0], back: [1] };
 export type PadAct = keyof typeof PADB0;
 // mode: "trig" = gatillos aceleran/frenan y el stick gira; "stick" = el stick apunta hacia dónde ir
 export const PAD0 = { dead: 0.15, sens: 1, invX: false, invY: false, stick: "left" as "left" | "right", mode: "trig" as "trig" | "stick", btn: PADB0 as Record<PadAct, number[]> };
@@ -65,7 +65,8 @@ addEventListener("gamepadconnected", (e) => padToast(`CONTROL ${pads().length} C
 addEventListener("gamepaddisconnected", () => padToast(`CONTROL DESCONECTADO · ${pads().length} conectado${pads().length === 1 ? "" : "s"}`));
 
 const keys = new Set<string>();
-addEventListener("keydown", (e) => keys.add(e.code));
+let jumpPulse = false;
+addEventListener("keydown", (e) => { keys.add(e.code); if (keyHit("jump", e.code)) jumpPulse = true; });
 addEventListener("keyup", (e) => keys.delete(e.code));
 addEventListener("blur", () => keys.clear());
 
@@ -109,6 +110,7 @@ export function setupTouch(onPinch?: (k: number) => void) {
   hold("tBoost", "boost");
   hold("tDrift", "drift");
   hold("tAbil", "ability");
+  document.getElementById("tJump")!.addEventListener("pointerdown", (e) => { e.preventDefault(); jumpPulse = true; });
   // Pellizco de dos dedos sobre el juego = zoom
   const cv = document.getElementById("c")!, pts = new Map<number, [number, number]>();
   let pd = 0;
@@ -127,9 +129,9 @@ export function setupTouch(onPinch?: (k: number) => void) {
 // ---------- Disposición táctil (Configuración → Editar controles táctiles) ----------
 // Cada control guardado = centro en fracción de la pantalla (x, y) y escala propia (s, se multiplica por el tamaño general).
 // Una disposición por orientación: v = vertical, h = apaisado (TLays); se aplica la de la orientación actual.
-export type TCtl = "stick" | "boost" | "drift" | "abil" | "pause" | "cam";
+export type TCtl = "stick" | "boost" | "drift" | "jump" | "abil" | "pause" | "cam";
 export type TLay = Partial<Record<TCtl, { x: number; y: number; s: number }>>;
-export const TCTLS: Record<TCtl, string> = { stick: "stickBase", boost: "tBoost", drift: "tDrift", abil: "tAbil", pause: "tPause", cam: "tCam" };
+export const TCTLS: Record<TCtl, string> = { stick: "stickBase", boost: "tBoost", drift: "tDrift", jump: "tJump", abil: "tAbil", pause: "tPause", cam: "tCam" };
 export type TLays = { v: TLay; h: TLay };
 const portrait = matchMedia("(orientation: portrait)");
 export const orient = () => (portrait.matches ? "v" : "h");
@@ -186,6 +188,7 @@ export function pollInput() {
   let boost = k("boost");
   let drift = k("drift");
   let ability = k("ability");
+  let jump = jumpPulse;
 
   let moveX = 0, moveY = 0;
   const gp = activePad();
@@ -198,6 +201,7 @@ export function pollInput() {
     boost ||= on("boost");
     drift ||= on("drift");
     ability ||= on("ability");
+    jump ||= on("jump");
   }
 
   if (touch.x || touch.y) { moveX = touch.x; moveY = -touch.y; }
@@ -205,7 +209,8 @@ export function pollInput() {
   drift ||= touch.drift;
   ability ||= touch.ability;
 
-  Object.assign(input, { throttle, steer, boost, drift, ability, moveX, moveY, move: !!(moveX || moveY) });
+  Object.assign(input, { throttle, steer, boost, drift, ability, jump, moveX, moveY, move: !!(moveX || moveY) });
+  jumpPulse = false;
 }
 
 // Botones de menú del gamepad: una foto por cuadro (padSnap) para que un botón mantenido desde el juego no "aprete" en el menú

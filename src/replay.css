@@ -7,6 +7,8 @@
 @keyframes bar { from { transform: translateY(calc(var(--d) * 100%)); } }
 #outro .o-tag { position: absolute; left: 4vw; bottom: calc(11vh + 14px); font: 400 clamp(14px, 2.2vw, 20px)/1 var(--display); color: var(--turbo); letter-spacing: .08em; text-shadow: 2px 2px 0 #000; }
 #outro .o-tag::before { content: ""; display: inline-block; width: .6em; height: .6em; margin-right: .6em; background: var(--turbo); animation: blink 1s steps(2) infinite; }
+#outro .o-stat { position: absolute; left: 50%; translate: -50% 0; bottom: calc(11vh + 14px); font: 500 clamp(13px, 1.8vw, 17px)/1 var(--data); color: var(--dim); letter-spacing: .08em; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+#outro .o-stat.hidden { display: none; }
 #outro .o-skip { position: absolute; right: 4vw; bottom: calc(11vh + 14px); font: 400 clamp(15px, 2vw, 19px)/1 var(--data); color: var(--txt); letter-spacing: .1em; text-shadow: 1px 1px 0 #000; }
 body.calm #outro .o-tag::before, body.calm #outro::before, body.calm #outro::after { animation: none; }
 
