@@ -409,6 +409,15 @@ cog_y = (chassis.cog_y × chassis.mass + wheels.cog_y × wheels.mass + weapon.co
 ```
 Valores en `balance.json / duelo`; no hardcoded en `duel.ts`.
 
+### Enlace con §24 — ranuras v2
+
+El building v1 tiene **3 ranuras fijas** (chasis / ruedas / arma). La evolución a v2 descrita en §24 agrega ranuras extra (motor, batería, blindaje, arma secundaria) sobre el **mismo layout de 3 columnas**.
+
+Para que la migración no requiera reescribir la lógica de composición:
+- Los puntos de anclaje deben ser un **array extensible**, no una enumeración cerrada de 5 elementos.
+- Los modificadores de stats (vel, giro, empuje, estabilidad, masa) deben sumarse como una lista de `Partial<RobotStats>`, no como ramas `if/else` por combo.
+- La pantalla de armado debe leer el número de ranuras activas de `balance.json` (`duelo_ranuras_v1 = 3`); activar v2 es subir ese número y agregar filas en la tabla de piezas, sin tocar el layout de UI.
+
 ---
 
 ## 28. Tabla de piezas v1 — stats, silueta y modos de falla
@@ -614,81 +623,3 @@ Estas piezas **no están en el alcance de la implementación v1**. Se proponen c
 3. **Efecto magnético** — la pieza "vuela" desde una esquina de la pantalla hacia el punto de anclaje con una curva de Bezier. Muy llamativo; requiere animación de traslación en espacio de cámara + conversión de coordenadas. Mayor costo de implementación.
 4. **Sin animación — swap instantáneo** — la pieza anterior desaparece y la nueva aparece sin transición. La opción más simple; acelera la iteración durante el prototipo. Puede sentirse abrupto en la build pública.
 
----
-
-## 27. Armado profundo
-
-*Prioridad usuario: robots → piezas → building. Esta sección es diseño; no implementar hasta §26 aprobado.*
-
-### 27.1 Puntos de anclaje
-
-Cada chasis expone **5 puntos de anclaje** calculados a partir de las dimensiones del `template()` en `models.ts`; no hay offsets hardcodeados en `duel.ts`. Las magnitudes (`ancho`, `largo`, `alto_arma`) viven en la tabla `duelo_piezas` de `balance.json`.
-
-| Ranura | Posición (espacio local del chasis) | Nota |
-|--------|-------------------------------------|------|
-| Rueda DL | `(−ancho/2,  0, +largo/2)` | espejado con DR |
-| Rueda DR | `(+ancho/2,  0, +largo/2)` | |
-| Rueda TL | `(−ancho/2,  0, −largo/2)` | espejado con TR |
-| Rueda TR | `(+ancho/2,  0, −largo/2)` | |
-| Arma    | `(0, alto_arma, +largo/2)` frontal | altura varía por tipo de arma |
-
-El CoG resultante lo calcula Havok a partir de `masa_chasis + masa_rueda × 4 + masa_arma` (todos en `balance.json`). Un chasis alto + arma pesada en el frente sube el CoG y aumenta el riesgo de volcado.
-
-### 27.2 Tabla de arquetipos de combate (3 chasis × 3 armas — 9 combos)
-
-Las ruedas modulan velocidad y tracción (ver §27.3) pero el **feel de pelea** lo define principalmente el par CHASIS + ARMA.
-
-| Chasis ↓ / Arma → | Trompo | Sierra | Pala |
-|---|---|---|---|
-| **Caja** | Control total: gira sin riesgo, daño medio continuo. CoG bajo → no vuelca. | Alcance lateral seguro, fácil de posicionar. Alta estabilidad. | Empuje frontal sólido; la masa extra favorece el choque. Muy predecible. |
-| **Cuña** | Alto riesgo-alta recompensa: CoG elevado + trompo → volcado si embiste mal. Daño máximo si el ángulo es bueno. | Cuña baja + filo lateral = emboscada de flanco. CoG moderado, versátil. | Embestida + empuje Havok = combo de presión máxima. Perfil bajo, difícil volcar. |
-| **Plancha** | **⚠ WARN** (§27.4): CoG muy alto + arma pesada → volcado frecuente. Sólo para jugadores que saben enderezar. | Rapidez de flanqueo + sierra: peligroso para el rival, frágil para el jugador. | Velocidad punta al servicio del empuje; baja vida pero alta movilidad. |
-
-> La fila "Plancha + Trompo" es el único combo que recibe WARN automático en v1. Los demás son viables sin aviso.
-
-### 27.3 Tabla de ruedas (modificadores globales de stats)
-
-| Rueda | Vel. punta | Giro | Empuje Havok | Estabilidad |
-|-------|-----------|------|-------------|-------------|
-| Estándar | ×1,00 | ×1,00 | base | media |
-| Gigantes | ×0,90 | ×0,80 | +lateral | alta |
-| Orugas | ×0,75 | ×0,70 | base | muy alta |
-
-Los multiplicadores son filas de `balance.json` (`duelo_piezas`); sin literales en `duel.ts`.
-
-### 27.4 Reglas de umbral — WARN y BAN
-
-| Combo | Regla | Texto en pantalla de armado |
-|-------|-------|-----------------------------|
-| Plancha + Trompo (cualquier rueda) | **WARN** | "Centro de gravedad inestable. El robot puede volcar con facilidad." |
-| Orugas + Trompo | **WARN** | "Baja velocidad y arma de alto par. Difícil escapar del contacto." |
-| *(reservado)* | **BAN** si volcado irreversible en prototipo | tooltip descriptivo (sin texto de aviso de riesgo aún) |
-
-**Semántica de los niveles:**
-
-- **WARN** → botón de confirmación extra en la pantalla de armado; el jugador puede igualmente elegirlo. Ícono ⚠ junto a las barras de preview.
-- **BAN** → opción deshabilitada (botón grayed-out, tooltip); solo aplicar tras prueba concreta en prototipo sim-lite. Criterio objetivo para BAN: en 3 de 3 intentos el robot se vuelca en los primeros 5 s de contacto normal contra CUÑA INDUSTRIAL → BAN; documentar en código con `// ponytail: combo baneado, verificar en prototipo`.
-- Las reglas se evalúan al cambiar cualquier pieza en la pantalla de armado (reactivo, sin botón aparte).
-
-### 27.5 Reuso de `models.ts`
-
-El building 3D se apoya en la infraestructura existente; **no duplicar código**:
-
-| Herramienta existente | Uso en duelo |
-|-----------------------|-------------|
-| `template()` | Instanciar chasis, ruedas y arma como variantes de plantillas fusionadas; no crear mallas sueltas por pieza. |
-| `carModel()` | Referencia de proporciones y lenguaje low-poly para el robot RC; mismo vocabulario visual que el survivor. |
-| `pbr()` / `M` de `render.ts` | Materiales metálicos idénticos al patio; sin PBR nuevo ni texturas extras en v1. |
-| Cámara orbital de `menu.ts` | Preview de armado reutiliza el patrón garaje (posición, target, damping); no duplicar lógica. |
-
-Los puntos de anclaje (§27.1) se calculan en tiempo de ejecución a partir de las dimensiones del `template()` del chasis elegido: `anchoChasis`, `largoChasis` y `altoArma` provienen de `balance.json`, no de constantes en el modelo.
-
-### 27.6 Enlace con §24 — ranuras v2
-
-El building v1 tiene **3 ranuras fijas** (chasis / ruedas / arma). La evolución a v2 descrita en §24 agrega ranuras extra (motor, batería, blindaje, arma secundaria) sobre el **mismo layout de 3 columnas**.
-
-Para que la migración no requiera reescribir la lógica de composición:
-
-- Los puntos de anclaje deben ser un **array extensible**, no una enumeración cerrada de 5 elementos.
-- Los modificadores de stats (vel, giro, empuje, estabilidad, masa) deben sumarse como una lista de `Partial<RobotStats>`, no como ramas `if/else` por combo.
-- La pantalla de armado debe leer el número de ranuras activas de `balance.json` (`duelo_ranuras_v1 = 3`), de modo que activar v2 sea subir ese número y agregar filas en la tabla de piezas, sin tocar el layout de UI.

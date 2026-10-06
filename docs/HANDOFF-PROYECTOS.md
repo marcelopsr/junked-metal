@@ -87,6 +87,8 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 - Configuración de imagen: gamma como curva de medios tonos; FSR apagado en carrera de 2 jugadores; recorte por distancia de props.
 - Rendimiento: ~1.600 draw calls en partida y ~3.200 en carrera a 2 jugadores (posible cuello de botella en celulares).
 
+**Modo Demolición (duelo melee):** diseño completo en [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md) (GDD maestro: reglas, building, piezas, IA, frases, armado profundo §27); checklist de rondas en [`docs/BATTLE_RC_PLAN.md`](./BATTLE_RC_PLAN.md). Implementación pendiente de aprobación explícita (§26 del GDD). No tocar `goBattle()` de kart al implementar.
+
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 
 ---
