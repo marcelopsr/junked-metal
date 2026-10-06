@@ -280,6 +280,14 @@
 }
 .duel-fab-cell.dim { opacity: 0.42; }
 .duel-fab-cell.filled { border-style: solid; border-color: rgba(125, 255, 176, .5); background: rgba(20, 40, 32, .68); color: #b9d3a4; }
+.duel-fab.erase-mode .duel-fab-cell.filled { border-color: rgba(255, 77, 77, .45); cursor: pointer; }
+.duel-fab.erase-mode .duel-fab-cell.filled:hover,
+.duel-fab.erase-mode .duel-fab-cell.filled:focus-visible {
+  border-color: var(--fab-ban);
+  background: rgba(48, 20, 20, .75);
+  box-shadow: 0 0 0 2px rgba(255, 77, 77, .35);
+}
+.duel-fab.erase-mode .duel-fab-cell:not(.filled) { opacity: 0.35; pointer-events: none; }
 .duel-fab-cell.can { border-color: var(--fab-accent); background: rgba(20, 40, 32, .88); animation: duel-drop-pulse 1.2s ease-in-out infinite; }
 .duel-fab-cell.just-placed { animation: duel-cell-place 0.42s ease-out; border-color: var(--fab-sig); box-shadow: 0 0 0 2px rgba(53, 201, 255, .45); }
 @keyframes duel-cell-place { 0% { transform: scale(1.12); background: rgba(53, 201, 255, .35); } 100% { transform: scale(1); } }

@@ -248,6 +248,13 @@ export function removeAt(build: RobotBuild, x: number, y: number, z: number): Ro
   return { cells: build.cells.filter((_, i) => i !== idx) };
 }
 
+/** Bloque anclado en una celda de rejilla (para preview de borrado). */
+export function cellAt(build: RobotBuild, x: number, y: number, z: number): Cell | null {
+  const idx = occupancyMap(build).get(`${x},${y},${z}`);
+  if (idx === undefined) return null;
+  return build.cells[idx] ?? null;
+}
+
 export function mirrorBuildX(build: RobotBuild): RobotBuild {
   return {
     cells: build.cells.map((c) => {

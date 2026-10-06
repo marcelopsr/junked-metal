@@ -13,7 +13,7 @@ import {
   saveDuelPaint, SLOT_LABEL, SWATCHES, type DuelPaintState, type PaintSlot,
 } from "./duel_paint";
 import {
-  blockDef, buildColliderMesh, type Cell, type LivingBuild, type RobotBuild, TEMPLATES, aabbOfBuild, cellWorldCenter,
+  blockDef, buildColliderMesh, type Cell, cellAt, type LivingBuild, type RobotBuild, TEMPLATES, aabbOfBuild, cellWorldCenter,
   cogOfBuild, defaultBuild, livingFromBuild, paintBuildMesh, pickHitCellIndex, placementGhostMesh, rivalBuild, saveBuild,
   statsOfBuild, stripCell, validateBuild, visualPivotOffset,
 } from "./duel_build";
@@ -593,7 +593,11 @@ function clearFabPlaceGhost() {
 
 function updateFabPlaceGhost(info: { probe: Cell; can: boolean; erase: boolean } | null) {
   clearFabPlaceGhost();
-  if (!info || info.erase || phase !== "fabricar") return;
+  if (!info || phase !== "fabricar") return;
+  const ghostCell = info.erase
+    ? cellAt(playerBuild, info.probe.x, info.probe.y, info.probe.z)
+    : info.probe;
+  if (!ghostCell) return;
   const scene = deps.scene;
   const pivot = visualPivotOffset(playerBuild);
   const root = new B.TransformNode("fabGhostRoot", scene);
@@ -601,7 +605,7 @@ function updateFabPlaceGhost(info: { probe: Cell; can: boolean; erase: boolean }
   const vis = new B.TransformNode("fabGhostVis", scene);
   vis.parent = root;
   vis.position.set(-pivot.x, -pivot.y, -pivot.z);
-  const m = placementGhostMesh(info.probe, info.can, playerPaint);
+  const m = placementGhostMesh(ghostCell, info.erase ? false : info.can, playerPaint);
   m.parent = vis;
   m.position.copyFrom(pivot);
   fabPlaceGhostRoot = root;
@@ -900,7 +904,7 @@ function ensureUi() {
 <div id="duel-inter"><p id="duel-inter-t"></p><button type="button" id="duel-next">SIGUIENTE ASALTO</button></div>
 <div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
 <button type="button" id="duel-flip">ENDEREZAR</button>
-<div id="duel-count" class="duel-count" aria-live="polite"></div>`;
+<div id="duel-count-wrap" class="duel-count-wrap"><p id="duel-count" class="duel-count-num" aria-live="polite"></p><p id="duel-count-sub" class="duel-count-sub"></p></div>`;
   document.body.appendChild(ui);
   const pause = document.createElement("div");
   pause.id = "duel-pause";
@@ -1384,22 +1388,30 @@ function updateHud() {
   ($d("duel-flip") as HTMLButtonElement).disabled = flipCd > 0;
 }
 
-/** Cuenta atrás de salida (misma lógica que kart.ts / #rcount). */
+/** Cuenta atrás de salida (misma lógica que kart.ts / #rcount) + telemetría RC bajo el número. */
 function updateCountdownUi() {
-  const el = $d("duel-count");
+  const num = $d("duel-count");
+  const sub = $d("duel-count-sub");
+  const wrap = document.getElementById("duel-count-wrap")!;
+  const assault = `ASALTO ${round} · MEJOR DE TRES`;
+  const marcador = `Marcador ${score[0]} – ${score[1]}`;
   if (phase === "countdown") {
     const show = countdown > 0 && countdown <= 3;
-    el.textContent = show ? String(Math.ceil(countdown)) : "";
-    el.className = "duel-count" + (show ? " on" : "");
+    const prep = countdown > 3;
+    num.textContent = show ? String(Math.ceil(countdown)) : "";
+    sub.textContent = prep ? `${assault} · Motores en línea` : show ? `${assault} · ${marcador}` : assault;
+    wrap.className = "duel-count-wrap" + (show ? " on" : prep ? " prep" : "");
     return;
   }
   if (phase === "fight" && t < 1.2) {
-    el.textContent = "¡YA!";
-    el.className = "duel-count go on";
+    num.textContent = "¡YA!";
+    sub.textContent = `${assault} · ${marcador}`;
+    wrap.className = "duel-count-wrap go on";
     return;
   }
-  el.textContent = "";
-  el.className = "duel-count";
+  num.textContent = "";
+  sub.textContent = "";
+  wrap.className = "duel-count-wrap";
 }
 
 function camFollow(b: Bot, dt: number) {

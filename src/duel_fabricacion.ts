@@ -6,7 +6,7 @@ import { isTouch } from "./input";
 import { BAL } from "./balance";
 import {
   type BlockCat, type Cell, type RobotBuild, type Rot,
-  TEMPLATES, allBlockIds, blockDef, blocksByCat, canPlace, footprint, massOfBuild,
+  TEMPLATES, allBlockIds,   blockDef, blocksByCat, canPlace, cellAt, footprint, massOfBuild,
   mirrorBuildX, placeCell, removeAt, saveBuild, statsOfBuild, validateBuild, wheelCount,
 } from "./duel_build";
 
@@ -278,6 +278,7 @@ export function mountFabricacion(
     const empty = $("duel-fab-empty");
     empty.hidden = build.cells.length > 0;
     root.classList.toggle("has-build", build.cells.length > 0);
+    root.classList.toggle("erase-mode", erase);
   }
 
   function syncTpl() {
@@ -297,7 +298,13 @@ export function mountFabricacion(
   }
 
   function refreshGhost() {
-    if (erase) { opts.onHoverCell?.(null); return; }
+    if (erase) {
+      if (ghostPin && cellAt(build, ghostPin.x, layerY, ghostPin.z)) {
+        const probe: Cell = { x: ghostPin.x, y: layerY, z: ghostPin.z, rot: 0, blockId: selected };
+        opts.onHoverCell?.({ probe, can: false, erase: true });
+      } else opts.onHoverCell?.(null);
+      return;
+    }
     if (ghostPin) {
       const probe: Cell = { x: ghostPin.x, y: layerY, z: ghostPin.z, rot, blockId: selected };
       const can = canPlace(build, probe);
@@ -331,11 +338,16 @@ export function mountFabricacion(
 
   const gridEl = $("duel-fab-grid");
   const emitHover = (cell: HTMLElement | null) => {
-    if (!cell?.dataset.x) { opts.onHoverCell?.(null); return; }
+    if (!cell?.dataset.x) { refreshGhost(); return; }
     const x = +cell.dataset.x!, z = +cell.dataset.z!;
     const probe: Cell = { x, y: layerY, z, rot, blockId: selected };
-    const can = !erase && canPlace(build, probe);
-    opts.onHoverCell?.({ probe, can, erase });
+    if (erase) {
+      if (cell.classList.contains("filled")) opts.onHoverCell?.({ probe, can: false, erase: true });
+      else opts.onHoverCell?.(null);
+      return;
+    }
+    const can = canPlace(build, probe);
+    opts.onHoverCell?.({ probe, can, erase: false });
   };
   gridEl.addEventListener("mouseover", (e) => {
     const cell = (e.target as HTMLElement).closest(".duel-fab-cell") as HTMLElement | null;
@@ -408,7 +420,7 @@ export function mountFabricacion(
     const prev = undo.pop();
     if (prev) { build = prev; saveBuild(build); opts.onChange(build); sync(); }
   };
-  $("duel-fab-erase").onclick = () => { erase = !erase; syncBars(); syncGrid(); };
+  $("duel-fab-erase").onclick = () => { erase = !erase; ghostPin = null; syncBars(); syncGrid(); refreshGhost(); };
   $("duel-fab-clear").onclick = () => { pushUndo(); apply({ cells: [] }); };
   $("duel-fab-confirm").onclick = () => {
     const chk = validateBuild(build);

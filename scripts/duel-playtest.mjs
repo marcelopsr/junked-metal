@@ -65,19 +65,37 @@ async function playFab(page, label) {
   if (!closed) issues.push(`${label}: drawer no cerró`);
   await page.click("#duel-fab-drawer-toggle");
 
+  await page.click("#duel-fab-erase");
+  const eraseUx = await page.evaluate(() => document.getElementById("duel-fab")?.classList.contains("erase-mode"));
+  if (!eraseUx) issues.push(`${label}: modo borrar sin clase erase-mode`);
+  await page.locator(".duel-fab-cell.filled").first().hover({ timeout: 5000 });
+  const ghostErase = await page.evaluate(() => window.__duel.info().ghost3d);
+  if (!ghostErase) issues.push(`${label}: sin ghost rojo en borrar sobre celda llena`);
+  await page.click("#duel-fab-erase");
+
   await page.click("#duel-fab-confirm");
   await page.evaluate(() => { window.__duel.auto(true); });
 
   const cd = await page.evaluate(() => {
     let sawCount = false;
+    let sawSub = false;
     for (let i = 0; i < 40; i++) {
       window.__tick(1);
-      const el = document.getElementById("duel-count");
-      if (el?.classList.contains("on") && el.textContent && el.textContent !== "¡YA!") sawCount = true;
+      const num = document.getElementById("duel-count")?.textContent;
+      const sub = document.getElementById("duel-count-sub")?.textContent ?? "";
+      if (num && num !== "¡YA!" && /^\d$/.test(num)) sawCount = true;
+      if (sub.includes("ASALTO")) sawSub = true;
     }
-    return { sawCount, phase: window.__duel.info().phase, cdText: document.getElementById("duel-count")?.textContent };
+    return {
+      sawCount,
+      sawSub,
+      phase: window.__duel.info().phase,
+      cdText: document.getElementById("duel-count")?.textContent,
+      subText: document.getElementById("duel-count-sub")?.textContent,
+    };
   });
   if (!cd.sawCount) issues.push(`${label}: no se vio cuenta regresiva (${cd.phase}, "${cd.cdText}")`);
+  if (!cd.sawSub) issues.push(`${label}: sin microcopy ASALTO ("${cd.subText}")`);
 
   for (let i = 0; i < 280; i++) await page.evaluate(() => window.__tick(1));
 
@@ -96,7 +114,7 @@ async function main() {
   const report = { rounds: [] };
 
   for (const [vp, entry] of [
-    ["pc", { query: "?mute&duel", via: "dev-query" }],
+    ["pc", { query: "?mute", via: "menu" }],
     ["cel", { query: "?mute", via: "menu" }],
   ]) {
     const page = await open(browser, entry.query, vp, { freeze: false });

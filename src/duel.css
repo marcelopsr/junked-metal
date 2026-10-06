@@ -109,21 +109,36 @@
 #duel-ui.inter #duel-confirm,
 #duel-ui.results #duel-confirm { display: none; }
 #duel-ui.fight #duel-hud { display: block; }
-#duel-count.duel-count {
-  position: fixed; left: 0; right: 0; top: 18%;
+.duel-count-wrap {
+  position: fixed; left: 0; right: 0; top: 16%;
   text-align: center; pointer-events: none; z-index: 45;
+  opacity: 0; transition: opacity 0.12s;
+}
+.duel-count-wrap.on,
+.duel-count-wrap.prep { opacity: 1; }
+.duel-count-num {
+  margin: 0;
   font: 700 clamp(72px, 16vw, 200px)/1 "Rajdhani", system-ui, sans-serif;
   color: #f4f7fa; text-shadow: 0 8px 0 rgba(0, 0, 0, .35);
-  opacity: 0; letter-spacing: 0.06em;
+  letter-spacing: 0.06em;
 }
-#duel-count.duel-count.on { opacity: 1; animation: duel-count-pulse 1s ease-out infinite; }
-#duel-count.duel-count.go { color: #7dffb0; animation: duel-count-go 1.2s ease-out both; }
+.duel-count-sub {
+  margin: 0.35rem 0 0;
+  font: 600 clamp(0.62rem, 2.2vw, 0.78rem)/1.35 "Rajdhani", system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #35c9ff;
+  text-shadow: 0 2px 6px #000a;
+}
+.duel-count-wrap.on .duel-count-num { animation: duel-count-pulse 1s ease-out infinite; }
+.duel-count-wrap.go .duel-count-num { color: #7dffb0; animation: duel-count-go 1.2s ease-out both; }
+.duel-count-wrap.prep .duel-count-sub { color: #7dffb0; }
 @keyframes duel-count-pulse { 0% { transform: scale(1.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: scale(.9); } }
 @keyframes duel-count-go { 0% { transform: scale(.6); } 30% { transform: scale(1.2); } 100% { transform: scale(1.5); opacity: 0; } }
-#duel-ui.fabricar #duel-count,
-#duel-ui.armado #duel-count,
-#duel-ui.inter #duel-count,
-#duel-ui.results #duel-count { display: none; }
+#duel-ui.fabricar #duel-count-wrap,
+#duel-ui.armado #duel-count-wrap,
+#duel-ui.inter #duel-count-wrap,
+#duel-ui.results #duel-count-wrap { display: none; }
 .duel-hp-row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.62rem; margin-bottom: 0.32rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
 .duel-hud-lab.enemy { color: var(--fab-ban, #ff4d4d); }
 .duel-hud-lab.you { color: var(--fab-accent, #7dffb0); }
