@@ -12,11 +12,11 @@ import {
 
 const D = BAL.duelo;
 const CATS: { id: BlockCat; lab: string; ico: string }[] = [
-  { id: "chasis", lab: "Chasis", ico: "lego" },
-  { id: "movimiento", lab: "Ruedas", ico: "turbo" },
-  { id: "arma", lab: "Arma", ico: "lanza" },
-  { id: "especial", lab: "Especial", ico: "heal" },
-  { id: "cosmetico", lab: "Extra", ico: "evo" },
+  { id: "chasis", lab: "Chasis", ico: "fab_chasis" },
+  { id: "movimiento", lab: "Ruedas", ico: "fab_rueda" },
+  { id: "arma", lab: "Arma", ico: "fab_arma" },
+  { id: "especial", lab: "Especial", ico: "fab_especial" },
+  { id: "cosmetico", lab: "Extra", ico: "fab_extra" },
 ];
 
 const ROT_ARROW = ["↑", "→", "↓", "←"];
@@ -66,8 +66,8 @@ export function mountFabricacion(
 <span class="duel-fab-corner bl" aria-hidden="true"></span><span class="duel-fab-corner br" aria-hidden="true"></span>
 <span class="duel-fab-visor-tag">VISOR 3D</span>
 <div class="duel-fab-zoom" aria-label="Zoom de cámara">
-<button type="button" class="duel-fab-btn" id="duel-fab-zoom-out" aria-label="Alejar">−</button>
-<button type="button" class="duel-fab-btn" id="duel-fab-zoom-in" aria-label="Acercar">+</button>
+<button type="button" class="duel-fab-btn duel-fab-zoom-btn" id="duel-fab-zoom-out" aria-label="Alejar"></button>
+<button type="button" class="duel-fab-btn duel-fab-zoom-btn" id="duel-fab-zoom-in" aria-label="Acercar"></button>
 </div>
 <p class="duel-fab-view-hint">Arrastrar · rueda o +/− zoom</p>
 <p class="duel-fab-empty" id="duel-fab-empty" hidden>Sin piezas: elegir bloque y tocar la rejilla, o una plantilla</p>
@@ -79,23 +79,28 @@ export function mountFabricacion(
 </header>
 <div class="duel-fab-grid-wrap">
 <div class="duel-fab-grid-row">
+<div class="duel-fab-layers-rail" aria-labelledby="duel-fab-layers-title">
+<p id="duel-fab-layers-title" class="duel-fab-layers-title">${icon("fab_layers", 14)} Perfil Y</p>
+<div class="duel-fab-profile" id="duel-fab-profile" aria-hidden="true"></div>
 <div class="duel-fab-layers" id="duel-fab-layers" role="tablist" aria-label="Alturas del robot"></div>
+</div>
 <div class="duel-fab-grid-main">
 <div class="duel-fab-layer">
 <div class="duel-fab-layer-lab">
 <span class="duel-sec-h">Plano de montaje</span>
 <span id="duel-fab-ylab" class="duel-fab-ylab">Plano altura 1</span>
+<span id="duel-fab-ydim" class="duel-fab-ydim">Altura 1 de 3</span>
 </div>
 <div class="duel-fab-layer-nav">
-<button type="button" class="duel-fab-btn" id="duel-fab-ydown" aria-label="Ver plano inferior">−</button>
-<button type="button" class="duel-fab-btn" id="duel-fab-yup" aria-label="Ver plano superior">+</button>
+<button type="button" class="duel-fab-btn duel-fab-plane-btn" id="duel-fab-ydown" aria-label="Ver plano inferior"></button>
+<button type="button" class="duel-fab-btn duel-fab-plane-btn" id="duel-fab-yup" aria-label="Ver plano superior"></button>
 </div></div>
 <div class="duel-fab-grid" id="duel-fab-grid" role="grid" aria-label="Rejilla de fabricación"></div>
 <div class="duel-fab-tools">
-<button type="button" class="duel-fab-btn" id="duel-fab-rot">Girar (R)</button>
-<button type="button" class="duel-fab-btn" id="duel-fab-mir">Espejo (M)</button>
-<button type="button" class="duel-fab-btn" id="duel-fab-undo">Deshacer (Z)</button>
-<button type="button" class="duel-fab-btn" id="duel-fab-erase">Borrar</button>
+<button type="button" class="duel-fab-btn duel-fab-tool-btn" id="duel-fab-rot">${icon("fab_rot", 16)} Girar (R)</button>
+<button type="button" class="duel-fab-btn duel-fab-tool-btn" id="duel-fab-mir">${icon("fab_mirror", 16)} Espejo (M)</button>
+<button type="button" class="duel-fab-btn duel-fab-tool-btn" id="duel-fab-undo">${icon("fab_undo", 16)} Deshacer (Z)</button>
+<button type="button" class="duel-fab-btn duel-fab-tool-btn" id="duel-fab-erase">${icon("fab_erase", 16)} Borrar</button>
 <button type="button" class="duel-fab-btn" id="duel-fab-clear">Vaciar</button>
 </div></div></div></div></div></div>
 <aside class="duel-fab-drawer h-panel" id="duel-fab-drawer">
@@ -147,14 +152,29 @@ export function mountFabricacion(
     });
   }
 
+  function layerTag(y: number, maxY: number): string {
+    if (y === 0) return "base";
+    if (y >= maxY) return "tope";
+    return `${y}`;
+  }
+
   function syncLayers() {
     const maxY = D.grid_max_y;
     const btns: string[] = [];
+    const prof: string[] = [];
+    for (let y = maxY; y >= 0; y--) {
+      const has = layerHasBlocks(y);
+      const on = y === layerY;
+      prof.push(`<div class="duel-fab-prof-seg${on ? " on" : ""}${has ? " has" : ""}" title="Plano ${layerPlanoLabel(y, maxY)}"></div>`);
+    }
     for (let y = 0; y <= maxY; y++) {
       const has = layerHasBlocks(y);
-      btns.push(`<button type="button" role="tab" class="duel-fab-ly${y === layerY ? " on" : ""}${has ? " has" : ""}" data-ly="${y}" aria-selected="${y === layerY}" aria-label="Altura ${y}${has ? ", con piezas" : ""}">${y}</button>`);
+      const tag = layerTag(y, maxY);
+      btns.push(`<button type="button" role="tab" class="duel-fab-ly${y === layerY ? " on" : ""}${has ? " has" : ""}" data-ly="${y}" aria-selected="${y === layerY}" aria-label="${layerPlanoLabel(y, maxY)}${has ? ", con piezas" : ""}"><span class="duel-fab-ly-n">Y${y}</span><span class="duel-fab-ly-t">${tag}</span></button>`);
     }
     $("duel-fab-layers").innerHTML = btns.join("");
+    $("duel-fab-profile").innerHTML = prof.join("");
+    $("duel-fab-ydim").textContent = `Altura ${layerY} de ${maxY}`;
   }
 
   function syncGrid() {
@@ -269,9 +289,18 @@ export function mountFabricacion(
     }
   });
 
+  const zoomIn = $("duel-fab-zoom-in");
+  const zoomOut = $("duel-fab-zoom-out");
+  zoomIn.innerHTML = icon("fab_zoom_in", 18);
+  zoomOut.innerHTML = icon("fab_zoom_out", 18);
+  const stopZoom = (e: Event) => e.stopPropagation();
+  zoomIn.addEventListener("pointerdown", stopZoom);
+  zoomOut.addEventListener("pointerdown", stopZoom);
+  zoomIn.onclick = (e) => { e.stopPropagation(); opts.onZoom?.(0.88); };
+  zoomOut.onclick = (e) => { e.stopPropagation(); opts.onZoom?.(1.14); };
+  ($("duel-fab-ydown") as HTMLButtonElement).innerHTML = icon("fab_plane_down", 18);
+  ($("duel-fab-yup") as HTMLButtonElement).innerHTML = icon("fab_plane_up", 18);
   $("duel-fab-drawer-toggle").onclick = () => { drawerOpen = !drawerOpen; syncDrawer(); };
-  $("duel-fab-zoom-in").onclick = () => opts.onZoom?.(0.88);
-  $("duel-fab-zoom-out").onclick = () => opts.onZoom?.(1.14);
   $("duel-fab-ydown").onclick = () => { layerY = Math.max(0, layerY - 1); syncGrid(); syncBars(); };
   $("duel-fab-yup").onclick = () => { layerY = Math.min(D.grid_max_y, layerY + 1); syncGrid(); syncBars(); };
   $("duel-fab-rot").onclick = () => { rot = ((rot + 1) % 4) as Rot; sync(); };

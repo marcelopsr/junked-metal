@@ -36,6 +36,21 @@ const P: Record<string, string> = {
   cofre: `<path d="M4 10h16v9.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10Z"/><path d="M4 10V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/><rect x="10.5" y="9" width="3" height="4" rx=".6"/>`,
   jefe: `<path d="M5 11a7 7 0 0 1 14 0v3l-2 1v3h-2.5v-2h-1v2h-3v-2h-1v2H7v-3l-2-1v-3Z"/><circle cx="9.3" cy="11.3" r="1.5" fill="currentColor"/><circle cx="14.7" cy="11.3" r="1.5" fill="currentColor"/>`,
   senal: `<path d="M5 19v-2M9 19v-5M13 19v-8M17 19V8M21 19V5"/>`,
+  // Fabricación (telemetría RC)
+  fab_chasis: `<rect x="5" y="8" width="14" height="9" rx="1"/><path d="M7 8V6.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V8"/><circle cx="8.5" cy="17.5" r="1.2"/><circle cx="15.5" cy="17.5" r="1.2"/><path d="M5 11h3M16 11h3"/>`,
+  fab_rueda: `<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 5v2M12 17v2M5 12h2M17 12h2"/><path d="M7.8 7.8l1.4 1.4M14.8 14.8l1.4 1.4M16.2 7.8l-1.4 1.4M9.2 14.8l-1.4 1.4"/>`,
+  fab_arma: `<path d="M6 18h12"/><path d="M8 18V9l4-3 4 3v9"/><path d="M12 6v4"/><rect x="10.5" y="12" width="3" height="4" rx=".5"/>`,
+  fab_especial: `<rect x="6" y="7" width="12" height="10" rx="1"/><path d="M9 7V5.5h6V7"/><circle cx="12" cy="12" r="1.5"/><path d="M8 15h8"/>`,
+  fab_extra: `<path d="M12 4.5v2.2M12 17.3v2.2M4.5 12h2.2M17.3 12h2.2M7.2 7.2l1.6 1.6M15.2 15.2l1.6 1.6M16.8 7.2l-1.6 1.6M8.8 15.2l-1.6 1.6"/><circle cx="12" cy="12" r="2.4"/>`,
+  fab_layers: `<rect x="5" y="14" width="14" height="3" rx=".6"/><rect x="6.5" y="10" width="11" height="3" rx=".6"/><rect x="8" y="6" width="8" height="3" rx=".6"/><path d="M18 7.5h2M18 11.5h2M18 15.5h2"/>`,
+  fab_zoom_in: `<circle cx="10" cy="10" r="5.5"/><path d="M14.2 14.2 19 19"/><path d="M10 7.5v5M7.5 10h5"/>`,
+  fab_zoom_out: `<circle cx="10" cy="10" r="5.5"/><path d="M14.2 14.2 19 19"/><path d="M7.5 10h5"/>`,
+  fab_plane_up: `<path d="M12 6.5 7.5 11h9L12 6.5Z"/><path d="M6 16.5h12"/>`,
+  fab_plane_down: `<path d="M6 7.5h12"/><path d="M12 17.5 16.5 13h-9l4.5 4.5Z"/>`,
+  fab_rot: `<path d="M16.5 7.5A6.5 6.5 0 0 0 8 9.5"/><path d="M7.5 6.5V10H4"/><path d="M7.5 16.5A6.5 6.5 0 0 0 16 14.5"/><path d="M16.5 17.5V14h3.5"/>`,
+  fab_mirror: `<path d="M12 4v16"/><path d="M6.5 8 9.5 12 6.5 16"/><path d="M17.5 8 14.5 12 17.5 16"/>`,
+  fab_undo: `<path d="M7.5 8H5.5a4 4 0 0 0 0 8h2"/><path d="M7.5 8 4 11.5 7.5 15"/>`,
+  fab_erase: `<path d="M5 19h14"/><path d="M8.5 19 5 8.5l5.5-5.5 8 8L15.5 19"/><path d="M9.5 7.5 16 14"/>`,
 };
 
 // Colores por ícono (degradado del trazo): armas cálidas, pasivas variadas, fusiones lima. Por defecto, plata.
@@ -46,6 +61,10 @@ const COL: Record<string, [string, string]> = {
   yoyoelec: ["#ff9bd4", "#7de8ff"], vapor: ["#ffffff", "#ff9d6b"], chispazo: ["#ffd84d", "#7de8ff"], globos: ["#9be3ff", "#ff9bd4"], anillo: ["#ffd84d", "#ff7a3a"],
   iman: ["#ff7a7a", "#7d9bff"], resorte: ["#d9b8ff", "#8a6bff"], turbo: ["#ffe27a", "#ffa02e"], litio: ["#9bff9b", "#2fcf6a"], capacitor: ["#9bf0ff", "#4a8bff"], lego: ["#ffa07a", "#ff4d4d"], lupa: ["#fff0a0", "#6bd8ff"],
   heal: ["#9bff9b", "#2fcf6a"], evo: ["#fff0a0", "#ffb02e"], cofre: ["#ffe27a", "#c47a2e"], jefe: ["#ff9b9b", "#ff4d4d"], senal: ["#9bf0ff", "#7dffb0"],
+  fab_chasis: ["#ffa07a", "#ff5a4d"], fab_rueda: ["#9bf0ff", "#4a8bff"], fab_arma: ["#ffe27a", "#ff7a3a"], fab_especial: ["#9bff9b", "#2fcf6a"],
+  fab_extra: ["#d9b8ff", "#8a6bff"], fab_layers: ["#9bf0ff", "#35c9ff"], fab_zoom_in: ["#fff0a0", "#6bd8ff"], fab_zoom_out: ["#fff0a0", "#6bd8ff"],
+  fab_plane_up: ["#7dffb0", "#35c9ff"], fab_plane_down: ["#7dffb0", "#35c9ff"], fab_rot: ["#ffd84d", "#ff9d2e"], fab_mirror: ["#9be3ff", "#6b8bff"],
+  fab_undo: ["#f0f5fa", "#9bb0c2"], fab_erase: ["#ff9b9b", "#ff5a5a"],
 };
 export const icon = (id: string, size = 24) => {
   const [a, b] = COL[id] ?? ["#ffffff", "#9bb0c2"], g = "ig-" + id;

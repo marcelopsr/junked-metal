@@ -355,6 +355,26 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
       parts.push(cyl(r, r, h * 0.08, rivet, [px + ox, py + h * 0.44, pz + oz]));
     }
   };
+  /** Chapa troquelada: cuerpo + labio y cantos biselados (se fusiona en merge). */
+  const pushChapaStamp = (
+    w: number, h: number, d: number, px: number, py: number, pz: number,
+    body = wBody, edge = wEdge,
+  ) => {
+    parts.push(box(w * 0.9, h * 0.88, d * 0.9, body, [px, py, pz]));
+    parts.push(box(w * 1.01, h * 0.1, d * 1.01, edge, [px, py + h * 0.42, pz]));
+    parts.push(box(w * 1.01, h * 0.06, d * 0.22, edge, [px, py - h * 0.38, pz]));
+    const cham = Math.min(w, d, h) * 0.11;
+    for (const [ox, oz, sx, sz] of [
+      [-w * 0.42, -d * 0.42, cham, cham], [w * 0.42, -d * 0.42, cham, cham],
+      [-w * 0.42, d * 0.42, cham, cham], [w * 0.42, d * 0.42, cham, cham],
+    ] as const) {
+      parts.push(box(sx, h * 0.78, sz, edge, [px + ox, py, pz + oz]));
+    }
+    const rr = g * 0.032;
+    for (const [ox, oz] of [[-w * 0.32, 0], [w * 0.32, 0], [0, -d * 0.32], [0, d * 0.32]] as const) {
+      parts.push(cyl(rr, rr, h * 0.06, rivet, [px + ox, py + h * 0.44, pz + oz]));
+    }
+  };
   for (const c of build.cells) {
     const def = blockDef(c.blockId);
     const { sx, sy, sz } = footprint(def, c.rot);
@@ -364,38 +384,49 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
     const w = sx * g * 0.97, h = sy * g * 0.94, d = sz * g * 0.97;
     if (def.cat === "movimiento") {
       if (c.blockId === "oruga") {
-        parts.push(box(w * 0.7, h * 0.7, d, tire, [px, py * 0.6, pz]));
-        parts.push(box(w * 0.35, h * 0.45, d * 0.85, rim, [px, py * 0.65, pz]));
+        parts.push(box(w * 0.7, h * 0.7, d, tire, [px, py, pz]));
+        parts.push(box(w * 0.35, h * 0.45, d * 0.85, rim, [px, py + h * 0.06, pz]));
       } else {
         const diam = c.blockId === "rueda_gig" ? g * 0.95 : g * 0.7;
+        const wheelY = py;
+        const baseQ = B.Quaternion.RotationAxis(B.Axis.Z, Math.PI / 2);
+        const yawQ = B.Quaternion.RotationAxis(B.Axis.Y, c.rot * (Math.PI / 2));
+        const q = yawQ.multiply(baseQ);
         const wh = wheel(diam, g * 0.35, z.wheel_rim.color, c.blockId === "rueda_gig" ? "todoterreno" : "");
-        wh.position.set(px, diam * 0.5, pz);
-        const q = B.Quaternion.RotationYawPitchRoll(c.rot * (Math.PI / 2), 0, Math.PI / 2);
+        wh.position.set(px, wheelY, pz);
         wh.rotationQuaternion = q;
         parts.push(wh);
         const tread = box(g * 0.11, diam * 0.55, g * 0.07, tire, [diam * 0.46, 0, 0]);
-        tread.position.set(px, diam * 0.52, pz);
+        tread.position.set(px, wheelY, pz);
         tread.rotationQuaternion = q.clone();
         parts.push(tread);
         const stripe = box(g * 0.06, diam * 0.12, g * 0.09, rim, [diam * 0.38, diam * 0.08, 0]);
-        stripe.position.set(px, diam * 0.55, pz);
+        stripe.position.set(px, wheelY + diam * 0.03, pz);
         stripe.rotationQuaternion = q.clone();
         parts.push(stripe);
       }
     } else if (def.cat === "arma") {
-      if (c.blockId === "trompo") parts.push(cyl(g * 0.4, g * 0.4, g * 0.2, wEdge, [px, py, pz]));
-      else if (c.blockId === "sierra") {
-        parts.push(box(g * 0.15, g * 0.35, g * 0.55, wBody, [px, py, pz]));
-        parts.push(cyl(g * 0.28, g * 0.28, g * 0.08, wEdge, [px + g * 0.25, py, pz], [0, 0, Math.PI / 2]));
-      } else parts.push(box(w, h * 0.85, d * 0.35, wBody, [px, py, pz]));
+      if (c.blockId === "trompo") {
+        pushChapaStamp(g * 0.55, g * 0.22, g * 0.55, px, py - g * 0.06, pz);
+        parts.push(cyl(g * 0.36, g * 0.36, g * 0.18, wEdge, [px, py + g * 0.08, pz]));
+        parts.push(box(g * 0.12, g * 0.06, g * 0.12, weld, [px, py + g * 0.2, pz]));
+      } else if (c.blockId === "sierra") {
+        pushChapaStamp(g * 0.22, g * 0.38, g * 0.62, px - g * 0.08, py, pz);
+        parts.push(cyl(g * 0.28, g * 0.28, g * 0.07, wEdge, [px + g * 0.26, py, pz], [0, 0, Math.PI / 2]));
+        parts.push(box(g * 0.04, g * 0.32, g * 0.32, wEdge, [px + g * 0.26, py, pz], [0, 0, Math.PI / 2]));
+      } else if (c.blockId === "pala") {
+        pushChapaStamp(w * 0.35, h * 0.55, d * 0.28, px - w * 0.12, py, pz);
+        pushChapaStamp(w * 0.55, h * 0.75, d * 0.12, px + w * 0.18, py + h * 0.05, pz, wEdge, wBody);
+      } else pushChapaStamp(w, h * 0.85, d * 0.35, px, py, pz);
     } else if (c.blockId === "asiento_rc") {
+      pushChapaStamp(w * 0.88, h * 0.22, d * 0.88, px, py - h * 0.32, pz, mb, weld);
       parts.push(box(w * 0.7, h * 0.5, d * 0.7, mt, [px, py * 0.85, pz]));
       parts.push(box(w * 0.55, h * 0.35, d * 0.25, M.matte("#1a1e18"), [px, py + h * 0.15, pz - d * 0.15]));
     } else if (c.blockId === "muneco") {
       parts.push(cyl(g * 0.12, g * 0.12, g * 0.35, M.matte("#c4a574"), [px, py, pz]));
       parts.push(cyl(g * 0.14, g * 0.14, g * 0.14, M.matte("#2a2d28"), [px, py + g * 0.22, pz]));
     } else if (c.blockId === "puerta") {
-      parts.push(box(w * 0.25, h, d, mt, [px, py, pz]));
+      pushChapaStamp(w * 0.28, h, d, px, py, pz, mt, weld);
     } else if (c.blockId === "cuna_blk") {
       pushChassis(w, h * 0.55, d, px, py * 0.7, pz);
       parts.push(box(w * 1.05, h * 0.18, d * 0.35, mt, [px, py * 0.35, pz + d * 0.35]));

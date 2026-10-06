@@ -226,6 +226,7 @@ function bindFabCamDrag(el: HTMLElement | null) {
   const onDown = (e: PointerEvent) => {
     if (shotCamFrozen || phase !== "fabricar") return;
     if (e.button !== 0) return;
+    if ((e.target as HTMLElement).closest(".duel-fab-zoom, .duel-fab-zoom .duel-fab-btn")) return;
     drag = true;
     lx = e.clientX;
     ly = e.clientY;
@@ -879,7 +880,7 @@ function showFabricar() {
     onLayout: () => refreshFabricarCam(),
     onZoom: (mul) => {
       fabCamDistMul = Math.max(0.48, Math.min(1.5, fabCamDistMul * mul));
-      refreshFabricarCam();
+      applyFabricarCam();
     },
   });
   fab.setBuild(playerBuild.cells.length ? playerBuild : defaultBuild());
