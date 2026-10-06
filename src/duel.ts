@@ -877,6 +877,10 @@ function showFabricar() {
     onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); previewFabricacion(); refreshFabricarCam(); },
     onConfirm: () => beginMatch(),
     onLayout: () => refreshFabricarCam(),
+    onZoom: (mul) => {
+      fabCamDistMul = Math.max(0.48, Math.min(1.5, fabCamDistMul * mul));
+      refreshFabricarCam();
+    },
   });
   fab.setBuild(playerBuild.cells.length ? playerBuild : defaultBuild());
   playerBuild = fab.getBuild();

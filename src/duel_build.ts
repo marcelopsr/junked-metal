@@ -336,6 +336,7 @@ export const TEMPLATES: Record<string, { label: string; build: RobotBuild }> = {
 
 export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh {
   const g = D.grid_m;
+  const occ = occupancyMap(build);
   const z = paint.zones;
   const mb = pbr("fbCh", { color: z.chassis_body.color, rough: 0.55, metal: z.chassis_body.preset === "metal" ? 0.7 : 0.1 });
   const mt = pbr("fbTrim", { color: z.chassis_trim.color, rough: 0.5 });
@@ -350,7 +351,8 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
     const px = (c.x + sx * 0.5 - 0.5) * g;
     const py = (c.y + sy * 0.5) * g;
     const pz = (c.z + sz * 0.5 - 0.5) * g;
-    const w = sx * g * 0.92, h = sy * g * 0.9, d = sz * g * 0.92;
+    const w = sx * g * 0.97, h = sy * g * 0.94, d = sz * g * 0.97;
+    const weld = pbr("fbWeld", { color: "#2a3830", rough: 0.55, metal: 0.45 });
     if (def.cat === "movimiento") {
       if (c.blockId === "oruga") {
         parts.push(box(w * 0.7, h * 0.7, d, tire, [px, py * 0.6, pz]));
@@ -359,9 +361,12 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
         const diam = c.blockId === "rueda_gig" ? g * 0.95 : g * 0.7;
         const wh = wheel(diam, g * 0.35, z.wheel_rim.color, c.blockId === "rueda_gig" ? "todoterreno" : "");
         wh.position.set(px, diam * 0.5, pz);
-        wh.rotation.y = c.rot * (Math.PI / 2);
-        wh.rotation.z = Math.PI / 2;
+        wh.rotationQuaternion = B.Quaternion.RotationYawPitchRoll(c.rot * (Math.PI / 2), 0, Math.PI / 2);
         parts.push(wh);
+        const mark = box(g * 0.07, g * 0.14, g * 0.05, M.matte("#1a2218"), [diam * 0.42, 0, 0]);
+        mark.position.set(px, diam * 0.52, pz);
+        mark.rotationQuaternion = wh.rotationQuaternion.clone();
+        parts.push(mark);
       }
     } else if (def.cat === "arma") {
       if (c.blockId === "trompo") parts.push(cyl(g * 0.4, g * 0.4, g * 0.2, wEdge, [px, py, pz]));
@@ -388,6 +393,26 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
       parts.push(box(w * 0.2, h, d, mb, [px + w * 0.35, py, pz]));
     } else {
       parts.push(box(w, h, d, mb, [px, py, pz]));
+      parts.push(box(w * 1.01, h * 0.12, d * 1.01, weld, [px, py + h * 0.44, pz]));
+    }
+  }
+  const seamG = g * 0.028;
+  const weldSeam = pbr("fbWeldSeam", { color: "#2a3830", rough: 0.55, metal: 0.45 });
+  const seen = new Set<string>();
+  for (const c of build.cells) {
+    for (const k of occupied(c)) {
+      const [x, y, z] = k.split(",").map(Number);
+      const cx = x * g, cy = (y + 0.5) * g, cz = z * g;
+      for (const n of neighbors(k)) {
+        if (!occ.has(n)) continue;
+        const pair = k < n ? `${k}|${n}` : `${n}|${k}`;
+        if (seen.has(pair)) continue;
+        seen.add(pair);
+        const [nx, ny, nz] = n.split(",").map(Number);
+        if (nx === x + 1) parts.push(box(seamG, g * 0.85, g * 0.92, weldSeam, [cx + g * 0.5, cy, cz]));
+        else if (ny === y + 1) parts.push(box(g * 0.92, seamG, g * 0.92, weldSeam, [cx, cy + g * 0.5, cz]));
+        else if (nz === z + 1) parts.push(box(g * 0.92, g * 0.85, seamG, weldSeam, [cx, cy, cz + g * 0.5]));
+      }
     }
   }
   if (!parts.length) parts.push(box(0.3, 0.2, 0.3, mb, [0, 0.1, 0]));
