@@ -104,6 +104,12 @@ export const sessions = [
     { id: "curso", act: partida(90) },
     { id: "cartas", act: async (p) => { await p.evaluate(() => window.__xp(9999)); await tick(p, 4); await wait(p, () => !document.getElementById("levelup").classList.contains("hidden")); await p.waitForTimeout(300); } },
   ] },
+  // partida_llena: 300 s de sim (partida avanzada, t=5 min) → mide el estado con armas evolucionadas y oleadas densas.
+  // Medido: ~168 draws PC (thin-instances agrupan por tipo; menos que partida-curso/90 s por diferente mezcla de proyectiles).
+  // Solo pc y solo medición de perf (shot: false); usar --only partida_llena para medir sin el resto.
+  { id: "partida_llena", query: "?mute&seed=3", vps: ["pc"], shots: [
+    { id: "llena", perf: true, shot: false, act: async (p) => { await p.evaluate(() => { window.__play(3); window.__god(); window.__sim(300); }); await tick(p, 45); } },
+  ] },
   { id: "carrera", query: "?mute&race", shots: [
     { id: "largada", act: async (p) => { await wait(p, () => window.__info?.().state === "race" && document.getElementById("load").classList.contains("hidden")); } },
     { id: "curso", tol: 8, act: async (p) => { await p.evaluate(() => { window.__race.auto(); window.__race.sim(8); }); } }, // tol alto: kart.ts usa Math.random en objetos y partículas

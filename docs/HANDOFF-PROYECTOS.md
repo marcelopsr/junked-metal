@@ -67,7 +67,7 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
   - `npm run sim -- --seeds 1,2 --secs 600` / `--duel perro` — simulación con bot, sin dibujar, repetible por semilla.
   - `npm run shots [-- --diff | --update]` — 35 capturas (compu y celular) con un Chromium headless sobre Metal, y comparación contra referencias locales.
   - `npm run perf` — ms por cuadro, draw calls, triángulos, memoria por escenario; compara con la medición anterior.
-    - **Ojo:** el escenario `partida` (90 s de sim, modo god) mide draw calls bajos (~300-400); `partida_llena` (300 s de sim, máximo de enemigos) da el número real cercano a producción (~1.600 draws). No confundir uno con otro al comparar rendimiento.
+    - **Ojo:** el escenario `partida` (90 s de sim, modo god) mide ~254 draws en PC. El escenario `partida_llena` (300 s de sim, avanzado) mide ~168 draws — no más, porque a los 5 min las armas evolucionadas producen menos proyectiles sueltos y thin-instances agrupan por tipo. El techo real del proyecto es ~670 draws (carrera 2J, split screen). No confundir perf lab/partida con "cuello de botella": son estados normales del juego.
 - **Verificación mínima antes de commit:** `npx tsc --noEmit -p .` + `npm run build` + la herramienta que corresponda.
 - **Balance:** la planilla de Google Sheets es la referencia ("biblia"). `npm run balance:xlsx` genera `balance.xlsx`; para traer cambios: exportar las hojas a TSV y `npm run balance:import -- archivo.txt`. El usuario todavía no subió la planilla a su Drive (pendiente: subir `balance.xlsx` y convertirla a Hojas de cálculo de Google).
 
