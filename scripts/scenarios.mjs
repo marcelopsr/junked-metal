@@ -117,7 +117,7 @@ export const sessions = [
   { id: "carrera2j", query: "?mute&race&players=2", vps: ["pc"], shots: [
     { id: "pantalla-dividida", tol: 8, act: async (p) => { await wait(p, () => window.__info?.().state === "race" && document.getElementById("load").classList.contains("hidden")); await p.evaluate(() => { window.__race.auto(); window.__race.sim(5); }); } },
   ] },
-  { id: "duel", query: "?mute&duel", shots: [
+  { id: "duel", query: "?mute&duel", vps: ["pc", "cel"], shots: [
     { id: "armado", act: async (p) => {
       await wait(p, () => document.getElementById("duel-ui")?.classList.contains("fabricar") && !!document.getElementById("duel-fab-grid"));
       await p.evaluate(() => window.__duel.openDrawer(true));
@@ -132,6 +132,8 @@ export const sessions = [
     } },
     { id: "pelea", act: async (p) => {
       await p.evaluate(() => { window.__duel.confirm(); window.__duel.auto(true); window.__duel.shotCam(true); });
+      // freeze: el countdown solo avanza con __tick (~3.4 s)
+      await tick(p, 220);
       await tick(p, 90);
     } },
   ] },

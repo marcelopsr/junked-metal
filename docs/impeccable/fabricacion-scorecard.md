@@ -16,4 +16,6 @@
 
 **Luz fab (2026-10-06):** `installFabricarLighting` — mediodía local + spot/bounce + fill desde cámara + glow en preview; pelea restaura mediodía/ sombras.
 
-**Verificación:** `npm run shots -- --only duel` · detect sobre TS/CSS fabricación
+**Verificación:** `npm run shots -- --only duel` · `node scripts/duel-playtest.mjs` · detect sobre TS/CSS fabricación
+
+**Pelea táctil (2026-10-06):** `body.duel-fight` oculta TURBO/DERRAPE/CAM; botón HAB → ARMA; pausa táctil abre `#duel-pause`.

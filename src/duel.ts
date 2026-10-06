@@ -1,5 +1,6 @@
 // Modo Demolición: fabricación RoboCraft (default) o armado 3×3 legado (?duel=legacy). Arena melee, mejor de 3.
 import * as B from "@babylonjs/core";
+import "./hud.css";
 import "./duel.css";
 import { BAL } from "./balance";
 import { damageNumber } from "./ui";
@@ -895,7 +896,7 @@ function ensureUi() {
 <aside class="duel-wb-drawer" id="duel-drawer" aria-labelledby="duel-sec-tray"><button type="button" class="duel-drawer-tab" id="duel-drawer-toggle" aria-controls="duel-drawer-panel" aria-expanded="true">Ocultar piezas</button>
 <div class="duel-drawer-panel" id="duel-drawer-panel"><section class="duel-wb-tray-wrap" aria-labelledby="duel-sec-tray"><h2 id="duel-sec-tray" class="duel-sec-h">Piezas</h2><div class="duel-wb-tray"></div></section></div></aside></div>
 <button type="button" class="duel-cta" id="duel-confirm">Confirmar armado</button></div>
-<div id="duel-hud"><div class="duel-hp-row"><span id="duel-en">RIVAL</span><span id="duel-you">TÚ</span></div><div class="duel-hp-row"><div class="duel-hp enemy"><i id="duel-hpE"></i></div><div class="duel-hp you"><i id="duel-hpP"></i></div></div><div id="duel-part-wear" class="duel-part-wear hidden" aria-live="polite"><span id="duel-part-label">PIEZA</span><div class="duel-hp part"><i id="duel-part-hp"></i></div></div><div class="duel-score" id="duel-score"></div></div>
+<div id="duel-hud" class="duel-hud h-panel"><div class="duel-hp-row"><span id="duel-en" class="duel-hud-lab enemy">RIVAL</span><span id="duel-you" class="duel-hud-lab you">PROPIO</span></div><div class="duel-hp-row duel-hp-bars"><div class="duel-hp-wrap enemy"><div class="h-track duel-hp-track enemy" role="presentation"><div id="duel-hpE"></div></div></div><div class="duel-hp-wrap you"><div class="h-track duel-hp-track you" role="presentation"><div id="duel-hpP"></div></div></div></div><div id="duel-part-wear" class="duel-part-wear hidden" aria-live="polite"><span id="duel-part-label">PIEZA</span><div class="h-track duel-hp-track part" role="presentation"><div id="duel-part-hp"></div></div></div><div class="duel-score" id="duel-score"></div></div>
 <div id="duel-inter"><p id="duel-inter-t"></p><button type="button" id="duel-next">SIGUIENTE ASALTO</button></div>
 <div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
 <button type="button" id="duel-flip">ENDEREZAR</button>`;
@@ -914,6 +915,11 @@ function ensureUi() {
   $d("duel-flip").onclick = () => flipPlayer();
   $d("duel-resume").onclick = () => { paused = false; $d("duel-pause").classList.remove("on"); };
   $d("duel-quit").onclick = () => { score = [0, 2]; endMatch(true); };
+  document.getElementById("tPause")?.addEventListener("click", () => {
+    if (!active || (phase !== "fight" && phase !== "countdown") || paused) return;
+    paused = true;
+    $d("duel-pause").classList.add("on");
+  }, true);
   wirePaintPanel("duel-paint-details", "duel-paint", () => syncArmado());
   addEventListener("keydown", (e) => {
     if (!active || phase !== "armado") return;
@@ -1013,6 +1019,22 @@ function previewArmado() {
   previewBot.body.setAngularVelocity(B.Vector3.Zero());
 }
 
+/** En táctil: solo stick + ARMA en pelea; ocultar turbo/derrape/cámara del modo supervivencia. */
+function syncDuelTouch() {
+  const inFight = phase === "countdown" || phase === "fight";
+  document.body.classList.toggle("duel-fight", inFight);
+  const touchEl = document.getElementById("touch");
+  const ab = document.getElementById("tAbil");
+  if (!isTouch) return;
+  if (inFight) {
+    touchEl?.classList.remove("hidden");
+    if (ab) ab.textContent = "ARMA";
+  } else {
+    touchEl?.classList.add("hidden");
+    if (ab) ab.textContent = "HAB";
+  }
+}
+
 function showArmado() {
   unbindFabCamDrag();
   unbindFabricarViewportSync();
@@ -1035,7 +1057,7 @@ function showArmado() {
   applyArmadoCam();
   shotCamFrozen = true;
   document.getElementById("fe")?.classList.add("hidden");
-  document.getElementById("touch")?.classList.add("hidden");
+  syncDuelTouch();
 }
 
 function showFabricar() {
@@ -1073,7 +1095,7 @@ function showFabricar() {
   bindFabricarViewportSync();
   bindFabCamDrag(document.getElementById("duel-fab-viewport"));
   document.getElementById("fe")?.classList.add("hidden");
-  document.getElementById("touch")?.classList.add("hidden");
+  syncDuelTouch();
 }
 
 export function startDuel() {
@@ -1132,7 +1154,7 @@ function startRound() {
   for (const b of bots) { b.hp = b.hpMax; b.rpm = 0; b.flipped = false; b.hitAt = 0; }
   phase = "countdown"; countdown = 3.4; t = 0;
   ui.className = "on fight";
-  if (isTouch) document.getElementById("touch")?.classList.remove("hidden");
+  syncDuelTouch();
   updateHud();
 }
 
@@ -1312,12 +1334,14 @@ function endRound(w: number) {
   else {
     phase = "inter";
     ui.className = "on inter";
+    syncDuelTouch();
     $d("duel-inter-t").textContent = `Asalto ${round}: ${w === 0 ? "Victoria" : "Derrota"}. Marcador ${score[0]} – ${score[1]}`;
   }
 }
 
 function endMatch(forfeit: boolean) {
   phase = "results";
+  syncDuelTouch();
   if (forfeit) score = [0, 2];
   ui.className = "on results";
   const win = score[0] >= 2;
@@ -1338,8 +1362,8 @@ function endMatch(forfeit: boolean) {
 function updateHud() {
   const p = bots.find((b) => b.human), e = bots.find((b) => !b.human);
   if (!p || !e) return;
-  ($d("duel-hpE") as HTMLElement).style.transform = `scaleX(${Math.max(0, e.hp / e.hpMax)})`;
-  ($d("duel-hpP") as HTMLElement).style.transform = `scaleX(${Math.max(0, p.hp / p.hpMax)})`;
+  ($d("duel-hpE") as HTMLElement).style.width = `${Math.round(100 * Math.max(0, e.hp / e.hpMax))}%`;
+  ($d("duel-hpP") as HTMLElement).style.width = `${Math.round(100 * Math.max(0, p.hp / p.hpMax))}%`;
   $d("duel-en").textContent = e.name;
   $d("duel-you").textContent = p.name;
   $d("duel-score").textContent = `ASALTOS ${score[0]} – ${score[1]}`;
@@ -1349,7 +1373,7 @@ function updateHud() {
     pw.classList.remove("hidden");
     $d("duel-part-label").textContent = `INTEGRIDAD · ${flash.name}`;
     const ratio = Math.max(0, p.living.partHp[flash.idx] / flash.max);
-    ($d("duel-part-hp") as HTMLElement).style.transform = `scaleX(${ratio})`;
+    ($d("duel-part-hp") as HTMLElement).style.width = `${Math.round(100 * ratio)}%`;
   } else {
     pw.classList.add("hidden");
     if (flash && t >= flash.until) p.wearFlash = undefined;
@@ -1379,7 +1403,7 @@ export function duelTick(dt: number) {
   if (phase === "fabricar") return;
   if (phase === "countdown") {
     countdown -= dt;
-    if (countdown <= 0) phase = "fight";
+    if (countdown <= 0) { phase = "fight"; syncDuelTouch(); }
     return;
   }
   if (phase === "fight") {
@@ -1417,6 +1441,9 @@ export function exitDuel() {
   cleanup();
   ui.className = "";
   $d("duel-pause").classList.remove("on");
+  document.body.classList.remove("duel-fight");
+  document.getElementById("touch")?.classList.add("hidden");
+  document.getElementById("tAbil") && (document.getElementById("tAbil")!.textContent = "HAB");
   document.getElementById("fe")?.classList.remove("hidden");
   engineStop();
   deps.onExit();

@@ -53,6 +53,8 @@ export function mountFabricacion(
   let rot: Rot = 0;
   let erase = false;
   let drawerOpen = !isTouch;
+  let placedFlash: string | null = null;
+  let placedFlashT = 0;
   const undo: RobotBuild[] = [];
 
   const root = document.createElement("div");
@@ -142,8 +144,11 @@ export function mountFabricacion(
     const drawer = $("duel-fab-drawer");
     const btn = $("duel-fab-drawer-toggle") as HTMLButtonElement;
     drawer.classList.toggle("closed", !drawerOpen);
+    const nudge = isTouch && !drawerOpen && build.cells.length === 0;
+    drawer.classList.toggle("nudge-catalog", nudge);
+    btn.classList.toggle("nudge", nudge);
     btn.setAttribute("aria-expanded", String(drawerOpen));
-    btn.textContent = drawerOpen ? "Ocultar catálogo" : "Mostrar catálogo";
+    btn.textContent = drawerOpen ? "Ocultar catálogo" : (nudge ? "Abrir catálogo de piezas" : "Mostrar catálogo");
     opts.onLayout?.();
   }
 
@@ -234,7 +239,8 @@ export function mountFabricacion(
       const onLayer = layerHasBlocks(layerY);
       const def = blockDef(selected);
       const showRot = can && def.cat === "movimiento";
-      cells.push(`<button type="button" class="duel-fab-cell${lab ? " filled" : ""}${can ? " can" : ""}${showRot ? " rot-hint" : ""}${!onLayer && !lab ? " dim" : ""}" data-rot="${rot}" data-x="${x}" data-z="${z}" aria-label="Celda ${x}, ${layerPlanoLabel(layerY, D.grid_max_y)}, ${z}${lab ? ": " + lab : ""}">${showRot ? `<span class="duel-fab-rot-g" aria-hidden="true">${ROT_ARROW[rot]}</span>` : ""}${lab ?? ""}</button>`);
+      const flash = placedFlash === key ? " just-placed" : "";
+      cells.push(`<button type="button" class="duel-fab-cell${lab ? " filled" : ""}${can ? " can" : ""}${showRot ? " rot-hint" : ""}${!onLayer && !lab ? " dim" : ""}${flash}" data-rot="${rot}" data-x="${x}" data-z="${z}" aria-label="Celda ${x}, ${layerPlanoLabel(layerY, D.grid_max_y)}, ${z}${lab ? ": " + lab : ""}">${showRot ? `<span class="duel-fab-rot-g" aria-hidden="true">${ROT_ARROW[rot]}</span>` : ""}${lab ?? ""}</button>`);
     }
     grid.innerHTML = cells.join("");
     $("duel-fab-ylab").textContent = layerPlanoLabel(layerY, D.grid_max_y);
@@ -325,7 +331,20 @@ export function mountFabricacion(
         apply(removeAt(build, x, layerY, z));
       } else {
         const next = placeCell(build, { x, y: layerY, z, rot, blockId: selected });
-        if (next) { pushUndo(); apply(next); }
+        if (next) {
+          placedFlash = `${x},${z}`;
+          placedFlashT = performance.now();
+          pushUndo();
+          apply(next);
+          requestAnimationFrame(() => {
+            if (performance.now() - placedFlashT > 380) return;
+            syncGrid();
+          });
+          setTimeout(() => {
+            if (placedFlash === `${x},${z}`) placedFlash = null;
+            syncGrid();
+          }, 420);
+        }
       }
       return;
     }

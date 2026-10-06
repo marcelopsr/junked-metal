@@ -65,6 +65,14 @@ select { font: 600 13px var(--data); padding: 5px 8px; border-radius: 0; backgro
 
 /* Táctil */
 #touch { position: fixed; inset: 0; pointer-events: none; }
+/* Demolición pelea: reutilizar stick + ARMA; sin turbo/derrape/cámara del survivor */
+body.duel-fight #tDrift,
+body.duel-fight #tBoost,
+body.duel-fight #tCam { display: none !important; }
+body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px; bottom: 170px; }
+@media (orientation: portrait) {
+  body.duel-fight #tAbil { right: 24px; bottom: 170px; }
+}
 /* Con menú o cartas abiertas los controles táctiles no se ven ni roban toques (#touch va después en el DOM).
    Excepción: en la pantalla de pausa queda el botón «II» para reanudar. */
 #levelup:not(.hidden) ~ #touch, #fe:not(.hidden) ~ #touch > :not(#tPause), #fe:not(.hidden):not(:has(#scr-pause.on)) ~ #touch #tPause { display: none; }
