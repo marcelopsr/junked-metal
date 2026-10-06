@@ -344,7 +344,17 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
   const rim = pbr("fbRim", { color: z.wheel_rim.color, rough: 0.4, metal: 0.5 });
   const wBody = pbr("fbWb", { color: z.weapon_body.color, rough: 0.45, metal: 0.4 });
   const wEdge = pbr("fbWe", { color: z.weapon_edge.color, rough: 0.35, metal: 0.6 });
+  const weld = pbr("fbWeld", { color: "#2a3830", rough: 0.55, metal: 0.45 });
+  const rivet = pbr("fbRiv", { color: "#3a4a42", rough: 0.4, metal: 0.65 });
   const parts: B.Mesh[] = [];
+  const pushChassis = (w: number, h: number, d: number, px: number, py: number, pz: number) => {
+    parts.push(box(w * 0.96, h * 0.94, d * 0.96, mb, [px, py, pz]));
+    parts.push(box(w * 1.02, h * 0.1, d * 1.02, weld, [px, py + h * 0.42, pz]));
+    const r = g * 0.045;
+    for (const [ox, oz] of [[-w * 0.38, -d * 0.38], [w * 0.38, -d * 0.38], [-w * 0.38, d * 0.38], [w * 0.38, d * 0.38]] as const) {
+      parts.push(cyl(r, r, h * 0.08, rivet, [px + ox, py + h * 0.44, pz + oz]));
+    }
+  };
   for (const c of build.cells) {
     const def = blockDef(c.blockId);
     const { sx, sy, sz } = footprint(def, c.rot);
@@ -352,7 +362,6 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
     const py = (c.y + sy * 0.5) * g;
     const pz = (c.z + sz * 0.5 - 0.5) * g;
     const w = sx * g * 0.97, h = sy * g * 0.94, d = sz * g * 0.97;
-    const weld = pbr("fbWeld", { color: "#2a3830", rough: 0.55, metal: 0.45 });
     if (def.cat === "movimiento") {
       if (c.blockId === "oruga") {
         parts.push(box(w * 0.7, h * 0.7, d, tire, [px, py * 0.6, pz]));
@@ -361,12 +370,17 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
         const diam = c.blockId === "rueda_gig" ? g * 0.95 : g * 0.7;
         const wh = wheel(diam, g * 0.35, z.wheel_rim.color, c.blockId === "rueda_gig" ? "todoterreno" : "");
         wh.position.set(px, diam * 0.5, pz);
-        wh.rotationQuaternion = B.Quaternion.RotationYawPitchRoll(c.rot * (Math.PI / 2), 0, Math.PI / 2);
+        const q = B.Quaternion.RotationYawPitchRoll(c.rot * (Math.PI / 2), 0, Math.PI / 2);
+        wh.rotationQuaternion = q;
         parts.push(wh);
-        const mark = box(g * 0.07, g * 0.14, g * 0.05, M.matte("#1a2218"), [diam * 0.42, 0, 0]);
-        mark.position.set(px, diam * 0.52, pz);
-        mark.rotationQuaternion = wh.rotationQuaternion.clone();
-        parts.push(mark);
+        const tread = box(g * 0.11, diam * 0.55, g * 0.07, tire, [diam * 0.46, 0, 0]);
+        tread.position.set(px, diam * 0.52, pz);
+        tread.rotationQuaternion = q.clone();
+        parts.push(tread);
+        const stripe = box(g * 0.06, diam * 0.12, g * 0.09, rim, [diam * 0.38, diam * 0.08, 0]);
+        stripe.position.set(px, diam * 0.55, pz);
+        stripe.rotationQuaternion = q.clone();
+        parts.push(stripe);
       }
     } else if (def.cat === "arma") {
       if (c.blockId === "trompo") parts.push(cyl(g * 0.4, g * 0.4, g * 0.2, wEdge, [px, py, pz]));
@@ -383,14 +397,16 @@ export function paintBuildMesh(build: RobotBuild, paint: DuelPaintState): B.Mesh
     } else if (c.blockId === "puerta") {
       parts.push(box(w * 0.25, h, d, mt, [px, py, pz]));
     } else if (c.blockId === "cuna_blk") {
-      parts.push(box(w, h * 0.55, d, mb, [px, py * 0.7, pz]));
+      pushChassis(w, h * 0.55, d, px, py * 0.7, pz);
       parts.push(box(w * 1.05, h * 0.18, d * 0.35, mt, [px, py * 0.35, pz + d * 0.35]));
     } else if (c.blockId === "plancha_blk") {
-      parts.push(box(w, h * 0.35, d, mb, [px, py * 0.45, pz]));
+      pushChassis(w, h * 0.35, d, px, py * 0.45, pz);
     } else if (c.blockId === "chapa_u") {
-      parts.push(box(w, h * 0.25, d, mb, [px, py * 0.4, pz]));
-      parts.push(box(w * 0.2, h, d, mb, [px - w * 0.35, py, pz]));
-      parts.push(box(w * 0.2, h, d, mb, [px + w * 0.35, py, pz]));
+      pushChassis(w, h * 0.25, d, px, py * 0.4, pz);
+      pushChassis(w * 0.2, h, d, px - w * 0.35, py, pz);
+      pushChassis(w * 0.2, h, d, px + w * 0.35, py, pz);
+    } else if (def.cat === "chasis" || def.cat === "cosmetico") {
+      pushChassis(w, h, d, px, py, pz);
     } else {
       parts.push(box(w, h, d, mb, [px, py, pz]));
       parts.push(box(w * 1.01, h * 0.12, d * 1.01, weld, [px, py + h * 0.44, pz]));

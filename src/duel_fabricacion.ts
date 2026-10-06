@@ -1,6 +1,7 @@
 // UI de fabricación RoboCraft (rejilla + cajón). La escena 3D la actualiza duel.ts vía onChange.
 import "./hud.css";
 import "./duel_fabricacion.css";
+import { icon } from "./icons";
 import { isTouch } from "./input";
 import { BAL } from "./balance";
 import {
@@ -10,13 +11,21 @@ import {
 } from "./duel_build";
 
 const D = BAL.duelo;
-const CATS: { id: BlockCat; lab: string }[] = [
-  { id: "chasis", lab: "Chasis" },
-  { id: "movimiento", lab: "Ruedas" },
-  { id: "arma", lab: "Arma" },
-  { id: "especial", lab: "Especial" },
-  { id: "cosmetico", lab: "Extra" },
+const CATS: { id: BlockCat; lab: string; ico: string }[] = [
+  { id: "chasis", lab: "Chasis", ico: "lego" },
+  { id: "movimiento", lab: "Ruedas", ico: "turbo" },
+  { id: "arma", lab: "Arma", ico: "lanza" },
+  { id: "especial", lab: "Especial", ico: "heal" },
+  { id: "cosmetico", lab: "Extra", ico: "evo" },
 ];
+
+const ROT_ARROW = ["↑", "→", "↓", "←"];
+
+function layerPlanoLabel(y: number, maxY: number): string {
+  if (y === 0) return "Plano base";
+  if (y >= maxY) return "Plano superior";
+  return `Plano altura ${y}`;
+}
 
 export type FabApi = {
   root: HTMLElement;
@@ -43,21 +52,24 @@ export function mountFabricacion(
   const root = document.createElement("div");
   root.id = "duel-fab";
   root.className = "duel-fab";
-  root.innerHTML = `<header class="duel-fab-head"><h1>FABRICACIÓN</h1>
-<p class="duel-fab-hint">Rejilla abajo · vista 3D arriba: el robot se ve en la mesa al colocar bloques</p>
-<p class="duel-fab-fallback">Arrastrar la vista · R rota pieza · M espejo · Z deshacer · plantillas a la izquierda</p></header>
+  root.innerHTML = `<header class="duel-fab-head"><p class="duel-fab-kicker">Demolición · mesa RC</p><h1 class="duel-fab-title">Fabricación</h1>
+<p class="duel-fab-hint">Vista 3D arriba · rejilla abajo: cada bloque se ve en la mesa al colocarlo</p>
+<p class="duel-fab-fallback">Arrastrar vista · R gira pieza · M espejo · Z deshacer · plantillas a la izquierda</p></header>
 <div class="duel-fab-main">
-<aside class="duel-fab-side" aria-labelledby="duel-fab-stats"><h2 id="duel-fab-stats" class="duel-sec-h">Telemetría</h2>
-<div class="duel-bars" id="duel-fab-bars"></div>
+<aside class="duel-fab-side h-panel" aria-labelledby="duel-fab-stats"><h2 id="duel-fab-stats" class="duel-sec-h">Telemetría</h2>
+<div class="duel-fab-bars" id="duel-fab-bars"></div>
 <div class="duel-fab-tpl" id="duel-fab-tpl"></div>
 <p class="duel-fab-warn" id="duel-fab-warn" role="status" aria-live="polite"></p></aside>
 <div class="duel-fab-center">
-<div class="duel-fab-viewport" id="duel-fab-viewport" role="region" aria-label="Vista del robot en la mesa">
+<div class="duel-fab-viewport duel-fab-visor" id="duel-fab-viewport" role="region" aria-label="Vista del robot en la mesa">
+<span class="duel-fab-corner tl" aria-hidden="true"></span><span class="duel-fab-corner tr" aria-hidden="true"></span>
+<span class="duel-fab-corner bl" aria-hidden="true"></span><span class="duel-fab-corner br" aria-hidden="true"></span>
+<span class="duel-fab-visor-tag">VISOR 3D</span>
 <div class="duel-fab-zoom" aria-label="Zoom de cámara">
-<button type="button" id="duel-fab-zoom-out" aria-label="Alejar">−</button>
-<button type="button" id="duel-fab-zoom-in" aria-label="Acercar">+</button>
+<button type="button" class="duel-fab-btn" id="duel-fab-zoom-out" aria-label="Alejar">−</button>
+<button type="button" class="duel-fab-btn" id="duel-fab-zoom-in" aria-label="Acercar">+</button>
 </div>
-<p class="duel-fab-view-hint">Arrastrar vista · rueda o botones acerca/aleja</p>
+<p class="duel-fab-view-hint">Arrastrar · rueda o +/− zoom</p>
 <p class="duel-fab-empty" id="duel-fab-empty" hidden>Sin piezas: elegir bloque y tocar la rejilla, o una plantilla</p>
 </div>
 <div class="duel-fab-build h-panel">
@@ -71,24 +83,24 @@ export function mountFabricacion(
 <div class="duel-fab-grid-main">
 <div class="duel-fab-layer">
 <div class="duel-fab-layer-lab">
-<span class="duel-sec-h">Rejilla superior</span>
-<span id="duel-fab-ylab" class="duel-fab-ylab">Altura 1</span>
+<span class="duel-sec-h">Plano de montaje</span>
+<span id="duel-fab-ylab" class="duel-fab-ylab">Plano altura 1</span>
 </div>
 <div class="duel-fab-layer-nav">
-<button type="button" id="duel-fab-ydown" aria-label="Ver plano inferior">−</button>
-<button type="button" id="duel-fab-yup" aria-label="Ver plano superior">+</button>
+<button type="button" class="duel-fab-btn" id="duel-fab-ydown" aria-label="Ver plano inferior">−</button>
+<button type="button" class="duel-fab-btn" id="duel-fab-yup" aria-label="Ver plano superior">+</button>
 </div></div>
 <div class="duel-fab-grid" id="duel-fab-grid" role="grid" aria-label="Rejilla de fabricación"></div>
 <div class="duel-fab-tools">
-<button type="button" id="duel-fab-rot">Rotar (R)</button>
-<button type="button" id="duel-fab-mir">Espejo (M)</button>
-<button type="button" id="duel-fab-undo">Deshacer (Z)</button>
-<button type="button" id="duel-fab-erase">Borrar</button>
-<button type="button" id="duel-fab-clear">Vaciar</button>
+<button type="button" class="duel-fab-btn" id="duel-fab-rot">Girar (R)</button>
+<button type="button" class="duel-fab-btn" id="duel-fab-mir">Espejo (M)</button>
+<button type="button" class="duel-fab-btn" id="duel-fab-undo">Deshacer (Z)</button>
+<button type="button" class="duel-fab-btn" id="duel-fab-erase">Borrar</button>
+<button type="button" class="duel-fab-btn" id="duel-fab-clear">Vaciar</button>
 </div></div></div></div></div></div>
 <aside class="duel-fab-drawer h-panel" id="duel-fab-drawer">
 <div class="duel-fab-drawer-head">
-<button type="button" class="duel-fab-drawer-tab" id="duel-fab-drawer-toggle" aria-controls="duel-fab-drawer-panel" aria-expanded="true">Ocultar piezas</button>
+<button type="button" class="duel-fab-drawer-tab duel-fab-btn" id="duel-fab-drawer-toggle" aria-controls="duel-fab-drawer-panel" aria-expanded="true">Ocultar catálogo</button>
 </div>
 <div class="duel-fab-drawer-panel" id="duel-fab-drawer-panel">
 <div class="duel-fab-tabs" id="duel-fab-tabs" role="tablist"></div>
@@ -116,16 +128,16 @@ export function mountFabricacion(
     const btn = $("duel-fab-drawer-toggle") as HTMLButtonElement;
     drawer.classList.toggle("closed", !drawerOpen);
     btn.setAttribute("aria-expanded", String(drawerOpen));
-    btn.textContent = drawerOpen ? "Ocultar piezas" : "Mostrar piezas";
+    btn.textContent = drawerOpen ? "Ocultar catálogo" : "Mostrar catálogo";
     opts.onLayout?.();
   }
 
   function syncInv() {
     $("duel-fab-tabs").innerHTML = CATS.map((c) =>
-      `<button type="button" role="tab" data-cat="${c.id}" class="${c.id === cat ? "on" : ""}" aria-selected="${c.id === cat}">${c.lab}</button>`).join("");
+      `<button type="button" role="tab" data-cat="${c.id}" class="duel-fab-tab${c.id === cat ? " on" : ""}" aria-selected="${c.id === cat}"><span class="duel-fab-tab-ico">${icon(c.ico, 18)}</span><span>${c.lab}</span></button>`).join("");
     const list = blocksByCat(cat);
     $("duel-fab-inv").innerHTML = list.map((b) =>
-      `<button type="button" class="duel-fab-blk${b.id === selected ? " on" : ""}" data-blk="${b.id}" role="listitem" title="${b.nombre}">${b.nombre}<br><span style="color:#7a9470;font-size:0.58rem">${b.masa_kg} kg · ${b.sx}×${b.sy}×${b.sz}</span></button>`).join("");
+      `<button type="button" class="duel-fab-blk duel-fab-btn${b.id === selected ? " on" : ""}" data-blk="${b.id}" role="listitem" title="${b.nombre}">${b.nombre}<br><span class="duel-fab-blk-meta">${b.masa_kg} kg · ${b.sx}×${b.sy}×${b.sz}</span></button>`).join("");
   }
 
   function layerHasBlocks(y: number) {
@@ -166,23 +178,27 @@ export function mountFabricacion(
       const probe: Cell = { x, y: layerY, z, rot, blockId: selected };
       const can = !erase && canPlace(build, probe);
       const onLayer = layerHasBlocks(layerY);
-      cells.push(`<button type="button" class="duel-fab-cell${lab ? " filled" : ""}${can ? " can" : ""}${!onLayer && !lab ? " dim" : ""}" data-x="${x}" data-z="${z}" aria-label="Celda ${x}, altura ${layerY}, ${z}${lab ? ": " + lab : ""}">${lab ?? ""}</button>`);
+      const def = blockDef(selected);
+      const showRot = can && def.cat === "movimiento";
+      cells.push(`<button type="button" class="duel-fab-cell${lab ? " filled" : ""}${can ? " can" : ""}${showRot ? " rot-hint" : ""}${!onLayer && !lab ? " dim" : ""}" data-rot="${rot}" data-x="${x}" data-z="${z}" aria-label="Celda ${x}, ${layerPlanoLabel(layerY, D.grid_max_y)}, ${z}${lab ? ": " + lab : ""}">${showRot ? `<span class="duel-fab-rot-g" aria-hidden="true">${ROT_ARROW[rot]}</span>` : ""}${lab ?? ""}</button>`);
     }
     grid.innerHTML = cells.join("");
-    $("duel-fab-ylab").textContent = `Altura ${layerY}`;
+    $("duel-fab-ylab").textContent = layerPlanoLabel(layerY, D.grid_max_y);
   }
 
   function syncBars() {
     const chk = validateBuild(build);
     const st = statsOfBuild(build, chk.level === "warn");
     const masa = massOfBuild(build);
-    const bar = (lab: string, pct: number) =>
-      `<div class="duel-bar"><span class="duel-bar-lab">${lab}</span><i role="presentation"><span style="width:${Math.min(100, pct)}%"></span></i><span class="duel-bar-pct" aria-hidden="true">${Math.round(pct)}%</span></div>`;
+    const bar = (lab: string, pct: number) => {
+      const p = Math.min(100, Math.round(pct));
+      return `<div class="duel-fab-bar"><span class="duel-fab-bar-lab">${lab}</span><div class="h-track" role="presentation"><div style="width:${p}%"></div></div><span class="duel-fab-bar-pct">${p}%</span></div>`;
+    };
     $("duel-fab-bars").innerHTML =
       bar("Masa", 100 * masa / D.masa_max_kg) +
       bar("Velocidad", 100 * st.maxSpd / 16) +
       bar("Vida", 100 * st.hpMax / 220) +
-      `<p style="font-size:0.65rem;color:#7a9470;margin:0.35rem 0 0">Ruedas ${wheelCount(build)}/${D.min_ruedas} · Piezas ${build.cells.length}</p>`;
+      `<p class="duel-fab-meta">Ruedas ${wheelCount(build)}/${D.min_ruedas} · Piezas ${build.cells.length}</p>`;
     const w = $("duel-fab-warn");
     w.className = "duel-fab-warn" + (chk.level === "ban" ? " ban" : "");
     w.textContent = chk.msg;
@@ -192,7 +208,10 @@ export function mountFabricacion(
       ? "Modo borrar: tocar una celda ocupada"
       : `Pieza activa: ${def.nombre}`;
     const rh = $("duel-fab-rot-hint");
-    rh.textContent = erase ? "" : `Giro ${rot * 90}° · tecla R · ${def.sx}×${def.sy}×${def.sz} celdas`;
+    const isWheel = def.cat === "movimiento";
+    rh.innerHTML = erase ? "" : isWheel
+      ? `Orientación ${ROT_ARROW[rot]} (${rot * 90}°) · tecla R · rueda sobre el plano`
+      : `Giro ${rot * 90}° · tecla R · ${def.sx}×${def.sy}×${def.sz} celdas`;
     ($("duel-fab-erase") as HTMLButtonElement).classList.toggle("on", erase);
     const empty = $("duel-fab-empty");
     empty.hidden = build.cells.length > 0;
@@ -201,7 +220,7 @@ export function mountFabricacion(
 
   function syncTpl() {
     $("duel-fab-tpl").innerHTML = Object.entries(TEMPLATES).map(([id, t]) =>
-      `<button type="button" data-tpl="${id}">${t.label}</button>`).join("");
+      `<button type="button" class="duel-fab-btn" data-tpl="${id}">${t.label}</button>`).join("");
   }
 
   function sync() {
