@@ -24,6 +24,7 @@ import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroUi, showPhoto, slowScale, snap }
 import { introOn, playIntro } from "./intro";
 import { CAR_YAW, carSpot, menuOff, menuTick, SHOTS } from "./menuscene";
 import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace, TRACKS } from "./kart";
+import { duelActive, duelDev, duelTick, exitDuel, initDuel, startDuel } from "./duel";
 
 const $ = (id: string) => document.getElementById(id)!;
 const R = BAL.ritmo, ATK = BAL.ataques; // balance.json: ritmo de la partida y ataques de bichos y jefes
@@ -71,7 +72,7 @@ type Gem = { m: B.InstancedMesh; xp: number; pull: boolean; vy: number };
 type Pickup = { m: B.AbstractMesh; type: "pila" | "iman" | "cofre" };
 type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number; k?: Kind }; // k: quién lo tiró (daño recibido por tipo)
 
-let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" = "menu";
+let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" | "duel" = "menu";
 let car: Car | null = null;
 let weapons: Weapon[] = [];
 let passives: Partial<Record<PassiveId, number>> = {};
@@ -368,6 +369,7 @@ addEventListener("pointerdown", skipOutro);
 
 function toMenu() {
   if (LAB.on) { LAB.on = false; god = false; }
+  if (duelActive()) exitDuel();
   engineStop(); music("menu");
   persist(); // bestiario visto en la partida abandonada
   clearRun();
@@ -505,6 +507,18 @@ function enterRace(battle: boolean) {
   setRaceCar(save.car);
   if (battle) startBattle(); else startRace();
 }
+function enterDuel() {
+  initAudio(); clearRun(); menuOff();
+  state = "duel"; reset(null);
+  $("hud").classList.add("hidden");
+  if (isTouch) document.getElementById("touch")?.classList.remove("hidden");
+  startDuel();
+}
+function goDuel() {
+  initAudio();
+  void launch([worldTask(() => "patio"), T_EFECTOS], "Preparando demolición", () => enterDuel(), () => afterFrames(2));
+}
+if (import.meta.env.DEV && /[?&]duel\b/.test(location.search)) setTimeout(() => goDuel(), 1500);
 if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2" && !isTouch) { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
 // Portada: fuentes del menú, dos cuadros dibujados (arma la escena del estante) y recién ahí se cierra la pantalla de carga; la precarga arranca con la portada ya a la vista
 boot("Cargando fuentes", 0.7);
@@ -512,7 +526,8 @@ await Promise.race([Promise.all(['500 16px Rajdhani', '700 16px Rajdhani'].map((
 boot("Armando el menú", 0.9);
 void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
 initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); }, load: (label, zone, go) => { void launch([worldTask(() => zone), T_EFECTOS], label, go, () => afterFrames(2), true); } }); // la luz del menú la pone menuTick
-initMenu({ scene, play: launchRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true) });
+initDuel({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); } });
+initMenu({ scene, play: launchRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), duel: goDuel });
 music("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: en cada carga de la página o apertura de la app instalada (cualquier tecla la salta); ?mute y ?lab (pruebas) no la muestran, ?intro la fuerza
 { const force = /[?&]intro\b/.test(location.search); if (force || !/[?&](mute|lab)\b/.test(location.search)) playIntro(!force); }
@@ -1110,6 +1125,7 @@ scene.onBeforeRenderObservable.add(() => {
   } else if (state === "play") { if (padPressed(pb("pause"))) pause(); else if (padPressed(pb("cam"))) camCycle(); }
   else if (state === "outro") outroTick(dt);
   else if (state === "race") { if (padPressed(pb("pause"))) racePause(); if (padPressed(pb("ok"))) raceClick(); if (padPressed(pb("cam"))) camCycle(); if (padPressed(14)) racePadMenu(-1); if (padPressed(15)) racePadMenu(1); raceTick(dt); }
+  else if (state === "duel") duelTick(dt);
   else if (!introOn()) menuPad(dt); // con la intro encima el menú no escucha el gamepad
 
   if (state === "play") {
@@ -1130,8 +1146,8 @@ scene.onBeforeRenderObservable.add(() => {
   // (si rotara, la dirección del stick cambiaría mientras girás).
   const k = 1 - Math.exp(-5 * dt);
   setWind(performance.now() / 1000, car?.pos ?? null);
-  if (state === "race") {
-    // la carrera maneja sus propias cámaras (kart.ts)
+  if (state === "race" || state === "duel") {
+    // carrera / demolición manejan cámara en su módulo
   } else if (car) {
     const cm = CAMS[save.camMode];
     if (cm.yaw !== undefined) camYaw = cm.yaw;
@@ -1362,7 +1378,8 @@ if (import.meta.env.DEV) Object.assign(window, {
   __out: () => JSON.stringify(Object.fromEntries(Object.entries(dmgOut).map(([k, v]) => [k, Math.round(v)]))), // daño infligido por arma
   __outro: () => { hp = -1; }, // fuerza la derrota (cierre en cámara lenta)
   __killBoss: () => enemies.forEach((e) => { if (e.def.boss) e.hp = 0; }),
-  __info: () => ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps(), abil, abilCd, abilOn, worldK, stun: enemies.filter((e) => e.stun > 0).length, driveMul, endless, next: RUN_BOSSES[bossIdx] }),
+  __info: () => state === "duel" ? { state, ...duelDev.info(), fps: engine.getFps() } : ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps(), abil, abilCd, abilOn, worldK, stun: enemies.filter((e) => e.stun > 0).length, driveMul, endless, next: RUN_BOSSES[bossIdx] }),
+  __duel: duelDev,
   __car: () => car && { p: car.pos, f: car.root.forward },
   __look: look,
   // Opciones de Imagen sin pasar por el menú ni guardar: __cfg({ fsr: "rendimiento" }) o __cfg({ preset: "ultra" }); sin argumentos devuelve el estado

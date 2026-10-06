@@ -157,7 +157,7 @@ function renderRace() {
 }
 
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void };
+type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; duel(): void };
 let api: Api;
 
 export function applySettings() {
@@ -185,7 +185,7 @@ function resetCfg() {
 }
 
 // ---------- Pila de pantallas ----------
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race";
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -1103,6 +1103,7 @@ export function initMenu(a: Api) {
     else if (d.rc) { cycleRace(d.rc); renderRace(); }
     else if (d.act === "race") api.race();
     else if (d.act === "battle") api.battle();
+    else if (d.act === "duelgo") api.duel();
     else if (d.act === "play") api.play();
     else if (d.act === "daily") api.play(true);
     else if (d.act === "endless") api.endless();

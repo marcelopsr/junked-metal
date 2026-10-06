@@ -9,7 +9,8 @@ alwaysApply: true
 
 - Usar la herramienta **AskUserQuestion** solo para dudas reales de diseño, balance, arte o prioridad.
 - **No** sustituir por preguntas sueltas en el texto del chat ("¿seguimos?", "¿te parece?", listas A/B en prosa).
-- Preferir **1-3 preguntas por ronda**; hasta 4×4 solo si hay varias decisiones genuinamente abiertas; opción **(Recomendado)** primero; **selección múltiple** cuando las opciones no se excluyen.
+- Preferir **1-3 preguntas por ronda**; hasta **4×4** en modos nuevos, GDD o balance grande (varias rondas seguidas si hace falta); opción **(Recomendado)** primero; **selección múltiple** cuando las opciones no se excluyen.
+- En toolbox extenso: descripciones ricas por opción; defaults razonables en docs si no hay respuesta.
 - No preguntar sobre lo que ya está decidido ni sobre acciones técnicas que se ejecutan directo.
 
 Excepción mínima: el usuario escribió una orden **literal y completa** ("hacé exactamente X") sin ambigüedad; aun así, al **terminar** esa tanda volver al loop con AskUserQuestion para el siguiente paso si hay decisiones abiertas.

@@ -1,0 +1,37 @@
+#duel-ui { position: fixed; inset: 0; z-index: 40; pointer-events: none; display: none; font-family: Silkscreen, VT323, monospace; color: #b9d3a4; }
+#duel-ui.on { display: block; pointer-events: auto; }
+#duel-ui.armado { background: linear-gradient(180deg, #0b0d0acc 0%, #0b0d0aee 55%, #0b0d0af2 100%); }
+#duel-arm { max-width: 720px; margin: 0 auto; padding: 1rem 1rem 5rem; }
+#duel-arm h1 { font-size: 1.1rem; letter-spacing: 0.08em; margin: 0 0 0.25rem; color: #e0a030; }
+#duel-arm .sub { font-size: 0.75rem; color: #5f7355; margin-bottom: 1rem; }
+.duel-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; }
+.duel-col { background: #141813; border: 1px solid #2c3a28; padding: 0.5rem; }
+.duel-col b { display: block; font-size: 0.65rem; color: #5f7355; margin-bottom: 0.35rem; }
+.duel-col .name { font-size: 0.85rem; margin-bottom: 0.5rem; }
+.duel-col button { background: #0b0d0a; border: 1px solid #2c3a28; color: #b9d3a4; padding: 0.35rem 0.6rem; cursor: pointer; font: inherit; }
+.duel-bars { display: flex; gap: 0.75rem; margin: 1rem 0; font-size: 0.7rem; flex-wrap: wrap; }
+.duel-bar { flex: 1; min-width: 5rem; }
+.duel-bar i { display: block; height: 6px; background: #10170d; border: 1px solid #2c3a28; margin-top: 2px; }
+.duel-bar i span { display: block; height: 100%; background: #7fbf5a; }
+.duel-warn { color: #e0a030; font-size: 0.75rem; min-height: 1.2em; margin: 0.5rem 0; }
+.duel-warn.ban { color: #d12a1c; }
+#duel-confirm { width: 100%; margin-top: 0.75rem; padding: 0.65rem; background: #2c3a28; border: 1px solid #5f7355; color: #b9d3a4; font: inherit; cursor: pointer; }
+#duel-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+#duel-hud { position: fixed; left: 0; right: 0; bottom: 0; padding: 0.5rem 0.75rem env(safe-area-inset-bottom); pointer-events: none; display: none; }
+#duel-ui.fight #duel-hud { display: block; }
+.duel-hp-row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.65rem; margin-bottom: 0.25rem; }
+.duel-hp { flex: 1; height: 8px; background: #10170d; border: 1px solid #2c3a28; }
+.duel-hp.enemy i { background: #d12a1c; }
+.duel-hp.you i { background: #7fbf5a; }
+.duel-hp i { display: block; height: 100%; width: 100%; transform-origin: left; }
+.duel-score { text-align: center; font-size: 0.8rem; color: #6fb3c4; margin-top: 0.25rem; }
+#duel-inter, #duel-res { max-width: 420px; margin: 20vh auto; padding: 1.5rem; background: #141813; border: 1px solid #2c3a28; text-align: center; display: none; }
+#duel-ui.inter #duel-inter, #duel-ui.results #duel-res { display: block; pointer-events: auto; }
+#duel-pause { position: fixed; inset: 0; background: #0b0d0ae6; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 0.75rem; z-index: 50; }
+#duel-pause.on { display: flex; pointer-events: auto; }
+#duel-pause button { font: inherit; padding: 0.5rem 1.2rem; border: 1px solid #2c3a28; background: #141813; color: #b9d3a4; cursor: pointer; }
+#duel-flip { position: fixed; right: 0.75rem; bottom: 4.5rem; padding: 0.5rem 0.75rem; font: inherit; background: #141813; border: 1px solid #2c3a28; color: #b9d3a4; display: none; pointer-events: auto; }
+#duel-ui.fight.flipped #duel-flip { display: block; }
+@media (max-width: 500px) {
+  .duel-cols { grid-template-columns: 1fr; }
+}

@@ -117,11 +117,9 @@ export const sessions = [
   { id: "carrera2j", query: "?mute&race&players=2", vps: ["pc"], shots: [
     { id: "pantalla-dividida", tol: 8, act: async (p) => { await wait(p, () => window.__info?.().state === "race" && document.getElementById("load").classList.contains("hidden")); await p.evaluate(() => { window.__race.auto(); window.__race.sim(5); }); } },
   ] },
-  // duel: activar cuando duel.ts exista. Cubre armado (pantalla de piezas), preview mesa y pelea inicial.
-  // { id: "duel", query: "?mute&duel", shots: [
-  //   { id: "armado",  act: async (p) => { await wait(p, () => document.querySelector("#scr-duel-armado.on")); await tick(p, 10); } },
-  //   { id: "pelea",   act: async (p) => { await p.evaluate(() => window.__duel.auto(true)); await tick(p, 60); } },
-  //   { id: "resultado", act: async (p) => { await p.evaluate(() => window.__duel.kill()); await tick(p, 30); } },
-  // ] },
+  { id: "duel", query: "?mute&duel", shots: [
+    { id: "armado", act: async (p) => { await wait(p, () => document.getElementById("duel-ui")?.classList.contains("on")); await tick(p, 15); } },
+    { id: "pelea", tol: 8, act: async (p) => { await p.evaluate(() => { window.__duel.confirm(); window.__duel.auto(true); }); await tick(p, 90); } },
+  ] },
 ];
 export { tick, info };
