@@ -623,3 +623,82 @@ Estas piezas **no están en el alcance de la implementación v1**. Se proponen c
 3. **Efecto magnético** — la pieza "vuela" desde una esquina de la pantalla hacia el punto de anclaje con una curva de Bezier. Muy llamativo; requiere animación de traslación en espacio de cámara + conversión de coordenadas. Mayor costo de implementación.
 4. **Sin animación — swap instantáneo** — la pieza anterior desaparece y la nueva aparece sin transición. La opción más simple; acelera la iteración durante el prototipo. Puede sentirse abrupto en la build pública.
 
+---
+
+## 34. Materiales, color y texturas por pieza (v1)
+
+**Decisión usuario (2026-10-06):** el armado no es solo stats; cada pieza se ve **pro** con **metal / plástico / pintura**, **colores** y **texturas procedurales**. Anula el “gris industrial fijo” de rondas anteriores.
+
+### Alcance v1
+
+- **Personalización completa** en pantalla de armado Demolición (no esperar a v2).
+- **Mismo pipeline visual** para jugador y rivales: los enemigos usan el **mismo sistema de materiales y zonas**, pero con **build y paleta fijas** (misma calidad “pro”, sin editor en pelea).
+
+### Zonas pintables / material por pieza
+
+| Pieza | Zonas | Notas |
+|-------|--------|--------|
+| Chasis | Cuerpo + detalles (trim) | 2 materiales/colores como carrocería del garaje |
+| Ruedas / orugas | Llanta / banda (goma) vs disco | Plástico mate vs metal |
+| Arma | Cuerpo + filo/disco (según tipo) | Trompo: disco; sierra: filo; pala: cuchara |
+| Cosméticos (×2) | Color propio por adorno | Antena, banderita, etc. |
+
+### Presets de material (por zona)
+
+Cada zona elige un **preset** que define PBR base (reutilizar `pbr()` / `M` de `render.ts`):
+
+| Preset | Feel | Parámetros típicos |
+|--------|------|---------------------|
+| Metal cepillado | Industrial BattleBots | metalness alto, rough medio, textura procedural rayas finas |
+| Plástico mate | Juguete RC / cubiertas | metalness bajo, rough alto, color saturado |
+| Pintura brillante | Carrocería lacada | metalness medio, rough bajo, specular visible |
+| Óxido / uso | Chatarra, bordes | rough alto, color marrón, procedural chips |
+
+El jugador puede combinar **preset + color** (paleta o selector HSV reutilizando patrón del garaje donde encaje).
+
+### Texturas
+
+- **Solo procedurales** `canvasTex` / NEAREST (como patio y autos); **sin bitmaps externos** en v1.
+- Variantes por preset: rayado metal, grano plástico, flake pintura, manchas óxido.
+
+### Persistencia
+
+- **Loadout de piezas** (chasis/ruedas/arma/cosméticos) + **materiales/colores por zona** → `localStorage` clave `duel_paint` (junto al nombre del robot).
+- No sincronizar con `Save` del survivor en v1 (modo aislado); *opcional v2:* importar color del auto del garaje como atajo.
+
+### Rival CUÑA INDUSTRIAL
+
+- **Build fija:** cuña + orugas + pala (§34 toolbox R).
+- **Look fijo pero mismo sistema:** chapa oscura + bandas naranja industrial + pala acero cepillado (valores en `balance.json` fila `duel_rival_cuña` o tabla `duel_paint_presets`); el jugador **no** edita al rival, pero el enemigo se ve tan detallado como el robot del jugador.
+
+### Implementación (referencia)
+
+- Reusar patrones de `menu.ts` / garaje (pintura por zona, HSV si ya existe para cel).
+- Materiales por sub-malla al `merge()` del robot: ids de zona en metadata de cada primitiva en `duel_build.ts` o equivalente dentro de `duel.ts`.
+- `ponytail:` si el garaje ya exporta helpers de pintura, extraer lo mínimo compartido a una función en `models.ts` o `duel_paint.ts` solo cuando duel lo necesite.
+
+### Checklist
+
+| Ítem | Estado |
+|------|--------|
+| Color/material chasis ×2 | ✅ v1 |
+| Ruedas/arma/cosmético | ✅ v1 |
+| Presets metal/plástico/pintura/óxido | ✅ v1 |
+| Texturas procedurales | ✅ v1 |
+| Rival mismo pipeline, paleta fija | ✅ v1 |
+
+---
+
+## 35. Armado — toolbox Q y R (resumen)
+
+| Tema | Decisión |
+|------|----------|
+| Cosméticos | 2 ranuras; pool 6 tipos; masa mínima afecta CoG en preview |
+| UI | Flechas ‹ ›; 3 presets Tanque/Veloz/Trompo |
+| Montaje VFX | Tornillos + efectos pro (snap, chispa soldadura, etc.) |
+| CUÑA build | Cuña + orugas + pala |
+| Nombre robot | localStorage + polaroid |
+| Lore | 1 línea picante por pieza en panel detalle |
+
+*(Color/material: ver §34 — reemplaza “gris fijo”.)*
+
