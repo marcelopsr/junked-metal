@@ -100,6 +100,7 @@ let shotCamFrozen = false;
 let previewFabRoot: B.TransformNode | null = null;
 /** Offsets de cámara en fabricación (arrastre en viewport; sin órbita automática). */
 let fabCamOff = { yaw: 0, pitch: 0 };
+const fabCamTarget = new B.Vector3(0, ARMADO_CAM.targetY, 0);
 let fabCamUnbind: (() => void) | null = null;
 
 function cfgFromBuild(b: RobotBuild): RobotConfig {
@@ -138,9 +139,10 @@ function applyFabricarCam() {
   const a = yaw + fabCamOff.yaw;
   const p = fabCamOff.pitch;
   const d = dist * Math.cos(p);
-  const h = height + Math.sin(p) * dist * 0.85;
-  deps.cam.position.set(Math.sin(a) * d, h, Math.cos(a) * d);
-  deps.cam.setTarget(new B.Vector3(0, targetY, 0));
+  const lift = height - targetY + Math.sin(p) * dist * 0.85;
+  const t = fabCamTarget;
+  deps.cam.position.set(t.x + Math.sin(a) * d, t.y + lift, t.z + Math.cos(a) * d);
+  deps.cam.setTarget(t);
 }
 
 function unbindFabCamDrag() {
@@ -384,12 +386,15 @@ function applyBuildPartWear(vic: Bot, atk: Bot, dmg: number) {
 function previewFabricacion() {
   previewFabRoot?.dispose();
   previewFabRoot = null;
-  if (!playerBuild.cells.length) return;
+  if (!playerBuild.cells.length) {
+    fabCamTarget.set(0, ARMADO_CAM.targetY, 0);
+    if (phase === "fabricar") applyFabricarCam();
+    return;
+  }
   const scene = deps.scene;
   const pivot = visualPivotOffset(playerBuild);
-  const aabb = aabbOfBuild(playerBuild);
   const root = new B.TransformNode("fabPreview", scene);
-  root.position.set(0, Math.max(WORKBENCH_TABLE_SURFACE, aabb.size.y * 0.5 + 0.05), 0);
+  root.position.set(0, WORKBENCH_TABLE_SURFACE, 0);
   const vis = new B.TransformNode("fabVis", scene);
   vis.parent = root;
   vis.position.set(-pivot.x, -pivot.y, -pivot.z);
@@ -398,6 +403,10 @@ function previewFabricacion() {
   m.position.copyFrom(pivot);
   shadows.addShadowCaster(m);
   previewFabRoot = root;
+  m.computeWorldMatrix(true);
+  const c = m.getBoundingInfo().boundingBox.centerWorld;
+  fabCamTarget.set(c.x, c.y, c.z);
+  if (phase === "fabricar") applyFabricarCam();
 }
 
 function buildWorkbench() {
@@ -769,7 +778,7 @@ function showFabricar() {
   if (conf) conf.style.display = "none";
   fab?.destroy();
   fab = mountFabricacion(ui, {
-    onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); previewFabricacion(); },
+    onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); previewFabricacion(); applyFabricarCam(); },
     onConfirm: () => beginMatch(),
   });
   fab.setBuild(playerBuild.cells.length ? playerBuild : defaultBuild());
@@ -1093,7 +1102,7 @@ export function duelTick(dt: number) {
 }
 
 function setShotCamPose() {
-  if (phase === "fabricar") applyArmadoCam();
+  if (phase === "fabricar") applyFabricarCam();
   else if (phase === "armado") applyArmadoCam();
   else {
     deps.cam.position.set(-6, 7.5, -11);
@@ -1143,5 +1152,6 @@ export const duelDev = {
     fab?.setBuild(playerBuild);
     cfg = cfgFromBuild(playerBuild);
     previewFabricacion();
+    applyFabricarCam();
   },
 };
