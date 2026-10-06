@@ -102,6 +102,8 @@ let previewFabRoot: B.TransformNode | null = null;
 let fabCamOff = { yaw: 0, pitch: 0 };
 const fabCamTarget = new B.Vector3(0, ARMADO_CAM.targetY, 0);
 let fabCamUnbind: (() => void) | null = null;
+let fabVpObs: ResizeObserver | null = null;
+let fabVpOnResize: (() => void) | null = null;
 
 function cfgFromBuild(b: RobotBuild): RobotConfig {
   const st = statsOfBuild(b, false);
@@ -147,31 +149,53 @@ function syncFabCamTargetFromPreview() {
   fabCamTarget.copyFrom(m.getBoundingInfo().boundingBox.centerWorld);
 }
 
-/** Desplaza solo la cámara para que `look` (centro del robot) caiga en #duel-fab-viewport. */
-function panFabCamForViewport(look: B.Vector3, camPos: B.Vector3): B.Vector3 {
+function resetCamViewportFull() {
+  deps.cam.viewport = new B.Viewport(0, 0, 1, 1);
+}
+
+/** Recorta el render 3D al rectángulo #duel-fab-viewport (el canvas sigue fullscreen). */
+function syncFabricarCamViewport() {
+  if (phase !== "fabricar") {
+    resetCamViewportFull();
+    return;
+  }
   const el = document.getElementById("duel-fab-viewport");
   const canvas = deps.scene.getEngine().getRenderingCanvas();
-  if (!el || !canvas) return camPos;
+  if (!el || !canvas) return;
   const vr = el.getBoundingClientRect();
   const cr = canvas.getBoundingClientRect();
-  const eng = deps.scene.getEngine();
-  const rw = eng.getRenderWidth(), rh = eng.getRenderHeight();
-  const wantX = ((vr.left + vr.width * 0.5 - cr.left) / cr.width) * rw;
-  const wantY = ((vr.top + vr.height * 0.5 - cr.top) / cr.height) * rh;
-  const transform = deps.scene.getTransformMatrix();
-  const viewport = deps.cam.viewport.toGlobal(rw, rh);
-  const cur = B.Vector3.Project(look, B.Matrix.IdentityReadOnly, transform, viewport);
-  const dx = wantX - cur.x, dy = wantY - cur.y;
-  if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return camPos;
-  const dist = B.Vector3.Distance(camPos, look);
-  const fov = deps.cam.fov ?? 0.8;
-  const aspect = eng.getAspectRatio(deps.cam);
-  const wppX = (2 * dist * Math.tan(fov / 2) * aspect) / rw;
-  const wppY = (2 * dist * Math.tan(fov / 2)) / rh;
-  const fwd = look.clone().subtract(camPos).normalize();
-  const right = B.Vector3.Cross(fwd, UP).normalize();
-  const up = B.Vector3.Cross(right, fwd).normalize();
-  return camPos.add(right.scale(-dx * wppX)).add(up.scale(dy * wppY));
+  if (cr.width < 1 || cr.height < 1 || vr.width < 4) return;
+  const x = (vr.left - cr.left) / cr.width;
+  const w = vr.width / cr.width;
+  const h = vr.height / cr.height;
+  const y = (cr.bottom - vr.bottom) / cr.height;
+  deps.cam.viewport = new B.Viewport(x, y, w, h);
+}
+
+function refreshFabricarCam() {
+  syncFabricarCamViewport();
+  applyFabricarCam();
+}
+
+function unbindFabricarViewportSync() {
+  fabVpObs?.disconnect();
+  fabVpObs = null;
+  if (fabVpOnResize) window.removeEventListener("resize", fabVpOnResize);
+  fabVpOnResize = null;
+  resetCamViewportFull();
+}
+
+function bindFabricarViewportSync() {
+  unbindFabricarViewportSync();
+  const el = document.getElementById("duel-fab-viewport");
+  const canvas = deps.scene.getEngine().getRenderingCanvas();
+  if (!el || !canvas) return;
+  fabVpOnResize = () => refreshFabricarCam();
+  window.addEventListener("resize", fabVpOnResize);
+  fabVpObs = new ResizeObserver(() => refreshFabricarCam());
+  fabVpObs.observe(el);
+  fabVpObs.observe(canvas);
+  requestAnimationFrame(() => requestAnimationFrame(refreshFabricarCam));
 }
 
 function applyFabricarCam() {
@@ -181,13 +205,9 @@ function applyFabricarCam() {
   const p = fabCamOff.pitch;
   const d = dist * Math.cos(p);
   const lift = height - targetY + Math.sin(p) * dist * 0.85;
-  const look = fabCamTarget;
-  const pos = panFabCamForViewport(
-    look,
-    new B.Vector3(look.x + Math.sin(a) * d, look.y + lift, look.z + Math.cos(a) * d),
-  );
-  deps.cam.position.copyFrom(pos);
-  deps.cam.setTarget(new B.Vector3(look.x, look.y, look.z));
+  const t = fabCamTarget;
+  deps.cam.position.set(t.x + Math.sin(a) * d, t.y + lift, t.z + Math.cos(a) * d);
+  deps.cam.setTarget(t);
 }
 
 function unbindFabCamDrag() {
@@ -438,9 +458,8 @@ function previewFabricacion() {
   }
   const scene = deps.scene;
   const pivot = visualPivotOffset(playerBuild);
-  const aabb = aabbOfBuild(playerBuild);
   const root = new B.TransformNode("fabPreview", scene);
-  root.position.set(0, WORKBENCH_TABLE_SURFACE - aabb.min.y, 0);
+  root.position.set(0, WORKBENCH_TABLE_SURFACE, 0);
   const vis = new B.TransformNode("fabVis", scene);
   vis.parent = root;
   vis.position.set(-pivot.x, -pivot.y, -pivot.z);
@@ -786,6 +805,7 @@ function previewArmado() {
 
 function showArmado() {
   unbindFabCamDrag();
+  unbindFabricarViewportSync();
   fab?.destroy(); fab = null;
   ensureUi(); cleanup(); phase = "armado";
   pendingPiece = null;
@@ -822,7 +842,7 @@ function showFabricar() {
   if (conf) conf.style.display = "none";
   fab?.destroy();
   fab = mountFabricacion(ui, {
-    onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); previewFabricacion(); applyFabricarCam(); },
+    onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); previewFabricacion(); refreshFabricarCam(); },
     onConfirm: () => beginMatch(),
   });
   fab.setBuild(playerBuild.cells.length ? playerBuild : defaultBuild());
@@ -831,8 +851,8 @@ function showFabricar() {
   ui.className = "on fabricar";
   fabCamOff = { yaw: 0, pitch: 0 };
   previewFabricacion();
-  applyFabricarCam();
   shotCamFrozen = false;
+  bindFabricarViewportSync();
   bindFabCamDrag(document.getElementById("duel-fab-viewport"));
   document.getElementById("fe")?.classList.add("hidden");
   document.getElementById("touch")?.classList.add("hidden");
@@ -857,6 +877,7 @@ function rivalCfg(): RobotConfig {
 }
 
 function beginMatch() {
+  unbindFabricarViewportSync();
   shotCamFrozen = false;
   if (!LEGACY_ARMADO) {
     playerBuild = fab?.getBuild() ?? playerBuild;
@@ -1146,7 +1167,7 @@ export function duelTick(dt: number) {
 }
 
 function setShotCamPose() {
-  if (phase === "fabricar") applyFabricarCam();
+  if (phase === "fabricar") refreshFabricarCam();
   else if (phase === "armado") applyArmadoCam();
   else {
     deps.cam.position.set(-6, 7.5, -11);
@@ -1158,6 +1179,7 @@ export function exitDuel() {
   if (!active) return;
   active = false; paused = false; autoPlayer = false; god = false; pendingPiece = null; shotCamFrozen = false;
   unbindFabCamDrag();
+  unbindFabricarViewportSync();
   fab?.destroy(); fab = null;
   cleanup();
   ui.className = "";
@@ -1196,6 +1218,6 @@ export const duelDev = {
     fab?.setBuild(playerBuild);
     cfg = cfgFromBuild(playerBuild);
     previewFabricacion();
-    applyFabricarCam();
+    refreshFabricarCam();
   },
 };
