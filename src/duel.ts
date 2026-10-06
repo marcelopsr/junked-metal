@@ -1,4 +1,4 @@
-// Modo Demolición: armado 3×3, arena acero, melee Havok, mejor de 3. (No confundir con battle/globos en kart.ts)
+// Modo Demolición: fabricación RoboCraft (default) o armado 3×3 legado (?duel=legacy). Arena melee, mejor de 3.
 import * as B from "@babylonjs/core";
 import "./duel.css";
 import { BAL } from "./balance";
@@ -11,10 +11,18 @@ import {
   cycleColor, cyclePreset, duelMat, loadDuelPaint, PAINT_SLOTS, PRESET_LABEL, rivalPaintFromBalance,
   saveDuelPaint, SLOT_LABEL, SWATCHES, type DuelPaintState, type PaintSlot,
 } from "./duel_paint";
+import {
+  blockDef, buildColliderMesh, type Cell, type LivingBuild, type RobotBuild, TEMPLATES, aabbOfBuild, cellWorldCenter,
+  cogOfBuild, defaultBuild, livingFromBuild, paintBuildMesh, pickHitCellIndex, rivalBuild, saveBuild,
+  statsOfBuild, stripCell, validateBuild, visualPivotOffset,
+} from "./duel_build";
+import { type FabApi, mountFabricacion } from "./duel_fabricacion";
 import { save } from "./menu";
 import { engineStop, music, SFX } from "./sfx";
 import { clearLayout, showWorld } from "./world";
 import { CLIMATES } from "./run";
+
+const LEGACY_ARMADO = typeof location !== "undefined" && new URLSearchParams(location.search).get("duel") === "legacy";
 
 const D = BAL.duelo;
 const CH = ["caja", "cuna", "plancha"] as const;
@@ -63,13 +71,19 @@ type Bot = {
   camYaw: number; camPos: B.Vector3; stats: { maxSpd: number; accel: number; turn: number; grip: number; push: number; dano: number; knock: number };
   mass: number; warnMul: number;
   dmgOut: number; dmgIn: number;
+  /** Fabricación: vida global + desgaste por bloque. */
+  living?: LivingBuild;
+  duelPaint?: DuelPaintState;
+  wearFlash?: { idx: number; until: number; max: number; name: string };
 };
 
 let active = false;
-let phase: "armado" | "countdown" | "fight" | "inter" | "results" = "armado";
+let phase: "fabricar" | "armado" | "countdown" | "fight" | "inter" | "results" = "fabricar";
 let ui: HTMLElement;
 let cfg: RobotConfig = { chassis: "caja", wheels: "estandar", weapon: "trompo" };
 let idx = { c: 0, w: 0, a: 0 };
+let playerBuild: RobotBuild = defaultBuild();
+let fab: FabApi | null = null;
 let mesh: B.Mesh[] = [];
 let bots: Bot[] = [];
 let score = [0, 0], round = 0, t = 0, countdown = 0, paused = false;
@@ -83,6 +97,25 @@ let paintSlot: PaintSlot = "chassis_body";
 let flipCd = 0;
 let pendingPiece: { cat: PieceCat; id: string } | null = null;
 let shotCamFrozen = false;
+let previewFabMesh: B.Mesh | null = null;
+
+function cfgFromBuild(b: RobotBuild): RobotConfig {
+  const st = statsOfBuild(b, false);
+  const weapon: WeaponId = st.weaponId === "none" ? "pala" : st.weaponId;
+  let wheels: WheelsId = "estandar";
+  let nStd = 0, nGig = 0, nOru = 0;
+  for (const c of b.cells) {
+    if (c.blockId === "rueda_std") nStd++;
+    if (c.blockId === "rueda_gig") nGig++;
+    if (c.blockId === "oruga") nOru++;
+  }
+  if (nOru >= nGig && nOru >= nStd && nOru > 0) wheels = "orugas";
+  else if (nGig >= nStd && nGig > 0) wheels = "gigantes";
+  let chassis: ChassisId = "caja";
+  if (b.cells.some((c) => c.blockId === "cuna_blk")) chassis = "cuna";
+  else if (b.cells.some((c) => c.blockId === "plancha_blk")) chassis = "plancha";
+  return { chassis, wheels, weapon };
+}
 
 function dismissLoadOverlay() {
   const el = document.getElementById("load");
@@ -180,6 +213,127 @@ function makeBot(id: number, human: boolean, c: RobotConfig, at: B.Vector3, name
   };
 }
 
+function attachBuildPhysics(root: B.Mesh, build: RobotBuild, mass: number, warn: boolean) {
+  const cog = cogOfBuild(build);
+  const aabb = aabbOfBuild(build);
+  const ext = aabb.size;
+  const agg = new B.PhysicsAggregate(root, B.PhysicsShapeType.MESH, { mass, friction: D.phys_friction_bot, restitution: 0.15 }, deps.scene);
+  const body = agg.body;
+  body.setMassProperties({
+    mass,
+    inertia: new B.Vector3(mass * 0.35, mass * 0.8, mass * 0.35),
+    centerOfMass: new B.Vector3(cog.x * 0.15, Math.min(0.35, cog.y - ext.y * 0.35), cog.z * 0.15),
+  });
+  return { agg, body };
+}
+
+function makeBotFromBuild(id: number, human: boolean, build: RobotBuild, at: B.Vector3, name: string, paint: DuelPaintState, warn = false): Bot {
+  const scene = deps.scene;
+  const st = statsOfBuild(build, warn);
+  const c = cfgFromBuild(build);
+  const root = buildColliderMesh(build);
+  root.name = "duelCol";
+  root.isVisible = false;
+  const pivot = visualPivotOffset(build);
+  root.position.copyFrom(at);
+  root.position.y = Math.max(at.y, aabbOfBuild(build).size.y * 0.5 + 0.05);
+  const vis = new B.TransformNode("duelVis", scene);
+  vis.parent = root;
+  vis.position.set(-pivot.x, -pivot.y, -pivot.z);
+  const m = paintBuildMesh(build, paint);
+  m.parent = vis;
+  m.position.copyFrom(pivot);
+  shadows.addShadowCaster(m);
+  const mass = Math.max(0.8, st.mass);
+  const { agg, body } = attachBuildPhysics(root, build, mass, warn);
+  return {
+    id, human, name, cfg: c, root, vis, body, agg, hp: st.hpMax, hpMax: st.hpMax, hitAt: 0, rpm: 0, flipped: false,
+    camYaw: 0, camPos: at.clone().add(new B.Vector3(0, 6, -10)),
+    stats: { maxSpd: st.maxSpd, accel: st.accel, turn: st.turn, grip: st.grip, push: st.push, dano: st.dano, knock: st.knock },
+    mass, warnMul: warn ? D.warn_traccion_mul : 1, dmgOut: 0, dmgIn: 0,
+    living: livingFromBuild(build), duelPaint: paint,
+  };
+}
+
+function refreshBuildBotVisual(b: Bot) {
+  if (!b.living || !b.duelPaint) return;
+  for (const ch of b.vis.getChildMeshes()) ch.dispose();
+  const build = b.living.build;
+  const pivot = visualPivotOffset(build);
+  const m = paintBuildMesh(build, b.duelPaint);
+  m.parent = b.vis;
+  m.position.copyFrom(pivot);
+  shadows.addShadowCaster(m);
+  const st = statsOfBuild(build, b.warnMul < 1);
+  b.cfg = cfgFromBuild(build);
+  b.mass = Math.max(0.8, st.mass);
+  b.stats = { maxSpd: st.maxSpd, accel: st.accel, turn: st.turn, grip: st.grip, push: st.push, dano: st.dano, knock: st.knock };
+  rebuildBuildBotPhysics(b);
+}
+
+function rebuildBuildBotPhysics(b: Bot) {
+  if (!b.living) return;
+  const build = b.living.build;
+  const lin = b.body.getLinearVelocity();
+  const ang = b.body.getAngularVelocity();
+  const pos = b.root.position.clone();
+  const rot = b.root.rotationQuaternion?.clone();
+  const pivot = visualPivotOffset(build);
+  b.agg.dispose();
+  b.root.dispose();
+  const root = buildColliderMesh(build);
+  root.name = "duelCol";
+  root.isVisible = false;
+  root.position.copyFrom(pos);
+  if (rot) root.rotationQuaternion = rot;
+  b.vis.parent = root;
+  b.vis.position.set(-pivot.x, -pivot.y, -pivot.z);
+  const { agg, body } = attachBuildPhysics(root, build, b.mass, b.warnMul < 1);
+  body.setLinearVelocity(lin);
+  body.setAngularVelocity(ang);
+  b.root = root;
+  b.agg = agg;
+  b.body = body;
+}
+
+function partBreakWorldPos(b: Bot, cell: Cell) {
+  const p = cellWorldCenter(cell);
+  return b.root.getAbsolutePosition().add(new B.Vector3(p.x, p.y, p.z));
+}
+
+function applyBuildPartWear(vic: Bot, atk: Bot, dmg: number) {
+  if (!vic.living) return;
+  const local = atk.root.position.subtract(vic.root.position);
+  local.y = 0;
+  const idx = pickHitCellIndex(vic.living.build, local.x, local.z);
+  if (idx < 0) return;
+  const cell = vic.living.build.cells[idx];
+  const def = blockDef(cell.blockId);
+  vic.living.partHp[idx] -= dmg * D.part_wear_mul;
+  if (vic.human) {
+    vic.wearFlash = { idx, until: t + 1.6, max: def.hp, name: def.nombre };
+  }
+  if (vic.living.partHp[idx] > 0) return;
+  const wheel = def.cat === "movimiento";
+  SFX.duelPartBreak(wheel);
+  const wpos = partBreakWorldPos(vic, cell);
+  impact(vic.vis.getChildMeshes()[0] ?? vic.root, wpos, vic.human ? "#c9a227" : "#8a6a20", 0.85, wheel ? "gomitas" : "clips", true, false);
+  const seatGone = stripCell(vic.living, idx);
+  if (seatGone) vic.hp = 0;
+  if (vic.wearFlash?.idx === idx) vic.wearFlash = undefined;
+  refreshBuildBotVisual(vic);
+}
+
+function previewFabricacion() {
+  previewFabMesh?.dispose();
+  previewFabMesh = null;
+  if (!playerBuild.cells.length) return;
+  const m = paintBuildMesh(playerBuild, playerPaint);
+  m.position.set(0, WORKBENCH_TABLE_SURFACE + 0.02, 0);
+  shadows.addShadowCaster(m);
+  previewFabMesh = m;
+}
+
 function buildWorkbench() {
   const scene = deps.scene;
   const floor = B.MeshBuilder.CreateGround("wbFloor", { width: 14, height: 14 }, scene);
@@ -208,6 +362,20 @@ function setPiece(cat: PieceCat, id: string) {
   syncArmado();
 }
 
+const SLOT_UI: Record<PieceCat, string> = { chassis: "chasis", wheels: "ruedas", weapon: "arma" };
+
+function selectPending(cat: PieceCat, id: string) {
+  if (!PIECE_CAT_IDS[cat].includes(id)) return;
+  pendingPiece = pendingPiece?.cat === cat && pendingPiece.id === id ? null : { cat, id };
+  syncArmado();
+}
+
+function applyPieceDrop(raw: string, slot: PieceCat) {
+  const [cat, id] = raw.split(":") as [PieceCat, string];
+  if (cat !== slot || !PIECE_CAT_IDS[cat].includes(id)) return;
+  setPiece(cat, id);
+}
+
 function buildArena() {
   const scene = deps.scene;
   const tex = canvasTex(128, (g, s) => {
@@ -227,12 +395,71 @@ function buildArena() {
 }
 
 function cleanup() {
+  hideDragGhost();
   for (const b of bots) { b.agg.dispose(); b.root.dispose(); }
   bots = [];
   previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
+  previewFabMesh?.dispose(); previewFabMesh = null;
   for (const m of mesh) { m.physicsBody?.dispose(); m.dispose(); }
   mesh = [];
   lastHit.clear();
+}
+
+let dragGhost: B.Mesh | null = null;
+function ghostPieceMesh(cat: PieceCat): B.Mesh {
+  const ghostMat = pbr("wbGhost", { color: "#9ccc7a", rough: 0.55, alpha: 0.62 });
+  if (cat === "chassis") return box(0.85, 0.32, 1.2, ghostMat, [0, 0.16, 0]);
+  if (cat === "wheels") {
+    const wh = wheel(0.32, 0.14, "#6a7a5a", "");
+    wh.position.set(0, 0.16, 0);
+    return merge("wbGhostWh", [wh]);
+  }
+  return cyl(0.28, 0.28, 0.1, ghostMat, [0, 0.12, 0]);
+}
+
+function screenToWorkbench(clientX: number, clientY: number): B.Vector3 | null {
+  const engine = deps.scene.getEngine();
+  const canvas = engine.getRenderingCanvas();
+  if (!canvas) return null;
+  const rect = canvas.getBoundingClientRect();
+  if (rect.width < 1 || rect.height < 1) return null;
+  const px = ((clientX - rect.left) / rect.width) * engine.getRenderWidth();
+  const py = ((clientY - rect.top) / rect.height) * engine.getRenderHeight();
+  const pickRay = deps.scene.createPickingRay(px, py, B.Matrix.Identity(), deps.cam, false);
+  const dy = pickRay.direction.y;
+  if (Math.abs(dy) < 1e-6) return null;
+  const t = (WORKBENCH_TABLE_SURFACE - pickRay.origin.y) / dy;
+  if (t < 0) return null;
+  return pickRay.origin.add(pickRay.direction.scale(t));
+}
+
+function onDragGhostMove(e: DragEvent) {
+  if (!dragGhost) return;
+  const p = screenToWorkbench(e.clientX, e.clientY);
+  if (p) dragGhost.position.set(p.x, WORKBENCH_TABLE_SURFACE + 0.06, p.z);
+}
+
+function showDragGhost(cat: PieceCat) {
+  hideDragGhost();
+  dragGhost = ghostPieceMesh(cat);
+  shadows.addShadowCaster(dragGhost);
+  addEventListener("dragover", onDragGhostMove);
+}
+
+function hideDragGhost() {
+  removeEventListener("dragover", onDragGhostMove);
+  dragGhost?.dispose();
+  dragGhost = null;
+}
+
+let partsDrawerOpen = !isTouch;
+function syncPartsDrawer() {
+  const drawer = ui.querySelector("#duel-drawer");
+  const btn = ui.querySelector("#duel-drawer-toggle") as HTMLButtonElement | null;
+  if (!drawer || !btn) return;
+  drawer.classList.toggle("closed", !partsDrawerOpen);
+  btn.setAttribute("aria-expanded", String(partsDrawerOpen));
+  btn.textContent = partsDrawerOpen ? "Ocultar piezas" : "Piezas";
 }
 
 let wbTrayWired = false;
@@ -248,34 +475,58 @@ function wireWorkbenchTray() {
     ev.dataTransfer.effectAllowed = "copy";
     chip.classList.add("dragging");
     chip.setAttribute("aria-grabbed", "true");
+    const [cat] = chip.dataset.piece!.split(":") as [PieceCat, string];
+    showDragGhost(cat);
+    onDragGhostMove(ev);
   });
   tray.addEventListener("dragend", (e) => {
     const chip = (e.target as HTMLElement).closest("[data-piece]") as HTMLElement | null;
     chip?.classList.remove("dragging");
     chip?.setAttribute("aria-grabbed", "false");
+    hideDragGhost();
     ui.querySelectorAll(".duel-drop.drag-over").forEach((el) => el.classList.remove("drag-over"));
   });
   tray.addEventListener("click", (e) => {
     const chip = (e.target as HTMLElement).closest("[data-piece]") as HTMLElement | null;
     if (!chip) return;
     const [cat, id] = chip.dataset.piece!.split(":") as [PieceCat, string];
-    setPiece(cat, id);
+    selectPending(cat, id);
   });
 }
 
-function wireWorkbenchDropCols() {
-  ui.querySelectorAll<HTMLElement>(".duel-tray-col[data-slot]").forEach((zone) => {
-    zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("drag-over"); });
-    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
-    zone.addEventListener("drop", (e) => {
-      e.preventDefault();
-      zone.classList.remove("drag-over");
-      const raw = (e as DragEvent).dataTransfer?.getData("text/plain");
-      if (!raw) return;
-      const [cat, id] = raw.split(":") as [PieceCat, string];
-      if (zone.dataset.slot !== cat) return;
-      setPiece(cat, id);
-    });
+let wbStageWired = false;
+function wireWorkbenchStage() {
+  if (wbStageWired) return;
+  wbStageWired = true;
+  const stage = ui.querySelector(".duel-wb-stage")!;
+  stage.addEventListener("dragover", (e) => {
+    const zone = (e.target as HTMLElement).closest(".duel-drop[data-slot]") as HTMLElement | null;
+    if (!zone) return;
+    e.preventDefault();
+    if ((e as DragEvent).dataTransfer) (e as DragEvent).dataTransfer!.dropEffect = "copy";
+    ui.querySelectorAll(".duel-drop.drag-over").forEach((el) => { if (el !== zone) el.classList.remove("drag-over"); });
+    zone.classList.add("drag-over");
+  });
+  stage.addEventListener("dragleave", (e) => {
+    const zone = (e.target as HTMLElement).closest(".duel-drop[data-slot]");
+    const rel = (e as DragEvent).relatedTarget as Node | null;
+    if (zone && rel && zone.contains(rel)) return;
+    (e.target as HTMLElement).closest(".duel-drop")?.classList.remove("drag-over");
+  });
+  stage.addEventListener("drop", (e) => {
+    const zone = (e.target as HTMLElement).closest(".duel-drop[data-slot]") as HTMLElement | null;
+    if (!zone) return;
+    e.preventDefault();
+    zone.classList.remove("drag-over");
+    const raw = (e as DragEvent).dataTransfer?.getData("text/plain");
+    if (!raw) return;
+    applyPieceDrop(raw, zone.dataset.slot as PieceCat);
+  });
+  stage.addEventListener("click", (e) => {
+    const zone = (e.target as HTMLElement).closest(".duel-drop[data-slot]") as HTMLElement | null;
+    if (!zone || !pendingPiece) return;
+    if (zone.dataset.slot !== pendingPiece.cat) return;
+    setPiece(pendingPiece.cat, pendingPiece.id);
   });
 }
 
@@ -283,24 +534,37 @@ function trayGroup(cat: PieceCat, lab: string, cur: string) {
   const chips = PIECE_CAT_IDS[cat].map((id) => {
     const p = PIECE[id as ChassisId | WheelsId | WeaponId];
     const on = id === cur;
-    return `<button type="button" class="duel-chip${on ? " on" : ""}" draggable="true" role="listitem" data-piece="${cat}:${id}" aria-pressed="${on}" aria-grabbed="false" title="${p.lore}">${p.label}</button>`;
+    const pend = pendingPiece?.cat === cat && pendingPiece.id === id;
+    return `<button type="button" class="duel-chip${on ? " on" : ""}${pend ? " pending" : ""}" draggable="true" role="listitem" data-piece="${cat}:${id}" aria-pressed="${on}" aria-grabbed="false" title="${p.lore}">${p.label}</button>`;
   }).join("");
-  return `<div class="duel-tray-col" data-slot="${cat}"><span class="duel-tray-lab">${lab}</span><div class="duel-tray-chips" role="list">${chips}</div></div>`;
+  return `<div class="duel-tray-col"><span class="duel-tray-lab">${lab}</span><div class="duel-tray-chips" role="list">${chips}</div></div>`;
+}
+
+function robotDropZones(ch: ChassisId, wh: WheelsId, ar: WeaponId) {
+  const mk = (cat: PieceCat) => {
+    const id = cat === "chassis" ? ch : cat === "wheels" ? wh : ar;
+    const lab = SLOT_UI[cat];
+    const pick = pendingPiece?.cat === cat;
+    return `<button type="button" class="duel-drop equipped${pick ? " pick-target" : ""}" data-slot="${cat}" aria-label="Zona de ${lab}: ${PIECE[id].label}. Arrastrar pieza o tocar con pieza seleccionada.">
+<span class="duel-drop-lab">${lab}</span><span class="duel-drop-val">${PIECE[id].label}</span></button>`;
+  };
+  return mk("wheels") + mk("weapon") + mk("chassis");
 }
 
 function ensureUi() {
   if (ui) return;
   ui = document.createElement("div");
   ui.id = "duel-ui";
-  ui.innerHTML = `<div id="duel-arm" class="duel-wb"><header class="duel-wb-head"><h1>ARMADO</h1><p class="duel-wb-hint">Toque una pieza para equiparla en el robot</p><p class="duel-wb-fallback">También puede arrastrar la pieza a su columna</p></header>
+  ui.innerHTML = `<div id="duel-arm" class="duel-wb"><header class="duel-wb-head"><h1>ARMADO</h1><p class="duel-wb-hint">Arrastrar cada pieza al robot</p><p class="duel-wb-fallback">O elegir pieza y tocar la zona en el robot</p></header>
 <div class="duel-wb-main"><aside class="duel-wb-side" aria-labelledby="duel-sec-stats"><h2 id="duel-sec-stats" class="duel-sec-h">Telemetría</h2><div class="duel-bars" role="group" aria-label="Estimación del robot"></div>
 <details class="duel-paint-wrap" id="duel-paint-details"><summary class="duel-paint-sum">Pintura <span class="duel-opt">(opcional)</span></summary><div class="duel-paint" id="duel-paint"></div></details>
 <p class="duel-warn" id="duel-warn" role="status" aria-live="polite"></p></aside>
-<div class="duel-wb-stage" aria-hidden="true"></div></div>
-<p class="duel-equip" id="duel-equip" aria-live="polite"></p>
-<section class="duel-wb-tray-wrap" aria-labelledby="duel-sec-tray"><h2 id="duel-sec-tray" class="duel-sec-h">Piezas</h2><div class="duel-wb-tray"></div></section>
+<div class="duel-wb-center"><div class="duel-wb-stage" aria-label="Robot en mesa de taller"><div class="duel-wb-drops" id="duel-drops"></div></div>
+<p class="duel-equip" id="duel-equip" aria-live="polite"></p></div>
+<aside class="duel-wb-drawer" id="duel-drawer" aria-labelledby="duel-sec-tray"><button type="button" class="duel-drawer-tab" id="duel-drawer-toggle" aria-controls="duel-drawer-panel" aria-expanded="true">Ocultar piezas</button>
+<div class="duel-drawer-panel" id="duel-drawer-panel"><section class="duel-wb-tray-wrap" aria-labelledby="duel-sec-tray"><h2 id="duel-sec-tray" class="duel-sec-h">Piezas</h2><div class="duel-wb-tray"></div></section></div></aside></div>
 <button type="button" class="duel-cta" id="duel-confirm">Confirmar armado</button></div>
-<div id="duel-hud"><div class="duel-hp-row"><span id="duel-en">RIVAL</span><span id="duel-you">TÚ</span></div><div class="duel-hp-row"><div class="duel-hp enemy"><i id="duel-hpE"></i></div><div class="duel-hp you"><i id="duel-hpP"></i></div></div><div class="duel-score" id="duel-score"></div></div>
+<div id="duel-hud"><div class="duel-hp-row"><span id="duel-en">RIVAL</span><span id="duel-you">TÚ</span></div><div class="duel-hp-row"><div class="duel-hp enemy"><i id="duel-hpE"></i></div><div class="duel-hp you"><i id="duel-hpP"></i></div></div><div id="duel-part-wear" class="duel-part-wear hidden" aria-live="polite"><span id="duel-part-label">PIEZA</span><div class="duel-hp part"><i id="duel-part-hp"></i></div></div><div class="duel-score" id="duel-score"></div></div>
 <div id="duel-inter"><p id="duel-inter-t"></p><button type="button" id="duel-next">SIGUIENTE ASALTO</button></div>
 <div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
 <button type="button" id="duel-flip">ENDEREZAR</button>`;
@@ -310,9 +574,11 @@ function ensureUi() {
   pause.innerHTML = `<p>PAUSA</p><button type="button" id="duel-resume">REANUDAR</button><button type="button" id="duel-quit">ABANDONAR</button>`;
   document.body.appendChild(pause);
   wireWorkbenchTray();
+  wireWorkbenchStage();
+  $d("duel-drawer-toggle").onclick = () => { partsDrawerOpen = !partsDrawerOpen; syncPartsDrawer(); };
   $d("duel-confirm").onclick = () => { if (comboCheck(cfg) !== "ban") beginMatch(); };
   $d("duel-next").onclick = () => startRound();
-  $d("duel-again").onclick = () => { score = [0, 0]; round = 0; showArmado(); };
+  $d("duel-again").onclick = () => { score = [0, 0]; round = 0; backToWorkshop(); };
   $d("duel-exit").onclick = () => exitDuel();
   $d("duel-flip").onclick = () => flipPlayer();
   $d("duel-resume").onclick = () => { paused = false; $d("duel-pause").classList.remove("on"); };
@@ -369,9 +635,12 @@ function syncArmado() {
   const cc = comboCheck(cfg);
   const ch = CH[idx.c], wh = WH[idx.w], ar = AR[idx.a];
   ui.querySelector(".duel-wb-tray")!.innerHTML = trayGroup("chassis", "Chasis", ch) + trayGroup("wheels", "Ruedas", wh) + trayGroup("weapon", "Arma", ar);
-  wireWorkbenchDropCols();
+  ui.querySelector("#duel-drops")!.innerHTML = robotDropZones(ch, wh, ar);
   const eq = $d("duel-equip");
-  eq.textContent = `${PIECE[ch].label} · ${PIECE[wh].label} · ${PIECE[ar].label}`;
+  if (pendingPiece) {
+    const p = PIECE[pendingPiece.id as ChassisId | WheelsId | WeaponId];
+    eq.textContent = `Seleccionado: ${p.label} — arrastrar o tocar zona de ${SLOT_UI[pendingPiece.cat]} en el robot`;
+  } else eq.textContent = `Equipado: ${PIECE[ch].label} · ${PIECE[wh].label} · ${PIECE[ar].label}`;
   const m = massOf(cfg), st = statsOf(cfg, cc === "warn");
   const bars = ui.querySelector(".duel-bars")!;
   const norm = (v: number, max: number) => Math.round(100 * v / max);
@@ -397,6 +666,7 @@ function previewArmado() {
 }
 
 function showArmado() {
+  fab?.destroy(); fab = null;
   ensureUi(); cleanup(); phase = "armado";
   pendingPiece = null;
   dismissLoadOverlay();
@@ -404,8 +674,42 @@ function showArmado() {
   applyClimate(CLIMATES.find((c) => c.id === "farol")!);
   buildWorkbench();
   deps.scene.physicsEnabled = true;
+  partsDrawerOpen = !isTouch;
+  const arm = document.getElementById("duel-arm");
+  if (arm) arm.style.display = "";
+  const conf = document.getElementById("duel-confirm");
+  if (conf) conf.style.display = "";
   ui.className = "on armado";
   syncArmado();
+  syncPartsDrawer();
+  applyArmadoCam();
+  shotCamFrozen = true;
+  document.getElementById("fe")?.classList.add("hidden");
+  document.getElementById("touch")?.classList.add("hidden");
+}
+
+function showFabricar() {
+  ensureUi(); cleanup(); phase = "fabricar";
+  dismissLoadOverlay();
+  showWorld(false); clearLayout();
+  applyClimate(CLIMATES.find((c) => c.id === "farol")!);
+  buildWorkbench();
+  deps.scene.physicsEnabled = true;
+  // Ocultar panel legado de armado 3×3
+  const arm = document.getElementById("duel-arm");
+  if (arm) arm.style.display = "none";
+  const conf = document.getElementById("duel-confirm");
+  if (conf) conf.style.display = "none";
+  fab?.destroy();
+  fab = mountFabricacion(ui, {
+    onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); previewFabricacion(); },
+    onConfirm: () => beginMatch(),
+  });
+  fab.setBuild(playerBuild.cells.length ? playerBuild : defaultBuild());
+  playerBuild = fab.getBuild();
+  cfg = cfgFromBuild(playerBuild);
+  ui.className = "on fabricar";
+  previewFabricacion();
   applyArmadoCam();
   shotCamFrozen = true;
   document.getElementById("fe")?.classList.add("hidden");
@@ -413,9 +717,16 @@ function showArmado() {
 }
 
 export function startDuel() {
-  active = true; score = [0, 0]; round = 0; loadoutWarn = comboCheck(cfg) === "warn";
+  active = true; score = [0, 0]; round = 0;
   playerPaint = loadDuelPaint();
-  showArmado();
+  playerBuild = defaultBuild();
+  if (LEGACY_ARMADO) {
+    loadoutWarn = comboCheck(cfg) === "warn";
+    showArmado();
+  } else {
+    loadoutWarn = validateBuild(playerBuild).level === "warn";
+    showFabricar();
+  }
 }
 
 function rivalCfg(): RobotConfig {
@@ -425,8 +736,14 @@ function rivalCfg(): RobotConfig {
 
 function beginMatch() {
   shotCamFrozen = false;
-  loadoutWarn = comboCheck(cfg) === "warn";
+  if (!LEGACY_ARMADO) {
+    playerBuild = fab?.getBuild() ?? playerBuild;
+    saveBuild(playerBuild);
+    cfg = cfgFromBuild(playerBuild);
+    loadoutWarn = validateBuild(playerBuild).level === "warn";
+  } else loadoutWarn = comboCheck(cfg) === "warn";
   matchDmg = { dealt: 0, taken: 0 };
+  fab?.destroy(); fab = null;
   cleanup();
   showWorld(false);
   clearLayout();
@@ -442,8 +759,13 @@ function startRound() {
   bots = []; lastHit.clear();
   round++;
   const r = BAL.dueloRival.cuna_industrial;
-  bots.push(makeBot(0, true, cfg, new B.Vector3(-4, 0.6, 0), playerPaint.name || "TÚ", playerPaint, loadoutWarn));
-  bots.push(makeBot(1, false, rivalCfg(), new B.Vector3(4, 0.6, 0), r.nombre, rivalPaintFromBalance(r), false));
+  if (LEGACY_ARMADO) {
+    bots.push(makeBot(0, true, cfg, new B.Vector3(-4, 0.6, 0), playerPaint.name || "TÚ", playerPaint, loadoutWarn));
+    bots.push(makeBot(1, false, rivalCfg(), new B.Vector3(4, 0.6, 0), r.nombre, rivalPaintFromBalance(r), false));
+  } else {
+    bots.push(makeBotFromBuild(0, true, playerBuild, new B.Vector3(-4, 0.6, 0), playerPaint.name || "TÚ", playerPaint, loadoutWarn));
+    bots.push(makeBotFromBuild(1, false, rivalBuild(), new B.Vector3(4, 0.6, 0), r.nombre, rivalPaintFromBalance(r), false));
+  }
   for (const b of bots) { b.hp = b.hpMax; b.rpm = 0; b.flipped = false; b.hitAt = 0; }
   phase = "countdown"; countdown = 3.4; t = 0;
   ui.className = "on fight";
@@ -567,6 +889,7 @@ function contactDamage() {
       if (vic.flipped) dmg *= D.volcado_vuln_mul;
       if (god && vic.human) dmg = 0;
       vic.hp -= dmg; vic.hitAt = now;
+      applyBuildPartWear(vic, atk, dmg);
       if (atk.human) { atk.dmgOut += dmg; matchDmg.dealt += dmg; }
       if (vic.human) { vic.dmgIn += dmg; matchDmg.taken += dmg; }
       if (dmg >= 3) {
@@ -629,7 +952,9 @@ function endMatch(forfeit: boolean) {
     ["Daño infligido", `${Math.round(matchDmg.dealt)}`],
     ["Daño recibido", `${Math.round(matchDmg.taken)}`],
     ["Rival", r.nombre],
-    ["Loadout", `${PIECE[cfg.chassis].label} / ${PIECE[cfg.wheels].label} / ${PIECE[cfg.weapon].label}`],
+    ["Loadout", LEGACY_ARMADO
+      ? `${PIECE[cfg.chassis].label} / ${PIECE[cfg.wheels].label} / ${PIECE[cfg.weapon].label}`
+      : `${playerBuild.cells.length} bloques · ${PIECE[cfg.weapon].label}`],
   ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
   engineStop(); music("menu");
 }
@@ -642,6 +967,17 @@ function updateHud() {
   $d("duel-en").textContent = e.name;
   $d("duel-you").textContent = p.name;
   $d("duel-score").textContent = `ASALTOS ${score[0]} – ${score[1]}`;
+  const pw = $d("duel-part-wear");
+  const flash = p.wearFlash;
+  if (flash && t < flash.until && p.living && flash.idx < p.living.partHp.length) {
+    pw.classList.remove("hidden");
+    $d("duel-part-label").textContent = `INTEGRIDAD · ${flash.name}`;
+    const ratio = Math.max(0, p.living.partHp[flash.idx] / flash.max);
+    ($d("duel-part-hp") as HTMLElement).style.transform = `scaleX(${ratio})`;
+  } else {
+    pw.classList.add("hidden");
+    if (flash && t >= flash.until) p.wearFlash = undefined;
+  }
   ui.classList.toggle("flipped", !!p.flipped && flipCd <= 0);
   ($d("duel-flip") as HTMLButtonElement).disabled = flipCd > 0;
 }
@@ -663,7 +999,7 @@ export function duelTick(dt: number) {
   if (!active || paused) return;
   if (phase === "inter" || phase === "results") return;
   if (flipCd > 0) flipCd = Math.max(0, flipCd - dt);
-  if (phase === "armado") return;
+  if (phase === "armado" || phase === "fabricar") return;
   if (phase === "countdown") {
     countdown -= dt;
     if (countdown <= 0) phase = "fight";
@@ -687,7 +1023,7 @@ export function duelTick(dt: number) {
 }
 
 function setShotCamPose() {
-  if (phase === "armado") applyArmadoCam();
+  if (phase === "armado" || phase === "fabricar") applyArmadoCam();
   else {
     deps.cam.position.set(-6, 7.5, -11);
     deps.cam.setTarget(new B.Vector3(0, 0.6, 0));
@@ -697,6 +1033,7 @@ function setShotCamPose() {
 export function exitDuel() {
   if (!active) return;
   active = false; paused = false; autoPlayer = false; god = false; pendingPiece = null; shotCamFrozen = false;
+  fab?.destroy(); fab = null;
   cleanup();
   ui.className = "";
   $d("duel-pause").classList.remove("on");
@@ -705,14 +1042,34 @@ export function exitDuel() {
   deps.onExit();
 }
 
+function backToWorkshop() {
+  if (LEGACY_ARMADO) showArmado();
+  else showFabricar();
+}
+
 export const duelDev = {
-  confirm: () => { if (phase === "armado") beginMatch(); },
+  confirm: () => { if (phase === "armado" || phase === "fabricar") beginMatch(); },
   auto: (on = true) => { autoPlayer = on; },
   god: () => { god = true; },
   kill: () => { const e = bots.find((b) => !b.human); if (e) e.hp = 0; },
   /** Pose fija para capturas headless (sin órbita ni follow). */
   shotCam: (on = true) => { shotCamFrozen = on; if (on) setShotCamPose(); },
-  info: () => ({ active, phase, score, round, cfg, pendingPiece, bots: bots.map((b) => ({ name: b.name, hp: b.hp, rpm: b.rpm, flipped: b.flipped })) }),
-  /** Equipa por API (headless / regresión). */
+  info: () => ({
+    active, phase, score, round, cfg, pendingPiece, build: playerBuild,
+    bots: bots.map((b) => ({ name: b.name, hp: b.hp, rpm: b.rpm, flipped: b.flipped })),
+  }),
+  /** Equipa por API (headless / regresión legado). */
   equip: (cat: PieceCat, id: string) => setPiece(cat, id),
+  openDrawer: (on = true) => {
+    if (phase === "fabricar") fab?.openDrawer(on);
+    else { partsDrawerOpen = on; syncPartsDrawer(); }
+  },
+  loadTemplate: (id: string) => {
+    if (!TEMPLATES[id]) return;
+    playerBuild = structuredClone(TEMPLATES[id].build);
+    saveBuild(playerBuild);
+    fab?.setBuild(playerBuild);
+    cfg = cfgFromBuild(playerBuild);
+    previewFabricacion();
+  },
 };

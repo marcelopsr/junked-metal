@@ -370,7 +370,9 @@ Tono: humor **picante** / taller / garantía void; español neutro; una línea a
 
 ## 27. Robot como ensamble — puntos de anclaje y reglas de CoG
 
-### Puntos de anclaje del robot
+> **2026-10-06 — reemplazado para producto.** El armado de tres ranuras fijas queda como referencia histórica y fallback `?duel=legacy`. La fuente de verdad del armado es [`docs/DEMOLICION_FABRICACION_ROBOCRAFT.md`](./DEMOLICION_FABRICACION_ROBOCRAFT.md) (rejilla 3D estilo RoboCraft + asiento + ruedas mínimas).
+
+### Puntos de anclaje del robot (legado 3×3)
 
 Cada robot se construye uniendo tres slots a un **origen de chasis**. El sistema no es libre (no es un grid 2D) sino una jerarquía de tres rangos fijos:
 

@@ -3,20 +3,30 @@
 #duel-ui.armado { background: linear-gradient(180deg, #0b0d0acc 0%, #0b0d0a44 35%, #0b0d0a99 72%, #0b0d0ae6 100%); pointer-events: none; }
 #duel-ui.armado .duel-wb > * { pointer-events: auto; }
 #duel-ui.armado #duel-confirm { pointer-events: auto; }
-.duel-wb { display: flex; flex-direction: column; min-height: 100%; max-width: 960px; margin: 0 auto; padding: 0.65rem 0.75rem calc(5.5rem + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.duel-wb { display: flex; flex-direction: column; min-height: 100%; max-width: 1100px; margin: 0 auto; padding: 0.65rem 0.75rem calc(5.5rem + env(safe-area-inset-bottom)); box-sizing: border-box; }
 .duel-wb-head { text-align: center; margin-bottom: 0.35rem; }
 .duel-wb-head h1 { font-size: 1rem; letter-spacing: 0.1em; margin: 0; color: #e0a030; }
 .duel-wb-hint { font-size: 0.82rem; color: #b9d3a4; margin: 0.35rem 0 0.15rem; }
 .duel-wb-fallback { font-size: 0.68rem; color: #7a9470; margin: 0 0 0.25rem; }
-.duel-wb-main { display: grid; grid-template-columns: minmax(9.5rem, 11.5rem) 1fr; gap: 0.5rem; flex: 1; min-height: 0; }
-.duel-wb-side { background: #141813dd; border: 1px solid #2c3a28; padding: 0.55rem 0.5rem; align-self: start; max-height: min(52vh, 22rem); overflow-y: auto; }
-.duel-wb-stage { position: relative; min-height: min(38vh, 18rem); pointer-events: none; }
+.duel-wb-main { display: grid; grid-template-columns: minmax(8.5rem, 10.5rem) minmax(0, 1fr) auto; gap: 0.45rem; flex: 1; min-height: 0; align-items: stretch; }
+.duel-wb-side { background: #141813dd; border: 1px solid #2c3a28; padding: 0.55rem 0.5rem; align-self: start; max-height: min(56vh, 24rem); overflow-y: auto; }
+.duel-wb-center { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.duel-wb-stage { position: relative; flex: 1; min-height: min(46vh, 21rem); pointer-events: auto; }
+.duel-wb-drawer { position: relative; width: 13.75rem; max-width: 38vw; flex-shrink: 0; }
+.duel-wb-drawer.closed { width: 2.65rem; }
+.duel-drawer-tab { position: absolute; left: 0; top: 0; z-index: 2; width: 2.65rem; min-height: 2.75rem; padding: 0.5rem 0.35rem; font: inherit; font-size: 0.58rem; line-height: 1.15; letter-spacing: 0.04em; text-transform: uppercase; color: #b9d3a4; background: #141813f0; border: 1px solid #2c3a28; border-right: none; cursor: pointer; writing-mode: vertical-rl; transform: rotate(180deg); }
+.duel-wb-drawer:not(.closed) .duel-drawer-tab { left: -2.65rem; border-right: 1px solid #2c3a28; border-left: none; writing-mode: horizontal-tb; transform: none; width: auto; min-width: 6.5rem; padding: 0.45rem 0.55rem; font-size: 0.62rem; }
+.duel-drawer-panel { height: 100%; min-height: min(46vh, 21rem); margin-left: 2.65rem; background: #141813f2; border: 1px solid #2c3a28; overflow: hidden; transition: opacity 0.15s ease, transform 0.2s ease; }
+.duel-wb-drawer.closed .duel-drawer-panel { opacity: 0; transform: translateX(0.75rem); pointer-events: none; position: absolute; right: 0; width: 13.75rem; }
+.duel-wb-drawer:not(.closed) .duel-drawer-panel { opacity: 1; transform: none; pointer-events: auto; overflow-y: auto; }
+.duel-wb-drops { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr minmax(3.25rem, auto); gap: 0.4rem; padding: 0.35rem 0.45rem 0.55rem; box-sizing: border-box; pointer-events: none; }
+.duel-wb-drops > .duel-drop { pointer-events: auto; }
 .duel-equip { text-align: center; font-size: 0.72rem; color: #6fb3c4; margin: 0.2rem 0 0.35rem; letter-spacing: 0.04em; }
 .duel-tray-col.drag-over { outline: 2px solid #7fbf5a; outline-offset: 2px; }
 .duel-drop { pointer-events: auto; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.15rem; padding: 0.45rem 0.35rem; border: 2px dashed #3a4a34; background: #0b0d0acc; text-align: center; cursor: pointer; transition: border-color 0.12s, background 0.12s; }
-.duel-drop[data-slot="chassis"] { grid-column: 1 / -1; align-self: end; max-width: 11rem; margin: 0 auto; width: 100%; }
-.duel-drop[data-slot="wheels"] { align-self: center; justify-self: start; max-width: 8.5rem; }
-.duel-drop[data-slot="weapon"] { align-self: center; justify-self: end; max-width: 8.5rem; }
+.duel-drop[data-slot="wheels"] { grid-row: 1; grid-column: 1; align-self: end; justify-self: start; max-width: 8.5rem; }
+.duel-drop[data-slot="weapon"] { grid-row: 1; grid-column: 2; align-self: end; justify-self: end; max-width: 8.5rem; }
+.duel-drop[data-slot="chassis"] { grid-row: 2; grid-column: 1 / -1; align-self: end; max-width: 11rem; margin: 0 auto; width: 100%; }
 .duel-drop-lab { font-size: 0.62rem; letter-spacing: 0.06em; text-transform: uppercase; color: #6fb3c4; }
 .duel-drop-val { font-size: 0.78rem; color: #b9d3a4; line-height: 1.2; }
 .duel-drop.drag-over,
@@ -24,8 +34,8 @@
 .duel-drop.equipped:not(.pick-target):not(.drag-over) { border-style: solid; border-color: #2c3a28; }
 @keyframes duel-drop-pulse { 0%, 100% { box-shadow: 0 0 0 0 #7fbf5a44; } 50% { box-shadow: 0 0 0 3px #7fbf5a33; } }
 .duel-sec-h { font-size: 0.68rem; letter-spacing: 0.06em; color: #6fb3c4; margin: 0 0 0.45rem; font-weight: normal; text-transform: uppercase; }
-.duel-wb-tray-wrap { margin-top: 0.5rem; background: #141813ee; border: 1px solid #2c3a28; padding: 0.5rem 0.55rem 0.55rem; }
-.duel-wb-tray { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
+.duel-wb-tray-wrap { margin: 0; background: transparent; border: none; padding: 0.5rem 0.45rem 0.55rem; }
+.duel-wb-tray { display: flex; flex-direction: column; gap: 0.55rem; }
 .duel-tray-col { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
 .duel-tray-lab { font-size: 0.62rem; color: #7a9470; text-transform: uppercase; letter-spacing: 0.04em; }
 .duel-tray-chips { display: flex; flex-direction: column; gap: 0.3rem; }
@@ -83,6 +93,10 @@
 .duel-hp.enemy i { background: #d12a1c; }
 .duel-hp.you i { background: #7fbf5a; }
 .duel-hp i { display: block; height: 100%; width: 100%; transform-origin: left; }
+.duel-part-wear { margin-top: 0.35rem; font-size: 0.58rem; letter-spacing: 0.04em; color: #8fa88a; }
+.duel-part-wear.hidden { display: none; }
+.duel-part-wear .duel-hp.part { height: 5px; margin-top: 0.15rem; max-width: 12rem; }
+.duel-part-wear .duel-hp.part i { background: #c9a227; }
 .duel-score { text-align: center; font-size: 0.8rem; color: #6fb3c4; margin-top: 0.25rem; }
 #duel-inter, #duel-res { max-width: 420px; margin: 12vh auto; padding: 1.5rem; background: #141813; border: 1px solid #2c3a28; text-align: center; display: none; pointer-events: auto; }
 #duel-inter button, #duel-res button { font: inherit; padding: 0.55rem 1rem; min-height: 2.75rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #b9d3a4; cursor: pointer; margin: 0.25rem; letter-spacing: 0.04em; }
@@ -100,12 +114,19 @@
 #duel-flip { position: fixed; right: 0.75rem; bottom: 4.5rem; padding: 0.5rem 0.75rem; font: inherit; background: #141813; border: 1px solid #2c3a28; color: #b9d3a4; display: none; pointer-events: auto; }
 #duel-ui.fight.flipped #duel-flip { display: block; }
 @media (max-width: 640px) {
-  .duel-wb-main { grid-template-columns: 1fr; }
-  .duel-wb-side { max-height: none; order: 2; }
-  .duel-wb-stage { min-height: 34vh; order: 1; }
-  .duel-wb-tray { grid-template-columns: 1fr; }
-  .duel-tray-chips { flex-direction: row; flex-wrap: wrap; }
-  .duel-chip { flex: 1 1 calc(33% - 0.3rem); min-width: 5.5rem; min-height: 2.75rem; }
+  .duel-wb-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto auto; }
+  .duel-wb-center { order: 1; }
+  .duel-wb-stage { min-height: 36vh; }
+  .duel-wb-drawer { order: 2; position: relative; width: 100%; max-width: none; pointer-events: auto; }
+  .duel-wb-drawer.closed { width: 100%; }
+  .duel-drawer-tab { position: relative; left: auto; width: 100%; min-height: 2.75rem; writing-mode: horizontal-tb; transform: none; border: 1px solid #2c3a28; margin-bottom: 0.35rem; }
+  .duel-wb-drawer:not(.closed) .duel-drawer-tab { left: auto; min-width: 0; }
+  .duel-drawer-panel { position: relative; margin-left: 0; min-height: 0; height: auto; }
+  .duel-wb-drawer.closed .duel-drawer-panel { display: none; }
+  .duel-wb-drawer:not(.closed) .duel-drawer-panel { display: block; opacity: 1; transform: none; overflow: visible; }
+  .duel-wb-side { max-height: none; order: 3; }
+  .duel-tray-chips { flex-direction: column; }
+  .duel-chip { min-height: 2.75rem; }
   .duel-drop { min-height: 2.75rem; }
   .duel-sw .sw { min-width: 2.75rem; min-height: 2.75rem; }
   .duel-wb { padding-bottom: 7rem; }

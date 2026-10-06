@@ -22,6 +22,7 @@ export const BAL = {
   precios: tab("precios", raw.precios),
   plagas: raw.plagas,
   duelo: lista("duelo", raw.duelo),
+  dueloBloques: tab("duelo_bloques", raw.duelo_bloques),
   dueloChasis: tab("duelo_chasis", raw.duelo_chasis),
   dueloRuedas: tab("duelo_ruedas", raw.duelo_ruedas),
   dueloArmas: tab("duelo_armas", raw.duelo_armas),

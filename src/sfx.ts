@@ -237,6 +237,14 @@ export const SFX = {
   levelUp: () => [523, 659, 784, 1047].forEach((f, i) => tone("square", f, f, 0.12, 0.07, i * 0.07)),
   boss: () => { tone("sawtooth", 70, 40, 1.2, 0.3); hiss("lowpass", 600, 80, 1.2, 0.25); },
   break: () => { hiss("bandpass", 1600, 300, 0.25, 0.3); tone("triangle", 300, 120, 0.15, 0.15); },
+  /** Bloque que se desprende en Demolición fabricación: rueda = goma, chapa = metal. */
+  duelPartBreak: (wheel: boolean) => {
+    if (wheel) {
+      gate("d-wheel", 12) && (tone("sine", 180, 90, 0.12, 0.16), hiss("bandpass", 900, 350, 0.08, 0.14));
+    } else {
+      gate("d-metal", 12) && (tone("triangle", 420, 180, 0.08, 0.12), hiss("bandpass", 2800, 700, 0.06, 0.16));
+    }
+  },
   click: () => tone("square", 900, 900, 0.03, 0.05),
   // Interfaz: bip de foco, clic de radio al aceptar, estática al cambiar de pantalla
   blip: () => gate("blip", 25) && tone("square", 1320, 1320, 0.025, 0.035),

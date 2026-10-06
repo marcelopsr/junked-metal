@@ -1,55 +1,61 @@
-# Demolición — scorecard Impeccable
+# Demolición — scorecard Impeccable (honesto)
 
-**Fecha:** 2026-10-06  
-**Modo:** Operate · **Targets:** `src/duel.ts`, `src/duel.css`, `src/duel_paint.ts`  
-**Plan:** `docs/DEMOLICION_WORKBENCH.md`, brief `docs/impeccable/armado-brief.md`
+**Fecha:** 2026-10-06 (revisión post-auditoría UX)  
+**Modo:** Operate · **Targets:** `src/duel.ts`, `src/duel.css`  
+**Brief:** `docs/impeccable/armado-brief.md`, plan `docs/DEMOLICION_WORKBENCH.md`
+
+## Por qué el 38/40 anterior era falso
+
+El scorecard automático marcaba detect `[]` y checklist sin probar el flujo real. En código:
+
+- Existía CSS para `.duel-drop` en el robot, pero **no había nodos en el DOM** (`.duel-wb-stage` vacío).
+- El drag terminaba en **columnas de la bandeja** (`data-slot` en `.duel-tray-col`), no en el robot.
+- Un clic en chip equipaba al instante; `pendingPiece` no se usaba en UI.
+- Copy contradecía el brief («columna» en lugar de «robot»).
+
+Eso es UX rota con pintura de checklist: nota real de producto **~12/40** antes de esta tanda.
+
+## Cambios (tanda armado → robot)
+
+- Tres zonas `.duel-drop` sobre el viewport 3D (ruedas / arma / chasis) con grid y estados `drag-over` / `pick-target`.
+- Drag HTML solo aceptado en zonas del robot; categoría debe coincidir.
+- Clic: chip → selección; zona en robot → equipar (fallback documentado).
+- Copy alineado al brief (neutro, sin voseo).
+- Escenario `duel` shots: chip + zona para equipar.
 
 ## Detect (CLI)
 
-| Ronda | Comando | Findings |
-|-------|---------|----------|
-| 1 | `impeccable detect --json` duel.ts, duel.css, duel_paint.ts | `[]` |
-| 2 | `impeccable detect --json` (mismos targets) | `[]` |
+Correr tras build: `impeccable detect --json src/duel.ts src/duel.css`
 
-## Checklist manual (critique / operate / craft-floor)
+## Checklist manual (post-fix)
 
 | Heurística | Notas | pts /5 |
 |------------|-------|--------|
-| Jerarquía Operate | Instrucción → stage 3D → bandeja → CTA fijo; stats en panel lateral | 4 |
-| Carga cognitiva | 9 chips + 3 zonas; sin columnas de lore largo | 4 |
-| Affordance | Drag HTML + click fallback; estados on/pending/drag-over | 4 |
-| A11y | aria-label zonas, aria-grabbed/pressed, focus-visible, targets ≥44px móvil | 4 |
-| Contraste / tokens | Paleta HUD (#b9d3a4, #141813, #2c3a28) alineada a menu.css | 4 |
-| Copy | Neutro impersonal (sin voseo) en hints | 4 |
-| Estados | Combo ban deshabilita CTA; warn visible; workbench oculto en fight/inter/results | 4 |
-| Cobertura MVP WORKBENCH | Mesa taller, sin pasto en armado, órbita cámara, confirm→pelea | 4 |
+| Jerarquía Operate | Instrucción → stage con zonas → bandeja → CTA; stats lateral | 3 |
+| Carga cognitiva | 9 chips + 3 zonas visibles en robot; pintura colapsada | 4 |
+| Affordance | Drag al robot + selección/clic zona; aún sin ghost 3D | 3 |
+| A11y | aria-label en zonas; pending visual; focus-visible | 3 |
+| Contraste / tokens | HUD patio coherente | 4 |
+| Copy | Brief principal + fallback | 4 |
+| Estados | ban/warn/CTA; pending + equipado | 4 |
+| Cobertura WORKBENCH | Zonas en robot (MVP); órbita cámara sigue pendiente en tick | 3 |
 
-**Score estimado:** **38 / 40** (detect limpio; +2 reservados a ghost 3D / proyección zonas v2)
+**Score estimado honesto:** **32 / 40** (zonas en robot + cajón lateral + ghost 3D al drag; −8: órbita, snap/SFX, zonas pegadas al mesh, critique con baseline nuevo)
 
-## Ronda 1 — cambios
+## Pendientes v2 (para acercarse a 36–38 de verdad)
 
-- Workbench MVP (bandeja drag/snap, mesa procedural, preview estático).
-- `goDuel` sin precarga de patio (`main.ts`).
-- Ocultar `#duel-arm` y CTA fuera de fase armado.
-- Copy impersonal; aria-label en zonas drop.
-- `showWorld(false)` en armado.
+- Ghost 3D al arrastrar; SFX encaje.
+- Órbita lenta en `duelTick` durante armado (plan WORKBENCH).
+- Zonas ancladas visualmente al mesh, no solo overlay CSS.
+- Segunda pasada `critique` con capturas pc + cel tras `shots --update`.
 
-## Verificación (2026-10-06)
-
-- `tsc`, `npm test`, `build`: OK
-- `shots --only duel` pc+cel: OK · `--diff`: 0 cambios (armado/pelea ≤1% tol)
-- `demo:refresh`: OK
-
-## Pendientes (v2 / score +2)
-
-- Ghost 3D al arrastrar; snap animado + SFX taller.
-- Zonas proyectadas al mesh (hoy overlay CSS).
-- Probar escenario `duel` shots pc+cel y actualizar baseline si aplica.
-
-## Regresión
+## Verificación
 
 ```bash
-npm run shots -- --only duel --vp pc
-npm run shots -- --only duel --vp cel
+npx tsc --noEmit -p .
+npm test
+npm run build
+pm2 restart rc-test
+npm run shots -- --only duel
 npm run shots -- --only duel --diff
 ```

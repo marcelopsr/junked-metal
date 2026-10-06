@@ -192,7 +192,11 @@ export function duelActive(): boolean;
 
 ## 5. Pantalla de armado (GDD §35, §37)
 
-**Flujo:** Menú Demolición → armado 3 columnas (chasis | ruedas | arma) + 2 cosméticos + preview 3D → CONFIRMAR → arena.
+**Flujo por defecto (2026-10):** Menú Demolición → **FABRICACIÓN** (`duel_fabricacion.ts`, rejilla RoboCraft-lite, `duel_build.ts`) → CONFIRMAR → arena. Legado 3×3: `?duel=legacy`. Ver `docs/DEMOLICION_FABRICACION_ROBOCRAFT.md`.
+
+**Combate fabricación:** una **barra de vida global** (`Bot.hp`); cada golpe resta HP y además desgasta el bloque más cercano al impacto (`part_wear_mul` en `BAL.duelo`). Integridad de bloque ≤ 0 → se quita la celda y se repinta el mesh; asiento perdido → KO (`hp = 0`).
+
+**Flujo legado:** armado 3 columnas (chasis | ruedas | arma) + 2 cosméticos + preview 3D → CONFIRMAR → arena.
 
 **PC:** tres columnas con ‹ ›; barras Masa/Vel/Vida; detalle + lore; presets Tanque/Veloz/Trompo; pintura §34 en la misma pantalla.
 
