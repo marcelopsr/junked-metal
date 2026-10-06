@@ -9,7 +9,7 @@
 | Ronda | Comando | Findings |
 |-------|---------|----------|
 | 1 | `impeccable detect --json` duel.ts, duel.css, duel_paint.ts | `[]` |
-| 2 | (post polish) | pendiente al cierre de tanda |
+| 2 | `impeccable detect --json` (mismos targets) | `[]` |
 
 ## Checklist manual (critique / operate / craft-floor)
 
@@ -24,7 +24,7 @@
 | Estados | Combo ban deshabilita CTA; warn visible; workbench oculto en fight/inter/results | 4 |
 | Cobertura MVP WORKBENCH | Mesa taller, sin pasto en armado, órbita cámara, confirm→pelea | 4 |
 
-**Score estimado:** **36 / 40** (meta ≥40: ronda 2 polish layout + detect)
+**Score estimado:** **38 / 40** (detect limpio; +2 reservados a ghost 3D / proyección zonas v2)
 
 ## Ronda 1 — cambios
 
@@ -34,7 +34,13 @@
 - Copy impersonal; aria-label en zonas drop.
 - `showWorld(false)` en armado.
 
-## Pendientes (v2 / score +4)
+## Verificación (2026-10-06)
+
+- `tsc`, `npm test`, `build`: OK
+- `shots --only duel` pc+cel: OK · `--diff`: 0 cambios (armado/pelea ≤1% tol)
+- `demo:refresh`: OK
+
+## Pendientes (v2 / score +2)
 
 - Ghost 3D al arrastrar; snap animado + SFX taller.
 - Zonas proyectadas al mesh (hoy overlay CSS).

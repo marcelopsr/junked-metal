@@ -88,7 +88,7 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 - Configuración de imagen: gamma como curva de medios tonos; FSR apagado en carrera de 2 jugadores; recorte por distancia de props.
 - Rendimiento: ~1.600 draw calls en partida y ~3.200 en carrera a 2 jugadores (posible cuello de botella en celulares).
 
-**Modo Demolición (duelo melee):** GDD [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md); mesa de armado MVP [`docs/DEMOLICION_WORKBENCH.md`](./DEMOLICION_WORKBENCH.md) (`src/duel.ts` + `duel.css`: taller farol, bandeja drag/click, órbita, arena al confirmar). Menú «Demolición», `?duel`, `__duel`, escenario `shots` `duel`; `goDuel()` ya no precarga patio. **Pendiente:** playtest balance/IA, assets GLB §36, polish Impeccable v2. No tocar `goBattle()` de kart.
+**Modo Demolición (duelo melee):** GDD [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md); mesa MVP [`docs/DEMOLICION_WORKBENCH.md`](./DEMOLICION_WORKBENCH.md). Impeccable Operate: scorecard [`docs/impeccable/demolicion-scorecard.md`](./impeccable/demolicion-scorecard.md) (~38/40; `impeccable detect --json` en duel.ts/css). Regresión UI: `npm run shots -- --only duel --diff` (pc+cel; pelea usa `__duel.confirm()`). **Pendiente:** balance/IA, GLB §36, ghost drag v2. No tocar `goBattle()` de kart.
 
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 
