@@ -931,13 +931,47 @@ function ensureUi() {
     if (e.key === "q" || e.key === "Q") { playerPaint.zones[paintSlot] = cycleColor(playerPaint.zones[paintSlot], -1); persistPaint(); syncArmado(); }
     if (e.key === "r" || e.key === "R") { playerPaint.zones[paintSlot] = cyclePreset(playerPaint.zones[paintSlot], 1); persistPaint(); syncArmado(); }
   });
+  addEventListener("keydown", (e) => {
+    if (!active || phase !== "fabricar") return;
+    const paintOpen = (document.getElementById(PAINT_FAB.detailsId) as HTMLDetailsElement | null)?.open;
+    if (!paintOpen) return;
+    if (e.key === "q" || e.key === "Q") {
+      playerPaint.zones[paintSlot] = cycleColor(playerPaint.zones[paintSlot], -1);
+      persistPaint(); PAINT_FAB.refresh(); syncPaintUi(PAINT_FAB);
+    }
+    if (e.key === "e" || e.key === "E") {
+      playerPaint.zones[paintSlot] = cyclePreset(playerPaint.zones[paintSlot], 1);
+      persistPaint(); PAINT_FAB.refresh(); syncPaintUi(PAINT_FAB);
+    }
+  });
 }
 
 function persistPaint() { saveDuelPaint(playerPaint); }
 
 type PaintUiTarget = { detailsId: string; panelId: string; refresh: () => void };
 const PAINT_ARM: PaintUiTarget = { detailsId: "duel-paint-details", panelId: "duel-paint", refresh: () => syncArmado() };
-const PAINT_FAB: PaintUiTarget = { detailsId: "duel-fab-paint-details", panelId: "duel-fab-paint", refresh: () => previewFabricacion() };
+const PAINT_FAB: PaintUiTarget = { detailsId: "duel-fab-paint-details", panelId: "duel-fab-paint", refresh: () => { previewFabricacion(); updateFabPaintPreview(); fab?.refreshGhost(); } };
+
+const FAB_PAINT_PREVIEW_SLOTS: PaintSlot[] = ["chassis_body", "chassis_trim", "wheel_tire", "weapon_body"];
+
+function updateFabPaintPreview() {
+  const strip = document.getElementById("duel-fab-paint-preview");
+  const chip = document.getElementById("duel-fab-paint-chip");
+  const sw = FAB_PAINT_PREVIEW_SLOTS.map((s) => {
+    const c = playerPaint.zones[s].color;
+    return `<span class="duel-fab-pv-s" style="--pv:${c}" title="${SLOT_LABEL[s]}"></span>`;
+  }).join("");
+  if (strip) {
+    strip.hidden = false;
+    strip.innerHTML = `<span class="duel-fab-pv-lab">Pintura</span><span class="duel-fab-pv-sw">${sw}</span>`;
+  }
+  if (chip) {
+    const a = playerPaint.zones.chassis_body.color;
+    const b = playerPaint.zones.chassis_trim.color;
+    chip.hidden = false;
+    chip.style.background = `linear-gradient(135deg, ${a} 0%, ${a} 48%, ${b} 52%, ${b} 100%)`;
+  }
+}
 
 function onPaintPanelClick(e: Event, target: PaintUiTarget) {
   const t = e.target as HTMLElement;
@@ -981,12 +1015,17 @@ function syncPaintUi(target: PaintUiTarget = PAINT_ARM) {
     const on = c === z.color;
     return `<button type="button" class="sw${on ? " on" : ""}" data-sw="${c}" style="background:${c}" aria-label="Color ${name}" aria-pressed="${on}"></button>`;
   }).join("");
+  const fab = target.detailsId === PAINT_FAB.detailsId;
+  const hint = fab
+    ? `<p class="duel-paint-hint"><span class="duel-paint-hint-lab">Atajos:</span> <kbd>Q</kbd> color anterior · <kbd>E</kbd> siguiente material · <kbd>R</kbd> gira pieza</p>`
+    : `<p class="duel-paint-hint"><span class="duel-paint-hint-lab">Atajos:</span> <kbd>Q</kbd> color anterior · <kbd>R</kbd> siguiente material</p>`;
   el.innerHTML = open
-    ? `<p class="duel-paint-hint"><span class="duel-paint-hint-lab">Atajos:</span> <kbd>Q</kbd> color anterior · <kbd>R</kbd> siguiente material</p>
+    ? `${hint}
 <fieldset class="duel-fs"><legend>Zona a pintar</legend><div class="duel-pzones">${tabs}</div></fieldset>
 <fieldset class="duel-fs"><legend>Color</legend><div class="duel-sw">${sw}</div></fieldset>
 <p class="duel-paint-meta"><span class="duel-paint-mat-lab">Material:</span> <strong>${PRESET_LABEL[z.preset]}</strong> · <button type="button" data-preset>Siguiente material</button></p>`
     : "";
+  if (fab) updateFabPaintPreview();
 }
 
 function syncArmado() {
@@ -1092,6 +1131,8 @@ function showFabricar() {
   fab.setBuild(playerBuild.cells.length ? playerBuild : defaultBuild());
   playerBuild = fab.getBuild();
   cfg = cfgFromBuild(playerBuild);
+  syncPaintUi(PAINT_FAB);
+  updateFabPaintPreview();
   ui.className = "on fabricar";
   fabCamOff = { yaw: 0, pitch: 0 };
   fabCamDistMul = 1;

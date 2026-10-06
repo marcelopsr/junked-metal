@@ -3,6 +3,7 @@ import "./hud.css";
 import "./duel_fabricacion.css";
 import { icon } from "./icons";
 import { isTouch } from "./input";
+import { SFX } from "./sfx";
 import { BAL } from "./balance";
 import {
   type BlockCat, type Cell, type RobotBuild, type Rot,
@@ -56,6 +57,7 @@ export function mountFabricacion(
   let drawerOpen = !isTouch;
   let placedFlash: string | null = null;
   let placedFlashT = 0;
+  let rejectFlashT = 0;
   let ghostPin: { x: number; z: number } | null = null;
   const undo: RobotBuild[] = [];
 
@@ -68,6 +70,7 @@ export function mountFabricacion(
 <div class="duel-fab-main">
 <aside class="duel-fab-side h-panel" aria-labelledby="duel-fab-stats"><h2 id="duel-fab-stats" class="duel-sec-h">Telemetría</h2>
 <div class="duel-fab-bars" id="duel-fab-bars"></div>
+<div class="duel-fab-paint-preview" id="duel-fab-paint-preview" aria-label="Vista previa de pintura" hidden></div>
 <details class="duel-paint-wrap" id="duel-fab-paint-details"><summary class="duel-paint-sum">Pintura <span class="duel-opt">(opcional)</span></summary><div class="duel-paint" id="duel-fab-paint"></div></details>
 <div class="duel-fab-tpl" id="duel-fab-tpl"></div>
 <p class="duel-fab-warn" id="duel-fab-warn" role="status" aria-live="polite"></p></aside>
@@ -76,6 +79,7 @@ export function mountFabricacion(
 <span class="duel-fab-corner tl" aria-hidden="true"></span><span class="duel-fab-corner tr" aria-hidden="true"></span>
 <span class="duel-fab-corner bl" aria-hidden="true"></span><span class="duel-fab-corner br" aria-hidden="true"></span>
 <span class="duel-fab-visor-tag">VISOR 3D</span>
+<div class="duel-fab-paint-chip" id="duel-fab-paint-chip" hidden aria-hidden="true"></div>
 <div class="duel-fab-zoom" aria-label="Zoom de cámara">
 <button type="button" class="duel-fab-btn duel-fab-zoom-btn" id="duel-fab-zoom-out" aria-label="Alejar"></button>
 <button type="button" class="duel-fab-btn duel-fab-zoom-btn" id="duel-fab-zoom-in" aria-label="Acercar"></button>
@@ -246,6 +250,37 @@ export function mountFabricacion(
     }
     grid.innerHTML = cells.join("");
     $("duel-fab-ylab").textContent = layerPlanoLabel(layerY, D.grid_max_y);
+    applyGridPinHighlight();
+  }
+
+  function applyGridPinHighlight() {
+    gridEl.querySelectorAll(".duel-fab-cell").forEach((btn) => {
+      const el = btn as HTMLButtonElement;
+      const x = +el.dataset.x!, z = +el.dataset.z!;
+      const pinned = ghostPin?.x === x && ghostPin?.z === z;
+      el.classList.toggle("pin", pinned);
+      const lab = el.classList.contains("filled");
+      const probe: Cell = { x, y: layerY, z, rot, blockId: selected };
+      const blocked = pinned && !erase && !lab && !canPlace(build, probe);
+      el.classList.toggle("no-can", blocked);
+      let xMark = el.querySelector(".duel-fab-x");
+      if (blocked) {
+        if (!xMark) {
+          xMark = document.createElement("span");
+          xMark.className = "duel-fab-x";
+          xMark.setAttribute("aria-hidden", "true");
+          xMark.textContent = "×";
+          el.appendChild(xMark);
+        }
+        const base = `Celda ${x}, ${layerPlanoLabel(layerY, D.grid_max_y)}, ${z}`;
+        el.setAttribute("aria-label", `${base}, no cabe aquí`);
+      } else if (!lab) {
+        xMark?.remove();
+        const base = `Celda ${x}, ${layerPlanoLabel(layerY, D.grid_max_y)}, ${z}`;
+        const can = canPlace(build, probe);
+        el.setAttribute("aria-label", can ? `${base}, colocable` : base);
+      }
+    });
   }
 
   function syncBars() {
@@ -269,6 +304,8 @@ export function mountFabricacion(
     $("duel-fab-equip").textContent = erase
       ? "Modo borrar: tocar una celda ocupada"
       : `Pieza activa: ${def.nombre}`;
+    const equip = $("duel-fab-equip");
+    equip.classList.toggle("reject-flash", rejectFlashT > 0 && performance.now() < rejectFlashT);
     const rh = $("duel-fab-rot-hint");
     const isWheel = def.cat === "movimiento";
     rh.innerHTML = erase ? "" : isWheel
@@ -351,13 +388,16 @@ export function mountFabricacion(
   };
   gridEl.addEventListener("mouseover", (e) => {
     const cell = (e.target as HTMLElement).closest(".duel-fab-cell") as HTMLElement | null;
-    if (cell?.dataset.x != null) ghostPin = { x: +cell.dataset.x, z: +cell.dataset.z! };
+    if (cell?.dataset.x != null) {
+      ghostPin = { x: +cell.dataset.x, z: +cell.dataset.z! };
+      applyGridPinHighlight();
+    }
     emitHover(cell);
   });
-  gridEl.addEventListener("mouseleave", () => { ghostPin = null; refreshGhost(); });
+  gridEl.addEventListener("mouseleave", () => { ghostPin = null; applyGridPinHighlight(); refreshGhost(); });
   gridEl.addEventListener("pointerdown", (e) => {
     const cell = (e.target as HTMLElement).closest(".duel-fab-cell") as HTMLElement | null;
-    if (cell?.dataset.x != null) { ghostPin = { x: +cell.dataset.x, z: +cell.dataset.z! }; refreshGhost(); }
+    if (cell?.dataset.x != null) { ghostPin = { x: +cell.dataset.x, z: +cell.dataset.z! }; applyGridPinHighlight(); refreshGhost(); }
   }, { passive: true });
 
   root.addEventListener("click", (e) => {
@@ -372,23 +412,37 @@ export function mountFabricacion(
     if (cell?.dataset.x != null) {
       const x = +cell.dataset.x!, z = +cell.dataset.z!;
       if (erase) {
+        const had = cellAt(build, x, layerY, z);
+        if (!had) { SFX.duelFabReject(); rejectFlashT = performance.now() + 320; syncBars(); return; }
+        SFX.duelFabErase();
         pushUndo();
         apply(removeAt(build, x, layerY, z));
       } else {
-        const next = placeCell(build, { x, y: layerY, z, rot, blockId: selected });
+        const probe: Cell = { x, y: layerY, z, rot, blockId: selected };
+        if (!canPlace(build, probe)) {
+          SFX.duelFabReject();
+          rejectFlashT = performance.now() + 320;
+          ghostPin = { x, z };
+          applyGridPinHighlight();
+          syncBars();
+          refreshGhost();
+          return;
+        }
+        const next = placeCell(build, probe);
         if (next) {
+          SFX.duelFabPlace();
           placedFlash = `${x},${z}`;
           placedFlashT = performance.now();
           pushUndo();
           apply(next);
-          requestAnimationFrame(() => {
-            if (performance.now() - placedFlashT > 380) return;
-            syncGrid();
-          });
-          setTimeout(() => {
-            if (placedFlash === `${x},${z}`) placedFlash = null;
-            syncGrid();
-          }, 420);
+          const clearFlash = () => {
+            if (placedFlash !== `${x},${z}`) return;
+            placedFlash = null;
+            const btn = gridEl.querySelector(`.duel-fab-cell[data-x="${x}"][data-z="${z}"]`);
+            btn?.classList.remove("just-placed");
+          };
+          requestAnimationFrame(() => { if (performance.now() - placedFlashT <= 380) clearFlash(); });
+          setTimeout(clearFlash, 420);
         }
       }
       return;

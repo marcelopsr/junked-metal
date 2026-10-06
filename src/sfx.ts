@@ -245,6 +245,10 @@ export const SFX = {
       gate("d-metal", 12) && (tone("triangle", 420, 180, 0.08, 0.12), hiss("bandpass", 2800, 700, 0.06, 0.16));
     }
   },
+  /** Colocación en rejilla de fabricación Demolición. */
+  duelFabPlace: () => gate("fab-pl", 22) && (tone("triangle", 640, 960, 0.06, 0.1), hiss("bandpass", 2200, 800, 0.04, 0.12)),
+  duelFabReject: () => gate("fab-rj", 28) && (tone("square", 280, 140, 0.07, 0.09), hiss("bandpass", 900, 200, 0.05, 0.1)),
+  duelFabErase: () => gate("fab-er", 24) && (tone("triangle", 360, 200, 0.05, 0.08), hiss("bandpass", 1400, 400, 0.04, 0.1)),
   click: () => tone("square", 900, 900, 0.03, 0.05),
   // Interfaz: bip de foco, clic de radio al aceptar, estática al cambiar de pantalla
   blip: () => gate("blip", 25) && tone("square", 1320, 1320, 0.025, 0.035),

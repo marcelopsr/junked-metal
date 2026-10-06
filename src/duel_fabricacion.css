@@ -289,9 +289,54 @@
 }
 .duel-fab.erase-mode .duel-fab-cell:not(.filled) { opacity: 0.35; pointer-events: none; }
 .duel-fab-cell.can { border-color: var(--fab-accent); background: rgba(20, 40, 32, .88); animation: duel-drop-pulse 1.2s ease-in-out infinite; }
+.duel-fab-cell.pin:not(.filled) { box-shadow: inset 0 0 0 1px rgba(53, 201, 255, .55); }
+.duel-fab-cell.no-can {
+  border-color: var(--fab-ban);
+  border-style: solid;
+  background: rgba(48, 18, 18, .72);
+  animation: duel-fab-reject 0.45s ease-out;
+  cursor: not-allowed;
+}
+.duel-fab-cell.no-can .duel-fab-x {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.05rem; font-weight: 700; color: var(--fab-ban);
+  text-shadow: 0 0 6px rgba(0, 0, 0, .85);
+  pointer-events: none;
+}
+@keyframes duel-fab-reject {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
 .duel-fab-cell.just-placed { animation: duel-cell-place 0.42s ease-out; border-color: var(--fab-sig); box-shadow: 0 0 0 2px rgba(53, 201, 255, .45); }
 @keyframes duel-cell-place { 0% { transform: scale(1.12); background: rgba(53, 201, 255, .35); } 100% { transform: scale(1); } }
 .duel-fab-cell.rot-hint.can { box-shadow: inset 0 0 0 1px rgba(125, 255, 176, .35); }
+.duel-fab-equip.reject-flash { color: var(--fab-ban); animation: duel-fab-reject 0.32s ease-out; }
+
+.duel-fab-paint-preview {
+  display: flex; align-items: center; gap: 0.45rem;
+  margin-top: 0.45rem; padding: 0.38rem 0.42rem;
+  border: 1px solid var(--g-line); border-radius: var(--fab-radius-sm);
+  background: rgba(0, 0, 0, .32);
+}
+.duel-fab-pv-lab {
+  font-size: 0.58rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--g-dim); flex-shrink: 0;
+}
+.duel-fab-pv-sw { display: flex; gap: 0.28rem; flex-wrap: wrap; }
+.duel-fab-pv-s {
+  width: 1.35rem; height: 1.35rem; border-radius: 4px;
+  background: var(--pv); border: 1px solid rgba(255, 255, 255, .22);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35);
+}
+.duel-fab-paint-chip {
+  position: absolute; top: 0.45rem; right: 4.5rem; z-index: 2;
+  width: 2.1rem; height: 1.1rem; border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, .28);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+  pointer-events: none;
+}
 
 .duel-fab-drawer { display: flex; flex-direction: column; min-height: 0; padding: 0; overflow: hidden; }
 .duel-fab-drawer.closed { min-width: 0; }
