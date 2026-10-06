@@ -126,6 +126,20 @@ JSON: PC `.perf/2026-10-06-1837.json` · cel `.perf/2026-10-06-1838.json` (más 
 
 **Sim @300 s (semillas 1–3):** nv **11** (muerte 4:16), **16** (muerte 4:44), **12** (vivo @5:00) — estados over/over/play; bajas 198 / 329 / 226.
 
+### Sim @600 s (semillas 1–5, commit `450b6fb`)
+
+Bot estándar, sin god. Tres supervivencias completas; dos muertes tempranas (semillas 3 y 5).
+
+| Semilla | Resultado | Nv @ fin | Bajas |
+|--------:|-----------|---------:|------:|
+| 1 | vivo 600 s | 37 | 2426 |
+| 2 | vivo 600 s | 41 | 2820 |
+| 3 | muerte 268.9 s | 9 | 160 |
+| 4 | vivo 600 s | 38 | 2291 |
+| 5 | muerte 345.3 s | 8 | 137 |
+
+**Nota:** nivel a 10 min en runs largas (37–41) por encima del objetivo narrativo de rampa lenta; revisar `dureza_xp` / curva solo si playtest o sim @5 min empeora de forma sistemática.
+
 ### Mecánica (tanda 2026-10-06, antes de UI)
 
 - Contacto: empuje al auto (`contacto_empuje_auto`) al recibir golpe de contacto.
@@ -136,6 +150,8 @@ JSON: PC `.perf/2026-10-06-1837.json` · cel `.perf/2026-10-06-1838.json` (más 
 ### Fases 2–5 (2026-10-06)
 
 - **Combate/pickups:** empuje a bichos en contacto (`contacto_empuje_bicho`); imán un poco más rápido; gemas en radar si ≤40 en piso.
+- **Feel contacto (`450b6fb`):** `contacto_empuje_auto` 6.8, `contacto_empuje_bicho` 2.9, `enemigo_separacion` 1.58 m; empuje al auto escala con enjambre; anti-pinball y standoff en `enemies.ts`.
+- **Radio eventos (`450b6fb`):** `radioEvent()` — copy METEO/RADAR/SEÑAL, ícono, duración tras tipeo.
 - **Eventos:** avisos ~6 s antes (enjambre, élite, lluvia, pelota) vía `aviso_evento_s`; élites en radar (blip violeta).
 - **UX:** `NV 05 +2` con niveles pendientes; subtítulo en cartas con presión cercana; outro con tiempo/bajas/nivel.
 - **Gráficos:** ajuste `LOOK` (faro, niebla, exposición) para lectura nocturna en partida.
