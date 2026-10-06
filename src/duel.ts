@@ -97,7 +97,10 @@ let paintSlot: PaintSlot = "chassis_body";
 let flipCd = 0;
 let pendingPiece: { cat: PieceCat; id: string } | null = null;
 let shotCamFrozen = false;
-let previewFabMesh: B.Mesh | null = null;
+let previewFabRoot: B.TransformNode | null = null;
+/** Offsets de cámara en fabricación (arrastre en viewport; sin órbita automática). */
+let fabCamOff = { yaw: 0, pitch: 0 };
+let fabCamUnbind: (() => void) | null = null;
 
 function cfgFromBuild(b: RobotBuild): RobotConfig {
   const st = statsOfBuild(b, false);
@@ -128,6 +131,60 @@ function applyArmadoCam() {
   const { yaw, dist, height, targetY } = ARMADO_CAM;
   deps.cam.position.set(Math.sin(yaw) * dist, height, Math.cos(yaw) * dist);
   deps.cam.setTarget(new B.Vector3(0, targetY, 0));
+}
+
+function applyFabricarCam() {
+  const { yaw, dist, height, targetY } = ARMADO_CAM;
+  const a = yaw + fabCamOff.yaw;
+  const p = fabCamOff.pitch;
+  const d = dist * Math.cos(p);
+  const h = height + Math.sin(p) * dist * 0.85;
+  deps.cam.position.set(Math.sin(a) * d, h, Math.cos(a) * d);
+  deps.cam.setTarget(new B.Vector3(0, targetY, 0));
+}
+
+function unbindFabCamDrag() {
+  fabCamUnbind?.();
+  fabCamUnbind = null;
+}
+
+function bindFabCamDrag(el: HTMLElement | null) {
+  unbindFabCamDrag();
+  if (!el) return;
+  let drag = false;
+  let lx = 0;
+  let ly = 0;
+  const end = () => { drag = false; };
+  const onDown = (e: PointerEvent) => {
+    if (shotCamFrozen || phase !== "fabricar") return;
+    if (e.button !== 0) return;
+    drag = true;
+    lx = e.clientX;
+    ly = e.clientY;
+    el.setPointerCapture(e.pointerId);
+  };
+  const onMove = (e: PointerEvent) => {
+    if (!drag || shotCamFrozen || phase !== "fabricar") return;
+    const dx = e.clientX - lx;
+    const dy = e.clientY - ly;
+    const yawMul = e.pointerType === "touch" ? 0.0032 : 0.0024;
+    const pitchMul = e.pointerType === "touch" ? 0.0025 : 0.0019;
+    fabCamOff.yaw += dx * yawMul;
+    fabCamOff.pitch = Math.max(-0.4, Math.min(0.34, fabCamOff.pitch - dy * pitchMul));
+    lx = e.clientX;
+    ly = e.clientY;
+    applyFabricarCam();
+  };
+  el.addEventListener("pointerdown", onDown);
+  el.addEventListener("pointermove", onMove);
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+  fabCamUnbind = () => {
+    el.removeEventListener("pointerdown", onDown);
+    el.removeEventListener("pointermove", onMove);
+    el.removeEventListener("pointerup", end);
+    el.removeEventListener("pointercancel", end);
+  };
 }
 
 export function initDuel(d: Deps) { deps = d; ensureUi(); }
@@ -325,13 +382,22 @@ function applyBuildPartWear(vic: Bot, atk: Bot, dmg: number) {
 }
 
 function previewFabricacion() {
-  previewFabMesh?.dispose();
-  previewFabMesh = null;
+  previewFabRoot?.dispose();
+  previewFabRoot = null;
   if (!playerBuild.cells.length) return;
+  const scene = deps.scene;
+  const pivot = visualPivotOffset(playerBuild);
+  const aabb = aabbOfBuild(playerBuild);
+  const root = new B.TransformNode("fabPreview", scene);
+  root.position.set(0, Math.max(WORKBENCH_TABLE_SURFACE, aabb.size.y * 0.5 + 0.05), 0);
+  const vis = new B.TransformNode("fabVis", scene);
+  vis.parent = root;
+  vis.position.set(-pivot.x, -pivot.y, -pivot.z);
   const m = paintBuildMesh(playerBuild, playerPaint);
-  m.position.set(0, WORKBENCH_TABLE_SURFACE + 0.02, 0);
+  m.parent = vis;
+  m.position.copyFrom(pivot);
   shadows.addShadowCaster(m);
-  previewFabMesh = m;
+  previewFabRoot = root;
 }
 
 function buildWorkbench() {
@@ -399,7 +465,7 @@ function cleanup() {
   for (const b of bots) { b.agg.dispose(); b.root.dispose(); }
   bots = [];
   previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
-  previewFabMesh?.dispose(); previewFabMesh = null;
+  previewFabRoot?.dispose(); previewFabRoot = null;
   for (const m of mesh) { m.physicsBody?.dispose(); m.dispose(); }
   mesh = [];
   lastHit.clear();
@@ -666,6 +732,7 @@ function previewArmado() {
 }
 
 function showArmado() {
+  unbindFabCamDrag();
   fab?.destroy(); fab = null;
   ensureUi(); cleanup(); phase = "armado";
   pendingPiece = null;
@@ -709,9 +776,11 @@ function showFabricar() {
   playerBuild = fab.getBuild();
   cfg = cfgFromBuild(playerBuild);
   ui.className = "on fabricar";
+  fabCamOff = { yaw: 0, pitch: 0 };
   previewFabricacion();
-  applyArmadoCam();
-  shotCamFrozen = true;
+  applyFabricarCam();
+  shotCamFrozen = false;
+  bindFabCamDrag(document.getElementById("duel-fab-viewport"));
   document.getElementById("fe")?.classList.add("hidden");
   document.getElementById("touch")?.classList.add("hidden");
 }
@@ -999,7 +1068,8 @@ export function duelTick(dt: number) {
   if (!active || paused) return;
   if (phase === "inter" || phase === "results") return;
   if (flipCd > 0) flipCd = Math.max(0, flipCd - dt);
-  if (phase === "armado" || phase === "fabricar") return;
+  if (phase === "armado") return;
+  if (phase === "fabricar") return;
   if (phase === "countdown") {
     countdown -= dt;
     if (countdown <= 0) phase = "fight";
@@ -1023,7 +1093,8 @@ export function duelTick(dt: number) {
 }
 
 function setShotCamPose() {
-  if (phase === "armado" || phase === "fabricar") applyArmadoCam();
+  if (phase === "fabricar") applyArmadoCam();
+  else if (phase === "armado") applyArmadoCam();
   else {
     deps.cam.position.set(-6, 7.5, -11);
     deps.cam.setTarget(new B.Vector3(0, 0.6, 0));
@@ -1033,6 +1104,7 @@ function setShotCamPose() {
 export function exitDuel() {
   if (!active) return;
   active = false; paused = false; autoPlayer = false; god = false; pendingPiece = null; shotCamFrozen = false;
+  unbindFabCamDrag();
   fab?.destroy(); fab = null;
   cleanup();
   ui.className = "";

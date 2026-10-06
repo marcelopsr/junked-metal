@@ -43,15 +43,19 @@ export function mountFabricacion(
   root.id = "duel-fab";
   root.className = "duel-fab";
   root.innerHTML = `<header class="duel-fab-head"><h1>FABRICACIÓN</h1>
-<p class="duel-fab-hint">Colocar bloques en la rejilla: el robot se arma celda a celda</p>
-<p class="duel-fab-fallback">R rota · M espejo · Z deshacer · plantillas abajo a la izquierda</p></header>
+<p class="duel-fab-hint">Rejilla abajo · vista 3D arriba: el robot se ve en la mesa al colocar bloques</p>
+<p class="duel-fab-fallback">Arrastrar la vista · R rota pieza · M espejo · Z deshacer · plantillas a la izquierda</p></header>
 <div class="duel-fab-main">
 <aside class="duel-fab-side" aria-labelledby="duel-fab-stats"><h2 id="duel-fab-stats" class="duel-sec-h">Telemetría</h2>
 <div class="duel-bars" id="duel-fab-bars"></div>
 <div class="duel-fab-tpl" id="duel-fab-tpl"></div>
 <p class="duel-fab-warn" id="duel-fab-warn" role="status" aria-live="polite"></p></aside>
 <div class="duel-fab-center">
-<div class="duel-fab-stage" aria-hidden="true"></div>
+<div class="duel-fab-viewport" id="duel-fab-viewport" role="region" aria-label="Vista del robot en la mesa">
+<p class="duel-fab-view-hint">Arrastrar para girar la vista</p>
+<p class="duel-fab-empty" id="duel-fab-empty" hidden>Sin piezas: elegir bloque y tocar la rejilla, o una plantilla</p>
+</div>
+<div class="duel-fab-build">
 <p class="duel-fab-equip" id="duel-fab-equip" aria-live="polite"></p>
 <div class="duel-fab-grid-wrap">
 <div class="duel-fab-layer"><button type="button" id="duel-fab-ydown" aria-label="Bajar capa">−</button>
@@ -64,7 +68,7 @@ export function mountFabricacion(
 <button type="button" id="duel-fab-undo">Deshacer (Z)</button>
 <button type="button" id="duel-fab-erase">Borrar</button>
 <button type="button" id="duel-fab-clear">Vaciar</button>
-</div></div></div>
+</div></div></div></div>
 <aside class="duel-fab-drawer" id="duel-fab-drawer">
 <button type="button" class="duel-fab-drawer-tab" id="duel-fab-drawer-toggle" aria-controls="duel-fab-drawer-panel" aria-expanded="true">Ocultar piezas</button>
 <div class="duel-fab-drawer-panel" id="duel-fab-drawer-panel">
@@ -153,6 +157,9 @@ export function mountFabricacion(
       ? "Modo borrar: tocar una celda ocupada"
       : `Bloque: ${def.nombre} · rot ${rot * 90}°`;
     ($("duel-fab-erase") as HTMLButtonElement).classList.toggle("on", erase);
+    const empty = $("duel-fab-empty");
+    empty.hidden = build.cells.length > 0;
+    root.classList.toggle("has-build", build.cells.length > 0);
   }
 
   function syncTpl() {

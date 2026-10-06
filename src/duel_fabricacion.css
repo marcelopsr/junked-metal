@@ -1,7 +1,12 @@
-/* Fabricación RoboCraft — cajón + rejilla (modo Operate) */
-#duel-ui.fabricar { background: linear-gradient(180deg, #0b0d0acc 0%, #0b0d0a44 30%, #0b0d0a99 70%, #0b0d0ae6 100%); pointer-events: none; }
+/* Fabricación RoboCraft — vista 3D + rejilla (modo Operate) */
+#duel-ui.fabricar {
+  background: linear-gradient(180deg, #0b0d0a55 0%, #0b0d0a22 28%, #0b0d0a88 62%, #0b0d0ae6 100%);
+  pointer-events: none;
+}
 #duel-ui.fabricar .duel-fab > * { pointer-events: auto; }
 #duel-ui.fabricar #duel-fab-confirm { pointer-events: auto; }
+#duel-ui.fabricar .duel-fab-viewport { pointer-events: auto; touch-action: none; cursor: grab; }
+#duel-ui.fabricar .duel-fab-viewport:active { cursor: grabbing; }
 #duel-ui.fight #duel-fab,
 #duel-ui.inter #duel-fab,
 #duel-ui.results #duel-fab,
@@ -11,22 +16,81 @@
 #duel-ui.results #duel-fab-confirm,
 #duel-ui.armado #duel-fab-confirm { display: none; }
 
-.duel-fab { display: flex; flex-direction: column; min-height: 100%; max-width: 1100px; margin: 0 auto; padding: 0.55rem 0.7rem calc(5.5rem + env(safe-area-inset-bottom)); box-sizing: border-box; }
-.duel-fab-head { text-align: center; margin-bottom: 0.3rem; }
-.duel-fab-head h1 { font-size: 1rem; letter-spacing: 0.1em; margin: 0; color: #e0a030; }
-.duel-fab-hint { font-size: 0.78rem; color: #b9d3a4; margin: 0.3rem 0 0.1rem; }
+.duel-fab {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0.55rem 0.7rem calc(5.5rem + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+.duel-fab-head { text-align: center; margin-bottom: 0.35rem; }
+.duel-fab-head h1 { font-size: 1.05rem; letter-spacing: 0.1em; margin: 0; color: #e0a030; }
+.duel-fab-hint { font-size: 0.78rem; color: #b9d3a4; margin: 0.3rem 0 0.1rem; max-width: 36rem; margin-inline: auto; line-height: 1.35; }
 .duel-fab-fallback { font-size: 0.65rem; color: #7a9470; margin: 0 0 0.2rem; }
 
-.duel-fab-main { display: grid; grid-template-columns: minmax(8rem, 10rem) minmax(0, 1fr) auto; gap: 0.4rem; flex: 1; min-height: 0; }
-.duel-fab-side { background: #141813dd; border: 1px solid #2c3a28; padding: 0.5rem 0.45rem; align-self: start; max-height: min(52vh, 22rem); overflow-y: auto; }
-.duel-fab-center { display: flex; flex-direction: column; min-width: 0; gap: 0.35rem; }
-.duel-fab-stage { position: relative; flex: 1; min-height: min(36vh, 16rem); pointer-events: none; }
-.duel-fab-equip { text-align: center; font-size: 0.7rem; color: #6fb3c4; margin: 0; letter-spacing: 0.03em; min-height: 1.1em; }
+.duel-fab-main {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 11rem) minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+.duel-fab-side {
+  background: #141813ee;
+  border: 1px solid #2c3a28;
+  padding: 0.5rem 0.45rem;
+  align-self: start;
+  max-height: min(58vh, 26rem);
+  overflow-y: auto;
+  box-shadow: inset 0 1px 0 #2c3a2844;
+}
+.duel-fab-center { display: flex; flex-direction: column; min-width: 0; min-height: 0; gap: 0.4rem; }
+.duel-fab-viewport {
+  position: relative;
+  flex: 1;
+  min-height: min(46vh, 22rem);
+  border: 1px solid #2c3a28;
+  background: linear-gradient(180deg, #0b0d0a33 0%, #0b0d0a11 45%, #14181355 100%);
+  box-shadow: inset 0 0 0 1px #7fbf5a22;
+}
+.duel-fab-view-hint {
+  position: absolute;
+  left: 0.45rem;
+  bottom: 0.4rem;
+  margin: 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6fb3c4;
+  pointer-events: none;
+  text-shadow: 0 1px 2px #000c;
+}
+.duel-fab-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #b9d3a4;
+  background: #141813aa;
+  border: 1px dashed #3a4a34;
+  pointer-events: none;
+}
+.duel-fab.has-build .duel-fab-empty { display: none; }
+.duel-fab-build { display: flex; flex-direction: column; gap: 0.35rem; flex-shrink: 0; }
+.duel-fab-equip { text-align: center; font-size: 0.72rem; color: #6fb3c4; margin: 0; letter-spacing: 0.03em; min-height: 1.1em; }
 
 .duel-fab-grid-wrap { background: #141813ee; border: 1px solid #2c3a28; padding: 0.4rem 0.45rem 0.5rem; }
 .duel-fab-layer { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; margin-bottom: 0.35rem; }
 .duel-fab-layer span { font-size: 0.65rem; color: #6fb3c4; text-transform: uppercase; letter-spacing: 0.05em; }
-.duel-fab-layer button { font: inherit; font-size: 0.7rem; min-height: 2.5rem; min-width: 2.5rem; padding: 0.3rem 0.55rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #b9d3a4; cursor: pointer; }
+.duel-fab-layer button { font: inherit; font-size: 0.7rem; min-height: 2.75rem; min-width: 2.75rem; padding: 0.3rem 0.55rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #b9d3a4; cursor: pointer; }
 .duel-fab-layer button:focus-visible { outline: 2px solid #e0a030; outline-offset: 2px; }
 
 .duel-fab-grid { display: grid; gap: 2px; margin: 0 auto; width: fit-content; max-width: 100%; }
@@ -35,48 +99,67 @@
 .duel-fab-cell.can { border-color: #7fbf5a; background: #141813cc; animation: duel-drop-pulse 1.2s ease-in-out infinite; }
 .duel-fab-cell:focus-visible { outline: 2px solid #e0a030; outline-offset: 1px; }
 
-.duel-fab-drawer { position: relative; width: 13.5rem; max-width: 36vw; flex-shrink: 0; }
+.duel-fab-drawer { position: relative; width: 13.75rem; max-width: 36vw; flex-shrink: 0; }
 .duel-fab-drawer.closed { width: 2.65rem; }
 .duel-fab-drawer-tab { position: absolute; left: 0; top: 0; z-index: 2; width: 2.65rem; min-height: 2.75rem; padding: 0.45rem 0.3rem; font: inherit; font-size: 0.58rem; line-height: 1.15; letter-spacing: 0.04em; text-transform: uppercase; color: #b9d3a4; background: #141813f0; border: 1px solid #2c3a28; border-right: none; cursor: pointer; writing-mode: vertical-rl; transform: rotate(180deg); }
 .duel-fab-drawer:not(.closed) .duel-fab-drawer-tab { left: -2.65rem; border-right: 1px solid #2c3a28; border-left: none; writing-mode: horizontal-tb; transform: none; width: auto; min-width: 6.5rem; padding: 0.4rem 0.5rem; font-size: 0.62rem; }
-.duel-fab-drawer-panel { height: 100%; min-height: min(42vh, 20rem); margin-left: 2.65rem; background: #141813f2; border: 1px solid #2c3a28; overflow: hidden; }
-.duel-fab-drawer.closed .duel-fab-drawer-panel { opacity: 0; pointer-events: none; position: absolute; right: 0; width: 13.5rem; }
+.duel-fab-drawer-panel { height: 100%; min-height: min(46vh, 21rem); margin-left: 2.65rem; background: #141813f2; border: 1px solid #2c3a28; overflow: hidden; }
+.duel-fab-drawer.closed .duel-fab-drawer-panel { opacity: 0; pointer-events: none; position: absolute; right: 0; width: 13.75rem; }
 .duel-fab-drawer:not(.closed) .duel-fab-drawer-panel { opacity: 1; pointer-events: auto; overflow-y: auto; }
 
 .duel-fab-tabs { display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0.4rem 0.4rem 0.25rem; }
-.duel-fab-tabs button { font: inherit; font-size: 0.58rem; min-height: 2.4rem; padding: 0.25rem 0.35rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #6fb3c4; cursor: pointer; text-transform: uppercase; }
+.duel-fab-tabs button { font: inherit; font-size: 0.58rem; min-height: 2.5rem; padding: 0.25rem 0.35rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #6fb3c4; cursor: pointer; text-transform: uppercase; }
 .duel-fab-tabs button.on { border-color: #7fbf5a; color: #b9d3a4; }
 .duel-fab-inv { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.35rem 0.4rem 0.5rem; }
-.duel-fab-blk { font: inherit; font-size: 0.7rem; text-align: left; padding: 0.4rem 0.35rem; min-height: 2.5rem; background: #0b0d0a; border: 1px solid #2c3a28; color: #b9d3a4; cursor: pointer; }
+.duel-fab-blk { font: inherit; font-size: 0.7rem; text-align: left; padding: 0.4rem 0.35rem; min-height: 2.75rem; background: #0b0d0a; border: 1px solid #2c3a28; color: #b9d3a4; cursor: pointer; }
 .duel-fab-blk.on { border-color: #7fbf5a; }
 .duel-fab-blk:focus-visible { outline: 2px solid #e0a030; outline-offset: 2px; }
 
 .duel-fab-tools { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.35rem; }
-.duel-fab-tools button { font: inherit; font-size: 0.65rem; min-height: 2.5rem; padding: 0.3rem 0.45rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #6fb3c4; cursor: pointer; }
+.duel-fab-tools button { font: inherit; font-size: 0.65rem; min-height: 2.75rem; padding: 0.3rem 0.45rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #6fb3c4; cursor: pointer; }
+.duel-fab-tools button.on { border-color: #e0a030; color: #b9d3a4; }
 .duel-fab-tools button:focus-visible { outline: 2px solid #e0a030; outline-offset: 2px; }
 
 .duel-fab-tpl { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.4rem; }
-.duel-fab-tpl button { font: inherit; font-size: 0.62rem; min-height: 2.5rem; padding: 0.3rem 0.4rem; border: 1px solid #2c3a28; background: #10170d; color: #b9d3a4; cursor: pointer; }
+.duel-fab-tpl button { font: inherit; font-size: 0.62rem; min-height: 2.75rem; padding: 0.3rem 0.4rem; border: 1px solid #2c3a28; background: #10170d; color: #b9d3a4; cursor: pointer; }
 
 .duel-fab-warn { color: #e0a030; font-size: 0.7rem; min-height: 1.1em; margin: 0.3rem 0 0; }
 .duel-fab-warn.ban { color: #d12a1c; }
 
-#duel-fab-confirm.duel-cta { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%, 1100px); box-sizing: border-box; padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)); background: #2c3a28; border: 2px solid #7fbf5a; border-bottom: none; color: #e8f0dc; font: inherit; font-size: 0.95rem; font-weight: bold; letter-spacing: 0.08em; cursor: pointer; z-index: 105; pointer-events: auto; box-shadow: 0 -8px 24px #000a; }
+#duel-fab-confirm.duel-cta {
+  position: fixed; left: 50%; bottom: 0; transform: translateX(-50%);
+  width: min(100%, 1180px); box-sizing: border-box;
+  padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  background: #2c3a28; border: 2px solid #7fbf5a; border-bottom: none;
+  color: #e8f0dc; font: inherit; font-size: 0.95rem; font-weight: bold;
+  letter-spacing: 0.08em; cursor: pointer; z-index: 105; pointer-events: auto;
+  box-shadow: 0 -8px 24px #000a;
+}
 #duel-fab-confirm:disabled { opacity: 0.4; cursor: not-allowed; border-color: #5f7355; }
 #duel-fab-confirm:not(:disabled):hover { background: #354430; }
 #duel-fab-confirm:focus-visible { outline: 2px solid #e0a030; outline-offset: 2px; }
 
 @media (max-width: 640px) {
-  .duel-fab-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto auto; }
+  .duel-fab-main { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto; gap: 0.5rem; }
   .duel-fab-center { order: 1; }
-  .duel-fab-drawer { order: 2; position: relative; width: 100%; max-width: none; }
+  .duel-fab-viewport { flex: 0 0 auto; min-height: min(42vh, 18.5rem); }
+  .duel-fab-grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .duel-fab-side { order: 2; max-height: none; }
+  .duel-fab-drawer { order: 3; position: relative; width: 100%; max-width: none; }
   .duel-fab-drawer.closed { width: 100%; }
-  .duel-fab-drawer-tab { position: relative; left: auto; width: 100%; writing-mode: horizontal-tb; transform: none; border: 1px solid #2c3a28; margin-bottom: 0.3rem; }
+  .duel-fab-drawer-tab { position: relative; left: auto; width: 100%; writing-mode: horizontal-tb; transform: none; border: 1px solid #2c3a28; margin-bottom: 0.3rem; min-height: 2.75rem; }
   .duel-fab-drawer:not(.closed) .duel-fab-drawer-tab { left: auto; min-width: 0; }
   .duel-fab-drawer-panel { margin-left: 0; min-height: 0; height: auto; }
   .duel-fab-drawer.closed .duel-fab-drawer-panel { display: none; }
-  .duel-fab-drawer:not(.closed) .duel-fab-drawer-panel { display: block; overflow: visible; }
-  .duel-fab-side { order: 3; max-height: none; }
-  .duel-fab-cell { width: 1.85rem; height: 1.85rem; min-width: 1.85rem; min-height: 1.85rem; }
-  .duel-fab { padding-bottom: 7rem; }
+  .duel-fab-drawer:not(.closed) .duel-fab-drawer-panel {
+    display: block;
+    max-height: min(36vh, 15.5rem);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .duel-fab-tabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 0.35rem; }
+  .duel-fab-tabs button { flex: 0 0 auto; min-height: 2.75rem; }
+  .duel-fab-cell { width: 2.75rem; height: 2.75rem; min-width: 2.75rem; min-height: 2.75rem; font-size: 0.52rem; }
+  .duel-fab-tools button { flex: 1 1 calc(50% - 0.2rem); min-height: 2.75rem; }
+  .duel-fab { padding-bottom: 7.25rem; }
 }
