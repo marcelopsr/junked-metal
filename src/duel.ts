@@ -13,7 +13,7 @@ import {
 } from "./duel_paint";
 import { save } from "./menu";
 import { engineStop, music, SFX } from "./sfx";
-import { buildGrass, clearLayout, setZone, showWorld } from "./world";
+import { clearLayout, showWorld } from "./world";
 import { CLIMATES } from "./run";
 
 const D = BAL.duelo;
@@ -79,6 +79,7 @@ let paintSlot: PaintSlot = "chassis_body";
 let flipCd = 0;
 let pendingPiece: { cat: PieceCat; id: string } | null = null;
 let armadoCamYaw = 0.55;
+let shotCamFrozen = false;
 
 export function initDuel(d: Deps) { deps = d; ensureUi(); }
 
@@ -431,9 +432,8 @@ function beginMatch() {
   loadoutWarn = comboCheck(cfg) === "warn";
   matchDmg = { dealt: 0, taken: 0 };
   cleanup();
-  setZone("patio", false);
-  showWorld(true);
-  buildGrass();
+  showWorld(false);
+  clearLayout();
   applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
   buildArena();
   music("battle");
@@ -667,10 +667,12 @@ export function duelTick(dt: number) {
   if (phase === "inter" || phase === "results") return;
   if (flipCd > 0) flipCd = Math.max(0, flipCd - dt);
   if (phase === "armado") {
-    armadoCamYaw += dt * 0.22;
-    const r = 5.2, h = 3.35, ty = WORKBENCH_ROBOT_Y - 0.15;
-    deps.cam.position.set(Math.sin(armadoCamYaw) * r, h, Math.cos(armadoCamYaw) * r);
-    deps.cam.setTarget(new B.Vector3(0, ty, 0));
+    if (!shotCamFrozen) {
+      armadoCamYaw += dt * 0.22;
+      const r = 5.2, h = 3.35, ty = WORKBENCH_ROBOT_Y - 0.15;
+      deps.cam.position.set(Math.sin(armadoCamYaw) * r, h, Math.cos(armadoCamYaw) * r);
+      deps.cam.setTarget(new B.Vector3(0, ty, 0));
+    }
     return;
   }
   if (phase === "countdown") {
@@ -689,15 +691,26 @@ export function duelTick(dt: number) {
     aiStep(e, dt, p);
     contactDamage();
     updateHud();
-    camFollow(p, dt);
+    if (!shotCamFrozen) camFollow(p, dt);
     const w = roundWinner();
     if (w !== null) endRound(w);
   }
 }
 
+function setShotCamPose() {
+  if (phase === "armado") {
+    const r = 5.2, h = 3.35, ty = WORKBENCH_ROBOT_Y - 0.15, yaw = 0.55;
+    deps.cam.position.set(Math.sin(yaw) * r, h, Math.cos(yaw) * r);
+    deps.cam.setTarget(new B.Vector3(0, ty, 0));
+  } else {
+    deps.cam.position.set(-6, 7.5, -11);
+    deps.cam.setTarget(new B.Vector3(0, 0.6, 0));
+  }
+}
+
 export function exitDuel() {
   if (!active) return;
-  active = false; paused = false; autoPlayer = false; god = false; pendingPiece = null;
+  active = false; paused = false; autoPlayer = false; god = false; pendingPiece = null; shotCamFrozen = false;
   cleanup();
   ui.className = "";
   $d("duel-pause").classList.remove("on");
@@ -711,5 +724,7 @@ export const duelDev = {
   auto: (on = true) => { autoPlayer = on; },
   god: () => { god = true; },
   kill: () => { const e = bots.find((b) => !b.human); if (e) e.hp = 0; },
+  /** Pose fija para capturas headless (sin órbita ni follow). */
+  shotCam: (on = true) => { shotCamFrozen = on; if (on) setShotCamPose(); },
   info: () => ({ active, phase, score, round, cfg, bots: bots.map((b) => ({ name: b.name, hp: b.hp, rpm: b.rpm, flipped: b.flipped })) }),
 };
