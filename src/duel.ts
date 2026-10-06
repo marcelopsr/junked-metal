@@ -60,7 +60,6 @@ const ARMADO_CAM = { yaw: 0.38, dist: 3.85, height: 2.45, targetY: WORKBENCH_TAB
 const wbLampPos = new B.Vector3(0.15, WORKBENCH_TABLE_SURFACE + 1.25, 0.55);
 const wbLampFwd = new B.Vector3(-0.12, -0.62, -0.78);
 const wbLampPosLive = new B.Vector3();
-const wbLampFwdLive = new B.Vector3();
 let wbFill: B.PointLight | null = null;
 let fabBenchKey: B.SpotLight | null = null;
 let fabBenchBounce: B.PointLight | null = null;
@@ -344,20 +343,49 @@ function bindFabCamDrag(el: HTMLElement | null) {
   el.addEventListener("pointermove", onMove);
   el.addEventListener("pointerup", end);
   el.addEventListener("pointercancel", end);
+  const zoomClamp = (mul: number) => Math.max(0.5, Math.min(1.42, mul));
   const onWheel = (e: WheelEvent) => {
     if (shotCamFrozen || phase !== "fabricar") return;
     e.preventDefault();
-    const k = e.deltaY > 0 ? 1.07 : 0.93;
-    fabCamDistMul = Math.max(0.52, Math.min(1.38, fabCamDistMul * k));
+    const k = e.deltaY > 0 ? 1.06 : 0.94;
+    fabCamDistMul = zoomClamp(fabCamDistMul * k);
     applyFabricarCam();
   };
+  let pinch0 = 0;
+  const pinchDist = (ev: TouchEvent) => {
+    if (ev.touches.length < 2) return 0;
+    const a = ev.touches[0], b = ev.touches[1];
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  };
+  const onTouchStart = (e: TouchEvent) => {
+    if (shotCamFrozen || phase !== "fabricar" || e.touches.length < 2) return;
+    pinch0 = pinchDist(e);
+    e.preventDefault();
+  };
+  const onTouchMove = (e: TouchEvent) => {
+    if (shotCamFrozen || phase !== "fabricar" || e.touches.length < 2 || pinch0 < 1) return;
+    const d = pinchDist(e);
+    if (d > 1) fabCamDistMul = zoomClamp(fabCamDistMul * (pinch0 / d));
+    pinch0 = d;
+    applyFabricarCam();
+    e.preventDefault();
+  };
+  const onTouchEnd = () => { pinch0 = 0; };
   el.addEventListener("wheel", onWheel, { passive: false });
+  el.addEventListener("touchstart", onTouchStart, { passive: false });
+  el.addEventListener("touchmove", onTouchMove, { passive: false });
+  el.addEventListener("touchend", onTouchEnd);
+  el.addEventListener("touchcancel", onTouchEnd);
   fabCamUnbind = () => {
     el.removeEventListener("pointerdown", onDown);
     el.removeEventListener("pointermove", onMove);
     el.removeEventListener("pointerup", end);
     el.removeEventListener("pointercancel", end);
     el.removeEventListener("wheel", onWheel);
+    el.removeEventListener("touchstart", onTouchStart);
+    el.removeEventListener("touchmove", onTouchMove);
+    el.removeEventListener("touchend", onTouchEnd);
+    el.removeEventListener("touchcancel", onTouchEnd);
   };
 }
 
@@ -572,7 +600,7 @@ function updateFabPlaceGhost(info: { probe: Cell; can: boolean; erase: boolean }
   const vis = new B.TransformNode("fabGhostVis", scene);
   vis.parent = root;
   vis.position.set(-pivot.x, -pivot.y, -pivot.z);
-  const m = placementGhostMesh(info.probe, info.can);
+  const m = placementGhostMesh(info.probe, info.can, playerPaint);
   m.parent = vis;
   m.position.copyFrom(pivot);
   fabPlaceGhostRoot = root;
@@ -1028,7 +1056,7 @@ function showFabricar() {
     onConfirm: () => beginMatch(),
     onLayout: () => refreshFabricarCam(),
     onZoom: (mul) => {
-      fabCamDistMul = Math.max(0.48, Math.min(1.5, fabCamDistMul * mul));
+      fabCamDistMul = Math.max(0.5, Math.min(1.42, fabCamDistMul * mul));
       applyFabricarCam();
     },
     onHoverCell: (info) => updateFabPlaceGhost(info),
@@ -1195,14 +1223,27 @@ function stepDuelPhysics(b: Bot, dt: number, throttle: number, steer: number, we
 }
 
 function aiStep(b: Bot, dt: number, target: Bot) {
-  const p = b.root.position, d = target.root.position.subtract(p); d.y = 0;
+  const p = b.root.position;
+  const d = target.root.position.subtract(p);
+  d.y = 0;
   const dist = d.length();
-  const fwd = b.root.forward; fwd.y = 0; fwd.normalize();
-  const cross = fwd.x * d.z - fwd.z * d.x;
-  const steer = B.Scalar.Clamp(cross * 0.8, -1, 1);
-  const aggr = 0.55 + round * 0.12;
-  const throttle = dist > 3 ? aggr : dist < 1.8 ? -0.5 : 0.3;
-  stepDuelPhysics(b, dt, throttle, steer, dist < 2.5);
+  if (dist < 1e-3) return;
+  const toT = d.normalize();
+  const fwd = b.root.forward;
+  fwd.y = 0;
+  fwd.normalize();
+  const dot = B.Vector3.Dot(fwd, toT);
+  const cross = fwd.x * toT.z - fwd.z * toT.x;
+  const steer = B.Scalar.Clamp(cross * 1.05, -1, 1);
+  const aggr = 0.48 + round * 0.11;
+  let throttle = 0;
+  if (b.flipped) throttle = -0.25;
+  else if (dist > 4.8) throttle = aggr;
+  else if (dist > 2.6) throttle = aggr * (dist > 3.6 ? 0.9 : 0.55);
+  else if (dist < 1.5) throttle = dot > 0.3 ? 0.5 : -0.4;
+  else throttle = dot > 0.45 ? 0.62 * aggr : 0.2;
+  const ram = dist < 2.4 && dot > 0.38;
+  stepDuelPhysics(b, dt, throttle, steer, ram);
 }
 
 function contactDamage() {
@@ -1220,7 +1261,7 @@ function contactDamage() {
     lastHit.set(key, now);
     for (const [atk, vic] of [[a, b], [b, a]] as const) {
       let dmg = atk.stats.dano * (1 + D.melee_vel_coef * relN + D.melee_masa_coef * (atk.mass / 5));
-      if (atk.cfg.weapon === "trompo") dmg *= 0.35 + 0.65 * atk.rpm;
+      if (atk.stats.dano >= 4 && atk.rpm > 0.05) dmg *= 0.35 + 0.65 * atk.rpm;
       if (vic.flipped) dmg *= D.volcado_vuln_mul;
       if (god && vic.human) dmg = 0;
       vic.hp -= dmg; vic.hitAt = now;
@@ -1234,9 +1275,9 @@ function contactDamage() {
         if (vic.human || atk.human) damageNumber(innerWidth / 2 + (vic.human ? -40 : 40), 120, Math.round(dmg), false);
       }
       if (atk.stats.knock > 0 && rel > 4) vic.body.applyImpulse(new B.Vector3(0, atk.stats.knock * atk.mass * 0.15, 0), vic.root.getAbsolutePosition());
-      if (atk.cfg.weapon === "pala" && rel > 2) {
+      if (atk.stats.push > 0.9 && rel > 2) {
         const push = vic.root.position.subtract(atk.root.position); push.y = 0; push.normalize();
-        vic.body.applyImpulse(push.scale(atk.stats.push * atk.mass * rel * 0.08), vic.root.getAbsolutePosition());
+        vic.body.applyImpulse(push.scale(atk.stats.push * atk.mass * rel * 0.075), vic.root.getAbsolutePosition());
       }
     }
   }

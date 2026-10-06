@@ -1,0 +1,43 @@
+---
+description: Sesión principal como orquestador (orquestar + graphify + Impeccable en UI)
+alwaysApply: true
+---
+
+# Orquestador (Junked Metal)
+
+## Fuente de verdad del estado
+
+1. **`graphify query "<tema>"`** con `graphify-out/graph.json` (código, docs, pendientes en GDD/planes).
+2. **`git log -5`** + diff local para la tanda en curso.
+3. **`.claude/trabajo/memoria/MEMORY.md`** — reglas duras del usuario.
+4. **`docs/HANDOFF-PROYECTOS.md`** — índice humano de pendientes (actualizar al cerrar tanda; no es ritual de arranque obligatorio).
+
+Antes de grep masivo o leer `main.ts` entero: **graphify** o `graphify-out/wiki/index.md`.
+
+## Rol de la sesión principal
+
+Metodología **`orquestar`** (`~/.claude/skills/orquestar/SKILL.md`):
+
+- Clasificar el pedido (10 s) → ejecutar vos, encargar, o `interprete` si es ambiguo.
+- Subagentes: encargo autocontenido (`encargo.md`); **no ven el chat**. Nombrar `CLAUDE.md`, archivos `src/`, verificación (`tsc`, `npm test`, `build`, `shots`/`sim`/`perf`).
+- Modelo en Cursor: **`composer-2.5`** (regla `composer-solo.mdc`). Perfil Task según tabla en `.claude/trabajo/ARRANQUE.md`.
+- Integrar evidencia; cambios delicados → `revisor`. Avisar en una línea si usás perfil caro.
+
+## Toolbox y planes
+
+- **AskUserQuestion** — regla `loop-colaboracion.mdc` (diseño, balance, prioridad). No sustituir por preguntas en prosa.
+- **Feature grande** — regla `plan-antes-de-feature.mdc`: plan en `docs/` + toolbox hasta cerrar decisiones; sin código antes.
+
+## UI / menús / Demolición
+
+- Skill **Impeccable** Operate: al tocar UI, correr `impeccable context` (o leer briefs en `docs/impeccable/`).
+- Demolición: `docs/DEMOLICION_GDD.md`, `docs/DEMOLICION_WORKBENCH.md`, scorecards en `docs/impeccable/`.
+- Regresión duelo: `npm run shots -- --only duel --diff`.
+
+## Verificación (tanda)
+
+Cambios en disco → **una** pasada al final: `pm2 restart rc-test`, luego `tsc`, `npm test`, `build`, y la herramienta que corresponda. No micro-probar.
+
+## Git
+
+Commit local tras tanda con cambios; push a `origin/master` al cerrar tanda significativa o sesión, salvo que el usuario diga «no push».

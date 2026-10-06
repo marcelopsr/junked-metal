@@ -498,6 +498,30 @@ export function livingFromBuild(build: RobotBuild): LivingBuild {
   return { build: b, partHp: b.cells.map((c) => blockDef(c.blockId).hp) };
 }
 
+function tintGhostMesh(root: B.Mesh, valid: boolean) {
+  const alpha = valid ? 0.5 : 0.36;
+  const stack: B.AbstractMesh[] = [root];
+  while (stack.length) {
+    const mesh = stack.pop()!;
+    if (mesh instanceof B.Mesh && mesh.material) {
+      const mat = mesh.material as B.PBRMaterial;
+      mat.alpha = alpha;
+      mat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+      mat.needDepthPrePass = true;
+      if (valid) mat.emissiveColor = B.Color3.FromHexString("#6a9a48").scale(0.22);
+      else mat.emissiveColor = B.Color3.FromHexString("#a04040").scale(0.28);
+    }
+    stack.push(...mesh.getChildMeshes(false));
+  }
+}
+
+/** Silueta del bloque real (misma malla que en pelea) al apuntar una celda en fabricación. */
+export function placementGhostMesh(probe: Cell, valid: boolean, paint: DuelPaintState): B.Mesh {
+  const m = paintBuildMesh({ cells: [probe] }, paint);
+  tintGhostMesh(m, valid);
+  return m;
+}
+
 export function cellWorldCenter(c: Cell): { x: number; y: number; z: number } {
   const g = D.grid_m;
   const def = blockDef(c.blockId);

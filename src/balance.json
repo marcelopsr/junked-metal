@@ -401,7 +401,7 @@
   ],
   "duelo": [
     {"id":"hp_base","valor":100,"descripcion":"Vida base antes del bonus de chasis (modo Demolición)"},
-    {"id":"melee_cd_s","valor":0.5,"descripcion":"Segundos de cooldown por par atacante–víctima"},
+    {"id":"melee_cd_s","valor":0.55,"descripcion":"Segundos de cooldown por par atacante–víctima"},
     {"id":"melee_vel_coef","valor":1.15,"descripcion":"Multiplicador de daño por velocidad relativa normalizada (0–1)"},
     {"id":"melee_masa_coef","valor":0.08,"descripcion":"Término de masa: (masa_atacante_kg / 5) × este coeficiente"},
     {"id":"warn_traccion_mul","valor":0.95,"descripcion":"Multiplicador de tracción si el loadout confirmado estaba en WARN"},

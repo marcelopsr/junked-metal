@@ -38,7 +38,13 @@ export type FabApi = {
 
 export function mountFabricacion(
   host: HTMLElement,
-  opts: { onChange(b: RobotBuild): void; onConfirm(): void; onLayout?(): void; onZoom?(mul: number): void },
+  opts: {
+    onChange(b: RobotBuild): void;
+    onConfirm(): void;
+    onLayout?(): void;
+    onZoom?(mul: number): void;
+    onHoverCell?(info: { probe: Cell; can: boolean; erase: boolean } | null): void;
+  },
 ): FabApi {
   let build: RobotBuild = { cells: [] };
   let selected = "chapa";
@@ -58,6 +64,7 @@ export function mountFabricacion(
 <div class="duel-fab-main">
 <aside class="duel-fab-side h-panel" aria-labelledby="duel-fab-stats"><h2 id="duel-fab-stats" class="duel-sec-h">Telemetría</h2>
 <div class="duel-fab-bars" id="duel-fab-bars"></div>
+<details class="duel-paint-wrap" id="duel-fab-paint-details"><summary class="duel-paint-sum">Pintura <span class="duel-opt">(opcional)</span></summary><div class="duel-paint" id="duel-fab-paint"></div></details>
 <div class="duel-fab-tpl" id="duel-fab-tpl"></div>
 <p class="duel-fab-warn" id="duel-fab-warn" role="status" aria-live="polite"></p></aside>
 <div class="duel-fab-center">
@@ -69,7 +76,7 @@ export function mountFabricacion(
 <button type="button" class="duel-fab-btn duel-fab-zoom-btn" id="duel-fab-zoom-out" aria-label="Alejar"></button>
 <button type="button" class="duel-fab-btn duel-fab-zoom-btn" id="duel-fab-zoom-in" aria-label="Acercar"></button>
 </div>
-<p class="duel-fab-view-hint">Arrastrar · rueda o +/− zoom</p>
+<p class="duel-fab-view-hint">Arrastrar vista · rueda o +/− · pellizco zoom</p>
 <p class="duel-fab-empty" id="duel-fab-empty" hidden>Sin piezas: elegir bloque y tocar la rejilla, o una plantilla</p>
 </div>
 <div class="duel-fab-build h-panel">
@@ -288,6 +295,19 @@ export function mountFabricacion(
       if (prev) { build = prev; saveBuild(build); opts.onChange(build); sync(); }
     }
   }
+
+  const gridEl = $("duel-fab-grid");
+  const emitHover = (cell: HTMLElement | null) => {
+    if (!cell?.dataset.x) { opts.onHoverCell?.(null); return; }
+    const x = +cell.dataset.x!, z = +cell.dataset.z!;
+    const probe: Cell = { x, y: layerY, z, rot, blockId: selected };
+    const can = !erase && canPlace(build, probe);
+    opts.onHoverCell?.({ probe, can, erase });
+  };
+  gridEl.addEventListener("mouseover", (e) => {
+    emitHover((e.target as HTMLElement).closest(".duel-fab-cell") as HTMLElement | null);
+  });
+  gridEl.addEventListener("mouseleave", () => opts.onHoverCell?.(null));
 
   root.addEventListener("click", (e) => {
     const t = e.target as HTMLElement;
