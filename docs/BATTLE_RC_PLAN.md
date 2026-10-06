@@ -10,6 +10,32 @@ solo como mapa de qué código ya sabe hacer arenas, pilotos y HUD.
 
 ---
 
+## Decisiones usuario (2026-10-06 ronda 1)
+
+Toolbox cerrado. Decisiones vinculantes para la implementación:
+
+| # | Pregunta (origen: SPEC-modo-robots.md R1) | Decisión |
+|---|---|---|
+| 1 | Nombre del modo | **«Demolición»** (UI definitivo; interno `duel`, módulo `src/duel.ts`) |
+| 2 | UX del armado | **Pantalla propia estilo garaje 3D + ranuras** (`Scr` nueva en `duel.ts`, 3 ranuras + vista 3D del robot; patrón visual del garaje de `menu.ts`) |
+| 3 | Arquetipo del enemigo v0 | **Cuña embestidora** (IA de acometida directa; enseña el sistema; par natural del trompo) |
+| 4 | Fidelidad física | **Sim-lite** (`applyForce`/`applyTorque`, NO `drive()`; el CoG del armado importa físicamente; puede volcar) |
+
+**Pendientes de Ronda 1 según este plan (no cerrados en esta sesión):**
+- P2 de la Ronda 1 del plan: relación con la progresión (tornillos/modo lateral) → **pasa a Ronda 2**
+- P3 de la Ronda 1 del plan: escenario/arena del MVP → **pasa a Ronda 2** (pregunta de look de arena)
+
+> Nota: las preguntas de R1 del SPEC-modo-robots.md y de este plan no son idénticas; los ítems del
+> checklist §10 se actualizan abajo.
+
+**Consecuencias directas:**
+- `drive()` queda fuera del loop del modo duel (fuerzas puras sobre Havok).
+- Trampa Havok: NO fijar velocidad → `centerOfMass` SÍ se puede desplazar según el armado.
+- El nombre "batalla" queda reservado para los globos de `kart.ts`; nunca usar para este modo.
+- **MVP sin proyectiles** (confirmado): §4.2 y §2 son correctos al respecto; ninguna sección de este doc debe proponer proyectiles para el modo duel.
+
+---
+
 ## 1. Visión y límites
 
 ### Qué es (MVP)
@@ -204,10 +230,12 @@ Ninguna se decide sin toolbox. Total: **16**.
 
 | # | Decisión | Ronda |
 |---|---|---|
-| 1 | Nombre del modo | R1 |
-| 2 | Relación con la progresión (modo lateral vs. integrado al save/tornillos) | R1 |
-| 3 | Escenario/arena del MVP | R1 |
-| 4 | Identidad del enemigo v0 | R1 |
+| 1 | ~~Nombre del modo~~ → **Demolición** ✓ | R1 ✓ |
+| 2 | Relación con la progresión (modo lateral vs. integrado al save/tornillos) | R2 |
+| 3 | Escenario/arena del MVP (look de la arena) | R2 |
+| 4 | ~~Identidad del enemigo v0~~ → **Cuña embestidora** ✓ | R1 ✓ |
+| ★ | ~~UX del armado~~ → **Pantalla propia 3D + ranuras** ✓ | R1 ✓ |
+| ★ | ~~Fidelidad física~~ → **Sim-lite (fuerzas Havok)** ✓ | R1 ✓ |
 | 5 | Slots de pieza que entran al MVP | R2 |
 | 6 | Set de armas melee inicial | R2 |
 | 7 | Origen de las piezas (todo libre vs. compra con tornillos) | R2 |
