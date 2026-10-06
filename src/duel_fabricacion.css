@@ -336,7 +336,7 @@
 
 #duel-fab-confirm.duel-cta {
   position: fixed; left: 50%;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   width: min(calc(100% - 1.5rem), 1180px); box-sizing: border-box;
   padding: 0.85rem 1rem;

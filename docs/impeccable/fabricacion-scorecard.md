@@ -14,4 +14,6 @@
 
 **Cámara:** sin órbita automática; arrastre en `#duel-fab-viewport`. `__duel.shotCam(true)` fija pose baseline.
 
+**Luz fab (2026-10-06):** `installFabricarLighting` — mediodía local + spot/bounce + fill desde cámara + glow en preview; pelea restaura mediodía/ sombras.
+
 **Verificación:** `npm run shots -- --only duel` · detect sobre TS/CSS fabricación

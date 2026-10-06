@@ -13,7 +13,7 @@ import {
 } from "./duel_paint";
 import {
   blockDef, buildColliderMesh, type Cell, type LivingBuild, type RobotBuild, TEMPLATES, aabbOfBuild, cellWorldCenter,
-  cogOfBuild, defaultBuild, livingFromBuild, paintBuildMesh, pickHitCellIndex, rivalBuild, saveBuild,
+  cogOfBuild, defaultBuild, livingFromBuild, paintBuildMesh, pickHitCellIndex, placementGhostMesh, rivalBuild, saveBuild,
   statsOfBuild, stripCell, validateBuild, visualPivotOffset,
 } from "./duel_build";
 import { type FabApi, mountFabricacion } from "./duel_fabricacion";
@@ -64,6 +64,8 @@ const wbLampFwdLive = new B.Vector3();
 let wbFill: B.PointLight | null = null;
 let fabBenchKey: B.SpotLight | null = null;
 let fabBenchBounce: B.PointLight | null = null;
+let fabCamLight: B.DirectionalLight | null = null;
+const fabCamLightDir = new B.Vector3();
 type PieceCat = "chassis" | "wheels" | "weapon";
 const PIECE_CAT_KEY: Record<PieceCat, "c" | "w" | "a"> = { chassis: "c", wheels: "w", weapon: "a" };
 const PIECE_CAT_IDS: Record<PieceCat, readonly string[]> = { chassis: CH, wheels: WH, weapon: AR };
@@ -105,6 +107,8 @@ let flipCd = 0;
 let pendingPiece: { cat: PieceCat; id: string } | null = null;
 let shotCamFrozen = false;
 let previewFabRoot: B.TransformNode | null = null;
+let fabPlaceGhostRoot: B.TransformNode | null = null;
+let fabPlaceGhost: B.Mesh | null = null;
 let fabPreviewGlow: B.PointLight | null = null;
 /** Offsets de cámara en fabricación (arrastre en viewport; sin órbita automática). */
 let fabCamOff = { yaw: 0, pitch: 0 };
@@ -153,7 +157,7 @@ function syncWorkbenchLights() {
   if (phase === "fabricar") {
     const t = fabCamTarget;
     wbLampPosLive.set(t.x + 0.42, WORKBENCH_TABLE_SURFACE + 0.26, t.z + 0.52);
-    setLamp(wbLampPosLive, wbLampFwd, true, 0);
+    setLamp(wbLampPosLive, wbLampFwd, false, 0);
   } else {
     setLamp(wbLampPos, wbLampFwd, false, 0);
   }
@@ -173,22 +177,25 @@ function syncWorkbenchLights() {
     wbFill.position.set(-0.75, WORKBENCH_TABLE_TOP + 1.05, 0.35);
   }
   wbFill.setEnabled(true);
+  if (phase === "fabricar") {
+    if (!fabCamLight) {
+      fabCamLight = new B.DirectionalLight("fabCamLight", new B.Vector3(0, -1, 0), scene);
+      fabCamLight.diffuse = B.Color3.FromHexString("#fff8f0");
+      fabCamLight.intensity = 3.4;
+    }
+    fabCamLight.setEnabled(true);
+    fabCamLightDir.copyFrom(fabCamTarget).subtractInPlace(deps.cam.position).normalize();
+    fabCamLight.direction = fabCamLightDir;
+  } else fabCamLight?.setEnabled(false);
 }
 
 /** Clima y focos extra solo en fabricar; la arena de pelea vuelve a mediodía en beginMatch. */
 function installFabricarLighting() {
-  const farol = CLIMATES.find((c) => c.id === "farol")!;
-  applyClimate({
-    ...farol,
-    sun: [0.25, -0.55, 0.4],
-    exposure: farol.exposure * 1.82,
-    hemiI: farol.hemiI * 2.15,
-    sunI: farol.sunI * 0.42,
-    amb: "#9eb4d4",
-    ground: "#3d4a38",
-  });
-  deps.scene.environmentIntensity = 1.05;
-  shadows.darkness = 0.22;
+  // Mediodía acotado a la mesa: legible sin esperar al farol del auto (lampK≈0 de día).
+  const medio = CLIMATES.find((c) => c.id === "mediodia")!;
+  applyClimate({ ...medio, exposure: medio.exposure * 1.28, hemiI: medio.hemiI * 1.4, fog: 0.0025 });
+  deps.scene.environmentIntensity = 0.82;
+  shadows.darkness = 0.32;
   const scene = deps.scene;
   if (!fabBenchKey) {
     fabBenchKey = new B.SpotLight(
@@ -221,6 +228,8 @@ function disposeWorkbenchLights() {
   fabBenchKey = null;
   fabBenchBounce?.dispose();
   fabBenchBounce = null;
+  fabCamLight?.dispose();
+  fabCamLight = null;
 }
 
 function syncFabCamTargetFromPreview() {
@@ -546,6 +555,30 @@ function applyBuildPartWear(vic: Bot, atk: Bot, dmg: number) {
   refreshBuildBotVisual(vic);
 }
 
+function clearFabPlaceGhost() {
+  fabPlaceGhost?.dispose();
+  fabPlaceGhost = null;
+  fabPlaceGhostRoot?.dispose();
+  fabPlaceGhostRoot = null;
+}
+
+function updateFabPlaceGhost(info: { probe: Cell; can: boolean; erase: boolean } | null) {
+  clearFabPlaceGhost();
+  if (!info || info.erase || phase !== "fabricar") return;
+  const scene = deps.scene;
+  const pivot = visualPivotOffset(playerBuild);
+  const root = new B.TransformNode("fabGhostRoot", scene);
+  root.position.set(0, WORKBENCH_TABLE_SURFACE, 0);
+  const vis = new B.TransformNode("fabGhostVis", scene);
+  vis.parent = root;
+  vis.position.set(-pivot.x, -pivot.y, -pivot.z);
+  const m = placementGhostMesh(info.probe, info.can);
+  m.parent = vis;
+  m.position.copyFrom(pivot);
+  fabPlaceGhostRoot = root;
+  fabPlaceGhost = m;
+}
+
 function previewFabricacion() {
   fabPreviewGlow?.dispose();
   fabPreviewGlow = null;
@@ -662,6 +695,7 @@ function buildArena() {
 
 function cleanup() {
   hideDragGhost();
+  clearFabPlaceGhost();
   disposeWorkbenchLights();
   for (const b of bots) { b.agg.dispose(); b.root.dispose(); }
   bots = [];
@@ -852,21 +886,7 @@ function ensureUi() {
   $d("duel-flip").onclick = () => flipPlayer();
   $d("duel-resume").onclick = () => { paused = false; $d("duel-pause").classList.remove("on"); };
   $d("duel-quit").onclick = () => { score = [0, 2]; endMatch(true); };
-  ui.querySelector("#duel-paint-details")!.addEventListener("toggle", () => syncPaintUi());
-  ui.querySelector("#duel-paint")!.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement;
-    const slot = t.closest("[data-pzone]") as HTMLElement | null;
-    if (slot?.dataset.pzone) { paintSlot = slot.dataset.pzone as PaintSlot; syncPaintUi(); return; }
-    const sw = t.closest("[data-sw]") as HTMLElement | null;
-    if (sw?.dataset.sw) {
-      playerPaint.zones[paintSlot] = { ...playerPaint.zones[paintSlot], color: sw.dataset.sw };
-      persistPaint(); syncArmado(); return;
-    }
-    if (t.closest("[data-preset]")) {
-      playerPaint.zones[paintSlot] = cyclePreset(playerPaint.zones[paintSlot], 1);
-      persistPaint(); syncArmado();
-    }
-  });
+  wirePaintPanel("duel-paint-details", "duel-paint", () => syncArmado());
   addEventListener("keydown", (e) => {
     if (!active || phase !== "armado") return;
     if (e.key === "q" || e.key === "Q") { playerPaint.zones[paintSlot] = cycleColor(playerPaint.zones[paintSlot], -1); persistPaint(); syncArmado(); }
@@ -876,14 +896,45 @@ function ensureUi() {
 
 function persistPaint() { saveDuelPaint(playerPaint); }
 
+type PaintUiTarget = { detailsId: string; panelId: string; refresh: () => void };
+const PAINT_ARM: PaintUiTarget = { detailsId: "duel-paint-details", panelId: "duel-paint", refresh: () => syncArmado() };
+const PAINT_FAB: PaintUiTarget = { detailsId: "duel-fab-paint-details", panelId: "duel-fab-paint", refresh: () => previewFabricacion() };
+
+function onPaintPanelClick(e: Event, target: PaintUiTarget) {
+  const t = e.target as HTMLElement;
+  const slot = t.closest("[data-pzone]") as HTMLElement | null;
+  if (slot?.dataset.pzone) { paintSlot = slot.dataset.pzone as PaintSlot; syncPaintUi(target); return; }
+  const sw = t.closest("[data-sw]") as HTMLElement | null;
+  if (sw?.dataset.sw) {
+    playerPaint.zones[paintSlot] = { ...playerPaint.zones[paintSlot], color: sw.dataset.sw };
+    persistPaint(); target.refresh(); syncPaintUi(target); return;
+  }
+  if (t.closest("[data-preset]")) {
+    playerPaint.zones[paintSlot] = cyclePreset(playerPaint.zones[paintSlot], 1);
+    persistPaint(); target.refresh(); syncPaintUi(target);
+  }
+}
+
+function wirePaintPanel(detailsId: string, panelId: string, refresh: () => void) {
+  const details = document.getElementById(detailsId) as HTMLDetailsElement | null;
+  const panel = document.getElementById(panelId);
+  if (!details || !panel || panel.dataset.paintWired) return;
+  panel.dataset.paintWired = "1";
+  const target: PaintUiTarget = { detailsId, panelId, refresh };
+  details.addEventListener("toggle", () => syncPaintUi(target));
+  panel.addEventListener("click", (e) => onPaintPanelClick(e, target));
+}
+
 const SWATCH_NAMES: Record<string, string> = {
   "#d62828": "Rojo", "#1d4ed8": "Azul", "#2a9d8f": "Verde azulado", "#e85d04": "Naranja",
   "#4a5058": "Gris", "#e5e7eb": "Blanco", "#ffc300": "Amarillo", "#6b7a3a": "Oliva",
 };
 
-function syncPaintUi() {
-  const el = $d("duel-paint");
-  const open = ($d("duel-paint-details") as HTMLDetailsElement).open;
+function syncPaintUi(target: PaintUiTarget = PAINT_ARM) {
+  const el = document.getElementById(target.panelId);
+  const details = document.getElementById(target.detailsId) as HTMLDetailsElement | null;
+  if (!el || !details) return;
+  const open = details.open;
   const z = playerPaint.zones[paintSlot];
   const tabs = PAINT_SLOTS.map((s) => `<button type="button" class="pz${s === paintSlot ? " on" : ""}" data-pzone="${s}" aria-pressed="${s === paintSlot}">${SLOT_LABEL[s]}</button>`).join("");
   const sw = SWATCHES.map((c) => {
@@ -973,14 +1024,16 @@ function showFabricar() {
   if (conf) conf.style.display = "none";
   fab?.destroy();
   fab = mountFabricacion(ui, {
-    onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); previewFabricacion(); refreshFabricarCam(); },
+    onChange: (b) => { playerBuild = b; cfg = cfgFromBuild(b); clearFabPlaceGhost(); previewFabricacion(); refreshFabricarCam(); },
     onConfirm: () => beginMatch(),
     onLayout: () => refreshFabricarCam(),
     onZoom: (mul) => {
       fabCamDistMul = Math.max(0.48, Math.min(1.5, fabCamDistMul * mul));
       applyFabricarCam();
     },
+    onHoverCell: (info) => updateFabPlaceGhost(info),
   });
+  wirePaintPanel(PAINT_FAB.detailsId, PAINT_FAB.panelId, PAINT_FAB.refresh);
   fab.setBuild(playerBuild.cells.length ? playerBuild : defaultBuild());
   playerBuild = fab.getBuild();
   cfg = cfgFromBuild(playerBuild);
