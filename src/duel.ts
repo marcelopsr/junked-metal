@@ -23,7 +23,10 @@ import { engineStop, music, SFX } from "./sfx";
 import { clearLayout, showWorld } from "./world";
 import { CLIMATES } from "./run";
 
-const LEGACY_ARMADO = typeof location !== "undefined" && new URLSearchParams(location.search).get("duel") === "legacy";
+// Armado 3×3 legado: solo dev (`?mute&duel=legacy`). Producto = fabricación RoboCraft.
+const LEGACY_ARMADO = import.meta.env.DEV
+  && typeof location !== "undefined"
+  && new URLSearchParams(location.search).get("duel") === "legacy";
 
 const D = BAL.duelo;
 const CH = ["caja", "cuna", "plancha"] as const;
@@ -599,15 +602,12 @@ function updateFabPlaceGhost(info: { probe: Cell; can: boolean; erase: boolean }
     : info.probe;
   if (!ghostCell) return;
   const scene = deps.scene;
-  const pivot = visualPivotOffset(playerBuild);
   const root = new B.TransformNode("fabGhostRoot", scene);
   root.position.set(0, WORKBENCH_TABLE_SURFACE, 0);
   const vis = new B.TransformNode("fabGhostVis", scene);
   vis.parent = root;
-  vis.position.set(-pivot.x, -pivot.y, -pivot.z);
   const m = placementGhostMesh(ghostCell, info.erase ? false : info.can, playerPaint);
   m.parent = vis;
-  m.position.copyFrom(pivot);
   fabPlaceGhostRoot = root;
   fabPlaceGhost = m;
 }

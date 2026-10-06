@@ -248,6 +248,17 @@ export function removeAt(build: RobotBuild, x: number, y: number, z: number): Ro
   return { cells: build.cells.filter((_, i) => i !== idx) };
 }
 
+/** Mueve un bloque anclado en (from*) a un nuevo anclaje si cabe. */
+export function moveCell(
+  build: RobotBuild, fromX: number, fromY: number, fromZ: number, toX: number, toY: number, toZ: number,
+): RobotBuild | null {
+  const cell = cellAt(build, fromX, fromY, fromZ);
+  if (!cell) return null;
+  const stripped = removeAt(build, fromX, fromY, fromZ);
+  const moved: Cell = { ...cell, x: toX, y: toY, z: toZ };
+  return placeCell(stripped, moved);
+}
+
 /** Bloque anclado en una celda de rejilla (para preview de borrado). */
 export function cellAt(build: RobotBuild, x: number, y: number, z: number): Cell | null {
   const idx = occupancyMap(build).get(`${x},${y},${z}`);

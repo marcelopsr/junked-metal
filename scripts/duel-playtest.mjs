@@ -52,7 +52,10 @@ async function playFab(page, label) {
   });
   if (!ghostOk) issues.push(`${label}: sin ghost 3D con pieza colocable`);
   const placed = await page.evaluate(() => {
-    const cell = document.querySelector(".duel-fab-cell.can:not(.filled)");
+    const cell =
+      document.querySelector(".duel-fab-cell.place-zone:not(.filled)") ??
+      document.querySelector(".duel-fab-cell.valid-anchor:not(.filled)") ??
+      document.querySelector(".duel-fab-cell.foot:not(.filled)");
     if (!cell) return false;
     cell.click();
     return true;

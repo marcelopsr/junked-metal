@@ -88,7 +88,9 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 - Configuración de imagen: gamma como curva de medios tonos; FSR apagado en carrera de 2 jugadores; recorte por distancia de props.
 - Rendimiento: ~1.600 draw calls en partida y ~3.200 en carrera a 2 jugadores (posible cuello de botella en celulares).
 
-**Modo Demolición (duelo melee):** GDD [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md); mesa MVP [`docs/DEMOLICION_WORKBENCH.md`](./DEMOLICION_WORKBENCH.md). Impeccable Operate: scorecard [`docs/impeccable/demolicion-scorecard.md`](./impeccable/demolicion-scorecard.md) (~38/40; `impeccable detect --json` en duel.ts/css). Regresión UI: `npm run shots -- --only duel --diff` (pc+cel; pelea usa `__duel.confirm()`). **Fabricación (2026-10-06):** pintura en telemetría; ghost 3D al hover en rejilla (v1.1). **Pendiente:** balance/IA, GLB §36, ghost con silueta por tipo de bloque/rueda. No tocar `goBattle()` de kart.
+**Modo Demolición (duelo melee):** GDD [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md); **armado producto = fabricación RoboCraft** (`fabricar`). Armado 3×3 legado solo dev: `?duel=legacy`. Mesa WORKBENCH [`docs/DEMOLICION_WORKBENCH.md`](./DEMOLICION_WORKBENCH.md) congelada. Scorecards: [`fabricacion-scorecard.md`](./impeccable/fabricacion-scorecard.md) 25/25; [`demolicion-scorecard.md`](./impeccable/demolicion-scorecard.md) (armado drag legacy). Regresión: `npm run playtest:duel` + `npm run shots -- --only duel`. **Pendiente:** inter-asalto/pelea (GDD §3), GLB §36, balance sim duelo. No tocar `goBattle()` de kart.
+
+**Supervivencia — mejora de experiencia:** Fases 0–5 en [`docs/SURVIVAL_EXPERIENCE_PLAN.md`](./SURVIVAL_EXPERIENCE_PLAN.md). **Siguiente apuesta (usuario):** identidad de build — GDD [`docs/SURVIVAL_BUILD_IDENTITY.md`](./SURVIVAL_BUILD_IDENTITY.md); cerrar checklist §6 antes de código.
 
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 

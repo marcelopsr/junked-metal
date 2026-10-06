@@ -81,3 +81,23 @@ describe("habilidades y arsenal", async () => {
     expect(startWeapons("soldadito", 1, "clips")).toHaveLength(2);
   });
 });
+
+describe("balance supervivencia", () => {
+  it("gomita nv1 mata hormiga en 3 impactos (vida con dureza, sin pasivas)", () => {
+    const hp = BAL.enemigos.hormiga.vida * BAL.ritmo.dureza_vida;
+    const hit = BAL.armas.gomitas.dano_base + BAL.armas.gomitas.dano_nivel;
+    expect(hit * 2).toBeLessThan(hp);
+    expect(hit * 3).toBeGreaterThanOrEqual(hp);
+  });
+});
+
+describe("moveCell fabricación", () => {
+  it("reubica un bloque si el destino es válido", async () => {
+    const { emptyBuild, placeCell, moveCell } = await import("../src/duel_build");
+    let b = placeCell(emptyBuild(), { x: 0, y: 0, z: 0, rot: 0, blockId: "chapa" })!;
+    const seat = placeCell(b, { x: 0, y: 1, z: 0, rot: 0, blockId: "asiento_rc" })!;
+    b = placeCell(seat, { x: 1, y: 1, z: 0, rot: 0, blockId: "chapa" })!;
+    const moved = moveCell(b, 1, 1, 0, -1, 1, 0);
+    expect(moved?.cells.some((c) => c.x === -1 && c.z === 0 && c.blockId === "chapa")).toBe(true);
+  });
+});
