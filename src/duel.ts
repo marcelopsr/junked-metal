@@ -145,7 +145,7 @@ function makeBot(id: number, human: boolean, c: RobotConfig, at: B.Vector3, name
   const mass = massOf(c);
   const ch = BAL.dueloChasis[c.chassis];
   const cogY = ch.cog_y_m;
-  const agg = new B.PhysicsAggregate(root, B.PhysicsShapeType.BOX, { mass, friction: 0.35, restitution: 0.15, extents: new B.Vector3(1.3, 0.45, 1.9) }, scene);
+  const agg = new B.PhysicsAggregate(root, B.PhysicsShapeType.BOX, { mass, friction: D.phys_friction_bot, restitution: 0.15, extents: new B.Vector3(1.3, 0.45, 1.9) }, scene);
   const body = agg.body;
   body.setMassProperties({ mass, inertia: new B.Vector3(mass * 0.35, mass * 0.8, mass * 0.35), centerOfMass: new B.Vector3(0, cogY - 0.25, 0) });
   return {
@@ -164,11 +164,11 @@ function buildArena() {
   const fl = B.MeshBuilder.CreateGround("duelFloor", { width: ARENA, height: ARENA }, scene);
   fl.position.y = 0.02; fl.receiveShadows = true;
   fl.material = pbr("duelFloor", { color: "#888", rough: 0.85, tex }); mesh.push(fl);
-  new B.PhysicsAggregate(fl, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.4, restitution: 0.1 }, scene);
+  new B.PhysicsAggregate(fl, B.PhysicsShapeType.BOX, { mass: 0, friction: D.phys_friction_floor, restitution: 0.1 }, scene);
   const h = 2.5, t = 0.8;
   for (const [px, pz, sx, sz] of [[0, -HALF, ARENA, t], [0, HALF, ARENA, t], [-HALF, 0, t, ARENA], [HALF, 0, t, ARENA]] as const) {
     const w = box(sx, h, sz, M.metal("#555"), [px, h / 2, pz]);
-    new B.PhysicsAggregate(w, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.2, restitution: 0.5 }, scene);
+    new B.PhysicsAggregate(w, B.PhysicsShapeType.BOX, { mass: 0, friction: D.phys_friction_bot, restitution: D.phys_wall_restitution }, scene);
     mesh.push(w);
   }
 }
@@ -325,11 +325,17 @@ function grounded(body: B.PhysicsBody, mesh: B.Mesh) {
   return ray.hasHit;
 }
 
+// ponytail: un applyForce por cuadro; varios applyForce compiten y vibran en bordes
+function clampDuelVec(v: B.Vector3, max: number) {
+  const sq = v.lengthSquared();
+  if (sq > max * max && sq > 1e-8) v.scaleInPlace(max / Math.sqrt(sq));
+}
+
 function stepDuelPhysics(b: Bot, dt: number, throttle: number, steer: number, weaponBtn: boolean) {
   const mesh = b.root;
   mesh.computeWorldMatrix(true);
   const upDot = B.Vector3.Dot(mesh.up, UP);
-  b.flipped = upDot < 0.45;
+  b.flipped = upDot < D.phys_flip_up_dot;
   const onGround = grounded(b.body, mesh);
   if (b.cfg.weapon === "trompo" && weaponBtn) b.rpm = Math.min(1, b.rpm + dt / BAL.dueloArmas.trompo.rpm_carga_s);
   else b.rpm = Math.max(0, b.rpm - dt * 0.8);
@@ -338,51 +344,64 @@ function stepDuelPhysics(b: Bot, dt: number, throttle: number, steer: number, we
   if (fFwd.lengthSquared() < 1e-4) fFwd.set(0, 0, 1); else fFwd.normalize();
   B.Vector3.CrossToRef(UP, fFwd, fRight);
   const s = b.stats;
-  const driveMul = b.flipped ? 0.15 : 1;
+  const driveMul = b.flipped ? D.phys_volcado_drive_mul : 1;
   const pos = mesh.getAbsolutePosition();
+  const fCap = b.mass * D.phys_force_cap_mul;
+  const tCap = b.mass * D.phys_torque_cap_mul;
 
   b.body.getLinearVelocityToRef(fVel);
   const fs = B.Vector3.Dot(fVel, fFwd), ls = B.Vector3.Dot(fVel, fRight);
 
+  fForce.set(0, 0, 0);
+  fTorque.set(0, 0, 0);
+
   if (onGround && Math.abs(throttle) > 0.01) {
-    const acc = throttle > 0 ? s.accel * throttle : throttle * s.accel * 1.35;
-    fForce.copyFrom(fFwd).scaleInPlace(acc * b.mass * driveMul);
-    b.body.applyForce(fForce, pos);
-  } else if (onGround && Math.abs(fs) > 0.2) {
-    fForce.copyFrom(fFwd).scaleInPlace(-fs * s.grip * b.mass * 1.2 * driveMul);
-    b.body.applyForce(fForce, pos);
+    const acc = throttle > 0 ? s.accel * throttle : throttle * s.accel * D.phys_reverse_mul;
+    fForce.x += fFwd.x * acc * b.mass * driveMul;
+    fForce.z += fFwd.z * acc * b.mass * driveMul;
+  } else if (onGround && Math.abs(fs) > D.phys_grip_fwd_min_spd) {
+    const g = -fs * s.grip * b.mass * D.phys_grip_fwd_k * driveMul;
+    fForce.x += fFwd.x * g;
+    fForce.z += fFwd.z * g;
   }
-  if (onGround && Math.abs(ls) > 0.05) {
-    fForce.copyFrom(fRight).scaleInPlace(-ls * s.grip * b.mass * 3.5);
-    b.body.applyForce(fForce, pos);
+  if (onGround && Math.abs(ls) > D.phys_grip_lat_min_spd) {
+    const g = -ls * s.grip * b.mass * D.phys_grip_lat_k;
+    fForce.x += fRight.x * g;
+    fForce.z += fRight.z * g;
   }
   if (onGround && fs > s.maxSpd) {
-    fForce.copyFrom(fFwd).scaleInPlace(-(fs - s.maxSpd) * b.mass * 4);
-    b.body.applyForce(fForce, pos);
+    const g = -(fs - s.maxSpd) * b.mass * D.phys_spd_cap_k;
+    fForce.x += fFwd.x * g;
+    fForce.z += fFwd.z * g;
   }
 
   if (onGround && !b.flipped) {
     const steerK = B.Scalar.Clamp(Math.abs(fs) / 5, 0.25, 1);
-    fTorque.set(0, steer * s.turn * b.mass * 1.1 * steerK, 0);
-    b.body.applyTorque(fTorque);
+    fTorque.y += steer * s.turn * b.mass * D.phys_steer_k * steerK;
     const av = b.body.getAngularVelocity();
-    fTorque.set(-av.x * b.mass * 2.8, 0, -av.z * b.mass * 2.8);
-    b.body.applyTorque(fTorque);
+    fTorque.x += -av.x * b.mass * D.phys_ang_damp_xy;
+    fTorque.z += -av.z * b.mass * D.phys_ang_damp_xy;
   } else if (!onGround) {
     const av = b.body.getAngularVelocity();
-    fTorque.set(-av.x * b.mass * 0.6, steer * s.turn * b.mass * 0.15, -av.z * b.mass * 0.6);
-    b.body.applyTorque(fTorque);
+    fTorque.x += -av.x * b.mass * D.phys_ang_damp_air;
+    fTorque.z += -av.z * b.mass * D.phys_ang_damp_air;
+    fTorque.y += steer * s.turn * b.mass * D.phys_steer_air_k;
     if (Math.abs(throttle) > 0.01) {
-      fForce.copyFrom(fFwd).scaleInPlace(throttle * s.accel * b.mass * 0.12);
-      b.body.applyForce(fForce, pos);
+      fForce.x += fFwd.x * throttle * s.accel * b.mass * D.phys_accel_air_k;
+      fForce.z += fFwd.z * throttle * s.accel * b.mass * D.phys_accel_air_k;
     }
   }
 
-  if (b.cfg.weapon === "trompo" && b.rpm > 0.2) b.body.applyTorque(new B.Vector3(0, b.rpm * b.mass * 0.35, 0));
+  if (b.cfg.weapon === "trompo" && b.rpm > 0.2) fTorque.y += b.rpm * b.mass * D.phys_trompo_torque_k;
   if (upDot < 0.25 && onGround) {
-    fTorque.set(mesh.right.x * b.mass * 3, 0, mesh.right.z * b.mass * 3);
-    b.body.applyTorque(fTorque);
+    fTorque.x += mesh.right.x * b.mass * D.phys_self_right_k;
+    fTorque.z += mesh.right.z * b.mass * D.phys_self_right_k;
   }
+
+  clampDuelVec(fForce, fCap);
+  if (fForce.lengthSquared() > 1e-6) b.body.applyForce(fForce, pos);
+  clampDuelVec(fTorque, tCap);
+  if (fTorque.lengthSquared() > 1e-6) b.body.applyTorque(fTorque);
 }
 
 function aiStep(b: Bot, dt: number, target: Bot) {

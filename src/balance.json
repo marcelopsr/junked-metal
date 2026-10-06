@@ -407,12 +407,32 @@
     {"id":"warn_traccion_mul","valor":0.95,"descripcion":"Multiplicador de tracción si el loadout confirmado estaba en WARN"},
     {"id":"asalto_objetivo_s","valor":120,"descripcion":"Duración objetivo de un asalto (tuning; no es límite duro)"},
     {"id":"volcado_vuln_mul","valor":1.25,"descripcion":"Multiplicador de daño recibido mientras el robot está volcado"},
-    {"id":"flip_cd_s","valor":1.25,"descripcion":"Cooldown del botón enderezar tras volcado (modo Demolición)"}
+    {"id":"flip_cd_s","valor":1.35,"descripcion":"Cooldown del botón enderezar tras volcado (modo Demolición)"},
+    {"id":"phys_grip_fwd_k","valor":1.05,"descripcion":"Coef. frenado longitudinal sin acelerador (× grip × masa)"},
+    {"id":"phys_grip_lat_k","valor":2.65,"descripcion":"Coef. frenado lateral (× grip × masa)"},
+    {"id":"phys_grip_fwd_min_spd","valor":0.35,"descripcion":"|vel longitudinal| mínima para grip longitudinal"},
+    {"id":"phys_grip_lat_min_spd","valor":0.08,"descripcion":"|vel lateral| mínima para grip lateral"},
+    {"id":"phys_spd_cap_k","valor":3,"descripcion":"Fuerza de tope cuando supera maxSpd (× masa)"},
+    {"id":"phys_steer_k","valor":1,"descripcion":"Multiplicador torque de giro en suelo"},
+    {"id":"phys_ang_damp_xy","valor":3.2,"descripcion":"Amortiguación roll/pitch angular en suelo (× masa)"},
+    {"id":"phys_ang_damp_air","valor":0.55,"descripcion":"Amortiguación roll/pitch en el aire (× masa)"},
+    {"id":"phys_steer_air_k","valor":0.12,"descripcion":"Torque de giro en el aire"},
+    {"id":"phys_accel_air_k","valor":0.1,"descripcion":"Aceleración en el aire (× accel × masa)"},
+    {"id":"phys_reverse_mul","valor":1.28,"descripcion":"Multiplicador aceleración marcha atrás"},
+    {"id":"phys_self_right_k","valor":2,"descripcion":"Torque auto-enderezado suave cuando up·Y < 0.25"},
+    {"id":"phys_trompo_torque_k","valor":0.32,"descripcion":"Torque Y del trompo cargado (× rpm × masa)"},
+    {"id":"phys_force_cap_mul","valor":26,"descripcion":"Tope de |F| por cuadro: masa × este valor (ponytail: un solo applyForce)"},
+    {"id":"phys_torque_cap_mul","valor":9,"descripcion":"Tope de |τ| por cuadro: masa × este valor"},
+    {"id":"phys_friction_bot","valor":0.4,"descripcion":"Fricción del colisionador del robot"},
+    {"id":"phys_friction_floor","valor":0.45,"descripcion":"Fricción del piso de la arena"},
+    {"id":"phys_wall_restitution","valor":0.28,"descripcion":"Restitución de las paredes (rebote en bordes)"},
+    {"id":"phys_flip_up_dot","valor":0.42,"descripcion":"Umbral up·Y para considerar volcado"},
+    {"id":"phys_volcado_drive_mul","valor":0.12,"descripcion":"Multiplicador de empuje cuando volcado"}
   ],
   "duelo_chasis": [
     {"id":"caja","nombre":"Caja","masa_kg":3,"hp_bonus":30,"traccion_mul":1,"vel_max_mul":0.92,"cog_y_m":0.4},
     {"id":"cuna","nombre":"Cuña","masa_kg":2.2,"hp_bonus":-10,"traccion_mul":1.1,"vel_max_mul":1,"cog_y_m":0.22},
-    {"id":"plancha","nombre":"Plancha","masa_kg":1.8,"hp_bonus":-20,"traccion_mul":0.95,"vel_max_mul":1.05,"cog_y_m":0.28}
+    {"id":"plancha","nombre":"Plancha","masa_kg":1.8,"hp_bonus":-20,"traccion_mul":0.95,"vel_max_mul":1.05,"cog_y_m":0.3}
   ],
   "duelo_ruedas": [
     {"id":"estandar","nombre":"Estándar","masa_kg":0.4,"vel_max_mul":1,"traccion_mul":1,"lift_m":0},
@@ -422,7 +442,7 @@
   "duelo_armas": [
     {"id":"trompo","nombre":"Trompo","masa_kg":0.8,"dano_base":5,"push_mul":0.6,"rpm_max":1,"rpm_carga_s":0.35,"knock_up_n":0},
     {"id":"sierra","nombre":"Sierra","masa_kg":0.7,"dano_base":7,"push_mul":0.3,"rpm_max":0,"rpm_carga_s":0,"knock_up_n":2.2},
-    {"id":"pala","nombre":"Pala","masa_kg":1.2,"dano_base":2,"push_mul":2.4,"rpm_max":0,"rpm_carga_s":0,"knock_up_n":0}
+    {"id":"pala","nombre":"Pala","masa_kg":1.2,"dano_base":2,"push_mul":2.15,"rpm_max":0,"rpm_carga_s":0,"knock_up_n":0}
   ],
   "duelo_rival": [
     {"id":"cuna_industrial","nombre":"CUÑA INDUSTRIAL","chasis_id":"cuna","ruedas_id":"orugas","arma_id":"pala","cuerpo_color":"#2a2d32","bandas_color":"#e85d04","pala_color":"#8a9098"}
