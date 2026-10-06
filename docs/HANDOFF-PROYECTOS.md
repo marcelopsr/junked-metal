@@ -1,6 +1,6 @@
 # Junked Metal — Handoff para Claude Projects
 
-Actualizado: 2026-10-04 · Último commit: `0110547` (rama `master`, solo local; lo publicado en GitHub Pages es anterior).
+Actualizado: 2026-10-06 · Ver `git log -1` para último commit en `master`.
 
 Este documento es autocontenido: alcanza para retomar el proyecto sin el historial de las conversaciones.
 
@@ -87,7 +87,7 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 - Configuración de imagen: gamma como curva de medios tonos; FSR apagado en carrera de 2 jugadores; recorte por distancia de props.
 - Rendimiento: ~1.600 draw calls en partida y ~3.200 en carrera a 2 jugadores (posible cuello de botella en celulares).
 
-**Modo Demolición (duelo melee):** diseño completo en [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md) (GDD maestro: reglas, building, piezas, IA, frases, armado §27–§37, assets §36); balance borrador en `src/balance.json` (`duelo_*`); atribuciones OS en [`docs/ATTRIBUTIONS.md`](./ATTRIBUTIONS.md); checklist en [`docs/BATTLE_RC_PLAN.md`](./BATTLE_RC_PLAN.md). Implementación pendiente de aprobación explícita (§26 del GDD). No tocar `goBattle()` de kart al implementar.
+**Modo Demolición (duelo melee):** diseño completo en [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md) (GDD maestro: reglas, building, piezas, IA, frases, armado §27–§37, assets §36); balance borrador en `src/balance.json` (`duelo_*`); atribuciones OS en [`docs/ATTRIBUTIONS.md`](./ATTRIBUTIONS.md); arquitectura en [`docs/BATTLE_ARCHITECTURE.md`](./BATTLE_ARCHITECTURE.md); checklist en [`docs/BATTLE_RC_PLAN.md`](./BATTLE_RC_PLAN.md). **Implementación en curso** (aprobado §26, 2026-10-06): módulo `src/duel.ts` + menú «Demolición». Toolbox histórico local: `.claude/trabajo/SPEC-modo-robots.md` (carpeta `.claude/` en gitignore — si falta, el GDD manda). No tocar `goBattle()` de kart al implementar.
 
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 

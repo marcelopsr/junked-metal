@@ -14,6 +14,17 @@ alwaysApply: true
 
 Excepción mínima: el usuario escribió una orden **literal y completa** ("hacé exactamente X") sin ambigüedad; aun así, al **terminar** esa tanda volver al loop con AskUserQuestion para el siguiente paso si hay decisiones abiertas.
 
+## Política toolbox extendido
+
+Cuando el alcance lo merece (modo nuevo, GDD, balance grande):
+
+- Usar **AskUserQuestion** con hasta **4 preguntas × 4 opciones** por ronda; **varias rondas seguidas** en la misma sesión si hace falta cubrir mecánica, diseño y UX de una vez.
+- Cada opción lleva **descripción rica** (implicaciones, tradeoff, qué se ve en pantalla). La opción **(Recomendado)** va **primera** cuando hay criterio claro de producto/arte (`ART_DIRECTION`, física Havok, ponytail).
+- **Preferir pocas tandas grandes** que muchas micro-rondas de 1–2 preguntas; agrupar temas relacionados (combate + derrota + asaltos; armado + preview + stats; etc.).
+- Incluir **defaults razonables** en el GDD o plan para lo no respondido; marcar qué quedó confirmado por el usuario vs default del equipo.
+- Durante implementación: **volver al toolbox** solo ante ambigüedad real; no improvisar diseño en código.
+- **No** preguntar commit, push ni cuándo subir; **no** preguntar «¿seguimos?».
+
 ## Loop de sesión
 
 1. **AskUserQuestion** → foco y decisiones.

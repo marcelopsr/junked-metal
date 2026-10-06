@@ -362,7 +362,9 @@ Tono: humor **picante** / taller / garantía void; español neutro; una línea a
 
 ## 26. Aprobación
 
-Implementación de código (`duel.ts`) **después** de mensaje explícito: **«aprobado, implementar»** (o equivalente) sobre este documento.
+**2026-10-06 — aprobado para implementar.** El usuario ejecutó el plan de prototipo Demolición (equivalente a **«aprobado, implementar»** sobre este GDD). Autorizada la implementación de `src/duel.ts` según `docs/BATTLE_ARCHITECTURE.md` y checklist en `docs/BATTLE_RC_PLAN.md`.
+
+*(Criterio previo al plan: mensaje explícito «aprobado, implementar» o equivalente sobre este documento.)*
 
 ---
 

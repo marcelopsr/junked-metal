@@ -11,7 +11,7 @@
 
 **Nombre interno:** `duel` (`src/duel.ts`). El nombre `battle` ya está tomado por el modo de globos de `kart.ts` (`startBattle()`, L404); no reutilizarlo ni confundirlo.
 
-**Estado actual:** GDD cerrado en diseño (sin «aprobado, implementar»). Sin `src/duel.ts` todavía.
+**Estado actual:** GDD aprobado para implementación (2026-10-06, `DEMOLICION_GDD.md` §26). `src/duel.ts` en curso según este documento.
 
 ---
 
