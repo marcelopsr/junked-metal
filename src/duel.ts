@@ -6,7 +6,7 @@ import { damageNumber } from "./ui";
 import { impact } from "./fx";
 import { input, isTouch, padPressed, pb } from "./input";
 import { box, cyl, merge, wheel } from "./models";
-import { applyClimate, canvasTex, M, pbr, shadows, TEX } from "./render";
+import { applyClimate, canvasTex, M, pbr, setLamp, shadows, TEX } from "./render";
 import {
   cycleColor, cyclePreset, duelMat, loadDuelPaint, PAINT_SLOTS, PRESET_LABEL, rivalPaintFromBalance,
   saveDuelPaint, SLOT_LABEL, SWATCHES, type DuelPaintState, type PaintSlot,
@@ -57,6 +57,13 @@ const WORKBENCH_TABLE_SURFACE = WORKBENCH_TABLE_TOP + 0.055; // centro del table
 const WORKBENCH_ROBOT_Y = WORKBENCH_TABLE_SURFACE - 0.15;
 /** Cámara fija en armado (sin órbita). */
 const ARMADO_CAM = { yaw: 0.38, dist: 3.85, height: 2.45, targetY: WORKBENCH_TABLE_SURFACE + 0.22 };
+const wbLampPos = new B.Vector3(0.15, WORKBENCH_TABLE_SURFACE + 1.25, 0.55);
+const wbLampFwd = new B.Vector3(-0.12, -0.62, -0.78);
+const wbLampPosLive = new B.Vector3();
+const wbLampFwdLive = new B.Vector3();
+let wbFill: B.PointLight | null = null;
+let fabBenchKey: B.SpotLight | null = null;
+let fabBenchBounce: B.PointLight | null = null;
 type PieceCat = "chassis" | "wheels" | "weapon";
 const PIECE_CAT_KEY: Record<PieceCat, "c" | "w" | "a"> = { chassis: "c", wheels: "w", weapon: "a" };
 const PIECE_CAT_IDS: Record<PieceCat, readonly string[]> = { chassis: CH, wheels: WH, weapon: AR };
@@ -98,6 +105,7 @@ let flipCd = 0;
 let pendingPiece: { cat: PieceCat; id: string } | null = null;
 let shotCamFrozen = false;
 let previewFabRoot: B.TransformNode | null = null;
+let fabPreviewGlow: B.PointLight | null = null;
 /** Offsets de cámara en fabricación (arrastre en viewport; sin órbita automática). */
 let fabCamOff = { yaw: 0, pitch: 0 };
 let fabCamDistMul = 1;
@@ -135,6 +143,84 @@ function applyArmadoCam() {
   const { yaw, dist, height, targetY } = ARMADO_CAM;
   deps.cam.position.set(Math.sin(yaw) * dist, height, Math.cos(yaw) * dist);
   deps.cam.setTarget(new B.Vector3(0, targetY, 0));
+  syncWorkbenchLights();
+}
+
+/** Faro sobre la mesa (main no llama setLamp en duelo; sin esto el visor queda casi a oscuras). */
+function syncWorkbenchLights() {
+  if (phase !== "fabricar" && phase !== "armado") return;
+  const scene = deps.scene;
+  if (phase === "fabricar") {
+    const t = fabCamTarget;
+    wbLampPosLive.set(t.x + 0.42, WORKBENCH_TABLE_SURFACE + 0.26, t.z + 0.52);
+    setLamp(wbLampPosLive, wbLampFwd, true, 0);
+  } else {
+    setLamp(wbLampPos, wbLampFwd, false, 0);
+  }
+  if (!wbFill) {
+    wbFill = new B.PointLight("wbFill", new B.Vector3(-0.75, WORKBENCH_TABLE_TOP + 1.05, 0.35), scene);
+    wbFill.diffuse = B.Color3.FromHexString("#ffc890");
+    wbFill.intensity = 1.15;
+    wbFill.range = 5.5;
+  }
+  if (phase === "fabricar") {
+    wbFill.intensity = 3.4;
+    wbFill.range = 11;
+    wbFill.position.set(fabCamTarget.x - 0.75, WORKBENCH_TABLE_TOP + 1.35, fabCamTarget.z + 0.35);
+  } else {
+    wbFill.intensity = 1.15;
+    wbFill.range = 5.5;
+    wbFill.position.set(-0.75, WORKBENCH_TABLE_TOP + 1.05, 0.35);
+  }
+  wbFill.setEnabled(true);
+}
+
+/** Clima y focos extra solo en fabricar; la arena de pelea vuelve a mediodía en beginMatch. */
+function installFabricarLighting() {
+  const farol = CLIMATES.find((c) => c.id === "farol")!;
+  applyClimate({
+    ...farol,
+    sun: [0.25, -0.55, 0.4],
+    exposure: farol.exposure * 1.82,
+    hemiI: farol.hemiI * 2.15,
+    sunI: farol.sunI * 0.42,
+    amb: "#9eb4d4",
+    ground: "#3d4a38",
+  });
+  deps.scene.environmentIntensity = 1.05;
+  shadows.darkness = 0.22;
+  const scene = deps.scene;
+  if (!fabBenchKey) {
+    fabBenchKey = new B.SpotLight(
+      "fabBenchKey",
+      new B.Vector3(1.2, 3.05, 1.45),
+      new B.Vector3(-0.38, -0.93, -0.33),
+      Math.PI / 2.3,
+      2.6,
+      scene,
+    );
+    fabBenchKey.diffuse = B.Color3.FromHexString("#fff8ec");
+    fabBenchKey.intensity = 7.2;
+    fabBenchKey.range = 22;
+  }
+  fabBenchKey.setEnabled(true);
+  if (!fabBenchBounce) {
+    fabBenchBounce = new B.PointLight("fabBenchBounce", new B.Vector3(0, 1.48, 0.22), scene);
+    fabBenchBounce.diffuse = B.Color3.FromHexString("#ffe4bc");
+    fabBenchBounce.intensity = 3.1;
+    fabBenchBounce.range = 9.5;
+  }
+  fabBenchBounce.setEnabled(true);
+  syncWorkbenchLights();
+}
+
+function disposeWorkbenchLights() {
+  wbFill?.dispose();
+  wbFill = null;
+  fabBenchKey?.dispose();
+  fabBenchKey = null;
+  fabBenchBounce?.dispose();
+  fabBenchBounce = null;
 }
 
 function syncFabCamTargetFromPreview() {
@@ -209,6 +295,7 @@ function applyFabricarCam() {
   const t = fabCamTarget;
   deps.cam.position.set(t.x + Math.sin(a) * d, t.y + lift, t.z + Math.cos(a) * d);
   deps.cam.setTarget(t);
+  syncWorkbenchLights();
 }
 
 function unbindFabCamDrag() {
@@ -460,6 +547,8 @@ function applyBuildPartWear(vic: Bot, atk: Bot, dmg: number) {
 }
 
 function previewFabricacion() {
+  fabPreviewGlow?.dispose();
+  fabPreviewGlow = null;
   previewFabRoot?.dispose();
   previewFabRoot = null;
   if (!playerBuild.cells.length) {
@@ -478,6 +567,12 @@ function previewFabricacion() {
   m.parent = vis;
   m.position.copyFrom(pivot);
   shadows.addShadowCaster(m);
+  fabPreviewGlow = new B.PointLight("fabPrevGlow", new B.Vector3(0, 0.45, 0.18), scene);
+  fabPreviewGlow.parent = root;
+  fabPreviewGlow.intensity = 3.2;
+  fabPreviewGlow.diffuse = B.Color3.FromHexString("#fff6ea");
+  fabPreviewGlow.range = 2.5;
+  fabPreviewGlow.falloffType = B.Light.FALLOFF_STANDARD;
   previewFabRoot = root;
   syncFabCamTargetFromPreview();
   if (phase === "fabricar") applyFabricarCam();
@@ -567,10 +662,13 @@ function buildArena() {
 
 function cleanup() {
   hideDragGhost();
+  disposeWorkbenchLights();
   for (const b of bots) { b.agg.dispose(); b.root.dispose(); }
   bots = [];
   previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
-  previewFabRoot?.dispose(); previewFabRoot = null;
+  previewFabRoot?.dispose();
+  fabPreviewGlow = null;
+  previewFabRoot = null;
   for (const m of mesh) { m.physicsBody?.dispose(); m.dispose(); }
   mesh = [];
   lastHit.clear();
@@ -865,8 +963,8 @@ function showFabricar() {
   ensureUi(); cleanup(); phase = "fabricar";
   dismissLoadOverlay();
   showWorld(false); clearLayout();
-  applyClimate(CLIMATES.find((c) => c.id === "farol")!);
   buildWorkbench();
+  installFabricarLighting();
   deps.scene.physicsEnabled = true;
   // Ocultar panel legado de armado 3×3
   const arm = document.getElementById("duel-arm");
@@ -930,6 +1028,8 @@ function beginMatch() {
   showWorld(false);
   clearLayout();
   applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
+  deps.scene.environmentIntensity = 0.55;
+  shadows.darkness = 0.5;
   buildArena();
   music("battle");
   ui.className = "on fight";
