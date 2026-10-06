@@ -1,48 +1,42 @@
 # Surface brief — Demolición / ARMADO (Operate)
 
 **Modo:** Operate · **Target:** `src/duel.ts` + `src/duel.css`  
-**Baseline shots:** `npm run shots -- --only duel --vp pc` → `.shots/actual/pc-duel-armado.png` (2026-10-06)
+**Plan:** `docs/DEMOLICION_WORKBENCH.md`  
+**Baseline shots:** `npm run shots -- --only duel --vp pc` → `.shots/actual/pc-duel-armado.png`
+
+## Visión workbench
+
+Mesa de taller RC antes de la arena: robot centrado en madera/metal, fondo taller oscuro (clima farol), bandeja Lego con drag a zonas. Telemetría y pintura en panel lateral colapsable. Jerarquía: instrucción → mesa 3D → bandeja → CTA.
+
+## Criterios de aceptación (Impeccable Operate)
+
+| Criterio | Meta MVP |
+|----------|----------|
+| Jerarquía | Instrucción una línea; mesa domina viewport; stats secundarios |
+| Carga cognitiva | 9 chips + 3 zonas; lore en chip corto o tooltip, no columnas largas |
+| Affordance | Chips `draggable`; zonas con estado vacío/equipado/hover drag |
+| A11y | Click fallback documentado; focus visible; targets táctiles 44px |
+| Contraste | Texto secundario sobre panel `#141813`, no gris genérico sobre verde |
 
 ## Impeccable CLI
 
 | Paso | Comando | Resultado |
 |------|---------|-----------|
-| Context | `impeccable context --target src/duel.ts` | OK; sin PRODUCT.md; refinamiento permitido |
-| Critique/audit verbs | `impeccable critique/audit` | No en CLI v4.3.1; evaluación manual + `detect` |
-| Detect | `impeccable detect --json src/duel.ts src/duel.css` | Ver salida en tanda (pre-cambio) |
+| Context | `impeccable context --target src/duel.ts` | OK; refinamiento sobre implementación existente |
+| Detect | `impeccable detect --json src/duel.ts src/duel.css` | Post-cambio en tanda |
 
-## Critique (heurísticas, pre-cambio)
+## Copy
 
-| Criterio | Nota 0–4 | Observación |
-|----------|----------|-------------|
-| Jerarquía visual | 1 | Pintura compite con piezas; lore en una línea |
-| Carga cognitiva | 1 | Tres lores + 6 zonas + 8 swatches a la vez |
-| Etiquetas / affordance | 2 | Q/R en texto plano; botones ‹ › sin nombre |
-| A11y estructura | 1 | Sin landmarks de sección; barras sin texto asociado |
-| Contraste / tamaño | 2 | 0.6–0.75rem dominante; secundario `#5f7355` bajo |
+- Principal: «Arrastrar cada pieza al robot» (neutro impersonal, ART_DIRECTION).
+- Fallback: «O elegir pieza y tocar la zona en el robot».
+- CTA: «Confirmar armado» (sin cambio).
 
-## Distill + clarify + layout (plan tanda 1)
-
-1. **Flujo:** (1) Piezas con lore por columna → (2) Telemetría con títulos → (3) `<details>` «Pintura (opcional)» → aviso → CTA único.
-2. **Copy:** Atajos como `<kbd>` secundarios; confirmar «Confirmar armado»; quitar voseo en aviso combo.
-3. **A11y checklist post-implementación:**
-   - [x] `h1` + `h2` por sección
-   - [x] `aria-expanded` vía `<details>` nativo
-   - [x] `aria-label` en swatches y flechas de pieza
-   - [x] `:focus-visible` en controles
-   - [x] Targets ≥44px en `@media (max-width: 500px)`
-
-## Después (tanda 1)
-
-- Shots: `pc-duel-armado`, `cel-duel-armado` (escenario espera `duel-ui.armado` + `#load.hidden`)
-- `detect`: `[]` post-cambio
-
-## Verificación prevista
+## Verificación
 
 - `tsc`, `npm test`, `build`
-- `shots --only duel` pc + cel
-- `impeccable detect` post-cambio
+- `shots --only duel` pc + cel; `--diff`; `--update` si workbench es nueva referencia
+- `graphify update` tras commit
 
-## Regresión visual (repetible)
+## v2 (fuera de brief)
 
-Tras `pm2 restart rc-test`: `npm run shots -- --only duel --vp pc` y `--vp cel` (capturas en `.shots/actual/`). Comparar con referencia: `npm run shots -- --only duel --diff` (sale 1 si supera tolerancia; % por PNG en `.shots/diff/`). Tras cambio intencional de UI armado: `npm run shots -- --only duel --update`.
+Ghost 3D al arrastrar, snap animado, zonas proyectadas al mesh, audio de encaje.

@@ -523,7 +523,7 @@ function enterDuel() {
 }
 function goDuel() {
   initAudio();
-  void launch([worldTask(() => "patio"), T_EFECTOS], "Preparando demolición", () => enterDuel(), () => afterFrames(2));
+  void launch([T_EFECTOS], "Preparando demolición", () => enterDuel(), () => afterFrames(2));
 }
 if (import.meta.env.DEV && /[?&]duel\b/.test(location.search)) setTimeout(() => goDuel(), 1500);
 if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2" && !isTouch) { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera

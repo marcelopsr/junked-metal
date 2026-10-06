@@ -3,17 +3,17 @@ import * as B from "@babylonjs/core";
 import "./duel.css";
 import { BAL } from "./balance";
 import { damageNumber } from "./ui";
-import { burst, impact } from "./fx";
+import { impact } from "./fx";
 import { input, padPressed, pb } from "./input";
 import { box, cyl, merge, wheel } from "./models";
-import { applyClimate, canvasTex, M, pbr, shadows } from "./render";
+import { applyClimate, canvasTex, M, pbr, shadows, TEX } from "./render";
 import {
   cycleColor, cyclePreset, duelMat, loadDuelPaint, PAINT_SLOTS, PRESET_LABEL, rivalPaintFromBalance,
   saveDuelPaint, SLOT_LABEL, SWATCHES, type DuelPaintState, type PaintSlot,
 } from "./duel_paint";
 import { save } from "./menu";
 import { engineStop, music, SFX } from "./sfx";
-import { buildGrass, clearLayout, setZone } from "./world";
+import { buildGrass, clearLayout, setZone, showWorld } from "./world";
 import { CLIMATES } from "./run";
 
 const D = BAL.duelo;
@@ -43,6 +43,11 @@ let deps: Deps;
 const $d = (id: string) => document.getElementById(id)!;
 
 const ARENA = 25, HALF = ARENA / 2;
+const WORKBENCH_TABLE_TOP = 0.78;
+const WORKBENCH_ROBOT_Y = WORKBENCH_TABLE_TOP + 0.14;
+type PieceCat = "chassis" | "wheels" | "weapon";
+const PIECE_CAT_KEY: Record<PieceCat, "c" | "w" | "a"> = { chassis: "c", wheels: "w", weapon: "a" };
+const PIECE_CAT_IDS: Record<PieceCat, readonly string[]> = { chassis: CH, wheels: WH, weapon: AR };
 const UP = B.Vector3.Up();
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
 const fFwd = new B.Vector3(), fRight = new B.Vector3(), fForce = new B.Vector3(), fTorque = new B.Vector3(), fVel = new B.Vector3();
@@ -72,6 +77,8 @@ let camShake = 0;
 let playerPaint = loadDuelPaint();
 let paintSlot: PaintSlot = "chassis_body";
 let flipCd = 0;
+let pendingPiece: { cat: PieceCat; id: string } | null = null;
+let armadoCamYaw = 0.55;
 
 export function initDuel(d: Deps) { deps = d; ensureUi(); }
 
@@ -156,6 +163,34 @@ function makeBot(id: number, human: boolean, c: RobotConfig, at: B.Vector3, name
   };
 }
 
+function buildWorkbench() {
+  const scene = deps.scene;
+  const floor = B.MeshBuilder.CreateGround("wbFloor", { width: 14, height: 14 }, scene);
+  floor.position.y = 0.01;
+  floor.receiveShadows = true;
+  floor.material = pbr("wbFloor", { color: "#2a2e28", rough: 0.92, tex: canvasTex(128, (g, s) => {
+    g.fillStyle = "#2a2e28"; g.fillRect(0, 0, s, s);
+    for (let i = 0; i < 80; i++) { g.fillStyle = i % 3 ? "#353a32" : "#222620"; g.fillRect(Math.random() * s, Math.random() * s, 2 + Math.random() * 4, 1); }
+  }) });
+  mesh.push(floor);
+  const top = box(3.4, 0.11, 2.6, pbr("wbTop", { color: "#7a5c3a", rough: 0.78, tex: TEX.wood() }), [0, WORKBENCH_TABLE_TOP, 0]);
+  top.receiveShadows = true; shadows.addShadowCaster(top); mesh.push(top);
+  for (const [x, z] of [[-1.45, -1], [1.45, -1], [-1.45, 1], [1.45, 1]] as const) {
+    mesh.push(box(0.14, WORKBENCH_TABLE_TOP - 0.05, 0.14, M.metal("#4a4e54"), [x, (WORKBENCH_TABLE_TOP - 0.05) / 2, z]));
+  }
+  mesh.push(box(0.35, 0.22, 2.8, M.metal("#3a3e44"), [0, WORKBENCH_TABLE_TOP + 0.16, -1.15]));
+  mesh.push(box(7, 2.8, 0.25, M.matte("#14120f"), [0, 1.45, -3.8]));
+}
+
+function setPiece(cat: PieceCat, id: string) {
+  const arr = PIECE_CAT_IDS[cat];
+  const i = arr.indexOf(id);
+  if (i < 0) return;
+  idx[PIECE_CAT_KEY[cat]] = i;
+  pendingPiece = null;
+  syncArmado();
+}
+
 function buildArena() {
   const scene = deps.scene;
   const tex = canvasTex(128, (g, s) => {
@@ -177,20 +212,95 @@ function buildArena() {
 function cleanup() {
   for (const b of bots) { b.agg.dispose(); b.root.dispose(); }
   bots = [];
+  previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
   for (const m of mesh) { m.physicsBody?.dispose(); m.dispose(); }
   mesh = [];
   lastHit.clear();
+}
+
+function wireWorkbenchUi() {
+  const tray = ui.querySelector(".duel-wb-tray")!;
+  tray.addEventListener("dragstart", (e) => {
+    const ev = e as DragEvent;
+    const chip = (ev.target as HTMLElement).closest("[data-piece]") as HTMLElement | null;
+    if (!chip || !ev.dataTransfer) return;
+    ev.dataTransfer.setData("text/plain", chip.dataset.piece!);
+    ev.dataTransfer.effectAllowed = "copy";
+    chip.classList.add("dragging");
+    chip.setAttribute("aria-grabbed", "true");
+  });
+  tray.addEventListener("dragend", (e) => {
+    const chip = (e.target as HTMLElement).closest("[data-piece]") as HTMLElement | null;
+    chip?.classList.remove("dragging");
+    chip?.setAttribute("aria-grabbed", "false");
+    ui.querySelectorAll(".duel-drop.drag-over").forEach((el) => el.classList.remove("drag-over"));
+  });
+  ui.querySelectorAll(".duel-drop").forEach((zone) => {
+    zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("drag-over"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag-over"));
+    zone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      zone.classList.remove("drag-over");
+      const raw = (e as DragEvent).dataTransfer?.getData("text/plain");
+      if (!raw) return;
+      const [cat, id] = raw.split(":") as [PieceCat, string];
+      if ((zone as HTMLElement).dataset.slot !== cat) return;
+      setPiece(cat, id);
+    });
+    zone.addEventListener("click", () => {
+      if (!pendingPiece) return;
+      const slot = (zone as HTMLElement).dataset.slot as PieceCat;
+      if (pendingPiece.cat !== slot) return;
+      setPiece(slot, pendingPiece.id);
+    });
+    zone.addEventListener("keydown", (e) => {
+      const ke = e as KeyboardEvent;
+      if (ke.key !== "Enter" && ke.key !== " ") return;
+      ke.preventDefault();
+      (zone as HTMLElement).click();
+    });
+  });
+  tray.addEventListener("click", (e) => {
+    const chip = (e.target as HTMLElement).closest("[data-piece]") as HTMLElement | null;
+    if (!chip) return;
+    const [cat, id] = chip.dataset.piece!.split(":") as [PieceCat, string];
+    pendingPiece = { cat, id };
+    ui.querySelectorAll(".duel-chip").forEach((c) => { c.classList.remove("pending"); c.setAttribute("aria-pressed", c.classList.contains("on") ? "true" : "false"); });
+    chip.classList.add("pending");
+    chip.setAttribute("aria-pressed", "true");
+    ui.querySelectorAll(".duel-drop").forEach((z) => {
+      const el = z as HTMLElement;
+      const on = el.dataset.slot === cat;
+      el.classList.toggle("pick-target", on);
+      el.setAttribute("aria-label", on ? `Zona ${el.dataset.slot}, pieza seleccionada` : `Zona ${el.dataset.slot}`);
+    });
+  });
+}
+
+function trayGroup(cat: PieceCat, lab: string, cur: string) {
+  const chips = PIECE_CAT_IDS[cat].map((id) => {
+    const p = PIECE[id as ChassisId | WheelsId | WeaponId];
+    const on = id === cur;
+    return `<button type="button" class="duel-chip${on ? " on" : ""}" draggable="true" role="listitem" data-piece="${cat}:${id}" aria-pressed="${on}" aria-grabbed="false" title="${p.lore}">${p.label}</button>`;
+  }).join("");
+  return `<div class="duel-tray-col"><span class="duel-tray-lab">${lab}</span><div class="duel-tray-chips" role="list">${chips}</div></div>`;
 }
 
 function ensureUi() {
   if (ui) return;
   ui = document.createElement("div");
   ui.id = "duel-ui";
-  ui.innerHTML = `<div id="duel-arm"><header class="duel-arm-head"><h1>ARMADO</h1><p class="sub">Arena de acero, mejor de tres. Solo cuerpo a cuerpo: elige chasis, ruedas y un arma. Sin proyectiles.</p></header>
-<section class="duel-sec" aria-labelledby="duel-sec-pieces"><h2 id="duel-sec-pieces" class="duel-sec-h">1 · Piezas</h2><div class="duel-cols"></div></section>
-<section class="duel-sec" aria-labelledby="duel-sec-stats"><h2 id="duel-sec-stats" class="duel-sec-h">2 · Telemetría</h2><div class="duel-bars" role="group" aria-label="Estimación del robot"></div></section>
-<details class="duel-paint-wrap" id="duel-paint-details"><summary class="duel-paint-sum">3 · Pintura <span class="duel-opt">(opcional)</span></summary><div class="duel-paint" id="duel-paint"></div></details>
-<p class="duel-warn" id="duel-warn" role="status" aria-live="polite"></p><button type="button" class="duel-cta" id="duel-confirm">Confirmar armado</button></div>
+  ui.innerHTML = `<div id="duel-arm" class="duel-wb"><header class="duel-wb-head"><h1>ARMADO</h1><p class="duel-wb-hint">Arrastrar cada pieza al robot</p><p class="duel-wb-fallback">O elegir pieza y tocar la zona en el robot</p></header>
+<div class="duel-wb-main"><aside class="duel-wb-side" aria-labelledby="duel-sec-stats"><h2 id="duel-sec-stats" class="duel-sec-h">Telemetría</h2><div class="duel-bars" role="group" aria-label="Estimación del robot"></div>
+<details class="duel-paint-wrap" id="duel-paint-details"><summary class="duel-paint-sum">Pintura <span class="duel-opt">(opcional)</span></summary><div class="duel-paint" id="duel-paint"></div></details>
+<p class="duel-warn" id="duel-warn" role="status" aria-live="polite"></p></aside>
+<div class="duel-wb-stage" aria-hidden="false"><div class="duel-wb-zones">
+<div class="duel-drop" data-slot="chassis" tabindex="0" role="button" aria-label="Zona chasis"><span class="duel-drop-lab">Chasis</span><span class="duel-drop-val" id="duel-slot-c"></span></div>
+<div class="duel-drop" data-slot="wheels" tabindex="0" role="button" aria-label="Zona ruedas"><span class="duel-drop-lab">Ruedas</span><span class="duel-drop-val" id="duel-slot-w"></span></div>
+<div class="duel-drop" data-slot="weapon" tabindex="0" role="button" aria-label="Zona arma"><span class="duel-drop-lab">Arma</span><span class="duel-drop-val" id="duel-slot-a"></span></div>
+</div></div></div>
+<section class="duel-wb-tray-wrap" aria-labelledby="duel-sec-tray"><h2 id="duel-sec-tray" class="duel-sec-h">Piezas</h2><div class="duel-wb-tray"></div></section>
+<button type="button" class="duel-cta" id="duel-confirm">Confirmar armado</button></div>
 <div id="duel-hud"><div class="duel-hp-row"><span id="duel-en">RIVAL</span><span id="duel-you">TÚ</span></div><div class="duel-hp-row"><div class="duel-hp enemy"><i id="duel-hpE"></i></div><div class="duel-hp you"><i id="duel-hpP"></i></div></div><div class="duel-score" id="duel-score"></div></div>
 <div id="duel-inter"><p id="duel-inter-t"></p><button type="button" id="duel-next">SIGUIENTE ASALTO</button></div>
 <div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
@@ -200,15 +310,7 @@ function ensureUi() {
   pause.id = "duel-pause";
   pause.innerHTML = `<p>PAUSA</p><button type="button" id="duel-resume">REANUDAR</button><button type="button" id="duel-quit">ABANDONAR</button>`;
   document.body.appendChild(pause);
-  ui.querySelector(".duel-cols")!.addEventListener("click", (e) => {
-    const b = (e.target as HTMLElement).closest("[data-duel]") as HTMLElement | null;
-    if (!b) return;
-    const [col, dir] = b.dataset.duel!.split(":") as ["c" | "w" | "a", "m" | "p"];
-    const key = col === "c" ? "c" : col === "w" ? "w" : "a";
-    const arr = col === "c" ? CH : col === "w" ? WH : AR;
-    idx[key] = (idx[key] + (dir === "p" ? 1 : arr.length - 1)) % arr.length;
-    syncArmado();
-  });
+  wireWorkbenchUi();
   $d("duel-confirm").onclick = () => { if (comboCheck(cfg) !== "ban") beginMatch(); };
   $d("duel-next").onclick = () => startRound();
   $d("duel-again").onclick = () => { score = [0, 0]; round = 0; showArmado(); };
@@ -266,21 +368,17 @@ function syncPaintUi() {
 function syncArmado() {
   cfg = { chassis: CH[idx.c], wheels: WH[idx.w], weapon: AR[idx.a] };
   const cc = comboCheck(cfg);
-  const cols = ui.querySelector(".duel-cols")!;
   const ch = CH[idx.c], wh = WH[idx.w], ar = AR[idx.a];
-  const pieceRows: [string, "c" | "w" | "a", string, string][] = [
-    ["Chasis", "c", PIECE[ch].label, PIECE[ch].lore],
-    ["Ruedas", "w", PIECE[wh].label, PIECE[wh].lore],
-    ["Arma", "a", PIECE[ar].label, PIECE[ar].lore],
-  ];
-  cols.innerHTML = pieceRows.map(([lab, col, nom, lore]) => `<div class="duel-col">
-<span class="duel-col-lab">${lab}</span>
-<div class="name" id="duel-piece-${col}">${nom}</div>
-<p class="duel-col-lore">${lore}</p>
-<div class="duel-col-nav" role="group" aria-label="${lab}">
-<button type="button" class="duel-step" data-duel="${col}:m" aria-label="${lab} anterior">‹</button>
-<button type="button" class="duel-step" data-duel="${col}:p" aria-label="${lab} siguiente">›</button>
-</div></div>`).join("");
+  ($d("duel-slot-c") as HTMLElement).textContent = PIECE[ch].label;
+  ($d("duel-slot-w") as HTMLElement).textContent = PIECE[wh].label;
+  ($d("duel-slot-a") as HTMLElement).textContent = PIECE[ar].label;
+  ui.querySelector(".duel-wb-tray")!.innerHTML = trayGroup("chassis", "Chasis", ch) + trayGroup("wheels", "Ruedas", wh) + trayGroup("weapon", "Arma", ar);
+  ui.querySelectorAll(".duel-drop").forEach((z) => {
+    const el = z as HTMLElement;
+    const match = pendingPiece && el.dataset.slot === pendingPiece.cat;
+    el.classList.toggle("pick-target", !!match);
+    el.classList.toggle("equipped", true);
+  });
   const m = massOf(cfg), st = statsOf(cfg, cc === "warn");
   const bars = ui.querySelector(".duel-bars")!;
   const norm = (v: number, max: number) => Math.round(100 * v / max);
@@ -295,24 +393,23 @@ function syncArmado() {
 }
 
 let previewBot: Bot | null = null;
-/** Altura del colisionador sobre el pasto (y=0); sin simular en armado para que shots y preview no deriven. */
-const ARMADO_PREVIEW_Y = 0.38;
 function previewArmado() {
   previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
-  const at = new B.Vector3(0, ARMADO_PREVIEW_Y, 0);
+  const at = new B.Vector3(0, WORKBENCH_ROBOT_Y, 0);
   previewBot = makeBot(9, true, cfg, at, "Preview", playerPaint, comboCheck(cfg) === "warn");
-  // ponytail: Havok + pasto en armado: un cuerpo dinámico sin input aún se auto-endereza y vibra entre cuadros
+  // ponytail: Havok en armado: cuerpo estático para que shots y preview no deriven
   previewBot.body.setMotionType(B.PhysicsMotionType.STATIC);
   previewBot.body.setLinearVelocity(B.Vector3.Zero());
   previewBot.body.setAngularVelocity(B.Vector3.Zero());
-  deps.cam.setTarget(new B.Vector3(0, 0.55, 0));
-  deps.cam.position.set(0, 4, -7);
 }
 
 function showArmado() {
   ensureUi(); cleanup(); phase = "armado";
-  setZone("patio", false); clearLayout(); buildGrass();
-  applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
+  pendingPiece = null;
+  armadoCamYaw = 0.55;
+  showWorld(false); clearLayout();
+  applyClimate(CLIMATES.find((c) => c.id === "farol")!);
+  buildWorkbench();
   deps.scene.physicsEnabled = true;
   ui.className = "on armado";
   syncArmado();
@@ -333,8 +430,12 @@ function rivalCfg(): RobotConfig {
 function beginMatch() {
   loadoutWarn = comboCheck(cfg) === "warn";
   matchDmg = { dealt: 0, taken: 0 };
-  previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
-  cleanup(); buildArena();
+  cleanup();
+  setZone("patio", false);
+  showWorld(true);
+  buildGrass();
+  applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
+  buildArena();
   music("battle");
   ui.className = "on fight";
   startRound();
@@ -350,7 +451,6 @@ function startRound() {
   for (const b of bots) { b.hp = b.hpMax; b.rpm = 0; b.flipped = false; b.hitAt = 0; }
   phase = "countdown"; countdown = 3.4; t = 0;
   ui.className = "on fight";
-  $d("duel-inter").parentElement!.className = "on fight";
   updateHud();
 }
 
@@ -566,7 +666,13 @@ export function duelTick(dt: number) {
   if (!active || paused) return;
   if (phase === "inter" || phase === "results") return;
   if (flipCd > 0) flipCd = Math.max(0, flipCd - dt);
-  if (phase === "armado") return;
+  if (phase === "armado") {
+    armadoCamYaw += dt * 0.22;
+    const r = 5.2, h = 3.35, ty = WORKBENCH_ROBOT_Y - 0.15;
+    deps.cam.position.set(Math.sin(armadoCamYaw) * r, h, Math.cos(armadoCamYaw) * r);
+    deps.cam.setTarget(new B.Vector3(0, ty, 0));
+    return;
+  }
   if (phase === "countdown") {
     countdown -= dt;
     if (countdown <= 0) phase = "fight";
@@ -591,7 +697,7 @@ export function duelTick(dt: number) {
 
 export function exitDuel() {
   if (!active) return;
-  active = false; paused = false;
+  active = false; paused = false; autoPlayer = false; god = false; pendingPiece = null;
   cleanup();
   ui.className = "";
   $d("duel-pause").classList.remove("on");
