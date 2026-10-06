@@ -3,7 +3,7 @@ import * as B from "@babylonjs/core";
 import "./hud.css";
 import "./duel.css";
 import { BAL } from "./balance";
-import { damageNumber } from "./ui";
+import { banner, damageNumber } from "./ui";
 import { impact } from "./fx";
 import { input, isTouch, padPressed, pb } from "./input";
 import { box, cyl, merge, wheel } from "./models";
@@ -574,11 +574,12 @@ function applyBuildPartWear(vic: Bot, atk: Bot, dmg: number) {
   const def = blockDef(cell.blockId);
   vic.living.partHp[idx] -= dmg * D.part_wear_mul;
   if (vic.human) {
-    vic.wearFlash = { idx, until: t + 1.6, max: def.hp, name: def.nombre };
+    vic.wearFlash = { idx, until: t + 2.4, max: def.hp, name: def.nombre };
   }
   if (vic.living.partHp[idx] > 0) return;
   const wheel = def.cat === "movimiento";
   SFX.duelPartBreak(wheel);
+  if (vic.human) banner(`INTEGRIDAD · ${def.nombre} fuera de combate`, 2.8);
   const wpos = partBreakWorldPos(vic, cell);
   impact(vic.vis.getChildMeshes()[0] ?? vic.root, wpos, vic.human ? "#c9a227" : "#8a6a20", 0.85, wheel ? "gomitas" : "clips", true, false);
   const seatGone = stripCell(vic.living, idx);
@@ -901,7 +902,7 @@ function ensureUi() {
 <div class="duel-drawer-panel" id="duel-drawer-panel"><section class="duel-wb-tray-wrap" aria-labelledby="duel-sec-tray"><h2 id="duel-sec-tray" class="duel-sec-h">Piezas</h2><div class="duel-wb-tray"></div></section></div></aside></div>
 <button type="button" class="duel-cta" id="duel-confirm">Confirmar armado</button></div>
 <div id="duel-hud" class="duel-hud h-panel"><div class="duel-hp-row"><span id="duel-en" class="duel-hud-lab enemy">RIVAL</span><span id="duel-you" class="duel-hud-lab you">PROPIO</span></div><div class="duel-hp-row duel-hp-bars"><div class="duel-hp-wrap enemy"><div class="h-track duel-hp-track enemy" role="presentation"><div id="duel-hpE"></div></div></div><div class="duel-hp-wrap you"><div class="h-track duel-hp-track you" role="presentation"><div id="duel-hpP"></div></div></div></div><div id="duel-part-wear" class="duel-part-wear hidden" aria-live="polite"><span id="duel-part-label">PIEZA</span><div class="h-track duel-hp-track part" role="presentation"><div id="duel-part-hp"></div></div></div><div class="duel-score" id="duel-score"></div></div>
-<div id="duel-inter"><p id="duel-inter-t"></p><button type="button" id="duel-next">SIGUIENTE ASALTO</button></div>
+<div id="duel-inter"><p class="duel-inter-kicker">ENTRE ASALTOS</p><p id="duel-inter-pips" class="duel-inter-pips" aria-live="polite"></p><p id="duel-inter-t" class="duel-inter-title"></p><p id="duel-inter-tip" class="duel-inter-tip"></p><button type="button" class="duel-cta duel-inter-next" id="duel-next">SIGUIENTE ASALTO</button></div>
 <div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
 <button type="button" id="duel-flip">ENDEREZAR</button>
 <div id="duel-count-wrap" class="duel-count-wrap"><p id="duel-count" class="duel-count-num" aria-live="polite"></p><p id="duel-count-sub" class="duel-count-sub"></p></div>`;
@@ -1226,7 +1227,8 @@ function stepDuelPhysics(b: Bot, dt: number, throttle: number, steer: number, we
   b.flipped = upDot < D.phys_flip_up_dot;
   const onGround = grounded(b.body, mesh);
   if (b.cfg.weapon === "trompo" && weaponBtn) b.rpm = Math.min(1, b.rpm + dt / BAL.dueloArmas.trompo.rpm_carga_s);
-  else b.rpm = Math.max(0, b.rpm - dt * 0.8);
+  else if (b.cfg.weapon === "sierra" && weaponBtn) b.rpm = Math.min(1, b.rpm + dt * 1.8);
+  else b.rpm = Math.max(0, b.rpm - dt * 0.85);
 
   fFwd.copyFrom(mesh.forward); fFwd.y = 0;
   if (fFwd.lengthSquared() < 1e-4) fFwd.set(0, 0, 1); else fFwd.normalize();
@@ -1330,8 +1332,11 @@ function contactDamage() {
     if (now - (lastHit.get(key) ?? 0) < D.melee_cd_s) continue;
     lastHit.set(key, now);
     for (const [atk, vic] of [[a, b], [b, a]] as const) {
+      const wpn = atk.cfg.weapon;
       let dmg = atk.stats.dano * (1 + D.melee_vel_coef * relN + D.melee_masa_coef * (atk.mass / 5));
-      if (atk.stats.dano >= 4 && atk.rpm > 0.05) dmg *= 0.35 + 0.65 * atk.rpm;
+      if (wpn === "trompo" && atk.rpm > 0.05) dmg *= 0.35 + 0.65 * atk.rpm;
+      else if (wpn === "sierra" && atk.rpm > 0.2) dmg *= 1.08 + 0.35 * atk.rpm;
+      else if (wpn === "pala") dmg *= 0.68;
       if (vic.flipped) dmg *= D.volcado_vuln_mul;
       if (god && vic.human) dmg = 0;
       vic.hp -= dmg; vic.hitAt = now;
@@ -1344,10 +1349,15 @@ function contactDamage() {
         camShake = Math.max(camShake, sh * 2.2);
         if (vic.human || atk.human) damageNumber(innerWidth / 2 + (vic.human ? -40 : 40), 120, Math.round(dmg), false);
       }
-      if (atk.stats.knock > 0 && rel > 4) vic.body.applyImpulse(new B.Vector3(0, atk.stats.knock * atk.mass * 0.15, 0), vic.root.getAbsolutePosition());
-      if (atk.stats.push > 0.9 && rel > 2) {
+      if (wpn === "sierra" && rel > 2.2 && atk.rpm > 0.15) {
+        vic.body.applyImpulse(new B.Vector3(0, atk.stats.knock * atk.mass * 0.22, 0), vic.root.getAbsolutePosition());
+      } else if (atk.stats.knock > 0 && rel > 4) {
+        vic.body.applyImpulse(new B.Vector3(0, atk.stats.knock * atk.mass * 0.15, 0), vic.root.getAbsolutePosition());
+      }
+      const pushMul = wpn === "pala" ? 1.45 : 1;
+      if (atk.stats.push > 0.5 && rel > 1.8) {
         const push = vic.root.position.subtract(atk.root.position); push.y = 0; push.normalize();
-        vic.body.applyImpulse(push.scale(atk.stats.push * atk.mass * rel * 0.075), vic.root.getAbsolutePosition());
+        vic.body.applyImpulse(push.scale(atk.stats.push * atk.mass * rel * 0.075 * pushMul), vic.root.getAbsolutePosition());
       }
     }
   }
@@ -1376,6 +1386,24 @@ function roundWinner(): number | null {
   return null;
 }
 
+function duelScorePips(): string {
+  const pip = (n: number) => "●".repeat(n) + "○".repeat(Math.max(0, 2 - n));
+  return `PROPIO ${pip(score[0])}  ·  RIVAL ${pip(score[1])}`;
+}
+
+const INTER_TIPS = [
+  "Radio: el rival sube la agresión en asaltos largos.",
+  "Volcado no termina el asalto; enderezar reduce la vulnerabilidad.",
+  "Piezas rotas bajan tracción o integridad según el bloque.",
+  "Pala empuja; sierra levanta; trompo castiga si el disco gira.",
+];
+
+function syncInterUi(w: number) {
+  $d("duel-inter-pips").textContent = duelScorePips();
+  $d("duel-inter-t").textContent = w === 0 ? `Victoria en asalto ${round}` : `Derrota en asalto ${round}`;
+  $d("duel-inter-tip").textContent = INTER_TIPS[(round - 1) % INTER_TIPS.length];
+}
+
 function endRound(w: number) {
   score[w]++;
   if (score[0] >= 2 || score[1] >= 2) endMatch(false);
@@ -1383,7 +1411,7 @@ function endRound(w: number) {
     phase = "inter";
     ui.className = "on inter";
     syncDuelTouch();
-    $d("duel-inter-t").textContent = `Asalto ${round}: ${w === 0 ? "Victoria" : "Derrota"}. Marcador ${score[0]} – ${score[1]}`;
+    syncInterUi(w);
   }
 }
 
@@ -1396,7 +1424,7 @@ function endMatch(forfeit: boolean) {
   const r = BAL.dueloRival.cuna_industrial;
   $d("duel-res-t").textContent = win ? "MEJOR DE TRES · VICTORIA" : forfeit ? "ABANDONO · DERROTA 2–0" : "MEJOR DE TRES · DERROTA";
   $d("duel-res-stats").innerHTML = [
-    ["Marcador", `${score[0]} – ${score[1]}`],
+    ["Marcador", duelScorePips()],
     ["Daño infligido", `${Math.round(matchDmg.dealt)}`],
     ["Daño recibido", `${Math.round(matchDmg.taken)}`],
     ["Rival", r.nombre],

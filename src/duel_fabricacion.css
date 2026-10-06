@@ -257,6 +257,9 @@
 }
 .duel-fab-rot-hint { text-align: center; font-size: 0.7rem; color: var(--g-dim); margin: 0.28rem 0 0; min-height: 1.1em; }
 
+.duel-fab-grid { touch-action: none; }
+.duel-fab-grid { touch-action: none; }
+.duel-fab-grid { touch-action: none; }
 .duel-fab-grid-wrap {
   flex: 1 1 auto; min-height: 0; max-width: 100%;
   overflow: auto; -webkit-overflow-scrolling: touch;

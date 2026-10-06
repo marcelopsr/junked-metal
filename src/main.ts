@@ -1,4 +1,4 @@
-import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudSlots, hudKill, hudRadar, hudUpdate, initHud, pickOffer, selectOffer, showOffers, uiTick } from "./ui";
+import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
@@ -216,6 +216,7 @@ function clearRun() {
   enemies = []; weapons = []; gems = []; pickups = [];
   clearFx();
   rainK = 0; rainBanner = false; rainSfx(0);
+  evtPre = { swarm: false, ball: false, rain: false, elites: new Set() };
   car?.dispose();
   car = null;
   applyClimate(zoneClimate() ?? DUSK); // al volver al menú, atardecer (o el tubo del garaje)
@@ -269,6 +270,7 @@ function startRun(d = false) {
   for (const k in dmgOut) delete dmgOut[k];
   $("hud").classList.remove("hidden");
   hudBoss(null);
+  hudWorkshop(save.perm);
   banner(`${profile.climate.name} · ${profile.plague.name}`, 3);
   // Guía de controles los primeros segundos (se va sola)
   const hint = $("hint");
@@ -347,7 +349,7 @@ function startOutro(res: NonNullable<typeof outroRes>) {
     debris(car.pos, save.paint || "#d62828", 14, 9, 0.9);
     SFX.explosion();
   }
-  outroUi(true);
+  outroUi(true, `${fmt(time)} · ${kills} bajas · NV ${level}`);
 }
 function outroTick(dt: number) {
   outroT += dt;
@@ -389,7 +391,8 @@ function toMenu() {
 
 // ---------- Nivel / cofre ----------
 function gainXp(n: number) {
-  xp += n * st.xp * driveMul;
+  const early = time < R.xp_temprana_s ? R.xp_temprana_mult : 1;
+  xp += n * st.xp * driveMul * early;
   while (xp >= xpNeed(level)) { xp -= xpNeed(level); level++; pendingLevels++; }
 }
 
@@ -406,7 +409,15 @@ function openOffers(list: Offer[], title: string) {
   offerSel = 0;
   SFX.levelUp();
   engineStop();
-  showOffers(title, list, 0, choose, previewOffer);
+  const c = car!;
+  let near = 0, bossNear = false;
+  for (const e of enemies) {
+    if (Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) > 24) continue;
+    if (e.def.boss) bossNear = true;
+    else near++;
+  }
+  const sub = bossNear ? "Amenaza crítica: jefe en radio corto" : near ? `Presión en radio: ${near} contacto${near === 1 ? "" : "s"} cercano${near === 1 ? "" : "s"}` : "";
+  showOffers(title, list, 0, choose, previewOffer, sub);
   offerTitle = title;
   const can = rerolls > 0 && list[0]?.kind !== "evo";
   $("luHint").textContent = `${list.map((_, i) => i + 1).join(" · ")} o clic — Enter confirma${can ? ` · ${keyName(KEYS.reroll[0])} o ${btnName(pb("reroll"))} re-sortea (${rerolls})` : ""}`;
@@ -630,7 +641,9 @@ function update(dt: number) {
   time += dt;
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
   // Lluvia: empieza a la fracción profile.rainAt de la partida; la intensidad sube suave
-  const raining = time / 600 >= profile.rainAt;
+  const rainAtS = profile.rainAt * 600, warnS = R.aviso_evento_s;
+  if (!rainBanner && !evtPre.rain && time >= rainAtS - warnS && time < rainAtS) { evtPre.rain = true; banner("RADAR · HUMEDAD EN SUBIDA", 2); }
+  const raining = time >= rainAtS;
   if (raining && !rainBanner) { rainBanner = true; banner("LLUVIA", 2); }
   rainK = LAB.on && raining ? 1 : rainK + ((raining ? 1 : 0) - rainK) * Math.min(1, dt * RAIN.ramp);
   const s = nightfall(LAB.on ? LAB.t : time / 600);
@@ -671,7 +684,11 @@ function update(dt: number) {
     throttle: boosting ? 1 : throttle, steer, speed: maxSpeed,
     accel: c.def.accel * (boosting ? R.turbo_acel : 1),
     turn: c.def.turn * (input.drift ? R.derrape_giro : 1),
-    grip: (input.drift ? R.derrape_agarre : c.def.grip) * (1 - (1 - RAIN.grip) * rainK), // mojado: el auto agarra menos
+    grip: (() => {
+      let g = (input.drift ? R.derrape_agarre : c.def.grip) * (1 - (1 - RAIN.grip) * rainK);
+      if (!input.drift && rainK > 0) g *= 1 + R.lluvia_control * (1 - rainK);
+      return g;
+    })(),
   });
   c.animate(dt, steer, r.fs, maxSpeed);
   { const zp = zoneTick(dt, c.pos); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
@@ -736,7 +753,9 @@ function update(dt: number) {
     }
     if (!simulating) banner(ant ? "COLUMNA" : "ESCOLTA", 1.2);
   }
+  if (!evtPre.swarm && swarmT > 0 && swarmT <= warnS) { evtPre.swarm = true; banner("RADAR · ENJAMBRE INMINENTE", 1.8); }
   if ((swarmT -= dt) <= 0) {
+    evtPre.swarm = false;
     swarmT = profile.swarmEvery;
     banner("ENJAMBRE", 1.4);
     const ns = Math.round((R.enjambre_base + time / R.enjambre_seg) * horde * TOUGH.count); // el enjambre crece con la partida
@@ -763,6 +782,13 @@ function update(dt: number) {
     hudBoss(DEF[kind].name, 1);
     SFX.boss();
   }
+  for (let ei = 0; ei < profile.elites.length; ei++) {
+    const [t, k] = profile.elites[ei];
+    if (!evtPre.elites.has(ei) && time >= t - warnS && time < t) {
+      evtPre.elites.add(ei);
+      banner(k === "rapida" ? "SEÑAL · ÉLITE RÁPIDA" : "SEÑAL · ÉLITE BLINDADA", 2);
+    }
+  }
   // Élites (run.ts: 2-3 por partida, sin rng): la aparición común más reciente (mejor si no es hormiga) se vuelve élite
   for (const [t, k] of profile.elites) if (t <= time && t > time - dt) {
     let e: Enemy | undefined, fallback: Enemy | undefined;
@@ -785,6 +811,7 @@ function update(dt: number) {
     if (e.leader && !ld && Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) <= 14) e.leader = null;
     const tgt = ld ? ld.pos.add(ld.node.right.scale(e.slot.x)).addInPlace(ld.node.forward.scale(-e.slot.z)) : c.pos;
     const ev = e.stun > 0 ? stunned(e, wdt) : e.update(wdt, tgt);
+    if (ev === "spit_aim" && !simulating) { const f = e.node.forward; FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0))); mark("scorch", e.pos.x, e.pos.z, Math.atan2(f.x, f.z), 0.35, 4); }
     if (ev === "spit") {
       // Apunta adonde vas a estar (predicción simple): esquivar = cambiar de rumbo
       const cvl = c.body.getLinearVelocity(), from = e.pos.add(new B.Vector3(0, 0.6, 0));
@@ -839,13 +866,43 @@ function update(dt: number) {
         contactHit = Math.max(contactHit, cd); // el golpe más fuerte, no la suma
         dmgBy["contacto " + e.kind] = (dmgBy["contacto " + e.kind] ?? 0) + e.def.dmg * 0.6;
         e.touchCd = R.contacto_recarga_s;
+        if (!e.def.boss) e.body.applyImpulse(dir.scale(R.contacto_empuje_bicho * e.def.mass), e.pos);
         // Un jefe te despide lejos: nunca quedás atrapado contra él
         if (e.def.boss) c.body.applyImpulse(dir.scale(-R.contacto_jefe_empuje * c.def.mass).addInPlace(new B.Vector3(0, 4 * c.def.mass, 0)), c.pos);
       }
     }
   }
   // Invulnerabilidad de contacto: como mucho un golpe cada 0,5 s aunque te rodeen
-  if ((touchIFrame -= dt) <= 0 && contactHit) { hurt(contactHit, true, "_contacto", contactBy); SFX.hurt(); touchIFrame = R.contacto_invuln_s; }
+  if ((touchIFrame -= dt) <= 0 && contactHit) {
+    hurt(contactHit, true, "_contacto", contactBy);
+    SFX.hurt();
+    let px = 0, pz = 0, n = 0;
+    for (const e of enemies) {
+      if (e.def.boss || e.hp <= 0) continue;
+      if (Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) > carR + e.radius + 0.5) continue;
+      px += c.pos.x - e.pos.x; pz += c.pos.z - e.pos.z; n++;
+    }
+    if (n > 0) {
+      const len = Math.hypot(px, pz) || 1, imp = R.contacto_empuje_auto * c.def.mass;
+      c.body.applyImpulse(new B.Vector3((px / len) * imp, 0, (pz / len) * imp), c.pos);
+    }
+    touchIFrame = R.contacto_invuln_s;
+  }
+  // Bichos normales cerca del auto: no se amontonan en un solo punto
+  const sepR = R.enemigo_separacion, sepR2 = sepR * sepR;
+  for (let i = 0; i < enemies.length; i++) {
+    const a = enemies[i];
+    if (a.def.boss || a.elite || a.hp <= 0 || Math.hypot(a.pos.x - c.pos.x, a.pos.z - c.pos.z) > 14) continue;
+    for (let j = i + 1; j < enemies.length; j++) {
+      const b = enemies[j];
+      if (b.def.boss || b.elite || b.hp <= 0) continue;
+      const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d2 = dx * dx + dz * dz;
+      if (d2 < 1e-4 || d2 > sepR2) continue;
+      const d = Math.sqrt(d2), k = ((sepR - d) / sepR) * 10 * wdt;
+      a.body.applyImpulse(new B.Vector3(-(dx / d) * k * a.def.mass, 0, -(dz / d) * k * a.def.mass), a.pos);
+      b.body.applyImpulse(new B.Vector3((dx / d) * k * b.def.mass, 0, (dz / d) * k * b.def.mass), b.pos);
+    }
+  }
   for (let i = enemies.length - 1; i >= 0; i--) { // jefe final: la primera barra vacía no lo mata
     const e = enemies[i];
     if (e.hp > 0 || e.rearm()) continue;
@@ -880,7 +937,7 @@ function update(dt: number) {
     if (d2 < mag2) g.pull = true;
     g.m.rotation.y += dt * 2;
     if (g.vy !== 0 || g.m.position.y > 0) { g.vy -= 22 * dt; g.m.position.y = Math.max(0, g.m.position.y + g.vy * dt); if (g.m.position.y === 0) g.vy = g.vy < -4 ? -g.vy * 0.35 : 0; } // rebota una o dos veces
-    if (g.pull) { const d = Math.sqrt(d2), sp = Math.min(d, (18 + 20 / (d + 0.5)) * dt); g.m.position.x += (dx / d) * sp; g.m.position.z += (dz / d) * sp; }
+    if (g.pull) { const d = Math.sqrt(d2) || 0.01, sp = Math.min(d, (20 + 24 / (d + 0.5)) * dt); g.m.position.x += (dx / d) * sp; g.m.position.z += (dz / d) * sp; }
     if (d2 < 1.2) { gainXp(g.xp); SFX.gem(); if (g.xp > 1) FX.xp(g.m.position); g.m.dispose(); gems.splice(i, 1); }
   }
   for (let i = pickups.length - 1; i >= 0; i--) {
@@ -899,7 +956,9 @@ function update(dt: number) {
 
   // --- Eventos del patio ---
   if ((chestT -= dt) <= 0) { chestT = profile.chestEvery; dropPickup(spawnPoint(c.pos, 20, 35), "cofre"); banner("COFRE SIN DUEÑO EN EL PATIO", 1.6); }
+  if (!evtPre.ball && !ball && ballT > 0 && ballT <= warnS) { evtPre.ball = true; banner("RADAR · PELOTA EN CAMINO", 1.6); }
   if ((ballT -= dt) <= 0 && !ball) {
+    evtPre.ball = false;
     // Una pelota gigante cruza el patio aplastando todo
     ballT = profile.ballEvery;
     const from = spawnPoint(c.pos, 40, 45);
@@ -927,6 +986,7 @@ function update(dt: number) {
 let god = false; // solo dev
 let lampBoost = false, moteT = 0, flyT = 0;
 let rainK = 0, rainBanner = false; // lluvia: intensidad 0..1 y aviso ya mostrado
+let evtPre = { swarm: false, ball: false, rain: false, elites: new Set<number>() };
 // Zoom de cámara: rueda del mouse o teclas - / = (0.8 cerca … 2 lejos), se guarda
 const zoomBy = (k: number) => { save.zoom = Math.min(2, Math.max(0.8, save.zoom * k)); persist(); };
 addEventListener("wheel", (ev) => state === "play" && zoomBy(ev.deltaY > 0 ? 1.08 : 1 / 1.08), { passive: true });
@@ -1022,16 +1082,18 @@ function updateHud(dt: number) {
   hudArrows(out);
   if ((hudT -= dt) > 0) return;
   hudT = 0.05;
+  const gemBlips = gems.length <= 40 ? gems.map((g) => ({ x: g.m.position.x, z: g.m.position.z, kind: "gema" as const })) : [];
   hudRadar(
     { x: car!.pos.x, z: car!.pos.z, yaw: Math.atan2(car!.root.forward.x, car!.root.forward.z), up: camYaw },
-    [...enemies.map((e) => ({ x: e.pos.x, z: e.pos.z, kind: e.def.boss ? ("jefe" as const) : ("enemigo" as const) })),
-     ...pickups.filter((p) => p.type === "cofre").map((p) => ({ x: p.m.position.x, z: p.m.position.z, kind: "cofre" as const }))]);
+    [...enemies.map((e) => ({ x: e.pos.x, z: e.pos.z, kind: e.def.boss ? ("jefe" as const) : e.elite ? ("elite" as const) : ("enemigo" as const) })),
+     ...pickups.filter((p) => p.type === "cofre").map((p) => ({ x: p.m.position.x, z: p.m.position.z, kind: "cofre" as const })),
+     ...gemBlips]);
   // Daño visible: pintura gastada y piezas que saltan al cruzar 50% y 25%
   const frac = Math.max(0, hp / maxHp);
   car!.wear(frac);
   for (const t of [0.5, 0.25]) if (lastHpFrac > t && frac <= t) { debris(car!.pos, save.paint || "#d62828", 8, 7, 0.8); FX.sparks(car!.pos); shake = Math.max(shake, 0.6); }
   lastHpFrac = frac;
-  hudUpdate({ hp, maxHp, boost, xp, need: xpNeed(level), level, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh });
+  hudUpdate({ hp, maxHp, boost, xp, need: xpNeed(level), level, pending: pendingLevels, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh });
   hudAbility(ABILITIES[abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / abilCdOf(abil, abilLv), abilOn > 0);
 }
 
@@ -1157,7 +1219,7 @@ scene.onBeforeRenderObservable.add(() => {
     updateHud(dt);
   }
   tickFx(dt * ts);
-  uiTick(dt, state === "play");
+  uiTick(dt, state === "play" || state === "duel");
   if (save.fps && (fpsT -= dt) <= 0) { // estadísticas: fps y ms de los cuadros dibujados (no los del navegador), resolución interna real y escala o modo FSR
     fpsT = 0.5;
     const g = gfxInfo();

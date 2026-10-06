@@ -152,7 +152,12 @@
 .duel-part-wear.hidden { display: none; }
 .duel-part-wear .duel-hp-track { height: 6px; margin-top: 0.2rem; max-width: 100%; }
 .duel-score { text-align: center; font-size: 0.72rem; color: var(--fab-sig, #35c9ff); margin-top: 0.35rem; letter-spacing: 0.06em; font-weight: 700; }
-#duel-inter, #duel-res { max-width: 420px; margin: 12vh auto; padding: 1.5rem; background: #141813; border: 1px solid #2c3a28; text-align: center; display: none; pointer-events: auto; }
+#duel-inter, #duel-res { max-width: 420px; margin: 12vh auto; padding: 1.5rem; background: #141813; border: 1px solid #2c3a28; text-align: center; display: none; pointer-events: auto; font-family: Rajdhani, sans-serif; }
+.duel-inter-kicker { margin: 0 0 0.35rem; font-size: 0.62rem; letter-spacing: 0.14em; color: var(--g-dim, #a9b8c6); }
+.duel-inter-pips { margin: 0 0 0.65rem; font-size: 1.05rem; letter-spacing: 0.12em; color: #7dffb0; }
+.duel-inter-title { margin: 0 0 0.5rem; font-size: 1.15rem; font-weight: 700; color: #b9d3a4; }
+.duel-inter-tip { margin: 0 0 1rem; font-size: 0.78rem; line-height: 1.35; color: #8fa88a; max-width: 22rem; margin-inline: auto; }
+.duel-inter-next { width: min(100%, 18rem); margin-inline: auto; }
 #duel-inter button, #duel-res button { font: inherit; padding: 0.55rem 1rem; min-height: 2.75rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #b9d3a4; cursor: pointer; margin: 0.25rem; letter-spacing: 0.04em; }
 #duel-inter button:focus-visible, #duel-res button:focus-visible, #duel-flip:focus-visible { outline: 2px solid #e0a030; outline-offset: 2px; }
 #duel-confirm:not(:disabled):hover { background: #354430; }
