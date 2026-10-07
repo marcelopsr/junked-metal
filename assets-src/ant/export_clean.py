@@ -18,20 +18,9 @@ bpy.ops.object.mode_set(mode="OBJECT")
 bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
 bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
 
-# Cuánto se ensancha cada parte alrededor de su hueso (1 = igual). Oleada 1b: mandíbulas/antenas legibles.
+# Oleada 2: silueta en ant.blend (polish_oleada2.py). Solo normalización mínima al exportar.
 def fat(name):
-    n = int(name.split(".")[1]) if "." in name else 0
-    if name == "Bone.002":
-        return 2.22  # abdomen más volumen vs cintura (oleada 1c)
-    if name in ("Bone", "Bone.001"):
-        return 1.88  # tórax
-    if name == "Bone.031":
-        return 1.78  # cabeza
-    if 3 <= n <= 6:
-        return 2.62  # mandíbulas — pinzas al juego
-    if 32 <= n <= 37:
-        return 2.78  # antenas gruesas a distancia
-    return 2.68  # patas toy
+    return 1.02
 names = {g.index: g.name for g in ant.vertex_groups}
 bones = arm.data.bones
 for v in ant.data.vertices:

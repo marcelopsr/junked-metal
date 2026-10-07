@@ -94,7 +94,7 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 **Supervivencia — mejora de experiencia:** Fases 0–5 en [`docs/SURVIVAL_EXPERIENCE_PLAN.md`](./SURVIVAL_EXPERIENCE_PLAN.md). **Siguiente apuesta (usuario):** identidad de build — GDD [`docs/SURVIVAL_BUILD_IDENTITY.md`](./SURVIVAL_BUILD_IDENTITY.md); cerrar checklist §6 antes de código.
 
-**Upgrade visual modelos 3D:** master **`5b636a0`** + `1e08b75` — oleada **1c** (13 bichos + **8 autos** en Garaje, GLB re-export, materiales) — [Visual completo enemigos+autos](446725cc-80f4-4fa3-9666-a9f258127da7), tabla en [`OLEADA1C_FULL.md`](./encargos/OLEADA1C_FULL.md). **Ver:** Bestiario → **ficha** de cada bicho (la grilla no tiene 3D: [`OLEADA1C_VISIBLE_PROOF.md`](./encargos/OLEADA1C_VISIBLE_PROOF.md)). Garaje para autos. Duel WIP sin commit.
+**Upgrade visual modelos 3D:** oleada **1c** cerrada (`5b636a0`, `1e08b75`). Oleada **2** escultura Blender + índice **21+8** entidades: [`OLEADA2_BLENDER_ART.md`](./encargos/OLEADA2_BLENDER_ART.md) (scripts `polish_oleada2` / `sculpt_oleada2`, baselines `_oleada2_baseline/`). **Ver:** Bestiario → **ficha** 3D; Garaje para autos. Duel WIP sin commit.
 
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 

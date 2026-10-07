@@ -4,6 +4,8 @@ Fecha: 2026-10-07 · Agente **C** de [`VISUAL_MODELS_OLEADA1_GLB.md`](../VISUAL_
 
 **Estado** [Malla escarabajo oleada 1](4bd208b7-339a-4c9a-8575-351b042cd47f) (2026-10-07): **cerrado** — cambios en `escarabajo.py` (silueta, walk, embestida frames 8–12 / clave 10), cuerno **curvo**, **1328** tris, GLB publicado. Sin `glb.ts`. Shots/`__glbStats` → integrador.
 
+**Oleada 2 sculpt** [Esculpir GLB escarabajo](2957c243-1993-41a1-b20d-36125a514fa0): vértices en `escarabajo.blend` (`sculpt_oleada2.py`), **1534** tris, `walk`/`attack` OK. Renders: `.renders/oleada2_before/` vs `oleada2_after/`. Re-export: `export_blend.py` — **no** regenerar con `escarabajo.py` (pisa el sculpt). Sin commit hasta [Integrador oleada 2 escultura](49dfbfed-b98a-44f4-a388-dd0a0e38160f).
+
 ### §1b Oleada VISIBLE (2026-10-07)
 
 | Métrica | Antes (1a) | Después (1b) |

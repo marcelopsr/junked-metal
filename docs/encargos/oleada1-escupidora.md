@@ -6,6 +6,8 @@ Referencias obligatorias: `src/glb.ts` (contrato VAT), `docs/ART_DIRECTION.md` (
 
 **Estado** [Malla escupidora oleada 1](db2e6d0b-bf79-48ef-8499-33ab578c39e0) (2026-10-07): **cerrado** — `escupidora.py` (saco doble, walk/attack cuadro **13**), **1476** tris, `atk`/`hit` sin cambio. Shots → integrador.
 
+**Oleada 2 sculpt** [Esculpir GLB ant escupidora](2840ded1-8273-478b-a30e-2baeef3a166f): `polish_oleada2.py` + `export_blend.py` (no `escupidora.py`). Renders `oleada2_before|after/` incl. `game_15m`. VAT OK 1476 tris.
+
 ### Oleada 1b — VISIBLE (2026-10-07)
 
 Segunda pasada solo geometría/materiales/animación en `escupidora.py` (sin tocar `src/`).

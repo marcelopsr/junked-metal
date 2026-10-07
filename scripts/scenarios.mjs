@@ -64,6 +64,13 @@ export const sessions = [
       await tick(p, 90);
       await p.waitForTimeout(300);
     } },
+    { id: "ficha-escupidora", act: async (p) => {
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-beast="escupidora"]', "click");
+      await wait(p, () => document.querySelector("#scr-beast.on"));
+      await tick(p, 90);
+      await p.waitForTimeout(300);
+    } },
     { id: "creditos", act: view("credits") },
   ] },
   // Taller y garaje con compras: __cfg escribe el guardado en memoria (sin persistir) y la pantalla se vuelve a abrir para redibujarla

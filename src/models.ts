@@ -1,6 +1,7 @@
 import * as B from "@babylonjs/core";
 import earcut from "earcut";
 import { precio } from "./balance";
+import { carGlbHull, carGlbTpl } from "./carGlb";
 import { M, pbr, shadows } from "./render";
 
 // Modelos procedurales. Las piezas se fusionan en una sola malla (con multi-material)
@@ -249,7 +250,11 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   let parts: B.Mesh[];
   let stock: B.Mesh[] = []; // alerón de serie (se reemplaza si se elige otro)
   const paint = pbr("paint" + kind + o.paint, { color: o.paint ?? A.paint, rough: 0.4, coat: 0.8 });
-  if (kind === "buggy") {
+  const trimHex = o.trim ?? "#c9ccd1";
+  const useGlb = !!carGlbTpl(kind);
+  const glbHull = useGlb ? carGlbHull(kind, o.paint ?? A.paint, trimHex) : null;
+  if (glbHull) parts = [glbHull];
+  else if (kind === "buggy") {
     parts = [
       box(1.05, 0.1, 2.1, M.matte("#2b2d31"), [0, 0.02, 0]),
       extrude([[-1.05, 0.05], [1.0, 0.05], [1.12, 0.2], [0.6, 0.36], [0.1, 0.42], [-0.45, 0.52], [-1.0, 0.46], [-1.1, 0.25]], 0.95, paint, [0, 0.05, 0]),
@@ -358,8 +363,34 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     for (const [x, z] of [[-0.46, 0.66], [0.46, 0.66], [-0.46, -0.66], [0.46, -0.66]]) ws.push({ pos: [x, 0, z], d: 0.52, w: 0.18 });
   }
 
+  // Ruedas (mismas anclas con hull GLB o procedural)
+  if (useGlb && ws.length === 0) {
+    if (kind === "buggy") for (const [x, z] of [[-0.72, 0.72], [0.72, 0.72], [-0.72, -0.72], [0.72, -0.72]]) ws.push({ pos: [x, 0, z], d: 0.8, w: 0.36 });
+    else if (kind === "monster") for (const [x, z] of [[-0.8, 0.72], [0.8, 0.72], [-0.8, -0.72], [0.8, -0.72]]) ws.push({ pos: [x, -0.05, z], d: 1.15, w: 0.5 });
+    else if (kind === "formula") for (const [x, z] of [[-0.62, 0.9], [0.62, 0.9], [-0.66, -0.85], [0.66, -0.85]]) ws.push({ pos: [x, 0, z], d: z < 0 ? 0.72 : 0.6, w: z < 0 ? 0.42 : 0.3 });
+    else if (kind === "tanque") for (const z of [-0.6, -0.2, 0.2, 0.6]) for (const x of [-0.72, 0.72]) ws.push({ pos: [x, 0.02, z], d: 0.36, w: 0.34, steer: false });
+    else if (kind === "axel") for (const x of [-0.82, 0.82]) ws.push({ pos: [x, 0, 0], d: 1.6, w: 0.42, steer: false });
+    else if (kind === "helado") for (const [x, z] of [[-0.62, 0.78], [0.62, 0.78], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
+    else if (kind === "combi") for (const [x, z] of [[-0.62, 0.75], [0.62, 0.75], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
+    else for (const [x, z] of [[-0.46, 0.66], [0.46, 0.66], [-0.46, -0.66], [0.46, -0.66]]) ws.push({ pos: [x, 0, z], d: 0.52, w: 0.18 });
+    if (kind === "buggy" || kind === "formula") {
+      stock = [
+        box(1.35, 0.05, 0.38, M.plastic("#ffc300"), [0, 0.9, -1.0], [0.12, 0, 0]),
+        box(0.05, 0.4, 0.15, M.matte("#222"), [0.4, 0.68, -0.95]),
+        box(0.05, 0.4, 0.15, M.matte("#222"), [-0.4, 0.68, -0.95]),
+      ];
+      if (kind === "formula") {
+        stock = [
+          box(1.2, 0.05, 0.3, paint, [0, 0.62, -1.15]),
+          box(0.05, 0.3, 0.3, M.plastic("#111"), [0.55, 0.47, -1.15]),
+          box(0.05, 0.3, 0.3, M.plastic("#111"), [-0.55, 0.47, -1.15]),
+        ];
+      }
+    }
+  }
+
   // Franjas de pintura / molduras (lectura en garaje y a distancia; trim del taller si hay)
-  {
+  if (!useGlb) {
     const [bw, bh, bl] = CARS_SIZE[kind];
     const trimM = M.plastic(o.trim ?? "#c9ccd1");
     const dark = M.matte("#14171c");
@@ -393,7 +424,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   }
 
   // Detalle de juguete realista (todos los autos): aros cromados en los faros, luces traseras, espejos, parrilla y escapes
-  {
+  if (!useGlb) {
     const [bw, bh, bl] = CARS_SIZE[kind], chrome = M.metal("#e6e9ee"), tail = M.glow("#ff3a2a");
     for (const [x, y, z, d] of A.lamps) for (const s of x ? [1, -1] : [1]) parts.push(tor(d * 1.35, d * 0.22, chrome, [x * s, y, z - d * 0.1], [Math.PI / 2, 0, 0], 12));
     if (kind !== "axel" && kind !== "tanque") {
@@ -413,7 +444,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
 
   // Ópticas del faro (color elegido) + luz del faro en la escena
   const lamp = LAMPS[o.lamp ?? "calido"] ?? LAMPS.calido;
-  for (const [x, y, z, d] of A.lamps) for (const s of x ? [1, -1] : [1]) parts.push(sph(d, M.glow(lamp[0]), [x * s, y, z]));
+  if (!useGlb) for (const [x, y, z, d] of A.lamps) for (const s of x ? [1, -1] : [1]) parts.push(sph(d, M.glow(lamp[0]), [x * s, y, z]));
   const spot = scene.getLightByName("lamp");
   if (spot) spot.diffuse = B.Color3.FromHexString(lamp[1]);
 
@@ -488,13 +519,14 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     else if (o.acc === "banderita") { const x = -bw * 0.38, z = -bl * 0.42; parts.push(cyl(0.025, 0.025, 1.0, M.metal("#e5e7eb"), [x, bh * 0.5 + 0.5, z], undefined, 4), box(0.02, 0.2, 0.32, acc("#f97316"), [x, bh * 0.5 + 0.88, z - 0.16])); }
   }
 
-  // Piloto sentado (o asomado por la escotilla del tanque)
-  for (const m of pilotParts(o.pilot ?? "soldadito")) { m.position.scaleInPlace(ps).addInPlaceFromFloats(px, py, pz); m.scaling.scaleInPlace(ps); parts.push(m); }
+  // Piloto sentado (GLB trae soldadito blockout; otro piloto sustituye)
+  const pilotId = o.pilot ?? "soldadito";
+  if (!useGlb || pilotId !== "soldadito") for (const m of pilotParts(pilotId)) { m.position.scaleInPlace(ps).addInPlaceFromFloats(px, py, pz); m.scaling.scaleInPlace(ps); parts.push(m); }
 
   // Antena, siempre: es un auto RC
   parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#ff4d6d"), [0.38, 1.6, -0.7]));
   const rim = o.rim ?? A.rim;
-  const body = merge("carBody", parts, o.fixed ? [] : [paint]); // la pintura queda aparte si se gasta con el daño (Car.wear)
+  const body = merge("carBody", parts, useGlb || o.fixed ? [] : [paint]); // GLB: Paint en hull; procedural: submalla de daño
   const cast: B.AbstractMesh[] = [];
   const bodySh = shadowProxy(body);
   if (bodySh) bodySh.parent = body;

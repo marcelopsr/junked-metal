@@ -6,6 +6,7 @@ import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "
 import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineKind, SFX } from "./sfx";
 import { ambient, burst, clearFx, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { activePad, btnName, camCycle, ctl, input, isTouch, keyHit, KEYS, padPressed, padSnap, pb, pollInput, setupTouch } from "./input";
+import { carGlbProgress, loadCarGlbs } from "./carGlb";
 import { GLB, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
@@ -490,8 +491,9 @@ addEventListener("keydown", (e) => {
 // ---------- Carga (loading.ts) ----------
 // Tareas pesadas que se hacen solas en los menús (un hueco libre por vez) y que launch() completa tras Jugar / Carrera con pantalla de carga.
 // Peso (w) ~ ms de la tarea en una PC rápida, redondeado; el orden de la cola es el de la precarga.
-let bichosOk = false, plantillasOk = false, efectosOk = false, fxN = 0, fxTotal = 1;
+let bichosOk = false, autosOk = false, plantillasOk = false, efectosOk = false, fxN = 0, fxTotal = 1;
 const T_BICHOS: Task = { id: "bichos", label: "Cargando bichos", w: 3, done: () => bichosOk, run: async () => { await loadGlbs(scene); bichosOk = true; }, prog: glbProgress };
+const T_AUTOS: Task = { id: "autos", label: "Cargando autos", w: 2, done: () => autosOk, run: async () => { await loadCarGlbs(scene); autosOk = true; }, prog: carGlbProgress };
 // Plantillas instanciadas que la partida crearía al vuelo (un hipo al primer bicho, tuerca o pila): se arman antes, de a una por hueco libre
 const T_PLANTILLAS: Task = { id: "plantillas", label: "Cargando bichos", w: 2, done: () => plantillasOk, prog: () => fxN / fxTotal, run: async () => {
   const jobs: (() => unknown)[] = [() => gemTpl(1), () => gemTpl(5), () => gemTpl(20), pilaTpl, imanTpl, spitTpl, nutTpl];
@@ -514,7 +516,7 @@ const T_EFECTOS: Task = { id: "efectos", label: "Preparando efectos", w: 3, done
   for (fxN = 0; fxN < jobs.length; fxN += 6) { await Promise.all(jobs.slice(fxN, fxN + 6).map(([mat, m]) => mat.forceCompilationAsync(m, { useInstances: m.position.y < -400 }).catch(() => undefined))); await idle(); } // las plantillas viven en y = -500
   fxN = fxTotal; efectosOk = true;
 } };
-preload([T_BICHOS, T_PLANTILLAS, worldTask(() => zoneFor(false)), T_EFECTOS], () => state === "menu");
+preload([T_BICHOS, T_AUTOS, T_PLANTILLAS, worldTask(() => zoneFor(false)), T_EFECTOS], () => state === "menu");
 /** Espera n cuadros dibujados (con tope de 1,5 s: con la pestaña oculta no hay cuadros). */
 const afterFrames = (n: number) => new Promise<void>((r) => {
   let k = 0;
@@ -523,7 +525,7 @@ const afterFrames = (n: number) => new Promise<void>((r) => {
 });
 function launchRun(d = false) {
   initAudio(); // el gesto del jugador es este clic: el audio se activa acá, no tras la carga
-  void launch([T_BICHOS, T_PLANTILLAS, worldTask(() => zoneFor(d)), T_EFECTOS], "Encendiendo el auto", () => startRun(d), () => afterFrames(2));
+  void launch([T_BICHOS, T_AUTOS, T_PLANTILLAS, worldTask(() => zoneFor(d)), T_EFECTOS], "Encendiendo el auto", () => startRun(d), () => afterFrames(2));
 }
 const raceZone = (battle: boolean) => battle ? "patio" : TRACKS[raceCfg.cup ? 0 : raceCfg.track].zone;
 function goRace(battle = false) {

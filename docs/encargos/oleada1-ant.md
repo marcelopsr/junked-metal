@@ -6,6 +6,8 @@
 
 **Estado agente** [Malla ant oleada 1](145abb52-a65c-45c3-82ab-04b6226a9b89) (2026-10-07): pipeline Blender + `gltf-transform` OK (1240 tris, `__glbStats` OK). Pipeline OK; integrador copió `ant_clean.glb` → `public/models/ant.glb` ([Integrador oleada 1 GLB](4eae5458-03b0-403b-a0f2-4e21391a178e)). **Pendiente** refino artístico en `.blend` / `fat()` (§1).
 
+**Oleada 2 sculpt** [Esculpir GLB ant escupidora](2840ded1-8273-478b-a30e-2baeef3a166f): `polish_oleada2.py` en `ant.blend`, **1272** tris, `export_clean.py` con `fat≈1.02`. Renders `renders/oleada2_before|after/`. Pinzas/ojos siguen en export. Sin commit hasta integrador.
+
 **Referencias obligatorias (solo lectura):**
 
 - Contrato VAT / materiales / animaciones: [`src/glb.ts`](../../src/glb.ts) (comentario L6–25, `WALK`/`ATTACK` L34).
