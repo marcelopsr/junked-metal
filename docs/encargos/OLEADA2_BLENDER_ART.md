@@ -13,8 +13,8 @@ GLB de juego en commit **`fe919c4`** (`git show fe919c4:public/models/<nombre>.g
 | hormiga | `ant/` | **Sí** — [Esculpir GLB ant escupidora](2840ded1-8273-478b-a30e-2baeef3a166f): `polish_oleada2.py` en `Ant`; `fat≈1.02` en export | `export_clean.py` → `ant.glb` | 1 272 / 1 526 | `renders/oleada2_before\|after/` |
 | escupidora | `escupidora/` | **Sí** — mismo agente: saco/cabeza/patas/ojos en `escupidora.blend` | `export_blend.py` (no `escupidora.py`) | 1 476 / 1 771 | `game_15m`, `attack_escupe` |
 | escarabajo | `escarabajo/` | **Sí** — `polish_oleada2.py` (élitros, pronoto, cuerno) | `bicho.export` | 1 534 / 1 841 | Diferencia visible |
-| perro | `perro/` | **Sí** — `polish_oleada2.py` (pecho, hocico, orejas) en malla `Perro` | `bicho.export` | 6 789 / 8 147 | Cambio de silueta sutil en render ortográfico |
-| gato | `gato/` | **Sí** — `polish_oleada2.py` (orejas, mejillas, cola) en malla `Gato` | `bicho.export` | 6 904 / 8 285 | Cambio sutil en render ortográfico |
+| perro | `perro/` | **Sí** — [Esculpir GLB perro gato](66a90a4a-1333-458b-890c-e658a869d3a6): sculpt por **vertex groups** (pecho, hocico, orejas); no re-correr `perro.py` | `export_blend.py` + `render_renders.py` | 6 789 / 8 147 | `renders/*.png` + `oleada2_before\|after.png` |
+| gato | `gato/` | **Sí** — mismo agente: orejas, mejillas, cola; `spin` min Y **-0.17** intacto | `export_blend.py` + `render_renders.py` | 6 904 / 8 285 | idem |
 
 ### Bestiario procedural (sin GLB en oleada 2)
 
@@ -43,7 +43,11 @@ $BL -b assets-src/escupidora/escupidora.blend --python assets-src/escupidora/pol
 $BL -b assets-src/escupidora/escupidora.blend --python assets-src/escupidora/export_blend.py
 $BL -b assets-src/escarabajo/escarabajo.blend --python assets-src/escarabajo/polish_oleada2.py
 $BL -b assets-src/perro/perro.blend --python assets-src/perro/polish_oleada2.py
+$BL -b assets-src/perro/perro.blend --python assets-src/perro/export_blend.py
+$BL -b assets-src/perro/perro.blend --python assets-src/perro/render_renders.py
 $BL -b assets-src/gato/gato.blend --python assets-src/gato/polish_oleada2.py
+$BL -b assets-src/gato/gato.blend --python assets-src/gato/export_blend.py
+$BL -b assets-src/gato/gato.blend --python assets-src/gato/render_renders.py
 
 # After (mismo script y `ortho` que before)
 $BL -b --python assets-src/render_oleada2_baseline.py -- \
@@ -91,8 +95,8 @@ Duelo: **excluido** de esta tanda.
 | 7 | rey | Procedural + 6 patas | `models.ts`, `assets-src/rey/` |
 | 8 | cortadora | Procedural | `models.ts`, `assets-src/cortadora/` |
 | 9 | tarantula | Procedural + 8 patas | `models.ts`, `assets-src/tarantula/` |
-| 10 | perro | GLB VAT | `assets-src/perro/` |
-| 11 | gato | GLB VAT | `assets-src/gato/` |
+| 10 | perro | GLB VAT **✓** oleada 2 [66a90a4a](66a90a4a-1333-458b-890c-e658a869d3a6) | `assets-src/perro/` |
+| 11 | gato | GLB VAT **✓** oleada 2 [66a90a4a](66a90a4a-1333-458b-890c-e658a869d3a6) | `assets-src/gato/` |
 | 12 | aspiradora | Procedural | `models.ts`, `assets-src/aspiradora/` |
 | 13 | cortacercos | Procedural | `models.ts`, `assets-src/cortacercos/` |
 
@@ -113,11 +117,4 @@ Duelo: **excluido** de esta tanda.
 
 | # | `CarKind` | Carpeta Blender | Runtime |
 |---|-----------|-----------------|---------|
-| 22 | buggy | `assets-src/cars/buggy/` | `public/models/cars/buggy.glb` |
-| 23 | monster | `assets-src/cars/monster/` | `…/monster.glb` |
-| 24 | formula | `assets-src/cars/formula/` | `…/formula.glb` |
-| 25 | tanque | `assets-src/cars/tanque/` | `…/tanque.glb` |
-| 26 | carrera | `assets-src/cars/carrera/` | `…/carrera.glb` |
-| 27 | axel | `assets-src/cars/axel/` | `…/axel.glb` |
-| 28 | helado | `assets-src/cars/helado/` | `…/helado.glb` |
-| 29 | combi | `assets-src/cars/combi/` | `…/combi.glb` |
+| 22–29 | 8× `CarKind` | **✓** blockout GLB [Esculpir 8 autos RC](24ef11e1-22f4-4c8d-9f23-f124b856bce0) · `carGlb.ts` | `assets-src/cars/<id>/` → `public/models/cars/*.glb` |

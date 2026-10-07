@@ -14,3 +14,4 @@ logs/
 # Resultados de las herramientas de prueba (npm run shots / perf)
 .shots/
 .perf/
+assets-src/_oleada2_baseline/
