@@ -17,7 +17,7 @@ T = lambda p: (p[0], p[1], p[2] if p[2] > 0 else p[2] * 0.85)  # acorta la mitad
 b.reset()
 mats = [b.mat("Body", "#6e7279", rough=0.75), b.mat("Chest", "#efebe2", rough=0.8), b.mat("Nose", "#202124", rough=0.35),
         b.mat("EarInner", "#b48a8c", rough=0.7)]
-eye = b.mat("Eye", "#2a1a10", rough=0.1)
+eye = b.mat("Eye", "#3a2418", rough=0.1)  # GLB.perro.eye en glb.ts
 
 # ---------- Esqueleto (coordenadas del juego sin escalar) ----------
 BONES = [("hips", (0, 3.9, -2.4), (0, 3.9, -0.6), None),
@@ -52,9 +52,9 @@ for s in (1, -1):
     m.ell((s * 1.2, 3.75, 2.2), (0.75, 1.1, 0.95))   # paletas
     m.ell((s * 1.15, 3.45, -2.3), (0.85, 1.35, 1.2))  # muslos
     # oreja de murciélago: tres óvalos chatos de la base a la punta redonda, abiertos hacia afuera
-    m.ell((s * 1.1, 7.45, 4.6), (1.0, 0.85, 0.32))
-    m.ell((s * 1.4, 8.15, 4.55), (1.02, 0.82, 0.28))
-    m.ell((s * 1.6, 8.75, 4.5), (0.82, 0.62, 0.24))
+    m.ell((s * 1.1, 7.45, 4.6), (1.08, 0.92, 0.34))
+    m.ell((s * 1.42, 8.2, 4.55), (1.1, 0.88, 0.3))
+    m.ell((s * 1.65, 8.85, 4.48), (0.88, 0.68, 0.26))
     m.tube([(s * 1.55, 3.9, 2.45), (s * 1.62, 2.3, 2.1), (s * 1.55, 0.55, 2.4)], [0.95, 0.62, 0.5])
     m.ell((s * 1.55, 0.38, 2.8), (0.66, 0.4, 0.85))   # mano
     m.tube([(s * 1.35, 3.6, -2.4), (s * 1.5, 2.3, -1.75), (s * 1.45, 1.2, -3.05), (s * 1.45, 0.4, -2.85)], [1.0, 0.7, 0.45, 0.45])
@@ -73,7 +73,7 @@ def region(p, n):
     if ay > 7.6 and ax > 0.6 and n.z > 0.3 and q.seg_dist(Vector((ax, ay, 0)), Vector((1.1, 7.6, 0)), Vector((1.6, 9.0, 0))) < 0.58:
         return 3
     wob = 0.12 * math.sin(p.x * 5.0 + p.y * 3.0)
-    if p.z > 1.6 and n.z > 0.1 and (p.x / 1.05) ** 2 + ((ay - 3.4) / 1.5) ** 2 < 1 + wob:
+    if p.z > 1.2 and n.z > 0.08 and (p.x / 1.15) ** 2 + ((ay - 3.25) / 1.65) ** 2 < 1.08 + wob:
         return 1
     return 0
 

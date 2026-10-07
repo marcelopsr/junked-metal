@@ -21,14 +21,14 @@ bones = [("body", (0, 0.45, 0), (0, 0.45, 0.4), None),
 ao = b.armature("EscarabajoRig", bones)
 
 m = b.Build([n for n, *_ in bones])
-m.ell((0, 0.52, -0.3), (0.8, 0.46, 0.92), shell, "body", 16, 9)          # élitros
-m.ell((0, 0.53, -0.32), (0.06, 0.475, 0.9), dark, "body", 6, 8)           # costura entre élitros
-m.ell((0, 0.55, 0.62), (0.58, 0.32, 0.38), shell, "body", 12, 7)         # pronoto
-m.ell((0, 0.42, 1.0), (0.36, 0.3, 0.34), dark, "head", 12, 8)
+m.ell((0, 0.52, -0.3), (0.86, 0.48, 0.96), shell, "body", 16, 9)          # élitros (ancho plaga)
+m.ell((0, 0.53, -0.32), (0.07, 0.49, 0.92), dark, "body", 6, 8)           # costura entre élitros
+m.ell((0, 0.56, 0.62), (0.62, 0.34, 0.4), shell, "body", 12, 7)           # pronoto
+m.ell((0, 0.42, 1.02), (0.38, 0.31, 0.36), dark, "head", 12, 8)
 for s in (1, -1):
-    m.ell((s * 0.25, 0.52, 1.2), (0.11, 0.11, 0.11), eye, "head", 8, 6)
-if HORN == "curvo":  # rinoceronte: sale hacia adelante y se curva para arriba
-    m.tube([(0, 0.5, 1.15), (0, 0.6, 1.5), (0, 0.82, 1.75), (0, 1.12, 1.82)], [0.17, 0.12, 0.07, 0.02], dark, "head", 8)
+    m.ell((s * 0.26, 0.53, 1.22), (0.12, 0.12, 0.12), eye, "head", 8, 6)
+if HORN == "curvo":  # rinoceronte: sale hacia adelante y se curva para arriba (default oleada 1)
+    m.tube([(0, 0.48, 1.12), (0, 0.58, 1.48), (0, 0.86, 1.78), (0, 1.18, 1.86)], [0.19, 0.14, 0.08, 0.02], dark, "head", 8)
 elif HORN == "recto":  # el de la procedural: cono recto adelante y arriba
     m.tube([(0, 0.5, 1.0), (0, 0.99, 1.73)], [0.2, 0.02], dark, "head", 8)
 else:  # tenazas de ciervo volante
@@ -47,14 +47,14 @@ LEGS = [(s, k) for s in (1, -1) for k in range(3)]
 def walk(f):  # 32 cuadros: más pesado que la escupidora; el cuadro 32 repite el 0
     p = f / 32
     P = b.legs_walk(LEGS, p, 0.28, 0.3)
-    P["body"] = {"loc": (0, 0.02 * (1 - math.cos(4 * math.pi * p)) / 2, 0), "rot": b.lift(1, 0.03 * math.sin(2 * math.pi * p))}
-    P["head"] = {"rot": b.yaw_fwd(1, 0.06 * math.sin(2 * math.pi * p))}
+    P["body"] = {"loc": (0, 0.026 * (1 - math.cos(4 * math.pi * p)) / 2, 0), "rot": b.lift(1, 0.04 * math.sin(2 * math.pi * p))}
+    P["head"] = {"rot": b.yaw_fwd(1, 0.05 * math.sin(2 * math.pi * p))}
     return P
 
 
-# Embestida (24 cuadros): se agacha y retrocede (0-8), arremete (12), revolea el cuerno (15), vuelve (24)
+# Embestida (24 cuadros): carga (0-8), arremete (8-12 alineado con GLB hit 0.33), revolea cuerno (15), vuelve (24)
 # valores: cabeceo del cuerpo, cabeceo de la cabeza, avance z del cuerpo
-ATK = {0: (0, 0, 0), 8: (-0.12, -0.25, -0.22), 12: (-0.06, -0.15, 0.45), 15: (0.1, 0.5, 0.35), 24: (0, 0, 0)}
+ATK = {0: (0, 0, 0), 8: (-0.14, -0.3, -0.26), 10: (-0.1, -0.18, 0.08), 12: (-0.05, -0.1, 0.55), 15: (0.12, 0.52, 0.38), 24: (0, 0, 0)}
 
 
 def attack(f):

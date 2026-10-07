@@ -19,7 +19,7 @@ mats = [b.mat("Body", "#d9782a", rough=0.8), b.mat("Stripe", "#93441a", rough=0.
         b.mat("Nose", "#d98a8a", rough=0.4), b.mat("EarInner", "#e3a6a0", rough=0.7)]
 eye, pupil = b.mat("Eye", "#b5d43a", rough=0.1), b.mat("Pupil", "#0a0a0a", rough=0.1)
 
-TAIL = [(0, 3.55, -3.3), (0, 3.2, -4.7), (0, 2.9, -6.1), (0, 2.7, -7.6), (0, 2.62, -9.3)]
+TAIL = [(0, 3.55, -3.35), (0, 3.15, -4.85), (0, 2.85, -6.35), (0, 2.68, -8.0), (0, 2.58, -9.85)]
 BONES = [("hips", (0, 3.4, -2.3), (0, 3.35, -0.6), None),
          ("spine", (0, 3.35, -0.6), (0, 3.35, 1.3), "hips"),
          ("chest", (0, 3.35, 1.3), (0, 3.6, 2.9), "spine"),
@@ -40,11 +40,11 @@ ao = b.armature("GatoRig", [(n, tuple(x * S for x in T(h)), tuple(x * S for x in
 
 # ---------- Malla ----------
 m = q.Shape(S, T)
-m.loft([((0, 3.4, -3.55), 0.6, 0.6), ((0, 3.42, -3.05), 1.1, 1.08), ((0, 3.35, -2.2), 1.25, 1.25),
-        ((0, 3.15, -1.0), 1.15, 1.25), ((0, 3.25, 0.3), 1.22, 1.32), ((0, 3.3, 1.5), 1.25, 1.42),
-        ((0, 3.45, 2.45), 1.12, 1.35), ((0, 3.85, 3.05), 0.9, 1.05), ((0, 4.3, 3.5), 0.75, 0.8), ((0, 4.75, 3.95), 0.72, 0.72)])
-m.loft([(TAIL[0], 0.4, 0.4), (TAIL[1], 0.34, 0.34), (TAIL[2], 0.32, 0.32), (TAIL[3], 0.3, 0.3), (TAIL[4], 0.25, 0.25)], 14)
-m.ell((0, 2.62, -9.3), (0.25, 0.25, 0.28), 12, 8)
+m.loft([((0, 3.4, -3.55), 0.54, 0.54), ((0, 3.42, -3.05), 1.02, 1.0), ((0, 3.35, -2.2), 1.14, 1.14),
+        ((0, 3.15, -1.0), 1.05, 1.14), ((0, 3.25, 0.3), 1.12, 1.2), ((0, 3.3, 1.5), 1.14, 1.28),
+        ((0, 3.45, 2.45), 1.02, 1.22), ((0, 3.85, 3.05), 0.82, 0.95), ((0, 4.3, 3.5), 0.68, 0.72), ((0, 4.75, 3.95), 0.66, 0.66)])
+m.loft([(TAIL[0], 0.36, 0.36), (TAIL[1], 0.31, 0.31), (TAIL[2], 0.29, 0.29), (TAIL[3], 0.27, 0.27), (TAIL[4], 0.22, 0.22)], 14)
+m.ell((0, 2.58, -9.85), (0.22, 0.22, 0.26), 12, 8)
 m.ell((0, 5.0, 4.35), (1.0, 0.88, 0.95))            # cráneo
 m.ell((0, 4.55, 5.12), (0.45, 0.35, 0.38))          # hocico
 m.ell((0, 4.2, 4.98), (0.32, 0.22, 0.32))           # mentón
@@ -53,8 +53,8 @@ for s in (1, -1):
     m.ell((s * 0.5, 4.62, 4.72), (0.58, 0.52, 0.55))   # cachetes
     m.ell((s * 0.22, 4.5, 5.26), (0.3, 0.26, 0.24))    # almohadillas de los bigotes
     m.cone((s * 0.55, 5.45, 4.3), (s * 0.88, 6.55, 4.08), 0.45)  # orejas triangulares
-    m.ell((s * 0.62, 3.55, 2.3), (0.5, 0.85, 0.72))    # escápulas
-    m.ell((s * 0.68, 3.0, -2.1), (0.6, 1.05, 0.95))    # muslos
+    m.ell((s * 0.62, 3.55, 2.3), (0.44, 0.78, 0.66))    # escápulas
+    m.ell((s * 0.68, 3.0, -2.1), (0.54, 0.95, 0.86))    # muslos
     m.tube([(s * 0.7, 3.4, 2.4), (s * 0.77, 2.2, 2.05), (s * 0.72, 0.45, 2.25)], [0.55, 0.36, 0.28], 12)
     m.ell((s * 0.72, 0.26, 2.55), (0.35, 0.26, 0.46), 12, 8)  # mano
     m.tube([(s * 0.75, 3.2, -2.25), (s * 0.86, 2.2, -1.55), (s * 0.8, 0.9, -2.85), (s * 0.8, 0.3, -2.6)], [0.7, 0.42, 0.26, 0.26], 12)
@@ -83,7 +83,7 @@ def region(p, n):
         return BODY
     # cola: anillos, punta oscura
     if z < -3.5 and y > 1.8:
-        return STRIPE if z < -8.9 or math.sin(-z * 7.5) > 0.25 else BODY
+        return STRIPE if z < -9.4 or math.sin(-z * 7.2) > 0.12 else BODY
     # patas: medias claras, adentro claro, anillos afuera
     legz = 1.5 < z < 3.2 or -3.5 < z < -1.2
     if ax > 0.3 and (y < 1.9 or (y < 2.35 and legz)):
@@ -96,7 +96,7 @@ def region(p, n):
         return BELLY
     if ax < 0.2 and n.y > 0.75:
         return STRIPE
-    if y > belly + 0.25 and math.sin(z * 7.2 + 0.9 * math.sin(y * 2.4) + 1.2 * ax) > 0.3:
+    if y > belly + 0.2 and math.sin(z * 6.8 + 0.85 * math.sin(y * 2.3) + 1.1 * ax) > 0.22:
         return STRIPE
     return BODY
 
@@ -187,7 +187,8 @@ def attack_pose(v, ik=False):
 JUMP = {0: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
         6: (-0.9, -0.05, -0.3, 0, 0, 0, 0, 0.15, 0, 0.05),                # se agazapa, pies plantados
         16: (-0.95, -0.05, -0.3, 0, 0, 0, 0, 0.15, 0, 0.05),               # (meneo de cola y cadera, abajo)
-        20: (0.4, 0.3, 0.6, 1.0, 1.0, -0.9, 0.2, 0.1, 0.25, 0),            # salta estirado, manos adelante, patas de atrás empujan
+        19: (-0.15, 0.08, 0.05, 0.55, 0.75, -0.45, 0.12, 0.12, 0.2, 0),   # despegue (SEQ fase 1 @ cuadro 19)
+        20: (0.35, 0.28, 0.55, 0.95, 0.98, -0.85, 0.18, 0.1, 0.24, 0),     # salta estirado, manos adelante, patas de atrás empujan
         25: (0.6, -0.05, 1.2, 0.8, 1.6, -0.3, 1.5, -0.1, 0.35, 0),         # arriba, recogido
         29: (-0.45, -0.15, 1.3, 0.4, 0, 0.3, 0, -0.2, 0.2, 0.1),          # cae y amortigua
         38: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0)}
@@ -203,10 +204,10 @@ def jump(f):
 
 def spin(f):  # 24 cuadros: se agacha (0-4), una vuelta entera a velocidad constante agachado, patas abiertas y la cola hacia afuera (4-20: es un ciclo), se para (20-24)
     low = min(1, f / 4, (24 - f) / 4)
-    t = min(1, max(0, (f - 4) / 16))
-    P = attack_pose((-0.2 * low, 0, 0, 0.15 * low, 0.9 * low, -0.15 * low, 0.9 * low, -0.2 * low, 0.3 * low, 0.35 * low))  # FK: con IK el giro de 180° de las caderas rompe el plano sagital
+    t = min(1, max(0, (f - 4) / 16))  # 4→20: una vuelta; en 20 yaw=2π ≡ 0 para loop con cuadro 4
+    P = attack_pose((-0.16 * low, 0, 0, 0.14 * low, 0.88 * low, -0.14 * low, 0.88 * low, -0.2 * low, 0.3 * low, 0.34 * low))  # FK: con IK el giro de 180° de las caderas rompe el plano sagital
     put(P, "hips", b.yaw_fwd(1, 2 * math.pi * t))
-    tail(P, (-0.1 * low, 0, 0, 0), 0.5 * low, 0, 0)
+    tail(P, (-0.12 * low, 0.05 * low, 0, 0), 0.55 * low, f * 0.35 if 4 <= f < 20 else 0, 0)
     for s in (1, -1):
         put(P, "ear_" + side(s), b.nose_up(0.6 * low))
     return P

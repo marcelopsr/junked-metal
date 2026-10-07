@@ -20,14 +20,19 @@ bones = [("body", (0, 0.36, 0), (0, 0.36, 0.22), None),
 ao = b.armature("EscupidoraRig", bones)
 
 m = b.Build([n for n, *_ in bones])
-m.ell((0, 0.48, -0.72), (0.5, 0.43, 0.6), sac, "abdomen", 14, 9)
-m.ell((0, 0.36, 0), (0.24, 0.21, 0.26), body, "body", 10, 7)
-m.ell((0, 0.44, 0.5), (0.31, 0.28, 0.3), body, "head", 12, 8)
+# Saco ácido: volumen principal + gota trasera (lee de noche con alpha/emisivo Sac)
+m.ell((0, 0.5, -0.8), (0.58, 0.5, 0.68), sac, "abdomen", 14, 9)
+m.ell((0, 0.54, -1.2), (0.3, 0.26, 0.28), sac, "abdomen", 8, 6)
+m.ell((0, 0.36, 0), (0.26, 0.22, 0.28), body, "body", 10, 7)
+m.ell((0, 0.39, 0.16), (0.3, 0.2, 0.24), body, "body", 8, 5)  # tórax / cintura
+m.ell((0, 0.45, 0.52), (0.34, 0.3, 0.32), body, "head", 12, 8)
+m.tube([(0, 0.42, 0.78), (0, 0.4, 0.95)], [0.06, 0.04], body, "head", 6)  # probóscis / boquilla de escupitajo
 for s in (1, -1):
-    m.ell((s * 0.17, 0.55, 0.74), (0.135, 0.135, 0.135), eye, "head", 8, 6)
-    m.tube([(s * 0.12, 0.33, 0.7), (s * 0.11, 0.3, 0.92), (s * 0.04, 0.27, 1.0)], [0.07, 0.05, 0.015], legs, "head", 5)
-    m.tube([(s * 0.1, 0.66, 0.62), (s * 0.17, 0.92, 0.66), (s * 0.3, 0.98, 0.92)], [0.025, 0.022, 0.018], body, "head", 4)
-    m.ell((s * 0.3, 0.98, 0.92), (0.045, 0.045, 0.045), body, "head", 6, 4)
+    m.ell((s * 0.18, 0.56, 0.76), (0.15, 0.15, 0.15), eye, "head", 8, 6)
+    m.tube([(s * 0.14, 0.36, 0.66), (s * 0.19, 0.31, 0.86), (s * 0.11, 0.27, 1.02), (s * 0.04, 0.25, 1.1)],
+           [0.08, 0.065, 0.04, 0.018], legs, "head", 5)
+    m.tube([(s * 0.1, 0.66, 0.62), (s * 0.18, 0.94, 0.66), (s * 0.32, 1.02, 0.94)], [0.028, 0.024, 0.018], body, "head", 4)
+    m.ell((s * 0.32, 1.02, 0.94), (0.05, 0.05, 0.05), body, "head", 6, 4)
 for s, k, n, hip, knee, foot in geo:
     m.tube([hip, knee], [0.05, 0.04], legs, "leg_" + n, 6)
     m.ell(knee, (0.065, 0.065, 0.065), legs, "leg_" + n, 6, 4)
@@ -38,17 +43,19 @@ b.skin(ob, ao)
 LEGS = [(s, k) for s in (1, -1) for k in range(3)]
 
 
-def walk(f):  # 24 cuadros = 1 s; el cuadro 24 repite el 0
+def walk(f):  # 24 cuadros = 1 s; el cuadro 24 repite el 0 — zancada más pesada que hormiga
     p = f / 24
-    P = b.legs_walk(LEGS, p, 0.35, 0.35)
-    P["body"] = {"loc": (0, 0.015 * (1 - math.cos(4 * math.pi * p)) / 2, 0)}
-    P["abdomen"] = {"rot": b.yaw_fwd(1, 0.08 * math.sin(2 * math.pi * p))}
-    P["head"] = {"rot": b.nose_up(0.05 * math.sin(4 * math.pi * p))}
+    P = b.legs_walk(LEGS, p, 0.28, 0.32)
+    bob = (1 - math.cos(4 * math.pi * p)) / 2
+    P["body"] = {"loc": (0, 0.022 * bob, 0), "rot": b.nose_up(0.04 * math.sin(2 * math.pi * p))}
+    P["abdomen"] = {"rot": b.yaw_fwd(1, 0.1 * math.sin(2 * math.pi * p + 0.4))}
+    P["head"] = {"rot": b.nose_up(0.06 * math.sin(4 * math.pi * p))}
     return P
 
 
 # Ataque (20 cuadros): carga (0-10) cabeza atrás y saco que se infla; escupe (13) latigazo adelante; vuelve (20)
-ATK = {0: (0, 0, 0, 1.0, 0), 10: (0.2, 0.55, -0.12, 1.15, -0.05), 13: (-0.1, -0.45, 0.12, 0.88, 0.1), 20: (0, 0, 0, 1.0, 0)}
+# Cuadro 13 = 13/20 = 0,65 → alineado con GLB.escupidora hit (escupitajo en juego)
+ATK = {0: (0, 0, 0, 1.0, 0), 10: (0.22, 0.58, -0.14, 1.18, -0.06), 13: (-0.12, -0.52, 0.14, 0.86, 0.12), 20: (0, 0, 0, 1.0, 0)}
 
 
 def attack(f):

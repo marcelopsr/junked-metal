@@ -94,6 +94,8 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 **Supervivencia — mejora de experiencia:** Fases 0–5 en [`docs/SURVIVAL_EXPERIENCE_PLAN.md`](./SURVIVAL_EXPERIENCE_PLAN.md). **Siguiente apuesta (usuario):** identidad de build — GDD [`docs/SURVIVAL_BUILD_IDENTITY.md`](./SURVIVAL_BUILD_IDENTITY.md); cerrar checklist §6 antes de código.
 
+**Upgrade visual modelos 3D:** [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md), [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md), [`VISUAL_MODELS_OLEADA1_GLB.md`](./VISUAL_MODELS_OLEADA1_GLB.md), [`encargos/`](./encargos/). Oleada 1 **integrada** ([integrador final](f0e2892b-a397-4260-9346-8497f60c538c): build verde). **Pendiente:** commit GLB+`assets-src`+docs; `--update` refs `cel-lab-jefes` (y duel/menús en tandas aparte). Oleada 2 procedurales (survey OSS).
+
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 
 ---
