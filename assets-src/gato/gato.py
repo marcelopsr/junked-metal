@@ -15,9 +15,9 @@ A = b.args()
 S = 1.0
 T = lambda p: (p[0], p[1], p[2] if p[2] > 3 else 3 + (p[2] - 3) * 0.9)  # acorta el tronco (la cola se corre con él)
 b.reset()
-mats = [b.mat("Body", "#d9782a", rough=0.8), b.mat("Stripe", "#93441a", rough=0.85), b.mat("Belly", "#f1d3a1", rough=0.85),
-        b.mat("Nose", "#d98a8a", rough=0.4), b.mat("EarInner", "#e3a6a0", rough=0.7)]
-eye, pupil = b.mat("Eye", "#b5d43a", rough=0.1), b.mat("Pupil", "#0a0a0a", rough=0.1)
+mats = [b.mat("Body", "#f08828", rough=0.78), b.mat("Stripe", "#7a3010", rough=0.82), b.mat("Belly", "#fff0d8", rough=0.82),
+        b.mat("Nose", "#e87888", rough=0.38), b.mat("EarInner", "#f0b0a8", rough=0.65)]
+eye, pupil = b.mat("Eye", "#b5d43a", rough=0.08, emit=0.55), b.mat("Pupil", "#0a0a0a", rough=0.1)
 
 TAIL = [(0, 3.55, -3.35), (0, 3.15, -4.85), (0, 2.85, -6.35), (0, 2.68, -8.0), (0, 2.58, -9.85)]
 BONES = [("hips", (0, 3.4, -2.3), (0, 3.35, -0.6), None),

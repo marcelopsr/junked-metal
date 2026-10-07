@@ -11,8 +11,8 @@ import bicho as b
 A = b.args()
 HORN = A.get("horn", "curvo")
 b.reset()
-shell, shine, dark, legs, eye = b.mat("Body", "#2f7d4a", metal=0.7, rough=0.25), b.mat("Shine", "#48c878", rough=0.22), \
-    b.mat("Dark", "#1c1c1c", rough=0.4), b.mat("Legs", "#111111", rough=0.5), b.mat("Eye", "#d0ff60", emit=1.8)
+shell, shine, dark, legs, eye = b.mat("Body", "#2a9e52", metal=0.78, rough=0.22), b.mat("Shine", "#6ef0a0", rough=0.18), \
+    b.mat("Dark", "#0f1210", rough=0.45), b.mat("Legs", "#0a0a0a", rough=0.55), b.mat("Eye", "#d0ff60", emit=2.8)
 
 HIPS = [(0.5, 0.38, 0.5), (0.5, 0.38, 0.0), (0.5, 0.38, -0.5)]  # índice 0 = pata delantera (R1/L1)
 leg_bones, geo = b.leg_bones(HIPS, 1.0, splay=[0.3, 0.0, -0.3])

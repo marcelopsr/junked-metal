@@ -15,9 +15,9 @@ A = b.args()
 S = 1.08  # metros del juego por unidad del script
 T = lambda p: (p[0], p[1], p[2] if p[2] > 0 else p[2] * 0.85)  # acorta la mitad trasera: cuerpo compacto
 b.reset()
-mats = [b.mat("Body", "#6e7279", rough=0.75), b.mat("Chest", "#efebe2", rough=0.8), b.mat("Nose", "#202124", rough=0.35),
-        b.mat("EarInner", "#b48a8c", rough=0.7)]
-eye = b.mat("Eye", "#3a2418", rough=0.1)  # GLB.perro.eye en glb.ts
+mats = [b.mat("Body", "#5c6068", rough=0.72), b.mat("Chest", "#faf8f2", rough=0.78), b.mat("Nose", "#101214", rough=0.32),
+        b.mat("EarInner", "#c49a9c", rough=0.65)]
+eye = b.mat("Eye", "#3a2418", rough=0.08, emit=0.35)  # GLB.perro.eye en glb.ts
 
 # ---------- Esqueleto (coordenadas del juego sin escalar) ----------
 BONES = [("hips", (0, 3.9, -2.4), (0, 3.9, -0.6), None),

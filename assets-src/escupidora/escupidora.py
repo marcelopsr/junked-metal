@@ -9,8 +9,8 @@ import bicho as b
 
 A = b.args()
 b.reset()
-body, sac, legs, eye = b.mat("Body", "#d2381c", rough=0.35), b.mat("Sac", "#9acd32", rough=0.2, emit=0.55, emit_hex="#3d5500", alpha=0.88), \
-    b.mat("Legs", "#5a160a", rough=0.5), b.mat("Eye", "#ffb020", emit=3.0)
+body, sac, legs, eye = b.mat("Body", "#e83a18", rough=0.32), b.mat("Sac", "#b8e838", rough=0.18, emit=1.05, emit_hex="#4a6a10", alpha=0.9), \
+    b.mat("Legs", "#3d0e08", rough=0.55), b.mat("Eye", "#ffb020", emit=4.2)
 
 HIPS = [(0.18, 0.34, 0.2), (0.18, 0.34, 0.0), (0.18, 0.34, -0.2)]  # índice 0 = pata delantera (R1/L1)
 leg_bones, geo = b.leg_bones(HIPS, 0.9, splay=[0.3, 0.0, -0.3])
