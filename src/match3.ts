@@ -38,6 +38,7 @@ const PIECE_GLOW = ["#e0c040", "#b9d3a4", "#8dff6a", "#9ad4e8", "#f0c050"];
 let root: B.TransformNode | null = null;
 let m3Light: B.PointLight | null = null;
 let screenMesh: B.Mesh | null = null;
+let screenMat: B.PBRMaterial | null = null;
 let tex: B.DynamicTexture | null = null;
 let texCtx: CanvasRenderingContext2D | null = null;
 const TEX_PX = 480;
@@ -310,7 +311,13 @@ function syncHud() {
   if (st.phase === "ready") {
     ov.classList.remove("hidden");
     panel.innerHTML = `<p class="m3-title">CHATARRA ALINEADA</p><div class="m3-goals-vis">${goalsHtml(false)}</div><p class="m3-meta">${M3_MOVES} movimientos · sin obstáculos</p><p class="m3-instr">Cada pieza del pedido tiene forma distinta. Tocar o arrastrar entre vecinas; sin match de 3, el movimiento se revierte.</p><div class="m3-btns"><button type="button" class="primary" id="m3-play">Jugar</button><button type="button" id="m3-menu">Menú</button></div>`;
-    $m("m3-play").onclick = () => { startPlay(st); ov.classList.add("hidden"); SFX.accept(); };
+    $m("m3-play").onclick = () => {
+      startPlay(st);
+      ov.classList.add("hidden");
+      syncHud();
+      paintScreen();
+      SFX.accept();
+    };
     $m("m3-menu").onclick = () => requestExit();
     $m("m3-play").focus();
   } else if (st.phase === "win") {
@@ -372,10 +379,16 @@ function buildCabinet() {
   const panel = B.MeshBuilder.CreateBox("m3panel", { width: 0.92, height: 0.62, depth: 0.04 }, D.scene);
   panel.parent = root;
   panel.position.set(0, 1.22, 0.34);
-  panel.material = pbr("m3scr", { color: "#0a0c08", rough: 0.9, emissive: "#1a2218" });
+  // ponytail: material propio (no pbr cache): albedo oscuro × textura dejaba la pantalla negra con setDark.
+  screenMat = new B.PBRMaterial("m3scr", D.scene);
+  screenMat.disableLighting = true;
+  screenMat.roughness = 1;
+  screenMat.metallic = 0;
+  screenMat.emissiveColor = B.Color3.White();
   tex = new B.DynamicTexture("m3tex", TEX_PX, D.scene, false);
   tex.hasAlpha = false;
-  (panel.material as B.PBRMaterial).albedoTexture = tex;
+  screenMat.emissiveTexture = tex;
+  panel.material = screenMat;
   texCtx = tex.getContext() as unknown as CanvasRenderingContext2D;
   screenMesh = panel;
   const marquee = B.MeshBuilder.CreateBox("m3marq", { width: 0.7, height: 0.12, depth: 0.06 }, D.scene);
@@ -408,8 +421,10 @@ function disposeCabinet() {
     root.dispose();
   }
   tex?.dispose();
+  screenMat?.dispose();
   root = null;
   screenMesh = null;
+  screenMat = null;
   tex = null;
   texCtx = null;
 }
