@@ -64,6 +64,7 @@ export class Enemy {
   airborne = false;
   legs: { m: B.InstancedMesh; base: number; side: number; phase: number; pos: B.Vector3; ry: number; rz: number }[] = [];
   wings: { m: B.InstancedMesh; pos: B.Vector3; yaw: number; flap: number }[] = []; // polilla
+  attachRoot: B.TransformNode | null = null; // bestiario: patas/alas bajo un TransformNode (no InstancedMesh→InstancedMesh)
   tele: B.InstancedMesh[] = []; // tarántula: aro fijo (zona) + aro que crece (cuenta regresiva)
   land = new B.Vector3(); // tarántula: dónde va a caer el salto
   shots = 0; // tarántula: escupitajos que quedan en la ráfaga
@@ -165,6 +166,36 @@ export class Enemy {
     if (this.legs.length || this.wings.length) this.syncAttachParts();
   }
 
+  /** Ficha del bestiario: jerarquía real bajo un TransformNode (main.ts mueve el pivot). */
+  bindAttachPivot(root: B.TransformNode) {
+    this.attachRoot = root;
+    this.node.parent = root;
+    this.node.position.setAll(0);
+    this.node.rotationQuaternion = null;
+    for (const l of this.legs) {
+      l.m.parent = root;
+      l.m.position.copyFrom(l.pos);
+      l.m.rotationQuaternion = null;
+      l.m.rotation.set(0, l.ry, l.rz);
+    }
+    for (const w of this.wings) {
+      w.m.parent = root;
+      w.m.position.copyFrom(w.pos);
+      w.m.rotationQuaternion = null;
+      w.m.rotation.set(0, w.yaw, w.flap);
+    }
+  }
+
+  unbindAttachPivot() {
+    if (!this.attachRoot) return;
+    this.node.parent = null;
+    for (const l of this.legs) l.m.parent = null;
+    for (const w of this.wings) w.m.parent = null;
+    this.attachRoot.dispose();
+    this.attachRoot = null;
+    this.syncAttachParts();
+  }
+
   // Telegráfico en el piso: zona de radio r centrada en p; k = 0..1 cuánto falta (el aro interior crece hasta el borde)
   showTele(p: B.Vector3 | null, r = 0, k = 0) { // público: la ficha del bestiario (main.ts) muestra el aviso real
     for (const t of this.tele) t.isVisible = !!p;
@@ -187,7 +218,7 @@ export class Enemy {
 
   // Patas/alas en espacio de mundo: las instancias hijas no siguen al cuerpo instanciado (beastTick usa euler + quaternion).
   syncAttachParts() {
-    if (!this.legs.length && !this.wings.length) return;
+    if (this.attachRoot || (!this.legs.length && !this.wings.length)) return;
     this.node.computeWorldMatrix(true);
     const pw = this.node.getWorldMatrix(), ar = this.node.absoluteRotationQuaternion, as = this.node.absoluteScaling;
     const put = (m: B.InstancedMesh, pos: B.Vector3, rx: number, ry: number, rz: number) => {
@@ -211,11 +242,14 @@ export class Enemy {
       // Aleteo rápido a pocos cuadros (stop-motion)
       this.walk += dt * 22;
       const a = Math.round(Math.sin(this.walk) * 3) / 3;
-      for (const w of this.wings) w.flap = a * 0.9; // yaw en w.yaw espeja el ala izquierda
-      this.syncAttachParts();
+      for (const w of this.wings) {
+        w.flap = a * 0.9; // yaw en w.yaw espeja el ala izquierda
+        if (this.attachRoot) { w.m.rotation.y = w.yaw; w.m.rotation.z = w.flap; }
+      }
+      if (!this.attachRoot) this.syncAttachParts();
       return;
     }
-    if (this.vat && GLB[this.kind]!.clips) { this.bossClip(dt); this.syncAttachParts(); return; }
+    if (this.vat && GLB[this.kind]!.clips) { this.bossClip(dt); if (!this.attachRoot) this.syncAttachParts(); return; }
     if (this.vat) { // ataque propio (atk) o, sin él, justo después de golpear (main.ts carga touchCd)
       const v = this.body.getLinearVelocity(), a = GLB[this.kind]!.atk;
       glbAnimate(this.vat, Math.hypot(v.x, v.z), dt, !a && this.touchCd > 0.5, a && this.atk >= 0 ? this.atk / a : -1);
@@ -232,8 +266,9 @@ export class Enemy {
       const s = Math.sin(this.walk + l.phase);
       l.ry = l.base + s * amp;
       l.rz = l.side * Math.max(0, Math.cos(this.walk + l.phase)) * amp * 0.5; // levanta al avanzar
+      if (this.attachRoot) { l.m.rotation.y = l.ry; l.m.rotation.z = l.rz; }
     }
-    this.syncAttachParts();
+    if (!this.attachRoot) this.syncAttachParts();
   }
 
   // Fotograma de una secuencia del jefe (SEQ): tramo phase (0..2) en su fracción p (0..1)
@@ -649,6 +684,7 @@ export class Enemy {
   }
 
   dispose() {
+    this.unbindAttachPivot();
     this.agg.dispose(); this.node.dispose();
     for (const l of this.legs) l.m.dispose();
     for (const w of this.wings) w.m.dispose();
