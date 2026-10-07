@@ -27,6 +27,14 @@ export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla 
   hormiga: { file: "ant", scale: 2, visual: 1.24, eye: "#ff4a28" },
   escupidora: { file: "escupidora", scale: 1, visual: 1.22, eye: "#ffc040", atk: 0.83, hit: 0.65 }, // assets-src/escupidora
   escarabajo: { file: "escarabajo", scale: 1, visual: 1.22, eye: "#e8ff50", atk: 1, hit: 0.33 }, // assets-src/escarabajo
+  friccion: { file: "friccion", scale: 1, eye: "#fff8e8" }, // assets-src/proc2 — escala VIS_1c en export
+  robot: { file: "robot", scale: 1, eye: "#ffe566" },
+  rey: { file: "rey", scale: 1, eye: "#d0ff60" },
+  tarantula: { file: "tarantula", scale: 1, eye: "#ff4fd8" },
+  cortadora: { file: "cortadora", scale: 1 },
+  aspiradora: { file: "aspiradora", scale: 1, eye: "#ff2a1a" },
+  cortacercos: { file: "cortacercos", scale: 1, eye: "#ff2a1a" },
+  polilla: { file: "polilla", scale: 1, visual: 1.05, eye: "#c9a0ff" }, // assets-src/polilla — cuerpo GLB; alas en wingTemplate
   perro: { file: "perro", scale: 1, eye: "#3a2418", clips: [2.3, 13] }, // assets-src/perro (Felipe)
   gato: { file: "gato", scale: 1.1, eye: "#a8ff3a", clips: [2.3, 15.4] }, // assets-src/gato (Eulalio)
 };
@@ -36,6 +44,13 @@ const CLIP_FPS = 24, LOOPS = ["idle", "walk", "run", "rage"];
 const clips = new Map<Kind, Record<string, { from: number; n: number; loop: boolean }>>();
 const tpls = new Map<Kind, B.Mesh>();
 export const glbTpl = (k: Kind) => tpls.get(k);
+/** Centro xz del GLB en espacio del modelo (pies en y=0); centra la vitrina del bestiario sin tocar colisión. */
+export function glbFootprint(kind: Kind) {
+  const g = tpls.get(kind);
+  if (!g) return { x: 0, z: 0 };
+  const b = g.getBoundingInfo().boundingBox;
+  return { x: (b.minimum.x + b.maximum.x) * 0.5, z: (b.minimum.z + b.maximum.z) * 0.5 };
+}
 export const glbStats: Record<string, { loadMs: number; bakeMs: number; vatBytes: number; tris: number; bones: number }> = {};
 
 // Precarga todo en segundo plano desde la portada (tarea "bichos" de main.ts); launch() espera lo que falte antes de la partida. No rechaza (el arranque sigue): cada falla o demora (8 s) va a la consola.

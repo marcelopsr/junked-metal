@@ -6,5 +6,29 @@ alwaysApply: true
 # Modelo obligatorio: Composer
 
 - La sesión principal y **todos** los subagentes lanzados con **Task** usan únicamente **`composer-2.5`**.
-- **Prohibido:** `composer-2.5-fast`, `haiku-*`, `sonnet-*`, `opus-*`, `fable-*`, `gemini-*`, `gpt-*`, `grok-*`, `muse-*`, y `inherit` cuando el resultado no sea Composer.
-- Si el usuario o un encargo piden otro modelo, informarlo y seguir con **`composer-2.5`**.
+- Cada invocación **Task** debe incluir **`model: "composer-2.5"`** de forma explícita. No omitir el parámetro `model`.
+- **`inherit`** solo si el entorno garantiza que el subagente termina en Composer 2.5; en este repo **preferir siempre** `model: "composer-2.5"` explícito.
+
+## Modelos prohibidos
+
+`composer-2.5-fast`, `haiku-*`, `sonnet-*`, `opus-*`, `fable-*`, `gemini-*`, `gpt-*`, `grok-*`, `muse-*`, y cualquier otro slug que no sea **`composer-2.5`**.
+
+## `subagent_type` prohibidos (ejecutores)
+
+En este repo **no** se usa Task con perfiles nombrados por modelo o rol dedicado para **ejecutar** trabajo:
+
+- `sonnet-*`, `haiku-*`, `opus-*`, `fable-*`
+- `revisor`, `interprete`, `investigador`, `bugbot`, `security-review`, `ci-investigator`, y análogos
+
+Si el usuario o un encargo piden otro modelo o perfil, informarlo y seguir con **`composer-2.5`** y los tipos permitidos abajo.
+
+## `subagent_type` permitidos (ejecutores)
+
+Solo estos (u otros que el usuario **cambie explícitamente** en esta regla), **siempre** con `model: "composer-2.5"`:
+
+| Tipo | Uso |
+|---|---|
+| `generalPurpose` | Encargos, implementación, investigación en código, verificación |
+| `explore` | Mapa rápido del repo (`quick` / `medium` / `very thorough`) |
+
+Ejemplo mínimo: `Task({ subagent_type: "generalPurpose", model: "composer-2.5", … })`.

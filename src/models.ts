@@ -69,7 +69,8 @@ export function extrude(profile: [number, number][], width: number, mat: B.Mater
 export function merge(name: string, parts: B.Mesh[], keep?: B.Material[]) {
   // Piezas ya aplanadas (con color de vértice) mezcladas con otras sin él: Babylon no fusiona atributos distintos; las que faltan reciben blanco
   if (parts.some((p) => p.isVerticesDataPresent(B.VertexBuffer.ColorKind))) for (const p of parts) if (!p.isVerticesDataPresent(B.VertexBuffer.ColorKind)) p.setVerticesData(B.VertexBuffer.ColorKind, new Float32Array(p.getTotalVertices() * 4).fill(1), false, 4);
-  const m = B.Mesh.MergeMeshes(parts, true, true, undefined, false, true)!;
+  const m = B.Mesh.MergeMeshes(parts, true, true, undefined, false, true);
+  if (!m) throw new Error(`merge ${name}: MergeMeshes devolvió null (${parts.length} piezas)`);
   m.name = name;
   m.receiveShadows = true;
   flatten(m, keep);
@@ -526,7 +527,14 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   // Antena, siempre: es un auto RC
   parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#ff4d6d"), [0.38, 1.6, -0.7]));
   const rim = o.rim ?? A.rim;
-  const body = merge("carBody", parts, useGlb || o.fixed ? [] : [paint]); // GLB: Paint en hull; procedural: submalla de daño
+  // Hull GLB ya está aplanado (vertex color): fusionarlo con piezas del garaje suele hacer fallar MergeMeshes.
+  let body: B.Mesh;
+  if (useGlb && glbHull) {
+    body = glbHull;
+    body.name = "carBody";
+    body.receiveShadows = true;
+    for (const p of parts) if (p !== glbHull) { p.parent = body; shadows.addShadowCaster(p); }
+  } else body = merge("carBody", parts, useGlb || o.fixed ? [] : [paint]);
   const cast: B.AbstractMesh[] = [];
   const bodySh = shadowProxy(body);
   if (bodySh) bodySh.parent = body;
@@ -596,7 +604,7 @@ const vis1c = (k: string, s: number) => s * (["friccion", "robot", "cortadora", 
 
 export function enemyTemplate(kind: string, scale = 1): B.Mesh {
   return template(kind, () => {
-    // hormiga, escupidora, escarabajo, Felipe (perro) y Eulalio (gato) no están acá: son GLB animados (glb.ts, public/models/)
+    // Plaga/jefes con GLB (glb.ts): hormiga, escupidora, escarabajo, friccion, robot, rey, tarantula, cortadora, aspiradora, cortacercos, perro, gato
     if (kind === "rey") {
       // Minijefe: elytra ancha, costura y cuerno; ojos lima como escarabajo (GLB)
       const shell = M.metal("#d4a017"), shellHi = M.metal("#e8bc28");
@@ -775,24 +783,48 @@ export const LEGS: Record<string, { hips: [number, number, number][]; len: numbe
   rey: { hips: [[0.58, 0.36, -0.55], [0.62, 0.36, 0], [0.58, 0.36, 0.55]], len: 1.14, r: 0.095, color: "#0a0a0a", scale: 3.5, knee: "#6ef040" },
   tarantula: { hips: [[0.38, 0.44, -0.12], [0.42, 0.44, 0.14], [0.42, 0.44, 0.38], [0.36, 0.44, 0.62]], len: 1.62, r: 0.125, color: "#1a120e", scale: 3, yaw: [0.82, 0.28, -0.28, -0.78], knee: "#ff6fe8" },
 };
+// Fémur + tibia + tarso; espejo en enemies.ts. Fuente Blender: build_rey_leg / build_tarantula_leg (proc2/meshes.py).
+function articulatedLegMeshes(L: (typeof LEGS)[string], hair: boolean) {
+  const hy = L.hips[0][1];
+  const leg = M.plastic(L.color);
+  const kneeMat = L.knee ? M.glow(L.knee) : leg;
+  const knee: V3 = [L.len * 0.48, L.len * 0.32, 0];
+  const foot: V3 = [L.len * 0.98, -hy + 0.02, 0.06];
+  return [
+    tube([[0, 0, 0], [L.len * 0.25, L.len * 0.22, 0], knee], L.r * 1.05, leg),
+    tube([knee, [L.len * 0.72, L.len * 0.05, 0.03], foot], L.r * 0.82, leg),
+    sph(L.r * 2.5, leg, [L.len * 0.2, L.len * 0.16, 0], [1.12, 0.88, 1.08], 4),
+    sph(L.r * 3.3, kneeMat, knee, undefined, 4),
+    sph(L.r * 1.9, leg, foot, [1.25, 0.32, 0.95], 4),
+    cyl(L.r * 0.7, L.r * 0.3, L.r * 1.4, leg, foot, [0.15, 0, 0.35], 4),
+    ...(hair ? [0.32, 0.52, 0.72].map((t) => sph(0.2, M.matte(L.color), [L.len * (0.5 + t * 0.35), L.len * (0.26 - t * 0.2), 0.02], [1.35, 0.55, 1.15], 3)) : []),
+  ];
+}
 export function legTemplate(kind: string) {
   const L = LEGS[kind];
-  const hy = L.hips[0][1];
-  const knee = L.knee ? M.glow(L.knee) : M.plastic(L.color);
-  return template("leg_" + kind, () => [
-    tube([[0, 0, 0], [L.len * 0.45, L.len * 0.35, 0], [L.len * 0.95, -hy, 0]], L.r, M.plastic(L.color)),
-    sph(L.r * 3, knee, [L.len * 0.45, L.len * 0.35, 0], undefined, 3), // rodilla: 8 patas por jefe, 6 por bicho
-  ], L.scale);
+  return template("leg_" + kind, () => articulatedLegMeshes(L, kind === "tarantula"), L.scale);
 }
 
 // Ala de polilla (lado derecho, bisagra en el origen): se instancia de a dos y aletea en Enemy.animate
-export const wingTemplate = () => template("wing_polilla", () => [
-  sph(1.45, pbr("mothWing", { color: "#d4c090", rough: 0.86, alpha: 0.92 }), [0.88, 0.02, -0.08], [1.45, 0.04, 1.15], 6),
-  sph(0.72, pbr("mothWingH", { color: "#a89068", rough: 0.88, alpha: 0.9 }), [0.62, -0.02, 0.32], [1.25, 0.05, 0.95], 5),
-  sph(0.34, M.matte("#3a2818"), [0.95, 0.05, -0.12], [1.15, 0.1, 1.05], 4),
-  ...[[0.55, 0.08, 0.15], [1.05, -0.02, -0.2], [0.35, 0.12, 0.45]].map((p) => sph(0.22, M.matte("#2a1810"), p as V3, [1.2, 0.08, 1.1], 4)),
-  sph(0.18, pbr("mothWingSpot", { color: "#e8d8b0", rough: 0.7, alpha: 0.85 }), [0.78, 0.04, 0.05], [1.1, 0.06, 0.9], 4),
-]);
+export const wingTemplate = () => template("wing_polilla", () => {
+  const wing = pbr("mothWing", { color: "#d4c090", rough: 0.86, alpha: 0.92 });
+  const wingH = pbr("mothWingH", { color: "#a89068", rough: 0.88, alpha: 0.9 });
+  const spot = pbr("mothWingSpot", { color: "#e8d8b0", rough: 0.7, alpha: 0.85 });
+  const vein = M.matte("#5a4830");
+  const dark = M.matte("#2a1810");
+  return [
+    sph(1.45, wing, [0.88, 0.02, -0.08], [1.45, 0.04, 1.15], 6),
+    sph(0.72, wingH, [0.62, -0.02, 0.32], [1.25, 0.05, 0.95], 5),
+    sph(0.38, wingH, [1.02, -0.01, 0.08], [1.2, 0.04, 0.85], 5),
+    sph(0.34, M.matte("#3a2818"), [0.95, 0.05, -0.12], [1.15, 0.1, 1.05], 4),
+    ...[[0.55, 0.08, 0.15], [1.05, -0.02, -0.2], [0.35, 0.12, 0.45], [0.72, 0.1, 0.28], [1.18, 0, 0.02]].map((p) => sph(0.22, dark, p as V3, [1.2, 0.08, 1.1], 4)),
+    sph(0.18, spot, [0.78, 0.04, 0.05], [1.1, 0.06, 0.9], 4),
+    sph(0.14, spot, [0.48, 0.06, 0.22], [1.05, 0.05, 0.85], 4),
+    tube([[0.42, 0.04, 0.05], [0.95, 0.02, -0.05], [1.15, -0.01, -0.18]], 0.012, vein),
+    tube([[0.38, 0.02, 0.22], [0.72, 0, 0.08], [1.02, -0.02, -0.08]], 0.01, vein),
+    tube([[0.52, 0.06, -0.05], [0.88, 0.03, 0.12], [0.55, 0.05, 0.38]], 0.009, vein),
+  ];
+});
 // Telegráfico de ataque enemigo en el piso (rojo = amenaza): aro + disco tenue, radio 1, se escala por instancia
 export function teleTemplate() {
   const t = template("tele", () => {

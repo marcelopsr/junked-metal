@@ -7,6 +7,8 @@ Referencias: [`docs/VISUAL_MODELS_OLEADA1_GLB.md`](../VISUAL_MODELS_OLEADA1_GLB.
 
 **Estado** [Malla gato oleada 1](75e6485e-122b-4bd5-be52-0f7fee934b99) (2026-10-07): **cerrado** — oleada **1b visible** (2026-10-07): rayas/cola §1b, **6904** tris GLB; `spin` min Y **-0.17** sin cambio; `SEQ` intacto. Renders en `assets-src/gato/renders/`. Integrador: shots.
 
+**Oleada 2 sculpt** [Esculpir GLB perro gato](66a90a4a-1333-458b-890c-e658a869d3a6): `polish_oleada2.py` + `export_blend.py` + `render_renders.py`. `jump` [0,38], `spin` [0,24] sin cambio.
+
 ---
 
 ## Rol en juego

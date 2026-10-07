@@ -39,6 +39,7 @@ const IC = B.VertexBuffer.ColorInstanceKind; // "instanceColor": el que los mate
 const tintable = (m: B.Mesh) => { if (!m.instancedBuffers?.[IC]) { m.registerInstancedBuffer(IC, 4); m.instancedBuffers[IC] = WHITE; } }; // antes de la primera instancia: las nuevas copian el blanco
 const rot = (v: B.Vector3, a: number) => new B.Vector3(v.x * Math.cos(a) + v.z * Math.sin(a), 0, -v.x * Math.sin(a) + v.z * Math.cos(a));
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
+const _locM = B.Matrix.Identity(), _worldM = B.Matrix.Identity(), _wq = B.Quaternion.Identity(), _lq = B.Quaternion.Identity(), _ws = new B.Vector3(), _wp = new B.Vector3();
 
 // Secuencias de los jefes GLB (Blender, 24 cuadros/s): acción y cuadros donde cambia el tramo (hasta el despegue o el aviso, hasta el
 // golpe, hasta el final). Las usa Enemy.seq con el reloj del juego (aviso, caída) en vez del de la acción, así el cuadro cae con el cuerpo.
@@ -61,8 +62,8 @@ export class Enemy {
   state = 0; // máquina de estados para cargas / saltos
   timer = 1 + rng();
   airborne = false;
-  legs: { m: B.InstancedMesh; base: number; side: number; phase: number }[] = [];
-  wings: B.InstancedMesh[] = []; // polilla
+  legs: { m: B.InstancedMesh; base: number; side: number; phase: number; pos: B.Vector3; ry: number; rz: number }[] = [];
+  wings: { m: B.InstancedMesh; pos: B.Vector3; yaw: number; flap: number }[] = []; // polilla
   tele: B.InstancedMesh[] = []; // tarántula: aro fijo (zona) + aro que crece (cuenta regresiva)
   land = new B.Vector3(); // tarántula: dónde va a caer el salto
   shots = 0; // tarántula: escupitajos que quedan en la ráfaga
@@ -125,19 +126,18 @@ export class Enemy {
     this.body = this.agg.body;
     this.body.setMassProperties({ mass: d.mass, inertia: new B.Vector3(0, d.mass, 0), centerOfMass: new B.Vector3(0, h / 2, 0) }); // = centro de la forma (ver Car.setMass)
 
-    const L = this.vat ? undefined : LEGS[kind];
+    const L = LEGS[kind];
     if (L) {
       const tpl = legTemplate(kind);
       if (d.boss) tintable(tpl);
       L.hips.forEach(([x, y, z], i) => {
         for (const side of [1, -1]) {
           const m = tpl.createInstance("leg");
-          m.parent = this.node;
-          m.position.set(x * side * L.scale, y * L.scale, z * L.scale);
+          const pos = new B.Vector3(x * side * L.scale, y * L.scale, z * L.scale);
+          m.parent = null; // InstancedMesh no hereda bien a otro InstancedMesh (ficha del bestiario)
           const yaw = L.yaw?.[i] ?? 0, base = side > 0 ? yaw : Math.PI - yaw;
-          m.rotation.y = base;
           // marcha en trípode: patas alternadas en fase opuesta
-          this.legs.push({ m, base, side, phase: (i + (side > 0 ? 0 : 1)) % 2 ? Math.PI : 0 });
+          this.legs.push({ m, base, side, phase: (i + (side > 0 ? 0 : 1)) % 2 ? Math.PI : 0, pos, ry: base, rz: 0 });
         }
       });
     }
@@ -145,10 +145,9 @@ export class Enemy {
       this.body.setGravityFactor(0); // vuela: la altura la maneja update()
       for (const side of [1, -1]) {
         const w = wingTemplate().createInstance("wing");
-        w.parent = this.node;
-        w.position.set(side * 0.18, 0.08, 0.05);
-        w.rotation.y = side > 0 ? 0 : Math.PI;
-        this.wings.push(w);
+        w.parent = null;
+        const pos = new B.Vector3(side * 0.18, 0.08, 0.05);
+        this.wings.push({ m: w, pos, yaw: side > 0 ? 0 : Math.PI, flap: 0 });
       }
     }
     if (kind === "aspiradora" || kind === "cortacercos") {
@@ -163,6 +162,7 @@ export class Enemy {
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
       if (kind === "gato") { this.state = 0; this.timer = 2; }
     }
+    if (this.legs.length || this.wings.length) this.syncAttachParts();
   }
 
   // Telegráfico en el piso: zona de radio r centrada en p; k = 0..1 cuánto falta (el aro interior crece hasta el borde)
@@ -185,20 +185,41 @@ export class Enemy {
     fill.position.set(this.pos.x + dir.x * f, y + 0.01, this.pos.z + dir.z * f); fill.scaling.set(DOG_RAM.width, 1, f);
   }
 
+  // Patas/alas en espacio de mundo: las instancias hijas no siguen al cuerpo instanciado (beastTick usa euler + quaternion).
+  syncAttachParts() {
+    if (!this.legs.length && !this.wings.length) return;
+    this.node.computeWorldMatrix(true);
+    const pw = this.node.getWorldMatrix(), ar = this.node.absoluteRotationQuaternion, as = this.node.absoluteScaling;
+    const put = (m: B.InstancedMesh, pos: B.Vector3, rx: number, ry: number, rz: number) => {
+      B.Quaternion.FromEulerAnglesToRef(rx, ry, rz, _lq);
+      ar.multiplyToRef(_lq, _wq);
+      B.Vector3.TransformCoordinatesToRef(pos, pw, _wp);
+      m.scaling.copyFrom(as);
+      m.position.copyFrom(_wp);
+      if (!m.rotationQuaternion) m.rotationQuaternion = _wq.clone();
+      else m.rotationQuaternion.copyFrom(_wq);
+      m.rotation.setAll(0);
+      m.computeWorldMatrix(true);
+    };
+    for (const l of this.legs) put(l.m, l.pos, 0, l.ry, l.rz);
+    for (const w of this.wings) put(w.m, w.pos, 0, w.yaw, w.flap); // aleteo en Z (antes rotation.z)
+  }
+
   // Animación de caminata: amplitud y frecuencia según la velocidad real
   animate(dt: number) {
     if (this.wings.length) {
       // Aleteo rápido a pocos cuadros (stop-motion)
       this.walk += dt * 22;
       const a = Math.round(Math.sin(this.walk) * 3) / 3;
-      for (const w of this.wings) w.rotation.z = a * 0.9; // con rotation.y = PI el ala izquierda ya queda espejada
+      for (const w of this.wings) w.flap = a * 0.9; // yaw en w.yaw espeja el ala izquierda
+      this.syncAttachParts();
       return;
     }
-    if (this.vat && GLB[this.kind]!.clips) return this.bossClip(dt);
+    if (this.vat && GLB[this.kind]!.clips) { this.bossClip(dt); this.syncAttachParts(); return; }
     if (this.vat) { // ataque propio (atk) o, sin él, justo después de golpear (main.ts carga touchCd)
       const v = this.body.getLinearVelocity(), a = GLB[this.kind]!.atk;
       glbAnimate(this.vat, Math.hypot(v.x, v.z), dt, !a && this.touchCd > 0.5, a && this.atk >= 0 ? this.atk / a : -1);
-      return;
+      if (!this.legs.length) return;
     }
     if (!this.legs.length) return;
     const v = this.body.getLinearVelocity();
@@ -209,9 +230,10 @@ export class Enemy {
     const amp = Math.min(0.55, 0.12 + sp * 0.06);
     for (const l of this.legs) {
       const s = Math.sin(this.walk + l.phase);
-      l.m.rotation.y = l.base + s * amp;
-      l.m.rotation.z = l.side * Math.max(0, Math.cos(this.walk + l.phase)) * amp * 0.5; // levanta al avanzar
+      l.ry = l.base + s * amp;
+      l.rz = l.side * Math.max(0, Math.cos(this.walk + l.phase)) * amp * 0.5; // levanta al avanzar
     }
+    this.syncAttachParts();
   }
 
   // Fotograma de una secuencia del jefe (SEQ): tramo phase (0..2) en su fracción p (0..1)
@@ -626,7 +648,13 @@ export class Enemy {
     });
   }
 
-  dispose() { this.agg.dispose(); this.node.dispose(); for (const t of this.tele) t.dispose(); for (const c of this.cables) c.m.dispose(); }
+  dispose() {
+    this.agg.dispose(); this.node.dispose();
+    for (const l of this.legs) l.m.dispose();
+    for (const w of this.wings) w.m.dispose();
+    for (const t of this.tele) t.dispose();
+    for (const c of this.cables) c.m.dispose();
+  }
 }
 
 // Qué aparece según el minuto de la partida: [tipo, peso]

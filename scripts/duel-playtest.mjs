@@ -37,6 +37,8 @@ async function playFab(page, label) {
   const confirmDisabled = await page.evaluate(() => document.getElementById("duel-fab-confirm")?.disabled);
   if (confirmDisabled) issues.push(`${label}: confirm deshabilitado tras cuna`);
 
+  const menuBtn = await page.$("#duel-fab-menu");
+  if (!menuBtn) issues.push(`${label}: sin botón Menú principal`);
   await page.click("#duel-fab-zoom-in");
   await page.click("#duel-fab-zoom-out");
 

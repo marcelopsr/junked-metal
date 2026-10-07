@@ -79,21 +79,27 @@ class CarBuild:
         return ob
 
 
+def bumper_bar(b: CarBuild, z, y, width, depth, m):
+    """Paragolpes delantero/trasero (cinta de goma o plástico)."""
+    b.box((0, y, z), (width, 0.1, depth), m)
+
+
 def pilot_soldadito(b: CarBuild, seat, paint_army="#55642c"):
     """Muñequito soldadito en asiento: cadera en seat (x,y,z), escala s."""
     px, py, pz, ps = seat
     army = mat("Pilot", paint_army, rough=0.45)
-    face = mat("Matte", "#3d4a22", rough=0.55)
+    visor = mat("Glass", "#1a2838", rough=0.06, alpha=0.55)
     gold = mat("Trim", "#e0a030", rough=0.35)
-    blk = mat("Matte", "#111111", rough=0.4)
+    blk = mat("Rubber", "#0a0a0a", rough=0.85)
     s = ps
-    b.cyl((px, py + 0.14 * s, pz), 0.11 * s, 0.28 * s, army, 8)
-    b.sph((px, py + 0.37 * s, pz), 0.19 * s, army, 10)
-    b.ell((px, py + 0.42 * s, pz), (0.23 * s, 0.23 * s, 0.13 * s), army, 8)
-    b.cyl((px, py + 0.41 * s, pz), 0.24 * s, 0.025 * s, gold, 10, axis="x")
-    b.box((px, py + 0.4 * s, pz + 0.1 * s), (0.14 * s, 0.05 * s, 0.02 * s), face)
+    b.box((px, py + 0.12 * s, pz), (0.24 * s, 0.16 * s, 0.18 * s), army)
+    b.cyl((px, py + 0.26 * s, pz), 0.12 * s, 0.2 * s, army, 8)
+    b.sph((px, py + 0.4 * s, pz), 0.2 * s, army, 10)
+    b.ell((px, py + 0.43 * s, pz), (0.24 * s, 0.22 * s, 0.14 * s), army, 8)
+    b.cyl((px, py + 0.42 * s, pz), 0.25 * s, 0.025 * s, gold, 8, axis="x")
+    b.box((px, py + 0.39 * s, pz + 0.1 * s), (0.15 * s, 0.08 * s, 0.03 * s), visor)
     for ex in (0.05, -0.05):
-        b.sph((px + ex * s, py + 0.42 * s, pz + 0.11 * s), 0.035 * s, blk, 6)
+        b.sph((px + ex * s, py + 0.41 * s, pz + 0.11 * s), 0.038 * s, blk, 6)
 
 
 def export_static(ob, kind, folder):

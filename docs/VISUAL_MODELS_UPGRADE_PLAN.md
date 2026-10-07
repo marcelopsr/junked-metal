@@ -258,7 +258,7 @@ Usar **hasta 4 preguntas × 4 opciones**; opción **(Recomendado)** primero. Mar
 | Aprobado por usuario | **Sí** (toolbox 2026-10-07) |
 | Checklist §8 | **Cerrado** |
 | Fase 0 (`models.ts`) | **Diferida** — no bloquea oleada 1 GLB; valorar antes de oleada 4 (8 autos en paralelo). |
-| Próximo paso | Briefs listos en [`docs/VISUAL_MODELS_OLEADA1_GLB.md`](./VISUAL_MODELS_OLEADA1_GLB.md). **Ejecutar oleada 1 GLB**: 5 agentes en `assets-src/{ant,escupidora,escarabajo,perro,gato}` (refinar in-house). **Oleada 2 procedurales**: packs en [`docs/OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md). Integrador + Impeccable + shots lab/bestiario por criatura. |
+| Próximo paso | **Oleada 1c + 2 cerradas** (`5b636a0`, `dc5f1e5`, `8156093`): 5 GLB esculpidos en `public/models/`, 8× `proc2/` en Blender (`OLEADA2_PROCEDURAL_BLENDER.md`), 8 hulls auto (`OLEADA2_CARS_BLENDER.md` / `carGlb.ts`). **Siguiente:** oleada **2b** — publicar `*_raw.glb` → `public/models/` + `glb.ts` para los 8 procedurales; piloto GLB; `shots --diff` con refs actualizadas. Inventario vivo: [`encargos/OLEADA2_BLENDER_ART.md`](./encargos/OLEADA2_BLENDER_ART.md). |
 
 ---
 

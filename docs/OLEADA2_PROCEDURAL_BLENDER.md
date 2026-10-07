@@ -1,6 +1,6 @@
 # Oleada 2 — Assets Blender (8 enemigos procedurales)
 
-Estado: **mallas generadas en Blender** (2026-10-07). Runtime sigue usando `enemyTemplate()` en `src/models.ts` hasta integración GLB.
+Estado: **mallas en Blender** (2026-10-07), versionadas en `dc5f1e5`. Agente: [Esculpir 8 enemigos procedural](30b962b3-bcf4-4440-a240-c2733cd9754c). Runtime sigue en `enemyTemplate()` (`src/models.ts`) hasta oleada 2b (`public/models/` + VAT estático).
 
 Plan maestro: [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md) · Encuesta OSS: [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md) · Arte: [`ART_DIRECTION.md`](./ART_DIRECTION.md).
 
@@ -12,9 +12,9 @@ Plan maestro: [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md)
 |--------|---------|---------------|-----------------------------|
 | `friccion` | `assets-src/friccion/` | Malla rígida completa | — |
 | `robot` | `assets-src/robot/` | Malla rígida completa | — |
-| `polilla` | `assets-src/polilla/` | Cuerpo + ala derecha (`WingR`) | `wingTemplate()` ×2 en partida |
-| `rey` | `assets-src/rey/` | Cefalotórax + elytra | `legTemplate` ×6 (`LEGS.rey`) |
-| `tarantula` | `assets-src/tarantula/` | Cuerpo + quelíceros | `legTemplate` ×8 |
+| `polilla` | `assets-src/polilla/` | Cuerpo + ala derecha (`WingR` en `*_raw.glb`) | `wingTemplate()` ×2 en partida (sync `meshes.py`) |
+| `rey` | `assets-src/rey/` | Cefalotórax + elytra (`Rey` en `public/models/rey.glb`) | `LegR` en raw; `legTemplate` ×6 en partida |
+| `tarantula` | `assets-src/tarantula/` | Cuerpo + quelíceros | `LegR` en raw; `legTemplate` ×8 en partida |
 | `cortadora` | `assets-src/cortadora/` | Ride-on completo | — |
 | `aspiradora` | `assets-src/aspiradora/` | Disco + torreta | — |
 | `cortacercos` | `assets-src/cortacercos/` | Herramienta + espada | `sectorTemplate` (telemetría de ataque) |

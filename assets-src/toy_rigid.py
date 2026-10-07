@@ -89,8 +89,8 @@ def attack_pose(f):
     return {"root": {"loc": (0, 0, t * 0.12)}}
 
 
-def export_kind(kind: str, folder: str, parts: list, scale: float = 1.0, export_public=False):
-    """parts: [(object_name, callable(ToyBuild)), ...]"""
+def export_kind(kind: str, folder: str, parts: list, scale: float = 1.0, export_public=False, public_parts: list | None = None):
+    """parts: [(object_name, callable(ToyBuild)), ...]; public_parts: nombres de malla para public/models (default: todas)."""
     b.reset()
     bones = [("root", (0, 0, 0), (0, 0.2, 0), None)]
     ao = b.armature(kind + "Rig", bones)
@@ -114,6 +114,7 @@ def export_kind(kind: str, folder: str, parts: list, scale: float = 1.0, export_
     walk_act = b.action(ao, "walk", range(0, 10), walk_pose)
     b.action(ao, "attack", range(0, 6), attack_pose)
     ao.select_set(True)
+    pub_names = {n for n in (public_parts or [p[0] for p in parts])}
     for ob in obs:
         ob.select_set(True)
     bpy.context.view_layer.objects.active = obs[0]
@@ -134,12 +135,32 @@ def export_kind(kind: str, folder: str, parts: list, scale: float = 1.0, export_
     )
     pub = os.path.join(ROOT, "public", "models", kind + ".glb")
     if export_public:
+        src = raw
+        if public_parts and len(public_parts) < len(parts):
+            for o in obs:
+                o.select_set(o.name in pub_names)
+            ao.select_set(True)
+            game_raw = os.path.join(folder, kind + "_game_raw.glb")
+            bpy.ops.export_scene.gltf(
+                filepath=game_raw,
+                export_format="GLB",
+                use_selection=True,
+                export_animations=True,
+                export_animation_mode="ACTIONS",
+                export_yup=True,
+                export_all_influences=False,
+                export_texcoords=False,
+                export_materials="EXPORT",
+                export_skins=True,
+                export_force_sampling=False,
+            )
+            src = game_raw
         subprocess.run(
             [
                 "npx",
                 "gltf-transform",
                 "optimize",
-                raw,
+                src,
                 pub,
                 "--compress",
                 "quantize",

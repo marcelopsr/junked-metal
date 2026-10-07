@@ -18,10 +18,10 @@ Antes de grep masivo o leer `main.ts` entero: **graphify** o `graphify-out/wiki/
 
 Metodología **`orquestar`** (`~/.claude/skills/orquestar/SKILL.md`):
 
-- Clasificar el pedido (10 s) → ejecutar vos, encargar, o `interprete` si es ambiguo.
+- Clasificar el pedido (10 s) → ejecutar vos, encargar con **Task**, o desambiguar en sesión (sin `interprete` ni otros `subagent_type` de rol).
 - Subagentes: encargo autocontenido (`encargo.md`); **no ven el chat**. Nombrar `CLAUDE.md`, archivos `src/`, verificación (`tsc`, `npm test`, `build`, `shots`/`sim`/`perf`).
-- Modelo en Cursor: **`composer-2.5`** (regla `composer-solo.mdc`). Perfil Task según tabla en `.claude/trabajo/ARRANQUE.md`.
-- Integrar evidencia; cambios delicados → `revisor`. Avisar en una línea si usás perfil caro.
+- **Task:** `model: "composer-2.5"` obligatorio; `subagent_type` solo `generalPurpose` o `explore` (regla `composer-solo.mdc`). Tabla de delegación en `.claude/trabajo/ARRANQUE.md`.
+- Integrar evidencia; cambios delicados → segundo pase en sesión o encargo `generalPurpose` con `model: "composer-2.5"` (sin `revisor` ni perfiles sonnet/opus/fable).
 
 ## Toolbox y planes
 

@@ -60,7 +60,10 @@ const WORKBENCH_TABLE_SURFACE = WORKBENCH_TABLE_TOP + 0.055; // centro del table
 /** Raíz del robot: malla con offset +0.15; ruedas en y≈0 local → apoyar en la mesa. */
 const WORKBENCH_ROBOT_Y = WORKBENCH_TABLE_SURFACE - 0.15;
 /** Cámara fija en armado (sin órbita). */
-const ARMADO_CAM = { yaw: 0.38, dist: 3.85, height: 2.45, targetY: WORKBENCH_TABLE_SURFACE + 0.22 };
+const ARMADO_CAM = { yaw: 0.32, dist: 3.15, height: 2.05, targetY: WORKBENCH_TABLE_SURFACE + 0.42 };
+const FAB_CAM_YAW_MAX = 0.95;
+const FAB_CAM_PITCH_MIN = -0.28;
+const FAB_CAM_PITCH_MAX = 0.22;
 const wbLampPos = new B.Vector3(0.15, WORKBENCH_TABLE_SURFACE + 1.25, 0.55);
 const wbLampFwd = new B.Vector3(-0.12, -0.62, -0.78);
 const wbLampPosLive = new B.Vector3();
@@ -196,9 +199,10 @@ function syncWorkbenchLights() {
 function installFabricarLighting() {
   // Mediodía acotado a la mesa: legible sin esperar al farol del auto (lampK≈0 de día).
   const medio = CLIMATES.find((c) => c.id === "mediodia")!;
-  applyClimate({ ...medio, exposure: medio.exposure * 1.28, hemiI: medio.hemiI * 1.4, fog: 0.0025 });
-  deps.scene.environmentIntensity = 0.82;
-  shadows.darkness = 0.32;
+  applyClimate({ ...medio, exposure: medio.exposure * 1.42, hemiI: medio.hemiI * 1.75, sunI: medio.sunI * 1.15, fog: 0.0018 });
+  deps.scene.environmentIntensity = 1.05;
+  deps.scene.ambientColor = B.Color3.FromHexString("#c8d4e8");
+  shadows.darkness = 0.22;
   const scene = deps.scene;
   if (!fabBenchKey) {
     fabBenchKey = new B.SpotLight(
@@ -210,14 +214,14 @@ function installFabricarLighting() {
       scene,
     );
     fabBenchKey.diffuse = B.Color3.FromHexString("#fff8ec");
-    fabBenchKey.intensity = 7.2;
+    fabBenchKey.intensity = 9.5;
     fabBenchKey.range = 22;
   }
   fabBenchKey.setEnabled(true);
   if (!fabBenchBounce) {
     fabBenchBounce = new B.PointLight("fabBenchBounce", new B.Vector3(0, 1.48, 0.22), scene);
     fabBenchBounce.diffuse = B.Color3.FromHexString("#ffe4bc");
-    fabBenchBounce.intensity = 3.1;
+    fabBenchBounce.intensity = 4.2;
     fabBenchBounce.range = 9.5;
   }
   fabBenchBounce.setEnabled(true);
@@ -297,7 +301,21 @@ function bindFabricarViewportSync() {
   requestAnimationFrame(() => requestAnimationFrame(refreshFabricarCam));
 }
 
+function clampFabCamOff() {
+  fabCamOff.yaw = Math.max(-FAB_CAM_YAW_MAX, Math.min(FAB_CAM_YAW_MAX, fabCamOff.yaw));
+  fabCamOff.pitch = Math.max(FAB_CAM_PITCH_MIN, Math.min(FAB_CAM_PITCH_MAX, fabCamOff.pitch));
+  fabCamDistMul = Math.max(0.72, Math.min(1.28, fabCamDistMul));
+}
+
+function resetFabricarCam() {
+  fabCamOff = { yaw: 0, pitch: 0 };
+  fabCamDistMul = 1;
+  fabCamTarget.set(0, ARMADO_CAM.targetY, 0);
+  applyFabricarCam();
+}
+
 function applyFabricarCam() {
+  clampFabCamOff();
   syncFabCamTargetFromPreview();
   const { yaw, dist, height, targetY } = ARMADO_CAM;
   const a = yaw + fabCamOff.yaw;
@@ -338,7 +356,8 @@ function bindFabCamDrag(el: HTMLElement | null) {
     const yawMul = e.pointerType === "touch" ? 0.0032 : 0.0024;
     const pitchMul = e.pointerType === "touch" ? 0.0025 : 0.0019;
     fabCamOff.yaw += dx * yawMul;
-    fabCamOff.pitch = Math.max(-0.4, Math.min(0.34, fabCamOff.pitch - dy * pitchMul));
+    fabCamOff.pitch -= dy * pitchMul;
+    clampFabCamOff();
     lx = e.clientX;
     ly = e.clientY;
     applyFabricarCam();
@@ -347,7 +366,7 @@ function bindFabCamDrag(el: HTMLElement | null) {
   el.addEventListener("pointermove", onMove);
   el.addEventListener("pointerup", end);
   el.addEventListener("pointercancel", end);
-  const zoomClamp = (mul: number) => Math.max(0.5, Math.min(1.42, mul));
+  const zoomClamp = (mul: number) => Math.max(0.72, Math.min(1.28, mul));
   const onWheel = (e: WheelEvent) => {
     if (shotCamFrozen || phase !== "fabricar") return;
     e.preventDefault();
@@ -650,40 +669,47 @@ function buildWorkbench() {
   const floor = B.MeshBuilder.CreateGround("wbFloor", { width: 14, height: 14 }, scene);
   floor.position.y = 0.01;
   floor.receiveShadows = true;
-  floor.material = pbr("wbFloor", { color: "#2a2e28", rough: 0.92, tex: canvasTex(128, (g, s) => {
-    g.fillStyle = "#2a2e28"; g.fillRect(0, 0, s, s);
-    for (let i = 0; i < 80; i++) { g.fillStyle = i % 3 ? "#353a32" : "#222620"; g.fillRect(Math.random() * s, Math.random() * s, 2 + Math.random() * 4, 1); }
+  floor.material = pbr("wbFloor", { color: "#5a6258", rough: 0.88, tex: canvasTex(128, (g, s) => {
+    g.fillStyle = "#5a6258"; g.fillRect(0, 0, s, s);
+    for (let i = 0; i < 80; i++) { g.fillStyle = i % 3 ? "#6a7268" : "#4a5248"; g.fillRect(Math.random() * s, Math.random() * s, 2 + Math.random() * 4, 1); }
   }) });
   mesh.push(floor);
+  const backdrop = B.MeshBuilder.CreatePlane("wbBackdrop", { width: 11, height: 6.5 }, scene);
+  backdrop.position.set(0, 2.15, -2.35);
+  backdrop.rotation.x = 0.08;
+  backdrop.material = M.matte("#dce2ec");
+  backdrop.receiveShadows = true;
+  mesh.push(backdrop);
   const blueprint = canvasTex(256, (g, s) => {
-    g.fillStyle = "#152238";
+    g.fillStyle = "#2a4a72";
     g.fillRect(0, 0, s, s);
     const step = s / 20;
-    g.strokeStyle = "#2a4a6e";
+    g.strokeStyle = "#5a8ec4";
     g.lineWidth = 1;
     for (let i = 0; i <= 20; i++) {
       g.beginPath(); g.moveTo(i * step, 0); g.lineTo(i * step, s); g.stroke();
       g.beginPath(); g.moveTo(0, i * step); g.lineTo(s, i * step); g.stroke();
     }
-    g.strokeStyle = "#4a8ab8";
+    g.strokeStyle = "#9ed4f5";
     g.setLineDash([5, 4]);
     g.strokeRect(step * 2, step * 2, step * 16, step * 12);
     g.setLineDash([]);
-    g.fillStyle = "#6fb3c4";
+    g.fillStyle = "#d8f0ff";
     g.font = "bold 11px monospace";
     g.fillText("PLANO · 1200×900 mm", step * 2, step * 1.5);
-    g.strokeStyle = "#3d6a94";
+    g.strokeStyle = "#6aa8d4";
     g.beginPath(); g.moveTo(step * 2, step * 16); g.lineTo(step * 18, step * 16);
     g.moveTo(step * 18, step * 14); g.lineTo(step * 18, step * 16); g.stroke();
     g.fillText("1200", step * 9, step * 17.2);
   });
-  const top = box(3.4, 0.11, 2.6, pbr("wbTop", { color: "#1a3050", rough: 0.92, tex: blueprint }), [0, WORKBENCH_TABLE_TOP, 0]);
+  const topMat = pbr("wbTop", { color: "#4a7aaa", rough: 0.72, tex: blueprint, emissive: "#2a5080" });
+  const top = box(3.4, 0.11, 2.6, topMat, [0, WORKBENCH_TABLE_TOP, 0]);
   top.receiveShadows = true; shadows.addShadowCaster(top); mesh.push(top);
   for (const [x, z] of [[-1.45, -1], [1.45, -1], [-1.45, 1], [1.45, 1]] as const) {
-    mesh.push(box(0.14, WORKBENCH_TABLE_TOP - 0.05, 0.14, M.metal("#4a4e54"), [x, (WORKBENCH_TABLE_TOP - 0.05) / 2, z]));
+    mesh.push(box(0.14, WORKBENCH_TABLE_TOP - 0.05, 0.14, M.metal("#6a7078"), [x, (WORKBENCH_TABLE_TOP - 0.05) / 2, z]));
   }
-  mesh.push(box(0.35, 0.22, 2.8, M.metal("#3a3e44"), [0, WORKBENCH_TABLE_TOP + 0.16, -1.15]));
-  mesh.push(box(7, 2.8, 0.25, M.matte("#14120f"), [0, 1.45, -3.8]));
+  mesh.push(box(0.35, 0.22, 2.8, M.metal("#5a6068"), [0, WORKBENCH_TABLE_TOP + 0.16, -1.15]));
+  mesh.push(box(7, 2.8, 0.25, M.matte("#b8c0cc"), [0, 1.45, -3.8]));
 }
 
 function setPiece(cat: PieceCat, id: string) {
@@ -902,14 +928,14 @@ function ensureUi() {
 <div class="duel-drawer-panel" id="duel-drawer-panel"><section class="duel-wb-tray-wrap" aria-labelledby="duel-sec-tray"><h2 id="duel-sec-tray" class="duel-sec-h">Piezas</h2><div class="duel-wb-tray"></div></section></div></aside></div>
 <button type="button" class="duel-cta" id="duel-confirm">Confirmar armado</button></div>
 <div id="duel-hud" class="duel-hud h-panel"><div class="duel-hp-row"><span id="duel-en" class="duel-hud-lab enemy">RIVAL</span><span id="duel-you" class="duel-hud-lab you">PROPIO</span></div><div class="duel-hp-row duel-hp-bars"><div class="duel-hp-wrap enemy"><div class="h-track duel-hp-track enemy" role="presentation"><div id="duel-hpE"></div></div></div><div class="duel-hp-wrap you"><div class="h-track duel-hp-track you" role="presentation"><div id="duel-hpP"></div></div></div></div><div id="duel-part-wear" class="duel-part-wear hidden" aria-live="polite"><span id="duel-part-label">PIEZA</span><div class="h-track duel-hp-track part" role="presentation"><div id="duel-part-hp"></div></div></div><div class="duel-score" id="duel-score"></div></div>
-<div id="duel-inter"><p class="duel-inter-kicker">ENTRE ASALTOS</p><p id="duel-inter-pips" class="duel-inter-pips" aria-live="polite"></p><p id="duel-inter-t" class="duel-inter-title"></p><p id="duel-inter-tip" class="duel-inter-tip"></p><button type="button" class="duel-cta duel-inter-next" id="duel-next">SIGUIENTE ASALTO</button></div>
+<div id="duel-inter"><p class="duel-inter-kicker">ENTRE ASALTOS</p><p id="duel-inter-pips" class="duel-inter-pips" aria-live="polite"></p><p id="duel-inter-t" class="duel-inter-title"></p><p id="duel-inter-tip" class="duel-inter-tip"></p><button type="button" class="duel-cta duel-inter-next" id="duel-next">SIGUIENTE ASALTO</button><button type="button" class="duel-fab-btn duel-inter-menu" id="duel-inter-menu">Menú principal</button></div>
 <div id="duel-res"><div class="duel-polaroid"><p id="duel-res-t"></p><dl id="duel-res-stats"></dl></div><button type="button" id="duel-again">REINTENTAR</button><button type="button" id="duel-exit">MENÚ</button></div>
 <button type="button" id="duel-flip">ENDEREZAR</button>
 <div id="duel-count-wrap" class="duel-count-wrap"><p id="duel-count" class="duel-count-num" aria-live="polite"></p><p id="duel-count-sub" class="duel-count-sub"></p></div>`;
   document.body.appendChild(ui);
   const pause = document.createElement("div");
   pause.id = "duel-pause";
-  pause.innerHTML = `<p>PAUSA</p><button type="button" id="duel-resume">REANUDAR</button><button type="button" id="duel-quit">ABANDONAR</button>`;
+  pause.innerHTML = `<p>PAUSA</p><button type="button" id="duel-resume">REANUDAR</button><button type="button" id="duel-quit">ABANDONAR</button><button type="button" id="duel-pause-menu">Menú principal</button>`;
   document.body.appendChild(pause);
   wireWorkbenchTray();
   wireWorkbenchStage();
@@ -918,6 +944,8 @@ function ensureUi() {
   $d("duel-next").onclick = () => startRound();
   $d("duel-again").onclick = () => { score = [0, 0]; round = 0; backToWorkshop(); };
   $d("duel-exit").onclick = () => exitDuel();
+  $d("duel-inter-menu").onclick = () => exitDuel();
+  $d("duel-pause-menu").onclick = () => exitDuel();
   $d("duel-flip").onclick = () => flipPlayer();
   $d("duel-resume").onclick = () => { paused = false; $d("duel-pause").classList.remove("on"); };
   $d("duel-quit").onclick = () => { score = [0, 2]; endMatch(true); };
@@ -931,6 +959,10 @@ function ensureUi() {
     if (!active || phase !== "armado") return;
     if (e.key === "q" || e.key === "Q") { playerPaint.zones[paintSlot] = cycleColor(playerPaint.zones[paintSlot], -1); persistPaint(); syncArmado(); }
     if (e.key === "r" || e.key === "R") { playerPaint.zones[paintSlot] = cyclePreset(playerPaint.zones[paintSlot], 1); persistPaint(); syncArmado(); }
+  });
+  addEventListener("keydown", (e) => {
+    if (!active || e.repeat || e.code !== "Escape") return;
+    if (phase === "fabricar" || phase === "armado" || phase === "inter") { e.preventDefault(); exitDuel(); }
   });
   addEventListener("keydown", (e) => {
     if (!active || phase !== "fabricar") return;
@@ -1124,9 +1156,11 @@ function showFabricar() {
     onConfirm: () => beginMatch(),
     onLayout: () => refreshFabricarCam(),
     onZoom: (mul) => {
-      fabCamDistMul = Math.max(0.5, Math.min(1.42, fabCamDistMul * mul));
+      fabCamDistMul = Math.max(0.72, Math.min(1.28, fabCamDistMul * mul));
       applyFabricarCam();
     },
+    onMenu: () => exitDuel(),
+    onResetCam: () => resetFabricarCam(),
     onHoverCell: (info) => updateFabPlaceGhost(info),
   });
   wirePaintPanel(PAINT_FAB.detailsId, PAINT_FAB.panelId, PAINT_FAB.refresh);
@@ -1140,6 +1174,7 @@ function showFabricar() {
   fabCamDistMul = 1;
   previewFabricacion();
   shotCamFrozen = false;
+  resetFabricarCam();
   bindFabricarViewportSync();
   bindFabCamDrag(document.getElementById("duel-fab-viewport"));
   document.getElementById("fe")?.classList.add("hidden");
@@ -1578,6 +1613,7 @@ export const duelDev = {
     bots: bots.map((b) => ({ name: b.name, hp: b.hp, rpm: b.rpm, flipped: b.flipped })),
   }),
   refreshGhost: () => fab?.refreshGhost(),
+  resetCam: () => { if (phase === "fabricar") resetFabricarCam(); },
   /** Equipa por API (headless / regresión legado). */
   equip: (cat: PieceCat, id: string) => setPiece(cat, id),
   openDrawer: (on = true) => {

@@ -255,6 +255,9 @@ export const SFX = {
   accept: () => { hiss("bandpass", 3200, 1800, 0.04, 0.2); tone("square", 520, 260, 0.05, 0.05, 0.02); },
   back: () => tone("square", 440, 220, 0.06, 0.04),
   static: () => hiss("bandpass", 5000, 1200, 0.22, 0.09),
+  /** Arcade match-3: intercambio y línea eliminada. */
+  m3Swap: () => gate("m3sw", 20) && (tone("triangle", 520, 780, 0.06, 0.09), hiss("bandpass", 1800, 900, 0.04, 0.1)),
+  m3Clear: () => gate("m3cl", 14) && (tone("square", 660, 330, 0.08, 0.08), hiss("lowpass", 2400, 600, 0.06, 0.12)),
 };
 
 // Lluvia: ruido filtrado en bucle por el canal de efectos (respeta volumen y mute); k 0..1, 0 = silencio

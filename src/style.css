@@ -89,6 +89,10 @@ body.duel-fight #tDrift,
 body.duel-fight #tJump,
 body.duel-fight #tBoost,
 body.duel-fight #tCam { display: none !important; }
+/* Match-3 arcade: solo pausa táctil; el tablero usa touch-action en el canvas */
+body.match3-play #touch.match3-only > :not(#tPause) { display: none !important; }
+body.match3-play #touch.match3-only #tPause { display: block !important; pointer-events: auto; }
+body.match3-play { touch-action: none; }
 body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px; bottom: 170px; }
 @media (orientation: portrait) {
   body.duel-fight #tAbil { right: 24px; bottom: 170px; }

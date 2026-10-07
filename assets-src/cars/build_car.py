@@ -5,7 +5,7 @@ import os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from rc_common import CarBuild, export_static, pilot_soldadito, reset, mat
+from rc_common import CarBuild, export_static, pilot_soldadito, bumper_bar, reset, mat
 
 KINDS = ("buggy", "monster", "formula", "tanque", "carrera", "axel", "helado", "combi")
 
@@ -39,9 +39,12 @@ def build_buggy():
     b = CarBuild()
     b.box((0, 0.02, 0), (1.05, 0.1, 2.1), A["matte"])
     b.box((0, 0.28, 0.05), (1.0, 0.32, 0.95), A["paint"])
+    b.box((0, 0.14, 0.02), (1.08, 0.06, 1.05), A["trim"])
     b.ell((0, 0.52, 0.12), (0.62, 0.36, 0.88), A["glass"], 10)
+    for sx in (-1, 1):
+        b.box((sx * 0.48, 0.48, 0.1), (0.04, 0.28, 0.06), A["trim"])
     b.tube([(-0.42, 0.45, -0.5), (-0.38, 0.95, -0.3), (0.38, 0.95, -0.3), (0.42, 0.45, -0.5)], 0.035, A["metal"])
-    b.box((0, 0.12, 1.16), (1.1, 0.14, 0.16), A["rubber"])
+    bumper_bar(b, 1.22, 0.12, 1.12, 0.14, A["rubber"])
     b.box((0, 0.9, -1.0), (1.35, 0.05, 0.38), A["trim"])
     b.sph((0.3, 0.3, 1.1), 0.14, A["lamp"], 8)
     b.sph((-0.3, 0.3, 1.1), 0.14, A["lamp"], 8)
@@ -55,7 +58,11 @@ def build_monster():
     b.box((0, 0.35, 0), (1.0, 0.14, 1.9), A["matte"])
     b.box((0, 0.72, 0), (1.05, 0.75, 1.15), A["paint"])
     b.box((0, 0.95, 0.42), (1.0, 0.3, 0.05), A["glass"])
+    b.box((0, 0.88, 0.35), (0.88, 0.2, 0.08), A["glass"])
+    for sx in (-1, 1):
+        b.box((sx * 0.58, 0.55, 0.0), (0.08, 0.35, 0.9), A["trim"])
     b.box((0, 0.5, 1.12), (1.3, 0.1, 0.3), A["metal"])
+    bumper_bar(b, 1.08, 0.38, 1.35, 0.16, A["rubber"])
     b.box((0, 1.2, 0.15), (1.0, 0.08, 0.2), A["matte"])
     for x in (0.36, 0.12):
         b.sph((x, 1.23, 0.15), 0.1, A["lamp"], 8)
@@ -69,8 +76,10 @@ def build_formula():
     b = CarBuild()
     b.box((0, 0.12, 0), (1.25, 0.22, 2.5), A["paint"])
     b.box((0, 0.02, 1.35), (1.4, 0.04, 0.3), A["matte"])
+    b.box((0, 0.22, 1.42), (1.15, 0.06, 0.45), A["trim"])
     b.box((0, 0.1, -0.2), (1.0, 0.18, 0.7), A["matte"])
-    b.box((0, 0.62, -1.15), (1.2, 0.05, 0.3), A["paint"])
+    b.box((0, 0.68, -1.15), (1.25, 0.08, 0.35), A["paint"])
+    bumper_bar(b, 1.48, 0.06, 0.95, 0.1, A["rubber"])
     b.sph((0.18, 0.08, 1.3), 0.08, A["lamp"], 8)
     b.sph((-0.18, 0.08, 1.3), 0.08, A["lamp"], 8)
     pilot_soldadito(b, ANCH["formula"]["seat"])
@@ -86,7 +95,9 @@ def build_tanque():
         b.box((x, 0.28, 0), (0.36, 0.05, 2.3), olive)
     b.box((0, 0.35, 0), (1.05, 0.5, 1.1), A["paint"])
     b.cyl((0, 0.66, -0.15), 0.95, 0.32, A["paint"], 10, axis="y")
+    b.box((0, 0.52, 0.35), (0.55, 0.22, 0.35), A["glass"])
     b.cyl((0, 0.68, 0.75), 0.13, 1.1, A["metal"], 8, axis="x")
+    bumper_bar(b, 1.05, 0.32, 1.15, 0.14, A["rubber"])
     b.sph((0.38, 0.42, 1.02), 0.12, A["lamp"], 8)
     b.sph((-0.38, 0.42, 1.02), 0.12, A["lamp"], 8)
     pilot_soldadito(b, ANCH["tanque"]["seat"])
@@ -98,9 +109,12 @@ def build_carrera():
     b = CarBuild()
     b.box((0, 0.0, 0), (0.7, 0.06, 1.7), A["matte"])
     b.ell((0, 0.22, 0), (0.95, 0.28, 1.05), A["paint"], 12)
+    b.ell((0, 0.38, 0.14), (0.58, 0.18, 0.08), A["glass"], 8)
     b.box((0, 0.4, 0.12), (0.62, 0.16, 0.04), A["glass"])
     b.tube([(-0.38, 0.12, 1.06), (0, 0.1, 1.12), (0.38, 0.12, 1.06)], 0.04, A["metal"])
+    b.box((0, 0.32, -0.88), (0.88, 0.04, 0.28), A["paint"])
     b.cyl((0.43, 0.18, -0.2), 0.08, 0.14, A["metal"], 8, axis="x")
+    bumper_bar(b, 1.02, 0.08, 0.82, 0.1, A["rubber"])
     b.sph((0.25, 0.2, 1.0), 0.12, A["lamp"], 8)
     b.sph((-0.25, 0.2, 1.0), 0.12, A["lamp"], 8)
     pilot_soldadito(b, ANCH["carrera"]["seat"])
@@ -115,9 +129,11 @@ def build_axel():
     b.cyl((0, 0, 0), 0.16, 1.9, steel, 8, axis="x")
     b.box((0, -0.12, 0), (0.95, 0.12, 1.25), A["matte"])
     b.box((0, 0.12, 0), (0.72, 0.38, 0.9), A["paint"])
+    b.box((0, 0.26, 0.08), (0.5, 0.18, 0.45), A["glass"])
     b.tube([(-0.42, 0.28, -0.55), (-0.42, 0.78, -0.2), (0.42, 0.78, -0.2), (0.42, 0.28, -0.55)], 0.04, steel)
     for s in (-1, 1):
         b.cyl((s * 0.98, 0, 0), 0.5, 0.06, red, 8, axis="x")
+    bumper_bar(b, 0.82, 0.1, 0.88, 0.12, A["rubber"])
     b.sph((0.28, 0.3, 0.7), 0.16, A["lamp"], 8)
     b.sph((-0.28, 0.3, 0.7), 0.16, A["lamp"], 8)
     pilot_soldadito(b, ANCH["axel"]["seat"])
@@ -132,9 +148,11 @@ def build_helado():
     b.box((0, 0.05, 0), (1.0, 0.14, 2.3), A["matte"])
     b.box((0, 0.58, -0.4), (1.1, 0.95, 1.45), cream)
     b.box((0, 0.45, 0.35), (1.1, 0.55, 1.0), A["paint"])
+    b.box((0, 0.62, 0.55), (0.75, 0.42, 0.04), A["glass"])
     b.box((0, 0.7, 0.85), (1.0, 0.3, 0.04), A["glass"])
     b.cyl((0, 1.37, -0.4), 0.46, 0.62, mat("Matte", "#d9a15a"), 6, axis="y")
     b.sph((0, 1.8, -0.4), 0.5, pink, 10)
+    bumper_bar(b, 1.28, 0.08, 1.05, 0.12, A["rubber"])
     b.sph((0.4, 0.4, 1.22), 0.14, A["lamp"], 8)
     b.sph((-0.4, 0.4, 1.22), 0.14, A["lamp"], 8)
     pilot_soldadito(b, ANCH["helado"]["seat"])
@@ -151,6 +169,9 @@ def build_combi():
     b.box((0, 0.8, 0.98), (0.9, 0.34, 0.04), A["glass"])
     for s in (-1, 1):
         b.box((s * 0.55, 0.78, 0.7), (0.02, 0.32, 0.5), A["glass"])
+    for z in (-0.5, 0.35, 1.05):
+        b.box((0, 0.58, z), (1.18, 0.03, 0.04), A["trim"])
+    bumper_bar(b, 1.22, 0.1, 1.12, 0.14, A["rubber"])
     b.sph((0.4, 0.4, 1.2), 0.18, A["lamp"], 8)
     b.sph((-0.4, 0.4, 1.2), 0.18, A["lamp"], 8)
     pilot_soldadito(b, ANCH["combi"]["seat"])

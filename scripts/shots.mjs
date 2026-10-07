@@ -1,6 +1,6 @@
 // Capturas de los escenarios de scenarios.mjs con UN Chromium headless (GPU real) contra pm2 rc-test (:5174). Uso (npm run shots):
 //   npm run shots                      captura todo a .shots/actual/ (~15 s)
-//   npm run shots -- --only garaje     solo los ids que contengan "garaje" (varios: --only garaje,lab); --vp pc|cel
+//   npm run shots -- --only garaje     solo shots con id exacto "garaje" (o clave completa pc-menu-garaje); --only garaje-vista-previa para otro; --vp pc|cel
 //   npm run shots -- --diff            además compara con .shots/ref/ (pixelmatch): imágenes de diferencia en .shots/diff/, resumen y exit 1 si algo cambió
 //   npm run shots -- --update          copia lo capturado a .shots/ref/ (nuevas referencias)
 // Las animaciones y las partículas hacen que dos corridas nunca sean idénticas: `tol` = % de píxeles distintos que se tolera (por defecto TOL).
@@ -15,6 +15,11 @@ const { values: a } = parseArgs({ options: { only: { type: "string" }, vp: { typ
 const TOL = 1.0; // % de píxeles que pueden cambiar sin avisar (calibrado con dos corridas seguidas, ver CLAUDE.md)
 const [ACT, REF, DIF] = [".shots/actual", ".shots/ref", ".shots/diff"];
 const only = a.only?.split(",");
+/** Sin guión: id exacto del shot (`garaje`, `ficha-hormiga`). Con guión: substring en la clave `vp-sesión-shot`. */
+const shotMatches = (vp, sid, shid, o) => {
+  const key = `${vp}-${sid}-${shid}`;
+  return o.includes("-") ? key.includes(o) : shid === o || key === `${vp}-${sid}-${o}`;
+};
 for (const d of [ACT, REF, DIF]) mkdirSync(d, { recursive: true });
 if (a.diff) for (const f of [DIF]) { rmSync(f, { recursive: true, force: true }); mkdirSync(f); }
 
@@ -35,7 +40,7 @@ try {
   for (const vp of a.vp ? [a.vp] : ["pc", "cel"]) {
     for (const s of sessions) {
       if (s.vps && !s.vps.includes(vp)) continue;
-      const shots = s.shots.filter((sh) => sh.shot !== false && (!sh.vps || sh.vps.includes(vp)) && (!only || only.some((o) => `${vp}-${s.id}-${sh.id}`.includes(o))));
+      const shots = s.shots.filter((sh) => sh.shot !== false && (!sh.vps || sh.vps.includes(vp)) && (!only || only.some((o) => o === s.id || shotMatches(vp, s.id, sh.id, o))));
       if (!shots.length) continue;
       const page = await open(browser, s.query, vp, { freeze: true });
       for (const sh of s.shots) { // los pasos que no se capturan igual corren: el estado de la sesión depende de ellos

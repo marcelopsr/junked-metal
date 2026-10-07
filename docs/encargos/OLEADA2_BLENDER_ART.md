@@ -1,10 +1,10 @@
 # Oleada 2 — arte en malla (Blender)
 
-Estado: **piloto cerrado** (2026-10-07). Objetivo: cambios con **vértices movidos en `.blend`**, no solo factores numéricos en scripts de export o en `models.ts`.
+Estado: **cerrada** — `dc5f1e5` + `8156093` ([Integrador oleada 2 escultura](49dfbfed-b98a-44f4-a388-dd0a0e38160f), cierre piloto [Oleada 2 escultura Blender](32406723-a59f-47de-ad78-ccb54f48299b): 5 GLB esculpidos, renders `oleada2_before|after`, shots ficha/garaje OK). Objetivo cumplido: **vértices en `.blend`** (plaga/jefes GLB) y assets `proc2/` (8 procedurales); **runtime** procedural salvo esos GLB + autos `carGlb.ts`.
 
 ## Línea base «before»
 
-GLB de juego en commit **`fe919c4`** (`git show fe919c4:public/models/<nombre>.glb`). Copia de trabajo en `assets-src/_oleada2_baseline/` (no versionada). Renders: `assets-src/<carpeta>/renders/oleada2_before.png`.
+GLB de juego en commit **`fe919c4`** (`git show fe919c4:public/models/<nombre>.glb`). Copia local `assets-src/_oleada2_baseline/` (en `.gitignore`, regenerable). Renders: `assets-src/<carpeta>/renders/oleada2_before.png` y `oleada2_after.png` (`render_oleada2_baseline.py`).
 
 ## Resumen por criatura
 
@@ -12,17 +12,39 @@ GLB de juego en commit **`fe919c4`** (`git show fe919c4:public/models/<nombre>.g
 |----------|---------|------------------------|--------|------------------------------|---------------|
 | hormiga | `ant/` | **Sí** — [Esculpir GLB ant escupidora](2840ded1-8273-478b-a30e-2baeef3a166f): `polish_oleada2.py` en `Ant`; `fat≈1.02` en export | `export_clean.py` → `ant.glb` | 1 272 / 1 526 | `renders/oleada2_before\|after/` |
 | escupidora | `escupidora/` | **Sí** — mismo agente: saco/cabeza/patas/ojos en `escupidora.blend` | `export_blend.py` (no `escupidora.py`) | 1 476 / 1 771 | `game_15m`, `attack_escupe` |
-| escarabajo | `escarabajo/` | **Sí** — `polish_oleada2.py` (élitros, pronoto, cuerno) | `bicho.export` | 1 534 / 1 841 | Diferencia visible |
+| escarabajo | `escarabajo/` | **Sí** — `polish_oleada2.py` (élitros, pronoto, cuerno) | `bicho.export` | 1 534 / 1 841 | `renders/oleada2_before\|after.png` (`8156093`) |
 | perro | `perro/` | **Sí** — [Esculpir GLB perro gato](66a90a4a-1333-458b-890c-e658a869d3a6): sculpt por **vertex groups** (pecho, hocico, orejas); no re-correr `perro.py` | `export_blend.py` + `render_renders.py` | 6 789 / 8 147 | `renders/*.png` + `oleada2_before\|after.png` |
 | gato | `gato/` | **Sí** — mismo agente: orejas, mejillas, cola; `spin` min Y **-0.17** intacto | `export_blend.py` + `render_renders.py` | 6 904 / 8 285 | idem |
 
-### Bestiario procedural (sin GLB en oleada 2)
+### Oleada 3 — sculpt profundo (2026-10-07)
 
-| Id | Estado oleada 2 |
-|----|-----------------|
-| friccion | **Blockout** `assets-src/friccion/friccion.blend` (`blockout_oleada2.py`). El juego sigue en `enemyTemplate` / `models.ts`. |
-| robot | **Blockout** `assets-src/robot/robot.blend` (`blockout_oleada2.py`). Sin cableado a `public/models/`. |
-| polilla, rey, tarantula, cortadora, aspiradora, cortacercos | **Solo procedural** (`models.ts`); pendiente oleada 2b con `.blend` o import OSS. |
+Agente [Escultura GLB perro/gato/jefes](8260d5c7-09f1-4054-b50a-0fe9c8c27aa9): vértices en `.blend`, `public/models/` sin cambiar `glb.ts` scale.
+
+| Criatura | Script | Tris `public/` |
+|----------|--------|----------------|
+| perro | `polish_oleada2b.py` (2.º pase; 1.º `polish_oleada2.py`) | 6 789 |
+| gato | `polish_oleada2b.py` | 6 904 |
+| aspiradora | `polish_oleada2.py` + `export_blend.py` (nuevo) | 948 |
+| cortacercos | `polish_oleada2.py` + `export_blend.py` (nuevo) | 752 |
+
+Renders: `assets-src/{aspiradora,cortacercos}/renders/oleada2_before|after.png` (`ortho=2.4`).
+
+### Bestiario procedural (Blender oleada 2, sin GLB en juego aún)
+
+Agente [Esculpir 8 enemigos procedural](30b962b3-bcf4-4440-a240-c2733cd9754c): `assets-src/proc2/meshes.py` + `toy_rigid.py` + `build_all.py`. Detalle: [`OLEADA2_PROCEDURAL_BLENDER.md`](../OLEADA2_PROCEDURAL_BLENDER.md).
+
+| Id | Tris `_raw.glb` | Notas |
+|----|-----------------|-------|
+| friccion | 644 | `proc2/`; piloto previo `blockout_oleada2.py` — juego sigue `models.ts` |
+| robot | 732 | idem |
+| polilla | 604 | Cuerpo + `WingR`; alas en partida = `wingTemplate` |
+| rey | 508 | Cuerpo; patas = `legTemplate` ×6 |
+| tarantula | 596 | Cuerpo; patas = `legTemplate` ×8 |
+| cortadora | 556 | Ride-on completo |
+| aspiradora | 916 | Disco + torreta |
+| cortacercos | 612 | Herramienta; `sectorTemplate` sigue en código |
+
+**Runtime:** `enemyTemplate()` en `src/models.ts` (commit `dc5f1e5` no sustituye por GLB). Integración VAT/`glb.ts` = oleada 2b.
 
 ## Pipeline reproducible
 
@@ -89,16 +111,16 @@ Duelo: **excluido** de esta tanda.
 | 1 | hormiga | GLB VAT | `assets-src/ant/` |
 | 2 | escupidora | GLB VAT | `assets-src/escupidora/` |
 | 3 | escarabajo | GLB VAT | `assets-src/escarabajo/` |
-| 4 | friccion | Procedural + blockout | `models.ts`, `assets-src/friccion/` |
-| 5 | robot | Procedural + blockout | `models.ts`, `assets-src/robot/` |
-| 6 | polilla | Procedural + alas | `models.ts`, `assets-src/polilla/` |
-| 7 | rey | Procedural + 6 patas | `models.ts`, `assets-src/rey/` |
-| 8 | cortadora | Procedural | `models.ts`, `assets-src/cortadora/` |
-| 9 | tarantula | Procedural + 8 patas | `models.ts`, `assets-src/tarantula/` |
+| 4 | friccion | Runtime procedural · blend **✓** [30b962b3](30b962b3-bcf4-4440-a240-c2733cd9754c) | `models.ts`, `assets-src/friccion/` |
+| 5 | robot | idem | `models.ts`, `assets-src/robot/` |
+| 6 | polilla | idem (+ alas runtime) | `models.ts`, `assets-src/polilla/` |
+| 7 | rey | idem (+ patas runtime) | `models.ts`, `assets-src/rey/` |
+| 8 | cortadora | idem | `models.ts`, `assets-src/cortadora/` |
+| 9 | tarantula | idem (+ patas runtime) | `models.ts`, `assets-src/tarantula/` |
 | 10 | perro | GLB VAT **✓** oleada 2 [66a90a4a](66a90a4a-1333-458b-890c-e658a869d3a6) | `assets-src/perro/` |
 | 11 | gato | GLB VAT **✓** oleada 2 [66a90a4a](66a90a4a-1333-458b-890c-e658a869d3a6) | `assets-src/gato/` |
-| 12 | aspiradora | Procedural | `models.ts`, `assets-src/aspiradora/` |
-| 13 | cortacercos | Procedural | `models.ts`, `assets-src/cortacercos/` |
+| 12 | aspiradora | Runtime procedural · blend **✓** [30b962b3](30b962b3-bcf4-4440-a240-c2733cd9754c) | `models.ts`, `assets-src/aspiradora/` |
+| 13 | cortacercos | idem | `models.ts`, `assets-src/cortacercos/` |
 
 ### B — Ocho plantillas auxiliares
 

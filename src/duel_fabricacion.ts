@@ -45,6 +45,8 @@ export function mountFabricacion(
     onConfirm(): void;
     onLayout?(): void;
     onZoom?(mul: number): void;
+    onMenu?(): void;
+    onResetCam?(): void;
     onHoverCell?(info: { probe: Cell; can: boolean; erase: boolean } | null): void;
   },
 ): FabApi {
@@ -72,7 +74,11 @@ export function mountFabricacion(
   const root = document.createElement("div");
   root.id = "duel-fab";
   root.className = "duel-fab";
-  root.innerHTML = `<header class="duel-fab-head"><p class="duel-fab-kicker">Demolición · mesa RC</p><h1 class="duel-fab-title">Fabricación</h1>
+  root.innerHTML = `<header class="duel-fab-head"><div class="duel-fab-nav">
+<button type="button" class="duel-fab-btn duel-fab-nav-btn" id="duel-fab-menu">Menú principal</button>
+<button type="button" class="duel-fab-btn duel-fab-nav-btn" id="duel-fab-cam-reset">Recentrar vista</button>
+</div>
+<p class="duel-fab-kicker">Demolición · mesa RC</p><h1 class="duel-fab-title">Fabricación</h1>
 <p class="duel-fab-hint">Vista 3D arriba · rejilla abajo: cada bloque se ve en la mesa al colocarlo</p>
 <p class="duel-fab-fallback">Arrastrar vista · R gira pieza · M espejo · Z deshacer · plantillas a la izquierda</p></header>
 <div class="duel-fab-main">
@@ -675,6 +681,8 @@ export function mountFabricacion(
   zoomOut.addEventListener("pointerdown", stopZoom);
   zoomIn.onclick = (e) => { e.stopPropagation(); opts.onZoom?.(0.88); };
   zoomOut.onclick = (e) => { e.stopPropagation(); opts.onZoom?.(1.14); };
+  $("duel-fab-menu").onclick = () => opts.onMenu?.();
+  $("duel-fab-cam-reset").onclick = () => opts.onResetCam?.();
   ($("duel-fab-ydown") as HTMLButtonElement).innerHTML = icon("fab_plane_down", 18);
   ($("duel-fab-yup") as HTMLButtonElement).innerHTML = icon("fab_plane_up", 18);
   $("duel-fab-drawer-toggle").onclick = () => { drawerOpen = !drawerOpen; syncDrawer(); };

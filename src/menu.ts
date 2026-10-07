@@ -157,7 +157,7 @@ function renderRace() {
 }
 
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; duel(): void };
+type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; duel(): void; match3(): void };
 let api: Api;
 
 export function applySettings() {
@@ -185,7 +185,7 @@ function resetCfg() {
 }
 
 // ---------- Pila de pantallas ----------
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel";
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -233,9 +233,26 @@ function askBuy(name: string, cost: number, then: () => void) {
 }
 function askClose() { $("ask").classList.add("hidden"); askFn = null; askBack?.focus(); }
 
+let m3ConfigReturn = false;
+/** Configuración global mientras el arcade match-3 sigue en pausa (sin duplicar opciones). */
+export function openM3Config() {
+  m3ConfigReturn = true;
+  stack.length = 0;
+  stack.push("config");
+  $("fe").classList.add("ingame");
+  show();
+}
+
 function back() {
   if (askFn) return askClose(); // Esc / B cierran la confirmación sin comprar
   const s = current();
+  if (s === "config" && m3ConfigReturn) {
+    m3ConfigReturn = false;
+    stack.pop();
+    show();
+    document.getElementById("m3-resume")?.focus({ preventScroll: true });
+    return;
+  }
   if (!s || s === "title" || s === "main") return;
   SFX.back();
   if (s === "pause") return api.resume();
@@ -1109,6 +1126,7 @@ export function initMenu(a: Api) {
     else if (d.act === "race") api.race();
     else if (d.act === "battle") api.battle();
     else if (d.act === "duelgo") api.duel();
+    else if (d.act === "match3go") api.match3();
     else if (d.act === "play") api.play();
     else if (d.act === "daily") api.play(true);
     else if (d.act === "endless") api.endless();

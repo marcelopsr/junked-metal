@@ -7,8 +7,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import bicho as b
 from toy_rigid import ToyBuild
 
-M = lambda **kw: None  # placeholder — mats passed per build
-
 
 def _mats_friccion():
     return {
@@ -37,6 +35,7 @@ def build_friccion(m: ToyBuild):
     m.box(0.02, 0.18, 0.1, t["orange"], "root", (-0.28, 0.54, -0.82))
     m.tube([[-0.36, 0.14, 1.02], [0, 0.11, 1.08], [0.36, 0.14, 1.02]], [0.035, 0.035, 0.035], t["chrome"], "root", 6)
     m.box(0.06, 0.04, 0.55, b.mat("Trim", "#f8fafc", rough=0.4), "root", (0, 0.38, 0.35))
+    m.box(0.64, 0.03, 0.08, t["chrome"], "root", (0, 0.52, -0.72))  # labio del capó (lectura a 15 m)
     for x, y in ((0.32, 0.2), (-0.32, 0.2)):
         m.tor(0.22, 0.035, t["chrome"], "root", (x, y, 0.92), (math.pi / 2, 0, 0), 10)
         m.sph(0.16, t["lamp"], "root", (x, y, 0.97), None, 6)
@@ -45,6 +44,9 @@ def build_friccion(m: ToyBuild):
         m.cyl(0.46, 0.46, 0.2, t["rubber"], "root", (x, 0.14, z), (0, 0, math.pi / 2), 10)
     for x, z in ((-0.4, 0.48), (0.4, 0.48)):
         m.sph(0.1, t["orange"], "root", (x, 0.32, z), None, 4)
+    m.box(0.22, 0.08, 0.12, t["dark"], "root", (0, 0.22, -0.92))  # matrícula toy
+    for sx in (-1, 1):
+        m.box(0.04, 0.06, 0.08, t["chrome"], "root", (sx * 0.38, 0.42, 0.15))  # espejos retrovisores
 
 
 def build_robot(m: ToyBuild):
@@ -80,6 +82,10 @@ def build_robot(m: ToyBuild):
     m.tor(0.22, 0.045, chrome, "root", (0, 0.76, -0.48), (math.pi / 2, 0, 0), 12)
     for a in (0, math.pi / 2, math.pi, math.pi * 1.5):
         m.box(0.06, 0.32, 0.05, chrome, "root", (math.sin(a) * 0.22, 0.76, -0.48 - math.cos(a) * 0.22), (0, a, 0))
+    m.box(0.52, 0.08, 0.04, b.mat("Vent", "#4a1010", rough=0.7), "root", (0, 0.88, -0.42))  # rejilla trasera
+    for sx in (-1, 1):
+        for z in (0.05, 0.28):
+            m.sph(0.04, joint, "root", (sx * 0.36, 0.55 + z * 0.3, 0.12 + z), None, 4)  # remaches del torso
 
 
 def build_polilla_body(m: ToyBuild):
@@ -95,18 +101,56 @@ def build_polilla_body(m: ToyBuild):
     m.sph(0.2, eye, "root", (-0.11, 0.06, 0.5), None, 8)
     m.sph(0.08, eye_core, "root", (0.11, 0.06, 0.52), None, 4)
     m.sph(0.08, eye_core, "root", (-0.11, 0.06, 0.52), None, 4)
+    for sx in (-1, 1):
+        m.sph(0.06, fur, "root", (sx * 0.22, 0.18, 0.22), (1.1, 0.9, 1.0), 4)  # mechones laterales
+    m.cyl(0.012, 0.02, 0.18, fur, "root", (0, 0.12, 0.48), (0.4, 0, 0), 4)  # probóscis corta
 
 
 def build_polilla_wing(m: ToyBuild):
     wing = b.mat("Wing", "#d4c090", rough=0.86, alpha=0.92)
     wing_h = b.mat("WingH", "#a89068", rough=0.88, alpha=0.9)
     spot = b.mat("WingSpot", "#e8d8b0", rough=0.7, alpha=0.85)
+    vein = b.mat("Vein", "#5a4830", rough=0.9)
     m.sph(1.45, wing, "root", (0.88, 0.02, -0.08), (1.45, 0.04, 1.15), 6)
     m.sph(0.72, wing_h, "root", (0.62, -0.02, 0.32), (1.25, 0.05, 0.95), 5)
+    m.sph(0.38, wing_h, "root", (1.02, -0.01, 0.08), (1.2, 0.04, 0.85), 5)
     m.sph(0.34, b.mat("WingMark", "#3a2818", rough=0.9), "root", (0.95, 0.05, -0.12), (1.15, 0.1, 1.05), 4)
-    for p in ((0.55, 0.08, 0.15), (1.05, -0.02, -0.2), (0.35, 0.12, 0.45)):
+    for p in ((0.55, 0.08, 0.15), (1.05, -0.02, -0.2), (0.35, 0.12, 0.45), (0.72, 0.1, 0.28), (1.18, 0.0, 0.02)):
         m.sph(0.22, b.mat("Spot", "#2a1810", rough=0.9), "root", p, (1.2, 0.08, 1.1), 4)
     m.sph(0.18, spot, "root", (0.78, 0.04, 0.05), (1.1, 0.06, 0.9), 4)
+    m.sph(0.14, spot, "root", (0.48, 0.06, 0.22), (1.05, 0.05, 0.85), 4)
+    for path, radii in (
+        ([[0.42, 0.04, 0.05], [0.95, 0.02, -0.05], [1.15, -0.01, -0.18]], [0.012, 0.012, 0.01]),
+        ([[0.38, 0.02, 0.22], [0.72, 0.0, 0.08], [1.02, -0.02, -0.08]], [0.01, 0.009, 0.008]),
+        ([[0.52, 0.06, -0.05], [0.88, 0.03, 0.12], [0.55, 0.05, 0.38]], [0.009, 0.008, 0.007]),
+    ):
+        m.tube(path, radii, vein, "root", 4)
+
+
+def _build_articulated_leg(m: ToyBuild, leg_len: float, hip_y: float, r: float, body_hex: str, knee_hex: str, hair: bool):
+    """Pata derecha: cadera en el origen; fémur + tibia + tarso (models.ts legTemplate)."""
+    leg = b.mat("Leg", body_hex, rough=0.55 if not hair else 0.88)
+    knee_m = b.mat("Knee", knee_hex, emit=2.5)
+    knee = (leg_len * 0.48, leg_len * 0.32, 0.0)
+    foot = (leg_len * 0.98, -hip_y + 0.02, 0.06)
+    m.tube([[0, 0, 0], (leg_len * 0.25, leg_len * 0.22, 0), knee], [r * 1.08, r * 1.05, r * 1.02], leg, "root", 5)
+    m.tube([knee, (leg_len * 0.72, leg_len * 0.05, 0.03), foot], [r * 0.85, r * 0.78, r * 0.68], leg, "root", 5)
+    m.sph(r * 2.5, leg, "root", (leg_len * 0.2, leg_len * 0.16, 0), (1.12, 0.88, 1.08), 4)
+    m.sph(r * 3.3, knee_m, "root", knee, None, 4)
+    m.sph(r * 1.9, leg, "root", foot, (1.25, 0.32, 0.95), 4)
+    m.cyl(r * 0.35, r * 0.15, r * 1.4, leg, "root", foot, (0.15, 0, 0.35), 4)
+    if hair:
+        for t in (0.32, 0.52, 0.72):
+            p = (leg_len * (0.5 + t * 0.35), leg_len * (0.26 - t * 0.2), 0.02)
+            m.sph(0.2, b.mat("Hair", body_hex, rough=0.92), "root", p, (1.35, 0.55, 1.15), 3)
+
+
+def build_rey_leg(m: ToyBuild):
+    _build_articulated_leg(m, 1.14, 0.36, 0.095, "#0a0a0a", "#6ef040", False)
+
+
+def build_tarantula_leg(m: ToyBuild):
+    _build_articulated_leg(m, 1.62, 0.44, 0.125, "#1a120e", "#ff6fe8", True)
 
 
 def build_rey(m: ToyBuild):
@@ -125,6 +169,8 @@ def build_rey(m: ToyBuild):
     m.sph(0.14, b.mat("EyeMid", "#b8e838", emit=2.5), "root", (0, 0.64, 1.28), None, 4)
     m.box(0.18, 0.42, 1.35, b.mat("Wing", "#f5f0c8", rough=0.5), "root", (0.62, 0.72, -0.22))
     m.box(0.18, 0.42, 1.35, b.mat("Wing", "#f5f0c8", rough=0.5), "root", (-0.62, 0.72, -0.22))
+    m.box(0.04, 0.52, 2.0, dark, "root", (0, 0.82, -0.22))  # sutura central del caparazón
+    m.cyl(0.06, 0.1, 0.22, shell_hi, "root", (0, 1.02, 1.88), (0.35, 0, 0), 6)  # base del cuerno
 
 
 def build_tarantula(m: ToyBuild):
@@ -143,6 +189,8 @@ def build_tarantula(m: ToyBuild):
     m.sph(0.18, b.mat("Eye", "#ff4fd8", emit=3.5), "root", (-0.12, 0.7, 0.74), None, 6)
     for p in ((0.22, 0.64, 0.62), (-0.22, 0.64, 0.62), (0.16, 0.72, 0.54), (-0.16, 0.72, 0.54), (0, 0.76, 0.66)):
         m.sph(0.08, b.mat("Eye", "#ff4fd8", emit=2.5), "root", p, None, 4)
+    for p in ((0.45, 0.55, -0.35), (-0.42, 0.58, -0.2), (0.3, 0.48, 0.15), (-0.28, 0.52, 0.4)):
+        m.sph(0.12, hair, "root", p, (1.2, 0.7, 1.1), 4)  # pelos del cefalotórax
 
 
 def build_cortadora(m: ToyBuild):
@@ -164,6 +212,8 @@ def build_cortadora(m: ToyBuild):
         m.cyl(2, 2, 0.85, b.mat("Rubber", "#1a1a1a", rough=0.9), "root", (x, 0.88, z), (0, 0, math.pi / 2), 12)
     for x, z in ((-3.35, 2.35), (3.35, 2.35), (-3.35, -2.55), (3.35, -2.55)):
         m.cyl(1.05, 1.05, 0.2, b.mat("Hub", "#fbbf24", metal=0.6), "root", (x, 0.88, z), (0, 0, math.pi / 2), 8)
+    m.box(1.1, 0.65, 0.35, dark, "root", (0, 2.15, -0.55))  # respaldo del asiento
+    m.box(0.35, 0.08, 0.45, b.mat("Sticker", "#facc15", rough=0.4), "root", (-2.1, 1.55, 0.35))  # calcomanía toy
 
 
 def build_aspiradora(m: ToyBuild):
@@ -185,6 +235,8 @@ def build_aspiradora(m: ToyBuild):
         m.cyl(1.65, 1.65, 0.1, dark, "root", (s * 2.75, 0.14, 2.45), None, 6)
         for k in (0, 1, 2):
             m.box(0.14, 0.08, 2.1, b.mat("Brush", "#9ca3af", rough=0.7), "root", (s * 2.75, 0.2, 2.45), (0, k * 1.15, 0))
+    m.cyl(0.08, 0.08, 0.35, dark, "root", (-2.35, 0.55, -0.85), (0, 0.4, 0.2), 6)  # bobina del cable
+    m.box(0.55, 0.12, 0.18, b.mat("Latch", "#c8ccd2", metal=0.4), "root", (0, 1.18, -0.55))
 
 
 def build_cortacercos(m: ToyBuild):
@@ -206,6 +258,8 @@ def build_cortacercos(m: ToyBuild):
     m.sph(0.42, b.mat("Eye", "#ff2a1a", emit=4.0), "root", (0.72, 2.15, -1.15), None, 6)
     m.sph(0.42, b.mat("Eye", "#ff2a1a", emit=4.0), "root", (-0.72, 2.15, -1.15), None, 6)
     m.tube([[0, 0.92, -4.25], [0, 0.28, -4.95], [0.75, 0.08, -5.65]], [0.16, 0.16, 0.16], dark, "root", 6)
+    m.tor(0.55, 0.06, dark, "root", (0.95, 1.85, -0.35), (math.pi / 2, 0, 0), 10)  # guarda del gatillo
+    m.box(0.42, 0.22, 0.12, b.mat("Label", "#fef3c7", rough=0.5), "root", (0, 1.45, -2.15))  # etiqueta de advertencia
 
 
 BUILDERS = {

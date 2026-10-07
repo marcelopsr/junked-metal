@@ -35,9 +35,10 @@ const fakePad = (p) => p.evaluate(() => {
 });
 
 // ---------- partida ----------
-const lab = (o) => async (p) => { await wait(p, () => window.__lab); await p.evaluate((o) => window.__lab(o), o); };
+const labReady = async (p) => { await wait(p, () => window.__ready); await p.evaluate(() => window.__ready()); };
+const lab = (o) => async (p) => { await wait(p, () => window.__lab); await labReady(p); await p.evaluate((o) => window.__lab(o), o); };
 const partida = (secs) => async (p) => { await p.evaluate((s) => { window.__play(3); window.__god(); window.__sim(s); }, secs); await tick(p, 45); }; // semilla 3; god: la captura no depende de que el bot sobreviva; 45 cuadros para que la cámara alcance al auto
-const labAnts = async (p) => { await p.evaluate(() => { window.__lab({ frames: 2 }); window.__ants(300); }); };
+const labAnts = async (p) => { await labReady(p); await p.evaluate(() => { window.__lab({ frames: 2 }); window.__ants(300); }); };
 
 const PIEZAS = ["wing:alto", "exhaust:chimenea", "bumper:cano", "bumper:antivuelco", "bumper:laterales", "tires:oruga", "tires:todoterreno", "tires:rayos", "acc:pelotita", "acc:banderita", "acc:matafuego"].map((x) => "part:" + x);
 const garajePiezas = (car, kit) => async (p) => { await p.evaluate(([car, kit, unlocked]) => window.__cfg({ car, cars: ["buggy", car], unlocked, kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", ...kit } }), [car, kit, PIEZAS]);
@@ -67,6 +68,48 @@ export const sessions = [
     { id: "ficha-escupidora", act: async (p) => {
       await view("bestiary")(p);
       await p.dispatchEvent('[data-beast="escupidora"]', "click");
+      await wait(p, () => document.querySelector("#scr-beast.on"));
+      await tick(p, 90);
+      await p.waitForTimeout(300);
+    } },
+    { id: "ficha-friccion", act: async (p) => {
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-beast="friccion"]', "click");
+      await wait(p, () => document.querySelector("#scr-beast.on"));
+      await tick(p, 90);
+      await p.waitForTimeout(300);
+    } },
+    { id: "ficha-rey", act: async (p) => {
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-beast="rey"]', "click");
+      await wait(p, () => document.querySelector("#scr-beast.on"));
+      await tick(p, 90);
+      await p.waitForTimeout(300);
+    } },
+    { id: "ficha-tarantula", act: async (p) => {
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-beast="tarantula"]', "click");
+      await wait(p, () => document.querySelector("#scr-beast.on"));
+      await tick(p, 90);
+      await p.waitForTimeout(300);
+    } },
+    { id: "ficha-polilla", act: async (p) => {
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-beast="polilla"]', "click");
+      await wait(p, () => document.querySelector("#scr-beast.on"));
+      await tick(p, 90);
+      await p.waitForTimeout(300);
+    } },
+    { id: "ficha-robot", act: async (p) => {
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-beast="robot"]', "click");
+      await wait(p, () => document.querySelector("#scr-beast.on"));
+      await tick(p, 90);
+      await p.waitForTimeout(300);
+    } },
+    { id: "ficha-cortacercos", act: async (p) => {
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-beast="cortacercos"]', "click");
       await wait(p, () => document.querySelector("#scr-beast.on"));
       await tick(p, 90);
       await p.waitForTimeout(300);
@@ -101,18 +144,18 @@ export const sessions = [
       await drag("#tBoost", 0.4, 0.4, -120, -160); await drag("#tDrift", 0.9, 0.9, 30, 30); await p.waitForTimeout(100); } },
   ] },
   { id: "lab", query: "?mute&seed=3&lab", shots: [
-    { id: "noche", act: async (p) => { await wait(p, () => window.__lab); await p.evaluate(() => window.__lab({})); } }, // se rearma a mano: el arranque solo del ?lab corre con tiempo real
+    { id: "noche", act: async (p) => { await wait(p, () => window.__lab); await labReady(p); await p.evaluate(() => window.__lab({})); } }, // se rearma a mano: el arranque solo del ?lab corre con tiempo real
     { id: "jefes", act: lab({ boss: true }) },
     { id: "niebla", act: lab({ climate: "niebla" }) },
     { id: "farol", act: lab({ climate: "farol" }) },
     { id: "hormigas300", act: labAnts, shot: false }, // solo medición: 300 instancias
-    { id: "preset-bajo", act: async (p) => { await p.evaluate(() => { window.__cfg({ preset: "bajo" }); window.__lab({}); }); } }, // preajuste Bajo (lo demás corre en Medio, el de fábrica)
-    { id: "fsr-fxaa", act: async (p) => { await p.evaluate(() => { window.__cfg({ preset: "medio", scaler: "fsr", fsr: "rendimiento", aa: "fxaa", sharpen: 0.6 }); window.__lab({}); }); } }, // FXAA antes del agrandado de FSR
+    { id: "preset-bajo", act: async (p) => { await labReady(p); await p.evaluate(() => { window.__cfg({ preset: "bajo" }); window.__lab({}); }); } }, // preajuste Bajo (lo demás corre en Medio, el de fábrica)
+    { id: "fsr-fxaa", act: async (p) => { await labReady(p); await p.evaluate(() => { window.__cfg({ preset: "medio", scaler: "fsr", fsr: "rendimiento", aa: "fxaa", sharpen: 0.6 }); window.__lab({}); }); } }, // FXAA antes del agrandado de FSR
     // Modos de cámara (Configuración → Juego), al final de la sesión: __cfg cambia el modo sin guardar y __lab rearma la escena. En cel solo los fijos
     ...["actual", "cenital", "iso", "baja", "dinamica"].map((m) => ({ id: "cam-" + m, perf: false, vps: m === "actual" || m === "dinamica" ? ["pc"] : undefined,
-      act: async (p) => { await p.evaluate((m) => { window.__cfg({ preset: "medio", scaler: "simple", aa: "none", sharpen: 0, camMode: m }); window.__lab({}); }, m); } })),
+      act: async (p) => { await labReady(p); await p.evaluate((m) => { window.__cfg({ preset: "medio", scaler: "simple", aa: "none", sharpen: 0, camMode: m }); window.__lab({}); }, m); } })),
     // Teléfono apaisado (último: deja el viewport girado para el resto de la sesión)
-    { id: "cam-baja-apaisado", perf: false, vps: ["cel"], act: async (p) => { await p.setViewportSize({ width: 844, height: 390 }); await p.waitForTimeout(100); await p.evaluate(() => { window.__cfg({ camMode: "baja" }); window.__lab({}); }); } },
+    { id: "cam-baja-apaisado", perf: false, vps: ["cel"], act: async (p) => { await p.setViewportSize({ width: 844, height: 390 }); await p.waitForTimeout(100); await labReady(p); await p.evaluate(() => { window.__cfg({ camMode: "baja" }); window.__lab({}); }); } },
   ] },
   { id: "partida", query: "?mute&seed=3", shots: [
     { id: "curso", act: partida(90) },
@@ -159,6 +202,43 @@ export const sessions = [
       });
       await tick(p, 220);
       await tick(p, 90);
+    } },
+  ] },
+  { id: "match3", query: "?mute&match3", vps: ["pc", "cel"], shots: [
+    { id: "gabinete", act: async (p) => {
+      await wait(p, () => window.__info?.().state === "match3" && document.getElementById("match3-ui")?.classList.contains("on"));
+      await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
+      await tick(p, 12);
+    } },
+    { id: "objetivos", act: async (p) => {
+      await p.evaluate(() => window.__match3.ready());
+      await tick(p, 8);
+    } },
+    { id: "juego", act: async (p) => {
+      await p.evaluate(() => { document.getElementById("m3-play")?.click(); window.__match3.start(); });
+      await tick(p, 25);
+    } },
+    { id: "pausa", act: async (p) => {
+      await p.keyboard.press("Escape");
+      await tick(p, 10);
+    } },
+    { id: "victoria", act: async (p) => {
+      await p.evaluate(() => window.__match3.setPhase("win"));
+      await tick(p, 12);
+    } },
+    { id: "derrota", act: async (p) => {
+      await p.evaluate(() => window.__match3.setPhase("lose"));
+      await tick(p, 12);
+    } },
+  ] },
+  { id: "match3_menu", query: "?mute", vps: ["pc"], shots: [
+    { id: "entrada", act: async (p) => {
+      await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
+      if (await p.evaluate(() => document.getElementById("scr-title")?.classList.contains("on"))) await p.keyboard.press("Space");
+      await toMain(p);
+      await p.click('#scr-main [data-go="match3"]');
+      await wait(p, () => document.getElementById("scr-match3")?.classList.contains("on"));
+      await tick(p, 8);
     } },
   ] },
   { id: "duel_menu", query: "?mute", vps: ["pc"], shots: [

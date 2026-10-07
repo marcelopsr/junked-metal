@@ -76,6 +76,25 @@ for v in ob.data.vertices:
         if leg:
             along_bone(v, leg, 0.05 * wl)
 
+    wp = w(v, {"fpaw_L", "fpaw_R", "hpaw_L", "hpaw_R"})
+    if wp > 0.35 and v.co.y < 0.35:
+        v.co.y -= 0.008 * wp
+        push_radial(v, 0.014 * wp)
+
+    wt = w(v, {"tail"})
+    if wt > 0.25:
+        along_bone(v, "tail", 0.06 * wt)
+        if v.co.y < 0.15:
+            push_radial(v, 0.01 * wt)
+
+    if w(v, {"head"}) > 0.4 and 0.62 < v.co.y < 0.78 and abs(v.co.x) < 0.2:
+        v.co.y += 0.014 * w(v, {"head"})
+        v.co.z += 0.006 * w(v, {"head"})
+
+    whp = w(v, {"hips", "thigh_L", "thigh_R"})
+    if whp > 0.45 and v.co.y > 0.25 and v.co.y < 0.5 and abs(v.co.x) > 0.22:
+        push_radial(v, 0.02 * whp)
+
 for p in ob.data.polygons:
     p.use_smooth = True
 ob.data.update()

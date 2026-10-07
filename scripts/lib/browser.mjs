@@ -37,7 +37,7 @@ export async function open(browser, query, vp = "pc", { freeze = false } = {}) {
   });
   const t0 = Date.now();
   await page.goto(BASE + "/" + query, { waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => typeof window.__sim === "function", null, { timeout: 90000, polling: 50 });
+  await page.waitForFunction(() => typeof window.__sim === "function", null, { timeout: 150000, polling: 50 }); // 13× VAT GLB en headless frío puede pasar 90 s
   const portada = await page.evaluate(() => window.__tPortada ?? null);
   if (freeze) await page.evaluate(() => { const e = window.__scene.getEngine(); e.stopRenderLoop(); e.getDeltaTime = () => 1000 / 60; }); // y el paso de tiempo de cada cuadro queda fijo en 1/60 s
   page.t = { portada: portada && Math.round(portada), listo: Date.now() - t0 };

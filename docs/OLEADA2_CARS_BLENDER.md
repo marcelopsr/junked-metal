@@ -1,6 +1,6 @@
 # Oleada 2 — Autos RC en Blender
 
-Estado: **blockout 8× `CarKind`** en `assets-src/cars/<id>/` · runtime: `src/carGlb.ts` + fallback procedural en `carModel()`.
+Estado: **pasada 2 (juguete RC)** 8× `CarKind` en `assets-src/cars/<id>/` · runtime: `src/carGlb.ts` + fallback procedural en `carModel()`. Blockout: 624–796 tris/hull; pasada 2: **652–888** tris (+4–14 % vs blockout): paragolpes `bumper_bar`, ventanas/trim, piloto con visor `Glass`.
 
 Referencias: [`ART_DIRECTION.md`](./ART_DIRECTION.md) (juguete RC, noche, low-poly legible), [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md) §2.2, `CARS` / `ANCH` en `src/models.ts` y `src/car.ts`.
 
@@ -58,7 +58,7 @@ Paso manual (ya lo hace `export_static`):
 
 ## Piloto
 
-Blockout **soldadito** en cada `.blend` (casco, visor, ojos negros) en `ANCH[kind].seat`. Si el jugador elige otro piloto en el garaje, `carModel()` oculta submallas `Pilot` y monta `pilotParts()` procedural.
+**Soldadito** en cada `.blend` (`pilot_soldadito`: torso, hombros, casco, visor `Glass`, ojos `Rubber`) en `ANCH[kind].seat`. Con piloto **soldadito** y hull GLB, no se añade `pilotParts()`. Con otro piloto, `carModel()` monta `pilotParts()` pero el mesh `Pilot` del GLB **sigue visible** — pendiente ocultar nodo/material `Pilot` al instanciar.
 
 ## Integración TypeScript
 

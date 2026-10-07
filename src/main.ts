@@ -7,7 +7,7 @@ import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineK
 import { ambient, burst, clearFx, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { activePad, btnName, camCycle, ctl, input, isTouch, keyHit, KEYS, padPressed, padSnap, pb, pollInput, setupTouch } from "./input";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
-import { GLB, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
+import { GLB, glbFootprint, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
 import { CAM_MODES, CAM_NAMES, type CamMode } from "./savefmt";
@@ -26,6 +26,7 @@ import { introOn, playIntro } from "./intro";
 import { CAR_YAW, carSpot, menuOff, menuTick, SHOTS } from "./menuscene";
 import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace, TRACKS } from "./kart";
 import { duelActive, duelDev, duelTick, exitDuel, initDuel, startDuel } from "./duel";
+import { exitMatch3, initMatch3, match3Active, match3Dev, match3PauseToggle, match3Tick, startMatch3 } from "./match3";
 
 const $ = (id: string) => document.getElementById(id)!;
 const R = BAL.ritmo, ATK = BAL.ataques; // balance.json: ritmo de la partida y ataques de bichos y jefes
@@ -73,7 +74,7 @@ type Gem = { m: B.InstancedMesh; xp: number; pull: boolean; vy: number };
 type Pickup = { m: B.AbstractMesh; type: "pila" | "iman" | "cofre" };
 type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number; k?: Kind }; // k: quién lo tiró (daño recibido por tipo)
 
-let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" | "duel" = "menu";
+let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" | "duel" | "match3" = "menu";
 let car: Car | null = null;
 let weapons: Weapon[] = [];
 let passives: Partial<Record<PassiveId, number>> = {};
@@ -382,6 +383,7 @@ addEventListener("pointerdown", skipOutro);
 function toMenu() {
   if (LAB.on) { LAB.on = false; god = false; }
   if (duelActive()) exitDuel();
+  if (match3Active()) exitMatch3();
   engineStop(); music("menu");
   persist(); // bestiario visto en la partida abandonada
   clearRun();
@@ -497,7 +499,11 @@ const T_AUTOS: Task = { id: "autos", label: "Cargando autos", w: 2, done: () => 
 // Plantillas instanciadas que la partida crearía al vuelo (un hipo al primer bicho, tuerca o pila): se arman antes, de a una por hueco libre
 const T_PLANTILLAS: Task = { id: "plantillas", label: "Cargando bichos", w: 2, done: () => plantillasOk, prog: () => fxN / fxTotal, run: async () => {
   const jobs: (() => unknown)[] = [() => gemTpl(1), () => gemTpl(5), () => gemTpl(20), pilaTpl, imanTpl, spitTpl, nutTpl];
-  for (const k of Object.keys(DEF) as Kind[]) if (!GLB[k]) jobs.push(() => enemyTemplate(k, DEF[k].scale), () => LEGS[k] && legTemplate(k), () => k === "polilla" && wingTemplate());
+  for (const k of Object.keys(DEF) as Kind[]) {
+    if (!GLB[k]) jobs.push(() => enemyTemplate(k, DEF[k].scale));
+    if (LEGS[k]) jobs.push(() => legTemplate(k));
+    if (k === "polilla") jobs.push(() => wingTemplate());
+  }
   fxTotal = jobs.length;
   for (fxN = 0; fxN < jobs.length; fxN++) { jobs[fxN](); await idle(); }
   plantillasOk = true;
@@ -513,7 +519,8 @@ const T_EFECTOS: Task = { id: "efectos", label: "Preparando efectos", w: 3, done
     for (const mat of m.material instanceof B.MultiMaterial ? m.material.subMaterials : [m.material]) if (mat && !seen.has(mat)) { seen.add(mat); jobs.push([mat, m]); }
   }
   fxTotal = jobs.length;
-  for (fxN = 0; fxN < jobs.length; fxN += 6) { await Promise.all(jobs.slice(fxN, fxN + 6).map(([mat, m]) => mat.forceCompilationAsync(m, { useInstances: m.position.y < -400 }).catch(() => undefined))); await idle(); } // las plantillas viven en y = -500
+  const compile = (mat: B.Material, mesh: B.Mesh) => Promise.race([mat.forceCompilationAsync(mesh, { useInstances: mesh.position.y < -400 }).catch(() => undefined), new Promise<void>((r) => setTimeout(r, 2000))]); // headless: sin tope un shader cuelga ensureAll; 2 s basta para los que compilan y shots no superan 90 s
+  for (fxN = 0; fxN < jobs.length; fxN += 6) { await Promise.all(jobs.slice(fxN, fxN + 6).map(([mat, m]) => compile(mat, m))); await idle(); } // las plantillas viven en y = -500
   fxN = fxTotal; efectosOk = true;
 } };
 preload([T_BICHOS, T_AUTOS, T_PLANTILLAS, worldTask(() => zoneFor(false)), T_EFECTOS], () => state === "menu");
@@ -550,7 +557,20 @@ function goDuel() {
   initAudio();
   void launch([T_EFECTOS], "Preparando demolición", () => enterDuel(), () => afterFrames(2));
 }
+function enterMatch3() {
+  initAudio(); clearRun(); menuOff();
+  state = "match3"; reset(null);
+  $("hud").classList.add("hidden");
+  const q = new URLSearchParams(location.search);
+  const seed = q.has("seed") ? Number(q.get("seed")) : 20261007;
+  startMatch3(Number.isFinite(seed) ? seed : 20261007);
+}
+function goMatch3() {
+  initAudio();
+  void launch([T_EFECTOS], "Encendiendo gabinete", () => enterMatch3(), () => afterFrames(2));
+}
 if (import.meta.env.DEV && /[?&]duel\b/.test(location.search)) setTimeout(() => goDuel(), 1500);
+if (import.meta.env.DEV && /[?&]match3\b/.test(location.search)) setTimeout(() => goMatch3(), 1500);
 if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2" && !isTouch) { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
 // Portada: fuentes del menú, dos cuadros dibujados (arma la escena del estante) y recién ahí se cierra la pantalla de carga; la precarga arranca con la portada ya a la vista
 boot("Cargando fuentes", 0.7);
@@ -559,7 +579,8 @@ boot("Armando el menú", 0.9);
 void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
 initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); }, load: (label, zone, go) => { void launch([worldTask(() => zone), T_EFECTOS], label, go, () => afterFrames(2), true); } }); // la luz del menú la pone menuTick
 initDuel({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); } });
-initMenu({ scene, play: launchRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), duel: goDuel });
+initMatch3({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); } });
+initMenu({ scene, play: launchRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), duel: goDuel, match3: goMatch3 });
 music("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: en cada carga de la página o apertura de la app instalada (cualquier tecla la salta); ?mute y ?lab (pruebas) no la muestran, ?intro la fuerza
 { const force = /[?&]intro\b/.test(location.search); if (force || !/[?&](mute|lab)\b/.test(location.search)) playIntro(!force); }
@@ -1190,6 +1211,8 @@ function beastTick(dt: number, on: boolean) {
   const kind = BV.kind!, d = DEF[kind], span = Math.max(d.size[0], d.size[2]);
   if (!beast) {
     const e = new Enemy(kind, new B.Vector3(0, PED_H, 0), 1);
+    e.node.rotationQuaternion = null;
+    e.node.rotation.y = BV.yaw;
     e.body.setMotionType(B.PhysicsMotionType.ANIMATED);
     e.body.disablePreStep = false; // el cuerpo sigue a la malla (no cae ni empuja)
     if (BV.elite) e.makeElite(BV.elite);
@@ -1201,7 +1224,8 @@ function beastTick(dt: number, on: boolean) {
     beast = { e, ped, key, seq: BV.seq, t: 9, vel, fx: 0, atk: 0 };
   }
   const b = beast, e = b.e, n = e.node;
-  if (b.seq !== BV.seq) { b.seq = BV.seq; b.t = 0; b.fx = 0; n.setEnabled(true); n.scaling.setAll(1); if (BV.anim === "attack") b.atk++; }
+  const vis = GLB[kind]?.visual ?? 1;
+  if (b.seq !== BV.seq) { b.seq = BV.seq; b.t = 0; b.fx = 0; n.setEnabled(true); n.scaling.setAll(vis); if (BV.anim === "attack") b.atk++; }
   b.t += dt;
   if (performance.now() - BV.touched > 2500) BV.yaw += dt * 0.35; // giro lento si nadie lo toca
   const t = b.t, A = BV.anim, at = kind === "tarantula" && b.atk % 2 === 0 ? TAR_JUMP : kind === "perro" && b.atk % 2 === 0 ? DOG_LANE : BATK[kind] ?? { wind: 0.35, hit: "lunge" as const };
@@ -1251,9 +1275,13 @@ function beastTick(dt: number, on: boolean) {
   }
   if (kind === "polilla") lift += 1.2 + Math.sin(performance.now() / 600) * 0.15; // vuela
   b.vel.copyFrom(fwd.scale(sp));
-  n.position.set(fwd.x * push, PED_H + lift, fwd.z * push);
-  n.rotationQuaternion = B.Quaternion.RotationYawPitchRoll(BV.yaw, pitch, roll);
+  const fp = glbTpl(kind) ? glbFootprint(kind) : { x: 0, z: 0 };
+  const ox = (Math.cos(BV.yaw) * fp.x + Math.sin(BV.yaw) * fp.z) * vis, oz = (-Math.sin(BV.yaw) * fp.x + Math.cos(BV.yaw) * fp.z) * vis;
+  n.position.set(fwd.x * push - ox, PED_H + lift, fwd.z * push - oz);
+  n.rotationQuaternion = null;
+  n.rotation.set(pitch, BV.yaw, roll);
   if (n.isEnabled()) e.animate(A === "phase" ? dt * 1.5 : dt);
+  else e.syncAttachParts();
   return span;
 }
 
@@ -1271,6 +1299,7 @@ scene.onBeforeRenderObservable.add(() => {
   else if (state === "outro") outroTick(dt);
   else if (state === "race") { if (padPressed(pb("pause"))) racePause(); if (padPressed(pb("ok"))) raceClick(); if (padPressed(pb("cam"))) camCycle(); if (padPressed(14)) racePadMenu(-1); if (padPressed(15)) racePadMenu(1); raceTick(dt); }
   else if (state === "duel") duelTick(dt);
+  else if (state === "match3") { if (padPressed(pb("pause"))) match3PauseToggle(); match3Tick(dt); }
   else if (!introOn()) menuPad(dt); // con la intro encima el menú no escucha el gamepad
 
   if (state === "play") {
@@ -1280,7 +1309,7 @@ scene.onBeforeRenderObservable.add(() => {
     updateHud(dt);
   }
   tickFx(dt * ts);
-  uiTick(dt, state === "play" || state === "duel");
+  uiTick(dt, state === "play" || state === "duel" || state === "match3");
   if (save.fps && (fpsT -= dt) <= 0) { // estadísticas: fps y ms de los cuadros dibujados (no los del navegador), resolución interna real y escala o modo FSR
     fpsT = 0.5;
     const g = gfxInfo();
@@ -1291,7 +1320,7 @@ scene.onBeforeRenderObservable.add(() => {
   // (si rotara, la dirección del stick cambiaría mientras girás).
   const k = 1 - Math.exp(-5 * dt);
   setWind(performance.now() / 1000, car?.pos ?? null);
-  if (state === "race" || state === "duel") {
+  if (state === "race" || state === "duel" || state === "match3") {
     // carrera / demolición manejan cámara en su módulo
   } else if (car) {
     const cm = CAMS[save.camMode];
@@ -1409,7 +1438,7 @@ scene.onBeforeRenderObservable.add(() => {
   }
   shake = Math.max(0, shake - dt * 2);
   const s = save.shake ? shake * shake * 0.8 : 0;
-  if (state !== "race" && state !== "duel") cam.setTarget(camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0)));
+  if (state !== "race" && state !== "duel" && state !== "match3") cam.setTarget(camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0)));
 });
 
 // Límite de FPS (Configuración → Imagen): el navegador no deja fijar la tasa, así que se saltan cuadros del bucle y su tiempo se suma al dt del siguiente
@@ -1523,8 +1552,9 @@ if (import.meta.env.DEV) Object.assign(window, {
   __out: () => JSON.stringify(Object.fromEntries(Object.entries(dmgOut).map(([k, v]) => [k, Math.round(v)]))), // daño infligido por arma
   __outro: () => { hp = -1; }, // fuerza la derrota (cierre en cámara lenta)
   __killBoss: () => enemies.forEach((e) => { if (e.def.boss) e.hp = 0; }),
-  __info: () => state === "duel" ? { state, ...duelDev.info(), fps: engine.getFps() } : ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps(), abil, abilCd, abilOn, worldK, stun: enemies.filter((e) => e.stun > 0).length, driveMul, endless, next: RUN_BOSSES[bossIdx] }),
+  __info: () => state === "duel" ? { state, ...duelDev.info(), fps: engine.getFps() } : state === "match3" ? { state, ...match3Dev.info(), fps: engine.getFps() } : ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps(), abil, abilCd, abilOn, worldK, stun: enemies.filter((e) => e.stun > 0).length, driveMul, endless, next: RUN_BOSSES[bossIdx] }),
   __duel: duelDev,
+  __match3: match3Dev,
   __car: () => car && { p: car.pos, f: car.root.forward },
   __look: look,
   // Opciones de Imagen sin pasar por el menú ni guardar: __cfg({ fsr: "rendimiento" }) o __cfg({ preset: "ultra" }); sin argumentos devuelve el estado

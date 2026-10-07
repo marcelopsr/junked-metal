@@ -14,6 +14,8 @@ Fecha: 2026-10-07. Objetivo: que el cambio se note en **≤30 s** abriendo ficha
 
 La pantalla **solo lista** (`#scr-bestiary`, shot `bestiario`) **no muestra mallas** — solo tarjetas HTML. Si solo se abre esa pantalla, oleada 1/1b/1c parecen “iguales”.
 
+**Oleada 2 (2026-10):** el salto grande en pantalla ya fue **1c**; el sculpt en `.blend` de plaga/jefes es **sutil** en el GLB publicado. Lo más nuevo en juego: **Garaje** (hull Blender en los 8 autos). Los 8 bichos procedural de `proc2/` siguen dibujados con `models.ts` hasta integración GLB.
+
 ## Capturas (headless, rc-test :5174)
 
 | Shot | PC | Celular |

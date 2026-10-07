@@ -8,7 +8,14 @@ sys.path.insert(0, os.path.join(ROOT, "assets-src"))
 sys.path.insert(0, os.path.join(ROOT, "assets-src", "proc2"))
 
 from toy_rigid import export_kind
-from meshes import BUILDERS, SCALES, build_polilla_body, build_polilla_wing
+from meshes import (
+    BUILDERS,
+    SCALES,
+    build_polilla_body,
+    build_polilla_wing,
+    build_rey_leg,
+    build_tarantula_leg,
+)
 
 KINDS = ("friccion", "robot", "polilla", "rey", "tarantula", "cortadora", "aspiradora", "cortacercos")
 
@@ -17,7 +24,15 @@ for kind in KINDS:
     os.makedirs(folder, exist_ok=True)
     if kind == "polilla":
         parts = [("Polilla", build_polilla_body), ("WingR", build_polilla_wing)]
+        pub_parts = ["Polilla"]
+    elif kind == "rey":
+        parts = [("Rey", BUILDERS[kind]), ("LegR", build_rey_leg)]
+        pub_parts = ["Rey"]
+    elif kind == "tarantula":
+        parts = [("Tarantula", BUILDERS[kind]), ("LegR", build_tarantula_leg)]
+        pub_parts = ["Tarantula"]
     else:
         parts = [(kind.capitalize(), BUILDERS[kind])]
-    export_kind(kind, folder, parts, scale=SCALES[kind], export_public=False)
+        pub_parts = None
+    export_kind(kind, folder, parts, scale=SCALES[kind], export_public=True, public_parts=pub_parts)
     print("OK", kind)

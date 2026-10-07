@@ -7,6 +7,8 @@
 
 **Estado** [Malla perro oleada 1](54aaf9fd-14e9-4138-b244-5a7fb064756b) (2026-10-07): **cerrado** — oleada **1b visible** (2026-10-07): pecho/orejas §1b, **6789** tris GLB, `SEQ` intacto, renders en `assets-src/perro/renders/`. Shots lab/jefes → integrador.
 
+**Oleada 2 sculpt** [Esculpir GLB perro gato](66a90a4a-1333-458b-890c-e658a869d3a6): `polish_oleada2.py` en `perro.blend` (pesos de hueso, no coords 0–1). Export **`export_blend.py`**; PNG con **`render_renders.py`**. `jump_slam` [0,40], `charge` [0,26] sin cambio. **No** volver a `perro.py` ni correr polish dos veces seguidas (acumula deformación).
+
 ---
 
 ## 1. Contrato con el motor (`glb.ts`)

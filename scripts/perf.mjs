@@ -36,7 +36,10 @@ try {
   for (const vp of a.vp ? [a.vp] : ["pc", "cel"]) {
     for (const s of sessions) {
       if (s.vps && !s.vps.includes(vp)) continue;
-      const sel = s.shots.filter((sh) => sh.perf !== false && (!only || only.some((o) => `${vp}-${s.id}-${sh.id}`.includes(o))));
+      const sel = s.shots.filter((sh) => sh.perf !== false && (!only || only.some((o) => {
+        const key = `${vp}-${s.id}-${sh.id}`;
+        return o.includes("-") ? key.includes(o) : sh.id === o || key === `${vp}-${s.id}-${o}`;
+      })));
       if (!sel.length) continue;
       const page = await open(browser, s.query, vp, { freeze: true }), cdp = await page.ctx.newCDPSession(page);
       await cdp.send("Performance.enable");

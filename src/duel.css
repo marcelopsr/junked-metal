@@ -158,6 +158,8 @@
 .duel-inter-title { margin: 0 0 0.5rem; font-size: 1.15rem; font-weight: 700; color: #b9d3a4; }
 .duel-inter-tip { margin: 0 0 1rem; font-size: 0.78rem; line-height: 1.35; color: #8fa88a; max-width: 22rem; margin-inline: auto; }
 .duel-inter-next { width: min(100%, 18rem); margin-inline: auto; }
+.duel-inter-menu { display: block; width: min(100%, 18rem); margin: 0.65rem auto 0; font: inherit; }
+#duel-pause-menu { margin-top: 0.5rem; width: 100%; }
 #duel-inter button, #duel-res button { font: inherit; padding: 0.55rem 1rem; min-height: 2.75rem; border: 1px solid #2c3a28; background: #0b0d0a; color: #b9d3a4; cursor: pointer; margin: 0.25rem; letter-spacing: 0.04em; }
 #duel-inter button:focus-visible, #duel-res button:focus-visible, #duel-flip:focus-visible { outline: 2px solid #e0a030; outline-offset: 2px; }
 #duel-confirm:not(:disabled):hover { background: #354430; }
