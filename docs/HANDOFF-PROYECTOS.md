@@ -94,7 +94,7 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 **Supervivencia — mejora de experiencia:** Fases 0–5 en [`docs/SURVIVAL_EXPERIENCE_PLAN.md`](./SURVIVAL_EXPERIENCE_PLAN.md). **Siguiente apuesta (usuario):** identidad de build — GDD [`docs/SURVIVAL_BUILD_IDENTITY.md`](./SURVIVAL_BUILD_IDENTITY.md); cerrar checklist §6 antes de código.
 
-**Upgrade visual modelos 3D:** [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md), [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md), [`VISUAL_MODELS_OLEADA1_GLB.md`](./VISUAL_MODELS_OLEADA1_GLB.md), [`encargos/`](./encargos/). Oleada 1 en **master** (`9dbe79e`). **Oleada 1b bestiario** integrada ([Integrador bestiario 1b](dba38453-252a-475a-8cf1-d1a297ea5a28): tsc/test/build OK; refs bestiario PC/cel en `.shots/ref/`). **Ver:** Menú → Bestiario (`:5173`). Commit 1b (5 GLB + `models.ts` procedural) pendiente en git; duelo WIP fuera. Renders: `assets-src/*/renders/`.
+**Upgrade visual modelos 3D:** master **`5b636a0`** + `1e08b75` — oleada **1c** (13 bichos + **8 autos** en Garaje, GLB re-export, materiales) — [Visual completo enemigos+autos](446725cc-80f4-4fa3-9666-a9f258127da7), tabla en [`OLEADA1C_FULL.md`](./encargos/OLEADA1C_FULL.md). **Ver:** Bestiario → **ficha** de cada bicho (la grilla no tiene 3D: [`OLEADA1C_VISIBLE_PROOF.md`](./encargos/OLEADA1C_VISIBLE_PROOF.md)). Garaje para autos. Duel WIP sin commit.
 
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 
