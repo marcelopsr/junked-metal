@@ -135,7 +135,8 @@ export function wheel(d: number, w: number, rim: string, style = "") {
     ...(style === "todoterreno" ? around(10, (a) => box(w * 1.2, d * 0.12, d * 0.17, M.rubber(), [0, Math.sin(a) * d * 0.5, Math.cos(a) * d * 0.5], [a, 0, 0])) : []),
     ...(style === "oruga" ? around(14, (a) => box(w * 1.1, d * 0.06, d * 0.09, M.rubber(), [0, Math.sin(a) * d * 0.5, Math.cos(a) * d * 0.5], [a, 0, 0])) : []),
     cyl(d * 0.62, d * 0.62, W * 1.04, M.metal(style === "rayos" ? "#e5e7eb" : rim), [0, 0, 0], [0, 0, Math.PI / 2], 20),
-    cyl(d * 0.48, d * 0.48, W * 1.08, M.matte("#1d2026"), [0, 0, 0], [0, 0, Math.PI / 2], 20), // fondo oscuro de la llanta
+    cyl(d * 0.52, d * 0.52, W * 1.1, M.plastic("#f0f2f5"), [0, 0, 0], [0, 0, Math.PI / 2], 20), // banda blanca toy
+    cyl(d * 0.46, d * 0.46, W * 1.12, M.matte("#0a0b0e"), [0, 0, 0], [0, 0, Math.PI / 2], 20),
     ...(style === "rayos" ? around(8, (a) => box(W * 1.1, d * 0.46, d * 0.04, M.plastic(SPOKES[Math.round((a / Math.PI / 2) * 8) % 8]), [0, 0, 0], [a, 0, 0]))
       : around(5, (a) => box(W * 1.1, d * 0.46, d * 0.07, M.metal(rim), [0, 0, 0], [a, 0, 0]))), // 5 rayos
     cyl(d * 0.2, d * 0.2, W * 1.14, M.metal(), [0, 0, 0], [0, 0, Math.PI / 2], 14),
@@ -357,6 +358,40 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     for (const [x, z] of [[-0.46, 0.66], [0.46, 0.66], [-0.46, -0.66], [0.46, -0.66]]) ws.push({ pos: [x, 0, z], d: 0.52, w: 0.18 });
   }
 
+  // Franjas de pintura / molduras (lectura en garaje y a distancia; trim del taller si hay)
+  {
+    const [bw, bh, bl] = CARS_SIZE[kind];
+    const trimM = M.plastic(o.trim ?? "#c9ccd1");
+    const dark = M.matte("#14171c");
+    const stripe = (w: number, h: number, l: number, mat: B.Material, pos: V3, rot?: V3) => parts.push(box(w, h, l, mat, pos, rot));
+    if (kind === "buggy") {
+      stripe(bw * 0.96, 0.07, bl * 0.88, dark, [0, bh * 0.2, 0]);
+      stripe(0.05, bh * 0.42, bl * 0.55, trimM, [bw * 0.5, bh * 0.48, 0.02]);
+      for (const sd of [-1, 1]) stripe(0.12, 0.22, 0.55, M.plastic("#ffc300"), [sd * bw * 0.42, bh * 0.55, -bl * 0.15]);
+    } else if (kind === "monster") {
+      for (const sd of [-1, 1]) stripe(0.22, 0.35, bl * 0.55, M.plastic("#ef4444"), [sd * (bw * 0.5 + 0.08), bh * 0.55, 0]);
+      stripe(bw * 0.55, 0.12, 0.08, dark, [0, bh * 0.92, bl * 0.38]);
+    } else if (kind === "formula") {
+      stripe(0.12, 0.04, bl * 0.75, M.plastic("#f8fafc"), [0, bh * 0.12, 0.05]);
+      stripe(bw * 0.35, 0.06, 0.35, trimM, [0, bh * 0.08, bl * 0.42]);
+    } else if (kind === "tanque") {
+      stripe(bw * 0.82, 0.08, bl * 0.35, dark, [0, bh * 0.72, bl * 0.08]);
+      for (const z of [-0.35, 0.35]) stripe(0.14, bh * 0.55, 0.14, trimM, [bw * 0.38, bh * 0.48, z]);
+    } else if (kind === "carrera") {
+      stripe(0.08, 0.05, bl * 0.7, M.plastic("#f8fafc"), [bw * 0.48, bh * 0.38, 0]);
+      stripe(0.08, 0.05, bl * 0.7, M.plastic("#111"), [-bw * 0.48, bh * 0.38, 0]);
+    } else if (kind === "axel") {
+      stripe(0.55, 0.1, 0.55, dark, [0, bh * 0.05, 0]);
+      for (const sd of [-1, 1]) tor(0.52, 0.04, M.plastic("#facc15"), [sd * 0.98, 0, 0], [0, 0, Math.PI / 2], 8);
+    } else if (kind === "helado") {
+      stripe(bw * 0.85, 0.08, 0.12, M.plastic("#fff0f5"), [0, bh * 0.62, -bl * 0.35]);
+      stripe(0.55, 0.06, bl * 0.5, trimM, [bw * 0.52, bh * 0.55, -0.15]);
+    } else if (kind === "combi") {
+      for (let i = 0; i < 4; i++) stripe(0.06, 0.14, 0.45, i % 2 ? trimM : M.matte("#d9cba6"), [bw * 0.52, bh * 0.35 + i * 0.16, -bl * 0.2 + i * 0.35]);
+      stripe(bw * 0.75, 0.06, 0.2, dark, [0, bh * 0.18, bl * 0.48]);
+    }
+  }
+
   // Detalle de juguete realista (todos los autos): aros cromados en los faros, luces traseras, espejos, parrilla y escapes
   {
     const [bw, bh, bl] = CARS_SIZE[kind], chrome = M.metal("#e6e9ee"), tail = M.glow("#ff3a2a");
@@ -513,14 +548,19 @@ export function pilotParts(id: string): B.Mesh[] {
     ];
   }
   // soldadito de plástico verde: todo de un color, casco con ala
-  const army = M.plastic("#55642c");
+  const army = M.plastic("#55642c"), face = M.matte("#3d4a22");
   return [
     cyl(0.19, 0.24, 0.28, army, [0, 0.14, 0], undefined, 8), ...arms(army), box(0.16, 0.16, 0.08, army, [0, 0.16, -0.13]),
-    sph(0.19, army, [0, 0.37, 0]), sph(0.23, army, [0, 0.42, 0], [1, 0.55, 1]), tor(0.24, 0.025, army, [0, 0.41, 0], undefined, 10),
+    sph(0.19, army, [0, 0.37, 0]), sph(0.23, army, [0, 0.42, 0], [1, 0.55, 1]), tor(0.24, 0.025, M.plastic("#e0a030"), [0, 0.41, 0], undefined, 10),
+    box(0.14, 0.05, 0.02, face, [0, 0.4, 0.1]),
+    sph(0.035, M.plastic("#111"), [0.05, 0.42, 0.11], undefined, 4), sph(0.035, M.plastic("#111"), [-0.05, 0.42, 0.11], undefined, 4),
   ];
 }
 
 // ---------- Enemigos ----------
+
+const VIS_1C = 1.22; // oleada 1c: silueta más legible en bestiario (no toca DEF.size ni colisión)
+const vis1c = (k: string, s: number) => s * (["friccion", "robot", "cortadora", "aspiradora", "cortacercos"].includes(k) ? VIS_1C : 1);
 
 export function enemyTemplate(kind: string, scale = 1): B.Mesh {
   return template(kind, () => {
@@ -537,17 +577,19 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         sph(0.88, dark, [0, 0.44, 1.02]),
         cyl(0.04, 0.26, 1.05, dark, [0, 0.8, 1.48], [1.02, 0, 0], 6),
         sph(0.14, shellHi, [0, 0.98, 2.02]),
-        sph(0.3, M.glow("#d0ff60"), [0.3, 0.56, 1.38]),
-        sph(0.3, M.glow("#d0ff60"), [-0.3, 0.56, 1.38]),
-        sph(0.11, M.glow("#b8e838"), [0, 0.64, 1.26], undefined, 4),
+        sph(0.34, M.glow("#d0ff60"), [0.32, 0.56, 1.38]),
+        sph(0.34, M.glow("#d0ff60"), [-0.32, 0.56, 1.38]),
+        sph(0.14, M.glow("#b8e838"), [0, 0.64, 1.28], undefined, 4),
+        box(0.18, 0.42, 1.35, M.plastic("#f5f0c8"), [0.62, 0.72, -0.22]),
+        box(0.18, 0.42, 1.35, M.plastic("#f5f0c8"), [-0.62, 0.72, -0.22]),
       ];
     }
     // ponytail: siluetas oleada2 (Kenney toy car / wind-up bot); extraer a models/enemies/{friccion,robot}.ts si crece más
     if (kind === "friccion") {
-      const orange = M.plastic("#f97316");
-      const dark = M.matte("#1a1410");
-      const chrome = M.metal("#e6e9ee");
-      const lamp = M.glow("#fff4d0");
+      const orange = M.plastic("#ff6b0a");
+      const dark = M.matte("#0d0a08");
+      const chrome = M.metal("#f0f4ff");
+      const lamp = M.glow("#fff8e8");
       return [
         box(0.72, 0.06, 1.55, dark, [0, 0.03, 0]),
         extrude([[-1.02, 0.04], [0.98, 0.04], [1.08, 0.14], [0.92, 0.28], [0.35, 0.34], [0.05, 0.52], [-0.35, 0.5], [-0.78, 0.38], [-1.02, 0.22]], 0.76, orange, [0, 0.06, 0]),
@@ -556,17 +598,18 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         box(0.02, 0.18, 0.1, orange, [0.28, 0.54, -0.82]),
         box(0.02, 0.18, 0.1, orange, [-0.28, 0.54, -0.82]),
         tube([[-0.36, 0.14, 1.02], [0, 0.11, 1.08], [0.36, 0.14, 1.02]], 0.035, chrome),
-        ...[[0.32, 0.2], [-0.32, 0.2]].flatMap(([x, y]) => [tor(0.2, 0.03, chrome, [x, y, 0.92], [Math.PI / 2, 0, 0], 10), sph(0.14, lamp, [x, y, 0.96], undefined, 6)]),
+        box(0.06, 0.04, 0.55, M.plastic("#f8fafc"), [0, 0.38, 0.35]),
+        ...[[0.32, 0.2], [-0.32, 0.2]].flatMap(([x, y]) => [tor(0.22, 0.035, chrome, [x, y, 0.92], [Math.PI / 2, 0, 0], 10), sph(0.16, lamp, [x, y, 0.97], undefined, 6)]),
         cyl(0.09, 0.09, 0.18, chrome, [0.42, 0.22, -0.15], [0, 0, Math.PI / 2], 8),
         ...[[-0.4, 0.48], [0.4, 0.48], [-0.4, -0.48], [0.4, -0.48]].map(([x, z]) => cyl(0.46, 0.46, 0.2, M.rubber(), [x, 0.14, z], [0, 0, Math.PI / 2], 10)),
         ...[[-0.4, 0.48], [0.4, 0.48]].map(([x, z]) => sph(0.1, orange, [x, 0.32, z], undefined, 4)),
       ];
     }
     if (kind === "robot") {
-      const tin = M.metal("#ef4444");
-      const tinDark = M.metal("#b91c1c");
-      const joint = M.metal("#9ca3af");
-      const lamp = M.glow("#facc15");
+      const tin = M.metal("#ff3b30");
+      const tinDark = M.metal("#991b1b");
+      const joint = M.metal("#b8c0cc");
+      const lamp = M.glow("#ffe566");
       const chrome = M.metal("#d4a017");
       const arm = (sx: number) => [
         cyl(0.1, 0.1, 0.35, joint, [sx * 0.48, 0.78, 0.12], [0, 0, -sx * 0.7], 8),
@@ -584,8 +627,9 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         cyl(0.38, 0.42, 0.32, tin, [0, 1.28, 0.02], undefined, 10),
         sph(0.4, tin, [0, 1.48, 0.02], [1, 0.75, 1], 8),
         box(0.52, 0.14, 0.06, M.matte("#111"), [0, 1.32, 0.24]),
-        sph(0.12, lamp, [0.16, 1.34, 0.28], undefined, 6),
-        sph(0.12, lamp, [-0.16, 1.34, 0.28], undefined, 6),
+        box(0.38, 0.08, 0.06, M.metal("#d4a017"), [0, 0.52, 0.26]),
+        sph(0.14, lamp, [0.16, 1.34, 0.28], undefined, 6),
+        sph(0.14, lamp, [-0.16, 1.34, 0.28], undefined, 6),
         cyl(0.025, 0.025, 0.38, joint, [0, 1.7, 0], undefined, 4),
         sph(0.07, M.glow("#e0a030"), [0, 1.92, 0], undefined, 4),
         ...arm(1),
@@ -596,15 +640,22 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
       ];
     }
     if (kind === "cortadora") {
-      const red = M.plastic("#dc2626");
+      // Juguete ride-on: plataforma gris, capó rojo alto, volante y barra de corte al frente (lectura a distancia)
+      const red = M.plastic("#dc2626"), deck = M.metal("#8b95a3"), dark = M.matte("#141414");
       return [
-        cyl(5.6, 6, 1.2, M.metal("#9ca3af"), [0, 0.9, 0], undefined, 20),
-        extrude([[-3, 0], [3, 0], [3, 0.8], [1.5, 1.6], [-2.5, 1.6], [-3, 1]], 4.6, red, [0, 1.3, 0]),
-        cyl(1.6, 1.8, 1.6, M.metal("#6b7f99"), [0, 3.6, 0.3], undefined, 12),
-        box(3, 0.4, 0.6, M.matte("#111"), [0, 3.1, -2.6]),
-        tube([[-1.8, 2.2, -2.8], [-1.8, 5, -5], [-1.8, 7.5, -6.2], [1.8, 7.5, -6.2], [1.8, 5, -5], [1.8, 2.2, -2.8]], 0.16, M.metal("#111")),
-        ...[[-2.8, 2.4], [2.8, 2.4], [-2.8, -2.4], [2.8, -2.4]].map(([x, z]) => cyl(1.8, 1.8, 0.7, M.rubber(), [x, 0.9, z], [0, 0, Math.PI / 2], 16)),
-        ...[[-3.2, 2.4], [3.2, 2.4], [-3.2, -2.4], [3.2, -2.4]].map(([x, z]) => cyl(0.9, 0.9, 0.15, M.metal("#fbbf24"), [x, 0.9, z], [0, 0, Math.PI / 2], 10)),
+        cyl(5.8, 6.2, 1.05, deck, [0, 0.82, -0.15], undefined, 16),
+        box(6.4, 0.35, 2.2, dark, [0, 0.42, 2.85]),
+        box(6.2, 0.22, 0.55, M.metal("#d6dbe1"), [0, 0.58, 3.35]),
+        extrude([[-3.2, 0], [3.2, 0], [3.2, 1.05], [2.2, 2.05], [-0.2, 2.35], [-3.2, 1.35]], 4.8, red, [0, 1.22, -0.35]),
+        box(2.2, 0.55, 1.4, M.plastic("#b91c1c"), [0, 2.05, -0.2]),
+        cyl(2.05, 2.15, 0.35, dark, [0, 3.35, 0.15], undefined, 10),
+        box(2.5, 0.12, 0.12, M.metal("#d6dbe1"), [0, 3.55, 0.15]),
+        box(0.12, 0.12, 2.5, M.metal("#d6dbe1"), [0, 3.55, 0.15]),
+        box(3.4, 0.45, 0.7, dark, [0, 3.05, -2.75]),
+        tube([[-2, 2.35, -2.95], [-2, 5.2, -5.2], [-2, 7.8, -6.35], [2, 7.8, -6.35], [2, 5.2, -5.2], [2, 2.35, -2.95]], 0.2, dark),
+        box(0.85, 0.12, 3.6, M.plastic("#facc15"), [2.55, 1.35, -0.1]),
+        ...[[-2.95, 2.35], [2.95, 2.35], [-2.95, -2.55], [2.95, -2.55]].map(([x, z]) => cyl(2, 2, 0.85, M.rubber(), [x, 0.88, z], [0, 0, Math.PI / 2], 12)),
+        ...[[-3.35, 2.35], [3.35, 2.35], [-3.35, -2.55], [3.35, -2.55]].map(([x, z]) => cyl(1.05, 1.05, 0.2, M.metal("#fbbf24"), [x, 0.88, z], [0, 0, Math.PI / 2], 8)),
       ];
     }
     if (kind === "polilla") {
@@ -642,49 +693,55 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
       ];
     }
     if (kind === "aspiradora") {
-      // Disco robot con paragolpes, torreta láser, boca de succión y cepillos laterales; sensores rojos al frente
-      const shell = M.plastic("#7a8fa6"), dark = M.matte("#111");
+      // Disco bajo tipo juguete: paragolpes negro, domo gris, torreta y ojos rojos grandes al frente (+z)
+      const shell = M.plastic("#7a8fa6"), dark = M.matte("#111"), bumper = M.rubber();
       return [
-        cyl(6.1, 6.4, 1.1, shell, [0, 0.7, 0], undefined, 24),
-        cyl(5.2, 5.6, 0.25, M.metal("#6b7a8a"), [0, 1.35, 0], undefined, 24),
-        tor(6.3, 0.32, M.rubber(), [0, 0.5, 0], undefined, 24),
-        cyl(1.2, 1.35, 0.5, dark, [0, 1.7, -0.9], undefined, 12),
-        cyl(1.1, 1.1, 0.1, M.plastic("#c8ccd2"), [0, 1.5, 1.1], undefined, 16),
-        box(3, 0.3, 0.4, M.matte("#0b0b0b"), [0, 0.35, 2.9]),
-        sph(0.45, M.glow("#ff2a1a"), [0.9, 0.95, 2.95]),
-        sph(0.45, M.glow("#ff2a1a"), [-0.9, 0.95, 2.95]),
+        tor(6.45, 0.42, bumper, [0, 0.48, 0], undefined, 20),
+        cyl(6.15, 6.45, 0.75, shell, [0, 0.62, 0], undefined, 20),
+        sph(4.2, shell, [0, 1.05, 0], [1, 0.42, 1], 8),
+        cyl(5.4, 5.7, 0.2, M.metal("#5c6b7a"), [0, 1.22, 0], undefined, 18),
+        box(4.8, 0.14, 0.35, M.plastic("#facc15"), [0, 1.28, 0.2]),
+        cyl(1.45, 1.55, 0.65, dark, [0, 1.75, -0.35], undefined, 10),
+        sph(0.75, M.glow("#ff2a1a"), [0, 2.05, 0.15], undefined, 6),
+        cyl(1.35, 1.35, 0.14, M.plastic("#c8ccd2"), [0, 1.55, 1.05], undefined, 12),
+        box(3.6, 0.38, 0.55, dark, [0, 0.32, 3.05]),
+        sph(0.62, M.glow("#ff2a1a"), [1.05, 0.88, 3.12]),
+        sph(0.62, M.glow("#ff2a1a"), [-1.05, 0.88, 3.12]),
         ...[-1, 1].flatMap((s) => [
-          cyl(1.5, 1.5, 0.06, M.matte("#555"), [s * 2.5, 0.12, 2.3], undefined, 6),
-          ...[0, 1, 2].map((k) => box(0.08, 0.05, 1.9, M.matte("#888"), [s * 2.5, 0.16, 2.3], [0, k * 1.05, 0])),
+          cyl(1.65, 1.65, 0.1, dark, [s * 2.75, 0.14, 2.45], undefined, 6),
+          ...[0, 1, 2].map((k) => box(0.14, 0.08, 2.1, M.matte("#9ca3af"), [s * 2.75, 0.2, 2.45], [0, k * 1.15, 0])),
         ]),
       ];
     }
     if (kind === "cortacercos") {
-      // Motor naranja con manija en D, espada con dientes y el cable de alimentación saliendo de atrás; LED rojo de encendido
+      // Herramienta eléctrica toy: bloque naranja atrás, mango en D, espada larga dentada hacia +z
       const body = M.plastic("#e0a030"), dark = M.matte("#1a1a1a"), steel = M.metal("#9ca3af");
       return [
-        box(2.4, 1.5, 3, body, [0, 1.15, -2.6]),
-        sph(2.6, body, [0, 1.8, -2.6], [1, 0.45, 1.2], 10),
-        box(2.5, 0.5, 2.4, dark, [0, 0.45, -2.6]),
-        tor(2.2, 0.22, dark, [0, 2.1, -0.9], [Math.PI / 2, 0, 0], 14),
-        tube([[0, 1.6, -4.1], [0, 2.6, -4.6], [0, 2.4, -5.1], [0, 1.3, -4.9]], 0.18, dark),
-        box(0.7, 0.18, 5.6, steel, [0, 0.9, 2.6]),
-        ...Array.from({ length: 10 }, (_, i) => [-1, 1].map((s) => box(0.35, 0.12, 0.2, M.metal("#d6dbe1"), [s * 0.48, 0.9, 0.2 + i * 0.55]))).flat(),
-        sph(0.3, M.glow("#ff2a1a"), [0.6, 1.95, -1.3]),
-        sph(0.3, M.glow("#ff2a1a"), [-0.6, 1.95, -1.3]),
-        tube([[0, 0.9, -4.1], [0, 0.3, -4.7], [0.6, 0.1, -5.4]], 0.12, dark),
+        box(2.65, 1.65, 3.2, body, [0, 1.12, -2.75]),
+        sph(2.85, body, [0, 1.95, -2.65], [1, 0.5, 1.15], 8),
+        box(2.7, 0.55, 2.6, dark, [0, 0.42, -2.7]),
+        box(0.55, 0.35, 1.1, M.plastic("#c2410c"), [0, 1.05, -1.35]),
+        tor(2.35, 0.28, dark, [0, 2.25, -0.75], [Math.PI / 2, 0, 0], 12),
+        tube([[0, 1.75, -4.25], [0, 2.85, -4.85], [0, 2.55, -5.35], [0, 1.35, -5.05]], 0.22, dark),
+        box(0.35, 0.55, 0.45, dark, [0.95, 2.05, -0.55]),
+        box(0.85, 0.28, 5.9, steel, [0, 0.92, 2.75]),
+        box(0.55, 0.22, 5.5, M.metal("#6b7280"), [0, 0.78, 2.75]),
+        ...Array.from({ length: 8 }, (_, i) => [-1, 1].map((s) => box(0.42, 0.18, 0.28, M.metal("#e5e7eb"), [s * 0.52, 0.92, -0.15 + i * 0.72]))).flat(),
+        sph(0.42, M.glow("#ff2a1a"), [0.72, 2.15, -1.15]),
+        sph(0.42, M.glow("#ff2a1a"), [-0.72, 2.15, -1.15]),
+        tube([[0, 0.92, -4.25], [0, 0.28, -4.95], [0.75, 0.08, -5.65]], 0.16, dark),
       ];
     }
     throw new Error(`enemyTemplate: ${kind} no tiene modelo procedural (los GLB van por glb.ts)`);
-  }, scale);
+  }, vis1c(kind, scale));
 }
 
 // ---------- Patas articuladas (instancias animadas aparte) ----------
 // Pata del lado derecho: cadera en el origen, fémur hacia arriba y afuera, tibia hasta el piso.
 // yaw (opcional): abre cada pata hacia adelante/atrás (lado derecho; el izquierdo se espeja)
 export const LEGS: Record<string, { hips: [number, number, number][]; len: number; r: number; color: string; scale: number; yaw?: number[]; knee?: string }> = {
-  rey: { hips: [[0.58, 0.36, -0.55], [0.62, 0.36, 0], [0.58, 0.36, 0.55]], len: 1.14, r: 0.088, color: "#0a0a0a", scale: 3.5, knee: "#3a4818" },
-  tarantula: { hips: [[0.38, 0.44, -0.12], [0.42, 0.44, 0.14], [0.42, 0.44, 0.38], [0.36, 0.44, 0.62]], len: 1.62, r: 0.118, color: "#1a120e", scale: 3, yaw: [0.82, 0.28, -0.28, -0.78], knee: "#5a2860" },
+  rey: { hips: [[0.58, 0.36, -0.55], [0.62, 0.36, 0], [0.58, 0.36, 0.55]], len: 1.14, r: 0.095, color: "#0a0a0a", scale: 3.5, knee: "#6ef040" },
+  tarantula: { hips: [[0.38, 0.44, -0.12], [0.42, 0.44, 0.14], [0.42, 0.44, 0.38], [0.36, 0.44, 0.62]], len: 1.62, r: 0.125, color: "#1a120e", scale: 3, yaw: [0.82, 0.28, -0.28, -0.78], knee: "#ff6fe8" },
 };
 export function legTemplate(kind: string) {
   const L = LEGS[kind];
@@ -698,9 +755,11 @@ export function legTemplate(kind: string) {
 
 // Ala de polilla (lado derecho, bisagra en el origen): se instancia de a dos y aletea en Enemy.animate
 export const wingTemplate = () => template("wing_polilla", () => [
-  sph(1.45, pbr("mothWing", { color: "#c9b88a", rough: 0.88, alpha: 0.9 }), [0.88, 0.02, -0.08], [1.45, 0.04, 1.15], 6),
-  sph(0.72, pbr("mothWingH", { color: "#b0a070", rough: 0.9, alpha: 0.88 }), [0.62, -0.02, 0.32], [1.25, 0.05, 0.95], 5),
-  sph(0.34, M.matte("#4a3a28"), [0.95, 0.05, -0.12], [1.15, 0.1, 1.05], 4),
+  sph(1.45, pbr("mothWing", { color: "#d4c090", rough: 0.86, alpha: 0.92 }), [0.88, 0.02, -0.08], [1.45, 0.04, 1.15], 6),
+  sph(0.72, pbr("mothWingH", { color: "#a89068", rough: 0.88, alpha: 0.9 }), [0.62, -0.02, 0.32], [1.25, 0.05, 0.95], 5),
+  sph(0.34, M.matte("#3a2818"), [0.95, 0.05, -0.12], [1.15, 0.1, 1.05], 4),
+  ...[[0.55, 0.08, 0.15], [1.05, -0.02, -0.2], [0.35, 0.12, 0.45]].map((p) => sph(0.22, M.matte("#2a1810"), p as V3, [1.2, 0.08, 1.1], 4)),
+  sph(0.18, pbr("mothWingSpot", { color: "#e8d8b0", rough: 0.7, alpha: 0.85 }), [0.78, 0.04, 0.05], [1.1, 0.06, 0.9], 4),
 ]);
 // Telegráfico de ataque enemigo en el piso (rojo = amenaza): aro + disco tenue, radio 1, se escala por instancia
 export function teleTemplate() {
@@ -719,9 +778,9 @@ export function sectorTemplate() {
     const d = B.MeshBuilder.CreateDisc("p", { radius: 1, tessellation: 24, arc: 1 / 3 }, scene);
     d.rotation.z = Math.PI / 6; d.bakeCurrentTransformIntoVertices(); // arco de 30° a 150°: centro en +y
     d.rotation.x = Math.PI / 2; d.bakeCurrentTransformIntoVertices(); // acostado: centro en +z
-    d.material = pbr("teleFill", { color: "#ff2a1a", rough: 1, emissive: "#a01008", alpha: 0.22 });
-    const edge: V3[] = [[0, 0.01, 0], ...Array.from({ length: 13 }, (_, i) => { const a = -Math.PI / 3 + (i * Math.PI) / 18; return [Math.sin(a), 0.01, Math.cos(a)] as V3; }), [0, 0.01, 0]];
-    return [d, tube(edge, 0.02, M.glow("#ff2a1a"))];
+    d.material = pbr("teleFillArc", { color: "#ff2a1a", rough: 1, emissive: "#c01808", alpha: 0.28 });
+    const edge: V3[] = [[0, 0.02, 0], ...Array.from({ length: 13 }, (_, i) => { const a = -Math.PI / 3 + (i * Math.PI) / 18; return [Math.sin(a), 0.02, Math.cos(a)] as V3; }), [0, 0.02, 0]];
+    return [d, tube(edge, 0.045, M.glow("#ff2a1a")), tor(1.88, 0.04, M.glow("#ff5a45"), [0, 0.02, 0], [Math.PI / 2, 0, 0], 20)];
   });
   shadows.removeShadowCaster(t);
   return t;
@@ -740,11 +799,15 @@ export function auraTemplate(t: string) {
 // Cable del cortacercos tirado en el piso (7 m a lo largo de z) con chispas rojas: es ataque enemigo
 export function cableTemplate() {
   const t = template("cable", () => [
-    cyl(0.18, 0.18, 7, M.matte("#141414"), [0, 0, 0], [Math.PI / 2, 0, 0], 6),
-    ...[-3.4, -1.7, 0, 1.7, 3.4].map((z) => sph(0.24, M.glow("#ff2a1a"), [0, 0.06, z], undefined, 4)),
+    cyl(0.26, 0.26, 7, M.matte("#141414"), [0, 0, 0], [Math.PI / 2, 0, 0], 6),
+    ...[-3.2, -1.6, 0, 1.6, 3.2].map((z, i) => box(0.38, 0.22, 0.55, M.plastic(i % 2 ? "#e0a030" : "#141414"), [0, 0.04, z])),
+    ...[-3.4, -1.7, 0, 1.7, 3.4].map((z) => sph(0.34, M.glow("#ff2a1a"), [0, 0.1, z], undefined, 5)),
   ]);
   shadows.removeShadowCaster(t);
   return t;
 }
 // Tuerca roja que dispara la aspiradora (ataque enemigo)
-export const nutTemplate = () => template("tuerca", () => [tor(0.6, 0.22, pbr("nutRed", { color: "#ff3a1f", rough: 0.3, metal: 0.6, emissive: "#c01800" }), [0, 0, 0], [Math.PI / 2, 0, 0], 6)]);
+export const nutTemplate = () => template("tuerca", () => [
+  tor(0.78, 0.28, pbr("nutRed", { color: "#ff3a1f", rough: 0.3, metal: 0.6, emissive: "#c01800" }), [0, 0, 0], [Math.PI / 2, 0, 0], 6),
+  cyl(0.32, 0.32, 0.12, M.matte("#1a1a1a"), [0, 0, 0], [Math.PI / 2, 0, 0], 6),
+]);

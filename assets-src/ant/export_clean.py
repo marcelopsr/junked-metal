@@ -6,7 +6,7 @@
 # - Sombreado suave. Engorda la malla tipo juguete: cada vértice se aleja del eje de sus huesos (mezclado por peso); el rig y las acciones no cambian.
 # - Agrega dos ojos (material "Eye") pesados al hueso de la cabeza; el juego los pinta emisivos.
 # - Acciones del juego: "walk" y "attack" (el original se llama "bite"). Solo se exportan los canales con keyframes.
-import bpy, os, math
+import bpy, os, math, subprocess
 from mathutils.geometry import intersect_point_line
 
 ant = bpy.data.objects["Ant"]
@@ -22,16 +22,16 @@ bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=F
 def fat(name):
     n = int(name.split(".")[1]) if "." in name else 0
     if name == "Bone.002":
-        return 2.05  # abdomen más volumen vs cintura
+        return 2.22  # abdomen más volumen vs cintura (oleada 1c)
     if name in ("Bone", "Bone.001"):
-        return 1.72  # tórax
+        return 1.88  # tórax
     if name == "Bone.031":
-        return 1.62  # cabeza
+        return 1.78  # cabeza
     if 3 <= n <= 6:
-        return 2.35  # mandíbulas — pinzas al juego
+        return 2.62  # mandíbulas — pinzas al juego
     if 32 <= n <= 37:
-        return 2.5  # antenas gruesas a distancia
-    return 2.45  # patas toy (ligeramente menos que antes para no robar silueta)
+        return 2.78  # antenas gruesas a distancia
+    return 2.68  # patas toy
 names = {g.index: g.name for g in ant.vertex_groups}
 bones = arm.data.bones
 for v in ant.data.vertices:
@@ -50,9 +50,9 @@ body_mat = ant.data.materials[0]
 for sx, bone in ((1, "Bone.004"), (-1, "Bone.003")):
     bpy.ops.mesh.primitive_cone_add(
         vertices=5,
-        radius1=0.052,
-        radius2=0.012,
-        depth=0.13,
+        radius1=0.062,
+        radius2=0.014,
+        depth=0.15,
         location=(0.11 * sx, 0.268, 0.095),
         rotation=(math.radians(68), 0, math.radians(22 * sx)),
     )
@@ -66,11 +66,14 @@ for sx, bone in ((1, "Bone.004"), (-1, "Bone.003")):
     bpy.ops.object.join()
 
 ant.data.materials[0].name = "Body"
-ant.data.materials[0].diffuse_color = (0.38, 0.11, 0.04, 1)  # marrón un poco más claro (contraste con patio)
+ant.data.materials[0].diffuse_color = (0.48, 0.14, 0.05, 1)  # caparazón más saturado (día / bestiario)
 eye = bpy.data.materials.new("Eye")
-eye.diffuse_color = (0.9, 0.12, 0.08, 1)
+eye.diffuse_color = (0.95, 0.18, 0.1, 1)
+p = eye.node_tree.nodes["Principled BSDF"]
+p.inputs["Emission Color"].default_value = (0.95, 0.15, 0.08, 1)
+p.inputs["Emission Strength"].default_value = 2.5
 for x in (0.105, -0.105):
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.048, location=(x, 0.238, 0.162))
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.056, location=(x, 0.238, 0.162))
     e = bpy.context.active_object
     bpy.ops.object.shade_smooth()
     e.data.materials.append(eye)
@@ -83,3 +86,8 @@ out = os.path.join(os.path.dirname(bpy.data.filepath), "ant_clean.glb")
 bpy.ops.export_scene.gltf(filepath=out, export_format="GLB", export_animations=True, export_animation_mode="ACTIONS",
                           export_force_sampling=False, export_yup=True, export_all_influences=False, export_texcoords=False,
                           export_materials="EXPORT")
+ROOT = os.path.normpath(os.path.join(os.path.dirname(bpy.data.filepath), "..", ".."))
+pub = os.path.join(ROOT, "public", "models", "ant.glb")
+subprocess.run(["npx", "gltf-transform", "optimize", out, pub, "--compress", "quantize", "--simplify", "false",
+                "--texture-compress", "false", "--palette", "false"], cwd=ROOT, check=True)
+print("EXPORT", pub)

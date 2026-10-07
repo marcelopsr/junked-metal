@@ -23,10 +23,10 @@ import { M, pbr, shadows } from "./render";
 // elige cuál mostrar con glbPlay. El valor son los m/s de suelo a los que el ciclo walk y el run no patinan (la zancada del modelo).
 // atk/hit (opcional): el bicho dispara su propio ataque (enemies.ts) y la animación dura atk segundos; el golpe (escupida,
 // arremetida) sale en la fracción hit de ella. Sin atk ataca al tocar al auto (touchCd), como la hormiga.
-export const GLB: Partial<Record<Kind, { file: string; scale: number; eye?: string; atk?: number; hit?: number; clips?: [walk: number, run: number] }>> = {
-  hormiga: { file: "ant", scale: 2 },
-  escupidora: { file: "escupidora", scale: 1, eye: "#ffb020", atk: 0.83, hit: 0.65 }, // assets-src/escupidora
-  escarabajo: { file: "escarabajo", scale: 1, eye: "#d0ff60", atk: 1, hit: 0.33 }, // assets-src/escarabajo
+export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla en pantalla sin tocar DEF.size (colisión) */ visual?: number; eye?: string; atk?: number; hit?: number; clips?: [walk: number, run: number] }>> = {
+  hormiga: { file: "ant", scale: 2, visual: 1.24, eye: "#ff4a28" },
+  escupidora: { file: "escupidora", scale: 1, visual: 1.22, eye: "#ffc040", atk: 0.83, hit: 0.65 }, // assets-src/escupidora
+  escarabajo: { file: "escarabajo", scale: 1, visual: 1.22, eye: "#e8ff50", atk: 1, hit: 0.33 }, // assets-src/escarabajo
   perro: { file: "perro", scale: 1, eye: "#3a2418", clips: [2.3, 13] }, // assets-src/perro (Felipe)
   gato: { file: "gato", scale: 1.1, eye: "#a8ff3a", clips: [2.3, 15.4] }, // assets-src/gato (Eulalio)
 };
@@ -99,9 +99,15 @@ async function load(scene: B.Scene, kind: Kind) {
   mesh.skeleton = sk;
   mesh.numBoneInfluencers = 4;
   const mat = (m: B.Material | null) => {
-    if (m?.name.startsWith("Eye")) return M.glow(o.eye ?? "#ff3020");
-    if (!m || (m.name === "Body" && !o.clips)) return M.plastic(DEF[kind].color);
+    if (m?.name.startsWith("Eye")) return pbr("glEye" + kind, { color: o.eye ?? "#ff3020", rough: 0.35, emissive: o.eye ?? "#ff3020" });
+    if (!m) return M.plastic(DEF[kind].color);
     const p = m as B.PBRMaterial, hex = p.albedoColor.toGammaSpace().toHexString();
+    if (m.name === "Body" && !o.clips) {
+      const metal = p.metallic ?? 0;
+      if (metal > 0.35) return pbr("glSh" + kind + hex, { color: hex, rough: p.roughness ?? 0.22, metal, coat: 0.45 });
+      // Oleada 1c: color del GLB (más contraste que un solo DEF.color plano en bestiario)
+      return pbr("glBd" + kind + hex, { color: hex, rough: 0.3, coat: 0.58 });
+    }
     if (o.clips) return pbr("fur" + hex + p.roughness, { color: hex, rough: p.roughness ?? 0.8 }); // jefes de pelo: mate, con el color y la rugosidad del GLB (Body incluido)
     if (p.alpha >= 1) return pbr("pl" + hex, { color: hex, rough: 0.32, coat: 0.5 }); // = M.plastic(hex)
     // translúcido (saco de ácido de la escupidora): conserva alpha y emisivo del GLB

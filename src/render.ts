@@ -376,7 +376,7 @@ export function wetGround(k: number) {
 export const M = {
   plastic: (c: string) => pbr("pl" + c, { color: c, rough: 0.32, coat: 0.5 }),
   matte: (c: string) => pbr("mt" + c, { color: c, rough: 0.8 }),
-  rubber: () => pbr("rubber", { color: "#1c1c1c", rough: 0.92 }),
+  rubber: () => pbr("rubber", { color: "#0c0d10", rough: 0.96 }),
   metal: (c = "#c9ccd1") => pbr("me" + c, { color: c, rough: 0.28, metal: 1 }),
   glass: () => pbr("glass", { color: "#1a2530", rough: 0.05, alpha: 0.75 }),
   glow: (c: string) => pbr("gl" + c, { color: c, rough: 0.4, emissive: c }),

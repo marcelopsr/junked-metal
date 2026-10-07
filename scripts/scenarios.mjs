@@ -57,6 +57,13 @@ export const sessions = [
     { id: "controles", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ scaler: "simple" })); await ctlTab(p); } },
     { id: "bestiario", act: async (p) => { await view("bestiary")(p); } },
     { id: "ficha", act: async (p) => { await p.dispatchEvent("#beasts [data-beast]", "click"); await wait(p, () => document.querySelector("#scr-beast.on")); await p.waitForTimeout(500); } },
+    { id: "ficha-hormiga", act: async (p) => {
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-beast="hormiga"]', "click");
+      await wait(p, () => document.querySelector("#scr-beast.on"));
+      await tick(p, 90);
+      await p.waitForTimeout(300);
+    } },
     { id: "creditos", act: view("credits") },
   ] },
   // Taller y garaje con compras: __cfg escribe el guardado en memoria (sin persistir) y la pantalla se vuelve a abrir para redibujarla
@@ -157,8 +164,8 @@ export const sessions = [
       await p.click('#scr-duel [data-act="duelgo"]');
       await wait(p, () => document.getElementById("duel-ui")?.classList.contains("fabricar") && !!document.getElementById("duel-fab-grid"));
       await p.evaluate(() => window.__duel.loadTemplate("cuna"));
-      await p.evaluate(() => window.__duel.refreshGhost?.());
-      await tick(p, 12);
+      await p.evaluate(() => { window.__duel.refreshGhost?.(); window.__duel.resetCam?.(); });
+      await tick(p, 20);
     } },
   ] },
 ];

@@ -113,7 +113,11 @@ export class Enemy {
     const tpl0 = glb ?? enemyTemplate(kind, d.scale);
     if (d.boss) tintable(tpl0); // también los GLB (glb.ts): el color por instancia convive con el shader de animación
     this.node = tpl0.createInstance(kind);
-    if (glb) this.vat = glbVat(this.node);
+    if (glb) {
+      this.vat = glbVat(this.node);
+      const vs = GLB[kind]?.visual ?? 1;
+      if (vs !== 1) this.node.scaling.setAll(vs);
+    }
     this.node.position.copyFrom(pos);
     this.node.rotation.y = rng() * 6.3;
     this.agg = new B.PhysicsAggregate(this.node, B.PhysicsShapeType.BOX,
