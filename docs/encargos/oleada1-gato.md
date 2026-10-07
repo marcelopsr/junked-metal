@@ -5,7 +5,7 @@
 
 Referencias: [`docs/VISUAL_MODELS_OLEADA1_GLB.md`](../VISUAL_MODELS_OLEADA1_GLB.md) (encargo E), [`docs/ART_DIRECTION.md`](../ART_DIRECTION.md), contrato GLB en [`src/glb.ts`](../../src/glb.ts).
 
-**Estado** [Malla gato oleada 1](75e6485e-122b-4bd5-be52-0f7fee934b99) (2026-10-07): **cerrado** — `gato.py` (silueta, `jump` cuadro 19, `spin`), **6965** tris; `spin` min Y **-0.17** (nota FK). Renders en `assets-src/gato/renders/`. Integrador: shots.
+**Estado** [Malla gato oleada 1](75e6485e-122b-4bd5-be52-0f7fee934b99) (2026-10-07): **cerrado** — oleada **1b visible** (2026-10-07): rayas/cola §1b, **6904** tris GLB; `spin` min Y **-0.17** sin cambio; `SEQ` intacto. Renders en `assets-src/gato/renders/`. Integrador: shots.
 
 ---
 
@@ -39,6 +39,17 @@ Los cuatro índices marcan **fotogramas Blender a 24 FPS** donde empieza cada tr
 | `spin` | `spin` | 0→4 agacharse · 4→20 **una vuelta** en ciclo (se repite 4× en 1,8 s) · 20→24 levantarse | Estados 2–3 (trompo); `recSeq = "spin"` al terminar |
 
 `swipe` existe en el GLB (contacto con el auto) pero **no** está en `SEQ`; no romper nombre ni duración si se retoca la malla.
+
+### 1b — Oleada visible (solo malla/materiales)
+
+**Alcance:** `region()` (rayas/panza), loft de cola y punta en `gato.py`. **Prohibido** tocar `JUMP`, `spin()`, `acts`, duraciones y `SEQ` ([0,19,29,38] / [0,4,20,24]).
+
+| Ítem | Criterio |
+|------|----------|
+| Rayas | Lomo y costados más contrastados; anillos de cola legibles en lab |
+| Cola | Silueta más gruesa en base y punta redondeada (trompo/salto) |
+| Tris | Techo **≤ 8 400** en `public/models/gato.glb` |
+| Verificación | `render-clips.sh` → `jump_agazapa`, `jump_aire`, `spin` + `lateral` |
 
 ---
 

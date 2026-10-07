@@ -6,7 +6,7 @@
 # - Sombreado suave. Engorda la malla tipo juguete: cada vértice se aleja del eje de sus huesos (mezclado por peso); el rig y las acciones no cambian.
 # - Agrega dos ojos (material "Eye") pesados al hueso de la cabeza; el juego los pinta emisivos.
 # - Acciones del juego: "walk" y "attack" (el original se llama "bite"). Solo se exportan los canales con keyframes.
-import bpy, os
+import bpy, os, math
 from mathutils.geometry import intersect_point_line
 
 ant = bpy.data.objects["Ant"]
@@ -18,14 +18,20 @@ bpy.ops.object.mode_set(mode="OBJECT")
 bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
 bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
 
-# Cuánto se ensancha cada parte alrededor de su hueso (1 = igual)
+# Cuánto se ensancha cada parte alrededor de su hueso (1 = igual). Oleada 1b: mandíbulas/antenas legibles.
 def fat(name):
     n = int(name.split(".")[1]) if "." in name else 0
-    if name == "Bone.002": return 1.8   # abdomen
-    if name in ("Bone", "Bone.001", "Bone.031"): return 1.5  # tórax, cuello, cabeza
-    if 3 <= n <= 6: return 1.5           # mandíbulas
-    if 32 <= n <= 37: return 1.8         # antenas
-    return 2.6                           # patas (Bone.007 a Bone.030)
+    if name == "Bone.002":
+        return 2.05  # abdomen más volumen vs cintura
+    if name in ("Bone", "Bone.001"):
+        return 1.72  # tórax
+    if name == "Bone.031":
+        return 1.62  # cabeza
+    if 3 <= n <= 6:
+        return 2.35  # mandíbulas — pinzas al juego
+    if 32 <= n <= 37:
+        return 2.5  # antenas gruesas a distancia
+    return 2.45  # patas toy (ligeramente menos que antes para no robar silueta)
 names = {g.index: g.name for g in ant.vertex_groups}
 bones = arm.data.bones
 for v in ant.data.vertices:
@@ -39,11 +45,32 @@ for v in ant.data.vertices:
 for p in ant.data.polygons: p.use_smooth = True  # sombreado suave: superficie de plástico, no facetas
 ant.data.update()
 
+# Pinzas extra (low-poly) — silueta de mandíbula a distancia
+body_mat = ant.data.materials[0]
+for sx, bone in ((1, "Bone.004"), (-1, "Bone.003")):
+    bpy.ops.mesh.primitive_cone_add(
+        vertices=5,
+        radius1=0.052,
+        radius2=0.012,
+        depth=0.13,
+        location=(0.11 * sx, 0.268, 0.095),
+        rotation=(math.radians(68), 0, math.radians(22 * sx)),
+    )
+    pin = bpy.context.active_object
+    bpy.ops.object.shade_smooth()
+    pin.data.materials.append(body_mat)
+    pin.vertex_groups.new(name=bone).add(list(range(len(pin.data.vertices))), 1.0, "REPLACE")
+    pin.select_set(True)
+    ant.select_set(True)
+    bpy.context.view_layer.objects.active = ant
+    bpy.ops.object.join()
+
 ant.data.materials[0].name = "Body"
-ant.data.materials[0].diffuse_color = (0.35, 0.09, 0.03, 1)
+ant.data.materials[0].diffuse_color = (0.38, 0.11, 0.04, 1)  # marrón un poco más claro (contraste con patio)
 eye = bpy.data.materials.new("Eye")
-for x in (0.09, -0.09):
-    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.035, location=(x, 0.215, 0.15))
+eye.diffuse_color = (0.9, 0.12, 0.08, 1)
+for x in (0.105, -0.105):
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.048, location=(x, 0.238, 0.162))
     e = bpy.context.active_object
     bpy.ops.object.shade_smooth()
     e.data.materials.append(eye)

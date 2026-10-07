@@ -43,8 +43,9 @@ m = q.Shape(S, T)
 m.loft([((0, 3.4, -3.55), 0.54, 0.54), ((0, 3.42, -3.05), 1.02, 1.0), ((0, 3.35, -2.2), 1.14, 1.14),
         ((0, 3.15, -1.0), 1.05, 1.14), ((0, 3.25, 0.3), 1.12, 1.2), ((0, 3.3, 1.5), 1.14, 1.28),
         ((0, 3.45, 2.45), 1.02, 1.22), ((0, 3.85, 3.05), 0.82, 0.95), ((0, 4.3, 3.5), 0.68, 0.72), ((0, 4.75, 3.95), 0.66, 0.66)])
-m.loft([(TAIL[0], 0.36, 0.36), (TAIL[1], 0.31, 0.31), (TAIL[2], 0.29, 0.29), (TAIL[3], 0.27, 0.27), (TAIL[4], 0.22, 0.22)], 14)
-m.ell((0, 2.58, -9.85), (0.22, 0.22, 0.26), 12, 8)
+# cola más gruesa en la base y punta redondeada — silueta icónica en trompo/salto (oleada 1b)
+m.loft([(TAIL[0], 0.41, 0.41), (TAIL[1], 0.35, 0.35), (TAIL[2], 0.32, 0.32), (TAIL[3], 0.29, 0.29), (TAIL[4], 0.24, 0.24)], 14)
+m.ell((0, 2.58, -9.85), (0.26, 0.26, 0.3), 12, 8)
 m.ell((0, 5.0, 4.35), (1.0, 0.88, 0.95))            # cráneo
 m.ell((0, 4.55, 5.12), (0.45, 0.35, 0.38))          # hocico
 m.ell((0, 4.2, 4.98), (0.32, 0.22, 0.32))           # mentón
@@ -81,9 +82,11 @@ def region(p, n):
         if z < 4.5 and y > 4.6 and n.y > -0.2 and math.sin(z * 9) > 0.4:  # nuca
             return STRIPE
         return BODY
-    # cola: anillos, punta oscura
+    # cola: anillos más contrastados, punta y base oscuras (oleada 1b)
     if z < -3.5 and y > 1.8:
-        return STRIPE if z < -9.4 or math.sin(-z * 7.2) > 0.12 else BODY
+        if z < -9.15 or z > -3.75:
+            return STRIPE
+        return STRIPE if math.sin(-z * 6.4) > -0.08 else BODY
     # patas: medias claras, adentro claro, anillos afuera
     legz = 1.5 < z < 3.2 or -3.5 < z < -1.2
     if ax > 0.3 and (y < 1.9 or (y < 2.35 and legz)):
@@ -94,9 +97,9 @@ def region(p, n):
     belly = 2.65 + 0.45 * max(0.0, z - 1.6)
     if y < belly or (z > 2.7 and n.z > 0.45 and y < 4.1 and ax < 0.55):
         return BELLY
-    if ax < 0.2 and n.y > 0.75:
+    if ax < 0.16 and n.y > 0.72 and y > belly + 0.25 and -3.3 < z < 2.85:
         return STRIPE
-    if y > belly + 0.2 and math.sin(z * 6.8 + 0.85 * math.sin(y * 2.3) + 1.1 * ax) > 0.22:
+    if y > belly + 0.12 and math.sin(z * 6.4 + 0.8 * math.sin(y * 2.2) + 1.05 * ax) > 0.04:
         return STRIPE
     return BODY
 

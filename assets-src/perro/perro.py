@@ -51,10 +51,10 @@ for s in (1, -1):
     m.ell((s * 0.5, 5.3, 6.05), (0.58, 0.5, 0.5))     # belfos
     m.ell((s * 1.2, 3.75, 2.2), (0.75, 1.1, 0.95))   # paletas
     m.ell((s * 1.15, 3.45, -2.3), (0.85, 1.35, 1.2))  # muslos
-    # oreja de murciélago: tres óvalos chatos de la base a la punta redonda, abiertos hacia afuera
-    m.ell((s * 1.1, 7.45, 4.6), (1.08, 0.92, 0.34))
-    m.ell((s * 1.42, 8.2, 4.55), (1.1, 0.88, 0.3))
-    m.ell((s * 1.65, 8.85, 4.48), (0.88, 0.68, 0.26))
+    # oreja de murciélago: tres óvalos chatos, punta redonda — silueta icónica a distancia (oleada 1b)
+    m.ell((s * 1.1, 7.45, 4.6), (1.12, 0.96, 0.36))
+    m.ell((s * 1.44, 8.28, 4.52), (1.14, 0.92, 0.32))
+    m.ell((s * 1.7, 9.05, 4.42), (0.96, 0.74, 0.28))
     m.tube([(s * 1.55, 3.9, 2.45), (s * 1.62, 2.3, 2.1), (s * 1.55, 0.55, 2.4)], [0.95, 0.62, 0.5])
     m.ell((s * 1.55, 0.38, 2.8), (0.66, 0.4, 0.85))   # mano
     m.tube([(s * 1.35, 3.6, -2.4), (s * 1.5, 2.3, -1.75), (s * 1.45, 1.2, -3.05), (s * 1.45, 0.4, -2.85)], [1.0, 0.7, 0.45, 0.45])
@@ -70,11 +70,18 @@ def region(p, n):
     ax, ay = abs(p.x), p.y
     if ((p.x / 0.5) ** 2 + ((p.y - 5.95) / 0.38) ** 2 + ((p.z - 6.62) / 0.32) ** 2) < 1:
         return 2
-    if ay > 7.6 and ax > 0.6 and n.z > 0.3 and q.seg_dist(Vector((ax, ay, 0)), Vector((1.1, 7.6, 0)), Vector((1.6, 9.0, 0))) < 0.58:
-        return 3
-    wob = 0.12 * math.sin(p.x * 5.0 + p.y * 3.0)
-    if p.z > 1.2 and n.z > 0.08 and (p.x / 1.15) ** 2 + ((ay - 3.25) / 1.65) ** 2 < 1.08 + wob:
-        return 1
+    # interior de oreja: franja rosa legible en 3/4 y frontal (oleada 1b)
+    if ay > 7.25 and ax > 0.42:
+        ear = q.seg_dist(Vector((ax, ay, 0)), Vector((1.05, 7.5, 0)), Vector((1.72, 9.05, 0)))
+        if ear < 0.78 and (n.z > 0.12 or (p.x * n.x > 0.2 and n.z > -0.08)):
+            return 3
+    # mancha blanca de pecho: babero ancho sin ruido procedural (oleada 1b)
+    if n.z > 0.1 and ax < 1.12:
+        bib = (p.x / 0.98) ** 2 + ((ay - 3.5) / 1.82) ** 2 + ((p.z - 2.45) / 1.42) ** 2
+        if p.z > 1.35 and ay > 2.75 and bib < 1.02:
+            return 1
+        if 2.65 < ay < 4.35 and p.z > 1.55 and (p.x / 0.78) ** 2 + ((ay - 3.3) / 1.15) ** 2 < 0.92:
+            return 1
     return 0
 
 

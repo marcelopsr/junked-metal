@@ -4,6 +4,17 @@ Fecha: 2026-10-07 · Agente **C** de [`VISUAL_MODELS_OLEADA1_GLB.md`](../VISUAL_
 
 **Estado** [Malla escarabajo oleada 1](4bd208b7-339a-4c9a-8575-351b042cd47f) (2026-10-07): **cerrado** — cambios en `escarabajo.py` (silueta, walk, embestida frames 8–12 / clave 10), cuerno **curvo**, **1328** tris, GLB publicado. Sin `glb.ts`. Shots/`__glbStats` → integrador.
 
+### §1b Oleada VISIBLE (2026-10-07)
+
+| Métrica | Antes (1a) | Después (1b) |
+|---------|------------|--------------|
+| Tris (`TRIS` / `glPrimitives`) | 1 328 | **1 534** (techo plan **1 594**) |
+| Submateriales GLB | 4 | **5** (`Shine` `#48c878` — conserva albedo en runtime, contraste con `Body`→plastic) |
+| `horn` | `curvo` | `curvo` (tubo más grueso al pie, punta más alta) |
+| Ojos | `emit=1.5` | `emit=1.8` |
+
+**Cambios visuales:** costura élitros más ancha; bandas `Shine` + cantos `Dark` laterales; cuerno curvo retocado; pose `attack` cuadro **8** más agachada (`ATK` + apertura de patas en carga). Renders en `assets-src/escarabajo/.renders/` (incl. `escarabajo_attack_carga_lejos.png`, cámara `dist=2.5`). Pipeline: Blender + `gltf-transform inspect` OK (`walk`/`attack`, sin meshopt/draco).
+
 ## Alcance y rutas disjuntas
 
 | Permitido (lectura/escritura) | Prohibido |
@@ -75,9 +86,9 @@ Scripts comprobados en esta máquina (evidencia para el agente):
 
 | Comando | Resultado |
 |---------|-----------|
-| `Blender -b --python assets-src/escarabajo/escarabajo.py` | OK · `TRIS escarabajo 1328` · `BONES 14` · `escarabajo_raw.glb` → `public/models/escarabajo.glb` (~59 KB) |
+| `Blender -b --python assets-src/escarabajo/escarabajo.py` | OK · `TRIS escarabajo 1534` (1b) · `BONES 14` · `escarabajo_raw.glb` → `public/models/escarabajo.glb` (~71 KB) |
 | `Blender -b --python assets-src/escarabajo/escarabajo.py -- export=0 render=/tmp/escarabajo-test` | OK · PNG `escarabajo_cuerno_curvo_34.png` |
-| `npx gltf-transform inspect public/models/escarabajo.glb` | 1 mesh, **1328** gl primitives, **4** submateriales; animaciones **`attack`** (9 canales), **`walk`** (15 canales); extensiones `KHR_mesh_quantization`, emissive strength |
+| `npx gltf-transform inspect public/models/escarabajo.glb` | 1 mesh, **1534** gl primitives, **5** submateriales; animaciones **`attack`** (9 canales), **`walk`** (15 canales); extensiones `KHR_mesh_quantization`, emissive strength |
 
 **Presupuesto tris oleada:** +10–20 % sobre **1328** → objetivo **~1460–1594** tris (techo orientativo del plan; no bloquear export si queda ~1400 con buena silueta).
 

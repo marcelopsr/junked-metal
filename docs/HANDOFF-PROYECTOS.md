@@ -94,7 +94,7 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 **Supervivencia — mejora de experiencia:** Fases 0–5 en [`docs/SURVIVAL_EXPERIENCE_PLAN.md`](./SURVIVAL_EXPERIENCE_PLAN.md). **Siguiente apuesta (usuario):** identidad de build — GDD [`docs/SURVIVAL_BUILD_IDENTITY.md`](./SURVIVAL_BUILD_IDENTITY.md); cerrar checklist §6 antes de código.
 
-**Upgrade visual modelos 3D:** [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md), [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md), [`VISUAL_MODELS_OLEADA1_GLB.md`](./VISUAL_MODELS_OLEADA1_GLB.md), [`encargos/`](./encargos/). Oleada 1 **integrada** ([integrador final](f0e2892b-a397-4260-9346-8497f60c538c): build verde). **Pendiente:** commit GLB+`assets-src`+docs; `--update` refs `cel-lab-jefes` (y duel/menús en tandas aparte). Oleada 2 procedurales (survey OSS).
+**Upgrade visual modelos 3D:** [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md), [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md), [`VISUAL_MODELS_OLEADA1_GLB.md`](./VISUAL_MODELS_OLEADA1_GLB.md), [`encargos/`](./encargos/). Oleada 1 en **master** (`9dbe79e`). **Oleada 1b bestiario** integrada ([Integrador bestiario 1b](dba38453-252a-475a-8cf1-d1a297ea5a28): tsc/test/build OK; refs bestiario PC/cel en `.shots/ref/`). **Ver:** Menú → Bestiario (`:5173`). Commit 1b (5 GLB + `models.ts` procedural) pendiente en git; duelo WIP fuera. Renders: `assets-src/*/renders/`.
 
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 

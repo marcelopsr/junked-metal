@@ -192,6 +192,34 @@ npm run shots -- --diff
 
 ---
 
+## Oleada 1b — polish visible (2026-10-07)
+
+**Objetivo:** silueta legible en partida (mandíbulas, antenas, ojos emisivos, contraste tórax/abdomen) sin pasar **1 488 tris** (+20 % sobre 1 240 publicados).
+
+| Etapa | Tris | Notas |
+|-------|------|--------|
+| `ant.blend` antes (oleada 1) | **1 080** | CC0 + rig |
+| `public/models/ant.glb` antes (1b) | **1 240** | Sin commit oleada 1 en repo en algunas tandas |
+| `ant.blend` tras `polish_1b.py` | **1 080** | Misma topología; vértices: cintura, mandíbulas +Y/±X, antenas alargadas |
+| `ant_clean.glb` / `public/models/ant.glb` tras 1b | **1 272** | `export_clean.py`: `fat()` mandíbulas 2.35, antenas 2.5, pinzas cone×2, ojos r=0.048 |
+
+**Scripts añadidos en `assets-src/ant/`:** `polish_1b.py` (persiste en `.blend`), `render_1b.py` → PNG en `assets-src/ant/renders/`.
+
+**Pipeline 1b:**
+
+```bash
+cd assets-src/ant
+/Applications/Blender.app/Contents/MacOS/Blender -b ant.blend --python polish_1b.py
+/Applications/Blender.app/Contents/MacOS/Blender -b ant.blend --python export_clean.py
+npx gltf-transform optimize ant_clean.glb ../../public/models/ant.glb \
+  --compress quantize --simplify false --texture-compress false --palette false
+/Applications/Blender.app/Contents/MacOS/Blender -b ant.blend --python render_1b.py
+```
+
+**No hecho en 1b:** subdivisión extra en `.blend` (probada; llevó a ~2 046 tris export — descartada). Sin cambios en `src/glb.ts`.
+
+---
+
 ## 10. Fuera de alcance
 
 - Escupidora, escarabajo, perro, gato (otros agentes oleada 1).

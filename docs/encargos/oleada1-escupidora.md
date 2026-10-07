@@ -6,6 +6,26 @@ Referencias obligatorias: `src/glb.ts` (contrato VAT), `docs/ART_DIRECTION.md` (
 
 **Estado** [Malla escupidora oleada 1](db2e6d0b-bf79-48ef-8499-33ab578c39e0) (2026-10-07): **cerrado** — `escupidora.py` (saco doble, walk/attack cuadro **13**), **1476** tris, `atk`/`hit` sin cambio. Shots → integrador.
 
+### Oleada 1b — VISIBLE (2026-10-07)
+
+Segunda pasada solo geometría/materiales/animación en `escupidora.py` (sin tocar `src/`).
+
+| Ítem | Cambio |
+|------|--------|
+| Saco `Sac` | Abdomen principal y gota trasera más anchos/altos; emisivo **0.55** (`#3d5500`), alpha **0.88**. |
+| Cabeza | Cráneo más alto/ancho; probóscis más larga y gruesa; ojos **0.19** radio. |
+| `Eye` | Emisión **3.0** (antes 1.5). |
+| `attack` cuadro **13** | Latigazo exagerado: cabeza **−0.82** rad, saco escala **0.76**, avance cabeza **0.2**; carga (10) también más marcada. |
+| `atk` / `hit` | Sin cambio (**0.83** / **0.65**); cuadro escupida sigue en **13**. |
+| Tris | **1476** (techo **1550**); bbox publicado ~±0.79 × ±0.42 × ±1.0 m. |
+| Renders | `assets-src/escupidora/renders/` — incluye **`game_15m`** y **`game_15m_escupe`** (`bicho.render` **dist=15**, ángulo 3/4 como lab). |
+
+```bash
+/Applications/Blender.app/Contents/MacOS/Blender -b --python assets-src/escupidora/escupidora.py -- render=assets-src/escupidora/renders
+```
+
+Integrador: `pm2 restart rc-test` → lab/bestiario; no hace falta `glb.ts` salvo QA visual.
+
 ---
 
 ## 1. Objetivo de producto

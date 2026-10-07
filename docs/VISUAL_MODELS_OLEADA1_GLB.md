@@ -1,6 +1,6 @@
 # Oleada 1 — Encargos GLB (5 carpetas en paralelo)
 
-Estado: **oleada 1 integrada** (2026-10-07) — mallas + [Integrador oleada 1 final](f0e2892b-a397-4260-9346-8497f60c538c): `tsc`/test/build OK; lab/bestiario capturados; `--diff` global rojo (menús/duel fuera de alcance). **Siguiente:** commit assets+docs; `shots --update` acotado (`cel-lab-jefes` + lab PC si aplica); Impeccable; oleada 2 procedurales.  
+Estado: **oleada 1b** (2026-10-07) — pulido visible 5 GLB + procedural bestiario; [Integrador bestiario 1b](dba38453-252a-475a-8cf1-d1a297ea5a28) verde + refs bestiario actualizadas (local `.shots/`). **Siguiente:** commit/push bundle 1b; cortadora/aspiradora/cortacercos si faltan en `models.ts`; Impeccable.  
 Plan maestro: [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md) · Encuesta OSS: [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md) · Arte: [`ART_DIRECTION.md`](./ART_DIRECTION.md).
 
 **Encargos por carpeta (detalle operativo):** [`encargos/oleada1-ant.md`](./encargos/oleada1-ant.md) · [`oleada1-escupidora.md`](./encargos/oleada1-escupidora.md) · [`oleada1-escarabajo.md`](./encargos/oleada1-escarabajo.md) · [`oleada1-perro.md`](./encargos/oleada1-perro.md) · [`oleada1-gato.md`](./encargos/oleada1-gato.md).
@@ -50,7 +50,7 @@ Medición en `public/models/*.glb` (cuantizados, los que carga el juego):
 |--------|---------|---------------|------------|-------------------|-------------|---------------------|
 | hormiga | `ant` | 1 240 | ≤ 1 488 | `walk`, `attack` | 2 | 0.9, 0.6, 1.7 |
 | escupidora | `escupidora` | 1 476 | ≤ 1 550 | `walk`, `attack` | 1 | 1.1, 0.8, 2.0 |
-| escarabajo | `escarabajo` | 1 328 | ≤ 1 594 | `walk`, `attack` | 1 | 1.7, 1.1, 2.3 |
+| escarabajo | `escarabajo` | 1 534 (1b) | ≤ 1 594 | `walk`, `attack` | 1 | 1.7, 1.1, 2.3 |
 | perro | `perro` | 6 935 | ≤ 8 332 | `idle`, `walk`, `run`, `rage`, `jump_slam`, `charge`, `death` | 1 | 3.2, 8, 8 |
 | gato | `gato` | 6 965 | ≤ 8 400 | `idle`, `walk`, `run`, `rage`, `jump`, `spin`, `swipe`, `death` | 1.1 | 3.4, 3.6, 6.4 |
 

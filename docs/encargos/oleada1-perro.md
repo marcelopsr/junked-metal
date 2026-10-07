@@ -5,7 +5,7 @@
 
 **Referencia de producto:** jefe final Felipe (bulldog francés gris, mancha blanca en pecho), `DEF.perro` en `src/enemies.ts` — colisión `[3.2, 8, 8]`, color base `#6e7279`. Dirección: `docs/ART_DIRECTION.md` (noche, low-poly, un foco, sin UI genérica).
 
-**Estado** [Malla perro oleada 1](54aaf9fd-14e9-4138-b244-5a7fb064756b) (2026-10-07): **cerrado** — `perro.py` (ojos `#3a2418`, pecho/orejas), **6935** tris, `SEQ` intacto. `public/models/perro.glb` actualizado. Shots lab/jefes → integrador.
+**Estado** [Malla perro oleada 1](54aaf9fd-14e9-4138-b244-5a7fb064756b) (2026-10-07): **cerrado** — oleada **1b visible** (2026-10-07): pecho/orejas §1b, **6789** tris GLB, `SEQ` intacto, renders en `assets-src/perro/renders/`. Shots lab/jefes → integrador.
 
 ---
 
@@ -33,6 +33,17 @@ Felipe usa el modo **clips** (todas las acciones del GLB se hornean a VAT a 24 c
 | `death` | ida | `range(0, 49)` |
 
 Materiales esperados: `Body`, `Chest`, `Nose`, `EarInner`, `Eye` (emisivo en juego). Con `clips`, el juego usa el color/rugosidad del GLB en pelo (`glb.ts`), no el `DEF.color` plano.
+
+### 1b — Oleada visible (solo malla/materiales)
+
+**Alcance:** `region()` y primitivas de orejas/pecho en `perro.py`. **Prohibido** tocar `JUMP`, `CHARGE`, `acts`, rangos de cuadros y `SEQ` ([0,12,28,40] / [0,7,16,26]).
+
+| Ítem | Criterio |
+|------|----------|
+| Mancha de pecho | Babero `Chest` blanco amplio, borde limpio (sin ruido sin), legible en 3/4 y frontal |
+| Orejas | Silueta de murciélago un poco más alta; `EarInner` visible en 3/4 |
+| Tris | Techo **≤ 8 332** en `public/models/perro.glb` |
+| Verificación | Export Blender + `render=` con al menos `frontal`, `34`, `jump_slam_golpe`, `charge` |
 
 ---
 

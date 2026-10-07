@@ -526,40 +526,73 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
   return template(kind, () => {
     // hormiga, escupidora, escarabajo, Felipe (perro) y Eulalio (gato) no están acá: son GLB animados (glb.ts, public/models/)
     if (kind === "rey") {
-      const shell = M.metal("#d4a017");
+      // Minijefe: elytra ancha, costura y cuerno; ojos lima como escarabajo (GLB)
+      const shell = M.metal("#d4a017"), shellHi = M.metal("#e8bc28");
       const dark = M.plastic("#111");
       return [
-        sph(1.6, shell, [0, 0.5, -0.15], [1, 0.6, 1.3], 10),
-        box(0.03, 0.5, 1.9, dark, [0, 0.72, -0.15]),
-        sph(0.75, dark, [0, 0.4, 0.95]),
-        cyl(0.02, 0.2, 0.9, dark, [0, 0.75, 1.35], [1.0, 0, 0], 6),
-        sph(0.22, M.glow("#d0ff60"), [0.24, 0.52, 1.24]),
-        sph(0.22, M.glow("#d0ff60"), [-0.24, 0.52, 1.24]),
+        sph(1.78, shell, [0, 0.56, -0.22], [1, 0.78, 1.48], 10),
+        sph(1.35, shellHi, [0, 0.74, -0.38], [1, 0.42, 1.15], 8),
+        box(0.06, 0.58, 2.05, dark, [0, 0.8, -0.22]),
+        box(0.42, 0.1, 1.55, dark, [0, 0.54, -0.22]),
+        sph(0.88, dark, [0, 0.44, 1.02]),
+        cyl(0.04, 0.26, 1.05, dark, [0, 0.8, 1.48], [1.02, 0, 0], 6),
+        sph(0.14, shellHi, [0, 0.98, 2.02]),
+        sph(0.3, M.glow("#d0ff60"), [0.3, 0.56, 1.38]),
+        sph(0.3, M.glow("#d0ff60"), [-0.3, 0.56, 1.38]),
+        sph(0.11, M.glow("#b8e838"), [0, 0.64, 1.26], undefined, 4),
       ];
     }
+    // ponytail: siluetas oleada2 (Kenney toy car / wind-up bot); extraer a models/enemies/{friccion,robot}.ts si crece más
     if (kind === "friccion") {
+      const orange = M.plastic("#f97316");
+      const dark = M.matte("#1a1410");
+      const chrome = M.metal("#e6e9ee");
+      const lamp = M.glow("#fff4d0");
       return [
-        extrude([[-0.75, 0], [0.75, 0], [0.8, 0.18], [0.3, 0.26], [0, 0.45], [-0.5, 0.45], [-0.75, 0.25]], 0.8, M.plastic("#f97316"), [0, 0.1, 0]),
-        box(0.6, 0.2, 0.05, M.glass(), [0, 0.45, 0.1], [-0.6, 0, 0]),
-        sph(0.18, M.glow("#fff4d0"), [0.3, 0.22, 0.78]),
-        sph(0.18, M.glow("#fff4d0"), [-0.3, 0.22, 0.78]),
-        ...[[-0.42, 0.45], [0.42, 0.45], [-0.42, -0.45], [0.42, -0.45]].map(([x, z]) => cyl(0.42, 0.42, 0.18, M.rubber(), [x, 0.12, z], [0, 0, Math.PI / 2], 10)),
+        box(0.72, 0.06, 1.55, dark, [0, 0.03, 0]),
+        extrude([[-1.02, 0.04], [0.98, 0.04], [1.08, 0.14], [0.92, 0.28], [0.35, 0.34], [0.05, 0.52], [-0.35, 0.5], [-0.78, 0.38], [-1.02, 0.22]], 0.76, orange, [0, 0.06, 0]),
+        box(0.48, 0.22, 0.38, M.glass(), [0, 0.44, -0.05], [-0.55, 0, 0]),
+        box(0.58, 0.04, 0.14, orange, [0, 0.48, -0.82]),
+        box(0.02, 0.18, 0.1, orange, [0.28, 0.54, -0.82]),
+        box(0.02, 0.18, 0.1, orange, [-0.28, 0.54, -0.82]),
+        tube([[-0.36, 0.14, 1.02], [0, 0.11, 1.08], [0.36, 0.14, 1.02]], 0.035, chrome),
+        ...[[0.32, 0.2], [-0.32, 0.2]].flatMap(([x, y]) => [tor(0.2, 0.03, chrome, [x, y, 0.92], [Math.PI / 2, 0, 0], 10), sph(0.14, lamp, [x, y, 0.96], undefined, 6)]),
+        cyl(0.09, 0.09, 0.18, chrome, [0.42, 0.22, -0.15], [0, 0, Math.PI / 2], 8),
+        ...[[-0.4, 0.48], [0.4, 0.48], [-0.4, -0.48], [0.4, -0.48]].map(([x, z]) => cyl(0.46, 0.46, 0.2, M.rubber(), [x, 0.14, z], [0, 0, Math.PI / 2], 10)),
+        ...[[-0.4, 0.48], [0.4, 0.48]].map(([x, z]) => sph(0.1, orange, [x, 0.32, z], undefined, 4)),
       ];
     }
     if (kind === "robot") {
       const tin = M.metal("#ef4444");
+      const tinDark = M.metal("#b91c1c");
+      const joint = M.metal("#9ca3af");
+      const lamp = M.glow("#facc15");
+      const chrome = M.metal("#d4a017");
+      const arm = (sx: number) => [
+        cyl(0.1, 0.1, 0.35, joint, [sx * 0.48, 0.78, 0.12], [0, 0, -sx * 0.7], 8),
+        box(0.16, 0.48, 0.16, tin, [sx * 0.62, 0.62, 0.28], [0.4, 0, -sx * 0.5]),
+        cyl(0.08, 0.1, 0.22, joint, [sx * 0.72, 0.42, 0.38], [0.5, 0, 0], 8),
+      ];
       return [
-        box(0.9, 0.8, 0.7, tin, [0, 0.55, 0]),
-        box(0.6, 0.45, 0.5, M.metal(), [0, 1.2, 0]),
-        sph(0.21, M.glow("#facc15"), [0.14, 1.25, 0.26]),
-        sph(0.21, M.glow("#facc15"), [-0.14, 1.25, 0.26]),
-        cyl(0.02, 0.02, 0.35, M.metal(), [0, 1.6, 0], undefined, 4),
-        box(0.18, 0.6, 0.18, tin, [0.56, 0.55, 0.1], [0.5, 0, 0]),
-        box(0.18, 0.6, 0.18, tin, [-0.56, 0.55, 0.1], [0.5, 0, 0]),
-        box(0.3, 0.2, 0.4, M.metal("#333"), [0.25, 0.1, 0]),
-        box(0.3, 0.2, 0.4, M.metal("#333"), [-0.25, 0.1, 0]),
-        cyl(0.08, 0.08, 0.35, M.metal("#d4a017"), [0, 0.6, -0.5], [Math.PI / 2, 0, 0], 6),
-        box(0.5, 0.25, 0.05, M.metal("#d4a017"), [0, 0.6, -0.7]),
+        box(0.42, 0.12, 0.55, tinDark, [0.28, 0.08, 0.05]),
+        box(0.42, 0.12, 0.55, tinDark, [-0.28, 0.08, 0.05]),
+        cyl(0.14, 0.16, 0.22, joint, [0.28, 0.24, 0.05], undefined, 8),
+        cyl(0.14, 0.16, 0.22, joint, [-0.28, 0.24, 0.05], undefined, 8),
+        cyl(0.52, 0.58, 0.72, tin, [0, 0.68, 0], undefined, 10),
+        cyl(0.48, 0.52, 0.08, tinDark, [0, 0.32, 0], undefined, 10),
+        box(0.7, 0.55, 0.45, tin, [0, 0.72, 0.02]),
+        cyl(0.38, 0.42, 0.32, tin, [0, 1.28, 0.02], undefined, 10),
+        sph(0.4, tin, [0, 1.48, 0.02], [1, 0.75, 1], 8),
+        box(0.52, 0.14, 0.06, M.matte("#111"), [0, 1.32, 0.24]),
+        sph(0.12, lamp, [0.16, 1.34, 0.28], undefined, 6),
+        sph(0.12, lamp, [-0.16, 1.34, 0.28], undefined, 6),
+        cyl(0.025, 0.025, 0.38, joint, [0, 1.7, 0], undefined, 4),
+        sph(0.07, M.glow("#e0a030"), [0, 1.92, 0], undefined, 4),
+        ...arm(1),
+        ...arm(-1),
+        cyl(0.06, 0.06, 0.12, joint, [0, 0.72, -0.38], [Math.PI / 2, 0, 0], 6),
+        tor(0.22, 0.045, chrome, [0, 0.76, -0.48], [Math.PI / 2, 0, 0], 12),
+        ...[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a) => box(0.06, 0.32, 0.05, chrome, [Math.sin(a) * 0.22, 0.76, -0.48 - Math.cos(a) * 0.22], [0, a, 0])),
       ];
     }
     if (kind === "cortadora") {
@@ -577,30 +610,35 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
     if (kind === "polilla") {
       // Cuerpo peludo y antenas plumosas; las alas van aparte (wingTemplate) para aletear
       const fur = M.matte("#d8c690");
+      const eye = pbr("mothEye", { color: "#c9a0ff", emissive: "#f0d8ff", rough: 0.35 });
+      const eyeCore = pbr("mothEyeCore", { color: "#ffffff", emissive: "#ffffff", rough: 0.2 });
       return [
-        sph(0.5, fur, [0, 0, -0.35], [0.8, 0.75, 1.5]),
-        sph(0.42, M.matte("#a8966c"), [0, 0.02, 0.08]),
-        sph(0.3, fur, [0, 0.02, 0.36]),
-        cyl(0.02, 0.06, 0.55, fur, [0.14, 0.22, 0.6], [0.9, 0, -0.5], 4),
-        cyl(0.02, 0.06, 0.55, fur, [-0.14, 0.22, 0.6], [0.9, 0, 0.5], 4),
-        sph(0.13, M.glow("#c9a0ff"), [0.1, 0.05, 0.47]),
-        sph(0.13, M.glow("#c9a0ff"), [-0.1, 0.05, 0.47]),
+        sph(0.54, fur, [0, 0, -0.38], [0.85, 0.78, 1.55]),
+        sph(0.46, M.matte("#a8966c"), [0, 0.03, 0.1]),
+        sph(0.34, fur, [0, 0.03, 0.4]),
+        cyl(0.025, 0.07, 0.62, fur, [0.16, 0.24, 0.64], [0.9, 0, -0.5], 4),
+        cyl(0.025, 0.07, 0.62, fur, [-0.16, 0.24, 0.64], [0.9, 0, 0.5], 4),
+        sph(0.2, eye, [0.11, 0.06, 0.5]),
+        sph(0.2, eye, [-0.11, 0.06, 0.5]),
+        sph(0.08, eyeCore, [0.11, 0.06, 0.52]),
+        sph(0.08, eyeCore, [-0.11, 0.06, 0.52]),
       ];
     }
     if (kind === "tarantula") {
-      // Cefalotórax + abdomen peludo con banda, quelíceros y racimo de ojos; las 8 patas van aparte (LEGS)
-      const hair = M.matte("#7a55a8"), dark = M.matte("#6b4a3a");
+      // Cefalotórax + abdomen con banda naranja, quelíceros gruesos; 8 patas en LEGS
+      const hair = M.matte("#7a55a8"), band = M.plastic("#c87830"), dark = M.matte("#4a3228");
       return [
-        sph(1.3, hair, [0, 0.55, -0.75], [1, 0.8, 1.15], 10),
-        sph(0.8, M.matte("#8a4a22"), [0, 0.86, -0.85], [1, 0.35, 1], 8),
-        sph(0.95, dark, [0, 0.45, 0.3], [1, 0.6, 1.15], 10),
-        cyl(0.05, 0.16, 0.35, M.plastic("#4a2a1a"), [0.13, 0.25, 0.85], [2.6, 0, 0], 5),
-        cyl(0.05, 0.16, 0.35, M.plastic("#4a2a1a"), [-0.13, 0.25, 0.85], [2.6, 0, 0], 5),
-        cyl(0.07, 0.09, 0.5, dark, [0.25, 0.35, 0.8], [1.2, 0, -0.4], 5),
-        cyl(0.07, 0.09, 0.5, dark, [-0.25, 0.35, 0.8], [1.2, 0, 0.4], 5),
-        sph(0.14, M.glow("#ff4fd8"), [0.09, 0.66, 0.68]),
-        sph(0.14, M.glow("#ff4fd8"), [-0.09, 0.66, 0.68]),
-        ...[[0.2, 0.62, 0.6], [-0.2, 0.62, 0.6], [0.14, 0.7, 0.52], [-0.14, 0.7, 0.52]].map((p) => sph(0.07, M.glow("#ff4fd8"), p as V3, undefined, 4)),
+        sph(1.5, hair, [0, 0.6, -0.82], [1, 0.88, 1.22], 10),
+        tor(1.08, 0.24, band, [0, 0.64, -0.58], [Math.PI / 2, 0, 0], 12),
+        sph(1.0, M.matte("#8a4a22"), [0, 0.92, -0.9], [1, 0.38, 1.05], 8),
+        sph(1.08, dark, [0, 0.5, 0.34], [1, 0.68, 1.22], 10),
+        cyl(0.07, 0.22, 0.48, M.plastic("#2a1810"), [0.17, 0.28, 0.98], [2.55, 0, 0], 5),
+        cyl(0.07, 0.22, 0.48, M.plastic("#2a1810"), [-0.17, 0.28, 0.98], [2.55, 0, 0], 5),
+        cyl(0.1, 0.13, 0.68, dark, [0.3, 0.4, 0.9], [1.25, 0, -0.38], 5),
+        cyl(0.1, 0.13, 0.68, dark, [-0.3, 0.4, 0.9], [1.25, 0, 0.38], 5),
+        sph(0.18, M.glow("#ff4fd8"), [0.12, 0.7, 0.74]),
+        sph(0.18, M.glow("#ff4fd8"), [-0.12, 0.7, 0.74]),
+        ...[[0.22, 0.64, 0.62], [-0.22, 0.64, 0.62], [0.16, 0.72, 0.54], [-0.16, 0.72, 0.54], [0, 0.76, 0.66]].map((p) => sph(0.08, M.glow("#ff4fd8"), p as V3, undefined, 4)),
       ];
     }
     if (kind === "aspiradora") {
@@ -644,23 +682,25 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
 // ---------- Patas articuladas (instancias animadas aparte) ----------
 // Pata del lado derecho: cadera en el origen, fémur hacia arriba y afuera, tibia hasta el piso.
 // yaw (opcional): abre cada pata hacia adelante/atrás (lado derecho; el izquierdo se espeja)
-export const LEGS: Record<string, { hips: [number, number, number][]; len: number; r: number; color: string; scale: number; yaw?: number[] }> = {
-  rey: { hips: [[0.5, 0.38, -0.5], [0.5, 0.38, 0], [0.5, 0.38, 0.5]], len: 1.0, r: 0.06, color: "#111111", scale: 3.5 },
-  tarantula: { hips: [[0.32, 0.45, -0.05], [0.36, 0.45, 0.18], [0.36, 0.45, 0.4], [0.3, 0.45, 0.6]], len: 1.5, r: 0.09, color: "#2a1d16", scale: 3, yaw: [0.75, 0.25, -0.25, -0.7] },
+export const LEGS: Record<string, { hips: [number, number, number][]; len: number; r: number; color: string; scale: number; yaw?: number[]; knee?: string }> = {
+  rey: { hips: [[0.58, 0.36, -0.55], [0.62, 0.36, 0], [0.58, 0.36, 0.55]], len: 1.14, r: 0.088, color: "#0a0a0a", scale: 3.5, knee: "#3a4818" },
+  tarantula: { hips: [[0.38, 0.44, -0.12], [0.42, 0.44, 0.14], [0.42, 0.44, 0.38], [0.36, 0.44, 0.62]], len: 1.62, r: 0.118, color: "#1a120e", scale: 3, yaw: [0.82, 0.28, -0.28, -0.78], knee: "#5a2860" },
 };
 export function legTemplate(kind: string) {
   const L = LEGS[kind];
   const hy = L.hips[0][1];
+  const knee = L.knee ? M.glow(L.knee) : M.plastic(L.color);
   return template("leg_" + kind, () => [
     tube([[0, 0, 0], [L.len * 0.45, L.len * 0.35, 0], [L.len * 0.95, -hy, 0]], L.r, M.plastic(L.color)),
-    sph(L.r * 3, M.plastic(L.color), [L.len * 0.45, L.len * 0.35, 0], undefined, 3), // rodilla: 8 patas por jefe, 6 por bicho
+    sph(L.r * 3, knee, [L.len * 0.45, L.len * 0.35, 0], undefined, 3), // rodilla: 8 patas por jefe, 6 por bicho
   ], L.scale);
 }
 
 // Ala de polilla (lado derecho, bisagra en el origen): se instancia de a dos y aletea en Enemy.animate
 export const wingTemplate = () => template("wing_polilla", () => [
-  sph(1.2, pbr("mothWing", { color: "#b8a77c", rough: 0.9, alpha: 0.92 }), [0.6, 0, -0.15], [1, 0.05, 0.95], 6),
-  sph(0.3, M.matte("#4a3a28"), [0.72, 0.04, -0.2], [1, 0.1, 1], 4),
+  sph(1.45, pbr("mothWing", { color: "#c9b88a", rough: 0.88, alpha: 0.9 }), [0.88, 0.02, -0.08], [1.45, 0.04, 1.15], 6),
+  sph(0.72, pbr("mothWingH", { color: "#b0a070", rough: 0.9, alpha: 0.88 }), [0.62, -0.02, 0.32], [1.25, 0.05, 0.95], 5),
+  sph(0.34, M.matte("#4a3a28"), [0.95, 0.05, -0.12], [1.15, 0.1, 1.05], 4),
 ]);
 // Telegráfico de ataque enemigo en el piso (rojo = amenaza): aro + disco tenue, radio 1, se escala por instancia
 export function teleTemplate() {
