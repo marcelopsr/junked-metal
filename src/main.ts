@@ -1202,7 +1202,7 @@ const BATK: Partial<Record<Kind, { tele?: "self" | "land" | "arc"; r?: number; w
 };
 const DOG_LANE = { lane: true as const, tele: undefined, r: undefined, wind: DOG_RAM.wind, hit: "lunge" as const }; // segundo ataque de Felipe: la embestida con su carril rojo
 const TAR_JUMP = { tele: "land" as const, r: ATK.salto_radio, wind: ATK.tarantula_salto_aviso_s, hit: "hop" as const }; // segundo ataque de la tarántula: salto con aro de caída
-let beast: { e: Enemy; ped: B.InstancedMesh; key: string; seq: number; t: number; vel: B.Vector3; fx: number; atk: number } | null = null; // atk: ataques pedidos (la tarántula alterna ráfaga y salto)
+let beast: { e: Enemy; ped: B.InstancedMesh; pivot: B.TransformNode; key: string; seq: number; t: number; vel: B.Vector3; fx: number; atk: number } | null = null; // atk: ataques pedidos (la tarántula alterna ráfaga y salto)
 function beastTick(dt: number, on: boolean) {
   const key = on && BV.kind ? BV.kind + BV.elite : "";
   if (beast && beast.key !== key) { beast.e.dispose(); beast.ped.dispose(); beast = null; }
@@ -1211,8 +1211,10 @@ function beastTick(dt: number, on: boolean) {
   const kind = BV.kind!, d = DEF[kind], span = Math.max(d.size[0], d.size[2]);
   if (!beast) {
     const e = new Enemy(kind, new B.Vector3(0, PED_H, 0), 1);
+    const pivot = new B.TransformNode("beastPivot", scene);
+    e.bindAttachPivot(pivot);
     e.node.rotationQuaternion = null;
-    e.node.rotation.y = BV.yaw;
+    e.node.rotation.y = 0;
     e.body.setMotionType(B.PhysicsMotionType.ANIMATED);
     e.body.disablePreStep = false; // el cuerpo sigue a la malla (no cae ni empuja)
     if (BV.elite) e.makeElite(BV.elite);
@@ -1221,9 +1223,9 @@ function beastTick(dt: number, on: boolean) {
     const ped = pedTpl().createInstance("ped");
     ped.position.setAll(0); // la instancia nace donde está la plantilla escondida
     ped.scaling.set(span * 0.62 + 0.4, PED_H, span * 0.62 + 0.4);
-    beast = { e, ped, key, seq: BV.seq, t: 9, vel, fx: 0, atk: 0 };
+    beast = { e, ped, pivot, key, seq: BV.seq, t: 9, vel, fx: 0, atk: 0 };
   }
-  const b = beast, e = b.e, n = e.node;
+  const b = beast, e = b.e, n = e.node, pivot = b.pivot;
   const vis = GLB[kind]?.visual ?? 1;
   if (b.seq !== BV.seq) { b.seq = BV.seq; b.t = 0; b.fx = 0; n.setEnabled(true); n.scaling.setAll(vis); if (BV.anim === "attack") b.atk++; }
   b.t += dt;
@@ -1275,13 +1277,15 @@ function beastTick(dt: number, on: boolean) {
   }
   if (kind === "polilla") lift += 1.2 + Math.sin(performance.now() / 600) * 0.15; // vuela
   b.vel.copyFrom(fwd.scale(sp));
-  const fp = glbTpl(kind) ? glbFootprint(kind) : { x: 0, z: 0 };
+  const attachExtra = e.legs.length || e.wings.length;
+  const fp = glbTpl(kind) && !attachExtra ? glbFootprint(kind) : { x: 0, z: 0 };
   const ox = (Math.cos(BV.yaw) * fp.x + Math.sin(BV.yaw) * fp.z) * vis, oz = (-Math.sin(BV.yaw) * fp.x + Math.cos(BV.yaw) * fp.z) * vis;
-  n.position.set(fwd.x * push - ox, PED_H + lift, fwd.z * push - oz);
+  pivot.position.set(fwd.x * push - ox, PED_H + lift, fwd.z * push - oz);
+  pivot.rotationQuaternion = null;
+  pivot.rotation.set(pitch, BV.yaw, roll);
   n.rotationQuaternion = null;
-  n.rotation.set(pitch, BV.yaw, roll);
+  n.rotation.setAll(0);
   if (n.isEnabled()) e.animate(A === "phase" ? dt * 1.5 : dt);
-  else e.syncAttachParts();
   return span;
 }
 
