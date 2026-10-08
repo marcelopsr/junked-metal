@@ -81,12 +81,13 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 **Hecho el 2026-10-04:** segunda barra de los jefes finales (vida original 8.000 / 7.500 / 7.000 + segunda barra al 50 % con daño ×1,5, `ataques.segunda_barra_*`), texto de Eulalio, app de la Mac renombrada, CI con `npm test` y README.
 
+**Hecho el 2026-10-08 (rendimiento):** los "~1.600 / ~3.200 draws" eran viejos: la línea base real (`.perf/2026-10-08-0155.json`) daba 142 en partida y 564 en carrera de 2. El mayor gasto era el GlowLayer, que redibujaba toda la escena. Ahora solo dibuja lo emisivo y lo opaco grande (radio > 4 m, que tapa halos; `GLOW_TAPA` en render.ts). PC: carrera 2J 564 → 447 draws (tris 1541k → 1505k), carrera curso 339 → 273, match3 100 → 77, portada 81 → 75, garaje 116 → 108, folded2 307 → 240. Celular sin cambio (no tiene bloom). Partida y lab no se pudieron volver a medir porque había WIP ajeno en weapons.ts. Recorte por distancia: ya existía (`setDrawDist`, DETAIL.draw: Bajo 95, Medio 145, Alto 220, Ultra sin límite) y ahora también alcanza a las instancias (cerca de tablones), poniendo el LOD en su plantilla.
+
 **Abierto (preguntar al usuario antes de tocar):**
 - Daño base del arma inicial (que la hormiga muera en 3 golpes y no 2): el usuario cortó la pregunta; quedó sin decidir.
 - Ritmo de subida de nivel con XP ×2 (el bot llega a nivel 26 a los 5 min).
 - Menús: portada con o sin bichos de juguete; posición del auto en el menú principal.
-- Configuración de imagen: gamma como curva de medios tonos; FSR apagado en carrera de 2 jugadores; recorte por distancia de props.
-- Rendimiento: ~1.600 draw calls en partida y ~3.200 en carrera a 2 jugadores (posible cuello de botella en celulares).
+- Configuración de imagen: gamma como curva de medios tonos; FSR apagado en carrera de 2 jugadores.
 
 **Modo Demolición (duelo melee):** GDD [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md); **armado producto = fabricación RoboCraft** (`fabricar`). Armado 3×3 legado solo dev: `?duel=legacy`. Mesa WORKBENCH [`docs/DEMOLICION_WORKBENCH.md`](./DEMOLICION_WORKBENCH.md) congelada. Scorecards: [`fabricacion-scorecard.md`](./impeccable/fabricacion-scorecard.md) 25/25; [`demolicion-scorecard.md`](./impeccable/demolicion-scorecard.md) (armado drag legacy). Regresión: `npm run playtest:duel` (incl. pantalla **inter** tras 1er asalto) + `npm run shots -- --only duel`. **Pendiente:** polaroid inter, GLB §36, sim duelo multi-seed. No tocar `goBattle()` de kart.
 

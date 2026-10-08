@@ -175,10 +175,13 @@ export function setZone(id: string, layout = true) {
   return true;
 }
 
-/** Detalle del mundo: distancia de dibujo de los props (0 = sin límite). Un LOD vacío esconde la malla cuando ni su punto más cercano entra en la distancia;
- *  las mallas fusionadas (su esfera abarca todo el patio) y el pasto (thin instances) no se recortan. */
+/** Detalle del mundo: distancia de dibujo de los props (0 = sin límite; Bajo 95, Medio 145, Alto 220: DETAIL en render.ts). Un LOD vacío esconde la malla
+ *  cuando ni su punto más cercano entra en la distancia (solo visibilidad: los colisionadores no se tocan); las mallas fusionadas (su esfera abarca todo
+ *  el patio) y el pasto (thin instances) no se recortan. */
 export function setDrawDist(d: number) {
-  for (const m of [...worldMeshes, ...layoutMeshes]) {
+  // Las instancias (cerca de tablones, cajas Folded) usan el LOD de su plantilla con su propia esfera: se recortan agregándolo a la plantilla.
+  const all = [...worldMeshes, ...layoutMeshes], srcs = new Set(all.flatMap((m) => (m instanceof B.InstancedMesh ? [m.sourceMesh] : [])));
+  for (const m of [...all, ...srcs]) {
     if (!(m instanceof B.Mesh) || m.isDisposed() || m.alwaysSelectAsActiveMesh || m.thinInstanceCount) continue;
     m.removeLODLevel(null);
     if (d) { m.computeWorldMatrix(true); m.addLODLevel(d + m.getBoundingInfo().boundingSphere.radiusWorld, null); }

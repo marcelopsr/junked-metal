@@ -65,7 +65,15 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   sky.infiniteDistance = true;
   sky.isPickable = false;
   // Bloom moderno sobre lo emisivo (faro, ojos, tuercas, ventanas); el cielo no. Fuera en táctil.
-  if (!low) { const gl = glowL = new B.GlowLayer("bloom", scene, { mainTextureRatio: 0.75, blurKernelSize: 24 }); gl.intensity = 0.35; gl.addExcludedMesh(sky); }
+  if (!low) { const gl = glowL = new B.GlowLayer("bloom", scene, { mainTextureRatio: 0.75, blurKernelSize: 24 }); gl.intensity = 0.35; gl.addExcludedMesh(sky);
+    // El mapa de brillo redibujaba TODA la escena (lo opaco en negro, para tapar halos): ~35-45 % de los draws. Ahora entra lo emisivo y, como tapa,
+    // solo lo opaco grande (paredes, casas, gabinete). ponytail: lo opaco chico (autos, props) ya no tapa halos detrás; si se nota, bajar GLOW_TAPA.
+    const GLOW_TAPA = 4; // radio (m) desde el que una malla opaca sigue tapando el brillo
+    (gl as unknown as { _thinEffectLayer: { _canRenderMesh(m: B.AbstractMesh, mat: B.Material): boolean } })._thinEffectLayer._canRenderMesh = (m, mat) => {
+      const e = mat as B.PBRMaterial;
+      return !e.emissiveColor || !!e.emissiveTexture || (e.emissiveColor.r + e.emissiveColor.g + e.emissiveColor.b) * (e.emissiveIntensity ?? 1) > 0
+        || m.getBoundingInfo().boundingSphere.radiusWorld > GLOW_TAPA;
+    }; }
   probe = new B.ReflectionProbe("probe", 128, scene);
   probe.renderList!.push(sky);
   probe.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
