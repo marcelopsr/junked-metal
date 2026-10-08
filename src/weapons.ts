@@ -86,7 +86,7 @@ export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: Passiv
 
 // Fusiones: dos armas a nivel 5 (o evolucionadas) se combinan en una sola, que nace evolucionada y libera un lugar.
 // La fusión conserva lo evolucionado de ambas y suma una sinergia (ver class Fusion).
-export const FUSIONS: { id: FusionId; from: [WeaponId, WeaponId]; desc: string }[] = [
+const FUSIONS: { id: FusionId; from: [WeaponId, WeaponId]; desc: string }[] = [
   { id: "chispazo", from: ["petardos", "tesla"], desc: "Racimo de petardos y tormenta eléctrica; cada explosión suelta un rayo en cadena. Fiesta con riesgo eléctrico" },
   { id: "globos", from: ["gomitas", "agua"], desc: "Gomitas saltarinas e hidrolavadora; cada gomita revienta y empapa en área. Cumpleaños infantil, versión bélica" },
   { id: "anillo", from: ["clips", "chispero"], desc: "Tornado de clips y estela infernal; los clips encendidos dejan fuego en su órbita. Compromiso eterno, con llamas" },
@@ -105,6 +105,8 @@ export abstract class Weapon {
   constructor(public id: WeaponId) {}
   abstract update(c: Ctx): void;
   dispose() {}
+  dano(cfg: { dano_base: number; dano_nivel: number }) { return cfg.dano_base + cfg.dano_nivel * this.lv; } // daño base por nivel (sin stats)
+  recarga(cfg: { recarga_min: number; recarga_base: number; recarga_nivel: number }) { return Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv); }
 }
 
 const nearest = (pos: B.Vector3, enemies: Enemy[], range: number, skip?: Set<Enemy>) => {
@@ -136,7 +138,7 @@ class Gomitas extends Weapon {
         }
       }
     }
-    const dmg = (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1);
+    const dmg = this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1);
     for (let i = this.shots.length - 1; i >= 0; i--) {
       const s = this.shots[i];
       s.m.position.addInPlace(s.dir.scale(cfg.velocidad * c.st.area * c.dt));
@@ -174,7 +176,7 @@ class Clips extends Weapon {
     const sc = this.evolved ? 2 : 1 + this.lv * 0.1;
     while (this.ms.length < n) this.ms.push(this.tpl.createInstance("c"));
     this.a += c.dt * (this.evolved ? 5 : 3.5);
-    const dmg = (this.evolved ? cfg.dano_evo_fijo : cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg;
+    const dmg = (this.evolved ? cfg.dano_evo_fijo : this.dano(cfg)) * c.st.dmg;
     this.ms.forEach((m, i) => {
       const a = this.a + (i * Math.PI * 2) / n;
       m.position.set(c.car.pos.x + Math.sin(a) * r, c.car.pos.y + 0.4, c.car.pos.z + Math.cos(a) * r);
@@ -206,7 +208,7 @@ class Chispero extends Weapon {
       this.t = X.chispero_intervalo_s;
       this.drop(c.car.pos, r, this.evolved ? cfg.duracion_evo : cfg.duracion_base + cfg.duracion_nivel * this.lv);
     }
-    const dps = (this.evolved ? cfg.dano_evo_fijo : cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg;
+    const dps = (this.evolved ? cfg.dano_evo_fijo : this.dano(cfg)) * c.st.dmg;
     for (let i = this.fires.length - 1; i >= 0; i--) {
       const f = this.fires[i];
       f.life -= c.dt;
@@ -231,7 +233,7 @@ class Petardos extends Weapon {
   update(c: Ctx) {
     const cfg = W.petardos;
     if ((this.cd -= c.dt) <= 0) {
-      this.cd = this.cdMax = Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv) * c.st.cooldown;
+      this.cd = this.cdMax = this.recarga(cfg) * c.st.cooldown;
       const n = cant(cfg, this.lv);
       for (let i = 0; i < n; i++) {
         const near = c.enemies.filter((e) => B.Vector3.Distance(e.pos, c.car.pos) < cfg.alcance);
@@ -250,7 +252,7 @@ class Petardos extends Weapon {
       f.m.rotation.x += c.dt * 12;
       if (Math.random() < c.dt * 18) FX.trail(f.m.position, "#ffb347");
       if (f.t >= 1) {
-        const r = (cfg.area_base + cfg.area_nivel * this.lv) * c.st.area, dmg = (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg;
+        const r = (cfg.area_base + cfg.area_nivel * this.lv) * c.st.area, dmg = this.dano(cfg) * c.st.dmg;
         c.explode(f.to, r, dmg);
         const nr = X.petardos_racimo_n;
         if (this.evolved) for (let k = 0; k < nr; k++) { const a = (k / nr) * Math.PI * 2; c.explode(f.to.add(new B.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)), r * X.petardos_racimo_radio, dmg * X.petardos_racimo_dano); }
@@ -267,8 +269,8 @@ class Tesla extends Weapon {
   update(c: Ctx) {
     const cfg = W.tesla;
     if ((this.cd -= c.dt) <= 0) {
-      if (this.zap(c, c.car.pos, c.car.pos.add(new B.Vector3(0.4, 1.6, -0.7)), this.evolved ? cfg.n_evo : cant(cfg, this.lv), (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1)))
-        this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv)) * c.st.cooldown;
+      if (this.zap(c, c.car.pos, c.car.pos.add(new B.Vector3(0.4, 1.6, -0.7)), this.evolved ? cfg.n_evo : cant(cfg, this.lv), this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1)))
+        this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown;
     }
     for (let i = this.bolts.length - 1; i >= 0; i--) { const b = this.bolts[i]; if ((b.life -= c.dt) > 0) continue; b.m.dispose(); this.bolts.splice(i, 1); }
   }
@@ -318,7 +320,7 @@ class Agua extends Weapon {
       const t = nearest(c.car.pos, c.enemies, R);
       if (t) {
         this.spray = this.evolved ? cfg.duracion_evo : cfg.duracion_base + cfg.duracion_nivel * this.lv;
-        this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv)) * c.st.cooldown;
+        this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown;
         this.dir.set(t.pos.x - c.car.pos.x, 0, t.pos.z - c.car.pos.z).normalize();
       }
     }
@@ -326,7 +328,7 @@ class Agua extends Weapon {
       this.spray -= c.dt;
       if ((this.tick -= c.dt) <= 0) {
         this.tick = X.agua_pulso_s;
-        const dmg = (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1), push = this.evolved ? X.agua_empuje_evo : X.agua_empuje;
+        const dmg = this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1), push = this.evolved ? X.agua_empuje_evo : X.agua_empuje;
         for (const e of c.enemies) {
           const dx = e.pos.x - c.car.pos.x, dz = e.pos.z - c.car.pos.z, d = Math.hypot(dx, dz);
           if (d < 0.01 || d > R + e.radius) continue;
@@ -402,7 +404,7 @@ class Yoyo extends Weapon {
     if (!this.ys.length && (this.cd -= c.dt) <= 0) {
       const t = nearest(c.car.pos, c.enemies, R + 2);
       if (t) {
-        this.cd = this.cdMax = Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv) * c.st.cooldown;
+        this.cd = this.cdMax = this.recarga(cfg) * c.st.cooldown;
         const n = cant(cfg, this.lv), base = Math.atan2(t.pos.x - c.car.pos.x, t.pos.z - c.car.pos.z);
         for (let i = 0; i < n; i++) {
           const a = base + (i - (n - 1) / 2) * X.yoyo_abanico;
@@ -410,7 +412,7 @@ class Yoyo extends Weapon {
         }
       }
     }
-    const dmg = (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg;
+    const dmg = this.dano(cfg) * c.st.dmg;
     for (let i = this.ys.length - 1; i >= 0; i--) {
       const y = this.ys[i];
       y.d += (y.back ? -X.yoyo_vuelta_vel : 1) * sp * c.dt; // vuelve más rápido de lo que sale
@@ -447,7 +449,7 @@ class Bengalas extends Weapon {
     if ((this.cd -= c.dt) <= 0) {
       const near = c.enemies.filter((e) => B.Vector3.Distance(e.pos, c.car.pos) < (ev ? cfg.alcance_evo : cfg.alcance));
       if (near.length) {
-        this.cd = this.cdMax = (ev ? cfg.recarga_evo : Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv)) * c.st.cooldown;
+        this.cd = this.cdMax = (ev ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown;
         const n = ev ? cfg.n_evo : cant(cfg, this.lv);
         for (let i = 0; i < n; i++) {
           const t = near[(rng() * near.length) | 0];
@@ -472,7 +474,7 @@ class Bengalas extends Weapon {
         f.m.dispose(); this.flying.splice(i, 1);
       }
     }
-    const dps = (ev ? cfg.dano_evo_fijo : cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg * (this.steam ? X.vapor_dano_mult : 1);
+    const dps = (ev ? cfg.dano_evo_fijo : this.dano(cfg)) * c.st.dmg * (this.steam ? X.vapor_dano_mult : 1);
     for (let i = this.zones.length - 1; i >= 0; i--) {
       const z = this.zones[i];
       z.life -= c.dt;
@@ -501,14 +503,14 @@ class Regla extends Weapon {
     if (!this.rs.length && (this.cd -= c.dt) <= 0) {
       const t = nearest(c.car.pos, c.enemies, R);
       if (t) {
-        this.cd = this.cdMax = (ev ? cfg.recarga_evo : Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv)) * c.st.cooldown;
+        this.cd = this.cdMax = (ev ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown;
         const base = Math.atan2(t.pos.x - c.car.pos.x, t.pos.z - c.car.pos.z);
         const na = ev ? cfg.n_evo : cant(cfg, this.lv), sep = ev ? X.regla_abanico_evo : X.regla_abanico;
         const angs = Array.from({ length: na }, (_, i) => (i - (na - 1) / 2) * sep); // en abanico
         angs.forEach((o, i) => this.rs.push({ m: this.tpl.createInstance("r"), from: c.car.pos.clone(), dir: new B.Vector3(Math.sin(base + o), 0, Math.cos(base + o)), side: i % 2 ? -1 : 1, t: 0, hit: new Set() }));
       }
     }
-    const dmg = (ev ? cfg.dano_evo_fijo : cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg, sc = ev ? X.regla_tamano_evo : 1;
+    const dmg = (ev ? cfg.dano_evo_fijo : this.dano(cfg)) * c.st.dmg, sc = ev ? X.regla_tamano_evo : 1;
     for (let i = this.rs.length - 1; i >= 0; i--) {
       const r = this.rs[i];
       const half = r.t < 0.5;
@@ -550,7 +552,7 @@ class Helado extends Weapon {
         SFX.click();
       }
     }
-    const dmg = (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1);
+    const dmg = this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1);
     for (let i = this.shots.length - 1; i >= 0; i--) {
       const s = this.shots[i];
       s.m.position.addInPlace(s.dir.scale(cfg.velocidad * c.st.area * c.dt));
@@ -585,14 +587,14 @@ class Bocina extends Weapon {
     if ((this.cd -= c.dt) <= 0) {
       const R = (this.evolved ? cfg.area_evo : cfg.area_base + cfg.area_nivel * this.lv) * c.st.area, t = nearest(c.car.pos, c.enemies, R);
       if (t) {
-        this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv)) * c.st.cooldown;
+        this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown;
         const m = this.tpl.createInstance("o");
         m.position.set(c.car.pos.x, 0.5, c.car.pos.z);
         this.waves.push({ m, t: 0, dir: new B.Vector3(t.pos.x - c.car.pos.x, 0, t.pos.z - c.car.pos.z).normalize(), R, full: this.evolved, hit: new Set() });
         SFX.boss();
       }
     }
-    const dmg = (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1);
+    const dmg = this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1);
     for (let i = this.waves.length - 1; i >= 0; i--) {
       const w = this.waves[i];
       w.t += c.dt / cfg.duracion_base;
@@ -603,7 +605,7 @@ class Bocina extends Weapon {
         if (w.hit.has(e)) continue;
         const dx = e.pos.x - c.car.pos.x, dz = e.pos.z - c.car.pos.z, d = Math.hypot(dx, dz);
         if (d > r + e.radius || d < 0.01) continue;
-        if (!w.full && dx * w.dir.x + dz * w.dir.z < d * 0.5) continue; // cono de unos 120°
+        if (!w.full && dx * w.dir.x + dz * w.dir.z < d * X.bocina_cono) continue; // cono de unos 120°
         w.hit.add(e);
         c.damage(e, dmg, new B.Vector3((dx / d) * X.bocina_empuje, 0.4, (dz / d) * X.bocina_empuje));
         if (this.lv >= X.bocina_aturde_desde_nivel || this.evolved) e.stun = Math.max(e.stun, this.evolved ? X.bocina_aturde_evo_s : X.bocina_aturde_s);
@@ -623,17 +625,17 @@ class Trompo extends Weapon {
   update(c: Ctx) {
     const cfg = W.trompo, ev = this.evolved;
     if (ev) { // órbita fija
-      while (this.tops.length < 2) this.tops.push({ m: this.tpl.createInstance("t"), target: null, life: 1e9, ang: this.tops.length * Math.PI, trail: 0 });
+      while (this.tops.length < X.trompo_evo_cantidad) this.tops.push({ m: this.tpl.createInstance("t"), target: null, life: 1e9, ang: this.tops.length * Math.PI, trail: 0 });
     } else if (!this.tops.length && (this.cd -= c.dt) <= 0) {
       const t = nearest(c.car.pos, c.enemies, cfg.alcance);
       if (t) {
-        this.cd = this.cdMax = Math.max(cfg.recarga_min, cfg.recarga_base - cfg.recarga_nivel * this.lv) * c.st.cooldown;
+        this.cd = this.cdMax = this.recarga(cfg) * c.st.cooldown;
         const m = this.tpl.createInstance("t");
         m.position.set(c.car.pos.x, 0.6, c.car.pos.z);
         this.tops.push({ m, target: t, life: cfg.duracion_base + cfg.duracion_nivel * this.lv, ang: 0, trail: 0 });
       }
     }
-    const dmg = (cfg.dano_base + cfg.dano_nivel * this.lv) * c.st.dmg * (ev ? cfg.dano_evo_mult : 1);
+    const dmg = this.dano(cfg) * c.st.dmg * (ev ? cfg.dano_evo_mult : 1);
     for (let i = this.tops.length - 1; i >= 0; i--) {
       const tp = this.tops[i];
       tp.m.rotation.y += c.dt * 25;
@@ -648,19 +650,19 @@ class Trompo extends Weapon {
         tp.m.position.addInPlace(to.scale((cfg.velocidad * c.dt) / Math.max(d, 0.01)));
         if (d < tp.target.radius + 0.8) { c.damage(tp.target, dmg, to.scale(X.trompo_empuje / Math.max(d, 0.01))); tp.target = nearest(tp.m.position, c.enemies.filter((e) => e !== tp.target), X.trompo_retarget); }
       }
-      for (const e of c.enemies) if (ev && Math.hypot(tp.m.position.x - e.pos.x, tp.m.position.z - e.pos.z) < e.radius + 1.1 && rng() < c.dt * 6) { c.damage(e, dmg * X.trompo_evo_contacto_mult, e.pos.subtract(tp.m.position).normalize().scale(X.trompo_empuje)); }
+      for (const e of c.enemies) if (ev && Math.hypot(tp.m.position.x - e.pos.x, tp.m.position.z - e.pos.z) < e.radius + 1.1 && rng() < c.dt * X.trompo_evo_golpes_s) { c.damage(e, dmg * X.trompo_evo_contacto_mult, e.pos.subtract(tp.m.position).normalize().scale(X.trompo_empuje)); }
       if ((tp.trail -= c.dt) <= 0) { // estela: un disco que corta un rato
-        tp.trail = 0.14;
+        tp.trail = X.trompo_estela_cada_s;
         const b = this.bladeTpl.createInstance("b");
         b.position.set(tp.m.position.x, 0.12, tp.m.position.z); b.rotation.x = Math.PI / 2;
-        this.blades.push({ m: b, life: 0.7 });
+        this.blades.push({ m: b, life: X.trompo_estela_vida_s });
       }
     }
     for (let i = this.blades.length - 1; i >= 0; i--) {
       const b = this.blades[i];
       b.life -= c.dt;
       b.m.rotation.z += c.dt * 10; // el desvanecido por visibility no hace nada en instancias (Babylon avisa por consola en cada llamada)
-      for (const e of c.enemies) if (Math.hypot(b.m.position.x - e.pos.x, b.m.position.z - e.pos.z) < e.radius + 0.9 && rng() < c.dt * 8) c.damage(e, dmg * X.trompo_estela_mult);
+      for (const e of c.enemies) if (Math.hypot(b.m.position.x - e.pos.x, b.m.position.z - e.pos.z) < e.radius + 0.9 && rng() < c.dt * X.trompo_estela_golpes_s) c.damage(e, dmg * X.trompo_estela_mult);
       if (b.life <= 0) { b.m.dispose(); this.blades.splice(i, 1); }
     }
   }
@@ -778,7 +780,7 @@ export function evoOffer(ws: Weapon[], ps: Partial<Record<PassiveId, number>>): 
 }
 
 // Primera fusión cuyas dos armas están a nivel 5 o evolucionadas
-export function fusionOffer(ws: Weapon[]): Offer | null {
+function fusionOffer(ws: Weapon[]): Offer | null {
   const ready = (id: WeaponId) => ws.some((w) => w.id === id && (w.lv >= NMAX || w.evolved));
   const f = FUSIONS.find((x) => !ws.some((w) => w.id === x.id) && ready(x.from[0]) && ready(x.from[1])); // cada fusión, una sola vez
   return f ? { kind: "fusion", id: f.id, title: WEAPONS[f.id].name, icon: f.id, desc: `${WEAPONS[f.from[0]].name} + ${WEAPONS[f.from[1]].name}. ${f.desc}` } : null;
