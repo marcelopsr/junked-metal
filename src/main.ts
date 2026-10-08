@@ -25,9 +25,7 @@ import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, sl
 import { introOn, playIntro } from "./intro";
 import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
 import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace, TRACKS } from "./kart";
-import { duelActive, duelDev, duelTick, exitDuel, initDuel, startDuel } from "./duel";
 import "./kit.css"; // kit de UI compartido: se carga después de todas las hojas (ver src/kit.css)
-import { exitMatch3, initMatch3, match3Active, match3Dev, match3PauseToggle, match3Tick, startMatch3 } from "./match3";
 
 const $ = (id: string) => document.getElementById(id)!;
 const R = BAL.ritmo, ATK = BAL.ataques; // balance.json: ritmo de la partida y ataques de bichos y jefes
@@ -385,8 +383,8 @@ addEventListener("pointerdown", skipOutro);
 
 function toMenu() {
   if (LAB.on) { LAB.on = false; god = false; }
-  if (duelActive()) exitDuel();
-  if (match3Active()) exitMatch3();
+  if (duelM?.duelActive()) duelM.exitDuel();
+  if (m3M?.match3Active()) m3M.exitMatch3();
   engineStop(); music("menu");
   persist(); // bestiario visto en la partida abandonada
   clearRun();
@@ -549,16 +547,25 @@ function enterRace(battle: boolean) {
   setRaceCar(save.car);
   if (battle) startBattle(); else startRace();
 }
+// Duelo y match-3 se cargan al entrar (chunks aparte): la portada no los necesita
+let duelM: typeof import("./duel") | null = null, m3M: typeof import("./match3") | null = null;
+const modeOpts = () => ({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); } });
+async function loadDuel() {
+  if (!duelM) { const m = await import("./duel"); m.initDuel(modeOpts()); duelM = m; if (import.meta.env.DEV) Object.assign(window, { __duel: m.duelDev }); }
+}
+async function loadMatch3() {
+  if (!m3M) { const m = await import("./match3"); m.initMatch3(modeOpts()); m3M = m; if (import.meta.env.DEV) Object.assign(window, { __match3: m.match3Dev }); }
+}
 function enterDuel() {
   initAudio(); clearRun(); menuOff();
   state = "duel"; reset(null);
   $("hud").classList.add("hidden");
   document.getElementById("touch")?.classList.add("hidden");
-  startDuel();
+  duelM!.startDuel();
 }
 function goDuel() {
   initAudio();
-  void launch([T_EFECTOS], "Preparando demolición", () => enterDuel(), () => afterFrames(2));
+  void loadDuel().then(() => launch([T_EFECTOS], "Preparando demolición", () => enterDuel(), () => afterFrames(2)));
 }
 function enterMatch3() {
   initAudio(); clearRun(); menuOff();
@@ -566,11 +573,11 @@ function enterMatch3() {
   $("hud").classList.add("hidden");
   const q = new URLSearchParams(location.search);
   const seed = q.has("seed") ? Number(q.get("seed")) : 20261007;
-  startMatch3(Number.isFinite(seed) ? seed : 20261007);
+  m3M!.startMatch3(Number.isFinite(seed) ? seed : 20261007);
 }
 function goMatch3() {
   initAudio();
-  void launch([], "Encendiendo gabinete", () => enterMatch3(), () => afterFrames(2));
+  void loadMatch3().then(() => launch([], "Encendiendo gabinete", () => enterMatch3(), () => afterFrames(2)));
 }
 if (import.meta.env.DEV && /[?&]duel\b/.test(location.search)) setTimeout(() => goDuel(), 1500);
 if (import.meta.env.DEV && /[?&]match3\b/.test(location.search)) setTimeout(() => goMatch3(), 1500);
@@ -586,8 +593,6 @@ await Promise.race([Promise.all(['500 16px Rajdhani', '700 16px Rajdhani'].map((
 boot("Armando el menú", 0.9);
 void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
 initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); }, load: (label, zone, go) => { void launch([worldTask(() => zone), T_EFECTOS], label, go, () => afterFrames(2), true); } }); // la luz del menú la pone menuTick
-initDuel({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); } });
-initMatch3({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); } });
 initMenu({ scene, play: launchRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), duel: goDuel, match3: goMatch3 });
 music("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: en cada carga de la página o apertura de la app instalada (cualquier tecla la salta); ?mute y ?lab (pruebas) no la muestran, ?intro la fuerza
@@ -1313,8 +1318,8 @@ scene.onBeforeRenderObservable.add(() => {
   } else if (state === "play") { if (padPressed(pb("pause"))) pause(); else if (padPressed(pb("cam"))) camCycle(); }
   else if (state === "outro") outroTick(dt);
   else if (state === "race") { if (padPressed(pb("pause"))) racePause(); if (padPressed(pb("ok"))) raceClick(); if (padPressed(pb("cam"))) camCycle(); if (padPressed(14)) racePadMenu(-1); if (padPressed(15)) racePadMenu(1); raceTick(dt); }
-  else if (state === "duel") duelTick(dt);
-  else if (state === "match3") { if (padPressed(pb("pause"))) match3PauseToggle(); match3Tick(dt); }
+  else if (state === "duel") duelM!.duelTick(dt);
+  else if (state === "match3") { if (padPressed(pb("pause"))) m3M?.match3PauseToggle(); m3M?.match3Tick(dt); }
   else if (!introOn()) menuPad(dt); // con la intro encima el menú no escucha el gamepad
 
   if (state === "play") {
@@ -1567,9 +1572,7 @@ if (import.meta.env.DEV) Object.assign(window, {
   __out: () => JSON.stringify(Object.fromEntries(Object.entries(dmgOut).map(([k, v]) => [k, Math.round(v)]))), // daño infligido por arma
   __outro: () => { hp = -1; }, // fuerza la derrota (cierre en cámara lenta)
   __killBoss: () => enemies.forEach((e) => { if (e.def.boss) e.hp = 0; }),
-  __info: () => state === "duel" ? { state, ...duelDev.info(), fps: engine.getFps() } : state === "match3" ? { state, ...match3Dev.info(), fps: engine.getFps() } : ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps(), abil, abilCd, abilOn, worldK, stun: enemies.filter((e) => e.stun > 0).length, driveMul, endless, next: RUN_BOSSES[bossIdx] }),
-  __duel: duelDev,
-  __match3: match3Dev,
+  __info: () => state === "duel" ? { state, ...duelM!.duelDev.info(), fps: engine.getFps() } : state === "match3" ? { state, ...m3M?.match3Dev.info(), fps: engine.getFps() } : ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps(), abil, abilCd, abilOn, worldK, stun: enemies.filter((e) => e.stun > 0).length, driveMul, endless, next: RUN_BOSSES[bossIdx] }),
   __car: () => car && { p: car.pos, f: car.root.forward },
   __look: look,
   // Opciones de Imagen sin pasar por el menú ni guardar: __cfg({ fsr: "rendimiento" }) o __cfg({ preset: "ultra" }); sin argumentos devuelve el estado
