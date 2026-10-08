@@ -1,6 +1,6 @@
 # Junked Metal — Handoff para Claude Projects
 
-Actualizado: 2026-10-06 · Ver `git log -1` para último commit en `master`.
+Actualizado: 2026-10-08 · Ver `git log -1` para último commit en `master`.
 
 Este documento es autocontenido: alcanza para retomar el proyecto sin el historial de las conversaciones.
 
@@ -12,15 +12,15 @@ Este documento es autocontenido: alcanza para retomar el proyecto sin el histori
 
 - **Tecnología:** Babylon.js 9 + física Havok + TypeScript + Vite. Corre en compu y celular (instalable como app).
 - **Creador:** TheDuende. Repo público `marcelopsr/junked-metal`; publicado en https://marcelopsr.github.io/junked-metal/ (cada push a `master` publica).
-- **Estilo actual:** cartoon brillante, contorno suave, menús de vidrio oscuro con tipografía Rajdhani. (Hubo una etapa PS1/retro que ya NO es el norte.)
-- **Modos:** Supervivencia (principal), Desafío diario (semilla del día), Carrera estilo Mario Kart (copa de 3 pistas, pantalla dividida) y Batalla de globos.
+- **Estilo actual (2026-10-08):** día estilo Megabonk + mundo Folded (chatarra industrial plegada, desgaste y óxido); HUD y menús de paneles de chapa oscura opaca con borde naranja, Rajdhani y tokens `--jm-*`. Noche, PSX y terminal verde son historia. Ver `docs/ART_DIRECTION.md`.
+- **Modos:** Supervivencia (principal), Desafío diario (semilla del día), Carrera estilo Mario Kart (copa de 3 pistas, pantalla dividida solo en compu), Batalla de globos, Junket Crush (match-3, campaña de 10 niveles) y Demolición (duelo melee).
 
 ### Contenido actual (resumen)
 - **Bichos:** hormiga, escupidora, escarabajo (modelos de Blender, animación horneada), autito a fricción, robot, polilla; élites raras Rápida y Blindada.
 - **Minijefes:** Escarabajo rey, Cortadora, Tarántula, Eulalio el michu (gato).
 - **Jefe final (sorteado por semilla):** Felipe el dogo (bulldog francés gris con pecho blanco), Aspiradora robot, Cortacercos eléctrico. Fase 2 con rugido, tinte rojo, vapor y halo que late.
 - **Armas:** gomitas, clips, chispero, petardos, tesla, lápiz-lanza, pistola de agua, yo-yo, bengalas, regla, helado, bocina, trompo; evoluciones con pasivas y 5 fusiones.
-- **Meta:** 5 autos, 5 pilotos, piezas visuales, editor de calcos 16×16, taller con mejoras, zonas compradas (Patio, Garaje de la casa, Jardín delantero), 15 logros, bestiario con ficha 3D, estadísticas.
+- **Meta:** 8 autos, 5 pilotos, piezas visuales, editor de calcos 16×16, taller con mejoras, zonas compradas (Patio, Garaje de la casa, Jardín delantero), 15 logros, bestiario con ficha 3D, estadísticas.
 - **Menús:** escenas propias (estante de juguetes de noche; mesa de taller), pantalla de carga con precarga distribuida, configuración de imagen completa (escala, FSR 1, preajustes Bajo/Medio/Alto/Ultra, FXAA/MSAA, nitidez, límite de FPS, FPS de menús, FOV, brillo, gamma).
 
 ---
@@ -86,18 +86,23 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 **Hecho el 2026-10-08 (limpieza tras el WIP):** duelo y match-3 con carga perezosa (`import()` en `main.ts`: `loadDuel()`/`loadMatch3()`; `__duel`/`__match3` existen solo tras entrar al modo; `duel.css`/`match3.css` quedan estáticos antes de `kit.css`); vitest excluye `.claude/**`; `dmgBy` ya no cuenta doble el contacto (fuente `contacto <bicho>` vía `hurt()`); nuevas filas `ritmo`: `revive_vida/radio/dano` y `embestida_rebote/_y` (mismos valores). Verificado: `sim` semillas 1,2,3 a 300 s idéntico con y sin el refactor de `weapons.ts`.
 
 **Abierto (preguntar al usuario antes de tocar):**
-- Daño base del arma inicial (que la hormiga muera en 3 golpes y no 2): el usuario cortó la pregunta; quedó sin decidir.
-- Ritmo de subida de nivel con XP ×2 (el bot llega a nivel 26 a los 5 min).
+- (Cerrado por la Fase 1 de `SURVIVAL_EXPERIENCE_PLAN.md`, ya no está abierto) Daño del arma inicial: gomitas `dano_base` 4, la hormiga muere en 3 impactos. Ritmo de XP: `dureza_xp` 1,62 y rampa lenta los primeros 180 s (`xp_temprana_mult` 0,78); el bot llega a nivel 12-13 a los 5 min.
 - Menús: portada con o sin bichos de juguete; posición del auto en el menú principal.
 - Configuración de imagen: gamma como curva de medios tonos; FSR apagado en carrera de 2 jugadores.
 
 **Modo Demolición (duelo melee):** GDD [`docs/DEMOLICION_GDD.md`](./DEMOLICION_GDD.md); **armado producto = fabricación RoboCraft** (`fabricar`). Armado 3×3 legado solo dev: `?duel=legacy`. Mesa WORKBENCH [`docs/DEMOLICION_WORKBENCH.md`](./DEMOLICION_WORKBENCH.md) congelada. Scorecards: [`fabricacion-scorecard.md`](./impeccable/fabricacion-scorecard.md) 25/25; [`demolicion-scorecard.md`](./impeccable/demolicion-scorecard.md) (armado drag legacy). Regresión: `npm run playtest:duel` (incl. pantalla **inter** tras 1er asalto) + `npm run shots -- --only duel`. **Pendiente:** polaroid inter, GLB §36, sim duelo multi-seed. No tocar `goBattle()` de kart.
 
-**Supervivencia (WIP local sin commit):** salto arcade (`salto_*` en `balance.json`, F / `#tJump` + barra CD), cartas con barra de vida + sub amenaza + botón re-sortear, chip taller `#wshop`, outro con stat. Verificar: `npm test` (51), `npm run perf -- --only partida_llena,carrera`.
+**Supervivencia (integrado, árbol limpio al 2026-10-08):** salto arcade (`salto_*` en `balance.json`, F / `#tJump` + barra CD), cartas con barra de vida + sub amenaza + botón re-sortear, chip taller `#wshop`, outro con stat. Verificar: `npm test` (51), `npm run perf -- --only partida_llena,carrera`.
 
-**Supervivencia — mejora de experiencia:** Fases 0–5 en [`docs/SURVIVAL_EXPERIENCE_PLAN.md`](./SURVIVAL_EXPERIENCE_PLAN.md). **Siguiente apuesta (usuario):** identidad de build — GDD [`docs/SURVIVAL_BUILD_IDENTITY.md`](./SURVIVAL_BUILD_IDENTITY.md); cerrar checklist §6 antes de código.
+**Supervivencia — mejora de experiencia:** Fases 0–5 en [`docs/SURVIVAL_EXPERIENCE_PLAN.md`](./SURVIVAL_EXPERIENCE_PLAN.md). Identidad de build ([`docs/SURVIVAL_BUILD_IDENTITY.md`](./SURVIVAL_BUILD_IDENTITY.md)): **DESCARTADA por el usuario (2026-10-06)**; el GDD queda solo como referencia.
 
-**Upgrade visual modelos 3D:** oleada **1c** (`5b636a0`, `1e08b75`). Oleada **2** cerrada **`dc5f1e5`** + **`8156093`** ([Integrador oleada 2 escultura](49dfbfed-b98a-44f4-a388-dd0a0e38160f), [Oleada 2 escultura Blender](32406723-a59f-47de-ad78-ccb54f48299b)): 5 GLB con sculpt en blend, 8 autos `carGlb.ts`, `proc2/` para 8 procedurales ([Esculpir 8 enemigos procedural](30b962b3-bcf4-4440-a240-c2733cd9754c)) — runtime procedural salvo plaga/jefes GLB y hulls de auto. Docs: [`OLEADA2_BLENDER_ART.md`](./encargos/OLEADA2_BLENDER_ART.md). **Si “se ve todo igual”:** [`OLEADA1C_VISIBLE_PROOF.md`](./encargos/OLEADA1C_VISIBLE_PROOF.md) (ficha 3D, no grilla); Garaje para autos; polilla/fricción/etc. **no** cambiaron en juego hasta oleada 2b. Pages = `origin/master`. **Pendiente:** proc2 → GLB runtime; `Pilot` GLB; `shots --diff`. **Local sin commit:** tope 2 s compilación shaders en `T_EFECTOS` (`main.ts`, [Verificar oleada 2 Composer](93452a02-b523-4ebe-92b1-e8b2c07314e8)) para que `shots` no cuelgue en headless. Duel WIP sin commit.
+**Upgrade visual modelos 3D:** oleada **1c** (`5b636a0`, `1e08b75`). Oleada **2** cerrada **`dc5f1e5`** + **`8156093`** ([Integrador oleada 2 escultura](49dfbfed-b98a-44f4-a388-dd0a0e38160f), [Oleada 2 escultura Blender](32406723-a59f-47de-ad78-ccb54f48299b)): 5 GLB con sculpt en blend, 8 autos `carGlb.ts`, `proc2/` para 8 procedurales ([Esculpir 8 enemigos procedural](30b962b3-bcf4-4440-a240-c2733cd9754c)) — runtime procedural salvo plaga/jefes GLB y hulls de auto. Docs: [`OLEADA2_BLENDER_ART.md`](./encargos/OLEADA2_BLENDER_ART.md). **Si “se ve todo igual”:** [`OLEADA1C_VISIBLE_PROOF.md`](./encargos/OLEADA1C_VISIBLE_PROOF.md) (ficha 3D, no grilla); Garaje para autos; polilla/fricción/etc. **no** cambiaron en juego hasta oleada 2b. Pages = `origin/master`. **Pendiente:** proc2 → GLB runtime; `Pilot` GLB; `shots --diff`. (Antes figuraban como "local sin commit" el tope de 2 s de compilación de shaders en `T_EFECTOS` y el WIP de duelo: ya están integrados, git limpio al 2026-10-08.)
+
+**Decisiones del usuario del 2026-10-08:**
+- **Arte vigente:** día estilo Megabonk + mundo Folded; HUD de paneles oscuros opacos con borde naranja, Rajdhani, tokens `--jm-*`. Lo de noche, foco duro, PSX y terminal de fósforo verde (VT323/Silkscreen) es historia (`docs/ART_DIRECTION.md`, sección Vigente).
+- **Modos en paralelo:** Carrera, Junket Crush (match-3) y Demolición siguen desarrollándose en paralelo a Supervivencia.
+- **Sin economía en modos laterales:** esos tres modos NO dan tornillos ni logros (aislados de la economía de Supervivencia). No volver a proponerlo sin una razón nueva.
+- **Textos del juego:** español neutro impersonal, sin voseo.
 
 **Ideas propuestas y no hechas:** eventos del patio, objetivos secundarios, enemigos de élite más variados, ranking del diario online, arranque automático de pm2 al prender la Mac.
 

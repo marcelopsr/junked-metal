@@ -1,85 +1,71 @@
 # Junked Metal — Dirección de arte
 
-Decidida con el equipo el 2026-09-29. Es la referencia para cualquier asset, shader o pantalla nueva.
+Referencia para cualquier asset, shader o pantalla nueva. Actualizada el 2026-10-08. Todo lo anterior a esta fecha que contradiga la sección "Vigente" está en "Historia (no vigente)" al final.
 
-## Sensación
-**Retro low-fi de la era PS1 (PSX-style), low-poly y luminoso.** Un auto RC en un patio que se vuelve noche mientras dura la partida.
-Referencias de partida: Buckshot Roulette y Lethal Company, pero el norte es la estética PS1 en general. **No es terror ni tétrico**:
-la escena se lee siempre bien. Low-poly sin verse cuadrado (nada de bloques). Decidida el 2026-10-03.
-**Ajuste 2026-10-03: moderno + "crude/janky retro".** PS1 es sabor (píxel, dither, color 15 bits), no imitación: nada de affine warping,
-Gouraud ni draw distance corta. Moderno en luz y feedback (bloom en emisivos, glitch VHS al recibir daño, apagón antes de cada jefe);
-tosco y hecho a mano en la UI (cartas torcidas, bordes mordidos, cinta de papel, fuentes pixel VT323 + Silkscreen, animaciones a pocos cuadros).
+## Vigente (2026-10-08)
 
-## Textos (regla absoluta)
-Español neutro e impersonal en todo texto visible: "Presiona", "Sobrevive", "El auto quedó destrozado". Nunca voseo ("Apretá", "querés")
-ni "tu/te". Créditos sin tecnologías: historia breve y "Creado por TheDuende".
-UI funcional (movimientos, objetivo, botones, avisos) en español neutro; branding, carteles, slogans, chistes y nombres propios (p. ej. "Junket Crush", "GOOD METAL / BRIGHTER DAYS") en inglés y fuera de la traducción.
+**Dirección:** partidas de **DÍA** al estilo Megabonk (sol alto, cielo azul, colores saturados, low-poly con texturas pixeladas y contornos suaves) sobre un mundo **Folded**: chatarra industrial plegada y ensamblada (chapa, perfiles, remaches), con desgaste y óxido. HUD y menús de **paneles de chapa oscura opaca con borde naranja gastado**, tipografía **Rajdhani** y tokens `--jm-*`.
 
-## Paleta y render
-- **Ciclo atardecer → noche:** cada partida arranca en ATARDECER y anochece entre el 20% y el 65% del tiempo hasta la noche de la semilla
-  (noche de luna, niebla, farol ámbar, madrugada). El Perro llega de noche. Mañana y nublado existen solo para el lab. (src/run.ts: `mixClimate`, `nightfall`)
-- **Paleta propia por clima** (`ramp`: sombra, medio, luz) que el post mezcla con el color: cada clima tiene identidad de color.
-- **Faro del auto** (SpotLight, `setLamp`) + resplandor; el turbo hace destellar y abrir el cono.
-- **Render PSX:** resolución interna baja (Calidad 1080p, Ultra 1440p, Equilibrado 720p, Rendimiento 540p) escalada sin filtrar;
-  texturas procedurales ≤96 px NEAREST; temblor de vértices PS1 suave (`SnapPlugin`, `LOOK.snap`).
-- **Post retro (shader `retro`):** contornos de 1 px por profundidad (sin pasto), paleta del clima, dither Bayer 4x4 + 32 niveles (15 bits),
-  grano, scanlines, viñeta, aberración. Perillas en `LOOK` (render.ts), ajustables en vivo con el modo lab.
-- **Código de amenaza:** rojo = ataque enemigo (escupitajo); verde fósforo = disparos propios (gomitas). No usar rojo para nada del jugador.
-- **Identidad por emisivo:** ojos que brillan por tipo (hormiga rojo, escupidora ámbar, escarabajo lima, autito faros blancos, robot amarillo, Perro rojo);
-  tuercas de XP emisivas.
-- **Ambiente:** polvo flotando en el haz del faro; luciérnagas cuando anochece.
+Reglas que mandan:
+- **Nada de emojis ni UI genérica** (glassmorphism, pills genéricas, `system-ui` suelto, blancos puros, degradados morados). Íconos SVG propios (`icons.ts`).
+- **Textos del juego:** español neutro e impersonal, sin voseo ni "tu/te" ("Presiona", "Sobrevive", "El auto quedó destrozado"). Créditos sin tecnologías: historia breve y "Creado por TheDuende". Branding, carteles, slogans, chistes, nombres propios ("Junket Crush", "GOOD METAL / BRIGHTER DAYS") y los textos del mundo (calcos, carteles de los modelos) van en inglés y fuera de la traducción.
+- **Mundo Folded, volumen real a 360°:** orden de diseño silueta, material, color, detalle. No es papel, cartón ni sprites. Detalle en "Folded 2.5D" más abajo.
+- **Desgaste con intención:** pintura saltada en bordes y esquinas, óxido desde las uniones; más desgaste en piezas de contacto, menos en paneles grandes.
+- **Lectura clara:** la escena se lee siempre bien (no es terror). Rojo = amenaza enemiga; no usar rojo para nada del jugador.
+- **Rendimiento primero:** instancias y plantillas, atlas único, texturas ≤256 sin filtrar, nada de mallas sueltas por entidad.
 
-## Personajes
+**Tokens reales (src/kit.css, `:root`; fuente única de la paleta: `PAL`/`M3C` en `src/kit3d.ts`, si cambia un HEX cambiar los dos):**
+
+| Rol | Token | Valor |
+|---|---|---|
+| Acentos | `--jm-amarillo` / `--jm-amarillo2` / `--jm-naranja` | `#FFB400` / `#FFD166` / `#FF9138` |
+| Estado | `--jm-rojo` / `--jm-cian` / `--jm-verde` / `--jm-morado` | `#FF3B2E` / `#00C2FF` / `#22C55E` / `#8B5CF6` |
+| Fondos | `--jm-fondo` / `--jm-fondo2` / `--jm-panel` / `--jm-borde` | `#0B0F14` / `#14181F` / `#1F2937` / `#374151` |
+| Texto | `--jm-texto` / `--jm-texto2` | `#F8FAFC` / `#9CA3AF` |
+| Chapa | `--jm-chapa` (borde naranja gastado) / `--jm-chapa-osc` / `--jm-tornillo` | `#b5651d` / `#3a2414` / `#6b4a2a` |
+| Forma | `--jm-r` / `--jm-gap` / `--jm-pad` | 3px / 10px / 14px |
+
+**Tipografía:** Rajdhani (paquete `@fontsource/rajdhani`, local) para todo: títulos 700 en mayúsculas (`--jm-titulo`), texto funcional 500 (`--jm-texto-f`). Escala `--jm-t-*` (h1 clamp 30-44px, h2 22, kicker 13, cuerpo 16, chico 13, número 30). El foco es cian (`outline: 3px solid var(--jm-cian)`), igual con teclado, joystick o mouse.
+
+**HUD y menús:** `kit.css` se carga última y pisa los estilos de vidrio de `style.css`, `menu.css` y `hud.css` (los encabezados de esos archivos todavía dicen "vidrio" o "terminal": están desactualizados, manda `kit.css`). Panel = chapa oscura (gradiente opaco ~.96) con borde naranja de 3px, tornillos en las cuatro esquinas, sombra interior; botones de chapa pintada (verde `.primary`, amarillo `.warn`, rojo `.danger`); pestañas activas amarillas; tarjetas seleccionadas con filo amarillo. Barras sin esquinas redondeadas.
+
+**Modos:** Supervivencia (principal), Carrera, Junket Crush (match-3) y Demolición comparten esta dirección; Carrera, Junket Crush y Demolición siguen en desarrollo y no dan tornillos ni logros (ver HANDOFF §5).
+
+### Personajes, mundo y combate (vigente)
+
+#### Personajes
 - **Enemigos:** anatomía creíble y amenazante. Patas articuladas animadas, mandíbulas, brillo de caparazón.
 - **Autos del jugador:** réplica RC detallada (carrocería de policarbonato con stickers de marca propia,
   amortiguadores visibles, llantas con taco). **Daño visible** (humo, chispas, piezas que se caen con
   poca vida). **Personalización** en el taller (color, llantas) y mejoras de la partida montadas en el auto.
 
-## Mundo
+#### Mundo
 - Suelo rico: pasto que se mueve con el viento, marcas de neumático persistentes, tierra, charcos.
 - Objetos cotidianos detallados que cuentan la historia del patio.
 - Destrucción del entorno: macetas que se rompen, marcas de explosión, objetos que vuelan.
 
-## Combate (efectos)
+#### Combate (efectos)
 - Impactos con peso: hit-stop, destello, esquirlas del material, sacudida proporcional.
 - Explosiones físicas: humo, fuego, onda que empuja, marcas quemadas en el piso.
 - Muertes con restos: insectos patas arriba / en pedazos con física; juguetes desarmados.
 - Números de daño (críticos más grandes).
 
-## Combate (agregado 2026-10-03)
+#### Combate (agregado 2026-10-03)
 - Flash blanco breve en cada golpe; hit-stop solo en críticos y jefes.
 - Insectos muertos quedan patas arriba unos segundos con un charco del color de sus ojos; juguetes sueltan tornillos, resortes y chispas.
 - Feedback de impacto por arma (`fx.ts` `IMPACT`, `sfx.ts` `SFX.impact`): chispas del color del arma (verde fósforo = propias), pedazos del caparazón, squash de 3 pasos en el bicho, sacudida y sonido propios. Con "Reducir parpadeos" no hay destello ni chispas.
 - Final de partida: ~5 s de cámara lenta (0,2x) con barras de cine y la cámara orbitando el auto; luego los resultados con una foto polaroid (zona, tiempo, bajas, auto) que se puede guardar como PNG.
 - Intro de 4 cuadros pixelados (casa que apaga la luz, bichos en el pasto, el auto se enciende entre juguetes, logo); solo en el primer arranque y desde Créditos.
 
-## HUD: terminal gastada del transmisor
-Misma telemetría RC (batería por celdas, señal/XP, reloj, turbo, velocímetro, armas, flechas), vista como equipo de campo viejo en un monitor CRT:
-fósforo verde sobre negro, bordes rectos, scanlines con parpadeo sobre todo el HUD.
-- Cartas de mejora = monitores CRT: carcasa de plástico, pantalla con scanlines, se "sintonizan" al aparecer (keyframes `tune`/`off`),
-  ícono SVG rasterizado a 24 px y escalado pixelado (`pixelateIcon` en ui.ts).
-- Tipografía: **VT323** (datos) + **Silkscreen** (títulos y jefes). Fuentes locales (OFL).
-- Prohibido: emojis, esquinas redondeadas, glassmorphism, pills genéricas, `system-ui`, blancos puros.
+Nota: de "Combate (agregado)" el resumen de impacto por arma, hit-stop, restos y cámara lenta final siguen vigentes; "verde fósforo = disparos propios" es de la etapa de terminal (ver Historia): hoy cada arma usa su color. La intro de 4 cuadros mantiene su arte pixelado de noche.
 
-### Paleta de UI
-| Rol | Hex |
-|---|---|
-| Carcasa | `#0b0d0a` |
-| Panel | `#141813` |
-| Línea / borde | `#2c3a28` |
-| Texto (fósforo) | `#b9d3a4` |
-| Texto secundario | `#5f7355` |
-| LCD fondo / tinta | `#10170d` / `#8dff6a` |
-| Señal (XP) | `#6fb3c4` |
-| Batería OK / baja | `#7fbf5a` / `#d12a1c` |
-| Turbo | `#e0a030` |
-| Rareza: común / rara / épica / evolución | `#8a9a82` / `#6fb3c4` / `#9a6fb5` / `#e0a030` |
+## Referencia técnica vigente
 
-## Giro a Megabonk (2026-10-03)
+### Giro a Megabonk (2026-10-03)
 Las partidas son **de día**: sol alto, cielo azul, colores saturados (desat ~1), low-poly con texturas pixeladas y contornos suaves.
 Los climas nocturnos siguen en `CLIMATES` solo para el lab. El faro del auto queda casi apagado de día (`day` en `Climate`). Esta sección reemplaza lo de "noche" y "un solo foco duro" de arriba.
 
-## Folded 2.5D (sistema base, 2026-10-07)
+### Folded 2.5D (sistema base, 2026-10-07)
 
 **Qué es:** mundo 3D completo construido como papercraft y fabricado como chatarra industrial: superficies simples plegadas y
 ensambladas (chapa, perfiles, remaches) cuya riqueza sale del material, la textura procedural, los trims, los calcos y la luz.
@@ -143,7 +129,7 @@ remaches de verdad eran 460k triángulos): usar la franja `remaches` del trim. U
 malla (cilindro, casco convexo) se viste con `skin()` de world.ts: el colisionador viejo queda invisible y una instancia Folded
 lo cubre, así la física y la semilla no cambian.
 
-## Superficies: macro + detalle (2026-10-08)
+### Superficies: macro + detalle (2026-10-08)
 
 - Todo piso grande se arma en dos escalas: **macro** (textura de color que cubre ~90 m, manchas con intención: pisado, quemado, húmedo; sin grano) y **detalle** (`surface(mat, perfil, repeticiones)` en `render.ts`, detailMap de Babylon: grano + relieve + brillo salidos de UNA altura, así el brillo sigue a la forma).
 - Perfiles: `grass` (hojas peinadas), `soil`, `concrete`, `asphalt` (agregado pulido), `steel` (cepillado), `leaf` (follaje superpuesto), `brick`. Uno nuevo = un objeto en `SURF`.
@@ -151,7 +137,9 @@ lo cubre, así la física y la semilla no cambian.
 - Anisotropía por defecto 8 (Medio): el piso casi siempre se ve rasante.
 - `flatten()` (models.ts) no aplana materiales con detalle: si un prop fusionado tiene que conservar relieve, usar `surface()`.
 
-## Etapa 2: acabados (2026-10-08)
+### Etapa 2: acabados (2026-10-08)
+
+Nota: lo de sombras de noche, faro y resplandor aplica solo a los climas nocturnos (lab); de día mandan el sol y el hemisférico.
 
 - **Desgaste:** vive en Folded (`wornCanvas` de `kit3d.ts` → celdas del atlas de `folded.ts`): pintura saltada concentrada en bordes, óxido desde esquinas y borde de apoyo, rugosidad/metal por zona (pintura, chapa expuesta, goma) en el canal ORM. Es la única fuente: no agregar máscaras paralelas en `render.ts`.
 - **Sombras con tinte:** el rebote del hemisférico de noche es tierra cálida apagada (`NIGHT_GROUND`, render.ts), no negro: bajos y panzas se leen; el contraste lo da el faro.
@@ -162,3 +150,53 @@ lo cubre, así la física y la semilla no cambian.
 - **Uniones oxidadas:** tornillos y remaches del kit usan `FOLD.bolt` (cabeza de acero con anillo de óxido) y la maza de la rueda es `FOLD.rust`. La pintura Folded baja a rugosidad 0,42 para separarse de la chapa expuesta (0,35 metal) y del óxido (0,95); el centro de cada cara conserva pintura.
 - **Quitina:** `FOLD.chitin(color)` para bichos (hormiga, escupidora, escarabajo, polilla en las bandas, tarántula en cuerpo y bandas): color liso, rugosidad 0,28, cantos oscuros y mates, un reflejo ancho. Sin desgaste de chapa: la diferencia bicho/máquina se lee por material.
 - **Máquinas:** robot y fricción con más desgaste de pintura (0,75-0,9). Todo es celda del atlas compartido: cero texturas ni materiales nuevos por objeto.
+
+---
+
+## Historia (no vigente)
+
+Direcciones anteriores, conservadas como referencia. No usar para trabajo nuevo.
+
+### Sensación
+**Retro low-fi de la era PS1 (PSX-style), low-poly y luminoso.** Un auto RC en un patio que se vuelve noche mientras dura la partida.
+Referencias de partida: Buckshot Roulette y Lethal Company, pero el norte es la estética PS1 en general. **No es terror ni tétrico**:
+la escena se lee siempre bien. Low-poly sin verse cuadrado (nada de bloques). Decidida el 2026-10-03.
+**Ajuste 2026-10-03: moderno + "crude/janky retro".** PS1 es sabor (píxel, dither, color 15 bits), no imitación: nada de affine warping,
+Gouraud ni draw distance corta. Moderno en luz y feedback (bloom en emisivos, glitch VHS al recibir daño, apagón antes de cada jefe);
+tosco y hecho a mano en la UI (cartas torcidas, bordes mordidos, cinta de papel, fuentes pixel VT323 + Silkscreen, animaciones a pocos cuadros).
+
+### Paleta y render
+- **Ciclo atardecer → noche:** cada partida arranca en ATARDECER y anochece entre el 20% y el 65% del tiempo hasta la noche de la semilla
+  (noche de luna, niebla, farol ámbar, madrugada). El Perro llega de noche. Mañana y nublado existen solo para el lab. (src/run.ts: `mixClimate`, `nightfall`)
+- **Paleta propia por clima** (`ramp`: sombra, medio, luz) que el post mezcla con el color: cada clima tiene identidad de color.
+- **Faro del auto** (SpotLight, `setLamp`) + resplandor; el turbo hace destellar y abrir el cono.
+- **Render PSX:** resolución interna baja (Calidad 1080p, Ultra 1440p, Equilibrado 720p, Rendimiento 540p) escalada sin filtrar;
+  texturas procedurales ≤96 px NEAREST; temblor de vértices PS1 suave (`SnapPlugin`, `LOOK.snap`).
+- **Post retro (shader `retro`):** contornos de 1 px por profundidad (sin pasto), paleta del clima, dither Bayer 4x4 + 32 niveles (15 bits),
+  grano, scanlines, viñeta, aberración. Perillas en `LOOK` (render.ts), ajustables en vivo con el modo lab.
+- **Código de amenaza:** rojo = ataque enemigo (escupitajo); verde fósforo = disparos propios (gomitas). No usar rojo para nada del jugador.
+- **Identidad por emisivo:** ojos que brillan por tipo (hormiga rojo, escupidora ámbar, escarabajo lima, autito faros blancos, robot amarillo, Perro rojo);
+  tuercas de XP emisivas.
+- **Ambiente:** polvo flotando en el haz del faro; luciérnagas cuando anochece.
+
+### HUD: terminal gastada del transmisor
+Misma telemetría RC (batería por celdas, señal/XP, reloj, turbo, velocímetro, armas, flechas), vista como equipo de campo viejo en un monitor CRT:
+fósforo verde sobre negro, bordes rectos, scanlines con parpadeo sobre todo el HUD.
+- Cartas de mejora = monitores CRT: carcasa de plástico, pantalla con scanlines, se "sintonizan" al aparecer (keyframes `tune`/`off`),
+  ícono SVG rasterizado a 24 px y escalado pixelado (`pixelateIcon` en ui.ts).
+- Tipografía: **VT323** (datos) + **Silkscreen** (títulos y jefes). Fuentes locales (OFL).
+- Prohibido: emojis, esquinas redondeadas, glassmorphism, pills genéricas, `system-ui`, blancos puros.
+
+### Paleta de UI
+| Rol | Hex |
+|---|---|
+| Carcasa | `#0b0d0a` |
+| Panel | `#141813` |
+| Línea / borde | `#2c3a28` |
+| Texto (fósforo) | `#b9d3a4` |
+| Texto secundario | `#5f7355` |
+| LCD fondo / tinta | `#10170d` / `#8dff6a` |
+| Señal (XP) | `#6fb3c4` |
+| Batería OK / baja | `#7fbf5a` / `#d12a1c` |
+| Turbo | `#e0a030` |
+| Rareza: común / rara / épica / evolución | `#8a9a82` / `#6fb3c4` / `#9a6fb5` / `#e0a030` |
