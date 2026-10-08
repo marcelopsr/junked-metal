@@ -29,7 +29,7 @@ Este documento es autocontenido: alcanza para retomar el proyecto sin el histori
 
 1. **Preguntar antes de decidir.** Toda decisión de diseño, contenido, texto, precio, balance o publicación se pregunta ANTES con preguntas de opción múltiple (hasta 4 preguntas × 4 opciones, la recomendada primera y marcada, preferir selección múltiple). Nunca decidir y avisar después. Los encargos traen propuestas, no decisiones aplicadas.
 2. **Idioma:** responder en español. **Textos del juego:** español neutro e impersonal, sin voseo ("Presiona", "Sobrevive"; nunca "Apretá", "querés", "tu"). Créditos sin tecnologías, "Creado por TheDuende".
-3. **Encargos con Sonnet** (bajo/medio/alto según dificultad); la sesión principal dirige, integra y verifica.
+3. **Encargos con Opus o Sonnet** (bajo/medio/alto según criterio del orquestador; en paralelo cuando no se pisan); la sesión principal dirige, integra y verifica.
 4. **Probar en tanda:** hacer todos los cambios y probar UNA vez al final, no pedacito por pedacito.
 5. **Sin servidores ni puertos propios:** usar los de pm2 (ver §4). Un solo navegador liviano y cerrado al terminar.
 6. **Git automático:** commit local tras cada tanda con cambios; push a `origin/master` sin preguntar al terminar una tanda significativa o al cerrar sesión. Solo pausar si el usuario dice "no push" o pregunta sobre publicación.
@@ -112,7 +112,7 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 ```
 Continuamos Junked Metal. Leé el handoff (HANDOFF-PROYECTOS.md) y respetá sus reglas de trabajo:
-preguntar antes de decidir con opción múltiple, español, textos del juego neutros, encargos con Sonnet,
+preguntar antes de decidir con opción múltiple, español, textos del juego neutros, encargos con Opus o Sonnet según la tarea,
 cambios en tanda y una prueba, pm2 y herramientas headless, commit local salvo que pida publicar.
 Empezá preguntándome qué trabajamos hoy, ofreciendo como opciones los pendientes de la sección 5.
 ```
