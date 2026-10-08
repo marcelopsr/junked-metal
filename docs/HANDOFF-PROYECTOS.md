@@ -83,6 +83,8 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 **Hecho el 2026-10-08 (rendimiento):** los "~1.600 / ~3.200 draws" eran viejos: la línea base real (`.perf/2026-10-08-0155.json`) daba 142 en partida y 564 en carrera de 2. El mayor gasto era el GlowLayer, que redibujaba toda la escena. Ahora solo dibuja lo emisivo y lo opaco grande (radio > 4 m, que tapa halos; `GLOW_TAPA` en render.ts). PC: carrera 2J 564 → 447 draws (tris 1541k → 1505k), carrera curso 339 → 273, match3 100 → 77, portada 81 → 75, garaje 116 → 108, folded2 307 → 240. Celular sin cambio (no tiene bloom). Partida y lab no se pudieron volver a medir porque había WIP ajeno en weapons.ts. Recorte por distancia: ya existía (`setDrawDist`, DETAIL.draw: Bajo 95, Medio 145, Alto 220, Ultra sin límite) y ahora también alcanza a las instancias (cerca de tablones), poniendo el LOD en su plantilla.
 
+**Hecho el 2026-10-08 (limpieza tras el WIP):** duelo y match-3 con carga perezosa (`import()` en `main.ts`: `loadDuel()`/`loadMatch3()`; `__duel`/`__match3` existen solo tras entrar al modo; `duel.css`/`match3.css` quedan estáticos antes de `kit.css`); vitest excluye `.claude/**`; `dmgBy` ya no cuenta doble el contacto (fuente `contacto <bicho>` vía `hurt()`); nuevas filas `ritmo`: `revive_vida/radio/dano` y `embestida_rebote/_y` (mismos valores). Verificado: `sim` semillas 1,2,3 a 300 s idéntico con y sin el refactor de `weapons.ts`.
+
 **Abierto (preguntar al usuario antes de tocar):**
 - Daño base del arma inicial (que la hormiga muera en 3 golpes y no 2): el usuario cortó la pregunta; quedó sin decidir.
 - Ritmo de subida de nivel con XP ×2 (el bot llega a nivel 26 a los 5 min).

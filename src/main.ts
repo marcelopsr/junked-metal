@@ -25,6 +25,7 @@ import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, sl
 import { introOn, playIntro } from "./intro";
 import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
 import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace, TRACKS } from "./kart";
+import "./duel.css"; import "./match3.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css
 import "./kit.css"; // kit de UI compartido: se carga después de todas las hojas (ver src/kit.css)
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -942,13 +943,12 @@ function update(dt: number) {
         // Embestir algo más pesado que vos tiene costo: rebote y daño (salvo Ariete)
         if (e.def.mass > c.def.mass * st.mass * R.embestida_rebote_masa && !ariete) {
           if (e.touchCd <= 0) { hurt(e.def.dmg * R.contacto_dano * TOUGH.dmg, false, "rebote " + e.kind, e.kind); e.touchCd = R.contacto_recarga_s; }
-          c.body.applyImpulse(dir.scale(-rel * 0.9 * c.def.mass).addInPlace(new B.Vector3(0, 1.5, 0)), c.pos);
+          c.body.applyImpulse(dir.scale(-rel * R.embestida_rebote * c.def.mass).addInPlace(new B.Vector3(0, R.embestida_rebote_y, 0)), c.pos);
         }
       } else if (rel <= R.embestida_vel_min && !(ariete && boosting) && e.touchCd <= 0 && e.stun <= 0) {
         const cd = e.def.dmg * R.contacto_dano * (e.def.boss ? 1 : TOUGH.dmg);
         if (cd > contactHit) contactBy = e.kind;
         contactHit = Math.max(contactHit, cd); // el golpe más fuerte, no la suma
-        dmgBy["contacto " + e.kind] = (dmgBy["contacto " + e.kind] ?? 0) + e.def.dmg * 0.6;
         e.touchCd = R.contacto_recarga_s;
         if (!e.def.boss) e.body.applyImpulse(dir.scale(R.contacto_empuje_bicho * e.def.mass), e.pos);
         // Un jefe te despide lejos: nunca quedás atrapado contra él
@@ -958,7 +958,7 @@ function update(dt: number) {
   }
   // Invulnerabilidad de contacto: como mucho un golpe cada 0,5 s aunque te rodeen
   if ((touchIFrame -= dt) <= 0 && contactHit) {
-    hurt(contactHit, true, "_contacto", contactBy);
+    hurt(contactHit, true, contactBy ? "contacto " + contactBy : "contacto", contactBy);
     SFX.hurt();
     let px = 0, pz = 0, n = 0;
     for (const e of enemies) {
@@ -1072,7 +1072,7 @@ function update(dt: number) {
   }
 
   hp = Math.min(maxHp, hp + st.regen * dt);
-  if (hp <= 0 && revives > 0) { revives--; hp = maxHp * 0.5; explode(c.pos, 9, 150); banner("PRÓRROGA: BATERÍA DE RESERVA", 2); }
+  if (hp <= 0 && revives > 0) { revives--; hp = maxHp * R.revive_vida; explode(c.pos, R.revive_radio, R.revive_dano); banner("PRÓRROGA: BATERÍA DE RESERVA", 2); }
   if (hp <= 0) return endless ? endRun(true, "El auto quedó destrozado en el modo sin fin. Las horas extra no se pagan.") : endRun(false, "El auto quedó destrozado. Se aceptan reclamos, pero nadie los lee.");
   if (pendingLevels > 0 && state === "play") { pendingLevels--; openOffers(offersFor(), `Nivel ${level - pendingLevels}`); }
 }
