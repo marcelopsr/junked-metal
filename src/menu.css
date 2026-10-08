@@ -219,9 +219,39 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #opts .note { font: 500 14px/1.35 "Rajdhani", system-ui, sans-serif; color: var(--dim); padding: 4px 10px; }
 #opts .sect { margin-top: 18px; }
 
-/* Menú principal en una sola columna: con el control se recorre solo arriba / abajo, sin saltos en diagonal */
-.mainGrid { display: grid; grid-template-columns: 1fr; gap: 8px; width: min(420px, 92vw); }
+/* Menú principal: Jugar y Desafío diario al frente, Más modos (submenú), bloque Auto (Garaje + Taller) y enlaces chicos.
+   kit.css carga después y pisa .mainGrid button / .list button: acá los selectores llevan #scr-main para ganar la especificidad. */
+.mainGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: min(420px, 92vw); }
 .mainGrid .wide { grid-column: 1 / -1; }
+#scr-main .mainGrid .mm-lab { display: flex; align-items: center; gap: 10px; margin: 8px 0 -2px; font: 700 13px/1 var(--jm-titulo); letter-spacing: .16em; text-transform: uppercase; color: var(--jm-amarillo2); text-shadow: 0 2px 0 #000; }
+#scr-main .mainGrid .mm-lab::after { content: ""; flex: 1; height: 2px; background: var(--jm-chapa); }
+#dailyBtn .bs { margin-left: auto; font: 700 13px/1 var(--jm-titulo); letter-spacing: .06em; color: var(--jm-amarillo2); }
+#dailyBtn:focus .bs { color: var(--jm-fondo); }
+#dailyBtn .bs:empty { display: none; }
+/* Más modos: sin ícono propio (los de los modos viven adentro); flecha a la derecha y el texto alineado con el de los botones con ícono */
+#scr-main .mainGrid button.more.wide::before { display: none; }
+#scr-main .mainGrid button.more.wide { display: flex; align-items: center; padding-left: 42px; }
+@media (orientation: portrait) and (max-width: 1100px) { #scr-main .mainGrid button.more.wide { padding-left: 52px; } } /* kit.css da 20 px de relleno a los botones en celular vertical */
+#scr-main .mainGrid button.more.wide::after { content: "\203A"; margin-left: auto; font-size: 24px; line-height: .6; color: var(--jm-amarillo2); }
+#scr-main .mainGrid button.more.wide:focus::after { color: var(--jm-fondo); }
+/* Enlaces secundarios: placas planas y chicas, borde sólido (el punteado se leía como deshabilitado) */
+#scr-main .mainGrid .mm-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 2px; }
+#scr-main .mainGrid .mm-links button.lnk { flex: 1 1 auto; min-height: 40px; padding: 8px 10px; font-size: 12px; letter-spacing: .1em; text-align: center; }
+#scr-main .mainGrid .mm-links button.lnk::before { display: none; }
+#scr-main .mainGrid .mm-links button.lnk.hidden { display: none; }
+#scr-main .mainGrid .mm-links button.lnk:not(:focus) { background: var(--jm-fondo); border: 1px solid var(--jm-borde); box-shadow: none; color: var(--jm-texto2); }
+@media (pointer: coarse) { #scr-main .mainGrid .mm-links button.lnk { min-height: 44px; } }
+@media (orientation: landscape) and (max-height: 500px) { #scr-main .mainGrid .mm-links button.lnk { min-height: 36px; padding-block: 4px; } #scr-main .mainGrid .mm-lab { margin: 2px 0 -2px; } }
+
+/* Más modos: una placa por modo con su descripción */
+.list.modeList:not(.row3) { display: flex; flex-direction: column; width: min(480px, 92vw); }
+.modeList .mtx { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.modeList .mtx small { font: 500 14px/1.25 var(--jm-texto-f); letter-spacing: .01em; text-transform: none; color: var(--jm-texto2); white-space: normal; }
+.modeList button:focus .mtx small { color: #3a2a1c; }
+.modeList button:has(> .mtx) { align-items: flex-start; }
+.modeList button:has(> .mtx) > .jm-ico { margin-top: 1px; }
+#scr-play .list { width: min(420px, 90vw); }
+#scr-play .foot { max-width: min(420px, 90vw); text-align: center; }
 .tag { color: #f4f7fa; text-shadow: 0 2px 6px rgba(0, 0, 0, .55); font-weight: 600; letter-spacing: .04em; }
 .foot { color: #eaf1f7; text-shadow: 0 2px 5px rgba(0, 0, 0, .6); }
 #opts { padding-top: 14px; }

@@ -274,7 +274,9 @@ export const sessions = [
       await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
       if (await p.evaluate(() => document.getElementById("scr-title")?.classList.contains("on"))) await p.keyboard.press("Space");
       await toMain(p);
-      await p.click('#scr-main [data-go="match3"]');
+      await p.click('#scr-main [data-go="modes"]');
+      await wait(p, () => document.getElementById("scr-modes")?.classList.contains("on"));
+      await p.click('#scr-modes [data-go="match3"]');
       await wait(p, () => document.getElementById("scr-match3")?.classList.contains("on"));
       await tick(p, 8);
     } },
@@ -284,7 +286,9 @@ export const sessions = [
       await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
       if (await p.evaluate(() => document.getElementById("scr-title")?.classList.contains("on"))) await p.keyboard.press("Space");
       await toMain(p);
-      await p.click('#scr-main [data-go="duel"]');
+      await p.click('#scr-main [data-go="modes"]');
+      await wait(p, () => document.getElementById("scr-modes")?.classList.contains("on"));
+      await p.click('#scr-modes [data-go="duel"]');
       await wait(p, () => document.getElementById("scr-duel")?.classList.contains("on"));
       await p.click('#scr-duel [data-act="duelgo"]');
       await wait(p, () => document.getElementById("duel-ui")?.classList.contains("fabricar") && !!document.getElementById("duel-fab-grid"));

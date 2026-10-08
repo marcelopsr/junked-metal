@@ -15,11 +15,13 @@ async function toMain(page) {
   await waitFn(page, () => document.getElementById("scr-main")?.classList.contains("on"));
 }
 
-/** Menú principal → Demolición → Entrar al taller */
+/** Menú principal → Más modos → Demolición → Entrar al taller */
 async function enterDuelFromMenu(page) {
   await waitFn(page, () => document.getElementById("load")?.classList.contains("hidden"), 90000);
   await toMain(page);
-  await page.click('#scr-main [data-go="duel"]');
+  await page.click('#scr-main [data-go="modes"]');
+  await waitFn(page, () => document.getElementById("scr-modes")?.classList.contains("on"));
+  await page.click('#scr-modes [data-go="duel"]');
   await waitFn(page, () => document.getElementById("scr-duel")?.classList.contains("on"));
   await page.click('#scr-duel [data-act="duelgo"]');
   await waitFn(page, () => document.getElementById("duel-ui")?.classList.contains("fabricar"), 90000);

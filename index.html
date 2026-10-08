@@ -136,22 +136,43 @@
     <section id="scr-main" class="scr">
       <div class="brand small">JUNKED METAL</div>
       <nav class="list mainGrid">
-        <button data-act="play" class="primary wide">Jugar</button>
-        <button data-go="daily" id="dailyBtn">Desafío diario</button>
-        <button data-go="race">Carrera</button>
-        <button data-go="duel">Demolición</button>
-        <button data-go="match3">Junket Crush</button>
-        <button data-act="zone" id="zoneBtn" class="chip">Zona</button>
-        <button data-act="curse" id="curseBtn" class="chip hidden">Maldiciones</button><!-- maldiciones ocultas por ahora (decisión del usuario 2026-10-04) -->
+        <button data-act="playmenu" class="primary wide">Jugar</button>
+        <button data-go="daily" id="dailyBtn" class="wide"><span class="bt">Desafío diario</span><small class="bs" id="dailyRec"></small></button>
+        <button data-go="modes" class="wide more"><span class="bt">Más modos</span></button>
+        <div class="mm-lab wide">Auto</div>
         <button data-go="garage">Garaje</button>
         <button data-go="shop">Taller</button>
-        <button data-go="bestiary">Chatarroteca</button>
-        <button data-go="config">Configuración</button>
-        <button data-go="credits">Créditos</button>
-        <button data-act="install" id="install" class="hidden wide">Instalar</button>
+        <div class="mm-links wide">
+          <button data-go="bestiary" class="lnk">Chatarroteca</button>
+          <button data-go="config" class="lnk">Configuración</button>
+          <button data-go="credits" class="lnk">Créditos</button>
+          <button data-act="install" id="install" class="lnk hidden">Instalar</button>
+        </div>
       </nav>
       <div class="foot" id="mainInfo"></div>
       <div class="foot hidden" id="iosHint">Para instalar: Compartir → Agregar a inicio</div>
+    </section>
+
+    <section id="scr-play" class="scr">
+      <div class="otitle">Supervivencia</div>
+      <div class="foot">Diez minutos contra la plaga: esquivar, mejorar el auto y llegar al final.</div>
+      <nav class="list">
+        <button data-act="playgo" class="primary">Largar</button>
+        <button data-act="zone" id="zoneBtn"><span class="bt"></span></button>
+        <button data-act="curse" id="curseBtn" class="hidden"></button><!-- maldiciones ocultas por ahora (decisión del usuario 2026-10-04) -->
+        <button data-act="back">Volver</button>
+      </nav>
+      <div class="foot" id="zoneDesc"></div>
+    </section>
+
+    <section id="scr-modes" class="scr">
+      <div class="otitle">Más modos</div>
+      <nav class="list modeList">
+        <button data-go="race"><span class="mtx"><b>Carrera</b><small>Circuito en el patio contra 10 corredores, con objetos, derrape y mini-turbo.</small></span></button>
+        <button data-go="duel"><span class="mtx"><b>Demolición</b><small>Arena de acero, mejor de tres asaltos. Solo chasis, ruedas y un arma de contacto.</small></span></button>
+        <button data-go="match3"><span class="mtx"><b>Junket Crush</b><small>Gabinete arcade en el taller: intercambiar piezas de chatarra y completar el pedido.</small></span></button>
+        <button data-act="back">Volver</button>
+      </nav>
     </section>
 
     <section id="scr-duel" class="scr">

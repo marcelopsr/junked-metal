@@ -187,7 +187,7 @@ function resetCfg() {
 }
 
 // ---------- Pila de pantallas ----------
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3";
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3" | "play" | "modes";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -204,6 +204,7 @@ function show() {
   if (s === "garage") renderGarage();
   if (s === "shop") renderShop();
   if (s === "main") renderMain();
+  if (s === "play") renderPlay();
   if (s === "daily") { const b = save.daily.day === today() ? save.daily.best : 0; $("dailyInfo").textContent = b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy."; }
   if (s === "race") renderRace();
   if (s === "bestiary") renderBestiary();
@@ -376,11 +377,17 @@ const curseTxt = () => save.curses.length ? `${save.curses.length > 1 ? "Maldici
 function renderMain() {
   $("mainInfo").textContent = `${save.scrap} tornillos · récord ${fmt(save.best)}`;
   const b = save.daily.day === today() ? save.daily.best : 0;
-  $("dailyBtn").textContent = b ? `Desafío diario · ${fmt(b)}` : "Desafío diario";
-  if (!owns("zone:" + save.zone)) save.zone = "patio"; // guardado importado con una zona sin comprar
-  $("zoneBtn").textContent = `Zona · ${ZONES[save.zone].short}`;
-  $("curseBtn").textContent = curseTxt();
+  $("dailyRec").textContent = b ? fmt(b) : ""; // el texto va en <span>/<small>: tocar el botón entero borraría su ícono
   if (save.endless) $("mainInfo").textContent += ` · sin fin +${fmt(save.endless)}`;
+}
+
+// Supervivencia: la zona se elige acá, dentro del flujo de Jugar (el menú principal ya no la muestra)
+function renderPlay() {
+  if (!owns("zone:" + save.zone)) save.zone = "patio"; // guardado importado con una zona sin comprar
+  const z = ZONES[save.zone];
+  $("zoneBtn").querySelector(".bt")!.textContent = `Zona · ${z.name}`;
+  $("zoneDesc").textContent = z.desc;
+  $("curseBtn").textContent = curseTxt();
 }
 
 // ---------- Taller y garaje ----------
@@ -1108,8 +1115,8 @@ export function initMenu(a: Api) {
   api = a;
   // Íconos de la familia de interfaz en los botones fijos (solo presentación: no cambia texto ni acción)
   for (const b of document.querySelectorAll<HTMLButtonElement>("#fe button[data-go], #fe button[data-act]")) {
-    const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k];
-    if (id && (!b.classList.contains("primary") || k === "play" || k === "resume")) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
+    const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k] ?? (k === "playmenu" || k === "playgo" ? "jugar" : undefined);
+    if (id && !b.classList.contains("lnk") && (!b.classList.contains("primary") || /^(play|playmenu|playgo|resume)$/.test(k))) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
   }
   $("tPause").innerHTML = uiIcon("pausa", 26);
   applySettings();
@@ -1139,15 +1146,16 @@ export function initMenu(a: Api) {
     else if (d.act === "battle") api.battle();
     else if (d.act === "duelgo") api.duel();
     else if (d.act === "match3go") api.match3();
-    else if (d.act === "play") api.play();
+    else if (d.act === "play" || d.act === "playgo") api.play();
+    else if (d.act === "playmenu") { if (ownedZones().length > 1) go("play"); else api.play(); } // con una sola zona no hay nada que elegir: largar directo
     else if (d.act === "daily") api.play(true);
     else if (d.act === "endless") api.endless();
     else if (d.act === "curse") { // ciclo: ninguna → Horda → Sin reparaciones → ambas
       const all = CURSE_SETS.map((c) => c.join()), i = all.indexOf(save.curses.join());
-      save.curses = [...CURSE_SETS[(i + 1) % CURSE_SETS.length]]; persist(); renderMain();
+      save.curses = [...CURSE_SETS[(i + 1) % CURSE_SETS.length]]; persist(); renderPlay();
     }
     else if (d.act === "zone") { // el fondo cambia en el loop del menú (main.ts); estática como al cambiar de canal
-      const zs = ownedZones(); save.zone = zs[(zs.indexOf(save.zone) + 1) % zs.length]; persist(); renderMain();
+      const zs = ownedZones(); save.zone = zs[(zs.indexOf(save.zone) + 1) % zs.length]; persist(); renderPlay();
       fe.classList.remove("zap"); void fe.offsetWidth; fe.classList.add("zap"); SFX.static();
     }
     else if (d.act === "back") back();
