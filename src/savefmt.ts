@@ -75,10 +75,10 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     const decalSel = Number.isInteger(s.decalSel) && decals[s.decalSel] ? s.decalSel : -1;
     if (s.lookv !== 6) { s.aa = "none"; delete s.outline; delete s.clean; delete s.retro; delete s.visual; s.lookv = 6; } // estilo cartoon fijo: sin contorno ni looks retro (una vez)
     // Imagen v1 (una vez): la vieja "Calidad" (solo resolución, con Auto) y el interruptor de sombras se reemplazan por Escala/FSR y Sombras por niveles; en táctil FXAA era el mínimo forzado
-    if (s.gfxv !== 1) { if (s.shadows === false) s.shadowQ = "off"; if (deps.isTouch && (s.aa ?? "none") === "none") s.aa = "fxaa"; delete s.quality; delete s.shadows; s.gfxv = 1; }
+    if (!(s.gfxv >= 1)) { if (s.shadows === false) s.shadowQ = "off"; if (deps.isTouch && (s.aa ?? "none") === "none") s.aa = "fxaa"; delete s.quality; delete s.shadows; s.gfxv = 1; }
     // Imagen v2 (una vez): "Escalado" Simple/FSR con el modo aparte, una sola nitidez (la de FSR si estaba activo) y el bloom dentro del preajuste.
     // Quien estaba en un preajuste pasa al mismo preajuste con sus valores nuevos (sombras y texturas cambiaron de escala).
-    if (s.gfxv !== 2) {
+    if (!(s.gfxv >= 2)) {
       const on = typeof s.fsr === "string" && s.fsr !== "off";
       s.scaler = on ? "fsr" : "simple"; if (!on) delete s.fsr;
       if (on && typeof s.fsrSharp === "number") s.sharpen = s.fsrSharp;
@@ -91,13 +91,16 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     const one = <T,>(v: unknown, list: readonly T[], d: T): T => ((list as readonly unknown[]).includes(v) ? (v as T) : d);
     s.scale = num(s.scale, 0.5, 1, D.scale); s.sharpen = num(s.sharpen, 0, 1, D.sharpen);
     s.fov = num(s.fov, 40, 70, D.fov); s.bright = num(s.bright, 0.6, 1.4, 1); s.gamma = num(s.gamma, 0.7, 1.4, 1);
-    s.scaler = one(s.scaler, ["simple", "fsr"], D.scaler); s.fsr = one(s.fsr, ["ultra", "calidad", "equilibrado", "rendimiento"], D.fsr); if (typeof s.bloom !== "boolean") s.bloom = D.bloom; if (s.aa === "taa") s.aa = "fxaa"; // TAA se quitó: quien lo tenía guardado pasa a FXAA
+    s.gpu = one(s.gpu, ["webgl", "webgpu"], D.gpu); s.scaler = one(s.scaler, ["simple", "fsr", "ia"], D.scaler); s.fsr = one(s.fsr, ["ultra", "calidad", "equilibrado", "rendimiento"], D.fsr); if (typeof s.bloom !== "boolean") s.bloom = D.bloom; if (s.aa === "taa") s.aa = "fxaa"; // TAA se quitó: quien lo tenía guardado pasa a FXAA
     s.aa = one(s.aa, ["none", "fxaa", "msaa2", "msaa4", "msaa8"], D.aa);
     s.shadowQ = one(s.shadowQ, ["off", "low", "mid", "high"], D.shadowQ); s.detail = one(s.detail, ["bajo", "medio", "alto", "ultra"], D.detail);
     s.texRes = one(s.texRes, [128, 256, 512], D.texRes); s.aniso = one(s.aniso, [1, 2, 4, 8, 16], D.aniso); s.camMode = one(s.camMode, CAM_MODES, D.camMode);
     s.fpsCap = one(s.fpsCap, [0, 30, 60, 120], 0); s.menuFps = one(s.menuFps, [0, 30, 60], D.menuFps);
     // Colores del auto por zona: solo "#rrggbb" (un color libre llega al HTML del garaje); el guardado viejo ya trae paint y rim, trim (detalles) es nuevo
     for (const k of ["paint", "trim", "rim"]) s[k] = typeof s[k] === "string" && /^#[0-9a-f]{6}$/i.test(s[k]) ? s[k].toLowerCase() : "";
+    // Junket Crush: solo números enteros no negativos (estrellas 0-3)
+    const nums = (o: unknown, hi: number) => Object.fromEntries(Object.entries(typeof o === "object" && o ? o : {}).filter(([, v]) => Number.isInteger(v) && (v as number) >= 0).map(([k, v]) => [k, Math.min(hi, v as number)]));
+    s.m3 = { stars: nums(s.m3?.stars, 3), best: nums(s.m3?.best, 1e9), tools: nums(s.m3?.tools, 99) };
     s.preset = deps.presetOf({ shadowQ: s.shadowQ, detail: s.detail, texRes: s.texRes, aniso: s.aniso, bloom: s.bloom });
     return { ...structuredClone(D), ...s, decals, decalSel, perm: { ...D.perm, ...s.perm }, kit: { ...D.kit, ...s.kit }, vol: { ...D.vol, ...s.vol },
       stats: { ...D.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };

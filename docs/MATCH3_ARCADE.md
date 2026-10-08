@@ -48,3 +48,12 @@ Intercambio, eliminación (fade + pop), caída por celda y entrada de piezas nue
 - `src/match3.ts` — gabinete 3D, textura del tablero, UI
 - `src/match3.css` — marquesina y paneles
 - `test/match3.test.ts` — pruebas unitarias
+
+## Presentación
+
+- Piezas: forma propia por color (tuerca, cristal, batería, chip, componente, resorte) dibujadas en `match3_draw.ts`, con degradado, contorno tinta y brillo especular; ocupan ~80 % de la casilla.
+- Casillas: hueco oscuro con sombra interior arriba y bisel claro abajo (`match3.ts`).
+- Gabinete: desgaste con `edgeRust` de `wornTex` (bordes, esquinas y apoyo; caras centrales sanas). Póster en español.
+- Cámara (`fitMatch3Camera`): centrada en la pantalla, el tablero ocupa ~60 % del alto en compu y casi todo el ancho en celular; la marquesina asoma arriba.
+- Peso: aplastado al aterrizar, destello de casilla al limpiar, esquirlas del color de la pieza y micro sacudida en combos de 4+ (especiales ya sacudían).
+- Sin texturas nuevas: todo es canvas 2D sobre la pantalla emisiva del gabinete.

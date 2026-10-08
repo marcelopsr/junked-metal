@@ -7,7 +7,7 @@ import { banner, damageNumber } from "./ui";
 import { impact } from "./fx";
 import { input, isTouch, padPressed, pb } from "./input";
 import { box, cyl, merge, wheel } from "./models";
-import { applyClimate, canvasTex, M, pbr, setLamp, shadows, TEX } from "./render";
+import { applyClimate, canvasTex, M, pbr, setLamp, shadows, surface, TEX } from "./render";
 import {
   cycleColor, cyclePreset, duelMat, loadDuelPaint, PAINT_SLOTS, PRESET_LABEL, rivalPaintFromBalance,
   saveDuelPaint, SLOT_LABEL, SWATCHES, type DuelPaintState, type PaintSlot,
@@ -18,6 +18,7 @@ import {
   statsOfBuild, stripCell, validateBuild, visualPivotOffset,
 } from "./duel_build";
 import { type FabApi, mountFabricacion } from "./duel_fabricacion";
+import { arenaDecorTick, buildArenaDecor, disposeArenaDecor, lit, wallMat } from "./duel_arena";
 import { save } from "./menu";
 import { engineStop, music, SFX } from "./sfx";
 import { clearLayout, showWorld } from "./world";
@@ -738,25 +739,32 @@ function applyPieceDrop(raw: string, slot: PieceCat) {
 function buildArena() {
   const scene = deps.scene;
   const tex = canvasTex(128, (g, s) => {
-    g.fillStyle = "#6f7480"; g.fillRect(0, 0, s, s);
-    for (let i = 0; i < 40; i++) { g.strokeStyle = i % 2 ? "#8a8f9a" : "#5a5e68"; g.beginPath(); g.moveTo(Math.random() * s, 0); g.lineTo(Math.random() * s, s); g.stroke(); }
+    g.fillStyle = "#3a3d44"; g.fillRect(0, 0, s, s); // chapa oscura: las marcas amarillas tienen que contrastar tras la paleta retro
+    for (let i = 0; i < 40; i++) { g.strokeStyle = i % 2 ? "#4c5058" : "#2c2f35"; g.beginPath(); g.moveTo(Math.random() * s, 0); g.lineTo(Math.random() * s, s); g.stroke(); }
+    // Marcas de ring: círculo central y borde de seguridad amarillo (separan el centro del perímetro)
+    g.strokeStyle = "#ffc21a"; g.lineWidth = 4; g.beginPath(); g.arc(s / 2, s / 2, s * 0.16, 0, 6.29); g.stroke();
+    g.setLineDash([8, 6]); g.lineWidth = 5; g.strokeRect(5, 5, s - 10, s - 10);
   });
   const fl = B.MeshBuilder.CreateGround("duelFloor", { width: ARENA, height: ARENA }, scene);
   fl.position.y = 0.02; fl.receiveShadows = true;
-  fl.material = pbr("duelFloor", { color: "#888", rough: 0.85, tex }); mesh.push(fl);
+  const fm = lit(surface(pbr("duelFloor", { color: "#fff", rough: 0.8, tex, emissive: "#262626" }), "steel", Math.round(ARENA / 1.5)));
+  fm.emissiveTexture = tex; // pintura reflectiva: las marcas se leen fuera del foco
+  fl.material = fm; mesh.push(fl);
   new B.PhysicsAggregate(fl, B.PhysicsShapeType.BOX, { mass: 0, friction: D.phys_friction_floor, restitution: 0.1 }, scene);
-  const h = 2.5, t = 0.8;
+  const h = 2.5, t = 0.8, wm = wallMat();
   for (const [px, pz, sx, sz] of [[0, -HALF, ARENA, t], [0, HALF, ARENA, t], [-HALF, 0, t, ARENA], [HALF, 0, t, ARENA]] as const) {
-    const w = box(sx, h, sz, M.metal("#555"), [px, h / 2, pz]);
+    const w = box(sx, h, sz, wm, [px, h / 2, pz]);
     new B.PhysicsAggregate(w, B.PhysicsShapeType.BOX, { mass: 0, friction: D.phys_friction_bot, restitution: D.phys_wall_restitution }, scene);
     mesh.push(w);
   }
+  mesh.push(...buildArenaDecor(scene, HALF));
 }
 
 function cleanup() {
   hideDragGhost();
   clearFabPlaceGhost();
   disposeWorkbenchLights();
+  disposeArenaDecor();
   for (const b of bots) { b.agg.dispose(); b.root.dispose(); }
   bots = [];
   previewBot?.agg.dispose(); previewBot?.root.dispose(); previewBot = null;
@@ -1213,8 +1221,8 @@ function beginMatch() {
   cleanup();
   showWorld(false);
   clearLayout();
-  applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
-  deps.scene.environmentIntensity = 0.55;
+  applyClimate(CLIMATES.find((c) => c.id === "farol")!); // noche de galpón: el foco cenital manda
+  deps.scene.environmentIntensity = 0.35;
   shadows.darkness = 0.5;
   buildArena();
   music("battle");
@@ -1534,6 +1542,7 @@ function camFollow(b: Bot, dt: number) {
 
 export function duelTick(dt: number) {
   if (!active || paused) return;
+  arenaDecorTick(dt);
   if (phase === "inter" || phase === "results") return;
   if (flipCd > 0) flipCd = Math.max(0, flipCd - dt);
   if (phase === "armado") return;

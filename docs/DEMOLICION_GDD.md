@@ -885,3 +885,12 @@ Prioridad **open source → editar → procedural** (§36); el vertical slice pu
 
 Las preguntas 3–4 de §33 quedan **obsoletas** respecto a decisiones cerradas: estilo **industrial + personalización §34**, montaje **tornillos + VFX pro §35**. Conservar §33 solo como registro del toolbox original; no volver a preguntar esos ítems.
 
+
+## 38. Arena de Demolición (recinto industrial, 2026-10-08)
+
+- Ring de 25×25 m con muros de placas atornilladas (franja de seguridad amarilla/negra, óxido); piso con círculo central y borde punteado amarillo. Solo piso y muros tienen colisión.
+- Fondo fuera del ring, sin colisión y fusionado en una malla (`duelDecor`): contenedores apilados (norte y oeste), grada escalonada de chapa (sur), prensa/trituradora (este), grúa torre (noreste), 4 torres de focos con cabezal emisivo.
+- Animados baratos (sin física): gancho de la grúa que oscila, ventilador industrial y baliza giratoria.
+- Señalización: carteles "ZONA DE DEMOLICIÓN" y "PELIGRO · NO PASAR".
+- Luz: clima "farol" (noche de galpón) + un solo foco cenital nuevo sobre el centro (jerarquía); ambiente ×2,2 mientras dura la arena. Piso, muros y carteles usan su textura también como emisiva tenue (pintura reflectiva): sin eso la paleta retro se comía las marcas. Los materiales de la arena suben `maxSimultaneousLights` a 6 (`lit()`): con el tope de 4 de PBR el foco no llegaba.
+- Código: `src/duel_arena.ts` (`buildArenaDecor`, `arenaDecorTick`, `wallMat`); se arma desde `buildArena()` en `duel.ts`.

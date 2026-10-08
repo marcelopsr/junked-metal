@@ -37,7 +37,7 @@ const B01 = (x: number) => Math.max(0, Math.min(1, x));
 const memo: Record<string, string | number> = {};
 const ch = (k: string, v: string | number) => memo[k] !== (memo[k] = v);
 const txt = (id: string, v: string) => { if (ch(id, v)) $(id).textContent = v; };
-const bar = (id: string, pct: number) => { const w = `${Math.round(pct * 10) / 10}%`; if (ch(id, w)) el(id).style.width = w; };
+const bar = (id: string, pct: number) => { const k = Math.round(Math.max(0, Math.min(100, pct)) * 10) / 1000; if (ch(id, k)) el(id).style.transform = `scaleX(${k})`; };
 
 export function hudWorkshop(perm: Partial<Record<(typeof WSHOP_KEYS)[number], number>>) {
   const items = WSHOP_KEYS.filter((k) => (perm[k] ?? 0) > 0);

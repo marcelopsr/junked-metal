@@ -17,6 +17,7 @@ export { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPi
 export { DepthOfFieldEffectBlurLevel } from "@babylonjs/core/PostProcesses/depthOfFieldEffect.js";
 export { DirectionalLight } from "@babylonjs/core/Lights/directionalLight.js";
 export { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture.js";
+export { RawTexture } from "@babylonjs/core/Materials/Textures/rawTexture.js";
 export { Engine } from "@babylonjs/core/Engines/engine.js";
 export { FSR1RenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/fsr1RenderingPipeline.js";
 export { FxaaPostProcess } from "@babylonjs/core/PostProcesses/fxaaPostProcess.js";
@@ -72,4 +73,5 @@ export type { PhysicsEngine as PhysicsEngineV2 } from "@babylonjs/core/Physics/v
 // Efectos de registro que el índice completo traía solos y las rutas profundas no (cada uno agrega métodos a Scene o al motor)
 import "@babylonjs/core/Physics/physicsEngineComponent.js";
 import "@babylonjs/core/Physics/v2/physicsEngineComponent.js";
+import "@babylonjs/core/Meshes/thinInstanceMesh.js"; // thinInstanceSetBuffer: sin esto es un stub mudo (pasto, arbustos y adornos de carrera no se dibujaban)
 import "@babylonjs/core/Culling/ray.js"; // scene.pick/createPickingRay (toques del Match-3)

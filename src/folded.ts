@@ -86,7 +86,35 @@ export const FOLD = {
   bare: () => flat("bare", PAL.metalClaro, 0.32, 1),
   rust: () => flat("rust", PAL.oxido, 0.95, 0.25),
   dark: () => flat("dark", PAL.negro, 0.7, 0.4),
-  rubber: () => flat("rubber", PAL.goma, 0.95, 0),
+  /** Goma con polvo de tierra que se junta hacia los cantos de la celda (hombros de la banda, borde de apoyo de los tacos). */
+  rubber: () => once("rubber", (m) => {
+    m.albedoColor = B.Color3.FromHexString(PAL.goma).toLinearSpace(); m.roughness = 0.9; m.metallic = 0;
+    m.metadata = { tile: () => tile("rubber", (a, o, _e, x, y) => {
+      a.fillStyle = PAL.goma; a.fillRect(x, y, TS, TS); o.fillStyle = orm(0.88, 0); o.fillRect(x, y, TS, TS);
+      for (let i = 0; i < 8; i++) { // franjas de polvo: densas en el borde, se apagan hacia el centro (abajo más, es el apoyo)
+        const k = 1 - i / 8; a.fillStyle = `rgba(110,88,60,${0.5 * k})`; o.fillStyle = orm(1, 0);
+        a.fillRect(x, y + i * 2, TS, 2); a.fillRect(x, y + TS - 2 - i * 3, TS, 3); if (k > 0.6) o.fillRect(x, y + TS - 3 - i * 3, TS, 3);
+      }
+    }) };
+  }),
+  /** Quitina: oscura, lisa y con brillo (rugosidad baja), filo más oscuro y mate en los cantos; sin desgaste de chapa. */
+  chitin: (c: string) => once("ch" + c, (m) => {
+    m.albedoColor = B.Color3.FromHexString(c).toLinearSpace(); m.roughness = 0.3; m.metallic = 0.15;
+    m.metadata = { tile: () => tile("ch" + c, (a, o, _e, x, y) => {
+      a.fillStyle = c; a.fillRect(x, y, TS, TS); o.fillStyle = orm(0.28, 0.15); o.fillRect(x, y, TS, TS);
+      a.fillStyle = "rgba(0,0,0,0.35)"; o.fillStyle = orm(0.55, 0.05);
+      for (const r of [[0, 0, TS, 6], [0, TS - 6, TS, 6], [0, 0, 6, TS], [TS - 6, 0, 6, TS]]) { a.fillRect(x + r[0], y + r[1], r[2], r[3]); o.fillRect(x + r[0], y + r[1], r[2], r[3]); }
+      a.fillStyle = "rgba(255,240,220,0.12)"; a.fillRect(x + 10, y + 12, TS - 20, 8); // reflejo ancho (se lee de lejos, no es detalle)
+    }) };
+  }),
+  /** Tornillos y remaches: acero con óxido acumulado en la unión (la celda entera es la cabeza: se oxida el anillo exterior). */
+  bolt: () => once("bolt", (m) => {
+    m.albedoColor = B.Color3.FromHexString(PAL.oxido).toLinearSpace(); m.roughness = 0.8; m.metallic = 0.4;
+    m.metadata = { tile: () => tile("bolt", (a, o, _e, x, y) => {
+      a.fillStyle = PAL.oxido; a.fillRect(x, y, TS, TS); o.fillStyle = orm(0.95, 0.25); o.fillRect(x, y, TS, TS);
+      a.fillStyle = PAL.metalClaro; a.fillRect(x + 16, y + 16, TS - 32, TS - 32); o.fillStyle = orm(0.35, 1); o.fillRect(x + 16, y + 16, TS - 32, TS - 32);
+    }) };
+  }),
   plastic: (c: string) => flat("ip" + c, c, 0.55, 0),
   screen: (c: string = PAL.cian) => flat("scr" + c, "#05080b", 0.15, 0, c),
   emissive: (c: string) => flat("em" + c, c, 0.4, 0, c),
@@ -253,7 +281,7 @@ export function geoKit(scene: B.Scene, add: (m: B.Mesh, mat: B.Material) => B.Me
     wheel: piece((n, d: number, w: number) => {
       const ax = new B.Vector3(...N(n, [1, 0, 0])).normalize(), q = B.Quaternion.FromUnitVectorsToRef(B.Vector3.Up(), ax, new B.Quaternion());
       const c = (dd: number, h: number, m: B.Material, tess: number) => { cyl(dd, h, m, W(n, [0, 0, 0]), undefined, tess).rotationQuaternion = q.clone(); };
-      c(d, w, Mx.rubber, 12); c(d * 0.62, w * 1.04, Mx.steel, 10); c(d * 0.25, w * 1.2, Mx.dark, 6);
+      c(d, w, Mx.rubber, 12); c(d * 0.62, w * 1.04, Mx.steel, 10); c(d * 0.25, w * 1.2, Mx.rust, 6); // maza: unión que junta óxido
       for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; box(w * 1.02, d * 0.06, d * 0.08, Mx.rubber, [0, Math.cos(a) * d * 0.5, Math.sin(a) * d * 0.5], [a, 0, 0], n); }
       for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; for (const s of [-1, 1]) bolts(W(n, [s * w * 0.52, Math.cos(a) * d * 0.18, Math.sin(a) * d * 0.18]), W(n, [s * w * 0.52, Math.cos(a) * d * 0.18, Math.sin(a) * d * 0.18]), 1, N(n, [s, 0, 0])); }
     }),

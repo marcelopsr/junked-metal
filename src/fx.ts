@@ -87,7 +87,8 @@ export const FX = {
     burst(p, { n: 60, color: "#ffd166", color2: "#ff4d00", size: [0.5 * r, 1.2 * r], power: [r * 2, r * 5], life: [0.2, 0.5], gravity: 2 });
     burst(p, { n: 25, color: "#ececec", size: [0.8 * r, 1.6 * r], power: [1, r * 2], life: [0.6, 1.2], gravity: 3, add: false });
   },
-  dust: (p: B.Vector3) => burst(p, { n: 2, color: "#ffffff", size: [0.3, 0.7], power: [0.5, 1.5], life: [0.4, 0.8], gravity: 1, add: false }),
+  dust: (p: B.Vector3) => burst(p, { n: 2, color: "#cdbd9c", // tierra levantada (derrape, aterrizaje): blanco puro se leía como vapor
+ size: [0.3, 0.7], power: [0.5, 1.5], life: [0.4, 0.8], gravity: 1, add: false }),
   xp: (p: B.Vector3) => burst(p, { n: 5, color: "#9be7ff", size: [0.1, 0.25], power: [1, 3], life: [0.2, 0.4] }),
   smoke: (p: B.Vector3, dark = false) => burst(p, { n: 2, color: dark ? "#a8a8a8" : "#f4f4f4", size: [0.5, 1.1], power: [0.5, 1.5], life: [0.8, 1.4], gravity: 3, add: false }),
   // Estela de proyectil: una voluta chica que se apaga rápido (llamar con probabilidad, no cada cuadro)

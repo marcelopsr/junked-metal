@@ -1,7 +1,6 @@
 # Supervivencia — Plan de mejora de experiencia
 
 Estado: **APROBADO para Fase 0–1** (toolbox ronda 2, 2026-10-06). Fases 2–5 pendientes de nueva autorización.
-Regla: `.cursor/rules/plan-antes-de-feature.mdc`
 
 ---
 

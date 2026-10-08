@@ -39,9 +39,10 @@ def build_friccion(m: ToyBuild):
     for x, y in ((0.32, 0.2), (-0.32, 0.2)):
         m.tor(0.22, 0.035, t["chrome"], "root", (x, y, 0.92), (math.pi / 2, 0, 0), 10)
         m.sph(0.16, t["lamp"], "root", (x, y, 0.97), None, 6)
-    m.cyl(0.09, 0.09, 0.18, t["chrome"], "root", (0.42, 0.22, -0.15), (0, 0, math.pi / 2), 8)
+    m.cyl(0.09, 0.09, 0.18, t["chrome"], "root", (0.42, 0.22, -0.15), (0, math.pi / 2, 0), 8)
     for x, z in ((-0.4, 0.48), (0.4, 0.48), (-0.4, -0.48), (0.4, -0.48)):
-        m.cyl(0.46, 0.46, 0.2, t["rubber"], "root", (x, 0.14, z), (0, 0, math.pi / 2), 10)
+        m.cyl(0.46, 0.46, 0.2, t["rubber"], "root", (x, 0.14, z), (0, math.pi / 2, 0), 10)
+        m.cyl(0.24, 0.24, 0.22, t["chrome"], "root", (x, 0.14, z), (0, math.pi / 2, 0), 8)
     for x, z in ((-0.4, 0.48), (0.4, 0.48)):
         m.sph(0.1, t["orange"], "root", (x, 0.32, z), None, 4)
     m.box(0.22, 0.08, 0.12, t["dark"], "root", (0, 0.22, -0.92))  # matrícula toy
@@ -78,10 +79,6 @@ def build_robot(m: ToyBuild):
     m.sph(0.07, b.mat("Antenna", "#e0a030", emit=2.0), "root", (0, 1.92, 0), None, 4)
     arm(1)
     arm(-1)
-    m.cyl(0.06, 0.06, 0.12, joint, "root", (0, 0.72, -0.38), (math.pi / 2, 0, 0), 6)
-    m.tor(0.22, 0.045, chrome, "root", (0, 0.76, -0.48), (math.pi / 2, 0, 0), 12)
-    for a in (0, math.pi / 2, math.pi, math.pi * 1.5):
-        m.box(0.06, 0.32, 0.05, chrome, "root", (math.sin(a) * 0.22, 0.76, -0.48 - math.cos(a) * 0.22), (0, a, 0))
     m.box(0.52, 0.08, 0.04, b.mat("Vent", "#4a1010", rough=0.7), "root", (0, 0.88, -0.42))  # rejilla trasera
     for sx in (-1, 1):
         for z in (0.05, 0.28):
@@ -95,8 +92,20 @@ def build_polilla_body(m: ToyBuild):
     m.sph(0.54, fur, "root", (0, 0, -0.38), (0.85, 0.78, 1.55), 10)
     m.sph(0.46, b.mat("Thorax", "#a8966c", rough=0.88), "root", (0, 0.03, 0.1), None, 8)
     m.sph(0.34, fur, "root", (0, 0.03, 0.4), None, 8)
-    m.cyl(0.025, 0.07, 0.62, fur, "root", (0.16, 0.24, 0.64), (0.9, 0, -0.5), 4)
-    m.cyl(0.025, 0.07, 0.62, fur, "root", (-0.16, 0.24, 0.64), (0.9, 0, 0.5), 4)
+    # Antenas plumosas curvadas que nacen con sentido anatómico de la frente
+    for sx in (-1, 1):
+        m.tube(
+            [(sx * 0.08, 0.12, 0.44), (sx * 0.16, 0.25, 0.52), (sx * 0.25, 0.38, 0.55)],
+            [0.026, 0.02, 0.014],
+            fur,
+            "root",
+            5,
+        )
+        for t in (0.35, 0.65, 0.9):
+            px = sx * (0.08 + t * 0.17)
+            py = 0.12 + t * 0.26
+            pz = 0.44 + t * 0.11
+            m.sph(0.06, fur, "root", (px, py, pz), (1.3, 0.6, 0.8), 4)
     m.sph(0.2, eye, "root", (0.11, 0.06, 0.5), None, 8)
     m.sph(0.2, eye, "root", (-0.11, 0.06, 0.5), None, 8)
     m.sph(0.08, eye_core, "root", (0.11, 0.06, 0.52), None, 4)

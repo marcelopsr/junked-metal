@@ -32,7 +32,7 @@
 @keyframes ld-lane { to { background-position-x: -54px; } }
 
 #load .ld-bar { height: 8px; background: rgba(255, 255, 255, .14); border-radius: 99px; overflow: hidden; }
-#load .ld-bar i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #35c9ff, #7dffb0); transition: width .25s cubic-bezier(.2, .8, .2, 1); }
+#load .ld-bar i { display: block; height: 100%; transform: scaleX(0); transform-origin: left; background: linear-gradient(90deg, #35c9ff, #7dffb0); transition: transform .25s cubic-bezier(.2, .8, .2, 1); }
 #load .ld-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: -6px; font: 700 15px/1 var(--data, "Rajdhani", system-ui, sans-serif); letter-spacing: .12em; text-transform: uppercase; }
 #load .ld-pct { color: #7dffb0; font-variant-numeric: tabular-nums; }
 #load .ld-tip { display: flex; flex-direction: column; gap: 4px; padding-top: 12px; border-top: 1px dashed rgba(255, 255, 255, .2); font-size: 17px; line-height: 1.25; color: #eaf1f7; text-align: left; min-height: 3.6em; }

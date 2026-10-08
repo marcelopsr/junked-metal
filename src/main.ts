@@ -37,18 +37,19 @@ let wasGrounded = true, coyoteT = 0;
 
 // Guardado (localStorage "rcfight2"): type Save y DEFAULT viven en menu.ts
 
-// ---------- Motor (WebGL2 por defecto, WebGPU con ?webgpu) ----------
+// ---------- Motor (WebGL2 por defecto; WebGPU si se eligió en Configuración → Imagen o con ?webgpu; ?webgl lo fuerza) ----------
 const canvas = $("c") as HTMLCanvasElement;
 const low = isTouch;
 // Havok (JS + wasm de 2 MB) sale del paquete de arranque: se baja y compila en paralelo con el motor y la escena
 const havok = import("@babylonjs/havok").then((m) => m.default({ locateFile: () => havokWasm }));
-const GPU = location.search.includes("webgpu") ? (await import("@babylonjs/core/Engines/webgpuEngine.js")).WebGPUEngine : null; // WebGPU solo a pedido: no entra al paquete de arranque
-let engine: B.AbstractEngine;
+const wantGpu = !location.search.includes("webgl") && (location.search.includes("webgpu") || save.gpu === "webgpu");
+const GPU = wantGpu ? (await import("@babylonjs/core/Engines/webgpuEngine.js")).WebGPUEngine : null; // WebGPU solo a pedido: no entra al paquete de arranque
+let gpuEng: B.AbstractEngine | null = null;
 if (GPU && (await GPU.IsSupportedAsync)) {
-  const gpu = new GPU(canvas, { antialias: true, stencil: true });
-  await gpu.initAsync();
-  engine = gpu;
-} else engine = new B.Engine(canvas, true, { stencil: true }, true);
+  try { const gpu = new GPU(canvas, { antialias: true, stencil: true }); await gpu.initAsync(); gpuEng = gpu; }
+  catch (e) { console.warn("WebGPU falló, se usa WebGL", e); } // ponytail: si falla después de crear el contexto el canvas puede quedar tomado; recargar con ?webgl
+}
+const engine: B.AbstractEngine = gpuEng ?? new B.Engine(canvas, true, { stencil: true }, true);
 boot("Iniciando el motor", 0.15);
 const scene = new B.Scene(engine);
 scene.enablePhysics(new B.Vector3(0, -25, 0), new B.HavokPlugin(true, await havok));
@@ -280,9 +281,10 @@ function startRun(d = false) {
   const hint = $("hint");
   for (const k of hint.querySelectorAll<HTMLElement>("kbd[data-k]")) k.textContent = keyName(KEYS[k.dataset.k as keyof typeof KEYS][0]); // teclas reasignadas
   if (save.hint) hint.classList.remove("hidden", "fade"); else hint.classList.add("hidden");
-  setTimeout(() => hint.classList.add("fade"), 9000);
-  setTimeout(() => hint.classList.add("hidden"), 9700);
+  hintOn = save.hint; // se apaga en update() con la primera entrada o a los HINT_S de partida
 }
+let hintOn = false;
+const HINT_S = 11;
 
 // Logros (achievements.ts): las pruebas de dev (__sim, lab, god) no otorgan nada ni tocan el guardado
 let runAch: string[] = [], hitAt = 0; // logros de esta partida (pantalla final) y último golpe recibido
@@ -427,7 +429,7 @@ function openOffers(list: Offer[], title: string) {
   showOffers(title, list, 0, choose, previewOffer, sub, threat);
   offerTitle = title;
   const frac = hp / maxHp;
-  $("luHpFill").style.width = `${frac * 100}%`;
+  $("luHpFill").style.transform = `scaleX(${frac})`;
   $("luHpN").textContent = `${Math.ceil(hp)}/${maxHp}`;
   $("luHp").classList.toggle("lu-hp--low", frac < 0.35);
   const can = rerolls > 0 && list[0]?.kind !== "evo";
@@ -681,6 +683,7 @@ function spawnEnemy(kind: Kind, p: B.Vector3) {
 function update(dt: number) {
   const c = car!;
   time += dt;
+  if (hintOn && (time > HINT_S || input.throttle || input.steer || input.move || input.boost || input.drift || input.jump || input.ability)) { hintOn = false; $("hint").classList.add("fade"); }
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
   // Lluvia: empieza a la fracción profile.rainAt de la partida; la intensidad sube suave
   const rainAtS = profile.rainAt * 600, warnS = R.aviso_evento_s;

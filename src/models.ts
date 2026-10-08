@@ -88,7 +88,7 @@ export function flatten(m: B.Mesh, keep: B.Material[] = []) {
   const groups = new Map<B.Material, B.SubMesh[]>();
   for (const sm of m.subMeshes) {
     let mat = multi.subMaterials[sm.materialIndex]!;
-    if (mat instanceof B.PBRMaterial && !mat.albedoTexture && mat.emissiveColor.equals(B.Color3.Black()) && mat.alpha === 1 && !mat.name.startsWith("vc") && !keep.includes(mat)) {
+    if (mat instanceof B.PBRMaterial && !mat.albedoTexture && !mat.detailMap.isEnabled && mat.emissiveColor.equals(B.Color3.Black()) && mat.alpha === 1 && !mat.name.startsWith("vc") && !keep.includes(mat)) {
       const c = mat.albedoColor, k = mat.clearCoat.isEnabled ? mat.clearCoat.intensity : 0;
       for (let v = sm.verticesStart * 4, e = (sm.verticesStart + sm.verticesCount) * 4; v < e; v += 4) { col[v] = c.r; col[v + 1] = c.g; col[v + 2] = c.b; }
       mat = pbr(`vc${mat.roughness}|${mat.metallic}|${k}`, { color: "#ffffff", rough: mat.roughness ?? 0.5, metal: mat.metallic ?? 0, coat: k });

@@ -48,7 +48,7 @@ export function wornCanvas(seed: number, base: string, patches: string | null, w
     }
   };
   ca.fillStyle = base; ca.fillRect(0, 0, S, S);
-  co.fillStyle = orm(0.55, 0.08); co.fillRect(0, 0, S, S);
+  co.fillStyle = orm(edgeRust ? 0.42 : 0.55, 0.08); co.fillRect(0, 0, S, S); // Folded: esmalte algo más liso, contrasta con la chapa expuesta (0,35/0,9) y el óxido (0,95)
   if (patches) for (let i = 0; i < 15; i++) { const x = rnd() * S, y = rnd() * S; for (let j = 0; j < 4; j++) blob(x + (rnd() - 0.5) * 50, y + (rnd() - 0.5) * 50, 12 + rnd() * 22, patches, 0.6, 0.08); }
   for (let i = 0; i < Math.round((edgeRust ? 14 : 70) * wear); i++) blob(rnd() * S, rnd() * S, 1.5 + rnd() * 5, rnd() < 0.5 ? "#17110c" : "#5a2f17", 0.92, 0.12); // óxido y mugre
   // Bordes y esquinas: pintura saltada que deja ver chapa y óxido
@@ -138,7 +138,7 @@ export function poster(c: Ctx) {
   c.fillText("GOOD METAL", 128, 64);
   gear(c, 128, 180, 62, "#b8612a");
   c.fillStyle = "#e9c48a"; c.fillRect(102, 150, 52, 56); c.fillStyle = "#2a1d14"; c.fillRect(110, 166, 12, 12); c.fillRect(134, 166, 12, 12);
-  c.fillStyle = "#e9c48a"; c.font = "700 34px Rajdhani, sans-serif"; c.fillText("BRIGHTER DAYS", 128, 320);
+  c.fillStyle = "#e9c48a"; c.font = "700 34px Rajdhani, sans-serif"; c.fillText("BETTER DAYS", 128, 320);
 }
 
 // ---------- Utilería del taller (en unidades libres: `u` = lado de una caja chica) ----------

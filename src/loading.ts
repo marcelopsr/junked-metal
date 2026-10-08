@@ -21,7 +21,7 @@ const TIPS = [
   "Las macetas se rompen con la embestida o con las armas: sueltan tuercas y, a veces, una pila que repara el auto. Nadie las va a extrañar.",
   "El turbo gasta energía mientras se usa y se recarga solo al soltarlo. Como las vacaciones.",
   "En el Taller se compran mejoras permanentes con tornillos. Cada partida suma según el tiempo sobrevivido y las bajas. Es lo más parecido a un sueldo.",
-  "El Bestiario anota con qué armas se hace más daño a cada bicho. Alguien tenía que llevar el expediente.",
+  "La Chatarroteca anota con qué armas se hace más daño a cada bicho. Alguien tenía que llevar el expediente.",
   "Bajo la mesa del patio y dentro del garaje la cámara se acerca para no perder de vista al auto. Hasta ella se preocupa.",
   "El Desafío diario usa la misma semilla durante todo el día: todos sufren el mismo patio.",
   "El Garaje y el Jardín son zonas nuevas que se desbloquean en el Taller. Más metros cuadrados, mismos problemas.",
@@ -69,7 +69,7 @@ async function hide() {
 function set(label: string, f: number) {
   $("ldStep").textContent = label;
   const p = Math.max(0, Math.min(1, f));
-  $("ldBar").style.width = `${p * 100}%`;
+  $("ldBar").style.transform = `scaleX(${p})`;
   $("ldPct").textContent = `${Math.round(p * 100)}%`;
 }
 

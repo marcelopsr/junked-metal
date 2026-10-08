@@ -71,6 +71,7 @@ describe("parseSave", () => {
     expect(load({ ...v1, preset: "medio", shadowQ: "mid", texRes: 512, bloom: false })).toMatchObject({ texRes: 256, bloom: true, preset: "medio" });
     expect(load({ ...v1, preset: "custom", shadowQ: "high", texRes: 512, bloom: false })).toMatchObject({ shadowQ: "high", texRes: 512, bloom: false });
     expect(load({ lookv: 6, gfxv: 2, scaler: "raro", texRes: 128, bloom: "x" })).toMatchObject({ scaler: "simple", texRes: 128, bloom: true }); // ya migrado: solo se valida
+    expect(load({ lookv: 6, gfxv: 2, scaler: "ia", fsr: "calidad", gpu: "webgpu" })).toMatchObject({ scaler: "ia", gpu: "webgpu" }); // v2 no se vuelve a migrar en cada carga
   });
   it("controles viejos: la tecla principal reasignada se conserva y gana la alternativa de fábrica", () => {
     const s = load({ keys: { up: "KeyI", boost: "KeyJ", inventada: "KeyZ" }, pad: { dead: 0.3, sens: 1.5 } });

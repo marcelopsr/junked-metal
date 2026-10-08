@@ -25,7 +25,7 @@ function kit() {
     ([[G.rivetM, 0.016, 0.008, 0], [G.boltM, 0.022, 0.012, 1]] as const).forEach(([list, d, h, col]) => list.forEach((M, i) => {
       cur = marks.filter((m) => m[col] <= i).at(-1)![2];
       const c = B.MeshBuilder.CreateCylinder("p", { diameterTop: d * 0.8 * k, diameterBottom: d * k, height: h * k, tessellation: 6 }, sc());
-      c.bakeTransformIntoVertices(M); add(c, FOLD.bare());
+      c.bakeTransformIntoVertices(M); add(c, FOLD.bolt());
     }));
     if (s !== 1) for (const p of parts) { p.computeWorldMatrix(true); p.bakeCurrentTransformIntoVertices(); p.scaling.setAll(s); }
     return parts;
@@ -55,7 +55,7 @@ const BUGS: Record<string, Bug> = {
 };
 export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
   const { G, done, strut, bone } = kit();
-  const body = FOLD.painted(o.color, 0.75, o.seed), plate = FOLD.painted(PAL.metalOsc, 0.6, 62), eye = FOLD.emissive(o.eye);
+  const body = FOLD.chitin(o.color), plate = FOLD.painted(PAL.metalOsc, 0.6, 62), eye = FOLD.emissive(o.eye);
   if (o.look === "beetle") { // élitros: dos chapas en techo a dos aguas sobre el abdomen, con costura y cuerno de acero (IDENTITY)
     along(G, 0.62, 0.8, 0.9, plate, [0, 0.4, -0.6]);
     for (const s of [-1, 1]) G.box(0.44, 0.04, 1.1, body, [s * 0.2, 0.74, -0.55], [0, 0, -s * 0.3]);
@@ -90,7 +90,7 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     bone(0);
   }
   // Patas: fémur, rodilla de acero, tibia y pie de goma, cada una en su hueso (caminata horneada: 300 hormigas cuestan lo mismo que una)
-  const leg = FOLD.painted(o.color, 0.9, o.seed + 2);
+  const leg = FOLD.chitin(o.color);
   let b = 1;
   for (const [[hx, hy, hz], yaw] of ANT_HIPS) for (const s of [1, -1]) {
     bone(b++);
@@ -122,7 +122,7 @@ export function antPose(vis: number, walk: number, atk: number, kk = 1) {
 const MOTH = "#d8c690";
 export function mothBody(vis = 1) {
   const { G, done, strut, bone } = kit();
-  const fur = FOLD.painted(MOTH, 0.55, 71), band = FOLD.painted("#5a4830", 0.7, 72), eye = FOLD.emissive("#c9a0ff");
+  const fur = FOLD.painted(MOTH, 0.55, 71), band = FOLD.chitin("#5a4830"), eye = FOLD.emissive("#c9a0ff");
   along(G, 0.3, 0.34, 0.36, fur, [0, 0.42, -0.02], 8); // tórax
   G.cyl(0.4, 0.06, band, [0, 0.42, 0.16], [Math.PI / 2, 0, 0], 8); // collar
   bone(1);
@@ -167,7 +167,7 @@ export function mothWing(side: 1 | -1) {
 const ROBOT_K = 1.22, SH = 0.9;
 export function robotBody() {
   const { G, done, strut, bone } = kit();
-  const tin = FOLD.painted("#e0322a", 0.65, 81), dark = FOLD.painted("#5c1414", 0.8, 82), steel = FOLD.bare(), lamp = FOLD.emissive("#ffe566");
+  const tin = FOLD.painted("#e0322a", 0.8, 81), dark = FOLD.painted("#5c1414", 0.9, 82), steel = FOLD.bare(), lamp = FOLD.emissive("#ffe566");
   for (const s of [-1, 1]) {
     bone(s < 0 ? 1 : 2);
     G.box(0.28, 0.1, 0.42, dark, [s * 0.22, 0.06, 0.04]); G.box(0.29, 0.025, 0.43, FOLD.rubber(), [s * 0.22, 0.012, 0.04]); // pies
@@ -211,7 +211,7 @@ const FR_W: V3[] = [[-0.42, 0.24, 0.55], [0.42, 0.24, 0.55], [-0.42, 0.24, -0.55
 const FR_K = 1.3; // largo del GLB viejo (2,6 m): escala calibrada con glbStats/bounding box, el colisionador no cambia
 export function frictionBody() {
   const { G, done, strut, bone } = kit();
-  const orange = FOLD.painted("#ff6b0a", 0.6, 121), dark = FOLD.dark(), steel = FOLD.bare();
+  const orange = FOLD.painted("#ff6b0a", 0.75, 121), dark = FOLD.dark(), steel = FOLD.bare();
   G.box(0.7, 0.06, 1.5, dark, [0, 0.16, 0]); // chasis
   G.box(0.8, 0.22, 1.7, orange, [0, 0.3, 0]); // carrocería
   for (const s of [-1, 1]) G.bend([s * 0.4, 0.41, -0.85], [s * 0.4, 0.41, 0.85], 0.025, orange);
@@ -347,7 +347,7 @@ export function reyPose(_v: number, walk: number, atk: number) {
 /** Tarántula: cefalotórax de chapa con placa, abdomen en prisma con faja naranja y placa dorsal, quelíceros de acero, racimo de ojos. Huesos: 0 cuerpo, 1 abdomen. */
 export function tarantulaBody() {
   const { G, done, strut, bone } = kit();
-  const hair = FOLD.painted("#7a55a8", 0.7, 141), dark = FOLD.painted("#4a3228", 0.75, 142), band = FOLD.painted("#c87830", 0.6, 143), eye = FOLD.emissive("#ff4fd8");
+  const hair = FOLD.painted("#7a55a8", 0.7, 141), dark = FOLD.chitin("#4a3228"), band = FOLD.chitin("#c87830"), eye = FOLD.emissive("#ff4fd8");
   G.box(1.0, 0.5, 1.1, dark, [0, 0.5, 0.32]); // cefalotórax
   G.plate([0, 0.756, 0.3], [Math.PI / 2, 0, 0], 0.8, 0.9, hair);
   for (const s of [-1, 1]) G.bend([s * 0.5, 0.75, -0.2], [s * 0.5, 0.75, 0.86], 0.04, dark);

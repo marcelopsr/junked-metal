@@ -70,6 +70,7 @@
 }
 #match3-ui .m3-goal.done { border-color: var(--verde); }
 #match3-ui .m3-gicon { grid-row: 1 / span 2; width: 26px; height: 26px; box-sizing: border-box; }
+#match3-ui img.m3-gicon { width: 34px; height: 34px; image-rendering: auto; }
 #match3-ui .m3-shape-0 .m3-gicon { background: var(--amarillo); clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0 50%); box-shadow: inset 0 0 0 8px var(--amarillo), inset 0 0 0 30px #2a1c05; }
 #match3-ui .m3-shape-1 .m3-gicon { background: linear-gradient(90deg, #ff7a70 50%, var(--rojo) 50%); clip-path: polygon(50% 0, 84% 50%, 50% 100%, 16% 50%); }
 #match3-ui .m3-gtext { text-align: left; color: var(--texto); }
@@ -166,5 +167,45 @@
   #match3-ui .m3-goals-vis { flex-direction: row; }
   #match3-ui .m3-instr { display: none; }
 }
+/* Consejo de la mecánica nueva del nivel */
+#match3-ui .m3-tip { text-align: left; font-size: 16px; line-height: 1.3; margin: 10px 0 4px; padding: 8px 10px; color: var(--texto); background: var(--fondo); border: 1px solid color-mix(in srgb, var(--cian) 45%, transparent); }
+#match3-ui .m3-tip b { display: block; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cian); }
+#match3-ui .m3-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; margin: 8px 0 0; font-size: 15px; color: var(--texto2); }
+#match3-ui .m3-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 2px; background: var(--fondo); border: 1px solid var(--borde); color: var(--texto); font-weight: 700; }
+#match3-ui .m3-chip img { width: 26px; height: 26px; }
+#match3-ui .m3-score { font-size: 40px; font-weight: 700; margin: 2px 0; color: var(--texto); line-height: 1; }
+#match3-ui .m3-best { display: inline-block; vertical-align: middle; font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fondo); background: var(--cian); padding: 2px 6px; }
+
+/* Estrellas de resultado: entran de a una con un golpe de prensa */
+#match3-ui .m3-stars { display: flex; justify-content: center; gap: 6px; margin: 4px 0 8px; }
+#match3-ui .m3-stars svg { width: 54px; height: 54px; }
+#match3-ui .m3-stars svg:nth-child(2) { transform: translateY(-10px); width: 64px; height: 64px; }
+#match3-ui .m3-stars polygon { fill: #2a2f37; stroke: var(--fondo); stroke-width: 1.6; stroke-linejoin: round; }
+#match3-ui .m3-stars svg.on polygon { fill: var(--amarillo); }
+#match3-ui .m3-stars svg.on { animation: m3-stamp 0.42s cubic-bezier(.2,1.6,.4,1) both; animation-delay: calc(var(--i) * 0.28s + 0.15s); }
+@keyframes m3-stamp { from { transform: scale(2.4) rotate(-25deg); opacity: 0; } to { opacity: 1; } }
+#match3-ui .m3-stars svg.on:nth-child(2) { animation-name: m3-stamp2; }
+@keyframes m3-stamp2 { from { transform: translateY(-10px) scale(2.4) rotate(25deg); opacity: 0; } to { transform: translateY(-10px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #match3-ui .m3-stars svg.on { animation: none; } }
+
+/* Herramientas del taller: caja de herramientas al pie, cada una con su ícono y cuántas quedan */
+#match3-ui .m3-tools {
+  pointer-events: auto; position: absolute; left: 50%; transform: translateX(-50%);
+  bottom: max(8px, env(safe-area-inset-bottom)); display: flex; gap: 6px; padding: 6px;
+  background: rgba(11, 15, 20, 0.86); border: 2px solid #b5651d; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+#match3-ui .m3-tools.hidden { display: none; }
+#match3-ui .m3-tools button {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 64px; min-height: 0; padding: 4px 6px 2px;
+  background: linear-gradient(#2a2f37, #14181F); color: var(--texto); font-size: 13px; text-shadow: none;
+}
+#match3-ui .m3-tools button img { width: 34px; height: 34px; }
+#match3-ui .m3-tools button b { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; line-height: 20px; border-radius: 10px; background: var(--amarillo); color: var(--fondo); font-size: 13px; }
+#match3-ui .m3-tools button.on { background: linear-gradient(#ffb26b, var(--naranja)); color: var(--fondo); box-shadow: 0 0 0 2px var(--amarillo), 0 0 14px rgba(255, 145, 56, 0.7); }
+#match3-ui .m3-tools button:disabled { opacity: 0.35; cursor: default; }
+@media (orientation: landscape) and (min-width: 900px) {
+  #match3-ui .m3-tools { left: max(12px, env(safe-area-inset-left)); top: 50%; bottom: auto; transform: translateY(-50%); flex-direction: column; }
+}
+
 /* Mientras corre el arcade no se muestra ningún control táctil del auto (la pausa propia está montada en el bisel) */
 html body.match3-play #touch.match3-only, html body.match3-play #touch.match3-only #tPause { display: none !important; }

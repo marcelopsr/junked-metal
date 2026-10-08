@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph, template, tor, tube } from "./models";
 import { debris, splat } from "./fx";
-import { canvasTex, G, M, pbr, shadows, TEX } from "./render";
+import { canvasTex, G, M, pbr, shadows, surface, TEX, type Surf } from "./render";
 import { rng, seedRng } from "./rng";
 import { FOLD, FOLD_PAINT, FOLDED_SLICE } from "./folded";
 import { crateDetail, fencePanel, paintCanFold, rampLip, realCarFold, toolFold, wateringCanFold } from "./folded_slice";
@@ -187,12 +187,12 @@ export function setDrawDist(d: number) {
 
 // ---------- Piezas comunes del mundo ----------
 // Suelo visible + colisionador. La textura repite con la misma densidad de texel que el patio original.
-function floor(key: string, color: string, t: () => B.Texture, rough = 0.95) {
+function floor(key: string, color: string, t: () => B.Texture, rough = 0.95, kind: Surf = "grass", macro = 90) {
   const GS = HALF * 2 + 700, // el suelo sigue más allá del patio: el horizonte se pierde en la niebla
      tx = tex(key, t);
-  tx.uScale = tx.vScale = (14 * GS) / 260;
+  tx.uScale = tx.vScale = GS / macro; // macro: color a escala de patio; el grano fino lo pone surface() cada ~4,5 m (a la altura de la cámara de partida, 1 texel ≈ 1 píxel)
   const ground = B.MeshBuilder.CreateGround("ground", { width: GS, height: GS, subdivisions: 80 }, scene); // subdividido: dos triángulos enormes interpolan mal la profundidad y los decales se hunden en el piso
-  ground.material = pbr(key, { color, rough, tex: tx });
+  ground.material = surface(pbr(key, { color, rough, tex: tx }), kind, Math.round(GS / 4.5));
   ground.receiveShadows = true;
   const gcol = B.MeshBuilder.CreateBox("gcol", { width: GS, height: 2, depth: GS }, scene);
   gcol.position.y = -1;
@@ -250,8 +250,8 @@ function house() {
 }
 // Árbol: tronco enorme, copa fuera de cuadro (sombras de hojas igual)
 function tree(x: number, z: number) {
-  occluders.push(stat(cyl(7, 9, 70, pbr("bark", { color: "#ffffff", rough: 0.95, tex: tex("bark", TEX.bark) }), [x, 35, z]), B.PhysicsShapeType.CYLINDER));
-  const crown = M.matte("#2f6b2a"), lobes: B.Mesh[] = [];
+  occluders.push(stat(cyl(7, 9, 70, surface(pbr("bark", { color: "#ffffff", rough: 0.95, tex: tex("bark", TEX.bark) }), "soil", 6, 0.6), [x, 35, z]), B.PhysicsShapeType.CYLINDER));
+  const crown = leafM("#2f6b2a", 24), lobes: B.Mesh[] = [];
   for (let k = 0; k < 5; k++) lobes.push(sph(40, crown, [x + (rng() - 0.5) * 30, 72 + rng() * 10, z + (rng() - 0.5) * 30], [1, 0.7, 1], 6));
   shadows.addShadowCaster(merge("crown", lobes)); // una sola malla por copa: 5 mallas = 5 dibujos por pasada (cada cascada de sombra incluida)
   bare.push({ x, z, r: 6 });
@@ -298,9 +298,9 @@ function patioBuild() {
   occluders.push(top);
 
   // Suelo: césped + baldosas + huerta
-  floor("grass", "#ffffff", TEX.grass);
-  decal("patio", 48, 34, 0, -30, pbr("tiles", { color: "#ffffff", rough: 0.6, tex: tex("tiles", TEX.tiles) }));
-  const dirt = decal("dirt", 42, 32, 50, 45, pbr("dirt", { color: "#ffffff", rough: 1, tex: tex("dirt", TEX.dirt) }));
+  floor("grass", "#ffffff", TEX.grassMacro);
+  decal("patio", 48, 34, 0, -30, surface(pbr("tiles", { color: "#ffffff", rough: 0.6, tex: tex("tiles", TEX.tiles) }), "concrete", 28, 0.7));
+  const dirt = decal("dirt", 42, 32, 50, 45, surface(pbr("dirt", { color: "#ffffff", rough: 1, tex: tex("dirt", TEX.dirt) }), "soil", 24));
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirt.material!, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   const crops: B.Mesh[] = [];
@@ -323,20 +323,27 @@ function patioBuild() {
   for (const [x, z] of [[-75, -70], [78, -60], [-80, 70], [70, 85]]) tree(x * K, z * K);
 }
 
+// Follaje con hojas en relieve (perfil "leaf"): rep = repeticiones sobre las UV de la malla (esfera: vuelta completa)
+const leafM = (c: string, rep = 8) => surface(pbr(`leaf${c}${rep}`, { color: c, rough: 0.8 }), "leaf", rep, 0.75);
 // Arbustos a lo largo de la cerca: un solo mesh con thin instances, sin física (la cerca ya frena al auto)
 function bushes() {
-  const g = M.matte("#4f9a3c"), g2 = M.matte("#3f8a34"), fl = M.plastic("#ff8fb8");
+  const g = leafM("#4f9a3c"), g2 = leafM("#3f8a34"), fl = M.plastic("#ff8fb8");
   const base = merge("bush", [sph(5, g, [0, 2.2, 0], [1.3, 0.9, 1.1], 6), sph(4, g2, [2.4, 1.8, 0.8], undefined, 6), sph(3.6, g, [-2.4, 1.6, -0.6], undefined, 6), sph(1.1, fl, [1.5, 3.6, 1.8], undefined, 4), sph(1.1, fl, [-1.8, 3.2, 1.6], undefined, 4)]);
   base.isPickable = false;
   const mats: number[] = [];
   const m = new B.Matrix(), sc = new B.Vector3(), p = new B.Vector3(), q = new B.Quaternion();
-  for (let i = -HALF + 8; i < HALF - 8; i += 14 + rng() * 10) for (const [x, z] of [[i, HALF - 5], [i, -HALF + 5], [HALF - 5, i], [-HALF + 5, i]] as const) {
-    if (rng() < 0.35) continue;
-    const k = 0.7 + rng() * 0.7;
-    sc.set(k, k, k); p.set(x + (rng() - 0.5) * 3, 0, z + (rng() - 0.5) * 3);
-    B.Quaternion.RotationYawPitchRollToRef(rng() * 6.3, 0, 0, q);
-    B.Matrix.ComposeToRef(sc, q, p, m);
-    mats.push(...m.toArray());
+  // Matas agrupadas contra la cerca (2-5 arbustos por grupo, de mayor a menor) con tramos de cerca desnuda entre grupos: menos fila uniforme
+  for (let i = -HALF + 12; i < HALF - 12; i += 34 + rng() * 26) for (const [ax, az, tx, tz] of [[i, HALF - 5, 1, 0], [i, -HALF + 5, 1, 0], [HALF - 5, i, 0, 1], [-HALF + 5, i, 0, 1]] as const) {
+    if (rng() < 0.3) continue;
+    const n = int(2, 5);
+    for (let j = 0; j < n; j++) {
+      const k = (1.5 - j * 0.22) * (0.8 + rng() * 0.35), off = (j - (n - 1) / 2) * 7 + (rng() - 0.5) * 3, inn = j % 2 ? 4 : 0; // el grande al centro-atrás, los chicos adelante
+      const x = ax + tx * off - Math.sign(ax) * (1 - tx) * inn, z = az + tz * off - Math.sign(az) * (1 - tz) * inn;
+      sc.set(k, k * (0.8 + rng() * 0.4), k); p.set(x, 0, z);
+      B.Quaternion.RotationYawPitchRollToRef(rng() * 6.3, 0, 0, q);
+      B.Matrix.ComposeToRef(sc, q, p, m);
+      mats.push(...m.toArray());
+    }
   }
   base.thinInstanceSetBuffer("matrix", new Float32Array(mats), 16, true); base.alwaysSelectAsActiveMesh = true;
   base.receiveShadows = true;
@@ -379,7 +386,7 @@ function patioLayout() {
 
 // ---------- Garaje ----------
 function garageBuild() {
-  floor("concrete", "#ffffff", concreteTex, 0.75);
+  floor("concrete", "#ffffff", concreteTex, 0.75, "concrete", 18);
   // Manchas de aceite fijas: debajo del auto y frente al banco
   const oil = pbr("oilStain", { color: "#16130f", rough: 0.35, alpha: 0.7 });
   for (const [x, z, sx, sz] of [[30, 20, 9, 6], [26, -18, 6, 5], [-40, -55, 7, 4], [-10, 40, 5, 4]]) { const d = B.MeshBuilder.CreateDisc("oilStain", { radius: 1, tessellation: 14 }, scene); d.rotation.x = Math.PI / 2; d.scaling.set(sx, sz, 1); d.position.set(x, 0.025, z); d.material = oil; d.receiveShadows = true; }
@@ -476,7 +483,7 @@ function flicker(mat: B.PBRMaterial) {
 
 // ---------- Jardín delantero ----------
 function frontBuild() {
-  floor("lawn", "#b8f0a0", TEX.grass, 0.9);
+  floor("lawn", "#b8f0a0", TEX.grassMacro, 0.9);
   // Franjas de corte del césped
   const mow = pbr("mow", { color: "#e8ffd0", rough: 0.9, alpha: 0.08 });
   for (let i = 0; i < 12; i += 2) decal("mow", HALF * 2, (HALF * 2) / 12, 0, -HALF + ((i + 0.5) * HALF * 2) / 12, mow, 0.015);
@@ -499,8 +506,8 @@ function frontBuild() {
   house();
   // Ligustros a los costados
   for (const sx of [-1, 1]) {
-    const hp = [box(7, 11, HALF * 2 + 10, M.matte("#2f6b2a"), [sx * (HALF + 3.5), 5.5, 0])];
-    for (let z = -HALF; z < HALF; z += 7) hp.push(sph(8 + rng() * 3, M.matte(rng() < 0.5 ? "#2f6b2a" : "#3a7a32"), [sx * (HALF + 3.5), 11, z], [1, 0.6, 1], 6));
+    const hp = [box(7, 11, HALF * 2 + 10, leafM("#2f6b2a", 40), [sx * (HALF + 3.5), 5.5, 0])];
+    for (let z = -HALF; z < HALF; z += 7) hp.push(sph(8 + rng() * 3, leafM(rng() < 0.5 ? "#2f6b2a" : "#3a7a32"), [sx * (HALF + 3.5), 11, z], [1, 0.6, 1], 6));
     const hedge = merge("hedge", hp);
     shadows.addShadowCaster(hedge);
     occluders.push(hedge);
@@ -573,7 +580,7 @@ let layoutMeshes: B.AbstractMesh[] = [];
 let tuft: B.Mesh;
 let tuftCount = 22000;
 let staticBare = 0;
-const clear = (x: number, z: number, r: number, m: number) => !isBare(x, z) && !bare.some((b) => Math.hypot(x - b.x, z - b.z) < b.r + r) && Math.hypot(x, z) > 14 + r && Math.abs(x) < HALF - m && Math.abs(z) < HALF - m;
+const clear = (x: number, z: number, r: number, m: number) => !isBare(x, z) && !bare.some((b) => Math.hypot(x - b.x, z - b.z) < b.r + r) && Math.hypot(x, z) > 18 + r && /* claro alrededor de la salida: espacio negativo para el auto y la cámara baja */ Math.abs(x) < HALF - m && Math.abs(z) < HALF - m;
 // Busca un lugar libre al azar (con semilla). null si no encuentra.
 // m: margen al borde
 function freeSpot(r: number, m = 10): [number, number] | null {
@@ -755,19 +762,25 @@ function giantTools() {
   }
 }
 
+// Rocas en grupos (una grande y satélites chicos): puntos de interés en vez de lluvia pareja
 function rocks(n: number) {
-  for (let i = 0; i < n; i++) {
-    const spot = freeSpot(4);
-    if (!spot) continue;
-    const [x, z] = spot;
-    const r = B.MeshBuilder.CreatePolyhedron("rock", { type: 2, size: 1 }, scene);
-    r.convertToFlatShadedMesh();
-    r.material = pbr("stone", { color: "#ffffff", rough: 0.9, tex: tex("stone", TEX.stone) });
-    r.scaling.set(1.5 + rng() * 3, 0.8 + rng() * 1.5, 1.5 + rng() * 3);
-    r.rotation.y = rng() * 6;
-    r.position.set(x, r.scaling.y * 0.4, z);
-    stat(r, B.PhysicsShapeType.CONVEX_HULL);
-    bare.push({ x, z, r: r.scaling.x });
+  let left = n;
+  while (left > 0) {
+    const c = freeSpot(10); if (!c) break;
+    const g = Math.min(left, int(2, 5)); left -= g;
+    for (let i = 0; i < g; i++) {
+      const a = rng() * 6.3, d = i ? 4 + rng() * 5 : 0, x = c[0] + Math.cos(a) * d, z = c[1] + Math.sin(a) * d;
+      if (i && isBare(x, z)) continue;
+      const big = i ? 0.5 + rng() * 0.4 : 1.2 + rng() * 0.5;
+      const r = B.MeshBuilder.CreatePolyhedron("rock", { type: 2, size: 1 }, scene);
+      r.convertToFlatShadedMesh();
+      r.material = pbr("stone", { color: "#ffffff", rough: 0.9, tex: tex("stone", TEX.stone) });
+      r.scaling.set((1.5 + rng() * 3) * big, (0.8 + rng() * 1.5) * big, (1.5 + rng() * 3) * big);
+      r.rotation.set(0, rng() * 6, (rng() - 0.5) * 0.3); // inclinación leve: no todas apoyadas igual
+      r.position.set(x, r.scaling.y * 0.4, z); // pose ANTES del aggregate
+      stat(r, B.PhysicsShapeType.CONVEX_HULL);
+      bare.push({ x, z, r: r.scaling.x });
+    }
   }
 }
 
@@ -964,12 +977,25 @@ class WindPlugin extends B.MaterialPluginBase {
   constructor(m: B.Material) { super(m, "Wind", 200, { WIND: false }); this._enable(true); }
   getClassName() { return "WindPlugin"; }
   prepareDefines(d: B.MaterialDefines) { d["WIND"] = true; }
-  getUniforms() {
-    return { ubo: [{ name: "windTime", size: 1, type: "float" }, { name: "windCar", size: 3, type: "vec3" }], vertex: "uniform float windTime;\nuniform vec3 windCar;" };
+  isCompatible() { return true; } // GLSL (WebGL) y WGSL (WebGPU)
+  getUniforms(lang?: number) {
+    return { ubo: [{ name: "windTime", size: 1, type: "float" }, { name: "windCar", size: 3, type: "vec3" }], vertex: lang === 1 ? "uniform windTime: f32;\nuniform windCar: vec3f;" : "uniform float windTime;\nuniform vec3 windCar;" };
   }
   bindForSubMesh(ubo: B.UniformBuffer) { ubo.updateFloat("windTime", windT); ubo.updateVector3("windCar", windCar); }
-  getCustomCode(type: string) {
+  getCustomCode(type: string, lang?: number) {
     if (type !== "vertex") return null;
+    if (lang === 1) return {
+      CUSTOM_VERTEX_UPDATE_WORLDPOS: `{
+        let gh = max(worldPos.y, 0.0);
+        let gw = sin(uniforms.windTime * 1.7 + worldPos.x * 0.33 + worldPos.z * 0.21) + 0.45 * sin(uniforms.windTime * 3.3 + worldPos.z * 0.9);
+        worldPos.x += 0.8 * gw * gh * 0.16; worldPos.z += 0.5 * gw * gh * 0.16;
+        let gd = worldPos.xz - uniforms.windCar.xz;
+        let gp = 1.0 - smoothstep(0.7, 2.4, length(gd));
+        let gn = normalize(gd + vec2f(0.0001)) * gp * gh * 0.9;
+        worldPos.x += gn.x; worldPos.z += gn.y;
+        worldPos.y = mix(worldPos.y, worldPos.y * 0.15, gp);
+      }`,
+    };
     return {
       CUSTOM_VERTEX_UPDATE_WORLDPOS: `
         float gh = max(worldPos.y, 0.0);

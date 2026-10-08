@@ -4,7 +4,7 @@
 > Este documento es histórico y sirve como checklist de rondas de decisión; el GDD manda en caso de contradicción.
 
 Estado: **BORRADOR — sin aprobar. Prohibido implementar hasta cerrar las decisiones del checklist.**
-Fecha: 2026-10-06 · Regla asociada: `.cursor/rules/plan-antes-de-feature.mdc`
+Fecha: 2026-10-06
 
 Este documento planifica un modo nuevo: **duelo 1 contra 1 estilo BattleBots** entre robots RC armados por
 piezas, con combate cuerpo a cuerpo (sin proyectiles). NO es la "Batalla de globos" ya existente

@@ -205,35 +205,44 @@ export const sessions = [
     } },
   ] },
   { id: "match3", query: "?mute&match3", vps: ["pc", "cel", "nb", "celh"], shots: [
-    { id: "gabinete", act: async (p) => {
+    { id: "mapa", act: async (p) => {
       await wait(p, () => window.__info?.().state === "match3" && document.getElementById("match3-ui")?.classList.contains("on"));
       await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
       await tick(p, 12);
+      await p.evaluate(() => { window.__match3.resetProgress(); window.__match3.unlockAll(); window.__match3.map(); });
+      await tick(p, 40);
     } },
     { id: "objetivos", act: async (p) => {
-      await p.evaluate(() => window.__match3.ready());
+      await p.evaluate(() => window.__match3.level(9));
       await tick(p, 8);
     } },
     { id: "juego", act: async (p) => {
-      await p.evaluate(() => { document.getElementById("m3-play")?.click(); window.__match3.start(); });
-      await tick(p, 25);
+      await p.evaluate(() => document.getElementById("m3-play")?.click());
+      await tick(p, 20);
     } },
-    { id: "seleccion", act: async (p) => {
-      const c = await p.evaluate(() => window.__match3.cellPx(3, 4));
-      await p.mouse.click(c.x, c.y);
-      await tick(p, 4);
+    { id: "combo", act: async (p) => {
+      await p.evaluate(() => { window.__match3.put(3, 0, "bomb", 1); window.__match3.put(4, 0, "h", 2); });
+      const a = await p.evaluate(() => window.__match3.cellPx(3, 0)), b = await p.evaluate(() => window.__match3.cellPx(4, 0));
+      await p.mouse.click(a.x, a.y); await p.mouse.click(b.x, b.y);
+      await tick(p, 14);
     } },
     { id: "pausa", act: async (p) => {
+      await tick(p, 200);
       await p.keyboard.press("Escape");
       await tick(p, 10);
     } },
     { id: "victoria", act: async (p) => {
-      await p.evaluate(() => window.__match3.setPhase("win"));
-      await tick(p, 12);
+      await p.keyboard.press("Escape");
+      await p.evaluate(() => window.__match3.win());
+      await tick(p, 260);
+    } },
+    { id: "jefe", act: async (p) => {
+      await p.evaluate(() => window.__match3.level(10, true));
+      await tick(p, 20);
     } },
     { id: "derrota", act: async (p) => {
-      await p.evaluate(() => window.__match3.setPhase("lose"));
-      await tick(p, 12);
+      await p.evaluate(() => window.__match3.lose());
+      await tick(p, 60);
     } },
   ] },
   // Banco Folded 2.5D (src/folded_lab.ts): paleta, materiales wear 0/0,5/1, trims, calcos y kit a 0/90/180/270 grados y desde arriba

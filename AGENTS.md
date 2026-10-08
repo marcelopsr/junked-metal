@@ -6,10 +6,6 @@ HUD de telemetría RC como terminal gastada, **nada de emojis ni UI genérica**)
 
 ## Cómo trabajamos (CLI o chat, mismo flujo)
 
-**Modelo en Cursor:** solo `composer-2.5` (sesión y subagentes); Task con `model: "composer-2.5"` y `subagent_type` solo `generalPurpose` o `explore` — ver `.cursor/rules/composer-solo.mdc`.
-
-Metodología `orquestar` (skill de usuario): la sesión principal reparte, encarga, integra y verifica; los encargos a subagentes son autocontenidos. Guía para este juego: `.claude/trabajo/ARRANQUE.md`.
-
 1. **Entender con graphify primero** (ver sección graphify abajo): `graphify query`, `path`, `explain` antes de grep o de leer archivos enteros.
 2. **Construir con ponytail** (plugin habilitado en `.Codex/settings.json`): la escalera YAGNI → reusar lo que ya existe → stdlib/plataforma → dependencia instalada → mínimo código. Los atajos deliberados llevan un comentario `ponytail:` con su techo.
    - `/ponytail-review` sobre el diff antes de cerrar una tarea grande.
@@ -17,8 +13,8 @@ Metodología `orquestar` (skill de usuario): la sesión principal reparte, encar
    - `/ponytail-debt` para listar los `ponytail:` pendientes.
 3. **Verificar** siempre: `npx tsc --noEmit -p .`, `npm test` y `npm run build`; después probar con las herramientas headless (`npm run shots`, `sim`, `perf`: ver "Herramientas de prueba"), no con el panel del navegador a mano.
 4. **Mantener el grafo**: `graphify update .` tras cambios de código (el hook de git lo hace en cada commit). Cambios en docs → `/graphify --update`.
-5. **Loop con AskUserQuestion (toolbox)** — regla `.cursor/rules/loop-colaboracion.mdc`: solo para dudas reales de diseño, balance o prioridad (preferir 1-3 preguntas por ronda); al cerrar una tanda, otra ronda si hay decisiones abiertas. No preguntas sueltas en el chat. Herramientas del proyecto y de la Mac: usar sin pedir permiso. **Git:** commit local tras cada tanda con cambios; push a `origin/master` sin preguntar al terminar una tanda significativa o al cerrar sesión (usuario autorizó). Nunca AskUserQuestion sobre commit/push salvo que el usuario lo pida explícitamente.
-6. **Plan antes de feature** — regla `.cursor/rules/plan-antes-de-feature.mdc`: features nuevas, modos o cambios que crucen módulos exigen plan en `docs/` + rondas de toolbox hasta cerrar las decisiones, antes de cualquier código (ejemplo: `docs/BATTLE_RC_PLAN.md`).
+5. **Decisiones del usuario**: solo para dudas reales de diseño, balance o prioridad; al cerrar una tanda, otra ronda si hay decisiones abiertas. No preguntas sueltas en el chat. Herramientas del proyecto y de la Mac: usar sin pedir permiso. **Git:** commit local tras cada tanda con cambios; push a `origin/master` sin preguntar al terminar una tanda significativa o al cerrar sesión (usuario autorizó). Nunca preguntar sobre commit/push salvo que el usuario lo pida explícitamente.
+6. **Plan antes de feature**: features nuevas, modos o cambios que crucen módulos exigen plan en `docs/` hasta cerrar las decisiones, antes de cualquier código (ejemplo: `docs/BATTLE_RC_PLAN.md`).
 
 ## Mapa del código (`src/`)
 

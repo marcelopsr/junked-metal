@@ -111,8 +111,8 @@ button.primary:hover:not(:disabled) { background: linear-gradient(#7af0a2, #2fd3
 .jm-badge.ok { background: var(--jm-verde); } .jm-badge.bad { background: var(--jm-rojo); color: #fff; } .jm-badge.info { background: var(--jm-cian); }
 
 /* ---------- Tooltip / avisos (franja de chapa chica) ---------- */
-.jm-tip, #padToast, .note { font: 500 15px/1.35 var(--jm-texto-f); color: var(--jm-texto); background: rgba(11, 15, 20, .9); border: 1px solid var(--jm-borde); border-left: 3px solid var(--jm-amarillo); border-radius: 0; }
-#padToast { border-color: var(--jm-borde); border-left-color: var(--jm-amarillo); }
+.jm-tip, #padToast, .note { font: 500 15px/1.35 var(--jm-texto-f); color: var(--jm-texto); background: rgba(11, 15, 20, .9); border: 1px solid var(--jm-borde); box-shadow: inset 0 2px 0 var(--jm-amarillo); border-radius: 0; } /* acento: filo amarillo arriba, como la chapa de los botones */
+#padToast { border-color: var(--jm-borde); }
 
 /* ---------- Modal / Dialog ---------- */
 .ask { background: rgba(5, 7, 10, .7); }
@@ -169,8 +169,8 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 
 /* ---------- Cartas de mejora: placa con barra de rareza arriba, ícono en sello, nivel con pips ---------- */
 #levelup { background: linear-gradient(transparent 0 30%, rgba(11, 15, 20, .9) 62%); }
-.offer { background: linear-gradient(180deg, var(--jm-panel), var(--jm-fondo2)); border: 2px solid var(--jm-borde); border-top: 5px solid var(--rc); border-radius: var(--jm-r);
-  box-shadow: inset 0 0 0 1px #000, 0 10px 24px rgba(0, 0, 0, .55); color: var(--jm-texto2); backdrop-filter: none; }
+.offer { background: linear-gradient(180deg, var(--jm-panel), var(--jm-fondo2)); border: 2px solid var(--jm-borde); border-radius: var(--jm-r);
+  box-shadow: inset 0 5px 0 var(--rc), inset 0 0 0 1px #000, 0 10px 24px rgba(0, 0, 0, .55); color: var(--jm-texto2); backdrop-filter: none; }
 .offer:hover, .offer.sel { box-shadow: 0 0 0 3px var(--rc), 0 14px 30px rgba(0, 0, 0, .6); }
 .offer b { font: 700 18px/1.1 var(--jm-titulo); color: var(--jm-texto); text-transform: uppercase; letter-spacing: .02em; }
 .offer .kind { font: 700 11px/1 var(--jm-titulo); letter-spacing: .16em; }

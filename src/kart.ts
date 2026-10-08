@@ -8,11 +8,14 @@ import { burst, FX, mark } from "./fx";
 import { icon } from "./icons";
 import { keyHit, padsConnected, pollPlayer, type PlayerCtl } from "./input";
 import { box, cyl, merge, pilotParts, sph, type CarKind, type CarOpts } from "./models";
-import { applyClimate, canvasTex, M, pbr, setSplit, setLamp, shadows } from "./render";
+import { applyClimate, canvasTex, M, pbr, setSplit, setLamp, shadows, surface } from "./render";
 import { rng, seedRng } from "./rng";
 import { engineSfx, engineStop, music, SFX } from "./sfx";
 import { buildGrass, buildLayout, clearLayout, setZone, zoneClimate } from "./world";
-import { CLIMATES } from "./run";
+import { DUSK } from "./run";
+import { PAL, wornMat } from "./kit3d";
+// Luz de carrera: la misma mañana con sol bajo (sombras largas, volumen) con que arranca la partida, con menos niebla para separar planos
+const RACE_CLIM = { ...DUSK, fog: DUSK.fog * 0.4 };
 import { carOpts } from "./menu"; // import circular (menu importa kart): solo se usa dentro de funciones
 
 // ---------- Configuración (se guarda aparte del guardado del juego) ----------
@@ -151,11 +154,11 @@ function ribbon(off0: number, off1: number, y: number, vScale: number, colorFn?:
 
 function buildTrack() {
   const road = ribbon(-W, W, 0.05, 14);
-  const rm = road.material = pbr("raceRoad", { color: "#ffffff", rough: 0.92, tex: roadTex() });
+  const rm = road.material = surface(pbr("raceRoad", { color: "#ffffff", rough: 0.92, tex: roadTex() }), "asphalt", [Math.round((2 * W) / 3), 14 / 3]); // grano cada ~3 m
   rm.zOffset = -2;
   const curb = (a: number, b: number) => {
     const m = ribbon(a, b, 0.07, 6, (i) => (Math.floor(i / 2) % 2 ? [0.95, 0.95, 0.95, 1] : [0.86, 0.14, 0.14, 1]));
-    const cm = m.material = pbr("raceCurb", { color: "#ffffff", rough: 0.7 });
+    const cm = m.material = surface(pbr("raceCurb", { color: "#ffffff", rough: 0.7 }), "concrete", 4);
     cm.zOffset = -3;
   };
   curb(-W - 1.8, -W); curb(W, W + 1.8);
@@ -172,7 +175,7 @@ function buildTrack() {
   for (const sd of [-1, 1]) arch.push(cyl(1.2, 1.2, 12, M.plastic("#f4f7fa"), [s0.x + R[0].x * sd * (W + 3), 6, s0.z + R[0].z * sd * (W + 3)], undefined, 8));
   const banner = B.MeshBuilder.CreateBox("arch", { width: (W + 3) * 2, height: 3, depth: 0.6 }, D.scene);
   banner.position.set(s0.x, 12.5, s0.z); banner.rotation.y = yaw;
-  const bt = canvasTex(256, (c, s) => { c.fillStyle = "#1d4ed8"; c.fillRect(0, 0, s, s); c.fillStyle = "#fff"; c.font = "bold 90px sans-serif"; c.textAlign = "center"; c.fillText("SALIDA", s / 2, s * 0.62); });
+  const bt = canvasTex(256, (c, s) => { c.fillStyle = "#1d4ed8"; c.fillRect(0, 0, s, s); c.fillStyle = "#fff"; c.font = "bold 90px sans-serif"; c.textAlign = "center"; c.fillText("START", s / 2, s * 0.62); });
   banner.material = pbr("raceBanner", { color: "#ffffff", rough: 0.6, tex: bt });
   arch.push(banner);
   for (const m of arch) { shadows.addShadowCaster(m); mesh.push(m); }
@@ -200,7 +203,7 @@ function buildTrack() {
     const i = Math.floor(f * trk.N), p = P[i];
     const r = B.MeshBuilder.CreateBox("ramp", { width: W * 1.2, height: 0.5, depth: 9 }, D.scene);
     r.position.set(p.x, 0.5, p.z); r.rotation = new B.Vector3(-0.2, Math.atan2(T[i].x, T[i].z), 0);
-    r.material = pbr("raceRamp", { color: "#ffc24d", rough: 0.6 });
+    r.material = wornMat(PAL.amarillo, PAL.oxido, 21);
     new B.PhysicsAggregate(r, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.4 }, D.scene);
     mesh.push(r);
   }
@@ -228,7 +231,7 @@ function buildArena() {
   for (let k = 0; k < seg; k++) {
     const a = (k / seg) * Math.PI * 2, b = B.MeshBuilder.CreateBox("arenaWall", { width: len, height: 3.2, depth: 2 }, D.scene);
     b.position.set(c.x + Math.cos(a) * (r + 1.5), 1.6, c.z + Math.sin(a) * (r + 1.5)); b.rotation.y = -a + Math.PI / 2;
-    b.material = M.plastic(k % 2 ? "#f4f7fa" : "#ef4444"); shadows.addShadowCaster(b);
+    b.material = k % 2 ? wornMat(PAL.grisChapa, null, 23) : wornMat(PAL.rojoChapa, PAL.oxido, 24); shadows.addShadowCaster(b);
     new B.PhysicsAggregate(b, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.1, restitution: 0.6 }, D.scene);
     mesh.push(b);
   }
@@ -256,7 +259,7 @@ function decorate(crowd: boolean) {
   colors.forEach((c, k) => {
     const base = merge("flag", [cyl(0.18, 0.18, 5, M.metal("#e8edf2"), [0, 2.5, 0], undefined, 5), box(0.08, 1, 1.5, M.plastic(c), [0, 4.4, 0.8])]);
     const ms: B.Matrix[] = [];
-    for (let i = k * 4; i < N; i += 16) for (const sd of [-1, 1]) { const p = P[i].add(R[i].scale(sd * (W + 3.6))); ms.push(mat(p.x, 0, p.z, Math.atan2(T[i].x, T[i].z) + (sd > 0 ? 0 : Math.PI))); }
+    for (let i = k * 4; i < N; i += 16) for (const sd of [-1, 1]) { const p = P[i].add(R[i].scale(sd * (W + 4))); ms.push(mat(p.x, 0, p.z, Math.atan2(T[i].x, T[i].z) + (sd > 0 ? 0 : Math.PI))); }
     place(base, ms);
   });
   // Público: figuritas gigantes en dos filas a cada lado de la recta de salida
@@ -268,7 +271,7 @@ function decorate(crowd: boolean) {
   for (const id of PILOT_IDS) if (crowd && ms[id]) place(merge("crowd", pilotParts(id)), ms[id]);
   // Tribunas bajas detrás del público
   if (crowd) for (const sd of [-1, 1]) {
-    const i = 0, p = P[i].add(R[i].scale(sd * (W + 8 + 7))), b = box(3, 3, 52, M.plastic(sd > 0 ? "#3b6fd8" : "#d85a3b"), [p.x, 1.5, p.z], [0, Math.atan2(T[i].x, T[i].z), 0]);
+    const i = 0, p = P[i].add(R[i].scale(sd * (W + 8 + 7))), b = box(3, 3, 52, sd > 0 ? wornMat(PAL.petroleo, PAL.oxido, 25) : wornMat(PAL.rojoChapa, PAL.oxido, 24), [p.x, 1.5, p.z], [0, Math.atan2(T[i].x, T[i].z), 0]);
     b.isPickable = false; mesh.push(b);
   }
   // Globos en el arco
@@ -293,16 +296,31 @@ function decorate(crowd: boolean) {
       shadows.addShadowCaster(pl); mesh.push(post, pl);
     }
   }
-  // Neumáticos apilados fuera de las curvas más cerradas
+  // Neumáticos apilados fuera de las curvas más cerradas: lado exterior (mismo signo que los carteles), pasando el cordón (W + 1,8) con margen
   const tire = merge("tires", [0, 1, 2].map((k) => B.MeshBuilder.CreateTorus("t", { diameter: 2.2, thickness: 0.8, tessellation: 10 }, D.scene)).map((m, k) => { m.position.y = 0.4 + k * 0.8; m.material = M.rubber(); return m; }));
   const tms: B.Matrix[] = [];
-  for (let i = 0; i < N; i += 3) { const a = angleAhead(i); if (Math.abs(a) > 0.5) { const out = -Math.sign(a); for (let k = 0; k < 3; k++) { const p = P[i].add(R[(i + k * 2) % N].scale(out * (W + 3.5 + k * 0.4))); tms.push(mat(p.x, 0, p.z, 0)); } } }
+  for (let i = 0; i < N; i += 3) { const a = angleAhead(i); if (Math.abs(a) > 0.5) { const out = Math.sign(a); for (let k = 0; k < 3; k++) { const j = (i + k * 2) % N, p = P[j].add(R[j].scale(out * (W + 4.5 + k * 0.4))); tms.push(mat(p.x, 0, p.z, 0)); } } }
   if (tms.length) place(tire, tms);
+  // Vallas de chapa (mismo lenguaje que la chatarra del patio): paneles oxidados del lado de afuera en las rectas,
+  // inclinación y alto variados por índice (determinista, sin rng de la partida). Una malla, thin instances.
+  const plate = merge("scrapFence", [box(4.2, 2.2, 0.15, M.metal("#7a5a3e"), [0, 1.1, 0]), box(4.4, 0.3, 0.2, M.metal("#4a4f55"), [0, 2.1, 0]), cyl(0.15, 0.15, 2.6, M.metal("#4a4f55"), [-2, 1.3, 0], undefined, 5)]);
+  const fms: B.Matrix[] = [];
+  for (let i = 2; i < N; i += 5) {
+    if (Math.abs(angleAhead(i)) > 0.4 || i < 10 || i > N - 10) continue; // curvas: neumáticos; salida: público
+    for (const sd of [-1, 1]) {
+      const h = (i * 7 + (sd > 0 ? 3 : 0)) % 5, p = P[i].add(R[i].scale(sd * (W + 6 + h * 0.3)));
+      fms.push(B.Matrix.Compose(new B.Vector3(1, 0.8 + h * 0.1, 1), B.Quaternion.FromEulerAngles((h - 2) * 0.04, Math.atan2(T[i].x, T[i].z) + (h - 2) * 0.08, 0), new B.Vector3(p.x, 0, p.z)));
+    }
+  }
+  if (fms.length) { place(plate, fms); shadows.addShadowCaster(plate); }
 }
 let roadTx: B.Texture | null = null;
 const roadTex = () => roadTx ??= canvasTex(256, (c, s) => {
   c.fillStyle = "#6e6a66"; c.fillRect(0, 0, s, s);
   for (let i = 0; i < 1800; i++) { c.fillStyle = Math.random() < 0.5 ? "#7d7873" : "#5c5854"; c.fillRect(Math.random() * s, Math.random() * s, 2, 2); }
+  // Huella de las ruedas: dos franjas más oscuras y lisas donde pisa todo el pelotón, y alguna gota de aceite en el medio de cada carril
+  for (const u of [0.3, 0.7]) { const g = c.createLinearGradient(s * (u - 0.12), 0, s * (u + 0.12), 0); g.addColorStop(0, "rgba(40,38,36,0)"); g.addColorStop(0.5, "rgba(40,38,36,.28)"); g.addColorStop(1, "rgba(40,38,36,0)"); c.fillStyle = g; c.fillRect(0, 0, s, s); }
+  for (let i = 0; i < 5; i++) { const x = s * (Math.random() < 0.5 ? 0.3 : 0.7) + (Math.random() - 0.5) * 20, y = Math.random() * s, r = 3 + Math.random() * 6; c.fillStyle = "rgba(25,22,20,.35)"; c.beginPath(); c.ellipse(x, y, r, r * 1.6, 0, 0, 7); c.fill(); }
   c.fillStyle = "#e8e4d4"; c.fillRect(s / 2 - 3, 0, 6, s * 0.5); // línea central discontinua
 });
 
@@ -393,7 +411,7 @@ export function startRace(keepCup = false) {
   const def = TRACKS[trackNo];
   W = def.w; gridGap = def.gap; LAPS = raceCfg.laps + def.extra;
   trk = buildTrackData(def);
-  applyClimate(zoneClimate() ?? CLIMATES.find((c) => c.id === "mediodia")!);
+  applyClimate(zoneClimate() ?? RACE_CLIM);
   seedRng(20261003 + raceNo);
   buildTrack();
   music("race");
@@ -408,7 +426,7 @@ export function startBattle() {
   setZone("patio", false); clearLayout(); buildGrass();
   D.scene.physicsEnabled = true;
   cup = {}; raceNo = 1; battleT = 150;
-  applyClimate(CLIMATES.find((c) => c.id === "mediodia")!);
+  applyClimate(RACE_CLIM);
   seedRng(20261004);
   buildArena();
   music("battle");

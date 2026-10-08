@@ -25,6 +25,8 @@ export type Arcade = {
   /** Puntos que la cámara nunca recorta (esquinas del display y de la pantalla, con el marco). */
   mustSee: B.Vector3[];
   dispose(): void;
+  /** Esconde o muestra el gabinete (con sus luces) sin destruirlo: se reusa entre partidas. */
+  show(on: boolean): void;
 };
 
 export function buildArcade(scene: B.Scene): Arcade {
@@ -49,7 +51,8 @@ export function buildArcade(scene: B.Scene): Arcade {
   };
 
   // --- Materiales con lógica física ---
-  const tPaint = wornTex(scene, 11, M3C.naranja, M3C.rojo), tDark = wornTex(scene, 23, "#262a30", null), tGrey = wornTex(scene, 37, "#b9b9b4", null);
+  // desgaste en bordes y esquinas (edgeRust), caras centrales sanas
+  const tPaint = wornTex(scene, 11, M3C.naranja, null, 128, 0.6, 0.7), tDark = wornTex(scene, 23, "#262a30", null, 128, 0.6, 0.6), tGrey = wornTex(scene, 37, "#b9b9b4", null, 128, 0.5, 0.6);
   owned.push(tPaint.alb, tPaint.orm, tDark.alb, tDark.orm, tGrey.alb, tGrey.orm);
   const paint = mat("paint", { tex: tPaint });                       // pintura gastada: rugosidad media, chapa expuesta metálica en bordes
   const dark = mat("dark", { tex: tDark });                          // chapa oscura (puertas, bisel)
@@ -305,6 +308,7 @@ export function buildArcade(scene: B.Scene): Arcade {
     root, screen, display, stick, stickPick: [shaft, ball], cap, capMat: capM,
     pauseAnchor: world(s2 + side / 2, BZ.dispY),
     mustSee: [world(-s2 - 0.03, BZ.dispY + BZ.dispH / 2 + 0.03), world(s2 + 0.03, BZ.dispY + BZ.dispH / 2 + 0.03), world(-s2 - 0.03, BZ.scrY - s2 - 0.03), world(s2 + 0.03, BZ.scrY - s2 - 0.03)],
+    show(on: boolean) { root.setEnabled(on); lights.forEach((l) => l.setEnabled(on)); },
     dispose() {
       lights.forEach((l) => l.dispose());
       root.getChildMeshes().forEach((m) => m.dispose());

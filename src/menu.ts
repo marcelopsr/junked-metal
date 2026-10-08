@@ -37,7 +37,7 @@ export type Save = {
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
   bloom: boolean; lookv: number; shake: boolean; fps: boolean; hudSolid: boolean; hint: boolean;
   // Imagen (render.ts, Gfx): resolución (escala manual o FSR), suavizado, calidad (preset = el que coincide con los cuatro ajustes, o "custom") y pantalla.
-  gfxv: number; scaler: "simple" | "fsr"; scale: number; fsr: Exclude<Fsr, "off">; aa: AA; sharpen: number;
+  gfxv: number; gpu: "webgl" | "webgpu"; scaler: "simple" | "fsr" | "ia"; scale: number; fsr: Exclude<Fsr, "off">; aa: AA; sharpen: number;
   preset: Preset | "custom"; shadowQ: ShadowQ; detail: Detail; texRes: number; aniso: number;
   fpsCap: number; menuFps: number; fov: number; bright: number; gamma: number; // menuFps: tope de cuadros solo en los menús (0 = el mismo que el juego)
   // Controles (input.ts): teclas [principal, alternativa], joystick, carrera, disposición táctil y 3 perfiles con nombre (null = vacío)
@@ -50,6 +50,7 @@ export type Save = {
   ach: AchId[];
   ability: AbilityId; curses: CurseId[]; endless: number; // habilidad activa elegida, maldiciones de la próxima partida y récord del modo sin fin (s)
   abilLv: Partial<Record<AbilityId, number>>; weapon: WeaponId; // nivel de cada habilidad (Taller) y arma inicial elegida en el garaje (Arsenal)
+  m3: { stars: Record<string, number>; best: Record<string, number>; tools: Record<string, number> }; // Junket Crush: estrellas y récord por nivel, herramientas guardadas
 };
 // Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
 const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (innerHeight * (devicePixelRatio || 1))) * 20) / 20));
@@ -58,11 +59,12 @@ const DEFAULT: Save = {
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0, arm: 0, reg: 0, tur: 0, ram: 0, cdr: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", trim: "", rim: "", zoom: 1.35, camMode: "actual",
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
-  gfxv: 2, scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
+  gfxv: 2, gpu: "webgl", scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
+  m3: { stars: {}, best: {}, tools: {} },
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego
 export const save: Save = parseSave((() => { try { return localStorage.getItem("rcfight2"); } catch { return null; } })(), DEFAULT, { abilities: ABILITIES, weapons: ARSENAL, curses: CURSES, kinds: Object.keys(DEF), zones: ZONES, isTouch, validDecal, presetOf, presets: PRESETS });
@@ -180,7 +182,7 @@ const commit = () => { save.preset = presetOf(save); persist(); saveRaceCfg(); a
 /** Vuelve las opciones (imagen, audio, controles, accesibilidad) a los valores de fábrica; el progreso no se toca. */
 function resetCfg() {
   const D = structuredClone(DEFAULT);
-  Object.assign(save, { scaler: D.scaler, scale: D.scale, fsr: D.fsr, aa: D.aa, sharpen: D.sharpen, preset: D.preset, shadowQ: D.shadowQ, detail: D.detail, texRes: D.texRes, aniso: D.aniso, fpsCap: D.fpsCap, menuFps: D.menuFps, fov: D.fov, bright: D.bright, gamma: D.gamma, bloom: D.bloom, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, camMode: D.camMode, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: D.keys, race: D.race, tlay: D.tlay });
+  Object.assign(save, { gpu: D.gpu, scaler: D.scaler, scale: D.scale, fsr: D.fsr, aa: D.aa, sharpen: D.sharpen, preset: D.preset, shadowQ: D.shadowQ, detail: D.detail, texRes: D.texRes, aniso: D.aniso, fpsCap: D.fpsCap, menuFps: D.menuFps, fov: D.fov, bright: D.bright, gamma: D.gamma, bloom: D.bloom, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, camMode: D.camMode, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: D.keys, race: D.race, tlay: D.tlay });
   commit();
 }
 
@@ -629,7 +631,8 @@ const focusSel = (q: string) => { const e = document.querySelector<HTMLButtonEle
 type Row = [label: string, kind: "range", path: string, min: number, max: number, step: number, unit?: "%" | "x" | "°"] | [label: string, kind: "tog", path: string] | [label: string, kind: "sel", path: string, opts: [string, string][]] | [label: string, kind: "bind", path: string] | [label: string, kind: "padtest"] | [label: string, kind: "prof", i: number] | [label: string, kind: "note"] | [label: string, kind: "btn", act: string] | [label: string, kind: "sect"];
 const DESC: Record<string, string> = {
   scale: "Porcentaje de la resolución de la pantalla con que se dibuja el juego (100% es la nativa). Menos escala sube los fps a costa de nitidez.",
-  scaler: "Simple dibuja a un porcentaje fijo de la pantalla. FSR 1 de AMD dibuja más chico y reconstruye los bordes al subir a la nativa. En pantalla dividida de carrera FSR se apaga y vale la escala simple.",
+  gpu: "WebGPU suele aliviar al procesador con muchos enemigos en pantalla; WebGL funciona en todos los equipos. Se aplica al volver a abrir el juego. Si WebGPU falla, arranca con WebGL.",
+  scaler: "Simple dibuja a un porcentaje fijo de la pantalla. FSR 1 de AMD dibuja más chico y reconstruye los bordes al subir a la nativa. IA dibuja a la mitad y una red neuronal la agranda al doble: imagen más limpia, sin píxeles visibles, a cambio de más trabajo de la tarjeta; pide el motor WebGPU. En pantalla dividida de carrera FSR se apaga y vale la escala simple.",
   fsr: "Cuánto baja FSR la resolución antes de reconstruirla: Ultra calidad 77%, Calidad 67%, Equilibrado 59%, Rendimiento 50%.",
   preset: "Fija de una vez sombras, detalle del mundo, texturas, filtrado y bloom. Cambiar cualquiera de esos cinco pasa a Personalizado.",
   shadowQ: "Sombras de la luna: tamaño del mapa y cascadas. Con una cascada solo hay sombras cerca del auto. Apagadas rinde mucho más en equipos modestos.",
@@ -662,7 +665,8 @@ const DESC: Record<string, string> = {
 const TABS: Record<string, { name: string; rows: Row[] }> = {
   gfx: { name: "Imagen", rows: [
     ["Resolución", "sect"],
-    ["Escalado", "sel", "scaler", [["simple", "Simple"], ["fsr", "FSR"]]],
+    ["Motor gráfico", "sel", "gpu", [["webgl", "WebGL"], ["webgpu", "WebGPU"]]],
+    ["Escalado", "sel", "scaler", [["simple", "Simple"], ["fsr", "FSR"], ["ia", "IA (WebSR)"]]],
     ["Escala de render", "range", "scale", 0.5, 1, 0.05, "%"],
     ["Modo FSR", "sel", "fsr", [["ultra", "Ultra calidad (77%)"], ["calidad", "Calidad (67%)"], ["equilibrado", "Equilibrado (59%)"], ["rendimiento", "Rendimiento (50%)"]]],
     ["Nitidez", "range", "sharpen", 0, 1, 0.05, "%"],
@@ -759,7 +763,7 @@ const KN: Record<string, string> = { ArrowUp: "Flecha arriba", ArrowDown: "Flech
 export const keyName = (c?: string) => (KN[c ?? ""] ?? (c ?? "").replace(/^Key|^Digit/, "").replace(/^Numpad/, "Num ").replace("Left", " izq").replace("Right", " der")).toUpperCase();
 const show2 = (v: number, u?: string) => (u === "%" ? `${Math.round(v * 100)}%` : u === "°" ? `${Math.round(v)}°` : `${v.toFixed(2)}x`);
 /** Fila que no aplica con el modo de escalado elegido: no se dibuja (tampoco recibe foco con teclado o mando). */
-const hiddenRow = (path: string) => (path === "scale" && save.scaler === "fsr") || (path === "fsr" && save.scaler !== "fsr");
+const hiddenRow = (path: string) => (path === "scale" && save.scaler !== "simple") || (path === "fsr" && save.scaler !== "fsr");
 /** Aviso de combinación: nota corta bajo el control cuando dos ajustes chocan, o "". */
 const warn = (path: string) => {
   if (path !== "aa") return "";
@@ -771,6 +775,8 @@ const warn = (path: string) => {
 const choices = (path: string, list: [string, string][]): [string, string, boolean][] => list.map(([v, n]) => {
   if (path === "aa" && v.startsWith("msaa") && +v.slice(4) > maxMsaa()) return null;
   if (path === "preset" && v === "custom" && save.preset !== "custom") return null;
+  if (path === "scaler" && v === "ia" && save.gpu !== "webgpu") return [v, `${n} (requiere WebGPU)`, true] as [string, string, boolean];
+  if (path === "gpu" && v === "webgpu" && !("gpu" in navigator)) return [v, `${n} (no disponible)`, true] as [string, string, boolean];
   return [v, n, false] as [string, string, boolean];
 }).filter((o): o is [string, string, boolean] => !!o);
 function renderConfig() {

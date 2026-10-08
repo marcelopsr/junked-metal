@@ -142,3 +142,23 @@ cilindros de 6 lados y solo donde se leen; nada de remaches "reales" en piezas q
 remaches de verdad eran 460k triángulos): usar la franja `remaches` del trim. Utilería que tiene colisionador derivado de su
 malla (cilindro, casco convexo) se viste con `skin()` de world.ts: el colisionador viejo queda invisible y una instancia Folded
 lo cubre, así la física y la semilla no cambian.
+
+## Superficies: macro + detalle (2026-10-08)
+
+- Todo piso grande se arma en dos escalas: **macro** (textura de color que cubre ~90 m, manchas con intención: pisado, quemado, húmedo; sin grano) y **detalle** (`surface(mat, perfil, repeticiones)` en `render.ts`, detailMap de Babylon: grano + relieve + brillo salidos de UNA altura, así el brillo sigue a la forma).
+- Perfiles: `grass` (hojas peinadas), `soil`, `concrete`, `asphalt` (agregado pulido), `steel` (cepillado), `leaf` (follaje superpuesto), `brick`. Uno nuevo = un objeto en `SURF`.
+- Escala del detalle: 1 texel ≈ 1 píxel a la distancia de juego (piso de partida: cada ~4,5 m). Más chico se pierde en el mipmap; más grande se ve la baldosa.
+- Anisotropía por defecto 8 (Medio): el piso casi siempre se ve rasante.
+- `flatten()` (models.ts) no aplana materiales con detalle: si un prop fusionado tiene que conservar relieve, usar `surface()`.
+
+## Etapa 2: acabados (2026-10-08)
+
+- **Desgaste:** vive en Folded (`wornCanvas` de `kit3d.ts` → celdas del atlas de `folded.ts`): pintura saltada concentrada en bordes, óxido desde esquinas y borde de apoyo, rugosidad/metal por zona (pintura, chapa expuesta, goma) en el canal ORM. Es la única fuente: no agregar máscaras paralelas en `render.ts`.
+- **Sombras con tinte:** el rebote del hemisférico de noche es tierra cálida apagada (`NIGHT_GROUND`, render.ts), no negro: bajos y panzas se leen; el contraste lo da el faro.
+- **Separación de siluetas:** `environmentIntensity` 0,65: Fresnel del cielo como filo frío en los contornos, sin luz extra (cada material ya usa sus 4 luces: hemi, luna, faro, resplandor).
+- **Emisivo y bloom:** sin cambios (GlowLayer 0,35, bloom umbral 0,95): el brillo queda en ojos, faros y tuercas, sin velar el color.
+- **Golpe recibido:** `glitchHit()` hace destellar rojo el resplandor del auto ~0,2 s (respeta modo calmo). El polvo de derrapes y aterrizajes es color tierra, no blanco.
+- **Goma con polvo:** `FOLD.rubber` lleva franjas de tierra en los cantos de su celda (hombros de la banda y borde de apoyo), más mates (rugosidad 1); el centro de la banda queda goma negra.
+- **Uniones oxidadas:** tornillos y remaches del kit usan `FOLD.bolt` (cabeza de acero con anillo de óxido) y la maza de la rueda es `FOLD.rust`. La pintura Folded baja a rugosidad 0,42 para separarse de la chapa expuesta (0,35 metal) y del óxido (0,95); el centro de cada cara conserva pintura.
+- **Quitina:** `FOLD.chitin(color)` para bichos (hormiga, escupidora, escarabajo, polilla en las bandas, tarántula en cuerpo y bandas): color liso, rugosidad 0,28, cantos oscuros y mates, un reflejo ancho. Sin desgaste de chapa: la diferencia bicho/máquina se lee por material.
+- **Máquinas:** robot y fricción con más desgaste de pintura (0,75-0,9). Todo es celda del atlas compartido: cero texturas ni materiales nuevos por objeto.
