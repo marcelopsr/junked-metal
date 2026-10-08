@@ -435,7 +435,7 @@ function openOffers(list: Offer[], title: string) {
   const rr = $("luReroll");
   rr.classList.toggle("hidden", !can);
   if (can) { rr.textContent = `Re-sortear (${rerolls})`; rr.onclick = () => reroll(); } else rr.onclick = null;
-  $("luHint").textContent = `${list.map((_, i) => i + 1).join(" · ")} o clic — Enter confirma${can ? ` · ${keyName(KEYS.reroll[0])} o ${btnName(pb("reroll"))}` : ""}`;
+  $("luHint").textContent = isTouch ? "Toca una carta para elegirla" : `${list.map((_, i) => i + 1).join(" · ")} o clic — Enter confirma${can ? ` · ${keyName(KEYS.reroll[0])} o ${btnName(pb("reroll"))}` : ""}`;
   $("luHint").onclick = null;
 }
 // Re-sorteo de cartas (Dado cargado): mismas reglas, cartas nuevas. Las evoluciones no se re-sortean.

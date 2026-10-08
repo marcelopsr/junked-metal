@@ -180,6 +180,18 @@
   /* celular: arriba no hay hueco entre progreso y radar; la banda va bajo la racha/jefe, todavía lejos del auto */
   #banner { top: calc(max(10px, env(safe-area-inset-top)) + 176px); max-width: 92vw; min-width: 0; }
 }
+/* Celular vertical: el estado del auto se ancla a la izquierda del velocímetro (centrado lo pisaba y cortaba "160 / 160") */
+@media (orientation: portrait) and (max-width: 720px) {
+  #txl { left: auto; right: calc(8px + 96px * var(--hud-scale) + 6px); translate: none; transform-origin: 100% 100%; width: min(250px, calc((100vw - 200px) / var(--hud-scale))); }
+  #hpTxt { white-space: nowrap; }
+}
+/* Celular apaisado: el aviso de radio sube a una franja arriba, entre progreso (izq.) y II/CAM/radar (der.); centrado tapaba el auto */
+@media (orientation: landscape) and (max-height: 500px) {
+  #banner { top: max(8px, env(safe-area-inset-top)); max-width: min(380px, calc(100vw - 480px)); min-width: 0; padding: 4px 10px 5px; }
+  #banner .rxh { margin-bottom: 2px; padding-bottom: 2px; }
+  body #banner.evt-warn #bannerTxt, body #banner.evt-now #bannerTxt, body #banner:not(.evt-warn):not(.evt-now) #bannerTxt { font-size: 17px; }
+  #bannerIco .ico { width: 18px; height: 18px; }
+}
 
 /* Accesibilidad: "Reducir parpadeos" (menu.ts pone body.calm) */
 body.calm #hud *, body.calm #hud *::before, body.calm #hud *::after, body.calm #banner { animation: none !important; }

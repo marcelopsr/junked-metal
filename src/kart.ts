@@ -834,9 +834,9 @@ function hud() {
   const cdEl = $r("#rcount");
   cdEl.textContent = countdown > 0 ? (countdown > 3 ? "" : String(Math.ceil(countdown))) : t < 1.2 ? "¡YA!" : "";
   cdEl.className = countdown > 0 ? "on" : t < 1.2 ? "go on" : "";
-  // Tabla en vivo (derecha): primeros 5
-  const rank = [...racers].sort((a, b) => placeOf(a) - placeOf(b)).slice(0, 5);
-  $r("#rtab").innerHTML = rank.map((r, i) => `<div class="${r.human >= 0 ? "me" : ""}"><b>${i + 1}</b><i style="background:${r.color}"></i>${r.name}</div>`).join("");
+  // Tabla en vivo (derecha): primeros 5 y, si quedó afuera, el jugador con su puesto real (fila separada)
+  const rank = [...racers].sort((a, b) => placeOf(a) - placeOf(b)).map((r, i) => ({ r, i })).filter(({ r, i }) => i < 5 || r.human >= 0);
+  $r("#rtab").innerHTML = rank.map(({ r, i }) => `<div class="${r.human >= 0 ? "me" : ""}${i >= 5 ? " far" : ""}"><b>${i + 1}</b><i style="background:${r.color}"></i>${r.name}</div>`).join("");
 }
 
 function showResults() {

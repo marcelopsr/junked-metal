@@ -115,6 +115,15 @@ body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px
 @media (orientation: portrait) { #tCam { top: calc(max(10px, env(safe-area-inset-top)) + 166px); right: 8px; } }
 /* Celular vertical: DERRAPE apilado sobre TURBO, así el stick queda libre a la izquierda */
 @media (orientation: portrait) { #tDrift { right: 24px; bottom: calc(170px + 84px * var(--touch-scale, 1) + 14px); } }
+/* Celular apaisado (poca altura): arriba a la derecha quedan radar/mapa y II/CAM; el racimo baja para no taparlos
+   (SALTO sobre TURBO, HAB sobre DERRAPE) y el stick baja para dejar libres reloj y racha a la izquierda */
+@media (orientation: landscape) and (max-height: 500px) {
+  #stickBase { bottom: 56px; }
+  #tBoost { bottom: 110px; }
+  #tDrift { bottom: 90px; }
+  #tJump { bottom: calc(110px + 84px * var(--touch-scale, 1) + 8px); }
+  #tAbil { right: calc(122px + 10px * var(--touch-scale, 1)); bottom: calc(90px + 84px * var(--touch-scale, 1) + 22px); }
+}
 
 @keyframes deal { from { opacity: 0; transform: translateY(60px) rotate(-8deg) scale(.9); } }
 /* Encendido de tubo: línea horizontal que se abre, destello de fósforo y un salto de sincronía */
@@ -153,3 +162,32 @@ body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px
 #padToast.on { opacity: 1; translate: -50% 0; }
 /* WebSR (websr.ts): la imagen agrandada tapa a #c; los toques y el mouse siguen yendo al juego */
 #sr { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+/* Cartas de mejora en celular: vertical = tres cartas horizontales compactas (ícono a la izquierda, texto a la derecha)
+   que entran en 100dvh; apaisado = la fila de siempre pero sin alto mínimo. En PC no cambia nada. */
+@media (orientation: portrait) and (max-width: 720px), (orientation: landscape) and (max-height: 500px) {
+  body #levelup { justify-content: center; justify-content: safe center; gap: 8px; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+  #levelup .otitle { font-size: 28px; }
+  #levelup .lu-head { gap: 4px; margin: 0; }
+  #levelup .lu-meta { gap: 4px; }
+  #levelup #offers { gap: 8px; margin: 0; }
+  #levelup .offer { min-height: 0; padding: 10px 12px; gap: 4px; }
+  #levelup .offer .art { width: 56px; height: 56px; margin: 0 auto; }
+  #levelup .offer .art svg { width: 34px; height: 34px; }
+  #levelup .offer b { font-size: 16px; }
+  #levelup .offer > span:not(.kind):not(.pips) { font-size: 13px !important; line-height: 1.3; }
+}
+@media (orientation: portrait) and (max-width: 720px) {
+  body #levelup { background: linear-gradient(rgba(11, 15, 20, .45), rgba(11, 15, 20, .9) 35%); }
+  #levelup #offers { flex-direction: column; flex-wrap: nowrap; width: min(440px, 100%); }
+  #levelup .offer { width: 100%; display: grid; grid-template-columns: 56px 1fr; grid-template-areas: "art kind" "art name" "art desc" "art pips"; column-gap: 12px; row-gap: 3px; align-items: start; }
+  #levelup .offer .kind { grid-area: kind; }
+  #levelup .offer .art { grid-area: art; align-self: center; margin: 0; }
+  #levelup .offer b { grid-area: name; }
+  #levelup .offer > span:not(.kind):not(.pips) { grid-area: desc; }
+  #levelup .offer .pips { grid-area: pips; margin-top: 2px; }
+  #levelup .offer:hover, #levelup .offer.sel { transform: translateX(4px); }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  #levelup .offer { width: min(220px, 31vw); }
+}

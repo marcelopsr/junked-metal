@@ -48,3 +48,31 @@
 #race.split .rp .rtime { top: 62px; }
 #rinfo { font: 600 17px/1.4 "Rajdhani", system-ui, sans-serif; text-align: right; max-width: 560px; } #rinfo small { color: #a9b8c6; font-size: 14px; } #rinfo em { color: #ffd84d; font-style: normal; font-weight: 700; }
 .medal { font-weight: 700; padding: 1px 8px; border-radius: 99px; } .medal.m3 { background: #ffc24d; color: #3a2a00; } .medal.m2 { background: #d0d7de; color: #1a2230; } .medal.m1 { background: #c47a3e; color: #fff; } .medal.m0 { background: rgba(255, 255, 255, .15); }
+
+/* Ranking: el jugador fuera del top 5 va en una fila aparte, separada */
+#rtab div.far { margin-top: 6px; }
+
+/* Celular: las esquinas son de los controles táctiles (style.css). Vertical: columna derecha = mapa, II, CAM y ranking
+   en ese orden; columna izquierda = vuelta, tiempo y objeto. Apaisado: arriba a la derecha van II/CAM y el racimo de
+   botones, así que el ranking pasa a la izquierda y la posición al centro de abajo (el stick ocupa la esquina). */
+@media (pointer: coarse) and (orientation: portrait) {
+  #race:not(.split) #rmap { top: max(10px, env(safe-area-inset-top)); right: 8px; width: 100px; height: 100px; }
+  #race:not(.split) #rtab { top: calc(max(10px, env(safe-area-inset-top)) + 220px); right: 8px; font-size: 14px; }
+  #race:not(.split) .rp .rlap { top: max(10px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); font-size: 20px; padding: 6px 12px; }
+  #race:not(.split) .rp .rtime { top: calc(max(10px, env(safe-area-inset-top)) + 42px); left: max(12px, env(safe-area-inset-left)); font-size: 15px; }
+  #race:not(.split) .rp .ritem { top: calc(max(10px, env(safe-area-inset-top)) + 66px); left: max(12px, env(safe-area-inset-left)); translate: none; min-width: 64px; min-height: 64px; }
+}
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
+  #race:not(.split) #rmap { top: max(10px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); width: 88px; height: 88px; }
+  #race:not(.split) #rtab { top: calc(max(10px, env(safe-area-inset-top)) + 66px); left: max(12px, env(safe-area-inset-left)); right: auto; font-size: 13px; gap: 2px; }
+  #race:not(.split) .rp .rlap { top: max(10px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); font-size: 18px; padding: 5px 10px; }
+  #race:not(.split) .rp .rtime { top: calc(max(10px, env(safe-area-inset-top)) + 38px); left: max(12px, env(safe-area-inset-left)); font-size: 14px; }
+  #race:not(.split) .rp .ritem { top: max(10px, env(safe-area-inset-top)); min-width: 64px; min-height: 64px; }
+  #race:not(.split) .rp .rpos { left: 50%; translate: -50% 0; bottom: max(8px, env(safe-area-inset-bottom)); padding: 2px 12px 4px; }
+  #race:not(.split) .rp .rpos b { font-size: 44px; }
+  #race:not(.split) .rp .rspd { bottom: max(8px, env(safe-area-inset-bottom)); right: max(8px, env(safe-area-inset-right)); font-size: 22px; padding: 6px 10px; }
+}
+@media (pointer: coarse) {
+  #race:not(.split) #rtab div { min-width: 0; padding: 3px 8px; }
+  #race:not(.split) .rp .ritem:empty::after { font-size: 34px; }
+}

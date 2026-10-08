@@ -117,6 +117,11 @@
 }
 #match3-ui .m3-pausebtn i { display: block; width: 7px; height: 20px; background: var(--amarillo); border-radius: 1px; }
 #match3-ui .m3-pausebtn.hidden { display: none; }
+/* Celular vertical: el ancla 3D cae sobre el display y tapa el tercer contador; la pausa pasa a la esquina superior derecha
+   (sobre la marquesina), fuera del tablero. !important porque match3.ts escribe left/top en línea (placePauseBtn). */
+@media (orientation: portrait) and (max-width: 720px) {
+  #match3-ui .m3-pausebtn { left: auto !important; top: max(10px, env(safe-area-inset-top)) !important; right: max(10px, env(safe-area-inset-right)); }
+}
 
 #match3-ui .m3-hint {
   pointer-events: none;
