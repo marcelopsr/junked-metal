@@ -61,8 +61,17 @@ Si modificaste archivos de código (`.ts`, `.mjs`), actualiza el grafo AST:
 graphify update .
 ```
 
-### Paso 4: Higiene del Diff y Aislamiento
+### Paso 4: Higiene del Diff, Aislamiento y Commit Local
 Revisa `git status -s` y `git diff --stat`:
 - [ ] Cero `console.log` de depuración olvidados, TODOs temporales sin formato `// ponytail:` o código muerto.
 - [ ] **Aislamiento verificado:** Confirmar que `.claude/` y `CLAUDE.md` **no** aparecen modificados.
 - [ ] Todos los requisitos de la solicitud original del usuario están cubiertos con evidencia real (resultados de comandos y capturas).
+- [ ] Realizar commit local de la tanda verificada (y `git push origin master` al cerrar una tanda significativa, salvo indicación contraria del usuario).
+
+### Paso 5: Ciclo de Descubrimiento Recursivo (Continuous Product Evolution)
+El cierre de la verificación **inicia obligatoriamente el siguiente ciclo de descubrimiento** (ver `.agents/rules/product-evolution-loop.md`):
+1. **Actualizar contexto persistente:** Registra en `docs/PRODUCT_EVOLUTION.md` (y en `docs/VISUAL_QUALITY.md` si hubo evaluación visual) el trabajo completado, las métricas validadas, las decisiones tomadas o descartadas y el checkpoint de sesión.
+2. **Explorar con una lente renovada:** Analiza cómo quedó el producto tras el cambio (Calidad/Impeccable, Experiencia UX/UI, Integración Folded 2.5D, Simplificación/YAGNI, Rendimiento, Funcionalidades o Producto) consultando el backlog para no duplicar ni reabrir ideas descartadas.
+3. **Proponer y recomendar (2 a 4 oportunidades):** Presenta entre 2 y 4 oportunidades genuinas detallando *qué es, qué problema resuelve, qué valor aporta, complejidad estimada y por qué conviene ahora*, seguidas de tu **recomendación fundamentada**.
+4. **Solicitar la siguiente decisión:** Usa `ask_question` con la opción recomendada en primer lugar `(Recommended)` para decidir cómo continuar el ciclo `BUILD → VALIDATE → LEARN → DISCOVER → PROPOSE → DECIDE → BUILD ↺`.
+

@@ -1,54 +1,45 @@
 ---
 name: frontend-design
 description: >-
-  Guides UI/UX design, HUD telemetry, menus, Demolicion Workbench, Match-3 arcade
-  cabinet UI, custom SVG icons, and responsive CSS for Junked Metal while preventing
-  generic AI aesthetics. Activate this skill whenever creating, styling, or refining
-  HTML/DOM/CSS interfaces in index.html, src/*.css, src/ui.ts, src/menu.ts,
-  src/icons.ts, src/duel_fabricacion.ts, or src/match3.ts. Do not activate for pure
-  physics, balance, or headless script tasks.
+  Guides UI/UX design, HUD telemetry, menus, Junket Crush arcade cabinet UI, custom
+  SVG icons, Folded 2.5D sheet-metal aesthetic, and responsive CSS for Junked Metal
+  while preventing generic AI aesthetics. Activate this skill whenever creating,
+  styling, or refining HTML/DOM/CSS interfaces in index.html, src/*.css, src/ui.ts,
+  src/menu.ts, src/icons.ts, src/kit3d.ts, or src/match3*.ts. Do not activate for
+  pure physics, balance, or headless script tasks.
 ---
 
-# Frontend Design — Identidad Visual Junked Metal
+# Frontend Design — Identidad Visual Junked Metal (Vigente 2026-10-08)
 
-*Adaptado de los principios anti-plantilla de `anthropics/skills/frontend-design` y `impeccable`, anclado a la dirección de arte real de Junked Metal (`docs/ART_DIRECTION.md` y `docs/DEMOLICION_WORKBENCH.md`).*
+*Anclado a `docs/ART_DIRECTION.md`, `DESIGN.md`, `PRODUCT.md` y la rúbrica de `docs/VISUAL_QUALITY.md`.*
 
 **Nivel de razonamiento recomendado:** `Gemini Flash — Low` para ajustes puntuales de CSS; `Gemini Flash — Medium` para componentes, pantallas nuevas, animaciones y responsive PC/celular.
 
-## 1. Regla Cero: Respetar el Mundo Visual de Cada Superficie
-Junked Metal no es una web SaaS; cada pantalla pertenece a un artefacto físico dentro del universo del juego. Consulta [references/tokens-and-surfaces.md](./references/tokens-and-surfaces.md) para la paleta exacta y reglas por superficie:
+## 1. Regla Cero: Un Solo Lenguaje Visual de Taller y Chapa Plegada
+Consulta [references/tokens-and-surfaces.md](./references/tokens-and-surfaces.md) para los tokens `--jm-*` exactos (`src/kit.css` y `PAL` en `src/kit3d.ts`):
 
-1. **HUD de Supervivencia y Cartas (`src/ui.ts`, `src/hud.css`):**
-   - **Concepto:** Terminal CRT gastada de un transmisor RC de campo.
-   - **Estética:** Fósforo verde (`#b9d3a4` / `#8dff6a`) sobre carcasa negra/verde muy oscuro (`#0b0d0a` / `#141813`), bordes rectos (`#2c3a28`), scanlines con parpadeo sutil.
-   - **Cartas de mejora:** Monitores CRT que se "sintonizan" al aparecer (`tune`/`off`), íconos SVG rasterizados a 24 px y escalados pixelados con `pixelateIcon()`.
-   - **Tipografías:** `VT323` para datos/telemetría y `Silkscreen` para títulos/avisos de jefe.
-2. **Menús Principales (`src/menu.ts`, `src/menu.css`):**
-   - **Concepto:** Paneles de vidrio oscuro limpio sobre la escena 3D en vivo (estante de juguetes / mesa de taller en `src/menuscene.ts`).
-   - **Tipografía:** `Rajdhani` (con `Silkscreen` / `VT323` donde corresponda por acento técnico).
-3. **Taller de Demolición (`src/duel_fabricacion.ts`, `src/duel_fabricacion.css`):**
-   - **Concepto:** Mesa de trabajo industrial (*Workbench* RoboCraft, `docs/DEMOLICION_WORKBENCH.md`).
-   - **Invariante:** Respetar las fases (`fabricar`, `fight`, `inter`), el cajón de piezas (`#duel-fab-drawer`), fantasmas 3D (`ghost3d`) y microcopy de asalto.
-4. **Chatarra Alineada (`src/match3.ts`, `src/match3.css`):**
-   - **Concepto:** Gabinete arcade de los 90 integrado con estética Junked Metal.
-   - **Accesibilidad:** Los objetivos muestran siempre ícono de forma + barra de progreso (nunca depender solo del color) y respetan la clase `calm` (reducir movimiento).
+1. **Sistema Unificado de Chapa Oscura (`src/kit.css`, `src/ui.ts`, `src/menu.ts`):**
+   - `src/kit.css` se carga al final y gobierna todas las superficies (HUD, cartas, menús, diálogos).
+   - **Paneles:** Chapa oscura opaca (`~0.96`) con borde naranja gastado de 3 px (`--jm-chapa: #b5651d`), remaches/tornillos en las esquinas y barras rectas sin esquinas redondeadas tipo píldora.
+   - **Tipografía:** `Rajdhani` (`@fontsource/rajdhani`) en toda la interfaz (700 en mayúsculas para títulos/labels, 500 para cuerpo).
+   - **Botones y Estados:** Primario en verde (`--jm-verde`), advertencia/pestaña activa en amarillo (`--jm-amarillo`), peligro en rojo (`--jm-rojo`), foco de teclado/gamepad/mouse en cian (`3px solid var(--jm-cian)`).
+2. **Mundo 3D y Escenas de Menú / Modos (`src/folded.ts`, `src/kit3d.ts`, `src/menuscene.ts`, `src/match3_scene.ts`):**
+   - **Día estilo Megabonk + Folded 2.5D:** Volumen real a 360° (frente, dorso, laterales, arriba, espesor y uniones visibles), materiales `FOLD` cacheados con desgaste intencional en bordes y zonas de contacto.
+   - **Junket Crush (`src/match3*.ts`):** Gabinete arcade 3D Folded con pantalla emisiva 2D, campaña de 10 niveles, objetivos con ícono de forma + barra de progreso y soporte para modo `calm`.
 
-## 2. Prohibiciones Estrictas (Anti-"AI Slop")
-- **Cero emojis** en cualquier parte del DOM o canvas. Si necesitas iconografía, agrégala como SVG geométrico limpio en `src/icons.ts`.
-- **Cero `system-ui`, `Inter` o `Roboto`:** usa exclusivamente las fuentes locales empaquetadas (`VT323`, `Silkscreen`, `Rajdhani`).
-- **Cero rojo para el jugador:** El rojo (`#d12a1c`) significa amenaza o daño enemigo. Las barras, proyectiles y estados positivos del jugador usan verde fósforo (`#7fbf5a` / `#8dff6a`), ámbar (`#e0a030`, turbo/evolución) o cian (`#6fb3c4`, señal/XP).
-- **Cero voseo o tuteo:** Todo copy debe estar en español neutro e impersonal (*"Presiona"*, *"Selecciona"*, *"El auto"*).
+## 2. Prohibiciones Estrictas (Anti-"AI Slop" e Invariantes)
+- **Cero emojis** en DOM o canvas. Toda iconografía va como SVG geométrico limpio en `src/icons.ts`.
+- **Cero estética obsoleta o genérica:** No reintroducir la terminal CRT verde (`VT323`/`Silkscreen`) salvo referencia histórica explícita; prohibido glassmorphism, píldoras SaaS, blancos puros `#ffffff` o degradados morados.
+- **Cero rojo para el jugador:** El rojo (`--jm-rojo: #FF3B2E`) es exclusivo de amenaza o daño enemigo.
+- **Cero voseo o tuteo:** Español neutro e impersonal en UI (*"Presiona"*, *"Sobrevive"*, *"El auto"*); carteles del mundo 3D y slogans en inglés (*"GOOD METAL / BETTER DAYS"*).
 
-## 3. Diseño Responsive y Multiplataforma (PC + Celular)
-- Comprueba siempre que la interfaz funcione en los dos viewports oficiales de prueba (`scripts/lib/browser.mjs`):
-  - **PC:** `1280×720` (teclado + mouse + gamepad).
-  - **Celular (`cel`):** `390×844` vertical (`isMobile: true, hasTouch: true`) y `844×390` apaisado (`celh`).
-- En táctil (`isTouch`):
-  - Áreas de toque cómodas y sin solaparse con los controles virtuales (`#stick`, `#tBoost`, `#tDrift`, `#tJump`, `#tAbil`, `#tPause`).
-  - En Modo Carrera (`src/kart.ts`), nunca mostrar ni habilitar el selector de 2 jugadores en pantalla dividida en celular (`raceCfg.players` es siempre 1 en táctil).
-- Respeta las opciones de accesibilidad del guardado (`Save`): `calm` / reducir parpadeos y escala de controles táctiles (`tlay`, `touch`).
+## 3. Calidad Impeccable (Aspiración 40/40) y Diseño Responsive
+- Al intervenir interfaces DOM, evita los antipatrones detectados por Impeccable (`layout-transition` con `width` cuando pueda ser `transform: scaleX`, pestañas con `side-tab` incongruentes o `img` con `src=""` visible). No fuerces cambios artificiales si una superficie ya está bien resuelta.
+- Verifica siempre los viewports oficiales (`scripts/lib/browser.mjs`):
+  - **PC (`1280×720`)** y **Celular (`390×844` vertical / `844×390` apaisado)**.
+  - En celular (`isTouch`), respeta las zonas reservadas para controles táctiles (`#stick`, `#tBoost`, `#tDrift`, `#tJump`, `#tAbil`, `#tPause`) para que ningún aviso de radio, carta, ranking o botón quede tapado.
+  - En Carrera (`src/kart.ts`), nunca mostrar el selector de 2 jugadores en táctil (`raceCfg.players` = 1).
 
 ## 4. Verificación Visual Obligatoria
-Nunca des por terminada una tarea de UI solo porque compila:
 1. Reinicia `rc-test` (`pm2 restart rc-test`) y captura los escenarios afectados con `npm run shots -- --only <id>`.
-2. Inspecciona las imágenes PNG generadas en `.shots/actual/` con `view_file` tanto en `pc` como en `cel`.
+2. Inspecciona las capturas en `.shots/actual/` con `view_file` (PC y celular) y evalúa con la rúbrica de 10 dimensiones de `docs/VISUAL_QUALITY.md`.

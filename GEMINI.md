@@ -36,15 +36,30 @@ Carga únicamente las skills proporcionales a la tarea (Progressive Disclosure):
 |---|---|
 | `codebase-discovery` | Explorar arquitectura, modos (`main`, `duel`, `kart`, `match3`), flujo de datos o dependencias con `graphify`. |
 | `implementation-strategy` | Planificar features nuevas o cambios que crucen módulos (`docs/*_PLAN.md`), evaluar riesgos y aplicar YAGNI. |
-| `frontend-design` | Diseñar o editar HUD CRT, menús, taller RoboCraft (`duel_fabricacion`), gabinete Match-3, íconos SVG o CSS responsive. |
+| `frontend-design` | Diseñar o editar HUD/menús de chapa oscura (`kit.css`, `--jm-*`, `Rajdhani`), gabinete Junket Crush, íconos SVG o CSS responsive (`docs/ART_DIRECTION.md`). |
 | `data-and-balance` | Modificar `src/balance.json`, `src/balance.ts`, scripts de planilla (`balance:*`) o migraciones/sanitización en `src/savefmt.ts`. |
 | `testing` | Escribir o ejecutar tests unitarios en Vitest (`npm test`), simulaciones deterministas (`npm run sim`) o playtests (`playtest:duel`). |
 | `browser-verification` | Verificar visualmente o en navegador headless (`npm run shots`, modo `?lab`, `?duel`, `?race`, `?match3`, PC y celular). |
 | `code-review` | Revisar diffs buscando bugs reales, trampas de Havok/Babylon, rupturas de determinismo, regresiones o deuda Ponytail. |
 | `security-review` | Auditar sanitización de guardados (`savefmt.ts`), `innerHTML`/XSS, importador TSV, rutas relativas de Pages o dependencias. |
 | `performance-review` | Optimizar FPS/draw calls, instanciación (`template()`), pools (`fx.ts`), loops de `update()`, fachada `bjs.ts` o correr `npm run perf`. |
-| `final-verification` | Cierre con evidencia (`tsc --noEmit`, `npm test`, `npm run build`, pruebas headless, `graphify update .` y limpieza del diff). |
+| `final-verification` | Cierre con evidencia (`tsc --noEmit`, `npm test`, `npm run build`, pruebas headless, `graphify update .`, limpieza del diff) y disparo del ciclo de descubrimiento. |
 
 ### Flujo Proporcional
-- **Cambio pequeño/localizado:** `Implementation` → `final-verification` (`tsc`, `test`, `build`).
-- **Feature o cambio transversal:** `codebase-discovery` → `implementation-strategy` → `Implementation` (+ `frontend-design` / `data-and-balance`) → `testing` → `browser-verification` → `code-review` (+ `performance-review` / `security-review` si aplica) → `final-verification`.
+- **Cambio pequeño/localizado:** `Implementation` → `final-verification` (`tsc`, `test`, `build`) → `New Discovery`.
+- **Feature o cambio transversal:** `codebase-discovery` → `implementation-strategy` → `Implementation` (+ `frontend-design` / `data-and-balance`) → `testing` → `browser-verification` → `code-review` (+ `performance-review` / `security-review` si aplica) → `final-verification` → `New Discovery`.
+
+---
+
+## 4. Loop Permanente de Evolución de Producto (Recursive Discovery Loop)
+
+**Regla esencial:** *Después de completar y validar una tarea, el agente debe revisar el estado actualizado del producto, identificar oportunidades genuinamente nuevas, presentar recomendaciones priorizadas y solicitar la siguiente decisión del usuario, manteniendo el contexto persistente.*
+
+```text
+EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺
+```
+
+1. **El final de una tarea inicia el siguiente descubrimiento:** Nunca cierres una entrega solo con *"Implementación completada"*. Tras validar con evidencia (`final-verification`), actualiza el registro persistente en [`docs/PRODUCT_EVOLUTION.md`](./docs/PRODUCT_EVOLUTION.md) (estado de módulos, decisiones aprobadas/descartadas, backlog y checkpoint de sesión).
+2. **Perspectiva renovada por ciclo:** Alterna lentes según el estado del producto (Calidad/Impeccable, Experiencia UX/UI, Integración Folded 2.5D, Simplificación/YAGNI, Rendimiento, Funcionalidades, Arquitectura, Producto). Evita repetir propuestas ya descartadas o inventar defectos artificiales.
+3. **Propuestas y criterio propio (2 a 4 opciones):** Para cada oportunidad detalla brevemente *qué es, qué problema resuelve, qué valor aporta, complejidad estimada y por qué conviene desarrollarla*. Emite siempre una **recomendación fundamentada** (impacto, valor, coherencia, riesgo, reutilización) y consulta al usuario mediante `ask_question` cómo desea continuar (elegir una, combinar, modificar, descartar, explorar otra lente o delegar).
+
