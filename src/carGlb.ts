@@ -1,3 +1,4 @@
+import { FOLDED_SLICE } from "./folded";
 import * as B from "@babylonjs/core";
 import type { CarKind } from "./models";
 import { flatten } from "./models";
@@ -75,6 +76,7 @@ async function loadOne(scene: B.Scene, kind: CarKind) {
 }
 
 export function loadCarGlbs(scene: B.Scene) {
+  if (FOLDED_SLICE) return Promise.resolve(); // Folded: las carrocerías son carHull (folded_slice.ts); los GLB no se bajan
   if (!loadPromise) {
     const kinds = Object.keys(CAR_GLB) as CarKind[];
     loadPromise = Promise.all(kinds.map((k) => loadOne(scene, k))).then(() => {});

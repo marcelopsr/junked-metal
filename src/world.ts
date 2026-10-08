@@ -3,6 +3,8 @@ import { box, cyl, merge, sph, template, tor, tube } from "./models";
 import { debris, splat } from "./fx";
 import { canvasTex, G, M, pbr, shadows, TEX } from "./render";
 import { rng, seedRng } from "./rng";
+import { FOLD, FOLD_PAINT, FOLDED_SLICE } from "./folded";
+import { crateDetail, fencePanel, paintCanFold, rampLip, realCarFold, toolFold, wateringCanFold } from "./folded_slice";
 import { precio } from "./balance";
 import type { Climate } from "./run";
 
@@ -39,7 +41,7 @@ function retex() {
     o.dispose(); texs[k] = n;
   }
 }
-const woodM = () => pbr("wood", { color: "#ffffff", rough: 0.75, tex: tex("wood", TEX.wood) });
+const woodM = () => (FOLDED_SLICE ? FOLD.painted("#8a6a44", 0.8, 301) : pbr("wood", { color: "#ffffff", rough: 0.75, tex: tex("wood", TEX.wood) })); // Folded: tablón de chapa
 
 // ---------- Objetos rompibles ----------
 // bits: colores de lo que salta al romperse un "cofre" (pot). Sin bits: tierra y hojas de maceta.
@@ -213,7 +215,22 @@ const concreteTex = () => canvasTex(256, (c, s) => {
   c.strokeStyle = "#5a5c58"; c.lineWidth = 3; c.strokeRect(0, 0, s, s);
 });
 
-const plankTpl = () => template("plank", () => [box(2, 7, 0.4, woodM(), [0, 3.5, 0]), box(2, 0.3, 0.6, M.matte("#6b4a2b"), [0, 5.5, -0.3])]);
+const plankTpl = () => template("plank", () => (FOLDED_SLICE ? fencePanel() : [box(2, 7, 0.4, woodM(), [0, 3.5, 0]), box(2, 0.3, 0.6, M.matte("#6b4a2b"), [0, 5.5, -0.3])]));
+// Slice Folded (?folded2): flejes, cantoneras, remaches y calcos de la caja de chapa, como instancia hija escalada a la caja (que sigue siendo el colisionador)
+const crateFold = (m: B.Mesh, w: number, h: number, d: number) => {
+  if (!FOLDED_SLICE) return m;
+  const k = template("crateFold", crateDetail).createInstance("crateF");
+  k.parent = m; k.scaling.set(w, h, d); k.isPickable = false;
+  return m;
+};
+// Folded: el colisionador viejo queda invisible (misma forma física, mismo rng) y lo viste una instancia de la plantilla de chapa
+const skin = (m: B.Mesh, name: string, build: () => B.Mesh[]) => {
+  if (!FOLDED_SLICE) return m;
+  m.isVisible = false;
+  const k = template(name, build).createInstance(name);
+  k.parent = m; k.isPickable = false; k.receiveShadows = true; shadows.addShadowCaster(k);
+  return m;
+};
 
 // Casa al fondo (da escala): fachada con ventanas encendidas y siluetas
 function house() {
@@ -252,7 +269,8 @@ function realCar(x: number, z: number, ry: number, lift: number, solid: boolean,
     ...[-13, 13].map((bx) => box(8, 3, 0.5, M.matte("#8a1810"), [bx, lift + 9, -48.2])),
   ];
   const wheels: [number, number][] = [[-19, 31], [19, 31], [-19, -31], [19, -31]];
-  for (const [wx, wz] of wheels) parts.push(cyl(14, 14, 8, M.rubber(), [wx, hub, wz], [0, 0, Math.PI / 2], 14), cyl(8, 8, 8.4, M.metal("#9aa0a6"), [wx, hub, wz], [0, 0, Math.PI / 2], 10));
+  if (FOLDED_SLICE) { parts.forEach((p) => p.dispose()); parts.length = 0; parts.push(...realCarFold(lift, paint)); } // solo visual: el colisionador son las cajas de abajo
+  else for (const [wx, wz] of wheels) parts.push(cyl(14, 14, 8, M.rubber(), [wx, hub, wz], [0, 0, Math.PI / 2], 14), cyl(8, 8, 8.4, M.metal("#9aa0a6"), [wx, hub, wz], [0, 0, Math.PI / 2], 10));
   const m = merge("realCar", parts);
   m.position.set(x, 0, z); m.rotation.y = ry;
   shadows.addShadowCaster(m);
@@ -428,7 +446,7 @@ function garageLayout() {
   toyRamps(int(2, 3), [0, 1]);
   giantTools();
   paintCans(int(4, 7));
-  piles(int(2, 3), ["#b08850", "#9a7444", "#c49a64"], M.matte, 3);
+  piles(int(2, 3), [FOLD_PAINT[0], FOLD_PAINT[1], FOLD_PAINT[2]], (c) => FOLD.painted(c, 0.8, 37), 3, true); // cajas de chapa (Folded 2.5D)
   puddles(int(3, 6), pbr("oil", { color: "#0c0b0a", rough: 0.05, metal: 0.4, alpha: 0.9 }));
   ball();
 }
@@ -581,6 +599,7 @@ function ramp(mat: B.Material, x: number, z: number, ry: number, W: number, L: n
   stat(m, B.PhysicsShapeType.MESH, { friction: 0.5 }, [x, y, z, ry]); // hull redondeaba la unión con tablones y el borde de salto
   const len = L + T + Lb;
   bare.push({ x: x + (Math.sin(ry) * len) / 2, z: z + (Math.cos(ry) * len) / 2, r: len / 2 + 1 });
+  if (FOLDED_SLICE && H > 1) deco.push(...rampLip(W, L, H)); // franja hazard en el borde de salto
   if (deco.length) { const d = merge("rampDeco", deco); d.position.set(x, y, z); d.rotation.y = ry; shadows.addShadowCaster(d); } // solo visual: se posa después sin problema
 }
 // Tablón apoyado sobre la subida de una rampa (adorno, coordenadas locales de ramp)
@@ -641,7 +660,7 @@ function toyRamps(n: number, kinds: number[]) {
 
 // Tablones, neumáticos y cajas estáticas para saltar (no cofres: solo geometría de patio)
 function jumpScrap(n: number) {
-  const wood = woodM(), carton = M.matte("#9a3412");
+  const wood = woodM(), carton = FOLD.painted(FOLD_PAINT[0], 0.8, 23); // caja de chapa gastada (Folded 2.5D)
   for (let i = 0; i < n; i++) {
     const sp = freeSpot(12, 28); if (!sp) continue;
     const [x, z] = sp, ry = rng() * Math.PI, roll = int(0, 2);
@@ -651,7 +670,7 @@ function jumpScrap(n: number) {
     } else if (roll === 1) {
       stat(tor(2.4, 0.85, M.rubber(), [x, 0.85, z], [Math.PI / 2, ry, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
     } else {
-      for (let k = 0; k < int(2, 3); k++) stat(box(2.4, 2.2, 2.4, carton, [x, 1.1 + k * 2.05, z], [0, ry, 0]), B.PhysicsShapeType.BOX, { friction: 0.45 });
+      for (let k = 0; k < int(2, 3); k++) crateFold(stat(box(2.4, 2.2, 2.4, carton, [x, 1.1 + k * 2.05, z], [0, ry, 0]), B.PhysicsShapeType.BOX, { friction: 0.45 }), 2.4, 2.2, 2.4);
     }
     bare.push({ x, z, r: 5 });
   }
@@ -717,7 +736,7 @@ function paintCans(n: number) {
       cyl(4.4, 4.4, 5, tin, [0, 2.5, 0], undefined, 14), cyl(4.5, 4.5, 2.6, M.matte(c), [0, 2.6, 0], undefined, 14),
       cyl(4.2, 4.2, 0.2, M.metal("#8a8e94"), [0, 5.05, 0], undefined, 14), tor(3.4, 0.2, M.metal("#8a8e94"), [0, 5.4, 0], [Math.PI / 2, 0, 0], 10),
     ]), B.PhysicsShapeType.CYLINDER, {}, [p[0], 0, p[1]]);
-    breakable(can, 90, 2.4, c, [c, "#b8bcc2"]);
+    breakable(skin(can, "lataF" + c, () => paintCanFold(c)), 90, 2.4, c, [c, "#b8bcc2"]);
     bare.push({ x: p[0], z: p[1], r: 2.5 });
   }
 }
@@ -729,9 +748,9 @@ function giantTools() {
     () => merge("martillo", [cyl(1.6, 1.6, 14, woodM(), [0, 0.8, 0], [0, 0, Math.PI / 2], 8), box(2.6, 2.6, 7, steel, [7.5, 1.3, 0])]),
     () => merge("destornillador", [cyl(2.4, 2.4, 6, M.plastic("#c0392b"), [0, 1.2, 0], [0, 0, Math.PI / 2], 8), cyl(0.6, 0.6, 9, steel, [7.5, 1.2, 0], [0, 0, Math.PI / 2], 6)]),
   ];
-  for (const make of kit) {
+  for (const [i, make] of kit.entries()) {
     const sp = freeSpot(9); if (!sp) continue;
-    stat(make(), B.PhysicsShapeType.CONVEX_HULL, {}, [sp[0], 0, sp[1], rng() * 6.3]);
+    skin(stat(make(), B.PhysicsShapeType.CONVEX_HULL, {}, [sp[0], 0, sp[1], rng() * 6.3]), "toolF" + i, () => toolFold(i as 0 | 1 | 2));
     bare.push({ x: sp[0], z: sp[1], r: 8 });
   }
 }
@@ -782,19 +801,19 @@ function hose() {
 function wateringCan() {
   const cs = freeSpot(5) ?? [-70, -40];
   bare.push({ x: cs[0], z: cs[1], r: 3 });
-  stat(merge("can", [
+  skin(stat(merge("can", [
     cyl(5, 5, 6, M.metal("#15803d"), [0, 3, 0], undefined, 16),
     tube([[0, 2, 2.4], [0, 5, 5], [0, 6.5, 6.5]], 0.35, M.metal("#15803d")),
     tor(4, 0.4, M.metal("#15803d"), [0, 6.8, -1], [0, Math.PI / 2, Math.PI / 2], 12),
-  ]), B.PhysicsShapeType.CYLINDER, {}, [cs[0], 0, cs[1]]);
+  ]), B.PhysicsShapeType.CYLINDER, {}, [cs[0], 0, cs[1]]), "regaderaF", wateringCanFold);
 }
 
 // Pilas de bloques o cajas (pirámides empujables y rompibles) de lado s
-function piles(np: number, cols: string[], mat: (c: string) => B.Material, s = 2) {
+function piles(np: number, cols: string[], mat: (c: string) => B.Material, s = 2, fold = false) {
   for (let pile = 0; pile < np; pile++) {
     const sp = freeSpot(8); if (!sp) continue;
     const [bx, bz] = sp, rows = int(2, 4);
-    for (let r = 0; r < rows; r++) for (let i = 0; i < rows - r + 1; i++) { const c = cols[int(0, cols.length - 1)]; breakable(dyn(box(s, s, s, mat(c), [bx + (i - (rows - r) / 2) * s * 1.1, s / 2 + r * s * 1.025, bz]), B.PhysicsShapeType.BOX, 0.3 * s), 40, s * 0.6, c); }
+    for (let r = 0; r < rows; r++) for (let i = 0; i < rows - r + 1; i++) { const c = cols[int(0, cols.length - 1)]; const b = dyn(box(s, s, s, mat(c), [bx + (i - (rows - r) / 2) * s * 1.1, s / 2 + r * s * 1.025, bz]), B.PhysicsShapeType.BOX, 0.3 * s); breakable(fold ? crateFold(b, s, s, s) : b, 40, s * 0.6, c); }
     bare.push({ x: bx, z: bz, r: 3 * s });
   }
 }

@@ -1,5 +1,5 @@
 import * as B from "@babylonjs/core";
-import { auraTemplate, cableTemplate, enemyTemplate, legTemplate, LEGS, sectorTemplate, teleTemplate, wingTemplate } from "./models";
+import { auraTemplate, cableTemplate, enemyTemplate, legTemplate, LEGS, sectorTemplate, teleTemplate, wingTemplate, windKeyTemplate } from "./models";
 import { FX } from "./fx";
 import { rng } from "./rng";
 import { BAL } from "./balance";
@@ -39,7 +39,7 @@ const IC = B.VertexBuffer.ColorInstanceKind; // "instanceColor": el que los mate
 const tintable = (m: B.Mesh) => { if (!m.instancedBuffers?.[IC]) { m.registerInstancedBuffer(IC, 4); m.instancedBuffers[IC] = WHITE; } }; // antes de la primera instancia: las nuevas copian el blanco
 const rot = (v: B.Vector3, a: number) => new B.Vector3(v.x * Math.cos(a) + v.z * Math.sin(a), 0, -v.x * Math.sin(a) + v.z * Math.cos(a));
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
-const _locM = B.Matrix.Identity(), _worldM = B.Matrix.Identity(), _wq = B.Quaternion.Identity(), _lq = B.Quaternion.Identity(), _ws = new B.Vector3(), _wp = new B.Vector3();
+const _wq = B.Quaternion.Identity(), _lq = B.Quaternion.Identity(), _ws = new B.Vector3(), _wp = new B.Vector3();
 
 // Secuencias de los jefes GLB (Blender, 24 cuadros/s): acción y cuadros donde cambia el tramo (hasta el despegue o el aviso, hasta el
 // golpe, hasta el final). Las usa Enemy.seq con el reloj del juego (aviso, caída) en vez del de la acción, así el cuadro cae con el cuerpo.
@@ -63,7 +63,8 @@ export class Enemy {
   timer = 1 + rng();
   airborne = false;
   legs: { m: B.InstancedMesh; base: number; side: number; phase: number; pos: B.Vector3; ry: number; rz: number }[] = [];
-  wings: { m: B.InstancedMesh; pos: B.Vector3; yaw: number; flap: number }[] = []; // polilla
+  wings: { m: B.InstancedMesh; pos: B.Vector3; side: number; flap: number }[] = []; // polilla
+  windKey?: { m: B.InstancedMesh; pos: B.Vector3; rot: number }; // robot a cuerda
   attachRoot: B.TransformNode | null = null; // bestiario: patas/alas bajo un TransformNode (no InstancedMesh→InstancedMesh)
   tele: B.InstancedMesh[] = []; // tarántula: aro fijo (zona) + aro que crece (cuenta regresiva)
   land = new B.Vector3(); // tarántula: dónde va a caer el salto
@@ -144,12 +145,18 @@ export class Enemy {
     }
     if (kind === "polilla") {
       this.body.setGravityFactor(0); // vuela: la altura la maneja update()
-      for (const side of [1, -1]) {
-        const w = wingTemplate().createInstance("wing");
+      for (const side of [1, -1] as const) {
+        const w = wingTemplate(side).createInstance("wing" + (side > 0 ? "R" : "L"));
         w.parent = null;
-        const pos = new B.Vector3(side * 0.18, 0.08, 0.05);
-        this.wings.push({ m: w, pos, yaw: side > 0 ? 0 : Math.PI, flap: 0 });
+        const pos = new B.Vector3(side * 0.16, 0.42, -0.05);
+        this.wings.push({ m: w, pos, side, flap: 0 });
       }
+    }
+    if (kind === "robot") {
+      const k = windKeyTemplate().createInstance("windKey");
+      k.parent = null;
+      const pos = new B.Vector3(0, 0.74, -0.38);
+      this.windKey = { m: k, pos, rot: 0 };
     }
     if (kind === "aspiradora" || kind === "cortacercos") {
       // Mismo par zona + relleno que la tarántula; el cortacercos usa un sector (su barrido) en vez de un aro
@@ -163,26 +170,32 @@ export class Enemy {
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
       if (kind === "gato") { this.state = 0; this.timer = 2; }
     }
-    if (this.legs.length || this.wings.length) this.syncAttachParts();
+    if (this.legs.length || this.wings.length || this.windKey) this.syncAttachParts();
   }
 
-  /** Ficha del bestiario: jerarquía real bajo un TransformNode (main.ts mueve el pivot). */
+  /** Ficha del bestiario: cuerpo + patas/alas bajo el mismo pivot (main.ts mueve solo el pivot). */
   bindAttachPivot(root: B.TransformNode) {
     this.attachRoot = root;
-    this.node.parent = root;
-    this.node.position.setAll(0);
-    this.node.rotationQuaternion = null;
+    const vs = GLB[this.kind]?.visual ?? 1;
+    // ponytail: InstancedMesh (VAT) + Havok no siguen bien al padre; main.ts copia el pivot al cuerpo cada frame
+    this.node.parent = null;
     for (const l of this.legs) {
       l.m.parent = root;
-      l.m.position.copyFrom(l.pos);
       l.m.rotationQuaternion = null;
+      l.m.position.set(l.pos.x * vs, l.pos.y * vs, l.pos.z * vs);
       l.m.rotation.set(0, l.ry, l.rz);
     }
     for (const w of this.wings) {
       w.m.parent = root;
-      w.m.position.copyFrom(w.pos);
       w.m.rotationQuaternion = null;
-      w.m.rotation.set(0, w.yaw, w.flap);
+      w.m.position.set(w.pos.x * vs, w.pos.y * vs, w.pos.z * vs);
+      w.m.rotation.set(0, 0, w.side * w.flap);
+    }
+    if (this.windKey) {
+      this.windKey.m.parent = root;
+      this.windKey.m.rotationQuaternion = null;
+      this.windKey.m.position.set(this.windKey.pos.x * vs, this.windKey.pos.y * vs, this.windKey.pos.z * vs);
+      this.windKey.m.rotation.set(0, 0, this.windKey.rot);
     }
   }
 
@@ -191,6 +204,7 @@ export class Enemy {
     this.node.parent = null;
     for (const l of this.legs) l.m.parent = null;
     for (const w of this.wings) w.m.parent = null;
+    if (this.windKey) this.windKey.m.parent = null;
     this.attachRoot.dispose();
     this.attachRoot = null;
     this.syncAttachParts();
@@ -216,9 +230,10 @@ export class Enemy {
     fill.position.set(this.pos.x + dir.x * f, y + 0.01, this.pos.z + dir.z * f); fill.scaling.set(DOG_RAM.width, 1, f);
   }
 
-  // Patas/alas en espacio de mundo: las instancias hijas no siguen al cuerpo instanciado (beastTick usa euler + quaternion).
+  // Patas/alas/llave en espacio de mundo: las instancias hijas no siguen al cuerpo instanciado (beastTick usa euler + quaternion).
   syncAttachParts() {
-    if (this.attachRoot || (!this.legs.length && !this.wings.length)) return;
+    if (this.attachRoot) return; // bestiario: todo va parentado al pivot
+    if (!this.legs.length && !this.wings.length && !this.windKey) return;
     this.node.computeWorldMatrix(true);
     const pw = this.node.getWorldMatrix(), ar = this.node.absoluteRotationQuaternion, as = this.node.absoluteScaling;
     const put = (m: B.InstancedMesh, pos: B.Vector3, rx: number, ry: number, rz: number) => {
@@ -233,20 +248,51 @@ export class Enemy {
       m.computeWorldMatrix(true);
     };
     for (const l of this.legs) put(l.m, l.pos, 0, l.ry, l.rz);
-    for (const w of this.wings) put(w.m, w.pos, 0, w.yaw, w.flap); // aleteo en Z (antes rotation.z)
+    for (const w of this.wings) put(w.m, w.pos, 0.12 * Math.cos(this.walk), 0, w.side * w.flap);
+    if (this.windKey) put(this.windKey.m, this.windKey.pos, 0, 0, this.windKey.rot);
   }
 
   // Animación de caminata: amplitud y frecuencia según la velocidad real
   animate(dt: number) {
     if (this.wings.length) {
-      // Aleteo rápido a pocos cuadros (stop-motion)
-      this.walk += dt * 22;
-      const a = Math.round(Math.sin(this.walk) * 3) / 3;
-      for (const w of this.wings) {
-        w.flap = a * 0.9; // yaw en w.yaw espeja el ala izquierda
-        if (this.attachRoot) { w.m.rotation.y = w.yaw; w.m.rotation.z = w.flap; }
+      // Aleteo rápido y continuo: insecto ágil
+      this.walk += dt * 24;
+      const a = Math.sin(this.walk) * 0.55;
+      for (const w of this.wings) w.flap = a;
+      if (this.vat) glbAnimate(this.vat, 0.6, dt, false, -1);
+      if (this.attachRoot) {
+        for (const w of this.wings) {
+          w.m.rotationQuaternion = null;
+          w.m.rotation.set(0.12 * Math.cos(this.walk), 0, w.side * w.flap);
+        }
+      } else {
+        this.syncAttachParts();
       }
-      if (!this.attachRoot) this.syncAttachParts();
+      return;
+    }
+    if (this.kind === "robot") {
+      const v = this.body.getLinearVelocity();
+      const sp = Math.hypot(v.x, v.z);
+      const keySpeed = 4.0 + sp * 4;
+      if (this.windKey) this.windKey.rot += dt * keySpeed;
+      if (sp > 0.2) {
+        // Marcha mecánica: bamboleo lateral rítmico y paso de juguete a cuerda
+        this.walk += dt * Math.min(24, 6 + sp * 4);
+        this.node.rotation.z = Math.sin(this.walk) * 0.08;
+        this.node.rotation.x = Math.sin(this.walk * 2) * 0.03;
+      } else {
+        this.node.rotation.z = 0;
+        this.node.rotation.x = 0;
+      }
+      if (this.vat) glbAnimate(this.vat, sp, dt, this.touchCd > 0.5, this.atk >= 0 ? this.atk / 0.9 : -1);
+      if (this.attachRoot) {
+        if (this.windKey) {
+          this.windKey.m.rotationQuaternion = null;
+          this.windKey.m.rotation.set(0, 0, this.windKey.rot);
+        }
+      } else {
+        this.syncAttachParts();
+      }
       return;
     }
     if (this.vat && GLB[this.kind]!.clips) { this.bossClip(dt); if (!this.attachRoot) this.syncAttachParts(); return; }
@@ -259,7 +305,7 @@ export class Enemy {
     const v = this.body.getLinearVelocity();
     const sp = Math.hypot(v.x, v.z);
     this.walk += dt * Math.min(28, 4 + sp * 3.2) / (this.def.scale ?? 1);
-    if ((this.pose += dt) < 0.1) return;
+    if ((this.pose += dt) < 0.1) { if (!this.attachRoot) this.syncAttachParts(); return; }
     this.pose = 0;
     const amp = Math.min(0.55, 0.12 + sp * 0.06);
     for (const l of this.legs) {
@@ -688,6 +734,7 @@ export class Enemy {
     this.agg.dispose(); this.node.dispose();
     for (const l of this.legs) l.m.dispose();
     for (const w of this.wings) w.m.dispose();
+    if (this.windKey) this.windKey.m.dispose();
     for (const t of this.tele) t.dispose();
     for (const c of this.cables) c.m.dispose();
   }

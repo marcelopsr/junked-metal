@@ -61,6 +61,8 @@ export { UniformBuffer } from "@babylonjs/core/Materials/uniformBuffer.js";
 export { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 export { Vector4 } from "@babylonjs/core/Maths/math.vector.js";
 export { VertexAnimationBaker } from "@babylonjs/core/BakedVertexAnimation/vertexAnimationBaker.js";
+export { Skeleton } from "@babylonjs/core/Bones/skeleton.js";
+export { Bone } from "@babylonjs/core/Bones/bone.js";
 export { VertexBuffer } from "@babylonjs/core/Buffers/buffer.js";
 export { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData.js";
 export { Viewport } from "@babylonjs/core/Maths/math.viewport.js";
@@ -70,3 +72,4 @@ export type { PhysicsEngine as PhysicsEngineV2 } from "@babylonjs/core/Physics/v
 // Efectos de registro que el índice completo traía solos y las rutas profundas no (cada uno agrega métodos a Scene o al motor)
 import "@babylonjs/core/Physics/physicsEngineComponent.js";
 import "@babylonjs/core/Physics/v2/physicsEngineComponent.js";
+import "@babylonjs/core/Culling/ray.js"; // scene.pick/createPickingRay (toques del Match-3)

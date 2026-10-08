@@ -23,9 +23,10 @@ import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
-import { CAR_YAW, carSpot, menuOff, menuTick, SHOTS } from "./menuscene";
+import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
 import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace, TRACKS } from "./kart";
 import { duelActive, duelDev, duelTick, exitDuel, initDuel, startDuel } from "./duel";
+import "./kit.css"; // kit de UI compartido: se carga después de todas las hojas (ver src/kit.css)
 import { exitMatch3, initMatch3, match3Active, match3Dev, match3PauseToggle, match3Tick, startMatch3 } from "./match3";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -567,10 +568,15 @@ function enterMatch3() {
 }
 function goMatch3() {
   initAudio();
-  void launch([T_EFECTOS], "Encendiendo gabinete", () => enterMatch3(), () => afterFrames(2));
+  void launch([], "Encendiendo gabinete", () => enterMatch3(), () => afterFrames(2));
 }
 if (import.meta.env.DEV && /[?&]duel\b/.test(location.search)) setTimeout(() => goDuel(), 1500);
 if (import.meta.env.DEV && /[?&]match3\b/.test(location.search)) setTimeout(() => goMatch3(), 1500);
+// ponytail: el banco Folded (`?folded`, solo dev) reusa el estado "match3" (cámara libre, sin auto); un estado propio si crece
+if (import.meta.env.DEV && /[?&]folded\b/.test(location.search)) setTimeout(() => void launch([], "Banco Folded", () => {
+  clearRun(); menuOff(); state = "match3"; reset(null); $("hud").classList.add("hidden");
+  void import("./folded_lab").then((m) => { applyClimate(DUSK); setDark(0.22); m.foldedLab(scene, cam); });
+}, () => afterFrames(2)), 1500);
 if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2" && !isTouch) { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
 // Portada: fuentes del menú, dos cuadros dibujados (arma la escena del estante) y recién ahí se cierra la pantalla de carga; la precarga arranca con la portada ya a la vista
 boot("Cargando fuentes", 0.7);
@@ -1181,7 +1187,7 @@ function updateHud(dt: number) {
 
 // ---------- Loop ----------
 const camTarget = new B.Vector3();
-// Encuadres del menú: SHOTS (menuscene.ts), uno por pantalla dentro de su escena (estante o mesa de taller)
+// Encuadres del menú: SHOTS (menuscene.ts, derivados de SCENES), uno por pantalla dentro de su escenario
 const shot = (scr: string) => (engine.getAspectRatio(cam) < 1 && SHOTS[scr + "_v"]) || SHOTS[scr] || SHOTS.main; // _v: encuadre de celular vertical
 let previewKey = "", previewR = 0;
 // ---------- Ficha del bestiario: el bicho sobre un pedestal en el centro del patio (origen, donde gira el auto del garaje) ----------
@@ -1276,15 +1282,17 @@ function beastTick(dt: number, on: boolean) {
     if (t > 1.8 && !(GLB[kind]?.clips && t < 3)) { const k = Math.min(1, (t - 1.8) / 0.25); n.scaling.setAll(k < 1 ? k * 1.1 : 1); roll = 0; }
   }
   if (kind === "polilla") lift += 1.2 + Math.sin(performance.now() / 600) * 0.15; // vuela
+  if (kind === "robot" && (A === "walk" || A === "phase")) {
+    roll = Math.sin(t * 14) * 0.08;
+    pitch = Math.sin(t * 28) * 0.03;
+  }
   b.vel.copyFrom(fwd.scale(sp));
-  const attachExtra = e.legs.length || e.wings.length;
-  const fp = glbTpl(kind) && !attachExtra ? glbFootprint(kind) : { x: 0, z: 0 };
-  const ox = (Math.cos(BV.yaw) * fp.x + Math.sin(BV.yaw) * fp.z) * vis, oz = (-Math.sin(BV.yaw) * fp.x + Math.cos(BV.yaw) * fp.z) * vis;
-  pivot.position.set(fwd.x * push - ox, PED_H + lift, fwd.z * push - oz);
+  pivot.position.set(fwd.x * push, PED_H + lift, fwd.z * push);
   pivot.rotationQuaternion = null;
   pivot.rotation.set(pitch, BV.yaw, roll);
+  n.position.copyFrom(pivot.position);
   n.rotationQuaternion = null;
-  n.rotation.setAll(0);
+  n.rotation.copyFrom(pivot.rotation);
   if (n.isEnabled()) e.animate(A === "phase" ? dt * 1.5 : dt);
   return span;
 }
@@ -1393,9 +1401,9 @@ scene.onBeforeRenderObservable.add(() => {
       for (const m of occluders) m.visibility = ray.intersectsMesh(m, true).hit ? 0.999 : 1;
     }
   } else {
-    cam.fov = 0.85;
-    // Diorama: cada pantalla del menú tiene su encuadre en su escena; la cámara viaja con lerp suave y se mece un poco
+    // Diorama: cada pantalla del menú tiene su encuadre en su escena (SCENES, menuscene.ts); la cámara viaja con lerp suave y se mece un poco
     const scr = current() ?? "main", t = performance.now() / 1000;
+    cam.fov = menuFov(scr);
     // Escena de la pantalla (estante o mesa) con su luz y foco; al cambiar de escena la cámara corta al encuadre nuevo
     if (menuTick(scr, cam, scr === "beast" ? new B.Vector3(0, PED_H + 1, 0) : carSpot(scr)?.addInPlaceFromFloats(0, 0.6, 0) ?? camTarget, dt, low)) { // foco: el bicho, el auto o lo que mira la cámara
       const [x, y, z, a, b, c] = shot(scr);
@@ -1426,7 +1434,7 @@ scene.onBeforeRenderObservable.add(() => {
         preview?.dispose();
         const m = carModel(shownCar(), { ...carOpts(), fixed: true });
         preview = m.body;
-        previewR = Math.max(...m.wheels.map((w) => w.r));
+        previewR = -Math.min(...m.wheels.map((w) => w.m.position.y - w.r));
         for (const c of m.cast) shadows.addShadowCaster(c);
         previewKey = key;
         preview.rotation.y = CAR_YAW;

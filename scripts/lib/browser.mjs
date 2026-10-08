@@ -1,6 +1,6 @@
 // Navegador headless compartido por sim.mjs, shots.mjs y perf.mjs. Chromium headless shell (el liviano de Playwright) con la GPU real del Mac:
 // sin las banderas ANGLE/Metal cae a SwiftShader (CPU), que es ~10x más lento y no mide nada útil. Las tres "disable-*" evitan que Chrome
-// frene timers y render por creerse en segundo plano (ruido en mediciones). Server: pm2 `rc-test` (:5174, sin recarga); RC_URL lo cambia.
+// frene timers y render por creerse en segundo plano (ruido en mediciones). Server: pm2 `rc-test` (:5174, sin recarga); RC_URL lo cambia; RC_Q agrega parámetros a todas las URL.
 import { chromium } from "playwright";
 
 export const BASE = process.env.RC_URL ?? "http://localhost:5174";
@@ -16,7 +16,9 @@ export async function launch() {
   return chromium.launch({ headless: true, args: ARGS });
 }
 
-export const VIEWPORTS = { pc: { width: 1280, height: 720 }, cel: { width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },
+export const VIEWPORTS = { pc: { width: 1280, height: 720 }, nb: { width: 1440, height: 900 }, // nb: notebook, solo a pedido (--vp nb)
+  cel: { width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 1 },
+  tab: { width: 820, height: 1180, isMobile: true, hasTouch: true, deviceScaleFactor: 1 }, // tablet vertical, solo a pedido (--vp tab)
   celh: { width: 844, height: 390, isMobile: true, hasTouch: true, deviceScaleFactor: 1 } }; // celh: celular apaisado, solo a pedido (--vp celh)
 
 /**
@@ -36,7 +38,7 @@ export async function open(browser, query, vp = "pc", { freeze = false } = {}) {
     new MutationObserver((_, o) => { const l = document.getElementById("load"); if (l?.classList.contains("out")) { window.__tPortada = performance.now(); o.disconnect(); } }).observe(document, { subtree: true, attributes: true, childList: true });
   });
   const t0 = Date.now();
-  await page.goto(BASE + "/" + query, { waitUntil: "domcontentloaded" });
+  await page.goto(BASE + "/" + query + (process.env.RC_Q ?? ""), { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => typeof window.__sim === "function", null, { timeout: 150000, polling: 50 }); // 13× VAT GLB en headless frío puede pasar 90 s
   const portada = await page.evaluate(() => window.__tPortada ?? null);
   if (freeze) await page.evaluate(() => { const e = window.__scene.getEngine(); e.stopRenderLoop(); e.getDeltaTime = () => 1000 / 60; }); // y el paso de tiempo de cada cuadro queda fijo en 1/60 s

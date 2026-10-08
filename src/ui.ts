@@ -5,7 +5,7 @@ import "@fontsource/silkscreen/400.css";
 import "@fontsource/silkscreen/700.css";
 import "./style.css";
 import "./hud.css";
-import { icon } from "./icons";
+import { icon, uiIconUrl } from "./icons";
 import { isTouch, KEYS } from "./input";
 
 const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram", "cdr"] as const;
@@ -20,6 +20,7 @@ const el = <T extends HTMLElement = HTMLElement>(id: string) => $(id) as T;
 // ---------- Estáticos ----------
 export function initHud() {
   $("sigIco").innerHTML = icon("senal", 16);
+  for (const k of ["vida", "energia", "habilidades", "nivel", "bajas"]) document.documentElement.style.setProperty("--ico-" + k, uiIconUrl(k)); // íconos de las barras (kit.css)
   // Marcas del velocímetro sobre el arco de 240° (centro 60,56)
   $("ticks").innerHTML = Array.from({ length: 9 }, (_, i) => {
     const a = (-120 + i * 30) * (Math.PI / 180), sn = Math.sin(a), cs = Math.cos(a);

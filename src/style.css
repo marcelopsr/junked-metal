@@ -24,13 +24,7 @@ kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-right: 3p
 .sect span { color: var(--txt); letter-spacing: .04em; }
 .hint { font-size: 11px; color: var(--dim); letter-spacing: .1em; }
 .otitle { font: 400 clamp(24px, 4vw, 36px)/1 var(--display); color: #fff1cf; text-shadow: 0 3px 0 #3a2a1c, 2px 0 0 #3a2a1c, -2px 0 0 #3a2a1c, 0 -2px 0 #3a2a1c; }
-button { font: 700 14px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; padding: 12px 22px; border: 1px solid var(--line); border-radius: 0; background: var(--panel); color: var(--txt); cursor: pointer; box-shadow: 0 3px 0 #000; }
-button:hover:not(:disabled) { border-color: var(--txt); }
-button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
-button:disabled { opacity: .35; cursor: default; }
-button.primary { background: var(--turbo); color: #111; border-color: #000; font-size: 16px; padding: 14px 30px; }
 .q { font-size: 12px; color: var(--dim); letter-spacing: .08em; text-transform: uppercase; }
-select { font: 600 13px var(--data); padding: 5px 8px; border-radius: 0; background: var(--panel); color: var(--txt); border: 1px solid var(--line); margin-left: 6px; }
 
 #cars, #shop, #offers { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 #shop button { font-size: 11px; padding: 9px 12px; }
@@ -38,13 +32,9 @@ select { font: 600 13px var(--data); padding: 5px 8px; border-radius: 0; backgro
 #paint .sw { width: 24px; height: 24px; border-radius: 0; border: 2px solid #000; cursor: pointer; padding: 0; box-shadow: none; }
 #paint .sw.on { outline: 2px solid var(--txt); outline-offset: 2px; }
 #paint .rim { border-radius: 50%; }
-.carc { width: 190px; background: var(--shell); border: 1px solid var(--line); border-radius: 0; padding: 12px; cursor: pointer; text-align: left; font-size: 12px; color: var(--dim); }
-.carc b { display: block; font: 700 16px/1.2 var(--data); color: var(--txt); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.carc { position: relative; width: 190px; background: var(--shell); border: 1px solid var(--line); border-radius: 0; padding: 12px; cursor: pointer; text-align: left; font-size: 12px; color: var(--dim); }
 .carc .st { display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; margin-top: 8px; font-size: 11px; }
 .carc .st i { display: block; height: 5px; margin-top: 4px; background: var(--sig); }
-.carc.sel { border-color: var(--turbo); box-shadow: 0 0 0 1px var(--turbo); }
-.carc.locked { opacity: .55; }
-.carc .price { margin-top: 8px; color: var(--r-evo); font-weight: 700; }
 
 /* Cartas de mejora */
 #levelup { justify-content: flex-end; padding-bottom: 7vh; background: linear-gradient(transparent 0 35%, rgba(10, 11, 13, .88) 62%); }
@@ -142,41 +132,6 @@ body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px
 @keyframes blink { 50% { opacity: .3; } }
 
 
-/* Hecho a mano (crude retro): cartas torcidas, bordes mordidos y cinta de papel */
-.carc, .offer { clip-path: polygon(0 2%, 9% 0, 40% 1.5%, 72% 0, 100% 1%, 99% 38%, 100% 70%, 98.5% 100%, 60% 98.5%, 25% 100%, 0 98.8%, 1.2% 60%); }
-.carc:nth-child(3n+1), .offer:nth-child(3n+1) { rotate: -1.6deg; }
-.carc:nth-child(3n+2), .offer:nth-child(3n+2) { rotate: 1.1deg; }
-.carc:nth-child(3n), .offer:nth-child(3n) { rotate: -.6deg; }
-.carc::before, .offer::before { content: ""; position: absolute; top: -2px; left: 50%; width: 54px; height: 16px; translate: -50% 0; rotate: -4deg; background: #d8cfa8bb; mix-blend-mode: screen; pointer-events: none; }
-.carc { position: relative; }
-.brand { rotate: -2deg; text-shadow: 3px 3px 0 #000, -1px 0 0 #d12a1c99; }
-
-/* Cartas de día: crema, bordes gruesos, sin pantalla de fósforo */
-#levelup { background: linear-gradient(transparent 0 35%, rgba(40, 70, 120, .7) 62%); }
-.offer { background: var(--panel); border: 4px solid var(--line); border-radius: 12px; box-shadow: 0 5px 0 var(--line); animation: none; }
-.offer:hover, .offer.sel { box-shadow: 0 8px 0 var(--rc), 0 0 0 3px var(--rc); }
-.offer .art { background: var(--lcd); border-radius: 8px; box-shadow: none; }
-.offer .pips i { background: #3a2a1c33; }
-.offer.evo, .offer.fusion { background: #ffe7a8; }
-
-/* Cartas y fichas modernas: vidrio oscuro, sin cinta ni inclinación */
-.carc, .offer { clip-path: none; rotate: none !important; background: rgba(14, 24, 36, .82); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, .18); border-radius: 18px; box-shadow: 0 12px 30px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .1); color: #f4f7fa; }
-.carc::before, .offer::before { display: none; }
-.offer:hover, .offer.sel { transform: translateY(-8px); box-shadow: 0 16px 34px rgba(0, 0, 0, .4), 0 0 0 2px var(--rc); }
-.offer b, .carc b { font: 800 15px/1.2 "Rajdhani", system-ui, sans-serif; color: #fff; text-transform: none; letter-spacing: 0; text-shadow: none; }
-.offer .kind { font: 800 10px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .12em; color: var(--rc); }
-.offer, .offer p, .offer span, .carc, .carc p { font-family: "Rajdhani", system-ui, sans-serif; color: #dbe6ee; }
-.offer .art { background: rgba(255, 255, 255, .08); border: 0; border-radius: 14px; box-shadow: none; }
-.offer .pips i { height: 5px; border-radius: 99px; background: rgba(255, 255, 255, .16); }
-.offer.evo, .offer.fusion { background: rgba(60, 44, 10, .85); }
-
-/* Botones y menús modernos */
-button, select { font: 700 14px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .04em; border-radius: 12px; clip-path: none !important; background: rgba(14, 24, 36, .78); color: #f4f7fa; border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 6px 16px rgba(0, 0, 0, .28); text-shadow: none; }
-button:hover { background: rgba(30, 48, 68, .9); }
-.list button { text-transform: none; font-size: 16px; padding: 14px 22px; text-align: left; }
-.list button:focus { background: linear-gradient(135deg, #35c9ff, #7dffb0); color: #08202c; box-shadow: 0 8px 22px rgba(53, 201, 255, .35); }
-.brand, .otitle { color: #fff; text-shadow: 0 4px 0 rgba(8, 20, 30, .55), 0 8px 24px rgba(0, 0, 0, .35); }
-
 /* Íconos de color: marco con forma según rareza, flotan suave y rebotan al elegir */
 .ico { filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .45)); overflow: visible; }
 .offer .art { width: 84px; height: 84px; background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, .22), rgba(255, 255, 255, .06)); clip-path: circle(50%); border: 0; }
@@ -189,17 +144,9 @@ button:hover { background: rgba(30, 48, 68, .9); }
 @keyframes ico-float { 50% { transform: translateY(-3px); } }
 @keyframes ico-bounce { 0% { transform: scale(.8); } 100% { transform: scale(1.1); } }
 
-/* Títulos redondeados y gruesos (sin tipografía pixelada) */
-.brand, .otitle { font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.brand { font-size: clamp(48px, 10vw, 96px); }
-.sect { font: 700 14px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .14em; color: #dbe9f4; text-shadow: 0 2px 4px rgba(0, 0, 0, .55); }
-/* Fichas del taller y bestiario: texto más grande y barras de nivel visibles */
-.carc { font-size: 15px; }
-.carc b { font-size: 18px; }
+.carc b { display: block; margin-bottom: 4px; }
 .carc .pips { display: flex; gap: 4px; margin-top: 8px; }
-.carc .pips i { flex: 1; height: 6px; border-radius: 99px; background: rgba(255, 255, 255, .16); }
-.carc .pips i.on { background: linear-gradient(90deg, #35c9ff, #7dffb0); }
-.carc .price { margin-top: 6px; font-weight: 700; color: #ffc24d; }
+.offer { animation: none; } /* las cartas ya no se "sintonizan": entran con la animación de kit.css */
 
 /* Aviso de joystick conectado / desconectado (input.ts) */
 #padToast { position: fixed; left: 50%; bottom: 24px; translate: -50% 20px; z-index: 50; padding: 9px 16px; font: 700 13px var(--data); letter-spacing: .08em; color: #f0e6d8; background: rgba(12, 34, 38, .92); border: 1px solid #c9692a; border-radius: 10px; opacity: 0; pointer-events: none; transition: opacity .2s, translate .2s; }

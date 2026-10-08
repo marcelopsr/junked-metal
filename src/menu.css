@@ -13,8 +13,6 @@ body.calm #fe.zap::after, body.calm .press { animation: none; }
 body.calm .scr.on { animation-duration: .05s; }
 
 /* Foco estilo terminal: siempre visible, igual con teclado, gamepad o mouse */
-#fe :is(button, select, input, [tabindex]):focus { outline: 2px dashed var(--lcd-ink); outline-offset: 3px; }
-#fe .carc:focus { border-color: var(--lcd-ink); }
 
 /* Título: logo arriba y aviso abajo, la portada 3D respira en el medio */
 #scr-title.on { justify-content: flex-start; min-height: calc(100vh - 32px); padding: 4vh 0 6vh; }
@@ -27,12 +25,6 @@ body.calm .scr.on { animation-duration: .05s; }
 /* Lista principal: botones mordidos y torcidos, el foco se "enciende" en fósforo */
 .list { display: flex; flex-direction: column; gap: 9px; width: min(330px, 90vw); }
 .list.row3 { flex-direction: row; flex-wrap: wrap; justify-content: center; width: auto; }
-.list button { font: 400 18px/1 var(--display); text-align: left; padding: 13px 18px; clip-path: polygon(0 4%, 12% 0, 70% 6%, 100% 0, 99% 60%, 100% 100%, 40% 95%, 0 100%, 1.5% 50%); }
-.list button:nth-child(odd) { rotate: -.8deg; } .list button:nth-child(even) { rotate: .6deg; }
-.list button::before { content: "> "; opacity: 0; }
-.list button:focus { outline: none; background: var(--lcd-ink); color: var(--shell); box-shadow: 0 0 16px #8dff6a66, 0 3px 0 #000; }
-.list button:focus::before { opacity: 1; }
-.list button.primary { font-size: 20px; }
 
 /* Garaje: panel a la derecha, el auto gira a la izquierda */
 .scr.side { align-items: flex-end; max-width: none; padding-right: 3vw; }
@@ -42,8 +34,6 @@ body.calm .scr.on { animation-duration: .05s; }
 .side .carc { width: 100%; padding: 9px 12px; }
 .side .carc .st { grid-template-columns: auto 1fr auto 1fr auto 1fr; margin-top: 5px; }
 /* Legibilidad: las listas del garaje van sobre vidrio oscuro (como #bpanel), se lean sobre el fondo que sea */
-#scr-garage #cars, #scr-garage #paint { background: rgba(14, 24, 36, .84); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, .18); border-radius: 16px; box-shadow: 0 12px 30px rgba(0, 0, 0, .35); padding: 8px 12px; box-sizing: border-box; }
-#scr-garage .carc b { color: #fff; font-size: 15px; }
 /* Pintura: zonas, paleta de 24 y selector libre */
 .side #paint { flex-direction: column; align-items: stretch; gap: 10px; text-transform: none; letter-spacing: 0; }
 #paint > * { flex: none; }
@@ -126,7 +116,6 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 
 /* Configuración */
 #tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-.tab.on { border-color: var(--turbo); color: var(--turbo); }
 #opts { display: flex; flex-direction: column; gap: 6px; width: min(640px, 94vw); max-height: 58vh; overflow-y: auto; padding: 4px; }
 #opts .row { display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; padding: 8px 12px; background: var(--shell); border: 1px solid var(--line); font: 400 17px/1.1 var(--data); text-transform: none; letter-spacing: .02em; color: var(--txt); box-shadow: none; text-align: left; }
 #opts .row b { color: var(--lcd-ink); font-weight: 400; white-space: nowrap; }
@@ -228,20 +217,12 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #opts .row.off { opacity: .6; }
 #opts > * { flex-shrink: 0; } /* con descripciones largas la lista scrollea en vez de apretar las filas unas sobre otras */
 #opts .note { font: 500 14px/1.35 "Rajdhani", system-ui, sans-serif; color: var(--dim); padding: 4px 10px; }
-#opts .row { min-height: 46px; }
-#opts .row { font: 700 18px/1.1 "Rajdhani", system-ui, sans-serif; letter-spacing: .02em; text-transform: none; }
-#opts .row output, #opts .row b { font: 700 18px "Rajdhani", system-ui, sans-serif; }
 #opts .sect { margin-top: 18px; }
 
 /* Menú principal en una sola columna: con el control se recorre solo arriba / abajo, sin saltos en diagonal */
 .mainGrid { display: grid; grid-template-columns: 1fr; gap: 8px; width: min(420px, 92vw); }
 .mainGrid .wide { grid-column: 1 / -1; }
-.mainGrid .primary { font-size: 24px; padding: 18px 22px; text-align: center; }
-.mainGrid button { text-align: center; min-height: 46px; font-size: 18px; }
-.mainGrid .chip { min-height: 38px; font-size: 14px; letter-spacing: .02em; opacity: .9; }
-.mainGrid .ghost { background: transparent; border-color: rgba(255, 255, 255, .12); min-height: 40px; font-size: 15px; box-shadow: none; }
 .tag { color: #f4f7fa; text-shadow: 0 2px 6px rgba(0, 0, 0, .55); font-weight: 600; letter-spacing: .04em; }
-.mainGrid .ghost { color: #dbe6ee; }
 .foot { color: #eaf1f7; text-shadow: 0 2px 5px rgba(0, 0, 0, .6); }
 #opts { padding-top: 14px; }
 #opts .note { background: rgba(8, 16, 26, .55); border: 0; border-radius: 10px; color: #cfdbe6; }
@@ -253,7 +234,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #bmsg { position: absolute; left: 0; right: 0; bottom: 8%; text-align: center; font: 700 clamp(22px, 3.4vw, 40px)/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .08em; color: #ff6a5a; text-shadow: 0 3px 0 rgba(8, 20, 30, .6), 0 0 18px rgba(255, 60, 40, .45); pointer-events: none; opacity: 0; }
 #bmsg.pop { animation: bmsg 2.2s ease-out both; }
 @keyframes bmsg { 0% { opacity: 0; scale: 1.3; } 10% { opacity: 1; scale: 1; } 75% { opacity: 1; } 100% { opacity: 0; } }
-#bpanel { display: flex; flex-direction: column; gap: 10px; min-height: 0; padding: 14px 16px; background: rgba(14, 24, 36, .82); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, .18); border-radius: 18px; box-shadow: 0 12px 30px rgba(0, 0, 0, .35); text-align: left; }
+#bpanel { display: flex; flex-direction: column; gap: 10px; min-height: 0; text-align: left; } /* chapa: kit.css */
 .bhead { display: flex; align-items: center; gap: 10px; }
 .bname { flex: 1; min-width: 0; text-align: center; }
 .bname small { display: block; color: var(--dim); font-size: 14px; letter-spacing: .14em; text-transform: uppercase; }
@@ -285,9 +266,6 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 }
 @media (max-height: 500px) { #scr-beast.on { padding: 8px; } #bpanel { padding: 8px 12px; gap: 6px; } }
 
-/* Botones de menú casi opacos (pedido del usuario): se leen sobre cualquier escena */
-#fe button:not(.primary):not(:focus) { background: rgba(14, 32, 36, .94); border-color: rgba(201, 105, 42, .35); backdrop-filter: none; -webkit-backdrop-filter: none; }
-.mainGrid .chip { opacity: 1; }
 
 /* Controles: ranuras de teclas y botones, aviso de repetidas, perfiles y prueba del joystick (menu.ts) */
 #opts .row.multi { padding: 6px 8px 6px 12px; }
@@ -349,7 +327,7 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam)::after { co
 /* Confirmación de compra: velo sobre el menú con una tarjeta centrada */
 .ask { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; background: rgba(6, 12, 18, .6); }
 .ask.hidden { display: none; }
-.askbox { max-width: min(460px, 92vw); padding: 22px 24px; border-radius: 16px; background: rgba(14, 24, 32, .96); border: 1px solid rgba(255, 255, 255, .12); text-align: center; box-shadow: 0 10px 40px rgba(0, 0, 0, .5); }
+.askbox { max-width: min(460px, 92vw); text-align: center; } /* chapa: kit.css */
 .askbox p { font-size: 18px; margin: 10px 0 18px; }
 /* Garaje en celular apaisado: panel angosto a la derecha con la altura de la pantalla y scroll propio; el auto queda libre a la izquierda */
 @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {

@@ -2,52 +2,96 @@ import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph, tor, tube, wheel } from "./models";
 import { applyClimate, canvasTex, glow, lamp, LOOK, M, menuLights, pbr, setDof, shadows } from "./render";
 import { ambient } from "./fx";
+import { brick, canvasTexture, KIT, kitPut, M3C, wornMat, type KitId } from "./kit3d";
 import { showWorld } from "./world";
 
-// Escenas de los menús (no de la partida), pastel suave y cálido con profundidad de campo:
-// - ESTANTE de juguetes de noche (título, principal, bestiario, ficha, créditos): luna por la ventana, lámpara hongo, guirnalda.
-//   El estante está en el origen: la ficha del bestiario (main.ts, beastTick) pone su pedestal ahí, sobre la tabla.
-// - MESA de taller tipo diorama (garaje, taller, configuración): flexo sobre el auto, tablero de herramientas, cajoneras.
-// Cada escena = dos mallas fusionadas (cuarto sin sombras propias + utilería que proyecta), armadas la primera vez que se ven.
+// Escenas de los menús (no de la partida). Sistema de configuración:
+// - SETS: escenarios físicos (cuarto + utilería fija), armados la primera vez que se ven y lejos entre sí (solo uno encendido).
+// - SCENES: una entrada por sección (cámara, auto de muestra, utilería del kit modular de kit3d.ts con variaciones y animación ambiental,
+//   ajustes de luz). Una escena nueva = un objeto más en SCENES; el menú (menu.ts) y main.ts no cambian.
 // El mundo de juego se esconde mientras tanto (showWorld) y la luz de partida vuelve con menuOff().
 
 type V3 = [number, number, number];
-type Id = "shelf" | "bench";
-const BENCH = new B.Vector3(0, 0, 400); // la mesa queda lejos del estante: nunca se ven juntas (solo una escena encendida)
-const b = (x: number, y: number, z: number) => [x + BENCH.x, y + BENCH.y, z + BENCH.z];
-
-// Encuadres: [cámara x, y, z, mira x, y, z]. main.ts los lee (y la ficha escribe SHOTS.beast en este mismo objeto).
-export const SHOTS: Record<string, number[]> = {
-  title: [2.3, 1, 4.4, -0.3, 0.75, 0],
-  main: [-0.5, 3, 10.5, -6.3, 1.4, -1],
-  bestiary: [-5, 4.2, 9.5, -9.5, 0.6, 0.5],
-  credits: [10, 3.2, 15, 4, 10.5, -60],
-  garage: [...b(2, 4, 11), ...b(-2.2, 2.2, 1)],
-  shop: [...b(-4, 8, 14), ...b(10, 9, -14)],
-  config: [...b(10, 4.2, 11), ...b(14.5, 1, 3.5)],
-  // Celular vertical (_v): el auto centrado y más lejos; en el principal queda abajo, en la franja libre bajo los botones; en garaje, arriba sobre el menú
-  title_v: [3.9, 1.7, 8, 0, 0.75, 0], main_v: [5.4, 1.4, 14, 0, 4.8, 0], garage_v: [...b(2.6, 3.8, 14), ...b(0, -2.8, 1)],
-};
-const SCENE: Record<string, Id> = { garage: "bench", shop: "bench", config: "bench" }; // el resto, estante
-const sceneOf = (scr: string): Id => SCENE[scr] ?? "shelf";
-/** Dónde va el auto de muestra en cada pantalla (null = sin auto). */
-export const carSpot = (scr: string) => (scr === "garage" ? new B.Vector3(BENCH.x, BENCH.y, BENCH.z + 1) : scr === "title" || scr === "main" ? B.Vector3.Zero() : null);
-export const CAR_YAW = 0.95; // estante: el auto mira hacia la cámara en 3/4
-
-// Luz de cada escena: luna (sol de la escena, con sombras) lavanda, ambiente pastel y rebote durazno
+type SetId = "shelf" | "bench" | "clean";
 type Clim = Parameters<typeof applyClimate>[0];
-const CLIM: Record<Id, Clim> = {
-  shelf: { sun: [0.35, -0.6, 0.72], sunColor: "#bfe0e0", sunI: 1.6, hemiI: 0.42, amb: "#a8c8c4", ground: "#5f7f7c",
-    sky: ["#0b2226", "#1f4a50", "#3f7476", "#12302f"], exposure: 1, fog: 0.004, ramp: ["#000000", "#808080", "#ffffff"] },
-  bench: { sun: [-0.3, -0.85, -0.45], sunColor: "#cfe4e2", sunI: 1.1, hemiI: 0.5, amb: "#e0c8b0", ground: "#5f8a88",
-    sky: ["#16353a", "#c98a5a", "#e0b090", "#16353a"], exposure: 1, fog: 0.005, ramp: ["#000000", "#808080", "#ffffff"] },
+type Lamp = { spot: V3; to: V3; glow: V3; spotI: number; glowI: number; cone: number };
+type Cam = { pos: V3; target: V3; fov?: number };
+/** Utilería de una sección: pieza del kit (kit3d.ts), tamaño `u`, dónde y cómo; `v` = variación (color de la chapa o id del cartel); `anim` = animación ambiental. */
+type Prop = { kit: KitId; u: number; at: V3; rot?: V3; v?: string; anim?: "swing" | "spin" };
+/** Escena de una sección del menú. Todas las coordenadas son locales a su escenario (`set`). */
+export type MenuScene = { set: SetId; cam: Cam; camV?: Cam; car?: V3; props?: Prop[]; clim?: Partial<Clim>; lamp?: Partial<Lamp>; dof?: number };
+
+// ---------- Escenarios físicos: el cuarto y su utilería fija, armados una vez; lejos entre sí (solo uno encendido) ----------
+const SETS: Record<SetId, { origin: V3; build: (low: boolean) => [B.Mesh[], B.Mesh[]]; clim: Clim; lamp: Lamp; dof: number }> = {
+  // ESTANTE de juguetes de noche: luna por la ventana, lámpara hongo, guirnalda. La ficha del bestiario pone su pedestal en el origen.
+  shelf: { origin: [0, 0, 0], build: (low) => shelfBuild(low), dof: 0.8,
+    clim: { sun: [0.35, -0.6, 0.72], sunColor: "#bfe0e0", sunI: 1.6, hemiI: 0.42, amb: "#a8c8c4", ground: "#5f7f7c",
+      sky: ["#0b2226", "#1f4a50", "#3f7476", "#12302f"], exposure: 1, fog: 0.004, ramp: ["#000000", "#808080", "#ffffff"] },
+    lamp: { spot: [8, 13, 8], to: [-1, 0, 0], glow: [22, 4.6, -3], spotI: 5, glowI: 2.2, cone: 0.9 } },
+  // MESA de taller tipo diorama: flexo, tablero perforado, cajoneras
+  bench: { origin: [0, 0, 400], build: (low) => benchBuild(low), dof: 0.65,
+    clim: { sun: [-0.3, -0.85, -0.45], sunColor: "#cfe4e2", sunI: 1.1, hemiI: 0.5, amb: "#e0c8b0", ground: "#5f8a88",
+      sky: ["#16353a", "#c98a5a", "#e0b090", "#16353a"], exposure: 1, fog: 0.005, ramp: ["#000000", "#808080", "#ffffff"] },
+    lamp: { spot: [2.5, 6.4, -1], to: [-0.5, 0, 1.5], glow: [3, 8.5, -1.5], spotI: 7, glowI: 1.4, cone: 1.2 } },
+  // GALPÓN limpio (configuración): pared de ladrillo, piso de chapa, casi nada en el medio para que el panel respire
+  clean: { origin: [0, 0, -400], build: () => cleanBuild(), dof: 0.5,
+    clim: { sun: [0.2, -0.8, -0.5], sunColor: "#ffd6a8", sunI: 0.9, hemiI: 0.35, amb: "#8a7a6a", ground: "#3b3833",
+      sky: ["#0b0f14", "#14181f", "#1f2937", "#0b0f14"], exposure: 1, fog: 0.006, ramp: ["#000000", "#808080", "#ffffff"] },
+    lamp: { spot: [0, 26, 10], to: [0, 0, -6], glow: [-14, 24.5, -4], spotI: 7, glowI: 2.4, cone: 1.1 } },
 };
-const DOF: Record<Id, number> = { shelf: 0.8, bench: 0.65 }; // cuánto se desenfoca el fondo lejano
-// Lámpara de cada escena: foco (de dónde, hacia dónde) y resplandor cálido (la pantalla de la lámpara / la bombita del flexo)
-const LAMP: Record<Id, { spot: B.Vector3; to: B.Vector3; glow: B.Vector3; spotI: number; glowI: number; cone: number }> = {
-  shelf: { spot: new B.Vector3(8, 13, 8), to: new B.Vector3(-1, 0, 0), glow: new B.Vector3(22, 4.6, -3), spotI: 5, glowI: 2.2, cone: 0.9 },
-  bench: { spot: new B.Vector3(...(b(2.5, 6.4, -1) as V3)), to: new B.Vector3(...(b(-0.5, 0, 1.5) as V3)), glow: new B.Vector3(...(b(3, 8.5, -1.5) as V3)), spotI: 7, glowI: 1.4, cone: 1.2 },
+
+// ---------- Secciones: crear una escena nueva = agregar un objeto acá ----------
+// cam/camV: encuadre (camV = celular vertical). car: dónde va el auto de muestra. props: utilería propia (se ve solo en esa sección).
+// Los encuadres dejan libre la zona donde va el panel: principal a la izquierda, garaje a la derecha.
+export const SCENES: Record<string, MenuScene> = {
+  title: { set: "shelf", cam: { pos: [2.3, 1, 4.4], target: [-0.3, 0.75, 0] }, camV: { pos: [3.9, 1.7, 8], target: [0, 0.75, 0] }, car: [0, 0, 0] },
+  main: { set: "shelf", cam: { pos: [-0.5, 3, 10.5], target: [2.7, 1.4, -1] }, camV: { pos: [5.4, 1.4, 14], target: [0, -2.6, 0] }, car: [0, 0, 0],
+    props: [
+      { kit: "crate", u: 2.6, at: [-4.6, 0, -4], rot: [0, 0.25, 0] }, { kit: "crate", u: 1.8, at: [-4.4, 1.95, -3.8], rot: [0, -0.2, 0], v: M3C.amarillo },
+      { kit: "sign", u: 3, at: [-11, 0, -4.8], rot: [0, 0.15, 0], v: "junked" },
+      { kit: "cageLamp", u: 3.4, at: [-4.5, 16.6, 0.5], anim: "swing" },
+    ] },
+  bestiary: { set: "shelf", cam: { pos: [-5, 4.2, 9.5], target: [-9.5, 0.6, 0.5] },
+    props: [
+      ...[[-4.4, 2, M3C.verde], [-3, 1.1, M3C.rojo], [-1.7, 2.4, M3C.morado], [-5.6, 3.5, M3C.amarillo]].map(([x, z, c]) => ({ kit: "jar" as const, u: 1.5, at: [x, 0, z] as V3, v: c as string })),
+      { kit: "sign", u: 1.3, at: [-9.5, 0, -3.8], v: "specimens" },
+    ] },
+  beast: { set: "shelf", cam: { pos: [0, 3, 8], target: [0, 1, 0] } }, // main.ts recalcula SHOTS.beast según el bicho
+  credits: { set: "shelf", cam: { pos: [10, 3.2, 15], target: [4, 10.5, -60] } },
+  garage: { set: "bench", cam: { pos: [2, 4, 11], target: [-2.2, 2.2, 1] }, camV: { pos: [2.6, 3.8, 14], target: [0, -2.8, 1] }, car: [0, 0, 1],
+    props: [
+      { kit: "toolbox", u: 3.4, at: [-9, 0, -7], rot: [0, 0.3, 0] }, { kit: "crate", u: 4, at: [13, 0, -12.5], rot: [0, 0.15, 0] },
+      { kit: "sign", u: 6, at: [-1, 9.5, -16.2], v: "playfix" },
+      { kit: "cageLamp", u: 4, at: [-5, 14, -6], anim: "swing" },
+    ] },
+  shop: { set: "bench", cam: { pos: [-4, 8, 14], target: [10, 9, -14] },
+    props: [
+      { kit: "vise", u: 3.2, at: [26, 0, 5], rot: [0, -0.4, 0] }, { kit: "toolbox", u: 4, at: [-4, 0, -9], rot: [0, -0.2, 0], v: M3C.amarillo },
+      { kit: "sign", u: 9, at: [29, 13, -16.2], v: "goodmetal" }, { kit: "pipe", u: 6, at: [6, 34, -16], rot: [0, 0, 0] },
+      { kit: "cageLamp", u: 5, at: [14, 40, -4], anim: "swing" },
+    ] },
+  config: { set: "clean", cam: { pos: [0, 9, 34], target: [0, 8, 0] }, camV: { pos: [0, 10, 48], target: [0, 8, 0] },
+    props: [
+      { kit: "crate", u: 7, at: [-24, 0, -8], rot: [0, 0.2, 0] }, { kit: "crate", u: 5, at: [-23, 5.3, -8], rot: [0, -0.15, 0], v: M3C.amarillo },
+      { kit: "barrel", u: 8, at: [23, 0, -9] }, { kit: "toolbox", u: 4, at: [17, 0, -5], rot: [0, -0.5, 0] },
+      { kit: "sign", u: 6, at: [-14, 15, -17.6], v: "junked" }, { kit: "pipe", u: 9, at: [10, 24, -17] },
+      { kit: "cageLamp", u: 5, at: [-14, 30, -4], anim: "swing" },
+    ] },
 };
+const sceneOf = (scr: string) => (SCENES[scr] ? scr : "main");
+const add = (o: V3, p: V3): V3 => [o[0] + p[0], o[1] + p[1], o[2] + p[2]];
+// Encuadres en coordenadas del mundo: [cámara x, y, z, mira x, y, z]. main.ts los lee (y la ficha escribe SHOTS.beast en este mismo objeto).
+export const SHOTS: Record<string, number[]> = {};
+for (const [k, s] of Object.entries(SCENES)) {
+  const o = SETS[s.set].origin;
+  SHOTS[k] = [...add(o, s.cam.pos), ...add(o, s.cam.target)];
+  if (s.camV) SHOTS[k + "_v"] = [...add(o, s.camV.pos), ...add(o, s.camV.target)];
+}
+/** Dónde va el auto de muestra en cada pantalla (null = sin auto). */
+export const carSpot = (scr: string) => { const s = SCENES[scr]; return s?.car ? new B.Vector3(...add(SETS[s.set].origin, s.car)) : null; };
+/** Campo de visión del encuadre de cada pantalla. */
+export const menuFov = (scr: string) => SCENES[sceneOf(scr)].cam.fov ?? 0.85;
+export const CAR_YAW = 0.95; // estante: el auto mira hacia la cámara en 3/4
 
 const PAST = ["#c98a5a", "#8a5a3a", "#5f8a9a", "#6f8f7a", "#c9a14a", "#a0452a", "#7f9a9c"];
 const W = (c: string) => M.matte(c), P = (c: string) => M.plastic(c);
@@ -182,7 +226,6 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     cyl(0.9, 0.9, 2.6, P("#c9a14a"), [3.4, 0.45, 9.8], [0, 0.5, Math.PI / 2], 6), cyl(0.25, 0.25, 3, metal, [5.8, 0.45, 8.4], [0, 0.5, Math.PI / 2], 6),
   ];
   if (!low) props.push(cyl(2.6, 2.4, 3, P("#a0452a"), [-25, 1.5, -3], undefined, 10), tor(1.6, 0.35, P("#a0452a"), [-23.6, 1.6, -3], [Math.PI / 2, 0, 0], 8), cyl(2.2, 2.2, 0.1, W("#a0705a"), [-25, 2.95, -3], undefined, 10));
-  for (const m of [...room, ...props]) m.position.addInPlace(BENCH);
   return [room, props];
 }
 function transmitter(): B.Mesh[] {
@@ -200,49 +243,81 @@ function transmitter(): B.Mesh[] {
 const place = (m: B.Mesh, pos: V3, rot: V3) => { m.position.set(...pos); m.rotation.set(...rot); return m; };
 
 
-let cur: Id | null = null, fade = 1, moteT = 0;
-const WARM = B.Color3.FromHexString("#ffc890");
-const built: Partial<Record<Id, B.Mesh[]>> = {};
-function build(id: Id, low: boolean) {
-  const [room, props] = id === "shelf" ? shelfBuild(low) : benchBuild(low);
-  const r = merge("menu_" + id + "_room", room), p = merge("menu_" + id + "_props", props);
-  r.isPickable = p.isPickable = false;
-  r.freezeWorldMatrix(); p.freezeWorldMatrix(); // estáticos: sin recalcular la matriz ni el volumen cada cuadro
-  shadows.addShadowCaster(p);
-  return [r, p];
+function cleanBuild(): [B.Mesh[], B.Mesh[]] {
+  const scene = lamp.getScene();
+  const bt = canvasTexture(scene, "menuBrick", 512, 256, brick); bt.uScale = 8; bt.vScale = 5; bt.wrapU = bt.wrapV = B.Texture.WRAP_ADDRESSMODE;
+  const wall = pbr("menuBrickM", { color: "#ffffff", rough: 0.95, tex: bt });
+  const floor = wornMat("#3b3833", null, 51);
+  const room = [box(160, 1, 120, floor, [0, -0.5, 0]), box(160, 70, 2, wall, [0, 34, -19]), box(160, 2, 120, W("#14181f"), [0, 60, 0]),
+    box(2, 70, 120, wall, [-60, 34, 0]), box(2, 70, 120, wall, [60, 34, 0])];
+  return [room, []];
 }
 
-/** Cada cuadro del menú: enciende la escena de la pantalla (la arma la primera vez), luz, polvo y foco.
- *  Devuelve true si cambió de escena: main.ts corta la cámara al encuadre nuevo (la estática del menú tapa el corte y la escena aparece desde oscuro). */
-export function menuTick(scr: string, cam: B.Camera, focus: B.Vector3, dt: number, low: boolean) {
-  const id = sceneOf(scr), cut = id !== cur;
-  if (cut) {
-    if (!cur) { showWorld(false); menuLights(true); }
-    built[id] ??= build(id, low);
-    for (const k of Object.keys(built) as Id[]) for (const m of built[k]!) m.setEnabled(k === id);
-    cur = id; fade = 0;
-    applyClimate(CLIM[id]);
+let curSet: SetId | null = null, curSec = "", fade = 1, moteT = 0, clock = 0;
+const WARM = B.Color3.FromHexString("#ffc890");
+const builtSet: Partial<Record<SetId, B.Mesh[]>> = {};
+const builtSec: Record<string, { stat: B.Mesh[]; anim: { m: B.Mesh; a: "swing" | "spin"; ph: number }[] }> = {};
+function buildSet(id: SetId, low: boolean) {
+  const o = SETS[id].origin, [room, props] = SETS[id].build(low);
+  const out = [merge("menu_" + id + "_room", room)];
+  if (props.length) { const p = merge("menu_" + id + "_props", props); shadows.addShadowCaster(p); out.push(p); }
+  for (const m of out) { m.position.addInPlace(new B.Vector3(...o)); m.isPickable = false; m.freezeWorldMatrix(); } // estáticos: sin recalcular la matriz cada cuadro
+  return out;
+}
+function buildSec(k: string) {
+  const s = SCENES[k], o = SETS[s.set].origin, stat: B.Mesh[] = [], anim: { m: B.Mesh; a: "swing" | "spin"; ph: number }[] = [];
+  for (const p of s.props ?? []) {
+    const parts = KIT[p.kit](p.u, p.v as never);
+    if (p.anim) { // animada: malla propia con el pivote en su punto de apoyo (la lámpara cuelga de él)
+      const m = merge("menu_" + k + "_" + p.kit, kitPut(parts, [0, 0, 0], p.rot));
+      m.position.set(...add(o, p.at)); m.isPickable = false; shadows.addShadowCaster(m);
+      anim.push({ m, a: p.anim, ph: anim.length * 1.7 });
+    } else stat.push(...kitPut(parts, add(o, p.at), p.rot));
   }
-  const sc = lamp.getScene(), L = LAMP[id];
-  fade = Math.min(1, fade + dt * 2.5);
-  sc.imageProcessingConfiguration.exposure = CLIM[id].exposure * LOOK.exposure * (0.15 + 0.85 * fade * fade);
-  lamp.position.copyFrom(L.spot); L.to.subtractToRef(L.spot, lamp.direction).normalize();
-  lamp.intensity = L.spotI; lamp.angle = L.cone; glow.position.copyFrom(L.glow); glow.intensity = L.glowI;
+  const out: B.Mesh[] = [];
+  if (stat.length) { const m = merge("menu_" + k + "_props", stat); m.isPickable = false; m.freezeWorldMatrix(); shadows.addShadowCaster(m); out.push(m); }
+  return { stat: out, anim };
+}
+const v3 = (o: V3, p: V3) => new B.Vector3(...add(o, p));
+
+/** Cada cuadro del menú: enciende el escenario y la utilería de la sección (las arma la primera vez), luz, polvo, foco y animación ambiental.
+ *  Devuelve true si cambió de escenario: main.ts corta la cámara al encuadre nuevo (la estática del menú tapa el corte y la escena aparece desde oscuro). */
+export function menuTick(scr: string, cam: B.Camera, focus: B.Vector3, dt: number, low: boolean) {
+  const k = sceneOf(scr), sc = SCENES[k], id = sc.set, set = SETS[id], cut = id !== curSet;
+  if (cut) {
+    if (!curSet) { showWorld(false); menuLights(true); }
+    builtSet[id] ??= buildSet(id, low);
+    for (const s of Object.keys(builtSet) as SetId[]) for (const m of builtSet[s]!) m.setEnabled(s === id);
+    curSet = id; fade = 0;
+  }
+  if (k !== curSec) {
+    builtSec[k] ??= buildSec(k);
+    for (const [s, b] of Object.entries(builtSec)) for (const m of [...b.stat, ...b.anim.map((x) => x.m)]) m.setEnabled(s === k);
+    curSec = k;
+    applyClimate({ ...set.clim, ...sc.clim });
+  }
+  const L = { ...set.lamp, ...sc.lamp }, exp = sc.clim?.exposure ?? set.clim.exposure, o = set.origin, spot = v3(o, L.spot), to = v3(o, L.to);
+  fade = Math.min(1, fade + dt * 2.5); clock += dt;
+  lamp.getScene().imageProcessingConfiguration.exposure = exp * LOOK.exposure * (0.15 + 0.85 * fade * fade);
+  lamp.position.copyFrom(spot); to.subtractToRef(spot, lamp.direction).normalize();
+  lamp.intensity = L.spotI; lamp.angle = L.cone; glow.position.copyFrom(v3(o, L.glow)); glow.intensity = L.glowI;
   lamp.diffuse.copyFrom(WARM); // carModel pinta el foco con el faro del auto de muestra: en el menú manda la lámpara
-  setDof(Math.max(1, B.Vector3.Dot(focus.subtract(cam.position), cam.getDirection(B.Axis.Z))), DOF[id]); // el desenfoque mide profundidad sobre el eje de la cámara, no distancia
+  setDof(Math.max(1, B.Vector3.Dot(focus.subtract(cam.position), cam.getDirection(B.Axis.Z))), sc.dof ?? set.dof); // el desenfoque mide profundidad sobre el eje de la cámara, no distancia
+  for (const x of builtSec[k].anim) { if (x.a === "swing") x.m.rotation.z = Math.sin(clock * 0.9 + x.ph) * 0.06; else x.m.rotation.y += dt * 0.5; }
   // Polvo que flota en el haz de la lámpara
   if ((moteT -= dt) <= 0) {
     moteT = low ? 0.16 : 0.07;
-    const k = Math.random();
-    ambient("mote", B.Vector3.Lerp(L.spot, L.to, 0.25 + k * 0.7).addInPlaceFromFloats((Math.random() - 0.5) * 6 * k, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 6 * k));
+    const r = Math.random();
+    ambient("mote", B.Vector3.Lerp(spot, to, 0.25 + r * 0.7).addInPlaceFromFloats((Math.random() - 0.5) * 6 * r, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 6 * r));
   }
   return cut;
 }
 /** Sale de los menús (partida o carrera): apaga las escenas, la profundidad de campo y la luz de lámpara; el mundo vuelve a verse. */
 export function menuOff() {
-  if (!cur) return;
-  for (const k of Object.keys(built) as Id[]) for (const m of built[k]!) m.setEnabled(false);
-  cur = null;
+  if (!curSet) return;
+  for (const s of Object.keys(builtSet) as SetId[]) for (const m of builtSet[s]!) m.setEnabled(false);
+  for (const b of Object.values(builtSec)) for (const m of [...b.stat, ...b.anim.map((x) => x.m)]) m.setEnabled(false);
+  curSet = null; curSec = "";
   menuLights(false);
   setDof(0);
   showWorld(true);

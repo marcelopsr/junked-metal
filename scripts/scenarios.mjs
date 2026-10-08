@@ -48,7 +48,7 @@ export const sessions = [
   { id: "menu", query: "?mute&seed=3", shots: [
     { id: "carga", act: carga, perf: false },
     { id: "portada", act: sinCarga },
-    { id: "principal", act: async (p) => { await p.dispatchEvent("#scr-title", "click"); await wait(p, () => document.querySelector("#scr-main.on")); await p.waitForTimeout(150); } },
+    { id: "principal", act: async (p) => { await p.dispatchEvent("#scr-title", "click"); await wait(p, () => document.querySelector("#scr-main.on")); await tick(p, 180); await p.waitForTimeout(150); } }, // 180 cuadros: la cámara termina de viajar desde la portada
     { id: "garaje", act: view("garage") },
     { id: "garaje-vista-previa", act: async (p) => { await view("garage")(p); await p.focus('.carc.locked[data-k="tanque"]'); await p.waitForTimeout(400); } },
     { id: "taller", act: view("shop") },
@@ -204,7 +204,7 @@ export const sessions = [
       await tick(p, 90);
     } },
   ] },
-  { id: "match3", query: "?mute&match3", vps: ["pc", "cel"], shots: [
+  { id: "match3", query: "?mute&match3", vps: ["pc", "cel", "nb", "celh"], shots: [
     { id: "gabinete", act: async (p) => {
       await wait(p, () => window.__info?.().state === "match3" && document.getElementById("match3-ui")?.classList.contains("on"));
       await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
@@ -218,6 +218,11 @@ export const sessions = [
       await p.evaluate(() => { document.getElementById("m3-play")?.click(); window.__match3.start(); });
       await tick(p, 25);
     } },
+    { id: "seleccion", act: async (p) => {
+      const c = await p.evaluate(() => window.__match3.cellPx(3, 4));
+      await p.mouse.click(c.x, c.y);
+      await tick(p, 4);
+    } },
     { id: "pausa", act: async (p) => {
       await p.keyboard.press("Escape");
       await tick(p, 10);
@@ -230,6 +235,30 @@ export const sessions = [
       await p.evaluate(() => window.__match3.setPhase("lose"));
       await tick(p, 12);
     } },
+  ] },
+  // Banco Folded 2.5D (src/folded_lab.ts): paleta, materiales wear 0/0,5/1, trims, calcos y kit a 0/90/180/270 grados y desde arriba
+  { id: "folded", query: "?mute&folded", vps: ["pc"], shots: [
+    ...[0, 90, 180, 270].map((yaw) => ({ id: "y" + yaw, act: async (p) => {
+      await wait(p, () => window.__folded && document.getElementById("load")?.classList.contains("hidden"));
+      await p.evaluate((yaw) => window.__folded({ yaw }), yaw); await tick(p, 4);
+    } })),
+    { id: "top", act: async (p) => { await p.evaluate(() => window.__folded({ yaw: 30, top: true })); await tick(p, 4); } },
+  ] },
+  // Vertical slice Folded (Folded): hormiga, polilla, robot, buggy, caja y cerca a 0..315 grados y desde arriba (cámara cerca)
+  { id: "folded2", query: "?mute&folded", vps: ["pc"], shots: [
+    ...[0, 45, 90, 135, 180, 225, 270, 315].map((yaw) => ({ id: "y" + yaw, act: async (p) => {
+      await wait(p, () => window.__folded && document.getElementById("load")?.classList.contains("hidden"));
+      await p.evaluate((yaw) => window.__folded({ yaw, slice: true }), yaw); await tick(p, 4);
+    } })),
+    { id: "top", act: async (p) => { await p.evaluate(() => window.__folded({ yaw: 30, top: true, slice: true })); await tick(p, 4); } },
+  ] },
+  // Jefes Folded (rey, tarántula, cortadora, aspiradora, cortacercos) a 1/5, fila z = 9 del banco
+  { id: "folded2_jefes", query: "?mute&folded", vps: ["pc"], shots: [
+    ...[0, 45, 90, 135, 180, 225, 270, 315].map((yaw) => ({ id: "y" + yaw, act: async (p) => {
+      await wait(p, () => window.__folded && document.getElementById("load")?.classList.contains("hidden"));
+      await p.evaluate((yaw) => window.__folded({ yaw, slice: true, row: 6.4 }), yaw); await tick(p, 4);
+    } })),
+    { id: "top", act: async (p) => { await p.evaluate(() => window.__folded({ yaw: 30, top: true, slice: true, row: 6.4 })); await tick(p, 4); } },
   ] },
   { id: "match3_menu", query: "?mute", vps: ["pc"], shots: [
     { id: "entrada", act: async (p) => {

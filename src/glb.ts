@@ -1,6 +1,8 @@
 import * as B from "@babylonjs/core";
 import { DEF, type Kind } from "./enemies";
-import { flatten } from "./models";
+import { flatten, merge } from "./models";
+import { FOLDED_SLICE } from "./folded";
+import { PETS, PROC } from "./folded_slice";
 import { M, pbr, shadows } from "./render";
 
 // Bichos importados de GLB con esqueleto. La animación se hornea en una textura (VAT: una matriz por hueso y cuadro) y
@@ -23,7 +25,7 @@ import { M, pbr, shadows } from "./render";
 // elige cuál mostrar con glbPlay. El valor son los m/s de suelo a los que el ciclo walk y el run no patinan (la zancada del modelo).
 // atk/hit (opcional): el bicho dispara su propio ataque (enemies.ts) y la animación dura atk segundos; el golpe (escupida,
 // arremetida) sale en la fracción hit de ella. Sin atk ataca al tocar al auto (touchCd), como la hormiga.
-export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla en pantalla sin tocar DEF.size (colisión) */ visual?: number; eye?: string; atk?: number; hit?: number; clips?: [walk: number, run: number] }>> = {
+export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla en pantalla sin tocar DEF.size (colisión) */ visual?: number; eye?: string; atk?: number; hit?: number; clips?: [walk: number, run: number]; /** procedural Folded (PROC) */ proc?: boolean }>> = {
   hormiga: { file: "ant", scale: 2, visual: 1.24, eye: "#ff4a28" },
   escupidora: { file: "escupidora", scale: 1, visual: 1.22, eye: "#ffc040", atk: 0.83, hit: 0.65 }, // assets-src/escupidora
   escarabajo: { file: "escarabajo", scale: 1, visual: 1.22, eye: "#e8ff50", atk: 1, hit: 0.33 }, // assets-src/escarabajo
@@ -39,6 +41,9 @@ export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla 
   gato: { file: "gato", scale: 1.1, eye: "#a8ff3a", clips: [2.3, 15.4] }, // assets-src/gato (Eulalio)
 };
 
+// Folded (?folded2): estos bichos se arman en folded_slice.ts (PROC) y su caminata se hornea igual que la de un GLB (procBake);
+// el GLB viejo queda sin usar. Misma escala de nodo (visual) y misma colisión.
+if (FOLDED_SLICE) for (const k of [...Object.keys(PROC), ...Object.keys(PETS)] as Kind[]) if (GLB[k]) GLB[k]!.proc = true;
 const WALK = 10, ATTACK = 6; // cuadros horneados: walk 0..9, attack 10..15
 const CLIP_FPS = 24, LOOPS = ["idle", "walk", "run", "rage"];
 const clips = new Map<Kind, Record<string, { from: number; n: number; loop: boolean }>>();
@@ -62,8 +67,52 @@ export function loadGlbs(scene: B.Scene) {
   return Promise.race([all, late]);
 }
 
+/** Bicho procedural (PROC de folded_slice.ts) horneado como un GLB: un hueso por pieza móvil (peso 1), poses de caminata y ataque → VAT. */
+export function procBake(scene: B.Scene, kind: Kind) {
+  if (tpls.has(kind)) return tpls.get(kind)!;
+  const pet = PETS[kind], P = pet ?? PROC[kind]!, vis = GLB[kind]?.visual ?? 1, t0 = performance.now();
+  const parts = pet ? pet.build() : PROC[kind]!.build(vis);
+  for (const p of parts) {
+    const n = p.getTotalVertices(), b = (p.metadata as { bone?: number } | null)?.bone ?? 0, ix = new Float32Array(n * 4), w = new Float32Array(n * 4);
+    for (let i = 0; i < n; i++) { ix[i * 4] = b; w[i * 4] = 1; }
+    p.setVerticesData(B.VertexBuffer.MatricesIndicesKind, ix, false, 4); p.setVerticesData(B.VertexBuffer.MatricesWeightsKind, w, false, 4);
+  }
+  const mesh = merge(kind + "Fold", parts);
+  const sk = new B.Skeleton(kind + "Sk", kind + "Sk", scene);
+  for (let i = 0; i < P.bones; i++) new B.Bone("b" + i, sk, null, B.Matrix.Identity());
+  const per = (P.bones + 1) * 16, nf = pet ? Object.values(pet.clips).reduce((a, [n]) => a + n, 0) : WALK + ATTACK;
+  const data = new Float32Array(nf * per); // + la matriz identidad final que Babylon agrega al esqueleto
+  const put = (f: number, ms: B.Matrix[]) => { ms.forEach((m, b) => m.copyToArray(data, f * per + b * 16)); B.Matrix.IdentityReadOnly.copyToArray(data, f * per + P.bones * 16); };
+  if (pet) { // mascotas: un tramo por clip, mismos nombres y cuadros que las acciones de Blender (glbPlay)
+    const tab: Record<string, { from: number; n: number; loop: boolean }> = {};
+    let at = 0;
+    for (const [name, [n, loop]] of Object.entries(pet.clips)) { tab[name] = { from: at, n, loop }; for (let i = 0; i < n; i++) put(at++, pet.pose(name, i, n)); }
+    clips.set(kind, tab);
+  } else {
+    const pr = PROC[kind]!;
+    for (let i = 0; i < WALK; i++) put(i, pr.pose(vis, i / WALK, 0));
+    for (let i = 0; i < ATTACK; i++) put(WALK + i, pr.pose(vis, 0, i / (ATTACK - 1)));
+  }
+  mesh.skeleton = sk; mesh.numBoneInfluencers = 4;
+  finishVat(scene, kind, mesh, sk, data);
+  glbStats[kind] = { loadMs: 0, bakeMs: performance.now() - t0, vatBytes: data.byteLength, tris: mesh.getTotalIndices() / 3, bones: P.bones };
+  return mesh;
+}
+function finishVat(scene: B.Scene, kind: Kind, mesh: B.Mesh, sk: B.Skeleton, data: Float32Array) {
+  const vat = new B.BakedVertexAnimationManager(scene);
+  vat.texture = new B.VertexAnimationBaker(scene, sk).textureFromBakedVertexData(data);
+  mesh.bakedVertexAnimationManager = vat;
+  mesh.registerInstancedBuffer("bakedVertexAnimationSettingsInstanced", 4);
+  mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced = new B.Vector4(0, WALK - 1, 0, 0);
+  mesh.receiveShadows = true;
+  mesh.position.y = -500; // la fuente queda escondida, como las plantillas de models.ts
+  shadows.addShadowCaster(mesh);
+  tpls.set(kind, mesh);
+}
+
 async function load(scene: B.Scene, kind: Kind) {
   const o = GLB[kind]!, t0 = performance.now();
+  if (o.proc) { procBake(scene, kind); return; }
   await import("@babylonjs/loaders/glTF/2.0"); // el navegador lo baja una sola vez para todos los bichos
   const c = await B.LoadAssetContainerAsync(`models/${o.file}.glb`, scene); // relativa: el build usa base "./"
   c.addAllToScene();
@@ -133,15 +182,7 @@ async function load(scene: B.Scene, kind: Kind) {
   flatten(mesh); // colores de material a color de vértice: menos submallas = menos dibujos por pasada
   for (const n of c.transformNodes) if (!n.parent) n.dispose(); // __root__ y huesos ya no se dibujan ni se actualizan
   for (const m of c.materials) if (!scene.meshes.some((x) => x.material === m)) m.dispose();
-  const vat = new B.BakedVertexAnimationManager(scene);
-  vat.texture = new B.VertexAnimationBaker(scene, sk).textureFromBakedVertexData(data);
-  mesh.bakedVertexAnimationManager = vat;
-  mesh.registerInstancedBuffer("bakedVertexAnimationSettingsInstanced", 4);
-  mesh.instancedBuffers.bakedVertexAnimationSettingsInstanced = new B.Vector4(0, WALK - 1, 0, 0);
-  mesh.receiveShadows = true;
-  mesh.position.y = -500; // la fuente queda escondida, como las plantillas de models.ts
-  shadows.addShadowCaster(mesh);
-  tpls.set(kind, mesh);
+  finishVat(scene, kind, mesh, sk, data);
   glbStats[kind] = { loadMs: t1 - t0, bakeMs: performance.now() - t1, vatBytes: data.byteLength, tris: mesh.getTotalIndices() / 3, bones: sk.bones.length };
 }
 

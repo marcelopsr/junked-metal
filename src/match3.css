@@ -1,165 +1,170 @@
-/* Modo arcade match-3: HUD y paneles sobre el gabinete 3D */
+/* Modo arcade match-3: el HUD visible vive en el display del gabinete (3D); acá van los paneles, la pausa montada y la ayuda.
+   Tokens: los del kit (src/kit.css, --jm-*), mismos HEX que M3C en kit3d.ts. */
 #match3-ui {
+  --amarillo: var(--jm-amarillo); --rojo: var(--jm-rojo); --cian: var(--jm-cian); --verde: var(--jm-verde); --naranja: var(--jm-naranja); --amarillo-claro: var(--jm-amarillo2);
+  --fondo: var(--jm-fondo); --fondo2: var(--jm-fondo2); --panel: var(--jm-panel); --borde: var(--jm-borde); --texto2: var(--jm-texto2); --texto: var(--jm-texto); --error: #EF4444;
+  --titulo: var(--jm-titulo);
   position: fixed;
   inset: 0;
   z-index: 42;
   pointer-events: none;
-  font-family: VT323, monospace;
-  color: #b9d3a4;
+  font-family: var(--titulo);
+  font-weight: 500;
+  color: var(--texto);
   display: none;
 }
 #match3-ui.on { display: block; }
+
+/* HUD textual solo para lectores de pantalla (lo visible está dibujado en el display del gabinete) */
+#match3-ui .m3-hud {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+/* Panel de chapa: fondo oscuro, borde naranja gastado, tornillos en las esquinas */
 #match3-ui .m3-panel {
   pointer-events: auto;
   position: relative;
-  width: min(92vw, 420px);
-  background: #0b0d0a;
-  border: 2px solid #2c3a28;
-  box-shadow: 0 0 0 1px #141813 inset, 0 12px 40px rgba(0, 0, 0, 0.65);
-  padding: 12px 14px;
+  width: min(92vw, 400px);
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 10px 10px, #6b4a2a 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 10px) 10px, #6b4a2a 0 3px, transparent 4px),
+    radial-gradient(circle at 10px calc(100% - 10px), #6b4a2a 0 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #6b4a2a 0 3px, transparent 4px),
+    var(--fondo2);
+  border: 3px solid #b5651d;
+  outline: 2px solid var(--fondo);
+  box-shadow: inset 0 0 0 2px #3a2414, inset 0 0 24px rgba(0, 0, 0, 0.6), 0 14px 40px rgba(0, 0, 0, 0.7);
+  padding: 18px 20px 16px;
   text-align: center;
 }
-#match3-ui .m3-overlay .m3-panel {
-  position: absolute;
-  left: 50%;
-  bottom: 8%;
-  transform: translateX(-50%);
-}
+#match3-ui .m3-overlay .m3-panel { margin: auto; max-height: calc(100dvh - 32px); overflow-y: auto; }
+#match3-ui .m3-kicker { margin: 0; font-weight: 700; font-size: 14px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--texto2); }
 #match3-ui .m3-title {
-  font-family: Silkscreen, VT323, monospace;
-  font-size: 14px;
-  letter-spacing: 0.12em;
-  color: #e0a030;
-  margin: 0 0 6px;
+  font-family: var(--titulo);
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--amarillo);
+  margin: 2px 0 10px;
+  text-shadow: 0 2px 0 #5a2a00, 0 0 12px rgba(255, 145, 56, 0.35);
 }
-#match3-ui .m3-sub { font-size: 17px; line-height: 1.35; color: #8ca882; margin: 6px 0 10px; }
-#match3-ui .m3-meta, #match3-ui .m3-instr { font-size: 17px; line-height: 1.35; margin: 6px 0; color: #8ca882; }
-#match3-ui .m3-instr { color: #b9d3a4; }
-#match3-ui .m3-hud {
-  pointer-events: none;
-  position: absolute;
-  top: max(6%, env(safe-area-inset-top));
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(96vw, 520px);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 17px;
-  text-shadow: 0 0 8px rgba(141, 255, 106, 0.25);
-}
-#match3-ui .m3-moves {
-  background: rgba(11, 13, 10, 0.82);
-  border: 1px solid #2c3a28;
-  padding: 6px 10px;
-  flex: 0 0 auto;
-}
-#match3-ui .m3-moves.low { border-color: #c45c2a; color: #f0a060; }
-#match3-ui .m3-moves b { color: #8dff6a; font-size: 20px; }
-#match3-ui .m3-moves.low b { color: #f0a060; }
-#match3-ui .m3-goals-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  flex: 1 1 200px;
-  justify-content: flex-end;
-}
+#match3-ui .m3-title.ok { color: var(--verde); text-shadow: 0 2px 0 #08391b; }
+#match3-ui .m3-title.bad { color: var(--rojo); text-shadow: 0 2px 0 #4a0d08; }
+#match3-ui .m3-sub, #match3-ui .m3-meta, #match3-ui .m3-instr { font-size: 17px; line-height: 1.3; margin: 6px 0; color: var(--texto2); }
+#match3-ui .m3-instr { color: var(--texto); }
+
+/* Objetivos (panel de entrada/resultados): ícono con la forma de la pieza + barra + contador */
 #match3-ui .m3-goal {
   display: grid;
   grid-template-columns: auto 1fr auto;
   grid-template-rows: auto auto;
-  gap: 2px 6px;
+  gap: 2px 10px;
   align-items: center;
-  background: rgba(11, 13, 10, 0.82);
-  border: 1px solid #2c3a28;
-  padding: 4px 6px;
-  min-width: 0;
-  font-size: 14px;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  padding: 6px 10px;
+  font-size: 18px;
+  font-weight: 700;
 }
-#match3-ui .m3-goal.done { border-color: #7fbf5a; opacity: 0.85; }
-#match3-ui .m3-gicon {
-  grid-row: 1 / span 2;
-  width: 22px;
-  height: 22px;
-  border: 2px solid #0b0d0a;
-  box-sizing: border-box;
+#match3-ui .m3-goal.done { border-color: var(--verde); }
+#match3-ui .m3-gicon { grid-row: 1 / span 2; width: 26px; height: 26px; box-sizing: border-box; }
+#match3-ui .m3-shape-0 .m3-gicon { background: var(--amarillo); clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0 50%); box-shadow: inset 0 0 0 8px var(--amarillo), inset 0 0 0 30px #2a1c05; }
+#match3-ui .m3-shape-1 .m3-gicon { background: linear-gradient(90deg, #ff7a70 50%, var(--rojo) 50%); clip-path: polygon(50% 0, 84% 50%, 50% 100%, 16% 50%); }
+#match3-ui .m3-gtext { text-align: left; color: var(--texto); }
+#match3-ui .m3-gbar { grid-column: 2; height: 6px; background: var(--fondo2); border: 1px solid var(--borde); }
+#match3-ui .m3-gbar i { display: block; height: 100%; background: var(--amarillo); }
+#match3-ui .m3-goal.done .m3-gbar i { background: var(--verde); }
+#match3-ui .m3-gnum { grid-column: 3; grid-row: 1 / span 2; color: var(--texto); font-size: 20px; }
+#match3-ui .m3-goals-vis { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+
+/* Botones de chapa pintada: verde = jugar, amarillo = secundario, rojo = salir/abandonar */
+#match3-ui .m3-btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 12px; }
+#match3-ui button {
+  font-family: var(--titulo);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  min-height: 46px;
+  min-width: 46px;
+  padding: 8px 18px;
+  cursor: pointer;
+  color: var(--fondo);
+  background: linear-gradient(#ffd166, var(--amarillo) 55%, #c98a00);
+  border: 2px solid var(--fondo);
+  border-radius: 3px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.3), 0 3px 0 #000;
 }
-#match3-ui .m3-shape-0 .m3-gicon { background: #c9a227; clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); }
-#match3-ui .m3-shape-1 .m3-gicon { background: #8a9a82; border-radius: 2px; box-shadow: inset 0 -4px 0 #5f7355; }
-#match3-ui .m3-shape-2 .m3-gicon { background: linear-gradient(#7fbf5a, #4a6a38); border-radius: 1px; }
-#match3-ui .m3-shape-3 .m3-gicon { background: repeating-linear-gradient(90deg, #6fb3c4 0 50%, #141813 50% 100%); }
-#match3-ui .m3-shape-4 .m3-gicon { background: #e0a030; clip-path: polygon(50% 0%, 65% 50%, 50% 100%, 35% 50%); }
-#match3-ui .m3-gtext { color: #8dff6a; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#match3-ui .m3-gbar { grid-column: 2; height: 4px; background: #141813; border: 1px solid #2c3a28; }
-#match3-ui .m3-gbar i { display: block; height: 100%; background: #7fbf5a; }
-#match3-ui .m3-gnum { grid-column: 3; color: #b9d3a4; font-size: 13px; }
-#match3-ui .m3-goals-vis { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; text-align: left; }
-#match3-ui .m3-goals-vis .m3-goal { width: 100%; box-sizing: border-box; }
+#match3-ui button.primary { background: linear-gradient(#5ee08a, var(--verde) 55%, #15803d); }
+#match3-ui #m3-quit, #match3-ui #m3-confirm-yes, #match3-ui #m3-exit { background: linear-gradient(#ff7a70, var(--rojo) 55%, #b91c1c); color: var(--texto); text-shadow: 0 1px 0 #000; }
+#match3-ui button:hover:not(:disabled) { filter: brightness(1.08); }
+#match3-ui button:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.3), 0 1px 0 #000; }
+#match3-ui button:focus-visible { outline: 3px solid var(--cian); outline-offset: 3px; }
+
+/* Pausa montada en el bisel (posición calculada desde el 3D) */
+#match3-ui .m3-pausebtn {
+  pointer-events: auto;
+  position: absolute;
+  width: 52px; height: 52px; min-width: 0; padding: 0;
+  display: flex; gap: 6px; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #4b5563, #1f2937 60%, #0b0f14);
+  border: 3px solid #9CA3AF;
+  box-shadow: 0 0 0 3px #0b0f14, 0 4px 8px rgba(0, 0, 0, 0.6);
+}
+#match3-ui .m3-pausebtn i { display: block; width: 7px; height: 20px; background: var(--amarillo); border-radius: 1px; }
+#match3-ui .m3-pausebtn.hidden { display: none; }
+
 #match3-ui .m3-hint {
   pointer-events: none;
   position: absolute;
-  bottom: max(2%, env(safe-area-inset-bottom));
+  bottom: max(10px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
-  font-size: 15px;
-  color: #5f7355;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--texto);
+  background: rgba(11, 15, 20, 0.86);
+  border: 1px solid var(--borde);
+  padding: 6px 14px;
   max-width: 92vw;
   text-align: center;
 }
 #match3-ui .m3-hint.hidden { display: none; }
-#match3-ui.m3-playing .m3-hint { opacity: 0.85; }
-#match3-ui .m3-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
-#match3-ui button {
-  font-family: Silkscreen, VT323, monospace;
-  font-size: 13px;
-  min-height: 44px;
-  min-width: 44px;
-  background: #141813;
-  color: #b9d3a4;
-  border: 2px solid #2c3a28;
-  padding: 8px 14px;
-  cursor: pointer;
-}
-#match3-ui button.primary { border-color: #7fbf5a; color: #8dff6a; }
-#match3-ui button:hover:not(:disabled) { border-color: #5f7355; background: #1a1f18; }
-#match3-ui button:focus-visible { outline: 2px solid #6fb3c4; outline-offset: 2px; }
-#match3-ui .m3-overlay {
-  pointer-events: auto;
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-#match3-ui .m3-overlay.hidden { display: none; }
+
+#match3-ui .m3-overlay,
 #match3-ui .m3-pause,
 #match3-ui .m3-confirm {
   pointer-events: auto;
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.72);
-  display: none;
+  background: rgba(5, 7, 10, 0.62);
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 12px;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   box-sizing: border-box;
 }
-#match3-ui .m3-pause.on,
-#match3-ui .m3-confirm:not(.hidden) { display: flex; }
+#match3-ui .m3-overlay.hidden { display: none; }
+#match3-ui .m3-pause, #match3-ui .m3-confirm { display: none; background: rgba(5, 7, 10, 0.78); }
+#match3-ui .m3-pause.on, #match3-ui .m3-confirm:not(.hidden) { display: flex; }
+#match3-ui .m3-pause-help { max-width: min(86vw, 340px); text-align: center; }
+#match3-ui .m3-pause .m3-btns { flex-direction: column; width: min(80vw, 280px); }
 #match3-ui .m3-confirm-box { position: static; transform: none; }
-body.calm #match3-ui .m3-hint { opacity: 0.6; }
-@media (max-width: 520px) {
-  #match3-ui .m3-hud { top: max(3%, env(safe-area-inset-top)); font-size: 15px; }
-  #match3-ui .m3-overlay .m3-panel { bottom: 5%; }
-  #match3-ui .m3-goals-row { justify-content: center; }
-  #match3-ui .m3-goal .m3-gtext { display: none; }
+
+@media (max-width: 600px) {
+  #match3-ui .m3-hint { font-size: 14px; width: 90vw; box-sizing: border-box; }
+  #match3-ui .m3-title { font-size: 30px; }
 }
 @media (orientation: landscape) and (max-height: 520px) {
-  #match3-ui .m3-hud { top: 2%; width: min(98vw, 640px); }
   #match3-ui .m3-hint { display: none; }
+  #match3-ui .m3-panel { padding: 10px 16px; }
+  #match3-ui .m3-title { font-size: 26px; margin-bottom: 4px; }
+  #match3-ui .m3-goals-vis { flex-direction: row; }
+  #match3-ui .m3-instr { display: none; }
 }
+/* Mientras corre el arcade no se muestra ningún control táctil del auto (la pausa propia está montada en el bisel) */
+html body.match3-play #touch.match3-only, html body.match3-play #touch.match3-only #tPause { display: none !important; }

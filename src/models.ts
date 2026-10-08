@@ -3,6 +3,8 @@ import earcut from "earcut";
 import { precio } from "./balance";
 import { carGlbHull, carGlbTpl } from "./carGlb";
 import { M, pbr, shadows } from "./render";
+import { FOLDED_SLICE } from "./folded";
+import { carHull, foldLeg, foldWheel, mothWing } from "./folded_slice";
 
 // Modelos procedurales. Las piezas se fusionan en una sola malla (con multi-material)
 // y los enemigos se dibujan como instancias: cientos en pantalla con pocos draw calls.
@@ -130,6 +132,7 @@ export function template(name: string, build: () => B.Mesh[], scale = 1) {
 const SPOKES = ["#ef4444", "#f59e0b", "#facc15", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#14b8a6"];
 export function wheel(d: number, w: number, rim: string, style = "") {
   const around = (n: number, f: (a: number) => B.Mesh) => Array.from({ length: n }, (_, k) => f((k * Math.PI * 2) / n));
+  if (style === "fold") return merge("wheel", foldWheel(d, w, rim)); // vertical slice Folded (?folded2)
   const lisa = style === "lisa", W = lisa ? w * 1.25 : w;
   return merge("wheel", [
     cyl(d, d, W, M.rubber(), [0, 0, 0], [0, 0, Math.PI / 2], 16),
@@ -252,9 +255,11 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   let stock: B.Mesh[] = []; // alerón de serie (se reemplaza si se elige otro)
   const paint = pbr("paint" + kind + o.paint, { color: o.paint ?? A.paint, rough: 0.4, coat: 0.8 });
   const trimHex = o.trim ?? "#c9ccd1";
-  const useGlb = !!carGlbTpl(kind);
+  const fb = FOLDED_SLICE; // Folded (?folded2): carrocerías de chapa (carHull), ruedas foldWheel en las anclas de siempre
+  const useGlb = !fb && !!carGlbTpl(kind);
   const glbHull = useGlb ? carGlbHull(kind, o.paint ?? A.paint, trimHex) : null;
   if (glbHull) parts = [glbHull];
+  else if (fb) parts = carHull(kind, paint, LAMPS[o.lamp ?? "calido"]?.[0] ?? LAMPS.calido[0]); // ruedas y alerón de serie: bloque de abajo
   else if (kind === "buggy") {
     parts = [
       box(1.05, 0.1, 2.1, M.matte("#2b2d31"), [0, 0.02, 0]),
@@ -365,7 +370,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   }
 
   // Ruedas (mismas anclas con hull GLB o procedural)
-  if (useGlb && ws.length === 0) {
+  if ((useGlb || fb) && ws.length === 0) {
     if (kind === "buggy") for (const [x, z] of [[-0.72, 0.72], [0.72, 0.72], [-0.72, -0.72], [0.72, -0.72]]) ws.push({ pos: [x, 0, z], d: 0.8, w: 0.36 });
     else if (kind === "monster") for (const [x, z] of [[-0.8, 0.72], [0.8, 0.72], [-0.8, -0.72], [0.8, -0.72]]) ws.push({ pos: [x, -0.05, z], d: 1.15, w: 0.5 });
     else if (kind === "formula") for (const [x, z] of [[-0.62, 0.9], [0.62, 0.9], [-0.66, -0.85], [0.66, -0.85]]) ws.push({ pos: [x, 0, z], d: z < 0 ? 0.72 : 0.6, w: z < 0 ? 0.42 : 0.3 });
@@ -391,7 +396,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   }
 
   // Franjas de pintura / molduras (lectura en garaje y a distancia; trim del taller si hay)
-  if (!useGlb) {
+  if (!useGlb && !fb) {
     const [bw, bh, bl] = CARS_SIZE[kind];
     const trimM = M.plastic(o.trim ?? "#c9ccd1");
     const dark = M.matte("#14171c");
@@ -425,7 +430,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   }
 
   // Detalle de juguete realista (todos los autos): aros cromados en los faros, luces traseras, espejos, parrilla y escapes
-  if (!useGlb) {
+  if (!useGlb && !fb) {
     const [bw, bh, bl] = CARS_SIZE[kind], chrome = M.metal("#e6e9ee"), tail = M.glow("#ff3a2a");
     for (const [x, y, z, d] of A.lamps) for (const s of x ? [1, -1] : [1]) parts.push(tor(d * 1.35, d * 0.22, chrome, [x * s, y, z - d * 0.1], [Math.PI / 2, 0, 0], 12));
     if (kind !== "axel" && kind !== "tanque") {
@@ -445,7 +450,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
 
   // Ópticas del faro (color elegido) + luz del faro en la escena
   const lamp = LAMPS[o.lamp ?? "calido"] ?? LAMPS.calido;
-  if (!useGlb) for (const [x, y, z, d] of A.lamps) for (const s of x ? [1, -1] : [1]) parts.push(sph(d, M.glow(lamp[0]), [x * s, y, z]));
+  if (!useGlb && !fb) for (const [x, y, z, d] of A.lamps) for (const s of x ? [1, -1] : [1]) parts.push(sph(d, M.glow(lamp[0]), [x * s, y, z]));
   const spot = scene.getLightByName("lamp");
   if (spot) spot.diffuse = B.Color3.FromHexString(lamp[1]);
 
@@ -540,7 +545,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   if (bodySh) bodySh.parent = body;
   cast.push(bodySh ?? body);
   const wheels = ws.map((w) => {
-    const { inst: m, cast: c } = wheelInst(w.d, w.w, rim, o.tires === "serie" ? "" : o.tires === "lisas" ? "lisa" : o.tires ?? "");
+    const { inst: m, cast: c } = wheelInst(w.d, w.w, rim, fb && (!o.tires || o.tires === "serie") && kind !== "tanque" ? "fold" : o.tires === "serie" ? "" : o.tires === "lisas" ? "lisa" : o.tires ?? "");
     m.position = v(w.pos);
     m.parent = body;
     cast.push(c);
@@ -707,12 +712,13 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         sph(0.54, fur, [0, 0, -0.38], [0.85, 0.78, 1.55]),
         sph(0.46, M.matte("#a8966c"), [0, 0.03, 0.1]),
         sph(0.34, fur, [0, 0.03, 0.4]),
-        cyl(0.025, 0.07, 0.62, fur, [0.16, 0.24, 0.64], [0.9, 0, -0.5], 4),
-        cyl(0.025, 0.07, 0.62, fur, [-0.16, 0.24, 0.64], [0.9, 0, 0.5], 4),
-        sph(0.2, eye, [0.11, 0.06, 0.5]),
-        sph(0.2, eye, [-0.11, 0.06, 0.5]),
-        sph(0.08, eyeCore, [0.11, 0.06, 0.52]),
-        sph(0.08, eyeCore, [-0.11, 0.06, 0.52]),
+        ...[-1, 1].flatMap((sx) => [
+          tube([[sx * 0.08, 0.12, 0.44], [sx * 0.16, 0.25, 0.52], [sx * 0.25, 0.38, 0.55]], 0.02, fur),
+          sph(0.06, fur, [sx * 0.14, 0.21, 0.48], [1.3, 0.6, 0.8]),
+          sph(0.06, fur, [sx * 0.22, 0.33, 0.54], [1.3, 0.6, 0.8]),
+          sph(0.2, eye, [sx * 0.11, 0.06, 0.5]),
+          sph(0.08, eyeCore, [sx * 0.11, 0.06, 0.52]),
+        ]),
       ];
     }
     if (kind === "tarantula") {
@@ -802,27 +808,53 @@ function articulatedLegMeshes(L: (typeof LEGS)[string], hair: boolean) {
 }
 export function legTemplate(kind: string) {
   const L = LEGS[kind];
-  return template("leg_" + kind, () => articulatedLegMeshes(L, kind === "tarantula"), L.scale);
+  return template("leg_" + kind, () => FOLDED_SLICE ? foldLeg(L) : articulatedLegMeshes(L, kind === "tarantula"), L.scale);
 }
 
-// Ala de polilla (lado derecho, bisagra en el origen): se instancia de a dos y aletea en Enemy.animate
-export const wingTemplate = () => template("wing_polilla", () => {
+// Ala de polilla: bisagra que nace en el tórax (x = 0), ala anterior y posterior con venas y ocelos
+export const wingTemplate = (side: 1 | -1 = 1) => template("wing_polilla_" + (side > 0 ? "R" : "L"), () => {
+  if (FOLDED_SLICE) return mothWing(side); // vertical slice Folded (?folded2)
   const wing = pbr("mothWing", { color: "#d4c090", rough: 0.86, alpha: 0.92 });
   const wingH = pbr("mothWingH", { color: "#a89068", rough: 0.88, alpha: 0.9 });
   const spot = pbr("mothWingSpot", { color: "#e8d8b0", rough: 0.7, alpha: 0.85 });
   const vein = M.matte("#5a4830");
   const dark = M.matte("#2a1810");
+  const joint = M.matte("#8a7550");
+  const s = side;
   return [
-    sph(1.45, wing, [0.88, 0.02, -0.08], [1.45, 0.04, 1.15], 6),
-    sph(0.72, wingH, [0.62, -0.02, 0.32], [1.25, 0.05, 0.95], 5),
-    sph(0.38, wingH, [1.02, -0.01, 0.08], [1.2, 0.04, 0.85], 5),
-    sph(0.34, M.matte("#3a2818"), [0.95, 0.05, -0.12], [1.15, 0.1, 1.05], 4),
-    ...[[0.55, 0.08, 0.15], [1.05, -0.02, -0.2], [0.35, 0.12, 0.45], [0.72, 0.1, 0.28], [1.18, 0, 0.02]].map((p) => sph(0.22, dark, p as V3, [1.2, 0.08, 1.1], 4)),
-    sph(0.18, spot, [0.78, 0.04, 0.05], [1.1, 0.06, 0.9], 4),
-    sph(0.14, spot, [0.48, 0.06, 0.22], [1.05, 0.05, 0.85], 4),
-    tube([[0.42, 0.04, 0.05], [0.95, 0.02, -0.05], [1.15, -0.01, -0.18]], 0.012, vein),
-    tube([[0.38, 0.02, 0.22], [0.72, 0, 0.08], [1.02, -0.02, -0.08]], 0.01, vein),
-    tube([[0.52, 0.06, -0.05], [0.88, 0.03, 0.12], [0.55, 0.05, 0.38]], 0.009, vein),
+    // Raíz y bisagra articulada: conecta directamente al costado del tórax (x = 0)
+    sph(0.12, joint, [s * 0.04, 0, 0], [1.2, 0.8, 0.9], 4),
+    tube([[0, 0, 0], [s * 0.16, 0.02, 0], [s * 0.38, 0.03, -0.02]], 0.03, vein),
+    // Ala anterior (forewing): pala aerodinámica ancha
+    sph(1.2, wing, [s * 0.72, 0.02, -0.04], [1.35, 0.04, 1.05], 6),
+    sph(0.68, wingH, [s * 0.52, -0.01, 0.18], [1.18, 0.05, 0.88], 5),
+    sph(0.38, wingH, [s * 0.88, 0.0, 0.04], [1.15, 0.04, 0.8], 5),
+    // Ala posterior (hindwing): más corta y redondeada, debajo hacia atrás
+    sph(0.85, wing, [s * 0.48, -0.02, -0.24], [1.1, 0.04, 0.95], 5),
+    sph(0.42, wingH, [s * 0.68, -0.02, -0.22], [1.05, 0.04, 0.85], 5),
+    // Ocelo y marcas oscuras
+    sph(0.28, dark, [s * 0.78, 0.03, -0.06], [1.1, 0.08, 1.0], 4),
+    sph(0.18, spot, [s * 0.78, 0.04, -0.06], [1.05, 0.06, 0.9], 4),
+    ...[[s * 0.46, 0.05, 0.08], [s * 0.88, -0.01, -0.16], [s * 0.32, 0.08, 0.28], [s * 0.62, 0.06, 0.22]].map(
+      (p) => sph(0.18, dark, p as V3, [1.15, 0.07, 1.05], 4)
+    ),
+    // Venas estructurales que nacen del tronco
+    tube([[s * 0.16, 0.02, 0], [s * 0.65, 0.03, 0.05], [s * 1.05, 0.0, -0.08]], 0.012, vein),
+    tube([[s * 0.16, 0.02, 0], [s * 0.52, 0.01, 0.18], [s * 0.82, -0.01, 0.14]], 0.01, vein),
+    tube([[s * 0.16, 0.02, 0], [s * 0.45, -0.01, -0.22], [s * 0.75, -0.02, -0.28]], 0.01, vein),
+  ];
+}, FOLDED_SLICE ? 1.3 : 1); // slice: alas más grandes, se leen desde la cámara de partida
+
+// Llave de cuerda para el robot a cuerda (gira en vivo en la espalda al caminar o idle)
+export const windKeyTemplate = () => template("wind_key", () => {
+  const chrome = M.metal("#d4a017");
+  const joint = M.metal("#b8c0cc");
+  return [
+    cyl(0.06, 0.06, 0.16, joint, [0, 0, 0], [Math.PI / 2, 0, 0], 6),
+    tor(0.24, 0.045, chrome, [0, 0, -0.08], [Math.PI / 2, 0, 0], 12),
+    ...[0, Math.PI / 2, Math.PI, Math.PI * 1.5].map((a) =>
+      box(0.06, 0.32, 0.05, chrome, [Math.sin(a) * 0.22, 0, -0.08 - Math.cos(a) * 0.22], [0, a, 0])
+    ),
   ];
 });
 // Telegráfico de ataque enemigo en el piso (rojo = amenaza): aro + disco tenue, radio 1, se escala por instancia

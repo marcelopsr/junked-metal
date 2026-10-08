@@ -334,10 +334,16 @@ export function pbr(key: string, o: MatOpts) {
   if (o.emissive) m.emissiveColor = B.Color3.FromHexString(o.emissive);
   if (o.alpha !== undefined) m.alpha = o.alpha;
   if (o.coat) { m.clearCoat.isEnabled = true; m.clearCoat.intensity = o.coat; m.clearCoat.roughness = 0.08; } // barniz de plástico: reflejo suave del cielo
+  snapMat(m);
+  mats.set(key, m);
+  return m;
+}
+
+/** Mismo acabado que pbr() para materiales armados fuera (Folded 2.5D, folded.ts): vértices pixelados + filtrado del cielo. */
+export function snapMat(m: B.PBRMaterial) {
   new SnapPlugin(m);
   m.realTimeFiltering = true;
   m.realTimeFilteringQuality = B.Constants.TEXTURE_FILTERING_QUALITY_LOW;
-  mats.set(key, m);
   return m;
 }
 

@@ -75,8 +75,8 @@ export class Car {
     this.model = carModel(kind, opts);
     this.paintBase = this.model.paint.albedoColor.clone();
     this.model.body.parent = this.vis;
-    const r = Math.max(...this.model.wheels.map((x) => x.r));
-    this.model.body.position.y = r - h / 2;
+    const groundY = Math.min(...this.model.wheels.map((x) => x.m.position.y - x.r));
+    this.model.body.position.y = -groundY - h / 2;
     for (const c of this.model.cast) shadows.addShadowCaster(c);
 
     this.agg = new B.PhysicsAggregate(this.root, B.PhysicsShapeType.BOX,

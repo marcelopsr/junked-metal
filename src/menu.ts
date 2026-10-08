@@ -8,7 +8,7 @@ import { DEF, type Kind } from "./enemies";
 import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { ARSENAL, PILOTS, type PilotId } from "./pilots";
-import { icon } from "./icons";
+import { icon, UI_BTN_ICON, uiIcon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
 import { engineTest, initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
@@ -797,7 +797,7 @@ function renderConfig() {
     if (r[1] === "prof") { const p = save.profiles[r[2]], a = `psave:${r[2]}`;
       return `<div class="row multi prof"><input type="text" data-pname="${r[2]}" maxlength="20" value="${esc(p?.name ?? r[0])}" aria-label="Nombre del perfil ${r[2] + 1}"><span class="lb"><small>${p ? "Guardado" : "Vacío"}</small></span>`
         + `<button data-act="${a}">${armed === a ? "¿Sobrescribir?" : "Guardar"}</button><button data-act="pload:${r[2]}" ${p ? "" : "disabled"}>Usar</button></div>`; }
-    if (r[1] === "tog") return `<button class="row" data-tog="${r[2]}"><span class="lb">${r[0]}${d(r[2])}</span><b>${val(r[2]) ? "SÍ" : "NO"}</b></button>`;
+    if (r[1] === "tog") return `<button class="row" data-tog="${r[2]}"><span class="lb">${r[0]}${d(r[2])}</span><b class="jm-sw${val(r[2]) ? " on" : ""}">${val(r[2]) ? "SÍ" : "NO"}</b></button>`;
     if (r[1] === "sel") return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><select data-set="${r[2]}">${choices(r[2], r[3]).map(([v, n, no]) => `<option value="${v}" ${String(val(r[2])) === v ? "selected" : ""} ${no ? "disabled" : ""}>${n}</option>`).join("")}</select></label>`;
     const v = val(r[2]) as number;
     return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><input type="range" data-set="${r[2]}" data-u="${r[6]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${v}"><output>${show2(v, r[6])}</output></label>`;
@@ -1100,6 +1100,12 @@ function tedit(on: boolean) {
 // ---------- Arranque ----------
 export function initMenu(a: Api) {
   api = a;
+  // Íconos de la familia de interfaz en los botones fijos (solo presentación: no cambia texto ni acción)
+  for (const b of document.querySelectorAll<HTMLButtonElement>("#fe button[data-go], #fe button[data-act]")) {
+    const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k];
+    if (id && (!b.classList.contains("primary") || k === "play" || k === "resume")) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
+  }
+  $("tPause").innerHTML = uiIcon("pausa", 26);
   applySettings();
   ctlTexts();
   $("teReset").addEventListener("click", () => { save.tlay = { v: {}, h: {} }; persist(); applySettings(); editTouch(true, {}, save.touch, (l) => { save.tlay[orient()] = l; persist(); }); }); // restablece las dos orientaciones
