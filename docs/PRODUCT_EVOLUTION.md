@@ -178,39 +178,47 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Subagente 4 · Gabinete Junket Crush: Cabezal del Mapa (`src/match3.ts`):** `paintDisplay()` en modo mapa dibuja en el cabezal superior digital el nivel seleccionado en 7 segmentos (`NIVEL XX` / `JEFE · NV`), título en mayúsculas, movimientos permitidos, récord alcanzado y sus 3 estrellas con `drawStar`.
 - **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (538 ms), `npm run shots -- --only taller,partida,carrera,match3` (55 capturas verificadas en PC y celular) y `npx graphify update .` (3065 nodos, 7486 aristas).
 
+### Ciclo #17 (2026-10-09) — Insignia `COBRADO` y Rango en Chatarroteca, Rosa Cardinal y Pulso de Cofre en Radar, `LÍDER` de Copa en Podio y `JEFE X%` en Junket Crush
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Chatarroteca (`src/menu.ts`, `src/menu.css`):** Etiqueta `<b class="ach-ok"> · COBRADO</b>` en logros completados y rango honorífico de bajas (`Aprendiz de Patio`, `Cazador de Plagas`, `Chatarrero Veterano`, `Leyenda del Patio`) en `statsHtml()`.
+  - **Subagente 2 · HUD de Supervivencia: Radar (`src/ui.ts`, `src/hud.css`):** Puntos cardinales (`N`, `E`, `S`, `O`) orientados según `rCar.up` en el perímetro interior de `drawRadar()` y borde dorado `.has-chest` en `#radar` cuando hay un cofre activo.
+  - **Subagente 3 · Carrera: Copa y Podio (`src/kart.ts`, `src/race.css`):** Insignia `<b class="cup-lead">LÍDER</b>` junto al puntaje acumulado del puntero en `#rres` y título `${TRACKS[trackNo].name} · COPA (${raceNo}/3)`.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`):** Cápsula `JEFE ${hpPct}% · NV ${lvIdx + 1}/${LEVELS.length}` en rojo `M3C.error` en el cabezal superior durante niveles de jefe (`st.lv.boss`).
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (420 ms), `npm run shots -- --only bestiario,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3068 nodos, 7497 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #17
+## 4. Backlog Vivo de Oportunidades — Ciclo #18
 
-### A. Área 1 · Chatarroteca: Estado de Cobro en Logros y Rango de Bajas en Estadísticas (`src/menu.ts`, `src/menu.css`)
-1. **Insignia `Cobrado` en Logros Completados y Rango Honorífico en Estadísticas de Bajas:**
-   - **Qué es:** En `renderBestiary()` (`btab === "logros"`), marcar en verde `<span class="ach-ok">Cobrado</span>` en `<div class="price">` cuando el logro ya está desbloqueado (`ok`), y en `btab === "stats"` anteponer el rango honorífico del piloto según bajas acumuladas (ej. `Chatarrero Novato / Veterano / Leyenda`) en la tarjeta de `Bajas por tipo`.
-   - **Qué problema resuelve:** En la Chatarroteca, los logros completados siguen mostrando el premio como si estuviera pendiente de cobro, y en Estadísticas la cifra de bajas carece de título de progresión.
-   - **Valor:** Mayor claridad de recompensas ya reclamadas y sentido de progresión global. Complejidad: Baja.
+### A. Área 1 · Ficha 3D del Bestiario (`#scr-beast`): Silueta e Insignia de Registro en el Encabezado (`src/menu.ts`, `src/menu.css`)
+1. **Silueta `beastIcon` e Insignia `REGISTRADO · X BAJAS` / `SIN REGISTROS` en `.bhead` (`#scr-beast`):**
+   - **Qué es:** En `renderBeast()`, mostrar junto a `<b>${d.name}</b>` en `.bname` la silueta SVG `beastIcon(k, 24)` y una insignia de estado en `<small>` indicando si el bicho ya está fichado (`REGISTRADO · X bajas` en verde o `SIN REGISTROS` en gris tenue).
+   - **Qué problema resuelve:** Al abrir el visor 3D de un bicho (`#scr-beast`), el encabezado superior solo dice `Plaga · 1 / 13` sin mostrar de inmediato cuántas bajas se llevan ni su silueta icónica.
+   - **Valor:** Encabezado técnico de ficha mucho más informativo al recorrer las 13 criaturas con `Q/E` o cruceta. Complejidad: Baja.
 
-### B. Área 2 · HUD de Supervivencia: Marcas Cardinales en el Radar y Resplandor de Cofre Activo (`src/ui.ts`, `src/hud.css`)
-2. **Puntos Cardinales (`N`, `S`, `E`, `O`) Orientados en el Radar y Pulso Dorado al Detectar Cofre en Campo:**
-   - **Qué es:** En `drawRadar()`, dibujar 4 marcas discretas de orientación (`N`, `S`, `E`, `O`) en el perímetro del radar según la rotación de la vista (`rCar.up`), y alternar una clase `.has-chest` en `#radarBox` que emite un pulso dorado suave cuando hay al menos un cofre sin custodia en el patio.
-   - **Qué problema resuelve:** El radar circular no ofrece referencia cardinal para saber hacia qué lado del patio se navega, y los cofres sin custodia pueden pasar desapercibidos en el borde del radar en medio de enjambres intensos.
-   - **Valor:** Navegación espacial certera y alerta periférica de botines clave. Complejidad: Baja.
+### B. Área 2 · HUD de Supervivencia: Pips Dorados en Nivel Máximo (`.max`) en `#slots` (`src/ui.ts`, `src/hud.css`)
+2. **Distinción Cromática `.max` para Armas y Pasivas en Nivel 5 dentro de `#slots`:**
+   - **Qué es:** En `hudSlots(weapons, passives)`, añadir la clase `.max` a las ranuras de armas (`!w.evolved && w.lv >= 5`) y pasivas (`p.lv >= 5`) que ya alcanzaron el nivel máximo 5, iluminando sus 5 pips `.pips i.on` en dorado `#ffd24a`.
+   - **Qué problema resuelve:** Hoy en `#slots` los pips de un arma o pasiva en nivel 5 lucen del mismo cian que en nivel 1–4, dificultando distinguir de un vistazo qué piezas ya están al tope y no volverán a salir en cartas.
+   - **Valor:** Lectura periférica instantánea del estado de madurez de la build. Complejidad: Baja.
 
-### C. Área 3 · Carrera: Resaltado del Líder de Copa en la Tabla y Barra de Ronda (`src/kart.ts`, `src/race.css`)
-3. **Insignia de Líder de Copa (`.cup-lead`) en `#rres` y Barra de Progreso de la Copa:**
-   - **Qué es:** En `showResults()` cuando `raceCfg.cup` está activo, añadir una pastilla dorada `.cup-lead` al corredor que va primero en la tabla general acumulada de la copa (`cup[r.id]`), y en el título mostrar `COPA: CARRERA X/3` con una barra o pip de ronda de 3 carreras.
-   - **Qué problema resuelve:** Durante la copa de 3 carreras, la tabla tras la carrera 1 y 2 no destaca claramente quién va en la punta del campeonato ni qué porcentaje de la copa se completó.
-   - **Valor:** Mayor emoción competitiva y claridad del estado del torneo de karts. Complejidad: Baja.
+### C. Área 3 · Carrera: Línea de Meta y Rumbo del Jugador en el Mini-mapa `#rmap` (`src/kart.ts`)
+3. **Marca de Línea de Meta (`trk.P[0]`) y Flecha Direccional del Jugador en el Mini-mapa `#rmap`:**
+   - **Qué es:** En `hud()` (`src/kart.ts`), dibujar sobre `#rmap` en modo Carrera una marca transversal blanca/dorada en la línea de largada/meta (`trk.P[0]`), y representar al jugador humano (`r.human >= 0`) con un indicador con borde oscuro y punta direccional hacia su vector de avance (`fwdOf(r)`).
+   - **Qué problema resuelve:** En el mini-mapa circular `#rmap` todos los corredores son puntos redondos sin orientación y no se ve dónde está ubicada la línea de meta del circuito.
+   - **Valor:** Lectura clara de cuánto falta para cerrar la vuelta y hacia dónde apunta el auto propio. Complejidad: Baja.
 
-### D. Área 4 · Gabinete Junket Crush: Barra de Blindaje/Vida del Jefe en el Cabezal Superior (`src/match3.ts`)
-4. **Modo Blindaje del Jefe en el Display Superior para Niveles de Jefe (`st.lv.boss`):**
-   - **Qué es:** En `paintDisplay()`, cuando `st.lv.boss` es `true`, rotular la barra inferior como `BLINDAJE DEL JEFE` en rojo carmesí con porcentaje en vivo de objetivos de impacto restantes (`M3C.error`), distinguiendo visualmente las batallas de jefe de los niveles convencionales de recolección.
-   - **Qué problema resuelve:** En los niveles de jefe (como el Gran Aplastador), la barra inferior luce idéntico a una barra de puntos normal, sin transmitir la sensación de estar desmantelando al jefe.
-   - **Valor:** Tensión y estética arcade reforzadas para los hitos culminantes de la campaña. Complejidad: Baja.
+### D. Área 4 · Gabinete Junket Crush: Insignia de Atajo de Tecla (`1–4`) en Herramientas `#m3-tools` (`src/match3.ts`, `src/match3.css`)
+4. **Indicador Visual de Tecla Rápida (`1`, `2`, `3`, `4`) en los Botones de `#m3-tools` en Escritorio:**
+   - **Qué es:** En `ensureUi()` (`src/match3.ts`), añadir `<i class="m3-tkey">${i + 1}</i>` en la esquina superior izquierda de cada botón de `#m3-tools` (`Martillo`, `Sierra`, `Imán`, `Llave`), visible en escritorio y oculto en dispositivos táctiles (`@media (pointer: coarse)`).
+   - **Qué problema resuelve:** Las herramientas del gabinete tienen soporte de teclado (`1–4`), pero el atajo solo figuraba en `aria-label` y era invisible en pantalla.
+   - **Valor:** Descubribilidad inmediata de los atajos de teclado en PC para activar herramientas sin soltar el teclado. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #16 completado, verificado y subido a `origin/master`.
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (538 ms), 55 capturas verificadas en `.shots/actual/` y grafo actualizado (3065 nodos, 7486 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los subagentes del Ciclo #16 finalizaron y liberaron sus archivos).
-- **Próxima decisión pendiente:** Selección del usuario mediante `ask_question` (multi-selección) de las áreas a ejecutar en paralelo por subagentes en el **Ciclo #17**.
+- **Último trabajo completado:** Ciclo #17 completado, verificado y subido a `origin/master`.
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (420 ms), 33 capturas verificadas en `.shots/actual/` y grafo actualizado (3068 nodos, 7497 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los subagentes del Ciclo #17 finalizaron y liberaron sus archivos).
+- **Próxima decisión pendiente:** Selección del usuario mediante `ask_question` (multi-selección) de las áreas a ejecutar en paralelo por subagentes en el **Ciclo #18**.

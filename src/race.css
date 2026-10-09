@@ -48,6 +48,7 @@
 #rres th { text-align: left; color: #a9b8c6; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; padding: 0 12px; }
 #rres td { background: rgba(255, 255, 255, .08); padding: 8px 12px; } #rres td:first-child { border-radius: 10px 0 0 10px; width: 36px; color: #ffd84d; font-weight: 700; } #rres td:last-child { border-radius: 0 10px 10px 0; }
 #rres tr.me td { background: rgba(255, 216, 77, .22); } #rres td i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+#rres .cup-lead { display: inline-block; margin-left: 6px; padding: 2px 5px; font: 800 10px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #ffd84d; color: #1f1100; border-radius: 4px; vertical-align: middle; }
 #rres nav { display: flex; gap: 10px; margin-top: 8px; }
 
 #rflash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 4; }

@@ -79,6 +79,7 @@
 
 /* ---------- Radar (arriba-derecha) ---------- */
 #radar { top: max(10px, env(safe-area-inset-top)); right: 14px; transform-origin: 100% 0; --rs: 1.3; padding: 6px; border-radius: 50%; }
+#radar.has-chest { border-color: #ffd24a; box-shadow: 0 0 12px rgba(255, 210, 74, .35); }
 #radarC { display: block; width: calc(64px * var(--rs)); aspect-ratio: 1; image-rendering: pixelated; border-radius: 50%; background: rgba(8, 16, 12, .6); }
 
 /* ---------- Estado del auto: vida, turbo, habilidad (abajo-centro) ---------- */

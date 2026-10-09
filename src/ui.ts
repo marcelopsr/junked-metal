@@ -300,6 +300,8 @@ function initRadar() {
 export function hudRadar(car: { x: number; z: number; yaw: number; up?: number }, blips: Blip[]) {
   rCar = { x: car.x, z: car.z, yaw: car.yaw, up: car.up ?? car.yaw };
   rBlips = blips; rAge = 0;
+  const hasCh = blips.some((b) => b.kind === "cofre");
+  if (ch("radCh", +hasCh)) (document.getElementById("radar") ?? $("radarC").parentElement)?.classList.toggle("has-chest", hasCh);
 }
 function drawRadar() {
   const g = rCtx, u = rCar.up, c = Math.cos(u), s = Math.sin(u);
@@ -312,6 +314,12 @@ function drawRadar() {
     i ? g.lineTo(X, Y) : g.moveTo(X, Y);
   });
   g.stroke();
+  // Marcas cardinales (N/E/S/O)
+  g.font = "700 6px Rajdhani, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+  ([["N", 0, "#ffd24a"], ["E", 1.5708, "#8dff6a"], ["S", 3.1416, "#8dff6a"], ["O", -1.5708, "#8dff6a"]] as const).forEach(([lb, ang, col]) => {
+    const a = ang - u, lx = RH + Math.sin(a) * (RH - 5.5), ly = RH - Math.cos(a) * (RH - 5.5);
+    g.fillStyle = col; g.globalAlpha = lb === "N" ? 0.9 : 0.55; g.fillText(lb, lx, ly);
+  });
   // Barrido: línea y estela a píxeles
   g.fillStyle = "#8dff6a";
   for (let k = 0; k < 7; k++) {

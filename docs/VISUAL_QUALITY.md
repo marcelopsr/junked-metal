@@ -376,3 +376,19 @@ Carrera (1) y Survivor en partida (2).
    - `.rpos` colorea el número de puesto según podio (`1º` oro `#ffd84d`, `2º` plata `#d8e2ef`, `3º` bronce `#e09145`, `4º+` blanco `#f4f7fa`) con `data-pl`, y `.ritem` activa `.full` con borde ámbar resplandeciente cuando el corredor lleva un ítem armado (`pc-carrera-curso.png`).
 4. **Telemetría en vivo del nivel seleccionado en el cabezal electrónico del mapa de Junket Crush (Subagente 4 · `src/match3.ts`):**
    - `paintDisplay()` cuando `mode === "map"` renderiza en el display digital superior el número de nivel en 7 segmentos (`NIVEL 01` / `JEFE · NV`), nombre en mayúsculas, movimientos permitidos, récord de puntos y las 3 estrellas del nodo seleccionado con `drawStar` (`pc-match3-mapa.png`, `cel-match3-mapa.png`).
+
+---
+
+## 2026-10-09 · Ciclo #17 (Insignia `COBRADO` y Rango Honorífico en Chatarroteca, Rosa Cardinal y Pulso de Cofre en Radar, Insignia `LÍDER` de Copa en Podio y `JEFE X%` en Junket Crush)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-bestiario.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-podio.png`, `.shots/actual/pc-match3-jefe.png`, `.shots/actual/cel-match3-jefe.png` (`npm run shots -- --only bestiario,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Insignia `· COBRADO` en logros completados y rango honorífico de bajas en Chatarroteca (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderBestiary()` (`btab === "logros"`), los logros desbloqueados añaden `<b class="ach-ok"> · COBRADO</b>` en verde `#22c55e` junto al premio, y `statsHtml()` incorpora el rango honorífico (`Aprendiz de Patio`, `Cazador de Plagas`, `Chatarrero Veterano`, `Leyenda del Patio`) en el encabezado de `Bajas por tipo`.
+2. **Puntos cardinales (`N`, `E`, `S`, `O`) orientados en el radar y pulso `.has-chest` al detectar cofre (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - `drawRadar()` dibuja las 4 marcas cardinales rotadas según `rCar.up` (`N` en oro `#ffd24a` y `E/S/O` en verde fósforo `#8dff6a`), y `hudRadar()` aplica `.has-chest` sobre `#radar` cuando hay un cofre activo en el campo (`pc-partida-curso.png`).
+3. **Insignia `.cup-lead` (`LÍDER`) y encabezado `COPA (X/3)` en el podio de Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - `showResults()` destaca con `<b class="cup-lead">LÍDER</b>` al puntero de la tabla acumulada de la copa y titula las rondas intermedias como `<Circuito> · COPA (X/3)` (`pc-carrera-podio.png`).
+4. **Indicador de blindaje restante del jefe (`JEFE X% · NV 10/10`) en el cabezal de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - `paintDisplay()` calcula el porcentaje restante de los objetivos en niveles de jefe (`st.lv.boss`) y renderiza la cápsula superior derecha en rojo carmesí `M3C.error` como `JEFE 100% · NV 10/10` (`pc-match3-jefe.png`, `cel-match3-jefe.png`).

@@ -419,12 +419,13 @@ function paintDisplay() {
       c.textAlign = "left"; c.fillStyle = done ? M3C.exito : M3C.texto; c.font = `700 ${g.k === "score" ? 26 : 36}px Rajdhani, sans-serif`;
       c.fillText(done ? "OK" : String(left), x + 54, 44);
     });
-    const nvTxt = `NV ${lvIdx + 1}/${LEVELS.length}`;
+    const totNeed = st.lv.goals.reduce((a, g) => a + g.n, 0), totLeft = st.lv.goals.reduce((a, g) => a + goalLeft(g), 0), hpPct = Math.max(0, Math.ceil((totLeft / Math.max(1, totNeed)) * 100));
+    const nvTxt = st.lv.boss ? `JEFE ${hpPct}% · NV ${lvIdx + 1}/${LEVELS.length}` : `NV ${lvIdx + 1}/${LEVELS.length}`;
     c.font = "700 15px Rajdhani, sans-serif";
     const nw = Math.ceil(c.measureText(nvTxt).width) + 12;
-    c.fillStyle = "#0b0f14"; c.strokeStyle = M3C.borde; c.lineWidth = 1;
+    c.fillStyle = "#0b0f14"; c.strokeStyle = st.lv.boss ? M3C.error : M3C.borde; c.lineWidth = 1;
     c.beginPath(); c.roundRect(W - 8 - nw, 6, nw, 20, 4); c.fill(); c.stroke();
-    c.fillStyle = M3C.cian; c.textAlign = "right"; c.fillText(nvTxt, W - 14, 16);
+    c.fillStyle = st.lv.boss ? M3C.error : M3C.cian; c.textAlign = "right"; c.fillText(nvTxt, W - 14, 16);
     if (lastChain >= 2) {
       const chTxt = `CADENA ×${lastChain}`;
       const cw = Math.ceil(c.measureText(chTxt).width) + 12;

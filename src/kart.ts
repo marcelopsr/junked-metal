@@ -929,9 +929,10 @@ function showResults() {
   resultsOn = true; music("menu"); SFX.finish();
   const order = mode === "battle" ? [...racers].sort((a, b) => battleScore(b) - battleScore(a)) : [...racers].sort((a, b) => (a.fin || 1e9) - (b.fin || 1e9) || prog(b) - prog(a));
   order.forEach((r, i) => { r.place = i + 1; cup[r.id] = (cup[r.id] ?? 0) + POINTS[i]; });
+  const maxCup = raceCfg.cup && mode === "race" ? Math.max(...racers.map((r) => cup[r.id] ?? 0)) : -1;
   const last = mode === "battle" || !raceCfg.cup || raceNo >= 3;
-  const tb = order.map((r, i) => `<tr class="${r.human >= 0 ? "me" : ""}"><td>${i + 1}</td><td><i style="background:${r.color}"></i>${r.name}</td><td>${mode === "battle" ? (r.out ? "fuera " + fmt(r.fin) : "●".repeat(r.balloons)) : r.fin ? fmt(r.fin) : "—"}</td><td>+${POINTS[i]}</td><td>${cup[r.id]}</td></tr>`).join("");
-  $r("#rres .rtitle").textContent = mode === "battle" ? "Batalla de globos" : `${TRACKS[trackNo].name} · carrera ${raceNo}${raceCfg.cup ? "/3" : ""}`;
+  const tb = order.map((r, i) => `<tr class="${r.human >= 0 ? "me" : ""}"><td>${i + 1}</td><td><i style="background:${r.color}"></i>${r.name}</td><td>${mode === "battle" ? (r.out ? "fuera " + fmt(r.fin) : "●".repeat(r.balloons)) : r.fin ? fmt(r.fin) : "—"}</td><td>+${POINTS[i]}</td><td>${cup[r.id]}${raceCfg.cup && mode === "race" && (cup[r.id] ?? 0) === maxCup && maxCup > 0 ? '<b class="cup-lead">LÍDER</b>' : ""}</td></tr>`).join("");
+  $r("#rres .rtitle").textContent = mode === "battle" ? "Batalla de globos" : raceCfg.cup && mode === "race" && !last ? `${TRACKS[trackNo].name} · COPA (${raceNo}/3)` : `${TRACKS[trackNo].name} · carrera ${raceNo}${raceCfg.cup ? "/3" : ""}`;
   $r("#rres table").innerHTML = `<tr><th>#</th><th>Corredor</th><th>Tiempo</th><th>Pts</th><th>Total</th></tr>${tb}`;
   ($r("#rres [data-r=next]") as HTMLElement).style.display = last ? "none" : "";
   if (last && raceCfg.cup && mode === "race") { const champ = Object.entries(cup).sort((a, b) => b[1] - a[1])[0]; const r = racers.find((x) => x.id === +champ[0])!; $r("#rres .rtitle").textContent = `COPA: gana ${r.name} con ${champ[1]} puntos`; }

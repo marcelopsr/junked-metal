@@ -116,12 +116,14 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .ficha.logro.locked b { letter-spacing: .04em; }
 .achProg { margin-top: 5px; display: flex; flex-direction: column; gap: 3px; font: 600 12px/1.15 var(--jm-titulo); color: var(--jm-texto2); }
 .achProg b { display: inline; margin: 0; font: 700 12px/1 var(--jm-titulo); color: var(--jm-amarillo2); letter-spacing: .02em; }
+.ficha.logro .price .ach-ok { color: #22c55e; font-weight: 800; letter-spacing: .04em; }
 .sello { position: absolute; top: 10px; right: 8px; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%;
   border: 3px double var(--turbo); color: var(--turbo); font: 400 8px/1 var(--display); letter-spacing: 0; rotate: -14deg;
   box-shadow: inset 0 0 0 3px #0000, inset 0 0 0 4px var(--turbo); opacity: .9; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1) both;
   mask: radial-gradient(circle at 30% 70%, #0000 0 1px, #000 1.5px) 0 0 / 7px 9px; } /* tinta mordida: puntitos sin entintar */
 .ficha.logro.locked .sello { border: 2px dashed var(--dim); box-shadow: none; color: var(--dim); rotate: 8deg; animation: none; mask: none; opacity: .6; }
 /* Estadísticas de carrera: fichas con una cifra grande y filas clave/valor */
+.st-rank { color: var(--jm-amarillo2, #ffd24a); font-weight: 700; }
 .ficha .big { font: 700 32px/1 var(--jm-titulo); color: var(--lcd-ink); margin: 2px 0 6px; }
 .ficha .big.wi { font-size: 22px; text-transform: uppercase; letter-spacing: .02em; }
 .ficha .kv { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14.5px; padding: 3px 0; border-bottom: 1px dashed var(--line); }

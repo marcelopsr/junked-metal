@@ -1053,11 +1053,12 @@ function statsHtml() {
   const fav = topW[0];
   const kinds = (Object.keys(DEF) as Kind[]).filter((k) => (save.slain[k] ?? 0) > 0).sort((a, b) => (save.slain[b] ?? 0) - (save.slain[a] ?? 0));
   const total = kinds.reduce((n, k) => n + save.slain[k]!, 0), maxS = kinds[0] ? save.slain[kinds[0]]! : 1;
+  const rank = total >= 2500 ? "Leyenda del Patio" : total >= 500 ? "Chatarrero Veterano" : total >= 100 ? "Cazador de Plagas" : "Aprendiz de Patio";
   return card("Partidas", String(s.runs), s.runs ? `<div>${s.wins} ${s.wins === 1 ? "ganada" : "ganadas"} · ${Math.round((s.wins / s.runs) * 100)}%</div>${bar(s.wins, s.runs)}` : "Sin partidas completas. Todavía no hay nada que lamentar.")
     + card("Tiempo jugado", longTime(s.time), save.best ? kv("Mejor tiempo", `${fmt(save.best)}${save.endless ? ` (+${fmt(save.endless)})` : ""}`) : "Tiempo total en el patio.")
     + card("Recorrido", `${(s.dist / 1000).toFixed(1).replace(".", ",")} km`, "Distancia total manejada, sin llegar a ningún lado.")
     + `<div tabindex="0" class="carc ficha"><b>Arma favorita</b><div class="big wi">${fav ? icon(fav[0], 26) + WEAPONS[fav[0] as WeaponId].name : "Sin datos"}</div>${topW.length ? topW.slice(0, 3).map(([id, v]) => `<div class="kv stRow"><span class="wi">${icon(id, 15)}${WEAPONS[id as WeaponId].name}</span>${bar(v, fav[1])}<b>${Math.round(v)}</b></div>`).join("") : "Se define con el daño de cada partida. Aún sin favoritos."}</div>`
-    + `<div tabindex="0" class="carc ficha"><b>Bajas por tipo</b><div class="big">${total}</div>${kinds.map((k) => `<div class="kv stRow"><span class="wi">${beastIcon(k, 16)}${DEF[k].name}</span>${bar(save.slain[k]!, maxS)}<b>${save.slain[k]}</b></div>`).join("") || "Sin bajas todavía. El patio sigue en paz."}</div>`
+    + `<div tabindex="0" class="carc ficha"><b>Bajas por tipo · <span class="st-rank">${rank}</span></b><div class="big">${total}</div>${kinds.map((k) => `<div class="kv stRow"><span class="wi">${beastIcon(k, 16)}${DEF[k].name}</span>${bar(save.slain[k]!, maxS)}<b>${save.slain[k]}</b></div>`).join("") || "Sin bajas todavía. El patio sigue en paz."}</div>`
     + `<div tabindex="0" class="carc ficha"><b>Mejores marcas por zona</b>${(Object.keys(ZONES) as ZoneId[]).map((z) => { const r = s.zone[z]; return kv(ZONES[z].short, r ? `${fmt(r.t)} · ${r.kills} bajas` : "—"); }).join("")}</div>`;
 }
 function renderBestiary() {
@@ -1074,7 +1075,7 @@ function renderBestiary() {
   $("btabs").innerHTML = tabsHtml(bCounts, btab, "btab");
   $("beasts").innerHTML = btab === "stats" ? statsHtml() : btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
     const a: { name: string; txt: string; reward?: string; scrap?: number } = ACH[k], ok = save.ach.includes(k);
-    return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b class="wi">${achIco(k)}${a.name}</b>${a.txt}${achProg(k, ok)}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}</div>` : ""}</div>`;
+    return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b class="wi">${achIco(k)}${a.name}</b>${a.txt}${achProg(k, ok)}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}${ok ? `<b class="ach-ok"> · COBRADO</b>` : ""}</div>` : ""}</div>`;
   }).join("")
     : btab === "pilotos" ? (Object.keys(PILOTS) as PilotId[]).map((k) => {
       const p = PILOTS[k], own = owns("pilot:" + k), st = save.pilot === k ? "EN USO" : own ? "EN EL GARAJE" : p.ach ? `Logro: ${p.ach.txt}` : `Bloqueado · ${p.cost} tornillos`;
