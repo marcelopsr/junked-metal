@@ -94,8 +94,17 @@ button.primary:hover:not(:disabled) { background: linear-gradient(#7af0a2, #2fd3
 .carc b { font: 700 17px/1.15 var(--jm-titulo); color: var(--jm-texto); text-transform: uppercase; letter-spacing: .03em; }
 .carc:hover:not(:disabled) { background: var(--jm-fondo2); border-color: #4b5563; outline: 0; }
 .carc.sel { border-color: var(--jm-amarillo); box-shadow: inset 4px 0 0 var(--jm-amarillo), 0 0 0 1px var(--jm-amarillo); background: #1a1608; }
-.carc.locked { opacity: 1; color: #6b7280; } .carc.locked b { color: var(--jm-texto2); }
+.carc.locked { opacity: 1; color: #9ca3af; } .carc.locked b { color: var(--jm-texto); }
 .carc .price { color: var(--jm-amarillo); font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; }
+#shop .perk { background: rgba(11, 15, 20, .94); border-color: var(--jm-chapa); }
+#shop .perk.no { background: rgba(11, 15, 20, .92); border-color: var(--jm-borde); color: var(--jm-texto2); }
+#shop .perk.no b { color: #e2e8f0; }
+#shop .perk.no .price { color: var(--jm-texto2); }
+.carc .stc > span:first-child { font: 700 12px/1 var(--jm-titulo); color: var(--jm-texto2); text-transform: uppercase; letter-spacing: .04em; }
+.carc .stc em { font: 700 13px/1 var(--jm-titulo); color: var(--jm-amarillo2); }
+.carc .wsyn { font: 600 12px/1.15 var(--jm-titulo); color: var(--jm-texto2); background: var(--jm-fondo2); border-color: var(--jm-borde); border-radius: 2px; }
+.carc .wsyn b { color: var(--jm-amarillo2); }
+.stb { background: var(--jm-fondo2); border: 1px solid var(--jm-borde); box-shadow: inset 0 1px 2px #000; }
 .carc .st i, .carc .pips i.on, #fe .pips i.on { background: var(--jm-cian); border-radius: 0; }
 .carc .pips i, #fe .pips i { border-radius: 0; background: var(--jm-panel); }
 .ficha.boss { border-color: var(--jm-rojo); }

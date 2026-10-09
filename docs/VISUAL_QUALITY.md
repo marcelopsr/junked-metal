@@ -173,5 +173,23 @@ Carrera (1) y Survivor en partida (2).
    - Se alineó el póster del taller (`poster()` en `src/kit3d.ts:138`) con `docs/ART_DIRECTION.md` (`"GOOD METAL / BRIGHTER DAYS"`), visible en la pared izquierda de `pc-match3-mapa.png`.
    - Se asignó un GIF transparente 1×1 válido en `#overPhotoImg` (`index.html`), se quitó `transition: width` residual en `.h-track > div` (`src/hud.css`) y se migró `.jm-sw::after` a `transform: translateX(26px)` en compositor (`src/kit.css`).
 
+---
+
+## 2026-10-09 · Ciclo #4 (Claridad en Garaje, Sinergias en ARMA y Grilla/Contraste en Taller 720p)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-taller-garaje-arma.png`, `.shots/actual/cel-taller-garaje-arma.png`, `.shots/actual/pc-menu-taller.png`, `.shots/actual/cel-menu-taller.png`, `.shots/actual/pc-taller-arsenal.png` (`npm run shots -- --only garaje,taller`, 26 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas y verificadas en captura
+1. **Cifras reales y barras con riel completo en Garaje (`src/menu.ts`, `src/menu.css`, `src/kit.css`):**
+   - En la pestaña `AUTO` del Garaje (`pc-menu-garaje.png`, `cel-menu-garaje.png`), cada atributo (`Carrocería`, `Velocidad`, `Embestida`) se organiza en una celda `.stc` dentro de una grilla de 3 columnas iguales (`grid-template-columns: repeat(3, 1fr)`), mostrando la cifra real en amarillo (`150`, `54` km/h, `×3` en *El Divorciado*; `220`, `45`, `×4,5` en *El Loco Cuarentón*; `110`, `68`, `×2,4` en *El Apurado*) sobre una barra de progreso con riel oscuro completo (`.stb`).
+   - Se ajustó la altura útil de `#cars` (`55vh` en PC y `43vh` en celular vertical), eliminando el recorte inferior de la tercera tarjeta (*El Apurado*) en `cel-menu-garaje.png`.
+2. **Sinergia de evolución en `ARMA` inicial y vista previa en Taller (`src/menu.ts`, `src/menu.css`, `src/kit.css`):**
+   - En la pestaña `ARMA` del Garaje (`pc-taller-garaje-arma.png`, `cel-taller-garaje-arma.png`), cada arma muestra un bloque `.wsyn` con el ícono SVG de su pasiva par y la receta completa (`Evoluciona con RESORTE → Gomitas Saltarinas`, `Evoluciona con IMÁN DE HELADERA → Tornado de Clips`, `Evoluciona con MOTOR TURBO → Estela Infernal`).
+   - En el Taller (`ARSENAL` y `AUTOS`), enfocar un arma o un auto muestra en `#sinfo` su sinergia de evolución o sus cifras base junto al cálculo de tornillos/partidas restantes (`pc-taller-arsenal.png`).
+3. **Grilla 3×3 equilibrada y contraste de chapa oscura en Taller (`src/menu.css`, `src/kit.css`):**
+   - **Encuadre PC 720p (`pc-menu-taller.png`):** `#shop` pasa a una grilla de 3 columnas (`repeat(3, minmax(210px, 256px))`), transformando los 9 ítems de `CHASIS` de una disposición `4 + 4 + 1` con fila huérfana a un bloque simétrico `3 × 3`. El mayor ancho por tarjeta evita que títulos como `MOTOR REBOBINADO`, `NAFTA DE ENCENDEDOR`, `PARAGOLPES DE FIERRO` y `GATILLO ENGRASADO` se partan en dos líneas, dejando amplio aire sobre `#sinfo` y `VOLVER`.
+   - **Encuadre móvil (`cel-menu-taller.png`):** Las pestañas `#stabs` quedan en 2 filas limpias de 4 botones (sin dejar `ZONAS` huérfana en una 3ª fila), los filtros `#sfilt` ya no truncan la palabra `COMPRADAS` en el borde derecho y `#shop` usa 2 columnas aprovechando todo el ancho de la pantalla.
+   - **Contraste sin saldo (`#shop .perk.no`):** Se reemplazó `opacity: .5` por fondo de chapa oscura opaco (`rgba(11, 15, 20, .92)`) con título nítido (`#e2e8f0`), diferenciando las mejoras comprables por su borde bronce `--jm-chapa` y precio en `--jm-amarillo` brillante.
+
 
 

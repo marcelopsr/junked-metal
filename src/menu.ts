@@ -421,15 +421,15 @@ export const ABIL_ICON: Record<AbilityId, string> = { bombardeo: "petardos", esc
 const abilCost = (k: AbilityId) => costos("hab_" + k);
 const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;
 // Desbloqueables: car:<auto>, pilot:<piloto>, part:<ranura>:<opción>. Los pilotos con logro no se compran.
-type Unlock = { id: string; name: string; desc: string; cost: number; ach?: string; icon?: string };
+type Unlock = { id: string; name: string; desc: string; cost: number; ach?: string; icon?: string; fx?: string };
 const UNLOCKS = {
-  autos: () => (Object.keys(CARS) as CarKind[]).filter((k) => CARS[k].cost).map((k): Unlock => ({ id: "car:" + k, name: CARS[k].name, desc: CARS[k].desc, cost: CARS[k].cost })),
+  autos: () => (Object.keys(CARS) as CarKind[]).filter((k) => CARS[k].cost).map((k): Unlock => ({ id: "car:" + k, name: CARS[k].name, desc: CARS[k].desc, cost: CARS[k].cost, fx: `Carrocería ${CARS[k].hp} · Velocidad ${Math.round(CARS[k].speed * 3.6)} km/h · Embestida ×${n1(CARS[k].ram)}` })),
   pilotos: () => (Object.keys(PILOTS) as PilotId[]).filter((k) => PILOTS[k].cost || PILOTS[k].ach).map((k): Unlock => {
     const p = PILOTS[k];
     return { id: "pilot:" + k, name: p.name, desc: `${p.pros.join(" · ")} · Contra: ${p.con}`, cost: p.cost, ach: p.ach?.txt };
   }),
   zonas: () => (Object.keys(ZONES) as ZoneId[]).filter((k) => ZONES[k].cost).map((k): Unlock => ({ id: "zone:" + k, name: ZONES[k].name, desc: ZONES[k].desc, cost: ZONES[k].cost })),
-  arsenal: () => ARSENAL.filter((k) => k !== "gomitas").map((k): Unlock => ({ id: "arma:" + k, name: WEAPONS[k].name, desc: WEAPONS[k].desc, cost: precio("arma_" + k), icon: k })),
+  arsenal: () => ARSENAL.filter((k) => k !== "gomitas").map((k): Unlock => ({ id: "arma:" + k, name: WEAPONS[k].name, desc: WEAPONS[k].desc, cost: precio("arma_" + k), icon: k, fx: `Evoluciona con ${PASSIVES[WEAPONS[k].evo].name} → ${WEAPONS[k].evoName}` })),
   piezas: () => (Object.keys(PARTS) as Slot[]).flatMap((sl) => Object.entries(opts(sl)).filter(([, [, c]]) => c).map(([o, [n, c]]): Unlock => ({ id: `part:${sl}:${o}`, name: n, desc: PARTS[sl].name, cost: c }))),
 };
 function owns(id: string) {
@@ -478,7 +478,7 @@ addEventListener("focusin", (e) => {
   if (d.k) peek.car = d.k as CarKind; else if (d.pilot) peek.pilot = d.pilot as PilotId; else if (d.part) peek.part = d.part.split(":") as [Slot, string];
 });
 
-const bar = (v: number, max: number) => `<i style="width:${Math.min(100, (v / max) * 100)}%"></i>`;
+const bar = (v: number, max: number) => `<span class="stb"><i style="width:${Math.min(100, (v / max) * 100)}%"></i></span>`;
 const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" data-${attr}="${id}">${n}</button>`).join("");
 const STABS = { chasis: "Chasis", equipo: "Equipo de partida", habilidades: "Habilidades", arsenal: "Arsenal", autos: "Autos", pilotos: "Pilotos", piezas: "Piezas", zonas: "Zonas" };
 let stab: keyof typeof STABS = "chasis";
@@ -500,7 +500,7 @@ function shopItems(): ShopItem[] {
     const fx = (x: number) => `Enfriamiento ${n1(abilCd(k, x))} s · efecto ${Math.round(abilK(x) * 100)}%`;
     return { attr: `data-hab="${k}"`, name: a.name, desc: `Nivel ${l + 1}. Menos espera, más efecto`, ico: ABIL_ICON[k], lv: l, max, cost: c[l], bought: l > 0, fx: l < max ? `${fx(l)} → ${fx(l + 1)}` : fx(l) };
   });
-  return UNLOCKS[stab]().map((u) => { const own = owns(u.id); return { attr: `data-buy="${u.id}"`, name: u.name, desc: u.desc, ico: u.icon, cost: own || u.ach ? undefined : u.cost, ach: u.ach, bought: own }; });
+  return UNLOCKS[stab]().map((u) => { const own = owns(u.id); return { attr: `data-buy="${u.id}"`, name: u.name, desc: u.desc, ico: u.icon, cost: own || u.ach ? undefined : u.cost, ach: u.ach, bought: own, fx: u.fx }; });
 }
 function renderShop() {
   $("bank").textContent = `${save.scrap} tornillos`;
@@ -529,7 +529,7 @@ function renderGarage() {
   const lock = (id: string, ach?: string) => (owns(id) ? "" : `<div class="price">${ach ? `Logro: ${ach}` : `Bloqueado · ${priceOf(id)} tornillos`}</div>`);
   if (gtab === "auto") $("cars").innerHTML = (Object.keys(CARS) as CarKind[]).map((k) => {
     const c = CARS[k];
-    return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><span>Carrocería</span>${bar(c.hp, 300)}<span>Velocidad</span>${bar(c.speed, 21)}<span>Embestida</span>${bar(c.ram, 5.5)}</div>${lock("car:" + k)}</div>`;
+    return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><div class="stc"><span>Carrocería <em>${c.hp}</em></span>${bar(c.hp, 300)}</div><div class="stc"><span>Velocidad <em>${Math.round(c.speed * 3.6)}</em></span>${bar(c.speed, 21)}</div><div class="stc"><span>Embestida <em>×${n1(c.ram)}</em></span>${bar(c.ram, 5.5)}</div></div>${lock("car:" + k)}</div>`;
   }).join("");
   else if (gtab === "piloto") $("cars").innerHTML = (Object.keys(PILOTS) as PilotId[]).map((k) => {
     const p = PILOTS[k], id = "pilot:" + k;
@@ -544,7 +544,7 @@ function renderGarage() {
     const own = PILOTS[save.pilot].start, first = startPick() === "gomitas" ? own : startPick();
     $("cars").innerHTML = `<div class="note">Arranca con: ${WEAPONS[first].name}${first !== own ? ` (en lugar de ${WEAPONS[own].name}, la del piloto)` : ""}</div>` + ARSENAL.map((k) => {
       const id = "arma:" + k, w = WEAPONS[k];
-      return `<div tabindex="0" class="carc pilot ${startPick() === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-arma="${k}"><b class="wi">${icon(k, 22)}${w.name}</b>${k === "gomitas" ? "De serie. Piloto con arma propia: arranca con la suya" : w.desc}${lock(id)}</div>`;
+      return `<div tabindex="0" class="carc pilot ${startPick() === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-arma="${k}"><b class="wi">${icon(k, 22)}${w.name}</b>${k === "gomitas" ? "De serie. Piloto con arma propia: arranca con la suya" : w.desc}<div class="wsyn">${icon(w.evo, 14)}<span>Evoluciona con <b>${PASSIVES[w.evo].name}</b> → ${w.evoName}</span></div>${lock(id)}</div>`;
     }).join("");
   }
   else if (gtab === "piezas") $("cars").innerHTML = editing ? "" : (Object.keys(PARTS) as Slot[]).map((sl) => `<div class="slot"><span>${PARTS[sl].name}</span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
