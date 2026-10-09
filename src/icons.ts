@@ -66,8 +66,9 @@ const COL: Record<string, [string, string]> = {
   fab_plane_up: ["#7dffb0", "#35c9ff"], fab_plane_down: ["#7dffb0", "#35c9ff"], fab_rot: ["#ffd84d", "#ff9d2e"], fab_mirror: ["#9be3ff", "#6b8bff"],
   fab_undo: ["#f0f5fa", "#9bb0c2"], fab_erase: ["#ff9b9b", "#ff5a5a"],
 };
+let uid = 0;
 export const icon = (id: string, size = 24) => {
-  const [a, b] = COL[id] ?? ["#ffffff", "#9bb0c2"], g = "ig-" + id;
+  const [a, b] = COL[id] ?? ["#ffffff", "#9bb0c2"], g = `ig-${id}-${++uid}`;
   return `<svg class="ico" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="url(#${g})" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><defs><linearGradient id="${g}" gradientUnits="userSpaceOnUse" x1="3" y1="3" x2="21" y2="21"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>${P[id] ?? P.evo}</svg>`;
 };
 
@@ -103,10 +104,10 @@ const UI: Record<string, { d: string; c: [string, string] }> = {
 };
 /** Ícono de interfaz. `plate`: sobre placa de chapa (navegación y botones cuadrados). */
 export const uiIcon = (id: string, size = 24, plate = false) => {
-  const g = UI[id] ?? UI.info, gid = "ui-" + id;
+  const g = UI[id] ?? UI.info, n = ++uid, gid = `ui-${id}-${n}`, pid = `uip-${n}`;
   const glyph = `<g fill="url(#${gid})" stroke="#0B0F14" stroke-width="1.3" stroke-linejoin="round"${plate ? ` transform="translate(3.36 3.36) scale(.72)"` : ""}>${g.d}</g>`;
-  const pl = plate ? `<rect x="1" y="1" width="22" height="22" rx="3" fill="url(#ui-plate)" stroke="#b5651d" stroke-width="1.4"/><path d="M3.5 3.2h17" stroke="#ffffff" stroke-opacity=".18"/><circle cx="3.6" cy="20.4" r=".8" fill="#6b4a2a"/><circle cx="20.4" cy="20.4" r=".8" fill="#6b4a2a"/>` : "";
-  return `<svg class="ico jm-ico" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g.c[0]}"/><stop offset="1" stop-color="${g.c[1]}"/></linearGradient>${plate ? `<linearGradient id="ui-plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4556"/><stop offset="1" stop-color="#14181F"/></linearGradient>` : ""}</defs>${pl}${glyph}</svg>`;
+  const pl = plate ? `<rect x="1" y="1" width="22" height="22" rx="3" fill="url(#${pid})" stroke="#b5651d" stroke-width="1.4"/><path d="M3.5 3.2h17" stroke="#ffffff" stroke-opacity=".18"/><circle cx="3.6" cy="20.4" r=".8" fill="#6b4a2a"/><circle cx="20.4" cy="20.4" r=".8" fill="#6b4a2a"/>` : "";
+  return `<svg class="ico jm-ico" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g.c[0]}"/><stop offset="1" stop-color="${g.c[1]}"/></linearGradient>${plate ? `<linearGradient id="${pid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4556"/><stop offset="1" stop-color="#14181F"/></linearGradient>` : ""}</defs>${pl}${glyph}</svg>`;
 };
 /** El mismo ícono como url() para CSS (barras del HUD). */
 export const uiIconUrl = (id: string) => `url("data:image/svg+xml,${encodeURIComponent(uiIcon(id).replace(' class="ico jm-ico"', ' xmlns="http://www.w3.org/2000/svg"'))}")`;
@@ -134,7 +135,7 @@ const BEAST_SVG: Record<string, { d: string; c: [string, string]; e?: string }> 
 
 /** Ícono SVG de cada especie para las fichas de la Chatarroteca. */
 export const beastIcon = (id: string, size = 38) => {
-  const g = BEAST_SVG[id] ?? BEAST_SVG.hormiga, gid = "bs-" + id;
+  const g = BEAST_SVG[id] ?? BEAST_SVG.hormiga, gid = `bs-${id}-${++uid}`;
   return `<svg class="ico jm-ico" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g.c[0]}"/><stop offset="1" stop-color="${g.c[1]}"/></linearGradient></defs><g fill="url(#${gid})" stroke="#0B0F14" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${g.d}</g>${g.e ?? ""}</svg>`;
 };
 

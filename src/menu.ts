@@ -1078,10 +1078,10 @@ export function openOver(r: { win: boolean; why: string; time: number; kills: nu
   $("overShop").classList.toggle("hidden", !canBuy());
   const rows = Object.entries(r.dmg).sort((a, b) => b[1] - a[1]), top = rows[0]?.[1] || 1;
   const name = (id: string) => (id in WEAPONS ? WEAPONS[id as WeaponId].name : id[0].toUpperCase() + id.slice(1));
-  $("overDmg").innerHTML = rows.map(([id, v]) => `<li><span class="wi">${id in WEAPONS ? icon(id, 18) : ""}${name(id)}</span><i style="width:${(v / top) * 100}%"></i><b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño infligido</span></li>";
+  $("overDmg").innerHTML = rows.map(([id, v]) => `<li><span class="wi">${id in WEAPONS ? icon(id, 18) : ""}${name(id)}</span>${bar(v, top)}<b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño infligido</span></li>";
   const hurt = Object.entries(r.hurt ?? {}).sort((a, b) => b[1] - a[1]), hurtTop = hurt[0]?.[1] || 1;
-  const hurtName = (id: string) => id.startsWith("contacto ") ? `Contacto · ${DEF[id.slice(9) as Kind]?.name ?? id.slice(9)}` : id[0].toUpperCase() + id.slice(1);
-  $("overHurt").innerHTML = hurt.map(([id, v]) => `<li><span>${hurtName(id)}</span><i style="width:${(v / hurtTop) * 100}%"></i><b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño recibido</span></li>";
+  const hurtName = (id: string) => id.startsWith("contacto ") ? `Contacto · ${DEF[id.slice(9) as Kind]?.name ?? id.slice(9)}` : (DEF[id as Kind]?.name ?? id[0].toUpperCase() + id.slice(1));
+  $("overHurt").innerHTML = hurt.map(([id, v]) => `<li><span>${hurtName(id)}</span>${bar(v, hurtTop)}<b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño recibido</span></li>";
   $("overSeed").textContent = r.seed;
   reset("over");
 }

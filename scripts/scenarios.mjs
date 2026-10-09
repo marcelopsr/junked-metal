@@ -160,8 +160,9 @@ export const sessions = [
   { id: "partida", query: "?mute&seed=3", shots: [
     { id: "curso", act: partida(90) },
     { id: "cartas", act: async (p) => { await p.evaluate(() => window.__xp(9999)); await tick(p, 4); await wait(p, () => !document.getElementById("levelup").classList.contains("hidden")); await p.waitForTimeout(300); } },
-    { id: "pausa", vps: ["pc"], act: async (p) => { await p.evaluate(() => window.__play(3)); await tick(p, 90); await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },
-    // ponytail: shot de resultados/outro pendiente (revive + outro en headless); cubrir con escenario `over` en otra tanda
+    { id: "pausa", vps: ["pc"], act: async (p) => { await partida(90)(p); await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },
+    { id: "outro", perf: false, act: async (p) => { await p.evaluate(() => window.__outro()); await tick(p, 40); await wait(p, () => !document.getElementById("outro").classList.contains("hidden")); await p.waitForTimeout(150); } },
+    { id: "resultados", perf: false, act: async (p) => { await tick(p, 270); await wait(p, () => document.querySelector("#scr-over.on") && !document.getElementById("overPhoto").classList.contains("hidden") && document.getElementById("overPhotoImg").complete); await p.waitForTimeout(200); } },
   ] },
   // partida_llena: 300 s de sim (partida avanzada, t=5 min) → mide el estado con armas evolucionadas y oleadas densas.
   // Medido: ~168 draws PC (thin-instances agrupan por tipo; menos que partida-curso/90 s por diferente mezcla de proyectiles).
@@ -172,6 +173,7 @@ export const sessions = [
   { id: "carrera", query: "?mute&race", shots: [
     { id: "largada", act: async (p) => { await wait(p, () => window.__info?.().state === "race" && document.getElementById("load").classList.contains("hidden")); } },
     { id: "curso", tol: 8, act: async (p) => { await p.evaluate(() => { window.__race.auto(); window.__race.sim(8); }); } }, // tol alto: kart.ts usa Math.random en objetos y partículas
+    { id: "podio", perf: false, tol: 5, act: async (p) => { await p.evaluate(() => window.__race.podium()); await tick(p, 15); await wait(p, () => !document.getElementById("rres").classList.contains("hidden")); await p.waitForTimeout(150); } },
   ] },
   { id: "carrera2j", query: "?mute&race&players=2", vps: ["pc"], shots: [
     { id: "pantalla-dividida", tol: 8, act: async (p) => { await wait(p, () => window.__info?.().state === "race" && document.getElementById("load").classList.contains("hidden")); await p.evaluate(() => { window.__race.auto(); window.__race.sim(5); }); } },

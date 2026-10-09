@@ -191,5 +191,23 @@ Carrera (1) y Survivor en partida (2).
    - **Encuadre móvil (`cel-menu-taller.png`):** Las pestañas `#stabs` quedan en 2 filas limpias de 4 botones (sin dejar `ZONAS` huérfana en una 3ª fila), los filtros `#sfilt` ya no truncan la palabra `COMPRADAS` en el borde derecho y `#shop` usa 2 columnas aprovechando todo el ancho de la pantalla.
    - **Contraste sin saldo (`#shop .perk.no`):** Se reemplazó `opacity: .5` por fondo de chapa oscura opaco (`rgba(11, 15, 20, .92)`) con título nítido (`#e2e8f0`), diferenciando las mejoras comprables por su borde bronce `--jm-chapa` y precio en `--jm-amarillo` brillante.
 
+---
+
+## 2026-10-09 · Ciclo #5 (Cierre de Partida `#outro` / `#scr-over`, Solución de Gradientes SVG Ocultos y Fin de Fase C Folded)
+
+**Capturas verificadas:** `.shots/actual/pc-partida-outro.png`, `.shots/actual/cel-partida-outro.png`, `.shots/actual/pc-partida-resultados.png`, `.shots/actual/cel-partida-resultados.png`, `.shots/actual/pc-partida-pausa.png`, `.shots/actual/pc-carrera-podio.png`, `.shots/actual/cel-carrera-podio.png` (`npm run shots -- --only partida,carrera`, 15 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas y verificadas en captura
+1. **Solución de íconos SVG invisibles en Pausa y Resultados (`src/icons.ts`):**
+   - **Causa raíz:** Cada llamada a `icon(id)` generaba un `<linearGradient id="ig-${id}">` con el mismo `id` que los íconos ya insertados dentro de `#hud`. Cuando `#hud` pasaba a `.hidden` (`display: none`) al abrir Pausa (`#scr-pause`) o Resultados (`#scr-over`), Chromium resolvía `stroke="url(#ig-...)"` contra el primer `<linearGradient>` del DOM (oculto dentro de `#hud.hidden`), dejando los íconos de armas completamente invisibles.
+   - **Solución:** Se incorporó un sufijo incremental único por instancia (`ig-${id}-${++uid}`) en `icon()`, `uiIcon()` y `beastIcon()`, haciendo que todos los íconos de armas en `#scr-pause` y `#scr-over` se rendericen nítidos y con su degradado completo.
+2. **Cámara lenta (`#outro`), Polaroid determinista y Reporte de Fin de Partida (`src/replay.ts`, `src/replay.css`, `src/menu.css`, `src/main.ts`, `src/style.css`):**
+   - **Polaroid (`src/replay.ts`):** Se migró la tipografía del epígrafe de las fuentes inexistentes `Silkscreen`/`VT323` a `Rajdhani` (`700` y `600`) y se reemplazó `Math.random()` en las fibras del papel por un LCG determinista (`s = 20261009`) para que las capturas de referencia tengan `0%` de ruido aleatorio.
+   - **Cámara lenta (`#outro`):** `endRun()` ahora oculta `#banner` junto con `#hud` y `#touch` se oculta durante `#outro` y `#race.podium`, evitando que alertas de radio o controles táctiles tapen la explosión en cámara lenta (`cel-partida-outro.png`).
+   - **Grilla de `#scr-over` en PC y celular:** Se corrigió la especificidad de `#fe #overDmg li, #fe #overHurt li` (que antes era pisada por `#fe li { display: flex }`, truncando los nombres de armas y bichos) y de `#scr-over .overGrid` en `@media (max-width: 700px)` (que antes era pisada por `.overRow` de `replay.css`). Ahora `pc-partida-resultados.png` y `cel-partida-resultados.png` entran íntegros en cuadro sin truncados ni desbordes verticales.
+3. **Cierre de Fase C Folded: Podio 3D de Carrera y Muros Rompibles (`src/kart.ts`, `src/race.css`, `src/world.ts`):**
+   - **Podio Folded (`buildPodium` en `src/kart.ts`):** Bloques de chapa plegada (`FOLD.painted` en oro `#eab308`, plata `#94a3b8` y bronce `#c27838`), tapa superior de acero (`FOLD.bare()`), faja `TRIM.hazard` en el zócalo, placas frontales `1 / 2 / 3` orientadas hacia la cámara (`yaw + Math.PI`) y foco `setLamp` apuntando al podio durante la ceremonia (`pc-carrera-podio.png`, `cel-carrera-podio.png`).
+   - **Muros de ladrillo rompibles (`brickWalls` en `src/world.ts`):** Migrados a `FOLD.painted("#b45309", 0.8, 340 + (i % 4))` + `crateFold` bajo `FOLDED_SLICE`, completando el 100% de la Fase C Folded sin alterar la secuencia de `rng()`.
+
 
 

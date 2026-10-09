@@ -5,17 +5,20 @@
 #outro::before, #outro::after { content: ""; position: absolute; left: 0; right: 0; height: 11vh; background: #050605; animation: bar .5s steps(5, end) both; }
 #outro::before { top: 0; --d: -1; } #outro::after { bottom: 0; --d: 1; }
 @keyframes bar { from { transform: translateY(calc(var(--d) * 100%)); } }
-#outro .o-tag { position: absolute; left: 4vw; bottom: calc(11vh + 14px); font: 400 clamp(14px, 2.2vw, 20px)/1 var(--display); color: var(--turbo); letter-spacing: .08em; text-shadow: 2px 2px 0 #000; }
+#outro .o-tag { position: absolute; left: 4vw; bottom: calc(11vh + 14px); font: 700 clamp(14px, 2.2vw, 20px)/1 var(--display); color: var(--turbo); letter-spacing: .08em; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
 #outro .o-tag::before { content: ""; display: inline-block; width: .6em; height: .6em; margin-right: .6em; background: var(--turbo); animation: blink 1s steps(2) infinite; }
-#outro .o-stat { position: absolute; left: 50%; translate: -50% 0; bottom: calc(11vh + 14px); font: 500 clamp(13px, 1.8vw, 17px)/1 var(--data); color: var(--dim); letter-spacing: .08em; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+#outro .o-stat { position: absolute; left: 50%; translate: -50% 0; bottom: calc(11vh + 14px); font: 700 clamp(13px, 1.8vw, 17px)/1 var(--data); color: var(--txt); letter-spacing: .08em; text-transform: uppercase; text-shadow: 2px 2px 0 #000; white-space: nowrap; background: rgba(11, 15, 20, .82); border: 1px solid var(--line); padding: 4px 10px; border-radius: 3px; }
 #outro .o-stat.hidden { display: none; }
-#outro .o-skip { position: absolute; right: 4vw; bottom: calc(11vh + 14px); font: 400 clamp(15px, 2vw, 19px)/1 var(--data); color: var(--txt); letter-spacing: .1em; text-shadow: 1px 1px 0 #000; }
+#outro .o-skip { position: absolute; right: 4vw; bottom: calc(11vh + 14px); font: 700 clamp(14px, 2vw, 18px)/1 var(--data); color: var(--lcd-ink); letter-spacing: .1em; text-transform: uppercase; text-shadow: 2px 2px 0 #000; }
+@media (max-width: 720px) {
+  #outro .o-stat { bottom: calc(11vh + 42px); font-size: 13px; }
+}
 body.calm #outro .o-tag::before, body.calm #outro::before, body.calm #outro::after { animation: none; }
 
 /* Polaroid: foto torcida con cinta de papel, apoyada sobre la pantalla de resultados */
-.overRow { display: flex; flex-wrap: wrap; gap: 8px 30px; align-items: center; justify-content: center; width: 100%; }
-.overCol { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.polaroid { position: relative; margin: 6px 0 10px; width: min(300px, 62vw, 42vh); display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.polaroid img { display: block; width: 100%; image-rendering: pixelated; rotate: -2.2deg; box-shadow: 0 6px 0 #000a, 0 14px 22px #000b; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1) both; }
+.overRow { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; justify-content: center; width: 100%; }
+.overCol { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.polaroid { position: relative; margin: 4px 0 6px; width: min(260px, 60vw, 38vh); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.polaroid img { display: block; width: 100%; image-rendering: pixelated; rotate: -1.8deg; box-shadow: 0 6px 0 #000a, 0 14px 22px #000b; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1) both; }
 .polaroid::before { content: ""; position: absolute; top: -9px; left: 50%; width: 72px; height: 20px; translate: -50% 0; rotate: 3deg; background: #d8cfa8bb; mix-blend-mode: screen; pointer-events: none; z-index: 1; }
-.polaroid button { font-size: 13px; padding: 9px 16px; }
+.polaroid button { font-size: 13px; padding: 8px 14px; }

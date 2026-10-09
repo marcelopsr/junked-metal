@@ -94,7 +94,7 @@ body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px
 }
 /* Con menú o cartas abiertas los controles táctiles no se ven ni roban toques (#touch va después en el DOM).
    Excepción: en la pantalla de pausa queda el botón «II» para reanudar. */
-#levelup:not(.hidden) ~ #touch, #fe:not(.hidden) ~ #touch > :not(#tPause), #fe:not(.hidden):not(:has(#scr-pause.on)) ~ #touch #tPause { display: none; }
+#levelup:not(.hidden) ~ #touch, #outro:not(.hidden) ~ #touch, body:has(#race.podium) #touch, #fe:not(.hidden) ~ #touch > :not(#tPause), #fe:not(.hidden):not(:has(#scr-pause.on)) ~ #touch #tPause { display: none; }
 #stickZone { position: absolute; left: 0; bottom: 0; width: 55%; height: max(65%, 340px); pointer-events: auto; } /* 340 px: cubre el stick entero (150 + 130 x 1,4) en apaisado */
 #stickBase { position: absolute; left: 40px; bottom: 150px; width: 130px; height: 130px; border-radius: 50%; border: 2px solid #ffffff55; background: #0003; }
 #stickKnob { position: absolute; left: 40px; top: 40px; width: 50px; height: 50px; border-radius: 50%; background: #e8eaedcc; border: 2px solid #000; }

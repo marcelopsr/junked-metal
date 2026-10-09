@@ -927,12 +927,24 @@ function buildPodium(order: Racer[]) {
   podiumBase.copyFrom(p0); podiumDir.copyFrom(dir);
   const yaw = Math.atan2(dir.x, dir.z), right = new B.Vector3(dir.z, 0, -dir.x);
   const slots: [number, number, string][] = [[0, 3.4, "#ffc24d"], [-5.6, 2.2, "#d0d7de"], [5.6, 1.4, "#c47a3e"]];
+  const topM = FOLD.bare(), hazM = FOLD.trim(), v1 = 1 - TRIM.hazard / 8, v0 = v1 - 1 / 8, uv = new B.Vector4(0, v0 + 0.002, 2.2, v1 - 0.002);
   slots.forEach(([off, h, col], i) => {
-    const b = box(5, h, 5, M.plastic(col), [p0.x + right.x * off, h / 2, p0.z + right.z * off], [0, yaw, 0]);
-    b.isPickable = false; shadows.addShadowCaster(b); mesh.push(b);
+    const cx = p0.x + right.x * off, cz = p0.z + right.z * off;
+    const b = box(5, h, 5, FOLD.painted(col, 0.45, 700 + i), [cx, h / 2, cz], [0, yaw, 0]);
+    const cap = box(5.2, 0.18, 5.2, topM, [cx, h - 0.08, cz], [0, yaw, 0]);
+    const band = B.MeshBuilder.CreateBox("podHaz", { width: 5.08, height: 0.28, depth: 5.08, faceUV: [uv, uv, uv, uv, uv, uv] }, D.scene);
+    band.position.set(cx, h - 0.34, cz); band.rotation.set(0, yaw, 0); band.material = hazM;
+    const tx = canvasTex(64, (g, sz) => {
+      g.fillStyle = "#14181F"; g.fillRect(0, 0, sz, sz);
+      g.strokeStyle = col; g.lineWidth = 6; g.strokeRect(4, 4, sz - 8, sz - 8);
+      g.fillStyle = col; g.font = "900 44px Rajdhani, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillText(String(i + 1), sz / 2, sz / 2 + 2);
+    });
+    const pl = box(1.1, 1.1, 0.14, pbr("podPl" + i, { color: "#ffffff", rough: 0.5, metal: 0.2, tex: tx, emissive: "#1a1408" }), [cx + dir.x * 2.52, Math.max(0.65, h * 0.45), cz + dir.z * 2.52], [0, yaw + Math.PI, 0]);
+    for (const m of [b, cap, band, pl]) { m.isPickable = false; shadows.addShadowCaster(m); mesh.push(m); }
     const r = order[i]; if (!r) return;
     r.car.agg.dispose(); // sin física: el auto es solo una malla sobre el bloque
-    r.car.root.position.set(p0.x + right.x * off, h + r.car.def.size[1] / 2 + 0.3, p0.z + right.z * off);
+    r.car.root.position.set(cx, h + r.car.def.size[1] / 2 + 0.3, cz);
     r.car.root.rotationQuaternion = B.Quaternion.FromEulerAngles(0, yaw, 0);
     r.car.vis.rotation.set(0, 0, 0); r.car.root.visibility = 1;
     r.spin = 0; r.bubble?.setEnabled(false);
@@ -973,9 +985,12 @@ export function raceTick(dt: number) {
   } else t += dt;
   if (podiumOn) {
     const a = Math.sin(t * 0.45) * 0.55, front = podiumDir.clone(), side = new B.Vector3(podiumDir.z, 0, -podiumDir.x);
-    D.cam.position.set(podiumBase.x + front.x * 33 * Math.cos(a) + side.x * 33 * Math.sin(a), 8, podiumBase.z + front.z * 33 * Math.cos(a) + side.z * 33 * Math.sin(a));
-    D.cam.setTarget(podiumBase.add(new B.Vector3(0, 2.5, 0)).add(side.scale(-9)));
+    const portrait = D.scene.getEngine().getRenderWidth() < D.scene.getEngine().getRenderHeight();
+    const dist = portrait ? 28 : 33;
+    D.cam.position.set(podiumBase.x + front.x * dist * Math.cos(a) + side.x * dist * Math.sin(a), portrait ? 7.5 : 8, podiumBase.z + front.z * dist * Math.cos(a) + side.z * dist * Math.sin(a));
+    D.cam.setTarget(podiumBase.add(new B.Vector3(0, portrait ? -2.2 : 2.5, 0)).add(side.scale(portrait ? 0 : -9)));
     D.cam.fov = 0.8;
+    setLamp(D.cam.position, podiumBase.subtract(D.cam.position).normalize(), true, dt);
     for (const r of racers) if (r.place <= 3) r.car.vis.rotation.y += dt * 0.7;
     hud();
     return;
@@ -1013,5 +1028,6 @@ if (import.meta.env.DEV) Object.assign(window, {
     give: (it: Item) => { for (const h of humans) { h.item = it; h.useAt = 1e9; } },
     use: () => { for (const h of humans) useItem(h); },
     skip: () => { for (const r of racers) { r.lap = LAPS; } },
+    podium: () => { countdown = 0; t = 96; racers.forEach((r, i) => { r.fin = 92.4 + i * 2.1; r.lapBest = 29.8 + i * 0.7; }); if (!resultsOn) showResults(); },
   },
 });

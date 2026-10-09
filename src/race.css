@@ -47,7 +47,7 @@
 .rp .rtime { position: absolute; left: 16px; top: 62px; font: 600 17px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; color: #cfe3f2; text-shadow: 0 2px 4px rgba(0, 0, 0, .5); }
 #race.split .rp .rtime { top: 62px; }
 #rinfo { font: 600 17px/1.4 "Rajdhani", system-ui, sans-serif; text-align: right; max-width: 560px; } #rinfo small { color: #a9b8c6; font-size: 14px; } #rinfo em { color: #ffd84d; font-style: normal; font-weight: 700; }
-.medal { font-weight: 700; padding: 1px 8px; border-radius: 99px; } .medal.m3 { background: #ffc24d; color: #3a2a00; } .medal.m2 { background: #d0d7de; color: #1a2230; } .medal.m1 { background: #c47a3e; color: #fff; } .medal.m0 { background: rgba(255, 255, 255, .15); }
+.medal { display: inline-block; white-space: nowrap; font-weight: 700; padding: 1px 8px; border-radius: 99px; } .medal.m3 { background: #ffc24d; color: #3a2a00; } .medal.m2 { background: #d0d7de; color: #1a2230; } .medal.m1 { background: #c47a3e; color: #fff; } .medal.m0 { background: rgba(255, 255, 255, .15); }
 
 /* Ranking: el jugador fuera del top 5 va en una fila aparte, separada */
 #rtab div.far { margin-top: 6px; }
@@ -75,4 +75,11 @@
 @media (pointer: coarse) {
   #race:not(.split) #rtab div { min-width: 0; padding: 3px 8px; }
   #race:not(.split) .rp .ritem:empty::after { font-size: 34px; }
+}
+@media (max-width: 720px) and (orientation: portrait) {
+  #rres { justify-content: flex-end; align-items: center; gap: 6px; padding: 12px 12px max(14px, env(safe-area-inset-bottom)); background: linear-gradient(180deg, transparent 22%, rgba(11, 15, 20, .92) 48%); }
+  #rres .rtitle { font-size: 22px; text-align: center; }
+  #rres table { font-size: 14px; border-spacing: 0 2px; min-width: 94vw; }
+  #rres td { padding: 4px 8px; }
+  #rinfo { font-size: 13px; text-align: center; }
 }

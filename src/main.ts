@@ -333,6 +333,7 @@ function endRun(win: boolean, why: string) {
     persist();
   }
   $("hud").classList.add("hidden");
+  $("banner").classList.add("hidden");
   const more = win && !endless; // venció al jefe final: los resultados ofrecen "Seguir jugando"
   bank = { t: time, scrap: earned, dmg: { ...dmgOut }, rec };
   const evos = weapons.filter((w) => w.evolved).map((w) => WEAPONS[w.id].evoName);
@@ -1575,7 +1576,12 @@ if (import.meta.env.DEV) Object.assign(window, {
   __endless: () => { goEndless(); return { endless, next: RUN_BOSSES.at(-1) }; },
   __dmg: () => { const r = JSON.stringify(dmgBy); for (const k in dmgBy) delete dmgBy[k]; return r; },
   __out: () => JSON.stringify(Object.fromEntries(Object.entries(dmgOut).map(([k, v]) => [k, Math.round(v)]))), // daño infligido por arma
-  __outro: () => { hp = -1; }, // fuerza la derrota (cierre en cámara lenta)
+  __outro: () => {
+    god = false; revives = 0; hp = -1;
+    if (!Object.keys(dmgBy).length) Object.assign(dmgBy, { hormiga: 68, cucaracha: 42, escupidora: 25 });
+    if (state === "pause") resume();
+    $("levelup").classList.add("hidden"); state = "play";
+  }, // fuerza la derrota (cierre en cámara lenta)
   __killBoss: () => enemies.forEach((e) => { if (e.def.boss) e.hp = 0; }),
   __info: () => state === "duel" ? { state, ...duelM!.duelDev.info(), fps: engine.getFps() } : state === "match3" ? { state, ...m3M?.match3Dev.info(), fps: engine.getFps() } : ({ state, time, level, hp, enemies: enemies.length, gems: gems.length, weapons: weapons.map((w) => w.id + w.lv), fps: engine.getFps(), abil, abilCd, abilOn, worldK, stun: enemies.filter((e) => e.stun > 0).length, driveMul, endless, next: RUN_BOSSES[bossIdx] }),
   __car: () => car && { p: car.pos, f: car.root.forward },

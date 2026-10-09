@@ -67,7 +67,9 @@ export async function showPhoto(i: PhotoInfo) {
   g.imageSmoothingEnabled = false;
   // Papel envejecido (nada de blanco puro): beige apagado, motas y bordes más oscuros
   g.fillStyle = "#cfc8b0"; g.fillRect(0, 0, c.width, c.height);
-  for (let n = 0; n < 700; n++) { g.fillStyle = Math.random() < 0.5 ? "#b8b098" : "#dcd5bd"; g.globalAlpha = 0.5; g.fillRect(Math.random() * c.width, Math.random() * c.height, 1 + (Math.random() * 2) | 0, 1); }
+  let s = 20261009;
+  const r = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+  for (let n = 0; n < 700; n++) { g.fillStyle = r() < 0.5 ? "#b8b098" : "#dcd5bd"; g.globalAlpha = 0.5; g.fillRect(r() * c.width, r() * c.height, 1 + (r() * 2) | 0, 1); }
   g.globalAlpha = 1;
   const edge = g.createRadialGradient(c.width / 2, c.height / 2, c.height * 0.35, c.width / 2, c.height / 2, c.height * 0.8);
   edge.addColorStop(0, "#0000"); edge.addColorStop(1, "#4a432c66");
@@ -75,16 +77,16 @@ export async function showPhoto(i: PhotoInfo) {
   // Foto + hundido sutil del marco
   g.drawImage(src, (src.width - cw) / 2, (src.height - ch) / 2, cw, ch, pad, pad, pw, ph);
   g.strokeStyle = "#2a2618"; g.lineWidth = 2; g.strokeRect(pad - 1, pad - 1, pw + 2, ph + 2);
-  // Pie escrito a mano (fuentes del juego): zona y tiempo, bajas y auto, resultado y fecha
+  // Pie rotulado en Rajdhani: zona y tiempo, bajas y auto, resultado y fecha
   const ink = "#1b2418", u = pw / 800;
   g.fillStyle = ink; g.textBaseline = "alphabetic";
-  const y0 = pad + ph + foot * 0.3;
-  g.font = `${Math.round(34 * u)}px Silkscreen`; g.textAlign = "left"; g.fillText(i.zone.toUpperCase(), pad, y0);
+  const y0 = pad + ph + foot * 0.32;
+  g.font = `700 ${Math.round(34 * u)}px Rajdhani, sans-serif`; g.textAlign = "left"; g.fillText(i.zone.toUpperCase(), pad, y0);
   g.textAlign = "right"; g.fillText(i.time, pad + pw, y0);
-  g.textAlign = "left"; g.font = `${Math.round(60 * u)}px VT323`;
-  g.fillText(`${i.kills} ${i.kills === 1 ? "baja" : "bajas"} · ${i.car}`, pad, y0 + 54 * u);
-  g.fillStyle = "#5a5a40"; g.font = `${Math.round(38 * u)}px VT323`;
-  g.fillText(`${i.win ? "Victoria" : "Fin de la partida"} · ${new Date().toLocaleDateString("sv")} · Junked Metal`, pad, y0 + 96 * u);
+  g.textAlign = "left"; g.font = `700 ${Math.round(50 * u)}px Rajdhani, sans-serif`;
+  g.fillText(`${i.kills} ${i.kills === 1 ? "BAJA" : "BAJAS"} · ${i.car.toUpperCase()}`, pad, y0 + 52 * u);
+  g.fillStyle = "#4d4c38"; g.font = `600 ${Math.round(30 * u)}px Rajdhani, sans-serif`;
+  g.fillText(`${i.win ? "VICTORIA" : "FIN DE LA PARTIDA"} · JUNKED METAL`, pad, y0 + 92 * u);
   photoUrl = c.toDataURL("image/png");
   ($("overPhotoImg") as HTMLImageElement).src = photoUrl;
   fig.classList.remove("hidden");
