@@ -125,6 +125,9 @@
 #hint .tip { grid-column: 1 / -1; color: var(--g-dim); text-align: center; }
 #hint kbd, kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-right: 3px; text-align: center; background: rgba(255, 255, 255, .14); border: 1px solid var(--g-line); border-bottom-width: 2px; border-radius: 6px; color: var(--g-txt); font: 700 11px var(--hf); }
 @media (pointer: coarse) { #hint { display: none !important; } }
+/* Con cartas de nivel o menú/pausa abiertos, ocultar guía de controles y telemetría inferior para no pisar botones ni cartas */
+#hud:has(~ #levelup:not(.hidden)) #hint, #hud:has(~ #fe:not(.hidden)) #hint { display: none !important; }
+#hud:has(~ #levelup:not(.hidden)) #txl, #hud:has(~ #fe:not(.hidden)) #txl { opacity: 0; visibility: hidden; pointer-events: none; }
 
 /* ---------- Silencio y aviso de eventos (transmisor RC) ---------- */
 #muted { position: fixed; top: calc(max(10px, env(safe-area-inset-top)) + 178px); right: 16px; font: 700 11px/1 var(--hf); letter-spacing: .08em; color: var(--g-dim); background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 8px; padding: 5px 8px; pointer-events: none; }

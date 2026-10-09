@@ -132,3 +132,27 @@ Carrera (1) y Survivor en partida (2).
 - En `pc-partida-cartas.png`, el borde inferior de las 3 cartas de nivel y la leyenda `"1 · 2 · 3 o clic — Enter confirma"` pisan la barra `#bar` (`12.6V`).
 - Siguen pendientes del listado inicial: pósters bilingües en `src/kit3d.ts:138`, desgaste uniforme/manchas laterales del gabinete de Junket Crush (`src/match3_scene.ts`), utilería de mesa en `src/menuscene.ts` y antipatrones DOM puntuales (`side-tab`, `layout-transition`).
 
+---
+
+## 2026-10-08 · Ciclo #2 (Claridad en Partida: Cartas de Nivel, Sinergias y Pausa en Vivo)
+
+**Capturas verificadas:** `.shots/actual/pc-partida-cartas.png`, `.shots/actual/cel-partida-cartas.png`, `.shots/actual/pc-partida-pausa.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png` (`npm run shots -- --only partida`, 5 capturas sin errores).
+
+### Intervenciones aplicadas y verificadas en captura
+1. **Eliminación de solapamientos en Cartas de Nivel y Pausa (`src/hud.css`, `src/style.css`):**
+   - `#hud:has(~ #levelup:not(.hidden))` y `#hud:has(~ #fe:not(.hidden))` ocultan `#hint` y `#txl` mientras están abiertas las cartas de nivel o el menú de pausa.
+   - En `pc-partida-cartas.png` y `cel-partida-cartas.png`, las 3 cartas de mejora quedan centradas con aire limpio arriba y abajo, sin pisar el panel inferior `12.6V` (mientras `#luHp` muestra `VIDA 160/160` en el encabezado).
+   - En `pc-partida-pausa.png`, desaparece el cuadro `#hint` traslúcido detrás de `SEGUIR / CONTROLES / CONFIGURACIÓN / ABANDONAR` y el pie `ATARDECER · PLAGA DE HORMIGAS · Semilla 3 · ESC sigue · M sonido` se lee limpio.
+2. **Indicador de sinergia de evolución y fusión en cada carta (`src/weapons.ts`, `src/ui.ts`, `src/style.css`, `src/kit.css`):**
+   - Cada carta de arma, pasiva, evolución o fusión incluye un sello `.syn` con ícono SVG de 14 px y etiqueta en español neutro (`Evo · Pila de litio`, `Evo · Imán de heladera`, `Evo · Petardos / Bengalas`), que cambia a estado resaltado dorado (`Par listo · ...`, clase `.syn.on`) cuando el jugador ya tiene la contraparte en su inventario.
+   - Integrado tanto en el diseño vertical de PC como en la grilla horizontal compacta de celular (`grid-template-areas: "art kind" "art name" "art desc" "art syn" "art pips"`).
+3. **Desglose de daño en vivo en Pausa (`src/main.ts`, `src/menu.ts`, `src/menu.css`):**
+   - En `#scr-pause`, cada fila de `#kitW` muestra bajo el nombre del arma su daño acumulado y porcentaje del total (`1.240 · 68%` o `0 daño` al inicio) junto con una barra inferior proporcional (`--w-pct`), y la columna `PARTIDA` suma la fila `Daño total`.
+   - Se fijó `white-space: nowrap` en `#fe li b` para evitar que `×1.00 (pico ×1.00)` se parta en dos renglones.
+
+### Hallazgos visuales detectados para Ciclo #3
+- En `pc-match3-gabinete.png`, las dos manchas verdes laterales que tapan los tercios izquierdo y derecho del cuadro son esferas/masas de follaje cercanas a la cámara en `src/match3_scene.ts`.
+- En `pc-menu-garaje.png` y `pc-menu-taller.png`, la lámpara articulada celeste (`src/menuscene.ts`) sigue en plástico liso (`M.plastic`) con la bombilla asomando a través del cono superior, desentonando con el auto y la caja de herramientas Folded.
+- En `pc-menu-taller.png`, las 9 tarjetas de `CHASIS` (4×2 + 1 huérfana) empujan `#shopPreview` y `VOLVER` hasta el borde inferior en 1280×720, y la opacidad de tarjetas sin saldo apaga demasiado el título y el ícono.
+
+

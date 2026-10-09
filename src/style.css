@@ -37,7 +37,7 @@ kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-right: 3p
 .carc .st i { display: block; height: 5px; margin-top: 4px; background: var(--sig); }
 
 /* Cartas de mejora */
-#levelup { justify-content: flex-end; padding-bottom: 7vh; background: linear-gradient(transparent 0 35%, rgba(10, 11, 13, .88) 62%); }
+#levelup { justify-content: center; padding: 4vh 0 3vh; background: linear-gradient(transparent 0 28%, rgba(10, 11, 13, .88) 58%); }
 #levelup .lu-head { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 4px; max-width: 96vw; }
 #levelup .lu-meta { display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(420px, 92vw); }
 #levelup .lu-sub { margin: 0; font: 600 13px/1.35 var(--data); letter-spacing: .08em; color: var(--dim); text-align: center; min-height: 1.35em; text-transform: uppercase; }
@@ -55,17 +55,22 @@ kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-right: 3p
 #levelup .lu-reroll { margin: 2px 0 6px; padding: 8px 14px; font: 700 11px/1 var(--data); letter-spacing: .14em; text-transform: uppercase; color: var(--txt); background: #0b100a; border: 1px solid var(--line); cursor: pointer; box-shadow: inset 0 0 16px #000; }
 #levelup .lu-reroll:hover { border-color: var(--accent); color: var(--accent); }
 #levelup #offers { gap: 14px; margin-bottom: 6px; }
-#levelup .offer > span:not(.kind):not(.pips) { line-height: 1.45; font-size: 12px; }
+#levelup .offer > span:not(.kind):not(.pips) { line-height: 1.4; font-size: 12px; }
 /* Cada carta es un monitor CRT: carcasa de plástico, pantalla de fósforo con scanlines, se "sintoniza" al aparecer */
-.offer { --rc: var(--r-comun); position: relative; width: 210px; min-height: 250px; background: #050705; border: 6px solid var(--panel); border-top-color: #1d231b; border-bottom-color: #0a0c09; outline: 1px solid #000; padding: 14px; cursor: pointer; text-align: left; font-size: 13px; color: var(--dim); display: flex; flex-direction: column; gap: 8px; box-shadow: inset 0 0 28px #000, inset 0 3px 0 var(--rc), 0 6px 14px #000c; animation: tune .55s steps(9, end) both; animation-delay: calc(var(--i) * 90ms); transition: transform .12s, box-shadow .12s; }
+.offer { --rc: var(--r-comun); position: relative; width: 215px; min-height: 254px; background: #050705; border: 6px solid var(--panel); border-top-color: #1d231b; border-bottom-color: #0a0c09; outline: 1px solid #000; padding: 13px 14px; cursor: pointer; text-align: left; font-size: 13px; color: var(--dim); display: flex; flex-direction: column; gap: 7px; box-shadow: inset 0 0 28px #000, inset 0 3px 0 var(--rc), 0 6px 14px #000c; animation: tune .55s steps(9, end) both; animation-delay: calc(var(--i) * 90ms); transition: transform .12s, box-shadow .12s; }
 .offer::after { content: none; }
 .offer:hover, .offer.sel { transform: translateY(-6px); box-shadow: inset 0 0 22px #000, inset 0 3px 0 var(--rc), 0 0 18px color-mix(in srgb, var(--rc) 35%, transparent), 0 10px 18px #000c; }
 .offer.sel b, .offer:hover b { text-shadow: 0 0 8px color-mix(in srgb, var(--rc) 70%, transparent); }
-.offer .art { width: 78px; height: 78px; margin: 4px auto 6px; display: grid; place-items: center; color: var(--rc); background: #0b100a; border: 1px solid var(--line); box-shadow: inset 0 0 12px #000; }
+.offer .art { width: 78px; height: 78px; margin: 2px auto 4px; display: grid; place-items: center; color: var(--rc); background: #0b100a; border: 1px solid var(--line); box-shadow: inset 0 0 12px #000; }
 .offer .art canvas { width: 72px; height: 72px; image-rendering: pixelated; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--rc) 60%, transparent)); }
 .offer b { font: 700 16px/1.15 var(--data); color: var(--txt); text-transform: uppercase; letter-spacing: .03em; }
 .offer .kind { font: 700 10px/1 var(--data); letter-spacing: .16em; color: var(--rc); text-transform: uppercase; }
+.offer .syn { display: flex; align-items: center; gap: 5px; margin-top: auto; padding: 4px 6px; font: 700 11px/1.15 var(--data); letter-spacing: .03em; color: var(--dim); background: rgba(0, 0, 0, .35); border: 1px solid var(--line); }
+.offer .syn.on { color: #ffe082; border-color: rgba(245, 183, 0, .55); background: rgba(245, 183, 0, .12); }
+.offer .syn .ico { flex: 0 0 auto; width: 14px; height: 14px; }
+.offer .syn span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .offer .pips { display: flex; gap: 3px; margin-top: auto; }
+.offer .syn + .pips { margin-top: 2px; }
 .offer .pips i { flex: 1; height: 4px; background: #ffffff18; }
 .offer .pips i.on { background: var(--rc); }
 .offer.rara { --rc: var(--r-rara); } .offer.epica { --rc: var(--r-epica); } .offer.evo { --rc: var(--r-evo); background: #221d10; } .offer.fusion { --rc: var(--r-fusion); background: #1b1f0e; }
@@ -180,11 +185,12 @@ body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px
 @media (orientation: portrait) and (max-width: 720px) {
   body #levelup { background: linear-gradient(rgba(11, 15, 20, .45), rgba(11, 15, 20, .9) 35%); }
   #levelup #offers { flex-direction: column; flex-wrap: nowrap; width: min(440px, 100%); }
-  #levelup .offer { width: 100%; display: grid; grid-template-columns: 56px 1fr; grid-template-areas: "art kind" "art name" "art desc" "art pips"; column-gap: 12px; row-gap: 3px; align-items: start; }
+  #levelup .offer { width: 100%; display: grid; grid-template-columns: 56px 1fr; grid-template-areas: "art kind" "art name" "art desc" "art syn" "art pips"; column-gap: 12px; row-gap: 3px; align-items: start; }
   #levelup .offer .kind { grid-area: kind; }
   #levelup .offer .art { grid-area: art; align-self: center; margin: 0; }
   #levelup .offer b { grid-area: name; }
   #levelup .offer > span:not(.kind):not(.pips) { grid-area: desc; }
+  #levelup .offer .syn { grid-area: syn; margin-top: 1px; }
   #levelup .offer .pips { grid-area: pips; margin-top: 2px; }
   #levelup .offer:hover, #levelup .offer.sel { transform: translateX(4px); }
 }

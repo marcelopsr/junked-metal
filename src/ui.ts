@@ -387,6 +387,7 @@ export function showOffers(title: string, offers: Offer[], sel: number, onPick: 
       <div class="art">${icon(o.kind === "evo" ? o.id : o.icon, 44)}</div>
       <b>${o.title}</b>
       <span>${o.desc}</span>
+      ${o.syn ? `<div class="syn ${o.syn.ready ? "on" : ""}">${o.syn.icons.map((k) => icon(k, 14)).join("")}<span>${o.syn.label}</span></div>` : ""}
       ${o.lv ? `<span class="pips">${Array.from({ length: 5 }, (_, k) => `<i class="${k < o.lv! ? "on" : ""}"></i>`).join("")}</span>` : ""}
     </div>`).join("");
   $("levelup").classList.remove("hidden");

@@ -133,8 +133,12 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #overHurt li i { height: 8px; background: #ff8a8a88; }
 #fe ul { list-style: none; margin: 0; padding: 8px 12px; background: var(--shell); border: 1px solid var(--line); clip-path: polygon(0 1%, 30% 0, 100% 1.5%, 99.4% 100%, 50% 99%, 0 100%); }
 #fe li { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 17px; padding: 3px 0; }
-#fe li b { color: var(--lcd-ink); font-weight: 400; }
+#fe li b { color: var(--lcd-ink); font-weight: 400; white-space: nowrap; }
 #fe li .pips { margin: 0; }
+#kitW li { background: linear-gradient(90deg, rgba(245, 183, 0, .26) var(--w-pct, 0%), transparent 0) no-repeat 0 100% / 100% 2px; padding-bottom: 5px; }
+#kitW .wn { display: flex; flex-direction: column; line-height: 1.05; min-width: 0; }
+#kitW .wn em { font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#kitW .wdmg { font: 600 11px/1.1 var(--data); color: var(--dim); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
 .kit.stats { grid-template-columns: repeat(4, 1fr); padding: 0; background: none; border: 0; clip-path: none; width: min(560px, 94vw); }
 .kit.stats li { flex-direction: column; background: var(--shell); border: 1px solid var(--line); padding: 8px; }
 .kit.stats li span { color: var(--dim); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }

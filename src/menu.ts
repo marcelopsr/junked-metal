@@ -1052,10 +1052,10 @@ function renderBeast() {
 }
 
 // ---------- Pausa y resultados (los datos los arma main.ts) ----------
-type Kit = { weapons: { id: WeaponId; lv: number; evolved: boolean }[]; passives: { id: PassiveId; lv: number }[]; stats: [string, string][]; run: [string, string][]; seed: string };
+type Kit = { weapons: { id: WeaponId; lv: number; evolved: boolean; dmg?: number; pct?: number }[]; passives: { id: PassiveId; lv: number }[]; stats: [string, string][]; run: [string, string][]; seed: string };
 const pips = (l: number) => `<span class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(Math.max(0, 5 - l))}</span>`;
 export function openPause(k: Kit) {
-  $("kitW").innerHTML = k.weapons.map((w) => `<li><span class="wi">${icon(w.id, 20)}${w.evolved ? WEAPONS[w.id].evoName : WEAPONS[w.id].name}</span>${w.evolved ? "<b>EVO</b>" : pips(w.lv)}</li>`).join("");
+  $("kitW").innerHTML = k.weapons.map((w) => `<li style="--w-pct:${w.pct ?? 0}%"><span class="wi">${icon(w.id, 20)}<span class="wn"><em>${w.evolved ? WEAPONS[w.id].evoName : WEAPONS[w.id].name}</em><small class="wdmg">${w.dmg ? `${w.dmg.toLocaleString("es")} · ${w.pct}%` : "0 daño"}</small></span></span>${w.evolved ? "<b>EVO</b>" : pips(w.lv)}</li>`).join("");
   $("kitP").innerHTML = k.passives.map((p) => `<li><span class="wi">${icon(p.id, 20)}${PASSIVES[p.id].name}</span>${pips(p.lv)}</li>`).join("") || "<li><span>Ninguna</span></li>";
   $("kitS").innerHTML = k.stats.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("kitR").innerHTML = k.run.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");

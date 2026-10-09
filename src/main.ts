@@ -473,11 +473,15 @@ function pause() {
   if (state !== "play") return;
   state = "pause"; scene.physicsEnabled = false; engineStop(); musicDuck(true);
   const evoLine = weapons.filter((w) => w.evolved).map((w) => WEAPONS[w.id].evoName).join(" · ");
+  const totDmg = Object.values(dmgOut).reduce((a, b) => a + b, 0);
   openPause({
-    weapons: weapons.map((w) => ({ id: w.id, lv: w.lv, evolved: w.evolved })),
+    weapons: weapons.map((w) => {
+      const d = Math.round(dmgOut[w.id] ?? 0);
+      return { id: w.id, lv: w.lv, evolved: w.evolved, dmg: d, pct: totDmg > 0 ? Math.round((d / totDmg) * 100) : 0 };
+    }),
     passives: (Object.entries(passives) as [PassiveId, number][]).map(([id, lv]) => ({ id, lv })),
     stats: [["Carrocería", `${Math.ceil(hp)} / ${maxHp}`], ["Velocidad", `${Math.round(car!.def.speed * st.speedMul * 3.6)} km/h`], ["Embestida", `x${car!.def.ram}`], ["Daño", `${Math.round(st.dmg * 100)}%`], ["Blindaje", `${Math.round(st.armor * 100)}%`], ["Imán", `${st.magnet.toFixed(1)} m`]],
-    run: [["Nivel", `NV ${level}${pendingLevels ? ` (+${pendingLevels} pend.)` : ""}`], ["Tiempo", fmt(time)], ["Combo manejo", `×${driveMul.toFixed(2)} (pico ×${bestDriveMul.toFixed(2)})`], ["Re-sorteos", String(rerolls)], ...(evoLine ? [["Evoluciones", evoLine] as [string, string]] : [])],
+    run: [["Nivel", `NV ${level}${pendingLevels ? ` (+${pendingLevels} pend.)` : ""}`], ["Tiempo", fmt(time)], ["Daño total", Math.round(totDmg).toLocaleString("es")], ["Combo manejo", `×${driveMul.toFixed(2)} (pico ×${bestDriveMul.toFixed(2)})`], ["Re-sorteos", String(rerolls)], ...(evoLine ? [["Evoluciones", evoLine] as [string, string]] : [])],
     seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`,
   });
 }

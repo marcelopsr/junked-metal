@@ -176,6 +176,8 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 .offer .kind { font: 700 11px/1 var(--jm-titulo); letter-spacing: .16em; }
 .offer, .offer p, .offer span { font-family: var(--jm-texto-f); }
 .offer > span:not(.kind):not(.pips) { color: #cbd5e1; font-size: 14px !important; }
+.offer .syn { font-family: var(--jm-titulo); font-size: 11.5px; padding: 3px 5px; color: var(--jm-texto2); background: var(--jm-fondo); border-color: var(--jm-borde); border-radius: 3px; }
+.offer .syn.on { color: var(--jm-amarillo2); border-color: rgba(245, 183, 0, .6); background: rgba(245, 183, 0, .14); }
 .offer .art { background: radial-gradient(circle at 50% 35%, #2b3442, var(--jm-fondo)); box-shadow: inset 0 0 0 2px var(--jm-borde); }
 .offer .pips i { height: 6px; border-radius: 0; background: var(--jm-fondo); }
 .offer.evo, .offer.fusion { background: linear-gradient(180deg, #3a2a08, var(--jm-fondo2)); }
