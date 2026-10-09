@@ -245,3 +245,21 @@ Carrera (1) y Survivor en partida (2).
    - `Partidas` suma barra de porcentaje de victorias; `Tiempo jugado` incluye `Mejor tiempo`; `Arma favorita` muestra el ícono SVG del arma principal y las 3 armas con mayor daño acumulado con barras `.stb`; `Bajas por tipo` incorpora `beastIcon(k, 16)` y barras proporcionales `.stb` para cada especie; y la tabla `#records` (*Mejores partidas*) queda enmarcada en una placa de chapa oscura con filo superior `--jm-chapa`.
    - Además, se añadió `#beasts` a `SCROLL` y se resetea `$("beasts").scrollTop = 0` al abrir la Chatarroteca desde el menú principal o al cambiar de pestaña (`d.btab`), corrigiendo el desplazamiento residual en móvil tras inspeccionar fichas del final de la lista.
 
+---
+
+## 2026-10-09 · Ciclo #8 ( Ejecución en Paralelo por Subagentes: Pausa/Resultados, HUD de Evolución, Créditos/Más Modos y Poda GLTF)
+
+**Capturas verificadas:** `.shots/actual/pc-partida-pausa.png`, `.shots/actual/pc-partida-resultados.png`, `.shots/actual/cel-partida-resultados.png`, `.shots/actual/pc-menu-creditos.png`, `.shots/actual/cel-menu-creditos.png`, `.shots/actual/pc-menu-mas-modos.png`, `.shots/actual/cel-menu-mas-modos.png` (`npm run shots -- --only menu,partida`, 63 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por subagentes en paralelo y verificadas en captura
+1. **Sinergias bidireccionales en Pausa e íconos SVG completos en Resultados (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - **Pausa (`#scr-pause`):** Cada arma no evolucionada en `#kitW` muestra su pasiva de evolución debajo del daño (`Evo: Resorte`, `Evo: Capacitor`) resaltada en `--jm-amarillo2` (`.wsynP.on`) cuando la pasiva ya está equipada; simétricamente, cada pasiva en `#kitP` muestra las armas que evoluciona (`Evo: Lanza-gomitas`, etc.) con el mismo código visual.
+   - **Resultados (`#scr-over`):** `#overDmg` incorpora íconos SVG para fuentes no-arma (`Embestida` con `icon("lanza", 18)`, habilidades activas con `ABIL_ICON` y `Pelota` con `icon("mortero", 18)`); `#overHurt` resuelve el `Kind` de cada fuente de daño recibido (`Hormiga`, `Cucaracha`, `Hormiga escupidora`, `Contacto · ...`, `Rebote · ...`, `Salto · ...`, `Barrido · ...`, `Ácido`, `Cables`) y renderiza su silueta `beastIcon(hk, 18)` alineada a la izquierda con truncado limpio (`em` con `text-overflow: ellipsis`).
+2. **Placa de chapa en Créditos y progreso vivo en Más Modos / Junket Crush (Subagente 1 · `index.html`, `src/menu.ts`, `src/menu.css`, `scripts/scenarios.mjs`):**
+   - **Créditos (`#scr-credits`):** `#scr-credits .roll` utiliza ahora `.briefCard.jm-panel` (`pc-menu-creditos.png`, `cel-menu-creditos.png`), unificando la última pantalla informativa con el sistema de paneles de chapa oscura y tornillos en las esquinas sin alterar el texto original.
+   - **Más Modos (`#scr-modes`) y `#scr-match3`:** `refreshModes()` inyecta el progreso de Carrera (`#progRace`: pistas completadas y medallas ganadas sobre 3) y de Junket Crush (`#progM3` y `#m3Brief`: nivel de campaña `X / 10` y estrellas `Y / 30`), cubierto por la nueva captura `mas-modos` (`pc-menu-mas-modos.png`, `cel-menu-mas-modos.png`).
+3. **Indicador de sinergia y evolución lista en el HUD de Supervivencia (Subagente 3 · `src/ui.ts`, `src/hud.css`):**
+   - `hudSlots()` marca con `.syn-on` las ranuras de armas y pasivas que forman pareja de evolución activa, y con `.evo-ready` + insignia `<b class="evo-tag">EVO</b>` las armas en nivel 5 listas para evolucionar al abrir el próximo cofre (respetando `body.calm`).
+4. **Poda estática del chunk muerto GLTF Loader bajo `FOLDED_SLICE` (Subagente 2 + Orquestador · `src/glb.ts`, `src/carGlb.ts`):**
+   - Se cortocircuitaron `load()` y `loadOne()` con `FOLDED_SLICE` y `@vite-ignore`, eliminando por completo `dist/assets/2.0-*.js` (`542.16 kB`) y `glTFLoaderAnimation.pure-*.js` (`23.59 kB`) del build de producción.
+

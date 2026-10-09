@@ -255,10 +255,16 @@ export const SFX = {
   accept: () => { hiss("bandpass", 3200, 1800, 0.04, 0.2); tone("square", 520, 260, 0.05, 0.05, 0.02); },
   back: () => tone("square", 440, 220, 0.06, 0.04),
   static: () => hiss("bandpass", 5000, 1200, 0.22, 0.09),
-  /** Arcade match-3: intercambio y línea eliminada. */
-  m3Swap: () => gate("m3sw", 20) && (tone("triangle", 520, 780, 0.06, 0.09), hiss("bandpass", 1800, 900, 0.04, 0.1)),
-  m3Clear: () => gate("m3cl", 14) && (tone("square", 660, 330, 0.08, 0.08), hiss("lowpass", 2400, 600, 0.06, 0.12)),
+  /** Arcade match-3: intercambio, línea eliminada, click mecánico y fanfarria de nivel. */
+  m3Click: () => gate("m3ck", 28) && (tone("square", 1200, 600, 0.02, 0.06), hiss("bandpass", 3400, 1400, 0.025, 0.08)),
+  m3Swap: () => gate("m3sw", 20) && (tone("triangle", 440, 880, 0.05, 0.11), hiss("bandpass", 2600, 1100, 0.035, 0.14)),
+  m3Clear: () => gate("m3cl", 14) && (tone("square", 740, 370, 0.07, 0.09), tone("triangle", 1100, 550, 0.06, 0.08), hiss("lowpass", 3200, 800, 0.05, 0.14)),
+  m3Win: () => [523, 659, 784, 1047, 1318].forEach((f, i) => {
+    tone("triangle", f, f * 1.01, 0.22, 0.1, i * 0.07);
+    tone("square", f * 0.5, f * 0.5, 0.18, 0.04, i * 0.07);
+  }),
 };
+
 
 // Lluvia: ruido filtrado en bucle por el canal de efectos (respeta volumen y mute); k 0..1, 0 = silencio
 let rainG: GainNode | null = null;

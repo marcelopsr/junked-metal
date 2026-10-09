@@ -319,12 +319,13 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .rcHead { display: flex; align-items: center; gap: 6px; }
 .rcHead b { font-size: 15px; margin-right: auto; }
 .rcHead em { font: 700 15px/1 var(--jm-titulo); color: var(--jm-amarillo2); font-style: normal; font-variant-numeric: tabular-nums; }
-.rmedal { padding: 2px 6px; font: 700 10px/1 var(--jm-titulo); letter-spacing: .08em; border-radius: 2px; background: var(--jm-panel); color: var(--jm-texto2); border: 1px solid var(--jm-borde); }
-.rmedal.m3 { background: var(--jm-amarillo); color: var(--jm-fondo); border-color: var(--jm-fondo); }
-.rmedal.m2 { background: #cbd5e1; color: var(--jm-fondo); border-color: var(--jm-fondo); }
-.rmedal.m1 { background: #d97706; color: var(--jm-fondo); border-color: var(--jm-fondo); }
+.rmedal { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; font: 700 10.5px/1 var(--jm-titulo); letter-spacing: .08em; border-radius: 3px; background: var(--jm-panel); color: var(--jm-texto2); border: 1px solid var(--jm-borde); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15); }
+.rmedal.m3 { background: linear-gradient(180deg, #ffd700 0%, #e6a800 100%); color: #1e1300; border-color: #ffe680; box-shadow: 0 0 8px rgba(255, 215, 0, .45), inset 0 1px 0 #fff; text-shadow: 0 1px 0 rgba(255, 255, 255, .3); }
+.rmedal.m2 { background: linear-gradient(180deg, #f1f5f9 0%, #94a3b8 100%); color: #0f172a; border-color: #ffffff; box-shadow: 0 0 6px rgba(203, 213, 225, .35), inset 0 1px 0 #fff; text-shadow: 0 1px 0 rgba(255, 255, 255, .4); }
+.rmedal.m1 { background: linear-gradient(180deg, #fb923c 0%, #b45309 100%); color: #2a1100; border-color: #fed7aa; box-shadow: 0 0 6px rgba(217, 119, 6, .35), inset 0 1px 0 #ffedd5; text-shadow: 0 1px 0 rgba(255, 255, 255, .25); }
 .rcGoals { display: flex; justify-content: space-between; gap: 4px; font: 600 11.5px/1.1 var(--jm-titulo); letter-spacing: .03em; color: var(--jm-texto2); font-variant-numeric: tabular-nums; border-top: 1px dashed var(--jm-borde); padding-top: 4px; }
 .rcGoals .mg { color: var(--jm-amarillo2); } .rcGoals .ms { color: #cbd5e1; } .rcGoals .mb { color: #f59e0b; }
+
 #fe #rcHelp { width: min(560px, 94vw); padding: 5px 10px; font-size: 13.5px; color: var(--jm-texto2); background: rgba(11, 15, 20, .88); border: 1px solid var(--jm-borde); border-radius: var(--jm-r); text-shadow: none; text-align: center; }
 @media (max-width: 640px) {
   .rcBrief { grid-template-columns: 1fr; gap: 5px; }

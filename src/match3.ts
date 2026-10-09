@@ -518,7 +518,7 @@ function afterAction() {
   if (st.phase === "win" && !finaleDone) {
     finaleDone = true;
     banner = { txt: st.movesLeft > 0 ? "SOBRECARGA FINAL" : "PEDIDO COMPLETO", t: 1.2, col: M3C.verde };
-    SFX.finish();
+    SFX.m3Win();
     if (st.movesLeft > 0) {
       const pre = snap(st);
       const f = finale(st);

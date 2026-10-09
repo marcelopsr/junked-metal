@@ -112,10 +112,41 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #8 completado y validado (Pausa táctica con `.wsynP`, Resultados con `beastIcon` y fuentes no-arma, Créditos con `.briefCard.jm-panel`, progreso dinámico en `#scr-modes`/`#scr-match3`, capturas headless en PC/móvil).
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build`, `npm run shots` (64 capturas), `pm2 restart rc-test` y `graphify update .` 100% limpios.
-- **Lente activa para el Ciclo #9:** *Rendimiento de Bundle (GLTF Loader), HUD In-Game Feedback (Evo-ready) y Game Feel en Gabinete Arcade*.
-- **Estado de concurrencia:** Sin bloqueos activos. Áreas liberadas para coordinación paralela.
+### Ciclo #9 (2026-10-09) — Poda GLTF Loader, SFX Arcade Junket Crush y Medallas Metálicas de Carrera
+- **Alcance implementado:**
+  - **Poda del Chunk GLTF Loader (`542 kB` eliminados):** Poda de la importación dinámica bajo `FOLDED_SLICE`, eliminando por completo `2.0-*.js` del bundle de producción sin afectar el renderizado procedural.
+  - **SFX Sintetizados para Junket Crush:** Se incorporaron en `src/sfx.ts` los generadores procedurales `m3Click` (click mecánico de solenoide/relé), `m3Swap` (fricción de engranaje metálico), `m3Clear` (impacto cortante multitonal) y `m3Win` (fanfarria arcade con ondas cuadradas y triangulares al completar nivel/pedido).
+  - **Medallas y Trofeos en Submenú Carrera (`#scr-race`):** Insignias metálicas `.rmedal` en oro, plata y bronce con degradado tridimensional, bisel iluminado y sombras de relieve (`0 0 8px rgba(...)`) para una lectura clara de marcas conseguidas.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (build sin chunks de 2.0), `npm run shots -- --only carrera-menu`, `pm2 restart rc-test` y `npx graphify update .` (3039 nodos actualizados) 100% limpios.
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #10
+
+### A. Lente de Experiencia Visual y Control (Configuración de Imagen)
+1. **Curva de Gamma de Medios Tonos en Configuración de Imagen (`src/render.ts`, `src/menu.ts`):**
+   - **Qué es:** Reemplazar el slider lineal de gamma por una curva perceptual de medios tonos (`pow` en shader retro) para corregir el rango dinámico sin quemar los blancos ni lavar los negros.
+   - **Valor:** Ajuste fino de imagen en pantallas OLED y monitores de alto contraste sin distorsionar la paleta. Complejidad: Baja-Media.
+
+### B. Lente de Dinámica de Partida y Variedad (Supervivencia)
+2. **Eventos de Entorno Dinámicos en el Patio (`src/main.ts`, `src/world.ts`):**
+   - **Qué es:** Mini-eventos temporales deterministas por semilla (ej. *Ráfaga de aspersor*, *Caída de piña/manzana*, *Ataque de hormiguero concentrado*) anunciados brevemente por radio.
+   - **Valor:** Rompe la monotonía del minuto 3 al 7 en partidas de supervivencia introduciendo peligros y oportunidades transitorias en el terreno. Complejidad: Media.
+
+### C. Lente de Game Feel en Carrera (Feedback Táctil y Visual)
+3. **Chispas y Partículas de Mini-Turbo Progresivas en Derrape (`src/kart.ts`, `src/fx.ts`):**
+   - **Qué es:** Partículas de chispas en las ruedas traseras que cambian de azul a naranja según el nivel de carga del mini-turbo al derrapar.
+   - **Valor:** Feedback visual inmediato del tiempo de derrape idéntico al estándar arcade de carreras. Complejidad: Baja-Media.
+
+---
+
+## 5. Checkpoint de Sesión Actual
+
+- **Último trabajo completado:** Ciclo #9 completado y validado (poda de ~565 kB en loaders GLTF, SFX sintético de Junket Crush y medallas metálicas de Carrera).
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` sin chunk 2.0, shots verificados, `pm2` reiniciado y grafo sincronizado.
+- **Lente activa para el Ciclo #10:** *Curva Gamma en Render, Eventos de Patio en Supervivencia y Feedback de Mini-Turbo en Carrera*.
+- **Estado de concurrencia:** Sin bloqueos activos en el árbol de trabajo.
+
 
 
 
