@@ -213,15 +213,21 @@ export function hudJump(ready: number) {
   const cdS = cd.toFixed(3);
   if (ch("jmpCd", cdS)) {
     $("tJump").style.setProperty("--cd", cdS);
-    const on = cd > 0.02;
-    $("jumpRow").classList.toggle("hidden", !on || isTouch);
-    $("jumpTrack").classList.toggle("hidden", !on || isTouch);
-    if (on && !isTouch) { const k = KEYS.jump[0]; txt("jumpKey", k.startsWith("Key") ? k.slice(3) : k); bar("jumpBar", ready * 100); }
+    $("jumpRow").classList.toggle("hidden", isTouch);
+    $("jumpTrack").classList.toggle("hidden", isTouch);
+    $("jumpRow").classList.toggle("ready", ready >= 1);
+  }
+  if (!isTouch) {
+    const k = KEYS.jump[0];
+    txt("jumpKey", `${ready >= 1 ? "LISTO · " : ""}${k.startsWith("Key") ? k.slice(3) : k}`);
+    bar("jumpBar", ready * 100);
   }
 }
 
-export function hudAbility(name: string, key: string, frac: number, on: boolean) {
-  txt("abName", name); txt("abKey", key);
+export function hudAbility(name: string, key: string, frac: number, on: boolean, ico?: string, remS?: number) {
+  if (ch("abName", `${ico ?? ""}:${name}`)) $("abName").innerHTML = `${ico ? icon(ico, 13) : ""}${name}`;
+  const stTxt = on ? "ACTIVA" : frac >= 1 ? "LISTO" : remS && remS > 0 ? `${Math.ceil(remS)}S` : "";
+  txt("abKey", isTouch ? stTxt : stTxt ? `${stTxt} · ${key}` : key);
   bar("abil", (on ? 1 : frac) * 100);
   const st = on ? "on" : frac >= 1 ? "ready" : "";
   if (ch("abSt", st)) { $("txl").classList.toggle("ab-on", on); $("txl").classList.toggle("ab-ready", st === "ready"); $("tAbil").classList.toggle("on", on); }

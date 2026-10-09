@@ -119,34 +119,43 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Medallas y Trofeos en Submenú Carrera (`#scr-race`):** Insignias metálicas `.rmedal` en oro, plata y bronce con degradado tridimensional, bisel iluminado y sombras de relieve (`0 0 8px rgba(...)`) para una lectura clara de marcas conseguidas.
 - **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (build sin chunks de 2.0), `npm run shots -- --only carrera-menu`, `pm2 restart rc-test` y `npx graphify update .` (3039 nodos actualizados) 100% limpios.
 
+### Ciclo #10 (2026-10-09) — Ícono Reloj y Descripciones en Taller, HUD Táctico de Habilidad/Salto (`#txl`) y Aviso de Evolución Lista
+- **Alcance implementado en paralelo por 3 subagentes:**
+  - **Subagente 1 · Íconos SVG y Taller (`src/icons.ts`, `src/menu.ts`):** Nuevo ícono SVG `"reloj"` (cronómetro con degradado `#9be3ff → #ffd84d`) asignado a `ABIL_ICON.lenta` (eliminando la colisión con la mejora *Señal* del Taller). En `shopItems()` (`stab === "habilidades"`), cada tarjeta ahora muestra qué hace realmente la habilidad además de su nivel y tiempo de recarga (`${a.desc} · Nivel ${l + 1} (${n1(abilCd(k, l))} s)`).
+  - **Subagente 2 · HUD Táctico de Supervivencia `#txl` (`src/ui.ts`, `src/hud.css`):** Se habilitó la cabecera `.h-ptitle.h-abil` en `#txl` con el ícono SVG inline de la habilidad equipada (`#abName`), su estado en vivo en `#abKey` (`LISTO · E` en verde `#22c55e`, `ACTIVA · E` en `#ffd24a` o cuenta regresiva `NS · E`, y sin sufijo de tecla en pantallas táctiles) y la fila de Salto `#jumpRow` siempre visible en escritorio (`LISTO · F` con barra de carga).
+  - **Subagente 3 · Supervivencia Core (`src/main.ts`):** Conexión de `ABIL_ICON[abil]` y `abilCd` con `hudAbility()` en `updateHud()`, más registro por partida (`evoNotified`) en `choose(i)` que dispara un aviso de radio `EVOLUCIÓN LISTA · <EVO_NAME> (COFRE)` la primera vez que un arma llega a Nv. 5 con su pasiva pareja equipada.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (build limpio en 586 ms sin chunk 2.0), `npm run shots -- --only taller,partida` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3046 nodos, 7433 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #10
+## 4. Backlog Vivo de Oportunidades — Ciclo #11
 
-### A. Lente de Experiencia Visual y Control (Configuración de Imagen)
-1. **Curva de Gamma de Medios Tonos en Configuración de Imagen (`src/render.ts`, `src/menu.ts`):**
-   - **Qué es:** Reemplazar el slider lineal de gamma por una curva perceptual de medios tonos (`pow` en shader retro) para corregir el rango dinámico sin quemar los blancos ni lavar los negros.
-   - **Valor:** Ajuste fino de imagen en pantallas OLED y monitores de alto contraste sin distorsionar la paleta. Complejidad: Baja-Media.
+### A. Área 1 · Carrera HUD y Podio (`src/kart.ts`, `src/race.css`)
+1. **Meta de Medalla en Vivo en HUD, Chispas de Mini-Turbo y Placa `#rbest` en Podio:**
+   - **Qué es:** Mostrar junto al cronómetro en `#race` la medalla objetivo que todavía está al alcance (`ORO 1:18.0`, `PLATA 1:27.0`, `BRONCE 1:39.0`), emitir chispas progresivas de derrape (azul → naranja) al cargar mini-turbo y enmarcar `#rbest` en el podio sobre una placa de chapa oscura con insignia `.rmedal`.
+   - **Valor:** Conecta en tiempo real las medallas metálicas del menú con la carrera y el podio. Complejidad: Baja-Media.
 
-### B. Lente de Dinámica de Partida y Variedad (Supervivencia)
-2. **Eventos de Entorno Dinámicos en el Patio (`src/main.ts`, `src/world.ts`):**
-   - **Qué es:** Mini-eventos temporales deterministas por semilla (ej. *Ráfaga de aspersor*, *Caída de piña/manzana*, *Ataque de hormiguero concentrado*) anunciados brevemente por radio.
-   - **Valor:** Rompe la monotonía del minuto 3 al 7 en partidas de supervivencia introduciendo peligros y oportunidades transitorias en el terreno. Complejidad: Media.
+### B. Área 2 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`)
+2. **Insignia `NV X/10`, Marcas de Estrella de Alto Contraste y Pedidos `.done`:**
+   - **Qué es:** Añadir una pastilla `NV X/10` en el cabezal del gabinete durante la partida, elevar el contraste de las 3 líneas de meta de estrellas en `.m3-sbar` y marcar en verde metálico (`.done`) los pedidos completados (`0`).
+   - **Valor:** Lectura periférica instantánea de qué falta para ganar o sacar 3 estrellas. Complejidad: Baja.
 
-### C. Lente de Game Feel en Carrera (Feedback Táctil y Visual)
-3. **Chispas y Partículas de Mini-Turbo Progresivas en Derrape (`src/kart.ts`, `src/fx.ts`):**
-   - **Qué es:** Partículas de chispas en las ruedas traseras que cambian de azul a naranja según el nivel de carga del mini-turbo al derrapar.
-   - **Valor:** Feedback visual inmediato del tiempo de derrape idéntico al estándar arcade de carreras. Complejidad: Baja-Media.
+### C. Área 3 · Render y Configuración de Imagen (`src/render.ts`, `src/menu.ts`)
+3. **Curva Perceptual de Gamma de Medios Tonos y Salvaguarda FSR en Pantalla Dividida 2J:**
+   - **Qué es:** Ajustar el control de gamma como curva de potencia en medios tonos dentro del shader retro (sin lavar negros ni quemar blancos) y desactivar automáticamente el pase extra de FSR durante carreras a pantalla dividida de 2 jugadores.
+   - **Valor:** Mejor contraste en monitores OLED/LCD y menor costo de GPU cuando hay 2 cámaras activas. Complejidad: Baja-Media.
+
+### D. Área 4 · Eventos Dinámicos de Entorno en el Patio (`src/main.ts`, `src/world.ts`)
+4. **Mini-Eventos Deterministas por Semilla en los Minutos 3–7:**
+   - **Qué es:** Eventos breves anunciados por radio (ej. ráfaga de aspersores o brote concentrado del jardín) gobernados por `rng()` de la semilla.
+   - **Valor:** Mayor variedad táctica en el tramo medio de la partida sin alterar el balance base. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #9 completado y validado (poda de ~565 kB en loaders GLTF, SFX sintético de Junket Crush y medallas metálicas de Carrera).
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` sin chunk 2.0, shots verificados, `pm2` reiniciado y grafo sincronizado.
-- **Lente activa para el Ciclo #10:** *Curva Gamma en Render, Eventos de Patio en Supervivencia y Feedback de Mini-Turbo en Carrera*.
-- **Estado de concurrencia:** Sin bloqueos activos en el árbol de trabajo.
-
-
-
+- **Último trabajo completado:** Ciclo #10 completado, verificado y documentado (Ícono `"reloj"` y descripciones completas en `Habilidades` del Taller, HUD `#txl` con ícono/estado de habilidad y salto siempre visible en PC, y aviso de radio `EVOLUCIÓN LISTA · ... (COFRE)` en Supervivencia).
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` sin chunk 2.0, 33 capturas verificadas en `.shots/actual/`, `pm2` reiniciado y grafo actualizado (3046 nodos).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno — todos los bloqueos del Ciclo #10 liberados tras finalizar y verificar la tanda.
+- **Próxima decisión pendiente:** Selección multi-opción del usuario para lanzar los subagentes en paralelo del **Ciclo #11**.
 

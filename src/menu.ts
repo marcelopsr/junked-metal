@@ -478,7 +478,7 @@ const PERKS: { k: PermK; cat: "chasis" | "equipo"; name: string; desc: string; c
 ];
 // Íconos: también los usará la mesa de taller 3D para mostrar cada mejora como pieza (id = clave de perm, hab:<habilidad>, arma:<arma>)
 export const PERK_ICON: Record<PermK, string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", reroll: "resorte", extra: "cofre", revive: "heal", cards: "evo", arm: "lego", reg: "heal", tur: "turbo", ram: "lanza", cdr: "capacitor" };
-export const ABIL_ICON: Record<AbilityId, string> = { bombardeo: "petardos", escudo: "heal", emp: "tesla", lenta: "senal" };
+export const ABIL_ICON: Record<AbilityId, string> = { bombardeo: "petardos", escudo: "heal", emp: "tesla", lenta: "reloj" };
 const abilCost = (k: AbilityId) => costos("hab_" + k);
 const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;
 // Desbloqueables: car:<auto>, pilot:<piloto>, part:<ranura>:<opción>. Los pilotos con logro no se compran.
@@ -559,7 +559,7 @@ function shopItems(): ShopItem[] {
   if (stab === "habilidades") return (Object.keys(ABILITIES) as AbilityId[]).map((k) => {
     const l = save.abilLv[k] ?? 0, c = abilCost(k), max = c.length, a = ABILITIES[k];
     const fx = (x: number) => `Enfriamiento ${n1(abilCd(k, x))} s · efecto ${Math.round(abilK(x) * 100)}%`;
-    return { attr: `data-hab="${k}"`, name: a.name, desc: `Nivel ${l + 1}. Menos espera, más efecto`, ico: ABIL_ICON[k], lv: l, max, cost: c[l], bought: l > 0, fx: l < max ? `${fx(l)} → ${fx(l + 1)}` : fx(l) };
+    return { attr: `data-hab="${k}"`, name: a.name, desc: `${a.desc} · Nivel ${l + 1} (${n1(abilCd(k, l))} s)`, ico: ABIL_ICON[k], lv: l, max, cost: c[l], bought: l > 0, fx: l < max ? `${fx(l)} → ${fx(l + 1)}` : fx(l) };
   });
   return UNLOCKS[stab]().map((u) => { const own = owns(u.id); return { attr: `data-buy="${u.id}"`, name: u.name, desc: u.desc, ico: u.icon, cost: own || u.ach ? undefined : u.cost, ach: u.ach, bought: own, fx: u.fx }; });
 }

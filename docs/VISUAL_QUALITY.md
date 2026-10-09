@@ -263,3 +263,19 @@ Carrera (1) y Survivor en partida (2).
 4. **Poda estática del chunk muerto GLTF Loader bajo `FOLDED_SLICE` (Subagente 2 + Orquestador · `src/glb.ts`, `src/carGlb.ts`):**
    - Se cortocircuitaron `load()` y `loadOne()` con `FOLDED_SLICE` y `@vite-ignore`, eliminando por completo `dist/assets/2.0-*.js` (`542.16 kB`) y `glTFLoaderAnimation.pure-*.js` (`23.59 kB`) del build de producción.
 
+---
+
+## 2026-10-09 · Ciclos #9 y #10 (Medallas Metálicas en Carrera, Ícono Reloj y Descripciones en Taller, y HUD `#txl` de Habilidad y Salto)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-carrera-menu.png`, `.shots/actual/pc-taller-habilidades.png`, `.shots/actual/cel-taller-habilidades.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png` (`npm run shots -- --only taller,partida`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por subagentes en paralelo y verificadas en captura
+1. **Medallas metálicas `.rmedal` en Carrera y SFX sintético en Junket Crush (Ciclo #9 · `src/menu.ts`, `src/race.css`, `src/sfx.ts`, `src/match3.ts`):**
+   - Las tarjetas `.rcCard` del submenú de Carrera muestran insignias `.rmedal` con bisel y relieve metálico para oro, plata y bronce; el gabinete Junket Crush incorpora sonidos mecánicos sintetizados (`m3Click`, `m3Swap`, `m3Clear`, `m3Win`).
+2. **Ícono SVG `"reloj"` y descripciones completas en `Habilidades` del Taller (Ciclo #10 · Subagente 1 · `src/icons.ts`, `src/menu.ts`):**
+   - *Cámara lenta* estrena el ícono SVG `"reloj"` (cronómetro con degradado `#9be3ff → #ffd84d`), eliminando la colisión con la mejora *Señal*.
+   - Las 4 fichas de `Habilidades` en el Taller (`pc-taller-habilidades.png`, `cel-taller-habilidades.png`) muestran ahora qué hace cada habilidad junto con su nivel y enfriamiento actual (`Lluvia de petardos alrededor del auto · Nivel 1 (20 s)`, `Ralentiza todo durante 4 s · Nivel 1 (24 s)`).
+3. **HUD `#txl` con cabecera de habilidad, estado `LISTO · E` y fila de Salto en escritorio (Ciclo #10 · Subagentes 2 y 3 · `src/ui.ts`, `src/hud.css`, `src/main.ts`):**
+   - Se rehabilitó `.h-ptitle.h-abil` en `src/hud.css` (que estaba oculto por `display: none`), mostrando el ícono SVG y nombre de la habilidad equipada (`PETARDOS`), su estado en `#abKey` (`LISTO · E` en verde `#22c55e` en PC y `LISTO` en móvil) y la fila de Salto (`SALTO` / `LISTO · F` con barra de carga) siempre visible en escritorio (`pc-partida-curso.png`).
+   - En `src/main.ts`, `choose(i)` dispara por única vez por arma un aviso `EVOLUCIÓN LISTA · <EVO_NAME> (COFRE)` cuando un arma alcanza Nv. 5 con su pasiva pareja equipada.
+

@@ -11,7 +11,7 @@ import { GLB, glbFootprint, glbProgress, glbStats, glbTpl, loadGlbs } from "./gl
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
 import { CAM_MODES, CAM_NAMES, type CamMode } from "./savefmt";
-import { applySettings, beastRec, BV, carOpts, current, shownCar, startPick, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
+import { ABIL_ICON, applySettings, beastRec, BV, carOpts, current, shownCar, startPick, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
 import { ABILITIES, abilCd as abilCdOf, abilK, type AbilityId } from "./abilities";
 import { pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
@@ -123,6 +123,7 @@ addEventListener("camcycle", () => {
 let ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number; hit?: boolean } | null = null;
 let offers: Offer[] = [];
 let offerSel = 0;
+const evoNotified = new Set<string>();
 
 
 // Habilidad activa (abilities.ts): enfriamiento, segundos activa, petardos por caer y ritmo del mundo (cámara lenta)
@@ -217,6 +218,7 @@ function clearRun() {
   preview?.dispose();
   preview = null;
   enemies = []; weapons = []; gems = []; pickups = [];
+  evoNotified.clear();
   clearFx();
   rainK = 0; rainBanner = false; rainSfx(0);
   evtPre = { swarm: false, ball: false, rain: false, elites: new Set(), boss: new Set() };
@@ -461,6 +463,14 @@ function choose(i: number) {
   else if (o.kind === "fusion") { weapons = fuse(weapons, o.id as WeaponId); banner(o.title.toUpperCase()); if (o.id in ACH) grant(o.id as AchId); }
   else hp = Math.min(maxHp, hp + R.carta_reparacion);
   recompute();
+  if (!simulating && (o.kind === "weapon" || o.kind === "passive")) {
+    for (const w of weapons) {
+      if (!w.evolved && w.lv >= 5 && passives[WEAPONS[w.id].evo] && !evoNotified.has(w.id)) {
+        evoNotified.add(w.id);
+        banner(`EVOLUCIÓN LISTA · ${WEAPONS[w.id].evoName.toUpperCase()} (COFRE)`, 2.4);
+      }
+    }
+  }
   state = "play";
   scene.physicsEnabled = true;
 }
@@ -1194,7 +1204,7 @@ function updateHud(dt: number) {
   for (const t of [0.5, 0.25]) if (lastHpFrac > t && frac <= t) { debris(car!.pos, save.paint || "#d62828", 8, 7, 0.8); FX.sparks(car!.pos); shake = Math.max(shake, 0.6); }
   lastHpFrac = frac;
   hudUpdate({ hp, maxHp, boost, xp, need: xpNeed(level), level, pending: pendingLevels, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh });
-  hudAbility(ABILITIES[abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / abilCdOf(abil, abilLv), abilOn > 0);
+  hudAbility(ABILITIES[abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / abilCdOf(abil, abilLv), abilOn > 0, ABIL_ICON[abil], Math.max(0, abilCd));
   if (!simulating) hudJump(jumpCd <= 0 ? 1 : 1 - jumpCd / R.salto_cd_s);
 }
 

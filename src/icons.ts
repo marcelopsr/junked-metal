@@ -36,6 +36,7 @@ const P: Record<string, string> = {
   cofre: `<path d="M4 10h16v9.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10Z"/><path d="M4 10V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/><rect x="10.5" y="9" width="3" height="4" rx=".6"/>`,
   jefe: `<path d="M5 11a7 7 0 0 1 14 0v3l-2 1v3h-2.5v-2h-1v2h-3v-2h-1v2H7v-3l-2-1v-3Z"/><circle cx="9.3" cy="11.3" r="1.5" fill="currentColor"/><circle cx="14.7" cy="11.3" r="1.5" fill="currentColor"/>`,
   senal: `<path d="M5 19v-2M9 19v-5M13 19v-8M17 19V8M21 19V5"/>`,
+  reloj: `<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.8 2M10 3h4M12 3v2.5M17.5 6.5l1.5-1.5"/>`,
   // Fabricación (telemetría RC)
   fab_chasis: `<rect x="5" y="8" width="14" height="9" rx="1"/><path d="M7 8V6.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V8"/><circle cx="8.5" cy="17.5" r="1.2"/><circle cx="15.5" cy="17.5" r="1.2"/><path d="M5 11h3M16 11h3"/>`,
   fab_rueda: `<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 5v2M12 17v2M5 12h2M17 12h2"/><path d="M7.8 7.8l1.4 1.4M14.8 14.8l1.4 1.4M16.2 7.8l-1.4 1.4M9.2 14.8l-1.4 1.4"/>`,
@@ -60,7 +61,7 @@ const COL: Record<string, [string, string]> = {
   helado: ["#ff9bd4", "#9be3ff"], bocina: ["#ffe27a", "#ff7a3a"], trompo: ["#b783ff", "#35c9ff"],
   yoyoelec: ["#ff9bd4", "#7de8ff"], vapor: ["#ffffff", "#ff9d6b"], chispazo: ["#ffd84d", "#7de8ff"], globos: ["#9be3ff", "#ff9bd4"], anillo: ["#ffd84d", "#ff7a3a"],
   iman: ["#ff7a7a", "#7d9bff"], resorte: ["#d9b8ff", "#8a6bff"], turbo: ["#ffe27a", "#ffa02e"], litio: ["#9bff9b", "#2fcf6a"], capacitor: ["#9bf0ff", "#4a8bff"], lego: ["#ffa07a", "#ff4d4d"], lupa: ["#fff0a0", "#6bd8ff"],
-  heal: ["#9bff9b", "#2fcf6a"], evo: ["#fff0a0", "#ffb02e"], cofre: ["#ffe27a", "#c47a2e"], jefe: ["#ff9b9b", "#ff4d4d"], senal: ["#9bf0ff", "#7dffb0"],
+  heal: ["#9bff9b", "#2fcf6a"], evo: ["#fff0a0", "#ffb02e"], cofre: ["#ffe27a", "#c47a2e"], jefe: ["#ff9b9b", "#ff4d4d"], senal: ["#9bf0ff", "#7dffb0"], reloj: ["#9be3ff", "#ffd84d"],
   fab_chasis: ["#ffa07a", "#ff5a4d"], fab_rueda: ["#9bf0ff", "#4a8bff"], fab_arma: ["#ffe27a", "#ff7a3a"], fab_especial: ["#9bff9b", "#2fcf6a"],
   fab_extra: ["#d9b8ff", "#8a6bff"], fab_layers: ["#9bf0ff", "#35c9ff"], fab_zoom_in: ["#fff0a0", "#6bd8ff"], fab_zoom_out: ["#fff0a0", "#6bd8ff"],
   fab_plane_up: ["#7dffb0", "#35c9ff"], fab_plane_down: ["#7dffb0", "#35c9ff"], fab_rot: ["#ffd84d", "#ff9d2e"], fab_mirror: ["#9be3ff", "#6b8bff"],
