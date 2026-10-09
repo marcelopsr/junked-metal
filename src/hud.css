@@ -125,6 +125,7 @@
 #slots .slot .pips { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }
 #slots .slot .pips i { width: 4px; height: 3px; background: rgba(255, 255, 255, .2); border-radius: 2px; }
 #slots .slot .pips i.on { background: var(--sig); box-shadow: 0 0 4px var(--sig); }
+#slots .slot.max .pips i.on { background: #ffd24a; box-shadow: 0 0 4px rgba(255, 210, 74, .65); }
 #slots .slot.small .pips { bottom: 2px; }
 
 /* ---------- Flechas de borde ---------- */

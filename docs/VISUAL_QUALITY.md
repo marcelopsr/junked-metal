@@ -392,3 +392,20 @@ Carrera (1) y Survivor en partida (2).
    - `showResults()` destaca con `<b class="cup-lead">LÍDER</b>` al puntero de la tabla acumulada de la copa y titula las rondas intermedias como `<Circuito> · COPA (X/3)` (`pc-carrera-podio.png`).
 4. **Indicador de blindaje restante del jefe (`JEFE X% · NV 10/10`) en el cabezal de Junket Crush (Subagente 4 · `src/match3.ts`):**
    - `paintDisplay()` calcula el porcentaje restante de los objetivos en niveles de jefe (`st.lv.boss`) y renderiza la cápsula superior derecha en rojo carmesí `M3C.error` como `JEFE 100% · NV 10/10` (`pc-match3-jefe.png`, `cel-match3-jefe.png`).
+
+---
+
+## 2026-10-09 · Ciclo #18 (Silueta e Insignia `REGISTRADO` en Visor 3D del Bestiario, Pips Dorados `.max` en `#slots`, Línea de Meta y Rumbo en `#rmap`, y Atajos `1–4` en `#m3-tools`)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-bestiario.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-jefe.png`, `.shots/actual/cel-match3-jefe.png` (`npm run shots -- --only bestiario,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Silueta `beastIcon` e insignia `REGISTRADO (X bajas)` / `SIN REGISTROS` en el visor 3D del Bestiario (`#scr-beast`) (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - `renderBeast()` incorpora en `.bname` la etiqueta `<em class="b-reg ${met ? "ok" : ""}">` con el conteo de bajas registradas (`REGISTRADO (X bajas)` en verde `#22c55e` o `SIN REGISTROS`) y la silueta `beastIcon(k, 24)` junto al nombre de la criatura.
+2. **Pips dorados `.max` para armas y pasivas en nivel 5 dentro de `#slots` (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - `hudSlots()` asigna la clase `.max` a las armas no evolucionadas en nivel 5 (`!w.evolved && w.lv >= 5`) y a las pasivas en nivel 5 (`p.lv >= 5`), iluminando sus 5 pips `.pips i.on` en dorado `#ffd24a`.
+3. **Marca de línea de meta y vector de rumbo del jugador en el mini-mapa `#rmap` de Carrera (Subagente 3 · `src/kart.ts`):**
+   - `hud()` traza en `#rmap` una barra transversal dorada sobre `trk.P[0]` indicando la línea de largada/meta y dibuja para el corredor humano (`r.human >= 0`) una aguja de rumbo hacia `fwdOf(r)` y borde oscuro de contraste (`pc-carrera-curso.png`).
+4. **Insignias de atajo de teclado (`1–4`) en los botones de herramientas `#m3-tools` de Junket Crush (Subagente 4 · `src/match3.ts`, `src/match3.css`):**
+   - `ensureUi()` incluye `<i class="m3-tkey">${i + 1}</i>` en la esquina superior izquierda de cada herramienta (`Martillo`, `Sierra`, `Imán`, `Llave`) en escritorio (`pc-match3-jefe.png`), ocultándose automáticamente en pantallas táctiles (`@media (pointer: coarse)`).
+

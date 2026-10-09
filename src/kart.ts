@@ -908,7 +908,23 @@ function hud() {
     if (mode === "battle") { const kk = (s * 0.42) / ARENA.r; mapCtx.arc(s / 2, s / 2, ARENA.r * kk, 0, 7); } else
     trk.P.forEach((p, i) => { const x = s / 2 + p.x * k, y = s / 2 - p.z * k; i ? mapCtx.lineTo(x, y) : mapCtx.moveTo(x, y); });
     mapCtx.closePath(); mapCtx.stroke();
-    for (const r of racers) { if (r.out) continue; const p = mode === "battle" ? r.car.pos.subtract(ARENA.c).scale((s * 0.42) / ARENA.r / k) : r.car.pos; mapCtx.fillStyle = r.human >= 0 ? "#ffd84d" : r.color; mapCtx.beginPath(); mapCtx.arc(s / 2 + p.x * k, s / 2 - p.z * k, r.human >= 0 ? 5 : 3.2, 0, 7); mapCtx.fill(); }
+    if (mode !== "battle") {
+      const p0 = trk.P[0], r0 = trk.R[0], fx = s / 2 + p0.x * k, fy = s / 2 - p0.z * k;
+      mapCtx.save(); mapCtx.strokeStyle = "#ffd84d"; mapCtx.lineWidth = 2.5;
+      mapCtx.beginPath(); mapCtx.moveTo(fx - r0.x * 6, fy + r0.z * 6); mapCtx.lineTo(fx + r0.x * 6, fy - r0.z * 6); mapCtx.stroke();
+      mapCtx.restore();
+    }
+    for (const r of racers) {
+      if (r.out) continue;
+      const p = mode === "battle" ? r.car.pos.subtract(ARENA.c).scale((s * 0.42) / ARENA.r / k) : r.car.pos;
+      const mx = s / 2 + p.x * k, my = s / 2 - p.z * k;
+      if (r.human >= 0) {
+        const f = fwdOf(r); mapCtx.strokeStyle = "#ffd84d"; mapCtx.lineWidth = 2; mapCtx.beginPath(); mapCtx.moveTo(mx, my); mapCtx.lineTo(mx + f.x * 8, my - f.z * 8); mapCtx.stroke();
+        mapCtx.fillStyle = "#ffd84d"; mapCtx.strokeStyle = "#0b0f14"; mapCtx.lineWidth = 1.5; mapCtx.beginPath(); mapCtx.arc(mx, my, 5, 0, 7); mapCtx.fill(); mapCtx.stroke();
+      } else {
+        mapCtx.fillStyle = r.color; mapCtx.beginPath(); mapCtx.arc(mx, my, 3.2, 0, 7); mapCtx.fill();
+      }
+    }
   }
   const cdEl = $r("#rcount");
   cdEl.textContent = countdown > 0 ? (countdown > 3 ? "" : String(Math.ceil(countdown))) : t < 1.2 ? "¡YA!" : "";

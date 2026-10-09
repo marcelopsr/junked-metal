@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-09 (Ciclos #1 a #7 completados y validados · Ciclo #8 iniciado)
+**Última actualización:** 2026-10-09 (Ciclos #1 a #18 completados y validados · Ciclo #19 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -186,39 +186,48 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`):** Cápsula `JEFE ${hpPct}% · NV ${lvIdx + 1}/${LEVELS.length}` en rojo `M3C.error` en el cabezal superior durante niveles de jefe (`st.lv.boss`).
 - **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (420 ms), `npm run shots -- --only bestiario,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3068 nodos, 7497 aristas).
 
+### Ciclo #18 (2026-10-09) — Silueta e Insignia `REGISTRADO` en Visor 3D del Bestiario, Pips Dorados `.max` en `#slots`, Línea de Meta y Rumbo en `#rmap`, y Atajos `1–4` en `#m3-tools`
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Ficha 3D del Bestiario (`src/menu.ts`, `src/menu.css`):** Silueta `beastIcon(k, 24)` e insignia `<em class="b-reg ${met ? "ok" : ""}">` (`REGISTRADO (X bajas)` / `SIN REGISTROS`) en `.bname` de `#scr-beast`.
+  - **Subagente 2 · HUD de Supervivencia: `#slots` (`src/ui.ts`, `src/hud.css`):** Clase `.max` para armas no evolucionadas en nivel 5 y pasivas en nivel 5, iluminando sus 5 pips `.pips i.on` en dorado `#ffd24a`.
+  - **Subagente 3 · Carrera Mini-mapa `#rmap` (`src/kart.ts`):** Línea de meta transversal dorada en `trk.P[0]` y vector de rumbo direccional (`fwdOf(r)`) con borde oscuro para el punto del jugador humano.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`):** Insignias `<i class="m3-tkey">${i + 1}</i>` de atajos de teclado (`1–4`) en `#m3-tools` (ocultas en dispositivos táctiles `@media (pointer: coarse)`).
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (418 ms), `npm run shots -- --only bestiario,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3071 nodos, 7505 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #18
+## 4. Backlog Vivo de Oportunidades — Ciclo #19
 
-### A. Área 1 · Ficha 3D del Bestiario (`#scr-beast`): Silueta e Insignia de Registro en el Encabezado (`src/menu.ts`, `src/menu.css`)
-1. **Silueta `beastIcon` e Insignia `REGISTRADO · X BAJAS` / `SIN REGISTROS` en `.bhead` (`#scr-beast`):**
-   - **Qué es:** En `renderBeast()`, mostrar junto a `<b>${d.name}</b>` en `.bname` la silueta SVG `beastIcon(k, 24)` y una insignia de estado en `<small>` indicando si el bicho ya está fichado (`REGISTRADO · X bajas` en verde o `SIN REGISTROS` en gris tenue).
-   - **Qué problema resuelve:** Al abrir el visor 3D de un bicho (`#scr-beast`), el encabezado superior solo dice `Plaga · 1 / 13` sin mostrar de inmediato cuántas bajas se llevan ni su silueta icónica.
-   - **Valor:** Encabezado técnico de ficha mucho más informativo al recorrer las 13 criaturas con `Q/E` o cruceta. Complejidad: Baja.
+### A. Área 1 · Submenú Desafío Diario (`#scr-daily`) y Supervivencia (`#scr-play`) (`src/menu.ts`, `src/menu.css`)
+1. **Encabezado `DESAFÍO DIARIO · FECHA · SEMILLA #` en `#scr-daily` y Resaltado de Zona Conquistada en `#scr-play`:**
+   - **Qué es:** En `renderDaily()` (`src/menu.ts`), agregar una franja `.briefRec` con la fecha e identificador de la semilla del día (`DESAFÍO DIARIO · ${today()} · SEMILLA #${seed}`) e incluir `Semilla #${seed}` en `#dailyInfo`. En `renderPlay()`, resaltar en dorado (`.win-rec`) el renglón principal de `#playRec` cuando la zona seleccionada ya fue conquistada (`zr && zr.t >= 600`).
+   - **Qué problema resuelve:** En `#scr-daily`, el jugador ve el clima y los jefes pero no el código de la semilla diaria ni la fecha del desafío dentro de la tarjeta `.briefCard`.
+   - **Valor:** Ficha diaria completa y verificable para comparar semillas e intentos del día. Complejidad: Baja.
 
-### B. Área 2 · HUD de Supervivencia: Pips Dorados en Nivel Máximo (`.max`) en `#slots` (`src/ui.ts`, `src/hud.css`)
-2. **Distinción Cromática `.max` para Armas y Pasivas en Nivel 5 dentro de `#slots`:**
-   - **Qué es:** En `hudSlots(weapons, passives)`, añadir la clase `.max` a las ranuras de armas (`!w.evolved && w.lv >= 5`) y pasivas (`p.lv >= 5`) que ya alcanzaron el nivel máximo 5, iluminando sus 5 pips `.pips i.on` en dorado `#ffd24a`.
-   - **Qué problema resuelve:** Hoy en `#slots` los pips de un arma o pasiva en nivel 5 lucen del mismo cian que en nivel 1–4, dificultando distinguir de un vistazo qué piezas ya están al tope y no volverán a salir en cartas.
-   - **Valor:** Lectura periférica instantánea del estado de madurez de la build. Complejidad: Baja.
+### B. Área 2 · HUD de Supervivencia: Alerta `BAJA` en Batería (`#volt`) y Sufijo `!` en Daño Crítico (`src/ui.ts`, `src/hud.css`)
+2. **Aviso de Baja Tensión en `#volt` (`< 25%`) y Exclamación `!` en Números de Daño Crítico (`damageNumber`):**
+   - **Qué es:** En `hudUpdate()` (`src/ui.ts`), cuando la batería cae por debajo del 25% (`low`), mostrar `${v}V · BAJA` en `#volt` con color rojo pulsante (`#txl.low #volt`), y en `damageNumber()`, añadir `!` al texto cuando el impacto es crítico (`crit`).
+   - **Qué problema resuelve:** Cuando el chasis está en estado crítico (`< 25%`), el voltaje numérico cambia sutilmente (`9.5V`) sin una etiqueta de alerta textual inmediata junto a la batería, y los impactos críticos solo cambian de tamaño/color sin signo distintivo.
+   - **Valor:** Lectura periférica inmediata de peligro de batería y mayor impacto visual en golpes críticos. Complejidad: Baja.
 
-### C. Área 3 · Carrera: Línea de Meta y Rumbo del Jugador en el Mini-mapa `#rmap` (`src/kart.ts`)
-3. **Marca de Línea de Meta (`trk.P[0]`) y Flecha Direccional del Jugador en el Mini-mapa `#rmap`:**
-   - **Qué es:** En `hud()` (`src/kart.ts`), dibujar sobre `#rmap` en modo Carrera una marca transversal blanca/dorada en la línea de largada/meta (`trk.P[0]`), y representar al jugador humano (`r.human >= 0`) con un indicador con borde oscuro y punta direccional hacia su vector de avance (`fwdOf(r)`).
-   - **Qué problema resuelve:** En el mini-mapa circular `#rmap` todos los corredores son puntos redondos sin orientación y no se ve dónde está ubicada la línea de meta del circuito.
-   - **Valor:** Lectura clara de cuánto falta para cerrar la vuelta y hacia dónde apunta el auto propio. Complejidad: Baja.
+### C. Área 3 · Carrera: Tiempo de Vuelta y Aviso `¡RÉCORD!` al Cruzar la Meta (`src/kart.ts`)
+3. **Cronómetro de Vuelta y Sello `¡RÉCORD!` en el Aviso Central `onLap()` de Carrera:**
+   - **Qué es:** En `onLap(r)` (`src/kart.ts`), calcular el tiempo de la vuelta recién completada (`lt = t - r.lapT`) y si marca la mejor vuelta personal de la carrera (`isBest`), mostrar en el aviso `say()` de cada vuelta: `VUELTA 2 · 0:28.4 ¡RÉCORD!` (o `¡ÚLTIMA VUELTA! · 0:28.4 ¡RÉCORD!`).
+   - **Qué problema resuelve:** Hoy al cruzar la línea de meta el aviso solo dice `VUELTA 2` o `¡ÚLTIMA VUELTA!`, sin informar cuánto tardó la vuelta recién cerrada ni si fue vuelta rápida.
+   - **Valor:** Feedback arcade instantáneo de ritmo de vuelta tras cada paso por meta. Complejidad: Baja.
 
-### D. Área 4 · Gabinete Junket Crush: Insignia de Atajo de Tecla (`1–4`) en Herramientas `#m3-tools` (`src/match3.ts`, `src/match3.css`)
-4. **Indicador Visual de Tecla Rápida (`1`, `2`, `3`, `4`) en los Botones de `#m3-tools` en Escritorio:**
-   - **Qué es:** En `ensureUi()` (`src/match3.ts`), añadir `<i class="m3-tkey">${i + 1}</i>` en la esquina superior izquierda de cada botón de `#m3-tools` (`Martillo`, `Sierra`, `Imán`, `Llave`), visible en escritorio y oculto en dispositivos táctiles (`@media (pointer: coarse)`).
-   - **Qué problema resuelve:** Las herramientas del gabinete tienen soporte de teclado (`1–4`), pero el atajo solo figuraba en `aria-label` y era invisible en pantalla.
-   - **Valor:** Descubribilidad inmediata de los atajos de teclado en PC para activar herramientas sin soltar el teclado. Complejidad: Baja.
+### D. Área 4 · Gabinete Junket Crush: Placa `JEFE` en los Nodos de Jefe del Mapa (`src/match3_draw.ts`)
+4. **Etiqueta `JEFE` sobre los Nodos de Jefe en el Mapa de Campaña (`RUTA DEL DESGUACE`):**
+   - **Qué es:** En `drawNode()` (`src/match3_draw.ts`), cuando `lv.boss` es `true`, dibujar sobre el borde superior de la tuerca hexagonal una placa compacta `"JEFE"` con fondo rojo carmesí (`M3C.rojo`) y borde oscuro/dorado.
+   - **Qué problema resuelve:** En el mapa de campaña, los nodos de jefe (niveles 5 y 10) son un poco más grandes (`r = 40` vs `33`), pero cuando están bloqueados o ya completados en dorado no tienen una insignia explícita que los distinga como combates de jefe.
+   - **Valor:** Identificación visual inmediata de los hitos de jefe en la Ruta del Desguace. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #17 completado, verificado y subido a `origin/master`.
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (420 ms), 33 capturas verificadas en `.shots/actual/` y grafo actualizado (3068 nodos, 7497 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los subagentes del Ciclo #17 finalizaron y liberaron sus archivos).
-- **Próxima decisión pendiente:** Selección del usuario mediante `ask_question` (multi-selección) de las áreas a ejecutar en paralelo por subagentes en el **Ciclo #18**.
+- **Último trabajo completado:** Ciclo #18 completado, verificado y subido a `origin/master`.
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (418 ms), 33 capturas verificadas en `.shots/actual/` y grafo actualizado (3071 nodos, 7505 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (bloqueos del Ciclo #18 liberados tras validación).
+- **Próxima decisión pendiente:** Selección de tareas en paralelo por subagentes para el **Ciclo #19**.
+

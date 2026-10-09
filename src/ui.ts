@@ -95,11 +95,11 @@ export function hudSlots(weapons: SlotInfo[], passives: SlotInfo[]) {
         const hasPair = !w.evolved && !!evoP && passives.some((p) => p.id === evoP);
         const evoReady = hasPair && w.lv >= 5;
         const cls = w.evolved ? "evo" : evoReady ? "evo-ready" : hasPair ? "syn-on" : "";
-        return `<div class="slot ${cls}">${icon(w.id, 26)}<div class="cd"></div>${evoReady ? `<b class="evo-tag">EVO</b>` : ""}${w.evolved ? "" : pips(w.lv)}</div>`;
+        return `<div class="slot ${cls} ${!w.evolved && w.lv >= 5 ? "max" : ""}">${icon(w.id, 26)}<div class="cd"></div>${evoReady ? `<b class="evo-tag">EVO</b>` : ""}${w.evolved ? "" : pips(w.lv)}</div>`;
       }).join("")}</div>` +
       `<div class="row">${passives.map((p) => {
         const pairsW = weapons.some((w) => !w.evolved && WEAPONS[w.id as WeaponId]?.evo === p.id);
-        return `<div class="slot small ${pairsW ? "syn-on" : ""}">${icon(p.id, 18)}${pips(p.lv)}</div>`;
+        return `<div class="slot small ${pairsW ? "syn-on" : ""} ${p.lv >= 5 ? "max" : ""}">${icon(p.id, 18)}${pips(p.lv)}</div>`;
       }).join("")}</div>`;
     cds = Array.from($("slots").querySelectorAll<HTMLElement>(".row:first-child .cd"));
   }

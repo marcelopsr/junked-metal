@@ -363,6 +363,8 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .bname { flex: 1; min-width: 0; text-align: center; }
 .bname small { display: block; color: var(--dim); font-size: 14px; letter-spacing: .14em; text-transform: uppercase; }
 .bname b { display: block; font-size: clamp(20px, 2.4vw, 28px); letter-spacing: .06em; text-transform: uppercase; color: #fff; }
+#bpanel .bname .b-reg { font-style: normal; font-weight: 700; color: var(--dim); } #bpanel .bname .b-reg.ok { color: #22c55e; }
+#bpanel .bname b.wi { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .bnav { min-width: 48px; min-height: 48px; padding: 0; font-size: 22px; }
 .bctl .slot { justify-content: flex-start; }
 .bctl .slot > span { margin-right: 8px; min-width: 84px; }

@@ -663,7 +663,7 @@ function ensureUi() {
   ui = document.createElement("div");
   ui.id = "match3-ui";
   ui.innerHTML = `<div class="m3-hud" id="m3-hud" aria-live="polite"></div><button type="button" class="m3-pausebtn hidden" id="m3-pausebtn" aria-label="Pausa"><i></i><i></i></button>
-<div class="m3-tools hidden" id="m3-tools" role="toolbar" aria-label="Herramientas del taller">${TOOLS.map((t, i) => `<button type="button" data-tool="${t}" aria-label="${TOOL_NAME[t]} (tecla ${i + 1})"><img src="${toolImg(t)}" alt=""><span>${TOOL_NAME[t]}</span><b>0</b></button>`).join("")}</div>
+<div class="m3-tools hidden" id="m3-tools" role="toolbar" aria-label="Herramientas del taller">${TOOLS.map((t, i) => `<button type="button" data-tool="${t}" aria-label="${TOOL_NAME[t]} (tecla ${i + 1})"><i class="m3-tkey">${i + 1}</i><img src="${toolImg(t)}" alt=""><span>${TOOL_NAME[t]}</span><b>0</b></button>`).join("")}</div>
 <div class="m3-hint hidden" id="m3-hint"></div>
 <div class="m3-overlay hidden" id="m3-overlay"><div class="m3-panel" id="m3-panel"></div></div>
 <div class="m3-pause" id="m3-pause" role="dialog" aria-modal="true" aria-labelledby="m3-pause-t" aria-hidden="true">
