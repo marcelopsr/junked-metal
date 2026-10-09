@@ -225,3 +225,23 @@ Carrera (1) y Survivor en partida (2).
    - Los controles de `#scr-race` pasaron de una pila vertical de 11 botones a `.raceGrid` en 2 columnas (`Largada` con `uiIcon("carrera")` junto a `Batalla de globos`, `Modo`, `Cilindrada` + `Vueltas`, `Jugadores` + `Control J1`, `Volver`), adaptándose en celular (`isTouch`) ocultando el selector de jugadores y expandiendo `Control J1` a ancho completo.
    - Debajo se sumó `#rcBrief` con las 3 tarjetas `.rcCard` (`Patio`, `Jardín`, `Garaje`), cada una mostrando la insignia de medalla (`ORO` / `PLATA` / `BRONCE` / `SIN MARCA`), el mejor tiempo personal y los tiempos objetivo (`Oro`, `Plata`, `Bronce`) calculados dinámicamente con `medalTimes(i, c.laps, c.cc)` según las vueltas y cilindrada elegidas. Un clic sobre cualquier tarjeta selecciona esa pista en modo *Carrera suelta*.
    - El pie de controles `#fe #rcHelp` se enmarcó sobre una franja de chapa oscura (`rgba(11, 15, 20, .88)`) sin sombra de texto múltiple, garantizando lectura limpia sobre la madera clara del escritorio.
+
+---
+
+## 2026-10-09 · Ciclo #7 (Chatarroteca Completa: `Pilotos`, `Logros` con Progreso e Íconos y `Estadísticas` con Barras y Siluetas)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-bestiario-pilotos.png`, `.shots/actual/cel-menu-bestiario-pilotos.png`, `.shots/actual/pc-menu-bestiario-logros.png`, `.shots/actual/cel-menu-bestiario-logros.png`, `.shots/actual/pc-menu-bestiario-stats.png`, `.shots/actual/cel-menu-bestiario-stats.png`, `.shots/actual/pc-menu-bestiario.png` (`npm run shots -- --only menu`, 52 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas y verificadas en captura
+1. **Pestaña `Pilotos` con arma de serie, estado y tipografía limpia (`src/menu.ts`, `src/menu.css`):**
+   - Cada ficha de piloto incorpora la franja `.wsyn` con el ícono SVG y nombre de su arma inicial (`Arma de serie: LANZA-GOMITAS` / `ANTENA TESLA` / `PETARDOS`), el borde `.sel` cuando es el piloto activo y el pie `.price` alineado al fondo con su estado (`EN USO`, `EN EL GARAJE`, `Bloqueado · N tornillos` o `Logro: ...`).
+   - Se eliminó la regla heredada `.ficha.locked b { letter-spacing: .4em }` que deformaba los nombres de los pilotos bloqueados y sus armas de serie.
+2. **Pestaña `Logros` con íconos por categoría, avance contextual y premios sin repetición (`src/menu.ts`, `src/menu.css`):**
+   - `achIco(k)` asigna a cada uno de los 19 logros su ícono SVG propio (`uiIcon("vehiculo")` para victorias por auto, `beastIcon(k)` para jefes derrotados, `icon("chispazo" | "globos" | "anillo")` para fusiones e íconos específicos para hazañas).
+   - `achProg(k, ok)` añade progreso contextual (`.achProg`) en logros pendientes o acumulativos (`Mejor marca: 8:32 / 10:00` con barra `.stb`, `Bajas registradas: N` en jefes, y `Auto en el garaje · falta ganar la partida` vs. `Requiere desbloquear el auto en el Taller` en logros por vehículo).
+   - `rewardName(id)` evita duplicar el nombre de la ranura cuando la pieza ya empieza con él (`Premio: Alerón alto` en vez de `Alerón Alerón alto`, y `Escape · Chimeneas`).
+3. **Pestaña `Estadísticas` en grilla 3×2 con barras `.stb`, íconos SVG y placa `#records` (`src/menu.ts`, `src/menu.css`):**
+   - `#scr-bestiary[data-btab="stats"] #beasts` se organiza en una grilla simétrica de 3 columnas en PC (`2×3` para las 6 tarjetas) y 1 columna en móvil.
+   - `Partidas` suma barra de porcentaje de victorias; `Tiempo jugado` incluye `Mejor tiempo`; `Arma favorita` muestra el ícono SVG del arma principal y las 3 armas con mayor daño acumulado con barras `.stb`; `Bajas por tipo` incorpora `beastIcon(k, 16)` y barras proporcionales `.stb` para cada especie; y la tabla `#records` (*Mejores partidas*) queda enmarcada en una placa de chapa oscura con filo superior `--jm-chapa`.
+   - Además, se añadió `#beasts` a `SCROLL` y se resetea `$("beasts").scrollTop = 0` al abrir la Chatarroteca desde el menú principal o al cambiar de pestaña (`d.btab`), corrigiendo el desplazamiento residual en móvil tras inspeccionar fichas del final de la lista.
+

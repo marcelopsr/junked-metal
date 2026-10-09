@@ -218,7 +218,7 @@ function show() {
   if (s === "play") renderPlay();
   if (s === "daily") renderDaily();
   if (s === "race") renderRace();
-  if (s === "bestiary") renderBestiary();
+  if (s === "bestiary") { renderBestiary(); if (!ret.get("bestiary")) $("beasts").scrollTop = 0; }
   if (s === "beast") renderBeast();
   if (s === "config") renderConfig();
   // Cambio de canal: estática breve + encendido de tubo (keyframes tune de style.css)
@@ -286,7 +286,7 @@ export function reset(s: Scr | null) {
 
 // ---------- Foco: navegación espacial ----------
 const focusables = () => [...document.querySelectorAll<HTMLElement>(`#scr-${current()} :is(button:not(:disabled), select:not(:disabled), input:not(:disabled), [tabindex])`)].filter((e) => e.offsetParent);
-const SCROLL = "#cars, #shop, #opts, #binfo"; // listas con scroll propio
+const SCROLL = "#cars, #shop, #opts, #binfo, #beasts"; // listas con scroll propio
 function move(dx: number, dy: number) {
   const cur = document.activeElement as HTMLElement, els = focusables();
   if (!els.includes(cur)) return els[0]?.focus();
@@ -985,21 +985,39 @@ const PHASE2: Partial<Record<Kind, string>> = { gato: " y maúlla para convocar 
 const BTABS = { bichos: "Bichos", pilotos: "Pilotos", logros: "Logros", stats: "Estadísticas" };
 let btab: keyof typeof BTABS = "bichos";
 /** Nombre visible de un premio de logro (part:<ranura>:<opción> o pilot:<id>). */
-const rewardName = (id: string) => { const [t, k, o] = id.split(":"); return t === "pilot" ? PILOTS[k as PilotId].name : `${PARTS[k as Slot].name} ${opts(k as Slot)[o][0]}`; };
+const rewardName = (id: string) => {
+  const [t, k, o] = id.split(":");
+  if (t === "pilot") return PILOTS[k as PilotId].name;
+  const s = PARTS[k as Slot].name, n = opts(k as Slot)[o][0];
+  return n.toLowerCase().startsWith(s.toLowerCase()) ? n : `${s} · ${n}`;
+};
 /** Tiempo largo legible: "2 h 05 min" o "7 min 12 s". */
 const longTime = (s: number) => { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); return h ? `${h} h ${String(m).padStart(2, "0")} min` : `${m} min ${String(Math.floor(s % 60)).padStart(2, "0")} s`; };
+/** Ícono SVG propio para cada logro según su categoría (auto, jefe, fusión o hazaña). */
+const achIco = (k: AchId) => k.startsWith("gana_") ? uiIcon("vehiculo", 20) : k in DEF ? beastIcon(k as Kind, 22)
+  : k === "chispazo" || k === "globos" || k === "anillo" ? icon(k, 22)
+  : icon(k === "racha" ? "senal" : k === "intacto" ? "lego" : k === "diez" ? "litio" : "evo", 22);
+/** Progreso contextual para logros con avance medible (tiempo, bajas de jefe o auto en el garaje). */
+function achProg(k: AchId, ok: boolean) {
+  if (k === "diez" && !ok && save.best > 0) return `<div class="achProg"><span>Mejor marca: <b>${fmt(Math.min(600, save.best))} / 10:00</b></span>${bar(save.best, 600)}</div>`;
+  if (k === "diario" && !ok && save.daily.best > 0) return `<div class="achProg"><span>Mejor marca hoy: <b>${fmt(Math.min(600, save.daily.best))} / 10:00</b></span>${bar(save.daily.best, 600)}</div>`;
+  if (k in DEF && (save.slain[k as Kind] ?? 0) > 0) return `<div class="achProg"><span>Bajas registradas: <b>${save.slain[k as Kind]}</b></span></div>`;
+  if (k.startsWith("gana_") && !ok) return `<div class="achProg"><span>${owns("car:" + k.slice(5)) ? "Auto en el garaje · falta ganar la partida" : "Requiere desbloquear el auto en el Taller"}</span></div>`;
+  return "";
+}
 /** Estadísticas de carrera: fichas con los totales históricos (save.stats y save.slain). */
 function statsHtml() {
   const s = save.stats, kv = (a: string, b: string | number) => `<div class="kv"><span>${a}</span><b>${b}</b></div>`;
   const card = (title: string, big: string, extra = "") => `<div tabindex="0" class="carc ficha"><b>${title}</b><div class="big">${big}</div>${extra}</div>`;
-  const fav = Object.entries(s.dmg).filter(([id]) => id in WEAPONS).sort((a, b) => b[1] - a[1])[0];
-  const kinds = (Object.keys(DEF) as Kind[]).filter((k) => (save.slain[k] ?? 0) > 0);
-  const total = kinds.reduce((n, k) => n + save.slain[k]!, 0);
-  return card("Partidas", String(s.runs), s.runs ? `${s.wins} ${s.wins === 1 ? "ganada" : "ganadas"} · ${Math.round((s.wins / s.runs) * 100)}%` : "Sin partidas completas. Todavía no hay nada que lamentar.")
-    + card("Tiempo jugado", longTime(s.time))
+  const topW = Object.entries(s.dmg).filter(([id, v]) => id in WEAPONS && v > 0).sort((a, b) => b[1] - a[1]);
+  const fav = topW[0];
+  const kinds = (Object.keys(DEF) as Kind[]).filter((k) => (save.slain[k] ?? 0) > 0).sort((a, b) => (save.slain[b] ?? 0) - (save.slain[a] ?? 0));
+  const total = kinds.reduce((n, k) => n + save.slain[k]!, 0), maxS = kinds[0] ? save.slain[kinds[0]]! : 1;
+  return card("Partidas", String(s.runs), s.runs ? `<div>${s.wins} ${s.wins === 1 ? "ganada" : "ganadas"} · ${Math.round((s.wins / s.runs) * 100)}%</div>${bar(s.wins, s.runs)}` : "Sin partidas completas. Todavía no hay nada que lamentar.")
+    + card("Tiempo jugado", longTime(s.time), save.best ? kv("Mejor tiempo", `${fmt(save.best)}${save.endless ? ` (+${fmt(save.endless)})` : ""}`) : "Tiempo total en el patio.")
     + card("Recorrido", `${(s.dist / 1000).toFixed(1).replace(".", ",")} km`, "Distancia total manejada, sin llegar a ningún lado.")
-    + card("Arma favorita", fav ? WEAPONS[fav[0] as WeaponId].name : "Sin datos", fav ? `${Math.round(fav[1])} de daño acumulado` : "Se define con el daño de cada partida. Aún sin favoritos.")
-    + `<div tabindex="0" class="carc ficha"><b>Bajas por tipo</b><div class="big">${total}</div>${kinds.map((k) => kv(DEF[k].name, save.slain[k]!)).join("") || "Sin bajas todavía. El patio sigue en paz."}</div>`
+    + `<div tabindex="0" class="carc ficha"><b>Arma favorita</b><div class="big wi">${fav ? icon(fav[0], 26) + WEAPONS[fav[0] as WeaponId].name : "Sin datos"}</div>${topW.length ? topW.slice(0, 3).map(([id, v]) => `<div class="kv stRow"><span class="wi">${icon(id, 15)}${WEAPONS[id as WeaponId].name}</span>${bar(v, fav[1])}<b>${Math.round(v)}</b></div>`).join("") : "Se define con el daño de cada partida. Aún sin favoritos."}</div>`
+    + `<div tabindex="0" class="carc ficha"><b>Bajas por tipo</b><div class="big">${total}</div>${kinds.map((k) => `<div class="kv stRow"><span class="wi">${beastIcon(k, 16)}${DEF[k].name}</span>${bar(save.slain[k]!, maxS)}<b>${save.slain[k]}</b></div>`).join("") || "Sin bajas todavía. El patio sigue en paz."}</div>`
     + `<div tabindex="0" class="carc ficha"><b>Mejores marcas por zona</b>${(Object.keys(ZONES) as ZoneId[]).map((z) => { const r = s.zone[z]; return kv(ZONES[z].short, r ? `${fmt(r.t)} · ${r.kills} bajas` : "—"); }).join("")}</div>`;
 }
 function renderBestiary() {
@@ -1010,11 +1028,11 @@ function renderBestiary() {
   $("btabs").innerHTML = tabsHtml(BTABS, btab, "btab");
   $("beasts").innerHTML = btab === "stats" ? statsHtml() : btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
     const a: { name: string; txt: string; reward?: string; scrap?: number } = ACH[k], ok = save.ach.includes(k);
-    return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b class="wi">${icon("evo", 22)}${a.name}</b>${a.txt}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}</div>` : ""}</div>`;
+    return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b class="wi">${achIco(k)}${a.name}</b>${a.txt}${achProg(k, ok)}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}</div>` : ""}</div>`;
   }).join("")
     : btab === "pilotos" ? (Object.keys(PILOTS) as PilotId[]).map((k) => {
-      const p = PILOTS[k];
-      return `<div tabindex="0" class="carc ficha pilot ${owns("pilot:" + k) ? "" : "locked"}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="lore">${p.lore}</div></div>`;
+      const p = PILOTS[k], own = owns("pilot:" + k), st = save.pilot === k ? "EN USO" : own ? "EN EL GARAJE" : p.ach ? `Logro: ${p.ach.txt}` : `Bloqueado · ${p.cost} tornillos`;
+      return `<div tabindex="0" class="carc ficha pilot ${save.pilot === k ? "sel" : ""} ${own ? "" : "locked"}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div><div class="lore">${p.lore}</div><div class="price">${st}</div></div>`;
     }).join("")
     : (Object.keys(DEF) as Kind[]).map((k) => {
       // Todo visible desde el inicio; lo propio (bajas) dice "Sin registros todavía" hasta que aparezca. Clic, Enter o A abren la ficha completa.
@@ -1243,7 +1261,7 @@ export function initMenu(a: Api) {
       renderBeast();
     }
     else if (d.belite !== undefined) { BV.elite = d.belite as Elite | ""; BV.anim = ""; renderBeast(); }
-    else if (d.btab) { btab = d.btab as typeof btab; renderBestiary(); focusSel(`[data-btab="${btab}"]`); }
+    else if (d.btab) { btab = d.btab as typeof btab; renderBestiary(); $("beasts").scrollTop = 0; focusSel(`[data-btab="${btab}"]`); }
     else if (d.stab) { stab = d.stab as typeof stab; renderShop(); $("shop").scrollTop = 0; focusSel(`[data-stab="${stab}"]`); }
     else if (d.buy) { const id = d.buy, c = priceOf(id); if (owns(id) || c === undefined) return; askBuy(nm, c, () => { if (!buy(id)) return; renderShop(); focusSel(`[data-buy="${id}"]`); }); }
     else if (d.sf) { sfilt = d.sf as typeof sfilt; renderShop(); focusSel(`[data-sf="${sfilt}"]`); }

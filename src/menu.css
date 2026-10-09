@@ -37,7 +37,7 @@ body.calm .scr.on { animation-duration: .05s; }
 .carc .stc > span:first-child { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; }
 .carc .stc em { font-style: normal; font-weight: 700; color: var(--lcd-ink); font-variant-numeric: tabular-nums; }
 .stb { display: block; width: 100%; height: 6px; background: var(--panel); border: 1px solid var(--line); align-self: center; }
-.stb > i, .carc .st .stb > i { display: block; height: 100%; margin: 0; }
+.stb > i, .carc .st .stb > i { display: block; height: 100%; margin: 0; background: var(--sig); }
 .carc .wsyn { display: flex; align-items: center; gap: 5px; margin-top: 5px; padding: 3px 6px; font: 600 12px/1.15 var(--data); color: var(--dim); background: rgba(0, 0, 0, .35); border: 1px solid var(--line); }
 .carc .wsyn .ico { flex: none; width: 14px; height: 14px; }
 .carc .wsyn b { display: inline; margin: 0; font-size: inherit; color: var(--lcd-ink); }
@@ -104,24 +104,29 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #fe .pips i.on { background: var(--sig); }
 #beasts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; width: 100%; }
 .ficha { width: auto; }
+.ficha.pilot, .ficha.logro { display: flex; flex-direction: column; }
 .ficha.boss { border-color: var(--low); }
-.ficha.locked b { letter-spacing: .4em; }
 .ficha .lore { margin: 6px 0 2px; color: var(--txt); font-style: italic; opacity: .8; }
+.ficha .price { margin-top: auto; padding-top: 6px; }
 /* Logros: sello de goma estampado en la ficha; pendiente = sello vacío punteado */
 .ficha.logro { position: relative; padding-right: 74px; }
 .ficha.logro.locked b { letter-spacing: .04em; }
+.achProg { margin-top: 5px; display: flex; flex-direction: column; gap: 3px; font: 600 12px/1.15 var(--jm-titulo); color: var(--jm-texto2); }
+.achProg b { display: inline; margin: 0; font: 700 12px/1 var(--jm-titulo); color: var(--jm-amarillo2); letter-spacing: .02em; }
 .sello { position: absolute; top: 10px; right: 8px; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%;
   border: 3px double var(--turbo); color: var(--turbo); font: 400 8px/1 var(--display); letter-spacing: 0; rotate: -14deg;
   box-shadow: inset 0 0 0 3px #0000, inset 0 0 0 4px var(--turbo); opacity: .9; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1) both;
   mask: radial-gradient(circle at 30% 70%, #0000 0 1px, #000 1.5px) 0 0 / 7px 9px; } /* tinta mordida: puntitos sin entintar */
 .ficha.logro.locked .sello { border: 2px dashed var(--dim); box-shadow: none; color: var(--dim); rotate: 8deg; animation: none; mask: none; opacity: .6; }
 /* Estadísticas de carrera: fichas con una cifra grande y filas clave/valor */
-.ficha .big { font: 400 34px/1 var(--data); color: var(--lcd-ink); margin: 4px 0 6px; }
-.ficha .kv { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; padding: 2px 0; border-bottom: 1px dashed var(--line); }
-.ficha .kv b { display: inline; margin: 0; font-size: 15px; letter-spacing: 0; text-transform: none; color: var(--lcd-ink); }
-#records { border-collapse: collapse; font-size: 17px; }
-#records th { color: var(--dim); font-weight: 400; letter-spacing: .1em; text-transform: uppercase; font-size: 13px; }
-#records td, #records th { padding: 3px 14px; border-bottom: 1px solid var(--line); }
+.ficha .big { font: 700 32px/1 var(--jm-titulo); color: var(--lcd-ink); margin: 2px 0 6px; }
+.ficha .big.wi { font-size: 22px; text-transform: uppercase; letter-spacing: .02em; }
+.ficha .kv { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14.5px; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+.ficha .kv.stRow { display: grid; grid-template-columns: minmax(92px, 1.3fr) 1fr auto; gap: 8px; }
+.ficha .kv b { display: inline; margin: 0; font-size: 14.5px; letter-spacing: 0; text-transform: none; color: var(--lcd-ink); font-variant-numeric: tabular-nums; text-align: right; }
+#records { border-collapse: collapse; font-size: 16px; }
+#records th { color: var(--jm-amarillo2); font: 700 12px/1 var(--jm-titulo); letter-spacing: .12em; text-transform: uppercase; }
+#records td, #records th { padding: 4px 14px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .roll p { margin: 6px 0; font-size: 19px; }
 .roll .dim { color: var(--dim); }
 
@@ -422,13 +427,16 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam)::after { co
    en vez de cortar una fila seca, y el relleno inferior deja que la última fila suba por encima del desvanecido. Historia completa. */
 #scr-bestiary #beasts { max-height: max(220px, calc(100dvh - 208px)); overflow-y: auto; overscroll-behavior: contain; padding: 4px 8px 28px 2px; align-content: start;
   mask-image: linear-gradient(#000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(#000 calc(100% - 28px), transparent); }
-#scr-bestiary[data-btab="stats"] #beasts { max-height: max(180px, calc(100dvh - 340px)); }
-#scr-bestiary #records { max-height: 14vh; overflow-y: auto; display: block; flex: none; }
+#scr-bestiary[data-btab="pilotos"] #beasts { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+#scr-bestiary[data-btab="logros"] #beasts { grid-template-columns: repeat(auto-fill, minmax(225px, 1fr)); }
+#scr-bestiary[data-btab="stats"] #beasts { max-height: max(180px, calc(100dvh - 320px)); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 720px) { #scr-bestiary[data-btab="stats"] #beasts { grid-template-columns: 1fr; } }
+#scr-bestiary #records { max-height: 15vh; overflow-y: auto; display: block; flex: none; background: rgba(11, 15, 20, .92); border: 1px solid var(--jm-borde); border-top: 2px solid var(--jm-chapa); border-radius: var(--jm-r); padding: 4px 10px; box-shadow: inset 0 0 0 1px #000, 0 6px 16px rgba(0, 0, 0, .4); }
 #scr-bestiary #records.hidden { display: none; }
 #beasts .ficha { padding-top: 8px; padding-bottom: 8px; }
 #beasts .ficha .lore { margin-top: 4px; font-size: 13px; line-height: 1.24; }
 #beasts .ficha .st { margin-top: 6px; gap: 3px 8px; }
-#beasts .ficha .price { margin-top: 6px; }
+#beasts .ficha .price { margin-top: auto; padding-top: 6px; }
 /* Miniatura del bicho: ícono SVG propio en placa oscura en la esquina superior derecha de cada ficha */
 #beasts .bthumb { float: right; width: 48px; height: 48px; margin: 0 0 4px 8px; object-fit: cover; image-rendering: pixelated; background: rgba(11, 15, 20, .82); border: 1px solid var(--jm-borde); border-radius: 6px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); }
 #beasts span.bthumb { display: grid; place-items: center; opacity: .94; }

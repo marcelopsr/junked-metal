@@ -131,6 +131,26 @@ export const sessions = [
       await wait(p, () => document.querySelector("#scr-race.on"));
       await p.waitForTimeout(150);
     } },
+    { id: "bestiario-pilotos", perf: false, act: async (p) => {
+      await p.evaluate(() => window.__cfg({
+        pilot: "divorciada", unlocked: ["pilot:divorciada", "zone:jardin"], cars: ["sedan", "buggy"], best: 512,
+        ach: ["gana_sedan", "rey", "racha"],
+        slain: { hormiga: 340, escarabajo: 120, arana: 85, polilla: 60, rey: 3, tarantula: 1 },
+        stats: { runs: 6, wins: 2, time: 2940, dist: 14200, dmg: { clips: 18400, gomitas: 9200, tesla: 6100 }, zone: { patio: { t: 612, kills: 420 }, jardin: { t: 485, kills: 310 } } },
+        runs: [{ t: 612, kills: 420, lv: 18, seed: 3041, win: true }, { t: 512, kills: 355, lv: 15, seed: 8812, win: false }],
+      }));
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-btab="pilotos"]', "click");
+      await p.waitForTimeout(150);
+    } },
+    { id: "bestiario-logros", perf: false, act: async (p) => {
+      await p.dispatchEvent('[data-btab="logros"]', "click");
+      await p.waitForTimeout(150);
+    } },
+    { id: "bestiario-stats", perf: false, act: async (p) => {
+      await p.dispatchEvent('[data-btab="stats"]', "click");
+      await p.waitForTimeout(150);
+    } },
   ] },
   // Taller y garaje con compras: __cfg escribe el guardado en memoria (sin persistir) y la pantalla se vuelve a abrir para redibujarla
   { id: "taller", query: "?mute&seed=3", shots: [

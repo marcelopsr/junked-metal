@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-09 (Ciclos #1, #2, #3, #4, #5 y #6 completados y validados · Ciclo #7 iniciado)
+**Última actualización:** 2026-10-09 (Ciclos #1 a #7 completados y validados · Ciclo #8 iniciado)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -11,8 +11,8 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 | Módulo / Modo | Archivos clave | Estado actual | Calidad Visual / Técnica | Notas clave |
 |---|---|---|---|---|
-| **Supervivencia (Core)** | `src/main.ts`, `src/enemies.ts`, `src/weapons.ts`, `src/run.ts`, `src/folded_slice.ts`, `src/fx.ts`, `src/replay.ts` | Producción activa | Partida, Cartas, Pausa, Cámara lenta (`#outro`) y Resultados (`#scr-over`): 9/10 · Perf PC: `lab-noche` 189 draws (`6.2 ms`), `partida_llena` 205 draws (`8.9 ms`) | En Ciclo #6 se sumó `previewProfile(seed)` en `src/run.ts` (con test unitario en `test/run.test.ts`) para previsualizar clima, plaga, minijefes y jefe final sin alterar el `rng()` global. |
-| **HUD y Menús (`kit.css`)** | `src/kit.css`, `src/ui.ts`, `src/menu.ts`, `src/menu.css`, `src/hud.css`, `src/menuscene.ts` | Producción activa | Portada/Garaje/Taller/Submenús de Lanzamiento/Cartas/Pausa/Resultados: 9–9.5/10 | En Ciclo #6 se completaron las fichas de largada `.briefCard` en `#scr-play` y `#scr-daily` y la grilla `.raceGrid` + `.rcBrief` en `#scr-race`, verificadas en PC y celular (`pc-menu-jugar`, `pc-menu-diario`, `pc-menu-carrera-menu`). Pendiente: pestañas secundarias de Chatarroteca (`Pilotos`, `Logros`, `Estadísticas`) y sinergias en `#scr-pause` / íconos en `#overHurt`. |
+| **Supervivencia (Core)** | `src/main.ts`, `src/enemies.ts`, `src/weapons.ts`, `src/run.ts`, `src/folded_slice.ts`, `src/fx.ts`, `src/replay.ts` | Producción activa | Partida, Cartas, Pausa, Cámara lenta (`#outro`) y Resultados (`#scr-over`): 9/10 · Perf PC: `lab-noche` 189 draws (`6.2 ms`), `partida_llena` 205 draws (`8.9 ms`) | En Ciclo #6 se sumó `previewProfile(seed)` en `src/run.ts` (con test unitario en `test/run.test.ts`). Pendiente: mostrar receta de evolución en `#kitW`/`#kitP` de `#scr-pause` e íconos SVG (`beastIcon`, `embestida`, habilidades) en `#overHurt` y `#overDmg` de `#scr-over`. |
+| **HUD y Menús (`kit.css`)** | `src/kit.css`, `src/ui.ts`, `src/menu.ts`, `src/menu.css`, `src/hud.css`, `src/menuscene.ts` | Producción activa | Portada/Garaje/Taller/Submenús/Chatarroteca (4 pestañas)/Cartas/Pausa/Resultados: 9.5/10 | En Ciclo #7 se completaron las 4 pestañas de Chatarroteca (`Pilotos` con `.wsyn` y estado, `Logros` con `achIco`/`achProg` y `rewardName`, `Estadísticas` en grilla 3×2 con barras `.stb`, íconos SVG y placa `#records`), más reinicio de scroll en `#beasts` y capturas `bestiario-pilotos`, `bestiario-logros` y `bestiario-stats`. |
 | **Carrera y Batalla (`kart.ts`)** | `src/kart.ts`, `src/race.css`, `src/world.ts` | Producción activa | Submenú `#scr-race`, Largada, Curso y Podio 3D unificados con Folded: 9/10 · Perf PC: `largada` 249 draws (`7.6 ms`), `curso` 293 draws (`6.6 ms`) | En Ciclo #6 `#scr-race` incorporó grilla de 2 columnas, 3 tarjetas `.rcCard` con insignia de medalla, mejor tiempo personal y tiempos objetivo (`Oro / Plata / Bronce`) dinámicos según vueltas y cilindrada, y selección directa de pista al tocar una tarjeta. |
 | **Junket Crush (`match3`)** | `src/match3*.ts`, `src/match3.css` | Producción activa (carga perezosa) | Juego y Gabinete: 8.5–9/10 · Perf: 77 draws | En Ciclo #3 se eliminaron las masas verdes del patio detrás del gabinete (`showWorld(false)` en `startMatch3`), se normalizó el UV planar lateral a `[0..1]` con `CLAMP_ADDRESSMODE`, se sumaron chapas de roce en joystick/botón y se alineó el póster `"GOOD METAL / BRIGHTER DAYS"`. |
 | **Mundo y Sistema Folded 2.5D** | `src/folded.ts`, `src/folded_slice.ts`, `src/kit3d.ts`, `src/world.ts` | Activo por defecto (`FOLDED_SLICE = true`) | Fase A + B + C 100% completadas: 9/10 | En Ciclo #5 se completaron `brickWalls` (`FOLD.painted` + `crateFold`) y `buildPodium`, cerrando el 100% de la migración visual Folded 2.5D. Pendiente técnico: podar el chunk muerto `@babylonjs/loaders/glTF/2.0` (`542 kB`) cuando `FOLDED_SLICE = true`. |
@@ -33,7 +33,8 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 - **Ciclo #3 (Aprobado e implementado 2026-10-09, `478deb8`):** Propuesta 1 (Calidad Impeccable en Escenas de Menú y Gabinete Junket Crush: `showWorld(false)` en `startMatch3` eliminando las masas verdes laterales, UVs normalizados `[0..1]` y chapas de roce en el gabinete, lámpara/mesa/cajonera/transmisor Folded en `menuscene.ts`, póster `"GOOD METAL / BRIGHTER DAYS"` y limpieza de transiciones DOM).
 - **Ciclo #4 (Aprobado e implementado 2026-10-09, `85c3a23`):** Propuesta 1 (Claridad y Encuadre en Garaje y Taller 720p: cifras reales y barras `.stb` con riel oscuro en autos del Garaje, sinergia de evolución `.wsyn` en `ARMA` inicial y en `#sinfo` del Taller, grilla `3×3` sin fila huérfana en PC 720p, grilla de 2 columnas y filtros sin truncado en celular, y alto contraste de chapa oscura para `.perk.no`).
 - **Ciclo #5 (Aprobado e implementado 2026-10-09, `5d7155f`):** Propuesta 1 (Cierre de Partida `#scr-over` / `#outro`, solución de gradientes SVG con ID único en `src/icons.ts`, Polaroid en `Rajdhani` con papel determinista, podio 3D Folded `buildPodium`, muros rompibles `brickWalls` Folded y cobertura headless de `outro`, `resultados` y `podio`).
-- **Ciclo #6 (Aprobado e implementado 2026-10-09):** Propuesta 1 (Submenús de Lanzamiento `#scr-race`, `#scr-play`, `#scr-daily` con grilla compacta `.raceGrid`, tarjetas `.rcCard` con metas de medalla y selección directa de pista, ficha de largada `.briefCard` con récord de zona y equipamiento activo, y pronóstico determinista `previewProfile` del Desafío Diario).
+- **Ciclo #6 (Aprobado e implementado 2026-10-09, `e02d4f4`):** Propuesta 1 (Submenús de Lanzamiento `#scr-race`, `#scr-play`, `#scr-daily` con grilla compacta `.raceGrid`, tarjetas `.rcCard` con metas de medalla y selección directa de pista, ficha de largada `.briefCard` con récord de zona y equipamiento activo, y pronóstico determinista `previewProfile` del Desafío Diario).
+- **Ciclo #7 (Aprobado e implementado 2026-10-09):** Propuesta 1 (Chatarroteca Completa: `Pilotos` con `.wsyn` y estado de desbloqueo, `Logros` con íconos SVG propios por categoría `achIco`, progreso contextual `achProg` y nombres de premios limpios `rewardName`, `Estadísticas` en grilla `3×2` con barras `.stb`, íconos de armas/bichos y placa `#records`, reinicio de `scrollTop` en `#beasts` y cobertura headless `bestiario-pilotos`, `bestiario-logros`, `bestiario-stats`).
 
 ### Ideas Descartadas o Congeladas (No volver a proponer sin nueva razón)
 - **Economía compartida / tornillos en modos laterales:** Descartado explícitamente (2026-10-08).
@@ -66,48 +67,52 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 - **Alcance implementado:** Solución de íconos SVG invisibles en `#scr-pause` y `#scr-over` (`uid` incremental por `<linearGradient>` en `src/icons.ts`), Polaroid en `Rajdhani` con granulado determinista (`src/replay.ts`), ocultación de `#banner` y `#touch` durante `#outro` y `#race.podium`, grilla de `#scr-over` corregida en PC y celular, podio 3D Folded (`buildPodium` en `src/kart.ts`), muros rompibles Folded (`brickWalls` en `src/world.ts`) y cobertura headless de `outro`, `resultados` y `podio`.
 - **Evidencia de validación:** `tsc --noEmit`, `npm test` (46/46), `npm run build`, `npm run shots -- --only partida,carrera` (15 capturas) y `graphify update .`.
 
-### Ciclo #6 (2026-10-09) — Submenús de Lanzamiento (`#scr-race`, `#scr-play`, `#scr-daily`) con Grilla Compacta, Metas de Medalla y Ficha de Largada
+### Ciclo #6 (2026-10-09) — Submenús de Lanzamiento (`#scr-race`, `#scr-play`, `#scr-daily`) con Grilla Compacta, Metas de Medalla y Ficha de Largada (`e02d4f4`)
+- **Alcance implementado:** `previewProfile(seed)` en `src/run.ts` (con test unitario en `test/run.test.ts`), ficha `.briefCard.jm-panel` en `#scr-play` y `#scr-daily`, grilla `.raceGrid` en 2 columnas y 3 tarjetas `.rcCard` con metas de medalla en `#scr-race`, y capturas `jugar`, `diario` y `carrera-menu` en `scripts/scenarios.mjs`.
+- **Evidencia de validación:** `tsc --noEmit`, `npm test` (47/47), `npm run build`, `npm run shots -- --only menu` (46 capturas) y `graphify update .`.
+
+### Ciclo #7 (2026-10-09) — Chatarroteca Completa (`Pilotos`, `Logros` con Progreso e Íconos y `Estadísticas` con Barras y Siluetas)
 - **Alcance implementado (Propuesta 1):**
-  - `previewProfile(seed)` en `src/run.ts` (con test unitario en `test/run.test.ts`) para calcular clima, plaga, minijefes y jefe final de cualquier semilla sin consumir el `rng()` global.
-  - Ficha de largada `.briefCard.jm-panel` en `#scr-play` (descripción de zona, mejor marca personal `.briefRec` y grilla `.briefKit` 2×2 de Auto/Piloto/Arma inicial/Habilidad con íconos SVG) y en `#scr-daily` (grilla `.briefGrid` con escenario, plaga dominante, minijefes apilados con `beastIcon` y jefe final + `.briefKit` + récord del día).
-  - Grilla `.raceGrid` en 2 columnas en `#scr-race` + `#rcBrief` con 3 tarjetas `.rcCard` (`Patio`, `Jardín`, `Garaje`) que muestran insignia de medalla, mejor tiempo personal y tiempos objetivo (`Oro / Plata / Bronce`) dinámicos para las vueltas y cilindrada activas, permitiendo elegir pista con un clic; más pie `#fe #rcHelp` en placa oscura legible.
-  - Escenarios deterministas `jugar`, `diario` y `carrera-menu` agregados a la sesión `menu` en `scripts/scenarios.mjs`.
-- **Evidencia de validación:** `tsc --noEmit`, `npm test` (47/47), `npm run build`, `npm run shots -- --only menu` (46 capturas verificadas en PC y celular) y `graphify update .`.
+  - Pestaña `Pilotos`: franja `.wsyn` con el arma inicial de cada piloto e ícono SVG, estado `.sel` cuando está en uso, pie `.price` alineado al fondo (`EN USO` / `EN EL GARAJE` / `Bloqueado · N tornillos` / `Logro: ...`) y eliminación de `letter-spacing: .4em` en `.ficha.locked b`.
+  - Pestaña `Logros`: `achIco(k)` con íconos SVG propios por categoría (`vehiculo`, `beastIcon`, fusiones, hazañas), `achProg(k, ok)` con barra o contador de avance (`Mejor marca`, `Mejor marca hoy`, `Bajas registradas`, `Auto en el garaje`) y `rewardName(id)` sin duplicar el nombre de la ranura.
+  - Pestaña `Estadísticas`: grilla `3×2` en PC (`1×N` en móvil), barra de porcentaje de victorias en `Partidas`, `Mejor tiempo` en `Tiempo jugado`, íconos SVG y barras `.stb` en `Arma favorita` (top 3 armas) y `Bajas por tipo` (`beastIcon` + barra por especie), y tabla `#records` enmarcada en placa de chapa oscura.
+  - Reinicio de `$("beasts").scrollTop = 0` al abrir la Chatarroteca o cambiar de pestaña (`d.btab`) + inclusión de `#beasts` en `SCROLL` + capturas deterministas `bestiario-pilotos`, `bestiario-logros` y `bestiario-stats` en `scripts/scenarios.mjs`.
+- **Evidencia de validación:** `tsc --noEmit`, `npm test` (47/47), `npm run build`, `npm run shots -- --only menu` (52 capturas verificadas en PC y celular) y `graphify update .`.
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #7
+## 4. Backlog Vivo de Oportunidades — Ciclo #8
 
-### A. Lente de Calidad Visual y UX en Chatarroteca (`Pilotos`, `Logros`, `Estadísticas`)
-1. **Refinamiento Visual, Progreso e Íconos en las Pestañas `Pilotos`, `Logros` y `Estadísticas` + Cobertura Headless (`src/menu.ts`, `src/menu.css`, `scripts/scenarios.mjs`):**
-   - **Problema actual:** Mientras la pestaña `Bichos` ya tiene siluetas `beastIcon` y barras con riel `.stb`, las otras tres pestañas de `#scr-bestiary` quedaron atrás:
-     - En `Pilotos`, no se muestra el **arma inicial propia de cada piloto** (`icon(p.start, 16) + WEAPONS[p.start].name`), ni el estado (`EN USO` / `EN EL GARAJE` / condición de desbloqueo por logro o tornillos).
-     - En `Logros`, las 18 tarjetas repiten el mismo ícono `evo` genérico en lugar de usar el ícono SVG acorde al logro/recompensa, y los logros pendientes no muestran el **progreso actual** cuando depende de acumuladores (`save.slain`, `save.best`, `save.stats`).
-     - En `Estadísticas`, `Arma favorita` carece de su ícono SVG, `Bajas por tipo` lista texto plano sin `beastIcon(k, 16)` ni barras proporcionales `.stb`, y la tabla `#records` (*Mejores partidas*) flota suelta sobre la escena 3D sin placa de chapa `.jm-panel2`.
-   - **Propuesta:** Completar las tres pestañas con íconos SVG propios, arma inicial y estado en `Pilotos`, íconos específicos y progreso en `Logros`, barras `.stb` + `beastIcon` y tabla `#records` enmarcada en `Estadísticas`, y sumar capturas headless en `scripts/scenarios.mjs`.
+### A. Lente de Claridad Táctica en Partida (`#scr-pause` y `#scr-over`)
+1. **Sinergias Bidireccionales en Pausa (`#kitW` / `#kitP`) e Íconos SVG de Fuentes de Daño en Resultados (`#overDmg` / `#overHurt`) (`src/menu.ts`, `src/menu.css`):**
+   - **Problema actual:**
+     - En `#scr-pause`, `#kitW` muestra el daño y porcentaje de cada arma, pero no indica **qué pasiva necesita cada arma equipada para evolucionar** (ni resalta si esa pasiva ya está en `#kitP`), y `#kitP` tampoco indica qué arma equipada evoluciona con cada pasiva.
+     - En `#scr-over`, `#overDmg` deja sin ícono a fuentes no-arma (`embestida` o habilidades activas como `bombardeo` / `emp`), y `#overHurt` (*Daño recibido por fuente*) lista texto plano (`Contacto · Hormiga`, `Hormiga escupidora`) sin las siluetas `beastIcon(k, 16)` de cada amenaza.
+   - **Propuesta:** Añadir en `#kitW` y `#kitP` el indicador compacto de pareja de evolución (resaltado en `--jm-amarillo2` cuando ambos componentes están equipados), y sumar `beastIcon(k, 16)` en cada fila de `#overHurt` más íconos de embestida (`lanza`) y habilidades (`ABIL_ICON`) en `#overDmg`.
 
 ### B. Lente de Simplificación y Rendimiento de Empaquetado (Bundle Size)
 2. **Poda Estática del Chunk GLTF Loader (`542 kB`) bajo `FOLDED_SLICE` (`src/glb.ts`, `src/carGlb.ts`):**
-   - **Problema actual:** Con `FOLDED_SLICE = true`, el 100% de los 8 autos (`carHull`) y los 13 enemigos/jefes (`PROC` + `PETS`) se construyen proceduralmente sin descargar ningún `.glb`, pero Vite sigue emitiendo `dist/assets/2.0-*.js` (`542.16 kB`, `128.11 kB` gzip) y `glTFLoaderAnimation.pure-*.js` (`23.59 kB`) porque el cortocircuito en `src/glb.ts` (`if (o.proc)`) depende de un registro en tiempo de ejecución.
-   - **Propuesta:** Cortocircuitar estáticamente con `if (FOLDED_SLICE)` antes de `await import("@babylonjs/loaders/glTF/2.0")` en `src/glb.ts` y `src/carGlb.ts` para eliminar ~565 kB de código muerto del build de producción.
+   - **Problema actual:** Con `FOLDED_SLICE = true`, el 100% de los 8 autos (`carHull`) y los 13 enemigos/jefes (`PROC` + `PETS`) se construyen proceduralmente sin descargar ningún `.glb`, pero Vite sigue emitiendo `dist/assets/2.0-*.js` (`542.16 kB`, `128.11 kB` gzip) y `glTFLoaderAnimation.pure-*.js` (`23.59 kB`) porque el cortocircuito en `src/glb.ts` (`if (o.proc)`) ocurre después de resolver el registro dinámico.
+   - **Propuesta:** Cortocircuitar con `if (FOLDED_SLICE)` antes de `await import("@babylonjs/loaders/glTF/2.0")` en `src/glb.ts` y `src/carGlb.ts` para eliminar ~565 kB de código muerto del build de producción.
 
-### C. Lente de Experiencia en Partida (`#scr-pause` y `#scr-over`)
-3. **Guía de Sinergias en Pausa (`#kitW` / `#kitP`) e Íconos de Amenaza en Daño Recibido (`#overHurt`) (`src/menu.ts`, `src/menu.css`):**
+### C. Lente de Coherencia Visual en Pantallas Secundarias (`#scr-credits`, `#scr-modes`, `#scr-match3`)
+3. **Placa de Chapa en `#scr-credits`, Resumen de Progreso en `#scr-modes` / `#scr-match3` y Cobertura Headless (`index.html`, `src/menu.ts`, `src/menu.css`, `scripts/scenarios.mjs`):**
    - **Problema actual:**
-     - En `#scr-pause`, `#kitW` muestra el daño y porcentaje de cada arma, pero no recuerda **qué pasiva necesita cada arma equipada para evolucionar** (ni resalta si esa pasiva ya está en `#kitP`), obligando al jugador a memorizar las 10 parejas de evolución entre subidas de nivel.
-     - En `#scr-over`, mientras `#overDmg` muestra íconos SVG en las armas (aunque `embestida` y habilidades aún aparecen sin ícono), `#overHurt` (*Daño recibido por fuente*) muestra nombres de texto plano sin las siluetas `beastIcon(k, 18)` de los enemigos que dañaron al auto.
-   - **Propuesta:** Agregar en cada fila de `#kitW` (cuando el arma aún no evolucionó) el recordatorio compacto de su pasiva par (resaltado en amarillo si ya se posee en `#kitP`), y sumar `beastIcon` en `#overHurt` e íconos de embestida/habilidad en `#overDmg`.
+     - En `#scr-credits` (`pc-menu-creditos.png`, `cel-menu-creditos.png`), el bloque `.roll` sigue flotando como texto suelto con sombra dura sobre los libros y la lupa 3D del escritorio, siendo la única pantalla informativa del menú que aún no usa placa de chapa oscura `.briefCard.jm-panel`.
+     - En `#scr-modes` (*Más modos*) y `#scr-match3`, los botones de **Carrera** y **Junket Crush** muestran solo una descripción estática sin reflejar el avance del jugador (medallas obtenidas en las 3 pistas de Carrera o nivel alcanzado / estrellas en la campaña de 10 niveles de Junket Crush), y `#scr-modes` aún no cuenta con captura dedicada en `scripts/scenarios.mjs`.
+   - **Propuesta:** Enmarcar `#scr-credits .roll` en `.briefCard.jm-panel` (conservando intactos la historia y *"Creado por TheDuende"*), mostrar en `#scr-modes` y `#scr-match3` el resumen de medallas de Carrera y nivel/estrellas de Junket Crush, y agregar la captura `mas-modos` en `scripts/scenarios.mjs`.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Implementación y validación visual de la **Propuesta 1 del Ciclo #6** (submenús de lanzamiento `#scr-race`, `#scr-play` y `#scr-daily` con `previewProfile(seed)` en `src/run.ts`, fichas de largada `.briefCard`, grilla `.raceGrid` en 2 columnas, tarjetas `.rcCard` con tiempos objetivo de medalla `Oro / Plata / Bronce`, pie `#rcHelp` en placa oscura y capturas `jugar`, `diario` y `carrera-menu` en `scripts/scenarios.mjs`).
-- **Estado de validación:** `npx tsc --noEmit -p .`, `npm test` (47/47), `npm run build`, `npm run shots -- --only menu` (46 capturas verificadas visualmente en PC y celular) y `graphify update .` completados sin errores.
-- **Lente activa del Ciclo #7:** *Calidad Visual y UX en Chatarroteca (`Pilotos`, `Logros`, `Estadísticas`), Simplificación del Build (Poda del chunk GLTF de 542 kB) y Claridad Táctica en Pausa/Resultados (`#kitW` + `#overHurt`)*.
-- **Propuestas activas para decisión del usuario (Ciclo #7):**
-  1. *(Recomendada)* **Chatarroteca Completa: Claridad Visual, Progreso e Íconos en `Pilotos`, `Logros` y `Estadísticas` + Cobertura Headless**.
+- **Último trabajo completado:** Implementación y validación visual de la **Propuesta 1 del Ciclo #7** (Chatarroteca completa en `Pilotos`, `Logros` y `Estadísticas` con íconos SVG propios, estado de desbloqueo, arma inicial `.wsyn`, progreso contextual `.achProg`, barras `.stb`, placa `#records`, reinicio de scroll en `#beasts` y capturas `bestiario-pilotos`, `bestiario-logros` y `bestiario-stats`).
+- **Estado de validación:** `npx tsc --noEmit -p .`, `npm test` (47/47), `npm run build`, `npm run shots -- --only menu` (52 capturas verificadas visualmente en PC y celular) y `graphify update .` completados sin errores.
+- **Lente activa del Ciclo #8:** *Claridad Táctica en Pausa/Resultados (`#kitW`, `#kitP`, `#overDmg`, `#overHurt`), Simplificación del Build (Poda del chunk GLTF de 542 kB) y Coherencia Visual en `#scr-credits` + `#scr-modes`*.
+- **Propuestas activas para decisión del usuario (Ciclo #8):**
+  1. *(Recomendada)* **Claridad Táctica en Pausa y Resultados: Sinergias Bidireccionales en `#kitW`/`#kitP` e Íconos SVG en `#overHurt` y `#overDmg`**.
   2. **Simplificación del Build: Poda Estática del Chunk GLTF Loader (`542 kB`) bajo `FOLDED_SLICE`**.
-  3. **Claridad Táctica en Pausa y Resultados: Sinergias de Evolución en `#kitW` e Íconos SVG en `#overHurt` / `#overDmg`**.
-- **Próxima decisión necesaria:** Selección del usuario sobre cómo avanzar en el Ciclo #7.
+  3. **Coherencia Visual en `#scr-credits` y `#scr-modes`: Placa de Chapa en Créditos + Resumen de Progreso en Modos + Captura Headless**.
+- **Próxima decisión necesaria:** Selección del usuario sobre cómo avanzar en el Ciclo #8.
+
 
