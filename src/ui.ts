@@ -11,7 +11,7 @@ import { isTouch, KEYS } from "./input";
 const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram", "cdr"] as const;
 // ponytail: copia de menu.PERK_ICON (ui no puede importar menu: kart ↔ menu)
 const WSHOP_ICON: Record<(typeof WSHOP_KEYS)[number], string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", arm: "lego", reg: "heal", tur: "turbo", ram: "lanza", cdr: "capacitor" };
-import type { Offer } from "./weapons";
+import { WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -88,8 +88,17 @@ export function hudSlots(weapons: SlotInfo[], passives: SlotInfo[]) {
     slotKey = key;
     const pips = (lv: number) => `<span class="pips">${Array.from({ length: 5 }, (_, i) => `<i class="${i < lv ? "on" : ""}"></i>`).join("")}</span>`;
     $("slots").innerHTML =
-      `<div class="row">${weapons.map((w) => `<div class="slot ${w.evolved ? "evo" : ""}">${icon(w.id, 26)}<div class="cd"></div>${w.evolved ? "" : pips(w.lv)}</div>`).join("")}</div>` +
-      `<div class="row">${passives.map((p) => `<div class="slot small">${icon(p.id, 18)}${pips(p.lv)}</div>`).join("")}</div>`;
+      `<div class="row">${weapons.map((w) => {
+        const evoP = WEAPONS[w.id as WeaponId]?.evo;
+        const hasPair = !w.evolved && !!evoP && passives.some((p) => p.id === evoP);
+        const evoReady = hasPair && w.lv >= 5;
+        const cls = w.evolved ? "evo" : evoReady ? "evo-ready" : hasPair ? "syn-on" : "";
+        return `<div class="slot ${cls}">${icon(w.id, 26)}<div class="cd"></div>${evoReady ? `<b class="evo-tag">EVO</b>` : ""}${w.evolved ? "" : pips(w.lv)}</div>`;
+      }).join("")}</div>` +
+      `<div class="row">${passives.map((p) => {
+        const pairsW = weapons.some((w) => !w.evolved && WEAPONS[w.id as WeaponId]?.evo === p.id);
+        return `<div class="slot small ${pairsW ? "syn-on" : ""}">${icon(p.id, 18)}${pips(p.lv)}</div>`;
+      }).join("")}</div>`;
     cds = Array.from($("slots").querySelectorAll<HTMLElement>(".row:first-child .cd"));
   }
   cds.forEach((c, i) => { const v = (weapons[i]?.cd ?? 0).toFixed(2); if (ch(`cd${i}`, v)) c.style.setProperty("--cd", v); });

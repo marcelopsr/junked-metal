@@ -47,9 +47,10 @@ function applyCarMats(mesh: B.Mesh, paint: string, trim: string) {
 }
 
 async function loadOne(scene: B.Scene, kind: CarKind) {
-  const o = CAR_GLB[kind];
+  if (FOLDED_SLICE) return;
+  const o = CAR_GLB[kind], gltf = "@babylonjs/loaders/glTF/2.0";
   try {
-    await import("@babylonjs/loaders/glTF/2.0");
+    await import(/* @vite-ignore */ gltf);
     const c = await B.LoadAssetContainerAsync(`models/cars/${o.file}.glb`, scene);
     c.addAllToScene();
     const parts = c.meshes.filter((m): m is B.Mesh => m instanceof B.Mesh && m.getTotalVertices() > 0);

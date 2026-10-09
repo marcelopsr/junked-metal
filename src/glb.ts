@@ -112,8 +112,9 @@ function finishVat(scene: B.Scene, kind: Kind, mesh: B.Mesh, sk: B.Skeleton, dat
 
 async function load(scene: B.Scene, kind: Kind) {
   const o = GLB[kind]!, t0 = performance.now();
-  if (o.proc) { procBake(scene, kind); return; }
-  await import("@babylonjs/loaders/glTF/2.0"); // el navegador lo baja una sola vez para todos los bichos
+  if (FOLDED_SLICE || o.proc) { procBake(scene, kind); return; }
+  const gltf = "@babylonjs/loaders/glTF/2.0";
+  await import(/* @vite-ignore */ gltf); // el navegador lo baja una sola vez para todos los bichos
   const c = await B.LoadAssetContainerAsync(`models/${o.file}.glb`, scene); // relativa: el build usa base "./"
   c.addAllToScene();
   const t1 = performance.now();

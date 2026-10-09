@@ -77,42 +77,45 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - Pestaña `Logros`: `achIco(k)` con íconos SVG propios por categoría (`vehiculo`, `beastIcon`, fusiones, hazañas), `achProg(k, ok)` con barra o contador de avance (`Mejor marca`, `Mejor marca hoy`, `Bajas registradas`, `Auto en el garaje`) y `rewardName(id)` sin duplicar el nombre de la ranura.
   - Pestaña `Estadísticas`: grilla `3×2` en PC (`1×N` en móvil), barra de porcentaje de victorias en `Partidas`, `Mejor tiempo` en `Tiempo jugado`, íconos SVG y barras `.stb` en `Arma favorita` (top 3 armas) y `Bajas por tipo` (`beastIcon` + barra por especie), y tabla `#records` enmarcada en placa de chapa oscura.
   - Reinicio de `$("beasts").scrollTop = 0` al abrir la Chatarroteca o cambiar de pestaña (`d.btab`) + inclusión de `#beasts` en `SCROLL` + capturas deterministas `bestiario-pilotos`, `bestiario-logros` y `bestiario-stats` en `scripts/scenarios.mjs`.
-- **Evidencia de validación:** `tsc --noEmit`, `npm test` (47/47), `npm run build`, `npm run shots -- --only menu` (52 capturas verificadas en PC y celular) y `graphify update .`.
+### Ciclo #8 (2026-10-09) — Claridad Táctica en Pausa y Resultados, Placa en Créditos, Progreso en Más Modos y Junket Crush
+- **Alcance implementado:**
+  - **Claridad Táctica en Pausa (`#kitW`, `#kitP`):** Indicador contextual `.wsynP` debajo de cada arma que muestra su pareja de evolución requerida (`Evo: <Pasiva>`) y resalta en amarillo oro (`.wsynP.on`) cuando la pasiva correspondiente ya está equipada en la build. En pasivas (`#kitP`), se expone qué arma equipada evoluciona cada una (o el catálogo disponible si no está equipada aún).
+  - **Íconos SVG y Siluetas en Resultados (`#overDmg`, `#overHurt`):** Daño infligido ahora incluye íconos temáticos para fuentes no-arma (`embestida` con ícono de lanza, habilidades activas con `ABIL_ICON`). Daño recibido (`#overHurt`) mapea fuentes de contacto, embestidas y proyectiles a siluetas exactas `beastIcon(k, 18)` de cada enemigo (`hormiga`, `escupidora`, `cucaracha`/`friccion`, `rey`, etc.).
+  - **Coherencia Visual en Créditos (`#scr-credits`):** Enmarcado del texto de la historia en placa de chapa oscura `.briefCard.jm-panel`, eliminando el texto flotante sobre la mesa 3D y alineando el lenguaje con las demás pantallas.
+  - **Progreso en Pantalla de Modos (`#scr-modes`) y Entrada a Junket Crush (`#scr-match3`):** Resumen de circuitos completados y medallas obtenidas en Carrera (`progRace`), nivel alcanzado y estrellas acumuladas en Junket Crush (`progM3`), y placa `.briefCard.jm-panel` en `#m3Brief` de `#scr-match3`.
+  - **Cobertura Headless:** Incorporación de la captura `mas-modos` en `scripts/scenarios.mjs` validada en PC y móvil.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75 pasando, incluido test de campaña match-3), `npm run build`, `npm run shots -- --only menu,match3_menu,partida` (64 capturas verificadas en PC y móvil), `pm2 restart rc-test` y `npx graphify update .` completados sin errores.
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #8
+## 4. Backlog Vivo de Oportunidades — Ciclo #9
 
-### A. Lente de Claridad Táctica en Partida (`#scr-pause` y `#scr-over`)
-1. **Sinergias Bidireccionales en Pausa (`#kitW` / `#kitP`) e Íconos SVG de Fuentes de Daño en Resultados (`#overDmg` / `#overHurt`) (`src/menu.ts`, `src/menu.css`):**
-   - **Problema actual:**
-     - En `#scr-pause`, `#kitW` muestra el daño y porcentaje de cada arma, pero no indica **qué pasiva necesita cada arma equipada para evolucionar** (ni resalta si esa pasiva ya está en `#kitP`), y `#kitP` tampoco indica qué arma equipada evoluciona con cada pasiva.
-     - En `#scr-over`, `#overDmg` deja sin ícono a fuentes no-arma (`embestida` o habilidades activas como `bombardeo` / `emp`), y `#overHurt` (*Daño recibido por fuente*) lista texto plano (`Contacto · Hormiga`, `Hormiga escupidora`) sin las siluetas `beastIcon(k, 16)` de cada amenaza.
-   - **Propuesta:** Añadir en `#kitW` y `#kitP` el indicador compacto de pareja de evolución (resaltado en `--jm-amarillo2` cuando ambos componentes están equipados), y sumar `beastIcon(k, 16)` en cada fila de `#overHurt` más íconos de embestida (`lanza`) y habilidades (`ABIL_ICON`) en `#overDmg`.
+### A. Lente de Simplificación y Rendimiento (Bundle Size)
+1. **Poda Estática del Chunk GLTF Loader (`542 kB`) bajo `FOLDED_SLICE` (`src/glb.ts`, `src/carGlb.ts`):**
+   - **Qué es:** Cortocircuitar las importaciones dinámicas de `@babylonjs/loaders/glTF/2.0` cuando `FOLDED_SLICE = true`.
+   - **Qué problema resuelve:** El build de producción sigue emitiendo `2.0-*.js` (`542 kB`) y `glTFLoaderAnimation.pure-*.js` (`23.6 kB`) que nunca se ejecutan porque todos los modelos se generan proceduralmente.
+   - **Qué valor aporta:** Reducción de más de medio megabyte en la descarga inicial web. Complejidad: Baja.
 
-### B. Lente de Simplificación y Rendimiento de Empaquetado (Bundle Size)
-2. **Poda Estática del Chunk GLTF Loader (`542 kB`) bajo `FOLDED_SLICE` (`src/glb.ts`, `src/carGlb.ts`):**
-   - **Problema actual:** Con `FOLDED_SLICE = true`, el 100% de los 8 autos (`carHull`) y los 13 enemigos/jefes (`PROC` + `PETS`) se construyen proceduralmente sin descargar ningún `.glb`, pero Vite sigue emitiendo `dist/assets/2.0-*.js` (`542.16 kB`, `128.11 kB` gzip) y `glTFLoaderAnimation.pure-*.js` (`23.59 kB`) porque el cortocircuito en `src/glb.ts` (`if (o.proc)`) ocurre después de resolver el registro dinámico.
-   - **Propuesta:** Cortocircuitar con `if (FOLDED_SLICE)` antes de `await import("@babylonjs/loaders/glTF/2.0")` en `src/glb.ts` y `src/carGlb.ts` para eliminar ~565 kB de código muerto del build de producción.
+### B. Lente de Experiencia y Feedback en Partida (HUD Táctico)
+2. **Indicador Visual de 'Evolución Lista' en los Slots del HUD (`src/ui.ts`, `src/hud.css`):**
+   - **Qué es:** Pulso sutil dorado o borde energizado en el slot de un arma (`#slots .slot`) cuando alcanza nivel 5 y su pasiva pareja ya está en posesión del jugador.
+   - **Qué problema resuelve:** El jugador no siempre recuerda en medio del combate si un arma ya está lista para que el próximo cofre o nivel ofrezca la evolución.
+   - **Qué valor aporta:** Claridad inmediata sin necesidad de pausar la partida. Complejidad: Baja-Media.
 
-### C. Lente de Coherencia Visual en Pantallas Secundarias (`#scr-credits`, `#scr-modes`, `#scr-match3`)
-3. **Placa de Chapa en `#scr-credits`, Resumen de Progreso en `#scr-modes` / `#scr-match3` y Cobertura Headless (`index.html`, `src/menu.ts`, `src/menu.css`, `scripts/scenarios.mjs`):**
-   - **Problema actual:**
-     - En `#scr-credits` (`pc-menu-creditos.png`, `cel-menu-creditos.png`), el bloque `.roll` sigue flotando como texto suelto con sombra dura sobre los libros y la lupa 3D del escritorio, siendo la única pantalla informativa del menú que aún no usa placa de chapa oscura `.briefCard.jm-panel`.
-     - En `#scr-modes` (*Más modos*) y `#scr-match3`, los botones de **Carrera** y **Junket Crush** muestran solo una descripción estática sin reflejar el avance del jugador (medallas obtenidas en las 3 pistas de Carrera o nivel alcanzado / estrellas en la campaña de 10 niveles de Junket Crush), y `#scr-modes` aún no cuenta con captura dedicada en `scripts/scenarios.mjs`.
-   - **Propuesta:** Enmarcar `#scr-credits .roll` en `.briefCard.jm-panel` (conservando intactos la historia y *"Creado por TheDuende"*), mostrar en `#scr-modes` y `#scr-match3` el resumen de medallas de Carrera y nivel/estrellas de Junket Crush, y agregar la captura `mas-modos` en `scripts/scenarios.mjs`.
+### C. Lente de Integración y Audio Táctil (Game Feel)
+3. **Efectos Sonoros Sintetizados para Interacciones en el Gabinete Junket Crush (`src/sfx.ts`, `src/match3_scene.ts`):**
+   - **Qué es:** Sonidos mecánicos de click retro/arcade sintetizados en Web Audio API para el arrastre, matches de chatarra y victoria de nivel en Junket Crush.
+   - **Qué problema resuelve:** Actualmente Junket Crush tiene excelente ambientación visual 3D pero feedback sonoro acotado en comparación con las partidas de Supervivencia y Carrera.
+   - **Qué valor aporta:** Completa la experiencia inmersiva del mini-juego arcade. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Implementación y validación visual de la **Propuesta 1 del Ciclo #7** (Chatarroteca completa en `Pilotos`, `Logros` y `Estadísticas` con íconos SVG propios, estado de desbloqueo, arma inicial `.wsyn`, progreso contextual `.achProg`, barras `.stb`, placa `#records`, reinicio de scroll en `#beasts` y capturas `bestiario-pilotos`, `bestiario-logros` y `bestiario-stats`).
-- **Estado de validación:** `npx tsc --noEmit -p .`, `npm test` (47/47), `npm run build`, `npm run shots -- --only menu` (52 capturas verificadas visualmente en PC y celular) y `graphify update .` completados sin errores.
-- **Lente activa del Ciclo #8:** *Claridad Táctica en Pausa/Resultados (`#kitW`, `#kitP`, `#overDmg`, `#overHurt`), Simplificación del Build (Poda del chunk GLTF de 542 kB) y Coherencia Visual en `#scr-credits` + `#scr-modes`*.
-- **Propuestas activas para decisión del usuario (Ciclo #8):**
-  1. *(Recomendada)* **Claridad Táctica en Pausa y Resultados: Sinergias Bidireccionales en `#kitW`/`#kitP` e Íconos SVG en `#overHurt` y `#overDmg`**.
-  2. **Simplificación del Build: Poda Estática del Chunk GLTF Loader (`542 kB`) bajo `FOLDED_SLICE`**.
-  3. **Coherencia Visual en `#scr-credits` y `#scr-modes`: Placa de Chapa en Créditos + Resumen de Progreso en Modos + Captura Headless**.
-- **Próxima decisión necesaria:** Selección del usuario sobre cómo avanzar en el Ciclo #8.
+- **Último trabajo completado:** Ciclo #8 completado y validado (Pausa táctica con `.wsynP`, Resultados con `beastIcon` y fuentes no-arma, Créditos con `.briefCard.jm-panel`, progreso dinámico en `#scr-modes`/`#scr-match3`, capturas headless en PC/móvil).
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build`, `npm run shots` (64 capturas), `pm2 restart rc-test` y `graphify update .` 100% limpios.
+- **Lente activa para el Ciclo #9:** *Rendimiento de Bundle (GLTF Loader), HUD In-Game Feedback (Evo-ready) y Game Feel en Gabinete Arcade*.
+- **Estado de concurrencia:** Sin bloqueos activos. Áreas liberadas para coordinación paralela.
+
 
 

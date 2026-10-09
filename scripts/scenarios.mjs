@@ -131,6 +131,7 @@ export const sessions = [
       await wait(p, () => document.querySelector("#scr-race.on"));
       await p.waitForTimeout(150);
     } },
+    { id: "mas-modos", perf: false, act: view("modes") },
     { id: "bestiario-pilotos", perf: false, act: async (p) => {
       await p.evaluate(() => window.__cfg({
         pilot: "divorciada", unlocked: ["pilot:divorciada", "zone:jardin"], cars: ["sedan", "buggy"], best: 512,

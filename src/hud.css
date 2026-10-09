@@ -101,7 +101,10 @@
 #slots .row { display: flex; gap: 5px; }
 #slots .slot { position: relative; width: 40px; height: 40px; display: grid; place-items: center; overflow: hidden; color: var(--g-txt); background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 12px; box-shadow: 0 6px 16px rgba(0, 0, 0, .25); backdrop-filter: blur(8px); }
 #slots .slot.small { width: 30px; height: 30px; color: var(--g-dim); }
+#slots .slot.syn-on { border-color: rgba(255, 194, 77, .65); }
+#slots .slot.evo-ready { border-color: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, .45); animation: h-glow 1.4s ease-in-out infinite; }
 #slots .slot.evo { border-color: #ffc24d; color: #ffc24d; animation: h-glow 1.6s ease-in-out infinite; }
+#slots .slot .evo-tag { position: absolute; top: 2px; right: 2px; padding: 1px 3px; font: 700 8px/1 var(--hf); letter-spacing: .04em; color: #0b0f14; background: #ffd24a; border-radius: 3px; pointer-events: none; }
 #slots .slot .cd { position: absolute; inset: 0; background: conic-gradient(#000b calc(var(--cd, 0) * 360deg), transparent 0); }
 #slots .slot .pips { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }
 #slots .slot .pips i { width: 4px; height: 3px; background: rgba(255, 255, 255, .2); border-radius: 2px; }

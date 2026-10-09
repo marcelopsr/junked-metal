@@ -172,9 +172,9 @@
     <section id="scr-modes" class="scr">
       <div class="otitle">Más modos</div>
       <nav class="list modeList">
-        <button data-go="race"><span class="mtx"><b>Carrera</b><small>Circuito en el patio contra 10 corredores, con objetos, derrape y mini-turbo.</small></span></button>
+        <button data-go="race"><span class="mtx"><b>Carrera</b><small>Circuito en el patio contra 10 corredores, con objetos, derrape y mini-turbo.</small><small class="mprog" id="progRace"></small></span></button>
         <button data-go="duel"><span class="mtx"><b>Demolición</b><small>Arena de acero, mejor de tres asaltos. Solo chasis, ruedas y un arma de contacto.</small></span></button>
-        <button data-go="match3"><span class="mtx"><b>Junket Crush</b><small>Gabinete arcade en el taller: intercambiar piezas de chatarra y completar el pedido.</small></span></button>
+        <button data-go="match3"><span class="mtx"><b>Junket Crush</b><small>Gabinete arcade en el taller: intercambiar piezas de chatarra y completar el pedido.</small><small class="mprog" id="progM3"></small></span></button>
         <button data-act="back">Volver</button>
       </nav>
     </section>
@@ -192,6 +192,7 @@
     <section id="scr-match3" class="scr">
       <div class="otitle">Junket Crush</div>
       <div class="foot">Gabinete arcade en el taller: intercambiar piezas de chatarra y completar el pedido.</div>
+      <div class="briefCard jm-panel" id="m3Brief"></div>
       <nav class="list">
         <button data-act="match3go" class="primary">Jugar</button>
         <button data-act="back">Volver</button>
@@ -270,7 +271,7 @@
 
     <section id="scr-credits" class="scr">
       <div class="otitle">Créditos</div>
-      <div class="roll">
+      <div class="roll briefCard jm-panel">
         <p><b>JUNKED METAL</b></p>
         <p>Cada noche, cuando la casa se apaga, el patio cambia de dueño y nadie firma el traspaso. Bajo el pasto viven hormigas, escarabajos y un perro con opiniones.</p>
         <p>Los juguetes olvidados aprendieron a defenderse, o eso dice su currículum. Un auto a control remoto, armado con chatarra, lápices y gomitas, sale a resistir hasta el amanecer sin contrato.</p>

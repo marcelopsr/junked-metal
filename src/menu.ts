@@ -217,6 +217,7 @@ function show() {
   if (s === "main") renderMain();
   if (s === "play") renderPlay();
   if (s === "daily") renderDaily();
+  if (s === "modes" || s === "match3") refreshModes();
   if (s === "race") renderRace();
   if (s === "bestiary") { renderBestiary(); if (!ret.get("bestiary")) $("beasts").scrollTop = 0; }
   if (s === "beast") renderBeast();
@@ -422,6 +423,32 @@ function renderDaily() {
     + `<div><span>Jefe final (10:00)</span><b class="wi">${beastIcon(p.final, 18)}${DEF[p.final].name}</b></div>`
     + `</div>` + kitStripHtml();
   $("dailyInfo").textContent = b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy. El mejor tiempo del día queda como récord.";
+}
+function refreshModes() {
+  const rb = (save as { raceBest?: Record<string, number> }).raceBest ?? {};
+  let rDone = 0, rMeds = 0;
+  TRACKS.forEach((tk, i) => {
+    const b = bestRace(i), t = b?.t ?? rb[tk.zone] ?? rb[String(i)];
+    if (typeof t === "number" && t > 0) {
+      rDone++;
+      if (medalOf(i, raceCfg.laps, b?.cc ?? raceCfg.cc, t) > 0) rMeds++;
+    }
+  });
+  $("progRace").textContent = rDone ? `Pistas completadas: ${rDone} / ${TRACKS.length} · Medallas: ${rMeds} / ${TRACKS.length}` : "Copa de 3 circuitos · Sin tiempos registrados";
+  let m3Unl = 1, m3Stars = 0;
+  try {
+    const raw = JSON.parse(localStorage.getItem("rc_match3_v1") || "null");
+    const stObj: Record<string, number> = raw && typeof raw.stars === "object" && raw.stars ? raw.stars : save.m3.stars;
+    const vals = Object.values(stObj).filter((v): v is number => typeof v === "number" && v > 0);
+    m3Stars = Math.min(30, vals.reduce((a, b) => a + b, 0));
+    m3Unl = typeof raw?.unlocked === "number" ? Math.max(1, Math.min(10, Math.floor(raw.unlocked))) : Math.min(10, 1 + vals.length);
+  } catch { /* sin storage */ }
+  $("progM3").textContent = `Campaña: Nivel ${m3Unl} / 10 · Estrellas: ${m3Stars} / 30`;
+  $("m3Brief").innerHTML = `<div class="briefGrid">`
+    + `<div><span>Campaña</span><b>Nivel ${m3Unl} / 10</b></div>`
+    + `<div><span>Estrellas</span><b>${m3Stars} / 30</b></div>`
+    + `</div>`
+    + `<div class="briefRec">${m3Stars > 0 ? `Progreso en La Ruta del Desguace: nivel ${m3Unl} habilitado.` : "Diez niveles de clasificación de chatarra · Sin marcas registradas todavía."}</div>`;
 }
 
 // ---------- Taller y garaje ----------
@@ -1107,13 +1134,22 @@ function renderBeast() {
 type Kit = { weapons: { id: WeaponId; lv: number; evolved: boolean; dmg?: number; pct?: number }[]; passives: { id: PassiveId; lv: number }[]; stats: [string, string][]; run: [string, string][]; seed: string };
 const pips = (l: number) => `<span class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(Math.max(0, 5 - l))}</span>`;
 export function openPause(k: Kit) {
-  $("kitW").innerHTML = k.weapons.map((w) => `<li style="--w-pct:${w.pct ?? 0}%"><span class="wi">${icon(w.id, 20)}<span class="wn"><em>${w.evolved ? WEAPONS[w.id].evoName : WEAPONS[w.id].name}</em><small class="wdmg">${w.dmg ? `${w.dmg.toLocaleString("es")} · ${w.pct}%` : "0 daño"}</small></span></span>${w.evolved ? "<b>EVO</b>" : pips(w.lv)}</li>`).join("");
-  $("kitP").innerHTML = k.passives.map((p) => `<li><span class="wi">${icon(p.id, 20)}${PASSIVES[p.id].name}</span>${pips(p.lv)}</li>`).join("") || "<li><span>Ninguna</span></li>";
+  $("kitW").innerHTML = k.weapons.map((w) => {
+    const def = WEAPONS[w.id], ev = def.evo, hasP = k.passives.some((p) => p.id === ev);
+    const syn = !w.evolved ? `<small class="wsynP ${hasP ? "on" : ""}">Evo: ${PASSIVES[ev].name}</small>` : "";
+    return `<li style="--w-pct:${w.pct ?? 0}%"><span class="wi">${icon(w.id, 20)}<span class="wn"><em>${w.evolved ? def.evoName : def.name}</em><small class="wdmg">${w.dmg ? `${w.dmg.toLocaleString("es")} · ${w.pct}%` : "0 daño"}</small>${syn}</span></span>${w.evolved ? "<b>EVO</b>" : pips(w.lv)}</li>`;
+  }).join("");
+  $("kitP").innerHTML = k.passives.map((p) => {
+    const eqW = k.weapons.filter((w) => !w.evolved && WEAPONS[w.id].evo === p.id).map((w) => WEAPONS[w.id].name);
+    const allW = (Object.keys(WEAPONS) as WeaponId[]).filter((id) => WEAPONS[id].desc && WEAPONS[id].evo === p.id).map((id) => WEAPONS[id].name);
+    return `<li><span class="wi">${icon(p.id, 20)}<span class="wn"><em>${PASSIVES[p.id].name}</em><small class="wsynP ${eqW.length ? "on" : ""}">Evo: ${(eqW.length ? eqW : allW).join(" · ")}</small></span></span>${pips(p.lv)}</li>`;
+  }).join("") || "<li><span>Ninguna</span></li>";
   $("kitS").innerHTML = k.stats.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("kitR").innerHTML = k.run.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("pauseSeed").textContent = k.seed;
   reset("pause");
 }
+
 export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; hurt?: Record<string, number>; seed: string; more?: boolean; title?: string; prevBest?: number; bestStreak?: number; bestHit?: number; bestDrive?: number; bossKills?: number; evos?: string[]; ach?: string[]; car?: string }) {
   $("overEndless").classList.toggle("hidden", !r.more); // venció al jefe final: puede seguir en modo sin fin
   $("overTitle").textContent = r.title ?? (r.win ? "VICTORIA" : "FIN DE LA PARTIDA");
@@ -1129,11 +1165,29 @@ export function openOver(r: { win: boolean; why: string; time: number; kills: nu
   $("overRec").classList.toggle("hidden", !r.record);
   $("overShop").classList.toggle("hidden", !canBuy());
   const rows = Object.entries(r.dmg).sort((a, b) => b[1] - a[1]), top = rows[0]?.[1] || 1;
-  const name = (id: string) => (id in WEAPONS ? WEAPONS[id as WeaponId].name : id[0].toUpperCase() + id.slice(1));
-  $("overDmg").innerHTML = rows.map(([id, v]) => `<li><span class="wi">${id in WEAPONS ? icon(id, 18) : ""}${name(id)}</span>${bar(v, top)}<b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño infligido</span></li>";
+  const name = (id: string) => (id in WEAPONS ? WEAPONS[id as WeaponId].name : id in ABILITIES ? ABILITIES[id as AbilityId].name : id[0].toUpperCase() + id.slice(1));
+  const dmgIco = (id: string) => (id in WEAPONS ? icon(id, 18) : id in ABIL_ICON ? icon(ABIL_ICON[id as AbilityId], 18) : id === "embestida" ? icon("lanza", 18) : icon("mortero", 18));
+  $("overDmg").innerHTML = rows.map(([id, v]) => `<li><span class="wi">${dmgIco(id)}<em>${name(id)}</em></span>${bar(v, top)}<b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño infligido</span></li>";
   const hurt = Object.entries(r.hurt ?? {}).sort((a, b) => b[1] - a[1]), hurtTop = hurt[0]?.[1] || 1;
-  const hurtName = (id: string) => id.startsWith("contacto ") ? `Contacto · ${DEF[id.slice(9) as Kind]?.name ?? id.slice(9)}` : (DEF[id as Kind]?.name ?? id[0].toUpperCase() + id.slice(1));
-  $("overHurt").innerHTML = hurt.map(([id, v]) => `<li><span>${hurtName(id)}</span>${bar(v, hurtTop)}<b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño recibido</span></li>";
+  const hurtKind = (id: string): Kind | null => {
+    if (id in DEF) return id as Kind;
+    const [p, k] = id.split(" ");
+    if ((p === "contacto" || p === "rebote" || p === "salto" || p === "barrido") && k in DEF) return k as Kind;
+    if (id === "cucaracha") return "escarabajo";
+    if (id === "ácido") return "escupidora";
+    if (id === "cables") return "cortacercos";
+    return null;
+  };
+  const hurtIco = (id: string) => {
+    const hk = hurtKind(id);
+    return hk ? beastIcon(hk, 18) : id === "pelota" ? icon("mortero", 18) : icon("blindaje", 18);
+  };
+  const hurtName = (id: string) => {
+    const [p, k] = id.split(" ");
+    if ((p === "contacto" || p === "rebote" || p === "salto" || p === "barrido") && k) return `${p[0].toUpperCase() + p.slice(1)} · ${DEF[k as Kind]?.name ?? k}`;
+    return DEF[id as Kind]?.name ?? id[0].toUpperCase() + id.slice(1);
+  };
+  $("overHurt").innerHTML = hurt.map(([id, v]) => `<li><span class="wi">${hurtIco(id)}<em>${hurtName(id)}</em></span>${bar(v, hurtTop)}<b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño recibido</span></li>";
   $("overSeed").textContent = r.seed;
   reset("over");
 }
