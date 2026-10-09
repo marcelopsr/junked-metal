@@ -408,7 +408,11 @@ function renderPlay() {
   const z = ZONES[save.zone], zr = save.stats.zone[save.zone];
   $("zoneBtn").querySelector(".bt")!.textContent = `Zona · ${z.name}`;
   $("zoneDesc").textContent = z.desc;
-  $("playRec").textContent = zr ? `Mejor marca en ${z.short}: ${fmt(zr.t)} · ${zr.kills} ${zr.kills === 1 ? "baja" : "bajas"}` : `Sin marcas registradas en ${z.short} todavía.`;
+  const zRow = `<div class="zoneRow">${(Object.keys(ZONES) as ZoneId[]).map((zid) => {
+    const r = save.stats.zone[zid], own = owns("zone:" + zid), win = !!r && r.t >= 600;
+    return `<span class="zchip ${zid === save.zone ? "on" : ""} ${win ? "win" : ""}"><b>${ZONES[zid].short}</b><em>${!own ? "Bloq." : r ? `${fmt(r.t)}${win ? " ★" : ""}` : "—"}</em></span>`;
+  }).join("")}</div>`;
+  $("playRec").innerHTML = `<div>${zr ? `Mejor marca en ${z.short}: ${fmt(zr.t)} · ${zr.kills} ${zr.kills === 1 ? "baja" : "bajas"}${zr.t >= 600 ? " · ★ ZONA CONQUISTADA" : ""}` : `Sin marcas registradas en ${z.short} todavía.`}</div>${zRow}`;
   $("playKit").innerHTML = kitStripHtml();
   $("curseBtn").textContent = curseTxt();
 }
@@ -1058,7 +1062,13 @@ function renderBestiary() {
   const rec = $("records"), recSect = rec.previousElementSibling as HTMLElement | null;
   rec.classList.toggle("hidden", btab !== "stats");
   recSect?.classList.toggle("hidden", btab !== "stats");
-  $("btabs").innerHTML = tabsHtml(BTABS, btab, "btab");
+  const bCounts: Record<keyof typeof BTABS, string> = {
+    bichos: `Bichos (${(Object.keys(DEF) as Kind[]).filter((k) => save.seen.includes(k) || (save.slain[k] ?? 0) > 0).length}/${KINDS.length})`,
+    pilotos: `Pilotos (${(Object.keys(PILOTS) as PilotId[]).filter((k) => owns("pilot:" + k)).length}/${Object.keys(PILOTS).length})`,
+    logros: `Logros (${save.ach.length}/${Object.keys(ACH).length})`,
+    stats: "Estadísticas",
+  };
+  $("btabs").innerHTML = tabsHtml(bCounts, btab, "btab");
   $("beasts").innerHTML = btab === "stats" ? statsHtml() : btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
     const a: { name: string; txt: string; reward?: string; scrap?: number } = ACH[k], ok = save.ach.includes(k);
     return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b class="wi">${achIco(k)}${a.name}</b>${a.txt}${achProg(k, ok)}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}</div>` : ""}</div>`;

@@ -109,7 +109,7 @@ const beams: { x: number; y: number; k: "h" | "v"; t: number }[] = [];
 const rings: { x: number; y: number; r: number; t: number; col: string }[] = [];
 const bolts: { x: number; y: number; tx: number; ty: number; t: number }[] = [];
 const floats: { x: number; y: number; txt: string; t: number; col: string; big: boolean }[] = [];
-let shake = 0, flash = 0;
+let shake = 0, flash = 0, lastChain = 0;
 
 const cx = (x: number) => OX + (x + 0.5) * CELL;
 const cy = (y: number) => OY + (y + 0.5) * CELL;
@@ -149,7 +149,7 @@ function beginStep() {
   if (s.hits.some((h) => h.k === "crate" || h.k === "chain")) SFX.break();
   if (s.cleared.length) SFX.m3Clear();
   if (s.cleared.length >= 4) shake = Math.max(shake, 3 + Math.min(4, s.cleared.length - 4)); // micro sacudida en combos de 4+
-  if (s.chain >= 1) { comboTxt = { txt: s.chain >= 4 ? `¡REACCIÓN EN CADENA x${s.chain + 1}!` : `CADENA x${s.chain + 1}`, t: 0 }; SFX.streak(s.chain * 15); }
+  if (s.chain >= 1) { lastChain = s.chain + 1; comboTxt = { txt: s.chain >= 4 ? `¡REACCIÓN EN CADENA x${s.chain + 1}!` : `CADENA x${s.chain + 1}`, t: 0 }; SFX.streak(s.chain * 15); }
   if (s.gain && s.cleared.length) {
     const mx = s.cleared.reduce((a, c) => a + c.x, 0) / s.cleared.length, my = s.cleared.reduce((a, c) => a + c.y, 0) / s.cleared.length;
     floats.push({ x: cx(mx), y: cy(my), txt: `+${s.gain}`, t: 0, col: s.chain ? M3C.cian : M3C.texto, big: s.gain >= 300 });
@@ -191,7 +191,7 @@ function endClear(s: M3ResolveStep) {
 }
 function nextStep() { stepIdx++; if (stepIdx < steps.length) beginStep(); else endSteps(); }
 function endSteps() {
-  anim = null; V = null; off = {}; steps = []; resolving = false;
+  anim = null; V = null; off = {}; steps = []; resolving = false; lastChain = 0;
   const f = afterAnim; afterAnim = null;
   f?.();
 }
@@ -417,6 +417,14 @@ function paintDisplay() {
     c.fillStyle = "#0b0f14"; c.strokeStyle = M3C.borde; c.lineWidth = 1;
     c.beginPath(); c.roundRect(W - 8 - nw, 6, nw, 20, 4); c.fill(); c.stroke();
     c.fillStyle = M3C.cian; c.textAlign = "right"; c.fillText(nvTxt, W - 14, 16);
+    if (lastChain >= 2) {
+      const chTxt = `CADENA ×${lastChain}`;
+      const cw = Math.ceil(c.measureText(chTxt).width) + 12;
+      const cx0 = W - 12 - nw - cw;
+      c.fillStyle = "rgba(255,180,0,0.18)"; c.strokeStyle = M3C.amarillo; c.lineWidth = 1.2;
+      c.beginPath(); c.roundRect(cx0, 6, cw, 20, 4); c.fill(); c.stroke();
+      c.fillStyle = M3C.amarilloClaro; c.textAlign = "right"; c.fillText(chTxt, cx0 + cw - 6, 16);
+    }
     // puntaje con tres marcas de estrella
     const bx = 158, bw = W - 172, by = H - 22, max = st.lv.stars[2] * 1.08, k = Math.min(1, shownScore / max);
     c.fillStyle = "#07090c"; c.fillRect(bx, by, bw, 12);
@@ -598,7 +606,7 @@ function startLevel(i: number) {
   later = null; lvIdx = i; mode = "level"; attempt++;
   st = newMatch3(LEVELS[i], baseSeed + i * 1009 + attempt);
   layoutBoard();
-  V = null; anim = null; resolving = false; tool = null; sel = null; armed = null; finaleDone = false; shownScore = 0;
+  V = null; anim = null; resolving = false; tool = null; sel = null; armed = null; finaleDone = false; shownScore = 0; lastChain = 0;
   parts.length = beams.length = rings.length = bolts.length = floats.length = 0; banner = null; comboTxt = null;
   paused = false; $m("m3-pause").classList.remove("on");
   showIntro(); syncHud(); SFX.accept();

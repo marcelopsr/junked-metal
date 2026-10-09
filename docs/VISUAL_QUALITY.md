@@ -313,3 +313,20 @@ Carrera (1) y Survivor en partida (2).
 4. **Sello gráfico de inspección de taller en la Polaroid de fin de partida (Subagente 4 · `src/replay.ts`, `src/replay.css`):**
    - `showPhoto()` estampa en el margen inferior derecho del papel Polaroid un sello inclinado de doble trazo (`INSPECCIÓN · VICTORIA` en verde taller `#1f6f3a` o `CHASIS SINIESTRADO` en rojo óxido `#9a2c2c`) sin usar `Math.random()`.
 
+---
+
+## 2026-10-09 · Ciclo #13 (Barra de Jefe con `beastIcon` y `FASE 2`, Resumen de Zonas y Contadores en Chatarroteca, Alerta `¡MISIL!` y Récord en Carrera, y `CADENA ×N` / Nodos 3★ en Junket Crush)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-jugar.png`, `.shots/actual/cel-menu-jugar.png`, `.shots/actual/pc-menu-bestiario.png`, `.shots/actual/pc-lab-jefes.png`, `.shots/actual/pc-carrera-podio.png`, `.shots/actual/pc-match3-mapa.png`, `.shots/actual/pc-match3-combo.png` (`npm run shots -- --only jugar,bestiario,carrera,match3,lab`, 47 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Silueta SVG `beastIcon`, porcentaje en vivo e insignia `FASE 2` en `#bossbar` (Subagente 1 · `src/ui.ts`, `src/hud.css`, `src/main.ts`):**
+   - `hudBoss()` renderiza la silueta SVG `beastIcon(kind, 20)` junto al nombre del jefe, el porcentaje entero `.b-pct` (`100%`) y la insignia `.b-rage` (`FASE 2`) con degradado incandescente cuando `boss.enraged` está activo (`pc-lab-jefes.png`).
+2. **Resumen comparativo de las 3 zonas en `#scr-play` y contadores `(X/Y)` en Chatarroteca (Subagente 2 · `src/menu.ts`, `src/menu.css`):**
+   - `#playRec` incorpora la grilla `.zoneRow` con chips `.zchip` para `Patio`, `Garaje` y `Jardín` mostrando el mejor tiempo, estado de bloqueo y estrella de zona conquistada (`★`), y `#btabs` en Chatarroteca muestra `BICHOS (X/13)`, `PILOTOS (X/5)` y `LOGROS (X/19)` (`pc-menu-jugar.png`, `cel-menu-jugar.png`, `pc-menu-bestiario.png`).
+3. **Alerta táctica `¡MISIL!` en `.rspd` y diferencial contra récord previo en el podio (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - `.rspd` muestra la pastilla roja `.rwarn` (`¡MISIL!`) cuando un proyectil teledirigido apunta al jugador, y `#rinfo` en el podio resalta en verde `.rbest` (`¡NUEVO RÉCORD! (-X.XX s)`) o `.rdiff` (`+X.XX s vs récord`) (`pc-carrera-podio.png`).
+4. **Insignia `CADENA ×N` en el cabezal y anillo dorado para niveles de 3 estrellas en Junket Crush (Subagente 4 · `src/match3.ts`, `src/match3_draw.ts`):**
+   - `paintDisplay()` dibuja la cápsula ámbar `CADENA ×N` junto a `NV X/10` durante reacciones en cadena, y `drawNode()` enmarca con anillo exterior dorado los niveles completados con 3 estrellas en el mapa.
+
+

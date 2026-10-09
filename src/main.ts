@@ -1019,7 +1019,7 @@ function update(dt: number) {
     if (state !== "play") return;
   }
   const boss = enemies.find((e) => e.def.boss);
-  if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp));
+  if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp), boss.kind, boss.enraged);
   { const ms = boss ? "boss" : apagon ? "blackout" : "run"; if (!simulating && (ms !== musicS || (musicT -= dt) <= 0)) { musicS = ms; musicT = 1; music(ms, time / 600); } } // música: cambio de estado al instante, intensidad cada ~1 s
 
   // --- Ácido de escupidoras ---

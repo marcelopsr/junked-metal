@@ -144,39 +144,51 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #13
+### Ciclo #13 (2026-10-09) — Barra de Jefe con `beastIcon`/`FASE 2`, Resumen de Zonas y Contadores en Chatarroteca, Alerta `¡MISIL!` y Récord en Carrera, y `CADENA ×N` en Junket Crush
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Barra de Jefe en Supervivencia (`src/ui.ts`, `src/hud.css`, `src/main.ts`):** Silueta SVG `beastIcon(kind, 20)`, porcentaje `.b-pct` en vivo e insignia `.b-rage` (`FASE 2`) con barra incandescente en `#bossbar` cuando `boss.enraged` está activo.
+  - **Subagente 2 · Selección de Zona y Chatarroteca (`src/menu.ts`, `src/menu.css`):** Grilla `.zoneRow` con chips `.zchip` de las 3 zonas (`Patio`, `Garaje`, `Jardín`) e indicador `★ ZONA CONQUISTADA` en `#scr-play`, más contadores de colección en las pestañas de Chatarroteca (`Bichos (X/13)`, `Pilotos (X/5)`, `Logros (X/19)`).
+  - **Subagente 3 · Carrera HUD y Podio (`src/kart.ts`, `src/race.css`):** Alerta `.rwarn` (`¡MISIL!`) junto al velocímetro cuando un misil teledirigido apunta al corredor humano, y diferencial contra el récord previo (`¡NUEVO RÉCORD! (-X.XX s)` o `+X.XX s vs récord`) en la placa `#rinfo` del podio.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3_draw.ts`):** Insignia ámbar `CADENA ×N` junto a `NV X/10` en el display superior durante cascadas y anillo dorado exterior en los nodos del mapa completados con 3 estrellas.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (1.09 s), `npm run shots -- --only jugar,bestiario,carrera,match3,lab` (47 capturas verificadas en PC y celular) y `npx graphify update .` (3056 nodos, 7456 aristas).
 
-### A. Área 1 · Supervivencia: Tarjetas de Jefes y Amenaza en Vivo (`src/ui.ts`, `src/hud.css`, `src/main.ts`)
-1. **Silueta SVG (`beastIcon`) e Indicador de Fase en la Barra de Jefe (`#boss`):**
-   - **Qué es:** Mostrar junto al nombre del jefe en `#boss` su silueta `beastIcon(kind, 18)` y una insignia de fase (`ENFURECIDO` cuando baja del 50% de vida y acelera sus ataques) con pulso en la barra.
-   - **Qué problema resuelve:** Hoy `#bossName` es solo texto plano y no avisa visualmente cuando el jefe entra en su fase de furia (<50% HP).
-   - **Valor:** Lectura táctica inmediata en duelos contra minijefes y el Rey de la Chatarra. Complejidad: Baja.
+---
 
-### B. Área 2 · Submenús de Lanzamiento (`#scr-play`, `#scr-daily`) y Chatarroteca (`src/menu.ts`, `src/menu.css`)
-2. **Resumen de Récords por Zona en Selección de Patio y Filtro Rápido en Chatarroteca:**
-   - **Qué es:** Mostrar en las tarjetas/selectores de zona de `#scr-play` una insignia si la zona ya fue conquistada (o el mejor tiempo alcanzado) y agregar en la pestaña `Logros` de la Chatarroteca un contador de progreso global (`Desbloqueados: X / Y`) en el encabezado.
-   - **Qué problema resuelve:** El jugador tiene que cambiar entre zonas o contar manualmente cuántos logros lleva completados.
-   - **Valor:** Visibilidad inmediata de metas pendientes de progresión. Complejidad: Baja.
+## 4. Backlog Vivo de Oportunidades — Ciclo #14
 
-### C. Área 3 · Carrera y Batalla de Globos (`src/kart.ts`, `src/race.css`)
-3. **Indicador de Peligro Entrante (`¡COHETE!`) y Podio con Diferencia contra Récord Personal:**
-   - **Qué es:** Mostrar en el HUD del corredor una alerta compacta cuando un cohete teledirigido o bomba cae cerca suyo, y en la placa `#rinfo` del podio indicar si marcó `¡NUEVO RÉCORD PERSONAL!` (o la diferencia `+X.Xs` contra su mejor marca previa).
-   - **Qué problema resuelve:** En carrera no se sabe si el tiempo final superó el récord histórico de la pista ni cuándo un cohete viene cerrando distancia por detrás.
-   - **Valor:** Más emoción competitiva y claridad en el cierre de copa/pista. Complejidad: Baja.
+### A. Área 1 · Garaje: Pestañas `Piloto`, `Habilidad` y `Arma` (`src/menu.ts`, `src/menu.css`)
+1. **Arma de Serie en `Piloto`, Ícono SVG en `Habilidad` y Estado `EN USO` / `EN EL GARAJE` en las 3 Pestañas:**
+   - **Qué es:** Añadir en `#scr-garage` la franja `.wsyn` con el arma inicial de cada piloto en la pestaña `Piloto`, el ícono SVG `ABIL_ICON` en cada tarjeta de `Habilidad` y el pie `<div class="price">EN USO / EN EL GARAJE</div>` en pilotos, habilidades y armas desbloqueadas.
+   - **Qué problema resuelve:** Hoy en el Garaje la pestaña `Auto` muestra `EN USO` / `EN EL GARAJE` e íconos, pero `Piloto`, `Habilidad` y `Arma` omiten el arma inicial del piloto, el ícono de la habilidad o la confirmación de qué pieza está equipada.
+   - **Valor:** Coherencia 100% entre las 4 pestañas de equipamiento del Garaje. Complejidad: Baja.
 
-### D. Área 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`)
-4. **Indicador de Racha/Cascada (`COMBO ×N`) en el Cabezal del Gabinete y Resumen de Estrellas en Selección:**
-   - **Qué es:** Mostrar en el display superior del gabinete un sello brillante `COMBO ×N` cuando se encadenan cascadas en un mismo turno, y resaltar en los nodos del mapa de niveles aquellos que ya tienen las 3 estrellas completas con borde dorado.
-   - **Qué problema resuelve:** Las cascadas suman puntos extra pero no tienen un indicador visual dedicado en el display del cabezal.
-   - **Valor:** Refuerza el feedback arcade de las jugadas en cadena. Complejidad: Baja.
+### B. Área 2 · Supervivencia: Distancia en Metros en Flechas de Borde (`#arrows`) (`src/ui.ts`, `src/hud.css`, `src/main.ts`)
+2. **Etiqueta de Distancia (`Xm`) en Indicadores de Jefe y Cofre Fuera de Pantalla (`#arrows`):**
+   - **Qué es:** Calcular en `updateHud()` la distancia en metros desde el auto hasta cada jefe o cofre fuera de pantalla y mostrar `<small class="adist">${a.dist}m</small>` debajo del glifo en `#arrows`.
+   - **Qué problema resuelve:** Las flechas de borde indican dirección pero no si el cofre o el jefe está a 15 metros o en la otra punta del patio.
+   - **Valor:** Mejor toma de decisiones de ruteo en plena persecución. Complejidad: Baja.
+
+### C. Área 3 · Carrera y Batalla: Telemetría en Vivo en la Tabla `#rtab` (`src/kart.ts`, `src/race.css`)
+3. **Estado de Corredores en Vivo (`#rtab`) con Globos en Batalla y Estado (`META` / `TURBO` / `ESCUDO`) en Carrera:**
+   - **Qué es:** Mostrar en el borde derecho de cada fila de `#rtab` los globos restantes (`●●●`) en Batalla de Globos o una etiqueta compacta (`META`, `ESCUDO`, `TURBO`) en modo Carrera.
+   - **Qué problema resuelve:** La tabla `#rtab` solo muestra puesto y nombre sin reflejar quién ya cruzó la meta, quién lleva escudo o cuántos globos les quedan a los líderes.
+   - **Valor:** Lectura competitiva en tiempo real sin ensuciar la pista. Complejidad: Baja.
+
+### D. Área 4 · Gabinete Junket Crush: Metas de Estrellas en Intro y Victoria (`src/match3.ts`, `src/match3.css`)
+4. **Umbrales de Puntaje (`★ / ★★ / ★★★`) en el Panel de Inicio de Nivel y Puntos Faltantes para la Siguiente Estrella en Victoria:**
+   - **Qué es:** Mostrar en `showIntro()` las estrellas ya ganadas en ese nivel junto con los 3 umbrales de puntaje (`lv.stars`), y en `showWin()` indicar cuántos puntos faltaron para la siguiente estrella cuando se obtienen 1 o 2 estrellas.
+   - **Qué problema resuelve:** El jugador entra al nivel o lo termina con 2 estrellas sin saber exactamente qué puntaje exige la 3ª estrella.
+   - **Valor:** Claridad en las metas de rejugabilidad de la campaña de 10 niveles. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #12 completado, verificado y documentado (Deltas comparativos en Garaje, transición `NV X → NV Y` y `.evo-rdy` en Cartas de Nivel, insignia `.rturbo` y vuelta `.final` en Carrera, y sello de inspección de taller en la Polaroid).
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (595 ms), 17 capturas verificadas en `.shots/actual/` y grafo actualizado (3053 nodos).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (locks del Ciclo #12 liberados tras verificación).
-- **Próxima decisión pendiente:** Selección de tareas en paralelo por área para el **Ciclo #13**.
+- **Último trabajo completado:** Ciclo #13 completado, verificado y documentado (Barra de jefe con `beastIcon` y `FASE 2`, resumen de las 3 zonas en `#scr-play` y contadores `(X/Y)` en Chatarroteca, alerta `¡MISIL!` y diferencial de récord en Carrera, e insignia `CADENA ×N` + nodos 3★ en Junket Crush).
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (1.09 s), 47 capturas verificadas en `.shots/actual/` y grafo actualizado (3056 nodos).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (locks del Ciclo #13 liberados tras verificación).
+- **Próxima decisión pendiente:** Selección de tareas en paralelo por área para el **Ciclo #14**.
+
+
 
 

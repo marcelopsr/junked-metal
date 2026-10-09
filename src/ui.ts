@@ -5,7 +5,7 @@ import "@fontsource/silkscreen/400.css";
 import "@fontsource/silkscreen/700.css";
 import "./style.css";
 import "./hud.css";
-import { icon, uiIconUrl } from "./icons";
+import { beastIcon, icon, uiIconUrl } from "./icons";
 import { isTouch, KEYS } from "./input";
 
 const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram", "cdr"] as const;
@@ -105,9 +105,18 @@ export function hudSlots(weapons: SlotInfo[], passives: SlotInfo[]) {
 }
 
 // ---------- Jefe ----------
-export function hudBoss(name: string | null, pct = 1) {
-  if (ch("boss", name ?? "")) { $("bossbar").classList.toggle("hidden", !name); if (name) $("bossName").textContent = name; }
-  if (name) { bar("bossHp", pct * 100); if (ch("crit", +(pct < 0.25))) $("bossbar").classList.toggle("crit", pct < 0.25); }
+export function hudBoss(name: string | null, pct = 1, kind?: string, enraged = false) {
+  if (ch("boss", name ?? "")) $("bossbar").classList.toggle("hidden", !name);
+  if (name) {
+    const pInt = Math.max(0, Math.ceil(pct * 100));
+    const hdKey = `${name}:${kind ?? ""}:${+enraged}:${pInt}`;
+    if (ch("bossHd", hdKey)) {
+      $("bossName").innerHTML = `${kind ? beastIcon(kind, 20) : ""}<span>${name}</span>${enraged ? `<b class="b-rage">FASE 2</b>` : ""}<small class="b-pct">${pInt}%</small>`;
+    }
+    bar("bossHp", pct * 100);
+    if (ch("crit", +(pct < 0.25))) $("bossbar").classList.toggle("crit", pct < 0.25);
+    if (ch("rage", +enraged)) $("bossbar").classList.toggle("rage", enraged);
+  }
 }
 
 // ---------- Aviso de radio: entra con interferencia y el texto se va tecleando ----------

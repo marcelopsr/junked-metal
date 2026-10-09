@@ -888,7 +888,8 @@ function hud() {
     } else p.querySelector(".rtime")!.textContent = "";
     const spdEl = p.querySelector(".rspd") as HTMLElement;
     const tTag = h.boost > 0 ? `<b class="rturbo on">TURBO</b>` : h.drifting !== 0 ? (h.charge > 1.5 ? `<b class="rturbo t2">TURBO 2</b>` : h.charge > 0.75 ? `<b class="rturbo t1">TURBO 1</b>` : `<b class="rturbo t0">DERRAPE</b>`) : "";
-    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${tTag}`;
+    const wTag = projs.some((pr) => pr.kind === "misil" && pr.target === h) ? `<b class="rwarn">¡MISIL!</b>` : "";
+    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${tTag}${wTag}`;
     if (spdEl.dataset.h !== spdHtml) { spdEl.dataset.h = spdHtml; spdEl.innerHTML = spdHtml; }
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; }
@@ -926,9 +927,13 @@ function showResults() {
   if (last && raceCfg.cup && mode === "race") { const champ = Object.entries(cup).sort((a, b) => b[1] - a[1])[0]; const r = racers.find((x) => x.id === +champ[0])!; $r("#rres .rtitle").textContent = `COPA: gana ${r.name} con ${champ[1]} puntos`; }
   const info: string[] = [];
   if (mode === "race") for (const h of humans) if (h.fin > 0) {
+    const prevBest = times[String(trackNo)]?.[0]?.t;
     const medal = medalOf(trackNo, raceCfg.laps, raceCfg.cc, h.fin), isBest = recordTime(trackNo, { t: h.fin, lap: h.lapBest, car: h.car.kind, cc: raceCfg.cc });
     const mt = medalTimes(trackNo, raceCfg.laps, raceCfg.cc);
-    info.push(`<b>${h.name}</b>: ${fmt(h.fin)} · mejor vuelta ${h.lapBest ? fmt(h.lapBest) : "—"}${isBest ? " · <em>¡RÉCORD!</em>" : ""} · <span class="medal rmedal m${medal}">${medal ? "MEDALLA DE " + MEDAL[medal] : "sin medalla"}</span><br><small>Objetivos: oro ${fmt(mt[0])} · plata ${fmt(mt[1])} · bronce ${fmt(mt[2])}</small>`);
+    const recHtml = isBest
+      ? ` · <em class="rbest">¡NUEVO RÉCORD!${prevBest && prevBest > h.fin ? ` (-${(prevBest - h.fin).toFixed(2)} s)` : ""}</em>`
+      : prevBest ? ` · <span class="rdiff">+${(h.fin - prevBest).toFixed(2)} s vs récord</span>` : "";
+    info.push(`<b>${h.name}</b>: ${fmt(h.fin)} · mejor vuelta ${h.lapBest ? fmt(h.lapBest) : "—"}${recHtml} · <span class="medal rmedal m${medal}">${medal ? "MEDALLA DE " + MEDAL[medal] : "sin medalla"}</span><br><small>Objetivos: oro ${fmt(mt[0])} · plata ${fmt(mt[1])} · bronce ${fmt(mt[2])}</small>`);
   }
   if (mode === "race" && times[String(trackNo)]) info.push(`<small>Mejores de la pista: ${times[String(trackNo)].map((x, i) => `${i + 1}. ${fmt(x.t)}`).join(" · ")}</small>`);
   $r("#rinfo").innerHTML = info.join("<br>");

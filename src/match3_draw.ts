@@ -255,15 +255,16 @@ export function drawStar(c: C, cx: number, cy: number, r: number, on: boolean) {
   c.fillStyle = on ? M3C.amarillo : "#2a2f37"; c.fill(); c.strokeStyle = INK; c.lineWidth = 2; c.stroke();
 }
 function drawNode(c: C, i: number, lv: LevelDef, m: MapView) {
-  const { x, y } = nodePos(i), locked = i > m.open, done = m.stars[i] > 0, cur = i === m.sel;
+  const { x, y } = nodePos(i), locked = i > m.open, done = m.stars[i] > 0, perf = m.stars[i] >= 3, cur = i === m.sel;
   const r = lv.boss ? 40 : 33;
   if (cur) { c.strokeStyle = M3C.cian; c.lineWidth = 4; c.globalAlpha = 0.5 + 0.5 * Math.sin(m.t * 5); c.beginPath(); c.arc(x, y, r + 9, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1; }
+  if (perf && !cur) { c.strokeStyle = M3C.amarilloClaro; c.lineWidth = 2.5; c.beginPath(); c.arc(x, y, r + 6, 0, Math.PI * 2); c.stroke(); }
   // tuerca gigante como nodo
   const hex = Array.from({ length: 6 }, (_, k) => { const a = (k / 6) * Math.PI * 2 + Math.PI / 6; return [x + Math.cos(a) * r, y + Math.sin(a) * r]; });
   poly(c, hex);
   c.fillStyle = locked ? "#2a2f37" : done ? shade(c, M3C.amarillo, x, y, r) : shade(c, M3C.naranja, x, y, r);
   if (lv.boss && !locked) c.fillStyle = shade(c, M3C.rojo, x, y, r);
-  c.fill(); c.strokeStyle = INK; c.lineWidth = 3; c.stroke();
+  c.fill(); c.strokeStyle = perf ? M3C.amarilloClaro : INK; c.lineWidth = 3; c.stroke();
   c.fillStyle = locked ? "#14181F" : INK; c.beginPath(); c.arc(x, y, r * 0.58, 0, Math.PI * 2); c.fill();
   c.textAlign = "center"; c.textBaseline = "middle";
   if (locked) { // candado

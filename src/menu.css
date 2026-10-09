@@ -302,6 +302,11 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #fe .briefCard p, #fe .briefCard .foot { margin: 0; font: 500 15px/1.3 var(--jm-texto-f); color: var(--jm-texto); text-shadow: none; text-align: left; max-width: none; }
 #fe .briefCard p.dim { font-size: 13.5px; color: var(--jm-texto2); }
 .briefRec { font: 700 14px/1.2 var(--jm-titulo); letter-spacing: .06em; text-transform: uppercase; color: var(--jm-amarillo2); padding: 6px 9px; background: var(--jm-fondo); border: 1px solid var(--jm-borde); border-left: 3px solid var(--jm-amarillo); border-radius: 2px; }
+.briefRec .zoneRow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+.briefRec .zchip { display: flex; justify-content: space-between; align-items: center; gap: 4px; padding: 3px 7px; background: rgba(0, 0, 0, .35); border: 1px solid var(--jm-borde); border-radius: 4px; font: 600 12px/1.1 var(--data); color: var(--dim); }
+.briefRec .zchip.on { border-color: var(--jm-naranja); color: var(--jm-texto); }
+.briefRec .zchip.win em { color: var(--jm-amarillo2, #ffd24a); font-style: normal; font-weight: 700; }
+.briefRec .zchip em { font-style: normal; font-variant-numeric: tabular-nums; }
 #dailyBrief { display: flex; flex-direction: column; gap: 6px; }
 .briefGrid, .briefKit { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 8px 10px; background: var(--jm-fondo); border: 1px solid var(--jm-borde); border-radius: var(--jm-r); }
 .briefKit { border-top: 2px solid rgba(181, 101, 29, .65); }
