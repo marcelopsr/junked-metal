@@ -154,40 +154,52 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #14
+### Ciclo #14 (2026-10-09) — Garaje Unificado (`Piloto`, `Habilidad`, `Arma`), Distancia `Xm` en `#arrows`, Telemetría `#rtab` en Carrera y Metas de Estrellas en Junket Crush
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Garaje: Piloto, Habilidad y Arma (`src/menu.ts`, `src/menu.css`):** Franja `.wsyn` con el arma inicial de serie en `Piloto`, ícono SVG `ABIL_ICON` en cada tarjeta de `Habilidad` y pie `EN USO` / `EN EL GARAJE` / `DISPONIBLE` en las 3 pestañas de equipamiento, más ajuste tipográfico en móvil (`390px`) para deltas `.cdlt`.
+  - **Subagente 2 · Supervivencia: Flechas de Borde (`src/ui.ts`, `src/hud.css`, `src/main.ts`):** Cálculo de distancia horizontal en metros hacia jefes y cofres fuera de cámara en `updateHud()` y etiqueta `<small class="adist">${a.dist}m</small>` debajo de cada flecha en `#arrows`.
+  - **Subagente 3 · Carrera y Batalla: Tabla `#rtab` (`src/kart.ts`, `src/race.css`):** Etiqueta `.rt-st` en cada fila de `#rtab` con los globos restantes (`●●●` / `FUERA`) en Batalla de Globos y el estado activo (`META` / `ESCUDO` / `TURBO`) en Carrera, memoizada por `dataset.h`.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`):** Línea `.m3-tiers` con los 3 umbrales de puntaje (`Metas: ★ X · ★★ Y · ★★★ Z`) en `showIntro()` e indicación de puntos faltantes para la siguiente estrella (`Siguiente estrella (N★): X pts (faltaron Y)`) en `showWin()`.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (551 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3059 nodos, 7467 aristas).
 
-### A. Área 1 · Garaje: Pestañas `Piloto`, `Habilidad` y `Arma` (`src/menu.ts`, `src/menu.css`)
-1. **Arma de Serie en `Piloto`, Ícono SVG en `Habilidad` y Estado `EN USO` / `EN EL GARAJE` en las 3 Pestañas:**
-   - **Qué es:** Añadir en `#scr-garage` la franja `.wsyn` con el arma inicial de cada piloto en la pestaña `Piloto`, el ícono SVG `ABIL_ICON` en cada tarjeta de `Habilidad` y el pie `<div class="price">EN USO / EN EL GARAJE</div>` en pilotos, habilidades y armas desbloqueadas.
-   - **Qué problema resuelve:** Hoy en el Garaje la pestaña `Auto` muestra `EN USO` / `EN EL GARAJE` e íconos, pero `Piloto`, `Habilidad` y `Arma` omiten el arma inicial del piloto, el ícono de la habilidad o la confirmación de qué pieza está equipada.
-   - **Valor:** Coherencia 100% entre las 4 pestañas de equipamiento del Garaje. Complejidad: Baja.
+---
 
-### B. Área 2 · Supervivencia: Distancia en Metros en Flechas de Borde (`#arrows`) (`src/ui.ts`, `src/hud.css`, `src/main.ts`)
-2. **Etiqueta de Distancia (`Xm`) en Indicadores de Jefe y Cofre Fuera de Pantalla (`#arrows`):**
-   - **Qué es:** Calcular en `updateHud()` la distancia en metros desde el auto hasta cada jefe o cofre fuera de pantalla y mostrar `<small class="adist">${a.dist}m</small>` debajo del glifo en `#arrows`.
-   - **Qué problema resuelve:** Las flechas de borde indican dirección pero no si el cofre o el jefe está a 15 metros o en la otra punta del patio.
-   - **Valor:** Mejor toma de decisiones de ruteo en plena persecución. Complejidad: Baja.
+## 4. Backlog Vivo de Oportunidades — Ciclo #15
 
-### C. Área 3 · Carrera y Batalla: Telemetría en Vivo en la Tabla `#rtab` (`src/kart.ts`, `src/race.css`)
-3. **Estado de Corredores en Vivo (`#rtab`) con Globos en Batalla y Estado (`META` / `TURBO` / `ESCUDO`) en Carrera:**
-   - **Qué es:** Mostrar en el borde derecho de cada fila de `#rtab` los globos restantes (`●●●`) en Batalla de Globos o una etiqueta compacta (`META`, `ESCUDO`, `TURBO`) en modo Carrera.
-   - **Qué problema resuelve:** La tabla `#rtab` solo muestra puesto y nombre sin reflejar quién ya cruzó la meta, quién lleva escudo o cuántos globos les quedan a los líderes.
-   - **Valor:** Lectura competitiva en tiempo real sin ensuciar la pista. Complejidad: Baja.
+### A. Área 1 · Supervivencia: Identidad de Build en Pausa y Resultados (`src/menu.ts`, `src/menu.css`)
+1. **Resumen de Equipamiento (`Auto · Piloto · Habilidad`) en Pausa (`#scr-pause`) y Resultados (`#scr-over`):**
+   - **Qué es:** Mostrar en el subtítulo/encabezado de `#scr-pause` y `#scr-over` una tira compacta con el auto, piloto y habilidad usados en la partida.
+   - **Qué problema resuelve:** Al ver una captura de `#scr-over` o pausar la partida no se identifica con qué vehículo y piloto se logró esa marca.
+   - **Valor:** Contexto completo de la build en pausa y al compartir resultados. Complejidad: Baja.
 
-### D. Área 4 · Gabinete Junket Crush: Metas de Estrellas en Intro y Victoria (`src/match3.ts`, `src/match3.css`)
-4. **Umbrales de Puntaje (`★ / ★★ / ★★★`) en el Panel de Inicio de Nivel y Puntos Faltantes para la Siguiente Estrella en Victoria:**
-   - **Qué es:** Mostrar en `showIntro()` las estrellas ya ganadas en ese nivel junto con los 3 umbrales de puntaje (`lv.stars`), y en `showWin()` indicar cuántos puntos faltaron para la siguiente estrella cuando se obtienen 1 o 2 estrellas.
-   - **Qué problema resuelve:** El jugador entra al nivel o lo termina con 2 estrellas sin saber exactamente qué puntaje exige la 3ª estrella.
-   - **Valor:** Claridad en las metas de rejugabilidad de la campaña de 10 niveles. Complejidad: Baja.
+### B. Área 2 · HUD de Supervivencia: Placas de Racha (`#combo`) y Manejo (`#drv`) (`src/ui.ts`, `src/hud.css`)
+2. **Placa de Telemetría Oscura y Etiqueta `XP ×N` en los Medidores de Racha (`#combo`) y Manejo (`#drv`):**
+   - **Qué es:** Enmarcar `#combo` y `#drv` con una pastilla de telemetría translúcida de borde izquierdo coloreado y explicitar `XP ×1.2` en `#drv`.
+   - **Qué problema resuelve:** En el patio diurno el texto suelto de `#combo` y `#drv` pierde contraste sobre el pasto claro o ladrillo, y no explica que `MANEJO` multiplica la XP.
+   - **Valor:** Legibilidad garantizada sobre cualquier terreno y claridad mecánica. Complejidad: Baja.
+
+### C. Área 3 · Carrera: Tarjeta de Pausa (`#rpause`) con Telemetría del Circuito (`src/kart.ts`, `src/race.css`)
+3. **Panel de Chapa Oscura e Información de Pista/Cilindrada en la Pausa de Carrera (`#rpause`):**
+   - **Qué es:** Enmarcar el contenido de `#rpause` en una placa de chapa oscura con borde superior naranja/dorado y mostrar subtítulo con la pista actual, vuelta, cilindrada (`100cc/150cc/200cc`) y modalidad (`Copa` / `Carrera` / `Batalla`).
+   - **Qué problema resuelve:** Hoy `#rpause` solo muestra el título `PAUSA` y tres botones sueltos sobre un desenfoque sin contexto del circuito en curso.
+   - **Valor:** Unifica la estética de pausa de Carrera con el resto de Junked Metal. Complejidad: Baja.
+
+### D. Área 4 · Gabinete Junket Crush: Contexto en Pausa (`#m3-pause`) y Puntaje en Derrota (`src/match3.ts`, `src/match3.css`)
+4. **Nombre de Nivel y Puntaje Actual en `#m3-pause` y Resumen de Puntaje en `showLose()`:**
+   - **Qué es:** Actualizar el encabezado de `#m3-pause` al pausar para mostrar `PAUSA · NIVEL X (<Nombre>)` y el puntaje acumulado, e incluir en `showLose()` el puntaje alcanzado junto a los objetivos pendientes.
+   - **Qué problema resuelve:** Al pausar o perder en Junket Crush no se muestra el puntaje logrado en el intento actual.
+   - **Valor:** Mejor feedback de progreso en cada intento del gabinete. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #13 completado, verificado y documentado (Barra de jefe con `beastIcon` y `FASE 2`, resumen de las 3 zonas en `#scr-play` y contadores `(X/Y)` en Chatarroteca, alerta `¡MISIL!` y diferencial de récord en Carrera, e insignia `CADENA ×N` + nodos 3★ en Junket Crush).
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (1.09 s), 47 capturas verificadas en `.shots/actual/` y grafo actualizado (3056 nodos).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (locks del Ciclo #13 liberados tras verificación).
-- **Próxima decisión pendiente:** Selección de tareas en paralelo por área para el **Ciclo #14**.
+- **Último trabajo completado:** Ciclo #14 completado, verificado y documentado (Garaje unificado en `Piloto`/`Habilidad`/`Arma`, distancia `Xm` en `#arrows`, telemetría `#rtab` en Carrera/Batalla y umbrales de estrellas en Junket Crush).
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (551 ms), 33 capturas verificadas en `.shots/actual/` y grafo actualizado (3059 nodos).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (locks del Ciclo #14 liberados tras verificación).
+- **Próxima decisión pendiente:** Selección de tareas en paralelo por área para el **Ciclo #15**.
+
+
 
 
 

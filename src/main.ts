@@ -1188,13 +1188,13 @@ let hudT = 0, hudSlotF = 0, lastKmh = 0, lastMaxKmh = 80;
 function updateHud(dt: number) {
   if (!low || (hudSlotF++ & 1) === 0) hudSlots(weapons.map((w) => ({ id: w.id, lv: w.lv, evolved: w.evolved, cd: w.cdFrac })), (Object.entries(passives) as [PassiveId, number][]).map(([id, lv]) => ({ id, lv })));
   // Flechas hacia jefes y cofres fuera de pantalla
-  const W = engine.getRenderWidth(), H = engine.getRenderHeight(), k = innerWidth / W, out: { x: number; y: number; kind: "jefe" | "cofre" }[] = [];
+  const W = engine.getRenderWidth(), H = engine.getRenderHeight(), k = innerWidth / W, out: { x: number; y: number; kind: "jefe" | "cofre"; dist?: number }[] = [];
   const targets: [B.Vector3, "jefe" | "cofre"][] = [...enemies.filter((e) => e.def.boss).map((e) => [e.pos, "jefe"] as [B.Vector3, "jefe"]), ...pickups.filter((p) => p.type === "cofre").map((p) => [p.m.position, "cofre"] as [B.Vector3, "cofre"])];
   for (const [p, kind] of targets) {
     const sp = toScreen(p);
     let x = sp.x, y = sp.y;
     if (sp.z > 1) { x = W - x; y = H; } // detrás de la cámara
-    if (sp.z > 1 || x < 0 || x > W || y < 0 || y > H) out.push({ x: x * k, y: y * k, kind });
+    if (sp.z > 1 || x < 0 || x > W || y < 0 || y > H) out.push({ x: x * k, y: y * k, kind, dist: Math.round(Math.hypot(p.x - car!.pos.x, p.z - car!.pos.z)) });
   }
   hudArrows(out);
   if ((hudT -= dt) > 0) return;

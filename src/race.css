@@ -24,6 +24,8 @@
 #rtab { position: absolute; right: 14px; top: 156px; display: flex; flex-direction: column; gap: 3px; font: 600 16px/1 "Rajdhani", system-ui, sans-serif; }
 #race.split #rtab { display: none; }
 #rtab div { display: flex; align-items: center; gap: 8px; background: var(--g-bg); border-radius: 8px; padding: 4px 10px; min-width: 130px; }
+#rtab div span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#rtab .rt-st { margin-left: auto; font: 700 11px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; color: #ffd84d; }
 #rtab div.me { outline: 2px solid #ffd84d; } #rtab i { width: 10px; height: 10px; border-radius: 50%; } #rtab b { width: 14px; color: #ffd84d; }
 #rcount { position: absolute; left: 0; right: 0; top: 18%; text-align: center; font: 700 clamp(90px, 18vw, 220px)/1 "Rajdhani", system-ui, sans-serif; color: #fff; text-shadow: 0 8px 0 rgba(0, 0, 0, .35); opacity: 0; }
 #rcount.on { opacity: 1; animation: r-count 1s ease-out infinite; } #rcount.go { color: #7dffb0; animation: r-go 1.2s ease-out both; }

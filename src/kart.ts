@@ -912,7 +912,14 @@ function hud() {
   cdEl.className = countdown > 0 ? "on" : t < 1.2 ? "go on" : "";
   // Tabla en vivo (derecha): primeros 5 y, si quedó afuera, el jugador con su puesto real (fila separada)
   const rank = [...racers].sort((a, b) => placeOf(a) - placeOf(b)).map((r, i) => ({ r, i })).filter(({ r, i }) => i < 5 || r.human >= 0);
-  $r("#rtab").innerHTML = rank.map(({ r, i }) => `<div class="${r.human >= 0 ? "me" : ""}${i >= 5 ? " far" : ""}"><b>${i + 1}</b><i style="background:${r.color}"></i>${r.name}</div>`).join("");
+  const tabHtml = rank.map(({ r, i }) => {
+    const st = mode === "battle"
+      ? `<small class="rt-st">${r.out ? "FUERA" : "●".repeat(r.balloons)}</small>`
+      : `<small class="rt-st">${r.fin > 0 ? "META" : r.shield > 0 ? "ESCUDO" : r.boost > 0 ? "TURBO" : ""}</small>`;
+    return `<div class="${r.human >= 0 ? "me" : ""}${i >= 5 ? " far" : ""}"><b>${i + 1}</b><i style="background:${r.color}"></i><span>${r.name}</span>${st}</div>`;
+  }).join("");
+  const tabEl = $r("#rtab");
+  if (tabEl.dataset.h !== tabHtml) { tabEl.dataset.h = tabHtml; tabEl.innerHTML = tabHtml; }
 }
 
 function showResults() {

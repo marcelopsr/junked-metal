@@ -602,18 +602,18 @@ function renderGarage() {
   }
   else if (gtab === "piloto") $("cars").innerHTML = (Object.keys(PILOTS) as PilotId[]).map((k) => {
     const p = PILOTS[k], id = "pilot:" + k;
-    return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div>${lock(id, p.ach?.txt)}</div>`;
+    return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div>${owns(id) ? `<div class="price">${save.pilot === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id, p.ach?.txt)}</div>`;
   }).join("");
   else if (gtab === "habilidad") $("cars").innerHTML = (Object.keys(ABILITIES) as AbilityId[]).map((k) => {
     const a = ABILITIES[k];
     const l = save.abilLv[k] ?? 0;
-    return `<div tabindex="0" class="carc pilot ${save.ability === k ? "sel" : ""}" data-abil="${k}"><b>${a.name}</b>${a.desc}<div class="price">Nivel ${l + 1} · Enfriamiento ${n1(abilCd(k, l))} s</div></div>`;
+    return `<div tabindex="0" class="carc pilot ${save.ability === k ? "sel" : ""}" data-abil="${k}"><b class="wi">${icon(ABIL_ICON[k], 22)}${a.name}</b>${a.desc}<div class="price">Nivel ${l + 1} · Enfriamiento ${n1(abilCd(k, l))} s · ${save.ability === k ? "EN USO" : "DISPONIBLE"}</div></div>`;
   }).join("");
   else if (gtab === "arma") { // Arsenal: una sola arma inicial; Gomitas siempre está. Elegir otra reemplaza la del piloto (ver startWeapons)
     const own = PILOTS[save.pilot].start, first = startPick() === "gomitas" ? own : startPick();
     $("cars").innerHTML = `<div class="note">Arranca con: ${WEAPONS[first].name}${first !== own ? ` (en lugar de ${WEAPONS[own].name}, la del piloto)` : ""}</div>` + ARSENAL.map((k) => {
       const id = "arma:" + k, w = WEAPONS[k];
-      return `<div tabindex="0" class="carc pilot ${startPick() === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-arma="${k}"><b class="wi">${icon(k, 22)}${w.name}</b>${k === "gomitas" ? "De serie. Piloto con arma propia: arranca con la suya" : w.desc}<div class="wsyn">${icon(w.evo, 14)}<span>Evoluciona con <b>${PASSIVES[w.evo].name}</b> → ${w.evoName}</span></div>${lock(id)}</div>`;
+      return `<div tabindex="0" class="carc pilot ${startPick() === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-arma="${k}"><b class="wi">${icon(k, 22)}${w.name}</b>${k === "gomitas" ? "De serie. Piloto con arma propia: arranca con la suya" : w.desc}<div class="wsyn">${icon(w.evo, 14)}<span>Evoluciona con <b>${PASSIVES[w.evo].name}</b> → ${w.evoName}</span></div>${owns(id) ? `<div class="price">${startPick() === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id)}</div>`;
     }).join("");
   }
   else if (gtab === "piezas") $("cars").innerHTML = editing ? "" : (Object.keys(PARTS) as Slot[]).map((sl) => `<div class="slot"><span>${PARTS[sl].name}</span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {

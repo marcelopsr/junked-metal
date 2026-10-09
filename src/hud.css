@@ -121,6 +121,7 @@
 #arrows .arw { position: absolute; left: 0; top: 0; width: 0; height: 0; color: #fff; }
 #arrows .arw .chev { position: absolute; left: -26px; top: -26px; width: 52px; height: 52px; }
 #arrows .arw .glyph { position: absolute; left: -13px; top: -13px; width: 26px; height: 26px; display: grid; place-items: center; background: var(--g-bg); border: 1px solid currentColor; border-radius: 8px; }
+#arrows .arw .adist { position: absolute; left: 0; top: 15px; translate: -50% 0; font: 700 10px/1 var(--hf); letter-spacing: .04em; color: currentColor; background: rgba(8, 14, 20, .82); padding: 1px 4px; border-radius: 4px; white-space: nowrap; }
 #arrows .arw.jefe { color: #ff6b6b; } #arrows .arw.cofre { color: #ffc24d; }
 #arrows .arw.jefe .glyph { animation: h-blink .6s steps(2) infinite; }
 

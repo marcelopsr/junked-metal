@@ -373,9 +373,9 @@ function tickNumbers(dt: number) {
 
 // ---------- Flechas de borde hacia objetivos fuera de cámara: ficha con ícono y una punta que orbita hacia el objetivo ----------
 const CHEV = `<svg class="chev" viewBox="0 0 52 52"><path d="M40 18 51 26 40 34 43 26Z" fill="currentColor" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
-export function hudArrows(list: { x: number; y: number; kind: "jefe" | "cofre" }[]) {
+export function hudArrows(list: { x: number; y: number; kind: "jefe" | "cofre"; dist?: number }[]) {
   const box = $("arrows");
-  while (box.children.length < list.length) box.insertAdjacentHTML("beforeend", `<div class="arw">${CHEV}<span class="glyph"></span></div>`);
+  while (box.children.length < list.length) box.insertAdjacentHTML("beforeend", `<div class="arw">${CHEV}<span class="glyph"></span><small class="adist"></small></div>`);
   const w = innerWidth, h = innerHeight, m = 40;
   Array.from(box.children).forEach((c, i) => {
     const a = list[i], e = c as HTMLElement;
@@ -383,7 +383,8 @@ export function hudArrows(list: { x: number; y: number; kind: "jefe" | "cofre" }
     const cx = w / 2, cy = h / 2, dx = a.x - cx, dy = a.y - cy;
     const t = Math.min((cx - m) / Math.abs(dx || 1e-3), (cy - m) / Math.abs(dy || 1e-3));
     e.style.display = "";
-    if (e.dataset.k !== a.kind) { e.dataset.k = a.kind; e.className = `arw ${a.kind}`; e.lastElementChild!.innerHTML = icon(a.kind, 16); }
+    if (e.dataset.k !== a.kind) { e.dataset.k = a.kind; e.className = `arw ${a.kind}`; e.querySelector(".glyph")!.innerHTML = icon(a.kind, 16); }
+    (e.lastElementChild as HTMLElement).textContent = a.dist ? `${a.dist}m` : "";
     e.style.transform = `translate(${cx + dx * t}px, ${cy + dy * t}px)`;
     (e.firstElementChild as HTMLElement).style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
   });

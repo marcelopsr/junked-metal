@@ -504,6 +504,7 @@ function showIntro() {
     <p class="m3-sub">${lv.desc}</p>
     <div class="m3-goals-vis">${goalsHtml(false)}</div>
     <p class="m3-meta">${lv.moves} movimientos${best ? ` · récord ${best}` : ""}</p>
+    <p class="m3-tiers">Metas: ★ ${lv.stars[0]} · ★★ ${lv.stars[1]} · ★★★ ${lv.stars[2]}</p>
     <p class="m3-tip"><b>Nuevo</b>${lv.tip}</p>
     ${lv.tools ? `<div class="m3-chips"><span>Herramientas de prueba:</span>${toolsHtml(lv.tools)}</div>` : ""}
     <div class="m3-btns"><button type="button" class="primary" id="m3-play">Jugar</button><button type="button" id="m3-map">Mapa</button></div>`, "m3-play");
@@ -517,6 +518,7 @@ function showWin(res: { first: boolean; stars: number; newBest: boolean }) {
   showPanel(`<p class="m3-kicker">Nivel ${lvIdx + 1} · ${lv.name}</p><p class="m3-title ok">${last ? "TRITURADORA APAGADA" : "PEDIDO COMPLETO"}</p>
     ${starsHtml(res.stars)}
     <p class="m3-score">${st.got.score}${res.newBest ? ` <span class="m3-best">nuevo récord</span>` : ""}</p>
+    ${res.stars < 3 ? `<p class="m3-tiers">Siguiente estrella (${res.stars + 1}★): ${lv.stars[res.stars]} pts (faltaron ${Math.max(1, lv.stars[res.stars] - st.got.score)})</p>` : `<p class="m3-tiers ok">¡Nivel perfeccionado con 3 estrellas!</p>`}
     ${last && res.first ? `<p class="m3-sub">La Ruta del Desguace queda abierta de punta a punta. Se vienen más turnos en el taller.</p>` : ""}
     ${reward}
     <div class="m3-btns">${last ? "" : `<button type="button" class="primary" id="m3-next">Siguiente</button>`}<button type="button" id="m3-retry">Repetir</button><button type="button" id="m3-map">Mapa</button></div>`, last ? "m3-map" : "m3-next");

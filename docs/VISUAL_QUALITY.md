@@ -329,4 +329,21 @@ Carrera (1) y Survivor en partida (2).
 4. **Insignia `CADENA ×N` en el cabezal y anillo dorado para niveles de 3 estrellas en Junket Crush (Subagente 4 · `src/match3.ts`, `src/match3_draw.ts`):**
    - `paintDisplay()` dibuja la cápsula ámbar `CADENA ×N` junto a `NV X/10` durante reacciones en cadena, y `drawNode()` enmarca con anillo exterior dorado los niveles completados con 3 estrellas en el mapa.
 
+---
+
+## 2026-10-09 · Ciclo #14 (Garaje Unificado en `Piloto`/`Habilidad`/`Arma`, Distancia `Xm` en `#arrows`, Telemetría `#rtab` en Carrera y Metas de Estrellas en Junket Crush)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-objetivos.png`, `.shots/actual/pc-match3-victoria.png`, `.shots/actual/cel-match3-victoria.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Unificación de `Piloto`, `Habilidad` y `Arma` en el Garaje (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()`, la pestaña `Piloto` muestra la franja `.wsyn` con el arma inicial de serie e ícono SVG, `Habilidad` incorpora el ícono SVG `ABIL_ICON` inline en el título, y las 3 pestañas muestran el pie `<div class="price">EN USO / EN EL GARAJE / DISPONIBLE</div>` en elementos desbloqueados.
+2. **Distancia en metros (`Xm`) en flechas de borde fuera de pantalla `#arrows` (Subagente 2 · `src/ui.ts`, `src/hud.css`, `src/main.ts`):**
+   - `updateHud()` calcula la distancia horizontal en metros hacia cada jefe o cofre fuera de pantalla y `hudArrows()` renderiza `<small class="adist">${a.dist}m</small>` debajo del glifo direccional.
+3. **Telemetría en vivo en la tabla de posiciones `#rtab` de Carrera y Batalla (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - Cada fila de `#rtab` muestra a la derecha (`<small class="rt-st">`) los globos restantes (`●●●` / `FUERA`) en Batalla o el estado activo (`META` / `ESCUDO` / `TURBO`) en Carrera con memoización DOM (`dataset.h`).
+4. **Umbrales de puntaje (`★ / ★★ / ★★★`) en el inicio de nivel y puntos faltantes en Victoria de Junket Crush (Subagente 4 · `src/match3.ts`, `src/match3.css`):**
+   - `showIntro()` detalla `Metas: ★ X · ★★ Y · ★★★ Z` (`pc-match3-objetivos.png`) y `showWin()` informa `Siguiente estrella (N★): X pts (faltaron Y)` o `¡Nivel perfeccionado con 3 estrellas!` (`pc-match3-victoria.png`, `cel-match3-victoria.png`).
+
+
 
