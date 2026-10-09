@@ -221,6 +221,7 @@ function clearRun() {
   evoNotified.clear();
   clearFx();
   rainK = 0; rainBanner = false; rainSfx(0);
+  yardPulseIdx = 0; yardPulseT = 0;
   evtPre = { swarm: false, ball: false, rain: false, elites: new Set(), boss: new Set() };
   car?.dispose();
   car = null;
@@ -773,7 +774,12 @@ function update(dt: number) {
     c.body.applyImpulse(new B.Vector3(fwd.x * hx, vy, fwd.z * hx), c.pos);
     if (!simulating) { SFX.boing(); const rear = c.pos.add(c.root.forward.scale(-0.8)); FX.dust(rear); shake = Math.max(shake, 0.18); }
   }
-  { const zp = zoneTick(dt, c.pos); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
+  if (yardPulseIdx < YARD_PULSES.length && time >= YARD_PULSES[yardPulseIdx]) {
+    yardPulseIdx++; yardPulseT = 10;
+    if (!simulating) { banner(zoneId === "jardin" ? "SOBREPRESIÓN EN ASPERSORES" : "PICOS DE TENSIÓN EN EL PATIO", 2.2); FX.sparks(c.pos.add(new B.Vector3(0, 0.6, 0))); }
+  }
+  if (yardPulseT > 0) yardPulseT = Math.max(0, yardPulseT - dt);
+  { const zp = zoneTick(dt, c.pos, yardPulseT > 0); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
   engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * R.turbo_vel)), throttle, boosting, input.drift, floorAt(c.pos.x, c.pos.z));
   if (c.kind === "helado" && (jingleT -= dt) <= 0) { SFX.jingle(); jingleT = 16; }
   runDist += Math.abs(r.fs) * dt;
@@ -1095,6 +1101,8 @@ function update(dt: number) {
 let god = false; // solo dev
 let lampBoost = false, moteT = 0, flyT = 0;
 let rainK = 0, rainBanner = false; // lluvia: intensidad 0..1 y aviso ya mostrado
+let yardPulseIdx = 0, yardPulseT = 0;
+const YARD_PULSES = [225, 345] as const;
 let evtPre = { swarm: false, ball: false, rain: false, elites: new Set<number>(), boss: new Set<number>() };
 // Zoom de cámara: rueda del mouse o teclas - / = (0.8 cerca … 2 lejos), se guarda
 const zoomBy = (k: number) => { save.zoom = Math.min(2, Math.max(0.8, save.zoom * k)); persist(); };

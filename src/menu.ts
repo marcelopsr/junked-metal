@@ -865,7 +865,7 @@ function renderConfig() {
   $("opts").innerHTML = rows.map((r) => {
     if (r[1] === "sect") return `<div class="sect">${r[0]}</div>`;
     if (r[1] === "note") return `<div class="note">${r[0]}</div>`;
-    if (r[1] === "btn") return `<button class="row" data-act="${r[2]}"><span class="lb">${armed === r[2] ? "¿Seguro? Pulsa otra vez para restablecer" : r[0]}${d(r[2])}</span><b>&gt;</b></button>`;
+    if (r[1] === "btn") return `<button class="row" data-act="${r[2]}"><span class="lb">${armed === r[2] ? "¿Seguro? Presiona otra vez para restablecer" : r[0]}${d(r[2])}</span><b>&gt;</b></button>`;
     if (r[1] === "bind") return bindRow(r[0], r[2]);
     if (r[1] === "padtest") return padTestHtml();
     if (r[1] === "prof") { const p = save.profiles[r[2]], a = `psave:${r[2]}`;

@@ -403,15 +403,31 @@ function paintDisplay() {
     const gs = st.lv.goals, gw = (W - 164) / gs.length;
     gs.forEach((g, i) => {
       const x = 158 + i * gw, left = goalLeft(g), done = left <= 0;
+      if (done) {
+        c.fillStyle = "rgba(34,197,94,0.16)"; c.strokeStyle = M3C.exito; c.lineWidth = 1.5;
+        c.beginPath(); c.roundRect(x + 2, 14, Math.min(gw - 8, 108), 54, 6); c.fill(); c.stroke();
+      }
       drawGoalIcon(c, g, x + 26, 42, 48);
       c.textAlign = "left"; c.fillStyle = done ? M3C.exito : M3C.texto; c.font = `700 ${g.k === "score" ? 26 : 36}px Rajdhani, sans-serif`;
       c.fillText(done ? "OK" : String(left), x + 54, 44);
     });
+    const nvTxt = `NV ${lvIdx + 1}/${LEVELS.length}`;
+    c.font = "700 15px Rajdhani, sans-serif";
+    const nw = Math.ceil(c.measureText(nvTxt).width) + 12;
+    c.fillStyle = "#0b0f14"; c.strokeStyle = M3C.borde; c.lineWidth = 1;
+    c.beginPath(); c.roundRect(W - 8 - nw, 6, nw, 20, 4); c.fill(); c.stroke();
+    c.fillStyle = M3C.cian; c.textAlign = "right"; c.fillText(nvTxt, W - 14, 16);
     // puntaje con tres marcas de estrella
     const bx = 158, bw = W - 172, by = H - 22, max = st.lv.stars[2] * 1.08, k = Math.min(1, shownScore / max);
     c.fillStyle = "#07090c"; c.fillRect(bx, by, bw, 12);
     c.fillStyle = M3C.amarillo; c.fillRect(bx, by, bw * k, 12);
-    st.lv.stars.forEach((s) => drawStar(c, bx + (bw * s) / max, by + 6, 9, shownScore >= s));
+    c.strokeStyle = "rgba(255,255,255,0.22)"; c.lineWidth = 1; c.strokeRect(bx, by, bw, 12);
+    st.lv.stars.forEach((s) => {
+      const sx = bx + (bw * s) / max;
+      c.fillStyle = shownScore >= s ? "#ffffff" : "rgba(255,255,255,0.55)";
+      c.fillRect(sx - 1, by - 2, 2, 16);
+      drawStar(c, sx, by + 6, 9, shownScore >= s);
+    });
     c.fillStyle = M3C.texto; c.font = "700 18px Rajdhani, sans-serif"; c.textAlign = "left"; c.fillText(String(Math.round(shownScore)), 12, H - 14);
   }
   c.fillStyle = "rgba(0,0,0,0.14)"; for (let i = 0; i < H; i += 3) c.fillRect(0, i, W, 1);

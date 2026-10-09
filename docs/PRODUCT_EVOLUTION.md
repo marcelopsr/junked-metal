@@ -126,36 +126,43 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Subagente 3 · Supervivencia Core (`src/main.ts`):** Conexión de `ABIL_ICON[abil]` y `abilCd` con `hudAbility()` en `updateHud()`, más registro por partida (`evoNotified`) en `choose(i)` que dispara un aviso de radio `EVOLUCIÓN LISTA · <EVO_NAME> (COFRE)` la primera vez que un arma llega a Nv. 5 con su pasiva pareja equipada.
 - **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (build limpio en 586 ms sin chunk 2.0), `npm run shots -- --only taller,partida` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3046 nodos, 7433 aristas).
 
+### Ciclo #11 (2026-10-09) — Carrera HUD/Podio, Cabezal Junket Crush `NV X/10`, Curva Gamma/FSR 2J y Pulsos del Patio
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Carrera HUD y Podio (`src/kart.ts`, `src/race.css`):** Meta de medalla objetivo en vivo (`ORO 1:35.2` / `PLATA` / `BRONCE`) con relieve metálico `.rmedal` junto al cronómetro en `#race`, chispas progresivas dobles desde las ruedas traseras (`azul → naranja`) según nivel de carga de mini-turbo y placa de chapa oscura con borde superior dorado para `#rinfo` en el podio.
+  - **Subagente 2 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`):** Insignia `NV X/10` en la esquina superior derecha del cabezal del gabinete, pastilla verde metálico en pedidos completados (`OK` / `.done`) y marcas divisorias verticales de alto contraste en las 3 metas de estrellas de la barra de puntaje.
+  - **Subagente 3 · Render y Configuración de Imagen (`src/render.ts`, `src/menu.ts`):** Curva perceptual de gamma de medios tonos (`midtonesExposure` + `midtonesDensity`) en `imageProcessingConfiguration`, limpieza segura de `fsrP` / `fxaaLo` al activar/desactivar pantalla dividida (`setSplit`) y unificación de confirmaciones de Configuración en español neutro impersonal.
+  - **Subagente 4 · Supervivencia y Patio (`src/main.ts`, `src/world.ts`):** Pulsos deterministas de mitad de partida (`YARD_PULSES = [225, 345]`, sin alterar la secuencia de `rng()` en `sim`) con aviso de radio/banner y sobrepresión temporal de aspersores en `zoneTick(dt, c.pos, boost)`.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (build limpio en 551 ms), `npm run shots -- --only carrera,match3,partida` (31 capturas verificadas en PC y celular) y `npx graphify update .` (3050 nodos, 7439 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #11
+## 4. Backlog Vivo de Oportunidades — Ciclo #12
 
-### A. Área 1 · Carrera HUD y Podio (`src/kart.ts`, `src/race.css`)
-1. **Meta de Medalla en Vivo en HUD, Chispas de Mini-Turbo y Placa `#rbest` en Podio:**
-   - **Qué es:** Mostrar junto al cronómetro en `#race` la medalla objetivo que todavía está al alcance (`ORO 1:18.0`, `PLATA 1:27.0`, `BRONCE 1:39.0`), emitir chispas progresivas de derrape (azul → naranja) al cargar mini-turbo y enmarcar `#rbest` en el podio sobre una placa de chapa oscura con insignia `.rmedal`.
-   - **Valor:** Conecta en tiempo real las medallas metálicas del menú con la carrera y el podio. Complejidad: Baja-Media.
+### A. Área 1 · Garaje y Personalización (`src/menu.ts`, `src/menu.css`)
+1. **Valores Numéricos/Deltas en Barras del Garaje y Etiqueta de Pintura/Calco Activo:**
+   - **Qué es:** Mostrar junto a las barras de atributos del auto en `#scr-garage` el valor o comparativa contra el auto en uso, además del nombre del color/calco seleccionado en la paleta.
+   - **Valor:** Lectura técnica inmediata al comparar los 8 vehículos RC. Complejidad: Baja.
 
-### B. Área 2 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`)
-2. **Insignia `NV X/10`, Marcas de Estrella de Alto Contraste y Pedidos `.done`:**
-   - **Qué es:** Añadir una pastilla `NV X/10` en el cabezal del gabinete durante la partida, elevar el contraste de las 3 líneas de meta de estrellas en `.m3-sbar` y marcar en verde metálico (`.done`) los pedidos completados (`0`).
-   - **Valor:** Lectura periférica instantánea de qué falta para ganar o sacar 3 estrellas. Complejidad: Baja.
+### B. Área 2 · Cartas de Nivel en Supervivencia (`src/ui.ts`, `src/hud.css`)
+2. **Insignia de Transición de Nivel (`NV X → NV Y`) y Aviso de Fusión Lista en `#cards`:**
+   - **Qué es:** Añadir una pastilla superior en cada carta de mejora indicando `NUEVA`, `NV 2 → NV 3` o `NV 4 → NV 5 · ¡FUSIÓN LISTA!` con borde destacado cuando completa la pareja de evolución.
+   - **Valor:** Decisión instantánea bajo presión al subir de nivel. Complejidad: Baja.
 
-### C. Área 3 · Render y Configuración de Imagen (`src/render.ts`, `src/menu.ts`)
-3. **Curva Perceptual de Gamma de Medios Tonos y Salvaguarda FSR en Pantalla Dividida 2J:**
-   - **Qué es:** Ajustar el control de gamma como curva de potencia en medios tonos dentro del shader retro (sin lavar negros ni quemar blancos) y desactivar automáticamente el pase extra de FSR durante carreras a pantalla dividida de 2 jugadores.
-   - **Valor:** Mejor contraste en monitores OLED/LCD y menor costo de GPU cuando hay 2 cámaras activas. Complejidad: Baja-Media.
+### C. Área 3 · Carrera: Medidor de Carga de Mini-Turbo y Última Vuelta (`src/kart.ts`, `src/race.css`)
+3. **Indicador de Carga de Derrape (`TURBO 1` / `TURBO 2`) junto al Velocímetro y Destello en Última Vuelta:**
+   - **Qué es:** Mostrar una barra/etiqueta reactiva de carga de mini-turbo en `.rspd` al derrapar y resaltar `.rlap` en dorado durante la vuelta final.
+   - **Valor:** Hace explícito el umbral de mini-turbo de nivel 1 y 2. Complejidad: Baja.
 
-### D. Área 4 · Eventos Dinámicos de Entorno en el Patio (`src/main.ts`, `src/world.ts`)
-4. **Mini-Eventos Deterministas por Semilla en los Minutos 3–7:**
-   - **Qué es:** Eventos breves anunciados por radio (ej. ráfaga de aspersores o brote concentrado del jardín) gobernados por `rng()` de la semilla.
-   - **Valor:** Mayor variedad táctica en el tramo medio de la partida sin alterar el balance base. Complejidad: Media.
+### D. Área 4 · Polaroid de Fin de Partida (`src/replay.ts`, `src/replay.css`)
+4. **Sello de Inspección de Taller (`VICTORIA` / `SINIESTRO`) y Zona en la Foto Polaroid:**
+   - **Qué es:** Estampar en la esquina de la Polaroid un sello gráfico estilo taller con el resultado y la zona jugada.
+   - **Valor:** Mayor personalidad y valor compartible al guardar la foto. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #10 completado, verificado y documentado (Ícono `"reloj"` y descripciones completas en `Habilidades` del Taller, HUD `#txl` con ícono/estado de habilidad y salto siempre visible en PC, y aviso de radio `EVOLUCIÓN LISTA · ... (COFRE)` en Supervivencia).
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` sin chunk 2.0, 33 capturas verificadas en `.shots/actual/`, `pm2` reiniciado y grafo actualizado (3046 nodos).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno — todos los bloqueos del Ciclo #10 liberados tras finalizar y verificar la tanda.
-- **Próxima decisión pendiente:** Selección multi-opción del usuario para lanzar los subagentes en paralelo del **Ciclo #11**.
-
+- **Último trabajo completado:** Ciclo #11 completado, verificado y documentado (Meta de medalla en vivo y placa `#rinfo` en Carrera, insignia `NV X/10` y marcas de estrella en Junket Crush, curva perceptual de gamma/FSR en 2J y pulsos deterministas del patio en Supervivencia).
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (551 ms), 31 capturas verificadas en `.shots/actual/`, `pm2` reiniciado y grafo actualizado (3050 nodos).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno — todos los bloqueos del Ciclo #11 liberados tras finalizar y verificar la tanda.
+- **Próxima decisión pendiente:** Selección multi-opción del usuario para lanzar los subagentes en paralelo del **Ciclo #12**.

@@ -746,7 +746,12 @@ function stepRacer(r: Racer, dt: number) {
   if (r.spin > 0) { r.spin -= dt; r.spinRot += dt * 12; c.vis.rotation.y = r.spinRot; c.body.setAngularVelocity(B.Vector3.Zero()); if (r.spin <= 0) { c.vis.rotation.y = 0; r.inv = 1.2; } }
   c.animate(dt, steer, out.fs, top);
   // Chispas del derrape (azul → naranja) y polvo fuera de pista
-  if (r.drifting !== 0 && Math.random() < 0.6) burst(pos.add(new B.Vector3(0, 0.2, 0)).subtract(fwdOf(r).scale(1.1)), { n: 2, color: r.charge > 1.5 ? "#ff9d2e" : r.charge > 0.75 ? "#4aa8ff" : "#ffffff", size: [0.12, 0.25], power: [2, 5], life: [0.15, 0.3], gravity: -8 });
+  if (r.drifting !== 0 && Math.random() < (r.charge > 1.5 ? 0.9 : r.charge > 0.75 ? 0.75 : 0.55)) {
+    const fwd = fwdOf(r), rt = new B.Vector3(fwd.z, 0, -fwd.x), rear = pos.add(new B.Vector3(0, 0.22, 0)).subtract(fwd.scale(1.05));
+    const lv2 = r.charge > 1.5, lv1 = r.charge > 0.75;
+    const col1 = lv2 ? "#ff9d2e" : lv1 ? "#4aa8ff" : "#ffffff", col2 = lv2 ? "#ffd84d" : lv1 ? "#9be3ff" : "#cfe3f2";
+    for (const s of [-0.62, 0.62]) burst(rear.add(rt.scale(s)), { n: lv2 ? 3 : lv1 ? 2 : 1, color: col1, color2: col2, size: lv2 ? [0.16, 0.32] : [0.11, 0.22], power: lv2 ? [3, 7] : [2, 5], life: [0.15, 0.3], gravity: -8 });
+  }
   if (off && Math.abs(out.fs) > 5 && Math.random() < 0.5) FX.dust(pos);
   if (r.boost > 0 && Math.random() < 0.7) FX.sparks(pos.subtract(fwdOf(r).scale(1.2)).add(new B.Vector3(0, 0.3, 0)));
   // Lakitu: se salió demasiado, se cayó o quedó trabado
@@ -872,7 +877,13 @@ function hud() {
     p.querySelector(".rpos b")!.textContent = String(mode === "battle" ? racers.filter((o) => !o.out).length : placeOf(h));
     p.querySelector(".rpos i")!.textContent = mode === "battle" ? "/10 en pie" : "/10";
     p.querySelector(".rlap")!.textContent = mode === "battle" ? (h.out ? "ELIMINADO" : "●".repeat(h.balloons) + " " + Math.max(0, Math.ceil(battleT - t)) + " s") : `VUELTA ${clamp(h.lap, 1, LAPS)}/${LAPS}`;
-    if (mode === "race") p.querySelector(".rtime")!.textContent = `${fmt(Math.max(0, t - h.lapT))}${h.lapBest ? "  ·  MEJOR " + fmt(h.lapBest) : ""}`; else p.querySelector(".rtime")!.textContent = "";
+    if (mode === "race") {
+      const mt = medalTimes(trackNo, raceCfg.laps, raceCfg.cc), elapsed = h.fin > 0 ? h.fin : Math.max(0, t);
+      const mTag = elapsed <= mt[0] ? `<span class="rmedal m3">ORO ${fmt(mt[0])}</span>` : elapsed <= mt[1] ? `<span class="rmedal m2">PLATA ${fmt(mt[1])}</span>` : elapsed <= mt[2] ? `<span class="rmedal m1">BRONCE ${fmt(mt[2])}</span>` : "";
+      const rtEl = p.querySelector(".rtime") as HTMLElement;
+      const html = `<span>${fmt(Math.max(0, t - h.lapT))}${h.lapBest ? " · MEJOR " + fmt(h.lapBest) : ""}</span>${mTag}`;
+      if (rtEl.dataset.h !== html) { rtEl.dataset.h = html; rtEl.innerHTML = html; }
+    } else p.querySelector(".rtime")!.textContent = "";
     p.querySelector(".rspd")!.textContent = `${Math.round(Math.abs(h.fs) * 3.6)} km/h`;
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; }
@@ -912,7 +923,7 @@ function showResults() {
   if (mode === "race") for (const h of humans) if (h.fin > 0) {
     const medal = medalOf(trackNo, raceCfg.laps, raceCfg.cc, h.fin), isBest = recordTime(trackNo, { t: h.fin, lap: h.lapBest, car: h.car.kind, cc: raceCfg.cc });
     const mt = medalTimes(trackNo, raceCfg.laps, raceCfg.cc);
-    info.push(`<b>${h.name}</b>: ${fmt(h.fin)} · mejor vuelta ${h.lapBest ? fmt(h.lapBest) : "—"}${isBest ? " · <em>¡RÉCORD!</em>" : ""} · <span class="medal m${medal}">${medal ? "MEDALLA DE " + MEDAL[medal] : "sin medalla"}</span><br><small>Objetivos: oro ${fmt(mt[0])} · plata ${fmt(mt[1])} · bronce ${fmt(mt[2])}</small>`);
+    info.push(`<b>${h.name}</b>: ${fmt(h.fin)} · mejor vuelta ${h.lapBest ? fmt(h.lapBest) : "—"}${isBest ? " · <em>¡RÉCORD!</em>" : ""} · <span class="medal rmedal m${medal}">${medal ? "MEDALLA DE " + MEDAL[medal] : "sin medalla"}</span><br><small>Objetivos: oro ${fmt(mt[0])} · plata ${fmt(mt[1])} · bronce ${fmt(mt[2])}</small>`);
   }
   if (mode === "race" && times[String(trackNo)]) info.push(`<small>Mejores de la pista: ${times[String(trackNo)].map((x, i) => `${i + 1}. ${fmt(x.t)}`).join(" · ")}</small>`);
   $r("#rinfo").innerHTML = info.join("<br>");

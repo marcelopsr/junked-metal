@@ -68,7 +68,8 @@
   font-size: 18px;
   font-weight: 700;
 }
-#match3-ui .m3-goal.done { border-color: var(--verde); }
+#match3-ui .m3-goal.done { border-color: var(--verde); background: rgba(34, 197, 94, 0.12); box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.35); }
+#match3-ui .m3-goal.done .m3-gnum, #match3-ui .m3-goal.done .m3-gtext { color: var(--verde); }
 #match3-ui .m3-gicon { grid-row: 1 / span 2; width: 26px; height: 26px; box-sizing: border-box; }
 #match3-ui img.m3-gicon { width: 34px; height: 34px; image-rendering: auto; }
 #match3-ui .m3-shape-0 .m3-gicon { background: var(--amarillo); clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0 50%); box-shadow: inset 0 0 0 8px var(--amarillo), inset 0 0 0 30px #2a1c05; }

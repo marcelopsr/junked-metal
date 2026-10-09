@@ -253,9 +253,9 @@ export const maxMsaa = () => Math.max(1, scene.getEngine().getCaps().maxMSAASamp
 /** La cadena de postproceso de la cámara es FSR → "pipe": FSR necesita ser la primera etapa (recibe la escena a baja resolución). */
 function chain(edit: () => void) {
   const m = scene.postProcessRenderPipelineManager;
-  m.detachCamerasFromRenderPipeline("pipe", cams());
+  m.detachCamerasFromRenderPipeline("pipe", [mainCam]);
   edit();
-  m.attachCamerasToRenderPipeline("pipe", cams());
+  m.attachCamerasToRenderPipeline("pipe", [mainCam]);
 }
 
 /** FSR es una cadena de una sola cámara: en pantalla dividida (carrera de 2) se apagan y vale la escala manual. */
@@ -317,10 +317,14 @@ export function applyGfx(g: Gfx) {
   }
   // Pantalla: el brillo escala la exposición; el gamma sube o baja los medios tonos (curva de color de Babylon, sin tocar negros ni blancos)
   if (cur.bright !== was.bright && clim) scene.imageProcessingConfiguration.exposure = clim.exposure * LOOK.exposure * cur.bright;
-  if (cur.gamma !== was.gamma) {
+  if (cur.gamma !== was.gamma || (cur.gamma !== 1 && !scene.imageProcessingConfiguration.colorCurvesEnabled)) {
     const ip = scene.imageProcessingConfiguration;
     ip.colorCurvesEnabled = cur.gamma !== 1;
-    if (cur.gamma !== 1) { ip.colorCurves ??= new B.ColorCurves(); ip.colorCurves.midtonesExposure = (cur.gamma - 1) * 100; }
+    if (cur.gamma !== 1) {
+      ip.colorCurves ??= new B.ColorCurves();
+      ip.colorCurves.midtonesExposure = (cur.gamma - 1) * 90;
+      ip.colorCurves.midtonesDensity = (1 - cur.gamma) * 30;
+    }
   }
 }
 
@@ -339,8 +343,16 @@ function setupPixels(cam: B.Camera, low: boolean) {
 
 /** Pantalla dividida (carrera para 2): la segunda cámara comparte el postproceso "pipe" (addCamera: el pipeline se reconstruye solo con las cámaras que conoce); FSR se apaga mientras dure (fsrEff). */
 export function setSplit(cam2: B.Camera | null, on: boolean) {
-  if (on && cam2) { split = cam2; applyGfx(cur); pipeline.addCamera(cam2); }
-  else if (cam2) { pipeline.removeCamera(cam2); split = null; applyGfx(cur); }
+  if (on && cam2) {
+    if (split && split !== cam2) pipeline.removeCamera(split);
+    split = cam2;
+    applyGfx(cur);
+    pipeline.addCamera(cam2);
+  } else if (cam2 ?? split) {
+    pipeline.removeCamera((cam2 ?? split)!);
+    split = null;
+    applyGfx(cur);
+  }
 }
 
 // ---------- Materiales ----------

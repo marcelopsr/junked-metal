@@ -570,9 +570,9 @@ function sprinkler(x: number, z: number) {
   bare.push({ x, z, r: 2 });
 }
 /** Llamar cada paso de la partida: gira los aspersores y devuelve el empujón (velocidad a sumar) o null. Determinista (dt). */
-export function zoneTick(dt: number, p: B.Vector3) {
+export function zoneTick(dt: number, p: B.Vector3, boost = false) {
   if (!sprinklers.length) return null;
-  sprT += dt;
+  sprT += dt * (boost ? 1.85 : 1);
   let push: B.Vector3 | null = null;
   for (const s of sprinklers) {
     const a = s.ph + sprT * 1.3;
@@ -581,7 +581,7 @@ export function zoneTick(dt: number, p: B.Vector3) {
     if (d > 15 || d < 1.5 || p.y > 5) continue;
     const da = Math.atan2(dx, dz) - a;
     if (Math.abs(Math.atan2(Math.sin(da), Math.cos(da))) > 0.32) continue;
-    (push ??= new B.Vector3()).addInPlace(new B.Vector3(dx / d, 0, dz / d).scaleInPlace(38 * dt * (1 - d / 18)));
+    (push ??= new B.Vector3()).addInPlace(new B.Vector3(dx / d, 0, dz / d).scaleInPlace((boost ? 51 : 38) * dt * (1 - d / 18)));
   }
   return push;
 }

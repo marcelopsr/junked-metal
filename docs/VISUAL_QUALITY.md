@@ -279,3 +279,20 @@ Carrera (1) y Survivor en partida (2).
    - Se rehabilitó `.h-ptitle.h-abil` en `src/hud.css` (que estaba oculto por `display: none`), mostrando el ícono SVG y nombre de la habilidad equipada (`PETARDOS`), su estado en `#abKey` (`LISTO · E` en verde `#22c55e` en PC y `LISTO` en móvil) y la fila de Salto (`SALTO` / `LISTO · F` con barra de carga) siempre visible en escritorio (`pc-partida-curso.png`).
    - En `src/main.ts`, `choose(i)` dispara por única vez por arma un aviso `EVOLUCIÓN LISTA · <EVO_NAME> (COFRE)` cuando un arma alcanza Nv. 5 con su pasiva pareja equipada.
 
+---
+
+## 2026-10-09 · Ciclo #11 (Meta de Medalla en Vivo y Placa `#rinfo` en Carrera, Insignia `NV X/10` en Junket Crush, Curva Gamma/FSR 2J y Pulsos del Patio)
+
+**Capturas verificadas:** `.shots/actual/pc-carrera-curso.png`, `.shots/actual/cel-carrera-curso.png`, `.shots/actual/pc-carrera-podio.png`, `.shots/actual/cel-carrera-podio.png`, `.shots/actual/pc-match3-juego.png`, `.shots/actual/pc-match3-derrota.png` (`npm run shots -- --only carrera,match3,partida`, 31 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Meta de medalla en vivo en el HUD, chispas dobles de mini-turbo y placa `#rinfo` en el podio (Subagente 1 · `src/kart.ts`, `src/race.css`):**
+   - Debajo de `VUELTA X/3`, `.rtime` muestra ahora junto al tiempo la insignia metálica `.rmedal` de la medalla que aún está al alcance (`ORO 1:35.2` -> `PLATA` -> `BRONCE`) tanto en PC (`pc-carrera-curso.png`) como en celular (`cel-carrera-curso.png`).
+   - El derrape emite chispas progresivas dobles desde ambas ruedas traseras (`[-0.62, 0.62]`) cambiando de blanco a azul eléctrico (`#4aa8ff` / `#9be3ff`) y naranja incandescente (`#ff9d2e` / `#ffd84d`).
+   - En el podio (`pc-carrera-podio.png`, `cel-carrera-podio.png`), `#rinfo` queda enmarcado como placa de chapa oscura con borde superior dorado (`#ffc24d`) e insignia `.rmedal`.
+2. **Insignia `NV X/10`, marcas divisorias de estrella y pedidos `.done` en Junket Crush (Subagente 2 · `src/match3.ts`, `src/match3.css`):**
+   - El cabezal 3D del gabinete muestra la cápsula `NV X/10` en cian en la esquina superior derecha (`pc-match3-juego.png`), enmarca en verde metálico los pedidos completados (`OK`) y traza líneas divisorias verticales de alto contraste en los 3 umbrales de estrella de la barra de puntaje.
+3. **Curva perceptual de gamma de medios tonos y salvaguarda de FSR en pantalla dividida 2J (Subagente 3 · `src/render.ts`, `src/menu.ts`):**
+   - `applyGfx()` calibra tanto `midtonesExposure` como `midtonesDensity` en `imageProcessingConfiguration.colorCurves`, y `setSplit()` limpia cualquier instancia de `fsrP` / `fxaaLo` antes de adjuntar la segunda cámara.
+4. **Pulsos deterministas del patio y sobrepresión de aspersores (Subagente 4 · `src/main.ts`, `src/world.ts`):**
+   - En los segundos `225` y `345` de la partida (`YARD_PULSES`), `update()` lanza una ráfaga de sobrepresión de 10 s (`zoneTick(dt, c.pos, yardPulseT > 0)`) con aviso de radio/banner sin consumir llamadas extra a `rng()`.
