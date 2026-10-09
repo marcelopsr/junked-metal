@@ -588,10 +588,14 @@ function renderGarage() {
   $("paint").classList.toggle("hidden", gtab !== "pintura");
   $("cars").classList.toggle("hidden", gtab === "pintura");
   const lock = (id: string, ach?: string) => (owns(id) ? "" : `<div class="price">${ach ? `Logro: ${ach}` : `Bloqueado · ${priceOf(id)} tornillos`}</div>`);
-  if (gtab === "auto") $("cars").innerHTML = (Object.keys(CARS) as CarKind[]).map((k) => {
-    const c = CARS[k];
-    return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><div class="stc"><span>Carrocería <em>${c.hp}</em></span>${bar(c.hp, 300)}</div><div class="stc"><span>Velocidad <em>${Math.round(c.speed * 3.6)}</em></span>${bar(c.speed, 21)}</div><div class="stc"><span>Embestida <em>×${n1(c.ram)}</em></span>${bar(c.ram, 5.5)}</div></div>${lock("car:" + k)}</div>`;
-  }).join("");
+  if (gtab === "auto") {
+    const eq = CARS[save.car];
+    const dTag = (v: number, b: number, isX = false) => Math.abs(v - b) < 0.05 ? "" : `<b class="cdlt ${v > b ? "up" : "dn"}">${v > b ? "+" : ""}${isX ? n1(v - b) : Math.round(v - b)}</b>`;
+    $("cars").innerHTML = (Object.keys(CARS) as CarKind[]).map((k) => {
+      const c = CARS[k];
+      return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><div class="stc"><span>Carrocería <em>${c.hp}${dTag(c.hp, eq.hp)}</em></span>${bar(c.hp, 300)}</div><div class="stc"><span>Velocidad <em>${Math.round(c.speed * 3.6)}${dTag(Math.round(c.speed * 3.6), Math.round(eq.speed * 3.6))}</em></span>${bar(c.speed, 21)}</div><div class="stc"><span>Embestida <em>×${n1(c.ram)}${dTag(c.ram, eq.ram, true)}</em></span>${bar(c.ram, 5.5)}</div></div>${owns("car:" + k) ? `<div class="price">${save.car === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock("car:" + k)}</div>`;
+    }).join("");
+  }
   else if (gtab === "piloto") $("cars").innerHTML = (Object.keys(PILOTS) as PilotId[]).map((k) => {
     const p = PILOTS[k], id = "pilot:" + k;
     return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div>${lock(id, p.ach?.txt)}</div>`;
@@ -638,7 +642,7 @@ function renderPaint() {
   const bar = (k: string, lab: string, max: number, val: number) => `<label class="hrow"><span>${lab}</span><input type="range" data-hsv="${k}" min="0" max="${max}" step="${k === "h" ? 5 : 2}" value="${val}" aria-label="${lab}"></label>`;
   $("paint").innerHTML = `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
     + `<div class="pal">${PAINTS.map((c) => `<button class="sw ${mine && c === cur ? "on" : ""}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
-    + `<div class="hsv"><div class="hsvt"><span>Color libre</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
+    + `<div class="hsv"><div class="hsvt"><span>${PZ[pz]} · ${mine ? "Personalizado" : "De fábrica"}</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
     + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
     + `<div class="note">${pz === "trim" ? "Detalles: alerón, paragolpes, defensas y accesorios." : pz === "rim" ? "Llantas de las cuatro ruedas (o de las que haya)." : "Carrocería: la chapa entera."} Pintar es gratis: el patio cobra en otras cosas.</div>`;
   hsvBars(h, sat, v);
@@ -650,6 +654,8 @@ addEventListener("change", (e) => {
   if (!(e.target as HTMLElement).dataset?.hsv) return;
   save[pz] = hsv2hex(...hsvNow()); persist();
   document.querySelectorAll("#paint .pal .sw.on, #paint [data-pdef]").forEach((b) => b.classList.remove("on"));
+  const sp = document.querySelector("#paint .hsvt span");
+  if (sp) sp.textContent = `${PZ[pz]} · Personalizado`;
 });
 // ---------- Editor de calcos (garaje → Piezas): grilla DECAL_N², 8 colores de DECAL_PAL, 3 diseños ----------
 // Se edita un borrador (`draft`); Guardar lo escribe en la ranura `eslot` y lo aplica al capó. Cursor de celdas para teclado y gamepad.

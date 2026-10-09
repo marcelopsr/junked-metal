@@ -296,3 +296,20 @@ Carrera (1) y Survivor en partida (2).
    - `applyGfx()` calibra tanto `midtonesExposure` como `midtonesDensity` en `imageProcessingConfiguration.colorCurves`, y `setSplit()` limpia cualquier instancia de `fsrP` / `fxaaLo` antes de adjuntar la segunda cámara.
 4. **Pulsos deterministas del patio y sobrepresión de aspersores (Subagente 4 · `src/main.ts`, `src/world.ts`):**
    - En los segundos `225` y `345` de la partida (`YARD_PULSES`), `update()` lanza una ráfaga de sobrepresión de 10 s (`zoneTick(dt, c.pos, yardPulseT > 0)`) con aviso de radio/banner sin consumir llamadas extra a `rng()`.
+
+---
+
+## 2026-10-09 · Ciclo #12 (Deltas Comparativos en Garaje, Transición `NV X → NV Y` en Cartas, Insignia Mini-Turbo en Carrera y Sello de Taller en Polaroid)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-cartas.png`, `.shots/actual/pc-partida-resultados.png`, `.shots/actual/cel-partida-resultados.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Deltas comparativos en Garaje y estado de pintura activa (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - Cada tarjeta `.carc` en `#scr-garage` compara `Carrocería`, `Velocidad` y `Embestida` contra el auto equipado (`CARS[save.car]`) con deltas `.cdlt.up` (`#22c55e`) y `.cdlt.dn` (`#f59e0b`), muestra `<div class="price">EN USO</div>` / `EN EL GARAJE` en vehículos propios y detalla `${PZ[pz]} · Personalizado / De fábrica` en la cabecera `.hsvt` de `Pintura`.
+2. **Transición explícita de nivel (`NUEVA` / `NV X → NV Y`) y pip `.next` en Cartas de Mejora (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - `kindLabel()` en `#cards` indica `Arma · NUEVA`, `Pieza · NUEVA` o `NV X → NV Y` (más `· ¡EVO LISTA!` o `· MÁX` en nivel 5), ilumina en dorado el pip `.next` que se encenderá al elegir la carta y enmarca la tarjeta con `.evo-rdy` cuando completa la pareja de evolución.
+3. **Insignia reactiva de derrape/mini-turbo y destello de última vuelta en Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - `.rspd` incorpora la pastilla `.rturbo` (`DERRAPE`, `TURBO 1` en azul `#4aa8ff`, `TURBO 2` / `TURBO` en naranja `#ff9d2e`) junto a los `km/h`, y `.rlap` se ilumina con `.final` en dorado durante la última vuelta.
+4. **Sello gráfico de inspección de taller en la Polaroid de fin de partida (Subagente 4 · `src/replay.ts`, `src/replay.css`):**
+   - `showPhoto()` estampa en el margen inferior derecho del papel Polaroid un sello inclinado de doble trazo (`INSPECCIÓN · VICTORIA` en verde taller `#1f6f3a` o `CHASIS SINIESTRADO` en rojo óxido `#9a2c2c`) sin usar `Math.random()`.
+

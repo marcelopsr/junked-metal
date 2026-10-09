@@ -382,7 +382,13 @@ export function hudArrows(list: { x: number; y: number; kind: "jefe" | "cofre" }
 
 // ---------- Cartas de mejora ----------
 const rarity = (o: Offer) => (o.kind === "evo" ? "evo" : o.kind === "fusion" ? "fusion" : o.lv === 5 ? "epica" : o.kind === "weapon" && o.lv === 1 ? "rara" : "comun");
-const kindLabel = (o: Offer) => (o.kind === "evo" ? "Evolución" : o.kind === "fusion" ? "Fusión" : o.kind === "heal" ? "Reparación" : o.lv === 1 ? (o.kind === "weapon" ? "Arma nueva" : "Pieza nueva") : `${o.kind === "weapon" ? "Arma" : "Pieza"} · nivel ${o.lv}`);
+const kindLabel = (o: Offer) => (
+  o.kind === "evo" ? "Evolución" :
+  o.kind === "fusion" ? "Fusión" :
+  o.kind === "heal" ? "Reparación" :
+  o.lv === 1 ? (o.kind === "weapon" ? "Arma · NUEVA" : "Pieza · NUEVA") :
+  `${o.kind === "weapon" ? "Arma" : "Pieza"} · NV ${(o.lv ?? 2) - 1} → NV ${o.lv}${o.lv === 5 && o.syn?.ready ? " · ¡EVO LISTA!" : o.lv === 5 ? " · MÁX" : ""}`
+);
 
 let pickCb: ((i: number) => void) | null = null;
 let hoverCb: ((i: number) => void) | null = null;
@@ -397,13 +403,13 @@ export function showOffers(title: string, offers: Offer[], sel: number, onPick: 
   subEl.textContent = sub;
   subEl.className = threat ? `lu-sub lu-sub--${threat}` : "lu-sub";
   $("offers").innerHTML = offers.map((o, i) => `
-    <div class="offer ${rarity(o)} ${i === sel ? "sel" : ""}" data-i="${i}" style="--i:${i}">
+    <div class="offer ${rarity(o)} ${o.lv === 5 && o.syn?.ready ? "evo-rdy" : ""} ${i === sel ? "sel" : ""}" data-i="${i}" style="--i:${i}">
       <span class="kind">${kindLabel(o)}</span>
       <div class="art">${icon(o.kind === "evo" ? o.id : o.icon, 44)}</div>
       <b>${o.title}</b>
       <span>${o.desc}</span>
       ${o.syn ? `<div class="syn ${o.syn.ready ? "on" : ""}">${o.syn.icons.map((k) => icon(k, 14)).join("")}<span>${o.syn.label}</span></div>` : ""}
-      ${o.lv ? `<span class="pips">${Array.from({ length: 5 }, (_, k) => `<i class="${k < o.lv! ? "on" : ""}"></i>`).join("")}</span>` : ""}
+      ${o.lv ? `<span class="pips">${Array.from({ length: 5 }, (_, k) => `<i class="${k === o.lv! - 1 && o.lv! > 1 ? "on next" : k < o.lv! ? "on" : ""}"></i>`).join("")}</span>` : ""}
     </div>`).join("");
   $("levelup").classList.remove("hidden");
   hoverCb?.(sel);

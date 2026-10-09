@@ -134,35 +134,49 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Subagente 4 · Supervivencia y Patio (`src/main.ts`, `src/world.ts`):** Pulsos deterministas de mitad de partida (`YARD_PULSES = [225, 345]`, sin alterar la secuencia de `rng()` en `sim`) con aviso de radio/banner y sobrepresión temporal de aspersores en `zoneTick(dt, c.pos, boost)`.
 - **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (build limpio en 551 ms), `npm run shots -- --only carrera,match3,partida` (31 capturas verificadas en PC y celular) y `npx graphify update .` (3050 nodos, 7439 aristas).
 
+### Ciclo #12 (2026-10-09) — Deltas Comparativos en Garaje, Transición `NV X → NV Y` en Cartas, Insignia Mini-Turbo en Carrera y Sello de Taller en Polaroid
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Garaje y Personalización (`src/menu.ts`, `src/menu.css`):** Deltas comparativos (`.cdlt.up` en verde `#22c55e`, `.cdlt.dn` en ámbar `#f59e0b`) frente al auto en uso (`CARS[save.car]`) en las barras de `Carrocería`, `Velocidad` y `Embestida` del Garaje, pie `EN USO` / `EN EL GARAJE` en vehículos propios y cabecera dinámica `${PZ[pz]} · Personalizado / De fábrica` en `Pintura`.
+  - **Subagente 2 · Cartas de Nivel (`src/ui.ts`, `src/hud.css`):** Etiquetas de transición explícita (`Arma · NUEVA`, `Pieza · NUEVA`, `NV X → NV Y`, `· ¡EVO LISTA!`, `· MÁX`), pip `.next` iluminado en dorado para el nivel que se desbloqueará y borde `.evo-rdy` cuando la mejora deja lista la evolución.
+  - **Subagente 3 · Carrera HUD (`src/kart.ts`, `src/race.css`):** Insignia reactiva `.rturbo` (`DERRAPE`, `TURBO 1`, `TURBO 2`, `TURBO`) junto al velocímetro `.rspd` y destello dorado `.final` en `.rlap` al entrar en la última vuelta.
+  - **Subagente 4 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** Sello rectangular inclinado de doble marco estilo inspección de taller (`INSPECCIÓN · VICTORIA` en `#1f6f3a` o `CHASIS SINIESTRADO` en `#9a2c2c`) en el margen inferior derecho de la foto Polaroid (`showPhoto`).
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (595 ms), `npm run shots -- --only garaje,partida,carrera` (17 capturas verificadas en PC y celular) y `npx graphify update .` (3053 nodos, 7446 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #12
+## 4. Backlog Vivo de Oportunidades — Ciclo #13
 
-### A. Área 1 · Garaje y Personalización (`src/menu.ts`, `src/menu.css`)
-1. **Valores Numéricos/Deltas en Barras del Garaje y Etiqueta de Pintura/Calco Activo:**
-   - **Qué es:** Mostrar junto a las barras de atributos del auto en `#scr-garage` el valor o comparativa contra el auto en uso, además del nombre del color/calco seleccionado en la paleta.
-   - **Valor:** Lectura técnica inmediata al comparar los 8 vehículos RC. Complejidad: Baja.
+### A. Área 1 · Supervivencia: Tarjetas de Jefes y Amenaza en Vivo (`src/ui.ts`, `src/hud.css`, `src/main.ts`)
+1. **Silueta SVG (`beastIcon`) e Indicador de Fase en la Barra de Jefe (`#boss`):**
+   - **Qué es:** Mostrar junto al nombre del jefe en `#boss` su silueta `beastIcon(kind, 18)` y una insignia de fase (`ENFURECIDO` cuando baja del 50% de vida y acelera sus ataques) con pulso en la barra.
+   - **Qué problema resuelve:** Hoy `#bossName` es solo texto plano y no avisa visualmente cuando el jefe entra en su fase de furia (<50% HP).
+   - **Valor:** Lectura táctica inmediata en duelos contra minijefes y el Rey de la Chatarra. Complejidad: Baja.
 
-### B. Área 2 · Cartas de Nivel en Supervivencia (`src/ui.ts`, `src/hud.css`)
-2. **Insignia de Transición de Nivel (`NV X → NV Y`) y Aviso de Fusión Lista en `#cards`:**
-   - **Qué es:** Añadir una pastilla superior en cada carta de mejora indicando `NUEVA`, `NV 2 → NV 3` o `NV 4 → NV 5 · ¡FUSIÓN LISTA!` con borde destacado cuando completa la pareja de evolución.
-   - **Valor:** Decisión instantánea bajo presión al subir de nivel. Complejidad: Baja.
+### B. Área 2 · Submenús de Lanzamiento (`#scr-play`, `#scr-daily`) y Chatarroteca (`src/menu.ts`, `src/menu.css`)
+2. **Resumen de Récords por Zona en Selección de Patio y Filtro Rápido en Chatarroteca:**
+   - **Qué es:** Mostrar en las tarjetas/selectores de zona de `#scr-play` una insignia si la zona ya fue conquistada (o el mejor tiempo alcanzado) y agregar en la pestaña `Logros` de la Chatarroteca un contador de progreso global (`Desbloqueados: X / Y`) en el encabezado.
+   - **Qué problema resuelve:** El jugador tiene que cambiar entre zonas o contar manualmente cuántos logros lleva completados.
+   - **Valor:** Visibilidad inmediata de metas pendientes de progresión. Complejidad: Baja.
 
-### C. Área 3 · Carrera: Medidor de Carga de Mini-Turbo y Última Vuelta (`src/kart.ts`, `src/race.css`)
-3. **Indicador de Carga de Derrape (`TURBO 1` / `TURBO 2`) junto al Velocímetro y Destello en Última Vuelta:**
-   - **Qué es:** Mostrar una barra/etiqueta reactiva de carga de mini-turbo en `.rspd` al derrapar y resaltar `.rlap` en dorado durante la vuelta final.
-   - **Valor:** Hace explícito el umbral de mini-turbo de nivel 1 y 2. Complejidad: Baja.
+### C. Área 3 · Carrera y Batalla de Globos (`src/kart.ts`, `src/race.css`)
+3. **Indicador de Peligro Entrante (`¡COHETE!`) y Podio con Diferencia contra Récord Personal:**
+   - **Qué es:** Mostrar en el HUD del corredor una alerta compacta cuando un cohete teledirigido o bomba cae cerca suyo, y en la placa `#rinfo` del podio indicar si marcó `¡NUEVO RÉCORD PERSONAL!` (o la diferencia `+X.Xs` contra su mejor marca previa).
+   - **Qué problema resuelve:** En carrera no se sabe si el tiempo final superó el récord histórico de la pista ni cuándo un cohete viene cerrando distancia por detrás.
+   - **Valor:** Más emoción competitiva y claridad en el cierre de copa/pista. Complejidad: Baja.
 
-### D. Área 4 · Polaroid de Fin de Partida (`src/replay.ts`, `src/replay.css`)
-4. **Sello de Inspección de Taller (`VICTORIA` / `SINIESTRO`) y Zona en la Foto Polaroid:**
-   - **Qué es:** Estampar en la esquina de la Polaroid un sello gráfico estilo taller con el resultado y la zona jugada.
-   - **Valor:** Mayor personalidad y valor compartible al guardar la foto. Complejidad: Baja.
+### D. Área 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`)
+4. **Indicador de Racha/Cascada (`COMBO ×N`) en el Cabezal del Gabinete y Resumen de Estrellas en Selección:**
+   - **Qué es:** Mostrar en el display superior del gabinete un sello brillante `COMBO ×N` cuando se encadenan cascadas en un mismo turno, y resaltar en los nodos del mapa de niveles aquellos que ya tienen las 3 estrellas completas con borde dorado.
+   - **Qué problema resuelve:** Las cascadas suman puntos extra pero no tienen un indicador visual dedicado en el display del cabezal.
+   - **Valor:** Refuerza el feedback arcade de las jugadas en cadena. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #11 completado, verificado y documentado (Meta de medalla en vivo y placa `#rinfo` en Carrera, insignia `NV X/10` y marcas de estrella en Junket Crush, curva perceptual de gamma/FSR en 2J y pulsos deterministas del patio en Supervivencia).
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (551 ms), 31 capturas verificadas en `.shots/actual/`, `pm2` reiniciado y grafo actualizado (3050 nodos).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno — todos los bloqueos del Ciclo #11 liberados tras finalizar y verificar la tanda.
-- **Próxima decisión pendiente:** Selección multi-opción del usuario para lanzar los subagentes en paralelo del **Ciclo #12**.
+- **Último trabajo completado:** Ciclo #12 completado, verificado y documentado (Deltas comparativos en Garaje, transición `NV X → NV Y` y `.evo-rdy` en Cartas de Nivel, insignia `.rturbo` y vuelta `.final` en Carrera, y sello de inspección de taller en la Polaroid).
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (595 ms), 17 capturas verificadas en `.shots/actual/` y grafo actualizado (3053 nodos).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (locks del Ciclo #12 liberados tras verificación).
+- **Próxima decisión pendiente:** Selección de tareas en paralelo por área para el **Ciclo #13**.
+
+

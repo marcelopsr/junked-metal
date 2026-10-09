@@ -876,7 +876,9 @@ function hud() {
     const p = dom!.querySelector(`.rp[data-p="${h.human}"]`) as HTMLElement;
     p.querySelector(".rpos b")!.textContent = String(mode === "battle" ? racers.filter((o) => !o.out).length : placeOf(h));
     p.querySelector(".rpos i")!.textContent = mode === "battle" ? "/10 en pie" : "/10";
-    p.querySelector(".rlap")!.textContent = mode === "battle" ? (h.out ? "ELIMINADO" : "●".repeat(h.balloons) + " " + Math.max(0, Math.ceil(battleT - t)) + " s") : `VUELTA ${clamp(h.lap, 1, LAPS)}/${LAPS}`;
+    const lapEl = p.querySelector(".rlap") as HTMLElement;
+    lapEl.textContent = mode === "battle" ? (h.out ? "ELIMINADO" : "●".repeat(h.balloons) + " " + Math.max(0, Math.ceil(battleT - t)) + " s") : `VUELTA ${clamp(h.lap, 1, LAPS)}/${LAPS}`;
+    lapEl.classList.toggle("final", mode === "race" && clamp(h.lap, 1, LAPS) === LAPS);
     if (mode === "race") {
       const mt = medalTimes(trackNo, raceCfg.laps, raceCfg.cc), elapsed = h.fin > 0 ? h.fin : Math.max(0, t);
       const mTag = elapsed <= mt[0] ? `<span class="rmedal m3">ORO ${fmt(mt[0])}</span>` : elapsed <= mt[1] ? `<span class="rmedal m2">PLATA ${fmt(mt[1])}</span>` : elapsed <= mt[2] ? `<span class="rmedal m1">BRONCE ${fmt(mt[2])}</span>` : "";
@@ -884,7 +886,10 @@ function hud() {
       const html = `<span>${fmt(Math.max(0, t - h.lapT))}${h.lapBest ? " · MEJOR " + fmt(h.lapBest) : ""}</span>${mTag}`;
       if (rtEl.dataset.h !== html) { rtEl.dataset.h = html; rtEl.innerHTML = html; }
     } else p.querySelector(".rtime")!.textContent = "";
-    p.querySelector(".rspd")!.textContent = `${Math.round(Math.abs(h.fs) * 3.6)} km/h`;
+    const spdEl = p.querySelector(".rspd") as HTMLElement;
+    const tTag = h.boost > 0 ? `<b class="rturbo on">TURBO</b>` : h.drifting !== 0 ? (h.charge > 1.5 ? `<b class="rturbo t2">TURBO 2</b>` : h.charge > 0.75 ? `<b class="rturbo t1">TURBO 1</b>` : `<b class="rturbo t0">DERRAPE</b>`) : "";
+    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${tTag}`;
+    if (spdEl.dataset.h !== spdHtml) { spdEl.dataset.h = spdHtml; spdEl.innerHTML = spdHtml; }
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; }
     const m = p.querySelector(".rmsg") as HTMLElement; if (t > msgT[h.human]) m.classList.remove("on");
