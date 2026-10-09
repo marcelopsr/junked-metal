@@ -209,5 +209,19 @@ Carrera (1) y Survivor en partida (2).
    - **Podio Folded (`buildPodium` en `src/kart.ts`):** Bloques de chapa plegada (`FOLD.painted` en oro `#eab308`, plata `#94a3b8` y bronce `#c27838`), tapa superior de acero (`FOLD.bare()`), faja `TRIM.hazard` en el zócalo, placas frontales `1 / 2 / 3` orientadas hacia la cámara (`yaw + Math.PI`) y foco `setLamp` apuntando al podio durante la ceremonia (`pc-carrera-podio.png`, `cel-carrera-podio.png`).
    - **Muros de ladrillo rompibles (`brickWalls` en `src/world.ts`):** Migrados a `FOLD.painted("#b45309", 0.8, 340 + (i % 4))` + `crateFold` bajo `FOLDED_SLICE`, completando el 100% de la Fase C Folded sin alterar la secuencia de `rng()`.
 
+---
 
+## 2026-10-09 · Ciclo #6 (Submenús de Lanzamiento `#scr-race`, `#scr-play` y `#scr-daily`)
 
+**Capturas verificadas:** `.shots/actual/pc-menu-jugar.png`, `.shots/actual/cel-menu-jugar.png`, `.shots/actual/pc-menu-diario.png`, `.shots/actual/cel-menu-diario.png`, `.shots/actual/pc-menu-carrera-menu.png`, `.shots/actual/cel-menu-carrera-menu.png` (`npm run shots -- --only menu`, 46 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas y verificadas en captura
+1. **Ficha de largada en Supervivencia (`#scr-play` en `index.html`, `src/menu.ts`, `src/menu.css`):**
+   - Se incorporó un panel de chapa `.briefCard.jm-panel` con la descripción de la zona activa (`#zoneDesc`), una franja destacada `.briefRec` con la mejor marca personal de la zona (`MEJOR MARCA EN PATIO: 10:12 · 420 BAJAS` o aviso sin marca) y una grilla `.briefKit` 2×2 con el equipamiento activo (`Auto`, `Piloto`, `Arma inicial` con su ícono SVG real resolviendo el arma del piloto cuando corresponde, y `Habilidad` con ícono SVG).
+2. **Pronóstico determinista del Desafío Diario (`#scr-daily` en `index.html`, `src/run.ts`, `src/menu.ts`, `src/menu.css`):**
+   - Se expuso `previewProfile(seed)` en `src/run.ts` usando un generador local aislado (sin consumir el `rng()` global) y cubierta con test unitario en `test/run.test.ts`.
+   - `#scr-daily` presenta una grilla `.briefGrid` con el escenario y clima del día (`Patio · Atardecer`), la plaga dominante (`Plaga de hormigas`), los dos minijefes apilados en `.briefMinis` con sus siluetas `beastIcon` sin truncarse (`Cortadora de césped` y `Eulalio el michu`) y el jefe final de los 10:00 (`Felipe el dogo`), seguida por `.briefKit` y el récord diario.
+3. **Grilla de 2 columnas y tarjetas de circuito con metas de medalla en Carrera (`#scr-race` en `index.html`, `src/menu.ts`, `src/menu.css`):**
+   - Los controles de `#scr-race` pasaron de una pila vertical de 11 botones a `.raceGrid` en 2 columnas (`Largada` con `uiIcon("carrera")` junto a `Batalla de globos`, `Modo`, `Cilindrada` + `Vueltas`, `Jugadores` + `Control J1`, `Volver`), adaptándose en celular (`isTouch`) ocultando el selector de jugadores y expandiendo `Control J1` a ancho completo.
+   - Debajo se sumó `#rcBrief` con las 3 tarjetas `.rcCard` (`Patio`, `Jardín`, `Garaje`), cada una mostrando la insignia de medalla (`ORO` / `PLATA` / `BRONCE` / `SIN MARCA`), el mejor tiempo personal y los tiempos objetivo (`Oro`, `Plata`, `Bronce`) calculados dinámicamente con `medalTimes(i, c.laps, c.cc)` según las vueltas y cilindrada elegidas. Un clic sobre cualquier tarjeta selecciona esa pista en modo *Carrera suelta*.
+   - El pie de controles `#fe #rcHelp` se enmarcó sobre una franja de chapa oscura (`rgba(11, 15, 20, .88)`) sin sombra de texto múltiple, garantizando lectura limpia sobre la madera clara del escritorio.

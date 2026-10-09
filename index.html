@@ -156,13 +156,17 @@
     <section id="scr-play" class="scr">
       <div class="otitle">Supervivencia</div>
       <div class="foot">Diez minutos contra la plaga: esquivar, mejorar el auto y llegar al final.</div>
+      <div class="briefCard jm-panel">
+        <div class="foot" id="zoneDesc"></div>
+        <div class="briefRec" id="playRec"></div>
+        <div id="playKit"></div>
+      </div>
       <nav class="list">
         <button data-act="playgo" class="primary">Largar</button>
         <button data-act="zone" id="zoneBtn"><span class="bt"></span></button>
         <button data-act="curse" id="curseBtn" class="hidden"></button><!-- maldiciones ocultas por ahora (decisión del usuario 2026-10-04) -->
         <button data-act="back">Volver</button>
       </nav>
-      <div class="foot" id="zoneDesc"></div>
     </section>
 
     <section id="scr-modes" class="scr">
@@ -197,19 +201,20 @@
     <section id="scr-race" class="scr">
       <div class="otitle">Carrera</div>
       <div class="foot">Circuito en el patio · 10 corredores · objetos, derrape y mini-turbo</div>
-      <nav class="list">
+      <nav class="list raceGrid">
         <button data-act="race" class="primary">Largada</button>
         <button data-act="battle">Batalla de globos</button>
+        <button data-rc="cup" id="rcCup"></button>
+        <button data-rc="track" id="rcTrack"></button>
+        <button data-rc="cc" id="rcCC"></button>
+        <button data-rc="laps" id="rcLaps"></button>
         <button data-rc="players" id="rcPlayers"></button>
         <button data-rc="p1" id="rcP1"></button>
         <button data-rc="p2" id="rcP2"></button>
         <button data-rc="car2" id="rcCar2"></button>
-        <button data-rc="cc" id="rcCC"></button>
-        <button data-rc="laps" id="rcLaps"></button>
-        <button data-rc="cup" id="rcCup"></button>
-        <button data-rc="track" id="rcTrack"></button>
-        <button data-act="back">Volver</button>
+        <button data-act="back" class="wide">Volver</button>
       </nav>
+      <div id="rcBrief" class="rcBrief"></div>
       <div class="foot" id="rcHelp"></div>
     </section>
 
@@ -255,9 +260,9 @@
 
     <section id="scr-daily" class="scr">
       <div class="otitle">Desafío diario</div>
-      <div class="roll">
+      <div class="roll briefCard jm-panel">
         <p>Una partida especial que cambia cada día. Se juega en el Patio y sin maldiciones.</p>
-        <p>El mejor tiempo del día queda como récord. Mañana, otro desafío y otra oportunidad de quedar mal.</p>
+        <div id="dailyBrief"></div>
         <p id="dailyInfo" class="dim"></p>
       </div>
       <div class="btns"><button data-act="back">Rechazar</button><button data-act="daily" class="primary">Aceptar</button></div>

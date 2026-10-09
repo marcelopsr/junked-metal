@@ -14,10 +14,10 @@ import { engineTest, initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { setDrawDist, ZONES, type ZoneId } from "./world";
 import { camCycle, isTouch, padsConnected } from "./input";
-import { bestRace, MEDAL, medalOf, raceCfg, saveRaceCfg, TRACKS, trackName, type RaceCtl } from "./kart";
+import { bestRace, MEDAL, medalOf, medalTimes, raceCfg, saveRaceCfg, TRACKS, trackName, type RaceCtl } from "./kart";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, abilCd, abilK, CURSES, type AbilityId, type CurseId } from "./abilities";
-import { FINALS, type Elite } from "./run";
+import { FINALS, previewProfile, type Elite } from "./run";
 import { CAM_MODES, CAM_NAMES, parseSave } from "./savefmt";
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -149,13 +149,24 @@ function renderRace() {
   $("rcCar2").textContent = `Auto J2 · ${CARS[c.car2]?.name ?? c.car2}`;
   for (const id of ["rcP2", "rcCar2"]) $(id).classList.toggle("hidden", c.players === 1);
   $("rcPlayers").classList.toggle("hidden", isTouch);
+  $("rcP1").classList.toggle("wide", isTouch);
   $("rcCC").textContent = `Cilindrada · ${c.cc}cc ${c.cc === 50 ? "(fácil)" : c.cc === 100 ? "(medio)" : "(difícil)"}`;
   $("rcLaps").textContent = `Vueltas · ${c.laps}`;
   $("rcCup").textContent = c.cup ? "Modo · Copa de 3 pistas" : "Modo · Carrera suelta";
+  $("rcCup").classList.toggle("wide", c.cup);
   $("rcTrack").textContent = `Pista · ${trackName(c.track)}`;
   $("rcTrack").classList.toggle("hidden", c.cup);
-  const rec = TRACKS.map((tk, i) => { const b = bestRace(i); return `${tk.zone === "patio" ? "Patio" : tk.zone === "jardin" ? "Jardín" : "Garaje"} ${b ? fmt(b.t) + " " + (MEDAL[medalOf(i, c.laps, b.cc, b.t)] || "") : "—"}`; }).join(" · ");
-  $("rcHelp").textContent = `Récords: ${rec}. J1: auto del Garaje (${CARS[save.car].name}). Joysticks conectados: ${padsConnected()}. ${raceKeys("kb1")} ${raceKeys("kb2")} Se cambian en Configuración → Controles.`;
+  $("rcBrief").innerHTML = TRACKS.map((tk, i) => {
+    const zName = tk.zone === "patio" ? "Patio" : tk.zone === "jardin" ? "Jardín" : "Garaje";
+    const b = bestRace(i), m = b ? medalOf(i, c.laps, b.cc, b.t) : 0, [g, s, br] = medalTimes(i, c.laps, c.cc);
+    return `<div class="carc rcCard ${!c.cup && c.track === i ? "sel" : ""}" data-rctrack="${i}">`
+      + `<div class="rcHead"><b>${zName}</b><span class="rmedal m${m}">${m ? MEDAL[m] : "SIN MARCA"}</span><em>${b ? fmt(b.t) : "—"}</em></div>`
+      + `<div class="rcGoals"><span class="mg">Oro ${fmt(g)}</span><span class="ms">Plata ${fmt(s)}</span><span class="mb">Bronce ${fmt(br)}</span></div>`
+      + `</div>`;
+  }).join("");
+  const k1 = isTouch ? "Control táctil" : c.p1 === "kbd" ? raceKeys("kb1") : c.p1 === "kbd2" ? raceKeys("kb2") : `${ctl[c.p1]} (${padsConnected()} conectado${padsConnected() === 1 ? "" : "s"})`;
+  const k2Txt = c.players === 2 ? ` · J2 (${CARS[c.car2]?.name ?? c.car2}): ${c.p2 === "kbd" ? raceKeys("kb1") : c.p2 === "kbd2" ? raceKeys("kb2") : ctl[c.p2]}` : "";
+  $("rcHelp").textContent = `J1 (${CARS[save.car].name}) · ${k1}${k2Txt}`;
 }
 
 // ---------- Ajustes ----------
@@ -205,7 +216,7 @@ function show() {
   if (s === "shop") renderShop();
   if (s === "main") renderMain();
   if (s === "play") renderPlay();
-  if (s === "daily") { const b = save.daily.day === today() ? save.daily.best : 0; $("dailyInfo").textContent = b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy."; }
+  if (s === "daily") renderDaily();
   if (s === "race") renderRace();
   if (s === "bestiary") renderBestiary();
   if (s === "beast") renderBeast();
@@ -381,13 +392,36 @@ function renderMain() {
   if (save.endless) $("mainInfo").textContent += ` · sin fin +${fmt(save.endless)}`;
 }
 
-// Supervivencia: la zona se elige acá, dentro del flujo de Jugar (el menú principal ya no la muestra)
+// Supervivencia y Desafío diario: ficha de largada con el equipo actual, récord de zona y condiciones de la semilla del día
+function kitStripHtml() {
+  const own = PILOTS[save.pilot].start, w = startPick() === "gomitas" ? own : startPick(), ab = save.ability;
+  return `<div class="briefKit">`
+    + `<div><span>Auto</span><b>${CARS[save.car].name}</b></div>`
+    + `<div><span>Piloto</span><b>${PILOTS[save.pilot].name}</b></div>`
+    + `<div><span>Arma inicial</span><b class="wi">${icon(w, 16)}${WEAPONS[w].name}</b></div>`
+    + `<div><span>Habilidad</span><b class="wi">${icon(ABIL_ICON[ab], 16)}${ABILITIES[ab].name}</b></div>`
+    + `</div>`;
+}
 function renderPlay() {
   if (!owns("zone:" + save.zone)) save.zone = "patio"; // guardado importado con una zona sin comprar
-  const z = ZONES[save.zone];
+  const z = ZONES[save.zone], zr = save.stats.zone[save.zone];
   $("zoneBtn").querySelector(".bt")!.textContent = `Zona · ${z.name}`;
   $("zoneDesc").textContent = z.desc;
+  $("playRec").textContent = zr ? `Mejor marca en ${z.short}: ${fmt(zr.t)} · ${zr.kills} ${zr.kills === 1 ? "baja" : "bajas"}` : `Sin marcas registradas en ${z.short} todavía.`;
+  $("playKit").innerHTML = kitStripHtml();
   $("curseBtn").textContent = curseTxt();
+}
+function renderDaily() {
+  const b = save.daily.day === today() ? save.daily.best : 0;
+  const seed = Number(new URLSearchParams(location.search).get("seed")) || dailySeed();
+  const p = previewProfile(seed);
+  $("dailyBrief").innerHTML = `<div class="briefGrid">`
+    + `<div><span>Escenario</span><b>Patio · ${p.climate.name}${Number.isFinite(p.rainAt) ? " (Lluvia)" : ""}</b></div>`
+    + `<div><span>Plaga dominante</span><b>${p.plague.name}</b></div>`
+    + `<div><span>Minijefes</span><b class="briefMinis"><span class="wi">${beastIcon(p.minis[0], 16)}${DEF[p.minis[0]].name}</span><span class="wi">${beastIcon(p.minis[1], 16)}${DEF[p.minis[1]].name}</span></b></div>`
+    + `<div><span>Jefe final (10:00)</span><b class="wi">${beastIcon(p.final, 18)}${DEF[p.final].name}</b></div>`
+    + `</div>` + kitStripHtml();
+  $("dailyInfo").textContent = b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy. El mejor tiempo del día queda como récord.";
 }
 
 // ---------- Taller y garaje ----------
@@ -1120,7 +1154,7 @@ export function initMenu(a: Api) {
   // Íconos de la familia de interfaz en los botones fijos (solo presentación: no cambia texto ni acción)
   for (const b of document.querySelectorAll<HTMLButtonElement>("#fe button[data-go], #fe button[data-act]")) {
     const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k] ?? (k === "playmenu" || k === "playgo" ? "jugar" : undefined);
-    if (id && !b.classList.contains("lnk") && (!b.classList.contains("primary") || /^(play|playmenu|playgo|resume)$/.test(k))) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
+    if (id && !b.classList.contains("lnk") && (!b.classList.contains("primary") || /^(play|playmenu|playgo|resume|race|daily)$/.test(k))) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
   }
   $("tPause").innerHTML = uiIcon("pausa", 26);
   applySettings();
@@ -1134,7 +1168,7 @@ export function initMenu(a: Api) {
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-act],[data-k],[data-sw],[data-pdef],[data-pz],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
+    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-rctrack],[data-act],[data-k],[data-sw],[data-pdef],[data-pz],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
     if (d?.act === "askyes") { const f = askFn; askClose(); SFX.accept(); f?.(); return; }
     if (d?.act === "askno") { askClose(); return; }
@@ -1146,6 +1180,7 @@ export function initMenu(a: Api) {
     SFX.accept();
     if (d.go) go(d.go as Scr);
     else if (d.rc) { cycleRace(d.rc); renderRace(); }
+    else if (d.rctrack !== undefined) { raceCfg.cup = false; raceCfg.track = +d.rctrack as 0 | 1 | 2; saveRaceCfg(); renderRace(); }
     else if (d.act === "race") api.race();
     else if (d.act === "battle") api.battle();
     else if (d.act === "duelgo") api.duel();

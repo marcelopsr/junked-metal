@@ -86,18 +86,30 @@ const pickElites = (seed: number): [number, Elite][] => {
   return Array.from({ length: n }, (_, i) => [BAL.ritmo.elite_desde_s + span * (i + 0.15 + 0.7 * frac(seed * (0.3247 + 0.1 * i))), frac(seed * (0.8191 + 0.07 * i)) < 0.5 ? "rapida" : "blindada"]);
 };
 
-export function makeProfile(seed: number): Profile {
-  const pick = <T>(a: T[]) => a[Math.floor(rng() * a.length)];
+export function makeProfile(seed: number, r: () => number = rng): Profile {
+  const pick = <T>(a: T[]) => a[Math.floor(r() * a.length)];
   return {
     seed,
     climate: pick(NIGHTS),
     plague: pick(PLAGUES),
-    minis: pickMinis(rng()),
-    swarmEvery: BAL.ritmo.enjambre_cada_min + rng() * BAL.ritmo.enjambre_cada_rango,
-    ballEvery: BAL.ritmo.pelota_cada_min + rng() * BAL.ritmo.pelota_cada_rango,
-    chestEvery: BAL.ritmo.cofre_cada_min + rng() * BAL.ritmo.cofre_cada_rango,
+    minis: pickMinis(r()),
+    swarmEvery: BAL.ritmo.enjambre_cada_min + r() * BAL.ritmo.enjambre_cada_rango,
+    ballEvery: BAL.ritmo.pelota_cada_min + r() * BAL.ritmo.pelota_cada_rango,
+    chestEvery: BAL.ritmo.cofre_cada_min + r() * BAL.ritmo.cofre_cada_rango,
     rainAt: rainAt(seed),
     final: pickFinal(seed),
     elites: pickElites(seed),
   };
 }
+
+/** Calcula el perfil de una semilla sin tocar el estado global de `rng()`. */
+export function previewProfile(seed: number): Profile {
+  let s = seed >>> 0 || 1;
+  return makeProfile(seed, () => {
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  });
+}
+

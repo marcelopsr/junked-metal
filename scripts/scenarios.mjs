@@ -115,6 +115,22 @@ export const sessions = [
       await p.waitForTimeout(300);
     } },
     { id: "creditos", act: view("credits") },
+    { id: "jugar", perf: false, act: async (p) => {
+      await p.evaluate(() => window.__cfg({ unlocked: ["zone:jardin"], stats: { runs: 4, wins: 1, time: 1800, dist: 5000, dmg: {}, zone: { patio: { t: 612, kills: 420 } } } }));
+      await toMain(p);
+      await p.dispatchEvent('#scr-main [data-act="playmenu"]', "click");
+      await wait(p, () => document.querySelector("#scr-play.on"));
+      await p.waitForTimeout(150);
+    } },
+    { id: "diario", perf: false, act: view("daily") },
+    { id: "carrera-menu", perf: false, act: async (p) => {
+      await toMain(p);
+      await p.dispatchEvent('#scr-main [data-go="modes"]', "click");
+      await wait(p, () => document.querySelector("#scr-modes.on"));
+      await p.dispatchEvent('#scr-modes [data-go="race"]', "click");
+      await wait(p, () => document.querySelector("#scr-race.on"));
+      await p.waitForTimeout(150);
+    } },
   ] },
   // Taller y garaje con compras: __cfg escribe el guardado en memoria (sin persistir) y la pantalla se vuelve a abrir para redibujarla
   { id: "taller", query: "?mute&seed=3", shots: [

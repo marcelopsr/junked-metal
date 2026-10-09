@@ -1,7 +1,7 @@
 // Lógica de partida sin motor: azar con semilla (rng.ts) y perfil de cada partida (run.ts). Misma semilla = misma partida.
 import { describe, expect, it } from "vitest";
 import { rng, seedRng } from "../src/rng";
-import { CLIMATES, FINALS, makeProfile, nightfall } from "../src/run";
+import { CLIMATES, FINALS, makeProfile, nightfall, previewProfile } from "../src/run";
 
 const profile = (seed: number) => { seedRng(seed); return makeProfile(seed); };
 
@@ -18,6 +18,15 @@ describe("rng", () => {
 describe("makeProfile", () => {
   it("es determinista por semilla", () => {
     for (const s of [1, 2, 3, 99, 123456]) expect(profile(s)).toEqual(profile(s));
+  });
+  it("previewProfile coincide con makeProfile sin avanzar el rng global", () => {
+    seedRng(42);
+    const expectedNext = rng();
+    seedRng(42);
+    for (const s of [1, 3, 20261009]) expect(previewProfile(s)).toEqual(profile(s));
+    seedRng(42);
+    previewProfile(20261009);
+    expect(rng()).toBe(expectedNext);
   });
   it("siempre trae clima, jefe final y minijefes válidos", () => {
     for (let s = 1; s <= 200; s++) {
