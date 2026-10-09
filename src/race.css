@@ -34,6 +34,8 @@
 #rres { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 14px; padding-right: 3vw; background: linear-gradient(90deg, transparent 30%, rgba(8, 16, 26, .82) 70%); pointer-events: auto; }
 #rres.hidden, #rpause.hidden { display: none; }
 #rpause { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: rgba(8, 16, 26, .75); backdrop-filter: blur(8px); pointer-events: auto; }
+#rpause .rbox { background: rgba(11, 15, 20, .94); border: 2px solid #b5651d; border-radius: 8px; padding: 22px 28px; display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 12px 32px rgba(0, 0, 0, .65); }
+#rpause .rsub { font: 600 16px/1.2 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; color: #ffd84d; text-transform: uppercase; }
 #rpause .rtitle { font: 700 40px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .1em; } #rpause nav { display: flex; gap: 10px; }
 #rres .rtitle { font: 700 32px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .08em; }
 #rres table { border-collapse: separate; border-spacing: 0 4px; min-width: min(560px, 92vw); font: 600 20px/1 "Rajdhani", system-ui, sans-serif; }

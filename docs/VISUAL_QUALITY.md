@@ -345,5 +345,18 @@ Carrera (1) y Survivor en partida (2).
 4. **Umbrales de puntaje (`★ / ★★ / ★★★`) en el inicio de nivel y puntos faltantes en Victoria de Junket Crush (Subagente 4 · `src/match3.ts`, `src/match3.css`):**
    - `showIntro()` detalla `Metas: ★ X · ★★ Y · ★★★ Z` (`pc-match3-objetivos.png`) y `showWin()` informa `Siguiente estrella (N★): X pts (faltaron Y)` o `¡Nivel perfeccionado con 3 estrellas!` (`pc-match3-victoria.png`, `cel-match3-victoria.png`).
 
+---
 
+## 2026-10-09 · Ciclo #15 (Identidad de Build en Pausa/Resultados, Placas de Telemetría en `#combo`/`#drv`, Tarjeta `.rbox` en Pausa de Carrera y Contexto en Pausa/Derrota de Junket Crush)
 
+**Capturas verificadas:** `.shots/actual/pc-partida-pausa.png`, `.shots/actual/pc-partida-resultados.png`, `.shots/actual/pc-match3-pausa.png`, `.shots/actual/pc-match3-derrota.png`, `.shots/actual/cel-match3-pausa.png` (`npm run shots -- --only partida,carrera,match3`, 31 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Identidad completa de la build en Pausa (`#scr-pause`) y Resultados (`#scr-over`) de Supervivencia (Subagente 1 · `src/menu.ts`):**
+   - `openPause()` y `openOver()` anteponen `Auto · Piloto · Habilidad · Zona` al pie de telemetría (`#pauseSeed` y `#overSeed`), permitiendo identificar de un vistazo con qué combinación se logró una partida al pausar o compartir captura (`pc-partida-pausa.png`, `pc-partida-resultados.png`).
+2. **Placas oscuras de telemetría en Racha (`#combo`) y Manejo (`#drv`) con etiqueta explícita `XP ×N` (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - `#combo` y `#drv` se enmarcan sobre placa oscura translúcida (`rgba(11, 15, 20, .74)`) con borde izquierdo de estado (`#7dffb0` / `#ffc24d` / `var(--sig)`), garantizando contraste sobre cualquier terreno del patio, y `hudDrive()` explicita `XP ×N` (`pc-partida-pausa.png`).
+3. **Tarjeta de chapa oscura `.rbox` con telemetría del circuito en la pausa de Carrera (`#rpause`) (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - `#rpause` envuelve su contenido en `.rbox` y actualiza `.rsub` en vivo al pausar con el circuito actual, modalidad (`Copa (X/3)`, `Carrera` o `Batalla de globos`), cilindrada (`100cc/150cc/200cc`) y vuelta o tiempo restante.
+4. **Nivel, puntaje y movimientos en `#m3-pause` y puntaje alcanzado en `showLose()` de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - Al pausar en el gabinete, `#m3-pause` muestra `PAUSA · NV X` y `<Nombre> · Puntaje: X · Movimientos: Y` (`pc-match3-pausa.png`), y al quedarse sin movimientos `showLose()` informa `Puntaje alcanzado: X pts · Récord: Y pts` (`pc-match3-derrota.png`).

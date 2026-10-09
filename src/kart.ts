@@ -447,7 +447,7 @@ function ensureDom() {
     <div id="rflash"></div>
     <div id="rcount"></div>
     <div id="rtab"></div>
-    <div id="rpause" class="hidden"><div class="rtitle">PAUSA</div><nav><button data-r="resume" class="primary">Seguir</button><button data-r="restart">Reiniciar</button><button data-r="exit">Salir al menú</button></nav></div>
+    <div id="rpause" class="rover hidden"><div class="rbox"><div class="rtitle">PAUSA</div><div class="rsub"></div><nav><button data-r="resume" class="primary">Seguir</button><button data-r="restart">Reiniciar</button><button data-r="exit">Salir al menú</button></nav></div></div>
     <div id="rres" class="hidden"><div class="rtitle"></div><table></table><div id="rinfo"></div><nav><button data-r="next" class="primary">Siguiente carrera</button><button data-r="again">Revancha</button><button data-r="exit">Menú</button></nav></div>`;
   document.body.appendChild(dom);
   mapCv = $r("#rmap") as HTMLCanvasElement; mapCtx = mapCv.getContext("2d")!;
@@ -1000,7 +1000,12 @@ export const raceClick = () => { if (resultsOn || paused) (document.activeElemen
 function setPause(on: boolean) {
   paused = on; D.scene.physicsEnabled = !on;
   $r("#rpause").classList.toggle("hidden", !on);
-  if (on) { engineStop(); ($r("#rpause button") as HTMLElement).focus(); }
+  if (on) {
+    $r("#rpause .rsub").textContent = mode === "battle"
+      ? `Batalla de globos · Patio · ${Math.max(0, Math.ceil(battleT - t))} s restantes`
+      : `${TRACKS[trackNo].name} · ${raceCfg.cup ? `Copa (${raceNo}/3)` : "Carrera"} · ${raceCfg.cc}cc · Vuelta ${clamp(humans[0]?.lap ?? 1, 1, LAPS)}/${LAPS}`;
+    engineStop(); ($r("#rpause button") as HTMLElement).focus();
+  }
 }
 export function raceTick(dt: number) {
   if (!active || paused) return;

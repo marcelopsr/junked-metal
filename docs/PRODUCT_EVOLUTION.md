@@ -162,45 +162,48 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`):** Línea `.m3-tiers` con los 3 umbrales de puntaje (`Metas: ★ X · ★★ Y · ★★★ Z`) en `showIntro()` e indicación de puntos faltantes para la siguiente estrella (`Siguiente estrella (N★): X pts (faltaron Y)`) en `showWin()`.
 - **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (551 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3059 nodos, 7467 aristas).
 
+### Ciclo #15 (2026-10-09) — Identidad de Build en Pausa/Resultados, Placas `#combo`/`#drv` con `XP ×N`, Pausa de Carrera con Telemetría y Pausa/Derrota en Junket Crush
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Supervivencia: Pausa y Resultados (`src/menu.ts`, `src/menu.css`):** Inclusión de `Auto · Piloto · Habilidad · Zona` al inicio de `#pauseSeed` (`openPause`) y `#overSeed` (`openOver`) junto al clima, plaga y semilla.
+  - **Subagente 2 · HUD de Supervivencia: Racha y Manejo (`src/ui.ts`, `src/hud.css`):** Placas de telemetría oscuras con borde izquierdo de estado para `#combo` y `#drv`, ajuste responsive en móvil y etiqueta explícita `XP ×N` en `hudDrive()`.
+  - **Subagente 3 · Carrera: Pausa con Telemetría (`src/kart.ts`, `src/race.css`):** Tarjeta de chapa oscura `.rbox` en `#rpause` con línea `.rsub` en vivo detallando circuito, modalidad (`Copa (X/3)` / `Carrera` / `Batalla de globos`), cilindrada y vuelta o tiempo restante.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`):** Encabezado `PAUSA · NV X` con nombre del nivel, puntaje actual y movimientos restantes en `#m3-pause`, más resumen `Puntaje alcanzado: X pts · Récord: Y pts` en `showLose()`.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (573 ms), `npm run shots -- --only partida,carrera,match3` (31 capturas verificadas en PC y celular) y `npx graphify update .` (3062 nodos, 7475 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #15
+## 4. Backlog Vivo de Oportunidades — Ciclo #16
 
-### A. Área 1 · Supervivencia: Identidad de Build en Pausa y Resultados (`src/menu.ts`, `src/menu.css`)
-1. **Resumen de Equipamiento (`Auto · Piloto · Habilidad`) en Pausa (`#scr-pause`) y Resultados (`#scr-over`):**
-   - **Qué es:** Mostrar en el subtítulo/encabezado de `#scr-pause` y `#scr-over` una tira compacta con el auto, piloto y habilidad usados en la partida.
-   - **Qué problema resuelve:** Al ver una captura de `#scr-over` o pausar la partida no se identifica con qué vehículo y piloto se logró esa marca.
-   - **Valor:** Contexto completo de la build en pausa y al compartir resultados. Complejidad: Baja.
+### A. Área 1 · Taller: Vista Previa Numérica en Tarjeta y Contador de Comprables (`src/menu.ts`, `src/menu.css`)
+1. **Transición Numérica (`Antes → Después`) Visible en Cada Tarjeta del Taller y Contador `Comprables ahora (N)`:**
+   - **Qué es:** Mostrar la línea `i.fx` (`<div class="sfx">${i.fx}</div>`, ej. `Carrocería +0 → +20` o `Enfriamiento 14 s → 13 s`) directamente dentro de cada tarjeta `.carc.perk` del Taller (sin obligar a enfocar una por una para leer `#sinfo`), y añadir en el filtro `Comprables ahora` el contador `(N)` de mejoras que alcanzan con los tornillos actuales en la pestaña activa.
+   - **Qué problema resuelve:** Hoy en el Taller el efecto numérico exacto (`i.fx`) solo aparece abajo del todo en `#sinfo` al hacer foco sobre una tarjeta, lo que obliga a recorrerlas una por una (especialmente incómodo en táctil).
+   - **Valor:** Lectura inmediata de retorno de inversión por tarjeta y visibilidad instantánea de cuántas compras están al alcance. Complejidad: Baja.
 
-### B. Área 2 · HUD de Supervivencia: Placas de Racha (`#combo`) y Manejo (`#drv`) (`src/ui.ts`, `src/hud.css`)
-2. **Placa de Telemetría Oscura y Etiqueta `XP ×N` en los Medidores de Racha (`#combo`) y Manejo (`#drv`):**
-   - **Qué es:** Enmarcar `#combo` y `#drv` con una pastilla de telemetría translúcida de borde izquierdo coloreado y explicitar `XP ×1.2` en `#drv`.
-   - **Qué problema resuelve:** En el patio diurno el texto suelto de `#combo` y `#drv` pierde contraste sobre el pasto claro o ladrillo, y no explica que `MANEJO` multiplica la XP.
-   - **Valor:** Legibilidad garantizada sobre cualquier terreno y claridad mecánica. Complejidad: Baja.
+### B. Área 2 · HUD de Supervivencia: Estado `SIN FIN` en el Cronómetro y Destello de Velocidad Punta en `#spd` (`src/ui.ts`, `src/hud.css`)
+2. **Insignia/Estado `.endless` en `#clock` al Superar los 10:00 y Resaltado de Velocidad Máxima (`.top`) en `#spd`:**
+   - **Qué es:** Al alcanzar `d.time >= 600` (10:00, Modo Sin Fin), activar la clase `.endless` en `#clock` (borde e indicador dorado en el cronómetro) y en `#spd` activar `.top` cuando `s >= 0.9` (90%+ de la velocidad máxima del auto) iluminando el arco y los `km/h` en ámbar.
+   - **Qué problema resuelve:** El reloj `#clock` luce idéntico antes y después de cumplir los 10 minutos de supervivencia, y el velocímetro analógico no acusa visualmente cuando el vehículo va a fondo.
+   - **Valor:** Feedback visual claro de victoria/Modo Sin Fin en el reloj y sensación cinética en el velocímetro. Complejidad: Baja.
 
-### C. Área 3 · Carrera: Tarjeta de Pausa (`#rpause`) con Telemetría del Circuito (`src/kart.ts`, `src/race.css`)
-3. **Panel de Chapa Oscura e Información de Pista/Cilindrada en la Pausa de Carrera (`#rpause`):**
-   - **Qué es:** Enmarcar el contenido de `#rpause` en una placa de chapa oscura con borde superior naranja/dorado y mostrar subtítulo con la pista actual, vuelta, cilindrada (`100cc/150cc/200cc`) y modalidad (`Copa` / `Carrera` / `Batalla`).
-   - **Qué problema resuelve:** Hoy `#rpause` solo muestra el título `PAUSA` y tres botones sueltos sobre un desenfoque sin contexto del circuito en curso.
-   - **Valor:** Unifica la estética de pausa de Carrera con el resto de Junked Metal. Complejidad: Baja.
+### C. Área 3 · Carrera HUD: Color de Podio en `.rpos` y Caja de Objeto `.ritem.full` (`src/kart.ts`, `src/race.css`)
+3. **Jerarquía Cromática de Podio (`1º` Oro, `2º` Plata, `3º` Bronce) en `.rpos` y Borde Activo en `.ritem.full`:**
+   - **Qué es:** Asignar `data-pl="${Math.min(4, place)}"` a `.rpos` en modo Carrera para colorear el número de puesto según medalla (`1º` oro `#ffd84d`, `2º` plata `#d8e2ef`, `3º` bronce `#e09145`, `4º+` blanco `#f4f7fa`) y activar la clase `.full` en `.ritem` cuando el corredor lleva un objeto listo para usar (borde ámbar e iluminación sutil).
+   - **Qué problema resuelve:** Hoy `.rpos b` pinta todos los puestos del 1º al 10º con el mismo amarillo `#ffd84d`, diluyendo la recompensa visual de entrar en puestos de podio, y `.ritem` tiene el mismo borde apagado esté vacío o cargado.
+   - **Valor:** Lectura periférica instantánea de si se va en puesto de medalla y de si se lleva un ítem armado. Complejidad: Baja.
 
-### D. Área 4 · Gabinete Junket Crush: Contexto en Pausa (`#m3-pause`) y Puntaje en Derrota (`src/match3.ts`, `src/match3.css`)
-4. **Nombre de Nivel y Puntaje Actual en `#m3-pause` y Resumen de Puntaje en `showLose()`:**
-   - **Qué es:** Actualizar el encabezado de `#m3-pause` al pausar para mostrar `PAUSA · NIVEL X (<Nombre>)` y el puntaje acumulado, e incluir en `showLose()` el puntaje alcanzado junto a los objetivos pendientes.
-   - **Qué problema resuelve:** Al pausar o perder en Junket Crush no se muestra el puntaje logrado en el intento actual.
-   - **Valor:** Mejor feedback de progreso en cada intento del gabinete. Complejidad: Baja.
+### D. Área 4 · Gabinete Junket Crush: Telemetría del Nivel Seleccionado en el Cabezal del Mapa (`src/match3.ts`)
+4. **Vista Previa en Vivo del Nivel Seleccionado (`NV XX`, Nombre, Movimientos, Récord y Estrellas) en el Display Superior del Mapa:**
+   - **Qué es:** En `paintDisplay()` cuando `mode === "map"`, reemplazar el texto fijo `"FICHAS ∞ / JUNKET CRUSH"` por la telemetría en vivo del nodo seleccionado `LEVELS[mapSel]`: número `NV` en el display de 7 segmentos izquierdo, nombre del nivel (e insignia `JEFE` si aplica), movimientos disponibles, récord de puntos y sus 3 estrellas en el panel derecho.
+   - **Qué problema resuelve:** Mientras se recorre el mapa de La Ruta del Desguace con el joystick o teclado, el display superior del gabinete muestra un texto estático sin informar qué nivel está seleccionado ni cuál es su récord.
+   - **Valor:** Conecta el mapa con el cabezal electrónico del gabinete arcade y permite consultar cada nivel al instante al mover el cursor. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #14 completado, verificado y documentado (Garaje unificado en `Piloto`/`Habilidad`/`Arma`, distancia `Xm` en `#arrows`, telemetría `#rtab` en Carrera/Batalla y umbrales de estrellas en Junket Crush).
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (551 ms), 33 capturas verificadas en `.shots/actual/` y grafo actualizado (3059 nodos).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (locks del Ciclo #14 liberados tras verificación).
-- **Próxima decisión pendiente:** Selección de tareas en paralelo por área para el **Ciclo #15**.
-
-
-
-
-
+- **Último trabajo completado:** Ciclo #15 completado, verificado y subido a `origin/master`.
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (573 ms), 31 capturas verificadas en `.shots/actual/` y grafo actualizado (3062 nodos, 7475 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los subagentes del Ciclo #15 finalizaron y liberaron sus archivos).
+- **Próxima decisión pendiente:** Selección del usuario mediante `ask_question` (multi-selección) de las áreas a ejecutar en paralelo por subagentes en el **Ciclo #16**.
 

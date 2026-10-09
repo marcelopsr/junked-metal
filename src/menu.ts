@@ -1162,7 +1162,7 @@ export function openPause(k: Kit) {
   }).join("") || "<li><span>Ninguna</span></li>";
   $("kitS").innerHTML = k.stats.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("kitR").innerHTML = k.run.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
-  $("pauseSeed").textContent = k.seed;
+  $("pauseSeed").textContent = `${CARS[save.car].name} · ${PILOTS[save.pilot].name} · ${ABILITIES[save.ability].name} · ${ZONES[save.zone].short} · ${k.seed}`;
   reset("pause");
 }
 
@@ -1204,7 +1204,7 @@ export function openOver(r: { win: boolean; why: string; time: number; kills: nu
     return DEF[id as Kind]?.name ?? id[0].toUpperCase() + id.slice(1);
   };
   $("overHurt").innerHTML = hurt.map(([id, v]) => `<li><span class="wi">${hurtIco(id)}<em>${hurtName(id)}</em></span>${bar(v, hurtTop)}<b>${Math.round(v)}</b></li>`).join("") || "<li><span>Sin daño recibido</span></li>";
-  $("overSeed").textContent = r.seed;
+  $("overSeed").textContent = `${CARS[save.car].name} · ${PILOTS[save.pilot].name} · ${ABILITIES[save.ability].name} · ${ZONES[save.zone].short} · ${r.seed}`;
   reset("over");
 }
 

@@ -249,7 +249,7 @@ let drvT = 0;
 export function hudDrive(mul: number, trick?: string) {
   const show = mul > 1.001;
   if (ch("drvOn", +show)) $("drv").classList.toggle("hidden", !show);
-  txt("drvN", `x${mul.toFixed(1)}`);
+  txt("drvN", `XP ×${mul.toFixed(1)}`);
   if (ch("drvMax", +(mul >= 2))) $("drv").classList.toggle("max", mul >= 2);
   if (trick) { drvT = 1.2; $("drvLbl").textContent = trick; const d = $("drv"); d.classList.remove("pop"); void d.offsetWidth; d.classList.add("pop"); }
 }

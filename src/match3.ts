@@ -531,6 +531,7 @@ function showLose() {
   const miss = st.lv.goals.filter((g) => goalLeft(g) > 0).map((g) => `${goalLabel(g).toLowerCase()} (faltaron ${goalLeft(g)})`).join(", ");
   showPanel(`<p class="m3-kicker">Nivel ${lvIdx + 1} · ${st.lv.name}</p><p class="m3-title bad">SIN MOVIMIENTOS</p>
     <p class="m3-sub">Quedó pendiente: ${miss}.</p>
+    <p class="m3-tiers">Puntaje alcanzado: ${st.got.score} pts${prog().best[st.lv.id] ? ` · Récord: ${prog().best[st.lv.id]} pts` : ""}</p>
     <div class="m3-goals-vis">${goalsHtml(true)}</div>
     <div class="m3-btns"><button type="button" class="primary" id="m3-retry">Reintentar</button><button type="button" id="m3-map">Mapa</button></div>`, "m3-retry");
   $m("m3-retry").onclick = () => startLevel(lvIdx);
@@ -622,6 +623,10 @@ export function match3PauseToggle() {
   if (!active || mode !== "level" || !st || st.phase !== "play" || resolving || menuScr() === "config") return;
   paused = !paused;
   quitAsk = false;
+  if (paused && st) {
+    $m("m3-pause-t").textContent = `PAUSA · NV ${lvIdx + 1}`;
+    $m("m3-pause-meta").textContent = `${st.lv.name} · Puntaje: ${st.got.score} · Movimientos: ${st.movesLeft}`;
+  }
   $m("m3-pause").classList.toggle("on", paused);
   $m("m3-pause").setAttribute("aria-hidden", String(!paused));
   $m("m3-confirm")?.classList.add("hidden");
@@ -653,7 +658,7 @@ function ensureUi() {
 <div class="m3-hint hidden" id="m3-hint"></div>
 <div class="m3-overlay hidden" id="m3-overlay"><div class="m3-panel" id="m3-panel"></div></div>
 <div class="m3-pause" id="m3-pause" role="dialog" aria-modal="true" aria-labelledby="m3-pause-t" aria-hidden="true">
-<p class="m3-title" id="m3-pause-t">PAUSA</p><p class="m3-sub m3-pause-help">Juntar 3 o más iguales. 4 = sierra, L = bomba, T = prensa, 5 = núcleo. Dos especiales juntos se combinan.</p><div class="m3-btns">
+<p class="m3-title" id="m3-pause-t">PAUSA</p><p class="m3-tiers" id="m3-pause-meta"></p><p class="m3-sub m3-pause-help">Juntar 3 o más iguales. 4 = sierra, L = bomba, T = prensa, 5 = núcleo. Dos especiales juntos se combinan.</p><div class="m3-btns">
 <button type="button" class="primary" id="m3-resume">Reanudar</button><button type="button" id="m3-pause-restart">Reiniciar</button><button type="button" id="m3-pause-map">Mapa</button><button type="button" id="m3-config">Opciones</button><button type="button" id="m3-quit">Salir del gabinete</button></div></div>
 <div class="m3-confirm hidden" id="m3-confirm" role="alertdialog" aria-labelledby="m3-confirm-t" aria-hidden="true"><div class="m3-panel m3-confirm-box">
 <p class="m3-title" id="m3-confirm-t">¿Abandonar el nivel?</p><p class="m3-sub">Las estrellas ya ganadas se conservan; este intento no.</p>

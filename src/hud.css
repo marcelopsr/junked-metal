@@ -59,16 +59,20 @@
 #bossbar.rage #bossHp { background: linear-gradient(90deg, #ff2a2a, #ffc24d); box-shadow: 0 0 10px rgba(255, 77, 77, .45); }
 #bossbar.crit #bossName, #bossbar.crit #bossHp { animation: h-blink .45s steps(2) infinite; }
 
-/* ---------- Racha y combo de manejo (bajo el reloj) ---------- */
-#combo { top: calc(max(10px, env(safe-area-inset-top)) + 148px); left: 14px; transform-origin: 0 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; will-change: transform; }
+/* ---------- Racha y combo de manejo ---------- */
+#combo { position: absolute; right: max(12px, env(safe-area-inset-right)); top: calc(max(10px, env(safe-area-inset-top)) + 160px); transform-origin: 100% 0; text-align: right; background: rgba(11, 15, 20, .74); border: 1px solid var(--g-line); border-left: 3px solid #fff; border-radius: 8px; padding: 4px 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, .4); transition: opacity .2s, scale .12s; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; will-change: transform; }
+#combo .h-tape, #drv .h-tape { display: block; font: 700 11px/1 var(--hf); letter-spacing: .14em; color: var(--g-dim); }
 #combo b { font: 700 46px/1 var(--hf); color: #fff; text-shadow: 0 3px 10px rgba(0, 0, 0, .45); font-variant-numeric: tabular-nums; }
 #combo i { display: block; width: 100%; height: 4px; border-radius: 99px; background: #fff; transform-origin: 0 0; }
+#combo.t1 { border-left-color: #7dffb0; }
 #combo.t1 b { color: #7dffb0; } #combo.t1 i { background: #7dffb0; }
+#combo.t2, #combo.t3 { border-left-color: #ffc24d; }
 #combo.t2 b, #combo.t3 b { color: #ffc24d; } #combo.t2 i, #combo.t3 i { background: #ffc24d; }
 #combo.t3 b { animation: h-blink .35s steps(2) infinite; }
-#drv { top: calc(max(10px, env(safe-area-inset-top)) + 206px); left: 14px; transform-origin: 0 0; display: flex; align-items: center; gap: 6px; }
+#drv { position: absolute; right: max(12px, env(safe-area-inset-right)); top: calc(max(10px, env(safe-area-inset-top)) + 218px); transform-origin: 100% 0; text-align: right; background: rgba(11, 15, 20, .74); border: 1px solid var(--g-line); border-left: 3px solid var(--sig); border-radius: 8px; padding: 4px 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, .4); transition: opacity .25s, scale .12s; display: flex; align-items: center; gap: 6px; }
 #drv b { font: 700 30px/1 var(--hf); color: var(--sig); text-shadow: 0 2px 8px rgba(0, 0, 0, .45); font-variant-numeric: tabular-nums; }
 #drv.pop { animation: h-pop .3s steps(3) both; }
+#drv.max { border-left-color: #ffc24d; }
 #drv.max b { color: #ffc24d; }
 
 /* ---------- Radar (arriba-derecha) ---------- */
@@ -183,8 +187,8 @@
   #signal { width: min(200px, 50vw); }
   #lcd { top: calc(max(10px, env(safe-area-inset-top)) + 54px); } #timer { font-size: 26px; }
   #banner { top: calc(max(10px, env(safe-area-inset-top)) + 78px); }
-  #combo { left: 8px; top: calc(max(10px, env(safe-area-inset-top)) + 100px); } #combo b { font-size: 36px; }
-  #drv { left: 8px; top: calc(max(10px, env(safe-area-inset-top)) + 150px); } #drv b { font-size: 24px; }
+  #combo { left: 8px; right: auto; transform-origin: 0 0; align-items: flex-start; text-align: left; top: calc(max(10px, env(safe-area-inset-top)) + 100px); } #combo b { font-size: 36px; }
+  #drv { left: 8px; right: auto; transform-origin: 0 0; text-align: left; top: calc(max(10px, env(safe-area-inset-top)) + 150px); } #drv b { font-size: 24px; }
   #bossbar { top: calc(max(10px, env(safe-area-inset-top)) + 104px); width: min(420px, calc(100vw / var(--hud-scale) - 24px)); }
   #radar { right: 8px; --rs: .9; }
   #txl { width: min(250px, 58vw); bottom: max(8px, env(safe-area-inset-bottom)); }
