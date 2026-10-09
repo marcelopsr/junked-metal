@@ -786,8 +786,8 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
 // Pata del lado derecho: cadera en el origen, fémur hacia arriba y afuera, tibia hasta el piso.
 // yaw (opcional): abre cada pata hacia adelante/atrás (lado derecho; el izquierdo se espeja)
 export const LEGS: Record<string, { hips: [number, number, number][]; len: number; r: number; color: string; scale: number; yaw?: number[]; knee?: string }> = {
-  rey: { hips: [[0.58, 0.36, -0.55], [0.62, 0.36, 0], [0.58, 0.36, 0.55]], len: 1.14, r: 0.095, color: "#0a0a0a", scale: 3.5, knee: "#6ef040" },
-  tarantula: { hips: [[0.38, 0.44, -0.12], [0.42, 0.44, 0.14], [0.42, 0.44, 0.38], [0.36, 0.44, 0.62]], len: 1.62, r: 0.125, color: "#1a120e", scale: 3, yaw: [0.82, 0.28, -0.28, -0.78], knee: "#ff6fe8" },
+  rey: { hips: [[0.58, 0.36, -0.55], [0.62, 0.36, 0], [0.58, 0.36, 0.55]], len: 1.14, r: 0.095, color: "#3c4450", scale: 3.5, knee: "#6ef040" },
+  tarantula: { hips: [[0.38, 0.44, -0.12], [0.42, 0.44, 0.14], [0.42, 0.44, 0.38], [0.36, 0.44, 0.62]], len: 1.62, r: 0.125, color: "#4a3228", scale: 3, yaw: [0.82, 0.28, -0.28, -0.78], knee: "#ff6fe8" },
 };
 // Fémur + tibia + tarso; espejo en enemies.ts. Fuente Blender: build_rey_leg / build_tarantula_leg (proc2/meshes.py).
 function articulatedLegMeshes(L: (typeof LEGS)[string], hair: boolean) {

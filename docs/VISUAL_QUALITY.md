@@ -105,3 +105,30 @@ de juguete en el cuarto de la portada y los jefes de chapa gastada.
 ### Cambios implementados / puntuación posterior
 Ninguno todavía en esta entrada: la intervención de Demolición se revirtió. Próximas prioridades:
 Carrera (1) y Survivor en partida (2).
+
+---
+
+## 2026-10-08 · Ciclo #1 (Supervivencia, Chatarroteca, Carrera Folded y Utilería del Patio)
+
+**Capturas verificadas:** `.shots/actual/` (`npm run shots -- --only menu,lab,partida,carrera,folded`, 75 capturas en PC y celular sin errores de consola).
+
+### Intervenciones aplicadas y verificadas en captura
+1. **Carrera (`src/kart.ts`, `src/world.ts`):**
+   - **Causa de los rectángulos flotantes en `pc-carrera-curso.png`:** La fachada de la casa (`house()` en `src/world.ts:239`, alto 90) tenía `color: "#efe6d8"` + `emissive: "#6a6050"`, que con el sol diurno y `levels = 0.85` del shader retro saturaba a blanco puro y se fundía con el cielo, dejando solo la puerta y las ventanas flotando en el aire. Se reemplazó por ladrillo cálido (`#9c5c46`, `emissive: "#1f120d"`, superficie `brick`) con cornisas horizontales, alféizares y marcos oscuros (`#36261e`).
+   - **Materiales Folded en pista y circuito:** Pórtico de largada en chapa plegada (`FOLD.painted`) con bases `TRIM.hazard` (`FOLD.trim()`), cartel `START` en tipografía `Rajdhani` con flejes oxidados, cajas de objetos `?` como módulos de telemetría con remaches, rampas con labio `TRIM.hazard`, carteles de curva con caja 3D trasera, barreras de neumáticos con llanta interior pintada y vallas sin z-fighting.
+2. **Survivor en partida y laboratorio (`src/fx.ts`, `src/main.ts`, `src/hud.css`, `src/enemies.ts`, `src/folded_slice.ts`, `src/models.ts`):**
+   - **Composición HUD:** Aviso `#banner` anclado al borde superior (`top: 10px` en PC, bajando solo si `#bossbar` está visible) y fuente compacta (`clamp(15px, 2.1vw, 20px)`), liberando el centro de juego. El tutorial `#hint` se desvanece a los 7 s (`visibility: hidden; pointer-events: none`).
+   - **Sombras de contacto (1 draw call, 0 allocs):** `contactShadows(carPos, enemies)` en `src/fx.ts` dibuja discos suaves por thin-instance debajo del auto y hasta 259 enemigos (incluyendo polillas en vuelo con escala atenuada por altura y jefes saltando).
+   - **Tonos base y articulaciones:** Diferenciación cromática entre plagas (`hormiga` caoba `#6e3520`, `escupidora` oliva ácido `#6b8a22` con saco `#b8ff28`, `robot` pies/pelvis de acero oscuro `#282c34` contra torso carmesí `#e0322a`, patas de `rey` `#3c4450` y `tarantula` `#4a3228`). Se sumaron cilindros de rótula/cadera y bisagra de tobillo en `foldLeg` y pasadores de cadera/hombro en `petBody` (`perro` y `gato`).
+3. **Chatarroteca (`src/icons.ts`, `src/menu.ts`, `src/menu.css`):**
+   - La sección `#records` (*Mejores partidas*) ahora se muestra únicamente en la pestaña `Estadísticas`, liberando `calc(100dvh - 208px)` en `Bichos`, `Pilotos` y `Logros` (entran 2 filas completas de 4 fichas en 1280x720 sin cortes).
+   - Se crearon 13 siluetas SVG dedicadas (`beastIcon` en `src/icons.ts`) conectadas a `.bthumb` en cada tarjeta de la Chatarroteca.
+4. **Utilería y restos Folded (`src/folded_slice.ts`, `src/world.ts`, `src/fx.ts`):**
+   - `potFold()` (macetas de chapa terracota con flejes oxidados y remaches) y `gnomeFold()` (gnomos de jardín de chapa plegada con hebilla de acero, barba en placas y ojos emisivos) integrados en `pots()`, `gnomes()`, `planterAlley()`, `toyScatter()` y `hose()` sin alterar semillas (`rng()`).
+   - `debris()` en `src/fx.ts` ahora instancia placas de chapa pintada con tuerca/remache central (`FOLD.painted` + `FOLD.bare()`).
+
+### Hallazgos nuevos detectados en las capturas de este ciclo (para Ciclo #2)
+- En `pc-partida-pausa.png`, el cuadro `#hint` de controles queda visible detrás de los botones de pausa y se superpone con el pie de texto (`ATARDECER · PLAGA DE HORMIGAS · Semilla 3`).
+- En `pc-partida-cartas.png`, el borde inferior de las 3 cartas de nivel y la leyenda `"1 · 2 · 3 o clic — Enter confirma"` pisan la barra `#bar` (`12.6V`).
+- Siguen pendientes del listado inicial: pósters bilingües en `src/kit3d.ts:138`, desgaste uniforme/manchas laterales del gabinete de Junket Crush (`src/match3_scene.ts`), utilería de mesa en `src/menuscene.ts` y antipatrones DOM puntuales (`side-tab`, `layout-transition`).
+

@@ -14,6 +14,7 @@ import { engineSfx, engineStop, music, SFX } from "./sfx";
 import { buildGrass, buildLayout, clearLayout, setZone, zoneClimate } from "./world";
 import { DUSK } from "./run";
 import { PAL, wornMat } from "./kit3d";
+import { FOLD, TRIM } from "./folded";
 // Luz de carrera: la misma mañana con sol bajo (sombras largas, volumen) con que arranca la partida, con menos niebla para separar planos
 const RACE_CLIM = { ...DUSK, fog: DUSK.fog * 0.4 };
 import { carOpts } from "./menu"; // import circular (menu importa kart): solo se usa dentro de funciones
@@ -162,26 +163,53 @@ function buildTrack() {
     cm.zOffset = -3;
   };
   curb(-W - 1.8, -W); curb(W, W + 1.8);
-  // Línea de salida: tablero a cuadros + arco
+  // Línea de salida: tablero a cuadros + pórtico de chapa Folded
   const { P, T, R } = trk, s0 = P[0], yaw = Math.atan2(T[0].x, T[0].z);
   const line = B.MeshBuilder.CreatePlane("startLine", { width: W * 2, height: 3.2 }, D.scene);
-  line.rotation.x = Math.PI / 2; line.position.set(s0.x, 0.09, s0.z); line.rotation.y = yaw;
-  line.rotation = new B.Vector3(Math.PI / 2, yaw, 0);
-  const chk = canvasTex(128, (c, s) => { const n = 8; for (let i = 0; i < n * 2; i++) for (let j = 0; j < 2; j++) { c.fillStyle = (i + j) % 2 ? "#111" : "#fff"; c.fillRect((i * s) / (n * 2), (j * s) / 2, s / (n * 2) + 1, s / 2 + 1); } });
+  line.rotation = new B.Vector3(Math.PI / 2, yaw, 0); line.position.set(s0.x, 0.09, s0.z);
+  const chk = canvasTex(128, (c, s) => { const n = 8; for (let i = 0; i < n * 2; i++) for (let j = 0; j < 2; j++) { c.fillStyle = (i + j) % 2 ? "#14181F" : "#f3f4f6"; c.fillRect((i * s) / (n * 2), (j * s) / 2, s / (n * 2) + 1, s / 2 + 1); } });
   const lm = line.material = pbr("raceLine", { color: "#ffffff", rough: 0.7, tex: chk });
   lm.zOffset = -4;
   mesh.push(line);
-  const arch: B.Mesh[] = [];
-  for (const sd of [-1, 1]) arch.push(cyl(1.2, 1.2, 12, M.plastic("#f4f7fa"), [s0.x + R[0].x * sd * (W + 3), 6, s0.z + R[0].z * sd * (W + 3)], undefined, 8));
-  const banner = B.MeshBuilder.CreateBox("arch", { width: (W + 3) * 2, height: 3, depth: 0.6 }, D.scene);
-  banner.position.set(s0.x, 12.5, s0.z); banner.rotation.y = yaw;
-  const bt = canvasTex(256, (c, s) => { c.fillStyle = "#1d4ed8"; c.fillRect(0, 0, s, s); c.fillStyle = "#fff"; c.font = "bold 90px sans-serif"; c.textAlign = "center"; c.fillText("START", s / 2, s * 0.62); });
-  banner.material = pbr("raceBanner", { color: "#ffffff", rough: 0.6, tex: bt });
+  const hazBox = (w: number, h: number, d: number, p: [number, number, number], r?: [number, number, number]) => {
+    const v1 = 1 - TRIM.hazard / 8, v0 = v1 - 1 / 8, u = Math.max(w, d) / (h * 8), uv = new B.Vector4(0, v0 + 0.002, u, v1 - 0.002);
+    const b = B.MeshBuilder.CreateBox("haz", { width: w, height: h, depth: d, faceUV: [uv, uv, uv, uv, uv, uv] }, D.scene);
+    b.position.set(...p); if (r) b.rotation.set(...r); b.material = FOLD.trim(); return b;
+  };
+  const arch: B.Mesh[] = [], pilMat = FOLD.painted(PAL.grisChapa, 0.75, 330), rustM = FOLD.rust();
+  for (const sd of [-1, 1]) {
+    const px = s0.x + R[0].x * sd * (W + 3), pz = s0.z + R[0].z * sd * (W + 3);
+    arch.push(
+      box(1.5, 12, 1.5, pilMat, [px, 6, pz], [0, yaw, 0]),
+      hazBox(1.9, 1.6, 1.9, [px, 0.8, pz], [0, yaw, 0]),
+      box(1.7, 0.5, 1.7, rustM, [px, 11.8, pz], [0, yaw, 0]),
+    );
+  }
+  const banner = B.MeshBuilder.CreateBox("arch", { width: (W + 3) * 2 + 1.6, height: 3.2, depth: 0.9 }, D.scene);
+  banner.position.set(s0.x, 12.6, s0.z); banner.rotation.y = yaw;
+  const bt = canvasTex(256, (c, s) => {
+    c.fillStyle = "#14181F"; c.fillRect(0, 0, s, s);
+    c.fillStyle = "#b5651d"; c.fillRect(0, 0, s, 18); c.fillRect(0, s - 18, s, 18);
+    c.fillStyle = "#FFB400"; for (let i = -s; i < s * 2; i += 32) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + 16, 0); c.lineTo(i + 4, 18); c.lineTo(i - 12, 18); c.fill(); c.beginPath(); c.moveTo(i, s - 18); c.lineTo(i + 16, s - 18); c.lineTo(i + 4, s); c.lineTo(i - 12, s); c.fill(); }
+    c.fillStyle = "#000000"; c.font = "700 84px Rajdhani, sans-serif"; c.textAlign = "center"; c.fillText("START", s / 2 + 4, s * 0.64 + 4);
+    c.fillStyle = "#FFB400"; c.fillText("START", s / 2, s * 0.64);
+  });
+  banner.material = pbr("raceBanner", { color: "#ffffff", rough: 0.55, metal: 0.25, tex: bt, emissive: "#261c08" });
   arch.push(banner);
   for (const m of arch) { shadows.addShadowCaster(m); mesh.push(m); }
-  // Cajas de objetos (5 filas de 3)
-  const qt = canvasTex(128, (c, s) => { c.fillStyle = "#35c9ff"; c.fillRect(0, 0, s, s); c.strokeStyle = "#fff"; c.lineWidth = 8; c.strokeRect(6, 6, s - 12, s - 12); c.fillStyle = "#fff"; c.font = "bold 100px sans-serif"; c.textAlign = "center"; c.fillText("?", s / 2, s * 0.76); });
-  const qm = pbr("raceBox", { color: "#ffffff", rough: 0.3, tex: qt, emissive: "#1a5a7a" });
+  // Cajas de objetos (5 filas de 3): caja de telemetría con marco oscuro, remaches y signo en Rajdhani
+  const boxMat = () => {
+    const qt = canvasTex(128, (c, s) => {
+      c.fillStyle = "#0e2938"; c.fillRect(0, 0, s, s);
+      c.strokeStyle = "#00C2FF"; c.lineWidth = 10; c.strokeRect(8, 8, s - 16, s - 16);
+      c.strokeStyle = "#14181F"; c.lineWidth = 4; c.strokeRect(2, 2, s - 4, s - 4);
+      c.fillStyle = "#FFB400"; for (const [x, y] of [[16, 16], [s - 16, 16], [16, s - 16], [s - 16, s - 16]]) { c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); }
+      c.fillStyle = "#000000"; c.font = "700 92px Rajdhani, sans-serif"; c.textAlign = "center"; c.fillText("?", s / 2 + 3, s * 0.76 + 3);
+      c.fillStyle = "#7fe3ff"; c.fillText("?", s / 2, s * 0.76);
+    });
+    return pbr("raceBox", { color: "#ffffff", rough: 0.28, metal: 0.2, tex: qt, emissive: "#0d4a66" });
+  };
+  const qm = boxMat();
   for (const f of [0.1, 0.3, 0.5, 0.7, 0.9]) for (const o of [-5, 0, 5]) {
     const i = Math.floor(f * trk.N), at = P[i].add(R[i].scale(o)); at.y = 1.5;
     const m = B.MeshBuilder.CreateBox("itemBox", { size: 1.8 }, D.scene);
@@ -189,8 +217,16 @@ function buildTrack() {
     boxes.push({ m, at, t: 0 }); mesh.push(m);
   }
   // Placas de turbo
-  const ch = canvasTex(128, (c, s) => { c.fillStyle = "#ffb02e"; c.fillRect(0, 0, s, s); c.fillStyle = "#fff"; for (let k = 0; k < 3; k++) { c.beginPath(); c.moveTo(s * 0.15, s * (0.9 - k * 0.3)); c.lineTo(s * 0.5, s * (0.6 - k * 0.3)); c.lineTo(s * 0.85, s * (0.9 - k * 0.3)); c.lineTo(s * 0.85, s * (0.78 - k * 0.3)); c.lineTo(s * 0.5, s * (0.48 - k * 0.3)); c.lineTo(s * 0.15, s * (0.78 - k * 0.3)); c.fill(); } });
-  const pm = pbr("racePad", { color: "#ffffff", rough: 0.5, tex: ch, emissive: "#a05a00" });
+  const ch = canvasTex(128, (c, s) => {
+    c.fillStyle = "#14181F"; c.fillRect(0, 0, s, s);
+    c.strokeStyle = "#b5651d"; c.lineWidth = 8; c.strokeRect(4, 4, s - 8, s - 8);
+    for (let k = 0; k < 3; k++) {
+      c.fillStyle = k === 0 ? "#ffe066" : "#FFB400";
+      c.beginPath(); c.moveTo(s * 0.14, s * (0.88 - k * 0.28)); c.lineTo(s * 0.5, s * (0.6 - k * 0.28)); c.lineTo(s * 0.86, s * (0.88 - k * 0.28));
+      c.lineTo(s * 0.86, s * (0.74 - k * 0.28)); c.lineTo(s * 0.5, s * (0.46 - k * 0.28)); c.lineTo(s * 0.14, s * (0.74 - k * 0.28)); c.fill();
+    }
+  });
+  const pm = pbr("racePad", { color: "#ffffff", rough: 0.45, tex: ch, emissive: "#8a4e00" });
   pm.zOffset = -4;
   for (const [f, o] of [[0.17, 3], [0.47, -3], [0.77, 3]] as const) {
     const i = Math.floor(f * trk.N), at = P[i].add(R[i].scale(o));
@@ -200,18 +236,20 @@ function buildTrack() {
   }
   // Rampitas en dos rectas (el cuerpo toma la pose de la malla al crearse: se inclina ANTES del PhysicsAggregate)
   for (const f of [0.34, 0.84]) {
-    const i = Math.floor(f * trk.N), p = P[i];
+    const i = Math.floor(f * trk.N), p = P[i], ry = Math.atan2(T[i].x, T[i].z);
     const r = B.MeshBuilder.CreateBox("ramp", { width: W * 1.2, height: 0.5, depth: 9 }, D.scene);
-    r.position.set(p.x, 0.5, p.z); r.rotation = new B.Vector3(-0.2, Math.atan2(T[i].x, T[i].z), 0);
-    r.material = wornMat(PAL.amarillo, PAL.oxido, 21);
+    r.position.set(p.x, 0.5, p.z); r.rotation = new B.Vector3(-0.2, ry, 0);
+    r.material = FOLD.painted(PAL.amarillo, 0.78, 331);
     new B.PhysicsAggregate(r, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.4 }, D.scene);
-    mesh.push(r);
+    const lip = hazBox(W * 1.2 + 0.1, 0.54, 1.1, [0, 0.02, 4.0]);
+    lip.parent = r; lip.isPickable = false;
+    mesh.push(r, lip);
   }
   // Hormigas que cruzan la pista
   for (const [f, ph] of [[0.22, 0], [0.4, 2], [0.57, 4], [0.66, 1], [0.82, 3], [0.95, 5]] as const) {
     const i = Math.floor(f * trk.N);
     const m = B.MeshBuilder.CreateSphere("ant", { diameter: 1.4, segments: 5 }, D.scene);
-    m.scaling.set(0.9, 0.6, 1.5); m.material = M.plastic("#a0522d");
+    m.scaling.set(0.9, 0.6, 1.5); m.material = FOLD.chitin("#6e3520");
     shadows.addShadowCaster(m);
     ants.push({ m, c: P[i].clone(), n: R[i].clone(), ph, sp: 0.5 + (ph % 3) * 0.12, hit: 0 });
     mesh.push(m);
@@ -231,13 +269,17 @@ function buildArena() {
   for (let k = 0; k < seg; k++) {
     const a = (k / seg) * Math.PI * 2, b = B.MeshBuilder.CreateBox("arenaWall", { width: len, height: 3.2, depth: 2 }, D.scene);
     b.position.set(c.x + Math.cos(a) * (r + 1.5), 1.6, c.z + Math.sin(a) * (r + 1.5)); b.rotation.y = -a + Math.PI / 2;
-    b.material = k % 2 ? wornMat(PAL.grisChapa, null, 23) : wornMat(PAL.rojoChapa, PAL.oxido, 24); shadows.addShadowCaster(b);
+    b.material = k % 2 ? FOLD.painted(PAL.grisChapa, 0.75, 332) : FOLD.painted(PAL.rojoChapa, 0.8, 333); shadows.addShadowCaster(b);
     new B.PhysicsAggregate(b, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.1, restitution: 0.6 }, D.scene);
     mesh.push(b);
   }
   // Cajas de objetos: anillo interior + centro
-  const qt = canvasTex(128, (g, sz) => { g.fillStyle = "#35c9ff"; g.fillRect(0, 0, sz, sz); g.strokeStyle = "#fff"; g.lineWidth = 8; g.strokeRect(6, 6, sz - 12, sz - 12); g.fillStyle = "#fff"; g.font = "bold 100px sans-serif"; g.textAlign = "center"; g.fillText("?", sz / 2, sz * 0.76); });
-  const qm = pbr("raceBox", { color: "#ffffff", rough: 0.3, tex: qt, emissive: "#1a5a7a" });
+  const qt = canvasTex(128, (g, sz) => {
+    g.fillStyle = "#0e2938"; g.fillRect(0, 0, sz, sz);
+    g.strokeStyle = "#00C2FF"; g.lineWidth = 10; g.strokeRect(8, 8, sz - 16, sz - 16);
+    g.fillStyle = "#7fe3ff"; g.font = "700 92px Rajdhani, sans-serif"; g.textAlign = "center"; g.fillText("?", sz / 2, sz * 0.76);
+  });
+  const qm = pbr("raceBox", { color: "#ffffff", rough: 0.28, metal: 0.2, tex: qt, emissive: "#0d4a66" });
   const ring = (n: number, k0: number): [number, number][] => Array.from({ length: n }, (_, k) => [Math.cos((k / n) * 6.283 + k0) * r * (n > 6 ? 0.68 : 0.32), Math.sin((k / n) * 6.283 + k0) * r * (n > 6 ? 0.68 : 0.32)]);
   const spots: [number, number][] = [[0, 0], ...ring(5, 0.4), ...ring(9, 0)];
   for (const [dx, dz] of spots) {
@@ -246,7 +288,7 @@ function buildArena() {
   }
 }
 
-// Pista viva: banderines, público de juguetes en la salida, globos y pilas de neumáticos en las curvas
+// Pista viva: banderines de chapa, público de juguetes en la salida, globos y pilas de neumáticos en las curvas
 function decorate(crowd: boolean) {
   const { P, T, R, N } = trk;
   const place = (base: B.Mesh, mats: B.Matrix[]) => {
@@ -254,10 +296,10 @@ function decorate(crowd: boolean) {
     base.thinInstanceSetBuffer("matrix", buf, 16, true); base.isPickable = false; base.alwaysSelectAsActiveMesh = true; mesh.push(base);
   };
   const mat = (x: number, y: number, z: number, yaw: number, s = 1) => B.Matrix.Compose(new B.Vector3(s, s, s), B.Quaternion.FromEulerAngles(0, yaw, 0), new B.Vector3(x, y, z));
-  // Banderines de 4 colores a ambos lados cada ~13 m
-  const colors = ["#ef4444", "#ffd84d", "#35c9ff", "#7dffb0"];
+  // Banderines de chapa de 4 colores a ambos lados cada ~13 m
+  const colors = [PAL.rojoChapa, PAL.amarillo, PAL.cian, PAL.verde], poleM = FOLD.bare();
   colors.forEach((c, k) => {
-    const base = merge("flag", [cyl(0.18, 0.18, 5, M.metal("#e8edf2"), [0, 2.5, 0], undefined, 5), box(0.08, 1, 1.5, M.plastic(c), [0, 4.4, 0.8])]);
+    const base = merge("flag", [cyl(0.18, 0.18, 5, poleM, [0, 2.5, 0], undefined, 5), box(0.1, 1.05, 1.55, FOLD.painted(c, 0.6, 334 + k), [0, 4.4, 0.8])]);
     const ms: B.Matrix[] = [];
     for (let i = k * 4; i < N; i += 16) for (const sd of [-1, 1]) { const p = P[i].add(R[i].scale(sd * (W + 4))); ms.push(mat(p.x, 0, p.z, Math.atan2(T[i].x, T[i].z) + (sd > 0 ? 0 : Math.PI))); }
     place(base, ms);
@@ -271,18 +313,26 @@ function decorate(crowd: boolean) {
   for (const id of PILOT_IDS) if (crowd && ms[id]) place(merge("crowd", pilotParts(id)), ms[id]);
   // Tribunas bajas detrás del público
   if (crowd) for (const sd of [-1, 1]) {
-    const i = 0, p = P[i].add(R[i].scale(sd * (W + 8 + 7))), b = box(3, 3, 52, sd > 0 ? wornMat(PAL.petroleo, PAL.oxido, 25) : wornMat(PAL.rojoChapa, PAL.oxido, 24), [p.x, 1.5, p.z], [0, Math.atan2(T[i].x, T[i].z), 0]);
+    const i = 0, p = P[i].add(R[i].scale(sd * (W + 8 + 7))), b = box(3, 3, 52, sd > 0 ? FOLD.painted(PAL.petroleo, 0.8, 338) : FOLD.painted(PAL.rojoChapa, 0.8, 339), [p.x, 1.5, p.z], [0, Math.atan2(T[i].x, T[i].z), 0]);
     b.isPickable = false; mesh.push(b);
   }
   // Globos en el arco
-  const bl = merge("balloons", [0, 1, 2, 3, 4, 5].map((k) => sph(2.2, M.plastic(colors[k % 4]), [Math.cos(k * 1.1) * 1.4, 14.5 + (k % 3) * 1.2, Math.sin(k * 1.1) * 1.4], [1, 1.2, 1], 6)));
+  const bl = merge("balloons", [0, 1, 2, 3, 4, 5].map((k) => sph(2.2, FOLD.painted(colors[k % 4], 0.45, 340 + (k % 4)), [Math.cos(k * 1.1) * 1.4, 14.5 + (k % 3) * 1.2, Math.sin(k * 1.1) * 1.4], [1, 1.2, 1], 6)));
   place(bl, [-1, 1].map((sd) => { const q = P[0].add(R[0].scale(sd * (W + 3))); return mat(q.x, 0, q.z, 0); }));
-  // Carteles de curva (amarillo con flechas, como en Mario Kart): uno por curva cerrada, a la salida de la recta, mirando al que llega
+  // Carteles de curva de chapa con marco industrial: uno por curva cerrada, a la salida de la recta, mirando al que llega
   const sign = (dirRight: boolean) => canvasTex(128, (g, sz) => {
-    g.fillStyle = "#ffc24d"; g.fillRect(0, 0, sz, sz); g.strokeStyle = "#1a1a1a"; g.lineWidth = 10; g.strokeRect(5, 5, sz - 10, sz - 10);
-    g.fillStyle = "#1a1a1a"; for (let k = 0; k < 2; k++) { const x0 = sz * (0.2 + k * 0.28); g.beginPath(); if (dirRight) { g.moveTo(x0, sz * 0.2); g.lineTo(x0 + sz * 0.24, sz * 0.5); g.lineTo(x0, sz * 0.8); g.lineTo(x0 + sz * 0.1, sz * 0.5); } else { g.moveTo(sz - x0, sz * 0.2); g.lineTo(sz - x0 - sz * 0.24, sz * 0.5); g.lineTo(sz - x0, sz * 0.8); g.lineTo(sz - x0 - sz * 0.1, sz * 0.5); } g.closePath(); g.fill(); }
+    g.fillStyle = "#FFB400"; g.fillRect(0, 0, sz, sz);
+    g.strokeStyle = "#14181F"; g.lineWidth = 12; g.strokeRect(6, 6, sz - 12, sz - 12);
+    g.fillStyle = "#14181F";
+    for (let k = 0; k < 2; k++) {
+      const x0 = sz * (0.2 + k * 0.28);
+      g.beginPath();
+      if (dirRight) { g.moveTo(x0, sz * 0.2); g.lineTo(x0 + sz * 0.24, sz * 0.5); g.lineTo(x0, sz * 0.8); g.lineTo(x0 + sz * 0.1, sz * 0.5); }
+      else { g.moveTo(sz - x0, sz * 0.2); g.lineTo(sz - x0 - sz * 0.24, sz * 0.5); g.lineTo(sz - x0, sz * 0.8); g.lineTo(sz - x0 - sz * 0.1, sz * 0.5); }
+      g.closePath(); g.fill();
+    }
   });
-  const signMat = [sign(false), sign(true)].map((tx, k) => pbr("raceSign" + k, { color: "#ffffff", rough: 0.6, tex: tx, emissive: "#6a4a00" }));
+  const signMat = [sign(false), sign(true)].map((tx, k) => pbr("raceSign" + k, { color: "#ffffff", rough: 0.55, metal: 0.2, tex: tx, emissive: "#523800" }));
   let lastSign = -99;
   for (let i = 4; i < N - 4; i++) {
     const a = angleAhead(i);
@@ -290,20 +340,29 @@ function decorate(crowd: boolean) {
       lastSign = i;
       const turnRight = a < 0, out = turnRight ? -1 : 1; // lado exterior de la curva
       const j = (i - 6 + N) % N, q = P[j].add(R[j].scale(out * (W + 4)));
-      const post = cyl(0.25, 0.25, 3, M.metal("#e8edf2"), [q.x, 1.5, q.z], undefined, 6);
-      const pl = B.MeshBuilder.CreatePlane("curveSign", { width: 4.4, height: 2.8 }, D.scene);
+      const post = cyl(0.28, 0.28, 3.2, poleM, [q.x, 1.6, q.z], undefined, 6);
+      const pl = B.MeshBuilder.CreateBox("curveSign", { width: 4.4, height: 2.8, depth: 0.16 }, D.scene);
       pl.position.set(q.x, 3.6, q.z); pl.rotation.y = Math.atan2(T[j].x, T[j].z) + Math.PI; pl.material = signMat[turnRight ? 1 : 0]; pl.isPickable = false;
       shadows.addShadowCaster(pl); mesh.push(post, pl);
     }
   }
-  // Neumáticos apilados fuera de las curvas más cerradas: lado exterior (mismo signo que los carteles), pasando el cordón (W + 1,8) con margen
-  const tire = merge("tires", [0, 1, 2].map((k) => B.MeshBuilder.CreateTorus("t", { diameter: 2.2, thickness: 0.8, tessellation: 10 }, D.scene)).map((m, k) => { m.position.y = 0.4 + k * 0.8; m.material = M.rubber(); return m; }));
+  // Neumáticos apilados fuera de las curvas más cerradas: caucho Folded con llanta interior pintada
+  const tire = merge("tires", [0, 1, 2].flatMap((k) => {
+    const t = B.MeshBuilder.CreateTorus("t", { diameter: 2.2, thickness: 0.8, tessellation: 10 }, D.scene);
+    t.position.y = 0.4 + k * 0.8; t.material = FOLD.rubber();
+    const rim = cyl(1.3, 1.3, 0.55, FOLD.painted(k % 2 ? PAL.rojoChapa : PAL.amarillo, 0.7, 344 + k), [0, 0.4 + k * 0.8, 0], undefined, 8);
+    return [t, rim];
+  }));
   const tms: B.Matrix[] = [];
   for (let i = 0; i < N; i += 3) { const a = angleAhead(i); if (Math.abs(a) > 0.5) { const out = Math.sign(a); for (let k = 0; k < 3; k++) { const j = (i + k * 2) % N, p = P[j].add(R[j].scale(out * (W + 4.5 + k * 0.4))); tms.push(mat(p.x, 0, p.z, 0)); } } }
   if (tms.length) place(tire, tms);
-  // Vallas de chapa (mismo lenguaje que la chatarra del patio): paneles oxidados del lado de afuera en las rectas,
-  // inclinación y alto variados por índice (determinista, sin rng de la partida). Una malla, thin instances.
-  const plate = merge("scrapFence", [box(4.2, 2.2, 0.15, M.metal("#7a5a3e"), [0, 1.1, 0]), box(4.4, 0.3, 0.2, M.metal("#4a4f55"), [0, 2.1, 0]), cyl(0.15, 0.15, 2.6, M.metal("#4a4f55"), [-2, 1.3, 0], undefined, 5)]);
+  // Vallas de chapa Folded: paneles oxidados del lado de afuera en las rectas, sin z-fighting entre tapa y panel
+  const plate = merge("scrapFence", [
+    box(4.2, 2.1, 0.14, FOLD.painted(PAL.petroleo, 0.85, 347), [0, 1.05, 0]),
+    box(4.4, 0.28, 0.24, FOLD.rust(), [0, 2.24, 0]),
+    cyl(0.18, 0.18, 2.6, poleM, [-2.0, 1.3, -0.14], undefined, 6),
+    cyl(0.18, 0.18, 2.6, poleM, [2.0, 1.3, -0.14], undefined, 6),
+  ]);
   const fms: B.Matrix[] = [];
   for (let i = 2; i < N; i += 5) {
     if (Math.abs(angleAhead(i)) > 0.4 || i < 10 || i > N - 10) continue; // curvas: neumáticos; salida: público

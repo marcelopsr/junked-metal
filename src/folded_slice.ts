@@ -44,13 +44,13 @@ const along = (G: GeoKit, d1: number, d2: number, len: number, m: B.Material, p:
 
 // ---------- Hormiga: gáster hexagonal con placa, cintura, tórax con lomo atornillado, cabeza con mandíbulas de acero ----------
 // Huesos (VAT de glb.ts): 0 cuerpo, 1..6 patas (cadera i, lado +1/-1), 7 antenas. `vis`: escala que glb.ts le da al nodo (GLB.visual).
-const ANT_COLOR = "#a0522d";
+const ANT_COLOR = "#6e3520";
 const ANT_HIPS: [V3, number][] = [[[0.2, 0.46, 0.3], 0.65], [[0.22, 0.46, 0.14], 0], [[0.2, 0.46, -0.02], -0.65]];
 /** Insectos de 6 patas (hormiga, escupidora, escarabajo): mismo esqueleto y caminata; cambian color, tamaño (k) y la pieza de identidad. */
 type Bug = { color: string; k: number; eye: string; seed: number; look: "ant" | "spit" | "beetle" };
 const BUGS: Record<string, Bug> = {
   hormiga: { color: ANT_COLOR, k: 1, eye: "#ff4a28", seed: 61, look: "ant" },
-  escupidora: { color: "#d2381c", k: 1.3, eye: "#ffc040", seed: 64, look: "spit" },
+  escupidora: { color: "#6b8a22", k: 1.3, eye: "#ffc040", seed: 64, look: "spit" },
   escarabajo: { color: "#2f7d4a", k: 1.6, eye: "#e8ff50", seed: 67, look: "beetle" },
 };
 export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
@@ -69,9 +69,9 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     G.trimStrip([0, 0.44, -0.27], undefined, 0.46, 0.46, "hazard", 0.05); // faja de peligro (IDENTITY)
   }
   if (o.look === "spit") { // saco de ácido sobre el gáster y tobera de la escupida (IDENTITY)
-    G.sph(0.5, FOLD.emissive("#9adf2a"), [0, 0.88, -0.78]);
-    G.cyl(0.56, 0.06, FOLD.bare(), [0, 0.86, -0.78], undefined, 8);
-    G.cyl(0.08, 0.3, FOLD.bare(), [0, 0.5, 1.02], [Math.PI / 2, 0, 0], 6, 0.12);
+    G.sph(0.54, FOLD.emissive("#b8ff28"), [0, 0.9, -0.78]);
+    G.cyl(0.58, 0.08, FOLD.bare(), [0, 0.86, -0.78], undefined, 8);
+    G.cyl(0.1, 0.32, FOLD.bare(), [0, 0.5, 1.02], [Math.PI / 2, 0, 0], 6, 0.14);
   }
   along(G, 0.14, 0.18, 0.26, FOLD.dark(), [0, 0.46, -0.12]); // cintura
   G.box(0.4, 0.28, 0.46, body, [0, 0.5, 0.14]); // tórax
@@ -167,7 +167,7 @@ export function mothWing(side: 1 | -1) {
 const ROBOT_K = 1.22, SH = 0.9;
 export function robotBody() {
   const { G, done, strut, bone } = kit();
-  const tin = FOLD.painted("#e0322a", 0.8, 81), dark = FOLD.painted("#5c1414", 0.9, 82), steel = FOLD.bare(), lamp = FOLD.emissive("#ffe566");
+  const tin = FOLD.painted("#e0322a", 0.8, 81), dark = FOLD.painted("#282c34", 0.9, 82), steel = FOLD.bare(), lamp = FOLD.emissive("#ffe566");
   for (const s of [-1, 1]) {
     bone(s < 0 ? 1 : 2);
     G.box(0.28, 0.1, 0.42, dark, [s * 0.22, 0.06, 0.04]); G.box(0.29, 0.025, 0.43, FOLD.rubber(), [s * 0.22, 0.012, 0.04]); // pies
@@ -453,14 +453,16 @@ export function cortacercosPose(_v: number, walk: number, atk: number) {
   return [B.Matrix.RotationX(-0.08 * Math.sin(atk * Math.PI)), B.Matrix.Translation(0, 0, 0.22 * S * Math.sin(walk * Math.PI * 8))];
 }
 
-/** Pata articulada Folded (rey, tarántula): fémur y tibia de perfil, rodilla de bisagra emisiva, pie de goma. Misma geometría que la vieja (LEGS). */
+/** Pata articulada Folded (rey, tarántula): fémur y tibia de perfil, rodilla de bisagra emisiva, tobillo y pie de goma. Misma geometría que la vieja (LEGS). */
 export function foldLeg(L: { hips: [number, number, number][]; len: number; r: number; color: string; knee?: string }) {
   const { G, done, strut } = kit();
-  const hy = L.hips[0][1], leg = FOLD.painted(L.color, 0.8, 181), knee: V3 = [L.len * 0.48, L.len * 0.32, 0], foot: V3 = [L.len * 0.98, -hy + 0.02, 0.06];
-  G.box(L.r * 2.2, L.r * 2.2, L.r * 2.2, FOLD.bare(), [0, 0, 0]);
-  strut([0, 0, 0], knee, L.r * 1.6, L.r * 2, leg); strut(knee, foot, L.r * 1.2, L.r * 1.5, leg);
-  G.cyl(L.r * 1.9, L.r * 2.2, L.knee ? FOLD.emissive(L.knee) : FOLD.bare(), knee, [Math.PI / 2, 0, 0], 6);
-  G.box(L.r * 2.6, L.r * 0.8, L.r * 2.4, FOLD.rubber(), [foot[0], foot[1] + L.r * 0.4, foot[2]]);
+  const hy = L.hips[0][1], leg = FOLD.painted(L.color, 0.75, 181), steel = FOLD.bare(), knee: V3 = [L.len * 0.48, L.len * 0.32, 0], foot: V3 = [L.len * 0.98, -hy + 0.02, 0.06];
+  G.cyl(L.r * 2.4, L.r * 2.4, steel, [-L.r * 0.4, 0, 0], [0, 0, Math.PI / 2], 6); // rótula hacia el caparazón
+  G.box(L.r * 2.3, L.r * 2.3, L.r * 2.3, steel, [0, 0, 0]);
+  strut([0, 0, 0], knee, L.r * 1.75, L.r * 2.15, leg); strut(knee, foot, L.r * 1.35, L.r * 1.65, leg);
+  G.cyl(L.r * 2.1, L.r * 2.4, L.knee ? FOLD.emissive(L.knee) : steel, knee, [Math.PI / 2, 0, 0], 6); // rodilla
+  G.cyl(L.r * 1.6, L.r * 1.9, steel, [foot[0], foot[1] + L.r * 0.72, foot[2]], [Math.PI / 2, 0, 0], 6); // tobillo
+  G.box(L.r * 2.7, L.r * 0.9, L.r * 2.5, FOLD.rubber(), [foot[0], foot[1] + L.r * 0.42, foot[2]]);
   return done(3);
 }
 
@@ -509,14 +511,17 @@ export function petBody(Q: Quad) {
   const [tx, ty2, tz] = Q.tail;
   if (c) { strut([tx, ty2, tz], [0, ty2 + 1.6, tz - 1.8], 0.45, 0.45, coat); strut([0, ty2 + 1.6, tz - 1.8], [0, ty2 + 2.8, tz - 2.6], 0.4, 0.4, dark); }
   else strut([tx, ty2, tz], [0, ty2 + 1.8, tz - 1.8], 0.55, 0.55, coat);
-  // Patas: muslo pintado, rodilla de acero, caña y pata de goma
+  // Patas: perno de cadera en el torso, muslo pintado, rodilla de acero, caña y pata de goma
   QLEGS.forEach(([s, f], i) => {
-    bone(3 + i);
     const x = s * hx, z = f * hz, lw = c ? 0.8 : 1.1;
-    G.box(lw * 1.15, hy * 0.5, lw * 1.25, coat, [x, hy * 0.72, z]);
-    G.box(lw * 0.9, lw * 0.6, lw * 0.9, steel, [x, hy * 0.46, z]);
-    G.box(lw * 0.8, hy * 0.42, lw * 0.85, f > 0 ? light : coat, [x, hy * 0.24, z]);
-    G.box(lw * 1.1, 0.4, lw * 1.4, FOLD.rubber(), [x, 0.2, z + 0.15]);
+    bone(0);
+    G.cyl(lw * 0.8, lw * 1.4, steel, [x - s * lw * 0.15, hy, z], [0, 0, Math.PI / 2], 6); // perno de cadera
+    bone(3 + i);
+    G.cyl(lw * 1.1, lw * 1.25, dark, [x, hy * 0.98, z], [0, 0, Math.PI / 2], 6); // hombro articulado
+    G.box(lw * 1.15, hy * 0.56, lw * 1.25, coat, [x, hy * 0.74, z]);
+    G.box(lw * 0.95, lw * 0.65, lw * 0.95, steel, [x, hy * 0.46, z]);
+    G.box(lw * 0.82, hy * 0.44, lw * 0.88, f > 0 ? light : coat, [x, hy * 0.24, z]);
+    G.box(lw * 1.15, 0.42, lw * 1.45, FOLD.rubber(), [x, 0.21, z + 0.15]);
   });
   return done(c ? 9 : 11);
 }
@@ -606,7 +611,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(1.1, 0.32, 1.8, paint, [0, 0.36, -0.1]); G.box(1.1, 0.06, 0.45, paint, [0, 0.42, 0.95], [0.5, 0, 0]); edges(1.1, 0.52, -1.0, 0.8, paint);
     G.box(0.9, 0.3, 0.9, paint, [0, 0.67, -0.15]); edges(0.9, 0.82, -0.6, 0.3, paint);
     G.cyl(0.42, 0.08, olive, [0, 0.86, -0.25], undefined, 8);
-    G.cyl(0.13, 1.1, steel, [0, 0.68, 0.75], [Math.PI / 2, 0, 0], 8); G.cyl(0.18, 0.16, dark, [0, 0.68, 1.3], [Math.PI / 2, 0, 0], 8);
+    G.cyl(0.13, 1.1, steel, [0, 0.68, 0.75], [Math.PI / 2, 0, 0], 8); G.cyl(0.18, 0.16, dark, [0, 0.68, 1.3], [0, 0, Math.PI / 2], 8);
     num(0.455, 0.67, -0.15, 0.24); lamps(0.38, 0.42, 1.08, 0.12); G.trimStrip([0, 0.36, -1.01], undefined, 1.0, 0.1, "hazard", 0.02);
   } else if (kind === "axel") { // Axel: eje de caño entre dos ruedas gigantes y jaula-cabina colgando
     const red = FOLD.painted("#b8321f", 0.6, 231);
@@ -689,6 +694,33 @@ export function wateringCanFold() {
   G.tube([[0, 6.0, -2.2], [0, 8.4, -1.4], [0, 8.4, 0.6], [0, 6.0, 1.4]], 0.4, g);
   G.rivets([2.52, 0.6, 0], [2.52, 5.6, 0], 7, [1, 0, 0]); G.decal([0, 3.2, -2.53], undefined, "numero", 1.8);
   return done(40);
+}
+/** Maceta Folded (unidad sc=1, 5×4): tambor de chapa terracota con flejes oxidados, labio superior remachado y tierra. */
+export function potFold() {
+  const { G, done } = kit();
+  const body = FOLD.painted("#c2410c", 0.85, 285), rim = FOLD.painted("#9a3412", 0.8, 286), rust = FOLD.rust();
+  G.cyl(5, 4, body, [0, 2, 0], undefined, 10, 4);
+  G.cyl(4.3, 0.35, rust, [0, 0.35, 0], undefined, 10);
+  G.cyl(4.9, 0.28, rust, [0, 2.1, 0], undefined, 10);
+  G.cyl(5.45, 0.65, rim, [0, 3.85, 0], undefined, 10);
+  G.cyl(4.6, 0.22, FOLD.dark(), [0, 4.12, 0], undefined, 10);
+  G.rivets([-2.3, 3.85, -1.4], [2.3, 3.85, -1.4], 4, [0, 0, -1]);
+  return done(32);
+}
+/** Gnomo de jardín Folded: túnica de chapa azul remachada, cinturón con hebilla de acero, barba de placas y gorro rojo plegado. */
+export function gnomeFold() {
+  const { G, done } = kit();
+  const coat = FOLD.painted("#2563eb", 0.75, 287), hat = FOLD.painted("#dc2626", 0.7, 288), skin = FOLD.painted("#e8b490", 0.5, 289), beard = FOLD.painted("#e5e7eb", 0.6, 290), steel = FOLD.bare();
+  G.cyl(2.4, 4, coat, [0, 2, 0], undefined, 8, 3.6);
+  G.cyl(2.7, 0.55, FOLD.dark(), [0, 2.55, 0], undefined, 8);
+  G.box(0.8, 0.7, 0.25, steel, [0, 2.55, 1.32]); // hebilla
+  G.box(2.1, 1.9, 2.0, skin, [0, 4.9, 0]);
+  G.box(0.55, 0.5, 0.6, skin, [0, 4.9, 1.15]); // nariz
+  for (const s of [-1, 1]) G.box(0.32, 0.24, 0.12, FOLD.emissive("#ffb02e"), [s * 0.52, 5.25, 1.02]);
+  G.box(1.9, 2.1, 0.5, beard, [0, 3.6, 0.95], [0.25, 0, 0]); // barba de chapa
+  G.cyl(0.12, 3.5, hat, [0, 7.1, -0.05], [-0.18, 0, 0], 8, 2.7);
+  G.rivets([-0.9, 1.2, 1.3], [0.9, 1.2, 1.3], 4, [0, 0, 1]);
+  return done(25);
 }
 /** Auto real oxidado en caballetes (1 u ≈ 4,5 cm). Paneles de chapa con óxido, vidrios oscuros, ópticas emisivas. */
 export function realCarFold(lift: number, paint: string) {

@@ -39,11 +39,11 @@ Nada se borra: los `.blend` quedan para proporciones, colisión, esqueleto, anim
 |---|---|---|---|---|---|
 | Suelos (pasto, tierra, baldosas) | canvas `TEX` | render.ts, world.ts `floor` | A | Fondo, se ve desde arriba | Nada (lectura) |
 | Pasto | thin instances | world.ts `buildGrass`, `grassTuft` | A | Vegetación = billboards/cards válidos | Nada |
-| Casa, árboles, arbustos | procedural | world.ts `house`, `tree`, `bushes` | C | Fondo lejano | Casa: paneles de chapa en el borde cercano; resto igual |
+| Casa, árboles, arbustos | procedural | world.ts `house`, `tree`, `bushes` | B (casa hecha) | Fondo lejano | Casa actualizada con ladrillo cálido (`brick`), cornisas y marcos oscuros (ya no se funde con el cielo); árboles/arbustos se mantienen |
 | Cajas para saltar | procedural | world.ts `jumpScrap` | B (hecho) | Ya usan FOLD.painted | Pasar a geoKit.foldBox |
 | Pilas de cajas del garaje | procedural | world.ts `piles` | B (hecho) | FOLD.painted | geoKit.foldBox |
-| Rampas, puente de tablones | procedural (madera) | world.ts `ramp`, `plankBridge`, `toyRamps` | B | Colisión importante | Chapa con TRIM.hazard en el borde; F para el collider (no tocar) |
-| Macetas, latas de pintura, herramientas gigantes, regadera, manguera, gnomos, pelota | procedural | world.ts `pots`, `paintCans`, `giantTools`, `wateringCan`, `hose`, `gnomes`, `ball` | E | Props cercanos | Rearmar con geoKit (latas = barril, herramientas = perfiles) |
+| Rampas, puente de tablones | procedural (madera) | world.ts `ramp`, `plankBridge`, `toyRamps` | B (hecho) | Colisión importante | Chapa con TRIM.hazard en el borde; F para el collider (no tocar) |
+| Macetas, latas de pintura, herramientas gigantes, regadera, manguera, gnomos, pelota | procedural + Folded | world.ts `pots`, `paintCans`, `giantTools`, `wateringCan`, `hose`, `gnomes`, `ball` | E (hecho salvo pelota) | Props cercanos | Macetas (`potFold`), gnomos (`gnomeFold`), latas, herramientas, regadera y soporte de manguera migrados a Folded (`folded_slice.ts`) |
 | Rocas | procedural | world.ts `rocks` | A | Naturales | Nada |
 | Muros de ladrillo | procedural | world.ts `brickWalls` | A | Textura brick del kit ya compartida | Nada |
 | Charcos, agua | procedural | world.ts `puddles`, `water` | A | Superficies | Nada |
@@ -51,7 +51,7 @@ Nada se borra: los `.blend` quedan para proporciones, colisión, esqueleto, anim
 | Taller del menú (estantes, banco, transmisor) | procedural + KIT | menuscene.ts | B | Ya usa KIT/wornMat | Pasar a FOLD/geoKit cuando se toque |
 | Utilería KIT (crate, barrel, toolbox, vise, cageLamp, pipe, plate, jar, sign) | procedural | kit3d.ts `KIT` | A | Base del lenguaje | Unificar con geoKit (foldBox en vez de crate) |
 | Gabinete Junket Crush + taller | procedural (referencia) | match3_scene.ts | A | Implementación de referencia; ahora usa geoKit sin cambio visual | Nada |
-| Circuito y arena de Carrera | procedural | kart.ts `buildTrack`, `buildArena`, `decorate` | C | Cintas y público | Bordes con TRIM.hazard, carteles con calcos |
+| Circuito y arena de Carrera | procedural + Folded | kart.ts `buildTrack`, `buildArena`, `decorate` | C (hecho) | Cintas y público | Pórtico, rampas y labios con `TRIM.hazard`, vallas/tribunas/público con `FOLD.painted`/`FOLD.rust`, carteles de curva 3D y cajas `?` en `Rajdhani` |
 | Podio | procedural | kart.ts `buildPodium` | E | Pieza única | foldBox escalonado |
 
 ## Efectos, materiales y texturas
@@ -59,27 +59,30 @@ Nada se borra: los `.blend` quedan para proporciones, colisión, esqueleto, anim
 | Asset | Origen | Archivo | Clase | Nota | Qué haría falta |
 |---|---|---|---|---|---|
 | Partículas (chispas, polvo, motas) | pool `ParticleSystem` | fx.ts | A | Billboards válidos | Nada |
-| Restos / debris | instancias | fx.ts `debris` | E | Cubos | Placas, tornillos y fragmentos (geoKit) |
+| Restos / debris | instancias Folded | fx.ts `debris` | E (hecho) | Placas con tuerca | Placas de chapa pintada + tuerca de acero (`FOLD.painted` + `FOLD.bare()`) |
+| Sombras de contacto | thin instances | fx.ts `contactShadows` | A (nuevo) | 1 draw call, 0 allocs | Disco suave bajo el auto y hasta 259 enemigos (escala atenuada por altura) |
 | Marcas en el piso, manchas | thin/decal | fx.ts `mark`, `splat` | A | Decals | Podrían usar el atlas DECALS (mancha) |
 | Lluvia | thin instances | fx.ts `tickRain` | A | | Nada |
 | Materiales de juguete `M` | `pbr()` | render.ts | B | Plástico brillante con barniz | Migrar usos a FOLD por pieza |
 | Shader retro, SnapPlugin, post | render.ts | render.ts | A | Pipeline común; FOLD ahora lo usa (`snapMat`) | Nada |
 | Chapa gastada `wornTex` | canvas | kit3d.ts | A | Ahora con parámetro `wear` | Nada |
-| Carteles `SIGNS`, marquesina, decal lateral, póster | canvas | kit3d.ts | A | Textos en inglés del mundo | Nada |
+| Carteles `SIGNS`, marquesina, decal lateral, póster | canvas | kit3d.ts | A | Textos en inglés del mundo | Revisar póster bilingüe en `kit3d.ts:138` |
 | Polaroid / intro | canvas 2D | replay.ts, intro.ts | A | UI 2D | Nada |
-| Íconos UI | SVG | icons.ts | A | UI | Nada |
+| Íconos UI + Bestiario | SVG | icons.ts | A (ampliado) | UI + `beastIcon` (13 bichos) | Nada |
 
-## Estado 2026-10-07: Folded activo por defecto
+## Estado 2026-10-08: Folded activo por defecto + Ciclo #1 completado
 
-Migrado a Folded (src/folded_slice.ts): hormiga, escupidora (×1,3), escarabajo (×1,6), autito a fricción (×1,3), polilla, robot,
-rey, tarántula (+ patas `foldLeg`), cortadora, aspiradora, cortacercos, perro y gato (clips horneados con procBake), los 8 autos
-de CARS (y Carrera), cerca, cajas, latas de pintura, herramientas gigantes, regadera, autos reales del patio, tablones (woodM) y
-labio hazard de las rampas.
+Migrado a Folded (`src/folded_slice.ts`, `src/world.ts`, `src/fx.ts`, `src/kart.ts`): hormiga, escupidora (×1,3), escarabajo (×1,6),
+autito a fricción (×1,3), polilla, robot, rey, tarántula (+ patas `foldLeg` con rótula y bisagra), cortadora, aspiradora, cortacercos,
+perro y gato (clips horneados con `procBake` y pasadores de cadera/hombro), los 8 autos de CARS (y Carrera), cerca, cajas, latas de
+pintura, herramientas gigantes, regadera, macetas (`potFold`), gnomos (`gnomeFold`), soporte de manguera, autos reales del patio,
+tablones (`woodM`), labio hazard de las rampas, restos (`debris` en placas con tuerca) y circuito/decorado de Carrera (`kart.ts`).
 
 **Sin usar, sin borrar** (se pueden volver a mirar poniendo `FOLDED_SLICE = false` en src/folded.ts): `public/models/{ant,
 escupidora,escarabajo,friccion,robot,rey,tarantula,cortadora,aspiradora,cortacercos,polilla,perro,gato}.glb`, `public/models/cars/*.glb`
 (ya no se descargan), y los procedurales previos de models.ts (`enemyTemplate`, ramas de `carModel`, `articulatedLegMeshes`) y
 world.ts (mallas que ahora son colisionador invisible). Fuentes `.blend` en assets-src/ intactas.
 
-**Pendiente (sigue igual que antes):** macetas, gnomos, pelota, manguera, casa, árboles, rompibles en piezas (fase C), restos de
-fx.ts, circuito/podio de Carrera, taller del menú.
+**Pendiente (sigue igual que antes):** pelota (`ball`), árboles, rompibles en piezas (`hitBreakables`, fase C), podio de Carrera,
+taller del menú (`menuscene.ts`).
+

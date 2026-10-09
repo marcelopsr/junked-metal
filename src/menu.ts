@@ -8,7 +8,7 @@ import { DEF, type Kind } from "./enemies";
 import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { ARSENAL, PILOTS, type PilotId } from "./pilots";
-import { icon, UI_BTN_ICON, uiIcon } from "./icons";
+import { beastIcon, icon, UI_BTN_ICON, uiIcon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
 import { engineTest, initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
@@ -969,6 +969,10 @@ function statsHtml() {
     + `<div tabindex="0" class="carc ficha"><b>Mejores marcas por zona</b>${(Object.keys(ZONES) as ZoneId[]).map((z) => { const r = s.zone[z]; return kv(ZONES[z].short, r ? `${fmt(r.t)} · ${r.kills} bajas` : "—"); }).join("")}</div>`;
 }
 function renderBestiary() {
+  $("scr-bestiary").dataset.btab = btab;
+  const rec = $("records"), recSect = rec.previousElementSibling as HTMLElement | null;
+  rec.classList.toggle("hidden", btab !== "stats");
+  recSect?.classList.toggle("hidden", btab !== "stats");
   $("btabs").innerHTML = tabsHtml(BTABS, btab, "btab");
   $("beasts").innerHTML = btab === "stats" ? statsHtml() : btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
     const a: { name: string; txt: string; reward?: string; scrap?: number } = ACH[k], ok = save.ach.includes(k);
@@ -981,9 +985,9 @@ function renderBestiary() {
     : (Object.keys(DEF) as Kind[]).map((k) => {
       // Todo visible desde el inicio; lo propio (bajas) dice "Sin registros todavía" hasta que aparezca. Clic, Enter o A abren la ficha completa.
       const d = DEF[k], n = save.slain[k] ?? 0, met = save.seen.includes(k) || n > 0;
-      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}" data-beast="${k}"><b class="wi">${d.boss ? icon("jefe", 22) : ""}${d.name}</b>${rankOf(k)} · ${met ? `${n} ${n === 1 ? "baja" : "bajas"}` : "Sin registros todavía"}<div class="lore">${LORE[k]}</div><div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"} de XP` : "Fin de la partida"}</div></div>`;
+      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}" data-beast="${k}"><span class="bthumb">${beastIcon(k, 38)}</span><b class="wi">${d.boss ? icon("jefe", 22) : ""}${d.name}</b>${rankOf(k)} · ${met ? `${n} ${n === 1 ? "baja" : "bajas"}` : "Sin registros todavía"}<div class="lore">${LORE[k]}</div><div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"} de XP` : "Fin de la partida"}</div></div>`;
     }).join("");
-  $("records").innerHTML = save.runs.length
+  rec.innerHTML = save.runs.length
     ? `<tr><th>#</th><th>Tiempo</th><th>Bajas</th><th>Nivel</th><th>Semilla</th></tr>` + save.runs.map((r, i) => `<tr><td>${i + 1}</td><td>${fmt(r.t)}${r.win ? " V" : ""}</td><td>${r.kills}</td><td>${r.lv}</td><td>${r.seed}</td></tr>`).join("")
     : `<tr><td>Sin partidas todavía.</td></tr>`;
 }

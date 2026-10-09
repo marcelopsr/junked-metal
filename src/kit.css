@@ -247,7 +247,7 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 #banner .rxh { font: 700 11px/1 var(--jm-titulo); letter-spacing: .16em; color: var(--jm-texto2); border-bottom: 1px solid var(--jm-borde); }
 #banner .rx-tag { color: var(--jm-amarillo); }
 #banner .rx-live { border-radius: 50%; box-shadow: none; }
-#bannerTxt, #banner.evt-warn #bannerTxt, #banner.evt-now #bannerTxt { font: 700 clamp(18px, 3.4vw, 28px)/1.1 var(--jm-titulo); letter-spacing: .04em; text-transform: uppercase; color: var(--jm-texto); text-shadow: 0 2px 0 #000; }
+#bannerTxt, #banner.evt-warn #bannerTxt, #banner.evt-now #bannerTxt { font: 700 clamp(15px, 2.1vw, 20px)/1.12 var(--jm-titulo); letter-spacing: .04em; text-transform: uppercase; color: var(--jm-texto); text-shadow: 0 2px 0 #000; }
 #banner.evt-warn #bannerTxt { color: var(--jm-amarillo); }
 #banner.evt-now #bannerTxt { color: var(--jm-rojo); }
 #bannerIco { filter: none; color: var(--jm-amarillo); }

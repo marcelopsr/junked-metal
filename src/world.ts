@@ -4,7 +4,7 @@ import { debris, splat } from "./fx";
 import { canvasTex, G, M, pbr, shadows, surface, TEX, type Surf } from "./render";
 import { rng, seedRng } from "./rng";
 import { FOLD, FOLD_PAINT, FOLDED_SLICE } from "./folded";
-import { crateDetail, fencePanel, paintCanFold, rampLip, realCarFold, toolFold, wateringCanFold } from "./folded_slice";
+import { crateDetail, fencePanel, gnomeFold, paintCanFold, potFold, rampLip, realCarFold, toolFold, wateringCanFold } from "./folded_slice";
 import { precio } from "./balance";
 import type { Climate } from "./run";
 
@@ -235,17 +235,25 @@ const skin = (m: B.Mesh, name: string, build: () => B.Mesh[]) => {
   return m;
 };
 
-// Casa al fondo (da escala): fachada con ventanas encendidas y siluetas
+// Casa al fondo (da escala): fachada de ladrillo/revoque cálido con cornisas, marcos oscuros, ventanas encendidas y siluetas
 function house() {
   const GS = HALF * 2 + 60, K = HALF / 100;
+  const wallM = surface(pbr("houseWall", { color: "#9c5c46", rough: 0.88, emissive: "#1f120d" }), "brick", 16, 0.35);
+  const trimM = M.matte("#36261e"), sillM = M.matte("#5c4338");
   const h = merge("house", [
-    box(GS, 90, 6, pbr("houseWall", { color: "#efe6d8", rough: 0.9, emissive: "#6a6050" }), [0, 45, HALF + 14]), // emisivo: da la espalda al sol y quedaba azul marino
-    box(GS, 3, 10, M.matte("#8a5a44"), [0, 1.5, HALF + 12]),
+    box(GS, 90, 6, wallM, [0, 45, HALF + 14]),
+    box(GS, 4, 10, M.matte("#5c3d2e"), [0, 2, HALF + 12]),
+    box(GS, 1.8, 7.6, sillM, [0, 24, HALF + 13.2]),
+    box(GS + 4, 4, 10, trimM, [0, 88.5, HALF + 12]),
     ...[-70, -25, 45, 90].map((x, i) => box(26, 30, 1, i === 1 ? M.glass() : M.glow(i % 2 ? "#ffb15c" : "#ffcf8a"), [x * K, 42, HALF + 10.6])),
     // Siluetas en las ventanas encendidas (alguien mirando afuera)
     box(7, 14, 0.4, M.matte("#1a1410"), [-66 * K, 36, HALF + 10]), sph(6, M.matte("#1a1410"), [-66 * K, 46, HALF + 10], [1, 1, 0.2], 6),
     box(5, 10, 0.4, M.matte("#1a1410"), [84 * K, 34, HALF + 10]),
-    ...[-70, -25, 45, 90].map((x) => box(29, 33, 0.6, M.matte("#ffffff"), [x * K, 42, HALF + 10.9])),
+    ...[-70, -25, 45, 90].flatMap((x) => [
+      box(29.4, 33.4, 0.7, trimM, [x * K, 42, HALF + 10.9]),
+      box(31, 2.2, 2.2, sillM, [x * K, 25.8, HALF + 10.4]),
+    ]),
+    box(25, 42, 0.8, trimM, [10 * K, 21, HALF + 10.9]),
     box(22, 40, 1, pbr("door", { color: "#ffffff", rough: 0.6, tex: tex("door", TEX.wood) }), [10 * K, 20, HALF + 10.6]),
   ]);
   h.receiveShadows = true;
@@ -691,11 +699,14 @@ function planterAlley() {
   const sp = freeSpot(20);
   if (!sp) return;
   const ry = rng() * Math.PI, dx = Math.sin(ry), dz = Math.cos(ry), parts: B.Mesh[] = [];
+  const pMat = FOLDED_SLICE ? FOLD.painted("#6e7681", 0.85, 308) : M.matte("#8a8f94");
+  const l1 = FOLDED_SLICE ? FOLD.painted("#3f8f2f", 0.65, 309) : M.matte("#3f8f2f"), l2 = FOLDED_SLICE ? FOLD.painted("#4ea83a", 0.65, 310) : M.matte("#4ea83a");
   for (let k = 0; k < 8; k++) for (const e of [-3.6, 3.6]) {
     const t = (k - 3.5) * 4.4, x = sp[0] + dx * t + dz * e, z = sp[1] + dz * t - dx * e;
-    stat(cyl(3.2, 3.2, 2.6, M.matte("#8a8f94"), [x, 1.3, z], undefined, 10), B.PhysicsShapeType.CYLINDER).isVisible = false;
-    parts.push(cyl(3.2, 2.6, 2.6, M.matte("#8a8f94"), [x, 1.3, z], undefined, 10), cyl(2.8, 2.8, 0.2, M.matte("#4a3420"), [x, 2.55, z], undefined, 10));
-    for (let l = 0; l < 3; l++) { const a = l * 2.1 + k; const lf = sph(2, M.matte(l % 2 ? "#3f8f2f" : "#4ea83a"), [x + Math.cos(a) * 0.6, 3.3, z + Math.sin(a) * 0.6], [0.4, 0.2, 1.4]); lf.rotation.set(0.6, -a + Math.PI / 2, 0); parts.push(lf); }
+    stat(cyl(3.2, 3.2, 2.6, pMat, [x, 1.3, z], undefined, 10), B.PhysicsShapeType.CYLINDER).isVisible = false;
+    parts.push(cyl(3.2, 2.6, 2.6, pMat, [x, 1.3, z], undefined, 10), cyl(2.8, 2.8, 0.2, FOLDED_SLICE ? FOLD.dark() : M.matte("#4a3420"), [x, 2.55, z], undefined, 10));
+    if (FOLDED_SLICE) parts.push(cyl(3.32, 3.32, 0.3, FOLD.rust(), [x, 2.4, z], undefined, 10));
+    for (let l = 0; l < 3; l++) { const a = l * 2.1 + k; const lf = sph(2, l % 2 ? l1 : l2, [x + Math.cos(a) * 0.6, 3.3, z + Math.sin(a) * 0.6], [0.4, 0.2, 1.4]); lf.rotation.set(0.6, -a + Math.PI / 2, 0); parts.push(lf); }
     bare.push({ x, z, r: 1.8 });
   }
   shadows.addShadowCaster(merge("planters", parts));
@@ -708,9 +719,9 @@ function toyScatter() {
   const toy = ["#ef4444", "#3b82f6", "#facc15", "#22c55e", "#a855f7"];
   for (let k = 0; k < 26; k++) {
     const a = rng() * 6.3, r = Math.sqrt(rng()) * 11, s = between(0.7, 1.5), c = toy[int(0, 4)];
-    breakable(dyn(box(s, s * between(0.6, 1), s * between(1, 2), M.plastic(c), [sp[0] + Math.cos(a) * r, s / 2, sp[1] + Math.sin(a) * r], [0, rng() * 6.3, 0]), B.PhysicsShapeType.BOX, 0.3), 25, s * 0.7, c);
+    breakable(dyn(box(s, s * between(0.6, 1), s * between(1, 2), FOLDED_SLICE ? FOLD.painted(c, 0.55, 312 + (k % 5)) : M.plastic(c), [sp[0] + Math.cos(a) * r, s / 2, sp[1] + Math.sin(a) * r], [0, rng() * 6.3, 0]), B.PhysicsShapeType.BOX, 0.3), 25, s * 0.7, c);
   }
-  for (let k = 0; k < 5; k++) { const a = rng() * 6.3, r = Math.sqrt(rng()) * 10; dyn(sph(1.4, M.plastic(toy[k]), [sp[0] + Math.cos(a) * r, 0.7, sp[1] + Math.sin(a) * r], undefined, 10), B.PhysicsShapeType.SPHERE, 0.4); }
+  for (let k = 0; k < 5; k++) { const a = rng() * 6.3, r = Math.sqrt(rng()) * 10; dyn(sph(1.4, FOLDED_SLICE ? FOLD.painted(toy[k], 0.5, 318 + k) : M.plastic(toy[k]), [sp[0] + Math.cos(a) * r, 0.7, sp[1] + Math.sin(a) * r], undefined, 10), B.PhysicsShapeType.SPHERE, 0.4); }
   bare.push({ x: sp[0], z: sp[1], r: 12 });
 }
 
@@ -718,20 +729,29 @@ function toyScatter() {
 function pots(n: number) {
   const list: [number, number, number][] = [];
   for (let i = 0; i < n; i++) { const sc = between(0.8, 1.35), p = freeSpot(6 * sc); if (p) { list.push([p[0], p[1], sc]); bare.push({ x: p[0], z: p[1], r: 3 * sc }); } }
+  const l1 = FOLDED_SLICE ? FOLD.painted("#3f8f2f", 0.65, 309) : M.matte("#3f8f2f"), l2 = FOLDED_SLICE ? FOLD.painted("#4ea83a", 0.65, 310) : M.matte("#4ea83a");
   for (const [x, z, sc] of list) {
     const pot = stat(merge("pot", [
       cyl(5 * sc, 4 * sc, 4 * sc, M.matte("#c2410c"), [0, 2 * sc, 0], undefined, 16),
       cyl(5.4 * sc, 5.4 * sc, 0.6 * sc, M.matte("#9a3412"), [0, 3.9 * sc, 0], undefined, 16),
       cyl(4.6 * sc, 4.6 * sc, 0.2 * sc, M.matte("#4a3420"), [0, 4.1 * sc, 0], undefined, 16),
     ]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z]);
+    if (FOLDED_SLICE) {
+      pot.isVisible = false;
+      const pk = template("potF", potFold).createInstance("potF");
+      pk.parent = pot; pk.scaling.setAll(sc); pk.isPickable = false; pk.receiveShadows = true; shadows.addShadowCaster(pk);
+    }
     const plant: B.Mesh[] = []; // hojas y flor en una sola malla (se rompe junto con la maceta: extras)
     for (let k = 0; k < 7; k++) {
       const a = (k / 7) * Math.PI * 2;
-      const leaf = sph(3 * sc, M.matte(k % 2 ? "#3f8f2f" : "#4ea83a"), [x + Math.cos(a) * 1.3 * sc, 5.5 * sc, z + Math.sin(a) * 1.3 * sc], [0.4, 0.2, 1.4]);
-      leaf.rotation.set(0.6, -a + Math.PI / 2, 0);
+      const leaf = FOLDED_SLICE
+        ? box(1.1 * sc, 0.16 * sc, 2.8 * sc, k % 2 ? l1 : l2, [x + Math.cos(a) * 1.3 * sc, 5.4 * sc, z + Math.sin(a) * 1.3 * sc], [0.55, -a + Math.PI / 2, 0])
+        : sph(3 * sc, k % 2 ? l1 : l2, [x + Math.cos(a) * 1.3 * sc, 5.5 * sc, z + Math.sin(a) * 1.3 * sc], [0.4, 0.2, 1.4]);
+      if (!FOLDED_SLICE) leaf.rotation.set(0.6, -a + Math.PI / 2, 0);
       plant.push(leaf);
     }
-    plant.push(sph(1.2 * sc, M.plastic(["#f43f5e", "#facc15", "#a855f7"][Math.floor(rng() * 3)]), [x, 7 * sc, z]));
+    const fc = ["#f43f5e", "#facc15", "#a855f7"][Math.floor(rng() * 3)];
+    plant.push(sph(1.2 * sc, FOLDED_SLICE ? FOLD.painted(fc, 0.5, 325) : M.plastic(fc), [x, 6.8 * sc, z]));
     const leaves = merge("plant", plant);
     shadows.addShadowCaster(leaves);
     breakable(pot, 120 * sc, 2.6 * sc, "#c2410c", true, [leaves]);
@@ -790,28 +810,28 @@ function rocks(n: number) {
 function gnomes(n: number) {
   const list: [number, number, number][] = [];
   for (let i = 0; i < n; i++) { const p = freeSpot(5); if (p) { list.push([p[0], p[1], rng() * 6.3]); bare.push({ x: p[0], z: p[1], r: 2.5 }); } }
-  for (const [x, z, ry] of list) stat(merge("gnome", [
+  for (const [x, z, ry] of list) skin(stat(merge("gnome", [
     cyl(2.4, 3.6, 4, M.plastic("#2563eb"), [0, 2, 0], undefined, 12),
     cyl(2.6, 2.6, 0.5, M.plastic("#78350f"), [0, 2.6, 0], undefined, 12),
     sph(2.4, M.plastic("#f5c7a9"), [0, 5, 0]),
     cyl(0.1, 2.6, 2.4, M.plastic("#f8fafc"), [0, 3.6, 0.8], [Math.PI - 0.3, 0, 0], 10),
     cyl(0.05, 2.6, 3.4, M.plastic("#dc2626"), [0, 7, 0], [-0.2, 0, 0], 12),
     sph(0.6, M.plastic("#f59e9e"), [0, 5, 1.15]),
-  ]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z, ry]);
+  ]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z, ry]), "gnomeF", gnomeFold);
 }
 
 // Manguera enrollada con su tramo serpenteando por el pasto
 function hose() {
   const hs = freeSpot(8);
   if (!hs) return;
-  const [hx, hz] = hs;
-  const h = merge("hose", [0, 1, 2, 3].map((i) => tor(9 - i * 0.2, 0.9, M.plastic("#22c55e"), [0, 0.45 + i * 0.85, 0], undefined, 24)));
+  const [hx, hz] = hs, hm = FOLDED_SLICE ? FOLD.painted("#1f9d4c", 0.65, 305) : M.plastic("#22c55e");
+  const h = merge("hose", [0, 1, 2, 3].map((i) => tor(9 - i * 0.2, 0.9, hm, [0, 0.45 + i * 0.85, 0], undefined, 24)));
   h.position.set(hx, 0, hz);
   stat(h, B.PhysicsShapeType.MESH);
   bare.push({ x: hx, z: hz, r: 5 });
   const a0 = rng() * 6.3, path: [number, number, number][] = [[hx + Math.cos(a0) * 4.6, 0.4, hz + Math.sin(a0) * 4.6]];
   for (let k = 1; k < 5; k++) path.push([path[k - 1][0] + Math.cos(a0 + (rng() - 0.5)) * 9, 0.4, path[k - 1][2] + Math.sin(a0 + (rng() - 0.5)) * 9]);
-  tube(path, 0.45, M.plastic("#22c55e")).receiveShadows = true;
+  tube(path, 0.45, hm).receiveShadows = true;
 }
 
 function wateringCan() {

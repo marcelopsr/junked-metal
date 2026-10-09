@@ -57,7 +57,7 @@ export const sessions = [
     { id: "config-fsr", act: async (p) => { await p.evaluate(() => { const s = document.querySelector('select[data-set="scaler"]'); s.value = "fsr"; s.dispatchEvent(new Event("change", { bubbles: true })); }); await p.waitForTimeout(150); } },
     { id: "controles", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ scaler: "simple" })); await ctlTab(p); } },
     { id: "bestiario", act: async (p) => { await view("bestiary")(p); } },
-    { id: "ficha", act: async (p) => { await p.dispatchEvent("#beasts [data-beast]", "click"); await wait(p, () => document.querySelector("#scr-beast.on")); await p.waitForTimeout(500); } },
+    { id: "ficha", act: async (p) => { await p.dispatchEvent("#beasts [data-beast]", "click"); await wait(p, () => document.querySelector("#scr-beast.on")); await tick(p, 90); await p.waitForTimeout(300); } },
     { id: "ficha-hormiga", act: async (p) => {
       await view("bestiary")(p);
       await p.dispatchEvent('[data-beast="hormiga"]', "click");

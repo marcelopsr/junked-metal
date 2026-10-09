@@ -2,6 +2,7 @@ import * as B from "@babylonjs/core";
 import { box, template } from "./models";
 import { G, M, pbr, TEX, wetGround } from "./render";
 import { RAIN } from "./run";
+import { FOLD, FOLDED_SLICE } from "./folded";
 
 // Partículas con un pool de sistemas reutilizables (cero creación por golpe).
 let scene: B.Scene;
@@ -104,7 +105,9 @@ export const FX = {
 // ---------- Restos con física simple (sin Havok: son decorativos) ----------
 type Chunk = { m: B.InstancedMesh; v: B.Vector3; av: B.Vector3; life: number };
 const chunks: Chunk[] = [];
-const chunkTpl = (c: string) => template("chunk" + c, () => [box(0.3, 0.14, 0.24, M.plastic(c), [0, 0, 0])]);
+const chunkTpl = (c: string) => template("chunk" + c, () => (FOLDED_SLICE
+  ? [box(0.34, 0.06, 0.26, FOLD.painted(c, 0.75, 401), [0, 0, 0]), box(0.11, 0.09, 0.11, FOLD.bare(), [0.06, 0.03, 0])]
+  : [box(0.3, 0.14, 0.24, M.plastic(c), [0, 0, 0])]));
 
 export function debris(pos: B.Vector3, color: string, n: number, power = 6, size = 1) {
   const tpl = chunkTpl(color);
@@ -326,8 +329,32 @@ function rainHide() { rainUp = false; for (const t of [drops, splashes, puddles]
 /** Humedad inicial (lab): 0 seco .. 1 empapado, con charcos al máximo. */
 export const rainWet = (w: number) => { wet = w; wetGround(w); };
 
+let cShadows: Thin;
+/** Sombras de contacto bajo el auto y cada enemigo (1 draw call por thin instances): anclan los cuerpos también bajo techo o con VAT. */
+export function contactShadows(carPos: B.Vector3 | null, enemies: { pos: B.Vector3; def: { size: [number, number, number] } }[]) {
+  if (!carPos) { if (cShadows) cShadows.m.thinInstanceCount = 0; return; }
+  if (!cShadows) {
+    const m = pbr("cShadowMat", { color: "#080c10", rough: 1, alpha: 0.44 });
+    m.disableLighting = true; m.zOffset = -3; m.disableDepthWrite = true;
+    const t = new B.DynamicTexture("cShadowTex", 32, scene, false);
+    const c = t.getContext() as unknown as CanvasRenderingContext2D, g = c.createRadialGradient(16, 16, 2, 16, 16, 16);
+    g.addColorStop(0, "#fff"); g.addColorStop(0.65, "#bbb"); g.addColorStop(1, "#000"); c.fillStyle = g; c.fillRect(0, 0, 32, 32); t.update();
+    t.getAlphaFromRGB = true; m.opacityTexture = t;
+    cShadows = thin(flatDisc("cShadow", 12), m, 260);
+  }
+  let k = 0;
+  put(cShadows, k++, carPos.x, 0.032, carPos.z, 1.05, 1.35);
+  for (let i = 0; i < enemies.length && k < cShadows.n; i++) {
+    const e = enemies[i], p = e.pos, s = e.def.size, air = Math.max(0.45, 1 - Math.max(0, p.y - s[1] * 0.5) * 0.04);
+    put(cShadows, k++, p.x, 0.031, p.z, s[0] * 0.65 * air, s[2] * 0.65 * air);
+  }
+  cShadows.m.thinInstanceCount = k;
+  cShadows.m.thinInstanceBufferUpdated("matrix");
+}
+
 export function clearFx() {
   if (drops) { rainHide(); pData.fill(1e9); }
+  if (cShadows) cShadows.m.thinInstanceCount = 0;
   wet = 0; wetGround(0);
   for (const c of chunks) c.m.dispose();
   for (const k of marks) k.m.dispose();

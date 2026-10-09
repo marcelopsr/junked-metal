@@ -4,7 +4,7 @@ import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
 import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineKind, SFX } from "./sfx";
-import { ambient, burst, clearFx, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
+import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { activePad, btnName, camCycle, ctl, input, isTouch, keyHit, KEYS, padPressed, padSnap, pb, pollInput, setupTouch } from "./input";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
 import { GLB, glbFootprint, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
@@ -283,7 +283,7 @@ function startRun(d = false) {
   hintOn = save.hint; // se apaga en update() con la primera entrada o a los HINT_S de partida
 }
 let hintOn = false;
-const HINT_S = 11;
+const HINT_S = 7;
 
 // Logros (achievements.ts): las pruebas de dev (__sim, lab, god) no otorgan nada ni tocan el guardado
 let runAch: string[] = [], hitAt = 0; // logros de esta partida (pantalla final) y último golpe recibido
@@ -1340,6 +1340,7 @@ scene.onBeforeRenderObservable.add(() => {
   // (si rotara, la dirección del stick cambiaría mientras girás).
   const k = 1 - Math.exp(-5 * dt);
   setWind(performance.now() / 1000, car?.pos ?? null);
+  if (!simulating) contactShadows(car && (state === "play" || state === "level" || state === "outro" || state === "pause") ? car.pos : null, enemies);
   if (state === "race" || state === "duel" || state === "match3") {
     // carrera / demolición manejan cámara en su módulo
   } else if (car) {

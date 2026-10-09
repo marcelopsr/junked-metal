@@ -14,8 +14,8 @@ const ATK = BAL.ataques;
 const stats = (k: Kind) => { const e = BAL.enemigos[k]; return { hp: e.vida, speed: e.velocidad, dmg: e.dano, mass: e.peso, xp: e.xp, final: e.tipo === "jefe_final" }; };
 export const DEF: Record<Kind, Def> = {
   // Jefes finales (tipo jefe_final): dos barras. Al vaciar la primera ruge y se llena la segunda (rearm); ver ataques.segunda_barra_*
-  hormiga: { name: "Hormiga", ...stats("hormiga"), size: [0.9, 0.6, 1.7], color: "#a0522d" },
-  escupidora: { name: "Hormiga escupidora", ...stats("escupidora"), size: [1.1, 0.8, 2], color: "#d2381c" },
+  hormiga: { name: "Hormiga", ...stats("hormiga"), size: [0.9, 0.6, 1.7], color: "#6e3520" },
+  escupidora: { name: "Hormiga escupidora", ...stats("escupidora"), size: [1.1, 0.8, 2], color: "#6b8a22" },
   friccion: { name: "Autito a fricción", ...stats("friccion"), size: [0.9, 0.6, 1.6], color: "#f97316" },
   robot: { name: "Robot a cuerda", ...stats("robot"), size: [1.2, 1.7, 1], color: "#ef4444" },
   polilla: { name: "Polilla", ...stats("polilla"), size: [1.4, 0.5, 1.1], color: "#d8c690" },
