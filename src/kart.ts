@@ -790,13 +790,17 @@ const relink: { c: Car; f: number }[] = [];
 const stuckLog: { n: string; idx: number; x: number; z: number; t: number }[] = [];
 
 function onLap(r: Racer) {
-  if (r.lap >= 2) { const lt = t - r.lapT; if (!r.lapBest || lt < r.lapBest) r.lapBest = lt; }
+  const lt = r.lap >= 2 ? t - r.lapT : 0;
+  const isBest = lt > 0 && (!r.lapBest || lt <= r.lapBest);
+  if (isBest) r.lapBest = lt;
   r.lapT = t;
   if (r.lap > LAPS) {
     r.fin = t; r.place = racers.filter((o) => o.fin > 0).length;
-    if (r.human >= 0) { say(r.human, `¡Llegaste ${r.place}º!`); SFX.levelUp(); if (finishedAt < 0) finishedAt = t; }
+    if (r.human >= 0) { say(r.human, `¡Llegaste ${r.place}º!${isBest ? " · ¡VUELTA RÉCORD!" : ""}`); SFX.levelUp(); if (finishedAt < 0) finishedAt = t; }
   } else if (r.human >= 0 && r.lap >= 1) {
-    say(r.human, r.lap === LAPS ? "¡ÚLTIMA VUELTA!" : `VUELTA ${r.lap}`); SFX.lap();
+    const lapMsg = r.lap === LAPS ? "¡ÚLTIMA VUELTA!" : `VUELTA ${r.lap}`;
+    const timeMsg = lt > 0 ? ` · ${fmt(lt)}${isBest ? " ¡RÉCORD!" : ""}` : "";
+    say(r.human, `${lapMsg}${timeMsg}`); SFX.lap();
     if (r.lap === LAPS) music("boss", 1);
   }
 }

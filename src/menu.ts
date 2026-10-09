@@ -412,7 +412,7 @@ function renderPlay() {
     const r = save.stats.zone[zid], own = owns("zone:" + zid), win = !!r && r.t >= 600;
     return `<span class="zchip ${zid === save.zone ? "on" : ""} ${win ? "win" : ""}"><b>${ZONES[zid].short}</b><em>${!own ? "Bloq." : r ? `${fmt(r.t)}${win ? " ★" : ""}` : "—"}</em></span>`;
   }).join("")}</div>`;
-  $("playRec").innerHTML = `<div>${zr ? `Mejor marca en ${z.short}: ${fmt(zr.t)} · ${zr.kills} ${zr.kills === 1 ? "baja" : "bajas"}${zr.t >= 600 ? " · ★ ZONA CONQUISTADA" : ""}` : `Sin marcas registradas en ${z.short} todavía.`}</div>${zRow}`;
+  $("playRec").innerHTML = `<div class="${zr && zr.t >= 600 ? "win-rec" : ""}">${zr ? `Mejor marca en ${z.short}: ${fmt(zr.t)} · ${zr.kills} ${zr.kills === 1 ? "baja" : "bajas"}${zr.t >= 600 ? " · ★ ZONA CONQUISTADA" : ""}` : `Sin marcas registradas en ${z.short} todavía.`}</div>${zRow}`;
   $("playKit").innerHTML = kitStripHtml();
   $("curseBtn").textContent = curseTxt();
 }
@@ -420,13 +420,13 @@ function renderDaily() {
   const b = save.daily.day === today() ? save.daily.best : 0;
   const seed = Number(new URLSearchParams(location.search).get("seed")) || dailySeed();
   const p = previewProfile(seed);
-  $("dailyBrief").innerHTML = `<div class="briefGrid">`
+  $("dailyBrief").innerHTML = `<div class="briefRec">DESAFÍO DIARIO · ${today()} · SEMILLA #${seed}</div><div class="briefGrid">`
     + `<div><span>Escenario</span><b>Patio · ${p.climate.name}${Number.isFinite(p.rainAt) ? " (Lluvia)" : ""}</b></div>`
     + `<div><span>Plaga dominante</span><b>${p.plague.name}</b></div>`
     + `<div><span>Minijefes</span><b class="briefMinis"><span class="wi">${beastIcon(p.minis[0], 16)}${DEF[p.minis[0]].name}</span><span class="wi">${beastIcon(p.minis[1], 16)}${DEF[p.minis[1]].name}</span></b></div>`
     + `<div><span>Jefe final (10:00)</span><b class="wi">${beastIcon(p.final, 18)}${DEF[p.final].name}</b></div>`
     + `</div>` + kitStripHtml();
-  $("dailyInfo").textContent = b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy. El mejor tiempo del día queda como récord.";
+  $("dailyInfo").textContent = `Semilla #${seed} · ${b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy. El mejor tiempo del día queda como récord."}`;
 }
 function refreshModes() {
   const rb = (save as { raceBest?: Record<string, number> }).raceBest ?? {};

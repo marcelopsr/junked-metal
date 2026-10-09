@@ -409,3 +409,22 @@ Carrera (1) y Survivor en partida (2).
 4. **Insignias de atajo de teclado (`1–4`) en los botones de herramientas `#m3-tools` de Junket Crush (Subagente 4 · `src/match3.ts`, `src/match3.css`):**
    - `ensureUi()` incluye `<i class="m3-tkey">${i + 1}</i>` en la esquina superior izquierda de cada herramienta (`Martillo`, `Sierra`, `Imán`, `Llave`) en escritorio (`pc-match3-jefe.png`), ocultándose automáticamente en pantallas táctiles (`@media (pointer: coarse)`).
 
+---
+
+## 2026-10-09 · Ciclo #19 (Ficha Diaria con Semilla y Zona Conquistada, Alerta Batería `BAJA` y Daño `!`, Récord de Vuelta en Carrera y Placa `JEFE` en Mapa de Junket Crush)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-diario.png`, `.shots/actual/pc-menu-jugar.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-mapa.png` (`npm run shots -- --only jugar,diario,partida,carrera,match3`, 35 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Franja `DESAFÍO DIARIO · FECHA · SEMILLA #` y resaltado `.win-rec` de zona conquistada (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - `renderDaily()` antepone la franja `.briefRec` destacada con la fecha y código de semilla (`DESAFÍO DIARIO · 2026-10-09 · SEMILLA #3`) dentro de `#dailyBrief`, y actualiza `#dailyInfo` con el prefijo `Semilla #3 · Récord...` (`pc-menu-diario.png`).
+   - `renderPlay()` aplica `.win-rec` en oro cálido `#ffd24a` al renglón de mejor marca en `#playRec` cuando la zona ya fue conquistada (`zr.t >= 600`) (`pc-menu-jugar.png`).
+2. **Alerta `· BAJA` pulsante en `#volt` y sufijo `!` en números de daño crítico (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - `hudUpdate()` muestra `${volt}V · BAJA` cuando la batería cae por debajo del 25% (`low`), con resplandor y animación `voltPulse` roja en `#txl.low #volt`.
+   - `damageNumber()` añade el sufijo `!` (`${Math.round(v)}!`) en números de daño crítico flotantes.
+3. **Cronómetro de vuelta cerrada (`fmt(lt)`) y sello `¡RÉCORD!` en `onLap()` de Carrera (Subagente 3 · `src/kart.ts`):**
+   - `onLap()` calcula el tiempo de la vuelta recién completada (`lt = t - r.lapT`), actualiza `r.lapBest` y en el aviso central `say()` informa `${lapMsg} · ${fmt(lt)}${isBest ? " ¡RÉCORD!" : ""}` (y `¡Llegaste Nº! · ¡VUELTA RÉCORD!` en meta).
+4. **Placa roja `"JEFE"` sobre los nodos de jefe en el mapa de campaña de Junket Crush (Subagente 4 · `src/match3_draw.ts`):**
+   - `drawNode()` renderiza una placa compacta `"JEFE"` con fondo rojo carmesí `M3C.rojo` y tipografía técnica centrada en `y - r - 9` sobre las tuercas hexagonales de niveles de jefe (`lv.boss`) en la Ruta del Desguace (`pc-match3-mapa.png`).
+
+

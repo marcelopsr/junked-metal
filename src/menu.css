@@ -310,6 +310,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .briefRec .zchip.on { border-color: var(--jm-naranja); color: var(--jm-texto); }
 .briefRec .zchip.win em { color: var(--jm-amarillo2, #ffd24a); font-style: normal; font-weight: 700; }
 .briefRec .zchip em { font-style: normal; font-variant-numeric: tabular-nums; }
+#playRec .win-rec { color: var(--jm-amarillo2, #ffd24a); font-weight: 700; }
 #dailyBrief { display: flex; flex-direction: column; gap: 6px; }
 .briefGrid, .briefKit { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 8px 10px; background: var(--jm-fondo); border: 1px solid var(--jm-borde); border-radius: var(--jm-r); }
 .briefKit { border-top: 2px solid rgba(181, 101, 29, .65); }

@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-09 (Ciclos #1 a #18 completados y validados · Ciclo #19 listo para selección)
+**Última actualización:** 2026-10-09 (Ciclos #1 a #19 completados y validados · Ciclo #20 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -196,38 +196,50 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #19
+### Ciclo #19 (2026-10-09) — Ficha Diaria con Semilla y Zona Conquistada, Alerta Batería `BAJA` y Daño `!`, Récord de Vuelta en Carrera y Placa `JEFE` en Mapa de Junket Crush
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Desafío Diario y Supervivencia (`src/menu.ts`, `src/menu.css`):** Franja `.briefRec` destacada con fecha y código de semilla (`DESAFÍO DIARIO · 2026-10-09 · SEMILLA #3`) en `#dailyBrief`, prefijo `Semilla #3 · ` en `#dailyInfo`, y clase `.win-rec` en oro cálido `#ffd24a` para el récord de zona conquistada en `#playRec`.
+  - **Subagente 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`):** Alerta `${volt}V · BAJA` cuando la batería cae bajo el 25% (`low`) con resplandor y animación `voltPulse` roja en `#txl.low #volt`, más sufijo `!` en números de daño crítico flotantes (`${Math.round(v)}!`).
+  - **Subagente 3 · Carrera: Vueltas (`src/kart.ts`):** Cronómetro de vuelta cerrada (`fmt(lt)`) y sello `¡RÉCORD!` en el aviso central `say()` en `onLap(r)` (`${lapMsg} · ${fmt(lt)}${isBest ? " ¡RÉCORD!" : ""}`).
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3_draw.ts`):** Placa compacta `"JEFE"` con fondo rojo carmesí `M3C.rojo` y tipografía técnica centrada en `y - r - 9` sobre las tuercas hexagonales de niveles de jefe (`lv.boss`) en la Ruta del Desguace.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (460 ms), `npm run shots -- --only jugar,diario,partida,carrera,match3` (35 capturas verificadas en PC y celular) y `npx graphify update .` (3074 nodos, 7524 aristas).
 
-### A. Área 1 · Submenú Desafío Diario (`#scr-daily`) y Supervivencia (`#scr-play`) (`src/menu.ts`, `src/menu.css`)
-1. **Encabezado `DESAFÍO DIARIO · FECHA · SEMILLA #` en `#scr-daily` y Resaltado de Zona Conquistada en `#scr-play`:**
-   - **Qué es:** En `renderDaily()` (`src/menu.ts`), agregar una franja `.briefRec` con la fecha e identificador de la semilla del día (`DESAFÍO DIARIO · ${today()} · SEMILLA #${seed}`) e incluir `Semilla #${seed}` en `#dailyInfo`. En `renderPlay()`, resaltar en dorado (`.win-rec`) el renglón principal de `#playRec` cuando la zona seleccionada ya fue conquistada (`zr && zr.t >= 600`).
-   - **Qué problema resuelve:** En `#scr-daily`, el jugador ve el clima y los jefes pero no el código de la semilla diaria ni la fecha del desafío dentro de la tarjeta `.briefCard`.
-   - **Valor:** Ficha diaria completa y verificable para comparar semillas e intentos del día. Complejidad: Baja.
+---
 
-### B. Área 2 · HUD de Supervivencia: Alerta `BAJA` en Batería (`#volt`) y Sufijo `!` en Daño Crítico (`src/ui.ts`, `src/hud.css`)
-2. **Aviso de Baja Tensión en `#volt` (`< 25%`) y Exclamación `!` en Números de Daño Crítico (`damageNumber`):**
-   - **Qué es:** En `hudUpdate()` (`src/ui.ts`), cuando la batería cae por debajo del 25% (`low`), mostrar `${v}V · BAJA` en `#volt` con color rojo pulsante (`#txl.low #volt`), y en `damageNumber()`, añadir `!` al texto cuando el impacto es crítico (`crit`).
-   - **Qué problema resuelve:** Cuando el chasis está en estado crítico (`< 25%`), el voltaje numérico cambia sutilmente (`9.5V`) sin una etiqueta de alerta textual inmediata junto a la batería, y los impactos críticos solo cambian de tamaño/color sin signo distintivo.
-   - **Valor:** Lectura periférica inmediata de peligro de batería y mayor impacto visual en golpes críticos. Complejidad: Baja.
+## 4. Backlog Vivo de Oportunidades — Ciclo #20
 
-### C. Área 3 · Carrera: Tiempo de Vuelta y Aviso `¡RÉCORD!` al Cruzar la Meta (`src/kart.ts`)
-3. **Cronómetro de Vuelta y Sello `¡RÉCORD!` en el Aviso Central `onLap()` de Carrera:**
-   - **Qué es:** En `onLap(r)` (`src/kart.ts`), calcular el tiempo de la vuelta recién completada (`lt = t - r.lapT`) y si marca la mejor vuelta personal de la carrera (`isBest`), mostrar en el aviso `say()` de cada vuelta: `VUELTA 2 · 0:28.4 ¡RÉCORD!` (o `¡ÚLTIMA VUELTA! · 0:28.4 ¡RÉCORD!`).
-   - **Qué problema resuelve:** Hoy al cruzar la línea de meta el aviso solo dice `VUELTA 2` o `¡ÚLTIMA VUELTA!`, sin informar cuánto tardó la vuelta recién cerrada ni si fue vuelta rápida.
-   - **Valor:** Feedback arcade instantáneo de ritmo de vuelta tras cada paso por meta. Complejidad: Baja.
+### A. Área 1 · Menú de Configuración y Diagnóstico de Mandos (`src/menu.ts`, `src/menu.css`)
+1. **Iluminación Reactiva `.active` en los Anillos de Stick en el Probador de Mandos (`padTest`):**
+   - **Qué es:** En `padTest()` (`src/menu.ts`), cuando el stick izquierdo o derecho sale de la zona muerta (`m >= PAD.dead`), añadir la clase `.active` al contenedor `.pt-st` para que el anillo exterior `.pt-ring` se ilumine en ámbar cálido (`#ffd24a`) y marque visualmente la deflexión activa en tiempo real.
+   - **Qué problema resuelve:** En la pantalla de Configuración de controles, el probador de joystick mueve el punto interior pero el anillo conserva el mismo borde apagado, dificultando verificar con claridad el umbral de activación de la zona muerta.
+   - **Valor:** Feedback de diagnóstico de mandos mucho más nítido e intuitivo al calibrar el control. Complejidad: Baja.
 
-### D. Área 4 · Gabinete Junket Crush: Placa `JEFE` en los Nodos de Jefe del Mapa (`src/match3_draw.ts`)
-4. **Etiqueta `JEFE` sobre los Nodos de Jefe en el Mapa de Campaña (`RUTA DEL DESGUACE`):**
-   - **Qué es:** En `drawNode()` (`src/match3_draw.ts`), cuando `lv.boss` es `true`, dibujar sobre el borde superior de la tuerca hexagonal una placa compacta `"JEFE"` con fondo rojo carmesí (`M3C.rojo`) y borde oscuro/dorado.
-   - **Qué problema resuelve:** En el mapa de campaña, los nodos de jefe (niveles 5 y 10) son un poco más grandes (`r = 40` vs `33`), pero cuando están bloqueados o ya completados en dorado no tienen una insignia explícita que los distinga como combates de jefe.
-   - **Valor:** Identificación visual inmediata de los hitos de jefe en la Ruta del Desguace. Complejidad: Baja.
+### B. Área 2 · HUD de Supervivencia: Pulso de Nitro Máximo (`#boost.full`) y Destello (`src/ui.ts`, `src/hud.css`)
+2. **Indicador de Impulso Máximo (`.full`) en la Barra de Nitro (`#boost`):**
+   - **Qué es:** En `hudUpdate()` (`src/ui.ts`), cuando el boost alcanza el 100% de carga (`d.boost >= 100`), aplicar de forma memoizada la clase `.full` al contenedor `#boost` para encender un borde cian brillante y pulso sutil de sobrepresión.
+   - **Qué problema resuelve:** En combate rápido el jugador no siempre detecta si la barra de nitro llegó a su tope máximo para soltar un acelerón o embestida evasiva.
+   - **Valor:** Lectura periférica instantánea de disponibilidad total de nitro sin desviar la mirada del auto. Complejidad: Baja.
+
+### C. Área 3 · Carrera: Efecto de Objeto Desplegado (`.used`) en `.ritem` (`src/kart.ts`, `src/race.css`)
+3. **Destello de Confirmación de Uso de Objeto (`.used`) en la Caja `.ritem`:**
+   - **Qué es:** En `useItem(r)` (`src/kart.ts`), cuando el jugador humano presiona el botón de objeto y lo despliega con éxito, disparar una clase temporal `.used` sobre `.ritem` con un flash blanco/cian rápido (`0.25 s`) antes de limpiar el ícono.
+   - **Qué problema resuelve:** Al accionar un petardo o escudo, la caja del ítem se vacía de golpe sin una transición o confirmación táctil de que la orden fue recibida por el vehículo.
+   - **Valor:** Mayor satisfacción táctil y certeza de despliegue de objetos en carrera. Complejidad: Baja.
+
+### D. Área 4 · Gabinete Junket Crush: Display de Multiplicador de Puntos en Cadena (`src/match3.ts`, `src/match3.css`)
+4. **Insignia Flotante de Multiplicador de Cascada (`×2`, `×3`, `×4`) en el Tablero de Juego:**
+   - **Qué es:** En `src/match3.ts`, cuando ocurre una reacción en cadena (`chain > 1`), mostrar un indicador flotante temporal `.m3-chain-mult` en la esquina superior del tablero con el multiplicador de puntaje activo (`×2`, `×3`, `×4`).
+   - **Qué problema resuelve:** Durante una cascada el jugador ve cómo sube el puntaje pero no tiene feedback visual inmediato de qué multiplicador de bonificación está aplicando cada reacción en cadena.
+   - **Valor:** Refuerzo arcade gratificante durante las combinaciones múltiples en el gabinete. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #18 completado, verificado y subido a `origin/master`.
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (418 ms), 33 capturas verificadas en `.shots/actual/` y grafo actualizado (3071 nodos, 7505 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (bloqueos del Ciclo #18 liberados tras validación).
-- **Próxima decisión pendiente:** Selección de tareas en paralelo por subagentes para el **Ciclo #19**.
+- **Último trabajo completado:** Ciclo #19 completado, verificado y documentado.
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (460 ms), 35 capturas verificadas en `.shots/actual/` y grafo actualizado (3074 nodos, 7524 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (bloqueos del Ciclo #19 liberados tras validación).
+- **Próxima decisión pendiente:** Selección de tareas en paralelo por subagentes para el **Ciclo #20**.
+
+
 

@@ -58,7 +58,7 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   });
   const low = p < 0.25;
   if (ch("low", +low)) { $("txl").classList.toggle("low", low); $("hud").classList.toggle("low", low); }
-  txt("volt", `${(9 + 3.6 * p).toFixed(1)}V`);
+  txt("volt", `${(9 + 3.6 * p).toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   bar("boost", d.boost);
   bar("xp", Math.min(1, d.xp / d.need) * 100);
@@ -365,7 +365,7 @@ const free: HTMLSpanElement[] = [];
 export function damageNumber(x: number, y: number, v: number, crit: boolean) {
   if (nums.length > 60) return;
   const e = free.pop() ?? $("dmg").appendChild(document.createElement("span"));
-  e.textContent = String(Math.round(v));
+  e.textContent = `${Math.round(v)}${crit ? "!" : ""}`;
   e.className = crit ? "crit" : "";
   e.style.display = "";
   nums.push({ e, x: x + (Math.random() - 0.5) * 20, y, vy: -90 - Math.random() * 40, life: 0.7 });

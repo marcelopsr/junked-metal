@@ -271,6 +271,16 @@ function drawNode(c: C, i: number, lv: LevelDef, m: MapView) {
     c.strokeStyle = M3C.texto2; c.lineWidth = 3; c.beginPath(); c.arc(x, y - 4, 6, Math.PI, 0); c.stroke();
     c.fillStyle = M3C.texto2; c.fillRect(x - 8, y - 3, 16, 12);
   } else { c.fillStyle = M3C.texto; c.font = `700 ${lv.boss ? 32 : 28}px Rajdhani, sans-serif`; c.fillText(String(i + 1), x, y + 1); }
+  if (lv.boss) {
+    const by = y - r - 9;
+    c.fillStyle = locked ? "#2a2f37" : M3C.rojo;
+    c.strokeStyle = perf ? M3C.amarilloClaro : INK;
+    c.lineWidth = 2;
+    c.beginPath(); c.roundRect(x - 22, by - 7, 44, 14, 3); c.fill(); c.stroke();
+    c.fillStyle = locked ? M3C.texto2 : "#ffffff";
+    c.font = "800 11px Rajdhani, sans-serif";
+    c.fillText("JEFE", x, by + 1);
+  }
   if (done) for (let s = 0; s < 3; s++) drawStar(c, x - 22 + s * 22, y + r + 11, 10, s < m.stars[i]);
   if (cur && !locked) drawCarMarker(c, x + r + 16, y - 8, m.t);
 }
