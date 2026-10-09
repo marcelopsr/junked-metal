@@ -5,6 +5,7 @@ import * as B from "@babylonjs/core";
 import "./match3.css";
 import { current as menuScr, openM3Config, persist, save } from "./menu";
 import { applyClimate, setDark } from "./render";
+import { showWorld } from "./world";
 import { buildArcade, M3C, type Arcade } from "./match3_scene";
 import { music, SFX } from "./sfx";
 import { DUSK } from "./run";
@@ -829,13 +830,11 @@ function navKey(code: string) {
 export function initMatch3(d: Deps) { D = d; ensureUi(); }
 export function match3Active() { return active; }
 
-// Árboles y arbustos del patio tapan los costados del gabinete: se apagan mientras se juega y se restauran al salir
-let hiddenFlora: B.AbstractMesh[] = [];
+// El gabinete vive en su propio taller de ladrillo: se apaga el patio entero al entrar
 export function startMatch3(seed = 20261007) {
   ensureUi();
+  showWorld(false);
   buildCabinet();
-  hiddenFlora = D.scene.meshes.filter((m) => m.isEnabled() && /bush|tree|crown|arbol|leaf|hoja/i.test(m.name));
-  hiddenFlora.forEach((m) => m.setEnabled(false));
   baseSeed = seed;
   active = true; paused = false; resolving = false; sel = null;
   mode = "map"; st = null;
@@ -874,7 +873,6 @@ export function exitMatch3() {
   document.body.classList.remove("match3-play");
   document.getElementById("touch")?.classList.remove("match3-only");
   if (resizeObs) { removeEventListener("resize", resizeObs); resizeObs = null; }
-  hiddenFlora.forEach((m) => m.setEnabled(true)); hiddenFlora = [];
   arcade?.show(false); // queda armado y escondido para la próxima entrada (~40 ms menos)
   const canvas = D.scene.getEngine().getRenderingCanvas() as HTMLCanvasElement;
   canvas.style.touchAction = "";

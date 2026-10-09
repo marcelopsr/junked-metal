@@ -138,7 +138,7 @@ export function poster(c: Ctx) {
   c.fillText("GOOD METAL", 128, 64);
   gear(c, 128, 180, 62, "#b8612a");
   c.fillStyle = "#e9c48a"; c.fillRect(102, 150, 52, 56); c.fillStyle = "#2a1d14"; c.fillRect(110, 166, 12, 12); c.fillRect(134, 166, 12, 12);
-  c.fillStyle = "#e9c48a"; c.font = "700 34px Rajdhani, sans-serif"; c.fillText("BETTER DAYS", 128, 320);
+  c.fillStyle = "#e9c48a"; c.font = "700 32px Rajdhani, sans-serif"; c.fillText("BRIGHTER DAYS", 128, 320);
 }
 
 // ---------- Utilería del taller (en unidades libres: `u` = lado de una caja chica) ----------

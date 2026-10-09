@@ -52,7 +52,8 @@ export function buildArcade(scene: B.Scene): Arcade {
 
   // --- Materiales con lógica física ---
   // desgaste en bordes y esquinas (edgeRust), caras centrales sanas
-  const tPaint = wornTex(scene, 11, M3C.naranja, null, 128, 0.6, 0.7), tDark = wornTex(scene, 23, "#262a30", null, 128, 0.6, 0.6), tGrey = wornTex(scene, 37, "#b9b9b4", null, 128, 0.5, 0.6);
+  const tPaint = wornTex(scene, 11, M3C.naranja, null, 128, 0.55, 0.72), tDark = wornTex(scene, 23, "#262a30", null, 128, 0.55, 0.6), tGrey = wornTex(scene, 37, "#b9b9b4", null, 128, 0.5, 0.6);
+  tPaint.alb.wrapU = tPaint.alb.wrapV = tPaint.orm.wrapU = tPaint.orm.wrapV = B.Texture.CLAMP_ADDRESSMODE;
   owned.push(tPaint.alb, tPaint.orm, tDark.alb, tDark.orm, tGrey.alb, tGrey.orm);
   const paint = mat("paint", { tex: tPaint });                       // pintura gastada: rugosidad media, chapa expuesta metálica en bordes
   const dark = mat("dark", { tex: tDark });                          // chapa oscura (puertas, bisel)
@@ -95,9 +96,9 @@ export function buildArcade(scene: B.Scene): Arcade {
       for (let i = 0; i < a.length; i += 3) { const x = a[i], y = a[i + 1], z = a[i + 2]; a[i] = y; a[i + 1] = z; a[i + 2] = x; }
       m.setVerticesData(kind, a);
     }
-    // UV planar en el plano del perfil: la pintura no se estira en los laterales largos
+    // UV planar normalizado [0..1] al contorno del lateral: el óxido de borde cae en cantos, esquinas y base (sin repetir al medio)
     const P = m.getVerticesData(B.VertexBuffer.PositionKind)!, uv: number[] = [];
-    for (let i = 0; i < P.length; i += 3) uv.push(P[i + 2] * 1.3 + P[i] * 1.3, P[i + 1] * 1.3);
+    for (let i = 0; i < P.length; i += 3) uv.push((P[i + 2] + 0.51) / 0.92, P[i + 1] / 1.96);
     m.setVerticesData(B.VertexBuffer.UVKind, uv);
     m.refreshBoundingInfo();
     m.position.x = s > 0 ? W + 0.03 : -W;
@@ -156,15 +157,17 @@ export function buildArcade(scene: B.Scene): Arcade {
   bend([-W - 0.02, 0.935, -0.525], [W + 0.02, 0.935, -0.525], 0.016);
   const onDeck = (x: number, z: number, h = 0) => { const v = B.Vector3.TransformCoordinates(new B.Vector3(x, 0.024 + h, z), deck.computeWorldMatrix(true)); return [v.x, v.y, v.z] as V3; };
   for (const [x, z] of [[-0.33, -0.07], [0.33, -0.07], [-0.33, 0.07], [0.33, 0.07], [0, -0.07], [0, 0.07]]) rivets(onDeck(x, z, 0.002), onDeck(x, z, 0.002), 1, [0, 0.95, -0.3]);
-  // Joystick montado: placa base, aro y fuelle de goma; palanca + bocha en un pivote que se inclina
+  // Joystick montado: placa de roce gastada donde apoya la mano, placa base de acero, aro y fuelle de goma
   const at = (x: number, z: number, h: number, parent: B.TransformNode = deck) => { const n = new B.TransformNode("p", scene); n.parent = parent; n.position.set(x, 0.024 + h, z); return n; };
+  box(0.16, 0.004, 0.14, rust, [-0.16, 0.025, -0.04], [0, 0.05, 0], deck);
   box(0.11, 0.008, 0.11, steel, [-0.16, 0.028, -0.05], undefined, deck);
   cyl(0.075, 0.012, blackM, [0, 0, 0]).parent = at(-0.16, -0.05, 0.01); 
   const boot = cyl(0.03, 0.035, rubber, [0, 0, 0], undefined, 8, 0.06); boot.parent = at(-0.16, -0.05, 0.03);
   const stick = at(-0.16, -0.05, 0.02); stick.name = "m3stick";
   const shaft = B.MeshBuilder.CreateCylinder("m3shaft", { diameter: 0.014, height: 0.065, tessellation: 6 }, scene); shaft.material = steel; shaft.parent = stick; shaft.position.y = 0.032;
   const ball = B.MeshBuilder.CreateSphere("m3ball", { diameter: 0.05, segments: 8 }, scene); ball.material = btn[0]; ball.parent = stick; ball.position.y = 0.07;
-  // Botón rojo encastrado: aro negro hundido + capuchón que baja al apretarlo
+  // Botón rojo encastrado: chapa de desgaste alrededor + aro negro hundido + capuchón que baja al apretarlo
+  box(0.12, 0.004, 0.11, rust, [0.12, 0.025, 0.01], [0, -0.06, 0], deck);
   cyl(0.06, 0.012, blackM, [0, 0, 0]).parent = at(0.12, 0.01, 0.002);
   cyl(0.068, 0.004, steel, [0, 0, 0], undefined, 12).parent = at(0.12, 0.01, 0.008);
   const cap = B.MeshBuilder.CreateCylinder("m3cap", { diameter: 0.044, height: 0.022, tessellation: 12 }, scene); const capM = mat("cap", { color: M3C.rojo, rough: 0.3 }); cap.material = capM; cap.parent = at(0.12, 0.01, 0.016);

@@ -16,7 +16,7 @@
 .h-tape, .h-ptitle { display: none; } /* rótulos de la versión terminal: ya no se usan, quedan en el HTML */
 .h-g::before { display: none; }
 .h-track { position: relative; height: 8px; background: rgba(255, 255, 255, .14); border-radius: 99px; }
-.h-track > div { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #35c9ff, #7dffb0); transition: width .3s cubic-bezier(.2, .8, .2, 1), background .3s; }
+.h-track > div { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #35c9ff, #7dffb0); transition: background .3s; }
 /* HUD de partida: el relleno se escala (compositor) en vez de animar width; ui.ts bar() escribe scaleX */
 #hud .h-track > div { width: 100%; transform: scaleX(0); transform-origin: left; transition: transform .3s cubic-bezier(.2, .8, .2, 1), background .3s; }
 .h-boost > div { background: linear-gradient(90deg, #ff9d2e, #ffd84d); }

@@ -155,4 +155,23 @@ Carrera (1) y Survivor en partida (2).
 - En `pc-menu-garaje.png` y `pc-menu-taller.png`, la lámpara articulada celeste (`src/menuscene.ts`) sigue en plástico liso (`M.plastic`) con la bombilla asomando a través del cono superior, desentonando con el auto y la caja de herramientas Folded.
 - En `pc-menu-taller.png`, las 9 tarjetas de `CHASIS` (4×2 + 1 huérfana) empujan `#shopPreview` y `VOLVER` hasta el borde inferior en 1280×720, y la opacidad de tarjetas sin saldo apaga demasiado el título y el ícono.
 
+---
+
+## 2026-10-09 · Ciclo #3 (Gabinete Junket Crush, Mesa de Menú Folded, Póster en Inglés y Limpieza DOM)
+
+**Capturas verificadas:** `.shots/actual/pc-match3-mapa.png`, `.shots/actual/cel-match3-juego.png`, `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-menu-taller.png` (`npm run shots -- --only menu,match3`, 56 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas y verificadas en captura
+1. **Eliminación de las masas verdes laterales y desgaste localizado en el gabinete de Junket Crush (`src/match3.ts`, `src/main.ts`, `src/match3_scene.ts`):**
+   - **Causa raíz de las dos manchas verdes en el gabinete:** Al entrar a Junket Crush (`enterMatch3()` en `src/main.ts`), `menuOff()` llamaba a `showWorld(true)`, encendiendo todo el patio (`worldMeshes` y `layoutMeshes` en el origen `(0,0,0)`) superpuesto con el cuarto de ladrillo del gabinete; además, la precarga diferida (`worldTask`) podía terminar estando ya en `"match3"` y el filtro `hiddenFlora` solo ocultaba nombres con `/bush|tree|crown/`, dejando visibles las macetas y plantas fusionadas del patio a ambos lados del gabinete.
+   - **Solución:** `startMatch3()` ahora invoca `showWorld(false)` directamente (y `worldTask` respeta `state === "menu" || state === "match3"`), despejando por completo el cuarto de ladrillo en `pc-match3-mapa.png` y ahorrando draw calls del patio oculto.
+   - **Desgaste con lógica física en el gabinete:** El mapeo UV planar de los laterales (`src/match3_scene.ts:99`) multiplicaba `y * 1.3` (llegando a `v = 2.53` con `WRAP_ADDRESSMODE`), lo que repetía la franja de óxido de borde de `wornTex` 2,5 veces a mitad de la chapa lateral. Se normalizó el UV planar al contorno `[0..1]` con `CLAMP_ADDRESSMODE` para que el óxido de borde caiga únicamente en los cantos, esquinas y zócalo, y se sumaron chapas de roce (`rust`) bajo la base del joystick y del botón de disparo.
+2. **Mesa de taller y lámpara articulada Folded en Menú (`src/menuscene.ts`):**
+   - **Causa del aspecto plástico y solape de la bombilla:** `benchBuild()` y `transmitter()` usaban `M.plastic` liso (`#9ccfe8`, `#c98a5a`) y la esfera `sph(1.5)` del foco en `[2.5, 6.5, -1]` atravesaba la pared lateral del cono `cyl(1.2, 3.8, 2.6)`.
+   - **Solución:** Se migraron la lámpara articulada, la cajonera 3×3, el transmisor RC, la mesa de trabajo, las herramientas del tablero perforado y la batería a materiales `wornMat` (`#3a6b7c`, `#262a30`, `M3C.naranja`, `M3C.amarillo`, `#a0452a`), y se rediseñó la campana facetada de 8 caras con cuello oscuro y foco `sph(1.1)` alojado dentro de la boca del cono sin atravesar la chapa (`pc-menu-garaje.png`, `pc-menu-taller.png`).
+3. **Póster 100% en inglés y limpieza de antipatrones DOM (`src/kit3d.ts`, `index.html`, `src/hud.css`, `src/kit.css`):**
+   - Se alineó el póster del taller (`poster()` en `src/kit3d.ts:138`) con `docs/ART_DIRECTION.md` (`"GOOD METAL / BRIGHTER DAYS"`), visible en la pared izquierda de `pc-match3-mapa.png`.
+   - Se asignó un GIF transparente 1×1 válido en `#overPhotoImg` (`index.html`), se quitó `transition: width` residual en `.h-track > div` (`src/hud.css`) y se migró `.jm-sw::after` a `transform: translateX(26px)` en compositor (`src/kit.css`).
+
+
 

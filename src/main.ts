@@ -515,7 +515,7 @@ const T_PLANTILLAS: Task = { id: "plantillas", label: "Cargando bichos", w: 2, d
   plantillasOk = true;
 } };
 /** Mundo de una zona (sin el layout con semilla, que arma cada partida). En los menús queda escondido (showWorld). */
-const worldTask = (zone: () => string): Task => ({ id: "patio", label: "Armando el patio", w: 5, done: () => worldReady(zone()), run: () => { setZone(zone(), false); if (state === "menu") showWorld(false); } });
+const worldTask = (zone: () => string): Task => ({ id: "patio", label: "Armando el patio", w: 5, done: () => worldReady(zone()), run: () => { setZone(zone(), false); if (state === "menu" || state === "match3") showWorld(false); } });
 // Compila los shaders de todos los materiales ya creados (en paralelo si el navegador puede) para que el primer cuadro de partida no se trabe
 // ponytail: solo los materiales que existen al correr (no los de armas ni de una zona que se arma después); techo: precompilar con los defines de cada plantilla de arma
 const T_EFECTOS: Task = { id: "efectos", label: "Preparando efectos", w: 3, done: () => efectosOk, prog: () => fxN / fxTotal, run: async () => {
@@ -588,7 +588,7 @@ if (import.meta.env.DEV && /[?&]duel\b/.test(location.search)) setTimeout(() => 
 if (import.meta.env.DEV && /[?&]match3\b/.test(location.search)) setTimeout(() => goMatch3(), 1500);
 // ponytail: el banco Folded (`?folded`, solo dev) reusa el estado "match3" (cámara libre, sin auto); un estado propio si crece
 if (import.meta.env.DEV && /[?&]folded\b/.test(location.search)) setTimeout(() => void launch([], "Banco Folded", () => {
-  clearRun(); menuOff(); state = "match3"; reset(null); $("hud").classList.add("hidden");
+  clearRun(); menuOff(); showWorld(false); state = "match3"; reset(null); $("hud").classList.add("hidden");
   void import("./folded_lab").then((m) => { applyClimate(DUSK); setDark(0.22); m.foldedLab(scene, cam); });
 }, () => afterFrames(2)), 1500);
 if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2" && !isTouch) { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
