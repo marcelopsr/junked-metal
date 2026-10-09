@@ -170,40 +170,47 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3.css`):** Encabezado `PAUSA · NV X` con nombre del nivel, puntaje actual y movimientos restantes en `#m3-pause`, más resumen `Puntaje alcanzado: X pts · Récord: Y pts` en `showLose()`.
 - **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (573 ms), `npm run shots -- --only partida,carrera,match3` (31 capturas verificadas en PC y celular) y `npx graphify update .` (3062 nodos, 7475 aristas).
 
+### Ciclo #16 (2026-10-09) — Transición Numérica en Tarjetas del Taller y `Comprables (N)`, Estado `.endless` y Velocidad Punta `.top`, Colores de Podio en Carrera y Telemetría en Cabezal del Mapa de Junket Crush
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Taller (`src/menu.ts`, `src/menu.css`):** Línea de transición de nivel `<span class="sfx">${i.fx}</span>` en cada tarjeta `.carc.perk` en oro cálido `#ffd24a`, más contador dinámico de compras disponibles en `sfiltLabels.comprables` (`Comprables ahora (${buyN})`).
+  - **Subagente 2 · HUD de Supervivencia: Reloj y Velocímetro (`src/ui.ts`, `src/hud.css`):** Activación memoizada de `.endless` en `#lcd` / `#clock` con borde y números dorados al superar 10:00 (`d.time >= 600`), y activación memoizada de `.top` en `#txr` / `#spd` iluminando el arco analógico y `km/h` en ámbar cálido a más del 90% de velocidad punta (`s >= 0.9`).
+  - **Subagente 3 · Carrera HUD: Puesto y Caja de Objeto (`src/kart.ts`, `src/race.css`):** Colores de podio en `.rpos` (`1º` oro `#ffd84d`, `2º` plata `#d8e2ef`, `3º` bronce `#e09145`, `4º+` blanco `#f4f7fa`) con `data-pl`, y borde ámbar activo `.full` en `.ritem` al portar un ítem armado.
+  - **Subagente 4 · Gabinete Junket Crush: Cabezal del Mapa (`src/match3.ts`):** `paintDisplay()` en modo mapa dibuja en el cabezal superior digital el nivel seleccionado en 7 segmentos (`NIVEL XX` / `JEFE · NV`), título en mayúsculas, movimientos permitidos, récord alcanzado y sus 3 estrellas con `drawStar`.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (538 ms), `npm run shots -- --only taller,partida,carrera,match3` (55 capturas verificadas en PC y celular) y `npx graphify update .` (3065 nodos, 7486 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #16
+## 4. Backlog Vivo de Oportunidades — Ciclo #17
 
-### A. Área 1 · Taller: Vista Previa Numérica en Tarjeta y Contador de Comprables (`src/menu.ts`, `src/menu.css`)
-1. **Transición Numérica (`Antes → Después`) Visible en Cada Tarjeta del Taller y Contador `Comprables ahora (N)`:**
-   - **Qué es:** Mostrar la línea `i.fx` (`<div class="sfx">${i.fx}</div>`, ej. `Carrocería +0 → +20` o `Enfriamiento 14 s → 13 s`) directamente dentro de cada tarjeta `.carc.perk` del Taller (sin obligar a enfocar una por una para leer `#sinfo`), y añadir en el filtro `Comprables ahora` el contador `(N)` de mejoras que alcanzan con los tornillos actuales en la pestaña activa.
-   - **Qué problema resuelve:** Hoy en el Taller el efecto numérico exacto (`i.fx`) solo aparece abajo del todo en `#sinfo` al hacer foco sobre una tarjeta, lo que obliga a recorrerlas una por una (especialmente incómodo en táctil).
-   - **Valor:** Lectura inmediata de retorno de inversión por tarjeta y visibilidad instantánea de cuántas compras están al alcance. Complejidad: Baja.
+### A. Área 1 · Chatarroteca: Estado de Cobro en Logros y Rango de Bajas en Estadísticas (`src/menu.ts`, `src/menu.css`)
+1. **Insignia `Cobrado` en Logros Completados y Rango Honorífico en Estadísticas de Bajas:**
+   - **Qué es:** En `renderBestiary()` (`btab === "logros"`), marcar en verde `<span class="ach-ok">Cobrado</span>` en `<div class="price">` cuando el logro ya está desbloqueado (`ok`), y en `btab === "stats"` anteponer el rango honorífico del piloto según bajas acumuladas (ej. `Chatarrero Novato / Veterano / Leyenda`) en la tarjeta de `Bajas por tipo`.
+   - **Qué problema resuelve:** En la Chatarroteca, los logros completados siguen mostrando el premio como si estuviera pendiente de cobro, y en Estadísticas la cifra de bajas carece de título de progresión.
+   - **Valor:** Mayor claridad de recompensas ya reclamadas y sentido de progresión global. Complejidad: Baja.
 
-### B. Área 2 · HUD de Supervivencia: Estado `SIN FIN` en el Cronómetro y Destello de Velocidad Punta en `#spd` (`src/ui.ts`, `src/hud.css`)
-2. **Insignia/Estado `.endless` en `#clock` al Superar los 10:00 y Resaltado de Velocidad Máxima (`.top`) en `#spd`:**
-   - **Qué es:** Al alcanzar `d.time >= 600` (10:00, Modo Sin Fin), activar la clase `.endless` en `#clock` (borde e indicador dorado en el cronómetro) y en `#spd` activar `.top` cuando `s >= 0.9` (90%+ de la velocidad máxima del auto) iluminando el arco y los `km/h` en ámbar.
-   - **Qué problema resuelve:** El reloj `#clock` luce idéntico antes y después de cumplir los 10 minutos de supervivencia, y el velocímetro analógico no acusa visualmente cuando el vehículo va a fondo.
-   - **Valor:** Feedback visual claro de victoria/Modo Sin Fin en el reloj y sensación cinética en el velocímetro. Complejidad: Baja.
+### B. Área 2 · HUD de Supervivencia: Marcas Cardinales en el Radar y Resplandor de Cofre Activo (`src/ui.ts`, `src/hud.css`)
+2. **Puntos Cardinales (`N`, `S`, `E`, `O`) Orientados en el Radar y Pulso Dorado al Detectar Cofre en Campo:**
+   - **Qué es:** En `drawRadar()`, dibujar 4 marcas discretas de orientación (`N`, `S`, `E`, `O`) en el perímetro del radar según la rotación de la vista (`rCar.up`), y alternar una clase `.has-chest` en `#radarBox` que emite un pulso dorado suave cuando hay al menos un cofre sin custodia en el patio.
+   - **Qué problema resuelve:** El radar circular no ofrece referencia cardinal para saber hacia qué lado del patio se navega, y los cofres sin custodia pueden pasar desapercibidos en el borde del radar en medio de enjambres intensos.
+   - **Valor:** Navegación espacial certera y alerta periférica de botines clave. Complejidad: Baja.
 
-### C. Área 3 · Carrera HUD: Color de Podio en `.rpos` y Caja de Objeto `.ritem.full` (`src/kart.ts`, `src/race.css`)
-3. **Jerarquía Cromática de Podio (`1º` Oro, `2º` Plata, `3º` Bronce) en `.rpos` y Borde Activo en `.ritem.full`:**
-   - **Qué es:** Asignar `data-pl="${Math.min(4, place)}"` a `.rpos` en modo Carrera para colorear el número de puesto según medalla (`1º` oro `#ffd84d`, `2º` plata `#d8e2ef`, `3º` bronce `#e09145`, `4º+` blanco `#f4f7fa`) y activar la clase `.full` en `.ritem` cuando el corredor lleva un objeto listo para usar (borde ámbar e iluminación sutil).
-   - **Qué problema resuelve:** Hoy `.rpos b` pinta todos los puestos del 1º al 10º con el mismo amarillo `#ffd84d`, diluyendo la recompensa visual de entrar en puestos de podio, y `.ritem` tiene el mismo borde apagado esté vacío o cargado.
-   - **Valor:** Lectura periférica instantánea de si se va en puesto de medalla y de si se lleva un ítem armado. Complejidad: Baja.
+### C. Área 3 · Carrera: Resaltado del Líder de Copa en la Tabla y Barra de Ronda (`src/kart.ts`, `src/race.css`)
+3. **Insignia de Líder de Copa (`.cup-lead`) en `#rres` y Barra de Progreso de la Copa:**
+   - **Qué es:** En `showResults()` cuando `raceCfg.cup` está activo, añadir una pastilla dorada `.cup-lead` al corredor que va primero en la tabla general acumulada de la copa (`cup[r.id]`), y en el título mostrar `COPA: CARRERA X/3` con una barra o pip de ronda de 3 carreras.
+   - **Qué problema resuelve:** Durante la copa de 3 carreras, la tabla tras la carrera 1 y 2 no destaca claramente quién va en la punta del campeonato ni qué porcentaje de la copa se completó.
+   - **Valor:** Mayor emoción competitiva y claridad del estado del torneo de karts. Complejidad: Baja.
 
-### D. Área 4 · Gabinete Junket Crush: Telemetría del Nivel Seleccionado en el Cabezal del Mapa (`src/match3.ts`)
-4. **Vista Previa en Vivo del Nivel Seleccionado (`NV XX`, Nombre, Movimientos, Récord y Estrellas) en el Display Superior del Mapa:**
-   - **Qué es:** En `paintDisplay()` cuando `mode === "map"`, reemplazar el texto fijo `"FICHAS ∞ / JUNKET CRUSH"` por la telemetría en vivo del nodo seleccionado `LEVELS[mapSel]`: número `NV` en el display de 7 segmentos izquierdo, nombre del nivel (e insignia `JEFE` si aplica), movimientos disponibles, récord de puntos y sus 3 estrellas en el panel derecho.
-   - **Qué problema resuelve:** Mientras se recorre el mapa de La Ruta del Desguace con el joystick o teclado, el display superior del gabinete muestra un texto estático sin informar qué nivel está seleccionado ni cuál es su récord.
-   - **Valor:** Conecta el mapa con el cabezal electrónico del gabinete arcade y permite consultar cada nivel al instante al mover el cursor. Complejidad: Baja.
+### D. Área 4 · Gabinete Junket Crush: Barra de Blindaje/Vida del Jefe en el Cabezal Superior (`src/match3.ts`)
+4. **Modo Blindaje del Jefe en el Display Superior para Niveles de Jefe (`st.lv.boss`):**
+   - **Qué es:** En `paintDisplay()`, cuando `st.lv.boss` es `true`, rotular la barra inferior como `BLINDAJE DEL JEFE` en rojo carmesí con porcentaje en vivo de objetivos de impacto restantes (`M3C.error`), distinguiendo visualmente las batallas de jefe de los niveles convencionales de recolección.
+   - **Qué problema resuelve:** En los niveles de jefe (como el Gran Aplastador), la barra inferior luce idéntico a una barra de puntos normal, sin transmitir la sensación de estar desmantelando al jefe.
+   - **Valor:** Tensión y estética arcade reforzadas para los hitos culminantes de la campaña. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #15 completado, verificado y subido a `origin/master`.
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (573 ms), 31 capturas verificadas en `.shots/actual/` y grafo actualizado (3062 nodos, 7475 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los subagentes del Ciclo #15 finalizaron y liberaron sus archivos).
-- **Próxima decisión pendiente:** Selección del usuario mediante `ask_question` (multi-selección) de las áreas a ejecutar en paralelo por subagentes en el **Ciclo #16**.
-
+- **Último trabajo completado:** Ciclo #16 completado, verificado y subido a `origin/master`.
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (538 ms), 55 capturas verificadas en `.shots/actual/` y grafo actualizado (3065 nodos, 7486 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los subagentes del Ciclo #16 finalizaron y liberaron sus archivos).
+- **Próxima decisión pendiente:** Selección del usuario mediante `ask_question` (multi-selección) de las áreas a ejecutar en paralelo por subagentes en el **Ciclo #17**.

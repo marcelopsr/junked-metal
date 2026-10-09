@@ -570,15 +570,18 @@ function shopItems(): ShopItem[] {
 function renderShop() {
   $("bank").textContent = `${save.scrap} tornillos`;
   $("stabs").innerHTML = tabsHtml(STABS, stab, "stab");
-  $("sfilt").innerHTML = tabsHtml(SFILT, sfilt, "sf") + `<button class="tab" data-ss="1">${SSORT[ssort]}</button>`;
+  const allItems = shopItems();
   const ok = (i: ShopItem) => i.cost !== undefined && i.cost <= save.scrap;
-  let items = shopItems().filter((i) => sfilt === "todo" || (sfilt === "comprables" ? ok(i) : sfilt === "compradas" ? i.bought : i.cost !== undefined ? !ok(i) : !!i.ach && !i.bought));
+  const buyN = allItems.filter(ok).length;
+  const sfiltLabels: Record<keyof typeof SFILT, string> = { ...SFILT, comprables: `Comprables ahora (${buyN})` };
+  $("sfilt").innerHTML = tabsHtml(sfiltLabels, sfilt, "sf") + `<button class="tab" data-ss="1">${SSORT[ssort]}</button>`;
+  let items = allItems.filter((i) => sfilt === "todo" || (sfilt === "comprables" ? ok(i) : sfilt === "compradas" ? i.bought : i.cost !== undefined ? !ok(i) : !!i.ach && !i.bought));
   if (ssort) items = items.sort((x, y) => ((x.cost ?? Infinity) - (y.cost ?? Infinity)) * (ssort === 1 ? 1 : -1) || 0);
   $("shop").innerHTML = items.map((i) => {
     const done = i.cost === undefined, info = [i.fx, done ? (i.ach && !i.bought ? `Se gana con un logro: ${i.ach}` : i.max ? "Nivel máximo" : "Ya está en el garaje") : tipicas(i.cost!)].filter(Boolean).join(" · ");
     const pips = i.max ? `<div class="pips">${"<i class=on></i>".repeat(i.lv!)}${"<i></i>".repeat(i.max - i.lv!)}</div>` : "";
     const price = done ? (i.max ? "MÁXIMO" : i.ach && !i.bought ? `Logro: ${i.ach}` : "EN EL GARAJE") : `${i.cost} tornillos`;
-    return `<button class="carc perk ${ok(i) ? "" : "no"}" ${i.attr} data-info="${info}" aria-disabled="${!ok(i)}"><b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${pips}<div class="price">${price}</div></button>`;
+    return `<button class="carc perk ${ok(i) ? "" : "no"}" ${i.attr} data-info="${info}" aria-disabled="${!ok(i)}"><b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${i.fx ? `<span class="sfx">${i.fx}</span>` : ""}${pips}<div class="price">${price}</div></button>`;
   }).join("") || `<div class="note">Nada por acá con este filtro. El patio no regala nada.</div>`;
   $("sinfo").textContent = "Enfoca una mejora para ver qué cambia y cuánto falta.";
 }

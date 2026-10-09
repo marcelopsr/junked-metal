@@ -99,6 +99,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .perk { width: auto; padding: 8px 11px; display: flex; flex-direction: column; gap: 2px; }
 .perk .pips { margin-top: auto; padding-top: 4px; }
 .perk .price { margin-top: 2px; }
+.carc.perk .sfx { font: 600 12px/1.2 var(--data); color: var(--jm-amarillo2, #ffd24a); font-variant-numeric: tabular-nums; margin-top: 2px; }
 #shop .perk.no { opacity: 1; } /* no alcanza: conserva contraste de chapa oscura y permite enfocar para ver la vista previa */
 #sfilt .tab { font-size: 12px; }
 #fe .pips { display: flex; gap: 3px; margin-top: 8px; }

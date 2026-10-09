@@ -389,10 +389,18 @@ function paintDisplay() {
   c.fillStyle = M3C.fondo2; c.fillRect(4, 4, 140, H - 8); c.fillRect(150, 4, W - 154, H - 8);
   c.textBaseline = "middle";
   if (mode === "map" || !st) {
-    c.fillStyle = M3C.texto2; c.font = "700 20px Rajdhani, sans-serif"; c.textAlign = "center"; c.fillText("FICHAS", 74, 22);
-    c.fillStyle = M3C.amarillo; c.font = "700 58px Rajdhani, sans-serif"; c.fillText("∞", 74, 66);
-    c.fillStyle = M3C.amarillo; c.font = "700 34px Rajdhani, sans-serif"; c.fillText("JUNKET CRUSH", 150 + (W - 154) / 2, 38);
-    c.fillStyle = M3C.texto2; c.font = "700 18px Rajdhani, sans-serif"; c.fillText("ELEGIR NIVEL CON EL JOYSTICK", 150 + (W - 154) / 2, 76);
+    const lv = LEVELS[mapSel] ?? LEVELS[0], p = prog(), stN = p.stars[lv.id] ?? 0, best = p.best[lv.id] ?? 0;
+    c.fillStyle = M3C.texto2; c.font = "700 18px Rajdhani, sans-serif"; c.textAlign = "center";
+    c.fillText(lv.boss ? "JEFE · NV" : "NIVEL", 74, 20);
+    c.font = "700 62px Rajdhani, sans-serif";
+    c.fillStyle = "rgba(255,180,0,0.08)"; c.fillText("88", 74, 64);
+    c.fillStyle = lv.boss ? M3C.error : M3C.amarillo; c.fillText(String(mapSel + 1).padStart(2, "0"), 74, 64);
+    c.textAlign = "left";
+    c.fillStyle = M3C.amarillo; c.font = "700 28px Rajdhani, sans-serif";
+    c.fillText(lv.name.toUpperCase(), 166, 34);
+    c.fillStyle = M3C.texto2; c.font = "700 17px Rajdhani, sans-serif";
+    c.fillText(`${lv.moves} MOVIMIENTOS · ${best ? `RÉCORD ${best} PTS` : "SIN MARCA REGISTRADA"}`, 166, 70);
+    for (let k = 0; k < 3; k++) drawStar(c, W - 78 + k * 26, 32, 10, k < stN);
   } else {
     const low = st.movesLeft <= 3 && st.phase === "play";
     c.fillStyle = M3C.texto2; c.font = "700 18px Rajdhani, sans-serif"; c.textAlign = "center";

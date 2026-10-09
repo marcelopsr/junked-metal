@@ -874,8 +874,11 @@ function camFor(r: Racer, c: B.FreeCamera, dt: number) {
 function hud() {
   for (const h of humans) {
     const p = dom!.querySelector(`.rp[data-p="${h.human}"]`) as HTMLElement;
-    p.querySelector(".rpos b")!.textContent = String(mode === "battle" ? racers.filter((o) => !o.out).length : placeOf(h));
-    p.querySelector(".rpos i")!.textContent = mode === "battle" ? "/10 en pie" : "/10";
+    const posEl = p.querySelector(".rpos") as HTMLElement;
+    const pl = mode === "battle" ? racers.filter((o) => !o.out).length : placeOf(h);
+    posEl.querySelector("b")!.textContent = String(pl);
+    posEl.querySelector("i")!.textContent = mode === "battle" ? "/10 en pie" : "/10";
+    posEl.dataset.pl = mode === "race" ? String(Math.min(4, pl)) : "";
     const lapEl = p.querySelector(".rlap") as HTMLElement;
     lapEl.textContent = mode === "battle" ? (h.out ? "ELIMINADO" : "●".repeat(h.balloons) + " " + Math.max(0, Math.ceil(battleT - t)) + " s") : `VUELTA ${clamp(h.lap, 1, LAPS)}/${LAPS}`;
     lapEl.classList.toggle("final", mode === "race" && clamp(h.lap, 1, LAPS) === LAPS);
@@ -892,7 +895,7 @@ function hud() {
     const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${tTag}${wTag}`;
     if (spdEl.dataset.h !== spdHtml) { spdEl.dataset.h = spdHtml; spdEl.innerHTML = spdHtml; }
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
-    if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; }
+    if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; it.classList.toggle("full", !!h.item); }
     const m = p.querySelector(".rmsg") as HTMLElement; if (t > msgT[h.human]) m.classList.remove("on");
     p.classList.toggle("drift", h.drifting !== 0 && h.charge > 0.75);
     p.classList.toggle("drift2", h.drifting !== 0 && h.charge > 1.5);

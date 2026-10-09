@@ -7,12 +7,18 @@
 #race.split::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1.5px; background: #0c141e; }
 .rp .rpos { position: absolute; left: 16px; bottom: 16px; display: flex; align-items: baseline; gap: 4px; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 16px; padding: 4px 16px 6px; backdrop-filter: blur(10px); }
 .rp .rpos b { font: 700 64px/1 "Rajdhani", system-ui, sans-serif; color: #ffd84d; text-shadow: 0 4px 0 rgba(0, 0, 0, .35); }
+.rp .rpos[data-pl="1"] b { color: #ffd84d; }
+.rp .rpos[data-pl="2"] b { color: #d8e2ef; }
+.rp .rpos[data-pl="3"] b { color: #e09145; }
+.rp .rpos[data-pl="4"] b { color: #f4f7fa; }
 .rp .rpos i { font: 600 22px/1 "Rajdhani", system-ui, sans-serif; font-style: normal; color: #a9b8c6; }
 .rp .rlap { position: absolute; left: 16px; top: 14px; font: 700 24px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .08em; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 12px; padding: 8px 14px; backdrop-filter: blur(10px); }
 .rp .rlap.final { border-color: #ffd84d; color: #ffd84d; box-shadow: 0 0 14px rgba(255, 216, 77, .28); }
 .rp .ritem { position: absolute; left: 50%; top: 14px; translate: -50% 0; min-width: 84px; min-height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--g-bg); border: 2px solid var(--g-line); border-radius: 18px; backdrop-filter: blur(10px); }
+.rp .ritem.full { border-color: #ffd84d; box-shadow: 0 0 14px rgba(255, 216, 77, .28); }
 .rp .ritem:empty::after { content: "?"; font: 700 44px/1 "Rajdhani", system-ui, sans-serif; color: rgba(255, 255, 255, .25); }
 .rp .ritem span { font: 700 13px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #a9b8c6; }
+.rp .ritem.full span { color: #ffd84d; }
 .rp .rspd { position: absolute; right: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 8px; font: 700 28px/1 "Rajdhani", system-ui, sans-serif; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 12px; padding: 8px 14px; backdrop-filter: blur(10px); }
 .rp .rspd .rturbo { font: 800 12px/1 "Rajdhani", system-ui, sans-serif; padding: 3px 6px; border-radius: 5px; letter-spacing: .06em; } .rp .rspd .rturbo.t0 { background: rgba(255, 255, 255, .18); color: #e2e8f0; } .rp .rspd .rturbo.t1 { background: #4aa8ff; color: #071320; box-shadow: 0 0 8px rgba(74, 168, 255, .45); } .rp .rspd .rturbo.t2, .rp .rspd .rturbo.on { background: #ff9d2e; color: #1f1100; box-shadow: 0 0 10px rgba(255, 157, 46, .55); }
 .rp .rmsg { position: absolute; left: 0; right: 0; top: 32%; text-align: center; font: 700 clamp(30px, 5vw, 56px)/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; opacity: 0; text-shadow: 0 4px 0 rgba(0, 0, 0, .4), 0 0 24px rgba(0, 0, 0, .35); }

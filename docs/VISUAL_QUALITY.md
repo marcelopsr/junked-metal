@@ -360,3 +360,19 @@ Carrera (1) y Survivor en partida (2).
    - `#rpause` envuelve su contenido en `.rbox` y actualiza `.rsub` en vivo al pausar con el circuito actual, modalidad (`Copa (X/3)`, `Carrera` o `Batalla de globos`), cilindrada (`100cc/150cc/200cc`) y vuelta o tiempo restante.
 4. **Nivel, puntaje y movimientos en `#m3-pause` y puntaje alcanzado en `showLose()` de Junket Crush (Subagente 4 · `src/match3.ts`):**
    - Al pausar en el gabinete, `#m3-pause` muestra `PAUSA · NV X` y `<Nombre> · Puntaje: X · Movimientos: Y` (`pc-match3-pausa.png`), y al quedarse sin movimientos `showLose()` informa `Puntaje alcanzado: X pts · Récord: Y pts` (`pc-match3-derrota.png`).
+
+---
+
+## 2026-10-09 · Ciclo #16 (Transición Numérica en Tarjetas del Taller y `Comprables (N)`, Estado `.endless` y Velocidad Punta `.top`, Colores de Podio en Carrera y Telemetría en Cabezal del Mapa de Junket Crush)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-taller.png`, `.shots/actual/cel-menu-taller.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-mapa.png`, `.shots/actual/cel-match3-mapa.png` (`npm run shots -- --only taller,partida,carrera,match3`, 55 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Transición numérica visible en cada tarjeta `.carc.perk` del Taller y contador `Comprables ahora (N)` (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - Cada tarjeta del Taller renderiza `<span class="sfx">${i.fx}</span>` en oro cálido (`#ffd24a`) mostrando el delta exacto (ej. `Vida 150 → 160`, `Daño 100% → 110%`, `Imán 100% → 110%`) sin obligar a enfocar una por una, y el botón de filtro muestra `COMPRABLES AHORA (N)` con la cantidad exacta al alcance (`pc-menu-taller.png`, `cel-menu-taller.png`).
+2. **Estado `.endless` en el cronómetro y destello de velocidad punta `.top` en `#spd` / `#txr` (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - Al alcanzar 10:00 (`d.time >= 600`), `#lcd` / `#clock` activa `.endless` con resplandor dorado, y al acelerar al 90%+ de la velocidad máxima (`s >= 0.9`), `#txr` / `#spd` activa `.top` tiñendo el arco del velocímetro y los `km/h` en ámbar cálido.
+3. **Jerarquía cromática de podio en `.rpos` y caja de objeto armada `.ritem.full` en Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - `.rpos` colorea el número de puesto según podio (`1º` oro `#ffd84d`, `2º` plata `#d8e2ef`, `3º` bronce `#e09145`, `4º+` blanco `#f4f7fa`) con `data-pl`, y `.ritem` activa `.full` con borde ámbar resplandeciente cuando el corredor lleva un ítem armado (`pc-carrera-curso.png`).
+4. **Telemetría en vivo del nivel seleccionado en el cabezal electrónico del mapa de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - `paintDisplay()` cuando `mode === "map"` renderiza en el display digital superior el número de nivel en 7 segmentos (`NIVEL 01` / `JEFE · NV`), nombre en mayúsculas, movimientos permitidos, récord de puntos y las 3 estrellas del nodo seleccionado con `drawStar` (`pc-match3-mapa.png`, `cel-match3-mapa.png`).
