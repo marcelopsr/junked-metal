@@ -137,7 +137,7 @@
 #txl.low #lipo i { background: linear-gradient(90deg, var(--low) var(--p, 100%), rgba(255, 255, 255, .14) var(--p, 100%)); animation: h-blink .5s steps(2) infinite; }
 #txl.low #volt { color: #ff5252; text-shadow: 0 0 6px rgba(255, 82, 82, .65); animation: voltPulse .6s ease-in-out infinite alternate; }
 @keyframes voltPulse { from { opacity: .7; } to { opacity: 1; } }
-#volt.sag { color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, .7); animation: voltPulse .2s infinite alternate; }
+#volt.sag { color: #f59e0b; text-shadow: 0 0 10px rgba(245, 158, 11, .85), 0 0 3px rgba(255, 230, 160, .8); animation: voltPulse .2s infinite alternate; }
 #volt.thermal-stress { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, .8); animation: voltPulse .15s infinite alternate; }
 .esc-temp { display: block; font: 700 9px/1 var(--hf); color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, .7); margin-top: 2px; letter-spacing: .05em; }
 #lipo.panic i:first-child.unbalanced { animation: lipo-cell-sag .25s steps(2) infinite; }

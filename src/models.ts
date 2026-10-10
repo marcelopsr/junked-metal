@@ -533,6 +533,18 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         );
       }
     }
+    if (kind === "monster") {
+      for (let a = 0; a < 6; a++) {
+        const ang = (a * Math.PI) / 3;
+        parts.push(
+          box(0.004, 0.012, 0.05, M.metal("#0284c7"), [
+            -bw * 0.12 + Math.cos(ang) * 0.026,
+            bh * 0.32 + Math.sin(ang) * 0.026,
+            -bl * 0.28
+          ], [0, 0, ang])
+        );
+      }
+    }
     if (kind === "buggy" || kind === "formula" || kind === "carrera") {
       parts.push(
         // Servo de dirección en nylon oscuro con tapa sellada
@@ -542,6 +554,35 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         // Varillas de reenvío / tirantes ajustables (turnbuckles) hacia manguetas directrices
         cyl(0.003, 0.003, bw * 0.32, chrome, [-bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, 0.35], 4),
         cyl(0.003, 0.003, bw * 0.32, chrome, [bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, -0.35], 4)
+      );
+    }
+    if (kind === "formula" || kind === "buggy") {
+      parts.push(
+        cyl(0.008, 0.008, 0.01, M.plastic("#18181b"), [0, bh * 0.25, bl * 0.36]),
+        box(0.004, 0.004, 0.022, M.plastic("#f8fafc"), [0, bh * 0.26, bl * 0.37], [0, 0.2, 0])
+      );
+    }
+    if (kind === "buggy" || kind === "monster" || kind === "formula") {
+      // Palieres de transmisión telescópicos articulados (CVDs) desde el diferencial a cada buje de rueda trasera
+      for (const sx of [-1, 1]) {
+        parts.push(
+          // Vaso de salida del diferencial en acero templado
+          cyl(0.012, 0.012, 0.018, M.metal("#27272a"), [sx * bw * 0.08, bh * 0.22, -bl * 0.28], [0, 0, Math.PI / 2], 6),
+          // Eje del palier CVD cromado articulado en ángulo
+          cyl(0.005, 0.005, bw * 0.28, chrome, [sx * bw * 0.22, bh * 0.22, -bl * 0.28], [0, 0, sx * 0.1], 4),
+          // Campana de junta homocinética / fuelle de goma en buje de rueda
+          cyl(0.014, 0.014, 0.015, M.rubber(), [sx * bw * 0.35, bh * 0.22, -bl * 0.28], [0, 0, Math.PI / 2], 6)
+        );
+      }
+      // Barra estabilizadora trasera (sway bar) de alambre de acero con rótulas esféricas
+      parts.push(
+        // Alambre transversal central de torsión
+        cyl(0.004, 0.004, bw * 0.44, M.metal("#94a3b8"), [0, bh * 0.36, -bl * 0.34], [0, 0, Math.PI / 2], 4),
+        // Bieletas verticales a los trapecios de suspensión con rótulas anodizadas
+        cyl(0.003, 0.003, 0.045, chrome, [-bw * 0.22, bh * 0.32, -bl * 0.32], [0.3, 0, 0], 4),
+        cyl(0.003, 0.003, 0.045, chrome, [bw * 0.22, bh * 0.32, -bl * 0.32], [0.3, 0, 0], 4),
+        sph(0.008, M.metal("#0284c7"), [-bw * 0.22, bh * 0.34, -bl * 0.33]),
+        sph(0.008, M.metal("#0284c7"), [bw * 0.22, bh * 0.34, -bl * 0.33])
       );
     }
     if (kind === "buggy" || kind === "monster" || kind === "carrera") {

@@ -131,6 +131,18 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .slot-badge { display: inline-block; padding: 2px 5px; font: 700 9px/1 var(--hf); color: #38bdf8; background: rgba(56, 189, 248, .12); border: 1px solid rgba(56, 189, 248, .3); border-radius: 3px; letter-spacing: .06em; margin-bottom: 4px; vertical-align: middle; }
 .slot-badge.mounted { color: #22c55e; background: rgba(34, 197, 94, .15); border-color: rgba(34, 197, 94, .4); }
 .bought-pulse { animation: part-mounted .6s ease-out; }
+#shop .carc.perk[data-buy^="part:"] { cursor: pointer; }
+#shop .carc.perk[data-buy^="part:"]:hover {
+  border-color: rgba(56, 189, 248, .45);
+  background: rgba(18, 26, 36, .96);
+}
+#shop .carc.perk[data-buy^="part:"]:hover:has(.slot-badge.mounted) {
+  border-color: rgba(34, 197, 94, .55);
+}
+#shop .carc.perk[data-buy^="part:"]:active { border-color: #38bdf8; }
+.perk.active-part { border-color: rgba(34, 197, 94, .45); }
+.mount-hint { font-size: 11px; letter-spacing: .04em; color: var(--jm-texto2, #9ca3af); }
+.mount-hint.on { color: #22c55e; font-weight: 700; }
 @keyframes part-mounted {
   0% { box-shadow: 0 0 16px rgba(34, 197, 94, .8); border-color: #22c55e; }
   100% { box-shadow: none; }

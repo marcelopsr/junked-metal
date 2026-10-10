@@ -625,7 +625,11 @@ function renderShop() {
       const isMounted = optKey !== undefined && (save.kit?.[slotKey] === optKey || (optKey === "def" && !save.kit?.[slotKey]));
       slotBadge = `<span class="slot-badge">${slotLabel}</span>` + (isMounted ? ` <span class="slot-badge mounted">MONTADO</span>` : "");
     }
-    return `<button class="carc perk ${ok(i) ? "" : "no"}" ${i.attr} data-info="${info}" aria-disabled="${!ok(i)}">${slotBadge}<b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${i.fx ? `<span class="sfx">${i.fx}</span>` : ""}${pips}<div class="price">${price}</div></button>`;
+    const isOwnedPart = stab === "piezas" && !!optKey && owns(`part:${slotKey}:${optKey}`);
+    const isMounted = optKey !== undefined && (save.kit?.[slotKey!] === optKey || (optKey === "def" && !save.kit?.[slotKey!]));
+    const canClick = ok(i) || isOwnedPart;
+    const priceText = isOwnedPart ? (isMounted ? "MONTADO EN AUTO" : "EN GARAJE · TOCAR PARA MONTAR") : price;
+    return `<button class="carc perk ${canClick ? "" : "no"} ${isMounted ? "active-part" : ""}" ${i.attr} data-info="${info}" aria-disabled="${!canClick}">${slotBadge}<b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${i.fx ? `<span class="sfx">${i.fx}</span>` : ""}${pips}<div class="price">${isOwnedPart ? `<span class="mount-hint ${isMounted ? "on" : ""}">${priceText}</span>` : price}</div></button>`;
   }).join("") || `<div class="note">Nada por acá con este filtro. El patio no regala nada.</div>`;
   $("sinfo").textContent = "Enfoca una mejora para ver qué cambia y cuánto falta.";
   if (stab === "piezas") {
@@ -1496,6 +1500,28 @@ export function initMenu(a: Api) {
     else if (d.stab) { stab = d.stab as typeof stab; renderShop(); $("shop").scrollTop = 0; focusSel(`[data-stab="${stab}"]`); }
     else if (d.buy) {
       const id = d.buy, c = priceOf(id);
+      if (owns(id) && id.startsWith("part:")) {
+        const partsMatch = /^part:([^:]+):(.+)$/.exec(id);
+        if (partsMatch) {
+          const slot = partsMatch[1] as Slot, opt = partsMatch[2];
+          save.kit = save.kit || {};
+          if (save.kit[slot] === opt) {
+            delete save.kit[slot];
+          } else {
+            save.kit[slot] = opt;
+          }
+          persist();
+          renderShop();
+          focusSel(`[data-buy="${id}"]`);
+          const el = document.querySelector<HTMLElement>(`[data-buy="${id}"]`);
+          if (el) {
+            el.classList.add("bought-pulse");
+            setTimeout(() => el.classList.remove("bought-pulse"), 600);
+          }
+          SFX.scrapClink();
+          return;
+        }
+      }
       if (owns(id) || c === undefined) return;
       askBuy(nm, c, () => {
         if (!buy(id)) return;

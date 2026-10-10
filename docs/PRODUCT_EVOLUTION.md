@@ -733,45 +733,55 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
     - `Trompo`: Punta inferior cónica de carburo de tungsteno y corona superior estriada de enganche para lanzador.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (393 ms), `npm run test:restart`, `npm run shots -- --only garaje,taller,partida` (35 capturas en PC y móvil en 25.2 s sin errores) y `graphify update .` (3396 nodos, 8067 aristas).
 
+### Ciclo #43 (2026-10-10) — Palieres CVD & Barras Estabilizadoras 3D y Montaje Directo en Taller
+- **Alcance implementado (2 Especialistas Paralelos):**
+  - **Procedural 3D & Folded Modeler (`src/models.ts`):**
+    - Palieres de transmisión telescópicos articulados (CVDs) desde el diferencial central a los bujes de las ruedas traseras, con vaso de salida en acero templado (`#27272a`), eje articulado cromado y fuelle de goma (`M.rubber()`) en `buggy`, `monster` y `formula`.
+    - Barra estabilizadora trasera (sway bar) de alambre de torsión de acero (`#94a3b8`) con bieletas verticales cromadas y rótulas esféricas de aluminio anodizado en azul (`#0284c7`) ancladas a los trapecios de suspensión.
+  - **Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`):**
+    - Montaje/equipamiento directo de piezas ya compradas desde la pestaña de Piezas del Taller sin obligar a ir a Garaje: si el jugador toca una pieza adquirida no montada, se equipa de inmediato en el auto activo (`save.kit[slot] = opt; persist(); renderShop();`), con animación `.bought-pulse` y feedback sonoro `SFX.blip()`.
+    - Indicador contextual en la tarjeta de pieza: `.mount-hint` ("MONTADO EN AUTO" en verde vs "EN GARAJE · TOCAR PARA MONTAR") y borde de chapa destacada `.active-part` cuando está en uso.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (495 ms), `npm run test:restart`, `npm run shots -- --only garaje,taller` (26 capturas en PC y móvil en 15.8 s sin errores) y `graphify update .` (3397 nodos, 8078 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #43 (Evolución Multidisciplinaria)
+## 4. Backlog Vivo de Oportunidades — Ciclo #44 (Evolución Multidisciplinaria)
 
-### A. Especialista 1 · Procedural 3D & Folded Modeler (`src/models.ts`, `src/kit3d.ts`)
-1. **(Recomendada) Barras Estabilizadoras y Cardanes de Transmisión CV (CVDs):**
-   - **Qué es:** Añadir barras estabilizadoras de alambre de acero (`sway bars`) con rótulas esféricas en los ejes traseros, y palieres/cardanes telescópicos de transmisión articulados visibles entre el diferencial y los bujes de rueda.
-   - **Valor:** Eleva al máximo la fidelidad de maqueta mecánica 1:10 en el garaje y juego sin costo de rendimiento. Complejidad: Media.
-
-### B. Especialista 2 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
-2. **Montaje Directo desde el Taller para Piezas Adquiridas:**
-   - **Qué es:** Permitir que al hacer clic en una pieza que ya está en posesión del jugador (`"EN EL GARAJE"`), se monte/desmonte inmediatamente en el auto activo (`save.kit[slot] = opt; persist(); renderShop();`) con feedback auditivo `SFX.scrapClink()`, sin obligar a ir a Garaje → Piezas.
-   - **Valor:** Flujo de usuario continuo e inmediato de taller de competición. Complejidad: Baja.
-
-### C. Especialista 3 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-3. **Curva de Recuperación Elástica Post-Sag y Chirp Sonoro de Enlace Límite:**
+### A. Especialista 1 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
+1. **(Recomendada) Curva de Recuperación Elástica Post-Sag y Chirp Sonoro de Enlace Límite:**
    - **Qué es:** Simular la relajación electroquímica gradual (~250ms con amortiguación suave) al soltar el acelerador en lugar de rebote instantáneo, y conectar un micro-chirp piezoeléctrico en `sfx.ts` cuando la señal cae por debajo de -90 dBm.
    - **Valor:** Respuesta orgánica analógica que separa la química LiPo de una barra genérica. Complejidad: Media.
 
-### D. Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`)
-4. **Resonancia de Carrocería por Colisión (`bodyThud`) y Alarma Piezoeléctrica LiPo Crítica:**
+### B. Especialista 2 · Audio & Synth Sound Designer (`src/sfx.ts`)
+2. **Resonancia de Carrocería por Colisión (`bodyThud`) y Alarma Piezoeléctrica LiPo Crítica:**
    - **Qué es:** Sintetizar el golpe sordo de resonancia hueca de lexan/policarbonato en colisiones de carrocería, y una alarma piezoeléctrica intermitente cuando la batería cae del 15% (emulando los buzzer de telemetría LiPo).
    - **Valor:** Feedback sonoro inmersivo y advertencia auditiva crítica sin desviar la mirada al HUD. Complejidad: Media.
+
+### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
+3. **Manguetas de Dirección de Aluminio Anodizado y Tuercas de Rueda Hexagonales de Bloqueo:**
+   - **Qué es:** Modelar las manguetas portamanguetas de dirección delanteras en aluminio mecanizado CNC con tuercas hexagonales centrales autoblocantes de nylon en las 4 ruedas de competición.
+   - **Valor:** Completa el tren rodante con realismo diegético total en vista de Garaje. Complejidad: Media.
+
+### D. Especialista 4 · Combat Feel & VFX Specialist (`src/fx.ts`)
+4. **Micro-chispas de Fricción en CVDs/Piñón y Vaho Térmico de Disipador:**
+   - **Qué es:** Emitir partículas muy sutiles de micro-fricción o distorsión térmica sobre el disipador del motor 540 cuando el vehículo sostiene aceleración máxima por más de 3 segundos.
+   - **Valor:** Conecta la mecánica 3D interna directamente con el combate en vivo. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #42 completado y validado enfocando al Procedural 3D & Folded Modeler en 3 pases paralelos (Chasis RC, Utilería de taller en banco y Armas bélicas) (`tsc` 0 errores, `test` 75/75, `build` 393 ms, 35 capturas en `.shots/actual/` en 25.2 s, grafo en 3396 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #43**.
+- **Último trabajo completado:** Ciclo #43 completado y validado en paralelo (Procedural 3D Modeler con palieres CVD y barras estabilizadoras + Menu Specialist con montaje directo de piezas desde el Taller) (`tsc` 0 errores, `test` 75/75, `build` 495 ms, 26 capturas en `.shots/actual/` en 15.8 s, grafo en 3397 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #44**.
 
-### 🔓 LISTO PARA EL CICLO #43 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #44 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Procedural 3D Modeler** | Barras estabilizadoras y palieres articulados CVD en chasis de competición | `src/models.ts` |
-| **Menu, Workshop & Flow** | Montaje directo de piezas compradas desde el Taller sin volver a Garaje | `src/menu.ts`, `src/menu.css` |
 | **Diegetic HUD & Telemetry** | Relajación elástica post-sag y chirp analógico en señal crítica | `src/ui.ts`, `src/hud.css` |
 | **Audio Synth Designer** | Resonancia hueca de lexan `bodyThud` y buzzer piezoeléctrico LiPo baja | `src/sfx.ts` |
+| **Procedural 3D Modeler** | Manguetas CNC delanteras y tuercas hexagonales autoblocantes | `src/models.ts` |
+| **Combat Feel & VFX** | Micro-fricción y distorsión térmica reactiva en disipador 540 | `src/fx.ts` |
 
 
 ## 2026-10-10 · Muestra cinematográfica 3D local (tanda visual independiente)

@@ -11,6 +11,7 @@ import { isTouch, KEYS } from "./input";
 const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram", "cdr"] as const;
 import { WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
+import { SFX } from "./sfx";
 
 const $ = (id: string) => (document.getElementById(id) ?? (id === "jump" ? document.getElementById("jumpRow") : null))!;
 const el = <T extends HTMLElement = HTMLElement>(id: string) => $(id) as T;
@@ -48,6 +49,8 @@ export function hudWorkshop(perm: Partial<Record<(typeof WSHOP_KEYS)[number], nu
 }
 
 let boostHold = 0;
+let currentSag = 0;
+let lastRfChirp = 0;
 export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number; shield?: boolean; boostActive?: boolean; distCenter?: number; heat?: number }) {
   const p = Math.max(0, d.hp / d.maxHp);
   // 3 celdas LiPo: se vacían de derecha a izquierda
@@ -81,9 +84,11 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   }
   memo.prevHp = d.hp;
   const displayV = 9 + 3.6 * p;
-  const sag = (d.boostActive ? 0.32 : 0);
-  const finalV = Math.max(0, displayV - sag);
-  const isSag = sag > 0;
+  const targetSag = d.boostActive ? 0.32 : 0;
+  currentSag += (targetSag - currentSag) * 0.25;
+  if (!d.boostActive && currentSag < 0.005) currentSag = 0;
+  const finalV = Math.max(0, displayV - currentSag);
+  const isSag = currentSag > 0.03;
   if (ch("sag", +isSag)) $("volt").classList.toggle("sag", isSag);
   if (ch("voltSag", +Boolean(d.boostActive))) $("lipo")?.classList.toggle("sag", Boolean(d.boostActive));
   boostHold = d.boostActive ? Math.min(120, boostHold + 1) : 0;
@@ -105,6 +110,10 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     const isFringe = d.distCenter > 75;
     if (ch("sigFringe", +isFringe)) $("signal").classList.toggle("fringe", isFringe);
     if (ch("rfLoss", +isLoss)) $("signal").classList.toggle("rf-loss", isLoss);
+    if (isLoss && performance.now() - lastRfChirp > 1200) {
+      lastRfChirp = performance.now();
+      SFX.blip();
+    }
   }
   const dbm = Math.round(-42 - Math.min(52, ((d.distCenter ?? 0) / 90) * 52));
   let sigDbm = document.getElementById("sigDbm");
