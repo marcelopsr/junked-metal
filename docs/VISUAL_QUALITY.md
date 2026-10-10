@@ -783,3 +783,23 @@ Carrera (1) y Survivor en partida (2).
 4. **Síntesis con Paneo Estéreo y Alarma Espacial (Audio & Synth Sound Designer · `src/sfx.ts`):**
    - Se incorporó soporte de paneo estéreo opcional (`pan?: number`, -1 a 1) en la primitiva `tone()` mediante `StereoPannerNode`, manteniendo compatibilidad hacia atrás.
    - Se actualizó `SFX.collisionWarning(pan)` para advertencias direccionales y se agregó `SFX.spatialAlert(pan)` para avisos perimetrales espaciales.
+
+---
+
+## 2026-10-10 · Ciclo #37 (Ecosistema Matricial de Especialistas: Filtros de Pintura y Paquete Off-Road en Taller, Glitch CRT y RSSI Periférico en HUD, Pack LiPo XT60 y Red Lateral 3D, Paneo en Ruido Filtrado SFX)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 30.4 s).
+
+### Intervenciones aplicadas por los 4 Especialistas y verificadas en captura
+1. **Filtro de acabados reactivo y homologación `.rally-pkg` en Taller (Menu, Workshop & Flow Specialist · `src/menu.ts`, `src/menu.css`):**
+   - En `renderPaint()`, se implementó la botonera `.paint-filters` con estados reactivos ("TODOS", "BRILLO/METAL", "MATES") que filtra instantáneamente las muestras en `.pal` sin recargas de página.
+   - En `renderGarage()`, se detecta la configuración todoterreno (`monster`, `buggy` o ruedas todoterreno) desplegando la pastilla verde oliva `<span class="rally-pkg">PAQUETE OFF-ROAD</span>` en el resumen del taller `#bankG` y en la ranura de ruedas.
+2. **Micro-glitch analógico CRT ante impactos y atenuación periférica RSSI (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - Se exportó la función `hudImpactGlitch()` para activar `#hud.glitch` durante 160 ms con sacudida horizontal de dos pasos (`@keyframes hud-jitter`) y aumento de contraste/brillo.
+   - En `hudUpdate()`, cuando la distancia al centro supera los 75 m (`d.distCenter > 75`), se aplica `.fringe` a `#signal`, reduciendo su opacidad y saturación para reflejar la lejanía respecto a la antena de transmisión.
+3. **Pack de batería LiPo con conector XT60 y red protectora en ventanilla (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - En `carModel()`, los modelos todoterreno (`buggy`, `monster`) incorporan un pack de batería LiPo azul con cables siliconados rojo/negro y conector XT60 amarillo expuesto en la bandeja trasera del chasis.
+   - Los modelos de pista (`carrera`, `deportivo`) incorporan una red de protección de nylon mate (`#27272a`) en la ventanilla del habitáculo.
+4. **Ruido filtrado espacial y efectos direccionales (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Se añadió soporte de paneo estéreo opcional (`pan?: number`, -1 a 1) en la primitiva `hiss()` mediante `StereoPannerNode`.
+   - Se añadieron y adaptaron las primitivas de fricción espacial `SFX.spatialHiss(pan, dur)`, `SFX.scrape(pan)` y `SFX.drift(pan)`.

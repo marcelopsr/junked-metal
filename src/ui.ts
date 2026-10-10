@@ -49,7 +49,7 @@ export function hudWorkshop(perm: Partial<Record<(typeof WSHOP_KEYS)[number], nu
   box.innerHTML = `<span class="h-tape">TALLER</span><div class="ws">${items.map((k) => `<span class="ws-i">${icon(WSHOP_ICON[k], 16)}<b>${perm[k]}</b></span>`).join("")}</div>`;
 }
 
-export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number; shield?: boolean; boostActive?: boolean }) {
+export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number; shield?: boolean; boostActive?: boolean; distCenter?: number }) {
   const p = Math.max(0, d.hp / d.maxHp);
   // 3 celdas LiPo: se vacían de derecha a izquierda
   Array.from($("lipo").children).forEach((c, i) => {
@@ -88,6 +88,10 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("sag", +isSag)) $("volt").classList.toggle("sag", isSag);
   txt("volt", `${displayV.toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
+  if (d.distCenter !== undefined) {
+    const isFringe = d.distCenter > 75;
+    if (ch("sigFringe", +isFringe)) $("signal").classList.toggle("fringe", isFringe);
+  }
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);
   hudTurbo(d.boost / 100);
@@ -112,6 +116,15 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("spdTop", +(s >= 0.9))) (document.getElementById("spd") ?? $("txr")).classList.toggle("top", s >= 0.9);
   if (ch("blaze", +(s >= 0.95))) $("txr").classList.toggle("blazing", s >= 0.95);
   txt("kmh", String(Math.round(Math.abs(d.kmh))));
+}
+
+let glitchTimer = 0;
+export function hudImpactGlitch() {
+  const hudEl = $("hud");
+  if (!hudEl) return;
+  hudEl.classList.add("glitch");
+  clearTimeout(glitchTimer);
+  glitchTimer = window.setTimeout(() => hudEl.classList.remove("glitch"), 160);
 }
 
 // ---------- Slots de armas / pasivas ----------

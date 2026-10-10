@@ -181,16 +181,49 @@ function tone(type: OscillatorType, f0: number, f1: number, dur: number, vol: nu
   o.stop(t + dur + 0.02);
 }
 
-function hiss(filter: BiquadFilterType, f0: number, f1: number, dur: number, vol: number) {
+function hiss(filter: BiquadFilterType, f0: number, f1: number, dur: number, vol: number, pan?: number): void;
+function hiss(dur: number, vol: number, f0: number, f1: number, pan?: number): void;
+function hiss(
+  a: BiquadFilterType | number,
+  b: number,
+  c: number,
+  d: number,
+  e?: number,
+  f?: number,
+) {
   if (!ctx) return;
+  let filter: BiquadFilterType = "bandpass";
+  let f0: number, f1: number, dur: number, vol: number, pan: number | undefined;
+  if (typeof a === "string") {
+    filter = a;
+    f0 = b;
+    f1 = c;
+    dur = d;
+    vol = e ?? 0.1;
+    pan = f;
+  } else {
+    dur = a;
+    vol = b;
+    f0 = c;
+    f1 = d;
+    pan = e;
+  }
   const t = ctx.currentTime, s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
   s.buffer = noise;
   fl.type = filter;
-  fl.frequency.setValueAtTime(f0, t);
+  fl.frequency.setValueAtTime(Math.max(20, f0), t);
   fl.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  s.connect(fl).connect(g).connect(fxBus); duckEngine();
+  s.connect(fl).connect(g);
+  if (pan !== undefined && ctx.createStereoPanner) {
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = Math.max(-1, Math.min(1, pan));
+    g.connect(panner).connect(fxBus);
+  } else {
+    g.connect(fxBus);
+  }
+  duckEngine();
   s.start(t, Math.random() * 0.5);
   s.stop(t + dur + 0.02);
 }
@@ -230,11 +263,14 @@ export const SFX = {
     tone("triangle", 783.99, 783.99, 0.1, 0.12, 0.16);
     tone("triangle", 1046.5, 1046.5, 0.22, 0.24, 0.24);
   },
-  scrapClink: () => { tone("triangle", 2200, 1800, 0.04, 0.08); tone("sine", 3200, 2400, 0.03, 0.06, 0.02); },
+  scrapClink: (pan?: number) => { tone("triangle", 2200, 1800, 0.04, 0.08, 0, pan); tone("sine", 3200, 2400, 0.03, 0.06, 0.02, pan); },
   collisionWarning: (pan?: number) => { tone("sawtooth", 880, 880, 0.05, 0.08, 0, pan); tone("sawtooth", 880, 880, 0.05, 0.08, 0.08, pan); },
   spatialAlert: (pan: number) => { tone("triangle", 1046.5, 783.99, 0.08, 0.12, 0, pan); },
+  spatialHiss: (pan: number, dur = 0.15) => { hiss(dur, 0.12, 1200, 0, pan); },
+  scrape: (pan?: number) => { hiss("bandpass", 2200, 600, 0.08, 0.14, pan); },
+  drift: (pan?: number) => { hiss("bandpass", 1100, 400, 0.12, 0.12, pan); },
   boostSurge: () => { tone("triangle", 220, 880, 0.15, 0.18); tone("sawtooth", 440, 1100, 0.12, 0.15, 0.04); },
-  brakeScreech: () => { tone("sawtooth", 950, 420, 0.12, 0.16); tone("triangle", 600, 300, 0.08, 0.12, 0.03); },
+  brakeScreech: (pan?: number) => { tone("sawtooth", 950, 420, 0.12, 0.16, 0, pan); tone("triangle", 600, 300, 0.08, 0.12, 0.03, pan); },
   lipoFull: () => { tone("sine", 587.33, 880, 0.08, 0.14); tone("triangle", 880, 1174.66, 0.1, 0.18, 0.06); },
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {

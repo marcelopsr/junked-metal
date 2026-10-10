@@ -487,6 +487,17 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         );
       }
     }
+    if (kind === "buggy" || kind === "monster") {
+      parts.push(
+        box(0.08, 0.04, 0.12, M.plastic("#2563eb"), [0, bh * 0.45, -bl * 0.38]),
+        cyl(0.006, 0.006, 0.06, M.plastic("#ef4444"), [0.02, bh * 0.47, -bl * 0.33], [0, 0, 0.4], 4),
+        cyl(0.006, 0.006, 0.06, M.plastic("#18181b"), [-0.02, bh * 0.47, -bl * 0.33], [0, 0, -0.4], 4),
+        box(0.02, 0.015, 0.025, M.plastic("#eab308"), [0, bh * 0.48, -bl * 0.3])
+      );
+    }
+    if (kind === "carrera" || (kind as string) === "deportivo") {
+      parts.push(box(0.004, 0.09, 0.16, M.matte("#27272a"), [bw * 0.45, bh * 0.65, 0]));
+    }
     if (kind !== "tanque") {
       const ax = bw * 0.35, ay = bh * 0.7, az = -bl * 0.42;
       parts.push(

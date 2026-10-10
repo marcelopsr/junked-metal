@@ -643,38 +643,58 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 4. Backlog Vivo de Oportunidades — Ciclo #37 (Especialistas Matriciales)
 
+### Ciclo #37 (2026-10-10) — Ecosistema Matricial de Especialistas: Filtros de Pintura y Paquete Off-Road en Taller, Glitch CRT y RSSI Periférico en HUD, Pack LiPo XT60 y Red Lateral 3D, Paneo en Ruido Filtrado SFX
+- **Alcance implementado por 4 especialistas en paralelo (partición disjunta estricta):**
+  - **Especialista 1 · Menu, Workshop & Flow (`src/menu.ts`, `src/menu.css`):**
+    - Barra reactiva de filtros de acabado `.paint-filters` ("TODOS", "BRILLO/METAL", "MATES") en `renderPaint()`.
+    - Insignia diegética `<span class="rally-pkg">PAQUETE OFF-ROAD</span>` en verde oliva en el resumen de taller `#bankG` y en la ranura de ruedas para configuraciones todoterreno.
+  - **Especialista 2 · Diegetic HUD & Telemetry (`src/ui.ts`, `src/hud.css`):**
+    - Rutina `hudImpactGlitch()` con clase `#hud.glitch` (160 ms de sacudida CRT `@keyframes hud-jitter` y realce momentáneo de contraste/brillo ante impactos).
+    - Atenuación diegética de radio `#signal.fringe` (opacidad 0.6 y escala de grises 0.4) cuando el vehículo opera a más de 75 m del centro del patio.
+  - **Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`):**
+    - Pack de batería LiPo azul con cables de silicona rojo/negro y ficha de conexión XT60 amarilla en bandeja trasera de `buggy` y `monster`.
+    - Red de protección de habitáculo en nylon mate en la ventanilla del piloto para `carrera` y `deportivo`.
+  - **Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`):**
+    - Paneo estéreo en la primitiva de ruido filtrado `hiss()` con `StereoPannerNode`.
+    - Nueva primitiva de fricción direccional `SFX.spatialHiss(pan, dur)` y propagación de `pan` hacia `scrape`, `drift`, `scrapClink` y `brakeScreech`.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando), `npm run build` (429 ms), `pm2 restart rc-test`, `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas en PC y celular sin errores en 30.4 s) y `graphify update .` (3237 nodos, 7815 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #38 (Especialistas Matriciales)
+
 ### A. Especialista 1 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
-1. **(Recomendada) Filtro de Acabados en Pintura (Mates vs. Metálicos/Brillantes) y Homologación Paquete Off-Road (`.rally-pkg`):**
-   - **Qué es:** Mini-filtro en cabina de pintura para aislar tonos mate de brillantes/metal, más pastilla diegética `<span class="rally-pkg">PAQUETE OFF-ROAD</span>` en el taller al combinar ruedas todoterreno con defensas laterales o jaula.
-   - **Valor:** Agiliza la personalización y premia las combinaciones mecánicas todoterreno. Complejidad: Baja.
+1. **(Recomendada) Previsualización de Color en Foco (Swatch Peek) e Insignia de Tracción Total en Cabecera (`#bankG`):**
+   - **Qué es:** Reflejar temporalmente el color en el modelo 3D del auto (`peek.paint`) al navegar las muestras con gamepad/cursor antes de pulsar enter, más llevar la insignia diegética `TRACCIÓN TOTAL` a `#bankG` para cerrar la tríada técnica con `PAQUETE AERO` y `PAQUETE OFF-ROAD`.
+   - **Valor:** Mayor placer táctil al personalizar acabados y consistencia técnica plena en taller. Complejidad: Baja-Media.
 
 ### B. Especialista 2 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-2. **Flicker Analógico por Impacto Físico (`#lcd.glitch`) y Variación de Señal RSSI en Periferia (`#signal`):**
-   - **Qué es:** Micro-sacudida de contraste o parpadeo CRT en telemetría de 150 ms al sufrir choques pesados, más atenuación de barras de señal al alejarse del patio o combatir jefes electromagnéticos.
-   - **Valor:** Mayor dramatismo físico y sensación de radioenlace analógico real. Complejidad: Media.
+2. **Micro-Interferencia Analógica Extrema en Bordes del Patio (`distCenter > 85m`) y Alerta Térmica LiPo:**
+   - **Qué es:** Micro-flicker intermitente `@keyframes rf-loss` en `#signal` cuando el vehículo está a punto de perder alcance radial (< 5m del límite exterior), más pulso térmico en voltímetro al encadenar múltiples turbos/derrapes.
+   - **Valor:** Refuerza la inmersión del radioenlace y la gestión de batería sin texto invasivo. Complejidad: Media.
 
 ### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
-3. **Malla de Ventanilla en Autos de Pista o Pack de Baterías LiPo con Conector XT60 Expuesto:**
-   - **Qué es:** Red de protección de piloto en `carrera`/`deportivo`, o bloque rectangular de batería LiPo con cables siliconados y ficha XT60 visible en bandeja trasera de `buggy`/`monster`.
-   - **Valor:** Refuerza la identidad y escala 1:10 de vehículo artesanal radiocontrolado. Complejidad: Media.
+3. **Brazos de Dirección / Servo Visibles en Tren Delantero y Switch de Encendido RC con LED:**
+   - **Qué es:** Tirantes articulados finos hacia los cubos de rueda delantera en chasis descubiertos (`buggy`, `formula`), más micro-switch de corredera con LED indicador de enlace en el chasis.
+   - **Valor:** Aumenta la sensación de escala macro y detalle de maqueta RC artesanal. Complejidad: Baja.
 
 ### D. Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`)
-4. **Espacialización con Paneo en `hiss()` (Ruido Filtrado) y Atenuación por Distancia en SFX Posicionales:**
-   - **Qué es:** Incorporar `pan?: number` en la primitiva de ruido blanco/filtrado `hiss()`, y helper de utilidad para atenuar volumen y calcular paneo según posición relativa 3D del enemigo o proyectil.
-   - **Valor:** Paisaje acústico inmersivo y lectura auditiva espacial en auriculares. Complejidad: Media.
+4. **Atenuación por Distancia (Distance Rolloff) en SFX Espaciales y Paneo Dinámico en Colisiones:**
+   - **Qué es:** Parámetro `dist?: number` para modular ganancia de avisos espaciales según lejanía del emisor, y cálculo del ángulo de choque relativo para enviar `pan` dinámico en impactos.
+   - **Valor:** Espacialización acústica inmersiva y lectura auditiva táctica de amenazas perimetrales. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #36 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 424 ms, 33 capturas en `.shots/actual/` en 29.6 s, grafo sincronizado).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #37** con los Especialistas Matriciales.
+- **Último trabajo completado:** Ciclo #37 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 429 ms, 33 capturas en `.shots/actual/` en 30.4 s, grafo sincronizado en 3237 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #38** con los Especialistas Matriciales.
 
-### 🔓 LISTO PARA EL CICLO #37 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #38 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Menu, Workshop & Flow** | Filtro de acabados (brillo vs mate) e insignia de homologación `.rally-pkg` | `src/menu.ts`, `src/menu.css` |
-| **Diegetic HUD & Telemetry** | Flicker analógico por impacto pesado (`#lcd.glitch`) y atenuación de RSSI | `src/ui.ts`, `src/hud.css` |
-| **Procedural 3D Modeler** | Pack de baterías LiPo con ficha XT60 expuesta en chasis o malla de ventanilla | `src/models.ts` |
-| **Audio Synth Designer** | Paneo en ruido filtrado `hiss()` y cálculo de atenuación por distancia 3D | `src/sfx.ts` |
+| **Menu, Workshop & Flow** | Previsualización de color en foco (`swatch peek`) e insignia `TRACCIÓN TOTAL` en cabecera | `src/menu.ts`, `src/menu.css` |
+| **Diegetic HUD & Telemetry** | Micro-flicker RF por alcance extremo (`rf-loss`) y alerta térmica LiPo | `src/ui.ts`, `src/hud.css` |
+| **Procedural 3D Modeler** | Brazos de servo de dirección en tren delantero y micro-switch RC con LED | `src/models.ts` |
+| **Audio Synth Designer** | Atenuación por distancia (Distance Rolloff) en SFX y paneo dinámico en choques | `src/sfx.ts` |

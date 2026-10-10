@@ -598,7 +598,9 @@ function renderGarage() {
   const ownedPaints = PAINTS.filter((p) => owns("paint:" + ((p as any).id ?? p))).length;
   const hasAero = Boolean(save.kit.wing && save.kit.wing !== "nada" && save.kit.bumper && save.kit.bumper !== "nada");
   const aeroPkgTag = hasAero ? '<span class="aero-pkg">PAQUETE AERO</span>' : "";
-  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span> <span class="parts-pct">${pctParts}% TALLER</span>${aeroPkgTag} <span class="paints-pct">${ownedPaints}/${PAINTS.length} PINTURAS</span>`;
+  const hasOffroad = Boolean(save.car === "monster" || save.car === "buggy" || save.kit.tires === "todoterreno");
+  const rallyPkgTag = hasOffroad ? '<span class="rally-pkg">PAQUETE OFF-ROAD</span>' : "";
+  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span> <span class="parts-pct">${pctParts}% TALLER</span>${aeroPkgTag}${rallyPkgTag} <span class="paints-pct">${ownedPaints}/${PAINTS.length} PINTURAS</span>`;
   $("gtabs").innerHTML = tabsHtml(GTABS, gtab, "gtab");
   $("paint").classList.toggle("hidden", gtab !== "pintura");
   $("cars").classList.toggle("hidden", gtab === "pintura");
@@ -646,7 +648,8 @@ function renderGarage() {
     const totalSl = Object.keys(opts(sl)).length;
     const ownedSl = Object.keys(opts(sl)).filter((o) => owns(`part:${sl}:${o}`)).length;
     const aeroTag = sl === "wing" && hasAero ? ' <span class="aero-pkg">PAQUETE AERO</span>' : "";
-    return `<div class="slot"><span>${PARTS[sl].name}${aeroTag} <em class="slot-count">(${ownedSl}/${totalSl})</em></span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
+    const rallyTag = sl === "tires" && hasOffroad ? ' <span class="rally-pkg">PAQUETE OFF-ROAD</span>' : "";
+    return `<div class="slot"><span>${PARTS[sl].name}${aeroTag}${rallyTag} <em class="slot-count">(${ownedSl}/${totalSl})</em></span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
       const own = owns(`part:${sl}:${o}`);
       const isStock = c === 0;
       return `<button class="opt ${save.kit[sl] === o ? "on" : ""} ${own ? "" : "locked"}" data-part="${sl}:${o}">${n}${isStock ? ' <em class="stock-tag">DE SERIE</em>' : (own ? "" : ` · ${c}`)}</button>`;
@@ -671,6 +674,8 @@ const isGlossy = (c: string) => {
   const isMetallic = ["#c0c0c0", "#d4af37", "#b87333", "#5b6470"].includes(c.toLowerCase());
   return isMetallic || (s >= 60 && v >= 60);
 };
+type PaintFilter = "todos" | "brillo" | "mates";
+let pfilt: PaintFilter = "todos";
 // Fondos de las barras: cada una muestra hacia dónde va el color con las otras dos fijas
 function hsvBars(h: number, sat: number, v: number) {
   const el = $("paint");
@@ -685,8 +690,16 @@ function renderPaint() {
   const customZones = (["paint", "trim", "rim"] as (keyof typeof PZ)[]).filter((z) => !!save[z]).length;
   const decalTag = save.decalSel >= 0 && save.decals[save.decalSel] ? `CALCO #${save.decalSel + 1} ACTIVO` : "SIN CALCO EN CAPÓ";
   const statusPill = `<div class="paint-status"><span id="pztBadge" class="paint-badge">PATRONES: ${customZones}/3 ZONAS</span><span class="decal-badge">${decalTag}</span></div>`;
+  const PFILTS: [PaintFilter, string][] = [
+    ["todos", "TODOS"],
+    ["brillo", "BRILLO/METAL"],
+    ["mates", "MATES"],
+  ];
+  const filterBar = `<div class="paint-filters">${PFILTS.map(([f, lab]) => `<button class="p-filter ${pfilt === f ? "active" : ""}" data-pfilt="${f}">${lab}</button>`).join("")}</div>`;
+  const isHidden = (c: string) => (pfilt === "brillo" && !isGlossy(c)) || (pfilt === "mates" && isGlossy(c));
   $("paint").innerHTML = statusPill + `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
-    + `<div class="pal">${PAINTS.map((c) => `<button class="${["sw", isGlossy(c) && "glossy", mine && c === cur && "on"].filter(Boolean).join(" ")}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
+    + filterBar
+    + `<div class="pal">${PAINTS.map((c) => `<button class="${["sw", isGlossy(c) && "glossy", mine && c === cur && "on", isHidden(c) && "hidden"].filter(Boolean).join(" ")}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
     + `<div class="hsv"><div class="hsvt"><span><i id="pzdot" class="sw-dot" style="background:${cur}"></i>${PZ[pz]} · ${mine ? "Personalizado" : "De fábrica"}</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
     + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
     + `<div class="note">${pz === "trim" ? "Detalles: alerón, paragolpes, defensas y accesorios." : pz === "rim" ? "Llantas de las cuatro ruedas (o de las que haya)." : "Carrocería: la chapa entera."} Pintar es gratis: el patio cobra en otras cosas.</div>`;
@@ -1310,7 +1323,7 @@ export function initMenu(a: Api) {
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-rctrack],[data-act],[data-k],[data-sw],[data-pdef],[data-pz],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
+    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-rctrack],[data-act],[data-k],[data-sw],[data-pdef],[data-pz],[data-pfilt],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
     if (d?.act === "askyes") { const f = askFn; askClose(); SFX.accept(); f?.(); return; }
     if (d?.act === "askno") { askClose(); return; }
@@ -1375,6 +1388,7 @@ export function initMenu(a: Api) {
     else if (d.dact === "done") { editing = false; renderGarage(); focusSel('[data-dact="edit"]'); }
     else if (d.sw || d.pdef) { save[pz] = d.sw ?? ""; persist(); renderPaint(); focusSel(d.sw ? `[data-sw="${d.sw}"]` : "[data-pdef]"); }
     else if (d.pz) { pz = d.pz as typeof pz; renderPaint(); focusSel(`[data-pz="${pz}"]`); }
+    else if (d.pfilt) { pfilt = d.pfilt as typeof pfilt; renderPaint(); focusSel(`[data-pfilt="${pfilt}"]`); }
     else if (d.gtab) { gtab = d.gtab as typeof gtab; renderGarage(); $("cars").scrollTop = 0; focusSel(`[data-gtab="${gtab}"]`); }
     else if (d.beast) openBeast(d.beast as Kind);
     else if (d.bnav) beastStep(+d.bnav);
