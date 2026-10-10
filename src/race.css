@@ -70,6 +70,7 @@
 .rp .rrev { padding: 3px 6px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #ff9138; color: #1f1100; border-radius: 4px; box-shadow: 0 0 8px rgba(255, 145, 56, .5); }
 .rp .rslip { padding: 3px 6px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #ffd84d; color: #1f1100; border-radius: 4px; box-shadow: 0 0 8px rgba(255, 216, 77, .5); }
 .rp .rair { padding: 3px 6px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #00e5ff; color: #002b33; border-radius: 4px; box-shadow: 0 0 8px rgba(0, 229, 255, .5); }
+.rp .rspin { padding: 3px 6px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #ef4444; color: #fff; border-radius: 4px; box-shadow: 0 0 10px rgba(239, 68, 68, .7); animation: r-blink .3s steps(2) infinite; }
 .rp .rthreat { padding: 3px 6px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #ff9138; color: #1f1100; border-radius: 4px; box-shadow: 0 0 8px rgba(255, 145, 56, .6); animation: r-blink .4s steps(2) infinite; }
 @keyframes r-blink { 50% { opacity: .25; } }
 #rinfo .rbest { color: #22c55e; font-style: normal; font-weight: 800; }

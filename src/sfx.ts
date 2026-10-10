@@ -212,6 +212,8 @@ export const SFX = {
   explosion: () => gate("boom", 8) && (hiss("lowpass", 1400, 60, 0.6, 0.45), tone("sine", 90, 30, 0.45, 0.35)),
   zap: () => gate("zap", 10) && hiss("highpass", 6000, 2500, 0.1, 0.12),
   hurt: () => gate("hurt", 6) && (tone("square", 300, 120, 0.16, 0.1), tone("triangle", 150, 70, 0.16, 0.12)), // chirrido de juguete
+  ignite: () => { hiss("bandpass", 1800, 400, 0.35, 0.28); tone("sine", 120, 45, 0.3, 0.22); },
+  radioChirp: () => { tone("sine", 1800, 1200, 0.04, 0.08); tone("sine", 2400, 1600, 0.04, 0.06, 0.03); },
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {
     if (crit) tone("square", 880, 440, 0.05, 0.06);

@@ -104,6 +104,12 @@ export async function showPhoto(i: PhotoInfo) {
   g.textAlign = "left";
   g.fillText(`REGISTRO TÉCNICO · ESCENARIO: ${i.zone.toUpperCase()}`, pad, y0 + 118 * u);
   g.restore();
+  g.save();
+  g.font = `600 ${Math.round(14 * u)}px Rajdhani, sans-serif`;
+  g.fillStyle = "rgba(77, 76, 56, 0.55)";
+  g.textAlign = "left";
+  g.fillText("INSPECCIONADO · TALLER CENTRAL", pad, y0 + 138 * u);
+  g.restore();
   if (i.kills >= 100) {
     g.save();
     g.font = `700 ${Math.round(15 * u)}px Rajdhani, sans-serif`;

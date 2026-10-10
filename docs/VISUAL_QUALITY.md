@@ -562,3 +562,27 @@ Carrera (1) y Survivor en partida (2).
    - Se sumó al pool de efectos tridimensionales el método `FX.weld(p)`, disparando 10 chispas blanquiazules concentradas `#e0f2fe` de alta velocidad, corta duración y sustentación negativa acentuada para colisiones blindadas y reparaciones de chasis.
 6. **Condecoración de alta letalidad (100+ bajas) en Polaroid (Subagente 6 · `src/replay.ts`):**
    - En `showPhoto()`, si la partida alcanza o supera las 100 bajas, se estampa a la derecha del pie de la instantánea un distintivo cobrizo `"★ ALTA LETALIDAD (100+)"`, conmemorando partidas de exterminio masivo en el archivo fotográfico.
+
+---
+
+## 2026-10-10 · Ciclo #27 (Chasis Reforzado Garaje, Pulso Radio HUD, Trompo Carrera, Turnos Match-3, Fuego FX, Inspección Polaroid, SFX Ignite/Chirp y Parrilla Tanque 3D)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 37.1 s).
+
+### Intervenciones aplicadas por 8 subagentes en paralelo y verificadas en captura
+1. **Insignia técnica de chasis reforzado en autos pesados (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()` (pestaña `auto`), se identifican los vehículos de alta integridad (`tanque`, `monster`, `combi`) y se les asigna la pastilla cian blindada `<span class="armor-badge">CHASIS REFORZADO</span>`, comunicando su rol defensivo directamente en la ficha del garaje.
+2. **Pulso reactivo con resplandor en avisos de radio del HUD (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `applyBannerSkin()`, las alertas diegéticas de eventos de patio (`tone === "now"` o `"warn"`) activan la clase `.event-pulse` sobre `#banner`, desencadenando la animación `b-pulse` con resplandor perimetral naranja intermitente y borde reforzado.
+3. **Pastilla de trompo y pérdida de tracción en Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `hud()` de carrera, se detecta el estado de spin del corredor (`h.spin > 0.05 || h.out`) y se despliega la pastilla roja estroboscópica `<b class="rspin">¡TROMPO!</b>` junto al velocímetro, clarificando al instante la causa de la pérdida de control.
+4. **Resplandor áureo perimetral en medidor de turnos de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - En `paintDisplay()`, cuando restan 10 o más movimientos en fase de juego, el display numérico se resalta con un marco áureo sutil (`rgba(255,180,0,0.07)` y borde `rgba(255,180,0,0.25)`), reforzando visualmente la holgura táctica del jugador.
+5. **Efecto tridimensional de llamarada de ignición en `FX.ignite` (Subagente 5 · `src/fx.ts`):**
+   - Se añadió al pool de partículas el método `FX.ignite(p)`, generando 12 partículas de fuego expansivo con núcleo amarillo `#ffe600`, envoltura anaranjada `#ff5500` y sustentación térmica ascendente.
+6. **Sello de peritaje técnico en Polaroid (Subagente 6 · `src/replay.ts`):**
+   - En `showPhoto()`, se incorpora en el pie del peritaje la leyenda caligráfica diegética `"INSPECCIONADO · TALLER CENTRAL"` en tono grafito tenue `rgba(77, 76, 56, 0.55)`, afianzando la narrativa de taller mecánico.
+7. **Audio procedural de combustión y radiofrecuencia (Subagente 7 · `src/sfx.ts`):**
+   - Se incorporaron al motor procedural WebAudio los métodos `SFX.ignite()` (fogonazo térmico con filtro pasa-bandas y caída senoidal grave) y `SFX.radioChirp()` (doble tono senoidal agudo de sincronización de radio).
+8. **Parrilla de protección de acero en chasis pesado (Subagente 8 · `src/models.ts`):**
+   - En `carModel()`, se incorporó al tanque dentro del conjunto de vehículos pesados que reciben parrilla frontal con marco mate y rejilla cromada (`chrome`), otorgando coherencia tridimensional inmediata a su condición de chasis reforzado.

@@ -146,6 +146,8 @@ function applyBannerSkin(b: HTMLElement, opts?: BannerOpts) {
     ico.classList.add("hidden");
     ico.innerHTML = "";
   }
+  if (opts?.tone === "now" || opts?.tone === "warn") b.classList.add("event-pulse");
+  else b.classList.remove("event-pulse");
 }
 function showBanner(txt: string, secs: number, opts?: BannerOpts) {
   const b = $("banner");
@@ -196,7 +198,7 @@ function hideBanner() {
   bannerOn = false; bannerTyping = false; bannerHold = 0;
   const b = $("banner");
   b.classList.add("hidden");
-  b.classList.remove("out", "evt-warn", "evt-now");
+  b.classList.remove("out", "evt-warn", "evt-now", "event-pulse");
   el("bannerIco").classList.add("hidden");
 }
 function tickBanner(dt: number) {

@@ -95,6 +95,7 @@ export const FX = {
   shock: (p: B.Vector3) => burst(p, { n: 8, color: "#5be7ff", color2: "#a855f7", size: [0.08, 0.22], power: [3, 8], life: [0.12, 0.28], gravity: -5 }),
   splash: (p: B.Vector3) => burst(p, { n: 7, color: "#a5f3fc", color2: "#ffffff", size: [0.12, 0.3], power: [1.2, 3.5], life: [0.2, 0.45], gravity: 4, add: false }),
   weld: (p: B.Vector3) => burst(p, { n: 10, color: "#e0f2fe", color2: "#38bdf8", size: [0.06, 0.18], power: [4, 10], life: [0.1, 0.22], gravity: -25 }),
+  ignite: (p: B.Vector3) => burst(p, { n: 12, color: "#ff5500", color2: "#ffe600", size: [0.15, 0.45], power: [2.5, 6], life: [0.25, 0.55], gravity: -2, add: true }),
   xp: (p: B.Vector3) => burst(p, { n: 5, color: "#9be7ff", size: [0.1, 0.25], power: [1, 3], life: [0.2, 0.4] }),
   smoke: (p: B.Vector3, dark = false) => burst(p, { n: 2, color: dark ? "#a8a8a8" : "#f4f4f4", size: [0.5, 1.1], power: [0.5, 1.5], life: [0.8, 1.4], gravity: 3, add: false }),
   // Estela de proyectil: una voluta chica que se apaga rápido (llamar con probabilidad, no cada cuadro)

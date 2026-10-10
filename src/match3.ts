@@ -413,6 +413,10 @@ function paintDisplay() {
   } else {
     const low = st.movesLeft <= 3 && st.phase === "play";
     if (low) { c.fillStyle = "rgba(255,59,46,0.18)"; c.beginPath(); c.roundRect(8, 4, 132, 68, 4); c.fill(); }
+    else if (st.movesLeft >= 10 && st.phase === "play") {
+      c.fillStyle = "rgba(255,180,0,0.07)"; c.strokeStyle = "rgba(255,180,0,0.25)"; c.lineWidth = 1;
+      c.beginPath(); c.roundRect(8, 4, 132, 68, 4); c.fill(); c.stroke();
+    }
     c.fillStyle = M3C.texto2; c.font = "700 18px Rajdhani, sans-serif"; c.textAlign = "center";
     c.fillText(st.movesLeft === 1 && st.phase === "play" ? "ÚLTIMO" : low ? "¡ÚLTIMOS!" : "MOVIMIENTOS", 74, 20);
     c.font = "700 62px Rajdhani, sans-serif";

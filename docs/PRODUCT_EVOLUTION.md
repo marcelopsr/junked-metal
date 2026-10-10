@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-10 (Ciclos #1 a #26 completados y validados · Ciclo #27 listo para selección)
+**Última actualización:** 2026-10-10 (Ciclos #1 a #27 completados y validados · Ciclo #28 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -414,10 +414,88 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
    - **Qué problema resuelve:** Acentúa el carácter de informe técnico de peritaje tras cada desguace.
    - **Valor:** Cohesión temática y autenticidad en el archivo fotográfico. Complejidad: Baja.
 
+### G. Área 7 · Audio Sintetizado (`src/sfx.ts`)
+7. **Audio Procedural de Ignición de Combustible y Chirp de Radio:**
+   - **Qué es:** En `SFX` (`src/sfx.ts`), incorporar los métodos `ignite()` (fogonazo térmico con ruido modulado) y `radioChirp()` (bip de radiofrecuencia).
+   - **Qué problema resuelve:** Otorga feedback auditivo directo a explosiones de combustible y avisos por radio.
+   - **Valor:** Identidad sonora y riqueza sensorial. Complejidad: Baja.
+
+### H. Área 8 · Modelos Procedurales del Taller (`src/models.ts`)
+8. **Defensa Frontal Reforzada en Vehículos Pesados:**
+   - **Qué es:** En `carModel()` (`src/models.ts`), incorporar soporte de parrilla de protección de acero y soporte de defensa para modelos pesados (tanque y chasis reforzados).
+   - **Qué problema resuelve:** Coherencia visual 3D con la insignia de chasis reforzado del garaje.
+   - **Valor:** Contundencia visual en los modelos pesados. Complejidad: Baja.
+
+---
+
+### Ciclo #27 (2026-10-10) — Chasis Reforzado Garaje, Pulso Radio HUD, Trompo Carrera, Turnos Match-3, Fuego FX, Inspección Polaroid, SFX Ignite/Chirp y Parrilla Tanque 3D
+- **Alcance implementado en paralelo por 8 subagentes:**
+  - **Subagente 1 · Garaje y Chasis (`src/menu.ts`, `src/menu.css`):** Insignia técnica `<span class="armor-badge">CHASIS REFORZADO</span>` en vehículos pesados (`tanque`, `monster`, `combi`).
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Pulso reactivo `.event-pulse` y resplandor de advertencia en avisos diegéticos de radio ante eventos críticos.
+  - **Subagente 3 · Carrera Trompo (`src/kart.ts`, `src/race.css`):** Pastilla de trompo y pérdida de tracción `<b class="rspin">¡TROMPO!</b>` en velocímetro tras pérdida de control.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`):** Resplandor áureo perimetral en display numérico de movimientos al disponer de $\ge 10$ turnos en fase de juego.
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** Llamarada expansiva con núcleo incandescente amarillo y halo naranja en `FX.ignite(p)`.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`):** Sello caligráfico diegético de peritaje técnico `"INSPECCIONADO · TALLER CENTRAL"`.
+  - **Subagente 7 · Audio Sintetizado (`src/sfx.ts`):** Métodos procedurales WebAudio `SFX.ignite()` (combustión) y `SFX.radioChirp()` (sincronía de radio).
+  - **Subagente 8 · Modelos Procedurales (`src/models.ts`):** Parrilla frontal con marco mate y rejilla cromada de acero (`chrome`) en chasis tanque.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (545 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular en 37.1 s) y `npx graphify update .` (3120 nodos, 7627 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #28 (8 Áreas en Paralelo)
+
+### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
+1. **Filtro Rápido o Contador de Piezas Desbloqueadas en Chatarroteca:**
+   - **Qué es:** En `renderBestiary()` o encabezado de Chatarroteca, exhibir el resumen de piezas coleccionadas (`X/Y PIEZAS DISPONIBLES`).
+   - **Qué problema resuelve:** Comunica el progreso global de desbloqueo de piezas de taller sin obligar al jugador a recorrer todas las pestañas.
+   - **Valor:** Sensación de colección y completitud. Complejidad: Baja.
+
+### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
+2. **Resplandor Verde de Recarga / Reparación en Batería LiPo (`#lipo.healing`):**
+   - **Qué es:** En `hudUpdate()`, cuando la vida aumenta tras recoger una llave o mejora de curación, emitir un destello esmeralda `.healing` sobre las celdas de batería.
+   - **Qué problema resuelve:** Feedback sensorial claro de recuperación de salud en combate caótico.
+   - **Valor:** Recompensa de alivio y claridad de supervivencia. Complejidad: Baja.
+
+### C. Área 3 · Carrera: Velocidad Máxima en Tacómetro (`src/kart.ts`, `src/race.css`)
+3. **Pastilla de Velocidad Punta (`.rmax`):**
+   - **Qué es:** En `hud()` de carrera, encender una pastilla ámbar `.rmax` (`MÁXIMA`) cuando el kart alcanza el 98%+ de su velocidad tope.
+   - **Qué problema resuelve:** Informa al piloto de que el vehículo ya no puede acelerar más por tracción pura salvo que use turbo o rebufo.
+   - **Valor:** Precisión en la gestión de velocidad y turbos. Complejidad: Baja.
+
+### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`)
+4. **Partículas Brillantes en Creación de Piezas Especiales:**
+   - **Qué es:** En `spawnSpecial()`, emitir un destello estelar perimetral en la celda donde se fusionan 4 o más piezas para crear una bomba o relámpago.
+   - **Qué problema resuelve:** Destaca el instante mágico de creación de un ítem especial en el tablero.
+   - **Valor:** Gratificación visual inmediata en combinaciones estratégicas. Complejidad: Baja.
+
+### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
+5. **Efecto de Vapor y Escape Térmico en `FX.steam`:**
+   - **Qué es:** En `FX` (`src/fx.ts`), añadir la rutina `steam(p)` con nubes blanquecinas translúcidas de elevación lenta y desvanecimiento suave para recalentamiento o contacto de motor con agua.
+   - **Qué problema resuelve:** Enriquece las transiciones térmicas del vehículo y charcos del patio.
+   - **Valor:** Densidad ambiental y atmósfera mecánica. Complejidad: Baja.
+
+### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
+6. **Sello de Turno de Taller en Pie de Polaroid:**
+   - **Qué es:** En `showPhoto()`, incluir un cuño adicional en el pie del marco con el turno operativo (`"GUARDIA NOCTURNA"`).
+   - **Qué problema resuelve:** Acentúa la inmersión del taller en el archivo fotográfico.
+   - **Valor:** Coherencia de mundo y autenticidad diegética. Complejidad: Baja.
+
+### G. Área 7 · Audio Sintetizado (`src/sfx.ts`)
+7. **Efecto de Escape de Vapor y Válvula de Alivio en `SFX.steamHiss`:**
+   - **Qué es:** En `SFX` (`src/sfx.ts`), incorporar el método `steamHiss()` con ruido siseante filtrado pasa-altos y caída suave de presión.
+   - **Qué problema resuelve:** Feedback auditivo para válvulas de desahogo y evaporación de agua.
+   - **Valor:** Riqueza acústica y variedad de texturas sonoras. Complejidad: Baja.
+
+### H. Área 8 · Modelos Procedurales del Taller (`src/models.ts`)
+8. **Detalle de Soportes y Tirantes en Alerones de Carrera:**
+   - **Qué es:** En `carModel()` (`src/models.ts`), incorporar tensores o soportes diagonales en los alerones de fórmula y carrera.
+   - **Qué problema resuelve:** Da soporte estructural realista a los apéndices aerodinámicos de alta velocidad.
+   - **Valor:** Fidelidad técnica de maquetismo RC. Complejidad: Baja.
+
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #26 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (533 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3115 nodos, 7617 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #26 han sido liberados).
-- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #27**.
+- **Último trabajo completado:** Ciclo #27 implementado en paralelo con 8 subagentes, verificado con `tsc`, `test` (75/75), `build` (545 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3120 nodos, 7627 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #27 han sido liberados).
+- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #28**.

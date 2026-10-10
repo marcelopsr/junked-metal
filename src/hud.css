@@ -171,6 +171,9 @@
   animation: h-bannerin .35s cubic-bezier(.2, 1.4, .4, 1) both;
 }
 #hud:has(#bossbar:not(.hidden)) ~ #banner { top: calc(max(10px, env(safe-area-inset-top)) + 74px); }
+#banner.event-pulse { animation: banner-in .2s cubic-bezier(0, 0, .2, 1), b-pulse .5s ease-in-out infinite alternate; }
+@keyframes banner-in { from { opacity: 0; transform: translateY(-16px) scale(.92); } }
+@keyframes b-pulse { from { box-shadow: 0 4px 12px rgba(0, 0, 0, .8), 0 0 6px rgba(255, 120, 40, .3); } to { box-shadow: 0 4px 16px rgba(0, 0, 0, .9), 0 0 16px rgba(255, 120, 40, .7); border-color: rgba(255, 145, 56, .9); } }
 #banner.out { animation: h-bannerout .3s ease-in forwards; }
 #banner .rxh { display: flex; align-items: center; gap: 10px; margin-bottom: 3px; padding-bottom: 3px; border-bottom: 1px solid #2c3a28; font: 400 12px/1 "VT323", monospace; letter-spacing: .06em; color: var(--ban-dim); text-transform: uppercase; }
 #banner .rx-tag { color: var(--ban-ink); font-weight: 400; }

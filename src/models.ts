@@ -441,7 +441,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       const my = kind === "monster" ? bh * 1.1 : kind === "buggy" ? bh * 0.85 : bh * 0.78;
       for (const sd of [-1, 1]) parts.push(box(0.16, 0.06, 0.1, M.plastic("#1b1e24"), [sd * (bw / 2 + 0.1), my, bl * 0.12]), cyl(0.03, 0.03, 0.16, M.metal("#9aa0a6"), [sd * (bw / 2 + 0.04), my - 0.05, bl * 0.12], [0, 0, Math.PI / 2], 6)); // espejos
     }
-    if (kind === "monster" || kind === "helado" || kind === "combi") {
+    if (kind === "monster" || kind === "helado" || kind === "combi" || kind === "tanque") {
       parts.push(box(bw * 0.5, 0.2, 0.04, M.matte("#14171c"), [0, bh * 0.38, bl * 0.5 + 0.01]));
       for (let k = 0; k < 4; k++) parts.push(box(bw * 0.46, 0.015, 0.05, chrome, [0, bh * 0.3 + k * 0.045, bl * 0.5 + 0.03])); // parrilla con rejilla
     }
