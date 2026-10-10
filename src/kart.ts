@@ -96,7 +96,7 @@ const ITEM_NAME: Record<Item, string> = { turbo: "Turbo", petardo: "Petardo", ch
 type Racer = {
   id: number; name: string; car: Car; human: number; ctl?: PlayerCtl; color: string;
   top: number; acc: number; turn: number; grip: number; skill: number; lane: number;
-  idx: number; lap: number; frac: number; fin: number; place: number; points: number;
+  idx: number; lap: number; frac: number; prog: number; fin: number; place: number; points: number;
   item: Item | null; itemAt: number; useAt: number; prevItemBtn: boolean;
   boost: number; slow: number; spin: number; shield: number; inv: number; spinRot: number;
   drifting: number; charge: number; offT: number; stuckT: number; camYaw: number; camPos: B.Vector3; fs: number; lastLap: number; auto: boolean; laki: number; hits: number;
@@ -417,7 +417,7 @@ function makeRacers() {
     const r: Racer = {
       id: i, name: human >= 0 ? `Jugador ${human + 1}` : NAMES[i % NAMES.length], car, human, ctl: human === 0 ? ctl1 : human === 1 ? ctl2 : undefined, color: opts.paint!,
       top: ks[0], acc: ks[1], turn: ks[2], grip: ks[3], skill: 0.9 + rng() * 0.16, lane: (rng() - 0.5) * 8,
-      idx, lap: 0, frac: 0, fin: 0, place: grid + 1, points: 0, item: null, itemAt: 0, useAt: 0, prevItemBtn: false,
+      idx, lap: 0, frac: 0, prog: 0, fin: 0, place: grid + 1, points: 0, item: null, itemAt: 0, useAt: 0, prevItemBtn: false,
       boost: 0, slow: 0, spin: 0, shield: 0, inv: 0, spinRot: 0, drifting: 0, charge: 0, offT: 0, stuckT: 0, camYaw: yaw, camPos: new B.Vector3(), fs: 0, lastLap: 0, auto: false, laki: 0, hits: 0,
       aggr: PERSONA[i % PERSONA.length][0], drifter: PERSONA[i % PERSONA.length][1], early: false, boxT: 0,
       balloons: 3, out: false, balls: [], wp: null, wpT: 0, lapT: 0, lapBest: 0,
@@ -783,6 +783,7 @@ function stepRacer(r: Racer, dt: number) {
   if (r.offT > 3 || r.stuckT > 4 || pos.y < -3 || (c.root.up.y < 0.3 && r.spin <= 0)) lakitu(r);
   // Posición fina para rankear
   const T = trk.T[r.idx]; r.frac = clamp((pos.x - trk.P[r.idx].x) * T.x + (pos.z - trk.P[r.idx].z) * T.z, 0, DS) / DS;
+  r.prog = (r.idx + r.frac) / trk.N;
 }
 function rubber(r: Racer) {
   if (!humans.length) return 1;
@@ -921,12 +922,14 @@ function hud() {
     const prevPl = (h as any).prevPl as number | undefined;
     const overTag = prevPl !== undefined && pl < prevPl ? '<b class="rover">¡REBASE!</b>' : "";
     (h as any).prevPl = pl;
+    const isLastLap = h.lap >= LAPS && mode !== "battle";
+    const finalTag = isLastLap && h.prog > 0.85 ? '<b class="rfinal">SECTOR FINAL</b>' : "";
     const tTag = h.boost > 0 ? `<b class="rturbo on">TURBO</b>` : h.drifting !== 0 ? (h.charge > 1.5 ? `<b class="rturbo t2">TURBO 2</b>` : h.charge > 0.75 ? `<b class="rturbo t1">TURBO 1</b>` : `<b class="rturbo t0">DERRAPE</b>`) : "";
     const shTag = h.shield > 0 ? `<b class="rshield">ESCUDO ${Math.ceil(h.shield)}s</b>` : "";
     const wTag = projs.some((pr) => pr.kind === "misil" && pr.target === h) ? `<b class="rwarn">¡MISIL!</b>` : "";
     const closeRival = racers.some((o) => o !== h && !o.out && o.car.pos.subtract(h.car.pos).length() < 3.5);
     const thTag = !wTag && closeRival ? '<b class="rthreat">¡CERCA!</b>' : "";
-    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${slipTag}${airTag}${spinTag}${maxTag}${overTag}${tTag}${shTag}${wTag}${thTag}`;
+    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${slipTag}${airTag}${spinTag}${maxTag}${overTag}${finalTag}${tTag}${shTag}${wTag}${thTag}`;
     if (spdEl.dataset.h !== spdHtml) { spdEl.dataset.h = spdHtml; spdEl.innerHTML = spdHtml; }
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; it.classList.toggle("full", !!h.item); }

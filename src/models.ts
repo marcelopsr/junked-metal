@@ -445,6 +445,14 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       parts.push(box(bw * 0.5, 0.2, 0.04, M.matte("#14171c"), [0, bh * 0.38, bl * 0.5 + 0.01]));
       for (let k = 0; k < 4; k++) parts.push(box(bw * 0.46, 0.015, 0.05, chrome, [0, bh * 0.3 + k * 0.045, bl * 0.5 + 0.03])); // parrilla con rejilla
     }
+    if (kind === "combi" || kind === "buggy") {
+      const ry = kind === "combi" ? bh * 0.42 : bh * 0.35;
+      for (const sd of [-1, 1]) {
+        for (const rz of [-0.6, -0.3, 0, 0.3, 0.6]) {
+          parts.push(sph(0.018, chrome, [sd * (bw * 0.49), ry, rz * (bl * 0.45)], undefined, 4));
+        }
+      }
+    }
     if (kind !== "axel") for (const sd of [-1, 1]) parts.push(cyl(0.07, 0.07, 0.2, chrome, [sd * bw * 0.22, 0.14, -bl * 0.5 - 0.04], [Math.PI / 2, 0, 0], 12), cyl(0.045, 0.045, 0.22, M.matte("#101010"), [sd * bw * 0.22, 0.14, -bl * 0.5 - 0.05], [Math.PI / 2, 0, 0], 10)); // escapes
   }
 

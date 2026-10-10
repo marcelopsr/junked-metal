@@ -605,7 +605,9 @@ function renderGarage() {
       const vicTag = owns("car:" + k) ? (won ? '<span class="car-vic won">★ VICTORIA REGISTRADA</span>' : '<span class="car-vic pending">PENDIENTE DE VICTORIA</span>') : "";
       const isArmored = k === "tanque" || k === "monster" || k === "combi";
       const armorTag = isArmored ? '<span class="armor-badge">CHASIS REFORZADO</span>' : "";
-      return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><div class="stc"><span>Carrocería <em>${c.hp}${dTag(c.hp, eq.hp)}</em></span>${bar(c.hp, 300)}</div><div class="stc"><span>Velocidad <em>${Math.round(c.speed * 3.6)}${dTag(Math.round(c.speed * 3.6), Math.round(eq.speed * 3.6))}</em></span>${bar(c.speed, 21)}</div><div class="stc"><span>Embestida <em>×${n1(c.ram)}${dTag(c.ram, eq.ram, true)}</em></span>${bar(c.ram, 5.5)}</div></div>${vicTag}${armorTag}${owns("car:" + k) ? `<div class="price">${save.car === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock("car:" + k)}</div>`;
+      const allParts = (Object.keys(PARTS) as Slot[]).every((sl) => Object.keys(opts(sl)).every((o) => owns("part:" + sl + ":" + o)));
+      const completeTag = owns("car:" + k) && allParts ? '<span class="parts-complete">TOTALMENTE EQUIPADO</span>' : "";
+      return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><div class="stc"><span>Carrocería <em>${c.hp}${dTag(c.hp, eq.hp)}</em></span>${bar(c.hp, 300)}</div><div class="stc"><span>Velocidad <em>${Math.round(c.speed * 3.6)}${dTag(Math.round(c.speed * 3.6), Math.round(eq.speed * 3.6))}</em></span>${bar(c.speed, 21)}</div><div class="stc"><span>Embestida <em>×${n1(c.ram)}${dTag(c.ram, eq.ram, true)}</em></span>${bar(c.ram, 5.5)}</div></div>${vicTag}${armorTag}${completeTag}${owns("car:" + k) ? `<div class="price">${save.car === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock("car:" + k)}</div>`;
     }).join("");
   }
   else if (gtab === "piloto") $("cars").innerHTML = (Object.keys(PILOTS) as PilotId[]).map((k) => {

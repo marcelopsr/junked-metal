@@ -194,7 +194,7 @@
 @keyframes m3-stamp { from { transform: scale(2.4) rotate(-25deg); opacity: 0; } to { opacity: 1; } }
 #match3-ui .m3-stars svg.on:nth-child(2) { animation-name: m3-stamp2; }
 @keyframes m3-stamp2 { from { transform: translateY(-10px) scale(2.4) rotate(25deg); opacity: 0; } to { transform: translateY(-10px); opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { #match3-ui .m3-stars svg.on { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #match3-ui .m3-stars svg.on, #match3-ui .m3-tools button.on { animation: none; } }
 
 /* Herramientas del taller: caja de herramientas al pie, cada una con su ícono y cuántas quedan */
 #match3-ui .m3-tools {
@@ -210,7 +210,11 @@
 #match3-ui .m3-tools button img { width: 34px; height: 34px; }
 #match3-ui .m3-tools button b { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; line-height: 20px; border-radius: 10px; background: var(--amarillo); color: var(--fondo); font-size: 13px; }
 #match3-ui .m3-tools button .m3-tkey { position: absolute; top: 2px; left: 4px; font: 700 11px/1 var(--titulo); font-style: normal; color: var(--texto2); pointer-events: none; }
-#match3-ui .m3-tools button.on { background: linear-gradient(#ffb26b, var(--naranja)); color: var(--fondo); box-shadow: 0 0 0 2px var(--amarillo), 0 0 14px rgba(255, 145, 56, 0.7); }
+#match3-ui .m3-tools button.on { background: linear-gradient(#ffb26b, var(--naranja)); color: var(--fondo); box-shadow: 0 0 0 2px var(--amarillo), 0 0 14px rgba(255, 145, 56, 0.7); animation: m3-tool-pulse .7s infinite alternate ease-in-out; }
+@keyframes m3-tool-pulse {
+  from { box-shadow: 0 0 0 2px var(--amarillo), 0 0 10px rgba(255, 145, 56, 0.6); }
+  to { box-shadow: 0 0 0 3px #fff, 0 0 20px rgba(255, 180, 0, 0.95); transform: translateY(-2px) scale(1.05); }
+}
 #match3-ui .m3-tools button.on .m3-tkey { color: var(--fondo); }
 @media (pointer: coarse) { #match3-ui .m3-tools button .m3-tkey { display: none; } }
 #match3-ui .m3-tools button:disabled { opacity: 0.35; cursor: default; }

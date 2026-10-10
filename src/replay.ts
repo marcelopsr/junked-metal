@@ -148,6 +148,14 @@ export async function showPhoto(i: PhotoInfo) {
   g.fillText("ARCHIVADO · PATIO RC", 0, 0);
   g.restore();
   g.save();
+  g.translate(pad + pw - 10 * u, pad + ph + foot - 14 * u);
+  g.rotate(0.03);
+  g.font = `600 ${Math.round(15 * u)}px Rajdhani, sans-serif`;
+  g.fillStyle = "rgba(77, 76, 56, 0.65)";
+  g.textAlign = "right";
+  g.fillText("VºBº JEFE DE TALLER", 0, 0);
+  g.restore();
+  g.save();
   g.translate(pad + pw - Math.round(135 * u), y0 + Math.round(64 * u));
   g.rotate(-0.1);
   const stCol = i.win ? "#1f6f3a" : "#9a2c2c", stTxt = i.win ? "INSPECCIÓN · VICTORIA" : "CHASIS SINIESTRADO";

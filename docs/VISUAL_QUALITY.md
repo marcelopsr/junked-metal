@@ -635,3 +635,28 @@ Carrera (1) y Survivor en partida (2).
 8. **Anillos helicoidales concéntricos en amortiguadores Monster (Subagente 8 · `src/models.ts`):**
    - En `carModel()`, los amortiguadores del Monster Truck incorporan cilindros coaxiales exteriores oscuros (`#111`) sobre el vástago rojo (`#ef4444`), modelando el aspecto escalonado de un resorte de alta absorción para chasis todo terreno.
 
+---
+
+## 2026-10-10 · Ciclo #30 (Insignia Totalmente Equipado en Garaje, Resplandor Crítico HUD, Sector Final Carrera, Herramienta Armada Match-3, Humo Burnout FX, Firma Polaroid, SFX Overtake y Remaches 3D)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 35.9 s).
+
+### Intervenciones aplicadas por 8 subagentes en paralelo y verificadas en captura
+1. **Insignia áurea `.parts-complete` ("TOTALMENTE EQUIPADO") en autos del Garaje (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()` (pestaña `auto`), se evalúa si el jugador posee todas las piezas del catálogo (`PARTS`). Los autos en propiedad muestran la pastilla azul cian brillante `<span class="parts-complete">TOTALMENTE EQUIPADO</span>`, reconociendo al jugador que maximizó la colección.
+2. **Resplandor áureo y contraste en números de daño crítico y modo sin fin en reloj (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `#dmg span.crit`, se incorporó un resplandor áureo vibrante (`text-shadow: 0 0 16px rgba(255, 216, 77, .85), 0 3px 0 #3a1c00`), y en `#clock.endless` se estilizó el marco en tono dorado suave (`rgba(255, 210, 74, .6)`) para enfatizar la supervivencia más allá de los 10 minutos.
+3. **Pastilla parpadeante `.rfinal` ("SECTOR FINAL") en última vuelta de Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `hud()` de carrera, se calcula el progreso normalizado en pista (`prog`) y, si el corredor cursa la última vuelta (`h.lap >= LAPS`) superando el 85% del trazado, se enciende la pastilla naranja parpadeante `<b class="rfinal">SECTOR FINAL</b>` junto al velocímetro, agudizando la tensión competitiva antes de la bandera a cuadros.
+4. **Animación pulsante incandescente `m3-tool-pulse` en herramienta armada (Subagente 4 · `src/match3_draw.ts`, `src/match3.ts`, `src/match3.css`):**
+   - En `#match3-ui .m3-tools button.on`, se implementó la animación `m3-tool-pulse` con elevación física (`translateY(-2px) scale(1.05)`), borde blanco y halo naranja-dorado de hasta 20 px, con compatibilidad accesible para `prefers-reduced-motion`.
+5. **Efecto tridimensional de humo denso de fricción en `FX.burnout` (Subagente 5 · `src/fx.ts`):**
+   - Se sumó al pool de efectos tridimensionales el método `FX.burnout(p)`, emitiendo 10 partículas opacas blanco-grisáceas (`#e2e8f0` y `#94a3b8`) de gran volumen y sustentación neutra para aceleraciones a fondo desde reposo.
+6. **Sello caligráfico de visto bueno "VºBº JEFE DE TALLER" en Polaroid (Subagente 6 · `src/replay.ts`, `src/replay.css`):**
+   - En `showPhoto()`, se añadió una rúbrica en ángulo sutil con tinta grafito caligráfica `"VºBº JEFE DE TALLER"` en el pie del marco a la derecha de `ARCHIVADO · PATIO RC`, rematando la estética de informe técnico de peritaje.
+7. **Audio procedural de rebase armónico ascendente en `SFX.overtake` (Subagente 7 · `src/sfx.ts`):**
+   - Se incorporó al motor sonoro el método `SFX.overtake()`, combinando una onda senoidal ascendente (620→1240 Hz) y una triangular en octava superior (1240→1860 Hz) que transmite la euforia acústica del adelantamiento.
+8. **Remaches cromados en guardabarros de Combi y Buggy (Subagente 8 · `src/models.ts`):**
+   - En `carModel()`, la combi y el buggy reciben hileras simétricas de 5 remaches esféricos cromados `sph(0.018, chrome, ...)` a lo largo de sus costados, enriqueciendo el maquetismo artesanal a escala.
+
+

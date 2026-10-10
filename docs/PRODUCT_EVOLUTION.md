@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-10 (Ciclos #1 a #29 completados y validados · Ciclo #30 listo para selección)
+**Última actualización:** 2026-10-10 (Ciclos #1 a #30 completados y validados · Ciclo #31 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -522,74 +522,89 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #30 (8 Áreas en Paralelo)
+### Ciclo #30 (2026-10-10) — Insignia Totalmente Equipado en Garaje, Resplandor Crítico HUD, Sector Final Carrera, Herramienta Armada Match-3, Humo Burnout FX, Firma Polaroid, SFX Overtake y Remaches 3D
+- **Alcance implementado en paralelo por 8 subagentes:**
+  - **Subagente 1 · Garaje Equipamiento (`src/menu.ts`, `src/menu.css`):** Insignia `.parts-complete` (`TOTALMENTE EQUIPADO`) en autos del garaje cuando el jugador posee todas las piezas del catálogo `PARTS`.
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Resplandor áureo vibrante en números de daño crítico `#dmg span.crit` (`text-shadow: 0 0 16px rgba(...)`) y estilización del marco `#clock.endless` al rebasar 10 minutos.
+  - **Subagente 3 · Carrera Sector Final (`src/kart.ts`, `src/race.css`):** Pastilla parpadeante `<b class="rfinal">SECTOR FINAL</b>` en la última vuelta tras superar el 85% del circuito.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`, `src/match3.css`):** Animación pulsante incandescente `m3-tool-pulse` en botones de herramientas armadas con soporte para `prefers-reduced-motion`.
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** Rutina `FX.burnout(p)` con 10 partículas de humo denso de fricción para arrancadas desde reposo y derrapes en seco.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** Sello caligráfico de peritaje `"VºBº JEFE DE TALLER"` en el pie del documento Polaroid a la derecha.
+  - **Subagente 7 · Audio Sintetizado (`src/sfx.ts`):** Barrido armónico procedural ascendente `SFX.overtake()` (620→1240 Hz y 1240→1860 Hz) para adelantamientos limpios.
+  - **Subagente 8 · Modelos Procedurales (`src/models.ts`):** Remaches metálicos esféricos cromados a lo largo del perfil de chapa para la combi y el buggy.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando en 28.3 s), `npm run build` (531 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular en 35.9 s) y `graphify update .` (3147 nodos, 7677 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #31 (8 Áreas en Paralelo)
 
 ### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
-1. **Insignia "EQUIPAMIENTO COMPLETO" en Autos con Todas las Piezas Adquiridas:**
-   - **Qué es:** En `renderGarage()` pestaña `auto`, si el jugador posee todas las piezas desbloqueables del modelo, mostrar la pastilla áurea `<span class="parts-complete">TOTALMENTE EQUIPADO</span>`.
-   - **Qué problema resuelve:** Premia al coleccionista que maximiza un auto y ayuda a identificar qué vehículos aún tienen piezas pendientes.
-   - **Valor:** Claridad de progreso y satisfacción de completismo. Complejidad: Baja.
+1. **Porcentaje Global de Desbloqueo en Resumen del Taller (`.parts-pct`):**
+   - **Qué es:** En el cabezal del taller de piezas, mostrar una pastilla con el porcentaje global de catálogo adquirido (`X% DESBLOQUEADO`).
+   - **Qué problema resuelve:** Comunica al instante la progresión global de personalización del taller.
+   - **Valor:** Completismo y claridad económica. Complejidad: Baja.
 
 ### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
-2. **Indicador de Multiplicador de Daño Crítico en la Pausa:**
-   - **Qué es:** En el panel de telemetría de `#scr-pause`, añadir un indicador técnico `#pauseCrit` con la probabilidad crítica y el factor multiplicador efectivo del vehículo.
-   - **Qué problema resuelve:** Clarifica el impacto real de las pasivas de daño, foco y lentes antes de reanudar el combate.
-   - **Valor:** Mayor profundidad táctica y transparencia matemática. Complejidad: Baja.
+2. **Resplandor de Sobrecarga Eléctrica en Voltímetro (`#volt.surge`):**
+   - **Qué es:** En `#volt`, activar temporalmente un resplandor cian eléctrico intenso al disparar la habilidad activa.
+   - **Qué problema resuelve:** Refuerza la sensación diegética de consumo de alta corriente de la batería LiPo.
+   - **Valor:** Game feel y retroalimentación reactiva. Complejidad: Baja.
 
-### C. Área 3 · Carrera: Alerta de Sector Final de Vuelta (`src/kart.ts`, `src/race.css`)
-3. **Pastilla de Sector Final / Tramo de Meta (`.rfinal`):**
-   - **Qué es:** En `hud()` de carrera, al entrar al último 15% del circuito en la última vuelta, desplegar la pastilla parpadeante `<b class="rfinal">SECTOR FINAL</b>`.
-   - **Qué problema resuelve:** Aumenta la adrenalina y tensión competitiva al disputar las curvas decisivas antes de la bandera a cuadros.
-   - **Valor:** Game feel y emoción en el clímax de cada carrera. Complejidad: Baja.
+### C. Área 3 · Carrera: Pastilla de Derrape Perfecto (`src/kart.ts`, `src/race.css`)
+3. **Pastilla de Derrape Perfecto (`.rperfect`):**
+   - **Qué es:** En `hud()` de carrera, encender una pastilla magenta `<b class="rperfect">¡PERFECTO!</b>` al liberar un mini-turbo de nivel 2.
+   - **Qué problema resuelve:** Recompensa la ejecución técnica óptima en curvas cerradas.
+   - **Valor:** Gratificación y feedback competitivo inmediato. Complejidad: Baja.
 
 ### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`, `src/match3.css`)
-4. **Resplandor de Selección en Herramientas Activas del Arcade:**
-   - **Qué es:** En `#m3-tools`, cuando una herramienta táctica está armada (martillo, sierra, etc.), aplicar un anillo incandescente pulsante `.m3-tbtn.armed`.
-   - **Qué problema resuelve:** Evita confusiones sobre si el cursor se encuentra en modo uso de herramienta o en selección normal de piezas.
-   - **Valor:** Ergonomía y usabilidad arcade. Complejidad: Baja.
+4. **Resplandor de Selección de Celda con Herramienta Armada:**
+   - **Qué es:** En `drawBoard()`, cuando una herramienta táctica está armada, proyectar una mira o halo amarillo sutil sobre la celda señalada.
+   - **Qué problema resuelve:** Evita errores al aplicar martillos o sierras en celdas adyacentes no deseadas.
+   - **Valor:** Precisión táctil y usabilidad arcade. Complejidad: Baja.
 
 ### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
-5. **Efecto de Quemada de Neumático en Salida Parada en `FX.burnout`:**
-   - **Qué es:** En `FX` (`src/fx.ts`), añadir la rutina `burnout(p)` con humo denso blanco-grisáceo de fricción intensa al arrancar a fondo desde reposo.
-   - **Qué problema resuelve:** Enfatiza la tracción inicial y el par motor de los autos RC.
-   - **Valor:** Realismo visual y contundencia física. Complejidad: Baja.
+5. **Chispas de Fricción Lateral Chapa-Metal en `FX.scrape`:**
+   - **Qué es:** En `FX` (`src/fx.ts`), añadir la rutina `scrape(p)` para roces rasantes de carrocería contra barandillas o muros del patio.
+   - **Qué problema resuelve:** Aumenta la contundencia de las colisiones laterales sin recurrir al choque frontal completo.
+   - **Valor:** Game feel de combate y carrera física. Complejidad: Baja.
 
 ### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
-6. **Sello de Firma del Jefe de Taller en Polaroid:**
-   - **Qué es:** En `showPhoto()`, incluir un trazo caligráfico angulado estilizado `"VºBº JEFE DE TALLER"` en tono grafito sobre el ángulo inferior derecho del marco.
-   - **Qué problema resuelve:** Refuerza la identidad analógica y diegética de un documento técnico de peritaje.
-   - **Valor:** Identidad de arte y narrativa ambiental. Complejidad: Baja.
+6. **Sello con Hora Local de Finalización en Polaroid:**
+   - **Qué es:** En `showPhoto()`, incluir un cuño diegético compacto `"HORA CIERRE · HH:MM"` en el pie del marco.
+   - **Qué problema resuelve:** Añade un marcador temporal realista que hace que cada captura guardada sea única.
+   - **Valor:** Coherencia de registro documental. Complejidad: Baja.
 
 ### G. Área 7 · Audio Sintetizado (`src/sfx.ts`)
-7. **Efecto Procedural de Rebase Triunfal en `SFX.overtake`:**
-   - **Qué es:** En `SFX` (`src/sfx.ts`), incorporar `overtake()` con un barrido armónico ascendente con sutil trémolo al superar a un oponente en carrera.
-   - **Qué problema resuelve:** Acompaña acústicamente la pastilla visual `¡REBASE!`.
-   - **Valor:** Retroalimentación multimodal satisfactoria. Complejidad: Baja.
+7. **Fanfarria Triunfal Breve en `SFX.podiumFanfare`:**
+   - **Qué es:** En `SFX` (`src/sfx.ts`), incorporar `podiumFanfare()` con arpegio mayor brillante al entrar al podio de carrera.
+   - **Qué problema resuelve:** Acompaña acústicamente la pantalla de resultados del circuito.
+   - **Valor:** Clímax sonoro memorable. Complejidad: Baja.
 
 ### H. Área 8 · Modelos Procedurales del Taller (`src/models.ts`)
-8. **Remaches de Refuerzo en Guardabarros de Combi y Buggy:**
-   - **Qué es:** En `carModel()` (`src/models.ts`), incorporar micro-esferas metálicas en los arcos de rueda de la combi y el buggy simulando remaches industriales.
-   - **Qué problema resuelve:** Mayor detalle de maquetismo a escala en las zonas laterales de los modelos.
-   - **Valor:** Calidad visual 3D enriquecida a corta distancia. Complejidad: Baja.
+8. **Antena RC Flexible con Banderín en Parte Trasera:**
+   - **Qué es:** En `carModel()` (`src/models.ts`), incorporar una antena de cable metálico con banderín reflectante de color en la zaga de los vehículos.
+   - **Qué problema resuelve:** Realza inequívocamente la escala de autito radiocontrolado.
+   - **Valor:** Fidelidad temática e identidad visual. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #29 completado, verificado con `tsc` (0 errores), `test` (75/75), `build` (578 ms), 33 capturas en `.shots/actual/` (35.7 s) y grafo actualizado (`graphify update .`).
-- **Próxima decisión pendiente:** Implementación en paralelo del **Ciclo #30** con 8 subagentes por área.
+- **Último trabajo completado:** Ciclo #30 completado, verificado con `tsc` (0 errores), `test` (75/75), `build` (531 ms), 33 capturas en `.shots/actual/` (35.9 s) y grafo actualizado (`graphify update .`).
+- **Próxima decisión pendiente:** Implementación en paralelo del **Ciclo #31** con 8 subagentes por área.
 
-### 🔓 LISTO PARA ARRANCAR — Ciclo #30 (Orquestador Antigravity + 8 Subagentes por Área, 2026-10-10)
+### 🔓 LISTO PARA ARRANCAR — Ciclo #31 (Orquestador Antigravity + 8 Subagentes por Área, 2026-10-10)
 > **Coordinación en paralelo — Áreas listas para asignación de subagentes:**
 
 | Subagente / Área | Tarea asignada | Archivos asignados (`🔓`) | Estado |
 |---|---|---|---|
-| **Subagente 1 · Garaje Equipamiento** | Insignia "TOTALMENTE EQUIPADO" en autos completos | `src/menu.ts`, `src/menu.css` | ⏳ Pendiente decisión |
-| **Subagente 2 · HUD Supervivencia** | Indicador de daño crítico efectivo en Pausa (`#pauseCrit`) | `src/ui.ts`, `src/hud.css` | ⏳ Pendiente decisión |
-| **Subagente 3 · Carrera Sector Final** | Pastilla de tramo final de meta (`.rfinal`) | `src/kart.ts`, `src/race.css` | ⏳ Pendiente decisión |
-| **Subagente 4 · Gabinete Junket Crush** | Resplandor de herramienta armada (`.m3-tbtn.armed`) | `src/match3_draw.ts`, `src/match3.ts`, `src/match3.css` | ⏳ Pendiente decisión |
-| **Subagente 5 · Efectos Visuales 3D** | Quemada de neumático en salida parada `FX.burnout` | `src/fx.ts` | ⏳ Pendiente decisión |
-| **Subagente 6 · Cierre y Polaroid** | Sello de firma caligráfica "VºBº JEFE DE TALLER" | `src/replay.ts`, `src/replay.css` | ⏳ Pendiente decisión |
-| **Subagente 7 · Audio Sintetizado** | Barrido armónico de rebase `SFX.overtake()` | `src/sfx.ts` | ⏳ Pendiente decisión |
-| **Subagente 8 · Modelos Procedurales** | Remaches en guardabarros de combi y buggy | `src/models.ts` | ⏳ Pendiente decisión |
+| **Subagente 1 · Garaje Desbloqueo** | Porcentaje global de catálogo en cabezal del taller | `src/menu.ts`, `src/menu.css` | ⏳ Pendiente decisión |
+| **Subagente 2 · HUD Supervivencia** | Resplandor de sobrecarga eléctrica `#volt.surge` | `src/ui.ts`, `src/hud.css` | ⏳ Pendiente decisión |
+| **Subagente 3 · Carrera Derrape** | Pastilla de derrape perfecto `.rperfect` | `src/kart.ts`, `src/race.css` | ⏳ Pendiente decisión |
+| **Subagente 4 · Gabinete Junket Crush** | Halo de mira en celda con herramienta armada | `src/match3_draw.ts`, `src/match3.ts`, `src/match3.css` | ⏳ Pendiente decisión |
+| **Subagente 5 · Efectos Visuales 3D** | Chispas de fricción rasante `FX.scrape` | `src/fx.ts` | ⏳ Pendiente decisión |
+| **Subagente 6 · Cierre y Polaroid** | Sello de hora de cierre `"HORA CIERRE · HH:MM"` | `src/replay.ts`, `src/replay.css` | ⏳ Pendiente decisión |
+| **Subagente 7 · Audio Sintetizado** | Fanfarria triunfal breve `SFX.podiumFanfare()` | `src/sfx.ts` | ⏳ Pendiente decisión |
+| **Subagente 8 · Modelos Procedurales** | Antena RC flexible con banderín reflectante | `src/models.ts` | ⏳ Pendiente decisión |
+
 
