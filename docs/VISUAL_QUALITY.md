@@ -870,3 +870,10 @@ Carrera (1) y Survivor en partida (2).
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.
 
 Conclusión visual: avance verificable a geometría relightable, todavía lejos de la ilustración aprobada. El frenchie conserva pecho marfil visible pero necesita continuidad anatómica y acabado de pelo; el pasto en láminas resulta rígido; árboles/casa siguen como volumen básico y el desgaste del buggy necesita localización. No se asigna una nota de fidelidad ni se declara acabado final. Próximo foco recomendado: refinar esta escena antes de producir Eulalio o integrar modelos en partidas. Triángulos, performance indicativa y límites de teléfono/hordas están en el README de la muestra.
+
+
+## 2026-10-10 · Biblioteca de ocho superficies generadas
+
+`assets-src/material-library/v1/evidence/gallery-pc.png`, `gallery-cel.png` y ocho `repeat-*.png` documentan la revisión real. Suelos, madera, chapa, pintura, asfalto y ladrillo siguen el detalle táctil de la tierra aprobada con colores propios de cada material. Originales 1254×1254, WebP 6,51 MB total frente a PNG 34,76 MB. Galería verificada con cuadrados sin distorsión, 16 archivos decodificados y ocho diálogos por viewport, sin errores/desbordamiento.
+
+Evaluación: materiales ricos en detalle disponibles para reutilización; todavía no aplicados al juego. Repetición 3×3 inspeccionada: nudos/parches/rayaduras recurrentes y patrón/alineación de ladrillo pueden hacerse evidentes; para áreas extensas revisar o corregir juntas, para tablas/paneles usar UV acotada. Hormigón/asfalto tienen árido expuesto. No certificar seamless ni asignar mejora medida al gameplay. Normal/ORM, respuesta bajo luz del juego y costo de integración pendientes. Recomendado empezar por comparar tres superficies en una zona existente. Fuentes, prompts y límites en el README/HANDOFF del paquete.

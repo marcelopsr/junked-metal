@@ -47,6 +47,12 @@ Cada encargo entrega `HANDOFF.md` dentro de su carpeta con: estado (propuesto/en
 5. Guardar evidencia fuera de `.shots/` para entregas duraderas, actualizar el handoff y grafo, y realizar un commit **solo de rutas propias**. No `git add -A`, `git commit -a` ni barrer WIP de otras sesiones, aunque parezca útil como checkpoint. No publicar esta muestra. Registrar resultados de otros módulos como ajenos, sin presentarlos como pruebas propias.
 6. Actualizar la entrada de esta línea en `docs/PRODUCT_EVOLUTION.md` y `docs/VISUAL_QUALITY.md` sin reemplazar el checkpoint de los ciclos concurrentes. Cada sesión verifica e integra sus entregas dentro del alcance autorizado, cierra su tanda y puede continuar sin esperar a Codex. Una revisión posterior consulta el estado real; no toma notas antiguas como aprobación nueva.
 
+## Biblioteca de superficies disponible — v1
+
+El usuario pidió más recursos como la tierra aprobada. La tanda `assets-src/material-library/v1/` aporta ocho albedos independientes: tierra compactada, hierba/tierra, hormigón, madera, acero oxidado, pintura amarilla, asfalto y ladrillo. PNG originales de 1254 × 1254, WebP a igual resolución, prompts exactos y `assets.json` con usos, parámetros iniciales y mapas ausentes. Galería local: http://localhost:5173/assets-src/material-library/v1/index.html. Leer su `README.md` y `HANDOFF.md` antes de integrar.
+
+Gemini puede aplicar estos recursos o producir variantes de forma autónoma dentro de su alcance autorizado; no necesita esperar revisión de Codex. No están aplicados a las partidas. Repetición no certificada sin costuras y normal/ORM pendientes; el atlas Folded activo de 64 px requiere una estrategia propia para conservar detalle. La carpeta no entra en el build normal ni se publica. La reserva de producción se libera al completar esta tanda; futuras sesiones conservan sus originales y usan versiones nuevas.
+
 ## Prompt listo para Gemini
 
 ```text

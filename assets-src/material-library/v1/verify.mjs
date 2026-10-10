@@ -18,7 +18,8 @@ try{for(const name of ['pc','cel']){
   for(const a of data.assets){for(const path of [a.source,a.texture]){const img=new Image();img.src=path;await img.decode();out.push({path,width:img.naturalWidth,height:img.naturalHeight});}}
   await document.fonts.ready;return out;
  });assert.equal(decoded.length,16);for(const img of decoded){assert.equal(img.width,1254);assert.equal(img.height,1254);}
- await page.locator('.card').last().scrollIntoViewIfNeeded();await page.evaluate(async()=>{await Promise.all([...document.images].map(i=>i.decode()));scrollTo(0,0);});
+ await page.evaluate(async()=>{for(const i of document.images)i.loading='eager';await Promise.all([...document.images].map(i=>i.decode()));scrollTo(0,0);});
+ const square=await page.evaluate(()=>[...document.querySelectorAll('.card img')].every(i=>{const r=i.getBoundingClientRect();return Math.abs(r.width-r.height)<1;}));assert(square,'Gallery images must keep a square aspect ratio');
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);assert(!overflow);
  await page.screenshot({path:root+`evidence/gallery-${name}.png`,fullPage:true});
  for(const a of catalog.assets){
@@ -26,6 +27,6 @@ try{for(const name of ['pc','cel']){
   if(name==='pc')await page.locator('dialog').screenshot({path:root+`evidence/repeat-${a.id}.png`});
   await page.keyboard.press('Escape');assert(!(await page.locator('dialog').isVisible()));
  }
- assert.deepEqual(errors,[]);results.push({viewport:name,decoded:decoded.length,dialogs:8,overflow,errors});await context.close();
+ assert.deepEqual(errors,[]);results.push({viewport:name,decoded:decoded.length,dialogs:8,square,overflow,errors});await context.close();
 }}finally{await browser.close();}
 await writeFile(root+'evidence/verification.json',JSON.stringify({date:'2026-10-10',results},null,2)+'\n');console.log(JSON.stringify(results));

@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-10",
+  "results": [
+    {
+      "viewport": "pc",
+      "decoded": 16,
+      "dialogs": 8,
+      "square": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "viewport": "cel",
+      "decoded": 16,
+      "dialogs": 8,
+      "square": true,
+      "overflow": false,
+      "errors": []
+    }
+  ]
+}

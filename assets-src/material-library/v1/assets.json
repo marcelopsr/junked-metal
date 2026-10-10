@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "date": "2026-10-10",
+  "generator": "built-in imagegen",
+  "reference": "reference-earth.png",
+  "assets": [
+    {
+      "id": "01-compacted-earth",
+      "name": "Tierra compactada",
+      "uses": [
+        "Caminos del patio y transiciones de terreno",
+        "Circuito RC de tierra y senderos nuevos"
+      ],
+      "repeatMeters": 2.5,
+      "roughness": 0.97,
+      "metallic": 0,
+      "source": "sources/01-compacted-earth.png",
+      "texture": "textures/01-compacted-earth.webp",
+      "prompt": "prompts/01-compacted-earth.txt",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 4451958,
+      "textureBytes": 858650,
+      "sourceSha256": "a15cbfb870ef799f949d7c69f91395412b7bc40118384645a62bb0affc9d4e6b",
+      "colorSpace": "sRGB",
+      "maps": {
+        "albedo": "textures/01-compacted-earth.webp",
+        "normal": null,
+        "orm": null
+      },
+      "status": "generated-not-integrated",
+      "tileability": "review-on-target; not certified seamless"
+    },
+    {
+      "id": "02-grass-earth",
+      "name": "Hierba y tierra",
+      "uses": [
+        "Base del pasto en patio y jardín",
+        "Bordes de pistas y nuevos jardines"
+      ],
+      "repeatMeters": 1.5,
+      "roughness": 0.95,
+      "metallic": 0,
+      "source": "sources/02-grass-earth.png",
+      "texture": "textures/02-grass-earth.webp",
+      "prompt": "prompts/02-grass-earth.txt",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 4741123,
+      "textureBytes": 966530,
+      "sourceSha256": "4c448edb3932960e8af542225f8a1c19f3d82637653e7bf3386085407bbb9809",
+      "colorSpace": "sRGB",
+      "maps": {
+        "albedo": "textures/02-grass-earth.webp",
+        "normal": null,
+        "orm": null
+      },
+      "status": "generated-not-integrated",
+      "tileability": "review-on-target; not certified seamless"
+    },
+    {
+      "id": "03-worn-concrete",
+      "name": "Hormigón gastado",
+      "uses": [
+        "Suelo del garaje y losetas actuales",
+        "Taller y arenas nuevas"
+      ],
+      "repeatMeters": 2,
+      "roughness": 0.88,
+      "metallic": 0,
+      "source": "sources/03-worn-concrete.png",
+      "texture": "textures/03-worn-concrete.webp",
+      "prompt": "prompts/03-worn-concrete.txt",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 4689693,
+      "textureBytes": 846810,
+      "sourceSha256": "1bbe243ffde89715f1328373d15d7e0ff29a7cbf264621b6b2369d5d8f0daffe",
+      "colorSpace": "sRGB",
+      "maps": {
+        "albedo": "textures/03-worn-concrete.webp",
+        "normal": null,
+        "orm": null
+      },
+      "status": "generated-not-integrated",
+      "tileability": "review-on-target; not certified seamless"
+    },
+    {
+      "id": "04-aged-wood",
+      "name": "Madera envejecida",
+      "uses": [
+        "Cerca, rampas y mesa de taller",
+        "Pallets, cajas y puentes nuevos"
+      ],
+      "repeatMeters": 0.6,
+      "roughness": 0.89,
+      "metallic": 0,
+      "source": "sources/04-aged-wood.png",
+      "texture": "textures/04-aged-wood.webp",
+      "prompt": "prompts/04-aged-wood.txt",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 4111963,
+      "textureBytes": 708542,
+      "sourceSha256": "8f8cd200afeb1aa6b50a5296f8f505c748c2988bd1d4f0230377f90232f308d9",
+      "colorSpace": "sRGB",
+      "maps": {
+        "albedo": "textures/04-aged-wood.webp",
+        "normal": null,
+        "orm": null
+      },
+      "status": "generated-not-integrated",
+      "tileability": "review-on-target; not certified seamless"
+    },
+    {
+      "id": "05-rusted-steel",
+      "name": "Acero oxidado",
+      "uses": [
+        "Chatarra y accesorios metálicos",
+        "Barriles, barreras y escenarios industriales nuevos"
+      ],
+      "repeatMeters": 0.6,
+      "roughness": 0.82,
+      "metallic": 0.35,
+      "source": "sources/05-rusted-steel.png",
+      "texture": "textures/05-rusted-steel.webp",
+      "prompt": "prompts/05-rusted-steel.txt",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 4329589,
+      "textureBytes": 835008,
+      "sourceSha256": "2ff73303b138eafdfd58778f78e8ec33a0509c91c5b14240dce1a3c805e6447b",
+      "colorSpace": "sRGB",
+      "maps": {
+        "albedo": "textures/05-rusted-steel.webp",
+        "normal": null,
+        "orm": null
+      },
+      "status": "generated-not-integrated",
+      "tileability": "review-on-target; not certified seamless"
+    },
+    {
+      "id": "06-worn-yellow-paint",
+      "name": "Pintura amarilla gastada",
+      "uses": [
+        "Carrocería amarilla y chapas pintadas",
+        "Señales, contenedores y utilería nuevos"
+      ],
+      "repeatMeters": 0.5,
+      "roughness": 0.62,
+      "metallic": 0.05,
+      "source": "sources/06-worn-yellow-paint.png",
+      "texture": "textures/06-worn-yellow-paint.webp",
+      "prompt": "prompts/06-worn-yellow-paint.txt",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 3678500,
+      "textureBytes": 707032,
+      "sourceSha256": "69e43808020dcd6b5a03f171a19c3285818cee91c699210b79429867fd1a04ad",
+      "colorSpace": "sRGB",
+      "maps": {
+        "albedo": "textures/06-worn-yellow-paint.webp",
+        "normal": null,
+        "orm": null
+      },
+      "status": "generated-not-integrated",
+      "tileability": "review-on-target; not certified seamless"
+    },
+    {
+      "id": "07-rough-asphalt",
+      "name": "Asfalto granular",
+      "uses": [
+        "Sectores de pista y pavimento",
+        "Circuitos urbanos y zonas de estacionamiento nuevas"
+      ],
+      "repeatMeters": 2,
+      "roughness": 0.93,
+      "metallic": 0,
+      "source": "sources/07-rough-asphalt.png",
+      "texture": "textures/07-rough-asphalt.webp",
+      "prompt": "prompts/07-rough-asphalt.txt",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 4682662,
+      "textureBytes": 844410,
+      "sourceSha256": "75daf25391aed1bc0356a84699d9e30fcbf92fd0cfe910f12f29f1d7eccda7d9",
+      "colorSpace": "sRGB",
+      "maps": {
+        "albedo": "textures/07-rough-asphalt.webp",
+        "normal": null,
+        "orm": null
+      },
+      "status": "generated-not-integrated",
+      "tileability": "review-on-target; not certified seamless"
+    },
+    {
+      "id": "08-aged-brick",
+      "name": "Ladrillo envejecido",
+      "uses": [
+        "Muros y borde de casa actuales",
+        "Muros de arena y construcciones nuevas"
+      ],
+      "repeatMeters": 1.2,
+      "roughness": 0.9,
+      "metallic": 0,
+      "source": "sources/08-aged-brick.png",
+      "texture": "textures/08-aged-brick.webp",
+      "prompt": "prompts/08-aged-brick.txt",
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 4076116,
+      "textureBytes": 742612,
+      "sourceSha256": "5be590199ca21eee7fe7a815312327da18061aa456023aadd3a64365123cf4c3",
+      "colorSpace": "sRGB",
+      "maps": {
+        "albedo": "textures/08-aged-brick.webp",
+        "normal": null,
+        "orm": null
+      },
+      "status": "generated-not-integrated",
+      "tileability": "review-on-target; not certified seamless"
+    }
+  ]
+}

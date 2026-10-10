@@ -1,0 +1,9 @@
+Use case: photorealistic-natural.
+Asset type: a single reusable game material BASE COLOR / ALBEDO texture for Junked Metal, NOT a concept image, NOT a texture atlas or labelled sheet.
+Image 1 is ONLY a reference for surface detail density, grounded tactile realism and visual richness; do not replicate its brown palette on materials that need a different colour.
+Create one square texture at the highest native detail available, orthographic flat view directly perpendicular to the surface, edge to edge with no frame. Material occupies every pixel.
+Lighting: diffuse uniform neutral illumination, no directional light, cast shadows, vignette, bright highlights, depth of field, perspective or ambient-occlusion shading baked into larger shapes.
+Natural detailed surface with calm large-scale value variation so repeated gameplay surfaces remain readable, preserve the stylized cinematic backyard world.
+Tileability is a production intent: match opposite edges; continuous small patterns across all boundaries, no distinctive giant centre feature.
+No text, labels, logos, border, UI, collage, room, camera view, character or 3D preview sphere.
+Primary subject: Old warm terracotta red-brown brick wall surface with finely weathered individual bricks and recessed dusty warm gray mortar. Consistent running bond pattern, perfectly straight orthographic alignment, varied quiet warm brick colours, chipped microtexture, no graffiti, moss, nails or large broken bricks. Pattern must wrap horizontally and vertically as a continuous masonry texture.
