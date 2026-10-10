@@ -140,6 +140,19 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     if (ch("sigFringing", 0)) $("signal")?.classList.toggle("sig-fringing", false);
     if (ch("sigCritical", 0)) $("signal")?.classList.toggle("sig-critical", false);
   }
+  let failsafeEl = document.getElementById("rfFailsafe");
+  if (isLoss) {
+    if (!failsafeEl) {
+      failsafeEl = document.createElement("div");
+      failsafeEl.id = "rfFailsafe";
+      failsafeEl.className = "rf-failsafe";
+      failsafeEl.textContent = "FAILSAFE RX: SEÑAL LÍMITE";
+      $("hud")?.appendChild(failsafeEl);
+    }
+    failsafeEl.style.display = "";
+  } else if (failsafeEl) {
+    failsafeEl.style.display = "none";
+  }
   const dbm = Math.round(-42 - Math.min(52, ((d.distCenter ?? 0) / 90) * 52));
   let sigDbm = document.getElementById("sigDbm");
   if (!sigDbm) {

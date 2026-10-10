@@ -776,36 +776,53 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`):** Vector diegético de retorno a base en radar `#radar.rf-return` con distintivo `▲ BASE` pulsante en rojo alarma cuando la distancia supera los 75m; y micro-glitch analógico `.telemetry-glitch` en el voltímetro ante interferencias severas de radiofrecuencia.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (564 ms), `npm run test:restart`, `npm run shots -- --only garaje,partida,carrera` (17 capturas en PC y móvil en 22.1 s sin errores) y `graphify update .` (3633 nodos, 8713 aristas).
 
+### Ciclo #48 (2026-10-10) — Tirantes Carbono 3D, SFX Grava y Regen, Brake Dive en car.ts y Brújula/Failsafe en Radar HUD
+- **Alcance implementado por los 4 Especialistas:**
+  - **Procedural 3D & Folded Modeler (`src/models.ts`):** Torres de amortiguación delantera CNC en aluminio anodizado azul (`M.metal("#0284c7")`) con taladros de regulación oscuros y tirantes superiores diagonales de refuerzo de chasis en fibra de carbono mate (`M.matte("#1e293b")`), fusionados en el array `parts` del coche con **0 draw calls adicionales**.
+  - **Audio & Synth Sound Designer (`src/sfx.ts`):** `SFX.gravelThud(impulse, pan, dist)` simulando el impacto hueco combinado con dispersión de gravilla en aterrizajes fuertes; y `SFX.regenWhine(spd, pan)` con barrido descendente en onda triangular de freno regenerativo/motor brushless al soltar acelerador.
+  - **Combat Feel & VFX Specialist (`src/car.ts`):** Inclinación reactiva en frenadas violentas (*Brake Dive*) en `Car.divePitch` (+0.045 rad) modulada exponencialmente y compuesta con `vis.rotation.x`; rebote asimétrico aleatorio en alabeo lateral en aterrizajes duros (`steerRoll ±0.04`); y disparo de `SFX.gravelThud` al tocar suelo con 0 GC allocations.
+  - **Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`):** Micro-brújula de rumbo cardinal fija (`N`) grabada en el reborde superior del radar `#radar::before`; y cartel diegético de emergencia `.rf-failsafe` (`FAILSAFE RX: SEÑAL LÍMITE`) parpadeando en la base del HUD cuando el vínculo de radiofrecuencia entra en pérdida crítica (>85m).
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (9/9 suites, 77 tests OK), `npm run build` (504 ms), `npm run test:restart`, `npm run shots -- --only garaje,partida,carrera` (17 capturas en PC y móvil en 21.7 s sin errores) y `graphify update .` (3665 nodos, 8806 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #48 (Evolución Multidisciplinaria)
+## 4. Backlog Vivo de Oportunidades — Ciclo #49 (Evolución Multidisciplinaria)
 
 ### A. Especialista 1 · Procedural 3D & Folded Modeler (`src/models.ts`)
-1. **(Recomendada) Tirantes de Refuerzo de Chasis Superior en Fibra de Carbono y Torre de Amortiguación CNC:**
-   - **Qué es:** Añadir tirantes diagonales superiores de rigidez en chasis expuestos (`buggy`, `monster`) emulando fibra de carbono mate (`M.matte("#1e293b")`) y torres de suspensión delantera con agujeros de anclaje múltiple en aluminio anodizado.
-   - **Valor:** Extraordinario nivel de maqueta de competición RC visible en el Garaje y Podio con 0 draw calls al fusionar en `parts`. Complejidad: Baja.
+1. **(Recomendada) Tuercas Ciegas de Trapecios y Tensores Roscados de Dirección en Acero Inoxidable:**
+   - **Qué es:** Añadir tirantes de dirección ajustables con tensores roscados hexagonales paso inverso en acero inoxidable (`M.metal("#94a3b8")`) conectando el servo horn con las manguetas delanteras, más tuercas ciegas de anclaje de trapecios.
+   - **Valor:** Extraordinario detalle mecánico de automodelismo RC en primeros planos de Garaje y Taller con 0 draw calls al fusionar en `parts`. Complejidad: Baja.
 
 ### B. Especialista 2 · Audio & Synth Sound Designer (`src/sfx.ts`)
-2. **Resonancia de Grava al Aterrizar y Freno Motor Regenerativo:**
-   - **Qué es:** Añadir chasquido de gravilla y dispersión de arenilla al aterrizar de saltos con rebote (`SFX.gravelThud`), junto con zumbido agudo descendente de freno regenerativo/motor brushless al soltar acelerador a fondo.
-   - **Valor:** Tactilidad acústica instantánea en saltos del patio y desaceleraciones. Complejidad: Baja-Media.
+2. **Resonancia de Carrocería Lexan en Derrapes Fuertes y Alerta Sonora Failsafe:**
+   - **Qué es:** Micro-vibración y crujido de policarbonato al rozar bordillos (`SFX.curbRattle`), y alarma pulsante bitonal intermitente de telemetría de failsafe al activarse la alerta crítica de enlace de radio.
+   - **Valor:** Coherencia acústica total entre la UI de telemetría analógica y la respuesta auditiva del transmisor RC. Complejidad: Baja-Media.
 
-### C. Especialista 3 · Combat Feel & VFX Specialist (`src/car.ts`)
-3. **Brake Dive Reactivo en Clavada de Frenos y Rebote Asimétrico en Aterrizajes:**
-   - **Qué es:** Hundimiento reactivo del morro y elevación de zaga (+0.04 rad en X) cuando el jugador frena violentamente a alta velocidad (*Brake Dive*), simétrico al *Rear Squat*, más balanceo lateral en Z en aterrizajes con alabeo.
-   - **Valor:** Sensación de inercia viva y suspensión independiente en frenadas al límite. Complejidad: Media.
+### C. Especialista 3 · Combat Feel & VFX Specialist (`src/car.ts`, `src/fx.ts`)
+3. **Micro-Chispas de Fricción en Suelo por Panza Baja y Roce de Paragolpes:**
+   - **Qué es:** Emisión dosificada de chispas en el fondo plano del vehículo (`FX.transmissionSpark`) cuando la suspensión sufre compresión máxima tras un salto con compresión violenta de chasis contra el suelo.
+   - **Valor:** Feedback visual espectacular y tangible de la violencia de los saltos y baches del patio. Complejidad: Media.
 
 ### D. Especialista 4 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-4. **Micro-Brújula Diegética de Rumbo y Aviso de Retorno Automático Failsafe:**
-   - **Qué es:** Indicador circular tenue de rumbo de navegación en `#radar` (`N / S / E / O`) y aviso de telemetría `FAILSAFE RX: SEÑAL LÍMITE` parpadeando en la base del HUD cuando el vínculo entra en pérdida crítica.
-   - **Valor:** Orientación inmediata en zonas periféricas del mapa y sensación inmersiva de radio-control. Complejidad: Baja.
+4. **Vúmetro Analógico de Intensidad de Señal RF con Indicador de Ruido de Piso:**
+   - **Qué es:** Franja segmentada analógica debajo del icono de antena que muestre tanto la potencia de la señal recibida (RSSI) como una pequeña barra roja de ruido de fondo (SNR / Noise Floor) en zonas de interferencia.
+   - **Valor:** Información diegética de radiocontrol de alta fidelidad para pilotos técnicos. Complejidad: Baja-Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #47 completado y validado con los 4 Especialistas (`tsc` 0 errores, `test` 75/75, `build` limpio en 564 ms, 17 capturas en `.shots/actual/` en 22.1 s, grafo en 3633 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #48**.
+- **Último trabajo completado:** Ciclo #48 completado y validado con los 4 Especialistas (`tsc` 0 errores, `test` 77/77, `build` limpio en 504 ms, 17 capturas en `.shots/actual/` en 21.7 s, grafo en 3665 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #49**.
+
+### 🔓 LISTO PARA EL CICLO #49 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+
+| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
+|---|---|---|
+| **Procedural 3D Modeler** | Tensores roscados de dirección y tuercas ciegas de trapecios | `src/models.ts` |
+| **Audio Synth Designer** | Crujido de policarbonato `curbRattle` y alarma sonora Failsafe | `src/sfx.ts` |
+| **Combat Feel & VFX** | Chispas de panza baja por compresión de suspensión en saltos | `src/car.ts` |
+| **Diegetic HUD & Telemetry** | Vúmetro analógico con indicador de ruido de piso (SNR) | `src/ui.ts`, `src/hud.css` |
 
 ### 🔓 LISTO PARA EL CICLO #48 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 

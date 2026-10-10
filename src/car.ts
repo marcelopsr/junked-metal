@@ -3,6 +3,7 @@ import { carModel, type CarKind, type CarModel, type CarOpts } from "./models";
 import { shadows } from "./render";
 import { BAL } from "./balance";
 import { FX } from "./fx";
+import { SFX } from "./sfx";
 import { at, FOOT, flatL, groundGap, MOON, moonCar, toLocal, toWorld } from "./moon";
 
 // Precio y manejo de cada auto salen de balance.json (tabla autos)
@@ -101,6 +102,7 @@ export class Car {
   def;
   torqueRoll = 0;
   squatPitch = 0;
+  divePitch = 0;
   private steerRoll = 0;
   private basePitch = 0;
   private lastFs = 0;
@@ -174,6 +176,10 @@ export class Car {
     const targetSquat = (fwd > 0.8 && spd < 2.5) ? -0.045 * driveMult : 0;
     this.squatPitch += (targetSquat - this.squatPitch) * (dt > 0 ? Math.min(1, 10 * dt) : 0.18);
 
+    // Inclinación reactiva en frenada brusca (Brake Dive)
+    const targetDive = (fs > 2.0 && fwd < -0.2) ? 0.045 : 0;
+    this.divePitch += (targetDive - this.divePitch) * (dt > 0 ? Math.min(1, 10 * dt) : 0.18);
+
     const k = 1 - Math.exp(-8 * dt);
     this.steerRoll = B.Scalar.Lerp(this.steerRoll, -steer * B.Scalar.Clamp(fs / maxSpeed, -1, 1) * 0.16, k);
     this.vis.rotation.z = this.steerRoll + this.torqueRoll;
@@ -181,9 +187,14 @@ export class Car {
     // Cabeceo según la trayectoria (rampas y saltos): el colisionador no vuelca, la carrocería sí apunta hacia donde va
     const vy = tmpV.y, pitch = Math.abs(fs) > 2 ? B.Scalar.Clamp(-Math.atan(vy / fs), -0.5, 0.5) : 0;
     this.basePitch = B.Scalar.Lerp(this.basePitch, B.Scalar.Clamp(-acc * 0.004, -0.08, 0.08) + pitch, k);
-    this.vis.rotation.x = this.basePitch + this.squatPitch;
+    this.vis.rotation.x = this.basePitch + this.squatPitch + this.divePitch;
     // Rebote al aterrizar: se aplasta y recupera con un resorte amortiguado
-    if (this.lastVy < -4 && vy > -1) { this.bounce = Math.min(0.3, -this.lastVy * 0.03); this.bT = 0; }
+    if (this.lastVy < -4 && vy > -1) {
+      this.bounce = Math.min(0.3, -this.lastVy * 0.03);
+      this.bT = 0;
+      this.steerRoll += (Math.random() > 0.5 ? 0.04 : -0.04);
+      SFX.gravelThud(Math.min(8, -this.lastVy));
+    }
     this.lastVy = vy;
     this.bT += dt; this.bounce *= Math.exp(-5 * dt);
     const sq = this.bounce * Math.cos(this.bT * 18);

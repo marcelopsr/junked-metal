@@ -986,6 +986,26 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #48 (Ecosistema Matricial de Especialistas: Tirantes Carbono 3D, Grava y Regen SFX, Brake Dive car.ts y Brújula/Failsafe HUD)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 21.7 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Torres de suspensión CNC y tirantes de rigidez en fibra de carbono (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - Incorporadas torres de amortiguación delantera CNC en aluminio anodizado azul (`M.metal("#0284c7")`) con taladros de regulación oscuros en trapecios de suspensión delantera.
+   - Añadidos tirantes superiores diagonales de refuerzo de chasis en fibra de carbono mate (`M.matte("#1e293b")`), fusionados en el array `parts` del coche con **0 draw calls adicionales**.
+2. **Resonancia de grava en aterrizajes y freno regenerativo (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.gravelThud(impulse, pan, dist)` sintetizando el crujido y dispersión de gravilla al tocar tierra tras un salto violento.
+   - Incorporado `SFX.regenWhine(spd, pan)` con barrido de frecuencia descendente de freno motor eléctrico regenerativo al soltar el gatillo a alta velocidad.
+3. **Inclinación reactiva en frenada (*Brake Dive*) y rebote asimétrico (Combat Feel & VFX Specialist · `src/car.ts`):**
+   - Integrada propiedad `Car.divePitch` (+0.045 rad) que hunde el morro y descarga la zaga en frenadas bruscas a velocidad (`fs > 2.0 && fwd < -0.2`), complementando el *Rear Squat* y componiéndose en `vis.rotation.x`.
+   - Incorporado balanceo lateral asimétrico en Z al aterrizar de saltos con rebote (`steerRoll ±0.04`) y disparo de `SFX.gravelThud` al tocar suelo con 0 GC allocations.
+4. **Micro-brújula cardinal y aviso diegético FAILSAFE RX (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - Grabada marca de orientación fija (`N`) en el reborde superior del radar `#radar::before`.
+   - Incorporado aviso diegético de alarma `.rf-failsafe` (`FAILSAFE RX: SEÑAL LÍMITE`) parpadeando en la base del HUD cuando el vínculo entra en pérdida crítica (>85m).
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

@@ -602,6 +602,17 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         box(0.014, 0.005, 0.012, M.plastic("#38bdf8"), [-bw * 0.12, bh * 0.28 + 0.02, 0.038])
       );
     }
+    if (kind === "buggy" || kind === "monster" || kind === "formula") {
+      // Torre de amortiguación delantera CNC en aluminio anodizado azul con taladros de anclaje
+      parts.push(
+        box(bw * 0.44, bh * 0.28, 0.008, M.metal("#0284c7"), [0, bh * 0.46, bl * 0.28]),
+        cyl(0.006, 0.006, 0.012, M.metal("#0f172a"), [-bw * 0.16, bh * 0.54, bl * 0.28], [Math.PI / 2, 0, 0], 6),
+        cyl(0.006, 0.006, 0.012, M.metal("#0f172a"), [bw * 0.16, bh * 0.54, bl * 0.28], [Math.PI / 2, 0, 0], 6),
+        // Tirantes superiores de refuerzo de chasis en fibra de carbono mate
+        cyl(0.004, 0.004, bl * 0.45, M.matte("#1e293b"), [-bw * 0.15, bh * 0.44, -bl * 0.06], [0.32, 0, -0.12], 4),
+        cyl(0.004, 0.004, bl * 0.45, M.matte("#1e293b"), [bw * 0.15, bh * 0.44, -bl * 0.06], [0.32, 0, 0.12], 4)
+      );
+    }
     for (const sx of [-bw * 0.35, bw * 0.35]) {
       for (const sz of [-bl * 0.32, bl * 0.32]) {
         parts.push(
@@ -987,6 +998,25 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         tube([[0, 0.92, -4.25], [0, 0.28, -4.95], [0.75, 0.08, -5.65]], 0.16, dark),
       ];
     }
+    // Luna (moon_sky.ts): bicho de fuego (brasa emisiva bajo chapa remachada) y bicho-cohete (lata con punta roja, aletas y escape)
+    if (kind === "fuego") {
+      const hot = pbr("bichoFuego", { color: "#ff7a1a", rough: 0.45, metal: 0.3, emissive: "#ff4a00" }), core = M.glow("#ffd24a"), scrap = M.metal("#4a423b");
+      return [
+        sph(0.66, hot, [0, 0.36, -0.36], [1, 0.82, 1.3], 8), sph(0.3, core, [0, 0.52, -0.44], undefined, 6),
+        box(0.52, 0.06, 0.52, scrap, [0, 0.66, -0.3], [0.3, 0, 0]), box(0.34, 0.22, 0.4, scrap, [0, 0.36, 0.1]),
+        sph(0.4, scrap, [0, 0.38, 0.46], [1, 0.8, 1.1], 6), sph(0.1, core, [0.11, 0.45, 0.63], undefined, 4), sph(0.1, core, [-0.11, 0.45, 0.63], undefined, 4),
+        cyl(0.015, 0.03, 0.42, scrap, [0.1, 0.6, 0.62], [0.7, 0, -0.35], 4), cyl(0.015, 0.03, 0.42, scrap, [-0.1, 0.6, 0.62], [0.7, 0, 0.35], 4),
+      ];
+    }
+    if (kind === "cohete") {
+      const tin = M.metal("#8a8f98"), rust = M.matte("#7a4a2a"), red = M.plastic("#d62828");
+      return [
+        cyl(0.62, 0.62, 1.05, tin, [0, 0.46, -0.08], [Math.PI / 2, 0, 0], 10), cyl(0.03, 0.62, 0.5, red, [0, 0.46, 0.7], [Math.PI / 2, 0, 0], 10),
+        box(0.66, 0.05, 0.08, rust, [0, 0.46, 0.2]), cyl(0.36, 0.26, 0.22, rust, [0, 0.46, -0.7], [Math.PI / 2, 0, 0], 8), sph(0.34, M.glow("#ff9138"), [0, 0.46, -0.84], [1, 1, 1.5], 6),
+        ...[-1, 1].flatMap((s) => [box(0.06, 0.34, 0.36, red, [s * 0.36, 0.5, -0.5], [0, 0, s * 0.5]), box(0.08, 0.1, 1.1, rust, [s * 0.26, 0.05, 0])]),
+        box(0.06, 0.34, 0.36, red, [0, 0.82, -0.5]), sph(0.18, M.glow("#ffe566"), [0, 0.72, 0.3], undefined, 6),
+      ];
+    }
     throw new Error(`enemyTemplate: ${kind} no tiene modelo procedural (los GLB van por glb.ts)`);
   }, vis1c(kind, scale));
 }
@@ -997,6 +1027,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
 export const LEGS: Record<string, { hips: [number, number, number][]; len: number; r: number; color: string; scale: number; yaw?: number[]; knee?: string }> = {
   rey: { hips: [[0.58, 0.36, -0.55], [0.62, 0.36, 0], [0.58, 0.36, 0.55]], len: 1.14, r: 0.095, color: "#3c4450", scale: 3.5, knee: "#6ef040" },
   tarantula: { hips: [[0.38, 0.44, -0.12], [0.42, 0.44, 0.14], [0.42, 0.44, 0.38], [0.36, 0.44, 0.62]], len: 1.62, r: 0.125, color: "#4a3228", scale: 3, yaw: [0.82, 0.28, -0.28, -0.78], knee: "#ff6fe8" },
+  fuego: { hips: [[0.16, 0.3, 0.22], [0.18, 0.3, 0.06], [0.16, 0.3, -0.1]], len: 0.5, r: 0.035, color: "#4a423b", scale: 1, yaw: [0.6, 0, -0.6], knee: "#ff7a1a" }, // luna: bicho de fuego
 };
 // Fémur + tibia + tarso; espejo en enemies.ts. Fuente Blender: build_rey_leg / build_tarantula_leg (proc2/meshes.py).
 function articulatedLegMeshes(L: (typeof LEGS)[string], hair: boolean) {

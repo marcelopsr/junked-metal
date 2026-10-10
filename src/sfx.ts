@@ -1,6 +1,7 @@
 // Audio 100% procedural con WebAudio (sin archivos). Se enciende con el primer gesto del usuario.
 let ctx: AudioContext | null = null;
 let master: GainNode, fxBus: GainNode, engBus: GainNode, musicBus: GainNode;
+let fxLP: BiquadFilterNode;
 let noise: AudioBuffer;
 // Volúmenes 0..1 (Configuración → Audio). El motor va por su propio canal.
 const vol = { master: 1, sfx: 1, engine: 1, music: 0.7, mute: false };
@@ -15,7 +16,8 @@ export function initAudio() {
   ctx = new AudioContext();
   master = ctx.createGain();
   fxBus = ctx.createGain(); engBus = ctx.createGain(); musicBus = ctx.createGain();
-  fxBus.connect(master); engBus.connect(master); musicBus.connect(master);
+  fxLP = ctx.createBiquadFilter(); fxLP.type = "lowpass"; fxLP.frequency.value = 22000; fxLP.Q.value = 0.5; // transparente; moonAmbience() lo cierra en la luna (sonidos amortiguados)
+  fxBus.connect(fxLP).connect(master); engBus.connect(master); musicBus.connect(master);
   setAudio(vol);
   const comp = ctx.createDynamicsCompressor(); // evita saturar con 100 golpes a la vez
   master.connect(comp).connect(ctx.destination);
@@ -371,6 +373,19 @@ export const SFX = {
     if (!gate("lipo-warn", 0.4)) return;
     tone("square", 2400, 2400, 0.04, 0.06);
     tone("square", 2400, 2400, 0.04, 0.06, 0.08);
+  },
+  gravelThud: (impulse = 5, pan?: number, dist?: number) => {
+    if (!gate("gravel-thud", 10)) return;
+    const dGain = dist !== undefined ? Math.max(0.12, 1 / (1 + dist * 0.04)) : 1;
+    const vol = Math.min(0.3, (0.07 + impulse * 0.02) * dGain);
+    tone("sine", 110, 45, 0.14, vol, 0, pan);
+    hiss("bandpass", 1600, 400, 0.12, vol * 0.9, pan, dist);
+  },
+  regenWhine: (spd = 10, pan?: number) => {
+    if (!gate("regen-whine", 6)) return;
+    const s = Math.max(2, Math.min(45, spd));
+    const fStart = Math.min(2200, 600 + s * 35);
+    tone("triangle", fStart, fStart * 0.45, 0.16, 0.07, 0, pan);
   },
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {
