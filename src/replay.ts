@@ -145,6 +145,14 @@ export async function showPhoto(i: PhotoInfo) {
   g.textAlign = "left";
   g.fillText("BATERÍA LiPo · DESCARGA TOTAL", pad, y0 + 232 * u);
   g.restore();
+  if (tSec >= 300) {
+    g.save();
+    g.font = `600 ${Math.round(11 * u)}px Rajdhani, sans-serif`;
+    g.fillStyle = "rgba(77, 76, 56, 0.45)";
+    g.textAlign = "left";
+    g.fillText("ALCANCE MÁXIMO DE PATIO (5+ MIN)", pad, y0 + 248 * u);
+    g.restore();
+  }
   if (i.kills >= 100) {
     g.save();
     g.font = `700 ${Math.round(15 * u)}px Rajdhani, sans-serif`;

@@ -140,6 +140,8 @@
 #txr.top, #spd.top { border-color: rgba(255, 194, 77, .85); box-shadow: 0 0 14px rgba(255, 194, 77, .35); animation: txr-top-glow 1s ease-in-out infinite alternate; }
 #txr.top #kmh, #spd.top #kmh { color: #ffd24a; text-shadow: 0 0 8px rgba(255, 210, 74, .5); }
 #txr.top #spdArc, #spd.top #spdArc { stroke: #ffd24a; filter: drop-shadow(0 0 8px rgba(255, 210, 74, .85)); }
+#txr.blazing { border-color: #f97316; box-shadow: 0 0 16px rgba(249, 115, 22, .6); }
+#txr.blazing #kmh { color: #fb923c; text-shadow: 0 0 10px rgba(249, 115, 22, .8); }
 @keyframes txr-top-glow { from { border-color: rgba(255, 194, 77, .5); } to { border-color: rgba(255, 210, 74, .95); box-shadow: 0 0 18px rgba(255, 210, 74, .55); } }
 
 /* ---------- Armas y piezas (abajo-izquierda) ---------- */
@@ -150,6 +152,7 @@
 #slots .slot.syn-on { border-color: rgba(255, 194, 77, .65); }
 #slots .slot.evo-ready { border-color: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, .45); animation: h-glow 1.4s ease-in-out infinite; }
 #slots .slot.evo { border-color: #ffc24d; color: #ffc24d; animation: h-glow 1.6s ease-in-out infinite; }
+#slots .slot.evo-max { border-color: #ffd24a; box-shadow: 0 0 14px rgba(255, 210, 74, .65); animation: h-glow 1s ease-in-out infinite; }
 #slots .slot .evo-tag { position: absolute; top: 2px; right: 2px; padding: 1px 3px; font: 700 8px/1 var(--hf); letter-spacing: .04em; color: #0b0f14; background: #ffd24a; border-radius: 3px; pointer-events: none; }
 #slots .slot .cd { position: absolute; inset: 0; background: conic-gradient(#000b calc(var(--cd, 0) * 360deg), transparent 0); }
 #slots .slot .pips { position: absolute; bottom: 3px; left: 0; right: 0; display: flex; justify-content: center; gap: 2px; }

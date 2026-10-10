@@ -726,6 +726,26 @@ Carrera (1) y Survivor en partida (2).
    - En `src/sfx.ts`, se sumó `SFX.collisionWarning()` con dos pulsos de onda de sierra de 880 Hz para alarmas sonoras de peligro inminente.
    - En `src/replay.ts`, se añadió el cuño analógico diegético `"BATERÍA LiPo · DESCARGA TOTAL"` en tinta sepia en el pie de la Polaroid al agotarse la energía.
 
+---
+
+## 2026-10-10 · Ciclo #34 (Tracción Total y Ranuras Taller, Armas Máximas y Pulso Térmico HUD, Succión y Tuercas 3D Carrera, Choque Combos Match-3, Humo Criogénico FX, SFX Boost y Sello Alcance Polaroid)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 29.3 s).
+
+### Intervenciones aplicadas por 4 subagentes consolidados en paralelo y verificadas en captura
+1. **Insignia `.all-wheel` ("TRACCIÓN TOTAL") y conteo de piezas en ranuras del Taller (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()`, se identifican los vehículos con tracción y masa reforzada (`monster`, `tanque`, `pickup`) con la pastilla ámbar `<span class="all-wheel">TRACCIÓN TOTAL</span>`. En la pestaña de piezas, cada ranura exhibe el conteo de personalizaciones desbloqueadas `<em class="slot-count">(${ownedSl}/${totalSl})</em>` junto a su título.
+2. **Halo áureo en armas evolucionadas al máximo `.evo.max` y pulso térmico en tacómetro (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `hudSlots()`, las armas evolucionadas que alcanzan el nivel 5 reciben la clase `.evo.max` con halo dorado intenso y animación `h-glow` rápida (`animation: h-glow 1s ease-in-out infinite; box-shadow: 0 0 14px rgba(255, 210, 74, .65)`). En `hudUpdate()`, rodar al 95%+ de velocidad máxima activa la clase `#txr.blazing` con borde naranja incandescente y texto `#kmh` con brillo ardiente.
+3. **Pastilla de succión plena `.rslip-max` ("¡SUCCIÓN!") y tuercas centrales cromadas 3D (Subagente 3 · `src/kart.ts`, `src/race.css`, `src/models.ts`):**
+   - En `hud()` de carrera, el rebufo aerodinámico pleno a corta distancia (`h.slip > 1.2`) enciende la pastilla púrpura de alta prioridad `<b class="rslip-max">¡SUCCIÓN!</b>` en el velocímetro. En `src/models.ts`, los modelos monoplaza y de competición (`formula`, `carrera`) incorporan tuercas centrales cromadas hexagonales de fijación rápida en sus 4 ruedas.
+4. **Marco estroboscópico en combos $\ge 4$, humo criogénico `FX.nitrogenFreeze`, SFX Boost y Sello de Alcance en Polaroid (Subagente 4 · `src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts`):**
+   - En `src/match3.ts`, los combos de reacción en cadena de nivel 4 o superior proyectan un marco de choque perimetral dorado sobre el display del gabinete arcade.
+   - En `src/fx.ts`, se sumó la rutina `FX.nitrogenFreeze(p)` con 10 partículas criogénicas translúcidas azuladas para efectos de enfriamiento térmico.
+   - En `src/sfx.ts`, se añadió `SFX.boostSurge()` con un doble barrido armónico ascendente de modulación para aceleración turbo.
+   - En `src/replay.ts`, las sesiones de supervivencia que superan los 5 minutos reciben la estampa diegética `"ALCANCE MÁXIMO DE PATIO (5+ MIN)"` en tinta analógica sepia en el pie de la Polaroid.
+
+
 
 
 

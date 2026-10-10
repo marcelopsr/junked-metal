@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-10 (Ciclos #1 a #33 completados y validados · Ciclo #34 listo para selección)
+**Última actualización:** 2026-10-10 (Ciclos #1 a #34 completados y validados · Ciclo #35 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -588,40 +588,68 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
    - **Qué problema resuelve:** Enriquece la identidad mecánica de cada auto y facilita la gestión de piezas en el taller.
    - **Valor:** Visibilidad de configuración e inmersión diegética. Complejidad: Media.
 
+### Ciclo #34 (2026-10-10) — Tracción Total y Ranuras Taller, Armas Máximas y Pulso Térmico HUD, Succión y Tuercas 3D Carrera, Choque Combos Match-3, Humo Criogénico FX, SFX Boost y Sello Alcance Polaroid
+- **Alcance implementado en paralelo por 4 subagentes consolidados:**
+  - **Subagente 1 · Garaje, Taller y Menús (`src/menu.ts`, `src/menu.css`):**
+    - Insignia reflectante `.all-wheel` (`TRACCIÓN TOTAL`) en autos con tracción y masa reforzada (`monster`, `tanque`, `pickup`) en el Garaje.
+    - Conteo de opciones de piezas desbloqueadas `<em class="slot-count">(${ownedSl}/${totalSl})</em>` junto al título de cada ranura en el taller de personalización.
+  - **Subagente 2 · HUD y Telemetría de Supervivencia (`src/ui.ts`, `src/hud.css`):**
+    - Resaltado áureo de armas evolucionadas al nivel 5 o máximo `.evo.max` con halo pulsante rápido (`box-shadow: 0 0 14px rgba(255, 210, 74, .65)`).
+    - Pulso térmico en tacómetro `#txr.blazing` con borde naranja ardiente y texto incandescente al rodar a velocidad punta ($\ge 95\%$).
+  - **Subagente 3 · Carrera, Tacómetro y Modelado 3D (`src/kart.ts`, `src/race.css`, `src/models.ts`):**
+    - Pastilla púrpura de succión plena `<b class="rslip-max">¡SUCCIÓN!</b>` en tacómetro de carrera ante rebufo fuerte a corta distancia ($slip > 1.2$).
+    - Tuercas centrales cromadas hexagonales de fijación rápida (`cyl(0.018, 0.018, 0.02, chrome, ...)`) en las cuatro ruedas de competición para Formula y Carrera.
+  - **Subagente 4 · Gabinete Junket Crush, Audio SFX, Efectos FX y Polaroid (`src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts`):**
+    - Marco de choque estroboscópico dorado en el display arcade al alcanzar reacciones en cadena de combo $\ge 4$.
+    - Rutina `FX.nitrogenFreeze(p)` con 10 partículas criogénicas translúcidas azuladas para efectos térmicos bajo cero.
+    - Generador sonoro `SFX.boostSurge()` con doble barrido armónico ascendente de modulación para aceleración turbo.
+    - Sello analógico diegético `"ALCANCE MÁXIMO DE PATIO (5+ MIN)"` en tinta sepia en el pie de la Polaroid en partidas largas.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando en 19.5 s), `npm run build` (399 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular en 29.3 s) y `graphify update .` (3155 nodos, 7700 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #35 (4 Áreas Consolidadas)
+
+### A. Subagente 1 · Garaje, Taller y Menús (`src/menu.ts`, `src/menu.css`)
+1. **Insignia de Alto Régimen / Giro Rápido (`.high-rev`) e Indicador de Patrones de Pintura:**
+   - **Qué es:** En `renderGarage()`, destacar a los autos con aceleración extrema ($\ge 18$) o giro nervioso (`carrera`, `formula`, `axel`) con la pastilla `.high-rev` (`ALTO RÉGIMEN`). En la pestaña de pintura, indicar la cantidad de patrones de color aplicados.
+   - **Qué problema resuelve:** Comunica de inmediato el perfil de respuesta al acelerador y la agilidad de paso por curva.
+   - **Valor:** Identidad de conducción e inmersión de personalización. Complejidad: Media.
+
 ### B. Subagente 2 · HUD y Telemetría de Supervivencia (`src/ui.ts`, `src/hud.css`)
-2. **Halo Áureo en Armas Evolucionadas al Nivel Máximo (`.evo.max`) y Pulso Térmico en Tacómetro (`#txr.blazing`):**
-   - **Qué es:** En `hudUpdate()`, resaltar el marco exterior de slots de armas evolucionadas al nivel 5 con un halo dorado pulsante. En `#txr`, aplicar clase `.blazing` con resplandor naranja incandescente al sostener velocidad extrema.
-   - **Qué problema resuelve:** Celebra visualmente las armas al tope de poder y aporta adrenalina de aceleración continua.
-   - **Valor:** Feedback de potencia y game feel de alta velocidad. Complejidad: Media.
+2. **Micro-Destello Dorado al Completar Recarga LiPo al 100% (`#lipo.full-flash`) y Alerta de Recarga de Turbo:**
+   - **Qué es:** En `hudUpdate()`, cuando la vida pasa de un valor inferior al 100% exacto, disparar un fogonazo áureo instantáneo en el bloque de celdas LiPo. En el botón/indicador de turbo, añadir pulsación de advertencia si la batería está agotada.
+   - **Qué problema resuelve:** Da feedback inequívoco de regeneración completa sin tener que desviar la mirada al texto numérico.
+   - **Valor:** Claridad táctica instantánea en combate intenso. Complejidad: Media.
 
 ### C. Subagente 3 · Carrera, Tacómetro y Modelado 3D (`src/kart.ts`, `src/race.css`, `src/models.ts`)
-3. **Pastilla de Rebufo Máximo `.rslip-max` en Tacómetro y Tuercas Centrales Cromadas en Ruedas de Competición:**
-   - **Qué es:** En `hud()` de carrera, diferenciar rebufo incipiente de succión aerodinámica plena con la pastilla magenta `<b class="rslip-max">¡SUCCIÓN!</b>`. En `src/models.ts`, añadir tuercas centrales de fijación rápida en las ruedas de Formula y Deportivo.
-   - **Qué problema resuelve:** Clarifica el momento exacto para saltar a rebasar y suma detalle de maquetismo de carreras a escala.
-   - **Valor:** Táctica de carrera y fidelidad visual 3D. Complejidad: Media.
+3. **Pastilla de Salida de Curva / Tracción Recuperada (`.rapunch`) y Tomas de Aire Frontales Cromadas:**
+   - **Qué es:** En `hud()` de carrera, encender la pastilla `<b class="rapunch">TRACCIÓN</b>` al soltar el derrape con mini-turbo consumado. En `src/models.ts`, modelar tomas de aire cromadas dobles en el capó de Monster y Combi.
+   - **Qué problema resuelve:** Premia visualmente la ejecución limpia del derrape y suma volumen mecánico agresivo al frontal de vehículos pesados.
+   - **Valor:** Satisfacción de conducción arcade y riqueza en los modelos 3D. Complejidad: Media.
 
 ### D. Subagente 4 · Gabinete Junket Crush, Audio SFX, Efectos FX y Polaroid (`src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts`)
-4. **Ondas Expansivas de Choque en Combos $\ge 4$, Humo Frío Criogénico `FX.nitrogenFreeze`, SFX Boost y Sello de Alcance en Polaroid:**
-   - **Qué es:** En `src/match3.ts`, ondas de choque de borde en combos largos. En `src/fx.ts`, partículas criogénicas `nitrogenFreeze(p)`. En `src/sfx.ts`, tono ascendente `boostSurge()`. En `src/replay.ts`, sello `"ALCANCE MÁXIMO DE PATIO"` en partidas de más de 5 minutos.
-   - **Qué problema resuelve:** Intensifica la espectacularidad en gabinetes arcade y completa la paleta de efectos y audio procedural.
-   - **Valor:** Retroalimentación sensorial rica y variada. Complejidad: Media.
+4. **Halo de Energía al Detonar Núcleos Match-3, Savia Ámbar `FX.amberGlow`, SFX Frenada y Sello de Tren Trasero:**
+   - **Qué es:** En `src/match3.ts`, destello radial expansivo al destruir piezas de reactor/núcleo. En `src/fx.ts`, partículas de resina ámbar `amberGlow(p)`. En `src/sfx.ts`, chirrido modulado de frenada límite `brakeScreech()`. En `src/replay.ts`, sello `"CALIBRACIÓN DE TREN TRASERO · CONFORME"` en Polaroid.
+   - **Qué problema resuelve:** Eleva el dramatismo de los remates en Match-3 y expande la variedad sonora y narrativa de taller.
+   - **Valor:** Feedback multisensorial y verosimilitud de objeto físico. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #33 completado, verificado con `tsc` (0 errores), `test` (75/75), `build` (455 ms), 33 capturas en `.shots/actual/` (30.5 s) y grafo actualizado (`graphify update .`).
-- **Próxima decisión pendiente:** Implementación en paralelo del **Ciclo #34** con 4 subagentes consolidados por área.
+- **Último trabajo completado:** Ciclo #34 completado, verificado con `tsc` (0 errores), `test` (75/75), `build` (399 ms), 33 capturas en `.shots/actual/` (29.3 s) y grafo actualizado (`graphify update .`).
+- **Próxima decisión pendiente:** Implementación en paralelo del **Ciclo #35** con 4 subagentes consolidados por área.
 
-### 🔓 LISTO PARA ARRANCAR — Ciclo #34 (Orquestador Antigravity + 4 Subagentes Consolidados, 2026-10-10)
+### 🔓 LISTO PARA ARRANCAR — Ciclo #35 (Orquestador Antigravity + 4 Subagentes Consolidados, 2026-10-10)
 > **Coordinación en paralelo — Áreas consolidadas para asignación de subagentes:**
 
 | Subagente / Área | Tarea asignada | Archivos asignados (`🔓`) | Estado |
 |---|---|---|---|
-| **Subagente 1 · Garaje y Taller** | Insignia de tracción total `.all-wheel` y conteo de piezas en ranuras | `src/menu.ts`, `src/menu.css` | ⏳ Pendiente decisión |
-| **Subagente 2 · HUD y Telemetría** | Halo dorado en armas evolucionadas al máximo y tacómetro incandescente | `src/ui.ts`, `src/hud.css` | ⏳ Pendiente decisión |
-| **Subagente 3 · Carrera y Modelos 3D** | Pastilla de succión plena `.rslip-max` y tuercas centrales cromadas en ruedas | `src/kart.ts`, `src/race.css`, `src/models.ts` | ⏳ Pendiente decisión |
-| **Subagente 4 · Gabinete, FX, SFX y Polaroid** | Choque de combos Match-3, humo frío `nitrogenFreeze`, SFX boost y sello Polaroid | `src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts` | ⏳ Pendiente decisión |
+| **Subagente 1 · Garaje y Taller** | Insignia de alto régimen `.high-rev` y patrones de color en pintura | `src/menu.ts`, `src/menu.css` | ⏳ Pendiente decisión |
+| **Subagente 2 · HUD y Telemetría** | Fogonazo dorado LiPo al 100% y alerta de recarga de turbo | `src/ui.ts`, `src/hud.css` | ⏳ Pendiente decisión |
+| **Subagente 3 · Carrera y Modelos 3D** | Pastilla de tracción recuperada `.rapunch` y tomas de aire cromadas en capó | `src/kart.ts`, `src/race.css`, `src/models.ts` | ⏳ Pendiente decisión |
+| **Subagente 4 · Gabinete, FX, SFX y Polaroid** | Halo de núcleos Match-3, savia ámbar `amberGlow`, SFX frenada y sello Polaroid | `src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts` | ⏳ Pendiente decisión |
 
 
 

@@ -916,6 +916,7 @@ function hud() {
     const spdEl = p.querySelector(".rspd") as HTMLElement;
     const revTag = h.fs < -0.5 ? `<b class="rrev">R</b>` : "";
     const slipTag = (h.slip ?? 0) > 0.6 ? `<b class="rslip">REBUFO</b>` : "";
+    const slipMaxTag = (h.slip ?? 0) > 1.2 ? '<b class="rslip-max">¡SUCCIÓN!</b>' : "";
     const airTag = h.car.pos.y > 0.85 ? '<b class="rair">EN EL AIRE</b>' : "";
     const spinTag = h.spin > 0.05 || h.out ? '<b class="rspin">¡TROMPO!</b>' : "";
     const maxTag = !spinTag && h.fs >= h.top * 0.96 ? '<b class="rmax">MÁXIMA</b>' : "";
@@ -939,7 +940,7 @@ function hud() {
     });
     const aheadTag = aheadRival ? '<b class="rahead">RIVAL DELANTE</b>' : "";
     const backTag = h.fs < -0.5 ? '<b class="rback">MARCHA ATRÁS</b>' : "";
-    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${slipTag}${airTag}${spinTag}${maxTag}${overTag}${finalTag}${perfTag}${tTag}${shTag}${wTag}${thTag}${aheadTag}${backTag}`;
+    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${slipTag}${slipMaxTag}${airTag}${spinTag}${maxTag}${overTag}${finalTag}${perfTag}${tTag}${shTag}${wTag}${thTag}${aheadTag}${backTag}`;
     if (spdEl.dataset.h !== spdHtml) { spdEl.dataset.h = spdHtml; spdEl.innerHTML = spdHtml; }
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; it.classList.toggle("full", !!h.item); }

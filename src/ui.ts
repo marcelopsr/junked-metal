@@ -91,6 +91,7 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     $("spdArc").style.strokeDasharray = `${s * ARC} 400`;
   }
   if (ch("spdTop", +(s >= 0.9))) (document.getElementById("spd") ?? $("txr")).classList.toggle("top", s >= 0.9);
+  if (ch("blaze", +(s >= 0.95))) $("txr").classList.toggle("blazing", s >= 0.95);
   txt("kmh", String(Math.round(Math.abs(d.kmh))));
 }
 
@@ -108,7 +109,8 @@ export function hudSlots(weapons: SlotInfo[], passives: SlotInfo[]) {
         const evoP = WEAPONS[w.id as WeaponId]?.evo;
         const hasPair = !w.evolved && !!evoP && passives.some((p) => p.id === evoP);
         const evoReady = hasPair && w.lv >= 5;
-        const cls = w.evolved ? "evo" : evoReady ? "evo-ready" : hasPair ? "syn-on" : "";
+        const isEvoMax = w.evolved && w.lv >= 5;
+        const cls = w.evolved ? (isEvoMax ? "evo evo-max" : "evo") : evoReady ? "evo-ready" : hasPair ? "syn-on" : "";
         return `<div class="slot ${cls} ${!w.evolved && w.lv >= 5 ? "max" : ""}">${icon(w.id, 26)}<div class="cd"></div>${evoReady ? `<b class="evo-tag">EVO</b>` : ""}${w.evolved ? "" : pips(w.lv)}</div>`;
       }).join("")}</div>` +
       `<div class="row">${passives.map((p) => {

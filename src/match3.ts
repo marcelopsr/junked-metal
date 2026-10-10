@@ -358,6 +358,13 @@ function paintBoard(c: CanvasRenderingContext2D) {
   c.globalAlpha = 1;
   c.restore();
   if (flash > 0) { c.fillStyle = `rgba(255,255,255,${Math.min(0.5, flash)})`; c.fillRect(0, 0, TEX_PX, TEX_PX); }
+  if (comboTxt && lastChain >= 4) {
+    c.save();
+    c.strokeStyle = M3C.amarilloClaro;
+    c.lineWidth = 3;
+    c.strokeRect(6, 6, TEX_PX - 12, TEX_PX - 12);
+    c.restore();
+  }
   if (comboTxt) {
     const k = comboTxt.t / 1.1, s = 1 + Math.max(0, 0.3 - comboTxt.t) * 2;
     c.save(); c.globalAlpha = Math.min(1, 3 * (1 - k)); c.translate(TEX_PX / 2, TEX_PX * 0.3); c.scale(s, s);
