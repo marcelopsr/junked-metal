@@ -422,8 +422,10 @@ function paintDisplay() {
     gs.forEach((g, i) => {
       const x = 158 + i * gw, left = goalLeft(g), done = left <= 0;
       if (done) {
-        c.fillStyle = "rgba(34,197,94,0.16)"; c.strokeStyle = M3C.exito; c.lineWidth = 1.5;
+        c.fillStyle = "rgba(34,197,94,0.18)"; c.strokeStyle = M3C.exito; c.lineWidth = 2;
+        c.shadowColor = M3C.exito; c.shadowBlur = 8;
         c.beginPath(); c.roundRect(x + 2, 14, Math.min(gw - 8, 108), 54, 6); c.fill(); c.stroke();
+        c.shadowBlur = 0;
       }
       drawGoalIcon(c, g, x + 26, 42, 48);
       c.textAlign = "left"; c.fillStyle = done ? M3C.exito : M3C.texto; c.font = `700 ${g.k === "score" ? 26 : 36}px Rajdhani, sans-serif`;

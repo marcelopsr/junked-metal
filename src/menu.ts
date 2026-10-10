@@ -607,7 +607,8 @@ function renderGarage() {
   }
   else if (gtab === "piloto") $("cars").innerHTML = (Object.keys(PILOTS) as PilotId[]).map((k) => {
     const p = PILOTS[k], id = "pilot:" + k;
-    return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div>${owns(id) ? `<div class="price">${save.pilot === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id, p.ach?.txt)}</div>`;
+    const vet = owns(id) && (save.pilot === k && (save.stats.runs >= 5 || save.stats.wins >= 1));
+    return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div>${vet ? '<span class="vet-badge">★ VETERANO</span>' : ''}<div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div>${owns(id) ? `<div class="price">${save.pilot === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id, p.ach?.txt)}</div>`;
   }).join("");
   else if (gtab === "habilidad") $("cars").innerHTML = (Object.keys(ABILITIES) as AbilityId[]).map((k) => {
     const a = ABILITIES[k];

@@ -21,7 +21,10 @@
 .rp .ritem span { font: 700 13px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #a9b8c6; }
 .rp .ritem.full span { color: #ffd84d; }
 .rp .rspd { position: absolute; right: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 8px; font: 700 28px/1 "Rajdhani", system-ui, sans-serif; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 12px; padding: 8px 14px; backdrop-filter: blur(10px); }
-.rp .rspd .rturbo { font: 800 12px/1 "Rajdhani", system-ui, sans-serif; padding: 3px 6px; border-radius: 5px; letter-spacing: .06em; } .rp .rspd .rturbo.t0 { background: rgba(255, 255, 255, .18); color: #e2e8f0; } .rp .rspd .rturbo.t1 { background: #4aa8ff; color: #071320; box-shadow: 0 0 8px rgba(74, 168, 255, .45); } .rp .rspd .rturbo.t2, .rp .rspd .rturbo.on { background: #ff9d2e; color: #1f1100; box-shadow: 0 0 10px rgba(255, 157, 46, .55); }
+.rp .rspd .rturbo { font: 800 12px/1 "Rajdhani", system-ui, sans-serif; padding: 3px 6px; border-radius: 5px; letter-spacing: .06em; } .rp .rspd .rturbo.t0 { background: rgba(255, 255, 255, .18); color: #e2e8f0; } .rp .rspd .rturbo.t1 { background: #4aa8ff; color: #071320; box-shadow: 0 0 8px rgba(74, 168, 255, .45); }
+.rp .rspd .rturbo.t2 { background: linear-gradient(135deg, #a855f7, #ec4899); color: #fff; box-shadow: 0 0 14px rgba(236, 72, 153, .75); animation: r-turbo-t2 .35s ease-in-out infinite alternate; }
+.rp .rspd .rturbo.on { background: #ff9d2e; color: #1f1100; box-shadow: 0 0 10px rgba(255, 157, 46, .55); }
+@keyframes r-turbo-t2 { from { transform: scale(1); filter: drop-shadow(0 0 4px #ec4899); } to { transform: scale(1.06); filter: drop-shadow(0 0 8px #a855f7); } }
 .rp .rmsg { position: absolute; left: 0; right: 0; top: 32%; text-align: center; font: 700 clamp(30px, 5vw, 56px)/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; opacity: 0; text-shadow: 0 4px 0 rgba(0, 0, 0, .4), 0 0 24px rgba(0, 0, 0, .35); }
 .rp .rmsg.on { animation: r-msg 2s ease-out both; }
 @keyframes r-msg { 0% { opacity: 0; transform: scale(.7); } 12% { opacity: 1; transform: scale(1.1); } 20% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }

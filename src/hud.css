@@ -69,9 +69,12 @@
 #combo i { display: block; width: 100%; height: 4px; border-radius: 99px; background: #fff; transform-origin: 0 0; }
 #combo.t1 { border-left-color: #7dffb0; }
 #combo.t1 b { color: #7dffb0; } #combo.t1 i { background: #7dffb0; }
-#combo.t2, #combo.t3 { border-left-color: #ffc24d; }
-#combo.t2 b, #combo.t3 b { color: #ffc24d; } #combo.t2 i, #combo.t3 i { background: #ffc24d; }
-#combo.t3 b { animation: h-blink .35s steps(2) infinite; }
+#combo.t2 { border-left-color: #ffc24d; box-shadow: 0 4px 14px rgba(255, 194, 77, .3); }
+#combo.t2 b { color: #ffc24d; text-shadow: 0 0 10px rgba(255, 194, 77, .5); }
+#combo.t2 i { background: #ffc24d; }
+#combo.t3 { border-left-color: #ff4d4d; box-shadow: 0 0 16px rgba(255, 77, 77, .5); }
+#combo.t3 b { color: #ff4d4d; text-shadow: 0 0 12px rgba(255, 77, 77, .8); animation: h-blink .35s steps(2) infinite; }
+#combo.t3 i { background: #ff4d4d; box-shadow: 0 0 8px rgba(255, 77, 77, .8); }
 #drv { position: absolute; right: max(12px, env(safe-area-inset-right)); top: calc(max(10px, env(safe-area-inset-top)) + 218px); transform-origin: 100% 0; text-align: right; background: rgba(11, 15, 20, .74); border: 1px solid var(--g-line); border-left: 3px solid var(--sig); border-radius: 8px; padding: 4px 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, .4); transition: opacity .25s, scale .12s; display: flex; align-items: center; gap: 6px; }
 #drv b { font: 700 30px/1 var(--hf); color: var(--sig); text-shadow: 0 2px 8px rgba(0, 0, 0, .45); font-variant-numeric: tabular-nums; }
 #drv.pop { animation: h-pop .3s steps(3) both; }

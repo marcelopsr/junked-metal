@@ -542,3 +542,23 @@ Carrera (1) y Survivor en partida (2).
    - Se añadió la rutina `FX.splash(p)` con partículas compuestas cian-blanquecinas translúcidas (`#a5f3fc` y `#ffffff`) de dispersión parabólica y disipación rápida, disponible para la pistola de agua y contacto con charcos.
 6. **Sombra angular de doblez táctil en esquina de Polaroid (Subagente 6 · `src/replay.ts`):**
    - En `showPhoto()`, se trazó un micro-doblez y sombra angular tenue (`rgba(60, 52, 40, 0.14)`) en el vértice superior derecho del lienzo polaroid, aportando mayor verosimilitud de objeto físico analógico al archivo fotográfico de cada partida.
+
+---
+
+## 2026-10-10 · Ciclo #26 (Insignia Piloto Veterano, Racha Escalonada Glow, Turbo N2 Electrificado, Halo Pedidos Match-3, Chispas Soldadura FX y Récord Letalidad Polaroid)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 6 subagentes en paralelo y verificadas en captura
+1. **Insignia técnica de veteranía en pilotos con rodaje (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()` (pestaña `piloto`), se evalúa si el piloto en uso o en propiedad acumula historial de rodaje ($\ge 5$ partidas o $\ge 1$ victoria). De cumplirse, se inserta la pastilla verde esmeralda `<span class="vet-badge">★ VETERANO</span>`, recompensando la dedicación a un personaje de la cuadrilla.
+2. **Escalonamiento de resplandor visual en hitos de racha de bajas del HUD (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `#combo`, se diferenció el escalón intermedio (`#combo.t2`: ámbar `#ffc24d` con resplandor suave) del nivel de sobrecarga máxima (`#combo.t3`: rojo fuego `#ff4d4d` con halo expansivo de 16 px, parpadeo estroboscópico en texto y sombra intensa en barra de tiempo), elevando la excitación visual en rachas de 40+ bajas.
+3. **Intensificación eléctrica y pulsante en mini-turbo nivel 2 de Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `src/race.css`, se desacopló `.rp .rspd .rturbo.t2`, otorgándole un degradado violeta/magenta `linear-gradient(135deg, #a855f7, #ec4899)`, sombra incandescente y animación `r-turbo-t2` con ligera escala y filtro drop-shadow alternante para indicar el punto culmen del derrape.
+4. **Halo esmeralda resplandeciente en pedidos completados de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - En `paintDisplay()`, las tarjetas de objetivos cumplidos (`done = true`) reciben un contorno de 2 px con sombra luminosa verde esmeralda (`shadowColor = M3C.exito; shadowBlur = 8`), otorgando retroalimentación de cumplimiento instantánea en el cabezal del gabinete.
+5. **Efecto de chispas de soldadura y blindaje en `FX.weld` (Subagente 5 · `src/fx.ts`):**
+   - Se sumó al pool de efectos tridimensionales el método `FX.weld(p)`, disparando 10 chispas blanquiazules concentradas `#e0f2fe` de alta velocidad, corta duración y sustentación negativa acentuada para colisiones blindadas y reparaciones de chasis.
+6. **Condecoración de alta letalidad (100+ bajas) en Polaroid (Subagente 6 · `src/replay.ts`):**
+   - En `showPhoto()`, si la partida alcanza o supera las 100 bajas, se estampa a la derecha del pie de la instantánea un distintivo cobrizo `"★ ALTA LETALIDAD (100+)"`, conmemorando partidas de exterminio masivo en el archivo fotográfico.

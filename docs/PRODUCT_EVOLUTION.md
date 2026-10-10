@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-10 (Ciclos #1 a #20 completados y validados · Ciclo #21 listo para selección)
+**Última actualización:** 2026-10-10 (Ciclos #1 a #26 completados y validados · Ciclo #27 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -364,49 +364,60 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #26 (6 Áreas en Paralelo)
+### Ciclo #26 (2026-10-10) — Piloto Veterano, Racha Escalonada Glow, Turbo N2 Electrificado, Halo Pedidos Match-3, Chispas Soldadura FX y Récord Letalidad Polaroid
+- **Alcance implementado en paralelo por 6 subagentes:**
+  - **Subagente 1 · Garaje y Pilotos (`src/menu.ts`, `src/menu.css`):** Insignia técnica `<span class="vet-badge">★ VETERANO</span>` en pilotos propios con rodaje ($\ge 5$ partidas o $\ge 1$ victoria) en `renderGarage()`.
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Escalonamiento visual en hitos de racha de bajas (`#combo.t2` ámbar con glow; `#combo.t3` rojo fuego crítico con halo de 16 px, parpadeo y glow en barra).
+  - **Subagente 3 · Carrera Turbo N2 (`src/kart.ts`, `src/race.css`):** Intensificación en mini-turbo nivel 2 (`.rturbo.t2`) con gradiente violeta/magenta, glow y animación `r-turbo-t2`.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`):** Halo iluminado con sombra verde esmeralda (`shadowColor = M3C.exito; shadowBlur = 8`) en pedidos completados del cabezal.
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** Método `FX.weld(p)` con 10 chispas blanquiazules concentradas `#e0f2fe` de alta velocidad y sustentación gravitatoria negativa.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** Condecoración técnica `"★ ALTA LETALIDAD (100+)"` en fotos Polaroid con 100+ bajas.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (533 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3115 nodos, 7617 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #27 (6 Áreas en Paralelo)
 
 ### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
-1. **Insignia de Veteranía en Fichas de Pilotos (`.vet-badge`):**
-   - **Qué es:** En `renderBestiary()` pestaña pilotos, marcar al piloto activo o desbloqueado con una pastilla `.vet-badge` (`VETERANO`) cuando el jugador haya disputado más de 10 partidas con él.
-   - **Qué problema resuelve:** Reconoce la lealtad y el rodaje con cada personaje de la cuadrilla RC.
-   - **Valor:** Fidelidad temática y trazabilidad de pilotos. Complejidad: Baja.
+1. **Insignia de Chasis Blindado en Estadísticas de Carrocería (`.armor-badge`):**
+   - **Qué es:** En `renderGarage()` para autos con alta resistencia base o blindaje pasivo, mostrar un sello técnico `.armor-badge` (`CHASIS REFORZADO`) junto a la barra de integridad.
+   - **Qué problema resuelve:** Comunica visualmente la vocación tanque o resistente de vehículos específicos frente a los ligeros de velocidad.
+   - **Valor:** Identidad de chasis y lectura de roles en el garaje. Complejidad: Baja.
 
 ### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
-2. **Resplandor Progresivo en Contador de Racha de Bajas (`#streak`):**
-   - **Qué es:** En `hudStreak()`, añadir escalonamiento de resplandor visual (ámbar, naranja, rojo incandescente) según los hitos de racha (25, 50, 75 y 100 bajas).
-   - **Qué problema resuelve:** Enfatiza el frenesí de combate y la consecución de multiplicadores de experiencia.
-   - **Valor:** Celebración táctica de alta intensidad en el HUD. Complejidad: Baja.
+2. **Animación de Pulso en Radio Transmisor al Activarse un Evento de Patio (`#radio.event-pulse`):**
+   - **Qué es:** En `radioMsg()` (`src/ui.ts`), añadir la clase `.event-pulse` con resplandor naranja y parpadeo intermitente de la antena del transmisor al recibir alertas de eventos climáticos o hordas.
+   - **Qué problema resuelve:** Llama la atención periférica del jugador sobre eventos críticos del patio sin invadir el centro de la pantalla.
+   - **Valor:** Tensión diegética y claridad en eventos sorpresa. Complejidad: Baja.
 
-### C. Área 3 · Carrera: Intensificación de Mini-Turbo Nivel 2 (`src/kart.ts`, `src/race.css`)
-3. **Resplandor Eléctrico Reforzado en Mini-Turbo Nivel 2 (`.rturbo.t2`):**
-   - **Qué es:** En `src/race.css`, potenciar `.rp .rturbo.t2` con una animación pulsante de alta frecuencia y sombra violeta/fucsia incandescente para comunicar la liberación inminente del turbo máximo.
-   - **Qué problema resuelve:** Clarifica el punto exacto de máxima carga del derrape antes de enderezar el kart.
-   - **Valor:** Feedback milimétrico de precisión en la conducción arcade. Complejidad: Baja.
+### C. Área 3 · Carrera: Alerta de Trompo / Giro Incontrolado (`src/kart.ts`, `src/race.css`)
+3. **Pastilla de Trompo y Pérdida de Tracción (`.rspin`):**
+   - **Qué es:** En `hud()` de carrera, desplegar una pastilla ámbar/roja `.rspin` (`TROMPO`) cuando el kart entra en estado de spin tras pisar un obstáculo (aceite o cáscara de plátano).
+   - **Qué problema resuelve:** Aclara la causa de la pérdida momentánea de control y velocidad.
+   - **Valor:** Claridad de control en lances de carrera. Complejidad: Baja.
 
 ### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`)
-4. **Destello Perimetral en Cumplimiento de Pedidos:**
-   - **Qué es:** En `drawGoal()`, cuando una meta de chatarra alcanza el 100% de recolección en vivo, emitir una onda verde esmeralda translúcida sobre la ficha del pedido en el cabezal del gabinete.
-   - **Qué problema resuelve:** Alerta instantáneamente al jugador de que ese objetivo ya está cumplido para redirigir su atención.
-   - **Valor:** Lectura táctica sin desviar la mirada del tablero. Complejidad: Baja.
+4. **Resplandor Dorado en Barra de Movimientos al Recibir Turnos Extra (+3):**
+   - **Qué es:** En `match3.ts`, cuando una habilidad o combo otorga movimientos adicionales, activar un halo áureo `M3C.amarillo` momentáneo sobre el medidor de turnos restantes.
+   - **Qué problema resuelve:** Resalta visualmente la ganancia de turnos extra, un momento de alivio crucial.
+   - **Valor:** Refuerzo positivo y feedback visual en momentos de rescate. Complejidad: Baja.
 
 ### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
-5. **Efecto de Chispas de Soldadura y Blindaje en `FX.weld`:**
-   - **Qué es:** En `FX` (`src/fx.ts`), añadir la rutina `weld(p)` con chispas blanquiazules concentradas `#e0f2fe` de alta velocidad y corta vida para reparaciones de chasis o impactos blindados.
-   - **Qué problema resuelve:** Acentúa la identidad de taller mecánico y chapa pesada en las interacciones defensivas.
-   - **Valor:** Textura diegética e impacto sensorial. Complejidad: Baja.
+5. **Efecto de Ignición y Llamarada Corta en `FX.ignite`:**
+   - **Qué es:** En `FX` (`src/fx.ts`), añadir la rutina `ignite(p)` con llamarada expansiva anaranjada `#ff5500` y núcleo amarillo `#ffe600` de corta duración para explosiones de combustible o bidones.
+   - **Qué problema resuelve:** Proporciona un efecto específico de fuego con más densidad y volumen que las chispas estándar.
+   - **Valor:** Textura de combustión para armas térmicas e incendios de patio. Complejidad: Baja.
 
 ### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
-6. **Anotación Técnica de Bajas Promedio o Récord Personal en Polaroid:**
-   - **Qué es:** En `showPhoto()`, si la partida es la mejor en bajas de la zona, estampar a la derecha la nota técnica `"RÉCORD DE BAJAS"` en color cobre envejecido.
-   - **Qué problema resuelve:** Completa el espectro de condecoraciones en la fotografía de fin de partida.
-   - **Valor:** Recompensa de rendimiento en el cierre de la experiencia. Complejidad: Baja.
+6. **Sello de Firma del Mecánico Inspector en el Pie de la Polaroid:**
+   - **Qué es:** En `showPhoto()`, trazar una firma caligráfica diegética simulada (`"INSPECCIONADO · TALLER CENTRAL"`) en tono grafito tenue en la base del papel.
+   - **Qué problema resuelve:** Acentúa el carácter de informe técnico de peritaje tras cada desguace.
+   - **Valor:** Cohesión temática y autenticidad en el archivo fotográfico. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #25 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (553 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3105 nodos, 7598 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #25 han sido liberados).
-- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #26**.
-
+- **Último trabajo completado:** Ciclo #26 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (533 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3115 nodos, 7617 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #26 han sido liberados).
+- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #27**.
