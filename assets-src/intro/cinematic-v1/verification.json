@@ -1,0 +1,21 @@
+{
+  "created": "2026-10-10",
+  "checks": [
+    {
+      "viewport": "pc",
+      "imagesLoaded": 10,
+      "horizontalOverflow": false,
+      "errors": []
+    },
+    {
+      "viewport": "cel",
+      "imagesLoaded": 10,
+      "horizontalOverflow": false,
+      "errors": []
+    }
+  ],
+  "pngAssets": 9,
+  "transparentAssets": 5,
+  "totalBytes": 17237341,
+  "runtimeTested": false
+}

@@ -78,6 +78,8 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 **Arte e intro — investigación del 2026-10-10:** usuario eligió intro + recursos reutilizables, mantener noche/historia y ver una muestra antes de integrar. Storyboard generado y plan en [`INTRO_ASSETS_PLAN.md`](INTRO_ASSETS_PLAN.md), prompt reproducible y lámina en `docs/images/intro-storyboard-v1.*`. Intro actual capturada en sus cuatro momentos con headless; sin cambios de código ni modelos nuevos. Confirmado `FOLDED_SLICE = true`: los GLB antiguos de autos no son la ruta activa. **Pendiente:** evaluar la dirección de la lámina y producir recursos separados; no reemplazar la intro hasta esa elección. La muestra es conceptual, más detallada que el render vigente.
 
+**Arte e intro — producción del 2026-10-10:** tras ver la lámina, el usuario eligió **conservar el acabado cinematográfico**, con más detalle que el gameplay. Paquete [`assets-src/intro/cinematic-v1/README.md`](../assets-src/intro/cinematic-v1/README.md): cuatro fondos, hormiga/escarabajo/Eulalio/buggy y cartel vacío con transparencia; prompts exactos, medidas, montaje HTML estático y captura. PNG/alpha/bordes y montaje pc/cel verificados; 17,24 MB fuente. Una pose por personaje y fondos sin separación por profundidad: no hay video, modelos 3D nuevos ni rig. **Pendiente:** integrar y animar la intro, exportar archivos de distribución y medir su carga. Esta sesión solo produjo recursos; `src/intro.ts` conserva la versión anterior.
+
 **Pendiente de implementar (ya decidido por el usuario):**
 - **Planilla en Drive:** subir `balance.xlsx` y dejarla como referencia.
 

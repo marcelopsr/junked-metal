@@ -1,6 +1,6 @@
 # Junked Metal — Intro y recursos visuales
 
-Fecha: 2026-10-10. Estado: **acabado cinematográfico aprobado; producción de escenas y personajes separados en curso; integración fuera de esta tanda**.
+Fecha: 2026-10-10. Estado: **acabado cinematográfico aprobado; paquete de nueve recursos separados producido y verificado en montaje estático; integración fuera de esta tanda**.
 
 ## Alcance acordado
 
@@ -42,6 +42,8 @@ Límites visibles antes de convertirla en recursos finales:
 
 ## Producción propuesta de la intro
 
+**Producción entregada:** [`assets-src/intro/cinematic-v1/README.md`](../assets-src/intro/cinematic-v1/README.md). Cuatro fondos cinematográficos, cuatro personajes con transparencia y un cartel independiente sin texto; prompts exactos, inventario de medidas y comprobaciones incluidos. [Vista del montaje](../assets-src/intro/cinematic-v1/preview.png) y [montaje local editable](../assets-src/intro/cinematic-v1/index.html). Las imágenes se produjeron por separado con `image_gen`, no recortando la lámina. Son capas para composición 2D: personajes en una pose; luces y vegetación horneadas en cada fondo. No se produjeron capas de parallax, geometría 3D ni animación de ruedas.
+
 | Momento existente | Mejora visual | Recursos a producir | Movimiento propuesto |
 |---|---|---|---|
 | Cartel / 0–5 s | Cámara a ras del pasto; ring de metal con profundidad y luces cálidas | Fondo por planos, cartel sin texto, cuerda, guirnalda y pasto frontal | Desplazamiento lento entre planos; encendido de focos |
@@ -70,8 +72,8 @@ Capacidades disponibles: generación de imágenes y transparencia con `image_gen
 
 ## Límites de integración y verificación posterior
 
-Antes de código: elegir la dirección de esta muestra y cerrar el formato de producción. Arte final debe venir separado en recursos, no como una lámina única. Cambios de modelos deberán conservar pivotes, escala, colisión, clips y el horneado VAT; probar 360° y cámaras reales. No tocar archivos de otros especialistas para producir una muestra.
+La dirección cinematográfica y la producción de imágenes separadas ya están elegidas y entregadas. Antes de integrar código: cerrar el formato de distribución y la animación. Cambios futuros de modelos deberán conservar pivotes, escala, colisión, clips y el horneado VAT; probar 360° y cámaras reales. No tocar archivos de otros especialistas para producir los recursos.
 
 Integración de intro alcanzaría `intro.ts`, su presentación si hiciera falta y un escenario headless de las cuatro escenas; revisar llamadas de `playIntro`, silencio, modo calmo, subtítulos, logo, salida y posibles fallos de carga. Usar recursos relativos para GitHub Pages. Verificación al final de esa tanda: `tsc`, `npm test`, `build`, capturas pc/cel y prueba de reproducción/salto. Medir arranque si se agregan descargas; evaluar rendimiento si se cambia la escena 3D.
 
-Esta tanda solo produjo documentación y una imagen conceptual. No se corrieron suites de código, simulación ni medición de rendimiento; no hay afirmación de mejora integrada ni de calidad 3D comprobada. Siguiente decisión: evaluación artística de la lámina; todavía no autoriza sustituir recursos.
+Primera tanda: documentación y storyboard conceptual. Segunda tanda: acabado cinematográfico elegido por el usuario, nueve PNG separados y un montaje estático local. Validación: PNG/alpha/bordes, montaje de escritorio y teléfono, diez imágenes cargadas en cada uno sin errores ni desbordamiento; navegador cerrado al terminar. Los PNG fuente suman 17,24 MB y requieren exportación para distribución. No se corrieron suites del juego, simulación ni medición de rendimiento; no hay afirmación de mejora integrada ni de geometría 3D generada. La producción de recursos está autorizada y entregada; integración, reproducción y optimización de descarga siguen pendientes.

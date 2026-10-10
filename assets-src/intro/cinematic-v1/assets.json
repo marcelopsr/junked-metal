@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "created": "2026-10-10",
+  "tool": "image_gen",
+  "integration": "not integrated",
+  "reference": "../../../docs/images/intro-storyboard-v1.png",
+  "assets": [
+    {
+      "file": "01-ring-fondo.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2158254,
+      "transparent": false,
+      "contentBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 941
+      },
+      "transparentPixels": 0
+    },
+    {
+      "file": "02-rivales-fondo.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2192456,
+      "transparent": false,
+      "contentBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 941
+      },
+      "transparentPixels": 0
+    },
+    {
+      "file": "03-entrada-fondo.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2260903,
+      "transparent": false,
+      "contentBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 941
+      },
+      "transparentPixels": 0
+    },
+    {
+      "file": "04-cierre-fondo.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2173895,
+      "transparent": false,
+      "contentBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 941
+      },
+      "transparentPixels": 0
+    },
+    {
+      "file": "05-hormiga.png",
+      "width": 1374,
+      "height": 1145,
+      "bytes": 1221626,
+      "transparent": true,
+      "contentBounds": {
+        "x": 58,
+        "y": 16,
+        "width": 1262,
+        "height": 1096
+      },
+      "transparentPixels": 1034211
+    },
+    {
+      "file": "06-escarabajo.png",
+      "width": 1423,
+      "height": 1105,
+      "bytes": 1468842,
+      "transparent": true,
+      "contentBounds": {
+        "x": 33,
+        "y": 12,
+        "width": 1363,
+        "height": 1067
+      },
+      "transparentPixels": 901982
+    },
+    {
+      "file": "07-eulalio.png",
+      "width": 1151,
+      "height": 1367,
+      "bytes": 1775001,
+      "transparent": true,
+      "contentBounds": {
+        "x": 62,
+        "y": 50,
+        "width": 1072,
+        "height": 1267
+      },
+      "transparentPixels": 743745
+    },
+    {
+      "file": "08-buggy.png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 2229349,
+      "transparent": true,
+      "contentBounds": {
+        "x": 14,
+        "y": 15,
+        "width": 1507,
+        "height": 998
+      },
+      "transparentPixels": 807113
+    },
+    {
+      "file": "09-cartel.png",
+      "width": 1671,
+      "height": 941,
+      "bytes": 1757015,
+      "transparent": true,
+      "contentBounds": {
+        "x": 37,
+        "y": 86,
+        "width": 1608,
+        "height": 796
+      },
+      "transparentPixels": 751257
+    }
+  ]
+}
