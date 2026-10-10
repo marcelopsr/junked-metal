@@ -883,6 +883,27 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #42 y #43 (Ecosistema Matricial de Especialistas: Montaje Directo en Taller, Sag Suave, Palieres CVD y Barras 3D, SFX Lexan Thud)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-taller.png`, `.shots/actual/cel-menu-taller.png`, `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png` (`npm run shots -- --only taller,garaje,partida`, 35 capturas en PC y celular sin errores en 25.3 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Montaje y desmontaje directo de piezas desde el Taller (Menu, Workshop & Flow Specialist · `src/menu.ts`, `src/menu.css`):**
+   - Al pulsar una pieza ya adquirida (`"EN EL GARAJE"`) en el catálogo `#shop`, ahora se monta o desequipa de inmediato (`save.kit[slot] = opt; persist();`), actualizando el badge a `MONTADO`, disparando el pulso visual `.bought-pulse` y el sonido metálico `SFX.scrapClink()` sin obligar al jugador a navegar a Garaje.
+   - Las tarjetas de piezas adquiridas incorporan cursor pointer y estados `:hover` diferenciados con verde esmeralda.
+2. **Curva de recuperación electroquímica suave (*Voltage Recovery Curve*) y chirp RF (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, `currentSag` amortigua exponencialmente (`0.25`) hacia el valor nominal al cesar la aceleración turbo, evitando saltos abruptos de tensión.
+   - Cuando la señal de radiofrecuencia desciende por debajo de -85 dBm en periferia, el receptor emite un micro-chirp analógico `SFX.blip()` con cooldown de 1.2s.
+3. **Disipador clip-on anodizado, palieres CVD, barras estabilizadoras y servo horn (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - Para Monster Truck, 6 aletas radiales de disipador de aluminio anodizado en azul eléctrico (`M.metal("#0284c7")`) montadas sobre el motor 540.
+   - En monoplazas y buggies, brazo oscilante de servo horn en nylon blanco (`M.plastic("#f8fafc")`) conectado a la timonería frontal.
+   - Palieres telescópicos de transmisión con juntas homocinéticas CVD en acero pavonado para tren motriz trasero, y barras estabilizadoras anti-roll en varilla de acero templado en trapecios delanteros.
+4. **Resonancia de carrocería en lexan y zumbador LiPo de bajo voltaje (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.bodyThud(pan)` sintetizando el golpe sordo de flexión de policarbonato ante impactos leves.
+   - Incorporado `SFX.lipoLowWarn()` con doble pulso piezoeléctrico en 2.4 kHz para avisos de telemetría de batería en estado de alarma.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.
