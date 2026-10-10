@@ -5,6 +5,7 @@ import { rng } from "./rng";
 import { BAL } from "./balance";
 import type { Elite } from "./run";
 import { GLB, glbAnimate, glbPlay, glbTpl, glbVat } from "./glb";
+import { alignYaw, alt, at, flatL, hflat, MOON, onFloor, orient, toLocal, toWorld, yawOf } from "./moon";
 
 export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos";
 
@@ -122,7 +123,8 @@ export class Enemy {
       if (vs !== 1) this.node.scaling.setAll(vs);
     }
     this.node.position.copyFrom(pos);
-    this.node.rotation.y = rng() * 6.3;
+    const yaw = rng() * 6.3;
+    if (MOON.on) this.node.rotationQuaternion = alignYaw(pos, yaw); else this.node.rotation.y = yaw; // luna: parado en el lugar ANTES del cuerpo físico
     this.agg = new B.PhysicsAggregate(this.node, B.PhysicsShapeType.BOX,
       { mass: d.mass, friction: 0.3, restitution: 0.1, extents: new B.Vector3(w, h, l), center: new B.Vector3(0, h / 2, 0) }, this.node.getScene());
     this.body = this.agg.body;
@@ -219,6 +221,7 @@ export class Enemy {
     zone.position.set(p.x, p.y + 0.06, p.z); zone.scaling.set(r, 1, r);
     const f = Math.max(0.05, r * k);
     fill.position.set(p.x, p.y + 0.07, p.z); fill.scaling.set(f, 1, f);
+    if (MOON.on) { onFloor(p, 0.06, zone.position); onFloor(p, 0.07, fill.position); orient(zone, p); orient(fill, p); } // luna: apoyado en el piso del lugar
   }
 
   // Carril de la embestida de Felipe: el aro del telegráfico estirado a lo largo (elipse), el relleno crece desde el perro.
@@ -228,6 +231,7 @@ export class Enemy {
     const [zone, fill] = this.tele, h = DOG_RAM.len / 2, f = Math.max(0.05, h * k), y = this.pos.y + 0.06;
     zone.position.set(this.pos.x + dir.x * h, y, this.pos.z + dir.z * h); zone.scaling.set(DOG_RAM.width, 1, h);
     fill.position.set(this.pos.x + dir.x * f, y + 0.01, this.pos.z + dir.z * f); fill.scaling.set(DOG_RAM.width, 1, f);
+    if (MOON.on) { onFloor(at(this.pos, dir.x * h, 0, dir.z * h), 0.06, zone.position); onFloor(at(this.pos, dir.x * f, 0, dir.z * f), 0.07, fill.position); orient(zone); orient(fill); } // dir: marco local
   }
 
   // Patas/alas/llave en espacio de mundo: las instancias hijas no siguen al cuerpo instanciado (beastTick usa euler + quaternion).
@@ -271,7 +275,7 @@ export class Enemy {
       return;
     }
     if (this.kind === "robot") {
-      const v = this.body.getLinearVelocity();
+      const v = this.vel();
       const sp = Math.hypot(v.x, v.z);
       const keySpeed = 4.0 + sp * 4;
       if (this.windKey) this.windKey.rot += dt * keySpeed;
@@ -297,12 +301,12 @@ export class Enemy {
     }
     if (this.vat && GLB[this.kind]!.clips) { this.bossClip(dt); if (!this.attachRoot) this.syncAttachParts(); return; }
     if (this.vat) { // ataque propio (atk) o, sin él, justo después de golpear (main.ts carga touchCd)
-      const v = this.body.getLinearVelocity(), a = GLB[this.kind]!.atk;
+      const v = this.vel(), a = GLB[this.kind]!.atk;
       glbAnimate(this.vat, Math.hypot(v.x, v.z), dt, !a && this.touchCd > 0.5, a && this.atk >= 0 ? this.atk / a : -1);
       if (!this.legs.length) return;
     }
     if (!this.legs.length) return;
-    const v = this.body.getLinearVelocity();
+    const v = this.vel();
     const sp = Math.hypot(v.x, v.z);
     this.walk += dt * Math.min(28, 4 + sp * 3.2) / (this.def.scale ?? 1);
     if ((this.pose += dt) < 0.1) { if (!this.attachRoot) this.syncAttachParts(); return; }
@@ -329,7 +333,7 @@ export class Enemy {
     let c = this.play;
     if (this.deathT >= 0) c = ["death", (this.deathT += dt)]; // el cuerpo físico ya no existe (die)
     else {
-      const [w, r] = GLB[this.kind]!.clips!, v = this.body.getLinearVelocity(), sp = Math.hypot(v.x, v.z), s = this.state, dog = this.kind === "perro";
+      const [w, r] = GLB[this.kind]!.clips!, v = this.vel(), sp = Math.hypot(v.x, v.z), s = this.state, dog = this.kind === "perro";
       if (!this.airborne) this.vy0 = 0;
       if (c) { /* acción forzada */ }
       else if (this.roar > 0) c = ["rage", ROAR - this.roar] // rugido de fase 2
@@ -360,27 +364,40 @@ export class Enemy {
   }
 
   get pos() { return this.node.position; }
+  /** Velocidad para animar: en la luna, en el marco del lugar (y = vertical). */
+  vel() { return MOON.on ? toLocal(this.body.getLinearVelocity(), this.pos) : this.body.getLinearVelocity(); }
 
   // Altura del piso bajo el enemigo (rayo corto hacia abajo, como drive() en car.ts): sirve en rampas y montículos.
   // null = no hay piso dentro de "depth" (sigue en el aire)
   groundY(depth: number) {
+    if (MOON.on) return alt(this.pos) < depth ? this.pos.y : null; // luna: piso analítico (solo importa si hay piso cerca)
     rayFrom.copyFrom(this.pos); rayFrom.y += 0.5;
     rayTo.copyFrom(this.pos); rayTo.y -= depth;
     (this.node.getScene().getPhysicsEngine() as B.PhysicsEngineV2).raycastToRef(rayFrom, rayTo, ray, { ignoreBody: this.body });
     return ray.hasHit ? ray.hitPointWorld.y : null;
   }
 
-  // Devuelve "slam" cuando el perro aterriza de un salto
+  // Devuelve "slam" cuando el perro aterriza de un salto.
+  // Luna: la IA piensa en el marco local del bicho (Y = vertical del lugar, X/Z = el plano tangente): la velocidad entra y sale convertida
+  // y `to`/`fwd` se miden en ese marco, así el resto de la IA (escrita para el patio) no cambia.
   update(dt: number, target: B.Vector3): string | void {
+    if (!MOON.on) return this.think(dt, target);
+    const p = this.pos, b = this.body;
+    b.setLinearVelocity(toLocal(b.getLinearVelocity(), p)); b.setAngularVelocity(toLocal(b.getAngularVelocity(), p));
+    const r = this.think(dt, target);
+    b.setLinearVelocity(toWorld(b.getLinearVelocity(), p)); b.setAngularVelocity(toWorld(b.getAngularVelocity(), p));
+    return r;
+  }
+  private think(dt: number, target: B.Vector3): string | void {
     const d = this.def;
     this.ramCd -= dt;
     this.hitCd -= dt;
     this.touchCd -= dt;
     const v = this.body.getLinearVelocity();
-    const to = target.subtract(this.pos); to.y = 0;
+    const to = MOON.on ? flatL(target.subtract(this.pos), this.pos) : target.subtract(this.pos); to.y = 0;
     const dist = to.length();
     to.normalize();
-    const fwd = this.node.forward.clone(); fwd.y = 0; fwd.normalize();
+    const fwd = MOON.on ? flatL(this.node.forward, this.pos) : this.node.forward.clone(); fwd.y = 0; fwd.normalize();
     const diff = Math.atan2(B.Vector3.Cross(fwd, to).y, B.Vector3.Dot(fwd, to));
     let move = to;
     let speed = d.speed * this.spd;
@@ -435,19 +452,19 @@ export class Enemy {
       // Va al faro: revolotea delante del auto (hacia donde avanza) y cada tanto se tira contra el parabrisas
       const cv = this.lastT ? target.subtract(this.lastT).scaleInPlace(1 / Math.max(dt, 1e-3)) : B.Vector3.Zero();
       (this.lastT ??= new B.Vector3()).copyFrom(target);
-      cv.y = 0;
+      hflat(cv, target);
       const cs = cv.length();
       this.timer -= dt;
       if (this.timer <= 0) { this.state = 1 - this.state; this.timer = this.state ? ATK.polilla_picada_s : ATK.polilla_vuelo_min + rng() * ATK.polilla_vuelo_rango; }
       const dive = this.state === 1;
       const goal = dive ? target.clone() : target.add(cs > 2 ? cv.scaleInPlace(4.5 / cs) : this.pos.subtract(target).normalize().scaleInPlace(3.5));
       if (!dive) goal.addInPlace(new B.Vector3(Math.sin(this.walk * 0.11) * 1.6, 0, Math.cos(this.walk * 0.07) * 1.6));
-      const g = goal.subtract(this.pos); g.y = 0;
+      const g = MOON.on ? flatL(goal.subtract(this.pos), this.pos) : goal.subtract(this.pos); g.y = 0;
       const gd = g.length();
       const sp = (dive ? d.speed * ATK.polilla_picada_vel : Math.min(d.speed, gd * 3)) * this.spd * (this.slow > 0 ? 0.45 : 1);
       const want = gd > 0.01 ? g.scaleInPlace(sp / gd) : g;
-      const floor = this.groundY(4) ?? this.pos.y - 1.7; // vuela a altura fija sobre el piso (montículos, rampas)
-      const hy = floor + (dive ? 0.5 : 1.7 + Math.sin(this.walk * 0.05) * 0.3) - this.pos.y;
+      const floor = MOON.on ? 0 : this.groundY(4) ?? this.pos.y - 1.7; // vuela a altura fija sobre el piso (montículos, rampas)
+      const hy = MOON.on ? (dive ? 0.5 : 1.7 + Math.sin(this.walk * 0.05) * 0.3) - alt(this.pos) : floor + (dive ? 0.5 : 1.7 + Math.sin(this.walk * 0.05) * 0.3) - this.pos.y;
       const k = Math.min(1, dt * 5);
       this.body.setLinearVelocity(new B.Vector3(v.x + (want.x - v.x) * k, hy * 4, v.z + (want.z - v.z) * k));
       this.body.setAngularVelocity(new B.Vector3(0, B.Scalar.Clamp(diff * 8, -8, 8), 0));
@@ -482,11 +499,11 @@ export class Enemy {
       } else if (this.state === 3) {
         speed = 0; turn = 4;
         // Apunta durante la primera mitad y después fija el punto: quedarse quieto = recibir el golpe
-        if (this.timer > 0.65) { const reach = Math.min(dist, ATK.tarantula_salto_alcance); this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
+        if (this.timer > 0.65) { const reach = Math.min(dist, ATK.tarantula_salto_alcance); if (MOON.on) onFloor(at(this.pos, to.x * reach, 0, to.z * reach), 0, this.land); else this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
         this.showTele(this.land, ATK.salto_radio, 1 - this.timer / ATK.tarantula_salto_aviso_s);
         if (this.timer <= 0) {
           const T = (2 * 14) / 25; // vuelo con vy = 14 y gravedad 25
-          const j = this.land.subtract(this.pos); j.y = 0;
+          const j = MOON.on ? flatL(this.land.subtract(this.pos), this.pos) : this.land.subtract(this.pos); j.y = 0;
           this.body.setLinearVelocity(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)));
           this.airborne = true;
           return;
@@ -506,7 +523,7 @@ export class Enemy {
         this.showTele(this.pos, ATK.aspiradora_radio, this.state === 1 ? 1 - this.timer / ATK.aspiradora_aviso_s : 1);
         if (this.state === 2) {
           this.pull = dist < ATK.aspiradora_radio ? ATK.aspiradora_succion_min + ATK.aspiradora_succion_extra * (1 - dist / ATK.aspiradora_radio) : 0;
-          if (Math.random() < dt * 25) { const a = Math.random() * 6.3, r = 5 + Math.random() * 14; FX.dust(this.pos.add(new B.Vector3(Math.sin(a) * r, 0.3, Math.cos(a) * r))); } // solo visual
+          if (Math.random() < dt * 25) { const a = Math.random() * 6.3, r = 5 + Math.random() * 14; FX.dust(at(this.pos, Math.sin(a) * r, 0.3, Math.cos(a) * r)); } // solo visual
         }
         if (this.timer <= 0) { if (this.state === 1) { this.state = 2; this.timer = ATK.aspiradora_succion_s; } else { this.state = 3; this.timer = ATK.aspiradora_tuercas_aviso_s; } }
       } else if (this.state === 3) {
@@ -546,7 +563,7 @@ export class Enemy {
         if (this.timer <= 0) {
           this.state = 0; this.timer = ATK.cortacercos_descanso_s; this.showTele(null);
           this.dropCable();
-          for (let k = -2; k <= 2; k++) { const a = this.aim + k * 0.5; FX.sparks(this.pos.add(new B.Vector3(Math.sin(a) * 8, 0.6, Math.cos(a) * 8))); }
+          for (let k = -2; k <= 2; k++) { const a = this.aim + k * 0.5; FX.sparks(at(this.pos, Math.sin(a) * 8, 0.6, Math.cos(a) * 8)); }
           // ¿El auto quedó dentro del sector (±60°, 10 m)?
           const off = Math.atan2(Math.sin(Math.atan2(to.x, to.z) - this.aim), Math.cos(Math.atan2(to.x, to.z) - this.aim));
           if (dist < ATK.cortacercos_radio + 1 && Math.abs(off) < Math.PI / 3) return "slash";
@@ -577,11 +594,11 @@ export class Enemy {
         }
       } else if (this.state === 1) { // salto anunciado
         speed = 0; turn = 5;
-        if (this.timer > 0.4) { const reach = Math.min(dist, ATK.gato_salto_alcance); this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
+        if (this.timer > 0.4) { const reach = Math.min(dist, ATK.gato_salto_alcance); if (MOON.on) onFloor(at(this.pos, to.x * reach, 0, to.z * reach), 0, this.land); else this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
         this.showTele(this.land, ATK.salto_radio, 1 - this.timer / ATK.gato_salto_aviso_s);
         if (this.timer <= 0) {
           const T = (2 * 14) / 25;
-          const j = this.land.subtract(this.pos); j.y = 0;
+          const j = MOON.on ? flatL(this.land.subtract(this.pos), this.pos) : this.land.subtract(this.pos); j.y = 0;
           this.body.setLinearVelocity(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)));
           this.airborne = true;
           return;
@@ -708,21 +725,26 @@ export class Enemy {
     }
     if (Math.random() > dt * 9) return; // solo visual
     const [w, h, l] = this.def.size;
-    FX.vapor(this.pos.add(new B.Vector3((Math.random() - 0.5) * w * 0.7, h * 0.85, (Math.random() - 0.5) * l * 0.7)), Math.max(w, l) * 0.12);
+    FX.vapor(at(this.pos, (Math.random() - 0.5) * w * 0.7, h * 0.85, (Math.random() - 0.5) * l * 0.7), Math.max(w, l) * 0.12);
   }
 
   // Cortacercos: un cable de 7 m tirado en el piso detrás suyo (dura 14 s, como mucho 8)
   private dropCable() {
     const back = this.node.forward.scale(-this.def.size[2] * 0.55), side = this.node.right.scale(3.5);
-    const c = this.pos.add(back); c.y = (this.groundY(3) ?? this.pos.y) + 0.08;
+    const c = this.pos.add(back);
+    if (MOON.on) onFloor(c, 0.08, c); else c.y = (this.groundY(3) ?? this.pos.y) + 0.08;
     const m = cableTemplate().createInstance("cable");
     m.position.copyFrom(c);
-    m.rotation.y = Math.atan2(side.x, side.z);
+    m.rotation.y = yawOf(side, c); orient(m);
     this.cables.push({ m, a: c.subtract(side), b: c.add(side), life: ATK.cortacercos_cable_vida_s });
     if (this.cables.length > ATK.cortacercos_cables_max) this.cables.shift()!.m.dispose();
   }
   // ¿El punto p está sobre algún cable? (distancia a cada segmento en el plano)
   onCable(p: B.Vector3) {
+    if (MOON.on) return this.cables.some(({ a, b }) => { // luna: distancia al segmento en 3D (el cable está apoyado en el piso)
+      const ab = b.subtract(a), t = B.Scalar.Clamp(B.Vector3.Dot(p.subtract(a), ab) / ab.lengthSquared(), 0, 1);
+      return B.Vector3.Distance(p, a.add(ab.scale(t))) < 1.2;
+    });
     return this.cables.some(({ a, b }) => {
       const abx = b.x - a.x, abz = b.z - a.z, t = B.Scalar.Clamp(((p.x - a.x) * abx + (p.z - a.z) * abz) / (abx * abx + abz * abz), 0, 1);
       return Math.hypot(p.x - a.x - abx * t, p.z - a.z - abz * t) < 1;

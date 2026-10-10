@@ -43,6 +43,7 @@ export { ParticleSystem } from "@babylonjs/core/Particles/particleSystem.js";
 export { PhysicsAggregate } from "@babylonjs/core/Physics/v2/physicsAggregate.js";
 export { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody.js";
 export { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin.js";
+export { PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin.js";
 export { PhysicsRaycastResult } from "@babylonjs/core/Physics/physicsRaycastResult.js";
 export { PhysicsShapeType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin.js";
 export { PointLight } from "@babylonjs/core/Lights/pointLight.js";

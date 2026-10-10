@@ -1,7 +1,7 @@
 // Simulaciones y duelos de balance con el bot, SIN dibujar, en Chromium headless contra pm2 rc-test (:5174). Uso (npm run sim):
 //   npm run sim -- --seeds 1,2,3 --secs 600      partidas completas del bot (una página limpia por semilla: Havok es determinista solo desde carga limpia)
 //   npm run sim -- --duel perro,aspiradora       duelos contra jefes finales con el equipo del minuto 10 (--seeds los varía; --adds 100 --max 180 --god --team N)
-//   --par 2 corre varias a la vez (más rápido, más CPU; no afecta al resultado) · --json imprime solo JSON (la tabla va a stderr)
+//   --zone luna juega en otro mapa (patio por defecto) · --par 2 corre varias a la vez (más rápido, más CPU; no afecta al resultado) · --json imprime solo JSON (la tabla va a stderr)
 // ponytail: no corre en Node puro: main.ts es DOM+WebGL+Vite de punta a punta (top-level await, ?url, CSS, canvas); NullEngine+Havok en Node funcionarían
 // (Havok WASM sí corre) pero habría que partir main.ts en lógica y presentación. Hasta entonces el navegador headless sin dibujar cuesta ~1 s de arranque por corrida.
 import { parseArgs } from "node:util";
@@ -9,7 +9,7 @@ import { launch, open } from "./lib/browser.mjs";
 
 const { values: a } = parseArgs({ options: {
   seeds: { type: "string", default: "1,2" }, secs: { type: "string", default: "600" }, duel: { type: "string" }, adds: { type: "string" }, max: { type: "string" },
-  team: { type: "string" }, god: { type: "boolean" }, par: { type: "string", default: "1" }, json: { type: "boolean" },
+  team: { type: "string" }, god: { type: "boolean" }, par: { type: "string", default: "1" }, json: { type: "boolean" }, zone: { type: "string" }, // --zone luna: mapa (solo dev, ?zone=)
 } });
 const seeds = a.seeds.split(",").map(Number), secs = Number(a.secs);
 const jobs = a.duel ? a.duel.split(",").flatMap((kind) => seeds.map((seed) => ({ kind, seed }))) : seeds.map((seed) => ({ seed }));
@@ -20,7 +20,7 @@ const seedMath = (seed) => { let s = seed >>> 0 || 1; Math.random = () => { s = 
 
 const browser = await launch();
 async function run(job) {
-  const page = await open(browser, `?mute&seed=${job.seed}`, "pc", { freeze: true });
+  const page = await open(browser, `?mute&seed=${job.seed}${a.zone ? "&zone=" + a.zone : ""}`, "pc", { freeze: true });
   try {
     await page.evaluate(seedMath, job.seed);
     if (job.kind) {

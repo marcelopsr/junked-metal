@@ -165,7 +165,7 @@ export function look(p: Partial<typeof LOOK>) {
 // El faro y el resplandor siguen al auto
 let flare = 0, lampK = 1, hurtK = 0;
 const glowBase = B.Color3.FromHexString("#ff8a3d"), HURT_C = B.Color3.FromHexString("#ff2418");
-export function setLamp(pos: B.Vector3, fwd: B.Vector3, boost = false, dt = 0) {
+export function setLamp(pos: B.Vector3, fwd: B.Vector3, boost = false, dt = 0, up?: B.Vector3) { // up: vertical del lugar (luna); sin él, +Y
   // Turbo: el faro destella y abre el cono; vuelve suave al soltar
   flare += ((boost ? 1 : 0) - flare) * Math.min(1, dt * (boost ? 14 : 4));
   lamp.intensity = LOOK.lampI * lampK * (1 + flare * 1.2);
@@ -174,6 +174,12 @@ export function setLamp(pos: B.Vector3, fwd: B.Vector3, boost = false, dt = 0) {
   hurtK = Math.max(0, hurtK - dt * 5);
   glow.intensity = LOOK.glowI * (lampK + hurtK * 1.6);
   B.Color3.LerpToRef(glowBase, HURT_C, hurtK, glow.diffuse);
+  if (up) { // luna: el faro sigue la vertical del lugar
+    lamp.position.copyFrom(up).scaleInPlace(1.2).addInPlace(pos);
+    lamp.direction.copyFrom(fwd).subtractInPlace(up.scale(B.Vector3.Dot(fwd, up) + 0.28)).normalize();
+    glow.position.copyFrom(up).scaleInPlace(2.2).addInPlace(pos);
+    return;
+  }
   lamp.position.set(pos.x, pos.y + 1.2, pos.z);
   lamp.direction.set(fwd.x, -0.28, fwd.z).normalize();
   glow.position.set(pos.x, pos.y + 2.2, pos.z);

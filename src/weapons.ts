@@ -7,6 +7,8 @@ import { box, cyl, merge, sph, template, tor } from "./models";
 import { M, pbr } from "./render";
 import { rng } from "./rng";
 import { BAL } from "./balance";
+// Luna: cada ayudante de moon.ts hace la cuenta plana de siempre en el patio; en la luna, lo mismo sobre la esfera (marco local del auto)
+import { advance, arc, at, below, grav, hd, hflat, MOON, onFloor, orient, rel, W as wv, yawTo } from "./moon";
 
 const W = BAL.armas, X = BAL.armasExtra, NMAX = BAL.ritmo.nivel_max; // balance.json: tablas armas y armas_extra; nivel máximo de armas y pasivas
 const _hitPt = new B.Vector3(); // centro de golpe de proyectil (evita Vector3 por par enemigo×disparo)
@@ -129,32 +131,32 @@ class Gomitas extends Weapon {
       if (t) {
         this.cd = this.cdMax = (cfg.recarga_base * c.st.cooldown) / (1 + cfg.recarga_div * (this.lv - 1)) / (this.evolved ? cfg.recarga_evo_div : 1);
         const n = this.evolved ? cfg.n_evo : cant(cfg, this.lv);
-        const base = Math.atan2(t.pos.x - c.car.pos.x, t.pos.z - c.car.pos.z);
+        const base = yawTo(c.car.pos, t.pos);
         for (let i = 0; i < n; i++) {
           const a = base + (i - (n - 1) / 2) * X.gomitas_abanico;
           const m = this.tpl.createInstance("g");
-          m.position.set(c.car.pos.x, c.car.pos.y + 0.5, c.car.pos.z);
-          this.shots.push({ m, dir: new B.Vector3(Math.sin(a), 0, Math.cos(a)), life: cfg.duracion_base, bounces: this.evolved ? X.gomitas_rebotes_evo : 0, hit: new Set() });
+          at(c.car.pos, 0, 0.5, 0, m.position);
+          this.shots.push({ m, dir: wv(Math.sin(a), 0, Math.cos(a), c.car.pos), life: cfg.duracion_base, bounces: this.evolved ? X.gomitas_rebotes_evo : 0, hit: new Set() });
         }
       }
     }
     const dmg = this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1);
     for (let i = this.shots.length - 1; i >= 0; i--) {
       const s = this.shots[i];
-      s.m.position.addInPlace(s.dir.scale(cfg.velocidad * c.st.area * c.dt));
-      s.m.rotation.y += c.dt * 10;
+      advance(s.m.position, s.dir, cfg.velocidad * c.st.area * c.dt);
+      s.m.rotation.y += c.dt * 10; orient(s.m);
       if (Math.random() < c.dt * 18) FX.trail(s.m.position, "#ff9bd4");
       let dead = (s.life -= c.dt) <= 0;
       for (const e of c.enemies) {
         if (s.hit.has(e)) continue;
-        _hitPt.copyFrom(e.pos); _hitPt.y += 0.4;
+        at(e.pos, 0, 0.4, 0, _hitPt);
         if (B.Vector3.Distance(s.m.position, _hitPt) >= e.radius + 0.35) continue;
         c.damage(e, dmg, s.dir.scale(X.gomitas_empuje));
         this.onHit?.(c, e);
         s.hit.add(e);
         if (s.bounces-- > 0) {
           const nx = nearest(e.pos, c.enemies, X.gomitas_rebote_alcance, s.hit);
-          if (nx) { s.dir = nx.pos.subtract(s.m.position); s.dir.y = 0; s.dir.normalize(); s.life = X.gomitas_rebote_vida_s; break; }
+          if (nx) { s.dir = hflat(nx.pos.subtract(s.m.position), s.m.position); s.dir.normalize(); s.life = X.gomitas_rebote_vida_s; break; }
         }
         dead = true;
         break;
@@ -186,8 +188,8 @@ class Clips extends Weapon {
     const dmg = (this.evolved ? cfg.dano_evo_fijo : this.dano(cfg)) * c.st.dmg;
     this.ms.forEach((m, i) => {
       const a = this.a + (i * Math.PI * 2) / n;
-      m.position.set(c.car.pos.x + Math.sin(a) * r, c.car.pos.y + 0.4, c.car.pos.z + Math.cos(a) * r);
-      m.rotation.set(0, -a, 0.3);
+      at(c.car.pos, Math.sin(a) * r, 0.4, Math.cos(a) * r, m.position);
+      m.rotation.set(0, -a, 0.3); orient(m);
       m.scaling.set(sc, sc, sc * 2.2);
       for (const e of c.enemies) if (e.hitCd <= 0 && B.Vector3.Distance(m.position, e.pos) < e.radius + 0.5 * sc) {
         c.damage(e, dmg, e.pos.subtract(c.car.pos).normalize().scale(X.clips_empuje));
@@ -220,13 +222,13 @@ class Chispero extends Weapon {
       const f = this.fires[i];
       f.life -= c.dt;
       f.m.scaling.setAll(f.r * Math.min(1, f.life * 2) * (0.9 + Math.random() * 0.2));
-      for (const e of c.enemies) if (Math.hypot(e.pos.x - f.m.position.x, e.pos.z - f.m.position.z) < f.r + e.radius * 0.5) c.damage(e, dps * c.dt);
+      for (const e of c.enemies) if (hd(e.pos, f.m.position) < f.r + e.radius * 0.5) c.damage(e, dps * c.dt);
       if (f.life <= 0) { f.m.dispose(); this.fires.splice(i, 1); }
     }
   }
   drop(p: B.Vector3, r: number, life: number) {
     const m = this.tpl.createInstance("f");
-    m.position.set(p.x, 0.03, p.z);
+    onFloor(p, 0.03, m.position); orient(m);
     m.scaling.setAll(r);
     this.fires.push({ m, life, r });
     if (Math.random() < 0.4) FX.hit(m.position);
@@ -259,16 +261,15 @@ class Petardos extends Weapon {
     for (let i = this.flying.length - 1; i >= 0; i--) {
       const f = this.flying[i];
       f.t += c.dt / cfg.duracion_base;
-      const p = B.Vector3.Lerp(f.from, f.to, f.t);
-      p.y += Math.sin(Math.PI * f.t) * 5;
+      const p = arc(f.from, f.to, f.t, 5);
       f.m.position.copyFrom(p);
-      f.m.rotation.x += c.dt * 12;
+      f.m.rotation.x += c.dt * 12; orient(f.m);
       if (Math.random() < c.dt * 18) FX.trail(f.m.position, "#ffb347");
       if (f.t >= 1) {
         const r = (cfg.area_base + cfg.area_nivel * this.lv) * c.st.area, dmg = this.dano(cfg) * c.st.dmg;
         c.explode(f.to, r, dmg);
         const nr = X.petardos_racimo_n;
-        if (this.evolved) for (let k = 0; k < nr; k++) { const a = (k / nr) * Math.PI * 2; c.explode(f.to.add(new B.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r)), r * X.petardos_racimo_radio, dmg * X.petardos_racimo_dano); }
+        if (this.evolved) for (let k = 0; k < nr; k++) { const a = (k / nr) * Math.PI * 2; c.explode(at(f.to, Math.cos(a) * r, 0, Math.sin(a) * r), r * X.petardos_racimo_radio, dmg * X.petardos_racimo_dano); }
         f.m.dispose();
         this.flying.splice(i, 1);
       }
@@ -282,7 +283,7 @@ class Tesla extends Weapon {
   update(c: Ctx) {
     const cfg = W.tesla;
     if ((this.cd -= c.dt) <= 0) {
-      if (this.zap(c, c.car.pos, c.car.pos.add(new B.Vector3(0.4, 1.6, -0.7)), this.evolved ? cfg.n_evo : cant(cfg, this.lv), this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1)))
+      if (this.zap(c, c.car.pos, at(c.car.pos, 0.4, 1.6, -0.7), this.evolved ? cfg.n_evo : cant(cfg, this.lv), this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1)))
         this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown;
     }
     for (let i = this.bolts.length - 1; i >= 0; i--) { const b = this.bolts[i]; if ((b.life -= c.dt) > 0) continue; b.m.dispose(); this.bolts.splice(i, 1); }
@@ -296,7 +297,7 @@ class Tesla extends Weapon {
     while (cur && hit.size < chain) {
       hit.add(cur);
       c.damage(cur, dmg);
-      const a = pts[pts.length - 1], b = cur.pos.add(new B.Vector3(0, 0.6, 0));
+      const a = pts[pts.length - 1], b = at(cur.pos, 0, 0.6, 0);
       for (let k = 1; k <= 3; k++) pts.push(B.Vector3.Lerp(a, b, k / 4).addInPlace(new B.Vector3((Math.random() - 0.5) * 0.8, (Math.random() - 0.5) * 0.8, (Math.random() - 0.5) * 0.8)));
       pts.push(b);
       const prev: Enemy = cur;
@@ -334,7 +335,7 @@ class Agua extends Weapon {
       if (t) {
         this.spray = this.evolved ? cfg.duracion_evo : cfg.duracion_base + cfg.duracion_nivel * this.lv;
         this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown;
-        this.dir.set(t.pos.x - c.car.pos.x, 0, t.pos.z - c.car.pos.z).normalize();
+        const rd = rel(t.pos, c.car.pos); this.dir.set(rd.x, 0, rd.z).normalize(); // marco local del auto
       }
     }
     if (this.spray > 0) {
@@ -343,26 +344,26 @@ class Agua extends Weapon {
         this.tick = X.agua_pulso_s;
         const dmg = this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1), push = this.evolved ? X.agua_empuje_evo : X.agua_empuje;
         for (const e of c.enemies) {
-          const dx = e.pos.x - c.car.pos.x, dz = e.pos.z - c.car.pos.z, d = Math.hypot(dx, dz);
+          const { x: dx, z: dz } = rel(e.pos, c.car.pos), d = Math.hypot(dx, dz);
           if (d < 0.01 || d > R + e.radius) continue;
           if (Math.acos(B.Scalar.Clamp((dx * this.dir.x + dz * this.dir.z) / d, -1, 1)) > half + e.radius / d) continue;
-          c.damage(e, dmg, new B.Vector3((dx / d) * push, 0.3, (dz / d) * push));
+          c.damage(e, dmg, wv((dx / d) * push, 0.3, (dz / d) * push, c.car.pos));
           e.slow = Math.max(e.slow, this.evolved ? X.agua_ralentiza_evo_s : X.agua_ralentiza_s);
         }
       }
       for (let k = 0; k < 3 && this.drops.length < 70; k++) {
         const a = Math.atan2(this.dir.x, this.dir.z) + (rng() - 0.5) * half * 1.6, sp = 22 + rng() * 8;
         const m = this.tpl.createInstance("w");
-        m.position.set(c.car.pos.x, c.car.pos.y + 0.8, c.car.pos.z);
-        m.rotation.y = a;
-        this.drops.push({ m, v: new B.Vector3(Math.sin(a) * sp, 2 + rng() * 2, Math.cos(a) * sp), life: R / sp });
+        at(c.car.pos, 0, 0.8, 0, m.position);
+        m.rotation.y = a; orient(m);
+        this.drops.push({ m, v: wv(Math.sin(a) * sp, 2 + rng() * 2, Math.cos(a) * sp, c.car.pos), life: R / sp });
       }
     }
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const g = this.drops[i];
       g.m.position.addInPlace(g.v.scale(c.dt));
-      g.v.y -= 12 * c.dt;
-      if ((g.life -= c.dt) <= 0 || g.m.position.y < 0.05) { g.m.dispose(); this.drops.splice(i, 1); }
+      grav(g.v, g.m.position, 12 * c.dt);
+      if ((g.life -= c.dt) <= 0 || below(g.m.position, 0.05)) { g.m.dispose(); this.drops.splice(i, 1); }
     }
   }
   dispose() { for (const g of this.drops) g.m.dispose(); }
@@ -386,13 +387,13 @@ class Yoyo extends Weapon {
   hilo = template("hilo", () => [cyl(0.04, 0.04, 1, M.glow("#c8ffb0"), [0, 0, 0], [Math.PI / 2, 0, 0], 4)]); // largo 1 en z: se estira por instancia
   private string(s: B.InstancedMesh, a: B.Vector3, b: B.Vector3) {
     s.position.set((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
-    s.rotation.y = Math.atan2(b.x - a.x, b.z - a.z);
-    s.scaling.set(1, 1, Math.hypot(b.x - a.x, b.z - a.z));
+    s.rotation.y = yawTo(a, b);
+    s.scaling.set(1, 1, hd(b, a)); orient(s);
   }
   update(c: Ctx) {
     const cfg = W.yoyo;
     this.t += c.dt;
-    const hand = c.car.pos.add(new B.Vector3(0, 0.6, 0));
+    const hand = at(c.car.pos, 0, 0.6, 0);
     if (this.evolved) {
       for (const y of this.ys) { y.m.dispose(); y.s.dispose(); } // los que estaban en vuelo al evolucionar
       this.ys = [];
@@ -402,8 +403,8 @@ class Yoyo extends Weapon {
       const dmg = cfg.dano_evo_fijo * c.st.dmg * (back ? X.yoyo_vuelta_mult : 1);
       this.orb.forEach((o, i) => {
         const a = this.t * 2.6 + i * Math.PI;
-        o.m.position.set(hand.x + Math.sin(a) * r, hand.y, hand.z + Math.cos(a) * r);
-        o.m.rotation.set(0, a, this.t * 20);
+        at(hand, Math.sin(a) * r, 0, Math.cos(a) * r, o.m.position);
+        o.m.rotation.set(0, a, this.t * 20); orient(o.m);
         this.string(o.s, hand, o.m.position);
         for (const e of c.enemies) if ((this.next.get(e) ?? 0) <= this.t && B.Vector3.Distance(o.m.position, e.pos) < e.radius + 0.9) {
           this.next.set(e, this.t + X.yoyo_orbita_golpe_s);
@@ -418,7 +419,7 @@ class Yoyo extends Weapon {
       const t = nearest(c.car.pos, c.enemies, R + 2);
       if (t) {
         this.cd = this.cdMax = this.recarga(cfg) * c.st.cooldown;
-        const n = cant(cfg, this.lv), base = Math.atan2(t.pos.x - c.car.pos.x, t.pos.z - c.car.pos.z);
+        const n = cant(cfg, this.lv), base = yawTo(c.car.pos, t.pos);
         for (let i = 0; i < n; i++) {
           const a = base + (i - (n - 1) / 2) * X.yoyo_abanico;
           this.ys.push({ m: this.tpl.createInstance("y"), s: this.hilo.createInstance("h"), dir: new B.Vector3(Math.sin(a), 0, Math.cos(a)), d: 0, back: false, hit: new Set() });
@@ -431,12 +432,12 @@ class Yoyo extends Weapon {
       y.d += (y.back ? -X.yoyo_vuelta_vel : 1) * sp * c.dt; // vuelve más rápido de lo que sale
       if (!y.back && y.d >= R) { y.back = true; y.hit.clear(); }
       if (y.back && y.d <= 0) { y.m.dispose(); y.s.dispose(); this.ys.splice(i, 1); continue; }
-      y.m.position.copyFrom(hand).addInPlace(y.dir.scale(y.d));
-      y.m.rotation.set(0, Math.atan2(y.dir.x, y.dir.z) + Math.PI / 2, this.t * 20);
+      at(hand, y.dir.x * y.d, 0, y.dir.z * y.d, y.m.position); // y.dir: marco local del auto
+      y.m.rotation.set(0, Math.atan2(y.dir.x, y.dir.z) + Math.PI / 2, this.t * 20); orient(y.m);
       this.string(y.s, hand, y.m.position);
       for (const e of c.enemies) if (!y.hit.has(e) && B.Vector3.Distance(y.m.position, e.pos) < e.radius + 0.7) {
         y.hit.add(e);
-        c.damage(e, dmg * (y.back ? X.yoyo_vuelta_mult : 1), y.dir.scale(y.back ? -X.yoyo_empuje : X.yoyo_empuje));
+        c.damage(e, dmg * (y.back ? X.yoyo_vuelta_mult : 1), wv(y.dir.x, y.dir.y, y.dir.z, c.car.pos).scale(y.back ? -X.yoyo_empuje : X.yoyo_empuje));
         this.onHit?.(c, e);
       }
     }
@@ -473,15 +474,14 @@ class Bengalas extends Weapon {
     for (let i = this.flying.length - 1; i >= 0; i--) {
       const f = this.flying[i];
       f.t += c.dt / X.bengalas_vuelo_s;
-      const p = B.Vector3.Lerp(f.from, f.to, Math.min(1, f.t));
-      p.y += Math.sin(Math.PI * Math.min(1, f.t)) * 6;
+      const p = arc(f.from, f.to, Math.min(1, f.t), 6);
       f.m.position.copyFrom(p);
-      f.m.rotation.x += c.dt * 10;
+      f.m.rotation.x += c.dt * 10; orient(f.m);
       if (Math.random() < c.dt * 18) FX.trail(f.m.position, "#ff6b6b");
       if (f.t >= 1) {
         const r = (ev ? cfg.area_evo : cfg.area_base + cfg.area_nivel * this.lv) * c.st.area * (this.steam ? X.vapor_radio_mult : 1), life = ev ? cfg.duracion_evo : cfg.duracion_base + cfg.duracion_nivel * this.lv;
         const m = this.zoneTpl.createInstance("z");
-        m.position.set(f.to.x, (f.to.y > 0.5 ? f.to.y - 0.5 : 0) + 0.03, f.to.z);
+        if (MOON.on) { onFloor(f.to, 0.03, m.position); orient(m); } else m.position.set(f.to.x, (f.to.y > 0.5 ? f.to.y - 0.5 : 0) + 0.03, f.to.z);
         this.zones.push({ m, r, life, max: life });
         FX.sparks(m.position);
         f.m.dispose(); this.flying.splice(i, 1);
@@ -492,8 +492,8 @@ class Bengalas extends Weapon {
       const z = this.zones[i];
       z.life -= c.dt;
       z.m.scaling.setAll(z.r * Math.min(1, (z.max - z.life) * 6, z.life * 2) * (0.92 + Math.random() * 0.16)); // parpadeo: solo visual
-      if (this.steam && Math.random() < c.dt * 3) FX.smoke(z.m.position.add(new B.Vector3(0, 0.4, 0)));
-      for (const e of c.enemies) if (Math.hypot(e.pos.x - z.m.position.x, e.pos.z - z.m.position.z) < z.r + e.radius * 0.5) {
+      if (this.steam && Math.random() < c.dt * 3) FX.smoke(at(z.m.position, 0, 0.4, 0));
+      for (const e of c.enemies) if (hd(e.pos, z.m.position) < z.r + e.radius * 0.5) {
         c.damage(e, dps * c.dt);
         if (this.steam) e.slow = Math.max(e.slow, X.vapor_ralentiza_s);
       }
@@ -520,7 +520,7 @@ class Regla extends Weapon {
       const t = nearest(c.car.pos, c.enemies, R);
       if (t) {
         this.cd = this.cdMax = (ev ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown;
-        const base = Math.atan2(t.pos.x - c.car.pos.x, t.pos.z - c.car.pos.z);
+        const base = yawTo(c.car.pos, t.pos);
         const na = ev ? cfg.n_evo : cant(cfg, this.lv), sep = ev ? X.regla_abanico_evo : X.regla_abanico;
         const angs = Array.from({ length: na }, (_, i) => (i - (na - 1) / 2) * sep); // en abanico
         angs.forEach((o, i) => this.rs.push({ m: this.tpl.createInstance("r"), from: c.car.pos.clone(), dir: new B.Vector3(Math.sin(base + o), 0, Math.cos(base + o)), side: i % 2 ? -1 : 1, t: 0, hit: new Set() }));
@@ -536,10 +536,11 @@ class Regla extends Weapon {
       // Lazo: adelante R·(1-cos θ)/2, de costado 0,35R·sin θ; el origen se desliza hacia el auto para volver a él
       const th = r.t * Math.PI * 2, o = B.Vector3.Lerp(r.from, c.car.pos, r.t);
       const fw = (R * (1 - Math.cos(th))) / 2, sd = 0.35 * R * Math.sin(th) * r.side;
-      r.m.position.set(o.x + r.dir.x * fw + r.dir.z * sd, c.car.pos.y + 0.7, o.z + r.dir.z * fw - r.dir.x * sd);
-      r.m.rotation.y += c.dt * 18;
+      if (MOON.on) at(o, r.dir.x * fw + r.dir.z * sd, 0.7, r.dir.z * fw - r.dir.x * sd, r.m.position); // r.dir: marco local
+      else r.m.position.set(o.x + r.dir.x * fw + r.dir.z * sd, c.car.pos.y + 0.7, o.z + r.dir.z * fw - r.dir.x * sd);
+      r.m.rotation.y += c.dt * 18; orient(r.m);
       r.m.scaling.setAll(sc);
-      for (const e of c.enemies) if (!r.hit.has(e) && Math.hypot(r.m.position.x - e.pos.x, r.m.position.z - e.pos.z) < e.radius + 1.2 * sc) {
+      for (const e of c.enemies) if (!r.hit.has(e) && hd(r.m.position, e.pos) < e.radius + 1.2 * sc) {
         r.hit.add(e);
         c.damage(e, dmg, e.pos.subtract(r.m.position).normalize().scale(X.regla_empuje));
       }
@@ -559,11 +560,11 @@ class Helado extends Weapon {
       if (t) {
         this.cd = this.cdMax = (cfg.recarga_base * c.st.cooldown) / (1 + cfg.recarga_div * (this.lv - 1)) / (this.evolved ? cfg.recarga_evo_div : 1);
         const na = this.evolved ? cfg.n_evo : cant(cfg, this.lv), sep = this.evolved ? X.helado_abanico_evo : X.helado_abanico;
-        const base = Math.atan2(t.pos.x - c.car.pos.x, t.pos.z - c.car.pos.z), angs = Array.from({ length: na }, (_, i) => (i - (na - 1) / 2) * sep); // en abanico
+        const base = yawTo(c.car.pos, t.pos), angs = Array.from({ length: na }, (_, i) => (i - (na - 1) / 2) * sep); // en abanico
         for (const o of angs) {
           const m = this.tpl.createInstance("h");
-          m.position.set(c.car.pos.x, c.car.pos.y + 0.6, c.car.pos.z);
-          this.shots.push({ m, dir: new B.Vector3(Math.sin(base + o), 0, Math.cos(base + o)), life: cfg.duracion_base, hit: new Set() });
+          at(c.car.pos, 0, 0.6, 0, m.position);
+          this.shots.push({ m, dir: wv(Math.sin(base + o), 0, Math.cos(base + o), c.car.pos), life: cfg.duracion_base, hit: new Set() });
         }
         SFX.click();
       }
@@ -571,18 +572,18 @@ class Helado extends Weapon {
     const dmg = this.dano(cfg) * c.st.dmg * (this.evolved ? cfg.dano_evo_mult : 1);
     for (let i = this.shots.length - 1; i >= 0; i--) {
       const s = this.shots[i];
-      s.m.position.addInPlace(s.dir.scale(cfg.velocidad * c.st.area * c.dt));
-      s.m.rotation.y += c.dt * 8;
+      advance(s.m.position, s.dir, cfg.velocidad * c.st.area * c.dt);
+      s.m.rotation.y += c.dt * 8; orient(s.m);
       if (Math.random() < c.dt * 14) FX.trail(s.m.position, "#9be3ff");
       let dead = (s.life -= c.dt) <= 0;
-      for (const e of c.enemies) if (!s.hit.has(e) && Math.hypot(s.m.position.x - e.pos.x, s.m.position.z - e.pos.z) < e.radius + 0.6) {
+      for (const e of c.enemies) if (!s.hit.has(e) && hd(s.m.position, e.pos) < e.radius + 0.6) {
         s.hit.add(e);
         c.damage(e, dmg, s.dir.scale(X.helado_empuje));
         e.slow = Math.max(e.slow, X.helado_ralentiza_base + X.helado_ralentiza_nivel * this.lv);
         if (this.evolved) { // congela al golpeado y enfría a los de alrededor
           e.stun = Math.max(e.stun, X.helado_congela_evo_s);
-          for (const o of c.enemies) if (o !== e && Math.hypot(o.pos.x - e.pos.x, o.pos.z - e.pos.z) < X.helado_enfria_radio_evo * c.st.area) o.slow = Math.max(o.slow, X.helado_enfria_evo_s);
-          burst(e.pos.add(new B.Vector3(0, 0.6, 0)), { n: 12, color: "#cfefff", size: [0.15, 0.4], power: [2, 6], life: [0.3, 0.6], gravity: -4 });
+          for (const o of c.enemies) if (o !== e && hd(o.pos, e.pos) < X.helado_enfria_radio_evo * c.st.area) o.slow = Math.max(o.slow, X.helado_enfria_evo_s);
+          burst(at(e.pos, 0, 0.6, 0), { n: 12, color: "#cfefff", size: [0.15, 0.4], power: [2, 6], life: [0.3, 0.6], gravity: -4 });
         }
         dead = true;
         break;
@@ -605,8 +606,9 @@ class Bocina extends Weapon {
       if (t) {
         this.cd = this.cdMax = (this.evolved ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown;
         const m = this.tpl.createInstance("o");
-        m.position.set(c.car.pos.x, 0.5, c.car.pos.z);
-        this.waves.push({ m, t: 0, dir: new B.Vector3(t.pos.x - c.car.pos.x, 0, t.pos.z - c.car.pos.z).normalize(), R, full: this.evolved, hit: new Set() });
+        onFloor(c.car.pos, 0.5, m.position); orient(m);
+        const rd = rel(t.pos, c.car.pos);
+        this.waves.push({ m, t: 0, dir: new B.Vector3(rd.x, 0, rd.z).normalize(), R, full: this.evolved, hit: new Set() });
         SFX.boss();
       }
     }
@@ -615,15 +617,15 @@ class Bocina extends Weapon {
       const w = this.waves[i];
       w.t += c.dt / cfg.duracion_base;
       const r = w.R * Math.min(1, w.t);
-      w.m.position.set(c.car.pos.x, 0.5, c.car.pos.z);
+      onFloor(c.car.pos, 0.5, w.m.position); orient(w.m);
       w.m.scaling.setAll(Math.max(0.1, r / 1.1));
       for (const e of c.enemies) {
         if (w.hit.has(e)) continue;
-        const dx = e.pos.x - c.car.pos.x, dz = e.pos.z - c.car.pos.z, d = Math.hypot(dx, dz);
+        const { x: dx, z: dz } = rel(e.pos, c.car.pos), d = Math.hypot(dx, dz);
         if (d > r + e.radius || d < 0.01) continue;
         if (!w.full && dx * w.dir.x + dz * w.dir.z < d * X.bocina_cono) continue; // cono de unos 120°
         w.hit.add(e);
-        c.damage(e, dmg, new B.Vector3((dx / d) * X.bocina_empuje, 0.4, (dz / d) * X.bocina_empuje));
+        c.damage(e, dmg, wv((dx / d) * X.bocina_empuje, 0.4, (dz / d) * X.bocina_empuje, c.car.pos));
         if (this.lv >= X.bocina_aturde_desde_nivel || this.evolved) e.stun = Math.max(e.stun, this.evolved ? X.bocina_aturde_evo_s : X.bocina_aturde_s);
       }
       if (w.t >= 1) { w.m.dispose(); this.waves.splice(i, 1); }
@@ -652,38 +654,40 @@ class Trompo extends Weapon {
       if (t) {
         this.cd = this.cdMax = this.recarga(cfg) * c.st.cooldown;
         const m = this.tpl.createInstance("t");
-        m.position.set(c.car.pos.x, 0.6, c.car.pos.z);
+        onFloor(c.car.pos, 0.6, m.position);
         this.tops.push({ m, target: t, life: cfg.duracion_base + cfg.duracion_nivel * this.lv, ang: 0, trail: 0 });
       }
     }
     const dmg = this.dano(cfg) * c.st.dmg * (ev ? cfg.dano_evo_mult : 1);
     for (let i = this.tops.length - 1; i >= 0; i--) {
       const tp = this.tops[i];
-      tp.m.rotation.y += c.dt * 25;
+      tp.m.rotation.y += c.dt * 25; orient(tp.m);
       if (ev) {
         tp.ang += c.dt * 3.2;
         const R = cfg.area_evo * c.st.area;
-        tp.m.position.set(c.car.pos.x + Math.cos(tp.ang) * R, 0.6, c.car.pos.z + Math.sin(tp.ang) * R);
+        if (MOON.on) onFloor(at(c.car.pos, Math.cos(tp.ang) * R, 0, Math.sin(tp.ang) * R), 0.6, tp.m.position);
+        else tp.m.position.set(c.car.pos.x + Math.cos(tp.ang) * R, 0.6, c.car.pos.z + Math.sin(tp.ang) * R);
       } else {
         if (!tp.target || tp.target.hp <= 0) tp.target = nearest(tp.m.position, c.enemies, X.trompo_retarget);
         if (!tp.target || (tp.life -= c.dt) <= 0) { tp.m.dispose(); this.tops.splice(i, 1); continue; }
-        const to = new B.Vector3(tp.target.pos.x - tp.m.position.x, 0, tp.target.pos.z - tp.m.position.z), d = to.length();
-        tp.m.position.addInPlace(to.scale((cfg.velocidad * c.dt) / Math.max(d, 0.01)));
+        const to = MOON.on ? hflat(tp.target.pos.subtract(tp.m.position), tp.m.position) : new B.Vector3(tp.target.pos.x - tp.m.position.x, 0, tp.target.pos.z - tp.m.position.z), d = to.length();
+        if (MOON.on) advance(tp.m.position, to.scale(1 / Math.max(d, 0.01)), cfg.velocidad * c.dt);
+        else tp.m.position.addInPlace(to.scale((cfg.velocidad * c.dt) / Math.max(d, 0.01)));
         if (d < tp.target.radius + 0.8) { c.damage(tp.target, dmg, to.scale(X.trompo_empuje / Math.max(d, 0.01))); tp.target = nearest(tp.m.position, c.enemies.filter((e) => e !== tp.target), X.trompo_retarget); }
       }
-      for (const e of c.enemies) if (ev && Math.hypot(tp.m.position.x - e.pos.x, tp.m.position.z - e.pos.z) < e.radius + 1.1 && rng() < c.dt * X.trompo_evo_golpes_s) { c.damage(e, dmg * X.trompo_evo_contacto_mult, e.pos.subtract(tp.m.position).normalize().scale(X.trompo_empuje)); }
+      for (const e of c.enemies) if (ev && hd(tp.m.position, e.pos) < e.radius + 1.1 && rng() < c.dt * X.trompo_evo_golpes_s) { c.damage(e, dmg * X.trompo_evo_contacto_mult, e.pos.subtract(tp.m.position).normalize().scale(X.trompo_empuje)); }
       if ((tp.trail -= c.dt) <= 0) { // estela: un disco que corta un rato
         tp.trail = X.trompo_estela_cada_s;
         const b = this.bladeTpl.createInstance("b");
-        b.position.set(tp.m.position.x, 0.12, tp.m.position.z); b.rotation.x = Math.PI / 2;
+        onFloor(tp.m.position, 0.12, b.position); b.rotation.x = Math.PI / 2; orient(b);
         this.blades.push({ m: b, life: X.trompo_estela_vida_s });
       }
     }
     for (let i = this.blades.length - 1; i >= 0; i--) {
       const b = this.blades[i];
       b.life -= c.dt;
-      b.m.rotation.z += c.dt * 10; // el desvanecido por visibility no hace nada en instancias (Babylon avisa por consola en cada llamada)
-      for (const e of c.enemies) if (Math.hypot(b.m.position.x - e.pos.x, b.m.position.z - e.pos.z) < e.radius + 0.9 && rng() < c.dt * X.trompo_estela_golpes_s) c.damage(e, dmg * X.trompo_estela_mult);
+      b.m.rotation.z += c.dt * 10; orient(b.m); // el desvanecido por visibility no hace nada en instancias (Babylon avisa por consola en cada llamada)
+      for (const e of c.enemies) if (hd(b.m.position, e.pos) < e.radius + 0.9 && rng() < c.dt * X.trompo_estela_golpes_s) c.damage(e, dmg * X.trompo_estela_mult);
       if (b.life <= 0) { b.m.dispose(); this.blades.splice(i, 1); }
     }
   }
@@ -705,7 +709,7 @@ class Fusion extends Weapon {
       }
     };
     // Cada golpe del yo-yo (como mucho 4 por segundo) suelta un rayo en cadena de 4 enemigos
-    if (id === "yoyoelec") (this.parts[0] as Yoyo).onHit = (c, e) => { if (this.t <= 0) { this.t = X.yoyoelec_cada_s; (this.parts[1] as Tesla).zap(c, e.pos, e.pos.add(new B.Vector3(0, 1, 0)), X.yoyoelec_cadena, X.yoyoelec_dano * c.st.dmg); } };
+    if (id === "yoyoelec") (this.parts[0] as Yoyo).onHit = (c, e) => { if (this.t <= 0) { this.t = X.yoyoelec_cada_s; (this.parts[1] as Tesla).zap(c, e.pos, at(e.pos, 0, 1, 0), X.yoyoelec_cadena, X.yoyoelec_dano * c.st.dmg); } };
     if (id === "vapor") (this.parts[0] as Bengalas).steam = true;
   }
   get cdFrac() { return this.parts[0].cdFrac; }
@@ -714,7 +718,7 @@ class Fusion extends Weapon {
     const [a, b] = this.parts;
     if (this.id === "chispazo") {
       // Cada explosión (como mucho 4 por segundo) suelta un rayo en cadena de 4 enemigos
-      a.update({ ...c, explode: (p, r, dmg) => { c.explode(p, r, dmg); if (this.t <= 0) { this.t = X.chispazo_cada_s; (b as Tesla).zap(c, p, p.add(new B.Vector3(0, 1, 0)), X.chispazo_cadena, dmg * X.chispazo_dano_mult); } } });
+      a.update({ ...c, explode: (p, r, dmg) => { c.explode(p, r, dmg); if (this.t <= 0) { this.t = X.chispazo_cada_s; (b as Tesla).zap(c, p, at(p, 0, 1, 0), X.chispazo_cadena, dmg * X.chispazo_dano_mult); } } });
     } else a.update(c);
     b.update(c);
     if (this.id === "anillo" && this.t <= 0) {

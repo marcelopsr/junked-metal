@@ -201,6 +201,19 @@ export const sessions = [
     { id: "outro", perf: false, act: async (p) => { await p.evaluate(() => window.__outro()); await tick(p, 40); await wait(p, () => !document.getElementById("outro").classList.contains("hidden")); await p.waitForTimeout(150); } },
     { id: "resultados", perf: false, act: async (p) => { await tick(p, 270); await wait(p, () => document.querySelector("#scr-over.on") && !document.getElementById("overPhoto").classList.contains("hidden") && document.getElementById("overPhotoImg").complete); await p.waitForTimeout(200); } },
   ] },
+  // Luna (src/moon.ts): selector de mapa, lado del Sol, lado oscuro con bichos acercándose (luces), la Tierra en el cielo y cráter/montículo en vivo (__luna)
+  { id: "luna", query: "?mute&seed=3&zone=luna", shots: [
+    { id: "selector", perf: false, act: async (p) => {
+      await labReady(p); await p.evaluate(() => window.__cfg({ zone: "luna" }));
+      if (await p.$("#scr-title.on")) await p.dispatchEvent("#scr-title", "click");
+      await toMain(p); await p.dispatchEvent('#scr-main [data-act="playmenu"]', "click");
+      await wait(p, () => document.querySelector("#scr-play.on")); await p.waitForTimeout(150);
+    } },
+    { id: "sol", act: async (p) => { await labReady(p); await p.evaluate(() => { window.__play(3); window.__god(); window.__sim(30); window.__killAll(); window.__luna.go("sol"); window.__luna.ring(10, 13); }); await tick(p, 60); } },
+    { id: "tierra", perf: false, act: async (p) => { await p.evaluate(() => { window.__cfg({ camMode: "baja" }); window.__luna.go("tierra"); }); await tick(p, 40); } },
+    { id: "oscuro", act: async (p) => { await p.evaluate(() => { window.__cfg({ camMode: "actual" }); window.__killAll(); window.__luna.go("oscuro"); window.__luna.ring(14, 24); window.__luna.ring(6, 32, "escarabajo"); }); await tick(p, 70); } },
+    { id: "crater", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.crater(8, 3, 13); window.__luna.crater(4, -1.6, 24); }); await tick(p, 40); } },
+  ] },
   // partida_llena: 300 s de sim (partida avanzada, t=5 min) → mide el estado con armas evolucionadas y oleadas densas.
   // Medido: ~168 draws PC (thin-instances agrupan por tipo; menos que partida-curso/90 s por diferente mezcla de proyectiles).
   // Solo pc y solo medición de perf (shot: false); usar --only partida_llena para medir sin el resto.

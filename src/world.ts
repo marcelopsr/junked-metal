@@ -7,6 +7,7 @@ import { FOLD, FOLD_PAINT, FOLDED_SLICE } from "./folded";
 import { crateDetail, fencePanel, gnomeFold, paintCanFold, potFold, rampLip, realCarFold, toolFold, wateringCanFold } from "./folded_slice";
 import { precio } from "./balance";
 import type { Climate } from "./run";
+import { LUNA_CLIMATE, MOON, moonBuild, moonReset, ringAt } from "./moon";
 
 // Zonas de juego. Un auto RC mide ~2 unidades (1 u ≈ 4,5 cm): una maceta es un edificio, un auto real es una montaña.
 // Cada zona = tabla de datos + build (lo fijo) + layout (lo que cambia con la semilla), armadas con las mismas piezas.
@@ -59,7 +60,7 @@ export function hitBreakables(pos: B.Vector3, r: number, dmg: number) {
     const p = b.m.getAbsolutePosition().clone();
     debris(p, b.color, b.pot ? 16 : 6, b.pot ? 9 : 6, b.pot ? 1.6 : 1);
     if (b.pot) {
-      if (b.bits) { for (const c of b.bits) debris(p.add(new B.Vector3(0, 2, 0)), c, 10, 7, 1.2); splat(p.x, p.z, b.bits[0], 3); }
+      if (b.bits) { for (const c of b.bits) debris(p.add(new B.Vector3(0, 2, 0)), c, 10, 7, 1.2); splat(p, b.bits[0], 3); }
       else { debris(p, "#4a3420", 10, 6, 1.2); debris(p.add(new B.Vector3(0, 4, 0)), "#3f8f2f", 8, 5, 1.4); }
       pots.push(p);
     }
@@ -81,7 +82,7 @@ const bare: { x: number; z: number; r: number }[] = [];
 const isBare = (x: number, z: number) => bare.some((b) => Math.hypot(x - b.x, z - b.z) < b.r) || Z.rects.some(([cx, cz, w, d]) => Math.abs(x - cx) < w && Math.abs(z - cz) < d);
 
 // ---------- Tabla de zonas ----------
-export type ZoneId = "patio" | "garaje" | "jardin";
+export type ZoneId = "patio" | "garaje" | "jardin" | "luna";
 type Zone = {
   name: string; short: string; desc: string; half: number; // short: botón del menú principal
   cost: number; // tornillos en el Taller (0 = siempre abierta)
@@ -109,6 +110,9 @@ export const ZONES: Record<ZoneId, Zone> = {
   jardin: { name: "Jardín delantero", short: "Jardín", desc: "Césped cortado, aspersores que empujan y la calle de límite. Se ve bien desde afuera, como todo.", half: 140, cost: ZONE_COST.jardin, grass: 1.3, grassH: 0.5,
     rects: [[12, 8, 5, 132], [0, -132, 220, 8], [-55, 35, 25, 8]],
     build: frontBuild, layout: frontLayout },
+  // Luna (moon.ts): esfera de verdad con gravedad radial; half grande = sin paredes ni borde en el radar
+  luna: { name: "Luna", short: "Luna", desc: "Un planeta chico: el horizonte se curva a cada metro y del lado oscuro solo se ven las luces de lo que se acerca.", half: 1000, cost: 0, grass: 0, grassH: 1,
+    rects: [], climate: LUNA_CLIMATE, build: () => moonBuild(scene, lowQ), layout: moonReset },
 };
 let Z: Zone = ZONES.patio;
 export let zoneId: ZoneId = "patio";
@@ -118,6 +122,7 @@ export const zoneClimate = () => Z.climate;
 export type Floor = "pasto" | "baldosa" | "tierra" | "cemento";
 export function floorAt(x: number, z: number): Floor {
   if (zoneId === "garaje") return "cemento";
+  if (zoneId === "luna") return "tierra";
   if (zoneId === "jardin") return z < -HALF + 16 || Math.abs(x - 12) < 4 ? "baldosa" : "pasto"; // vereda y camino de lajas
   if (Math.abs(x) < 24 && Math.abs(z + 30) < 17) return "baldosa";
   return Math.abs(x - 50) < 21 && Math.abs(z - 45) < 16 ? "tierra" : "pasto";
@@ -143,8 +148,8 @@ export function buildWorld(s: B.Scene, low: boolean, id: ZoneId = "patio") {
   occluders.length = 0;
   bare.length = 0;
   Z.build();
-  // Paredes físicas del borde (lo visible lo pone cada zona)
-  for (const [x, z, w, d] of [[0, HALF, HALF * 2 + 10, 2], [0, -HALF, HALF * 2 + 10, 2], [HALF, 0, 2, HALF * 2 + 10], [-HALF, 0, 2, HALF * 2 + 10]]) {
+  // Paredes físicas del borde (lo visible lo pone cada zona); la luna no tiene borde
+  if (id !== "luna") for (const [x, z, w, d] of [[0, HALF, HALF * 2 + 10, 2], [0, -HALF, HALF * 2 + 10, 2], [HALF, 0, 2, HALF * 2 + 10], [-HALF, 0, 2, HALF * 2 + 10]]) {
     const wall = B.MeshBuilder.CreateBox("wall", { width: w, height: 60, depth: d }, scene);
     wall.position.set(x, 30, z);
     wall.isVisible = false;
@@ -1041,6 +1046,7 @@ export const obstacles = () => bare;
 
 // Punto de aparición aleatorio en un anillo alrededor del jugador, dentro de la zona
 export function spawnPoint(center: B.Vector3, rMin: number, rMax: number) {
+  if (MOON.on) { const a = rng() * Math.PI * 2; return ringAt(center, a, rMin + rng() * (rMax - rMin)); } // luna: anillo sobre la esfera (distancias por la superficie)
   for (let i = 0; i < 10; i++) {
     const a = rng() * Math.PI * 2, r = rMin + rng() * (rMax - rMin);
     const x = center.x + Math.cos(a) * r, z = center.z + Math.sin(a) * r;

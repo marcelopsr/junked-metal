@@ -3,6 +3,7 @@ import { box, template } from "./models";
 import { G, M, pbr, TEX, wetGround } from "./render";
 import { RAIN } from "./run";
 import { FOLD, FOLDED_SLICE } from "./folded";
+import { alt, at, grav, MOON, onFloor, orient, toWorld, upAt } from "./moon";
 
 // Partículas con un pool de sistemas reutilizables (cero creación por golpe).
 let scene: B.Scene;
@@ -76,7 +77,8 @@ export function burst(pos: B.Vector3, o: BurstOpts) {
   [ps.minSize, ps.maxSize] = o.size;
   [ps.minEmitPower, ps.maxEmitPower] = o.power;
   [ps.minLifeTime, ps.maxLifeTime] = o.life;
-  ps.gravity.y = o.gravity ?? -18;
+  if (MOON.on) upAt(pos, ps.gravity).scaleInPlace(o.gravity ?? -18); // luna: caen hacia el centro
+  else ps.gravity.set(0, o.gravity ?? -18, 0);
   ps.blendMode = o.add === false ? B.ParticleSystem.BLENDMODE_STANDARD : B.ParticleSystem.BLENDMODE_ADD;
   ps.manualEmitCount = share(o.n * G.fx);
 }
@@ -161,11 +163,11 @@ export function debris(pos: B.Vector3, color: string, n: number, power = 6, size
   const tpl = chunkTpl(color);
   for (let i = 0, cap = Math.round(240 * Math.min(G.fx, 1)); i < n && chunks.length < cap; i++) {
     const m = tpl.createInstance("ch");
-    m.position.set(pos.x, pos.y + 0.4, pos.z);
+    at(pos, 0, 0.4, 0, m.position);
     m.scaling.setAll(size * (0.6 + Math.random() * 0.8));
     m.rotation.set(Math.random() * 6, Math.random() * 6, 0);
-    const a = Math.random() * Math.PI * 2;
-    chunks.push({ m, v: new B.Vector3(Math.cos(a) * power * Math.random(), power * (0.6 + Math.random() * 0.8), Math.sin(a) * power * Math.random()), av: new B.Vector3(Math.random() * 12, Math.random() * 12, 0), life: 1.8 + Math.random() });
+    const a = Math.random() * Math.PI * 2, v = new B.Vector3(Math.cos(a) * power * Math.random(), power * (0.6 + Math.random() * 0.8), Math.sin(a) * power * Math.random());
+    chunks.push({ m, v: MOON.on ? toWorld(v, pos, v) : v, av: new B.Vector3(Math.random() * 12, Math.random() * 12, 0), life: 1.8 + Math.random() });
   }
 }
 
@@ -227,11 +229,11 @@ const markTpl = (kind: "scorch" | "skid") => template(kind, () => {
   return [d];
 });
 
-export function mark(kind: "scorch" | "skid", x: number, z: number, rotY: number, s: number, life: number) {
+export function mark(kind: "scorch" | "skid", p: B.Vector3, rotY: number, s: number, life: number) {
   if (marks.length > 500) { const old = marks.shift()!; old.m.dispose(); }
   const m = markTpl(kind).createInstance("mk");
-  m.position.set(x, 0.03 + marks.length * 0.00002, z);
-  m.rotation.y = rotY;
+  onFloor(p, 0.03 + marks.length * 0.00002, m.position);
+  m.rotation.y = rotY; orient(m); // luna: apoyada en el piso del lugar
   m.scaling.setAll(s);
   marks.push({ m, life, s });
 }
@@ -244,11 +246,11 @@ const splatTpl = (c: string) => template("splat" + c, () => {
   sm.zOffset = -4; sm.disableDepthWrite = true;
   return [d];
 });
-export function splat(x: number, z: number, color: string, s: number) {
+export function splat(p: B.Vector3, color: string, s: number) {
   if (marks.length > 500) { const old = marks.shift()!; old.m.dispose(); }
   const m = splatTpl(color).createInstance("sp");
-  m.position.set(x, 0.035 + marks.length * 0.00002, z);
-  m.rotation.y = Math.random() * 6.3;
+  onFloor(p, 0.035 + marks.length * 0.00002, m.position);
+  m.rotation.y = Math.random() * 6.3; orient(m);
   m.scaling.set(s * (0.8 + Math.random() * 0.5), 1, s * (0.6 + Math.random() * 0.4));
   marks.push({ m, life: 12, s });
 }
@@ -261,7 +263,7 @@ export function corpse(m: B.InstancedMesh, h: number, anim?: (dt: number) => voi
   if (corpses.length > 60) corpses.shift()!.m.dispose();
   if (anim) { corpses.push({ m, life: 6, anim }); return; }
   m.rotationQuaternion = (m.rotationQuaternion ?? B.Quaternion.Identity()).multiply(B.Quaternion.RotationAxis(B.Axis.Z, Math.PI));
-  m.position.y = h;
+  if (MOON.on) onFloor(m.position, h, m.position); else m.position.y = h;
   corpses.push({ m, life: 5 + Math.random() * 2 });
 }
 
@@ -282,10 +284,11 @@ export function tickFx(dt: number) {
   }
   for (let i = chunks.length - 1; i >= 0; i--) {
     const c = chunks[i];
-    c.v.y -= 25 * dt;
+    grav(c.v, c.m.position, 25 * dt);
     c.m.position.addInPlace(c.v.scale(dt));
     c.m.rotation.addInPlace(c.av.scale(dt));
-    if (c.m.position.y < 0.07) { c.m.position.y = 0.07; c.v.y *= -0.3; c.v.x *= 0.6; c.v.z *= 0.6; c.av.scaleInPlace(0.5); }
+    if (MOON.on) { if (alt(c.m.position) < 0.07) { onFloor(c.m.position, 0.07, c.m.position); const u = upAt(c.m.position), vn = B.Vector3.Dot(c.v, u); c.v.subtractInPlace(u.scale(vn)).scaleInPlace(0.6).addInPlace(u.scaleInPlace(Math.abs(vn) * 0.3)); c.av.scaleInPlace(0.5); } }
+    else if (c.m.position.y < 0.07) { c.m.position.y = 0.07; c.v.y *= -0.3; c.v.x *= 0.6; c.v.z *= 0.6; c.av.scaleInPlace(0.5); }
     if ((c.life -= dt) < 0.4) c.m.scaling.scaleInPlace(0.9);
     if (c.life <= 0) { c.m.dispose(); chunks.splice(i, 1); }
   }
@@ -391,6 +394,15 @@ export function contactShadows(carPos: B.Vector3 | null, enemies: { pos: B.Vecto
     cShadows = thin(flatDisc("cShadow", 12), m, 260);
   }
   let k = 0;
+  if (MOON.on) { // luna: cada disco apoyado y girado según el piso de su lugar
+    const q = new B.Quaternion(), sc = new B.Vector3(), mx = new B.Matrix(), pp = new B.Vector3(), Y = B.Vector3.Up();
+    const putM = (p: B.Vector3, y: number, sx: number, sz: number) => { const u = upAt(p); B.Quaternion.FromUnitVectorsToRef(Y, u, q); sc.set(sx, 1, sz); B.Matrix.ComposeToRef(sc, q, onFloor(p, y, pp), mx); mx.copyToArray(cShadows.buf, k++ * 16); };
+    putM(carPos, 0.032, 1.05, 1.35);
+    for (let i = 0; i < enemies.length && k < cShadows.n; i++) { const e = enemies[i], s = e.def.size, air = Math.max(0.45, 1 - Math.max(0, alt(e.pos) - s[1] * 0.5) * 0.04); putM(e.pos, 0.031, s[0] * 0.65 * air, s[2] * 0.65 * air); }
+    cShadows.m.thinInstanceCount = k;
+    cShadows.m.thinInstanceBufferUpdated("matrix");
+    return;
+  }
   put(cShadows, k++, carPos.x, 0.032, carPos.z, 1.05, 1.35);
   for (let i = 0; i < enemies.length && k < cShadows.n; i++) {
     const e = enemies[i], p = e.pos, s = e.def.size, air = Math.max(0.45, 1 - Math.max(0, p.y - s[1] * 0.5) * 0.04);
@@ -402,7 +414,7 @@ export function contactShadows(carPos: B.Vector3 | null, enemies: { pos: B.Vecto
 
 export function clearFx() {
   if (drops) { rainHide(); pData.fill(1e9); }
-  if (cShadows) cShadows.m.thinInstanceCount = 0;
+  if (cShadows) { cShadows.m.thinInstanceCount = 0; const b = cShadows.buf; b.fill(0); for (let i = 0; i < cShadows.n; i++) b[i * 16] = b[i * 16 + 5] = b[i * 16 + 10] = b[i * 16 + 15] = 1; } // la luna escribe rotaciones: el patio solo pisa diagonal y posición
   wet = 0; wetGround(0);
   for (const c of chunks) c.m.dispose();
   for (const k of marks) k.m.dispose();

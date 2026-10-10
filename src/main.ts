@@ -23,6 +23,7 @@ import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
+import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
 import { raceCfg, TRACKS } from "./kart_cfg";
 import "./duel.css"; import "./match3.css"; import "./race.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css (race.css solo se importa acá)
@@ -52,6 +53,7 @@ const engine: B.AbstractEngine = gpuEng ?? new B.Engine(canvas, true, { stencil:
 boot("Iniciando el motor", 0.15);
 const scene = new B.Scene(engine);
 scene.enablePhysics(new B.Vector3(0, -25, 0), new B.HavokPlugin(true, await havok));
+initMoon(scene); // luna (moon.ts): gravedad radial y piso analítico; antes de la cámara lenta, que envuelve el mismo paso
 scene.skipPointerMovePicking = true;
 
 boot("Preparando la escena", 0.4);
@@ -153,7 +155,8 @@ function dropGems(pos: B.Vector3, amount: number) {
     const v: 1 | 5 | 20 = amount >= 20 ? 20 : amount >= 5 ? 5 : 1;
     amount -= v;
     const m = gemTpl(v).createInstance("gem");
-    m.position.set(pos.x + (rng() - 0.5) * 1.5, 0, pos.z + (rng() - 0.5) * 1.5);
+    const jx = (rng() - 0.5) * 1.5, jz = (rng() - 0.5) * 1.5;
+    if (MOON.on) onFloor(at(pos, jx, 0, jz), 0, m.position); else m.position.set(pos.x + jx, 0, pos.z + jz);
     gems.push({ m, xp: v, pull: false, vy: 5 + Math.random() * 4 }); // salta al caer (visual: Math.random, no toca la semilla)
   }
 }
@@ -170,11 +173,12 @@ function dropPickup(pos: B.Vector3, type: Pickup["type"]) {
     for (let i = 0; i < pickups.length; i++) { if (pickups[i].type === type) { n++; if (first < 0) first = i; } }
     if (n >= PICKUP_CAP && first >= 0) { pickups[first].m.dispose(); pickups.splice(first, 1); }
     m = (type === "pila" ? pilaTpl() : imanTpl()).createInstance(type);
-    m.position.set(pos.x, 0.8, pos.z);
+    onFloor(pos, 0.8, m.position); orient(m);
   } else {
     m = cyl(2.2, 2.2, 1.6, M.metal("#d4a017"), [pos.x, 0.8, pos.z], undefined, 6);
     const beam = cyl(1.4, 1.4, 60, pbr("beam", { color: "#fde68a", emissive: "#fbbf24", alpha: 0.25 }), [0, 30, 0], undefined, 8);
     beam.parent = m;
+    if (MOON.on) { onFloor(pos, 0.8, m.position); orient(m); } // luna: el haz sale para arriba del lugar
     shadows.addShadowCaster(m as B.Mesh); // las instancias ya proyectan sombra por su plantilla
   }
   pickups.push({ m, type });
@@ -208,6 +212,7 @@ function previewOffer(i: number) {
 }
 
 function clearRun() {
+  setMoon(false); // la luna se enciende solo en una partida de Supervivencia en la luna (startRun)
   for (const e of enemies) e.dispose();
   for (const w of weapons) w.dispose();
   for (const g of gems) g.m.dispose();
@@ -238,11 +243,13 @@ function startRun(d = false) {
   // Semilla de la partida: ?seed=N la fija (reproducible), si no, una nueva
   // Zona: el diario siempre en el patio; ?zone=garaje|jardin (solo dev) la fuerza. Se arma antes de sembrar: no toca la semilla.
   setZone(zoneFor(daily)); // ya armado por la precarga (tarea "patio") salvo que cambie la zona o el tope de texturas
+  setMoon(zoneId === "luna");
   runSeed = forceSeed || Number(new URLSearchParams(location.search).get("seed")) || (daily ? dailySeed() : newSeed());
   seedRng(runSeed);
   // Perfil de la partida: clima, plaga, orden de minijefes, ritmo de eventos y un patio distinto
   profile = makeProfile(runSeed);
   profile.climate = zoneClimate() ?? profile.climate; // interior (garaje): luz fija
+  if (MOON.on) profile.rainAt = Infinity; // en la luna no llueve
   cycleS = -1;
   buildLayout();
   RUN_BOSSES = [[R.jefe1_s, profile.minis[0]], [R.jefe2_s, profile.minis[1]], [R.jefe_final_s, profile.final]];
@@ -268,7 +275,7 @@ function startRun(d = false) {
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
   spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; wasGrounded = true; coyoteT = 0; apagon = false;
-  camYaw = 0; dynK = 1; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1);
+  camYaw = 0; dynK = 1; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1); camH.set(0, 0, 1); camUp.set(0, 1, 0);
   state = "play";
   scene.physicsEnabled = true;
   reset(null);
@@ -423,7 +430,7 @@ function openOffers(list: Offer[], title: string) {
   const c = car!;
   let near = 0, bossNear = false;
   for (const e of enemies) {
-    if (Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) > 24) continue;
+    if (hd(e.pos, c.pos) > 24) continue;
     if (e.def.boss) bossNear = true;
     else near++;
   }
@@ -647,12 +654,12 @@ function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
 function explode(pos: B.Vector3, r: number, dmg: number) {
   FX.explosion(pos.add(new B.Vector3(0, 0.5, 0)), r);
   SFX.explosion();
-  mark("scorch", pos.x, pos.z, Math.random() * 6, r * 0.55, 14);
+  mark("scorch", pos, Math.random() * 6, r * 0.55, 14);
   smashed(hitBreakables(pos, r, dmg));
   shake = Math.max(shake, 0.25);
   for (const e of enemies) {
     const d = B.Vector3.Distance(e.pos, pos);
-    if (d < r + e.radius) damage(e, dmg, e.pos.subtract(pos).normalize().addInPlace(new B.Vector3(0, 0.6, 0)).scale(6));
+    if (d < r + e.radius) damage(e, dmg, e.pos.subtract(pos).normalize().addInPlace(upv(e.pos, 0.6)).scale(6));
   }
 }
 
@@ -673,7 +680,7 @@ function kill(e: Enemy) {
   debris(e.pos, e.def.color, e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
   if (!simulating) debris(e.pos, CONFETI[Math.floor(Math.random() * CONFETI.length)], e.def.boss ? 14 : 3, e.def.boss ? 12 : 7, e.def.boss ? 1.2 : 0.5); // confeti de color: cada baja se ve festiva
   const juice = !simulating && !e.def.boss;
-  if (juice && BUG_GOO[e.kind]) splat(e.pos.x, e.pos.z, BUG_GOO[e.kind]!, Math.max(e.def.size[0], e.def.size[2]) * 0.55);
+  if (juice && BUG_GOO[e.kind]) splat(e.pos, BUG_GOO[e.kind]!, Math.max(e.def.size[0], e.def.size[2]) * 0.55);
   if (juice && (e.kind === "friccion" || e.kind === "robot")) { debris(e.pos, "#b8bcc2", 5, 8, 0.45); debris(e.pos, "#d4a017", 3, 9, 0.35); FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0))); }
   if (e.def.xp) dropGems(e.pos, e.def.xp * (e.def.boss ? 1 : TOUGH.xp));
   if (e.def.boss) {
@@ -701,9 +708,13 @@ function leave(e: Enemy) {
 const TOUGH = { count: R.dureza_cantidad, hp: R.dureza_vida, dmg: R.dureza_dano, xp: R.dureza_xp };
 function spawnEnemy(kind: Kind, p: B.Vector3) {
   enemies.push(new Enemy(kind, p, (1 + time / R.vida_escala_seg) * TOUGH.hp)); // los jefes ignoran hpMul
+  if (MOON.on) enemyLights(enemies[enemies.length - 1].node, kind, DEF[kind].size); // luna: versión "robot con luces" (ojos y baliza que atraviesan la niebla)
   if (!LAB.on && !save.seen.includes(kind)) save.seen.push(kind); // bestiario
   if (!LAB.on && !simulating) { const b = beastRec(kind); b.first ??= today(); if (!b.zones.includes(zoneId)) b.zones.push(zoneId); } // registro propio
 }
+
+// Fase 2 de la luna (moon.ts LUNA.spawn): un bicho en cualquier punto de la esfera (se apoya en el piso del lugar)
+LUNA.spawn = (kind, p) => spawnEnemy(kind, onFloor(p, 0.5));
 
 // ---------- Update ----------
 function update(dt: number) {
@@ -728,7 +739,7 @@ function update(dt: number) {
   if (bombs > 0 && (bombT -= dt) <= 0) {
     bombs--; bombT = R.bombardeo_intervalo_s;
     const a = rng() * Math.PI * 2, d = 3 + rng() * 11;
-    dmgSrc = "bombardeo"; explode(new B.Vector3(c.pos.x + Math.cos(a) * d, 0, c.pos.z + Math.sin(a) * d), R.bombardeo_radio, R.bombardeo_dano * st.dmg); dmgSrc = "";
+    dmgSrc = "bombardeo"; explode(MOON.on ? onFloor(at(c.pos, Math.cos(a) * d, 0, Math.sin(a) * d), 0) : new B.Vector3(c.pos.x + Math.cos(a) * d, 0, c.pos.z + Math.sin(a) * d), R.bombardeo_radio, R.bombardeo_dano * st.dmg); dmgSrc = "";
   }
   const wdt = dt * worldK;
 
@@ -739,7 +750,7 @@ function update(dt: number) {
     _moveF.set(Math.sin(camYaw), 0, Math.cos(camYaw));
     _moveR.set(_moveF.z, 0, -_moveF.x);
     _moveWant.set(_moveR.x * input.moveX + _moveF.x * input.moveY, 0, _moveR.z * input.moveX + _moveF.z * input.moveY);
-    _moveFwd.copyFrom(c.root.forward); _moveFwd.y = 0; _moveFwd.normalize();
+    _moveFwd.copyFrom(MOON.on ? flatL(c.root.forward, c.pos) : c.root.forward); _moveFwd.y = 0; _moveFwd.normalize(); // luna: camYaw y el rumbo, en el marco local del auto
     const wl = _moveWant.length();
     throttle = Math.min(1, wl);
     if (wl > 1e-6) _moveWant.scaleInPlace(1 / wl);
@@ -775,17 +786,17 @@ function update(dt: number) {
     jumpCd = R.salto_cd_s;
     coyoteT = 0;
     const m = c.body.getMassProperties().mass || c.def.mass;
-    const fwd = c.root.forward.clone(); fwd.y = 0;
+    const fwd = MOON.on ? flatL(c.root.forward, c.pos) : c.root.forward.clone(); fwd.y = 0;
     if (fwd.lengthSquared() > 1e-6) fwd.normalize();
     const ramp = r.slope ?? 0;
     const hx = Math.abs(r.fs) * R.salto_horiz * (1 + ramp * R.salto_rampa_h) * m;
     const vy = R.salto_impulso_v * (1 + ramp * R.salto_rampa_v) * m;
-    c.body.applyImpulse(new B.Vector3(fwd.x * hx, vy, fwd.z * hx), c.pos);
+    c.body.applyImpulse(W(fwd.x * hx, vy, fwd.z * hx, c.pos), c.pos);
     if (!simulating) { SFX.boing(); const rear = c.pos.add(c.root.forward.scale(-0.8)); FX.dust(rear); shake = Math.max(shake, 0.18); }
   }
   if (yardPulseIdx < YARD_PULSES.length && time >= YARD_PULSES[yardPulseIdx]) {
     yardPulseIdx++; yardPulseT = 10;
-    if (!simulating) { banner(zoneId === "jardin" ? "SOBREPRESIÓN EN ASPERSORES" : "PICOS DE TENSIÓN EN EL PATIO", 2.2); FX.sparks(c.pos.add(new B.Vector3(0, 0.6, 0))); }
+    if (!simulating && !MOON.on) { banner(zoneId === "jardin" ? "SOBREPRESIÓN EN ASPERSORES" : "PICOS DE TENSIÓN EN EL PATIO", 2.2); FX.sparks(c.pos.add(new B.Vector3(0, 0.6, 0))); }
   }
   if (yardPulseT > 0) yardPulseT = Math.max(0, yardPulseT - dt);
   { const zp = zoneTick(dt, c.pos, yardPulseT > 0); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
@@ -812,8 +823,8 @@ function update(dt: number) {
   // Marcas de neumático al derrapar / patinar
   if (r.grounded && (Math.abs(r.ls) > 3.5 || (input.drift && Math.abs(r.fs) > 5)) && (skidT -= dt) <= 0) {
     skidT = 0.025;
-    const yaw = Math.atan2(c.root.forward.x, c.root.forward.z);
-    for (const w of c.model.wheels) if (!w.front) { const p = w.m.getAbsolutePosition(); mark("skid", p.x, p.z, yaw, 1, 7); }
+    const yaw = yawOf(c.root.forward, c.pos);
+    for (const w of c.model.wheels) if (!w.front) mark("skid", w.m.getAbsolutePosition(), yaw, 1, 7);
   }
   // Daño visible: humo con media vida, humo negro y chispas con poca
   if (hp < maxHp * 0.5 && (smokeT -= dt) <= 0) {
@@ -840,7 +851,7 @@ function update(dt: number) {
       if (!simulating) SFX.bodyThud(spd * 0.4);
     }
   }
-  if (Math.abs(c.pos.x) > HALF + 5 || Math.abs(c.pos.z) > HALF + 5 || c.pos.y < -5) hp = 0;
+  if (MOON.on ? alt(c.pos) < -5 : Math.abs(c.pos.x) > HALF + 5 || Math.abs(c.pos.z) > HALF + 5 || c.pos.y < -5) hp = 0;
 
   // --- Aparición de enemigos ---
   // Tope de vivos y ritmo: con el bot que pelea jefes (devbot.ts) quedó en ~50% de victorias (__sim, 40 semillas).
@@ -848,7 +859,7 @@ function update(dt: number) {
   const maxAlive = duel >= 0 ? duel : Math.min(low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + time / R.tope_vivos_seg) * horde * TOUGH.count); // Horda: +50%. Tope 100 en compu, 60 en táctil
   // Aparecen sesgados hacia donde vas: manejar no es escapar gratis
   const cv = c.body.getLinearVelocity();
-  _spawnOff.set(cv.x, 0, cv.z).scaleInPlace(R.spawn_adelanto_s);
+  hflat(_spawnOff.copyFrom(cv), c.pos).scaleInPlace(R.spawn_adelanto_s);
   _ahead.copyFrom(c.pos).addInPlace(_spawnOff);
   let normals = 0;
   for (const e of enemies) if (!e.def.boss) normals++;
@@ -865,7 +876,7 @@ function update(dt: number) {
     const n = ant ? R.formacion_hormigas_base + Math.floor(time / R.formacion_hormigas_seg) : R.formacion_escolta;
     for (let i = 1; i <= n; i++) {
       const a = (i / n) * 6.28, slot = ant ? new B.Vector3(0, 0, 1.8 * i) : new B.Vector3(Math.sin(a) * 4.5, 0, Math.cos(a) * 4.5);
-      spawnEnemy(ant ? "hormiga" : "friccion", p0.add(new B.Vector3(slot.x, 0, -slot.z)));
+      spawnEnemy(ant ? "hormiga" : "friccion", at(p0, slot.x, 0, -slot.z));
       const f = enemies[enemies.length - 1];
       f.leader = lead; f.slot.copyFrom(slot); f.spd = R.formacion_vel;
     }
@@ -877,7 +888,7 @@ function update(dt: number) {
     swarmT = profile.swarmEvery;
     radioEvent("enjambre");
     const ns = Math.round((R.enjambre_base + time / R.enjambre_seg) * horde * TOUGH.count); // el enjambre crece con la partida
-    for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = new B.Vector3(c.pos.x + Math.cos(a) * R.enjambre_radio, 1, c.pos.z + Math.sin(a) * R.enjambre_radio); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
+    for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = MOON.on ? ringAt(c.pos, a, R.enjambre_radio) : new B.Vector3(c.pos.x + Math.cos(a) * R.enjambre_radio, 1, c.pos.z + Math.sin(a) * R.enjambre_radio); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
   if (time - Math.max(hitAt, 300) >= 60) grant("intacto"); // 60 s sin daño, contando desde el minuto 5
   const bossWarnS = R.aviso_jefe_s;
@@ -936,15 +947,15 @@ function update(dt: number) {
   let contactHit = 0, contactBy: Kind | undefined;
   for (const e of enemies) {
     // En formación va al lugar que le toca junto a su líder; cerca del auto (o sin líder) ataca por su cuenta
-    const ld = e.leader && e.leader.hp > 0 && Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) > 14 ? e.leader : null;
-    if (e.leader && !ld && Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) <= 14) e.leader = null;
+    const ld = e.leader && e.leader.hp > 0 && hd(e.pos, c.pos) > 14 ? e.leader : null;
+    if (e.leader && !ld && hd(e.pos, c.pos) <= 14) e.leader = null;
     const tgt = ld ? ld.pos.add(ld.node.right.scale(e.slot.x)).addInPlace(ld.node.forward.scale(-e.slot.z)) : c.pos;
     const ev = e.stun > 0 ? stunned(e, wdt) : e.update(wdt, tgt);
-    if (ev === "spit_aim" && !simulating) { const f = e.node.forward; FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0))); mark("scorch", e.pos.x, e.pos.z, Math.atan2(f.x, f.z), 0.35, 4); }
+    if (ev === "spit_aim" && !simulating) { const f = e.node.forward; FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0))); mark("scorch", e.pos, yawOf(f, e.pos), 0.35, 4); }
     if (ev === "spit") {
       // Apunta adonde vas a estar (predicción simple): esquivar = cambiar de rumbo
-      const cvl = c.body.getLinearVelocity(), from = e.pos.add(new B.Vector3(0, 0.6, 0));
-      const t = B.Vector3.Distance(from, c.pos) / ATK.acido_vel, aim = c.pos.add(new B.Vector3(cvl.x, 0, cvl.z).scale(t * 0.8));
+      const cvl = c.body.getLinearVelocity(), from = at(e.pos, 0, 0.6, 0);
+      const t = B.Vector3.Distance(from, c.pos) / ATK.acido_vel, aim = c.pos.add(hflat(cvl.clone(), c.pos).scale(t * 0.8));
       const m = spitTpl().createInstance("sp");
       m.position.copyFrom(from);
       pushSpit({ m, v: aim.subtract(from).normalize().scale(ATK.acido_vel), life: 2.2, k: e.kind });
@@ -953,31 +964,31 @@ function update(dt: number) {
     if (e.phaseUp) { e.phaseUp = false; banner(`${e.def.name} PIERDE LA PACIENCIA`, 2); shake = Math.max(shake, 1); SFX.boss(); }
     if (ev === "meow") { // Eulalio llama polillas alrededor suyo
       banner("¡MIAU!", 1.2);
-      for (let i = 0; i < 4; i++) { const a = (i / 4) * 6.28 + rng(); spawnEnemy("polilla", e.pos.add(new B.Vector3(Math.sin(a) * 6, 0, Math.cos(a) * 6))); }
+      for (let i = 0; i < 4; i++) { const a = (i / 4) * 6.28 + rng(); spawnEnemy("polilla", at(e.pos, Math.sin(a) * 6, 0, Math.cos(a) * 6)); }
     }
     if (ev === "slam") {
       FX.slam(e.pos, 10);
-      mark("scorch", e.pos.x, e.pos.z, 0, 7, 10);
+      mark("scorch", e.pos, 0, 7, 10);
       shake = 1.2;
       if (B.Vector3.Distance(e.pos, c.pos) < ATK.salto_radio) hurt(ATK.salto_dano, false, "salto " + e.kind, e.kind);
       for (const o of enemies) if (o !== e && B.Vector3.Distance(o.pos, e.pos) < ATK.salto_aplasta_radio) damage(o, 999);
     }
     // Jefes finales nuevos (enemies.ts): tuercas en abanico, barrido en arco, cables y succión
-    if (ev === "fan") for (const d of e.fan) { const m = nutTpl().createInstance("nut"); m.position.copyFrom(e.pos).addInPlace(new B.Vector3(d.x * 3.4, 0.7, d.z * 3.4)); pushSpit({ m, v: d.scale(ATK.acido_vel), life: 2.2, k: e.kind }); }
+    if (ev === "fan") for (const d of e.fan) { const m = nutTpl().createInstance("nut"); at(e.pos, d.x * 3.4, 0.7, d.z * 3.4, m.position); pushSpit({ m, v: W(d.x, d.y, d.z, e.pos).scale(ATK.acido_vel), life: 2.2, k: e.kind }); } // e.fan: marco local del jefe
     if (ev === "slash") { hurt(ATK.cortacercos_barrido_dano, false, "barrido " + e.kind, e.kind); FX.sparks(c.pos); }
     if (ev === "shock") { hurt(ATK.cortacercos_cable_dano, false, "cables", e.kind); FX.sparks(c.pos); }
-    if (e.pull && e.stun <= 0) { const d = new B.Vector3(e.pos.x - c.pos.x, 0, e.pos.z - c.pos.z).normalize().scaleInPlace(e.pull * wdt); c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(d)); }
-    const dist = Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z);
+    if (e.pull && e.stun <= 0) { const d = hflat(e.pos.subtract(c.pos), c.pos).normalize().scaleInPlace(e.pull * wdt); c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(d)); }
+    const dist = hd(e.pos, c.pos);
     if (!e.def.boss && !e.elite && dist > R.reciclar_distancia) { e.hp = -1e9; continue; } // muy lejos: se recicla (la élite no: lleva cofre)
     if (e.kind === "cortadora" && e.stun <= 0) for (const o of enemies) if (o !== e && !o.def.boss && B.Vector3.Distance(o.pos, e.pos) < e.radius + 0.5) damage(o, 999); // corta todo
-    if (dist < e.radius + carR && c.pos.y - e.pos.y < e.def.size[1] + 0.5) {
-      const dir = new B.Vector3(e.pos.x - c.pos.x, 0, e.pos.z - c.pos.z).normalize();
+    if (dist < e.radius + carR && rad(c.pos) - rad(e.pos) < e.def.size[1] + 0.5) {
+      const dir = hflat(e.pos.subtract(c.pos), c.pos).normalize();
       const rel = B.Vector3.Dot(cv, dir); // solo cuenta TU velocidad hacia el enemigo
       if (rel > R.embestida_vel_min && e.ramCd <= 0) {
         const lanza = weapons.find((w) => w.id === "lanza");
         const dmg = rel * c.def.ram * (1 + BAL.armas.lanza.dano_nivel * (lanza?.lv ?? 0)) * (boosting ? (c.kind === "axel" ? R.embestida_turbo_axel : R.embestida_turbo) : 1) * st.dmg * st.ram * (lanza?.evolved ? BAL.armas.lanza.dano_evo_mult : 1);
         dmgSrc = "embestida";
-        damage(e, dmg, dir.scale(rel * 0.8).addInPlace(new B.Vector3(0, rel * 0.2, 0)), true);
+        damage(e, dmg, dir.scale(rel * 0.8).addInPlace(upv(e.pos, rel * 0.2)), true);
         FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0)));
         SFX.ram(rel);
         if ((e.def.boss || e.elite || e.def.mass > 50) && rel > 3.5) {
@@ -992,7 +1003,7 @@ function update(dt: number) {
         // Embestir algo más pesado que vos tiene costo: rebote y daño (salvo Ariete)
         if (e.def.mass > c.def.mass * st.mass * R.embestida_rebote_masa && !ariete) {
           if (e.touchCd <= 0) { hurt(e.def.dmg * R.contacto_dano * TOUGH.dmg, false, "rebote " + e.kind, e.kind); e.touchCd = R.contacto_recarga_s; }
-          c.body.applyImpulse(dir.scale(-rel * R.embestida_rebote * c.def.mass).addInPlace(new B.Vector3(0, R.embestida_rebote_y, 0)), c.pos);
+          c.body.applyImpulse(dir.scale(-rel * R.embestida_rebote * c.def.mass).addInPlace(upv(c.pos, R.embestida_rebote_y)), c.pos);
         }
       } else if (rel <= R.embestida_vel_min && !(ariete && boosting) && e.touchCd <= 0 && e.stun <= 0) {
         const cd = e.def.dmg * R.contacto_dano * (e.def.boss ? 1 : TOUGH.dmg);
@@ -1002,7 +1013,7 @@ function update(dt: number) {
         if (!e.def.boss) e.body.applyImpulse(dir.scale(R.contacto_empuje_bicho * e.def.mass), e.pos);
         // Un jefe te despide lejos: nunca quedás atrapado contra él
         if (e.def.boss) {
-          c.body.applyImpulse(dir.scale(-R.contacto_jefe_empuje * c.def.mass).addInPlace(new B.Vector3(0, 4 * c.def.mass, 0)), c.pos);
+          c.body.applyImpulse(dir.scale(-R.contacto_jefe_empuje * c.def.mass).addInPlace(upv(c.pos, 4 * c.def.mass)), c.pos);
           const screenX = (e.pos.x - c.pos.x) * Math.cos(camYaw) - (e.pos.z - c.pos.z) * Math.sin(camYaw);
           const pan = B.Scalar.Clamp(screenX / 8, -1, 1);
           SFX.bodyThud(6, pan);
@@ -1019,10 +1030,21 @@ function update(dt: number) {
     hurt(contactHit, true, contactBy ? "contacto " + contactBy : "contacto", contactBy);
     SFX.hurt();
     if (contactHit > 8) SFX.bodyThud(contactHit * 0.4);
+    if (MOON.on) { // luna: el mismo empujón con vectores del plano tangente del auto
+      const P = new B.Vector3(); let n = 0;
+      for (const e of enemies) { if (e.def.boss || e.hp <= 0 || hd(e.pos, c.pos) > carR + e.radius + 0.5) continue; P.addInPlace(c.pos.subtract(e.pos)); n++; }
+      hflat(P, c.pos);
+      if (n > 0) {
+        P.scaleInPlace(1 / (P.length() || 1));
+        c.body.applyImpulse(P.scale(R.contacto_empuje_auto * c.def.mass * (1 + 0.15 * Math.min(n - 1, 6))), c.pos);
+        const vel = c.body.getLinearVelocity(), inward = -B.Vector3.Dot(vel, P);
+        if (inward > 0) c.body.setLinearVelocity(vel.addInPlace(P.scale(inward * 0.45)));
+      }
+    } else {
     let px = 0, pz = 0, n = 0;
     for (const e of enemies) {
       if (e.def.boss || e.hp <= 0) continue;
-      if (Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z) > carR + e.radius + 0.5) continue;
+      if (hd(e.pos, c.pos) > carR + e.radius + 0.5) continue;
       px += c.pos.x - e.pos.x; pz += c.pos.z - e.pos.z; n++;
     }
     if (n > 0) {
@@ -1032,16 +1054,24 @@ function update(dt: number) {
       const vel = c.body.getLinearVelocity(), inward = -(vel.x * ux + vel.z * uz);
       if (inward > 0) c.body.setLinearVelocity(new B.Vector3(vel.x + ux * inward * 0.45, vel.y, vel.z + uz * inward * 0.45));
     }
+    }
     touchIFrame = R.contacto_invuln_s;
   }
   // Bichos normales cerca del auto: no se amontonan en un solo punto
   const sepR = R.enemigo_separacion, sepR2 = sepR * sepR;
   for (let i = 0; i < enemies.length; i++) {
     const a = enemies[i];
-    if (a.def.boss || a.elite || a.hp <= 0 || Math.hypot(a.pos.x - c.pos.x, a.pos.z - c.pos.z) > 14) continue;
+    if (a.def.boss || a.elite || a.hp <= 0 || hd(a.pos, c.pos) > 14) continue;
     for (let j = i + 1; j < enemies.length; j++) {
       const b = enemies[j];
       if (b.def.boss || b.elite || b.hp <= 0) continue;
+      if (MOON.on) { // luna: separación en 3D (los vecinos están a 1-2 m: la cuerda es el plano tangente)
+        const D = b.pos.subtract(a.pos), d2 = D.lengthSquared();
+        if (d2 < 1e-4 || d2 > sepR2) continue;
+        const d = Math.sqrt(d2); D.scaleInPlace(((sepR - d) / sepR) * 12 * wdt / d);
+        a.body.applyImpulse(D.scale(-a.def.mass), a.pos); b.body.applyImpulse(D.scale(b.def.mass), b.pos);
+        continue;
+      }
       const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d2 = dx * dx + dz * dz;
       if (d2 < 1e-4 || d2 > sepR2) continue;
       const d = Math.sqrt(d2), k = ((sepR - d) / sepR) * 12 * wdt;
@@ -1063,11 +1093,11 @@ function update(dt: number) {
   // --- Ácido de escupidoras ---
   for (let i = spits.length - 1; i >= 0; i--) {
     const s = spits[i];
-    s.m.position.addInPlace(s.v.scale(wdt));
-    s.v.y -= 3 * wdt;
-    let dead = (s.life -= wdt) <= 0 || s.m.position.y < 0.1;
+    if (MOON.on) advance(s.m.position, s.v, s.v.length() * wdt); // luna: vuela pegado a la curva (en línea recta se metería en el piso)
+    else { s.m.position.addInPlace(s.v.scale(wdt)); s.v.y -= 3 * wdt; }
+    let dead = (s.life -= wdt) <= 0 || below(s.m.position, 0.1);
     if (B.Vector3.Distance(s.m.position, c.pos) < carR + 0.3) { hurt(ATK.acido_dano, false, "ácido", s.k); FX.hit(s.m.position); dead = true; }
-    if (dead) { mark("scorch", s.m.position.x, s.m.position.z, Math.random() * 6, 0.6, 5); s.m.dispose(); spits.splice(i, 1); }
+    if (dead) { mark("scorch", s.m.position, Math.random() * 6, 0.6, 5); s.m.dispose(); spits.splice(i, 1); }
   }
 
   // --- Armas ---
@@ -1081,6 +1111,21 @@ function update(dt: number) {
   if (fwdFlat.lengthSquared() > 1e-6) fwdFlat.normalize();
   for (let i = gems.length - 1; i >= 0; i--) {
     const g = gems[i];
+    if (MOON.on) { // luna: lo mismo con la altura sobre el piso del lugar y el imán por la superficie
+      const gp = g.m.position, D = hflat(c.pos.subtract(gp), gp), d2 = D.lengthSquared();
+      if (d2 < mag2) g.pull = true;
+      g.m.rotation.y += dt * 2;
+      let h = Math.max(0, alt(gp));
+      if (g.vy !== 0 || h > 0) { g.vy -= 22 * dt; h = Math.max(0, h + g.vy * dt); if (h === 0) g.vy = g.vy < -4 ? -g.vy * 0.35 : 0; }
+      if (g.pull) { const d = Math.sqrt(d2) || 0.01; advance(gp, D.scale(1 / d), Math.min(d, (22 + 28 / (d + 0.5)) * dt)); }
+      onFloor(gp, h, gp); orient(g.m);
+      if (!simulating) {
+        const gl = Math.sqrt(d2), f = c.root.forward, lampK = gl > 0.4 && gl < 20 ? Math.max(0, -B.Vector3.Dot(f, D) / gl) * (1 - gl / 20) : 0;
+        g.m.scaling.setAll((g.xp === 20 ? 1.5 : g.xp === 5 ? 1.05 : 0.95) * (1 + lampK * 0.24 + (g.pull ? 0.08 : 0)));
+      }
+      if (d2 < 1.2) { gainXp(g.xp); SFX.gem(); if (g.xp > 1) FX.xp(gp); g.m.dispose(); gems.splice(i, 1); }
+      continue;
+    }
     const dx = c.pos.x - g.m.position.x, dz = c.pos.z - g.m.position.z, d2 = dx * dx + dz * dz;
     if (d2 < mag2) g.pull = true;
     g.m.rotation.y += dt * 2;
@@ -1095,7 +1140,7 @@ function update(dt: number) {
   }
   for (let i = pickups.length - 1; i >= 0; i--) {
     const p = pickups[i];
-    p.m.rotation.y += dt * 2;
+    p.m.rotation.y += dt * 2; orient(p.m);
     if (B.Vector3.Distance(p.m.position, c.pos) < 2.2) {
       SFX.pickup();
       if (p.type === "pila") hp = Math.min(maxHp, hp + R.pila_cura);
@@ -1116,9 +1161,11 @@ function update(dt: number) {
     ballT = profile.ballEvery;
     const from = spawnPoint(c.pos, 40, 45);
     const m = sph(R.pelota_diametro, pbr("bigball", { color: "#f97316", rough: 0.45 }), [from.x, 4, from.z], undefined, 16);
+    if (MOON.on) onFloor(from, 4, m.position); // antes del cuerpo físico
     shadows.addShadowCaster(m);
     const agg = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: R.pelota_masa, restitution: 0.5 }, scene);
-    agg.body.setLinearVelocity(c.pos.subtract(from).normalize().scale(R.pelota_vel));
+    FOOT.set(agg.body, R.pelota_diametro / 2);
+    agg.body.setLinearVelocity((MOON.on ? hflat(c.pos.subtract(from), from) : c.pos.subtract(from)).normalize().scale(R.pelota_vel));
     ball = { m, agg, life: R.pelota_vida_s };
     radioEvent("pelota");
   }
@@ -1188,7 +1235,8 @@ function useAbility(c: Car) {
 function stunned(e: Enemy, dt: number) {
   e.stun -= dt; e.ramCd -= dt; e.touchCd -= dt; e.hitCd -= dt;
   const v = e.body.getLinearVelocity();
-  _stunV.set(v.x * 0.85, v.y, v.z * 0.85);
+  if (MOON.on) { const u = upAt(e.pos), vn = B.Vector3.Dot(v, u); _stunV.copyFrom(v).subtractInPlace(u.scale(vn)).scaleInPlace(0.85).addInPlace(u.scaleInPlace(vn)); }
+  else _stunV.set(v.x * 0.85, v.y, v.z * 0.85);
   e.body.setLinearVelocity(_stunV);
   e.body.setAngularVelocity(B.Vector3.Zero());
   if (!simulating && Math.random() < dt * 5) FX.sparks(e.pos.add(new B.Vector3(0, e.def.size[1] * 0.6, 0)));
@@ -1204,7 +1252,8 @@ function stunned(e: Enemy, dt: number) {
     const b = car.body, k = worldK;
     b.setLinearVelocity(b.getLinearVelocity().scaleInPlace(1 / k)); b.setAngularVelocity(b.getAngularVelocity().scaleInPlace(1 / k));
     step0(d * k);
-    const v = b.getLinearVelocity().scaleInPlace(k); v.y += pe.gravity.y * d * (1 - k * k);
+    const v = b.getLinearVelocity().scaleInPlace(k);
+    if (MOON.on) grav(v, b.transformNode.position, MOON.g * d * (1 - k * k)); else v.y += pe.gravity.y * d * (1 - k * k);
     b.setLinearVelocity(v); b.setAngularVelocity(b.getAngularVelocity().scaleInPlace(k));
   };
 }
@@ -1232,17 +1281,19 @@ function updateHud(dt: number) {
     const sp = toScreen(p);
     let x = sp.x, y = sp.y;
     if (sp.z > 1) { x = W - x; y = H; } // detrás de la cámara
-    if (sp.z > 1 || x < 0 || x > W || y < 0 || y > H) out.push({ x: x * k, y: y * k, kind, dist: Math.round(Math.hypot(p.x - car!.pos.x, p.z - car!.pos.z)) });
+    if (sp.z > 1 || x < 0 || x > W || y < 0 || y > H) out.push({ x: x * k, y: y * k, kind, dist: Math.round(hd(p, car!.pos)) });
   }
   hudArrows(out);
   if ((hudT -= dt) > 0) return;
   hudT = 0.05;
-  const gemBlips = gems.length <= 40 ? gems.map((g) => ({ x: g.m.position.x, z: g.m.position.z, kind: "gema" as const })) : [];
-  const recBlips = pickups.length <= 24 ? pickups.filter((p) => p.type !== "cofre").map((p) => ({ x: p.m.position.x, z: p.m.position.z, kind: "rec" as const })) : [];
+  // Luna: el radar es el plano local del auto (el auto en el centro, cada punto con su rumbo y su distancia por la superficie)
+  const xz = MOON.on ? (p: B.Vector3) => rel(p, car!.pos) : (p: B.Vector3) => ({ x: p.x, z: p.z });
+  const gemBlips = gems.length <= 40 ? gems.map((g) => ({ ...xz(g.m.position), kind: "gema" as const })) : [];
+  const recBlips = pickups.length <= 24 ? pickups.filter((p) => p.type !== "cofre").map((p) => ({ ...xz(p.m.position), kind: "rec" as const })) : [];
   hudRadar(
-    { x: car!.pos.x, z: car!.pos.z, yaw: Math.atan2(car!.root.forward.x, car!.root.forward.z), up: camYaw },
-    [...enemies.map((e) => ({ x: e.pos.x, z: e.pos.z, kind: e.def.boss ? ("jefe" as const) : e.elite ? ("elite" as const) : ("enemigo" as const) })),
-     ...pickups.filter((p) => p.type === "cofre").map((p) => ({ x: p.m.position.x, z: p.m.position.z, kind: "cofre" as const })),
+    MOON.on ? { x: 0, z: 0, yaw: yawOf(car!.root.forward, car!.pos), up: camYaw } : { x: car!.pos.x, z: car!.pos.z, yaw: Math.atan2(car!.root.forward.x, car!.root.forward.z), up: camYaw },
+    [...enemies.map((e) => ({ ...xz(e.pos), kind: e.def.boss ? ("jefe" as const) : e.elite ? ("elite" as const) : ("enemigo" as const) })),
+     ...pickups.filter((p) => p.type === "cofre").map((p) => ({ ...xz(p.m.position), kind: "cofre" as const })),
      ...gemBlips, ...recBlips]);
   // Daño visible: pintura gastada y piezas que saltan al cruzar 50% y 25%
   const frac = Math.max(0, hp / maxHp);
@@ -1253,7 +1304,7 @@ function updateHud(dt: number) {
     hp, maxHp, boost, xp, need: xpNeed(level), level, pending: pendingLevels, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh,
     shield: abil === "escudo" && abilOn > 0,
     boostActive: lampBoost,
-    distCenter: car ? Math.hypot(car.pos.x, car.pos.z) : 0,
+    distCenter: car ? (MOON.on ? hd(car.pos, B.Vector3.Zero()) : Math.hypot(car.pos.x, car.pos.z)) : 0,
     heat: Math.min(1, boostSec / 2.0),
   });
   hudAbility(ABILITIES[abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / abilCdOf(abil, abilLv), abilOn > 0, ABIL_ICON[abil], Math.max(0, abilCd));
@@ -1262,6 +1313,18 @@ function updateHud(dt: number) {
 
 // ---------- Loop ----------
 const camTarget = new B.Vector3();
+// Luna: la cámara guarda un rumbo (vector tangente) que viaja con el auto alrededor de la esfera y un "arriba" que sigue la vertical del lugar.
+// camYaw = ese rumbo medido en el marco local del auto: el stick, el radar y el resto lo leen igual que en el patio.
+const camH = new B.Vector3(0, 0, 1), camUp = new B.Vector3(0, 1, 0), _camM = new B.Matrix();
+function moonCam(c: Car, dt: number, follow: boolean) {
+  B.Vector3.LerpToRef(camUp, upAt(c.pos), 1 - Math.exp(-8 * dt), camUp).normalize();
+  let hy = yawOf(hflat(camH, c.pos), c.pos);
+  if (follow) { const t = yawOf(c.root.forward, c.pos); hy += Math.atan2(Math.sin(t - hy), Math.cos(t - hy)) * (1 - Math.exp(-2 * dt)); }
+  if (state === "outro") hy += dt * 0.45; // el cierre orbita el auto (outroTick suma a camYaw, que acá se recalcula)
+  camH.copyFrom(W(Math.sin(hy), 0, Math.cos(hy), c.pos));
+  camYaw = hy;
+  if (!simulating) moonTick(dt, c.pos, cam);
+}
 // Encuadres del menú: SHOTS (menuscene.ts, derivados de SCENES), uno por pantalla dentro de su escenario
 const shot = (scr: string) => (engine.getAspectRatio(cam) < 1 && SHOTS[scr + "_v"]) || SHOTS[scr] || SHOTS.main; // _v: encuadre de celular vertical
 let previewKey = "", previewR = 0;
@@ -1412,7 +1475,8 @@ scene.onBeforeRenderObservable.add(() => {
     // carrera / demolición manejan cámara en su módulo
   } else if (car) {
     const cm = CAMS[save.camMode];
-    if (cm.yaw !== undefined) camYaw = cm.yaw;
+    if (MOON.on) moonCam(car, dt, cm.yaw === undefined && !input.move && state === "play");
+    else if (cm.yaw !== undefined) camYaw = cm.yaw;
     else if (!input.move && state === "play") {
       const f = car.root.forward;
       const target = Math.atan2(f.x, f.z);
@@ -1421,17 +1485,18 @@ scene.onBeforeRenderObservable.add(() => {
     // Al elegir mejoras la cámara se acerca y gira a 3/4 frontal para ver la pieza montada
     const close = state === "level";
     const yaw = close ? camYaw + 2.5 : camYaw;
-    setLamp(car.pos, car.root.forward, lampBoost, dt);
+    setLamp(car.pos, car.root.forward, lampBoost, dt, MOON.on ? car.root.up : undefined);
     if (!simulating) { tickRain(dt * ts, car.pos, car.root.forward, rainK); rainSfx(rainK); }
     // Polvo que flota dentro del haz del faro
-    if (!simulating && (moteT -= dt) <= 0) {
+    if (!simulating && !MOON.on && (moteT -= dt) <= 0) { // luna: sin motas (son planas) ni bichitos de ambiente
       moteT = 0.09;
       const f = car.root.forward, d = 3 + Math.random() * 11, sd = (Math.random() - 0.5) * d * 0.9;
       ambient("mote", new B.Vector3(car.pos.x + f.x * d + f.z * sd, 0.4 + Math.random() * 2.2, car.pos.z + f.z * d - f.x * sd));
     }
     // Luciérnagas alrededor del auto cuando ya anocheció; en el garaje, polvo bajo los tubos
     const dust = zoneDust();
-    if (!simulating && dust && (flyT -= dt) <= 0) {
+    if (MOON.on) { /* sin ambiente en la luna */ }
+    else if (!simulating && dust && (flyT -= dt) <= 0) {
       flyT = 0.05;
       const [x, z, w, d] = dust[Math.floor(Math.random() * dust.length)];
       ambient("mote", new B.Vector3(x + (Math.random() - 0.5) * w, 0.5 + Math.random() * 12, z + (Math.random() - 0.5) * d));
@@ -1445,7 +1510,7 @@ scene.onBeforeRenderObservable.add(() => {
       ambient("fly", new B.Vector3(car.pos.x + Math.cos(a) * r, 0.5 + Math.random() * 2.5, car.pos.z + Math.sin(a) * r));
     }
     cam.fov = (save.fov * Math.PI) / 180; // Campo de visión (Configuración → Imagen): solo en partida; los encuadres de los menús usan el de fábrica
-    const back = new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+    const back = MOON.on ? W(Math.sin(yaw), 0, Math.cos(yaw), car.pos) : new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw)); // luna: camYaw es del marco local del auto
     // Bajo la mesa la cámara baja y se acerca (roofK suaviza entrar y salir); afuera vuelve al zoom del usuario
     roofK += ((underRoof(car.pos) ? 1 : 0) - roofK) * (1 - Math.exp(-3 * dt));
     // Dinámica: se aleja con bichos cerca (18 m) o a velocidad; muy lenta para no marear
@@ -1467,9 +1532,9 @@ scene.onBeforeRenderObservable.add(() => {
       gu = Math.min(gu * (asp < 1 ? 1.8 : 1), (R.spawn_anillo_min - 3) / Math.hypot(th, th * asp));
     }
     const fp = state === "outro" && outroAt ? outroAt : car.pos; // foco de la cámara
-    const want = fp.subtract(back.scale(close ? 5.5 : gb * zb)).addInPlace(new B.Vector3(0, close ? 3.2 : gu, 0));
+    const want = fp.subtract(back.scale(close ? 5.5 : gb * zb)).addInPlace(MOON.on ? camUp.scale(close ? 3.2 : gu) : new B.Vector3(0, close ? 3.2 : gu, 0));
     cam.position = B.Vector3.Lerp(cam.position, want, close ? 1 - Math.exp(-8 * dt) : k);
-    B.Vector3.LerpToRef(camTarget, close ? car.pos.add(new B.Vector3(0, -1.4, 0)) : fp.add(back.scale(gl)), close ? 0.2 : k * 1.5, camTarget);
+    B.Vector3.LerpToRef(camTarget, close ? car.pos.add(MOON.on ? camUp.scale(-1.4) : new B.Vector3(0, -1.4, 0)) : fp.add(back.scale(gl)), close ? 0.2 : k * 1.5, camTarget);
     // Lo que queda entre cámara y auto se tramea (screen-door en render.ts) mientras tapa
     if (!simulating) {
       const to = car.pos.add(new B.Vector3(0, 0.6, 0)).subtractInPlace(cam.position), len = to.length();
@@ -1526,7 +1591,16 @@ scene.onBeforeRenderObservable.add(() => {
   }
   shake = Math.max(0, shake - dt * 2);
   const s = save.shake ? shake * shake * 0.8 : 0;
-  if (state !== "race" && state !== "duel" && state !== "match3") cam.setTarget(camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0)));
+  if (state !== "race" && state !== "duel" && state !== "match3") {
+    const tgt = camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0));
+    if (MOON.on && car) { // luna: el "arriba" de la cámara es la vertical del lugar (setTarget usa siempre +Y): rotación propia
+      B.Matrix.LookAtLHToRef(cam.position, tgt, camUp, _camM); _camM.invert();
+      B.Quaternion.FromRotationMatrixToRef(_camM, (cam.rotationQuaternion ??= new B.Quaternion()));
+    } else {
+      if (cam.rotationQuaternion) { (cam as { rotationQuaternion: B.Quaternion | null }).rotationQuaternion = null; cam.upVector.set(0, 1, 0); }
+      cam.setTarget(tgt);
+    }
+  }
 });
 
 // Límite de FPS (Configuración → Imagen): el navegador no deja fijar la tasa, así que se saltan cuadros del bucle y su tiempo se suma al dt del siguiente
@@ -1577,7 +1651,15 @@ function botStep(m: typeof import("./devbot"), dt: number) {
   for (const s of spits) zones.push({ x: s.m.position.x + s.v.x * 0.3, z: s.m.position.z + s.v.z * 0.3, r: 1.2 });
   for (const cb of b?.cables ?? []) zones.push({ x: (cb.a.x + cb.b.x) / 2, z: (cb.a.z + cb.b.z) / 2, r: 3.5 }); // cables del cortacercos
   const bb = b && { x: b.pos.x, z: b.pos.z, kind: b.kind, fx: b.node.forward.x, fz: b.node.forward.z, charge: b.kind === "cortadora" && b.state === 1, ram: weapons.some((w) => w.id === "lanza" && w.evolved) };
-  Object.assign(input, m.botSteer(car!, enemies.filter((e) => !e.def.boss).map((e) => e.pos), obstacles(), bb, zones, gems.map((g) => g.m.position)), { move: false, drift: false });
+  if (MOON.on) { // luna: el bot ve todo en el plano local del auto (el auto en el origen; sin bordes, la órbita da la vuelta a la luna)
+    const cp = car!.pos, L = (p: B.Vector3) => rel(p, cp), mz: { x: number; z: number; r: number }[] = [];
+    if (b?.tele[0]?.isVisible && b.kind !== "aspiradora") mz.push({ ...L(b.tele[0].position), r: Math.max(b.tele[0].scaling.x, b.tele[0].scaling.z) });
+    for (const s of spits) mz.push({ ...L(s.m.position), r: 1.2 });
+    for (const cb of b?.cables ?? []) mz.push({ ...L(B.Vector3.Center(cb.a, cb.b)), r: 3.5 });
+    const f = flatL(car!.root.forward, cp), v = toLocal(car!.body.getLinearVelocity(), cp), bf = b && flatL(b.node.forward, cp);
+    const lb = b && bf && { ...L(b.pos), kind: b.kind, fx: bf.x, fz: bf.z, charge: b.kind === "cortadora" && b.state === 1, ram: weapons.some((w) => w.id === "lanza" && w.evolved) };
+    Object.assign(input, m.botSteer({ pos: { x: 0, z: 0 }, root: { forward: f }, body: { getLinearVelocity: () => v } }, enemies.filter((e) => !e.def.boss).map((e) => L(e.pos)), [], lb, mz, gems.map((g) => L(g.m.position))), { move: false, drift: false });
+  } else Object.assign(input, m.botSteer(car!, enemies.filter((e) => !e.def.boss).map((e) => e.pos), obstacles(), bb, zones, gems.map((g) => g.m.position)), { move: false, drift: false });
   update(dt);
   pe._step(dt);
   tickFx(dt);
@@ -1678,4 +1760,25 @@ if (import.meta.env.DEV) Object.assign(window, {
   // n hormigas en grilla delante del auto, quietas en modo lab, para medir el render: __ants(300)
   __ants: (n = 300) => { const f = car!.root.forward, r = new B.Vector3(f.z, 0, -f.x), w = Math.ceil(Math.sqrt(n)); for (let i = 0; i < n; i++) spawnEnemy("hormiga", car!.pos.add(f.scale(6 + Math.floor(i / w) * 1.8)).addInPlace(r.scale((i % w - w / 2) * 1.5)).addInPlace(new B.Vector3(0, 0.4, 0))); return enemies.length; },
   __carObj: () => car,
+  // Luna (solo dev): __luna.crater(radio, hondo, distancia) deforma delante del auto (hondo < 0 = montículo); go("oscuro"|"sol"|"tierra") lleva el auto;
+  // ring(n, r) pone n bichos en un anillo a r m; sky() dice si el Sol y la Tierra se ven; info() estado
+  __luna: {
+    crater: (r = 7, depth = 2.6, dist = 12) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(); deform(at(car.pos, f.x * dist, 0, f.z * dist), r, depth); return "ok"; },
+    go: (where: "oscuro" | "sol" | "tierra" | [number, number, number] = "oscuro") => { // [x, y, z]: una dirección cualquiera desde el centro
+      if (!car || !MOON.on) return "sin luna";
+      const d = (Array.isArray(where) ? new B.Vector3(...where) : where === "oscuro" ? SUN_DIR.scale(-1).addInPlace(new B.Vector3(0.25, 0.2, 0)) : where === "tierra" ? new B.Vector3(0, 1, 0).addInPlace(EARTH_DIR.scale(-0.66)) : SUN_DIR.add(B.Vector3.Up())).normalize(); // tierra: queda ~15° bajo la horizontal, sobre el horizonte que ve la cámara
+      const p = onFloor(d.scale(60).addInPlace(new B.Vector3(0, -60, 0)), car.def.size[1] / 2 + 0.3);
+      const aim = Array.isArray(where) ? new B.Vector3(0, 0, 1) : where === "tierra" ? EARTH_DIR : where === "sol" ? SUN_DIR.scale(-1) : SUN_DIR; // de frente a la Tierra; de espaldas al Sol; del lado oscuro, mirando hacia la luz
+      car.root.position.copyFrom(p); car.root.rotationQuaternion = alignYaw(p, yawOf(aim, p));
+      car.body.setLinearVelocity(B.Vector3.Zero()); car.body.setAngularVelocity(B.Vector3.Zero());
+      moonCar(car.body, upAt(p));
+      teleport(car.body);
+      camH.copyFrom(hflat(aim.clone(), p).normalize()); camUp.copyFrom(upAt(p)); camYaw = yawOf(camH, p);
+      cam.position.copyFrom(p).addInPlace(camH.scale(-15)).addInPlace(camUp.scale(13)); camTarget.copyFrom(p);
+      return { p, alt: alt(p) };
+    },
+    ring: (n = 12, r = 22, kind: Kind = "hormiga") => { if (!car) return 0; for (let i = 0; i < n; i++) spawnEnemy(kind, MOON.on ? ringAt(car.pos, (i / n) * Math.PI * 2, r) : car.pos.add(new B.Vector3(Math.cos((i / n) * 6.28) * r, 1, Math.sin((i / n) * 6.28) * r))); return enemies.length; },
+    sky: () => ({ sol: skyVisible(SUN_DIR, cam), tierra: skyVisible(EARTH_DIR, cam) }),
+    info: () => ({ on: MOON.on, alt: car ? alt(car.pos) : null, up: car ? upAt(car.pos) : null, enemies: enemies.length }),
+  },
 });
