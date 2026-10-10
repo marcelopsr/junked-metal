@@ -1,0 +1,14 @@
+{
+  "triangles": 57550,
+  "bytes": 3395748,
+  "clips": [
+    "charge",
+    "death",
+    "idle",
+    "jump_slam",
+    "rage",
+    "run",
+    "walk"
+  ],
+  "animations_verified": true
+}

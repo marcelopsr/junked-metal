@@ -6,8 +6,8 @@
       "view": "close",
       "animated": false,
       "time": 0,
-      "meshes": 108,
-      "triangles": 698594,
+      "meshes": 63,
+      "triangles": 2896562,
       "clips": [
         "charge",
         "death",
@@ -19,7 +19,7 @@
       ],
       "clip": "idle",
       "wheels": 4,
-      "grassInstances": 3711,
+      "grassInstances": 1657,
       "render": [
         1280,
         720
@@ -32,8 +32,8 @@
         "lighting": "night",
         "animated": false,
         "time": 0,
-        "meshes": 108,
-        "triangles": 796322,
+        "meshes": 63,
+        "triangles": 2904338,
         "clips": [
           "charge",
           "death",
@@ -45,7 +45,7 @@
         ],
         "clip": "idle",
         "wheels": 4,
-        "grassInstances": 3711,
+        "grassInstances": 1657,
         "render": [
           1280,
           720
@@ -57,8 +57,8 @@
         "lighting": "night",
         "animated": false,
         "time": 0,
-        "meshes": 108,
-        "triangles": 766906,
+        "meshes": 63,
+        "triangles": 2904338,
         "clips": [
           "charge",
           "death",
@@ -70,7 +70,7 @@
         ],
         "clip": "idle",
         "wheels": 4,
-        "grassInstances": 3711,
+        "grassInstances": 1657,
         "render": [
           1280,
           720
@@ -82,8 +82,8 @@
         "lighting": "day",
         "animated": false,
         "time": 0,
-        "meshes": 108,
-        "triangles": 746722,
+        "meshes": 63,
+        "triangles": 2901634,
         "clips": [
           "charge",
           "death",
@@ -95,7 +95,7 @@
         ],
         "clip": "idle",
         "wheels": 4,
-        "grassInstances": 3711,
+        "grassInstances": 1657,
         "render": [
           1280,
           720
@@ -107,8 +107,8 @@
         "lighting": "day",
         "animated": false,
         "time": 0,
-        "meshes": 108,
-        "triangles": 722906,
+        "meshes": 63,
+        "triangles": 2901634,
         "clips": [
           "charge",
           "death",
@@ -120,7 +120,7 @@
         ],
         "clip": "idle",
         "wheels": 4,
-        "grassInstances": 3711,
+        "grassInstances": 1657,
         "render": [
           1280,
           720
@@ -141,11 +141,11 @@
     "overflow": false,
     "errors": [],
     "perf": {
-      "medianMs": 4.099999999627471,
-      "p95Ms": 5,
-      "draws": 225,
-      "triangles": 698594,
-      "meshes": 108,
+      "medianMs": 18.5,
+      "p95Ms": 22.699999999254942,
+      "draws": 211,
+      "triangles": 2896562,
+      "meshes": 63,
       "render": [
         1280,
         720
@@ -160,8 +160,8 @@
       "view": "close",
       "animated": false,
       "time": 0,
-      "meshes": 108,
-      "triangles": 404324,
+      "meshes": 63,
+      "triangles": 1102484,
       "clips": [
         "charge",
         "death",
@@ -173,7 +173,7 @@
       ],
       "clip": "idle",
       "wheels": 4,
-      "grassInstances": 1603,
+      "grassInstances": 670,
       "render": [
         390,
         844
@@ -186,8 +186,8 @@
         "lighting": "night",
         "animated": false,
         "time": 0,
-        "meshes": 108,
-        "triangles": 502052,
+        "meshes": 63,
+        "triangles": 1110260,
         "clips": [
           "charge",
           "death",
@@ -199,7 +199,7 @@
         ],
         "clip": "idle",
         "wheels": 4,
-        "grassInstances": 1603,
+        "grassInstances": 670,
         "render": [
           390,
           844
@@ -211,8 +211,8 @@
         "lighting": "night",
         "animated": false,
         "time": 0,
-        "meshes": 108,
-        "triangles": 496456,
+        "meshes": 63,
+        "triangles": 1110332,
         "clips": [
           "charge",
           "death",
@@ -224,7 +224,7 @@
         ],
         "clip": "idle",
         "wheels": 4,
-        "grassInstances": 1603,
+        "grassInstances": 670,
         "render": [
           390,
           844
@@ -236,8 +236,8 @@
         "lighting": "day",
         "animated": false,
         "time": 0,
-        "meshes": 108,
-        "triangles": 460052,
+        "meshes": 63,
+        "triangles": 1107556,
         "clips": [
           "charge",
           "death",
@@ -249,7 +249,7 @@
         ],
         "clip": "idle",
         "wheels": 4,
-        "grassInstances": 1603,
+        "grassInstances": 670,
         "render": [
           390,
           844
@@ -261,8 +261,8 @@
         "lighting": "day",
         "animated": false,
         "time": 0,
-        "meshes": 108,
-        "triangles": 455256,
+        "meshes": 63,
+        "triangles": 1107628,
         "clips": [
           "charge",
           "death",
@@ -274,7 +274,7 @@
         ],
         "clip": "idle",
         "wheels": 4,
-        "grassInstances": 1603,
+        "grassInstances": 670,
         "render": [
           390,
           844
@@ -295,11 +295,11 @@
     "overflow": false,
     "errors": [],
     "perf": {
-      "medianMs": 2.599999999627471,
-      "p95Ms": 3.400000000372529,
-      "draws": 101,
-      "triangles": 404324,
-      "meshes": 108,
+      "medianMs": 7.899999998509884,
+      "p95Ms": 16,
+      "draws": 152,
+      "triangles": 1102484,
+      "meshes": 63,
       "render": [
         390,
         844

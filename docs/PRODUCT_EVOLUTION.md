@@ -817,15 +817,18 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 | **Combat Feel & VFX** | Torque twist / torsión elástica de chasis en arrancada en `car.ts` | `src/car.ts` |
 | **Diegetic HUD & Telemetry** | Desacople de antena con tinte por estado y alerta CRC ERR | `src/ui.ts`, `src/hud.css` |
 
-### 🔓 LISTO PARA EL CICLO #44 (Ecosistema de Especialistas Matriciales, 2026-10-10)
-
-| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
-|---|---|---|
-| **Diegetic HUD & Telemetry** | Relajación elástica post-sag y chirp analógico en señal crítica | `src/ui.ts`, `src/hud.css` |
-| **Audio Synth Designer** | Resonancia hueca de lexan `bodyThud` y buzzer piezoeléctrico LiPo baja | `src/sfx.ts` |
-| **Procedural 3D Modeler** | Manguetas CNC delanteras y tuercas hexagonales autoblocantes | `src/models.ts` |
-| **Combat Feel & VFX** | Micro-fricción y distorsión térmica reactiva en disipador 540 | `src/fx.ts` |
-
+### Ciclo #44 (2026-10-10) — Telemetría LiPo con Curva Post-Sag, Audio Diegético `bodyThud` y Fricción 540 / Banco Cinemático 3D Completo (Frenchie, Buggy, Entorno y Eulalio)
+- **Alcance implementado en producción (`src/`):**
+  - **Diegetic HUD & Telemetry (`src/ui.ts`, `src/hud.css`):** Relajación electroquímica gradual (~250 ms) post-sag con amortiguación elástica de tensión de celdas LiPo tras soltar nitro; alarma buzzer crítica de batería `SFX.lipoLowWarn()` (<15%) y micro-chirp piezoeléctrico `SFX.blip()` ante degradación extrema de señal RF (>75 m) con compuertas anti-saturación.
+  - **Audio Synth Designer (`src/sfx.ts`, `src/car.ts`, `src/main.ts`):** Nuevo sonido diegético `SFX.bodyThud(pan)` con síntesis de resonancia hueca de policarbonato/lexan disparado en colisiones dinámicas de chasis y parachoques contra muros, macetas, árboles o enemigos pesados, con cálculo de estéreo direccional `impactPan`.
+  - **Combat Feel & VFX (`src/fx.ts`, `src/main.ts`):** Micro-fricción térmica y partículas incandescentes proyectadas desde el bobinado del motor 540 y disipador del chasis cuando el auto mantiene nitro sostenido por más de 1.5 s, coordinado con telemetría de sobrecalentamiento `ESC: 85°C`.
+  - **Banco Cinematográfico 3D (`src/art_lab.ts`, `art-lab.html`, `assets-src/cinematic-3d/`):**
+    - **Frenchie:** Escultura anatómica PBR fiel a `10-frenchie-gris.png` (57.550 tris, 3.4 MB), mancha marfil visible en el pecho, orejas de murciélago erguidas, stop nasal a 90°, belfos, 4 dedos con garras, 7 clips de `PerroRig` intactos con matrices finitas.
+    - **Buggy RC:** Chatarra industrial inspirada en `08-buggy.png` (115.020 tris, 4.3 MB), remaches, jaula antivuelco X-brace, suspensión A-arms con coilovers 3D, 4 ruedas crawler profundas con llantas deep-dish beadlock, faros Fresnel y piloto soldadito.
+    - **Entorno y Vegetación:** Matas curvas orgánicas finas y anchas (`vegetation.glb`), cerca de tablas envejecidas con estacas y cuerda de seguridad naranja (`fence_boundary.glb`), catenaria suspendida con bombillas Edison ST64 (`patio_lights.glb`), suelo de tierra compactada con huellas en bajorrelieve (`ground_terrain.glb`).
+    - **Gato Eulalio:** Escultura cinematográfica basada en `07-eulalio.png` (58.496 tris, 3.6 MB), pelaje naranja atigrado mate, babero y calcetines blancos, ojos verdes almendrados con actitud escéptica, 8 clips de `GatoRig` intactos.
+    - **Ensamblaje y Evaluador:** Selector interactivo de personaje (`Frenchie`, `Eulalio`, `Dúo`), iluminación física día/noche con sombras PCF y ACES tonemapping, corredor de cámara frontal despejado para pasto instanciado.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando), `npm run build` (514 ms), `node scripts/cinematic-check.mjs` (aprobado 100%: 12.3 ms PC ~81 FPS, 5.6 ms Celular ~178 FPS, 4 ruedas, 7 clips animados finitos, 0 desbordamiento, 0 errores), capturas de verificación duraderas `preview-*.png` generadas.
 
 ## 2026-10-10 · Muestra cinematográfica 3D local (tanda visual independiente)
 

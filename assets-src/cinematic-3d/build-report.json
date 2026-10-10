@@ -1,19 +1,50 @@
 {
-  "frenchie": {
-    "triangles": 46878,
-    "bytes": 3400776,
-    "clips": [
-      "charge",
-      "death",
-      "idle",
-      "jump_slam",
-      "rage",
-      "run",
-      "walk"
-    ]
+  "date": "2026-10-10",
+  "orchestrator": "Gemini Multi-Agent Swarm",
+  "assets": {
+    "frenchie": {
+      "triangles": 57550,
+      "bytes": 3395748,
+      "clips": [
+        "charge",
+        "death",
+        "idle",
+        "jump_slam",
+        "rage",
+        "run",
+        "walk"
+      ],
+      "bones": 21,
+      "animations_verified": true
+    },
+    "buggy": {
+      "triangles": 115020,
+      "bytes": 4289104,
+      "wheels": 4,
+      "objects": [
+        "BuggyBody",
+        "Wheel_-1_0.92",
+        "Wheel_1_0.92",
+        "Wheel_-1_-0.9",
+        "Wheel_1_-0.9"
+      ]
+    },
+    "vegetation": {
+      "triangles": 2280,
+      "bytes": 225240
+    },
+    "fence_boundary": {
+      "triangles": 2116,
+      "bytes": 9025420
+    },
+    "patio_lights": {
+      "triangles": 6336,
+      "bytes": 137708
+    },
+    "ground_terrain": {
+      "triangles": 5568,
+      "bytes": 7228804
+    }
   },
-  "buggy": {
-    "triangles": 98744,
-    "bytes": 2888676
-  }
+  "total_unique_triangles": 188870
 }

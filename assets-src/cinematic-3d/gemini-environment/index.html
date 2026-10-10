@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Junked Metal · Entorno Cinematográfico 3D</title>
+<style>
+:root {
+  color-scheme: dark;
+  font-family: Rajdhani, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0b0f14;
+  color: #ecede4;
+  --jm-fondo: #0b0f14;
+  --jm-panel: #172027;
+  --jm-chapa: #b5651d;
+  --jm-naranja: #ff9138;
+  --jm-amarillo: #ffb400;
+  --jm-cian: #00c2ff;
+  --jm-verde: #22c55e;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: clamp(16px, 3vw, 40px);
+  max-width: 1500px;
+  margin-inline: auto;
+  line-height: 1.4;
+}
+header {
+  border-top: 3px solid var(--jm-chapa);
+  padding: 20px 0 28px;
+  border-bottom: 1px solid #28333c;
+  margin-bottom: 28px;
+}
+.tag {
+  letter-spacing: 0.16em;
+  color: var(--jm-naranja);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+h1 {
+  font-size: clamp(28px, 4vw, 48px);
+  margin: 8px 0;
+  color: var(--jm-amarillo);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+h2 {
+  font-size: 24px;
+  margin: 0 0 10px 0;
+  color: #f2ede2;
+  font-weight: 700;
+}
+p {
+  color: #b9c2c6;
+  font-size: 18px;
+  margin: 8px 0;
+}
+.lead {
+  font-size: 20px;
+  color: #dbe3e6;
+  max-width: 1000px;
+}
+.grid-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 22px;
+  margin-bottom: 36px;
+}
+.card {
+  background: var(--jm-panel);
+  border: 1px solid #33404a;
+  border-left: 4px solid var(--jm-chapa);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.card img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  display: block;
+  background: #06090d;
+  cursor: pointer;
+}
+.card-content {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 3px 8px;
+  background: #25333f;
+  color: var(--jm-cian);
+  margin-bottom: 8px;
+  border: 1px solid #3c4f5e;
+}
+.metrics {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px dashed #2d3840;
+  font-size: 15px;
+  color: #8f9da3;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0 32px;
+  background: var(--jm-panel);
+  border: 1px solid #33404a;
+}
+th, td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #28333c;
+  font-size: 16px;
+}
+th {
+  background: #1f2a33;
+  color: var(--jm-amarillo);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+code {
+  font-family: monospace;
+  background: #0f161c;
+  padding: 2px 6px;
+  border: 1px solid #283540;
+  color: var(--jm-cian);
+  font-size: 14px;
+}
+pre {
+  background: #0d1318;
+  border: 1px solid #28343f;
+  padding: 16px;
+  overflow-x: auto;
+  font-family: monospace;
+  color: #e2e8ea;
+  font-size: 15px;
+  line-height: 1.45;
+}
+footer {
+  border-top: 1px solid #2a353d;
+  padding: 24px 0;
+  margin-top: 40px;
+  color: #7f8e94;
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="tag">Junked Metal / Especialista en Entorno</span>
+  <h1>Entorno Cinematográfico 3D · Muestra y Catálogo</h1>
+  <p class="lead">Elevación del suelo, vegetación orgánica, delimitación de pista y catenaria de luces hacia el acabado de referencia <code>03-entrada-fondo.png</code>.</p>
+</header>
+
+<section>
+  <h2>Evidencia Visual Renderizada</h2>
+  <p>Renderizado en alta resolución (1280×720) desde Blender 5.2.2 con iluminación cinematográfica rasante (luna fría + foco cálido de patio).</p>
+
+  <div class="grid-previews">
+    <article class="card">
+      <img src="preview-combined.png" alt="Vista combinada del set de entorno">
+      <div class="card-content">
+        <span class="badge">SET COMBINADO</span>
+        <h2>Composición General del Patio</h2>
+        <p>Integración de las 4 familias de assets: suelo compactado con huellas de neumáticos, pasto curvo con briznas finas y maleza, estacas de madera con cuerda naranja y catenaria superior de bombillas Edison.</p>
+        <div class="metrics">4 módulos GLB · Iluminación PBR · Escala miniatura RC</div>
+      </div>
+    </article>
+
+    <article class="card">
+      <img src="preview-vegetation.png" alt="Primer plano de vegetación orgánica">
+      <div class="card-content">
+        <span class="badge">VEGETACIÓN ORGÁNICA</span>
+        <h2>Matas Curvas y Maleza de Jardín</h2>
+        <p>Sustitución de las láminas planas por matas de pasto con curvatura natural arqueada hacia el suelo, canaladura en V, hojas anchas de maleza silvestre y gradiente PBR vertical (raíz ocre → verde oliva → punta dorada que capta la luz rasante).</p>
+        <div class="metrics">vegetation.glb · 220 KB · 5 arquetipos de matas</div>
+      </div>
+    </article>
+
+    <article class="card">
+      <img src="preview-fence.png" alt="Estacas con cuerda de seguridad y cerca envejecida">
+      <div class="card-content">
+        <span class="badge">DELIMITACIÓN Y CERCA</span>
+        <h2>Estacas, Cáncamos y Cuerda de Seguridad</h2>
+        <p>Postes rústicos con abrazadera metálica y cáncamos de hierro forjado por los que pasa una cuerda trenzada de alta visibilidad delimitando la pista. Al fondo, cerca de madera envejecida con silueta irregular y vetas en relieve.</p>
+        <div class="metrics">fence_boundary.glb · 8.6 MB · 3 módulos de pista + cerca 5m</div>
+      </div>
+    </article>
+
+    <article class="card">
+      <img src="preview-lights.png" alt="Catenaria colgante con bombillas Edison">
+      <div class="card-content">
+        <span class="badge">ILUMINACIÓN DE PATIO</span>
+        <h2>Guirnalda Edison con Catenaria Real</h2>
+        <p>Cable suspendido con fórmula matemática de catenaria, portalámparas moldeados con collar de latón, bombilla de vidrio transparente tipo lágrima ST64 y filamento incandescente cálido brillante (#ffaa44, emisión x10).</p>
+        <div class="metrics">patio_lights.glb · 185 KB · 14 lámparas colgantes en tramo de 18m</div>
+      </div>
+    </article>
+
+    <article class="card">
+      <img src="preview-ground.png" alt="Terreno compactado con huellas de neumáticos">
+      <div class="card-content">
+        <span class="badge">SUPERFICIE Y HUELLAS</span>
+        <h2>Tierra Compactada con Huellas RC</h2>
+        <p>Malla de arena de 22×22m con relieve orgánico, mapa de normales con huellas de neumáticos RC grabadas en bajorrelieve, compactación y manchas de caucho sobre tierra con gravilla y piedras facetadas dispersas.</p>
+        <div class="metrics">ground_terrain.glb · 6.9 MB · Malla 22×22m + 80 piedras</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Catálogo de Modelos GLB y Fuentes .blend</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Módulo</th>
+        <th>Archivo GLB</th>
+        <th>Fuente .blend</th>
+        <th>Triángulos</th>
+        <th>Materiales PBR</th>
+        <th>Uso y Rol</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Vegetación</strong></td>
+        <td><code>vegetation.glb</code> (220 KB)</td>
+        <td><code>vegetation.blend</code></td>
+        <td>2.280</td>
+        <td>M_Vegetation_Organic (Albedo gradiente + Normal V-crease + Subsurface)</td>
+        <td>Reemplaza láminas planas. Matas para bordes, scatter e instancias en Babylon.</td>
+      </tr>
+      <tr>
+        <td><strong>Cerca y Delimitación</strong></td>
+        <td><code>fence_boundary.glb</code> (8.6 MB)</td>
+        <td><code>fence_boundary.blend</code></td>
+        <td>2.116</td>
+        <td>M_AgedWood, M_RustedHardware, M_SafetyRope</td>
+        <td>Barreras rectas y esquinas con cuerda naranja de seguridad; fondo de cerca rústica.</td>
+      </tr>
+      <tr>
+        <td><strong>Guirnalda Edison</strong></td>
+        <td><code>patio_lights.glb</code> (185 KB)</td>
+        <td><code>patio_lights.blend</code></td>
+        <td>6.336</td>
+        <td>M_Garland_Cable, M_Edison_Socket, M_Edison_Brass, M_Edison_Glass, M_Filament_Incandescent</td>
+        <td>Guirnalda suspendida sobre el patio; produce luz y bloom natural en post-procesado.</td>
+      </tr>
+      <tr>
+        <td><strong>Terreno y Huellas</strong></td>
+        <td><code>ground_terrain.glb</code> (6.9 MB)</td>
+        <td><code>ground_terrain.blend</code></td>
+        <td>5.568</td>
+        <td>M_Ground_CompactedTracks, M_Pebbles_Scatter</td>
+        <td>Suelo de pista con huellas de neumáticos RC grabadas y relieve micro-grano.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Cómo Integrar en <code>src/art_lab.ts</code></h2>
+  <p>Los modelos exportados son compatibles directamente con <code>B.LoadAssetContainerAsync</code> de Babylon.js 9:</p>
+  <pre><code>// 1. Cargar vegetación y configurar instancias de matas curvas
+const veg = await B.LoadAssetContainerAsync('assets-src/cinematic-3d/gemini-environment/vegetation.glb', scene);
+veg.addAllToScene();
+const fineTuft = veg.meshes.find(m => m.name === 'GrassTuft_Fine_Mesh');
+const broadWeed = veg.meshes.find(m => m.name === 'GrassTuft_Broad_Mesh');
+
+// 2. Cargar cerca y delimitación de pista con cuerda de seguridad
+const fence = await B.LoadAssetContainerAsync('assets-src/cinematic-3d/gemini-environment/fence_boundary.glb', scene);
+fence.addAllToScene();
+
+// 3. Cargar guirnalda de luces Edison con filamento incandescente brillante
+const lights = await B.LoadAssetContainerAsync('assets-src/cinematic-3d/gemini-environment/patio_lights.glb', scene);
+lights.addAllToScene();
+
+// 4. Cargar suelo con huellas de neumáticos grabadas
+const ground = await B.LoadAssetContainerAsync('assets-src/cinematic-3d/gemini-environment/ground_terrain.glb', scene);
+ground.addAllToScene();</code></pre>
+</section>
+
+<footer>
+  Junked Metal · Entorno y vegetación cinematográfica producida por Gemini Environment Specialist · 2026-10-10 · <a href="HANDOFF.md">Ver HANDOFF.md</a>
+</footer>
+
+</body>
+</html>

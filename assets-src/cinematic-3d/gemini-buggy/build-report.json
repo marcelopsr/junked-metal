@@ -1,0 +1,44 @@
+{
+  "triangles_by_mesh": {
+    "BuggyBody": 55196,
+    "Wheel_-1_0.92": 14956,
+    "Wheel_1_0.92": 14956,
+    "Wheel_-1_-0.9": 14956,
+    "Wheel_1_-0.9": 14956
+  },
+  "total_triangles": 115020,
+  "glb_bytes": 4289104,
+  "build_time_seconds": 4.61,
+  "objects": [
+    "BuggyBody",
+    "Wheel_-1_0.92",
+    "Wheel_1_0.92",
+    "Wheel_-1_-0.9",
+    "Wheel_1_-0.9"
+  ],
+  "materials": [
+    "Antenna",
+    "Chassis",
+    "Chrome",
+    "Glass",
+    "Lamp",
+    "Metal",
+    "Paint",
+    "Pilot",
+    "PilotHelmet",
+    "PilotVisor",
+    "Rubber",
+    "Spring"
+  ],
+  "pbr_textures": [
+    "buggy-albedo.png",
+    "buggy-normal.png",
+    "buggy-orm.png"
+  ],
+  "previews": [
+    "preview-hero.png",
+    "preview-side.png",
+    "preview-top.png",
+    "preview-rear.png"
+  ]
+}

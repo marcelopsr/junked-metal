@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-10",
+  "specialist": "Gemini Environment Specialist",
+  "modules": {
+    "vegetation": {
+      "blend": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/cinematic-3d/gemini-environment/vegetation.blend",
+      "glb": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/cinematic-3d/gemini-environment/vegetation.glb",
+      "triangles": 2280
+    },
+    "fence_boundary": {
+      "blend": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/cinematic-3d/gemini-environment/fence_boundary.blend",
+      "glb": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/cinematic-3d/gemini-environment/fence_boundary.glb",
+      "triangles": 2116
+    },
+    "patio_lights": {
+      "blend": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/cinematic-3d/gemini-environment/patio_lights.blend",
+      "glb": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/cinematic-3d/gemini-environment/patio_lights.glb",
+      "triangles": 6336
+    },
+    "ground_terrain": {
+      "blend": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/cinematic-3d/gemini-environment/ground_terrain.blend",
+      "glb": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/cinematic-3d/gemini-environment/ground_terrain.glb",
+      "triangles": 5568
+    }
+  }
+}

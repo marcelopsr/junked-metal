@@ -1,0 +1,24 @@
+{
+  "triangles": 58496,
+  "vertices": 29561,
+  "bytes": 3596552,
+  "clips": [
+    "death",
+    "idle",
+    "jump",
+    "rage",
+    "run",
+    "spin",
+    "swipe",
+    "walk"
+  ],
+  "materials": [
+    "EulalioCoat"
+  ],
+  "textures": [
+    "eulalio-albedo.png",
+    "eulalio-normal.png",
+    "eulalio-orm.png"
+  ],
+  "animations_verified": true
+}
