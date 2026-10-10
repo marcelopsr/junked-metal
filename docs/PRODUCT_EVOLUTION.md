@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-10 (Ciclos #1 a #31 completados y validados · Ciclo #32 listo para selección)
+**Última actualización:** 2026-10-10 (Ciclos #1 a #32 completados y validados · Ciclo #33 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -548,78 +548,90 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Subagente 8 · Modelos Procedurales (`src/models.ts`):** Antena RC flexible de cable metálico con banderín plástico rojo en la aleta trasera.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando en 30.0 s), `npm run build` (562 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular en 35.0 s) y `graphify update .` (3150 nodos, 7682 aristas).
 
+### Ciclo #32 (2026-10-10) — Blindaje Pesado Garaje, Resplandor XP HUD, Rival Frontal Carrera, Destello Estelar Match-3, Overheat FX, Lote Polaroid, Scrap Clink SFX y Tensores Formula 3D
+- **Alcance implementado en paralelo por 8 subagentes:**
+  - **Subagente 1 · Garaje Blindaje (`src/menu.ts`, `src/menu.css`):** Insignia distintiva `.heavy-armor` (`BLINDAJE PESADO`) en autos con carrocería base $\ge 250$ (`tanque`, `monster`) para destacar su rol de ariete.
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Resplandor esmeralda pulsante `#xp.surge` con destello y brillo energizado al alcanzar el nivel y abrir mejoras.
+  - **Subagente 3 · Carrera Proximidad (`src/kart.ts`, `src/race.css`):** Pastilla de advertencia táctica `<b class="rahead">RIVAL DELANTE</b>` en tacómetro al rodar a menos de $2.8\text{ m}$ detrás de un competidor en su trayectoria.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`, `src/match3.css`):** Destello estelar de 4 puntas luminoso en esquina superior de tarjetas de metas primarias y secundarias completadas.
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** Rutina `FX.overheat(p)` con bocanadas de vapor térmico anaranjado-rojizo de motor al límite.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** Sello diegético analógico `"LOTE FOTOGRÁFICO #XXXX"` en el pie del marco documental.
+  - **Subagente 7 · Audio Sintetizado (`src/sfx.ts`):** Tintineo metálico cristalino procedural `SFX.scrapClink()` modulado en doble armónico para recolección de chatarra.
+  - **Subagente 8 · Modelos Procedurales (`src/models.ts`):** Tirantes y tensores diagonales cromados en trompa y suspensión del Formula monoplaza.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando en 30.2 s), `npm run build` (392 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular en 29.4 s) y `graphify update .` (3153 nodos, 7691 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #32 (8 Áreas en Paralelo)
+## 4. Backlog Vivo de Oportunidades — Ciclo #33 (8 Áreas en Paralelo)
 
 ### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
-1. **Insignia de Chasis Blindado Pesado en Autos con Alta Vida Base (`.heavy-armor`):**
-   - **Qué es:** En `renderGarage()`, destacar a los vehículos con carrocería $\ge 250$ (`tanque`, `monster`) con una insignia blindada adicional de acero templado.
-   - **Qué problema resuelve:** Comunica con claridad visual contundente su rol de ariete para absorber golpes en el patio.
-   - **Valor:** Identidad de rol y ergonomía de selección. Complejidad: Baja.
+1. **Insignia de Chasis Liviano / Ágil en Autos con Alta Velocidad o Bajo Peso (`.light-frame`):**
+   - **Qué es:** En `renderGarage()`, destacar a los vehículos ligeros y veloces (`formula`, `deportivo`) con una pastilla de aleación `.light-frame` (`CHASIS LIVIANO`).
+   - **Qué problema resuelve:** Comunica de inmediato el trade-off de agilidad y aceleración frente a la resistencia de impacto.
+   - **Valor:** Ergonomía visual de catálogo e identidad de chasis. Complejidad: Baja.
 
 ### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
-2. **Resplandor Esmeralda de Subida de Nivel en Barra de Experiencia (`#xp.surge`):**
-   - **Qué es:** En `#xp`, disparar un destello perimetral verde fósforo al alcanzar el 100% y abrir el menú de mejoras.
-   - **Qué problema resuelve:** Realza el momento de mayor recompensa dopamínica del loop de juego.
-   - **Valor:** Game feel de gratificación instantánea. Complejidad: Baja.
+2. **Pánico en Viñeta de Daño Crítico (`#blood.panic`):**
+   - **Qué es:** En `hudUpdate()`, cuando la salud LiPo cae por debajo del 18%, acelerar la pulsación de la viñeta roja perimetral con clase `.panic`.
+   - **Qué problema resuelve:** Refuerza la urgencia de maniobra evasiva antes de la destrucción total.
+   - **Valor:** Tensión dramática y alerta sensorial inequívoca. Complejidad: Baja.
 
-### C. Área 3 · Carrera: Pastilla de Proximidad Frontal (`src/kart.ts`, `src/race.css`)
-3. **Pastilla de Rival Frontal Cercano (`.rahead`):**
-   - **Qué es:** En `hud()` de carrera, encender una pastilla ámbar `<b class="rahead">RIVAL DELANTE</b>` cuando un oponente rueda a menos de 2 metros por delante.
-   - **Qué problema resuelve:** Alerta sobre oportunidades de succión aerodinámica o peligro de impacto trasero.
-   - **Valor:** Táctica de carrera y anticipación. Complejidad: Baja.
+### C. Área 3 · Carrera: Pastilla de Marcha Atrás (`src/kart.ts`, `src/race.css`)
+3. **Pastilla de Marcha Atrás en Tacómetro (`.rback`):**
+   - **Qué es:** En `hud()` de carrera, encender una pastilla ámbar `<b class="rback">MARCHA ATRÁS</b>` cuando la velocidad es negativa ($fs < -0.5$).
+   - **Qué problema resuelve:** Da feedback inequívoco al maniobrar tras trompos o colisiones contra muros.
+   - **Valor:** Claridad de telemetría de pilotaje. Complejidad: Baja.
 
 ### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`, `src/match3.css`)
-4. **Destello Estelar en Tarjetas de Metas Primarias al Completarse:**
-   - **Qué es:** En `paintDisplay()`, cuando un objetivo principal llega al 100%, trazar un estallido de 4 puntas dorado sobre la tarjeta.
-   - **Qué problema resuelve:** Eleva la visibilidad del logro de objetivos en medio del dinamismo del tablero.
-   - **Valor:** Feedback celebratorio claro. Complejidad: Baja.
+4. **Marco de Selección Reforzado en Celda Activa (`m3-active-cell`):**
+   - **Qué es:** En `match3_draw.ts`, dibujar un marco con micro-esquinas resaltadas y halo brillante sobre la pieza actualmente seleccionada antes de mover.
+   - **Qué problema resuelve:** Evita dudas sobre qué chatarra está armada para el intercambio.
+   - **Valor:** Precisión táctil y visual en el tablero. Complejidad: Baja.
 
 ### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
-5. **Vapor de Sobrecalentamiento Térmico en `FX.overheat`:**
-   - **Qué es:** En `FX` (`src/fx.ts`), incorporar la rutina `overheat(p)` con bocanadas de vapor anaranjado-rojizo de motor al límite.
-   - **Qué problema resuelve:** Expresa visualmente el agotamiento térmico del motor o la proximidad a la rotura.
-   - **Valor:** Telemetría visual diegética en el modelo 3D. Complejidad: Baja.
+5. **Chispas de Plasma Eléctrico en `FX.sparkZap`:**
+   - **Qué es:** En `FX` (`src/fx.ts`), incorporar la rutina `sparkZap(p)` con partículas ultrarrápidas de arco cian/azul para descargas LiPo o trampas.
+   - **Qué problema resuelve:** Enriquece el abanico de feedback elemental electro-mecánico.
+   - **Valor:** Impacto visual diferenciado frente a chispas de combustión. Complejidad: Baja.
 
 ### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
-6. **Sello con Identificador Único de Lote en Polaroid:**
-   - **Qué es:** En `showPhoto()`, incluir un número de serie de película `"LOTE FOTOGRÁFICO #XXXX"` en el pie del marco.
-   - **Qué problema resuelve:** Refuerza la identidad analógica retro de rollo fotográfico instantáneo.
-   - **Valor:** Atmósfera estética y detalle artesanal. Complejidad: Baja.
+6. **Sello de Diagnóstico LiPo en Polaroid:**
+   - **Qué es:** En `showPhoto()`, incluir un micro-sello analógico `"BATERÍA LiPo · DESCARGA TOTAL"` en tinta técnica gastada.
+   - **Qué problema resuelve:** Contextualiza la detención del vehículo como agotamiento de energía en el patio.
+   - **Valor:** Atmósfera narrativa diegética RC. Complejidad: Baja.
 
 ### G. Área 7 · Audio Sintetizado (`src/sfx.ts`)
-7. **Tintineo Metálico Cristalino de Chatarra en `SFX.scrapClink`:**
-   - **Qué es:** En `SFX` (`src/sfx.ts`), incorporar `scrapClink()` con dos tonos de alta frecuencia modulados para recolección de tornillos.
-   - **Qué problema resuelve:** Enriquecer el feedback de recolección económica en el patio.
-   - **Valor:** Satisfacción acústica micro-recompensa. Complejidad: Baja.
+7. **Tono de Alerta de Impacto Próximo `SFX.collisionWarning`:**
+   - **Qué es:** En `SFX` (`src/sfx.ts`), incorporar `collisionWarning()` con dos bips de advertencia electrónica retro.
+   - **Qué problema resuelve:** Provee un recurso sonoro para momentos de peligro inminente o proximidad extrema.
+   - **Valor:** Tensión auditiva y retro-feeling arcade. Complejidad: Baja.
 
 ### H. Área 8 · Modelos Procedurales del Taller (`src/models.ts`)
-8. **Tirantes Estabilizadores en Alerón Delantero del Formula:**
-   - **Qué es:** En `carModel()` (`src/models.ts`), añadir tensores de acero micro-tubulares en la trompa del Formula hacia el morro.
-   - **Qué problema resuelve:** Aumenta la complejidad mecánica visual del auto monoplaza.
-   - **Valor:** Realismo de ingeniería deportiva a escala. Complejidad: Baja.
+8. **Tapa Moleteada de Batería/Carga en Carrocerías Deportivas:**
+   - **Qué es:** En `carModel()` (`src/models.ts`), modelar un tapón cilíndrico metálico moleteado en el lateral trasero de deportivo y combi.
+   - **Qué problema resuelve:** Acentúa la naturaleza de maqueta a escala de radiocontrol.
+   - **Valor:** Detalle de ensamblaje industrial en miniatura. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #31 completado, verificado con `tsc` (0 errores), `test` (75/75), `build` (562 ms), 33 capturas en `.shots/actual/` (35.0 s) y grafo actualizado (`graphify update .`).
-- **Próxima decisión pendiente:** Implementación en paralelo del **Ciclo #32** con 8 subagentes por área.
+- **Último trabajo completado:** Ciclo #32 completado, verificado con `tsc` (0 errores), `test` (75/75), `build` (392 ms), 33 capturas en `.shots/actual/` (29.4 s) y grafo actualizado (`graphify update .`).
+- **Próxima decisión pendiente:** Implementación en paralelo del **Ciclo #33** con 8 subagentes por área.
 
-### 🔓 LISTO PARA ARRANCAR — Ciclo #32 (Orquestador Antigravity + 8 Subagentes por Área, 2026-10-10)
+### 🔓 LISTO PARA ARRANCAR — Ciclo #33 (Orquestador Antigravity + 8 Subagentes por Área, 2026-10-10)
 > **Coordinación en paralelo — Áreas listas para asignación de subagentes:**
 
 | Subagente / Área | Tarea asignada | Archivos asignados (`🔓`) | Estado |
 |---|---|---|---|
-| **Subagente 1 · Garaje Blindaje** | Insignia de chasis pesado `.heavy-armor` en autos $>250$ HP | `src/menu.ts`, `src/menu.css` | ⏳ Pendiente decisión |
-| **Subagente 2 · HUD Supervivencia** | Resplandor esmeralda de subida de nivel `#xp.surge` | `src/ui.ts`, `src/hud.css` | ⏳ Pendiente decisión |
-| **Subagente 3 · Carrera Proximidad** | Pastilla de rival delantero cercano `.rahead` | `src/kart.ts`, `src/race.css` | ⏳ Pendiente decisión |
-| **Subagente 4 · Gabinete Junket Crush** | Destello estelar en metas completadas de cabezal | `src/match3_draw.ts`, `src/match3.ts`, `src/match3.css` | ⏳ Pendiente decisión |
-| **Subagente 5 · Efectos Visuales 3D** | Vapor térmico de motor `FX.overheat` | `src/fx.ts` | ⏳ Pendiente decisión |
-| **Subagente 6 · Cierre y Polaroid** | Sello de lote fotográfico `"LOTE FOTOGRÁFICO #XXXX"` | `src/replay.ts`, `src/replay.css` | ⏳ Pendiente decisión |
-| **Subagente 7 · Audio Sintetizado** | Tintineo metálico cristalino `SFX.scrapClink()` | `src/sfx.ts` | ⏳ Pendiente decisión |
-| **Subagente 8 · Modelos Procedurales** | Tensores estabilizadores en trompa del Formula | `src/models.ts` | ⏳ Pendiente decisión |
+| **Subagente 1 · Garaje Chasis** | Insignia de chasis liviano `.light-frame` en autos ágiles | `src/menu.ts`, `src/menu.css` | ⏳ Pendiente decisión |
+| **Subagente 2 · HUD Supervivencia** | Pánico acelerado en viñeta de daño crítico `#blood.panic` | `src/ui.ts`, `src/hud.css` | ⏳ Pendiente decisión |
+| **Subagente 3 · Carrera Maniobra** | Pastilla de marcha atrás `.rback` en tacómetro | `src/kart.ts`, `src/race.css` | ⏳ Pendiente decisión |
+| **Subagente 4 · Gabinete Junket Crush** | Marco reforzado en celda seleccionada activa | `src/match3_draw.ts`, `src/match3.ts`, `src/match3.css` | ⏳ Pendiente decisión |
+| **Subagente 5 · Efectos Visuales 3D** | Chispas de plasma eléctrico `FX.sparkZap` | `src/fx.ts` | ⏳ Pendiente decisión |
+| **Subagente 6 · Cierre y Polaroid** | Sello analógico LiPo `"BATERÍA LiPo · DESCARGA TOTAL"` | `src/replay.ts`, `src/replay.css` | ⏳ Pendiente decisión |
+| **Subagente 7 · Audio Sintetizado** | Tono retro de alerta de colisión `SFX.collisionWarning()` | `src/sfx.ts` | ⏳ Pendiente decisión |
+| **Subagente 8 · Modelos Procedurales** | Tapa moleteada de carga en laterales de carrocería | `src/models.ts` | ⏳ Pendiente decisión |
 
 
 

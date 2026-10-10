@@ -132,6 +132,13 @@ export async function showPhoto(i: PhotoInfo) {
   g.textAlign = "left";
   g.fillText(`HORA REGISTRO · ${timeStr}`, pad, y0 + 198 * u);
   g.restore();
+  const lot = (Math.abs(Math.sin(tSec + i.kills) * 9000) + 1000) | 0;
+  g.save();
+  g.font = `600 ${Math.round(12 * u)}px Rajdhani, sans-serif`;
+  g.fillStyle = "rgba(77, 76, 56, 0.4)";
+  g.textAlign = "left";
+  g.fillText(`LOTE FOTOGRÁFICO #${lot}`, pad, y0 + 216 * u);
+  g.restore();
   if (i.kills >= 100) {
     g.save();
     g.font = `700 ${Math.round(15 * u)}px Rajdhani, sans-serif`;

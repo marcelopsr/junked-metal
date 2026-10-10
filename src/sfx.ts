@@ -223,6 +223,7 @@ export const SFX = {
     tone("triangle", 783.99, 783.99, 0.1, 0.12, 0.16);
     tone("triangle", 1046.5, 1046.5, 0.22, 0.24, 0.24);
   },
+  scrapClink: () => { tone("triangle", 2200, 1800, 0.04, 0.08); tone("sine", 3200, 2400, 0.03, 0.06, 0.02); },
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {
     if (crit) tone("square", 880, 440, 0.05, 0.06);

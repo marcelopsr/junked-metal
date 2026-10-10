@@ -683,5 +683,30 @@ Carrera (1) y Survivor en partida (2).
 8. **Antena RC flexible con banderín en la carrocería 3D (Subagente 8 · `src/models.ts`):**
    - En `carModel()`, todos los modelos salvo el tanque incorporan una antena delgada metálica (`#71717a`) inclinada con banderín plástico rojo (`#ef4444`) en la aleta trasera, enfatizando la identidad a escala de vehículo radiocontrolado.
 
+---
+
+## 2026-10-10 · Ciclo #32 (Blindaje Pesado Garaje, Resplandor XP HUD, Rival Frontal Carrera, Destello Estelar Match-3, Vapor Overheat FX, Lote Fotográfico Polaroid, Clink Tornillos SFX y Tensores Formula 3D)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 29.4 s).
+
+### Intervenciones aplicadas por 8 subagentes en paralelo y verificadas en captura
+1. **Insignia técnica `.heavy-armor` ("BLINDAJE PESADO") en vehículos pesados (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()` (pestaña `auto`), se identifican los vehículos con carrocería base $\ge 250$ (`tanque`, `monster`) y se despliega la insignia plateada de acero `<span class="heavy-armor">BLINDAJE PESADO</span>`, clarificando su alta absorción de daño.
+2. **Resplandor esmeralda de sobrecarga `#xp.surge` al subir de nivel (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, cuando el nivel del jugador incrementa (`d.level > prevLv`), se dispara la animación `xp-surge` sobre la barra `#xp`, proyectando un halo verde esmeralda `rgba(34, 197, 94, .95)` con incremento de brillo que celebra el ascenso de nivel.
+3. **Pastilla de advertencia frontal `.rahead` ("RIVAL DELANTE") en Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `hud()` de carrera, se detecta si un oponente rueda directamente por delante a menos de 2.8 m en el cono frontal de marcha, encendiendo la pastilla dorada `<b class="rahead">RIVAL DELANTE</b>` para anticipar rebufos o colisiones traseras.
+4. **Cruz estelar brillante en tarjetas de metas cumplidas de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - En `paintDisplay()`, las metas cumplidas en el cabezal del gabinete incorporan un destello estelar de 4 puntas en la esquina superior derecha (amarillo claro para metas primarias, cian para secundarias), magnificando la satisfacción de completitud.
+5. **Efecto tridimensional de vapor térmico de sobrecalentamiento en `FX.overheat` (Subagente 5 · `src/fx.ts`):**
+   - Se sumó al pool de partículas 3D el método `FX.overheat(p)`, generando bocanadas de vapor rojizo-anaranjado (`#fca5a5` y `#ea580c`) con sustentación ascendente que representan el límite térmico del motor.
+6. **Sello diegético de número de lote fotográfico en Polaroid (Subagente 6 · `src/replay.ts`):**
+   - En `showPhoto()`, se calcula un identificador de rollo fotográfico y se estampa en el pie de la Polaroid la leyenda `"LOTE FOTOGRÁFICO #XXXX"` en tipografía técnica sepia, reforzando la sensación de documento físico.
+7. **Audio procedural de tintineo metálico en `SFX.scrapClink` (Subagente 7 · `src/sfx.ts`):**
+   - Se añadió al motor de síntesis sonora `SFX.scrapClink()`, con dos tonos modulados de alta frecuencia (2200→1800 Hz y 3200→2400 Hz) que simulan el sonido cristalino de tuercas y tornillos de chatarra chocando en el chasis.
+8. **Tirantes estabilizadores cromados en la trompa del Formula (Subagente 8 · `src/models.ts`):**
+   - En `carModel()`, el Formula monoplaza incorpora dos tirantes cilíndricos cromados diagonales en el tren delantero, aumentando la fidelidad aerodinámica del bólido de carreras.
+
+
 
 

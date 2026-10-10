@@ -453,6 +453,11 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         }
       }
     }
+    if (kind === "formula") {
+      parts.push(
+        ...[-0.22, 0.22].map((x) => cyl(0.012, 0.012, 0.35, chrome, [x, 0.16, bl * 0.44], [0.4, 0, x > 0 ? -0.2 : 0.2], 6))
+      );
+    }
     if (kind !== "tanque") {
       const ax = bw * 0.35, ay = bh * 0.7, az = -bl * 0.42;
       parts.push(

@@ -78,6 +78,7 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("lvMile", +isMile)) $("lvl").classList.toggle("milestone", isMile);
   if (ch("lvN", d.level) && prevLv !== undefined && d.level > prevLv) {
     const s = $("signal"); s.classList.remove("up"); void s.offsetWidth; s.classList.add("up");
+    const xpEl = $("xp"); xpEl.classList.remove("surge"); void xpEl.offsetWidth; xpEl.classList.add("surge");
   }
   txt("timer", `${pad(d.time / 60, 2)}:${pad(d.time % 60, 2)}`);
   if (ch("endless", +(d.time >= 600))) (document.getElementById("clock") ?? $("lcd")).classList.toggle("endless", d.time >= 600);

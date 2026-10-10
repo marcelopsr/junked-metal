@@ -37,6 +37,11 @@
 #signal .lbl { display: none; }
 #signal .h-track { flex: 1; }
 #xp { background: linear-gradient(90deg, #35c9ff, #7dffb0); }
+#xp.surge { animation: xp-surge .6s ease-out; }
+@keyframes xp-surge {
+  0% { box-shadow: 0 0 16px rgba(34, 197, 94, .95); filter: brightness(1.4); }
+  100% { box-shadow: none; filter: none; }
+}
 #lvl { font: 700 16px/1 var(--hf); letter-spacing: .06em; padding: 5px 9px; border: 0; border-radius: 99px; background: linear-gradient(135deg, #35c9ff, #7dffb0); color: #08202c; box-shadow: none; }
 #lvl.milestone { background: linear-gradient(135deg, #ffd24a, #ff9138); color: #1f1100; box-shadow: 0 0 10px rgba(255, 210, 74, .6); }
 #signal.up { animation: h-levelup .7s ease-out both; }

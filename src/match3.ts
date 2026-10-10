@@ -436,6 +436,10 @@ function paintDisplay() {
         c.shadowColor = isSec ? M3C.cian : M3C.exito; c.shadowBlur = 8;
         c.beginPath(); c.roundRect(x + 2, 14, Math.min(gw - 8, 108), 54, 6); c.fill(); c.stroke();
         c.shadowBlur = 0;
+        c.fillStyle = isSec ? M3C.cian : M3C.amarilloClaro;
+        const sx = x + Math.min(gw - 8, 108) - 10;
+        c.fillRect(sx - 3, 19, 8, 2);
+        c.fillRect(sx, 16, 2, 8);
       }
       drawGoalIcon(c, g, x + 26, 42, 48);
       c.textAlign = "left"; c.fillStyle = done ? M3C.exito : M3C.texto; c.font = `700 ${g.k === "score" ? 26 : 36}px Rajdhani, sans-serif`;
