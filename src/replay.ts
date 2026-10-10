@@ -124,6 +124,14 @@ export async function showPhoto(i: PhotoInfo) {
   g.textAlign = "left";
   g.fillText(`ODÓMETRO · REGISTRO ${km} KM`, pad, y0 + 178 * u);
   g.restore();
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  g.save();
+  g.font = `600 ${Math.round(13 * u)}px Rajdhani, sans-serif`;
+  g.fillStyle = "rgba(77, 76, 56, 0.45)";
+  g.textAlign = "left";
+  g.fillText(`HORA REGISTRO · ${timeStr}`, pad, y0 + 198 * u);
+  g.restore();
   if (i.kills >= 100) {
     g.save();
     g.font = `700 ${Math.round(15 * u)}px Rajdhani, sans-serif`;

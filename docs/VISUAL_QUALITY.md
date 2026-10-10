@@ -659,4 +659,29 @@ Carrera (1) y Survivor en partida (2).
 8. **Remaches cromados en guardabarros de Combi y Buggy (Subagente 8 · `src/models.ts`):**
    - En `carModel()`, la combi y el buggy reciben hileras simétricas de 5 remaches esféricos cromados `sph(0.018, chrome, ...)` a lo largo de sus costados, enriqueciendo el maquetismo artesanal a escala.
 
+---
+
+## 2026-10-10 · Ciclo #31 (Porcentaje Taller Garaje, Sobrecarga Voltímetro HUD, Derrape Perfecto Carrera, Retícula Herramienta Match-3, Chispas Rasantes FX, Hora Cierre Polaroid, SFX Podium Fanfare y Antena RC 3D)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 35.0 s).
+
+### Intervenciones aplicadas por 8 subagentes en paralelo y verificadas en captura
+1. **Pastilla de porcentaje global `.parts-pct` ("X% TALLER") en saldo del Garaje (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()`, se calcula el porcentaje de piezas desbloqueadas sobre el total del catálogo `PARTS` y se expone la pastilla cian `<span class="parts-pct">${pctParts}% TALLER</span>` en el saldo de tornillos, dando visibilidad de progresión global de personalización.
+2. **Resplandor de sobrecarga eléctrica `#volt.surge` al activar salto (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `hudJump(ready)`, cuando el salto se acciona (`ready === 0`), se dispara la animación `volt-surge` sobre el voltímetro `#volt`, emitiendo un fogonazo cian eléctrico con resplandor `text-shadow: 0 0 14px rgba(91, 231, 255, .95)`.
+3. **Pastilla magenta `.rperfect` ("¡PERFECTO!") en derrapes extendidos de Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `hud()` de carrera, cuando el corredor mantiene el derrape más allá de 1.8 s (`h.charge >= 1.8`), se despliega la pastilla magenta con halo brillante `<b class="rperfect">¡PERFECTO!</b>`, premiando la carga máxima del mini-turbo.
+4. **Retícula táctica y cursor en cruz en herramientas arcade (Subagente 4 · `src/match3_draw.ts`, `src/match3.ts`, `src/match3.css`):**
+   - En `syncTools()`, se conmuta la clase `#match3-ui.m3-armed` cuando una herramienta táctica está seleccionada (`tool !== null`), activando el cursor de precisión en cruz (`cursor: crosshair`) sobre el lienzo de juego.
+5. **Efecto tridimensional de micro-chispas rasantes en `FX.scrape` (Subagente 5 · `src/fx.ts`):**
+   - Se sumó al pool de partículas 3D el método `FX.scrape(p)`, generando 6 micro-chispas incandescentes amarillas y naranjas (`#fef08a` y `#ea580c`) con alta velocidad tangencial y sustentación gravitatoria para colisiones rasantes.
+6. **Sello diegético de hora local de registro en Polaroid (Subagente 6 · `src/replay.ts`, `src/replay.css`):**
+   - En `showPhoto()`, se extrae la hora local del dispositivo (`HH:MM`) y se estampa en el pie del marco la leyenda `"HORA REGISTRO · HH:MM"` en tono sepia técnico, individualizando cada documento archivado.
+7. **Audio procedural de fanfarria de podio en `SFX.podiumFanfare` (Subagente 7 · `src/sfx.ts`):**
+   - Se añadió al motor de síntesis sonora `SFX.podiumFanfare()`, ejecutando un arpegio triunfal de cuatro notas triangulares armónicas (C5, E5, G5, C6) para celebrar los puestos de podio.
+8. **Antena RC flexible con banderín en la carrocería 3D (Subagente 8 · `src/models.ts`):**
+   - En `carModel()`, todos los modelos salvo el tanque incorporan una antena delgada metálica (`#71717a`) inclinada con banderín plástico rojo (`#ef4444`) en la aleta trasera, enfatizando la identidad a escala de vehículo radiocontrolado.
+
+
 

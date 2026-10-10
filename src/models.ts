@@ -453,6 +453,13 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         }
       }
     }
+    if (kind !== "tanque") {
+      const ax = bw * 0.35, ay = bh * 0.7, az = -bl * 0.42;
+      parts.push(
+        cyl(0.008, 0.008, 0.65, M.metal("#71717a"), [ax, ay + 0.32, az], [0.1, 0, 0.05], 4),
+        box(0.01, 0.08, 0.12, M.plastic("#ef4444"), [ax, ay + 0.6, az - 0.06])
+      );
+    }
     if (kind !== "axel") for (const sd of [-1, 1]) parts.push(cyl(0.07, 0.07, 0.2, chrome, [sd * bw * 0.22, 0.14, -bl * 0.5 - 0.04], [Math.PI / 2, 0, 0], 12), cyl(0.045, 0.045, 0.22, M.matte("#101010"), [sd * bw * 0.22, 0.14, -bl * 0.5 - 0.05], [Math.PI / 2, 0, 0], 10)); // escapes
   }
 

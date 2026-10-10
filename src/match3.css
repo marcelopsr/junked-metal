@@ -222,5 +222,10 @@
   #match3-ui .m3-tools { left: max(12px, env(safe-area-inset-left)); top: 50%; bottom: auto; transform: translateY(-50%); flex-direction: column; }
 }
 
+/* Modo herramienta armada */
+#match3-ui.m3-armed canvas { cursor: crosshair; }
+body:has(#match3-ui.m3-armed) canvas { cursor: crosshair; }
+
 /* Mientras corre el arcade no se muestra ningún control táctil del auto (la pausa propia está montada en el bisel) */
 html body.match3-play #touch.match3-only, html body.match3-play #touch.match3-only #tPause { display: none !important; }
+

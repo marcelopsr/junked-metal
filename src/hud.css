@@ -105,6 +105,11 @@
 #txl.low #lipo i { background: linear-gradient(90deg, var(--low) var(--p, 100%), rgba(255, 255, 255, .14) var(--p, 100%)); animation: h-blink .5s steps(2) infinite; }
 #txl.low #volt { color: #ff5252; text-shadow: 0 0 6px rgba(255, 82, 82, .65); animation: voltPulse .6s ease-in-out infinite alternate; }
 @keyframes voltPulse { from { opacity: .7; } to { opacity: 1; } }
+#volt.surge { animation: volt-surge .5s ease-out; }
+@keyframes volt-surge {
+  0% { color: #5be7ff; text-shadow: 0 0 14px rgba(91, 231, 255, .95); }
+  100% { color: inherit; text-shadow: none; }
+}
 #txl.ab-ready .h-abil > div { animation: h-blink 1s steps(2) infinite; }
 #txl.ab-on .h-abil > div { background: #fff; animation: h-blink .25s steps(2) infinite; }
 #abName { display: inline-flex; align-items: center; gap: 4px; }

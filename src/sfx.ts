@@ -217,6 +217,12 @@ export const SFX = {
   steamHiss: () => hiss("highpass", 3500, 1200, 0.28, 0.16),
   relayClick: () => { tone("square", 1600, 800, 0.015, 0.08); tone("square", 1200, 400, 0.02, 0.07, 0.02); },
   overtake: () => { tone("sine", 620, 1240, 0.08, 0.12); tone("triangle", 1240, 1860, 0.08, 0.08, 0.04); },
+  podiumFanfare: () => {
+    tone("triangle", 523.25, 523.25, 0.1, 0.12);
+    tone("triangle", 659.25, 659.25, 0.1, 0.12, 0.08);
+    tone("triangle", 783.99, 783.99, 0.1, 0.12, 0.16);
+    tone("triangle", 1046.5, 1046.5, 0.22, 0.24, 0.24);
+  },
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {
     if (crit) tone("square", 880, 440, 0.05, 0.06);

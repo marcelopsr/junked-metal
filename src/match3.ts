@@ -519,6 +519,7 @@ function syncTools() {
   const bar = $m("m3-tools");
   const on = mode === "level" && st?.phase === "play" && !paused && TOOLS.some((t) => toolCount(t) > 0);
   bar.classList.toggle("hidden", !on);
+  ui?.classList.toggle("m3-armed", tool !== null);
   if (!on) return;
   bar.querySelectorAll<HTMLButtonElement>("button").forEach((b) => {
     const t = b.dataset.tool as Tool, n = toolCount(t);

@@ -591,7 +591,10 @@ function renderGarage() {
   if (gtab !== "piezas") editing = false;
   $("scr-garage").classList.toggle("editing", editing); // modo edición: solo el editor, con toda la altura
   const ownedCars = (Object.keys(CARS) as CarKind[]).filter((k) => owns("car:" + k)).length;
-  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span>`;
+  const allPartsList = (Object.keys(PARTS) as Slot[]).flatMap((sl) => Object.keys(opts(sl)).map((o) => `part:${sl}:${o}`));
+  const ownedPartsCount = allPartsList.filter((id) => owns(id)).length;
+  const pctParts = Math.round((ownedPartsCount / allPartsList.length) * 100);
+  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span> <span class="parts-pct">${pctParts}% TALLER</span>`;
   $("gtabs").innerHTML = tabsHtml(GTABS, gtab, "gtab");
   $("paint").classList.toggle("hidden", gtab !== "pintura");
   $("cars").classList.toggle("hidden", gtab === "pintura");

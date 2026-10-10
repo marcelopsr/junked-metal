@@ -233,6 +233,10 @@ function tickBanner(dt: number) {
 
 // ---------- Salto del auto: CD en botón táctil y mini barra en teclado ----------
 export function hudJump(ready: number) {
+  if (ready === 0) {
+    const voltEl = $("volt");
+    voltEl.classList.remove("surge"); void voltEl.offsetWidth; voltEl.classList.add("surge");
+  }
   const cd = ready >= 1 ? 0 : 1 - ready;
   const cdS = cd.toFixed(3);
   if (ch("jmpCd", cdS)) {
