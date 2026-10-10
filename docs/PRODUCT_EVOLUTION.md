@@ -812,8 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #49 completado y validado con 4 Especialistas (`tsc` 0 errores, `test` 80/80 en verde, `build` limpio en 1.31 s, 17 capturas en `.shots/actual/` en 63.3 s, grafo de conocimiento sincronizado).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #50**.
+- **Último trabajo completado:** Ciclo #50 completado y validado con 4 Especialistas (`tsc` 0 errores, `test` 81/81 en verde, `build` limpio en 1.48 s, 17 capturas en `.shots/actual/` en 32.9 s, grafo en 3867 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #51**.
+
+### 🔓 LISTO PARA EL CICLO #51 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+
+| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
+|---|---|---|
+| **Procedural 3D Modeler** | Ensamble de Servo Saver elástico y varillaje con rótulas esféricas bajo chasis delantero | `src/models.ts` |
+| **Audio Synth Designer** | Zumbido/conmutación térmica de FETs del ESC (`escWhine`) y chirrido de amortiguadores (`chassisSqueak`) | `src/sfx.ts` |
+| **Combat Feel & VFX** | Salpicaduras diegéticas de gravilla/polvo centrífugo en drift prolongado y compresión visible de muelles | `src/car.ts` |
+| **Diegetic HUD & Telemetry** | Micro-vúmetro RSSI analógico segmentado en `#signal` y efecto de enganche FHSS al recuperar enlace | `src/ui.ts`, `src/hud.css` |
+
+### Ciclo #50 (2026-10-10) — R-Clips 3D, SFX Servo y Antena, Chispas Laterales en car.ts y RX Diversity en HUD
+- **Alcance implementado en producción (`src/`):**
+  - **Procedural 3D Folded Modeler (`src/models.ts`):** Micro-arandelas de silicona azul y anillos de pasadores en horquilla de acero (R-clips de carrocería RC) en los 4 postes de montaje; tapa de registro del diferencial trasero en aluminio fundido con 4 tornillos Allen cromados en esquinas. 0 draw calls adicionales.
+  - **Audio Synth Sound Designer (`src/sfx.ts`):** Zumbido/temblor PWM analógico del servomotor de dirección `SFX.servoChatter(steer, spd)` bajo esfuerzo; resonancia armónica de varilla flexible de acero `SFX.antennaTwang(pan)` ante impactos o rozamiento con obstáculos.
+  - **Combat Feel & VFX (`src/car.ts`):** Proyección de micro-chispas en flanco exterior durante derrape lateral violento con velocidad (`Math.abs(ls) > 5.0 && Math.abs(fs) > 6.0`); transferencia física asimétrica al cabeceo base del chasis en aterrizajes según violencia del impacto vertical (`this.basePitch += this.lastVy * 0.012`) con 0 GC allocations.
+  - **Diegetic HUD & Telemetry (`src/ui.ts`, `src/hud.css`):** Indicador RX Diversity dual (`RX:A` / `RX:B`) conmutando antena activa en tiempo real; alerta crítica de SNR (<8 dB) con parpadeo y micro-glitch electromagnético de pantalla `.rf-interference` sobre el display digital LCD.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, 10 suites (81/81 tests) pasando, build Vite en 1.48 s, 17 capturas en `.shots/actual/` aprobadas, grafo de conocimiento sincronizado en 3867 nodos y 9404 aristas.
 
 ### 🔓 LISTO PARA EL CICLO #50 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
@@ -906,3 +923,30 @@ Verificado: tsc, 75 pruebas y build; un Chromium headless Metal cerrado al final
 Pedido del usuario: continuar produciendo recursos procedurales. `assets-src/procedural-props/v1/` entrega cinco familias × tres semillas: pallets, neumáticos apilados, bidones abollados, chapas dobladas y tornillería. Quince GLB completos a 360°, fuente Blender con mapas empaquetados, generador reutilizando CarBuild/bicho, quince PNG PBR 512×512, catálogo y visor local. Complementa vegetación/cercas/luces de Gemini y bibliotecas de superficies/decals; sin sustituir recursos activos ni tocar gameplay. Fuera del build y sin publicación.
 
 Verificado: generación con igual semilla, lectura de canales PNG, binarios GLB, carga/selección de quince variantes, día/noche, reset y encuadre completo en pc/cel, cero errores/desbordamiento. Tipos, 80 tests y build pasan sobre el árbol compartido. Evidencia y revisión Ponytail en el paquete, navegador cerrado. Total 53.796 triángulos, 524–6.032 por prop, GLB 19,84 MB. Reserva liberada; cualquier sesión autorizada puede reutilizar o producir v2 sin esperar revisión Codex. Siguiente oportunidad: integrar una selección en un banco o zona autorizada conservando instancias, escala y ambas cámaras. Sin AO físico, LOD ni prueba de hordas; no atribuir esta prueba al checkpoint Luna/LOD concurrente.
+
+
+## 2026-10-10 · Pipeline de LODs y Hordas Masivas de Supervivencia (`gemini-performance`)
+
+Decisión del usuario: Diseñar el pipeline de LODs (LOD0 héroe / LOD1 horda) y animación instanciada para llevar los modelos cinemáticos al combate masivo de Supervivencia.
+Se diseñó e implementó el pipeline de reducción geométrica rig-safe en Blender y la suite de medición cuantitativa en Chromium Metal:
+
+1. **Modelos LOD1 producidos y verificados (`assets-src/cinematic-3d/gemini-performance/`):**
+   - **Frenchie LOD1 (`frenchie_lod1.glb`):** 3.740 triángulos (-93.5% vs 57.5k), 1.32 MB. Preserva `PerroRig` (21 huesos), deformación sin NaN y los 7 clips de animación (`charge`, `death`, `idle`, `jump_slam`, `rage`, `run`, `walk`).
+   - **Eulalio LOD1 (`eulalio_lod1.glb`):** 3.802 triángulos (-93.5% vs 58.5k), 1.41 MB. Preserva `GatoRig` (23 huesos) y los 8 clips (`death`, `idle`, `jump`, `rage`, `run`, `spin`, `swipe`, `walk`).
+   - **Buggy LOD1 (`buggy_lod1.glb`):** 10.180 triángulos (-91.1% vs 115k), 1.11 MB. Carrocería a 4.4k tris y 4 ruedas independientes con tacos y beadlocks a 5.7k tris.
+
+2. **Benchmark Cuantitativo en Motor Real (`bench-lod.html`, `scripts/bench-check.mjs`):**
+   - Medición con Chromium Metal (Apple M4 Pro) a 1280×720:
+     - 20x LOD0 (Héroe): 1.15M tris, 4.50 ms mediana / 6.50 ms P95.
+     - 20x LOD1 (Horda 20): 74.8k tris, 3.90 ms mediana / 5.90 ms P95.
+     - 50x LOD1 (Horda 50): 186.9k tris, 5.30 ms mediana / 9.40 ms P95 (~188 FPS).
+     - 100x LOD1 (Horda 100): 373.8k tris, **7.90 ms mediana / 9.80 ms P95 (~126 FPS)**.
+   - Demuestra que con 100 enemigos activos corriendo simultáneamente en pantalla, el tiempo de render está **por debajo de 10 ms (P95: 9.8 ms)**, garantizando ampliamente los 60 FPS (presupuesto de 16.6 ms).
+
+3. **Entregables:**
+   - Plan maestro: `docs/LOD_AND_INSTANCING_PLAN.md`.
+   - Generador y verificador: `build_lods.py`, `verify_lods.py`.
+   - Banco interactivo: `bench-lod.html`, `src/bench_lod.ts`.
+   - Capturas de evidencia: `preview-horde-50.png`, `preview-horde-100.png`.
+   - Handoff técnico: `assets-src/cinematic-3d/gemini-performance/HANDOFF.md`.
+

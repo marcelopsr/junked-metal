@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Junked Metal — Benchmark de LODs y Horda</title>
+</head>
+<body>
+  <canvas id="bench-canvas" aria-label="Patio de pruebas de rendimiento de horda"></canvas>
+  <header>
+    <strong>JUNKED METAL / BENCHMARK DE HORDA</strong>
+    <span id="bench-status" role="status">Preparando entidades…</span>
+  </header>
+  <nav aria-label="Controles de Benchmark">
+    <button data-scenario="lod0_20">20x LOD0 (Héroe)</button>
+    <button data-scenario="lod1_20">20x LOD1 (Horda)</button>
+    <button data-scenario="lod1_50" aria-pressed="true">50x LOD1 (Horda 50)</button>
+    <button data-scenario="lod1_100">100x LOD1 (Horda 100)</button>
+    <button id="bench-motion" aria-pressed="true">Animación</button>
+  </nav>
+  <footer>
+    Banco de medición cuantitativa de rendimiento para combate masivo en Supervivencia.
+  </footer>
+  <script type="module" src="./src/bench_lod.ts"></script>
+</body>
+</html>
