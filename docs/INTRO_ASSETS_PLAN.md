@@ -1,6 +1,6 @@
 # Junked Metal — Intro y recursos visuales
 
-Fecha: 2026-10-10. Estado: **acabado cinematográfico aprobado; paquete de nueve recursos separados producido y verificado en montaje estático; integración fuera de esta tanda**.
+Fecha: 2026-10-10. Estado: **acabado cinematográfico aprobado; diez recursos activos, incluidos el frenchie y cuatro focos, producidos y verificados en montaje estático; integración fuera de esta tanda**.
 
 ## Alcance acordado
 
@@ -10,6 +10,7 @@ Decisiones del usuario en esta sesión:
 - Conservar la noche y la historia: cartel de la liga, presentación de rivales, entrada del auto RC y cierre.
 - Mostrar una lámina/storyboard antes de reemplazar recursos en el juego.
 - Tras ver la muestra, el usuario eligió conservar su acabado cinematográfico y producir escenas y personajes separados con ese nivel de detalle. La intro puede ser más elaborada que el gameplay; no se pide simplificar esta tanda a píxeles grandes.
+- El usuario pidió incluir un bulldog francés gris como otro jefe junto a Eulalio, con mancha visible de frente en el pecho y físico algo musculoso. Se produjo como recorte independiente y se amplió el montaje a cuatro rivales; el comportamiento y modelo del jefe en runtime no se modifican en esta tanda de recursos.
 
 Responsabilidad: ilustraciones, texturas, modelos y puesta en escena visual. La presente tanda no modifica código, gameplay, balance, física, audio ni interfaz. No publica ni integra la propuesta.
 
@@ -42,12 +43,12 @@ Límites visibles antes de convertirla en recursos finales:
 
 ## Producción propuesta de la intro
 
-**Producción entregada:** [`assets-src/intro/cinematic-v1/README.md`](../assets-src/intro/cinematic-v1/README.md). Cuatro fondos cinematográficos, cuatro personajes con transparencia y un cartel independiente sin texto; prompts exactos, inventario de medidas y comprobaciones incluidos. [Vista del montaje](../assets-src/intro/cinematic-v1/preview.png) y [montaje local editable](../assets-src/intro/cinematic-v1/index.html). Las imágenes se produjeron por separado con `image_gen`, no recortando la lámina. Son capas para composición 2D: personajes en una pose; luces y vegetación horneadas en cada fondo. No se produjeron capas de parallax, geometría 3D ni animación de ruedas.
+**Producción entregada:** [`assets-src/intro/cinematic-v1/README.md`](../assets-src/intro/cinematic-v1/README.md). Cuatro fondos cinematográficos activos, cinco personajes con transparencia y un cartel independiente sin texto; prompts exactos, inventario de medidas y comprobaciones incluidos. Se conserva además el fondo original de tres focos: once PNG fuente, diez activos. [Vista del montaje](../assets-src/intro/cinematic-v1/preview.png) y [montaje local editable](../assets-src/intro/cinematic-v1/index.html). Las imágenes se produjeron por separado con `image_gen`, no recortando la lámina. Son capas para composición 2D: personajes en una pose; luces y vegetación horneadas en cada fondo. No se produjeron capas de parallax, geometría 3D ni animación de ruedas.
 
 | Momento existente | Mejora visual | Recursos a producir | Movimiento propuesto |
 |---|---|---|---|
 | Cartel / 0–5 s | Cámara a ras del pasto; ring de metal con profundidad y luces cálidas | Fondo por planos, cartel sin texto, cuerda, guirnalda y pasto frontal | Desplazamiento lento entre planos; encendido de focos |
-| Rivales / 5–10 s | Siluetas fieles, poses con actitud y lectura bajo tres focos | Hormiga, escarabajo y Eulalio por separado; fondo compartido | Entrada breve, asentamiento y gesto sutil; sin horror ni parpadeo obligatorio |
+| Rivales / 5–10 s | Siluetas fieles, poses con actitud y lectura bajo cuatro focos | Hormiga, escarabajo, Eulalio y frenchie gris por separado; fondo compartido | Entrada breve, asentamiento y gesto sutil; sin horror ni parpadeo obligatorio |
 | Auto / 10–15,2 s | Buggy canónico, ruedas legibles, polvo y frenada con peso | Buggy con transparencia y estados de ruedas; reutilizar fondo y efectos existentes | Entrada y frenada existentes; separar ruedas y carrocería si el arte lo necesita |
 | Cierre / 15,2–19,6 s | Faro revela rivales; espacio claro para logo y subtítulo | Fondo nocturno, pasto frontal, buggy pequeño y ojos | Barrido suave de luz; logo actual superpuesto |
 
@@ -77,3 +78,5 @@ La dirección cinematográfica y la producción de imágenes separadas ya están
 Integración de intro alcanzaría `intro.ts`, su presentación si hiciera falta y un escenario headless de las cuatro escenas; revisar llamadas de `playIntro`, silencio, modo calmo, subtítulos, logo, salida y posibles fallos de carga. Usar recursos relativos para GitHub Pages. Verificación al final de esa tanda: `tsc`, `npm test`, `build`, capturas pc/cel y prueba de reproducción/salto. Medir arranque si se agregan descargas; evaluar rendimiento si se cambia la escena 3D.
 
 Primera tanda: documentación y storyboard conceptual. Segunda tanda: acabado cinematográfico elegido por el usuario, nueve PNG separados y un montaje estático local. Validación: PNG/alpha/bordes, montaje de escritorio y teléfono, diez imágenes cargadas en cada uno sin errores ni desbordamiento; navegador cerrado al terminar. Los PNG fuente suman 17,24 MB y requieren exportación para distribución. No se corrieron suites del juego, simulación ni medición de rendimiento; no hay afirmación de mejora integrada ni de geometría 3D generada. La producción de recursos está autorizada y entregada; integración, reproducción y optimización de descarga siguen pendientes.
+
+Ampliación del frenchie: recorte gris con mancha marfil frontal y físico compacto musculoso; fondo alternativo de cuatro focos. Once PNG fuente (21,36 MB), diez activos (19,17 MB), seis recortes transparentes; prompts y manifest actualizados. Montaje pc/cel con cuatro rivales, once imágenes cargadas sin errores ni desbordamiento y siluetas sin cortes en los límites comprobados. Capturas en `.shots/investigacion-arte/cinematic-frenchie-{pc,cel}.png`. La versión anterior de tres focos se conserva.

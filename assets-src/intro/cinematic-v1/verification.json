@@ -3,19 +3,25 @@
   "checks": [
     {
       "viewport": "pc",
-      "imagesLoaded": 10,
+      "imagesLoaded": 11,
+      "rivals": 4,
+      "frenchies": 1,
       "horizontalOverflow": false,
       "errors": []
     },
     {
       "viewport": "cel",
-      "imagesLoaded": 10,
+      "imagesLoaded": 11,
+      "rivals": 4,
+      "frenchies": 1,
       "horizontalOverflow": false,
       "errors": []
     }
   ],
-  "pngAssets": 9,
-  "transparentAssets": 5,
-  "totalBytes": 17237341,
+  "pngAssets": 11,
+  "activeAssets": 10,
+  "transparentAssets": 6,
+  "totalBytes": 21364157,
+  "activeBytes": 19171701,
   "runtimeTested": false
 }

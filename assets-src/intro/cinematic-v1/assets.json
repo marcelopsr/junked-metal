@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "created": "2026-10-10",
   "tool": "image_gen",
   "integration": "not integrated",
@@ -10,6 +10,22 @@
       "width": 1672,
       "height": 941,
       "bytes": 2158254,
+      "active": true,
+      "transparent": false,
+      "contentBounds": {
+        "x": 0,
+        "y": 0,
+        "width": 1672,
+        "height": 941
+      },
+      "transparentPixels": 0
+    },
+    {
+      "file": "02-rivales-fondo-v2.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2182216,
+      "active": true,
       "transparent": false,
       "contentBounds": {
         "x": 0,
@@ -24,6 +40,7 @@
       "width": 1672,
       "height": 941,
       "bytes": 2192456,
+      "active": false,
       "transparent": false,
       "contentBounds": {
         "x": 0,
@@ -38,6 +55,7 @@
       "width": 1672,
       "height": 941,
       "bytes": 2260903,
+      "active": true,
       "transparent": false,
       "contentBounds": {
         "x": 0,
@@ -52,6 +70,7 @@
       "width": 1672,
       "height": 941,
       "bytes": 2173895,
+      "active": true,
       "transparent": false,
       "contentBounds": {
         "x": 0,
@@ -66,6 +85,7 @@
       "width": 1374,
       "height": 1145,
       "bytes": 1221626,
+      "active": true,
       "transparent": true,
       "contentBounds": {
         "x": 58,
@@ -80,6 +100,7 @@
       "width": 1423,
       "height": 1105,
       "bytes": 1468842,
+      "active": true,
       "transparent": true,
       "contentBounds": {
         "x": 33,
@@ -94,6 +115,7 @@
       "width": 1151,
       "height": 1367,
       "bytes": 1775001,
+      "active": true,
       "transparent": true,
       "contentBounds": {
         "x": 62,
@@ -108,6 +130,7 @@
       "width": 1536,
       "height": 1024,
       "bytes": 2229349,
+      "active": true,
       "transparent": true,
       "contentBounds": {
         "x": 14,
@@ -122,6 +145,7 @@
       "width": 1671,
       "height": 941,
       "bytes": 1757015,
+      "active": true,
       "transparent": true,
       "contentBounds": {
         "x": 37,
@@ -130,6 +154,21 @@
         "height": 796
       },
       "transparentPixels": 751257
+    },
+    {
+      "file": "10-frenchie-gris.png",
+      "width": 1263,
+      "height": 1246,
+      "bytes": 1944600,
+      "active": true,
+      "transparent": true,
+      "contentBounds": {
+        "x": 152,
+        "y": 13,
+        "width": 958,
+        "height": 1211
+      },
+      "transparentPixels": 814573
     }
   ]
 }

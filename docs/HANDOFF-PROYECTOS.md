@@ -80,6 +80,8 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 **Arte e intro — producción del 2026-10-10:** tras ver la lámina, el usuario eligió **conservar el acabado cinematográfico**, con más detalle que el gameplay. Paquete [`assets-src/intro/cinematic-v1/README.md`](../assets-src/intro/cinematic-v1/README.md): cuatro fondos, hormiga/escarabajo/Eulalio/buggy y cartel vacío con transparencia; prompts exactos, medidas, montaje HTML estático y captura. PNG/alpha/bordes y montaje pc/cel verificados; 17,24 MB fuente. Una pose por personaje y fondos sin separación por profundidad: no hay video, modelos 3D nuevos ni rig. **Pendiente:** integrar y animar la intro, exportar archivos de distribución y medir su carga. Esta sesión solo produjo recursos; `src/intro.ts` conserva la versión anterior.
 
+**Ampliación de jefes en el arte, 2026-10-10:** usuario pidió frenchie/bulldog francés gris, mancha visible en el pecho y algo musculoso, junto a Eulalio. Entregado `10-frenchie-gris.png` con alpha + `02-rivales-fondo-v2.png` con cuatro focos. Montaje de cuatro rivales y captura actualizados; revisión pc/cel sin errores ni desbordamiento. Once fuentes conservadas, diez activas; 19,17 MB activos. Se conserva el fondo anterior. No cambia el jefe perro ni su lógica en el juego: incorporación al paquete y montaje visual, con integración runtime pendiente.
+
 **Pendiente de implementar (ya decidido por el usuario):**
 - **Planilla en Drive:** subir `balance.xlsx` y dejarla como referencia.
 
