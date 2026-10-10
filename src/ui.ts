@@ -406,7 +406,7 @@ const rarity = (o: Offer) => (o.kind === "evo" ? "evo" : o.kind === "fusion" ? "
 const kindLabel = (o: Offer) => (
   o.kind === "evo" ? "Evolución" :
   o.kind === "fusion" ? "Fusión" :
-  o.kind === "heal" ? "Reparación" :
+  o.kind === "heal" ? "Reparación · +35% vida" :
   o.lv === 1 ? (o.kind === "weapon" ? "Arma · NUEVA" : "Pieza · NUEVA") :
   `${o.kind === "weapon" ? "Arma" : "Pieza"} · NV ${(o.lv ?? 2) - 1} → NV ${o.lv}${o.lv === 5 && o.syn?.ready ? " · ¡EVO LISTA!" : o.lv === 5 ? " · MÁX" : ""}`
 );
@@ -424,7 +424,7 @@ export function showOffers(title: string, offers: Offer[], sel: number, onPick: 
   subEl.textContent = sub;
   subEl.className = threat ? `lu-sub lu-sub--${threat}` : "lu-sub";
   $("offers").innerHTML = offers.map((o, i) => `
-    <div class="offer ${rarity(o)} ${o.lv === 5 && o.syn?.ready ? "evo-rdy" : ""} ${i === sel ? "sel" : ""}" data-i="${i}" style="--i:${i}">
+    <div class="offer ${rarity(o)} ${o.kind === "heal" ? "heal" : ""} ${o.lv === 5 && o.syn?.ready ? "evo-rdy" : ""} ${i === sel ? "sel" : ""}" data-i="${i}" style="--i:${i}">
       <span class="kind">${kindLabel(o)}</span>
       <div class="art">${icon(o.kind === "evo" ? o.id : o.icon, 44)}</div>
       <b>${o.title}</b>

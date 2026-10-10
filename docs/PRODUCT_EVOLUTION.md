@@ -206,50 +206,64 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
-### Ciclo #20 (2026-10-10) — Anillos Activos en Probador de Mandos, Nitro Máximo `#boost.full`, Destello `.used` en Carrera y Multiplicador `(×N)` en Junket Crush
-- **Alcance implementado en paralelo por 4 subagentes:**
-  - **Subagente 1 · Configuración de Mandos (`src/menu.ts`, `src/menu.css`):** Clase `.active` en `.pt-st` cuando el stick supera la zona muerta (`m >= PAD.dead`), iluminando el anillo `.pt-ring` y la lectura numérica `em` en ámbar cálido `#ffd24a` con resplandor sutil.
-  - **Subagente 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`):** Activación memoizada de `#boost.full` al alcanzar carga completa (`d.boost >= 100`), otorgando un halo cian eléctrico y degradado incandescente a la barra de impulso.
-  - **Subagente 3 · Carrera: Objetos (`src/kart.ts`, `src/race.css`):** Destello transitorio `.used` (borde blanco puro y resplandor de 16 px) sobre `.ritem` durante 300 ms en `useItem(r)` al accionar un objeto.
-  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`):** Inclusión del multiplicador de cascada ` (×${s.chain + 1})` en los números flotantes de ganancia cuando ocurre una reacción en cadena (`s.chain >= 1`).
-- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (591 ms), `npm run shots -- --only config,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3077 nodos, 7529 aristas).
+### Ciclo #21 (2026-10-10) — Muestra de Color en Garaje, Reparación +35% en Cartas, Pastilla de Escudo en Carrera, Cajas de Chatarra Mejoradas, Críticos FX y Remaches Polaroid
+- **Alcance implementado en paralelo por 6 subagentes:**
+  - **Subagente 1 · Garaje Pintura (`src/menu.ts`, `src/menu.css`):** Punto cromático circular `<i id="pzdot" class="sw-dot">` dentro del título `.hsvt` de la pieza seleccionada, sincronizado en vivo con `hsvBars()` para mostrar el color aplicado en tiempo real.
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Etiqueta explícita `Reparación · +35% vida` en `kindLabel()` y clase `.offer.heal .kind` en verde esmeralda `#22c55e` para identificar al instante la curación en cartas de mejora.
+  - **Subagente 3 · Carrera Escudo (`src/kart.ts`, `src/race.css`):** Distintivo cian brillante `.rshield` (`ESCUDO Xs`) junto al velocímetro de carrera para corredores con burbuja de protección activa, reflejando el tiempo restante.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3_draw.ts`):** Ráfaga reforzada de 16 partículas de viruta y onda de choque naranja `rings` al asestar el golpe final que destruye una caja de chatarra (`h.left <= 0`).
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** 14 partículas en dorado `#ffd24a` y naranja `#ff4d00` para impactos críticos en `FX.hit(p, crit)` con mayor velocidad y escala física.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** 4 remaches envejecidos en los vértices exteriores del papel Polaroid y botón de descarga estilizado como chapa de taller con sombra y elevación hover.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (914 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3080 nodos, 7537 aristas).
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #21
+## 4. Backlog Vivo de Oportunidades — Ciclo #22 (6 Áreas en Paralelo)
 
-### A. Área 1 · Menú de Garaje y Taller (`src/menu.ts`, `src/menu.css`)
-1. **Pastilla de Color Seleccionado en la Cabecera de `Pintura` del Garaje:**
-   - **Qué es:** En `renderGarage()` (`src/menu.ts`), mostrar una muestra de color circular/cuadrada compacta con el tono de pintura activo junto al nombre de la pieza (`${PZ[pz]} · Personalizado`) en `.hsvt`.
-   - **Qué problema resuelve:** Al personalizar el auto en el Garaje, el título indica si es personalizado o de fábrica pero no muestra una muestra visual del tono aplicado en la cabecera.
-   - **Valor:** Mayor claridad cromática al pintar piezas del auto RC. Complejidad: Baja.
+### A. Área 1 · Menú y Configuración (`src/menu.ts`, `src/menu.css`)
+1. **Porcentajes Numéricos en Deslizadores de Audio (`SFX X% · MÚSICA Y%`):**
+   - **Qué es:** En `renderCfg()` (`src/menu.ts`), exhibir el valor porcentual numérico en vivo junto a los títulos o cursores de volumen de efectos de sonido y música de fondo.
+   - **Qué problema resuelve:** Los sliders permiten calibrar el audio pero no muestran la cifra exacta del nivel elegido.
+   - **Valor:** Mayor precisión y claridad al ajustar el sonido en distintos dispositivos. Complejidad: Baja.
 
-### B. Área 2 · HUD de Supervivencia: Porcentaje de Curación en Cartas de Reparación (`src/ui.ts`, `src/hud.css`)
-2. **Etiqueta Explícita `Reparación · +35% vida` en Cartas de Nivel:**
-   - **Qué es:** En `kindLabel()` (`src/ui.ts`), cuando la carta es de tipo curación (`o.kind === "heal"`), detallar `Reparación · +35% vida` con tinte verde esmeralda.
-   - **Qué problema resuelve:** Actualmente la carta de curación dice únicamente `Reparación` en la etiqueta de cabecera, sin explicitar de inmediato cuánto porcentaje de vida restaura antes de leer la descripción.
-   - **Valor:** Lectura táctica instantánea ante situaciones de emergencia en supervivencia. Complejidad: Baja.
+### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
+2. **Formateo de Chatarra con Separador de Miles en `#scrap`:**
+   - **Qué es:** En `hudUpdate()` (`src/ui.ts`), formatear el acumulado de chatarra/gemas con separador numérico legible (`d.scrap.toLocaleString("es-ES")`).
+   - **Qué problema resuelve:** En partidas largas donde se acumulan miles de piezas de chatarra, la lectura numérica continua dificulta evaluar el total de un vistazo.
+   - **Valor:** Mayor legibilidad en partidas de supervivencia avanzadas. Complejidad: Baja.
 
-### C. Área 3 · Carrera: Indicador de Escudo Activo en el HUD (`src/kart.ts`, `src/race.css`)
-3. **Pastilla de Escudo Activo (`ESCUDO Xs`) en el Velocímetro de Carrera:**
-   - **Qué es:** En `hud()` (`src/kart.ts`), cuando el corredor humano tiene burbuja de protección (`r.shield > 0`), mostrar una pastilla cian `.rshield` junto a `.rturbo` indicando el tiempo restante de protección (`ESCUDO 7s`).
-   - **Qué problema resuelve:** La burbuja 3D rodea al auto pero el HUD no tiene un temporizador numérico que avise cuándo caducará la protección ante proyectiles.
-   - **Valor:** Anticipación táctica de colisiones y disparos rivales. Complejidad: Baja.
+### C. Área 3 · Carrera: Indicador de Marcha Atrás (`src/kart.ts`, `src/race.css`)
+3. **Indicador de Marcha Atrás (`R`) en el Velocímetro de Carrera:**
+   - **Qué es:** En `hud()` (`src/kart.ts`), mostrar una pastilla ámbar `.rrev` (`R`) junto a la velocidad en km/h cuando el auto se desplaza en retroceso (`h.fs < -0.5`).
+   - **Qué problema resuelve:** Al chocar o girar en una curva cerrada, ayuda al piloto a confirmar inmediatamente si el motor está empujando hacia atrás.
+   - **Valor:** Mejor retroalimentación de manejo en situaciones de rescate o maniobra. Complejidad: Baja.
 
-### D. Área 4 · Gabinete Junket Crush: Efecto de Destello en Cajas Trituradas (`src/match3_draw.ts`, `src/match3.ts`)
-4. **Resplandor de Impacto al Romper Cajas de Chatarra en el Tablero:**
-   - **Qué es:** En `drawCrate()` o `beginStep()`, cuando una caja de chatarra recibe su segundo golpe y se destruye (`vw.crate[y][x] === 0`), añadir un destello dorado o partículas de viruta para enfatizar la demolición de la caja.
-   - **Qué problema resuelve:** La rotura de cajas de chatarra es uno de los objetivos clave de nivel y se beneficia de un impacto visual más rotundo al liberar el espacio.
-   - **Valor:** Mayor satisfacción táctil en la resolución de tableros de campaña. Complejidad: Baja.
+### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`)
+4. **Alerta Visual en Movimientos Críticos (`st.moves <= 3`):**
+   - **Qué es:** En `paintDisplay()` (`src/match3.ts`), cuando resten 3 o menos movimientos para agotar el nivel, colorear el indicador de movimientos en rojo pulsante `M3C.error`.
+   - **Qué problema resuelve:** Al estar concentrado en combinaciones del tablero, el jugador puede perder de vista que está en sus últimos 3 movimientos antes de la derrota.
+   - **Valor:** Anticipación y tensión dramática en momentos decisivos de la partida de gabinete. Complejidad: Baja.
+
+### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
+5. **Micro-Chispas y Fricción Reforzada en Derrape Extremo (`FX.skid`):**
+   - **Qué es:** En `FX.skid()` (`src/fx.ts`), añadir probabilidad de micro-chispas de fricción cuando el vehículo derrapa con alta velocidad angular o tracción forzada.
+   - **Qué problema resuelve:** El derrape actual deja marcas en el piso pero carece de pequeñas chispas metálicas cuando la chapa o llantas rozan a fondo el terreno.
+   - **Valor:** Mayor dinamismo visual y sensación de velocidad arcade. Complejidad: Baja.
+
+### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
+6. **Sello de Tinta de Desguace en Marco de Foto Polaroid:**
+   - **Qué es:** En `showPhoto()` (`src/replay.ts`), imprimir un sello gráfico inclinado `"DESGUACE RC · ARCHIVADO"` en tono tinta sepia gastada sobre el faldón inferior del papel polaroid.
+   - **Qué problema resuelve:** Refuerza la identidad física del patio de autos RC y el carácter de archivo fotográfico de cada partida.
+   - **Valor:** Toque diegético artesanal con alta personalidad. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #20 completado, verificado y documentado.
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (591 ms), 33 capturas verificadas en `.shots/actual/` y grafo actualizado (3077 nodos, 7529 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (bloqueos del Ciclo #20 liberados tras validación).
-- **Próxima decisión pendiente:** Selección de tareas en paralelo por subagentes para el **Ciclo #21**.
+- **Último trabajo completado:** Ciclo #21 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (914 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3080 nodos, 7537 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #21 han sido liberados).
+- **Próxima decisión pendiente:** Selección de alcance y asignación para el **Ciclo #22** (despliegue de 6 subagentes en paralelo por área).
+
 
 
 

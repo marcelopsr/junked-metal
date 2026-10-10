@@ -82,7 +82,7 @@ export function burst(pos: B.Vector3, o: BurstOpts) {
 }
 
 export const FX = {
-  hit: (p: B.Vector3) => burst(p, { n: 6, color: "#ffe08a", size: [0.1, 0.25], power: [3, 7], life: [0.15, 0.3] }),
+  hit: (p: B.Vector3, crit = false) => burst(p, { n: crit ? 14 : 6, color: crit ? "#ffd24a" : "#ffe08a", color2: crit ? "#ff4d00" : undefined, size: crit ? [0.16, 0.38] : [0.1, 0.25], power: crit ? [5, 11] : [3, 7], life: [0.15, 0.35] }),
   death: (p: B.Vector3, big = false) => burst(p, { n: big ? 80 : 14, color: "#ffb347", color2: "#ff5a36", size: big ? [0.6, 1.6] : [0.2, 0.5], power: big ? [8, 18] : [3, 8], life: [0.3, 0.7] }),
   explosion: (p: B.Vector3, r: number) => {
     burst(p, { n: 60, color: "#ffd166", color2: "#ff4d00", size: [0.5 * r, 1.2 * r], power: [r * 2, r * 5], life: [0.2, 0.5], gravity: 2 });

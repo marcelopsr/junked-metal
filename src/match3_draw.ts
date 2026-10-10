@@ -128,6 +128,7 @@ export function drawCargo(c: C, cx: number, cy: number, r: number) {
 
 /** Caja de madera (1 golpe) o con flejes de acero (2). */
 export function drawCrate(c: C, x: number, y: number, s: number, hp: number, hurt = 0) {
+  c.save();
   const p = s * 0.06;
   c.fillStyle = hurt ? M3C.amarilloClaro : "#8a5a2b"; c.fillRect(x + p, y + p, s - 2 * p, s - 2 * p);
   c.fillStyle = "#6e4320"; for (let i = 1; i < 4; i++) c.fillRect(x + p, y + p + (i * (s - 2 * p)) / 4 - 1, s - 2 * p, 2);
@@ -137,6 +138,7 @@ export function drawCrate(c: C, x: number, y: number, s: number, hp: number, hur
     c.fillStyle = M3C.metalClaro; c.fillRect(x + p, y + s * 0.28, s - 2 * p, s * 0.1); c.fillRect(x + p, y + s * 0.62, s - 2 * p, s * 0.1);
     c.fillStyle = INK; for (const yy of [0.33, 0.67]) for (const xx of [0.18, 0.82]) { c.beginPath(); c.arc(x + s * xx, y + s * yy, s * 0.03, 0, Math.PI * 2); c.fill(); }
   }
+  c.restore();
 }
 /** Cadena cruzada encima de una pieza encadenada. */
 export function drawChain(c: C, cx: number, cy: number, s: number) {

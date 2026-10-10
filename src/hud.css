@@ -233,4 +233,5 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 /* ---------- Cartas de nivel: evolución lista y pip siguiente ---------- */
 .offer.evo-rdy { border-color: #22c55e; box-shadow: 0 0 18px rgba(34, 197, 94, .35); }
 .offer.evo-rdy .kind { color: #22c55e; }
+.offer.heal .kind { color: #22c55e; }
 .offer .pips i.next { background: #ffd24a; box-shadow: 0 0 6px rgba(255, 210, 74, .85); }

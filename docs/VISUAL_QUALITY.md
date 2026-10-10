@@ -443,5 +443,26 @@ Carrera (1) y Survivor en partida (2).
 4. **Indicador de multiplicador de cascada `(×N)` en textos flotantes de Junket Crush (Subagente 4 · `src/match3.ts`):**
    - `beginStep()` incorpora ` (×${s.chain + 1})` en los números flotantes de ganancia cuando ocurre una reacción en cadena (`s.chain >= 1`), haciendo evidente la bonificación multiplicadora de cada cascada.
 
+---
+
+## 2026-10-10 · Ciclo #21 (Muestra de Color en Garaje, Reparación +35% en Cartas, Pastilla de Escudo en Carrera, Cajas de Chatarra Mejoradas, Críticos FX y Remaches Polaroid)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-cartas.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 6 subagentes en paralelo y verificadas en captura
+1. **Pastilla de color sincronizada en la cabecera de Pintura del Garaje (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - `renderPaint()` y `hsvBars()` integran un punto cromático circular `<i id="pzdot" class="sw-dot">` dentro del título `.hsvt` de la pieza seleccionada, reflejando en tiempo real el matiz y luminosidad aplicados en la personalización.
+2. **Etiqueta explícita `Reparación · +35% vida` en cartas de curación (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - `kindLabel()` etiqueta las cartas de salud como `Reparación · +35% vida` y `.offer.heal .kind` destaca el texto en verde esmeralda `#22c55e`, clarificando de un vistazo el beneficio táctico de curación.
+3. **Pastilla cian `.rshield` (`ESCUDO Xs`) en el velocímetro de Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - `hud()` añade un distintivo cian brillante junto a la lectura de velocidad cuando el corredor humano cuenta con un escudo de protección activo (`h.shield > 0`), mostrando los segundos restantes de invulnerabilidad.
+4. **Onda expansiva y virutas reforzadas al destruir cajas de chatarra en Junket Crush (Subagente 4 · `src/match3.ts`, `src/match3_draw.ts`):**
+   - En `beginStep()`, el impacto final que destruye una caja de chatarra (`h.left <= 0`) proyecta 16 partículas de residuo y genera un anillo de choque naranja `rings`, haciendo contundente la demolición de obstáculos.
+5. **Impactos críticos tridimensionales enriquecidos (Subagente 5 · `src/fx.ts`):**
+   - `FX.hit(p, crit)` multiplica a 14 las partículas de destello cuando `crit = true`, combinando chispas doradas `#ffd24a` y anaranjadas `#ff4d00` con mayor velocidad y tamaño para una retroalimentación física más intensa.
+6. **Remaches de fijación y botón de taller en el cierre Polaroid (Subagente 6 · `src/replay.ts`, `src/replay.css`):**
+   - `showPhoto()` traza 4 remaches envejecidos de color latón en los vértices del marco exterior de la foto, y `.polaroid button` viste el botón de descarga con borde de chapa oxidada, tipografía técnica y elevación con sombra al posar el cursor.
+
+
 
 

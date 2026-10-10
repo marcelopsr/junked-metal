@@ -21,4 +21,5 @@ body.calm #outro .o-tag::before, body.calm #outro::before, body.calm #outro::aft
 .polaroid { position: relative; margin: 4px 0 6px; width: min(260px, 60vw, 38vh); display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .polaroid img, #overPhoto img { display: block; width: 100%; image-rendering: pixelated; rotate: -1.8deg; border: 1px solid rgba(255, 255, 255, .14); box-shadow: 0 6px 0 #000a, 0 14px 22px #000b; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1) both; }
 .polaroid::before { content: ""; position: absolute; top: -9px; left: 50%; width: 72px; height: 20px; translate: -50% 0; rotate: 3deg; background: #d8cfa8bb; mix-blend-mode: screen; pointer-events: none; z-index: 1; }
-.polaroid button { font-size: 13px; padding: 8px 14px; }
+.polaroid button { font-size: 13px; padding: 8px 14px; border: 1px solid var(--jm-chapa, #b5651d); background: rgba(11, 15, 20, .92); color: var(--jm-amarillo2, #ffd24a); font-weight: 700; letter-spacing: .06em; transition: transform .12s, box-shadow .12s; border-radius: var(--jm-r, 3px); }
+.polaroid button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, .5); }

@@ -641,15 +641,16 @@ const hsv2hex = (h: number, s: number, v: number) => "#" + [5, 3, 1].map((n) => 
 function hsvBars(h: number, sat: number, v: number) {
   const el = $("paint");
   el.style.setProperty("--hue", hsv2hex(h, 100, 100)); el.style.setProperty("--sat0", hsv2hex(h, 0, v)); el.style.setProperty("--sat1", hsv2hex(h, 100, v)); el.style.setProperty("--val1", hsv2hex(h, sat, 100));
-  const c = hsv2hex(h, sat, v), chip = document.getElementById("pzchip");
+  const c = hsv2hex(h, sat, v), chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot");
   if (chip) { chip.style.background = c; chip.textContent = c.toUpperCase(); }
+  if (dot) dot.style.background = c;
 }
 function renderPaint() {
   const cur = zoneColor(), [h, sat, v] = hex2hsv(cur), mine = !!save[pz];
   const bar = (k: string, lab: string, max: number, val: number) => `<label class="hrow"><span>${lab}</span><input type="range" data-hsv="${k}" min="0" max="${max}" step="${k === "h" ? 5 : 2}" value="${val}" aria-label="${lab}"></label>`;
   $("paint").innerHTML = `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
     + `<div class="pal">${PAINTS.map((c) => `<button class="sw ${mine && c === cur ? "on" : ""}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
-    + `<div class="hsv"><div class="hsvt"><span>${PZ[pz]} · ${mine ? "Personalizado" : "De fábrica"}</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
+    + `<div class="hsv"><div class="hsvt"><span><i id="pzdot" class="sw-dot" style="background:${cur}"></i>${PZ[pz]} · ${mine ? "Personalizado" : "De fábrica"}</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
     + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
     + `<div class="note">${pz === "trim" ? "Detalles: alerón, paragolpes, defensas y accesorios." : pz === "rim" ? "Llantas de las cuatro ruedas (o de las que haya)." : "Carrocería: la chapa entera."} Pintar es gratis: el patio cobra en otras cosas.</div>`;
   hsvBars(h, sat, v);
@@ -662,7 +663,11 @@ addEventListener("change", (e) => {
   save[pz] = hsv2hex(...hsvNow()); persist();
   document.querySelectorAll("#paint .pal .sw.on, #paint [data-pdef]").forEach((b) => b.classList.remove("on"));
   const sp = document.querySelector("#paint .hsvt span");
-  if (sp) sp.textContent = `${PZ[pz]} · Personalizado`;
+  if (sp) {
+    const dot = document.getElementById("pzdot");
+    if (dot) sp.innerHTML = `<i id="pzdot" class="sw-dot" style="background:${save[pz]}"></i>${PZ[pz]} · Personalizado`;
+    else sp.textContent = `${PZ[pz]} · Personalizado`;
+  }
 });
 // ---------- Editor de calcos (garaje → Piezas): grilla DECAL_N², 8 colores de DECAL_PAL, 3 diseños ----------
 // Se edita un borrador (`draft`); Guardar lo escribe en la ranura `eslot` y lo aplica al capó. Cursor de celdas para teclado y gamepad.

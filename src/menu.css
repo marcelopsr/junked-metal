@@ -51,6 +51,7 @@ body.calm .scr.on { animation-duration: .05s; }
 #paint .pal .sw { width: auto; height: 34px; min-height: 0; }
 #paint .hsv { display: flex; flex-direction: column; gap: 6px; }
 #paint .hsvt { display: flex; align-items: center; gap: 8px; color: #fff; font: 600 13px/1 var(--data); letter-spacing: .1em; text-transform: uppercase; }
+#paint .hsvt .sw-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .7); vertical-align: middle; margin-right: 6px; box-shadow: 0 0 6px rgba(0, 0, 0, .6); }
 #paint .hsvt b { margin-left: auto; min-width: 84px; padding: 6px 8px; border: 2px solid #000; font: 700 12px/1 var(--data); color: #fff; text-shadow: 0 1px 2px #000; text-align: center; }
 #paint .hsvt .opt { font-size: 12px; padding: 7px 10px; box-shadow: none; }
 #paint .hsvt .opt.on { border-color: var(--turbo); color: var(--turbo); }

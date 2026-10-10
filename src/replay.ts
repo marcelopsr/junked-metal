@@ -60,7 +60,7 @@ export async function showPhoto(i: PhotoInfo) {
   // Recorte 4:3 centrado (pantallas verticales: lo más ancho que se pueda hasta 4:5); sin suavizado: queda el píxel del render
   const ar = Math.min(4 / 3, Math.max(0.8, src.width / src.height));
   const cw = Math.min(src.width, Math.round(src.height * ar)), ch = Math.min(src.height, Math.round(src.width / ar));
-  const k = cw < 480 ? 2 : 1, pw = cw * k, ph = ch * k, pad = Math.round(pw * 0.045), foot = Math.round(ph * 0.3);
+  const k = cw < 480 ? 2 : 1, pw = cw * k, ph = ch * k, pad = Math.round(pw * 0.045), foot = Math.round(ph * 0.3), u = pw / 800;
   const c = document.createElement("canvas");
   c.width = pw + pad * 2; c.height = ph + pad + foot;
   const g = c.getContext("2d")!;
@@ -74,11 +74,16 @@ export async function showPhoto(i: PhotoInfo) {
   const edge = g.createRadialGradient(c.width / 2, c.height / 2, c.height * 0.35, c.width / 2, c.height / 2, c.height * 0.8);
   edge.addColorStop(0, "#0000"); edge.addColorStop(1, "#4a432c66");
   g.fillStyle = edge; g.fillRect(0, 0, c.width, c.height);
+  const cr = Math.max(2, Math.round(2.8 * u));
+  g.fillStyle = "#8a8068";
+  [[pad * 0.45, pad * 0.45], [c.width - pad * 0.45, pad * 0.45], [pad * 0.45, c.height - pad * 0.45], [c.width - pad * 0.45, c.height - pad * 0.45]].forEach(([rx, ry]) => {
+    g.beginPath(); g.arc(rx, ry, cr, 0, Math.PI * 2); g.fill();
+  });
   // Foto + hundido sutil del marco
   g.drawImage(src, (src.width - cw) / 2, (src.height - ch) / 2, cw, ch, pad, pad, pw, ph);
   g.strokeStyle = "#2a2618"; g.lineWidth = 2; g.strokeRect(pad - 1, pad - 1, pw + 2, ph + 2);
   // Pie rotulado en Rajdhani: zona y tiempo, bajas y auto, resultado y fecha
-  const ink = "#1b2418", u = pw / 800;
+  const ink = "#1b2418";
   g.fillStyle = ink; g.textBaseline = "alphabetic";
   const y0 = pad + ph + foot * 0.32;
   g.font = `700 ${Math.round(34 * u)}px Rajdhani, sans-serif`; g.textAlign = "left"; g.fillText(i.zone.toUpperCase(), pad, y0);

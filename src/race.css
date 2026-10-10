@@ -63,6 +63,7 @@
 #race.split .rp .rtime { top: 62px; }
 #rinfo { font: 600 17px/1.45 "Rajdhani", system-ui, sans-serif; text-align: right; max-width: 560px; background: rgba(11, 15, 20, .88); border: 1px solid rgba(255, 255, 255, .16); border-top: 2px solid #ffc24d; border-radius: 8px; padding: 10px 14px; box-shadow: 0 8px 20px rgba(0, 0, 0, .45); } #rinfo small { color: #a9b8c6; font-size: 14px; } #rinfo em { color: #ffd84d; font-style: normal; font-weight: 700; }
 .rp .rspd .rwarn { font: 800 12px/1 "Rajdhani", system-ui, sans-serif; padding: 3px 6px; border-radius: 5px; letter-spacing: .06em; background: #ef4444; color: #fff; box-shadow: 0 0 10px rgba(239, 68, 68, .6); }
+.rp .rshield { padding: 3px 7px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #00bcd4; color: #041d24; border-radius: 4px; box-shadow: 0 0 10px rgba(0, 188, 212, .45); }
 #rinfo .rbest { color: #22c55e; font-style: normal; font-weight: 800; }
 #rinfo .rdiff { color: #94a3b8; font-weight: 600; }
 .medal { display: inline-block; white-space: nowrap; font-weight: 700; padding: 1px 8px; border-radius: 99px; } .medal.m3 { background: #ffc24d; color: #3a2a00; } .medal.m2 { background: #d0d7de; color: #1a2230; } .medal.m1 { background: #c47a3e; color: #fff; } .medal.m0 { background: rgba(255, 255, 255, .15); }

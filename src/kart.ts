@@ -899,8 +899,9 @@ function hud() {
     } else p.querySelector(".rtime")!.textContent = "";
     const spdEl = p.querySelector(".rspd") as HTMLElement;
     const tTag = h.boost > 0 ? `<b class="rturbo on">TURBO</b>` : h.drifting !== 0 ? (h.charge > 1.5 ? `<b class="rturbo t2">TURBO 2</b>` : h.charge > 0.75 ? `<b class="rturbo t1">TURBO 1</b>` : `<b class="rturbo t0">DERRAPE</b>`) : "";
+    const shTag = h.shield > 0 ? `<b class="rshield">ESCUDO ${Math.ceil(h.shield)}s</b>` : "";
     const wTag = projs.some((pr) => pr.kind === "misil" && pr.target === h) ? `<b class="rwarn">¡MISIL!</b>` : "";
-    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${tTag}${wTag}`;
+    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${tTag}${shTag}${wTag}`;
     if (spdEl.dataset.h !== spdHtml) { spdEl.dataset.h = spdHtml; spdEl.innerHTML = spdHtml; }
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; it.classList.toggle("full", !!h.item); }

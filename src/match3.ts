@@ -145,7 +145,12 @@ function beginStep() {
     burst(cx(c.x), cy(c.y), col, s.cleared.length > 20 ? 3 : 8, 190);
     if (c.v === CARGO) { floats.push({ x: cx(c.x), y: cy(c.y), txt: "¡MOTOR!", t: 0, col: M3C.amarillo, big: true }); SFX.pickup(); }
   }
-  for (const h of s.hits) if (h.k === "crate") burst(cx(h.x), cy(h.y), "#8a5a2b", 8, 200); else if (h.k === "chain") burst(cx(h.x), cy(h.y), M3C.metalClaro, 6);
+  for (const h of s.hits) {
+    if (h.k === "crate") {
+      burst(cx(h.x), cy(h.y), "#8a5a2b", h.left <= 0 ? 16 : 8, 200);
+      if (h.left <= 0) rings.push({ x: cx(h.x), y: cy(h.y), r: CELL * 1.1, t: 0, col: M3C.naranja });
+    } else if (h.k === "chain") burst(cx(h.x), cy(h.y), M3C.metalClaro, 6);
+  }
   if (s.hits.some((h) => h.k === "crate" || h.k === "chain")) SFX.break();
   if (s.cleared.length) SFX.m3Clear();
   if (s.cleared.length >= 4) shake = Math.max(shake, 3 + Math.min(4, s.cleared.length - 4)); // micro sacudida en combos de 4+
