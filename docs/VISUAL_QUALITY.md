@@ -522,3 +522,23 @@ Carrera (1) y Survivor en partida (2).
    - Se añadió el método `FX.shock(p)` al pool de partículas 3D, emitiendo 8 micro-arcos de alta velocidad con gradiente cian `#5be7ff` y violeta `#a855f7` con baja sustentación gravitatoria para efectos tesla, arcos voltaicos y trampas electrificadas.
 6. **Anotación técnica de escenario en el pie de la foto Polaroid (Subagente 6 · `src/replay.ts`):**
    - En `showPhoto()`, se incorporó una línea técnica en tipografía Rajdhani 600 y tono sepia `rgba(77, 76, 56, 0.7)` (`REGISTRO TÉCNICO · ESCENARIO: ${i.zone.toUpperCase()}`) en el pie del documento polaroid, completando el registro diegético de cada sesión archivada.
+
+---
+
+## 2026-10-10 · Ciclo #25 (Maestría en Arma Favorita, Tacómetro Incandescente a Fondo, Pastilla en el Aire Carrera, Impacto Alto Match-3, Salpicadura Líquida FX y Doblez Polaroid)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 6 subagentes en paralelo y verificadas en captura
+1. **Insignia dorada de maestría en estadísticas de arma favorita (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `statsHtml()`, dentro del desglose de armas principales en la Chatarroteca, el arma más letal con daño acumulado $\ge 50.000$ recibe el distintivo áureo `<em class="fav-badge">MAESTRÍA</em>`, premiando la especialización táctica del piloto.
+2. **Resplandor incandescente animado en tacómetro analógico a velocidad punta (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `#txr.top, #spd.top`, se incorporó una animación de resplandor áureo `txr-top-glow` con oscilación de sombra luminosa (hasta 18 px) y filtro drop-shadow de doble pase sobre el arco `#spdArc` al circular al 90%+ de velocidad punta, reforzando la emoción visual de la aceleración límite.
+3. **Pastilla cian `.rair` ("EN EL AIRE") en el velocímetro de Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `hud()` de carrera, se detecta cuando el kart despega del suelo (`pos.y > 0.85`), encendiendo la pastilla cian reflectante `<b class="rair">EN EL AIRE</b>` en el bloque de telemetría de velocidad durante saltos de rampas y trampolines.
+4. **Halo de impacto y ondas expansivas doradas en puntuaciones altas de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - En `beginStep()`, los turnos que generan $\ge 500$ puntos desencadenan un estallido adicional de chatarra dorada `burst()` y un anillo expansivo brillante `rings.push` de radio ampliado `CELL * 2.2`, magnificando el impacto sensorial de los combos épicos.
+5. **Efecto de salpicadura de agua y líquidos tridimensional en `FX.splash` (Subagente 5 · `src/fx.ts`):**
+   - Se añadió la rutina `FX.splash(p)` con partículas compuestas cian-blanquecinas translúcidas (`#a5f3fc` y `#ffffff`) de dispersión parabólica y disipación rápida, disponible para la pistola de agua y contacto con charcos.
+6. **Sombra angular de doblez táctil en esquina de Polaroid (Subagente 6 · `src/replay.ts`):**
+   - En `showPhoto()`, se trazó un micro-doblez y sombra angular tenue (`rgba(60, 52, 40, 0.14)`) en el vértice superior derecho del lienzo polaroid, aportando mayor verosimilitud de objeto físico analógico al archivo fotográfico de cada partida.

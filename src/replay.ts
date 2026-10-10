@@ -74,6 +74,12 @@ export async function showPhoto(i: PhotoInfo) {
   const edge = g.createRadialGradient(c.width / 2, c.height / 2, c.height * 0.35, c.width / 2, c.height / 2, c.height * 0.8);
   edge.addColorStop(0, "#0000"); edge.addColorStop(1, "#4a432c66");
   g.fillStyle = edge; g.fillRect(0, 0, c.width, c.height);
+  g.save();
+  g.fillStyle = "rgba(60, 52, 40, 0.14)";
+  g.beginPath();
+  g.moveTo(c.width - 24 * u, 0); g.lineTo(c.width, 24 * u); g.lineTo(c.width, 0); g.closePath();
+  g.fill();
+  g.restore();
   const cr = Math.max(2, Math.round(2.8 * u));
   g.fillStyle = "#8a8068";
   [[pad * 0.45, pad * 0.45], [c.width - pad * 0.45, pad * 0.45], [pad * 0.45, c.height - pad * 0.45], [c.width - pad * 0.45, c.height - pad * 0.45]].forEach(([rx, ry]) => {

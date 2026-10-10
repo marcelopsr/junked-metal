@@ -158,6 +158,10 @@ function beginStep() {
   if (s.gain && s.cleared.length) {
     const mx = s.cleared.reduce((a, c) => a + c.x, 0) / s.cleared.length, my = s.cleared.reduce((a, c) => a + c.y, 0) / s.cleared.length;
     floats.push({ x: cx(mx), y: cy(my), txt: `+${s.gain}${s.chain >= 1 ? ` (×${s.chain + 1})` : ""}`, t: 0, col: s.chain ? M3C.cian : M3C.texto, big: s.gain >= 300 });
+    if (s.gain >= 500) {
+      burst(cx(mx), cy(my), M3C.amarillo, 14, 240);
+      rings.push({ x: cx(mx), y: cy(my), r: CELL * 2.2, t: 0, col: M3C.amarilloClaro });
+    }
   }
   anim = { kind: "clear", step: s, t: 0, dur: (s.blasts.length ? 0.34 : 0.22) * animMul() };
 }

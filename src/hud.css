@@ -114,9 +114,10 @@
 #txr .h-read.r { position: absolute; left: 0; right: 0; bottom: 8px; display: flex; flex-direction: column; align-items: center; margin: 0; }
 #kmh { font: 700 34px/1 var(--hf); color: #fff; background: none; padding: 0; box-shadow: none; }
 #txr .h-read.r span { font-size: 12px; letter-spacing: .14em; color: var(--g-dim); }
-#txr.top, #spd.top { border-color: rgba(255, 194, 77, .65); }
-#txr.top #kmh, #spd.top #kmh { color: #ffd24a; text-shadow: 0 0 8px rgba(255, 210, 74, .45); }
-#txr.top #spdArc, #spd.top #spdArc { stroke: #ffd24a; }
+#txr.top, #spd.top { border-color: rgba(255, 194, 77, .85); box-shadow: 0 0 14px rgba(255, 194, 77, .35); animation: txr-top-glow 1s ease-in-out infinite alternate; }
+#txr.top #kmh, #spd.top #kmh { color: #ffd24a; text-shadow: 0 0 8px rgba(255, 210, 74, .5); }
+#txr.top #spdArc, #spd.top #spdArc { stroke: #ffd24a; filter: drop-shadow(0 0 8px rgba(255, 210, 74, .85)); }
+@keyframes txr-top-glow { from { border-color: rgba(255, 194, 77, .5); } to { border-color: rgba(255, 210, 74, .95); box-shadow: 0 0 18px rgba(255, 210, 74, .55); } }
 
 /* ---------- Armas y piezas (abajo-izquierda) ---------- */
 #slots { left: 14px; bottom: max(14px, env(safe-area-inset-bottom)); transform-origin: 0 100%; display: flex; flex-direction: row; align-items: flex-end; gap: 6px; }

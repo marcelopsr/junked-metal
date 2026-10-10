@@ -465,6 +465,7 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam)::after { co
 #beasts .ficha .lore { margin-top: 4px; font-size: 13px; line-height: 1.24; }
 #beasts .ficha .st { margin-top: 6px; gap: 3px 8px; }
 #beasts .ficha .price { margin-top: auto; padding-top: 6px; }
+.fav-badge { font: 800 10px/1 var(--hf); letter-spacing: .08em; padding: 2px 5px; border-radius: 3px; background: rgba(255, 210, 74, .2); color: var(--jm-amarillo2, #ffd24a); border: 1px solid rgba(255, 210, 74, .5); margin-left: 4px; vertical-align: middle; }
 /* Miniatura del bicho: ícono SVG propio en placa oscura en la esquina superior derecha de cada ficha */
 #beasts .bthumb { float: right; width: 48px; height: 48px; margin: 0 0 4px 8px; object-fit: cover; image-rendering: pixelated; background: rgba(11, 15, 20, .82); border: 1px solid var(--jm-borde); border-radius: 6px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); }
 #beasts span.bthumb { display: grid; place-items: center; opacity: .94; }

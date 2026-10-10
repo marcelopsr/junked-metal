@@ -352,9 +352,61 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
+### Ciclo #25 (2026-10-10) — Maestría en Arma Favorita, Tacómetro Incandescente a Fondo, Pastilla en el Aire Carrera, Impacto Alto Match-3, Salpicadura Líquida FX y Doblez Polaroid
+- **Alcance implementado en paralelo por 6 subagentes:**
+  - **Subagente 1 · Garaje y Estadísticas (`src/menu.ts`, `src/menu.css`):** En `statsHtml()`, se evalúa el arma principal del desglose histórico y, si acumula $\ge 50.000$ de daño, se incorpora la pastilla dorada `.fav-badge` (`MAESTRÍA`).
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Animación reactiva `txr-top-glow` y resplandor drop-shadow áureo reforzado en el arco `#spdArc` al superar el 90% de velocidad punta en `#txr.top`.
+  - **Subagente 3 · Carrera Acrobacia (`src/kart.ts`, `src/race.css`):** Detección de suspensión en el aire (`pos.y > 0.85`) en `hud()`, desplegando la pastilla cian reflectante `.rair` (`EN EL AIRE`) en el velocímetro tras rampas y saltos.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`):** En `beginStep()`, los turnos con ganancia $\ge 500$ puntos desencadenan un estallido de chatarra áurea `burst()` y un anillo expansivo brillante `rings.push` de radio ampliado `CELL * 2.2`.
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** Nuevo método `FX.splash(p)` con partículas cian-blanquecinas de dispersión parabólica para impactos acuáticos y charcos del patio.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** Renderizado de sombra angular tenue de micro-doblez de papel en el vértice superior derecho del lienzo fotográfico polaroid.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (553 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3105 nodos, 7598 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #26 (6 Áreas en Paralelo)
+
+### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
+1. **Insignia de Veteranía en Fichas de Pilotos (`.vet-badge`):**
+   - **Qué es:** En `renderBestiary()` pestaña pilotos, marcar al piloto activo o desbloqueado con una pastilla `.vet-badge` (`VETERANO`) cuando el jugador haya disputado más de 10 partidas con él.
+   - **Qué problema resuelve:** Reconoce la lealtad y el rodaje con cada personaje de la cuadrilla RC.
+   - **Valor:** Fidelidad temática y trazabilidad de pilotos. Complejidad: Baja.
+
+### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
+2. **Resplandor Progresivo en Contador de Racha de Bajas (`#streak`):**
+   - **Qué es:** En `hudStreak()`, añadir escalonamiento de resplandor visual (ámbar, naranja, rojo incandescente) según los hitos de racha (25, 50, 75 y 100 bajas).
+   - **Qué problema resuelve:** Enfatiza el frenesí de combate y la consecución de multiplicadores de experiencia.
+   - **Valor:** Celebración táctica de alta intensidad en el HUD. Complejidad: Baja.
+
+### C. Área 3 · Carrera: Intensificación de Mini-Turbo Nivel 2 (`src/kart.ts`, `src/race.css`)
+3. **Resplandor Eléctrico Reforzado en Mini-Turbo Nivel 2 (`.rturbo.t2`):**
+   - **Qué es:** En `src/race.css`, potenciar `.rp .rturbo.t2` con una animación pulsante de alta frecuencia y sombra violeta/fucsia incandescente para comunicar la liberación inminente del turbo máximo.
+   - **Qué problema resuelve:** Clarifica el punto exacto de máxima carga del derrape antes de enderezar el kart.
+   - **Valor:** Feedback milimétrico de precisión en la conducción arcade. Complejidad: Baja.
+
+### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`)
+4. **Destello Perimetral en Cumplimiento de Pedidos:**
+   - **Qué es:** En `drawGoal()`, cuando una meta de chatarra alcanza el 100% de recolección en vivo, emitir una onda verde esmeralda translúcida sobre la ficha del pedido en el cabezal del gabinete.
+   - **Qué problema resuelve:** Alerta instantáneamente al jugador de que ese objetivo ya está cumplido para redirigir su atención.
+   - **Valor:** Lectura táctica sin desviar la mirada del tablero. Complejidad: Baja.
+
+### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
+5. **Efecto de Chispas de Soldadura y Blindaje en `FX.weld`:**
+   - **Qué es:** En `FX` (`src/fx.ts`), añadir la rutina `weld(p)` con chispas blanquiazules concentradas `#e0f2fe` de alta velocidad y corta vida para reparaciones de chasis o impactos blindados.
+   - **Qué problema resuelve:** Acentúa la identidad de taller mecánico y chapa pesada en las interacciones defensivas.
+   - **Valor:** Textura diegética e impacto sensorial. Complejidad: Baja.
+
+### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
+6. **Anotación Técnica de Bajas Promedio o Récord Personal en Polaroid:**
+   - **Qué es:** En `showPhoto()`, si la partida es la mejor en bajas de la zona, estampar a la derecha la nota técnica `"RÉCORD DE BAJAS"` en color cobre envejecido.
+   - **Qué problema resuelve:** Completa el espectro de condecoraciones en la fotografía de fin de partida.
+   - **Valor:** Recompensa de rendimiento en el cierre de la experiencia. Complejidad: Baja.
+
+---
+
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #24 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (572 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3095 nodos, 7576 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #24 han sido liberados).
-- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #25**.
+- **Último trabajo completado:** Ciclo #25 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (553 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3105 nodos, 7598 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #25 han sido liberados).
+- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #26**.
 
