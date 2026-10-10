@@ -50,8 +50,11 @@ export function hudWorkshop(perm: Partial<Record<(typeof WSHOP_KEYS)[number], nu
 
 let boostHold = 0;
 let currentSag = 0;
+let lastSagTime = 0;
 let lastRfChirp = 0;
+let lastLipoWarn = 0;
 export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number; shield?: boolean; boostActive?: boolean; distCenter?: number; heat?: number }) {
+  const now = performance.now();
   const p = Math.max(0, d.hp / d.maxHp);
   // 3 celdas LiPo: se vacían de derecha a izquierda
   Array.from($("lipo").children).forEach((c, i) => {
@@ -65,6 +68,10 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     $("hud").classList.toggle("panic", panic);
     $("lipo").classList.toggle("panic", panic);
     $("lipo").querySelector("i:first-child")?.classList.toggle("unbalanced", panic);
+  }
+  if (panic && now - lastLipoWarn > 2500) {
+    lastLipoWarn = now;
+    SFX.lipoLowWarn();
   }
   const isShield = !!d.shield;
   if (ch("shielded", +isShield)) $("lipo").classList.toggle("shielded", isShield);
@@ -85,12 +92,16 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   memo.prevHp = d.hp;
   const displayV = 9 + 3.6 * p;
   const targetSag = d.boostActive ? 0.32 : 0;
-  currentSag += (targetSag - currentSag) * 0.25;
+  const dtSag = lastSagTime > 0 ? Math.min(0.1, (now - lastSagTime) / 1000) : 0.05;
+  lastSagTime = now;
+  // Relajación gradual (~250ms) con amortiguación elástica post-sag (targetSag -> currentSag)
+  const sagK = d.boostActive ? 0.35 : 1 - Math.exp(-dtSag / 0.18);
+  currentSag += (targetSag - currentSag) * sagK;
   if (!d.boostActive && currentSag < 0.005) currentSag = 0;
   const finalV = Math.max(0, displayV - currentSag);
   const isSag = currentSag > 0.03;
   if (ch("sag", +isSag)) $("volt").classList.toggle("sag", isSag);
-  if (ch("voltSag", +Boolean(d.boostActive))) $("lipo")?.classList.toggle("sag", Boolean(d.boostActive));
+  if (ch("voltSag", +Boolean(isSag || d.boostActive))) $("lipo")?.classList.toggle("sag", Boolean(isSag || d.boostActive));
   boostHold = d.boostActive ? Math.min(120, boostHold + 1) : 0;
   const isThermal = boostHold >= 30 || Boolean(d.heat && d.heat > 0.8);
   if (ch("thermalStress", +isThermal)) $("volt").classList.toggle("thermal-stress", isThermal);
@@ -113,8 +124,8 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     const isFringe = d.distCenter > 75;
     if (ch("sigFringe", +isFringe)) $("signal").classList.toggle("fringe", isFringe);
     if (ch("rfLoss", +isLoss)) $("signal").classList.toggle("rf-loss", isLoss);
-    if (isLoss && performance.now() - lastRfChirp > 1200) {
-      lastRfChirp = performance.now();
+    if ((isLoss || isFringe) && now - lastRfChirp > 1200) {
+      lastRfChirp = now;
       SFX.blip();
     }
   }
@@ -132,6 +143,24 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   const displayDbm = dbm + rfJitter;
   if (ch("sigDbm", displayDbm)) sigDbm.textContent = `${displayDbm} dBm`;
   if (ch("sigWarn", +isLoss)) sigDbm.classList.toggle("sig-warn", isLoss);
+  let sigPkt = document.getElementById("sigPkt");
+  if (d.distCenter !== undefined && d.distCenter > 75) {
+    const pktLoss = Math.min(68, Math.round(Math.max(0, (d.distCenter - 75) / 15 * 68)));
+    if (!sigPkt) {
+      sigPkt = document.createElement("span");
+      sigPkt.id = "sigPkt";
+      sigPkt.className = "sig-pkt";
+      const anchor = document.getElementById("sigDbm") ?? document.getElementById("sigBars") ?? document.getElementById("sigIco");
+      if (anchor?.parentNode) anchor.parentNode.insertBefore(sigPkt, anchor.nextSibling);
+      else $("signal")?.appendChild(sigPkt);
+    }
+    sigPkt.style.display = "";
+    if (ch("sigPkt", pktLoss)) sigPkt.textContent = `PL:${pktLoss}%`;
+    if (ch("pktLoss", +(pktLoss > 20))) $("signal")?.classList.toggle("pkt-loss", pktLoss > 20);
+  } else {
+    if (sigPkt) sigPkt.style.display = "none";
+    if (ch("pktLoss", 0)) $("signal")?.classList.toggle("pkt-loss", false);
+  }
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);
   hudTurbo(d.boost / 100);

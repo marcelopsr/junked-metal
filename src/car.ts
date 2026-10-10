@@ -2,12 +2,14 @@ import * as B from "@babylonjs/core";
 import { carModel, type CarKind, type CarModel, type CarOpts } from "./models";
 import { shadows } from "./render";
 import { BAL } from "./balance";
+import { FX } from "./fx";
 
 // Precio y manejo de cada auto salen de balance.json (tabla autos)
 const stats = (k: CarKind) => { const a = BAL.autos[k]; return { cost: a.precio, hp: a.vida, speed: a.velocidad, accel: a.aceleracion, turn: a.giro, grip: a.agarre, ram: a.embestida, mass: a.masa }; };
 
 const UP = B.Vector3.Up();
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
+const sparkPos = new B.Vector3();
 
 export const CARS: Record<CarKind, { name: string; desc: string; cost: number; hp: number; speed: number; accel: number; turn: number; grip: number; ram: number; mass: number; size: [number, number, number] }> = {
   buggy: { name: "El Divorciado", desc: "Se quedó con el auto y nada más. Equilibrado: salta bien y gira rápido.", ...stats("buggy"), size: [1.3, 0.7, 2.3] },
@@ -29,11 +31,29 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
   const right = B.Vector3.Cross(UP, fwd);
   let fs = B.Vector3.Dot(v, fwd);
   let ls = B.Vector3.Dot(v, right);
+
+  // Detección de impacto diegético contra obstáculos del entorno (muros, macetas, árboles)
+  const bAny = body as unknown as { _prevV?: B.Vector3 };
+  let impactSpeed = 0;
+  let impactPan = 0;
+  if (bAny._prevV) {
+    const dvX = v.x - bAny._prevV.x;
+    const dvZ = v.z - bAny._prevV.z;
+    const dv = Math.hypot(dvX, dvZ);
+    if (dv > 4.0) {
+      impactSpeed = dv;
+      impactPan = B.Scalar.Clamp((dvX * right.x + dvZ * right.z) / 4, -1, 1);
+    }
+  }
+
   // En el aire no hay control. Rayo corto hacia abajo (no v.y: subiendo una rampa v.y es grande y hay que poder doblar)
   const hh = mesh.getBoundingInfo().boundingBox.extendSize.y;
   rayFrom.copyFrom(mesh.position); rayTo.copyFrom(rayFrom); rayTo.y -= hh + 0.9; // en rampa el centro queda más alto que hh
   (mesh.getScene().getPhysicsEngine() as B.PhysicsEngineV2).raycastToRef(rayFrom, rayTo, ray, { ignoreBody: body });
-  if (!ray.hasHit) return { fs, ls, grounded: false, slope: 0 };
+  if (!ray.hasHit) {
+    if (bAny._prevV) bAny._prevV.copyFrom(v);
+    return { fs, ls, grounded: false, slope: 0, impactSpeed, impactPan };
+  }
 
   const ny = ray.hitNormal.y;
   const slope = Math.min(1, Math.sqrt(Math.max(0, 1 - ny * ny))); // 0 = plano, ~1 = rampa empinada
@@ -45,11 +65,19 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
   if (fs > o.speed) fs -= (fs - o.speed) * Math.min(1, 3 * dt);
   ls *= Math.max(0, 1 - o.grip * dt);
 
+  // Fricción mecánica en diferencial/transmisión al acelerar fuerte desde parado o patinar
+  if (t > 0.8 && Math.abs(fs) < 1.5 && Math.random() < 0.2) {
+    sparkPos.set(mesh.position.x - fwd.x * 0.4, mesh.position.y + 0.15, mesh.position.z - fwd.z * 0.4);
+    FX.transmissionSpark(sparkPos);
+  }
+
   const nv = fwd.scale(fs).addInPlace(right.scale(ls));
   nv.y = v.y;
   body.setLinearVelocity(nv);
+  if (!bAny._prevV) bAny._prevV = new B.Vector3();
+  bAny._prevV.copyFrom(nv);
   body.setAngularVelocity(new B.Vector3(0, o.steer * o.turn * B.Scalar.Clamp(fs / 4, -1, 1), 0));
-  return { fs, ls, grounded: true, slope };
+  return { fs, ls, grounded: true, slope, impactSpeed, impactPan };
 }
 
 export class Car {
@@ -93,6 +121,7 @@ export class Car {
   }
 
   get pos() { return this.root.position; }
+  get speed() { const v = this.body.getLinearVelocity(); return Math.hypot(v.x, v.z); }
 
   // Desgaste: la pintura se opaca y ensucia a medida que pierde vida (0..1)
   wear(hpFrac: number) {

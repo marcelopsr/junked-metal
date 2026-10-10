@@ -136,7 +136,7 @@ let horde = 1, curseK = 1, noRepair = false, endless = false, finalKind: Kind = 
 // Lo ya cobrado en el endRun anterior (vencer al jefe final y seguir en modo sin fin): el siguiente suma solo la diferencia
 let bank: { t: number; scrap: number; dmg: Record<string, number>; rec?: RunRec } | null = null;
 
-let touchIFrame = 0, hitStop = 0, smokeT = 0, skidT = 0, lastHpFrac = 1, smashCd = 0;
+let touchIFrame = 0, hitStop = 0, smokeT = 0, skidT = 0, lastHpFrac = 1, smashCd = 0, boostSec = 0, motorFxT = 0;
 
 // Macetas rotas sueltan tuercas y a veces una pila
 const smashed = (pots: B.Vector3[]) => { for (const p of pots) { SFX.break(); dropGems(p, R.maceta_xp); if (rng() < R.maceta_pila_prob) dropPickup(p, "pila"); shake = Math.max(shake, 0.5); } };
@@ -252,7 +252,7 @@ function startRun(d = false) {
   horde = curses.includes("horda") ? R.maldicion_horda : 1; noRepair = curses.includes("sinrep"); curseK = 1 + R.maldicion_tornillos * curses.length;
   endless = false; bank = null;
   abil = save.ability; abilLv = save.abilLv[abil] ?? 0; abilCd = abilOn = bombs = 0; worldK = 1; shieldM = null;
-  driveMul = 1; driftT = airT = trickT = 0; jumpCd = 0; hudDrive(1);
+  driveMul = 1; driftT = airT = trickT = 0; jumpCd = 0; boostSec = 0; motorFxT = 0; hudDrive(1);
   car = new Car(scene, save.car, carOpts());
   lastHpFrac = 1;
   passives = {};
@@ -749,6 +749,7 @@ function update(dt: number) {
   const ariete = weapons.some((w) => w.id === "lanza" && w.evolved);
   const boosting = input.boost && boost > R.turbo_umbral && throttle >= 0;
   lampBoost = boosting;
+  boostSec = boosting ? boostSec + dt : 0;
   boost = boosting ? boost - R.turbo_gasto * st.boostUse * dt : Math.min(100, boost + st.boostRegen * dt);
   const maxSpeed = c.def.speed * st.speedMul * (boosting ? R.turbo_vel : 1);
   const r = drive(c.body, c.root, dt, {
@@ -761,6 +762,10 @@ function update(dt: number) {
       return g;
     })(),
   });
+  if (r.impactSpeed > 4.0 && !simulating) {
+    SFX.bodyThud(r.impactSpeed, r.impactPan);
+    shake = Math.max(shake, Math.min(0.45, r.impactSpeed * 0.035));
+  }
   c.animate(dt, steer, r.fs, maxSpeed);
   if (jumpCd > 0) jumpCd -= dt;
   if (r.grounded) coyoteT = R.salto_coyote_s;
@@ -818,9 +823,23 @@ function update(dt: number) {
     if (hp < maxHp * 0.25 && Math.random() < 0.3) FX.sparks(p);
   }
   if ((dustT -= dt) <= 0 && r.grounded && (Math.abs(r.ls) > 3 || boosting)) { dustT = 0.05; const rear = c.pos.add(c.root.forward.scale(-1.1)); FX.dust(rear); if (boosting) FX.sparks(rear.add(new B.Vector3(0, 0.3, 0))); }
+  if (boostSec > 1.5 && (motorFxT -= dt) <= 0) {
+    motorFxT = 0.08;
+    const motorPos = c.pos.add(c.root.forward.scale(-0.45)).addInPlace(new B.Vector3(0, 0.35, 0));
+    FX.motorThermalFriction(motorPos, Math.min(2, boostSec - 1.2));
+  } else if (boostSec <= 1.5) {
+    motorFxT = 0;
+  }
   // Embestir objetos del patio los rompe
   const spd = Math.abs(r.fs);
-  if (spd > 9 && (smashCd -= dt) <= 0) { const pots = hitBreakables(c.pos, 1.3, spd * c.def.ram * 1.5); if (pots.length) smashCd = 0.3; smashed(pots); }
+  if (spd > 9 && (smashCd -= dt) <= 0) {
+    const pots = hitBreakables(c.pos, 1.3, spd * c.def.ram * 1.5);
+    if (pots.length) {
+      smashCd = 0.3;
+      smashed(pots);
+      if (!simulating) SFX.bodyThud(spd * 0.4);
+    }
+  }
   if (Math.abs(c.pos.x) > HALF + 5 || Math.abs(c.pos.z) > HALF + 5 || c.pos.y < -5) hp = 0;
 
   // --- Aparición de enemigos ---
@@ -961,6 +980,11 @@ function update(dt: number) {
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(new B.Vector3(0, rel * 0.2, 0)), true);
         FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0)));
         SFX.ram(rel);
+        if ((e.def.boss || e.elite || e.def.mass > 50) && rel > 3.5) {
+          const screenX = (e.pos.x - c.pos.x) * Math.cos(camYaw) - (e.pos.z - c.pos.z) * Math.sin(camYaw);
+          const pan = B.Scalar.Clamp(screenX / 8, -1, 1);
+          SFX.bodyThud(rel, pan);
+        }
         e.ramCd = R.embestida_recarga_s;
         shake = Math.max(shake, 0.25);
         if (ariete) explode(e.pos, BAL.armas.lanza.area_evo, dmg * BAL.armasExtra.lanza_ariete_dano);
@@ -977,7 +1001,16 @@ function update(dt: number) {
         e.touchCd = R.contacto_recarga_s;
         if (!e.def.boss) e.body.applyImpulse(dir.scale(R.contacto_empuje_bicho * e.def.mass), e.pos);
         // Un jefe te despide lejos: nunca quedás atrapado contra él
-        if (e.def.boss) c.body.applyImpulse(dir.scale(-R.contacto_jefe_empuje * c.def.mass).addInPlace(new B.Vector3(0, 4 * c.def.mass, 0)), c.pos);
+        if (e.def.boss) {
+          c.body.applyImpulse(dir.scale(-R.contacto_jefe_empuje * c.def.mass).addInPlace(new B.Vector3(0, 4 * c.def.mass, 0)), c.pos);
+          const screenX = (e.pos.x - c.pos.x) * Math.cos(camYaw) - (e.pos.z - c.pos.z) * Math.sin(camYaw);
+          const pan = B.Scalar.Clamp(screenX / 8, -1, 1);
+          SFX.bodyThud(6, pan);
+        } else if (e.elite) {
+          const screenX = (e.pos.x - c.pos.x) * Math.cos(camYaw) - (e.pos.z - c.pos.z) * Math.sin(camYaw);
+          const pan = B.Scalar.Clamp(screenX / 8, -1, 1);
+          SFX.bodyThud(4, pan);
+        }
       }
     }
   }
@@ -985,6 +1018,7 @@ function update(dt: number) {
   if ((touchIFrame -= dt) <= 0 && contactHit) {
     hurt(contactHit, true, contactBy ? "contacto " + contactBy : "contacto", contactBy);
     SFX.hurt();
+    if (contactHit > 8) SFX.bodyThud(contactHit * 0.4);
     let px = 0, pz = 0, n = 0;
     for (const e of enemies) {
       if (e.def.boss || e.hp <= 0) continue;
@@ -1215,7 +1249,13 @@ function updateHud(dt: number) {
   car!.wear(frac);
   for (const t of [0.5, 0.25]) if (lastHpFrac > t && frac <= t) { debris(car!.pos, save.paint || "#d62828", 8, 7, 0.8); FX.sparks(car!.pos); shake = Math.max(shake, 0.6); }
   lastHpFrac = frac;
-  hudUpdate({ hp, maxHp, boost, xp, need: xpNeed(level), level, pending: pendingLevels, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh });
+  hudUpdate({
+    hp, maxHp, boost, xp, need: xpNeed(level), level, pending: pendingLevels, time, kills, kmh: lastKmh, maxKmh: lastMaxKmh,
+    shield: abil === "escudo" && abilOn > 0,
+    boostActive: lampBoost,
+    distCenter: car ? Math.hypot(car.pos.x, car.pos.z) : 0,
+    heat: Math.min(1, boostSec / 2.0),
+  });
   hudAbility(ABILITIES[abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, abilCd) / abilCdOf(abil, abilLv), abilOn > 0, ABIL_ICON[abil], Math.max(0, abilCd));
   if (!simulating) hudJump(jumpCd <= 0 ? 1 : 1 - jumpCd / R.salto_cd_s);
 }

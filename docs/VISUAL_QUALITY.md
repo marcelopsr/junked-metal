@@ -925,6 +925,28 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #45 (Ecosistema Matricial de Especialistas: Frenos Ranurados 3D, BodyThud/Ram Espacial SFX, Chispas Transmisión y Packet Loss HUD)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 20.9 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Discos de freno ranurados y pinzas de freno en rojo competición (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - Incorporados discos de freno cilíndricos finos en acero templado (`cyl`, 12 facetas, `M.metal("#52525b")`) en el interior de cada una de las 4 ruedas del vehículo.
+   - Montadas pinzas de freno (calipers) compactas de dos pistones en rojo competición anodizado (`box`, `M.plastic("#ef4444")`) abrazando el borde superior del disco, visibles a través de los radios abiertos de las llantas y fusionadas en el subensamble `parts` del coche con **0 draw calls adicionales**.
+2. **BodyThud y Ram con atenuación espacial por distancia y resonancia por material (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Extendido `SFX.bodyThud(impulse, pan, dist, mat)` con roll-off atmosférico realista `1 / (1 + dist * 0.04)` y frecuencias de corte paso bajo diferenciadas por sustrato del choque (`"metal"` 1400Hz, `"wood"` 450Hz para macetas, `"soft"` 280Hz para césped/tierra, 600Hz por defecto).
+   - Incorporada atenuación por distancia en `SFX.ram(pwr, pan, dist)` dotando de espacialidad tridimensional a las colisiones periféricas.
+3. **Micro-chispas en transmisión en aceleración desde parado (Combat Feel & VFX Specialist · `src/car.ts`):**
+   - Detección en bucle de control (`car.ts`) de máxima aceleración aplicada con baja velocidad de avance (`cmd.fwd > 0.8 && speed < 1.5`), disparando micro-chispas de fricción y patinamiento en el eje motriz trasero mediante `FX.transmissionSpark(sparkPos)` con vector reutilizable en memoria para evitar presión sobre el Garbage Collector.
+4. **Micro-indicador de pérdida de paquetes y parpadeo de antena (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - Incorporado micro-badge dinámico `PL:X%` en `#sigPkt` cuando el vehículo se adentra en zona fringe o crítica (>75m del centro del transmisor).
+   - Animación analógica intermitente `@keyframes pktDrop` en el icono de antena `#signal.pkt-loss #sigIco` cuando la pérdida calculada supera el 20%.
+5. **Integración en Game Loop y Havok Callbacks (`src/main.ts`):**
+   - Conexión de `SFX.bodyThud` con atenuación espacial e impulso en choques violentos de chasis (`impactSpeed > 4.0`), rotura de macetas (`"wood"`) y embestidas contra jefes y élites (`"metal"`).
+   - Disparo de vaho térmico `FX.motorThermalFriction` sobre el disipador/motor 540 cuando el vehículo sostiene aceleración turbo prolongada (>1.5s).
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

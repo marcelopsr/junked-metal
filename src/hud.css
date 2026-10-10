@@ -55,6 +55,9 @@
 #signal.rf-loss { animation: rf-loss .2s steps(2) infinite; filter: contrast(1.6) brightness(.8); }
 .sig-dbm { font: 700 10px/1 var(--hf); color: var(--g-dim); margin-left: 4px; letter-spacing: .04em; }
 .sig-dbm.sig-warn { color: #f59e0b; text-shadow: 0 0 6px rgba(245, 158, 11, .6); animation: sigWarnFlicker .25s steps(2) infinite; }
+.sig-pkt { font: 700 9px/1 var(--hf); color: #f59e0b; margin-left: 3px; letter-spacing: .04em; }
+#signal.pkt-loss #sigIco { display: inline-flex; animation: pktDrop .3s steps(2) infinite; }
+@keyframes pktDrop { 0% { opacity: 1; } 50% { opacity: .25; } 100% { opacity: 1; } }
 @keyframes sigWarnFlicker {
   0% { opacity: .4; }
   50% { opacity: 1; }
@@ -122,7 +125,7 @@
 /* ---------- Estado del auto: vida, turbo, habilidad (abajo-centro) ---------- */
 #txl { left: 50%; translate: -50% 0; bottom: max(14px, env(safe-area-inset-bottom)); transform-origin: 50% 100%; width: min(300px, 70vw); padding: 10px 16px 10px 40px; display: flex; flex-direction: column; gap: 7px; }
 #txl .h-read { order: -1; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0; }
-#volt { font: 700 26px/1 var(--hf); }
+#volt { font: 700 26px/1 var(--hf); transition: color .25s ease-out, text-shadow .25s ease-out; }
 #hpTxt { margin-left: auto; font: 500 15px/1 var(--hf); color: var(--g-dim); }
 #lipo { position: relative; display: flex; gap: 3px; height: 14px; }
 #lipo i { flex: 1; border-radius: 99px; background: linear-gradient(90deg, var(--ok) var(--p, 100%), rgba(255, 255, 255, .14) var(--p, 100%)); transition: background .3s; }
@@ -138,8 +141,8 @@
   0% { box-shadow: 0 0 18px rgba(34, 197, 94, .95); filter: brightness(1.5); }
   100% { box-shadow: none; filter: none; }
 }
-#lipo.sag { filter: contrast(1.3) brightness(.85); }
-#lipo.sag i { opacity: .6; }
+#lipo.sag { filter: contrast(1.3) brightness(.85); transition: filter .25s ease-out; }
+#lipo.sag i { opacity: .6; transition: opacity .25s ease-out; }
 #txl.low #lipo i { background: linear-gradient(90deg, var(--low) var(--p, 100%), rgba(255, 255, 255, .14) var(--p, 100%)); animation: h-blink .5s steps(2) infinite; }
 #txl.low #volt { color: #ff5252; text-shadow: 0 0 6px rgba(255, 82, 82, .65); animation: voltPulse .6s ease-in-out infinite alternate; }
 @keyframes voltPulse { from { opacity: .7; } to { opacity: 1; } }

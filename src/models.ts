@@ -624,6 +624,10 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     for (const w of ws) {
       const [sx, wy, wz] = w.pos;
       parts.push(
+        // Disco de freno cilíndrico fino en acero templado con ranurado radial montado en el interior de la llanta
+        cyl(0.024, 0.024, 0.004, M.metal("#52525b"), [sx > 0 ? sx - 0.015 : sx + 0.015, wy, wz], [0, 0, Math.PI / 2], 12),
+        // Pinza de freno (caliper) compacta en rojo competición anodizado abrazando el borde superior del disco
+        box(0.008, 0.014, 0.012, M.plastic("#ef4444"), [sx > 0 ? sx - 0.015 : sx + 0.015, wy + 0.018, wz]),
         // Tuerca hexagonal central de rueda
         cyl(0.01, 0.01, 0.008, chrome, [sx > 0 ? sx + 0.02 : sx - 0.02, wy, wz], [0, 0, Math.PI / 2], 6),
         // Anillo de nylon azul métrico de bloqueo

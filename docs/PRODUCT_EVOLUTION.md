@@ -751,36 +751,54 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`):** Deriva térmica analógica sinusoidal de ADC (`Math.sin(now * 0.01) * 0.04`) en la lectura del voltímetro digital `#volt` cuando el ESC entra en sobrecarga térmica (`isThermal`), y scanline jamming estroboscópico `#radar.rf-jammed` en el panel de radar al caer en pérdida crítica periférica.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (6.9s), `npm run test:restart`, `npm run shots -- --only garaje,partida,lab` (32 capturas en PC y móvil en 61.5 s sin errores) y `graphify update .` (3505 nodos, 8270 aristas).
 
+### Ciclo #45 (2026-10-10) — Discos de Freno Ranurados 3D, BodyThud/Ram SFX Espacial, Chispas Transmisión y Packet Loss HUD
+- **Alcance implementado en paralelo por 4 Especialistas:**
+  - **Procedural 3D & Folded Modeler (`src/models.ts`):** Discos de freno cilíndricos en acero templado (`cyl`, 12 facetas, `#52525b`) y pinzas compactas de 2 pistones en rojo competición (`box`, `#ef4444`) en el interior de cada rueda, fusionadas en el array `parts` con **0 draw calls adicionales**.
+  - **Audio & Synth Sound Designer (`src/sfx.ts`):** `SFX.bodyThud(impulse, pan, dist, mat)` con atenuación espacial por distancia `1 / (1 + dist * 0.04)` y resonancia espectral paso bajo diferenciada por material (`"metal"` 1400Hz, `"wood"` 450Hz, `"soft"` 280Hz, default 600Hz); y roll-off por distancia incorporado en `SFX.ram(pwr, pan, dist)`.
+  - **Combat Feel & VFX Specialist (`src/car.ts`):** Detección de aceleración a fondo desde parado (`cmd.fwd > 0.8 && speed < 1.5`) con emisión de micro-chispas en eje motriz trasero (`FX.transmissionSpark`), vector estático reusable `sparkPos` (0 GC) y desacoplamiento limpio.
+  - **Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`):** Micro-indicador de pérdida de paquetes `PL:X%` en `#sigPkt` y animación estroboscópica en antena `#signal.pkt-loss` en zona periférica (>75m).
+  - **Integración de Bucle Central (`src/main.ts`):** Conexión de `SFX.bodyThud` con Havok collision callback en embestidas contra jefes/élites, rotura de macetas e impactos de chasis a velocidad (`impactSpeed > 4.0`), vaho térmico `FX.motorThermalFriction` tras boost prolongado (>1.5s), y paso de `distCenter` y `heat` a `hudUpdate()`.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (462 ms), `npm run test:restart`, `npm run shots -- --only garaje,partida,carrera` (17 capturas en PC y móvil en 20.9 s sin errores) y `graphify update .` (3539 nodos, 8347 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #45 (Evolución Multidisciplinaria)
+## 4. Backlog Vivo de Oportunidades — Ciclo #46 (Evolución Multidisciplinaria)
 
 ### A. Especialista 1 · Procedural 3D & Folded Modeler (`src/models.ts`)
-1. **(Recomendada) Discos de Freno Ranurados y Pinzas Rojas Anodizadas:**
-   - **Qué es:** Añadir discos de freno finos con ranurado radial en acero templado (`M.metal("#52525b")`) y pinzas de freno (calipers) en rojo competición (`M.plastic("#ef4444")`) visibles a través de las llantas abiertas.
-   - **Valor:** Fidelidad visual inmediata en vista cercana del Garaje y ceremonias de podio/cierre. Complejidad: Baja.
+1. **(Recomendada) Latiguillos de Freno Mallados en Acero y Válvulas de Inflado en Llantas:**
+   - **Qué es:** Añadir latiguillos flexibles de freno mallados en acero inox (`M.metal("#94a3b8")`) conectando el caliper con el chasis, y micro-válvulas Schrader de inflado de neumáticos en el reborde exterior de las llantas.
+   - **Valor:** Máxima fidelidad de maqueta mecánica en vista de taller/garaje y podio, con 0 draw calls al fusionar en `parts`. Complejidad: Baja.
 
 ### B. Especialista 2 · Audio & Synth Sound Designer (`src/sfx.ts`)
-2. **Atenuación Espacial `dist` en Colisiones (`bodyThud` / `ram`) y Resonancia por Material:**
-   - **Qué es:** Aplicar el factor de roll-off espacial por distancia `1 / (1 + dist * 0.04)` a los impactos de carrocería y permitir diferenciar el corte de agudos según el material del obstáculo (madera/maceta vs chapa/hormigón).
-   - **Valor:** Profundidad tridimensional acústica superior en duelos de Demolición y partidas abiertas. Complejidad: Baja-Media.
+2. **Modulación Dinámica de Superficie en Derrapes (`SFX.drift`) y Efecto Doppler:**
+   - **Qué es:** Modular el filtro de corte y resonancia de `SFX.drift(pan, floor)` según el tipo de superficie (asfalto chirriante, tierra rugosa, hierba suave) y simular pitch-shift Doppler en bólidos rivales que cruzan a velocidad.
+   - **Valor:** Tactilidad acústica instantánea en Carrera y Supervivencia. Complejidad: Media.
 
-### C. Especialista 3 · Combat Feel & VFX Specialist (`src/fx.ts`, `src/car.ts`)
-3. **Micro-Chispas Reactivas en Picos de Tracción desde Parado:**
-   - **Qué es:** Disparar `FX.transmissionSpark` en el eje motriz del vehículo cuando se aplica aceleración a fondo desde velocidad casi nula (`throttle > 0.9 && speed < 1.0`) o en rebotes violentos.
-   - **Valor:** Respaldo visual instantáneo de la potencia mecánica y el desgaste del embrague RC. Complejidad: Media.
+### C. Especialista 3 · Combat Feel & VFX Specialist (`src/car.ts`, `src/fx.ts`)
+3. **Torque Twist / Inclinación de Chasis por Par Motor en Arrancada:**
+   - **Qué es:** Inclinación elástica reactiva del chasis en el eje longitudinal (*torque roll*) al acelerar a fondo con alto par desde reposo, simulando la torsión mecánica de la transmisión RC.
+   - **Valor:** Peso físico y respuesta dinámica visceral al control del gatillo. Complejidad: Media.
 
 ### D. Especialista 4 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-4. **Telemetría de Antena & Pérdida de Paquetes en RSSI:**
-   - **Qué es:** Añadir micro-icono estroboscópico de antena/dipolo en `#signal` que parpadee cuando se pierden tramas de telemetría por framing error en zona periférica (>75m).
-   - **Valor:** Comunicación táctica inmediata del estado del enlace de radiofrecuencia. Complejidad: Baja.
+4. **Desacople Visual de Antena con Tinte Diegético y Alerta de CRC:**
+   - **Qué es:** Desacoplar el icono SVG `#sigIco` en `#signal` permitiendo coloración por estado (`#22c55e` óptimo, `#f59e0b` atenuado, `#ef4444` crítico) y aviso diegético `CRC ERR` cuando la pérdida de paquetes supera el 40%.
+   - **Valor:** Información de telemetría de radiofrecuencia aún más legible e inmersiva. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #44 completado y validado en paralelo con los 4 Especialistas (`tsc` 0 errores, `test` 75/75, `build` limpio, 32 capturas en `.shots/actual/` en 61.5 s, grafo en 3505 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #45**.
+- **Último trabajo completado:** Ciclo #45 completado y validado en paralelo con 4 Especialistas (`tsc` 0 errores, `test` 75/75, `build` limpio en 462 ms, 17 capturas en `.shots/actual/` en 20.9 s, grafo en 3539 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #46**.
+
+### 🔓 LISTO PARA EL CICLO #46 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+
+| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
+|---|---|---|
+| **Procedural 3D Modeler** | Latiguillos mallados de freno y válvulas Schrader en llantas | `src/models.ts` |
+| **Audio Synth Designer** | Modulación de superficie en derrapes y pitch-shift Doppler | `src/sfx.ts` |
+| **Combat Feel & VFX** | Torque twist / torsión elástica de chasis en arrancada en `car.ts` | `src/car.ts` |
+| **Diegetic HUD & Telemetry** | Desacople de antena con tinte por estado y alerta CRC ERR | `src/ui.ts`, `src/hud.css` |
 
 ### 🔓 LISTO PARA EL CICLO #45 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
@@ -788,7 +806,7 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 |---|---|---|
 | **Procedural 3D Modeler** | Discos de freno ranurados y pinzas rojas de competición | `src/models.ts` |
 | **Audio Synth Designer** | Roll-off espacial `dist` y resonancia por material en colisiones | `src/sfx.ts` |
-| **Combat Feel & VFX** | Chispas en transmisión en aceleración desde parado en `car.ts` | `src/fx.ts` |
+| **Combat Feel & VFX** | Chispas en transmisión en aceleración desde parado en `car.ts` | `src/car.ts` |
 | **Diegetic HUD & Telemetry** | Micro-icono de pérdida de paquetes en RSSI en zona periférica | `src/ui.ts`, `src/hud.css` |
 
 ### 🔓 LISTO PARA EL CICLO #44 (Ecosistema de Especialistas Matriciales, 2026-10-10)

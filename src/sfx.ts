@@ -252,12 +252,13 @@ export const SFX = {
   jingle: () => JINGLE.forEach(([f, d]) => tone("triangle", f, f * 0.995, 0.2, 0.07, d)),
   hit: () => gate("hit", 18) && (tone("sine", 700, 320, 0.05, 0.12), hiss("bandpass", 2400, 900, 0.04, 0.08)),
   kill: (racha = 0) => gate("kill", racha >= 25 ? 22 : 14) && (tone("sine", 520, 180, 0.1, 0.14), tone("triangle", 260, 90, 0.12, 0.08)), // boing
-  ram: (powerOrPan: number = 10, pan?: number) => {
+  ram: (powerOrPan: number = 10, pan?: number, dist?: number) => {
     const isPanOnly = pan === undefined && Math.abs(powerOrPan) <= 1;
     const pwr = isPanOnly ? 10 : powerOrPan;
     const p = isPanOnly ? powerOrPan : pan;
-    tone("sine", 160, 45, 0.18, Math.min(0.5, 0.2 + pwr * 0.01), 0, p);
-    hiss("lowpass", 1800, 200, 0.12, 0.25, p);
+    const dGain = dist !== undefined ? Math.max(0.15, 1 / (1 + dist * 0.04)) : 1;
+    tone("sine", 160, 45, 0.18, Math.min(0.5, (0.2 + pwr * 0.01) * dGain), 0, p);
+    hiss("lowpass", 1800, 200, 0.12, 0.25 * dGain, p, dist);
   },
   explosion: () => gate("boom", 8) && (hiss("lowpass", 1400, 60, 0.6, 0.45), tone("sine", 90, 30, 0.45, 0.35)),
   zap: (pan?: number) => { tone("sawtooth", 300, 1200, 0.06, 0.14, 0, pan); },
@@ -299,14 +300,16 @@ export const SFX = {
     hiss(0.09, 0.14 * dGain, 2800, 600, pan, dist);
   },
   lipoFull: () => { tone("sine", 587.33, 880, 0.08, 0.14); tone("triangle", 880, 1174.66, 0.1, 0.18, 0.06); },
-  bodyThud: (impulseOrPan?: number, panArg?: number) => {
+  bodyThud: (impulseOrPan?: number, panArg?: number, dist?: number, mat?: "wood" | "metal" | "soft") => {
     if (!gate("body-thud", 8)) return;
     const isPanOnly = panArg === undefined && impulseOrPan !== undefined && Math.abs(impulseOrPan) <= 1;
     const p = isPanOnly ? impulseOrPan : panArg;
     const imp = isPanOnly || impulseOrPan === undefined ? 5 : impulseOrPan;
-    const vol = Math.min(0.35, 0.08 + imp * 0.02);
+    const dGain = dist !== undefined ? Math.max(0.12, 1 / (1 + dist * 0.04)) : 1;
+    const vol = Math.min(0.35, (0.08 + imp * 0.02) * dGain);
+    const cutoff = mat === "metal" ? 1400 : mat === "wood" ? 450 : mat === "soft" ? 280 : 600;
     tone("sine", 140, 50, 0.12, vol, 0, p);
-    hiss("lowpass", 600, 150, 0.1, vol * 0.8, p);
+    hiss("lowpass", cutoff, 150, 0.1, vol * 0.8, p, dist);
   },
   lipoLowWarn: () => {
     if (!gate("lipo-warn", 0.4)) return;

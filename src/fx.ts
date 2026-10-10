@@ -110,6 +110,7 @@ export const FX = {
   sparks: (p: B.Vector3, n = 8) => sparks(p, n),
   heatHaze: (p: B.Vector3, intens = 1) => heatHaze(p, intens),
   transmissionSpark: (p: B.Vector3) => transmissionSpark(p),
+  motorThermalFriction: (p: B.Vector3, intens = 1) => motorThermalFriction(p, intens),
   // Destello blanco breve sobre el enemigo golpeado
   flash: (p: B.Vector3, s: number) => burst(p, { n: 1, color: "#ffffff", size: [s * 0.9, s * 1.1], power: [0, 0], life: [0.05, 0.07], gravity: 0 }),
   // Vapor de jefe enfurecido (fase 2): bocanadas rosadas que suben; s = tamaño según el jefe
@@ -127,10 +128,26 @@ export function transmissionSpark(pos: B.Vector3) {
   burst(pos, { n: 3, color: "#fff2a8", color2: "#ff9138", size: [0.03, 0.08], power: [6, 12], life: [0.08, 0.18], gravity: -22, add: true });
 }
 
+/** Micro-efecto de calor y chispas de fricción sutil desde el motor 540 y la transmisión */
+export function motorThermalFriction(pos: B.Vector3, intens = 1) {
+  burst(pos, {
+    n: Math.min(4, Math.max(1, Math.round(2 * intens))),
+    color: "#ff9b38",
+    color2: "#ff4500",
+    size: [0.04, 0.10],
+    power: [1.2, 3.2],
+    life: [0.12, 0.25],
+    gravity: -6,
+    add: true,
+  });
+  if (Math.random() < 0.45) {
+    transmissionSpark(pos);
+  }
+}
+
 /** Vaho térmico sutil sobre el disipador o motor 540 cuando hay sobrecarga térmica */
 export function heatHaze(pos: B.Vector3, intens = 1) {
-  // Usar las partículas de humo/chispa existentes en el pool sin crear ParticleSystem nuevos
-  sparks(pos, Math.min(4, Math.round(2 * intens)));
+  motorThermalFriction(pos, intens);
 }
 
 // ---------- Restos con física simple (sin Havok: son decorativos) ----------
