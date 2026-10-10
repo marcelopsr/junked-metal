@@ -1,0 +1,203 @@
+{
+  "date": "2026-10-10",
+  "results": [
+    {
+      "viewport": "pc",
+      "decoded": [
+        {
+          "id": "01-oil-stain",
+          "path": "sources/01-oil-stain.png",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 998327,
+          "semi": 574115,
+          "opaque": 74,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "01-oil-stain",
+          "path": "textures/01-oil-stain.webp",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 998327,
+          "semi": 574115,
+          "opaque": 74,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "02-tire-marks",
+          "path": "sources/02-tire-marks.png",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 1229635,
+          "semi": 342609,
+          "opaque": 272,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "02-tire-marks",
+          "path": "textures/02-tire-marks.webp",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 1229635,
+          "semi": 342609,
+          "opaque": 272,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "03-dry-leaves",
+          "path": "sources/03-dry-leaves.png",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 891271,
+          "semi": 679489,
+          "opaque": 1756,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "03-dry-leaves",
+          "path": "textures/03-dry-leaves.webp",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 891271,
+          "semi": 679489,
+          "opaque": 1756,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "04-small-scrap",
+          "path": "sources/04-small-scrap.png",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 1223537,
+          "semi": 347853,
+          "opaque": 1126,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "04-small-scrap",
+          "path": "textures/04-small-scrap.webp",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 1223537,
+          "semi": 347853,
+          "opaque": 1126,
+          "edgeMax": 1,
+          "alphaEqual": true
+        }
+      ],
+      "dialogs": 4,
+      "compositions": 20,
+      "opacityControl": true,
+      "square": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "viewport": "cel",
+      "decoded": [
+        {
+          "id": "01-oil-stain",
+          "path": "sources/01-oil-stain.png",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 998327,
+          "semi": 574115,
+          "opaque": 74,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "01-oil-stain",
+          "path": "textures/01-oil-stain.webp",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 998327,
+          "semi": 574115,
+          "opaque": 74,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "02-tire-marks",
+          "path": "sources/02-tire-marks.png",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 1229635,
+          "semi": 342609,
+          "opaque": 272,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "02-tire-marks",
+          "path": "textures/02-tire-marks.webp",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 1229635,
+          "semi": 342609,
+          "opaque": 272,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "03-dry-leaves",
+          "path": "sources/03-dry-leaves.png",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 891271,
+          "semi": 679489,
+          "opaque": 1756,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "03-dry-leaves",
+          "path": "textures/03-dry-leaves.webp",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 891271,
+          "semi": 679489,
+          "opaque": 1756,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "04-small-scrap",
+          "path": "sources/04-small-scrap.png",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 1223537,
+          "semi": 347853,
+          "opaque": 1126,
+          "edgeMax": 1,
+          "alphaEqual": true
+        },
+        {
+          "id": "04-small-scrap",
+          "path": "textures/04-small-scrap.webp",
+          "width": 1254,
+          "height": 1254,
+          "transparent": 1223537,
+          "semi": 347853,
+          "opaque": 1126,
+          "edgeMax": 1,
+          "alphaEqual": true
+        }
+      ],
+      "dialogs": 4,
+      "compositions": 20,
+      "opacityControl": true,
+      "square": true,
+      "overflow": false,
+      "errors": []
+    }
+  ]
+}

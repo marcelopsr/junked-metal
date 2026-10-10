@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "date": "2026-10-10",
+  "generator": "built-in imagegen",
+  "assets": [
+    {
+      "id": "01-oil-stain",
+      "name": "Mancha de aceite",
+      "uses": [
+        "Desgaste estático en suelo del garaje/taller",
+        "Rincones del circuito y zonas de mantenimiento"
+      ],
+      "sizeMeters": [
+        0.3,
+        0.7
+      ],
+      "roughness": 0.65,
+      "prompt": "prompts/01-oil-stain.txt",
+      "source": "sources/01-oil-stain.png",
+      "texture": "textures/01-oil-stain.webp",
+      "status": "generated-not-integrated",
+      "kind": "static-alpha-decal",
+      "colorSpace": "sRGB",
+      "maps": {
+        "colorAlpha": "textures/01-oil-stain.webp",
+        "normal": null,
+        "orm": null
+      },
+      "tileable": false,
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 1128022,
+      "textureBytes": 250996,
+      "sourceSha256": "50f5d59370c1b5a4fbe0bb65770b715078f981038e4786663d2f3e8f80de65b0",
+      "textureSha256": "10618aac41b344c7e62cf913c6c7e8ede6cd965e6ba0d3a10b4f8cfe6c01a791",
+      "alpha": {
+        "transparentPixels": 998327,
+        "semiTransparentPixels": 574115,
+        "opaquePixels": 74,
+        "webpMatchesSource": true
+      },
+      "generation": {
+        "mode": "edit",
+        "input": "reference/oil-stain-initial.png",
+        "initialPrompt": "prompts/01-oil-stain-initial.txt"
+      }
+    },
+    {
+      "id": "02-tire-marks",
+      "name": "Huellas de neumáticos",
+      "uses": [
+        "Huellas estáticas en pista y acceso al garaje",
+        "Variedad en asfalto y hormigón sin nuevas colisiones"
+      ],
+      "sizeMeters": [
+        0.5,
+        1.2
+      ],
+      "roughness": 0.95,
+      "prompt": "prompts/02-tire-marks.txt",
+      "source": "sources/02-tire-marks.png",
+      "texture": "textures/02-tire-marks.webp",
+      "status": "generated-not-integrated",
+      "kind": "static-alpha-decal",
+      "colorSpace": "sRGB",
+      "maps": {
+        "colorAlpha": "textures/02-tire-marks.webp",
+        "normal": null,
+        "orm": null
+      },
+      "tileable": false,
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 1080602,
+      "textureBytes": 353370,
+      "sourceSha256": "215b6b9e873f364106dc0f2811371216e2149c33198e9455638a84d077cbf243",
+      "textureSha256": "ab77f4e59eb2c1c69c1e1ff9ef05af38e91f8a01350d2091c59be8e0c703cb23",
+      "alpha": {
+        "transparentPixels": 1229635,
+        "semiTransparentPixels": 342609,
+        "opaquePixels": 272,
+        "webpMatchesSource": true
+      }
+    },
+    {
+      "id": "03-dry-leaves",
+      "name": "Hojas secas",
+      "uses": [
+        "Base de cerca y esquinas del patio",
+        "Bordes de pista y nuevos jardines"
+      ],
+      "sizeMeters": [
+        0.25,
+        0.6
+      ],
+      "roughness": 0.92,
+      "prompt": "prompts/03-dry-leaves.txt",
+      "source": "sources/03-dry-leaves.png",
+      "texture": "textures/03-dry-leaves.webp",
+      "status": "generated-not-integrated",
+      "kind": "static-alpha-decal",
+      "colorSpace": "sRGB",
+      "maps": {
+        "colorAlpha": "textures/03-dry-leaves.webp",
+        "normal": null,
+        "orm": null
+      },
+      "tileable": false,
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 1907005,
+      "textureBytes": 477808,
+      "sourceSha256": "7ecf4e1408f5ce995f6f48b5219f7646ac8e25d3247d40bed8e79ac85ca9d595",
+      "textureSha256": "aa549e5193f9a626a2a4e2d57a5cfed44a323ce8d183ea37d73e01383973d4bb",
+      "alpha": {
+        "transparentPixels": 891271,
+        "semiTransparentPixels": 679489,
+        "opaquePixels": 1756,
+        "webpMatchesSource": true
+      }
+    },
+    {
+      "id": "04-small-scrap",
+      "name": "Restos de taller",
+      "uses": [
+        "Desorden estático junto a taller/gabinete",
+        "Detalles de escenario y esquinas de carrera"
+      ],
+      "sizeMeters": [
+        0.15,
+        0.4
+      ],
+      "roughness": 0.8,
+      "prompt": "prompts/04-small-scrap.txt",
+      "source": "sources/04-small-scrap.png",
+      "texture": "textures/04-small-scrap.webp",
+      "status": "generated-not-integrated",
+      "kind": "static-alpha-decal",
+      "colorSpace": "sRGB",
+      "maps": {
+        "colorAlpha": "textures/04-small-scrap.webp",
+        "normal": null,
+        "orm": null
+      },
+      "tileable": false,
+      "width": 1254,
+      "height": 1254,
+      "sourceBytes": 1095885,
+      "textureBytes": 254512,
+      "sourceSha256": "a5ad1493f9c15b725b218b03eb282eca91da9be84c9ec1ff1f0186cd69c75bfe",
+      "textureSha256": "690509466fd45d87800a6ba1b2902b06f78ed995889a1ae36772a2069f38697b",
+      "alpha": {
+        "transparentPixels": 1223537,
+        "semiTransparentPixels": 347853,
+        "opaquePixels": 1126,
+        "webpMatchesSource": true
+      }
+    }
+  ]
+}

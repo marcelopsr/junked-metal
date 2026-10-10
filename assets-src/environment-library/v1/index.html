@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Junked Metal · Ambientación</title>
+<style>
+:root{color-scheme:dark;font-family:Rajdhani,sans-serif;background:#11171c;color:#ecede4}*{box-sizing:border-box}body{margin:0;padding:clamp(16px,3vw,40px);max-width:1600px;margin-inline:auto}header{border-top:3px solid #df8a28;padding:18px 0 24px}h1{font-size:clamp(28px,4vw,50px);line-height:1;margin:8px 0;color:#ffbd4a}h2{font-size:24px;margin:0}p{color:#b9c2c6;font-size:18px;margin:8px 0}.tag{letter-spacing:.16em;color:#c6935d;font-size:14px}#cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.card{background:#1b232b;border:1px solid #414a50;min-width:0}.checker{background-color:#363b3c;background-image:conic-gradient(#222728 25%,transparent 0 50%,#222728 0 75%,transparent 0);background-size:24px 24px}.card img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain}.copy{padding:14px}.copy p{font-size:16px;line-height:1.25}a{color:#ffbd4a;text-underline-offset:3px}nav{display:flex;gap:18px;margin-top:12px}button{font:inherit;font-size:17px;background:#2a333b;border:1px solid #8a6c40;color:#fff0d0;padding:10px 12px;cursor:pointer}.compare{width:100%;margin-top:12px}:focus-visible{outline:3px solid #ffc75a;outline-offset:3px}footer{border-top:1px solid #4c4f43;padding:20px 0;margin-top:30px;font-size:17px;color:#b9c2c6}dialog{width:min(94vw,1100px);max-height:94vh;background:#172027;color:#f2ecdd;border:1px solid #dd912e;padding:18px}dialog::backdrop{background:#000b}.dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.previews{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}figure{margin:0;min-width:0}.surface{aspect-ratio:1;background-size:cover;display:grid;place-items:center}.surface img{width:86%;height:86%;object-fit:contain}figcaption{padding:6px 0;font-size:17px}.alpha{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:650px;margin-top:16px}.light{background:#e5dfd0}.dark{background:#101419}label{display:flex;align-items:center;gap:12px;font-size:18px;margin-top:12px}input{min-height:44px;max-width:50%;accent-color:#ffbd4a}#status{margin:0 0 18px}@media(max-width:1000px){#cards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){#cards,.previews{grid-template-columns:1fr}dialog{padding:12px}.alpha{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><span class="tag">JUNKED METAL / RECURSOS COMPARTIDOS</span><h1>RASTROS DEL PATIO</h1><p>Aceite, neumáticos, hojas y restos de taller. Cuatro recursos con transparencia.</p><p>Composición 2D sobre materiales existentes; fuentes disponibles para cualquier sesión del equipo.</p></header>
+<p id="status" role="status">Cargando biblioteca…</p>
+<main id="cards" aria-label="Catálogo de ambientación"></main>
+<footer><a href="README.md">Usos y límites</a> · <a href="assets.json">Catálogo para agentes</a> · <a href="HANDOFF.md">Continuar esta tanda</a> · <a href="../../material-library/v1/index.html">Superficies v1</a><p>Son recursos planos disponibles. Todavía no se aplican a las partidas.</p></footer>
+<dialog aria-labelledby="compare-title"><div class="dialog-head"><h2 id="compare-title">Composición</h2><button id="close" type="button">Cerrar</button></div><p>Comparar el mismo recurso sobre tierra, hormigón y asfalto; revisar halos en claro y oscuro.</p><label>Opacidad <input id="opacity" type="range" min="0" max="100" value="100"><output for="opacity" id="opacity-value">100 %</output></label><div class="previews" id="previews"></div><div class="alpha" id="alpha"></div></dialog>
+<script type="module">
+import '@fontsource/rajdhani/500.css';
+import '@fontsource/rajdhani/700.css';
+const cards=document.querySelector('#cards'),status=document.querySelector('#status'),dialog=document.querySelector('dialog'),opacity=document.querySelector('#opacity');
+document.querySelector('#close').onclick=()=>dialog.close();
+opacity.oninput=()=>{document.querySelector('#opacity-value').textContent=opacity.value+' %';for(const img of dialog.querySelectorAll('img'))img.style.opacity=Number(opacity.value)/100;};
+function preview(a,label,background,parent){
+ const figure=document.createElement('figure'),surface=document.createElement('div'),img=document.createElement('img'),caption=document.createElement('figcaption');
+ surface.className='surface '+(background==='light'||background==='dark'?background:'');
+ if(background!=='light'&&background!=='dark')surface.style.backgroundImage=`url("../../material-library/v1/textures/${background}.webp")`;
+ img.src=a.texture;img.alt=a.name+' sobre '+label;img.width=a.width;img.height=a.height;caption.textContent=label;surface.append(img);figure.append(surface,caption);parent.append(figure);
+}
+function compare(a){
+ document.querySelector('#compare-title').textContent=a.name;document.querySelector('#previews').replaceChildren();document.querySelector('#alpha').replaceChildren();
+ for(const [label,bg]of [['Tierra','01-compacted-earth'],['Hormigón','03-worn-concrete'],['Asfalto','07-rough-asphalt']])preview(a,label,bg,document.querySelector('#previews'));
+ for(const [label,bg]of [['Fondo claro','light'],['Fondo oscuro','dark']])preview(a,label,bg,document.querySelector('#alpha'));
+ opacity.value='100';opacity.oninput();dialog.showModal();
+}
+try{
+ const response=await fetch('./assets.json');if(!response.ok)throw new Error('Catálogo no disponible');const catalog=await response.json();
+ for(const a of catalog.assets){
+  const article=document.createElement('article');article.className='card';article.dataset.asset=a.id;
+  const imageWrap=document.createElement('div');imageWrap.className='checker';const img=document.createElement('img');img.src=a.texture;img.alt=a.name;img.width=a.width;img.height=a.height;imageWrap.append(img);
+  const copy=document.createElement('div');copy.className='copy';const title=document.createElement('h2');title.textContent=a.name;const uses=document.createElement('p');uses.textContent=a.uses.join(' · ');const size=document.createElement('p');size.textContent=`${a.width} × ${a.height} · RGBA · WebP ${(a.textureBytes/1024).toFixed(0)} KB`;
+  const nav=document.createElement('nav');nav.setAttribute('aria-label',a.name+' archivos');for(const [label,path]of [['WebP',a.texture],['PNG',a.source]]){const link=document.createElement('a');link.href=path;link.download='';link.textContent=label;nav.append(link);}
+  const button=document.createElement('button');button.className='compare';button.type='button';button.textContent='Comparar sobre suelos';button.onclick=()=>compare(a);copy.append(title,uses,size,nav,button);article.append(imageWrap,copy);cards.append(article);
+ }
+ status.textContent=`${catalog.assets.length} recursos · ${(catalog.assets.reduce((n,a)=>n+a.textureBytes,0)/1e6).toFixed(2)} MB en WebP · alpha conservado`;
+}catch(error){status.textContent='No se pudo cargar la biblioteca.';console.error(error);}
+</script>
+</body>
+</html>

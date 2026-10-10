@@ -895,3 +895,10 @@ Conclusión visual: avance verificable a geometría relightable, todavía lejos 
 `assets-src/material-library/v1/evidence/gallery-pc.png`, `gallery-cel.png` y ocho `repeat-*.png` documentan la revisión real. Suelos, madera, chapa, pintura, asfalto y ladrillo siguen el detalle táctil de la tierra aprobada con colores propios de cada material. Originales 1254×1254, WebP 6,51 MB total frente a PNG 34,76 MB. Galería verificada con cuadrados sin distorsión, 16 archivos decodificados y ocho diálogos por viewport, sin errores/desbordamiento.
 
 Evaluación: materiales ricos en detalle disponibles para reutilización; todavía no aplicados al juego. Repetición 3×3 inspeccionada: nudos/parches/rayaduras recurrentes y patrón/alineación de ladrillo pueden hacerse evidentes; para áreas extensas revisar o corregir juntas, para tablas/paneles usar UV acotada. Hormigón/asfalto tienen árido expuesto. No certificar seamless ni asignar mejora medida al gameplay. Normal/ORM, respuesta bajo luz del juego y costo de integración pendientes. Recomendado empezar por comparar tres superficies en una zona existente. Fuentes, prompts y límites en el README/HANDOFF del paquete.
+
+
+## 2026-10-10 · Recursos de ambientación independientes
+
+Cuatro decals RGBA 1254×1254 (aceite, huellas, hojas y restos) en `assets-src/environment-library/v1/`, generados con imagegen integrado y conservados en PNG/WebP. Galería local compara sobre tierra/hormigón/asfalto y fondos claro/oscuro; alfa idéntico entre formatos, con ruido exterior máximo 1/255 registrado. Verificación headless pc/cel: ocho imágenes, cuatro diálogos y veinte composiciones por viewport, control de opacidad, proporciones, cero errores/desbordamiento; tsc, 75 pruebas y build pasan. Evidencia en `evidence/`, reserva liberada y continuidad independiente del proveedor.
+
+Calidad evaluada como recurso raster y composición 2D. No se asigna un puntaje al juego ni se afirma integración, iluminación física, geometría o rendimiento mejorados. A ras del suelo los detalles son planos; revisar escala/halos en la escena final. No sustituye las evaluaciones ni el checkpoint de los ciclos concurrentes.

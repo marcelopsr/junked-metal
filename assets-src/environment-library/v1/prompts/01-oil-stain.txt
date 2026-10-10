@@ -1,0 +1,5 @@
+Use case: precise-object-edit
+Asset type: alpha-only ground stain decal for Junked Metal.
+Input image 1: edit target; the previous oil decal. Keep its irregular silhouette and satellite drops, overhead composition and genuinely transparent background.
+Change the stain material only: completely remove the pale cream/tan crust, soil, granules, rocky surface and light border. The ENTIRE stain must use dark charcoal and dark translucent brown, with gently feathered semi-transparent edges that fade directly into zero alpha. Thin oil/dark grime discoloration, flat color and opacity only, no substrate at any pixel. A soft irregular dark-brown stain with denser center and a few slightly translucent mottled areas, no highlights. Remove the appearance of a cutout chunk of dried earth.
+No beige/white/light-gray rim, no soil/stones, no cracks, no raised material, no cast shadows, no base plane or ground, no text or watermark, no painted checkerboard. Preserve actual transparency. This is laid over brown earth or gray concrete/asphalt, so the underlying surface must show through the outer parts of the oil. Generous transparent padding on all edges. Square image.
