@@ -763,3 +763,23 @@ Carrera (1) y Survivor en partida (2).
 4. **Síntesis sonora procedural de frenada límite y batería completa (Audio & Synth Sound Designer · `src/sfx.ts`):**
    - Se sumó al motor WebAudio `SFX.brakeScreech()`, combinando oscilador de diente de sierra descendente (950→420 Hz) con onda triangular de refuerzo sub-armónico (600→300 Hz) para emular fricción violenta de goma y freno de disco.
    - Se añadió `SFX.lipoFull()`, con una secuencia armónica ascendente en dos etapas (587.33 Hz senoidal → 1174.66 Hz triangular) que provee feedback auditivo claro al completarse la carga de la batería.
+
+---
+
+## 2026-10-10 · Ciclo #36 (Ecosistema Matricial de Especialistas: Acabados Glossy y Paquete Aero en Taller, Voltage Sag y Celdas LiPo en HUD, Shaker Scoop y Jaula 3D, Paneo Estéreo y Alarma Espacial SFX)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 29.6 s).
+
+### Intervenciones aplicadas por los 4 Especialistas y verificadas en captura
+1. **Micro-indicadores de acabado `.glossy` y homologación `.aero-pkg` en Taller (Menu, Workshop & Flow Specialist · `src/menu.ts`, `src/menu.css`):**
+   - En `renderPaint()`, se detectan acabados metálicos y tonos de alta saturación (`isGlossy`), inyectando la clase `.sw.glossy` con un destello especular circular blanco de 4px en la esquina superior de cada muestra para previsualizar reflectancia.
+   - En `renderGarage()`, se detecta la combinación de alerón (`wing`) y paragolpes/defensa (`bumper`), desplegando la pastilla cian `<span class="aero-pkg">PAQUETE AERO</span>` tanto en el resumen de personalización como en la cabecera de ranura de alerón.
+2. **Caída de tensión LiPo (*Voltage Sag*) y desbalanceo crítico de celdas en HUD (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, se implementó la deflexión de voltaje dinámico (`sag = d.boostActive ? 0.22 : 0`) que resta 0.22V instantáneos al voltímetro `#volt` bajo sobrecarga de turbo o salto, activando la clase `#volt.sag` con oscilación ámbar fosforescente.
+   - En modo pánico LiPo (`p < 0.15`), se marca la primera celda con `.unbalanced` y animación `@keyframes lipo-cell-sag` para emular desbalance térmico y falla de celda.
+3. **Filtro de inducción / Shaker scoop y jaula antivuelco 3D (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - En `carModel()`, los modelos deportivos y pickup reciben un filtro cónico rojo de competición con abrazadera cromada sobre el capó (`M.plastic("#ef4444")` y `chrome`).
+   - El modelo Buggy todoterreno incorpora tubos diagonales cruzados de refuerzo antivuelco cromados en el habitáculo abierto.
+4. **Síntesis con Paneo Estéreo y Alarma Espacial (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Se incorporó soporte de paneo estéreo opcional (`pan?: number`, -1 a 1) en la primitiva `tone()` mediante `StereoPannerNode`, manteniendo compatibilidad hacia atrás.
+   - Se actualizó `SFX.collisionWarning(pan)` para advertencias direccionales y se agregó `SFX.spatialAlert(pan)` para avisos perimetrales espaciales.

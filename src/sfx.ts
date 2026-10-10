@@ -161,7 +161,7 @@ function gate(key: string, perSec: number) {
   return true;
 }
 
-function tone(type: OscillatorType, f0: number, f1: number, dur: number, vol: number, delay = 0) {
+function tone(type: OscillatorType, f0: number, f1: number, dur: number, vol: number, delay = 0, pan?: number) {
   if (!ctx) return;
   const t = ctx.currentTime + delay, o = ctx.createOscillator(), g = ctx.createGain();
   o.type = type;
@@ -169,7 +169,14 @@ function tone(type: OscillatorType, f0: number, f1: number, dur: number, vol: nu
   o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(fxBus); duckEngine();
+  if (pan !== undefined && ctx.createStereoPanner) {
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = Math.max(-1, Math.min(1, pan));
+    g.connect(panner).connect(fxBus);
+  } else {
+    g.connect(fxBus);
+  }
+  duckEngine();
   o.start(t);
   o.stop(t + dur + 0.02);
 }
@@ -224,7 +231,8 @@ export const SFX = {
     tone("triangle", 1046.5, 1046.5, 0.22, 0.24, 0.24);
   },
   scrapClink: () => { tone("triangle", 2200, 1800, 0.04, 0.08); tone("sine", 3200, 2400, 0.03, 0.06, 0.02); },
-  collisionWarning: () => { tone("sawtooth", 880, 880, 0.05, 0.08); tone("sawtooth", 880, 880, 0.05, 0.08, 0.08); },
+  collisionWarning: (pan?: number) => { tone("sawtooth", 880, 880, 0.05, 0.08, 0, pan); tone("sawtooth", 880, 880, 0.05, 0.08, 0.08, pan); },
+  spatialAlert: (pan: number) => { tone("triangle", 1046.5, 783.99, 0.08, 0.12, 0, pan); },
   boostSurge: () => { tone("triangle", 220, 880, 0.15, 0.18); tone("sawtooth", 440, 1100, 0.12, 0.15, 0.04); },
   brakeScreech: () => { tone("sawtooth", 950, 420, 0.12, 0.16); tone("triangle", 600, 300, 0.08, 0.12, 0.03); },
   lipoFull: () => { tone("sine", 587.33, 880, 0.08, 0.14); tone("triangle", 880, 1174.66, 0.1, 0.18, 0.06); },

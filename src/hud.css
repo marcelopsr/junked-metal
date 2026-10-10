@@ -115,6 +115,12 @@
 #txl.low #lipo i { background: linear-gradient(90deg, var(--low) var(--p, 100%), rgba(255, 255, 255, .14) var(--p, 100%)); animation: h-blink .5s steps(2) infinite; }
 #txl.low #volt { color: #ff5252; text-shadow: 0 0 6px rgba(255, 82, 82, .65); animation: voltPulse .6s ease-in-out infinite alternate; }
 @keyframes voltPulse { from { opacity: .7; } to { opacity: 1; } }
+#volt.sag { color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, .7); animation: voltPulse .2s infinite alternate; }
+#lipo.panic i:first-child.unbalanced { animation: lipo-cell-sag .25s steps(2) infinite; }
+@keyframes lipo-cell-sag {
+  0% { opacity: .2; }
+  100% { opacity: 1; }
+}
 #volt.surge { animation: volt-surge .5s ease-out; }
 @keyframes volt-surge {
   0% { color: #5be7ff; text-shadow: 0 0 14px rgba(91, 231, 255, .95); }

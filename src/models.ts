@@ -468,6 +468,17 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     if ((kind as string) === "deportivo" || (kind as string) === "pickup" || kind === "combi") {
       parts.push(cyl(0.024, 0.024, 0.015, chrome, [bw * 0.49, bh * 0.45, -bl * 0.3], [0, 0, Math.PI / 2], 8));
     }
+    if ((kind as string) === "deportivo" || (kind as string) === "pickup") {
+      parts.push(
+        cyl(0.035, 0.02, 0.06, M.plastic("#ef4444"), [0, bh * 0.72, bl * 0.15], [Math.PI / 2, 0, 0], 8),
+        cyl(0.022, 0.022, 0.02, chrome, [0, bh * 0.72, bl * 0.19], [Math.PI / 2, 0, 0], 8)
+      );
+    }
+    if (kind === "buggy") {
+      for (const sx of [-bw * 0.28, bw * 0.28]) {
+        parts.push(cyl(0.012, 0.012, bh * 0.85, chrome, [sx, bh * 0.55, -bl * 0.05], [0.3, 0, 0], 6));
+      }
+    }
     if (kind === "monster" || kind === "combi") {
       for (const sx of [-bw * 0.18, bw * 0.18]) {
         parts.push(

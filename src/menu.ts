@@ -596,7 +596,9 @@ function renderGarage() {
   const ownedPartsCount = allPartsList.filter((id) => owns(id)).length;
   const pctParts = Math.round((ownedPartsCount / allPartsList.length) * 100);
   const ownedPaints = PAINTS.filter((p) => owns("paint:" + ((p as any).id ?? p))).length;
-  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span> <span class="parts-pct">${pctParts}% TALLER</span> <span class="paints-pct">${ownedPaints}/${PAINTS.length} PINTURAS</span>`;
+  const hasAero = Boolean(save.kit.wing && save.kit.wing !== "nada" && save.kit.bumper && save.kit.bumper !== "nada");
+  const aeroPkgTag = hasAero ? '<span class="aero-pkg">PAQUETE AERO</span>' : "";
+  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span> <span class="parts-pct">${pctParts}% TALLER</span>${aeroPkgTag} <span class="paints-pct">${ownedPaints}/${PAINTS.length} PINTURAS</span>`;
   $("gtabs").innerHTML = tabsHtml(GTABS, gtab, "gtab");
   $("paint").classList.toggle("hidden", gtab !== "pintura");
   $("cars").classList.toggle("hidden", gtab === "pintura");
@@ -643,7 +645,8 @@ function renderGarage() {
   else if (gtab === "piezas") $("cars").innerHTML = editing ? "" : (Object.keys(PARTS) as Slot[]).map((sl) => {
     const totalSl = Object.keys(opts(sl)).length;
     const ownedSl = Object.keys(opts(sl)).filter((o) => owns(`part:${sl}:${o}`)).length;
-    return `<div class="slot"><span>${PARTS[sl].name} <em class="slot-count">(${ownedSl}/${totalSl})</em></span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
+    const aeroTag = sl === "wing" && hasAero ? ' <span class="aero-pkg">PAQUETE AERO</span>' : "";
+    return `<div class="slot"><span>${PARTS[sl].name}${aeroTag} <em class="slot-count">(${ownedSl}/${totalSl})</em></span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
       const own = owns(`part:${sl}:${o}`);
       const isStock = c === 0;
       return `<button class="opt ${save.kit[sl] === o ? "on" : ""} ${own ? "" : "locked"}" data-part="${sl}:${o}">${n}${isStock ? ' <em class="stock-tag">DE SERIE</em>' : (own ? "" : ` · ${c}`)}</button>`;
@@ -663,6 +666,11 @@ const hex2hsv = (h: string) => {
   return [Math.round(hue * 60), mx ? Math.round((d / mx) * 100) : 0, Math.round(mx * 100)];
 };
 const hsv2hex = (h: number, s: number, v: number) => "#" + [5, 3, 1].map((n) => { const k = (n + h / 60) % 6; return Math.round((v / 100) * (1 - (s / 100) * Math.max(0, Math.min(k, 4 - k, 1))) * 255).toString(16).padStart(2, "0"); }).join("");
+const isGlossy = (c: string) => {
+  const [, s, v] = hex2hsv(c);
+  const isMetallic = ["#c0c0c0", "#d4af37", "#b87333", "#5b6470"].includes(c.toLowerCase());
+  return isMetallic || (s >= 60 && v >= 60);
+};
 // Fondos de las barras: cada una muestra hacia dónde va el color con las otras dos fijas
 function hsvBars(h: number, sat: number, v: number) {
   const el = $("paint");
@@ -678,7 +686,7 @@ function renderPaint() {
   const decalTag = save.decalSel >= 0 && save.decals[save.decalSel] ? `CALCO #${save.decalSel + 1} ACTIVO` : "SIN CALCO EN CAPÓ";
   const statusPill = `<div class="paint-status"><span id="pztBadge" class="paint-badge">PATRONES: ${customZones}/3 ZONAS</span><span class="decal-badge">${decalTag}</span></div>`;
   $("paint").innerHTML = statusPill + `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
-    + `<div class="pal">${PAINTS.map((c) => `<button class="sw ${mine && c === cur ? "on" : ""}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
+    + `<div class="pal">${PAINTS.map((c) => `<button class="${["sw", isGlossy(c) && "glossy", mine && c === cur && "on"].filter(Boolean).join(" ")}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
     + `<div class="hsv"><div class="hsvt"><span><i id="pzdot" class="sw-dot" style="background:${cur}"></i>${PZ[pz]} · ${mine ? "Personalizado" : "De fábrica"}</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
     + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
     + `<div class="note">${pz === "trim" ? "Detalles: alerón, paragolpes, defensas y accesorios." : pz === "rim" ? "Llantas de las cuatro ruedas (o de las que haya)." : "Carrocería: la chapa entera."} Pintar es gratis: el patio cobra en otras cosas.</div>`;

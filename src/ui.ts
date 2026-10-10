@@ -49,7 +49,7 @@ export function hudWorkshop(perm: Partial<Record<(typeof WSHOP_KEYS)[number], nu
   box.innerHTML = `<span class="h-tape">TALLER</span><div class="ws">${items.map((k) => `<span class="ws-i">${icon(WSHOP_ICON[k], 16)}<b>${perm[k]}</b></span>`).join("")}</div>`;
 }
 
-export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number; shield?: boolean }) {
+export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number; shield?: boolean; boostActive?: boolean }) {
   const p = Math.max(0, d.hp / d.maxHp);
   // 3 celdas LiPo: se vacían de derecha a izquierda
   Array.from($("lipo").children).forEach((c, i) => {
@@ -59,7 +59,11 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   const low = p < 0.25;
   if (ch("low", +low)) { $("txl").classList.toggle("low", low); $("hud").classList.toggle("low", low); }
   const panic = p < 0.15;
-  if (ch("panic", +panic)) $("hud").classList.toggle("panic", panic);
+  if (ch("panic", +panic)) {
+    $("hud").classList.toggle("panic", panic);
+    $("lipo").classList.toggle("panic", panic);
+    $("lipo").querySelector("i:first-child")?.classList.toggle("unbalanced", panic);
+  }
   const isShield = !!d.shield;
   if (ch("shielded", +isShield)) $("lipo").classList.toggle("shielded", isShield);
   const isFull = p >= 0.999;
@@ -77,7 +81,12 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     lip.classList.remove("healing"); void lip.offsetWidth; lip.classList.add("healing");
   }
   memo.prevHp = d.hp;
-  txt("volt", `${(9 + 3.6 * p).toFixed(1)}V${low ? " · BAJA" : ""}`);
+  const v = 9 + 3.6 * p;
+  const sag = d.boostActive ? 0.22 : 0;
+  const displayV = Math.max(0, v - sag);
+  const isSag = sag > 0;
+  if (ch("sag", +isSag)) $("volt").classList.toggle("sag", isSag);
+  txt("volt", `${displayV.toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);

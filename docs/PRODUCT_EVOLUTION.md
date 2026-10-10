@@ -623,42 +623,58 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
     - Tono armónico ascendente en dos etapas `SFX.lipoFull()` para confirmación auditiva de pack LiPo al 100%.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando), `npm run build` (659 ms), `pm2 restart rc-test`, `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas en PC y celular sin errores en 29.5 s) y `graphify update .` (3194 nodos, 7752 aristas).
 
+### Ciclo #36 (2026-10-10) — Ecosistema Matricial de Especialistas: Acabados Glossy y Paquete Aero en Taller, Voltage Sag y Celdas LiPo en HUD, Shaker Scoop y Jaula 3D, Paneo Estéreo y Alarma Espacial SFX
+- **Alcance implementado por 4 especialistas en paralelo (partición disjunta estricta):**
+  - **Especialista 1 · Menu, Workshop & Flow (`src/menu.ts`, `src/menu.css`):**
+    - Micro-indicador de acabado `.glossy` con destello especular en muestras de pintura metálica o de alta saturación en `renderPaint()`.
+    - Insignia diegética `<span class="aero-pkg">PAQUETE AERO</span>` en Garaje al instalar alerón y faldón/paragolpes de competición.
+  - **Especialista 2 · Diegetic HUD & Telemetry (`src/ui.ts`, `src/hud.css`):**
+    - Simulación de caída de tensión LiPo (*Voltage Sag*) en `hudUpdate()` (`sag = 0.22V`) con alternancia de la clase `#volt.sag` (ámbar fosforescente con oscilación rápida) durante turbo o salto.
+    - Desbalanceo crítico de celdas LiPo en pánico (`p < 0.15`) mediante la clase `.unbalanced` con parpadeo asimétrico en la primera celda (`@keyframes lipo-cell-sag`).
+  - **Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`):**
+    - Filtro cónico de inducción o shaker scoop expuesto en rojo y cromo sobre el capó de `deportivo` y `pickup`.
+    - Jaula antivuelco interna tubular con barras diagonales cruzadas en la cabina abierta de `buggy`.
+  - **Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`):**
+    - Paneo estéreo opcional (`pan?: number`, -1 a 1) en el oscilador base `tone()` mediante `StereoPannerNode` de WebAudio.
+    - Soporte direccional en `SFX.collisionWarning(pan)` y nueva primitiva de alarma espacial `SFX.spatialAlert(pan)`.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando), `npm run build` (424 ms), `pm2 restart rc-test`, `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas en PC y celular sin errores en 29.6 s) y `graphify update .` (71/71 archivos uncached validados).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #36 (Especialistas Matriciales)
+## 4. Backlog Vivo de Oportunidades — Ciclo #37 (Especialistas Matriciales)
 
 ### A. Especialista 1 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
-1. **(Recomendada) Previsualización de Contraste y Acabado en Muestras de Pintura (`.sw-contrast`) o Pastilla de Paquete Aero (`.aero-pkg`):**
-   - **Qué es:** Indicador diegético en la cabina de pintura que clasifique acabados de alto brillo frente a tonos mate/chapa oscura, o insignia de homologación aerodinámica en el taller al combinar alerón y faldón de competición.
-   - **Valor:** Facilita la toma de decisiones estéticas sin rotar constantemente el modelo y premia sinergias de piezas. Complejidad: Baja.
+1. **(Recomendada) Filtro de Acabados en Pintura (Mates vs. Metálicos/Brillantes) y Homologación Paquete Off-Road (`.rally-pkg`):**
+   - **Qué es:** Mini-filtro en cabina de pintura para aislar tonos mate de brillantes/metal, más pastilla diegética `<span class="rally-pkg">PAQUETE OFF-ROAD</span>` en el taller al combinar ruedas todoterreno con defensas laterales o jaula.
+   - **Valor:** Agiliza la personalización y premia las combinaciones mecánicas todoterreno. Complejidad: Baja.
 
 ### B. Especialista 2 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-2. **Caída de Tensión (Voltage Sag) y Pánico Asimétrico de Celdas LiPo:**
-   - **Qué es:** Micro-fluctuación dinámica momentánea en la lectura del voltímetro (`#volt`) durante el uso activo de turbo o salto, emulando la caída real de tensión bajo demanda máxima de corriente.
-   - **Valor:** Realismo y dramatismo diegético en la instrumentación RC. Complejidad: Media.
+2. **Flicker Analógico por Impacto Físico (`#lcd.glitch`) y Variación de Señal RSSI en Periferia (`#signal`):**
+   - **Qué es:** Micro-sacudida de contraste o parpadeo CRT en telemetría de 150 ms al sufrir choques pesados, más atenuación de barras de señal al alejarse del patio o combatir jefes electromagnéticos.
+   - **Valor:** Mayor dramatismo físico y sensación de radioenlace analógico real. Complejidad: Media.
 
 ### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
-3. **Filtro Cónico Shaker Scoop para Deportivo/Pickup o Jaula Antivuelco Interna en Buggy/Monster:**
-   - **Qué es:** Filtro de inducción o toma de aire sobresaliente en deportivos, o estructura tubular interna visible tras el parabrisas/techo abierto en todoterrenos.
-   - **Valor:** Incrementa la sensación de auto RC artesanal de competición a escala 1:10. Complejidad: Media.
+3. **Malla de Ventanilla en Autos de Pista o Pack de Baterías LiPo con Conector XT60 Expuesto:**
+   - **Qué es:** Red de protección de piloto en `carrera`/`deportivo`, o bloque rectangular de batería LiPo con cables siliconados y ficha XT60 visible en bandeja trasera de `buggy`/`monster`.
+   - **Valor:** Refuerza la identidad y escala 1:10 de vehículo artesanal radiocontrolado. Complejidad: Media.
 
 ### D. Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`)
-4. **Micro-Panning Estéreo en Alarmas Perimetrales y Ducking Adaptativo en Bus de Efectos:**
-   - **Qué es:** Parámetro opcional de paneo estéreo (-1 a 1 con `StereoPannerNode`) para avisos direccionales (colisión inminente, rebufo), más atenuación suave de impactos menores cuando suena un aviso crítico de telemetría.
-   - **Valor:** Mayor profundidad e inteligibilidad acústica en auriculares y altavoces. Complejidad: Media.
+4. **Espacialización con Paneo en `hiss()` (Ruido Filtrado) y Atenuación por Distancia en SFX Posicionales:**
+   - **Qué es:** Incorporar `pan?: number` en la primitiva de ruido blanco/filtrado `hiss()`, y helper de utilidad para atenuar volumen y calcular paneo según posición relativa 3D del enemigo o proyectil.
+   - **Valor:** Paisaje acústico inmersivo y lectura auditiva espacial en auriculares. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #35 completado, formalizado `docs/SPECIALISTS_ECOSYSTEM.md`, verificado con `tsc` (0 errores), `test` (75/75), `build` (659 ms), 33 capturas en `.shots/actual/` (29.5 s) y grafo actualizado (`graphify update .`).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #36** con los Especialistas Matriciales.
+- **Último trabajo completado:** Ciclo #36 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 424 ms, 33 capturas en `.shots/actual/` en 29.6 s, grafo sincronizado).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #37** con los Especialistas Matriciales.
 
-### 🔓 LISTO PARA EL CICLO #36 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #37 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Menu, Workshop & Flow** | Previsualización de acabado en paleta (`.sw-contrast`) o paquete aero homologado | `src/menu.ts`, `src/menu.css` |
-| **Diegetic HUD & Telemetry** | Simulación de caída de tensión LiPo (`voltage sag`) en voltímetro bajo turbo/salto | `src/ui.ts`, `src/hud.css` |
-| **Procedural 3D Modeler** | Filtro cónico de competición en deportivo/pickup o jaula interna en buggy/monster | `src/models.ts` |
-| **Audio Synth Designer** | Micro-panning estéreo en telemetría / avisos direccionales con Web Audio | `src/sfx.ts` |
+| **Menu, Workshop & Flow** | Filtro de acabados (brillo vs mate) e insignia de homologación `.rally-pkg` | `src/menu.ts`, `src/menu.css` |
+| **Diegetic HUD & Telemetry** | Flicker analógico por impacto pesado (`#lcd.glitch`) y atenuación de RSSI | `src/ui.ts`, `src/hud.css` |
+| **Procedural 3D Modeler** | Pack de baterías LiPo con ficha XT60 expuesta en chasis o malla de ventanilla | `src/models.ts` |
+| **Audio Synth Designer** | Paneo en ruido filtrado `hiss()` y cálculo de atenuación por distancia 3D | `src/sfx.ts` |
