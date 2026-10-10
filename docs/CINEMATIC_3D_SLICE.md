@@ -23,6 +23,10 @@ Archivos propios: `art-lab.html`, `src/art_lab.ts`, `assets-src/cinematic-3d/`, 
 
 Banco funcional, Blender editables, dos GLB completos y texturas PBR. Frenchie 46.878 triángulos y siete clips conservados; buggy 98.744 triángulos y cuatro ruedas independientes. Tierra generada mediante imagegen y normal de grano independiente. Capturas y video orbital reales en `assets-src/cinematic-3d/`, con procedimiento y límites en su `README.md`.
 
-Validación: tsc correcto, 75 pruebas pasando, build correcto; headless Metal en pc/cel sin errores ni desbordamiento, esqueleto animado y matrices finitas de siete clips. Mediana orientativa de cuadro en M4 Pro: 4,1 ms a 1280×720 y 2,2 ms a 390×844; no es una prueba de teléfono físico ni de hordas. El navegador se cerró al terminar.
+Validación: tsc correcto, 75 pruebas pasando, build correcto; headless Metal en pc/cel sin errores ni desbordamiento, esqueleto animado y matrices finitas de siete clips. Mediana orientativa de cuadro en M4 Pro: 4,1 ms a 1280×720 y 2,6 ms a 390×844; no es una prueba de teléfono físico ni de hordas. El navegador se cerró al terminar.
 
 La muestra aún se ve más simple que el arte aprobado. Refinar anatomía/pelo, vegetación curva, desgaste localizado y composición de luz antes de declararla objetivo alcanzado. No se integra todavía en las partidas. El build estándar no contiene la página de evaluación ni sus recursos, guardados fuera de `public/`.
+
+## Continuidad entre sesiones
+
+El usuario autorizó el 2026-10-10 aprovechar los ciclos de Gemini y continuar esta línea en futuras sesiones de Codex. `docs/VISUAL_SESSION_COORDINATION.md` fija propiedad de archivos, encargos independientes, entrega verificable y prompts listos. Las carpetas `gemini-*` se reservan al tomar un encargo; Codex conserva el ensamblaje del banco. No se considera que un encargo esté corriendo solo por figurar en la tabla.

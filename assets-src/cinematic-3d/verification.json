@@ -142,7 +142,7 @@
     "errors": [],
     "perf": {
       "medianMs": 4.099999999627471,
-      "p95Ms": 4.900000000372529,
+      "p95Ms": 5,
       "draws": 225,
       "triangles": 698594,
       "meshes": 108,
@@ -295,8 +295,8 @@
     "overflow": false,
     "errors": [],
     "perf": {
-      "medianMs": 2.199999999254942,
-      "p95Ms": 5.599999999627471,
+      "medianMs": 2.599999999627471,
+      "p95Ms": 3.400000000372529,
       "draws": 101,
       "triangles": 404324,
       "meshes": 108,
