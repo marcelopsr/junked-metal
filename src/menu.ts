@@ -616,9 +616,11 @@ function renderGarage() {
       const lightTag = isLight ? '<span class="light-frame">CHASIS LIVIANO</span>' : "";
       const isAwd = k === "monster" || k === "tanque" || (k as string) === "pickup";
       const awdTag = isAwd ? '<span class="all-wheel">TRACCIÓN TOTAL</span>' : "";
+      const isHighRev = k === "carrera" || k === "formula" || k === "axel";
+      const highRevTag = isHighRev ? '<span class="high-rev">ALTO RÉGIMEN</span>' : "";
       const allParts = (Object.keys(PARTS) as Slot[]).every((sl) => Object.keys(opts(sl)).every((o) => owns("part:" + sl + ":" + o)));
       const completeTag = owns("car:" + k) && allParts ? '<span class="parts-complete">TOTALMENTE EQUIPADO</span>' : "";
-      return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><div class="stc"><span>Carrocería <em>${c.hp}${dTag(c.hp, eq.hp)}</em></span>${bar(c.hp, 300)}</div><div class="stc"><span>Velocidad <em>${Math.round(c.speed * 3.6)}${dTag(Math.round(c.speed * 3.6), Math.round(eq.speed * 3.6))}</em></span>${bar(c.speed, 21)}</div><div class="stc"><span>Embestida <em>×${n1(c.ram)}${dTag(c.ram, eq.ram, true)}</em></span>${bar(c.ram, 5.5)}</div></div>${vicTag}${armorTag}${heavyTag}${lightTag}${awdTag}${completeTag}${owns("car:" + k) ? `<div class="price">${save.car === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock("car:" + k)}</div>`;
+      return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><div class="stc"><span>Carrocería <em>${c.hp}${dTag(c.hp, eq.hp)}</em></span>${bar(c.hp, 300)}</div><div class="stc"><span>Velocidad <em>${Math.round(c.speed * 3.6)}${dTag(Math.round(c.speed * 3.6), Math.round(eq.speed * 3.6))}</em></span>${bar(c.speed, 21)}</div><div class="stc"><span>Embestida <em>×${n1(c.ram)}${dTag(c.ram, eq.ram, true)}</em></span>${bar(c.ram, 5.5)}</div></div>${vicTag}${armorTag}${heavyTag}${lightTag}${awdTag}${highRevTag}${completeTag}${owns("car:" + k) ? `<div class="price">${save.car === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock("car:" + k)}</div>`;
     }).join("");
   }
   else if (gtab === "piloto") $("cars").innerHTML = (Object.keys(PILOTS) as PilotId[]).map((k) => {
@@ -648,7 +650,7 @@ function renderGarage() {
     }).join("")}</div>`;
   }).join("");
   if (gtab === "piezas") { $("cars").insertAdjacentHTML("beforeend", decalHtml()); drawGrid(); }
-  if (gtab === "pintura") renderPaint();
+  else if (gtab === "pintura") renderPaint();
 }
 // ---------- Pintura por zona (garaje → Pintura): paleta + selector libre (tono, saturación, brillo) ----------
 // Las perillas son <input type="range">: mouse, dedo, flechas y el stick (move() ya las mueve) sin código propio. Gratis: los colores no cuestan tornillos.
@@ -672,7 +674,10 @@ function hsvBars(h: number, sat: number, v: number) {
 function renderPaint() {
   const cur = zoneColor(), [h, sat, v] = hex2hsv(cur), mine = !!save[pz];
   const bar = (k: string, lab: string, max: number, val: number) => `<label class="hrow"><span>${lab}</span><input type="range" data-hsv="${k}" min="0" max="${max}" step="${k === "h" ? 5 : 2}" value="${val}" aria-label="${lab}"></label>`;
-  $("paint").innerHTML = `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
+  const customZones = (["paint", "trim", "rim"] as (keyof typeof PZ)[]).filter((z) => !!save[z]).length;
+  const decalTag = save.decalSel >= 0 && save.decals[save.decalSel] ? `CALCO #${save.decalSel + 1} ACTIVO` : "SIN CALCO EN CAPÓ";
+  const statusPill = `<div class="paint-status"><span id="pztBadge" class="paint-badge">PATRONES: ${customZones}/3 ZONAS</span><span class="decal-badge">${decalTag}</span></div>`;
+  $("paint").innerHTML = statusPill + `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
     + `<div class="pal">${PAINTS.map((c) => `<button class="sw ${mine && c === cur ? "on" : ""}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
     + `<div class="hsv"><div class="hsvt"><span><i id="pzdot" class="sw-dot" style="background:${cur}"></i>${PZ[pz]} · ${mine ? "Personalizado" : "De fábrica"}</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
     + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
@@ -691,6 +696,11 @@ addEventListener("change", (e) => {
     const dot = document.getElementById("pzdot");
     if (dot) sp.innerHTML = `<i id="pzdot" class="sw-dot" style="background:${save[pz]}"></i>${PZ[pz]} · Personalizado`;
     else sp.textContent = `${PZ[pz]} · Personalizado`;
+  }
+  const pb = document.getElementById("pztBadge");
+  if (pb) {
+    const cz = (["paint", "trim", "rim"] as (keyof typeof PZ)[]).filter((z) => !!save[z]).length;
+    pb.textContent = `PATRONES: ${cz}/3 ZONAS`;
   }
 });
 // ---------- Editor de calcos (garaje → Piezas): grilla DECAL_N², 8 colores de DECAL_PAL, 3 diseños ----------

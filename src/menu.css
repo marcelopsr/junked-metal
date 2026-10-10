@@ -51,11 +51,15 @@ body.calm .scr.on { animation-duration: .05s; }
 .heavy-armor { margin-top: 4px; margin-left: 4px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #94a3b8; background: rgba(148, 163, 184, .15); border: 1px solid rgba(148, 163, 184, .4); border-radius: 3px; letter-spacing: .06em; }
 .light-frame { margin-top: 4px; margin-left: 4px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #38bdf8; background: rgba(56, 189, 248, .15); border: 1px solid rgba(56, 189, 248, .4); border-radius: 3px; letter-spacing: .06em; }
 .all-wheel { margin-top: 4px; margin-left: 4px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #fbbf24; background: rgba(251, 191, 36, .15); border: 1px solid rgba(251, 191, 36, .4); border-radius: 3px; letter-spacing: .06em; }
+.high-rev { margin-top: 4px; margin-left: 4px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #f43f5e; background: rgba(244, 63, 94, .15); border: 1px solid rgba(244, 63, 94, .4); border-radius: 3px; letter-spacing: .06em; }
 .parts-complete { margin-top: 4px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #38bdf8; background: rgba(56, 189, 248, .12); border: 1px solid rgba(56, 189, 248, .35); border-radius: 3px; letter-spacing: .06em; }
 .car-tally { margin-left: 8px; font: 700 11px/1 var(--hf); color: var(--jm-amarillo2, #ffd24a); background: rgba(255, 210, 74, .15); padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(255, 210, 74, .35); vertical-align: middle; }
 .parts-pct { margin-left: 6px; font: 700 11px/1 var(--hf); color: #38bdf8; background: rgba(56, 189, 248, .15); padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(56, 189, 248, .35); vertical-align: middle; }
 .paints-pct { margin-left: 6px; font: 700 11px/1 var(--hf); color: #ec4899; background: rgba(236, 72, 153, .15); padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(236, 72, 153, .35); vertical-align: middle; }
 /* Legibilidad: las listas del garaje van sobre vidrio oscuro (como #bpanel), se lean sobre el fondo que sea */
+.paint-status { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-bottom: 2px; }
+.paint-badge { display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #ec4899; background: rgba(236, 72, 153, .15); border: 1px solid rgba(236, 72, 153, .4); border-radius: 3px; letter-spacing: .06em; }
+.decal-badge { display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #38bdf8; background: rgba(56, 189, 248, .15); border: 1px solid rgba(56, 189, 248, .4); border-radius: 3px; letter-spacing: .06em; }
 /* Pintura: zonas, paleta de 24 y selector libre */
 .side #paint { flex-direction: column; align-items: stretch; gap: 10px; text-transform: none; letter-spacing: 0; }
 #paint > * { flex: none; }

@@ -745,8 +745,21 @@ Carrera (1) y Survivor en partida (2).
    - En `src/sfx.ts`, se añadió `SFX.boostSurge()` con un doble barrido armónico ascendente de modulación para aceleración turbo.
    - En `src/replay.ts`, las sesiones de supervivencia que superan los 5 minutos reciben la estampa diegética `"ALCANCE MÁXIMO DE PATIO (5+ MIN)"` en tinta analógica sepia en el pie de la Polaroid.
 
+---
 
+## 2026-10-10 · Ciclo #35 (Ecosistema Matricial de Especialistas: Alto Régimen y Patrones Cabina, Destello LiPo 100% y Alerta Turbo HUD, Tomas de Aire Cromadas 3D en Capó, Brake Screech y LiPo Full SFX)
 
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 29.5 s).
 
-
-
+### Intervenciones aplicadas por los 4 Especialistas y verificadas en captura
+1. **Insignia `.high-rev` ("ALTO RÉGIMEN") y telemetría de patrones en Cabina de Pintura (Menu, Workshop & Flow Specialist · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()`, se identifican los vehículos de giro rápido y aceleración extrema (`carrera`, `formula`, `axel`) con la pastilla roja/magenta `<span class="high-rev">ALTO RÉGIMEN</span>`.
+   - En `renderPaint()`, se incorporó la barra de estado diegético de personalización `.paint-status`, con las pastillas `.paint-badge` (`PATRONES: X/3 ZONAS`) y `.decal-badge` indicando el calco de capó activo, con sincronización reactiva al mezclar tonos HSV.
+2. **Destello áureo `#lipo.full-flash` y alerta de recarga de turbo en HUD (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, cuando el pack LiPo alcanza el 100% de carga o reparación completa (`p >= 0.999`), se activa la animación `#lipo.full-flash` con resplandor esmeralda diegético (`box-shadow: 0 0 18px rgba(34, 197, 94, .95); filter: brightness(1.5)`).
+   - Se exportó la rutina de sincronización `hudTurbo(ready)` conectada con `hudUpdate()`, atenuando y desaturando el botón de impulso cuando la carga no está al 100% (`#boost.warn`, `#boost.charging`), y unificando el estado de recarga en el indicador de salto `#jump.warn`.
+3. **Tomas de aire gemelas cromadas sobre capó en vehículos pesados (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - En `carModel()`, los vehículos de gran porte (`monster`, `combi`) incorporan tomas de aire dobles con carcasa cromada y orificio interior oscuro profundo en el capó (`box(0.06, 0.04, 0.12, chrome, ...)`, `box(0.04, 0.025, 0.04, M.metal("#09090b"), ...)`), aumentando el impacto visual de bólido con motor sobredimensionado.
+4. **Síntesis sonora procedural de frenada límite y batería completa (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Se sumó al motor WebAudio `SFX.brakeScreech()`, combinando oscilador de diente de sierra descendente (950→420 Hz) con onda triangular de refuerzo sub-armónico (600→300 Hz) para emular fricción violenta de goma y freno de disco.
+   - Se añadió `SFX.lipoFull()`, con una secuencia armónica ascendente en dos etapas (587.33 Hz senoidal → 1174.66 Hz triangular) que provee feedback auditivo claro al completarse la carga de la batería.

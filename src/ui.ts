@@ -62,6 +62,15 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("panic", +panic)) $("hud").classList.toggle("panic", panic);
   const isShield = !!d.shield;
   if (ch("shielded", +isShield)) $("lipo").classList.toggle("shielded", isShield);
+  const isFull = p >= 0.999;
+  if (ch("fullLipo", +isFull) && isFull) {
+    const lipoEl = $("lipo");
+    if (lipoEl) {
+      lipoEl.classList.remove("full-flash");
+      void lipoEl.offsetWidth;
+      lipoEl.classList.add("full-flash");
+    }
+  }
   const prevHp = memo.prevHp as number | undefined;
   if (prevHp !== undefined && d.hp > prevHp + 1) {
     const lip = $("lipo");
@@ -72,6 +81,7 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);
+  hudTurbo(d.boost / 100);
   bar("xp", Math.min(1, d.xp / d.need) * 100);
   const prevLv = memo.lvN as number | undefined;
   const lvTxt = `NV ${pad(d.level, 2)}${d.pending ? ` +${d.pending}` : ""}`;
@@ -236,6 +246,16 @@ function tickBanner(dt: number) {
   if (bannerHold < 0.35) $("banner").classList.add("out");
 }
 
+// ---------- Turbo del auto: aviso en recarga ----------
+export function hudTurbo(ready: number) {
+  const warn = ready < 1;
+  if (ch("turboWarn", +warn)) {
+    const el = $("boost");
+    el.classList.toggle("warn", warn);
+    el.classList.toggle("charging", warn);
+  }
+}
+
 // ---------- Salto del auto: CD en botón táctil y mini barra en teclado ----------
 export function hudJump(ready: number) {
   if (ready === 0) {
@@ -243,6 +263,7 @@ export function hudJump(ready: number) {
     voltEl.classList.remove("surge"); void voltEl.offsetWidth; voltEl.classList.add("surge");
   }
   $("jump").classList.toggle("ready", ready === 1);
+  $("jump").classList.toggle("warn", ready < 1);
   const cd = ready >= 1 ? 0 : 1 - ready;
   const cdS = cd.toFixed(3);
   if (ch("jmpCd", cdS)) {

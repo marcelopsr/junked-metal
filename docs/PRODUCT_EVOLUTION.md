@@ -608,48 +608,57 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #35 (4 Áreas Consolidadas)
+#### Ciclo #35 (2026-10-10) — Ecosistema Matricial de Especialistas: Alto Régimen y Patrones Cabina, Destello LiPo 100% y Alerta Turbo HUD, Tomas de Aire Cromadas 3D en Capó, Brake Screech y LiPo Full SFX
+- **Alcance implementado por 4 especialistas en paralelo (partición disjunta estricta):**
+  - **Especialista 1 · Menu, Workshop & Flow (`src/menu.ts`, `src/menu.css`):**
+    - Insignia reflectante `.high-rev` (`ALTO RÉGIMEN`) en autos de aceleración extrema o giro ágil (`carrera`, `formula`, `axel`) en el Garaje.
+    - Barra de estado diegético `.paint-status` en cabina de pintura con contadores reactivos de zonas personalizadas (`PATRONES: X/3 ZONAS`) y calco de capó activo.
+  - **Especialista 2 · Diegetic HUD & Telemetry (`src/ui.ts`, `src/hud.css`):**
+    - Destello áureo diegético `#lipo.full-flash` con resplandor verde esmeralda al alcanzar el 100% de batería LiPo o completar reparación de pack.
+    - Sincronización continua `hudTurbo(ready)` con atenuación y desaturación del botón de impulso (`#boost.warn`, `#boost.charging`) cuando la carga no está al 100%, más unificación del aviso en salto `#jump.warn`.
+  - **Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`):**
+    - Tomas de aire gemelas con carcasa cromada y orificio interior oscuro profundo sobre el capó en vehículos pesados y musculosos (`monster`, `combi`).
+  - **Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`):**
+    - Síntesis sonora procedural `SFX.brakeScreech()` con onda de sierra descendente y refuerzo sub-armónico para emular fricción violenta de frenada.
+    - Tono armónico ascendente en dos etapas `SFX.lipoFull()` para confirmación auditiva de pack LiPo al 100%.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando), `npm run build` (659 ms), `pm2 restart rc-test`, `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas en PC y celular sin errores en 29.5 s) y `graphify update .` (3194 nodos, 7752 aristas).
 
-### A. Subagente 1 · Garaje, Taller y Menús (`src/menu.ts`, `src/menu.css`)
-1. **Insignia de Alto Régimen / Giro Rápido (`.high-rev`) e Indicador de Patrones de Pintura:**
-   - **Qué es:** En `renderGarage()`, destacar a los autos con aceleración extrema ($\ge 18$) o giro nervioso (`carrera`, `formula`, `axel`) con la pastilla `.high-rev` (`ALTO RÉGIMEN`). En la pestaña de pintura, indicar la cantidad de patrones de color aplicados.
-   - **Qué problema resuelve:** Comunica de inmediato el perfil de respuesta al acelerador y la agilidad de paso por curva.
-   - **Valor:** Identidad de conducción e inmersión de personalización. Complejidad: Media.
+---
 
-### B. Subagente 2 · HUD y Telemetría de Supervivencia (`src/ui.ts`, `src/hud.css`)
-2. **Micro-Destello Dorado al Completar Recarga LiPo al 100% (`#lipo.full-flash`) y Alerta de Recarga de Turbo:**
-   - **Qué es:** En `hudUpdate()`, cuando la vida pasa de un valor inferior al 100% exacto, disparar un fogonazo áureo instantáneo en el bloque de celdas LiPo. En el botón/indicador de turbo, añadir pulsación de advertencia si la batería está agotada.
-   - **Qué problema resuelve:** Da feedback inequívoco de regeneración completa sin tener que desviar la mirada al texto numérico.
-   - **Valor:** Claridad táctica instantánea en combate intenso. Complejidad: Media.
+## 4. Backlog Vivo de Oportunidades — Ciclo #36 (Especialistas Matriciales)
 
-### C. Subagente 3 · Carrera, Tacómetro y Modelado 3D (`src/kart.ts`, `src/race.css`, `src/models.ts`)
-3. **Pastilla de Salida de Curva / Tracción Recuperada (`.rapunch`) y Tomas de Aire Frontales Cromadas:**
-   - **Qué es:** En `hud()` de carrera, encender la pastilla `<b class="rapunch">TRACCIÓN</b>` al soltar el derrape con mini-turbo consumado. En `src/models.ts`, modelar tomas de aire cromadas dobles en el capó de Monster y Combi.
-   - **Qué problema resuelve:** Premia visualmente la ejecución limpia del derrape y suma volumen mecánico agresivo al frontal de vehículos pesados.
-   - **Valor:** Satisfacción de conducción arcade y riqueza en los modelos 3D. Complejidad: Media.
+### A. Especialista 1 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
+1. **(Recomendada) Previsualización de Contraste y Acabado en Muestras de Pintura (`.sw-contrast`) o Pastilla de Paquete Aero (`.aero-pkg`):**
+   - **Qué es:** Indicador diegético en la cabina de pintura que clasifique acabados de alto brillo frente a tonos mate/chapa oscura, o insignia de homologación aerodinámica en el taller al combinar alerón y faldón de competición.
+   - **Valor:** Facilita la toma de decisiones estéticas sin rotar constantemente el modelo y premia sinergias de piezas. Complejidad: Baja.
 
-### D. Subagente 4 · Gabinete Junket Crush, Audio SFX, Efectos FX y Polaroid (`src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts`)
-4. **Halo de Energía al Detonar Núcleos Match-3, Savia Ámbar `FX.amberGlow`, SFX Frenada y Sello de Tren Trasero:**
-   - **Qué es:** En `src/match3.ts`, destello radial expansivo al destruir piezas de reactor/núcleo. En `src/fx.ts`, partículas de resina ámbar `amberGlow(p)`. En `src/sfx.ts`, chirrido modulado de frenada límite `brakeScreech()`. En `src/replay.ts`, sello `"CALIBRACIÓN DE TREN TRASERO · CONFORME"` en Polaroid.
-   - **Qué problema resuelve:** Eleva el dramatismo de los remates en Match-3 y expande la variedad sonora y narrativa de taller.
-   - **Valor:** Feedback multisensorial y verosimilitud de objeto físico. Complejidad: Media.
+### B. Especialista 2 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
+2. **Caída de Tensión (Voltage Sag) y Pánico Asimétrico de Celdas LiPo:**
+   - **Qué es:** Micro-fluctuación dinámica momentánea en la lectura del voltímetro (`#volt`) durante el uso activo de turbo o salto, emulando la caída real de tensión bajo demanda máxima de corriente.
+   - **Valor:** Realismo y dramatismo diegético en la instrumentación RC. Complejidad: Media.
+
+### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
+3. **Filtro Cónico Shaker Scoop para Deportivo/Pickup o Jaula Antivuelco Interna en Buggy/Monster:**
+   - **Qué es:** Filtro de inducción o toma de aire sobresaliente en deportivos, o estructura tubular interna visible tras el parabrisas/techo abierto en todoterrenos.
+   - **Valor:** Incrementa la sensación de auto RC artesanal de competición a escala 1:10. Complejidad: Media.
+
+### D. Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`)
+4. **Micro-Panning Estéreo en Alarmas Perimetrales y Ducking Adaptativo en Bus de Efectos:**
+   - **Qué es:** Parámetro opcional de paneo estéreo (-1 a 1 con `StereoPannerNode`) para avisos direccionales (colisión inminente, rebufo), más atenuación suave de impactos menores cuando suena un aviso crítico de telemetría.
+   - **Valor:** Mayor profundidad e inteligibilidad acústica en auriculares y altavoces. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #34 completado, verificado con `tsc` (0 errores), `test` (75/75), `build` (399 ms), 33 capturas en `.shots/actual/` (29.3 s) y grafo actualizado (`graphify update .`).
-- **Próxima decisión pendiente:** Implementación en paralelo del **Ciclo #35** con 4 subagentes consolidados por área.
+- **Último trabajo completado:** Ciclo #35 completado, formalizado `docs/SPECIALISTS_ECOSYSTEM.md`, verificado con `tsc` (0 errores), `test` (75/75), `build` (659 ms), 33 capturas en `.shots/actual/` (29.5 s) y grafo actualizado (`graphify update .`).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #36** con los Especialistas Matriciales.
 
-### 🔓 LISTO PARA ARRANCAR — Ciclo #35 (Orquestador Antigravity + 4 Subagentes Consolidados, 2026-10-10)
-> **Coordinación en paralelo — Áreas consolidadas para asignación de subagentes:**
+### 🔓 LISTO PARA EL CICLO #36 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
-| Subagente / Área | Tarea asignada | Archivos asignados (`🔓`) | Estado |
-|---|---|---|---|
-| **Subagente 1 · Garaje y Taller** | Insignia de alto régimen `.high-rev` y patrones de color en pintura | `src/menu.ts`, `src/menu.css` | ⏳ Pendiente decisión |
-| **Subagente 2 · HUD y Telemetría** | Fogonazo dorado LiPo al 100% y alerta de recarga de turbo | `src/ui.ts`, `src/hud.css` | ⏳ Pendiente decisión |
-| **Subagente 3 · Carrera y Modelos 3D** | Pastilla de tracción recuperada `.rapunch` y tomas de aire cromadas en capó | `src/kart.ts`, `src/race.css`, `src/models.ts` | ⏳ Pendiente decisión |
-| **Subagente 4 · Gabinete, FX, SFX y Polaroid** | Halo de núcleos Match-3, savia ámbar `amberGlow`, SFX frenada y sello Polaroid | `src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts` | ⏳ Pendiente decisión |
-
-
-
+| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
+|---|---|---|
+| **Menu, Workshop & Flow** | Previsualización de acabado en paleta (`.sw-contrast`) o paquete aero homologado | `src/menu.ts`, `src/menu.css` |
+| **Diegetic HUD & Telemetry** | Simulación de caída de tensión LiPo (`voltage sag`) en voltímetro bajo turbo/salto | `src/ui.ts`, `src/hud.css` |
+| **Procedural 3D Modeler** | Filtro cónico de competición en deportivo/pickup o jaula interna en buggy/monster | `src/models.ts` |
+| **Audio Synth Designer** | Micro-panning estéreo en telemetría / avisos direccionales con Web Audio | `src/sfx.ts` |

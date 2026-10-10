@@ -107,6 +107,11 @@
   0% { box-shadow: 0 0 14px rgba(34, 197, 94, .85); }
   100% { box-shadow: none; }
 }
+#lipo.full-flash { animation: lipo-full-glow .8s ease-out; }
+@keyframes lipo-full-glow {
+  0% { box-shadow: 0 0 18px rgba(34, 197, 94, .95); filter: brightness(1.5); }
+  100% { box-shadow: none; filter: none; }
+}
 #txl.low #lipo i { background: linear-gradient(90deg, var(--low) var(--p, 100%), rgba(255, 255, 255, .14) var(--p, 100%)); animation: h-blink .5s steps(2) infinite; }
 #txl.low #volt { color: #ff5252; text-shadow: 0 0 6px rgba(255, 82, 82, .65); animation: voltPulse .6s ease-in-out infinite alternate; }
 @keyframes voltPulse { from { opacity: .7; } to { opacity: 1; } }
@@ -122,8 +127,10 @@
 #txl.ab-ready #abKey, #jumpRow.ready #jumpKey { color: #22c55e; }
 #txl.ab-on #abKey { color: #ffd24a; }
 .h-ptitle.h-jump.ready b { color: #5be37a; text-shadow: 0 0 8px rgba(91, 227, 122, .6); }
+#jumpRow.warn #jumpKey { color: var(--g-dim); }
 #boost.full { box-shadow: 0 0 8px rgba(74, 168, 255, .6); }
 #boost.full i { background: linear-gradient(90deg, #4aa8ff, #9be3ff); filter: drop-shadow(0 0 4px #9be3ff); }
+#boost.warn, #boost.charging { opacity: .78; filter: saturate(.88); }
 #hud.low::before { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 90px 8px #ff4d4d66; animation: h-pulse 1.1s steps(4) infinite; }
 #hud.panic::before { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 120px 20px rgba(239, 68, 68, .6); animation: h-pulse .45s steps(2) infinite; }
 #hud.panic #volt { animation: voltPulse .3s ease-in-out infinite alternate; }

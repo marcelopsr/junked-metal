@@ -1,6 +1,6 @@
 # Junked Metal — Intro y recursos visuales
 
-Fecha: 2026-10-10. Estado: **investigación y muestra visual entregadas; arte final e integración pendientes de elección**.
+Fecha: 2026-10-10. Estado: **acabado cinematográfico aprobado; producción de escenas y personajes separados en curso; integración fuera de esta tanda**.
 
 ## Alcance acordado
 
@@ -9,6 +9,7 @@ Decisiones del usuario en esta sesión:
 - Intro + inventario de recursos reutilizables para Supervivencia, Carrera y Junket Crush. Primera producción concentrada en la intro.
 - Conservar la noche y la historia: cartel de la liga, presentación de rivales, entrada del auto RC y cierre.
 - Mostrar una lámina/storyboard antes de reemplazar recursos en el juego.
+- Tras ver la muestra, el usuario eligió conservar su acabado cinematográfico y producir escenas y personajes separados con ese nivel de detalle. La intro puede ser más elaborada que el gameplay; no se pide simplificar esta tanda a píxeles grandes.
 
 Responsabilidad: ilustraciones, texturas, modelos y puesta en escena visual. La presente tanda no modifica código, gameplay, balance, física, audio ni interfaz. No publica ni integra la propuesta.
 
@@ -33,7 +34,7 @@ La lámina propone composición, luz, profundidad y materiales. **Es una imagen 
 
 Límites visibles antes de convertirla en recursos finales:
 
-- Tiene más detalle, desenfoque y pelo que el render actual. Simplificar al lenguaje low-poly y texturas pixeladas; no prometer que el juego se verá exactamente así.
+- Tiene más detalle, desenfoque y pelo que el render actual. El usuario aprobó esta diferencia para la intro; el gameplay no cambia de dirección artística.
 - Los bichos sugieren una lectura más mecánica que algunas criaturas actuales. Confirmar su fidelidad con `PROC` y con la quitina vigente antes de reemplazarlos.
 - El buggy amarillo evita grandes paneles rojos del jugador, pero el generador añadió pequeños acentos rojos. Respetar en producción la regla rojo = amenaza enemiga, sin cambiar por esta muestra los colores del juego.
 - El título generado explora volumen; el cierre final debe conservar el branding y la tipografía existentes.
@@ -50,7 +51,7 @@ Límites visibles antes de convertirla en recursos finales:
 
 Ruta de menor costo para esta intro: **ilustraciones por capas y animación ligera sobre la presentación existente**. Mantener cuatro momentos y duración actual como punto de partida. Un video MP4 o una escena 3D nueva no son necesarios para lograr esta primera mejora. Si se elige prerender 3D, usar Blender para las imágenes y animaciones; no sumar otro motor en runtime.
 
-Resolución final, peso y formato se fijarán con una prueba representativa: comparar arte pixelado a 384×216 con la escala actual de 192×108, validar teléfono y escritorio y elegir el menor tamaño que conserve siluetas. La lámina completa no es un atlas listo para cargar en el juego.
+Para esta producción se conservan los PNG fuente cinematográficos a la resolución entregada por el generador, con transparencia real en personajes. La resolución de distribución, peso y formato se fijarán al integrar y probar escritorio/teléfono: no reducir automáticamente al canvas de 192×108. La lámina completa no es un atlas listo para cargar en el juego.
 
 ## Inventario de recursos reutilizables
 

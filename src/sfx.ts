@@ -226,6 +226,8 @@ export const SFX = {
   scrapClink: () => { tone("triangle", 2200, 1800, 0.04, 0.08); tone("sine", 3200, 2400, 0.03, 0.06, 0.02); },
   collisionWarning: () => { tone("sawtooth", 880, 880, 0.05, 0.08); tone("sawtooth", 880, 880, 0.05, 0.08, 0.08); },
   boostSurge: () => { tone("triangle", 220, 880, 0.15, 0.18); tone("sawtooth", 440, 1100, 0.12, 0.15, 0.04); },
+  brakeScreech: () => { tone("sawtooth", 950, 420, 0.12, 0.16); tone("triangle", 600, 300, 0.08, 0.12, 0.03); },
+  lipoFull: () => { tone("sine", 587.33, 880, 0.08, 0.14); tone("triangle", 880, 1174.66, 0.1, 0.18, 0.06); },
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {
     if (crit) tone("square", 880, 440, 0.05, 0.06);
