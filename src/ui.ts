@@ -128,6 +128,13 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
       lastRfChirp = now;
       SFX.blip();
     }
+    const isFringing = d.distCenter >= 60 && d.distCenter < 75;
+    const isCritical = d.distCenter >= 75;
+    if (ch("sigFringing", +isFringing)) $("signal")?.classList.toggle("sig-fringing", isFringing);
+    if (ch("sigCritical", +isCritical)) $("signal")?.classList.toggle("sig-critical", isCritical);
+  } else {
+    if (ch("sigFringing", 0)) $("signal")?.classList.toggle("sig-fringing", false);
+    if (ch("sigCritical", 0)) $("signal")?.classList.toggle("sig-critical", false);
   }
   const dbm = Math.round(-42 - Math.min(52, ((d.distCenter ?? 0) / 90) * 52));
   let sigDbm = document.getElementById("sigDbm");
@@ -155,10 +162,16 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
       else $("signal")?.appendChild(sigPkt);
     }
     sigPkt.style.display = "";
-    if (ch("sigPkt", pktLoss)) sigPkt.textContent = `PL:${pktLoss}%`;
+    const isCrcErr = pktLoss > 40;
+    const pktTxt = isCrcErr ? `CRC ERR ${pktLoss}%` : `PL:${pktLoss}%`;
+    if (ch("sigPkt", pktTxt)) sigPkt.textContent = pktTxt;
+    if (ch("sigCrc", +isCrcErr)) sigPkt.classList.toggle("crc-err", isCrcErr);
     if (ch("pktLoss", +(pktLoss > 20))) $("signal")?.classList.toggle("pkt-loss", pktLoss > 20);
   } else {
-    if (sigPkt) sigPkt.style.display = "none";
+    if (sigPkt) {
+      sigPkt.style.display = "none";
+      if (ch("sigCrc", 0)) sigPkt.classList.toggle("crc-err", false);
+    }
     if (ch("pktLoss", 0)) $("signal")?.classList.toggle("pkt-loss", false);
   }
   bar("boost", d.boost);

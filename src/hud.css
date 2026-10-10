@@ -56,7 +56,12 @@
 .sig-dbm { font: 700 10px/1 var(--hf); color: var(--g-dim); margin-left: 4px; letter-spacing: .04em; }
 .sig-dbm.sig-warn { color: #f59e0b; text-shadow: 0 0 6px rgba(245, 158, 11, .6); animation: sigWarnFlicker .25s steps(2) infinite; }
 .sig-pkt { font: 700 9px/1 var(--hf); color: #f59e0b; margin-left: 3px; letter-spacing: .04em; }
+.sig-pkt.crc-err { color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, .8); animation: crcWarn .2s steps(2) infinite; }
+#signal.sig-fringing #sigIco, #signal.sig-critical #sigIco { display: inline-flex; }
+#signal.sig-fringing #sigIco { color: #f59e0b; filter: drop-shadow(0 0 3px rgba(245, 158, 11, .5)); }
+#signal.sig-critical #sigIco { color: #ef4444; filter: drop-shadow(0 0 4px rgba(239, 68, 68, .7)); }
 #signal.pkt-loss #sigIco { display: inline-flex; animation: pktDrop .3s steps(2) infinite; }
+@keyframes crcWarn { 0% { opacity: 1; } 50% { opacity: .3; } 100% { opacity: 1; } }
 @keyframes pktDrop { 0% { opacity: 1; } 50% { opacity: .25; } 100% { opacity: 1; } }
 @keyframes sigWarnFlicker {
   0% { opacity: .4; }

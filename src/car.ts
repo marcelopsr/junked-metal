@@ -10,16 +10,17 @@ const stats = (k: CarKind) => { const a = BAL.autos[k]; return { cost: a.precio,
 const UP = B.Vector3.Up();
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
 const sparkPos = new B.Vector3();
+const tmpV = new B.Vector3();
 
-export const CARS: Record<CarKind, { name: string; desc: string; cost: number; hp: number; speed: number; accel: number; turn: number; grip: number; ram: number; mass: number; size: [number, number, number] }> = {
-  buggy: { name: "El Divorciado", desc: "Se quedó con el auto y nada más. Equilibrado: salta bien y gira rápido.", ...stats("buggy"), size: [1.3, 0.7, 2.3] },
-  monster: { name: "El Loco Cuarentón", desc: "Se compró ruedas gigantes para sentirse joven. Lento y duro: embestir hace +50%.", ...stats("monster"), size: [1.8, 1.1, 2.4] },
-  formula: { name: "El Apurado", desc: "Llega tarde a todo, por eso va siempre a fondo. Rapidísimo pero frágil.", ...stats("formula"), size: [1.3, 0.55, 2.8] },
-  tanque: { name: "El Suegro", desc: "Llega, se instala y no hay quien lo mueva. Blindado y pesado: embiste como un ladrillo.", ...stats("tanque"), size: [1.75, 0.9, 2.4] },
-  carrera: { name: "El Sin Seguro", desc: "Ninguna compañía le quiso hacer póliza, y con razón. Liviano y nervioso: derrapa en cada curva.", ...stats("carrera"), size: [1.1, 0.5, 2.1] },
-  axel: { name: "El Sin Licencia", desc: "Dos ruedas, cero carnet y mucha confianza. Rápido y ágil, pero frágil.", ...stats("axel"), size: [1.9, 1.0, 1.7] },
-  helado: { name: "El Tío del Helado", desc: "Pone musiquita, sonríe y reparte golpes fríos. Lento pero aguantador.", ...stats("helado"), size: [1.3, 0.95, 2.4] },
-  combi: { name: "El Tío Raro", desc: "Nadie sabe a qué se dedica, pero siempre vuelve con tuercas de más. Mucho aguante, poca prisa.", ...stats("combi"), size: [1.45, 1.0, 2.4] },
+export const CARS: Record<CarKind, { name: string; desc: string; cost: number; hp: number; speed: number; accel: number; turn: number; grip: number; ram: number; mass: number; size: [number, number, number]; drive?: "rwd" | "fwd" | "awd" }> = {
+  buggy: { name: "El Divorciado", desc: "Se quedó con el auto y nada más. Equilibrado: salta bien y gira rápido.", ...stats("buggy"), size: [1.3, 0.7, 2.3], drive: "rwd" },
+  monster: { name: "El Loco Cuarentón", desc: "Se compró ruedas gigantes para sentirse joven. Lento y duro: embestir hace +50%.", ...stats("monster"), size: [1.8, 1.1, 2.4], drive: "awd" },
+  formula: { name: "El Apurado", desc: "Llega tarde a todo, por eso va siempre a fondo. Rapidísimo pero frágil.", ...stats("formula"), size: [1.3, 0.55, 2.8], drive: "rwd" },
+  tanque: { name: "El Suegro", desc: "Llega, se instala y no hay quien lo mueva. Blindado y pesado: embiste como un ladrillo.", ...stats("tanque"), size: [1.75, 0.9, 2.4], drive: "awd" },
+  carrera: { name: "El Sin Seguro", desc: "Ninguna compañía le quiso hacer póliza, y con razón. Liviano y nervioso: derrapa en cada curva.", ...stats("carrera"), size: [1.1, 0.5, 2.1], drive: "rwd" },
+  axel: { name: "El Sin Licencia", desc: "Dos ruedas, cero carnet y mucha confianza. Rápido y ágil, pero frágil.", ...stats("axel"), size: [1.9, 1.0, 1.7], drive: "rwd" },
+  helado: { name: "El Tío del Helado", desc: "Pone musiquita, sonríe y reparte golpes fríos. Lento pero aguantador.", ...stats("helado"), size: [1.3, 0.95, 2.4], drive: "fwd" },
+  combi: { name: "El Tío Raro", desc: "Nadie sabe a qué se dedica, pero siempre vuelve con tuercas de más. Mucho aguante, poca prisa.", ...stats("combi"), size: [1.45, 1.0, 2.4], drive: "rwd" },
 };
 
 // Manejo arcade sobre un cuerpo Havok: la física resuelve choques,
@@ -33,7 +34,8 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
   let ls = B.Vector3.Dot(v, right);
 
   // Detección de impacto diegético contra obstáculos del entorno (muros, macetas, árboles)
-  const bAny = body as unknown as { _prevV?: B.Vector3 };
+  const bAny = body as unknown as { _prevV?: B.Vector3; _throttle?: number };
+  bAny._throttle = o.throttle;
   let impactSpeed = 0;
   let impactPan = 0;
   if (bAny._prevV) {
@@ -87,6 +89,8 @@ export class Car {
   body: B.PhysicsBody;
   agg: B.PhysicsAggregate;
   def;
+  torqueRoll = 0;
+  private steerRoll = 0;
   private lastFs = 0;
 
   private paintBase: B.Color3;
@@ -121,7 +125,7 @@ export class Car {
   }
 
   get pos() { return this.root.position; }
-  get speed() { const v = this.body.getLinearVelocity(); return Math.hypot(v.x, v.z); }
+  get speed() { this.body.getLinearVelocityToRef(tmpV); return Math.hypot(tmpV.x, tmpV.z); }
 
   // Desgaste: la pintura se opaca y ensucia a medida que pierde vida (0..1)
   wear(hpFrac: number) {
@@ -132,17 +136,30 @@ export class Car {
 
   // Solo visual: ruedas que giran y doblan, carrocería que se inclina
   private lastVy = 0; private bounce = 0; private bT = 0;
-  animate(dt: number, steer: number, fs: number, maxSpeed: number) {
+  animate(dt: number, steer: number, fs: number, maxSpeed: number, throttle?: number) {
     for (const wh of this.model.wheels) {
       wh.m.rotation.x += (fs * dt) / wh.r;
       if (wh.front) wh.m.rotation.y = B.Scalar.Lerp(wh.m.rotation.y, steer * 0.45, 1 - Math.exp(-12 * dt));
     }
     const acc = (fs - this.lastFs) / Math.max(dt, 1e-3);
     this.lastFs = fs;
+
+    // Torsión reactiva del chasis (torque twist al acelerar fuerte desde parado/baja velocidad)
+    const fwd = throttle !== undefined ? throttle : ((this.body as unknown as { _throttle?: number })._throttle ?? 0);
+    this.body.getLinearVelocityToRef(tmpV);
+    const spd = Math.hypot(tmpV.x, tmpV.z);
+    const isLaunching = fwd > 0.8 && spd < 2.0;
+    const driveMul = (this.def as { drive?: string }).drive === "rwd" ? 1.25 : 1.0;
+    const targetTorqueRoll = isLaunching ? fwd * 0.06 * driveMul : 0;
+    const damp = Math.max(0, Math.min(1, dt > 0 ? 12 * dt : 0.2));
+    this.torqueRoll += (targetTorqueRoll - this.torqueRoll) * damp;
+
     const k = 1 - Math.exp(-8 * dt);
-    this.vis.rotation.z = B.Scalar.Lerp(this.vis.rotation.z, -steer * B.Scalar.Clamp(fs / maxSpeed, -1, 1) * 0.16, k);
+    this.steerRoll = B.Scalar.Lerp(this.steerRoll, -steer * B.Scalar.Clamp(fs / maxSpeed, -1, 1) * 0.16, k);
+    this.vis.rotation.z = this.steerRoll + this.torqueRoll;
+
     // Cabeceo según la trayectoria (rampas y saltos): el colisionador no vuelca, la carrocería sí apunta hacia donde va
-    const vy = this.body.getLinearVelocity().y, pitch = Math.abs(fs) > 2 ? B.Scalar.Clamp(-Math.atan(vy / fs), -0.5, 0.5) : 0;
+    const vy = tmpV.y, pitch = Math.abs(fs) > 2 ? B.Scalar.Clamp(-Math.atan(vy / fs), -0.5, 0.5) : 0;
     this.vis.rotation.x = B.Scalar.Lerp(this.vis.rotation.x, B.Scalar.Clamp(-acc * 0.004, -0.08, 0.08) + pitch, k);
     // Rebote al aterrizar: se aplasta y recupera con un resorte amortiguado
     if (this.lastVy < -4 && vy > -1) { this.bounce = Math.min(0.3, -this.lastVy * 0.03); this.bT = 0; }

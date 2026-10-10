@@ -285,7 +285,40 @@ export const SFX = {
     hiss(dur, 0.12 * dGain, 1200, 0, pan, dist);
   },
   scrape: (pan?: number) => { hiss("bandpass", 2200, 600, 0.08, 0.14, pan); },
-  drift: (pan?: number) => { hiss("bandpass", 1100, 400, 0.12, 0.12, pan); },
+  drift: (pwr?: number, pan?: number, floor?: "asfalto" | "tierra" | "hierba") => {
+    if (!gate("drift", 16)) return;
+    const isPanOnly = pan === undefined && pwr !== undefined && pwr < 0;
+    const actualPan = isPanOnly ? pwr : pan;
+    const intensity = isPanOnly ? 1 : pwr === undefined ? 1 : Math.max(0, Math.min(2.5, pwr));
+    if (intensity <= 0.01) return;
+    const fType = floor ?? "asfalto";
+    if (fType === "tierra") {
+      hiss("lowpass", 450, 160, 0.14, 0.13 * intensity, actualPan);
+      hiss("bandpass", 320, 90, 0.11, 0.10 * intensity, actualPan);
+      tone("triangle", 130, 50, 0.08, 0.06 * intensity, 0, actualPan);
+    } else if (fType === "hierba") {
+      hiss("lowpass", 320, 120, 0.13, 0.08 * intensity, actualPan);
+      hiss("bandpass", 280, 140, 0.09, 0.05 * intensity, actualPan);
+    } else {
+      hiss("bandpass", 1200, 420, 0.13, 0.12 * intensity, actualPan);
+      tone("sawtooth", 1180, 580, 0.10, 0.04 * intensity, 0, actualPan);
+      tone("sine", 1220, 720, 0.11, 0.04 * intensity, 0, actualPan);
+    }
+  },
+  /** Efecto Doppler para adelantamientos y pasadas a alta velocidad de rivales. */
+  dopplerBy: (relSpeed: number, pan?: number, dist?: number) => {
+    if (!gate("doppler", 6)) return;
+    const sp = Math.max(3, Math.min(60, Math.abs(relSpeed)));
+    const dGain = dist !== undefined ? Math.max(0.1, 1 / (1 + dist * 0.045)) : 1;
+    const dur = Math.max(0.22, Math.min(0.48, 0.36 + sp * 0.002));
+    const fTop = Math.min(1800, 360 + sp * 24);
+    const fBottom = Math.max(65, (160 + sp * 6) * 0.48);
+    tone("sawtooth", fTop, fBottom, dur, 0.09 * dGain, 0, pan);
+    tone("triangle", fTop * 0.55, fBottom * 0.6, dur, 0.11 * dGain, 0, pan);
+    const hissTop = Math.min(3600, 1100 + sp * 40);
+    const hissBottom = Math.max(160, 280);
+    hiss("bandpass", hissTop, hissBottom, dur, 0.15 * dGain, pan, dist);
+  },
   boostSurge: () => {
     SFX.turboRelay();
     tone("triangle", 220, 880, 0.15, 0.18);

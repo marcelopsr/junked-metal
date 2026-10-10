@@ -947,6 +947,26 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #46 (Ecosistema Matricial de Especialistas: Latiguillos 3D, Drift Espectral y Doppler SFX, Torque Twist y Alerta CRC HUD)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 22.3 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Latiguillos de freno mallados en acero inox y micro-válvulas Schrader (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - Incorporados latiguillos flexibles de freno mallados en acero inoxidable (`cyl`, `M.metal("#94a3b8")`) conectando la pinza de freno al interior del pasarruedas para cada una de las 4 ruedas del coche.
+   - Añadidas micro-válvulas de inflado de neumáticos tipo Schrader en acero oscuro (`M.metal("#18181b")`) orientadas en el reborde exterior de las llantas, fusionadas con **0 draw calls adicionales**.
+2. **Modulación espectral por superficie en derrapes y pitch-shift Doppler (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - `SFX.drift(pwr, pan, floor)` ahora adapta su timbre dinámicamente según el sustrato: chirrido metálico estridente en asfalto (~1200Hz), rumor granular con corte cerrado (~450Hz) en tierra, y siseo amortiguado (~320Hz) en césped.
+   - Nueva función `SFX.dopplerBy(relSpeed, pan, dist)` que emula el efecto Doppler acústico en adelantamientos y cruces a alta velocidad mediante barrido de frecuencia descendente y ráfaga de aire Whoosh.
+3. **Simulación de torsión reactiva de chasis (*Torque Twist*) en arrancada (Combat Feel & VFX Specialist · `src/car.ts`):**
+   - Integrada propiedad `Car.torqueRoll` con calibración dinámica por tipo de tracción (`drive: "rwd" | "awd" | "fwd"`) que inclina el cuerpo visual del chasis en arrancadas bruscas (`cmd.fwd > 0.8 && speed < 2.0`), amortiguándose suavemente hacia 0 con un factor de decaimiento elástico de 0.2.
+   - Optimización crítica de rendimiento y garbage collection (0 GC allocations por frame al reutilizar `tmpV = new B.Vector3()` y llamar a `getLinearVelocityToRef`).
+4. **Tinte diegético de antena RF y alerta estroboscópica CRC ERR en telemetría (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - El icono `#sigIco` en `#signal` adopta estados cromáticos diegéticos: ámbar `.sig-fringing` entre 60 y 75 metros, y rojo alarma `.sig-critical` a más de 75 metros.
+   - El indicador de pérdida de paquetes conmuta a la alerta estroboscópica `CRC ERR ${pktLoss}%` con animación `@keyframes crcWarn` cuando la pérdida de paquetes supera el 40%, transmitiendo urgencia analógica de pérdida de enlace.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.
