@@ -430,8 +430,10 @@ function paintDisplay() {
     gs.forEach((g, i) => {
       const x = 158 + i * gw, left = goalLeft(g), done = left <= 0;
       if (done) {
-        c.fillStyle = "rgba(34,197,94,0.18)"; c.strokeStyle = M3C.exito; c.lineWidth = 2;
-        c.shadowColor = M3C.exito; c.shadowBlur = 8;
+        const isSec = g.k === "score";
+        c.fillStyle = isSec ? "rgba(6,182,212,0.18)" : "rgba(34,197,94,0.18)";
+        c.strokeStyle = isSec ? M3C.cian : M3C.exito; c.lineWidth = 2;
+        c.shadowColor = isSec ? M3C.cian : M3C.exito; c.shadowBlur = 8;
         c.beginPath(); c.roundRect(x + 2, 14, Math.min(gw - 8, 108), 54, 6); c.fill(); c.stroke();
         c.shadowBlur = 0;
       }

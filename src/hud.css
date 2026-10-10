@@ -60,6 +60,7 @@
 #bossbar .h-track { height: 12px; }
 #bossHp { background: linear-gradient(90deg, #ff4d4d, #ff9d6b); }
 #bossbar.rage #bossHp { background: linear-gradient(90deg, #ff2a2a, #ffc24d); box-shadow: 0 0 10px rgba(255, 77, 77, .45); }
+#bossbar.crit { border-color: rgba(255, 77, 77, .85); box-shadow: 0 0 18px rgba(255, 77, 77, .5); }
 #bossbar.crit #bossName, #bossbar.crit #bossHp { animation: h-blink .45s steps(2) infinite; }
 
 /* ---------- Racha y combo de manejo ---------- */

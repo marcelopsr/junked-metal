@@ -627,7 +627,8 @@ function renderGarage() {
   }
   else if (gtab === "piezas") $("cars").innerHTML = editing ? "" : (Object.keys(PARTS) as Slot[]).map((sl) => `<div class="slot"><span>${PARTS[sl].name}</span>${Object.entries(opts(sl)).map(([o, [n, c]]) => {
     const own = owns(`part:${sl}:${o}`);
-    return `<button class="opt ${save.kit[sl] === o ? "on" : ""} ${own ? "" : "locked"}" data-part="${sl}:${o}">${n}${own ? "" : ` · ${c}`}</button>`;
+    const isStock = c === 0;
+    return `<button class="opt ${save.kit[sl] === o ? "on" : ""} ${own ? "" : "locked"}" data-part="${sl}:${o}">${n}${isStock ? ' <em class="stock-tag">DE SERIE</em>' : (own ? "" : ` · ${c}`)}</button>`;
   }).join("")}</div>`).join("");
   if (gtab === "piezas") { $("cars").insertAdjacentHTML("beforeend", decalHtml()); drawGrid(); }
   if (gtab === "pintura") renderPaint();

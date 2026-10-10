@@ -215,6 +215,7 @@ export const SFX = {
   ignite: () => { hiss("bandpass", 1800, 400, 0.35, 0.28); tone("sine", 120, 45, 0.3, 0.22); },
   radioChirp: () => { tone("sine", 1800, 1200, 0.04, 0.08); tone("sine", 2400, 1600, 0.04, 0.06, 0.03); },
   steamHiss: () => hiss("highpass", 3500, 1200, 0.28, 0.16),
+  relayClick: () => { tone("square", 1600, 800, 0.015, 0.08); tone("square", 1200, 400, 0.02, 0.07, 0.02); },
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {
     if (crit) tone("square", 880, 440, 0.05, 0.06);

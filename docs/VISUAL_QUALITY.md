@@ -610,3 +610,28 @@ Carrera (1) y Survivor en partida (2).
    - Se sumó al motor sonoro procedural el método `SFX.steamHiss()`, con siseo filtrado pasa-altos (3500 a 1200 Hz) que simula la descompresión de vapor de un radiador.
 8. **Tirantes estructurales diagonales en alerones aerodinámicos (Subagente 8 · `src/models.ts`):**
    - En `carModel()`, los alerones altos y dobles reciben tensores diagonales metálicos `M.metal("#9aa0a6")` que vinculan la base con el plano superior, elevando el realismo de maquetismo de carreras RC.
+
+---
+
+## 2026-10-10 · Ciclo #29 (Piezas de Serie en Garaje, Alerta Crítica en Barra de Jefe, Rebase Carrera, Metas Secundarias Match-3, Niebla FX, Odómetro Polaroid, SFX Relay y Resortes Monster 3D)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 35.7 s).
+
+### Intervenciones aplicadas por 8 subagentes en paralelo y verificadas en captura
+1. **Etiqueta `.stock-tag` ("DE SERIE") en opciones originales de piezas en el Garaje (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()` (pestaña `piezas`), las opciones base con costo cero (`c === 0`) muestran el distintivo atenuado `<em class="stock-tag">DE SERIE</em>`, distinguiéndolas claramente de los upgrades de pago y piezas bloqueadas.
+2. **Resplandor carmesí y marco pulsante de alarma en barra de jefe en estado crítico (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `#bossbar.crit`, se reforzó el resplandor perimetral carmesí (`box-shadow: 0 0 18px rgba(255, 77, 77, .5)`) y el borde de alarma (`border-color: rgba(255, 77, 77, .85)`) cuando la salud del jefe desciende por debajo del 25% (`pct < 0.25`), agudizando el dramatismo en el clímax del enfrentamiento.
+3. **Pastilla verde reactiva `.rover` ("¡REBASE!") al adelantar rivales en Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `hud()` de carrera, se detecta el progreso de posición respecto al frame anterior (`pl < prevPl`) y se enciende la pastilla verde esmeralda con parpadeo estroboscópico `<b class="rover">¡REBASE!</b>` junto al velocímetro, premiando las maniobras de adelantamiento limpio.
+4. **Halo cian distintivo en metas secundarias cumplidas de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - En `paintDisplay()`, al verificar pedidos cumplidos (`done = true`), se diferencia si la meta es de puntuación secundaria (`g.k === "score"`), pintando su tarjeta con halo y trazo cian eléctrico `M3C.cian` en lugar del verde de las piezas primarias, ordenando la jerarquía de objetivos.
+5. **Efecto tridimensional de micro-partículas de niebla térmica en `FX.mist` (Subagente 5 · `src/fx.ts`):**
+   - Se añadió al pool de partículas el método `FX.mist(p)`, generando 8 partículas de condensación térmica blanquecina `#e2e8f0` a ras de suelo con sustentación suave y disipación prolongada para zonas frías o charcos humeantes.
+6. **Sello diegético de odómetro con kilometraje en Polaroid (Subagente 6 · `src/replay.ts`):**
+   - En `showPhoto()`, se calcula el kilometraje aproximado de la partida (`(time * 28) / 1000`) y se estampa en el pie del marco la leyenda `"ODÓMETRO · REGISTRO X.X KM"` en tono sepia técnico, enriqueciendo la telemetría histórica del vehículo.
+7. **Audio procedural de relé mecánico de potencia (Subagente 7 · `src/sfx.ts`):**
+   - Se incorporó al motor sonoro procedural el método `SFX.relayClick()`, con dos pulsos cuadrados breves e interruptivos (1600→800 Hz y 1200→400 Hz) que simulan el enganche de un contactor o interruptor magnético.
+8. **Anillos helicoidales concéntricos en amortiguadores Monster (Subagente 8 · `src/models.ts`):**
+   - En `carModel()`, los amortiguadores del Monster Truck incorporan cilindros coaxiales exteriores oscuros (`#111`) sobre el vástago rojo (`#ef4444`), modelando el aspecto escalonado de un resorte de alta absorción para chasis todo terreno.
+

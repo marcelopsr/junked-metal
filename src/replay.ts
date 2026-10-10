@@ -48,7 +48,7 @@ export function snap(engine: AbstractEngine) {
 }
 
 let photoUrl = "";
-export type PhotoInfo = { zone: string; time: string; kills: number; car: string; win: boolean };
+export type PhotoInfo = { zone: string; time: string | number; kills: number; car: string; win: boolean };
 /** Arma la polaroid con la última foto y la muestra en los resultados; sin foto (pruebas con __sim) no muestra nada. */
 export async function showPhoto(i: PhotoInfo) {
   const fig = $("overPhoto");
@@ -93,7 +93,7 @@ export async function showPhoto(i: PhotoInfo) {
   g.fillStyle = ink; g.textBaseline = "alphabetic";
   const y0 = pad + ph + foot * 0.32;
   g.font = `700 ${Math.round(34 * u)}px Rajdhani, sans-serif`; g.textAlign = "left"; g.fillText(i.zone.toUpperCase(), pad, y0);
-  g.textAlign = "right"; g.fillText(i.time, pad + pw, y0);
+  g.textAlign = "right"; g.fillText(String(i.time), pad + pw, y0);
   g.textAlign = "left"; g.font = `700 ${Math.round(50 * u)}px Rajdhani, sans-serif`;
   g.fillText(`${i.kills} ${i.kills === 1 ? "BAJA" : "BAJAS"} · ${i.car.toUpperCase()}`, pad, y0 + 52 * u);
   g.fillStyle = "#4d4c38"; g.font = `600 ${Math.round(30 * u)}px Rajdhani, sans-serif`;
@@ -115,6 +115,14 @@ export async function showPhoto(i: PhotoInfo) {
   g.fillStyle = "rgba(77, 76, 56, 0.45)";
   g.textAlign = "left";
   g.fillText("GUARDIA NOCTURNA · PATIO CENTRAL", pad, y0 + 158 * u);
+  g.restore();
+  const tSec = typeof i.time === "number" ? i.time : (typeof i.time === "string" && i.time.includes(":") ? i.time.split(":").reduce((acc, v) => acc * 60 + Number(v), 0) : Number(i.time) || 0);
+  const km = ((tSec * 28) / 1000).toFixed(1);
+  g.save();
+  g.font = `600 ${Math.round(13 * u)}px Rajdhani, sans-serif`;
+  g.fillStyle = "rgba(77, 76, 56, 0.45)";
+  g.textAlign = "left";
+  g.fillText(`ODÓMETRO · REGISTRO ${km} KM`, pad, y0 + 178 * u);
   g.restore();
   if (i.kills >= 100) {
     g.save();

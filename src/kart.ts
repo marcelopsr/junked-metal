@@ -918,12 +918,15 @@ function hud() {
     const airTag = h.car.pos.y > 0.85 ? '<b class="rair">EN EL AIRE</b>' : "";
     const spinTag = h.spin > 0.05 || h.out ? '<b class="rspin">¡TROMPO!</b>' : "";
     const maxTag = !spinTag && h.fs >= h.top * 0.96 ? '<b class="rmax">MÁXIMA</b>' : "";
+    const prevPl = (h as any).prevPl as number | undefined;
+    const overTag = prevPl !== undefined && pl < prevPl ? '<b class="rover">¡REBASE!</b>' : "";
+    (h as any).prevPl = pl;
     const tTag = h.boost > 0 ? `<b class="rturbo on">TURBO</b>` : h.drifting !== 0 ? (h.charge > 1.5 ? `<b class="rturbo t2">TURBO 2</b>` : h.charge > 0.75 ? `<b class="rturbo t1">TURBO 1</b>` : `<b class="rturbo t0">DERRAPE</b>`) : "";
     const shTag = h.shield > 0 ? `<b class="rshield">ESCUDO ${Math.ceil(h.shield)}s</b>` : "";
     const wTag = projs.some((pr) => pr.kind === "misil" && pr.target === h) ? `<b class="rwarn">¡MISIL!</b>` : "";
     const closeRival = racers.some((o) => o !== h && !o.out && o.car.pos.subtract(h.car.pos).length() < 3.5);
     const thTag = !wTag && closeRival ? '<b class="rthreat">¡CERCA!</b>' : "";
-    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${slipTag}${airTag}${spinTag}${maxTag}${tTag}${shTag}${wTag}${thTag}`;
+    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${slipTag}${airTag}${spinTag}${maxTag}${overTag}${tTag}${shTag}${wTag}${thTag}`;
     if (spdEl.dataset.h !== spdHtml) { spdEl.dataset.h = spdHtml; spdEl.innerHTML = spdHtml; }
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; it.classList.toggle("full", !!h.item); }
