@@ -299,8 +299,20 @@ export const SFX = {
     hiss(0.09, 0.14 * dGain, 2800, 600, pan, dist);
   },
   lipoFull: () => { tone("sine", 587.33, 880, 0.08, 0.14); tone("triangle", 880, 1174.66, 0.1, 0.18, 0.06); },
-  bodyThud: (pan?: number) => { tone("sine", 140, 50, 0.12, 0.18, 0, pan); hiss("lowpass", 600, 150, 0.1, 0.15, pan); },
-  lipoLowWarn: () => { tone("square", 2400, 2400, 0.04, 0.06); tone("square", 2400, 2400, 0.04, 0.06, 0.08); },
+  bodyThud: (impulseOrPan?: number, panArg?: number) => {
+    if (!gate("body-thud", 8)) return;
+    const isPanOnly = panArg === undefined && impulseOrPan !== undefined && Math.abs(impulseOrPan) <= 1;
+    const p = isPanOnly ? impulseOrPan : panArg;
+    const imp = isPanOnly || impulseOrPan === undefined ? 5 : impulseOrPan;
+    const vol = Math.min(0.35, 0.08 + imp * 0.02);
+    tone("sine", 140, 50, 0.12, vol, 0, p);
+    hiss("lowpass", 600, 150, 0.1, vol * 0.8, p);
+  },
+  lipoLowWarn: () => {
+    if (!gate("lipo-warn", 0.4)) return;
+    tone("square", 2400, 2400, 0.04, 0.06);
+    tone("square", 2400, 2400, 0.04, 0.06, 0.08);
+  },
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {
     if (crit) tone("square", 880, 440, 0.05, 0.06);

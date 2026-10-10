@@ -612,6 +612,24 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         parts.push(cyl(0.008, 0.008, 0.16, chrome, [sx, bh * 0.25, bl * 0.36], [0, 0, sx > 0 ? 0.3 : -0.3], 4));
       }
     }
+    if (kind === "formula" || kind === "buggy" || (kind as string) === "deportivo") {
+      // Manguetas de dirección delanteras en aluminio mecanizado CNC
+      for (const sx of [-bw * 0.38, bw * 0.38]) {
+        parts.push(
+          box(0.012, 0.024, 0.016, M.metal("#0284c7"), [sx, bh * 0.25, bl * 0.36]),
+          cyl(0.004, 0.004, 0.028, chrome, [sx, bh * 0.25, bl * 0.36], [0, 0, 0], 4)
+        );
+      }
+    }
+    for (const w of ws) {
+      const [sx, wy, wz] = w.pos;
+      parts.push(
+        // Tuerca hexagonal central de rueda
+        cyl(0.01, 0.01, 0.008, chrome, [sx > 0 ? sx + 0.02 : sx - 0.02, wy, wz], [0, 0, Math.PI / 2], 6),
+        // Anillo de nylon azul métrico de bloqueo
+        cyl(0.006, 0.006, 0.009, M.plastic("#2563eb"), [sx > 0 ? sx + 0.021 : sx - 0.021, wy, wz], [0, 0, Math.PI / 2], 6)
+      );
+    }
     if (kind !== "tanque") {
       const ax = bw * 0.35, ay = bh * 0.7, az = -bl * 0.42;
       parts.push(

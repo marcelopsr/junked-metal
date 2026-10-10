@@ -103,9 +103,12 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     $("volt").insertAdjacentElement("afterend", escEl);
   }
   if (ch("escThermal", +isThermal)) escEl.style.display = isThermal ? "" : "none";
-  txt("volt", `${finalV.toFixed(1)}V${low ? " · BAJA" : ""}`);
+  const thermalJitter = isThermal ? (Math.sin(performance.now() * 0.01) * 0.04) : 0;
+  const finalVWithJitter = Math.max(0, finalV + thermalJitter);
+  txt("volt", `${finalVWithJitter.toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   const isLoss = (d.distCenter ?? 0) > 85;
+  if (ch("radarJammed", +isLoss)) $("radar")?.classList.toggle("rf-jammed", isLoss);
   if (d.distCenter !== undefined) {
     const isFringe = d.distCenter > 75;
     if (ch("sigFringe", +isFringe)) $("signal").classList.toggle("fringe", isFringe);

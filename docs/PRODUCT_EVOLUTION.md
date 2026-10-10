@@ -743,36 +743,53 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
     - Indicador contextual en la tarjeta de pieza: `.mount-hint` ("MONTADO EN AUTO" en verde vs "EN GARAJE · TOCAR PARA MONTAR") y borde de chapa destacada `.active-part` cuando está en uso.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (495 ms), `npm run test:restart`, `npm run shots -- --only garaje,taller` (26 capturas en PC y móvil en 15.8 s sin errores) y `graphify update .` (3397 nodos, 8078 aristas).
 
+### Ciclo #44 (2026-10-10) — Manguetas CNC y Tuercas 3D, BodyThud Dinámico y LipoWarn SFX, Vaho Térmico VFX y Deriva ADC HUD
+- **Alcance implementado (4 Especialistas Paralelos):**
+  - **Procedural 3D & Folded Modeler (`src/models.ts`):** Manguetas de dirección delanteras en aluminio mecanizado CNC (`M.metal("#0284c7")`) con perno vertical cromado (kingpin) en vehículos con tren delantero visible (`formula`, `buggy`, `deportivo`), más tuercas métricas hexagonales de bloqueo (Nyloc) con anillo de nylon azul (`#2563eb`) en el centro exterior de cada rueda (0 draw calls adicionales).
+  - **Audio & Synth Sound Designer (`src/sfx.ts`):** Modulación de fuerza dinámica en `SFX.bodyThud(impulse, pan)` proporcional al impulso de impacto (`vol = Math.min(0.35, 0.08 + imp * 0.02)`), y control de cadencia rítmica de 2.4s mediante `gate("lipo-warn", 2.4)` en `SFX.lipoLowWarn()` para prevenir saturación de audio.
+  - **Combat Feel & VFX Specialist (`src/fx.ts`):** Desacoplamiento y exportación de `sparks()` del pool de partículas existente; implementación de `FX.transmissionSpark(pos)` para micro-chispas de alta velocidad en acoples mecánicos/diferencial, y `FX.heatHaze(pos, intens)` para distorsión y vaho térmico dosificado sobre el disipador o motor 540 bajo sobrecarga.
+  - **Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`):** Deriva térmica analógica sinusoidal de ADC (`Math.sin(now * 0.01) * 0.04`) en la lectura del voltímetro digital `#volt` cuando el ESC entra en sobrecarga térmica (`isThermal`), y scanline jamming estroboscópico `#radar.rf-jammed` en el panel de radar al caer en pérdida crítica periférica.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (6.9s), `npm run test:restart`, `npm run shots -- --only garaje,partida,lab` (32 capturas en PC y móvil en 61.5 s sin errores) y `graphify update .` (3505 nodos, 8270 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #44 (Evolución Multidisciplinaria)
+## 4. Backlog Vivo de Oportunidades — Ciclo #45 (Evolución Multidisciplinaria)
 
-### A. Especialista 1 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-1. **(Recomendada) Curva de Recuperación Elástica Post-Sag y Chirp Sonoro de Enlace Límite:**
-   - **Qué es:** Simular la relajación electroquímica gradual (~250ms con amortiguación suave) al soltar el acelerador en lugar de rebote instantáneo, y conectar un micro-chirp piezoeléctrico en `sfx.ts` cuando la señal cae por debajo de -90 dBm.
-   - **Valor:** Respuesta orgánica analógica que separa la química LiPo de una barra genérica. Complejidad: Media.
+### A. Especialista 1 · Procedural 3D & Folded Modeler (`src/models.ts`)
+1. **(Recomendada) Discos de Freno Ranurados y Pinzas Rojas Anodizadas:**
+   - **Qué es:** Añadir discos de freno finos con ranurado radial en acero templado (`M.metal("#52525b")`) y pinzas de freno (calipers) en rojo competición (`M.plastic("#ef4444")`) visibles a través de las llantas abiertas.
+   - **Valor:** Fidelidad visual inmediata en vista cercana del Garaje y ceremonias de podio/cierre. Complejidad: Baja.
 
 ### B. Especialista 2 · Audio & Synth Sound Designer (`src/sfx.ts`)
-2. **Resonancia de Carrocería por Colisión (`bodyThud`) y Alarma Piezoeléctrica LiPo Crítica:**
-   - **Qué es:** Sintetizar el golpe sordo de resonancia hueca de lexan/policarbonato en colisiones de carrocería, y una alarma piezoeléctrica intermitente cuando la batería cae del 15% (emulando los buzzer de telemetría LiPo).
-   - **Valor:** Feedback sonoro inmersivo y advertencia auditiva crítica sin desviar la mirada al HUD. Complejidad: Media.
+2. **Atenuación Espacial `dist` en Colisiones (`bodyThud` / `ram`) y Resonancia por Material:**
+   - **Qué es:** Aplicar el factor de roll-off espacial por distancia `1 / (1 + dist * 0.04)` a los impactos de carrocería y permitir diferenciar el corte de agudos según el material del obstáculo (madera/maceta vs chapa/hormigón).
+   - **Valor:** Profundidad tridimensional acústica superior en duelos de Demolición y partidas abiertas. Complejidad: Baja-Media.
 
-### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
-3. **Manguetas de Dirección de Aluminio Anodizado y Tuercas de Rueda Hexagonales de Bloqueo:**
-   - **Qué es:** Modelar las manguetas portamanguetas de dirección delanteras en aluminio mecanizado CNC con tuercas hexagonales centrales autoblocantes de nylon en las 4 ruedas de competición.
-   - **Valor:** Completa el tren rodante con realismo diegético total en vista de Garaje. Complejidad: Media.
+### C. Especialista 3 · Combat Feel & VFX Specialist (`src/fx.ts`, `src/car.ts`)
+3. **Micro-Chispas Reactivas en Picos de Tracción desde Parado:**
+   - **Qué es:** Disparar `FX.transmissionSpark` en el eje motriz del vehículo cuando se aplica aceleración a fondo desde velocidad casi nula (`throttle > 0.9 && speed < 1.0`) o en rebotes violentos.
+   - **Valor:** Respaldo visual instantáneo de la potencia mecánica y el desgaste del embrague RC. Complejidad: Media.
 
-### D. Especialista 4 · Combat Feel & VFX Specialist (`src/fx.ts`)
-4. **Micro-chispas de Fricción en CVDs/Piñón y Vaho Térmico de Disipador:**
-   - **Qué es:** Emitir partículas muy sutiles de micro-fricción o distorsión térmica sobre el disipador del motor 540 cuando el vehículo sostiene aceleración máxima por más de 3 segundos.
-   - **Valor:** Conecta la mecánica 3D interna directamente con el combate en vivo. Complejidad: Media.
+### D. Especialista 4 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
+4. **Telemetría de Antena & Pérdida de Paquetes en RSSI:**
+   - **Qué es:** Añadir micro-icono estroboscópico de antena/dipolo en `#signal` que parpadee cuando se pierden tramas de telemetría por framing error en zona periférica (>75m).
+   - **Valor:** Comunicación táctica inmediata del estado del enlace de radiofrecuencia. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #43 completado y validado en paralelo (Procedural 3D Modeler con palieres CVD y barras estabilizadoras + Menu Specialist con montaje directo de piezas desde el Taller) (`tsc` 0 errores, `test` 75/75, `build` 495 ms, 26 capturas en `.shots/actual/` en 15.8 s, grafo en 3397 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #44**.
+- **Último trabajo completado:** Ciclo #44 completado y validado en paralelo con los 4 Especialistas (`tsc` 0 errores, `test` 75/75, `build` limpio, 32 capturas en `.shots/actual/` en 61.5 s, grafo en 3505 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #45**.
+
+### 🔓 LISTO PARA EL CICLO #45 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+
+| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
+|---|---|---|
+| **Procedural 3D Modeler** | Discos de freno ranurados y pinzas rojas de competición | `src/models.ts` |
+| **Audio Synth Designer** | Roll-off espacial `dist` y resonancia por material en colisiones | `src/sfx.ts` |
+| **Combat Feel & VFX** | Chispas en transmisión en aceleración desde parado en `car.ts` | `src/fx.ts` |
+| **Diegetic HUD & Telemetry** | Micro-icono de pérdida de paquetes en RSSI en zona periférica | `src/ui.ts`, `src/hud.css` |
 
 ### 🔓 LISTO PARA EL CICLO #44 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 

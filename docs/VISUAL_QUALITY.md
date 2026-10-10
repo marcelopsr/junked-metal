@@ -904,6 +904,27 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #44 (Ecosistema Matricial de Especialistas: Manguetas CNC y Tuercas 3D, BodyThud Dinámico y LipoWarn SFX, Vaho Térmico VFX y Deriva ADC HUD)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-lab-noche.png` (`npm run shots -- --only garaje,partida,lab`, 32 capturas en PC y celular sin errores en 61.5 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Manguetas de dirección de aluminio CNC y tuercas Nyloc de rueda (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - Incorporadas manguetas de dirección delanteras en aluminio mecanizado CNC con anodizado azul (`M.metal("#0284c7")`) y kingpins cromados conectando los trapecios de suspensión frontal con el cubo de rueda en `formula`, `buggy` y `deportivo`.
+   - Añadidas tuercas métricas hexagonales de bloqueo (Nyloc) en el centro de cada rueda con corona cromada y anillo interior de nylon azul (`#2563eb`), fusionadas con 0 llamadas de dibujo adicionales.
+2. **BodyThud con modulación de fuerza y cadencia de alarma LiPo (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Modulación dinámica proporcional al impulso en `SFX.bodyThud(impulse, pan)` (`vol = Math.min(0.35, 0.08 + imp * 0.02)`) combinando componente subgrave y ruido paso bajo.
+   - Cadencia rítmica controlada de 2.4s mediante `gate("lipo-warn", 2.4)` en `SFX.lipoLowWarn()`.
+3. **Vaho térmico y micro-chispas de transmisión (Combat Feel & VFX Specialist · `src/fx.ts`):**
+   - Desacoplado `sparks()` del pool de partículas para emisión a medida.
+   - Implementado `FX.transmissionSpark(pos)` para micro-chispas incandescentes de alta velocidad en acoples mecánicos/diferencial.
+   - Implementado `FX.heatHaze(pos, intens)` para distorsión y vaho térmico dosificado sobre el disipador o motor 540 bajo sobrecarga.
+4. **Deriva térmica analógica en voltímetro y scanline jamming en radar (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - Deriva térmica de ADC en `#volt` con fluctuación sinusoidal leve (±0.04V) cuando el ESC entra en sobrecarga térmica (`isThermal`).
+   - Scanline jamming analógico `#radar.rf-jammed` en el radar cuando la señal desciende a zona periférica crítica (>85m).
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

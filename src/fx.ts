@@ -107,13 +107,31 @@ export const FX = {
   smoke: (p: B.Vector3, dark = false) => burst(p, { n: 2, color: dark ? "#a8a8a8" : "#f4f4f4", size: [0.5, 1.1], power: [0.5, 1.5], life: [0.8, 1.4], gravity: 3, add: false }),
   // Estela de proyectil: una voluta chica que se apaga rápido (llamar con probabilidad, no cada cuadro)
   trail: (p: B.Vector3, color = "#ffe27a") => burst(p, { n: 1, color, size: [0.22, 0.38], power: [0, 0.3], life: [0.2, 0.32], gravity: 0 }),
-  sparks: (p: B.Vector3) => burst(p, { n: 8, color: "#ffd27a", size: [0.05, 0.14], power: [4, 9], life: [0.2, 0.45], gravity: -20 }),
+  sparks: (p: B.Vector3, n = 8) => sparks(p, n),
+  heatHaze: (p: B.Vector3, intens = 1) => heatHaze(p, intens),
+  transmissionSpark: (p: B.Vector3) => transmissionSpark(p),
   // Destello blanco breve sobre el enemigo golpeado
   flash: (p: B.Vector3, s: number) => burst(p, { n: 1, color: "#ffffff", size: [s * 0.9, s * 1.1], power: [0, 0], life: [0.05, 0.07], gravity: 0 }),
   // Vapor de jefe enfurecido (fase 2): bocanadas rosadas que suben; s = tamaño según el jefe
   vapor: (p: B.Vector3, s = 1) => burst(p, { n: 3, color: "#ffe2da", color2: "#ff6a50", size: [0.8 * s, 1.7 * s], power: [0.8, 2.2], life: [0.7, 1.2], gravity: 5, add: false }),
   slam: (p: B.Vector3, r: number) => burst(p, { n: 120, color: "#f6f6f6", size: [1, 2.5], power: [r * 1.5, r * 3], life: [0.5, 1], gravity: 2, add: false }),
 };
+
+/** Chispas sueltas reutilizando el pool de partículas */
+export function sparks(p: B.Vector3, n = 8) {
+  burst(p, { n, color: "#ffd27a", size: [0.05, 0.14], power: [4, 9], life: [0.2, 0.45], gravity: -20 });
+}
+
+/** Micro-chispas de alta velocidad en acoples mecánicos y engranajes */
+export function transmissionSpark(pos: B.Vector3) {
+  burst(pos, { n: 3, color: "#fff2a8", color2: "#ff9138", size: [0.03, 0.08], power: [6, 12], life: [0.08, 0.18], gravity: -22, add: true });
+}
+
+/** Vaho térmico sutil sobre el disipador o motor 540 cuando hay sobrecarga térmica */
+export function heatHaze(pos: B.Vector3, intens = 1) {
+  // Usar las partículas de humo/chispa existentes en el pool sin crear ParticleSystem nuevos
+  sparks(pos, Math.min(4, Math.round(2 * intens)));
+}
 
 // ---------- Restos con física simple (sin Havok: son decorativos) ----------
 type Chunk = { m: B.InstancedMesh; v: B.Vector3; av: B.Vector3; life: number };
