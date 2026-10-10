@@ -1,0 +1,13 @@
+# Handoff — Props procedurales v1
+
+Fecha: 2026-10-10. Producción: sesión Codex. Reserva temporal: `assets-src/procedural-props/v1/`, `docs/PROCEDURAL_PROPS_PLAN.md`. Estado: exportados y verificados en Babylon. Reserva liberada al cierre de esta tanda; cualquier sesión autorizada puede continuar.
+
+Pedido: continuar con más recursos procedurales manteniendo la dirección aprobada. Entrega: quince GLB (cinco familias por tres semillas), fuente Blender empaquetada, generador reproducible, quince PNG PBR, catálogo y visor Babylon local. Fuentes y catálogo reutilizables por cualquier herramienta/modelo elegido por el usuario. Se preservan las entregas recientes de Gemini de frenchie, Eulalio, buggy y entorno.
+
+No toca modelos/gameplay activos, física, balance ni el banco cinematográfico compartido. Fuera del build normal y sin publicación. Sin rigs, animaciones, LOD ni AO físico; ORM rojo constante 1. La suma de GLB duplica mapas para mantener archivos autónomos; compartirlos al integrar y cargar únicamente lo elegido.
+
+Verificación final: `npx tsc --noEmit -p .`, `npm test` (80 pruebas, diez archivos) y `npm run build` pasan sobre el árbol compartido de la tanda. `verify.mjs` pasa para los quince GLB y mapas: hashes, atributos/UV/normales finitos, índices, texturas embebidas, pivotes, límites y variación. Babylon pc 1280×720 y cel 390×844: quince variantes seleccionables, día/noche, restablecer, conjunto completo en cuadro, sin errores ni desbordamiento. Veinte capturas de cuatro ángulos de una variante por familia, cuatro del conjunto y dos galerías; Chromium con Metal cerrado. Revisadas capturas de frente y reverso. El generador exige geometría reproducible con igual semilla y valida canales PNG releyendo un píxel por mapa. No sim/perf: no se cambió gameplay ni se midió rendimiento de partidas. Ver `evidence/verification.json` y `evidence/review.md`. Catálogo: 53.796 triángulos totales, 524–6.032 por prop y 19,84 MB de GLB. Próximo paso: usar una selección en el banco o en una zona autorizada del mundo, con instancias/materiales compartidos y ambas cámaras, o producir otra versión preservando esta.
+
+Commit: localizar el cierre mediante `git log --all --oneline -- assets-src/procedural-props/v1/`; consultar Git real antes de continuar. No sobrescribir fuentes editadas ni commits de otras sesiones.
+
+Revisión: se corrigieron la importación de cámara orbital fuera de la fachada reducida, conversión gamma duplicada en albedos, encuadre móvil y reutilización de submateriales. Acabado procedural funcional y estilizado, todavía sin desgaste localizado por pieza ni fidelidad cinematográfica acreditada. No publicar; commit local solo de esta entrega y sus fichas.

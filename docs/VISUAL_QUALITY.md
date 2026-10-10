@@ -1044,3 +1044,10 @@ Evaluación: materiales ricos en detalle disponibles para reutilización; todav�
 Cuatro decals RGBA 1254×1254 (aceite, huellas, hojas y restos) en `assets-src/environment-library/v1/`, generados con imagegen integrado y conservados en PNG/WebP. Galería local compara sobre tierra/hormigón/asfalto y fondos claro/oscuro; alfa idéntico entre formatos, con ruido exterior máximo 1/255 registrado. Verificación headless pc/cel: ocho imágenes, cuatro diálogos y veinte composiciones por viewport, control de opacidad, proporciones, cero errores/desbordamiento; tsc, 75 pruebas y build pasan. Evidencia en `evidence/`, reserva liberada y continuidad independiente del proveedor.
 
 Calidad evaluada como recurso raster y composición 2D. No se asigna un puntaje al juego ni se afirma integración, iluminación física, geometría o rendimiento mejorados. A ras del suelo los detalles son planos; revisar escala/halos en la escena final. No sustituye las evaluaciones ni el checkpoint de los ciclos concurrentes.
+
+
+## 2026-10-10 · Props procedurales 3D — v1
+
+Quince GLB en `assets-src/procedural-props/v1/`, cinco familias de chatarra/patio con tres semillas. Materiales de madera, goma, acero, óxido y pintura amarilla con albedo/normal/ORM numéricos 512×512. Evidencia Babylon pc/cel, conjunto día/noche y cuatro ángulos de una variante por familia en `evidence/`; carga y selección de quince modelos sin errores ni recortes del conjunto. Corregida conversión gamma del búfer byte que oscurecía albedos; pintura amarilla y madera se verificaron tras regenerar.
+
+Evaluación: volumen utilizable, agujeros reales en neumáticos/arandelas/tuercas, bordes y abolladuras legibles, acabado procedural estilizado. Desgaste todavía uniforme y relieves finos poco legibles de lejos; no alcanza por sí solo el acabado cinematográfico aprobado. Sin AO horneado/LOD, texturas autónomas duplicadas (GLB 19,84 MB), no rendimiento de hordas ni teléfono físico. Son recursos disponibles, aún sin integración en partidas. Tipos, 80 tests y build pasan; esta entrega conserva el checkpoint de los ciclos concurrentes.

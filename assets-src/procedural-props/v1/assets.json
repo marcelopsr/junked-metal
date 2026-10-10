@@ -1,0 +1,436 @@
+{
+  "version": 1,
+  "date": "2026-10-10",
+  "generator": "Blender procedural build.py",
+  "seeds": [
+    3,
+    17,
+    41
+  ],
+  "source": "props.blend",
+  "textures": [
+    "textures/paint-albedo.png",
+    "textures/paint-normal.png",
+    "textures/paint-orm.png",
+    "textures/rubber-albedo.png",
+    "textures/rubber-normal.png",
+    "textures/rubber-orm.png",
+    "textures/rust-albedo.png",
+    "textures/rust-normal.png",
+    "textures/rust-orm.png",
+    "textures/steel-albedo.png",
+    "textures/steel-normal.png",
+    "textures/steel-orm.png",
+    "textures/wood-albedo.png",
+    "textures/wood-normal.png",
+    "textures/wood-orm.png"
+  ],
+  "ao": "ORM red=1; not baked occlusion",
+  "assets": [
+    {
+      "id": "pallet-3",
+      "family": "pallet",
+      "name": "Pallet envejecido",
+      "seed": 3,
+      "uses": [
+        "Garaje, taller y bordes de pista"
+      ],
+      "model": "models/pallet-3.glb",
+      "triangles": 1588,
+      "vertices": 840,
+      "materials": [
+        "JM_Prop_wood",
+        "JM_Prop_rust"
+      ],
+      "geometrySha256": "832d8bd22a3df5c332a21e61d81225d971bd11687b0586a9c50c896d7d2305c2",
+      "sameSeedChecked": true,
+      "bytes": 1455108,
+      "sha256": "8f50996b5384b143159e973e1057ca8f8864e244b0d4af83f8352c8a8f4de0e2",
+      "dimensionsMeters": [
+        0.9765090942382812,
+        0.2409999966621399,
+        0.9086414575576782
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "pallet-17",
+      "family": "pallet",
+      "name": "Pallet envejecido",
+      "seed": 17,
+      "uses": [
+        "Garaje, taller y bordes de pista"
+      ],
+      "model": "models/pallet-17.glb",
+      "triangles": 1588,
+      "vertices": 840,
+      "materials": [
+        "JM_Prop_wood",
+        "JM_Prop_rust"
+      ],
+      "geometrySha256": "7d14c04e89f7be05a63ab828a345e6929c3d7a0d1d0b8ae5f4fdd1a915226042",
+      "sameSeedChecked": true,
+      "bytes": 1455112,
+      "sha256": "8c760ad22737d295dfd7b26b445b86715641aa42f3224d35428d6976f1a31042",
+      "dimensionsMeters": [
+        1.1126468181610107,
+        0.2409999966621399,
+        0.9055745601654053
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "pallet-41",
+      "family": "pallet",
+      "name": "Pallet envejecido",
+      "seed": 41,
+      "uses": [
+        "Garaje, taller y bordes de pista"
+      ],
+      "model": "models/pallet-41.glb",
+      "triangles": 1588,
+      "vertices": 840,
+      "materials": [
+        "JM_Prop_wood",
+        "JM_Prop_rust"
+      ],
+      "geometrySha256": "fdfeebfd82255013c2c2ff4761fded38c0c20968324385e5ae1a67abb2422f45",
+      "sameSeedChecked": true,
+      "bytes": 1455112,
+      "sha256": "7ab85126d60565b738449fcc09918704c46a74056b08203caa9b07f973f024b2",
+      "dimensionsMeters": [
+        1.1159660816192627,
+        0.2409999966621399,
+        0.9877989292144775
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "tires-3",
+      "family": "tires",
+      "name": "Neumáticos apilados",
+      "seed": 3,
+      "uses": [
+        "Barreras y rincones del circuito"
+      ],
+      "model": "models/tires-3.glb",
+      "triangles": 5832,
+      "vertices": 3060,
+      "materials": [
+        "JM_Prop_rubber"
+      ],
+      "geometrySha256": "e6c2a93c153b65d90f67c0890898a223c7f31e3f55ca089e53661eeabd027a7f",
+      "sameSeedChecked": true,
+      "bytes": 584948,
+      "sha256": "c4a8bb1d398066f34010987ea4960d01853259d96a7544df759f387f7c29b2d3",
+      "dimensionsMeters": [
+        0.5307897329330444,
+        0.42000001668930054,
+        0.5401099920272827
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "tires-17",
+      "family": "tires",
+      "name": "Neumáticos apilados",
+      "seed": 17,
+      "uses": [
+        "Barreras y rincones del circuito"
+      ],
+      "model": "models/tires-17.glb",
+      "triangles": 5904,
+      "vertices": 3096,
+      "materials": [
+        "JM_Prop_rubber"
+      ],
+      "geometrySha256": "0556714a19c53ab217500b414d34cb0df4af454f95231598957c0f71e3c654dc",
+      "sameSeedChecked": true,
+      "bytes": 586668,
+      "sha256": "bf03feb2c5e29ee94367ae920b2f65b45d52e780716d856f39ed7ca14cdcee5a",
+      "dimensionsMeters": [
+        0.5468958020210266,
+        0.42000001668930054,
+        0.5512577295303345
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "tires-41",
+      "family": "tires",
+      "name": "Neumáticos apilados",
+      "seed": 41,
+      "uses": [
+        "Barreras y rincones del circuito"
+      ],
+      "model": "models/tires-41.glb",
+      "triangles": 5976,
+      "vertices": 3132,
+      "materials": [
+        "JM_Prop_rubber"
+      ],
+      "geometrySha256": "312b89cf842d1d675b58e4086e03e8ae0ffd9a7d51decf9c25d8c7d498935641",
+      "sameSeedChecked": true,
+      "bytes": 585304,
+      "sha256": "82f925c947449548cbd28d6d10124fc8ed7101a37332b3f7fa39831f4064d25b",
+      "dimensionsMeters": [
+        0.565698504447937,
+        0.42000001668930054,
+        0.5721221566200256
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "drum-3",
+      "family": "drum",
+      "name": "Bidón abollado",
+      "seed": 3,
+      "uses": [
+        "Utilería de patio y taller"
+      ],
+      "model": "models/drum-3.glb",
+      "triangles": 3944,
+      "vertices": 1976,
+      "materials": [
+        "JM_Prop_paint",
+        "JM_Prop_rust",
+        "JM_Prop_steel"
+      ],
+      "geometrySha256": "d7ce8252dffec171878ae06bd516a71e7ab3493d77cebb0ba3f5488184ffe37d",
+      "sameSeedChecked": true,
+      "bytes": 1769348,
+      "sha256": "5ec8bdba5b8369f5387f64cbc17f4d483bcce35357330687a993345d0994b778",
+      "dimensionsMeters": [
+        0.5699999928474426,
+        0.8274999856948853,
+        0.5699999928474426
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "drum-17",
+      "family": "drum",
+      "name": "Bidón abollado",
+      "seed": 17,
+      "uses": [
+        "Utilería de patio y taller"
+      ],
+      "model": "models/drum-17.glb",
+      "triangles": 3780,
+      "vertices": 1894,
+      "materials": [
+        "JM_Prop_paint",
+        "JM_Prop_rust",
+        "JM_Prop_steel"
+      ],
+      "geometrySha256": "3ca4c4d87d56cefb4cdf174eb2369c7f24d71a0660cf82d77341d0744c287406",
+      "sameSeedChecked": true,
+      "bytes": 1763052,
+      "sha256": "98b07eb4d371e867491653ca7c1d2eabbdd1cb0929a1bcf0ed530a2194e53164",
+      "dimensionsMeters": [
+        0.5699999928474426,
+        0.8274999856948853,
+        0.5699999928474426
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "drum-41",
+      "family": "drum",
+      "name": "Bidón abollado",
+      "seed": 41,
+      "uses": [
+        "Utilería de patio y taller"
+      ],
+      "model": "models/drum-41.glb",
+      "triangles": 3888,
+      "vertices": 1948,
+      "materials": [
+        "JM_Prop_paint",
+        "JM_Prop_rust",
+        "JM_Prop_steel"
+      ],
+      "geometrySha256": "dc766d91acf40c0d3098f996afce5cb803d238db7b622b75744a3dd26467a865",
+      "sameSeedChecked": true,
+      "bytes": 1765620,
+      "sha256": "9862196d53cdab521bed44b8a1f0a85343db7a64e6bc0929ca312baf65b7efd6",
+      "dimensionsMeters": [
+        0.5760000944137573,
+        0.8274999856948853,
+        0.5761151313781738
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "sheets-3",
+      "family": "sheets",
+      "name": "Chapas dobladas",
+      "seed": 3,
+      "uses": [
+        "Chatarra y detalles de arena"
+      ],
+      "model": "models/sheets-3.glb",
+      "triangles": 556,
+      "vertices": 284,
+      "materials": [
+        "JM_Prop_paint",
+        "JM_Prop_rust"
+      ],
+      "geometrySha256": "ad60ab99974525b321365f2355067f5f54e6c9af9b97538b89e5585d0b811088",
+      "sameSeedChecked": true,
+      "bytes": 1255352,
+      "sha256": "18198b2b5d4b76b3b73ba29a223d3848fa672b2e0147f9a2cae7424e4f24bf89",
+      "dimensionsMeters": [
+        0.8428337574005127,
+        0.12623313069343567,
+        0.7366125583648682
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "sheets-17",
+      "family": "sheets",
+      "name": "Chapas dobladas",
+      "seed": 17,
+      "uses": [
+        "Chatarra y detalles de arena"
+      ],
+      "model": "models/sheets-17.glb",
+      "triangles": 532,
+      "vertices": 272,
+      "materials": [
+        "JM_Prop_paint",
+        "JM_Prop_rust"
+      ],
+      "geometrySha256": "6d2631aa7849b063d18ed9a8bf521a3f1aa7335afb0af1f0f5b0a3e47e6d8b50",
+      "sameSeedChecked": true,
+      "bytes": 1252972,
+      "sha256": "d28037e1e28764273860f02199ef3444606f0074fadf1bbb823a761db6020ff0",
+      "dimensionsMeters": [
+        0.8691582679748535,
+        0.12682761251926422,
+        0.8144044876098633
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "sheets-41",
+      "family": "sheets",
+      "name": "Chapas dobladas",
+      "seed": 41,
+      "uses": [
+        "Chatarra y detalles de arena"
+      ],
+      "model": "models/sheets-41.glb",
+      "triangles": 524,
+      "vertices": 268,
+      "materials": [
+        "JM_Prop_paint",
+        "JM_Prop_rust"
+      ],
+      "geometrySha256": "4309268d808e1f765c4124f9653273ff5d3eb4f6dfcf2e8f053679b6f6b3f83c",
+      "sameSeedChecked": true,
+      "bytes": 1252984,
+      "sha256": "14ddc4bd6288fcc97c8071e97e2dd985dd3495eb9c74b64503c8970aa6e27fb1",
+      "dimensionsMeters": [
+        0.9239040017127991,
+        0.1338738203048706,
+        0.8788565397262573
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "hardware-3",
+      "family": "hardware",
+      "name": "Tornillería",
+      "seed": 3,
+      "uses": [
+        "Banco de trabajo y bases de props"
+      ],
+      "model": "models/hardware-3.glb",
+      "triangles": 6032,
+      "vertices": 3032,
+      "materials": [
+        "JM_Prop_steel",
+        "JM_Prop_rust"
+      ],
+      "geometrySha256": "297ef80dc304650bbabfa6f16b955685e3d4f7382499842601a370ed05abe6b8",
+      "sameSeedChecked": true,
+      "bytes": 1553364,
+      "sha256": "a4b3814219b31a2f24a2b54497cb434f87aa0512d32f9f982be916ceb3295dc2",
+      "dimensionsMeters": [
+        0.567941427230835,
+        0.11699999868869781,
+        0.4728313386440277
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "hardware-17",
+      "family": "hardware",
+      "name": "Tornillería",
+      "seed": 17,
+      "uses": [
+        "Banco de trabajo y bases de props"
+      ],
+      "model": "models/hardware-17.glb",
+      "triangles": 6032,
+      "vertices": 3032,
+      "materials": [
+        "JM_Prop_steel",
+        "JM_Prop_rust"
+      ],
+      "geometrySha256": "4a4a87b9b94f3f7f5286e5ab6aa6fc191001357424aa52d3a5408af51852551c",
+      "sameSeedChecked": true,
+      "bytes": 1557652,
+      "sha256": "d762e31728dea3f4f102cae43c07f24ad70757a43171c12bdceffc4952bb297b",
+      "dimensionsMeters": [
+        0.5413217544555664,
+        0.11699999868869781,
+        0.5427493453025818
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    },
+    {
+      "id": "hardware-41",
+      "family": "hardware",
+      "name": "Tornillería",
+      "seed": 41,
+      "uses": [
+        "Banco de trabajo y bases de props"
+      ],
+      "model": "models/hardware-41.glb",
+      "triangles": 6032,
+      "vertices": 3032,
+      "materials": [
+        "JM_Prop_steel",
+        "JM_Prop_rust"
+      ],
+      "geometrySha256": "6173d54bc7f015d908ba72a6496eb974acb8efe14d2f7b790345930cbee22ed8",
+      "sameSeedChecked": true,
+      "bytes": 1551640,
+      "sha256": "d807171fc6c27856036bca9b78b238172cebf795c13ee997e230bdafd0130f6f",
+      "dimensionsMeters": [
+        0.46892690658569336,
+        0.11699999868869781,
+        0.48241686820983887
+      ],
+      "pivot": "bottom-center; glTF Y up",
+      "status": "exported-not-integrated"
+    }
+  ]
+}

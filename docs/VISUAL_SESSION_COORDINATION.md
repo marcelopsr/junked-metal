@@ -81,3 +81,10 @@ Continuar la línea visual de Junked Metal desde docs/VISUAL_SESSION_COORDINATIO
 ```
 
 La continuidad se comparte mediante archivos y prompts trasladados por el usuario. No hay sincronización automática de conversaciones ni trabajo garantizado mientras una sesión está cerrada; un agente debe retomar un prompt para continuar.
+
+
+## Props procedurales disponibles — v1 (2026-10-10)
+
+`assets-src/procedural-props/v1/` aporta quince modelos GLB reales: pallets, neumáticos apilados, bidones abollados, chapas y tornillería, con tres variantes por semilla. Incluye fuente Blender empaquetada, generador, quince mapas PBR y catálogo. Visor local: http://localhost:5173/assets-src/procedural-props/v1/index.html. Leer README/HANDOFF del paquete antes de regenerar o integrar. Verificados en Babylon pc/cel; reserva de esta tanda liberada.
+
+Complementa los recursos recientes de Gemini; no está integrado en partidas ni sustituye esos archivos. Gemini, Antigravity y cualquier herramienta/modelo autorizado pueden reutilizar una selección, proponer su integración dentro del alcance vigente o crear versiones nuevas, sin esperar revisión obligatoria de Codex. Conservar fuentes editadas, consultar Git y reservas activas; no publicar esta biblioteca local. LOD, AO horneado, instancias de integración y rendimiento real pendientes.

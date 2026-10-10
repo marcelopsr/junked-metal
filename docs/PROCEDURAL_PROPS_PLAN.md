@@ -1,0 +1,11 @@
+# Biblioteca procedural de props — v1
+
+2026-10-10. El usuario pidió continuar generando recursos procedurales en la dirección visual aprobada. Esta tanda produce cinco familias complementarias al entorno creado por Gemini: pallet envejecido, neumáticos apilados, bidón abollado, chapas dobladas y tornillería. Tres semillas por familia, quince GLB estáticos completos a 360°, fuentes Blender, materiales PBR procedurales y catálogo con semilla, escala, geometría y usos.
+
+Reserva temporal de esta sesión: `assets-src/procedural-props/v1/` y este plan. No tocar los modelos activos ni el banco cinematográfico compartido; hay trabajo concurrente en car/HUD/modelos/audio. Reusar `assets-src/cars/rc_common.py` para geometría y `assets-src/bicho.py` para materiales/color, sin usar su exportación a `public/`. Fuentes y recursos quedan en esta biblioteca local, fuera del build normal y sin publicación.
+
+Materiales: madera, goma, acero, óxido y pintura amarilla. Color, normal y rugosidad/metal generados numéricamente, no derivados de fotografías. Desgaste y variación por semilla; proporciones y siluetas legibles desde arriba. No crear rigs, física, colisiones ni un sistema de gameplay nuevo. Objetivo inicial: un objeto fusionado por recurso, hasta cuatro primitivas/materiales y menos de 12.000 triángulos por GLB; registrar medidas reales.
+
+Entrega: generador reproducible, .blend empaquetado, GLB, PNG PBR, catálogo y visor Babylon local con día/noche y órbita, descargas y evidencia pc/cel. Comprobar exportaciones, UV/normales, buffers finitos, carga de las quince variantes, pivotes sobre suelo y límites; reproducibilidad geométrica con misma semilla y variación con semilla distinta. Verificar la tanda al final usando los comandos existentes y un Chromium headless con candados, cerrado al terminar. Revisión Ponytail del generador/visor antes del cierre.
+
+Estado final: quince GLB producidos y verificados, 53.796 triángulos y 19,84 MB en total. Pasan tipos, 80 tests, build y comprobación Babylon pc/cel con conjunto completo visible, quince selecciones, luces y cero errores/desbordamiento. Reserva liberada; resultados y límites en `assets-src/procedural-props/v1/HANDOFF.md`. Cualquier herramienta/modelo autorizado puede continuar o aportar otra versión. No integrados en partidas ni publicados.

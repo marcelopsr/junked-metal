@@ -1,0 +1,162 @@
+{
+  "date": "2026-10-10",
+  "binaryChecks": [
+    {
+      "id": "pallet-3",
+      "triangles": 1588,
+      "primitives": 2,
+      "minY": 0,
+      "maxY": 0.2409999966621399,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "pallet-17",
+      "triangles": 1588,
+      "primitives": 2,
+      "minY": 0,
+      "maxY": 0.2409999966621399,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "pallet-41",
+      "triangles": 1588,
+      "primitives": 2,
+      "minY": 0,
+      "maxY": 0.2409999966621399,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "tires-3",
+      "triangles": 5832,
+      "primitives": 1,
+      "minY": 0,
+      "maxY": 0.42000001668930054,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "tires-17",
+      "triangles": 5904,
+      "primitives": 1,
+      "minY": 0,
+      "maxY": 0.42000001668930054,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "tires-41",
+      "triangles": 5976,
+      "primitives": 1,
+      "minY": 0,
+      "maxY": 0.42000001668930054,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "drum-3",
+      "triangles": 3944,
+      "primitives": 3,
+      "minY": 0,
+      "maxY": 0.8274999856948853,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "drum-17",
+      "triangles": 3780,
+      "primitives": 3,
+      "minY": 0,
+      "maxY": 0.8274999856948853,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "drum-41",
+      "triangles": 3888,
+      "primitives": 3,
+      "minY": 0,
+      "maxY": 0.8274999856948853,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "sheets-3",
+      "triangles": 556,
+      "primitives": 2,
+      "minY": 0,
+      "maxY": 0.12623313069343567,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "sheets-17",
+      "triangles": 532,
+      "primitives": 2,
+      "minY": 0,
+      "maxY": 0.12682761251926422,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "sheets-41",
+      "triangles": 524,
+      "primitives": 2,
+      "minY": 0,
+      "maxY": 0.1338738203048706,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "hardware-3",
+      "triangles": 6032,
+      "primitives": 2,
+      "minY": 0,
+      "maxY": 0.11699999868869781,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "hardware-17",
+      "triangles": 6032,
+      "primitives": 2,
+      "minY": 0,
+      "maxY": 0.11699999868869781,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    },
+    {
+      "id": "hardware-41",
+      "triangles": 6032,
+      "primitives": 2,
+      "minY": 0,
+      "maxY": 0.11699999868869781,
+      "embeddedTextures": true,
+      "finiteAttributes": true
+    }
+  ],
+  "results": [
+    {
+      "viewport": "pc",
+      "loaded": 15,
+      "selectedAllVariants": true,
+      "lights": true,
+      "reset": true,
+      "allInFrame": true,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "viewport": "cel",
+      "loaded": 15,
+      "selectedAllVariants": true,
+      "lights": true,
+      "reset": true,
+      "allInFrame": true,
+      "overflow": false,
+      "errors": []
+    }
+  ]
+}
