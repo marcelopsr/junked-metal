@@ -6,15 +6,18 @@
 // Las animaciones y las partículas hacen que dos corridas nunca sean idénticas: `tol` = % de píxeles distintos que se tolera (por defecto TOL).
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
+import { changedSessions } from "./lib/changed.mjs";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 import { launch, open } from "./lib/browser.mjs";
 import { sessions } from "./scenarios.mjs";
 
-const { values: a } = parseArgs({ options: { only: { type: "string" }, vp: { type: "string" }, diff: { type: "boolean" }, update: { type: "boolean" } } });
+const { values: a } = parseArgs({ options: { only: { type: "string" }, vp: { type: "string" }, diff: { type: "boolean" }, update: { type: "boolean" }, changed: { type: "boolean" }, base: { type: "string" } } });
+/** --changed [--base ref]: solo las sesiones que tocan los archivos cambiados (ver lib/changed.mjs). Nada visual → sale sin abrir el navegador. */
+function pickChanged(ref) { const { files, sessions } = changedSessions(ref || "HEAD"); console.log(`--changed: ${files.length} archivos → ${sessions.join(", ") || "nada que capturar"}`); if (!sessions.length) process.exit(0); return sessions; }
 const TOL = 1.0; // % de píxeles que pueden cambiar sin avisar (calibrado con dos corridas seguidas, ver CLAUDE.md)
 const [ACT, REF, DIF] = [".shots/actual", ".shots/ref", ".shots/diff"];
-const only = a.only?.split(",");
+const only = a.changed ? pickChanged(a.base) : a.only?.split(",");
 /** Sin guión: id exacto del shot (`garaje`, `ficha-hormiga`). Con guión: substring en la clave `vp-sesión-shot`. */
 const shotMatches = (vp, sid, shid, o) => {
   const key = `${vp}-${sid}-${shid}`;

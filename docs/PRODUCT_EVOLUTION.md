@@ -699,45 +699,53 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
     - Paneo estéreo direccional en el chispazo de arco voltaico `SFX.zap(pan)`.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando), `npm run build` (410 ms), `pm2 restart rc-test`, `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas en PC y celular sin errores en 30.2 s) y `graphify update .` (3332 nodos, 7965 aristas).
 
+### Ciclo #40 (2026-10-10) — Badges de Ranura en Taller, Jitter RF en HUD, Motor 540 3D y Relé / Tesla SFX (`f303c4c`)
+- **Alcance implementado (4 Especialistas Paralelos):**
+  - **Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`):** Badges diegéticos de ranura (`.slot-badge`: "AERODINÁMICA", "BLINDAJE", "TRACCIÓN", "TRANSMISIÓN", "SUSPENSIÓN", "MOTORIZACIÓN") en las tarjetas de piezas del Taller, propagación de ranura en `UNLOCKS.piezas()`, y animación diegética de ensamble `.bought-pulse` (`@keyframes part-mounted` con resplandor verde de 0.6s) tras comprar piezas en el taller.
+  - **Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`):** Jitter estocástico de radiofrecuencia (±2 dBm) en zona periférica (`isLoss` o `distCenter > 85`), y parpadeo de advertencia analógica `.sig-warn` en decibelios con color ámbar `#f59e0b` y resplandor CRT.
+  - **Procedural 3D & Folded Modeler (`src/models.ts`):** Motor eléctrico brushed tamaño 540 con lata cilíndrica cromada montada transversalmente junto al diferencial trasero, anillo de ventilación en grafito oscuro y piñón dentado de transmisión en bronce de alta visibilidad en `buggy` y `monster`.
+  - **Audio & Synth Sound Designer (`src/sfx.ts`):** Firma acústica de relé electromagnético de alta corriente (`turboRelay`) con contacto agudo y pulso inductivo, y descarga de arco voltaico direccional (`teslaDischarge`) con barrido sawtooth y paneo estéreo.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (407 ms), `pm2 restart rc-test`, `npm run shots` (163 capturas verificadas en PC y móvil en 96.1 s sin errores) y `graphify update .` (3344 nodos, 7985 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #40 (Especialistas Matriciales)
+## 4. Backlog Vivo de Oportunidades — Ciclo #41 (Especialistas Matriciales)
 
 ### A. Especialista 1 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
-1. **(Recomendada) Badge Diegético de Ranura en Piezas (`[ALERÓN]`, `[DEFENSA]`) y Clic Escalonado de Paleta:**
-   - **Qué es:** Mostrar la ranura funcional antes del nombre de cada pieza en venta en el Taller para evitar confusiones de montaje, más micro-clic acústico analógico al recorrer la paleta con cruceta/teclado.
-   - **Valor:** Máxima claridad de compra y tactilidad de perilla escalonada de taller RC. Complejidad: Baja.
+1. **(Recomendada) Indicador Diegético 'MONTADO / EN USO' en Tarjetas del Taller:**
+   - **Qué es:** En la pestaña Piezas del Taller, si una pieza ya comprada coincide con la actualmente equipada en `save.kit[sl]`, mostrar un pill tenue `"MONTADO"` o `"EN USO"` junto al badge de ranura.
+   - **Valor:** Evita alternar constantemente entre Garaje y Taller para saber qué componente está activo en el chasis. Complejidad: Baja.
 
 ### B. Especialista 2 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-2. **Micro-Parpadeo Analógico en Señal Fringe (`.fringe-jitter`) y Termómetro Dinámico del ESC:**
-   - **Qué es:** Jitter numérico analógico en los decibelios dBm al caer por debajo de -80 dBm, más graduación dinámica de temperatura del variador (65°C nominal a 95°C de corte) en lugar de valor estático.
-   - **Valor:** Realismo hardcore de transmisión analógica RC (OpenTX/EdgeTX). Complejidad: Media.
+2. **Voltage Sag Diegético Reactivo y Alerta Acústica Sincronizada:**
+   - **Qué es:** Deflexión dinámica en `displayV` y el bloque LiPo al mantener presionado el nitro/boost sostenido, simulando la resistencia interna real de packs LiPo 2S/3S, con parpadeo reactivo de celda.
+   - **Valor:** Máxima fidelidad de telemetría de radiocontrol en tiempo real. Complejidad: Media.
 
 ### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
-3. **Motor Eléctrico 540 con Piñón/Corona Visible y Servomotor de Dirección con Horn:**
-   - **Qué es:** Lata metálica cilíndrica del motor brushless tamaño 540 con piñón de bronce y corona dentada en el eje trasero, más servomotor delantero con brazo (horn) en nylon blanco.
-   - **Valor:** Cierra visualmente la cadena cinemática completa de auto RC a escala 1:10. Complejidad: Media.
+3. **Cableado de Silicona de Potencia ESC-Motor y Condensadores Cerámicos Anti-Chispa:**
+   - **Qué es:** Modelar los cables curvos siliconados (rojo/azul) que unen el variador ESC con las terminales del motor 540, más dos micro-pastillas cerámicas soldadas a la lata del motor como filtros supresores de RF.
+   - **Valor:** Lleva el nivel de detalle procedural del motor a estándar de exposición/hobby RC. Complejidad: Media.
 
 ### D. Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`)
-4. **Paneo Dinámico en Descargas Tesla y Curva de HF Damping en Primitiva `tone()`:**
-   - **Qué es:** Calcular el ángulo relativo de los objetivos alcanzados por arco eléctrico para enviar `pan` dinámico a `SFX.zap`, más amortiguación de armónicos agudos en `tone(..., dist)`.
-   - **Valor:** Lectura auditiva periférica tridimensional y sensación física de distancia. Complejidad: Media.
+4. **Control de Concurrencia para `teslaDischarge` y Conexión de `turboRelay` al Arranque de Nitro:**
+   - **Qué es:** Agregar compuerta `gate("tesla-arc", 16)` con atenuación espacial por distancia en `teslaDischarge`, e invocar `SFX.turboRelay()` en el instante en que el jugador activa el boost en `kart.ts`/`car.ts`.
+   - **Valor:** Limpieza dinámica del bus de efectos y sensación física instantánea de relé de alta corriente. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #39 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 410 ms, 33 capturas en `.shots/actual/` en 30.2 s, grafo en 3332 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #40** con los Especialistas Matriciales.
+- **Último trabajo completado:** Ciclo #40 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 407 ms, 163 capturas en `.shots/actual/` en 96.1 s, grafo en 3344 nodos, commit `f303c4c`).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #41** con los Especialistas Matriciales.
 
-### 🔓 LISTO PARA EL CICLO #40 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #41 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Menu, Workshop & Flow** | Badges de ranura `[ALERÓN]` en compras de taller y clic de paleta | `src/menu.ts`, `src/menu.css` |
-| **Diegetic HUD & Telemetry** | Jitter numérico RSSI en fringe y termómetro graduado dinámico de ESC | `src/ui.ts`, `src/hud.css` |
-| **Procedural 3D Modeler** | Motor 540 con piñón/corona dentada y servo con horn de dirección | `src/models.ts` |
-| **Audio Synth Designer** | Paneo en descargas Tesla y amortiguación HF en `tone(..., dist)` | `src/sfx.ts` |
+| **Menu, Workshop & Flow** | Pill diegético `MONTADO / EN USO` en catálogo de taller y clic auditivo | `src/menu.ts`, `src/menu.css` |
+| **Diegetic HUD & Telemetry** | Voltage Sag dinámico en boost continuo y pulso de telemetría | `src/ui.ts`, `src/hud.css` |
+| **Procedural 3D Modeler** | Cables de potencia ESC-motor 540 y condensadores cerámicos de RF | `src/models.ts` |
+| **Audio Synth Designer** | Disparo de `turboRelay` en activación de nitro y gate en descargas Tesla | `src/sfx.ts` |
 
 
 ## 2026-10-10 · Muestra cinematográfica 3D local (tanda visual independiente)

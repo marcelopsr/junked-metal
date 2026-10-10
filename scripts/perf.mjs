@@ -7,11 +7,14 @@
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { parseArgs } from "node:util";
+import { changedSessions } from "./lib/changed.mjs";
 import { BASE, launch, open } from "./lib/browser.mjs";
 import { sessions } from "./scenarios.mjs";
 
-const { values: a } = parseArgs({ options: { only: { type: "string" }, vp: { type: "string" }, frames: { type: "string", default: "180" }, "no-save": { type: "boolean" } } });
-const FRAMES = Number(a.frames), only = a.only?.split(","), DIR = ".perf";
+const { values: a } = parseArgs({ options: { only: { type: "string" }, vp: { type: "string" }, frames: { type: "string", default: "180" }, "no-save": { type: "boolean" }, changed: { type: "boolean" }, base: { type: "string" } } });
+/** --changed [--base ref]: solo las sesiones que tocan los archivos cambiados (ver lib/changed.mjs). Nada visual → sale sin abrir el navegador. */
+function pickChanged(ref) { const { files, sessions } = changedSessions(ref || "HEAD"); console.log(`--changed: ${files.length} archivos → ${sessions.join(", ") || "nada que capturar"}`); if (!sessions.length) process.exit(0); return sessions; }
+const FRAMES = Number(a.frames), only = a.changed ? pickChanged(a.base) : a.only?.split(","), DIR = ".perf";
 
 // Dentro de la página: calienta la GPU (los relojes tardan en subir) y mide 3 bloques de n/3 cuadros. ms = el MEJOR bloque (mediana de cada uno): el ruido de la Mac
 // (otros procesos, relojes de la GPU) solo suma tiempo, nunca resta. p95 sale de todos los cuadros: ahí sí se ven los tirones.
@@ -38,7 +41,7 @@ try {
       if (s.vps && !s.vps.includes(vp)) continue;
       const sel = s.shots.filter((sh) => sh.perf !== false && (!only || only.some((o) => {
         const key = `${vp}-${s.id}-${sh.id}`;
-        return o.includes("-") ? key.includes(o) : sh.id === o || key === `${vp}-${s.id}-${o}`;
+        return o === s.id || (o.includes("-") ? key.includes(o) : sh.id === o || key === `${vp}-${s.id}-${o}`);
       })));
       if (!sel.length) continue;
       const page = await open(browser, s.query, vp, { freeze: true }), cdp = await page.ctx.newCDPSession(page);

@@ -846,6 +846,25 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #40 (Ecosistema Matricial de Especialistas: Badges de Ranura en Taller, Jitter RF en HUD, Motor 540 3D y Relé / Tesla SFX)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-taller.png`, `.shots/actual/cel-menu-taller.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-menu-garaje.png` (`npm run shots`, 163 capturas en PC y celular sin errores en 96.1 s).
+
+### Intervenciones aplicadas por los 4 Especialistas y verificadas en captura
+1. **Badges diegéticos de ranura técnica y pulso de ensamble en Taller (Menu, Workshop & Flow Specialist · `src/menu.ts`, `src/menu.css`):**
+   - En `renderShop()`, las piezas a la venta incorporan una etiqueta diegética técnica `.slot-badge` (`AERODINÁMICA`, `BLINDAJE`, `TRACCIÓN`, `TRANSMISIÓN`, `SUSPENSIÓN`, `MOTORIZACIÓN`) con tipografía `var(--hf)` en cian translúcido `#38bdf8`, eliminando dudas de compatibilidad o montaje.
+   - Al comprar una pieza (`[data-buy^="part:"]`), se dispara la animación perimetral `.bought-pulse` con resplandor verde de 0.6s emulando el acople inmediato en el chasis.
+2. **Jitter de radiofrecuencia estocástico y alerta parpadeante en RSSI (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, superar los 85 metros activa fluctuación analógica de ±2 dBm en la lectura visible `sigDbm`, reproduciendo la inestabilidad de señal de radiocontrol en el límite de alcance.
+   - La etiqueta de decibelios activa la clase `.sig-warn` con tono ámbar `#f59e0b` y parpadeo rápido `@keyframes sigWarnFlicker` de 2 pasos.
+3. **Motor eléctrico brushed 540 con piñón de bronce (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - En `carModel()`, los vehículos de chasis expuesto (`buggy`, `monster`) incorporan una lata cilíndrica de motor clase 540 cromada montada transversalmente junto al tren trasero, con ranura de ventilación oscura y piñón dentado de transmisión en bronce de alta visibilidad (`M.metal("#d97706")`).
+4. **Firma de relé de potencia de alta corriente y descarga Tesla direccionada (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Se añadió `SFX.turboRelay()` combinando un pulso de contacto eléctrico en onda cuadrada aguda con la respuesta inductiva de bobina en onda triangular.
+   - Se incorporó `SFX.teslaDischarge(pan)` con barrido en diente de sierra y siseo de ionización direccionable en estéreo.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.
