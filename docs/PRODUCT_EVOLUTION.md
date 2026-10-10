@@ -663,38 +663,58 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 4. Backlog Vivo de Oportunidades — Ciclo #38 (Especialistas Matriciales)
 
+### Ciclo #38 (2026-10-10) — Ecosistema Matricial de Especialistas: Swatch Peek y Tracción en Taller, Micro-RF Loss en HUD, Servos y Switch 3D, Rolloff y Colisión Dinámica SFX
+- **Alcance implementado por 4 especialistas en paralelo (partición disjunta estricta):**
+  - **Especialista 1 · Menu, Workshop & Flow (`src/menu.ts`, `src/menu.css`):**
+    - Previsualización dinámica de pintura en foco (`peek.paint`) sobre el modelo 3D activo al navegar las muestras con gamepad, teclado o ratón, con restauración limpia en desenfoque.
+    - Insignia de tracción total `<span class="all-wheel">TRACCIÓN TOTAL</span>` integrada en la barra superior `#bankG` para Monster, Tanque y Pickup, completando la tríada con `PAQUETE AERO` y `PAQUETE OFF-ROAD`.
+  - **Especialista 2 · Diegetic HUD & Telemetry (`src/ui.ts`, `src/hud.css`):**
+    - Pérdida crítica de enlace de radio `#signal.rf-loss` con parpadeo estroboscópico `@keyframes rf-loss` y degradación de contraste al superar 85 m de distancia al centro.
+    - Alerta de sobrecarga térmica `#volt.thermal-stress` en el voltímetro (rojo incandescente `#ef4444` y oscilación de 0.15s) ante turbo prolongado (> 30 frames sostenidos) o temperatura crítica (`d.heat > 0.8`).
+  - **Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`):**
+    - Tirantes articulados cilíndricos del servo de dirección en tren delantero de `formula` y `buggy`.
+    - Micro-switch de corredera de encendido con LED emisor verde (`#22c55e`) de enlace receptor en el lateral del chasis para todos los autos convencionales.
+  - **Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`):**
+    - Factor de rolloff acústico `distGain = Math.max(0.12, 1 / (1 + dist * 0.04))` en `SFX.spatialAlert` y `SFX.spatialHiss`.
+    - Soporte de paneo estéreo opcional en colisiones de embestida `SFX.ram(powerOrPan, pan)` modulando tanto el tono como el ruido de impacto.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando), `npm run build` (467 ms), `pm2 restart rc-test`, `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas en PC y celular sin errores en 135.2 s / 29.5 s de render) y `graphify update .` (3313 nodos, 7942 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #39 (Especialistas Matriciales)
+
 ### A. Especialista 1 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
-1. **(Recomendada) Previsualización de Color en Foco (Swatch Peek) e Insignia de Tracción Total en Cabecera (`#bankG`):**
-   - **Qué es:** Reflejar temporalmente el color en el modelo 3D del auto (`peek.paint`) al navegar las muestras con gamepad/cursor antes de pulsar enter, más llevar la insignia diegética `TRACCIÓN TOTAL` a `#bankG` para cerrar la tríada técnica con `PAQUETE AERO` y `PAQUETE OFF-ROAD`.
-   - **Valor:** Mayor placer táctil al personalizar acabados y consistencia técnica plena en taller. Complejidad: Baja-Media.
+1. **(Recomendada) Vista Previa de Piezas en Catálogo del Taller (`#shop [data-buy]`) y Rótulo Técnico de Color (`.sw-label`):**
+   - **Qué es:** Extender `peek.part` al catálogo de compras del Taller para previsualizar alerones o paragolpes montados en el auto antes de gastar tornillos, más etiqueta técnica (ej. *"CÓD. PNT #D62828 · ROJO LLAMA"*) al recorrer la paleta.
+   - **Valor:** Máxima fluidez y certeza de compra estética sin desvíos de interfaz. Complejidad: Baja-Media.
 
 ### B. Especialista 2 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-2. **Micro-Interferencia Analógica Extrema en Bordes del Patio (`distCenter > 85m`) y Alerta Térmica LiPo:**
-   - **Qué es:** Micro-flicker intermitente `@keyframes rf-loss` en `#signal` cuando el vehículo está a punto de perder alcance radial (< 5m del límite exterior), más pulso térmico en voltímetro al encadenar múltiples turbos/derrapes.
-   - **Valor:** Refuerza la inmersión del radioenlace y la gestión de batería sin texto invasivo. Complejidad: Media.
+2. **Lectura Numérica RSSI en dBm (`#signal .rssi-dbm`) y Micro-Aviso Térmico de Variador/ESC (`#escTemp`):**
+   - **Qué es:** Mostrar valor numérico de atenuación analógica de señal (-45 dBm a -94 dBm) en el panel de antena, más micro-aviso `"ESC: 85°C / ALTA"` adyacente al voltímetro durante `.thermal-stress`.
+   - **Valor:** Profundiza la atmósfera diegética de radiocontrol profesional (estilo OpenTX/EdgeTX). Complejidad: Media.
 
 ### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
-3. **Brazos de Dirección / Servo Visibles en Tren Delantero y Switch de Encendido RC con LED:**
-   - **Qué es:** Tirantes articulados finos hacia los cubos de rueda delantera en chasis descubiertos (`buggy`, `formula`), más micro-switch de corredera con LED indicador de enlace en el chasis.
-   - **Valor:** Aumenta la sensación de escala macro y detalle de maqueta RC artesanal. Complejidad: Baja.
+3. **Conector XT60 con Cables Hacia Variador (ESC) y Clips Pasadores de Carrocería (R-Pins):**
+   - **Qué es:** Enlace de cables rojo/negro de alta corriente desde el LiPo hacia la caja del variador en chasis descubiertos, más pasadores metálicos en horquilla (R-clips) en los postes de sujeción de carrocería.
+   - **Valor:** Riqueza visual milimétrica en vista de garaje y cámaras en primer plano. Complejidad: Baja.
 
 ### D. Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`)
-4. **Atenuación por Distancia (Distance Rolloff) en SFX Espaciales y Paneo Dinámico en Colisiones:**
-   - **Qué es:** Parámetro `dist?: number` para modular ganancia de avisos espaciales según lejanía del emisor, y cálculo del ángulo de choque relativo para enviar `pan` dinámico en impactos.
-   - **Valor:** Espacialización acústica inmersiva y lectura auditiva táctica de amenazas perimetrales. Complejidad: Media.
+4. **Amortiguación Acústica de Agudos por Distancia (HF Air Absorption) y Paneo en Armas Perimetrales:**
+   - **Qué es:** Modulación dinámica del filtro pasa-bajos según distancia para simular absorción del aire sobre frecuencias altas, más enrutamiento de paneo espacial a proyectiles/armas perimetrales (`tesla`, `sierra`, `flame`).
+   - **Valor:** Paisaje sonoro 3D hiperrealista y lectura táctica periférica sin costo computacional. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #37 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 429 ms, 33 capturas en `.shots/actual/` en 30.4 s, grafo sincronizado en 3237 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #38** con los Especialistas Matriciales.
+- **Último trabajo completado:** Ciclo #38 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 467 ms, 33 capturas en `.shots/actual/` en 30 s de render, grafo en 3313 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #39** con los Especialistas Matriciales.
 
-### 🔓 LISTO PARA EL CICLO #38 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #39 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Menu, Workshop & Flow** | Previsualización de color en foco (`swatch peek`) e insignia `TRACCIÓN TOTAL` en cabecera | `src/menu.ts`, `src/menu.css` |
-| **Diegetic HUD & Telemetry** | Micro-flicker RF por alcance extremo (`rf-loss`) y alerta térmica LiPo | `src/ui.ts`, `src/hud.css` |
-| **Procedural 3D Modeler** | Brazos de servo de dirección en tren delantero y micro-switch RC con LED | `src/models.ts` |
-| **Audio Synth Designer** | Atenuación por distancia (Distance Rolloff) en SFX y paneo dinámico en choques | `src/sfx.ts` |
+| **Menu, Workshop & Flow** | Vista previa de piezas en catálogo del taller y rótulo técnico de color | `src/menu.ts`, `src/menu.css` |
+| **Diegetic HUD & Telemetry** | Lectura RSSI en dBm en antena y micro-aviso térmico ESC 85°C | `src/ui.ts`, `src/hud.css` |
+| **Procedural 3D Modeler** | Conector XT60 hacia ESC y pasadores R-pins en torretas de carrocería | `src/models.ts` |
+| **Audio Synth Designer** | Amortiguación de agudos por distancia (HF Damping) y paneo en armas | `src/sfx.ts` |

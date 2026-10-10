@@ -52,6 +52,12 @@
 #lvl.milestone { background: linear-gradient(135deg, #ffd24a, #ff9138); color: #1f1100; box-shadow: 0 0 10px rgba(255, 210, 74, .6); }
 #signal.up { animation: h-levelup .7s ease-out both; }
 #signal.fringe { opacity: .6; filter: grayscale(.4); }
+#signal.rf-loss { animation: rf-loss .2s steps(2) infinite; filter: contrast(1.6) brightness(.8); }
+@keyframes rf-loss {
+  0% { opacity: .2; }
+  50% { opacity: .9; }
+  100% { opacity: .3; }
+}
 #lcd { top: calc(max(10px, env(safe-area-inset-top)) + 58px); left: 14px; transform-origin: 0 0; display: flex; align-items: baseline; gap: 12px; padding: 7px 14px; }
 #timer { font: 700 32px/1 var(--hf); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 #lcd .sub { font: 700 15px/1 var(--hf); letter-spacing: .08em; color: var(--g-dim); font-variant-numeric: tabular-nums; }
@@ -123,6 +129,7 @@
 #txl.low #volt { color: #ff5252; text-shadow: 0 0 6px rgba(255, 82, 82, .65); animation: voltPulse .6s ease-in-out infinite alternate; }
 @keyframes voltPulse { from { opacity: .7; } to { opacity: 1; } }
 #volt.sag { color: #f59e0b; text-shadow: 0 0 8px rgba(245, 158, 11, .7); animation: voltPulse .2s infinite alternate; }
+#volt.thermal-stress { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, .8); animation: voltPulse .15s infinite alternate; }
 #lipo.panic i:first-child.unbalanced { animation: lipo-cell-sag .25s steps(2) infinite; }
 @keyframes lipo-cell-sag {
   0% { opacity: .2; }

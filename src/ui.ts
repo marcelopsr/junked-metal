@@ -49,7 +49,8 @@ export function hudWorkshop(perm: Partial<Record<(typeof WSHOP_KEYS)[number], nu
   box.innerHTML = `<span class="h-tape">TALLER</span><div class="ws">${items.map((k) => `<span class="ws-i">${icon(WSHOP_ICON[k], 16)}<b>${perm[k]}</b></span>`).join("")}</div>`;
 }
 
-export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number; shield?: boolean; boostActive?: boolean; distCenter?: number }) {
+let boostHold = 0;
+export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number; shield?: boolean; boostActive?: boolean; distCenter?: number; heat?: number }) {
   const p = Math.max(0, d.hp / d.maxHp);
   // 3 celdas LiPo: se vacían de derecha a izquierda
   Array.from($("lipo").children).forEach((c, i) => {
@@ -86,11 +87,16 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   const displayV = Math.max(0, v - sag);
   const isSag = sag > 0;
   if (ch("sag", +isSag)) $("volt").classList.toggle("sag", isSag);
+  boostHold = d.boostActive ? Math.min(120, boostHold + 1) : 0;
+  const isThermal = boostHold >= 30 || Boolean(d.heat && d.heat > 0.8);
+  if (ch("thermalStress", +isThermal)) $("volt").classList.toggle("thermal-stress", isThermal);
   txt("volt", `${displayV.toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   if (d.distCenter !== undefined) {
     const isFringe = d.distCenter > 75;
     if (ch("sigFringe", +isFringe)) $("signal").classList.toggle("fringe", isFringe);
+    const isLoss = d.distCenter > 85;
+    if (ch("rfLoss", +isLoss)) $("signal").classList.toggle("rf-loss", isLoss);
   }
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);

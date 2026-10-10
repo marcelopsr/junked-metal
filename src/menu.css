@@ -58,6 +58,7 @@ body.calm .scr.on { animation-duration: .05s; }
 .paints-pct { margin-left: 6px; font: 700 11px/1 var(--hf); color: #ec4899; background: rgba(236, 72, 153, .15); padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(236, 72, 153, .35); vertical-align: middle; }
 .aero-pkg { margin-left: 6px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #38bdf8; background: rgba(56, 189, 248, .15); border: 1px solid rgba(56, 189, 248, .4); border-radius: 3px; letter-spacing: .06em; vertical-align: middle; }
 .rally-pkg { margin-left: 6px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #84cc16; background: rgba(132, 204, 22, .15); border: 1px solid rgba(132, 204, 22, .4); border-radius: 3px; letter-spacing: .06em; vertical-align: middle; }
+#bankG .all-wheel { margin-top: 0; margin-left: 6px; vertical-align: middle; }
 /* Legibilidad: las listas del garaje van sobre vidrio oscuro (como #bpanel), se lean sobre el fondo que sea */
 .paint-status { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-bottom: 2px; }
 .paint-filters { --border: var(--line, rgba(255, 255, 255, .15)); display: flex; gap: 4px; margin-bottom: 6px; }

@@ -14,7 +14,7 @@ import { engineTest, initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { setDrawDist, ZONES, type ZoneId } from "./world";
 import { camCycle, isTouch, padsConnected } from "./input";
-import { bestRace, MEDAL, medalOf, medalTimes, raceCfg, saveRaceCfg, TRACKS, trackName, type RaceCtl } from "./kart";
+import { bestRace, MEDAL, medalOf, medalTimes, raceCfg, saveRaceCfg, TRACKS, trackName, type RaceCtl } from "./kart_cfg";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, abilCd, abilK, CURSES, type AbilityId, type CurseId } from "./abilities";
 import { FINALS, previewProfile, type Elite } from "./run";
@@ -230,7 +230,7 @@ function show() {
   (f && f.isConnected && f.offsetParent ? f : focusables()[0])?.focus({ preventScroll: false });
 }
 export function go(s: Scr) {
-  peek.car = peek.pilot = peek.part = undefined; // la vista previa no sale del garaje
+  peek.car = peek.pilot = peek.part = peek.paint = undefined; // la vista previa no sale del garaje
   const top = current();
   if (top && document.activeElement instanceof HTMLElement) ret.set(top, document.activeElement);
   ret.delete(s);
@@ -273,6 +273,7 @@ function back() {
   if (s === "pause") return api.resume();
   if (s === "over") return api.quit();
   if (s === "garage" && editing) { editing = false; renderGarage(); return focusSel('[data-dact="edit"]'); } // Esc / B: sale del editor, no del garaje
+  peek.paint = undefined;
   stack.pop();
   show();
   if (s === "beast") { focusSel(`[data-beast="${BV.kind}"]`); BV.kind = null; } // vuelve a la ficha chica del bicho que se estaba viendo
@@ -527,16 +528,28 @@ function buy(id: string) {
   persist();
   return true;
 }
+const PZ = { paint: "Carrocería", trim: "Detalles", rim: "Llantas" };
+let pz: keyof typeof PZ = "paint";
 /** Arma inicial de la partida: la elegida en el garaje si está comprada (si no, Gomitas). Ver startWeapons (pilots.ts). */
 export const startPick = (): WeaponId => (owns("arma:" + save.weapon) ? save.weapon : "gomitas");
 /** Lo que hay que mostrar sobre el auto (garaje, portada y partida). */
-// Vista previa en el garaje: con el foco (mouse, teclado o control) sobre algo bloqueado, el modelo lo muestra sin comprarlo
-export const peek: { car?: CarKind; pilot?: PilotId; part?: [Slot, string] } = {};
+// Vista previa en el garaje: con el foco (mouse, teclado o control) sobre algo bloqueado o muestra de pintura, el modelo lo muestra
+export const peek: { car?: CarKind; pilot?: PilotId; part?: [Slot, string]; paint?: string } = {};
 export const shownCar = (): CarKind => peek.car ?? save.car;
-export const carOpts = (): CarOpts => ({ paint: save.paint || undefined, trim: save.trim || undefined, rim: save.rim || undefined, ...save.kit, ...(peek.part ? { [peek.part[0]]: peek.part[1] } : {}), pilot: peek.pilot ?? save.pilot, sticker: save.decals[save.decalSel] || undefined });
+export const carOpts = (): CarOpts => ({
+  paint: (pz === "paint" && peek.paint !== undefined ? peek.paint : save.paint) || undefined,
+  trim: (pz === "trim" && peek.paint !== undefined ? peek.paint : save.trim) || undefined,
+  rim: (pz === "rim" && peek.paint !== undefined ? peek.paint : save.rim) || undefined,
+  ...save.kit,
+  ...(peek.part ? { [peek.part[0]]: peek.part[1] } : {}),
+  pilot: peek.pilot ?? save.pilot,
+  sticker: save.decals[save.decalSel] || undefined,
+});
 addEventListener("focusin", (e) => {
   const inf = (e.target as HTMLElement).closest?.("#shop [data-info]") as HTMLElement | null; // vista previa del Taller: antes → después y partidas que faltan
   if (inf) $("sinfo").textContent = inf.dataset.info!;
+  const sw = (e.target as HTMLElement).closest?.("#paint [data-sw]") as HTMLElement | null;
+  if (!sw) peek.paint = undefined;
   const el = (e.target as HTMLElement).closest?.(".locked[data-k],.locked[data-pilot],.locked[data-part]") as HTMLElement | null;
   peek.car = peek.pilot = peek.part = undefined;
   if (!el || current() !== "garage") return;
@@ -600,7 +613,9 @@ function renderGarage() {
   const aeroPkgTag = hasAero ? '<span class="aero-pkg">PAQUETE AERO</span>' : "";
   const hasOffroad = Boolean(save.car === "monster" || save.car === "buggy" || save.kit.tires === "todoterreno");
   const rallyPkgTag = hasOffroad ? '<span class="rally-pkg">PAQUETE OFF-ROAD</span>' : "";
-  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span> <span class="parts-pct">${pctParts}% TALLER</span>${aeroPkgTag}${rallyPkgTag} <span class="paints-pct">${ownedPaints}/${PAINTS.length} PINTURAS</span>`;
+  const hasAwd = Boolean(save.car === "monster" || save.car === "tanque" || (save.car as string) === "pickup");
+  const awdPkgTag = hasAwd ? '<span class="all-wheel">TRACCIÓN TOTAL</span>' : "";
+  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span> <span class="parts-pct">${pctParts}% TALLER</span>${aeroPkgTag}${rallyPkgTag}${awdPkgTag} <span class="paints-pct">${ownedPaints}/${PAINTS.length} PINTURAS</span>`;
   $("gtabs").innerHTML = tabsHtml(GTABS, gtab, "gtab");
   $("paint").classList.toggle("hidden", gtab !== "pintura");
   $("cars").classList.toggle("hidden", gtab === "pintura");
@@ -660,8 +675,6 @@ function renderGarage() {
 }
 // ---------- Pintura por zona (garaje → Pintura): paleta + selector libre (tono, saturación, brillo) ----------
 // Las perillas son <input type="range">: mouse, dedo, flechas y el stick (move() ya las mueve) sin código propio. Gratis: los colores no cuestan tornillos.
-const PZ = { paint: "Carrocería", trim: "Detalles", rim: "Llantas" };
-let pz: keyof typeof PZ = "paint";
 const zoneColor = () => save[pz] || factoryColor(shownCar())[pz];
 const hex2hsv = (h: string) => {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255), mx = Math.max(r, g, b), d = mx - Math.min(r, g, b);
@@ -704,6 +717,29 @@ function renderPaint() {
     + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
     + `<div class="note">${pz === "trim" ? "Detalles: alerón, paragolpes, defensas y accesorios." : pz === "rim" ? "Llantas de las cuatro ruedas (o de las que haya)." : "Carrocería: la chapa entera."} Pintar es gratis: el patio cobra en otras cosas.</div>`;
   hsvBars(h, sat, v);
+  $("paint").querySelectorAll<HTMLElement>(".pal .sw").forEach((b) => {
+    const c = b.dataset.sw;
+    if (!c) return;
+    const setPeek = () => {
+      peek.paint = c;
+      const chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot");
+      if (chip) { chip.style.background = c; chip.textContent = c.toUpperCase(); }
+      if (dot) dot.style.background = c;
+    };
+    const clearPeek = () => {
+      if (peek.paint === c) {
+        peek.paint = undefined;
+        const base = zoneColor();
+        const chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot");
+        if (chip) { chip.style.background = base; chip.textContent = base.toUpperCase(); }
+        if (dot) dot.style.background = base;
+      }
+    };
+    b.addEventListener("mouseenter", setPeek);
+    b.addEventListener("mouseleave", clearPeek);
+    b.addEventListener("focus", setPeek);
+    b.addEventListener("blur", clearPeek);
+  });
 }
 // Perillas: mientras se arrastra solo cambia la muestra; al soltar (change) se aplica al auto (rearmar el modelo en cada paso crearía un material por tono)
 const hsvNow = () => { const g = (k: string) => +(document.querySelector<HTMLInputElement>(`[data-hsv="${k}"]`)?.value ?? 0); return [g("h"), g("s"), g("v")] as const; };
@@ -1386,10 +1422,10 @@ export function initMenu(a: Api) {
     else if (d.dact === "undo") undo();
     else if (d.dact === "edit") { editing = true; renderGarage(); focusSel("#dgrid"); }
     else if (d.dact === "done") { editing = false; renderGarage(); focusSel('[data-dact="edit"]'); }
-    else if (d.sw || d.pdef) { save[pz] = d.sw ?? ""; persist(); renderPaint(); focusSel(d.sw ? `[data-sw="${d.sw}"]` : "[data-pdef]"); }
-    else if (d.pz) { pz = d.pz as typeof pz; renderPaint(); focusSel(`[data-pz="${pz}"]`); }
-    else if (d.pfilt) { pfilt = d.pfilt as typeof pfilt; renderPaint(); focusSel(`[data-pfilt="${pfilt}"]`); }
-    else if (d.gtab) { gtab = d.gtab as typeof gtab; renderGarage(); $("cars").scrollTop = 0; focusSel(`[data-gtab="${gtab}"]`); }
+    else if (d.sw || d.pdef) { peek.paint = undefined; save[pz] = d.sw ?? ""; persist(); renderPaint(); focusSel(d.sw ? `[data-sw="${d.sw}"]` : "[data-pdef]"); }
+    else if (d.pz) { peek.paint = undefined; pz = d.pz as typeof pz; renderPaint(); focusSel(`[data-pz="${pz}"]`); }
+    else if (d.pfilt) { peek.paint = undefined; pfilt = d.pfilt as typeof pfilt; renderPaint(); focusSel(`[data-pfilt="${pfilt}"]`); }
+    else if (d.gtab) { peek.paint = undefined; gtab = d.gtab as typeof gtab; renderGarage(); $("cars").scrollTop = 0; focusSel(`[data-gtab="${gtab}"]`); }
     else if (d.beast) openBeast(d.beast as Kind);
     else if (d.bnav) beastStep(+d.bnav);
     else if (d.banim) { // Caminar queda en bucle hasta volver a pulsarlo; el resto corre una vez

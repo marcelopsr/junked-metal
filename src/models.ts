@@ -498,11 +498,18 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     if (kind === "carrera" || (kind as string) === "deportivo") {
       parts.push(box(0.004, 0.09, 0.16, M.matte("#27272a"), [bw * 0.45, bh * 0.65, 0]));
     }
+    if (kind === "formula" || kind === "buggy") {
+      for (const sx of [-bw * 0.32, bw * 0.32]) {
+        parts.push(cyl(0.008, 0.008, 0.16, chrome, [sx, bh * 0.25, bl * 0.36], [0, 0, sx > 0 ? 0.3 : -0.3], 4));
+      }
+    }
     if (kind !== "tanque") {
       const ax = bw * 0.35, ay = bh * 0.7, az = -bl * 0.42;
       parts.push(
         cyl(0.008, 0.008, 0.65, M.metal("#71717a"), [ax, ay + 0.32, az], [0.1, 0, 0.05], 4),
-        box(0.01, 0.08, 0.12, M.plastic("#ef4444"), [ax, ay + 0.6, az - 0.06])
+        box(0.01, 0.08, 0.12, M.plastic("#ef4444"), [ax, ay + 0.6, az - 0.06]),
+        box(0.015, 0.01, 0.02, M.plastic("#18181b"), [-bw * 0.49, bh * 0.5, bl * 0.1]),
+        box(0.006, 0.006, 0.006, M.plastic("#22c55e"), [-bw * 0.49, bh * 0.52, bl * 0.12])
       );
     }
     if (kind !== "axel") for (const sd of [-1, 1]) parts.push(cyl(0.07, 0.07, 0.2, chrome, [sd * bw * 0.22, 0.14, -bl * 0.5 - 0.04], [Math.PI / 2, 0, 0], 12), cyl(0.045, 0.045, 0.22, M.matte("#101010"), [sd * bw * 0.22, 0.14, -bl * 0.5 - 0.05], [Math.PI / 2, 0, 0], 10)); // escapes

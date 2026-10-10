@@ -803,3 +803,23 @@ Carrera (1) y Survivor en partida (2).
 4. **Ruido filtrado espacial y efectos direccionales (Audio & Synth Sound Designer · `src/sfx.ts`):**
    - Se añadió soporte de paneo estéreo opcional (`pan?: number`, -1 a 1) en la primitiva `hiss()` mediante `StereoPannerNode`.
    - Se añadieron y adaptaron las primitivas de fricción espacial `SFX.spatialHiss(pan, dur)`, `SFX.scrape(pan)` y `SFX.drift(pan)`.
+
+---
+
+## 2026-10-10 · Ciclo #38 (Ecosistema Matricial de Especialistas: Swatch Peek y Tracción en Taller, Micro-RF Loss en HUD, Servos y Switch 3D, Rolloff y Colisión Dinámica SFX)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 135.2 s / 29.5 s de renderizado).
+
+### Intervenciones aplicadas por los 4 Especialistas y verificadas en captura
+1. **Previsualización en foco (`peek.paint`) e insignia de tracción total en cabecera `#bankG` (Menu, Workshop & Flow Specialist · `src/menu.ts`, `src/menu.css`):**
+   - En `renderPaint()`, recorrer las muestras con gamepad, teclado (`focus`) o cursor (`mouseenter`) proyecta temporalmente el color sobre el modelo 3D activo (`peek.paint`), restaurando el previo en `blur`/`mouseleave` si no se confirma.
+   - En `renderGarage()`, se llevó la insignia ámbar `<span class="all-wheel">TRACCIÓN TOTAL</span>` a la barra superior `#bankG` para Monster, Tanque y Pickup, completando la tríada de homologaciones mecánicas con `PAQUETE AERO` y `PAQUETE OFF-ROAD`.
+2. **Pérdida crítica de enlace RF (`.rf-loss`) y sobrecarga térmica en voltímetro (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, superar los 85 m de distancia al centro activa la clase `#signal.rf-loss` con parpadeo estroboscópico de dos pasos y degradación de brillo, simulando pérdida inminente de señal analógica.
+   - Al encadenar aceleración turbo prolongada o registrar temperatura crítica (`d.heat > 0.8`), se activa la clase `#volt.thermal-stress` con brillo rojo incandescente (`#ef4444`) y oscilación rápida de emergencia.
+3. **Brazos de servo articulados y micro-switch de corredera con LED (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - En `carModel()`, los chasis abiertos (`formula`, `buggy`) incorporan tirantes cilíndricos cromados en el eje delantero conectando el servo central con los cubos de dirección.
+   - Todos los vehículos convencionales incorporan en el lateral del chasis un micro-interruptor de encendido con cuerpo plástico oscuro y un micro-LED emisor verde (`#22c55e`) que simula la sincronización activa del receptor RC.
+4. **Atenuación acústica por distancia (*Rolloff*) y paneo estéreo en embestidas (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Se incorporó el factor de caída acústica `distGain = Math.max(0.12, 1 / (1 + dist * 0.04))` en `SFX.spatialAlert(pan, dist)` y `SFX.spatialHiss(pan, dur, dist)`.
+   - Se actualizó `SFX.ram(powerOrPan, pan)` permitiendo colisiones con paneo estéreo direccionado en la onda senoidal y en la capa sorda de choque.

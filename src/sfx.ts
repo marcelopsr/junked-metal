@@ -248,7 +248,13 @@ export const SFX = {
   jingle: () => JINGLE.forEach(([f, d]) => tone("triangle", f, f * 0.995, 0.2, 0.07, d)),
   hit: () => gate("hit", 18) && (tone("sine", 700, 320, 0.05, 0.12), hiss("bandpass", 2400, 900, 0.04, 0.08)),
   kill: (racha = 0) => gate("kill", racha >= 25 ? 22 : 14) && (tone("sine", 520, 180, 0.1, 0.14), tone("triangle", 260, 90, 0.12, 0.08)), // boing
-  ram: (power: number) => { tone("sine", 160, 45, 0.18, Math.min(0.5, 0.2 + power * 0.01)); hiss("lowpass", 1800, 200, 0.12, 0.25); },
+  ram: (powerOrPan: number = 10, pan?: number) => {
+    const isPanOnly = pan === undefined && Math.abs(powerOrPan) <= 1;
+    const pwr = isPanOnly ? 10 : powerOrPan;
+    const p = isPanOnly ? powerOrPan : pan;
+    tone("sine", 160, 45, 0.18, Math.min(0.5, 0.2 + pwr * 0.01), 0, p);
+    hiss("lowpass", 1800, 200, 0.12, 0.25, p);
+  },
   explosion: () => gate("boom", 8) && (hiss("lowpass", 1400, 60, 0.6, 0.45), tone("sine", 90, 30, 0.45, 0.35)),
   zap: () => gate("zap", 10) && hiss("highpass", 6000, 2500, 0.1, 0.12),
   hurt: () => gate("hurt", 6) && (tone("square", 300, 120, 0.16, 0.1), tone("triangle", 150, 70, 0.16, 0.12)), // chirrido de juguete
@@ -265,8 +271,14 @@ export const SFX = {
   },
   scrapClink: (pan?: number) => { tone("triangle", 2200, 1800, 0.04, 0.08, 0, pan); tone("sine", 3200, 2400, 0.03, 0.06, 0.02, pan); },
   collisionWarning: (pan?: number) => { tone("sawtooth", 880, 880, 0.05, 0.08, 0, pan); tone("sawtooth", 880, 880, 0.05, 0.08, 0.08, pan); },
-  spatialAlert: (pan: number) => { tone("triangle", 1046.5, 783.99, 0.08, 0.12, 0, pan); },
-  spatialHiss: (pan: number, dur = 0.15) => { hiss(dur, 0.12, 1200, 0, pan); },
+  spatialAlert: (pan: number, dist?: number) => {
+    const dGain = dist !== undefined ? Math.max(0.12, 1 / (1 + dist * 0.04)) : 1;
+    tone("triangle", 1046.5, 783.99, 0.08, 0.12 * dGain, 0, pan);
+  },
+  spatialHiss: (pan: number, dur = 0.15, dist?: number) => {
+    const dGain = dist !== undefined ? Math.max(0.15, 1 / (1 + dist * 0.04)) : 1;
+    hiss(dur, 0.12 * dGain, 1200, 0, pan);
+  },
   scrape: (pan?: number) => { hiss("bandpass", 2200, 600, 0.08, 0.14, pan); },
   drift: (pan?: number) => { hiss("bandpass", 1100, 400, 0.12, 0.12, pan); },
   boostSurge: () => { tone("triangle", 220, 880, 0.15, 0.18); tone("sawtooth", 440, 1100, 0.12, 0.15, 0.04); },
