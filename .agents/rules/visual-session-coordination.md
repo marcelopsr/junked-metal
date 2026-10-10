@@ -1,9 +1,11 @@
 ---
 trigger: always_on
-description: "Preserve the authorized cinematic art work shared between independent Codex and Gemini sessions."
+description: "Preserve shared art resources across user-selected tools and models, with autonomous or orchestrated work."
 ---
 
 # Continuidad de arte entre sesiones
+
+El equipo puede usar las herramientas y modelos que el usuario elija. Aplicar `docs/SPECIALISTS_ECOSYSTEM.md`: roles por tarea, trabajo autónomo o coordinación temporal, sin proveedor supervisor permanente. Todos pueden aportar y aprovechar recursos, fuentes y evidencia. Conservar la configuración nativa de cada sesión; el método no activa agentes ni sincroniza chats.
 
 El usuario autorizó colaborar entre la sesión visual de Codex y los ciclos de Gemini el 2026-10-10. Antes de tocar arte cinematográfico, leer `docs/VISUAL_SESSION_COORDINATION.md`, sus referencias y el estado Git actual. Mantener el proveedor nativo de cada harness; el usuario puede trasladar los prompts entre sesiones.
 

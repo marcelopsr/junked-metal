@@ -16,7 +16,9 @@ HUD de telemetría RC como terminal gastada, **nada de emojis ni UI genérica**)
 5. **Decisiones del usuario**: solo para dudas reales de diseño, balance o prioridad; al cerrar una tanda, otra ronda si hay decisiones abiertas. No preguntas sueltas en el chat. Herramientas del proyecto y de la Mac: usar sin pedir permiso. **Git:** commit local tras cada tanda con cambios; push a `origin/master` sin preguntar al terminar una tanda significativa o al cerrar sesión (usuario autorizó). Nunca preguntar sobre commit/push salvo que el usuario lo pida explícitamente.
 6. **Plan antes de feature**: features nuevas, modos o cambios que crucen módulos exigen plan en `docs/` hasta cerrar las decisiones, antes de cualquier código (ejemplo: `docs/BATTLE_RC_PLAN.md`).
 
-## Continuidad visual entre Codex y Gemini
+## Equipo compartido y continuidad visual
+
+El usuario aclaró el 2026-10-10 que pueden contribuir todas las herramientas y modelos que él elija. Leer `docs/SPECIALISTS_ECOSYSTEM.md`: permite sesiones autónomas o un orquestador por tanda, roles sin proveedor fijo y recursos compartidos con fuentes, catálogo, verificación y handoff. Ninguna plataforma es supervisora permanente; conservar la configuración nativa de cada sesión y las reservas temporales. Esta metodología no activa agentes ni sincroniza conversaciones automáticamente.
 
 El usuario autorizó el 2026-10-10 continuar el arte en Codex y aprovechar los ciclos de Gemini mediante encargos que él pueda trasladar. Leer `docs/VISUAL_SESSION_COORDINATION.md` antes de intervenir en esa línea: contiene el estado real, los archivos reservados, tareas independientes y prompts de continuidad. La escena experimental y sus recursos no son los modelos activos del juego. No incluir archivos de otra sesión en commits ni publicar esta muestra local.
 

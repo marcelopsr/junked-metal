@@ -17,30 +17,28 @@ Haz **todos** los cambios de código primero y ejecuta esta secuencia de verific
 
 ## 2. Secuencia Obligatoria de Verificación
 
-### Paso 1: Chequeo Estático, Tests Unitarios y Build de Producción
-Ejecuta siempre estos tres comandos:
+### Paso 1: Chequeo Estático y Tests (en proporción al cambio)
+No correr todo por costumbre (filosofía del usuario, 2026-10-10). Siempre:
 ```bash
 npx tsc --noEmit -p .
-npm test
-npm run build
 ```
-- `tsc --noEmit` valida el tipado estricto y que la fachada `src/bjs.ts` exporte todo lo usado de `@babylonjs/core`.
-- `npm test` corre toda la suite de Vitest (`balance`, `importer`, `save`, `run`, `stats`, `duel_build`, `match3`).
-- `npm run build` confirma que Vite empaqueta limpio hacia `dist/` con `base: "./"`.
+- Lógica con pruebas: `npx vitest run --changed --passWithNoTests` (solo las afectadas). `npm test` entero solo antes de commit/push.
+- `npm run build`: solo antes de push o si tocaste config de Vite, imports dinámicos o assets.
 - Si tocaste `src/balance.json` o `scripts/balance-*.mjs`, corre además `npm run balance:check`.
+- Docs o herramientas sin efecto en el juego: solo lo mínimo que pruebe lo tocado.
 
 ### Paso 2: Verificación Headless Proporcional (contra `rc-test` `:5174`)
 Si modificaste código de runtime (`src/`), reinicia primero `rc-test` y corre **de a una** las herramientas proporcionales al cambio:
 
 ```bash
-pm2 restart rc-test
+npm run test:restart
 ```
 
 - **Si tocaste UI, CSS, menús, HUD, modelos 3D o shaders:**
   ```bash
-  npm run shots -- --only <escenario_o_shot>
+  npm run shots -- --changed   # o --only <escenario_o_shot> si sabés exactamente qué mirar
   ```
-  Inspecciona las capturas generadas en `.shots/actual/` con `view_file` (PC y celular) y verifica que no haya errores de consola. Para regresión visual amplia: `npm run shots -- --diff`.
+  Inspecciona las capturas generadas en `.shots/actual/` con `view_file` (PC y celular) y verifica que no haya errores de consola. Suite completa (`npm run shots -- --diff` sin filtro) solo para renovar referencias o si el usuario lo pide.
 - **Si tocaste el modo Demolición (`src/duel*.ts`):**
   ```bash
   npm run playtest:duel

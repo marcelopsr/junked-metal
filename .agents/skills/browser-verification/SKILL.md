@@ -18,7 +18,7 @@ description: >-
 1. **Nunca levantes servidores propios ni abras puertos nuevos:** Usa siempre `rc-test` en `:5174` (sin HMR) administrado por `pm2`.
 2. **Reinicia `rc-test` antes de capturar tras cambios de código:**
    ```bash
-   pm2 restart rc-test
+   npm run test:restart
    ```
 3. **Un solo navegador headless con GPU Metal:** `scripts/lib/browser.mjs` lanza Chromium con `--use-angle=metal`, `--enable-gpu`, `--mute-audio` y congela el loop de render (`freeze: true`, `1/60 s` por cuadro) para que todo avance de forma determinista con `window.__tick(n)`.
 4. **Una herramienta a la vez:** Nunca corras `shots`, `perf`, `sim` o `playtest:duel` en paralelo entre sí (comparten `rc-test` y la GPU del Mac).
@@ -27,11 +27,12 @@ description: >-
 
 ```bash
 # Capturar un escenario o shot puntual en PC y celular (~5-10 s)
+npm run shots -- --changed            # por defecto: solo lo que toca el diff
 npm run shots -- --only garaje
 npm run shots -- --only match3
 npm run shots -- --only duel --vp pc
 
-# Capturar todos los escenarios en PC (1280x720) y celular (390x844) (~30 s)
+# Suite completa (todas las sesiones, PC y celular): SOLO para renovar referencias o si el usuario lo pide
 npm run shots
 
 # Comparar contra las referencias en .shots/ref/ (genera .shots/diff/ y exit 1 si supera tol)

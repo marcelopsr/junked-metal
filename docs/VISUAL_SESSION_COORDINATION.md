@@ -1,6 +1,8 @@
-# Continuidad visual — Codex y ciclos Gemini
+# Continuidad visual — equipo y recursos compartidos
 
 Actualizado: 2026-10-10. El usuario pidió que esta línea de arte pueda avanzar en varias sesiones y aprovechar el trabajo de los agentes Gemini. Esta ficha es la entrada de continuidad; consultar `git status`, `git log` y los archivos reales al retomar. No presupone que un agente esté ejecutándose ni que conozca mensajes de otro chat.
+
+**Ampliación del usuario:** cualquier herramienta o modelo que él elija puede aportar y reutilizar estos recursos. Codex y Antigravity/Gemini son colaboradores actuales, no roles exclusivos. `docs/SPECIALISTS_ECOSYSTEM.md` define el método común: trabajo autónomo o un orquestador temporal por tanda, fuentes y catálogo compartidos, reservas breves y cierre verificable. Los prompts específicos de abajo son ejemplos de continuidad, no requisitos de proveedor.
 
 ## Objetivo aprobado y estado real
 
@@ -24,15 +26,15 @@ La autonomía mantiene las decisiones del usuario, los límites de publicación 
 
 ## Coordinación de archivos y oportunidades independientes
 
-Las siguientes carpetas son destinos propuestos, no una lista exhaustiva ni trabajo ya iniciado. Gemini puede tomar una oportunidad libre o definir otra dentro de su alcance autorizado. Antes de comenzar registra agente/sesión, fecha, tarea y archivos en la tabla; cambia el estado a en curso. Solo su responsable modifica esos archivos mientras esté en curso. Al terminar deja resultado, commit y límites, y libera la reserva. Si aparece una reserva vigente o un diff ajeno en un archivo necesario, conserva ese diff y toma una tarea independiente; no espera ni pide confirmación para seguir con lo independiente.
+Las siguientes carpetas son destinos propuestos, no una lista exhaustiva ni trabajo ya iniciado. Gemini puede tomar una oportunidad libre o definir otra dentro de su alcance autorizado. Cualquier herramienta/modelo autorizado puede tomar estas líneas. Los nombres `gemini-*` son destinos históricos propuestos, no una restricción de autoría; se puede reservar una carpeta con nombre neutral sin borrar fuentes previas. Antes de comenzar registra agente/sesión, fecha, tarea y archivos en la tabla; cambia el estado a en curso. Solo su responsable modifica esos archivos mientras esté en curso. Al terminar deja resultado, commit y límites, y libera la reserva. Si aparece una reserva vigente o un diff ajeno en un archivo necesario, conserva ese diff y toma una tarea independiente; no espera ni pide confirmación para seguir con lo independiente.
 
 | Línea | Responsable / estado | Archivos asignados | Entrega esperada |
 |---|---|---|---|
 | Composición e integración del banco visual | Sin reserva activa; muestra inicial de Codex verificada | `art-lab.html`, `src/art_lab.ts`, `src/art_lab.css`, `scripts/cinematic-check.mjs`, archivos directamente bajo `assets-src/cinematic-3d/` | Cualquier sesión puede reservar y evolucionar el banco, incorporar recursos y verificarlo sin esperar revisión de Codex |
-| Frenchie: anatomía y pelo | Disponible para ciclo Gemini | Solo `assets-src/cinematic-3d/gemini-frenchie/` | Copia refinada del frenchie, script reproducible si aplica, Blender con texturas empaquetadas, GLB, capturas 360° y siete clips comprobados |
-| Vegetación y props | Disponible para ciclo Gemini | Solo `assets-src/cinematic-3d/gemini-environment/` | Matas curvas y variadas, cerca/props reutilizables, materiales, Blender/GLB y prueba visual local aislada |
-| Eulalio cinematográfico | Disponible para ciclo Gemini | Solo `assets-src/cinematic-3d/gemini-eulalio/` | Copia del gato basada en `07-eulalio.png`, fuente completa a 360°, materiales y conservación/prueba del rig existente |
-| Rendimiento e integración futura | Investigación disponible para Gemini; integración pendiente de alcance concreto | Solo `assets-src/cinematic-3d/gemini-performance/` para informe y variantes LOD | Comparar geometría/peso, proponer estrategia compatible con instancias/VAT y cámaras actuales; no modificar runtime compartido todavía |
+| Frenchie: anatomía y pelo | Disponible para cualquier sesión | Solo `assets-src/cinematic-3d/gemini-frenchie/` | Copia refinada del frenchie, script reproducible si aplica, Blender con texturas empaquetadas, GLB, capturas 360° y siete clips comprobados |
+| Vegetación y props | Disponible para cualquier sesión | Solo `assets-src/cinematic-3d/gemini-environment/` | Matas curvas y variadas, cerca/props reutilizables, materiales, Blender/GLB y prueba visual local aislada |
+| Eulalio cinematográfico | Disponible para cualquier sesión | Solo `assets-src/cinematic-3d/gemini-eulalio/` | Copia del gato basada en `07-eulalio.png`, fuente completa a 360°, materiales y conservación/prueba del rig existente |
+| Rendimiento e integración futura | Investigación disponible para cualquier sesión; integración pendiente de alcance concreto | Solo `assets-src/cinematic-3d/gemini-performance/` para informe y variantes LOD | Comparar geometría/peso, proponer estrategia compatible con instancias/VAT y cámaras actuales; no modificar runtime compartido todavía |
 
 Los ciclos Gemini pueden seguir su trabajo autorizado en `src/main.ts`, `src/models.ts`, `src/render.ts`, `src/world.ts`, `src/glb.ts`, `src/kart.ts`, menú/HUD, audio, balance, configuración y herramientas comunes. Estos archivos no quedan bloqueados por Codex ni por esta ficha. Para una integración visual que los alcance, definir alcance, plan y responsable, respetando cualquier trabajo activo; Gemini puede realizarla sin revisión obligatoria de Codex cuando tenga autorización del usuario para esa integración. La muestra actual todavía no está integrada ni autoriza por sí sola a reemplazar el arte de las partidas. No copiar ni modificar `.claude/` o `CLAUDE.md`.
 
@@ -52,6 +54,8 @@ Cada encargo entrega `HANDOFF.md` dentro de su carpeta con: estado (propuesto/en
 El usuario pidió más recursos como la tierra aprobada. La tanda `assets-src/material-library/v1/` aporta ocho albedos independientes: tierra compactada, hierba/tierra, hormigón, madera, acero oxidado, pintura amarilla, asfalto y ladrillo. PNG originales de 1254 × 1254, WebP a igual resolución, prompts exactos y `assets.json` con usos, parámetros iniciales y mapas ausentes. Galería local: http://localhost:5173/assets-src/material-library/v1/index.html. Leer su `README.md` y `HANDOFF.md` antes de integrar.
 
 Gemini puede aplicar estos recursos o producir variantes de forma autónoma dentro de su alcance autorizado; no necesita esperar revisión de Codex. No están aplicados a las partidas. Repetición no certificada sin costuras y normal/ORM pendientes; el atlas Folded activo de 64 px requiere una estrategia propia para conservar detalle. La carpeta no entra en el build normal ni se publica. La reserva de producción se libera al completar esta tanda; futuras sesiones conservan sus originales y usan versiones nuevas.
+
+**Ambientación elegida y producida — v1:** `assets-src/environment-library/v1/` complementa las superficies con cuatro imágenes RGBA independientes: aceite, huellas de neumáticos, hojas y pequeños restos. PNG 1254 × 1254, WebP con alpha exacto, prompts, catálogo, guía y galería de composición sobre tres suelos. Leer su `HANDOFF.md` para el cierre y las pruebas. Son recursos planos disponibles, no efectos físicos ni integración en partidas. Cualquier sesión autorizada puede aportar variantes o aprovecharlos.
 
 ## Prompt listo para Gemini
 

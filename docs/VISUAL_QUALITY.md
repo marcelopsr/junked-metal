@@ -865,6 +865,24 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #41 (Ecosistema Matricial de Especialistas: Indicador 'MONTADO' en Taller, Voltage Sag Reactivo, Cables Silicona 540 3D y Relé en Nitro SFX)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-taller.png`, `.shots/actual/cel-menu-taller.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-menu-garaje.png` (`npm run shots`, 163 capturas en PC y celular sin errores en 97.2 s).
+
+### Intervenciones aplicadas por los 4 Especialistas y verificadas en captura
+1. **Indicador diegético 'MONTADO' y clic de perilla en Paleta (Menu, Workshop & Flow Specialist · `src/menu.ts`, `src/menu.css`):**
+   - En `renderShop()`, las piezas que ya están montadas en el vehículo activo (`save.kit[slotKey] === optKey`) muestran el badge verde esmeralda `<span class="slot-badge mounted">MONTADO</span>`, permitiendo al jugador auditar su setup sin salir al Garaje.
+   - En `renderPaint()`, la navegación entre tonos de pintura (`focus` / `mouseenter`) reproduce el micro-clic analógico `SFX.blip()`, otorgando tactilidad de perilla rotativa física al seleccionar acabados.
+2. **Caída de tensión electroquímica reactiva (*Voltage Sag*) en HUD (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, la aceleración a fondo bajo boost (`d.boostActive`) induce una deflexión reactiva de 0.32V en `finalV` y activa la clase `#lipo.sag`, reduciendo contraste y brillo en las celdas de la batería para simular la demanda interna de amperaje.
+3. **Cableado de silicona ESC-motor y condensadores cerámicos de RF (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - En `carModel()`, los chasis expuestos (`buggy`, `monster`) incorporan cables flexibles cilíndricos en silicona roja (`#ef4444`) y azul (`#2563eb`) conectando el variador ESC con los bornes del motor 540, junto a dos micro-pastillas cerámicas amarillas (`#eab308`) soldadas a la lata metálica como filtros supresores de interferencia.
+4. **Relé electromagnético en nitro y compuerta espacial en arcos Tesla (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Se conectó `SFX.turboRelay()` al arranque de `boostSurge()`, dotando a la aceleración de nitro de un impacto físico mecánico previo al barrido de frecuencia.
+   - En `SFX.teslaDischarge(pan, dist)`, se integró limitador de tasa mediante `gate("tesla-arc", 16)` y atenuación espacial por distancia tanto en el oscilador principal como en el siseo residual.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

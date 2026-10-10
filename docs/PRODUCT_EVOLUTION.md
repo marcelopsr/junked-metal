@@ -707,45 +707,53 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Audio & Synth Sound Designer (`src/sfx.ts`):** Firma acústica de relé electromagnético de alta corriente (`turboRelay`) con contacto agudo y pulso inductivo, y descarga de arco voltaico direccional (`teslaDischarge`) con barrido sawtooth y paneo estéreo.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (407 ms), `pm2 restart rc-test`, `npm run shots` (163 capturas verificadas en PC y móvil en 96.1 s sin errores) y `graphify update .` (3344 nodos, 7985 aristas).
 
+### Ciclo #41 (2026-10-10) — Indicador 'MONTADO' en Taller, Voltage Sag Reactivo, Cables Silicona 540 3D y Relé en Nitro SFX
+- **Alcance implementado (4 Especialistas Paralelos):**
+  - **Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`):** Indicador diegético `<span class="slot-badge mounted">MONTADO</span>` con borde y fondo verde esmeralda (`#22c55e`) en las tarjetas de piezas del Taller para las partes actualmente montadas en el vehículo activo (`save.kit[slotKey] === optKey`), y micro-clic acústico de selector rotativo de taller `SFX.blip()` al recorrer las muestras de la cabina de pintura.
+  - **Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`):** Caída electroquímica reactiva (*Voltage Sag*) de `0.32V` en el voltímetro digital y atenuación de contraste/brillo `#lipo.sag` en los bloques LiPo bajo demanda extrema de aceleración (`d.boostActive`).
+  - **Procedural 3D & Folded Modeler (`src/models.ts`):** Cableado flexible de silicona de alta corriente (rojo `#ef4444` y azul `#2563eb`) conectando el variador ESC con las terminales del motor 540, más dos condensadores cerámicos amarillos de supresión de RF (`#eab308`) soldados sobre la lata metálica en chasis abiertos (`buggy`, `monster`).
+  - **Audio & Synth Sound Designer (`src/sfx.ts`):** Conexión física de `SFX.turboRelay()` al inicio de `boostSurge()` para conferir pegada electromecánica instantánea de relé al activar el nitro, y limitador de concurrencia `gate("tesla-arc", 16)` con atenuación espacial por distancia en `SFX.teslaDischarge(pan, dist)`.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (414 ms), `pm2 restart rc-test`, `npm run shots` (163 capturas verificadas en PC y móvil en 97.2 s sin errores) y `graphify update .` (3382 nodos, 8036 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #41 (Especialistas Matriciales)
+## 4. Backlog Vivo de Oportunidades — Ciclo #42 (Especialistas Matriciales)
 
 ### A. Especialista 1 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
-1. **(Recomendada) Indicador Diegético 'MONTADO / EN USO' en Tarjetas del Taller:**
-   - **Qué es:** En la pestaña Piezas del Taller, si una pieza ya comprada coincide con la actualmente equipada en `save.kit[sl]`, mostrar un pill tenue `"MONTADO"` o `"EN USO"` junto al badge de ranura.
-   - **Valor:** Evita alternar constantemente entre Garaje y Taller para saber qué componente está activo en el chasis. Complejidad: Baja.
+1. **(Recomendada) Montaje Directo desde el Taller para Piezas Adquiridas:**
+   - **Qué es:** Permitir que al hacer clic en una pieza que ya está en posesión del jugador (`"EN EL GARAJE"`), se monte/desmonte inmediatamente en el auto activo (`save.kit[slot] = opt; persist(); renderShop();`) con feedback auditivo `SFX.scrapClink()`, sin obligar a ir a Garaje → Piezas.
+   - **Valor:** Flujo de usuario continuo e inmediato de taller de competición. Complejidad: Baja.
 
 ### B. Especialista 2 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-2. **Voltage Sag Diegético Reactivo y Alerta Acústica Sincronizada:**
-   - **Qué es:** Deflexión dinámica en `displayV` y el bloque LiPo al mantener presionado el nitro/boost sostenido, simulando la resistencia interna real de packs LiPo 2S/3S, con parpadeo reactivo de celda.
-   - **Valor:** Máxima fidelidad de telemetría de radiocontrol en tiempo real. Complejidad: Media.
+2. **Curva de Recuperación Elástica Post-Sag y Chirp Sonoro de Enlace Límite:**
+   - **Qué es:** Simular la relajación electroquímica gradual (~250ms con amortiguación suave) al soltar el acelerador en lugar de rebote instantáneo, y conectar un micro-chirp piezoeléctrico en `sfx.ts` cuando la señal cae por debajo de -90 dBm.
+   - **Valor:** Respuesta orgánica analógica que separa la química LiPo de una barra genérica. Complejidad: Media.
 
 ### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
-3. **Cableado de Silicona de Potencia ESC-Motor y Condensadores Cerámicos Anti-Chispa:**
-   - **Qué es:** Modelar los cables curvos siliconados (rojo/azul) que unen el variador ESC con las terminales del motor 540, más dos micro-pastillas cerámicas soldadas a la lata del motor como filtros supresores de RF.
-   - **Valor:** Lleva el nivel de detalle procedural del motor a estándar de exposición/hobby RC. Complejidad: Media.
+3. **Disipador de Calor Clip-on Anodizado para Monster Truck y Servo Horn Delantero:**
+   - **Qué es:** Añadir un disipador clip-on de aluminio con aletas radiales anodizadas en azul eléctrico sobre el motor 540 de `monster`, más el brazo de servo de dirección (servo horn) en nylon blanco en tren frontal de `buggy`/`formula`.
+   - **Valor:** Acentúa la personalización pesada de todoterreno RC de alta potencia. Complejidad: Media.
 
 ### D. Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`)
-4. **Control de Concurrencia para `teslaDischarge` y Conexión de `turboRelay` al Arranque de Nitro:**
-   - **Qué es:** Agregar compuerta `gate("tesla-arc", 16)` con atenuación espacial por distancia en `teslaDischarge`, e invocar `SFX.turboRelay()` en el instante en que el jugador activa el boost en `kart.ts`/`car.ts`.
-   - **Valor:** Limpieza dinámica del bus de efectos y sensación física instantánea de relé de alta corriente. Complejidad: Media.
+4. **Resonancia de Carrocería por Colisión (`bodyThud`) y Alarma Piezoeléctrica LiPo Crítica:**
+   - **Qué es:** Sintetizar el golpe sordo de resonancia hueca de lexan/policarbonato en colisiones de carrocería, y una alarma piezoeléctrica intermitente cuando la batería cae del 15% (emulando los buzzer de telemetría LiPo).
+   - **Valor:** Feedback sonoro inmersivo y advertencia auditiva crítica sin desviar la mirada al HUD. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #40 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 407 ms, 163 capturas en `.shots/actual/` en 96.1 s, grafo en 3344 nodos, commit `f303c4c`).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #41** con los Especialistas Matriciales.
+- **Último trabajo completado:** Ciclo #41 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 414 ms, 163 capturas en `.shots/actual/` en 97.2 s, grafo en 3382 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #42** con los Especialistas Matriciales.
 
-### 🔓 LISTO PARA EL CICLO #41 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #42 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Menu, Workshop & Flow** | Pill diegético `MONTADO / EN USO` en catálogo de taller y clic auditivo | `src/menu.ts`, `src/menu.css` |
-| **Diegetic HUD & Telemetry** | Voltage Sag dinámico en boost continuo y pulso de telemetría | `src/ui.ts`, `src/hud.css` |
-| **Procedural 3D Modeler** | Cables de potencia ESC-motor 540 y condensadores cerámicos de RF | `src/models.ts` |
-| **Audio Synth Designer** | Disparo de `turboRelay` en activación de nitro y gate en descargas Tesla | `src/sfx.ts` |
+| **Menu, Workshop & Flow** | Montaje directo de piezas compradas desde el Taller sin volver a Garaje | `src/menu.ts`, `src/menu.css` |
+| **Diegetic HUD & Telemetry** | Relajación elástica post-sag y chirp analógico en señal crítica | `src/ui.ts`, `src/hud.css` |
+| **Procedural 3D Modeler** | Disipador clip-on anodizado en motor Monster y horn de servo delantero | `src/models.ts` |
+| **Audio Synth Designer** | Resonancia hueca de lexan `bodyThud` y buzzer piezoeléctrico LiPo baja | `src/sfx.ts` |
 
 
 ## 2026-10-10 · Muestra cinematográfica 3D local (tanda visual independiente)

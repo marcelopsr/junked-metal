@@ -35,7 +35,7 @@ Todos los números de balance del juego viven en [`src/balance.json`](../../src/
    ```
 5. Si el cambio afecta supervivencia o jefes, valida con simulación:
    ```bash
-   pm2 restart rc-test
+   npm run test:restart
    npm run sim -- --seeds 1,2 --secs 600
    ```
 

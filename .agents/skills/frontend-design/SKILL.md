@@ -41,5 +41,5 @@ Consulta [references/tokens-and-surfaces.md](./references/tokens-and-surfaces.md
   - En Carrera (`src/kart.ts`), nunca mostrar el selector de 2 jugadores en táctil (`raceCfg.players` = 1).
 
 ## 4. Verificación Visual Obligatoria
-1. Reinicia `rc-test` (`pm2 restart rc-test`) y captura los escenarios afectados con `npm run shots -- --only <id>`.
+1. Reinicia `rc-test` (`npm run test:restart`) y captura los escenarios afectados con `npm run shots -- --only <id>`.
 2. Inspecciona las capturas en `.shots/actual/` con `view_file` (PC y celular) y evalúa con la rúbrica de 10 dimensiones de `docs/VISUAL_QUALITY.md`.

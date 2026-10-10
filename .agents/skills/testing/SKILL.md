@@ -16,10 +16,10 @@ description: >-
 
 | Nivel | Herramienta / Comando | Tiempo | Qué protege |
 |---|---|---|---|
-| **1. Lógica Pura (Unit)** | `npm test` (`vitest run` sobre `test/*.test.ts`) | `< 1 s` | Esquema y guardas de `balance.json` (`balance.test.ts`), importador TSV (`importer.test.ts`), sanitización y migraciones de guardado (`save.test.ts`), semillas y climas (`run.test.ts`), pasivas/pilotos (`stats.test.ts`), armado de Demolición (`duel_build.test.ts`), reglas y balance de Match-3 (`match3.test.ts`, `match3_balance.test.ts`). |
+| **1. Lógica Pura (Unit)** | `npx vitest run --changed --passWithNoTests` en la tanda; `npm test` entero antes de commit/push | `< 1 s` | Esquema y guardas de `balance.json` (`balance.test.ts`), importador TSV (`importer.test.ts`), sanitización y migraciones de guardado (`save.test.ts`), semillas y climas (`run.test.ts`), pasivas/pilotos (`stats.test.ts`), armado de Demolición (`duel_build.test.ts`), reglas y balance de Match-3 (`match3.test.ts`, `match3_balance.test.ts`). |
 | **2. Ida y Vuelta de Planilla** | `npm run balance:check` | `~1 s` | Generación de `balance.xlsx` y re-importación sin diferencias ni pérdida de precisión. |
-| **3. Simulación Headless (Bot & Jefes)** | `npm run sim -- --seeds 1,2,3 --secs 600` / `--duel perro,aspiradora` | `~12 s` / semilla | Balance real de supervivencia de 10 min, progresión de XP/niveles, daño por arma (`__out()`) y daño recibido (`__dmg()`), duelos contra jefes finales en `rc-test` (`:5174`). |
-| **4. Flujo E2E de Modos** | `npm run playtest:duel` y `npm run shots` | `15–30 s` | Integración DOM + WebGL + Havok en PC y celular sin errores de consola. |
+| **3. Simulación Headless (Bot & Jefes)** | `npm run sim -- --seeds 1,2 --secs 600` (más semillas solo si se tocó balance) / `--duel perro,aspiradora` | `~12 s` / semilla | Balance real de supervivencia de 10 min, progresión de XP/niveles, daño por arma (`__out()`) y daño recibido (`__dmg()`), duelos contra jefes finales en `rc-test` (`:5174`). |
+| **4. Flujo E2E de Modos** | `npm run playtest:duel` y `npm run shots -- --changed` | `15–30 s` | Integración DOM + WebGL + Havok en PC y celular sin errores de consola. |
 
 ## 2. Reglas para Escribir Buenos Tests en `test/*.test.ts`
 1. **Sin DOM ni WebGL en Vitest:** Los tests de `test/` corren en Node puro con Vitest. Cuando diseñes lógica nueva (como `src/savefmt.ts`, `src/duel_build.ts` o `src/match3_logic.ts`), mantén las funciones de reglas/estado desacopladas del DOM y de Babylon para poder probarlas en `< 1 s` con `npm test`.
@@ -29,7 +29,7 @@ description: >-
    - Si tocas lógica con azar (`src/run.ts`, `src/match3_logic.ts`), fija la semilla con `seedRng(N)` y comprueba tanto el determinismo (misma semilla = mismo resultado) como las cotas estadísticas en múltiples semillas.
 
 ## 3. Uso de `npm run sim` para Balance de Combate
-Antes de correr `npm run sim`, asegúrate de haber reiniciado `rc-test` si cambiaste código (`pm2 restart rc-test`):
+Antes de correr `npm run sim`, asegúrate de haber reiniciado `rc-test` si cambiaste código (`npm run test:restart`):
 ```bash
 # Partida completa del bot (600 s de juego) en semillas 1 y 2
 npm run sim -- --seeds 1,2 --secs 600

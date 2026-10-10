@@ -7,6 +7,7 @@ description: "Enforce strict Gemini-only model usage, Flash Low/Medium/High reas
 
 ## 1. Exclusividad de Modelos Gemini (GEMINI ONLY)
 - Este proyecto opera dentro de Antigravity **exclusivamente con modelos Gemini** (Gemini Flash Low, Medium y High, o equivalentes Gemini más recientes).
+- **Alcance de esta configuración (aclaración del usuario, 2026-10-10):** describe el routing nativo actual de Antigravity, no una exclusividad del repositorio. El equipo comparte recursos con todas las herramientas y modelos que el usuario elija; una elección explícita posterior del usuario prevalece. Aplicar `docs/SPECIALISTS_ECOSYSTEM.md` para trabajo autónomo o con orquestador temporal. No cambiar proveedores por iniciativa propia.
 - **Dentro de Antigravity:** no invoques modelos de Claude, OpenAI ni otros proveedores como principal, revisor o subagente; conserva el routing nativo Gemini.
 - **Colaboración entre sesiones autorizada por el usuario (2026-10-10):** Codex puede trabajar por separado en el mismo repositorio y entregar encargos a los ciclos de Gemini a través del usuario. Esto no cambia el proveedor de Antigravity ni autoriza invocar otro harness desde Gemini. Aplicar `docs/VISUAL_SESSION_COORDINATION.md` para propiedad de archivos, continuidad y evidencia compartida.
 - **Autonomía aclarada por el usuario:** Gemini puede avanzar y cerrar ciclos dentro del alcance autorizado sin esperar revisión de Codex; la revisión posterior es opcional. Las oportunidades visuales no restringen otras líneas ya autorizadas.

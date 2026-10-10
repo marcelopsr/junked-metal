@@ -80,11 +80,12 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     lip.classList.remove("healing"); void lip.offsetWidth; lip.classList.add("healing");
   }
   memo.prevHp = d.hp;
-  const v = 9 + 3.6 * p;
-  const sag = d.boostActive ? 0.22 : 0;
-  const displayV = Math.max(0, v - sag);
+  const displayV = 9 + 3.6 * p;
+  const sag = (d.boostActive ? 0.32 : 0);
+  const finalV = Math.max(0, displayV - sag);
   const isSag = sag > 0;
   if (ch("sag", +isSag)) $("volt").classList.toggle("sag", isSag);
+  if (ch("voltSag", +Boolean(d.boostActive))) $("lipo")?.classList.toggle("sag", Boolean(d.boostActive));
   boostHold = d.boostActive ? Math.min(120, boostHold + 1) : 0;
   const isThermal = boostHold >= 30 || Boolean(d.heat && d.heat > 0.8);
   if (ch("thermalStress", +isThermal)) $("volt").classList.toggle("thermal-stress", isThermal);
@@ -97,7 +98,7 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     $("volt").insertAdjacentElement("afterend", escEl);
   }
   if (ch("escThermal", +isThermal)) escEl.style.display = isThermal ? "" : "none";
-  txt("volt", `${displayV.toFixed(1)}V${low ? " · BAJA" : ""}`);
+  txt("volt", `${finalV.toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   const isLoss = (d.distCenter ?? 0) > 85;
   if (d.distCenter !== undefined) {

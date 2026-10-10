@@ -616,11 +616,14 @@ function renderShop() {
     const pips = i.max ? `<div class="pips">${"<i class=on></i>".repeat(i.lv!)}${"<i></i>".repeat(i.max - i.lv!)}</div>` : "";
     const price = done ? (i.max ? "MÁXIMO" : i.ach && !i.bought ? `Logro: ${i.ach}` : "EN EL GARAJE") : `${i.cost} tornillos`;
     const p = i;
-    const slotKey = p.slot || (stab === "piezas" && p.attr.includes('data-buy="part:') ? p.attr.split(":")[1] : undefined);
+    const partsMatch = stab === "piezas" ? /data-buy="part:([^:]+):([^"]+)"/.exec(p.attr) : null;
+    const slotKey = (p.slot || (partsMatch ? partsMatch[1] : (stab === "piezas" && p.attr.includes('data-buy="part:') ? p.attr.split(":")[1] : undefined))) as Slot | undefined;
+    const optKey = partsMatch ? partsMatch[2] : (stab === "piezas" && p.attr.includes('data-buy="part:') ? p.attr.split(":")[2]?.replace(/"$/, "") : undefined);
     let slotBadge = "";
     if (stab === "piezas" && slotKey) {
       const slotLabel = SLOT_LABELS[slotKey] || slotKey.toUpperCase();
-      slotBadge = `<span class="slot-badge">${slotLabel}</span>`;
+      const isMounted = optKey !== undefined && (save.kit?.[slotKey] === optKey || (optKey === "def" && !save.kit?.[slotKey]));
+      slotBadge = `<span class="slot-badge">${slotLabel}</span>` + (isMounted ? ` <span class="slot-badge mounted">MONTADO</span>` : "");
     }
     return `<button class="carc perk ${ok(i) ? "" : "no"}" ${i.attr} data-info="${info}" aria-disabled="${!ok(i)}">${slotBadge}<b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${i.fx ? `<span class="sfx">${i.fx}</span>` : ""}${pips}<div class="price">${price}</div></button>`;
   }).join("") || `<div class="note">Nada por acá con este filtro. El patio no regala nada.</div>`;
@@ -772,6 +775,7 @@ function renderPaint() {
     const c = b.dataset.sw;
     if (!c) return;
     const setPeek = () => {
+      SFX.blip();
       peek.paint = c;
       const chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot"), lbl = document.getElementById("swLabel");
       if (chip) { chip.style.background = c; chip.textContent = c.toUpperCase(); }

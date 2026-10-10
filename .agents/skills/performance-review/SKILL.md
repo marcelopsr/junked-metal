@@ -30,7 +30,7 @@ No optimices a ciegas ni midas con otros procesos pesados corriendo:
 
 ```bash
 # 1. Reiniciar el servidor de pruebas sin HMR tras cambios
-pm2 restart rc-test
+npm run test:restart
 
 # 2. Medir escenarios puntuales (p. ej. partida a los 90s y partida llena a los 300s en PC)
 npm run perf -- --only partida,partida_llena --vp pc

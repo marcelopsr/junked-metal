@@ -285,10 +285,19 @@ export const SFX = {
   },
   scrape: (pan?: number) => { hiss("bandpass", 2200, 600, 0.08, 0.14, pan); },
   drift: (pan?: number) => { hiss("bandpass", 1100, 400, 0.12, 0.12, pan); },
-  boostSurge: () => { tone("triangle", 220, 880, 0.15, 0.18); tone("sawtooth", 440, 1100, 0.12, 0.15, 0.04); },
+  boostSurge: () => {
+    SFX.turboRelay();
+    tone("triangle", 220, 880, 0.15, 0.18);
+    tone("sawtooth", 440, 1100, 0.12, 0.15, 0.04);
+  },
   turboRelay: () => { tone("square", 1800, 400, 0.015, 0.1); tone("triangle", 220, 80, 0.03, 0.12, 0.015); },
   brakeScreech: (pan?: number) => { tone("sawtooth", 950, 420, 0.12, 0.16, 0, pan); tone("triangle", 600, 300, 0.08, 0.12, 0.03, pan); },
-  teslaDischarge: (pan?: number) => { tone("sawtooth", 450, 1800, 0.08, 0.16, 0, pan); hiss(0.09, 0.14, 2800, 600, pan); },
+  teslaDischarge: (pan?: number, dist?: number) => {
+    if (!gate("tesla-arc", 16)) return;
+    const dGain = dist !== undefined ? Math.max(0.12, 1 / (1 + dist * 0.04)) : 1;
+    tone("sawtooth", 450, 1800, 0.08, 0.16 * dGain, 0, pan);
+    hiss(0.09, 0.14 * dGain, 2800, 600, pan, dist);
+  },
   lipoFull: () => { tone("sine", 587.33, 880, 0.08, 0.14); tone("triangle", 880, 1174.66, 0.1, 0.18, 0.06); },
   // Impacto sobre un bicho según la fuente del daño (dmgSrc de main.ts). Lo que ya suena por su cuenta (explosión, rayo, embestida) no se repite.
   impact: (src: string, crit = false) => {

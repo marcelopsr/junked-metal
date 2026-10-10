@@ -7,6 +7,8 @@ Roguelite 3D de supervivencia y modos arcade con autos RC en un patio gigante (`
 
 ## 1. Principio Fundamental: GEMINI ONLY & Aislamiento
 
+**Alcance aclarado por el usuario (2026-10-10):** Gemini Only es la configuración nativa actual de este harness, no una exclusividad del repositorio. El equipo puede aportar y reutilizar recursos con todas las herramientas y modelos que el usuario elija; sus elecciones explícitas prevalecen. `docs/SPECIALISTS_ECOSYSTEM.md` permite trabajo autónomo o un orquestador temporal por tanda, sin roles fijos por proveedor. No cambiar la configuración de otra sesión por iniciativa propia.
+
 - **Exclusivamente modelos Gemini:** Todo el trabajo principal, revisiones y subagentes (`invoke_subagent` con `inherit`, `flash_lite`, `flash` o `pro`) deben ejecutarse únicamente con modelos Gemini. Prohibido usar o delegar en Claude, Sonnet, Opus, OpenAI, GPT, Codex u otros proveedores sin autorización explícita del usuario.
 - **Aislamiento total respecto a Claude:** `.claude/`, `CLAUDE.md` y `~/.claude/` pertenecen a un sistema independiente. **Prohibido modificarlos, migrarlos o depender de ellos.**
 - **Routing dinámico de razonamiento (sin pedir permiso):**
@@ -25,8 +27,9 @@ Roguelite 3D de supervivencia y modos arcade con autos RC en un patio gigante (`
 3. **Grafo primero (`graphify`):** Antes de usar `grep` masivo o leer archivos enteros (`main.ts` y `menu.ts` superan los 100 KB), consulta `graphify query`, `graphify path` o `graphify explain`, o revisa `graphify-out/wiki/index.md`. Tras modificar código, ejecuta `graphify update .`.
 4. **Escalera Ponytail (YAGNI):** Reusar lo que ya existe → plataforma/stdlib → dependencia instalada → mínimo código nuevo. Atajos deliberados llevan comentario `// ponytail: <techo>`.
 5. **Trabajo en tanda y prueba única:** Aplica todos los cambios de la tanda primero y ejecuta la verificación una sola vez al final.
+   **Verificar en proporción al cambio** (filosofía del usuario, 2026-10-10; vale para TODA prueba): no revisar toda la casa cada vez. Siempre `npx tsc --noEmit -p .` (barato); lógica: `npx vitest run --changed --passWithNoTests`, y `npm test` entero solo antes de commit/push; visual: `npm run shots -- --changed` (elige sesiones por `git diff`, mapa en `scripts/lib/changed.mjs`); `perf -- --changed` solo si el cambio puede costar rendimiento; balance/jugabilidad: `sim` con 1-2 semillas; `npm run build` solo antes de push o si tocaste config, imports dinámicos o assets. Docs y herramientas sin efecto en el juego: lo mínimo. Suites completas (todas las capturas, perf entero, muchas semillas) solo para renovar referencias, antes de una publicación grande o si el usuario lo pide.
 6. **Servidores `pm2` compartidos (nunca levantar servidores propios):**
-   - `rc-dev` (`:5173`, HMR para el usuario), `rc-test` (`:5174`, sin HMR para pruebas headless: ejecutar `pm2 restart rc-test` tras tocar código), `rc-demo` (`:4173`, build).
+   - `rc-dev` (`:5173`, HMR para el usuario), `rc-test` (`:5174`, sin HMR para pruebas headless: ejecutar `npm run test:restart` tras tocar código: espera a que nadie esté midiendo; nunca `pm2 restart rc-test` directo. En un git worktree el mismo comando levanta su propio `rc-test-<carpeta>`; `npm run test:down` al cerrar y `npm run test:ls` para ver servidores y candados), `rc-demo` (`:4173`, build).
 
 ---
 

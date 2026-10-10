@@ -508,7 +508,13 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.024, 0.024, 0.065, chrome, [-bw * 0.12, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 10),
         cyl(0.022, 0.022, 0.015, M.metal("#18181b"), [-bw * 0.12, bh * 0.32, -bl * 0.28 + 0.02], [0, 0, Math.PI / 2], 8),
         // Piñón dentado de bronce en eje de salida
-        cyl(0.014, 0.014, 0.012, M.metal("#d97706"), [-bw * 0.12 + 0.038, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 8)
+        cyl(0.014, 0.014, 0.012, M.metal("#d97706"), [-bw * 0.12 + 0.038, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 8),
+        // Cables de potencia flexibles ESC-Motor
+        cyl(0.005, 0.005, 0.07, M.plastic("#ef4444"), [-bw * 0.08, bh * 0.38, -bl * 0.23], [0.4, 0, 0.3], 4),
+        cyl(0.005, 0.005, 0.07, M.plastic("#2563eb"), [-bw * 0.08, bh * 0.36, -bl * 0.23], [0.4, 0, -0.3], 4),
+        // Condensadores cerámicos de supresión de interferencia RF soldados a la lata
+        box(0.006, 0.006, 0.003, M.plastic("#eab308"), [-bw * 0.12, bh * 0.34, -bl * 0.26]),
+        box(0.006, 0.006, 0.003, M.plastic("#eab308"), [-bw * 0.12, bh * 0.30, -bl * 0.26])
       );
     }
     for (const sx of [-bw * 0.35, bw * 0.35]) {
