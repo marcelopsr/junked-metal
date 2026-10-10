@@ -438,6 +438,21 @@ export const SFX = {
     tone("triangle", f, f * 1.01, 0.22, 0.1, i * 0.07);
     tone("square", f * 0.5, f * 0.5, 0.18, 0.04, i * 0.07);
   }),
+  /** Crujido y vibración de alta frecuencia de policarbonato al rozar bordillos o peraltes de hormigón. */
+  curbRattle: (spd = 10, pan?: number) => {
+    if (!gate("curb-rattle", 10)) return;
+    const s = Math.max(2, Math.min(40, Math.abs(spd)));
+    const vol = Math.min(0.24, 0.06 + s * 0.005);
+    tone("triangle", 320, 160, 0.06, vol * 0.8, 0, pan);
+    hiss("bandpass", 1800, 600, 0.05, vol, pan);
+    tone("triangle", 280, 140, 0.05, vol * 0.6, 0.02, pan);
+  },
+  /** Alarma sonora bitonal Failsafe de advertencia de receptor RX en límite de cobertura. */
+  rfFailsafeAlarm: () => {
+    if (!gate("rf-failsafe", 0.5)) return;
+    tone("square", 1950, 1950, 0.05, 0.08);
+    tone("square", 2600, 2600, 0.06, 0.09, 0.06);
+  },
 };
 
 
@@ -458,6 +473,103 @@ export function rainSfx(k: number) {
   }
   rainG.gain.setTargetAtTime(k * 0.1, ctx.currentTime, 0.5);
 }
+
+// ---------- Sonido espacial (mapa Luna) ----------
+// Sin aire no hay viento ni agudos: ambiente = zumbido grave, y todo el canal de efectos pasa por un pasabajos (sonidos amortiguados).
+// API para quien engancha cosas de la luna (moon_events.ts, naves, aliens, Sol/Tierra). pan -1..1 (panTo() de moon_events.ts lo saca en el marco local
+// del auto), dist en metros (baja el volumen), size ~0,75..1,25. Los de bucle se llaman cada cuadro con k 0..1 (0 = silencio y se apaga solo).
+//   moonAmbience(on)                       ambiente + pasabajos de la luna (lo prende moon_events al empezar y lo apaga main al terminar)
+//   SPACE.meteorWhistle(pan, dist, dur)    silbido que sube de volumen mientras el meteorito baja (dur = segundos de caída)
+//   SPACE.meteorImpact(pan, dist, size)    golpe sordo + temblor (caída de meteorito)
+//   SPACE.rumble(pan, dist, dur, vol)      temblor grave (falla que se agrieta)
+//   SPACE.eruptionBlast(pan, dist)         estallido de gas al abrirse la erupción
+//   SPACE.lava(k)                          bucle: burbujeo grave de la erupción
+//   SPACE.mothership(k, pan, doppler)      bucle: zumbido de la nave nodriza; k = cercanía (0 apaga), doppler -1 (se aleja) .. +1 (se acerca)
+//   SPACE.alienWave(pan, dist)             disparo de onda alien: barrido descendente con vibrato
+//   SPACE.sunLaunch(pan, dist)             bola de fuego que sale del Sol
+//   SPACE.earthLaunch(pan, dist)           cohetito que sale de la Tierra
+//   SPACE.skyImpact("sol" | "tierra", pan, dist)   impacto en el piso de lo que lanzaron
+const dGain = (dist?: number) => (dist === undefined ? 1 : Math.max(0.1, 1 / (1 + dist * 0.04)));
+/** Barrido de oscilador con subida (peak = fracción de dur donde llega al máximo) y vibrato opcional (wob Hz). */
+function sweep(type: OscillatorType, f0: number, f1: number, dur: number, vol: number, pan = 0, peak = 0.5, wob = 0) {
+  if (!ctx) return;
+  const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(), p = ctx.createStereoPanner();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * peak); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  if (wob) { const l = ctx.createOscillator(), lg = ctx.createGain(); l.frequency.value = wob; lg.gain.value = f0 * 0.06; l.connect(lg).connect(o.frequency); l.start(t); l.stop(t + dur + 0.02); }
+  p.pan.value = Math.max(-1, Math.min(1, pan));
+  o.connect(g).connect(p).connect(fxBus); o.start(t); o.stop(t + dur + 0.02);
+}
+/** Ruido filtrado con la misma subida/caída que sweep(). */
+function swell(filter: BiquadFilterType, f0: number, f1: number, dur: number, vol: number, pan = 0, peak = 0.5) {
+  if (!ctx) return;
+  const t = ctx.currentTime, s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(), p = ctx.createStereoPanner();
+  s.buffer = noise; fl.type = filter; fl.frequency.setValueAtTime(Math.max(20, f0), t); fl.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * peak); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  p.pan.value = Math.max(-1, Math.min(1, pan));
+  s.connect(fl).connect(g).connect(p).connect(fxBus); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
+}
+let ambG: GainNode | null = null;
+export function moonAmbience(on: boolean) {
+  if (!ctx) return;
+  const t = ctx.currentTime;
+  fxLP.frequency.setTargetAtTime(on ? 2400 : 22000, t, 0.4);
+  if (on && !ambG) {
+    ambG = ctx.createGain(); ambG.gain.value = 0; ambG.connect(fxBus);
+    const mix = ctx.createGain(); mix.gain.value = 0.7; mix.connect(ambG);
+    for (const [f, v] of [[41, 0.5], [41.8, 0.5], [82.3, 0.18], [123, 0.08]]) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f; g.gain.value = v; o.connect(g).connect(mix); o.start(); } // dos senos casi iguales: el batido lento es el "zumbido"
+    const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.08; lg.gain.value = 0.25; lfo.connect(lg).connect(mix.gain); lfo.start(); // respira cada ~12 s
+    const n = ctx.createBufferSource(), lp = ctx.createBiquadFilter(), ng = ctx.createGain(); n.buffer = noise; n.loop = true; lp.type = "lowpass"; lp.frequency.value = 90; ng.gain.value = 0.4; n.connect(lp).connect(ng).connect(mix); n.start();
+  }
+  ambG?.gain.setTargetAtTime(on ? 0.1 : 0, t, on ? 1.5 : 0.4);
+}
+let lavaG: GainNode | null = null, shipN: { g: GainNode; f: BiquadFilterNode; o: OscillatorNode[]; p: StereoPannerNode } | null = null;
+export const SPACE = {
+  meteorWhistle: (pan = 0, dist?: number, dur = 1.4) => { const g = dGain(dist); sweep("sine", 2600, 520, dur, 0.06 * g, pan, 0.7); swell("bandpass", 3400, 700, dur, 0.09 * g, pan, 0.8); },
+  meteorImpact: (pan = 0, dist?: number, size = 1) => {
+    const g = dGain(dist);
+    tone("sine", 95 / size ** 0.3, 26, 0.55, 0.4 * g, 0, pan); tone("sine", 60, 30, 0.4, 0.2 * g, 0.12, pan);
+    hiss("lowpass", 700, 50, 0.7, 0.34 * g, pan); swell("bandpass", 500, 120, 0.8, 0.1 * g, pan, 0.2); // lluvia de polvo y piedras
+  },
+  rumble: (pan = 0, dist?: number, dur = 2, vol = 0.2) => { const g = dGain(dist); swell("lowpass", 120, 60, dur, vol * g, pan, 0.4); sweep("sine", 48, 38, dur, vol * 0.8 * g, pan, 0.4); },
+  eruptionBlast: (pan = 0, dist?: number) => {
+    const g = dGain(dist);
+    swell("bandpass", 500, 1800, 1.0, 0.25 * g, pan, 0.15); swell("lowpass", 1200, 200, 1.4, 0.3 * g, pan, 0.2); tone("sine", 70, 30, 0.6, 0.35 * g, 0, pan);
+  },
+  lava: (k: number) => {
+    if (!ctx || (!lavaG && k <= 0)) return;
+    if (!lavaG) {
+      const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), o = ctx.createOscillator(), og = ctx.createGain();
+      s.buffer = noise; s.loop = true; fl.type = "bandpass"; fl.frequency.value = 260; fl.Q.value = 1.2;
+      lavaG = ctx.createGain(); lavaG.gain.value = 0; lavaG.connect(fxBus);
+      s.connect(fl).connect(lavaG); s.start();
+      o.frequency.value = 52; og.gain.value = 0.7; o.connect(og).connect(lavaG); o.start();
+    }
+    lavaG.gain.setTargetAtTime(Math.min(1, k) * 0.14, ctx.currentTime, 0.3);
+  },
+  mothership: (k: number, pan = 0, doppler = 0) => {
+    if (!ctx || (!shipN && k <= 0)) return;
+    if (!shipN) {
+      const g = ctx.createGain(), f = ctx.createBiquadFilter(), p = ctx.createStereoPanner(), o: OscillatorNode[] = [];
+      g.gain.value = 0; f.type = "lowpass"; f.Q.value = 2; g.connect(f).connect(p).connect(fxBus);
+      for (const [type, hz] of [["sawtooth", 50], ["sawtooth", 50.7], ["sine", 100]] as [OscillatorType, number][]) { const x = ctx.createOscillator(); x.type = type; x.frequency.value = hz; x.connect(g); x.start(); o.push(x); }
+      shipN = { g, f, o, p };
+    }
+    const t = ctx.currentTime, c = Math.max(0, Math.min(1, k));
+    shipN.g.gain.setTargetAtTime(c * c * 0.16, t, 0.15);
+    shipN.f.frequency.setTargetAtTime(180 + 900 * c, t, 0.15);
+    shipN.p.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), t, 0.1);
+    shipN.o[0].frequency.setTargetAtTime(50 * (1 + 0.07 * doppler), t, 0.2); shipN.o[1].frequency.setTargetAtTime(50.7 * (1 + 0.07 * doppler), t, 0.2); shipN.o[2].frequency.setTargetAtTime(100 * (1 + 0.07 * doppler), t, 0.2);
+  },
+  alienWave: (pan = 0, dist?: number) => { const g = dGain(dist); sweep("sawtooth", 1500, 260, 0.45, 0.07 * g, pan, 0.1, 38); sweep("sine", 900, 150, 0.4, 0.08 * g, pan, 0.1); },
+  sunLaunch: (pan = 0, dist?: number) => { const g = dGain(dist); swell("bandpass", 300, 1200, 0.9, 0.2 * g, pan, 0.3); sweep("sawtooth", 90, 50, 0.9, 0.08 * g, pan, 0.2); },
+  earthLaunch: (pan = 0, dist?: number) => { const g = dGain(dist); sweep("triangle", 300, 1400, 0.7, 0.06 * g, pan, 0.3); swell("bandpass", 2000, 600, 0.8, 0.12 * g, pan, 0.25); },
+  skyImpact: (kind: "sol" | "tierra", pan = 0, dist?: number) => {
+    const g = dGain(dist);
+    if (kind === "sol") { tone("sine", 80, 28, 0.5, 0.36 * g, 0, pan); hiss("lowpass", 1100, 80, 0.6, 0.3 * g, pan); }
+    else { tone("triangle", 240, 110, 0.12, 0.14 * g, 0, pan); tone("sine", 100, 36, 0.4, 0.3 * g, 0.03, pan); hiss("bandpass", 1800, 300, 0.25, 0.16 * g, pan); }
+  },
+};
 
 // ---------- Música ----------
 // Synthwave lo-fi sintetizado en vivo. Una grilla de 64 pasos (4 compases de semicorcheas) corre siempre:

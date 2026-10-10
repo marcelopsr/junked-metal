@@ -556,7 +556,10 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.006, 0.004, 0.016, M.plastic("#f4f4f5"), [0, bh * 0.26, bl * 0.335], [0.3, 0, 0], 6),
         // Varillas de reenvío / tirantes ajustables (turnbuckles) hacia manguetas directrices
         cyl(0.003, 0.003, bw * 0.32, chrome, [-bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, 0.35], 4),
-        cyl(0.003, 0.003, bw * 0.32, chrome, [bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, -0.35], 4)
+        cyl(0.003, 0.003, bw * 0.32, chrome, [bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, -0.35], 4),
+        // Tensores roscados hexagonales ajustables (turnbuckle nuts) en titanio mecanizado en el punto medio
+        cyl(0.008, 0.008, 0.012, M.metal("#64748b"), [-bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, 0.35], 6),
+        cyl(0.008, 0.008, 0.012, M.metal("#64748b"), [bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, -0.35], 6)
       );
     }
     if (kind === "formula" || kind === "buggy") {
@@ -634,7 +637,10 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       for (const sx of [-bw * 0.38, bw * 0.38]) {
         parts.push(
           box(0.012, 0.024, 0.016, M.metal("#0284c7"), [sx, bh * 0.25, bl * 0.36]),
-          cyl(0.004, 0.004, 0.028, chrome, [sx, bh * 0.25, bl * 0.36], [0, 0, 0], 4)
+          cyl(0.004, 0.004, 0.028, chrome, [sx, bh * 0.25, bl * 0.36], [0, 0, 0], 4),
+          // Tuercas ciegas hexagonales métricas de anclaje de rótulas
+          cyl(0.006, 0.006, 0.008, chrome, [sx, bh * 0.25 + 0.014, bl * 0.36], [0, 0, 0], 6),
+          cyl(0.006, 0.006, 0.008, chrome, [sx, bh * 0.25 - 0.014, bl * 0.36], [0, 0, 0], 6)
         );
       }
     }

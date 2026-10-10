@@ -57,6 +57,8 @@
 .sig-dbm.sig-warn { color: #f59e0b; text-shadow: 0 0 6px rgba(245, 158, 11, .6); animation: sigWarnFlicker .25s steps(2) infinite; }
 .sig-pkt { font: 700 9px/1 var(--hf); color: #f59e0b; margin-left: 3px; letter-spacing: .04em; }
 .sig-pkt.crc-err { color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, .8); animation: crcWarn .2s steps(2) infinite; }
+.sig-snr { font: 700 9px/1 var(--hf); color: #64748b; margin-left: 3px; letter-spacing: .03em; }
+.sig-snr.snr-low { color: #f59e0b; text-shadow: 0 0 4px rgba(245, 158, 11, .5); }
 #signal.sig-fringing #sigIco, #signal.sig-critical #sigIco { display: inline-flex; }
 #signal.sig-fringing #sigIco { color: #f59e0b; filter: drop-shadow(0 0 3px rgba(245, 158, 11, .5)); }
 #signal.sig-critical #sigIco { color: #ef4444; filter: drop-shadow(0 0 4px rgba(239, 68, 68, .7)); }

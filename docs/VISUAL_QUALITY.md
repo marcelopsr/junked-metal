@@ -1006,6 +1006,25 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #49 (Ecosistema Matricial de Especialistas: Tensores Roscados 3D, SFX Bordillos y Failsafe, Chispas Fondo Plano y Telemetría SNR)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 63.3 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Tensores roscados hexagonales y tuercas ciegas de rótulas (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - Incorporados tensores de ajuste hexagonal métricos (turnbuckle nuts) en titanio mecanizado (`M.metal("#64748b")`) en el punto medio de las varillas de reenvío de dirección.
+   - Añadidas tuercas ciegas hexagonales métricas de anclaje de rótulas en los extremos superior e inferior de cada mangueta de aluminio CNC, fusionadas en el array `parts` con **0 draw calls adicionales**.
+2. **Crujido en pianos/bordillos y alarma acústica Failsafe RX (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.curbRattle(spd, pan)` con síntesis de traqueteo de alta frecuencia de policarbonato al rozar bordillos o pianos de circuito.
+   - Incorporada alarma sonora bitonal industrial `SFX.rfFailsafeAlarm()` en onda cuadrada (1950 Hz -> 2600 Hz) para alertar acústicamente la pérdida inminente de señal RF.
+3. **Micro-chispas de fondo plano por compresión en saltos (Combat Feel & VFX Specialist · `src/car.ts`):**
+   - Detección en `Car.animate()` de compresión severa de amortiguación o aterrizaje duro (`this.lastVy < -4.5 && vy > -1`) proyectando micro-chispas de roce metálico contra el suelo (`FX.transmissionSpark(this.pos)`) con 0 GC allocations.
+4. **Telemetría continua de relación Señal/Ruido (SNR) y enlace Failsafe (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - Incorporado indicador `<span id="sigSnr" class="sig-snr">SNR:XXdB</span>` en `#signal` con alerta `.snr-low` ante interferencia electrostática severa.
+   - Vinculada la alarma acústica `SFX.rfFailsafeAlarm()` al banner de emergencia `FAILSAFE RX: SEÑAL LÍMITE`.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

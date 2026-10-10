@@ -812,8 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #48 completado y validado con los 4 Especialistas (`tsc` 0 errores, `test` 77/77, `build` limpio en 504 ms, 17 capturas en `.shots/actual/` en 21.7 s, grafo en 3665 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #49**.
+- **Último trabajo completado:** Ciclo #49 completado y validado con 4 Especialistas (`tsc` 0 errores, `test` 80/80 en verde, `build` limpio en 1.31 s, 17 capturas en `.shots/actual/` en 63.3 s, grafo de conocimiento sincronizado).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #50**.
+
+### 🔓 LISTO PARA EL CICLO #50 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+
+| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
+|---|---|---|
+| **Procedural 3D Modeler** | Pasadores R-Clip (Body Clips) de retención en postes de chasis y tornillería perimetral de diferencial | `src/models.ts` |
+| **Audio Synth Designer** | SFX de servo de dirección bajo estrés (Servo Whine & Chatter) y resonancia de antena (Antenna Twang) | `src/sfx.ts` |
+| **Combat Feel & VFX** | Chispas direccionales en raspones de flancos contra bordillos y squash asimétrico según cabeceo | `src/car.ts` |
+| **Diegetic HUD & Telemetry** | Micro-glitch electromagnético de pantalla bajo SNR crítico (<8 dB) e indicador RX Diversity [A\|B] | `src/ui.ts`, `src/hud.css` |
+
+### Ciclo #49 (2026-10-10) — Tensores Roscados 3D, SFX Bordillos y Failsafe, Chispas Fondo Plano y Telemetría SNR
+- **Alcance implementado en producción (`src/`):**
+  - **Procedural 3D Folded Modeler (`src/models.ts`):** Tensores roscados hexagonales ajustables (turnbuckle nuts) en titanio mecanizado (`M.metal("#64748b")`) en el punto medio de cada varilla de reenvío de dirección; tuercas ciegas métricas hexagonales de anclaje de rótulas en los extremos superior e inferior de las manguetas de aluminio CNC. 0 draw calls adicionales.
+  - **Audio Synth Sound Designer (`src/sfx.ts`):** Nuevo efecto procedural `SFX.curbRattle(spd, pan)` para vibración y crujido plástico de policarbonato al rozar bordillos o peraltes de pista; alarma sonora bitonal industrial `SFX.rfFailsafeAlarm()` para advertencia acústica de receptor RX en límite crítico de cobertura.
+  - **Combat Feel & VFX (`src/car.ts`):** Micro-chispas por contacto de chasis / fondo plano metálico contra el suelo en aterrizajes violentos o compresión severa de amortiguación (`FX.transmissionSpark(this.pos)`), con 0 GC allocations.
+  - **Diegetic HUD & Telemetry (`src/ui.ts`, `src/hud.css`):** Telemetría continua de relación Señal/Ruido (`SNR:XXdB`) con alerta `.snr-low` ante interferencia crítica, vinculada a la alarma sonora de Failsafe RX al rebasar el radio del patio.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, 10 suites (80/80 tests) pasando, build Vite en 1.31 s, 17 capturas en `.shots/actual/` aprobadas, grafo de conocimiento actualizado.
 
 ### 🔓 LISTO PARA EL CICLO #49 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 

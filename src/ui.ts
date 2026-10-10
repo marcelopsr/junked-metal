@@ -150,6 +150,7 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
       $("hud")?.appendChild(failsafeEl);
     }
     failsafeEl.style.display = "";
+    SFX.rfFailsafeAlarm();
   } else if (failsafeEl) {
     failsafeEl.style.display = "none";
   }
@@ -191,6 +192,20 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     }
     if (ch("pktLoss", 0)) $("signal")?.classList.toggle("pkt-loss", false);
   }
+  const snr = Math.max(4, Math.round(36 - ((d.distCenter ?? 0) / 90) * 32));
+  let sigSnr = document.getElementById("sigSnr");
+  if (!sigSnr) {
+    sigSnr = document.createElement("span");
+    sigSnr.id = "sigSnr";
+    sigSnr.className = "sig-snr";
+    const anchor = document.getElementById("sigPkt") ?? document.getElementById("sigDbm") ?? document.getElementById("sigBars") ?? document.getElementById("sigIco");
+    if (anchor?.parentNode) anchor.parentNode.insertBefore(sigSnr, anchor.nextSibling);
+    else $("signal")?.appendChild(sigSnr);
+  }
+  const snrTxt = `SNR:${snr}dB`;
+  if (ch("sigSnr", snrTxt)) sigSnr.textContent = snrTxt;
+  const isSnrLow = snr < 12;
+  if (ch("snrLow", +isSnrLow)) sigSnr.classList.toggle("snr-low", isSnrLow);
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);
   hudTurbo(d.boost / 100);

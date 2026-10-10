@@ -195,6 +195,9 @@ export class Car {
       this.steerRoll += (Math.random() > 0.5 ? 0.04 : -0.04);
       SFX.gravelThud(Math.min(8, -this.lastVy));
     }
+    if (this.lastVy < -4.5 && vy > -1) {
+      FX.transmissionSpark(this.pos);
+    }
     this.lastVy = vy;
     this.bT += dt; this.bounce *= Math.exp(-5 * dt);
     const sq = this.bounce * Math.cos(this.bT * 18);
