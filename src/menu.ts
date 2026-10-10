@@ -982,6 +982,7 @@ function padTest() {
     const x = ax(k * 2), y = ax(k * 2 + 1), m = Math.hypot(x, y);
     st.style.cssText = `--dz:${PAD.dead};--x:${x};--y:${y}`;
     st.classList.toggle("in", m < PAD.dead); st.classList.toggle("drive", (PAD.stick === "right") === !!k);
+    st.classList.toggle("active", m >= PAD.dead && m > 0.05);
     st.querySelector("em")!.textContent = m.toFixed(2);
   });
   el.querySelectorAll<HTMLElement>(".pt-tr i").forEach((b, k) => b.style.width = `${(gp?.buttons[6 + k]?.value ?? 0) * 100}%`);

@@ -569,6 +569,10 @@ function weightedItem(place: number): Item {
 function useItem(r: Racer) {
   const it = r.item; if (!it) return;
   r.item = null;
+  if (r.human >= 0) {
+    const itEl = dom?.querySelector(`.rp[data-p="${r.human}"] .ritem`) as HTMLElement | null;
+    if (itEl) { itEl.classList.remove("used"); void itEl.offsetWidth; itEl.classList.add("used"); setTimeout(() => itEl?.classList.remove("used"), 300); }
+  }
   const f = fwdOf(r), pos = r.car.pos;
   if (it === "turbo") { r.boost = Math.max(r.boost, 1.6); if (hear(r)) SFX.miniTurbo(); }
   else if (it === "escudo") { r.shield = 7; if (hear(r)) SFX.shield(); }

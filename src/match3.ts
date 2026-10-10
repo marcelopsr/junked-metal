@@ -152,7 +152,7 @@ function beginStep() {
   if (s.chain >= 1) { lastChain = s.chain + 1; comboTxt = { txt: s.chain >= 4 ? `¡REACCIÓN EN CADENA x${s.chain + 1}!` : `CADENA x${s.chain + 1}`, t: 0 }; SFX.streak(s.chain * 15); }
   if (s.gain && s.cleared.length) {
     const mx = s.cleared.reduce((a, c) => a + c.x, 0) / s.cleared.length, my = s.cleared.reduce((a, c) => a + c.y, 0) / s.cleared.length;
-    floats.push({ x: cx(mx), y: cy(my), txt: `+${s.gain}`, t: 0, col: s.chain ? M3C.cian : M3C.texto, big: s.gain >= 300 });
+    floats.push({ x: cx(mx), y: cy(my), txt: `+${s.gain}${s.chain >= 1 ? ` (×${s.chain + 1})` : ""}`, t: 0, col: s.chain ? M3C.cian : M3C.texto, big: s.gain >= 300 });
   }
   anim = { kind: "clear", step: s, t: 0, dur: (s.blasts.length ? 0.34 : 0.22) * animMul() };
 }

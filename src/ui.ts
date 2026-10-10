@@ -61,6 +61,7 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   txt("volt", `${(9 + 3.6 * p).toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   bar("boost", d.boost);
+  if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);
   bar("xp", Math.min(1, d.xp / d.need) * 100);
   const prevLv = memo.lvN as number | undefined;
   const lvTxt = `NV ${pad(d.level, 2)}${d.pending ? ` +${d.pending}` : ""}`;

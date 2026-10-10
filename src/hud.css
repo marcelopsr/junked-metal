@@ -98,6 +98,8 @@
 #abName .ico { width: 13px; height: 13px; }
 #txl.ab-ready #abKey, #jumpRow.ready #jumpKey { color: #22c55e; }
 #txl.ab-on #abKey { color: #ffd24a; }
+#boost.full { box-shadow: 0 0 8px rgba(74, 168, 255, .6); }
+#boost.full i { background: linear-gradient(90deg, #4aa8ff, #9be3ff); filter: drop-shadow(0 0 4px #9be3ff); }
 #hud.low::before { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 90px 8px #ff4d4d66; animation: h-pulse 1.1s steps(4) infinite; }
 
 /* ---------- Velocidad: arco + número (abajo-derecha) ---------- */

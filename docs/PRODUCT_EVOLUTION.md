@@ -236,10 +236,21 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #19 completado, verificado y documentado.
+- **Último trabajo completado:** Ciclo #19 completado, verificado y subido a `origin/master` (`1e92eeb`).
 - **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (460 ms), 35 capturas verificadas en `.shots/actual/` y grafo actualizado (3074 nodos, 7524 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (bloqueos del Ciclo #19 liberados tras validación).
-- **Próxima decisión pendiente:** Selección de tareas en paralelo por subagentes para el **Ciclo #20**.
+- **Archivos bloqueados (`🔒 EN CURSO`):** Reservados abajo para los 4 subagentes del Ciclo #20.
+- **Próxima decisión pendiente:** Ejecución y validación integrada del **Ciclo #20**.
+
+### 🔒 EN CURSO — Ciclo #20 (Orquestador Antigravity + 4 Subagentes por Área, 2026-10-10)
+> **Coordinación en paralelo — Archivos reservados por área (no editar desde otro agente sin coordinar):**
+
+| Subagente / Área | Tarea asignada | Archivos bloqueados (`🔒`) | Estado |
+|---|---|---|---|
+| **Subagente 1 · Configuración de Mandos** | Iluminación reactiva `.active` en ámbar en `.pt-st` al accionar sticks en `padTest` | `src/menu.ts`, `src/menu.css` | 🔧 En curso |
+| **Subagente 2 · HUD de Supervivencia** | Indicador de nitro al 100% (`#boost.full`) con resplandor cian brillante | `src/ui.ts`, `src/hud.css` | 🔧 En curso |
+| **Subagente 3 · Carrera Objeto Usado** | Destello de confirmación `.used` en `.ritem` al desplegar un objeto en `useItem()` | `src/kart.ts`, `src/race.css` | 🔧 En curso |
+| **Subagente 4 · Gabinete Junket Crush** | Multiplicador de cascada `(×N)` en textos flotantes de puntuación durante combos | `src/match3.ts`, `src/match3.css` | 🔧 En curso |
+
 
 
 

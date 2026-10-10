@@ -416,6 +416,8 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .pt-ring .dz { position: absolute; inset: 0; margin: auto; width: calc(var(--dz) * 100%); height: calc(var(--dz) * 100%); border-radius: 50%; background: #ffb02e33; border: 1px dashed var(--turbo); }
 .pt-ring .dot { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px; border-radius: 50%; background: var(--lcd-ink); translate: calc(var(--x) * 46px) calc(var(--y) * 46px); }
 .pt-st.in .dot { background: var(--dim); }
+.pt-st.active .pt-ring { border-color: var(--jm-amarillo2, #ffd24a); box-shadow: 0 0 10px rgba(255, 210, 74, .35); }
+.pt-st.active em { color: var(--jm-amarillo2, #ffd24a); font-weight: 700; }
 .pt-tr { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 120px; font-size: 13px; color: var(--dim); }
 .pt-tr b { display: block; height: 10px; margin-top: 3px; background: var(--lcd); border: 1px solid var(--line); }
 .pt-tr i { display: block; height: 100%; width: 0; background: var(--turbo); }

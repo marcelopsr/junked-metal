@@ -427,4 +427,21 @@ Carrera (1) y Survivor en partida (2).
 4. **Placa roja `"JEFE"` sobre los nodos de jefe en el mapa de campaña de Junket Crush (Subagente 4 · `src/match3_draw.ts`):**
    - `drawNode()` renderiza una placa compacta `"JEFE"` con fondo rojo carmesí `M3C.rojo` y tipografía técnica centrada en `y - r - 9` sobre las tuercas hexagonales de niveles de jefe (`lv.boss`) en la Ruta del Desguace (`pc-match3-mapa.png`).
 
+---
+
+## 2026-10-10 · Ciclo #20 (Anillos Activos en Probador de Mandos, Nitro Máximo `#boost.full`, Destello `.used` en Carrera y Multiplicador `(×N)` en Junket Crush)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-config.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-combo.png` (`npm run shots -- --only config,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 4 subagentes en paralelo y verificadas en captura
+1. **Iluminación reactiva `.active` en ámbar en el probador de mandos (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `padTest()`, cuando el stick se deflecta más allá de la zona muerta (`m >= PAD.dead && m > 0.05`), se activa la clase `.active` en `.pt-st`, iluminando el anillo exterior `.pt-ring` y la lectura numérica `em` en ámbar cálido `#ffd24a` con resplandor sutil.
+2. **Indicador de nitro al 100% (`#boost.full`) con resplandor cian brillante (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - `hudUpdate()` aplica de forma memoizada la clase `.full` sobre `#boost` al alcanzar carga completa (`d.boost >= 100`), otorgando un halo cian eléctrico y degradado incandescente a la barra de impulso.
+3. **Destello de confirmación de objeto usado `.used` en `.ritem` (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - `useItem()` dispara una animación flash instantánea `.used` (borde blanco puro y resplandor de 16 px) sobre la ranura del ítem durante 300 ms antes de limpiar la caja.
+4. **Indicador de multiplicador de cascada `(×N)` en textos flotantes de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - `beginStep()` incorpora ` (×${s.chain + 1})` en los números flotantes de ganancia cuando ocurre una reacción en cadena (`s.chain >= 1`), haciendo evidente la bonificación multiplicadora de cada cascada.
+
+
 

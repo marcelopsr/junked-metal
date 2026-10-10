@@ -16,6 +16,7 @@
 .rp .rlap.final { border-color: #ffd84d; color: #ffd84d; box-shadow: 0 0 14px rgba(255, 216, 77, .28); }
 .rp .ritem { position: absolute; left: 50%; top: 14px; translate: -50% 0; min-width: 84px; min-height: 84px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: var(--g-bg); border: 2px solid var(--g-line); border-radius: 18px; backdrop-filter: blur(10px); }
 .rp .ritem.full { border-color: #ffd84d; box-shadow: 0 0 14px rgba(255, 216, 77, .28); }
+.rp .ritem.used { border-color: #ffffff; background: rgba(255, 255, 255, .25); box-shadow: 0 0 16px rgba(255, 255, 255, .8); transition: none; }
 .rp .ritem:empty::after { content: "?"; font: 700 44px/1 "Rajdhani", system-ui, sans-serif; color: rgba(255, 255, 255, .25); }
 .rp .ritem span { font: 700 13px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .1em; text-transform: uppercase; color: #a9b8c6; }
 .rp .ritem.full span { color: #ffd84d; }
