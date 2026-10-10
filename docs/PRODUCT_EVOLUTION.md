@@ -718,3 +718,12 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 | **Diegetic HUD & Telemetry** | Lectura RSSI en dBm en antena y micro-aviso térmico ESC 85°C | `src/ui.ts`, `src/hud.css` |
 | **Procedural 3D Modeler** | Conector XT60 hacia ESC y pasadores R-pins en torretas de carrocería | `src/models.ts` |
 | **Audio Synth Designer** | Amortiguación de agudos por distancia (HF Damping) y paneo en armas | `src/sfx.ts` |
+
+
+## 2026-10-10 · Muestra cinematográfica 3D local (tanda visual independiente)
+
+Autorizada por el usuario para aproximar el arte de la intro mediante modelos reales en su Mac. `art-lab.html` muestra buggy amarillo y frenchie gris de pecho marfil, siete clips conservados, materiales PBR, patio, día/noche y tres cámaras. Fuentes Blender, GLB, texturas, capturas y video en `assets-src/cinematic-3d/`; plan y límites en `docs/CINEMATIC_3D_SLICE.md`. No reemplaza los modelos Folded activos ni modifica balance/partidas. Sin publicación. La página y sus recursos de trabajo quedan fuera del build estándar.
+
+Verificado: tsc, 75 pruebas y build; Chromium Metal, pc 1280×720 y cel 390×844, cuatro ruedas, siete clips con matrices finitas, movimiento en idle, controles, cero errores/desbordamientos. Mediana orientativa M4 Pro: 4,1 ms pc / 2,2 ms cel; viewport móvil en Mac, sin afirmar teléfono físico ni hordas. Modelos únicos: 46.878 triángulos frenchie y 98.744 buggy.
+
+Checkpoint propio: primera muestra ejecutable terminada; fidelidad cinematográfica todavía pendiente. Oportunidades de esta línea: (1) refinar anatomía/pelo, pasto y luz para cerrar la diferencia con la referencia (recomendado; complejidad media-alta, antes de repetir recursos); (2) construir Eulalio con el mismo criterio (media-alta, amplía el reparto); (3) crear LOD y una prueba aislada de instancias antes de integrar al gameplay (alta, controla costo de multitudes). Este checkpoint no sustituye el ciclo de los especialistas que trabajan en paralelo.

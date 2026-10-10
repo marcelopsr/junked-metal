@@ -1,0 +1,310 @@
+[
+  {
+    "viewport": "pc",
+    "initial": {
+      "lighting": "night",
+      "view": "close",
+      "animated": false,
+      "time": 0,
+      "meshes": 108,
+      "triangles": 698594,
+      "clips": [
+        "charge",
+        "death",
+        "idle",
+        "jump_slam",
+        "rage",
+        "run",
+        "walk"
+      ],
+      "clip": "idle",
+      "wheels": 4,
+      "grassInstances": 3711,
+      "render": [
+        1280,
+        720
+      ]
+    },
+    "shots": [
+      {
+        "light": "night",
+        "view": "close",
+        "lighting": "night",
+        "animated": false,
+        "time": 0,
+        "meshes": 108,
+        "triangles": 796322,
+        "clips": [
+          "charge",
+          "death",
+          "idle",
+          "jump_slam",
+          "rage",
+          "run",
+          "walk"
+        ],
+        "clip": "idle",
+        "wheels": 4,
+        "grassInstances": 3711,
+        "render": [
+          1280,
+          720
+        ]
+      },
+      {
+        "light": "night",
+        "view": "game",
+        "lighting": "night",
+        "animated": false,
+        "time": 0,
+        "meshes": 108,
+        "triangles": 766906,
+        "clips": [
+          "charge",
+          "death",
+          "idle",
+          "jump_slam",
+          "rage",
+          "run",
+          "walk"
+        ],
+        "clip": "idle",
+        "wheels": 4,
+        "grassInstances": 3711,
+        "render": [
+          1280,
+          720
+        ]
+      },
+      {
+        "light": "day",
+        "view": "close",
+        "lighting": "day",
+        "animated": false,
+        "time": 0,
+        "meshes": 108,
+        "triangles": 746722,
+        "clips": [
+          "charge",
+          "death",
+          "idle",
+          "jump_slam",
+          "rage",
+          "run",
+          "walk"
+        ],
+        "clip": "idle",
+        "wheels": 4,
+        "grassInstances": 3711,
+        "render": [
+          1280,
+          720
+        ]
+      },
+      {
+        "light": "day",
+        "view": "game",
+        "lighting": "day",
+        "animated": false,
+        "time": 0,
+        "meshes": 108,
+        "triangles": 722906,
+        "clips": [
+          "charge",
+          "death",
+          "idle",
+          "jump_slam",
+          "rage",
+          "run",
+          "walk"
+        ],
+        "clip": "idle",
+        "wheels": 4,
+        "grassInstances": 3711,
+        "render": [
+          1280,
+          720
+        ]
+      }
+    ],
+    "animatedSkeleton": true,
+    "clipsFinite": [
+      "charge",
+      "death",
+      "idle",
+      "jump_slam",
+      "rage",
+      "run",
+      "walk"
+    ],
+    "controls": true,
+    "overflow": false,
+    "errors": [],
+    "perf": {
+      "medianMs": 4.099999999627471,
+      "p95Ms": 4.900000000372529,
+      "draws": 225,
+      "triangles": 698594,
+      "meshes": 108,
+      "render": [
+        1280,
+        720
+      ],
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)"
+    }
+  },
+  {
+    "viewport": "cel",
+    "initial": {
+      "lighting": "night",
+      "view": "close",
+      "animated": false,
+      "time": 0,
+      "meshes": 108,
+      "triangles": 404324,
+      "clips": [
+        "charge",
+        "death",
+        "idle",
+        "jump_slam",
+        "rage",
+        "run",
+        "walk"
+      ],
+      "clip": "idle",
+      "wheels": 4,
+      "grassInstances": 1603,
+      "render": [
+        390,
+        844
+      ]
+    },
+    "shots": [
+      {
+        "light": "night",
+        "view": "close",
+        "lighting": "night",
+        "animated": false,
+        "time": 0,
+        "meshes": 108,
+        "triangles": 502052,
+        "clips": [
+          "charge",
+          "death",
+          "idle",
+          "jump_slam",
+          "rage",
+          "run",
+          "walk"
+        ],
+        "clip": "idle",
+        "wheels": 4,
+        "grassInstances": 1603,
+        "render": [
+          390,
+          844
+        ]
+      },
+      {
+        "light": "night",
+        "view": "game",
+        "lighting": "night",
+        "animated": false,
+        "time": 0,
+        "meshes": 108,
+        "triangles": 496456,
+        "clips": [
+          "charge",
+          "death",
+          "idle",
+          "jump_slam",
+          "rage",
+          "run",
+          "walk"
+        ],
+        "clip": "idle",
+        "wheels": 4,
+        "grassInstances": 1603,
+        "render": [
+          390,
+          844
+        ]
+      },
+      {
+        "light": "day",
+        "view": "close",
+        "lighting": "day",
+        "animated": false,
+        "time": 0,
+        "meshes": 108,
+        "triangles": 460052,
+        "clips": [
+          "charge",
+          "death",
+          "idle",
+          "jump_slam",
+          "rage",
+          "run",
+          "walk"
+        ],
+        "clip": "idle",
+        "wheels": 4,
+        "grassInstances": 1603,
+        "render": [
+          390,
+          844
+        ]
+      },
+      {
+        "light": "day",
+        "view": "game",
+        "lighting": "day",
+        "animated": false,
+        "time": 0,
+        "meshes": 108,
+        "triangles": 455256,
+        "clips": [
+          "charge",
+          "death",
+          "idle",
+          "jump_slam",
+          "rage",
+          "run",
+          "walk"
+        ],
+        "clip": "idle",
+        "wheels": 4,
+        "grassInstances": 1603,
+        "render": [
+          390,
+          844
+        ]
+      }
+    ],
+    "animatedSkeleton": true,
+    "clipsFinite": [
+      "charge",
+      "death",
+      "idle",
+      "jump_slam",
+      "rage",
+      "run",
+      "walk"
+    ],
+    "controls": true,
+    "overflow": false,
+    "errors": [],
+    "perf": {
+      "medianMs": 2.199999999254942,
+      "p95Ms": 5.599999999627471,
+      "draws": 101,
+      "triangles": 404324,
+      "meshes": 108,
+      "render": [
+        390,
+        844
+      ],
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4 Pro, Unspecified Version)"
+    }
+  }
+]

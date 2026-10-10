@@ -24,8 +24,8 @@ import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
 import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
-import { initKart, raceCfg, raceClick, racePadMenu, racePause, raceTick, setRaceCar, startBattle, startRace, TRACKS } from "./kart";
-import "./duel.css"; import "./match3.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css
+import { raceCfg, TRACKS } from "./kart_cfg";
+import "./duel.css"; import "./match3.css"; import "./race.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css (race.css solo se importa acá)
 import "./kit.css"; // kit de UI compartido: se carga después de todas las hojas (ver src/kit.css)
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -553,16 +553,21 @@ function launchRun(d = false) {
   void launch([T_BICHOS, T_AUTOS, T_PLANTILLAS, worldTask(() => zoneFor(d)), T_EFECTOS], "Encendiendo el auto", () => startRun(d), () => afterFrames(2));
 }
 const raceZone = (battle: boolean) => battle ? "patio" : TRACKS[raceCfg.cup ? 0 : raceCfg.track].zone;
+// Carrera (kart.ts) también en chunk aparte: se carga al elegirla
+let kartM: typeof import("./kart") | null = null;
+async function loadKart() {
+  if (!kartM) { const m = await import("./kart"); m.initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); }, load: (label, zone, go) => { void launch([worldTask(() => zone), T_EFECTOS], label, go, () => afterFrames(2), true); } }); kartM = m; } // la luz del menú la pone menuTick
+}
 function goRace(battle = false) {
   initAudio();
-  void launch([worldTask(() => raceZone(battle)), T_EFECTOS], battle ? "Inflando los globos" : "Preparando la largada", () => enterRace(battle), () => afterFrames(2));
+  void loadKart().then(() => launch([worldTask(() => raceZone(battle)), T_EFECTOS], battle ? "Inflando los globos" : "Preparando la largada", () => enterRace(battle), () => afterFrames(2)));
 }
 function enterRace(battle: boolean) {
   initAudio(); clearRun(); menuOff();
   state = "race"; reset(null);
   $("hud").classList.add("hidden");
-  setRaceCar(save.car);
-  if (battle) startBattle(); else startRace();
+  kartM!.setRaceCar(save.car);
+  if (battle) kartM!.startBattle(); else kartM!.startRace();
 }
 // Duelo y match-3 se cargan al entrar (chunks aparte): la portada no los necesita
 let duelM: typeof import("./duel") | null = null, m3M: typeof import("./match3") | null = null;
@@ -609,7 +614,6 @@ boot("Cargando fuentes", 0.7);
 await Promise.race([Promise.all(['500 16px Rajdhani', '700 16px Rajdhani'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 1500))]);
 boot("Armando el menú", 0.9);
 void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
-initKart({ scene, cam, onExit: () => { state = "menu"; music("menu"); reset("main"); }, load: (label, zone, go) => { void launch([worldTask(() => zone), T_EFECTOS], label, go, () => afterFrames(2), true); } }); // la luz del menú la pone menuTick
 initMenu({ scene, play: launchRun, resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), duel: goDuel, match3: goMatch3 });
 music("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: en cada carga de la página o apertura de la app instalada (cualquier tecla la salta); ?mute y ?lab (pruebas) no la muestran, ?intro la fuerza
@@ -1340,7 +1344,7 @@ scene.onBeforeRenderObservable.add(() => {
     if (padPressed(pb("reroll"))) reroll();
   } else if (state === "play") { if (padPressed(pb("pause"))) pause(); else if (padPressed(pb("cam"))) camCycle(); }
   else if (state === "outro") outroTick(dt);
-  else if (state === "race") { if (padPressed(pb("pause"))) racePause(); if (padPressed(pb("ok"))) raceClick(); if (padPressed(pb("cam"))) camCycle(); if (padPressed(14)) racePadMenu(-1); if (padPressed(15)) racePadMenu(1); raceTick(dt); }
+  else if (state === "race") { const k = kartM!; if (padPressed(pb("pause"))) k.racePause(); if (padPressed(pb("ok"))) k.raceClick(); if (padPressed(pb("cam"))) camCycle(); if (padPressed(14)) k.racePadMenu(-1); if (padPressed(15)) k.racePadMenu(1); k.raceTick(dt); }
   else if (state === "duel") duelM!.duelTick(dt);
   else if (state === "match3") { if (padPressed(pb("pause"))) m3M?.match3PauseToggle(); m3M?.match3Tick(dt); }
   else if (!introOn()) menuPad(dt); // con la intro encima el menú no escucha el gamepad

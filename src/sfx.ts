@@ -181,8 +181,8 @@ function tone(type: OscillatorType, f0: number, f1: number, dur: number, vol: nu
   o.stop(t + dur + 0.02);
 }
 
-function hiss(filter: BiquadFilterType, f0: number, f1: number, dur: number, vol: number, pan?: number): void;
-function hiss(dur: number, vol: number, f0: number, f1: number, pan?: number): void;
+function hiss(filter: BiquadFilterType, f0: number, f1: number, dur: number, vol: number, pan?: number, dist?: number): void;
+function hiss(dur: number, vol: number, f0: number, f1: number, pan?: number, dist?: number): void;
 function hiss(
   a: BiquadFilterType | number,
   b: number,
@@ -190,10 +190,11 @@ function hiss(
   d: number,
   e?: number,
   f?: number,
+  gArg?: number,
 ) {
   if (!ctx) return;
   let filter: BiquadFilterType = "bandpass";
-  let f0: number, f1: number, dur: number, vol: number, pan: number | undefined;
+  let f0: number, f1: number, dur: number, vol: number, pan: number | undefined, dist: number | undefined;
   if (typeof a === "string") {
     filter = a;
     f0 = b;
@@ -201,17 +202,20 @@ function hiss(
     dur = d;
     vol = e ?? 0.1;
     pan = f;
+    dist = gArg;
   } else {
     dur = a;
     vol = b;
     f0 = c;
     f1 = d;
     pan = e;
+    dist = f;
   }
+  const finalF0 = dist !== undefined ? Math.max(450, f0 / (1 + dist * 0.025)) : f0;
   const t = ctx.currentTime, s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
   s.buffer = noise;
   fl.type = filter;
-  fl.frequency.setValueAtTime(Math.max(20, f0), t);
+  fl.frequency.setValueAtTime(Math.max(20, finalF0), t);
   fl.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
@@ -256,7 +260,7 @@ export const SFX = {
     hiss("lowpass", 1800, 200, 0.12, 0.25, p);
   },
   explosion: () => gate("boom", 8) && (hiss("lowpass", 1400, 60, 0.6, 0.45), tone("sine", 90, 30, 0.45, 0.35)),
-  zap: () => gate("zap", 10) && hiss("highpass", 6000, 2500, 0.1, 0.12),
+  zap: (pan?: number) => { tone("sawtooth", 300, 1200, 0.06, 0.14, 0, pan); },
   hurt: () => gate("hurt", 6) && (tone("square", 300, 120, 0.16, 0.1), tone("triangle", 150, 70, 0.16, 0.12)), // chirrido de juguete
   ignite: () => { hiss("bandpass", 1800, 400, 0.35, 0.28); tone("sine", 120, 45, 0.3, 0.22); },
   radioChirp: () => { tone("sine", 1800, 1200, 0.04, 0.08); tone("sine", 2400, 1600, 0.04, 0.06, 0.03); },
@@ -277,7 +281,7 @@ export const SFX = {
   },
   spatialHiss: (pan: number, dur = 0.15, dist?: number) => {
     const dGain = dist !== undefined ? Math.max(0.15, 1 / (1 + dist * 0.04)) : 1;
-    hiss(dur, 0.12 * dGain, 1200, 0, pan);
+    hiss(dur, 0.12 * dGain, 1200, 0, pan, dist);
   },
   scrape: (pan?: number) => { hiss("bandpass", 2200, 600, 0.08, 0.14, pan); },
   drift: (pan?: number) => { hiss("bandpass", 1100, 400, 0.12, 0.12, pan); },

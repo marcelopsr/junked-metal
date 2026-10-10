@@ -32,7 +32,11 @@ const material = (name: string, hex: string, rough = .8, metal = 0) => {
 const soil = material('soil', '#ffffff', .95);
 const grassMat = material('grass', '#344c23', .9);
 const wood = material('fenceWood', '#63543d', .94);
-const steel = material('exposedSteel', '#8d9398', .32, .85);
+wood.albedoColor=B.Color3.White();
+wood.albedoTexture=canvasTexture(scene,'woodGrain',256,512,c=>{
+ const r=lcg(90);c.fillStyle='#675b45';c.fillRect(0,0,256,512);
+ for(let i=0;i<150;i++){c.strokeStyle=r()>.5?'#4b412f':'#786b50';c.lineWidth=.5+r()*2;c.beginPath();const x=r()*256;c.moveTo(x,0);c.bezierCurveTo(x+12,170,x-10,340,x+5,512);c.stroke();}
+});
 const wire = material('wire', '#202627', .8);
 const bulbMat = material('bulb', '#ffcf79', .3);
 bulbMat.emissiveColor = color('#ffbb63').scale(2);
@@ -45,16 +49,10 @@ const moon = B.MeshBuilder.CreateSphere('moon', {diameter:2.2,segments:24},scene
 const probe = new B.ReflectionProbe('skyReflection', 128, scene);
 probe.renderList = [sky];probe.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE; scene.environmentTexture = probe.cubeTexture;
 
-// Color y relieve comparten una altura reproducible; el grano no cambia con la calidad.
+// Relieve de grano independiente del albedo generado; no reconstruye sus piedras.
 const size = 512, random = lcg(813), heights = new Float32Array(size * size);
 for (let i = 0; i < heights.length; i++) heights[i] = random();
-soil.albedoTexture = canvasTexture(scene, 'earthColor', size, size, c => {
-  const image = c.createImageData(size,size);
-  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
-    const i=y*size+x, v=heights[i], macro=Math.sin(x*.032)*Math.cos(y*.021)*9;
-    image.data.set([73+v*39+macro,48+v*29+macro*.5,28+v*18,255],i*4);
-  } c.putImageData(image,0,0);
-});
+soil.albedoTexture = new B.Texture('assets-src/cinematic-3d/earth-albedo.png',scene);
 soil.bumpTexture = canvasTexture(scene,'earthNormal',size,size,c=>{
   const image=c.createImageData(size,size);
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
@@ -63,8 +61,8 @@ soil.bumpTexture = canvasTexture(scene,'earthNormal',size,size,c=>{
     const n=new B.Vector3(-dx,-dy,1).normalize();image.data.set([(n.x*.5+.5)*255,(n.y*.5+.5)*255,(n.z*.5+.5)*255,255],(y*size+x)*4);
   } c.putImageData(image,0,0);
 });
-for(const t of [soil.albedoTexture,soil.bumpTexture] as B.Texture[]){t.uScale=t.vScale=14;t.anisotropicFilteringLevel=8;}
-const ground=B.MeshBuilder.CreateGround('earth',{width:46,height:46,subdivisions:64},scene);ground.material=soil;ground.receiveShadows=true;
+for(const t of [soil.albedoTexture,soil.bumpTexture] as B.Texture[]){t.uScale=t.vScale=8;t.anisotropicFilteringLevel=8;}
+const ground=B.MeshBuilder.CreateGround('earth',{width:46,height:46,subdivisions:64,updatable:true},scene);ground.material=soil;ground.receiveShadows=true;
 const positions=ground.getVerticesData(B.VertexBuffer.PositionKind)!;
 for(let i=0;i<positions.length;i+=3){const x=positions[i],z=positions[i+2];positions[i+1]=Math.sin(x*.7)*Math.cos(z*.5)*.05;}
 ground.updateVerticesData(B.VertexBuffer.PositionKind,positions);
@@ -73,8 +71,8 @@ const normals:number[]=[];B.VertexData.ComputeNormals(positions,ground.getIndice
 const hemi=new B.HemisphericLight('ambient',new B.Vector3(0,1,0),scene);
 hemi.groundColor=color('#39281b');
 const sun=new B.DirectionalLight('sun',new B.Vector3(-.45,-1,-.35),scene);sun.position.set(10,20,12);
-const key=new B.SpotLight('warmKey',new B.Vector3(-3,7,4),new B.Vector3(.3,-1,-.45),1.55,2,scene);
-key.diffuse=color('#ffd39a');key.range=24;
+const key=new B.SpotLight('warmKey',new B.Vector3(-3,7,5),new B.Vector3(.3,-1,-.65).normalize(),1.6,2,scene);
+key.diffuse=color('#ffd39a');key.falloffType=B.Light.FALLOFF_STANDARD;key.range=25;
 const rim=new B.DirectionalLight('rim',new B.Vector3(.3,-.5,.6),scene);rim.diffuse=color('#8cb4df');
 const sunShadow=new B.ShadowGenerator(mobile?1024:2048,sun);sunShadow.usePercentageCloserFiltering=true;sunShadow.bias=.0003;sunShadow.normalBias=.025;
 const keyShadow=new B.ShadowGenerator(mobile?1024:2048,key);keyShadow.usePercentageCloserFiltering=true;keyShadow.bias=.0003;keyShadow.normalBias=.025;
@@ -86,8 +84,8 @@ for(let i=0;i<31;i++){
  plank.position.set((i-15)*.63,1.5,-8);plank.rotation.z=Math.sin(i*5)*.012;plank.receiveShadows=true;fence.push(plank);
 }
 for(const y of [.5,2.3]){const rail=B.MeshBuilder.CreateBox('fenceRail',{width:20,height:.16,depth:.16},scene);rail.position.set(0,y,-7.86);rail.material=wood;}
-// Vegetación cercana: volumen en dos caras, un solo lote; pasillo libre bajo los personajes.
-const blade=B.MeshBuilder.CreatePlane('grassBlade',{width:.16,height:.85,sideOrientation:B.Mesh.DOUBLESIDE},scene);
+// shortcut: pasto en láminas; sustituir por matas curvas al refinar el acabado cercano.
+const blade=B.MeshBuilder.CreatePlane('grassBlade',{width:.16,height:.85,sideOrientation:B.Mesh.DOUBLESIDE,updatable:true},scene);
 const v=blade.getVerticesData(B.VertexBuffer.PositionKind)!;for(let i=0;i<v.length;i+=3){if(v[i+1]>.1){v[i]*=.1;v[i+2]=.15;}v[i+1]+=.42;}blade.updateVerticesData(B.VertexBuffer.PositionKind,v);blade.material=grassMat;
 const matrices:number[]=[];
 for(let i=0;i<(mobile?1800:4200);i++){
@@ -111,15 +109,27 @@ for(let i=0;i<16;i++){
  const x=-9+i*1.2,y=5.3-.8*(1-(x/10)**2);
  const bulb=B.MeshBuilder.CreateSphere('lightbulb',{diameter:.17,segments:8},scene);bulb.position.set(x,y-.13,-5);bulb.material=bulbMat;bulbs.push(bulb);
 }
+// Casa y árboles lejanos con volumen: pueden verse desde cualquier ángulo.
+const houseMat=material('houseWall','#546171',.95),roofMat=material('roof','#282e38',.95);
+const house=B.MeshBuilder.CreateBox('house',{width:7,height:5,depth:5},scene);house.position.set(3,2.5,-15);house.material=houseMat;
+const roof=B.MeshBuilder.CreateCylinder('roof',{diameterTop:0,diameterBottom:10,height:3,tessellation:4},scene);roof.position.set(3,6,-15);roof.rotation.y=Math.PI/4;roof.scaling.z=.8;roof.material=roofMat;
+const windowMat=material('windowLight','#b9a272');windowMat.emissiveColor=color('#ffd189').scale(.65);
+for(const x of [1.5,4.5]){const win=B.MeshBuilder.CreateBox('window',{width:.9,height:1.3,depth:.04},scene);win.position.set(x,3.5,-12.47);win.material=windowMat;}
+const leafMat=material('treeLeaves','#233c2b',.97),trunkMat=material('treeTrunk','#493c2c',.94);
+for(const x of [-15,-11,11,15]){
+ const trunk=B.MeshBuilder.CreateCylinder('treeTrunk',{height:9,diameterTop:.3,diameterBottom:.7,tessellation:8},scene);trunk.position.set(x,4.5,-12);trunk.material=trunkMat;
+ for(let i=0;i<5;i++){const canopy=B.MeshBuilder.CreateSphere('canopy',{diameter:5,segments:12},scene);canopy.position.set(x+Math.sin(i*3)*2.1,8+Math.cos(i)*1.3,-12+Math.cos(i*3)*2);canopy.scaling.y=.7;canopy.material=leafMat;}
+}
+probe.position.set(0,2,0);probe.renderList=[sky,ground,...fence,...bulbs,house,roof];
 const pipeline=new B.DefaultRenderingPipeline('cinema',true,scene,[camera]);pipeline.samples=mobile?1:4;pipeline.fxaaEnabled=mobile;
 pipeline.bloomEnabled=true;pipeline.bloomThreshold=1.1;pipeline.bloomWeight=.15;pipeline.bloomKernel=32;
 
 let lighting:'day'|'night'='night',view:'close'|'game'|'orbit'='close',animated=true,time=0;
 function light(mode:typeof lighting){
  lighting=mode;const night=mode==='night';
- hemi.intensity=night?.3:.9;hemi.diffuse=color(night?'#7693ba':'#dfebed');
- sun.intensity=night?.15:2.4;sun.diffuse=color(night?'#b7d2ef':'#fff0cb');
- key.intensity=night?24:0;rim.intensity=night?.55:0;
+ hemi.intensity=night?.5:.9;hemi.diffuse=color(night?'#7693ba':'#dfebed');
+ sun.shadowEnabled=!night;key.shadowEnabled=night;sun.intensity=night?.15:2.4;sun.diffuse=color(night?'#b7d2ef':'#fff0cb');
+ key.intensity=night?16:0;rim.intensity=night?1.1:0;
  scene.clearColor=B.Color4.FromHexString(night?'#101b2dff':'#87acc9ff');scene.fogColor=color(night?'#142438':'#a2b6c5');scene.fogDensity=night?.009:.005;
  scene.imageProcessingConfiguration.exposure=night?1.15:1;moon.setEnabled(night);
  const c=skyTexture.getContext() as unknown as CanvasRenderingContext2D,g=c.createLinearGradient(0,0,0,256);
@@ -129,43 +139,43 @@ function light(mode:typeof lighting){
 }
 function framing(mode:typeof view,yaw=0){
  view=mode;camera.target.set(0,mode==='game'?.5:1.2,0);
- camera.alpha=Math.PI/2+.27+yaw*Math.PI/180;camera.beta=mode==='game'?.42:mode==='orbit'?1.1:1.36;
- camera.radius=mode==='game'?19:mode==='orbit'?14:mobile?15.5:12;
+ camera.alpha=Math.PI/2+.27+yaw*Math.PI/180;camera.beta=mode==='game'?.42:mode==='orbit'?1.1:1.49;
+ camera.radius=mobile?26:mode==='game'?19:mode==='orbit'?14:12;
+ pipeline.depthOfFieldEnabled=!mobile&&mode==='close';pipeline.depthOfField.focusDistance=camera.radius*1000;pipeline.depthOfField.fStop=4;pipeline.depthOfField.lensSize=45;
  for(const el of document.querySelectorAll<HTMLButtonElement>('[data-view]'))el.setAttribute('aria-pressed',String(el.dataset.view===mode));
 }
 light('night');framing('close');
 
 try{
- const [dog,car]=await Promise.all(['frenchie','buggy'].map(name=>B.LoadAssetContainerAsync(`models/cinematic/${name}.glb`,scene)));
+ const [dog,car]=await Promise.all(['frenchie','buggy'].map(name=>B.LoadAssetContainerAsync(`assets-src/cinematic-3d/${name}.glb`,scene)));
  dog.addAllToScene();car.addAllToScene();
  const dogRoot=new B.TransformNode('frenchie',scene),carRoot=new B.TransformNode('buggy',scene);
  for(const node of dog.rootNodes)node.parent=dogRoot;for(const node of car.rootNodes)node.parent=carRoot;
- dogRoot.scaling.setAll(.27);dogRoot.position.set(2.1,.025,.1);dogRoot.rotation.y=-.18;
- carRoot.position.set(-1.8,.04,.3);carRoot.rotation.y=.25;
+ dogRoot.scaling.setAll(.27);dogRoot.position.set(2.1,.025,.1);dogRoot.rotation.y=Math.PI-.18;
+ carRoot.position.set(-1.8,.04,.3);carRoot.rotation.y=Math.PI+.25;
  const paint=car.materials.find(m=>m.name==='Paint') as B.PBRMaterial|undefined;
- if(paint){const textures=wornTex(scene,431,'#e6a51e',null,512,.75,.5);textures.alb.updateSamplingMode(B.Texture.TRILINEAR_SAMPLINGMODE);textures.orm.updateSamplingMode(B.Texture.TRILINEAR_SAMPLINGMODE);paint.albedoColor=B.Color3.White();paint.albedoTexture=textures.alb;paint.metallicTexture=textures.orm;paint.useRoughnessFromMetallicTextureGreen=true;paint.useMetallnessFromMetallicTextureBlue=true;}
+ if(paint){paint.clearCoat.isEnabled=true;paint.clearCoat.intensity=.5;paint.clearCoat.roughness=.22;const textures=wornTex(scene,431,'#e6a51e',null,512,.45,.3);textures.alb.updateSamplingMode(B.Texture.TRILINEAR_SAMPLINGMODE);textures.orm.updateSamplingMode(B.Texture.TRILINEAR_SAMPLINGMODE);paint.albedoColor=B.Color3.White();paint.albedoTexture=textures.alb;paint.metallicTexture=textures.orm;paint.useRoughnessFromMetallicTextureGreen=true;paint.useMetallnessFromMetallicTextureBlue=true;}
  for(const m of [...dog.materials,...car.materials])if(m instanceof B.PBRMaterial){m.environmentIntensity=.65;m.maxSimultaneousLights=4;}
  for(const m of [...dog.meshes,...car.meshes])if(m.getTotalVertices()>0)cast(m);
  for(const a of dog.animationGroups)a.stop();
- const idle=dog.animationGroups.find(a=>a.name.toLowerCase().includes('idle'));if(!idle)throw new Error('El frenchie no contiene el clip idle');idle.start(true);
- const wheels=car.transformNodes.filter(n=>n.name.startsWith('Wheel_'));
- const wheelRotations=wheels.map(n=>(n.rotationQuaternion??B.Quaternion.FromEulerVector(n.rotation)).clone());
- function tick(n=1){if(!Number.isInteger(n)||n<1||n>1200)throw new RangeError('Cuadros: 1..1200');for(let i=0;i<n;i++){
-   if(animated)time+=1/60;
-   idle!.goToFrame(idle!.from+(time*24)%(idle!.to-idle!.from));
-   for(let j=0;j<wheels.length;j++)wheels[j].rotationQuaternion=B.Quaternion.RotationAxis(B.Axis.X,time*.35).multiply(wheelRotations[j]);
+ const idle=dog.animationGroups.find(a=>a.name.toLowerCase().includes('idle'));if(!idle)throw new Error('El frenchie no contiene el clip idle');let activeClip=idle;activeClip.start(true);
+ const wheels=car.transformNodes.filter(n=>/^Wheel_(-1|1)_(-0\.9|0\.92)$/.test(n.name));
+  function tick(n=1,dt=1/60){if(!Number.isInteger(n)||n<1||n>1200)throw new RangeError('Cuadros: 1..1200');for(let i=0;i<n;i++){
+   if(animated)time+=dt;
+   activeClip.goToFrame(activeClip.from+(time*24)%Math.max(1,activeClip.to-activeClip.from));
    scene.render();
  }}
- const info=()=>({lighting,view,animated,time,meshes:scene.meshes.length,triangles:scene.getActiveIndices()/3,clips:dog.animationGroups.map(a=>a.name),wheels:wheels.length,grassInstances:matrices.length/16,render:[engine.getRenderWidth(),engine.getRenderHeight()]});
- Object.assign(window,{__art:(opts:{light?:typeof lighting;view?:typeof view;yaw?:number;animated?:boolean;time?:number})=>{
+ const info=()=>({lighting,view,animated,time,meshes:scene.meshes.length,triangles:scene.getActiveIndices()/3,clips:dog.animationGroups.map(a=>a.name),clip:activeClip.name,wheels:wheels.length,grassInstances:matrices.length/16,render:[engine.getRenderWidth(),engine.getRenderHeight()]});
+ await scene.whenReadyAsync();
+ Object.assign(window,{__art:(opts:{light?:typeof lighting;view?:typeof view;yaw?:number;animated?:boolean;time?:number;clip?:string})=>{
+   if(opts.clip){const next=dog.animationGroups.find(a=>a.name===opts.clip);if(!next)throw new RangeError('Clip desconocido');activeClip.stop();activeClip=next;activeClip.start(true);time=0;}
    if(opts.light)light(opts.light);if(opts.view||opts.yaw!==undefined)framing(opts.view??view,opts.yaw??0);if(opts.animated!==undefined)animated=opts.animated;if(opts.time!==undefined)time=opts.time;tick();return info();
  },__artInfo:info,__artTick:tick,__artFreeze:()=>engine.stopRenderLoop(),__artScene:scene});
  for(const btn of document.querySelectorAll<HTMLButtonElement>('[data-view]'))btn.onclick=()=>framing(btn.dataset.view as typeof view);
  for(const btn of document.querySelectorAll<HTMLButtonElement>('[data-light]'))btn.onclick=()=>light(btn.dataset.light as typeof lighting);
  document.querySelector<HTMLButtonElement>('#art-motion')!.onclick=e=>{animated=!animated;(e.currentTarget as HTMLButtonElement).setAttribute('aria-pressed',String(animated));};
  status.textContent='Modelos 3D reales · Materiales PBR · Primera aproximación';
- // shortcut: paso fijo para comparación; usar tiempo real al integrar estos clips en una partida.
- engine.runRenderLoop(()=>tick());
+ engine.runRenderLoop(()=>tick(1,Math.min(.05,engine.getDeltaTime()/1000)));
 }catch(error){status.textContent='No se pudo cargar la escena. Revisar los recursos GLB.';console.error(error);}
 addEventListener('resize',()=>engine.resize());
 addEventListener('pagehide',()=>{engine.stopRenderLoop();scene.dispose();engine.dispose();},{once:true});

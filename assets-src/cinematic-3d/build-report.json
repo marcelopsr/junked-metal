@@ -1,0 +1,19 @@
+{
+  "frenchie": {
+    "triangles": 46878,
+    "bytes": 3400776,
+    "clips": [
+      "charge",
+      "death",
+      "idle",
+      "jump_slam",
+      "rage",
+      "run",
+      "walk"
+    ]
+  },
+  "buggy": {
+    "triangles": 98744,
+    "bytes": 2888676
+  }
+}

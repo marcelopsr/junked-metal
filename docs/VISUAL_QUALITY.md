@@ -823,3 +823,10 @@ Carrera (1) y Survivor en partida (2).
 4. **Atenuación acústica por distancia (*Rolloff*) y paneo estéreo en embestidas (Audio & Synth Sound Designer · `src/sfx.ts`):**
    - Se incorporó el factor de caída acústica `distGain = Math.max(0.12, 1 / (1 + dist * 0.04))` en `SFX.spatialAlert(pan, dist)` y `SFX.spatialHiss(pan, dur, dist)`.
    - Se actualizó `SFX.ram(powerOrPan, pan)` permitiendo colisiones con paneo estéreo direccionado en la onda senoidal y en la capa sorda de choque.
+
+
+## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
+
+Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.
+
+Conclusión visual: avance verificable a geometría relightable, todavía lejos de la ilustración aprobada. El frenchie conserva pecho marfil visible pero necesita continuidad anatómica y acabado de pelo; el pasto en láminas resulta rígido; árboles/casa siguen como volumen básico y el desgaste del buggy necesita localización. No se asigna una nota de fidelidad ni se declara acabado final. Próximo foco recomendado: refinar esta escena antes de producir Eulalio o integrar modelos en partidas. Triángulos, performance indicativa y límites de teléfono/hordas están en el README de la muestra.
