@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-09 (Ciclos #1 a #19 completados y validados · Ciclo #20 listo para selección)
+**Última actualización:** 2026-10-10 (Ciclos #1 a #20 completados y validados · Ciclo #21 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -206,50 +206,51 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #20
+### Ciclo #20 (2026-10-10) — Anillos Activos en Probador de Mandos, Nitro Máximo `#boost.full`, Destello `.used` en Carrera y Multiplicador `(×N)` en Junket Crush
+- **Alcance implementado en paralelo por 4 subagentes:**
+  - **Subagente 1 · Configuración de Mandos (`src/menu.ts`, `src/menu.css`):** Clase `.active` en `.pt-st` cuando el stick supera la zona muerta (`m >= PAD.dead`), iluminando el anillo `.pt-ring` y la lectura numérica `em` en ámbar cálido `#ffd24a` con resplandor sutil.
+  - **Subagente 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`):** Activación memoizada de `#boost.full` al alcanzar carga completa (`d.boost >= 100`), otorgando un halo cian eléctrico y degradado incandescente a la barra de impulso.
+  - **Subagente 3 · Carrera: Objetos (`src/kart.ts`, `src/race.css`):** Destello transitorio `.used` (borde blanco puro y resplandor de 16 px) sobre `.ritem` durante 300 ms en `useItem(r)` al accionar un objeto.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`):** Inclusión del multiplicador de cascada ` (×${s.chain + 1})` en los números flotantes de ganancia cuando ocurre una reacción en cadena (`s.chain >= 1`).
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (591 ms), `npm run shots -- --only config,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3077 nodos, 7529 aristas).
 
-### A. Área 1 · Menú de Configuración y Diagnóstico de Mandos (`src/menu.ts`, `src/menu.css`)
-1. **Iluminación Reactiva `.active` en los Anillos de Stick en el Probador de Mandos (`padTest`):**
-   - **Qué es:** En `padTest()` (`src/menu.ts`), cuando el stick izquierdo o derecho sale de la zona muerta (`m >= PAD.dead`), añadir la clase `.active` al contenedor `.pt-st` para que el anillo exterior `.pt-ring` se ilumine en ámbar cálido (`#ffd24a`) y marque visualmente la deflexión activa en tiempo real.
-   - **Qué problema resuelve:** En la pantalla de Configuración de controles, el probador de joystick mueve el punto interior pero el anillo conserva el mismo borde apagado, dificultando verificar con claridad el umbral de activación de la zona muerta.
-   - **Valor:** Feedback de diagnóstico de mandos mucho más nítido e intuitivo al calibrar el control. Complejidad: Baja.
+---
 
-### B. Área 2 · HUD de Supervivencia: Pulso de Nitro Máximo (`#boost.full`) y Destello (`src/ui.ts`, `src/hud.css`)
-2. **Indicador de Impulso Máximo (`.full`) en la Barra de Nitro (`#boost`):**
-   - **Qué es:** En `hudUpdate()` (`src/ui.ts`), cuando el boost alcanza el 100% de carga (`d.boost >= 100`), aplicar de forma memoizada la clase `.full` al contenedor `#boost` para encender un borde cian brillante y pulso sutil de sobrepresión.
-   - **Qué problema resuelve:** En combate rápido el jugador no siempre detecta si la barra de nitro llegó a su tope máximo para soltar un acelerón o embestida evasiva.
-   - **Valor:** Lectura periférica instantánea de disponibilidad total de nitro sin desviar la mirada del auto. Complejidad: Baja.
+## 4. Backlog Vivo de Oportunidades — Ciclo #21
 
-### C. Área 3 · Carrera: Efecto de Objeto Desplegado (`.used`) en `.ritem` (`src/kart.ts`, `src/race.css`)
-3. **Destello de Confirmación de Uso de Objeto (`.used`) en la Caja `.ritem`:**
-   - **Qué es:** En `useItem(r)` (`src/kart.ts`), cuando el jugador humano presiona el botón de objeto y lo despliega con éxito, disparar una clase temporal `.used` sobre `.ritem` con un flash blanco/cian rápido (`0.25 s`) antes de limpiar el ícono.
-   - **Qué problema resuelve:** Al accionar un petardo o escudo, la caja del ítem se vacía de golpe sin una transición o confirmación táctil de que la orden fue recibida por el vehículo.
-   - **Valor:** Mayor satisfacción táctil y certeza de despliegue de objetos en carrera. Complejidad: Baja.
+### A. Área 1 · Menú de Garaje y Taller (`src/menu.ts`, `src/menu.css`)
+1. **Pastilla de Color Seleccionado en la Cabecera de `Pintura` del Garaje:**
+   - **Qué es:** En `renderGarage()` (`src/menu.ts`), mostrar una muestra de color circular/cuadrada compacta con el tono de pintura activo junto al nombre de la pieza (`${PZ[pz]} · Personalizado`) en `.hsvt`.
+   - **Qué problema resuelve:** Al personalizar el auto en el Garaje, el título indica si es personalizado o de fábrica pero no muestra una muestra visual del tono aplicado en la cabecera.
+   - **Valor:** Mayor claridad cromática al pintar piezas del auto RC. Complejidad: Baja.
 
-### D. Área 4 · Gabinete Junket Crush: Display de Multiplicador de Puntos en Cadena (`src/match3.ts`, `src/match3.css`)
-4. **Insignia Flotante de Multiplicador de Cascada (`×2`, `×3`, `×4`) en el Tablero de Juego:**
-   - **Qué es:** En `src/match3.ts`, cuando ocurre una reacción en cadena (`chain > 1`), mostrar un indicador flotante temporal `.m3-chain-mult` en la esquina superior del tablero con el multiplicador de puntaje activo (`×2`, `×3`, `×4`).
-   - **Qué problema resuelve:** Durante una cascada el jugador ve cómo sube el puntaje pero no tiene feedback visual inmediato de qué multiplicador de bonificación está aplicando cada reacción en cadena.
-   - **Valor:** Refuerzo arcade gratificante durante las combinaciones múltiples en el gabinete. Complejidad: Baja.
+### B. Área 2 · HUD de Supervivencia: Porcentaje de Curación en Cartas de Reparación (`src/ui.ts`, `src/hud.css`)
+2. **Etiqueta Explícita `Reparación · +35% vida` en Cartas de Nivel:**
+   - **Qué es:** En `kindLabel()` (`src/ui.ts`), cuando la carta es de tipo curación (`o.kind === "heal"`), detallar `Reparación · +35% vida` con tinte verde esmeralda.
+   - **Qué problema resuelve:** Actualmente la carta de curación dice únicamente `Reparación` en la etiqueta de cabecera, sin explicitar de inmediato cuánto porcentaje de vida restaura antes de leer la descripción.
+   - **Valor:** Lectura táctica instantánea ante situaciones de emergencia en supervivencia. Complejidad: Baja.
+
+### C. Área 3 · Carrera: Indicador de Escudo Activo en el HUD (`src/kart.ts`, `src/race.css`)
+3. **Pastilla de Escudo Activo (`ESCUDO Xs`) en el Velocímetro de Carrera:**
+   - **Qué es:** En `hud()` (`src/kart.ts`), cuando el corredor humano tiene burbuja de protección (`r.shield > 0`), mostrar una pastilla cian `.rshield` junto a `.rturbo` indicando el tiempo restante de protección (`ESCUDO 7s`).
+   - **Qué problema resuelve:** La burbuja 3D rodea al auto pero el HUD no tiene un temporizador numérico que avise cuándo caducará la protección ante proyectiles.
+   - **Valor:** Anticipación táctica de colisiones y disparos rivales. Complejidad: Baja.
+
+### D. Área 4 · Gabinete Junket Crush: Efecto de Destello en Cajas Trituradas (`src/match3_draw.ts`, `src/match3.ts`)
+4. **Resplandor de Impacto al Romper Cajas de Chatarra en el Tablero:**
+   - **Qué es:** En `drawCrate()` o `beginStep()`, cuando una caja de chatarra recibe su segundo golpe y se destruye (`vw.crate[y][x] === 0`), añadir un destello dorado o partículas de viruta para enfatizar la demolición de la caja.
+   - **Qué problema resuelve:** La rotura de cajas de chatarra es uno de los objetivos clave de nivel y se beneficia de un impacto visual más rotundo al liberar el espacio.
+   - **Valor:** Mayor satisfacción táctil en la resolución de tableros de campaña. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #19 completado, verificado y subido a `origin/master` (`1e92eeb`).
-- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (460 ms), 35 capturas verificadas en `.shots/actual/` y grafo actualizado (3074 nodos, 7524 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Reservados abajo para los 4 subagentes del Ciclo #20.
-- **Próxima decisión pendiente:** Ejecución y validación integrada del **Ciclo #20**.
+- **Último trabajo completado:** Ciclo #20 completado, verificado y documentado.
+- **Estado de validación:** `tsc --noEmit`, `npm test` (75/75), `npm run build` (591 ms), 33 capturas verificadas en `.shots/actual/` y grafo actualizado (3077 nodos, 7529 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (bloqueos del Ciclo #20 liberados tras validación).
+- **Próxima decisión pendiente:** Selección de tareas en paralelo por subagentes para el **Ciclo #21**.
 
-### 🔒 EN CURSO — Ciclo #20 (Orquestador Antigravity + 4 Subagentes por Área, 2026-10-10)
-> **Coordinación en paralelo — Archivos reservados por área (no editar desde otro agente sin coordinar):**
-
-| Subagente / Área | Tarea asignada | Archivos bloqueados (`🔒`) | Estado |
-|---|---|---|---|
-| **Subagente 1 · Configuración de Mandos** | Iluminación reactiva `.active` en ámbar en `.pt-st` al accionar sticks en `padTest` | `src/menu.ts`, `src/menu.css` | 🔧 En curso |
-| **Subagente 2 · HUD de Supervivencia** | Indicador de nitro al 100% (`#boost.full`) con resplandor cian brillante | `src/ui.ts`, `src/hud.css` | 🔧 En curso |
-| **Subagente 3 · Carrera Objeto Usado** | Destello de confirmación `.used` en `.ritem` al desplegar un objeto en `useItem()` | `src/kart.ts`, `src/race.css` | 🔧 En curso |
-| **Subagente 4 · Gabinete Junket Crush** | Multiplicador de cascada `(×N)` en textos flotantes de puntuación durante combos | `src/match3.ts`, `src/match3.css` | 🔧 En curso |
 
 
 
