@@ -938,7 +938,8 @@ function hud() {
       return dot > 0.5 && dot < 2.5 && d.length() < 2.8;
     });
     const aheadTag = aheadRival ? '<b class="rahead">RIVAL DELANTE</b>' : "";
-    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${slipTag}${airTag}${spinTag}${maxTag}${overTag}${finalTag}${perfTag}${tTag}${shTag}${wTag}${thTag}${aheadTag}`;
+    const backTag = h.fs < -0.5 ? '<b class="rback">MARCHA ATRÁS</b>' : "";
+    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${slipTag}${airTag}${spinTag}${maxTag}${overTag}${finalTag}${perfTag}${tTag}${shTag}${wTag}${thTag}${aheadTag}${backTag}`;
     if (spdEl.dataset.h !== spdHtml) { spdEl.dataset.h = spdHtml; spdEl.innerHTML = spdHtml; }
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; it.classList.toggle("full", !!h.item); }

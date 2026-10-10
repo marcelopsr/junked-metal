@@ -707,6 +707,26 @@ Carrera (1) y Survivor en partida (2).
 8. **Tirantes estabilizadores cromados en la trompa del Formula (Subagente 8 · `src/models.ts`):**
    - En `carModel()`, el Formula monoplaza incorpora dos tirantes cilíndricos cromados diagonales en el tren delantero, aumentando la fidelidad aerodinámica del bólido de carreras.
 
+---
+
+## 2026-10-10 · Ciclo #33 (Chasis Liviano y Pinturas Garaje, Pánico LiPo HUD, Marcha Atrás y Tapón 3D Carrera, Retícula Activa Match-3, Plasma Zap FX, Alerta Colisión SFX y Sello LiPo Polaroid)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 30.5 s).
+
+### Intervenciones aplicadas por 4 subagentes consolidados en paralelo y verificadas en captura
+1. **Insignia `.light-frame` ("CHASIS LIVIANO") y contador `.paints-pct` en Garaje (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()`, se identifican los vehículos ligeros y veloces (`formula`, `carrera`, `axel`) con una pastilla cian reflectante `<span class="light-frame">CHASIS LIVIANO</span>`. Además, se contabilizan las opciones de carrocería en propiedad y se añade la pastilla magenta `<span class="paints-pct">${ownedPaints}/${total} PINTURAS</span>` en el saldo de tornillos, completando las métricas de colección.
+2. **Estado de pánico crítico `#hud.panic` y salto energizado en HUD (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, cuando la vida LiPo desciende del 15%, se activa la clase `#hud.panic`, disparando una viñeta perimetral carmesí acelerada (`animation: h-pulse .45s steps(2) infinite; box-shadow: inset 0 0 120px 20px rgba(239, 68, 68, .6)`) y oscilación estroboscópica de emergencia en el voltímetro `#volt`. En `hudJump(ready)`, el indicador `#jump` adquiere la clase `.ready` con texto verde esmeralda resplandeciente (`#5be37a`) cuando está disponible.
+3. **Pastilla de marcha atrás `.rback` y tapón de recarga lateral cromado 3D (Subagente 3 · `src/kart.ts`, `src/race.css`, `src/models.ts`):**
+   - En `hud()` de carrera, se detecta maniobra en reversa ($fs < -0.5$) desplegando la pastilla naranja `<b class="rback">MARCHA ATRÁS</b>` en el velocímetro con halo de atención. En `src/models.ts`, los modelos deportivo, pickup y combi reciben un tapón cilíndrico cromado lateral (`cyl(0.024, 0.024, 0.015, chrome, ...)`) en la aleta trasera, representando la toma de carga de la batería.
+4. **Retícula reforzada Match-3, Plasma Zap FX, Alerta Colisión SFX y Sello LiPo Polaroid (Subagente 4 · `src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts`):**
+   - En `src/match3.ts`, la celda activa seleccionada o armada traza cuatro esquinas reforzadas estilo retícula de 8 px de longitud en color cian o amarillo claro sobre el lienzo, garantizando precisión visual en el intercambio.
+   - En `src/fx.ts`, se incorporó `FX.sparkZap(p)` con 8 partículas de plasma eléctrico azul y cian ultrarrápidas de arco voltaico.
+   - En `src/sfx.ts`, se sumó `SFX.collisionWarning()` con dos pulsos de onda de sierra de 880 Hz para alarmas sonoras de peligro inminente.
+   - En `src/replay.ts`, se añadió el cuño analógico diegético `"BATERÍA LiPo · DESCARGA TOTAL"` en tinta sepia en el pie de la Polaroid al agotarse la energía.
+
+
 
 
 

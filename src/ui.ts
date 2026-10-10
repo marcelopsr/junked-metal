@@ -14,7 +14,7 @@ const WSHOP_ICON: Record<(typeof WSHOP_KEYS)[number], string> = { hp: "litio", d
 import { WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
 
-const $ = (id: string) => document.getElementById(id)!;
+const $ = (id: string) => (document.getElementById(id) ?? (id === "jump" ? document.getElementById("jumpRow") : null))!;
 const el = <T extends HTMLElement = HTMLElement>(id: string) => $(id) as T;
 
 // ---------- Estáticos ----------
@@ -58,6 +58,8 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   });
   const low = p < 0.25;
   if (ch("low", +low)) { $("txl").classList.toggle("low", low); $("hud").classList.toggle("low", low); }
+  const panic = p < 0.15;
+  if (ch("panic", +panic)) $("hud").classList.toggle("panic", panic);
   const isShield = !!d.shield;
   if (ch("shielded", +isShield)) $("lipo").classList.toggle("shielded", isShield);
   const prevHp = memo.prevHp as number | undefined;
@@ -238,6 +240,7 @@ export function hudJump(ready: number) {
     const voltEl = $("volt");
     voltEl.classList.remove("surge"); void voltEl.offsetWidth; voltEl.classList.add("surge");
   }
+  $("jump").classList.toggle("ready", ready === 1);
   const cd = ready >= 1 ? 0 : 1 - ready;
   const cdS = cd.toFixed(3);
   if (ch("jmpCd", cdS)) {

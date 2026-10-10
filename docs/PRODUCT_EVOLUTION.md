@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-10 (Ciclos #1 a #32 completados y validados · Ciclo #33 listo para selección)
+**Última actualización:** 2026-10-10 (Ciclos #1 a #33 completados y validados · Ciclo #34 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -560,78 +560,68 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Subagente 8 · Modelos Procedurales (`src/models.ts`):** Tirantes y tensores diagonales cromados en trompa y suspensión del Formula monoplaza.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando en 30.2 s), `npm run build` (392 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular en 29.4 s) y `graphify update .` (3153 nodos, 7691 aristas).
 
+### Ciclo #33 (2026-10-10) — Chasis Liviano y Pinturas Garaje, Pánico LiPo HUD, Marcha Atrás y Tapón 3D Carrera, Retícula Activa Match-3, Plasma Zap FX, Alerta Colisión SFX y Sello LiPo Polaroid
+- **Alcance implementado en paralelo por 4 subagentes consolidados:**
+  - **Subagente 1 · Garaje, Taller y Menús (`src/menu.ts`, `src/menu.css`):**
+    - Insignia reflectante `.light-frame` (`CHASIS LIVIANO`) en vehículos de alta velocidad y bajo peso (`formula`, `carrera`, `axel`) para comunicar el balance agilidad vs resistencia.
+    - Pastilla `.paints-pct` (`${ownedPaints}/${total} PINTURAS`) en el panel de saldo del taller, completando las métricas de colección.
+  - **Subagente 2 · HUD y Telemetría de Supervivencia (`src/ui.ts`, `src/hud.css`):**
+    - Estado de pánico crítico `#hud.panic` con viñeta perimetral roja acelerada (`animation: h-pulse .45s steps(2) infinite; box-shadow: inset 0 0 120px 20px rgba(239, 68, 68, .6)`) y oscilación de advertencia en voltímetro `#volt` cuando la batería LiPo desciende del 15%.
+    - Resaltado táctico `.ready` en verde esmeralda resplandeciente (`#5be37a`) en el indicador de salto `#jump` cuando está listo para activar.
+  - **Subagente 3 · Carrera, Tacómetro y Modelado 3D (`src/kart.ts`, `src/race.css`, `src/models.ts`):**
+    - Pastilla de marcha atrás `<b class="rback">MARCHA ATRÁS</b>` en velocímetro de carrera al maniobrar en reversa ($fs < -0.5$).
+    - Tapón cilíndrico cromado lateral de recarga de batería (`cyl(0.024, 0.024, 0.015, chrome, ...)`) en la aleta trasera de los modelos deportivo, pickup y combi.
+  - **Subagente 4 · Gabinete Junket Crush, Audio SFX, Efectos FX y Polaroid (`src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts`):**
+    - Retícula de cuatro esquinas reforzadas de 8 px en cian o amarillo claro sobre la celda activa seleccionada o armada en el tablero Match-3.
+    - Rutina `FX.sparkZap(p)` con 8 micro-partículas de plasma eléctrico azul y cian de arco voltaico de alta velocidad.
+    - Generador sonoro `SFX.collisionWarning()` con doble tono de onda de sierra a 880 Hz para alarmas de proximidad o impacto.
+    - Sello analógico diegético `"BATERÍA LiPo · DESCARGA TOTAL"` en tinta técnica sepia en el pie de la foto Polaroid al terminar la partida.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando en 20.7 s), `npm run build` (455 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular en 30.5 s) y `graphify update .` (3156 nodos, 7699 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #33 (8 Áreas en Paralelo)
+## 4. Backlog Vivo de Oportunidades — Ciclo #34 (4 Áreas Consolidadas)
 
-### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
-1. **Insignia de Chasis Liviano / Ágil en Autos con Alta Velocidad o Bajo Peso (`.light-frame`):**
-   - **Qué es:** En `renderGarage()`, destacar a los vehículos ligeros y veloces (`formula`, `deportivo`) con una pastilla de aleación `.light-frame` (`CHASIS LIVIANO`).
-   - **Qué problema resuelve:** Comunica de inmediato el trade-off de agilidad y aceleración frente a la resistencia de impacto.
-   - **Valor:** Ergonomía visual de catálogo e identidad de chasis. Complejidad: Baja.
+### A. Subagente 1 · Garaje, Taller y Menús (`src/menu.ts`, `src/menu.css`)
+1. **Insignia de Tracción Integral / Agarre en Autos Pesados (`.all-wheel`) e Indicador de Equipamiento en Ranuras de Taller:**
+   - **Qué es:** En `renderGarage()`, identificar a vehículos con tracción o masa reforzada con la pastilla `.all-wheel` (`TRACCIÓN TOTAL`). En `renderParts()`, añadir un micro-contador de opciones equipadas por ranura.
+   - **Qué problema resuelve:** Enriquece la identidad mecánica de cada auto y facilita la gestión de piezas en el taller.
+   - **Valor:** Visibilidad de configuración e inmersión diegética. Complejidad: Media.
 
-### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
-2. **Pánico en Viñeta de Daño Crítico (`#blood.panic`):**
-   - **Qué es:** En `hudUpdate()`, cuando la salud LiPo cae por debajo del 18%, acelerar la pulsación de la viñeta roja perimetral con clase `.panic`.
-   - **Qué problema resuelve:** Refuerza la urgencia de maniobra evasiva antes de la destrucción total.
-   - **Valor:** Tensión dramática y alerta sensorial inequívoca. Complejidad: Baja.
+### B. Subagente 2 · HUD y Telemetría de Supervivencia (`src/ui.ts`, `src/hud.css`)
+2. **Halo Áureo en Armas Evolucionadas al Nivel Máximo (`.evo.max`) y Pulso Térmico en Tacómetro (`#txr.blazing`):**
+   - **Qué es:** En `hudUpdate()`, resaltar el marco exterior de slots de armas evolucionadas al nivel 5 con un halo dorado pulsante. En `#txr`, aplicar clase `.blazing` con resplandor naranja incandescente al sostener velocidad extrema.
+   - **Qué problema resuelve:** Celebra visualmente las armas al tope de poder y aporta adrenalina de aceleración continua.
+   - **Valor:** Feedback de potencia y game feel de alta velocidad. Complejidad: Media.
 
-### C. Área 3 · Carrera: Pastilla de Marcha Atrás (`src/kart.ts`, `src/race.css`)
-3. **Pastilla de Marcha Atrás en Tacómetro (`.rback`):**
-   - **Qué es:** En `hud()` de carrera, encender una pastilla ámbar `<b class="rback">MARCHA ATRÁS</b>` cuando la velocidad es negativa ($fs < -0.5$).
-   - **Qué problema resuelve:** Da feedback inequívoco al maniobrar tras trompos o colisiones contra muros.
-   - **Valor:** Claridad de telemetría de pilotaje. Complejidad: Baja.
+### C. Subagente 3 · Carrera, Tacómetro y Modelado 3D (`src/kart.ts`, `src/race.css`, `src/models.ts`)
+3. **Pastilla de Rebufo Máximo `.rslip-max` en Tacómetro y Tuercas Centrales Cromadas en Ruedas de Competición:**
+   - **Qué es:** En `hud()` de carrera, diferenciar rebufo incipiente de succión aerodinámica plena con la pastilla magenta `<b class="rslip-max">¡SUCCIÓN!</b>`. En `src/models.ts`, añadir tuercas centrales de fijación rápida en las ruedas de Formula y Deportivo.
+   - **Qué problema resuelve:** Clarifica el momento exacto para saltar a rebasar y suma detalle de maquetismo de carreras a escala.
+   - **Valor:** Táctica de carrera y fidelidad visual 3D. Complejidad: Media.
 
-### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`, `src/match3.css`)
-4. **Marco de Selección Reforzado en Celda Activa (`m3-active-cell`):**
-   - **Qué es:** En `match3_draw.ts`, dibujar un marco con micro-esquinas resaltadas y halo brillante sobre la pieza actualmente seleccionada antes de mover.
-   - **Qué problema resuelve:** Evita dudas sobre qué chatarra está armada para el intercambio.
-   - **Valor:** Precisión táctil y visual en el tablero. Complejidad: Baja.
-
-### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
-5. **Chispas de Plasma Eléctrico en `FX.sparkZap`:**
-   - **Qué es:** En `FX` (`src/fx.ts`), incorporar la rutina `sparkZap(p)` con partículas ultrarrápidas de arco cian/azul para descargas LiPo o trampas.
-   - **Qué problema resuelve:** Enriquece el abanico de feedback elemental electro-mecánico.
-   - **Valor:** Impacto visual diferenciado frente a chispas de combustión. Complejidad: Baja.
-
-### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
-6. **Sello de Diagnóstico LiPo en Polaroid:**
-   - **Qué es:** En `showPhoto()`, incluir un micro-sello analógico `"BATERÍA LiPo · DESCARGA TOTAL"` en tinta técnica gastada.
-   - **Qué problema resuelve:** Contextualiza la detención del vehículo como agotamiento de energía en el patio.
-   - **Valor:** Atmósfera narrativa diegética RC. Complejidad: Baja.
-
-### G. Área 7 · Audio Sintetizado (`src/sfx.ts`)
-7. **Tono de Alerta de Impacto Próximo `SFX.collisionWarning`:**
-   - **Qué es:** En `SFX` (`src/sfx.ts`), incorporar `collisionWarning()` con dos bips de advertencia electrónica retro.
-   - **Qué problema resuelve:** Provee un recurso sonoro para momentos de peligro inminente o proximidad extrema.
-   - **Valor:** Tensión auditiva y retro-feeling arcade. Complejidad: Baja.
-
-### H. Área 8 · Modelos Procedurales del Taller (`src/models.ts`)
-8. **Tapa Moleteada de Batería/Carga en Carrocerías Deportivas:**
-   - **Qué es:** En `carModel()` (`src/models.ts`), modelar un tapón cilíndrico metálico moleteado en el lateral trasero de deportivo y combi.
-   - **Qué problema resuelve:** Acentúa la naturaleza de maqueta a escala de radiocontrol.
-   - **Valor:** Detalle de ensamblaje industrial en miniatura. Complejidad: Baja.
+### D. Subagente 4 · Gabinete Junket Crush, Audio SFX, Efectos FX y Polaroid (`src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts`)
+4. **Ondas Expansivas de Choque en Combos $\ge 4$, Humo Frío Criogénico `FX.nitrogenFreeze`, SFX Boost y Sello de Alcance en Polaroid:**
+   - **Qué es:** En `src/match3.ts`, ondas de choque de borde en combos largos. En `src/fx.ts`, partículas criogénicas `nitrogenFreeze(p)`. En `src/sfx.ts`, tono ascendente `boostSurge()`. En `src/replay.ts`, sello `"ALCANCE MÁXIMO DE PATIO"` en partidas de más de 5 minutos.
+   - **Qué problema resuelve:** Intensifica la espectacularidad en gabinetes arcade y completa la paleta de efectos y audio procedural.
+   - **Valor:** Retroalimentación sensorial rica y variada. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #32 completado, verificado con `tsc` (0 errores), `test` (75/75), `build` (392 ms), 33 capturas en `.shots/actual/` (29.4 s) y grafo actualizado (`graphify update .`).
-- **Próxima decisión pendiente:** Implementación en paralelo del **Ciclo #33** con 8 subagentes por área.
+- **Último trabajo completado:** Ciclo #33 completado, verificado con `tsc` (0 errores), `test` (75/75), `build` (455 ms), 33 capturas en `.shots/actual/` (30.5 s) y grafo actualizado (`graphify update .`).
+- **Próxima decisión pendiente:** Implementación en paralelo del **Ciclo #34** con 4 subagentes consolidados por área.
 
-### 🔓 LISTO PARA ARRANCAR — Ciclo #33 (Orquestador Antigravity + 8 Subagentes por Área, 2026-10-10)
-> **Coordinación en paralelo — Áreas listas para asignación de subagentes:**
+### 🔓 LISTO PARA ARRANCAR — Ciclo #34 (Orquestador Antigravity + 4 Subagentes Consolidados, 2026-10-10)
+> **Coordinación en paralelo — Áreas consolidadas para asignación de subagentes:**
 
 | Subagente / Área | Tarea asignada | Archivos asignados (`🔓`) | Estado |
 |---|---|---|---|
-| **Subagente 1 · Garaje Chasis** | Insignia de chasis liviano `.light-frame` en autos ágiles | `src/menu.ts`, `src/menu.css` | ⏳ Pendiente decisión |
-| **Subagente 2 · HUD Supervivencia** | Pánico acelerado en viñeta de daño crítico `#blood.panic` | `src/ui.ts`, `src/hud.css` | ⏳ Pendiente decisión |
-| **Subagente 3 · Carrera Maniobra** | Pastilla de marcha atrás `.rback` en tacómetro | `src/kart.ts`, `src/race.css` | ⏳ Pendiente decisión |
-| **Subagente 4 · Gabinete Junket Crush** | Marco reforzado en celda seleccionada activa | `src/match3_draw.ts`, `src/match3.ts`, `src/match3.css` | ⏳ Pendiente decisión |
-| **Subagente 5 · Efectos Visuales 3D** | Chispas de plasma eléctrico `FX.sparkZap` | `src/fx.ts` | ⏳ Pendiente decisión |
-| **Subagente 6 · Cierre y Polaroid** | Sello analógico LiPo `"BATERÍA LiPo · DESCARGA TOTAL"` | `src/replay.ts`, `src/replay.css` | ⏳ Pendiente decisión |
-| **Subagente 7 · Audio Sintetizado** | Tono retro de alerta de colisión `SFX.collisionWarning()` | `src/sfx.ts` | ⏳ Pendiente decisión |
-| **Subagente 8 · Modelos Procedurales** | Tapa moleteada de carga en laterales de carrocería | `src/models.ts` | ⏳ Pendiente decisión |
+| **Subagente 1 · Garaje y Taller** | Insignia de tracción total `.all-wheel` y conteo de piezas en ranuras | `src/menu.ts`, `src/menu.css` | ⏳ Pendiente decisión |
+| **Subagente 2 · HUD y Telemetría** | Halo dorado en armas evolucionadas al máximo y tacómetro incandescente | `src/ui.ts`, `src/hud.css` | ⏳ Pendiente decisión |
+| **Subagente 3 · Carrera y Modelos 3D** | Pastilla de succión plena `.rslip-max` y tuercas centrales cromadas en ruedas | `src/kart.ts`, `src/race.css`, `src/models.ts` | ⏳ Pendiente decisión |
+| **Subagente 4 · Gabinete, FX, SFX y Polaroid** | Choque de combos Match-3, humo frío `nitrogenFreeze`, SFX boost y sello Polaroid | `src/match3.ts`, `src/fx.ts`, `src/sfx.ts`, `src/replay.ts` | ⏳ Pendiente decisión |
 
 
 

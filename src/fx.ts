@@ -101,6 +101,7 @@ export const FX = {
   burnout: (p: B.Vector3) => burst(p, { n: 10, color: "#e2e8f0", color2: "#94a3b8", size: [0.4, 1.2], power: [1.2, 3.5], life: [0.4, 0.9], gravity: -0.5, add: false }),
   scrape: (p: B.Vector3) => burst(p, { n: 6, color: "#fef08a", color2: "#ea580c", size: [0.05, 0.12], power: [1.5, 4.5], life: [0.12, 0.25], gravity: -10, add: true }),
   overheat: (p: B.Vector3) => burst(p, { n: 5, color: "#fca5a5", color2: "#ea580c", size: [0.3, 0.8], power: [0.6, 2.0], life: [0.4, 0.8], gravity: -2, add: true }),
+  sparkZap: (p: B.Vector3) => burst(p, { n: 8, color: "#38bdf8", color2: "#2563eb", size: [0.08, 0.2], power: [2.0, 5.0], life: [0.1, 0.25], gravity: -4, add: true }),
   xp: (p: B.Vector3) => burst(p, { n: 5, color: "#9be7ff", size: [0.1, 0.25], power: [1, 3], life: [0.2, 0.4] }),
   smoke: (p: B.Vector3, dark = false) => burst(p, { n: 2, color: dark ? "#a8a8a8" : "#f4f4f4", size: [0.5, 1.1], power: [0.5, 1.5], life: [0.8, 1.4], gravity: 3, add: false }),
   // Estela de proyectil: una voluta chica que se apaga rápido (llamar con probabilidad, no cada cuadro)

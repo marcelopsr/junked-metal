@@ -77,6 +77,7 @@
 .rp .rperfect { padding: 3px 6px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #ec4899; color: #fff; border-radius: 4px; box-shadow: 0 0 10px rgba(236, 72, 153, .8); animation: r-blink .3s steps(2) infinite; }
 .rp .rthreat { padding: 3px 6px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #ff9138; color: #1f1100; border-radius: 4px; box-shadow: 0 0 8px rgba(255, 145, 56, .6); animation: r-blink .4s steps(2) infinite; }
 .rp .rahead { padding: 3px 6px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #eab308; color: #1c1917; border-radius: 4px; box-shadow: 0 0 8px rgba(234, 179, 8, .6); }
+.rp .rback { padding: 3px 6px; font: 800 12px/1 "Rajdhani", system-ui, sans-serif; letter-spacing: .06em; background: #ea580c; color: #fff; border-radius: 4px; box-shadow: 0 0 8px rgba(234, 88, 12, .6); }
 @keyframes r-blink { 50% { opacity: .25; } }
 #rinfo .rbest { color: #22c55e; font-style: normal; font-weight: 800; }
 #rinfo .rdiff { color: #94a3b8; font-weight: 600; }

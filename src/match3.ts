@@ -265,6 +265,7 @@ function paintMap(c: CanvasRenderingContext2D) {
 function paintBoard(c: CanvasRenderingContext2D) {
   const vw = view();
   if (!st || !vw) return;
+  const ORIG_X = OX, ORIG_Y = OY;
   const sx = shake ? (Math.random() - 0.5) * shake : 0, sy = shake ? (Math.random() - 0.5) * shake : 0;
   c.save(); c.translate(sx, sy);
   const a = anim;
@@ -310,6 +311,20 @@ function paintBoard(c: CanvasRenderingContext2D) {
       else { glow = 1; scale = 1.15 * (1 - (clearK - 0.35) / 0.65); }
     }
     if (playing && (isAt(sel, x, y) || isAt(armed, x, y))) lift = 1;
+    if (playing && (isAt(sel, x, y) || isAt(armed, x, y))) {
+      const cx = ORIG_X + x * CELL, cy = ORIG_Y + y * CELL, cs = 8;
+      c.save();
+      c.strokeStyle = isAt(armed, x, y) ? M3C.amarilloClaro : M3C.cian;
+      c.lineWidth = 2;
+      // Esquinas superior-izquierda, superior-derecha, inferior-izquierda, inferior-derecha
+      c.beginPath();
+      c.moveTo(cx + 2, cy + 2 + cs); c.lineTo(cx + 2, cy + 2); c.lineTo(cx + 2 + cs, cy + 2);
+      c.moveTo(cx + CELL - 2 - cs, cy + 2); c.lineTo(cx + CELL - 2, cy + 2); c.lineTo(cx + CELL - 2, cy + 2 + cs);
+      c.moveTo(cx + 2, cy + CELL - 2 - cs); c.lineTo(cx + 2, cy + CELL - 2); c.lineTo(cx + 2 + cs, cy + CELL - 2);
+      c.moveTo(cx + CELL - 2 - cs, cy + CELL - 2); c.lineTo(cx + CELL - 2, cy + CELL - 2); c.lineTo(cx + CELL - 2, cy + CELL - 2 - cs);
+      c.stroke();
+      c.restore();
+    }
     const sq = land > 0 && !a ? land / 0.12 : 0; // aplastado al aterrizar: ancho y bajo
     if (scale <= 0.02) continue;
     const px = OX + (x + 0.5 + ox) * CELL, py = OY + (y + 0.5 + oy) * CELL;

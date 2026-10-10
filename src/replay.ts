@@ -139,6 +139,12 @@ export async function showPhoto(i: PhotoInfo) {
   g.textAlign = "left";
   g.fillText(`LOTE FOTOGRÁFICO #${lot}`, pad, y0 + 216 * u);
   g.restore();
+  g.save();
+  g.font = `600 ${Math.round(11 * u)}px Rajdhani, sans-serif`;
+  g.fillStyle = "rgba(77, 76, 56, 0.4)";
+  g.textAlign = "left";
+  g.fillText("BATERÍA LiPo · DESCARGA TOTAL", pad, y0 + 232 * u);
+  g.restore();
   if (i.kills >= 100) {
     g.save();
     g.font = `700 ${Math.round(15 * u)}px Rajdhani, sans-serif`;
