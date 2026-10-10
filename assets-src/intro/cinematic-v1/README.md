@@ -4,6 +4,8 @@
 
 Ampliación solicitada: **bulldog francés gris, mancha clara visible de frente en el pecho y físico algo musculoso**, presentado como otro jefe junto a Eulalio. Es un animal orgánico de pelo corto, con orejas erguidas y pose frontal; no lleva armadura ni accesorios. El montaje de rivales ahora incluye cuatro personajes bajo cuatro focos.
 
+Subtítulo actualizado: **«Todo bajo control. De nadie. La garantía no cubre esto.»** La frase elegida por el usuario lleva un remate adicional propuesto en esta tanda; sustituye las referencias a duración, cantidad de jefes y Felipe en el montaje y en el texto de la intro del juego. El arte cinematográfico sigue sin integrarse.
+
 ## Ver el resultado
 
 - [`index.html`](index.html): montaje estático local de las cuatro escenas; abrir desde esta carpeta dentro del repositorio. Reutiliza la fuente Rajdhani instalada en `node_modules/@fontsource/rajdhani`, sin red ni servidor nuevo.
@@ -50,3 +52,5 @@ El buggy conserva la silueta de la lámina aprobada. Sus resortes son metálicos
 Once PNG decodificados; cinco fondos opacos; seis recortes con transparencia real y sin píxeles de alpha > 16 en el borde del lienzo. Correspondencia exacta entre los once archivos y sus prompts. Montaje inspeccionado en Chromium headless local con la GPU Metal: escritorio 1280×720 y teléfono 390×844, once imágenes cargadas en cada uno (el buggy se usa dos veces), cuatro rivales y un único frenchie, sin errores de página/carga ni desbordamiento horizontal. Capturas de evidencia actuales en `.shots/investigacion-arte/cinematic-frenchie-{pc,cel}.png`; las capturas iniciales de tres rivales se conservan. Navegador cerrado al terminar.
 
 La revisión cubre **el paquete y su montaje estático**. La intro real conserva `src/intro.ts`; no se probaron su reproducción con estos recursos, controles de salto ni rendimiento de carga. No se corrieron suites del juego porque no cambió su código. Antes de integrar: exportar imágenes de distribución con peso adecuado, decidir animación y manejo de carga, y verificar intro/salto/modo calmo/subtítulos en escritorio y teléfono según [`INTRO_ASSETS_PLAN.md`](../../../docs/INTRO_ASSETS_PLAN.md).
+
+Cambio de subtítulo: `tsc`, 75 pruebas y build correctos. Intro real y montaje revisados a 1280×720 y 390×844, frase sin cortes ni desbordamiento y salida con Escape correcta; sin errores de página. Capturas en `.shots/subtitulo/`. Esta prueba de texto no implica integración del arte cinematográfico.

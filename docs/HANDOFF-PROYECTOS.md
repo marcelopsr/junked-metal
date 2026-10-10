@@ -82,6 +82,8 @@ Documentación viva: `CLAUDE.md` (reglas, pruebas, balance, herramientas) y `doc
 
 **Ampliación de jefes en el arte, 2026-10-10:** usuario pidió frenchie/bulldog francés gris, mancha visible en el pecho y algo musculoso, junto a Eulalio. Entregado `10-frenchie-gris.png` con alpha + `02-rivales-fondo-v2.png` con cuatro focos. Montaje de cuatro rivales y captura actualizados; revisión pc/cel sin errores ni desbordamiento. Once fuentes conservadas, diez activas; 19,17 MB activos. Se conserva el fondo anterior. No cambia el jefe perro ni su lógica en el juego: incorporación al paquete y montaje visual, con integración runtime pendiente.
 
+**Subtítulo, 2026-10-10:** usuario eligió «Todo bajo control. De nadie.» y pidió agregar un remate. Aplicado «Todo bajo control. De nadie. La garantía no cubre esto.» en `src/intro.ts` y montaje cinematográfico. Cambio de texto únicamente; arte y animación cinematográficos siguen pendientes de integración.
+
 **Pendiente de implementar (ya decidido por el usuario):**
 - **Planilla en Drive:** subir `balance.xlsx` y dejarla como referencia.
 

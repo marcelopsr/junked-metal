@@ -23,5 +23,53 @@
   "transparentAssets": 6,
   "totalBytes": 21364157,
   "activeBytes": 19171701,
-  "runtimeTested": false
+  "runtimeTested": false,
+  "subtitleChecks": [
+    {
+      "viewport": "pc",
+      "runtime": {
+        "text": "Todo bajo control. De nadie. La garantía no cubre esto.",
+        "fits": true,
+        "overflow": false,
+        "viewport": [
+          1280,
+          720
+        ]
+      },
+      "montage": {
+        "text": "Todo bajo control. De nadie. La garantía no cubre esto.",
+        "fits": true,
+        "overflow": false,
+        "viewport": [
+          1280,
+          720
+        ]
+      },
+      "skip": true,
+      "errors": []
+    },
+    {
+      "viewport": "cel",
+      "runtime": {
+        "text": "Todo bajo control. De nadie. La garantía no cubre esto.",
+        "fits": true,
+        "overflow": false,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      "montage": {
+        "text": "Todo bajo control. De nadie. La garantía no cubre esto.",
+        "fits": true,
+        "overflow": false,
+        "viewport": [
+          390,
+          844
+        ]
+      },
+      "skip": true,
+      "errors": []
+    }
+  ]
 }
