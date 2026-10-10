@@ -221,6 +221,10 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     sph(1.1, M.glow("#fff0c8"), [2.68, 7.0, -1.18]),
     // transmisor RC de chapa gastada
     ...transmitter(fDark, fOrange, fRed, metal),
+    // soporte de pits (Pit Stand), cargador inteligente LiPo digital y botes de silicona/spray
+    ...pitStand(fDark, metal, M.rubber()),
+    ...lipoCharger(fTeal, metal, fDark),
+    ...siliconeOils(fYellow, fRed, metal),
     // repuestos: dos ruedas, batería con bornes y cables, tornillos y tuercas, latas de pintura, destornillador suelto, taza enlozada
     place(wheel(2, 1, "#8a5a3a"), [6.5, 0.5, 6.5], [0, 0.4, Math.PI / 2]), place(wheel(2, 1, "#3a6b7c"), [8.6, 1.0, 4.4], [0, -0.3, 0]),
     box(3.6, 1.4, 1.7, fTeal, [-14, 0.7, 4.5]), box(3.65, 0.45, 1.75, fDark, [-14, 1.25, 4.5]),
@@ -231,6 +235,55 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
   ];
   if (!low) props.push(cyl(2.6, 2.4, 3, fRed, [-25, 1.5, -3], undefined, 8), tor(1.6, 0.35, fRed, [-23.6, 1.6, -3], [Math.PI / 2, 0, 0], 8), cyl(2.2, 2.2, 0.1, W("#4a2e1b"), [-25, 2.95, -3], undefined, 8));
   return [room, props];
+}
+function pitStand(fDark: B.Material, metal: B.Material, rubber: B.Material): B.Mesh[] {
+  const parts = [
+    cyl(5.6, 6.2, 0.4, fDark, [0, 0.2, 0], undefined, 8),
+    cyl(2.8, 3.0, 0.15, metal, [0, 0.42, 0], undefined, 8),
+    tor(0.5, 0.18, metal, [0.4, 0.52, 0.3], undefined, 6),
+    cyl(0.2, 0.2, 0.8, metal, [-0.5, 0.52, -0.2], [0, 0.4, Math.PI / 2], 6),
+    cyl(1.4, 1.6, 2.2, metal, [0, 1.4, 0], undefined, 8),
+    tor(1.8, 0.25, fDark, [0, 2.4, 0], undefined, 8),
+    box(7.5, 0.3, 4.8, metal, [0, 2.65, 0]),
+    box(7.2, 0.15, 0.8, rubber, [0, 2.85, 1.8]),
+    box(7.2, 0.15, 0.8, rubber, [0, 2.85, -1.8]),
+  ];
+  const s = merge("pitStand", parts);
+  s.position.set(-7.5, 0, -3.5);
+  s.rotation.y = 0.25;
+  return [s];
+}
+function lipoCharger(fTeal: B.Material, metal: B.Material, fDark: B.Material): B.Mesh[] {
+  const parts = [
+    box(5.2, 1.6, 3.6, fTeal, [0, 0.8, 0]),
+    box(2.8, 0.05, 1.2, M.glow("#06b6d4"), [0, 1.62, -0.4]),
+    box(3.0, 0.04, 1.4, fDark, [0, 1.61, -0.4]),
+    ...[-1.2, -0.4, 0.4, 1.2].map((x) => box(0.45, 0.12, 0.35, metal, [x, 1.66, 0.9])),
+    cyl(0.35, 0.35, 0.4, M.plastic("#ef4444"), [2.7, 0.8, -0.6], [0, 0, Math.PI / 2], 6),
+    cyl(0.35, 0.35, 0.4, fDark, [2.7, 0.8, 0.6], [0, 0, Math.PI / 2], 6),
+    box(0.2, 0.4, 1.4, M.plastic("#fafafa"), [-2.65, 0.8, 0]),
+    tube([[2.7, 0.8, -0.6], [4.2, 0.3, -0.2], [5.5, 0.1, 0.8]], 0.09, M.plastic("#ef4444")),
+    tube([[2.7, 0.8, 0.6], [4.4, 0.3, 1.0], [5.8, 0.1, 1.8]], 0.09, fDark)
+  ];
+  const c = merge("lipoCharger", parts);
+  c.position.set(-17.5, 0, -2.5);
+  c.rotation.y = 0.35;
+  return [c];
+}
+function siliconeOils(fYellow: B.Material, fRed: B.Material, metal: B.Material): B.Mesh[] {
+  const parts = [
+    cyl(1.3, 1.4, 3.4, M.glass(), [0, 1.7, 0], undefined, 8),
+    cyl(1.1, 1.2, 2.4, fYellow, [0, 1.3, 0], undefined, 8),
+    cyl(0.3, 1.2, 1.0, fRed, [0, 3.8, 0], undefined, 8),
+    cyl(0.15, 0.15, 0.8, fRed, [0, 4.4, 0], undefined, 6),
+    cyl(1.6, 1.6, 4.8, metal, [2.6, 2.4, -0.4], undefined, 8),
+    cyl(1.5, 1.5, 0.8, M.plastic("#2563eb"), [2.6, 5.0, -0.4], undefined, 8),
+    cyl(0.1, 0.1, 1.2, fRed, [2.6, 5.2, 0.3], [Math.PI / 2, 0, 0], 4)
+  ];
+  const o = merge("siliconeOils", parts);
+  o.position.set(13.8, 0, -5.2);
+  o.rotation.y = -0.2;
+  return [o];
 }
 function transmitter(fDark: B.Material, fOrange: B.Material, fRed: B.Material, metal: B.Material): B.Mesh[] {
   const parts = [

@@ -168,7 +168,14 @@ class Gomitas extends Weapon {
 class Clips extends Weapon {
   ms: B.InstancedMesh[] = [];
   a = 0;
-  tpl = template("clip", () => [tor(0.9, 0.08, M.metal("#d6dbe1"), [0, 0, 0], undefined, 12)]);
+  tpl = template("clip", () => [
+    cyl(0.06, 0.06, 1.0, M.metal("#d6dbe1"), [-0.28, 0, 0], [Math.PI / 2, 0, 0], 6),
+    cyl(0.06, 0.06, 1.2, M.metal("#d6dbe1"), [0.28, 0, 0.1], [Math.PI / 2, 0, 0], 6),
+    cyl(0.06, 0.06, 0.7, M.metal("#d6dbe1"), [0.08, 0, -0.15], [Math.PI / 2, 0, 0], 6),
+    tor(0.56, 0.06, M.metal("#d6dbe1"), [0, 0, 0.5], undefined, 10),
+    tor(0.56, 0.06, M.metal("#d6dbe1"), [0.08, 0, -0.5], undefined, 10),
+    tor(0.2, 0.06, M.metal("#d6dbe1"), [-0.02, 0, 0.3], undefined, 8),
+  ]);
   update(c: Ctx) {
     const cfg = W.clips;
     const n = this.evolved ? cfg.n_evo : cant(cfg, this.lv);
@@ -229,7 +236,13 @@ class Chispero extends Weapon {
 
 class Petardos extends Weapon {
   flying: { m: B.InstancedMesh; from: B.Vector3; to: B.Vector3; t: number }[] = [];
-  tpl = template("petardo", () => [cyl(0.3, 0.3, 0.8, M.plastic("#dc2626"), [0, 0, 0], [Math.PI / 2, 0, 0], 8), box(0.05, 0.05, 0.3, M.matte("#222"), [0, 0, -0.5])]);
+  tpl = template("petardo", () => [
+    cyl(0.3, 0.3, 0.8, M.plastic("#dc2626"), [0, 0, 0], [Math.PI / 2, 0, 0], 8),
+    cyl(0.31, 0.31, 0.22, M.metal("#d97706"), [0, 0, 0], [Math.PI / 2, 0, 0], 8),
+    cyl(0.28, 0.28, 0.06, M.matte("#78350f"), [0, 0, 0.38], [Math.PI / 2, 0, 0], 8),
+    cyl(0.05, 0.05, 0.32, M.matte("#333"), [0, 0.04, -0.48], [1.2, 0, 0], 4),
+    sph(0.09, M.glow("#ff6b00"), [0, 0.14, -0.6])
+  ]);
   update(c: Ctx) {
     const cfg = W.petardos;
     if ((this.cd -= c.dt) <= 0) {
@@ -496,6 +509,9 @@ class Regla extends Weapon {
   rs: { m: B.InstancedMesh; from: B.Vector3; dir: B.Vector3; side: number; t: number; hit: Set<Enemy> }[] = [];
   tpl = template("regla", () => [
     box(0.5, 0.06, 2.6, pbr("regla", { color: "#e8d48a", rough: 0.5, emissive: "#2a5a10" }), [0, 0, 0]),
+    box(0.06, 0.07, 2.6, M.metal("#d1d5db"), [-0.22, 0, 0]),
+    box(0.56, 0.09, 0.32, M.metal("#374151"), [0, 0.01, -0.3]),
+    cyl(0.08, 0.08, 0.12, M.metal("#d97706"), [0.2, 0.07, -0.3], undefined, 6),
     ...[-1.1, -0.55, 0, 0.55, 1.1].map((z) => box(0.2, 0.08, 0.04, M.glow("#8dff6a"), [0.15, 0.01, z])),
   ]);
   update(c: Ctx) {
@@ -620,7 +636,12 @@ class Bocina extends Weapon {
 class Trompo extends Weapon {
   tops: { m: B.InstancedMesh; target: Enemy | null; life: number; ang: number; trail: number }[] = [];
   blades: { m: B.InstancedMesh; life: number }[] = [];
-  tpl = template("trompo_w", () => [cyl(0.9, 0.05, 0.8, pbr("topBody", { color: "#b783ff", rough: 0.3, emissive: "#3a1a66" }), [0, 0.3, 0], undefined, 10), cyl(1.1, 1.1, 0.1, M.metal("#e6e9ee"), [0, 0.65, 0], undefined, 12)]);
+  tpl = template("trompo_w", () => [
+    cyl(0.9, 0.05, 0.8, pbr("topBody", { color: "#b783ff", rough: 0.3, emissive: "#3a1a66" }), [0, 0.3, 0], undefined, 10),
+    cyl(1.1, 1.1, 0.1, M.metal("#e6e9ee"), [0, 0.65, 0], undefined, 12),
+    cyl(0.14, 0.02, 0.22, M.metal("#71717a"), [0, -0.11, 0], undefined, 6),
+    cyl(0.38, 0.38, 0.24, M.plastic("#4c1d95"), [0, 0.78, 0], undefined, 8),
+  ]);
   bladeTpl = template("estela", () => [tor(1.6, 0.14, pbr("blade", { color: "#7de8ff", rough: 0.2, emissive: "#2a8ab0", alpha: 0.8 }), [0, 0, 0], undefined, 18)]);
   update(c: Ctx) {
     const cfg = W.trompo, ev = this.evolved;

@@ -715,24 +715,42 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Audio & Synth Sound Designer (`src/sfx.ts`):** Conexión física de `SFX.turboRelay()` al inicio de `boostSurge()` para conferir pegada electromecánica instantánea de relé al activar el nitro, y limitador de concurrencia `gate("tesla-arc", 16)` con atenuación espacial por distancia en `SFX.teslaDischarge(pan, dist)`.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (414 ms), `pm2 restart rc-test`, `npm run shots` (163 capturas verificadas en PC y móvil en 97.2 s sin errores) y `graphify update .` (3382 nodos, 8036 aristas).
 
+### Ciclo #42 (2026-10-10) — Procedural 3D & Folded Modeler Multitarea: Chasis RC, Utilería de Taller y Armas Bélicas
+- **Alcance implementado (Procedural 3D & Folded Modeler en 3 Pases Paralelos):**
+  - **Pase 1 · Chasis & Mecánica RC (`src/models.ts`):**
+    - Disipador clip-on de aluminio anodizado en azul (`#2563eb`) con 4 aletas radiales sobre la lata cilíndrica del motor 540 en `buggy` y `monster`.
+    - Amortiguadores helicoidales de competición con cuerpo hidráulico rojo, vástago cromado, muelles en espiral y collarines de precarga roscados dorados en torretas de suspensión.
+    - Servo de dirección sellado en nylon grafito con servo horn (brazo oscilante) en nylon blanco de competición y tensores ajustables (`turnbuckles`) cromados hacia las manguetas del tren frontal en `buggy`, `formula` y `carrera`.
+    - Batería LiPo Hardcase de polímero negro con etiqueta de advertencia 50C en amarillo, conector hembra XT60 de alta corriente y cables de silicona flexible + cable balanceador blanco 3S.
+  - **Pase 2 · Utilería y Taller Folded (`src/menuscene.ts`):**
+    - Soporte de pits de competición (`pitStand`) rotatorio con base trapezoidal pesada, columna de aluminio, bandeja imantada con tornillos sueltos y plato superior con tiras de goma antideslizantes para apoyar el chasis en el banco.
+    - Cargador inteligente LiPo digital (`lipoCharger`) con chapa anodizada, pantalla LCD con resplandor cian, 4 botones táctiles (`BATT TYPE`, `DEC`, `INC`, `START`), bornes banana y cables cocodrilo.
+    - Botes dosificadores de aceite de silicona para amortiguadores y spray limpiador de chasis (`siliconeOils`) con pico fino y válvulas dosificadoras sobre el banco.
+  - **Pase 3 · Armas e Ingeniería Bélica (`src/weapons.ts`):**
+    - `Clips`: Geometría procedural fiel de alambre galvanizado doblado con bucles concéntricos interiores y exteriores, sustituyendo el toroide circular simple.
+    - `Petardos`: Cuerpo cilíndrico de cartón kraft con faja reflectante dorada, tapón inferior de arcilla y mecha de cordel con brasa incandescente.
+    - `Regla`: Bisel metálico de acero inoxidable, cursor métrico calibrador deslizante con tornillo moleteado de bloqueo en bronce y marcas graduadas.
+    - `Trompo`: Punta inferior cónica de carburo de tungsteno y corona superior estriada de enganche para lanzador.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (393 ms), `npm run test:restart`, `npm run shots -- --only garaje,taller,partida` (35 capturas en PC y móvil en 25.2 s sin errores) y `graphify update .` (3396 nodos, 8067 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #42 (Especialistas Matriciales)
+## 4. Backlog Vivo de Oportunidades — Ciclo #43 (Evolución Multidisciplinaria)
 
-### A. Especialista 1 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
-1. **(Recomendada) Montaje Directo desde el Taller para Piezas Adquiridas:**
+### A. Especialista 1 · Procedural 3D & Folded Modeler (`src/models.ts`, `src/kit3d.ts`)
+1. **(Recomendada) Barras Estabilizadoras y Cardanes de Transmisión CV (CVDs):**
+   - **Qué es:** Añadir barras estabilizadoras de alambre de acero (`sway bars`) con rótulas esféricas en los ejes traseros, y palieres/cardanes telescópicos de transmisión articulados visibles entre el diferencial y los bujes de rueda.
+   - **Valor:** Eleva al máximo la fidelidad de maqueta mecánica 1:10 en el garaje y juego sin costo de rendimiento. Complejidad: Media.
+
+### B. Especialista 2 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
+2. **Montaje Directo desde el Taller para Piezas Adquiridas:**
    - **Qué es:** Permitir que al hacer clic en una pieza que ya está en posesión del jugador (`"EN EL GARAJE"`), se monte/desmonte inmediatamente en el auto activo (`save.kit[slot] = opt; persist(); renderShop();`) con feedback auditivo `SFX.scrapClink()`, sin obligar a ir a Garaje → Piezas.
    - **Valor:** Flujo de usuario continuo e inmediato de taller de competición. Complejidad: Baja.
 
-### B. Especialista 2 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-2. **Curva de Recuperación Elástica Post-Sag y Chirp Sonoro de Enlace Límite:**
+### C. Especialista 3 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
+3. **Curva de Recuperación Elástica Post-Sag y Chirp Sonoro de Enlace Límite:**
    - **Qué es:** Simular la relajación electroquímica gradual (~250ms con amortiguación suave) al soltar el acelerador en lugar de rebote instantáneo, y conectar un micro-chirp piezoeléctrico en `sfx.ts` cuando la señal cae por debajo de -90 dBm.
    - **Valor:** Respuesta orgánica analógica que separa la química LiPo de una barra genérica. Complejidad: Media.
-
-### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
-3. **Disipador de Calor Clip-on Anodizado para Monster Truck y Servo Horn Delantero:**
-   - **Qué es:** Añadir un disipador clip-on de aluminio con aletas radiales anodizadas en azul eléctrico sobre el motor 540 de `monster`, más el brazo de servo de dirección (servo horn) en nylon blanco en tren frontal de `buggy`/`formula`.
-   - **Valor:** Acentúa la personalización pesada de todoterreno RC de alta potencia. Complejidad: Media.
 
 ### D. Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`)
 4. **Resonancia de Carrocería por Colisión (`bodyThud`) y Alarma Piezoeléctrica LiPo Crítica:**
@@ -743,16 +761,16 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #41 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 414 ms, 163 capturas en `.shots/actual/` en 97.2 s, grafo en 3382 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #42** con los Especialistas Matriciales.
+- **Último trabajo completado:** Ciclo #42 completado y validado enfocando al Procedural 3D & Folded Modeler en 3 pases paralelos (Chasis RC, Utilería de taller en banco y Armas bélicas) (`tsc` 0 errores, `test` 75/75, `build` 393 ms, 35 capturas en `.shots/actual/` en 25.2 s, grafo en 3396 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #43**.
 
-### 🔓 LISTO PARA EL CICLO #42 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #43 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
+| **Procedural 3D Modeler** | Barras estabilizadoras y palieres articulados CVD en chasis de competición | `src/models.ts` |
 | **Menu, Workshop & Flow** | Montaje directo de piezas compradas desde el Taller sin volver a Garaje | `src/menu.ts`, `src/menu.css` |
 | **Diegetic HUD & Telemetry** | Relajación elástica post-sag y chirp analógico en señal crítica | `src/ui.ts`, `src/hud.css` |
-| **Procedural 3D Modeler** | Disipador clip-on anodizado en motor Monster y horn de servo delantero | `src/models.ts` |
 | **Audio Synth Designer** | Resonancia hueca de lexan `bodyThud` y buzzer piezoeléctrico LiPo baja | `src/sfx.ts` |
 
 

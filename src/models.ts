@@ -507,6 +507,12 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         // Lata cilíndrica del motor 540 con ranura de ventilación
         cyl(0.024, 0.024, 0.065, chrome, [-bw * 0.12, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 10),
         cyl(0.022, 0.022, 0.015, M.metal("#18181b"), [-bw * 0.12, bh * 0.32, -bl * 0.28 + 0.02], [0, 0, Math.PI / 2], 8),
+        // Disipador clip-on de aluminio anodizado en azul con aletas radiales sobre la lata
+        cyl(0.028, 0.028, 0.045, M.metal("#2563eb"), [-bw * 0.12, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 10),
+        box(0.002, 0.038, 0.048, M.metal("#1d4ed8"), [-bw * 0.12 - 0.012, bh * 0.32, -bl * 0.28]),
+        box(0.002, 0.038, 0.048, M.metal("#1d4ed8"), [-bw * 0.12 - 0.004, bh * 0.32, -bl * 0.28]),
+        box(0.002, 0.038, 0.048, M.metal("#1d4ed8"), [-bw * 0.12 + 0.004, bh * 0.32, -bl * 0.28]),
+        box(0.002, 0.038, 0.048, M.metal("#1d4ed8"), [-bw * 0.12 + 0.012, bh * 0.32, -bl * 0.28]),
         // Piñón dentado de bronce en eje de salida
         cyl(0.014, 0.014, 0.012, M.metal("#d97706"), [-bw * 0.12 + 0.038, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 8),
         // Cables de potencia flexibles ESC-Motor
@@ -515,6 +521,38 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         // Condensadores cerámicos de supresión de interferencia RF soldados a la lata
         box(0.006, 0.006, 0.003, M.plastic("#eab308"), [-bw * 0.12, bh * 0.34, -bl * 0.26]),
         box(0.006, 0.006, 0.003, M.plastic("#eab308"), [-bw * 0.12, bh * 0.30, -bl * 0.26])
+      );
+      // Amortiguadores helicoidales de competición con muelles y collarines de precarga
+      for (const sx of [-bw * 0.36, bw * 0.36]) {
+        parts.push(
+          cyl(0.012, 0.012, 0.09, M.metal("#dc2626"), [sx, bh * 0.34, bl * 0.26], [0, 0, sx > 0 ? 0.35 : -0.35], 6),
+          cyl(0.005, 0.005, 0.11, chrome, [sx, bh * 0.30, bl * 0.26], [0, 0, sx > 0 ? 0.35 : -0.35], 4),
+          tor(0.018, 0.003, chrome, [sx, bh * 0.35, bl * 0.26], [0, 0, sx > 0 ? 0.35 : -0.35], 8),
+          tor(0.018, 0.003, chrome, [sx, bh * 0.32, bl * 0.26], [0, 0, sx > 0 ? 0.35 : -0.35], 8),
+          cyl(0.016, 0.016, 0.01, M.metal("#d97706"), [sx, bh * 0.37, bl * 0.26], [0, 0, sx > 0 ? 0.35 : -0.35], 6)
+        );
+      }
+    }
+    if (kind === "buggy" || kind === "formula" || kind === "carrera") {
+      parts.push(
+        // Servo de dirección en nylon oscuro con tapa sellada
+        box(0.035, 0.025, 0.028, M.plastic("#18181b"), [0, bh * 0.24, bl * 0.32]),
+        // Servo horn (brazo oscilante) en nylon blanco de competición
+        cyl(0.006, 0.004, 0.016, M.plastic("#f4f4f5"), [0, bh * 0.26, bl * 0.335], [0.3, 0, 0], 6),
+        // Varillas de reenvío / tirantes ajustables (turnbuckles) hacia manguetas directrices
+        cyl(0.003, 0.003, bw * 0.32, chrome, [-bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, 0.35], 4),
+        cyl(0.003, 0.003, bw * 0.32, chrome, [bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, -0.35], 4)
+      );
+    }
+    if (kind === "buggy" || kind === "monster" || kind === "carrera") {
+      parts.push(
+        // Batería LiPo Hardcase de competición con conector XT60 y cables de silicona
+        box(0.055, 0.024, 0.12, M.matte("#18181b"), [bw * 0.14, bh * 0.26, -bl * 0.08]),
+        box(0.042, 0.001, 0.08, M.plastic("#f59e0b"), [bw * 0.14, bh * 0.273, -bl * 0.08]),
+        box(0.012, 0.01, 0.016, M.plastic("#eab308"), [bw * 0.14, bh * 0.28, -bl * 0.02]),
+        cyl(0.004, 0.004, 0.04, M.plastic("#ef4444"), [bw * 0.13, bh * 0.29, -bl * 0.04], [0.3, 0, 0], 4),
+        cyl(0.004, 0.004, 0.04, M.plastic("#18181b"), [bw * 0.15, bh * 0.29, -bl * 0.04], [0.3, 0, 0], 4),
+        cyl(0.003, 0.003, 0.025, M.plastic("#fafafa"), [bw * 0.14, bh * 0.285, -bl * 0.01], [0.2, 0, 0], 4)
       );
     }
     for (const sx of [-bw * 0.35, bw * 0.35]) {
