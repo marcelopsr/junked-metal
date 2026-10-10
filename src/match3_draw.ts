@@ -260,7 +260,13 @@ function drawNode(c: C, i: number, lv: LevelDef, m: MapView) {
   const { x, y } = nodePos(i), locked = i > m.open, done = m.stars[i] > 0, perf = m.stars[i] >= 3, cur = i === m.sel;
   const r = lv.boss ? 40 : 33;
   if (cur) { c.strokeStyle = M3C.cian; c.lineWidth = 4; c.globalAlpha = 0.5 + 0.5 * Math.sin(m.t * 5); c.beginPath(); c.arc(x, y, r + 9, 0, Math.PI * 2); c.stroke(); c.globalAlpha = 1; }
-  if (perf && !cur) { c.strokeStyle = M3C.amarilloClaro; c.lineWidth = 2.5; c.beginPath(); c.arc(x, y, r + 6, 0, Math.PI * 2); c.stroke(); }
+  if (perf) {
+    const hg = c.createRadialGradient(x, y, r, x, y, r + 12);
+    hg.addColorStop(0, "rgba(255, 210, 74, 0.35)");
+    hg.addColorStop(1, "rgba(255, 210, 74, 0)");
+    c.fillStyle = hg; c.beginPath(); c.arc(x, y, r + 12, 0, Math.PI * 2); c.fill();
+    if (!cur) { c.strokeStyle = M3C.amarilloClaro; c.lineWidth = 2.5; c.beginPath(); c.arc(x, y, r + 6, 0, Math.PI * 2); c.stroke(); }
+  }
   // tuerca gigante como nodo
   const hex = Array.from({ length: 6 }, (_, k) => { const a = (k / 6) * Math.PI * 2 + Math.PI / 6; return [x + Math.cos(a) * r, y + Math.sin(a) * r]; });
   poly(c, hex);

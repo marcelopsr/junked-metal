@@ -123,6 +123,8 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   box-shadow: inset 0 0 0 3px #0000, inset 0 0 0 4px var(--turbo); opacity: .9; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1) both;
   mask: radial-gradient(circle at 30% 70%, #0000 0 1px, #000 1.5px) 0 0 / 7px 9px; } /* tinta mordida: puntitos sin entintar */
 .ficha.logro.locked .sello { border: 2px dashed var(--dim); box-shadow: none; color: var(--dim); rotate: 8deg; animation: none; mask: none; opacity: .6; }
+.logro.ach-near { border-color: var(--jm-amarillo2, #ffd24a); }
+.logro.ach-near .sello { border-color: var(--jm-amarillo2, #ffd24a); color: var(--jm-amarillo2, #ffd24a); }
 /* Estadísticas de carrera: fichas con una cifra grande y filas clave/valor */
 .st-rank { color: var(--jm-amarillo2, #ffd24a); font-weight: 700; }
 .ficha .big { font: 700 32px/1 var(--jm-titulo); color: var(--lcd-ink); margin: 2px 0 6px; }

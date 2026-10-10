@@ -1051,6 +1051,7 @@ function achProg(k: AchId, ok: boolean) {
   if (k.startsWith("gana_") && !ok) return `<div class="achProg"><span>${owns("car:" + k.slice(5)) ? "Auto en el garaje · falta ganar la partida" : "Requiere desbloquear el auto en el Taller"}</span></div>`;
   return "";
 }
+const isAchNear = (k: AchId, ok: boolean) => !ok && ((k === "diez" && save.best >= 420) || (k === "diario" && save.daily.best >= 420) || (k.startsWith("gana_") && owns("car:" + k.slice(5))));
 /** Estadísticas de carrera: fichas con los totales históricos (save.stats y save.slain). */
 function statsHtml() {
   const s = save.stats, kv = (a: string, b: string | number) => `<div class="kv"><span>${a}</span><b>${b}</b></div>`;
@@ -1081,7 +1082,8 @@ function renderBestiary() {
   $("btabs").innerHTML = tabsHtml(bCounts, btab, "btab");
   $("beasts").innerHTML = btab === "stats" ? statsHtml() : btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
     const a: { name: string; txt: string; reward?: string; scrap?: number } = ACH[k], ok = save.ach.includes(k);
-    return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"}"><span class="sello">${ok ? "LOGRADO" : "???"}</span><b class="wi">${achIco(k)}${a.name}</b>${a.txt}${achProg(k, ok)}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}${ok ? `<b class="ach-ok"> · COBRADO</b>` : ""}</div>` : ""}</div>`;
+    const near = isAchNear(k, ok);
+    return `<div tabindex="0" class="carc ficha logro ${ok ? "" : "locked"} ${near ? "ach-near" : ""}"><span class="sello">${ok ? "LOGRADO" : near ? "CASI LISTO" : "???"}</span><b class="wi">${achIco(k)}${a.name}</b>${a.txt}${achProg(k, ok)}${a.reward || a.scrap ? `<div class="price">Premio: ${a.reward ? rewardName(a.reward) : `${a.scrap} tornillos`}${ok ? `<b class="ach-ok"> · COBRADO</b>` : ""}</div>` : ""}</div>`;
   }).join("")
     : btab === "pilotos" ? (Object.keys(PILOTS) as PilotId[]).map((k) => {
       const p = PILOTS[k], own = owns("pilot:" + k), st = save.pilot === k ? "EN USO" : own ? "EN EL GARAJE" : p.ach ? `Logro: ${p.ach.txt}` : `Bloqueado · ${p.cost} tornillos`;

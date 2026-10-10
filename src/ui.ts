@@ -66,6 +66,8 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   const prevLv = memo.lvN as number | undefined;
   const lvTxt = `NV ${pad(d.level, 2)}${d.pending ? ` +${d.pending}` : ""}`;
   if (ch("lvlTxt", lvTxt)) $("lvl").textContent = lvTxt;
+  const isMile = d.level % 10 === 0 && d.level > 0;
+  if (ch("lvMile", +isMile)) $("lvl").classList.toggle("milestone", isMile);
   if (ch("lvN", d.level) && prevLv !== undefined && d.level > prevLv) {
     const s = $("signal"); s.classList.remove("up"); void s.offsetWidth; s.classList.add("up");
   }

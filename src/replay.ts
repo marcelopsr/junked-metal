@@ -92,6 +92,14 @@ export async function showPhoto(i: PhotoInfo) {
   g.fillText(`${i.kills} ${i.kills === 1 ? "BAJA" : "BAJAS"} · ${i.car.toUpperCase()}`, pad, y0 + 52 * u);
   g.fillStyle = "#4d4c38"; g.font = `600 ${Math.round(30 * u)}px Rajdhani, sans-serif`;
   g.fillText(`${i.win ? "VICTORIA" : "FIN DE LA PARTIDA"} · JUNKED METAL`, pad, y0 + 92 * u);
+  if (i.win) {
+    g.save();
+    g.font = `700 ${Math.round(18 * u)}px Rajdhani, sans-serif`;
+    g.fillStyle = "#ffd24a";
+    g.textAlign = "right";
+    g.fillText("★ RÉCORD DE ZONA", pad + pw, y0 + 26 * u);
+    g.restore();
+  }
   g.save();
   g.translate(pad + 10 * u, pad + ph + foot - 14 * u);
   g.rotate(-0.02);

@@ -248,53 +248,64 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** Sello diegético `"ARCHIVADO · PATIO RC"` rotado en el pie inferior izquierdo de la foto polaroid.
 - **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (677 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3084 nodos, 7549 aristas).
 
+### Ciclo #23 (2026-10-10) — Logros Avanzados "Casi Listo", Hito Nivel cada 10, Rebufo en Carrera, Halo 3 Estrellas Match-3, Polvo de Aterrizaje y Récord de Zona Polaroid
+- **Alcance implementado en paralelo por 6 subagentes:**
+  - **Subagente 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`):** Resaltado `.ach-near` con borde dorado `#ffd24a` y sello `"CASI LISTO"` en logros con $\ge 70\%$ de avance (supervivencia $\ge 420\text{ s}$ en desafíos de 10 min/diario, o auto ya adquirido en el garaje para victorias de vehículo).
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Conmutación reactiva de la clase `.milestone` sobre la pastilla `#lvl` cada 10 niveles (`level % 10 === 0 && level > 0`), otorgando degradado ámbar incandescente y resplandor áureo.
+  - **Subagente 3 · Carrera Rebufo (`src/kart.ts`, `src/race.css`):** Mecánica de rebufo/succión aerodinámica en `stepRacer` cuando el jugador se sitúa detrás de un rival (cono de 2 a 11 m longitudinal, latitud $< 2.2$ m). Al rebasar 0.6 s acumulados, la velocidad punta sube un 15% (`top *= 1.15`) y se despliega la pastilla amarilla `.rslip` (`REBUFO`) en el velocímetro.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`):** Halo dorado exterior translúcido (`createRadialGradient`) de 12 px alrededor de las estaciones del mapa de campaña completadas con 3 estrellas perfectas.
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** Nueva rutina `FX.land(p, hard)` que emite polvo de patio denso (`#cdbd9c`) y dispersión amortiguada para transmitir peso físico contundente al impactar el suelo tras desniveles y saltos.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** Distintivo en oro `"★ RÉCORD DE ZONA"` a la derecha del pie de fotos polaroid para partidas culminadas con victoria.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (555 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3092 nodos, 7567 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #23 (6 Áreas en Paralelo)
+## 4. Backlog Vivo de Oportunidades — Ciclo #24 (6 Áreas en Paralelo)
 
 ### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
-1. **Resaltado de Logros Avanzados (`.ach-near`):**
-   - **Qué es:** En `renderBestiary()` pestaña logros, destacar con un sutil borde ámbar cálido y etiqueta `¡CASI LISTO!` los logros que superen el 70% de progreso hacia su desbloqueo.
-   - **Qué problema resuelve:** Orienta al jugador sobre qué meta está más próxima a completarse para enfocar sus siguientes partidas.
-   - **Valor:** Mayor motivación y claridad en la progresión meta. Complejidad: Baja.
+1. **Contador de Victorias y Récord por Auto en Garaje (`.car-victories`):**
+   - **Qué es:** En `renderGarage()` y tarjetas de autos, mostrar una pastilla técnica con las victorias obtenidas con ese chasis (`3 VICTORIAS` o `SIN VICTORIA`) y el mejor tiempo registrado.
+   - **Qué problema resuelve:** Estimula el uso de todos los vehículos y proporciona trazabilidad directa de la trayectoria de cada auto sin tener que bucear en Estadísticas.
+   - **Valor:** Fidelidad con el garaje y rejugabilidad por modelo. Complejidad: Baja.
 
 ### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
-2. **Pulso de Hito Decenal en el Indicador de Nivel (`#lvl`):**
-   - **Qué es:** En `hudUpdate()` (`src/ui.ts`), activar un destello dorado especial `.milestone` en el badge de nivel `#lvl` cada 10 niveles alcanzados (`NV 10`, `NV 20`, `NV 30`...).
-   - **Qué problema resuelve:** Celebración visual de hitos significativos de supervivencia durante la partida.
-   - **Valor:** Satisfacción y retroalimentación reforzada en runs prolongadas. Complejidad: Baja.
+2. **Resplandor de Blindaje Activo en la Barra de Salud (`#hp.shielded`):**
+   - **Qué es:** En `hudUpdate()`, cuando el jugador cuenta con escudo de invulnerabilidad temporal o reducción extrema de daño, activar la clase `.shielded` sobre `#hp` con una franja cian eléctrica animada.
+   - **Qué problema resuelve:** Comunica con claridad el estado de protección activa sin que el jugador deba adivinar si los impactos le restarán vida.
+   - **Valor:** Lectura táctica instantánea en situaciones extremas. Complejidad: Baja.
 
-### C. Área 3 · Carrera: Indicador de Aspiración / Rebufo (`src/kart.ts`, `src/race.css`)
-3. **Pastilla de Rebufo (`REBUFO`) en el Velocímetro de Carrera:**
-   - **Qué es:** En `hud()` (`src/kart.ts`), mostrar un distintivo amarillo `.rslip` (`REBUFO`) cuando el corredor aprovecha la estela aerodinámica de un rival directo para ganar aceleración.
-   - **Qué problema resuelve:** Hace explícita la mecánica de succión detrás de otros autos, incentivando maniobras de adelantamiento táctico.
-   - **Valor:** Mayor profundidad de conducción en carreras. Complejidad: Baja.
+### C. Área 3 · Carrera: Alerta de Peligro Próximo (`src/kart.ts`, `src/race.css`)
+3. **Pastilla de Alerta por Amenaza Cercana (`.rthreat`):**
+   - **Qué es:** En `hud()` de carrera, si un proyectil enemigo o vehículo hostil rueda a menos de 7 metros en trayectoria de impacto inminente, mostrar un indicador parpadeante ámbar/rojo `.rthreat` (`¡PELIGRO!`).
+   - **Qué problema resuelve:** Otorga una fracción de segundo crítica para utilizar escudos, saltos o derrapes evasivos.
+   - **Valor:** Tensión y capacidad de respuesta táctica en carreras cerradas. Complejidad: Baja.
 
 ### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`)
-4. **Halo de Perfección en Nodos de 3 Estrellas del Mapa:**
-   - **Qué es:** En `drawNode()` (`src/match3_draw.ts`), trazar un resplandor dorado exterior tenue alrededor de los nodos de nivel completados con 3 estrellas perfectas.
-   - **Qué problema resuelve:** Distingue inmediatamente en el mapa de campaña los niveles dominados por completo frente a los que tienen estrellas pendientes.
-   - **Valor:** Claridad visual y satisfacción de completismo en la campaña. Complejidad: Baja.
+4. **Resplandor de Energía en Fichas Especiales Creadas:**
+   - **Qué es:** En `drawTile()`, trazar un halo vibrante perimetral y destellos sutiles en piezas especiales (bombas de chatarra o relámpagos) para destacar su poder destructivo latente en el tablero.
+   - **Qué problema resuelve:** Permite localizar de un vistazo las piezas reactivas en tableros abarrotados de chatarra.
+   - **Valor:** Claridad visual y satisfacción en combos complejos. Complejidad: Baja.
 
 ### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
-5. **Nube de Aterrizaje de Chasis (`FX.land`):**
-   - **Qué es:** En `FX` (`src/fx.ts`), añadir un método `land(p, hard)` que emita una voluta circular baja de polvo expansivo al impactar contra el suelo tras saltos o rampas.
-   - **Qué problema resuelve:** Conexión táctil y peso físico más contundente cuando el auto RC cae tras desniveles o saltos de trampolín.
-   - **Valor:** Mayor sensación de masa e impacto en la física arcade. Complejidad: Baja.
+5. **Efecto de Sobrecarga Eléctrica Tridimensional (`FX.shock`):**
+   - **Qué es:** En `FX` (`src/fx.ts`), añadir el método `shock(p)` que emite una descarga concentrada de micro-arcos cian `#5be7ff` y violeta `#a855f7` de alta velocidad para impactos tesla y trampas electrificadas.
+   - **Qué problema resuelve:** Diferencia visualmente el daño elemental eléctrico de las chispas ordinarias de fricción o impactos de fuego.
+   - **Valor:** Riqueza visual y lectura semántica del tipo de daño. Complejidad: Baja.
 
 ### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
-6. **Distintivo de Récord Histórico en Foto Polaroid:**
-   - **Qué es:** En `showPhoto()` (`src/replay.ts`), si la partida superó el mejor tiempo registrado en la zona, añadir una pequeña estrella o sello dorado `"RÉCORD DE ZONA"` junto a la hora y tiempo.
-   - **Qué problema resuelve:** Hace que las fotos polaroid de partidas históricas sean instantáneamente reconocibles al descargarlas o compartirlas.
-   - **Valor:** Recompensa de coleccionismo y orgullo para el jugador. Complejidad: Baja.
+6. **Anotación de Clima y Escenario en el Encabezado Polaroid:**
+   - **Qué es:** En `showPhoto()` (`src/replay.ts`), imprimir en el pie una anotación técnica adicional en tono sepia tenue con la zona y clima de la sesión (`"PATIO · ATARDECER"` o `"NIEBLA CERRADA"`).
+   - **Qué problema resuelve:** Contextualiza la memoria fotográfica al archivarse o compartirse.
+   - **Valor:** Cohesión diegética y riqueza temática en las postales de cierre. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #22 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (677 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3084 nodos, 7549 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #22 han sido liberados).
-- **Próxima decisión pendiente:** Selección de alcance y asignación para el **Ciclo #23** (despliegue de 6 subagentes en paralelo por área).
+- **Último trabajo completado:** Ciclo #23 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (555 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3092 nodos, 7567 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #23 han sido liberados).
+- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #24**.
+
 
 
 

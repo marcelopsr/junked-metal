@@ -38,6 +38,7 @@
 #signal .h-track { flex: 1; }
 #xp { background: linear-gradient(90deg, #35c9ff, #7dffb0); }
 #lvl { font: 700 16px/1 var(--hf); letter-spacing: .06em; padding: 5px 9px; border: 0; border-radius: 99px; background: linear-gradient(135deg, #35c9ff, #7dffb0); color: #08202c; box-shadow: none; }
+#lvl.milestone { background: linear-gradient(135deg, #ffd24a, #ff9138); color: #1f1100; box-shadow: 0 0 10px rgba(255, 210, 74, .6); }
 #signal.up { animation: h-levelup .7s ease-out both; }
 #lcd { top: calc(max(10px, env(safe-area-inset-top)) + 58px); left: 14px; transform-origin: 0 0; display: flex; align-items: baseline; gap: 12px; padding: 7px 14px; }
 #timer { font: 700 32px/1 var(--hf); letter-spacing: .02em; font-variant-numeric: tabular-nums; }

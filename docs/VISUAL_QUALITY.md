@@ -483,7 +483,22 @@ Carrera (1) y Survivor en partida (2).
 6. **Sello diegético de archivo en Polaroid (Subagente 6 · `src/replay.ts`):**
    - `showPhoto()` estampa un rótulo técnico `"ARCHIVADO · PATIO RC"` con rotación angular tenue en tono sepia sobre el pie del papel polaroid, enfatizando la memoria diegética de cada carrera o partida.
 
+---
 
+## 2026-10-10 · Ciclo #23 (Logros Avanzados "Casi Listo", Hito Nivel cada 10, Rebufo en Carrera, Halo 3 Estrellas Match-3, Polvo de Aterrizaje y Récord de Zona Polaroid)
 
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-mapa.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
 
-
+### Intervenciones aplicadas por 6 subagentes en paralelo y verificadas en captura
+1. **Resaltado y sello "CASI LISTO" en logros con progreso avanzado (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En la Chatarroteca (`renderBestiary()`), se incorporó la función `isAchNear()` que evalúa si un logro no completado cuenta con un avance $\ge 70\%$ (supervivencia $\ge 420\text{ s}$ en los desafíos de 10 minutos o diario, o vehículo ya adquirido en el garaje para victorias específicas). Los logros en este estado adquieren el estilo `.ach-near` con borde dorado brillante `#ffd24a` y el sello diegético conmuta a `"CASI LISTO"`.
+2. **Insignia dorada e iluminación especial por hito decenal en nivel del HUD (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - `hudUpdate()` activa la clase conmutada `.milestone` sobre la pastilla `#lvl` cada 10 niveles (`level % 10 === 0 && level > 0`), tiñendo el indicador con un degradado incandescente ámbar-dorado y resplandor perimetral de hito.
+3. **Mecánica de rebufo/succión aerodinámica y pastilla `.rslip` en Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `stepRacer()`, el corredor humano detecta a rivales directos que rueden por delante dentro de un cono de succión (distancia 2 a 11 unidades, desviación lateral $< 2.2$), acumulando hasta 1.5 s de succión aerodinámica. Al rebasar 0.6 s, la velocidad punta se incrementa un 15% (`top *= 1.15`) y el velocímetro enciende la pastilla amarilla `.rslip` (`REBUFO`).
+4. **Halo radial resplandeciente en nodos con 3 estrellas en la Ruta del Desguace (Subagente 4 · `src/match3_draw.ts`):**
+   - `drawNode()` proyecta un degradado radial dorado translúcido (`createRadialGradient`) de 12 px de radio exterior sobre las estaciones del mapa completadas con rendimiento perfecto (3 estrellas), diferenciando nítidamente el progreso maestro a lo largo de los hitos del desguace.
+5. **Nubes de impacto y dispersión al tocar tierra en `FX.land` (Subagente 5 · `src/fx.ts`):**
+   - Se sumó al pool de efectos tridimensionales la rutina `FX.land(p, hard)`, disparando partículas opacas de polvo de patio (`#cdbd9c`) de gran escala física y dispersión baja con amortiguación gravitatoria para enfatizar las caídas y aterrizajes tras rampas.
+6. **Distintivo en oro "★ RÉCORD DE ZONA" en Polaroid de victoria (Subagente 6 · `src/replay.ts`):**
+   - `showPhoto()` estampa a la derecha del pie de la instantánea Polaroid un distintivo tipográfico en oro `#ffd24a` (`"★ RÉCORD DE ZONA"`) en partidas culminadas con victoria, complementando el sello de inspección y archivado.

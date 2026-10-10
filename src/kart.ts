@@ -102,6 +102,7 @@ type Racer = {
   drifting: number; charge: number; offT: number; stuckT: number; camYaw: number; camPos: B.Vector3; fs: number; lastLap: number; auto: boolean; laki: number; hits: number;
   aggr: number; drifter: boolean; early: boolean; bubble?: B.Mesh; boxT: number;
   balloons: number; out: boolean; balls: B.Mesh[]; wp: B.Vector3 | null; wpT: number; lapT: number; lapBest: number;
+  slip?: number;
 };
 type Proj = { m: B.Mesh; kind: "petardo" | "misil"; owner: Racer; v: B.Vector3; life: number; target?: Racer };
 type Chicle = { m: B.Mesh; owner: Racer; life: number; arm: number };
@@ -420,6 +421,7 @@ function makeRacers() {
       boost: 0, slow: 0, spin: 0, shield: 0, inv: 0, spinRot: 0, drifting: 0, charge: 0, offT: 0, stuckT: 0, camYaw: yaw, camPos: new B.Vector3(), fs: 0, lastLap: 0, auto: false, laki: 0, hits: 0,
       aggr: PERSONA[i % PERSONA.length][0], drifter: PERSONA[i % PERSONA.length][1], early: false, boxT: 0,
       balloons: 3, out: false, balls: [], wp: null, wpT: 0, lapT: 0, lapBest: 0,
+      slip: 0,
     };
     if (mode === "battle") for (let k = 0; k < 3; k++) { const b = sph(1.1, pbr("balloon" + r.color, { color: r.color, rough: 0.25, emissive: r.color }), [(k - 1) * 0.6, 2.3 + (k === 1 ? 0.35 : 0), 0], [1, 1.2, 1], 6); b.parent = car.root; r.balls.push(b); }
     racers.push(r);
@@ -735,6 +737,19 @@ function stepRacer(r: Racer, dt: number) {
   let top = r.top * mul * (off ? 0.5 : 1) * (r.boost > 0 ? 1.45 : 1) * (r.slow > 0 ? 0.55 : 1);
   // Derrape con mini-turbo
   const sp = r.fs;
+  if (mode === "race" && r.human >= 0 && sp > 10) {
+    const ahead = racers.some((o) => o !== r && o.fin === 0 && (() => {
+      const d = o.car.pos.subtract(pos);
+      const fwd = fwdOf(r);
+      const dot = d.x * fwd.x + d.z * fwd.z;
+      const lat = Math.abs(d.x * -fwd.z + d.z * fwd.x);
+      return dot > 2 && dot < 11 && lat < 2.2;
+    })());
+    r.slip = ahead ? Math.min(1.5, (r.slip || 0) + dt) : Math.max(0, (r.slip || 0) - dt * 2);
+    if ((r.slip ?? 0) > 0.6) top *= 1.15;
+  } else if (r.slip) {
+    r.slip = Math.max(0, r.slip - dt * 2);
+  }
   if (!frozen && inp.drift && sp > 9 && Math.abs(inp.steer) > 0.25 && r.drifting === 0) r.drifting = Math.sign(inp.steer);
   if (r.drifting !== 0) {
     if (!inp.drift || sp < 7) {
@@ -899,10 +914,11 @@ function hud() {
     } else p.querySelector(".rtime")!.textContent = "";
     const spdEl = p.querySelector(".rspd") as HTMLElement;
     const revTag = h.fs < -0.5 ? `<b class="rrev">R</b>` : "";
+    const slipTag = (h.slip ?? 0) > 0.6 ? `<b class="rslip">REBUFO</b>` : "";
     const tTag = h.boost > 0 ? `<b class="rturbo on">TURBO</b>` : h.drifting !== 0 ? (h.charge > 1.5 ? `<b class="rturbo t2">TURBO 2</b>` : h.charge > 0.75 ? `<b class="rturbo t1">TURBO 1</b>` : `<b class="rturbo t0">DERRAPE</b>`) : "";
     const shTag = h.shield > 0 ? `<b class="rshield">ESCUDO ${Math.ceil(h.shield)}s</b>` : "";
     const wTag = projs.some((pr) => pr.kind === "misil" && pr.target === h) ? `<b class="rwarn">¡MISIL!</b>` : "";
-    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${tTag}${shTag}${wTag}`;
+    const spdHtml = `<span>${Math.round(Math.abs(h.fs) * 3.6)} km/h</span>${revTag}${slipTag}${tTag}${shTag}${wTag}`;
     if (spdEl.dataset.h !== spdHtml) { spdEl.dataset.h = spdHtml; spdEl.innerHTML = spdHtml; }
     const it = p.querySelector(".ritem") as HTMLElement, key = h.item ?? "";
     if (it.dataset.k !== key) { it.dataset.k = key; it.innerHTML = h.item ? `${icon(ITEM_ICON[h.item], 36)}<span>${ITEM_NAME[h.item]}</span>` : ""; it.classList.toggle("full", !!h.item); }
