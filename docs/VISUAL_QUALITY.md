@@ -502,3 +502,23 @@ Carrera (1) y Survivor en partida (2).
    - Se sumó al pool de efectos tridimensionales la rutina `FX.land(p, hard)`, disparando partículas opacas de polvo de patio (`#cdbd9c`) de gran escala física y dispersión baja con amortiguación gravitatoria para enfatizar las caídas y aterrizajes tras rampas.
 6. **Distintivo en oro "★ RÉCORD DE ZONA" en Polaroid de victoria (Subagente 6 · `src/replay.ts`):**
    - `showPhoto()` estampa a la derecha del pie de la instantánea Polaroid un distintivo tipográfico en oro `#ffd24a` (`"★ RÉCORD DE ZONA"`) en partidas culminadas con victoria, complementando el sello de inspección y archivado.
+
+---
+
+## 2026-10-10 · Ciclo #24 (Victorias por Auto en Garaje, Blindaje Activo en Batería LiPo, Alerta de Proximidad en Carrera, Resplandor en Fichas Especiales, Sobrecarga Eléctrica 3D y Anotación Técnica Polaroid)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 6 subagentes en paralelo y verificadas en captura
+1. **Pastilla de victoria registrada o pendiente por auto en el Garaje (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()`, se evalúa si el jugador posee el vehículo y ha obtenido la victoria asociada (`save.ach.includes("gana_" + k)`). Los autos con victoria despliegan la insignia técnica áurea `<span class="car-vic won">★ VICTORIA REGISTRADA</span>`, mientras que los modelos en propiedad aún no coronados muestran `<span class="car-vic pending">PENDIENTE DE VICTORIA</span>`, incentivando la maestría de toda la flota.
+2. **Resplandor cian de blindaje activo en celdas LiPo de salud (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, se añadió soporte para la propiedad `shield?: boolean` y la clase reactiva `#lipo.shielded`, que proyecta un halo perimetral cian eléctrico `rgba(0, 188, 212, .6)` y refuerza el contorno de cada celda de batería con resplandor drop-shadow.
+3. **Pastilla parpadeante de peligro cercano `.rthreat` en Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `hud()` de carrera, cuando un rival rueda a menos de 3.5 metros sin misil activo en curso, el velocímetro enciende la pastilla naranja parpadeante `<b class="rthreat">¡CERCA!</b>` con animación `r-blink`, proporcionando advertencia sensorial para anticipar roces o adelantamientos cerrados.
+4. **Corona y resplandor radial expansivo en piezas especiales de Junket Crush (Subagente 4 · `src/match3_draw.ts`):**
+   - En `drawPiece()`, el aura de piezas especiales (sierras, bombas, prensas) se potenció con un gradiente radial `createRadialGradient` pulsante (`r * 0.8` a `r * 1.35`) que difumina la energía luminosa hacia el tablero, haciéndolas resaltar con volumen vibrante.
+5. **Efecto de descarga eléctrica tridimensional en `FX.shock` (Subagente 5 · `src/fx.ts`):**
+   - Se añadió el método `FX.shock(p)` al pool de partículas 3D, emitiendo 8 micro-arcos de alta velocidad con gradiente cian `#5be7ff` y violeta `#a855f7` con baja sustentación gravitatoria para efectos tesla, arcos voltaicos y trampas electrificadas.
+6. **Anotación técnica de escenario en el pie de la foto Polaroid (Subagente 6 · `src/replay.ts`):**
+   - En `showPhoto()`, se incorporó una línea técnica en tipografía Rajdhani 600 y tono sepia `rgba(77, 76, 56, 0.7)` (`REGISTRO TÉCNICO · ESCENARIO: ${i.zone.toUpperCase()}`) en el pie del documento polaroid, completando el registro diegético de cada sesión archivada.

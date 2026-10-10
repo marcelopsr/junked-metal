@@ -92,6 +92,12 @@ export async function showPhoto(i: PhotoInfo) {
   g.fillText(`${i.kills} ${i.kills === 1 ? "BAJA" : "BAJAS"} · ${i.car.toUpperCase()}`, pad, y0 + 52 * u);
   g.fillStyle = "#4d4c38"; g.font = `600 ${Math.round(30 * u)}px Rajdhani, sans-serif`;
   g.fillText(`${i.win ? "VICTORIA" : "FIN DE LA PARTIDA"} · JUNKED METAL`, pad, y0 + 92 * u);
+  g.save();
+  g.font = `600 ${Math.round(16 * u)}px Rajdhani, sans-serif`;
+  g.fillStyle = "rgba(77, 76, 56, 0.7)";
+  g.textAlign = "left";
+  g.fillText(`REGISTRO TÉCNICO · ESCENARIO: ${i.zone.toUpperCase()}`, pad, y0 + 118 * u);
+  g.restore();
   if (i.win) {
     g.save();
     g.font = `700 ${Math.round(18 * u)}px Rajdhani, sans-serif`;

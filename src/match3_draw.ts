@@ -67,9 +67,17 @@ export function drawPiece(c: C, v: number, cx: number, cy: number, size: number,
   else if (v === CARGO) drawCargo(c, cx, cy, r);
   else {
     const s = spOf(v);
-    if (s) { // aura del especial: late para que se note en el tablero
-      c.save(); c.globalAlpha *= 0.35 + 0.2 * Math.sin(t * 6); c.fillStyle = s === SP.BOMB ? M3C.naranja : s === SP.CROSS ? M3C.especial : M3C.cian;
-      c.beginPath(); c.arc(cx, cy, r * 1.25, 0, Math.PI * 2); c.fill(); c.restore();
+    if (s) { // aura del especial: late y resplandece para que se note en el tablero
+      c.save();
+      const col = s === SP.BOMB ? M3C.naranja : s === SP.CROSS ? M3C.especial : M3C.cian;
+      const pulse = 0.35 + 0.2 * Math.sin(t * 6);
+      c.globalAlpha *= pulse;
+      const auraG = c.createRadialGradient(cx, cy, r * 0.8, cx, cy, r * 1.35);
+      auraG.addColorStop(0, col);
+      auraG.addColorStop(1, "rgba(255,255,255,0)");
+      c.fillStyle = auraG;
+      c.beginPath(); c.arc(cx, cy, r * 1.35, 0, Math.PI * 2); c.fill();
+      c.restore();
     }
     drawBase(c, colorOf(v), cx, cy, r);
     c.shadowBlur = 0;

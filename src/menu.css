@@ -43,6 +43,9 @@ body.calm .scr.on { animation-duration: .05s; }
 .carc .wsyn { display: flex; align-items: center; gap: 5px; margin-top: 5px; padding: 3px 6px; font: 600 12px/1.15 var(--data); color: var(--dim); background: rgba(0, 0, 0, .35); border: 1px solid var(--line); }
 .carc .wsyn .ico { flex: none; width: 14px; height: 14px; }
 .carc .wsyn b { display: inline; margin: 0; font-size: inherit; color: var(--lcd-ink); }
+.car-vic { display: inline-block; font: 700 11px/1 var(--hf); letter-spacing: .08em; padding: 3px 6px; border-radius: 3px; margin-bottom: 6px; width: fit-content; }
+.car-vic.won { background: rgba(255, 210, 74, .18); color: var(--jm-amarillo2, #ffd24a); border: 1px solid rgba(255, 210, 74, .5); }
+.car-vic.pending { background: rgba(255, 255, 255, .06); color: var(--lcd-ink-dim, #8a99a8); border: 1px solid rgba(255, 255, 255, .15); }
 /* Legibilidad: las listas del garaje van sobre vidrio oscuro (como #bpanel), se lean sobre el fondo que sea */
 /* Pintura: zonas, paleta de 24 y selector libre */
 .side #paint { flex-direction: column; align-items: stretch; gap: 10px; text-transform: none; letter-spacing: 0; }

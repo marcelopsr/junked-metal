@@ -300,16 +300,61 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
+### Ciclo #24 (2026-10-10) — Victorias por Auto en Garaje, Blindaje Activo en Batería LiPo, Alerta de Proximidad en Carrera, Resplandor en Fichas Especiales, Sobrecarga Eléctrica 3D y Anotación Técnica Polaroid
+- **Alcance implementado en paralelo por 6 subagentes:**
+  - **Subagente 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`):** En `renderGarage()`, se integró la verificación de victorias registradas por auto (`save.ach.includes("gana_" + k)`). Se añade la insignia técnica áurea `.car-vic.won` (`★ VICTORIA REGISTRADA`) o neutral `.car-vic.pending` (`PENDIENTE DE VICTORIA`) en vehículos adquiridos.
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Soporte para `shield?: boolean` en `hudUpdate()` y activación reactiva con cache de la clase `#lipo.shielded`, otorgando halo perimetral cian eléctrico `rgba(0, 188, 212, .6)` y drop-shadow reforzado a las celdas de batería.
+  - **Subagente 3 · Carrera Alerta (`src/kart.ts`, `src/race.css`):** Detección de proximidad inminente de rivales (< 3.5 m) en `hud()`, encendiendo la pastilla naranja intermitente `.rthreat` (`¡CERCA!`) con animación `r-blink`.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`):** En `drawPiece()`, enriquecimiento del aura de piezas especiales mediante gradiente radial pulsante (`r * 0.8` a `r * 1.35`) que proyecta una corona luminosa de alta energía hacia el tablero.
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** Nuevo método `FX.shock(p)` que dispara 8 micro-arcos veloces cian `#5be7ff` y violeta `#a855f7` de baja sustentación gravitatoria para efectos y trampas tesla.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** Anotación técnica diegética `REGISTRO TÉCNICO · ESCENARIO: ${i.zone.toUpperCase()}` impresa en tipografía Rajdhani 600 y tono sepia en el pie de la Polaroid.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (572 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3095 nodos, 7576 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #25 (6 Áreas en Paralelo)
+
+### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
+1. **Insignia de Maestría en Estadísticas de Arma Favorita:**
+   - **Qué es:** En `renderBestiary()` pestaña estadísticas, incorporar una insignia dorada con relieve `.fav-master` sobre el arma más utilizada cuando supere el 50% de las partidas o 100.000 de daño.
+   - **Qué problema resuelve:** Resalta visualmente el arma insigne del jugador dentro del historial táctico de combate.
+   - **Valor:** Reconocimiento de maestría táctica en la Chatarroteca. Complejidad: Baja.
+
+### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
+2. **Resplandor Incandescente en Arco de Tacómetro a Velocidad Punta (`#txr.top`):**
+   - **Qué es:** En `#txr.top`, intensificar el brillo del arco `#spdArc` con filtro drop-shadow ámbar de doble pase y pulso dinámico cuando el auto se mantiene al 90%+ de su velocidad punta.
+   - **Qué problema resuelve:** Refuerza la sensación física de inercia y velocidad límite en persecuciones a fondo.
+   - **Valor:** Retorno sensorial potente en el HUD analógico. Complejidad: Baja.
+
+### C. Área 3 · Carrera: Indicador Acrobático de Vuelo / Salto (`src/kart.ts`, `src/race.css`)
+3. **Pastilla de Salto y Vuelo en el Velocímetro (`.rair`):**
+   - **Qué es:** En `hud()` de carrera, desplegar una pastilla cian translúcida `.rair` (`EN EL AIRE`) mientras el kart permanezca despegado del piso tras saltos en rampas o trampolines.
+   - **Qué problema resuelve:** Comunica explícitamente el estado de vuelo durante saltos largos en carrera y colisiones de batalla.
+   - **Valor:** Dinamismo visual en acrobacias y desniveles. Complejidad: Baja.
+
+### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`)
+4. **Halo de Impacto Masivo en Puntuaciones Altas:**
+   - **Qué es:** En `match3.ts`, cuando un turno individual genere más de 500 puntos, disparar un pulso áureo sobre el medidor de puntaje y emitir partículas doradas flotantes.
+   - **Qué problema resuelve:** Enfatiza jugadas excepcionales y encadenamientos épicos en el gabinete arcade.
+   - **Valor:** Gratificación y feedback memorable en combos avanzados. Complejidad: Baja.
+
+### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
+5. **Efecto de Salpicadura de Agua / Líquido en `FX.splash`:**
+   - **Qué es:** En `FX` (`src/fx.ts`), añadir la rutina `splash(p)` con partículas translúcidas cian-blanquecinas de rápida disipación y dispersión parabólica para la pistola de agua y charcos.
+   - **Qué problema resuelve:** Diferencia los impactos de líquido de los estallidos de humo o fragmentos de chatarra seca.
+   - **Valor:** Diversidad elemental y consistencia con las armas acuáticas. Complejidad: Baja.
+
+### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
+6. **Sello de Doblez Táctil en Esquinas de Polaroid:**
+   - **Qué es:** En `showPhoto()`, trazar sombras angulares sutiles simulando dobleces o desgaste de papel fotográfico en los vértices del marco blanco.
+   - **Qué problema resuelve:** Acercar aún más la estética a una fotografía física analógica manipulada en un taller mecánico.
+   - **Valor:** Coherencia táctil con la dirección de arte diegética. Complejidad: Baja.
+
+---
+
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #23 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (555 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3092 nodos, 7567 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #23 han sido liberados).
-- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #24**.
-
-
-
-
-
-
-
+- **Último trabajo completado:** Ciclo #24 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (572 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3095 nodos, 7576 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #24 han sido liberados).
+- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #25**.
 
