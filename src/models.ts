@@ -554,6 +554,11 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         box(0.035, 0.025, 0.028, M.plastic("#18181b"), [0, bh * 0.24, bl * 0.32]),
         // Servo horn (brazo oscilante) en nylon blanco de competición
         cyl(0.006, 0.004, 0.016, M.plastic("#f4f4f5"), [0, bh * 0.26, bl * 0.335], [0.3, 0, 0], 6),
+        // Resorte helicoidal del Servo Saver de protección del mecanismo de dirección
+        cyl(0.008, 0.006, 0.014, chrome, [0, bh * 0.23, bl * 0.35], [0, 0, 0], 6),
+        // Rótulas esféricas de reenvío (ball joints) en los extremos de pivote de los tensores de dirección
+        sph(0.006, M.metal("#0284c7"), [-bw * 0.14, bh * 0.23, bl * 0.34]),
+        sph(0.006, M.metal("#0284c7"), [bw * 0.14, bh * 0.23, bl * 0.34]),
         // Varillas de reenvío / tirantes ajustables (turnbuckles) hacia manguetas directrices
         cyl(0.003, 0.003, bw * 0.32, chrome, [-bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, 0.35], 4),
         cyl(0.003, 0.003, bw * 0.32, chrome, [bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, -0.35], 4),

@@ -61,6 +61,13 @@
 .sig-snr.snr-low { color: #f59e0b; text-shadow: 0 0 4px rgba(245, 158, 11, .5); }
 .sig-snr.snr-critical { color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, .8); animation: crcWarn .2s steps(2) infinite; }
 .rx-div { font: 700 8px/1 var(--hf); color: #38bdf8; margin-left: 3px; border: 1px solid rgba(56, 189, 248, .3); padding: 1px 2px; border-radius: 2px; letter-spacing: .02em; }
+.rx-div.fhss-locked { animation: fhssLock .4s ease-out; }
+.sig-rssi { font: 700 8px/1 var(--hf); margin-left: 3px; letter-spacing: 1px; }
+.sig-rssi.bars-4 { color: #22c55e; }
+.sig-rssi.bars-3 { color: #eab308; }
+.sig-rssi.bars-2 { color: #f59e0b; }
+.sig-rssi.bars-1 { color: #ef4444; animation: crcWarn .2s steps(2) infinite; }
+@keyframes fhssLock { 0% { box-shadow: 0 0 8px #38bdf8; background: rgba(56, 189, 248, .4); } 100% { box-shadow: none; background: transparent; } }
 #signal.sig-fringing #sigIco, #signal.sig-critical #sigIco { display: inline-flex; }
 #signal.sig-fringing #sigIco { color: #f59e0b; filter: drop-shadow(0 0 3px rgba(245, 158, 11, .5)); }
 #signal.sig-critical #sigIco { color: #ef4444; filter: drop-shadow(0 0 4px rgba(239, 68, 68, .7)); }

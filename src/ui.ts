@@ -33,8 +33,8 @@ const ARC = 193; // largo del arco del velocímetro (240° de radio 46)
 const pad = (n: number, w: number) => String(Math.max(0, Math.floor(n))).padStart(w, "0");
 const B01 = (x: number) => Math.max(0, Math.min(1, x));
 // El DOM se toca solo cuando el valor cambió: ch() devuelve true si es nuevo
-const memo: Record<string, string | number> = {};
-const ch = (k: string, v: string | number) => memo[k] !== (memo[k] = v);
+const memo: Record<string, string | number | boolean> = {};
+const ch = (k: string, v: string | number | boolean) => memo[k] !== (memo[k] = v);
 const txt = (id: string, v: string) => { if (ch(id, v)) $(id).textContent = v; };
 const bar = (id: string, pct: number) => { const k = Math.round(Math.max(0, Math.min(100, pct)) * 10) / 1000; if (ch(id, k)) el(id).style.transform = `scaleX(${k})`; };
 
@@ -222,6 +222,33 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     const ant = (Math.floor((d.time || 0) * 0.8) % 2 === 0) ? "RX:A" : "RX:B";
     rxDiv.textContent = ant;
   }
+
+  const rssiBars = dbm > -60 ? 4 : dbm > -75 ? 3 : dbm > -88 ? 2 : 1;
+  let sigRssi = document.getElementById("sigRssi");
+  if (!sigRssi) {
+    sigRssi = document.createElement("span");
+    sigRssi.id = "sigRssi";
+    sigRssi.className = "sig-rssi";
+    const anchor = document.getElementById("rxDiv") ?? document.getElementById("sigSnr") ?? document.getElementById("sigPkt");
+    if (anchor?.parentNode) anchor.parentNode.insertBefore(sigRssi, anchor.nextSibling);
+    else $("signal")?.appendChild(sigRssi);
+  }
+  if (ch("rssiBars", rssiBars)) {
+    sigRssi.className = `sig-rssi bars-${rssiBars}`;
+    sigRssi.textContent = rssiBars === 4 ? "▌▌▌▌" : rssiBars === 3 ? "▌▌▌" : rssiBars === 2 ? "▌▌" : "▌";
+  }
+
+  const wasFringe = Boolean(memo.wasFringe);
+  const nowNominal = d.distCenter !== undefined && d.distCenter < 60;
+  if (wasFringe && nowNominal) {
+    const rd = document.getElementById("rxDiv");
+    if (rd) {
+      rd.classList.remove("fhss-locked");
+      void rd.offsetWidth;
+      rd.classList.add("fhss-locked");
+    }
+  }
+  memo.wasFringe = Boolean(d.distCenter !== undefined && d.distCenter >= 60);
 
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);

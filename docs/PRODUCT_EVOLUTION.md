@@ -812,8 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #50 completado y validado con 4 Especialistas (`tsc` 0 errores, `test` 81/81 en verde, `build` limpio en 1.48 s, 17 capturas en `.shots/actual/` en 32.9 s, grafo en 3867 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #51**.
+- **Último trabajo completado:** Ciclo #51 completado y validado con 4 Especialistas (`tsc` 0 errores, `test` 81/81 en verde, `build` limpio en 1.11 s, 17 capturas en `.shots/actual/` en 31.8 s, grafo en 3885 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #52**.
+
+### 🔓 LISTO PARA EL CICLO #52 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+
+| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
+|---|---|---|
+| **Procedural 3D Modeler** | Tubo de antena flexible en nylon traslúcido y bloques C-Hub de dirección con kingpins | `src/models.ts` |
+| **Audio Synth Designer** | Aullido de piñones de dientes rectos bajo par (`gearWhine`) y resonancia de Lexan (`lexanFlutter`) | `src/sfx.ts` |
+| **Combat Feel & VFX** | Inflexión elástica de antena por fuerzas G e inercia y ráfagas de polvo en derrapes sostenidos | `src/car.ts` |
+| **Diegetic HUD & Telemetry** | Micro-glitch de trama en RSSI durante CRC ERR y haptic chirp al enganchar enlace FHSS | `src/ui.ts`, `src/hud.css` |
+
+### Ciclo #51 (2026-10-10) — Servo Saver 3D, SFX FETs y Muelles, Polvo Drift en car.ts, RSSI y FHSS en HUD
+- **Alcance implementado en producción (`src/`):**
+  - **Procedural 3D Folded Modeler (`src/models.ts`):** Resorte helicoidal del Servo Saver de protección de dirección en cromo y rótulas esféricas (ball joints) en los pivotes de los tensores de dirección para `buggy`, `formula` y `carrera`. 0 draw calls adicionales.
+  - **Audio Synth Sound Designer (`src/sfx.ts`):** Silbido PWM ultrasónico de conmutación de MOSFETs del ESC `SFX.escWhine(spd, load)` bajo aceleración a fondo; chirrido mecánico de compresión de muelles y casquillos de nylon `SFX.chassisSqueak(impulse, pan)` en aterrizajes y baches.
+  - **Combat Feel & VFX (`src/car.ts`):** Proyección de micro-chispas desde el flanco exterior de las ruedas traseras en derrape lateral sostenido con velocidad (`Math.abs(ls) > 4.0 && Math.abs(fs) > 5.0`); chirrido de suspensión y silbido de variador acoplados al loop sin allocations (0 GC).
+  - **Diegetic HUD & Telemetry (`src/ui.ts`, `src/hud.css`):** Micro-vúmetro analógico segmentado `▌▌▌▌` (`.bars-1` a `.bars-4`) en `#signal` según RSSI en dBm; detección y animación de re-adquisición de salto de canales `.fhss-locked` en el indicador RX Diversity al recuperar radio seguro.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, 10 suites (81/81 tests) pasando, build Vite en 1.11 s, 17 capturas en `.shots/actual/` aprobadas, grafo de conocimiento sincronizado en 3885 nodos y 9441 aristas.
 
 ### 🔓 LISTO PARA EL CICLO #51 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 

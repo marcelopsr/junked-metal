@@ -84,8 +84,8 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
   }
 
   // Chispas de fricción mecánica en el flanco exterior al derrapar a alta velocidad
-  if (Math.abs(ls) > 5.0 && Math.abs(fs) > 6.0 && Math.random() < 0.2) {
-    at(mesh.position, (ls > 0 ? -right.x : right.x) * 0.5, 0.1, (ls > 0 ? -right.z : right.z) * 0.5, sparkPos);
+  if (Math.abs(ls) > 4.0 && Math.abs(fs) > 5.0 && Math.random() < 0.25) {
+    at(mesh.position, -fwd.x * 0.35 + (ls > 0 ? -right.x : right.x) * 0.3, 0.05, -fwd.z * 0.35 + (ls > 0 ? -right.z : right.z) * 0.3, sparkPos);
     FX.transmissionSpark(sparkPos);
   }
 
@@ -201,10 +201,12 @@ export class Car {
       this.basePitch += this.lastVy * 0.012;
       this.steerRoll += (Math.random() > 0.5 ? 0.04 : -0.04);
       SFX.gravelThud(Math.min(8, -this.lastVy));
+      SFX.chassisSqueak(Math.min(8, -this.lastVy));
     }
     if (this.lastVy < -4.5 && vy > -1) {
       FX.transmissionSpark(this.pos);
     }
+    if (fwd > 0.8 && spd > 3) SFX.escWhine(spd, fwd);
     this.lastVy = vy;
     this.bT += dt; this.bounce *= Math.exp(-5 * dt);
     const sq = this.bounce * Math.cos(this.bT * 18);

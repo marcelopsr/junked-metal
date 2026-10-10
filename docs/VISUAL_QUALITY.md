@@ -1045,6 +1045,26 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #51 (Ecosistema Matricial de Especialistas: Servo Saver 3D, SFX FETs y Muelles, Polvo Drift en car.ts, RSSI y FHSS en HUD)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 31.8 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Resorte de Servo Saver y rótulas esféricas de dirección (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - Incorporado muelle cónico helicoidal del Servo Saver de protección mecánica en cromo brillante (`chrome`) bajo la timonería delantera.
+   - Añadidas rótulas esféricas de pivote (ball joints) anodizadas en azul (`M.metal("#0284c7")`) en los extremos de los tirantes de dirección, con **0 draw calls adicionales**.
+2. **Silbido PWM de ESC y chirrido mecánico de suspensión (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.escWhine(spd, load)` modulando armónicos ultrasónicos (7.8 kHz a 14.5 kHz) de conmutación de transistores FET bajo aceleración a fondo.
+   - Incorporado `SFX.chassisSqueak(impulse, pan)` emulando la compresión y fricción elástica de resortes y casquillos de nylon en saltos y baches.
+3. **Micro-chispas en drift sostenido y sincronización acústica (Combat Feel & VFX Specialist · `src/car.ts`):**
+   - Detección en `drive()` de derrape lateral severo (`|ls| > 4.0 && |fs| > 5.0`) proyectando micro-chispas orientadas tangencialmente desde las ruedas traseras con 0 GC allocations.
+   - Disparo síncrono de `SFX.chassisSqueak` en aterrizajes con rebote y `SFX.escWhine` en aceleración plena.
+4. **Vúmetro analógico RSSI segmentado y re-adquisición FHSS (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - Incorporado `<span id="sigRssi" class="sig-rssi">` mostrando barras analógicas (`▌▌▌▌` a `▌`) con colores dinámicos según dBm.
+   - Efecto reactivo de enganche y destello `.fhss-locked` en el indicador RX Diversity al recuperar enlace seguro de 2.4 GHz.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

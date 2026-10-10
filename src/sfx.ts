@@ -468,6 +468,22 @@ export const SFX = {
     tone("sine", 680, 240, 0.22, 0.14, 0, pan);
     tone("triangle", 1360, 480, 0.11, 0.08, 0, pan);
   },
+  /** Silbido y conmutación ultrasónica PWM de transistores MOSFET del ESC al acelerar con carga. */
+  escWhine: (spd = 10, load = 1) => {
+    if (!gate("esc-whine", 6)) return;
+    const s = Math.max(2, Math.min(45, Math.abs(spd)));
+    const vol = Math.min(0.12, 0.02 + load * 0.05);
+    const f = Math.min(14500, 7800 + s * 140);
+    tone("sine", f, f * 0.98, 0.08, vol * 0.7);
+    tone("square", f * 0.5, f * 0.49, 0.05, vol * 0.3);
+  },
+  /** Chirrido mecánico de compresión de muelles y casquillos de nylon de suspensión. */
+  chassisSqueak: (impulse = 5, pan?: number) => {
+    if (!gate("chassis-sqk", 8)) return;
+    const vol = Math.min(0.18, 0.04 + impulse * 0.02);
+    tone("triangle", 1850, 920, 0.06, vol * 0.75, 0, pan);
+    hiss("bandpass", 3200, 1400, 0.04, vol * 0.6, pan);
+  },
 };
 
 
