@@ -1025,6 +1025,26 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #50 (Ecosistema Matricial de Especialistas: R-Clips 3D, SFX Servo y Antena, Chispas Laterales en car.ts y RX Diversity en HUD)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 32.9 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Pasadores R-Clip en postes y tornillería de diferencial trasero (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - Incorporadas micro-arandelas de silicona azul (`M.plastic("#0284c7")`) y aros de pasadores en horquilla de acero brillante (R-clips de chasis RC) en los 4 postes de fijación de carrocería.
+   - Incorporada tapa de registro del diferencial trasero sellado en aluminio fundido (`M.metal("#3f3f46")`) con 4 tornillos Allen cromados en esquinas para chasis descubiertos, con **0 draw calls adicionales**.
+2. **SFX de servo de dirección bajo carga y resonancia de antena (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.servoChatter(steer, spd)` sintetizando el zumbido de alta frecuencia y micro-temblor PWM analógico del servomotor al girar con esfuerzo.
+   - Incorporado `SFX.antennaTwang(pan)` modelando los armónicos oscilantes elásticos de la varilla de antena flexible de 2.4 GHz ante impactos o roces.
+3. **Chispas por derrape lateral violento y cabeceo asimétrico en saltos (Combat Feel & VFX Specialist · `src/car.ts`):**
+   - Detección en `drive()` de derrape lateral severo a velocidad (`Math.abs(ls) > 5.0 && Math.abs(fs) > 6.0`) proyectando micro-chispas de fricción mecánica en el flanco exterior con 0 GC allocations.
+   - Añadida transferencia física asimétrica al cabeceo base del chasis según impacto vertical al aterrizar (`this.basePitch += this.lastVy * 0.012`).
+4. **Indicador RX Diversity dual y micro-glitch electromagnético (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - Incorporado micro-indicador `<span id="rxDiv" class="rx-div">RX:A</span>` en `#signal` con conmutación dinámica de antena activa `[A|B]`.
+   - Activada alerta `.snr-critical` (<8 dB) y micro-glitch electromagnético `.rf-interference` sobre el display LCD del reloj ante interferencia crítica de radiofrecuencia.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

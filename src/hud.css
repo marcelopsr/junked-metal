@@ -59,6 +59,8 @@
 .sig-pkt.crc-err { color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, .8); animation: crcWarn .2s steps(2) infinite; }
 .sig-snr { font: 700 9px/1 var(--hf); color: #64748b; margin-left: 3px; letter-spacing: .03em; }
 .sig-snr.snr-low { color: #f59e0b; text-shadow: 0 0 4px rgba(245, 158, 11, .5); }
+.sig-snr.snr-critical { color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, .8); animation: crcWarn .2s steps(2) infinite; }
+.rx-div { font: 700 8px/1 var(--hf); color: #38bdf8; margin-left: 3px; border: 1px solid rgba(56, 189, 248, .3); padding: 1px 2px; border-radius: 2px; letter-spacing: .02em; }
 #signal.sig-fringing #sigIco, #signal.sig-critical #sigIco { display: inline-flex; }
 #signal.sig-fringing #sigIco { color: #f59e0b; filter: drop-shadow(0 0 3px rgba(245, 158, 11, .5)); }
 #signal.sig-critical #sigIco { color: #ef4444; filter: drop-shadow(0 0 4px rgba(239, 68, 68, .7)); }
@@ -81,6 +83,7 @@
 #lcd.endless { border-color: #ffd24a; box-shadow: 0 0 12px rgba(255, 210, 74, .28); }
 #clock.endless { border-color: rgba(255, 210, 74, .6); box-shadow: 0 0 10px rgba(255, 210, 74, .3); }
 #lcd.endless #timer, #clock.endless #timer { color: #ffd24a; }
+.rf-interference { filter: contrast(1.4) drop-shadow(0 0 2px rgba(239, 68, 68, .6)); opacity: .85; }
 
 #wshop { top: calc(max(10px, env(safe-area-inset-top)) + 108px); left: 14px; transform-origin: 0 0; display: flex; align-items: center; gap: 8px; padding: 6px 10px; max-width: min(320px, 70vw); }
 #wshop.hidden { display: none; }

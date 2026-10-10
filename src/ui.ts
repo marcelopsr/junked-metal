@@ -206,6 +206,23 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("sigSnr", snrTxt)) sigSnr.textContent = snrTxt;
   const isSnrLow = snr < 12;
   if (ch("snrLow", +isSnrLow)) sigSnr.classList.toggle("snr-low", isSnrLow);
+  if (ch("snrCrit", +(snr < 8))) sigSnr?.classList.toggle("snr-critical", snr < 8);
+
+  let rxDiv = document.getElementById("rxDiv");
+  if (!rxDiv) {
+    rxDiv = document.createElement("span");
+    rxDiv.id = "rxDiv";
+    rxDiv.className = "rx-div";
+    const anchor = document.getElementById("sigSnr") ?? document.getElementById("sigPkt") ?? document.getElementById("sigDbm") ?? document.getElementById("sigIco");
+    if (anchor?.parentNode) anchor.parentNode.insertBefore(rxDiv, anchor.nextSibling);
+    else $("signal")?.appendChild(rxDiv);
+  }
+  // Alterna antena receptora activa estocásticamente ante variaciones de señal
+  if (ch("rxDivSwitch", Math.floor((d.time || 0) * 0.8) % 2)) {
+    const ant = (Math.floor((d.time || 0) * 0.8) % 2 === 0) ? "RX:A" : "RX:B";
+    rxDiv.textContent = ant;
+  }
+
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);
   hudTurbo(d.boost / 100);
@@ -220,7 +237,9 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     const xpEl = $("xp"); xpEl.classList.remove("surge"); void xpEl.offsetWidth; xpEl.classList.add("surge");
   }
   txt("timer", `${pad(d.time / 60, 2)}:${pad(d.time % 60, 2)}`);
-  if (ch("endless", +(d.time >= 600))) (document.getElementById("clock") ?? $("lcd")).classList.toggle("endless", d.time >= 600);
+  const clockEl = document.getElementById("clock") ?? $("lcd");
+  if (ch("endless", +(d.time >= 600))) clockEl.classList.toggle("endless", d.time >= 600);
+  clockEl?.classList.toggle("rf-interference", snr < 8 && Math.random() < 0.25);
   txt("kills", d.kills > 9999 ? d.kills.toLocaleString("es-ES") : pad(d.kills, 4));
   const s = Math.min(1, Math.abs(d.kmh) / d.maxKmh);
   if (ch("spd", Math.round(s * 120))) { // media unidad de aguja por paso

@@ -83,6 +83,12 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
     FX.transmissionSpark(sparkPos);
   }
 
+  // Chispas de fricción mecánica en el flanco exterior al derrapar a alta velocidad
+  if (Math.abs(ls) > 5.0 && Math.abs(fs) > 6.0 && Math.random() < 0.2) {
+    at(mesh.position, (ls > 0 ? -right.x : right.x) * 0.5, 0.1, (ls > 0 ? -right.z : right.z) * 0.5, sparkPos);
+    FX.transmissionSpark(sparkPos);
+  }
+
   const nv = fwd.scale(fs).addInPlace(right.scale(ls));
   nv.y = v.y;
   body.setLinearVelocity(L ? toWorld(nv, P) : nv);
@@ -192,6 +198,7 @@ export class Car {
     if (this.lastVy < -4 && vy > -1) {
       this.bounce = Math.min(0.3, -this.lastVy * 0.03);
       this.bT = 0;
+      this.basePitch += this.lastVy * 0.012;
       this.steerRoll += (Math.random() > 0.5 ? 0.04 : -0.04);
       SFX.gravelThud(Math.min(8, -this.lastVy));
     }

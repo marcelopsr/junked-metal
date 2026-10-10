@@ -453,6 +453,21 @@ export const SFX = {
     tone("square", 1950, 1950, 0.05, 0.08);
     tone("square", 2600, 2600, 0.06, 0.09, 0.06);
   },
+  /** Zumbido y temblor PWM del servomotor de dirección analógico al girar con esfuerzo. */
+  servoChatter: (steer = 0, spd = 10) => {
+    if (!gate("servo-chat", 8)) return;
+    const st = Math.abs(steer);
+    if (st < 0.35) return;
+    const vol = Math.min(0.14, 0.03 + st * 0.07);
+    tone("square", 4200, 4100, 0.03, vol * 0.45);
+    tone("triangle", 2100, 2300, 0.04, vol * 0.65);
+  },
+  /** Resonancia elástica armónica de la varilla de antena flexible de 2.4 GHz al rozar o colisionar. */
+  antennaTwang: (pan?: number) => {
+    if (!gate("ant-twang", 4)) return;
+    tone("sine", 680, 240, 0.22, 0.14, 0, pan);
+    tone("triangle", 1360, 480, 0.11, 0.08, 0, pan);
+  },
 };
 
 

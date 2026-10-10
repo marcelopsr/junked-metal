@@ -580,6 +580,14 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
           cyl(0.014, 0.014, 0.015, M.rubber(), [sx * bw * 0.35, bh * 0.22, -bl * 0.28], [0, 0, Math.PI / 2], 6)
         );
       }
+      // Tapa de registro del diferencial trasero en aluminio fundido con tornillos perimetrales Allen
+      parts.push(
+        box(bw * 0.14, bh * 0.12, 0.006, M.metal("#3f3f46"), [0, bh * 0.22, -bl * 0.29]),
+        cyl(0.003, 0.003, 0.004, chrome, [-bw * 0.05, bh * 0.26, -bl * 0.294], [Math.PI / 2, 0, 0], 6),
+        cyl(0.003, 0.003, 0.004, chrome, [bw * 0.05, bh * 0.26, -bl * 0.294], [Math.PI / 2, 0, 0], 6),
+        cyl(0.003, 0.003, 0.004, chrome, [-bw * 0.05, bh * 0.18, -bl * 0.294], [Math.PI / 2, 0, 0], 6),
+        cyl(0.003, 0.003, 0.004, chrome, [bw * 0.05, bh * 0.18, -bl * 0.294], [Math.PI / 2, 0, 0], 6)
+      );
       // Barra estabilizadora trasera (sway bar) de alambre de acero con rótulas esféricas
       parts.push(
         // Alambre transversal central de torsión
@@ -620,7 +628,9 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       for (const sz of [-bl * 0.32, bl * 0.32]) {
         parts.push(
           cyl(0.005, 0.005, 0.04, M.plastic("#18181b"), [sx, bh * 0.72, sz], [0, 0, 0], 4),
-          box(0.012, 0.003, 0.003, chrome, [sx, bh * 0.735, sz])
+          box(0.012, 0.003, 0.003, chrome, [sx, bh * 0.735, sz]),
+          tor(0.007, 0.002, M.plastic("#0284c7"), [sx, bh * 0.725, sz], [Math.PI / 2, 0, 0], 6),
+          tor(0.006, 0.0015, chrome, [sx > 0 ? sx + 0.008 : sx - 0.008, bh * 0.735, sz], [0, 0, 0], 8)
         );
       }
     }
