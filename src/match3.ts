@@ -408,8 +408,9 @@ function paintDisplay() {
     for (let k = 0; k < 3; k++) drawStar(c, W - 78 + k * 26, 32, 10, k < stN);
   } else {
     const low = st.movesLeft <= 3 && st.phase === "play";
+    if (low) { c.fillStyle = "rgba(255,59,46,0.18)"; c.beginPath(); c.roundRect(8, 4, 132, 68, 4); c.fill(); }
     c.fillStyle = M3C.texto2; c.font = "700 18px Rajdhani, sans-serif"; c.textAlign = "center";
-    c.fillText(st.movesLeft === 1 && st.phase === "play" ? "ÚLTIMO" : "MOVIMIENTOS", 74, 20);
+    c.fillText(st.movesLeft === 1 && st.phase === "play" ? "ÚLTIMO" : low ? "¡ÚLTIMOS!" : "MOVIMIENTOS", 74, 20);
     c.font = "700 62px Rajdhani, sans-serif";
     c.fillStyle = "rgba(255,180,0,0.08)"; c.fillText("88", 74, 64);
     c.fillStyle = low ? M3C.error : M3C.amarillo; c.fillText(String(st.movesLeft).padStart(2, "0"), 74, 64);

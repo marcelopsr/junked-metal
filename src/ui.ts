@@ -71,7 +71,7 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   }
   txt("timer", `${pad(d.time / 60, 2)}:${pad(d.time % 60, 2)}`);
   if (ch("endless", +(d.time >= 600))) (document.getElementById("clock") ?? $("lcd")).classList.toggle("endless", d.time >= 600);
-  txt("kills", pad(d.kills, 4));
+  txt("kills", d.kills > 9999 ? d.kills.toLocaleString("es-ES") : pad(d.kills, 4));
   const s = Math.min(1, Math.abs(d.kmh) / d.maxKmh);
   if (ch("spd", Math.round(s * 120))) { // media unidad de aguja por paso
     $("needle").style.transform = `rotate(${-120 + s * 240}deg)`;

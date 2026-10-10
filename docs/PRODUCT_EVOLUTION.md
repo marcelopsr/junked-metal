@@ -238,31 +238,64 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
    - **Qué problema resuelve:** Al chocar o girar en una curva cerrada, ayuda al piloto a confirmar inmediatamente si el motor está empujando hacia atrás.
    - **Valor:** Mejor retroalimentación de manejo en situaciones de rescate o maniobra. Complejidad: Baja.
 
+### Ciclo #22 (2026-10-10) — Tornillos con Miles, Bajas Tabulares, Marcha Atrás en Carrera, Alerta Últimos Movimientos, Chispas Skid y Sello Archivador Polaroid
+- **Alcance implementado en paralelo por 6 subagentes:**
+  - **Subagente 1 · Garaje y Menú (`src/menu.ts`, `src/menu.css`):** Saldo de tornillos en el banco de Garaje y Taller formateado con miles (`save.scrap.toLocaleString("es-ES")`), y `#opts .row output` estilizado con números tabulares `font-variant-numeric: tabular-nums` y peso 700 para mantener estabilidad visual en sliders.
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Contador de bajas formateado con `toLocaleString("es-ES")` para números de 5+ cifras y alineación tabular estricta en `#lcd .sub`.
+  - **Subagente 3 · Carrera Marcha Atrás (`src/kart.ts`, `src/race.css`):** Pastilla ámbar `.rrev` (`R`) junto al velocímetro cuando el corredor humano retrocede (`h.fs < -0.5`), facilitando la orientación en maniobras de rescate y trompos.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`, `src/match3_draw.ts`):** Alerta visual con recuadro rojo translúcido detrás del medidor de movimientos y cambio de rótulo a `¡ÚLTIMOS!` cuando `movesLeft <= 3` en fase de juego.
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** Nuevo método `FX.skid(p, hard)` que emite polvo de fricción y chispas doradas/anaranjadas de tracción en derrapes cerrados.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`, `src/replay.css`):** Sello diegético `"ARCHIVADO · PATIO RC"` rotado en el pie inferior izquierdo de la foto polaroid.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (677 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular) y `npx graphify update .` (3084 nodos, 7549 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #23 (6 Áreas en Paralelo)
+
+### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
+1. **Resaltado de Logros Avanzados (`.ach-near`):**
+   - **Qué es:** En `renderBestiary()` pestaña logros, destacar con un sutil borde ámbar cálido y etiqueta `¡CASI LISTO!` los logros que superen el 70% de progreso hacia su desbloqueo.
+   - **Qué problema resuelve:** Orienta al jugador sobre qué meta está más próxima a completarse para enfocar sus siguientes partidas.
+   - **Valor:** Mayor motivación y claridad en la progresión meta. Complejidad: Baja.
+
+### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
+2. **Pulso de Hito Decenal en el Indicador de Nivel (`#lvl`):**
+   - **Qué es:** En `hudUpdate()` (`src/ui.ts`), activar un destello dorado especial `.milestone` en el badge de nivel `#lvl` cada 10 niveles alcanzados (`NV 10`, `NV 20`, `NV 30`...).
+   - **Qué problema resuelve:** Celebración visual de hitos significativos de supervivencia durante la partida.
+   - **Valor:** Satisfacción y retroalimentación reforzada en runs prolongadas. Complejidad: Baja.
+
+### C. Área 3 · Carrera: Indicador de Aspiración / Rebufo (`src/kart.ts`, `src/race.css`)
+3. **Pastilla de Rebufo (`REBUFO`) en el Velocímetro de Carrera:**
+   - **Qué es:** En `hud()` (`src/kart.ts`), mostrar un distintivo amarillo `.rslip` (`REBUFO`) cuando el corredor aprovecha la estela aerodinámica de un rival directo para ganar aceleración.
+   - **Qué problema resuelve:** Hace explícita la mecánica de succión detrás de otros autos, incentivando maniobras de adelantamiento táctico.
+   - **Valor:** Mayor profundidad de conducción en carreras. Complejidad: Baja.
+
 ### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`)
-4. **Alerta Visual en Movimientos Críticos (`st.moves <= 3`):**
-   - **Qué es:** En `paintDisplay()` (`src/match3.ts`), cuando resten 3 o menos movimientos para agotar el nivel, colorear el indicador de movimientos en rojo pulsante `M3C.error`.
-   - **Qué problema resuelve:** Al estar concentrado en combinaciones del tablero, el jugador puede perder de vista que está en sus últimos 3 movimientos antes de la derrota.
-   - **Valor:** Anticipación y tensión dramática en momentos decisivos de la partida de gabinete. Complejidad: Baja.
+4. **Halo de Perfección en Nodos de 3 Estrellas del Mapa:**
+   - **Qué es:** En `drawNode()` (`src/match3_draw.ts`), trazar un resplandor dorado exterior tenue alrededor de los nodos de nivel completados con 3 estrellas perfectas.
+   - **Qué problema resuelve:** Distingue inmediatamente en el mapa de campaña los niveles dominados por completo frente a los que tienen estrellas pendientes.
+   - **Valor:** Claridad visual y satisfacción de completismo en la campaña. Complejidad: Baja.
 
 ### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
-5. **Micro-Chispas y Fricción Reforzada en Derrape Extremo (`FX.skid`):**
-   - **Qué es:** En `FX.skid()` (`src/fx.ts`), añadir probabilidad de micro-chispas de fricción cuando el vehículo derrapa con alta velocidad angular o tracción forzada.
-   - **Qué problema resuelve:** El derrape actual deja marcas en el piso pero carece de pequeñas chispas metálicas cuando la chapa o llantas rozan a fondo el terreno.
-   - **Valor:** Mayor dinamismo visual y sensación de velocidad arcade. Complejidad: Baja.
+5. **Nube de Aterrizaje de Chasis (`FX.land`):**
+   - **Qué es:** En `FX` (`src/fx.ts`), añadir un método `land(p, hard)` que emita una voluta circular baja de polvo expansivo al impactar contra el suelo tras saltos o rampas.
+   - **Qué problema resuelve:** Conexión táctil y peso físico más contundente cuando el auto RC cae tras desniveles o saltos de trampolín.
+   - **Valor:** Mayor sensación de masa e impacto en la física arcade. Complejidad: Baja.
 
 ### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
-6. **Sello de Tinta de Desguace en Marco de Foto Polaroid:**
-   - **Qué es:** En `showPhoto()` (`src/replay.ts`), imprimir un sello gráfico inclinado `"DESGUACE RC · ARCHIVADO"` en tono tinta sepia gastada sobre el faldón inferior del papel polaroid.
-   - **Qué problema resuelve:** Refuerza la identidad física del patio de autos RC y el carácter de archivo fotográfico de cada partida.
-   - **Valor:** Toque diegético artesanal con alta personalidad. Complejidad: Baja.
+6. **Distintivo de Récord Histórico en Foto Polaroid:**
+   - **Qué es:** En `showPhoto()` (`src/replay.ts`), si la partida superó el mejor tiempo registrado en la zona, añadir una pequeña estrella o sello dorado `"RÉCORD DE ZONA"` junto a la hora y tiempo.
+   - **Qué problema resuelve:** Hace que las fotos polaroid de partidas históricas sean instantáneamente reconocibles al descargarlas o compartirlas.
+   - **Valor:** Recompensa de coleccionismo y orgullo para el jugador. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #21 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (914 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3080 nodos, 7537 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #21 han sido liberados).
-- **Próxima decisión pendiente:** Selección de alcance y asignación para el **Ciclo #22** (despliegue de 6 subagentes en paralelo por área).
+- **Último trabajo completado:** Ciclo #22 implementado en paralelo con 6 subagentes, verificado con `tsc`, `test` (75/75), `build` (677 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3084 nodos, 7549 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #22 han sido liberados).
+- **Próxima decisión pendiente:** Selección de alcance y asignación para el **Ciclo #23** (despliegue de 6 subagentes en paralelo por área).
+
 
 
 

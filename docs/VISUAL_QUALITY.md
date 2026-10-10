@@ -463,6 +463,27 @@ Carrera (1) y Survivor en partida (2).
 6. **Remaches de fijación y botón de taller en el cierre Polaroid (Subagente 6 · `src/replay.ts`, `src/replay.css`):**
    - `showPhoto()` traza 4 remaches envejecidos de color latón en los vértices del marco exterior de la foto, y `.polaroid button` viste el botón de descarga con borde de chapa oxidada, tipografía técnica y elevación con sombra al posar el cursor.
 
+---
+
+## 2026-10-10 · Ciclo #22 (Tornillos con Miles, Bajas Tabulares, Marcha Atrás en Carrera, Alerta Últimos Movimientos, Chispas Skid y Sello Archivador Polaroid)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores).
+
+### Intervenciones aplicadas por 6 subagentes en paralelo y verificadas en captura
+1. **Formato con miles en banco de Garaje y Taller, y tipografía tabular en opciones (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - `renderShop()` y `renderGarage()` formatean el saldo de tornillos con separador de miles (`save.scrap.toLocaleString("es-ES")`), y `#opts .row output` adquiere tipografía tabular alineada `font-variant-numeric: tabular-nums` y peso 700 para evitar desplazamientos al variar deslizadores.
+2. **Formateo de bajas con miles y estilo tabular en `#lcd .sub` (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - `hudUpdate()` formatea el conteo de bajas cuando supera 9999 con `toLocaleString("es-ES")`, y `#lcd .sub` recibe `font-variant-numeric: tabular-nums` para que el ancho de la lectura permanezca perfectamente estable.
+3. **Indicador de marcha atrás `.rrev` (`R`) en el velocímetro de Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - `hud()` añade una pastilla ámbar `.rrev` (`R`) cuando el auto retrocede (`h.fs < -0.5`), permitiendo confirmar al instante maniobras de reversa tras colisiones o trompos.
+4. **Alerta visual y rotulación `¡ÚLTIMOS!` en movimientos críticos de Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - `paintDisplay()` despliega un recuadro de aviso rojo translúcido (`rgba(255,59,46,0.18)`) detrás del medidor de movimientos y conmuta la cabecera a `¡ÚLTIMOS!` cuando `movesLeft <= 3`, incrementando la tensión dramática en el tramo final del nivel.
+5. **Chispas y fricción de derrape en `FX.skid` (Subagente 5 · `src/fx.ts`):**
+   - Se añadió el método `skid(p, hard)` que emite polvo de fricción y ráfagas de 4 micro-chispas incandescentes doradas y anaranjadas en derrapes cerrados.
+6. **Sello diegético de archivo en Polaroid (Subagente 6 · `src/replay.ts`):**
+   - `showPhoto()` estampa un rótulo técnico `"ARCHIVADO · PATIO RC"` con rotación angular tenue en tono sepia sobre el pie del papel polaroid, enfatizando la memoria diegética de cada carrera o partida.
+
+
 
 
 

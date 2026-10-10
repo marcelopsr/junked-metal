@@ -93,6 +93,13 @@ export async function showPhoto(i: PhotoInfo) {
   g.fillStyle = "#4d4c38"; g.font = `600 ${Math.round(30 * u)}px Rajdhani, sans-serif`;
   g.fillText(`${i.win ? "VICTORIA" : "FIN DE LA PARTIDA"} · JUNKED METAL`, pad, y0 + 92 * u);
   g.save();
+  g.translate(pad + 10 * u, pad + ph + foot - 14 * u);
+  g.rotate(-0.02);
+  g.font = `700 ${Math.round(18 * u)}px Rajdhani, sans-serif`;
+  g.fillStyle = "rgba(77, 76, 56, 0.75)";
+  g.fillText("ARCHIVADO · PATIO RC", 0, 0);
+  g.restore();
+  g.save();
   g.translate(pad + pw - Math.round(135 * u), y0 + Math.round(64 * u));
   g.rotate(-0.1);
   const stCol = i.win ? "#1f6f3a" : "#9a2c2c", stTxt = i.win ? "INSPECCIÓN · VICTORIA" : "CHASIS SINIESTRADO";

@@ -568,7 +568,7 @@ function shopItems(): ShopItem[] {
   return UNLOCKS[stab]().map((u) => { const own = owns(u.id); return { attr: `data-buy="${u.id}"`, name: u.name, desc: u.desc, ico: u.icon, cost: own || u.ach ? undefined : u.cost, ach: u.ach, bought: own, fx: u.fx }; });
 }
 function renderShop() {
-  $("bank").textContent = `${save.scrap} tornillos`;
+  $("bank").textContent = `${save.scrap.toLocaleString("es-ES")} tornillos`;
   $("stabs").innerHTML = tabsHtml(STABS, stab, "stab");
   const allItems = shopItems();
   const ok = (i: ShopItem) => i.cost !== undefined && i.cost <= save.scrap;
@@ -590,7 +590,7 @@ let gtab: keyof typeof GTABS = "auto";
 function renderGarage() {
   if (gtab !== "piezas") editing = false;
   $("scr-garage").classList.toggle("editing", editing); // modo edición: solo el editor, con toda la altura
-  $("bankG").textContent = `${save.scrap} tornillos`;
+  $("bankG").textContent = `${save.scrap.toLocaleString("es-ES")} tornillos`;
   $("gtabs").innerHTML = tabsHtml(GTABS, gtab, "gtab");
   $("paint").classList.toggle("hidden", gtab !== "pintura");
   $("cars").classList.toggle("hidden", gtab === "pintura");

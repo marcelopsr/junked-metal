@@ -143,7 +143,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #opts .row b { color: var(--lcd-ink); font-weight: 400; white-space: nowrap; }
 #opts .row select { margin: 0; }
 #opts .row input[type=range] { width: min(200px, 34vw); accent-color: var(--lcd-ink); margin-left: auto; }
-#opts .row output { min-width: 52px; text-align: right; color: var(--lcd-ink); }
+#opts .row output { min-width: 56px; text-align: right; color: var(--lcd-ink); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: .02em; }
 .note { color: var(--txt); font-size: 15px; text-align: left; padding: 6px 10px; background: #050605e6; } /* franja oscura: se lee sobre la escena */
 
 /* Pausa y resultados */

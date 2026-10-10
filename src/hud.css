@@ -41,7 +41,7 @@
 #signal.up { animation: h-levelup .7s ease-out both; }
 #lcd { top: calc(max(10px, env(safe-area-inset-top)) + 58px); left: 14px; transform-origin: 0 0; display: flex; align-items: baseline; gap: 12px; padding: 7px 14px; }
 #timer { font: 700 32px/1 var(--hf); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
-#lcd .sub { font: 700 15px/1 var(--hf); letter-spacing: .08em; color: var(--g-dim); }
+#lcd .sub { font: 700 15px/1 var(--hf); letter-spacing: .08em; color: var(--g-dim); font-variant-numeric: tabular-nums; }
 #lcd.endless, #clock.endless { border-color: #ffd24a; box-shadow: 0 0 12px rgba(255, 210, 74, .28); }
 #lcd.endless #timer, #clock.endless #timer { color: #ffd24a; }
 
