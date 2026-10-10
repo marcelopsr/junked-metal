@@ -19,3 +19,4 @@ assets-src/_oleada2_baseline/
 # Respaldos de Blender y caché de Python
 *.blend1
 __pycache__/
+.vite-test/

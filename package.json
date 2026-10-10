@@ -18,7 +18,10 @@
     "sim": "node scripts/sim.mjs",
     "shots": "node scripts/shots.mjs",
     "perf": "node scripts/perf.mjs",
-    "playtest:duel": "node scripts/duel-playtest.mjs"
+    "playtest:duel": "node scripts/duel-playtest.mjs",
+    "test:restart": "node scripts/test-restart.mjs",
+    "test:down": "node scripts/test-restart.mjs down",
+    "test:ls": "node scripts/test-restart.mjs ls"
   },
   "keywords": [],
   "type": "module",

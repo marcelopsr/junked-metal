@@ -21,5 +21,7 @@ module.exports = {
     { ...base, name: "rc-dev", args: "--port 5173 --strictPort --host localhost", out_file: "logs/rc-dev.out.log", error_file: "logs/rc-dev.err.log" },
     { ...base, name: "rc-test", args: "--config vite.test.config.ts", out_file: "logs/rc-test.out.log", error_file: "logs/rc-test.err.log" },
     { ...base, name: "rc-demo", args: "preview --port 4173 --strictPort --host localhost", out_file: "logs/rc-demo.out.log", error_file: "logs/rc-demo.err.log", env: { ...base.env, NODE_ENV: "production" } },
+    // Worktree de git: lo arma `npm run test:restart` con RC_TEST_NAME/RC_TEST_PORT (cwd = el worktree)
+    ...(process.env.RC_TEST_NAME ? [{ ...base, name: process.env.RC_TEST_NAME, args: "--config vite.test.config.ts", out_file: `logs/${process.env.RC_TEST_NAME}.out.log`, error_file: `logs/${process.env.RC_TEST_NAME}.err.log`, env: { ...base.env, RC_TEST_PORT: process.env.RC_TEST_PORT } }] : []),
   ],
 };

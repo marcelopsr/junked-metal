@@ -31,7 +31,7 @@ const medir = ({ n }) => {
   return { ms: Math.min(...ms), p95: q(all, 0.95), cpu: Math.min(...cpu), draws, tris: Math.round(sc.getActiveIndices() / 3), meshes: sc.meshes.length, activos: sc.getActiveMeshes().length };
 };
 
-const browser = await launch(), res = {}, loads = {}, t0 = Date.now();
+const browser = await launch({ perf: true }), res = {}, loads = {}, t0 = Date.now();
 try {
   for (const vp of a.vp ? [a.vp] : ["pc", "cel"]) {
     for (const s of sessions) {
