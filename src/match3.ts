@@ -186,7 +186,11 @@ function endClear(s: M3ResolveStep) {
     else if (h.k === "chain") v.lock[h.y][h.x] = 0;
     else v.rust[h.y][h.x] = 0;
   }
-  for (const m of s.made) { v.board[m.y][m.x] = m.v; v.lock[m.y][m.x] = 0; rings.push({ x: cx(m.x), y: cy(m.y), r: CELL * 0.9, t: 0, col: M3C.amarilloClaro }); }
+  for (const m of s.made) {
+    v.board[m.y][m.x] = m.v; v.lock[m.y][m.x] = 0;
+    rings.push({ x: cx(m.x), y: cy(m.y), r: CELL * 0.9, t: 0, col: M3C.amarilloClaro });
+    if (spOf(m.v)) burst(cx(m.x), cy(m.y), M3C.especial, 10, 180);
+  }
   if (s.made.length) SFX.blip();
   const dist: Record<string, number> = {};
   for (const f of s.fell) { v.board[f.fromY][f.x] = EMPTY; }

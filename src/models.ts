@@ -461,6 +461,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     const top = (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1);
     parts.push(
       ...[-0.3, 0.3].map((x) => box(0.05, top, 0.12, M.matte("#222"), [x, dy + top / 2, dz])),
+      ...[-0.22, 0.22].map((x) => cyl(0.015, 0.015, top * 1.1, M.metal("#9aa0a6"), [x, dy + top * 0.45, dz - 0.02], [0.3, 0, 0], 6)),
       box(wingW, 0.05, 0.4, plate, [0, dy + top, dz - 0.04], [0.14, 0, 0]),
       ...[-1, 1].map((s) => box(0.04, o.wing === "alto" ? 0.2 : 0.36, 0.44, o.wing === "alto" ? fin : paint, [s * wingW / 2, dy + top - (o.wing === "alto" ? 0.04 : 0.12), dz - 0.04])),
     );

@@ -60,6 +60,12 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("low", +low)) { $("txl").classList.toggle("low", low); $("hud").classList.toggle("low", low); }
   const isShield = !!d.shield;
   if (ch("shielded", +isShield)) $("lipo").classList.toggle("shielded", isShield);
+  const prevHp = memo.prevHp as number | undefined;
+  if (prevHp !== undefined && d.hp > prevHp + 1) {
+    const lip = $("lipo");
+    lip.classList.remove("healing"); void lip.offsetWidth; lip.classList.add("healing");
+  }
+  memo.prevHp = d.hp;
   txt("volt", `${(9 + 3.6 * p).toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   bar("boost", d.boost);

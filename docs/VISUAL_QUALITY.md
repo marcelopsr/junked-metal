@@ -586,3 +586,27 @@ Carrera (1) y Survivor en partida (2).
    - Se incorporaron al motor procedural WebAudio los métodos `SFX.ignite()` (fogonazo térmico con filtro pasa-bandas y caída senoidal grave) y `SFX.radioChirp()` (doble tono senoidal agudo de sincronización de radio).
 8. **Parrilla de protección de acero en chasis pesado (Subagente 8 · `src/models.ts`):**
    - En `carModel()`, se incorporó al tanque dentro del conjunto de vehículos pesados que reciben parrilla frontal con marco mate y rejilla cromada (`chrome`), otorgando coherencia tridimensional inmediata a su condición de chasis reforzado.
+
+---
+
+## 2026-10-10 · Ciclo #28 (Contador Colección Garaje, LiPo Healing Glow, Carrera Máxima, Fusión Estelar Match-3, Vapor FX, Guardia Nocturna Polaroid, SFX Steam Hiss y Tirantes Alerón 3D)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 35.4 s).
+
+### Intervenciones aplicadas por 8 subagentes en paralelo y verificadas en captura
+1. **Contador de colección de vehículos en el Garaje (Subagente 1 · `src/menu.ts`, `src/menu.css`):**
+   - En `renderGarage()`, se calculó la cantidad de autos en propiedad (`ownedCars`) y se integró la pastilla áurea `<span class="car-tally">${ownedCars}/${total} AUTOS</span>` en el saldo de banco, aportando satisfacción de completitud y trazabilidad de coleccionismo.
+2. **Resplandor y destello esmeralda de recarga en batería LiPo (Subagente 2 · `src/ui.ts`, `src/hud.css`):**
+   - En `hudUpdate()`, se compara la salud con la del frame previo y, ante una subida de vida significativa, se dispara la clase `#lipo.healing` con animación `lipo-heal` que emite un halo verde esmeralda `rgba(34, 197, 94, .85)`, celebrando visualmente las reparaciones.
+3. **Pastilla de velocidad punta en tacómetro de Carrera (Subagente 3 · `src/kart.ts`, `src/race.css`):**
+   - En `hud()` de carrera, se evalúa si el corredor alcanza o supera el 96% de su velocidad tope sin estar en trompo, desplegando la pastilla dorada `<b class="rmax">MÁXIMA</b>` para alertar al piloto sobre el límite del acelerador.
+4. **Estallido estelar luminoso al forjar piezas especiales en Junket Crush (Subagente 4 · `src/match3.ts`):**
+   - En `endClear()`, cuando una combinación forja una pieza reactiva especial (`spOf(m.v)`), se proyecta un estallido de chatarra luminosa `burst(cx, cy, M3C.especial, 10, 180)` complementando el anillo expansivo, celebrando la maniobra estratégica en el tablero.
+5. **Efecto tridimensional de emisión de vapor térmico en `FX.steam` (Subagente 5 · `src/fx.ts`):**
+   - Se añadió al pool de partículas el método `FX.steam(p)`, generando nubes translúcidas blanquecinas `#f1f5f9` de ascenso lento y desvanecimiento suave para recalentamiento y enfriamiento con agua.
+6. **Sello de turno de guardia nocturna en Polaroid (Subagente 6 · `src/replay.ts`):**
+   - En `showPhoto()`, se estampó en tipografía técnica el rótulo `"GUARDIA NOCTURNA · PATIO CENTRAL"` en el pie del marco, enriqueciendo la ambientación de taller clandestino.
+7. **Audio procedural de escape de vapor y sobrepresión (Subagente 7 · `src/sfx.ts`):**
+   - Se sumó al motor sonoro procedural el método `SFX.steamHiss()`, con siseo filtrado pasa-altos (3500 a 1200 Hz) que simula la descompresión de vapor de un radiador.
+8. **Tirantes estructurales diagonales en alerones aerodinámicos (Subagente 8 · `src/models.ts`):**
+   - En `carModel()`, los alerones altos y dobles reciben tensores diagonales metálicos `M.metal("#9aa0a6")` que vinculan la base con el plano superior, elevando el realismo de maquetismo de carreras RC.

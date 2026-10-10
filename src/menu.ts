@@ -590,7 +590,8 @@ let gtab: keyof typeof GTABS = "auto";
 function renderGarage() {
   if (gtab !== "piezas") editing = false;
   $("scr-garage").classList.toggle("editing", editing); // modo edición: solo el editor, con toda la altura
-  $("bankG").textContent = `${save.scrap.toLocaleString("es-ES")} tornillos`;
+  const ownedCars = (Object.keys(CARS) as CarKind[]).filter((k) => owns("car:" + k)).length;
+  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span>`;
   $("gtabs").innerHTML = tabsHtml(GTABS, gtab, "gtab");
   $("paint").classList.toggle("hidden", gtab !== "pintura");
   $("cars").classList.toggle("hidden", gtab === "pintura");

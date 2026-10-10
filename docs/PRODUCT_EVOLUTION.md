@@ -1,7 +1,7 @@
 # Junked Metal — Registro Persistente de Evolución de Producto
 
 **Metodología activa:** `EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺`  
-**Última actualización:** 2026-10-10 (Ciclos #1 a #27 completados y validados · Ciclo #28 listo para selección)
+**Última actualización:** 2026-10-10 (Ciclos #1 a #28 completados y validados · Ciclo #29 listo para selección)
 
 Este documento conserva la inteligencia acumulada del producto entre ciclos y sesiones: estado actual de cada módulo, evaluaciones de calidad, decisiones aprobadas, ideas descartadas o pospuestas, backlog vivo de oportunidades y el checkpoint de continuidad.
 
@@ -494,8 +494,74 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ---
 
+### Ciclo #28 (2026-10-10) — Contador Colección Garaje, LiPo Healing Glow, Carrera Máxima, Fusión Estelar Match-3, Vapor FX, Guardia Nocturna Polaroid, SFX Steam Hiss y Tirantes Alerón 3D
+- **Alcance implementado en paralelo por 8 subagentes:**
+  - **Subagente 1 · Garaje Colección (`src/menu.ts`, `src/menu.css`):** Contador de colección `<span class="car-tally">${ownedCars}/${total} AUTOS</span>` en el saldo del banco del garaje.
+  - **Subagente 2 · HUD Supervivencia (`src/ui.ts`, `src/hud.css`):** Destello esmeralda `.healing` (`lipo-heal`) en celdas de batería LiPo al recuperar vida.
+  - **Subagente 3 · Carrera Máxima (`src/kart.ts`, `src/race.css`):** Pastilla de velocidad punta `<b class="rmax">MÁXIMA</b>` en tacómetro al alcanzar $\ge 96\%$ del tope.
+  - **Subagente 4 · Gabinete Junket Crush (`src/match3.ts`):** Estallido estelar luminoso al forjar piezas reactivas especiales en el tablero.
+  - **Subagente 5 · Efectos Visuales 3D (`src/fx.ts`):** Rutina `FX.steam(p)` con nubes translúcidas de elevación térmica para escapes y charcos.
+  - **Subagente 6 · Cierre y Polaroid (`src/replay.ts`):** Sello diegético `"GUARDIA NOCTURNA · PATIO CENTRAL"` en el pie de la Polaroid.
+  - **Subagente 7 · Audio Sintetizado (`src/sfx.ts`):** Sonido procedural `SFX.steamHiss()` para descompresión de vapor.
+  - **Subagente 8 · Modelos Procedurales (`src/models.ts`):** Tirantes estructurales metálicos en alerones de alta velocidad.
+- **Evidencia de validación:** `npx tsc --noEmit -p .`, `npm test` (75/75), `npm run build` (556 ms), `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas verificadas en PC y celular en 35.4 s) y `npx graphify update .` (3132 nodos, 7650 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #29 (8 Áreas en Paralelo)
+
+### A. Área 1 · Garaje y Chatarroteca (`src/menu.ts`, `src/menu.css`)
+1. **Etiqueta de Pieza de Fábrica en el Taller (`.stock-tag`):**
+   - **Qué es:** En `renderGarage()` pestaña piezas, marcar con una pastilla neutra `.stock-tag` (`DE FÁBRICA`) la opción original de cada ranura frente a las modificadas.
+   - **Qué problema resuelve:** Clarifica el origen de los componentes para restaurar el auto a su estado base rápidamente.
+   - **Valor:** Usabilidad y claridad en la personalización. Complejidad: Baja.
+
+### B. Área 2 · HUD de Supervivencia (`src/ui.ts`, `src/hud.css`)
+2. **Indicador de Multiplicador Crítico en HUD de Pausa:**
+   - **Qué es:** En `#scr-pause`, añadir un indicador técnico con la probabilidad y daño crítico efectivo actual del vehículo.
+   - **Qué problema resuelve:** Facilita la toma de decisiones al evaluar pasivas de daño y foco.
+   - **Valor:** Información táctica para builds avanzados. Complejidad: Baja.
+
+### C. Área 3 · Carrera: Pastilla de Adelantamiento Limpio (`src/kart.ts`, `src/race.css`)
+3. **Pastilla de Rebase Limpio (`.rover`):**
+   - **Qué es:** En `hud()` de carrera, emitir una pastilla verde `.rover` (`ADELANTAMIENTO`) momentánea al subir un puesto en carrera limpia.
+   - **Qué problema resuelve:** Recompensa el pilotaje agresivo y técnico entre curvas.
+   - **Valor:** Gratificación y feedback competitivo inmediato. Complejidad: Baja.
+
+### D. Área 4 · Gabinete Junket Crush (`src/match3_draw.ts`, `src/match3.ts`)
+4. **Resplandor Cian en Cumplimiento de Metas Secundarias:**
+   - **Qué es:** En `drawGoal()`, cuando una meta secundaria de puntaje se supera, emitir una onda cian perimetral suave.
+   - **Qué problema resuelve:** Distingue el avance en objetivos secundarios frente a los principales de chatarra.
+   - **Valor:** Lectura estratificada en niveles complejos. Complejidad: Baja.
+
+### E. Área 5 · Efectos Visuales 3D (`src/fx.ts`)
+5. **Efecto de Niebla de Condensación en `FX.mist`:**
+   - **Qué es:** En `FX` (`src/fx.ts`), añadir la rutina `mist(p)` con micro-partículas vaporosas a ras de suelo para charcos fríos y zonas sombrías.
+   - **Qué problema resuelve:** Densifica el suelo en climas húmedos o de madrugada.
+   - **Valor:** Atmósfera ambiental e inmersión. Complejidad: Baja.
+
+### F. Área 6 · Cierre de Partida y Polaroid (`src/replay.ts`, `src/replay.css`)
+6. **Sello de Odómetro con Kilometraje en Polaroid:**
+   - **Qué es:** En `showPhoto()`, incluir un cuño diegético con la distancia recorrida (`"ODÓMETRO: X.X KM"`).
+   - **Qué problema resuelve:** Ofrece una métrica adicional de movilidad y resistencia en la instantánea.
+   - **Valor:** Coherencia técnica de peritaje automotor. Complejidad: Baja.
+
+### G. Área 7 · Audio Sintetizado (`src/sfx.ts`)
+7. **Sonido Mecánico de Relé e Interruptor en `SFX.relayClick`:**
+   - **Qué es:** En `SFX` (`src/sfx.ts`), incorporar `relayClick()` para el accionamiento de faros o sistemas eléctricos pesados.
+   - **Qué problema resuelve:** Textura acústica para conmutaciones de telemetría y faros.
+   - **Valor:** Realismo táctil del tablero de control. Complejidad: Baja.
+
+### H. Área 8 · Modelos Procedurales del Taller (`src/models.ts`)
+8. **Detalle de Resortes Espirales en Amortiguadores Monster y Buggy:**
+   - **Qué es:** En `carModel()` (`src/models.ts`), agregar anillos espirales o texturado de muelle helicoidal en la suspensión visible de todoterrenos.
+   - **Qué problema resuelve:** Mayor fidelidad mecánica en vehículos todoterreno de gran recorrido de suspensión.
+   - **Valor:** Belleza de maquetismo industrial. Complejidad: Baja.
+
+---
+
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #27 implementado en paralelo con 8 subagentes, verificado con `tsc`, `test` (75/75), `build` (545 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3120 nodos, 7627 aristas).
-- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #27 han sido liberados).
-- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #28**.
+- **Último trabajo completado:** Ciclo #28 implementado en paralelo con 8 subagentes, verificado con `tsc`, `test` (75/75), `build` (556 ms), 33 capturas en `.shots/actual/` y grafo actualizado (3132 nodos, 7650 aristas).
+- **Archivos bloqueados (`🔒 EN CURSO`):** Ninguno (todos los bloqueos del Ciclo #28 han sido liberados).
+- **Próxima decisión pendiente:** Selección y confirmación de oportunidades para el **Ciclo #29**.
