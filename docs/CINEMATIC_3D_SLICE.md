@@ -29,4 +29,4 @@ La muestra aún se ve más simple que el arte aprobado. Refinar anatomía/pelo, 
 
 ## Continuidad entre sesiones
 
-El usuario autorizó el 2026-10-10 aprovechar los ciclos de Gemini y continuar esta línea en futuras sesiones de Codex. `docs/VISUAL_SESSION_COORDINATION.md` fija propiedad de archivos, encargos independientes, entrega verificable y prompts listos. Las carpetas `gemini-*` se reservan al tomar un encargo; Codex conserva el ensamblaje del banco. No se considera que un encargo esté corriendo solo por figurar en la tabla.
+El usuario autorizó el 2026-10-10 aprovechar los ciclos de Gemini y continuar esta línea en futuras sesiones de Codex. Aclaró que Gemini puede trabajar de forma independiente y cerrar sus ciclos sin esperar revisión de Codex; esa revisión posterior es opcional. `docs/VISUAL_SESSION_COORDINATION.md` fija reservas temporales, oportunidades independientes, entrega verificable y prompts listos. Cualquier sesión puede reservar y evolucionar el banco cuando esté libre. No se considera que un encargo esté corriendo solo por figurar en la tabla.

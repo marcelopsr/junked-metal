@@ -9,6 +9,7 @@ description: "Enforce strict Gemini-only model usage, Flash Low/Medium/High reas
 - Este proyecto opera dentro de Antigravity **exclusivamente con modelos Gemini** (Gemini Flash Low, Medium y High, o equivalentes Gemini más recientes).
 - **Dentro de Antigravity:** no invoques modelos de Claude, OpenAI ni otros proveedores como principal, revisor o subagente; conserva el routing nativo Gemini.
 - **Colaboración entre sesiones autorizada por el usuario (2026-10-10):** Codex puede trabajar por separado en el mismo repositorio y entregar encargos a los ciclos de Gemini a través del usuario. Esto no cambia el proveedor de Antigravity ni autoriza invocar otro harness desde Gemini. Aplicar `docs/VISUAL_SESSION_COORDINATION.md` para propiedad de archivos, continuidad y evidencia compartida.
+- **Autonomía aclarada por el usuario:** Gemini puede avanzar y cerrar ciclos dentro del alcance autorizado sin esperar revisión de Codex; la revisión posterior es opcional. Las oportunidades visuales no restringen otras líneas ya autorizadas.
 - Al usar `invoke_subagent`, utiliza únicamente opciones nativas de Gemini (`inherit`, `flash_lite`, `flash`, `pro`).
 - Si en algún caso extremo consideras necesario salir de Gemini, detente, explica la razón técnica concreta y solicita autorización explícita al usuario antes de actuar.
 

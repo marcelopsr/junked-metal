@@ -18,6 +18,8 @@ Roguelite 3D de supervivencia y modos arcade con autos RC en un patio gigante (`
 
 ## 2. Reglas de Colaboración y Operación
 
+**Autonomía autorizada (2026-10-10):** Gemini puede elegir tareas, ejecutar, verificar, integrar y cerrar ciclos dentro del alcance autorizado sin esperar a Codex. Codex puede revisar después; su revisión no es requisito de cierre ni continuidad. Leer `docs/VISUAL_SESSION_COORDINATION.md` para reservas temporales y handoffs; los encargos visuales propuestos no limitan otras líneas ya autorizadas ni crean propiedad permanente por proveedor.
+
 1. **Preguntar antes de decidir diseño o balance:** Usa `ask_question` (opción múltiple, recomendada primero) para dudas reales de diseño, balance, precios o textos visibles. No hagas preguntas sueltas en texto plano.
 2. **Idioma:** Conversación en español. **Textos del juego:** español neutro e impersonal (*"Presiona"*, *"Sobrevive"*, *"El auto quedó destrozado"*); prohibido el voseo (*"Apretá"*, *"querés"*) y el tuteo (*"tu/te"*).
 3. **Grafo primero (`graphify`):** Antes de usar `grep` masivo o leer archivos enteros (`main.ts` y `menu.ts` superan los 100 KB), consulta `graphify query`, `graphify path` o `graphify explain`, o revisa `graphify-out/wiki/index.md`. Tras modificar código, ejecuta `graphify update .`.

@@ -20,6 +20,8 @@ HUD de telemetría RC como terminal gastada, **nada de emojis ni UI genérica**)
 
 El usuario autorizó el 2026-10-10 continuar el arte en Codex y aprovechar los ciclos de Gemini mediante encargos que él pueda trasladar. Leer `docs/VISUAL_SESSION_COORDINATION.md` antes de intervenir en esa línea: contiene el estado real, los archivos reservados, tareas independientes y prompts de continuidad. La escena experimental y sus recursos no son los modelos activos del juego. No incluir archivos de otra sesión en commits ni publicar esta muestra local.
 
+Gemini también puede avanzar de forma autónoma, elegir tareas y cerrar sus propios ciclos dentro del alcance autorizado sin esperar revisión de Codex; esa revisión posterior es opcional. Las reservas son temporales para evitar choques, no propiedad permanente de archivos ni un límite a las otras líneas autorizadas del proyecto.
+
 ## Mapa del código (`src/`)
 
 | Archivo | Rol |
