@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Junked Metal · Biblioteca de superficies</title>
+<style>
+:root{color-scheme:dark;font-family:Rajdhani,sans-serif;background:#11171c;color:#ecede4}*{box-sizing:border-box}body{margin:0;padding:clamp(16px,3vw,40px);max-width:1600px;margin-inline:auto}header{border-top:3px solid #df8a28;padding:18px 0 24px}h1{font-size:clamp(28px,4vw,50px);line-height:1;margin:8px 0;color:#ffbd4a}h2{font-size:24px;margin:0}p{color:#b9c2c6;font-size:18px;margin:8px 0}.tag{letter-spacing:.16em;color:#c6935d;font-size:14px}#cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.card{background:#1b232b;border:1px solid #414a50;min-width:0}.card img{display:block;width:100%;aspect-ratio:1;object-fit:cover}.copy{padding:14px}.copy p{font-size:16px;line-height:1.25}.copy a,footer a{color:#ffbd4a;text-underline-offset:3px}.copy nav{display:flex;gap:18px;margin-top:12px}.tile-button{font:inherit;font-size:16px;background:#2a333b;border:1px solid #8a6c40;color:#fff0d0;padding:9px 12px;cursor:pointer;width:100%;margin-top:12px}.tile-button:focus-visible,a:focus-visible,button:focus-visible{outline:3px solid #ffc75a;outline-offset:3px}footer{border-top:1px solid #4c4f43;padding:20px 0;margin-top:30px;font-size:17px;color:#b9c2c6}dialog{width:min(92vw,880px);max-height:95vh;background:#172027;color:#f2ecdd;border:1px solid #dd912e;padding:18px}dialog::backdrop{background:#000b}.dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.dialog-head button{font:inherit;font-size:18px;background:#333b40;border:1px solid #999;color:#fff;padding:8px 12px;cursor:pointer}.tile{margin-top:15px;aspect-ratio:1;background-repeat:repeat;background-size:33.333333% 33.333333%}#status{margin:0 0 18px}#reference{color:#f2c075}@media(max-width:1000px){#cards{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){#cards{grid-template-columns:1fr}.copy{padding:15px}dialog{padding:12px}}
+</style>
+</head>
+<body>
+<header><span class="tag">JUNKED METAL / RECURSOS VISUALES</span><h1>SUPERFICIES CON HISTORIA</h1><p>Ocho materiales para patio, garaje, pistas y chatarra.</p><p id="reference">La tierra aprobada guía el detalle; cada superficie conserva su propio color.</p></header>
+<p id="status" role="status">Cargando biblioteca…</p>
+<main id="cards" aria-label="Catálogo de materiales"></main>
+<footer>Los archivos son mapas de color. La repetición 3 × 3 permite evaluar juntas y patrones antes de aplicarlos.<br><a href="README.md">Usos y guía de integración</a> · <a href="assets.json">Catálogo para agentes</a> · <a href="reference-earth.png">Referencia aprobada</a></footer>
+<dialog id="repeat-dialog" aria-labelledby="repeat-title"><div class="dialog-head"><h2 id="repeat-title">Repetición</h2><button id="close-dialog" type="button">Cerrar</button></div><p>Vista 3 × 3. Revisar las uniones y la repetición de detalles.</p><div class="tile" id="tile"></div></dialog>
+<script type="module">
+import '@fontsource/rajdhani/500.css';
+import '@fontsource/rajdhani/700.css';
+const cards=document.querySelector('#cards'),status=document.querySelector('#status'),dialog=document.querySelector('#repeat-dialog');
+document.querySelector('#close-dialog').onclick=()=>dialog.close();
+try{
+ const response=await fetch('./assets.json');if(!response.ok)throw new Error('No se pudo cargar el catálogo');
+ const catalog=await response.json();
+ for(const a of catalog.assets){
+  const article=document.createElement('article');article.className='card';article.dataset.asset=a.id;
+  const img=document.createElement('img');img.src=a.texture;img.alt=a.name;img.loading='lazy';img.width=a.width;img.height=a.height;
+  const copy=document.createElement('div');copy.className='copy';
+  const heading=document.createElement('h2');heading.textContent=a.name;
+  const use=document.createElement('p');use.textContent=a.uses.join(' · ');
+  const size=document.createElement('p');size.textContent=`${a.width} × ${a.height} · WebP ${(a.textureBytes/1024).toFixed(0)} KB`;
+  const links=document.createElement('nav');links.setAttribute('aria-label',a.name+' archivos');
+  for(const [label,path]of [['WebP',a.texture],['PNG',a.source]]){const link=document.createElement('a');link.href=path;link.textContent=label;link.download='';links.append(link);}
+  const button=document.createElement('button');button.type='button';button.className='tile-button';button.textContent='Examinar repetición 3 × 3';button.onclick=()=>{document.querySelector('#repeat-title').textContent=a.name;document.querySelector('#tile').style.backgroundImage=`url("${a.texture}")`;dialog.showModal();};
+  copy.append(heading,use,size,links,button);article.append(img,copy);cards.append(article);
+ }
+ status.textContent=`${catalog.assets.length} superficies · ${(catalog.assets.reduce((n,a)=>n+a.textureBytes,0)/1e6).toFixed(2)} MB en WebP`;
+}catch(error){status.textContent='No se pudo cargar la biblioteca.';console.error(error);}
+</script>
+</body>
+</html>

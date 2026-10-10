@@ -54,6 +54,12 @@
 #signal.fringe { opacity: .6; filter: grayscale(.4); }
 #signal.rf-loss { animation: rf-loss .2s steps(2) infinite; filter: contrast(1.6) brightness(.8); }
 .sig-dbm { font: 700 10px/1 var(--hf); color: var(--g-dim); margin-left: 4px; letter-spacing: .04em; }
+.sig-dbm.sig-warn { color: #f59e0b; text-shadow: 0 0 6px rgba(245, 158, 11, .6); animation: sigWarnFlicker .25s steps(2) infinite; }
+@keyframes sigWarnFlicker {
+  0% { opacity: .4; }
+  50% { opacity: 1; }
+  100% { opacity: .5; }
+}
 @keyframes rf-loss {
   0% { opacity: .2; }
   50% { opacity: .9; }

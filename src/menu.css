@@ -128,6 +128,12 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .perk .price { margin-top: 2px; }
 .carc.perk .sfx { font: 600 12px/1.2 var(--data); color: var(--jm-amarillo2, #ffd24a); font-variant-numeric: tabular-nums; margin-top: 2px; }
 #shop .perk.no { opacity: 1; } /* no alcanza: conserva contraste de chapa oscura y permite enfocar para ver la vista previa */
+.slot-badge { display: inline-block; padding: 2px 5px; font: 700 9px/1 var(--hf); color: #38bdf8; background: rgba(56, 189, 248, .12); border: 1px solid rgba(56, 189, 248, .3); border-radius: 3px; letter-spacing: .06em; margin-bottom: 4px; vertical-align: middle; }
+.bought-pulse { animation: part-mounted .6s ease-out; }
+@keyframes part-mounted {
+  0% { box-shadow: 0 0 16px rgba(34, 197, 94, .8); border-color: #22c55e; }
+  100% { box-shadow: none; }
+}
 #sfilt .tab { font-size: 12px; }
 #fe .pips { display: flex; gap: 3px; margin-top: 8px; }
 #fe .pips i { flex: 0 0 12px; height: 4px; background: #ffffff18; }
@@ -483,7 +489,7 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam)::after { co
 #scr-bestiary[data-btab="stats"] #beasts { max-height: max(180px, calc(100dvh - 320px)); grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 720px) { #scr-bestiary[data-btab="stats"] #beasts { grid-template-columns: 1fr; } }
 /* Celular: las 4 pestañas (con contadores) no caben en una fila: grilla de 2x2 y la lista cede esa altura para que el título no se corte arriba */
-@media (max-width: 520px) { #btabs { display: grid; grid-template-columns: 1fr 1fr; } #scr-bestiary:not([data-btab="stats"]) #beasts { max-height: max(220px, calc(100dvh - 256px)); } }
+@media (max-width: 520px) { #btabs { display: grid; grid-template-columns: 1fr 1fr; } #scr-bestiary:not([data-btab="stats"]) #beasts { max-height: max(220px, calc(100dvh - 256px)); } #scr-bestiary[data-btab="stats"] #beasts { max-height: max(160px, calc(100dvh - 372px)); } }
 #scr-bestiary #records { max-height: 15vh; overflow-y: auto; display: block; flex: none; background: rgba(11, 15, 20, .92); border: 1px solid var(--jm-borde); border-top: 2px solid var(--jm-chapa); border-radius: var(--jm-r); padding: 4px 10px; box-shadow: inset 0 0 0 1px #000, 0 6px 16px rgba(0, 0, 0, .4); }
 #scr-bestiary #records.hidden { display: none; }
 #beasts .ficha { padding-top: 8px; padding-bottom: 8px; }

@@ -279,6 +279,7 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 #rcount { font-family: var(--jm-titulo); color: var(--jm-amarillo); -webkit-text-stroke: 6px var(--jm-fondo); paint-order: stroke fill; text-shadow: 0 8px 0 #000; }
 #rcount.go, .duel-count-wrap.go .duel-count-num { color: var(--jm-verde); }
 #rres { background: linear-gradient(90deg, transparent 30%, rgba(11, 15, 20, .86) 70%); }
+@media (max-width: 720px) and (orientation: portrait) { #rres { background: linear-gradient(180deg, transparent 14%, rgba(11, 15, 20, .92) 38%); } #rres th { color: #d4dde6; } } /* celular vertical: el panel ocupa el pie, el fondo oscuro sube hasta el título */
 #rres .rtitle, #rpause .rtitle { color: var(--jm-amarillo); text-transform: uppercase; text-shadow: 0 2px 0 #5a2a00; }
 #rres td { background: var(--jm-fondo); border-top: 1px solid var(--jm-borde); border-bottom: 1px solid var(--jm-borde); border-radius: 0 !important; }
 #rres tr.me td { background: #2a2108; border-color: var(--jm-amarillo); }

@@ -486,7 +486,7 @@ export const ABIL_ICON: Record<AbilityId, string> = { bombardeo: "petardos", esc
 const abilCost = (k: AbilityId) => costos("hab_" + k);
 const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;
 // Desbloqueables: car:<auto>, pilot:<piloto>, part:<ranura>:<opción>. Los pilotos con logro no se compran.
-type Unlock = { id: string; name: string; desc: string; cost: number; ach?: string; icon?: string; fx?: string };
+type Unlock = { id: string; name: string; desc: string; cost: number; ach?: string; icon?: string; fx?: string; slot?: string };
 const UNLOCKS = {
   autos: () => (Object.keys(CARS) as CarKind[]).filter((k) => CARS[k].cost).map((k): Unlock => ({ id: "car:" + k, name: CARS[k].name, desc: CARS[k].desc, cost: CARS[k].cost, fx: `Carrocería ${CARS[k].hp} · Velocidad ${Math.round(CARS[k].speed * 3.6)} km/h · Embestida ×${n1(CARS[k].ram)}` })),
   pilotos: () => (Object.keys(PILOTS) as PilotId[]).filter((k) => PILOTS[k].cost || PILOTS[k].ach).map((k): Unlock => {
@@ -495,7 +495,7 @@ const UNLOCKS = {
   }),
   zonas: () => (Object.keys(ZONES) as ZoneId[]).filter((k) => ZONES[k].cost).map((k): Unlock => ({ id: "zone:" + k, name: ZONES[k].name, desc: ZONES[k].desc, cost: ZONES[k].cost })),
   arsenal: () => ARSENAL.filter((k) => k !== "gomitas").map((k): Unlock => ({ id: "arma:" + k, name: WEAPONS[k].name, desc: WEAPONS[k].desc, cost: precio("arma_" + k), icon: k, fx: `Evoluciona con ${PASSIVES[WEAPONS[k].evo].name} → ${WEAPONS[k].evoName}` })),
-  piezas: () => (Object.keys(PARTS) as Slot[]).flatMap((sl) => Object.entries(opts(sl)).filter(([, [, c]]) => c).map(([o, [n, c]]): Unlock => ({ id: `part:${sl}:${o}`, name: n, desc: PARTS[sl].name, cost: c }))),
+  piezas: () => (Object.keys(PARTS) as Slot[]).flatMap((sl) => Object.entries(opts(sl)).filter(([, [, c]]) => c).map(([o, [n, c]]): Unlock => ({ id: `part:${sl}:${o}`, name: n, desc: PARTS[sl].name, cost: c, slot: sl }))),
 };
 function owns(id: string) {
   const [t, k, o] = id.split(":");
@@ -576,7 +576,7 @@ const SFILT = { todo: "Todo", comprables: "Comprables ahora", bloqueadas: "Bloqu
 const SSORT = ["Orden de fábrica", "Precio: menor primero", "Precio: mayor primero"];
 let sfilt: keyof typeof SFILT = "todo", ssort = 0;
 // Fila del Taller: attr = cómo la reconoce el clic; cost = precio de lo siguiente (undefined si está completa); fx = vista previa antes → después
-type ShopItem = { attr: string; name: string; desc: string; ico?: string; lv?: number; max?: number; cost?: number; ach?: string; bought: boolean; fx?: string };
+type ShopItem = { attr: string; name: string; desc: string; ico?: string; lv?: number; max?: number; cost?: number; ach?: string; bought: boolean; fx?: string; slot?: string };
 // Texto de costo: si ya se puede comprar, o cuántos tornillos faltan y unas cuántas partidas son (estimado)
 const tipicas = (c: number) => { const f = c - save.scrap, n = Math.ceil(f / BAL.ritmo.tornillos_partida_tipica); return f <= 0 ? "Se puede comprar ahora" : `Faltan ${f} tornillos (${n === 1 ? "una partida" : `unas ${n} partidas`})`; };
 function shopItems(): ShopItem[] {
@@ -589,8 +589,17 @@ function shopItems(): ShopItem[] {
     const fx = (x: number) => `Enfriamiento ${n1(abilCd(k, x))} s · efecto ${Math.round(abilK(x) * 100)}%`;
     return { attr: `data-hab="${k}"`, name: a.name, desc: `${a.desc} · Nivel ${l + 1} (${n1(abilCd(k, l))} s)`, ico: ABIL_ICON[k], lv: l, max, cost: c[l], bought: l > 0, fx: l < max ? `${fx(l)} → ${fx(l + 1)}` : fx(l) };
   });
-  return UNLOCKS[stab]().map((u) => { const own = owns(u.id); return { attr: `data-buy="${u.id}"`, name: u.name, desc: u.desc, ico: u.icon, cost: own || u.ach ? undefined : u.cost, ach: u.ach, bought: own, fx: u.fx }; });
+  return UNLOCKS[stab]().map((u) => { const own = owns(u.id); return { attr: `data-buy="${u.id}"`, name: u.name, desc: u.desc, ico: u.icon, cost: own || u.ach ? undefined : u.cost, ach: u.ach, bought: own, fx: u.fx, slot: u.slot }; });
 }
+const SLOT_LABELS: Record<string, string> = {
+  wing: "AERODINÁMICA",
+  bumper: "BLINDAJE",
+  wheel: "TRACCIÓN",
+  tires: "TRACCIÓN",
+  gear: "TRANSMISIÓN",
+  susp: "SUSPENSIÓN",
+  engine: "MOTORIZACIÓN",
+};
 function renderShop() {
   if (stab !== "piezas" && current() === "shop") peek.part = undefined;
   $("bank").textContent = `${save.scrap.toLocaleString("es-ES")} tornillos`;
@@ -606,7 +615,14 @@ function renderShop() {
     const done = i.cost === undefined, info = [i.fx, done ? (i.ach && !i.bought ? `Se gana con un logro: ${i.ach}` : i.max ? "Nivel máximo" : "Ya está en el garaje") : tipicas(i.cost!)].filter(Boolean).join(" · ");
     const pips = i.max ? `<div class="pips">${"<i class=on></i>".repeat(i.lv!)}${"<i></i>".repeat(i.max - i.lv!)}</div>` : "";
     const price = done ? (i.max ? "MÁXIMO" : i.ach && !i.bought ? `Logro: ${i.ach}` : "EN EL GARAJE") : `${i.cost} tornillos`;
-    return `<button class="carc perk ${ok(i) ? "" : "no"}" ${i.attr} data-info="${info}" aria-disabled="${!ok(i)}"><b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${i.fx ? `<span class="sfx">${i.fx}</span>` : ""}${pips}<div class="price">${price}</div></button>`;
+    const p = i;
+    const slotKey = p.slot || (stab === "piezas" && p.attr.includes('data-buy="part:') ? p.attr.split(":")[1] : undefined);
+    let slotBadge = "";
+    if (stab === "piezas" && slotKey) {
+      const slotLabel = SLOT_LABELS[slotKey] || slotKey.toUpperCase();
+      slotBadge = `<span class="slot-badge">${slotLabel}</span>`;
+    }
+    return `<button class="carc perk ${ok(i) ? "" : "no"}" ${i.attr} data-info="${info}" aria-disabled="${!ok(i)}">${slotBadge}<b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${i.fx ? `<span class="sfx">${i.fx}</span>` : ""}${pips}<div class="price">${price}</div></button>`;
   }).join("") || `<div class="note">Nada por acá con este filtro. El patio no regala nada.</div>`;
   $("sinfo").textContent = "Enfoca una mejora para ver qué cambia y cuánto falta.";
   if (stab === "piezas") {
@@ -1474,7 +1490,22 @@ export function initMenu(a: Api) {
     else if (d.belite !== undefined) { BV.elite = d.belite as Elite | ""; BV.anim = ""; renderBeast(); }
     else if (d.btab) { btab = d.btab as typeof btab; renderBestiary(); $("beasts").scrollTop = 0; focusSel(`[data-btab="${btab}"]`); }
     else if (d.stab) { stab = d.stab as typeof stab; renderShop(); $("shop").scrollTop = 0; focusSel(`[data-stab="${stab}"]`); }
-    else if (d.buy) { const id = d.buy, c = priceOf(id); if (owns(id) || c === undefined) return; askBuy(nm, c, () => { if (!buy(id)) return; renderShop(); focusSel(`[data-buy="${id}"]`); }); }
+    else if (d.buy) {
+      const id = d.buy, c = priceOf(id);
+      if (owns(id) || c === undefined) return;
+      askBuy(nm, c, () => {
+        if (!buy(id)) return;
+        renderShop();
+        focusSel(`[data-buy="${id}"]`);
+        if (id.startsWith("part:")) {
+          const el = document.querySelector<HTMLElement>(`[data-buy="${id}"]`) ?? (t.closest<HTMLElement>("[data-buy]") ?? t);
+          if (el) {
+            el.classList.add("bought-pulse");
+            setTimeout(() => el.classList.remove("bought-pulse"), 600);
+          }
+        }
+      });
+    }
     else if (d.sf) { sfilt = d.sf as typeof sfilt; renderShop(); focusSel(`[data-sf="${sfilt}"]`); }
     else if (d.ss) { ssort = (ssort + 1) % SSORT.length; renderShop(); focusSel("[data-ss]"); }
     else if (d.hab) {

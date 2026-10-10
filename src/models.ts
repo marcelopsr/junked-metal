@@ -502,6 +502,15 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.006, 0.006, 0.08, M.plastic("#18181b"), [-0.01, bh * 0.425, -bl * 0.18 - 0.04], [Math.PI / 2, 0, 0], 4)
       );
     }
+    if (kind === "buggy" || kind === "monster") {
+      parts.push(
+        // Lata cilíndrica del motor 540 con ranura de ventilación
+        cyl(0.024, 0.024, 0.065, chrome, [-bw * 0.12, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 10),
+        cyl(0.022, 0.022, 0.015, M.metal("#18181b"), [-bw * 0.12, bh * 0.32, -bl * 0.28 + 0.02], [0, 0, Math.PI / 2], 8),
+        // Piñón dentado de bronce en eje de salida
+        cyl(0.014, 0.014, 0.012, M.metal("#d97706"), [-bw * 0.12 + 0.038, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 8)
+      );
+    }
     for (const sx of [-bw * 0.35, bw * 0.35]) {
       for (const sz of [-bl * 0.32, bl * 0.32]) {
         parts.push(

@@ -99,10 +99,10 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("escThermal", +isThermal)) escEl.style.display = isThermal ? "" : "none";
   txt("volt", `${displayV.toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
+  const isLoss = (d.distCenter ?? 0) > 85;
   if (d.distCenter !== undefined) {
     const isFringe = d.distCenter > 75;
     if (ch("sigFringe", +isFringe)) $("signal").classList.toggle("fringe", isFringe);
-    const isLoss = d.distCenter > 85;
     if (ch("rfLoss", +isLoss)) $("signal").classList.toggle("rf-loss", isLoss);
   }
   const dbm = Math.round(-42 - Math.min(52, ((d.distCenter ?? 0) / 90) * 52));
@@ -115,7 +115,10 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     if (anchor?.parentNode) anchor.parentNode.insertBefore(sigDbm, anchor.nextSibling);
     else $("signal")?.appendChild(sigDbm);
   }
-  if (ch("sigDbm", dbm)) sigDbm.textContent = `${dbm} dBm`;
+  const rfJitter = isLoss ? (Math.random() < 0.4 ? (Math.random() > 0.5 ? 2 : -2) : 0) : 0;
+  const displayDbm = dbm + rfJitter;
+  if (ch("sigDbm", displayDbm)) sigDbm.textContent = `${displayDbm} dBm`;
+  if (ch("sigWarn", +isLoss)) sigDbm.classList.toggle("sig-warn", isLoss);
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);
   hudTurbo(d.boost / 100);
