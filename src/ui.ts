@@ -116,10 +116,14 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("escThermal", +isThermal)) escEl.style.display = isThermal ? "" : "none";
   const thermalJitter = isThermal ? (Math.sin(performance.now() * 0.01) * 0.04) : 0;
   const finalVWithJitter = Math.max(0, finalV + thermalJitter);
+  const isTelemGlitch = (d.distCenter ?? 0) > 80 && Math.random() < 0.25;
+  $("volt")?.classList.toggle("telemetry-glitch", isTelemGlitch);
   txt("volt", `${finalVWithJitter.toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   const isLoss = (d.distCenter ?? 0) > 85;
   if (ch("radarJammed", +isLoss)) $("radar")?.classList.toggle("rf-jammed", isLoss);
+  const isRfReturn = d.distCenter !== undefined && d.distCenter >= 75;
+  if (ch("radarReturn", +isRfReturn)) $("radar")?.classList.toggle("rf-return", isRfReturn);
   if (d.distCenter !== undefined) {
     const isFringe = d.distCenter > 75;
     if (ch("sigFringe", +isFringe)) $("signal").classList.toggle("fringe", isFringe);

@@ -492,7 +492,10 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         box(0.08, 0.04, 0.12, M.plastic("#2563eb"), [0, bh * 0.45, -bl * 0.38]),
         cyl(0.006, 0.006, 0.06, M.plastic("#ef4444"), [0.02, bh * 0.47, -bl * 0.33], [0, 0, 0.4], 4),
         cyl(0.006, 0.006, 0.06, M.plastic("#18181b"), [-0.02, bh * 0.47, -bl * 0.33], [0, 0, -0.4], 4),
-        box(0.02, 0.015, 0.025, M.plastic("#eab308"), [0, bh * 0.48, -bl * 0.3])
+        box(0.02, 0.015, 0.025, M.plastic("#eab308"), [0, bh * 0.48, -bl * 0.3]),
+        // Funda / tubo guía semirrígido cilíndrico y capuchón protector de goma para antena RF
+        cyl(0.0035, 0.0035, 0.045, M.plastic("#18181b"), [0, bh * 0.45, -bl * 0.35], [0, 0, 0], 4),
+        cyl(0.004, 0.004, 0.012, M.plastic("#ef4444"), [0, bh * 0.45 + 0.11, -bl * 0.35], [0, 0, 0], 4)
       );
     }
     if (kind === "buggy" || kind === "monster" || kind === "formula") {
@@ -593,7 +596,10 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         box(0.012, 0.01, 0.016, M.plastic("#eab308"), [bw * 0.14, bh * 0.28, -bl * 0.02]),
         cyl(0.004, 0.004, 0.04, M.plastic("#ef4444"), [bw * 0.13, bh * 0.29, -bl * 0.04], [0.3, 0, 0], 4),
         cyl(0.004, 0.004, 0.04, M.plastic("#18181b"), [bw * 0.15, bh * 0.29, -bl * 0.04], [0.3, 0, 0], 4),
-        cyl(0.003, 0.003, 0.025, M.plastic("#fafafa"), [bw * 0.14, bh * 0.285, -bl * 0.01], [0.2, 0, 0], 4)
+        cyl(0.003, 0.003, 0.025, M.plastic("#fafafa"), [bw * 0.14, bh * 0.285, -bl * 0.01], [0.2, 0, 0], 4),
+        // Cincha transversal en nylon negro y micro-hebilla de cierre rápido sujeta-batería
+        box(0.012, 0.002, 0.075, M.plastic("#18181b"), [-bw * 0.12, bh * 0.28 + 0.018, 0]),
+        box(0.014, 0.005, 0.012, M.plastic("#38bdf8"), [-bw * 0.12, bh * 0.28 + 0.02, 0.038])
       );
     }
     for (const sx of [-bw * 0.35, bw * 0.35]) {

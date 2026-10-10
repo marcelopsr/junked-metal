@@ -3,6 +3,7 @@ import { carModel, type CarKind, type CarModel, type CarOpts } from "./models";
 import { shadows } from "./render";
 import { BAL } from "./balance";
 import { FX } from "./fx";
+import { at, FOOT, flatL, groundGap, MOON, moonCar, toLocal, toWorld } from "./moon";
 
 // Precio y manejo de cada auto salen de balance.json (tabla autos)
 const stats = (k: CarKind) => { const a = BAL.autos[k]; return { cost: a.precio, hp: a.vida, speed: a.velocidad, accel: a.aceleracion, turn: a.giro, grip: a.agarre, ram: a.embestida, mass: a.masa }; };
@@ -27,8 +28,10 @@ export const CARS: Record<CarKind, { name: string; desc: string; cost: number; h
 // nosotros decidimos velocidad hacia adelante, agarre lateral y giro.
 export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
   o: { throttle: number; steer: number; speed: number; accel: number; turn: number; grip: number }) {
-  const v = body.getLinearVelocity();
-  const fwd = mesh.forward.clone(); fwd.y = 0; fwd.normalize();
+  // Luna: todo se piensa en el marco local del auto (Y = vertical del lugar) y la velocidad vuelve al mundo al final
+  const L = MOON.on, P = mesh.position;
+  const v = L ? toLocal(body.getLinearVelocity(), P) : body.getLinearVelocity();
+  const fwd = L ? flatL(mesh.forward, P) : mesh.forward.clone(); fwd.y = 0; fwd.normalize();
   const right = B.Vector3.Cross(UP, fwd);
   let fs = B.Vector3.Dot(v, fwd);
   let ls = B.Vector3.Dot(v, right);
@@ -50,14 +53,20 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
 
   // En el aire no hay control. Rayo corto hacia abajo (no v.y: subiendo una rampa v.y es grande y hay que poder doblar)
   const hh = mesh.getBoundingInfo().boundingBox.extendSize.y;
-  rayFrom.copyFrom(mesh.position); rayTo.copyFrom(rayFrom); rayTo.y -= hh + 0.9; // en rampa el centro queda más alto que hh
-  (mesh.getScene().getPhysicsEngine() as B.PhysicsEngineV2).raycastToRef(rayFrom, rayTo, ray, { ignoreBody: body });
-  if (!ray.hasHit) {
-    if (bAny._prevV) bAny._prevV.copyFrom(v);
-    return { fs, ls, grounded: false, slope: 0, impactSpeed, impactPan };
+  let ny = 1;
+  if (L) { // luna: piso analítico (moon.ts), el mismo que deforman los cráteres
+    const g = groundGap(P, hh);
+    if (g.gap > 0.9) { if (bAny._prevV) bAny._prevV.copyFrom(v); return { fs, ls, grounded: false, slope: 0, impactSpeed, impactPan }; }
+    ny = g.ny;
+  } else {
+    rayFrom.copyFrom(mesh.position); rayTo.copyFrom(rayFrom); rayTo.y -= hh + 0.9; // en rampa el centro queda más alto que hh
+    (mesh.getScene().getPhysicsEngine() as B.PhysicsEngineV2).raycastToRef(rayFrom, rayTo, ray, { ignoreBody: body });
+    if (!ray.hasHit) {
+      if (bAny._prevV) bAny._prevV.copyFrom(v);
+      return { fs, ls, grounded: false, slope: 0, impactSpeed, impactPan };
+    }
+    ny = ray.hitNormal.y;
   }
-
-  const ny = ray.hitNormal.y;
   const slope = Math.min(1, Math.sqrt(Math.max(0, 1 - ny * ny))); // 0 = plano, ~1 = rampa empinada
 
   const t = o.throttle;
@@ -69,16 +78,17 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
 
   // Fricción mecánica en diferencial/transmisión al acelerar fuerte desde parado o patinar
   if (t > 0.8 && Math.abs(fs) < 1.5 && Math.random() < 0.2) {
-    sparkPos.set(mesh.position.x - fwd.x * 0.4, mesh.position.y + 0.15, mesh.position.z - fwd.z * 0.4);
+    at(mesh.position, -fwd.x * 0.4, 0.15, -fwd.z * 0.4, sparkPos);
     FX.transmissionSpark(sparkPos);
   }
 
   const nv = fwd.scale(fs).addInPlace(right.scale(ls));
   nv.y = v.y;
-  body.setLinearVelocity(nv);
+  body.setLinearVelocity(L ? toWorld(nv, P) : nv);
   if (!bAny._prevV) bAny._prevV = new B.Vector3();
   bAny._prevV.copyFrom(nv);
-  body.setAngularVelocity(new B.Vector3(0, o.steer * o.turn * B.Scalar.Clamp(fs / 4, -1, 1), 0));
+  const w = o.steer * o.turn * B.Scalar.Clamp(fs / 4, -1, 1);
+  body.setAngularVelocity(L ? mesh.up.scale(w) : new B.Vector3(0, w, 0)); // luna: gira sobre su propia vertical
   return { fs, ls, grounded: true, slope, impactSpeed, impactPan };
 }
 
@@ -90,7 +100,9 @@ export class Car {
   agg: B.PhysicsAggregate;
   def;
   torqueRoll = 0;
+  squatPitch = 0;
   private steerRoll = 0;
+  private basePitch = 0;
   private lastFs = 0;
 
   private paintBase: B.Color3;
@@ -115,6 +127,8 @@ export class Car {
       { mass: d.mass, friction: 0.2, restitution: 0.1, extents: new B.Vector3(w, h, l) }, scene);
     this.body = this.agg.body;
     this.setMass(d.mass);
+    FOOT.set(this.body, h / 2); // luna: el piso analítico apoya la caja por su base
+    if (MOON.on) moonCar(this.body);
   }
 
   // Havok reemplaza TODAS las propiedades de masa en cada llamada: siempre mandar la inercia.
@@ -147,6 +161,7 @@ export class Car {
     // Torsión reactiva del chasis (torque twist al acelerar fuerte desde parado/baja velocidad)
     const fwd = throttle !== undefined ? throttle : ((this.body as unknown as { _throttle?: number })._throttle ?? 0);
     this.body.getLinearVelocityToRef(tmpV);
+    if (MOON.on) toLocal(tmpV, this.root.position, tmpV); // luna: velocidad en el marco del lugar (vy = vertical)
     const spd = Math.hypot(tmpV.x, tmpV.z);
     const isLaunching = fwd > 0.8 && spd < 2.0;
     const driveMul = (this.def as { drive?: string }).drive === "rwd" ? 1.25 : 1.0;
@@ -154,13 +169,19 @@ export class Car {
     const damp = Math.max(0, Math.min(1, dt > 0 ? 12 * dt : 0.2));
     this.torqueRoll += (targetTorqueRoll - this.torqueRoll) * damp;
 
+    // Cabeceo reactivo por transferencia de masas en arrancada dura (Rear Squat)
+    const driveMult = this.def.drive === "rwd" ? 1.3 : this.def.drive === "fwd" ? 0.7 : 1.0;
+    const targetSquat = (fwd > 0.8 && spd < 2.5) ? -0.045 * driveMult : 0;
+    this.squatPitch += (targetSquat - this.squatPitch) * (dt > 0 ? Math.min(1, 10 * dt) : 0.18);
+
     const k = 1 - Math.exp(-8 * dt);
     this.steerRoll = B.Scalar.Lerp(this.steerRoll, -steer * B.Scalar.Clamp(fs / maxSpeed, -1, 1) * 0.16, k);
     this.vis.rotation.z = this.steerRoll + this.torqueRoll;
 
     // Cabeceo según la trayectoria (rampas y saltos): el colisionador no vuelca, la carrocería sí apunta hacia donde va
     const vy = tmpV.y, pitch = Math.abs(fs) > 2 ? B.Scalar.Clamp(-Math.atan(vy / fs), -0.5, 0.5) : 0;
-    this.vis.rotation.x = B.Scalar.Lerp(this.vis.rotation.x, B.Scalar.Clamp(-acc * 0.004, -0.08, 0.08) + pitch, k);
+    this.basePitch = B.Scalar.Lerp(this.basePitch, B.Scalar.Clamp(-acc * 0.004, -0.08, 0.08) + pitch, k);
+    this.vis.rotation.x = this.basePitch + this.squatPitch;
     // Rebote al aterrizar: se aplasta y recupera con un resorte amortiguado
     if (this.lastVy < -4 && vy > -1) { this.bounce = Math.min(0.3, -this.lastVy * 0.03); this.bT = 0; }
     this.lastVy = vy;

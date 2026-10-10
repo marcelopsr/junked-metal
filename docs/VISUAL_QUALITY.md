@@ -967,6 +967,25 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #47 (Ecosistema Matricial de Especialistas: Cincha/Antena 3D, SFX WheelSpin, Rear Squat car.ts y Radar Retorno HUD)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 22.1 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Cincha de nylon sujeta-batería y funda semirrígida de antena 2.4 GHz (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - Incorporada cincha transversal en cinta de nylon negro (`M.plastic("#18181b")`) con micro-hebilla de cierre rápido en cian técnico (`#38bdf8`) asegurando el pack LiPo Hardcase contra la bandeja del chasis en buggies y monster trucks.
+   - Añadida funda semirrígida cilíndrica envolviendo el tercio inferior del mástil de la antena con capuchón protector de goma en rojo competición (`M.plastic("#ef4444")`) en la cúspide, fusionadas con **0 draw calls adicionales**.
+2. **Micro-chasquidos de arenilla `wheelSpin` y oclusión espacial (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.wheelSpin(slip, pan)` con limitador `gate("wheelspin", 12)` modulando volumen y frecuencia ante patinamiento o pérdida de tracción lateral, recreando el chasquido de gravilla proyectada contra los pasos de rueda.
+   - Añadida utilidad `occludeLowpass(cutoff, q)` para amortiguar frecuencias agudas en impactos y fuentes sonoras tras obstáculos sólidos del patio.
+3. **Cabeceo reactivo por transferencia de masas (*Rear Squat*) en arrancadas (Combat Feel & VFX Specialist · `src/car.ts`):**
+   - Integrada propiedad `Car.squatPitch` calculando el hundimiento transitorio del tren trasero y elevación del morro (~2.5°) al abrir gas a fondo desde baja velocidad, diferenciando según configuración de tracción (RWD 1.3 vs FWD 0.7) y desacoplado limpiamente con `basePitch` para evitar derivas acumulativas con 0 GC allocations.
+4. **Vector diegético de retorno a base en radar y micro-glitch de telemetría (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - Enlace crítico periférico (>75m) activa la clase `.rf-return` en `#radar` con distintivo `▲ BASE` parpadeando en rojo alarma para guiar al piloto de regreso a zona de cobertura.
+   - Activada clase `.telemetry-glitch` que produce micro-interferencias estocásticas en el voltímetro ante pérdida severa de paquetes.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

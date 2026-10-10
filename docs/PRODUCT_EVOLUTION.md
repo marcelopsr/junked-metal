@@ -768,36 +768,53 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
   - **Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`):** Tinte dinámico diegético en antena `#signal` (`.sig-fringing` en ámbar `#f59e0b` entre 60-75m, `.sig-critical` en rojo `#ef4444` >75m) y alerta estroboscópica de trama corrupta `CRC ERR ${pktLoss}%` con `.sig-pkt.crc-err` cuando la pérdida supera el 40%.
 - **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (509 ms), `npm run test:restart`, `npm run shots -- --only garaje,partida,carrera` (17 capturas en PC y móvil en 22.3 s sin errores) y `graphify update .` (3546 nodos, 8358 aristas).
 
+### Ciclo #47 (2026-10-10) — Cincha/Antena 3D, SFX WheelSpin, Rear Squat en car.ts y Retorno Radar HUD
+- **Alcance implementado por los 4 Especialistas:**
+  - **Procedural 3D & Folded Modeler (`src/models.ts`):** Cincha transversal en cinta de nylon negro (`M.plastic("#18181b")`) con micro-hebilla rápida en cian técnico (`#38bdf8`) abrazando el pack LiPo Hardcase contra la bandeja del chasis; más funda semirrígida cilíndrica de antena y capuchón protector de goma en rojo competición (`M.plastic("#ef4444")`) en el mástil superior, con **0 draw calls adicionales**.
+  - **Audio & Synth Sound Designer (`src/sfx.ts`):** Micro-chasquidos de arenilla y patinamiento `SFX.wheelSpin(slip, pan)` con limitador `gate("wheelspin", 12)` combinando onda triangular en graves y ruido pasabanda a 2800 Hz; más utilidad de oclusión espacial `occludeLowpass(cutoff, q)` para simular amortiguación acústica tras obstáculos.
+  - **Combat Feel & VFX Specialist (`src/car.ts`):** Cabeceo reactivo por transferencia dinámica de masas en arrancada dura (*Rear Squat*) en `Car.squatPitch`, modulado por tipo de tracción (`driveMult` RWD 1.3 vs FWD 0.7) y compuesto con `basePitch` para una respuesta visual visceral con 0 allocations.
+  - **Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`):** Vector diegético de retorno a base en radar `#radar.rf-return` con distintivo `▲ BASE` pulsante en rojo alarma cuando la distancia supera los 75m; y micro-glitch analógico `.telemetry-glitch` en el voltímetro ante interferencias severas de radiofrecuencia.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (8/8 suites, 75 tests OK), `npm run build` (564 ms), `npm run test:restart`, `npm run shots -- --only garaje,partida,carrera` (17 capturas en PC y móvil en 22.1 s sin errores) y `graphify update .` (3633 nodos, 8713 aristas).
+
 ---
 
-## 4. Backlog Vivo de Oportunidades — Ciclo #47 (Evolución Multidisciplinaria)
+## 4. Backlog Vivo de Oportunidades — Ciclo #48 (Evolución Multidisciplinaria)
 
 ### A. Especialista 1 · Procedural 3D & Folded Modeler (`src/models.ts`)
-1. **(Recomendada) Cincha de Velcro de Sujeción de Batería LiPo y Capuchón de Antena 2.4 GHz:**
-   - **Qué es:** Añadir en chasis expuestos (`buggy`, `monster`) una cincha transversal en cinta de nylon negro (`M.matte("#18181b")`) con micro-hebilla plástica que abrace el pack Hardcase contra la bandeja, y un tubo protector semirrígido de antena con capuchón de goma en color de acento (`M.plastic("#ef4444")`).
-   - **Valor:** Máxima fidelidad y encanto de automodelo RC real en Garaje, Taller y Podio con 0 draw calls al fusionar en `parts`. Complejidad: Baja.
+1. **(Recomendada) Tirantes de Refuerzo de Chasis Superior en Fibra de Carbono y Torre de Amortiguación CNC:**
+   - **Qué es:** Añadir tirantes diagonales superiores de rigidez en chasis expuestos (`buggy`, `monster`) emulando fibra de carbono mate (`M.matte("#1e293b")`) y torres de suspensión delantera con agujeros de anclaje múltiple en aluminio anodizado.
+   - **Valor:** Extraordinario nivel de maqueta de competición RC visible en el Garaje y Podio con 0 draw calls al fusionar en `parts`. Complejidad: Baja.
 
 ### B. Especialista 2 · Audio & Synth Sound Designer (`src/sfx.ts`)
-2. **Micro-texturas Procedurales de Pérdida de Tracción (`SFX.wheelSpin`) y Oclusión Acústica Ligera:**
-   - **Qué es:** Síntesis de micro-chasquidos de gravilla y patinamiento modulados por el deslizamiento lateral (`car.ls`) al transitar límites entre cemento y charcos/tierra, más filtrado paso bajo (~600–900 Hz) en colisiones detrás de obstáculos.
-   - **Valor:** Telemetría auditiva inmediata al piloto sobre pérdida de adherencia antes del trompo. Complejidad: Baja-Media.
+2. **Resonancia de Grava al Aterrizar y Freno Motor Regenerativo:**
+   - **Qué es:** Añadir chasquido de gravilla y dispersión de arenilla al aterrizar de saltos con rebote (`SFX.gravelThud`), junto con zumbido agudo descendente de freno regenerativo/motor brushless al soltar acelerador a fondo.
+   - **Valor:** Tactilidad acústica instantánea en saltos del patio y desaceleraciones. Complejidad: Baja-Media.
 
 ### C. Especialista 3 · Combat Feel & VFX Specialist (`src/car.ts`)
-3. **Compresión Asimétrica Trasera por Transferencia de Masas en Arrancada (*Rear Squat*):**
-   - **Qué es:** Añadir hundimiento transitorio del tren trasero (*squat*) y elevación de morro de 15-20 mm a escala RC al acelerar a fondo desde reposo, complementando el *torque twist* transversal para máxima sensación de masa y potencia.
-   - **Valor:** Comportamiento dinámico creíble y visceral del chasis en aceleraciones. Complejidad: Media.
+3. **Brake Dive Reactivo en Clavada de Frenos y Rebote Asimétrico en Aterrizajes:**
+   - **Qué es:** Hundimiento reactivo del morro y elevación de zaga (+0.04 rad en X) cuando el jugador frena violentamente a alta velocidad (*Brake Dive*), simétrico al *Rear Squat*, más balanceo lateral en Z en aterrizajes con alabeo.
+   - **Valor:** Sensación de inercia viva y suspensión independiente en frenadas al límite. Complejidad: Media.
 
 ### D. Especialista 4 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-4. **Vector de Retorno RF en Radar y Micro-Glitch de Caracteres por Interferencia Severa:**
-   - **Qué es:** Dibujar un pulso o vector tenue hacia el transmisor central en `#radar` cuando el enlace entra en estado crítico (>75m), y simular un micro-glitch aleatorio de dígitos en el voltímetro o timer ante pérdida severa (>50%).
-   - **Valor:** Utilidad táctica para evitar la pérdida total del vehículo en límites de mapa y sensación diegética de telemetría analógica. Complejidad: Baja-Media.
+4. **Micro-Brújula Diegética de Rumbo y Aviso de Retorno Automático Failsafe:**
+   - **Qué es:** Indicador circular tenue de rumbo de navegación en `#radar` (`N / S / E / O`) y aviso de telemetría `FAILSAFE RX: SEÑAL LÍMITE` parpadeando en la base del HUD cuando el vínculo entra en pérdida crítica.
+   - **Valor:** Orientación inmediata en zonas periféricas del mapa y sensación inmersiva de radio-control. Complejidad: Baja.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #46 completado y validado en paralelo con 4 Especialistas (`tsc` 0 errores, `test` 75/75, `build` limpio en 509 ms, 17 capturas en `.shots/actual/` en 22.3 s, grafo en 3546 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #47**.
+- **Último trabajo completado:** Ciclo #47 completado y validado con los 4 Especialistas (`tsc` 0 errores, `test` 75/75, `build` limpio en 564 ms, 17 capturas en `.shots/actual/` en 22.1 s, grafo en 3633 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #48**.
+
+### 🔓 LISTO PARA EL CICLO #48 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+
+| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
+|---|---|---|
+| **Procedural 3D Modeler** | Tirantes de fibra de carbono y torres de amortiguación CNC | `src/models.ts` |
+| **Audio Synth Designer** | Resonancia de grava en aterrizajes y freno regenerativo | `src/sfx.ts` |
+| **Combat Feel & VFX** | Brake dive en clavada de frenos y rebote asimétrico | `src/car.ts` |
+| **Diegetic HUD & Telemetry** | Micro-brújula de rumbo en radar y aviso Failsafe RX | `src/ui.ts`, `src/hud.css` |
 
 ### 🔓 LISTO PARA EL CICLO #47 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
@@ -807,15 +824,6 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 | **Audio Synth Designer** | Micro-chasquidos de gravilla/patinamiento `wheelSpin` | `src/sfx.ts` |
 | **Combat Feel & VFX** | Hundimiento trasero por transferencia de pesos (*Rear Squat*) | `src/car.ts` |
 | **Diegetic HUD & Telemetry** | Vector de retorno RF en radar y micro-glitch analógico | `src/ui.ts`, `src/hud.css` |
-
-### 🔓 LISTO PARA EL CICLO #46 (Ecosistema de Especialistas Matriciales, 2026-10-10)
-
-| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
-|---|---|---|
-| **Procedural 3D Modeler** | Latiguillos mallados de freno y válvulas Schrader en llantas | `src/models.ts` |
-| **Audio Synth Designer** | Modulación de superficie en derrapes y pitch-shift Doppler | `src/sfx.ts` |
-| **Combat Feel & VFX** | Torque twist / torsión elástica de chasis en arrancada en `car.ts` | `src/car.ts` |
-| **Diegetic HUD & Telemetry** | Desacople de antena con tinte por estado y alerta CRC ERR | `src/ui.ts`, `src/hud.css` |
 
 ### Ciclo #44 (2026-10-10) — Telemetría LiPo con Curva Post-Sag, Audio Diegético `bodyThud` y Fricción 540 / Banco Cinemático 3D Completo (Frenchie, Buggy, Entorno y Eulalio)
 - **Alcance implementado en producción (`src/`):**

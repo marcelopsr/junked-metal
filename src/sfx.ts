@@ -232,6 +232,23 @@ function hiss(
   s.stop(t + dur + 0.02);
 }
 
+/**
+ * Crea o configura un nodo de filtro pasabajos para simular oclusión acústica por obstáculos sólidos.
+ */
+export function occludeLowpass(cutoff = 700, q = 1.0): BiquadFilterNode | null {
+  if (!ctx) return null;
+  const fl = ctx.createBiquadFilter();
+  fl.type = "lowpass";
+  fl.frequency.setValueAtTime(cutoff, ctx.currentTime);
+  fl.Q.setValueAtTime(q, ctx.currentTime);
+  return fl;
+}
+
+/** Micro-chasquidos de pérdida de tracción y gravilla proyectada contra chasis/pasos de rueda. */
+export function wheelSpin(slip?: number, pan?: number) {
+  SFX.wheelSpin(slip, pan);
+}
+
 // ---------- Sonidos del juego ----------
 let combo = 0, comboT = 0;
 // Melodía del camioncito de helados (ponytail: notas fijas, onda triangular; ~6 s)
@@ -325,6 +342,12 @@ export const SFX = {
     tone("sawtooth", 440, 1100, 0.12, 0.15, 0.04);
   },
   turboRelay: () => { tone("square", 1800, 400, 0.015, 0.1); tone("triangle", 220, 80, 0.03, 0.12, 0.015); },
+  wheelSpin: (slip = 1, pan?: number) => {
+    if (!gate("wheelspin", 12)) return;
+    const s = Math.max(0.1, Math.min(2.5, slip));
+    tone("triangle", 220, 140, 0.05, 0.08 * s, 0, pan);
+    hiss("bandpass", 2800, 900, 0.06, 0.12 * s, pan);
+  },
   brakeScreech: (pan?: number) => { tone("sawtooth", 950, 420, 0.12, 0.16, 0, pan); tone("triangle", 600, 300, 0.08, 0.12, 0.03, pan); },
   teslaDischarge: (pan?: number, dist?: number) => {
     if (!gate("tesla-arc", 16)) return;
