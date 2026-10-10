@@ -683,41 +683,61 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 4. Backlog Vivo de Oportunidades — Ciclo #39 (Especialistas Matriciales)
 
+### Ciclo #39 (2026-10-10) — Ecosistema Matricial de Especialistas: Piezas en Catálogo/Rótulo en Taller, RSSI dBm/ESC Temp en HUD, XT60-ESC y R-Pins 3D, Absorción de Agudos SFX
+- **Alcance implementado por 4 especialistas en paralelo (partición disjunta estricta):**
+  - **Especialista 1 · Menu, Workshop & Flow (`src/menu.ts`, `src/menu.css`):**
+    - Vista previa reactiva de piezas (`peek.part`) en el catálogo del Taller (`#shop [data-buy^="part:"]`), visualizando cómo calza el accesorio en el pedestal antes de comprar.
+    - Rótulo técnico diegético `<div id="swLabel" class="sw-label">CÓD. PNT #HEX · TONO TALLER</div>` al pie de la paleta sincronizado en tiempo real con perillas HSV y muestras `.sw`.
+  - **Especialista 2 · Diegetic HUD & Telemetry (`src/ui.ts`, `src/hud.css`):**
+    - Lectura numérica diegética RSSI en dBm (`<span id="sigDbm" class="sig-dbm">${dbm} dBm</span>`) calculada según la distancia al transmisor base (-42 dBm nominal a -94 dBm exterior).
+    - Etiqueta de aviso térmico `<span id="escTemp" class="esc-temp">ESC: 85°C</span>` en rojo incandescente bajo el voltímetro durante la sobrecarga del variador.
+  - **Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`):**
+    - Caja de variador electrónico de velocidad (ESC) con disipador aleteado en aluminio oscuro y cableado siliconado de alta corriente hacia la batería en chasis descubiertos.
+    - 4 torretas de carrocería en nylon negro con pasadores en horquilla metálicos (R-pins) cromados en todas las carrocerías.
+  - **Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`):**
+    - Amortiguación atmosférica de frecuencias agudas por distancia (*HF Damping*) en `hiss(..., dist)`.
+    - Paneo estéreo direccional en el chispazo de arco voltaico `SFX.zap(pan)`.
+- **Evidencia de validación:** `npx tsc --noEmit -p .` (0 errores), `npm test` (75/75 pasando), `npm run build` (410 ms), `pm2 restart rc-test`, `npm run shots -- --only garaje,partida,carrera,match3` (33 capturas en PC y celular sin errores en 30.2 s) y `graphify update .` (3332 nodos, 7965 aristas).
+
+---
+
+## 4. Backlog Vivo de Oportunidades — Ciclo #40 (Especialistas Matriciales)
+
 ### A. Especialista 1 · Menu, Workshop & Flow Specialist (`src/menu.ts`, `src/menu.css`)
-1. **(Recomendada) Vista Previa de Piezas en Catálogo del Taller (`#shop [data-buy]`) y Rótulo Técnico de Color (`.sw-label`):**
-   - **Qué es:** Extender `peek.part` al catálogo de compras del Taller para previsualizar alerones o paragolpes montados en el auto antes de gastar tornillos, más etiqueta técnica (ej. *"CÓD. PNT #D62828 · ROJO LLAMA"*) al recorrer la paleta.
-   - **Valor:** Máxima fluidez y certeza de compra estética sin desvíos de interfaz. Complejidad: Baja-Media.
+1. **(Recomendada) Badge Diegético de Ranura en Piezas (`[ALERÓN]`, `[DEFENSA]`) y Clic Escalonado de Paleta:**
+   - **Qué es:** Mostrar la ranura funcional antes del nombre de cada pieza en venta en el Taller para evitar confusiones de montaje, más micro-clic acústico analógico al recorrer la paleta con cruceta/teclado.
+   - **Valor:** Máxima claridad de compra y tactilidad de perilla escalonada de taller RC. Complejidad: Baja.
 
 ### B. Especialista 2 · Diegetic HUD & Telemetry Specialist (`src/ui.ts`, `src/hud.css`)
-2. **Lectura Numérica RSSI en dBm (`#signal .rssi-dbm`) y Micro-Aviso Térmico de Variador/ESC (`#escTemp`):**
-   - **Qué es:** Mostrar valor numérico de atenuación analógica de señal (-45 dBm a -94 dBm) en el panel de antena, más micro-aviso `"ESC: 85°C / ALTA"` adyacente al voltímetro durante `.thermal-stress`.
-   - **Valor:** Profundiza la atmósfera diegética de radiocontrol profesional (estilo OpenTX/EdgeTX). Complejidad: Media.
+2. **Micro-Parpadeo Analógico en Señal Fringe (`.fringe-jitter`) y Termómetro Dinámico del ESC:**
+   - **Qué es:** Jitter numérico analógico en los decibelios dBm al caer por debajo de -80 dBm, más graduación dinámica de temperatura del variador (65°C nominal a 95°C de corte) en lugar de valor estático.
+   - **Valor:** Realismo hardcore de transmisión analógica RC (OpenTX/EdgeTX). Complejidad: Media.
 
 ### C. Especialista 3 · Procedural 3D & Folded Modeler (`src/models.ts`)
-3. **Conector XT60 con Cables Hacia Variador (ESC) y Clips Pasadores de Carrocería (R-Pins):**
-   - **Qué es:** Enlace de cables rojo/negro de alta corriente desde el LiPo hacia la caja del variador en chasis descubiertos, más pasadores metálicos en horquilla (R-clips) en los postes de sujeción de carrocería.
-   - **Valor:** Riqueza visual milimétrica en vista de garaje y cámaras en primer plano. Complejidad: Baja.
+3. **Motor Eléctrico 540 con Piñón/Corona Visible y Servomotor de Dirección con Horn:**
+   - **Qué es:** Lata metálica cilíndrica del motor brushless tamaño 540 con piñón de bronce y corona dentada en el eje trasero, más servomotor delantero con brazo (horn) en nylon blanco.
+   - **Valor:** Cierra visualmente la cadena cinemática completa de auto RC a escala 1:10. Complejidad: Media.
 
 ### D. Especialista 4 · Audio & Synth Sound Designer (`src/sfx.ts`)
-4. **Amortiguación Acústica de Agudos por Distancia (HF Air Absorption) y Paneo en Armas Perimetrales:**
-   - **Qué es:** Modulación dinámica del filtro pasa-bajos según distancia para simular absorción del aire sobre frecuencias altas, más enrutamiento de paneo espacial a proyectiles/armas perimetrales (`tesla`, `sierra`, `flame`).
-   - **Valor:** Paisaje sonoro 3D hiperrealista y lectura táctica periférica sin costo computacional. Complejidad: Media.
+4. **Paneo Dinámico en Descargas Tesla y Curva de HF Damping en Primitiva `tone()`:**
+   - **Qué es:** Calcular el ángulo relativo de los objetivos alcanzados por arco eléctrico para enviar `pan` dinámico a `SFX.zap`, más amortiguación de armónicos agudos en `tone(..., dist)`.
+   - **Valor:** Lectura auditiva periférica tridimensional y sensación física de distancia. Complejidad: Media.
 
 ---
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #38 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 467 ms, 33 capturas en `.shots/actual/` en 30 s de render, grafo en 3313 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #39** con los Especialistas Matriciales.
+- **Último trabajo completado:** Ciclo #39 completado y validado con los 4 Especialistas Matriciales (`tsc` 0 errores, `test` 75/75, `build` 410 ms, 33 capturas en `.shots/actual/` en 30.2 s, grafo en 3332 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #40** con los Especialistas Matriciales.
 
-### 🔓 LISTO PARA EL CICLO #39 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #40 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Menu, Workshop & Flow** | Vista previa de piezas en catálogo del taller y rótulo técnico de color | `src/menu.ts`, `src/menu.css` |
-| **Diegetic HUD & Telemetry** | Lectura RSSI en dBm en antena y micro-aviso térmico ESC 85°C | `src/ui.ts`, `src/hud.css` |
-| **Procedural 3D Modeler** | Conector XT60 hacia ESC y pasadores R-pins en torretas de carrocería | `src/models.ts` |
-| **Audio Synth Designer** | Amortiguación de agudos por distancia (HF Damping) y paneo en armas | `src/sfx.ts` |
+| **Menu, Workshop & Flow** | Badges de ranura `[ALERÓN]` en compras de taller y clic de paleta | `src/menu.ts`, `src/menu.css` |
+| **Diegetic HUD & Telemetry** | Jitter numérico RSSI en fringe y termómetro graduado dinámico de ESC | `src/ui.ts`, `src/hud.css` |
+| **Procedural 3D Modeler** | Motor 540 con piñón/corona dentada y servo con horn de dirección | `src/models.ts` |
+| **Audio Synth Designer** | Paneo en descargas Tesla y amortiguación HF en `tone(..., dist)` | `src/sfx.ts` |
 
 
 ## 2026-10-10 · Muestra cinematográfica 3D local (tanda visual independiente)

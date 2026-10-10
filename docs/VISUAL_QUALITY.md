@@ -824,6 +824,27 @@ Carrera (1) y Survivor en partida (2).
    - Se incorporó el factor de caída acústica `distGain = Math.max(0.12, 1 / (1 + dist * 0.04))` en `SFX.spatialAlert(pan, dist)` y `SFX.spatialHiss(pan, dur, dist)`.
    - Se actualizó `SFX.ram(powerOrPan, pan)` permitiendo colisiones con paneo estéreo direccionado en la onda senoidal y en la capa sorda de choque.
 
+---
+
+## 2026-10-10 · Ciclo #39 (Ecosistema Matricial de Especialistas: Piezas en Catálogo/Rótulo en Taller, RSSI dBm/ESC Temp en HUD, XT60-ESC y R-Pins 3D, Absorción de Agudos SFX)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/pc-carrera-curso.png`, `.shots/actual/pc-match3-juego.png` (`npm run shots -- --only garaje,partida,carrera,match3`, 33 capturas en PC y celular sin errores en 30.2 s).
+
+### Intervenciones aplicadas por los 4 Especialistas y verificadas en captura
+1. **Previsualización de piezas en compras del Taller y rótulo técnico en Paleta (Menu, Workshop & Flow Specialist · `src/menu.ts`, `src/menu.css`):**
+   - En `renderShop()`, al posar el cursor o enfocar piezas en venta (`stab === "piezas"`), se activa temporalmente `peek.part`, permitiendo ver el alerón, rodado o defensa montado sobre el auto del pedestal antes de gastar tornillos.
+   - En `renderPaint()`, se añadió al pie de la paleta el rótulo técnico `<div id="swLabel" class="sw-label">CÓD. PNT #HEX · TONO TALLER</div>`, sincronizado en tiempo real con la navegación de muestras y perillas HSV.
+2. **Lectura numérica de señal RSSI en dBm y micro-aviso térmico de ESC en HUD (Diegetic HUD & Telemetry Specialist · `src/ui.ts`, `src/hud.css`):**
+   - En `#signal`, se inyectó la lectura diegética `<span id="sigDbm" class="sig-dbm">${dbm} dBm</span>` calculada a partir de la distancia al centro (-42 dBm nominal a -94 dBm periférico).
+   - En `#volt`, se incorporó la etiqueta de alerta térmica `<span id="escTemp" class="esc-temp">ESC: 85°C</span>` en rojo incandescente al activarse la condición de sobrecarga prolongada.
+3. **Caja de variador electrónico (ESC) y torretas con pasadores R-pins (Procedural 3D & Folded Modeler · `src/models.ts`):**
+   - En `carModel()`, los chasis abiertos (`buggy`, `monster`, `formula`) incorporan la caja del variador de velocidad electrónico (ESC) en aluminio oscuro con aletas de refrigeración y cableado siliconado hacia la batería.
+   - En todas las carrocerías se modelaron 4 postes cilíndricos de torreta de sujeción atravesados por pasadores en horquilla (R-pins) metálicos cromados.
+4. **Absorción atmosférica de altas frecuencias (HF Damping) y paneo en arcos eléctricos (Audio & Synth Sound Designer · `src/sfx.ts`):**
+   - En la primitiva `hiss()`, se implementó la amortiguación de corte de agudos por distancia `finalF0 = Math.max(450, f0 / (1 + dist * 0.025))` para mayor realismo acústico de eventos distantes.
+   - Se actualizó `SFX.zap(pan)` permitiendo paneo estéreo direccional para impactos de chispas y descargas de plasma.
+
+---
 
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 

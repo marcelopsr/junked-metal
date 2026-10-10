@@ -96,6 +96,8 @@
   #race:not(.split) .rp .rlap { top: max(10px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); font-size: 20px; padding: 6px 12px; }
   #race:not(.split) .rp .rtime { top: calc(max(10px, env(safe-area-inset-top)) + 42px); left: max(12px, env(safe-area-inset-left)); font-size: 15px; }
   #race:not(.split) .rp .ritem { top: calc(max(10px, env(safe-area-inset-top)) + 66px); left: max(12px, env(safe-area-inset-left)); translate: none; min-width: 64px; min-height: 64px; }
+  /* Las insignias (REBUFO, SUCCIÓN, DERRAPE...) se acomodan en filas hacia arriba, sin pasar por encima de la posición de la izquierda */
+  #race:not(.split) .rp .rspd { right: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100vw - 168px); font-size: 22px; padding: 6px 10px; }
 }
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
   #race:not(.split) #rmap { top: max(10px, env(safe-area-inset-top)); right: max(8px, env(safe-area-inset-right)); width: 88px; height: 88px; }
@@ -112,8 +114,9 @@
   #race:not(.split) .rp .ritem:empty::after { font-size: 34px; }
 }
 @media (max-width: 720px) and (orientation: portrait) {
-  #rres { justify-content: flex-end; align-items: center; gap: 6px; padding: 12px 12px max(14px, env(safe-area-inset-bottom)); background: linear-gradient(180deg, transparent 22%, rgba(11, 15, 20, .92) 48%); }
-  #rres .rtitle { font-size: 22px; text-align: center; }
+  #rres { justify-content: flex-end; align-items: center; gap: 6px; padding: 12px 12px max(14px, env(safe-area-inset-bottom)); background: linear-gradient(180deg, transparent 14%, rgba(11, 15, 20, .92) 38%); }
+  #rres .rtitle { font-size: 22px; text-align: center; margin-bottom: 4px; }
+  #rres th { color: #d4dde6; }
   #rres table { font-size: 14px; border-spacing: 0 2px; min-width: 94vw; }
   #rres td { padding: 4px 8px; }
   #rinfo { font-size: 13px; text-align: center; }

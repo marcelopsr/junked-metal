@@ -495,6 +495,21 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         box(0.02, 0.015, 0.025, M.plastic("#eab308"), [0, bh * 0.48, -bl * 0.3])
       );
     }
+    if (kind === "buggy" || kind === "monster" || kind === "formula") {
+      parts.push(
+        box(0.04, 0.025, 0.045, M.metal("#3f3f46"), [0, bh * 0.42, -bl * 0.18]),
+        cyl(0.006, 0.006, 0.08, M.plastic("#ef4444"), [0.01, bh * 0.425, -bl * 0.18 - 0.04], [Math.PI / 2, 0, 0], 4),
+        cyl(0.006, 0.006, 0.08, M.plastic("#18181b"), [-0.01, bh * 0.425, -bl * 0.18 - 0.04], [Math.PI / 2, 0, 0], 4)
+      );
+    }
+    for (const sx of [-bw * 0.35, bw * 0.35]) {
+      for (const sz of [-bl * 0.32, bl * 0.32]) {
+        parts.push(
+          cyl(0.005, 0.005, 0.04, M.plastic("#18181b"), [sx, bh * 0.72, sz], [0, 0, 0], 4),
+          box(0.012, 0.003, 0.003, chrome, [sx, bh * 0.735, sz])
+        );
+      }
+    }
     if (kind === "carrera" || (kind as string) === "deportivo") {
       parts.push(box(0.004, 0.09, 0.16, M.matte("#27272a"), [bw * 0.45, bh * 0.65, 0]));
     }

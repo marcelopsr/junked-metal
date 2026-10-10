@@ -140,3 +140,6 @@ export const beastIcon = (id: string, size = 38) => {
   return `<svg class="ico jm-ico" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${g.c[0]}"/><stop offset="1" stop-color="${g.c[1]}"/></linearGradient></defs><g fill="url(#${gid})" stroke="#0B0F14" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${g.d}</g>${g.e ?? ""}</svg>`;
 };
 
+
+// Ícono de cada mejora permanente del taller (menú y HUD).
+export const PERK_ICON: Record<string, string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", reroll: "resorte", extra: "cofre", revive: "heal", cards: "evo", arm: "lego", reg: "heal", tur: "turbo", ram: "lanza", cdr: "capacitor" };

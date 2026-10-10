@@ -187,7 +187,7 @@ export const sessions = [
     { id: "farol", act: lab({ climate: "farol" }) },
     { id: "hormigas300", act: labAnts, shot: false }, // solo medición: 300 instancias
     { id: "preset-bajo", act: async (p) => { await labReady(p); await p.evaluate(() => { window.__cfg({ preset: "bajo" }); window.__lab({}); }); } }, // preajuste Bajo (lo demás corre en Medio, el de fábrica)
-    { id: "fsr-fxaa", act: async (p) => { await labReady(p); await p.evaluate(() => { window.__cfg({ preset: "medio", scaler: "fsr", fsr: "rendimiento", aa: "fxaa", sharpen: 0.6 }); window.__lab({}); }); } }, // FXAA antes del agrandado de FSR
+    { id: "fsr-fxaa", act: async (p) => { await labReady(p); await p.evaluate(() => { window.__cfg({ preset: "medio", scaler: "fsr", fsr: "rendimiento", aa: "fxaa", sharpen: 0.6 }); window.__lab({}); window.__tick(8); }); await p.waitForTimeout(400); } }, // FXAA antes del agrandado de FSR; los postprocesos nuevos compilan sus shaders en los primeros cuadros (con 3 sale el fondo liso): se les da tiempo
     // Modos de cámara (Configuración → Juego), al final de la sesión: __cfg cambia el modo sin guardar y __lab rearma la escena. En cel solo los fijos
     ...["actual", "cenital", "iso", "baja", "dinamica"].map((m) => ({ id: "cam-" + m, perf: false, vps: m === "actual" || m === "dinamica" ? ["pc"] : undefined,
       act: async (p) => { await labReady(p); await p.evaluate((m) => { window.__cfg({ preset: "medio", scaler: "simple", aa: "none", sharpen: 0, camMode: m }); window.__lab({}); }, m); } })),

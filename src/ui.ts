@@ -5,12 +5,10 @@ import "@fontsource/silkscreen/400.css";
 import "@fontsource/silkscreen/700.css";
 import "./style.css";
 import "./hud.css";
-import { beastIcon, icon, uiIconUrl } from "./icons";
+import { beastIcon, icon, PERK_ICON, uiIconUrl } from "./icons";
 import { isTouch, KEYS } from "./input";
 
 const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram", "cdr"] as const;
-// ponytail: copia de menu.PERK_ICON (ui no puede importar menu: kart ↔ menu)
-const WSHOP_ICON: Record<(typeof WSHOP_KEYS)[number], string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", arm: "lego", reg: "heal", tur: "turbo", ram: "lanza", cdr: "capacitor" };
 import { WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
 
@@ -46,7 +44,7 @@ export function hudWorkshop(perm: Partial<Record<(typeof WSHOP_KEYS)[number], nu
   box.classList.remove("hidden");
   const key = items.map((k) => `${k}:${perm[k]}`).join(",");
   if (!ch("wshop", key)) return;
-  box.innerHTML = `<span class="h-tape">TALLER</span><div class="ws">${items.map((k) => `<span class="ws-i">${icon(WSHOP_ICON[k], 16)}<b>${perm[k]}</b></span>`).join("")}</div>`;
+  box.innerHTML = `<span class="h-tape">TALLER</span><div class="ws">${items.map((k) => `<span class="ws-i">${icon(PERK_ICON[k], 16)}<b>${perm[k]}</b></span>`).join("")}</div>`;
 }
 
 let boostHold = 0;
@@ -90,6 +88,15 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   boostHold = d.boostActive ? Math.min(120, boostHold + 1) : 0;
   const isThermal = boostHold >= 30 || Boolean(d.heat && d.heat > 0.8);
   if (ch("thermalStress", +isThermal)) $("volt").classList.toggle("thermal-stress", isThermal);
+  let escEl = document.getElementById("escTemp");
+  if (!escEl) {
+    escEl = document.createElement("span");
+    escEl.id = "escTemp";
+    escEl.className = "esc-temp";
+    escEl.textContent = "ESC: 85°C";
+    $("volt").insertAdjacentElement("afterend", escEl);
+  }
+  if (ch("escThermal", +isThermal)) escEl.style.display = isThermal ? "" : "none";
   txt("volt", `${displayV.toFixed(1)}V${low ? " · BAJA" : ""}`);
   txt("hpTxt", `${Math.ceil(Math.max(0, d.hp))} / ${d.maxHp}`);
   if (d.distCenter !== undefined) {
@@ -98,6 +105,17 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     const isLoss = d.distCenter > 85;
     if (ch("rfLoss", +isLoss)) $("signal").classList.toggle("rf-loss", isLoss);
   }
+  const dbm = Math.round(-42 - Math.min(52, ((d.distCenter ?? 0) / 90) * 52));
+  let sigDbm = document.getElementById("sigDbm");
+  if (!sigDbm) {
+    sigDbm = document.createElement("span");
+    sigDbm.id = "sigDbm";
+    sigDbm.className = "sig-dbm";
+    const anchor = document.getElementById("sigBars") ?? document.getElementById("sigIco");
+    if (anchor?.parentNode) anchor.parentNode.insertBefore(sigDbm, anchor.nextSibling);
+    else $("signal")?.appendChild(sigDbm);
+  }
+  if (ch("sigDbm", dbm)) sigDbm.textContent = `${dbm} dBm`;
   bar("boost", d.boost);
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);
   hudTurbo(d.boost / 100);

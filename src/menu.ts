@@ -8,7 +8,7 @@ import { DEF, type Kind } from "./enemies";
 import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { ARSENAL, PILOTS, type PilotId } from "./pilots";
-import { beastIcon, icon, UI_BTN_ICON, uiIcon } from "./icons";
+import { beastIcon, icon, PERK_ICON, UI_BTN_ICON, uiIcon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
 import { engineTest, initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
@@ -482,7 +482,6 @@ const PERKS: { k: PermK; cat: "chasis" | "equipo"; name: string; desc: string; c
   { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: costos("cards"), fx: ["Opciones por carta", (l) => `${3 + l}`] },
 ];
 // Íconos: también los usará la mesa de taller 3D para mostrar cada mejora como pieza (id = clave de perm, hab:<habilidad>, arma:<arma>)
-export const PERK_ICON: Record<PermK, string> = { hp: "litio", dmg: "lupa", spd: "turbo", mag: "iman", xp: "capacitor", reroll: "resorte", extra: "cofre", revive: "heal", cards: "evo", arm: "lego", reg: "heal", tur: "turbo", ram: "lanza", cdr: "capacitor" };
 export const ABIL_ICON: Record<AbilityId, string> = { bombardeo: "petardos", escudo: "heal", emp: "tesla", lenta: "reloj" };
 const abilCost = (k: AbilityId) => costos("hab_" + k);
 const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;
@@ -534,14 +533,15 @@ let pz: keyof typeof PZ = "paint";
 export const startPick = (): WeaponId => (owns("arma:" + save.weapon) ? save.weapon : "gomitas");
 /** Lo que hay que mostrar sobre el auto (garaje, portada y partida). */
 // Vista previa en el garaje: con el foco (mouse, teclado o control) sobre algo bloqueado o muestra de pintura, el modelo lo muestra
-export const peek: { car?: CarKind; pilot?: PilotId; part?: [Slot, string]; paint?: string } = {};
+export type PeekPart = [Slot, string] | { slot: Slot; opt: string };
+export const peek: { car?: CarKind; pilot?: PilotId; part?: PeekPart; paint?: string } = {};
 export const shownCar = (): CarKind => peek.car ?? save.car;
 export const carOpts = (): CarOpts => ({
   paint: (pz === "paint" && peek.paint !== undefined ? peek.paint : save.paint) || undefined,
   trim: (pz === "trim" && peek.paint !== undefined ? peek.paint : save.trim) || undefined,
   rim: (pz === "rim" && peek.paint !== undefined ? peek.paint : save.rim) || undefined,
   ...save.kit,
-  ...(peek.part ? { [peek.part[0]]: peek.part[1] } : {}),
+  ...(peek.part ? (Array.isArray(peek.part) ? { [peek.part[0]]: peek.part[1] } : { [peek.part.slot]: peek.part.opt }) : {}),
   pilot: peek.pilot ?? save.pilot,
   sticker: save.decals[save.decalSel] || undefined,
 });
@@ -550,9 +550,19 @@ addEventListener("focusin", (e) => {
   if (inf) $("sinfo").textContent = inf.dataset.info!;
   const sw = (e.target as HTMLElement).closest?.("#paint [data-sw]") as HTMLElement | null;
   if (!sw) peek.paint = undefined;
+  const shopPart = (e.target as HTMLElement).closest?.('#shop [data-buy^="part:"]') as HTMLElement | null;
   const el = (e.target as HTMLElement).closest?.(".locked[data-k],.locked[data-pilot],.locked[data-part]") as HTMLElement | null;
-  peek.car = peek.pilot = peek.part = undefined;
-  if (!el || current() !== "garage") return;
+  peek.car = peek.pilot = undefined;
+  if (shopPart && current() === "shop") {
+    const [, sl, o] = (shopPart.dataset.buy ?? "").split(":") as [string, Slot, string];
+    if (sl && o) peek.part = Object.assign([sl, o] as [Slot, string], { slot: sl, opt: o });
+    return;
+  }
+  if (!el || current() !== "garage") {
+    if (!shopPart) peek.part = undefined;
+    return;
+  }
+  peek.part = undefined;
   const d = el.dataset;
   if (d.k) peek.car = d.k as CarKind; else if (d.pilot) peek.pilot = d.pilot as PilotId; else if (d.part) peek.part = d.part.split(":") as [Slot, string];
 });
@@ -582,6 +592,7 @@ function shopItems(): ShopItem[] {
   return UNLOCKS[stab]().map((u) => { const own = owns(u.id); return { attr: `data-buy="${u.id}"`, name: u.name, desc: u.desc, ico: u.icon, cost: own || u.ach ? undefined : u.cost, ach: u.ach, bought: own, fx: u.fx }; });
 }
 function renderShop() {
+  if (stab !== "piezas" && current() === "shop") peek.part = undefined;
   $("bank").textContent = `${save.scrap.toLocaleString("es-ES")} tornillos`;
   $("stabs").innerHTML = tabsHtml(STABS, stab, "stab");
   const allItems = shopItems();
@@ -598,6 +609,28 @@ function renderShop() {
     return `<button class="carc perk ${ok(i) ? "" : "no"}" ${i.attr} data-info="${info}" aria-disabled="${!ok(i)}"><b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${i.fx ? `<span class="sfx">${i.fx}</span>` : ""}${pips}<div class="price">${price}</div></button>`;
   }).join("") || `<div class="note">Nada por acá con este filtro. El patio no regala nada.</div>`;
   $("sinfo").textContent = "Enfoca una mejora para ver qué cambia y cuánto falta.";
+  if (stab === "piezas") {
+    $("shop").querySelectorAll<HTMLElement>('[data-buy^="part:"]').forEach((b) => {
+      const parts = (b.dataset.buy ?? "").split(":");
+      const slot = parts[1] as Slot, opt = parts[2];
+      if (!slot || !opt) return;
+      const setPeek = () => {
+        peek.part = Object.assign([slot, opt] as [Slot, string], { slot, opt });
+      };
+      const clearPeek = (e?: FocusEvent) => {
+        if (e && (e.relatedTarget as HTMLElement)?.closest?.("#ask")) return;
+        const curSlot = Array.isArray(peek.part) ? peek.part[0] : peek.part?.slot;
+        const curOpt = Array.isArray(peek.part) ? peek.part[1] : peek.part?.opt;
+        if (curSlot === slot && curOpt === opt) {
+          peek.part = undefined;
+        }
+      };
+      b.addEventListener("mouseenter", setPeek);
+      b.addEventListener("mouseleave", () => clearPeek());
+      b.addEventListener("focus", setPeek);
+      b.addEventListener("blur", clearPeek);
+    });
+  }
 }
 const GTABS = { auto: "Auto", piloto: "Piloto", arma: "Arma", habilidad: "Habilidad", pintura: "Pintura", piezas: "Piezas" };
 let gtab: keyof typeof GTABS = "auto";
@@ -693,9 +726,10 @@ let pfilt: PaintFilter = "todos";
 function hsvBars(h: number, sat: number, v: number) {
   const el = $("paint");
   el.style.setProperty("--hue", hsv2hex(h, 100, 100)); el.style.setProperty("--sat0", hsv2hex(h, 0, v)); el.style.setProperty("--sat1", hsv2hex(h, 100, v)); el.style.setProperty("--val1", hsv2hex(h, sat, 100));
-  const c = hsv2hex(h, sat, v), chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot");
+  const c = hsv2hex(h, sat, v), chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot"), lbl = document.getElementById("swLabel");
   if (chip) { chip.style.background = c; chip.textContent = c.toUpperCase(); }
   if (dot) dot.style.background = c;
+  if (lbl) lbl.textContent = `CÓD. PNT ${c.toUpperCase()} · TONO TALLER`;
 }
 function renderPaint() {
   const cur = zoneColor(), [h, sat, v] = hex2hsv(cur), mine = !!save[pz];
@@ -713,6 +747,7 @@ function renderPaint() {
   $("paint").innerHTML = statusPill + `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
     + filterBar
     + `<div class="pal">${PAINTS.map((c) => `<button class="${["sw", isGlossy(c) && "glossy", mine && c === cur && "on", isHidden(c) && "hidden"].filter(Boolean).join(" ")}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
+    + `<div id="swLabel" class="sw-label">CÓD. PNT ${cur.toUpperCase()} · TONO TALLER</div>`
     + `<div class="hsv"><div class="hsvt"><span><i id="pzdot" class="sw-dot" style="background:${cur}"></i>${PZ[pz]} · ${mine ? "Personalizado" : "De fábrica"}</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
     + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
     + `<div class="note">${pz === "trim" ? "Detalles: alerón, paragolpes, defensas y accesorios." : pz === "rim" ? "Llantas de las cuatro ruedas (o de las que haya)." : "Carrocería: la chapa entera."} Pintar es gratis: el patio cobra en otras cosas.</div>`;
@@ -722,17 +757,19 @@ function renderPaint() {
     if (!c) return;
     const setPeek = () => {
       peek.paint = c;
-      const chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot");
+      const chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot"), lbl = document.getElementById("swLabel");
       if (chip) { chip.style.background = c; chip.textContent = c.toUpperCase(); }
       if (dot) dot.style.background = c;
+      if (lbl) lbl.textContent = `CÓD. PNT ${c.toUpperCase()} · TONO TALLER`;
     };
     const clearPeek = () => {
       if (peek.paint === c) {
         peek.paint = undefined;
         const base = zoneColor();
-        const chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot");
+        const chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot"), lbl = document.getElementById("swLabel");
         if (chip) { chip.style.background = base; chip.textContent = base.toUpperCase(); }
         if (dot) dot.style.background = base;
+        if (lbl) lbl.textContent = `CÓD. PNT ${base.toUpperCase()} · TONO TALLER`;
       }
     };
     b.addEventListener("mouseenter", setPeek);

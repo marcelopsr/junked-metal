@@ -72,6 +72,7 @@ body.calm .scr.on { animation-duration: .05s; }
 #paint .pal { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
 #paint .pal .sw { position: relative; width: auto; height: 34px; min-height: 0; }
 .sw.glossy::after { content: ""; position: absolute; top: 1px; right: 1px; width: 4px; height: 4px; border-radius: 50%; background: #fff; opacity: .7; pointer-events: none; }
+.sw-label { margin-top: 6px; font: 700 11px/1 var(--hf); color: var(--g-dim); letter-spacing: .06em; text-transform: uppercase; }
 #paint .hsv { display: flex; flex-direction: column; gap: 6px; }
 #paint .hsvt { display: flex; align-items: center; gap: 8px; color: #fff; font: 600 13px/1 var(--data); letter-spacing: .1em; text-transform: uppercase; }
 #paint .hsvt .sw-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .7); vertical-align: middle; margin-right: 6px; box-shadow: 0 0 6px rgba(0, 0, 0, .6); }
@@ -481,6 +482,8 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tAbil, #tPause, #tCam)::after { co
 #scr-bestiary[data-btab="logros"] #beasts { grid-template-columns: repeat(auto-fill, minmax(225px, 1fr)); }
 #scr-bestiary[data-btab="stats"] #beasts { max-height: max(180px, calc(100dvh - 320px)); grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 720px) { #scr-bestiary[data-btab="stats"] #beasts { grid-template-columns: 1fr; } }
+/* Celular: las 4 pestañas (con contadores) no caben en una fila: grilla de 2x2 y la lista cede esa altura para que el título no se corte arriba */
+@media (max-width: 520px) { #btabs { display: grid; grid-template-columns: 1fr 1fr; } #scr-bestiary:not([data-btab="stats"]) #beasts { max-height: max(220px, calc(100dvh - 256px)); } }
 #scr-bestiary #records { max-height: 15vh; overflow-y: auto; display: block; flex: none; background: rgba(11, 15, 20, .92); border: 1px solid var(--jm-borde); border-top: 2px solid var(--jm-chapa); border-radius: var(--jm-r); padding: 4px 10px; box-shadow: inset 0 0 0 1px #000, 0 6px 16px rgba(0, 0, 0, .4); }
 #scr-bestiary #records.hidden { display: none; }
 #beasts .ficha { padding-top: 8px; padding-bottom: 8px; }
