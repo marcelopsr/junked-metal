@@ -30,15 +30,16 @@ function ring(name, major, minor, around, section) {
   const data = new B.VertexData(); data.positions = positions; data.indices = indices; data.normals = normals;
   const mesh = new B.Mesh(name, scene); data.applyToMesh(mesh); mesh.material = tireMat; return mesh;
 }
-for (let i = 0; i < 4; i++) { const m = ring('actual-tire-' + i, 8, 2.75, 40, 10); m.position.set(-14, 2.75 + i * 5.3, 0); shadows.addShadowCaster(m); }
+for (let i = 0; i < 3; i++) { const m = ring('actual-tire-' + i, 8, 2.75, 40, 10); m.position.set(-14, 2.75 + i * 5.3, 0); shadows.addShadowCaster(m); }
 
 try {
-  const container = await B.LoadAssetContainerAsync('./exports/tires-3.glb', scene);
+  const container = await B.LoadAssetContainerAsync('../../smoothvoxels/v1/exports/folded-stack.glb', scene);
   container.addAllToScene();
-  const voxel = new B.TransformNode('magicaVoxelCandidate', scene);
+  const voxel = new B.TransformNode('smoothVoxelCandidate', scene);
   for (const node of container.rootNodes) node.parent = voxel;
   for (const mesh of container.meshes) if (mesh.getTotalVertices()) shadows.addShadowCaster(mesh);
-  voxel.position.set(14, -4, 0); voxel.scaling.setAll(10);
+  voxel.rotation.x = Math.PI / 2;
+  voxel.position.set(14, 8, -13.25); voxel.scaling.setAll(10);
   await scene.whenReadyAsync();
   fitCamera();
   status.textContent = 'Ambas pilas cargadas · vista comparativa';

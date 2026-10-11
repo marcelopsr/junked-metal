@@ -60,6 +60,8 @@ Gemini puede aplicar estos recursos o producir variantes de forma autónoma dent
 
 **Utilería voxel MagicaVoxel — v1 (2026-10-10):** `assets-src/magicavoxel/v1/` contiene 15 fuentes `.vox` en cinco familias y tres semillas, además de cinco GLB representativos con textura embebida exportados desde MagicaVoxel y convertidos con Blender. Se abrieron e inspeccionaron las familias en MagicaVoxel; verificador local confirma formato y mallas. Biblioteca disponible para cualquier sesión; no está integrada a las partidas ni publicada. Comparativa local de neumáticos Folded vs voxel: `assets-src/magicavoxel/v1/comparison.html`. Ver su `README.md` para conversión y límites.
 
+**Corrección visual explícita del usuario (2026-10-10):** para los props que sigan la línea activa, «esférico» significa volumen 3D redondeado/curvo, no geometría de bloques. El neumático es un aro toroidal porque esa es su forma física. `assets-src/smoothvoxels/v1/` contiene la nueva prueba de tres aros redondeados, fuente MagicaVoxel de alta resolución procesada en Smooth Voxels, export GLB y comparativa pc/cel. Sigue fuera del gameplay: la geometría actual es demasiado pesada para tomarla como asset final de móvil sin reducirla y medirla.
+
 ## Prompt listo para Gemini
 
 ```text
