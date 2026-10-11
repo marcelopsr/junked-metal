@@ -533,6 +533,24 @@ export const SFX = {
     tone("sine", 50, 50, 0.4, vol * 0.8, 0, pan);
     hiss("bandpass", 1200, 300, 0.25, vol * 0.3, pan);
   },
+  /** Chorro de aire comprimido a presión de pistola neumática para limpieza de chasis y virutas. */
+  airBlow: (duration = 0.22, pan?: number) => {
+    if (!gate("air-blow", 5)) return;
+    const dur = Math.max(0.08, Math.min(0.6, duration));
+    hiss("bandpass", 3200, 1600, dur, 0.22, 0, pan);
+    hiss("highpass", 4800, 2200, dur * 0.8, 0.16, 0.01, pan);
+    tone("triangle", 180, 80, 0.04, 0.12, 0, pan);
+  },
+  /** Ticks rápidos de trinquete de micro-brida Zip-Tie de nylon al tensarse contra el chasis. */
+  zipTieZip: (pan?: number) => {
+    if (!gate("ziptie-zip", 4)) return;
+    for (let i = 0; i < 5; i++) {
+      const delay = i * 0.018;
+      const p = 1 + i * 0.08;
+      tone("triangle", 2800 * p, 4200 * p, 0.012, 0.08, delay, pan);
+      tone("square", 3400 * p, 2100 * p, 0.008, 0.05, delay, pan);
+    }
+  },
 };
 
 

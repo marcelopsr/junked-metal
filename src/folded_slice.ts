@@ -1405,4 +1405,275 @@ export function millingMachineFold(): B.Mesh {
   return m;
 }
 
+/** Compresor de aire con calderín horizontal de taller Folded: calderín cilíndrico horizontal en chapa de presión roja industrial
+ *  con cabezas convexas semiesféricas/achatadas, patas de apoyo delanteras en V con silentblocks de goma negra,
+ *  eje transversal trasero con 2 ruedas de goma maciza sobre llantas de chapa estampada roja,
+ *  asa tubular curva frontal de arrastre en acero curvado, bancada superior soldada sustentando motor eléctrico monofásico
+ *  aleteado con carcasa de condensador superior, cabezal compresor de 2 cilindros en V con aletas radiales de fundición,
+ *  cárter de aceite con ojo de buey de nivel y filtros de aspiración cilíndricos, volante de fundición con aspas de ventilación,
+ *  cubrepoleas en rejilla de alambre troquelada, tubo de descarga de cobre con aletas de refrigeración y válvula de retención,
+ *  y bloque de control con presostato, interruptor basculante rojo, 2 manómetros en latón/blanco, regulador de presión moleteado,
+ *  enchufe rápido hembra de latón, válvula de seguridad con anilla de tiro y grifo de purga de condensados inferior. */
+export function airCompressorFold(): B.Mesh {
+  const { G, done } = kit();
+  const redTank = FOLD.painted("#b91c1c", 0.85, 320);
+  const motorDark = FOLD.painted("#1e293b", 0.8, 318);
+  const brass = FOLD.painted("#d97706", 0.65, 282);
+  const copper = FOLD.painted("#ea580c", 0.65, 323);
+  const redValve = FOLD.painted("#dc2626", 0.7, 324);
+  const bare = FOLD.bare(), dark = FOLD.dark(), rubber = FOLD.rubber();
+
+  // 1. Calderín cilíndrico horizontal de presión con cabezas convexas semiesféricas achatadas
+  along(G, 2.2, 2.2, 3.8, redTank, [0, 1.85, 0], 16);
+  // Anillos de soldadura circunferenciales (costuras de unión de virolas)
+  along(G, 2.24, 2.24, 0.08, dark, [0, 1.85, 0], 16);
+  along(G, 2.24, 2.24, 0.08, dark, [0, 1.85, 1.9], 16);
+  along(G, 2.24, 2.24, 0.08, dark, [0, 1.85, -1.9], 16);
+  // Cabeza trasera convexa achatada (-Z)
+  G.cyl(2.14, 0.32, redTank, [0, 1.85, -2.06], [Math.PI / 2, 0, 0], 16, 1.8);
+  G.cyl(1.8, 0.24, redTank, [0, 1.85, -2.28], [Math.PI / 2, 0, 0], 14, 1.3);
+  G.cyl(1.3, 0.16, redTank, [0, 1.85, -2.44], [Math.PI / 2, 0, 0], 12, 0.7);
+  G.cyl(0.7, 0.08, dark, [0, 1.85, -2.52], [Math.PI / 2, 0, 0], 8);
+  // Cabeza delantera convexa achatada (+Z)
+  G.cyl(2.14, 0.32, redTank, [0, 1.85, 2.06], [Math.PI / 2, 0, 0], 16, 1.8);
+  G.cyl(1.8, 0.24, redTank, [0, 1.85, 2.28], [Math.PI / 2, 0, 0], 14, 1.3);
+  G.cyl(1.3, 0.16, redTank, [0, 1.85, 2.44], [Math.PI / 2, 0, 0], 12, 0.7);
+  G.cyl(0.7, 0.08, dark, [0, 1.85, 2.52], [Math.PI / 2, 0, 0], 8);
+  // Placa de características técnicas y timbrado de presión
+  G.plate([1.11, 1.85, 0.2], [0, Math.PI / 2, 0], 0.75, 0.45, FOLD.painted("#e2e8f0", 0.5, 322));
+  G.box(0.02, 0.06, 0.55, dark, [1.12, 1.95, 0.2]);
+  G.box(0.02, 0.04, 0.45, dark, [1.12, 1.85, 0.2]);
+  G.box(0.02, 0.04, 0.5, dark, [1.12, 1.75, 0.2]);
+  G.rivets([1.12, 2.02, -0.12], [1.12, 2.02, 0.52], 2, [1, 0, 0]);
+  G.rivets([1.12, 1.68, -0.12], [1.12, 1.68, 0.52], 2, [1, 0, 0]);
+  // Calcos de advertencia diegéticos
+  G.decal([-1.11, 1.85, -0.3], [0, -Math.PI / 2, 0], "warning", 0.55);
+  G.trimStrip([0, 1.85, -1.9], [Math.PI / 2, 0, 0], 2.2, 0.1, "hazard", 0.05);
+
+  // 2. Patas delanteras de apoyo en chapa doblada en V con tacos/silentblocks de goma negra
+  for (const sx of [-1, 1]) {
+    G.box(0.18, 0.35, 0.35, redTank, [sx * 0.55, 0.95, 1.35]);
+    G.box(0.14, 0.88, 0.28, redTank, [sx * 0.78, 0.52, 1.35], [0, 0, -sx * 0.32]);
+    G.box(0.28, 0.1, 0.32, dark, [sx * 0.96, 0.14, 1.35]);
+    G.cyl(0.55, 0.14, rubber, [sx * 0.96, 0.07, 1.35], undefined, 10);
+    G.bolts([sx * 0.96, 0.16, 1.35], [sx * 0.96, 0.16, 1.35], 1, [0, 1, 0]);
+  }
+
+  // 3. Eje transversal trasero con 2 ruedas de goma maciza sobre llantas de chapa estampada roja
+  for (const sx of [-1, 1]) {
+    G.box(0.16, 0.75, 0.32, redTank, [sx * 0.65, 0.78, -1.35]);
+    G.cyl(0.42, 0.25, dark, [sx * 0.65, 0.6, -1.35], [0, 0, Math.PI / 2], 8);
+  }
+  G.cyl(0.16, 2.9, bare, [0, 0.6, -1.35], [0, 0, Math.PI / 2], 8);
+  for (const sx of [-1, 1]) {
+    G.cyl(1.2, 0.32, rubber, [sx * 1.35, 0.6, -1.35], [0, 0, Math.PI / 2], 16);
+    G.cyl(1.22, 0.06, dark, [sx * 1.35, 0.6, -1.35], [0, 0, Math.PI / 2], 16);
+    G.cyl(0.82, 0.34, redTank, [sx * 1.35, 0.6, -1.35], [0, 0, Math.PI / 2], 12);
+    G.cyl(0.86, 0.05, bare, [sx * (1.35 + 0.16), 0.6, -1.35], [0, 0, Math.PI / 2], 12);
+    G.cyl(0.56, 0.36, dark, [sx * 1.35, 0.6, -1.35], [0, 0, Math.PI / 2], 10);
+    G.cyl(0.26, 0.44, bare, [sx * 1.35, 0.6, -1.35], [0, 0, Math.PI / 2], 6);
+    G.bolts([sx * (1.35 + 0.22), 0.6, -1.35], [sx * (1.35 + 0.22), 0.6, -1.35], 1, [sx, 0, 0]);
+  }
+
+  // 4. Asa tubular frontal de arrastre y transporte en acero curvado con empuñadura de goma
+  G.tube([[-0.45, 1.85, 2.15], [-0.45, 2.25, 2.7], [-0.45, 2.9, 3.0], [0.45, 2.9, 3.0], [0.45, 2.25, 2.7], [0.45, 1.85, 2.15]], 0.065, bare);
+  G.cyl(0.18, 0.62, rubber, [0, 2.9, 3.0], [0, 0, Math.PI / 2], 8);
+  for (const sx of [-1, 1]) {
+    G.box(0.16, 0.16, 0.1, dark, [sx * 0.45, 1.85, 2.15]);
+    G.bolts([sx * 0.45, 1.85, 2.15], [sx * 0.45, 1.85, 2.15], 1, [0, 0, 1]);
+  }
+
+  // 5. Grifo de purga de condensados en la panza inferior del tanque
+  G.cyl(0.18, 0.25, brass, [0, 0.65, 0.2], undefined, 6);
+  G.box(0.08, 0.18, 0.45, bare, [0, 0.52, 0.2]);
+  G.cyl(0.08, 0.12, dark, [0, 0.46, 0.2], undefined, 6);
+
+  // 6. Bancada superior soldada sobre el calderín sustentando el grupo motor-compresor
+  for (const sz of [-1.0, 0.6]) {
+    G.box(1.7, 0.24, 0.16, redTank, [0, 3.02, sz]);
+    G.bend([-0.85, 3.14, sz], [0.85, 3.14, sz], 0.04, redTank);
+  }
+  G.box(1.75, 0.1, 2.5, dark, [0, 3.16, -0.2]);
+  G.box(1.68, 0.04, 2.42, bare, [0, 3.22, -0.2]);
+  G.box(0.12, 0.05, 1.2, dark, [-0.42, 3.23, -0.2]);
+  G.box(0.12, 0.05, 1.2, dark, [0.48, 3.23, -0.2]);
+
+  // 7. Motor eléctrico monofásico cilíndrico aleteado con carcasa de condensador superior
+  along(G, 1.1, 1.1, 1.35, motorDark, [0.48, 3.82, -0.15], 12);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    G.box(0.04, 1.16, 1.28, dark, [0.48 + Math.cos(a) * 0.55, 3.82 + Math.sin(a) * 0.55, -0.15], [0, 0, a]);
+  }
+  along(G, 1.18, 1.18, 0.12, dark, [0.48, 3.82, 0.55], 12);
+  along(G, 1.18, 1.18, 0.14, dark, [0.48, 3.82, -0.85], 12);
+  along(G, 1.12, 1.05, 0.35, dark, [0.48, 3.82, -1.05], 12);
+  G.grate([0.48, 3.82, -1.23], undefined, 0.72, 0.72, 3, bare);
+  G.box(1.15, 0.12, 1.1, dark, [0.48, 3.25, -0.15]);
+  G.bolts([0.15, 3.26, -0.55], [0.82, 3.26, -0.55], 2, [0, 1, 0]);
+  G.bolts([0.15, 3.26, 0.25], [0.82, 3.26, 0.25], 2, [0, 1, 0]);
+  // Carcasa de condensador superior cilíndrica
+  along(G, 0.36, 0.36, 0.82, motorDark, [0.48, 4.45, -0.15], 8);
+  G.box(0.32, 0.18, 0.78, dark, [0.48, 4.36, -0.15]);
+  along(G, 0.38, 0.38, 0.08, dark, [0.48, 4.45, 0.28], 8);
+  along(G, 0.38, 0.38, 0.08, dark, [0.48, 4.45, -0.58], 8);
+  // Caja de bornes eléctricos y cableado
+  G.box(0.22, 0.32, 0.4, dark, [1.05, 3.82, -0.15]);
+  G.cyl(0.08, 0.12, bare, [1.16, 3.82, -0.15], [0, 0, Math.PI / 2], 6);
+  G.tube([[1.15, 3.82, -0.15], [1.15, 3.45, 0.2], [0.85, 3.3, 0.55]], 0.035, dark);
+
+  // 8. Cabezal compresor de 2 cilindros en V con aletas radiales de fundición y cárter de aceite
+  G.box(1.12, 0.82, 1.05, dark, [-0.42, 3.65, -0.15]);
+  G.box(1.3, 0.12, 1.15, dark, [-0.42, 3.25, -0.15]);
+  G.bolts([-0.95, 3.26, -0.55], [0.12, 3.26, -0.55], 2, [0, 1, 0]);
+  G.bolts([-0.95, 3.26, 0.25], [0.12, 3.26, 0.25], 2, [0, 1, 0]);
+  along(G, 0.85, 0.85, 0.12, dark, [-0.42, 3.65, 0.4], 10);
+  G.bolts([-0.65, 3.65, 0.46], [-0.18, 3.65, 0.46], 2, [0, 0, 1]);
+  // Ojo de buey de nivel de aceite
+  along(G, 0.22, 0.22, 0.08, brass, [-0.42, 3.42, 0.45], 8);
+  along(G, 0.16, 0.16, 0.09, FOLD.screen("#f8fafc"), [-0.42, 3.42, 0.45], 8);
+  along(G, 0.06, 0.06, 0.1, FOLD.emissive("#ef4444"), [-0.42, 3.42, 0.45], 6);
+  // Tapón de llenado y respiradero superior
+  G.cyl(0.14, 0.24, bare, [-0.42, 4.12, 0.15], undefined, 6);
+  G.cyl(0.2, 0.08, dark, [-0.42, 4.24, 0.15], undefined, 6);
+
+  // 2 Cilindros en V a 30° con aletas radiales de refrigeración y filtros de aire
+  const headCoords: [number, number][] = [];
+  for (const side of [-1, 1]) {
+    const ang = side * 0.52;
+    const dx = Math.sin(ang), dy = Math.cos(ang);
+    const x0 = -0.42 + side * 0.22, y0 = 4.05;
+    const px = x0 + dx * 0.42, py = y0 + dy * 0.42;
+    G.cyl(0.68, 0.75, dark, [px, py, -0.15], [0, 0, -ang], 10);
+    for (let f = 0; f < 5; f++) {
+      const fx = x0 + dx * (0.15 + f * 0.12), fy = y0 + dy * (0.15 + f * 0.12);
+      G.cyl(0.88, 0.035, dark, [fx, fy, -0.15], [0, 0, -ang], 12);
+    }
+    const hx = x0 + dx * 0.88, hy = y0 + dy * 0.88;
+    headCoords.push([hx, hy]);
+    G.box(0.78, 0.32, 0.78, dark, [hx, hy, -0.15], [0, 0, -ang]);
+    G.box(0.84, 0.05, 0.84, bare, [hx + dx * 0.18, hy + dy * 0.18, -0.15], [0, 0, -ang]);
+    for (const b of [-0.26, 0.26]) {
+      G.bolts([hx + dx * 0.2 + b * dy, hy + dy * 0.2 - b * dx, -0.15 - 0.26], [hx + dx * 0.2 + b * dy, hy + dy * 0.2 - b * dx, -0.15 + 0.26], 2, [dx, dy, 0]);
+    }
+    // Filtro de aire de aspiración cilíndrico
+    const ix = hx + dx * 0.1, iy = hy + dy * 0.1;
+    G.cyl(0.14, 0.22, bare, [ix, iy, 0.24], [Math.PI / 2, 0, 0], 6);
+    G.cyl(0.48, 0.32, dark, [ix, iy, 0.42], [Math.PI / 2, 0, 0], 12);
+    for (let s = 0; s < 6; s++) {
+      const sa = (s / 6) * Math.PI * 2;
+      G.box(0.03, 0.24, 0.03, bare, [ix + Math.cos(sa) * 0.24, iy + Math.sin(sa) * 0.24, 0.42]);
+    }
+    G.cyl(0.52, 0.04, dark, [ix, iy, 0.58], [Math.PI / 2, 0, 0], 12);
+    G.cyl(0.12, 0.08, bare, [ix, iy, 0.62], [Math.PI / 2, 0, 0], 6);
+    G.box(0.25, 0.06, 0.03, bare, [ix, iy, 0.64]);
+  }
+
+  // 9. Tubo de descarga de cobre con aletas de refrigeración y válvula de retención
+  const [[h1x, h1y], [h2x, h2y]] = headCoords;
+  G.tube([[h1x, h1y, -0.25], [-0.42, 4.35, -0.35], [h2x, h2y, -0.25]], 0.055, copper);
+  G.tube([[-0.42, 4.35, -0.35], [-0.42, 3.8, -0.42], [-0.42, 3.3, 0.0], [-0.42, 3.05, 0.45]], 0.055, copper);
+  for (let k = 0; k < 8; k++) {
+    G.cyl(0.24, 0.02, copper, [-0.42, 4.15 - k * 0.12, -0.36 - k * 0.01], undefined, 8);
+  }
+  // Válvula de retención del calderín
+  G.cyl(0.26, 0.28, brass, [-0.42, 2.98, 0.45], undefined, 6);
+  G.box(0.24, 0.18, 0.24, bare, [-0.42, 3.02, 0.45]);
+  G.bolts([-0.42, 3.15, 0.45], [-0.42, 3.15, 0.45], 1, [0, 1, 0]);
+  G.tube([[-0.32, 3.02, 0.45], [-0.15, 3.02, 0.65], [0.1, 3.3, 0.85]], 0.02, copper);
+
+  // 10. Volante de fundición con aspas de ventilación, polea motriz, correas y cubrepoleas en rejilla
+  along(G, 1.55, 1.55, 0.12, dark, [-0.42, 3.65, -0.9], 16);
+  along(G, 1.58, 1.58, 0.04, bare, [-0.42, 3.65, -0.9], 16);
+  along(G, 0.42, 0.42, 0.18, dark, [-0.42, 3.65, -0.9], 10);
+  along(G, 0.22, 0.22, 0.24, bare, [-0.42, 3.65, -0.9], 6);
+  G.bolts([-0.42, 3.65, -0.98], [-0.42, 3.65, -0.98], 1, [0, 0, -1]);
+  for (let k = 0; k < 5; k++) {
+    const ba = (k / 5) * Math.PI * 2;
+    const bx = -0.42 + Math.cos(ba) * 0.46, by = 3.65 + Math.sin(ba) * 0.46;
+    G.box(0.08, 0.55, 0.05, dark, [bx, by, -0.9], [0, 0.35, ba]);
+  }
+  // Polea del motor
+  along(G, 0.52, 0.52, 0.14, bare, [0.48, 3.82, -0.9], 12);
+  along(G, 0.46, 0.46, 0.16, dark, [0.48, 3.82, -0.9], 10);
+  G.bolts([0.48, 3.82, -0.98], [0.48, 3.82, -0.98], 1, [0, 0, -1]);
+  // Correas de transmisión trapezoidales
+  G.tube([[0.48, 4.05, -0.9], [-0.42, 4.4, -0.9]], 0.04, rubber);
+  G.tube([[0.48, 3.58, -0.9], [-0.42, 2.9, -0.9]], 0.04, rubber);
+  // Cubrepoleas de protección envolvente con rejilla troquelada
+  G.box(2.1, 1.85, 0.22, dark, [0.03, 3.65, -1.02]);
+  G.box(2.14, 0.06, 0.24, bare, [0.03, 4.58, -1.02]);
+  G.box(2.14, 0.06, 0.24, bare, [0.03, 2.72, -1.02]);
+  G.box(0.06, 1.85, 0.24, bare, [-1.02, 3.65, -1.02]);
+  G.box(0.06, 1.85, 0.24, bare, [1.08, 3.65, -1.02]);
+  G.grate([0.03, 3.65, -1.14], undefined, 1.95, 1.7, 6, bare);
+  G.box(0.08, 0.35, 0.25, redTank, [-0.42, 3.12, -0.85]);
+  G.box(0.08, 0.35, 0.25, redTank, [0.48, 3.12, -0.85]);
+  G.bolts([-0.42, 3.15, -0.92], [-0.42, 3.15, -0.92], 1, [0, 0, -1]);
+  G.bolts([0.48, 3.15, -0.92], [0.48, 3.15, -0.92], 1, [0, 0, -1]);
+
+  // 11. Bloque de control y salida neumática: presostato, manómetros, regulador y acoples rápidos
+  G.box(0.35, 0.35, 0.35, brass, [0.15, 3.3, 1.15]);
+  G.cyl(0.18, 0.35, brass, [0.15, 3.05, 1.15], undefined, 6);
+  // Presostato prismático negro e interruptor basculante rojo
+  G.box(0.55, 0.72, 0.45, dark, [0.15, 3.75, 1.15]);
+  G.bend([-0.12, 4.11, 1.15], [0.42, 4.11, 1.15], 0.03, dark);
+  G.box(0.18, 0.24, 0.12, dark, [0.15, 4.18, 1.15]);
+  G.box(0.14, 0.18, 0.14, FOLD.emissive("#ef4444"), [0.15, 4.25, 1.15], [0.25, 0, 0]);
+  G.cyl(0.1, 0.12, bare, [0.15, 3.75, 0.9], [Math.PI / 2, 0, 0], 6);
+  G.tube([[0.15, 3.75, 0.85], [0.35, 3.5, 0.6], [0.65, 3.5, 0.2]], 0.03, dark);
+
+  // Dos manómetros cilíndricos en latón/blanco con aguja indicadora
+  // Manómetro 1: Presión interna de calderín
+  along(G, 0.44, 0.44, 0.16, brass, [-0.22, 3.65, 1.42], 12);
+  along(G, 0.38, 0.38, 0.05, FOLD.screen("#f8fafc"), [-0.22, 3.65, 1.49], 12);
+  along(G, 0.46, 0.46, 0.04, dark, [-0.22, 3.65, 1.51], 12);
+  G.box(0.02, 0.16, 0.02, FOLD.emissive("#dc2626"), [-0.22 + 0.04, 3.65 + 0.04, 1.5], [0, 0, -0.65]);
+  for (let g = 0; g < 5; g++) {
+    const ga = -1.2 + g * 0.6;
+    G.box(0.015, 0.05, 0.01, dark, [-0.22 + Math.cos(ga) * 0.14, 3.65 + Math.sin(ga) * 0.14, 1.5]);
+  }
+  G.cyl(0.09, 0.25, brass, [-0.22, 3.42, 1.3], undefined, 6);
+
+  // Manómetro 2: Presión regulada de salida
+  along(G, 0.44, 0.44, 0.16, brass, [0.52, 3.65, 1.42], 12);
+  along(G, 0.38, 0.38, 0.05, FOLD.screen("#f8fafc"), [0.52, 3.65, 1.49], 12);
+  along(G, 0.46, 0.46, 0.04, dark, [0.52, 3.65, 1.51], 12);
+  G.box(0.02, 0.16, 0.02, FOLD.emissive("#dc2626"), [0.52 + 0.02, 3.65 + 0.05, 1.5], [0, 0, -0.35]);
+  for (let g = 0; g < 5; g++) {
+    const ga = -1.2 + g * 0.6;
+    G.box(0.015, 0.05, 0.01, dark, [0.52 + Math.cos(ga) * 0.14, 3.65 + Math.sin(ga) * 0.14, 1.5]);
+  }
+  G.cyl(0.09, 0.25, brass, [0.52, 3.42, 1.3], undefined, 6);
+
+  // Regulador de presión con perilla moleteada
+  G.box(0.38, 0.38, 0.35, brass, [0.15, 3.3, 1.45]);
+  G.cyl(0.32, 0.28, dark, [0.15, 3.6, 1.45], undefined, 12);
+  for (let k = 0; k < 6; k++) {
+    const ka = (k / 6) * Math.PI * 2;
+    G.box(0.03, 0.24, 0.03, bare, [0.15 + Math.cos(ka) * 0.16, 3.6, 1.45 + Math.sin(ka) * 0.16]);
+  }
+  G.cyl(0.18, 0.06, bare, [0.15, 3.76, 1.45], undefined, 8);
+
+  // Enchufe rápido hembra de salida en latón
+  along(G, 0.22, 0.22, 0.35, brass, [0.15, 3.3, 1.78], 8);
+  along(G, 0.28, 0.28, 0.18, brass, [0.15, 3.3, 1.76], 12);
+  along(G, 0.12, 0.12, 0.08, dark, [0.15, 3.3, 1.95], 8);
+  along(G, 0.26, 0.26, 0.1, bare, [0.15, 3.3, 1.58], 6);
+  // Grifo lateral directo de bola con palanca roja
+  G.cyl(0.18, 0.25, brass, [-0.08, 3.3, 1.45], [0, 0, Math.PI / 2], 6);
+  G.box(0.05, 0.08, 0.26, redValve, [-0.18, 3.42, 1.45], [0.3, 0, 0]);
+
+  // Válvula de seguridad con anilla de tiro
+  G.cyl(0.16, 0.35, brass, [0.15, 3.62, 0.95], undefined, 6);
+  G.cyl(0.2, 0.12, bare, [0.15, 3.82, 0.95], undefined, 8);
+  along(G, 0.18, 0.18, 0.04, bare, [0.15, 3.96, 0.95], 8);
+  along(G, 0.1, 0.1, 0.05, dark, [0.15, 3.96, 0.95], 8);
+
+  const parts = done(18);
+  const m = parts.length > 1 ? B.Mesh.MergeMeshes(parts, true, true, undefined, false, true)! : parts[0];
+  m.name = "airCompressorFold";
+  return m;
+}
+
+
 

@@ -1084,6 +1084,28 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #57 (Neumática de Taller & Detalle Eléctrico: Compresor con Calderín, Manguera Helicoidal con Pistola de Soplado, Manguitos Termorretráctiles y SFX)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 21.1 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Compresor de aire industrial con calderín horizontal Folded (Workshop Tools & Props 3D Modeler · `src/folded_slice.ts`):**
+   - Incorporado compresor de aire de pistón `airCompressorFold()` en chapa de presión roja industrial (`FOLD.painted("#b91c1c")`): calderín cilíndrico horizontal con cabezas convexas semiesféricas, patas en V con silentblocks de goma, eje transversal trasero con 2 ruedas macizas y llantas de chapa estampada roja, asa frontal tubular de transporte en acero curvado, y grifo de purga de condensados en la panza.
+   - Bancada superior soldada con motor eléctrico monofásico cilíndrico aleteado gris oscuro (`FOLD.painted("#1e293b")`), condensador cilíndrico superior, cabezal de 2 cilindros en V con aletas de fundición, ojo de buey de nivel de cárter, filtros de aire cilíndricos, volante con aspas de ventilación, poleas dobles, cubrepoleas envolvente de rejilla de alambre troquelada (`G.grate`), colector de descarga de cobre con 8 aletas disipadoras y válvula de retención.
+   - Bloque distribuidor con presostato electromecánico prismático con interruptor ON/OFF rojo, dos manómetros analógicos en latón con esfera blanca, manorreductor moleteado, enchufe rápido hembra de salida en latón y válvula de seguridad; 0 draw calls adicionales al compartir atlas Folded.
+2. **Manguera espiralada y pistola de soplado ergonómica en boxes (Workshop Diorama 3D Modeler · `src/menuscene.ts`):**
+   - Incorporada estación de soplado `airHoseAndBlowGun`: pistola ergonómica en aluminio pulido con empuñadura angulada, incrustaciones antideslizantes, ojal de colgado, gatillo de accionamiento en plástico negro, tornillo de caudal en latón, boquilla tubular curvada con punta cónica de alta presión (norma OSHA), y racor de acople rápido macho en latón dorado.
+   - Manguera helicoidal espiralada de poliuretano amarillo (`M.plastic("#eab308")`) con 9 espiras compactas reposando sobre la mesa junto al área de mantenimiento (`[12, 0, 7.5]`) y cayendo con curvatura continua hacia el compresor ubicado en el suelo del taller (`place(airCompressorFold(), [-30, 0, 16], [0, -0.3, 0])`); integrado en `menu_bench_props` con sombras y 0 draw calls adicionales.
+3. **Manguitos termorretráctiles y condensadores de desacoplo de RF (Procedural Vehicle 3D Modeler · `src/models.ts`):**
+   - Incorporados manguitos termorretráctiles bicolor en rojo vivo mate (`M.matte("#dc2626")`) y negro carbón mate (`M.matte("#18181b")`) enfundando los bornes de soldadura del motor Tipo 540 y las salidas de potencia del variador ESC en `buggy`, `monster`, `formula` y `carrera`.
+   - Añadidas virolas de marcado polarizado en amarillo pálido (`M.plastic("#fef08a")`) en los extremos indicando "+" y "-".
+   - Banco de dos condensadores electrolíticos en azul traslúcido (`M.plastic("#0284c7")`) con sellos superiores cromados en el variador ESC y dos condensadores cerámicos de desacoplo de radiofrecuencia soldados a la carcasa metálica de la lata del motor 540; 0 draw calls adicionales integrados en el coche con color de vértice.
+4. **Sonidos diegéticos de soplado neumático y trinquete Zip-Tie (Audio Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.airBlow(duration, pan)`: síntesis procedural de chorro de aire a alta presión combinando ruido pasabanda (3200 -> 1600 Hz) con pasaltos (4800 -> 2200 Hz) y golpe inicial sordo de onda triangular.
+   - Incorporado `SFX.zipTieZip(pan)`: tren de micro-ticks de trinquete plástico de bridas Zip-Tie al tensarse rápidamente mediante 5 impulsos con ondas triangulares y cuadradas en pitch armónico ascendente.
+
+---
+
 ## 2026-10-10 · Ciclo #56 (Fresadora Bridgeport, Lámpara de Máquina con Virutas, Micro-Bridas Zip-Ties y Zumbido Fluorescente)
 
 **Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 22.7 s).

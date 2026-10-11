@@ -502,11 +502,23 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         box(0.01, 0.008, 0.012, M.plastic("#18181b"), [0, bh * 0.42, -bl * 0.35])
       );
     }
-    if (kind === "buggy" || kind === "monster" || kind === "formula") {
+    if (kind === "buggy" || kind === "monster" || kind === "formula" || kind === "carrera") {
       parts.push(
         box(0.04, 0.025, 0.045, M.metal("#3f3f46"), [0, bh * 0.42, -bl * 0.18]),
         cyl(0.006, 0.006, 0.08, M.plastic("#ef4444"), [0.01, bh * 0.425, -bl * 0.18 - 0.04], [Math.PI / 2, 0, 0], 4),
-        cyl(0.006, 0.006, 0.08, M.plastic("#18181b"), [-0.01, bh * 0.425, -bl * 0.18 - 0.04], [Math.PI / 2, 0, 0], 4)
+        cyl(0.006, 0.006, 0.08, M.plastic("#18181b"), [-0.01, bh * 0.425, -bl * 0.18 - 0.04], [Math.PI / 2, 0, 0], 4),
+        // Manguitos termorretráctiles bicolor en las salidas del variador ESC
+        // Salida positiva (+): manguito rojo vivo mate y virola de marcado polarizada
+        cyl(0.008, 0.008, 0.016, M.matte("#dc2626"), [0.01, bh * 0.425, -bl * 0.18 - 0.025], [Math.PI / 2, 0, 0], 6),
+        cyl(0.0088, 0.0088, 0.0035, M.plastic("#fef08a"), [0.01, bh * 0.425, -bl * 0.18 - 0.031], [Math.PI / 2, 0, 0], 6),
+        // Salida negativa (-): manguito negro carbón mate y virola de marcado polarizada
+        cyl(0.008, 0.008, 0.016, M.matte("#18181b"), [-0.01, bh * 0.425, -bl * 0.18 - 0.025], [Math.PI / 2, 0, 0], 6),
+        cyl(0.0088, 0.0088, 0.0035, M.plastic("#fef08a"), [-0.01, bh * 0.425, -bl * 0.18 - 0.031], [Math.PI / 2, 0, 0], 6),
+        // Banco de condensadores electrolíticos del ESC (filtro anti-picos de tensión) con fundas cilíndricas azules
+        cyl(0.009, 0.009, 0.02, M.plastic("#0284c7"), [0.016, bh * 0.435, -bl * 0.18 + 0.012], [0, 0, 0], 8),
+        cyl(0.009, 0.009, 0.02, M.plastic("#0284c7"), [-0.016, bh * 0.435, -bl * 0.18 + 0.012], [0, 0, 0], 8),
+        cyl(0.007, 0.007, 0.003, chrome, [0.016, bh * 0.446, -bl * 0.18 + 0.012], [0, 0, 0], 6),
+        cyl(0.007, 0.007, 0.003, chrome, [-0.016, bh * 0.446, -bl * 0.18 + 0.012], [0, 0, 0], 6)
       );
     }
     if (kind === "buggy" || kind === "monster" || kind === "carrera") {
@@ -529,10 +541,30 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.006, 0.006, 0.006, chrome, [0.038, bh * 0.28 - 0.014, -bl * 0.22], [0, 0, Math.PI / 2], 6),
         // Piñón dentado de bronce en eje de salida
         cyl(0.014, 0.014, 0.012, M.metal("#d97706"), [0.042, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 8),
-        // Cables de potencia flexibles ESC-Motor
+        // Lengüetas soldadas de cobre/latón en los bornes del motor 540
+        box(0.004, 0.008, 0.005, M.metal("#d4af37"), [0.015, bh * 0.302, -bl * 0.22 + 0.025]),
+        box(0.004, 0.008, 0.005, M.metal("#d4af37"), [-0.015, bh * 0.302, -bl * 0.22 + 0.025]),
+        // Cables de potencia flexibles ESC-Motor en silicona 12AWG rojo (+) y negro (-)
         cyl(0.005, 0.005, 0.07, M.plastic("#ef4444"), [0.015, bh * 0.33, -bl * 0.22 + 0.025], [0.4, 0, 0.3], 4),
-        cyl(0.005, 0.005, 0.07, M.plastic("#2563eb"), [-0.015, bh * 0.33, -bl * 0.22 + 0.025], [0.4, 0, -0.3], 4),
-        // Condensadores cerámicos de supresión de interferencia RF soldados a la lata
+        cyl(0.005, 0.005, 0.07, M.plastic("#18181b"), [-0.015, bh * 0.33, -bl * 0.22 + 0.025], [0.4, 0, -0.3], 4),
+        // Manguitos termorretráctiles bicolor enfundando las soldaduras de los terminales del motor eléctrico Tipo 540:
+        // Lengüeta positiva (+): manguito cilíndrico en rojo vivo mate cubriendo la lengüeta y el inicio del cable rojo 12AWG
+        cyl(0.0075, 0.0075, 0.018, M.matte("#dc2626"), [0.014, bh * 0.308, -bl * 0.22 + 0.025], [0.4, 0, 0.3], 6),
+        // Virola de marcado de polaridad (+) en amarillo pálido cerca del extremo del manguito
+        cyl(0.0082, 0.0082, 0.0035, M.plastic("#fef08a"), [0.015, bh * 0.316, -bl * 0.22 + 0.025], [0.4, 0, 0.3], 6),
+        // Lengüeta negativa (-): manguito cilíndrico en negro carbón mate cubriendo la lengüeta y el cable negro
+        cyl(0.0075, 0.0075, 0.018, M.matte("#18181b"), [-0.014, bh * 0.308, -bl * 0.22 + 0.025], [0.4, 0, -0.3], 6),
+        // Virola de marcado de polaridad (-) en amarillo pálido cerca del extremo del manguito
+        cyl(0.0082, 0.0082, 0.0035, M.plastic("#fef08a"), [-0.015, bh * 0.316, -bl * 0.22 + 0.025], [0.4, 0, -0.3], 6),
+        // Dos pequeños condensadores cilíndricos de desacoplo cerámicos/electrolíticos soldados directamente entre los polos del motor y la carcasa metálica con manguitos azules
+        cyl(0.005, 0.005, 0.012, M.plastic("#0284c7"), [0.008, bh * 0.298, -bl * 0.22 + 0.027], [0.2, 0, 0.55], 6),
+        cyl(0.005, 0.005, 0.012, M.plastic("#0284c7"), [-0.008, bh * 0.298, -bl * 0.22 + 0.027], [0.2, 0, -0.55], 6),
+        // Patillas de soldadura de estaño/cromo uniendo los condensadores a las lengüetas y a la carcasa metálica
+        cyl(0.0012, 0.0012, 0.008, chrome, [0.012, bh * 0.301, -bl * 0.22 + 0.026], [0.2, 0, 0.55], 4),
+        cyl(0.0012, 0.0012, 0.008, chrome, [0.004, bh * 0.295, -bl * 0.22 + 0.027], [0.2, 0, 0.55], 4),
+        cyl(0.0012, 0.0012, 0.008, chrome, [-0.012, bh * 0.301, -bl * 0.22 + 0.026], [0.2, 0, -0.55], 4),
+        cyl(0.0012, 0.0012, 0.008, chrome, [-0.004, bh * 0.295, -bl * 0.22 + 0.027], [0.2, 0, -0.55], 4),
+        // Condensadores cerámicos de supresión de interferencia RF soldados a la culata
         box(0.006, 0.006, 0.003, M.plastic("#eab308"), [0, bh * 0.31, -bl * 0.22 + 0.025]),
         box(0.006, 0.006, 0.003, M.plastic("#eab308"), [0, bh * 0.25, -bl * 0.22 + 0.025])
       );
@@ -660,6 +692,9 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         // Terminales dorados embutidos de baja resistencia
         cyl(0.0025, 0.0025, 0.008, M.metal("#d4af37"), [bw * 0.14 - 0.0035, bh * 0.285, -bl * 0.014], [Math.PI / 2, 0, 0], 6),
         cyl(0.0025, 0.0025, 0.008, M.metal("#d4af37"), [bw * 0.14 + 0.0035, bh * 0.285, -bl * 0.014], [Math.PI / 2, 0, 0], 6),
+        // Manguitos termorretráctiles bicolor en las soldaduras del conector XT60
+        cyl(0.0055, 0.0055, 0.012, M.matte("#dc2626"), [bw * 0.14 - 0.0035, bh * 0.285, -bl * 0.024], [Math.PI / 2, 0, 0], 6),
+        cyl(0.0055, 0.0055, 0.012, M.matte("#18181b"), [bw * 0.14 + 0.0035, bh * 0.285, -bl * 0.024], [Math.PI / 2, 0, 0], 6),
         // Cables de silicona flexible 12AWG rojo (+) y negro (-) curvados saliendo hacia el variador ESC
         cyl(0.004, 0.004, 0.035, M.plastic("#ef4444"), [bw * 0.14 - 0.0035, bh * 0.285, -bl * 0.035], [0.35, 0, -0.25], 4),
         cyl(0.004, 0.004, 0.045, M.plastic("#ef4444"), [bw * 0.14 - 0.008, bh * 0.298, -bl * 0.065], [0.55, 0, -0.4], 4),

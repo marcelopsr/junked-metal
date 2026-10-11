@@ -812,17 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #56 ("Fresadora y Taller Industrial") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 582 ms, 17 capturas en `.shots/actual/` en 22.7 s, grafo en 3987 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #57**.
+- **Último trabajo completado:** Ciclo #57 ("Neumática de Taller & Detalle Eléctrico") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 680 ms, 17 capturas en `.shots/actual/` en 21.1 s, grafo en 3990 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #58**.
 
-### 🔓 LISTO PARA EL CICLO #57 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #58 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Workshop Tools & Props 3D Modeler** | Compresor de aire con calderín horizontal (`airCompressorFold`) o cizalla de chapa | `src/folded_slice.ts` |
-| **Workshop Diorama 3D Modeler** | Manguera espiralada con pistola de aire o estantería vertical de neumáticos | `src/menuscene.ts` |
-| **Procedural Vehicle 3D Modeler** | Termorretráctil bicolor en bananas de motor y cinta Kapton ámbar en chasis | `src/models.ts` |
-| **Audio Synth Sound Designer** | Ticks de trinquete de brida (`zipTieZip`) o fricción abrasiva de fresa (`millingBite`) | `src/sfx.ts` |
+| **Workshop Tools & Props 3D Modeler** | Carrete mural de manguera (`hoseReelFold`) o generador a gasolina (`gasGeneratorFold`) | `src/folded_slice.ts` |
+| **Workshop Diorama 3D Modeler** | Unidad FRL mural de aire con tubería de cobre o manómetro digital de ruedas | `src/menuscene.ts` |
+| **Procedural Vehicle 3D Modeler** | Embrague antirrebote Slipper Clutch con corona dentada o conectores banana 4mm | `src/models.ts` |
+| **Audio Synth Sound Designer** | Carraca de llave de vaso (`ratchetSocketWrench`) o chispazo por falso contacto LiPo | `src/sfx.ts` |
+
+### Ciclo #57 (2026-10-10) — Neumática de Taller & Detalle Eléctrico: Compresor con Calderín, Manguera Helicoidal con Pistola de Soplado, Manguitos Termorretráctiles y SFX
+- **Alcance implementado en producción (`src/`):**
+  - **Workshop Tools & Props 3D Modeler (`src/folded_slice.ts`):** Compresor de aire industrial `airCompressorFold()` en chapa de presión roja (`FOLD.painted("#b91c1c")`): calderín cilíndrico horizontal con fondos convexos, patas en V con silentblocks de goma, eje trasero con ruedas macizas y llantas estampadas rojas, asa frontal de transporte y grifo de purga de condensados; bancada superior soldada con motor eléctrico monofásico aleteado gris oscuro (`FOLD.painted("#1e293b")`), cabezal de 2 cilindros en V con aletas radiales, mirilla de nivel de aceite, filtros cilíndricos, volante con aspas, poleas y cubrepoleas de rejilla de alambre (`G.grate`), colector de descarga de cobre con 8 aletas disipadoras y válvula de retención; bloque distribuidor con presostato electromecánico ON/OFF rojo, 2 manómetros analógicos con esfera blanca, manorreductor moleteado, enchufe rápido hembra en latón y válvula de seguridad; 0 draw calls adicionales.
+  - **Workshop Diorama 3D Modeler (`src/menuscene.ts`):** Estación de soplado `airHoseAndBlowGun`: pistola ergonómica en aluminio pulido con empuñadura angulada antideslizante, gatillo negro basculante, tornillo de caudal en latón, boquilla tubular curvada con punta cónica de alta presión (norma OSHA) y racor rápido macho de latón; manguera helicoidal espiralada de poliuretano amarillo (`M.plastic("#eab308")`) con 9 espiras reposando sobre la mesa junto al área de mantenimiento (`[12, 0, 7.5]`) y cayendo con curvatura continua hacia el compresor ubicado en el suelo del taller (`place(airCompressorFold(), [-30, 0, 16], [0, -0.3, 0])`); integrado en `menu_bench_props` con sombras dinámicas y 0 draw calls adicionales.
+  - **Procedural Vehicle 3D Modeler (`src/models.ts`):** Manguitos termorretráctiles bicolor en rojo vivo mate (`M.matte("#dc2626")`) y negro carbón mate (`M.matte("#18181b")`) enfundando los bornes de soldadura del motor Tipo 540 y las salidas de potencia del variador ESC en `buggy`, `monster`, `formula` y `carrera`; virolas de marcado polarizado amarillo pálido indicando "+" y "-"; banco de 2 condensadores electrolíticos en azul traslúcido (`M.plastic("#0284c7")`) con sellos superiores cromados en el variador ESC y 2 condensadores cerámicos de desacoplo de radiofrecuencia soldados a la carcasa de la lata del motor 540; manguitos en los empalmes del conector XT60; 0 draw calls adicionales integrados con color de vértice.
+  - **Audio Synth Sound Designer (`src/sfx.ts`):** `SFX.airBlow(duration, pan)` con síntesis diegética de chorro de aire a alta presión combinando ruido pasabanda (3200 -> 1600 Hz) con pasaltos (4800 -> 2200 Hz) y golpe sordo de onda triangular; `SFX.zipTieZip(pan)` con tren de 5 micro-ticks rápidos de trinquete plástico de brida Zip-Tie al tensarse contra el chasis.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, vitest --changed 43 tests en verde, build Vite en 680 ms, 17 capturas en `.shots/actual/` aprobadas en 21.1 s, grafo de conocimiento sincronizado en 3990 nodos y 9659 aristas.
 
 ### Ciclo #56 (2026-10-10) — Fresadora Bridgeport, Lámpara de Máquina con Virutas, Micro-Bridas Zip-Ties y Zumbido Fluorescente
 - **Alcance implementado en producción (`src/`):**

@@ -4,7 +4,7 @@ import { applyClimate, canvasTex, glow, lamp, LOOK, M, menuLights, pbr, setDof, 
 import { ambient } from "./fx";
 import { brick, canvasTexture, KIT, kitPut, M3C, wornMat, type KitId } from "./kit3d";
 import { showWorld } from "./world";
-import { benchViseFold, drillPressFold, millingMachineFold } from "./folded_slice";
+import { airCompressorFold, benchViseFold, drillPressFold, millingMachineFold } from "./folded_slice";
 
 // Escenas de los menús (no de la partida). Sistema de configuración:
 // - SETS: escenarios físicos (cuarto + utilería fija), armados la primera vez que se ven y lejos entre sí (solo uno encendido).
@@ -248,6 +248,8 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     place(benchViseFold(), [-28, 0, 10], [0, 0.55, 0]),
     place(drillPressFold(), [-30, 0, -8], [0, 0.35, 0]),
     place(millingMachineFold(), [-33, 0, 5], [0, 0.4, 0]),
+    place(airCompressorFold(), [-30, 0, 16], [0, -0.3, 0]),
+    airHoseAndBlowGun(metal, fDark),
     magnifierLamp(metal, fDark),
     machineLamp(metal, fDark),
     drillViseAndChips(metal, fDark),
@@ -557,6 +559,89 @@ export function drillViseAndChips(metal: B.Material, fDark: B.Material): B.Mesh 
     tor(0.16, 0.038, metal, [-30.3, 3.75, -6.9], [0.2, -0.6, 0.3], 6)
   ];
   return merge("drillViseAndChips", parts);
+}
+
+export function airHoseAndBlowGun(metal: B.Material, fDark: B.Material): B.Mesh {
+  const hoseMat = M.plastic("#eab308");
+  const brassMat = M.metal("#d97706");
+  const parts: B.Mesh[] = [];
+
+  // 1. Cuerpo principal de la pistola de soplado en aluminio pulido (ergonómico)
+  parts.push(
+    box(0.42, 0.46, 1.25, metal, [11.8, 0.35, 7.2], [0, 0.3, 0]),
+    // Ojal superior de colgado
+    tor(0.36, 0.08, metal, [12.0, 0.58, 7.65], [0, 0.3, 0], 8),
+    // Tapón trasero moleteado de ajuste de caudal de aire
+    cyl(0.24, 0.24, 0.12, brassMat, [12.22, 0.35, 7.92], [0, 0.3, Math.PI / 2], 6),
+    // Empuñadura angulada ergonómica en aluminio
+    box(0.38, 1.15, 0.52, metal, [12.1, 0.28, 7.55], [-0.3, 0.3, 0]),
+    // Incrustaciones de agarre texturizadas en plástico negro
+    box(0.42, 0.88, 0.26, fDark, [12.05, 0.28, 7.42], [-0.3, 0.3, 0]),
+    tor(0.36, 0.05, fDark, [12.1, 0.14, 7.6], [-0.3, 0.3, 0], 8)
+  );
+
+  // 2. Gatillo de accionamiento tipo palanca en plástico negro
+  parts.push(
+    box(0.14, 0.82, 0.14, fDark, [11.75, 0.30, 7.15], [-0.15, 0.3, 0]),
+    cyl(0.08, 0.08, 0.44, metal, [11.78, 0.48, 7.05], [0, 0.3, Math.PI / 2], 6)
+  );
+
+  // 3. Boquilla tubular delgada curvada hacia abajo en acero pulido con boquilla de seguridad cónica
+  parts.push(
+    // Racor roscado hexagonal de acople de boquilla
+    cyl(0.28, 0.28, 0.14, brassMat, [11.5, 0.35, 6.6], [0.3, 0, 0], 6),
+    // Tubo curvado de soplado en acero pulido
+    tube([
+      [11.45, 0.35, 6.5],
+      [11.1, 0.35, 5.8],
+      [10.8, 0.28, 5.2],
+      [10.6, 0.20, 4.7]
+    ], 0.042, metal),
+    // Boquilla de seguridad cónica (OSHA safety tip) con orificios de alivio
+    cyl(0.12, 0.22, 0.24, metal, [10.58, 0.19, 4.65], [-0.35, 0.3, 0], 8),
+    tor(0.22, 0.035, metal, [10.62, 0.20, 4.72], [-0.35, 0.3, 0], 8),
+    cyl(0.06, 0.06, 0.05, fDark, [10.54, 0.18, 4.58], [-0.35, 0.3, 0], 6)
+  );
+
+  // 4. Racor de acople rápido macho en latón dorado en la base de la empuñadura
+  parts.push(
+    cyl(0.32, 0.32, 0.16, brassMat, [12.35, 0.18, 7.82], [-0.3, 0.3, 0], 6),
+    cyl(0.22, 0.16, 0.24, brassMat, [12.46, 0.16, 7.94], [-0.3, 0.3, 0], 8),
+    tor(0.22, 0.04, metal, [12.46, 0.16, 7.94], [-0.3, 0.3, 0], 8),
+    cyl(0.25, 0.25, 0.18, fDark, [12.56, 0.17, 8.04], [-0.3, 0.3, 0], 8),
+    tor(0.20, 0.035, metal, [12.65, 0.18, 8.14], [-0.3, 0.3, 0], 8)
+  );
+
+  // 5. Manguera espiralada helicoidal de poliuretano amarillo de alta resistencia
+  const coils = 9;
+  const stepsPerCoil = 12;
+  const totalSteps = coils * stepsPerCoil;
+  const hosePath: V3[] = [
+    [12.6, 0.18, 8.08],
+    [12.75, 0.22, 8.28],
+    [12.95, 0.32, 8.48]
+  ];
+  for (let i = 0; i <= totalSteps; i++) {
+    const t = i / totalSteps;
+    const a = t * coils * Math.PI * 2;
+    const r = 0.38;
+    const cx = 13.0 + t * 0.95;
+    const cz = 8.55 + t * 3.25;
+    const cy = 0.42 + Math.sin(a) * r * 0.85;
+    const px = cx + Math.cos(a) * 0.24;
+    hosePath.push([px, Math.max(0.08, cy), cz]);
+  }
+  // Caída desde el borde de la mesa (z=12.1) hacia la zona del compresor en el piso
+  hosePath.push(
+    [14.05, 0.34, 11.9],
+    [14.15, 0.12, 12.15],
+    [14.1, -0.6, 12.35],
+    [13.9, -1.8, 12.5],
+    [13.7, -3.2, 12.6]
+  );
+  parts.push(tube(hosePath, 0.065, hoseMat));
+
+  return merge("airHoseAndBlowGun", parts);
 }
 
 function lipoCharger(fTeal: B.Material, metal: B.Material, fDark: B.Material): B.Mesh[] {
