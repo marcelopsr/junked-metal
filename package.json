@@ -28,7 +28,11 @@
     "creative:cancel": "node scripts/comfy-status.mjs --cancel-all",
     "creative:start": "node scripts/comfy-status.mjs start",
     "creative:stop": "node scripts/comfy-status.mjs stop",
-    "creative:gen": "node scripts/creative-gen.mjs"
+    "creative:gen": "node scripts/creative-gen.mjs",
+    "creative:batch": "node scripts/creative-batch.mjs",
+    "creative:batch:status": "node scripts/creative-batch.mjs --status",
+    "creative:batch:watch": "node scripts/creative-batch.mjs --watch",
+    "creative:batch:cancel": "node scripts/creative-batch.mjs --cancel"
   },
   "keywords": [],
   "type": "module",

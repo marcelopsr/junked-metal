@@ -79,6 +79,26 @@ npm run creative:watch
 node scripts/creative-gen.mjs --watch <prompt_id>
 ```
 
+### Paso 2.1: Procesamiento por Lotes y Variantes en Segundo Plano (Batch Queue)
+Para despachar múltiples variantes o colecciones completas sin esperas manuales ni sobrecarga de VRAM:
+
+```bash
+# 1. Matriz de semillas en segundo plano (retorna de inmediato con PID):
+node scripts/creative-batch.mjs \
+  --prompt "rustic metal gear texture..." \
+  --seeds 101,102,103,104 \
+  --out-pattern "public/textures/variants/gear_{seed}.webp" \
+  --detach
+
+# 2. Lote desde archivo plan JSON:
+node scripts/creative-batch.mjs --file batch-plan.json --detach
+
+# 3. Monitoreo y control del lote:
+npm run creative:batch:status    # Consulta de progreso en <50ms (ítem actual, paso, ETA)
+npm run creative:batch:watch     # Dashboard interactivo en consola
+npm run creative:batch:cancel    # Cancelar lote y purgar cola
+```
+
 ### Paso 3: Inspeccionar y Optimizar
 1. Inspeccionar la imagen generada con `view_file` para validar anatomía, silueta, color y contraste.
 2. Convertir y comprimir a WebP optimizado para web (usando `squoosh`, `cwebp` o Python `Pillow`).
