@@ -101,8 +101,10 @@ body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px
 #tBoost, #tDrift, #tJump { position: absolute; pointer-events: auto; border-radius: 50%; width: 84px; height: 84px; padding: 0; font-size: 11px; }
 #tBoost { right: 24px; bottom: 170px; background: var(--turbo); color: #111; }
 #tDrift { right: 122px; bottom: 150px; }
-#tJump { right: 24px; bottom: 268px; color: var(--lcd-ink); border: 1px solid var(--line);
-  background: conic-gradient(#000c calc(var(--cd, 0) * 360deg), var(--shell) 0); }
+/* SALTO: panel oscuro con borde naranja e ícono propio (icons.ts «salto»); --cd (ui.ts hudJump) oscurece lo que falta de enfriamiento */
+#tJump { right: 24px; bottom: 268px; display: grid; place-content: center; justify-items: center; gap: 2px; font-weight: 700; letter-spacing: .08em; color: var(--jm-texto); border: 2px solid var(--jm-naranja);
+  background: conic-gradient(#000c calc(var(--cd, 0) * 360deg), var(--jm-fondo2) 0); }
+@media (orientation: portrait) { #tJump { right: calc(24px + 84px * var(--touch-scale, 1) + 16px); bottom: calc(170px + 84px * var(--touch-scale, 1) + 14px); } } /* vertical: a la izquierda de DERRAPE (antes caía justo encima y lo tapaba) */
 /* Habilidad: más chica, sobre TURBO (apaisado) o a su izquierda (vertical, donde DERRAPE ocupa el lugar de arriba).
    --cd (main.ts) oscurece la parte que falta enfriar */
 #tAbil { position: absolute; pointer-events: auto; border-radius: 50%; width: 64px; height: 64px; padding: 0; font-size: 10px; scale: var(--touch-scale, 1); transform-origin: right bottom;

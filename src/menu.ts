@@ -1421,6 +1421,7 @@ export function initMenu(a: Api) {
     if (id && !b.classList.contains("lnk") && (!b.classList.contains("primary") || /^(play|playmenu|playgo|resume|race|daily)$/.test(k))) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
   }
   $("tPause").innerHTML = uiIcon("pausa", 26);
+  $("tJump").innerHTML = uiIcon("salto", 28) + "SALTO";
   applySettings();
   ctlTexts();
   $("teReset").addEventListener("click", () => { save.tlay = { v: {}, h: {} }; persist(); applySettings(); editTouch(true, {}, save.touch, (l) => { save.tlay[orient()] = l; persist(); }); }); // restablece las dos orientaciones
