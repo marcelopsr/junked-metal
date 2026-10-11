@@ -1158,6 +1158,40 @@ Decisión del usuario: Integrar el albedo PBR de terreno (`09-scrap-earth`) en e
    - `npm run shots -- --only partida`: 9 capturas verificadas en `.shots/actual/` (`pc-partida-curso.png`, `cel-partida-curso.png`, etc.).
    - `graphify update .`: grafo de conocimiento actualizado (4070 nodos, 9820 aristas).
 
+## 2026-10-11 · Expansión Creativa Masiva (4 Tareas en Paralelo con Subagentes)
+
+Decisión del usuario: Ejecutar en paralelo las 4 propuestas creativas seleccionadas con equipos de subagentes trabajando concurrentemente sobre ComfyUI (SDXL Base 1.0 en Metal/MPS):
+
+1. **Weapon Art Specialist · Ilustraciones de Taller para Armas Evolucionadas:**
+   - Generadas 4 ilustraciones en 512×512 WebP con metadatos `.meta.json`:
+     - `public/images/evo-torbellino.webp` (41.1 KB · semilla 101): Hoja circular giratoria con chispas de desguace.
+     - `public/images/evo-sierra.webp` (29.4 KB · semilla 102): Disco doble dentado gemelo de acero oxidado.
+     - `public/images/evo-lanzallamas.webp` (28.8 KB · semilla 103): Boquilla industrial con llamaradas incandescentes.
+     - `public/images/evo-mortero.webp` (20.5 KB · semilla 104): Tubo lanzador cargado con bulones y metralla.
+   - Diseñado e integrado `.evo-thumb` con chapa biselada, remaches y resplandor áureo `:hover` en las cartas de mejora del HUD (`src/ui.ts`, `src/hud.css`).
+
+2. **Decals Specialist · Calcomanías de Chatarra con Alpha Real para el Garaje:**
+   - Diseñadas con canal alfa transparente y catalogadas en `assets-src/environment-library/v2/` y `public/images/decals/`:
+     - `decal_dorsal_07`: Dorsal vintage oxidado ("07" stencil desgastado).
+     - `decal_flames`: Llamas de soplete/fuego industrial sobre chapa.
+     - `decal_junkoil`: Marca retro de grasa/lubricante "JUNK-OIL".
+   - Integrado en el editor de personalización del Garaje (`src/models.ts`, `src/menu.ts`, `src/menu.css`), previsualización 3D en vivo con `MATERIAL_ALPHATESTANDBLEND` y persistencia en guardado.
+
+3. **Race Track Specialist · Albedo PBR de Asfalto con Virutas en Modo Carrera:**
+   - Generada textura `public/textures/race-asphalt.webp` (1024×1024 WebP, 202 KB, semilla 42091) con asfalto agrietado, viruta metálica y rodadas.
+   - Conectada en `src/kart.ts` mediante `roadTex()` con `TEXTURE_WRAP_ADDRESSMODE` y micro-relieve PBR en la cinta de pista.
+
+4. **Bestiary Art Specialist · Backdrop de Vitrina Nocturna en la Chatarroteca:**
+   - Generado `public/images/bestiary-backdrop.webp` (1024×512 WebP, 63.8 KB, semilla 88102) con vitrina rústica nocturna de frascos y especímenes mecánicos.
+   - Integrado en `#scr-bestiary` (`index.html`, `src/menu.css`) como cabecera `.bestiary-banner.jm-panel` enmarcada en chapa remachada.
+
+5. **Verificación Global:**
+   - `npx tsc --noEmit -p .`: 0 errores.
+   - `npm test`: 81/81 tests unitarios pasando al 100% (10 suites).
+   - `npm run build`: bundle de producción generado en 884 ms.
+   - `graphify update .`: grafo de conocimiento actualizado (4072 nodos, 9824 aristas).
+
+
 
 
 
