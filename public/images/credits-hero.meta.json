@@ -1,0 +1,18 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt": "cinematic wide illustration of a rugged yellow RC buggy made of scrap metal and recycled parts sitting on lawn grass in a dark backyard at night, solitary warm moonlight and subtle rim light, glowing amber and green firefly eyes in the background foliage, gritty industrial textures, dramatic low angle composition, highly detailed digital painting, sharp focus, no text",
+  "negative": "text, typography, letters, logo, signature, words, watermark, blurry, low resolution, deformed, bad anatomy, red color on the vehicle, cartoonish, oversaturated pink",
+  "seed": 1984,
+  "steps": 26,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 1024,
+  "height": 512,
+  "date": "2026-10-11T06:20:31.290Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/rc_fight/credits_hero_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/credits-hero.webp"
+}

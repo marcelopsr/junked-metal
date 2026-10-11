@@ -1060,3 +1060,28 @@ Culminación del ensamblaje del banco cinemático 3D (`art-lab.html`, `src/art_l
    - Evidencia capturada: `preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png`, `verification.json` y video orbital completo `orbit-preview.mp4` (8 s, 12 fps, H.264).
 
 
+## 2026-10-11 · Stack Creativo Local Primario (ComfyUI + SDXL + Metal/MPS)
+
+Decisión del usuario: Configurar y usar el stack creativo local de la Mac como recurso primario para generar ilustraciones, imágenes, fondos y texturas, con aceleración GPU Metal/MPS obligatoria, modelo SDXL Base 1.0 instalado y workflow `sdxl-web.json`. Prohibido el reemplazo de arte por CSS/SVG simple, reservando HTML/CSS/SVG para textos, botones e íconos funcionales.
+
+1. **Configuración de Entorno e Integración MCP:**
+   - Servidor MCP `comfy-local` registrado en `~/.gemini/config/mcp_config.json` apuntando a `/Users/msalas/CreativeStack/venv/bin/comfy-mcp`.
+   - Comprobada aceleración por hardware en Metal/MPS (`Apple M4 Pro`, 24 GB de memoria unificada, `torch 2.14.1`, device `mps`).
+   - Regla de persistencia agregada en `.agents/rules/creative-stack.md` y skill creada en `.agents/skills/creative-stack/SKILL.md`.
+
+2. **Runner Automatizado y Concurrencia Multiagente (`scripts/creative-gen.mjs`):**
+   - Script ejecutable que despacha workflows a `http://127.0.0.1:8188`, respeta la cola FIFO sin interrumpir trabajos concurrentes (comprobado en vivo contra la tanda de texturas de `redserva-c17`), espera la finalización en GPU, convierte a WebP con `cwebp` y emite metadatos `.meta.json` para reproducibilidad total (prompt, negativo, semilla, pasos, CFG, dimensiones, licencia SDXL).
+
+3. **Producción e Integración del Primer Recurso:**
+   - **Ilustración Hero para Créditos (`public/images/credits-hero.webp` · 73.5 KB, 1024×512):** Buggy amarillo de chatarra con neumáticos crawler sobre el césped del patio bajo la luna y ojos brillantes en la vegetación.
+   - **Metadatos guardados:** `public/images/credits-hero.meta.json` (semilla `1984`, 26 pasos, sampler `dpmpp_2m karras`, CFG `7.0`, modelo SDXL Base 1.0).
+   - **Integración DOM:** Incorporado bloque `.creditsArt` en `.briefCard.jm-panel` de `#scr-credits` en `index.html` y estilizado en `src/menu.css` con marco de chapa (`--jm-chapa`), borde gastado y adaptación responsive (160 px en PC, 120 px en móvil). Los textos narrativos y de créditos se conservan en HTML puro con tipografía `Rajdhani`.
+
+4. **Verificación Realizada:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado.
+   - `npm test`: 81/81 pruebas pasando en 10 archivos de test.
+   - `npm run build`: bundle de producción generado limpiamente.
+   - `npm run test:restart` y `npm run shots -- --only creditos`: capturas `pc-menu-creditos` y `cel-menu-creditos` ejecutadas en Chromium headless Metal en 20.6 s, verificadas visualmente en `.shots/actual/`, sin desbordamiento ni errores de consola.
+   - Grafo de conocimiento actualizado con `graphify update .`.
+
+
