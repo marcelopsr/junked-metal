@@ -812,8 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #51 completado y validado con 4 Especialistas (`tsc` 0 errores, `test` 81/81 en verde, `build` limpio en 1.11 s, 17 capturas en `.shots/actual/` en 31.8 s, grafo en 3885 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #52**.
+- **Último trabajo completado:** Ciclo #52 ("Todo 3D") completado y validado con 4 Especialistas 3D (`tsc` 0 errores, `test` 43/43 cambiados en verde, `build` limpio en 4.22 s, 17 capturas en `.shots/actual/` en 114.0 s, grafo en 3889 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #53**.
+
+### 🔓 LISTO PARA EL CICLO #53 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+
+| Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
+|---|---|---|
+| **Procedural Vehicle 3D Modeler** | Bieletas de convergencia Toe-Links con uniballs y conector Deans/XT60 para pack LiPo | `src/models.ts` |
+| **Environmental Props 3D Modeler** | Plato de goteo oxidado en maceta `potFold()` y mini-pala de mano en `gnomeFold()` | `src/folded_slice.ts` |
+| **Workshop Diorama 3D Modeler** | Cableado de silicona flexible para LiPo en pit stand y bandeja magnética de tornillos | `src/menuscene.ts` |
+| **Dynamic Suspension 3D Modeler** | Suspensión independiente por eje/rueda y camber dinámico reactivo en compresión | `src/car.ts` |
+
+### Ciclo #52 (2026-10-10) — Todo 3D: C-Hubs y Antena en Vehículo, Props Folded, Diorama Garaje y Cinemática de Ruedas
+- **Alcance implementado en producción (`src/`):**
+  - **Procedural Vehicle 3D Modeler (`src/models.ts`):** Bloques de dirección C-Hub delanteros en aluminio CNC con tornillos Kingpin de pivote en cromo; tubo guía de antena flexible en flúor de competición con grapa/clip de sujeción al chasis. 0 draw calls adicionales.
+  - **Environmental Props 3D Modeler (`src/folded_slice.ts`):** Roseta/alcachofa difusora perforada en latón estampado con placa difusora oscura y refuerzo de asa en regadera `wateringCanFold()`; garganta sellada y empuñadura de madera en asa de lata de pintura `paintCanFold()`.
+  - **Workshop Diorama 3D Modeler (`src/menuscene.ts`):** Peana / soporte de calibración de chasis (Pit Stand) en aluminio perforado y almohadillas de goma antideslizante donde reposa el coche; cargador inteligente LiPo de radiocontrol con display LCD brillante y puertos XT60 sobre el banco de trabajo.
+  - **Dynamic Suspension & 3D Kinematics Specialist (`src/car.ts`):** Cinemática elástica de amortiguación visible sobre las 4 ruedas (`wh.m.position.y += this.suspensionComp`) durante impactos verticales y baches, con compresión visible de coilovers y rebote continuo sin derivas ni allocations (0 GC).
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, vitest --changed 43 tests en verde, build Vite en 4.22 s, 17 capturas en `.shots/actual/` aprobadas, grafo de conocimiento sincronizado en 3889 nodos y 9446 aristas.
 
 ### 🔓 LISTO PARA EL CICLO #52 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 

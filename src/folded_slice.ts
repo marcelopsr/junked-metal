@@ -10,7 +10,7 @@ type V3 = [number, number, number];
 const sc = () => B.Engine.LastCreatedScene!;
 
 /** Kit que junta todo en `parts`; `done(k)` hornea remaches/tornillos (k = escala de la cabeza) y devuelve las piezas. */
-function kit() {
+export function kit() {
   const parts: B.Mesh[] = [];
   let cur = 0; // hueso de las piezas que se agregan (VAT de glb.ts: 0 = cuerpo)
   const add = (m: B.Mesh, mat: B.Material) => {
@@ -40,7 +40,7 @@ function kit() {
   };
   return { G, parts, done, strut, bone };
 }
-const along = (G: GeoKit, d1: number, d2: number, len: number, m: B.Material, p: V3, tess = 6) => G.cyl(d1, len, m, p, [Math.PI / 2, 0, 0], tess, d2); // prisma a lo largo de z (d1 adelante)
+export const along = (G: GeoKit, d1: number, d2: number, len: number, m: B.Material, p: V3, tess = 6) => G.cyl(d1, len, m, p, [Math.PI / 2, 0, 0], tess, d2); // prisma a lo largo de z (d1 adelante)
 
 // ---------- Hormiga: gáster hexagonal con placa, cintura, tórax con lomo atornillado, cabeza con mandíbulas de acero ----------
 // Huesos (VAT de glb.ts): 0 cuerpo, 1..6 patas (cadera i, lado +1/-1), 7 antenas. `vis`: escala que glb.ts le da al nodo (GLB.visual).
@@ -102,7 +102,7 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
   }
   return done(2.5, o.k / vis);
 }
-const piv = (p: B.Vector3, R: B.Matrix) => B.Matrix.Translation(-p.x, -p.y, -p.z).multiply(R).multiply(B.Matrix.Translation(p.x, p.y, p.z));
+export const piv = (p: B.Vector3, R: B.Matrix) => B.Matrix.Translation(-p.x, -p.y, -p.z).multiply(R).multiply(B.Matrix.Translation(p.x, p.y, p.z));
 /** Pose de la hormiga: walk 0..1 (ciclo) o atk 0..1 (arremetida). Trípode: patas alternadas en fase opuesta, como enemies.ts. */
 export function antPose(vis: number, walk: number, atk: number, kk = 1) {
   const k = kk / vis, ph = walk * Math.PI * 2, lunge = Math.sin(atk * Math.PI);
@@ -660,7 +660,9 @@ export function paintCanFold(c: string) {
   G.cyl(4.4, 5, tin, [0, 2.5, 0], undefined, 12);
   G.cyl(4.52, 2.6, label, [0, 2.6, 0], undefined, 12);
   G.cyl(4.2, 0.22, FOLD.dark(), [0, 5.05, 0], undefined, 12); G.cyl(4.5, 0.3, tin, [0, 4.9, 0], undefined, 12);
+  G.cyl(4.45, 0.12, FOLD.bare(), [0, 5.15, 0], undefined, 12);
   G.tube([[-2.1, 5.0, 0], [-1.7, 6.3, 0], [1.7, 6.3, 0], [2.1, 5.0, 0]], 0.14, FOLD.bare());
+  G.cyl(0.42, 1.2, FOLD.painted("#8a5a2b", 0.6, 263), [0, 6.3, 0], [0, 0, Math.PI / 2], 6);
   G.box(0.6, 1.8, 0.2, label, [1.2, 4.2, -2.12], [0, 0.5, 0]); // chorreadura
   G.decal([0, 2.6, -2.29], undefined, "label", 1.9);
   for (const y of [0.3, 4.7]) G.rivets([-2.2, y, 0], [2.2, y, 0], 2, [1, 0, 0]);
@@ -691,7 +693,10 @@ export function wateringCanFold() {
   const g = FOLD.painted("#15803d", 0.8, 281);
   G.cyl(5, 6, g, [0, 3, 0], undefined, 12); G.cyl(5.2, 0.4, FOLD.rust(), [0, 0.2, 0], undefined, 12); G.cyl(4.6, 0.3, FOLD.bare(), [0, 6.05, 0], undefined, 12);
   G.tube([[0, 2, 2.4], [0, 5, 5], [0, 6.5, 6.5]], 0.35, g); G.cyl(1.4, 0.5, FOLD.bare(), [0, 6.7, 6.7], [0.8, 0, 0], 8);
+  G.cyl(1.8, 0.35, FOLD.painted("#d97706", 0.65, 282), [0, 6.9, 6.9], [0.8, 0, 0], 10);
+  G.cyl(1.5, 0.1, FOLD.dark(), [0, 7.0, 7.0], [0.8, 0, 0], 8);
   G.tube([[0, 6.0, -2.2], [0, 8.4, -1.4], [0, 8.4, 0.6], [0, 6.0, 1.4]], 0.4, g);
+  G.box(0.8, 0.15, 0.8, FOLD.rust(), [0, 8.4, 0.1]);
   G.rivets([2.52, 0.6, 0], [2.52, 5.6, 0], 7, [1, 0, 0]); G.decal([0, 3.2, -2.53], undefined, "numero", 1.8);
   return done(40);
 }

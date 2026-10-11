@@ -109,9 +109,11 @@ export class Car {
   torqueRoll = 0;
   squatPitch = 0;
   divePitch = 0;
+  suspensionComp = 0;
   private steerRoll = 0;
   private basePitch = 0;
   private lastFs = 0;
+  private wheelBaseY: number[] = [];
 
   private paintBase: B.Color3;
 
@@ -127,6 +129,7 @@ export class Car {
     this.model = carModel(kind, opts);
     this.paintBase = this.model.paint.albedoColor.clone();
     this.model.body.parent = this.vis;
+    this.wheelBaseY = this.model.wheels.map((x) => x.m.position.y);
     const groundY = Math.min(...this.model.wheels.map((x) => x.m.position.y - x.r));
     this.model.body.position.y = -groundY - h / 2;
     for (const c of this.model.cast) shadows.addShadowCaster(c);
@@ -194,6 +197,17 @@ export class Car {
     const vy = tmpV.y, pitch = Math.abs(fs) > 2 ? B.Scalar.Clamp(-Math.atan(vy / fs), -0.5, 0.5) : 0;
     this.basePitch = B.Scalar.Lerp(this.basePitch, B.Scalar.Clamp(-acc * 0.004, -0.08, 0.08) + pitch, k);
     this.vis.rotation.x = this.basePitch + this.squatPitch + this.divePitch;
+
+    // Compresión elástica de amortiguadores en aterrizajes duros y baches
+    const targetComp = (this.lastVy < -3.5 && vy > -1) ? Math.min(0.08, -this.lastVy * 0.012) : 0;
+    if (targetComp > this.suspensionComp) this.suspensionComp = targetComp;
+    this.suspensionComp = B.Scalar.Lerp(this.suspensionComp, targetComp, 1 - Math.exp(-14 * dt));
+    for (let i = 0; i < this.model.wheels.length; i++) {
+      const wh = this.model.wheels[i];
+      wh.m.position.y = this.wheelBaseY[i];
+      wh.m.position.y += this.suspensionComp;
+    }
+
     // Rebote al aterrizar: se aplasta y recupera con un resorte amortiguado
     if (this.lastVy < -4 && vy > -1) {
       this.bounce = Math.min(0.3, -this.lastVy * 0.03);

@@ -495,7 +495,11 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         box(0.02, 0.015, 0.025, M.plastic("#eab308"), [0, bh * 0.48, -bl * 0.3]),
         // Funda / tubo guía semirrígido cilíndrico y capuchón protector de goma para antena RF
         cyl(0.0035, 0.0035, 0.045, M.plastic("#18181b"), [0, bh * 0.45, -bl * 0.35], [0, 0, 0], 4),
-        cyl(0.004, 0.004, 0.012, M.plastic("#ef4444"), [0, bh * 0.45 + 0.11, -bl * 0.35], [0, 0, 0], 4)
+        cyl(0.004, 0.004, 0.012, M.plastic("#ef4444"), [0, bh * 0.45 + 0.11, -bl * 0.35], [0, 0, 0], 4),
+        // Tubo guía semirrígido de antena en flúor
+        cyl(0.004, 0.004, 0.08, M.plastic("#22c55e"), [0, bh * 0.48, -bl * 0.35], [0, 0, 0], 4),
+        // Clip de fijación de base de antena al chasis
+        box(0.01, 0.008, 0.012, M.plastic("#18181b"), [0, bh * 0.42, -bl * 0.35])
       );
     }
     if (kind === "buggy" || kind === "monster" || kind === "formula") {
@@ -655,7 +659,12 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
           cyl(0.004, 0.004, 0.028, chrome, [sx, bh * 0.25, bl * 0.36], [0, 0, 0], 4),
           // Tuercas ciegas hexagonales métricas de anclaje de rótulas
           cyl(0.006, 0.006, 0.008, chrome, [sx, bh * 0.25 + 0.014, bl * 0.36], [0, 0, 0], 6),
-          cyl(0.006, 0.006, 0.008, chrome, [sx, bh * 0.25 - 0.014, bl * 0.36], [0, 0, 0], 6)
+          cyl(0.006, 0.006, 0.008, chrome, [sx, bh * 0.25 - 0.014, bl * 0.36], [0, 0, 0], 6),
+          // Soporte C-Hub envolvente
+          box(0.016, 0.032, 0.012, M.metal("#0284c7"), [sx, bh * 0.25, bl * 0.36]),
+          // Tornillos Kingpin superior e inferior de pivote de giro
+          cyl(0.005, 0.005, 0.006, chrome, [sx, bh * 0.25 + 0.018, bl * 0.36], [0, 0, 0], 6),
+          cyl(0.005, 0.005, 0.006, chrome, [sx, bh * 0.25 - 0.018, bl * 0.36], [0, 0, 0], 6)
         );
       }
     }

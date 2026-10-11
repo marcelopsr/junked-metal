@@ -1065,6 +1065,25 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #52 (Todo 3D: C-Hubs y Antena en Vehículo, Props Folded, Diorama Garaje y Cinemática de Ruedas)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 114.0 s).
+
+### Intervenciones aplicadas por los Especialistas 3D y verificadas en captura
+1. **Bloques de dirección C-Hub y tubo guía flexible de antena (Procedural Vehicle 3D Modeler · `src/models.ts`):**
+   - Incorporados soportes C-Hub envolventes en aluminio CNC con tornillos Kingpin de pivote en cromo en las manguetas del tren delantero abierto.
+   - Añadido tubo guía flexible en plástico flúor de competición y grapa de chasis para el mástil de radiofrecuencia, con **0 draw calls adicionales**.
+2. **Roseta difusora de regadera y herrajes de lata de pintura (Environmental Props 3D Modeler · `src/folded_slice.ts`):**
+   - En `wateringCanFold()`, incorporada roseta/alcachofa difusora perforada en latón estampado con placa oscura y platina de refuerzo soldada en el asa.
+   - En `paintCanFold()`, incorporado reborde de garganta sellada en tapa hermética y empuñadura cilíndrica de madera torneada en asa de transporte.
+3. **Pit Stand de calibración y cargador LiPo en banco de trabajo (Workshop Diorama 3D Modeler · `src/menuscene.ts`):**
+   - Incorporada peana / soporte de calibración (Pit Stand) en aluminio perforado anodizado azul y almohadillas antideslizante donde reposa el coche en el garaje.
+   - Incorporado cargador inteligente LiPo de radiocontrol con display LCD azul brillante y puertos XT60 sobre el banco de diorama.
+4. **Cinemática elástica de amortiguación sobre ruedas (Dynamic Suspension & 3D Kinematics Specialist · `src/car.ts`):**
+   - Integrada cinemática 3D continua de compresión en las 4 ruedas (`wh.m.position.y += this.suspensionComp`) durante impactos y baches, mostrando absorción realista de amortiguadores antes de la recuperación de carrocería con 0 GC allocations.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

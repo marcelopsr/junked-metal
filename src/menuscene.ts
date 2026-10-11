@@ -194,11 +194,25 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     box(68, 30, 0.6, peg, [0, 15.5, -16.6]),
     box(70, 1.2, 1.2, fDark, [0, 31, -16.4]), box(70, 1.2, 1.2, fDark, [0, 0.4, -16.4]),
   ];
+  // Peana de calibración / soporte de pits (Pit Stand) y cargador inteligente LiPo digital con puertos XT60
+  const stand = [
+    box(2.8, 0.2, 4.2, M.metal("#0284c7"), [0, 0.1, 1]),
+    box(2.4, 0.8, 3.6, M.metal("#0f172a"), [0, 0.5, 1]),
+    box(2.6, 0.08, 0.6, M.rubber(), [0, 0.94, -0.6]),
+    box(2.6, 0.08, 0.6, M.rubber(), [0, 0.94, 2.6])
+  ];
+  const charger = [
+    box(1.8, 0.8, 2.4, M.matte("#18181b"), [4.5, 0.4, 2.5], [0, -0.2, 0]),
+    box(1.2, 0.02, 0.9, M.glow("#38bdf8"), [4.5, 0.81, 2.5], [0, -0.2, 0]),
+    box(0.4, 0.3, 0.3, M.plastic("#eab308"), [5.4, 0.4, 2.3], [0, -0.2, 0])
+  ];
   const props = [
     // mesa de taller con canto de chapa plegada y patas robustas, base de corte verde bajo el auto
     box(66, 2, 28, wood, [0, -1, -2]), box(66.2, 0.8, 0.5, fDark, [0, -1.4, 12.1]),
     ...[[-31, -14], [31, -14], [-31, 10], [31, 10]].map(([x, z]) => box(2.4, 28, 2.4, fDark, [x, -16, z])),
     box(16, 0.08, 11, mat, [0, 0.04, 1.5]),
+    ...stand,
+    ...charger,
     // herramientas colgadas en chapa gastada: llave, destornilladores, martillo, pinza, rollos de cable y cinta
     box(0.9, 8, 0.4, metal, [-26, 15.5, -16]), tor(2.4, 0.7, metal, [-26, 20.4, -16], [Math.PI / 2, 0, 0], 8),
     ...[[fRed, -21], [fTeal, -19], [fYellow, -17]].flatMap(([m, x]) => [cyl(1.1, 1.1, 3.2, m as B.Material, [x as number, 20.5, -15.8], undefined, 6), cyl(0.3, 0.3, 4.4, metal, [x as number, 16.7, -15.8], undefined, 6)]),
