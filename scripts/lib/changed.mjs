@@ -4,6 +4,7 @@ import { execSync } from "node:child_process";
 const MAP = [
   [/^(docs|assets-src|logs|graphify-out)\/|\.md$|\.test\.ts$|^src\/(balance\.json|savefmt\.ts)$|^scripts\/(sim|balance|shots|perf|test-restart|lib\/changed)|^src\/sfx\.ts$/, []], // sin efecto visual: npm test / sim
   [/kart|race\.css/, ["carrera", "carrera2j"]],
+  [/aliens/, ["luna", "luna_aliens"]],
   [/moon/, ["luna"]],
   [/duel/, ["duel", "duel_menu"]],
   [/match3/, ["match3", "match3_menu"]],

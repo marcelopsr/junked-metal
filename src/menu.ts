@@ -1195,6 +1195,10 @@ const LORE: Record<Kind, string> = {
   tirador: "Encontró una pistolita en la basura de una nave y desde entonces se considera francotirador. Mantiene la distancia por estrategia y por timidez. Cada disparo lo anuncia con un zumbido, por cortesía profesional.",
   saltador: "En la Tierra sería una rana de lata; acá, con la gravedad que hay, se cree astronauta. Salta alto, cae lejos y nunca calcula dónde. Para eso tiene un aro que lo avisa por él.",
   emboscador: "Vive enterrado en un cráter con la paciencia de un cobrador. Deja asomar una lucecita para que alguien se acerque a mirar, y alguien siempre se acerca a mirar.",
+  flotante: "Un platillo de lata que nunca aprendió a aterrizar y decidió que era una virtud. Ronda en círculos como quien busca estacionamiento y, cuando lo encuentra, baja de golpe.",
+  tanque: "Le soldaron una puerta de horno adelante y desde entonces se cree invencible. Lo es, pero solo de frente. Gira tan despacio que para darse vuelta pide turno.",
+  explosivo: "Una jaula de chapa con algo verde adentro que no debería estar ahí. Corre hacia el auto con mucho entusiasmo y ningún plan para después, porque no hay después.",
+  curandero: "Estudió primeros auxilios por correspondencia y nunca terminó el curso. No pelea: se queda atrás, apunta un rayo verde al que está peor y lo deja como nuevo, o casi.",
 };
 // Cómo ataca y cómo esquivarlo (sale del comportamiento real de enemies.ts)
 const HOW: Record<Kind, [string, string]> = {
@@ -1217,7 +1221,38 @@ const HOW: Record<Kind, [string, string]> = {
   tirador: ["Se planta a unos 15 metros, carga la pistolita (chispas y el caño que sube) y suelta un anillo de luz lento hacia donde estaba el auto. Si el auto se acerca, retrocede.", "El anillo va derecho y despacio: moverse de costado apenas sale. Encimarlo obliga a que retroceda en vez de disparar."],
   saltador: ["Se agazapa con un aro en el piso donde va a caer y salta en un arco largo de baja gravedad. El punto de caída se fija al empezar el aviso.", "Salir del aro mientras se agazapa. En el aire no corrige: al caer queda quieto un momento, a tiro."],
   emboscador: ["Espera enterrado: solo asoma un señuelo de luz cian. Cuando el auto pasa a unos 8 metros salta encima y persigue; si el auto se aleja, se vuelve a enterrar.", "Una luz cian sola en el piso es una trampa: rodearla de lejos o pasar rápido y castigarlo cuando sale."],
+  flotante: ["Vuela bajo a altura fija, sin seguir el piso: pasa por encima de cráteres y montículos. Ronda al auto a unos 6 metros y cada tanto baja en picada contra él (chispas de aviso).", "La picada va derecho a donde está el auto: un volantazo al ver las chispas la deja pasar de largo, y abajo queda a tiro."],
+  tanque: ["Lento, con mucha vida y una placa frontal que frena casi todo el daño que le llega de frente. Gira muy despacio y embestirlo de frente devuelve el golpe.", "Rodearlo: por los costados y por detrás (donde brilla el reactor cian) el daño entra entero."],
+  explosivo: ["Corre derecho al auto; a unos 4 metros se planta, se infla y marca en el piso un aro rojo del tamaño de la explosión. Al llenarse revienta: daña a todo lo que esté adentro, bichos incluidos, y deja un cráter.", "Salir del aro antes de que se llene. Con otros bichos alrededor, conviene dejarlo reventar entre ellos."],
+  curandero: ["Se queda atrás, a unos 16 metros del auto, y con un rayo verde le repone vida al aliado más herido que tenga cerca (el halo marca a quién).", "Blanco prioritario: mientras siga en pie, los demás no se mueren. Ir a buscarlo o castigarlo con armas de alcance."],
 };
+// Biometría y debilidades mecánicas de campo (blindaje, maniobrabilidad y punto ciego táctico)
+const BIOMETRICS: Record<Kind, { armor: string; agility: string; blindSpot: string }> = {
+  hormiga: { armor: "Quitina delgada (nula)", agility: "Direccional directa en enjambre", blindSpot: "Flancos al marchar en fila" },
+  escupidora: { armor: "Cutícula blanda", agility: "Estática al fijar disparo", blindSpot: "Cuerpo a cuerpo a quemarropa" },
+  friccion: { armor: "Chapa estampada liviana", agility: "Rectilínea rígida sin corrección", blindSpot: "Lateral durante la inercia" },
+  robot: { armor: "Carcasa plástica reforzada", agility: "Giro pausado antes de cargar", blindSpot: "Retaguardia mientras da cuerda" },
+  polilla: { armor: "Alas membranosas frágiles", agility: "Flotación errática en altura", blindSpot: "Cuerpo inferior bajo la luz" },
+  escarabajo: { armor: "Caparazón blindado pesado", agility: "Giro lento de gran radio", blindSpot: "Zona posterior sin defensa" },
+  rey: { armor: "Placas de latón remachado", agility: "Viraje pesado de masa crítica", blindSpot: "Arco trasero en círculos amplios" },
+  cortadora: { armor: "Cárter de acero macizo", agility: "Impulso recto con desaceleración torpe", blindSpot: "Costado opuesto a la tobera de descarga" },
+  tarantula: { armor: "Exoesqueleto velloso flexible", agility: "Salto parabólico no guiado", blindSpot: "Punto de apoyo justo tras el aterrizaje" },
+  perro: { armor: "Masa muscular densa y collar", agility: "Gran pique con frenada larga", blindSpot: "Lateral al terminar la embestida recta" },
+  gato: { armor: "Ágil sin coraza estática", agility: "Quiebres súbitos impredecibles", blindSpot: "Detrás del eje de giro del trompo" },
+  aspiradora: { armor: "Chasis cilíndrico de polímero", agility: "Tracción en dos ruedas lenta", blindSpot: "Espacio entre las ráfagas de tuercas" },
+  cortacercos: { armor: "Blindaje motor industrial", agility: "Arco de barrido frontal rígido", blindSpot: "Zona trasera fuera del radio de cables" },
+  fuego: { armor: "Llama viva sin blindaje", agility: "Velocidad pura en línea recta", blindSpot: "Impacto frontal antes de agrupamiento" },
+  cohete: { armor: "Punta de chapa cónica", agility: "Carga en línea recta fija", blindSpot: "Flancos durante el apunte" },
+  enjambre: { armor: "Chapa delgada de descarte", agility: "Zigzag conjunto veloz", blindSpot: "Armas de área y ondas expansivas" },
+  tirador: { armor: "Estructura metálica ligera", agility: "Retroceso reactivo a corta distancia", blindSpot: "Persecución constante a fondo" },
+  saltador: { armor: "Patas elásticas articuladas", agility: "Trayectoria fija en el aire", blindSpot: "Base de impacto durante la agazapada" },
+  emboscador: { armor: "Enterrado en regolito", agility: "Salto vertical sorpresivo", blindSpot: "Círculo exterior fuera de la luz cian" },
+  flotante: { armor: "Blindaje gravitacional leve", agility: "Altura fija con vuelo circular", blindSpot: "Punto inferior tras la picada rasante" },
+  tanque: { armor: "Placa frontal deflectora pesada", agility: "Giro de orugas extremadamente lento", blindSpot: "Reactor dorsal de energía cian" },
+  explosivo: { armor: "Jaula metálica presurizada", agility: "Aproximación directa", blindSpot: "Distancia media provocando detonación" },
+  curandero: { armor: "Módulo médico ligero", agility: "Evasión pasiva a distancia", blindSpot: "Aislamiento rápido sin escolta" },
+};
+
 // Fase 2 (minijefes por debajo de la mitad de vida; jefes finales en su segunda barra; enemies.ts: enraged)
 const PHASE2: Partial<Record<Kind, string>> = { gato: " y maúlla para convocar polillas, refuerzos que nadie pidió", perro: " y salta más seguido, ya sin importarle el cansancio" };
 const BTABS = { bichos: "Bichos", pilotos: "Pilotos", logros: "Logros", stats: "Estadísticas" };
@@ -1353,6 +1388,7 @@ function renderBeast() {
     + `<div class="bblock" tabindex="0"><div class="sect">Datos</div><div class="st bst">${row(d.boss ? "Vida" : "Vida inicial", hp, d.boss ? 8000 : 270, num(hp))}${row("Velocidad", sp, 25, num(sp))}${row("Daño", d.dmg, d.boss ? 45 : 12, num(d.dmg))}${row("Peso", mass, d.boss ? 100 : 15, num(mass))}${row("XP", d.xp, d.boss ? 120 : 6, d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"}` : "Fin de la partida")}</div>`
     + (el ? `<p class="bnote">${el === "rapida" ? "Élite rápida: doble velocidad y 60% de la vida." : "Élite blindada: triple vida y cinco veces más pesada, casi no se la empuja."} Al caer suelta un cofre.</p>` : d.boss ? "" : `<p class="bnote">La vida de las plagas crece con el tiempo de partida.</p>`) + `</div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Cómo ataca</div><p>${HOW[k][0]}</p><div class="sect">Cómo esquivarlo</div><p>${HOW[k][1]}</p>${d.boss ? `<p class="bnote">${d.final ? `Fase 2: al vaciar la primera barra ruge, exige hablar con un superior, llena una segunda y pega más fuerte` : "Fase 2: por debajo de la mitad de vida pierde la paciencia y la compostura"}, va un 20% más rápido${PHASE2[k] ?? ""}.</p>` : ""}</div>`
+    + `<div class="bblock" tabindex="0"><div class="sect">Biometría y debilidades mecánicas</div>${BIOMETRICS[k] ? kv("Blindaje", BIOMETRICS[k].armor) + kv("Maniobrabilidad", BIOMETRICS[k].agility) + kv("Punto ciego", BIOMETRICS[k].blindSpot) : "<p>Sin datos biométricos.</p>"}</div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Trasfondo</div><p class="lore">${LORE[k]}</p></div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Registro propio</div>${met ? kv("Bajas", n) + kv("Primera vez", first) + kv("Daño recibido", Math.round(r?.hurt ?? 0)) + kv("Zonas", r?.zones.map((z) => ZONES[z].short).join(", ") || "Sin registros todavía") : `<p>Sin registros todavía.</p>`}</div>`
     + `<div class="bblock" tabindex="0"><div class="sect">Debilidades</div>${weak.length ? `<div class="st bst">${weak.map(([id, v]) => row(wname(id), v, weak[0][1], String(Math.round(v)))).join("")}</div><p class="bnote">Daño infligido por arma, según el historial propio.</p>` : `<p>Sin registros todavía.</p>`}</div>`

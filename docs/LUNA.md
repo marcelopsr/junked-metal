@@ -14,7 +14,7 @@ Fecha: 2026-10-10. Fuente de verdad para las fases del mapa Luna.
 - **Nave nodriza alienígena recurrente:** enemigo del mapa. Cada tanto aparece, persigue un rato desde el aire disparando y soltando aliens, y se va. No muere del todo: dañarla la echa antes y suelta premio.
 - **3 naves alienígenas menores** como minijefes, con roles distintos (bombardera, abductora/levanta, caza rápida).
 - **Pistolitas de onda:** varios aliens disparan una onda o rayo que se ve venir y se esquiva.
-- **8 aliens de chatarra alienígena:** mismo idioma visual que las hormigas del patio (chatarra plegada, Folded) con forma y luz alienígena. Roles: enjambre, tirador de onda, saltador en baja gravedad, emboscador de cráter, flotante, tanque, explosivo, curandero/escudo. Se agregan en tandas de 2-3.
+- **8 aliens de chatarra alienígena:** mismo idioma visual que las hormigas del patio (chatarra plegada, Folded) con forma y luz alienígena. Roles: enjambre, tirador de onda, saltador en baja gravedad, emboscador de cráter, flotante, tanque, explosivo, curandero/escudo. **Hechos los 8** (`src/aliens.ts`, 2026-10-11): flotante (vuela a altura fija sobre el radio sin deformar y pica contra el auto), tanque (placa frontal que deja pasar el 15 % del daño de frente; se lo rodea), explosivo (se arma con aro en el piso, revienta en área y deja un cráter con `deform`) y curandero (rayo verde y halo que curan al aliado más herido; se queda atrás). Números en `balance.json` (enemigos y ataques `alien_*`).
 - **Eventos:** lluvia de meteoritos (mapa en rojo, marcas de impacto con aviso, cráteres humeantes) y erupción o falla lunar que se expande y obliga a escapar.
 - **Sonido espacial:** ambiente sintetizado propio, sonidos amortiguados, efectos de meteoritos y naves.
 

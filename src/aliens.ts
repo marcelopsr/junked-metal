@@ -1,20 +1,20 @@
 // Aliens de chatarra de la luna (docs/LUNA.md, fase 2): mismo idioma Folded que las hormigas (chapa plegada, remaches) con luces
 // alienígenas verdes y cian que no se apagan con la niebla (de lejos, en el lado oscuro, se ven las luces). Acá viven sus modelos
 // (procedurales con caminata horneada: glb.ts los trata como un bicho Folded más) y su IA; enemies.ts y glb.ts solo los registran.
-// Primera tanda (4 de 8): enjambre, tirador de onda, saltador lunar y emboscador de cráter. Solo aparecen en la luna (spawnTable).
+// Los 8: enjambre, tirador de onda, saltador lunar, emboscador de cráter, flotante, tanque, explosivo y curandero. Solo aparecen en la luna (spawnTable).
 import * as B from "@babylonjs/core";
 import { FOLD } from "./folded";
 import { along, kit, piv } from "./folded_slice";
-import { pbr } from "./render";
-import { template, tor, sph } from "./models";
+import { pbr, shadows } from "./render";
+import { cyl, template, tor, sph } from "./models";
 import { BAL } from "./balance";
 import { rng } from "./rng";
 import { FX } from "./fx";
-import { alignYaw, arc, at, FOOT, LUNA, MOON, onFloor, toLocal, yawOf } from "./moon";
+import { alignYaw, alt, arc, at, flatL, FOOT, hd, hflat, LUNA, MOON, onFloor, rad, toLocal, yawOf } from "./moon";
 import type { Enemy, Kind } from "./enemies";
 
 /** Tipos alien (la nave nodriza los suelta con LUNA.spawn). */
-export const ALIENS = ["enjambre", "tirador", "saltador", "emboscador"] as const;
+export const ALIENS = ["enjambre", "tirador", "saltador", "emboscador", "flotante", "tanque", "explosivo", "curandero"] as const;
 export type Alien = (typeof ALIENS)[number];
 export const isAlien = (k: string): k is Alien => (ALIENS as readonly string[]).includes(k);
 
@@ -155,19 +155,118 @@ function ambushPose(_v: number, walk: number, atk: number) {
   return out;
 }
 
+// ---------- Flotante: platillo de chapa con cúpula de luz y tres tentáculos de cable colgando. Huesos: 0 cuerpo, 1-3 tentáculos ----------
+const FL_A = [0, 1, 2].map((i) => Math.PI / 6 + (i * Math.PI * 2) / 3); // rumbo de cada tentáculo
+function floaterBody() {
+  const K = kit(), { G, bone } = K, g = glow(GREEN);
+  G.cyl(1.15, 0.18, hull(), [0, 0.72, 0], undefined, 8, 0.7); // platillo (ancho arriba)
+  G.cyl(0.8, 0.08, plate(), [0, 0.84, 0], undefined, 8, 1.1); // tapa
+  G.sph(0.5, glow(CYAN), [0, 0.9, 0]); // cúpula
+  for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4; G.box(0.09, 0.05, 0.09, g, [Math.sin(a) * 0.5, 0.7, Math.cos(a) * 0.5]); } // luces del borde
+  G.box(0.26, 0.05, 0.04, g, [0, 0.76, 0.43]); // visor
+  FL_A.forEach((a, i) => {
+    bone(1 + i);
+    const x = Math.sin(a) * 0.24, z = Math.cos(a) * 0.24;
+    G.tube([[x, 0.64, z], [x * 1.25, 0.42, z * 1.25], [x * 1.1, 0.22, z * 1.1], [x * 0.8, 0.06, z * 0.8]], 0.03, FOLD.dark());
+    G.sph(0.09, g, [x * 0.8, 0.06, z * 0.8]);
+  });
+  bone(0);
+  return K.done(1.4);
+}
+function floaterPose(_v: number, walk: number, atk: number) {
+  const ph = walk * Math.PI * 2, out = [B.Matrix.Translation(0, 0.05 * Math.sin(ph), 0)];
+  FL_A.forEach((a, i) => { // se mecen; al picar (atk) se abren hacia afuera como garras
+    const ax = new B.Vector3(Math.cos(a), 0, -Math.sin(a)); // eje tangente: el tentáculo se abre en su plano radial
+    out.push(piv(new B.Vector3(Math.sin(a) * 0.24, 0.64, Math.cos(a) * 0.24), B.Matrix.RotationAxis(ax, -0.25 * Math.sin(ph + i * 2.1) - 0.7 * Math.sin(atk * Math.PI))).multiply(out[0]));
+  });
+  return out;
+}
+
+// ---------- Tanque: casco bajo sobre 6 patas, placa frontal gruesa inclinada con remaches (el blindaje se ve) y el reactor cian expuesto
+// atrás (por donde conviene pegarle). Huesos: 0 cuerpo, 1-6 patas ----------
+const TK_HIPS: Hip[] = [[[0.5, 0.48, 0.45], 0.5], [[0.56, 0.48, 0], 0], [[0.5, 0.48, -0.45], -0.5]];
+function tankBody() {
+  const K = kit(), { G } = K, g = glow(GREEN), armor = FOLD.painted("#8a8f92", 0.5, 84);
+  G.box(1.1, 0.5, 1.5, hull(), [0, 0.66, -0.05]);
+  G.box(1.2, 0.08, 1.3, plate(), [0, 0.95, -0.12]); // techo
+  G.box(1.56, 1.0, 0.16, armor, [0, 0.62, 0.8], [-0.3, 0, 0]); // placa frontal: tapa todo el frente
+  for (const s of [-1, 1]) G.box(0.14, 0.82, 0.5, armor, [s * 0.74, 0.62, 0.6], [0, -s * 0.35, 0]); // alas de la placa
+  G.rivets([-0.62, 1.04, 0.69], [0.62, 1.04, 0.69], 8, [0, 0.3, 1]);
+  G.rivets([-0.62, 0.22, 0.95], [0.62, 0.22, 0.95], 8, [0, 0.3, 1]);
+  G.box(0.72, 0.07, 0.05, g, [0, 0.74, 0.88], [-0.3, 0, 0]); // mirilla
+  along(G, 0.52, 0.52, 0.3, shell(), [0, 0.7, -0.86]);
+  G.sph(0.44, glow(CYAN), [0, 0.7, -1.0]); // reactor de atrás
+  legs(K, TK_HIPS, [0.3, 0.25, 0], [0.62, -0.48, 0.02], 0.1, 1);
+  return K.done(2);
+}
+const tankPose = (_v: number, walk: number, atk: number) => legPose([B.Matrix.Translation(0, 0.02 * Math.abs(Math.sin(walk * Math.PI * 2)), 0.08 * Math.sin(atk * Math.PI))], TK_HIPS, walk, 0.3, 0.22);
+
+// ---------- Explosivo: núcleo verde enjaulado en aros de chapa sobre 4 patitas, con mecha de luz cian. Al armarse (atk) se infla y
+// tiembla. Huesos: 0 cuerpo, 1-4 patas ----------
+const EX_HIPS: Hip[] = [[[0.2, 0.32, 0.12], 0.6], [[0.2, 0.32, -0.12], -0.6]];
+const EX_C = new B.Vector3(0, 0.56, 0); // centro del núcleo
+function bomberBody() {
+  const K = kit(), { G } = K;
+  G.sph(0.66, glow(GREEN), [0, 0.56, 0]); // núcleo
+  for (const [y, w] of [[0.36, 0.56], [0.56, 0.74], [0.76, 0.56]]) G.cyl(w, 0.1, hull(), [0, y, 0], undefined, 8); // aros de la jaula
+  for (let i = 0; i < 4; i++) { const a = (i * Math.PI) / 2 + Math.PI / 4; G.box(0.06, 0.5, 0.06, plate(), [Math.sin(a) * 0.31, 0.56, Math.cos(a) * 0.31]); } // barrotes
+  G.cyl(0.07, 0.3, FOLD.dark(), [0, 0.94, 0], undefined, 6);
+  G.sph(0.15, glow(CYAN), [0, 1.12, 0]); // mecha
+  G.box(0.3, 0.05, 0.04, glow(CYAN), [0, 0.6, 0.39]); // ojos
+  legs(K, EX_HIPS, [0.18, 0.1, 0], [0.36, -0.3, 0.02], 0.045, 1);
+  return K.done(1.4);
+}
+function bomberPose(_v: number, walk: number, atk: number) {
+  const s = 1 + 0.28 * atk, j = 0.03 * atk * Math.sin(atk * 60);
+  return legPose([piv(EX_C, B.Matrix.Scaling(s, s, s)).multiply(B.Matrix.Translation(j, 0.04 * Math.abs(Math.sin(walk * Math.PI * 4)), 0))], EX_HIPS, walk, 0.5, 0.35);
+}
+
+// ---------- Curandero: torre fina sobre 4 patas largas con cabeza de luz y un plato emisor (hexagonal) que gira. Huesos: 0 cuerpo, 1-4 patas,
+// 5 cabeza ----------
+const CU_HIPS: Hip[] = [[[0.18, 0.55, 0.14], 0.7], [[0.18, 0.55, -0.14], -0.7]];
+const CU_HEAD = new B.Vector3(0, 1.42, 0); // de acá sale el rayo (healTick)
+function healerBody() {
+  const K = kit(), { G, bone } = K, g = glow(GREEN);
+  G.cyl(0.36, 0.7, hull(), [0, 0.86, 0], undefined, 6, 0.52);
+  G.cyl(0.56, 0.14, plate(), [0, 0.5, 0], undefined, 6);
+  G.box(0.24, 0.05, 0.04, g, [0, 0.98, 0.2]); // visor
+  for (const s of [-1, 1]) G.tube([[s * 0.12, 1.2, -0.05], [s * 0.3, 1.5, -0.1], [s * 0.34, 1.72, -0.12]], 0.02, FOLD.dark()); // antenas
+  bone(5);
+  G.cyl(0.18, 0.2, FOLD.dark(), [0, 1.26, 0], undefined, 6);
+  G.cyl(0.86, 0.05, plate(), [0, 1.36, 0], undefined, 6); // plato
+  G.cyl(0.7, 0.03, glow(CYAN), [0, 1.39, 0], undefined, 6); // anillo de luz del plato
+  G.sph(0.34, g, [0, 1.5, 0]); // cabeza
+  bone(0);
+  legs(K, CU_HIPS, [0.28, 0.2, 0], [0.56, -0.55, 0.02], 0.05, 1);
+  return K.done(1.4);
+}
+function healerPose(_v: number, walk: number, atk: number) {
+  const out = legPose([B.Matrix.Translation(0, 0.03 * Math.abs(Math.sin(walk * Math.PI * 2)), 0)], CU_HIPS, walk, 0.36, 0.3);
+  out.push(B.Matrix.RotationY((walk * Math.PI) / 3).multiply(B.Matrix.Translation(0, 0.08 * Math.sin(atk * Math.PI), 0))); // el plato hexagonal gira 60° por ciclo: el giro no salta
+  return out;
+}
+
 /** Plantillas Folded con caminata horneada (glb.ts las agrega a PROC). */
 export const ALIEN_PROC: Record<Alien, { build: (vis: number) => B.Mesh[]; bones: number; pose: (vis: number, walk: number, atk: number) => B.Matrix[] }> = {
   enjambre: { build: swarmBody, bones: 5, pose: swarmPose },
   tirador: { build: shooterBody, bones: 6, pose: shooterPose },
   saltador: { build: jumperBody, bones: 5, pose: jumperPose },
   emboscador: { build: ambushBody, bones: 6, pose: ambushPose },
+  flotante: { build: floaterBody, bones: 4, pose: floaterPose },
+  tanque: { build: tankBody, bones: 7, pose: tankPose },
+  explosivo: { build: bomberBody, bones: 5, pose: bomberPose },
+  curandero: { build: healerBody, bones: 6, pose: healerPose },
 };
-/** Registro en GLB (glb.ts): sin archivo; atk = segundos de su animación de ataque (carga del tirador, agazapada del saltador). */
+/** Registro en GLB (glb.ts): sin archivo; atk = segundos de su animación de ataque (carga del tirador, agazapada del saltador, mecha del explosivo). */
 export const ALIEN_GLB = {
   enjambre: { file: "enjambre", scale: 1 },
   tirador: { file: "tirador", scale: 1, atk: ATK.alien_tirador_aviso_s },
   saltador: { file: "saltador", scale: 1, atk: ATK.alien_saltador_aviso_s },
   emboscador: { file: "emboscador", scale: 1 },
+  flotante: { file: "flotante", scale: 1 },
+  tanque: { file: "tanque", scale: 1 },
+  explosivo: { file: "explosivo", scale: 1, atk: ATK.alien_explosivo_aviso_s },
+  curandero: { file: "curandero", scale: 1 },
 };
 
 // ---------- IA (enemies.ts → think, en el marco local del bicho) ----------
@@ -176,6 +275,16 @@ type AI = (e: Enemy, dt: number, to: B.Vector3, dist: number) => number | string
 let packOwed = 0; // compañeros de enjambre ya pedidos que todavía no pensaron (no piden otra manada)
 const fly = new WeakMap<Enemy, { from: B.Vector3; t: number }>();
 const _p = new B.Vector3();
+const floating = new WeakSet<Enemy>();
+/** Gira hacia to a lo sumo turn rad/s y avanza solo hacia donde mira (el tanque: se lo puede rodear). En el marco local, como la IA. */
+function crawl(e: Enemy, dt: number, to: B.Vector3, speed: number, turn: number) {
+  const f = MOON.on ? flatL(e.node.forward, e.pos) : e.node.forward.clone(); f.y = 0; f.normalize();
+  const diff = Math.atan2(f.z * to.x - f.x * to.z, f.x * to.x + f.z * to.z), v = e.body.getLinearVelocity(), k = Math.min(1, dt * 4);
+  const s = speed * Math.max(0, Math.cos(diff));
+  e.body.setLinearVelocity(new B.Vector3(v.x + (f.x * s - v.x) * k, v.y, v.z + (f.z * s - v.z) * k));
+  e.body.setAngularVelocity(new B.Vector3(0, B.Scalar.Clamp(diff * 4, -turn, turn), 0));
+}
+const slowMul = (e: Enemy) => (e.slow > 0 ? ATK.bicho_lento_mult : 1);
 export const ALIEN_AI: Record<Alien, AI> = {
   // Llega en manada (el primero pide al resto alrededor suyo) y zigzaguea de a muchos hasta estar encima
   enjambre: (e, _dt, to, dist) => {
@@ -246,6 +355,39 @@ export const ALIEN_AI: Record<Alien, AI> = {
     if ((e.timer -= dt) <= 0 && dist > ATK.alien_emboscador_radio * 2) e.state = 0; // lejos otra vez: se vuelve a enterrar
     return 1;
   },
+  // Vuela a altura fija sobre el radio de la luna (no sigue el piso: pasa por encima de cráteres y montículos), ronda al auto
+  // y cada tanto baja en picada contra él; después vuelve a subir
+  flotante: (e, dt, to, dist) => {
+    if (!floating.has(e)) { floating.add(e); e.body.setGravityFactor(0); e.dir = rng() < 0.5 ? 1 : -1; } // e.dir: sentido de la ronda
+    const v = e.body.getLinearVelocity(), dive = e.state === 1;
+    let sp = e.def.speed * e.spd * slowMul(e), ev: string | null = null;
+    if ((e.timer -= dt) <= 0 || (dive && e.touchCd > 0.5)) { // terminó la picada (o ya mordió): sube
+      if (dive) { e.state = 0; e.timer = ATK.alien_flotante_cada_s; }
+      else if (dist < ATK.alien_flotante_orbita * 1.6) { e.state = 1; e.timer = ATK.alien_flotante_picada_s; ev = "spit_aim"; } // aviso: chispas
+    }
+    let rx: number, tz: number; // hacia el auto / de costado
+    if (e.state === 1) { sp *= ATK.alien_flotante_picada_vel; rx = 1; tz = 0; }
+    else { rx = B.Scalar.Clamp((dist - ATK.alien_flotante_orbita) / 3, -0.6, 1); tz = 0.7 * e.dir; }
+    const wx = (to.x * rx + to.z * tz) * sp, wz = (to.z * rx - to.x * tz) * sp;
+    const hy = e.state === 1 ? 0.4 - (MOON.on ? alt(e.pos) : e.pos.y) : (MOON.on ? MOON.R : 0) + ATK.alien_flotante_altura - rad(e.pos);
+    const k = Math.min(1, dt * 4), f = MOON.on ? flatL(e.node.forward, e.pos) : e.node.forward.clone(); f.y = 0; f.normalize();
+    e.body.setLinearVelocity(new B.Vector3(v.x + (wx - v.x) * k, B.Scalar.Clamp(hy * 4, -12, 8), v.z + (wz - v.z) * k));
+    e.body.setAngularVelocity(new B.Vector3(0, B.Scalar.Clamp(Math.atan2(f.z * to.x - f.x * to.z, f.x * to.x + f.z * to.z) * 6, -6, 6), 0));
+    return ev;
+  },
+  // Lento y de giro corto: siempre encara al auto con la placa (armorMul), así que hay que rodearlo
+  tanque: (e, dt, to) => { crawl(e, dt, to, e.def.speed * e.spd * slowMul(e), ATK.alien_tanque_giro); return null; },
+  // Corre al auto; cerca se planta, se arma con un aro en el piso del tamaño de la explosión y revienta ("boom": main.ts daña y deja un cráter)
+  explosivo: (e, dt, _to, dist) => {
+    if (e.atk >= 0) {
+      e.showTele(e.pos, ATK.alien_explosivo_radio, e.atk / ATK.alien_explosivo_aviso_s);
+      return (e.atk += dt) >= ATK.alien_explosivo_aviso_s ? "boom" : 0;
+    }
+    if (dist < ATK.alien_explosivo_arma) e.atk = 0;
+    return 1;
+  },
+  // Se queda atrás de los demás (a distancia del auto, como el tirador); el rayo que cura lo maneja healTick desde main.ts
+  curandero: (_e, _dt, _to, dist) => (dist < ATK.alien_curandero_cerca ? -0.8 : dist > ATK.alien_curandero_distancia ? 1 : 0),
 };
 
 // ---------- Onda del tirador: anillo cian que viaja lento a la altura del auto (main.ts lo mueve como el ácido) ----------
@@ -257,4 +399,49 @@ export function alienWave(e: Enemy, car: B.Vector3) {
   // ponytail: la orientación se fija al salir; en la luna el anillo se inclina un poco al recorrer la curva (≤25°); techo: reorientarlo por cuadro
   if (MOON.on) m.rotationQuaternion = alignYaw(from, yawOf(dir, from)); else m.rotation.y = Math.atan2(dir.x, dir.z);
   return { m, v: dir.scale(ATK.alien_onda_vel), life: ATK.alien_onda_vida_s, k: e.kind, float: true }; // float: sin caída (main.ts)
+}
+
+// ---------- Tanque: blindaje frontal ----------
+const FRONT = Math.cos((ATK.alien_tanque_frente_grados * Math.PI) / 180);
+/** Multiplicador del daño que recibe e si el golpe viene de from (main.ts damage(), con la posición del auto): el tanque casi no siente
+ *  lo que le entra por delante de la placa. ponytail: el origen es el auto, no el proyectil (todas las armas salen del auto); una explosión
+ *  ajena (meteorito) desde atrás también cuenta por dónde está el auto. Techo: pasar el origen real del golpe a damage(). */
+export function armorMul(e: Enemy, from: B.Vector3) {
+  if (e.kind !== "tanque") return 1;
+  const d = hflat(from.subtract(e.pos), e.pos), l = d.length();
+  return l > 1e-3 && B.Vector3.Dot(e.node.forward, d) / l > FRONT ? ATK.alien_tanque_blindaje : 1;
+}
+
+// ---------- Curandero: rayo verde al aliado más herido en alcance y halo sobre él (instancias hijas: se van con el curandero) ----------
+const beamTpl = () => { const t = template("alienRayo", () => [cyl(0.08, 0.08, 1, glow(GREEN), [0, 0.5, 0], undefined, 6)]); shadows.removeShadowCaster(t); return t; };
+const haloTpl = () => { const t = template("alienHalo", () => [tor(2, 0.06, glow(GREEN), [0, 0.08, 0], undefined, 20), tor(1.5, 0.04, glow(CYAN), [0, 0.6, 0], undefined, 16)]); shadows.removeShadowCaster(t); return t; };
+const heal = new WeakMap<Enemy, { beam: B.InstancedMesh; halo: B.InstancedMesh }>();
+const _inv = new B.Matrix(), _a = new B.Vector3(), _b = new B.Vector3(), UP = B.Vector3.Up();
+/** Cada cuadro (main.ts, salvo aturdido): repone vida al aliado más herido dentro del alcance; vis = dibujar el rayo (no en __sim). */
+export function healTick(e: Enemy, all: Enemy[], dt: number, vis: boolean) {
+  let best: Enemy | null = null, low = 1;
+  for (const o of all) {
+    if (o === e || o.def.boss || o.hp <= 0) continue;
+    const f = o.hp / o.maxHp;
+    if (f < low && hd(o.pos, e.pos) < ATK.alien_curandero_radio) { low = f; best = o; }
+  }
+  if (best) best.hp = Math.min(best.maxHp, best.hp + best.maxHp * ATK.alien_curandero_cura * dt);
+  if (!vis) return;
+  let fx = heal.get(e);
+  if (!best) { if (fx) fx.beam.isVisible = fx.halo.isVisible = false; return; }
+  if (!fx) {
+    fx = { beam: beamTpl().createInstance("rayo"), halo: haloTpl().createInstance("halo") };
+    fx.beam.parent = fx.halo.parent = e.node; fx.beam.isPickable = fx.halo.isPickable = false;
+    fx.beam.rotationQuaternion = new B.Quaternion(); fx.halo.rotationQuaternion = new B.Quaternion();
+    heal.set(e, fx);
+  }
+  fx.beam.isVisible = fx.halo.isVisible = true;
+  e.node.getWorldMatrix().invertToRef(_inv); // todo en el marco del curandero (son sus hijos)
+  B.Vector3.TransformCoordinatesToRef(at(best.pos, 0, best.def.size[1] * 0.6, 0), _inv, _b);
+  _b.subtractToRef(CU_HEAD, _a);
+  fx.beam.position.copyFrom(CU_HEAD); fx.beam.scaling.set(1, _a.length(), 1);
+  B.Quaternion.FromUnitVectorsToRef(UP, _a.normalize(), fx.beam.rotationQuaternion!);
+  B.Vector3.TransformCoordinatesToRef(best.pos, _inv, fx.halo.position);
+  fx.halo.scaling.setAll(best.radius * 1.3 * (1 + 0.08 * Math.sin(e.clock * 8)));
+  if (MOON.on && e.node.rotationQuaternion) B.Quaternion.InverseToRef(e.node.rotationQuaternion, fx.halo.rotationQuaternion!).multiplyInPlace(alignYaw(best.pos, 0)); // parado en el piso del aliado
 }

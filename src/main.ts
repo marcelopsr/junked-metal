@@ -859,7 +859,7 @@ function update(dt: number) {
   } else if (boostSec <= 1.5) {
     motorFxT = 0;
   }
-  // Embestir objetos del patio los rompe
+  // Embestir objetos del patio los rompe y despide chispas/fricción según el material
   const spd = Math.abs(r.fs);
   if (spd > 9 && (smashCd -= dt) <= 0) {
     const pots = hitBreakables(c.pos, 1.3, spd * c.def.ram * 1.5);
@@ -1815,7 +1815,8 @@ if (import.meta.env.DEV) Object.assign(window, {
     sky: () => ({ sol: skyVisible(SUN_DIR, cam), tierra: skyVisible(EARTH_DIR, cam) }),
     astro: (sun = true) => { if (!car || !MOON.on) return "sin luna"; skyLaunch(sun, car.pos); return skyInfo(); }, // lanza ya un proyectil del Sol (true) o de la Tierra
     info: () => ({ on: MOON.on, alt: car ? alt(car.pos) : null, up: car ? upAt(car.pos) : null, enemies: enemies.length, spits: spits.length }),
-    wound: (f = 0.5) => { for (const e of enemies) e.hp = e.maxHp * f; return enemies.length; }, // deja a todos con f de vida (el curandero tiene a quién curar)
+    clear: () => { for (const e of enemies) if (!e.def.boss) e.hp = -1e9; return enemies.length; }, // borra los bichos sin contarlos como bajas (sin XP)
+    wound: (f = 0.5) => { for (const e of enemies) if (e.hp > 0) e.hp = e.maxHp * f; return enemies.length; }, // deja a todos con f de vida (el curandero tiene a quién curar)
     // fila de bichos delante del auto (por defecto los aliens), a dist m y separados sep m; tough: no se mueren con las armas (capturas)
     row: (kinds: Kind[] = [...ALIENS], dist = 10, sep = 3.2, tough = true) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(), n0 = enemies.length; kinds.forEach((k, i) => { const x = (i - (kinds.length - 1) / 2) * sep; spawnEnemy(k, onFloor(at(car!.pos, f.x * dist + f.z * x, 0, f.z * dist - f.x * x), 0.5)); }); if (tough) for (const e of enemies.slice(n0)) e.hp = e.maxHp = 1e6; return enemies.length; },
   },

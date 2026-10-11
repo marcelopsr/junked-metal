@@ -212,8 +212,8 @@ export const sessions = [
     { id: "sol", act: async (p) => { await labReady(p); await p.evaluate(() => { window.__play(3); window.__god(); window.__sim(30); window.__killAll(); window.__luna.go("sol"); window.__luna.ring(10, 13); }); await tick(p, 60); } },
     { id: "tierra", perf: false, act: async (p) => { await p.evaluate(() => { window.__cfg({ camMode: "baja" }); window.__luna.go("tierra"); }); await tick(p, 40); } },
     { id: "oscuro", act: async (p) => { await p.evaluate(() => { window.__cfg({ camMode: "actual" }); window.__killAll(); window.__luna.go("oscuro"); window.__luna.ring(14, 24); window.__luna.ring(6, 32, "escarabajo"); }); await tick(p, 70); } },
-    // Aliens (src/aliens.ts): fila con los 4 (el enjambre ya pidió su manada, el emboscador empieza a enterrarse) y el tirador con su onda en vuelo
-    { id: "aliens", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.row(undefined, 8, 3); }); await tick(p, 6); } },
+    // Aliens (src/aliens.ts): fila con los 4 primeros (el enjambre ya pidió su manada, el emboscador empieza a enterrarse) y el tirador con su onda en vuelo
+    { id: "aliens", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.row(["enjambre", "tirador", "saltador", "emboscador"], 8, 3); }); await tick(p, 6); } },
     { id: "aliens-onda", perf: false, act: async (p) => {
       await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.row(["tirador"], 15); });
       for (let i = 0; i < 80 && !(await p.evaluate(() => window.__luna.info().spits > 0)); i++) await tick(p, 4);
@@ -232,6 +232,15 @@ export const sessions = [
     { id: "nave-bombardera", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("bombardera"); }); await tick(p, 150); } },
     { id: "nave-abductora", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("abductora"); }); await tick(p, 230); } },
     { id: "nave-caza", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("caza"); }); await tick(p, 24); } },
+  ] },
+  // Los 8 aliens (src/aliens.ts) en una carga limpia (sin XP previa: no sube de nivel en medio). Fila de los 8; después los 4 últimos heridos
+  // a la mitad (el flotante ya subió, el tanque encara con la placa, el explosivo se arma con su aro, el curandero tira el rayo) y el cráter del explosivo
+  { id: "luna_aliens", query: "?mute&seed=3&zone=luna", shots: [
+    { id: "ocho", perf: false, act: async (p) => { await labReady(p); await p.evaluate(() => { window.__play(3); window.__god(); window.__luna.go("sol"); window.__luna.row(undefined, 11, 2.6); }); await tick(p, 30); } }, // 30 cuadros: ya salió la tanda inicial de bichos (nuevos la borra)
+    { id: "nuevos", perf: false, act: async (p) => { await p.evaluate(() => { window.__luna.clear(); window.__luna.row(["flotante", "tanque", "explosivo", "curandero"], 9, 3.2); window.__luna.wound(0.5); }); await tick(p, 50); } },
+    { id: "boom", perf: false, act: async (p) => { // si las armas matan algo y sube de nivel, se elige la primera carta (última captura de la sesión)
+      for (let i = 0; i < 9; i++) { await tick(p, 10); if (!(await p.evaluate(() => document.getElementById("levelup").classList.contains("hidden")))) { await p.keyboard.press("1"); await p.keyboard.press("Enter"); } }
+    } },
   ] },
   // partida_llena: 300 s de sim (partida avanzada, t=5 min) → mide el estado con armas evolucionadas y oleadas densas.
   // Medido: ~168 draws PC (thin-instances agrupan por tipo; menos que partida-curso/90 s por diferente mezcla de proyectiles).

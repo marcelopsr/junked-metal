@@ -30,6 +30,10 @@ export const DEF: Record<Kind, Def> = {
   tirador: { name: "Tirador de onda", ...stats("tirador"), size: [1, 1.1, 1.1], color: "#7dff5a" },
   saltador: { name: "Saltador lunar", ...stats("saltador"), size: [0.9, 0.8, 1.2], color: "#7dff5a" },
   emboscador: { name: "Emboscador de cráter", ...stats("emboscador"), size: [1.4, 0.8, 1.4], color: "#3ff2ff" },
+  flotante: { name: "Flotante", ...stats("flotante"), size: [1.1, 0.8, 1.1], color: "#3ff2ff" },
+  tanque: { name: "Tanque de chatarra", ...stats("tanque"), size: [1.6, 1.1, 2], color: "#8a8f92" },
+  explosivo: { name: "Explosivo", ...stats("explosivo"), size: [0.8, 0.8, 0.8], color: "#7dff5a" },
+  curandero: { name: "Curandero", ...stats("curandero"), size: [0.8, 1.6, 0.8], color: "#7dff5a" },
   rey: { name: "ESCARABAJO REY", ...stats("rey"), size: [6, 3.8, 8], boss: true, scale: 3.5, color: "#d4a017" },
   cortadora: { name: "CORTADORA DE CÉSPED", ...stats("cortadora"), size: [7, 4.5, 6.4], boss: true, color: "#dc2626" },
   tarantula: { name: "TARÁNTULA", ...stats("tarantula"), size: [6, 2.6, 6.5], boss: true, scale: 3, color: "#7a55a8" },
@@ -192,7 +196,7 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
-    if (kind === "perro" || kind === "saltador") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída)
+    if (kind === "perro" || kind === "saltador" || kind === "explosivo") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
     if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
