@@ -640,7 +640,7 @@ const dmgOut: Record<string, number> = {};
 let dmgSrc = "";
 function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
   if (hitShip(e, dmg)) return; // luna: las naves son blancos de las armas (moon_ships.ts shipTargets)
-  if (e.kind === "tanque" && car) { const k = armorMul(e, car.pos); if (k < 1) { dmg *= k; if (!simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } } // tanque alien (aliens.ts): placa frontal
+  if (car && isAlien(e.kind)) { const k = armorMul(e, car.pos); if (k < 1) { dmg *= k; if (e.kind === "tanque" && !simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } } // tanque alien (aliens.ts): placa frontal y escudo del curandero
   if (dmgSrc) {
     const eff = Math.min(dmg, Math.max(0, e.hp));
     dmgOut[dmgSrc] = (dmgOut[dmgSrc] ?? 0) + eff;
@@ -672,10 +672,21 @@ function explode(pos: B.Vector3, r: number, dmg: number) {
   }
 }
 
+// Explosivo alien: daña a todo lo de adentro del aro y deja un cráter de verdad. Se usa al armarse y al morir por daño (otros explosivos del radio reviente en cadena)
+const boomed = new WeakSet<Enemy>();
+function boom(e: Enemy) {
+  if (boomed.has(e) || !car) return;
+  boomed.add(e); // una sola explosión por bicho (la cadena no vuelve sobre sí misma)
+  if (hd(car.pos, e.pos) < ATK.alien_explosivo_radio + Math.max(car.def.size[0], car.def.size[2]) / 2) hurt(ATK.alien_explosivo_dano, false, "explosión " + e.kind, e.kind);
+  explode(e.pos, ATK.alien_explosivo_radio, ATK.alien_explosivo_dano_bicho);
+  if (MOON.on) deform(e.pos, ATK.alien_explosivo_crater_r, ATK.alien_explosivo_crater_hondo);
+}
+
 // Color del charco de cada insecto = color de sus ojos (models.ts)
 const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora: "#ffb020", escarabajo: "#9acd32", polilla: "#c9a0ff" };
 const CONFETI = ["#ffd84d", "#ff9bd4", "#7de8ff", "#b6ff6a", "#ffa05a"];
 function kill(e: Enemy) {
+  if (e.kind === "explosivo" && e.hp > -1e8) boom(e); // murió por daño (clear/boom ponen -1e9)
   kills++;
   const s = hudKill(); // una sola llamada: cada hudKill() suma una baja (antes se llamaba 5 veces y el cartel mostraba otro número)
   bestStreak = Math.max(bestStreak, s); if (e.def.boss) bossKills++;
@@ -970,12 +981,7 @@ function update(dt: number) {
     const tgt = ld ? ld.pos.add(ld.node.right.scale(e.slot.x)).addInPlace(ld.node.forward.scale(-e.slot.z)) : c.pos;
     const ev = e.stun > 0 ? stunned(e, wdt) : e.update(wdt, tgt);
     if (ev === "spit_aim" && !simulating) { const f = e.node.forward; FX.sparks(e.pos.add(upv(e.pos, 0.5))); mark("scorch", e.pos, yawOf(f, e.pos), 0.35, 4); }
-    if (ev === "boom") { // explosivo alien (aliens.ts): revienta en su aro, daña a todo lo de adentro y deja un cráter de verdad
-      if (hd(c.pos, e.pos) < ATK.alien_explosivo_radio + carR) hurt(ATK.alien_explosivo_dano, false, "explosión " + e.kind, e.kind);
-      explode(e.pos, ATK.alien_explosivo_radio, ATK.alien_explosivo_dano_bicho);
-      if (MOON.on) deform(e.pos, ATK.alien_explosivo_crater_r, ATK.alien_explosivo_crater_hondo);
-      e.hp = -1e9; continue; // se fue sin dejar premio
-    }
+    if (ev === "boom") { boom(e); e.hp = -1e9; continue; } // explosivo alien (aliens.ts): se fue sin dejar premio
     if (e.kind === "curandero" && e.stun <= 0) healTick(e, enemies, wdt, !simulating); // rayo que cura (aliens.ts)
     if (ev === "wave") { pushSpit(alienWave(e, c.pos)); if (!simulating) SPACE.alienWave(panTo(c.pos, e.pos, camYaw), hd(c.pos, e.pos)); } // tirador de onda (aliens.ts): anillo lento, se esquiva
     if (ev === "spit") {
@@ -1820,4 +1826,5 @@ if (import.meta.env.DEV) Object.assign(window, {
     // fila de bichos delante del auto (por defecto los aliens), a dist m y separados sep m; tough: no se mueren con las armas (capturas)
     row: (kinds: Kind[] = [...ALIENS], dist = 10, sep = 3.2, tough = true) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(), n0 = enemies.length; kinds.forEach((k, i) => { const x = (i - (kinds.length - 1) / 2) * sep; spawnEnemy(k, onFloor(at(car!.pos, f.x * dist + f.z * x, 0, f.z * dist - f.x * x), 0.5)); }); if (tough) for (const e of enemies.slice(n0)) e.hp = e.maxHp = 1e6; return enemies.length; },
   },
+    killOne: (kind: Kind) => { const e = enemies.find((x) => x.kind === kind && x.hp > 0); if (e) damage(e, 1e5); return !!e; }, // mata a uno por daño (el explosivo revienta en cadena)
 });

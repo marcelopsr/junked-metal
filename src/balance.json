@@ -458,7 +458,8 @@
     {"id":"alien_curandero_distancia","valor":16,"descripcion":"Luna, curandero: distancia (m) al auto a la que se queda, detrás de los demás"},
     {"id":"alien_curandero_cerca","valor":10,"descripcion":"Luna, curandero: más cerca que esto (m) retrocede"},
     {"id":"alien_curandero_radio","valor":10,"descripcion":"Luna, curandero: alcance (m) del rayo que cura"},
-    {"id":"alien_curandero_cura","valor":0.15,"descripcion":"Luna, curandero: fracción de la vida máxima del aliado que repone por segundo (al más herido en alcance)"}
+    {"id":"alien_curandero_cura","valor":0.15,"descripcion":"Luna, curandero: fracción de la vida máxima del aliado que repone por segundo (al más herido en alcance)"},
+    {"id":"alien_curandero_escudo","valor":0.5,"descripcion":"Luna, curandero: multiplicador del daño que recibe el aliado al que apunta el rayo (0.5 = la mitad) mientras lo cura"}
   ],
   "autos": [
     {"id":"buggy","nombre":"El Divorciado","precio":0,"vida":150,"velocidad":15,"aceleracion":32,"giro":3.2,"agarre":10,"embestida":3,"masa":1},

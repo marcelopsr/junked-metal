@@ -407,10 +407,13 @@ const FRONT = Math.cos((ATK.alien_tanque_frente_grados * Math.PI) / 180);
  *  lo que le entra por delante de la placa. ponytail: el origen es el auto, no el proyectil (todas las armas salen del auto); una explosión
  *  ajena (meteorito) desde atrás también cuenta por dónde está el auto. Techo: pasar el origen real del golpe a damage(). */
 export function armorMul(e: Enemy, from: B.Vector3) {
-  if (e.kind !== "tanque") return 1;
+  const sh = (shieldUntil.get(e) ?? 0) > healClock ? ATK.alien_curandero_escudo : 1; // escudo del curandero (healTick)
+  if (e.kind !== "tanque") return sh;
   const d = hflat(from.subtract(e.pos), e.pos), l = d.length();
-  return l > 1e-3 && B.Vector3.Dot(e.node.forward, d) / l > FRONT ? ATK.alien_tanque_blindaje : 1;
+  return sh * (l > 1e-3 && B.Vector3.Dot(e.node.forward, d) / l > FRONT ? ATK.alien_tanque_blindaje : 1);
 }
+const shieldUntil = new WeakMap<Enemy, number>();
+let healClock = 0; // reloj propio (suma el dt de cada curandero: solo importa que avance; el escudo se renueva cada cuadro mientras el rayo lo toca)
 
 // ---------- Curandero: rayo verde al aliado más herido en alcance y halo sobre él (instancias hijas: se van con el curandero) ----------
 const beamTpl = () => { const t = template("alienRayo", () => [cyl(0.08, 0.08, 1, glow(GREEN), [0, 0.5, 0], undefined, 6)]); shadows.removeShadowCaster(t); return t; };
@@ -425,7 +428,8 @@ export function healTick(e: Enemy, all: Enemy[], dt: number, vis: boolean) {
     const f = o.hp / o.maxHp;
     if (f < low && hd(o.pos, e.pos) < ATK.alien_curandero_radio) { low = f; best = o; }
   }
-  if (best) best.hp = Math.min(best.maxHp, best.hp + best.maxHp * ATK.alien_curandero_cura * dt);
+  healClock += dt;
+  if (best) { best.hp = Math.min(best.maxHp, best.hp + best.maxHp * ATK.alien_curandero_cura * dt); shieldUntil.set(best, healClock + 0.25); }
   if (!vis) return;
   let fx = heal.get(e);
   if (!best) { if (fx) fx.beam.isVisible = fx.halo.isVisible = false; return; }
