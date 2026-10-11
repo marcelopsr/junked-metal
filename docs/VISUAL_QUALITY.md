@@ -1084,6 +1084,27 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #58 (Transmisión & Neumática Mural: Slipper Clutch con Corona Expuesta, Carrete de Manguera, Unidad FRL Mural y Carraca en SFX)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 24.6 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Carrete / enrollador mural de manguera neumática Folded (Workshop Tools & Props 3D Modeler · `src/folded_slice.ts`):**
+   - Incorporado carrete orientable `hoseReelFold()` en chapa gruesa en C (`FOLD.dark()`) con 4 bulones de anclaje a pared, racor giratorio de latón para acometida de aire, y horquilla basculante de giro horizontal a 180° en chapa estampada azul industrial (`FOLD.painted("#1e3a5f")`).
+   - Tambor cilíndrico rotativo de chapa estampada con dos discos laterales envolventes con nervaduras de refuerzo y rebordes redondeados, mecanismo lateral de trinquete ratchet con rueda dentada de 8 dientes y uña de bloqueo automático, cárter sellado con resorte espiral de rebobinado de fuerza constante, y 3 capas de manguera de poliuretano amarillo/naranja de alta visibilidad (`FOLD.painted("#f59e0b")`).
+   - Boquilla frontal de salida con ventana guía provista de 4 rodillos de teflón virgen de baja fricción (`FOLD.painted("#f8fafc")`: 2 horizontales y 2 verticales), tramo saliente con tope esférico bipartido de goma negra (`FOLD.rubber()`) y enchufe rápido hembra de latón (`FOLD.painted("#d97706")`); 0 draw calls adicionales al mapearse al atlas Folded con `done(18)`.
+2. **Unidad FRL mural de tratamiento de aire y montaje de taller (Workshop Diorama 3D Modeler · `src/menuscene.ts`):**
+   - Incorporada unidad FRL mural `frlAirUnit(metal, fDark)` montada en la pared izquierda del box (`[-33, 9, 8]`): bloque colector superior en aluminio mecanizado con pletina mural; vaso decantador de partículas y condensados en policarbonato transparente (`M.glass()`) con jaula ranurada protectora y válvula de purga automática inferior; regulador de presión central con pomo estriado y micro-manómetro analógico frontal con esfera blanca y aguja roja; vaso lubricador de aceite neumático en policarbonato con visor de gotas/caudal en latón (`M.metal("#d97706")`); y bajante vertical rígida de cobre acodada con válvula de corte con palanca roja, enchufe rápido y 2 abrazaderas omega completas con junta aislante y tornillería.
+   - Montaje del carrete mural `hoseReelFold()` anclado al lateral izquierdo del box (`place(hoseReelFold(), [-33, 11, 14], [0, 0.4, 0])`); ambas piezas integradas en `menu_bench_props` con sombras dinámicas completas y 0 draw calls adicionales.
+3. **Embrague antirrebote Slipper Clutch y corona dentada Spur Gear (Procedural Vehicle 3D Modeler · `src/models.ts`):**
+   - Incorporado conjunto de embrague Slipper Clutch contiguo al motor eléctrico Tipo 540 y a su piñón de ataque de bronce para chasis expuestos (`buggy`, `monster` y `carrera`): corona dentada principal Spur Gear en composite blanco Delrin de competición (`cyl(0.068, 0.068, 0.007, M.plastic("#f8fafc"))`) con rebaje interior, zapatas anulares de ferodo de fricción (`M.matte("#78350f")`) y 6 orificios perimetrales circulares de aligeramiento a 60°.
+   - Dos platos de presión Slipper Plates de aluminio mecanizado CNC anodizado azul (`M.metal("#0284c7")`), muelle helicoidal de compresión con 4 espiras toroidales de precarga guiadas sobre el eje de acero cromado, arandelas de asiento, y tuerca hexagonal autoblocante M4 con casquillo de freno Nyloc en nylon azul en el extremo; 0 draw calls adicionales integrados con color de vértice.
+4. **Sonidos diegéticos de carraca de llave de vaso y purga de aire (Audio Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.ratchetSocketWrench(pan)`: carraca mecánica de llave de vaso de cromo-vanadio sintetizada mediante tren progresivo de 6 pulsos mecánicos con ondas triangulares (4200–5600 Hz), siseo filtrado highpass (6200–1800 Hz) y click percusivo cuadrado (1200–800 Hz) con `gate("ratchet-wrench", 4)`.
+   - Incorporado `SFX.airPurge(pan)`: purga de condensados de filtro FRL o disparo de sobrepresión combinando golpe sordo subsónico en onda triangular (480–160 Hz), siseo turbulento bandpass (4400–2400 Hz) y silbido agudo residual highpass (7200–3000 Hz) con `gate("air-purge", 4)`.
+
+---
+
 ## 2026-10-10 · Ciclo #57 (Neumática de Taller & Detalle Eléctrico: Compresor con Calderín, Manguera Helicoidal con Pistola de Soplado, Manguitos Termorretráctiles y SFX)
 
 **Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 21.1 s).

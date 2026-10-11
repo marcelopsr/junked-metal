@@ -4,7 +4,7 @@ import { applyClimate, canvasTex, glow, lamp, LOOK, M, menuLights, pbr, setDof, 
 import { ambient } from "./fx";
 import { brick, canvasTexture, KIT, kitPut, M3C, wornMat, type KitId } from "./kit3d";
 import { showWorld } from "./world";
-import { airCompressorFold, benchViseFold, drillPressFold, millingMachineFold } from "./folded_slice";
+import { airCompressorFold, benchViseFold, drillPressFold, hoseReelFold, millingMachineFold } from "./folded_slice";
 
 // Escenas de los menús (no de la partida). Sistema de configuración:
 // - SETS: escenarios físicos (cuarto + utilería fija), armados la primera vez que se ven y lejos entre sí (solo uno encendido).
@@ -254,6 +254,8 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     machineLamp(metal, fDark),
     drillViseAndChips(metal, fDark),
     balanceLead(),
+    place(hoseReelFold(), [-33, 11, 14], [0, 0.4, 0]),
+    place(frlAirUnit(metal, fDark), [-33, 9, 8], [0, 0, 0]),
     // repuestos: dos ruedas, batería con bornes y cables, tornillos y tuercas, latas de pintura, destornillador suelto, taza enlozada
     place(wheel(2, 1, "#8a5a3a"), [6.5, 0.5, 6.5], [0, 0.4, Math.PI / 2]), place(wheel(2, 1, "#3a6b7c"), [8.6, 1.0, 4.4], [0, -0.3, 0]),
     box(3.6, 1.4, 1.7, fTeal, [-14, 0.7, 4.5]), box(3.65, 0.45, 1.75, fDark, [-14, 1.25, 4.5]),
@@ -642,6 +644,203 @@ export function airHoseAndBlowGun(metal: B.Material, fDark: B.Material): B.Mesh 
   parts.push(tube(hosePath, 0.065, hoseMat));
 
   return merge("airHoseAndBlowGun", parts);
+}
+
+export function frlAirUnit(metal: B.Material, fDark: B.Material): B.Mesh {
+  const brassMat = M.metal("#d97706");
+  const glassMat = M.glass();
+  const dialWhite = M.plastic("#f8fafc");
+  const needleRed = M.plastic("#ef4444");
+  const parts: B.Mesh[] = [];
+
+  // 1. Pletina de montaje mural y bloque colector superior en aluminio mecanizado
+  // Pletina mural de fijación a la pared izquierda
+  parts.push(
+    box(0.14, 2.4, 4.8, metal, [0.07, 0.4, 0]),
+    box(0.18, 0.4, 4.9, fDark, [0.09, 0.4, 0]),
+    // 4 tornillos de anclaje mural en esquinas
+    cyl(0.22, 0.22, 0.12, fDark, [0.15, 1.3, -2.0], [0, 0, Math.PI / 2], 6),
+    cyl(0.22, 0.22, 0.12, fDark, [0.15, 1.3, 2.0], [0, 0, Math.PI / 2], 6),
+    cyl(0.22, 0.22, 0.12, fDark, [0.15, -0.5, -2.0], [0, 0, Math.PI / 2], 6),
+    cyl(0.22, 0.22, 0.12, fDark, [0.15, -0.5, 2.0], [0, 0, Math.PI / 2], 6),
+    // Separadores / cartelas de soporte entre pletina y colector
+    box(0.55, 0.45, 0.5, metal, [0.42, 0.5, -1.6]),
+    box(0.55, 0.45, 0.5, metal, [0.42, 0.5, 1.6]),
+    // Bloques colectores modulares mecanizados (Filtro, Regulador, Lubricador)
+    box(1.25, 1.15, 1.35, metal, [0.95, 0.5, -1.6]),
+    box(1.35, 1.25, 1.45, metal, [1.0, 0.5, 0]),
+    box(1.25, 1.15, 1.35, metal, [0.95, 0.5, 1.6]),
+    // Bridas modulares intermedias de unión con tornillería
+    box(1.4, 1.2, 0.24, fDark, [0.98, 0.5, -0.8]),
+    box(1.4, 1.2, 0.24, fDark, [0.98, 0.5, 0.8]),
+    cyl(0.12, 0.12, 0.1, metal, [1.62, 0.85, -0.8], [0, 0, Math.PI / 2], 6),
+    cyl(0.12, 0.12, 0.1, metal, [1.62, 0.15, -0.8], [0, 0, Math.PI / 2], 6),
+    cyl(0.12, 0.12, 0.1, metal, [1.62, 0.85, 0.8], [0, 0, Math.PI / 2], 6),
+    cyl(0.12, 0.12, 0.1, metal, [1.62, 0.15, 0.8], [0, 0, Math.PI / 2], 6),
+    // Racores roscados en los extremos (entrada y salida)
+    cyl(0.48, 0.48, 0.32, brassMat, [0.95, 0.5, -2.35], [Math.PI / 2, 0, 0], 6),
+    cyl(0.45, 0.45, 0.35, brassMat, [0.95, 0.5, 2.35], [Math.PI / 2, 0, 0], 6)
+  );
+
+  // 2. Vaso decantador de filtro de partículas y condensados en policarbonato con rejilla metálica
+  parts.push(
+    // Anillo roscado de acople superior
+    cyl(1.15, 1.15, 0.22, fDark, [0.95, -0.15, -1.6], undefined, 12),
+    // Vaso transparente de policarbonato
+    cyl(1.02, 0.92, 2.25, glassMat, [0.95, -1.25, -1.6], undefined, 16),
+    // Cartucho filtrante interno de bronce sinterizado y deflector centrífugo
+    cyl(0.62, 0.62, 1.3, brassMat, [0.95, -0.9, -1.6], undefined, 10),
+    cyl(0.85, 0.25, 0.16, fDark, [0.95, -0.38, -1.6], undefined, 10),
+    // Nivel decantado de condensados acumulados en el fondo
+    cyl(0.86, 0.82, 0.4, M.plastic("#38bdf8"), [0.95, -1.82, -1.6], undefined, 12),
+    // Anillos protectores superior e inferior de la rejilla
+    cyl(1.12, 1.12, 0.16, metal, [0.95, -0.32, -1.6], undefined, 12),
+    cyl(1.0, 1.0, 0.16, metal, [0.95, -2.28, -1.6], undefined, 12)
+  );
+  // Rejilla metálica protectora ranurada alrededor del vaso de filtro
+  for (let i = 0; i < 6; i++) {
+    const a = (i * Math.PI) / 3;
+    parts.push(
+      box(0.08, 1.8, 0.08, metal, [
+        0.95 + Math.cos(a) * 0.54,
+        -1.3,
+        -1.6 + Math.sin(a) * 0.54
+      ])
+    );
+  }
+  // Válvula inferior de purga automática de condensados con mando manual estriado
+  parts.push(
+    cyl(0.42, 0.42, 0.45, brassMat, [0.95, -2.52, -1.6], undefined, 6),
+    tor(0.34, 0.07, fDark, [0.95, -2.58, -1.6], undefined, 8),
+    cyl(0.18, 0.18, 0.32, metal, [0.95, -2.85, -1.6], undefined, 8)
+  );
+
+  // 3. Regulador de presión central con pomo giratorio y micro-manómetro analógico
+  parts.push(
+    // Cuello superior del regulador
+    cyl(0.96, 0.96, 0.85, metal, [1.0, 1.45, 0], undefined, 12),
+    // Anillo de bloqueo de presión
+    cyl(0.92, 0.92, 0.18, metal, [1.0, 1.82, 0], undefined, 8),
+    // Pomo giratorio estriado de ajuste en composite negro
+    cyl(0.82, 0.82, 0.65, fDark, [1.0, 2.1, 0], undefined, 12),
+    cyl(0.72, 0.72, 0.07, metal, [1.0, 2.44, 0], undefined, 8)
+  );
+  // Ranuras verticales del pomo
+  for (let k = 0; k < 6; k++) {
+    const ka = (k * Math.PI) / 3;
+    parts.push(
+      box(0.06, 0.55, 0.06, metal, [
+        1.0 + Math.cos(ka) * 0.42,
+        2.1,
+        Math.sin(ka) * 0.42
+      ])
+    );
+  }
+  // Micro-manómetro analógico frontal (orientado hacia +X hacia el centro del taller)
+  parts.push(
+    // Racor de conexión entre bloque y manómetro
+    cyl(0.26, 0.26, 0.38, brassMat, [1.74, 0.5, 0], [0, 0, Math.PI / 2], 6),
+    // Caja trasera del manómetro en cromo/aluminio
+    cyl(1.12, 1.12, 0.32, metal, [2.05, 0.5, 0], [0, 0, Math.PI / 2], 16),
+    // Esfera blanca de lectura
+    cyl(1.0, 1.0, 0.04, dialWhite, [2.19, 0.5, 0], [0, 0, Math.PI / 2], 16),
+    // Bisel cromado perimetral
+    tor(1.0, 0.11, metal, [2.19, 0.5, 0], [0, Math.PI / 2, 0], 16),
+    // Lente transparente frontal
+    cyl(0.98, 0.98, 0.02, glassMat, [2.22, 0.5, 0], [0, 0, Math.PI / 2], 16),
+    // Aguja indicadora roja marcando presión de red (~6 bar)
+    box(0.03, 0.38, 0.04, needleRed, [2.2, 0.63, 0.08], [0, 0, -0.4]),
+    cyl(0.12, 0.12, 0.06, metal, [2.21, 0.5, 0], [0, 0, Math.PI / 2], 8)
+  );
+  // Marcas perimetrales graduadas en la esfera del manómetro
+  for (let m = 0; m < 5; m++) {
+    const ma = -0.9 + m * 0.45;
+    parts.push(
+      box(0.02, 0.08, 0.03, fDark, [
+        2.2,
+        0.5 + Math.sin(ma) * 0.38,
+        Math.cos(ma) * 0.38
+      ], [ma, 0, 0])
+    );
+  }
+
+  // 4. Vaso lubricador de aceite neumático en policarbonato con visor de gotas en latón
+  parts.push(
+    // Anillo roscado de acople superior
+    cyl(1.15, 1.15, 0.22, fDark, [0.95, -0.15, 1.6], undefined, 12),
+    // Vaso transparente de policarbonato
+    cyl(1.02, 0.92, 2.25, glassMat, [0.95, -1.25, 1.6], undefined, 16),
+    // Aceite neumático transparente/dorado en el fondo
+    cyl(0.88, 0.82, 1.25, brassMat, [0.95, -1.48, 1.6], undefined, 14),
+    // Tubo de aspiración capilar sumergido con filtro sinterizado
+    cyl(0.08, 0.08, 1.85, brassMat, [0.95, -1.15, 1.6], undefined, 6),
+    sph(0.18, brassMat, [0.95, -1.98, 1.6]),
+    // Anillos protectores de la rejilla
+    cyl(1.12, 1.12, 0.16, metal, [0.95, -0.32, 1.6], undefined, 12),
+    cyl(1.0, 1.0, 0.16, metal, [0.95, -2.28, 1.6], undefined, 12)
+  );
+  // Rejilla metálica protectora ranurada alrededor del vaso lubricador
+  for (let i = 0; i < 6; i++) {
+    const a = (i * Math.PI) / 3;
+    parts.push(
+      box(0.08, 1.8, 0.08, metal, [
+        0.95 + Math.cos(a) * 0.54,
+        -1.3,
+        1.6 + Math.sin(a) * 0.54
+      ])
+    );
+  }
+  // Visor de gotas / caudal de aceite en latón superior
+  parts.push(
+    cyl(0.58, 0.58, 0.36, brassMat, [0.95, 1.22, 1.6], undefined, 8),
+    cyl(0.44, 0.44, 0.48, glassMat, [0.95, 1.58, 1.6], undefined, 10),
+    sph(0.44, glassMat, [0.95, 1.8, 1.6]),
+    // Boquilla dosificadora de micro-gotas en latón y micro-gota
+    cyl(0.12, 0.12, 0.28, brassMat, [0.95, 1.62, 1.6], undefined, 6),
+    sph(0.09, brassMat, [0.95, 1.48, 1.6]),
+    // Tornillo micrométrico superior de regulación de goteo
+    cyl(0.25, 0.25, 0.24, metal, [0.95, 2.08, 1.6], undefined, 6),
+    box(0.04, 0.06, 0.2, fDark, [0.95, 2.18, 1.6])
+  );
+
+  // 5. Bajante vertical de tubería rígida de cobre/latón con dos abrazaderas murales
+  // Conexión acodada desde la entrada del filtro hacia la bajante mural
+  parts.push(
+    cyl(0.38, 0.38, 0.42, brassMat, [0.95, 0.5, -2.5], [Math.PI / 2, 0, 0], 8),
+    sph(0.34, brassMat, [0.95, 0.5, -2.68]),
+    tube([
+      [0.95, 0.5, -2.68],
+      [0.32, 0.5, -2.68],
+      [0.32, 0.5, -2.5]
+    ], 0.12, brassMat),
+    sph(0.32, brassMat, [0.32, 0.5, -2.5]),
+    // Tubo vertical de cobre/latón bajando directo hacia la mesa de trabajo (y = -9)
+    tube([
+      [0.32, 0.5, -2.5],
+      [0.32, -9.0, -2.5]
+    ], 0.13, brassMat),
+    // Válvula de bola de corte rápido con palanca roja cerca de la mesa
+    cyl(0.36, 0.36, 0.42, brassMat, [0.32, -8.1, -2.5], undefined, 8),
+    box(0.08, 0.14, 0.68, needleRed, [0.46, -8.05, -2.2], [0.3, 0, 0]),
+    // Conector rápido hembra de salida en la base
+    cyl(0.34, 0.34, 0.32, brassMat, [0.32, -8.8, -2.5], undefined, 8)
+  );
+  // Abrazaderas murales de fijación a la pared (y = -3.2 y y = -6.8)
+  for (const yClamp of [-3.2, -6.8]) {
+    parts.push(
+      // Pletina base contra la pared
+      box(0.08, 0.45, 0.88, metal, [0.04, yClamp, -2.5]),
+      // Abrazadera omega envolvente
+      box(0.34, 0.26, 0.36, metal, [0.2, yClamp, -2.5]),
+      // Junta aislante de goma
+      box(0.08, 0.22, 0.32, fDark, [0.31, yClamp, -2.5]),
+      // Tornillos de anclaje de la abrazadera a pared
+      cyl(0.1, 0.1, 0.1, fDark, [0.09, yClamp, -2.8], [0, 0, Math.PI / 2], 6),
+      cyl(0.1, 0.1, 0.1, fDark, [0.09, yClamp, -2.2], [0, 0, Math.PI / 2], 6)
+    );
+  }
+
+  return merge("frlAirUnit", parts);
 }
 
 function lipoCharger(fTeal: B.Material, metal: B.Material, fDark: B.Material): B.Mesh[] {

@@ -551,6 +551,24 @@ export const SFX = {
       tone("square", 3400 * p, 2100 * p, 0.008, 0.05, delay, pan);
     }
   },
+  /** Carraca metálica de llave de vaso con micro-trinquetes mecánicos de cromo-vanadio. */
+  ratchetSocketWrench: (pan?: number) => {
+    if (!gate("ratchet-wrench", 4)) return;
+    for (let i = 0; i < 6; i++) {
+      const delay = i * 0.022;
+      const p = 1 + (i % 2) * 0.15;
+      tone("triangle", 4200 * p, 5600 * p, 0.012, 0.09, delay, pan);
+      hiss("highpass", 6200 * p, 1800, 0.008, 0.06, delay, pan);
+      tone("square", 1200 * p, 800 * p, 0.006, 0.04, delay, pan);
+    }
+  },
+  /** Purga rápida de condensados de filtro FRL o válvula de sobrepresión de calderín. */
+  airPurge: (pan?: number) => {
+    if (!gate("air-purge", 4)) return;
+    tone("triangle", 480, 160, 0.02, 0.15, 0, pan);
+    hiss("bandpass", 4400, 2400, 0.07, 0.25, 0, pan);
+    hiss("highpass", 7200, 3000, 0.05, 0.18, 0.01, pan);
+  },
 };
 
 

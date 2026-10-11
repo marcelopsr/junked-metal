@@ -1675,5 +1675,213 @@ export function airCompressorFold(): B.Mesh {
   return m;
 }
 
+/** Carrete / enrollador mural de manguera neumática orientable Folded: soporte de anclaje mural en chapa plegada
+ *  gruesa en canal con 4 orificios avellanados y bulones de fijación (FOLD.dark()), horquilla o brazo basculante
+ *  de giro horizontal en chapa estampada pintada en azul industrial (FOLD.painted("#1e3a5f", 0.85, 310)) que permite
+ *  orientar el carrete 180°, tambor cilíndrico rotativo de chapa estampada con dos discos laterales envolventes con
+ *  nervaduras de refuerzo y rebordes redondeados, eje central con mecanismo de trinquete automático de bloqueo
+ *  audible y resorte espiral interior de rebobinado, manguera neumática de poliuretano amarillo/naranja bobinada en capas
+ *  compactas dentro del tambor, boquilla frontal de salida con ventana guía provista de 4 rodillos de teflón de suave
+ *  deslizamiento (dos horizontales y dos verticales), y tramo exterior de manguera saliente con tope esférico de goma
+ *  negra (FOLD.rubber()) de final de carrera y conector rápido hembra de latón (FOLD.painted("#d97706", 0.65, 282)). */
+export function hoseReelFold(): B.Mesh {
+  const { G, done } = kit();
+  const bluePaint = FOLD.painted("#1e3a5f", 0.85, 310);
+  const brass = FOLD.painted("#d97706", 0.65, 282);
+  const hoseColor = FOLD.painted("#f59e0b", 0.75, 325);
+  const teflon = FOLD.painted("#f8fafc", 0.35, 326);
+  const bare = FOLD.bare(), dark = FOLD.dark(), rubber = FOLD.rubber();
+
+  // 1. Soporte de anclaje mural en chapa plegada gruesa en canal con 4 orificios avellanados y bulones de fijación
+  G.box(1.1, 3.2, 0.1, dark, [0, 0, -1.1]);
+  G.box(0.1, 3.2, 0.45, dark, [-0.5, 0, -0.88]);
+  G.box(0.1, 3.2, 0.45, dark, [0.5, 0, -0.88]);
+  G.bend([-0.5, -1.6, -1.05], [-0.5, 1.6, -1.05], 0.05, dark);
+  G.bend([0.5, -1.6, -1.05], [0.5, 1.6, -1.05], 0.05, dark);
+  G.box(1.1, 0.08, 0.45, dark, [0, 1.56, -0.88]);
+  G.box(1.1, 0.08, 0.45, dark, [0, -1.56, -0.88]);
+  // 4 orificios avellanados con arandelas y bulones de anclaje a la pared
+  for (const bx of [-0.32, 0.32]) {
+    for (const by of [-1.25, 1.25]) {
+      G.cyl(0.26, 0.04, dark, [bx, by, -1.04], [Math.PI / 2, 0, 0], 8, 0.16);
+      G.cyl(0.3, 0.02, bare, [bx, by, -1.03], [Math.PI / 2, 0, 0], 8);
+      G.bolts([bx, by, -1.02], [bx, by, -1.02], 1, [0, 0, 1]);
+    }
+  }
+  // Cartelas salientes de soporte para el perno pivote vertical
+  G.box(0.55, 0.14, 0.55, dark, [0, 1.05, -0.63]);
+  G.box(0.55, 0.14, 0.55, dark, [0, -1.05, -0.63]);
+  G.cyl(0.38, 0.22, bare, [0, 1.05, -0.55], undefined, 8);
+  G.cyl(0.38, 0.22, bare, [0, -1.05, -0.55], undefined, 8);
+  // Racor giratorio de alimentación de aire en el soporte mural
+  G.cyl(0.22, 0.25, brass, [0, -0.65, -0.85], [Math.PI / 2, 0, 0], 6);
+  G.tube([[0, -0.65, -0.75], [0, -0.65, -0.55], [0, -0.4, -0.55]], 0.05, bare);
+
+  // 2. Horquilla o brazo basculante de giro horizontal en chapa estampada pintada en azul industrial (180° de orientación)
+  // Perno vertical de acero
+  G.cyl(0.2, 2.5, bare, [0, 0, -0.55], undefined, 8);
+  G.cyl(0.32, 0.14, dark, [0, 1.22, -0.55], undefined, 6);
+  G.cyl(0.32, 0.14, dark, [0, -1.22, -0.55], undefined, 6);
+  G.box(0.04, 0.04, 0.36, bare, [0, 1.26, -0.55]);
+  // Manguito central basculante
+  G.cyl(0.34, 1.85, bluePaint, [0, 0, -0.55], undefined, 10);
+  // Brazos horizontales superior e inferior de la horquilla
+  G.box(1.72, 0.12, 0.85, bluePaint, [0, 0.85, -0.15]);
+  G.box(1.72, 0.12, 0.85, bluePaint, [0, -0.85, -0.15]);
+  // Cartelas diagonales de refuerzo
+  for (const sx of [-1, 1]) {
+    G.box(0.1, 0.45, 0.45, bluePaint, [sx * 0.76, 0.65, -0.15], [0.65, 0, 0]);
+    G.box(0.1, 0.45, 0.45, bluePaint, [sx * 0.76, -0.65, -0.15], [-0.65, 0, 0]);
+    // Montantes verticales laterales de la horquilla
+    G.box(0.12, 1.7, 0.48, bluePaint, [sx * 0.8, 0, 0.05]);
+    G.bend([sx * 0.86, -0.85, 0.05], [sx * 0.86, 0.85, 0.05], 0.06, bluePaint);
+    // Chumaceras porta-cojinetes del eje central
+    G.cyl(0.58, 0.22, bare, [sx * 0.86, 0, 0.05], [0, 0, Math.PI / 2], 8);
+    G.bolts([sx * 0.98, 0.22, 0.05], [sx * 0.98, -0.22, 0.05], 2, [sx, 0, 0]);
+  }
+  // Placa de características técnicas sobre el brazo superior
+  G.plate([0, 0.92, -0.15], [-Math.PI / 2, 0, 0], 0.75, 0.35, FOLD.painted("#e2e8f0", 0.5, 322));
+  G.box(0.55, 0.02, 0.04, dark, [0, 0.93, -0.2]);
+  G.box(0.45, 0.02, 0.04, dark, [0, 0.93, -0.1]);
+  G.rivets([-0.32, 0.93, -0.15], [0.32, 0.93, -0.15], 2, [0, 1, 0]);
+
+  // 3. Tambor cilíndrico rotativo de chapa estampada con dos discos laterales envolventes, nervaduras y rebordes
+  G.cyl(1.35, 1.12, bluePaint, [0, 0, 0.05], [0, 0, Math.PI / 2], 14);
+  G.cyl(1.4, 0.08, dark, [-0.5, 0, 0.05], [0, 0, Math.PI / 2], 12);
+  G.cyl(1.4, 0.08, dark, [0.5, 0, 0.05], [0, 0, Math.PI / 2], 12);
+  G.box(0.32, 0.08, 0.22, bare, [0, 0.72, 0.05]);
+  G.bolts([0, 0.76, 0.05], [0, 0.76, 0.05], 1, [0, 1, 0]);
+  // Discos laterales envolventes con nervaduras de refuerzo y rebordes redondeados
+  for (const side of [-1, 1]) {
+    G.cyl(2.9, 0.06, bluePaint, [side * 0.56, 0, 0.05], [0, 0, Math.PI / 2], 24);
+    // Reborde perimetral exterior doblado
+    G.cyl(2.95, 0.08, bare, [side * 0.58, 0, 0.05], [0, 0, Math.PI / 2], 24, 2.95);
+    G.cyl(2.88, 0.04, bluePaint, [side * 0.60, 0, 0.05], [0, 0, Math.PI / 2], 20);
+    // 6 nervaduras radiales de refuerzo estampadas
+    for (let k = 0; k < 6; k++) {
+      const ang = (k / 6) * Math.PI * 2;
+      const rRib = 0.98;
+      const dy = Math.cos(ang) * rRib, dz = Math.sin(ang) * rRib;
+      G.box(0.04, 0.75, 0.12, bluePaint, [side * 0.61, dy, 0.05 + dz], [ang, 0, 0]);
+      // Orificios troquelados de alivio entre nervaduras
+      const hAng = ang + Math.PI / 6;
+      const rHole = 1.05;
+      const hy = Math.cos(hAng) * rHole, hz = Math.sin(hAng) * rHole;
+      G.cyl(0.36, 0.08, dark, [side * 0.56, hy, 0.05 + hz], [0, 0, Math.PI / 2], 10);
+      G.cyl(0.40, 0.02, bare, [side * 0.60, hy, 0.05 + hz], [0, 0, Math.PI / 2], 10);
+    }
+  }
+  G.decal([-0.57, 0.85, 0.05], [0, -Math.PI / 2, 0], "warning", 0.45);
+
+  // 4. Eje central con mecanismo de trinquete automático de bloqueo audible y resorte espiral interior de rebobinado
+  G.cyl(0.26, 1.88, bare, [0, 0, 0.05], [0, 0, Math.PI / 2], 10);
+  // Trinquete automático de bloqueo audible (ratchet derecho)
+  G.cyl(0.85, 0.14, bare, [0.68, 0, 0.05], [0, 0, Math.PI / 2], 16);
+  for (let t = 0; t < 8; t++) {
+    const ta = (t / 8) * Math.PI * 2;
+    G.box(0.12, 0.16, 0.1, dark, [0.68, Math.cos(ta) * 0.44, 0.05 + Math.sin(ta) * 0.44], [ta + 0.35, 0, 0]);
+  }
+  // Gatillo basculante con uña de enganche y muelle
+  G.cyl(0.1, 0.18, bare, [0.73, 0.45, 0.28], [0, 0, Math.PI / 2], 6);
+  G.box(0.08, 0.28, 0.12, dark, [0.73, 0.36, 0.22], [-0.55, 0, 0]);
+  G.box(0.08, 0.09, 0.08, bare, [0.73, 0.26, 0.16]);
+  G.tube([[0.73, 0.52, 0.35], [0.73, 0.46, 0.42], [0.73, 0.38, 0.44]], 0.02, bare);
+  G.cyl(1.12, 0.18, dark, [0.74, 0, 0.05], [0, 0, Math.PI / 2], 14);
+
+  // Tambor del resorte espiral interior de rebobinado (izquierdo)
+  G.cyl(1.18, 0.22, dark, [-0.7, 0, 0.05], [0, 0, Math.PI / 2], 14);
+  G.cyl(1.22, 0.05, bare, [-0.8, 0, 0.05], [0, 0, Math.PI / 2], 14);
+  for (let k = 0; k < 4; k++) {
+    const sa = (k / 4) * Math.PI * 2;
+    G.bolts([-0.81, Math.cos(sa) * 0.46, 0.05 + Math.sin(sa) * 0.46], [-0.81, Math.cos(sa) * 0.46, 0.05 + Math.sin(sa) * 0.46], 1, [-1, 0, 0]);
+  }
+  G.box(0.06, 0.4, 0.15, dark, [-0.81, 0, 0.32]);
+  G.box(0.02, 0.36, 0.08, bare, [-0.79, 0, 0.32]);
+
+  // 5. Manguera neumática de poliuretano amarillo bobinada en capas compactas dentro del tambor
+  // Capa 1 (interior)
+  for (let xi = -0.42; xi <= 0.42; xi += 0.14) {
+    G.cyl(1.56, 0.12, hoseColor, [xi, 0, 0.05], [0, 0, Math.PI / 2], 18, 1.56);
+  }
+  // Capa 2 (intermedia)
+  for (let xi = -0.38; xi <= 0.38; xi += 0.15) {
+    G.cyl(1.88, 0.12, hoseColor, [xi, 0, 0.05], [0, 0, Math.PI / 2], 20, 1.88);
+  }
+  // Capa 3 (exterior visible)
+  for (let xi = -0.42; xi <= 0.42; xi += 0.14) {
+    G.cyl(2.2, 0.12, hoseColor, [xi, 0, 0.05], [0, 0, Math.PI / 2], 22, 2.2);
+  }
+  for (let xi = -0.35; xi <= 0.35; xi += 0.14) {
+    G.cyl(2.18, 0.02, dark, [xi, 0, 0.05], [0, 0, Math.PI / 2], 20);
+  }
+  G.tube([[0, -1.05, 0.25], [0, -1.08, 0.65], [0, -1.04, 1.05]], 0.075, hoseColor);
+
+  // 6. Boquilla frontal de salida con ventana guía provista de 4 rodillos de teflón de suave deslizamiento
+  // Brazos de soporte de la ventana guía
+  G.box(0.08, 0.22, 0.95, bluePaint, [-0.42, -0.92, 0.85], [0.35, 0, 0]);
+  G.box(0.08, 0.22, 0.95, bluePaint, [0.42, -0.92, 0.85], [0.35, 0, 0]);
+  G.box(0.92, 0.1, 0.12, bluePaint, [0, -1.15, 1.25]);
+  G.bolts([-0.42, -0.9, 0.55], [0.42, -0.9, 0.55], 2, [0, 1, 0]);
+  // Marco rectangular de la ventana guía
+  G.box(0.72, 0.06, 0.18, bare, [0, -0.84, 1.35]);
+  G.box(0.72, 0.06, 0.18, bare, [0, -1.26, 1.35]);
+  G.box(0.06, 0.48, 0.18, bare, [-0.34, -1.05, 1.35]);
+  G.box(0.06, 0.48, 0.18, bare, [0.34, -1.05, 1.35]);
+  G.bolts([-0.34, -0.84, 1.45], [0.34, -0.84, 1.45], 2, [0, 0, 1]);
+  G.bolts([-0.34, -1.26, 1.45], [0.34, -1.26, 1.45], 2, [0, 0, 1]);
+  // 4 rodillos de teflón: 2 horizontales y 2 verticales
+  // Horizontal superior
+  G.cyl(0.04, 0.65, bare, [0, -0.91, 1.35], [0, 0, Math.PI / 2], 6);
+  G.cyl(0.12, 0.48, teflon, [0, -0.91, 1.35], [0, 0, Math.PI / 2], 12);
+  G.cyl(0.16, 0.03, dark, [-0.24, -0.91, 1.35], [0, 0, Math.PI / 2], 8);
+  G.cyl(0.16, 0.03, dark, [0.24, -0.91, 1.35], [0, 0, Math.PI / 2], 8);
+  // Horizontal inferior
+  G.cyl(0.04, 0.65, bare, [0, -1.19, 1.35], [0, 0, Math.PI / 2], 6);
+  G.cyl(0.12, 0.48, teflon, [0, -1.19, 1.35], [0, 0, Math.PI / 2], 12);
+  G.cyl(0.16, 0.03, dark, [-0.24, -1.19, 1.35], [0, 0, Math.PI / 2], 8);
+  G.cyl(0.16, 0.03, dark, [0.24, -1.19, 1.35], [0, 0, Math.PI / 2], 8);
+  // Vertical izquierdo
+  G.cyl(0.04, 0.44, bare, [-0.22, -1.05, 1.35], undefined, 6);
+  G.cyl(0.12, 0.26, teflon, [-0.22, -1.05, 1.35], undefined, 12);
+  G.cyl(0.16, 0.03, dark, [-0.22, -0.93, 1.35], undefined, 8);
+  G.cyl(0.16, 0.03, dark, [-0.22, -1.17, 1.35], undefined, 8);
+  // Vertical derecho
+  G.cyl(0.04, 0.44, bare, [0.22, -1.05, 1.35], undefined, 6);
+  G.cyl(0.12, 0.26, teflon, [0.22, -1.05, 1.35], undefined, 12);
+  G.cyl(0.16, 0.03, dark, [0.22, -0.93, 1.35], undefined, 8);
+  G.cyl(0.16, 0.03, dark, [0.22, -1.17, 1.35], undefined, 8);
+
+  // 7. Tramo exterior de manguera saliente con tope esférico de goma negra y conector rápido hembra de latón
+  G.tube([[0, -1.04, 1.05], [0, -1.05, 1.35], [0, -1.08, 1.75], [0, -1.2, 2.1], [0, -1.5, 2.35]], 0.075, hoseColor);
+  // Tope esférico bipartido de goma negra
+  G.sph(0.42, rubber, [0, -1.22, 2.15]);
+  G.cyl(0.38, 0.12, rubber, [0, -1.18, 2.08], [-0.5, 0, 0], 10, 0.22);
+  G.cyl(0.22, 0.12, rubber, [0, -1.26, 2.22], [-0.5, 0, 0], 10, 0.38);
+  G.cyl(0.44, 0.08, dark, [0, -1.22, 2.15], [-0.5, 0, 0], 12);
+  G.bolts([-0.2, -1.22, 2.15], [0.2, -1.22, 2.15], 2, [0, 0, 1]);
+  // Tramo de manguera final hacia el conector
+  G.tube([[0, -1.5, 2.35], [0, -1.8, 2.5], [0, -2.15, 2.55]], 0.075, hoseColor);
+  G.cyl(0.22, 0.35, rubber, [0, -2.1, 2.55], undefined, 8);
+  for (let k = 0; k < 4; k++) {
+    G.cyl(0.24, 0.04, bare, [0, -2.0 - k * 0.08, 2.55], undefined, 8);
+  }
+  // Conector rápido hembra de latón
+  G.cyl(0.26, 0.22, brass, [0, -2.3, 2.55], undefined, 6);
+  G.cyl(0.34, 0.35, brass, [0, -2.52, 2.55], undefined, 12);
+  for (let m = 0; m < 8; m++) {
+    const ma = (m / 8) * Math.PI * 2;
+    G.box(0.025, 0.28, 0.025, dark, [Math.cos(ma) * 0.17, -2.52, 2.55 + Math.sin(ma) * 0.17]);
+  }
+  G.cyl(0.28, 0.1, brass, [0, -2.72, 2.55], undefined, 10);
+  G.cyl(0.14, 0.12, dark, [0, -2.76, 2.55], undefined, 8);
+  G.cyl(0.18, 0.04, bare, [0, -2.68, 2.55], undefined, 8);
+
+  const parts = done(18);
+  const m = parts.length > 1 ? B.Mesh.MergeMeshes(parts, true, true, undefined, false, true)! : parts[0];
+  m.name = "hoseReelFold";
+  return m;
+}
+
+
 
 

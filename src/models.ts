@@ -521,7 +521,8 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.007, 0.007, 0.003, chrome, [-0.016, bh * 0.446, -bl * 0.18 + 0.012], [0, 0, 0], 6)
       );
     }
-    if (kind === "buggy" || kind === "monster" || kind === "carrera") {
+    if (kind === "buggy" || kind === "monster" || (kind as string) === "carrera") {
+      const spurY = bh * 0.28 + 0.014, spurZ = -bl * 0.22 - 0.0385;
       parts.push(
         // Lata cilíndrica del motor 540 con ranura de ventilación
         cyl(0.044, 0.044, 0.065, chrome, [0, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 10),
@@ -541,6 +542,47 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.006, 0.006, 0.006, chrome, [0.038, bh * 0.28 - 0.014, -bl * 0.22], [0, 0, Math.PI / 2], 6),
         // Piñón dentado de bronce en eje de salida
         cyl(0.014, 0.014, 0.012, M.metal("#d97706"), [0.042, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 8),
+        // Conjunto de Embrague Antirrebote (Slipper Clutch) y Corona Dentada Principal (Spur Gear)
+        // Eje central de transmisión / slipper shaft de acero
+        cyl(0.0045, 0.0045, 0.042, chrome, [0.050, spurY, spurZ], [0, 0, Math.PI / 2], 6),
+        // Corona dentada principal de composite técnico blanco Delrin de gran diámetro engranando contigua al piñón de bronce
+        cyl(0.068, 0.068, 0.007, M.plastic("#f8fafc"), [0.042, spurY, spurZ], [0, 0, Math.PI / 2], 16),
+        // Rebaje interior de la corona dentada y zapatas de ferodo de fricción aprisionadas
+        cyl(0.052, 0.052, 0.0073, M.plastic("#e2e8f0"), [0.042, spurY, spurZ], [0, 0, Math.PI / 2], 14),
+        cyl(0.048, 0.048, 0.0078, M.matte("#78350f"), [0.042, spurY, spurZ], [0, 0, Math.PI / 2], 12),
+        // 6 orificios circulares perimetrales de aligeramiento en la corona
+        ...Array.from({ length: 6 }, (_, a) => {
+          const ang = (a * Math.PI) / 3;
+          return cyl(
+            0.0075,
+            0.0075,
+            0.0076,
+            M.matte("#09090b"),
+            [0.042, spurY + Math.sin(ang) * 0.022, spurZ + Math.cos(ang) * 0.022],
+            [0, 0, Math.PI / 2],
+            6
+          );
+        }),
+        // Dos platos de presión de fricción (Slipper Plates) de aluminio mecanizado anodizado
+        // Plato de fricción interior (lado motor)
+        cyl(0.046, 0.046, 0.003, M.metal("#0284c7"), [0.0365, spurY, spurZ], [0, 0, Math.PI / 2], 12),
+        cyl(0.014, 0.014, 0.004, M.metal("#0284c7"), [0.033, spurY, spurZ], [0, 0, Math.PI / 2], 8),
+        // Plato de fricción exterior
+        cyl(0.046, 0.046, 0.003, M.metal("#0284c7"), [0.0475, spurY, spurZ], [0, 0, Math.PI / 2], 12),
+        cyl(0.018, 0.018, 0.003, M.metal("#0284c7"), [0.0495, spurY, spurZ], [0, 0, Math.PI / 2], 8),
+        // Arandela de asiento del muelle
+        cyl(0.013, 0.013, 0.0015, chrome, [0.051, spurY, spurZ], [0, 0, Math.PI / 2], 8),
+        // Muelle helicoidal de compresión de ajuste del slipper sobre el eje central
+        tor(0.012, 0.0025, M.metal("#71717a"), [0.053, spurY, spurZ], [0, 0, Math.PI / 2], 10),
+        tor(0.012, 0.0025, M.metal("#71717a"), [0.056, spurY, spurZ], [0, 0, Math.PI / 2], 10),
+        tor(0.012, 0.0025, M.metal("#71717a"), [0.059, spurY, spurZ], [0, 0, Math.PI / 2], 10),
+        tor(0.012, 0.0025, M.metal("#71717a"), [0.062, spurY, spurZ], [0, 0, Math.PI / 2], 10),
+        // Arandela de apoyo de tuerca
+        cyl(0.013, 0.013, 0.0015, chrome, [0.0635, spurY, spurZ], [0, 0, Math.PI / 2], 8),
+        // Tuerca hexagonal autoblocante M4 con casquillo de freno de nylon azul en el extremo del eje
+        cyl(0.009, 0.009, 0.004, chrome, [0.066, spurY, spurZ], [0, 0, Math.PI / 2], 6),
+        cyl(0.0078, 0.0078, 0.002, M.plastic("#0284c7"), [0.0685, spurY, spurZ], [0, 0, Math.PI / 2], 8),
+        cyl(0.004, 0.004, 0.002, chrome, [0.070, spurY, spurZ], [0, 0, Math.PI / 2], 6),
         // Lengüetas soldadas de cobre/latón en los bornes del motor 540
         box(0.004, 0.008, 0.005, M.metal("#d4af37"), [0.015, bh * 0.302, -bl * 0.22 + 0.025]),
         box(0.004, 0.008, 0.005, M.metal("#d4af37"), [-0.015, bh * 0.302, -bl * 0.22 + 0.025]),

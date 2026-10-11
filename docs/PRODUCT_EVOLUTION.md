@@ -812,17 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #57 ("Neumática de Taller & Detalle Eléctrico") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 680 ms, 17 capturas en `.shots/actual/` en 21.1 s, grafo en 3990 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #58**.
+- **Último trabajo completado:** Ciclo #58 ("Transmisión & Neumática Mural") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 624 ms, 17 capturas en `.shots/actual/` en 24.6 s, grafo en 3995 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #59**.
 
-### 🔓 LISTO PARA EL CICLO #58 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #59 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Workshop Tools & Props 3D Modeler** | Carrete mural de manguera (`hoseReelFold`) o generador a gasolina (`gasGeneratorFold`) | `src/folded_slice.ts` |
-| **Workshop Diorama 3D Modeler** | Unidad FRL mural de aire con tubería de cobre o manómetro digital de ruedas | `src/menuscene.ts` |
-| **Procedural Vehicle 3D Modeler** | Embrague antirrebote Slipper Clutch con corona dentada o conectores banana 4mm | `src/models.ts` |
-| **Audio Synth Sound Designer** | Carraca de llave de vaso (`ratchetSocketWrench`) o chispazo por falso contacto LiPo | `src/sfx.ts` |
+| **Workshop Tools & Props 3D Modeler** | Pistola sopladora y manómetro de inflado (`airBlowGunFold`) o generador a gasolina | `src/folded_slice.ts` |
+| **Workshop Diorama 3D Modeler** | Manómetro digital de ruedas (`digitalTireGauge`) o pistola de impacto 1/2" | `src/menuscene.ts` |
+| **Procedural Vehicle 3D Modeler** | Protector de engranajes transparente Lexan o hexágonos de rueda 12mm con pasador | `src/models.ts` |
+| **Audio Synth Sound Designer** | Pistonada rítmica de compresor (`compressorChug`) o clic de dinamométrica (`torqueWrenchClick`) | `src/sfx.ts` |
+
+### Ciclo #58 (2026-10-10) — Transmisión & Neumática Mural: Slipper Clutch con Corona Expuesta, Carrete de Manguera, Unidad FRL Mural y Carraca en SFX
+- **Alcance implementado en producción (`src/`):**
+  - **Workshop Tools & Props 3D Modeler (`src/folded_slice.ts`):** Carrete orientable de manguera neumática `hoseReelFold()` en chapa gruesa en C (`FOLD.dark()`) con 4 bulones de anclaje mural, racor giratorio de latón para red fija, horquilla de giro a 180° en chapa azul industrial (`FOLD.painted("#1e3a5f")`), tambor rotativo con discos laterales nervados, trinquete ratchet lateral con uña de bloqueo automático, cárter sellado con resorte espiral de rebobinado, 3 capas de manguera de poliuretano amarillo/naranja (`FOLD.painted("#f59e0b")`), boquilla frontal con 4 rodillos de teflón virgen de baja fricción (`FOLD.painted("#f8fafc")`), tramo exterior con tope esférico de goma negra (`FOLD.rubber()`) y conector rápido hembra en latón (`FOLD.painted("#d97706")`); 0 draw calls adicionales al mapearse al atlas Folded con `done(18)`.
+  - **Workshop Diorama 3D Modeler (`src/menuscene.ts`):** Unidad FRL mural `frlAirUnit(metal, fDark)` en pared izquierda del box (`[-33, 9, 8]`): bloque colector superior en aluminio mecanizado con pletina mural; vaso decantador de partículas y condensados en policarbonato transparente (`M.glass()`) con jaula ranurada protectora y válvula de purga automática inferior; regulador de presión central con pomo estriado y micro-manómetro analógico frontal con esfera blanca y aguja roja; vaso lubricador de aceite neumático en policarbonato con visor de gotas/caudal en latón (`M.metal("#d97706")`); y bajante vertical rígida de cobre acodada con válvula de corte con palanca roja, enchufe rápido y 2 abrazaderas omega completas con junta aislante y tornillería; montaje del carrete mural `hoseReelFold()` anclado al lateral izquierdo (`place(hoseReelFold(), [-33, 11, 14], [0, 0.4, 0])`); integradas en `menu_bench_props` con sombras dinámicas completas y 0 draw calls adicionales.
+  - **Procedural Vehicle 3D Modeler (`src/models.ts`):** Conjunto de embrague antirrebote Slipper Clutch contiguo al motor Tipo 540 y a su piñón de ataque de bronce para chasis expuestos (`buggy`, `monster` y `carrera`): corona dentada principal Spur Gear en composite blanco Delrin de competición (`cyl(0.068, 0.068, 0.007, M.plastic("#f8fafc"))`) con rebaje interior, zapatas anulares de ferodo de fricción (`M.matte("#78350f")`) y 6 orificios perimetrales circulares de aligeramiento a 60°; 2 platos de presión Slipper Plates de aluminio mecanizado CNC anodizado azul (`M.metal("#0284c7")`), muelle helicoidal de compresión con 4 espiras toroidales de precarga guiadas sobre el eje de acero cromado, arandelas de asiento, y tuerca hexagonal autoblocante M4 con casquillo de freno Nyloc en nylon azul en el extremo; 0 draw calls adicionales integrados con color de vértice.
+  - **Audio Synth Sound Designer (`src/sfx.ts`):** `SFX.ratchetSocketWrench(pan)` emulando carraca mecánica de llave de vaso de cromo-vanadio mediante tren progresivo de 6 pulsos mecánicos con ondas triangulares (4200–5600 Hz), siseo filtrado highpass (6200–1800 Hz) y click percusivo cuadrado (1200–800 Hz) con `gate("ratchet-wrench", 4)`; `SFX.airPurge(pan)` con purga de condensados de filtro FRL o disparo de sobrepresión combinando golpe sordo subsónico en onda triangular (480–160 Hz), siseo turbulento bandpass (4400–2400 Hz) y silbido agudo residual highpass (7200–3000 Hz) con `gate("air-purge", 4)`.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, vitest --changed 43 tests en verde, build Vite en 624 ms, 17 capturas en `.shots/actual/` aprobadas en 24.6 s, grafo de conocimiento sincronizado en 3995 nodos y 9678 aristas.
 
 ### Ciclo #57 (2026-10-10) — Neumática de Taller & Detalle Eléctrico: Compresor con Calderín, Manguera Helicoidal con Pistola de Soplado, Manguitos Termorretráctiles y SFX
 - **Alcance implementado en producción (`src/`):**
