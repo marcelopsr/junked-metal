@@ -32,7 +32,12 @@
     "creative:batch": "node scripts/creative-batch.mjs",
     "creative:batch:status": "node scripts/creative-batch.mjs --status",
     "creative:batch:watch": "node scripts/creative-batch.mjs --watch",
-    "creative:batch:cancel": "node scripts/creative-batch.mjs --cancel"
+    "creative:batch:cancel": "node scripts/creative-batch.mjs --cancel",
+    "creative:pbr": "node scripts/creative-pbr.mjs",
+    "assets:optimize": "node scripts/assets-optimize.mjs",
+    "assets:check": "node scripts/assets-optimize.mjs --check",
+    "doctor": "node scripts/doctor.mjs",
+    "doctor:fix": "node scripts/doctor.mjs --fix"
   },
   "keywords": [],
   "type": "module",

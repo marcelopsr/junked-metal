@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "71b27809-0c76-4ed0-b5b8-d4e017c8d864",
+  "prompt": "cracked peeling automotive paint texture, irregular geometric crackle patterns, exposed metal underneath, distressed chipped paint, seamless albedo texture, macro flat lay, top-down game texture",
+  "negative": "blurry, smooth, shiny, clean, text, watermark, 3d perspective, sphere, car model, horizon",
+  "seed": 202,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 80.5,
+  "date": "2026-10-11T19:39:23.099Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/web_00012_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-cracked.webp"
+}

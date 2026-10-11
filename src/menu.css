@@ -96,6 +96,43 @@ body.calm .scr.on { animation-duration: .05s; }
 #shop { display: grid; grid-template-columns: repeat(3, minmax(210px, 256px)); gap: 8px 10px; justify-content: center; width: 100%; max-width: 820px; max-height: 54vh; overflow: hidden auto; padding: 6px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 .carc.pilot .pro { color: var(--lcd-ink); } .carc.pilot .pro::before { content: "+ "; }
 .carc.pilot .con { color: var(--low); } .carc.pilot .con::before { content: "- "; }
+.carc.pilot .pilot-portrait {
+  float: right;
+  width: 58px;
+  height: 58px;
+  margin: 0 0 6px 8px;
+  position: relative;
+  background: rgba(11, 15, 20, .9);
+  border: 1px solid var(--jm-chapa, #3a4553);
+  box-shadow: inset 0 0 0 1px #000, 0 3px 8px rgba(0, 0, 0, .6);
+  padding: 2px;
+  box-sizing: border-box;
+}
+.carc.pilot .pilot-portrait::before,
+.carc.pilot .pilot-portrait::after {
+  content: "";
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--jm-chapa-brillo, #8b9bb0);
+  border-radius: 50%;
+  box-shadow: 0 0 1px rgba(0, 0, 0, .8);
+}
+.carc.pilot .pilot-portrait::before { top: 1px; left: 1px; }
+.carc.pilot .pilot-portrait::after { bottom: 1px; right: 1px; }
+.carc.pilot .pilot-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: auto;
+  filter: contrast(1.05) brightness(0.95);
+  border: 1px solid rgba(0, 0, 0, .5);
+}
+.carc.pilot.locked .pilot-portrait img {
+  filter: grayscale(0.85) contrast(0.9) brightness(0.6);
+  opacity: .7;
+}
 /* Piezas: una fila por ranura, opciones como etiquetas de cinta */
 .slot { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--line); }
 .slot > span { margin-right: auto; font: 700 14px/1 var(--data); letter-spacing: .1em; text-transform: uppercase; color: #fff; }

@@ -7,7 +7,7 @@ import { BAL, costos, precio } from "./balance";
 import { DEF, type Kind } from "./enemies";
 import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
 import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, GARAGE_DECALS, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type GarageDecalId, type Slot } from "./models";
-import { ARSENAL, PILOTS, type PilotId } from "./pilots";
+import { ARSENAL, PILOTS, PILOT_PORTRAITS, type PilotId } from "./pilots";
 import { beastIcon, icon, PERK_ICON, UI_BTN_ICON, uiIcon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
 import { engineTest, initAudio, setAudio, SFX } from "./sfx";
@@ -701,7 +701,11 @@ function renderGarage() {
   else if (gtab === "piloto") $("cars").innerHTML = (Object.keys(PILOTS) as PilotId[]).map((k) => {
     const p = PILOTS[k], id = "pilot:" + k;
     const vet = owns(id) && (save.pilot === k && (save.stats.runs >= 5 || save.stats.wins >= 1));
-    return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div>${vet ? '<span class="vet-badge">★ VETERANO</span>' : ''}<div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div>${owns(id) ? `<div class="price">${save.pilot === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id, p.ach?.txt)}</div>`;
+    const portraitSrc = vet && PILOT_PORTRAITS.veterano ? PILOT_PORTRAITS.veterano : PILOT_PORTRAITS[k];
+    const portraitHtml = portraitSrc
+      ? `<div class="pilot-portrait"><img src="${portraitSrc}" alt="${p.name}" width="64" height="64" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`
+      : "";
+    return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}">${portraitHtml}<b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div>${vet ? '<span class="vet-badge">★ VETERANO</span>' : ''}<div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div>${owns(id) ? `<div class="price">${save.pilot === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id, p.ach?.txt)}</div>`;
   }).join("");
   else if (gtab === "habilidad") $("cars").innerHTML = (Object.keys(ABILITIES) as AbilityId[]).map((k) => {
     const a = ABILITIES[k];
@@ -1256,7 +1260,11 @@ function renderBestiary() {
   }).join("")
     : btab === "pilotos" ? (Object.keys(PILOTS) as PilotId[]).map((k) => {
       const p = PILOTS[k], own = owns("pilot:" + k), st = save.pilot === k ? "EN USO" : own ? "EN EL GARAJE" : p.ach ? `Logro: ${p.ach.txt}` : `Bloqueado · ${p.cost} tornillos`;
-      return `<div tabindex="0" class="carc ficha pilot ${save.pilot === k ? "sel" : ""} ${own ? "" : "locked"}"><b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div><div class="lore">${p.lore}</div><div class="price">${st}</div></div>`;
+      const portraitSrc = PILOT_PORTRAITS[k];
+      const portraitHtml = portraitSrc
+        ? `<div class="pilot-portrait"><img src="${portraitSrc}" alt="${p.name}" width="64" height="64" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`
+        : "";
+      return `<div tabindex="0" class="carc ficha pilot ${save.pilot === k ? "sel" : ""} ${own ? "" : "locked"}">${portraitHtml}<b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div><div class="lore">${p.lore}</div><div class="price">${st}</div></div>`;
     }).join("")
     : (Object.keys(DEF) as Kind[]).map((k) => {
       // Todo visible desde el inicio; lo propio (bajas) dice "Sin registros todavía" hasta que aparezca. Clic, Enter o A abren la ficha completa.

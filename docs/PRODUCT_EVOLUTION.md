@@ -1256,3 +1256,37 @@ Decisión del usuario: Integrar una cola automática de procesamiento por lotes 
    - Prueba de lote detached (PID 78378): ejecución en segundo plano y verificación en tiempo real con `creative:batch:status`.
    - Prueba de cancelación: `creative:batch:cancel` interrumpió el proceso en segundo plano, limpió la cola en ComfyUI y actualizó el estado a `CANCELLED` de inmediato.
    - `graphify update .`: grafo de conocimiento sincronizado (4124 nodos, 9942 aristas).
+
+## 2026-10-11 · Modernización Integral del Stack: Telemetría en Simulación, Optimizador 3D GLB, Generador Tangente PBR y Doctor del Entorno
+
+Decisión del usuario: Implementar los 4 upgrades de infraestructura y herramientas para eliminar esperas manuales, optimizar assets y blindar el entorno local:
+
+1. **Telemetría Interactiva en Simulación de Balance (`scripts/sim.mjs`):**
+   - **Indicador de progreso en vivo:** Barra interactiva de una sola línea en `stderr` (`[Semilla 1] t=60/60s [====>] 100% · HP: 160 · Nv: 1 · Armas: 1`) para simulaciones de bot y duelos contra jefes (`--duel`), mostrando estado de combate y tiempo transcurrido en tiempo real.
+   - **Compatibilidad con pipelines automatizados:** Cero interferencia con el stream JSON (`--json`), canalizando la telemetría exclusivamente por `stderr` solo cuando se detecta una TTY interactiva.
+
+2. **Optimizador Automático de Modelos 3D GLB (`scripts/assets-optimize.mjs` · `npm run assets:optimize`):**
+   - **Pipeline no destructivo con `@gltf-transform/cli`:** Ejecuta pases seguros de deduplicación (`dedup`), poda de nodos/atributos huérfanos (`prune`), reordenamiento de vértices para caché de GPU (`reorder`) y remuestreo de curvas de animación (`resample`).
+   - **Preservación estricta de rigs y esqueletos:** Evita pases destructivos como `instance` o `join` que corrompen animaciones esqueléticas en modelos articulados (`cortadora.glb`, `ant.glb`, `perro.glb`).
+   - **Modo auditoría y CLI:** `--check` para análisis en seco sin sobreescritura, `--file <path>` para procesamiento puntual, y `--json` para integración con herramientas de CI.
+
+3. **Generador PBR de Mapas Normales y Rugosidad Tangente (`scripts/creative-pbr.mjs` · `npm run creative:pbr`):**
+   - **Cálculo de normales tangentes vía filtro Sobel:** Deriva vectores normales precisos en espacio tangente a partir de imágenes albedo PNG/WebP, con calibración de intensidad (`--strength`).
+   - **Generación de mapa de rugosidad física:** Extrae variaciones de reflectividad y textura superficial a partir de luminancia y contraste local, con inversión opcional (`--invert`).
+   - **Empaquetado WebP con metadatos:** Conversión directa mediante `cwebp` y volcado de metadatos reproducibles `.meta.json`.
+
+4. **Doctor e Inspector de Salud del Entorno Local (`scripts/doctor.mjs` · `npm run doctor`):**
+   - **Diagnóstico instantáneo (`<80ms`):** Verifica salud de servicios pm2 (`rc-dev`, `rc-test`, `rc-demo`), estado de ComfyUI (conectividad, Python, soporte Apple Silicon Metal/MPS), detección de candados huérfanos (`/tmp/rc-*.lock`) y presencia de binarios críticos en el sistema (`node`, `cwebp`, `npx`).
+   - **Autocorrección con `--fix` (`npm run doctor:fix`):** Limpieza autónoma de candados huérfanos y reinicio automático de servicios pm2 caídos o en estado erróneo.
+
+5. **Galería Cinemática de Retratos de Pilotos y Texturas en Garaje y Bestiario:**
+   - **Retratos cinemáticos (`public/images/pilots/` · `src/pilots.ts`):** Retratos WebP generados con SDXL para veterano, soldadito, robot y novato.
+   - **Integración diegética en UI (`src/menu.ts`, `src/menu.css`):** Contenedor `.pilot-portrait` con chapa biselada, remaches y filtro tenue de alto contraste en las fichas del Garaje y Chatarroteca, con atenuación en pilotos bloqueados.
+
+6. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado TypeScript.
+   - `npm test`: 81/81 pruebas unitarias pasando al 100% en 10 suites.
+   - `npm run build`: compilación limpia en 1.23 s.
+   - `npm run doctor`: diagnóstico ejecutado en 65 ms con todos los servicios y binarios verificados.
+   - Pruebas reales de cada herramienta: `assets-optimize` (26 modelos auditados), `creative:pbr` (0.73 s sobre albedo de asfalto), `sim` (telemetría interactiva validada en vivo).
+

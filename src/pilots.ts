@@ -30,6 +30,15 @@ export const PILOTS: Record<PilotId, { name: string; pros: string[]; con: string
 
 export const pilotStats = (st: PStats, id: PilotId) => { (PILOTS[id] ?? PILOTS.soldadito).mod(st); return st; };
 
+/** Retratos cinemáticos de pilotos para el garaje y bestiario */
+export const PILOT_PORTRAITS: Partial<Record<PilotId | "veterano" | "novato", string>> = {
+  veterano: "./images/pilots/pilot-veterano.webp",
+  soldadito: "./images/pilots/pilot-soldadito.webp",
+  robot: "./images/pilots/pilot-robot.webp",
+  novato: "./images/pilots/pilot-novato.webp",
+  figura: "./images/pilots/pilot-novato.webp", // Novato / temerario joven
+};
+
 /** Arsenal inicial (Taller → Arsenal, Garaje → Arma): Gomitas de serie y las armas base con fila arma_<id> en precios. Sin fusiones ni Lápiz-lanza (no dispara). */
 export const ARSENAL: WeaponId[] = ["gomitas", ...Object.keys(BAL.precios).filter((k) => k.startsWith("arma_")).map((k) => k.slice(5) as WeaponId)];
 

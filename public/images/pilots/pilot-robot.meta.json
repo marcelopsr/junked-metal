@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "367afb60-ec87-4c56-b94a-e8a982fd34a7",
+  "prompt": "cinematic macro portrait of a scrap metal assembled robot rc pilot, glowing circular amber optical lens eye, tarnished brass and copper rivets, exposed braided wiring, brushed oxidized metal plating, gritty DIY craftsmanship, dark night garage workshop background, warm tungsten illumination, cinematic depth of field, photorealistic, intricate mechanical detail, no text",
+  "negative": "text, watermark, logo, cartoon, anime, clean humanoid face, blurry, oversaturated",
+  "seed": 303,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 71.6,
+  "date": "2026-10-11T19:39:58.682Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/web_00013_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/pilots/pilot-robot.webp"
+}

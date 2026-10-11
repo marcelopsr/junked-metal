@@ -24,6 +24,7 @@ async function run(job) {
   try {
     await page.evaluate(seedMath, job.seed);
     if (job.kind) {
+      if (!a.json) process.stderr.write(`[Duelo ${job.kind} · Semilla ${job.seed}] Simulando combate contra jefe...\n`);
       const o = { seed: job.seed, god: a.god, adds: a.adds && Number(a.adds), max: a.max && Number(a.max), team: a.team && Number(a.team) };
       return { ...job, ...(await page.evaluate(([k, o]) => window.__bossDuel(k, Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== false && v !== ""))), [job.kind, o])) };
     }
@@ -31,9 +32,17 @@ async function run(job) {
     let resumen = "";
     for (;;) { // __sim corta a los ~35 s reales: se encadena hasta llegar a `secs` o a que termine la partida
       const i = await page.evaluate(() => window.__info());
+      if (!a.json) {
+        const pct = Math.min(100, Math.round((i.time / secs) * 100));
+        const barLen = 16;
+        const filled = Math.round((pct / 100) * barLen);
+        const bar = "=".repeat(Math.max(0, filled - 1)) + (filled > 0 && filled < barLen ? ">" : "=") + " ".repeat(Math.max(0, barLen - filled));
+        process.stderr.write(`\r[Semilla ${job.seed}] t=${Math.round(i.time)}/${secs}s [${bar}] ${pct}% · HP: ${Math.round(i.hp)} · Nv: ${i.level} · Armas: ${i.weapons?.length || 0}   `);
+      }
       if (i.time >= secs || !["play", "level"].includes(i.state)) break;
       resumen = await page.evaluate((s) => window.__sim(s - window.__info().time), secs);
     }
+    if (!a.json) process.stderr.write(`\r                                                                                 \r`);
     const i = await page.evaluate(() => window.__info()), m = (re) => resumen.match(re)?.[1];
     return { ...job, tiempo: +i.time.toFixed(1), nivel: i.level, hp: Math.round(i.hp), estado: i.state, bajas: Number(m(/bajas (\d+)/) ?? 0), mundo: m(/ · ([^·]+\/[^·]+) · semilla/)?.trim(), armas: i.weapons.join(" "), resumen,
       dano_infligido: JSON.parse(await page.evaluate(() => window.__out())), dano_recibido: JSON.parse(await page.evaluate(() => window.__dmg())) };

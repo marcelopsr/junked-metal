@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "8ad8e0f1-3c48-4d26-855a-69b0c2c8ecba",
+  "prompt": "cinematic macro portrait of a young reckless rookie rc pilot, crooked dusty goggles pushed up on forehead, duct tape wrapped around cracked racing helmet, enthusiastic energetic expression, frayed athletic jacket collar, dark night garage background, warm tungsten spotlight illumination, shallow depth of field, blurred rc model parts in background, photorealistic, intricate textures, no text",
+  "negative": "text, watermark, logo, cartoon, anime, 3d render, deformed, blurry",
+  "seed": 404,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 89.1,
+  "date": "2026-10-11T19:41:36.555Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/web_00015_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/pilots/pilot-novato.webp"
+}

@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "629291fd-3eb8-4561-b994-f9e9bd858807",
+  "prompt": "dried mud splatter on car metal surface, dense layer of cracked dried clay and dirt on weathered sheet metal, seamless albedo texture, macro flat lay, top-down game texture",
+  "negative": "blurry, smooth, shiny, clean, text, watermark, 3d perspective, sphere, car model, horizon",
+  "seed": 303,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 72.7,
+  "date": "2026-10-11T19:40:46.645Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/web_00014_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-mud.webp"
+}
