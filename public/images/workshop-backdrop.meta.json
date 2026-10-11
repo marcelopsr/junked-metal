@@ -1,0 +1,18 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt": "cinematic workbench in a moody clandestine RC mechanic workshop at night, disassembled toy RC buggy frame, exposed miniature shock absorbers with yellow coil springs, knobby crawler tire, precision screwdrivers, soldering iron, wire spools, scattered M3 hex bolts and washers, weathered wooden table top, industrial gooseneck work lamp casting warm incandescent tungsten light pool, dark background with tool pegboard, oily metal cans and spare parts shelves in deep atmospheric shadows, stylized photorealistic tactility, rich retro industrial junked metal aesthetic, wide panoramic composition, dramatic chiaroscuro lighting, masterwork",
+  "negative": "text, letters, watermark, logo, signature, words, cartoon, 3d render sphere, low quality, blurry, distorted, anime, oversaturated neon, daylight, modern clean tech, computer screen",
+  "seed": 771124,
+  "steps": 28,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 1024,
+  "height": 512,
+  "date": "2026-10-11T16:42:58.386Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/workshop_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/workshop-backdrop.webp"
+}

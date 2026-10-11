@@ -1115,5 +1115,26 @@ Decisión del usuario: Generar texturas PBR y albedos de terreno/chatarra para a
    - `npm run build`: bundle de producción generado en 564 ms.
    - `graphify update .`: grafo de conocimiento sincronizado (4063 nodos, 9786 aristas).
 
+## 2026-10-11 · Backdrop Cinemático de Taller y Garaje con ComfyUI (SDXL + Metal/MPS)
+
+Decisión del usuario: Generar e integrar un backdrop cinemático de taller/garaje nocturno para el Garaje y Taller de autos.
+
+1. **Producción de Ilustración con ComfyUI Local (Metal/MPS):**
+   - **Backdrop de Taller (`public/images/workshop-backdrop.webp` · 82.6 KB, 1024×512):** Mesa de trabajo rústica con herramientas de precisión (alicates, destornilladores, cautín, cables, tornillos M3, amortiguadores RC con resortes amarillos y rueda crawler), lámparas industriales colgantes con luz incandescente de tungsteno, tablero perforado con siluetas y estantes en penumbra.
+   - **Metadatos reproducibles:** `public/images/workshop-backdrop.meta.json` (semilla `771124`, 28 pasos, sampler `dpmpp_2m karras`, CFG `7.0`, modelo SDXL Base 1.0 en Apple M4 Pro Metal/MPS, compresión cwebp q85 con PSNR 42.72 dB).
+
+2. **Integración en Garaje y Taller (`index.html`, `src/menu.css`):**
+   - **Taller (`#scr-shop`):** Bloque `.shop-banner.jm-panel` enmarcado en chapa remachada (`--jm-chapa`, 2 px) con sombra interior y relación panorámica de 72 px en PC y 56 px en móvil.
+   - **Garaje (`#scr-garage`):** Bloque `.garage-banner.jm-panel` ubicado sobre las pestañas de personalización del auto (`#gtabs`), reforzando la atmósfera de taller clandestino mientras el auto 3D en la plataforma giratoria mantiene todo el protagonismo a la izquierda.
+   - Ocultamiento inteligente en modo edición (`#scr-garage.editing .garage-banner { display: none; }`) y en pantallas horizontales compactas (`@media (max-height: 500px)`).
+
+3. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado.
+   - `npm run test:restart` y `npm run shots -- --only garaje,taller`: 26 capturas de pantalla tomadas y verificadas en PC y móvil (`pc-menu-garaje.png`, `pc-menu-taller.png`, `cel-menu-garaje.png`, `cel-menu-taller.png`) sin desbordamiento horizontal ni colisiones de UI.
+   - `npm test`: 81/81 pruebas unitarias pasando al 100%.
+   - `npm run build`: compilación limpia en 552 ms.
+   - `graphify update .`: grafo de conocimiento sincronizado (4064 nodos, 9787 aristas).
+
+
 
 

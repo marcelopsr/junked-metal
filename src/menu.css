@@ -118,8 +118,56 @@ body.calm .scr.on { animation-duration: .05s; }
 .dpal .sw.on { outline: 2px solid var(--txt); outline-offset: 1px; }
 #dstat { color: var(--dim); font-size: 15px; }
 /* Modo edición (botón Editar): solo el editor, con toda la altura; Esc / B o Listo vuelven a las piezas */
-#scr-garage.editing > :is(.otitle, .sect, #gtabs, #paint, .btns) { display: none; }
+#scr-garage.editing > :is(.otitle, .sect, .garage-banner, #gtabs, #paint, .btns) { display: none; }
 .scr.side.editing > #cars { width: min(520px, 94vw); max-height: none; overflow: visible; }
+
+/* Banner cinemático de Taller y Garaje (ComfyUI SDXL Base 1.0) */
+.garage-banner, .shop-banner {
+  width: 100%;
+  border: 2px solid var(--jm-chapa, #b5651d);
+  background: var(--jm-fondo, #0b0f14);
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, .8), 0 3px 10px rgba(0, 0, 0, .5);
+  overflow: hidden;
+  border-radius: 2px;
+  position: relative;
+  flex: none;
+}
+.garage-banner img, .shop-banner img {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  object-position: center 46%;
+  filter: contrast(1.06) brightness(.93);
+}
+.garage-banner {
+  max-width: min(440px, 92vw);
+  height: 64px;
+  margin: 0 0 2px;
+}
+.garage-banner img {
+  height: 64px;
+}
+.shop-banner {
+  max-width: min(620px, 90vw);
+  height: 72px;
+  margin: 0 auto;
+}
+.shop-banner img {
+  height: 72px;
+}
+#scr-shop.on {
+  gap: 6px;
+  padding-top: 6px;
+}
+@media (max-width: 640px) {
+  .garage-banner { height: 48px; }
+  .garage-banner img { height: 48px; }
+  .shop-banner { height: 56px; }
+  .shop-banner img { height: 56px; }
+}
+@media (max-height: 500px) {
+  .garage-banner, .shop-banner { display: none; }
+}
 
 /* Taller y bestiario: fichas .carc */
 button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform: none; box-shadow: none; color: var(--dim); }
