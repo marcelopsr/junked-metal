@@ -315,14 +315,15 @@ function decorate(crowd: boolean) {
   if (fms.length) { place(plate, fms); shadows.addShadowCaster(plate); }
 }
 let roadTx: B.Texture | null = null;
-const roadTex = () => roadTx ??= canvasTex(256, (c, s) => {
-  c.fillStyle = "#6e6a66"; c.fillRect(0, 0, s, s);
-  for (let i = 0; i < 1800; i++) { c.fillStyle = Math.random() < 0.5 ? "#7d7873" : "#5c5854"; c.fillRect(Math.random() * s, Math.random() * s, 2, 2); }
-  // Huella de las ruedas: dos franjas más oscuras y lisas donde pisa todo el pelotón, y alguna gota de aceite en el medio de cada carril
-  for (const u of [0.3, 0.7]) { const g = c.createLinearGradient(s * (u - 0.12), 0, s * (u + 0.12), 0); g.addColorStop(0, "rgba(40,38,36,0)"); g.addColorStop(0.5, "rgba(40,38,36,.28)"); g.addColorStop(1, "rgba(40,38,36,0)"); c.fillStyle = g; c.fillRect(0, 0, s, s); }
-  for (let i = 0; i < 5; i++) { const x = s * (Math.random() < 0.5 ? 0.3 : 0.7) + (Math.random() - 0.5) * 20, y = Math.random() * s, r = 3 + Math.random() * 6; c.fillStyle = "rgba(25,22,20,.35)"; c.beginPath(); c.ellipse(x, y, r, r * 1.6, 0, 0, 7); c.fill(); }
-  c.fillStyle = "#e8e4d4"; c.fillRect(s / 2 - 3, 0, 6, s * 0.5); // línea central discontinua
-});
+const roadTex = () => {
+  if (roadTx && roadTx.getScene() === D.scene && roadTx.getInternalTexture()) return roadTx;
+  const t = new B.Texture("./textures/race-asphalt.webp", D.scene);
+  t.wrapU = t.wrapV = B.Constants.TEXTURE_WRAP_ADDRESSMODE;
+  t.uScale = 1;
+  t.vScale = 1;
+  return roadTx = t;
+};
+
 
 // ---------- Corredores ----------
 function makeRacers() {
