@@ -1,0 +1,18 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt": "isolated hot rod scrap metal flame decal, industrial fire graphics on scrap metal plate, burning blowtorch orange and yellow flames, scorched blackened edges, rusted riveted borders, centered graphic on clean solid pure black background, flat sticker graphic art, high contrast",
+  "negative": "text, letters, words, car, vehicle, background scenery, 3d perspective, photorealistic car, clutter, frames, watermark, blur",
+  "seed": 2024,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "euler",
+  "scheduler": "normal",
+  "width": 1024,
+  "height": 1024,
+  "date": "2026-10-11T18:36:25.407Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/decals/flames_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/environment-library/v2/sources/raw_flames_scrap.png"
+}

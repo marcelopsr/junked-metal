@@ -1,0 +1,3 @@
+isolated vintage racing number stencil decal, bold weathered distressed race number 07, peeling paint, rusted metal edges, gritty texture, automotive sponsor badge style, centered graphic on clean solid pure black background, flat sticker graphic art, high contrast
+Negative: text other than 07, car, vehicle, background scenery, 3d perspective, photorealistic car, clutter, frames, watermark, blur
+Seed: 1307 | Steps: 20 | Sampler: euler / normal | Model: SDXL Base 1.0 (ComfyUI Metal/MPS)

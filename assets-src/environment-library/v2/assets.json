@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "date": "2026-10-11",
+  "generator": "ComfyUI SDXL Base 1.0 (Metal/MPS) + Alpha Keying",
+  "assets": [
+    {
+      "id": "01-dorsal-07",
+      "name": "Dorsal Vintage Oxidado (07)",
+      "uses": [
+        "Calco para capó o alerón del auto RC",
+        "Decoración stencil estilo carreras de desguace"
+      ],
+      "roughness": 0.5,
+      "prompt": "prompts/01-dorsal-07.txt",
+      "source": "sources/raw_dorsal_07.png",
+      "texture": "textures/decal_dorsal_07.webp",
+      "publicTexture": "public/images/decals/decal_dorsal_07.webp",
+      "sourceSha256": "a5383258080fe213afbdd78072a84f90566d715fa89d02a8afb52385d41e2225",
+      "textureSha256": "5cf723768fea8e4652202820caf628107ffcbac06287a9c62c49b628446a5f26",
+      "sourceBytes": 2271980,
+      "textureBytes": 480628,
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true
+    },
+    {
+      "id": "02-flames-scrap",
+      "name": "Llamas Industriales de Chapa",
+      "uses": [
+        "Llamas de soplete sobre chapa de carrocería",
+        "Decoración agresiva estilo hot rod chatarra"
+      ],
+      "roughness": 0.45,
+      "prompt": "prompts/02-flames.txt",
+      "source": "sources/raw_flames_scrap.png",
+      "texture": "textures/decal_flames.webp",
+      "publicTexture": "public/images/decals/decal_flames.webp",
+      "sourceSha256": "dc57ba7744f8ef58ff0600fad87640e484b2751e0af022551b4631fb48f6bb15",
+      "textureSha256": "3efb9b376f89428998ec51e5c13d95b72cd15a12f235eb83e4d0539944c6f5c6",
+      "sourceBytes": 2101481,
+      "textureBytes": 660142,
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true
+    },
+    {
+      "id": "03-junkoil-badge",
+      "name": "Emblema JUNK-OIL Grasa y Lubricante",
+      "uses": [
+        "Marca de lubricante retro para chasis y capó",
+        "Insignia industrial de aceite y grasa de grafito"
+      ],
+      "roughness": 0.4,
+      "prompt": "prompts/03-junkoil.txt",
+      "source": "sources/raw_junkoil.png",
+      "texture": "textures/decal_junkoil.webp",
+      "publicTexture": "public/images/decals/decal_junkoil.webp",
+      "sourceSha256": "81b56e42e4fa69f3e9d7da169cafb2253f3fd4cab1a2696287e60e8282bdf751",
+      "textureSha256": "038f114f1a6af3a1b88eecedb8d080a586bc54521d71ed38fc529c307c858934",
+      "sourceBytes": 1844693,
+      "textureBytes": 244536,
+      "width": 1024,
+      "height": 1024,
+      "hasAlpha": true
+    }
+  ]
+}

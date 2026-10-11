@@ -1,0 +1,18 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt": "cinematic specimen display cabinet in a moody rustic workshop at night, glass jars with glowing insect specimens and scrap mechanical bugs, wooden shelves, dark metal cabinets, warm amber filament lamp glow, deep atmospheric shadows, stylized photorealistic tactility, panoramic composition, chiaroscuro lighting, masterwork",
+  "negative": "text, letters, watermark, logo, signature, words, cartoon, blurry, low resolution, daylight",
+  "seed": 88102,
+  "steps": 28,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 1024,
+  "height": 512,
+  "date": "2026-10-11T18:55:23.633Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/web_00007_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/bestiary-backdrop.webp"
+}

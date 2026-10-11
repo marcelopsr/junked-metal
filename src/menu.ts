@@ -6,7 +6,7 @@ import { CARS } from "./car";
 import { BAL, costos, precio } from "./balance";
 import { DEF, type Kind } from "./enemies";
 import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
-import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
+import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, GARAGE_DECALS, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type GarageDecalId, type Slot } from "./models";
 import { ARSENAL, PILOTS, type PilotId } from "./pilots";
 import { beastIcon, icon, PERK_ICON, UI_BTN_ICON, uiIcon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
@@ -830,7 +830,12 @@ const dirty = () => draft !== (save.decals[eslot] || DECAL_BLANK);
 const DHINT = { keys: () => "Clic o arrastre pinta, clic derecho borra · Flechas mueven el cursor, Enter pinta · 1 a 8 cambian el color, 0 borra · Ctrl+Z o Cmd+Z deshace", pad: () => `Stick o cruceta mueven el cursor · ${btnChip(pb("ok"))} pinta · ${btnChip(4)} y ${btnChip(5)} cambian el color · ${btnChip(2)} deshace`, touch: () => "Arrastra el dedo sobre la grilla para pintar" };
 function decalHtml() {
   const slots = [0, 1, 2].map((i) => `<button class="opt ${save.decalSel === i ? "on" : ""} ${eslot === i ? "edit" : ""} ${save.decals[i] ? "" : "locked"}" data-dsel="${i}">Diseño ${i + 1}</button>`).join("");
-  return `<div class="slot"><span>Calco de capó</span><button class="opt ${save.decalSel < 0 ? "on" : ""}" data-dsel="-1">Sin calco</button>${slots}${editing ? "" : `<button class="opt" data-dact="edit">Editar</button>`}</div>`
+  const scrapDecals = (Object.entries(GARAGE_DECALS) as [GarageDecalId, { name: string; src: string; desc: string }][]).map(([id, info]) => {
+    const isAct = save.decalSel >= 0 && save.decals[save.decalSel] === id;
+    return `<button class="opt decal-opt ${isAct ? "on" : ""}" data-dpre="${id}" title="${info.desc}"><img class="decal-thumb" src="${info.src}" alt="${info.name}" width="20" height="20" /> ${info.name}</button>`;
+  }).join("");
+  return `<div class="slot decal-scrap-slot"><span>Calcos de chatarra (HD)</span>${scrapDecals}</div>`
+    + `<div class="slot"><span>Calco propio de capó</span><button class="opt ${save.decalSel < 0 ? "on" : ""}" data-dsel="-1">Sin calco</button>${slots}${editing ? "" : `<button class="opt" data-dact="edit">Editar</button>`}</div>`
     + (!editing ? "" : `<div class="dedit"><canvas id="dgrid" tabindex="0" width="256" height="256" aria-label="Grilla del calco"></canvas><div class="dside">`
     + `<div class="dpal">${DECAL_PAL.map((c, k) => `<button class="sw ${dcol === k + 1 ? "on" : ""}" data-dcol="${k + 1}" style="background:${c}" aria-label="color ${k + 1}"></button>`).join("")}</div>`
     + `<div class="dbtn"><button class="opt ${dcol === 0 ? "on" : ""}" data-dcol="0">Borrar</button><button class="opt" data-dact="undo">Deshacer</button><button class="opt" data-dact="clear">Vaciar</button><button class="opt" data-dact="save">Guardar</button><button class="opt" data-dact="done">Listo</button></div>`
@@ -1485,6 +1490,18 @@ export function initMenu(a: Api) {
       if (n < 0) save.decalSel = -1;
       else { eslot = n; draft = save.decals[n] || DECAL_BLANK; hist = []; if (save.decals[n]) save.decalSel = n; }
       persist(); renderGarage(); focusSel(`[data-dsel="${n}"]`);
+    }
+    else if (d.dpre) { // aplicar calco oficial de chatarra (HD) a la ranura actual
+      const pre = d.dpre;
+      if (save.decalSel >= 0 && save.decals[save.decalSel] === pre) {
+        save.decals[save.decalSel] = "";
+        save.decalSel = -1;
+      } else {
+        if (save.decalSel < 0) save.decalSel = eslot;
+        save.decals[save.decalSel] = pre;
+        draft = pre;
+      }
+      persist(); renderGarage(); focusSel(`[data-dpre="${pre}"]`);
     }
     else if (d.dcol !== undefined) setCol(+d.dcol);
     else if (d.dact === "save") { // guarda el borrador en la ranura y lo aplica; un borrador vacío libera la ranura

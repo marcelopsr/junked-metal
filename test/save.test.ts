@@ -12,7 +12,7 @@ const D = {
 } as unknown as Save;
 const deps: SaveDeps = {
   abilities: { bombardeo: 1, emp: 1 }, weapons: ["gomitas", "clips"], curses: { horda: 1 }, kinds: ["hormiga", "gato"], zones: { patio: 1, garaje: 1 }, isTouch: false,
-  validDecal: (d) => typeof d === "string" && /^[0-8]{4}$/.test(d), presetOf: ({ shadowQ }) => (shadowQ === "off" ? "bajo" : "medio"),
+  validDecal: (d) => typeof d === "string" && (/^[0-8]{4}$/.test(d) || d.startsWith("decal:")), presetOf: ({ shadowQ }) => (shadowQ === "off" ? "bajo" : "medio"),
   presets: { bajo: { shadowQ: "off", texRes: 128, bloom: false }, medio: { shadowQ: "mid", texRes: 256, bloom: true } },
 };
 const load = (o: unknown, d = deps) => parseSave(typeof o === "string" ? o : JSON.stringify(o), D, d);
@@ -53,9 +53,10 @@ describe("parseSave", () => {
     expect(Object.keys(s.beast)).toEqual(["hormiga", "gato"]);
   });
   it("calcos: tres ranuras, diseños válidos y selección apuntando a una ranura con diseño", () => {
-    const s = load({ decals: ["0123", "malo", "8888", "extra"], decalSel: 1 });
-    expect(s.decals).toEqual(["0123", "", "8888"]); expect(s.decalSel).toBe(-1);
+    const s = load({ decals: ["0123", "malo", "decal:dorsal_07", "extra"], decalSel: 1 });
+    expect(s.decals).toEqual(["0123", "", "decal:dorsal_07"]); expect(s.decalSel).toBe(-1);
     expect(load({ decals: ["0123"], decalSel: 0 }).decalSel).toBe(0);
+    expect(load({ decals: ["decal:flames", "", ""], decalSel: 0 }).decalSel).toBe(0);
   });
   it("migra una vez: look v6 y Imagen v1 (sombras off, FXAA mínimo en táctil)", () => {
     expect(load({ aa: "msaa4", lookv: 3 })).toMatchObject({ aa: "none", lookv: 6 });

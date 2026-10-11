@@ -1,0 +1,18 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt": "isolated vintage racing number stencil decal, bold weathered distressed race number 07, peeling paint, rusted metal edges, gritty texture, automotive sponsor badge style, centered graphic on clean solid pure black background, flat sticker graphic art, high contrast",
+  "negative": "text other than 07, car, vehicle, background scenery, 3d perspective, photorealistic car, clutter, frames, watermark, blur",
+  "seed": 1307,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "euler",
+  "scheduler": "normal",
+  "width": 1024,
+  "height": 1024,
+  "date": "2026-10-11T18:34:13.843Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/decals/num07_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/environment-library/v2/sources/raw_dorsal_07.png"
+}

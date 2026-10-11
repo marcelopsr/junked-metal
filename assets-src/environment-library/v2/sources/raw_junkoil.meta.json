@@ -1,0 +1,18 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt": "vintage retro motor oil badge logo, industrial lubricant graphic emblem, distressed weathered stencil brand insignia JUNK-OIL, gear and oil drop emblem, graphite grease emblem, rusty metal plate background, centered emblem on pure black background, flat sticker graphic art, high contrast",
+  "negative": "car, vehicle, background scenery, 3d perspective, photorealistic car, clutter, frames, watermark, blur",
+  "seed": 9981,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "euler",
+  "scheduler": "normal",
+  "width": 1024,
+  "height": 1024,
+  "date": "2026-10-11T18:39:41.508Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/decals/junkoil_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/environment-library/v2/sources/raw_junkoil.png"
+}

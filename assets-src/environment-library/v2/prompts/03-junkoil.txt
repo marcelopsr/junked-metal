@@ -1,0 +1,3 @@
+vintage retro motor oil badge logo, industrial lubricant graphic emblem, distressed weathered stencil brand insignia JUNK-OIL, gear and oil drop emblem, graphite grease emblem, rusty metal plate background, centered emblem on pure black background, flat sticker graphic art, high contrast
+Negative: car, vehicle, background scenery, 3d perspective, photorealistic car, clutter, frames, watermark, blur
+Seed: 9981 | Steps: 20 | Sampler: euler / normal | Model: SDXL Base 1.0 (ComfyUI Metal/MPS)

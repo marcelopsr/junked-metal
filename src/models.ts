@@ -222,7 +222,16 @@ export type CarOpts = { paint?: string; trim?: string; rim?: string; wing?: stri
 export const DECAL_N = 16;
 export const DECAL_PAL = ["#0b0d0a", "#b9d3a4", "#5f7355", "#8dff6a", "#6fb3c4", "#e0a030", "#9a6fb5", "#c8d84a"];
 export const DECAL_BLANK = "0".repeat(DECAL_N * DECAL_N);
-export const validDecal = (s: unknown): s is string => typeof s === "string" && /^[0-8]+$/.test(s) && s.length === DECAL_N * DECAL_N;
+
+// Calcomanías de chatarra oficiales con transparencia (HD WebP en public/images/decals/)
+export const GARAGE_DECALS = {
+  "decal:dorsal_07": { name: "Dorsal 07", src: "images/decals/decal_dorsal_07.webp", desc: "Dorsal vintage oxidado stencil 07" },
+  "decal:flames": { name: "Llamas", src: "images/decals/decal_flames.webp", desc: "Llamas de soplete sobre chapa" },
+  "decal:junkoil": { name: "Junk-Oil", src: "images/decals/decal_junkoil.webp", desc: "Grasa y lubricante de grafito" },
+} as const;
+export type GarageDecalId = keyof typeof GARAGE_DECALS;
+
+export const validDecal = (s: unknown): s is string => typeof s === "string" && ((/^[0-8]+$/.test(s) && s.length === DECAL_N * DECAL_N) || s in GARAGE_DECALS);
 // Dónde va el calco en cada auto: [y, z, lado, cabeceo], sobre la superficie superior que más ve la cámara de partida (detrás y arriba, ~40°).
 // Buggy y Fórmula: el plato del alerón de serie. Monster: el techo de la cabina. Tanque: arriba de la torreta (la escotilla tapa el centro). Autito: la cola, que mira a la cámara.
 // Con un alerón elegido (alto/doble) el calco va sobre su plato, porque tapa la cubierta o la cola (ver carModel); el techo del Monster no lo tapa.
@@ -952,21 +961,32 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     else if (o.decal === "damero") for (let i = 0; i < 5; i++) for (let j = 0; j < 2; j++) parts.push(box(0.02, 0.07, 0.07, M.plastic((i + j) % 2 ? "#e8e4d4" : "#111"), [x, sy - 0.035 + j * 0.07, sz - 0.14 + i * 0.07]));
   }
 
-  // Calco propio (textura NEAREST 16x16 con alfa; el material se reusa por diseño)
+  // Calco del capó (textura HD oficial o grilla NEAREST 16x16 propia con alfa; el material se reusa por diseño)
   if (validDecal(o.sticker) && o.sticker !== DECAL_BLANK) {
     const onWing = kind !== "monster" && (o.wing === "alto" || o.wing === "doble"); // plato del alerón: top = el mismo de arriba, +0,033 = medio grosor y holgura
     const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : SPOT[kind];
-    const mat = pbr("calco" + o.sticker, { color: "#ffffff", rough: 0.4 });
+    const isHd = o.sticker in GARAGE_DECALS;
+    const mat = pbr("calco" + o.sticker, { color: "#ffffff", rough: isHd ? GARAGE_DECALS[o.sticker as GarageDecalId].name ? 0.45 : 0.4 : 0.4 });
     if (!mat.albedoTexture) {
-      const t = new B.DynamicTexture("calco", DECAL_N, scene, false, B.Texture.NEAREST_SAMPLINGMODE);
-      const c = t.getContext() as unknown as CanvasRenderingContext2D;
-      for (let i = 0; i < o.sticker.length; i++) { const n = +o.sticker[i]; if (n) { c.fillStyle = DECAL_PAL[n - 1]; c.fillRect(i % DECAL_N, (i / DECAL_N) | 0, 1, 1); } }
-      t.update();
-      t.hasAlpha = true;
-      mat.albedoTexture = t;
-      mat.emissiveTexture = t; mat.emissiveColor = new B.Color3(0.3, 0.3, 0.3); // autoiluminado a medias: de noche y lejos del faro igual se lee
-      mat.useAlphaFromAlbedoTexture = true;
-      mat.transparencyMode = B.Material.MATERIAL_ALPHATEST;
+      if (isHd) {
+        const tex = new B.Texture(GARAGE_DECALS[o.sticker as GarageDecalId].src, scene);
+        tex.hasAlpha = true;
+        mat.albedoTexture = tex;
+        mat.emissiveTexture = tex;
+        mat.emissiveColor = new B.Color3(0.25, 0.25, 0.25);
+        mat.useAlphaFromAlbedoTexture = true;
+        mat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
+      } else {
+        const t = new B.DynamicTexture("calco", DECAL_N, scene, false, B.Texture.NEAREST_SAMPLINGMODE);
+        const c = t.getContext() as unknown as CanvasRenderingContext2D;
+        for (let i = 0; i < o.sticker.length; i++) { const n = +o.sticker[i]; if (n) { c.fillStyle = DECAL_PAL[n - 1]; c.fillRect(i % DECAL_N, (i / DECAL_N) | 0, 1, 1); } }
+        t.update();
+        t.hasAlpha = true;
+        mat.albedoTexture = t;
+        mat.emissiveTexture = t; mat.emissiveColor = new B.Color3(0.3, 0.3, 0.3); // autoiluminado a medias: de noche y lejos del faro igual se lee
+        mat.useAlphaFromAlbedoTexture = true;
+        mat.transparencyMode = B.Material.MATERIAL_ALPHATEST;
+      }
     }
     const p = B.MeshBuilder.CreatePlane("calco", { size: hs }, scene);
     p.rotation.x = Math.PI / 2 + hp;

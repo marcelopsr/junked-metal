@@ -106,6 +106,8 @@ body.calm .scr.on { animation-duration: .05s; }
 .slot .opt.edit { text-decoration: underline dashed; text-underline-offset: 4px; } /* diseño que se está editando */
 .slot-count { font: 700 11px/1 var(--hf); color: var(--g-dim); margin-left: 6px; font-style: normal; }
 .stock-tag { font: 700 9px/1 var(--hf); color: var(--lcd-ink-dim, #8a99a8); opacity: .7; margin-left: 4px; }
+.slot .opt.decal-opt { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; }
+.decal-thumb { width: 18px; height: 18px; object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,.8)); vertical-align: middle; }
 /* Editor de calcos del capó (Piezas): grilla 16x16 a la izquierda, paleta y botones a la derecha */
 .dedit { width: 100%; display: flex; gap: 12px; align-items: flex-start; justify-content: flex-end; flex-wrap: wrap; padding: 8px 0; }
 #dgrid { width: min(256px, 100%, 58vh); aspect-ratio: 1; image-rendering: pixelated; border: 2px solid var(--line); background: #000; cursor: crosshair; touch-action: none; }
@@ -121,8 +123,8 @@ body.calm .scr.on { animation-duration: .05s; }
 #scr-garage.editing > :is(.otitle, .sect, .garage-banner, #gtabs, #paint, .btns) { display: none; }
 .scr.side.editing > #cars { width: min(520px, 94vw); max-height: none; overflow: visible; }
 
-/* Banner cinemático de Taller y Garaje (ComfyUI SDXL Base 1.0) */
-.garage-banner, .shop-banner {
+/* Banner cinemático de Taller, Garaje y Chatarroteca (ComfyUI SDXL Base 1.0) */
+.garage-banner, .shop-banner, .bestiary-banner {
   width: 100%;
   border: 2px solid var(--jm-chapa, #b5651d);
   background: var(--jm-fondo, #0b0f14);
@@ -132,7 +134,7 @@ body.calm .scr.on { animation-duration: .05s; }
   position: relative;
   flex: none;
 }
-.garage-banner img, .shop-banner img {
+.garage-banner img, .shop-banner img, .bestiary-banner img {
   display: block;
   width: 100%;
   object-fit: cover;
@@ -155,6 +157,15 @@ body.calm .scr.on { animation-duration: .05s; }
 .shop-banner img {
   height: 72px;
 }
+.bestiary-banner {
+  max-width: min(780px, 92vw);
+  height: 80px;
+  margin: 0 auto 4px;
+}
+.bestiary-banner img {
+  height: 80px;
+  object-position: center 50%;
+}
 #scr-shop.on {
   gap: 6px;
   padding-top: 6px;
@@ -164,9 +175,11 @@ body.calm .scr.on { animation-duration: .05s; }
   .garage-banner img { height: 48px; }
   .shop-banner { height: 56px; }
   .shop-banner img { height: 56px; }
+  .bestiary-banner { height: 60px; }
+  .bestiary-banner img { height: 60px; }
 }
 @media (max-height: 500px) {
-  .garage-banner, .shop-banner { display: none; }
+  .garage-banner, .shop-banner, .bestiary-banner { display: none; }
 }
 
 /* Taller y bestiario: fichas .carc */
