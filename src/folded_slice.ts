@@ -1006,3 +1006,154 @@ export function toolTrolleyFold(): B.Mesh {
   return m;
 }
 
+/** Taladro de columna vertical de taller Folded: base de fundición pesada ranurada para amarre de piezas en verde petróleo industrial,
+ *  columna cilíndrica vertical de acero pulido con cremallera posterior, mesa intermedia octogonal regulable en altura con collarín de bloqueo,
+ *  cabezal superior motorizado con carcasa de poleas trapezoidales en chapa plegada y motor eléctrico trasero cilíndrico aleteado,
+ *  eje principal con pínola graduada, mandril portabrocas cilíndrico estriado y broca espiralada descendente de corte,
+ *  y volante de bajada sensible con 3 brazos radiales de acero terminados en pomos esféricos de agarre. */
+export function drillPressFold(): B.Mesh {
+  const { G, done } = kit();
+  const castPetrol = FOLD.painted("#0e7490", 0.85, 316);
+  const bare = FOLD.bare(), dark = FOLD.dark(), rubber = FOLD.rubber();
+  const btnGreen = FOLD.emissive("#22c55e"), btnRed = FOLD.emissive("#ef4444");
+
+  // 1. Base de fundición pesada ranurada para amarre de piezas
+  G.box(3.2, 0.45, 4.2, castPetrol, [0, 0.225, 0.1]);
+  G.box(3.4, 0.14, 4.4, dark, [0, 0.07, 0.1]);
+  G.box(2.6, 0.04, 2.5, bare, [0, 0.47, 0.65]);
+  // Ranuras en T mecanizadas de amarre longitudinales y transversales
+  G.box(0.18, 0.08, 2.3, dark, [-0.65, 0.46, 0.65]);
+  G.box(0.18, 0.08, 2.3, dark, [0.65, 0.46, 0.65]);
+  G.box(1.8, 0.08, 0.18, dark, [0, 0.46, 0.65]);
+  // Collarín cilíndrico de base para la columna y nervaduras de fundición
+  G.cyl(1.85, 0.6, castPetrol, [0, 0.75, -1.0], undefined, 12, 2.05);
+  G.box(0.18, 0.48, 0.9, castPetrol, [-0.85, 0.5, -0.65], [0.35, 0, 0]);
+  G.box(0.18, 0.48, 0.9, castPetrol, [0.85, 0.5, -0.65], [0.35, 0, 0]);
+  G.box(0.5, 0.48, 0.18, castPetrol, [0, 0.5, -1.55]);
+  // Bulones de anclaje a la mesa
+  G.bolts([-1.35, 0.45, 1.8], [1.35, 0.45, 1.8], 2, [0, 1, 0]);
+  G.bolts([-1.35, 0.45, -1.6], [1.35, 0.45, -1.6], 2, [0, 1, 0]);
+  for (const [bx, bz] of [[-1.35, 1.8], [1.35, 1.8], [-1.35, -1.6], [1.35, -1.6]]) {
+    G.cyl(0.38, 0.04, dark, [bx, 0.47, bz], undefined, 8);
+  }
+  // Bulón y collarín de apriete de columna en la base
+  G.cyl(0.24, 0.45, bare, [0.95, 0.8, -1.0], [0, 0, Math.PI / 2], 6);
+  G.bolts([0.85, 0.8, -1.0], [0.85, 0.8, -1.0], 1, [1, 0, 0]);
+
+  // 2. Columna cilíndrica vertical de acero pulido y cremallera de elevación
+  G.cyl(1.3, 6.6, bare, [0, 4.3, -1.0], undefined, 12);
+  G.box(0.22, 4.4, 0.08, bare, [0, 3.8, -0.34]);
+  for (let dy = 1.8; dy <= 5.8; dy += 0.28) {
+    G.box(0.18, 0.06, 0.04, dark, [0, dy, -0.29]);
+  }
+  G.cyl(1.42, 0.16, bare, [0, 1.6, -1.0], undefined, 12);
+  G.cyl(1.42, 0.16, bare, [0, 6.0, -1.0], undefined, 12);
+
+  // 3. Mesa intermedia de taladrado octogonal regulable en altura con collarín de bloqueo
+  G.cyl(1.75, 0.65, castPetrol, [0, 3.2, -1.0], undefined, 12);
+  G.cyl(0.2, 0.5, bare, [-0.95, 3.2, -1.0], [0, 0, Math.PI / 2], 6);
+  G.box(0.14, 0.22, 0.85, bare, [-1.22, 3.2, -1.0], [0.35, 0, 0]);
+  G.sph(0.26, dark, [-1.22, 3.5, -1.35]);
+  // Brazo soporte en ménsula y manivela helicoidal
+  G.box(1.2, 0.55, 1.2, castPetrol, [0, 3.2, -0.15]);
+  G.cyl(1.3, 0.35, castPetrol, [0, 3.3, 0.5], undefined, 10);
+  G.cyl(0.16, 0.55, bare, [0.85, 3.2, -0.6], [0, 0, Math.PI / 2], 6);
+  G.box(0.1, 0.65, 0.12, bare, [1.15, 3.45, -0.6]);
+  G.cyl(0.16, 0.35, dark, [1.25, 3.75, -0.6], [0, 0, Math.PI / 2], 6);
+  // Plato octogonal de taladrado con ranuras radiales
+  G.cyl(2.7, 0.32, castPetrol, [0, 3.55, 0.65], undefined, 8);
+  G.cyl(2.82, 0.1, castPetrol, [0, 3.68, 0.65], undefined, 8);
+  G.cyl(2.5, 0.05, bare, [0, 3.72, 0.65], undefined, 8);
+  G.cyl(0.5, 0.06, dark, [0, 3.73, 0.65], undefined, 10);
+  G.box(0.16, 0.06, 2.2, dark, [0, 3.73, 0.65]);
+  G.box(2.2, 0.06, 0.16, dark, [0, 3.73, 0.65]);
+  G.box(0.16, 0.06, 1.8, dark, [0, 3.73, 0.65], [0, Math.PI / 4, 0]);
+  G.box(0.16, 0.06, 1.8, dark, [0, 3.73, 0.65], [0, -Math.PI / 4, 0]);
+
+  // 4. Cabezal superior motorizado con carcasa protectora de poleas y motor eléctrico trasero
+  G.box(2.0, 1.2, 2.6, castPetrol, [0, 7.0, -0.1]);
+  G.cyl(1.8, 0.45, castPetrol, [0, 6.6, -1.0], undefined, 12);
+  G.bolts([-0.8, 6.6, -1.0], [0.8, 6.6, -1.0], 2, [0, 0, 1]);
+  // Carcasa protectora superior de poleas trapezoidales en chapa plegada
+  G.box(2.2, 0.85, 3.6, castPetrol, [0, 7.95, -0.4]);
+  G.bend([-1.1, 8.37, -2.1], [-1.1, 8.37, 1.3], 0.08, castPetrol);
+  G.bend([1.1, 8.37, -2.1], [1.1, 8.37, 1.3], 0.08, castPetrol);
+  G.bend([-1.1, 8.37, 1.3], [1.1, 8.37, 1.3], 0.08, castPetrol);
+  G.bend([-1.1, 8.37, -2.1], [1.1, 8.37, -2.1], 0.08, castPetrol);
+  G.cyl(0.28, 0.14, bare, [0, 8.45, 0.8], undefined, 8);
+  // Franja diegética hazard en chapa sobre la carcasa superior
+  const yStrip = FOLD.painted("#eab308", 0.6, 318);
+  G.box(2.0, 0.18, 0.04, yStrip, [0, 7.95, 1.41]);
+  for (let s = -4; s <= 4; s++) {
+    G.box(0.12, 0.18, 0.05, dark, [s * 0.22, 7.95, 1.41], [0, 0, 0.5]);
+  }
+  // Motor eléctrico trasero cilíndrico aleteado
+  G.box(0.18, 0.35, 0.8, bare, [-0.75, 6.8, -1.8]);
+  G.box(0.18, 0.35, 0.8, bare, [0.75, 6.8, -1.8]);
+  G.cyl(0.18, 0.45, bare, [0.95, 6.8, -1.8], [0, 0, Math.PI / 2], 6);
+  G.cyl(1.45, 1.3, dark, [0, 6.8, -2.15], undefined, 12);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    G.box(0.04, 1.25, 0.12, dark, [Math.cos(a) * 0.74, 6.8, -2.15 + Math.sin(a) * 0.74], [0, -a, 0]);
+  }
+  G.cyl(1.35, 0.28, castPetrol, [0, 6.1, -2.15], undefined, 10);
+  G.cyl(1.0, 0.06, dark, [0, 5.94, -2.15], undefined, 8);
+  G.box(0.32, 0.45, 0.45, dark, [-0.85, 6.8, -2.15]);
+  G.cyl(0.16, 0.22, bare, [-1.05, 6.65, -2.15], [0, 0, Math.PI / 2], 6);
+  // Caja de mandos frontal con interruptor industrial Start/Stop
+  G.box(0.55, 0.85, 0.32, dark, [-0.95, 6.95, 0.75]);
+  G.box(0.52, 0.82, 0.04, bare, [-0.95, 6.95, 0.92]);
+  G.cyl(0.22, 0.08, btnGreen, [-0.95, 7.15, 0.96], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.42, 0.04, FOLD.painted("#eab308", 0.5, 317), [-0.95, 6.75, 0.93], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.32, 0.14, btnRed, [-0.95, 6.75, 0.99], [Math.PI / 2, 0, 0], 10);
+
+  // 5. Eje principal con mandril portabrocas cilíndrico estriado y broca espiralada descendente
+  G.cyl(0.85, 1.4, bare, [0, 5.8, 0.65], undefined, 12);
+  G.cyl(0.12, 1.4, bare, [-0.6, 5.9, 0.65], undefined, 6);
+  G.cyl(0.28, 0.12, dark, [-0.6, 5.7, 0.65], undefined, 8);
+  G.cyl(0.28, 0.12, dark, [-0.6, 5.55, 0.65], undefined, 8);
+  G.box(0.35, 0.12, 0.18, castPetrol, [-0.45, 6.3, 0.65]);
+  // Mandril portabrocas
+  G.cyl(0.68, 0.25, bare, [0, 5.05, 0.65], undefined, 10, 0.62);
+  G.cyl(0.82, 0.22, dark, [0, 4.85, 0.65], undefined, 12, 0.72);
+  G.cyl(0.12, 0.2, dark, [0.38, 4.85, 0.65], [0, 0, Math.PI / 2], 6);
+  G.cyl(0.78, 0.48, dark, [0, 4.52, 0.65], undefined, 12);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    G.box(0.04, 0.42, 0.04, bare, [Math.cos(a) * 0.39, 4.52, 0.65 + Math.sin(a) * 0.39], [0, -a, 0]);
+  }
+  G.cyl(0.72, 0.25, dark, [0, 4.18, 0.65], undefined, 10, 0.42);
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2;
+    G.box(0.08, 0.18, 0.08, bare, [Math.cos(a) * 0.12, 4.06, 0.65 + Math.sin(a) * 0.12], [0, -a, 0]);
+  }
+  // Broca espiralada descendente de corte
+  G.cyl(0.24, 0.3, bare, [0, 3.92, 0.65], undefined, 8);
+  G.cyl(0.22, 0.85, bare, [0, 3.45, 0.65], undefined, 8);
+  for (let i = 0; i < 7; i++) {
+    const ang = i * 0.85, yb = 3.75 - i * 0.08;
+    G.box(0.24, 0.06, 0.08, dark, [0, yb, 0.65], [0, ang, 0]);
+  }
+  G.cyl(0.22, 0.12, bare, [0, 2.98, 0.65], undefined, 6, 0.04);
+
+  // 6. Volante de bajada sensible con 3 brazos radiales de acero terminados en pomos esféricos
+  G.cyl(0.48, 0.24, bare, [1.12, 7.0, 0.65], [0, 0, Math.PI / 2], 10);
+  G.cyl(0.42, 0.18, dark, [1.22, 7.0, 0.65], [0, 0, Math.PI / 2], 10);
+  G.cyl(0.65, 0.28, bare, [1.35, 7.0, 0.65], [0, 0, Math.PI / 2], 10);
+  G.cyl(0.28, 0.1, dark, [1.51, 7.0, 0.65], [0, 0, Math.PI / 2], 6);
+  for (let k = 0; k < 3; k++) {
+    const ang = k * ((Math.PI * 2) / 3);
+    const dy = Math.cos(ang), dz = Math.sin(ang);
+    const armLen = 1.25;
+    const pEnd: V3 = [1.55, 7.0 + dy * armLen, 0.65 + dz * armLen];
+    G.tube([[1.35, 7.0, 0.65], pEnd], 0.045, bare);
+    G.sph(0.34, dark, pEnd);
+    G.sph(0.22, rubber, [1.55, 7.0 + dy * (armLen - 0.12), 0.65 + dz * (armLen - 0.12)]);
+  }
+
+  const parts = done(18);
+  const m = parts.length > 1 ? B.Mesh.MergeMeshes(parts, true, true, undefined, false, true)! : parts[0];
+  m.name = "drillPressFold";
+  return m;
+}
+

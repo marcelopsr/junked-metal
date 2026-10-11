@@ -812,17 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #54 ("Diorama y Puesto de Boxes") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 15.18 s, 17 capturas en `.shots/actual/` en 58.5 s, grafo en 3948 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #55**.
+- **Último trabajo completado:** Ciclo #55 ("Maquinaria Pesada e Iluminación") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 593 ms, 17 capturas en `.shots/actual/` en 22.5 s, grafo en 3954 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #56**.
 
-### 🔓 LISTO PARA EL CICLO #55 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #56 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Workshop Tools & Props 3D Modeler** | Taladro de columna vertical Folded (`drillPressFold`) o compresor de aire con calderín | `src/folded_slice.ts` |
-| **Workshop Diorama 3D Modeler** | Lámpara lupa de inspección con brazo pantógrafo y mazo de balanceo LiPo conectado | `src/menuscene.ts` |
-| **Procedural Vehicle 3D Modeler** | Micro-transponder de cronometraje con LED y switch de alimentación sellado | `src/models.ts` |
-| **Audio Synth Sound Designer** | Siseo térmico de estaño (`solderingSizzle`) y zumbido analógico de carga (`chargerHum`) | `src/sfx.ts` |
+| **Workshop Tools & Props 3D Modeler** | Fresadora vertical de torreta Folded (`millingMachineFold`) o compresor de aire | `src/folded_slice.ts` |
+| **Workshop Diorama 3D Modeler** | Mini-morsa con virutas en taladro o spot puntual de acento bajo lupa | `src/menuscene.ts` |
+| **Procedural Vehicle 3D Modeler** | Micro-bridas de sujeción de cables (Zip-Ties) y tobera NACA en cabina | `src/models.ts` |
+| **Audio Synth Sound Designer** | Loop diegético de taller (`workshopAmbience`) y ticks de enfriamiento (`coolDownTicks`) | `src/sfx.ts` |
+
+### Ciclo #55 (2026-10-10) — Maquinaria Pesada e Iluminación: Taladro de Columna Folded, Lámpara Lupa Pantógrafo, Transponder con LED y Siseo Térmico
+- **Alcance implementado en producción (`src/`):**
+  - **Workshop Tools & Props 3D Modeler (`src/folded_slice.ts`):** Taladro de columna vertical de fundición pesada `drillPressFold()` en verde petróleo industrial (`FOLD.painted("#0e7490")`): base ranurada con amarres en T, columna cilíndrica rectificada con cremallera, mesa intermedia octogonal regulable con ranuras radiales, cabezal motorizado con carcasa de poleas trapezoidales, mandril Jacobs estriado con broca espiralada, y volante de bajada sensible de 3 brazos con pomos esféricos; 0 draw calls adicionales al mapearse al atlas Folded.
+  - **Workshop Diorama 3D Modeler (`src/menuscene.ts`):** Lámpara lupa técnica de inspección `magnifierLamp` con mordaza C de anclaje al borde de la mesa (`[-32, 0, 0]`), brazos paralelos pantográficos de varilla de acero con resortes helicoidales dobles, cabezal anular circular con lente convexa transparente (`M.glass()`), anillo perimetral LED emisivo blanco brillante de 360° (`M.glow("#f8fafc")`) e interruptor basculante; mazo de cables finos de balanceo tricolor `balanceLead` conectando el `cellMeter` con la batería LiPo; montaje del taladro `drillPressFold()` en el fondo del taller (`[-30, 0, -8]`) con sombras dinámicas completas.
+  - **Procedural Vehicle 3D Modeler (`src/models.ts`):** Micro-transponder personal de cronometraje en naranja de competición (`M.plastic("#f97316")`) con cúpula emisora infrarroja roja (`M.glow("#ef4444")`), micro-LED testigo verde (`M.glow("#22c55e")`) de sincronización con lazo de cronometraje y pestaña M2 en la bandeja lateral del chasis para `buggy`, `formula` y `carrera`; interruptor estanco de alimentación general con capuchón protector de silicona bicapa y palanca roja basculante de encendido en el lateral del chasis.
+  - **Audio Synth Sound Designer (`src/sfx.ts`):** `SFX.solderingSizzle(pan)` con siseo térmico y chisporroteo de resina/flux de estaño al soldar conectores; `SFX.chargerHum(pan)` con zumbido analógico electromagnético de transformador PWM a 120/240 Hz y pitido agudo de confirmación de celda LiPo balanceada.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, vitest --changed 43 tests en verde, build Vite en 593 ms, 17 capturas en `.shots/actual/` aprobadas en 22.5 s, grafo de conocimiento sincronizado en 3954 nodos y 9588 aristas.
 
 ### Ciclo #54 (2026-10-10) — Diorama y Puesto de Boxes: Morsa de Fundición, Carro de Herramientas, Organizador Allen, CellMeter y Disipador 540
 - **Alcance implementado en producción (`src/`):**

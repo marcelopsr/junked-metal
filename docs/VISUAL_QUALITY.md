@@ -1084,6 +1084,26 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #55 (Maquinaria Pesada e Iluminación: Taladro de Columna Folded, Lámpara Lupa Pantógrafo, Transponder con LED y Siseo Térmico)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 22.5 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Taladro de columna vertical de fundición pesada Folded (Workshop Tools & Props 3D Modeler · `src/folded_slice.ts`):**
+   - Incorporado taladro `drillPressFold()` en fundición verde petróleo industrial (`FOLD.painted("#0e7490")`): base ranurada para amarre con ranuras en T, columna vertical rectificada con cremallera posterior, mesa intermedia octogonal regulable en altura con ranuras radiales, cabezal motorizado superior con carcasa de poleas trapezoidales y motor trasero con aletas de refrigeración, mandril Jacobs estriado con broca espiralada descendente y volante de bajada sensible de 3 brazos con pomos esféricos; 0 draw calls adicionales al mapearse al atlas Folded.
+2. **Lámpara lupa técnica de aumento y mazo de balanceo LiPo conectado (Workshop Diorama 3D Modeler · `src/menuscene.ts`):**
+   - Incorporada lámpara lupa `magnifierLamp` con mordaza C de anclaje sujeta al canto de la mesa (`[-32, 0, 0]`), brazos dobles paralelos pantográficos en varilla de acero pulido con articulaciones intermedias y resortes tensores, cabezal anular circular con lente de aumento central convexa en vidrio transparente (`M.glass()`), anillo perimetral LED emisivo blanco de 360° (`M.glow("#f8fafc")`) e interruptor basculante.
+   - Incorporado mazo de cables finos de balanceo tricolor `balanceLead` conectando el puerto JST-XH del `cellMeter` con el conector de balanceo de la batería LiPo sobre la mesa.
+   - Montaje del taladro `drillPressFold()` al fondo del taller junto al panel lateral (`[-30, 0, -8]`) con sombras dinámicas completas.
+3. **Micro-transponder personal de cronometraje e interruptor estanco (Procedural Vehicle 3D Modeler · `src/models.ts`):**
+   - Incorporado micro-transponder personal de cronometraje en naranja de competición (`M.plastic("#f97316")`) con cúpula emisora infrarroja roja (`M.glow("#ef4444")`), micro-LED testigo verde (`M.glow("#22c55e")`) de sincronización con lazo magnético de cronometraje y pestaña M2 en la bandeja lateral del chasis para `buggy`, `formula` y `carrera`.
+   - Incorporado interruptor estanco de alimentación general con capuchón protector de silicona bicapa y palanca roja basculante de encendido.
+4. **Audio diegético de soldadura de estaño y cargador LiPo (Audio Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.solderingSizzle(pan)` con siseo térmico y chisporroteo de resina/flux al soldar conectores.
+   - Incorporado `SFX.chargerHum(pan)` con zumbido analógico electromagnético de transformador PWM a 120/240 Hz y pitido agudo de confirmación de celda LiPo balanceada.
+
+---
+
 ## 2026-10-10 · Ciclo #54 (Diorama y Puesto de Boxes: Morsa de Fundición, Carro de Herramientas, Organizador Allen, CellMeter y Disipador 540)
 
 **Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 58.5 s).

@@ -679,6 +679,30 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         box(0.014, 0.005, 0.012, M.plastic("#38bdf8"), [-bw * 0.12, bh * 0.28 + 0.02, 0.038])
       );
     }
+    if (kind === "buggy" || kind === "formula" || kind === "carrera") {
+      parts.push(
+        // Micro-transponder personal de cronometraje por infrarrojos/RF (personal lap timing transponder) en la bandeja lateral del chasis
+        // Carcasa prismática compacta en naranja de competición
+        box(0.016, 0.011, 0.014, M.plastic("#f97316"), [-bw * 0.16, bh * 0.25, bl * 0.04]),
+        // Pestaña de anclaje con tornillo M2 de fijación al chasis
+        box(0.016, 0.002, 0.022, M.plastic("#f97316"), [-bw * 0.16, bh * 0.25 - 0.005, bl * 0.04]),
+        cyl(0.003, 0.003, 0.004, chrome, [-bw * 0.16, bh * 0.25 - 0.003, bl * 0.04 + 0.008], [0, 0, 0], 6),
+        // Ojo/LED emisor infrarrojo en cúpula semiesférica superior roja/ámbar
+        sph(0.005, M.glow("#ef4444"), [-bw * 0.16, bh * 0.25 + 0.006, bl * 0.04 + 0.002], [1, 0.8, 1], 6),
+        // Micro-LED testigo verde de sincronización con lazo de cronometraje
+        sph(0.0025, M.glow("#22c55e"), [-bw * 0.16 + 0.0045, bh * 0.25 + 0.006, bl * 0.04 - 0.003], undefined, 4),
+        // Circuito de encendido del chasis: interruptor estanco de alimentación general con capuchón protector de silicona roja/negra y rótulo de encendido
+        // Base rectangular fijada al lateral de la bandeja de electrónica
+        box(0.012, 0.008, 0.014, M.plastic("#18181b"), [-bw * 0.18, bh * 0.25, -bl * 0.02]),
+        // Palanca basculante fijada al lateral de la bandeja de electrónica
+        box(0.004, 0.006, 0.006, M.plastic("#ef4444"), [-bw * 0.18, bh * 0.25 + 0.005, -bl * 0.02], [0.35, 0, 0]),
+        // Capuchón protector de silicona roja/negra
+        cyl(0.007, 0.007, 0.003, M.plastic("#18181b"), [-bw * 0.18, bh * 0.25 + 0.004, -bl * 0.02], [0, 0, 0], 6),
+        cyl(0.005, 0.005, 0.002, M.plastic("#ef4444"), [-bw * 0.18, bh * 0.25 + 0.005, -bl * 0.02], [0, 0, 0], 6),
+        // Rótulo de encendido
+        box(0.01, 0.001, 0.004, M.plastic("#ef4444"), [-bw * 0.18, bh * 0.25 + 0.004, -bl * 0.02 + 0.005])
+      );
+    }
     if (kind === "buggy" || kind === "monster" || kind === "formula") {
       // Torre de amortiguación delantera CNC en aluminio anodizado azul con taladros de anclaje
       parts.push(

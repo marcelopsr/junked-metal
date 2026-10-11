@@ -4,7 +4,7 @@ import { applyClimate, canvasTex, glow, lamp, LOOK, M, menuLights, pbr, setDof, 
 import { ambient } from "./fx";
 import { brick, canvasTexture, KIT, kitPut, M3C, wornMat, type KitId } from "./kit3d";
 import { showWorld } from "./world";
-import { benchViseFold } from "./folded_slice";
+import { benchViseFold, drillPressFold } from "./folded_slice";
 
 // Escenas de los menús (no de la partida). Sistema de configuración:
 // - SETS: escenarios físicos (cuarto + utilería fija), armados la primera vez que se ven y lejos entre sí (solo uno encendido).
@@ -242,10 +242,13 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     ...pitStand(fDark, metal, M.rubber()),
     ...lipoCharger(fTeal, metal, fDark),
     ...siliconeOils(fYellow, fRed, metal),
-    // organizador escalonado de llaves Allen, comprobador de celdas LiPo y morsa de banco Folded
+    // organizador escalonado de llaves Allen, comprobador de celdas LiPo, morsa y taladro de columna Folded
     allenRack(metal, fDark),
     cellMeter(fDark, metal),
     place(benchViseFold(), [-28, 0, 10], [0, 0.55, 0]),
+    place(drillPressFold(), [-30, 0, -8], [0, 0.35, 0]),
+    magnifierLamp(metal, fDark),
+    balanceLead(),
     // repuestos: dos ruedas, batería con bornes y cables, tornillos y tuercas, latas de pintura, destornillador suelto, taza enlozada
     place(wheel(2, 1, "#8a5a3a"), [6.5, 0.5, 6.5], [0, 0.4, Math.PI / 2]), place(wheel(2, 1, "#3a6b7c"), [8.6, 1.0, 4.4], [0, -0.3, 0]),
     box(3.6, 1.4, 1.7, fTeal, [-14, 0.7, 4.5]), box(3.65, 0.45, 1.75, fDark, [-14, 1.25, 4.5]),
@@ -370,6 +373,152 @@ export function cellMeter(fDark: B.Material, metal: B.Material): B.Mesh {
   s.position.set(-10, 0, 4.2);
   s.rotation.y = 0.35;
   return s;
+}
+
+export function magnifierLamp(metal: B.Material, fDark: B.Material): B.Mesh {
+  const parts: B.Mesh[] = [];
+
+  // 1. Mordaza C de fundición con tornillo de apriete sujeta al borde lateral de la mesa de trabajo [-32, 0, 0]
+  parts.push(
+    box(1.8, 0.28, 1.6, fDark, [-32, 0.14, 0]),
+    box(0.4, 2.6, 1.6, fDark, [-32.8, -1.05, 0]),
+    box(1.6, 0.35, 1.6, fDark, [-32.1, -2.2, 0]),
+    cyl(0.28, 0.28, 1.4, metal, [-31.8, -2.8, 0], undefined, 8),
+    cyl(0.8, 0.8, 0.12, metal, [-31.8, -2.05, 0], undefined, 8),
+    cyl(0.14, 0.14, 1.4, metal, [-31.8, -3.4, 0], [Math.PI / 2, 0, 0], 6),
+    sph(0.22, metal, [-31.8, -3.4, 0.7]),
+    sph(0.22, metal, [-31.8, -3.4, -0.7]),
+    cyl(1.3, 1.5, 0.5, fDark, [-32, 0.45, 0], undefined, 10),
+    cyl(0.7, 0.7, 0.35, metal, [-32, 0.8, 0], undefined, 8),
+    box(0.7, 0.9, 0.8, fDark, [-32, 1.35, 0]),
+    cyl(0.2, 0.2, 0.9, metal, [-32, 1.35, 0], [0, 0, Math.PI / 2], 6),
+    cyl(0.65, 0.65, 0.25, fDark, [-32.5, 1.35, 0], [0, 0, Math.PI / 2], 8)
+  );
+
+  // 2. Brazos dobles paralelos articulados en varilla de acero pulido con codos basculantes y muelles tensores
+  parts.push(
+    tube([[-32, 1.35, -0.26], [-26, 8.2, 0.14]], 0.1, metal),
+    tube([[-32, 1.35, 0.26], [-26, 8.2, 0.66]], 0.1, metal),
+    tube([[-31.1, 2.4, -0.26], [-31.1, 2.4, 0.26]], 0.08, metal),
+    tube([[-26.9, 7.2, 0.14], [-26.9, 7.2, 0.66]], 0.08, metal),
+    cyl(0.16, 0.16, 0.75, metal, [-31.6, 1.8, 0.0], [Math.PI / 2, 0, 0], 6),
+    cyl(0.16, 0.16, 0.75, metal, [-27.2, 6.8, 0.4], [Math.PI / 2, 0, 0], 6),
+    tube([[-31.6, 1.8, -0.2], [-27.2, 6.8, 0.2]], 0.07, metal),
+    tube([[-31.6, 1.8, 0.2], [-27.2, 6.8, 0.6]], 0.07, metal)
+  );
+  for (let k = 1; k <= 5; k++) {
+    parts.push(
+      tor(0.16, 0.04, metal, [-31.6 + k * 0.73, 1.8 + k * 0.83, -0.2 + k * 0.066], [0.65, 0, 0], 6),
+      tor(0.16, 0.04, metal, [-31.6 + k * 0.73, 1.8 + k * 0.83, 0.2 + k * 0.066], [0.65, 0, 0], 6)
+    );
+  }
+
+  // Codo basculante intermedio con tensor
+  parts.push(
+    cyl(1.2, 1.2, 0.8, fDark, [-26, 8.2, 0.4], [Math.PI / 2, 0, 0], 12),
+    cyl(0.3, 0.3, 1.05, metal, [-26, 8.2, 0.4], [Math.PI / 2, 0, 0], 8),
+    cyl(0.55, 0.55, 0.2, fDark, [-26, 8.2, 0.88], [Math.PI / 2, 0, 0], 8),
+    box(0.25, 0.75, 1.3, fDark, [-26, 8.2, 0.95], [0, 0.3, 0])
+  );
+
+  // Tramo superior del pantógrafo
+  parts.push(
+    tube([[-26, 8.2, 0.28], [-18, 6.8, 1.48]], 0.1, metal),
+    tube([[-26, 8.2, 0.52], [-18, 6.8, 1.72]], 0.1, metal),
+    tube([[-24.8, 8.0, 0.28], [-24.8, 8.0, 0.52]], 0.08, metal),
+    tube([[-19.2, 7.0, 1.48], [-19.2, 7.0, 1.72]], 0.08, metal),
+    tube([[-25.2, 8.4, 0.4], [-19.5, 7.3, 1.6]], 0.06, metal)
+  );
+  for (let k = 1; k <= 4; k++) {
+    parts.push(
+      tor(0.14, 0.035, metal, [-25.2 + k * 1.14, 8.4 - k * 0.22, 0.4 + k * 0.24], [-0.2, 0.3, 0], 6)
+    );
+  }
+
+  // Articulación de muñeca / rótula
+  parts.push(
+    sph(0.5, metal, [-18, 6.8, 1.6]),
+    box(0.6, 0.7, 0.5, fDark, [-17.5, 6.6, 1.7], [0.2, 0.4, -0.2]),
+    cyl(0.18, 0.18, 0.7, metal, [-17.5, 6.6, 1.7], [Math.PI / 2, 0, 0], 6),
+    tube([[-18, 6.8, 1.6], [-16.8, 6.2, 1.9], [-15.8, 5.8, 2.1]], 0.16, metal)
+  );
+
+  // 3. Cabezal anular circular en plástico oscuro con lente de aumento central (M.glass()) y anillo perimetral LED (M.glow("#f8fafc"))
+  const headCenter: V3 = [-14.2, 5.2, 2.4];
+  const headRot: V3 = [0.35, -0.4, 0.2];
+  const headParts: B.Mesh[] = [
+    tor(3.2, 0.45, fDark, [0, 0, 0], undefined, 16),
+    cyl(3.8, 4.0, 0.35, fDark, [0, 0.05, 0], undefined, 16),
+    tor(2.2, 0.18, fDark, [0, 0, 0], undefined, 16),
+    cyl(2.1, 2.1, 0.1, M.glass(), [0, 0.02, 0], undefined, 16),
+    sph(2.8, M.glass(), [0, 0.02, 0], [1, 0.08, 1], 12),
+    tor(2.7, 0.16, M.glow("#f8fafc"), [0, -0.12, 0], undefined, 16),
+    cyl(2.9, 2.9, 0.06, M.glow("#f8fafc"), [0, -0.14, 0], undefined, 16),
+    box(0.35, 0.22, 0.7, fDark, [2.1, 0, 0], [0, 0.25, 0]),
+    cyl(0.2, 0.2, 0.5, metal, [2.25, 0, 0], [0, 0, Math.PI / 2], 6),
+    box(0.3, 0.2, 0.4, fDark, [-1.9, 0.2, 0]),
+    box(0.16, 0.12, 0.24, M.glow("#22c55e"), [-1.9, 0.28, 0]),
+    cyl(0.6, 0.6, 0.5, fDark, [-2.1, 0, 0], [Math.PI / 2, 0, 0], 8)
+  ];
+  const headMesh = merge("magnifierHead", headParts);
+  place(headMesh, headCenter, headRot);
+  headMesh.computeWorldMatrix(true);
+  headMesh.bakeCurrentTransformIntoVertices();
+  parts.push(headMesh);
+
+  return merge("magnifierLamp", parts);
+}
+
+export function balanceLead(): B.Mesh {
+  const poly = M.plastic("#f8fafc");
+  const dark = M.matte("#18181b");
+  const metal = M.metal("#cfd3dc");
+  const parts: B.Mesh[] = [
+    // 1. Conector de balanceo JST-XH en el lateral de la batería LiPo [-12.2, 0.75, 4.5]
+    box(0.25, 0.22, 0.48, poly, [-12.2, 0.75, 4.5]),
+    cyl(0.08, 0.08, 0.12, metal, [-12.1, 0.75, 4.38], [0, 0, Math.PI / 2], 4),
+    cyl(0.08, 0.08, 0.12, metal, [-12.1, 0.75, 4.5], [0, 0, Math.PI / 2], 4),
+    cyl(0.08, 0.08, 0.12, metal, [-12.1, 0.75, 4.62], [0, 0, Math.PI / 2], 4),
+    box(0.35, 0.2, 0.45, poly, [-11.95, 0.75, 4.5]),
+
+    // 2. Conector JST-XH insertado en el puerto del cellMeter [-8.65, 0.23, 4.62]
+    box(0.32, 0.22, 0.55, poly, [-8.65, 0.23, 4.62], [0, 0.35, 0]),
+    box(0.18, 0.18, 0.42, dark, [-8.85, 0.23, 4.68], [0, 0.35, 0]),
+
+    // 3. 3 cables finos flexibles curvados (rojo, blanco, negro) conectando ambos puertos
+    tube([
+      [-11.75, 0.75, 4.40],
+      [-11.2, 0.42, 4.32],
+      [-10.6, 0.12, 4.28],
+      [-10.0, 0.06, 4.30],
+      [-9.5, 0.08, 4.38],
+      [-9.1, 0.14, 4.50],
+      [-8.85, 0.23, 4.58]
+    ], 0.045, M.plastic("#ef4444")),
+    tube([
+      [-11.75, 0.75, 4.50],
+      [-11.15, 0.40, 4.42],
+      [-10.55, 0.11, 4.38],
+      [-9.95, 0.06, 4.40],
+      [-9.45, 0.08, 4.48],
+      [-9.05, 0.14, 4.58],
+      [-8.85, 0.23, 4.65]
+    ], 0.045, poly),
+    tube([
+      [-11.75, 0.75, 4.60],
+      [-11.1, 0.38, 4.52],
+      [-10.5, 0.10, 4.48],
+      [-9.9, 0.06, 4.50],
+      [-9.4, 0.08, 4.58],
+      [-9.0, 0.14, 4.66],
+      [-8.85, 0.23, 4.72]
+    ], 0.045, dark),
+
+    // Abrazaderas / termorretráctil de retención de mazo
+    tor(0.12, 0.04, dark, [-11.0, 0.32, 4.42], [0, 0.25, Math.PI / 2], 8),
+    tor(0.12, 0.04, dark, [-9.9, 0.06, 4.40], [0, 0.15, Math.PI / 2], 8)
+  ];
+  return merge("balanceLead", parts);
 }
 
 function lipoCharger(fTeal: B.Material, metal: B.Material, fDark: B.Material): B.Mesh[] {

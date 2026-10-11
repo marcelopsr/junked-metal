@@ -505,6 +505,20 @@ export const SFX = {
     tone("sawtooth", 520, 310, 0.09, 0.12, 0, pan);
     hiss("bandpass", 1600, 800, 0.06, 0.08, pan);
   },
+  /** Siseo térmico y chisporroteo de resina/flux de estaño al soldar conectores en el taller. */
+  solderingSizzle: (pan?: number) => {
+    if (!gate("solder-sizzle", 4)) return;
+    hiss("bandpass", 4800, 1800, 0.08, 0.14, pan);
+    hiss("highpass", 6500, 2000, 0.05, 0.09, pan);
+    tone("sine", 1200, 800, 0.03, 0.04, 0.02, pan);
+  },
+  /** Zumbido analógico de transformador PWM y pitido de confirmación de celda LiPo balanceada. */
+  chargerHum: (pan?: number) => {
+    if (!gate("charger-hum", 3)) return;
+    tone("sawtooth", 120, 120, 0.15, 0.08, 0, pan);
+    tone("sine", 240, 240, 0.12, 0.06, 0, pan);
+    tone("sine", 2800, 2800, 0.04, 0.09, 0.1, pan);
+  },
 };
 
 
