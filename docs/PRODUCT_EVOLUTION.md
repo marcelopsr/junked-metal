@@ -1345,4 +1345,32 @@ Decisión del usuario: Completar las 3 oportunidades seleccionadas (Props PBR, B
    - `npm run shots -- --only partida,lab`: 30 capturas aprobadas en PC (1280×720) y móvil (390×844) en 131.6 s.
    - `graphify update .`: grafo de conocimiento sincronizado (4187 nodos, 10112 aristas, 199 comunidades).
 
+## 2026-10-11 · Alarma Diegética de Jefes, Chispas y Fricción de Props, y Biometría Mecánica en Bestiario (Ciclo #36)
+
+Decisión del usuario: Implementar las 3 mejoras del ciclo:
+
+1. **Alarma y Rugido Industrial de Jefes (`src/sfx.ts`):**
+   - Rugido grave con alarma bitonal FM modulada (`boss-alarm`, barrido descendente 440→330 Hz y 220→110 Hz con distorsión analógica) sincronizada con la irrupción cinemática de jefes en combate.
+2. **Chispas de Óxido y Fricción de Caucho en Props (`src/fx.ts`, `src/main.ts`):**
+   - `FX.rustSparks(pos, n)`: chispas anaranjadas y cascarilla de óxido al embestir tambores y chapas a alta velocidad.
+   - `FX.tireFriction(pos, n)`: humo denso y partículas de caucho triturado al chocar pilas de neumáticos.
+   - Integración física reactiva en el bucle de colisiones de `main.ts` para impactos >9 y >14 km/h.
+3. **Biometría y Debilidades Mecánicas en la Chatarroteca (`src/menu.ts`):**
+   - Tarjeta diegética `Biometría y debilidades mecánicas` en la ficha 3D de cada bicho desplegando *Blindaje*, *Maniobrabilidad* y *Punto ciego táctico* para las 23 criaturas y jefes (incluyendo variantes lunares).
+4. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado.
+   - `npx vitest run test/run.test.ts test/stats.test.ts test/save.test.ts`: 34/34 tests unitarios aprobados.
+   - `npm run build`: bundle Vite compilado en 783 ms.
+   - `npm run shots -- --only bestiario,partida`: 11 capturas aprobadas en PC y móvil.
+   - `graphify update .`: grafo actualizado (4194 nodos, 10133 aristas, 204 comunidades).
+
+---
+
+## 4. Checkpoint de Sesión y Continuidad
+
+- **Último trabajo completado:** Ciclo #36 (Alarma FM industrial de jefes, Chispas/fricción de props en colisión y Biometría táctica en Bestiario).
+- **Invariantes activas:** Gemini Flash Low Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
+- **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
+
+
 

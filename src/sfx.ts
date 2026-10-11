@@ -410,7 +410,17 @@ export const SFX = {
   },
   pickup: () => gate("pickup", 12) && (tone("triangle", 520, 1040, 0.12, 0.15), tone("triangle", 780, 1560, 0.12, 0.1, 0.06)),
   levelUp: () => [523, 659, 784, 1047].forEach((f, i) => tone("square", f, f, 0.12, 0.07, i * 0.07)),
-  boss: () => { tone("sawtooth", 70, 40, 1.2, 0.3); hiss("lowpass", 600, 80, 1.2, 0.25); },
+  boss: () => {
+    // Rugido sordo grave
+    tone("sawtooth", 70, 40, 1.2, 0.3);
+    hiss("lowpass", 600, 80, 1.2, 0.25);
+    // Alarma industrial diegética de advertencia en frecuencia FM (interferencia y choque)
+    gate("boss-alarm", 1) && (
+      tone("square", 440, 330, 0.22, 0.12),
+      tone("sawtooth", 220, 110, 0.35, 0.18, 0.08),
+      hiss("bandpass", 1800, 600, 0.18, 0.15, undefined, 0.05)
+    );
+  },
   break: () => { hiss("bandpass", 1600, 300, 0.25, 0.3); tone("triangle", 300, 120, 0.15, 0.15); },
   /** Bloque que se desprende en Demolición fabricación: rueda = goma, chapa = metal. */
   duelPartBreak: (wheel: boolean) => {
