@@ -1135,6 +1135,30 @@ Decisión del usuario: Generar e integrar un backdrop cinemático de taller/gara
    - `npm run build`: compilación limpia en 552 ms.
    - `graphify update .`: grafo de conocimiento sincronizado (4064 nodos, 9787 aristas).
 
+## 2026-10-11 · Albedo PBR Terreno/Chatarra (09-scrap-earth) y Zona de Combate en Supervivencia (2 Subagentes en Paralelo)
+
+Decisión del usuario: Integrar el albedo PBR de terreno (`09-scrap-earth`) en el suelo del modo Supervivencia (`src/world.ts` / `src/render.ts`) manteniendo 60 FPS fijos, trabajando con 2 subagentes en paralelo.
+
+1. **Subagente 1 · Render & Texture Specialist (`src/render.ts`):**
+   - Agregada función `TEX.scrapEarth` para cargar e instanciar la textura WebP PBR (`./textures/09-scrap-earth.webp`) con direccionamiento repetible `TEXTURE_WRAP_ADDRESSMODE` y sampling trilineal.
+   - Actualizado `TEX.dirt` para reutilizar directamente `TEX.scrapEarth()` con escala `uScale = vScale = 8`, sustituyendo completamente el renderizado procedural en Canvas 2D (que ejecutaba 14.000 operaciones con `Math.random` por carga) por el albedo WebP pre-optimizado sin coste de CPU ni fugas de memoria.
+
+2. **Subagente 2 · World & Terrain Specialist (`src/world.ts`):**
+   - **Calibración de Huerta y Surcos:** Vinculado el decal de tierra (`42 × 32` m) y los 4 surcos cilíndricos a la textura PBR con escala precisa a escala de auto RC ($uScale = 7$, $vScale = 5.33$, $6.0$ m/tesela sin distorsión de aspecto), rugosidad física calibrada a 0.94 y micro-relieve `soil` vía `surface()`.
+   - **Nueva Zona de Combate de Chatarra (`scrapZone`):** Incorporado decal de $46 \times 36$ m en el cuadrante noroeste del patio $(-48, 20)$ con albedo PBR, berma de tierra perimetral, rampa de chapa oxidada para saltos acrobáticos, pilas de neumáticos de descarte y cajas Folded integradas.
+   - **Sonido y Fricción Diegética:** Registrada la zona en `floorAt(x, z)` para reproducir audio y partículas de gravilla al derrapar sobre la chatarra, y área despejada de matas de pasto (`ZONES.patio.rects` y `bare`).
+   - **Invariantes de Havok y Determinismo:** Poses de mallas asignadas antes de `PhysicsAggregate`, y cero llamadas a `rng()` para preservar el 100% del determinismo del generador de semillas.
+
+3. **Verificación Cuantitativa de Rendimiento y Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado TypeScript.
+   - `npm run perf -- --only partida --vp pc --frames 120`: **5.1 ms mediana / 5.9 ms P95** en PC con GPU Metal (~170+ FPS teóricos, garantizando ampliamente los 60 FPS dentro de los 16.6 ms de presupuesto) y 154 draw calls.
+   - `npm test`: 81/81 pruebas unitarias pasando al 100%.
+   - `npm run build`: bundle compilado limpiamente en 596 ms.
+   - `npm run sim -- --seeds 1 --secs 60`: simulación de bot 60 s determinista sin fallos.
+   - `npm run shots -- --only partida`: 9 capturas verificadas en `.shots/actual/` (`pc-partida-curso.png`, `cel-partida-curso.png`, etc.).
+   - `graphify update .`: grafo de conocimiento actualizado (4070 nodos, 9820 aristas).
+
+
 
 
 

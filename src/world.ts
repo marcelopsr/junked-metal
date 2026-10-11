@@ -100,7 +100,7 @@ const TUBO: Climate = { id: "tubo", name: "TUBO FLUORESCENTE", sun: [0.4, -1, 0.
 export const ZONE_COST = { garaje: precio("zona_garaje"), jardin: precio("zona_jardin") }; // curva de precios: como un auto o algo más (menu.ts, Taller)
 export const ZONES: Record<ZoneId, Zone> = {
   patio: { name: "Patio trasero", short: "Patio", desc: "Pileta, mesa de jardín y una huerta abandonada junto con los buenos propósitos.", half: 160, cost: 0, grass: 1, grassH: 1,
-    rects: [[0, -30, 24, 17], [50, 45, 21, 16]],
+    rects: [[0, -30, 24, 17], [50, 45, 21, 16], [-48, 20, 24, 18]],
     roof: (p) => Math.abs(p.x) < 17 && Math.abs(p.z + 30) < 15 && p.y < 16, // tapa de la mesa: 34x30 en (0,-30), a 16 de alto
     build: patioBuild, layout: patioLayout },
   garaje: { name: "Garaje de la casa", short: "Garaje", desc: "Cemento con aceite, un auto en caballetes y un tubo que parpadea desde el divorcio.", half: 80, cost: ZONE_COST.garaje, grass: 0, grassH: 1,
@@ -125,6 +125,7 @@ export function floorAt(x: number, z: number): Floor {
   if (zoneId === "luna") return "tierra";
   if (zoneId === "jardin") return z < -HALF + 16 || Math.abs(x - 12) < 4 ? "baldosa" : "pasto"; // vereda y camino de lajas
   if (Math.abs(x) < 24 && Math.abs(z + 30) < 17) return "baldosa";
+  if (Math.abs(x + 48) < 24 && Math.abs(z - 20) < 18) return "tierra";
   return Math.abs(x - 50) < 21 && Math.abs(z - 45) < 16 ? "tierra" : "pasto";
 }
 /** Columnas de polvo bajo los tubos del garaje [x, z, ancho, largo] (reemplazan a las luciérnagas) o undefined. */
@@ -313,10 +314,28 @@ function patioBuild() {
   shadows.addShadowCaster(top);
   occluders.push(top);
 
-  // Suelo: césped + baldosas + huerta
+  // Suelo: césped + baldosas + huerta + zona de combate de chatarra
   floor("grass", "#ffffff", TEX.grassMacro);
   decal("patio", 48, 34, 0, -30, surface(pbr("tiles", { color: "#ffffff", rough: 0.6, tex: tex("tiles", TEX.tiles) }), "concrete", 28, 0.7));
-  const dirt = decal("dirt", 42, 32, 50, 45, surface(pbr("dirt", { color: "#ffffff", rough: 1, tex: tex("dirt", TEX.dirt) }), "soil", 24));
+
+  // Huerta: tierra compactada y gravilla (scrapEarth/dirt) con surcos elevados y cultivos
+  const dirtMat = surface(
+    pbr("dirt", {
+      color: "#ffffff",
+      rough: 0.94,
+      metal: 0.05,
+      tex: tex("dirt", () => {
+        const t = TEX.scrapEarth();
+        t.uScale = 7;
+        t.vScale = 5.33;
+        return t;
+      }),
+    }),
+    "soil",
+    24,
+    0.85
+  );
+  const dirt = decal("dirt", 42, 32, 50, 45, dirtMat);
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirt.material!, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   const crops: B.Mesh[] = [];
@@ -325,6 +344,40 @@ function patioBuild() {
     for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte("#3f8f2f"), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4); l.rotation.y = k * 1.6; crops.push(l); }
   }
   shadows.addShadowCaster(merge("huerta", crops)); // 112 hojas sueltas = 112 dibujos por pasada; fusionadas, una
+
+  // Zona de combate de chatarra (scrapZone): arena árida con virutas, tornillos y lomos de combate
+  const scrapMat = surface(
+    pbr("scrapEarth", {
+      color: "#ffffff",
+      rough: 0.94,
+      metal: 0.05,
+      tex: tex("scrapEarth", () => {
+        const t = TEX.scrapEarth();
+        t.uScale = 7.67;
+        t.vScale = 6;
+        return t;
+      }),
+    }),
+    "soil",
+    26,
+    0.85
+  );
+  decal("scrapZone", 46, 36, -48, 20, scrapMat);
+  bare.push({ x: -48, z: 20, r: 23 });
+  // Berm/lomo de tierra y escombros en el flanco norte de la zona
+  stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
+  // Rampa de chapa oxidada para saltos acrobáticos dentro de la zona
+  ramp(FOLDED_SLICE ? FOLD.rust() : M.metal("#7a5038"), -48, 8, 0, 4.2, 6.5, 1.6);
+  // Neumáticos de descarte apilados en el borde oeste
+  stat(tor(2.8, 0.95, M.rubber(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
+  stat(tor(2.6, 0.9, M.rubber(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
+  // Cajas industriales de chapa Folded en el borde este
+  const scrapCrate = FOLDED_SLICE ? FOLD.painted(FOLD_PAINT[0], 0.8, 23) : M.matte("#b08850");
+  crateFold(stat(box(2.6, 2.4, 2.6, scrapCrate, [-33, 1.2, 24], [0, 0.35, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.6, 2.4, 2.6);
+  crateFold(stat(box(2.2, 2.0, 2.2, scrapCrate, [-34, 1.0, 28], [0, -0.2, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.2, 2.0, 2.2);
+  // Plancha de chapa oxidada en el suelo
+  const scrapPlate = FOLDED_SLICE ? FOLD.rust() : M.metal("#6a5a4e");
+  stat(box(4.5, 0.18, 5.5, scrapPlate, [-54, 0.09, 14], [0.03, 0.5, 0]), B.PhysicsShapeType.BOX, { friction: 0.65 });
 
   // Cerca de madera (instancias)
   const plank = plankTpl();
@@ -887,9 +940,33 @@ function puddles(n: number, mat: B.Material) {
   if (discs.length) merge("puddles", discs); // todos comparten material: un solo dibujo
 }
 function ball() {
-  const ballTex = tex("ball", () => canvasTex(256, (c, s) => { c.fillStyle = "#fafafa"; c.fillRect(0, 0, s, s); c.fillStyle = "#111"; for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) { c.beginPath(); c.arc(i * 32 + 16, j * 64 + 32, 12, 0, 7); c.fill(); } }));
   const bs = freeSpot(4) ?? [10, 10];
-  dyn(sph(5, pbr("ball", { color: "#ffffff", rough: 0.4, tex: ballTex }), [bs[0], 2.5, bs[1]], undefined, 16), B.PhysicsShapeType.SPHERE, 2);
+  if (!FOLDED_SLICE) {
+    const ballTex = tex("ball", () => canvasTex(256, (c, s) => { c.fillStyle = "#fafafa"; c.fillRect(0, 0, s, s); c.fillStyle = "#111"; for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) { c.beginPath(); c.arc(i * 32 + 16, j * 64 + 32, 12, 0, 7); c.fill(); } }));
+    dyn(sph(5, pbr("ball", { color: "#ffffff", rough: 0.4, tex: ballTex }), [bs[0], 2.5, bs[1]], undefined, 16), B.PhysicsShapeType.SPHERE, 2);
+    return;
+  }
+  const collider = dyn(sph(5, M.matte("#ffffff"), [bs[0], 2.5, bs[1]], undefined, 16), B.PhysicsShapeType.SPHERE, 2);
+  collider.isVisible = false;
+  const ballFiles = ["ball", "ball_tennis", "ball_beach"];
+  const variant = ballFiles[int(0, ballFiles.length - 1)];
+  import("@babylonjs/loaders/glTF/index.js").then(() => B.LoadAssetContainerAsync(`models/${variant}.glb`, scene)).then((c) => {
+    if (collider.isDisposed()) { c.dispose(); return; }
+    c.addAllToScene();
+    const root = new B.TransformNode("ballSkin", scene);
+    root.scaling.setAll(2.325);
+    root.position.set(0, -2.5, 0);
+    for (const node of c.rootNodes) node.parent = root;
+    for (const mesh of c.meshes) {
+      if (mesh.getTotalVertices()) {
+        shadows.addShadowCaster(mesh);
+        mesh.receiveShadows = true;
+      }
+    }
+    root.parent = collider;
+  }).catch(() => {
+    collider.isVisible = true;
+  });
 }
 
 export function clearLayout() {

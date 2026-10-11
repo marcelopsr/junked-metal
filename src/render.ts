@@ -556,7 +556,16 @@ export const TEX = {
     blob(26, 12, 40, "rgba(120,98,60,A)", 0.35);   // tierra pelada, chica
     blob(60, 4, 14, "rgba(118,170,70,A)", 0.3);    // matas más tiernas
   }, 1),
-  dirt: () => canvasTex(512, (c, s) => noise(c, s, "#7a5a3a", ["#5e4329", "#8f6b45", "#a07a52", "#4a3420"], 14000, 4), 8),
+  scrapEarth: () => {
+    const t = new B.Texture("./textures/09-scrap-earth.webp", scene);
+    t.wrapU = t.wrapV = B.Constants.TEXTURE_WRAP_ADDRESSMODE;
+    return t;
+  },
+  dirt: () => {
+    const t = TEX.scrapEarth();
+    t.uScale = t.vScale = 8;
+    return t;
+  },
   tiles: () => canvasTex(512, (c, s) => {
     const n = 4, w = s / n;
     for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
