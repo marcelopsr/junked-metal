@@ -86,3 +86,5 @@ world.ts (mallas que ahora son colisionador invisible). Fuentes `.blend` en asse
 **Pendiente (sigue igual que antes):** pelota (`ball`), árboles, rompibles en piezas (`hitBreakables`, fase C), podio de Carrera,
 taller del menú (`menuscene.ts`).
 
+**Muestra visual 2026-10-11:** fútbol, tenis y playa están disponibles como candidatos `.vox`/`.svox`/GLB en `assets-src/smoothvoxels/v1/`. No cambian el estado pendiente de migración de `ball()` ni el modelo/colisionador activo; revisar su HANDOFF y medir LOD/performance antes de integrarlos.
+
