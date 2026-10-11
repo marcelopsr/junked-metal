@@ -56,11 +56,15 @@ export async function lock(name = SERVER_LOCK) {
 /** Un solo navegador para toda la corrida. Espera hasta ~30 s a que rc-test responda (no levanta servidores propios: ver CLAUDE.md). */
 export async function launch({ perf = false } = {}) {
   let ok = false;
-  for (let i = 0; i < 30 && !ok; i++) {
-    try { await fetch(BASE, { signal: AbortSignal.timeout(3000) }); ok = true; }
-    catch { await new Promise((r) => setTimeout(r, 1000)); }
+  for (let i = 0; i < 60 && !ok; i++) {
+    try { await fetch(BASE, { signal: AbortSignal.timeout(1500) }); ok = true; }
+    catch {
+      if (i === 0) process.stderr.write(`Esperando a que ${BASE} responda...`);
+      else if (i % 3 === 0) process.stderr.write(".");
+      await new Promise((r) => setTimeout(r, 400));
+    }
   }
-  if (!ok) throw new Error(`No responde ${BASE} tras 30 s. Arrancarlo con: npm run test:restart`);
+  if (!ok) throw new Error(`\nNo responde ${BASE} tras 24 s. Arrancarlo con: npm run test:restart`);
   if (perf) await lock(PERF_LOCK); // primero el global, después el del servidor: sin espera circular
   await lock();
   return chromium.launch({ headless: true, args: ARGS });

@@ -42,20 +42,24 @@ description: >-
 
 ## 3. Flujo Canónico de Generación
 
-### Paso 1: Comprobar el Servidor y la Cola
+### Paso 1: Comprobar el Servidor y la Cola (Instantáneo)
 ```bash
-# 1. Comprobar que ComfyUI responde y usa MPS
-curl -s http://127.0.0.1:8188/system_stats
+# Comprobación instantánea (<50ms) de salud, GPU Metal MPS, VRAM libre, cola e historial
+npm run creative:status
 
-# 2. Comprobar la cola (debe estar vacía antes de lanzar)
-curl -s http://127.0.0.1:8188/queue
+# O con salida JSON para scripts:
+node scripts/comfy-status.mjs --json
 ```
-Si `system_stats` no responde, ejecutar `/Users/msalas/CreativeStack/start.command` y esperar a que esté listo.
-Si `queue_running` contiene elementos, esperar a que el proceso anterior finalice.
+Si el servidor está inactivo:
+- Arrancarlo con `npm run creative:start` o agregando `--auto-start` a `creative-gen.mjs`.
+- Liberar VRAM si está baja: `npm run creative:free`.
+- Cancelar trabajos atascados: `npm run creative:cancel`.
 
-### Paso 2: Ejecutar el Workflow con la API Local
-El script helper `scripts/creative-gen.mjs` permite despachar prompts deterministas al servidor local:
+### Paso 2: Ejecutar el Workflow con la API Local y Streaming Reactivo
+El script helper `scripts/creative-gen.mjs` despacha prompts deterministas con **indicadores en tiempo real vía WebSocket** (paso a paso, velocidad en s/it y ETA), sin sleeps ciegos ni bloqueos silenciosos:
+
 ```bash
+# Modo estándar: streaming en vivo de progreso con barra interactiva
 node scripts/creative-gen.mjs \
   --prompt "polished editorial illustration of a battered yellow RC buggy..." \
   --negative "text, watermark, blurry, distorted, low quality, logo" \
@@ -66,6 +70,13 @@ node scripts/creative-gen.mjs \
   --height 1024 \
   --prefix "rc_fight/hero" \
   --out "public/images/hero.webp"
+
+# Modo asíncrono no bloqueante (retorna en <300ms con Prompt ID para no frenar la sesión):
+node scripts/creative-gen.mjs --prompt "..." --async
+
+# Monitorear o reconectarse a un trabajo en curso:
+npm run creative:watch
+node scripts/creative-gen.mjs --watch <prompt_id>
 ```
 
 ### Paso 3: Inspeccionar y Optimizar

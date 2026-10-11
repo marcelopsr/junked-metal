@@ -21,7 +21,14 @@
     "playtest:duel": "node scripts/duel-playtest.mjs",
     "test:restart": "node scripts/test-restart.mjs",
     "test:down": "node scripts/test-restart.mjs down",
-    "test:ls": "node scripts/test-restart.mjs ls"
+    "test:ls": "node scripts/test-restart.mjs ls",
+    "creative:status": "node scripts/comfy-status.mjs",
+    "creative:watch": "node scripts/comfy-status.mjs --watch",
+    "creative:free": "node scripts/comfy-status.mjs --free",
+    "creative:cancel": "node scripts/comfy-status.mjs --cancel-all",
+    "creative:start": "node scripts/comfy-status.mjs start",
+    "creative:stop": "node scripts/comfy-status.mjs stop",
+    "creative:gen": "node scripts/creative-gen.mjs"
   },
   "keywords": [],
   "type": "module",
