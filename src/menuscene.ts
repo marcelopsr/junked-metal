@@ -4,7 +4,7 @@ import { applyClimate, canvasTex, glow, lamp, LOOK, M, menuLights, pbr, setDof, 
 import { ambient } from "./fx";
 import { brick, canvasTexture, KIT, kitPut, M3C, wornMat, type KitId } from "./kit3d";
 import { showWorld } from "./world";
-import { airCompressorFold, benchViseFold, drillPressFold, hoseReelFold, millingMachineFold } from "./folded_slice";
+import { airCompressorFold, benchViseFold, drillPressFold, gasGeneratorFold, hoseReelFold, millingMachineFold } from "./folded_slice";
 
 // Escenas de los menús (no de la partida). Sistema de configuración:
 // - SETS: escenarios físicos (cuarto + utilería fija), armados la primera vez que se ven y lejos entre sí (solo uno encendido).
@@ -249,6 +249,8 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     place(drillPressFold(), [-30, 0, -8], [0, 0.35, 0]),
     place(millingMachineFold(), [-33, 0, 5], [0, 0.4, 0]),
     place(airCompressorFold(), [-30, 0, 16], [0, -0.3, 0]),
+    place(gasGeneratorFold(), [-28, 0, 20], [0, 0.2, 0]),
+    digitalTireGauge(metal, fDark),
     airHoseAndBlowGun(metal, fDark),
     magnifierLamp(metal, fDark),
     machineLamp(metal, fDark),
@@ -893,6 +895,111 @@ export function screwTray(metal: B.Material, fDark: B.Material): B.Mesh {
   const s = merge("screwTray", parts);
   s.position.set(2.5, 0, 8.5);
   return s;
+}
+export function digitalTireGauge(metal: B.Material, fDark: B.Material): B.Mesh {
+  const anodBlue = M.metal("#0284c7");
+  const brass = M.metal("#d97706");
+  const lcdGlow = M.glow("#38bdf8");
+  const parts: B.Mesh[] = [];
+
+  // 1. Carcasa de mano ergonómica en plástico azul anodizado con empuñadura bimateria engomada (fDark)
+  parts.push(
+    // Cuerpo principal ergonómico en azul anodizado
+    box(1.15, 0.38, 2.3, anodBlue, [0, 0.19, 0]),
+    // Biseles redondeados en los laterales
+    cyl(0.36, 0.36, 2.2, anodBlue, [-0.54, 0.19, 0], [Math.PI / 2, 0, 0], 8),
+    cyl(0.36, 0.36, 2.2, anodBlue, [0.54, 0.19, 0], [Math.PI / 2, 0, 0], 8),
+    // Transición frontal estilizada hacia el cabezal de la boquilla
+    box(0.95, 0.36, 0.55, anodBlue, [0, 0.19, 1.25]),
+    cyl(0.85, 0.85, 0.36, anodBlue, [0, 0.19, 1.4], undefined, 12),
+    // Culata / remate inferior redondeado con ojal pasante para cinta o lanyard
+    cyl(0.88, 1.05, 0.45, anodBlue, [0, 0.19, -1.2], undefined, 10),
+    tor(0.52, 0.08, fDark, [0, 0.19, -1.48], [Math.PI / 2, 0, 0], 10),
+    cyl(0.24, 0.24, 0.18, metal, [0, 0.19, -1.48], [Math.PI / 2, 0, 0], 8),
+    // Inserto de goma inferior antideslizante de base
+    box(0.9, 0.04, 2.1, fDark, [0, 0.02, 0]),
+    // Paneles laterales bimateria de elastómero antideslizante en composite negro
+    box(0.1, 0.34, 1.85, fDark, [-0.58, 0.19, -0.12]),
+    box(0.1, 0.34, 1.85, fDark, [0.58, 0.19, -0.12])
+  );
+  // Ranuras transversales antideslizantes para los dedos en los costados
+  for (let r = 0; r < 5; r++) {
+    const rz = -0.75 + r * 0.3;
+    parts.push(
+      box(0.14, 0.36, 0.09, fDark, [-0.58, 0.19, rz]),
+      box(0.14, 0.36, 0.09, fDark, [0.58, 0.19, rz])
+    );
+  }
+
+  // 2. Boquilla angular a 45° en latón pulido con collarín de asiento para válvulas Schrader/Presta
+  parts.push(
+    // Cuello de acople en azul anodizado en el extremo superior
+    cyl(0.42, 0.42, 0.2, anodBlue, [0, 0.24, 1.52], [Math.PI / 4, 0, 0], 8),
+    // Tuerca hexagonal mecanizada en latón en la transición
+    cyl(0.44, 0.44, 0.12, brass, [0, 0.31, 1.59], [Math.PI / 4, 0, 0], 6),
+    // Vástago cilíndrico angular a 45° en latón pulido
+    cyl(0.28, 0.28, 0.55, brass, [0, 0.51, 1.79], [Math.PI / 4, 0, 0], 12),
+    // Collarín de asiento para válvula (chuck head moleteado de modelismo)
+    cyl(0.44, 0.44, 0.22, brass, [0, 0.70, 1.98], [Math.PI / 4, 0, 0], 16),
+    tor(0.44, 0.08, brass, [0, 0.70, 1.98], [Math.PI / 4, 0, 0], 16),
+    tor(0.46, 0.03, metal, [0, 0.65, 1.93], [Math.PI / 4, 0, 0], 12),
+    // Junta interior de sellado neumático en composite negro
+    cyl(0.24, 0.24, 0.08, fDark, [0, 0.76, 2.04], [Math.PI / 4, 0, 0], 12),
+    // Vástago central depresor de obús de válvula Schrader/Presta en latón
+    cyl(0.08, 0.08, 0.14, brass, [0, 0.76, 2.04], [Math.PI / 4, 0, 0], 6)
+  );
+
+  // 3. Micro-pantalla LCD azul retroiluminada mostrando lectura digital diegética en PSI
+  parts.push(
+    // Marco exterior biselado de la pantalla en composite negro
+    box(0.92, 0.06, 1.14, fDark, [0, 0.39, 0.25]),
+    // Filete metálico protector perimetral
+    box(0.96, 0.04, 1.18, metal, [0, 0.37, 0.25]),
+    // Panel LCD azul retroiluminado diegético
+    box(0.76, 0.04, 0.94, lcdGlow, [0, 0.42, 0.25]),
+    // Lente protectora frontal transparente de policarbonato
+    box(0.80, 0.02, 0.98, M.glass(), [0, 0.45, 0.25]),
+    // Segmentos digitales diegéticos (lectura fija de alta precisión "18.5 PSI" en fDark)
+    // Dígito '1':
+    box(0.04, 0.04, 0.28, fDark, [-0.22, 0.445, 0.35]),
+    // Dígito '8':
+    box(0.14, 0.04, 0.04, fDark, [-0.05, 0.445, 0.47]),
+    box(0.14, 0.04, 0.04, fDark, [-0.05, 0.445, 0.35]),
+    box(0.14, 0.04, 0.04, fDark, [-0.05, 0.445, 0.23]),
+    box(0.04, 0.04, 0.28, fDark, [-0.11, 0.445, 0.35]),
+    box(0.04, 0.04, 0.28, fDark, [0.01, 0.445, 0.35]),
+    // Punto decimal:
+    box(0.04, 0.04, 0.04, fDark, [0.08, 0.445, 0.22]),
+    // Dígito '5':
+    box(0.14, 0.04, 0.04, fDark, [0.19, 0.445, 0.47]),
+    box(0.04, 0.04, 0.12, fDark, [0.13, 0.445, 0.41]),
+    box(0.14, 0.04, 0.04, fDark, [0.19, 0.445, 0.35]),
+    box(0.04, 0.04, 0.12, fDark, [0.25, 0.445, 0.29]),
+    box(0.14, 0.04, 0.04, fDark, [0.19, 0.445, 0.23]),
+    // Unidad diegética "PSI":
+    box(0.04, 0.04, 0.14, fDark, [0.29, 0.445, 0.46]),
+    box(0.06, 0.04, 0.06, fDark, [0.33, 0.445, 0.49]),
+    box(0.08, 0.04, 0.10, fDark, [0.32, 0.445, 0.36])
+  );
+
+  // 4. Pulsador lateral metálico de purga micrométrica y botón pulsador frontal de encendido/puesta a cero
+  parts.push(
+    // Cuello lateral de la válvula de purga en latón
+    cyl(0.24, 0.24, 0.12, brass, [-0.60, 0.22, 0.55], [0, 0, Math.PI / 2], 8),
+    // Pulsador metálico estriado de alivio micrométrico de presión
+    cyl(0.18, 0.18, 0.16, metal, [-0.70, 0.22, 0.55], [0, 0, Math.PI / 2], 12),
+    tor(0.18, 0.03, metal, [-0.74, 0.22, 0.55], [0, 0, Math.PI / 2], 12),
+    cyl(0.05, 0.05, 0.06, fDark, [-0.78, 0.22, 0.55], [0, 0, Math.PI / 2], 6),
+    // Botón frontal circular de encendido / puesta a cero (Zero/Tare) bajo la pantalla
+    cyl(0.38, 0.38, 0.04, fDark, [0, 0.39, -0.52], undefined, 12),
+    cyl(0.28, 0.28, 0.08, metal, [0, 0.43, -0.52], undefined, 12),
+    sph(0.09, lcdGlow, [0, 0.47, -0.52])
+  );
+
+  const g = merge("digitalTireGauge", parts);
+  g.position.set(4.2, 0, 8.8);
+  g.rotation.y = -0.25;
+  return g;
 }
 function xt60Lead(metal: B.Material, fDark: B.Material): B.Mesh {
   const parts = [

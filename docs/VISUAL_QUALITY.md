@@ -1084,6 +1084,28 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #59 (Generación Auxiliar & Neumática de Pista: Generador con Jaula, Manómetro Digital de Neumáticos, Protector Lexan de Engranajes y Pistonada en SFX)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 56.3 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Grupo electrógeno portátil a gasolina Folded (Workshop Tools & Props 3D Modeler · `src/folded_slice.ts`):**
+   - Incorporado generador eléctrico portátil `gasGeneratorFold()`: jaula envolvente en tubos continuos de acero (`FOLD.bare()`) con 4 silentblocks de goma negra (`FOLD.rubber()`) en la base inferior y manguitos de agarre superiores.
+   - Depósito superior de combustible en chapa estampada roja de competición (`FOLD.painted("#dc2626")`) con tapón roscado central cromado, mirilla transparente con indicador analógico de nivel de combustible, calcos diegéticos de advertencia y llave de paso de latón con vaso decantador.
+   - Motor térmico monocilíndrico OHV de 4 tiempos con cilindro aleteado inclinado a 26° en fundición oscura (`FOLD.dark()`), carburador con filtro de aire cilíndrico en baño de aceite, silenciador de escape con protector anticalórico perforado, y tirador de arranque por cuerda (recoil starter) con empuñadura en T; alternador coaxial aleteado con tapa trasera ranurada.
+   - Panel frontal técnico estanco bajo voladizo: interruptor basculante rojo ON/OFF (`FOLD.emissive("#ef4444")`), voltímetro analógico con aguja indicadora en 230V, disyuntor térmico de rearme, 2 tomas de corriente Schuko con tapas basculantes en azul industrial (`FOLD.painted("#1e40af")`), borne de tierra en latón y franja de seguridad `hazard`; 0 draw calls adicionales al mapearse al atlas Folded con `done(18)`.
+2. **Manómetro digital de neumáticos de precisión y emplazamiento de boxes (Workshop Diorama 3D Modeler · `src/menuscene.ts`):**
+   - Incorporado manómetro digital de mano `digitalTireGauge(metal, fDark)` en la mesa de boxes (`[4.2, 0, 8.8]`): carcasa ergonómica bimateria en aluminio azul anodizado (`M.metal("#0284c7")`) con empuñadura antideslizante estriada en composite negro (`fDark`) y ojal para lanyard; boquilla angular a 45° en latón pulido (`M.metal("#d97706")`) con collarín moleteado para válvulas de modelismo; micro-display LCD activo en `M.glow("#38bdf8")` con lectura calibrada diegética en PSI ("18.5 PSI"); pulsador lateral de purga micrométrica y botón frontal Zero/Tare.
+   - Emplazamiento del grupo electrógeno `gasGeneratorFold()` en el suelo del taller en la zona técnica de boxes (`place(gasGeneratorFold(), [-28, 0, 20], [0, 0.2, 0])`); integrado en `menu_bench_props` con sombras dinámicas completas y 0 draw calls adicionales.
+3. **Cubierta protectora envolvente de engranajes en Lexan (Procedural Vehicle 3D Modeler · `src/models.ts`):**
+   - Incorporada carcasa protectora Clear Gear Cover contorneada en forma de 8 adaptada a la silueta del piñón de ataque y la corona Spur Gear del Slipper Clutch para chasis expuestos (`buggy`, `monster` y `carrera`): fabricada en policarbonato traslúcido técnico `M.plastic("#94a3b8")` con brillo superficial.
+   - 3 nervaduras estructurales longitudinales de refuerzo moldeadas para evitar deformación térmica e impactos de gravilla; tapón circular estanco de goma negra (`M.rubber()`) centrado concéntricamente frente a la tuerca M4 del Slipper Clutch para permitir regular la precarga con llave tubular sin desmontar la tapa; y 2 tornillos Allen M3 cromados anclando la cubierta a la bancada; 0 draw calls adicionales integrados con color de vértice.
+4. **Sonidos diegéticos de pistonada de compresor y purga de neumático (Audio Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.compressorChug(pan)`: pistonada rítmica del compresor cargando calderín mediante tren de 4 pulsos graves desfasados a 28–58 Hz con ondas sawtooth y triangle combinadas con ráfagas filtradas de admisión a 800–400 Hz y `gate("comp-chug", 4)`.
+   - Incorporado `SFX.tireBleed(pan)`: micro-soplido seco de purga de neumático al regular presión en el manómetro digital, combinando tono de escape senoidal (1400 -> 400 Hz) con doble siseo de alta presión bandpass y highpass (5200–6800 Hz) y `gate("tire-bleed", 4)`.
+
+---
+
 ## 2026-10-10 · Ciclo #58 (Transmisión & Neumática Mural: Slipper Clutch con Corona Expuesta, Carrete de Manguera, Unidad FRL Mural y Carraca en SFX)
 
 **Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 24.6 s).

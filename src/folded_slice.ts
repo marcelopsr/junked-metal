@@ -1882,6 +1882,338 @@ export function hoseReelFold(): B.Mesh {
   return m;
 }
 
+/** Grupo electrógeno portátil a gasolina Folded: jaula protectora perimetral en tubo de acero curvado (FOLD.bare())
+ *  con 4 silentblocks de goma negra (FOLD.rubber()) en la base inferior, depósito superior de combustible en chapa
+ *  estampada roja de competición (FOLD.painted("#dc2626", 0.8, 312)) con tapón roscado central cromado, indicador
+ *  analógico de nivel con mirilla transparente y calco diegético de advertencia, motor térmico monocilíndrico de 4 tiempos
+ *  con bloque y culata aleteados en fundición oscura (FOLD.dark()), carburador con filtro de aire cilíndrico, silenciador
+ *  de escape con protector anticalórico perforado, tirador de arranque por cuerda (recoil starter) con empuñadura en T,
+ *  alternador cilíndrico de generación eléctrica con aletas de refrigeración coaxiales acoplado al bloque motor, y panel
+ *  frontal de mandos técnico con interruptor general basculante rojo ON/OFF (FOLD.emissive("#ef4444")), voltímetro analógico
+ *  con esfera blanca y bisel negro, disyuntor térmico de rearme y 2 tomas de corriente Schuko con tapas protectoras basculantes. */
+export function gasGeneratorFold(): B.Mesh {
+  const { G, done } = kit();
+  const redFuel = FOLD.painted("#dc2626", 0.8, 312);
+  const panelDark = FOLD.painted("#0f172a", 0.85, 316);
+  const schukoBlue = FOLD.painted("#1e40af", 0.8, 317);
+  const brass = FOLD.painted("#d97706", 0.65, 282);
+  const bare = FOLD.bare(), dark = FOLD.dark(), rubber = FOLD.rubber();
 
+  // 1. Jaula protectora perimetral en tubo de acero curvado envolviendo la máquina, con 4 silentblocks de goma en la base
+  // 4 silentblocks de goma en la base inferior
+  for (const sx of [-1.02, 1.02]) {
+    for (const sz of [-1.35, 1.35]) {
+      G.cyl(0.44, 0.22, rubber, [sx, 0.11, sz], undefined, 10);
+      G.cyl(0.48, 0.04, dark, [sx, 0.02, sz], undefined, 10);
+      G.cyl(0.32, 0.04, bare, [sx, 0.24, sz], undefined, 8);
+      G.bolts([sx, 0.25, sz], [sx, 0.25, sz], 1, [0, 1, 0]);
+      // Pletina soldada de apoyo entre el taco y el tubo del chasis
+      G.box(0.36, 0.05, 0.36, dark, [sx, 0.26, sz]);
+    }
+  }
 
+  // Tubos del bastidor / jaula perimetral (aros tubulares y montantes en acero curvado)
+  const TUBE_R = 0.075;
+  // Aro lateral izquierdo (plano X = -1.15)
+  G.tube([
+    [-1.15, 0.32, 1.35], [-1.15, 0.28, 0], [-1.15, 0.32, -1.35],
+    [-1.15, 0.55, -1.52], [-1.15, 2.22, -1.52], [-1.15, 2.45, -1.35],
+    [-1.15, 2.45, 0], [-1.15, 2.45, 1.35], [-1.15, 2.22, 1.52],
+    [-1.15, 0.55, 1.52], [-1.15, 0.32, 1.35],
+  ], TUBE_R, bare);
 
+  // Aro lateral derecho (plano X = 1.15)
+  G.tube([
+    [1.15, 0.32, 1.35], [1.15, 0.28, 0], [1.15, 0.32, -1.35],
+    [1.15, 0.55, -1.52], [1.15, 2.22, -1.52], [1.15, 2.45, -1.35],
+    [1.15, 2.45, 0], [1.15, 2.45, 1.35], [1.15, 2.22, 1.52],
+    [1.15, 0.55, 1.52], [1.15, 0.32, 1.35],
+  ], TUBE_R, bare);
+
+  // Travesaños transversales superiores (frontal y trasero)
+  G.tube([[-1.15, 2.45, 1.35], [-0.85, 2.45, 1.48], [0.85, 2.45, 1.48], [1.15, 2.45, 1.35]], TUBE_R, bare);
+  G.tube([[-1.15, 2.45, -1.35], [-0.85, 2.45, -1.48], [0.85, 2.45, -1.48], [1.15, 2.45, -1.35]], TUBE_R, bare);
+
+  // Travesaños transversales inferiores (frontal y trasero)
+  G.tube([[-1.15, 0.28, 1.35], [-0.85, 0.28, 1.48], [0.85, 0.28, 1.48], [1.15, 0.28, 1.35]], TUBE_R, bare);
+  G.tube([[-1.15, 0.28, -1.35], [-0.85, 0.28, -1.48], [0.85, 0.28, -1.48], [1.15, 0.28, -1.35]], TUBE_R, bare);
+
+  // Barras laterales intermedias de protección contra impactos
+  G.tube([[-1.15, 1.32, -1.48], [-1.15, 1.32, 1.48]], TUBE_R * 0.9, bare);
+  G.tube([[1.15, 1.32, -1.48], [1.15, 1.32, 1.48]], TUBE_R * 0.9, bare);
+
+  // Manguitos de goma en los tubos superiores para agarre / transporte manual
+  G.cyl(0.22, 0.65, rubber, [-1.15, 2.45, 0], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.22, 0.65, rubber, [1.15, 2.45, 0], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.25, 0.05, dark, [-1.15, 2.45, -0.32], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.25, 0.05, dark, [-1.15, 2.45, 0.32], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.25, 0.05, dark, [1.15, 2.45, -0.32], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.25, 0.05, dark, [1.15, 2.45, 0.32], [Math.PI / 2, 0, 0], 8);
+
+  // Bancada inferior: dos largueros de chapa doblada con silentblocks que soportan el grupo motor-alternador
+  for (const lx of [-0.48, 0.48]) {
+    G.box(0.16, 0.14, 2.6, dark, [lx, 0.36, 0]);
+    G.bend([lx, 0.43, -1.3], [lx, 0.43, 1.3], 0.02, dark);
+    // Soldaduras a los tubos inferiores
+    G.box(0.22, 0.16, 0.18, bare, [lx, 0.32, 1.35]);
+    G.box(0.22, 0.16, 0.18, bare, [lx, 0.32, -1.35]);
+  }
+  // 4 silentblocks antivibración para el montaje del motor y alternador
+  for (const mx of [-0.48, 0.48]) {
+    for (const mz of [-0.85, 0.85]) {
+      G.cyl(0.34, 0.16, rubber, [mx, 0.49, mz], undefined, 8);
+      G.cyl(0.38, 0.04, dark, [mx, 0.42, mz], undefined, 8);
+      G.bolts([mx, 0.58, mz], [mx, 0.58, mz], 1, [0, 1, 0]);
+    }
+  }
+
+  // 2. Depósito superior de combustible en chapa estampada roja de competición con tapón cromado, visor y calcos
+  // Cuerpo principal del tanque estampado
+  G.box(1.88, 0.38, 1.76, redFuel, [0, 2.18, 0]);
+  G.box(1.72, 0.18, 1.62, redFuel, [0, 1.96, 0]);
+  // Reborde / pestaña perimetral de chapa estampada engatillada
+  G.box(2.02, 0.04, 1.9, redFuel, [0, 2.05, 0]);
+  G.box(2.04, 0.02, 1.92, bare, [0, 2.05, 0]);
+  // Cantos redondeados doblados en la parte superior del tanque
+  G.bend([-0.94, 2.37, -0.88], [0.94, 2.37, -0.88], 0.035, redFuel);
+  G.bend([-0.94, 2.37, 0.88], [0.94, 2.37, 0.88], 0.035, redFuel);
+  G.bend([-0.94, 2.37, -0.88], [-0.94, 2.37, 0.88], 0.035, redFuel);
+  G.bend([0.94, 2.37, -0.88], [0.94, 2.37, 0.88], 0.035, redFuel);
+
+  // Cartelas y soportes de fijación del tanque al bastidor tubular con silentblocks
+  for (const tx of [-0.96, 0.96]) {
+    for (const tz of [-0.75, 0.75]) {
+      G.box(0.2, 0.06, 0.22, dark, [tx, 2.05, tz]);
+      G.cyl(0.18, 0.08, rubber, [tx, 2.03, tz], undefined, 8);
+      G.bolts([tx, 2.09, tz], [tx, 2.09, tz], 1, [0, 1, 0]);
+    }
+  }
+
+  // Tapón roscado central cromado con ranuras de giro y respiradero
+  G.cyl(0.56, 0.06, dark, [0, 2.38, 0], undefined, 14);
+  G.cyl(0.48, 0.15, bare, [0, 2.46, 0], undefined, 14);
+  G.cyl(0.52, 0.04, bare, [0, 2.53, 0], undefined, 14);
+  G.box(0.58, 0.08, 0.12, bare, [0, 2.55, 0]);
+  G.cyl(0.08, 0.05, dark, [0, 2.58, 0], undefined, 6); // válvula respiradero central
+  // Cadena de retención del tapón
+  G.tube([[0.25, 2.45, 0], [0.38, 2.4, 0.15], [0.42, 2.38, 0.22]], 0.015, bare);
+
+  // Indicador analógico de nivel de gasolina con mirilla transparente
+  G.cyl(0.34, 0.07, dark, [0.48, 2.38, 0.45], undefined, 12);
+  G.cyl(0.3, 0.05, bare, [0.48, 2.41, 0.45], undefined, 12);
+  G.cyl(0.26, 0.02, FOLD.screen("#f8fafc"), [0.48, 2.42, 0.45], undefined, 12); // esfera blanca
+  G.cyl(0.27, 0.02, FOLD.screen("#94a3b8"), [0.48, 2.435, 0.45], undefined, 12); // mirilla transparente
+  // Aguja analógica de combustible
+  G.box(0.02, 0.015, 0.12, FOLD.emissive("#ef4444"), [0.48, 2.43, 0.45], [0, 0.45, 0]);
+  // Marcas de cuadrante: verde (lleno) y rojo (reserva)
+  G.box(0.035, 0.01, 0.035, FOLD.emissive("#22c55e"), [0.45, 2.425, 0.52]);
+  G.box(0.035, 0.01, 0.035, FOLD.emissive("#ef4444"), [0.51, 2.425, 0.38]);
+
+  // Calcos diegéticos en el depósito
+  G.decal([-0.42, 2.38, 0.3], [Math.PI / 2, 0, 0], "warning", 0.45);
+  G.decal([0, 2.18, 0.89], [0, Math.PI, 0], "voltaje", 0.4);
+
+  // Grifo de paso de gasolina inferior (petcock) con vaso de decantación y manguera
+  G.cyl(0.14, 0.22, brass, [-0.68, 1.82, -0.38], undefined, 6);
+  G.cyl(0.24, 0.22, FOLD.screen("#cbd5e1"), [-0.68, 1.66, -0.38], undefined, 8); // decantador de vidrio
+  G.box(0.06, 0.14, 0.24, redFuel, [-0.68, 1.78, -0.28], [0.35, 0, 0]); // palanca selector
+  G.tube([[-0.68, 1.66, -0.38], [-0.58, 1.45, -0.25], [-0.32, 1.3, 0.12]], 0.028, rubber);
+
+  // 3. Motor térmico monocilíndrico de 4 tiempos (bloque, culata aleteada, carburador, escape y recoil starter)
+  // Bloque del motor / cárter en fundición oscura
+  G.box(1.15, 0.88, 1.12, dark, [0.22, 0.95, -0.15]);
+  G.box(1.22, 0.12, 1.18, dark, [0.22, 0.56, -0.15]);
+  // Tapón de drenaje de aceite hexagonal
+  G.cyl(0.18, 0.12, bare, [0.22, 0.52, -0.72], [Math.PI / 2, 0, 0], 6);
+  // Varilla de llenado de aceite con tapón amarillo
+  G.cyl(0.16, 0.22, FOLD.painted("#eab308", 0.7, 314), [0.72, 0.72, -0.42], [0.35, 0, 0.35], 6);
+
+  // Cilindro y culata inclinados a 26° (OHV de 4 tiempos) con aletas profundas de fundición
+  const CYL_ANG = 0.45;
+  const sinA = Math.sin(CYL_ANG), cosA = Math.cos(CYL_ANG);
+  const cx0 = 0.35, cy0 = 1.18, cz0 = -0.15;
+  G.cyl(0.86, 0.82, dark, [cx0 + sinA * 0.25, cy0 + cosA * 0.25, cz0], [0, 0, -CYL_ANG], 12);
+  // Aletas de refrigeración radiales a lo largo del cilindro
+  for (let f = 0; f < 7; f++) {
+    const dist = 0.06 + f * 0.11;
+    G.cyl(1.08, 0.035, dark, [cx0 + sinA * dist, cy0 + cosA * dist, cz0], [0, 0, -CYL_ANG], 12);
+  }
+  // Culata de fundición con aletas cuadradas
+  const hDist = 0.78;
+  const hx = cx0 + sinA * hDist, hy = cy0 + cosA * hDist;
+  G.box(0.96, 0.52, 0.92, dark, [hx, hy, cz0], [0, 0, -CYL_ANG]);
+  for (let hf = -0.18; hf <= 0.18; hf += 0.09) {
+    G.box(1.04, 0.025, 0.98, dark, [hx - cosA * hf, hy + sinA * hf, cz0], [0, 0, -CYL_ANG]);
+  }
+  // Tapa de balancines en chapa estampada con tuerca cromada
+  const vDist = 1.05;
+  const vx = cx0 + sinA * vDist, vy = cy0 + cosA * vDist;
+  G.box(0.82, 0.18, 0.76, bare, [vx, vy, cz0], [0, 0, -CYL_ANG]);
+  G.bolts([vx + sinA * 0.1, vy + cosA * 0.1, cz0], [vx + sinA * 0.1, vy + cosA * 0.1, cz0], 1, [sinA, cosA, 0]);
+  // Bujía con aislador cerámico y pipa de goma
+  G.cyl(0.12, 0.28, FOLD.painted("#f8fafc", 0.4, 315), [hx - 0.12, hy + 0.18, cz0 + 0.32], [0.6, 0, 0], 6);
+  G.cyl(0.18, 0.12, bare, [hx - 0.12, hy + 0.1, cz0 + 0.32], [0.6, 0, 0], 6);
+  G.cyl(0.2, 0.24, rubber, [hx - 0.12, hy + 0.28, cz0 + 0.32], [0.6, 0, 0], 8);
+  G.tube([[hx - 0.12, hy + 0.28, cz0 + 0.32], [hx - 0.2, hy + 0.12, cz0 + 0.48], [0.22, 1.25, 0.35]], 0.03, dark);
+
+  // Carburador con filtro de aire cilíndrico
+  G.box(0.38, 0.36, 0.44, bare, [0.22, 1.35, 0.38]);
+  G.cyl(0.32, 0.26, bare, [0.22, 1.15, 0.38], undefined, 8); // cuba de flotador
+  G.box(0.05, 0.18, 0.08, dark, [0.03, 1.42, 0.38], [0, 0, 0.45]); // palanca del estárter (choke)
+  G.tube([[0.22, 1.4, 0.2], [0.32, 1.55, 0.05], [hx, hy, cz0]], 0.065, dark); // colector de admisión
+  // Carcasa cilíndrica del filtro de aire
+  along(G, 0.72, 0.72, 0.54, dark, [0.22, 1.46, 0.76], 14);
+  along(G, 0.76, 0.76, 0.06, dark, [0.22, 1.46, 1.02], 14);
+  along(G, 0.76, 0.76, 0.06, dark, [0.22, 1.46, 0.5], 14);
+  // Tuerca de mariposa frontal
+  along(G, 0.12, 0.12, 0.08, bare, [0.22, 1.46, 1.07], 6);
+  G.box(0.32, 0.08, 0.03, bare, [0.22, 1.46, 1.08]);
+  for (let s = 0; s < 6; s++) {
+    const sa = (s / 6) * Math.PI * 2;
+    G.box(0.04, 0.34, 0.04, bare, [0.22 + Math.cos(sa) * 0.36, 1.46 + Math.sin(sa) * 0.36, 0.76]);
+  }
+
+  // Silenciador de escape con protector anticalórico perforado
+  G.tube([[hx, hy, cz0 - 0.25], [0.68, 1.55, -0.65], [0.68, 1.38, -0.92]], 0.075, dark);
+  // Cuerpo del silenciador en chapa negra
+  G.box(0.76, 0.96, 0.94, dark, [0.68, 1.36, -1.18]);
+  // Tubo curvado de salida de gases con corte biselado
+  G.cyl(0.16, 0.35, bare, [0.98, 1.36, -1.42], [Math.PI / 4, 0, 0], 8);
+  // Protector anticalórico perforado (heat shield)
+  G.box(0.88, 1.06, 1.04, bare, [0.68, 1.36, -1.18]);
+  // Matriz de perforaciones troqueladas oscuras en el protector
+  for (let px = -0.28; px <= 0.28; px += 0.18) {
+    for (let py = -0.32; py <= 0.32; py += 0.16) {
+      G.box(0.08, 0.08, 0.02, dark, [0.68 + px, 1.36 + py, -1.71]);
+      G.box(0.02, 0.08, 0.08, dark, [1.13, 1.36 + py, -1.18 + px]);
+    }
+  }
+  G.decal([0.68, 1.36, -1.71], [0, 0, 0], "warning", 0.4);
+  G.bolts([0.32, 1.82, -1.18], [1.04, 1.82, -1.18], 2, [0, 1, 0]);
+
+  // Tirador de arranque por cuerda (recoil starter) con empuñadura en T
+  along(G, 1.18, 1.08, 0.36, redFuel, [0.22, 0.95, 0.58], 16);
+  along(G, 1.22, 1.22, 0.06, dark, [0.22, 0.95, 0.42], 16);
+  for (let k = 0; k < 8; k++) {
+    const ka = (k / 8) * Math.PI * 2;
+    G.box(0.04, 0.32, 0.02, dark, [0.22 + Math.cos(ka) * 0.38, 0.95 + Math.sin(ka) * 0.38, 0.76], [0, 0, ka]);
+  }
+  // Guía de salida de la cuerda y cuerda trenzada
+  G.cyl(0.14, 0.16, bare, [-0.18, 1.25, 0.72], [0.6, 0.4, 0], 6);
+  G.tube([[-0.18, 1.25, 0.72], [-0.32, 1.42, 0.84]], 0.026, FOLD.screen("#f8fafc"));
+  // Empuñadura en T de goma negra (recoil handle)
+  G.cyl(0.14, 0.44, rubber, [-0.35, 1.45, 0.88], [0, 0, Math.PI / 4], 8);
+  G.cyl(0.18, 0.08, dark, [-0.35, 1.45, 0.88], [0, 0, Math.PI / 4], 8);
+  G.sph(0.13, rubber, [-0.5, 1.3, 0.88]);
+  G.sph(0.13, rubber, [-0.2, 1.6, 0.88]);
+
+  // 4. Alternador cilíndrico de generación eléctrica con aletas de refrigeración coaxiales
+  // Campana de acoplamiento cónica con ventilador centrífugo
+  along(G, 1.16, 1.08, 0.44, dark, [-0.44, 0.95, -0.15], 14);
+  for (let a = 0; a < 6; a++) {
+    const aa = (a / 6) * Math.PI * 2;
+    G.box(0.04, 0.35, 0.04, bare, [-0.44, 0.95 + Math.sin(aa) * 0.52, -0.15 + Math.cos(aa) * 0.52]);
+  }
+  // Estátor / cuerpo cilíndrico principal del alternador
+  G.cyl(1.16, 1.15, dark, [-1.02, 0.95, -0.15], [0, 0, Math.PI / 2], 16);
+  // Aletas de refrigeración coaxiales / nervios longitudinales exteriores
+  for (let i = 0; i < 10; i++) {
+    const ra = (i / 10) * Math.PI * 2;
+    G.box(1.12, 0.04, 0.12, dark, [-1.02, 0.95 + Math.cos(ra) * 0.58, -0.15 + Math.sin(ra) * 0.58], [ra, 0, 0]);
+  }
+  // Tapa trasera del alternador con chumacera y rejillas
+  G.cyl(1.18, 0.16, dark, [-1.62, 0.95, -0.15], [0, 0, Math.PI / 2], 14);
+  G.cyl(0.46, 0.24, bare, [-1.68, 0.95, -0.15], [0, 0, Math.PI / 2], 10);
+  G.grate([-1.64, 0.95, -0.15], [0, -Math.PI / 2, 0], 0.75, 0.75, 4, bare);
+  // Tirantes roscados pasantes con tuercas hexagonales
+  for (const sa of [Math.PI / 4, 3 * Math.PI / 4, 5 * Math.PI / 4, 7 * Math.PI / 4]) {
+    const ty = 0.95 + Math.sin(sa) * 0.52, tz = -0.15 + Math.cos(sa) * 0.52;
+    G.cyl(0.045, 1.48, bare, [-1.02, ty, tz], [0, 0, Math.PI / 2], 6);
+    G.bolts([-1.71, ty, tz], [-1.71, ty, tz], 1, [-1, 0, 0]);
+  }
+  // Placa técnica del alternador (230V / 50Hz / 3.0kW)
+  G.plate([-1.02, 1.55, -0.15], [0, 0, 0], 0.65, 0.35, FOLD.painted("#e2e8f0", 0.5, 322));
+  G.box(0.5, 0.02, 0.05, dark, [-1.02, 1.56, -0.22]);
+  G.box(0.42, 0.02, 0.04, dark, [-1.02, 1.56, -0.12]);
+  G.rivets([-1.28, 1.56, -0.15], [-0.76, 1.56, -0.15], 2, [0, 1, 0]);
+
+  // 5. Panel frontal de mandos técnico (interruptor ON/OFF, voltímetro, disyuntor, 2 tomas Schuko con tapas)
+  // Caja prismática envolvente del panel de mandos
+  G.box(1.54, 1.02, 0.34, dark, [-0.18, 1.25, 1.28]);
+  G.box(1.5, 0.98, 0.05, panelDark, [-0.18, 1.25, 1.45]);
+  // Marco protector con rebordes de acero
+  for (const bx of [-0.94, 0.58]) G.box(0.05, 1.0, 0.12, bare, [bx, 1.25, 1.42]);
+  for (const by of [0.75, 1.75]) G.box(1.54, 0.05, 0.12, bare, [-0.18, by, 1.42]);
+  // Tornillos de anclaje del panel frontal
+  G.bolts([-0.88, 1.68, 1.48], [0.52, 1.68, 1.48], 2, [0, 0, 1]);
+  G.bolts([-0.88, 0.82, 1.48], [0.52, 0.82, 1.48], 2, [0, 0, 1]);
+  // Franja hazard de advertencia serigrafiada superior
+  G.trimStrip([-0.18, 1.66, 1.48], [0, Math.PI, 0], 1.28, 0.06, "hazard", 0.02);
+
+  // A. Interruptor general basculante rojo ON/OFF
+  G.box(0.26, 0.34, 0.08, dark, [-0.68, 1.45, 1.48]);
+  G.box(0.24, 0.32, 0.02, bare, [-0.68, 1.45, 1.52]);
+  G.box(0.18, 0.24, 0.08, FOLD.emissive("#ef4444"), [-0.68, 1.45, 1.56], [-0.35, 0, 0]);
+  G.box(0.08, 0.02, 0.01, bare, [-0.68, 1.53, 1.59]); // indicación 'I'
+  G.cyl(0.05, 0.01, bare, [-0.68, 1.37, 1.57], [Math.PI / 2, 0, 0], 8); // indicación 'O'
+
+  // B. Voltímetro analógico con esfera blanca, aguja indicadora y bisel negro
+  G.box(0.46, 0.46, 0.08, dark, [-0.25, 1.45, 1.48]);
+  G.cyl(0.38, 0.06, dark, [-0.25, 1.45, 1.52], [Math.PI / 2, 0, 0], 14);
+  G.cyl(0.34, 0.03, FOLD.screen("#f8fafc"), [-0.25, 1.45, 1.55], [Math.PI / 2, 0, 0], 14);
+  G.cyl(0.35, 0.02, FOLD.screen("#94a3b8"), [-0.25, 1.45, 1.57], [Math.PI / 2, 0, 0], 14);
+  // Aguja a ~230V
+  G.box(0.02, 0.16, 0.015, FOLD.emissive("#dc2626"), [-0.24, 1.49, 1.56], [0, 0, -0.25]);
+  for (let g = 0; g < 5; g++) {
+    const ga = -1.1 + g * 0.55;
+    G.box(0.015, 0.045, 0.01, dark, [-0.25 + Math.cos(ga) * 0.12, 1.45 + Math.sin(ga) * 0.12, 1.56]);
+  }
+  G.box(0.035, 0.035, 0.01, dark, [-0.25, 1.39, 1.56]); // símbolo V
+
+  // C. Disyuntor térmico de rearme (thermal circuit breaker)
+  G.cyl(0.2, 0.08, dark, [-0.68, 1.08, 1.48], [Math.PI / 2, 0, 0], 6);
+  G.cyl(0.24, 0.04, bare, [-0.68, 1.08, 1.52], [Math.PI / 2, 0, 0], 6);
+  G.cyl(0.13, 0.14, rubber, [-0.68, 1.08, 1.56], [Math.PI / 2, 0, 0], 8);
+  G.plate([-0.68, 0.92, 1.48], [0, Math.PI, 0], 0.28, 0.12, FOLD.painted("#e2e8f0", 0.5, 322));
+  G.box(0.2, 0.02, 0.01, dark, [-0.68, 0.92, 1.49]);
+
+  // D. 2 tomas de corriente Schuko con tapas protectoras basculantes
+  for (const sy of [1.42, 0.98]) {
+    G.box(0.44, 0.44, 0.06, dark, [0.24, sy, 1.48]);
+    G.cyl(0.36, 0.08, dark, [0.24, sy, 1.51], [Math.PI / 2, 0, 0], 12);
+    // Tapa protectora basculante azul industrial con bisagra
+    G.box(0.4, 0.4, 0.04, schukoBlue, [0.24, sy + 0.02, 1.57], [-0.18, 0, 0]);
+    // Eje de la bisagra y resorte
+    G.cyl(0.08, 0.44, bare, [0.24, sy + 0.22, 1.54], [0, 0, Math.PI / 2], 6);
+    G.box(0.08, 0.08, 0.06, dark, [0.06, sy + 0.22, 1.52]);
+    G.box(0.08, 0.08, 0.06, dark, [0.42, sy + 0.22, 1.52]);
+    // Pestaña para abrir la tapa
+    G.box(0.18, 0.06, 0.06, schukoBlue, [0.24, sy - 0.18, 1.59]);
+    G.cyl(0.16, 0.02, bare, [0.24, sy + 0.02, 1.59], [Math.PI / 2, 0, 0], 8);
+    // Tornillos de fijación de la base Schuko
+    for (const dx of [-0.15, 0.15]) {
+      for (const dy of [-0.15, 0.15]) {
+        G.bolts([0.24 + dx, sy + dy, 1.52], [0.24 + dx, sy + dy, 1.52], 1, [0, 0, 1]);
+      }
+    }
+  }
+
+  // E. Borne de puesta a tierra y LEDs indicadores
+  G.cyl(0.14, 0.12, brass, [-0.25, 0.96, 1.48], [Math.PI / 2, 0, 0], 6);
+  G.cyl(0.22, 0.04, brass, [-0.25, 0.96, 1.53], [Math.PI / 2, 0, 0], 6);
+  G.box(0.26, 0.06, 0.02, brass, [-0.25, 0.96, 1.56]);
+  G.box(0.08, 0.015, 0.01, bare, [-0.25, 0.86, 1.49]);
+  G.box(0.05, 0.015, 0.01, bare, [-0.25, 0.83, 1.49]);
+  G.box(0.02, 0.015, 0.01, bare, [-0.25, 0.8, 1.49]);
+  // LEDs de estado (verde = OK, rojo = sobrecarga)
+  G.cyl(0.08, 0.05, FOLD.emissive("#22c55e"), [-0.46, 1.25, 1.48], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.08, 0.05, FOLD.emissive("#ef4444"), [-0.46, 1.1, 1.48], [Math.PI / 2, 0, 0], 8);
+
+  // Mazo de cables de potencia en manguera de goma desde el alternador al panel
+  G.tube([[-0.18, 1.05, 1.15], [-0.48, 0.95, 0.75], [-0.85, 0.95, 0.25]], 0.06, rubber);
+
+  const parts = done(18);
+  const m = parts.length > 1 ? B.Mesh.MergeMeshes(parts, true, true, undefined, false, true)! : parts[0];
+  m.name = "gasGeneratorFold";
+  return m;
+}

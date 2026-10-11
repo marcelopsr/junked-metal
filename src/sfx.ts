@@ -569,6 +569,23 @@ export const SFX = {
     hiss("bandpass", 4400, 2400, 0.07, 0.25, 0, pan);
     hiss("highpass", 7200, 3000, 0.05, 0.18, 0.01, pan);
   },
+  /** Pistonada rítmica y carga de calderín de compresor de taller monofásico de correa. */
+  compressorChug: (pan?: number) => {
+    if (!gate("comp-chug", 4)) return;
+    for (let i = 0; i < 4; i++) {
+      const delay = i * 0.065;
+      tone("sawtooth", 58, 32, 0.04, 0.16, delay, pan);
+      tone("triangle", 120, 60, 0.03, 0.12, delay, pan);
+      hiss("bandpass", 800, 400, 0.025, 0.08, delay, pan);
+    }
+  },
+  /** Micro-soplido seco de purga de neumático al ajustar presión en el manómetro digital. */
+  tireBleed: (pan?: number) => {
+    if (!gate("tire-bleed", 4)) return;
+    tone("sine", 1400, 400, 0.015, 0.08, 0, pan);
+    hiss("bandpass", 5200, 1800, 0.035, 0.18, 0, pan);
+    hiss("highpass", 6800, 2400, 0.025, 0.12, 0.005, pan);
+  },
 };
 
 

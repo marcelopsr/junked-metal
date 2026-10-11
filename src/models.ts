@@ -522,7 +522,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       );
     }
     if (kind === "buggy" || kind === "monster" || (kind as string) === "carrera") {
-      const spurY = bh * 0.28 + 0.014, spurZ = -bl * 0.22 - 0.0385;
+      const spurY = bh * 0.28 + 0.014, spurZ = -bl * 0.22 - 0.0385, lexan = M.plastic("#94a3b8");
       parts.push(
         // Lata cilíndrica del motor 540 con ranura de ventilación
         cyl(0.044, 0.044, 0.065, chrome, [0, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 10),
@@ -583,6 +583,34 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.009, 0.009, 0.004, chrome, [0.066, spurY, spurZ], [0, 0, Math.PI / 2], 6),
         cyl(0.0078, 0.0078, 0.002, M.plastic("#0284c7"), [0.0685, spurY, spurZ], [0, 0, Math.PI / 2], 8),
         cyl(0.004, 0.004, 0.002, chrome, [0.070, spurY, spurZ], [0, 0, Math.PI / 2], 6),
+        // Cubierta Protectora de Engranajes de Lexan / Policarbonato Transparente (Clear Gear Cover Protector)
+        // Carcasa envolvente contorneada adaptada a la silueta en 8 del piñón y la corona
+        // Lóbulo principal envolvente sobre la corona dentada (Spur Gear) y conjunto del Slipper Clutch
+        cyl(0.076, 0.076, 0.033, lexan, [0.0545, spurY, spurZ], [0, 0, Math.PI / 2], 16),
+        cyl(0.076, 0.076, 0.0025, lexan, [0.0715, spurY, spurZ], [0, 0, Math.PI / 2], 16),
+        // Lóbulo envolvente sobre el piñón de ataque del motor
+        cyl(0.030, 0.030, 0.015, lexan, [0.045, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 12),
+        cyl(0.030, 0.030, 0.0025, lexan, [0.053, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 12),
+        // Cintura envolvente de unión en silueta en 8 protegiendo la zona de engrane piñón-corona
+        box(0.024, 0.032, 0.042, lexan, [0.049, (bh * 0.28 + spurY) * 0.5, (-bl * 0.22 + spurZ) * 0.5], [-0.35, 0, 0]),
+        box(0.0025, 0.030, 0.038, lexan, [0.0615, (bh * 0.28 + spurY) * 0.5, (-bl * 0.22 + spurZ) * 0.5], [-0.35, 0, 0]),
+        // Nervaduras estructurales longitudinales de refuerzo moldeadas en la tapa para evitar deformación por calor o gravilla
+        box(0.002, 0.0025, 0.048, lexan, [0.073, spurY + 0.018, spurZ]),
+        box(0.002, 0.0025, 0.048, lexan, [0.073, spurY - 0.018, spurZ]),
+        box(0.002, 0.0025, 0.034, lexan, [0.0635, (bh * 0.28 + spurY) * 0.5, (-bl * 0.22 + spurZ) * 0.5], [-0.35, 0, 0]),
+        // Tapón circular de goma negra de acceso rápido centrado frente a la tuerca M4 del Slipper Clutch para ajuste con llave tubular
+        cyl(0.016, 0.016, 0.003, M.rubber(), [0.0735, spurY, spurZ], [0, 0, Math.PI / 2], 12),
+        tor(0.015, 0.0015, M.rubber(), [0.0748, spurY, spurZ], [0, 0, Math.PI / 2], 12),
+        cyl(0.008, 0.008, 0.0012, M.matte("#09090b"), [0.0748, spurY, spurZ], [0, 0, Math.PI / 2], 8),
+        // 2 tornillos Allen M3 de fijación en acero cromado fijando la cubierta a la placa bancada del motor
+        // Tornillo M3 superior con orejeta de fijación en policarbonato
+        box(0.004, 0.009, 0.009, lexan, [0.039, spurY + 0.033, spurZ + 0.010]),
+        cyl(0.0055, 0.0055, 0.004, chrome, [0.042, spurY + 0.033, spurZ + 0.010], [0, 0, Math.PI / 2], 6),
+        cyl(0.0028, 0.0028, 0.0012, M.metal("#09090b"), [0.044, spurY + 0.033, spurZ + 0.010], [0, 0, Math.PI / 2], 6),
+        // Tornillo M3 inferior con orejeta de fijación en policarbonato
+        box(0.004, 0.009, 0.009, lexan, [0.039, spurY - 0.033, spurZ - 0.010]),
+        cyl(0.0055, 0.0055, 0.004, chrome, [0.042, spurY - 0.033, spurZ - 0.010], [0, 0, Math.PI / 2], 6),
+        cyl(0.0028, 0.0028, 0.0012, M.metal("#09090b"), [0.044, spurY - 0.033, spurZ - 0.010], [0, 0, Math.PI / 2], 6),
         // Lengüetas soldadas de cobre/latón en los bornes del motor 540
         box(0.004, 0.008, 0.005, M.metal("#d4af37"), [0.015, bh * 0.302, -bl * 0.22 + 0.025]),
         box(0.004, 0.008, 0.005, M.metal("#d4af37"), [-0.015, bh * 0.302, -bl * 0.22 + 0.025]),

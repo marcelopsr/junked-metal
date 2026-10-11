@@ -812,17 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #58 ("Transmisión & Neumática Mural") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 624 ms, 17 capturas en `.shots/actual/` en 24.6 s, grafo en 3995 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #59**.
+- **Último trabajo completado:** Ciclo #59 ("Generación Auxiliar & Neumática de Pista") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 13.08 s, 17 capturas en `.shots/actual/` en 56.3 s, grafo en 4006 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #60**.
 
-### 🔓 LISTO PARA EL CICLO #59 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #60 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Workshop Tools & Props 3D Modeler** | Pistola sopladora y manómetro de inflado (`airBlowGunFold`) o generador a gasolina | `src/folded_slice.ts` |
-| **Workshop Diorama 3D Modeler** | Manómetro digital de ruedas (`digitalTireGauge`) o pistola de impacto 1/2" | `src/menuscene.ts` |
-| **Procedural Vehicle 3D Modeler** | Protector de engranajes transparente Lexan o hexágonos de rueda 12mm con pasador | `src/models.ts` |
-| **Audio Synth Sound Designer** | Pistonada rítmica de compresor (`compressorChug`) o clic de dinamométrica (`torqueWrenchClick`) | `src/sfx.ts` |
+| **Workshop Tools & Props 3D Modeler** | Enrollador de cable Schuko (`cableDrumFold`) o torre halógena de iluminación | `src/folded_slice.ts` |
+| **Workshop Diorama 3D Modeler** | Calibre digital 150mm (`digitalCaliper`) o estación de soldadura de banco | `src/menuscene.ts` |
+| **Procedural Vehicle 3D Modeler** | Fuelles guardapolvos de goma en palieres CV o electroventilador forzado 30mm | `src/models.ts` |
+| **Audio Synth Sound Designer** | Delay en primitiva `hiss` y resonador de calderín metálico (`tankResonance`) | `src/sfx.ts` |
+
+### Ciclo #59 (2026-10-10) — Generación Auxiliar & Neumática de Pista: Generador con Jaula, Manómetro Digital de Neumáticos, Protector Lexan de Engranajes y Pistonada en SFX
+- **Alcance implementado en producción (`src/`):**
+  - **Workshop Tools & Props 3D Modeler (`src/folded_slice.ts`):** Generador eléctrico portátil `gasGeneratorFold()`: jaula envolvente en tubos continuos de acero (`FOLD.bare()`) con 4 silentblocks de goma negra (`FOLD.rubber()`) en la base inferior y manguitos de agarre superiores; depósito superior de combustible en chapa roja de competición (`FOLD.painted("#dc2626")`) con tapón roscado central cromado, mirilla transparente con indicador analógico de nivel de combustible, calcos de advertencia y llave de paso de latón con vaso decantador; motor térmico monocilíndrico OHV de 4 tiempos con cilindro aleteado inclinado a 26° en fundición oscura (`FOLD.dark()`), carburador con filtro de aire cilíndrico en baño de aceite, silenciador de escape con protector anticalórico perforado, y tirador de arranque por cuerda (recoil starter) con empuñadura en T; alternador coaxial aleteado con tapa trasera ranurada; panel frontal técnico estanco bajo voladizo con interruptor basculante rojo ON/OFF (`FOLD.emissive("#ef4444")`), voltímetro analógico con aguja indicadora en 230V, disyuntor térmico de rearme, 2 tomas de corriente Schuko con tapas basculantes en azul industrial (`FOLD.painted("#1e40af")`), borne de tierra en latón y franja de seguridad `hazard`; 0 draw calls adicionales al mapearse al atlas Folded con `done(18)`.
+  - **Workshop Diorama 3D Modeler (`src/menuscene.ts`):** Manómetro digital de mano `digitalTireGauge(metal, fDark)` en la mesa de boxes (`[4.2, 0, 8.8]`): carcasa ergonómica bimateria en aluminio azul anodizado (`M.metal("#0284c7")`) con empuñadura antideslizante estriada en composite negro (`fDark`) y ojal para lanyard; boquilla angular a 45° en latón pulido (`M.metal("#d97706")`) con collarín moleteado para válvulas de modelismo; micro-display LCD activo en `M.glow("#38bdf8")` con lectura calibrada diegética en PSI ("18.5 PSI"); pulsador lateral de purga micrométrica y botón frontal Zero/Tare; emplazamiento del grupo electrógeno `gasGeneratorFold()` en el suelo del taller en la zona técnica de boxes (`place(gasGeneratorFold(), [-28, 0, 20], [0, 0.2, 0])`); integrado en `menu_bench_props` con sombras dinámicas completas y 0 draw calls adicionales.
+  - **Procedural Vehicle 3D Modeler (`src/models.ts`):** Carcasa protectora Clear Gear Cover contorneada en forma de 8 adaptada a la silueta del piñón de ataque y la corona Spur Gear del Slipper Clutch para chasis expuestos (`buggy`, `monster` y `carrera`): fabricada en policarbonato traslúcido técnico `M.plastic("#94a3b8")` con brillo superficial; 3 nervaduras estructurales longitudinales de refuerzo moldeadas para evitar deformación térmica e impactos de gravilla; tapón circular estanco de goma negra (`M.rubber()`) centrado concéntricamente frente a la tuerca M4 del Slipper Clutch para permitir regular la precarga con llave tubular sin desmontar la tapa; y 2 tornillos Allen M3 cromados anclando la cubierta a la bancada; 0 draw calls adicionales integrados con color de vértice.
+  - **Audio Synth Sound Designer (`src/sfx.ts`):** `SFX.compressorChug(pan)` con pistonada rítmica del compresor cargando calderín mediante tren de 4 pulsos graves desfasados a 28–58 Hz con ondas sawtooth y triangle combinadas con ráfagas filtradas de admisión a 800–400 Hz y `gate("comp-chug", 4)`; `SFX.tireBleed(pan)` con micro-soplido seco de purga de neumático al regular presión en el manómetro digital, combinando tono de escape senoidal (1400 -> 400 Hz) con doble siseo de alta presión bandpass y highpass (5200–6800 Hz) y `gate("tire-bleed", 4)`.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, vitest --changed 43 tests en verde, build Vite en 13.08 s, 17 capturas en `.shots/actual/` aprobadas en 56.3 s, grafo de conocimiento sincronizado en 4006 nodos y 9704 aristas.
 
 ### Ciclo #58 (2026-10-10) — Transmisión & Neumática Mural: Slipper Clutch con Corona Expuesta, Carrete de Manguera, Unidad FRL Mural y Carraca en SFX
 - **Alcance implementado en producción (`src/`):**
