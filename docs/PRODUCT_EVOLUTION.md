@@ -1317,4 +1317,32 @@ Decisión del usuario: Integrar acabados especiales de carrocería PBR en el Gar
    - `npm run doctor`: todos los servicios, herramientas y ComfyUI 100% operativos.
    - `npm run shots -- --only garaje-pintura,bestiario`: 8 capturas aprobadas en PC (1280×720) y móvil (390×844) mostrando los retratos y la barra de acabados PBR.
 
+## 2026-10-11 · Props PBR en el Patio, Banner Cinemático de Jefes en Combate y Optimización Masiva GLB (Ciclo #35)
+
+Decisión del usuario: Completar las 3 oportunidades seleccionadas (Props PBR, Banners cinemáticos de aviso de jefes y Optimización GLB no destructiva):
+
+1. **Texturas PBR en Props del Patio y Garaje (`src/world.ts`):**
+   - **Generación Tangente de Normales y Rugosidad:** Calculados mapas con `creative-pbr.mjs` para los 3 tipos de utilería de chatarra:
+     - `prop-rusty-drum`: tambores de combustible oxidados (`prop-rusty-drum_normal.webp`, `prop-rusty-drum_roughness.webp`).
+     - `prop-tire-stack`: pilas de neumáticos de descarte (`prop-tire-stack_normal.webp`, `prop-tire-stack_roughness.webp`).
+     - `prop-wood-crate`: cajas industriales de madera y chapa (`prop-wood-crate_normal.webp`, `prop-wood-crate_roughness.webp`).
+   - **Integración en Escena 3D:**
+     - En `patioBuild`: incorporados tambores de nafta oxidados `rustyDrumM()` en la zona de chatarra (`scrapZone`), neumáticos de descarte con normales `tireStackM()`, y cajas `woodCrateM()`.
+     - En `garageBuild`: pila de neumáticos de taller (`tires`) migrada a `tireStackM()`.
+     - En `jumpScrap`: obstáculos aleatorios de salto actualizados para proyectar textura física y normales con iluminación de faro y sol.
+
+2. **Banner Cinemático Diegético de Jefe en Combate (`src/ui.ts`, `src/hud.css`, `src/main.ts`):**
+   - **Retrato Cinemático Diegético en `#bossbar`:** Al aparecer un minijefe o jefe final en Supervivencia (`spawnBoss`), el HUD activa la miniatura `.boss-banner-thumb` con el retrato cinemático de `BEAST_PORTRAITS` (`beast-rey`, `beast-cortadora`, `beast-aspiradora`, `beast-perro`, `beast-gato`, etc.).
+   - **Estilo de Chapa Oscura y Borde Remachado:** Panel acorde a `docs/ART_DIRECTION.md` (`Rajdhani`, chapa oscura, borde de chapa gastada `--jm-chapa`, sombra interior) integrado fluidamente sin entorpecer el campo visual ni la telemetría del transmisor.
+
+3. **Optimización Masiva de Modelos 3D GLB (`public/models/` · `npm run assets:optimize`):**
+   - **Auditoría y optimización no destructiva:** Procesados los 26 modelos GLB con `@gltf-transform/cli` aplicando deduplicación, poda de accessors y reordenamiento de caché de vértices, preservando el 100% de los rigs y animaciones esqueléticas.
+
+4. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado TypeScript.
+   - `npm test`: 80/81 pasando (tiempo de Match-3 contenido).
+   - `npm run build`: bundle de producción compilado limpiamente en 5.96 s.
+   - `npm run shots -- --only partida,lab`: 30 capturas aprobadas en PC (1280×720) y móvil (390×844) en 131.6 s.
+   - `graphify update .`: grafo de conocimiento sincronizado (4187 nodos, 10112 aristas, 199 comunidades).
+
 

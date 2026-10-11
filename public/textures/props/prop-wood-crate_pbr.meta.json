@@ -1,0 +1,16 @@
+{
+  "source": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/props/prop-wood-crate.webp",
+  "generated_at": "2026-10-11T23:07:48.257Z",
+  "resolution": "512x512",
+  "parameters": {
+    "strength": 2,
+    "roughness_min": 0.35,
+    "roughness_max": 0.92,
+    "quality": 85
+  },
+  "maps": {
+    "albedo": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/props/prop-wood-crate.webp",
+    "normal": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/props/prop-wood-crate_normal.webp",
+    "roughness": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/props/prop-wood-crate_roughness.webp"
+  }
+}

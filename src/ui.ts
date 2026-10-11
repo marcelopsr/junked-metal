@@ -12,6 +12,7 @@ const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram",
 import { WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
 import { SFX } from "./sfx";
+import { BEAST_PORTRAITS, type Kind } from "./enemies";
 
 const $ = (id: string) => (document.getElementById(id) ?? (id === "jump" ? document.getElementById("jumpRow") : null))!;
 const el = <T extends HTMLElement = HTMLElement>(id: string) => $(id) as T;
@@ -321,7 +322,11 @@ export function hudBoss(name: string | null, pct = 1, kind?: string, enraged = f
     const pInt = Math.max(0, Math.ceil(pct * 100));
     const hdKey = `${name}:${kind ?? ""}:${+enraged}:${pInt}`;
     if (ch("bossHd", hdKey)) {
-      $("bossName").innerHTML = `${kind ? beastIcon(kind, 20) : ""}<span>${name}</span>${enraged ? `<b class="b-rage">FASE 2</b>` : ""}<small class="b-pct">${pInt}%</small>`;
+      const portrait = kind ? (BEAST_PORTRAITS[kind as Kind] ?? "") : "";
+      const portraitHtml = portrait
+        ? `<div class="boss-banner-thumb"><img src="${portrait}" alt="" draggable="false"/></div>`
+        : "";
+      $("bossName").innerHTML = `${portraitHtml}${kind ? beastIcon(kind, 20) : ""}<span>${name}</span>${enraged ? `<b class="b-rage">FASE 2</b>` : ""}<small class="b-pct">${pInt}%</small>`;
     }
     bar("bossHp", pct * 100);
     if (ch("crit", +(pct < 0.25))) $("bossbar").classList.toggle("crit", pct < 0.25);

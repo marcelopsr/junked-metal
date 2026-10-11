@@ -27,7 +27,7 @@ import { evBase, evFog, evInit, evReset, lunaDev, lunaEv, panTo } from "./moon_e
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import { skyClear, skyInfo, skyLaunch, skyTick } from "./moon_sky";
-import { ALIENS, alienWave, isAlien } from "./aliens";
+import { ALIENS, alienWave, armorMul, healTick, isAlien } from "./aliens";
 import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
 import { raceCfg, TRACKS } from "./kart_cfg";
 import "./duel.css"; import "./match3.css"; import "./race.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css (race.css solo se importa acá)
@@ -640,6 +640,7 @@ const dmgOut: Record<string, number> = {};
 let dmgSrc = "";
 function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
   if (hitShip(e, dmg)) return; // luna: las naves son blancos de las armas (moon_ships.ts shipTargets)
+  if (e.kind === "tanque" && car) { const k = armorMul(e, car.pos); if (k < 1) { dmg *= k; if (!simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } } // tanque alien (aliens.ts): placa frontal
   if (dmgSrc) {
     const eff = Math.min(dmg, Math.max(0, e.hp));
     dmgOut[dmgSrc] = (dmgOut[dmgSrc] ?? 0) + eff;
@@ -936,7 +937,7 @@ function update(dt: number) {
     const fin = !endless && kind === finalKind;
     if (!simulating) radioBoss("now", bname, fin);
     banner(bname, 2.5);
-    hudBoss(bname, 1);
+    hudBoss(bname, 1, ship ? undefined : kind);
     SFX.boss();
   }
   for (let ei = 0; ei < profile.elites.length; ei++) {
@@ -969,6 +970,13 @@ function update(dt: number) {
     const tgt = ld ? ld.pos.add(ld.node.right.scale(e.slot.x)).addInPlace(ld.node.forward.scale(-e.slot.z)) : c.pos;
     const ev = e.stun > 0 ? stunned(e, wdt) : e.update(wdt, tgt);
     if (ev === "spit_aim" && !simulating) { const f = e.node.forward; FX.sparks(e.pos.add(upv(e.pos, 0.5))); mark("scorch", e.pos, yawOf(f, e.pos), 0.35, 4); }
+    if (ev === "boom") { // explosivo alien (aliens.ts): revienta en su aro, daña a todo lo de adentro y deja un cráter de verdad
+      if (hd(c.pos, e.pos) < ATK.alien_explosivo_radio + carR) hurt(ATK.alien_explosivo_dano, false, "explosión " + e.kind, e.kind);
+      explode(e.pos, ATK.alien_explosivo_radio, ATK.alien_explosivo_dano_bicho);
+      if (MOON.on) deform(e.pos, ATK.alien_explosivo_crater_r, ATK.alien_explosivo_crater_hondo);
+      e.hp = -1e9; continue; // se fue sin dejar premio
+    }
+    if (e.kind === "curandero" && e.stun <= 0) healTick(e, enemies, wdt, !simulating); // rayo que cura (aliens.ts)
     if (ev === "wave") { pushSpit(alienWave(e, c.pos)); if (!simulating) SPACE.alienWave(panTo(c.pos, e.pos, camYaw), hd(c.pos, e.pos)); } // tirador de onda (aliens.ts): anillo lento, se esquiva
     if (ev === "spit") {
       // Apunta adonde vas a estar (predicción simple): esquivar = cambiar de rumbo
@@ -1807,6 +1815,7 @@ if (import.meta.env.DEV) Object.assign(window, {
     sky: () => ({ sol: skyVisible(SUN_DIR, cam), tierra: skyVisible(EARTH_DIR, cam) }),
     astro: (sun = true) => { if (!car || !MOON.on) return "sin luna"; skyLaunch(sun, car.pos); return skyInfo(); }, // lanza ya un proyectil del Sol (true) o de la Tierra
     info: () => ({ on: MOON.on, alt: car ? alt(car.pos) : null, up: car ? upAt(car.pos) : null, enemies: enemies.length, spits: spits.length }),
+    wound: (f = 0.5) => { for (const e of enemies) e.hp = e.maxHp * f; return enemies.length; }, // deja a todos con f de vida (el curandero tiene a quién curar)
     // fila de bichos delante del auto (por defecto los aliens), a dist m y separados sep m; tough: no se mueren con las armas (capturas)
     row: (kinds: Kind[] = [...ALIENS], dist = 10, sep = 3.2, tough = true) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(), n0 = enemies.length; kinds.forEach((k, i) => { const x = (i - (kinds.length - 1) / 2) * sep; spawnEnemy(k, onFloor(at(car!.pos, f.x * dist + f.z * x, 0, f.z * dist - f.x * x), 0.5)); }); if (tough) for (const e of enemies.slice(n0)) e.hp = e.maxHp = 1e6; return enemies.length; },
   },

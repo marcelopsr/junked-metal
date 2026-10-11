@@ -44,6 +44,37 @@ function retex() {
 }
 const woodM = () => (FOLDED_SLICE ? FOLD.painted("#8a6a44", 0.8, 301) : pbr("wood", { color: "#ffffff", rough: 0.75, tex: tex("wood", TEX.wood) })); // Folded: tablón de chapa
 
+// Materiales PBR con mapas de normales de utilería (props del patio y garaje)
+const propTex = (name: string) => {
+  const t = new B.Texture(`./textures/props/${name}.webp`, scene, true, false, B.Texture.TRILINEAR_SAMPLINGMODE);
+  t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE;
+  return t;
+};
+const rustyDrumM = () =>
+  pbr("propRustyDrum", {
+    color: "#ffffff",
+    rough: 0.72,
+    metal: 0.55,
+    tex: tex("p_drum_alb", () => propTex("prop-rusty-drum")),
+    bump: tex("p_drum_bmp", () => propTex("prop-rusty-drum_normal")),
+  });
+const tireStackM = () =>
+  pbr("propTireStack", {
+    color: "#ffffff",
+    rough: 0.88,
+    metal: 0.05,
+    tex: tex("p_tire_alb", () => propTex("prop-tire-stack")),
+    bump: tex("p_tire_bmp", () => propTex("prop-tire-stack_normal")),
+  });
+const woodCrateM = () =>
+  pbr("propWoodCrate", {
+    color: "#ffffff",
+    rough: 0.78,
+    metal: 0.02,
+    tex: tex("p_crate_alb", () => propTex("prop-wood-crate")),
+    bump: tex("p_crate_bmp", () => propTex("prop-wood-crate_normal")),
+  });
+
 // ---------- Objetos rompibles ----------
 // bits: colores de lo que salta al romperse un "cofre" (pot). Sin bits: tierra y hojas de maceta.
 export type Breakable = { m: B.Mesh; hp: number; r: number; color: string; extras: B.Mesh[]; pot: boolean; bits?: string[] };
@@ -368,11 +399,14 @@ function patioBuild() {
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   // Rampa de chapa oxidada para saltos acrobáticos dentro de la zona
   ramp(FOLDED_SLICE ? FOLD.rust() : M.metal("#7a5038"), -48, 8, 0, 4.2, 6.5, 1.6);
-  // Neumáticos de descarte apilados en el borde oeste
-  stat(tor(2.8, 0.95, M.rubber(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
-  stat(tor(2.6, 0.9, M.rubber(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
-  // Cajas industriales de chapa Folded en el borde este
-  const scrapCrate = FOLDED_SLICE ? FOLD.painted(FOLD_PAINT[0], 0.8, 23) : M.matte("#b08850");
+  // Neumáticos de descarte apilados en el borde oeste con textura PBR y normales
+  stat(tor(2.8, 0.95, tireStackM(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
+  stat(tor(2.6, 0.9, tireStackM(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
+  // Tambores metálicos de combustible oxidados (PBR con relieve y desgaste)
+  stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-42, 2.4, 30], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 });
+  stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-45.5, 2.4, 32], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 });
+  // Cajas industriales de madera con textura PBR y normales en el borde este
+  const scrapCrate = woodCrateM();
   crateFold(stat(box(2.6, 2.4, 2.6, scrapCrate, [-33, 1.2, 24], [0, 0.35, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.6, 2.4, 2.6);
   crateFold(stat(box(2.2, 2.0, 2.2, scrapCrate, [-34, 1.0, 28], [0, -0.2, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.2, 2.0, 2.2);
   // Plancha de chapa oxidada en el suelo
@@ -505,8 +539,8 @@ function garageBuild() {
   shadows.addShadowCaster(bike);
   occluders.push(bike);
   stat(box(6, 34, 46, band, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [-76, 17, 40]).isVisible = false;
-  // Pila de cubiertas
-  stat(merge("tires", [0, 1, 2, 3].map((i) => tor(16, 5.5, M.rubber(), [0, 2.75 + i * 5.3, 0], undefined, 18))), B.PhysicsShapeType.CYLINDER, {}, [-68, 0, -50]);
+  // Pila de cubiertas con material PBR y normales
+  stat(merge("tires", [0, 1, 2, 3].map((i) => tor(16, 5.5, tireStackM(), [0, 2.75 + i * 5.3, 0], undefined, 18))), B.PhysicsShapeType.CYLINDER, {}, [-68, 0, -50]);
   // El auto de la casa, en caballetes: abajo es zona techada
   realCar(30, 0, 0, 9, true, "#8a2a2a");
 }
@@ -736,7 +770,7 @@ function toyRamps(n: number, kinds: number[]) {
 
 // Tablones, neumáticos y cajas estáticas para saltar (no cofres: solo geometría de patio)
 function jumpScrap(n: number) {
-  const wood = woodM(), carton = FOLD.painted(FOLD_PAINT[0], 0.8, 23); // caja de chapa gastada (Folded 2.5D)
+  const wood = woodM(), carton = woodCrateM(), tireM = tireStackM();
   for (let i = 0; i < n; i++) {
     const sp = freeSpot(12, 28); if (!sp) continue;
     const [x, z] = sp, ry = rng() * Math.PI, roll = int(0, 2);
@@ -744,7 +778,7 @@ function jumpScrap(n: number) {
       const layers = int(2, 4);
       for (let k = 0; k < layers; k++) stat(box(3.2, 0.22, 4.2, wood, [x, 0.11 + k * 0.2, z], [0, ry + k * 0.08, 0]), B.PhysicsShapeType.BOX, { friction: 0.55 });
     } else if (roll === 1) {
-      stat(tor(2.4, 0.85, M.rubber(), [x, 0.85, z], [Math.PI / 2, ry, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
+      stat(tor(2.4, 0.85, tireM, [x, 0.85, z], [Math.PI / 2, ry, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
     } else {
       for (let k = 0; k < int(2, 3); k++) crateFold(stat(box(2.4, 2.2, 2.4, carton, [x, 1.1 + k * 2.05, z], [0, ry, 0]), B.PhysicsShapeType.BOX, { friction: 0.45 }), 2.4, 2.2, 2.4);
     }
