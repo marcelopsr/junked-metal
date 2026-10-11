@@ -1,0 +1,16 @@
+{
+  "source": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-cracked.webp",
+  "generated_at": "2026-10-11T19:52:51.930Z",
+  "resolution": "512x512",
+  "parameters": {
+    "strength": 1.8,
+    "roughness_min": 0.35,
+    "roughness_max": 0.92,
+    "quality": 85
+  },
+  "maps": {
+    "albedo": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-cracked.webp",
+    "normal": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-cracked_normal.webp",
+    "roughness": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-cracked_roughness.webp"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "c0de4e57-8e06-4de7-a2bf-309cd52c87a1",
+  "prompt": "Macro close up of a brutal rusted mechanical lawn mower boss, jagged spinning rotary steel blades, dented hammered metal cowl housing, dark black exhaust smoke, dark backyard night setting, single harsh directional workshop spotlight beam, hard sharp cast shadows, gritty tactile weathered steel texture, cinematic lighting, no text, no letters",
+  "negative": "text, letters, words, typography, logo, watermark, signature, cartoon, 3d render plastic, smooth, blurry, friendly, cute, human face, daylight",
+  "seed": 502,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 33.8,
+  "date": "2026-10-11T19:58:50.324Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/bosses/cortacesped_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/bosses/boss-cortacesped.webp"
+}

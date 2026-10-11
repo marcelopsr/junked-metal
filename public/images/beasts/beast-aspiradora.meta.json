@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "a3a1e952-9ed2-4ae0-81b2-d2c069db40e4",
+  "prompt": "Night, rogue vintage robot vacuum cleaner boss, scuffed grey plastic chassis with flashing emergency hazard LEDs, whirring roller brush spitting gravel, dark patio floor",
+  "negative": "blurry, smooth 3d render, soft lighting, cartoon anime, cute, friendly, text, watermark, logo, clean studio photo, oversaturated daylight",
+  "seed": 2012,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 15.5,
+  "date": "2026-10-11T19:57:05.666Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/batch_12_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-aspiradora.webp"
+}

@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "6e13192d-676c-4c9e-9f0c-338152ec4fed",
+  "prompt": "Night, macro flashlight portrait of a menacing giant garden ant made of scrap metal and toy chitin, glowing red micro eyes, dirt yard background, grainy 35mm film retro game aesthetic, sharp shadows, low-poly textures",
+  "negative": "blurry, smooth 3d render, soft lighting, cartoon anime, cute, friendly, text, watermark, logo, clean studio photo, oversaturated daylight",
+  "seed": 2001,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 23.1,
+  "date": "2026-10-11T19:54:06.908Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/batch_1_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-hormiga.webp"
+}

@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "c5778ada-13e0-4f3c-97f5-ed6d5a44d702",
+  "prompt": "Macro close up of a monstrous concrete mixer truck boss, armored revolving steel mixing drum barrel, caked dried concrete splatter splashes, massive exposed heavy gear teeth sprockets, dark junkyard yard night setting, single harsh directional workshop spotlight beam, hard sharp cast shadows, gritty tactile steel and stone texture, cinematic lighting, no text, no letters",
+  "negative": "text, letters, words, typography, logo, watermark, signature, cartoon, 3d render plastic, smooth, blurry, friendly, cute, human face, daylight",
+  "seed": 503,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 33.5,
+  "date": "2026-10-11T19:59:29.044Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/bosses/hormigon_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/bosses/boss-hormigon.webp"
+}

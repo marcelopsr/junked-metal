@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "154d5404-de5c-4f45-b589-da3867ea50b8",
+  "prompt": "Macro close up of a monstrous scrap industrial robot vacuum cleaner boss, heavy battered sheet metal chassis, reinforced flexible corrugated hose nozzle, glowing cyclonic vacuum intake turbine, menacing amber warning beacon light, dark backyard junkyard night setting, single harsh directional spotlight beam, hard sharp cast shadows, gritty tactile rusted scrap metal texture, cinematic lighting, no text, no letters",
+  "negative": "text, letters, words, typography, logo, watermark, signature, cartoon, 3d render plastic, smooth, blurry, friendly, cute, human face, daylight",
+  "seed": 501,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 25.2,
+  "date": "2026-10-11T19:58:10.956Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/bosses/aspiradora_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/bosses/boss-aspiradora.webp"
+}

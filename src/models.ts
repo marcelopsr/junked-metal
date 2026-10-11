@@ -215,7 +215,16 @@ export const PARTS = {
 export type Slot = keyof typeof PARTS;
 // Faro: [emisivo de las ópticas, luz del SpotLight]. Nada rojo ni verde (código de amenaza y disparos propios).
 const LAMPS: Record<string, [string, string]> = { calido: ["#fff3b0", "#ffe9c2"], ambar: ["#ffb347", "#ffc77a"], cian: ["#9be7ff", "#bdefff"], violeta: ["#c9a7ff", "#d8c2ff"] };
-export type CarOpts = { paint?: string; trim?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; bumper?: string; tires?: string; acc?: string; pilot?: string; sticker?: string; fixed?: boolean }; // fixed: la pintura no se gasta (carrera, garaje): se hornea y ahorra una submalla
+
+// Acabados temáticos de chapa de carrocería (albedo/acabado en public/textures/paints/)
+export const GARAGE_FINISHES = {
+  "finish:rust": { name: "Óxido extremo", src: "textures/paints/paint-rust-extreme.webp", normal: "textures/paints/paint-rust-extreme_normal.webp", desc: "Chapa intensamente corroída con herrumbre y picaduras", rough: 0.85, metal: 0.15 },
+  "finish:cracked": { name: "Craquelado", src: "textures/paints/paint-cracked.webp", normal: "textures/paints/paint-cracked_normal.webp", desc: "Pintura automotriz cuarteada dejando ver metal base", rough: 0.65, metal: 0.2 },
+  "finish:mud": { name: "Barro seco", src: "textures/paints/paint-mud.webp", normal: "textures/paints/paint-mud_normal.webp", desc: "Lodo y arcilla seca salpicada sobre la carrocería", rough: 0.9, metal: 0.05 },
+} as const;
+export type GarageFinishId = keyof typeof GARAGE_FINISHES;
+
+export type CarOpts = { paint?: string; trim?: string; rim?: string; wing?: string; decal?: string; lamp?: string; exhaust?: string; bumper?: string; tires?: string; acc?: string; pilot?: string; sticker?: string; finish?: string; fixed?: boolean }; // fixed: la pintura no se gasta (carrera, garaje): se hornea y ahorra una submalla
 
 // Calco propio del capó (editor del garaje): grilla DECAL_N × DECAL_N, un carácter por celda: "0" = transparente, "1".."8" = DECAL_PAL[n-1].
 // Colores de la paleta de UI (docs/ART_DIRECTION.md); sin el rojo de amenaza.
@@ -262,7 +271,27 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   const ws: { pos: V3; d: number; w: number; steer?: boolean }[] = [];
   let parts: B.Mesh[];
   let stock: B.Mesh[] = []; // alerón de serie (se reemplaza si se elige otro)
-  const paint = pbr("paint" + kind + o.paint, { color: o.paint ?? A.paint, rough: 0.4, coat: 0.8 });
+  const finDef = o.finish && o.finish in GARAGE_FINISHES ? GARAGE_FINISHES[o.finish as GarageFinishId] : null;
+  const paintKey = "paint" + kind + (o.paint ?? "") + (o.finish ?? "");
+  const paintMatOpts: { color: string; rough: number; coat: number; metal?: number; tex?: B.Texture; bump?: B.Texture } = {
+    color: o.paint ?? A.paint,
+    rough: finDef?.rough ?? 0.4,
+    coat: finDef ? 0.15 : 0.8,
+    metal: finDef?.metal ?? 0,
+  };
+  if (finDef) {
+    const ft = new B.Texture(finDef.src, scene);
+    ft.uScale = ft.vScale = 2.0;
+    ft.wrapU = ft.wrapV = B.Texture.WRAP_ADDRESSMODE;
+    paintMatOpts.tex = ft;
+    if ("normal" in finDef && finDef.normal) {
+      const nt = new B.Texture(finDef.normal, scene);
+      nt.uScale = nt.vScale = 2.0;
+      nt.wrapU = nt.wrapV = B.Texture.WRAP_ADDRESSMODE;
+      paintMatOpts.bump = nt;
+    }
+  }
+  const paint = pbr(paintKey, paintMatOpts);
   const trimHex = o.trim ?? "#c9ccd1";
   const fb = FOLDED_SLICE; // Folded (?folded2): carrocerías de chapa (carHull), ruedas foldWheel en las anclas de siempre
   const useGlb = !fb && !!carGlbTpl(kind);

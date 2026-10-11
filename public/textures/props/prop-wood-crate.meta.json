@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "400b642a-b316-4fb5-8e56-635c5141c84a",
+  "prompt": "Old weathered pine wooden crate texture, worn rough pine wood planks, splinters, rusty nails, chipped edges, weathered timber, flat seamless albedo macro texture, neutral lighting, game asset texture",
+  "negative": "perspective, 3d object, shadow, ambient occlusion, bright specular glare, text, watermark, logo, blurry, shiny",
+  "seed": 3101,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 42.2,
+  "date": "2026-10-11T19:58:31.169Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/prop_wood_crate_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/props/prop-wood-crate.webp"
+}

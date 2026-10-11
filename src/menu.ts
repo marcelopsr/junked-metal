@@ -4,9 +4,9 @@ import "./menu.css";
 import type { Scene } from "@babylonjs/core";
 import { CARS } from "./car";
 import { BAL, costos, precio } from "./balance";
-import { DEF, type Kind } from "./enemies";
+import { BEAST_PORTRAITS, DEF, type Kind } from "./enemies";
 import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
-import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, GARAGE_DECALS, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type GarageDecalId, type Slot } from "./models";
+import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, GARAGE_DECALS, GARAGE_FINISHES, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type GarageDecalId, type GarageFinishId, type Slot } from "./models";
 import { ARSENAL, PILOTS, PILOT_PORTRAITS, type PilotId } from "./pilots";
 import { beastIcon, icon, PERK_ICON, UI_BTN_ICON, uiIcon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
@@ -33,7 +33,7 @@ export type Stats = { runs: number; wins: number; time: number; dist: number; dm
 export type Save = {
   intro: boolean; // ya se vio la intro del primer arranque
   scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number; arm: number; reg: number; tur: number; ram: number; cdr: number }; cars: CarKind[]; car: CarKind;
-  pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; paint: string; trim: string; rim: string; zoom: number; camMode: (typeof CAM_MODES)[number]; // paint/trim/rim: colores por zona (carrocería, detalles, llantas), "#rrggbb" o "" = el de fábrica
+  pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; paint: string; trim: string; rim: string; finish: string; zoom: number; camMode: (typeof CAM_MODES)[number]; // paint/trim/rim: colores por zona (carrocería, detalles, llantas), "#rrggbb" o "" = el de fábrica; finish: textura PBR
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
   bloom: boolean; lookv: number; shake: boolean; fps: boolean; hudSolid: boolean; hint: boolean;
   // Imagen (render.ts, Gfx): resolución (escala manual o FSR), suavizado, calidad (preset = el que coincide con los cuatro ajustes, o "custom") y pantalla.
@@ -57,7 +57,7 @@ const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (i
 const DEFAULT: Save = {
   intro: false,
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0, arm: 0, reg: 0, tur: 0, ram: 0, cdr: 0 }, cars: ["buggy"], car: "buggy",
-  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", trim: "", rim: "", zoom: 1.35, camMode: "actual",
+  pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", trim: "", rim: "", finish: "", zoom: 1.35, camMode: "actual",
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, gpu: "webgl", scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
@@ -230,7 +230,7 @@ function show() {
   (f && f.isConnected && f.offsetParent ? f : focusables()[0])?.focus({ preventScroll: false });
 }
 export function go(s: Scr) {
-  peek.car = peek.pilot = peek.part = peek.paint = undefined; // la vista previa no sale del garaje
+  peek.car = peek.pilot = peek.part = peek.paint = peek.finish = undefined; // la vista previa no sale del garaje
   const top = current();
   if (top && document.activeElement instanceof HTMLElement) ret.set(top, document.activeElement);
   ret.delete(s);
@@ -273,7 +273,7 @@ function back() {
   if (s === "pause") return api.resume();
   if (s === "over") return api.quit();
   if (s === "garage" && editing) { editing = false; renderGarage(); return focusSel('[data-dact="edit"]'); } // Esc / B: sale del editor, no del garaje
-  peek.paint = undefined;
+  peek.paint = peek.finish = undefined;
   stack.pop();
   show();
   if (s === "beast") { focusSel(`[data-beast="${BV.kind}"]`); BV.kind = null; } // vuelve a la ficha chica del bicho que se estaba viendo
@@ -534,12 +534,13 @@ export const startPick = (): WeaponId => (owns("arma:" + save.weapon) ? save.wea
 /** Lo que hay que mostrar sobre el auto (garaje, portada y partida). */
 // Vista previa en el garaje: con el foco (mouse, teclado o control) sobre algo bloqueado o muestra de pintura, el modelo lo muestra
 export type PeekPart = [Slot, string] | { slot: Slot; opt: string };
-export const peek: { car?: CarKind; pilot?: PilotId; part?: PeekPart; paint?: string } = {};
+export const peek: { car?: CarKind; pilot?: PilotId; part?: PeekPart; paint?: string; finish?: string } = {};
 export const shownCar = (): CarKind => peek.car ?? save.car;
 export const carOpts = (): CarOpts => ({
   paint: (pz === "paint" && peek.paint !== undefined ? peek.paint : save.paint) || undefined,
   trim: (pz === "trim" && peek.paint !== undefined ? peek.paint : save.trim) || undefined,
   rim: (pz === "rim" && peek.paint !== undefined ? peek.paint : save.rim) || undefined,
+  finish: (pz === "paint" && peek.finish !== undefined ? peek.finish : save.finish) || undefined,
   ...save.kit,
   ...(peek.part ? (Array.isArray(peek.part) ? { [peek.part[0]]: peek.part[1] } : { [peek.part.slot]: peek.part.opt }) : {}),
   pilot: peek.pilot ?? save.pilot,
@@ -771,7 +772,9 @@ function renderPaint() {
   ];
   const filterBar = `<div class="paint-filters">${PFILTS.map(([f, lab]) => `<button class="p-filter ${pfilt === f ? "active" : ""}" data-pfilt="${f}">${lab}</button>`).join("")}</div>`;
   const isHidden = (c: string) => (pfilt === "brillo" && !isGlossy(c)) || (pfilt === "mates" && isGlossy(c));
+  const finishBar = pz === "paint" ? `<div class="paint-finishes"><span class="fin-lab">TEXTURA PBR:</span><button class="opt ${!save.finish ? "on" : ""}" data-pfin="" title="Laca brillante lisa de fábrica">Laca lisa</button>${Object.entries(GARAGE_FINISHES).map(([id, f]) => `<button class="opt ${save.finish === id ? "on" : ""}" data-pfin="${id}" title="${f.desc}">${f.name}</button>`).join("")}</div>` : "";
   $("paint").innerHTML = statusPill + `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
+    + finishBar
     + filterBar
     + `<div class="pal">${PAINTS.map((c) => `<button class="${["sw", isGlossy(c) && "glossy", mine && c === cur && "on", isHidden(c) && "hidden"].filter(Boolean).join(" ")}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
     + `<div id="swLabel" class="sw-label">CÓD. PNT ${cur.toUpperCase()} · TONO TALLER</div>`
@@ -779,6 +782,22 @@ function renderPaint() {
     + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
     + `<div class="note">${pz === "trim" ? "Detalles: alerón, paragolpes, defensas y accesorios." : pz === "rim" ? "Llantas de las cuatro ruedas (o de las que haya)." : "Carrocería: la chapa entera."} Pintar es gratis: el patio cobra en otras cosas.</div>`;
   hsvBars(h, sat, v);
+  $("paint").querySelectorAll<HTMLElement>(".paint-finishes [data-pfin]").forEach((b) => {
+    const fin = b.dataset.pfin ?? "";
+    const setPeek = () => {
+      SFX.blip();
+      peek.finish = fin || undefined;
+    };
+    const clearPeek = () => {
+      if (peek.finish === (fin || undefined)) {
+        peek.finish = undefined;
+      }
+    };
+    b.addEventListener("mouseenter", setPeek);
+    b.addEventListener("mouseleave", clearPeek);
+    b.addEventListener("focus", setPeek);
+    b.addEventListener("blur", clearPeek);
+  });
   $("paint").querySelectorAll<HTMLElement>(".pal .sw").forEach((b) => {
     const c = b.dataset.sw;
     if (!c) return;
@@ -1269,7 +1288,11 @@ function renderBestiary() {
     : (Object.keys(DEF) as Kind[]).map((k) => {
       // Todo visible desde el inicio; lo propio (bajas) dice "Sin registros todavía" hasta que aparezca. Clic, Enter o A abren la ficha completa.
       const d = DEF[k], n = save.slain[k] ?? 0, met = save.seen.includes(k) || n > 0;
-      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}" data-beast="${k}"><span class="bthumb">${beastIcon(k, 38)}</span><b class="wi">${d.boss ? icon("jefe", 22) : ""}${d.name}</b>${rankOf(k)} · ${met ? `${n} ${n === 1 ? "baja" : "bajas"}` : "Sin registros todavía"}<div class="lore">${LORE[k]}</div><div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"} de XP` : "Fin de la partida"}</div></div>`;
+      const portraitSrc = BEAST_PORTRAITS[k];
+      const portraitHtml = portraitSrc
+        ? `<div class="beast-portrait"><img src="${portraitSrc}" alt="${d.name}" width="58" height="58" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`
+        : "";
+      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}" data-beast="${k}">${portraitHtml}<span class="bthumb">${beastIcon(k, 38)}</span><b class="wi">${d.boss ? icon("jefe", 22) : ""}${d.name}</b>${rankOf(k)} · ${met ? `${n} ${n === 1 ? "baja" : "bajas"}` : "Sin registros todavía"}<div class="lore">${LORE[k]}</div><div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"} de XP` : "Fin de la partida"}</div></div>`;
     }).join("");
   rec.innerHTML = save.runs.length
     ? `<tr><th>#</th><th>Tiempo</th><th>Bajas</th><th>Nivel</th><th>Semilla</th></tr>` + save.runs.map((r, i) => `<tr><td>${i + 1}</td><td>${fmt(r.t)}${r.win ? " V" : ""}</td><td>${r.kills}</td><td>${r.lv}</td><td>${r.seed}</td></tr>`).join("")
@@ -1320,7 +1343,9 @@ function renderBeast() {
   const weak = Object.entries(r?.by ?? {}).filter(([id]) => id in WEAPONS || id === "embestida").sort((a, b) => b[1] - a[1]).slice(0, 3);
   const wname = (id: string) => (id in WEAPONS ? WEAPONS[id as WeaponId].name : "Embestida");
   const first = r?.first ? r.first.split("-").reverse().join("/") : save.seen.includes(k) ? "Sin fecha (antes del registro)" : "Todavía no";
+  const bPortrait = BEAST_PORTRAITS[k];
   $("bpanel").innerHTML = `<div class="bhead"><button class="bnav" data-bnav="-1" aria-label="Bicho anterior">&lt;</button>`
+    + `${bPortrait ? `<div class="bhead-portrait"><img src="${bPortrait}" alt="${d.name}" width="48" height="48"></div>` : ""}`
     + `<div class="bname"><small>${rankOf(k)} · ${KINDS.indexOf(k) + 1} / ${KINDS.length} · <em class="b-reg ${met ? "ok" : ""}">${met ? `REGISTRADO (${n} ${n === 1 ? "baja" : "bajas"})` : "SIN REGISTROS"}</em></small><b class="wi">${beastIcon(k, 24)}${d.name}</b></div><button class="bnav" data-bnav="1" aria-label="Bicho siguiente">&gt;</button></div>`
     + `<div class="bctl"><div class="slot"><span>Animación</span>${btn("banim", "walk", "Caminar", BV.anim === "walk")}${btn("banim", "attack", "Atacar")}${btn("banim", "hit", "Recibir golpe")}${btn("banim", "die", "Morir")}${d.boss ? btn("banim", "phase", "Fase 2") : ""}</div>`
     + (d.boss ? "" : `<div class="slot"><span>Variante</span>${btn("belite", "", "Normal", !el)}${btn("belite", "rapida", "Rápida", el === "rapida")}${btn("belite", "blindada", "Blindada", el === "blindada")}</div>`) + `</div>`
@@ -1522,6 +1547,7 @@ export function initMenu(a: Api) {
     else if (d.dact === "edit") { editing = true; renderGarage(); focusSel("#dgrid"); }
     else if (d.dact === "done") { editing = false; renderGarage(); focusSel('[data-dact="edit"]'); }
     else if (d.sw || d.pdef) { peek.paint = undefined; save[pz] = d.sw ?? ""; persist(); renderPaint(); focusSel(d.sw ? `[data-sw="${d.sw}"]` : "[data-pdef]"); }
+    else if (d.pfin !== undefined) { peek.finish = undefined; save.finish = d.pfin; persist(); renderPaint(); focusSel(`[data-pfin="${d.pfin}"]`); }
     else if (d.pz) { peek.paint = undefined; pz = d.pz as typeof pz; renderPaint(); focusSel(`[data-pz="${pz}"]`); }
     else if (d.pfilt) { peek.paint = undefined; pfilt = d.pfilt as typeof pfilt; renderPaint(); focusSel(`[data-pfilt="${pfilt}"]`); }
     else if (d.gtab) { peek.paint = undefined; gtab = d.gtab as typeof gtab; renderGarage(); $("cars").scrollTop = 0; focusSel(`[data-gtab="${gtab}"]`); }

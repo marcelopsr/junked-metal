@@ -363,7 +363,7 @@ export function setSplit(cam2: B.Camera | null, on: boolean) {
 
 // ---------- Materiales ----------
 const mats = new Map<string, B.PBRMaterial>();
-export type MatOpts = { coat?: number; color: string; rough?: number; metal?: number; tex?: B.Texture; emissive?: string; alpha?: number };
+export type MatOpts = { coat?: number; color: string; rough?: number; metal?: number; tex?: B.Texture; bump?: B.Texture; emissive?: string; alpha?: number };
 
 export function pbr(key: string, o: MatOpts) {
   let m = mats.get(key);
@@ -373,6 +373,11 @@ export function pbr(key: string, o: MatOpts) {
   m.roughness = o.rough ?? 0.5;
   m.metallic = o.metal ?? 0;
   if (o.tex) m.albedoTexture = o.tex;
+  if (o.bump) {
+    m.bumpTexture = o.bump;
+    m.invertNormalMapX = false;
+    m.invertNormalMapY = false;
+  }
   if (o.emissive) m.emissiveColor = B.Color3.FromHexString(o.emissive);
   if (o.alpha !== undefined) m.alpha = o.alpha;
   if (o.coat) { m.clearCoat.isEnabled = true; m.clearCoat.intensity = o.coat; m.clearCoat.roughness = 0.08; } // barniz de plástico: reflejo suave del cielo

@@ -98,6 +98,7 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     s.fpsCap = one(s.fpsCap, [0, 30, 60, 120], 0); s.menuFps = one(s.menuFps, [0, 30, 60], D.menuFps);
     // Colores del auto por zona: solo "#rrggbb" (un color libre llega al HTML del garaje); el guardado viejo ya trae paint y rim, trim (detalles) es nuevo
     for (const k of ["paint", "trim", "rim"]) s[k] = typeof s[k] === "string" && /^#[0-9a-f]{6}$/i.test(s[k]) ? s[k].toLowerCase() : "";
+    s.finish = typeof s.finish === "string" && (s.finish === "" || s.finish.startsWith("finish:")) ? s.finish : "";
     // Junket Crush: solo números enteros no negativos (estrellas 0-3)
     const nums = (o: unknown, hi: number) => Object.fromEntries(Object.entries(typeof o === "object" && o ? o : {}).filter(([, v]) => Number.isInteger(v) && (v as number) >= 0).map(([k, v]) => [k, Math.min(hi, v as number)]));
     s.m3 = { stars: nums(s.m3?.stars, 3), best: nums(s.m3?.best, 1e9), tools: nums(s.m3?.tools, 99) };

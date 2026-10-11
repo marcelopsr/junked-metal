@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "d4474d60-e6df-405f-86d7-4cefdf6cb1d4",
+  "prompt": "Night, feral tabby cat miniboss Eulalio, glowing predatory eyes in the dark bushes, scrap metal claw caps, dramatic hard rim light, menacing backyard predator",
+  "negative": "blurry, smooth 3d render, soft lighting, cartoon anime, cute, friendly, text, watermark, logo, clean studio photo, oversaturated daylight",
+  "seed": 2011,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 15.7,
+  "date": "2026-10-11T19:56:50.156Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/batch_11_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-gato.webp"
+}

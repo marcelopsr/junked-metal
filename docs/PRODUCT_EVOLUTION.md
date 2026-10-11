@@ -1290,3 +1290,31 @@ Decisión del usuario: Implementar los 4 upgrades de infraestructura y herramien
    - `npm run doctor`: diagnóstico ejecutado en 65 ms con todos los servicios y binarios verificados.
    - Pruebas reales de cada herramienta: `assets-optimize` (26 modelos auditados), `creative:pbr` (0.73 s sobre albedo de asfalto), `sim` (telemetría interactiva validada en vivo).
 
+## 2026-10-11 · Acabados PBR Especiales en Garaje y Galería Cinemática de 13 Bestias en Chatarroteca
+
+Decisión del usuario: Integrar acabados especiales de carrocería PBR en el Garaje y generar la galería completa de retratos para los 13 bichos y jefes del bestiario mediante `creative-batch`:
+
+1. **Acabados PBR Especiales en Selector de Carrocería del Garaje (`src/models.ts`, `src/menu.ts`, `src/menu.css`):**
+   - **Texturas PBR y Mapas de Normales:** Generados mapas tangentes de normales y rugosidad con `creative-pbr.mjs` para los 3 acabados:
+     - `finish:rust` (*Óxido extremo*): chapa carcomida con relieve rugoso y manchas de corrosión.
+     - `finish:cracked` (*Craquelado*): micro-fisuras y pintura descascarada que expone el metal base.
+     - `finish:mud` (*Barro seco*): salpicaduras de tierra arcillosa con alta rugosidad física.
+   - **Renderizado PBR Diegético (`src/render.ts`, `src/models.ts`):** Propiedad `bump` conectada a `pbr()` para proyectar relieve tangible sobre los autos 3D (`carModel`), tanto en la plataforma giratoria del Garaje como en partida.
+   - **Selector de Acabado en UI (`src/menu.ts`, `src/menu.css`):** Barra `.paint-finishes` dentro de la pestaña `Carrocería` con botones de alternancia entre *Laca lisa de fábrica* y los 3 acabados especiales, previsualización interactiva al pasar el cursor (`peek.finish`), persistencia en `save.finish` y sanitización en `savefmt.ts`.
+
+2. **Galería Cinemática de Retratos para los 13 Bichos y Jefes (`public/images/beasts/` · `src/enemies.ts`):**
+   - **Generación autónoma por lotes con ComfyUI Metal/MPS:** Despacho de 13 ilustraciones en 512×512 WebP mediante `creative-batch` en segundo plano (completado en 4m 51s, ~15s por criatura, con metadatos `.meta.json` reproducibles):
+     - Plagas comunes: `beast-hormiga`, `beast-escupidora`, `beast-friccion`, `beast-robot`, `beast-polilla`, `beast-escarabajo`.
+     - Minijefes y Jefes Finales: `beast-rey`, `beast-cortadora`, `beast-tarantula`, `beast-perro`, `beast-gato`, `beast-aspiradora`, `beast-cortacercos`.
+   - **Integración diegética en Chatarroteca (`src/menu.ts`, `src/menu.css`):**
+     - Marco de chapa remachada `.beast-portrait` en cada tarjeta de `#scr-bestiary`, con borde áureo `.boss` en jefes.
+     - Cabecera de la ficha 3D interactiva (`renderBeast`) con miniatura `.bhead-portrait` junto al nombre y silueta SVG.
+
+3. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado TypeScript.
+   - `npm test`: 81/81 pruebas unitarias pasando al 100% en 10 suites.
+   - `npm run build`: bundle de producción generado en 569 ms.
+   - `npm run doctor`: todos los servicios, herramientas y ComfyUI 100% operativos.
+   - `npm run shots -- --only garaje-pintura,bestiario`: 8 capturas aprobadas en PC (1280×720) y móvil (390×844) mostrando los retratos y la barra de acabados PBR.
+
+

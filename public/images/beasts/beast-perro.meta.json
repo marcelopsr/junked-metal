@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "bcd55767-7f84-44f7-9c91-deb87a220602",
+  "prompt": "Night, fierce backyard dog boss Felipe, imposing silhouette, studded scrap metal spiked collar, snarling jaw, illuminated by blinding RC car headlight beam",
+  "negative": "blurry, smooth 3d render, soft lighting, cartoon anime, cute, friendly, text, watermark, logo, clean studio photo, oversaturated daylight",
+  "seed": 2010,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 15.3,
+  "date": "2026-10-11T19:56:34.379Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/batch_10_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-perro.webp"
+}

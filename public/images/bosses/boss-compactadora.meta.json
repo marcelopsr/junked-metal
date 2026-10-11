@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "c36e954b-ab39-4d39-b779-d7fb75b6db0c",
+  "prompt": "Macro close up of a gigantic mechanical scrap steamroller compactor boss, massive heavy steel flattening roller drum cylinder studded with welded iron spikes, heavy steel chassis with hydraulic pistons leaking dark motor oil, dark junkyard yard night setting, single harsh directional workshop spotlight beam, hard sharp cast shadows, gritty tactile weathered steel plate texture, cinematic lighting, no text, no letters",
+  "negative": "text, letters, words, typography, logo, watermark, signature, cartoon, 3d render plastic, smooth, blurry, friendly, cute, human face, daylight",
+  "seed": 504,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 31.8,
+  "date": "2026-10-11T20:00:11.166Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/bosses/compactadora_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/bosses/boss-compactadora.webp"
+}

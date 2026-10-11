@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "44488987-9e66-4b83-a5b5-a5a2a73d9034",
+  "prompt": "Night, giant rhinoceros beetle with dark iridescent armored shell, vicious horn, clockwork brass gears underneath, dirt ground under hard flashlight beam",
+  "negative": "blurry, smooth 3d render, soft lighting, cartoon anime, cute, friendly, text, watermark, logo, clean studio photo, oversaturated daylight",
+  "seed": 2006,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 15.5,
+  "date": "2026-10-11T19:55:34.114Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/batch_6_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-escarabajo.webp"
+}

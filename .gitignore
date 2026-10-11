@@ -20,3 +20,4 @@ assets-src/_oleada2_baseline/
 *.blend1
 __pycache__/
 .vite-test/
+scratch/

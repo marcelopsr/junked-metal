@@ -1,0 +1,16 @@
+{
+  "source": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-mud.webp",
+  "generated_at": "2026-10-11T19:52:52.170Z",
+  "resolution": "512x512",
+  "parameters": {
+    "strength": 1.2,
+    "roughness_min": 0.35,
+    "roughness_max": 0.92,
+    "quality": 85
+  },
+  "maps": {
+    "albedo": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-mud.webp",
+    "normal": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-mud_normal.webp",
+    "roughness": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/paints/paint-mud_roughness.webp"
+  }
+}

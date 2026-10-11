@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "a7040141-148b-4628-8b2e-2b12e7ca35d0",
+  "prompt": "Night, vintage aggressive pull-back friction toy car monster, battered orange metal body with teeth, sparks from worn gears, dirt yard, harsh single spotlight, gritty retro game",
+  "negative": "blurry, smooth 3d render, soft lighting, cartoon anime, cute, friendly, text, watermark, logo, clean studio photo, oversaturated daylight",
+  "seed": 2003,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 15.1,
+  "date": "2026-10-11T19:54:48.674Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/batch_3_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-friccion.webp"
+}

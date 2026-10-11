@@ -39,6 +39,23 @@ export const DEF: Record<Kind, Def> = {
   cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", ...stats("cortacercos"), size: [3, 2.4, 9], boss: true, color: "#e0a030" },
 };
 
+/** Retratos cinemáticos de bichos y jefes para la Chatarroteca */
+export const BEAST_PORTRAITS: Partial<Record<Kind, string>> = {
+  hormiga: "./images/beasts/beast-hormiga.webp",
+  escupidora: "./images/beasts/beast-escupidora.webp",
+  friccion: "./images/beasts/beast-friccion.webp",
+  robot: "./images/beasts/beast-robot.webp",
+  polilla: "./images/beasts/beast-polilla.webp",
+  escarabajo: "./images/beasts/beast-escarabajo.webp",
+  rey: "./images/beasts/beast-rey.webp",
+  cortadora: "./images/beasts/beast-cortadora.webp",
+  tarantula: "./images/beasts/beast-tarantula.webp",
+  perro: "./images/beasts/beast-perro.webp",
+  gato: "./images/beasts/beast-gato.webp",
+  aspiradora: "./images/beasts/beast-aspiradora.webp",
+  cortacercos: "./images/beasts/beast-cortacercos.webp",
+};
+
 const UP = B.Vector3.Up();
 export const ROAR = ATK.fase2_rugido_s; // segundos que un jefe ruge, quieto, al entrar en fase 2
 // Embestida de Felipe: segundos apuntando (normal / enfurecido), velocidad y largo de la carga (m), ancho del carril, segundos de frenada

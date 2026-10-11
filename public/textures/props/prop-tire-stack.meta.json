@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "0fc7753e-4cd2-44cf-82c1-b81816a8bc6a",
+  "prompt": "Old vulcanized black rubber tire stack texture, worn tread pattern, weathered cracked rubber from sun exposure, red clay dust and dirt in tread grooves, seamless flat albedo macro texture, neutral lighting",
+  "negative": "perspective, 3d cylinder view, shadows, highlight glare, shiny polished rubber, clean, text, watermark, logo, blurry",
+  "seed": 3103,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 35.8,
+  "date": "2026-10-11T19:59:50.671Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/prop_tire_stack_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/props/prop-tire-stack.webp"
+}

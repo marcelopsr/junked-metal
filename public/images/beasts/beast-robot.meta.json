@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "97df3cc9-c14f-4b67-ab6a-e961216786ab",
+  "prompt": "Night, menacing vintage tin toy robot, rusty red metal plate casing, big brass winding key on back, glowing diode eyes, dark lawn under hard flashlight beam, retro mechanical threat",
+  "negative": "blurry, smooth 3d render, soft lighting, cartoon anime, cute, friendly, text, watermark, logo, clean studio photo, oversaturated daylight",
+  "seed": 2004,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 15.3,
+  "date": "2026-10-11T19:55:03.971Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/batch_4_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-robot.webp"
+}
