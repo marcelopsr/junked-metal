@@ -484,6 +484,27 @@ export const SFX = {
     tone("triangle", 1850, 920, 0.06, vol * 0.75, 0, pan);
     hiss("bandpass", 3200, 1400, 0.04, vol * 0.6, pan);
   },
+  /** Tintineo metálico agudo de llaves y herramientas sobre la bandeja o banco de trabajo. */
+  toolClink: (pitch = 1, pan?: number) => {
+    if (!gate("tool-clink", 8)) return;
+    const p = Math.max(0.6, Math.min(1.8, pitch));
+    tone("triangle", 3400 * p, 4800 * p, 0.04, 0.12, 0, pan);
+    tone("sine", 6200 * p, 3100 * p, 0.08, 0.08, 0.01, pan);
+    hiss("bandpass", 4200 * p, 1200, 0.03, 0.09, pan);
+  },
+  /** Chasquido plástico y contacto de fricción dorada al enchufar conector XT60/Deans. */
+  xt60Snap: (pan?: number) => {
+    if (!gate("xt60-snap", 4)) return;
+    tone("triangle", 880, 220, 0.03, 0.14, 0, pan);
+    hiss("bandpass", 2800, 1400, 0.04, 0.16, pan);
+    tone("square", 440, 180, 0.02, 0.1, 0.02, pan);
+  },
+  /** Crujido de husillo roscado y apriete de mordazas de fundición de hierro. */
+  viseCreak: (pan?: number) => {
+    if (!gate("vise-creak", 6)) return;
+    tone("sawtooth", 520, 310, 0.09, 0.12, 0, pan);
+    hiss("bandpass", 1600, 800, 0.06, 0.08, pan);
+  },
 };
 
 

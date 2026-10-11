@@ -1084,6 +1084,29 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #54 (Diorama y Puesto de Boxes: Morsa de Fundición, Carro de Herramientas, Organizador Allen, CellMeter y Disipador 540)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 58.5 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Morsa pesada de banco y carro porta-herramientas rodante Folded (Workshop Tools & Props 3D Modeler · `src/folded_slice.ts`):**
+   - Incorporada morsa de fundición pesada `benchViseFold()`: cuerpo en fundición azul martillada (`FOLD.painted("#1e3a5f")`), brida apernada a la mesa, yunque posterior plano rectificado con cuerno cónico en acero desnudo, mordazas con insertos prismáticos estriados diamantados, husillo roscado y manivela oscilante a 31° con bolas esféricas de retención. 0 draw calls adicionales.
+   - Creado carro porta-herramientas rodante `toolTrolleyFold()`: estructura vertical de chapa roja de competición (`FOLD.painted("#dc2626")`), tapa con reborde antideslizante de goma, 4 cajones estriados con tiradores continuos de aluminio extrusionado, cerradura cilíndrica y 4 ruedas pivotantes con pedales de freno.
+2. **Organizador Allen escalonado, CellMeter LiPo y Pit Stand giratorio 360° (Workshop Diorama 3D Modeler · `src/menuscene.ts`):**
+   - Incorporado organizador `allenRack` en bloque mecanizado de aluminio con 4 destornilladores Allen métricos (1.5mm, 2.0mm, 2.5mm, 3.0mm) con mangos moleteados tricolor normalizados y vástagos pulidos.
+   - Incorporado comprobador digital `cellMeter` de celdas LiPo en policarbonato mate con pantalla LCD azul cian reflectiva brillante y conector de balanceo JST-XH sobre la mesa de calibración.
+   - Enriquecido el `pitStand` con buje giratorio 360°, arandela de fricción de teflón autolubricada, dial circular graduado cardinal y orificios para sujeción y purgado de amortiguadores.
+   - Montaje de la morsa `benchViseFold()` en la esquina frontal izquierda del banco de trabajo (`[-28, 0, 10]`) proyectando sombras completas.
+3. **Disipador térmico de aluminio en motor 540 y calzos de peana en chasis (Procedural Vehicle 3D Modeler · `src/models.ts`):**
+   - Incorporado disipador térmico cilíndrico de aluminio anodizado azul (`M.metal("#0284c7")`) con 3 aletas anulares radiales mecanizadas y placa soporte CNC con colisas de reglaje de piñón en motor 540 para `buggy`, `monster` y `carrera`.
+   - Incorporadas almohadillas magnéticas de apoyo y orificios cónicos de centrado en la panza plana del chasis que encajan geométricamente en el Pit Stand de taller para `formula` y `buggy`.
+4. **Audio diegético de taller y herramientas mecánicas (Audio Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.toolClink(pitch, pan)` con tintineo metálico de herramientas de mano.
+   - Incorporado `SFX.xt60Snap(pan)` con chasquido plástico y contacto de fricción dorada de conector LiPo.
+   - Incorporado `SFX.viseCreak(pan)` con crujido de husillo roscado y apriete de mordazas de hierro.
+
+---
+
 ## 2026-10-10 · Ciclo #53 (Detalle Mecánico: Toe-Links Uniball, Pack LiPo XT60, Herramientas Folded, Bandeja de Tornillos y Látigo de Antena)
 
 **Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 46.0 s).

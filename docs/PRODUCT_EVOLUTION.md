@@ -812,17 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #53 ("Detalle Mecánico") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 3.04 s, 17 capturas en `.shots/actual/` en 46.0 s, grafo en 3914 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #54**.
+- **Último trabajo completado:** Ciclo #54 ("Diorama y Puesto de Boxes") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 15.18 s, 17 capturas en `.shots/actual/` en 58.5 s, grafo en 3948 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #55**.
 
-### 🔓 LISTO PARA EL CICLO #54 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #55 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Procedural Vehicle 3D Modeler** | Suspensión de 4 brazos articulados (4-Link) en Monster o varillaje Bellcrank en pista | `src/models.ts` |
-| **Workshop Diorama 3D Modeler** | Comprobador digital de celdas LiPo (CellMeter) u organizador vertical de llaves Allen | `src/menuscene.ts` |
-| **Workshop Tools & Props 3D Modeler** | Carro de herramientas rodante Folded o morsa de fundición para banco de trabajo | `src/folded_slice.ts` |
-| **Dynamic Suspension 3D Modeler** | Camber dinámico reactivo en ruedas (Wheel Camber) y resonancia acústica de antena | `src/car.ts` |
+| **Workshop Tools & Props 3D Modeler** | Taladro de columna vertical Folded (`drillPressFold`) o compresor de aire con calderín | `src/folded_slice.ts` |
+| **Workshop Diorama 3D Modeler** | Lámpara lupa de inspección con brazo pantógrafo y mazo de balanceo LiPo conectado | `src/menuscene.ts` |
+| **Procedural Vehicle 3D Modeler** | Micro-transponder de cronometraje con LED y switch de alimentación sellado | `src/models.ts` |
+| **Audio Synth Sound Designer** | Siseo térmico de estaño (`solderingSizzle`) y zumbido analógico de carga (`chargerHum`) | `src/sfx.ts` |
+
+### Ciclo #54 (2026-10-10) — Diorama y Puesto de Boxes: Morsa de Fundición, Carro de Herramientas, Organizador Allen, CellMeter y Disipador 540
+- **Alcance implementado en producción (`src/`):**
+  - **Workshop Tools & Props 3D Modeler (`src/folded_slice.ts`):** Morsa pesada de banco `benchViseFold()` en fundición azul martillada con brida de montaje, yunque posterior plano con cuerno cónico en acero desnudo, mordazas prismáticas diamantadas, husillo roscado y manivela oscilante a 31° con bolas esféricas de retención; carro porta-herramientas rodante `toolTrolleyFold()` en chapa roja con tapa antideslizante, 4 cajones estriados con tiradores continuos de aluminio, cerradura y 4 ruedas pivotantes con frenos. 0 draw calls adicionales.
+  - **Workshop Diorama 3D Modeler (`src/menuscene.ts`):** Organizador escalonado `allenRack` en aluminio mecanizado con 4 destornilladores Allen de precisión métricos (1.5mm a 3.0mm) con mangos moleteados tricolor y vástagos pulidos; comprobador digital `cellMeter` de celdas LiPo en policarbonato mate con LCD reflectivo cian y conector JST-XH lateral; peana `pitStand` enriquecida con buje giratorio 360°, arandela de teflón autolubricada y dial circular graduado cardinal; montaje de la morsa `benchViseFold()` en la esquina frontal izquierda del banco con sombras dinámicas completas.
+  - **Procedural Vehicle 3D Modeler (`src/models.ts`):** Disipador térmico cilíndrico de aluminio anodizado azul (`M.metal("#0284c7")`) con 3 aletas anulares radiales mecanizadas y placa soporte CNC con colisas de reglaje de piñón en motor 540 para `buggy`, `monster` y `carrera`; almohadillas magnéticas de apoyo y orificios cónicos de centrado en la panza plana del chasis que encajan en el Pit Stand para `formula` y `buggy`.
+  - **Audio Synth Sound Designer (`src/sfx.ts`):** `SFX.toolClink(pitch, pan)` con tintineo metálico de herramientas de mano; `SFX.xt60Snap(pan)` con chasquido plástico y contacto de fricción dorada de conector LiPo; `SFX.viseCreak(pan)` con crujido de husillo roscado y apriete de mordazas de hierro.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, vitest --changed 43 tests en verde, build Vite en 15.18 s, 17 capturas en `.shots/actual/` aprobadas en 58.5 s, grafo de conocimiento sincronizado en 3948 nodos y 9554 aristas.
 
 ### Ciclo #53 (2026-10-10) — Detalle Mecánico: Toe-Links Uniball, Cables LiPo XT60, Herramientas Folded, Bandeja de Tornillos y Látigo de Antena
 - **Alcance implementado en producción (`src/`):**

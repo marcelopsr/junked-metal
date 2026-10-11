@@ -835,3 +835,174 @@ export function rampLip(W: number, L: number, H: number) {
   G.trimStrip([0, H + 0.08, L], [Math.PI / 2, 0, 0], W, 0.5, "hazard", 0.12);
   return done();
 }
+
+/** Morsa / tornillo de banco de fundición pesada Folded: base cilíndrica achaflanada con brida de montaje,
+ *  cuerpo masivo con guía prismática cuadrada, yunque posterior plano de golpeo en acero desnudo,
+ *  mordaza fija y mordaza móvil enfrentadas con insertos diamantados estriados, husillo roscado central
+ *  y manivela cilíndrica transversal oscilante con bolas de retención esféricas en los extremos. */
+export function benchViseFold(): B.Mesh {
+  const { G, done } = kit();
+  const castBlue = FOLD.painted("#1e3a5f", 0.85, 310);
+  const bare = FOLD.bare(), dark = FOLD.dark(), rubber = FOLD.rubber();
+
+  // 1. Base cilíndrica achaflanada con brida de montaje y bulones de anclaje para atornillar a la mesa
+  G.cyl(3.4, 0.22, castBlue, [0, 0.11, 0], undefined, 12);
+  G.cyl(2.8, 0.32, castBlue, [0, 0.38, 0], undefined, 12, 3.2);
+  G.cyl(2.6, 0.24, castBlue, [0, 0.66, 0], undefined, 12);
+  // Perno y palomilla de bloqueo de giro de base
+  G.cyl(0.2, 0.5, bare, [1.45, 0.66, 0], [0, 0, Math.PI / 2], 6);
+  G.box(0.12, 0.18, 0.65, bare, [1.72, 0.66, 0]);
+  // Bulones de anclaje a la mesa
+  G.bolts([-1.3, 0.22, -0.9], [-1.3, 0.22, -0.9], 1, [0, 1, 0]);
+  G.bolts([1.3, 0.22, -0.9], [1.3, 0.22, -0.9], 1, [0, 1, 0]);
+  G.bolts([0, 0.22, 1.45], [0, 0.22, 1.45], 1, [0, 1, 0]);
+  for (const [bx, bz] of [[-1.3, -0.9], [1.3, -0.9], [0, 1.45]]) {
+    G.cyl(0.48, 0.08, dark, [bx, 0.24, bz], undefined, 8);
+  }
+
+  // 2. Cuerpo principal masivo con guía prismática cuadrada y yunque plano posterior de golpeo en acero desnudo
+  G.box(1.9, 1.1, 2.4, castBlue, [0, 1.33, -0.2]);
+  G.box(0.35, 0.8, 2.2, castBlue, [-1.02, 1.25, -0.2], [0, 0, 0.3]);
+  G.box(0.35, 0.8, 2.2, castBlue, [1.02, 1.25, -0.2], [0, 0, -0.3]);
+  // Guía prismática cuadrada (alojamiento donde desliza la guía móvil)
+  G.box(1.5, 1.15, 3.4, castBlue, [0, 1.55, 0.3]);
+  G.box(1.12, 0.95, 3.42, dark, [0, 1.55, 0.3]);
+  G.bend([-0.75, 2.12, -0.8], [-0.75, 2.12, 1.4], 0.08, castBlue);
+  G.bend([0.75, 2.12, -0.8], [0.75, 2.12, 1.4], 0.08, castBlue);
+
+  // Yunque plano posterior rectificado de golpeo en acero desnudo
+  G.box(1.6, 0.2, 1.5, bare, [0, 2.15, -1.0]);
+  along(G, 0.65, 0.22, 1.1, bare, [0, 2.05, -2.1], 8);
+  G.box(1.5, 0.6, 1.4, castBlue, [0, 1.75, -1.0]);
+  G.box(0.9, 0.45, 0.8, castBlue, [0, 1.8, -1.9], [-0.35, 0, 0]);
+
+  // 3. Mordaza fija
+  G.box(2.3, 1.3, 1.0, castBlue, [0, 2.45, -0.15]);
+  G.box(2.5, 0.55, 0.4, castBlue, [0, 2.75, 0.3]);
+  // Inserto prismático diamantado estriado de la mordaza fija (FOLD.dark())
+  G.box(2.4, 0.52, 0.14, dark, [0, 2.75, 0.52]);
+  G.box(2.36, 0.08, 0.04, bare, [0, 2.65, 0.6]);
+  G.box(2.36, 0.08, 0.04, bare, [0, 2.85, 0.6]);
+  for (let i = -4; i <= 4; i++) G.box(0.06, 0.46, 0.03, bare, [i * 0.26, 2.75, 0.6]);
+  G.bolts([-0.7, 2.75, 0.58], [0.7, 2.75, 0.58], 2, [0, 0, 1]);
+
+  // 4. Mordaza móvil y corredera prismática cuadrada
+  G.box(1.08, 0.9, 3.2, bare, [0, 1.55, 1.2]);
+  G.box(2.3, 1.3, 1.0, castBlue, [0, 2.45, 1.55]);
+  G.bend([-1.15, 2.45, 1.1], [-1.15, 3.0, 1.1], 0.08, castBlue);
+  G.bend([1.15, 2.45, 1.1], [1.15, 3.0, 1.1], 0.08, castBlue);
+  G.box(2.5, 0.55, 0.4, castBlue, [0, 2.75, 1.1]);
+  // Inserto prismático diamantado estriado de la mordaza móvil (enfrentado a la fija)
+  G.box(2.4, 0.52, 0.14, dark, [0, 2.75, 0.88]);
+  G.box(2.36, 0.08, 0.04, bare, [0, 2.65, 0.8]);
+  G.box(2.36, 0.08, 0.04, bare, [0, 2.85, 0.8]);
+  for (let i = -4; i <= 4; i++) G.box(0.06, 0.46, 0.03, bare, [i * 0.26, 2.75, 0.8]);
+  G.bolts([-0.7, 2.75, 0.82], [0.7, 2.75, 0.82], 2, [0, 0, -1]);
+
+  // 5. Husillo roscado horizontal central en acero brillante atravesando la mordaza móvil
+  G.cyl(0.48, 4.4, bare, [0, 1.55, 1.5], [Math.PI / 2, 0, 0], 10);
+  for (let i = 0; i < 6; i++) G.cyl(0.52, 0.08, dark, [0, 1.55, 0.1 + i * 0.22], [Math.PI / 2, 0, 0], 8);
+  // Collar de empuje y cabeza frontal del husillo
+  G.box(1.2, 1.0, 0.5, castBlue, [0, 1.55, 2.2]);
+  G.cyl(0.85, 0.35, bare, [0, 1.55, 2.55], [Math.PI / 2, 0, 0], 10);
+  G.cyl(0.72, 0.65, bare, [0, 1.55, 2.95], [Math.PI / 2, 0, 0], 10);
+  G.cyl(0.68, 0.25, bare, [0, 1.55, 3.35], [Math.PI / 2, 0, 0], 8, 0.4);
+
+  // 6. Manivela cilíndrica transversal oscilante con dos bolas de retención esféricas en los extremos
+  const ang = 0.55;
+  G.cyl(0.18, 3.6, bare, [0.35 * Math.sin(ang), 1.55 - 0.35 * Math.cos(ang), 2.95], [0, 0, ang], 8);
+  const rA = 2.15, rB = -1.45;
+  G.sph(0.42, bare, [rA * Math.sin(ang), 1.55 - rA * Math.cos(ang), 2.95]);
+  G.cyl(0.28, 0.1, rubber, [(rA - 0.2) * Math.sin(ang), 1.55 - (rA - 0.2) * Math.cos(ang), 2.95], [0, 0, ang], 6);
+  G.sph(0.42, bare, [rB * Math.sin(ang), 1.55 - rB * Math.cos(ang), 2.95]);
+  G.cyl(0.28, 0.1, rubber, [(rB + 0.2) * Math.sin(ang), 1.55 - (rB + 0.2) * Math.cos(ang), 2.95], [0, 0, ang], 6);
+
+  const parts = done(18);
+  const m = parts.length > 1 ? B.Mesh.MergeMeshes(parts, true, true, undefined, false, true)! : parts[0];
+  m.name = "benchViseFold";
+  return m;
+}
+
+/** Carro porta-herramientas rodante de taller Folded: estructura prismática de chapa roja de competición,
+ *  tapa superior con alfombrilla y reborde de goma negra antideslizante, 4 cajones frontales apilados con tiradores
+ *  longitudinales en aluminio extrusionado y nervaduras estampadas, y 4 ruedas pivotantes inferiores en goma/acero con frenos de pie. */
+export function toolTrolleyFold(): B.Mesh {
+  const { G, done } = kit();
+  const redPaint = FOLD.painted("#dc2626", 0.8, 312);
+  const bare = FOLD.bare(), dark = FOLD.dark(), rubber = FOLD.rubber();
+
+  // 1. Estructura prismática vertical de chapa plegada roja de competición
+  G.box(5.4, 6.0, 3.6, redPaint, [0, 4.3, 0]);
+  G.box(5.55, 0.3, 3.75, dark, [0, 1.45, 0]);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    G.bend([sx * 2.7, 1.4, sz * 1.8], [sx * 2.7, 7.2, sz * 1.8], 0.12, redPaint);
+  }
+  for (const sx of [-1, 1]) {
+    G.box(0.08, 5.2, 0.3, dark, [sx * 2.72, 4.3, -1.0]);
+    G.box(0.08, 5.2, 0.3, dark, [sx * 2.72, 4.3, 1.0]);
+    G.rivets([sx * 2.72, 1.8, 0], [sx * 2.72, 6.8, 0], 6, [sx, 0, 0]);
+  }
+  // Asa lateral tubular de maniobra en aluminio (-x)
+  G.box(0.55, 0.18, 0.18, bare, [-2.98, 6.7, -1.1]);
+  G.box(0.55, 0.18, 0.18, bare, [-2.98, 6.7, 1.1]);
+  G.cyl(0.24, 2.4, bare, [-3.25, 6.7, 0], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.28, 0.12, rubber, [-3.25, 6.7, -0.6], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.28, 0.12, rubber, [-3.25, 6.7, 0.6], [Math.PI / 2, 0, 0], 8);
+  // Franja diegética hazard en zócalo y calco de taller en lateral
+  G.trimStrip([0, 1.45, 1.89], undefined, 5.2, 0.22, "hazard", 0.02);
+  G.decal([2.72, 5.5, 0], [0, -Math.PI / 2, 0], "label", 1.8);
+
+  // 2. Tapa superior con reborde de goma negra antideslizante
+  G.box(5.45, 0.15, 3.65, redPaint, [0, 7.37, 0]);
+  G.box(5.2, 0.08, 3.4, rubber, [0, 7.45, 0]);
+  for (let z = -1.4; z <= 1.4; z += 0.4) G.box(5.0, 0.04, 0.12, dark, [0, 7.5, z]);
+  G.box(5.5, 0.25, 0.16, rubber, [0, 7.52, 1.78]);
+  G.box(5.5, 0.25, 0.16, rubber, [0, 7.52, -1.78]);
+  G.box(0.16, 0.25, 3.65, rubber, [-2.68, 7.52, 0]);
+  G.box(0.16, 0.25, 3.65, rubber, [2.68, 7.52, 0]);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    G.box(0.35, 0.35, 0.35, dark, [sx * 2.68, 7.48, sz * 1.78]);
+  }
+
+  // 3. 4 cajones frontales apilados con tiradores longitudinales en aluminio extrusionado y nervaduras estampadas
+  const drawers: [number, number][] = [[6.6, 0.9], [5.5, 1.1], [4.2, 1.3], [2.7, 1.5]];
+  for (const [dy, dh] of drawers) {
+    G.box(4.9, dh - 0.12, 0.14, redPaint, [0, dy, 1.82]);
+    G.bend([-2.4, dy + dh * 0.44, 1.84], [2.4, dy + dh * 0.44, 1.84], 0.04, redPaint);
+    G.bend([-2.4, dy - dh * 0.44, 1.84], [2.4, dy - dh * 0.44, 1.84], 0.04, redPaint);
+    // Nervaduras estampadas de refuerzo
+    G.box(4.4, 0.06, 0.05, dark, [0, dy - dh * 0.15, 1.89]);
+    G.box(4.4, 0.06, 0.05, dark, [0, dy - dh * 0.32, 1.89]);
+    // Tirador longitudinal en perfil de aluminio extrusionado con labio ergonómico
+    G.box(4.7, 0.15, 0.18, bare, [0, dy + dh * 0.3, 1.94]);
+    G.box(4.4, 0.06, 0.03, dark, [0, dy + dh * 0.3, 2.04]);
+  }
+  // Cerradura cilíndrica de seguridad
+  G.cyl(0.3, 0.08, bare, [2.1, 7.0, 1.88], [Math.PI / 2, 0, 0], 8);
+  G.box(0.04, 0.14, 0.03, dark, [2.1, 7.0, 1.93]);
+
+  // 4. 4 ruedas pivotantes inferiores en goma/acero con frenos de pie
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    const rx = sx * 2.15, rz = sz * 1.35;
+    G.box(0.9, 0.08, 0.9, bare, [rx, 1.26, rz]);
+    G.bolts([rx - 0.3, 1.22, rz], [rx + 0.3, 1.22, rz], 2, [0, -1, 0]);
+    G.cyl(0.72, 0.14, bare, [rx, 1.16, rz], undefined, 8);
+    G.box(0.12, 0.72, 0.6, bare, [rx - 0.32, 0.82, rz]);
+    G.box(0.12, 0.72, 0.6, bare, [rx + 0.32, 0.82, rz]);
+    G.cyl(0.2, 0.85, bare, [rx, 0.52, rz], [0, 0, Math.PI / 2], 6);
+    G.cyl(0.8, 0.46, bare, [rx, 0.52, rz], [0, 0, Math.PI / 2], 10);
+    G.cyl(0.4, 0.5, dark, [rx, 0.52, rz], [0, 0, Math.PI / 2], 8);
+    G.cyl(1.04, 0.42, rubber, [rx, 0.52, rz], [0, 0, Math.PI / 2], 12);
+    // Frenos de pie en las ruedas frontales
+    if (sz === 1) {
+      G.box(0.22, 0.08, 0.55, bare, [rx, 0.82, rz + 0.35], [-0.35, 0, 0]);
+      G.box(0.38, 0.08, 0.22, dark, [rx, 0.94, rz + 0.62]);
+    }
+  }
+
+  const parts = done(20);
+  const m = parts.length > 1 ? B.Mesh.MergeMeshes(parts, true, true, undefined, false, true)! : parts[0];
+  m.name = "toolTrolleyFold";
+  return m;
+}
+

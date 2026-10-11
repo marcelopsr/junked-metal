@@ -4,6 +4,7 @@ import { applyClimate, canvasTex, glow, lamp, LOOK, M, menuLights, pbr, setDof, 
 import { ambient } from "./fx";
 import { brick, canvasTexture, KIT, kitPut, M3C, wornMat, type KitId } from "./kit3d";
 import { showWorld } from "./world";
+import { benchViseFold } from "./folded_slice";
 
 // Escenas de los menús (no de la partida). Sistema de configuración:
 // - SETS: escenarios físicos (cuarto + utilería fija), armados la primera vez que se ven y lejos entre sí (solo uno encendido).
@@ -241,6 +242,10 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     ...pitStand(fDark, metal, M.rubber()),
     ...lipoCharger(fTeal, metal, fDark),
     ...siliconeOils(fYellow, fRed, metal),
+    // organizador escalonado de llaves Allen, comprobador de celdas LiPo y morsa de banco Folded
+    allenRack(metal, fDark),
+    cellMeter(fDark, metal),
+    place(benchViseFold(), [-28, 0, 10], [0, 0.55, 0]),
     // repuestos: dos ruedas, batería con bornes y cables, tornillos y tuercas, latas de pintura, destornillador suelto, taza enlozada
     place(wheel(2, 1, "#8a5a3a"), [6.5, 0.5, 6.5], [0, 0.4, Math.PI / 2]), place(wheel(2, 1, "#3a6b7c"), [8.6, 1.0, 4.4], [0, -0.3, 0]),
     box(3.6, 1.4, 1.7, fTeal, [-14, 0.7, 4.5]), box(3.65, 0.45, 1.75, fDark, [-14, 1.25, 4.5]),
@@ -260,7 +265,28 @@ function pitStand(fDark: B.Material, metal: B.Material, rubber: B.Material): B.M
     cyl(0.2, 0.2, 0.8, metal, [-0.5, 0.52, -0.2], [0, 0.4, Math.PI / 2], 6),
     cyl(1.4, 1.6, 2.2, metal, [0, 1.4, 0], undefined, 8),
     tor(1.8, 0.25, fDark, [0, 2.4, 0], undefined, 8),
+    // Arandela de teflón autolubricada y collar giratorio 360° en aluminio
+    cyl(2.4, 2.4, 0.08, M.plastic("#f8fafc"), [0, 2.48, 0], undefined, 12),
+    tor(2.2, 0.15, metal, [0, 2.52, 0], undefined, 12),
+    // Plato superior giratorio 360° en aluminio con marcas graduadas de alineación
     box(7.5, 0.3, 4.8, metal, [0, 2.65, 0]),
+    cyl(2.6, 2.6, 0.08, metal, [0, 2.76, 0], undefined, 16),
+    // Dial circular graduado con marcas de alineación 360° y cuadrantes
+    cyl(2.2, 2.2, 0.04, fDark, [0, 2.81, 0], undefined, 16),
+    box(0.1, 0.05, 0.45, metal, [0, 2.83, 0.85]),
+    box(0.1, 0.05, 0.45, metal, [0, 2.83, -0.85]),
+    box(0.45, 0.05, 0.1, metal, [0.85, 2.83, 0]),
+    box(0.45, 0.05, 0.1, metal, [-0.85, 2.83, 0]),
+    ...[Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4, (7 * Math.PI) / 4].map((a) =>
+      box(0.08, 0.05, 0.28, metal, [Math.cos(a) * 0.82, 2.83, Math.sin(a) * 0.82], [0, -a, 0])
+    ),
+    box(0.16, 0.06, 0.24, M.plastic("#ef4444"), [0, 2.83, 1.15]),
+    // Orificios calibrados de sujeción para purgado y mantenimiento de amortiguadores
+    cyl(0.7, 0.7, 0.06, fDark, [-2.6, 2.81, 0], undefined, 8),
+    cyl(0.7, 0.7, 0.06, fDark, [2.6, 2.81, 0], undefined, 8),
+    tor(0.78, 0.07, metal, [-2.6, 2.81, 0], undefined, 8),
+    tor(0.78, 0.07, metal, [2.6, 2.81, 0], undefined, 8),
+    // Tiras de goma antideslizante para posar chasis
     box(7.2, 0.15, 0.8, rubber, [0, 2.85, 1.8]),
     box(7.2, 0.15, 0.8, rubber, [0, 2.85, -1.8]),
   ];
@@ -269,6 +295,83 @@ function pitStand(fDark: B.Material, metal: B.Material, rubber: B.Material): B.M
   s.rotation.y = 0.25;
   return [s];
 }
+export function allenRack(metal: B.Material, fDark: B.Material): B.Mesh {
+  const anodized = M.metal("#0284c7");
+  const ringColors = ["#ef4444", "#eab308", "#3b82f6", "#18181b"]; // 1.5, 2.0, 2.5, 3.0 mm
+  const shaftDiameters = [0.12, 0.16, 0.2, 0.24];
+  const parts: B.Mesh[] = [
+    // Base escalonada CNC en aluminio anodizado azul
+    box(4.8, 0.3, 2.0, anodized, [0, 0.15, 0]),
+    box(4.9, 0.06, 2.1, anodized, [0, 0.03, 0]),
+  ];
+  for (let i = 0; i < 4; i++) {
+    const x = -1.65 + i * 1.1;
+    const hStep = 0.55 + i * 0.2;
+    // Bloque escalonado para cada destornillador
+    parts.push(
+      box(1.05, hStep, 1.8, anodized, [x, 0.3 + hStep / 2, 0]),
+      tor(0.7, 0.08, metal, [x, 0.3 + hStep + 0.02, 0], undefined, 8),
+      cyl(0.52, 0.52, 0.06, fDark, [x, 0.3 + hStep + 0.03, 0], undefined, 8)
+    );
+    const yHandleBottom = 0.3 + hStep + 0.05;
+    const dH = 0.74;
+    // Mango cilíndrico moleteado en aluminio con anillos de colores distintivos
+    parts.push(
+      cyl(0.52, dH, 0.3, metal, [x, yHandleBottom + 0.15, 0], undefined, 8),
+      cyl(dH, dH, 1.6, metal, [x, yHandleBottom + 1.1, 0], undefined, 10),
+      tor(dH * 0.96, 0.05, fDark, [x, yHandleBottom + 0.6, 0], undefined, 8),
+      tor(dH * 0.96, 0.05, fDark, [x, yHandleBottom + 0.95, 0], undefined, 8),
+      tor(dH * 0.96, 0.05, fDark, [x, yHandleBottom + 1.3, 0], undefined, 8),
+      tor(dH * 0.96, 0.05, fDark, [x, yHandleBottom + 1.65, 0], undefined, 8),
+      cyl(dH * 1.02, dH * 1.02, 0.26, M.plastic(ringColors[i]), [x, yHandleBottom + 1.95, 0], undefined, 8),
+      cyl(0.66, 0.72, 0.25, anodized, [x, yHandleBottom + 2.2, 0], undefined, 8),
+      sph(0.48, metal, [x, yHandleBottom + 2.35, 0])
+    );
+    // Vástago de acero templado pulido extendiéndose hacia abajo en el orificio calibrado
+    const dS = shaftDiameters[i];
+    parts.push(
+      cyl(dS, dS, hStep + 0.2, metal, [x, 0.3 + (hStep + 0.2) / 2, 0], undefined, 6)
+    );
+  }
+  const s = merge("allenRack", parts);
+  s.position.set(16, 0, -4.5);
+  s.rotation.y = -0.15;
+  return s;
+}
+export function cellMeter(fDark: B.Material, metal: B.Material): B.Mesh {
+  const poly = M.matte("#18181b");
+  const parts: B.Mesh[] = [
+    // Carcasa compacta de policarbonato mate
+    box(2.6, 0.42, 1.6, poly, [0, 0.21, 0]),
+    box(2.5, 0.06, 1.5, poly, [0, 0.43, 0]),
+    box(0.8, 0.02, 0.18, fDark, [-0.65, 0.47, 0.55]),
+    // 3 pulsadores táctiles frontales (Mode, Cell, Type)
+    cyl(0.22, 0.22, 0.08, metal, [0.3, 0.48, 0.55], undefined, 8),
+    cyl(0.22, 0.22, 0.08, metal, [0.65, 0.48, 0.55], undefined, 8),
+    cyl(0.22, 0.22, 0.08, metal, [1.0, 0.48, 0.55], undefined, 8),
+    // Pantalla LCD azul/cian reflectiva brillante con segmentos de lectura
+    box(1.7, 0.04, 0.85, fDark, [0, 0.46, -0.15]),
+    box(1.55, 0.03, 0.72, M.glow("#38bdf8"), [0, 0.48, -0.15]),
+    box(0.32, 0.04, 0.16, fDark, [-0.48, 0.5, -0.15]),
+    box(0.32, 0.04, 0.16, fDark, [-0.1, 0.5, -0.15]),
+    box(0.32, 0.04, 0.16, fDark, [0.28, 0.5, -0.15]),
+    box(1.1, 0.03, 0.06, fDark, [-0.05, 0.5, 0.12]),
+    box(0.45, 0.03, 0.08, fDark, [0.38, 0.5, -0.32]),
+    // Puerto de pines de balanceo multipin JST-XH en plástico blanco en el lateral
+    box(0.22, 0.28, 1.1, M.plastic("#f8fafc"), [1.32, 0.23, -0.1]),
+  ];
+  for (let p = 0; p < 7; p++) {
+    parts.push(
+      box(0.08, 0.08, 0.08, metal, [1.37, 0.23, -0.48 + p * 0.14]),
+      box(0.04, 0.12, 0.08, fDark, [1.41, 0.23, -0.48 + p * 0.14])
+    );
+  }
+  const s = merge("cellMeter", parts);
+  s.position.set(-10, 0, 4.2);
+  s.rotation.y = 0.35;
+  return s;
+}
+
 function lipoCharger(fTeal: B.Material, metal: B.Material, fDark: B.Material): B.Mesh[] {
   const parts = [
     box(5.2, 1.6, 3.6, fTeal, [0, 0.8, 0]),

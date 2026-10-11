@@ -509,26 +509,35 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.006, 0.006, 0.08, M.plastic("#18181b"), [-0.01, bh * 0.425, -bl * 0.18 - 0.04], [Math.PI / 2, 0, 0], 4)
       );
     }
-    if (kind === "buggy" || kind === "monster") {
+    if (kind === "buggy" || kind === "monster" || kind === "carrera") {
       parts.push(
         // Lata cilíndrica del motor 540 con ranura de ventilación
-        cyl(0.024, 0.024, 0.065, chrome, [-bw * 0.12, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 10),
-        cyl(0.022, 0.022, 0.015, M.metal("#18181b"), [-bw * 0.12, bh * 0.32, -bl * 0.28 + 0.02], [0, 0, Math.PI / 2], 8),
-        // Disipador clip-on de aluminio anodizado en azul con aletas radiales sobre la lata
-        cyl(0.028, 0.028, 0.045, M.metal("#2563eb"), [-bw * 0.12, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 10),
-        box(0.002, 0.038, 0.048, M.metal("#1d4ed8"), [-bw * 0.12 - 0.012, bh * 0.32, -bl * 0.28]),
-        box(0.002, 0.038, 0.048, M.metal("#1d4ed8"), [-bw * 0.12 - 0.004, bh * 0.32, -bl * 0.28]),
-        box(0.002, 0.038, 0.048, M.metal("#1d4ed8"), [-bw * 0.12 + 0.004, bh * 0.32, -bl * 0.28]),
-        box(0.002, 0.038, 0.048, M.metal("#1d4ed8"), [-bw * 0.12 + 0.012, bh * 0.32, -bl * 0.28]),
+        cyl(0.044, 0.044, 0.065, chrome, [0, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 10),
+        cyl(0.04, 0.04, 0.015, M.metal("#18181b"), [0, bh * 0.28, -bl * 0.22 + 0.02], [0, 0, Math.PI / 2], 8),
+        // Disipador térmico de aluminio anodizado azul envolviendo la carcasa con aletas de refrigeración radiales
+        cyl(0.048, 0.048, 0.065, M.metal("#0284c7"), [0, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 12),
+        // 3 aletas anulares concéntricas de disipación térmica
+        tor(0.052, 0.003, M.metal("#0284c7"), [-0.018, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 10),
+        tor(0.052, 0.003, M.metal("#0284c7"), [0, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 10),
+        tor(0.052, 0.003, M.metal("#0284c7"), [0.018, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 10),
+        // Placa soporte de motor en aluminio CNC con ranuras colisas para ajuste micrométrico de entrehierro piñón-corona
+        box(0.005, 0.062, 0.054, M.metal("#0284c7"), [0.035, bh * 0.28, -bl * 0.22]),
+        box(0.006, 0.006, 0.018, M.metal("#0f172a"), [0.035, bh * 0.28 + 0.014, -bl * 0.22]),
+        box(0.006, 0.006, 0.018, M.metal("#0f172a"), [0.035, bh * 0.28 - 0.014, -bl * 0.22]),
+        // Dos tornillos Allen M3 de fijación de motor
+        cyl(0.006, 0.006, 0.006, chrome, [0.038, bh * 0.28 + 0.014, -bl * 0.22], [0, 0, Math.PI / 2], 6),
+        cyl(0.006, 0.006, 0.006, chrome, [0.038, bh * 0.28 - 0.014, -bl * 0.22], [0, 0, Math.PI / 2], 6),
         // Piñón dentado de bronce en eje de salida
-        cyl(0.014, 0.014, 0.012, M.metal("#d97706"), [-bw * 0.12 + 0.038, bh * 0.32, -bl * 0.28], [0, 0, Math.PI / 2], 8),
+        cyl(0.014, 0.014, 0.012, M.metal("#d97706"), [0.042, bh * 0.28, -bl * 0.22], [0, 0, Math.PI / 2], 8),
         // Cables de potencia flexibles ESC-Motor
-        cyl(0.005, 0.005, 0.07, M.plastic("#ef4444"), [-bw * 0.08, bh * 0.38, -bl * 0.23], [0.4, 0, 0.3], 4),
-        cyl(0.005, 0.005, 0.07, M.plastic("#2563eb"), [-bw * 0.08, bh * 0.36, -bl * 0.23], [0.4, 0, -0.3], 4),
+        cyl(0.005, 0.005, 0.07, M.plastic("#ef4444"), [0.015, bh * 0.33, -bl * 0.22 + 0.025], [0.4, 0, 0.3], 4),
+        cyl(0.005, 0.005, 0.07, M.plastic("#2563eb"), [-0.015, bh * 0.33, -bl * 0.22 + 0.025], [0.4, 0, -0.3], 4),
         // Condensadores cerámicos de supresión de interferencia RF soldados a la lata
-        box(0.006, 0.006, 0.003, M.plastic("#eab308"), [-bw * 0.12, bh * 0.34, -bl * 0.26]),
-        box(0.006, 0.006, 0.003, M.plastic("#eab308"), [-bw * 0.12, bh * 0.30, -bl * 0.26])
+        box(0.006, 0.006, 0.003, M.plastic("#eab308"), [0, bh * 0.31, -bl * 0.22 + 0.025]),
+        box(0.006, 0.006, 0.003, M.plastic("#eab308"), [0, bh * 0.25, -bl * 0.22 + 0.025])
       );
+    }
+    if (kind === "buggy" || kind === "monster") {
       // Amortiguadores helicoidales de competición con muelles y collarines de precarga
       for (const sx of [-bw * 0.36, bw * 0.36]) {
         parts.push(
@@ -593,6 +602,21 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.008, 0.008, 0.01, M.plastic("#18181b"), [0, bh * 0.25, bl * 0.36]),
         box(0.004, 0.004, 0.022, M.plastic("#f8fafc"), [0, bh * 0.26, bl * 0.37], [0, 0.2, 0])
       );
+      // Soporte inferior del chasis / bancada de mantenimiento: orificios de centrado mecanizados y almohadillas magnéticas para Pit Stand
+      const bellyY = kind === "buggy" ? -0.028 : 0.002;
+      for (const pz of [-bl * 0.24, bl * 0.24]) {
+        parts.push(
+          // Almohadilla magnética de apoyo en la panza plana del chasis que encaja sobre el Pit Stand de taller
+          box(bw * 0.26, 0.004, 0.065, M.metal("#475569"), [0, bellyY, pz]),
+          // Orificio de centrado mecanizado cónico para espiga de la bancada de boxes
+          cyl(0.018, 0.012, 0.006, M.metal("#09090b"), [0, bellyY, pz], [0, 0, 0], 8),
+          // Chaflán biselado perimetral del orificio en acero brillante
+          tor(0.022, 0.002, chrome, [0, bellyY - 0.001, pz], [0, 0, 0], 8),
+          // Insertos magnéticos laterales de fijación rápida
+          cyl(0.008, 0.008, 0.005, M.metal("#94a3b8"), [-bw * 0.09, bellyY, pz], [0, 0, 0], 6),
+          cyl(0.008, 0.008, 0.005, M.metal("#94a3b8"), [bw * 0.09, bellyY, pz], [0, 0, 0], 6)
+        );
+      }
     }
     if (kind === "buggy" || kind === "monster" || kind === "formula") {
       // Palieres de transmisión telescópicos articulados (CVDs) desde el diferencial a cada buje de rueda trasera
