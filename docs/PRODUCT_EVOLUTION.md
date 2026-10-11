@@ -1191,8 +1191,37 @@ Decisión del usuario: Ejecutar en paralelo las 4 propuestas creativas seleccion
    - `npm run build`: bundle de producción generado en 884 ms.
    - `graphify update .`: grafo de conocimiento actualizado (4072 nodos, 9824 aristas).
 
+## 2026-10-11 · Infraestructura Reactiva: Streaming WebSocket, Control Instantáneo y Eliminación de Esperas Ciegas en ComfyUI
 
+Decisión del usuario: Configurar scripts para eliminar esperas manuales, tiempos muertos y sleeps ineficientes en tareas de ComfyUI y herramientas del entorno, incorporando indicadores en tiempo real y respuestas inmediatas.
 
+1. **Generador Reactivo con Streaming por WebSocket (`scripts/creative-gen.mjs`):**
+   - **Streaming en tiempo real (`ws://127.0.0.1:8188/ws`):** Conexión nativa por WebSocket que elimina los sondeos ciegos HTTP (`setTimeout(2000)` / `setTimeout(4000)`).
+   - **Indicadores interactivos de progreso:** Barra de progreso paso a paso en consola (`Paso X/24 [=========> ] Y%`), velocidad de muestreo (`s/it`) y tiempo restante estimado (`ETA`), junto con identificación de fases (`Cargando Checkpoint`, `CLIP`, `Latente`, `KSampler`, `VAE`, `Guardando Imagen`).
+   - **Detección instantánea de fallos:** Los eventos `execution_error` se capturan en `<1s`, abortando y mostrando el traceback exacto sin aguardar timeouts de 300 segundos.
+   - **Modo Asíncrono no bloqueante (`--async` / `--detach`):** Despacha el grafo a ComfyUI y retorna en `<150ms` con el Prompt ID, posición en cola y tiempo estimado, permitiendo continuar otras tareas de código o documentación sin bloquear el hilo ni arriesgar timeouts de herramientas.
+   - **Modo de Seguimiento en Vuelo (`--watch [prompt_id]`):** Permite reconectarse a cualquier trabajo en progreso y proyectar su telemetría en vivo hasta la descarga y conversión a WebP.
+   - **Auto-Inicio Resiliente (`--auto-start`):** Si ComfyUI está inactivo, arranca el servidor en segundo plano mediante `start.command` con sondeo rápido a 300 ms hasta estar listo.
 
+2. **Herramienta de Control y Diagnóstico Instantáneo (`scripts/comfy-status.mjs`):**
+   - **Diagnóstico en `<50ms` (`npm run creative:status`):** Informa estado del servidor, versión, Python, disponibilidad de Metal/MPS, VRAM libre/total, RAM del sistema, estado de cola y los últimos trabajos completados con sus imágenes.
+   - **Liberación de Memoria VRAM (`npm run creative:free`):** Vacía la caché de VRAM en Metal sin reiniciar el proceso.
+   - **Cancelación y Purga de Cola (`npm run creative:cancel`):** Interrumpe trabajos en ejecución y limpia la cola pendiente.
+   - **Comandos de ciclo de vida (`npm run creative:start` / `npm run creative:stop`).**
+   - **Modo Machine-Readable (`--json`):** Salida estructurada para verificación programática por agentes.
 
+3. **Optimización de Sondeo en Servidor de Pruebas (`scripts/lib/browser.mjs`):**
+   - Reducido el intervalo de sondeo de arranque de `rc-test` de 1000 ms a 400 ms con indicador de progreso visual en `process.stderr`, recortando los tiempos muertos de espera a más de la mitad.
 
+4. **Integración en `package.json` y Documentación de Skills:**
+   - Nuevos scripts de acceso directo: `creative:status`, `creative:watch`, `creative:free`, `creative:cancel`, `creative:start`, `creative:stop`, `creative:gen`.
+   - Actualizado `.agents/skills/creative-stack/SKILL.md` con el nuevo flujo canónico.
+
+5. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado.
+   - `npm test`: 81/81 tests unitarios pasando al 100% (10 suites).
+   - Pruebas reales en vivo de generación:
+     - Modo `--detach`: encolado instantáneo en 130 ms.
+     - Modo sincrónico: streaming WebSocket completo con barra de progreso, 4 pasos completados en 4.4 s con metadatos `.meta.json`.
+     - Liberación de VRAM: recuperación comprobada de 5.1 GB a 13.6 GB libres con `npm run creative:free`.
+   - Grafo de conocimiento actualizado con `graphify update .`.
