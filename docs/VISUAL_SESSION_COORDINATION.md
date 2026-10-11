@@ -58,6 +58,8 @@ Gemini puede aplicar estos recursos o producir variantes de forma autónoma dent
 
 **Ambientación elegida y producida — v1:** `assets-src/environment-library/v1/` complementa las superficies con cuatro imágenes RGBA independientes: aceite, huellas de neumáticos, hojas y pequeños restos. PNG 1254 × 1254, WebP con alpha exacto, prompts, catálogo, guía y galería de composición sobre tres suelos. Leer su `HANDOFF.md` para el cierre y las pruebas. Son recursos planos disponibles, no efectos físicos ni integración en partidas. Cualquier sesión autorizada puede aportar variantes o aprovecharlos.
 
+**Utilería voxel MagicaVoxel — v1 (2026-10-10):** `assets-src/magicavoxel/v1/` contiene 15 fuentes `.vox` en cinco familias y tres semillas, además de cinco GLB representativos con textura embebida exportados desde MagicaVoxel y convertidos con Blender. Se abrieron e inspeccionaron las familias en MagicaVoxel; verificador local confirma formato y mallas. Biblioteca disponible para cualquier sesión; no está integrada a las partidas ni publicada. Ver `assets-src/magicavoxel/v1/README.md` para conversión y límites.
+
 ## Prompt listo para Gemini
 
 ```text
