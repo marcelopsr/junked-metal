@@ -984,3 +984,23 @@ Se diseñó e implementó el pipeline de reducción geométrica rig-safe en Blen
    - Capturas de evidencia: `preview-horde-50.png`, `preview-horde-100.png`.
    - Handoff técnico: `assets-src/cinematic-3d/gemini-performance/HANDOFF.md`.
 
+
+## 2026-10-10 · Banco Cinemático Maestro 3D y Ensamblaje Completo (Gemini Orquestador)
+
+Culminación del ensamblaje del banco cinemático 3D (`art-lab.html`, `src/art_lab.ts`, `assets-src/cinematic-3d/`) integrando todos los modelos PBR de alta fidelidad desarrollados por los especialistas:
+1. **Modelos 3D y Rigs Completos:**
+   - **Frenchie (`frenchie.glb` · 3.4 MB, 57.5k tris):** Esculpido anatómico con orejas de murciélago erguidas, stop nasal a 90°, belfos caídos, mancha marfil visible en el pecho, ojos ámbar volumétricos, 4 dedos/garras por pata y los 7 clips de `PerroRig` preservados con matrices finitas.
+   - **Buggy RC (`buggy.glb` · 4.3 MB, 115k tris):** Chasis de chatarra industrial con paneles remachados, pintura amarilla gastada, coilovers 3D con muelles helicoidales, piloto soldadito con casco y 4 ruedas independientes con tacos crawler (`Wheel_*`).
+   - **Eulalio (`eulalio.glb` · 3.6 MB, 58.5k tris):** Gato atigrado ginger tabby, ojos chartreuse de mirada condescendiente a medio cerrar, mechones en mejillas y pecho, calcetines blancos, 4 garras retráctiles por pata y los 8 clips de `GatoRig` intactos con matrices 100% finitas.
+   - **Entorno del Patio:** `vegetation.glb` (matas curvas orgánicas), `fence_boundary.glb` (cercas con cuerda de seguridad naranja), `patio_lights.glb` (catenaria Edison ST64) y `ground_terrain.glb` (tierra compactada con marcas de neumáticos).
+2. **Interactividad y Composición Master:**
+   - Selector dinámico de actores (`Frenchie`, `Eulalio`, `Dúo`).
+   - Iluminación física conmutables (`Noche` con lámpara y faros del buggy / `Día` con sol directo).
+   - Cámaras configuradas (`Primer Plano`, `Juego`, `Órbita 360°`).
+3. **Verificación Cuantitativa Automatizada (`scripts/cinematic-check.mjs`):**
+   - Ejecutado en Chromium headless con GPU Apple M4 Pro (Metal) contra servidor pm2 `rc-test` (:5174).
+   - PC 1280×720: 2.89M tris, 211 draw calls, 4 ruedas detectadas, 7 clips verificados con matrices finitas en todos los fotogramas, 0 errores de consola, 0 desbordamiento.
+   - Celular 390×844: 1.10M tris, 152 draw calls, 4 ruedas, 7 clips.
+   - Evidencia capturada: `preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png`, `verification.json` y video orbital completo `orbit-preview.mp4` (8 s, 12 fps, H.264).
+
+
