@@ -1225,3 +1225,34 @@ Decisión del usuario: Configurar scripts para eliminar esperas manuales, tiempo
      - Modo sincrónico: streaming WebSocket completo con barra de progreso, 4 pasos completados en 4.4 s con metadatos `.meta.json`.
      - Liberación de VRAM: recuperación comprobada de 5.1 GB a 13.6 GB libres con `npm run creative:free`.
    - Grafo de conocimiento actualizado con `graphify update .`.
+
+## 2026-10-11 · Cola de Procesamiento por Lotes en Segundo Plano (Batch Queue) para Variantes de Assets
+
+Decisión del usuario: Integrar una cola automática de procesamiento por lotes (`batch queue`) para despachar múltiples variantes de assets en segundo plano sin bloqueos, con telemetría interactiva y purga de VRAM.
+
+1. **Gestor de Lotes Creativo (`scripts/creative-batch.mjs`):**
+   - **Despacho secuencial ordenado:** Procesa un trabajo pesado a la vez en Metal/MPS de forma FIFO, respetando los límites de hardware sin competir por la GPU ni saturar la memoria compartida.
+   - **Múltiples formatos de entrada:**
+     - Archivo plan JSON (`--file batch.json`): permite definir defaults comunes y listas detalladas de tareas con prompts, semillas y rutas destino personalizadas.
+     - Matriz de semillas rápida (`--prompt "..." --seeds 101,102,103,104 --out-pattern "public/.../asset_{seed}.webp"`): genera variantes deterministas directas por CLI.
+     - Lista de prompts secuencial (`--prompts "p1; p2; p3" --out-pattern "public/.../asset_{index}.webp"`).
+   - **Modo en Segundo Plano no bloqueante (`--detach` / `--daemon`):** Lanza el proceso hijo desvinculado en `<150ms`, redirige logs a `logs/creative-batch.log` y mantiene el estado persistente en `logs/creative-batch-state.json`.
+   - **Telemetría y Control en Tiempo Real:**
+     - `npm run creative:batch:status`: consulta instantánea (`<50ms`) que detalla progreso del lote (ej. 3/8 completados), ítem actual en curso, paso de muestreo (14/24), ETA del ítem, tiempo transcurrido y ETA total del lote.
+     - `npm run creative:batch:watch`: dashboard interactivo de consola con barras de progreso en vivo.
+     - `npm run creative:batch:cancel`: detención segura del proceso hijo, interrupción de tareas activas en ComfyUI y purga inmediata de la cola.
+   - **Mantenimiento Autónomo de VRAM:** Monitorea la memoria GPU entre trabajos y ejecuta `/free` automáticamente si la VRAM libre desciende de 4.0 GB.
+   - **Resiliencia ante errores:** Si un ítem falla, registra el error y prosigue con los siguientes, generando un reporte final consolidado en `logs/<batch_id>-results.json`.
+
+2. **Integración en `package.json` y Documentación:**
+   - Comandos: `creative:batch`, `creative:batch:status`, `creative:batch:watch`, `creative:batch:cancel`.
+   - Documentación canónica agregada a `.agents/skills/creative-stack/SKILL.md`.
+
+3. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado.
+   - `npm test`: 81/81 tests unitarios pasando al 100%.
+   - `npm run build`: compilación limpia en 861 ms.
+   - Prueba de lote interactivo (2 ítems, semillas 111 y 222): completado en 25 s con purga de VRAM validada.
+   - Prueba de lote detached (PID 78378): ejecución en segundo plano y verificación en tiempo real con `creative:batch:status`.
+   - Prueba de cancelación: `creative:batch:cancel` interrumpió el proceso en segundo plano, limpió la cola en ComfyUI y actualizó el estado a `CANCELLED` de inmediato.
+   - `graphify update .`: grafo de conocimiento sincronizado (4124 nodos, 9942 aristas).
