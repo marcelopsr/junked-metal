@@ -1,0 +1,8 @@
+Use case: photorealistic-natural-scrap.
+Asset type: a single reusable game material BASE COLOR / ALBEDO texture for Junked Metal, NOT a concept image, NOT a texture atlas or labelled sheet.
+Create one square texture at native 1024x1024 detail, orthographic flat view directly perpendicular to the ground surface, edge to edge with no frame. Material occupies every pixel.
+Lighting: diffuse uniform neutral illumination, flat ambient lighting, no directional light, no cast shadows, no vignette, no specular reflections baked into shapes.
+Natural gritty surface with calm large-scale value variation so repeated gameplay surfaces remain readable; preserve the stylized cinematic backyard world.
+Tileability is a production intent: match opposite edges; continuous small patterns across boundaries, no distinctive giant centre feature.
+No text, labels, logos, border, UI, collage, room, camera view, character or 3D preview sphere.
+Primary subject: Dry compacted backyard earth and clay ground surface peppered with tiny weathered scrap metal debris: small rusty steel washers, oxidized wire fragments, tiny nuts, fine gravel and coarse sand, subtle miniature RC tire tracks impressed into dry dirt. Rich gritty tactile realism for an RC combat arena, calm value distribution across the entire frame.

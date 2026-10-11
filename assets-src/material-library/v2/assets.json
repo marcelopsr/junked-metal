@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "date": "2026-10-11",
+  "generator": "ComfyUI SDXL Base 1.0 (local Apple Silicon Metal/MPS)",
+  "reference": "../v1/reference-earth.png",
+  "assets": [
+    {
+      "id": "09-scrap-earth",
+      "name": "Tierra con chatarra y marcas RC",
+      "uses": [
+        "Suelo del patio en el banco cinemático 3D",
+        "Terreno principal de arena para combate RC y supervivencia"
+      ],
+      "repeatMeters": 2.5,
+      "roughness": 0.94,
+      "metallic": 0.05,
+      "source": "sources/09-scrap-earth.png",
+      "texture": "textures/09-scrap-earth.webp",
+      "prompt": "prompts/09-scrap-earth.txt",
+      "metadata": "textures/09-scrap-earth.meta.json",
+      "width": 1024,
+      "height": 1024,
+      "sourceBytes": 2073999,
+      "textureBytes": 267428,
+      "sourceSha256": "e4b5311054b5fbea5c3b71da95f0150392118411c6d9c6c10bc88fe2b7aff08d",
+      "colorSpace": "sRGB",
+      "maps": {
+        "albedo": "textures/09-scrap-earth.webp",
+        "normal": null,
+        "orm": null
+      },
+      "status": "integrated-art-lab",
+      "tileability": "uniform diffuse, low focal variation; suitable for 3D ground tile"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt": "orthographic flat top-down ground texture, dry compacted backyard earth and reddish-brown clay with scattered miniature scrap metal debris, small rusty steel washers, tiny oxidized nuts, fine gravel, subtle miniature RC tire tracks impressed into dry dirt, flat diffuse uniform lighting, no shadows, no vignette, seamless game material albedo",
+  "negative": "text, letters, watermark, logo, signature, words, directional shadows, sunlight, bright highlights, 3d sphere, balls, perspective view, horizon, border, frame, vignette, cartoon, blurry, low resolution, giant rocks, modern asphalt",
+  "seed": 20261011,
+  "steps": 28,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 1024,
+  "height": 1024,
+  "date": "2026-10-11T16:16:29.228Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/materials/scrap_earth_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/material-library/v2/textures/09-scrap-earth.webp"
+}

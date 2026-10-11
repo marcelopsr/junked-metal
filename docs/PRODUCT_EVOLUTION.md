@@ -1084,4 +1084,36 @@ Decisión del usuario: Configurar y usar el stack creativo local de la Mac como 
    - `npm run test:restart` y `npm run shots -- --only creditos`: capturas `pc-menu-creditos` y `cel-menu-creditos` ejecutadas en Chromium headless Metal en 20.6 s, verificadas visualmente en `.shots/actual/`, sin desbordamiento ni errores de consola.
    - Grafo de conocimiento actualizado con `graphify update .`.
 
+## 2026-10-11 · Producción de Superficie PBR Terreno/Chatarra con ComfyUI (SDXL + Metal/MPS), Biblioteca v2 e Integración en Banco Cinemático 3D
+
+Decisión del usuario: Generar texturas PBR y albedos de terreno/chatarra para ampliar la biblioteca de superficies (`assets-src/material-library/`) y aplicarlas al suelo del patio en el banco cinemático 3D (`src/art_lab.ts` / `art-lab.html`).
+
+1. **Producción de Textura con ComfyUI Local (Metal/MPS):**
+   - **`09-scrap-earth` (Tierra con chatarra y marcas RC):** Albedo ortográfico cenital 1024×1024 con iluminación difusa plana, libre de sombras proyectadas o viñeteado. Representa suelo de tierra compactada con gravilla fina, arcilla rojiza, diminutos trozos de arandelas oxidadas, virutas de chatarra y sutiles rodadas de neumáticos RC.
+   - **Parámetros reproducibles:** Semilla `20261011`, 28 pasos, sampler `dpmpp_2m`, scheduler `karras`, CFG `7.0`, modelo `sd_xl_base_1.0.safetensors` sobre GPU Metal/MPS en Apple M4 Pro (24 GB RAM unificada).
+   - **Archivos generados:**
+     - Fuente PNG en alta resolución: `assets-src/material-library/v2/sources/09-scrap-earth.png` (2.073.999 bytes).
+     - Textura WebP optimizada: `assets-src/material-library/v2/textures/09-scrap-earth.webp` (267.428 bytes, PSNR 41.17 dB).
+     - Metadatos adjuntos: `assets-src/material-library/v2/textures/09-scrap-earth.meta.json`.
+     - Asset de runtime web: `public/textures/09-scrap-earth.webp`.
+
+2. **Ampliación de la Biblioteca de Materiales (`assets-src/material-library/v2/`):**
+   - Catálogo formal `assets.json` versión 2 con hashes SHA-256, dimensiones, ratios de compresión, parámetros PBR recomendados (`roughness = 0.94`, `metallic = 0.05`), usos y estado `integrated-art-lab`.
+   - Documentación y guía de aplicación en `assets-src/material-library/v2/README.md`.
+   - Prompt de producción preservado en `assets-src/material-library/v2/prompts/09-scrap-earth.txt`.
+
+3. **Integración en el Banco Cinemático 3D (`src/art_lab.ts`, `art-lab.html`):**
+   - Textura `09-scrap-earth.webp` mapeada con repetición UV a 7x en el material PBR del suelo (`M_Ground_CompactedTracks` sobre `Ground_ArenaSection_Mesh`), con rugosidad calibrada a 0.94 y respuesta física bajo sombras diurnas y faros del buggy.
+   - Selector interactivo de superficie en la barra de control (`nav[aria-label="Evaluación visual"]`): botones `Chatarra` (nueva textura SDXL v2), `Tierra` (albedo de tierra compactada v1) y `Original` (textura embebida en GLB), con estilos `--jm-*`, `Rajdhani` y `aria-pressed`.
+   - Soporte programático en la API de pruebas `__art({ surface: 'scrap' | 'earth' | 'base' })` y reporte en `__artInfo()`.
+
+4. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado TypeScript.
+   - `node scripts/cinematic-check.mjs`: suite completa en PC (1280×720, 211 draws, 15.5 ms mediana) y móvil (390×844, 152 draws, 6.6 ms mediana) sobre Chromium headless acelerado por GPU Metal. 0 errores de consola, 0 desbordamiento horizontal.
+   - Capturas visuales inspeccionadas: `.shots/cinematic-3d/pc-night-close.png`, `pc-day-game.png`, `cel-night-close.png` con iluminación nocturna (lámpara y faros del buggy) y diurna (sol cenital).
+   - `npm test`: 81/81 pruebas unitarias pasando en 10 archivos de test.
+   - `npm run build`: bundle de producción generado en 564 ms.
+   - `graphify update .`: grafo de conocimiento sincronizado (4063 nodos, 9786 aristas).
+
+
 

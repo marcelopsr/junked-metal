@@ -121,6 +121,7 @@ pipeline.bloomKernel = 32;
 let lighting: 'day' | 'night' = 'night';
 let view: 'close' | 'game' | 'orbit' = 'close';
 let actor: 'frenchie' | 'eulalio' | 'both' = 'frenchie';
+let surfaceMode: 'scrap' | 'earth' | 'base' = 'scrap';
 let animated = true;
 let time = 0;
 
@@ -343,6 +344,46 @@ try {
     if (m.getTotalVertices() > 0) cast(m);
   }
 
+  // Material de terreno y aplicación de albedos (biblioteca de materiales v2 y v1)
+  const groundMat = (groundAsset.materials.find(m => m.name === 'M_Ground_CompactedTracks') || groundAsset.materials[0]) as B.PBRMaterial | undefined;
+  const origGroundAlbedo = groundMat?.albedoTexture ?? null;
+  const origRoughness = groundMat?.roughness ?? 0.92;
+  const origMetallic = groundMat?.metallic ?? 0.0;
+
+  const scrapTexture = new B.Texture('./textures/09-scrap-earth.webp', scene);
+  scrapTexture.uScale = 7;
+  scrapTexture.vScale = 7;
+  scrapTexture.wrapU = B.Constants.TEXTURE_WRAP_ADDRESSMODE;
+  scrapTexture.wrapV = B.Constants.TEXTURE_WRAP_ADDRESSMODE;
+
+  const earthTexture = new B.Texture('assets-src/material-library/v1/textures/01-compacted-earth.webp', scene);
+  earthTexture.uScale = 7;
+  earthTexture.vScale = 7;
+  earthTexture.wrapU = B.Constants.TEXTURE_WRAP_ADDRESSMODE;
+  earthTexture.wrapV = B.Constants.TEXTURE_WRAP_ADDRESSMODE;
+
+  function applySurface(mode: typeof surfaceMode) {
+    surfaceMode = mode;
+    if (!groundMat) return;
+    if (mode === 'scrap') {
+      groundMat.albedoTexture = scrapTexture;
+      groundMat.roughness = 0.94;
+      groundMat.metallic = 0.05;
+    } else if (mode === 'earth') {
+      groundMat.albedoTexture = earthTexture;
+      groundMat.roughness = 0.97;
+      groundMat.metallic = 0.0;
+    } else {
+      groundMat.albedoTexture = origGroundAlbedo;
+      groundMat.roughness = origRoughness;
+      groundMat.metallic = origMetallic;
+    }
+    for (const el of document.querySelectorAll<HTMLButtonElement>('[data-surface]')) {
+      el.setAttribute('aria-pressed', String(el.dataset.surface === mode));
+    }
+  }
+  applySurface('scrap');
+
   // Instanciación de matas orgánicas de pasto (thin instances) con corredor visual despejado
   const fineGrass = scene.getMeshByName('GrassTuft_Fine') as B.Mesh | null;
   const broadGrass = scene.getMeshByName('GrassTuft_Broad') as B.Mesh | null;
@@ -427,6 +468,7 @@ try {
     actor,
     animated,
     time,
+    surface: surfaceMode,
     meshes: scene.meshes.length,
     triangles: scene.getActiveIndices() / 3,
     clips: dog.animationGroups.map(a => a.name),
@@ -440,7 +482,8 @@ try {
   await scene.whenReadyAsync();
 
   Object.assign(window, {
-    __art: (opts: { light?: typeof lighting; view?: typeof view; yaw?: number; animated?: boolean; time?: number; clip?: string; actor?: typeof actor }) => {
+    __art: (opts: { light?: typeof lighting; view?: typeof view; yaw?: number; animated?: boolean; time?: number; clip?: string; actor?: typeof actor; surface?: typeof surfaceMode }) => {
+      if (opts.surface) applySurface(opts.surface);
       if (opts.actor) updateActors(opts.actor);
       if (opts.clip) {
         if (actor === 'eulalio') {
@@ -479,6 +522,9 @@ try {
   }
   for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-actor]')) {
     btn.onclick = () => updateActors(btn.dataset.actor as typeof actor);
+  }
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-surface]')) {
+    btn.onclick = () => applySurface(btn.dataset.surface as typeof surfaceMode);
   }
   document.querySelector<HTMLButtonElement>('#art-motion')!.onclick = e => {
     animated = !animated;
