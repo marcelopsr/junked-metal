@@ -966,7 +966,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     const onWing = kind !== "monster" && (o.wing === "alto" || o.wing === "doble"); // plato del alerón: top = el mismo de arriba, +0,033 = medio grosor y holgura
     const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : SPOT[kind];
     const isHd = o.sticker in GARAGE_DECALS;
-    const mat = pbr("calco" + o.sticker, { color: "#ffffff", rough: isHd ? GARAGE_DECALS[o.sticker as GarageDecalId].name ? 0.45 : 0.4 : 0.4 });
+    const mat = pbr("calco" + o.sticker, { color: "#ffffff", rough: isHd ? 0.45 : 0.4 });
     if (!mat.albedoTexture) {
       if (isHd) {
         const tex = new B.Texture(GARAGE_DECALS[o.sticker as GarageDecalId].src, scene);
