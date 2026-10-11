@@ -21,6 +21,10 @@ const Y = B.Vector3.Up();
 // ---------- Superficie: lomas suaves + cráteres/montículos (fijos del mundo y los de la partida) ----------
 type Dent = { d: B.Vector3; r: number; depth: number; cos: number; k: number; fade: number };
 const fixed: Dent[] = [], dents: Dent[] = [];
+// Rocas grandes con colisionador estático: siguen las deformaciones (remesh las reapoya y mueve su cuerpo con teleport)
+type Rock = { m: B.InstancedMesh; d: B.Vector3; sz: number; body: B.PhysicsBody };
+const rocks: Rock[] = [], _rk = new B.Vector3();
+const seat = (k: Rock) => k.m.position.copyFrom(k.d).scaleInPlace(radiusAt(k.d) + k.sz * 0.12).addInPlace(CENTER);
 export const DENT_CAP = 40; // deformaciones de la partida; pasado el tope, la más vieja se alisa en 3 s
 const mkDent = (d: B.Vector3, r: number, depth: number): Dent => ({ d, r, depth, cos: Math.cos(Math.min(Math.PI, (r * 1.7) / MOON.R)), k: 1, fade: 0 });
 function bump(dn: Dent, c: number) {
@@ -59,7 +63,14 @@ export function surfaceAt(p: B.Vector3, out = { pos: new B.Vector3(), normal: ne
 /** Hueco entre la base de algo (su origen menos foot) y el piso, y qué tan plano es el piso (ny = 1 plano). Lo usa drive() del auto. */
 export function groundGap(p: B.Vector3, foot: number) {
   const d = p.subtract(CENTER), r = d.length(); d.scaleInPlace(1 / r);
-  return { gap: r - foot - radiusAt(d), ny: B.Vector3.Dot(normalAt(d), d) };
+  let gap = r - foot - radiusAt(d), ny = B.Vector3.Dot(normalAt(d), d);
+  for (const k of rocks) { // arriba de una roca grande también es piso (su colisionador es una esfera de radio sz/2)
+    p.subtractToRef(k.m.position, _rk);
+    if (B.Vector3.Dot(_rk, d) <= 0) continue;
+    const g = _rk.length() - k.sz * 0.5 - foot;
+    if (g < gap) { gap = g; ny = 1; }
+  }
+  return { gap, ny };
 }
 /** Altura de p sobre el piso (m). */
 export const alt = (p: B.Vector3) => B.Vector3.Distance(p, CENTER) - radiusAt(dirOf(p));
@@ -166,6 +177,8 @@ export function ringAt(center: B.Vector3, a: number, r: number, lift = 1) { retu
 // ---------- Física: gravedad radial y piso analítico para cada cuerpo dinámico ----------
 /** Distancia del origen del cuerpo a su base (auto: medio alto; bichos: 0, su origen está en las patas; pelota: el radio). */
 export const FOOT = new WeakMap<B.PhysicsBody, number>();
+/** Cuerpos que ruedan (pelota gigante): no se enderezan a la vertical y en el piso giran según su velocidad (ω = n × v / radio). */
+export const ROLL = new WeakSet<B.PhysicsBody>();
 let carBody: B.PhysicsBody | null = null;
 const carUp = new B.Vector3(0, 1, 0);
 /** El cuerpo del auto se alinea a la normal del piso (rampas, bordes de cráter); el resto, a la vertical. */
@@ -212,7 +225,9 @@ export function initMoon(scene: B.Scene) {
         const vn = B.Vector3.Dot(_v, _n);
         if (vn < 0) { _v.subtractInPlace(_p.copyFrom(_n).scaleInPlace(vn)); b.setLinearVelocity(_v); } // sin rebote ni roce: se pierde solo lo que iba contra el piso (drive() y la IA ponen el resto)
         if (isCar) B.Vector3.LerpToRef(carUp, _n, Math.min(1, 12 * dd), carUp).normalize();
+        if (ROLL.has(b)) b.setAngularVelocity(B.Vector3.CrossToRef(_n, _v, _p).scaleInPlace(1 / (FOOT.get(b) || 1))); // rueda sin patinar
       } else if (isCar) B.Vector3.LerpToRef(carUp, _u, Math.min(1, 4 * dd), carUp).normalize();
+      if (ROLL.has(b)) { teleport(b); continue; } // la pelota conserva su giro
       // Parado sobre la luna: la vertical del cuerpo va a la del lugar (auto: a la del piso); el rumbo se conserva
       const q = (node.rotationQuaternion ??= B.Quaternion.FromEulerVector(node.rotation));
       Y.rotateByQuaternionToRef(q, _cu);
@@ -267,6 +282,7 @@ function remesh(dn: Dent) {
     f.m.updateVerticesData(B.VertexBuffer.PositionKind, f.pos); f.m.updateVerticesData(B.VertexBuffer.NormalKind, f.nor); f.m.updateVerticesData(B.VertexBuffer.ColorKind, f.col);
     f.m.refreshBoundingInfo();
   }
+  for (const k of rocks) if (B.Vector3.Dot(k.d, dn.d) >= dn.cos) { seat(k); teleport(k.body); }
 }
 /** Deforma la luna en el punto p: cráter (depth > 0) o montículo (depth < 0) de radio r (m). Permanente en la partida (tope DENT_CAP). */
 export function deform(p: B.Vector3, r: number, depth: number) {
@@ -287,7 +303,7 @@ let earth: B.Mesh;
 /** Arma la luna (lo fijo, con la semilla del mundo): esfera de 6 caras, cráteres, rocas, estrellas, Tierra y Sol. */
 export function moonBuild(s: B.Scene, low: boolean) {
   scene = s;
-  fixed.length = 0; dents.length = 0; faces.length = 0;
+  fixed.length = 0; dents.length = 0; faces.length = 0; rocks.length = 0;
   // Cráteres fijos: ninguno a menos de 16 m de la salida; grandes pocos, chicos muchos
   for (let i = 0; i < 72; i++) {
     const d = new B.Vector3(rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1).normalize(), big = i < 10;
@@ -330,11 +346,12 @@ export function moonBuild(s: B.Scene, low: boolean) {
   for (let i = 0; i < 70; i++) {
     const d = new B.Vector3(rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1).normalize(), sz = 1.6 + rng() * 2.6, yaw = rng() * 6.3;
     if (MOON.R * Math.acos(d.y) < 14 || heightAt(d) < -0.6) continue;
-    const m = rockTpl.createInstance("roca");
-    m.position.copyFrom(d).scaleInPlace(radiusAt(d) + sz * 0.12).addInPlace(CENTER);
+    const k: Rock = { m: rockTpl.createInstance("roca"), d, sz, body: null! }, m = k.m;
+    seat(k);
     m.scaling.setAll(sz);
     m.rotationQuaternion = B.Quaternion.FromUnitVectorsToRef(Y, d, new B.Quaternion()).multiply(B.Quaternion.RotationAxis(Y, yaw));
-    new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: 0, radius: sz * 0.5, friction: 0.5 }, scene);
+    k.body = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: 0, radius: sz * 0.5, friction: 0.5 }, scene).body;
+    rocks.push(k);
     m.receiveShadows = true;
   }
   const peb = B.MeshBuilder.CreatePolyhedron("moonPebble", { type: 3, sizeX: 0.46, sizeY: 0.22, sizeZ: 0.38 }, scene); // icosaedro achatado: 20 triángulos por piedrita

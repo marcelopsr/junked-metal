@@ -6,8 +6,9 @@ import { BAL } from "./balance";
 import type { Elite } from "./run";
 import { GLB, glbAnimate, glbPlay, glbTpl, glbVat } from "./glb";
 import { alignYaw, alt, at, flatL, hflat, MOON, onFloor, orient, toLocal, toWorld, yawOf } from "./moon";
+import { ALIEN_AI, ALIENS, type Alien } from "./aliens";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos";
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "fuego" | "cohete" | Alien;
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; final?: boolean; scale?: number; color: string };
 const ATK = BAL.ataques;
@@ -21,6 +22,14 @@ export const DEF: Record<Kind, Def> = {
   robot: { name: "Robot a cuerda", ...stats("robot"), size: [1.2, 1.7, 1], color: "#ef4444" },
   polilla: { name: "Polilla", ...stats("polilla"), size: [1.4, 0.5, 1.1], color: "#d8c690" },
   escarabajo: { name: "Escarabajo", ...stats("escarabajo"), size: [1.7, 1.1, 2.3], color: "#2f7d4a" },
+  // Luna (moon_sky.ts): salen del impacto de lo que lanzan el Sol (fuego: corre derecho como la hormiga) y la Tierra (cohete: carga como el robot)
+  fuego: { name: "Bicho de fuego", ...stats("fuego"), size: [0.8, 0.55, 1.3], color: "#ff7a1a" },
+  cohete: { name: "Bicho-cohete", ...stats("cohete"), size: [0.8, 0.8, 1.6], color: "#8a8f98" },
+  // Aliens de chatarra (aliens.ts: modelos e IA): solo en la luna
+  enjambre: { name: "Enjambre alienígena", ...stats("enjambre"), size: [0.6, 0.45, 0.8], color: "#3ff2ff" },
+  tirador: { name: "Tirador de onda", ...stats("tirador"), size: [1, 1.1, 1.1], color: "#7dff5a" },
+  saltador: { name: "Saltador lunar", ...stats("saltador"), size: [0.9, 0.8, 1.2], color: "#7dff5a" },
+  emboscador: { name: "Emboscador de cráter", ...stats("emboscador"), size: [1.4, 0.8, 1.4], color: "#3ff2ff" },
   rey: { name: "ESCARABAJO REY", ...stats("rey"), size: [6, 3.8, 8], boss: true, scale: 3.5, color: "#d4a017" },
   cortadora: { name: "CORTADORA DE CÉSPED", ...stats("cortadora"), size: [7, 4.5, 6.4], boss: true, color: "#dc2626" },
   tarantula: { name: "TARÁNTULA", ...stats("tarantula"), size: [6, 2.6, 6.5], boss: true, scale: 3, color: "#7a55a8" },
@@ -166,7 +175,7 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
-    if (kind === "perro") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida
+    if (kind === "perro" || kind === "saltador") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída)
     if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
@@ -407,17 +416,20 @@ export class Enemy {
     if (d.boss && !d.final && !this.enraged && this.hp < this.maxHp * ATK.fase2_vida) { this.enraged = true; this.phaseUp = true; this.setRage(true); this.roar = -1; } // fase 2: aviso en main.ts
     if (this.enraged) { speed *= ATK.fase2_vel; this.vapor(dt); }
     if (this.roar < 0 && !this.airborne && this.state === 0) this.roar = ROAR; // espera a que termine el ataque en curso
+    const ai = ALIEN_AI[this.kind as Alien]; // aliens de la luna (aliens.ts): número = multiplica la persecución común; texto = evento; null = ya movió
+    if (ai) { const r = ai(this, dt, to, dist); if (typeof r !== "number") return r ?? undefined; speed *= r; }
     if (this.roar > 0) { // ruge quieto (sigue recibiendo daño); frenarlo cada cuadro anula empujes
       this.roar = Math.max(0, this.roar - dt);
       this.body.setLinearVelocity(new B.Vector3(0, v.y, 0)); this.body.setAngularVelocity(B.Vector3.Zero());
       return;
     }
 
-    if (this.kind === "robot" || this.kind === "cortadora") {
-      // Apunta quieto, después sale disparado en línea recta
+    if (this.kind === "robot" || this.kind === "cortadora" || this.kind === "cohete") {
+      // Apunta quieto, después sale disparado en línea recta (el bicho-cohete de la luna, con los tiempos del robot)
       this.timer -= dt;
-      if (this.state === 0) { speed = 0; turn = this.kind === "robot" ? 5 : 2; if (this.timer <= 0) { this.state = 1; this.timer = this.kind === "robot" ? ATK.robot_carga_s : ATK.cortadora_carga_s; } }
-      else { move = fwd; turn = 0.3; if (this.timer <= 0) { this.state = 0; this.timer = this.kind === "robot" ? ATK.robot_pausa_s : ATK.cortadora_pausa_s; } }
+      const mow = this.kind === "cortadora";
+      if (this.state === 0) { speed = 0; turn = mow ? 2 : 5; if (this.timer <= 0) { this.state = 1; this.timer = mow ? ATK.cortadora_carga_s : ATK.robot_carga_s; } }
+      else { move = fwd; turn = 0.3; if (this.timer <= 0) { this.state = 0; this.timer = mow ? ATK.cortadora_pausa_s : ATK.robot_pausa_s; } }
     }
 
     if (this.kind === "escupidora") {
@@ -504,7 +516,7 @@ export class Enemy {
         if (this.timer <= 0) {
           const T = (2 * 14) / 25; // vuelo con vy = 14 y gravedad 25
           const j = MOON.on ? flatL(this.land.subtract(this.pos), this.pos) : this.land.subtract(this.pos); j.y = 0;
-          this.body.setLinearVelocity(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)));
+          this.body.setLinearVelocity(toWorld(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)), this.pos)); // j es del marco local (flatL): luna, al mundo
           this.airborne = true;
           return;
         }
@@ -599,7 +611,7 @@ export class Enemy {
         if (this.timer <= 0) {
           const T = (2 * 14) / 25;
           const j = MOON.on ? flatL(this.land.subtract(this.pos), this.pos) : this.land.subtract(this.pos); j.y = 0;
-          this.body.setLinearVelocity(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)));
+          this.body.setLinearVelocity(toWorld(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)), this.pos)); // j es del marco local (flatL): luna, al mundo
           this.airborne = true;
           return;
         }
@@ -766,7 +778,7 @@ export class Enemy {
 // La plaga de la partida multiplica pesos y puede adelantar la llegada (minuto) de cada tipo
 export function spawnTable(t: number, plague?: { mult: Partial<Record<Kind, number>>; from: Partial<Record<Kind, number>> }): [Kind, number][] {
   const m = t / 60;
-  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla"] as const).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
+  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", ...(MOON.on ? ALIENS : [])] as Kind[]).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
   return base.filter(([k, from]) => m >= (plague?.from[k] ?? from)).map(([k, , w]) => [k, w * (plague?.mult[k] ?? 1)]);
 }
 

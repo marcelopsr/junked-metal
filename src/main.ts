@@ -3,7 +3,7 @@ import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
-import { engineSfx, engineStop, initAudio, music, musicDuck, rainSfx, setEngineKind, SFX } from "./sfx";
+import { engineSfx, engineStop, initAudio, music, moonAmbience, musicDuck, rainSfx, setEngineKind, SFX, SPACE } from "./sfx";
 import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { activePad, btnName, camCycle, ctl, input, isTouch, keyHit, KEYS, padPressed, padSnap, pb, pollInput, setupTouch } from "./input";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
@@ -23,7 +23,11 @@ import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
-import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
+import { evBase, evFog, evInit, evReset, lunaDev, lunaEv, panTo } from "./moon_events";
+import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
+import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
+import { skyClear, skyInfo, skyLaunch, skyTick } from "./moon_sky";
+import { ALIENS, alienWave, isAlien } from "./aliens";
 import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
 import { raceCfg, TRACKS } from "./kart_cfg";
 import "./duel.css"; import "./match3.css"; import "./race.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css (race.css solo se importa acá)
@@ -75,7 +79,7 @@ initHud();
 // ---------- Estado de la partida ----------
 type Gem = { m: B.InstancedMesh; xp: number; pull: boolean; vy: number };
 type Pickup = { m: B.AbstractMesh; type: "pila" | "iman" | "cofre" };
-type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number; k?: Kind }; // k: quién lo tiró (daño recibido por tipo)
+type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number; k?: Kind; float?: boolean }; // k: quién lo tiró (daño recibido por tipo); float: luna, sin caída (onda alien)
 
 let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" | "duel" | "match3" = "menu";
 let car: Car | null = null;
@@ -213,6 +217,9 @@ function previewOffer(i: number) {
 
 function clearRun() {
   setMoon(false); // la luna se enciende solo en una partida de Supervivencia en la luna (startRun)
+  evReset(); // luna: meteoritos, erupciones, tinte rojo y ambiente (moon_events.ts)
+  shipsClear(); // naves de la luna (moon_ships.ts)
+  skyClear(); // luna: proyectiles del Sol y la Tierra (moon_sky.ts)
   for (const e of enemies) e.dispose();
   for (const w of weapons) w.dispose();
   for (const g of gems) g.m.dispose();
@@ -322,7 +329,7 @@ function endRun(win: boolean, why: string) {
   worldK = 1; abilOn = bombs = 0; fxSpeed(1); // ninguna habilidad sigue durante el cierre
   if (runAch.length) why += ` Logros: ${runAch.join(", ")}.`;
   state = simulating ? "over" : "outro"; // el cierre en cámara lenta (outroTick) abre los resultados
-  engineStop(); music("over"); rainSfx(0);
+  engineStop(); music("over"); rainSfx(0); moonAmbience(false);
   // Tornillos: los de la partida más tiempo y bajas, con el extra de las maldiciones (+30% cada una)
   const earned = Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK);
   const prevBest = save.best, record = Math.floor(time) > save.best;
@@ -362,7 +369,7 @@ function startOutro(res: NonNullable<typeof outroRes>) {
   for (const sp of spits) sp.m.dispose();
   spits = [];
   if (hp <= 0 && car) { // el auto se desarma
-    FX.explosion(car.pos.add(new B.Vector3(0, 0.5, 0)), 2);
+    FX.explosion(car.pos.add(upv(car.pos, 0.5)), 2);
     debris(car.pos, save.paint || "#d62828", 14, 9, 0.9);
     SFX.explosion();
   }
@@ -632,6 +639,7 @@ const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.IdentityReadOnl
 const dmgOut: Record<string, number> = {};
 let dmgSrc = "";
 function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
+  if (hitShip(e, dmg)) return; // luna: las naves son blancos de las armas (moon_ships.ts shipTargets)
   if (dmgSrc) {
     const eff = Math.min(dmg, Math.max(0, e.hp));
     dmgOut[dmgSrc] = (dmgOut[dmgSrc] ?? 0) + eff;
@@ -641,18 +649,18 @@ function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
   bestHit = Math.max(bestHit, dmg);
   if (dmg >= 4) SFX.impact(dmgSrc, crit);
   if (dmg >= 5 && !simulating && save.dmgNums) {
-    const sp = toScreen(e.pos.add(new B.Vector3(0, e.def.size[1] + 0.3, 0)));
+    const sp = toScreen(e.pos.add(upv(e.pos, e.def.size[1] + 0.3)));
     const k = innerWidth / engine.getRenderWidth();
     if (sp.z < 1) damageNumber(sp.x * k, sp.y * k, dmg, crit);
   }
   if (dmg >= 60 || e.def.boss && dmg >= 20) hitStop = Math.max(hitStop, crit ? 0.06 : 0.035);
   // Impacto: destello, chispas, pedazos y squash del bicho; la sacudida de cámara depende del arma
-  if (dmg >= 4 && !simulating) shake = Math.max(shake, impact(e.node, e.pos.add(new B.Vector3(0, e.def.size[1] * 0.5, 0)), e.def.color, Math.max(e.def.size[0], e.def.size[2]) * (e.def.scale ?? 1), dmgSrc, crit, !!e.def.boss));
+  if (dmg >= 4 && !simulating) shake = Math.max(shake, impact(e.node, e.pos.add(upv(e.pos, e.def.size[1] * 0.5)), e.def.color, Math.max(e.def.size[0], e.def.size[2]) * (e.def.scale ?? 1), dmgSrc, crit, !!e.def.boss));
   if (knock && !e.def.boss) e.body.applyImpulse(knock.scale(e.def.mass), e.pos);
 }
 
 function explode(pos: B.Vector3, r: number, dmg: number) {
-  FX.explosion(pos.add(new B.Vector3(0, 0.5, 0)), r);
+  FX.explosion(pos.add(upv(pos, 0.5)), r);
   SFX.explosion();
   mark("scorch", pos, Math.random() * 6, r * 0.55, 14);
   smashed(hitBreakables(pos, r, dmg));
@@ -676,13 +684,13 @@ function kill(e: Enemy) {
   if (s >= 100) grant("racha");
   if (!simulating && !LAB.on) save.slain[e.kind] = (save.slain[e.kind] ?? 0) + 1;
   SFX.kill(s);
-  FX.death(e.pos.add(new B.Vector3(0, 0.5, 0)), e.def.boss);
+  FX.death(e.pos.add(upv(e.pos, 0.5)), e.def.boss);
   debris(e.pos, e.def.color, e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
   if (!simulating) debris(e.pos, CONFETI[Math.floor(Math.random() * CONFETI.length)], e.def.boss ? 14 : 3, e.def.boss ? 12 : 7, e.def.boss ? 1.2 : 0.5); // confeti de color: cada baja se ve festiva
   const juice = !simulating && !e.def.boss;
   if (juice && BUG_GOO[e.kind]) splat(e.pos, BUG_GOO[e.kind]!, Math.max(e.def.size[0], e.def.size[2]) * 0.55);
-  if (juice && (e.kind === "friccion" || e.kind === "robot")) { debris(e.pos, "#b8bcc2", 5, 8, 0.45); debris(e.pos, "#d4a017", 3, 9, 0.35); FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0))); }
-  if (e.def.xp) dropGems(e.pos, e.def.xp * (e.def.boss ? 1 : TOUGH.xp));
+  if (juice && (e.kind === "friccion" || e.kind === "robot")) { debris(e.pos, "#b8bcc2", 5, 8, 0.45); debris(e.pos, "#d4a017", 3, 9, 0.35); FX.sparks(e.pos.add(upv(e.pos, 0.5))); }
+  if (e.def.xp) dropGems(e.pos, e.def.xp * (e.def.boss ? 1 : TOUGH.xp * (MOON.on ? R.luna_xp_mult : 1)));
   if (e.def.boss) {
     shake = 1.5;
     runScrap += R.tornillos_jefe;
@@ -708,13 +716,21 @@ function leave(e: Enemy) {
 const TOUGH = { count: R.dureza_cantidad, hp: R.dureza_vida, dmg: R.dureza_dano, xp: R.dureza_xp };
 function spawnEnemy(kind: Kind, p: B.Vector3) {
   enemies.push(new Enemy(kind, p, (1 + time / R.vida_escala_seg) * TOUGH.hp)); // los jefes ignoran hpMul
-  if (MOON.on) enemyLights(enemies[enemies.length - 1].node, kind, DEF[kind].size); // luna: versión "robot con luces" (ojos y baliza que atraviesan la niebla)
+  if (MOON.on && !isAlien(kind)) enemyLights(enemies[enemies.length - 1].node, kind, DEF[kind].size); // los aliens traen sus luces (aliens.ts); luna: versión "robot con luces" (ojos y baliza que atraviesan la niebla)
   if (!LAB.on && !save.seen.includes(kind)) save.seen.push(kind); // bestiario
   if (!LAB.on && !simulating) { const b = beastRec(kind); b.first ??= today(); if (!b.zones.includes(zoneId)) b.zones.push(zoneId); } // registro propio
 }
 
 // Fase 2 de la luna (moon.ts LUNA.spawn): un bicho en cualquier punto de la esfera (se apoya en el piso del lugar)
 LUNA.spawn = (kind, p) => spawnEnemy(kind, onFloor(p, 0.5));
+evInit({ // moon_events.ts: daño y sacudida viven acá
+  hurt: (n, continuous, src) => hurt(n, continuous, src),
+  blast: (p, r, dmg, src) => { dmgSrc = src; for (const e of enemies) if (B.Vector3.Distance(e.pos, p) < r + e.radius) damage(e, dmg, e.pos.subtract(p).normalize().addInPlace(upv(e.pos, 0.6)).scale(6)); dmgSrc = ""; },
+  shake: (k) => { shake = Math.max(shake, k); },
+  sim: () => simulating,
+});
+SHIP_IO.hurt = (n, src) => hurt(n, false, src);
+SHIP_IO.reward = (p, xp, boss) => { dropGems(p, xp); dropPickup(p, "cofre"); if (boss) { bossKills++; runScrap += R.tornillos_jefe; shake = 1.5; } };
 
 // ---------- Update ----------
 function update(dt: number) {
@@ -729,7 +745,7 @@ function update(dt: number) {
   if (raining && !rainBanner) { rainBanner = true; radioEvent("lluvia"); }
   rainK = LAB.on && raining ? 1 : rainK + ((raining ? 1 : 0) - rainK) * Math.min(1, dt * RAIN.ramp);
   const s = nightfall(LAB.on ? LAB.t : time / 600);
-  if (!simulating && Math.abs(s - cycleS) > 0.01) { cycleS = s; applyClimate(zoneClimate() ?? mixClimate(DUSK, profile.climate, s)); }
+  if (!simulating && Math.abs(s - cycleS) > 0.01) { cycleS = s; applyClimate(evBase(zoneClimate() ?? mixClimate(DUSK, profile.climate, s))); }
 
   // --- Habilidad activa (efectos con el reloj real; wdt = paso del mundo, más corto en cámara lenta) ---
   abilCd -= dt;
@@ -742,6 +758,7 @@ function update(dt: number) {
     dmgSrc = "bombardeo"; explode(MOON.on ? onFloor(at(c.pos, Math.cos(a) * d, 0, Math.sin(a) * d), 0) : new B.Vector3(c.pos.x + Math.cos(a) * d, 0, c.pos.z + Math.sin(a) * d), R.bombardeo_radio, R.bombardeo_dano * st.dmg); dmgSrc = "";
   }
   const wdt = dt * worldK;
+  if (MOON.on) lunaEv(wdt, time, c.pos, Math.max(c.def.size[0], c.def.size[2]) / 2, camYaw); // luna: lluvia de meteoritos y erupciones (moon_events.ts)
 
   // --- Manejo ---
   let throttle = input.throttle, steer = input.steer;
@@ -829,11 +846,11 @@ function update(dt: number) {
   // Daño visible: humo con media vida, humo negro y chispas con poca
   if (hp < maxHp * 0.5 && (smokeT -= dt) <= 0) {
     smokeT = hp < maxHp * 0.25 ? 0.06 : 0.14;
-    const p = c.pos.add(new B.Vector3(0, 0.6, 0)).addInPlace(c.root.forward.scale(0.6));
+    const p = c.pos.add(upv(c.pos, 0.6)).addInPlace(c.root.forward.scale(0.6));
     FX.smoke(p, hp < maxHp * 0.25);
     if (hp < maxHp * 0.25 && Math.random() < 0.3) FX.sparks(p);
   }
-  if ((dustT -= dt) <= 0 && r.grounded && (Math.abs(r.ls) > 3 || boosting)) { dustT = 0.05; const rear = c.pos.add(c.root.forward.scale(-1.1)); FX.dust(rear); if (boosting) FX.sparks(rear.add(new B.Vector3(0, 0.3, 0))); }
+  if ((dustT -= dt) <= 0 && r.grounded && (Math.abs(r.ls) > 3 || boosting)) { dustT = 0.05; const rear = c.pos.add(c.root.forward.scale(-1.1)); FX.dust(rear); if (boosting) FX.sparks(rear.add(upv(rear, 0.3))); }
   if (boostSec > 1.5 && (motorFxT -= dt) <= 0) {
     motorFxT = 0.08;
     const motorPos = c.pos.add(c.root.forward.scale(-0.45)).addInPlace(new B.Vector3(0, 0.35, 0));
@@ -856,14 +873,14 @@ function update(dt: number) {
   // --- Aparición de enemigos ---
   // Tope de vivos y ritmo: con el bot que pelea jefes (devbot.ts) quedó en ~50% de victorias (__sim, 40 semillas).
   // ponytail: más densidad casi no baja la tasa (más bichos = más XP); el techo real está en las fusiones repetidas
-  const maxAlive = duel >= 0 ? duel : Math.min(low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + time / R.tope_vivos_seg) * horde * TOUGH.count); // Horda: +50%. Tope 100 en compu, 60 en táctil
+  const maxAlive = duel >= 0 ? duel : Math.min(low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + time / R.tope_vivos_seg) * horde * TOUGH.count) * (MOON.on ? R.luna_tope_mult : 1); // Horda: +50%. Tope 100 en compu, 60 en táctil
   // Aparecen sesgados hacia donde vas: manejar no es escapar gratis
   const cv = c.body.getLinearVelocity();
   hflat(_spawnOff.copyFrom(cv), c.pos).scaleInPlace(R.spawn_adelanto_s);
   _ahead.copyFrom(c.pos).addInPlace(_spawnOff);
   let normals = 0;
   for (const e of enemies) if (!e.def.boss) normals++;
-  spawnAcc += (R.spawn_base + time / R.spawn_seg) * wdt * horde * TOUGH.count;
+  spawnAcc += (R.spawn_base + time / R.spawn_seg) * wdt * horde * TOUGH.count * (MOON.on ? R.luna_aparicion_mult : 1);
   // Con la cámara más alejada que el zoom por defecto (1.35) el anillo de aparición se abre igual, para no verlos nacer
   // Anillo fijo, fuera de cuadro aun con el zoom máximo (2): la partida no cambia según el zoom elegido
   while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(time, profile.plague)), spawnPoint(_ahead, R.spawn_anillo_min, R.spawn_anillo_max)); }
@@ -897,7 +914,7 @@ function update(dt: number) {
     if (!evtPre.boss.has(bi) && time >= bt - bossWarnS && time < bt) {
       evtPre.boss.add(bi);
       const fin = !endless && bi === RUN_BOSSES.length - 1 && bk === finalKind;
-      if (!simulating) radioBoss("pre", DEF[bk].name, fin);
+      if (!simulating) radioBoss("pre", MOON.on && bk !== finalKind ? SHIP_NAME[shipFor(bi, runSeed)] : DEF[bk].name, fin); // luna: los minijefes son naves
     }
   }
   // Apagón: 4 s antes de cada jefe se apagan luna y ambiente (queda el faro); vuelve en 3 s tras la entrada
@@ -909,13 +926,13 @@ function update(dt: number) {
   }
   if (bossIdx < RUN_BOSSES.length && time >= RUN_BOSSES[bossIdx][0]) {
     apagon = false;
-    const kind = RUN_BOSSES[bossIdx++][1];
-    spawnEnemy(kind, spawnPoint(c.pos, 30, 36));
+    const kind = RUN_BOSSES[bossIdx++][1], ship = MOON.on && kind !== finalKind ? shipFor(bossIdx - 1, runSeed) : null; // luna: minijefe = nave (moon_ships.ts)
+    if (ship) shipSpawn(ship, c.pos, time); else spawnEnemy(kind, spawnPoint(c.pos, 30, 36));
     if (endless) { // modo sin fin: otro jefe repetido en 2 min (rotan los tres de la partida) y cada vez con más vida
       RUN_BOSSES.push([time + R.sinfin_cada_s, RUN_BOSSES[RUN_BOSSES.length % 3][1]]);
-      const b = enemies[enemies.length - 1]; b.hp = b.maxHp *= time / R.sinfin_vida_div;
+      if (!ship) { const b = enemies[enemies.length - 1]; b.hp = b.maxHp *= time / R.sinfin_vida_div; }
     }
-    const bname = DEF[kind].name;
+    const bname = ship ? SHIP_NAME[ship] : DEF[kind].name;
     const fin = !endless && kind === finalKind;
     if (!simulating) radioBoss("now", bname, fin);
     banner(bname, 2.5);
@@ -951,7 +968,8 @@ function update(dt: number) {
     if (e.leader && !ld && hd(e.pos, c.pos) <= 14) e.leader = null;
     const tgt = ld ? ld.pos.add(ld.node.right.scale(e.slot.x)).addInPlace(ld.node.forward.scale(-e.slot.z)) : c.pos;
     const ev = e.stun > 0 ? stunned(e, wdt) : e.update(wdt, tgt);
-    if (ev === "spit_aim" && !simulating) { const f = e.node.forward; FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0))); mark("scorch", e.pos, yawOf(f, e.pos), 0.35, 4); }
+    if (ev === "spit_aim" && !simulating) { const f = e.node.forward; FX.sparks(e.pos.add(upv(e.pos, 0.5))); mark("scorch", e.pos, yawOf(f, e.pos), 0.35, 4); }
+    if (ev === "wave") { pushSpit(alienWave(e, c.pos)); if (!simulating) SPACE.alienWave(panTo(c.pos, e.pos, camYaw), hd(c.pos, e.pos)); } // tirador de onda (aliens.ts): anillo lento, se esquiva
     if (ev === "spit") {
       // Apunta adonde vas a estar (predicción simple): esquivar = cambiar de rumbo
       const cvl = c.body.getLinearVelocity(), from = at(e.pos, 0, 0.6, 0);
@@ -989,11 +1007,10 @@ function update(dt: number) {
         const dmg = rel * c.def.ram * (1 + BAL.armas.lanza.dano_nivel * (lanza?.lv ?? 0)) * (boosting ? (c.kind === "axel" ? R.embestida_turbo_axel : R.embestida_turbo) : 1) * st.dmg * st.ram * (lanza?.evolved ? BAL.armas.lanza.dano_evo_mult : 1);
         dmgSrc = "embestida";
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(upv(e.pos, rel * 0.2)), true);
-        FX.sparks(e.pos.add(new B.Vector3(0, 0.5, 0)));
+        FX.sparks(e.pos.add(upv(e.pos, 0.5)));
         SFX.ram(rel);
         if ((e.def.boss || e.elite || e.def.mass > 50) && rel > 3.5) {
-          const screenX = (e.pos.x - c.pos.x) * Math.cos(camYaw) - (e.pos.z - c.pos.z) * Math.sin(camYaw);
-          const pan = B.Scalar.Clamp(screenX / 8, -1, 1);
+          const pan = panTo(c.pos, e.pos, camYaw); // luna: en el marco local del auto
           SFX.bodyThud(rel, pan);
         }
         e.ramCd = R.embestida_recarga_s;
@@ -1014,12 +1031,10 @@ function update(dt: number) {
         // Un jefe te despide lejos: nunca quedás atrapado contra él
         if (e.def.boss) {
           c.body.applyImpulse(dir.scale(-R.contacto_jefe_empuje * c.def.mass).addInPlace(upv(c.pos, 4 * c.def.mass)), c.pos);
-          const screenX = (e.pos.x - c.pos.x) * Math.cos(camYaw) - (e.pos.z - c.pos.z) * Math.sin(camYaw);
-          const pan = B.Scalar.Clamp(screenX / 8, -1, 1);
+          const pan = panTo(c.pos, e.pos, camYaw); // luna: en el marco local del auto
           SFX.bodyThud(6, pan);
         } else if (e.elite) {
-          const screenX = (e.pos.x - c.pos.x) * Math.cos(camYaw) - (e.pos.z - c.pos.z) * Math.sin(camYaw);
-          const pan = B.Scalar.Clamp(screenX / 8, -1, 1);
+          const pan = panTo(c.pos, e.pos, camYaw); // luna: en el marco local del auto
           SFX.bodyThud(4, pan);
         }
       }
@@ -1088,20 +1103,28 @@ function update(dt: number) {
   }
   const boss = enemies.find((e) => e.def.boss);
   if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp), boss.kind, boss.enraged);
+  else if (MOON.on) { const sb = shipBar(); if (sb) hudBoss(sb.name, sb.pct); } // naves de la luna: misma barra de jefe
   { const ms = boss ? "boss" : apagon ? "blackout" : "run"; if (!simulating && (ms !== musicS || (musicT -= dt) <= 0)) { musicS = ms; musicT = 1; music(ms, time / 600); } } // música: cambio de estado al instante, intensidad cada ~1 s
 
   // --- Ácido de escupidoras ---
   for (let i = spits.length - 1; i >= 0; i--) {
     const s = spits[i];
-    if (MOON.on) advance(s.m.position, s.v, s.v.length() * wdt); // luna: vuela pegado a la curva (en línea recta se metería en el piso)
+    if (MOON.on && s.float) advance(s.m.position, s.v, wdt); // onda alien: pegada a la curva; advance recorre d·|v|: con v sin normalizar, d = wdt
+    else if (MOON.on) { // ácido y tuercas: avance por la curva + caída hacia el centro (la misma cuenta que el v.y -= 3·dt del patio)
+      const p = s.m.position, vr = B.Vector3.Dot(s.v, upAt(p)) - 3 * wdt;
+      advance(p, hflat(s.v, p), wdt);
+      const u = upAt(p); p.addInPlace(u.scale(vr * wdt)); s.v.addInPlace(u.scaleInPlace(vr));
+    }
     else { s.m.position.addInPlace(s.v.scale(wdt)); s.v.y -= 3 * wdt; }
     let dead = (s.life -= wdt) <= 0 || below(s.m.position, 0.1);
     if (B.Vector3.Distance(s.m.position, c.pos) < carR + 0.3) { hurt(ATK.acido_dano, false, "ácido", s.k); FX.hit(s.m.position); dead = true; }
     if (dead) { mark("scorch", s.m.position, Math.random() * 6, 0.6, 5); s.m.dispose(); spits.splice(i, 1); }
   }
+  if (MOON.on) skyTick(wdt, time, c.pos, simulating ? null : cam, hurt, enemies, camYaw); // luna: el Sol y la Tierra lanzan bichos (moon_sky.ts)
 
   // --- Armas ---
-  const ctx: Ctx = { scene, car: c, enemies, dt, st, fs: r.fs, damage, explode };
+  if (MOON.on) shipsTick(dt, time, c, simulating, camYaw); // naves alienígenas (moon_ships.ts): nodriza recurrente y minijefes
+  const ctx: Ctx = { scene, car: c, enemies: MOON.on ? shipTargets(enemies, c.pos) : enemies, dt, st, fs: r.fs, damage, explode };
   for (const w of weapons) { dmgSrc = w.id; w.update(ctx); }
   dmgSrc = "";
 
@@ -1164,7 +1187,7 @@ function update(dt: number) {
     if (MOON.on) onFloor(from, 4, m.position); // antes del cuerpo físico
     shadows.addShadowCaster(m);
     const agg = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: R.pelota_masa, restitution: 0.5 }, scene);
-    FOOT.set(agg.body, R.pelota_diametro / 2);
+    FOOT.set(agg.body, R.pelota_diametro / 2); ROLL.add(agg.body); // luna: rueda (moon.ts)
     agg.body.setLinearVelocity((MOON.on ? hflat(c.pos.subtract(from), from) : c.pos.subtract(from)).normalize().scale(R.pelota_vel));
     ball = { m, agg, life: R.pelota_vida_s };
     radioEvent("pelota");
@@ -1207,7 +1230,7 @@ function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   hitAt = time;
   dmgBy[src] = (dmgBy[src] ?? 0) + n * (1 - st.armor);
   hp -= n * (1 - st.armor);
-  if (!simulating && car && !save.calm) { FX.sparks(car.pos.add(new B.Vector3(0, 0.5, 0))); if (!continuous) debris(car.pos, save.paint || "#d62828", 2, 5, 0.5); } // chispas (y pedazos de pintura en los golpes fuertes) al recibir daño
+  if (!simulating && car && !save.calm) { FX.sparks(car.pos.add(upv(car.pos, 0.5))); if (!continuous) debris(car.pos, save.paint || "#d62828", 2, 5, 0.5); } // chispas (y pedazos de pintura en los golpes fuertes) al recibir daño
   if (!continuous) {
     shake = Math.max(shake, 0.5);
     if (!simulating && !save.calm) glitchHit();
@@ -1227,7 +1250,7 @@ function useAbility(c: Car) {
     SFX.pickup();
   } else if (abil === "emp") {
     for (const e of enemies) if (!e.def.boss && !e.airborne && B.Vector3.Distance(e.pos, c.pos) < R.emp_radio + e.radius) e.stun = R.emp_aturde_s * k;
-    if (!simulating) burst(c.pos.add(new B.Vector3(0, 0.6, 0)), { n: 90, color: "#8dff6a", color2: "#6fb3c4", size: [0.2, 0.6], power: [14, 22], life: [0.25, 0.5], gravity: 0 });
+    if (!simulating) burst(c.pos.add(upv(c.pos, 0.6)), { n: 90, color: "#8dff6a", color2: "#6fb3c4", size: [0.2, 0.6], power: [14, 22], life: [0.25, 0.5], gravity: 0 });
     SFX.zap(); shake = Math.max(shake, 0.4);
   } else { worldK = R.lenta_mundo; fxSpeed(R.lenta_mundo); }
 }
@@ -1239,7 +1262,7 @@ function stunned(e: Enemy, dt: number) {
   else _stunV.set(v.x * 0.85, v.y, v.z * 0.85);
   e.body.setLinearVelocity(_stunV);
   e.body.setAngularVelocity(B.Vector3.Zero());
-  if (!simulating && Math.random() < dt * 5) FX.sparks(e.pos.add(new B.Vector3(0, e.def.size[1] * 0.6, 0)));
+  if (!simulating && Math.random() < dt * 5) FX.sparks(e.pos.add(upv(e.pos, e.def.size[1] * 0.6)));
   return undefined;
 }
 // Cámara lenta: el paso de Havok (también el de __sim y el del cierre) avanza el mundo a worldK y al auto no.
@@ -1323,7 +1346,7 @@ function moonCam(c: Car, dt: number, follow: boolean) {
   if (state === "outro") hy += dt * 0.45; // el cierre orbita el auto (outroTick suma a camYaw, que acá se recalcula)
   camH.copyFrom(W(Math.sin(hy), 0, Math.cos(hy), c.pos));
   camYaw = hy;
-  if (!simulating) moonTick(dt, c.pos, cam);
+  if (!simulating) { moonTick(dt, c.pos, cam); evFog(scene); }
 }
 // Encuadres del menú: SHOTS (menuscene.ts, derivados de SCENES), uno por pantalla dentro de su escenario
 const shot = (scr: string) => (engine.getAspectRatio(cam) < 1 && SHOTS[scr + "_v"]) || SHOTS[scr] || SHOTS.main; // _v: encuadre de celular vertical
@@ -1763,12 +1786,13 @@ if (import.meta.env.DEV) Object.assign(window, {
   // Luna (solo dev): __luna.crater(radio, hondo, distancia) deforma delante del auto (hondo < 0 = montículo); go("oscuro"|"sol"|"tierra") lleva el auto;
   // ring(n, r) pone n bichos en un anillo a r m; sky() dice si el Sol y la Tierra se ven; info() estado
   __luna: {
+    ship: (id: ShipId = "nodriza") => { if (!car || !MOON.on) return "sin luna"; shipsClear(); const f = flatL(car.root.forward, car.pos).normalize(); shipSpawn(id, at(car.pos, f.x * 14, 0, f.z * 14), time, true); return "ok"; }, // borra las naves y pone una 14 m delante del auto (moon_ships.ts)
     crater: (r = 7, depth = 2.6, dist = 12) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(); deform(at(car.pos, f.x * dist, 0, f.z * dist), r, depth); return "ok"; },
-    go: (where: "oscuro" | "sol" | "tierra" | [number, number, number] = "oscuro") => { // [x, y, z]: una dirección cualquiera desde el centro
+    go: (where: "oscuro" | "sol" | "tierra" | [number, number, number] = "oscuro", faceSun = false) => { // faceSun: de frente al Sol (moon_sky.ts: que se vea en cuadro) // [x, y, z]: una dirección cualquiera desde el centro
       if (!car || !MOON.on) return "sin luna";
       const d = (Array.isArray(where) ? new B.Vector3(...where) : where === "oscuro" ? SUN_DIR.scale(-1).addInPlace(new B.Vector3(0.25, 0.2, 0)) : where === "tierra" ? new B.Vector3(0, 1, 0).addInPlace(EARTH_DIR.scale(-0.66)) : SUN_DIR.add(B.Vector3.Up())).normalize(); // tierra: queda ~15° bajo la horizontal, sobre el horizonte que ve la cámara
       const p = onFloor(d.scale(60).addInPlace(new B.Vector3(0, -60, 0)), car.def.size[1] / 2 + 0.3);
-      const aim = Array.isArray(where) ? new B.Vector3(0, 0, 1) : where === "tierra" ? EARTH_DIR : where === "sol" ? SUN_DIR.scale(-1) : SUN_DIR; // de frente a la Tierra; de espaldas al Sol; del lado oscuro, mirando hacia la luz
+      const aim = faceSun ? SUN_DIR : Array.isArray(where) ? new B.Vector3(0, 0, 1) : where === "tierra" ? EARTH_DIR : where === "sol" ? SUN_DIR.scale(-1) : SUN_DIR; // de frente a la Tierra; de espaldas al Sol; del lado oscuro, mirando hacia la luz
       car.root.position.copyFrom(p); car.root.rotationQuaternion = alignYaw(p, yawOf(aim, p));
       car.body.setLinearVelocity(B.Vector3.Zero()); car.body.setAngularVelocity(B.Vector3.Zero());
       moonCar(car.body, upAt(p));
@@ -1778,7 +1802,12 @@ if (import.meta.env.DEV) Object.assign(window, {
       return { p, alt: alt(p) };
     },
     ring: (n = 12, r = 22, kind: Kind = "hormiga") => { if (!car) return 0; for (let i = 0; i < n; i++) spawnEnemy(kind, MOON.on ? ringAt(car.pos, (i / n) * Math.PI * 2, r) : car.pos.add(new B.Vector3(Math.cos((i / n) * 6.28) * r, 1, Math.sin((i / n) * 6.28) * r))); return enemies.length; },
+    meteor: (n = 12) => lunaDev.meteors(n), // lluvia de meteoritos ya, con el mapa en rojo (moon_events.ts)
+    erupt: () => (car ? lunaDev.erupt(car.pos, camYaw) : "sin auto"), // erupción ya, a 14 m delante
     sky: () => ({ sol: skyVisible(SUN_DIR, cam), tierra: skyVisible(EARTH_DIR, cam) }),
-    info: () => ({ on: MOON.on, alt: car ? alt(car.pos) : null, up: car ? upAt(car.pos) : null, enemies: enemies.length }),
+    astro: (sun = true) => { if (!car || !MOON.on) return "sin luna"; skyLaunch(sun, car.pos); return skyInfo(); }, // lanza ya un proyectil del Sol (true) o de la Tierra
+    info: () => ({ on: MOON.on, alt: car ? alt(car.pos) : null, up: car ? upAt(car.pos) : null, enemies: enemies.length, spits: spits.length }),
+    // fila de bichos delante del auto (por defecto los aliens), a dist m y separados sep m; tough: no se mueren con las armas (capturas)
+    row: (kinds: Kind[] = [...ALIENS], dist = 10, sep = 3.2, tough = true) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(), n0 = enemies.length; kinds.forEach((k, i) => { const x = (i - (kinds.length - 1) / 2) * sep; spawnEnemy(k, onFloor(at(car!.pos, f.x * dist + f.z * x, 0, f.z * dist - f.x * x), 0.5)); }); if (tough) for (const e of enemies.slice(n0)) e.hp = e.maxHp = 1e6; return enemies.length; },
   },
 });

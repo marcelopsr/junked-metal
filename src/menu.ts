@@ -1161,6 +1161,12 @@ const LORE: Record<Kind, string> = {
   gato: "Eulalio el michu, naranja, con una sola neurona y un plan que cambia a mitad de salto. Gira, salta y jamás cae donde dijo que iba a caer. Duerme dieciocho horas y usa las otras seis para esto.",
   aspiradora: "Programada para limpiar la casa, renunció tras tres años sin un solo gracias y se escapó por la gatera. Considera que todo el patio es una pelusa, y en su mapa hay un solo punto marcado: el auto.",
   cortacercos: "Lo dejaron enchufado después de podar el ligustro y nadie volvió a buscarlo, como todo lo que se presta. Desde entonces, todo le parece un cerco. Zumba sin parar y deja cables pelados por donde pasa.",
+  fuego: "Cayó del Sol hecho una brasa y decidió que el frío de la luna era un problema personal. Corre a todo lo que da porque, si se queda quieto, se apaga. Deja la huella encendida por donde pasa.",
+  cohete: "Un cohete de chatarra que la Tierra tiró para sacárselo de encima. Le quedó media carga en el tanque y ninguna instrucción de aterrizaje, así que apunta a lo primero que se mueve.",
+  enjambre: "Una cápsula de chatarra con un núcleo que zumba. Sola no asusta a nadie, y lo sabe: por eso nunca viaja sola. Toman decisiones por votación y siempre gana la de ir todas juntas al auto.",
+  tirador: "Encontró una pistolita en la basura de una nave y desde entonces se considera francotirador. Mantiene la distancia por estrategia y por timidez. Cada disparo lo anuncia con un zumbido, por cortesía profesional.",
+  saltador: "En la Tierra sería una rana de lata; acá, con la gravedad que hay, se cree astronauta. Salta alto, cae lejos y nunca calcula dónde. Para eso tiene un aro que lo avisa por él.",
+  emboscador: "Vive enterrado en un cráter con la paciencia de un cobrador. Deja asomar una lucecita para que alguien se acerque a mirar, y alguien siempre se acerca a mirar.",
 };
 // Cómo ataca y cómo esquivarlo (sale del comportamiento real de enemies.ts)
 const HOW: Record<Kind, [string, string]> = {
@@ -1177,6 +1183,12 @@ const HOW: Record<Kind, [string, string]> = {
   gato: ["Zigzaguea y elige al azar: salto con aro rojo, trompo que rueda hacia el auto o un arranque de costado a toda velocidad. Ni él sabe cuál va a elegir.", "El aro marca dónde cae: salir antes de que se llene. Ante el trompo, frenar y dejarlo pasar sin pedir explicaciones."],
   aspiradora: ["Un aro rojo enorme anuncia la succión: arrastra al auto hacia ella y después suelta tres ráfagas de tuercas en abanico. Se lo lleva todo, como una hipoteca.", "Acelerar hacia afuera del aro apenas aparece. Las ráfagas dejan huecos entre tuerca y tuerca: pasar por ellos. Los huecos hay que aprovecharlos cuando aparecen."],
   cortacercos: ["Anuncia un barrido en arco con un sector rojo de 10 metros y siembra cables con chispas en el piso. Seguridad laboral: ninguna.", "Salir del sector antes del barrido y no pisar los cables: electrocutan mientras se está encima. Pisar cables es mala idea en cualquier contexto."],
+  fuego: ["Baja del Sol dentro de una bola de fuego (un aro rojo marca dónde cae) y corre derecho al auto, rápido y frágil, dejando un rastro de llamas.", "Salir del aro antes de que caiga la bola. Suelto es fácil de bajar: no dejar que se junten varios."],
+  cohete: ["Llega desde la Tierra en un cohetito (con aro rojo de aviso), se planta, apunta y embiste en línea recta como el robot a cuerda.", "Mientras apunta quieto hay tiempo: salir de su línea hacia un costado y castigarlo mientras frena."],
+  enjambre: ["Llega en manada de cinco que zigzaguean juntos hacia el auto y muerden por contacto. Rápidos y frágiles.", "Un golpe alcanza para cada uno: abrir paso con embestidas o con armas de área antes de quedar rodeado."],
+  tirador: ["Se planta a unos 15 metros, carga la pistolita (chispas y el caño que sube) y suelta un anillo de luz lento hacia donde estaba el auto. Si el auto se acerca, retrocede.", "El anillo va derecho y despacio: moverse de costado apenas sale. Encimarlo obliga a que retroceda en vez de disparar."],
+  saltador: ["Se agazapa con un aro en el piso donde va a caer y salta en un arco largo de baja gravedad. El punto de caída se fija al empezar el aviso.", "Salir del aro mientras se agazapa. En el aire no corrige: al caer queda quieto un momento, a tiro."],
+  emboscador: ["Espera enterrado: solo asoma un señuelo de luz cian. Cuando el auto pasa a unos 8 metros salta encima y persigue; si el auto se aleja, se vuelve a enterrar.", "Una luz cian sola en el piso es una trampa: rodearla de lejos o pasar rápido y castigarlo cuando sale."],
 };
 // Fase 2 (minijefes por debajo de la mitad de vida; jefes finales en su segunda barra; enemies.ts: enraged)
 const PHASE2: Partial<Record<Kind, string>> = { gato: " y maúlla para convocar polillas, refuerzos que nadie pidió", perro: " y salta más seguido, ya sin importarle el cansancio" };

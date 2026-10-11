@@ -3,6 +3,7 @@ import { DEF, type Kind } from "./enemies";
 import { flatten, merge } from "./models";
 import { FOLDED_SLICE } from "./folded";
 import { PETS, PROC } from "./folded_slice";
+import { ALIEN_GLB, ALIEN_PROC } from "./aliens";
 import { M, pbr, shadows } from "./render";
 
 // Bichos importados de GLB con esqueleto. La animación se hornea en una textura (VAT: una matriz por hueso y cuadro) y
@@ -39,11 +40,13 @@ export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla 
   polilla: { file: "polilla", scale: 1, visual: 1.05, eye: "#c9a0ff" }, // assets-src/polilla — cuerpo GLB; alas en wingTemplate
   perro: { file: "perro", scale: 1, eye: "#3a2418", clips: [2.3, 13] }, // assets-src/perro (Felipe)
   gato: { file: "gato", scale: 1.1, eye: "#a8ff3a", clips: [2.3, 15.4] }, // assets-src/gato (Eulalio)
+  ...ALIEN_GLB, // aliens de la luna (aliens.ts): procedurales Folded, sin archivo
 };
 
 // Folded (?folded2): estos bichos se arman en folded_slice.ts (PROC) y su caminata se hornea igual que la de un GLB (procBake);
 // el GLB viejo queda sin usar. Misma escala de nodo (visual) y misma colisión.
-if (FOLDED_SLICE) for (const k of [...Object.keys(PROC), ...Object.keys(PETS)] as Kind[]) if (GLB[k]) GLB[k]!.proc = true;
+Object.assign(PROC, ALIEN_PROC); // los aliens se hornean igual que el resto de los bichos Folded
+if (FOLDED_SLICE) for (const k of Object.keys(PROC) as Kind[]) if (GLB[k]) GLB[k]!.proc = true;
 const WALK = 10, ATTACK = 6; // cuadros horneados: walk 0..9, attack 10..15
 const CLIP_FPS = 24, LOOPS = ["idle", "walk", "run", "rage"];
 const clips = new Map<Kind, Record<string, { from: number; n: number; loop: boolean }>>();
@@ -112,9 +115,8 @@ function finishVat(scene: B.Scene, kind: Kind, mesh: B.Mesh, sk: B.Skeleton, dat
 
 async function load(scene: B.Scene, kind: Kind) {
   const o = GLB[kind]!, t0 = performance.now();
-  if (FOLDED_SLICE || o.proc) { procBake(scene, kind); return; }
-  const gltf = "@babylonjs/loaders/glTF/2.0";
-  await import(/* @vite-ignore */ gltf); // el navegador lo baja una sola vez para todos los bichos
+  if (o.proc) { procBake(scene, kind); return; }
+  await import("@babylonjs/loaders/glTF/index.js");
   const c = await B.LoadAssetContainerAsync(`models/${o.file}.glb`, scene); // relativa: el build usa base "./"
   c.addAllToScene();
   const t1 = performance.now();
@@ -166,23 +168,29 @@ async function load(scene: B.Scene, kind: Kind) {
   const mat = (m: B.Material | null) => {
     if (m?.name.startsWith("Eye")) return pbr("glEye" + kind, { color: o.eye ?? "#ff3020", rough: 0.35, emissive: o.eye ?? "#ff3020" });
     if (!m) return M.plastic(DEF[kind].color);
-    const p = m as B.PBRMaterial, hex = p.albedoColor.toGammaSpace().toHexString();
+    const p = m as B.PBRMaterial, hex = p.albedoColor ? p.albedoColor.toGammaSpace().toHexString() : "#888888";
     if (m.name === "Body" && !o.clips) {
       const metal = p.metallic ?? 0;
       if (metal > 0.35) return pbr("glSh" + kind + hex, { color: hex, rough: p.roughness ?? 0.22, metal, coat: 0.45 });
       // Oleada 1c: color del GLB (más contraste que un solo DEF.color plano en bestiario)
       return pbr("glBd" + kind + hex, { color: hex, rough: 0.3, coat: 0.58 });
     }
-    if (o.clips) return pbr("fur" + hex + p.roughness, { color: hex, rough: p.roughness ?? 0.8 }); // jefes de pelo: mate, con el color y la rugosidad del GLB (Body incluido)
+    if (o.clips) {
+      if (p.albedoTexture) return p; // jefes con texturas PBR completas (LOD1)
+      return pbr("fur" + hex + p.roughness, { color: hex, rough: p.roughness ?? 0.8 }); // jefes de pelo: mate, con el color y la rugosidad del GLB (Body incluido)
+    }
     if (p.alpha >= 1) return pbr("pl" + hex, { color: hex, rough: 0.32, coat: 0.5 }); // = M.plastic(hex)
     // translúcido (saco de ácido de la escupidora): conserva alpha y emisivo del GLB
-    return pbr("pl" + hex + p.alpha, { color: hex, rough: 0.2, coat: 0.5, alpha: p.alpha, emissive: p.emissiveColor.toGammaSpace().toHexString() });
+    return pbr("pl" + hex + p.alpha, { color: hex, rough: 0.2, coat: 0.5, alpha: p.alpha, emissive: p.emissiveColor ? p.emissiveColor.toGammaSpace().toHexString() : undefined });
   };
   if (mesh.material instanceof B.MultiMaterial) mesh.material.subMaterials = mesh.material.subMaterials.map(mat);
   else mesh.material = mat(mesh.material);
   flatten(mesh); // colores de material a color de vértice: menos submallas = menos dibujos por pasada
   for (const n of c.transformNodes) if (!n.parent) n.dispose(); // __root__ y huesos ya no se dibujan ni se actualizan
-  for (const m of c.materials) if (!scene.meshes.some((x) => x.material === m)) m.dispose();
+  for (const m of c.materials) {
+    const inUse = scene.meshes.some((x) => x.material === m || (x.material instanceof B.MultiMaterial && x.material.subMaterials.includes(m)));
+    if (!inUse) m.dispose();
+  }
   finishVat(scene, kind, mesh, sk, data);
   glbStats[kind] = { loadMs: t1 - t0, bakeMs: performance.now() - t1, vatBytes: data.byteLength, tris: mesh.getTotalIndices() / 3, bones: sk.bones.length };
 }

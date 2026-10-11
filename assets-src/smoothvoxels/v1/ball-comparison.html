@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Junked Metal · Pelota del patio: Original frente a SmoothPixel</title>
+<style>
+:root{color-scheme:dark;font-family:Rajdhani,Arial,sans-serif;background:#121619;color:#e7e3d8}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(#151a1e,#20211d);padding:clamp(16px,3vw,36px)}
+main{max-width:1420px;margin:auto}
+header{border-top:3px solid #df8a28;padding:16px 0 10px}
+small{color:#d09348;letter-spacing:.18em;font-weight:700}
+h1{font-size:clamp(27px,4vw,46px);line-height:1;margin:9px 0;color:#ffc04c}
+p{font-size:clamp(16px,2vw,20px);color:#b9c0c1;margin:8px 0}
+.controls{display:flex;align-items:center;gap:16px;margin:12px 0 14px;flex-wrap:wrap}
+label{font-size:18px;color:#f2d3a0}
+select,button{font:600 17px Rajdhani,Arial,sans-serif;letter-spacing:.06em;color:#ffd18a;background:#252a2c;border:1px solid #876232;padding:9px 14px;min-height:44px;cursor:pointer}
+button:focus-visible,select:focus-visible{outline:3px solid #ffc04c;outline-offset:3px}
+.stage{position:relative;border:1px solid #5a5546;background:#202522;overflow:hidden}
+canvas{display:block;width:100%;height:min(67vh,690px);min-height:360px;touch-action:none}
+.label{position:absolute;z-index:1;top:15px;width:50%;padding:7px 12px;color:#ffe4b3;font:700 clamp(15px,2vw,21px) Rajdhani,Arial,sans-serif;letter-spacing:.12em;text-shadow:0 2px 3px #000}
+.left{left:0;text-align:center}
+.right{right:0;text-align:center}
+.centerline{position:absolute;z-index:1;top:0;bottom:0;left:50%;width:1px;background:#bb7d36;opacity:.75;pointer-events:none}
+#status{min-height:22px;font-size:16px;color:#a0b8a4}
+.note{border-left:2px solid #d18832;padding:6px 14px;font-size:16px;color:#9fa8a9;margin-top:16px;background:rgba(21,26,29,0.7)}
+.alternatives{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.card{background:#1b2327;border:1px solid #41484a;padding:14px}
+.card h2{font-size:20px;margin:0 0 6px 0;color:#f2d3a0}
+.card p{font-size:15px;margin:0;color:#b0bab8}
+@media(max-width:640px){
+body{padding:14px}
+.stage canvas{height:62vh;min-height:380px}
+.label{top:9px;padding:6px 4px;letter-spacing:.04em;font-size:13px}
+.controls{flex-direction:column;align-items:stretch}
+.alternatives{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body><main>
+<header>
+<small>JUNKED METAL / COMPARACIÓN VISUAL</small>
+<h1>PELOTA DEL PATIO · ORIGINAL vs SMOOTHPIXEL</h1>
+<p>Lado izquierdo: la pelota procedural actual (esfera lisa de 16 segmentos con textura 2D en lienzo). Lado derecho: propuesta SmoothPixel con volumen 3D real y costuras en relieve.</p>
+</header>
+<div class="controls">
+<label for="variant">Variante SmoothPixel:</label>
+<select id="variant" aria-label="Variante de pelota">
+<option value="football">Pelota de fútbol (paneles y costuras 3D)</option>
+<option value="tennis">Pelota de tenis (fieltro texturado y ranura curva)</option>
+<option value="beach">Pelota de playa (gajos de color plástico de patio)</option>
+</select>
+<button id="reset">RESTABLECER CÁMARA</button>
+<span id="status" role="status">Cargando modelos...</span>
+</div>
+<div class="stage">
+<span class="label left">ORIGINAL · CÓDIGO ACTUAL (WORLD.TS)</span>
+<span class="label right" id="proposalLabel">PROPUESTA · FÚTBOL SMOOTHPIXEL</span>
+<span class="centerline"></span>
+<canvas id="view" aria-label="Comparación 3D lado a lado. Arrastre para girar y use la rueda para acercar"></canvas>
+</div>
+<div class="alternatives">
+<article class="card">
+<h2>1. Pelota de fútbol</h2>
+<p>Paneles pentagonales y hexagonales modelados en 3D con bajorrelieve en las costuras. Estilo clásico de juguete deportivo gastado en el patio.</p>
+</article>
+<article class="card">
+<h2>2. Pelota de tenis</h2>
+<p>Ranura ondulada icónica de pelota de tenis con motas de desgaste. Aporta un tono verde lima desgastado muy acorde a los juguetes de perros y niños.</p>
+</article>
+<article class="card">
+<h2>3. Pelota de playa</h2>
+<p>Seis gajos verticales en tonos industriales/vintage (ocre, caldera, cerceta y turquesa). Aporta un volumen veraniego y ligero sin perder la estética chatarra.</p>
+</article>
+</div>
+<p class="note"><strong>Evaluación técnica:</strong> Ambos modelos comparten el mismo radio exacto (2.5 unidades en el mundo del juego), altura de apoyo sobre el suelo del patio, ángulo de sol y sombras PBR. El original no tiene volumen en sus costuras (solo dibujo 2D). La versión SmoothPixel ofrece curvatura con biseles físicos que reaccionan a la luz direccional y al faro del auto RC.</p>
+</main>
+<script type="module" src="ball-comparison.js"></script>
+</body>
+</html>

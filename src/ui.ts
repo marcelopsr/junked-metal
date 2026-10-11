@@ -636,6 +636,26 @@ const kindLabel = (o: Offer) => (
   `${o.kind === "weapon" ? "Arma" : "Pieza"} · NV ${(o.lv ?? 2) - 1} → NV ${o.lv}${o.lv === 5 && o.syn?.ready ? " · ¡EVO LISTA!" : o.lv === 5 ? " · MÁX" : ""}`
 );
 
+const EVO_ART: Record<string, string> = {
+  torbellino: "./images/evo-torbellino.webp",
+  trompo: "./images/evo-torbellino.webp",
+  sierra: "./images/evo-sierra.webp",
+  lanzallamas: "./images/evo-lanzallamas.webp",
+  chispero: "./images/evo-lanzallamas.webp",
+  mortero: "./images/evo-mortero.webp",
+  petardos: "./images/evo-mortero.webp",
+};
+
+const evoImage = (o: Offer): string | null => {
+  if (o.kind !== "evo") return null;
+  const key = o.id.toLowerCase();
+  const title = o.title.toLowerCase();
+  for (const [k, v] of Object.entries(EVO_ART)) {
+    if (key.includes(k) || title.includes(k)) return v;
+  }
+  return null;
+};
+
 let pickCb: ((i: number) => void) | null = null;
 let hoverCb: ((i: number) => void) | null = null;
 let busy = false;
@@ -648,15 +668,21 @@ export function showOffers(title: string, offers: Offer[], sel: number, onPick: 
   const subEl = $("luSub");
   subEl.textContent = sub;
   subEl.className = threat ? `lu-sub lu-sub--${threat}` : "lu-sub";
-  $("offers").innerHTML = offers.map((o, i) => `
-    <div class="offer ${rarity(o)} ${o.kind === "heal" ? "heal" : ""} ${o.lv === 5 && o.syn?.ready ? "evo-rdy" : ""} ${i === sel ? "sel" : ""}" data-i="${i}" style="--i:${i}">
+  $("offers").innerHTML = offers.map((o, i) => {
+    const evoImgSrc = evoImage(o);
+    const artContent = evoImgSrc
+      ? `<div class="evo-thumb"><img src="${evoImgSrc}" alt="${o.title}" class="evo-thumb-img" width="76" height="76" loading="lazy" /><div class="evo-thumb-rivets"></div></div>`
+      : icon(o.kind === "evo" ? o.id : o.icon, 44);
+    return `
+    <div class="offer ${rarity(o)} ${o.kind === "heal" ? "heal" : ""} ${o.lv === 5 && o.syn?.ready ? "evo-rdy" : ""} ${evoImgSrc ? "has-evo-art" : ""} ${i === sel ? "sel" : ""}" data-i="${i}" style="--i:${i}">
       <span class="kind">${kindLabel(o)}</span>
-      <div class="art">${icon(o.kind === "evo" ? o.id : o.icon, 44)}</div>
+      <div class="art ${evoImgSrc ? "art-evo-thumb" : ""}">${artContent}</div>
       <b>${o.title}</b>
       <span>${o.desc}</span>
       ${o.syn ? `<div class="syn ${o.syn.ready ? "on" : ""}">${o.syn.icons.map((k) => icon(k, 14)).join("")}<span>${o.syn.label}</span></div>` : ""}
       ${o.lv ? `<span class="pips">${Array.from({ length: 5 }, (_, k) => `<i class="${k === o.lv! - 1 && o.lv! > 1 ? "on next" : k < o.lv! ? "on" : ""}"></i>`).join("")}</span>` : ""}
-    </div>`).join("");
+    </div>`;
+  }).join("");
   $("levelup").classList.remove("hidden");
   hoverCb?.(sel);
 }

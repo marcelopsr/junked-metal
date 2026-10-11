@@ -339,3 +339,72 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 .offer.evo-rdy .kind { color: #22c55e; }
 .offer.heal .kind { color: #22c55e; }
 .offer .pips i.next { background: #ffd24a; box-shadow: 0 0 6px rgba(255, 210, 74, .85); }
+
+/* ---------- Miniatura de taller para armas evolucionadas ---------- */
+.offer .art.art-evo-thumb {
+  width: 86px;
+  height: 86px;
+  clip-path: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+}
+.offer .evo-thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  background: #0f151c;
+  border: 2px solid #5a6978;
+  border-top-color: #8fa0b2;
+  border-bottom-color: #2b3542;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px #000, 0 4px 12px rgba(0, 0, 0, .75), 0 0 8px rgba(255, 194, 77, .35);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.offer .evo-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: contrast(1.08) brightness(0.96);
+  image-rendering: auto;
+}
+.offer .evo-thumb-rivets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px dashed rgba(255, 255, 255, .15);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, .85);
+}
+.offer .evo-thumb-rivets::before,
+.offer .evo-thumb-rivets::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #9bb0c2;
+  border-radius: 50%;
+  box-shadow: 0 1px 1px #000, inset 0 1px 0 #fff;
+}
+.offer .evo-thumb-rivets::before {
+  top: 2px;
+  left: 2px;
+  box-shadow: 0 1px 1px #000, 70px 0 0 #9bb0c2, 0 70px 0 #9bb0c2, 70px 70px 0 #9bb0c2;
+}
+.offer:hover .evo-thumb, .offer.sel .evo-thumb {
+  border-color: #ffd24a;
+  box-shadow: inset 0 0 0 1px #000, 0 4px 14px rgba(0, 0, 0, .9), 0 0 14px rgba(255, 210, 74, .65);
+}
+@media (orientation: portrait) and (max-width: 720px), (orientation: landscape) and (max-height: 500px) {
+  #levelup .offer .art.art-evo-thumb { width: 56px; height: 56px; }
+  #levelup .offer .evo-thumb { width: 54px; height: 54px; }
+  #levelup .offer .evo-thumb-rivets::before {
+    box-shadow: 0 1px 1px #000, 46px 0 0 #9bb0c2, 0 46px 0 #9bb0c2, 46px 46px 0 #9bb0c2;
+  }
+}
+

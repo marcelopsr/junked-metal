@@ -212,7 +212,26 @@ export const sessions = [
     { id: "sol", act: async (p) => { await labReady(p); await p.evaluate(() => { window.__play(3); window.__god(); window.__sim(30); window.__killAll(); window.__luna.go("sol"); window.__luna.ring(10, 13); }); await tick(p, 60); } },
     { id: "tierra", perf: false, act: async (p) => { await p.evaluate(() => { window.__cfg({ camMode: "baja" }); window.__luna.go("tierra"); }); await tick(p, 40); } },
     { id: "oscuro", act: async (p) => { await p.evaluate(() => { window.__cfg({ camMode: "actual" }); window.__killAll(); window.__luna.go("oscuro"); window.__luna.ring(14, 24); window.__luna.ring(6, 32, "escarabajo"); }); await tick(p, 70); } },
+    // Aliens (src/aliens.ts): fila con los 4 (el enjambre ya pidió su manada, el emboscador empieza a enterrarse) y el tirador con su onda en vuelo
+    { id: "aliens", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.row(undefined, 8, 3); }); await tick(p, 6); } },
+    { id: "aliens-onda", perf: false, act: async (p) => {
+      await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.row(["tirador"], 15); });
+      for (let i = 0; i < 80 && !(await p.evaluate(() => window.__luna.info().spits > 0)); i++) await tick(p, 4);
+      await tick(p, 26);
+    } },
     { id: "crater", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.crater(8, 3, 13); window.__luna.crater(4, -1.6, 24); }); await tick(p, 40); } },
+    // Eventos (src/moon_events.ts): lluvia de meteoritos (mapa en rojo, marcas en el piso, meteoros en vuelo, cráteres con humo) y erupción que se expande
+    { id: "meteoritos", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.meteor(14); }); await tick(p, 150); } },
+    { id: "erupcion", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.erupt(); }); await tick(p, 360); } },
+    // Sol y Tierra lanzan bichos (src/moon_sky.ts): __luna.astro(true|false) lanza ya; go(lugar, true) pone el auto de frente al Sol
+    { id: "astro-fuego", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go([0.5, 0.2, 0], true); }); await tick(p, 30); await p.evaluate(() => window.__luna.astro(true)); await tick(p, 112); } }, // cae desde arriba: a 112 cuadros ya entró en cuadro
+    { id: "astro-cohete", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("tierra"); }); await tick(p, 20); await p.evaluate(() => window.__luna.astro(false)); await tick(p, 120); } },
+    { id: "astro-impacto", perf: false, act: async (p) => { await tick(p, 40); } }, // el cohete ya cayó: cráter, humo y el bicho-cohete saliendo
+    // Naves (src/moon_ships.ts): __luna.ship(id) borra las naves y pone una 14 m delante del auto
+    { id: "nave-nodriza", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("nodriza"); }); await tick(p, 150); } },
+    { id: "nave-bombardera", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("bombardera"); }); await tick(p, 150); } },
+    { id: "nave-abductora", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("abductora"); }); await tick(p, 230); } },
+    { id: "nave-caza", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("caza"); }); await tick(p, 24); } },
   ] },
   // partida_llena: 300 s de sim (partida avanzada, t=5 min) → mide el estado con armas evolucionadas y oleadas densas.
   // Medido: ~168 draws PC (thin-instances agrupan por tipo; menos que partida-curso/90 s por diferente mezcla de proyectiles).
