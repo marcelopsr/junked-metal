@@ -1,0 +1,18 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt": "orthographic flat top-down road texture, worn cracked asphalt track with embedded scrap metal shavings, tire marks, subtle gravel and oil patina, flat diffuse neutral lighting, no harsh shadows, seamless racing track game material albedo",
+  "negative": "text, letters, watermark, logo, signature, words, 3d sphere, horizon, vignette, blurry, modern clean highway",
+  "seed": 42091,
+  "steps": 28,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 1024,
+  "height": 1024,
+  "date": "2026-10-11T18:57:43.856Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/web_00008_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/textures/race-asphalt.webp"
+}
