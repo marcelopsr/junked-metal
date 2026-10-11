@@ -812,17 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #55 ("Maquinaria Pesada e Iluminación") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 593 ms, 17 capturas en `.shots/actual/` en 22.5 s, grafo en 3954 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #56**.
+- **Último trabajo completado:** Ciclo #56 ("Fresadora y Taller Industrial") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 582 ms, 17 capturas en `.shots/actual/` en 22.7 s, grafo en 3987 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #57**.
 
-### 🔓 LISTO PARA EL CICLO #56 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #57 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Workshop Tools & Props 3D Modeler** | Fresadora vertical de torreta Folded (`millingMachineFold`) o compresor de aire | `src/folded_slice.ts` |
-| **Workshop Diorama 3D Modeler** | Mini-morsa con virutas en taladro o spot puntual de acento bajo lupa | `src/menuscene.ts` |
-| **Procedural Vehicle 3D Modeler** | Micro-bridas de sujeción de cables (Zip-Ties) y tobera NACA en cabina | `src/models.ts` |
-| **Audio Synth Sound Designer** | Loop diegético de taller (`workshopAmbience`) y ticks de enfriamiento (`coolDownTicks`) | `src/sfx.ts` |
+| **Workshop Tools & Props 3D Modeler** | Compresor de aire con calderín horizontal (`airCompressorFold`) o cizalla de chapa | `src/folded_slice.ts` |
+| **Workshop Diorama 3D Modeler** | Manguera espiralada con pistola de aire o estantería vertical de neumáticos | `src/menuscene.ts` |
+| **Procedural Vehicle 3D Modeler** | Termorretráctil bicolor en bananas de motor y cinta Kapton ámbar en chasis | `src/models.ts` |
+| **Audio Synth Sound Designer** | Ticks de trinquete de brida (`zipTieZip`) o fricción abrasiva de fresa (`millingBite`) | `src/sfx.ts` |
+
+### Ciclo #56 (2026-10-10) — Fresadora Bridgeport, Lámpara de Máquina con Virutas, Micro-Bridas Zip-Ties y Zumbido Fluorescente
+- **Alcance implementado en producción (`src/`):**
+  - **Workshop Tools & Props 3D Modeler (`src/folded_slice.ts`):** Fresadora vertical de torreta `millingMachineFold()` en fundición gris oscuro industrial (`FOLD.painted("#1e293b")`): base ranurada en T, columna prismática con guías en cola de milano rectificadas en acero desnudo, ménsula de elevación vertical con fuelle de goma y carro transversal, mesa de coordenadas longitudinal alargada con ranuras en T, nonios circulares y manivelas cromadas oscilantes en ambos extremos; torreta horizontal superior orientable con cremallera, cabezal de fresado con carcasa de poleas, motor trasero aleteado y husillo vertical con fresa cilíndrica de planear de insertos de carburo (`carbide`); 0 draw calls adicionales.
+  - **Workshop Diorama 3D Modeler (`src/menuscene.ts`):** Lámpara articulada `machineLamp` montada sobre la columna de máquina con brazo tubular doble metálico, codos con palomilla de apriete, campana reflectora cónica en verde forja (`M.matte("#164e63")`) y difusor puntual emisor cálido (`M.glow("#fff0c8")`); mini-morsa de máquina amarrada a las ranuras del taladro `drillViseAndChips` con cúmulo de virutas torneadas espiraladas en acero brillante esparcidas sobre el plato de fundición; montaje de la fresadora de torreta `millingMachineFold()` en el lateral izquierdo del garaje junto a la pared (`[-33, 0, 5]`) con sombras dinámicas completas.
+  - **Procedural Vehicle 3D Modeler (`src/models.ts`):** 4 micro-bridas de sujeción (Zip-Ties) en nylon negro con cabezas de trinquete y colas recortadas amarrando mazos de cables de potencia 12AWG y cables de balanceo LiPo a los largueros del chasis para `buggy`, `monster` y `carrera`; tobera NACA de refrigeración de electrónica embutida en bajorrelieve en la carrocería con marco afilado de aspiración dirigida hacia la bancada del motor para `carrera`, `buggy` y `deportivo`.
+  - **Audio Synth Sound Designer (`src/sfx.ts`):** `SFX.coolDownTicks(pan)` emulando micro-chasquidos aperiódicos de contracción térmica en aluminio y disipadores tras exigir el motor o al detenerse en boxes; `SFX.fluorescentBuzz(vol, pan)` con zumbido analógico de tubo fluorescente de taller a 50/60 Hz con micro-estática diegética de fondo.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, vitest --changed 43 tests en verde, build Vite en 582 ms, 17 capturas en `.shots/actual/` aprobadas en 22.7 s, grafo de conocimiento sincronizado en 3987 nodos y 9651 aristas.
 
 ### Ciclo #55 (2026-10-10) — Maquinaria Pesada e Iluminación: Taladro de Columna Folded, Lámpara Lupa Pantógrafo, Transponder con LED y Siseo Térmico
 - **Alcance implementado en producción (`src/`):**

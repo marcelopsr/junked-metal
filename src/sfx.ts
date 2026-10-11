@@ -519,6 +519,20 @@ export const SFX = {
     tone("sine", 240, 240, 0.12, 0.06, 0, pan);
     tone("sine", 2800, 2800, 0.04, 0.09, 0.1, pan);
   },
+  /** Micro-chasquidos aperiódicos de contracción térmica de aluminio y disipadores tras exigir el motor. */
+  coolDownTicks: (pan?: number) => {
+    if (!gate("cooldown-ticks", 3)) return;
+    const p = 0.9 + Math.random() * 0.3;
+    tone("sine", 6800 * p, 4200 * p, 0.02, 0.07, 0, pan);
+    hiss("highpass", 7200 * p, 1500, 0.015, 0.08, pan);
+  },
+  /** Zumbido analógico de tubo fluorescente de taller de 50/60 Hz con micro-estática diegética de fondo. */
+  fluorescentBuzz: (vol = 0.05, pan?: number) => {
+    if (!gate("fl-buzz", 1)) return;
+    tone("sawtooth", 100, 100, 0.4, vol * 0.6, 0, pan);
+    tone("sine", 50, 50, 0.4, vol * 0.8, 0, pan);
+    hiss("bandpass", 1200, 300, 0.25, vol * 0.3, pan);
+  },
 };
 
 

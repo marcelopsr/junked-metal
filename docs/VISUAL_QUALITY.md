@@ -1084,6 +1084,26 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #56 (Fresadora Bridgeport, Lámpara de Máquina con Virutas, Micro-Bridas Zip-Ties y Zumbido Fluorescente)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 22.7 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Fresadora vertical de torreta Bridgeport Folded (Workshop Tools & Props 3D Modeler · `src/folded_slice.ts`):**
+   - Incorporada fresadora vertical `millingMachineFold()` en fundición gris oscuro industrial (`FOLD.painted("#1e293b")`): base masiva ranurada en T con anclajes, columna prismática con guías en cola de milano rectificadas en acero desnudo, ménsula de elevación vertical con fuelle de goma y carro transversal, mesa de coordenadas longitudinal alargada con ranuras en T, nonios circulares y manivelas cromadas oscilantes en ambos extremos; torreta horizontal superior orientable con cremallera, cabezal de fresado con carcasa de poleas, motor trasero aleteado y husillo vertical con fresa cilíndrica de planear de insertos de carburo (`carbide`); 0 draw calls adicionales.
+2. **Lámpara articulada de máquina, mini-morsa de taladro y virutas en boxes (Workshop Diorama 3D Modeler · `src/menuscene.ts`):**
+   - Incorporada lámpara articulada `machineLamp` montada sobre la columna de máquina con brazo tubular doble metálico, codos con palomilla de apriete, campana reflectora cónica en verde forja (`M.matte("#164e63")`) y difusor puntual emisor cálido (`M.glow("#fff0c8")`).
+   - Incorporada mini-morsa de máquina amarrada a las ranuras del taladro `drillViseAndChips` con cúmulo de virutas torneadas espiraladas en acero brillante esparcidas sobre el plato de fundición.
+   - Montaje de la fresadora de torreta `millingMachineFold()` en el lateral izquierdo del garaje junto a la pared (`[-33, 0, 5]`) con sombras dinámicas completas.
+3. **Micro-bridas de nylon negro (Zip-Ties) y tobera NACA en cabina (Procedural Vehicle 3D Modeler · `src/models.ts`):**
+   - Incorporadas 4 micro-bridas de sujeción (Zip-Ties) en nylon negro con cabezas de trinquete y colas recortadas amarrando mazos de cables de potencia 12AWG y cables de balanceo LiPo a los largueros del chasis para `buggy`, `monster` y `carrera`.
+   - Incorporada tobera NACA de refrigeración de electrónica embutida en bajorrelieve en la carrocería con marco afilado de aspiración dirigida hacia la bancada del motor para `carrera`, `buggy` y `deportivo`.
+4. **Micro-chasquidos de contracción térmica y zumbido de fluorescente (Audio Synth Sound Designer · `src/sfx.ts`):**
+   - Incorporado `SFX.coolDownTicks(pan)` emulando micro-chasquidos aperiódicos de contracción térmica en aluminio y disipadores tras exigir el motor o al detenerse en boxes.
+   - Incorporado `SFX.fluorescentBuzz(vol, pan)` con zumbido analógico de tubo fluorescente de taller a 50/60 Hz con micro-estática diegética de fondo.
+
+---
+
 ## 2026-10-10 · Ciclo #55 (Maquinaria Pesada e Iluminación: Taladro de Columna Folded, Lámpara Lupa Pantógrafo, Transponder con LED y Siseo Térmico)
 
 **Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 22.5 s).

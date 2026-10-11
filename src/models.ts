@@ -676,7 +676,24 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.0015, 0.0015, 0.022, M.plastic("#18181b"), [bw * 0.14 + 0.0028, bh * 0.28, -bl * 0.014], [0.3, 0, 0], 4),
         // Cincha transversal en nylon negro y micro-hebilla de cierre rápido sujeta-batería
         box(0.012, 0.002, 0.075, M.plastic("#18181b"), [-bw * 0.12, bh * 0.28 + 0.018, 0]),
-        box(0.014, 0.005, 0.012, M.plastic("#38bdf8"), [-bw * 0.12, bh * 0.28 + 0.02, 0.038])
+        box(0.014, 0.005, 0.012, M.plastic("#38bdf8"), [-bw * 0.12, bh * 0.28 + 0.02, 0.038]),
+        // Micro-bridas de nylon negro (Zip-Ties) agrupando y fijando cables de silicona del motor y LiPo a los largueros del chasis
+        // Brida 1: abrazadera toroidal en mazo de salida de cables LiPo 12AWG
+        tor(0.007, 0.0018, M.plastic("#18181b"), [bw * 0.14, bh * 0.292, -bl * 0.048], [Math.PI / 2 + 0.4, 0, 0], 8),
+        box(0.004, 0.003, 0.004, M.plastic("#18181b"), [bw * 0.14 + 0.0035, bh * 0.295, -bl * 0.048], [Math.PI / 2 + 0.4, 0, 0.2]),
+        box(0.0015, 0.002, 0.007, M.plastic("#18181b"), [bw * 0.14 + 0.006, bh * 0.298, -bl * 0.05], [Math.PI / 2 + 0.6, 0.25, 0.5]),
+        // Brida 2: fijación de cables LiPo al larguero longitudinal del chasis
+        tor(0.007, 0.0018, M.plastic("#18181b"), [bw * 0.14 - 0.006, bh * 0.302, -bl * 0.075], [Math.PI / 2 + 0.5, 0, -0.2], 8),
+        box(0.004, 0.003, 0.004, M.plastic("#18181b"), [bw * 0.14 - 0.003, bh * 0.306, -bl * 0.075], [Math.PI / 2 + 0.5, 0, 0.1]),
+        box(0.0015, 0.002, 0.007, M.plastic("#18181b"), [bw * 0.14 - 0.001, bh * 0.31, -bl * 0.077], [Math.PI / 2 + 0.7, 0.35, 0.3]),
+        // Brida 3: mazo de cables de potencia del motor 540 hacia la bancada y variador ESC
+        tor(0.007, 0.0018, M.plastic("#18181b"), [0, bh * 0.33, -bl * 0.22 + 0.035], [Math.PI / 2 + 0.3, 0, 0], 8),
+        box(0.004, 0.003, 0.004, M.plastic("#18181b"), [0.004, bh * 0.334, -bl * 0.22 + 0.035], [Math.PI / 2 + 0.3, 0, 0.25]),
+        box(0.0015, 0.002, 0.007, M.plastic("#18181b"), [0.006, bh * 0.338, -bl * 0.22 + 0.033], [Math.PI / 2 + 0.5, 0.2, 0.55]),
+        // Brida 4: fijación de mazo fino de balanceo JST y señal junto a la bandeja del chasis
+        tor(0.007, 0.0018, M.plastic("#18181b"), [bw * 0.14 + 0.002, bh * 0.282, -bl * 0.016], [Math.PI / 2 + 0.25, 0, 0], 8),
+        box(0.004, 0.003, 0.004, M.plastic("#18181b"), [bw * 0.14 + 0.006, bh * 0.285, -bl * 0.016], [Math.PI / 2 + 0.25, 0, -0.3]),
+        box(0.0015, 0.002, 0.006, M.plastic("#18181b"), [bw * 0.14 + 0.008, bh * 0.288, -bl * 0.018], [Math.PI / 2 + 0.45, -0.2, -0.45])
       );
     }
     if (kind === "buggy" || kind === "formula" || kind === "carrera") {
@@ -726,6 +743,31 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     }
     if (kind === "carrera" || (kind as string) === "deportivo") {
       parts.push(box(0.004, 0.09, 0.16, M.matte("#27272a"), [bw * 0.45, bh * 0.65, 0]));
+    }
+    if (kind === "carrera" || kind === "buggy" || (kind as string) === "deportivo") {
+      // Tobera NACA de refrigeración de electrónica embutida en la superficie de la carrocería / capó
+      // Conducto triangular divergente en bajorrelieve (M.matte("#111")) con marco de perfil afilado en el color de la moldura/chapa
+      const nacaFrameMat = o.trim ? M.plastic(o.trim) : paint;
+      const nacaZ = kind === "carrera" ? bl * 0.24 : kind === "buggy" ? bl * 0.19 : bl * 0.22;
+      const nacaY = kind === "carrera" ? bh * 0.60 : kind === "buggy" ? bh * 0.62 : bh * 0.60;
+      const nacaPitch = kind === "carrera" ? -0.06 : kind === "buggy" ? -0.10 : -0.08;
+      parts.push(
+        // Rampa interior en bajorrelieve: canal triangular descendente que guía el flujo de aire hacia la electrónica y bancada del motor
+        box(0.022, 0.003, 0.04, M.matte("#111"), [0, nacaY - 0.002, nacaZ + 0.038], [nacaPitch - 0.08, 0, 0]),
+        box(0.044, 0.003, 0.045, M.matte("#111"), [0, nacaY - 0.007, nacaZ], [nacaPitch - 0.14, 0, 0]),
+        box(0.065, 0.004, 0.045, M.matte("#111"), [0, nacaY - 0.013, nacaZ - 0.038], [nacaPitch - 0.20, 0, 0]),
+        // Garganta profunda de entrada de aire bajo la carrocería
+        box(0.062, 0.016, 0.006, M.matte("#111"), [0, nacaY - 0.012, nacaZ - 0.06], [nacaPitch, 0, 0]),
+        // Aleta deflectora longitudinal divisoria de flujo
+        box(0.003, 0.012, 0.07, M.matte("#111"), [0, nacaY - 0.008, nacaZ - 0.02], [nacaPitch - 0.14, 0, 0]),
+        // Marco de perfil afilado con labios laterales divergentes en color de moldura/chapa
+        box(0.005, 0.007, 0.12, nacaFrameMat, [-0.021, nacaY, nacaZ], [nacaPitch, 0.23, 0]),
+        box(0.005, 0.007, 0.12, nacaFrameMat, [0.021, nacaY, nacaZ], [nacaPitch, -0.23, 0]),
+        // Visera superior transversal afilada sobre la boca de aspiración
+        box(0.072, 0.005, 0.008, nacaFrameMat, [0, nacaY + 0.002, nacaZ - 0.062], [nacaPitch, 0, 0]),
+        // Vértice afilado frontal donde convergen los flancos
+        box(0.016, 0.004, 0.008, nacaFrameMat, [0, nacaY + 0.001, nacaZ + 0.062], [nacaPitch, 0, 0])
+      );
     }
     if (kind === "formula" || kind === "buggy") {
       for (const sx of [-bw * 0.32, bw * 0.32]) {

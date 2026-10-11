@@ -4,7 +4,7 @@ import { applyClimate, canvasTex, glow, lamp, LOOK, M, menuLights, pbr, setDof, 
 import { ambient } from "./fx";
 import { brick, canvasTexture, KIT, kitPut, M3C, wornMat, type KitId } from "./kit3d";
 import { showWorld } from "./world";
-import { benchViseFold, drillPressFold } from "./folded_slice";
+import { benchViseFold, drillPressFold, millingMachineFold } from "./folded_slice";
 
 // Escenas de los menús (no de la partida). Sistema de configuración:
 // - SETS: escenarios físicos (cuarto + utilería fija), armados la primera vez que se ven y lejos entre sí (solo uno encendido).
@@ -242,12 +242,15 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     ...pitStand(fDark, metal, M.rubber()),
     ...lipoCharger(fTeal, metal, fDark),
     ...siliconeOils(fYellow, fRed, metal),
-    // organizador escalonado de llaves Allen, comprobador de celdas LiPo, morsa y taladro de columna Folded
+    // organizador escalonado de llaves Allen, comprobador de celdas LiPo, morsa, taladro y fresadora Folded
     allenRack(metal, fDark),
     cellMeter(fDark, metal),
     place(benchViseFold(), [-28, 0, 10], [0, 0.55, 0]),
     place(drillPressFold(), [-30, 0, -8], [0, 0.35, 0]),
+    place(millingMachineFold(), [-33, 0, 5], [0, 0.4, 0]),
     magnifierLamp(metal, fDark),
+    machineLamp(metal, fDark),
+    drillViseAndChips(metal, fDark),
     balanceLead(),
     // repuestos: dos ruedas, batería con bornes y cables, tornillos y tuercas, latas de pintura, destornillador suelto, taza enlozada
     place(wheel(2, 1, "#8a5a3a"), [6.5, 0.5, 6.5], [0, 0.4, Math.PI / 2]), place(wheel(2, 1, "#3a6b7c"), [8.6, 1.0, 4.4], [0, -0.3, 0]),
@@ -519,6 +522,41 @@ export function balanceLead(): B.Mesh {
     tor(0.12, 0.04, dark, [-9.9, 0.06, 4.40], [0, 0.15, Math.PI / 2], 8)
   ];
   return merge("balanceLead", parts);
+}
+
+export function machineLamp(metal: B.Material, fDark: B.Material): B.Mesh {
+  const parts: B.Mesh[] = [
+    // Base magnética / brida sujeta a la máquina
+    box(0.8, 0.6, 0.8, fDark, [-30.2, 5.8, -7.2]),
+    cyl(0.3, 0.3, 0.4, metal, [-30.2, 6.2, -7.2]),
+    // Brazo articulado tubular doble con codos de apriete por palomilla
+    tube([[-30.2, 6.4, -7.2], [-29.5, 7.6, -6.6], [-28.8, 6.8, -6.2]], 0.08, metal),
+    sph(0.24, metal, [-29.5, 7.6, -6.6]),
+    sph(0.24, metal, [-28.8, 6.8, -6.2]),
+    // Campana reflectora cónica en verde forja con borde oscuro
+    cyl(0.6, 1.4, 1.1, M.matte("#164e63"), [-28.8, 6.2, -6.2], [0.4, 0, 0], 12),
+    tor(1.36, 0.08, fDark, [-28.8, 5.7, -6.0], [0.4, 0, 0], 12),
+    // Foco emisor puntual cálido diegético
+    sph(0.45, M.glow("#fff0c8"), [-28.8, 5.8, -6.0])
+  ];
+  return merge("machineLamp", parts);
+}
+
+export function drillViseAndChips(metal: B.Material, fDark: B.Material): B.Mesh {
+  const parts: B.Mesh[] = [
+    // Mini-morsa de máquina amarrada a las ranuras del taladro
+    box(1.4, 0.4, 1.8, fDark, [-30, 3.85, -7.35], [0, 0.35, 0]),
+    box(1.2, 0.28, 0.22, metal, [-30, 4.15, -7.95], [0, 0.35, 0]),
+    box(1.2, 0.28, 0.22, metal, [-30, 4.15, -7.15], [0, 0.35, 0]),
+    cyl(0.14, 0.14, 1.1, metal, [-30, 3.9, -6.5], [Math.PI / 2, 0.35, 0], 6),
+    box(0.1, 0.6, 0.1, metal, [-30, 3.9, -5.9], [0, 0.35, 0]),
+    // Cúmulo de virutas torneadas espiraladas en acero brillante sobre el plato
+    tor(0.18, 0.04, metal, [-29.4, 3.75, -7.1], [0.6, 0.2, 0.4], 6),
+    tor(0.14, 0.035, metal, [-29.6, 3.75, -7.6], [0.3, 0.8, -0.2], 6),
+    tor(0.2, 0.045, metal, [-30.5, 3.75, -7.4], [-0.5, 0.4, 0.6], 6),
+    tor(0.16, 0.038, metal, [-30.3, 3.75, -6.9], [0.2, -0.6, 0.3], 6)
+  ];
+  return merge("drillViseAndChips", parts);
 }
 
 function lipoCharger(fTeal: B.Material, metal: B.Material, fDark: B.Material): B.Mesh[] {

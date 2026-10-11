@@ -1157,3 +1157,252 @@ export function drillPressFold(): B.Mesh {
   return m;
 }
 
+/** Fresadora vertical de torreta (Bridgeport) de taller Folded: base masiva de fundición pesada con brida y ranuras en T en gris oscuro industrial,
+ *  columna prismática vertical robusta con guías en cola de milano rectificadas en acero desnudo,
+ *  ménsula de elevación vertical (eje Z) con fuelle protector de goma en acordeón y volante frontal con manivela,
+ *  carro transversal (eje Y) y mesa de coordenadas longitudinal (eje X) alargada con ranuras en T longitudinales,
+ *  nonios circulares graduados y manivelas cromadas con mangos oscilantes en ambos extremos,
+ *  y brazo superior de torreta horizontal orientable con cremallera, cabezal superior de fresado con carcasa de poleas,
+ *  motor trasero aleteado y husillo vertical con fresa cilíndrica de planear de insertos de corte. */
+export function millingMachineFold(): B.Mesh {
+  const { G, done } = kit();
+  const castGrey = FOLD.painted("#1e293b", 0.85, 318);
+  const bare = FOLD.bare(), dark = FOLD.dark(), rubber = FOLD.rubber();
+  const carbide = FOLD.painted("#eab308", 0.4, 321);
+  const btnGreen = FOLD.emissive("#22c55e"), btnRed = FOLD.emissive("#ef4444");
+
+  // 1. Base masiva de fundición pesada con brida perimetral, ranuras en T y anclajes
+  G.box(3.4, 0.42, 4.4, castGrey, [0, 0.21, -0.4]);
+  G.box(3.65, 0.14, 4.65, dark, [0, 0.07, -0.4]);
+  G.bend([-1.7, 0.42, -2.6], [1.7, 0.42, -2.6], 0.06, castGrey);
+  G.bend([-1.7, 0.42, 1.8], [1.7, 0.42, 1.8], 0.06, castGrey);
+  G.bend([-1.7, 0.42, -2.6], [-1.7, 0.42, 1.8], 0.06, castGrey);
+  G.bend([1.7, 0.42, -2.6], [1.7, 0.42, 1.8], 0.06, castGrey);
+  // Bulones de anclaje de la base al suelo
+  for (const [bx, bz] of [[-1.45, 1.5], [1.45, 1.5], [-1.45, -2.2], [1.45, -2.2]]) {
+    G.cyl(0.44, 0.06, dark, [bx, 0.43, bz], undefined, 8);
+    G.bolts([bx, 0.42, bz], [bx, 0.42, bz], 1, [0, 1, 0]);
+  }
+  // Depósito de taladrina / plataforma frontal con ranuras en T mecanizadas
+  G.box(2.6, 0.08, 1.6, dark, [0, 0.44, 0.9]);
+  G.box(2.2, 0.04, 1.3, bare, [0, 0.47, 0.9]);
+  G.box(0.14, 0.06, 1.2, dark, [-0.6, 0.48, 0.9]);
+  G.box(0.14, 0.06, 1.2, dark, [0.6, 0.48, 0.9]);
+  // Nervaduras de fundición de unión entre base y columna
+  G.box(0.2, 0.65, 1.1, castGrey, [-1.15, 0.72, -0.7], [0.35, 0, 0]);
+  G.box(0.2, 0.65, 1.1, castGrey, [1.15, 0.72, -0.7], [0.35, 0, 0]);
+
+  // 2. Columna prismática vertical robusta con guías en cola de milano rectificadas
+  G.box(2.4, 2.8, 2.6, castGrey, [0, 1.82, -1.1]);
+  G.box(2.3, 3.4, 2.4, castGrey, [0, 4.85, -1.1]);
+  // Guías prismáticas rectificadas en cola de milano (dovetail) en acero desnudo
+  G.box(1.7, 4.6, 0.08, bare, [0, 3.75, 0.15]);
+  G.box(0.14, 4.6, 0.16, bare, [-0.88, 3.75, 0.14], [0, 0.45, 0]);
+  G.box(0.14, 4.6, 0.16, bare, [0.88, 3.75, 0.14], [0, -0.45, 0]);
+  // Regla graduada milimetrada vertical al costado de la guía
+  G.box(0.06, 4.2, 0.02, dark, [0.96, 3.75, 0.18]);
+  for (let dy = 1.8; dy <= 5.8; dy += 0.25) {
+    G.box(0.08, 0.02, 0.02, bare, [0.96, dy, 0.19]);
+  }
+  // Puerta de registro lateral / armario eléctrico en -X con rejillas de ventilación y pestillo
+  G.box(0.06, 2.5, 1.5, castGrey, [-1.22, 3.5, -1.1]);
+  G.box(0.04, 2.54, 1.54, dark, [-1.21, 3.5, -1.1]);
+  for (let yl = 2.7; yl <= 3.3; yl += 0.15) {
+    G.box(0.04, 0.05, 0.9, dark, [-1.25, yl, -1.1], [0.4, 0, 0]);
+  }
+  G.cyl(0.08, 0.2, bare, [-1.24, 4.4, -0.4], undefined, 6);
+  G.cyl(0.08, 0.2, bare, [-1.24, 2.6, -0.4], undefined, 6);
+  G.box(0.06, 0.22, 0.08, bare, [-1.26, 3.5, -1.75]);
+  G.sph(0.12, dark, [-1.27, 3.4, -1.75]);
+  // Chapa diegética de advertencia / peligro en la columna
+  G.plate([-1.23, 5.1, -1.1], [0, -Math.PI / 2, 0], 0.7, 0.45, FOLD.painted("#eab308", 0.5, 319));
+  G.box(0.02, 0.14, 0.4, dark, [-1.25, 5.1, -1.1]);
+  // Brida superior de torreta (anillo circular graduado con 4 bulones T)
+  G.cyl(2.3, 0.32, castGrey, [0, 6.56, -1.1], undefined, 16);
+  G.cyl(2.36, 0.1, bare, [0, 6.46, -1.1], undefined, 16);
+  for (let a = 0; a < 4; a++) {
+    const ang = (a / 4) * Math.PI * 2 + Math.PI / 4;
+    G.bolts([Math.cos(ang) * 0.95, 6.72, -1.1 + Math.sin(ang) * 0.95], [Math.cos(ang) * 0.95, 6.72, -1.1 + Math.sin(ang) * 0.95], 1, [0, 1, 0]);
+  }
+
+  // 3. Ménsula de elevación vertical (eje Z) con fuelle de goma y volante frontal
+  G.box(2.1, 1.4, 2.1, castGrey, [0, 2.5, 0.85]);
+  G.box(1.7, 1.1, 1.3, castGrey, [0, 1.95, 1.1], [-0.55, 0, 0]);
+  // Fuelle protector de goma tipo acordeón sobre las guías
+  for (let k = 0; k < 6; k++) {
+    const yb = 3.25 + k * 0.2;
+    G.box(1.74, 0.12, 0.16, rubber, [0, yb, 0.24]);
+    G.box(1.8, 0.04, 0.2, dark, [0, yb, 0.24]);
+  }
+  G.box(1.82, 0.06, 0.05, bare, [0, 3.18, 0.26]);
+  G.box(1.82, 0.06, 0.05, bare, [0, 4.42, 0.26]);
+  // Husillo telescópico vertical de elevación con pedestal tubular
+  G.cyl(0.68, 1.4, castGrey, [0, 1.15, 1.1], undefined, 10);
+  G.cyl(0.44, 1.1, bare, [0, 1.75, 1.1], undefined, 10);
+  G.cyl(0.88, 0.12, dark, [0, 0.48, 1.1], undefined, 10);
+  // Volante frontal de elevación del eje Z con caja cónica, nonio graduado y manivela
+  G.box(0.85, 0.6, 0.65, castGrey, [0, 2.2, 1.75]);
+  G.cyl(0.2, 0.42, bare, [0, 2.15, 2.1], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.52, 0.15, bare, [0, 2.15, 2.2], [Math.PI / 2, 0, 0], 12);
+  G.cyl(0.38, 0.16, dark, [0, 2.15, 2.32], [Math.PI / 2, 0, 0], 10);
+  G.cyl(1.3, 0.12, bare, [0, 2.15, 2.4], [Math.PI / 2, 0, 0], 16);
+  G.cyl(1.12, 0.14, dark, [0, 2.15, 2.4], [Math.PI / 2, 0, 0], 16);
+  for (let s = 0; s < 3; s++) {
+    const sa = (s / 3) * Math.PI * 2;
+    G.box(0.08, 0.48, 0.06, bare, [Math.cos(sa) * 0.35, 2.15 + Math.sin(sa) * 0.35, 2.4], [0, 0, sa]);
+  }
+  G.cyl(0.22, 0.1, bare, [0, 2.15, 2.48], [Math.PI / 2, 0, 0], 6);
+  G.cyl(0.1, 0.42, bare, [0.52, 2.15, 2.65], [Math.PI / 2, 0, 0], 6);
+  G.cyl(0.16, 0.26, rubber, [0.52, 2.15, 2.65], [Math.PI / 2, 0, 0], 8);
+  G.sph(0.2, bare, [0.52, 2.15, 2.88]);
+  // Palanca lateral de bloqueo de la ménsula (+X)
+  G.cyl(0.12, 0.32, bare, [1.1, 2.7, 0.45], [0, 0, Math.PI / 2], 6);
+  G.box(0.06, 0.45, 0.06, bare, [1.25, 2.9, 0.45], [0, 0, -0.4]);
+  G.sph(0.18, dark, [1.36, 3.1, 0.45]);
+
+  // 4. Carro transversal (eje Y) y mesa de coordenadas longitudinal (eje X)
+  G.box(2.6, 0.48, 2.0, castGrey, [0, 3.44, 1.1]);
+  G.box(0.16, 0.08, 1.8, bare, [-1.1, 3.22, 1.1]);
+  G.box(0.16, 0.08, 1.8, bare, [1.1, 3.22, 1.1]);
+  // Mando frontal del carro transversal (eje Y) con nonio graduado y manivela
+  G.box(0.65, 0.38, 0.42, castGrey, [0, 3.44, 2.2]);
+  G.cyl(0.54, 0.16, bare, [0, 3.44, 2.44], [Math.PI / 2, 0, 0], 12);
+  G.cyl(0.56, 0.03, dark, [0, 3.44, 2.44], [Math.PI / 2, 0, 0], 12);
+  G.cyl(0.34, 0.14, bare, [0, 3.44, 2.58], [Math.PI / 2, 0, 0], 8);
+  G.box(0.08, 0.65, 0.06, bare, [0, 3.75, 2.63]);
+  G.cyl(0.1, 0.34, bare, [0, 4.02, 2.78], [Math.PI / 2, 0, 0], 6);
+  G.sph(0.18, dark, [0, 3.44, 2.64]);
+  G.sph(0.2, bare, [0, 4.02, 2.96]);
+  // Guías longitudinales para la mesa sobre el carro transversal
+  G.box(2.5, 0.1, 0.2, bare, [0, 3.68, 0.45]);
+  G.box(2.5, 0.1, 0.2, bare, [0, 3.68, 1.75]);
+
+  // Mesa de coordenadas longitudinal alargada (eje X) con 3 ranuras en T
+  G.box(6.6, 0.4, 1.5, castGrey, [0, 3.92, 1.1]);
+  G.box(6.4, 0.05, 1.44, bare, [0, 4.145, 1.1]);
+  G.box(0.3, 0.1, 1.3, dark, [-3.15, 4.11, 1.1]);
+  G.box(0.3, 0.1, 1.3, dark, [3.15, 4.11, 1.1]);
+  // 3 ranuras en T longitudinales mecanizadas
+  G.box(5.9, 0.08, 0.15, dark, [0, 4.14, 1.1]);
+  G.box(5.9, 0.08, 0.15, dark, [0, 4.14, 0.72]);
+  G.box(5.9, 0.08, 0.15, dark, [0, 4.14, 1.48]);
+  G.box(5.9, 0.02, 0.07, bare, [0, 4.11, 1.1]);
+  G.box(5.9, 0.02, 0.07, bare, [0, 4.11, 0.72]);
+  G.box(5.9, 0.02, 0.07, bare, [0, 4.11, 1.48]);
+  // Ranura frontal y topes mecánicos ajustables con bulones
+  G.box(6.3, 0.12, 0.04, dark, [0, 3.92, 1.86]);
+  G.box(0.22, 0.18, 0.08, bare, [-1.5, 3.92, 1.91]);
+  G.bolts([-1.5, 3.92, 1.94], [-1.5, 3.92, 1.94], 1, [0, 0, 1]);
+  G.box(0.22, 0.18, 0.08, bare, [1.5, 3.92, 1.91]);
+  G.bolts([1.5, 3.92, 1.94], [1.5, 3.92, 1.94], 1, [0, 0, 1]);
+  // Extremo izquierdo (-X): soporte, nonio graduado y manivela cromada con mango oscilante
+  G.box(0.2, 0.38, 0.8, castGrey, [-3.38, 3.92, 1.1]);
+  G.cyl(0.22, 0.4, bare, [-3.58, 3.92, 1.1], [0, 0, Math.PI / 2], 8);
+  G.cyl(0.58, 0.16, bare, [-3.64, 3.92, 1.1], [0, 0, Math.PI / 2], 12);
+  G.cyl(0.6, 0.03, dark, [-3.64, 3.92, 1.1], [0, 0, Math.PI / 2], 12);
+  G.cyl(0.1, 0.18, bare, [-3.64, 4.24, 1.1], undefined, 6);
+  G.cyl(0.38, 0.14, bare, [-3.78, 3.92, 1.1], [0, 0, Math.PI / 2], 8);
+  G.box(0.08, 0.68, 0.14, bare, [-3.84, 4.2, 1.22], [-0.35, 0, 0]);
+  G.cyl(0.12, 0.38, bare, [-4.05, 4.46, 1.34], [0, 0, Math.PI / 2], 6);
+  G.cyl(0.18, 0.28, rubber, [-4.05, 4.46, 1.34], [0, 0, Math.PI / 2], 8);
+  G.sph(0.22, bare, [-4.25, 4.46, 1.34]);
+  // Extremo derecho (+X): soporte, nonio graduado y manivela cromada con mango oscilante
+  G.box(0.2, 0.38, 0.8, castGrey, [3.38, 3.92, 1.1]);
+  G.cyl(0.22, 0.4, bare, [3.58, 3.92, 1.1], [0, 0, Math.PI / 2], 8);
+  G.cyl(0.58, 0.16, bare, [3.64, 3.92, 1.1], [0, 0, Math.PI / 2], 12);
+  G.cyl(0.6, 0.03, dark, [3.64, 3.92, 1.1], [0, 0, Math.PI / 2], 12);
+  G.cyl(0.1, 0.18, bare, [3.64, 4.24, 1.1], undefined, 6);
+  G.cyl(0.38, 0.14, bare, [3.78, 3.92, 1.1], [0, 0, Math.PI / 2], 8);
+  G.box(0.08, 0.68, 0.14, bare, [3.84, 3.64, 0.98], [-0.35, 0, 0]);
+  G.cyl(0.12, 0.38, bare, [4.05, 3.38, 0.86], [0, 0, Math.PI / 2], 6);
+  G.cyl(0.18, 0.28, rubber, [4.05, 3.38, 0.86], [0, 0, Math.PI / 2], 8);
+  G.sph(0.22, bare, [4.25, 3.38, 0.86]);
+
+  // 5. Brazo superior de torreta horizontal orientable con cremallera y cabezal de fresado
+  G.box(1.7, 0.9, 3.5, castGrey, [0, 7.15, -0.7]);
+  G.bend([-0.85, 7.58, -2.4], [-0.85, 7.58, 1.0], 0.05, castGrey);
+  G.bend([0.85, 7.58, -2.4], [0.85, 7.58, 1.0], 0.05, castGrey);
+  G.bend([-0.85, 6.72, -2.4], [-0.85, 6.72, 1.0], 0.05, castGrey);
+  G.bend([0.85, 6.72, -2.4], [0.85, 6.72, 1.0], 0.05, castGrey);
+  G.box(0.12, 0.74, 3.3, bare, [-0.86, 7.15, -0.7]);
+  G.box(0.12, 0.74, 3.3, bare, [0.86, 7.15, -0.7]);
+  // Cremallera lateral dentada y piñón de ajuste horizontal del brazo
+  G.box(0.07, 0.2, 3.0, bare, [-0.92, 6.88, -0.7]);
+  for (let zr = -2.1; zr <= 0.6; zr += 0.22) {
+    G.box(0.05, 0.16, 0.07, dark, [-0.94, 6.88, zr]);
+  }
+  G.cyl(0.22, 0.32, bare, [-1.02, 6.58, -0.6], [0, 0, Math.PI / 2], 6);
+  G.cyl(0.3, 0.1, dark, [-1.16, 6.58, -0.6], [0, 0, Math.PI / 2], 6);
+
+  // Brida frontal de giro y basculación del cabezal
+  G.cyl(1.8, 0.25, castGrey, [0, 7.15, 1.05], [Math.PI / 2, 0, 0], 16);
+  G.cyl(1.86, 0.07, bare, [0, 7.15, 1.16], [Math.PI / 2, 0, 0], 16);
+  G.bolts([-0.6, 7.15, 1.2], [0.6, 7.15, 1.2], 2, [0, 0, 1]);
+  G.bolts([0, 7.75, 1.2], [0, 7.75, 1.2], 1, [0, 0, 1]);
+  G.bolts([0, 6.55, 1.2], [0, 6.55, 1.2], 1, [0, 0, 1]);
+
+  // Cabezal superior de fresado: cuerpo, carcasa de poleas y motor trasero
+  G.box(1.4, 1.7, 1.5, castGrey, [0, 7.25, 1.55]);
+  // Carcasa de poleas trapezoidales con selector de marchas
+  G.box(1.65, 0.68, 2.8, castGrey, [0, 8.25, 1.15]);
+  along(G, 1.62, 1.4, 0.65, castGrey, [0, 8.25, 2.45], 10);
+  G.cyl(0.3, 0.12, bare, [0, 8.62, 2.25], undefined, 8);
+  G.box(0.07, 0.38, 0.1, bare, [0.72, 8.42, 1.8], [0, 0, -0.4]);
+  G.sph(0.18, dark, [0.88, 8.58, 1.8]);
+  // Motor eléctrico trasero aleteado
+  G.cyl(1.3, 1.35, dark, [0, 7.9, 0.05], undefined, 12);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    G.box(0.04, 1.3, 0.11, dark, [Math.cos(a) * 0.66, 7.9, 0.05 + Math.sin(a) * 0.66], [0, -a, 0]);
+  }
+  G.cyl(1.22, 0.22, castGrey, [0, 8.65, 0.05], undefined, 10);
+  G.cyl(1.4, 0.16, bare, [0, 7.15, 0.05], undefined, 10);
+  G.box(0.32, 0.42, 0.42, dark, [-0.74, 7.9, 0.05]);
+  G.tube([[-0.74, 7.68, 0.05], [-0.82, 6.9, 0.35]], 0.038, bare);
+
+  // Consola de mandos eléctricos con pulsadores industriales Start/Stop
+  G.box(0.48, 0.78, 0.32, dark, [-0.88, 7.15, 1.6]);
+  G.box(0.45, 0.74, 0.04, bare, [-0.88, 7.15, 1.78]);
+  G.cyl(0.18, 0.07, btnGreen, [-0.88, 7.32, 1.81], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.28, 0.12, btnRed, [-0.88, 6.98, 1.84], [Math.PI / 2, 0, 0], 10);
+  G.box(0.05, 0.2, 0.06, bare, [-0.88, 7.48, 1.82], [0.35, 0, 0]);
+
+  // Pínola cromada, nonio micrométrico de profundidad y palancas de avance del husillo
+  G.cyl(1.0, 0.7, castGrey, [0, 6.55, 1.1], undefined, 12);
+  G.cyl(0.74, 1.05, bare, [0, 5.85, 1.1], undefined, 12);
+  G.cyl(0.09, 1.15, bare, [0, 6.1, 1.5], undefined, 6);
+  G.cyl(0.22, 0.08, dark, [0, 5.9, 1.5], undefined, 8);
+  G.cyl(0.22, 0.08, dark, [0, 5.76, 1.5], undefined, 8);
+  G.box(0.25, 0.14, 0.22, bare, [0, 6.22, 1.44]);
+  G.box(0.18, 0.95, 0.02, bare, [0, 6.1, 1.43]);
+  for (let dy = 5.7; dy <= 6.5; dy += 0.12) {
+    G.box(0.12, 0.02, 0.01, dark, [0, dy, 1.45]);
+  }
+  G.cyl(0.42, 0.12, bare, [0.72, 6.65, 1.4], [0, 0, Math.PI / 2], 10);
+  G.cyl(0.32, 0.08, dark, [0.8, 6.65, 1.4], [0, 0, Math.PI / 2], 8);
+  G.cyl(0.34, 0.16, bare, [0.74, 6.45, 1.1], [0, 0, Math.PI / 2], 8);
+  G.tube([[0.84, 6.45, 1.1], [0.92, 5.9, 1.4], [0.98, 5.4, 1.62]], 0.04, bare);
+  G.sph(0.2, rubber, [0.98, 5.4, 1.62]);
+
+  // Husillo vertical con fresa cilíndrica de planear de insertos de carburo
+  G.cyl(0.64, 0.22, dark, [0, 5.28, 1.1], undefined, 12);
+  G.box(0.1, 0.08, 0.68, bare, [0, 5.2, 1.1]);
+  G.cyl(0.52, 0.25, bare, [0, 5.08, 1.1], undefined, 10);
+  G.cyl(0.98, 0.28, bare, [0, 4.86, 1.1], undefined, 12);
+  G.cyl(0.34, 0.07, dark, [0, 4.71, 1.1], undefined, 8);
+  G.bolts([0, 4.69, 1.1], [0, 4.69, 1.1], 1, [0, -1, 0]);
+  for (let i = 0; i < 6; i++) {
+    const ang = (i / 6) * Math.PI * 2;
+    const cx = Math.cos(ang) * 0.44, cz = 1.1 + Math.sin(ang) * 0.44;
+    G.box(0.12, 0.15, 0.12, dark, [cx, 4.8, cz], [0, -ang, 0.12]);
+    G.box(0.09, 0.09, 0.04, carbide, [Math.cos(ang) * 0.47, 4.76, 1.1 + Math.sin(ang) * 0.47], [0, -ang, 0.12]);
+    G.cyl(0.05, 0.04, bare, [Math.cos(ang) * 0.47, 4.76, 1.1 + Math.sin(ang) * 0.47], [0, -ang, Math.PI / 2], 6);
+  }
+
+  const parts = done(18);
+  const m = parts.length > 1 ? B.Mesh.MergeMeshes(parts, true, true, undefined, false, true)! : parts[0];
+  m.name = "millingMachineFold";
+  return m;
+}
+
+
