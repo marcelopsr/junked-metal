@@ -244,6 +244,12 @@ export const sessions = [
       for (let i = 0; i < 9; i++) { await tick(p, 10); if (!(await p.evaluate(() => document.getElementById("levelup").classList.contains("hidden")))) { await p.keyboard.press("1"); await p.keyboard.press("Enter"); } }
     } },
   ] },
+  // Gusano lunar (src/moon_worm.ts, jefe final de la luna): __luna.worm(dist) lo hace salir ya delante del auto; arco y cráteres
+  { id: "luna_gusano", query: "?mute&seed=3&zone=luna", shots: [
+    { id: "aviso", perf: false, act: async (p) => { await labReady(p); await p.evaluate(() => { window.__play(3); window.__god(); window.__luna.go("sol"); window.__luna.clear(); window.__luna.worm(9); }); await tick(p, 2); } },
+    { id: "arco", perf: false, act: async (p) => { await tick(p, 120); } }, // a mitad del arco, delante del auto
+    { id: "crateres", perf: false, act: async (p) => { await tick(p, 260); } }, // ya se hundió: dos cráteres humeantes
+  ] },
   // partida_llena: 300 s de sim (partida avanzada, t=5 min) → mide el estado con armas evolucionadas y oleadas densas.
   // Medido: ~168 draws PC (thin-instances agrupan por tipo; menos que partida-curso/90 s por diferente mezcla de proyectiles).
   // Solo pc y solo medición de perf (shot: false); usar --only partida_llena para medir sin el resto.

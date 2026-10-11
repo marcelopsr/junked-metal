@@ -74,6 +74,7 @@ const rainAt = (seed: number) => { const r = (seed * 0.6180339887) % 1; return r
 export const FINALS: Kind[] = ["perro", "aspiradora", "cortacercos"];
 export const FINAL_WIN: Partial<Record<Kind, string>> = {
   perro: "¡Felipe fue derrotado! Pasará la tarde ofendido.",
+  gusano: "¡El gusano lunar no vuelve a salir! El regolito queda en paz, lleno de pozos.",
   aspiradora: "¡La aspiradora robot quedó sin batería y sin propósito de vida!",
   cortacercos: "¡El cortacercos eléctrico hizo cortocircuito! Nadie presentó una queja.",
 };

@@ -1197,6 +1197,7 @@ const LORE: Record<Kind, string> = {
   emboscador: "Vive enterrado en un cráter con la paciencia de un cobrador. Deja asomar una lucecita para que alguien se acerque a mirar, y alguien siempre se acerca a mirar.",
   flotante: "Un platillo de lata que nunca aprendió a aterrizar y decidió que era una virtud. Ronda en círculos como quien busca estacionamiento y, cuando lo encuentra, baja de golpe.",
   tanque: "Le soldaron una puerta de horno adelante y desde entonces se cree invencible. Lo es, pero solo de frente. Gira tan despacio que para darse vuelta pide turno.",
+  gusano: "Un tren de chatarra plegada que se cansó de esperar en la estación y decidió cavar su propio túnel. Vive bajo el regolito y sale a respirar solo cuando hay algo para morder. Cada salida deja un pozo; la luna ya perdió la cuenta.",
   explosivo: "Una jaula de chapa con algo verde adentro que no debería estar ahí. Corre hacia el auto con mucho entusiasmo y ningún plan para después, porque no hay después.",
   curandero: "Estudió primeros auxilios por correspondencia y nunca terminó el curso. No pelea: se queda atrás, apunta un rayo verde al que está peor y lo deja como nuevo, o casi.",
 };
@@ -1223,6 +1224,7 @@ const HOW: Record<Kind, [string, string]> = {
   emboscador: ["Espera enterrado: solo asoma un señuelo de luz cian. Cuando el auto pasa a unos 8 metros salta encima y persigue; si el auto se aleja, se vuelve a enterrar.", "Una luz cian sola en el piso es una trampa: rodearla de lejos o pasar rápido y castigarlo cuando sale."],
   flotante: ["Vuela bajo a altura fija, sin seguir el piso: pasa por encima de cráteres y montículos. Ronda al auto a unos 6 metros y cada tanto baja en picada contra él (chispas de aviso).", "La picada va derecho a donde está el auto: un volantazo al ver las chispas la deja pasar de largo, y abajo queda a tiro."],
   tanque: ["Lento, con mucha vida y una placa frontal que frena casi todo el daño que le llega de frente. Gira muy despacio y embestirlo de frente devuelve el golpe.", "Rodearlo: por los costados y por detrás (donde brilla el reactor cian) el daño entra entero."],
+  gusano: ["Avanza enterrado: solo se ve un surco de polvo y chispas que va hacia el auto. Cerca, marca un aro rojo donde va a salir, emerge en un arco largo y se vuelve a hundir más adelante; cada salida y cada entrada dejan un cráter. En la segunda barra va más rápido y sale dos veces seguidas.", "Enterrado no recibe daño: salir del aro antes de que se llene y castigarlo mientras cruza por arriba. Los cráteres que deja cambian el terreno: conviene no quedar atrapado entre pozos."],
   explosivo: ["Corre derecho al auto; a unos 4 metros se planta, se infla y marca en el piso un aro rojo del tamaño de la explosión. Al llenarse revienta: daña a todo lo que esté adentro, bichos incluidos, y deja un cráter.", "Salir del aro antes de que se llene. Con otros bichos alrededor, conviene dejarlo reventar entre ellos."],
   curandero: ["Se queda atrás, a unos 16 metros del auto, y con un rayo verde le repone vida al aliado más herido que tenga cerca (el halo marca a quién).", "Blanco prioritario: mientras siga en pie, los demás no se mueren. Ir a buscarlo o castigarlo con armas de alcance."],
 };
@@ -1249,6 +1251,7 @@ const BIOMETRICS: Record<Kind, { armor: string; agility: string; blindSpot: stri
   emboscador: { armor: "Enterrado en regolito", agility: "Salto vertical sorpresivo", blindSpot: "Círculo exterior fuera de la luz cian" },
   flotante: { armor: "Blindaje gravitacional leve", agility: "Altura fija con vuelo circular", blindSpot: "Punto inferior tras la picada rasante" },
   tanque: { armor: "Placa frontal deflectora pesada", agility: "Giro de orugas extremadamente lento", blindSpot: "Reactor dorsal de energía cian" },
+  gusano: { armor: "Segmentos de chapa plegada; invulnerable bajo tierra", agility: "Excava rápido, arco fijo al salir", blindSpot: "Todo el cuerpo durante el arco" },
   explosivo: { armor: "Jaula metálica presurizada", agility: "Aproximación directa", blindSpot: "Distancia media provocando detonación" },
   curandero: { armor: "Módulo médico ligero", agility: "Evasión pasiva a distancia", blindSpot: "Aislamiento rápido sin escolta" },
 };

@@ -28,6 +28,7 @@ import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, s
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import { skyClear, skyInfo, skyLaunch, skyTick } from "./moon_sky";
 import { ALIENS, alienWave, armorMul, healTick, isAlien } from "./aliens";
+import { wormForce, wormHeadTpl, wormOut } from "./moon_worm";
 import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
 import { raceCfg, TRACKS } from "./kart_cfg";
 import "./duel.css"; import "./match3.css"; import "./race.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css (race.css solo se importa acá)
@@ -259,7 +260,7 @@ function startRun(d = false) {
   if (MOON.on) profile.rainAt = Infinity; // en la luna no llueve
   cycleS = -1;
   buildLayout();
-  RUN_BOSSES = [[R.jefe1_s, profile.minis[0]], [R.jefe2_s, profile.minis[1]], [R.jefe_final_s, profile.final]];
+  RUN_BOSSES = [[R.jefe1_s, profile.minis[0]], [R.jefe2_s, profile.minis[1]], [R.jefe_final_s, MOON.on ? "gusano" : profile.final]]; // luna: el jefe final es el gusano lunar (moon_worm.ts)
   finalKind = RUN_BOSSES[RUN_BOSSES.length - 1][1]; // jefe final: vencerlo gana la partida
   // ponytail: maldiciones ocultas por ahora (decisión del usuario); volver a `daily ? [] : save.curses` y mostrar #curseBtn para reactivarlas
   const curses: typeof save.curses = [];
@@ -532,7 +533,7 @@ const T_AUTOS: Task = { id: "autos", label: "Cargando autos", w: 2, done: () => 
 const T_PLANTILLAS: Task = { id: "plantillas", label: "Cargando bichos", w: 2, done: () => plantillasOk, prog: () => fxN / fxTotal, run: async () => {
   const jobs: (() => unknown)[] = [() => gemTpl(1), () => gemTpl(5), () => gemTpl(20), pilaTpl, imanTpl, spitTpl, nutTpl];
   for (const k of Object.keys(DEF) as Kind[]) {
-    if (!GLB[k]) jobs.push(() => enemyTemplate(k, DEF[k].scale));
+    if (!GLB[k]) jobs.push(() => (k === "gusano" ? wormHeadTpl() : enemyTemplate(k, DEF[k].scale)));
     if (LEGS[k]) jobs.push(() => legTemplate(k));
     if (k === "polilla") jobs.push(() => wingTemplate());
   }
@@ -639,6 +640,7 @@ const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.IdentityReadOnl
 const dmgOut: Record<string, number> = {};
 let dmgSrc = "";
 function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
+  if (e.kind === "gusano" && !wormOut(e)) return; // gusano lunar: enterrado no recibe daño
   if (hitShip(e, dmg)) return; // luna: las naves son blancos de las armas (moon_ships.ts shipTargets)
   if (car && isAlien(e.kind)) { const k = armorMul(e, car.pos); if (k < 1) { dmg *= k; if (e.kind === "tanque" && !simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } } // tanque alien (aliens.ts): placa frontal y escudo del curandero
   if (dmgSrc) {
@@ -728,7 +730,7 @@ function leave(e: Enemy) {
 const TOUGH = { count: R.dureza_cantidad, hp: R.dureza_vida, dmg: R.dureza_dano, xp: R.dureza_xp };
 function spawnEnemy(kind: Kind, p: B.Vector3) {
   enemies.push(new Enemy(kind, p, (1 + time / R.vida_escala_seg) * TOUGH.hp)); // los jefes ignoran hpMul
-  if (MOON.on && !isAlien(kind)) enemyLights(enemies[enemies.length - 1].node, kind, DEF[kind].size); // los aliens traen sus luces (aliens.ts); luna: versión "robot con luces" (ojos y baliza que atraviesan la niebla)
+  if (MOON.on && !isAlien(kind) && kind !== "gusano") enemyLights(enemies[enemies.length - 1].node, kind, DEF[kind].size); // los aliens traen sus luces (aliens.ts); luna: versión "robot con luces" (ojos y baliza que atraviesan la niebla)
   if (!LAB.on && !save.seen.includes(kind)) save.seen.push(kind); // bestiario
   if (!LAB.on && !simulating) { const b = beastRec(kind); b.first ??= today(); if (!b.zones.includes(zoneId)) b.zones.push(zoneId); } // registro propio
 }
@@ -983,8 +985,13 @@ function update(dt: number) {
     const ld = e.leader && e.leader.hp > 0 && hd(e.pos, c.pos) > 14 ? e.leader : null;
     if (e.leader && !ld && hd(e.pos, c.pos) <= 14) e.leader = null;
     const tgt = ld ? ld.pos.add(ld.node.right.scale(e.slot.x)).addInPlace(ld.node.forward.scale(-e.slot.z)) : c.pos;
-    const ev = e.stun > 0 ? stunned(e, wdt) : e.update(wdt, tgt);
+    const ev = e.stun > 0 && e.kind !== "gusano" ? stunned(e, wdt) : e.update(wdt, tgt); // el gusano no se aturde (lo mueve su IA, también enterrado)
     if (ev === "spit_aim" && !simulating) { const f = e.node.forward; FX.sparks(e.pos.add(upv(e.pos, 0.5))); mark("scorch", e.pos, yawOf(f, e.pos), 0.35, 4); }
+    if (ev === "worm_up" || ev === "worm_down") { // gusano lunar (moon_worm.ts): cráter al salir y al hundirse; al salir golpea lo que esté encima
+      deform(e.land, ATK.gusano_aviso_radio, ATK.gusano_crater_hondo); craterHumeante(e.land, ATK.gusano_aviso_radio, !simulating);
+      if (!simulating) { FX.dust(e.land); FX.sparks(onFloor(e.land, 0.5), 14); shake = Math.max(shake, 0.4); }
+      if (ev === "worm_up" && hd(c.pos, e.land) < ATK.gusano_aviso_radio + carR) hurt(e.def.dmg * TOUGH.dmg * (e.enraged ? ATK.segunda_barra_dano : 1), false, "salida " + e.kind, e.kind);
+    }
     if (ev === "boom") { boom(e); e.hp = -1e9; continue; } // explosivo alien (aliens.ts): se fue sin dejar premio
     if (e.kind === "curandero" && e.stun <= 0) healTick(e, enemies, wdt, !simulating); // rayo que cura (aliens.ts)
     if (ev === "wave") { pushSpit(alienWave(e, c.pos)); if (!simulating) SPACE.alienWave(panTo(c.pos, e.pos, camYaw), hd(c.pos, e.pos)); } // tirador de onda (aliens.ts): anillo lento, se esquiva
@@ -1142,7 +1149,7 @@ function update(dt: number) {
 
   // --- Armas ---
   if (MOON.on) shipsTick(dt, time, c, simulating, camYaw); // naves alienígenas (moon_ships.ts): nodriza recurrente y minijefes
-  const ctx: Ctx = { scene, car: c, enemies: MOON.on ? shipTargets(enemies, c.pos) : enemies, dt, st, fs: r.fs, damage, explode };
+  const ctx: Ctx = { scene, car: c, enemies: MOON.on ? shipTargets(enemies.some((e) => e.kind === "gusano" && !wormOut(e)) ? enemies.filter((e) => e.kind !== "gusano" || wormOut(e)) : enemies, c.pos) : enemies, dt, st, fs: r.fs, damage, explode };
   for (const w of weapons) { dmgSrc = w.id; w.update(ctx); }
   dmgSrc = "";
 
@@ -1829,6 +1836,8 @@ if (import.meta.env.DEV) Object.assign(window, {
     killOne: (kind: Kind) => { const e = enemies.find((x) => x.kind === kind && x.hp > 0); if (e) damage(e, 1e5); return !!e; }, // mata a uno por daño (el explosivo revienta en cadena)
     wound: (f = 0.5) => { for (const e of enemies) if (e.hp > 0) e.hp = e.maxHp * f; return enemies.length; }, // deja a todos con f de vida (el curandero tiene a quién curar)
     // fila de bichos delante del auto (por defecto los aliens), a dist m y separados sep m; tough: no se mueren con las armas (capturas)
+    // gusano lunar: lo pone y lo hace salir ya a dist m delante del auto (capturas)
+    worm: (dist = 7) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(); spawnEnemy("gusano", onFloor(at(car.pos, f.x * dist + f.z * 10, 0, f.z * dist - f.x * 10), 0)); /* de costado: el arco cruza delante del auto */ const e = enemies[enemies.length - 1]; e.hp = e.maxHp = 1e6; wormForce(e, onFloor(at(car.pos, f.x * dist, 0, f.z * dist), 0)); return "ok"; },
     row: (kinds: Kind[] = [...ALIENS], dist = 10, sep = 3.2, tough = true) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(), n0 = enemies.length; kinds.forEach((k, i) => { const x = (i - (kinds.length - 1) / 2) * sep; spawnEnemy(k, onFloor(at(car!.pos, f.x * dist + f.z * x, 0, f.z * dist - f.x * x), 0.5)); }); if (tough) for (const e of enemies.slice(n0)) e.hp = e.maxHp = 1e6; return enemies.length; },
   },
     killOne: (kind: Kind) => { const e = enemies.find((x) => x.kind === kind && x.hp > 0); if (e) damage(e, 1e5); return !!e; }, // mata a uno por daño (el explosivo revienta en cadena)

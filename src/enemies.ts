@@ -7,8 +7,9 @@ import type { Elite } from "./run";
 import { GLB, glbAnimate, glbPlay, glbTpl, glbVat } from "./glb";
 import { alignYaw, alt, at, flatL, hflat, MOON, onFloor, orient, toLocal, toWorld, yawOf } from "./moon";
 import { ALIEN_AI, ALIENS, type Alien } from "./aliens";
+import { WORM_AI, wormDispose, wormHeadTpl } from "./moon_worm";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "fuego" | "cohete" | Alien;
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "fuego" | "cohete" | "gusano" | Alien;
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; final?: boolean; scale?: number; color: string };
 const ATK = BAL.ataques;
@@ -40,6 +41,7 @@ export const DEF: Record<Kind, Def> = {
   perro: { name: "FELIPE EL DOGO", ...stats("perro"), size: [3.2, 8, 8], boss: true, color: "#6e7279" },
   gato: { name: "EULALIO EL MICHU", ...stats("gato"), size: [3.4, 3.6, 6.4], boss: true, color: "#d9782a" },
   aspiradora: { name: "LA ASPIRADORA ROBOT", ...stats("aspiradora"), size: [6.4, 1.6, 6.4], boss: true, color: "#7a8fa6" },
+  gusano: { name: "GUSANO LUNAR", ...stats("gusano"), size: [2.2, 2.2, 2.4], boss: true, color: "#2f4f56" }, // jefe final de la luna (moon_worm.ts)
   cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", ...stats("cortacercos"), size: [3, 2.4, 9], boss: true, color: "#e0a030" },
 };
 
@@ -144,7 +146,7 @@ export class Enemy {
     this.radius = Math.max(w, l) / 2;
     const glb = glbTpl(kind); // modelo importado con VAT (glb.ts); los demás bichos usan su procedural de models.ts
     if (!glb && GLB[kind]) throw new Error(`Enemy ${kind}: falta su modelo GLB (models/${GLB[kind]!.file}.glb); ver el error de carga más arriba en la consola`);
-    const tpl0 = glb ?? enemyTemplate(kind, d.scale);
+    const tpl0 = glb ?? (kind === "gusano" ? wormHeadTpl() : enemyTemplate(kind, d.scale));
     if (d.boss) tintable(tpl0); // también los GLB (glb.ts): el color por instancia convive con el shader de animación
     this.node = tpl0.createInstance(kind);
     if (glb) {
@@ -196,7 +198,7 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
-    if (kind === "perro" || kind === "saltador" || kind === "explosivo") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
+    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
     if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
@@ -437,7 +439,7 @@ export class Enemy {
     if (d.boss && !d.final && !this.enraged && this.hp < this.maxHp * ATK.fase2_vida) { this.enraged = true; this.phaseUp = true; this.setRage(true); this.roar = -1; } // fase 2: aviso en main.ts
     if (this.enraged) { speed *= ATK.fase2_vel; this.vapor(dt); }
     if (this.roar < 0 && !this.airborne && this.state === 0) this.roar = ROAR; // espera a que termine el ataque en curso
-    const ai = ALIEN_AI[this.kind as Alien]; // aliens de la luna (aliens.ts): número = multiplica la persecución común; texto = evento; null = ya movió
+    const ai = this.kind === "gusano" ? (MOON.on ? WORM_AI : undefined) : ALIEN_AI[this.kind as Alien]; // aliens de la luna (aliens.ts): número = multiplica la persecución común; texto = evento; null = ya movió
     if (ai) { const r = ai(this, dt, to, dist); if (typeof r !== "number") return r ?? undefined; speed *= r; }
     if (this.roar > 0) { // ruge quieto (sigue recibiendo daño); frenarlo cada cuadro anula empujes
       this.roar = Math.max(0, this.roar - dt);
@@ -792,6 +794,7 @@ export class Enemy {
     if (this.windKey) this.windKey.m.dispose();
     for (const t of this.tele) t.dispose();
     for (const c of this.cables) c.m.dispose();
+    if (this.kind === "gusano") wormDispose(this);
   }
 }
 
