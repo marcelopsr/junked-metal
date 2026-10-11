@@ -1084,6 +1084,28 @@ Carrera (1) y Survivor en partida (2).
 
 ---
 
+## 2026-10-10 · Ciclo #53 (Detalle Mecánico: Toe-Links Uniball, Pack LiPo XT60, Herramientas Folded, Bandeja de Tornillos y Látigo de Antena)
+
+**Capturas verificadas:** `.shots/actual/pc-menu-garaje.png`, `.shots/actual/cel-menu-garaje.png`, `.shots/actual/pc-partida-curso.png`, `.shots/actual/cel-partida-curso.png`, `.shots/actual/pc-carrera-curso.png` (`npm run shots -- --only garaje,partida,carrera`, 17 capturas en PC y celular sin errores en 46.0 s).
+
+### Intervenciones aplicadas por los Especialistas y verificadas en captura
+1. **Toe-Links con rótulas uniball, cables LiPo y antena independiente (Procedural Vehicle 3D Modeler · `src/models.ts`):**
+   - Incorporadas bieletas de convergencia (Toe-Links) con tensores uniball regulables en ambos trenes (delantero y trasero) con rótulas esféricas de acero pulido y cuerpos hexagonales anodizados en titanio azul.
+   - Detallado pack Hardcase LiPo con conector XT60 dotado de chaflán polarizado antirreverso, pines dorados embutidos, cables de silicona 12AWG (rojo/negro) saliendo hacia el variador ESC y conector de balanceo JST-XH con cables tricolor.
+   - Varilla de antena desacoplada de la malla rígida del chasis y convertida en malla flexible independiente emparentada al `body` con capuchón superior rojo en el pool de sombras.
+2. **Bandeja magnética de tornillos y línea de carga LiPo en diorama (Workshop Diorama 3D Modeler · `src/menuscene.ts`):**
+   - Incorporada bandeja magnética circular `screwTray` en aluminio pulido con fondo de goma vulcanizada conteniendo 4 tornillos Allen M3, arandelas planas y pasadores R-clips esparcidos sobre la mesa de calibración.
+   - Añadido chicote de cable de silicona curvado 12AWG `xt60Lead` con conector hembra XT60 amarillo apoyado sobre la alfombrilla de corte verde y terminal acoplado en el cargador digital LiPo.
+3. **Herramientas de taller Folded enriquecidas con detalles maquinados (Workshop Tools & Props 3D Modeler · `src/folded_slice.ts`):**
+   - En `toolFold(0)` (llave combinada), añadida mordaza abierta inclinada a 15° con vaciado interior hexagonal, extremo opuesto con ojo de estrella cerrado de 12 puntas, y troquelado métrico diegético "10".
+   - En `toolFold(1)` (martillo), añadida uña sacaclavos curvada y hendida en V en chapa de acero forjado y cuña de fijación metálica en la testa del mango.
+   - En `toolFold(2)` (destornillador industrial), añadida virola con cuello hexagonal bolster para llave plana y punta Phillips fresada en cruz con vértice piramidal.
+4. **Cinemática inercial de antena y desacoplamiento de amortiguación (Dynamic Suspension & 3D Kinematics Specialist · `src/car.ts`):**
+   - Implementada flexión inercial elástica de antena (`antennaWhipX/Z`) respondiendo a aceleración longitudinal (latigazo hacia atrás/adelante) y fuerza centrífuga lateral en derrapes con amortiguación de resorte rápido a 60 FPS.
+   - Desacoplada la compresión vertical de amortiguadores en tren delantero vs trasero (`compFront` vs `compRear`) durante frenadas bruscas (dive) y arrancadas violentas (squat) con 0 GC allocations.
+
+---
+
 ## 2026-10-10 · Evaluación de la primera muestra cinematográfica 3D
 
 Evidencia real en `assets-src/cinematic-3d/preview-night.png`, `preview-day.png`, `preview-game.png`, `preview-phone.png` y `orbit-preview.mp4`, con resultados `verification.json`. Banco independiente `art-lab.html`: noche/día, buggy y frenchie completos a 360°, materiales PBR, suelo generado y fuente Blender. PC y viewport móvil sin recortes de los protagonistas ni desbordamiento.

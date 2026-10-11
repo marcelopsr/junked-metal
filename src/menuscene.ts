@@ -213,6 +213,8 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     box(16, 0.08, 11, mat, [0, 0.04, 1.5]),
     ...stand,
     ...charger,
+    xt60Lead(metal, fDark),
+    screwTray(metal, fDark),
     // herramientas colgadas en chapa gastada: llave, destornilladores, martillo, pinza, rollos de cable y cinta
     box(0.9, 8, 0.4, metal, [-26, 15.5, -16]), tor(2.4, 0.7, metal, [-26, 20.4, -16], [Math.PI / 2, 0, 0], 8),
     ...[[fRed, -21], [fTeal, -19], [fYellow, -17]].flatMap(([m, x]) => [cyl(1.1, 1.1, 3.2, m as B.Material, [x as number, 20.5, -15.8], undefined, 6), cyl(0.3, 0.3, 4.4, metal, [x as number, 16.7, -15.8], undefined, 6)]),
@@ -243,9 +245,9 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     place(wheel(2, 1, "#8a5a3a"), [6.5, 0.5, 6.5], [0, 0.4, Math.PI / 2]), place(wheel(2, 1, "#3a6b7c"), [8.6, 1.0, 4.4], [0, -0.3, 0]),
     box(3.6, 1.4, 1.7, fTeal, [-14, 0.7, 4.5]), box(3.65, 0.45, 1.75, fDark, [-14, 1.25, 4.5]),
     tube([[-12.2, 0.6, 4.2], [-10.8, 0.2, 5.6], [-9, 0.2, 5.8]], 0.12, fRed), tube([[-12.2, 0.6, 4.8], [-11, 0.2, 6.6], [-9.4, 0.2, 7]], 0.12, fDark),
-    ...[[3, 8], [4.2, 8.8], [-5, 7.5], [10.5, 8], [-6.8, 6.4]].map(([x, z], i) => (i % 2 ? tor(0.6, 0.24, metal, [x, 0.12, z], undefined, 6) : cyl(0.28, 0.28, 1.2, metal, [x, 0.14, z], [0, i, Math.PI / 2], 6))),
+    ...[[-0.6, 8], [4.8, 7.2], [-5, 7.5], [10.5, 8], [-6.8, 6.4]].map(([x, z], i) => (i % 2 ? tor(0.6, 0.24, metal, [x, 0.12, z], undefined, 6) : cyl(0.28, 0.28, 1.2, metal, [x, 0.14, z], [0, i, Math.PI / 2], 6))),
     ...[0, 1, 2, 3].flatMap((i) => [cyl(1.5, 1.5, 1.7, fDrawers[i], [-21 + i * 1.9, 0.85, 7.5 - (i % 2) * 1.2], undefined, 8), cyl(1.6, 1.6, 0.35, metal, [-21 + i * 1.9, 1.85, 7.5 - (i % 2) * 1.2], undefined, 8)]),
-    cyl(0.9, 0.9, 2.6, fYellow, [3.4, 0.45, 9.8], [0, 0.5, Math.PI / 2], 6), cyl(0.25, 0.25, 3, metal, [5.8, 0.45, 8.4], [0, 0.5, Math.PI / 2], 6),
+    cyl(0.9, 0.9, 2.6, fYellow, [4.2, 0.45, 10.2], [0, 0.5, Math.PI / 2], 6), cyl(0.25, 0.25, 3, metal, [6.6, 0.45, 8.8], [0, 0.5, Math.PI / 2], 6),
   ];
   if (!low) props.push(cyl(2.6, 2.4, 3, fRed, [-25, 1.5, -3], undefined, 8), tor(1.6, 0.35, fRed, [-23.6, 1.6, -3], [Math.PI / 2, 0, 0], 8), cyl(2.2, 2.2, 0.1, W("#4a2e1b"), [-25, 2.95, -3], undefined, 8));
   return [room, props];
@@ -277,12 +279,59 @@ function lipoCharger(fTeal: B.Material, metal: B.Material, fDark: B.Material): B
     cyl(0.35, 0.35, 0.4, fDark, [2.7, 0.8, 0.6], [0, 0, Math.PI / 2], 6),
     box(0.2, 0.4, 1.4, M.plastic("#fafafa"), [-2.65, 0.8, 0]),
     tube([[2.7, 0.8, -0.6], [4.2, 0.3, -0.2], [5.5, 0.1, 0.8]], 0.09, M.plastic("#ef4444")),
-    tube([[2.7, 0.8, 0.6], [4.4, 0.3, 1.0], [5.8, 0.1, 1.8]], 0.09, fDark)
+    tube([[2.7, 0.8, 0.6], [4.4, 0.3, 1.0], [5.8, 0.1, 1.8]], 0.09, fDark),
+    box(0.65, 0.3, 0.45, M.plastic("#eab308"), [6.0, 0.15, 1.3], [0, 0.45, 0]),
+    box(0.25, 0.28, 0.42, fDark, [5.7, 0.14, 1.3], [0, 0.45, 0]),
   ];
   const c = merge("lipoCharger", parts);
   c.position.set(-17.5, 0, -2.5);
   c.rotation.y = 0.35;
   return [c];
+}
+export function screwTray(metal: B.Material, fDark: B.Material): B.Mesh {
+  const parts = [
+    // Base cilíndrica achatada con reborde elevado en aluminio pulido
+    cyl(3.4, 3.6, 0.24, metal, [0, 0.12, 0], undefined, 16),
+    tor(3.3, 0.3, metal, [0, 0.24, 0], undefined, 16),
+    // Fondo interior magnético de goma oscura
+    cyl(2.9, 2.9, 0.06, fDark, [0, 0.18, 0], undefined, 16),
+    // Tornillos Allen métricos M3 diminutos desparramados en el fondo
+    cyl(0.18, 0.18, 0.7, metal, [0.35, 0.24, 0.25], [0, 0.6, Math.PI / 2], 6),
+    cyl(0.34, 0.34, 0.2, metal, [0.08, 0.24, 0.1], [0, 0.6, Math.PI / 2], 6),
+    cyl(0.18, 0.18, 0.7, metal, [-0.45, 0.24, -0.35], [0, -0.9, Math.PI / 2], 6),
+    cyl(0.34, 0.34, 0.2, metal, [-0.72, 0.24, -0.18], [0, -0.9, Math.PI / 2], 6),
+    cyl(0.18, 0.18, 0.65, metal, [0.6, 0.24, -0.45], [0, 1.3, Math.PI / 2], 6),
+    cyl(0.34, 0.34, 0.2, metal, [0.86, 0.24, -0.38], [0, 1.3, Math.PI / 2], 6),
+    cyl(0.18, 0.18, 0.7, metal, [-0.2, 0.24, 0.6], [0, -2.2, Math.PI / 2], 6),
+    cyl(0.34, 0.34, 0.2, metal, [0.08, 0.24, 0.72], [0, -2.2, Math.PI / 2], 6),
+    // Arandelas planas en acero
+    tor(0.46, 0.1, metal, [-0.25, 0.23, -0.05], undefined, 8),
+    tor(0.42, 0.09, metal, [0.4, 0.23, 0.7], undefined, 8),
+    tor(0.5, 0.11, metal, [0.15, 0.23, -0.6], undefined, 8),
+    // Pasadores R-clips de carrocería en acero
+    tor(0.32, 0.06, metal, [-0.65, 0.24, 0.35], undefined, 8),
+    cyl(0.08, 0.08, 0.7, metal, [-0.3, 0.24, 0.35], [0, 0, Math.PI / 2], 6),
+    tor(0.24, 0.05, metal, [-0.3, 0.24, 0.45], undefined, 8),
+    tor(0.32, 0.06, metal, [0.65, 0.24, -0.05], undefined, 8),
+    cyl(0.08, 0.08, 0.7, metal, [0.35, 0.24, -0.15], [0, 0.6, Math.PI / 2], 6),
+    tor(0.24, 0.05, metal, [0.4, 0.24, -0.24], undefined, 8),
+  ];
+  const s = merge("screwTray", parts);
+  s.position.set(2.5, 0, 8.5);
+  return s;
+}
+function xt60Lead(metal: B.Material, fDark: B.Material): B.Mesh {
+  const parts = [
+    // Tramo de cable de silicona curvado de carga rápida (rojo y negro) sobre la alfombrilla de corte
+    tube([[5.35, 0.4, 2.3], [4.6, 0.16, 2.2], [3.6, 0.12, 1.8], [2.6, 0.11, 1.4], [1.7, 0.11, 1.3], [1.25, 0.11, 1.05]], 0.08, M.plastic("#ef4444")),
+    tube([[5.35, 0.4, 2.2], [4.5, 0.16, 2.05], [3.5, 0.12, 1.65], [2.5, 0.11, 1.25], [1.6, 0.11, 1.15], [1.18, 0.11, 0.95]], 0.08, fDark),
+    // Conector hembra XT60 en plástico amarillo brillante apoyado sobre la alfombrilla de corte
+    box(0.72, 0.32, 0.46, M.plastic("#eab308"), [0.85, 0.16, 0.95], [0, -0.4, 0]),
+    box(0.26, 0.28, 0.42, fDark, [1.14, 0.16, 1.04], [0, -0.4, 0]),
+    cyl(0.1, 0.1, 0.14, metal, [0.58, 0.16, 0.86], [0, -0.4, Math.PI / 2], 6),
+    cyl(0.1, 0.1, 0.14, metal, [0.63, 0.16, 1.0], [0, -0.4, Math.PI / 2], 6),
+  ];
+  return merge("xt60Lead", parts);
 }
 function siliconeOils(fYellow: B.Material, fRed: B.Material, metal: B.Material): B.Mesh[] {
   const parts = [

@@ -812,17 +812,25 @@ Este documento conserva la inteligencia acumulada del producto entre ciclos y se
 
 ## 5. Checkpoint de Sesión Actual
 
-- **Último trabajo completado:** Ciclo #52 ("Todo 3D") completado y validado con 4 Especialistas 3D (`tsc` 0 errores, `test` 43/43 cambiados en verde, `build` limpio en 4.22 s, 17 capturas en `.shots/actual/` en 114.0 s, grafo en 3889 nodos).
-- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #53**.
+- **Último trabajo completado:** Ciclo #53 ("Detalle Mecánico") completado y validado con 4 Especialistas (`tsc` 0 errores, vitest 43/43 tests en verde, `build` limpio en 3.04 s, 17 capturas en `.shots/actual/` en 46.0 s, grafo en 3914 nodos).
+- **Próxima decisión pendiente:** Selección de alcance y tareas para el **Ciclo #54**.
 
-### 🔓 LISTO PARA EL CICLO #53 (Ecosistema de Especialistas Matriciales, 2026-10-10)
+### 🔓 LISTO PARA EL CICLO #54 (Ecosistema de Especialistas Matriciales, 2026-10-10)
 
 | Especialista | Propuesta destacada | Archivos asignados (`🔓`) |
 |---|---|---|
-| **Procedural Vehicle 3D Modeler** | Bieletas de convergencia Toe-Links con uniballs y conector Deans/XT60 para pack LiPo | `src/models.ts` |
-| **Environmental Props 3D Modeler** | Plato de goteo oxidado en maceta `potFold()` y mini-pala de mano en `gnomeFold()` | `src/folded_slice.ts` |
-| **Workshop Diorama 3D Modeler** | Cableado de silicona flexible para LiPo en pit stand y bandeja magnética de tornillos | `src/menuscene.ts` |
-| **Dynamic Suspension 3D Modeler** | Suspensión independiente por eje/rueda y camber dinámico reactivo en compresión | `src/car.ts` |
+| **Procedural Vehicle 3D Modeler** | Suspensión de 4 brazos articulados (4-Link) en Monster o varillaje Bellcrank en pista | `src/models.ts` |
+| **Workshop Diorama 3D Modeler** | Comprobador digital de celdas LiPo (CellMeter) u organizador vertical de llaves Allen | `src/menuscene.ts` |
+| **Workshop Tools & Props 3D Modeler** | Carro de herramientas rodante Folded o morsa de fundición para banco de trabajo | `src/folded_slice.ts` |
+| **Dynamic Suspension 3D Modeler** | Camber dinámico reactivo en ruedas (Wheel Camber) y resonancia acústica de antena | `src/car.ts` |
+
+### Ciclo #53 (2026-10-10) — Detalle Mecánico: Toe-Links Uniball, Cables LiPo XT60, Herramientas Folded, Bandeja de Tornillos y Látigo de Antena
+- **Alcance implementado en producción (`src/`):**
+  - **Procedural Vehicle 3D Modeler (`src/models.ts`):** Bieletas de convergencia (Toe-Links) con tensores uniball regulables y rótulas de acero en ambos trenes; pack Hardcase LiPo con conector XT60 con chaflán antirreverso y terminales dorados, cableado 12AWG y conector balanceador JST-XH; varilla de antena desacoplada como malla flexible independiente con capuchón rojo. 0 draw calls adicionales.
+  - **Workshop Diorama 3D Modeler (`src/menuscene.ts`):** Bandeja magnética circular `screwTray` en aluminio pulido con fondo de goma vulcanizada conteniendo 4 tornillos Allen M3, arandelas y pasadores R-clips; chicote de cable de silicona 12AWG `xt60Lead` con conector hembra XT60 amarillo apoyado sobre la alfombrilla de corte verde y terminal acoplado en el cargador digital LiPo.
+  - **Workshop Tools & Props 3D Modeler (`src/folded_slice.ts`):** Llave combinada `toolFold(0)` con mordaza inclinada a 15°, ojo de estrella cerrado de 12 puntas y troquelado métrico "10"; martillo `toolFold(1)` con uña sacaclavos curvada y hendida en V con cuña de fijación; destornillador `toolFold(2)` con virola hexagonal bolster para llave plana y punta Phillips fresada en cruz con vértice piramidal.
+  - **Dynamic Suspension & 3D Kinematics Specialist (`src/car.ts`):** Cinemática inercial elástica de antena (`antennaWhipX/Z`) respondiendo a aceleración longitudinal (latigazo) y fuerzas centrífugas laterales en derrapes con amortiguación de resorte rápido a 60 FPS; desacoplamiento de amortiguación en compresión delantera vs trasera (`compFront` vs `compRear`) durante cabeceos de frenada y arrancada con 0 GC allocations.
+- **Evidencia de validación:** `tsc --noEmit` 0 errores, vitest --changed 43 tests en verde, build Vite en 3.04 s, 17 capturas en `.shots/actual/` aprobadas, grafo de conocimiento sincronizado en 3914 nodos y 9497 aristas.
 
 ### Ciclo #52 (2026-10-10) — Todo 3D: C-Hubs y Antena en Vehículo, Props Folded, Diorama Garaje y Cinemática de Ruedas
 - **Alcance implementado en producción (`src/`):**

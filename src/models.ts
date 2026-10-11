@@ -192,7 +192,7 @@ function wheelInst(d: number, w: number, rim: string, style = "") {
 
 // ---------- Autos del jugador ----------
 /** `cast`: lo que entra a la lista de proyectores de sombra (gemelas de una submalla; ver shadowProxy), en vez de la carrocería y las ruedas. */
-export type CarModel = { body: B.Mesh; wheels: { m: B.AbstractMesh; front: boolean; r: number }[]; paint: B.PBRMaterial; cast: B.AbstractMesh[] };
+export type CarModel = { body: B.Mesh; wheels: { m: B.AbstractMesh; front: boolean; r: number }[]; paint: B.PBRMaterial; cast: B.AbstractMesh[]; antenna?: B.Mesh };
 export type CarKind = "buggy" | "monster" | "formula" | "tanque" | "carrera" | "axel" | "helado" | "combi";
 
 // Paletas del taller
@@ -570,6 +570,23 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
         cyl(0.008, 0.008, 0.012, M.metal("#64748b"), [-bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, 0.35], 6),
         cyl(0.008, 0.008, 0.012, M.metal("#64748b"), [bw * 0.14, bh * 0.23, bl * 0.34], [0, 0, -0.35], 6)
       );
+      // Bieletas de convergencia (Toe-Links) con tensores uniball ajustables en tren delantero y trasero descubiertos
+      for (const zAx of [bl * 0.34, -bl * 0.28]) {
+        for (const sx of [-1, 1]) {
+          parts.push(
+            // Rótulas esféricas uniball de acero pulido en los extremos interior y exterior
+            sph(0.006, chrome, [sx * bw * 0.13, bh * 0.22, zAx]),
+            sph(0.006, chrome, [sx * bw * 0.33, bh * 0.22, zAx]),
+            // Varilla roscada central de acero
+            cyl(0.003, 0.003, bw * 0.2, chrome, [sx * bw * 0.23, bh * 0.22, zAx], [0, 0, Math.PI / 2], 4),
+            // Cuerpo hexagonal central en titanio anodizado azul
+            cyl(0.007, 0.007, 0.018, M.metal("#0284c7"), [sx * bw * 0.23, bh * 0.22, zAx], [0, 0, Math.PI / 2], 6),
+            // Marcas de rosca izquierda / derecha en los extremos del tensor
+            cyl(0.0045, 0.0045, 0.003, chrome, [sx * bw * 0.23 - 0.011, bh * 0.22, zAx], [0, 0, Math.PI / 2], 6),
+            cyl(0.0045, 0.0045, 0.003, chrome, [sx * bw * 0.23 + 0.011, bh * 0.22, zAx], [0, 0, Math.PI / 2], 6)
+          );
+        }
+      }
     }
     if (kind === "formula" || kind === "buggy") {
       parts.push(
@@ -610,13 +627,29 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     }
     if (kind === "buggy" || kind === "monster" || kind === "carrera") {
       parts.push(
-        // Batería LiPo Hardcase de competición con conector XT60 y cables de silicona
+        // Batería LiPo Hardcase de competición con carcasa de policarbonato y etiqueta de advertencia
         box(0.055, 0.024, 0.12, M.matte("#18181b"), [bw * 0.14, bh * 0.26, -bl * 0.08]),
         box(0.042, 0.001, 0.08, M.plastic("#f59e0b"), [bw * 0.14, bh * 0.273, -bl * 0.08]),
-        box(0.012, 0.01, 0.016, M.plastic("#eab308"), [bw * 0.14, bh * 0.28, -bl * 0.02]),
-        cyl(0.004, 0.004, 0.04, M.plastic("#ef4444"), [bw * 0.13, bh * 0.29, -bl * 0.04], [0.3, 0, 0], 4),
-        cyl(0.004, 0.004, 0.04, M.plastic("#18181b"), [bw * 0.15, bh * 0.29, -bl * 0.04], [0.3, 0, 0], 4),
-        cyl(0.003, 0.003, 0.025, M.plastic("#fafafa"), [bw * 0.14, bh * 0.285, -bl * 0.01], [0.2, 0, 0], 4),
+        // Conector XT60 de alta temperatura en nylon amarillo con chaflán polarizado
+        box(0.013, 0.01, 0.016, M.plastic("#eab308"), [bw * 0.14, bh * 0.28, -bl * 0.02]),
+        box(0.006, 0.008, 0.016, M.plastic("#eab308"), [bw * 0.14 + 0.005, bh * 0.283, -bl * 0.02], [0, 0, 0.45]),
+        // Terminales dorados embutidos de baja resistencia
+        cyl(0.0025, 0.0025, 0.008, M.metal("#d4af37"), [bw * 0.14 - 0.0035, bh * 0.285, -bl * 0.014], [Math.PI / 2, 0, 0], 6),
+        cyl(0.0025, 0.0025, 0.008, M.metal("#d4af37"), [bw * 0.14 + 0.0035, bh * 0.285, -bl * 0.014], [Math.PI / 2, 0, 0], 6),
+        // Cables de silicona flexible 12AWG rojo (+) y negro (-) curvados saliendo hacia el variador ESC
+        cyl(0.004, 0.004, 0.035, M.plastic("#ef4444"), [bw * 0.14 - 0.0035, bh * 0.285, -bl * 0.035], [0.35, 0, -0.25], 4),
+        cyl(0.004, 0.004, 0.045, M.plastic("#ef4444"), [bw * 0.14 - 0.008, bh * 0.298, -bl * 0.065], [0.55, 0, -0.4], 4),
+        cyl(0.004, 0.004, 0.035, M.plastic("#18181b"), [bw * 0.14 + 0.0035, bh * 0.285, -bl * 0.035], [0.35, 0, 0.25], 4),
+        cyl(0.004, 0.004, 0.045, M.plastic("#18181b"), [bw * 0.14 + 0.008, bh * 0.298, -bl * 0.065], [0.55, 0, 0.4], 4),
+        // Conector blanco de balanceo JST-XH de 3 pines con pines metálicos
+        box(0.01, 0.006, 0.012, M.plastic("#fafafa"), [bw * 0.14, bh * 0.278, -bl * 0.005]),
+        cyl(0.001, 0.001, 0.004, chrome, [bw * 0.14 - 0.0028, bh * 0.28, -bl * 0.001], [Math.PI / 2, 0, 0], 4),
+        cyl(0.001, 0.001, 0.004, chrome, [bw * 0.14, bh * 0.28, -bl * 0.001], [Math.PI / 2, 0, 0], 4),
+        cyl(0.001, 0.001, 0.004, chrome, [bw * 0.14 + 0.0028, bh * 0.28, -bl * 0.001], [Math.PI / 2, 0, 0], 4),
+        // Cables finos de señal de balanceo
+        cyl(0.0015, 0.0015, 0.022, M.plastic("#ef4444"), [bw * 0.14 - 0.0028, bh * 0.28, -bl * 0.014], [0.3, 0, 0], 4),
+        cyl(0.0015, 0.0015, 0.022, M.plastic("#2563eb"), [bw * 0.14, bh * 0.281, -bl * 0.014], [0.3, 0, 0], 4),
+        cyl(0.0015, 0.0015, 0.022, M.plastic("#18181b"), [bw * 0.14 + 0.0028, bh * 0.28, -bl * 0.014], [0.3, 0, 0], 4),
         // Cincha transversal en nylon negro y micro-hebilla de cierre rápido sujeta-batería
         box(0.012, 0.002, 0.075, M.plastic("#18181b"), [-bw * 0.12, bh * 0.28 + 0.018, 0]),
         box(0.014, 0.005, 0.012, M.plastic("#38bdf8"), [-bw * 0.12, bh * 0.28 + 0.02, 0.038])
@@ -686,10 +719,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       );
     }
     if (kind !== "tanque") {
-      const ax = bw * 0.35, ay = bh * 0.7, az = -bl * 0.42;
       parts.push(
-        cyl(0.008, 0.008, 0.65, M.metal("#71717a"), [ax, ay + 0.32, az], [0.1, 0, 0.05], 4),
-        box(0.01, 0.08, 0.12, M.plastic("#ef4444"), [ax, ay + 0.6, az - 0.06]),
         box(0.015, 0.01, 0.02, M.plastic("#18181b"), [-bw * 0.49, bh * 0.5, bl * 0.1]),
         box(0.006, 0.006, 0.006, M.plastic("#22c55e"), [-bw * 0.49, bh * 0.52, bl * 0.12])
       );
@@ -794,6 +824,18 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   const bodySh = shadowProxy(body);
   if (bodySh) bodySh.parent = body;
   cast.push(bodySh ?? body);
+  let ant: B.Mesh | undefined;
+  if (kind !== "tanque") {
+    const [bw, bh, bl] = CARS_SIZE[kind];
+    const ax = bw * 0.35, ay = bh * 0.7, az = -bl * 0.42;
+    ant = cyl(0.007, 0.007, 0.65, M.metal("#71717a"), [0, 0.325, 0], undefined, 4);
+    ant.position.set(ax, ay, az);
+    ant.parent = body;
+    // Pequeño banderín o capuchón en el extremo
+    const cap = cyl(0.004, 0.004, 0.02, M.plastic("#ef4444"), [0, 0.64, 0], undefined, 4);
+    cap.parent = ant;
+    cast.push(ant);
+  }
   const wheels = ws.map((w) => {
     const { inst: m, cast: c } = wheelInst(w.d, w.w, rim, fb && (!o.tires || o.tires === "serie") && kind !== "tanque" ? "fold" : o.tires === "serie" ? "" : o.tires === "lisas" ? "lisa" : o.tires ?? "");
     m.position = v(w.pos);
@@ -802,7 +844,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     return { m, front: w.steer !== false && w.pos[2] > 0, r: w.d / 2 };
   });
   tessK = 1;
-  return { body, wheels, paint, cast };
+  return { body, wheels, paint, cast, antenna: ant };
 }
 
 // Figuritas de juguete que manejan: cadera en el origen, ~0,5 de alto, mirando a +z

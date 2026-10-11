@@ -38,8 +38,9 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
   let ls = B.Vector3.Dot(v, right);
 
   // Detección de impacto diegético contra obstáculos del entorno (muros, macetas, árboles)
-  const bAny = body as unknown as { _prevV?: B.Vector3; _throttle?: number };
+  const bAny = body as unknown as { _prevV?: B.Vector3; _throttle?: number; _ls?: number };
   bAny._throttle = o.throttle;
+  bAny._ls = ls;
   let impactSpeed = 0;
   let impactPan = 0;
   if (bAny._prevV) {
@@ -102,7 +103,7 @@ export function drive(body: B.PhysicsBody, mesh: B.AbstractMesh, dt: number,
 export class Car {
   root: B.Mesh;
   vis: B.TransformNode;
-  model: CarModel;
+  model: CarModel & { antenna?: B.TransformNode };
   body: B.PhysicsBody;
   agg: B.PhysicsAggregate;
   def;
@@ -110,6 +111,10 @@ export class Car {
   squatPitch = 0;
   divePitch = 0;
   suspensionComp = 0;
+  antennaWhipX = 0;
+  antennaWhipZ = 0;
+  antennaVelX = 0;
+  antennaVelZ = 0;
   private steerRoll = 0;
   private basePitch = 0;
   private lastFs = 0;
@@ -161,7 +166,7 @@ export class Car {
 
   // Solo visual: ruedas que giran y doblan, carrocería que se inclina
   private lastVy = 0; private bounce = 0; private bT = 0;
-  animate(dt: number, steer: number, fs: number, maxSpeed: number, throttle?: number) {
+  animate(dt: number, steer: number, fs: number, maxSpeed: number, throttle?: number, ls?: number) {
     for (const wh of this.model.wheels) {
       wh.m.rotation.x += (fs * dt) / wh.r;
       if (wh.front) wh.m.rotation.y = B.Scalar.Lerp(wh.m.rotation.y, steer * 0.45, 1 - Math.exp(-12 * dt));
@@ -198,14 +203,37 @@ export class Car {
     this.basePitch = B.Scalar.Lerp(this.basePitch, B.Scalar.Clamp(-acc * 0.004, -0.08, 0.08) + pitch, k);
     this.vis.rotation.x = this.basePitch + this.squatPitch + this.divePitch;
 
+    // Cinemática de flexión elástica de la antena (Antenna Whip)
+    const lateralSpeed = ls !== undefined ? ls : ((this.body as unknown as { _ls?: number })._ls ?? 0);
+    const targetWhipX = -B.Scalar.Clamp(acc * 0.005 + (fwd > 0.5 ? 0.12 : 0), -0.35, 0.35);
+    const targetWhipZ = B.Scalar.Clamp(steer * 0.15 + (lateralSpeed / Math.max(1, maxSpeed)) * 0.25, -0.4, 0.4);
+    const antK = 1 - Math.exp(-20 * dt);
+    const prevWhipX = this.antennaWhipX;
+    const prevWhipZ = this.antennaWhipZ;
+    this.antennaWhipX = B.Scalar.Lerp(this.antennaWhipX, targetWhipX, antK);
+    this.antennaWhipZ = B.Scalar.Lerp(this.antennaWhipZ, targetWhipZ, antK);
+    if (dt > 1e-4) {
+      this.antennaVelX = (this.antennaWhipX - prevWhipX) / dt;
+      this.antennaVelZ = (this.antennaWhipZ - prevWhipZ) / dt;
+    }
+    if (this.model.antenna) {
+      this.model.antenna.rotation.x = this.antennaWhipX;
+      this.model.antenna.rotation.z = this.antennaWhipZ;
+    }
+
     // Compresión elástica de amortiguadores en aterrizajes duros y baches
     const targetComp = (this.lastVy < -3.5 && vy > -1) ? Math.min(0.08, -this.lastVy * 0.012) : 0;
     if (targetComp > this.suspensionComp) this.suspensionComp = targetComp;
     this.suspensionComp = B.Scalar.Lerp(this.suspensionComp, targetComp, 1 - Math.exp(-14 * dt));
+
+    // Cinemática desacoplada de compresión por eje (Delantero vs Trasero)
+    const compFront = this.suspensionComp + (this.divePitch > 0 ? this.divePitch * 0.8 : 0) - (this.squatPitch < 0 ? Math.abs(this.squatPitch) * 0.3 : 0);
+    const compRear = this.suspensionComp + (this.squatPitch < 0 ? Math.abs(this.squatPitch) * 0.8 : 0) - (this.divePitch > 0 ? this.divePitch * 0.3 : 0);
     for (let i = 0; i < this.model.wheels.length; i++) {
       const wh = this.model.wheels[i];
       wh.m.position.y = this.wheelBaseY[i];
-      wh.m.position.y += this.suspensionComp;
+      const comp = wh.front ? compFront : compRear;
+      wh.m.position.y += comp;
     }
 
     // Rebote al aterrizar: se aplasta y recupera con un resorte amortiguado

@@ -672,18 +672,106 @@ export function paintCanFold(c: string) {
 export function toolFold(kind: 0 | 1 | 2) {
   const { G, done } = kit();
   const steel = FOLD.painted("#8f969e", 0.7, 271);
-  if (kind === 0) { // llave
-    G.box(16, 1, 2.6, steel, [0, 0.5, 0]); G.box(4.5, 1, 6, steel, [8, 0.5, 0]); G.box(3, 1.04, 2, FOLD.dark(), [9.4, 0.5, 0]);
-    for (const s of [-1, 1]) G.bend([-8, 1, s * 1.3], [6, 1, s * 1.3], 0.12, steel);
-    G.trimStrip([-1, 1.01, 0], [Math.PI / 2, 0, 0], 9, 1.2, "perfil", 0.02); G.bolts([-6, 1.02, 0], [4, 1.02, 0], 4, [0, 1, 0]);
+  if (kind === 0) { // llave fija / combinada
+    // Vástago central con acanalado drop-forged, perfil estampado y numeración diegética "10"
+    G.box(14, 1, 2.6, steel, [-0.5, 0.5, 0]);
+    for (const s of [-1, 1]) G.bend([-7.2, 1, s * 1.3], [5.8, 1, s * 1.3], 0.12, steel);
+    G.trimStrip([-0.5, 1.01, 0], [Math.PI / 2, 0, 0], 9.5, 1.3, "perfil", 0.02);
+    G.trimStrip([-0.5, -0.01, 0], [-Math.PI / 2, 0, 0], 9.5, 1.3, "perfil", 0.02);
+    // Troquelado de numeración métrica diegética "10" en acero estampado
+    G.box(2.2, 0.02, 1.1, FOLD.dark(), [2.6, 1.015, 0]);
+    G.box(0.24, 0.05, 0.75, steel, [2.15, 1.03, 0]);
+    G.box(0.18, 0.05, 0.22, steel, [2.02, 1.03, 0.26], [0, 0.5, 0]);
+    G.box(0.68, 0.05, 0.75, steel, [3.05, 1.03, 0]);
+    G.box(0.28, 0.07, 0.42, FOLD.dark(), [3.05, 1.035, 0]);
+    G.decal([-3.5, 1.02, 0], [Math.PI / 2, 0, 0], "numero", 0.85);
+    G.bolts([-5.5, 1.02, 0], [-1.5, 1.02, 0], 3, [0, 1, 0]);
+
+    // Mordaza abierta enriquecida con ángulo de inclinación de 15° respecto al vástago
+    const ang = (15 * Math.PI) / 180;
+    const jNode = new B.TransformNode("jaw", sc());
+    jNode.position.set(7.8, 0.5, 0); jNode.rotation.set(0, ang, 0); jNode.computeWorldMatrix(true);
+    const pJaw = (lx: number, ly: number, lz: number): V3 => {
+      const v = B.Vector3.TransformCoordinates(new B.Vector3(lx, ly, lz), jNode.getWorldMatrix());
+      return [v.x, v.y, v.z];
+    };
+    G.box(4.6, 1, 5.8, steel, pJaw(0, 0, 0), [0, ang, 0]);
+    G.cyl(2.4, 1.04, FOLD.dark(), pJaw(0.1, 0, 0), [0, ang, 0], 8);
+    G.box(3.2, 1.04, 2.2, FOLD.dark(), pJaw(1.5, 0, 0), [0, ang, 0]);
+    G.box(0.8, 1.01, 1.0, steel, pJaw(2.0, 0, 2.2), [0, ang + 0.35, 0]);
+    G.box(0.8, 1.01, 1.0, steel, pJaw(2.0, 0, -2.2), [0, ang - 0.35, 0]);
+    jNode.dispose();
+
+    // Extremo opuesto: ojo de estrella poligonal cerrado (estrella de 12 puntas) en acero estampado
+    G.box(2.2, 1, 3.4, steel, [-7.2, 0.5, 0]);
+    for (const s of [-1, 1]) G.bend([-6.2, 1, s * 1.3], [-7.8, 1, s * 1.7], 0.12, steel);
+    G.cyl(5.6, 1.0, steel, [-8.8, 0.5, 0], undefined, 12);
+    G.cyl(5.85, 0.3, steel, [-8.8, 0.5, 0], undefined, 12);
+    G.cyl(2.8, 1.04, FOLD.dark(), [-8.8, 0.5, 0], undefined, 12);
+    G.cyl(3.35, 1.05, FOLD.dark(), [-8.8, 0.5, 0], [0, 0, 0], 6);
+    G.cyl(3.35, 1.05, FOLD.dark(), [-8.8, 0.5, 0], [0, Math.PI / 6, 0], 6);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI + Math.PI / 12;
+      G.box(0.2, 1.02, 0.25, steel, [-8.8 + Math.cos(a) * 1.5, 0.5, Math.sin(a) * 1.5], [0, a, 0]);
+    }
   } else if (kind === 1) { // martillo
-    G.cyl(1.6, 14, FOLD.painted("#8a5a2b", 0.6, 272), [0, 0.8, 0], [0, 0, Math.PI / 2], 8); G.cyl(1.8, 4, FOLD.rubber(), [-5, 0.8, 0], [0, 0, Math.PI / 2], 8);
-    G.box(2.6, 2.6, 7, steel, [7.5, 1.3, 0]); for (const s of [-1, 1]) G.bend([6.2, 2.6, s * 3.5], [8.8, 2.6, s * 3.5], 0.15, steel);
+    const wood = FOLD.painted("#8a5a2b", 0.6, 272);
+    // Mango de madera con empuñadura de goma antideslizante estriada
+    G.cyl(1.6, 14.5, wood, [0.3, 0.8, 0], [0, 0, Math.PI / 2], 8);
+    G.cyl(1.82, 4.5, FOLD.rubber(), [-4.8, 0.8, 0], [0, 0, Math.PI / 2], 8);
+    for (let i = 0; i < 4; i++) G.cyl(1.98, 0.25, FOLD.dark(), [-6.2 + i * 1.0, 0.8, 0], [0, 0, Math.PI / 2], 8);
+    G.cyl(2.2, 0.35, FOLD.dark(), [-7.1, 0.8, 0], [0, 0, Math.PI / 2], 8);
+
+    // Cabeza de acero y cara de golpeo templada
+    G.box(2.6, 2.6, 7, steel, [7.5, 1.3, 0]);
+    for (const s of [-1, 1]) G.bend([6.2, 2.6, s * 3.5], [8.8, 2.6, s * 3.5], 0.15, steel);
     G.bolts([7.5, 2.62, -1.5], [7.5, 2.62, 1.5], 2, [0, 1, 0]);
+    G.cyl(2.5, 1.0, steel, [7.5, 1.3, 3.8], [Math.PI / 2, 0, 0], 10);
+    G.cyl(2.2, 0.2, FOLD.bare(), [7.5, 1.3, 4.35], [Math.PI / 2, 0, 0], 10);
+
+    // Uña sacaclavos curvada y hendida en dos garras en chapa estampada
+    for (const sy of [-1, 1]) {
+      const yG = 1.3 + sy * 0.72;
+      G.box(1.8, 0.85, 1.5, steel, [7.1, yG, -4.1], [0, -0.28, 0]);
+      G.box(1.5, 0.75, 1.4, steel, [6.4, yG, -5.2], [0, -0.62, 0]);
+      G.box(1.1, 0.65, 0.9, steel, [5.5, yG, -6.1], [0, -0.95, 0]);
+      G.bend([5.9, yG, -5.7], [5.1, yG, -6.4], 0.1, steel);
+    }
+    G.box(1.2, 0.45, 1.2, FOLD.dark(), [7.2, 1.3, -3.8]);
+    G.box(0.9, 0.35, 1.0, FOLD.dark(), [6.5, 1.3, -4.8]);
+
+    // Cuña de seguridad de acero en la testa superior del mango
+    G.cyl(1.5, 0.08, wood, [8.81, 1.3, 0], [0, 0, Math.PI / 2], 8);
+    G.box(0.12, 0.28, 1.1, FOLD.bare(), [8.85, 1.3, 0]);
+    G.box(0.12, 0.8, 0.22, FOLD.bare(), [8.85, 1.3, 0]);
+    G.box(0.8, 0.05, 0.35, FOLD.bare(), [7.5, 2.62, 0]);
   } else { // destornillador
-    G.cyl(2.4, 6, FOLD.painted("#c0392b", 0.5, 273), [0, 1.2, 0], [0, 0, Math.PI / 2], 8);
-    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; G.box(5.4, 0.3, 0.3, FOLD.dark(), [0, 1.2 + Math.cos(a) * 1.2, Math.sin(a) * 1.2], [a, 0, 0]); }
-    G.cyl(0.6, 9, FOLD.bare(), [7.5, 1.2, 0], [0, 0, Math.PI / 2], 6); G.box(0.8, 1.2, 0.2, FOLD.bare(), [12, 1.2, 0]);
+    const acetate = FOLD.painted("#c0392b", 0.5, 273);
+    // Mango estriado de acetato rojo con remate y golpeador
+    G.cyl(2.4, 6, acetate, [0, 1.2, 0], [0, 0, Math.PI / 2], 8);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      G.box(5.4, 0.3, 0.3, FOLD.dark(), [0, 1.2 + Math.cos(a) * 1.2, Math.sin(a) * 1.2], [a, 0, 0]);
+    }
+    G.cyl(2.1, 0.35, FOLD.dark(), [-3.05, 1.2, 0], [0, 0, Math.PI / 2], 8);
+    G.cyl(1.3, 0.12, FOLD.bare(), [-3.22, 1.2, 0], [0, 0, Math.PI / 2], 8);
+
+    // Virola y cuello hexagonal mecanizado (bolster) en la transición para torque adicional
+    G.cyl(1.8, 0.35, steel, [2.9, 1.2, 0], [0, 0, Math.PI / 2], 8);
+    G.cyl(1.35, 1.0, FOLD.bare(), [3.4, 1.2, 0], [0, 0, Math.PI / 2], 6);
+    G.cyl(1.1, 0.35, FOLD.bare(), [3.95, 1.2, 0], [0, 0, Math.PI / 2], 6, 0.65);
+
+    // Varilla redonda de acero
+    G.cyl(0.62, 7.4, FOLD.bare(), [7.75, 1.2, 0], [0, 0, Math.PI / 2], 8);
+
+    // Punta de cruz Phillips mecanizada con chaflanes en cruz oscura (FOLD.dark())
+    G.cyl(0.62, 0.6, FOLD.bare(), [11.6, 1.2, 0], [0, 0, Math.PI / 2], 8, 0.45);
+    G.box(0.65, 0.78, 0.18, FOLD.bare(), [12.0, 1.2, 0]);
+    G.box(0.65, 0.18, 0.78, FOLD.bare(), [12.0, 1.2, 0]);
+    for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
+      G.box(0.5, 0.22, 0.22, FOLD.dark(), [12.02, 1.2 + sy * 0.19, sz * 0.19], [0, 0, sy * sz * 0.35]);
+    }
+    G.cyl(0.26, 0.28, FOLD.dark(), [12.3, 1.2, 0], [0, 0, Math.PI / 2], 4, 0.08);
   }
   return done(30);
 }
