@@ -9,8 +9,7 @@ args.add_argument('obj', type=Path)
 args.add_argument('glb', type=Path)
 options = args.parse_args(sys.argv[sys.argv.index('--') + 1:])
 
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.delete(use_global=False)
+bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.wm.obj_import(filepath=str(options.obj.resolve()))
 objects = [obj for obj in bpy.context.scene.objects if obj.type == 'MESH']
 assert objects, f'No mesh imported from {options.obj}'

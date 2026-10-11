@@ -15,6 +15,7 @@
 - Las cinco familias se abrieron y se revisaron visualmente en la aplicación. Su exportador generó los cinco OBJ, materiales MTL y PNG de paleta.
 - Se convirtieron cinco variantes representativas (`*-3`) a GLB. Cada una conserva una malla, material y textura embebida; el lote suma menos de 0.5 MB.
 - El verificador confirma 15 fuentes VOX v150 con dimensiones, voxels y paleta válidos, y cinco GLB con malla, material y textura.
+- Prueba comparativa interactiva del stack Folded actual frente al GLB MagicaVoxel: `assets-src/magicavoxel/v1/comparison.html`; escena y cámara compartidas, escala aproximada para el mismo rango del patio. Captura Metal headless en `evidence/comparison.png`.
 - Captura del modelo de neumáticos exportada desde MagicaVoxel: `assets-src/magicavoxel/v1/evidence/tires-3.png`.
 
 ## Límite de esta tanda

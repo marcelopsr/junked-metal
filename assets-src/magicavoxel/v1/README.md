@@ -12,7 +12,7 @@ Primera tanda de utilería voxel para el patio, el taller y la pista. Conserva l
 
 `models/` contiene los quince `.vox` nativos. `exports/` incluye los cinco primeros GLB de prueba (`*-3`), OBJ/MTL/PNG exportados desde MagicaVoxel y la conversión reproducible desde OBJ a GLB con Blender. Cada GLB lleva textura y material embebidos; permanecen fuera de `public/` y todavía no están conectados a escenas o físicas activas.
 
-La captura `evidence/tires-3.png` se guardó desde la vista de MagicaVoxel. Las cinco familias se abrieron e inspeccionaron en la aplicación. Los diez `.vox` de semillas 17 y 41 se validan en formato, pero todavía no se exportaron como GLB.
+La prueba comparativa del neumático actual y el candidato se abre en `http://localhost:5173/assets-src/magicavoxel/v1/comparison.html`; `evidence/comparison.png` registra la misma escena capturada con Chromium headless. La captura `evidence/tires-3.png` se guardó desde la vista de MagicaVoxel. Las cinco familias se abrieron e inspeccionaron en la aplicación. Los diez `.vox` de semillas 17 y 41 se validan en formato, pero todavía no se exportaron como GLB.
 
 ## Regenerar y convertir
 

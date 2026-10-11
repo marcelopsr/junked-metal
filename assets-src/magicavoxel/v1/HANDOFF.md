@@ -6,7 +6,7 @@
 - 15 fuentes `.vox` (pallet, neumáticos, bidón, chapas, herrajes; semillas 3, 17, 41).
 - Cinco familias abiertas en MagicaVoxel. Se exportó desde la aplicación OBJ/MTL/PNG para una muestra por familia; Blender produjo cinco GLB con material y textura embebidos.
 - `python3 assets-src/magicavoxel/v1/verify.py` confirma las 15 fuentes VOX v150 y cinco GLB. Conteo GLB: pallet 628, neumáticos 2.128, bidón 1.622, chapas 2.876 y herrajes 1.108 caras. Suma: 0,49 MB.
-- Evidencia de MagicaVoxel: `evidence/tires-3.png`. La aplicación queda abierta con `hardware-3.vox`.
+- Comparativa interactiva Folded vs voxel (misma escena, cámara e iluminación): `comparison.html`; evidencia headless Metal pc: `evidence/comparison.png`. Evidencia de MagicaVoxel: `evidence/tires-3.png`. La aplicación queda abierta con `hardware-3.vox`.
 - No hay cambios de gameplay ni archivos en `public/`. Los GLB son props estáticos: ajustar escala, comprobar día/móvil, optimizar si se instancian, y definir colisionadores antes de integrar objetos físicos.
 
 ## Continuar

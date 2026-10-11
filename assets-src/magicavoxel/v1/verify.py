@@ -38,7 +38,7 @@ for family in FAMILIES:
     json_size, json_type = struct.unpack_from('<II', data, 12)
     assert json_type == 0x4E4F534A, path
     document = json.loads(data[20:20 + json_size])
-    assert document.get('meshes') and document.get('materials') and document.get('images'), path
+    assert len(document.get('meshes', [])) == 1 and document.get('materials') and document.get('images'), path
     assert document['images'][0].get('bufferView') is not None and document['images'][0].get('mimeType'), path
     faces = sum(accessor['count'] // 3 for mesh in document['meshes'] for primitive in mesh['primitives'] for accessor in [document['accessors'][primitive['indices']]])
     assert faces > 0, path
