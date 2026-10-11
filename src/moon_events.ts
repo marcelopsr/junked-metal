@@ -123,17 +123,22 @@ function spawnMeteor(car: B.Vector3, vis: boolean) {
   mets.push(m);
 }
 
+/** Cráter que sigue humeando (humo del meteorito) y deja el piso quemado; lo usa también el explosivo alien (main.ts boom). */
+export function craterHumeante(T: B.Vector3, r: number, vis: boolean) {
+  if (smokes.length < 10) smokes.push({ p: onFloor(T, 0.4), left: R.luna_meteoro_humo_s, t: 0 });
+  if (vis) mark("scorch", T, Math.random() * 6, r * 0.9, 30);
+}
+
 function landMeteor(m: Met, car: B.Vector3, carR: number, camYaw: number, vis: boolean) {
   const T = m.T, r = R.luna_meteoro_radio * m.size;
   deform(T, R.luna_meteoro_crater_r * m.size, R.luna_meteoro_crater_hondo * m.size);
   if (hd(car, T) < r + carR) H.hurt(R.luna_meteoro_dano, false, "meteorito");
   H.blast(T, r, R.luna_meteoro_dano_bicho, "meteoritos");
-  if (smokes.length < 10) smokes.push({ p: onFloor(T, 0.4), left: R.luna_meteoro_humo_s, t: 0 });
+  craterHumeante(T, r, vis);
   if (!vis) return;
   const p = onFloor(T, 0.5), dist = hd(car, T);
   FX.explosion(p, 2.2 * m.size);
   debris(T, "#7b7c80", 8, 9, 0.9);
-  mark("scorch", T, Math.random() * 6, r * 0.9, 30);
   SPACE.meteorImpact(panTo(car, T, camYaw), dist, m.size);
   H.shake(0.55 * B.Scalar.Clamp(1 - dist / 28, 0, 1));
 }

@@ -23,7 +23,7 @@ import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
-import { evBase, evFog, evInit, evReset, lunaDev, lunaEv, panTo } from "./moon_events";
+import { craterHumeante, evBase, evFog, evInit, evReset, lunaDev, lunaEv, panTo } from "./moon_events";
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import { skyClear, skyInfo, skyLaunch, skyTick } from "./moon_sky";
@@ -679,7 +679,7 @@ function boom(e: Enemy) {
   boomed.add(e); // una sola explosión por bicho (la cadena no vuelve sobre sí misma)
   if (hd(car.pos, e.pos) < ATK.alien_explosivo_radio + Math.max(car.def.size[0], car.def.size[2]) / 2) hurt(ATK.alien_explosivo_dano, false, "explosión " + e.kind, e.kind);
   explode(e.pos, ATK.alien_explosivo_radio, ATK.alien_explosivo_dano_bicho);
-  if (MOON.on) deform(e.pos, ATK.alien_explosivo_crater_r, ATK.alien_explosivo_crater_hondo);
+  if (MOON.on) { deform(e.pos, ATK.alien_explosivo_crater_r, ATK.alien_explosivo_crater_hondo); craterHumeante(e.pos, ATK.alien_explosivo_crater_r, !simulating); }
 }
 
 // Color del charco de cada insecto = color de sus ojos (models.ts)

@@ -418,7 +418,9 @@ let healClock = 0; // reloj propio (suma el dt de cada curandero: solo importa q
 // ---------- Curandero: rayo verde al aliado más herido en alcance y halo sobre él (instancias hijas: se van con el curandero) ----------
 const beamTpl = () => { const t = template("alienRayo", () => [cyl(0.08, 0.08, 1, glow(GREEN), [0, 0.5, 0], undefined, 6)]); shadows.removeShadowCaster(t); return t; };
 const haloTpl = () => { const t = template("alienHalo", () => [tor(2, 0.06, glow(GREEN), [0, 0.08, 0], undefined, 20), tor(1.5, 0.04, glow(CYAN), [0, 0.6, 0], undefined, 16)]); shadows.removeShadowCaster(t); return t; };
-const heal = new WeakMap<Enemy, { beam: B.InstancedMesh; halo: B.InstancedMesh }>();
+// Burbuja del escudo (esfera cian translúcida, diámetro 1; se escala al aliado): distingue el escudo de la cura
+const bubbleTpl = () => { const t = template("alienEscudo", () => [sph(1, pbr("alienEscudoM", { color: "#3ff2ff", rough: 0.2, emissive: "#3ff2ff", alpha: 0.28 }), [0, 0, 0], undefined, 12)]); shadows.removeShadowCaster(t); return t; };
+const heal = new WeakMap<Enemy, { beam: B.InstancedMesh; halo: B.InstancedMesh; bub: B.InstancedMesh }>();
 const _inv = new B.Matrix(), _a = new B.Vector3(), _b = new B.Vector3(), UP = B.Vector3.Up();
 /** Cada cuadro (main.ts, salvo aturdido): repone vida al aliado más herido dentro del alcance; vis = dibujar el rayo (no en __sim). */
 export function healTick(e: Enemy, all: Enemy[], dt: number, vis: boolean) {
@@ -432,20 +434,22 @@ export function healTick(e: Enemy, all: Enemy[], dt: number, vis: boolean) {
   if (best) { best.hp = Math.min(best.maxHp, best.hp + best.maxHp * ATK.alien_curandero_cura * dt); shieldUntil.set(best, healClock + 0.25); }
   if (!vis) return;
   let fx = heal.get(e);
-  if (!best) { if (fx) fx.beam.isVisible = fx.halo.isVisible = false; return; }
+  if (!best) { if (fx) fx.beam.isVisible = fx.halo.isVisible = fx.bub.isVisible = false; return; }
   if (!fx) {
-    fx = { beam: beamTpl().createInstance("rayo"), halo: haloTpl().createInstance("halo") };
-    fx.beam.parent = fx.halo.parent = e.node; fx.beam.isPickable = fx.halo.isPickable = false;
+    fx = { beam: beamTpl().createInstance("rayo"), halo: haloTpl().createInstance("halo"), bub: bubbleTpl().createInstance("escudo") };
+    fx.beam.parent = fx.halo.parent = fx.bub.parent = e.node; fx.beam.isPickable = fx.halo.isPickable = fx.bub.isPickable = false;
     fx.beam.rotationQuaternion = new B.Quaternion(); fx.halo.rotationQuaternion = new B.Quaternion();
     heal.set(e, fx);
   }
-  fx.beam.isVisible = fx.halo.isVisible = true;
+  fx.beam.isVisible = fx.halo.isVisible = fx.bub.isVisible = true;
   e.node.getWorldMatrix().invertToRef(_inv); // todo en el marco del curandero (son sus hijos)
   B.Vector3.TransformCoordinatesToRef(at(best.pos, 0, best.def.size[1] * 0.6, 0), _inv, _b);
   _b.subtractToRef(CU_HEAD, _a);
   fx.beam.position.copyFrom(CU_HEAD); fx.beam.scaling.set(1, _a.length(), 1);
   B.Quaternion.FromUnitVectorsToRef(UP, _a.normalize(), fx.beam.rotationQuaternion!);
   B.Vector3.TransformCoordinatesToRef(best.pos, _inv, fx.halo.position);
+  B.Vector3.TransformCoordinatesToRef(at(best.pos, 0, best.def.size[1] * 0.5, 0), _inv, fx.bub.position);
+  fx.bub.scaling.setAll(best.radius * 2.6 * (1 + 0.04 * Math.sin(e.clock * 10)));
   fx.halo.scaling.setAll(best.radius * 1.3 * (1 + 0.08 * Math.sin(e.clock * 8)));
   if (MOON.on && e.node.rotationQuaternion) B.Quaternion.InverseToRef(e.node.rotationQuaternion, fx.halo.rotationQuaternion!).multiplyInPlace(alignYaw(best.pos, 0)); // parado en el piso del aliado
 }

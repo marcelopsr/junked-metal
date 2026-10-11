@@ -239,6 +239,7 @@ export const sessions = [
     { id: "ocho", perf: false, act: async (p) => { await labReady(p); await p.evaluate(() => { window.__play(3); window.__god(); window.__luna.go("sol"); window.__luna.row(undefined, 11, 2.6); }); await tick(p, 30); } }, // 30 cuadros: ya salió la tanda inicial de bichos (nuevos la borra)
     { id: "nuevos", perf: false, act: async (p) => { await p.evaluate(() => { window.__luna.clear(); window.__luna.row(["flotante", "tanque", "explosivo", "curandero"], 9, 3.2); window.__luna.wound(0.5); }); await tick(p, 50); } },
     { id: "cadena", perf: false, act: async (p) => { await p.evaluate(() => { window.__luna.clear(); window.__luna.row(["explosivo", "explosivo", "explosivo"], 12, 2, false); }); await tick(p, 2); await p.evaluate(() => window.__luna.killOne?.("explosivo")); await tick(p, 8); } }, // 3 explosivos juntos, se mata uno: revientan en cadena
+    { id: "crater", perf: false, act: async (p) => { await tick(p, 150); } }, // 2,5 s después: la nube se fue, queda el cráter humeante y el piso quemado
     { id: "boom", perf: false, act: async (p) => { // si las armas matan algo y sube de nivel, se elige la primera carta (última captura de la sesión)
       for (let i = 0; i < 9; i++) { await tick(p, 10); if (!(await p.evaluate(() => document.getElementById("levelup").classList.contains("hidden")))) { await p.keyboard.press("1"); await p.keyboard.press("Enter"); } }
     } },

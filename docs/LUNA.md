@@ -24,3 +24,9 @@ Fecha: 2026-10-10. Fuente de verdad para las fases del mapa Luna.
 - La partida va cambiando el mapa: cuanto más avanza, más castigada queda la luna.
 - Decidido por defecto (se puede cambiar): las deformaciones son permanentes durante la partida, con un tope de cráteres activos para el rendimiento. Al superar el tope, los más viejos se suavizan de a poco.
 - El salto sale de la física (velocidad más rampa, con la baja gravedad lunar). Si hace falta, se agrega un impulso de salto con su tecla y botón táctil.
+
+## Fase 3 — decidido 2026-10-11 (orden de implementación)
+1. **Jefe final: gusano lunar.** Emerge y se hunde bajo la superficie dejando cráteres reales (`deform`); dos barras como los demás jefes finales.
+2. **Objetivos en la superficie:** juntar celdas de energía repartidas por la esfera o defender una antena un rato; obligan a recorrer el planeta.
+3. **Cohete de escape:** final alternativo; al minuto 10 aterriza un cohete y hay que llegar a él.
+4. **Variantes por semilla:** como los climas del patio (lado oscuro más grande, más cráteres, lluvia de meteoritos constante).
