@@ -1,10 +1,10 @@
-# Smooth Voxels — pila redondeada v1
+# Smooth Voxels — recursos redondeados v1
 
-Prueba local de una pila de tres neumáticos para Junked Metal. La malla de entrada conserva la sección toroidal del modelo Folded actual, pero usa celdas de 0,25 unidades y no agrega tacos cúbicos. Smooth Voxels procesa esa superficie con `lighting = smooth`, `deform = 8 0.8 0.7` y rugosidad alta.
+Biblioteca experimental de modelos curvos para Junked Metal. La pila de neumáticos de esta tanda ahora comparte carpeta con tres props del patio: maceta de terracota, lata de pintura RC y bidón oxidado. Las formas usan celdas de 0,25 unidades, superficie procesada por Smooth Voxels (`lighting = smooth`, `deform = 8 0.8 0.7`) y materiales mates.
 
-- `generate_stack.py` regenera `sources/folded-stack.vox` a partir del escritor MagicaVoxel del proyecto.
-- `sources/folded-stack.svox` conserva la fuente editable y los ajustes de suavizado.
-- `exports/folded-stack.glb` es la exportación GLB de Smooth Voxels Playground 2.4.
-- La comparación con el modelo actual está en `../../magicavoxel/v1/comparison.html`.
+- `generate_stack.py` y `generate_props.py` regeneran las fuentes MagicaVoxel desde Python.
+- Cada prop conserva su `.vox` reproducible, `.svox` editable y GLB exportado desde Smooth Voxels Playground 2.4 en `sources/` y `exports/`.
+- `props-preview.html` permite comparar los tres candidatos en Babylon y descargar sus GLB.
+- La pila de cubiertas Folded se compara con la versión Smooth Voxels en `../../magicavoxel/v1/comparison.html`.
 
-Es un recurso experimental fuera del gameplay y del build. La exportación tiene unas 126 mil posiciones de vértice; antes de usarla en el juego habrá que reducir su geometría y medir su costo en móvil.
+Maceta y lata están pensadas como candidatas visuales para los objetos equivalentes de `src/world.ts`; el bidón amplía los props de ambientación. Ningún archivo reemplaza todavía las mallas ni colisionadores activos. Los GLB pesan entre 0,47 y 1,05 MB; hay que reducir geometría, definir colisiones y medir costo en móvil antes de integrarlos. Todo el paquete queda fuera del build y de las partidas.
