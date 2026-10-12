@@ -72,6 +72,7 @@ const rainAt = (seed: number) => { const r = (seed * 0.6180339887) % 1; return r
 
 // Jefe final de las 10:00: uno de 3, con UNA tirada derivada de la semilla (sin gastar rng(), como la lluvia).
 export const FINALS: Kind[] = ["perro", "aspiradora", "cortacercos"];
+export const ESCAPE_WIN = "Escape: el cohete despegó con el auto a bordo. El gusano lunar se queda con el regolito.";
 export const FINAL_WIN: Partial<Record<Kind, string>> = {
   perro: "¡Felipe fue derrotado! Pasará la tarde ofendido.",
   gusano: "¡El gusano lunar no vuelve a salir! El regolito queda en paz, lleno de pozos.",

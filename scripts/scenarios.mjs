@@ -250,6 +250,12 @@ export const sessions = [
     { id: "arco", perf: false, act: async (p) => { await tick(p, 120); } }, // a mitad del arco, delante del auto
     { id: "crateres", perf: false, act: async (p) => { await tick(p, 260); } }, // ya se hundió: dos cráteres humeantes
   ] },
+  // Objetivos de la luna (src/moon_goals.ts): __luna.goal(tipo, dist) y __luna.rocket(dist) los ponen ya delante; baliza, aro de zona y radar
+  { id: "luna_goals", query: "?mute&seed=3&zone=luna", shots: [
+    { id: "celdas", perf: false, act: async (p) => { await labReady(p); await p.evaluate(() => { window.__play(3); window.__god(); window.__luna.go("sol"); window.__luna.clear(); window.__luna.goal("celdas", 18); }); await tick(p, 200); } },
+    { id: "antena", perf: false, act: async (p) => { await p.evaluate(() => { window.__luna.clear(); window.__luna.goal("antena", 16); }); await tick(p, 200); } },
+    { id: "cohete", perf: false, act: async (p) => { await p.evaluate(() => { window.__luna.clear(); window.__luna.rocket(18); }); await tick(p, 200); } },
+  ] },
   // partida_llena: 300 s de sim (partida avanzada, t=5 min) → mide el estado con armas evolucionadas y oleadas densas.
   // Medido: ~168 draws PC (thin-instances agrupan por tipo; menos que partida-curso/90 s por diferente mezcla de proyectiles).
   // Solo pc y solo medición de perf (shot: false); usar --only partida_llena para medir sin el resto.

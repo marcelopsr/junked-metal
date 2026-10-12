@@ -513,7 +513,7 @@ function tickCombo(dt: number, live: boolean) {
 
 // ---------- Radar de la radio: barrido, estela y blips (lienzo de 64 px escalado sin filtrar) ----------
 const RS = 64, RH = RS / 2, RR = 50, RK = (RH - 1) / RR; // lado, centro, alcance en metros, píxeles por metro
-type Blip = { x: number; z: number; kind: "enemigo" | "elite" | "jefe" | "cofre" | "gema" | "rec" };
+type Blip = { x: number; z: number; kind: "enemigo" | "elite" | "jefe" | "cofre" | "gema" | "rec" | "obj" };
 let rCtx: CanvasRenderingContext2D, rBg: HTMLCanvasElement;
 let rCar = { x: 0, z: 0, yaw: 0, up: 0 }, rBlips: Blip[] = [], rAge = 9, rSweep = 0, rAcc = 0;
 function initRadar() {
@@ -570,6 +570,7 @@ function drawRadar() {
     const age = (((rSweep - Math.atan2(rx, ry)) % 6.2832) + 6.2832) % 6.2832 / 6.2832;
     if (b.kind === "jefe") { if (blink) { g.globalAlpha = 1; g.fillStyle = "#ff4a38"; g.fillRect(x - 1, y - 1, 3, 3); } }
     else if (b.kind === "elite") { g.globalAlpha = 1; g.fillStyle = "#e8b0ff"; g.fillRect(x, y, 2, 2); }
+    else if (b.kind === "obj") { if (blink) { g.globalAlpha = 1; g.fillStyle = "#ffb347"; g.fillRect(x - 1, y - 1, 3, 3); } else { g.globalAlpha = 0.7; g.fillStyle = "#ffb347"; g.fillRect(x, y, 1, 1); } }
     else if (b.kind === "cofre") { g.globalAlpha = 1; g.fillStyle = "#e0a030"; g.fillRect(x - 1, y, 3, 1); g.fillRect(x, y - 1, 1, 3); }
     else if (b.kind === "rec") { g.globalAlpha = 1 - age * 0.5; g.fillStyle = "#b9d3a4"; g.fillRect(x, y, 2, 2); }
     else { g.globalAlpha = 1 - age * 0.8; g.fillStyle = b.kind === "gema" ? "#6fb3c4" : "#d6e8c8"; g.fillRect(x, y, 1, 1); }

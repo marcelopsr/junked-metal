@@ -18,7 +18,7 @@ import { ACH, type AchId } from "./achievements";
 import { applyClimate, gfxInfo, glitchHit, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setupRender, shadows } from "./render";
 import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
 import { buildLayout, floorAt, HALF, initWorld, hitBreakables, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
-import { CLIMATES, DUSK, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
+import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
@@ -26,6 +26,7 @@ import { introOn, playIntro } from "./intro";
 import { craterHumeante, evBase, evFog, evInit, evReset, lunaDev, lunaEv, panTo } from "./moon_events";
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
+import { goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand } from "./moon_goals";
 import { skyClear, skyInfo, skyLaunch, skyTick } from "./moon_sky";
 import { ALIENS, alienWave, armorMul, healTick, isAlien } from "./aliens";
 import { wormForce, wormHeadTpl, wormOut } from "./moon_worm";
@@ -220,6 +221,7 @@ function clearRun() {
   setMoon(false); // la luna se enciende solo en una partida de Supervivencia en la luna (startRun)
   evReset(); // luna: meteoritos, erupciones, tinte rojo y ambiente (moon_events.ts)
   shipsClear(); // naves de la luna (moon_ships.ts)
+  goalsClear(); // luna: objetivos en la superficie y cohete (moon_goals.ts)
   skyClear(); // luna: proyectiles del Sol y la Tierra (moon_sky.ts)
   for (const e of enemies) e.dispose();
   for (const w of weapons) w.dispose();
@@ -744,6 +746,7 @@ evInit({ // moon_events.ts: daño y sacudida viven acá
   sim: () => simulating,
 });
 SHIP_IO.hurt = (n, src) => hurt(n, false, src);
+GOAL_IO.win = (p) => { if (state !== "play" || endless) return; outroAt = p.clone(); endRun(true, ESCAPE_WIN); };
 SHIP_IO.reward = (p, xp, boss) => { dropGems(p, xp); dropPickup(p, "cofre"); if (boss) { bossKills++; runScrap += R.tornillos_jefe; shake = 1.5; } };
 
 // ---------- Update ----------
@@ -946,6 +949,7 @@ function update(dt: number) {
     apagon = false;
     const kind = RUN_BOSSES[bossIdx++][1], ship = MOON.on && kind !== finalKind ? shipFor(bossIdx - 1, runSeed) : null; // luna: minijefe = nave (moon_ships.ts)
     if (ship) shipSpawn(ship, c.pos, time); else spawnEnemy(kind, spawnPoint(c.pos, 30, 36));
+    if (MOON.on && kind === finalKind && !endless) rocketLand(c.pos, simulating); // luna: con el gusano aterriza el cohete de escape (moon_goals.ts)
     if (endless) { // modo sin fin: otro jefe repetido en 2 min (rotan los tres de la partida) y cada vez con más vida
       RUN_BOSSES.push([time + R.sinfin_cada_s, RUN_BOSSES[RUN_BOSSES.length % 3][1]]);
       if (!ship) { const b = enemies[enemies.length - 1]; b.hp = b.maxHp *= time / R.sinfin_vida_div; }
@@ -1127,7 +1131,9 @@ function update(dt: number) {
     if (state !== "play") return;
   }
   const boss = enemies.find((e) => e.def.boss);
-  if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp), boss.kind, boss.enraged);
+  const gb = MOON.on && car ? goalBar(car.pos) : null; // luna: progreso de la antena o del cohete en la barra de jefe
+  if (gb) hudBoss(gb.name, gb.pct);
+  else if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp), boss.kind, boss.enraged);
   else if (MOON.on) { const sb = shipBar(); if (sb) hudBoss(sb.name, sb.pct); } // naves de la luna: misma barra de jefe
   { const ms = boss ? "boss" : apagon ? "blackout" : "run"; if (!simulating && (ms !== musicS || (musicT -= dt) <= 0)) { musicS = ms; musicT = 1; music(ms, time / 600); } } // música: cambio de estado al instante, intensidad cada ~1 s
 
@@ -1149,6 +1155,7 @@ function update(dt: number) {
 
   // --- Armas ---
   if (MOON.on) shipsTick(dt, time, c, simulating, camYaw); // naves alienígenas (moon_ships.ts): nodriza recurrente y minijefes
+  if (MOON.on) { goalsTick(dt, time, c.pos, simulating); if (state !== "play") return; } // objetivos y cohete (moon_goals.ts); el cohete puede ganar la partida
   const ctx: Ctx = { scene, car: c, enemies: MOON.on ? shipTargets(enemies.some((e) => e.kind === "gusano" && !wormOut(e)) ? enemies.filter((e) => e.kind !== "gusano" || wormOut(e)) : enemies, c.pos) : enemies, dt, st, fs: r.fs, damage, explode };
   for (const w of weapons) { dmgSrc = w.id; w.update(ctx); }
   dmgSrc = "";
@@ -1342,6 +1349,7 @@ function updateHud(dt: number) {
     MOON.on ? { x: 0, z: 0, yaw: yawOf(car!.root.forward, car!.pos), up: camYaw } : { x: car!.pos.x, z: car!.pos.z, yaw: Math.atan2(car!.root.forward.x, car!.root.forward.z), up: camYaw },
     [...enemies.map((e) => ({ ...xz(e.pos), kind: e.def.boss ? ("jefe" as const) : e.elite ? ("elite" as const) : ("enemigo" as const) })),
      ...pickups.filter((p) => p.type === "cofre").map((p) => ({ ...xz(p.m.position), kind: "cofre" as const })),
+     ...(MOON.on ? goalBlips().map((p) => ({ ...xz(p), kind: "obj" as const })) : []),
      ...gemBlips, ...recBlips]);
   // Daño visible: pintura gastada y piezas que saltan al cruzar 50% y 25%
   const frac = Math.max(0, hp / maxHp);
@@ -1728,7 +1736,7 @@ if (import.meta.env.DEV) import("./devbot").then((m) => devReady().then(() => Ob
     simulating = false;
     $("levelup").classList.add("hidden");
     const boss = enemies.find((e) => e.def.boss);
-    return `${fmt(time)} nv${level} hp${Math.round(hp)}/${maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed} · tornillos ${Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK)} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
+    return `${fmt(time)} nv${level} hp${Math.round(hp)}/${maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed}${MOON.on ? " · " + goalStats() : ""} · tornillos ${Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK)} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
   },
   // Arranca una partida normal desde la consola (para __sim sin pasar por el menú): __play(3)
   __play: (seed = 1) => { if (state !== "menu") toMenu(); forceSeed = seed; startRun(); forceSeed = 0; return runSeed; },
@@ -1837,6 +1845,8 @@ if (import.meta.env.DEV) Object.assign(window, {
     wound: (f = 0.5) => { for (const e of enemies) if (e.hp > 0) e.hp = e.maxHp * f; return enemies.length; }, // deja a todos con f de vida (el curandero tiene a quién curar)
     // fila de bichos delante del auto (por defecto los aliens), a dist m y separados sep m; tough: no se mueren con las armas (capturas)
     // gusano lunar: lo pone y lo hace salir ya a dist m delante del auto (capturas)
+    goal: (kind: "celdas" | "antena" = "celdas", dist = 16) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos); goalForce(kind, car.pos, dist, Math.atan2(f.z, f.x)); return "ok"; }, // objetivo ya, a dist m (moon_goals.ts)
+    rocket: (dist = 16) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos); rocketForce(car.pos, dist, Math.atan2(f.z, f.x)); return "ok"; }, // cohete de escape ya, a dist m
     worm: (dist = 7) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(); spawnEnemy("gusano", onFloor(at(car.pos, f.x * dist + f.z * 10, 0, f.z * dist - f.x * 10), 0)); /* de costado: el arco cruza delante del auto */ const e = enemies[enemies.length - 1]; e.hp = e.maxHp = 1e6; wormForce(e, onFloor(at(car.pos, f.x * dist, 0, f.z * dist), 0)); return "ok"; },
     row: (kinds: Kind[] = [...ALIENS], dist = 10, sep = 3.2, tough = true) => { if (!car || !MOON.on) return "sin luna"; const f = flatL(car.root.forward, car.pos).normalize(), n0 = enemies.length; kinds.forEach((k, i) => { const x = (i - (kinds.length - 1) / 2) * sep; spawnEnemy(k, onFloor(at(car!.pos, f.x * dist + f.z * x, 0, f.z * dist - f.x * x), 0.5)); }); if (tough) for (const e of enemies.slice(n0)) e.hp = e.maxHp = 1e6; return enemies.length; },
   },

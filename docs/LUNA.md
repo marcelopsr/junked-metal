@@ -27,6 +27,7 @@ Fecha: 2026-10-10. Fuente de verdad para las fases del mapa Luna.
 
 ## Fase 3 — decidido 2026-10-11 (orden de implementación)
 1. **Jefe final: gusano lunar.** Emerge y se hunde bajo la superficie dejando cráteres reales (`deform`); dos barras como los demás jefes finales.
-2. **Objetivos en la superficie:** juntar celdas de energía repartidas por la esfera o defender una antena un rato; obligan a recorrer el planeta.
-3. **Cohete de escape:** final alternativo; al minuto 10 aterriza un cohete y hay que llegar a él.
+2. **[HECHO 2026-10-11, `src/moon_goals.ts`] Objetivos en la superficie:** juntar celdas de energía repartidas por la esfera o defender una antena un rato; obligan a recorrer el planeta.
+3. **[HECHO 2026-10-11, `src/moon_goals.ts`] Cohete de escape:** final alternativo; aterriza lejos al salir el gusano (jefe final) y quedarse `luna_cohete_s` en su zona gana la partida ("Escape", `ESCAPE_WIN` en run.ts); matar al gusano sigue ganando.
+   Objetivos: cada `luna_obj_cada_s` (primero a `luna_obj_primero_s`), lejos (`luna_obj_dist`), baliza naranja sin niebla + punto en el radar; celdas (3-4, tiempo límite) o antena (barra en la de jefe, solo avanza dentro del aro, llegan bichos). Premio = el de la nodriza (gemas + cofre). Dev: `__luna.goal("celdas"|"antena", dist)`, `__luna.rocket(dist)`; capturas `luna_goals`.
 4. **Variantes por semilla:** como los climas del patio (lado oscuro más grande, más cráteres, lluvia de meteoritos constante).
