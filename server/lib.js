@@ -23,6 +23,15 @@ export function verify(secret, token, now = Date.now()) {
   } catch { return null; }
 }
 
+// Canje del Worker jm-login (Cloudflare Access): firma HMAC de "cf-exchange:<mail>:<ts>" con JM_SECRET, ventana de 60 s.
+export const exchangeSig = (secret, email, ts) => mac(secret, `cf-exchange:${email}:${ts}`);
+export function exchangeOk(secret, body, now = Date.now()) {
+  const { email, ts, sig } = body || {};
+  if (typeof email !== "string" || !email.includes("@") || email.length > 254 || !Number.isFinite(ts) || Math.abs(now - ts) > 60e3) return null;
+  const a = Buffer.from(String(sig)), b = Buffer.from(exchangeSig(secret, email, ts));
+  return a.length === b.length && timingSafeEqual(a, b) ? email.toLowerCase() : null;
+}
+
 // TURN REST (coturn use-auth-secret): username "exp:uid", credencial = base64(HMAC-SHA1(secret, username)).
 export function turnCred(secret, uid, ttlSec = 3600, now = Date.now()) {
   const username = `${Math.floor(now / 1000) + ttlSec}:${uid.replace(/:/g, "-")}`;

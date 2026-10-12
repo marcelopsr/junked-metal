@@ -20,7 +20,7 @@ import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setSco
 import { setDrawDist, buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, heavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
-import { getToken, loginKey, loginUrl, NET_HOST, setToken, takeToken, type Msg, type Net } from "./net"; // net.ts es chico; peerjs sigue en su chunk dinámico
+import { cfLoginUrl, getToken, LOGIN_URL, loginKey, loginUrl, NET_HOST, setToken, takeToken, type Msg, type Net } from "./net"; // net.ts es chico; peerjs sigue en su chunk dinámico
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
@@ -655,6 +655,7 @@ if (NET_HOST) {
   if (takeToken()) netStatus("Sesión iniciada.");
   const b = $("netLogin"); b.classList.remove("hidden"); if (getToken()) b.textContent = "Sesión iniciada · volver a entrar";
   b.onclick = () => location.assign(loginUrl());
+  if (LOGIN_URL) { const c = $("netCfLogin"); c.classList.remove("hidden"); c.onclick = () => location.assign(cfLoginUrl()); } // opción principal; GitHub y clave quedan de alternativa
   const sess = () => { const on = !!getToken(); $("netSession").textContent = on ? "Sesión iniciada" : "Sin sesión"; $("netLogout").classList.toggle("hidden", !on); };
   $("netKeyBox").classList.remove("hidden"); sess();
   $("netKeyGo").onclick = async () => {

@@ -39,6 +39,9 @@ export async function loginKey(clave: string) {
   if (!j?.token) throw new Error(`El servidor respondió ${r.status}.`);
   setToken(j.token);
 }
+/** Login Cloudflare (Worker jm-login con Access One-time PIN, R6_RED.md § Login Cloudflare); vacío = sin ese botón. */
+export const LOGIN_URL = String(import.meta.env.VITE_LOGIN_URL ?? "").trim();
+export const cfLoginUrl = () => `${LOGIN_URL}${LOGIN_URL.includes("?") ? "&" : "?"}return=${encodeURIComponent(location.href)}`;
 export const loginUrl = () => `https://${NET_HOST}/auth/login?return=${encodeURIComponent(location.href)}`;
 /** Opciones de Peer. Con host propio: su PeerServer y los iceServers temporales de /api/turn (si falla o no hay token, solo STUN). Sin host: PeerJS Cloud y su config por defecto. */
 async function opts() {

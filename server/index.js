@@ -4,7 +4,7 @@ import { randomBytes, timingSafeEqual } from "node:crypto";
 import { readFile, open } from "node:fs/promises";
 import express from "express";
 import { ExpressPeerServer } from "peer";
-import { ORIGINS, sign, verify, turnCred, safeReturn, limiter } from "./lib.js";
+import { ORIGINS, sign, verify, turnCred, safeReturn, limiter, exchangeOk } from "./lib.js";
 
 const E = process.env;
 for (const k of ["JM_SECRET", "TURN_SECRET", "GROUP_KEY"]) if (!E[k]) throw new Error(`falta ${k} en .env`);
@@ -39,6 +39,21 @@ app.post("/api/login", (req, res) => {
   if (!loginOk(ipOf(req))) return res.status(429).json({ error: "Demasiados intentos, probá más tarde" });
   if (!eq(req.body?.clave ?? "", E.GROUP_KEY)) return res.status(401).json({ error: "Clave incorrecta" });
   res.json({ token: sign(E.JM_SECRET, "g-" + randomBytes(4).toString("hex")) });
+});
+
+// Login Cloudflare: el Worker jm-login manda el mail verificado por Access; acá se decide si está invitado.
+// ponytail: invitados en un JSON leído en cada canje; lo reemplaza el portal de administración (SQLite).
+const INVITES = E.INVITES_FILE || "/opt/junkedmetal/data/invites.json";
+const exchOk = limiter(30, 15 * 60e3);
+app.post("/api/cf-exchange", async (req, res) => {
+  if (!exchOk(ipOf(req))) return res.status(429).json({ error: "Demasiados intentos" });
+  const email = exchangeOk(E.JM_SECRET, req.body);
+  if (!email) return res.status(401).json({ error: "Firma inválida" });
+  let list = [];
+  try { list = JSON.parse(await readFile(INVITES, "utf8")); } catch { return res.status(503).json({ error: "Lista de invitados no disponible" }); }
+  const inv = Array.isArray(list) && list.find((i) => String(i.email).toLowerCase() === email);
+  if (!inv || inv.status !== "active") return res.status(403).json({ error: "Sin invitación" });
+  res.json({ token: sign(E.JM_SECRET, "cf-" + email) });
 });
 
 app.get("/api/turn", (req, res) => {

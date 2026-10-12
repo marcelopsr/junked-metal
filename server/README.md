@@ -33,3 +33,22 @@ Señalización PeerJS propia (`/peer`), login (clave de grupo o GitHub con lista
 
 ## Tests
 `cd server && npm test` (node:test: tokens, credenciales TURN, validación de `return`, rate limit).
+
+## Login Cloudflare
+
+Login por mail sin dominio propio: Worker `jm-login` (`server/cf-login/`, wrangler 4.149.0) en `jm-login.<sub>.workers.dev`, protegido por Cloudflare Access (Zero Trust gratis, team `junkedmetal`, método One-time PIN, política Allow con Include: Everyone; la verificación del mail es la autenticación, la lista de invitados vive en la VPS).
+
+Flujo: `GET /?return=<url>` (orígenes de `ORIGINS`) → Access pide el mail y el PIN → el Worker verifica `Cf-Access-Jwt-Assertion` (RS256 contra `<TEAM_DOMAIN>/cdn-cgi/access/certs`, `aud` = `POLICY_AUD`, `iss` = `TEAM_DOMAIN`, `exp`) → `POST /api/cf-exchange` en la VPS con `{email, ts, sig}`, `sig = base64url(HMAC-SHA256(JM_SECRET, "cf-exchange:<mail>:<ts>"))`, ventana de 60 s → la VPS busca el mail en `/opt/junkedmetal/data/invites.json` (`[{email, status: "active"|"revoked", createdAt}]`, variable `INVITES_FILE` para cambiarla) y, si está activo, devuelve `{token}` (formato `sign()`, uid `cf-<mail>`); si no, 403 y el Worker muestra "Sin invitación: pedí acceso al administrador" → redirección a `return#token=...`.
+
+`verify` es genérico: los uid `cf-*` valen para `/api/turn` y el PeerServer sin cambios. La lista JSON es provisoria; la reemplaza el portal de administración (SQLite).
+
+Despliegue (requiere un token con Workers Scripts:Edit, Workers Subdomain/Account Settings:Edit, Access: Organizations, Identity Providers, Apps and Policies:Edit):
+```sh
+cd server/cf-login && npm ci && set -a && . ~/.config/junkedmetal/cloudflare.env && set +a
+npx wrangler deploy
+ssh vps "grep ^JM_SECRET= /opt/junkedmetal/.env | cut -d= -f2" | npx wrangler secret put JM_SECRET
+# Access: crear org junkedmetal, IdP onetimepin, app self_hosted sobre jm-login.<sub>.workers.dev con política Allow Everyone;
+# copiar el AUD de la app a POLICY_AUD en wrangler.toml y volver a desplegar.
+gh variable set LOGIN_URL -R marcelopsr/junked-metal --body "https://jm-login.<sub>.workers.dev/"
+```
+Pruebas: `node --test server/cf-login/test/*.test.js` (firma compatible, ventana, return, JWT).

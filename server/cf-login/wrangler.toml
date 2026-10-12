@@ -1,0 +1,10 @@
+name = "jm-login"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+# TEAM_DOMAIN y POLICY_AUD los fija la app de Access (ver server/README.md § Login Cloudflare). JM_SECRET va como secreto.
+[vars]
+TEAM_DOMAIN = "https://junkedmetal.cloudflareaccess.com"
+POLICY_AUD = ""
+EXCHANGE_URL = "https://junkedmetal.duckdns.org/api/cf-exchange"
