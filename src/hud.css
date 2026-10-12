@@ -95,7 +95,7 @@
 @media (pointer: coarse), (max-width: 720px) { #encTag.st #encW { display: none; } #encTag.st #encN::before { content: "ESC "; } }
 #encAsk { position: absolute; top: 32%; left: 50%; translate: -50% 0; scale: var(--hud-scale); transform-origin: 50% 0; width: min(380px, calc(100vw / var(--hud-scale) - 24px)); padding: 12px 16px 14px; pointer-events: auto; border-top-color: var(--jm-amarillo, #FFB400); }
 #encAsk .encHd { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; font: 700 18px/1 var(--hf); letter-spacing: .1em; color: var(--jm-amarillo2, #FFD166); }
-#encAsk .encHd b { font: 700 22px/1 var(--hf); color: var(--g-txt); font-variant-numeric: tabular-nums; }
+#encAsk .encHd b { white-space: nowrap; font: 700 22px/1 var(--hf); color: var(--g-txt); font-variant-numeric: tabular-nums; }
 #encAsk .h-track { height: 10px; }
 #encBar { background: linear-gradient(90deg, #ff9138, #ffd166); }
 #encAsk .encBtns { display: flex; gap: 10px; margin-top: 12px; }

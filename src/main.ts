@@ -797,7 +797,7 @@ function endRun(win: boolean, why: string) {
   }
   $("hud").classList.add("hidden");
   bannerClear();
-  const more = win && !endless; // venció al jefe final: los resultados ofrecen "Seguir jugando"
+  const more = win && !endless && !erun; // venció al jefe final: los resultados ofrecen "Seguir jugando"
   bank = { t: time, scrap: earned, dmg: { ...dmgOut }, rec };
   const evos = weapons.filter((w) => w.evolved).map((w) => WEAPONS[w.id].evoName);
   const res = { win, title: endless ? "FIN DEL SIN FIN" : undefined, why, time, kills, level, scrap: earned, record, more, dmg: { ...dmgOut }, hurt: { ...dmgBy }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`, prevBest, bestStreak, bestHit: Math.round(bestHit), bestDrive: bestDriveMul, bossKills, evos, ach: [...runAch], car: save.car, enc };
