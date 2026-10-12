@@ -202,7 +202,7 @@ export const sessions = [
     { id: "resultados", perf: false, act: async (p) => { await tick(p, 270); await wait(p, () => document.querySelector("#scr-over.on") && !document.getElementById("overPhoto").classList.contains("hidden") && document.getElementById("overPhotoImg").complete); await p.waitForTimeout(200); } },
   ] },
   // ENCORE en la Luna con 1, 2 y 4 jugadores (compu; split screen solo en compu): escenario 1 tras 25 s del bot y oferta de pactos abierta (__enc)
-  ...[1, 2, 4].map((n) => ({ id: `encore${n}`, query: `?mute&encore&seed=58&players=${n}`, vps: ["pc"], shots: [
+  ...[1, 2, 4].map((n) => ({ id: `encore_pacto${n}`, query: `?mute&encore&seed=58&players=${n}`, vps: ["pc"], shots: [
     { id: "juego", act: async (p) => { await wait(p, () => window.__enc?.info()); await p.evaluate(() => { window.__god(); window.__sim(25); }); await tick(p, 45); } },
     { id: "pacto", act: async (p) => { await p.evaluate(() => { const e = window.__enc; e.land(); e.board(); if (e.info().phase === "overload") e.tick(30); if (e.info().phase === "guest") window.__killBoss(); }); await tick(p, 20); await p.evaluate(() => window.__enc.pick(1)); await tick(p, 20); } },
   ] })),
