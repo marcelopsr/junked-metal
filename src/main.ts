@@ -3,7 +3,7 @@ import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
-import { engineSfx, engineStop, initAudio, music, moonAmbience, musicDuck, rainSfx, setEngineKind, SFX, SPACE } from "./sfx";
+import { engineSfx, engineStop, initAudio, music, moonAmbience, encoreAmbience, musicDuck, rainSfx, setEngineKind, SFX, SPACE } from "./sfx";
 import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { activePad, btnName, camCycle, coopCtl, coopSkip, ctl, input, isTouch, keyHit, KEYS, KEYS2, padPressed, pads, padSnap, pb, pollInput, pollMate, pollPad, RACE, setupTouch } from "./input";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
@@ -319,7 +319,7 @@ function startRun(d = false) {
   time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
   spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; wasGrounded = true; coyoteT = 0; apagon = false;
   dirq = E.newDirQ(); ovT = 0; guestE = null; dirSub(null); saidSecrets = [];
-  if (encore && MOON.on) { erun = E.newRun(runSeed); GOAL_IO.tele = true; shopReset(); encPlan(); encScene(true); }
+  if (encore && MOON.on) { erun = E.newRun(runSeed, save.encore.secrets); GOAL_IO.tele = true; shopReset(); encPlan(); encScene(true); }
   if (erun && coop > 1) mateStart(coop); // R7a/c: de 2 a 4 jugadores en pantalla dividida (solo compu)
   camYaw = 0; dynK = 1; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1); camH.set(0, 0, 1); camUp.set(0, 1, 0);
   state = "play";
@@ -331,7 +331,7 @@ function startRun(d = false) {
   $("hud").classList.remove("hidden");
   hudBoss(null);
   hudWorkshop(save.perm);
-  if (erun) { say("start"); const h = E.hint(erun); if (h) say("hint", h); } else banner(`${profile.climate.name} · ${profile.plague.name}`, 3);
+  if (erun) { say("start"); tip("start"); const h = E.hint(erun); if (h) say("hint", h); } else banner(`${profile.climate.name} · ${profile.plague.name}`, 3);
   // Guía de controles los primeros segundos (se va sola)
   const hint = $("hint");
   for (const k of hint.querySelectorAll<HTMLElement>("kbd[data-k]")) k.textContent = keyName(KEYS[k.dataset.k as keyof typeof KEYS][0]); // teclas reasignadas
@@ -345,6 +345,7 @@ const HINT_S = 7;
 
 // ---------- ENCORE (encore.ts): escenarios encadenados con teleportador, votación y FINAL ACT ----------
 /** Frase del Director por el aviso de radio. */
+const tip = (id: keyof typeof E.TIPS) => { if (simulating || LAB.on) return; const t = E.tipOnce(save.encore, id); if (t) { E.dirPush(dirq, t, 3); persist(); } }; // primera partida guiada: cada aviso sale una sola vez en la vida del guardado
 const say = (id: E.LineId, txt = E.line(id, erun!, save.encore)) => E.dirPush(dirq, txt, E.dirPri(id)); // cola propia (encore.ts): no se pisa con la radio ni entre frases
 /** Agenda del escenario según la fase: un minijefe (nave); en la votación y el FINAL ACT, arena vacía donde solo entra el jefe. */
 function encPlan() {
@@ -356,6 +357,7 @@ function encPlan() {
 /** Escenario nuevo con el mismo auto, armas, nivel, XP y vida: borra lo del anterior y lo rearma con la semilla derivada (runSeed, escenario). */
 function encEnter() {
   const r = erun!;
+  const v0 = E.variantOf(r); if (v0 && !save.encore.seenVariants.includes(v0.name)) { save.encore.seenVariants.push(v0.name); persist(); } // Codex: destino jugado
   guestE = null; ovT = 0;
   evReset(); shipsClear(); goalsClear(); skyClear();
   for (const e of enemies) { e.hp = -1e9; e.dispose(); } // hp negativo: las armas con blanco fijo (trompo) lo sueltan
@@ -370,8 +372,9 @@ function encEnter() {
   hudBoss(null);
   const z = E.zoneOf(r); // Contenido 3: un escenario por vuelta (desde la segunda) en una zona plana; auto, armas y XP siguen igual
   if (z !== zoneId) { setZone(z, false); setMoon(z === "luna"); cycleS = -1; }
+  encoreAmbience(z, v0?.name); // ambiente propio del escenario (crossfade)
   GOAL_IO.half = MOON.on ? 0 : HALF; // teleportador y cofres dentro del patio
-  encPrior += time; time = 0; hitAt = 0;
+  encPrior += time; time = 0; hitAt = 0; stageHurt = false;
   runSeed = E.stageSeed(r.seed, r.loop, E.sceneIdx(r));
   seedRng(runSeed);
   profile = makeProfile(runSeed);
@@ -413,7 +416,7 @@ function encScene(first = false) {
   if (!MOON.on) { // Contenido 3: escenario terrestre: llegada al centro de la zona (donde arranca la Supervivencia), sin cráteres ni eventos lunares
     const c0 = new B.Vector3(0, 0, 0);
     shopPlan(erun!.seed, E.sceneIdx(erun!), c0);
-    carPlace(new B.Vector3(0, lead.car!.def.size[1] / 2 + 0.3, 0), new B.Vector3(0, 0, 1));
+    carPlace(new B.Vector3(0, lead.car!.def.size[1] / 2 + 0.3, 0), new B.Vector3(0, 0, -1)); // mirando a -z: la cámara queda en +z, no sobre la mesa del patio (tapa en z -15..-45, se trameaba toda la pantalla)
     return;
   }
   evPace(v?.rain, v?.quake); skyPace(v?.sky);
@@ -432,13 +435,25 @@ function finalArena() {
 }
 /** Minijefe i-ésimo de la luna: el de la variante o, sin ella, el que elige la semilla. */
 const minorShip = (i: number) => (erun && E.variantOf(erun)?.ship) || shipFor(i, runSeed);
+const minorMini = () => { const v = erun && E.variantOf(erun); return (v && (MOON.on || v.zone) && v.mini) || null; }; // H13: variante con minijefe propio (enemigo, no nave); en tierra solo si la variante trae su zona
 /** Aplica lo que pasó en la expedición: efectos en el mundo y frase del Director. */
+let pactOff = ""; // ids ofrecidos del último pacto (para telemetría si se rechaza)
 function encApply(ev: E.Ev | null) {
   if (!ev || !erun) return;
+  if (ev === "pact_offer" && erun.offer) { const n = erun.offer.filter((id) => !save.encore.seenPacts.includes(id)); if (n.length) { save.encore.seenPacts.push(...n); persist(); } } // Codex: pactos vistos
+  if (!simulating && !LAB.on) { // telemetría ENCORE (datos chicos; tipos [a-z_])
+    const r = erun, base = { stage: r.stage, loop: r.loop };
+    if (ev === "pact_offer") pactOff = r.offer ? r.offer.join("+") : "";
+    else if (ev === "pact_yes" || ev === "pact_no") track("pact_pick", { id: ev === "pact_yes" ? r.pacts[r.pacts.length - 1].id : pactOff, accepted: ev === "pact_yes", ...base });
+    if (ev === "stay" || ev === "pact_offer" || ev === "route_offer" || ev === "vote") track("stage_end", { choice: ev === "stay" ? "stay" : "advance", ...base, t: Math.floor(time), hp: +Math.min(1, lead.hp / lead.maxHp).toFixed(2), lv: level });
+    if (ev === "advance") track("route_pick", { variant: r.route, stage: r.stage, loop: r.loop });
+  }
   if (ev === "tele_land") rocketLand(lead.car!.pos, true); // el cohete de moon_goals.ts hace de teleportador; el aviso es el del Director
-  else if (ev === "advance" || ev === "encore" || ev === "vote" || ev === "final_act") encEnter(); // pact_* y route_offer no cargan nada: el escenario nuevo llega al elegir destino ("advance")
+  else if (ev === "advance" || ev === "encore" || ev === "vote" || ev === "final_act") { if (!stageHurt) grant("encore_impecable"); if (ev === "encore" && erun.loop >= 2) grant("encore_vuelta3"); encEnter(); } // pact_* y route_offer no cargan nada: el escenario nuevo llega al elegir destino ("advance")
   if (ev === "pact_yes") { recompute(); const p = E.pactOf(erun.pacts[erun.pacts.length - 1].id); if (p.gain.heal) for (const m of players) if (m.car) m.hp = Math.min(lead.maxHp, m.hp + lead.maxHp * p.gain.heal); } // el pacto ya está en `pfx` (encEnter → recompute); falta la cura instantánea
   const pact = ev === "pact_yes" || ev === "pact_no", v = ev === "advance" || ev === "encore" ? E.variantOf(erun) : null; // al llegar a un escenario nuevo, el Director anuncia su variante en vez de la frase suelta
+  if (ev === "tele_land" || ev === "tele_ready") tip("tele"); else if (ev === "pact_offer") tip("pact"); else if (ev === "vote") tip("vote");
+  if (ev === "stay") dropPickup(spawnPoint(lead.car!.pos, 12, 25), "cofre"); // H17: cada quedarse garantiza un cofre extra
   if (ev === "overload") ovT = 0; // el primer enjambre de la carga sale ya
   if (ev === "guest") { const g = erun.guest!, c = lead.car!; spawnEnemy(g, spawnPoint(c.pos, 30, 36)); guestE = enemies[enemies.length - 1]; hudBoss(DEF[g].name, 1, g); SFX.boss(); }
   if (pact) { say(ev); if (erun.phase === "route") say("route_offer"); } // la respuesta al trato y, enseguida, la oferta de destinos
@@ -661,7 +676,7 @@ if (NET_HOST) {
   const sess = () => {
     const on = !!getToken();
     $("netSession").textContent = on ? "Online: sesión iniciada" : "";
-    for (const id of ["netSession", "netLogout", "netHost", "netCode", "netJoin"]) $(id).classList.toggle("hidden", !on);
+    for (const id of ["netSession", "netLogout", "netAcct", "netHost", "netCode", "netJoin"]) $(id).classList.toggle("hidden", !on);
     for (const id of ["netCfLogin", "netAlt"]) $(id).classList.toggle("hidden", on);
   };
   sess();
@@ -822,6 +837,7 @@ function mateCam(m: Player, dt: number) {
 }
 
 // Logros (achievements.ts): las pruebas de dev (__sim, lab, god) no otorgan nada ni tocan el guardado
+let stageHurt = false; // ENCORE: recibió daño en este escenario (logro encore_impecable)
 let runAch: string[] = [], hitAt = 0; // logros de esta partida (pantalla final) y último golpe recibido
 function grant(id: AchId) {
   if (simulating || LAB.on || god || save.ach.includes(id)) return;
@@ -850,7 +866,7 @@ function endRun(win: boolean, why: string) {
   if (runAch.length) why += ` Logros: ${runAch.join(", ")}.`;
   if (net?.host) { net.send({ t: "end" }, true); setTimeout(netEnd, 1000); } // R6b: el cliente vuelve al menú con el aviso
   state = simulating ? "over" : "outro"; // el cierre en cámara lenta (outroTick) abre los resultados
-  engineStop(); music("over"); rainSfx(0); moonAmbience(false);
+  engineStop(); music("over"); rainSfx(0); moonAmbience(false); encoreAmbience(null);
   // Tornillos: los de la partida más tiempo y bajas, con el extra de las maldiciones (+30% cada una)
   const gross = grossScrap(), earned = Math.floor((gross + (erun ? encExtra + E.scrapExtra(gross, encG, pfx.scrap) : 0)) * curseK * (erun ? 1 : pfx.scrap)); // ENCORE: el extra de pactos y rutas se acumuló por escenario; el tramo actual se liquida con el efecto vigente
   const eb = save.encore.best, encBetter = !!erun && (erun.loop > eb.loop || (erun.loop === eb.loop && (erun.stage > eb.stage || (erun.stage === eb.stage && Math.floor(time) > eb.t))));
@@ -867,6 +883,7 @@ function endRun(win: boolean, why: string) {
     const S = save.stats, zr = S.zone[zoneId] ?? { t: 0, kills: 0 };
     if (erun) { const E = save.encore; E.runs++; if (win) E.wins++; E.lastLoop = erun.loop; E.lastCause = win ? "" : topHit; if (encBetter) E.best = { loop: erun.loop, stage: erun.stage, t: Math.floor(time) }; for (const id of erun.found) if (!E.secrets.includes(id)) E.secrets.push(id); } // ENCORE: récord propio; tornillos, tiempo, daño y bestiario sí cuentan
     else if (!bank) { S.runs++; if (win) S.wins++; }
+    if (erun) for (const id of E.endAch(erun, win, save.encore.secrets)) grant(id as AchId); // ENCORE: logros de fin de expedición
     S.time += time - (bank?.t ?? 0); S.dist += runDist; // runDist vuelve a 0 al seguir en modo sin fin
     for (const [src, v] of Object.entries(dmgOut)) S.dmg[src] = (S.dmg[src] ?? 0) + v - (bank?.dmg[src] ?? 0);
     if (!erun) S.zone[zoneId] = { t: Math.max(zr.t, Math.floor(time)), kills: Math.max(zr.kills, kills) };
@@ -1008,6 +1025,7 @@ function choose(i: number, by = lead) {
   else if (o.kind === "evo") { weapons.find((x) => x.id === o.id)!.evolved = true; banner(o.title.toUpperCase()); }
   else if (o.kind === "fusion") { weapons = fuse(weapons, o.id as WeaponId); banner(o.title.toUpperCase()); if (o.id in ACH) grant(o.id as AchId); }
   else by.hp = Math.min(by.maxHp, by.hp + R.carta_reparacion);
+  if (!simulating && !LAB.on) track("upgrade_pick", { id: o.id, lv: o.lv ?? weapons.find((x) => x.id === o.id)?.lv ?? 0, mode: erun ? "encore" : daily ? "diario" : "supervivencia" });
   recompute();
   if (!simulating && (o.kind === "weapon" || o.kind === "passive")) {
     for (const w of weapons) {
@@ -1292,14 +1310,14 @@ GOAL_IO.scrap = () => Math.floor(runScrap + Math.floor(time / R.tornillos_div_ti
 // R7b: who = índice en los autos vivos (0 = el que guía, 1 = el otro); la máquina cobra vida a quien la activa y las cartas (compartidas) dicen quién abrió
 GOAL_IO.hpFrac = (who) => whoP(who).hp / lead.maxHp;
 GOAL_IO.pay = (n, h, who) => applyCommand(whoP(who).id, { k: "buy", scrap: n, hpFrac: h });
-GOAL_IO.offer = (k, who) => { if (k === "cofre" && erun && !chestsLeft()) { E.discover(erun, "aplausos"); encSecrets(); } if (k === "cofre") openChest(who); else openOffers(offersFor(), "Máquina de opciones" + byTag(who)); };
+GOAL_IO.offer = (k, who) => { if (erun) tip("chest"); if (k === "cofre" && erun && !chestsLeft()) { E.discover(erun, "aplausos"); encSecrets(); } if (k === "cofre") openChest(who); else openOffers(offersFor(), "Máquina de opciones" + byTag(who)); };
 SHIP_IO.reward = (p, xp, boss) => { dropGems(p, xp); dropPickup(p, "cofre"); if (boss) { bossKills++; runScrap += R.tornillos_jefe; shake = 1.5; } };
 
 // ---------- Update ----------
 function update(dt: number) {
   const c = lead.car!;
   time += dt;
-  if (erun) { encApply(E.tick(erun, dt)); const d = E.dirTick(dirq, dt); if (d) dirSub(d, E.ENC.dirShowS); } // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
+  if (erun) { encApply(E.tick(erun, dt)); const d = E.dirTick(dirq, dt); if (d) { dirSub(d, E.ENC.dirShowS); if (!simulating && !LAB.on) SFX.radio((Object.values(E.TIPS) as string[]).includes(d)); } } // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
   const calm = erun?.phase === "vote" || erun?.phase === "final", tp = time + paceS, hordeK = horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
   if (hintOn && (time > HINT_S || input.throttle || input.steer || input.move || input.boost || input.drift || input.jump || input.ability)) { hintOn = false; $("hint").classList.add("fade"); }
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
@@ -1514,7 +1532,7 @@ function update(dt: number) {
       evtPre.boss.add(bi);
       const fin = !endless && bi === RUN_BOSSES.length - 1 && bk === finalKind;
       if (!simulating && erun?.phase === "final") say("boss_intro"); // FINAL ACT: la presentación la hace el Director
-      else if (!simulating) radioBoss("pre", MOON.on && bk !== finalKind ? SHIP_NAME[minorShip(bi)] : DEF[bk].name, fin); // luna: los minijefes son naves
+      else if (!simulating) radioBoss("pre", MOON.on && bk !== finalKind && !minorMini() ? SHIP_NAME[minorShip(bi)] : DEF[(bk !== finalKind && minorMini()) || bk].name, fin); // luna: los minijefes son naves
     }
   }
   // Apagón: 4 s antes de cada jefe se apagan luna y ambiente (queda el faro); vuelve en 3 s tras la entrada
@@ -1526,7 +1544,7 @@ function update(dt: number) {
   }
   if (bossIdx < RUN_BOSSES.length && time >= RUN_BOSSES[bossIdx][0]) {
     apagon = false;
-    const kind = RUN_BOSSES[bossIdx++][1], ship = MOON.on && kind !== finalKind ? minorShip(bossIdx - 1) : null; // luna: minijefe = nave (moon_ships.ts)
+    const k0 = RUN_BOSSES[bossIdx++][1], mini = k0 !== finalKind ? minorMini() : null, kind = mini ?? k0, ship = MOON.on && kind !== finalKind && !mini ? minorShip(bossIdx - 1) : null; // luna: minijefe = nave (moon_ships.ts)
     if (ship) shipSpawn(ship, c.pos, time); else spawnEnemy(kind, spawnPoint(c.pos, 30, 36));
     if (MOON.on && kind === finalKind && !endless && !erun) rocketLand(c.pos, simulating); // luna: con el gusano aterriza el cohete de escape (moon_goals.ts)
     if (endless) { // modo sin fin: otro jefe repetido en 2 min (rotan los tres de la partida) y cada vez con más vida
@@ -1859,7 +1877,7 @@ function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   if (by && !simulating && !LAB.on) beastRec(by).hurt += n * (1 - st.armor); // daño recibido por tipo (ficha del bestiario)
   airHit = true;
   if (driveMul > 1) { driveMul = 1; hudDrive(1); } // el combo de manejo cae con cualquier golpe
-  hitAt = time;
+  hitAt = time; stageHurt = true;
   dmgBy[src] = (dmgBy[src] ?? 0) + n * (1 - st.armor);
   lead.hp -= n * (1 - st.armor);
   if (!simulating && lead.car && !save.calm) { FX.sparks(lead.car.pos.add(upv(lead.car.pos, 0.5))); if (!continuous) debris(lead.car.pos, save.paint || "#d62828", 2, 5, 0.5); } // chispas (y pedazos de pintura en los golpes fuertes) al recibir daño
@@ -2368,9 +2386,9 @@ if (import.meta.env.DEV) import("./devbot").then((m) => devReady().then(() => Ob
     const boss = enemies.find((e) => e.def.boss);
     return `${fmt(time)} nv${level} hp${Math.round(lead.hp)}/${lead.maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed}${MOON.on ? " · " + goalStats() : ""} · tornillos ${Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK)} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
   },
-  // ENCORE (balance): el bot juega la expedición sin dibujar. Aborda el teleportador al aterrizar (no lo conduce hasta él), AVANZA siempre, rechaza pactos, toma el primer destino y en la votación
+  // ENCORE (balance): el bot juega la expedición sin dibujar. Aborda el teleportador al aterrizar (no lo conduce hasta él), AVANZA siempre, rechaza pactos (o `pacts`), toma el primer destino (o `route:"rand"`), no se queda (o `stay` veces) y en la votación
   // elige ¡ENCORE! mientras la vuelta sea < `encores` (0 = FINAL ACT tras el primer ciclo). Cada llamada corre hasta ~30 s reales: encadenar hasta `done`. Con 2-4 jugadores los compañeros quedan quietos (solo suman armas y escala de bichos) o, con `follow`, se recolocan junto al líder cada 0,75 s.
-  __encBot: (o: { encores?: number; players?: number; follow?: boolean } = {}) => {
+  __encBot: (o: { encores?: number; players?: number; follow?: boolean; pacts?: string[] | "all"; stay?: number; route?: string } = {}) => {
     const w0 = performance.now();
     let n = 0;
     if (!erun) { if (state !== "menu") toMenu(); encore = true; coop = o.players ?? 1; encLog.length = 0; startRun(); encLog.push({ loop: 0, stage: 0, t: 0 }); }
@@ -2379,9 +2397,16 @@ if (import.meta.env.DEV) import("./devbot").then((m) => devReady().then(() => Ob
       const r = erun, pick = (i: 0 | 1 | 2) => applyCommand(lead.id, { k: "enc", i });
       if (state === "play") {
         if (r.phase === "stage" && r.landed) encApply(E.boarded(r));
-        else if (r.phase === "teleporter" || r.phase === "stay") pick(1);
-        else if (r.phase === "pact") pick(2);
-        else if (r.phase === "route") pick(0);
+        else if (r.phase === "teleporter") pick(r.stays < (o.stay ?? 0) ? 0 : 1); // --stay N: se queda N veces por escenario (cada quedada dura stayS; la N-ésima pasa por `eco` con 3)
+        else if (r.phase === "pact") { // --pacts all|ids: acepta; con ids, si no se ofrece ninguno de la lista se FUERZA el primero libre en la ranura 0 (medición: la oferta real es al azar)
+          const want = o.pacts === "all" ? null : o.pacts?.find((id) => !r.pacts.some((a) => a.id === id));
+          if (want && r.offer && !r.offer.includes(want)) r.offer[0] = want;
+          pick(o.pacts === "all" ? 0 : want ? (r.offer![0] === want ? 0 : 1) : 2);
+        } else if (r.phase === "route") { // --route rand = al azar; --route <parte del nombre> (p. ej. medianoche) fuerza esa variante como destino 0 (medición)
+          const vi = o.route && o.route !== "rand" ? E.VARIANTS.findIndex((v) => v.name.toLowerCase().includes(o.route!.toLowerCase())) : -1;
+          if (vi >= 0) r.routes![0] = vi;
+          pick(o.route === "rand" ? (Math.random() < 0.5 ? 0 : 1) : 0);
+        }
         else if (r.phase === "vote") pick(r.loop < (o.encores ?? 0) ? 0 : 1);
       }
       botStep(m, 1 / 60);
@@ -2433,7 +2458,7 @@ if (import.meta.env.DEV) Object.assign(window, {
     tick: (secs: number) => { if (erun) encApply(E.tick(erun, secs)); return erun?.phase; },
     tele: (who = 1) => { const c = players.find((x) => x.id === who)?.car; if (!c) return false; rocketForce(c.pos, 0, 0); return true; }, // R7 QA: teleportador (cohete) justo bajo el auto del jugador `who`
     goto: (kind: "cofre" | "maquina" = "cofre", i = 0) => { const p = shopAt(kind, i); return !!(p && lead.car && carPlace(onFloor(p.clone(), lead.car.def.size[1] / 2 + 0.3), p.add(lead.car.root.forward))); }, // solo dev: teletransporta el auto de J1 a un cofre o a la máquina (cuerpo, no solo malla)
-    jump: (loop: number, stage: number) => { if (!erun) return "sin ENCORE"; erun.loop = loop; erun.stage = stage; erun.phase = "stage"; erun.stageT = 0; encApply("advance"); return E.zoneOf(erun); }, // solo dev: salta a (vuelta, escenario) como si se hubiera elegido el destino
+    jump: (loop: number, stage: number, route: number | null = null) => { if (!erun) return "sin ENCORE"; erun.loop = loop; erun.stage = stage; erun.route = route; erun.phase = "stage"; erun.stageT = 0; encApply("advance"); return E.zoneOf(erun); }, // solo dev: salta a (vuelta, escenario) como si se hubiera elegido el destino
     free: () => goalBlips().map((p) => ({ x: +p.x.toFixed(1), z: +p.z.toFixed(1), gap: +Math.min(...obstacles().map((b) => Math.hypot(p.x - b.x, p.z - b.z) - b.r)).toFixed(1) })), // solo dev: puntos de objetivos (teleportador, cofres, máquina) y holgura al mueble más cercano
     evo: (id: WeaponId = "lanza") => { const w = makeWeapon(id); w.lv = 5; weapons = weapons.filter((x) => x.id !== id).concat(w); passives[WEAPONS[id].evo] = 1; recompute(); return evoOffer(weapons, passives)?.kind ?? null; }, // solo dev: arma a nivel máximo más su pasiva (lo que pide un cofre para ofrecer la evolución)
     scrap: (n?: number) => { if (n !== undefined) runScrap += n - GOAL_IO.scrap(); return GOAL_IO.scrap(); }, // solo dev: fija (si se pasa n) y devuelve los tornillos totales

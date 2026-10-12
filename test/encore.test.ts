@@ -1,6 +1,6 @@
 // Fases de ENCORE sin motor (src/encore.ts): escenario → teleportador → decidir → ... → votación → ENCORE! o FINAL ACT → victoria.
 import { describe, expect, it } from "vitest";
-import { activePacts, ARENA, arenaPlan, ask, cleared, FINAL_POOL, finalOf, hint, report, scrapExtra, boarded, bossDown, craterPlan, dirPri, dirPush, dirTick, ENC, fxText, GUESTS, guestDown, line, newDirQ, openingLine, teleEvent, NO_FX, newRun, pactFx, pactOffer, PACTS, paceOf, routeOffer, pick, sceneIdx, stageSeed, tag, tick, variantOf, VARIANTS, type Ev, type Run, zoneOf, earthStage, EARTH, SECRETS, discover, secretLine, riskOf } from "../src/encore";
+import { activePacts, ARENA, arenaPlan, ask, cleared, FINAL_POOL, finalOf, hint, report, scrapExtra, boarded, bossDown, craterPlan, dirPri, dirPush, dirTick, ENC, fxText, GUESTS, guestDown, line, newDirQ, openingLine, teleEvent, NO_FX, newRun, pactFx, pactOffer, pactOf, PACTS, paceOf, routeOffer, pick, sceneIdx, stageSeed, tag, tick, variantOf, VARIANTS, type Ev, type Run, zoneOf, earthStage, EARTH, SECRETS, discover, secretLine, riskOf, endAch } from "../src/encore";
 
 /** Corre el reloj de a 1 s hasta que pase algo (o se pase de `max` s). */
 const until = (r: Run, max = 1000): Ev | null => { for (let i = 0; i < max; i++) { const e = tick(r, 1); if (e) return e; } return null; };
@@ -138,7 +138,7 @@ describe("variantes de escenario", () => {
   const cycle = (seed: number, loop: number) => Array.from({ length: ENC.stages }, (_, stage) => variantOf({ ...newRun(seed), loop, stage }));
 
   it("cada vuelta usa las variantes sin repetir; el primer escenario de la run es LA TARIMA", () => {
-    expect(VARIANTS.length).toBe(6); // más variantes que escenarios: una vuelta de 4 no las usa todas
+    expect(VARIANTS.length).toBe(8); // más variantes que escenarios: una vuelta de 4 no las usa todas (la del galpón solo se juega por elección)
     for (const seed of [1, 7, 1234, 99999]) for (let loop = 0; loop < 4; loop++) {
       const c = cycle(seed, loop);
       expect(new Set(c).size).toBe(ENC.stages);
@@ -229,10 +229,24 @@ describe("pactos del Director", () => {
   it("no hay oferta al pasar a la votación ni con menos de 2 pactos libres", () => {
     const r = { ...newRun(5), stage: ENC.stages - 1 }; toDecision(r);
     expect(pick(r, 1)).toBe("vote");
-    const s = newRun(5); s.pacts = PACTS.slice(0, PACTS.length - 1).map((p) => ({ id: p.id, left: Infinity }));
+    const s = newRun(5); s.pacts = PACTS.filter((p) => !p.secret).slice(0, -1).map((p) => ({ id: p.id, left: Infinity }));
     expect(pactOffer(s)).toBeNull();
     toDecision(s);
     expect(pick(s, 1)).toBe("route_offer");
+  });
+
+  it("pactos del Director: solo con su secreto, uno por oferta como máximo", () => {
+    const sp = PACTS.filter((p) => p.secret);
+    expect(sp.map((p) => p.secret)).toEqual(SECRETS.map((x) => x.id));
+    const all = (known: string[]) => { const o: string[][] = []; for (let seed = 1; seed <= 60; seed++) for (let st = 0; st < ENC.stages - 1; st++) o.push(pactOffer({ ...newRun(seed, known), stage: st })!); return o; };
+    expect(all([]).flat().filter((id) => pactOf(id).secret)).toEqual([]); // sin secretos no hay especiales
+    expect(all(["eco"]).flat().filter((id) => pactOf(id).secret)).not.toEqual([]);
+    expect(all(["eco"]).flat().every((id) => !pactOf(id).secret || id === "eco")).toBe(true); // solo el de su secreto
+    for (const o of all(SECRETS.map((x) => x.id))) expect(o.filter((id) => pactOf(id).secret).length).toBeLessThanOrEqual(1);
+    const r = { ...newRun(1, ["aplausos"]), stage: 0 }; r.phase = "pact"; r.offer = ["aplausos", "garantia"];
+    expect(ask(r)!.pacts![0].name).toContain("PACTO DEL DIRECTOR");
+    const f = { ...newRun(1), found: ["audiencia" as const] }; expect(all([]).length).toBeGreaterThan(0);
+    expect(Array.from({ length: 60 }, (_, i) => pactOffer({ ...f, seed: i + 1 })).flat().includes("audiencia")).toBe(true); // lo hallado en la run también cuenta
   });
 
   it("no se vuelve a ofrecer un pacto activo", () => {
@@ -265,6 +279,13 @@ describe("pactos del Director", () => {
     const f = pactFx(r);
     expect(f.dmg).toBeCloseTo(1.35); expect(f.maxHp).toBeCloseTo(0.7); expect(f.regen).toBe(2); expect(f.xp).toBeCloseTo(1.5); expect(f.scrap).toBeCloseTo(1.5);
     expect(f.spawn).toBeCloseTo(1.4 * 1.3 * 1.25);
+  });
+
+  it("pactos nuevos: COBRO, BIS y PERMANENCIA combinan sus efectos", () => {
+    const r = newRun(1); r.pacts = ["cobro", "bis", "permanencia"].map((id) => ({ id, left: 2 }));
+    const f = pactFx(r);
+    expect(f.scrap).toBeCloseTo(1.6 * 0.85); expect(f.xp).toBeCloseTo(0.75 * 1.25); expect(f.dmg).toBeCloseTo(1.25); expect(f.spawn).toBeCloseTo(1.35);
+    expect(f.regen).toBe(1); expect(f.maxHp).toBeCloseTo(1.2); expect(f.taken).toBeCloseTo(1.2);
   });
 
   it("cada pacto tiene ventaja y costo reales, y el texto sale de los números aplicados", () => {
@@ -499,6 +520,31 @@ describe("Contenido 3: escenarios terrestres", () => {
   });
 });
 
+describe("variante con zona: EL GALPÓN DE UTILERÍA", () => {
+  const gi = VARIANTS.findIndex((v) => v.zone === "galpon");
+  it("es terrestre, con LA GRÚA DE FERIA de minijefe y recompensa sin pasar a la de más riesgo lunar", () => {
+    expect(gi).toBeGreaterThan(0);
+    expect(VARIANTS[gi]).toMatchObject({ mini: "grua", zone: "galpon" });
+    expect(Object.keys(EARTH)).toContain("galpon");
+    expect(riskOf(gi)).toBeGreaterThan(1);
+  });
+  it("nunca sale en el sorteo, ni se ofrece en la vuelta 0; desde la 1 puede ofrecerse y entonces zoneOf devuelve su zona", () => {
+    let offered = 0;
+    for (let seed = 1; seed <= 80; seed++) for (let loop = 0; loop < 3; loop++) {
+      const r = newRun(seed); r.loop = loop;
+      for (let s = 0; s < ENC.stages; s++) { r.stage = s; expect(variantOf(r)!.zone).toBeUndefined(); }
+      r.stage = 0; r.routes = null;
+      const o = routeOffer(r);
+      if (!loop) expect(o).not.toContain(gi);
+      if (o.includes(gi)) { offered++; r.stage = 1; r.route = gi; expect(zoneOf(r)).toBe("galpon"); r.stage = 0; r.loop = 0; }
+    }
+    expect(offered).toBeGreaterThan(0);
+  });
+  it("el escenario terrestre sorteado nunca es el galpón", () => {
+    for (let seed = 1; seed <= 80; seed++) { const r = newRun(seed); r.loop = 1; r.stage = earthStage(r); expect(zoneOf(r)).not.toBe("galpon"); }
+  });
+});
+
 describe("Contenido 3: secretos del Director", () => {
   /** Juega una vuelta: pactos (aceptar o rechazar) y destino (el de más riesgo o el otro). */
   const loop = (r: Run, o: { pact: boolean; bold: boolean }) => {
@@ -518,9 +564,54 @@ describe("Contenido 3: secretos del Director", () => {
     const a = newRun(11); loop(a, { pact: true, bold: true }); expect(a.found).toEqual(["bambalinas"]);
     const b = newRun(11); loop(b, { pact: true, bold: false }); expect(b.found).not.toContain("bambalinas");
   });
+  it("quedarse tres veces en un escenario revela TOMA REPETIDA; dos no", () => {
+    const r = newRun(5); toDecision(r);
+    for (let i = 0; i < 2; i++) { pick(r, 0); until(r); }
+    expect(r.found).not.toContain("eco");
+    pick(r, 0); until(r);
+    expect(r.found).toEqual(["eco"]);
+  });
   it("discover no repite; la frase del Director es fija por semilla y trae el fragmento sin nombrar a nadie", () => {
     const r = newRun(3); discover(r, "aplausos"); discover(r, "aplausos"); expect(r.found).toEqual(["aplausos"]);
     expect(secretLine(r, "aplausos")).toBe(secretLine(newRun(3), "aplausos"));
     for (const s of SECRETS) expect(secretLine(r, s.id)).toContain(s.lore);
+  });
+});
+
+import { tipOnce, TIPS } from "../src/encore";
+describe("avisos de la primera partida", () => {
+  it("cada aviso sale una sola vez", () => {
+    const e = { tips: [] as string[] };
+    expect(tipOnce(e, "pact")).toBe(TIPS.pact);
+    expect(tipOnce(e, "pact")).toBeNull();
+    expect(e.tips).toEqual(["pact"]);
+  });
+});
+
+describe("H17 quedarse tentador y H13 mini", () => {
+  it("cada quedarse suma +10 % de tornillos acumulable y el texto lo dice", () => {
+    const r = newRun(5); toDecision(r);
+    expect(ask(r)!.opts[0]).toMatch(/COFRE EXTRA.*10%/);
+    expect(pactFx(r).scrap).toBe(1);
+    pick(r, 0); expect(r.stayN).toBe(1); expect(pactFx(r).scrap).toBeCloseTo(1.1);
+    expect(pick(r, 0)).toBeNull(); expect(r.stayN).toBe(1); // en la estadía no se vuelve a contar
+    until(r); pick(r, 0); expect(r.stayN).toBe(2); expect(pactFx(r).scrap).toBeCloseTo(1.2);
+    r.phase = "stage"; r.stage = 1; // el bono sobrevive al cambio de escenario
+    expect(pactFx(r).scrap).toBeCloseTo(1.2);
+  });
+  it("ENSAYO DE MEDIANOCHE: recompensa 1.2 y minijefe proyector", () => {
+    const v = VARIANTS.find((x) => x.name === "ENSAYO DE MEDIANOCHE")!;
+    expect(v.reward).toEqual({ xp: 1.2, scrap: 1.2 }); expect(v.mini).toBe("proyector");
+  });
+});
+
+describe("logros de ENCORE (endAch)", () => {
+  it("fin de expedición", () => {
+    const r = newRun(1), med = VARIANTS.findIndex((v) => v.name === "ENSAYO DE MEDIANOCHE");
+    expect(endAch(r, false, [])).toEqual([]);
+    expect(endAch(r, true, [])).toEqual(["encore_final"]);
+    r.pacts = [{ id: "bis", left: 1 }, { id: "bis", left: 1 }, { id: "bis", left: 1 }]; r.went = [med]; r.found = ["eco"];
+    expect(endAch(r, true, [])).toEqual(["encore_final", "encore_pactos", "encore_eco", "encore_medianoche"]);
+    expect(endAch(r, false, ["aplausos", "audiencia", "bambalinas"])).toEqual(["encore_secretos"]); // eco sale de la run, el resto del perfil
   });
 });

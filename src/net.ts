@@ -35,6 +35,34 @@ export function track(type: string, data: Record<string, unknown> = {}) {
   if (!NET_HOST || !token) return;
   try { void fetch(`https://${NET_HOST}/api/telemetry`, { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, type, data }) }).catch(() => {}); } catch { /* sin red */ }
 }
+export type LbRow = { name: string; loop: number; stage: number; t: number; win: boolean };
+/** Récords ENCORE online (GET /api/leaderboard): null sin servidor, sin sesión o con error. */
+export async function leaderboard(): Promise<LbRow[] | null> {
+  const token = getToken();
+  if (!NET_HOST || !token) return null;
+  try { const r = await fetch(`https://${NET_HOST}/api/leaderboard`, { headers: { Authorization: `Bearer ${token}` } }); return r.ok ? await r.json() : null; } catch { return null; }
+}
+export type Me = { email: string; alias: string | null; status: string; plan: { name: string; currentPeriodEnd: number | string | null; active: boolean } | null };
+export type MyStats = { modes: { mode: string; played: number; won: number; bestTime: number | null }[]; encore: { loop: number; stage: number; t: number; win: boolean } | null; pacts: { top: { id: string; accepted: number }[]; accepted: number; rejected: number; rejectedPct: number }; stages: { stay: number; advance: number; stayPct: number; advancePct: number } };
+const authGet = async <T>(path: string): Promise<T | null> => {
+  const token = getToken();
+  if (!NET_HOST || !token) return null;
+  try { const r = await fetch(`https://${NET_HOST}${path}`, { headers: { Authorization: `Bearer ${token}` } }); return r.ok ? await r.json() : null; } catch { return null; }
+};
+/** GET /api/me y /api/me/stats: null sin servidor, sin sesión o con error. */
+export const me = () => authGet<Me>("/api/me");
+export const myStats = () => authGet<MyStats>("/api/me/stats");
+/** POST /api/alias: devuelve null si se guardó, o el motivo del servidor. */
+export async function setAlias(alias: string): Promise<string | null> {
+  const token = getToken();
+  if (!NET_HOST || !token) return "Sin sesión.";
+  try {
+    const r = await fetch(`https://${NET_HOST}/api/alias`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ alias }) });
+    if (r.ok) return null;
+    const j = await r.json().catch(() => null);
+    return j?.error ?? j?.message ?? `El servidor respondió ${r.status}.`;
+  } catch { return "No se pudo contactar al servidor."; }
+}
 export const setToken = (t: string) => { try { t ? localStorage.setItem(TOKEN, t) : localStorage.removeItem(TOKEN); } catch { /* sin almacenamiento */ } };
 /** Login con la clave de grupo: POST /api/login y guarda el token. Lanza con un mensaje legible si falla. */
 export async function loginKey(clave: string) {

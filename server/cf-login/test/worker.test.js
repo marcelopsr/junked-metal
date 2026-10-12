@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { exchangeSig as wSig, safeReturn, accessEmail } from "../worker.js";
+import { exchangeSig as wSig, safeReturn, accessEmail, originsFor, exchangeSecret } from "../worker.js";
 import { exchangeOk } from "../../lib.js";
 
 test("firma de canje compatible con server/lib.js, ventana 60 s", async () => {
@@ -27,4 +27,20 @@ test("JWT de Access: firma, aud, iss, exp", async () => {
   assert.equal(await accessEmail(await mk({ ...ok, exp: 1 }), team, "A", 1e12, [jwk]), null);
   assert.equal(await accessEmail(await mk({ ...ok, iss: "https://o.com" }), team, "A", 1e12, [jwk]), null);
   const t = await mk(ok); assert.equal(await accessEmail(t.slice(0, -4) + "AAAA", team, "A", 1e12, [jwk]), null);
+});
+test("localhost solo con DEV_ORIGINS=true; secreto de canje propio con respaldo", () => {
+  assert.equal(safeReturn("http://localhost:5173/", originsFor({})), null);
+  assert.ok(safeReturn("http://localhost:5173/", originsFor({ DEV_ORIGINS: "true" })));
+  assert.equal(exchangeSecret({ EXCHANGE_SECRET: "e", JM_SECRET: "j" }), "e");
+  assert.equal(exchangeSecret({ JM_SECRET: "j" }), "j");
+});
+test("cabeceras PWA: sw.js no-cache, manifest con su MIME, resto intacto", async () => {
+  const { pwaHeaders } = await import("../worker.js");
+  const sw = pwaHeaders("/sw.js", new Response("x", { headers: { "Cache-Control": "max-age=3600", "Content-Type": "text/plain" } }));
+  assert.equal(sw.headers.get("Cache-Control"), "no-cache");
+  assert.match(sw.headers.get("Content-Type"), /^text\/javascript/);
+  assert.equal(await sw.text(), "x");
+  assert.equal(pwaHeaders("/manifest.webmanifest", new Response("{}")).headers.get("Content-Type"), "application/manifest+json");
+  const nf = new Response("no", { status: 404 }); assert.equal(pwaHeaders("/sw.js", nf), nf);
+  const o = new Response("a"); assert.equal(pwaHeaders("/index.html", o), o);
 });

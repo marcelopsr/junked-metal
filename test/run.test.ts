@@ -48,4 +48,11 @@ describe("nightfall", () => {
     expect(nightfall(0)).toBe(0); expect(nightfall(1)).toBe(1);
     let prev = -1; for (let p = 0; p <= 1.0001; p += 0.05) { const v = nightfall(p); expect(v).toBeGreaterThanOrEqual(prev); prev = v; }
   });
+
+  it("minijefes: con 1000 semillas cada uno sale ~40 % (±5 %), siempre dos distintos", () => {
+    const c: Record<string, number> = {};
+    for (let s = 1; s <= 1000; s++) { const m = previewProfile(s).minis; expect(m[0]).not.toBe(m[1]); m.forEach((k) => { c[k] = (c[k] ?? 0) + 1; }); }
+    expect(Object.keys(c)).toHaveLength(5);
+    for (const n of Object.values(c)) { expect(n).toBeGreaterThanOrEqual(350); expect(n).toBeLessThanOrEqual(450); }
+  });
 });

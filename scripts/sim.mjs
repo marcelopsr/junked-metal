@@ -2,6 +2,7 @@
 //   npm run sim -- --seeds 1,2,3 --secs 600      partidas completas del bot (una página limpia por semilla: Havok es determinista solo desde carga limpia)
 //   npm run sim -- --duel perro,aspiradora       duelos contra jefes finales con el equipo del minuto 10 (--seeds los varía; --adds 100 --max 180 --god --team N)
 //   npm run sim -- --encore [--players 1,2,4] [--encores N] [--follow: compañeros pegados al bot] [--seeds 1,2,3]   expedición ENCORE con el bot (aborda el teleportador, AVANZA, rechaza pactos); --encores = vueltas extra antes del FINAL ACT (0 = FINAL ACT tras el primer ciclo)
+//   ENCORE política del bot: --pacts all|id,id (acepta; con ids fuerza ese pacto en la oferta) · --stay N (se queda N veces por escenario) · --route rand|<nombre> (destino al azar con la semilla, o fuerza esa variante: medianoche)
 //   --zone luna juega en otro mapa (patio por defecto) · --par 2 corre varias a la vez (más rápido, más CPU; no afecta al resultado) · --json imprime solo JSON (la tabla va a stderr)
 // ponytail: no corre en Node puro: main.ts es DOM+WebGL+Vite de punta a punta (top-level await, ?url, CSS, canvas); NullEngine+Havok en Node funcionarían
 // (Havok WASM sí corre) pero habría que partir main.ts en lógica y presentación. Hasta entonces el navegador headless sin dibujar cuesta ~1 s de arranque por corrida.
@@ -10,7 +11,7 @@ import { launch, open } from "./lib/browser.mjs";
 
 const { values: a } = parseArgs({ options: {
   seeds: { type: "string", default: "1,2" }, secs: { type: "string", default: "600" }, duel: { type: "string" }, adds: { type: "string" }, max: { type: "string" },
-  team: { type: "string" }, god: { type: "boolean" }, par: { type: "string", default: "1" }, json: { type: "boolean" }, zone: { type: "string" }, encore: { type: "boolean" }, players: { type: "string", default: "1" }, encores: { type: "string", default: "0" }, follow: { type: "boolean" }, // --zone luna: mapa (solo dev, ?zone=)
+  team: { type: "string" }, god: { type: "boolean" }, par: { type: "string", default: "1" }, json: { type: "boolean" }, zone: { type: "string" }, encore: { type: "boolean" }, players: { type: "string", default: "1" }, encores: { type: "string", default: "0" }, follow: { type: "boolean" }, pacts: { type: "string" }, stay: { type: "string" }, route: { type: "string" }, // --zone luna: mapa (solo dev, ?zone=)
 } });
 const seeds = a.seeds.split(",").map(Number), secs = Number(a.secs);
 const jobs = a.encore ? a.players.split(",").flatMap((n) => seeds.map((seed) => ({ seed, players: Number(n) }))) : a.duel ? a.duel.split(",").flatMap((kind) => seeds.map((seed) => ({ kind, seed }))) : seeds.map((seed) => ({ seed }));
@@ -26,7 +27,7 @@ async function run(job) {
     await page.evaluate(seedMath, job.seed);
     if (a.encore) { // expedición ENCORE: __encBot corre ~30 s reales por llamada; se encadena hasta que muere o gana
       let r;
-      do r = await page.evaluate((o) => window.__encBot(o), { encores: Number(a.encores), players: job.players, follow: a.follow }); while (!r.done && r.real > 0);
+      do r = await page.evaluate((o) => window.__encBot(o), { encores: Number(a.encores), players: job.players, follow: a.follow, pacts: a.pacts === "all" ? "all" : a.pacts?.split(","), stay: a.stay && Number(a.stay), route: a.route }); while (!r.done && r.real > 0);
       return { ...job, ...r };
     }
     if (job.kind) {

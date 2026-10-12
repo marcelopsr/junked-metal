@@ -61,10 +61,10 @@ export const RAIN = {
 export type Elite = "rapida" | "blindada";
 export type Profile = { seed: number; climate: Climate; plague: Plague; minis: Kind[]; swarmEvery: number; ballEvery: number; chestEvery: number; rainAt: number; final: Kind; elites: [number, Elite][] };
 
-// Los dos minijefes de la partida: 2 de 3 en orden, con UNA sola tirada (no corre el resto del perfil de la semilla)
-const MINIS: Kind[] = ["rey", "cortadora", "tarantula", "gato"];
-// Dos minijefes distintos entre cuatro (12 combinaciones ordenadas)
-const pickMinis = (r: number): Kind[] => { const i = Math.floor(r * 12), a = i % 4; return [MINIS[a], MINIS[(a + 1 + Math.floor(i / 4)) % 4]]; };
+// Los dos minijefes de la partida: 2 de 5 en orden, con UNA sola tirada (no corre el resto del perfil de la semilla)
+const MINIS: Kind[] = ["rey", "cortadora", "tarantula", "gato", "proyector"];
+// Dos minijefes distintos entre cinco (20 combinaciones ordenadas)
+const pickMinis = (r: number): Kind[] => { const n = MINIS.length, i = Math.floor(r * n * (n - 1)), a = i % n; return [MINIS[a], MINIS[(a + 1 + Math.floor(i / n)) % n]]; };
 
 // Lluvia derivada de la semilla SIN gastar rng(): así el patio, la plaga y el resto de cada semilla existente no cambian.
 // Un solo valor reparte ambas cosas: r < chance = llueve, y r/chance (uniforme) elige cuándo empieza. Infinity = no llueve.

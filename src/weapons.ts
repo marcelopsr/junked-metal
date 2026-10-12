@@ -61,7 +61,7 @@ export interface Ctx {
   explode(pos: B.Vector3, r: number, dmg: number): void;
 }
 
-export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza" | "agua" | "yoyo" | "bengalas" | "regla" | "helado" | "bocina" | "trompo" | FusionId;
+export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza" | "agua" | "yoyo" | "bengalas" | "regla" | "helado" | "bocina" | "trompo" | "tuercas" | "bobinas" | FusionId;
 export type FusionId = "chispazo" | "globos" | "anillo" | "yoyoelec" | "vapor";
 export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: PassiveId; evoName: string; evoDesc: string }> = {
   gomitas: { name: "Lanza-gomitas", desc: "Dispara gomitas al enemigo más cercano. Artillería de papelería", evo: "resorte", evoName: "Gomitas Saltarinas", evoDesc: "5 gomitas que rebotan entre enemigos. Culpa repartida" },
@@ -78,6 +78,8 @@ export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: Passiv
   helado: { name: "Helado congelante", desc: "Bochas de helado que ralentizan a lo que tocan. Sin gluten, sin piedad", evo: "capacitor", evoName: "Cono triple", evoDesc: "Tres bochas en abanico que congelan y enfrían en área. Frialdad corporativa" },
   bocina: { name: "Bocina", desc: "Onda sonora en cono que empuja y aturde. Para quien toca bocina en el semáforo", evo: "turbo", evoName: "Sirena", evoDesc: "Onda circular enorme que aturde a todo lo cercano. Tráfico a las seis de la tarde" },
   trompo: { name: "Trompo", desc: "Un trompo que rebota entre enemigos dejando una estela cortante. Da vueltas sin resolver nada", evo: "iman", evoName: "Ciclón", evoDesc: "Dos trompos orbitan el auto y barren todo a su paso. Mucho movimiento, ningún progreso" },
+  tuercas: { name: "Imán de tuercas", desc: "Tuercas en órbita que atraen a los bichos y salen disparadas, una por blanco. Ferretería con malas pulgas", evo: "lego", evoName: "Electroimán de grúa", evoDesc: `${W.tuercas.n_evo} tuercas que arrastran al doble de fuerza y salen a gran distancia. El chatarrero de turno` },
+  bobinas: { name: "Bobinas", desc: "Suelta bobinas al avanzar; entre dos seguidas corre un arco que quema y frena. Cableado a la vista", evo: "litio", evoName: "Línea de alta tensión", evoDesc: `${W.bobinas.n_evo} bobinas más duraderas, unidas también de a dos en red. Prohibido tocar` },
   // Fusiones: nunca salen sueltas en las cartas (ver FUSIONS); evoName = nombre porque nacen evolucionadas
   chispazo: { name: "Petardos eléctricos", desc: "", evo: "capacitor", evoName: "Petardos eléctricos", evoDesc: "" },
   globos: { name: "Globos de agua", desc: "", evo: "resorte", evoName: "Globos de agua", evoDesc: "" },
@@ -694,6 +696,116 @@ class Trompo extends Weapon {
   dispose() { for (const t of this.tops) t.m.dispose(); for (const b of this.blades) b.m.dispose(); }
 }
 
+// Imán de tuercas: tuercas en órbita que atraen a los bichos hacia el anillo; cada tanto salen disparadas (cada una a un blanco distinto), atraviesan todo y se rearman.
+// Evolución (Electroimán de grúa): más tuercas, atracción doble, alcance largo y golpe mayor.
+class Tuercas extends Weapon {
+  orbit: B.InstancedMesh[] = [];
+  fly: { m: B.InstancedMesh; dir: B.Vector3; life: number; hit: Set<Enemy> }[] = [];
+  a = 0;
+  rearm = 0;
+  tpl = template("tuerca", () => [
+    cyl(0.5, 0.5, 0.26, M.metal("#a8b0ba"), [0, 0, 0], undefined, 6),
+    cyl(0.2, 0.2, 0.3, M.matte("#2b2d31"), [0, 0, 0], undefined, 8),
+  ]);
+  update(c: Ctx) {
+    const cfg = W.tuercas, ev = this.evolved;
+    const n = ev ? cfg.n_evo : cant(cfg, this.lv), pullR = (ev ? cfg.area_evo : cfg.area_base + cfg.area_nivel * this.lv) * c.st.area;
+    if (this.rearm > 0) this.rearm -= c.dt;
+    else while (this.orbit.length < n && !this.fly.length) this.orbit.push(this.tpl.createInstance("n"));
+    // Atracción: arrastra hacia el anillo (se detiene al llegar, no los mete al auto)
+    if (this.orbit.length) {
+      const k = X.tuercas_atrae * (ev ? X.tuercas_atrae_evo_mult : 1) * c.dt;
+      for (const e of c.enemies) {
+        const { x: dx, z: dz } = rel(e.pos, c.car.pos), d = Math.hypot(dx, dz);
+        if (d > pullR + e.radius || d < X.tuercas_anillo_min) continue;
+        c.damage(e, 0, wv((-dx / d) * k, 0, (-dz / d) * k, c.car.pos));
+      }
+    }
+    this.a += c.dt * X.tuercas_giro;
+    this.orbit.forEach((m, i) => {
+      const a = this.a + (i * Math.PI * 2) / this.orbit.length;
+      at(c.car.pos, Math.sin(a) * X.tuercas_orbita_r, 0.5, Math.cos(a) * X.tuercas_orbita_r, m.position);
+      m.rotation.set(0.5, this.a * 2, 0); orient(m);
+    });
+    if (this.orbit.length && (this.cd -= c.dt) <= 0) {
+      const R = ev ? cfg.alcance_evo : cfg.alcance, used = new Set<Enemy>();
+      let first = null as Enemy | null;
+      while (this.orbit.length) {
+        const m = this.orbit.pop()!, t: Enemy | null = nearest(m.position, c.enemies, R, used) ?? first;
+        if (!t) { this.orbit.push(m); break; }
+        used.add(t); first ??= t;
+        const dir = hflat(t.pos.subtract(m.position), m.position).normalize();
+        this.fly.push({ m, dir, life: R / cfg.velocidad, hit: new Set() });
+      }
+      if (this.fly.length) { this.cd = this.cdMax = (ev ? cfg.recarga_evo : this.recarga(cfg)) * c.st.cooldown; this.rearm = X.tuercas_rearme_s; SFX.zap(); }
+    }
+    const dmg = this.dano(cfg) * c.st.dmg * (ev ? cfg.dano_evo_mult : 1);
+    for (let i = this.fly.length - 1; i >= 0; i--) {
+      const f = this.fly[i];
+      advance(f.m.position, f.dir, cfg.velocidad * c.dt);
+      f.m.rotation.x += c.dt * 14; orient(f.m);
+      for (const e of c.enemies) if (!f.hit.has(e) && B.Vector3.Distance(f.m.position, e.pos) < e.radius + X.tuercas_golpe_radio) { f.hit.add(e); c.damage(e, dmg, e.pos.subtract(f.m.position).normalize().scale(X.tuercas_empuje)); }
+      if ((f.life -= c.dt) <= 0) { f.m.dispose(); this.fly.splice(i, 1); }
+    }
+  }
+  dispose() { for (const m of this.orbit) m.dispose(); for (const f of this.fly) f.m.dispose(); }
+}
+
+// Bobinas: el auto va soltando bobinas detrás; entre dos bobinas seguidas corre un arco eléctrico que quema a quien lo cruza y lo frena.
+// Evolución (Línea de alta tensión): más bobinas, duran más y cada una también se une con la anterior a la anterior (red).
+class Bobinas extends Weapon {
+  nodes: { m: B.InstancedMesh; life: number }[] = [];
+  beams: B.InstancedMesh[] = [];
+  last: B.Vector3 | null = null;
+  tpl = template("bobina", () => [
+    cyl(0.28, 0.34, 0.9, M.metal("#b87333"), [0, 0.45, 0], undefined, 8),
+    tor(0.4, 0.06, M.metal("#8a5a2b"), [0, 0.35, 0], undefined, 8),
+    sph(0.22, M.glow("#35d0ff"), [0, 1.0, 0]),
+  ]);
+  beamTpl = template("arco", () => [box(1, 1, 1, pbr("arcoMat", { color: "#7de8ff", rough: 0.2, emissive: "#35d0ff", alpha: 0.85 }), [0, 0, 0.5])]); // largo 1 sobre +z: se escala al largo del arco
+  update(c: Ctx) {
+    const cfg = W.bobinas, ev = this.evolved;
+    const n = ev ? cfg.n_evo : cant(cfg, this.lv), life = ev ? cfg.duracion_evo : cfg.duracion_base + cfg.duracion_nivel * this.lv;
+    const r = (ev ? cfg.area_evo : cfg.area_base + cfg.area_nivel * this.lv) * c.st.area;
+    if (Math.abs(c.fs) > X.chispero_vel_min && (!this.last || hd(this.last, c.car.pos) >= X.bobinas_paso_m)) {
+      const m = this.tpl.createInstance("b");
+      onFloor(c.car.pos, 0.02, m.position); orient(m);
+      this.nodes.push({ m, life });
+      this.last = c.car.pos.clone();
+      FX.hit(at(m.position, 0, 1, 0));
+    }
+    for (let i = this.nodes.length - 1; i >= 0; i--) if ((this.nodes[i].life -= c.dt) <= 0 || this.nodes.length > n) { this.nodes[i].m.dispose(); this.nodes.splice(i, 1); }
+    // Arcos entre bobinas vecinas (y, evolucionada, también a dos de distancia)
+    const segs: [B.Vector3, B.Vector3][] = [];
+    for (let i = 1; i < this.nodes.length; i++) for (let j = i - 1; j >= Math.max(0, i - (ev ? 2 : 1)); j--) {
+      const a = this.nodes[j].m.position, b = this.nodes[i].m.position;
+      if (B.Vector3.Distance(a, b) <= X.bobinas_seg_max) segs.push([a, b]);
+    }
+    while (this.beams.length < segs.length) this.beams.push(this.beamTpl.createInstance("a"));
+    while (this.beams.length > segs.length) this.beams.pop()!.dispose();
+    const dps = (ev ? cfg.dano_evo_fijo : this.dano(cfg)) * c.st.dmg, th = 0.12 + 0.1 * Math.random();
+    segs.forEach(([a, b], i) => {
+      const m = this.beams[i], A = at(a, 0, 0.9, 0), Bp = at(b, 0, 0.9, 0), len = B.Vector3.Distance(A, Bp);
+      m.position.copyFrom(A); m.lookAt(Bp); orient(m);
+      m.scaling.set(th, th, len);
+      for (const e of c.enemies) {
+        if (distSeg(e.pos, A, Bp) >= r + e.radius * 0.5) continue;
+        c.damage(e, dps * c.dt);
+        e.slow = Math.max(e.slow, X.bobinas_ralentiza_s);
+      }
+    });
+    if (segs.length && Math.random() < c.dt * X.bobinas_chispas_s) FX.hit(at(segs[0][0], 0, 1, 0));
+  }
+  dispose() { for (const n of this.nodes) n.m.dispose(); for (const b of this.beams) b.dispose(); }
+}
+// Distancia de p al segmento a-b
+const _ab = new B.Vector3(), _ap = new B.Vector3();
+function distSeg(p: B.Vector3, a: B.Vector3, b: B.Vector3) {
+  b.subtractToRef(a, _ab); p.subtractToRef(a, _ap);
+  const t = B.Scalar.Clamp(B.Vector3.Dot(_ap, _ab) / Math.max(_ab.lengthSquared(), 1e-6), 0, 1);
+  return B.Vector3.Distance(p, _ab.scaleInPlace(t).addInPlace(a));
+}
+
 // Fusión: corre las dos armas de origen ya evolucionadas (nivel 5) y les agrega la sinergia de la tabla FUSIONS
 class Fusion extends Weapon {
   parts: Weapon[];
@@ -758,6 +870,8 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
     helado: () => [cyl(0.34, 0.02, 0.5, M.matte("#d9a15a"), [-0.3, top + 0.3, 0.1], undefined, 8), sph(0.4, M.plastic("#f7a8cf"), [-0.3, top + 0.6, 0.1]), sph(0.26, M.plastic("#9be3ff"), [-0.3, top + 0.85, 0.1])],
     bocina: () => [box(0.3, 0.2, 0.3, M.metal("#2b2d31"), [0, top, 0.1]), cyl(0.12, 0.5, 0.6, M.plastic("#ffc24d"), [0, top + 0.1, 0.55], [Math.PI / 2, 0, 0], 12)],
     trompo: () => [cyl(0.42, 0.04, 0.4, M.plastic("#b783ff"), [0.3, top + 0.2, -0.1], undefined, 10), cyl(0.5, 0.5, 0.06, M.metal("#e6e9ee"), [0.3, top + 0.42, -0.1], undefined, 12)],
+    tuercas: () => [cyl(0.4, 0.4, 0.5, M.metal("#a8b0ba"), [0, top + 0.1, -0.1], undefined, 6), box(0.6, 0.12, 0.2, M.plastic("#dc2626"), [0, top - 0.1, -0.1]), cyl(0.18, 0.18, 0.54, M.matte("#2b2d31"), [0, top + 0.1, -0.1], undefined, 8)],
+    bobinas: () => [cyl(0.2, 0.26, 0.5, M.metal("#b87333"), [0.3, top + 0.1, rear + 0.2], undefined, 8), ...[0, 1].map((i) => tor(0.28, 0.05, M.metal("#8a5a2b"), [0.3, top + 0.02 + i * 0.14, rear + 0.2], undefined, 8)), sph(0.15, M.glow("#35d0ff"), [0.3, top + 0.42, rear + 0.2])],
     yoyoelec: () => [...parts.yoyo(), ...parts.tesla()],
     vapor: () => [...parts.bengalas(), ...parts.agua()],
     chispazo: () => [...parts.petardos(), ...parts.tesla()],
@@ -771,7 +885,7 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
 
 export function makeWeapon(id: WeaponId): Weapon {
   if (isFusion(id)) return new Fusion(id);
-  const C = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza, agua: Agua, yoyo: Yoyo, bengalas: Bengalas, regla: Regla, helado: Helado, bocina: Bocina, trompo: Trompo }[id];
+  const C = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza, agua: Agua, yoyo: Yoyo, bengalas: Bengalas, regla: Regla, helado: Helado, bocina: Bocina, trompo: Trompo, tuercas: Tuercas, bobinas: Bobinas }[id];
   return new C(id);
 }
 

@@ -1,0 +1,23 @@
+<!-- lista-de-espera: pegar en portada/. Envía a la VPS; no revela si el correo ya existe. -->
+<form id="jm-espera" style="display:grid;gap:8px;max-width:420px">
+  <label>Correo <input type="email" name="email" required maxlength="254" autocomplete="email"></label>
+  <label>Mensaje (opcional) <textarea name="mensaje" maxlength="300" rows="3"></textarea></label>
+  <input type="text" name="web" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+  <button type="submit">Pedir acceso</button>
+  <p id="jm-espera-msg" role="status"></p>
+</form>
+<script>
+(() => {
+  const f = document.getElementById("jm-espera"), m = document.getElementById("jm-espera-msg");
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    m.textContent = "";
+    try {
+      const r = await fetch("https://junkedmetal.duckdns.org/api/waitlist", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: f.email.value.trim(), mensaje: f.mensaje.value.trim(), web: f.web.value }) });
+      if (r.status === 202) { m.textContent = "Gracias, se avisará por correo."; f.reset(); }
+      else m.textContent = r.status === 429 ? "Demasiadas solicitudes, intenta más tarde." : "Revisa el correo e intenta de nuevo.";
+    } catch { m.textContent = "No se pudo enviar, intenta más tarde."; }
+  });
+})();
+</script>

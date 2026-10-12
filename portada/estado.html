@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estado del servicio · Junked Metal</title>
+<meta name="description" content="Estado público de Junked Metal: juego, online e ingreso.">
+<link rel="canonical" href="https://marcelopsr.github.io/junked-metal/estado.html">
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap">
+<style>
+:root{--jm-naranja:#f08a24;--jm-texto:#eee6da;--jm-fondo:#0d0f13;--jm-panel:#161a21;--jm-borde:#374151}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--jm-fondo) url(credits-hero.webp) center/cover no-repeat fixed;color:var(--jm-texto);font:500 18px/1.45 Rajdhani,system-ui,sans-serif;padding:24px 16px}
+main{max-width:760px;margin:0 auto}
+section,header{background:var(--jm-panel);border:2px solid var(--jm-naranja);padding:20px;margin:0 0 16px;overflow-wrap:anywhere}
+h1{margin:0 0 8px;font-size:clamp(34px,9vw,64px);line-height:.9;letter-spacing:.04em;text-transform:uppercase;color:var(--jm-naranja)}
+h2{margin:0 0 10px;font-size:26px;letter-spacing:.06em;text-transform:uppercase;color:var(--jm-naranja)}
+h3{margin:16px 0 6px;font-size:19px;letter-spacing:.06em;text-transform:uppercase}
+p{margin:0 0 12px}p:last-child{margin-bottom:0}
+ul{margin:0 0 12px;padding-left:20px}
+b{color:var(--jm-naranja)}
+.fila{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--jm-borde);padding:10px 0;font-size:22px}
+.fila:first-of-type{border-top:0}
+.fila span:last-child{font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.ok span:last-child{color:#6fd36f}.caido span:last-child{color:#ff6b5b}
+.btn{display:inline-block;background:var(--jm-naranja);color:#111;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;padding:14px 28px}
+a:not(.btn){color:var(--jm-naranja)}
+a:focus-visible{outline:3px solid var(--jm-texto);outline-offset:3px}
+</style></head><body><main>
+<header>
+<h1>Estado del servicio</h1>
+<p>Cómo están hoy el juego, el modo online y el ingreso.</p>
+<p><a href="index.html">Volver a la portada</a></p>
+</header>
+<section aria-live="polite"><div id="filas"></div><p id="hora"></p></section>
+<script>
+const N = { juego: "Juego", online: "Online", login: "Ingreso" };
+const filas = document.getElementById("filas"), hora = document.getElementById("hora");
+function pintar(d) {
+  filas.textContent = "";
+  for (const k of Object.keys(N)) {
+    const ok = d && d[k] === "ok", f = document.createElement("div");
+    f.className = "fila " + (ok ? "ok" : "caido");
+    const a = document.createElement("span"), b = document.createElement("span");
+    a.textContent = N[k]; b.textContent = d ? (ok ? "Funciona" : "Caído") : "Sin datos";
+    f.append(a, b); filas.append(f);
+  }
+  hora.textContent = d ? "Actualizado: " + new Date(d.actualizado).toLocaleString("es") : "";
+}
+fetch("https://junkedmetal.duckdns.org/api/status", { cache: "no-store" })
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(pintar)
+  .catch(() => { filas.textContent = ""; hora.textContent = "Sin datos del servidor"; });
+</script>
+</main></body></html>

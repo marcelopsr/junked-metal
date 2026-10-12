@@ -3,6 +3,10 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Junked Metal</title>
 <meta name="description" content="Roguelite de autos RC en un patio gigante. Acceso por invitación.">
+<link rel="canonical" href="https://marcelopsr.github.io/junked-metal/">
+<meta property="og:title" content="Junked Metal"><meta property="og:description" content="Roguelite de autos RC en un patio gigante. Acceso por invitación."><meta property="og:type" content="website"><meta property="og:url" content="https://marcelopsr.github.io/junked-metal/">
+<meta property="og:image" content="https://marcelopsr.github.io/junked-metal/og.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Junked Metal"><meta name="twitter:description" content="Roguelite de autos RC en un patio gigante. Acceso por invitación."><meta name="twitter:image" content="https://marcelopsr.github.io/junked-metal/og.jpg">
 <link rel="icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap">
 <!-- Portada pública: el juego completo vive detrás de Cloudflare Access (solo correos con licencia vigente). -->
@@ -15,16 +19,64 @@ h1{margin:0 0 8px;font-size:clamp(40px,9vw,72px);line-height:.9;letter-spacing:.
 p{margin:0 0 20px}
 a{display:inline-block;background:var(--jm-naranja);color:#111;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;padding:14px 28px}
 a:focus-visible{outline:3px solid var(--jm-texto);outline-offset:3px}
+#first,#how{background:none;color:var(--jm-naranja);border:2px solid var(--jm-naranja);padding:12px 20px;display:table;margin-top:12px}
+#nov{margin-top:16px;border-top:1px solid var(--jm-naranja);padding-top:12px;font-size:16px}
+#nov[hidden]{display:none}
+#nov h2{margin:0 0 6px;font-size:16px;letter-spacing:.1em;text-transform:uppercase;color:var(--jm-naranja)}
+#nov ul{list-style:none;margin:0;padding:0}#nov li{margin-bottom:8px;overflow-wrap:anywhere}
+#all{background:none;color:var(--jm-naranja);padding:0;letter-spacing:.04em;text-transform:none;text-decoration:underline}
+#nov time{opacity:.7;margin-right:6px}#nov b{color:var(--jm-naranja)}
 small{display:block;margin-top:16px;opacity:.75}
 </style></head><body><main>
 <h1>Junked Metal</h1>
 <p>Roguelite de autos RC en un patio gigante: chatarra, plagas y jefes enormes.</p>
 <a id="go" href="https://jm-login.mesr-96.workers.dev/">Ingresar</a>
+<a id="how" href="como-se-juega.html">Cómo se juega</a>
+<a id="first" href="primeros-pasos.html">Primeros pasos</a>
+<details id="espera" style="margin-top:16px"><summary style="cursor:pointer;min-height:44px;display:flex;align-items:center">¿Sin invitación? Pedir acceso</summary>
+<style>#jm-espera label{display:grid;gap:4px}#jm-espera input,#jm-espera textarea{font:inherit;padding:10px;background:#0d0f13;color:var(--jm-texto);border:1px solid var(--jm-naranja)}#jm-espera button{font:inherit;font-weight:700;text-transform:uppercase;background:var(--jm-naranja);color:#111;border:0;min-height:44px;cursor:pointer}</style>
+<form id="jm-espera" style="display:grid;gap:8px;margin-top:12px">
+  <label>Correo <input type="email" name="email" required maxlength="254" autocomplete="email"></label>
+  <label>Mensaje (opcional) <textarea name="mensaje" maxlength="300" rows="3"></textarea></label>
+  <input type="text" name="web" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
+  <button type="submit">Pedir acceso</button>
+  <p id="jm-espera-msg" role="status"></p>
+</form>
+<script>
+(() => {
+  const f = document.getElementById("jm-espera"), m = document.getElementById("jm-espera-msg");
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    m.textContent = "";
+    try {
+      const r = await fetch("https://junkedmetal.duckdns.org/api/waitlist", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: f.email.value.trim(), mensaje: f.mensaje.value.trim(), web: f.web.value }) });
+      if (r.status === 202) { m.textContent = "Gracias, se avisará por correo."; f.reset(); }
+      else m.textContent = r.status === 429 ? "Demasiadas solicitudes: intentar más tarde." : "Revisar el correo e intentar de nuevo.";
+    } catch { m.textContent = "No se pudo enviar, intentar más tarde."; }
+  });
+})();
+</script>
+</details>
 <small>Acceso por invitación. El ingreso pide el correo invitado y un código que llega por mail.</small>
+<section id="nov" hidden><h2>Novedades</h2><ul></ul><a id="all" href="cambios.html">Ver todos los cambios</a></section>
+<small><a href="estado.html">Estado del servicio</a></small>
 </main>
 <script>
 // Un link de invitación viejo (?invite=CODE) se reenvía al juego para no perder el canje.
 const inv = new URLSearchParams(location.search).get("invite");
 if (inv) document.getElementById("go").href += "?invite=" + encodeURIComponent(inv);
+// Novedades: si el JSON falta o es inválido, la sección queda oculta.
+fetch("novedades.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => {
+  const l = d.filter(e => e && e.titulo).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).slice(0, 3);
+  if (!l.length) return;
+  const ul = document.querySelector("#nov ul");
+  for (const e of l) {
+    const li = document.createElement("li"), t = document.createElement("time"), b = document.createElement("b");
+    t.textContent = e.fecha || ""; b.textContent = e.titulo;
+    li.append(t, b, " " + (e.texto || "")); ul.append(li);
+  }
+  document.getElementById("nov").hidden = false;
+}).catch(() => {});
 </script>
 </body></html>

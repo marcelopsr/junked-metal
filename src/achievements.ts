@@ -21,6 +21,13 @@ export const ACH = {
   racha: { name: "Productividad récord", txt: "Encadena una racha de 100 bajas", reward: "part:decal:rayo" },
   intacto: { name: "Sin siniestros", txt: "Pasa 60 s sin recibir daño desde el minuto 5", reward: "part:bumper:antivuelco" },
   diez: { name: "Jornada completa", txt: "Sobrevive 10 minutos, sin horas extra", reward: "pilot:figura" },
+  encore_final: { name: "Gran final, sin bis", txt: "Gana el FINAL ACT de ENCORE", reward: "part:decal:rayo" },
+  encore_vuelta3: { name: "Función de tarde y noche", txt: "Llega a la vuelta 3 de ENCORE: dos ¡ENCORE! seguidos", scrap: BAL.ritmo.logro_gato_tornillos },
+  encore_secretos: { name: "Todo lo que no estaba en el guion", txt: "Descubre los cuatro secretos del Director", scrap: BAL.ritmo.logro_gato_tornillos },
+  encore_pactos: { name: "Letra chica, firma grande", txt: "Gana ENCORE con 3 pactos activos a la vez", scrap: BAL.ritmo.logro_gato_tornillos },
+  encore_eco: { name: "Toma 47", txt: "Quédate tres veces en un mismo escenario y gana la expedición", scrap: BAL.ritmo.logro_gato_tornillos },
+  encore_medianoche: { name: "Turno de noche", txt: "Gana ENCORE tras elegir ENSAYO DE MEDIANOCHE como destino", scrap: BAL.ritmo.logro_gato_tornillos },
+  encore_impecable: { name: "Ensayo sin rasguños", txt: "Termina un escenario de ENCORE sin recibir daño", scrap: BAL.ritmo.logro_gato_tornillos },
   diario: { name: "Atrapado en la rutina", txt: "Gana un desafío diario", scrap: BAL.ritmo.logro_diario_tornillos },
 } as const satisfies Record<string, { name: string; txt: string; reward?: string; scrap?: number }>;
 export type AchId = keyof typeof ACH;

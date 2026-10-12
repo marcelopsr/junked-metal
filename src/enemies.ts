@@ -9,7 +9,7 @@ import { alignYaw, alt, at, flatL, hflat, MOON, onFloor, orient, toLocal, toWorl
 import { ALIEN_AI, ALIENS, type Alien } from "./aliens";
 import { WORM_AI, wormDispose, wormHeadTpl } from "./moon_worm";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "fuego" | "cohete" | "gusano" | Alien;
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "proyector" | "grua" | "fuego" | "cohete" | "gusano" | Alien;
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; final?: boolean; scale?: number; color: string };
 const ATK = BAL.ataques;
@@ -41,6 +41,8 @@ export const DEF: Record<Kind, Def> = {
   perro: { name: "FELIPE EL DOGO", ...stats("perro"), size: [3.2, 8, 8], boss: true, color: "#6e7279" },
   gato: { name: "EULALIO EL MICHU", ...stats("gato"), size: [3.4, 3.6, 6.4], boss: true, color: "#d9782a" },
   aspiradora: { name: "LA ASPIRADORA ROBOT", ...stats("aspiradora"), size: [6.4, 1.6, 6.4], boss: true, color: "#7a8fa6" },
+  proyector: { name: "EL PROYECTOR DEL DIRECTOR", ...stats("proyector"), size: [3.6, 4.2, 4.6], boss: true, color: "#e0a030" },
+  grua: { name: "LA GRÚA DE FERIA", ...stats("grua"), size: [3.4, 5, 5.2], boss: true, color: "#c2410c" },
   gusano: { name: "GUSANO LUNAR", ...stats("gusano"), size: [2.2, 2.2, 2.4], boss: true, color: "#2f4f56" }, // jefe final de la luna (moon_worm.ts)
   cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", ...stats("cortacercos"), size: [3, 2.4, 9], boss: true, color: "#e0a030" },
 };
@@ -198,7 +200,8 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
-    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
+    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano" || kind === "proyector" || kind === "grua") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
+    if (kind === "proyector" || kind === "grua") this.timer = 2.5;
     if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
@@ -258,11 +261,11 @@ export class Enemy {
 
   // Carril de la embestida de Felipe: el aro del telegráfico estirado a lo largo (elipse), el relleno crece desde el perro.
   // ponytail: elipse en vez de un rectángulo propio; si se lee mal, plantilla de carril en models.ts
-  showLane(dir: B.Vector3, k: number) {
+  showLane(dir: B.Vector3, k: number, len = DOG_RAM.len, width = DOG_RAM.width) {
     this.showTele(this.pos, 1, 0);
-    const [zone, fill] = this.tele, h = DOG_RAM.len / 2, f = Math.max(0.05, h * k), y = this.pos.y + 0.06;
-    zone.position.set(this.pos.x + dir.x * h, y, this.pos.z + dir.z * h); zone.scaling.set(DOG_RAM.width, 1, h);
-    fill.position.set(this.pos.x + dir.x * f, y + 0.01, this.pos.z + dir.z * f); fill.scaling.set(DOG_RAM.width, 1, f);
+    const [zone, fill] = this.tele, h = len / 2, f = Math.max(0.05, h * k), y = this.pos.y + 0.06;
+    zone.position.set(this.pos.x + dir.x * h, y, this.pos.z + dir.z * h); zone.scaling.set(width, 1, h);
+    fill.position.set(this.pos.x + dir.x * f, y + 0.01, this.pos.z + dir.z * f); fill.scaling.set(width, 1, f);
     if (MOON.on) { onFloor(at(this.pos, dir.x * h, 0, dir.z * h), 0.06, zone.position); onFloor(at(this.pos, dir.x * f, 0, dir.z * f), 0.07, fill.position); orient(zone); orient(fill); } // dir: marco local
   }
 
@@ -577,6 +580,73 @@ export class Enemy {
         }
         this.state = 0; this.timer = ATK.aspiradora_descanso_s; this.showTele(null);
       } else speed = 0;
+    }
+
+    if (this.kind === "proyector") {
+      // Se planta a distancia y proyecta, siempre con aro rojo de aviso: abanico de tuercas (aro chico) o anillo de tuercas en 360 grados (aro grande, hay huecos)
+      this.timer -= dt;
+      if (this.state === 0) {
+        this.showTele(null);
+        if (dist < ATK.proyector_distancia) speed = 0;
+        if (this.timer <= 0 && dist < ATK.proyector_distancia * 1.6) { this.state = rng() < ATK.proyector_prob_anillo ? 3 : 1; this.timer = this.state === 3 ? ATK.proyector_anillo_aviso_s : ATK.proyector_abanico_aviso_s; }
+      } else {
+        const ring = this.state === 3, aviso = ring ? ATK.proyector_anillo_aviso_s : ATK.proyector_abanico_aviso_s;
+        speed = 0; turn = 3;
+        this.showTele(this.pos, ring ? ATK.proyector_anillo_radio : 5, 1 - this.timer / aviso);
+        if (this.timer <= 0) {
+          const n = ring ? ATK.proyector_anillo_n : ATK.proyector_abanico_n, base = Math.atan2(to.x, to.z);
+          this.fan = Array.from({ length: n }, (_, i) => { const a = ring ? base + (i + 0.5) * (6.2832 / n) : base + (i - (n - 1) / 2) * ATK.proyector_abanico_ang; return new B.Vector3(Math.sin(a), 0.12, Math.cos(a)).normalize(); });
+          this.state = 0; this.timer = ATK.proyector_descanso_s; this.showTele(null);
+          this.body.setAngularVelocity(B.Vector3.Zero());
+          return "fan";
+        }
+      }
+    }
+
+    if (this.kind === "grua") {
+      // Dos ataques con aviso rojo. RIEL: carril largo, se clava el rumbo y carga en línea (moverse de costado). GARRA: aro que se CIERRA sobre la grúa y después suelta chatarra en espiral (rodear, no huir en línea recta)
+      this.timer -= dt;
+      const dir = new B.Vector3(Math.sin(this.aim), 0, Math.cos(this.aim));
+      if (this.state === 0) {
+        this.showTele(null);
+        if (this.timer <= 0 && dist < ATK.grua_distancia) {
+          if (rng() < ATK.grua_prob_riel) { this.state = 3; this.timer = ATK.grua_riel_aviso_s; this.aim = Math.atan2(to.x, to.z); } else { this.state = 1; this.timer = ATK.grua_garra_aviso_s; }
+        }
+      } else if (this.state === 1) { // garra: el aro rojo baja de grua_garra_radio al mínimo
+        speed = 0; turn = 3;
+        const k = 1 - Math.max(0, this.timer) / ATK.grua_garra_aviso_s;
+        this.showTele(this.pos, ATK.grua_garra_radio + (ATK.grua_garra_radio_min - ATK.grua_garra_radio) * k, 1);
+        if (this.timer <= 0) { this.state = 2; this.shots = ATK.grua_garra_rafagas; this.timer = 0; this.aim = Math.atan2(to.x, to.z); this.showTele(null); }
+      } else if (this.state === 2) { // espiral de chatarra: cada ráfaga gira un poco, hay huecos
+        speed = 0; turn = 0;
+        if (this.timer <= 0) {
+          if (this.shots-- > 0) {
+            const n = ATK.grua_garra_rafaga_n, base = this.aim + (ATK.grua_garra_rafagas - this.shots) * ATK.grua_garra_giro;
+            this.fan = Array.from({ length: n }, (_, i) => { const a = base + i * (6.2832 / n); return new B.Vector3(Math.sin(a), 0.12, Math.cos(a)).normalize(); });
+            this.timer = ATK.grua_garra_intervalo_s;
+            this.body.setAngularVelocity(B.Vector3.Zero());
+            return "fan";
+          }
+          this.state = 0; this.timer = ATK.grua_garra_descanso_s;
+        }
+      } else if (this.state === 3) { // riel: carril rojo que se llena y se clava el rumbo
+        this.showLane(dir, 1 - Math.max(0, this.timer) / ATK.grua_riel_aviso_s, ATK.grua_riel_largo, ATK.grua_riel_ancho);
+        const a = Math.atan2(B.Vector3.Cross(fwd, dir).y, B.Vector3.Dot(fwd, dir));
+        this.body.setLinearVelocity(new B.Vector3(v.x * 0.8, v.y, v.z * 0.8));
+        this.body.setAngularVelocity(new B.Vector3(0, B.Scalar.Clamp(a * 8, -8, 8), 0));
+        if (this.timer <= 0) { this.state = 4; this.timer = ATK.grua_riel_largo / ATK.grua_riel_vel; }
+        return;
+      } else if (this.state === 4) { // carga: no dobla
+        this.body.setLinearVelocity(new B.Vector3(dir.x * ATK.grua_riel_vel, v.y, dir.z * ATK.grua_riel_vel));
+        this.body.setAngularVelocity(B.Vector3.Zero());
+        if (this.timer <= 0) { this.state = 5; this.timer = ATK.grua_riel_frenada_s; this.showTele(null); }
+        return;
+      } else { // frenada
+        const f = Math.max(0, this.timer) / ATK.grua_riel_frenada_s;
+        this.body.setLinearVelocity(new B.Vector3(dir.x * ATK.grua_riel_vel * 0.5 * f, v.y, dir.z * ATK.grua_riel_vel * 0.5 * f));
+        if (this.timer <= 0) { this.state = 0; this.timer = ATK.grua_riel_descanso_s; }
+        return;
+      }
     }
 
     if (this.kind === "cortacercos") {

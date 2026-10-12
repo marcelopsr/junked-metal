@@ -182,7 +182,7 @@
 }
 .telemetry-glitch { animation: telemGlitch .15s steps(2) 1; }
 @keyframes telemGlitch { 0% { opacity: .4; filter: blur(1px); } 50% { opacity: 1; filter: none; } 100% { opacity: .7; } }
-.rf-failsafe { position: fixed; bottom: max(14px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); font: 700 11px/1 var(--hf); color: #ef4444; background: rgba(15, 23, 42, .92); border: 1px solid rgba(239, 68, 68, .6); padding: 4px 10px; border-radius: 4px; letter-spacing: .08em; animation: failPulse .3s steps(2) infinite; pointer-events: none; z-index: 10; }
+.rf-failsafe { position: fixed; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 165px * var(--hud-scale, 1)); /* arriba del panel de batería (#txl), que ocupa el mismo borde inferior */ left: 50%; transform: translateX(-50%); font: 700 11px/1 var(--hf); color: #ef4444; background: rgba(15, 23, 42, .92); border: 1px solid rgba(239, 68, 68, .6); padding: 4px 10px; border-radius: 4px; letter-spacing: .08em; animation: failPulse .3s steps(2) infinite; pointer-events: none; z-index: 10; }
 @keyframes failPulse { 0% { opacity: 1; } 50% { opacity: .3; } 100% { opacity: 1; } }
 #radarC { display: block; width: calc(64px * var(--rs)); aspect-ratio: 1; image-rendering: pixelated; border-radius: 50%; background: rgba(8, 16, 12, .6); }
 
@@ -348,6 +348,7 @@
   #bossbar { top: calc(max(10px, env(safe-area-inset-top)) + 104px); width: min(420px, calc(100vw / var(--hud-scale) - 24px)); }
   #radar { right: 8px; --rs: .9; }
   #txl { width: min(250px, 58vw); bottom: max(8px, env(safe-area-inset-bottom)); }
+  .rf-failsafe { bottom: calc(max(8px, env(safe-area-inset-bottom)) + 128px * var(--hud-scale, 1)); } /* arriba del #txl táctil, debajo de los botones */
   #txr { right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); width: 96px; }
   #slots { left: 8px; bottom: max(8px, env(safe-area-inset-bottom)); gap: 4px; }
   #slots .slot { width: 34px; height: 34px; } #slots .slot.small { width: 26px; height: 26px; }
@@ -496,3 +497,6 @@ body.calm #dirSub { animation: none !important; }
 #quadHp u { display: block; height: 100%; background: var(--jm-cian, #00C2FF); transform-origin: 0 50%; }
 #quadHp .down { border-color: #c0392b; }
 #quadHp .down u { background: #c0392b; }
+
+/* compu: el failsafe coincidía con #dirSub (misma altura y centro); va a su izquierda, fuera de su ancho máximo (520 px) */
+@media (pointer: fine) { .rf-failsafe { left: max(8px, calc(50% - 270px * var(--hud-scale, 1))); transform: translateX(-100%); } }

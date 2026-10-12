@@ -19,7 +19,8 @@ import { ACH, type AchId } from "./achievements";
 import { ABILITIES, abilCd, abilK, CURSES, type AbilityId, type CurseId } from "./abilities";
 import { FINALS, previewProfile, type Elite } from "./run";
 import { CAM_MODES, CAM_NAMES, parseSave } from "./savefmt";
-import { SECRETS } from "./encore";
+import { PACTS, SECRETS, VARIANTS } from "./encore";
+import { leaderboard, me, myStats, setAlias } from "./net";
 
 const $ = (id: string) => document.getElementById(id)!;
 export const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -51,7 +52,7 @@ export type Save = {
   ach: AchId[];
   ability: AbilityId; curses: CurseId[]; endless: number; // habilidad activa elegida, maldiciones de la próxima partida y récord del modo sin fin (s)
   abilLv: Partial<Record<AbilityId, number>>; weapon: WeaponId; // nivel de cada habilidad (Taller) y arma inicial elegida en el garaje (Arsenal)
-  encore: { best: { loop: number; stage: number; t: number }; wins: number; runs: number; lastLoop: number; lastCause: string; secrets: string[] }; // ENCORE: mejor expedición (vuelta, escenario, segundos), ganadas, partidas y la última derrota (vuelta y causa, "" = sin derrota; memoria del Director); aparte de Supervivencia
+  encore: { best: { loop: number; stage: number; t: number }; wins: number; runs: number; lastLoop: number; lastCause: string; secrets: string[]; tips: string[]; seenPacts: string[]; seenVariants: string[] }; // ENCORE: mejor expedición (vuelta, escenario, segundos), ganadas, partidas y la última derrota (vuelta y causa, "" = sin derrota; memoria del Director); aparte de Supervivencia
   m3: { stars: Record<string, number>; best: Record<string, number>; tools: Record<string, number> }; // Junket Crush: estrellas y récord por nivel, herramientas guardadas
 };
 // Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
@@ -66,7 +67,7 @@ const DEFAULT: Save = {
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
-  encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [] },
+  encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] },
   m3: { stars: {}, best: {}, tools: {} },
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego
@@ -214,7 +215,46 @@ function resetCfg() {
 }
 
 // ---------- Pila de pantallas ----------
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3" | "play" | "modes" | "encore";
+/** Codex de ENCORE: lo descubierto con su texto; lo pendiente, "???". Todo con textContent. */
+function renderCodex() {
+  const e = save.encore, fill = (id: string, rows: [string, string][]) => $(id).replaceChildren(...rows.map(([a, b]) => { const li = document.createElement("li"), t = document.createElement("b"); t.textContent = a; li.append(t, b ? ` · ${b}` : ""); return li; }));
+  const NM: Record<string, string> = { dmg: "daño", speed: "velocidad", maxHp: "vida máx.", xp: "XP", scrap: "tornillos", spawn: "enemigos", taken: "daño recibido", regen: "regeneración", heal: "reparación" };
+  const fx = (g: object) => Object.entries(g).map(([k, v]) => `${NM[k] ?? k} x${v}`).join(", ");
+  const miss = (n: number): [string, string][] => n ? [[`??? x${n}`, "sin descubrir"]] : []; // lo pendiente va en una sola línea con contador
+  const sec = SECRETS.filter((x) => e.secrets.includes(x.id)), pa = PACTS.filter((p) => e.seenPacts.includes(p.id)), va = VARIANTS.filter((v) => e.seenVariants.includes(v.name));
+  $("cdxCount").textContent = `Secretos ${sec.length}/${SECRETS.length} · Pactos ${pa.length}/${PACTS.length} · Destinos ${va.length}/${VARIANTS.length}`;
+  fill("cdxSec", SECRETS.map((x) => e.secrets.includes(x.id) ? [x.name, x.lore] : ["???", x.how]));
+  fill("cdxPact", [...pa.map((p): [string, string] => [p.name, `ganancia ${fx(p.gain)} / costo ${fx(p.cost)}`]), ...miss(PACTS.length - pa.length)]);
+  fill("cdxVar", [...va.map((v): [string, string] => [v.name, v.line]), ...miss(VARIANTS.length - va.length)]);
+}
+/** Tus estadísticas del servidor (Codex): sin sesión o sin respuesta, el bloque queda oculto. */
+function renderMyStats() {
+  const box = $("cdxMe"), ul = $("cdxMeList"), li = (a: string, b: string) => { const x = document.createElement("li"), t = document.createElement("b"); t.textContent = a; x.append(t, ` · ${b}`); return x; };
+  box.classList.add("hidden");
+  void myStats().then((s) => {
+    if (!s) return;
+    const rows = s.modes.map((m) => li(m.mode, `${m.played} ${m.played === 1 ? "jugada" : "jugadas"}, ${m.won} ${m.won === 1 ? "ganada" : "ganadas"}`));
+    if (s.encore) rows.push(li("Mejor ENCORE", `vuelta ${s.encore.loop + 1}, escenario ${s.encore.stage + 1}`));
+    if (s.pacts.top.length) rows.push(li("Pactos favoritos", s.pacts.top.map((p) => p.id).join(", ")));
+    if (s.stages.stay + s.stages.advance) rows.push(li("Quedarse", `${Math.round(s.stages.stayPct)} %`));
+    ul.replaceChildren(...rows); box.classList.toggle("hidden", !rows.length);
+  });
+}
+/** Mi cuenta: correo, licencia y apodo desde /api/me; todo con textContent. */
+function renderAcct() {
+  const ul = $("acctList"), al = $("acctAlias") as HTMLInputElement, msg = $("acctMsg");
+  ul.replaceChildren(); msg.textContent = ""; al.value = "";
+  void me().then((m) => {
+    if (!m) { msg.textContent = "No se pudo cargar la cuenta."; return; }
+    const p = m.plan, end = p?.currentPeriodEnd ? new Date(p.currentPeriodEnd) : null;
+    const lic = !p ? "sin licencia" : p.active ? `${p.name}${end ? `, vence el ${String(end.getDate()).padStart(2, "0")}/${String(end.getMonth() + 1).padStart(2, "0")}/${end.getFullYear()}` : ""}` : `${p.name}, vencida`;
+    ul.replaceChildren(...([["Correo", m.email], ["Licencia", lic]] as const).map(([a, b]) => { const x = document.createElement("li"), t = document.createElement("b"); t.textContent = a; x.append(t, ` · ${b}`); return x; }));
+    al.value = m.alias ?? "";
+  });
+}
+$("acctSave").onclick = async () => { const a = ($("acctAlias") as HTMLInputElement).value.trim(), e = await setAlias(a); $("acctMsg").textContent = e ?? "Apodo guardado."; };
+$("acctOut").onclick = () => { $("netLogout").click(); back(); }; // el cierre real vive en main.ts (sess())
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3" | "play" | "modes" | "encore" | "codex" | "cuenta";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -233,6 +273,9 @@ function show() {
   if (s === "main") renderMain();
   if (s === "play") renderPlay();
   if (s === "encore") { renderEncP(); const e = save.encore; $("encRec").textContent = e.runs ? `Mejor expedición: vuelta ${e.best.loop + 1}, escenario ${e.best.stage + 1} · ${fmt(e.best.t)} · ${e.wins} ${e.wins === 1 ? "ganada" : "ganadas"} de ${e.runs}` : "Sin expediciones registradas todavía."; $("encSec").innerHTML = SECRETS.filter((x) => e.secrets.includes(x.id)).map((x) => `<li><b>${x.name}</b> · ${x.lore}</li>`).join("") || `<li>Secretos del Director: ${SECRETS.length} sin descubrir.</li>`; } // Contenido 3: secretos descubiertos (textos propios, sin HTML del guardado)
+  if (s === "codex") { renderCodex(); renderMyStats(); }
+  if (s === "cuenta") renderAcct();
+  if (s === "encore") void leaderboard().then((rows) => { const box = $("encLb"), ol = $("encLbList"); box.classList.toggle("hidden", !rows?.length); ol.replaceChildren(...(rows ?? []).slice(0, 10).map((r) => { const li = document.createElement("li"); li.textContent = `${r.name} · vuelta ${r.loop + 1}, escenario ${r.stage + 1} · ${fmt(r.t)}`; return li; })); });
   if (s === "daily") renderDaily();
   if (s === "modes" || s === "match3") refreshModes();
   if (s === "race") renderRace();
@@ -1202,6 +1245,8 @@ const LORE: Record<Kind, string> = {
   rey: "Se coronó solo con una tapita de gaseosa y se declaró monarca vitalicio sin consultar a nadie. Exige reverencias y migas de galleta. Su corte son todos los escarabajos del patio, que no lo votaron pero tampoco se quejan.",
   cortadora: "Arrancó un domingo a las siete de la mañana y descubrió que el pasto ya no le alcanzaba para sentirse realizada. Corta mangueras, macetas y todo lo que se cruce en su línea.",
   tarantula: "Ocho patas, cero paciencia y un departamento bajo el tanque de agua que ocupa sin contrato. Teje redes por pasatiempo y emboscadas por oficio. Sale cuando escucha un motor.",
+  proyector: "Sobró de un ensayo del Director y nadie lo apagó. Proyecta luces que queman y tuercas que duelen, y nunca pasó por mantenimiento.",
+  grua: "La grúa de feria del show del Director: perdió el premio hace años y sigue buscando qué agarrar. Si no hay peluches, sirve un auto.",
   perro: "Felipe, bulldog francés y dueño del patio por derecho de ladrido. Sufre de zoomies, ladra a la nada, entierra juguetes y se niega a negociar. Nadie sabe qué ve con ese ojo, pero tiene opiniones sobre todo.",
   gato: "Eulalio el michu, naranja, con una sola neurona y un plan que cambia a mitad de salto. Gira, salta y jamás cae donde dijo que iba a caer. Duerme dieciocho horas y usa las otras seis para esto.",
   aspiradora: "Programada para limpiar la casa, renunció tras tres años sin un solo gracias y se escapó por la gatera. Considera que todo el patio es una pelusa, y en su mapa hay un solo punto marcado: el auto.",
@@ -1229,6 +1274,8 @@ const HOW: Record<Kind, [string, string]> = {
   rey: ["Escarabajo gigante: persigue sin pausa y aplasta por contacto con mucho daño. Gobierna por decreto y por peso.", "Gira despacio: dar vueltas amplias a su alrededor y nunca quedar contra una pared. Igual que con los jefes de verdad."],
   cortadora: ["Apunta quieta y carga en línea recta durante casi tres segundos, cortando todo lo que encuentra. Su método para resolver problemas.", "La pausa antes de cargar es el aviso: cruzar de costado su trayectoria, nunca escapar en línea recta delante de ella."],
   tarantula: ["Dos ataques anunciados en rojo: un aro a su alrededor antes de una ráfaga de seis escupitajos, y un aro donde va a caer de un salto. Al menos avisa, a diferencia del casero.", "Salir del aro antes de que se llene. En el salto, el punto de caída se fija a mitad del aviso: cambiar de rumbo en ese momento."],
+  proyector: ["Se planta lejos y proyecta; cada golpe lo anuncia un aro rojo en el piso: uno chico antes de un abanico de tuercas y uno grande antes de un anillo con huecos.", "Salir del aro chico, o colarse por los huecos del anillo grande, evita todo el daño."],
+  grua: ["Dos ataques anunciados: un carril rojo antes de embestir en línea recta, y un aro que se cierra a su alrededor antes de soltar tuercas en espiral.", "En el carril, salir de costado. Cuando el aro se cierra, rodear la espiral en vez de huir en línea recta."],
   perro: ["Salta y aplasta todo en 11 metros al caer, embiste en línea recta por un carril marcado en rojo, hace zoomies en zigzag al doble de velocidad o gira como un trompo. Todo con la misma convicción y ninguna estrategia.", "Mientras está en el aire, mirar la sombra y alejarse del punto de caída. Ante el carril rojo, salir de costado: después de embestir frena torpe y queda expuesto. En los zoomies, no cruzarse en su camino. Razonar con él ya se intentó."],
   gato: ["Zigzaguea y elige al azar: salto con aro rojo, trompo que rueda hacia el auto o un arranque de costado a toda velocidad. Ni él sabe cuál va a elegir.", "El aro marca dónde cae: salir antes de que se llene. Ante el trompo, frenar y dejarlo pasar sin pedir explicaciones."],
   aspiradora: ["Un aro rojo enorme anuncia la succión: arrastra al auto hacia ella y después suelta tres ráfagas de tuercas en abanico. Se lo lleva todo, como una hipoteca.", "Acelerar hacia afuera del aro apenas aparece. Las ráfagas dejan huecos entre tuerca y tuerca: pasar por ellos. Los huecos hay que aprovecharlos cuando aparecen."],
@@ -1256,6 +1303,8 @@ const BIOMETRICS: Record<Kind, { armor: string; agility: string; blindSpot: stri
   rey: { armor: "Placas de latón remachado", agility: "Viraje pesado de masa crítica", blindSpot: "Arco trasero en círculos amplios" },
   cortadora: { armor: "Cárter de acero macizo", agility: "Impulso recto con desaceleración torpe", blindSpot: "Costado opuesto a la tobera de descarga" },
   tarantula: { armor: "Exoesqueleto velloso flexible", agility: "Salto parabólico no guiado", blindSpot: "Punto de apoyo justo tras el aterrizaje" },
+  proyector: { armor: "Cajón de chapa oxidada", agility: "Lento, se planta a distancia", blindSpot: "Cerca del trípode, bajo el cañón" },
+  grua: { armor: "Chapa gruesa; la cabina amarilla es lo más frágil", agility: "Lenta al girar, 28 m/s en el riel", blindSpot: "El costado durante la carga" },
   perro: { armor: "Masa muscular densa y collar", agility: "Gran pique con frenada larga", blindSpot: "Lateral al terminar la embestida recta" },
   gato: { armor: "Ágil sin coraza estática", agility: "Quiebres súbitos impredecibles", blindSpot: "Detrás del eje de giro del trompo" },
   aspiradora: { armor: "Chasis cilíndrico de polímero", agility: "Tracción en dos ruedas lenta", blindSpot: "Espacio entre las ráfagas de tuercas" },

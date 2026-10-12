@@ -201,6 +201,8 @@ const IMPACT: Record<string, { spark: string; chips: number; shake: number; squa
   embestida: { spark: "#ffd27a", chips: 3, shake: 0.25, squash: 1 },
   pelota: { spark: "#ffd27a", chips: 4, shake: 0.4, squash: 1 },
   trompo: { spark: "#d8dde8", chips: 2, shake: 0.2, squash: 0.55 },
+  tuercas: { spark: "#cbd5e1", chips: 2, shake: 0.15, squash: 0.6 },
+  bobinas: { spark: "#7de8ff", chips: 0, shake: 0.05, squash: 0.3 },
   sierra: { spark: "#ffb347", chips: 2, shake: 0.22, squash: 0.5 },
   pala: { spark: "#ffd27a", chips: 3, shake: 0.28, squash: 0.85 },
 };

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { openDb, extendEnd } from "../db.js";
+import { openDb, extendEnd, csvCell } from "../db.js";
 
 const DAY = 86400e3;
 test("importa invites.json como activos una sola vez", () => {
@@ -68,4 +68,100 @@ test("redeemCode: válido una vez, reusado, vencido, revocado, activo con link n
   const { code: c3 } = db.invite("c@x.com", 5);
   db.setStatus("c@x.com", "revoked");
   assert.equal(db.redeemCode(c3, 6).error, "Usuario revocado");
+});
+test("telemetryAnalysis: agregados de 30 días e ignora lo viejo", () => {
+  const db = openDb(":memory:"), now = 100 * DAY, J = JSON.stringify, t = (u, ty, d, at = now) => db.track(u, ty, J(d), at);
+  t("a", "pact_pick", { id: "x", accepted: true }); t("a", "pact_pick", { id: "x", accepted: false }); t("b", "pact_pick", { id: "x", accepted: true });
+  t("a", "pact_pick", { id: "x", accepted: true }, now - 40 * DAY);
+  t("a", "stage_end", { choice: "stay", stage: 0 }); t("b", "stage_end", { choice: "advance", stage: 0 }); t("b", "stage_end", { choice: "advance", stage: 1 });
+  for (let i = 0; i < 12; i++) t("a", "upgrade_pick", { id: "u" + i, mode: "encore" });
+  t("a", "upgrade_pick", { id: "u0", mode: "encore" }); t("a", "upgrade_pick", { id: "z", mode: "arcade" });
+  t("a", "route_pick", { variant: "v1" }); t("b", "route_pick", { variant: "v1" }); t("b", "route_pick", { variant: "v2" });
+  t("a", "run_start", {}); t("a", "run_end", {}); t("a", "run_start", {}, now - DAY);
+  db.track("a", "pact_pick", "no json", now);
+  const r = JSON.parse(JSON.stringify(db.telemetryAnalysis(now - 30 * DAY)));
+  assert.deepEqual(r.pacts, [{ id: "x", accepted: 2, rejected: 1 }]);
+  assert.deepEqual(r.stages, [{ stage: 0, stay: 1, advance: 1 }, { stage: 1, stay: 0, advance: 1 }]);
+  const enc = r.upgrades.filter((u) => u.mode === "encore");
+  assert.equal(enc.length, 10); assert.deepEqual(enc[0], { mode: "encore", id: "u0", n: 2 });
+  assert.deepEqual(r.upgrades.filter((u) => u.mode === "arcade"), [{ mode: "arcade", id: "z", n: 1 }]);
+  assert.deepEqual(r.routes, [{ variant: "v1", n: 2 }, { variant: "v2", n: 1 }]);
+  assert.deepEqual(r.perDay, [{ day: "1970-04-11", started: 1, ended: 1 }, { day: "1970-04-10", started: 1, ended: 0 }]);
+});
+
+test("expiring: 2 días aparece, 10 no; aviso una sola vez por período", () => {
+  const db = openDb(join(mkdtempSync(join(tmpdir(), "jm-exp-")), "jm.db")), now = 1e12;
+  db.savePlan({ id: "mes", name: "Mensual", price: 500, currency: "USD", period: "month" });
+  for (const [m, d] of [["a@x.com", 2], ["b@x.com", 10], ["c@x.com", -2], ["r@x.com", 1]]) { db.invite(m, now); db.setSub(m, "mes", now + d * DAY); }
+  db.setStatus("r@x.com", "revoked", now);
+  const e = db.expiring(3, now);
+  assert.deepEqual(e.soon.map((u) => u.email), ["a@x.com"]);
+  assert.deepEqual(e.lapsed.map((u) => u.email), ["c@x.com"]);
+  const calls = [];
+  assert.deepEqual(db.noticeExpiring((m) => calls.push(m), now), ["a@x.com"]);
+  assert.deepEqual(db.noticeExpiring((m) => calls.push(m), now + 3600e3), []);
+  assert.equal(calls.length, 1);
+  assert.equal(db.auditList().filter((a) => a.action === "licencia-por-vencer").length, 1);
+  db.applyPayment({ ref: "p1", provider: "manual", email: "a@x.com", planId: "mes" }, now); // renueva: otro período, otro aviso futuro
+  assert.deepEqual(db.expiring(3, now).soon, []);
+});
+import { checkAlias } from "../db.js";
+test("alias: validación, unicidad sin mayúsculas, borrar, migración", () => {
+  assert.equal(checkAlias("  Ana_Gómez-1 "), "Ana_Gómez-1");
+  for (const m of ["ab", "a".repeat(17), "a@b.com", "ho!la", "", "Eres PUTO", "Mierda1"]) assert.throws(() => checkAlias(m), m);
+  const db = openDb(":memory:");
+  db.invite("a@x.com"); db.invite("b@x.com");
+  db.setAlias("a@x.com", "Zeta");
+  assert.throws(() => db.setAlias("b@x.com", "zETA"), /en uso/);
+  db.setAlias("a@x.com", "ZETA"); // el mismo usuario puede recambiar mayúsculas
+  assert.equal(db.aliasOf("cf-a@x.com"), "ZETA");
+  db.setAlias("a@x.com", ""); assert.equal(db.aliasOf("cf-a@x.com"), null);
+  assert.throws(() => db.setAlias("no@x.com", "Zeta"), /inexistente/);
+  // base vieja sin columna: se migra
+  const f = join(mkdtempSync(join(tmpdir(), "jm-")), "v.db");
+  const old = new (db.db.constructor)(f); old.exec("CREATE TABLE users(email TEXT PRIMARY KEY, status TEXT NOT NULL, invitedAt INTEGER, activatedAt INTEGER, revokedAt INTEGER, note TEXT NOT NULL DEFAULT '', lastSeen INTEGER, tokenVersion INTEGER NOT NULL DEFAULT 0)"); old.close();
+  assert.equal(openDb(f).user("x@x.com"), undefined);
+});
+test("dailySeed estable por fecha, distinta entre días, en 1..2^31; runEndSospechoso", async () => {
+  const { dailySeed, runEndSospechoso } = await import("../db.js");
+  const s = dailySeed("k", "2026-10-12");
+  assert.equal(s, dailySeed("k", "2026-10-12"));
+  assert.notEqual(s, dailySeed("k", "2026-10-13"));
+  assert.notEqual(s, dailySeed("otra", "2026-10-12"));
+  assert.ok(Number.isInteger(s) && s >= 1 && s <= 2 ** 31);
+  assert.equal(runEndSospechoso({ t: 600, kills: 10, lv: 5 }), null);
+  assert.equal(runEndSospechoso({ t: 240, loop: 1, stage: 0 }), null);
+  assert.ok(runEndSospechoso({ t: 239, loop: 1, stage: 0 }));
+  assert.ok(runEndSospechoso({ t: 100, loop: -1, stage: 0 }));
+});
+
+test("userStats: agregados del propio uid, sin mezclar con otros; vacío → ceros", () => {
+  const db = openDb(":memory:"), J = JSON.stringify, t = (u, ty, d, at) => db.track(u, ty, J(d), at);
+  assert.deepEqual(db.userStats("nadie"), { modes: [], encore: null, pacts: { top: [], accepted: 0, rejected: 0, rejectedPct: 0 }, stages: { stay: 0, advance: 0, stayPct: 0, advancePct: 0 }, upgrades: [], variants: [], last: null });
+  t("a", "run_end", { mode: "encore", win: false, t: 200, loop: 0, stage: 2 }, 1); t("a", "run_end", { mode: "encore", win: true, t: 300, loop: 1, stage: 0 }, 2);
+  t("a", "run_end", { mode: "arcade", win: true, t: 500, kills: 9, lv: 4 }, 3); t("a", "run_end", { mode: "arcade", win: true, t: 400 }, 4); t("a", "run_end", { mode: "arcade", win: false, t: 50, kills: 7, lv: 2 }, 5);
+  t("b", "run_end", { mode: "arcade", win: true, t: 1, loop: 9, stage: 3 }, 6); t("b", "pact_pick", { id: "x", accepted: true }, 6);
+  for (const [id, ok] of [["x", true], ["x", true], ["y", true], ["z", false]]) t("a", "pact_pick", { id, accepted: ok }, 7);
+  for (const c of ["stay", "stay", "stay", "advance"]) t("a", "stage_end", { choice: c, stage: 0 }, 8);
+  for (const id of ["u1", "u1", "u2", "u3", "u4", "u5", "u6"]) t("a", "upgrade_pick", { id, mode: "arcade" }, 9);
+  t("a", "route_pick", { variant: "v1" }, 10); t("b", "route_pick", { variant: "v2" }, 10);
+  const r = JSON.parse(JSON.stringify(db.userStats("a")));
+  assert.deepEqual(r.modes, [{ mode: "arcade", played: 3, won: 2, bestTime: 400 }, { mode: "encore", played: 2, won: 1, bestTime: 300 }]);
+  assert.deepEqual(r.encore, { loop: 1, stage: 0, t: 300, win: true });
+  assert.deepEqual(r.pacts, { top: [{ id: "x", accepted: 2 }, { id: "y", accepted: 1 }], accepted: 3, rejected: 1, rejectedPct: 25 });
+  assert.deepEqual(r.stages, { stay: 3, advance: 1, stayPct: 75, advancePct: 25 });
+  assert.equal(r.upgrades.length, 5); assert.deepEqual(r.upgrades[0], { id: "u1", n: 2 });
+  assert.deepEqual(r.variants, [{ variant: "v1", n: 1 }]);
+  assert.deepEqual(r.last, { at: 5, mode: "arcade", win: false, t: 50, kills: 7, lv: 2 });
+});
+test("csvCell: escapa y neutraliza fórmulas solo en strings", () => {
+  assert.equal(csvCell('a,"b"'), '"a,""b"""');
+  for (const f of ["=1+1", "+1", "-1", "@x"]) assert.equal(csvCell(f), "'" + f);
+  assert.equal(csvCell(-5), "-5"); assert.equal(csvCell(null), "");
+});
+test("pruneEvents borra solo los eventos más viejos que el corte", () => {
+  const db = openDb(":memory:"), now = 100 * DAY;
+  db.track("u", "x", "{}", now - 91 * DAY); db.track("u", "x", "{}", now - 89 * DAY);
+  assert.equal(db.pruneEvents(now - 90 * DAY), 1);
+  assert.equal(db.events().length, 1);
 });

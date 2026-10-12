@@ -1,14 +1,18 @@
 // jm-login: Cloudflare Access (One-time PIN) delante. Verifica el JWT de Access y canjea el mail en la VPS (POST /api/cf-exchange,
-// firmado con JM_SECRET); la VPS decide si está invitado y devuelve el token de server/lib.js con uid "cf-<mail>".
-export const ORIGINS = ["https://jm-login.mesr-96.workers.dev", "https://junkedmetal.duckdns.org", "https://marcelopsr.github.io", "http://localhost:5173", "http://localhost:5174"]; // igual que server/lib.js
+// firmado con EXCHANGE_SECRET); la VPS decide si está invitado y devuelve el token de server/lib.js con uid "cf-<mail>".
+export const ORIGINS = ["https://jm-login.mesr-96.workers.dev", "https://junkedmetal.duckdns.org", "https://marcelopsr.github.io"]; // igual que server/lib.js
+// localhost solo si la variable del Worker DEV_ORIGINS = "true" (no se pone en producción).
+export const originsFor = (env) => env?.DEV_ORIGINS === "true" ? [...ORIGINS, "http://localhost:5173", "http://localhost:5174"] : ORIGINS;
+// Secreto del canje; JM_SECRET solo como respaldo de transición (quitarlo del Worker una vez puesto EXCHANGE_SECRET).
+export const exchangeSecret = (env) => env.EXCHANGE_SECRET || env.JM_SECRET;
 const enc = new TextEncoder();
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const unb64u = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
 
-export function safeReturn(ret) {
+export function safeReturn(ret, origins = ORIGINS) {
   try {
     const u = new URL(ret);
-    return ORIGINS.includes(u.origin) && !u.username && !u.password ? u.origin + u.pathname + u.search : null;
+    return origins.includes(u.origin) && !u.username && !u.password ? u.origin + u.pathname + u.search : null;
   } catch { return null; }
 }
 
@@ -36,19 +40,29 @@ export async function accessEmail(jwt, team, aud, now = Date.now(), certs = null
   return typeof c.email === "string" && c.email ? c.email.toLowerCase() : null;
 }
 
+// Cabeceras de PWA sobre lo que sirve ASSETS: sw.js nunca en caché HTTP (el navegador debe ver versiones nuevas), manifest con su MIME.
+export function pwaHeaders(pathname, res) {
+  const type = pathname === "/sw.js" ? "text/javascript; charset=utf-8" : pathname === "/manifest.webmanifest" ? "application/manifest+json" : null;
+  if (!type || !res.ok) return res;
+  const h = new Headers(res.headers);
+  h.set("Content-Type", type);
+  if (pathname === "/sw.js") h.set("Cache-Control", "no-cache");
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     // Todo el dominio está detrás de Access (solo mails con licencia vigente): fuera de /login se sirve el juego (dist/).
-    if (url.pathname !== "/login") return env.ASSETS.fetch(req);
-    const ret = safeReturn(url.searchParams.get("return") || "");
+    if (url.pathname !== "/login") return pwaHeaders(url.pathname, await env.ASSETS.fetch(req));
+    const ret = safeReturn(url.searchParams.get("return") || "", originsFor(env));
     if (!ret) return new Response("return no permitido", { status: 400 });
     let mail = null;
     try { mail = await accessEmail(req.headers.get("Cf-Access-Jwt-Assertion"), env.TEAM_DOMAIN, env.POLICY_AUD); } catch { mail = null; }
     if (!mail) return page(403, "Sesión de Cloudflare Access inválida.");
     const ts = Date.now();
     let r;
-    try { r = await fetch(env.EXCHANGE_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: mail, ts, sig: await exchangeSig(env.JM_SECRET, mail, ts), invite: (url.searchParams.get("invite") || "").slice(0, 64) || undefined }) }); }
+    try { r = await fetch(env.EXCHANGE_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: mail, ts, sig: await exchangeSig(exchangeSecret(env), mail, ts), invite: (url.searchParams.get("invite") || "").slice(0, 64) || undefined }) }); }
     catch { return page(502, "No se pudo contactar al servidor del juego."); }
     if (r.status === 403) return page(403, "Sin invitación: pedí acceso al administrador.");
     const j = r.ok ? await r.json().catch(() => null) : null;

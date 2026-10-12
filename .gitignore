@@ -26,3 +26,9 @@ scratch/
 .env.local
 .env.*.local
 server/node_modules/
+
+# Capturas del e2e (npm run e2e)
+.e2e/
+
+# Resultados de npm run carga
+.carga/

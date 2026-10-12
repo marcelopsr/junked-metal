@@ -1295,6 +1295,39 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         ]),
       ];
     }
+    if (kind === "proyector") {
+      // Proyector de cine de chatarra (el show del Director): cajón oxidado sobre trípode, lente ámbar al frente (+z), dos carretes de película arriba
+      const rust = M.plastic("#8a5a2a"), steel = M.metal("#9ca3af"), dark = M.matte("#1a1a1a"), amber = M.glow("#ffb020");
+      return [
+        box(3.2, 2.1, 3.4, rust, [0, 2.45, -0.2]),
+        box(3.3, 0.3, 3.5, dark, [0, 1.45, -0.2]),
+        cyl(1.7, 2.1, 1.5, steel, [0, 2.45, 2.3], [Math.PI / 2, 0, 0], 12),
+        cyl(1.5, 1.5, 0.2, amber, [0, 2.45, 3.1], [Math.PI / 2, 0, 0], 12),
+        tor(2.1, 0.18, dark, [0, 2.45, 2.7], undefined, 12),
+        ...[-1, 1].map((s) => tor(2.5, 0.28, steel, [s * 0.95, 4.2, -0.9], [0, Math.PI / 2, 0], 12)),
+        ...[-1, 1].map((s) => cyl(0.35, 0.35, 0.7, dark, [s * 0.95, 4.2, -0.9], [0, 0, Math.PI / 2], 6)),
+        tube([[-0.95, 3.4, -0.9], [-0.2, 3.3, 0.3], [0.5, 3.6, 0.9], [0.95, 3.4, -0.9]], 0.06, dark),
+        box(0.18, 0.7, 0.18, M.plastic("#c2410c"), [1.5, 3.7, 0.6]),
+        sph(0.45, M.glow("#ff2a1a"), [1.5, 4.15, 0.6], undefined, 6),
+        ...[[-1.3, 1.0], [1.3, 1.0], [0, -1.7]].map(([x, z]) => tube([[x * 0.4, 1.5, z * 0.4], [x, 0.7, z], [x * 1.15, 0, z * 1.15]], 0.16, steel)),
+      ];
+    }
+    if (kind === "grua") {
+      // Grúa de feria de chatarra (el show del Director): chasis naranja con orugas, torre, brazo con garra de tres dedos al frente (+z) y cabina con luz roja
+      const body = M.plastic("#c2410c"), steel = M.metal("#9ca3af"), dark = M.matte("#1a1a1a"), amber = M.glow("#ffb020");
+      return [
+        box(3.4, 0.9, 5, body, [0, 0.9, 0]),
+        ...[-1, 1].map((s) => box(0.9, 0.9, 5.4, dark, [s * 1.8, 0.45, 0])),
+        box(1.6, 3.4, 1.6, body, [0, 2.9, -1.2]),
+        box(1.9, 1.2, 1.9, M.plastic("#facc15"), [0, 4.9, -1.2]),
+        sph(0.4, M.glow("#ff2a1a"), [0, 5.7, -1.2], undefined, 6),
+        box(0.7, 0.7, 5.6, steel, [0, 4.6, 1.3], [0.35, 0, 0]),
+        cyl(0.08, 0.08, 2.6, dark, [0, 3.3, 3.6], undefined, 5),
+        sph(0.5, amber, [0, 1.95, 3.6], undefined, 6),
+        ...[0, 1, 2].map((k) => tube([[0, 1.95, 3.6], [Math.sin(k * 2.094) * 0.9, 1.4, 3.6 + Math.cos(k * 2.094) * 0.9], [Math.sin(k * 2.094) * 0.5, 0.8, 3.6 + Math.cos(k * 2.094) * 0.5]], 0.14, steel)),
+        ...[[-1.3, 1.9], [1.3, 1.9]].map(([x, z]) => cyl(0.35, 0.35, 0.3, dark, [x, 0.5, z], [0, 0, Math.PI / 2], 8)),
+      ];
+    }
     if (kind === "cortacercos") {
       // Herramienta eléctrica toy: bloque naranja atrás, mango en D, espada larga dentada hacia +z
       const body = M.plastic("#e0a030"), dark = M.matte("#1a1a1a"), steel = M.metal("#9ca3af");

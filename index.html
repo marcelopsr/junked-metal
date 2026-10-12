@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Junked Metal</title>
-  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="manifest" href="./manifest.webmanifest" crossorigin="use-credentials" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
   <meta name="theme-color" content="#0b0d0a" />
@@ -170,9 +170,11 @@
       <div class="foot">The show must go on. Expedición desde la Luna, escenario tras escenario, bajo la mirada del Director.</div>
       <div class="foot">Cada escenario termina en un teleportador: quedarse da tiempo para mejorar con la amenaza en aumento, avanzar lleva al siguiente. Tras el cuarto, el público vota: ¡ENCORE! (otra vuelta, más difícil) o FINAL ACT (el jefe del show).</div>
       <div class="briefCard jm-panel"><div class="briefRec" id="encRec"></div><ul class="briefRec" id="encSec"></ul></div>
+      <div class="briefCard jm-panel hidden" id="encLb"><div class="briefRec">Récords online</div><ol class="briefRec" id="encLbList"></ol></div>
       <nav class="list">
         <button data-act="encorego" class="primary">Largar</button>
         <button data-act="encplayers" id="encPlayers"></button>
+        <button data-go="codex">Codex</button>
         <div class="foot hidden" id="netSession" role="status" aria-live="polite"></div>
         <button id="netCfLogin" class="hidden">Online: iniciar sesión</button>
         <details id="netAlt" class="hidden"><summary class="foot">Otras formas de entrar</summary>
@@ -181,6 +183,7 @@
           <button id="netKeyGo">Entrar con clave de grupo</button>
         </details>
         <button id="netLogout" class="hidden">Cerrar sesión</button>
+        <button id="netAcct" class="hidden" data-go="cuenta">Mi cuenta</button>
         <button id="netHost">Online: crear sala</button>
         <input id="netCode" class="netCode" maxlength="6" placeholder="Código de sala" autocomplete="off" spellcheck="false" aria-label="Código de sala">
         <button id="netJoin">Unirse con código</button>
@@ -324,6 +327,27 @@
         <p class="dim">Ningún insecto real fue lastimado. Los juguetes sí, y ya les llegó la factura.</p>
       </div>
       <div class="btns"><button data-act="back">Volver</button><button id="introBtn">Ver intro</button></div>
+    </section>
+
+    <section id="scr-cuenta" class="scr">
+      <div class="otitle">MI CUENTA</div>
+      <div class="briefCard jm-panel"><ul class="briefRec" id="acctList"></ul>
+        <label class="briefRec" for="acctAlias">Apodo</label>
+        <input id="acctAlias" class="netCode" maxlength="16" placeholder="3 a 16 caracteres" autocomplete="off" spellcheck="false">
+        <button id="acctSave">Guardar</button>
+        <div class="foot" id="acctMsg" role="status" aria-live="polite"></div>
+      </div>
+      <div class="btns"><button data-act="back">Volver</button><button id="acctOut">Cerrar sesión</button></div>
+    </section>
+
+    <section id="scr-codex" class="scr">
+      <div class="otitle">CODEX</div>
+      <div class="foot" id="cdxCount"></div>
+      <div class="briefCard jm-panel"><div class="briefRec">Secretos del Director</div><ul class="briefRec" id="cdxSec"></ul></div>
+      <div class="briefCard jm-panel"><div class="briefRec">Pactos</div><ul class="briefRec" id="cdxPact"></ul></div>
+      <div class="briefCard jm-panel"><div class="briefRec">Destinos jugados</div><ul class="briefRec" id="cdxVar"></ul></div>
+      <div class="briefCard jm-panel hidden" id="cdxMe"><div class="briefRec">Tus estadísticas</div><ul class="briefRec" id="cdxMeList"></ul></div>
+      <div class="btns"><button data-act="back">Volver</button></div>
     </section>
 
     <section id="scr-pause" class="scr">

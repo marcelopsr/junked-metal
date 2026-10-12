@@ -3,7 +3,7 @@ main = "worker.js"
 compatibility_date = "2026-09-01"
 workers_dev = true
 
-# TEAM_DOMAIN y POLICY_AUD los fija la app de Access (ver server/README.md § Login Cloudflare). JM_SECRET va como secreto.
+# TEAM_DOMAIN y POLICY_AUD los fija la app de Access (ver server/README.md § Login Cloudflare). EXCHANGE_SECRET va como secreto (`wrangler secret put EXCHANGE_SECRET`); DEV_ORIGINS="true" solo en desarrollo local (.dev.vars), nunca en producción.
 # El juego completo (build de dist/ con VITE_LOGIN_URL=<este worker>/login) se sirve desde acá, protegido por Access.
 [assets]
 directory = "../../dist"

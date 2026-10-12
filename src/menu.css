@@ -485,7 +485,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   #scr-over .kit.stats li { padding: 4px 3px; }
   #scr-over .kit.stats li span { font-size: 10.5px; }
   #scr-over .kit.stats li b { font-size: 19px !important; }
-  #scr-over .overGrid { display: grid; grid-template-columns: 1fr 128px; gap: 6px; align-items: start; }
+  #scr-over .overGrid { display: grid; grid-template-columns: minmax(0, 1fr) 128px; /* minmax: un reporte largo (ENCORE) no ensancha la columna ni empuja la foto fuera del panel */ gap: 6px; align-items: start; }
   #scr-over .overGrid .card { max-width: none; width: 100%; padding: 6px 8px; gap: 3px; }
   #scr-over .overGrid .card:first-child { grid-column: 1 / -1; }
   #scr-over .overGrid .card .sect { margin-top: 2px; font-size: 11px; }
@@ -493,7 +493,8 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   #overHurt { margin-top: 4px; }
   #fe #overDmg li, #fe #overHurt li { font-size: 13px; grid-template-columns: 136px 1fr 40px; gap: 6px; padding: 1px 0; }
   .kv li { font-size: 13px; padding: 1px 0; }
-  #scr-over .overGrid .polaroid { width: 128px; margin: 0; gap: 4px; align-self: center; }
+  #scr-over .overGrid .polaroid { width: 128px; margin: 0; gap: 4px; align-self: center; padding-inline: 3px; box-sizing: border-box; } /* la foto girada -1,5 grados sobresalía ~2px */
+  #scr-over .overGrid .polaroid img { max-width: 100%; }
   #scr-over .overGrid .polaroid button { min-height: 32px; padding: 4px 8px; font-size: 11px; }
   #scr-over .foot { font-size: 12px; }
   #scr-over .list.row3 button { min-height: 40px; padding: 8px 10px; font-size: 14px; }
@@ -769,3 +770,7 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 #netKeyBox { display: grid; gap: 8px; }
 #netKeyBox.hidden { display: none; }
 .netCode:focus { outline: 2px solid var(--jm-naranja); outline-offset: 1px; }
+
+/* ENCORE: récords online compactos (10 filas de 2 renglones empujaban Largar fuera de la pantalla en celular) */
+#encLbList { margin: 0; max-height: 26vh; overflow-y: auto; overscroll-behavior: contain; font-size: 12px; line-height: 1.2; letter-spacing: .03em; padding: 4px 9px; }
+#encLbList li { padding: 2px 0; }
