@@ -19,6 +19,7 @@
     "shots": "node scripts/shots.mjs",
     "perf": "node scripts/perf.mjs",
     "playtest:duel": "node scripts/duel-playtest.mjs",
+    "test:net": "node scripts/net-test.mjs",
     "test:restart": "node scripts/test-restart.mjs",
     "test:down": "node scripts/test-restart.mjs down",
     "test:ls": "node scripts/test-restart.mjs ls",
