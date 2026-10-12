@@ -198,6 +198,19 @@ Fecha 2026-10-12. `mate` pasó a `mates: Mate[]` (main.ts), cada uno con su núm
 - Niebla, `moonTick` y el cielo se calculan con la cámara del que guía; números de daño y flechas de jefe solo se proyectan en su mitad.
 - Balance sin ajustar para 2 (armas duplicadas, misma cantidad de bichos).
 
+## R6a: estado por jugador, sin red
+
+Fecha 2026-10-12. Primera fase de `R6_RED.md` §5: separar el estado por jugador en `main.ts`, sin red.
+
+- **`Player`** (`id` = número de participante 1-4, `car` — `null` = caído hasta el próximo escenario —, `hp`/`maxHp`/`boost`, `in` = su entrada, `cam` y estado de cámara `h`/`up`/`tgt`, copias de armas `weapons`/`sig`, salto y contacto propios). Lista `players`; J1 es siempre `players[0]`.
+- **`lead`** = el jugador que guía (antes los globales `car`, `hp`, `maxHp`, `boost` y `leadPn`): usa la cámara principal `cam` con sus modos, el `input` global y las armas de verdad. Se retiraron `mates`, `Mate` y `leadPn`; `others()` = los que no guían en orden de jugador y `liveM()` = los vivos de esos (sus índices 1.. siguen siendo los `who` de los eventos).
+- **Mismo código para todos:** HUD 2x2 (`players.map`), curas del pacto y del escudo (`for p of players`), daño por jugador `hurtP(p, …)` (el que guía pasa por `hurt()`, los demás por `mateHurt`), dev `__enc.hurt` por id. Si cae el que guía, `mateLead` ya no cruza número de jugador: cambia `lead` y se intercambian la cámara principal y la extra.
+- **Comandos:** `applyCommand(playerId, cmd)` con `card` (cartas; la reparación cura a quien elige), `reroll`, `enc` (pactos, rutas y votos del teleportador) y `buy` (máquina de opciones: tornillos y vida de quien compra, vía `GOAL_IO.pay`). Teclado, joystick, botones, cartas (`showOffers`) y el bot entran por ahí. Los menús siguen siendo locales y mandan como el que guía.
+- **Compartido (igual que antes):** XP, nivel, armas, pasivas, tornillos y pactos.
+- Diferencia conocida (solo coop 3-4): tras dos cambios de guía con un caído que volvió, el orden de `others()` es siempre por número de jugador; antes podía quedar desordenado. Cambia qué compañero recibe la próxima aparición o el lugar de llegada, nada más.
+- **Verificado R6a:** `tsc` limpio, `vitest` 128/128, `sim --seeds 1 --secs 600` = 166.9 s, nv 4, 24 bajas (igual que R1). Sin recorrido headless del cooperativo ni capturas.
+- Falta para R6b: `InputSource` remota, `damage/kill` como eventos, ofertas de cartas por jugador sin pausa global, `simRng`/`visRng`.
+
 ## Contenido 2
 
 Fecha 2026-10-12. Solo datos en `src/encore.ts` (más pruebas); sin tocar `main.ts`, `menu.ts` ni `balance.json`.
