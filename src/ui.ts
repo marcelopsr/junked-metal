@@ -347,6 +347,22 @@ export function hudMate(d: { n: string; hp: number; max: number; down: boolean }
   txt("mateN", d.n); txt("mateTxt", d.down ? "FUERA" : `${Math.ceil(d.hp)}/${d.max}`);
   ($("mateBar") as HTMLElement).style.transform = `scaleX(${d.down ? 0 : Math.max(0, d.hp / d.max)})`;
 }
+/** R7c: 3-4 jugadores en 2x2, una vida compacta por cuadro (J1 arriba izq., J2 arriba der., J3 abajo izq., J4 abajo der.); con 3 el cuarto queda negro. */
+export function hudQuad(d: { hp: number; max: number; down: boolean }[] | null) {
+  if (ch("quadN", d?.length ?? 0)) {
+    $("quadHp").classList.toggle("hidden", !d); $("quadVoid").classList.toggle("hidden", d?.length !== 3);
+    $("quadHp").innerHTML = (d ?? []).map((_, i) => `<div class="q${i + 1}"><b>J${i + 1}</b><i><u></u></i><span></span></div>`).join("");
+    for (let i = 0; i < 4; i++) ch(`quad${i}`, ""); // chips nuevos: que se escriban aunque el valor no cambió
+  }
+  if (!d) return;
+  d.forEach((p, i) => {
+    if (!ch(`quad${i}`, `${Math.ceil(p.hp)}/${p.max}/${p.down}`)) return;
+    const el = $("quadHp").children[i] as HTMLElement;
+    el.classList.toggle("down", p.down);
+    el.querySelector("span")!.textContent = p.down ? "FUERA" : `${Math.ceil(Math.max(0, p.hp))}/${p.max}`;
+    el.querySelector("u")!.style.transform = `scaleX(${p.down ? 0 : Math.max(0, p.hp / p.max)})`;
+  });
+}
 export function hudEnc(d: { tag: [string, string, boolean]; pacts: { tag: string; left: string; terms: string }[]; ask: EncAsk | null } | null) {
   if (ch("encOn", !!d)) $("encTag").classList.toggle("hidden", !d);
   if (ch("encPk", d ? d.pacts.map((p) => p.tag + p.left).join("|") : "")) $("encPacts").innerHTML = d ? d.pacts.map((p) => `<i title="${p.terms}"><b>${p.tag}</b> ${p.left}</i>`).join("") : ""; // pactos activos, compactos bajo el reloj

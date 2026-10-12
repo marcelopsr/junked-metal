@@ -462,3 +462,15 @@ body.calm #dirSub { animation: none !important; }
 #mateHp u { display: block; height: 100%; background: var(--jm-cian, #00C2FF); transform-origin: 0 50%; }
 #mateHp.down { border-color: #c0392b; }
 #mateHp.down u { background: #c0392b; }
+/* R7c: 3-4 jugadores en 2x2 — cuarto cuadro negro (con 3) y una vida compacta pegada a la esquina de abajo de cada cuadro */
+#quadVoid { position: absolute; left: 50%; top: 50%; right: 0; bottom: 0; background: #000; }
+#quadHp > div { position: absolute; display: flex; align-items: center; gap: 6px; padding: 3px 8px; scale: var(--hud-scale); font: 700 12px/1 var(--hf); letter-spacing: .08em; color: var(--g-dim); background: rgba(14, 12, 10, .88); border: 1px solid var(--jm-naranja, #ff7a1a); }
+#quadHp .q1, #quadHp .q2 { bottom: calc(50% + 8px); transform-origin: 0 100%; }
+#quadHp .q3, #quadHp .q4 { bottom: 8px; transform-origin: 0 100%; }
+#quadHp .q1, #quadHp .q3 { left: 14px; }
+#quadHp .q2, #quadHp .q4 { left: calc(50% + 14px); }
+#quadHp b { color: var(--jm-amarillo2, #FFD166); }
+#quadHp i { display: block; width: 70px; height: 6px; background: rgba(255, 255, 255, .12); }
+#quadHp u { display: block; height: 100%; background: var(--jm-cian, #00C2FF); transform-origin: 0 50%; }
+#quadHp .down { border-color: #c0392b; }
+#quadHp .down u { background: #c0392b; }

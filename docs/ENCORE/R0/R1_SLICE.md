@@ -177,8 +177,22 @@ Fecha 2026-10-12. Primer paso del cooperativo local. Todo cuelga de `coop` (main
 - **Verificado R7b:** `tsc` limpio, `vitest` 127/127 (nueva: con 2 autos los meteoritos dañan a los dos). Sin `sim`, capturas ni recorrido headless de esta parte.
 - **Verificado R7a:** `tsc`, `vitest` 126/126, recorrido headless (dos cámaras, J2 maneja con flechas, J2 cae y revive al avanzar, J1 cae y J2 guía, los 2 caen → cierre), 0 errores de consola, captura vista de la pantalla dividida. Sin playtest con dos personas ni con dos joysticks reales.
 
+## R7c: ENCORE de 3 a 4 en compu (2x2)
+
+Fecha 2026-10-12. `mate` pasó a `mates: Mate[]` (main.ts), cada uno con su número de jugador `pn` y su entrada `in`; `coop` es la cantidad de jugadores (1 = solo). Con 1 y 2 el comportamiento es el de R7a/b (mismo orden de aparición, mismos cuadros arriba/abajo, mismo `#mateHp`).
+
+- **Menú:** `Jugadores · 1/2/3/4` en `#scr-encore` (`encCfg.players`, `encMax()` en menu.ts). Oculto en táctil. J3 y J4 solo con joystick: el selector saltea 3 si hay menos de 3 joysticks y 4 si hay menos de 4, y lo avisa en el botón ("3 o 4 piden 3 o 4 joysticks"); se rehace al conectar o desconectar un control y `launchRun` vuelve a recortar al largar. Dev: `?encore&players=3|4`.
+- **Grilla:** 2 = arriba/abajo (`TOP`/`BOTTOM`); 3-4 = 2x2 (`QUAD`: J1 arriba izq., J2 arriba der., J3 abajo izq., J4 abajo der.; `vpOf(pn)`). Con 3 el cuarto cuadro queda negro (`#quadVoid`). Cada jugador conserva su cuadro aunque pase a guiar.
+- **Input:** J1 teclado WASD + joystick 0; J2 flechas (Teclado 2) o joystick 1 (`pollMate`); J3 y J4 joysticks 2 y 3 (`pollPad` en input.ts, mapeo de siempre en gatillos).
+- **HUD:** con 3-4, una vida compacta por cuadro en su esquina de abajo (`hudQuad` en ui.ts, `#quadHp`); con 2 sigue `#mateHp`.
+- **Enemigos y eventos:** persiguen al auto vivo más cercano de los N; la aparición rota entre el que guía y cada compañero vivo; reciclado, contacto, embestida, ácido, salida del gusano, gemas, pilas y cofres miran a todos. Los eventos de la luna reciben los N autos vivos (`who` = índice en `liveM()` + 1).
+- **Caídas:** un compañero caído queda fuera hasta el próximo escenario (`mateDown`); si cae el que guía, guía el primer compañero vivo (`mateLead` cruza auto, vida, armas, cámara y número de jugador). Si caen todos, termina la partida.
+- **Rendimiento** (`ponytail:` en render.ts): con 3-4 cuadros (2 o más cámaras extra en `setSplit`, que ahora lleva una lista) la escala de render baja al 70 % de la elegida y partículas y distancia de dibujo pasan a Bajo; el pasto no cambia (se arma con el mundo). Techo: escala medida por tiempo de cuadro real.
+- `ponytail:` las copias de armas son por compañero: con 4 el daño total se cuadruplica (balance sin ajustar, como en R7a).
+- **Verificado R7c:** `tsc` limpio, `vitest` 127/127. Sin recorrido headless, capturas, `perf` ni prueba con 3-4 joysticks reales.
+
 ### Qué falta (y para 3-4 jugadores)
-- `mate` es uno: para 3-4, lista de mates, viewports 2x2 y `coopCtl` por índice de joystick (Teclado 1/2 alcanzan para 2).
+- Probar 3-4 con joysticks reales y medir `perf` de la grilla 2x2; el cuarto cuadro con 3 podría mostrar el radar en vez de negro.
 - Del que guía siguen: combo de manejo, recolección con imán y el indicador de habilidad del HUD (muestra su tecla). Los ataques especiales de jefes (barrido, cables, salto, succión) y la pelota apuntan solo a él.
 - Niebla, `moonTick` y el cielo se calculan con la cámara del que guía; números de daño y flechas de jefe solo se proyectan en su mitad.
 - Balance sin ajustar para 2 (armas duplicadas, misma cantidad de bichos).

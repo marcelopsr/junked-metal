@@ -123,12 +123,17 @@ function importSave() {
 }
 
 // ---------- ENCORE: jugadores (R7a). Dos = pantalla dividida, SOLO en compu: en táctil el selector no aparece y siempre es 1 (como raceCfg.players) ----------
-export const encCfg = { players: 1 as 1 | 2 };
+// R7c: 3 y 4 en 2x2; J3 y J4 solo con joystick, así que esas cantidades piden 3 o 4 joysticks conectados (el selector las saltea y lo avisa)
+export const encCfg = { players: 1 as 1 | 2 | 3 | 4 };
+export const encMax = () => (isTouch ? 1 : Math.max(2, Math.min(4, padsConnected())));
 function renderEncP() {
   if (isTouch) encCfg.players = 1;
-  $("encPlayers").textContent = `Jugadores · ${encCfg.players}${encCfg.players === 2 ? " (pantalla dividida)" : ""}`;
+  if (encCfg.players > encMax()) encCfg.players = encMax() as 2 | 3;
+  const n = encCfg.players, m = encMax();
+  $("encPlayers").textContent = `Jugadores · ${n}${n > 1 ? " (pantalla dividida)" : ""}${m === 2 ? " · 3 o 4 piden 3 o 4 joysticks" : m === 3 ? " · 4 pide 4 joysticks" : ""}`;
   $("encPlayers").classList.toggle("hidden", isTouch);
 }
+for (const ev of ["gamepadconnected", "gamepaddisconnected"]) addEventListener(ev, () => renderEncP());
 
 // ---------- Carrera (kart.ts): opciones de la largada ----------
 const nextOf = <T,>(a: T[], v: T) => a[(a.indexOf(v) + 1) % a.length];
@@ -1569,7 +1574,7 @@ export function initMenu(a: Api) {
     else if (d.act === "match3go") api.match3();
     else if (d.act === "play" || d.act === "playgo") api.play();
     else if (d.act === "encorego") api.play(false, true);
-    else if (d.act === "encplayers") { encCfg.players = encCfg.players === 1 ? 2 : 1; renderEncP(); }
+    else if (d.act === "encplayers") { encCfg.players = (encCfg.players >= encMax() ? 1 : encCfg.players + 1) as 1 | 2 | 3 | 4; renderEncP(); }
     else if (d.act === "playmenu") { if (ownedZones().length > 1) go("play"); else api.play(); } // con una sola zona no hay nada que elegir: largar directo
     else if (d.act === "daily") api.play(true);
     else if (d.act === "endless") api.endless();

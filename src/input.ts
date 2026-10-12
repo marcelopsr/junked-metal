@@ -256,3 +256,9 @@ export function pollMate(): typeof input {
   jump2Pulse = false;
   return o;
 }
+/** R7c: J3 y J4 solo con joystick (índices 2 y 3 de los conectados), mapeo de siempre forzado a gatillos como el J2. Sin joystick: quieto. */
+export function pollPad(i: number): typeof input {
+  const o = { throttle: 0, steer: 0, boost: false, drift: false, ability: false, jump: false, moveX: 0, moveY: 0, move: false }, gp = pads()[i];
+  if (gp) padInto(o, gp, "trig");
+  return o;
+}

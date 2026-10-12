@@ -250,9 +250,10 @@ export const presetOf = (g: Pick<Gfx, "shadowQ" | "detail" | "texRes" | "aniso" 
 export const G = { grass: DETAIL.medio.grass, fx: DETAIL.medio.fx, draw: DETAIL.medio.draw as number, texCap: 512 as number };
 const cur: Gfx = { scaler: "simple", scale: 1, fsr: "calidad", aa: "none", sharpen: 0, shadowQ: "mid", detail: "medio", texRes: 256, aniso: 0, bloom: true, bright: 1, gamma: 1 }; // aniso 0: la primera vez siempre se aplica
 let mainCam: B.Camera, pipeline: B.DefaultRenderingPipeline, lowQ = false;
-let fsrP: B.FSR1RenderingPipeline | null = null, split: B.Camera | null = null;
+let fsrP: B.FSR1RenderingPipeline | null = null;
+const split: B.Camera[] = []; // cámaras extra de la pantalla dividida (carrera de 2, ENCORE de 2 a 4)
 let anisoHook: B.Nullable<B.Observer<B.BaseTexture>> = null, glowL: B.GlowLayer | null = null;
-const cams = () => (split ? [mainCam, split] : [mainCam]);
+const cams = () => [mainCam, ...split];
 /** MSAA que admite la tarjeta (1 = ninguno). */
 export const maxMsaa = () => Math.max(1, scene.getEngine().getCaps().maxMSAASamples || 1);
 
@@ -265,14 +266,16 @@ function chain(edit: () => void) {
 }
 
 /** FSR es una cadena de una sola cámara: en pantalla dividida (carrera de 2) se apagan y vale la escala manual. */
-const fsrEff = (): Fsr => (split || cur.scaler !== "fsr" ? "off" : cur.fsr);
+const fsrEff = (): Fsr => (split.length || cur.scaler !== "fsr" ? "off" : cur.fsr);
 let fsrApplied: Fsr = "off", fxaaLoOn = false, fxaaLo: B.FxaaPostProcess | null = null;
 /** WebSR: una sola cámara y motor WebGPU. */
-const iaOn = () => cur.scaler === "ia" && !split && scene.getEngine().isWebGPU;
+const iaOn = () => cur.scaler === "ia" && !split.length && scene.getEngine().isWebGPU;
 let iaApplied = false;
+// ponytail: con 3-4 cuadros (2x2) la escala baja fija al 70 % de la elegida y el detalle a Bajo; techo: escala por cuadro medida con el tiempo de cuadro real
+const quadK = () => (split.length >= 2 ? 0.7 : 1);
 function applyScale() {
   const e = scene.getEngine(), ia = iaOn();
-  e.setHardwareScalingLevel(1 / ((devicePixelRatio || 1) * (ia ? 0.5 : fsrEff() === "off" ? cur.scale : 1)));
+  e.setHardwareScalingLevel(1 / ((devicePixelRatio || 1) * (ia ? 0.5 : fsrEff() === "off" ? cur.scale * quadK() : 1)));
   if (ia !== iaApplied) { iaApplied = ia; void import("./websr").then((m) => m.setSR(ia, e)); } // FSR: el canvas es nativo y la escena se dibuja a 1/FSR_K dentro del pipeline
 }
 
@@ -316,6 +319,7 @@ export function applyGfx(g: Gfx) {
   if (glowL) glowL.isEnabled = cur.bloom;
   const d = DETAIL[cur.detail];
   Object.assign(G, { grass: d.grass, fx: d.fx, draw: d.draw, texCap: cur.texRes });
+  if (split.length >= 2) Object.assign(G, { fx: Math.min(G.fx, DETAIL.bajo.fx), draw: DETAIL.bajo.draw }); // R7c: 3-4 cuadros = partículas y distancia de dibujo de Bajo (el pasto no: se arma con el mundo)
   if (cur.aniso !== was.aniso) {
     const lvl = Math.min(cur.aniso, eng.getCaps().maxAnisotropy || 1);
     for (const t of scene.textures) if (!t.isRenderTarget) t.anisotropicFilteringLevel = lvl;
@@ -350,13 +354,12 @@ function setupPixels(cam: B.Camera, low: boolean) {
 /** Pantalla dividida (carrera para 2): la segunda cámara comparte el postproceso "pipe" (addCamera: el pipeline se reconstruye solo con las cámaras que conoce); FSR se apaga mientras dure (fsrEff). */
 export function setSplit(cam2: B.Camera | null, on: boolean) {
   if (on && cam2) {
-    if (split && split !== cam2) pipeline.removeCamera(split);
-    split = cam2;
+    if (split.includes(cam2)) return;
+    split.push(cam2);
     applyGfx(cur);
     pipeline.addCamera(cam2);
-  } else if (cam2 ?? split) {
-    pipeline.removeCamera((cam2 ?? split)!);
-    split = null;
+  } else {
+    for (const c of cam2 ? [cam2] : [...split]) { pipeline.removeCamera(c); if (split.includes(c)) split.splice(split.indexOf(c), 1); }
     applyGfx(cur);
   }
 }
