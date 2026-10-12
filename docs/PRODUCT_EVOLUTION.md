@@ -1401,10 +1401,35 @@ Decisión del usuario: Completar las 3 oportunidades seleccionadas:
 
 ---
 
+## 2026-10-12 · E2E Accesibilidad de Menús (C1, C2, A1, A2, A3, A4) y Modularización del Visor 3D del Bestiario (Ciclo #39)
+
+Trabajo ejecutado bajo metodología E2E y orquestación con 2 subagentes:
+
+1. **Accesibilidad Integral en Menús (`src/menu.ts`, `src/menu.css`, `index.html`):**
+   - **C1 (Corrección de Backspace y cursor en `#netKey`):** El chequeo de campo de texto en el controlador de teclado ahora incluye `password`, `search` y `number`, permitiendo borrar con Backspace y mover el cursor con flechas sin disparar la navegación ni volver al menú anterior.
+   - **C2 (Focus Trap y Semántica ARIA en `#ask`):** `focusables()` devuelve los botones interactivos del modal de confirmación `#ask` cuando `askFn` está activo. En `index.html`, `#ask` cuenta con `role="dialog"`, `aria-modal="true"` y `aria-labelledby="askTitle"`.
+   - **A1 (Navegabilidad de `<summary>` en teclado y gamepad):** Selector de `focusables()` actualizado con `summary` para permitir abrir "Otras formas de entrar" (`<details id="netAlt">`).
+   - **A2 (Fondo Accesible en Textos Flotantes):** `.list .foot`, `#netStatus`, `#netSession` y `#mainInfo` dotados de fondo `--jm-panel` / `rgba(11, 15, 20, 0.92)` con borde y padding, asegurando contraste >15:1 sobre la mesa 3D.
+   - **A3 (Objetivo Táctil en Celular):** `#tabs .tab` fijado con `min-height: 44px` en `@media (pointer: coarse)` para cumplir las pautas de accesibilidad táctil.
+   - **A4 (Soporte de `prefers-reduced-motion`):** Animaciones desactivadas bajo `@media (prefers-reduced-motion: reduce)`, e inicialización de `save.calm` por defecto conectada a la preferencia del sistema operativo.
+
+2. **Modularización del Visor 3D del Bestiario (`src/bestiary_preview.ts`, `src/main.ts`):**
+   - Extracción de ~110 líneas de `src/main.ts` hacia `src/bestiary_preview.ts` (`pedTpl`, `PED_H`, `BATK`, `DOG_LANE`, `TAR_JUMP`, `beastTick`, `setupBeastCam`).
+   - `src/main.ts` reducido y aligerado sin alterar el determinismo, las variables globales ni los hooks de prueba.
+
+3. **Verificación E2E Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado TypeScript.
+   - `npx vitest run`: 146/146 pruebas unitarias pasando al 100% en 12 suites (18.8s).
+   - `npm run test:restart`: reinicio limpio del servicio de pruebas headless.
+   - `node scripts/e2e.mjs`: suite completa E2E superada al 100% en PC y celular (18 pasos exitosos con capturas generadas en `.e2e/`).
+   - `npx graphify update .`: grafo de conocimiento sincronizado (5799 nodos, 13146 aristas, 322 comunidades).
+
+---
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Ciclo #38 (Destellos de chispas en haz de faro, Filtros por categoría táctica en Bestiario con bajas visibles y Humo/chirrido en derrapes sobre cemento/aceite).
-- **Invariantes activas:** Gemini Flash Low Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
+- **Último trabajo completado:** Ciclo #39 (Accesibilidad de Menús C1/C2/A1/A2/A3/A4 y Modularización del Visor 3D del Bestiario hacia `src/bestiary_preview.ts`).
+- **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Low Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 
 

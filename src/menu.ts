@@ -63,7 +63,8 @@ const DEFAULT: Save = {
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", trim: "", rim: "", finish: "", zoom: 1.35, camMode: "actual",
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, gpu: "webgl", scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
-  keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1, calm: false, dmgNums: true,
+  keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1,
+  calm: typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false), dmgNums: true,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
@@ -347,7 +348,10 @@ export function reset(s: Scr | null) {
 }
 
 // ---------- Foco: navegación espacial ----------
-const focusables = () => [...document.querySelectorAll<HTMLElement>(`#scr-${current()} :is(button:not(:disabled), select:not(:disabled), input:not(:disabled), [tabindex])`)].filter((e) => e.offsetParent);
+const focusables = () => {
+  const root = askFn ? "#ask" : `#scr-${current()}`;
+  return [...document.querySelectorAll<HTMLElement>(`${root} :is(button:not(:disabled), select:not(:disabled), input:not(:disabled), summary, [tabindex])`)].filter((e) => e.offsetParent);
+};
 const SCROLL = "#cars, #shop, #opts, #binfo, #beasts"; // listas con scroll propio
 function move(dx: number, dy: number) {
   const cur = document.activeElement as HTMLElement, els = focusables();
@@ -400,7 +404,7 @@ addEventListener("keydown", (e) => {
   initAudio();
   if (bindKey(e)) return; // reasignando una tecla o un botón
   if (document.body.classList.contains("tedit")) { if (e.code === "Escape" || e.code === "Enter") { e.preventDefault(); tedit(false); } return; }
-  const txt = e.target instanceof HTMLInputElement && e.target.type === "text"; // nombre de perfil: se escribe; solo flechas arriba/abajo y Esc salen
+  const txt = e.target instanceof HTMLInputElement && /^(text|password|search|number)$/.test(e.target.type); // nombre de perfil o clave: se escribe; solo flechas arriba/abajo y Esc salen
   if (txt && !/^(ArrowUp|ArrowDown|Escape|Enter)$/.test(e.code)) return;
   if (txt && e.code === "Enter") { e.preventDefault(); return move(0, 1); }
   if (keyHit("mute", e.code)) { save.mute = !save.mute; return commit(); }
