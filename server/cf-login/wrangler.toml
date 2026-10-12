@@ -5,6 +5,6 @@ workers_dev = true
 
 # TEAM_DOMAIN y POLICY_AUD los fija la app de Access (ver server/README.md § Login Cloudflare). JM_SECRET va como secreto.
 [vars]
-TEAM_DOMAIN = "https://junkedmetal.cloudflareaccess.com"
-POLICY_AUD = ""
+TEAM_DOMAIN = "https://icy-cloud-e7b5.cloudflareaccess.com"
+POLICY_AUD = "ed720dd5a2e287416f8f0b9a5f7e0d87198774f419b92ba99fc648a80c680017"
 EXCHANGE_URL = "https://junkedmetal.duckdns.org/api/cf-exchange"
