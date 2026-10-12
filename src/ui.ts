@@ -339,6 +339,14 @@ export function hudBoss(name: string | null, pct = 1, kind?: string, enraged = f
 /** null = Supervivencia: todo oculto. tag = [prefijo, texto, numerado]; ask = ventana abierta con sus dos botones (null = sin botón) y lo que queda. */
 type EncAsk = { title: string; opts: [string | null, string | null]; left: number; frac: number; pacts?: [PactView, PactView]; reject?: string };
 const pactHtml = (p: PactView) => `<b>${p.name}</b><small>VENTAJA</small>${p.gain.map((t) => `<span class="pg">${t}</span>`).join("")}<small>COSTO</small>${p.cost.map((t) => `<span class="pc">${t}</span>`).join("")}<em>${p.dur}</em>`;
+/** ENCORE para 2 (R7a): vida del otro jugador; down = fuera hasta el próximo escenario. */
+export function hudMate(d: { n: string; hp: number; max: number; down: boolean } | null) {
+  if (ch("mateOn", !!d)) $("mateHp").classList.toggle("hidden", !d);
+  if (!d) return;
+  if (ch("mateDown", d.down)) $("mateHp").classList.toggle("down", d.down);
+  txt("mateN", d.n); txt("mateTxt", d.down ? "FUERA" : `${Math.ceil(d.hp)}/${d.max}`);
+  ($("mateBar") as HTMLElement).style.transform = `scaleX(${d.down ? 0 : Math.max(0, d.hp / d.max)})`;
+}
 export function hudEnc(d: { tag: [string, string, boolean]; pacts: { tag: string; left: string; terms: string }[]; ask: EncAsk | null } | null) {
   if (ch("encOn", !!d)) $("encTag").classList.toggle("hidden", !d);
   if (ch("encPk", d ? d.pacts.map((p) => p.tag + p.left).join("|") : "")) $("encPacts").innerHTML = d ? d.pacts.map((p) => `<i title="${p.terms}"><b>${p.tag}</b> ${p.left}</i>`).join("") : ""; // pactos activos, compactos bajo el reloj

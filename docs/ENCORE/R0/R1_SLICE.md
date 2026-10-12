@@ -155,3 +155,23 @@ Fecha 2026-10-12. Solo modo ENCORE; Supervivencia intacta (`erun` null: la cuent
 - **Tornillos**: antes `earned` multiplicaba todo por el `pfx.scrap` vigente al morir. Ahora `recompute()` liquida (`scrapExtra(bruto, ultimo, k)`) lo ganado con el efecto que se va cada vez que cambia (pacto aceptado, salida de escenario), `encExtra` lo acumula y `endRun` suma el tramo final. Las maldiciones (`curseK`) siguen multiplicando el total.
 - **Pruebas**: `test/encore.test.ts` +5 (sorteo, pistas, arena, reporte, tornillos). `npx tsc --noEmit -p .` limpio; `npx vitest run` 126/126.
 - **No verificado**: la arena y la luz de show no se vieron en pantalla (sin captura); los focos usan `put` de `moon_goals.ts` y el tinte repinta la sonda del cielo una vez al entrar al FINAL ACT. Conviene `?encore&seed=N` con `__enc` hasta `final` y una captura.
+
+## R7a: ENCORE para 2 en compu (pantalla dividida)
+
+Fecha 2026-10-12. Primer paso del cooperativo local. Todo cuelga de `coop` (main.ts): con 1 jugador `mate` es null y ENCORE y Supervivencia no cambian (`sim --seeds 1 --secs 600` igual que en R1: 166.9 s, nv 4, 24 bajas).
+
+- **Menú:** botón `Jugadores · 1/2` en `#scr-encore` (`encCfg` en `menu.ts`). En táctil no aparece y siempre es 1, como `raceCfg.players`. Dev: `?encore&players=2`; `__enc.mate()` y `__enc.hurt(n, 1|2)`.
+- **Pantalla dividida:** J1 arriba, J2 abajo (`TOP` / `BOTTOM`), segunda `FreeCamera` y `setSplit` una sola vez (dos `addCamera` repiten el postproceso). La cámara del J2 (`mateCam`) es la persecución "actual" en el marco de la luna; los modos de cámara son solo del que guía.
+- **Luna:** `moonCar` guarda el "arriba" de cada auto en un `WeakMap` por cuerpo (antes un solo `carBody/carUp`); la cámara lenta de la habilidad también lleva los dos cuerpos.
+- **Input:** J1 = teclado sin las teclas de Teclado 2 + primer joystick (`pollInput({ skip, pad })`); J2 = segundo joystick si hay dos, si no Teclado 2 (`coopCtl`, `pollPlayer` de la carrera; el objeto hace de turbo).
+- **Enemigos:** persiguen al auto vivo más cercano; la aparición alterna entre los dos autos; el reciclado mide al más cercano. El J2 embiste (daño de embestida simple) y recibe contacto y ácido.
+- **Vida por auto:** si cae el otro, queda fuera hasta el próximo escenario (`mateDown`, vuelve con la vida llena en `encEnter`). Si cae el que guía, el otro pasa a guiar (`mateLead`: se cruzan auto, vida, armas, cámaras e input; cada jugador conserva su mitad de pantalla). Si caen los 2, termina la partida.
+- **Compartido** (`ponytail:`): XP, nivel, armas, pasivas, tornillos y pactos. El J2 dispara **copias** de las armas desde su auto (`mateArm`, se rehacen al cambiar armas o niveles): no se tocó `weapons.ts`, pero el daño total se duplica con 2.
+- **HUD:** vida del otro jugador compacta sobre la línea divisoria (`#mateHp`, `hudMate`); "FUERA" cuando cayó.
+- **Verificado:** `tsc`, `vitest` 126/126, recorrido headless (dos cámaras, J2 maneja con flechas, J2 cae y revive al avanzar, J1 cae y J2 guía, los 2 caen → cierre), 0 errores de consola, captura vista de la pantalla dividida. Sin playtest con dos personas ni con dos joysticks reales.
+
+### Qué falta (y para 3-4 jugadores)
+- `mate` es uno: para 3-4, lista de mates, viewports 2x2 y `coopCtl` por índice de joystick (Teclado 1/2 alcanzan para 2).
+- El que guía tiene todo lo que no es del auto: habilidad, salto, combo de manejo, recolección con imán, cofres y cartas, abordar el teleportador, objetivos, naves, eventos y cielo (`lunaEv`, `skyTick`, `shipsTick`, `goalsTick` reciben un solo auto). Los ataques especiales de jefes (barrido, cables, salto, succión) y la pelota apuntan solo a él.
+- Niebla, `moonTick` y el cielo se calculan con la cámara del que guía; números de daño y flechas de jefe solo se proyectan en su mitad. El recuadro de controles del arranque tapa el centro de la mitad de abajo.
+- Balance sin ajustar para 2 (armas duplicadas, misma cantidad de bichos).

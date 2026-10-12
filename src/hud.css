@@ -451,3 +451,11 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 #dirSub .dtxt { font: 700 clamp(14px, 2vw, 18px)/1.15 var(--jm-titulo); letter-spacing: .04em; text-transform: uppercase; color: var(--jm-texto); text-shadow: 0 2px 0 #000; }
 @media (pointer: coarse) { #dirSub { bottom: 26vh; } }
 body.calm #dirSub { animation: none !important; }
+
+/* ENCORE para 2 (R7a): vida del otro jugador, compacta, sobre la línea de la pantalla dividida */
+#mateHp { position: absolute; top: 50%; left: 14px; translate: 0 -50%; scale: var(--hud-scale); transform-origin: 0 50%; display: flex; align-items: center; gap: 6px; padding: 3px 8px; pointer-events: none; font: 700 12px/1 var(--hf); letter-spacing: .08em; color: var(--g-dim); background: rgba(14, 12, 10, .88); border: 1px solid var(--jm-naranja, #ff7a1a); }
+#mateHp b { color: var(--jm-amarillo2, #FFD166); }
+#mateHp i { display: block; width: 90px; height: 6px; background: rgba(255, 255, 255, .12); }
+#mateHp u { display: block; height: 100%; background: var(--jm-cian, #00C2FF); transform-origin: 0 50%; }
+#mateHp.down { border-color: #c0392b; }
+#mateHp.down u { background: #c0392b; }

@@ -181,8 +181,9 @@ const dz = (v: number) => (Math.abs(v) < PAD.dead ? 0 : Math.max(-1, Math.min(1,
 export const stickXY = (gp: Gamepad) => { const i = PAD.stick === "right" ? 2 : 0; return [dz(gp.axes[i] ?? 0) * (PAD.invX ? -1 : 1), dz(gp.axes[i + 1] ?? 0) * (PAD.invY ? -1 : 1)]; };
 const bv = (gp: Gamepad, i: number) => (i < 0 ? 0 : gp.buttons[i]?.value || +!!gp.buttons[i]?.pressed);
 
-export function pollInput() {
-  const k = (a: Action) => KEYS[a].some((x) => keys.has(x));
+/** coop (ENCORE para 2, R7a): `skip` = teclas del jugador 2 que el 1 no lee; `pad` = joystick fijo del jugador 1 (null = ninguno). Sin argumento, lo de siempre. */
+export function pollInput(coop?: { skip: string[]; pad: Gamepad | null }) {
+  const k = (a: Action) => KEYS[a].some((x) => keys.has(x) && !coop?.skip.includes(x));
   let throttle = (k("up") ? 1 : 0) - (k("down") ? 1 : 0);
   let steer = (k("right") ? 1 : 0) - (k("left") ? 1 : 0);
   let boost = k("boost");
@@ -191,7 +192,7 @@ export function pollInput() {
   let jump = jumpPulse;
 
   let moveX = 0, moveY = 0;
-  const gp = activePad();
+  const gp = coop ? coop.pad : activePad();
   if (gp) {
     const b = (i: number) => +!!gp.buttons[i]?.pressed, on = (a: PadAct) => bv(gp, pb(a)) > 0.5;
     const [sx, sy] = stickXY(gp), cx = b(15) - b(14), cy = b(12) - b(13); // stick o cruceta
@@ -246,3 +247,6 @@ export function pollPlayer(c: PlayerCtl) {
   const steer = stickXY(gp)[0] || (b(15) ? 1 : 0) - (b(14) ? 1 : 0);
   return { throttle: v("accel") - v("brake"), steer, drift: v("drift") > 0.5, item: v("item") > 0.5 };
 }
+/** ENCORE para 2 (R7a): el jugador 2 usa el segundo joystick si hay dos, si no Teclado 2 (flechas); el 1 se queda con el teclado y el primer joystick. */
+export const coopCtl = (): PlayerCtl => (pads().length >= 2 ? { pad: 1 } : "kbd2");
+export const coopSkip = () => Object.values(RACE.kb2).flat().filter(Boolean);

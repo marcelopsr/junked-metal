@@ -179,10 +179,10 @@ export function ringAt(center: B.Vector3, a: number, r: number, lift = 1) { retu
 export const FOOT = new WeakMap<B.PhysicsBody, number>();
 /** Cuerpos que ruedan (pelota gigante): no se enderezan a la vertical y en el piso giran según su velocidad (ω = n × v / radio). */
 export const ROLL = new WeakSet<B.PhysicsBody>();
-let carBody: B.PhysicsBody | null = null;
-const carUp = new B.Vector3(0, 1, 0);
+// Autos (uno por jugador, R7a cooperativo): cada cuerpo con su "arriba" suavizado
+let carUps = new WeakMap<B.PhysicsBody, B.Vector3>();
 /** El cuerpo del auto se alinea a la normal del piso (rampas, bordes de cráter); el resto, a la vertical. */
-export function moonCar(b: B.PhysicsBody | null, up: B.Vector3 = Y) { carBody = b; carUp.copyFrom(up); }
+export function moonCar(b: B.PhysicsBody, up: B.Vector3 = Y) { const u = carUps.get(b); if (u) u.copyFrom(up); else carUps.set(b, up.clone()); }
 let pe: B.PhysicsEngineV2, saved = new B.Vector3(0, -25, 0);
 let plugin: B.HavokPlugin;
 /** Lleva el cuerpo de Havok a la pose de su nodo (los cuerpos tienen disablePreStep: sin cambiar el tipo, setPhysicsBodyTransformation no hace nada). */
@@ -217,21 +217,21 @@ export function initMoon(scene: B.Scene) {
       p.subtractToRef(CENTER, _u);
       const r = _u.length(); _u.scaleInPlace(1 / r);
       const gap = r - (FOOT.get(b) ?? 0) - radiusAt(_u);
-      const isCar = b === carBody;
+      const carUp = carUps.get(b);
       if (gap < 0.05) {
         if (gap < 0) p.addInPlace(_p.copyFrom(_u).scaleInPlace(-gap)); // piso: se empuja hacia afuera
         normalAt(_u, _n);
         b.getLinearVelocityToRef(_v);
         const vn = B.Vector3.Dot(_v, _n);
         if (vn < 0) { _v.subtractInPlace(_p.copyFrom(_n).scaleInPlace(vn)); b.setLinearVelocity(_v); } // sin rebote ni roce: se pierde solo lo que iba contra el piso (drive() y la IA ponen el resto)
-        if (isCar) B.Vector3.LerpToRef(carUp, _n, Math.min(1, 12 * dd), carUp).normalize();
+        if (carUp) B.Vector3.LerpToRef(carUp, _n, Math.min(1, 12 * dd), carUp).normalize();
         if (ROLL.has(b)) b.setAngularVelocity(B.Vector3.CrossToRef(_n, _v, _p).scaleInPlace(1 / (FOOT.get(b) || 1))); // rueda sin patinar
-      } else if (isCar) B.Vector3.LerpToRef(carUp, _u, Math.min(1, 4 * dd), carUp).normalize();
+      } else if (carUp) B.Vector3.LerpToRef(carUp, _u, Math.min(1, 4 * dd), carUp).normalize();
       if (ROLL.has(b)) { teleport(b); continue; } // la pelota conserva su giro
       // Parado sobre la luna: la vertical del cuerpo va a la del lugar (auto: a la del piso); el rumbo se conserva
       const q = (node.rotationQuaternion ??= B.Quaternion.FromEulerVector(node.rotation));
       Y.rotateByQuaternionToRef(q, _cu);
-      B.Quaternion.FromUnitVectorsToRef(_cu, isCar ? carUp : _u, _dq);
+      B.Quaternion.FromUnitVectorsToRef(_cu, carUp ?? _u, _dq);
       _dq.multiplyToRef(q, q); q.normalize();
       teleport(b);
     }
@@ -242,7 +242,7 @@ export function setMoon(on: boolean) {
   if (on === MOON.on || !pe) { MOON.on = on && !!pe; return; }
   MOON.on = on;
   if (on) { saved.copyFrom(pe.gravity); pe.setGravity(B.Vector3.Zero()); } else pe.setGravity(saved.clone());
-  if (!on) carBody = null;
+  if (!on) carUps = new WeakMap();
 }
 
 // ---------- Mundo visible ----------

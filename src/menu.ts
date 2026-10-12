@@ -122,6 +122,14 @@ function importSave() {
   i.click();
 }
 
+// ---------- ENCORE: jugadores (R7a). Dos = pantalla dividida, SOLO en compu: en táctil el selector no aparece y siempre es 1 (como raceCfg.players) ----------
+export const encCfg = { players: 1 as 1 | 2 };
+function renderEncP() {
+  if (isTouch) encCfg.players = 1;
+  $("encPlayers").textContent = `Jugadores · ${encCfg.players}${encCfg.players === 2 ? " (pantalla dividida)" : ""}`;
+  $("encPlayers").classList.toggle("hidden", isTouch);
+}
+
 // ---------- Carrera (kart.ts): opciones de la largada ----------
 const nextOf = <T,>(a: T[], v: T) => a[(a.indexOf(v) + 1) % a.length];
 function cycleRace(k: string) {
@@ -218,7 +226,7 @@ function show() {
   if (s === "shop") renderShop();
   if (s === "main") renderMain();
   if (s === "play") renderPlay();
-  if (s === "encore") { const e = save.encore; $("encRec").textContent = e.runs ? `Mejor expedición: vuelta ${e.best.loop + 1}, escenario ${e.best.stage + 1} · ${fmt(e.best.t)} · ${e.wins} ${e.wins === 1 ? "ganada" : "ganadas"} de ${e.runs}` : "Sin expediciones registradas todavía."; }
+  if (s === "encore") { renderEncP(); const e = save.encore; $("encRec").textContent = e.runs ? `Mejor expedición: vuelta ${e.best.loop + 1}, escenario ${e.best.stage + 1} · ${fmt(e.best.t)} · ${e.wins} ${e.wins === 1 ? "ganada" : "ganadas"} de ${e.runs}` : "Sin expediciones registradas todavía."; }
   if (s === "daily") renderDaily();
   if (s === "modes" || s === "match3") refreshModes();
   if (s === "race") renderRace();
@@ -1561,6 +1569,7 @@ export function initMenu(a: Api) {
     else if (d.act === "match3go") api.match3();
     else if (d.act === "play" || d.act === "playgo") api.play();
     else if (d.act === "encorego") api.play(false, true);
+    else if (d.act === "encplayers") { encCfg.players = encCfg.players === 1 ? 2 : 1; renderEncP(); }
     else if (d.act === "playmenu") { if (ownedZones().length > 1) go("play"); else api.play(); } // con una sola zona no hay nada que elegir: largar directo
     else if (d.act === "daily") api.play(true);
     else if (d.act === "endless") api.endless();
