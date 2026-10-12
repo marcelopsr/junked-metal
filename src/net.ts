@@ -38,7 +38,7 @@ async function opts() {
     const j = r.ok ? await r.json() : null;
     if (Array.isArray(j?.iceServers) && j.iceServers.length) iceServers = j.iceServers;
   } catch { /* red o CORS: sigue con STUN */ }
-  return { debug: 0, host: NET_HOST, port: 443, secure: true, path: "/peer", config: { iceServers } };
+  return { debug: 0, host: NET_HOST, port: 443, secure: true, path: "/peer", token: getToken(), config: { iceServers } };
 }
 const ABC = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin 0/O ni 1/I
 export const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => ABC[b % ABC.length]).join("");
