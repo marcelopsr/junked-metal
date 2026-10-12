@@ -114,7 +114,7 @@ describe("parseSave", () => {
     expect(load({}).encore).toEqual({ best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "" });
     expect(load({ encore: { best: { loop: -1, stage: "x", t: 1.5 }, wins: null, runs: 3 } }).encore).toEqual({ best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 3, lastLoop: 0, lastCause: "" });
     // R3: la causa se sanea (va a pantalla) y sin causa no hay vuelta; guardados anteriores sin los campos cargan limpios
-    expect(load({ encore: { runs: 1, lastLoop: 4, lastCause: "<b>x</b> bombardeo" + "y".repeat(80) } }).encore).toMatchObject({ lastLoop: 4, lastCause: "bxbbombardeo" + "y".repeat(28) });
+    expect(load({ encore: { runs: 1, lastLoop: 4, lastCause: "<b>x</b> bombardeo" + "y".repeat(80) } }).encore).toMatchObject({ lastLoop: 4, lastCause: "bxb bombardeo" + "y".repeat(27) });
     expect(load({ encore: { runs: 1, lastLoop: 4, lastCause: 7 } }).encore).toMatchObject({ lastLoop: 0, lastCause: "" });
     expect(load({ encore: { runs: 2, lastLoop: -3, lastCause: "gato" } }).encore).toMatchObject({ lastLoop: 0, lastCause: "gato" });
   });

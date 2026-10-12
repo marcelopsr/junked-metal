@@ -130,3 +130,16 @@ Al AVANZAR (tras la oferta de pactos, si la hay) y si queda un escenario por jug
 - **Director**: frase `route_offer` tras aceptar o rechazar el pacto (o sola); al elegir, el anuncio de la variante elegida.
 - **Pruebas**: `test/encore.test.ts` (describe "rutas": 6 nuevas; los flujos existentes ahora pasan por `route`).
 - **Límites**: los tornillos se cobran al terminar la partida con el `pfx` vigente (igual que DOBLE O CHATARRA), así que la recompensa en tornillos cuenta solo si el destino sigue activo al morir. No verificado: aspecto en compu y celular, ni juego real (solo `tsc` y `vitest`). Valores provisorios.
+
+## R3
+
+Solo en ENCORE; Supervivencia no cambia. Lógica pura en `src/encore.ts`, pegamento en `main.ts` / `ui.ts` / `hud.css` / `index.html`.
+
+- **Eventos del teleportador** (`teleEvent`, `boarded`): al abordar sale `OVERLOAD`, `BOSS_GUEST` o `NINGUNO`, por hash propio de (semilla, vuelta, escenario), sin gastar el `rng()`. Probabilidad `eventP0 + eventStep * (vuelta * 4 + escenario)`, tope `eventMax` (0,20 + 0,08 por escenario, máx. 0,75); la mitad inferior es OVERLOAD y la superior BOSS_GUEST.
+  - **OVERLOAD** (fase `overload`, `overloadS` = 25 s): `main.ts` fuerza `swarmT = 0` cada `overloadEvery` (6 s), así que reusa el enjambre existente, x`overloadK` (2,5) y tope `overloadMax` (80). Al vencer la carga, `tele_ready`.
+  - **BOSS_GUEST** (fase `guest`): aparece uno de `GUESTS` (rey, cortadora, tarántula, gato) con `spawnEnemy`; sin reloj. `main.ts` detecta que la instancia salió de `enemies` y llama `guestDown` → `tele_ready`.
+  - Durante el evento no se puede decidir; la barra de jefe y la de sobrecarga (`ask`) ya existentes lo muestran.
+- **Cola del Director** (`newDirQ`, `dirPush`, `dirTick`, `PRI`): una frase a la vez, `dirGapS` (5 s) entre inicios, prioridad (hitos del show 3-5, avisos menores 1-2; empate por llegada), tope `dirCap` (4, se pierde la de menor prioridad) y caducidad `dirTtlS` (15 s). Se muestra en un subtítulo propio `#dirSub` (`ui.ts dirSub`, abajo al centro, placa de chapa como la radio), así que ya no compite con los avisos de radio. El anuncio de variante también pasa por la cola.
+- **Memoria** (`save.encore`): se suman `lastLoop` y `lastCause` (causa = fuente de daño principal de la última derrota; "" si ganó), saneados en `parseSave` (letras, números y puntuación simple, máx. 40). Las expediciones (`runs`) y la mejor vuelta (`best.loop`) ya existían. `openingLine` arma la primera frase de la run: "Volvió quien cayó en la vuelta N…", "Otra vez aquí… mejor vuelta M" u "Otra vez aquí" (sin expediciones previas, la frase de siempre).
+- **Pruebas**: `test/encore.test.ts` (eventos, cola, memoria) y `test/save.test.ts` (campos nuevos y saneo); los flujos viejos superan el evento antes de decidir.
+- **No verificado**: aspecto y posición de `#dirSub` en compu y celular, juego real (solo `tsc` y `vitest`), balance de OVERLOAD (tamaño y ritmo de los enjambres) y de las probabilidades; el archivo `dialogue_cues.csv` no se tocó (las frases nuevas viven en `LINES`). Valores provisorios.

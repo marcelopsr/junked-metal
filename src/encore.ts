@@ -126,7 +126,7 @@ export function boarded(r: Run): Ev | null {
   return ready(r);
 }
 /** El invitado cayó: el teleportador queda listo. */
-export function guestDown(r: Run): Ev | null { return r.phase === "guest" ? ready(r) : null; }
+export function guestDown(r: Run): Ev | null { if (r.phase !== "guest") return null; r.guest = null; return ready(r); }
 
 /** Responde a la oferta de destinos: el escenario siguiente toma la variante elegida (y su recompensa). */
 function chooseRoute(r: Run, i: 0 | 1): Ev {

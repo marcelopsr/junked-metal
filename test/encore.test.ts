@@ -8,7 +8,11 @@ const until = (r: Run, max = 1000): Ev | null => { for (let i = 0; i < max; i++)
 /** AVANZAR, rechazar los pactos si se ofrecen y tomar el primer destino si se ofrece: termina en el escenario siguiente (o la votación). */
 const adv = (r: Run) => { let e = pick(r, 1); if (e === "pact_offer") e = pick(r, 2); return e === "pact_no" || e === "pact_yes" || e === "route_offer" ? pick(r, 0) : e; };
 /** Lleva el escenario hasta la decisión abierta. */
-const toDecision = (r: Run) => { expect(until(r)).toBe("tele_land"); expect(boarded(r)).toBe("tele_ready"); };
+const toDecision = (r: Run) => { // si el teleportador trae evento (R3), se supera antes de decidir
+  expect(until(r)).toBe("tele_land");
+  const e = boarded(r);
+  if (e === "overload") expect(until(r)).toBe("tele_ready"); else if (e === "guest") expect(guestDown(r)).toBe("tele_ready"); else expect(e).toBe("tele_ready");
+};
 
 describe("flujo de fases", () => {
   it("escenario → teleportador → decisión: antes de aterrizar no se puede abordar", () => {
@@ -346,7 +350,7 @@ describe("R3: eventos del teleportador", () => {
   it("OVERLOAD: se aguanta la carga y recién después se decide; no se puede decidir antes", () => {
     const r = withEv("OVERLOAD"); r.landed = true;
     expect(boarded(r)).toBe("overload"); expect(r.phase).toBe("overload");
-    expect(pick(r, 1)).toBeNull(); expect(guestDown(r)).toBeNull();
+    expect(pick(r, 1)).toBeNull(); expect(guestDown(r)).toBeNull(); expect(r.guest).toBeNull();
     for (let i = 0; i < ENC.overloadS - 1; i++) expect(tick(r, 1)).toBeNull();
     expect(tick(r, 1)).toBe("tele_ready"); expect(r.phase).toBe("teleporter"); expect(r.timer).toBe(ENC.decideS);
   });
@@ -356,7 +360,6 @@ describe("R3: eventos del teleportador", () => {
     expect(GUESTS).toContain(r.guest!);
     expect(tick(r, 1000)).toBeNull(); expect(r.phase).toBe("guest"); // sin reloj: espera al jefe
     expect(guestDown(r)).toBe("tele_ready"); expect(r.phase).toBe("teleporter"); expect(guestDown(r)).toBeNull();
-    pick(r, 1); // avanzar limpia el invitado
     expect(r.guest).toBeNull();
   });
   it("las líneas del Director existen para los eventos nuevos", () => {
