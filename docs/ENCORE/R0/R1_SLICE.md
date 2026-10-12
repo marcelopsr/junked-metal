@@ -189,6 +189,7 @@ Fecha 2026-10-12. `mate` pasó a `mates: Mate[]` (main.ts), cada uno con su núm
 - **Caídas:** un compañero caído queda fuera hasta el próximo escenario (`mateDown`); si cae el que guía, guía el primer compañero vivo (`mateLead` cruza auto, vida, armas, cámara y número de jugador). Si caen todos, termina la partida.
 - **Rendimiento** (`ponytail:` en render.ts): con 3-4 cuadros (2 o más cámaras extra en `setSplit`, que ahora lleva una lista) la escala de render baja al 70 % de la elegida y partículas y distancia de dibujo pasan a Bajo; el pasto no cambia (se arma con el mundo). Techo: escala medida por tiempo de cuadro real.
 - `ponytail:` las copias de armas son por compañero: con 4 el daño total se cuadruplica (balance sin ajustar, como en R7a).
+- **Escala coop:** vida de bichos y jefes × (1 + 0,6·(N−1)) (`coop_vida_por_jugador`) y aparición, tope de vivos y enjambres × (1 + 0,35·(N−1)) (`coop_ritmo_por_jugador`) en `ritmo` de balance.json; con 1 jugador ×1. No cubre las naves de la luna (moon*.ts).
 - **Verificado R7c:** `tsc` limpio, `vitest` 127/127. Sin recorrido headless, capturas, `perf` ni prueba con 3-4 joysticks reales.
 
 ### Qué falta (y para 3-4 jugadores)
@@ -196,3 +197,11 @@ Fecha 2026-10-12. `mate` pasó a `mates: Mate[]` (main.ts), cada uno con su núm
 - Del que guía siguen: combo de manejo, recolección con imán y el indicador de habilidad del HUD (muestra su tecla). Los ataques especiales de jefes (barrido, cables, salto, succión) y la pelota apuntan solo a él.
 - Niebla, `moonTick` y el cielo se calculan con la cámara del que guía; números de daño y flechas de jefe solo se proyectan en su mitad.
 - Balance sin ajustar para 2 (armas duplicadas, misma cantidad de bichos).
+
+## Contenido 2
+
+Fecha 2026-10-12. Solo datos en `src/encore.ts` (más pruebas); sin tocar `main.ts`, `menu.ts` ni `balance.json`.
+
+- **Pactos (+4, ahora 10):** ENSAYO GENERAL (+15% daño y velocidad / +20% daño recibido, 2 esc.), ENTRADAS AGOTADAS (+25% XP y tornillos / -20% vida máx. y +15% enemigos, resto de la run), CAMERINO BLINDADO (+30% vida máx. / -15% velocidad, 2 esc.), SEGURO DE ESCENA (+1 vida/s y -15% daño recibido / -15% daño, 2 esc.). Solo usan efectos de `Fx` ya aplicados por `pactFx`. `ponytail:` valores sin playtest.
+- **Director:** cada momento tiene 3 frases. `line()` elige con hash de (semilla, momento) más el avance de escenario: varía entre runs, es determinista, no usa `rng()` y nunca repite la misma en dos escenarios seguidos.
+- **Variantes (+2, ahora 6):** LLUVIA DE CHATARRA (lado oscuro, meteoritos x0.45, caza, +40% tornillos) y NOCHE DE ESTRENO (de frente al Sol, cielo x0.7, abductora, +25% XP). Usan solo `at/rain/quake/sky/ship/craters` existentes; `moon_*.ts` no cambió. Con 6 variantes y 4 escenarios, la mezcla Fisher-Yates sigue sin repetir dentro de la vuelta (salen 4 de 6); la vuelta 0 empieza en LA TARIMA. `at` ya no es único entre variantes (la prueba pide solo que las 4 primeras lo sean).

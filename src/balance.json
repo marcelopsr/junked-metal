@@ -123,6 +123,8 @@
     {"id":"lupa","nombre":"Lupa","base":0,"por_nivel":0.08,"base2":0,"por_nivel2":0}
   ],
   "ritmo": [
+    {"id":"coop_vida_por_jugador","valor":0.6,"descripcion":"ENCORE cooperativo: vida de bichos y jefes × (1 + valor × (jugadores - 1)); compensa las copias de armas de cada compañero"},
+    {"id":"coop_ritmo_por_jugador","valor":0.35,"descripcion":"ENCORE cooperativo: aparición y tope de vivos de bichos × (1 + valor × (jugadores - 1))"},
     {"id":"dureza_cantidad","valor":0.5,"descripcion":"Multiplicador de la cantidad de bichos normales (aparición, tope de vivos y enjambres)"},
     {"id":"dureza_vida","valor":2,"descripcion":"Multiplicador de vida de los bichos normales (no afecta a los jefes)"},
     {"id":"dureza_dano","valor":4,"descripcion":"Multiplicador del daño por contacto de los bichos normales"},

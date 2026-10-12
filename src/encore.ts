@@ -177,6 +177,10 @@ export const PACTS: Pact[] = [
   { id: "chatarra", name: "DOBLE O CHATARRA", tag: "CHATARRA", stages: Infinity, gain: { scrap: 1.5 }, cost: { spawn: 1.25 } },
   { id: "patrocinio", name: "PATROCINIO DEFECTUOSO", tag: "PATROCINIO", stages: 2, gain: { speed: 1.2 }, cost: { taken: 1.25 } },
   { id: "maquillaje", name: "RETOQUE DE MAQUILLAJE", tag: "RETOQUE", stages: 2, gain: { heal: 0.6 }, cost: { dmg: 0.8 } },
+  { id: "ensayo", name: "ENSAYO GENERAL", tag: "ENSAYO", stages: 2, gain: { dmg: 1.15, speed: 1.15 }, cost: { taken: 1.2 } },
+  { id: "entradas", name: "ENTRADAS AGOTADAS", tag: "ENTRADAS", stages: Infinity, gain: { xp: 1.25, scrap: 1.25 }, cost: { maxHp: 0.8, spawn: 1.15 } },
+  { id: "blindaje", name: "CAMERINO BLINDADO", tag: "BLINDAJE", stages: 2, gain: { maxHp: 1.3 }, cost: { speed: 0.85 } },
+  { id: "seguro", name: "SEGURO DE ESCENA", tag: "SEGURO", stages: 2, gain: { regen: 1, taken: 0.85 }, cost: { dmg: 0.85 } },
   { id: "nocturno", name: "PROGRAMA NOCTURNO", tag: "NOCTURNO", stages: 1, gain: { regen: 2 }, cost: { spawn: 1.4 } },
 ];
 export const pactOf = (id: string): Pact => PACTS.find((p) => p.id === id)!;
@@ -227,6 +231,8 @@ export const VARIANTS: Variant[] = [
   { name: "EL LADO OSCURO", line: "SIN SOL NI PÚBLICO. SOLO LAS ERUPCIONES ALUMBRAN.", at: "oscuro", craters: [5, 4, 8], rain: 1.4, quake: 0.55, sky: 1, ship: "abductora", risk: "SIN SOL · MÁS METEORITOS", reward: { xp: 1.3 } },
   { name: "CAMPO DE CRÁTERES", line: "EL PISO ES UN QUESO. LOS METEORITOS ESTÁN DE GIRA.", at: "tierra", craters: [10, 5, 11], rain: 0.6, quake: 1.6, sky: 1, ship: "caza", risk: "MÁS CRÁTERES Y ERUPCIONES", reward: { scrap: 1.3 } },
   { name: "SOL DE FRENTE", line: "REFLECTORES AL MÁXIMO. EL SOL TAMBIÉN TIRA.", at: "sol", craters: [3, 3, 6], rain: 1.2, quake: 1, sky: 0.55, ship: "bombardera", risk: "EL SOL DISPARA MÁS", reward: { scrap: 1.15, xp: 1.15 } },
+  { name: "LLUVIA DE CHATARRA", line: "POCA LUZ Y CHATARRA DEL CIELO. NADIE PIDIÓ PARAGUAS.", at: "oscuro", craters: [4, 3, 6], rain: 0.45, quake: 1.2, sky: 1.3, ship: "caza", risk: "SIN SOL · METEORITOS SEGUIDOS", reward: { scrap: 1.4 } },
+  { name: "NOCHE DE ESTRENO", line: "FOCOS ENCENDIDOS Y NAVES DE INVITADAS. QUÉ GALA.", at: "sol", craters: [2, 3, 5], rain: 1.3, quake: 1.2, sky: 0.7, ship: "abductora", risk: "MÁS NAVES Y LANZAMIENTOS", reward: { xp: 1.25 } },
 ];
 /** Hash sin estado: n → [0, 1). Un paso de mulberry32. */
 const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -276,22 +282,22 @@ export function tag(r: Run): [string, string, boolean] {
 // Presentador macabro de show. Frases cortas para el aviso de radio; no revelan quién es. La variante sale del escenario, nunca del rng() de la partida.
 export type LineId = Ev | "start" | "boss_intro" | "hint";
 const LINES: Record<Exclude<LineId, "hint">, string[]> = {
-  start: ["¡LUCES ENCENDIDAS! GRAVEDAD OPCIONAL, DIGNIDAD NO INCLUIDA.", "SONRÍAN PARA EL PÚBLICO. NO PREGUNTEN DÓNDE ESTÁ EL PÚBLICO."],
-  tele_land: ["¡LLEGÓ EL TELEPORTADOR! QUÉ DECEPCIÓN PARA EL EQUIPO DE ESCONDITES.", "TELEPORTADOR EN ESCENA. LA PRODUCCIÓN LO ESCONDIÓ CON CARIÑO."],
-  tele_ready: ["LA PUERTA ESTÁ ABIERTA. ¿SE QUEDAN O CAMBIAMOS DE CANAL?", "¡ELENCO LISTO! QUE NADIE OLVIDE RESPIRAR. DECIDAN."],
-  overload: ["SOBRECARGA EN EL TELEPORTADOR. LA CARGA ES LENTA, LOS VISITANTES NO.", "EL TELEPORTADOR SE ESTÁ CALENTANDO. AGUANTEN, QUE EL PÚBLICO APUESTA."],
-  guest: ["EL TELEPORTADOR NECESITA UN INVITADO. VENZAN AL INVITADO Y LA PUERTA SE ABRE.", "PERMÍTANME PRESENTAR A UN ALLEGADO. NO LO HICIERON ENOJAR, SOLO LLEGÓ ASÍ."],
-  stay: ["¿SE QUEDAN? ¡ADORO LA INSISTENCIA! LA PRODUCCIÓN TAMBIÉN.", "OTRA TOMA, ENTONCES. LOS PELIGROS SE ESTIRAN, ASÍ QUE ESTÍRENSE."],
-  pact_offer: ["TENGO DOS TRATOS PARA USTEDES. LA LETRA CHICA ESTÁ A LA VISTA.", "UN PACTO, SIN PRESIONES. BUENO, CON POCA PRESIÓN."],
-  pact_yes: ["¡TRATO HECHO! ME ENCANTAN LOS CLIENTES CON FE.", "FIRMADO. YO CUMPLO, ASÍ QUE CUMPLAN USTEDES."],
-  pact_no: ["¿NADA? PRUDENTE. ABURRIDO, PERO PRUDENTE.", "SIN TRATO, SIN RENCORES. LA OFERTA SE ENFRÍA."],
-  route_offer: ["DOS PUERTAS, DOS PROBLEMAS DISTINTOS. ELIJAN EL QUE MEJOR PAGUE.", "EL PRÓXIMO ESCENARIO TIENE DOS VERSIONES. LA RECOMPENSA CRECE CON EL RIESGO."],
-  advance: ["¡CAMBIO DE ESCENARIO! NO TOQUEN NADA, ES UTILERÍA.", "SIGUIENTE ESCENA. EL ESCENARIO ES NUEVO, LOS PROBLEMAS SON DE ARCHIVO."],
-  vote: ["¡FIN DEL CUARTO ACTO! EL PÚBLICO VOTA: ¡ENCORE! O FINAL ACT.", "EL PÚBLICO ESTÁ DIVIDIDO. YO, NO: QUIERO UN FINAL ESPECTACULAR."],
-  encore: ["¡OTRA VUELTA! EL PÚBLICO EXIGE MÁS. Y YO SOY EL PÚBLICO.", "¡QUE EMPIECE EL BIS! ESTA VEZ CON MÁS ENTUSIASMO DE MI PARTE."],
-  final_act: ["¡EL ÚLTIMO ACTO! NADIE ABANDONA EL ESCENARIO ANTES DEL APLAUSO.", "FINAL ACT. APAGUEN SUS CELULARES, ENCIENDAN SUS MOTORES."],
-  boss_intro: ["LES PREPARÉ UN INVITADO. NO ESPEREN BUENOS MODALES."],
-  won: ["¡GANADORES! NO CONFUNDAN ESTO CON HABER ESCAPADO."],
+  start: ["¡LUCES ENCENDIDAS! GRAVEDAD OPCIONAL, DIGNIDAD NO INCLUIDA.", "SONRÍAN PARA EL PÚBLICO. NO PREGUNTEN DÓNDE ESTÁ EL PÚBLICO.", "EL TELÓN SUBE. EL SEGURO DE VIDA, EN CAMBIO, BAJÓ."],
+  tele_land: ["¡LLEGÓ EL TELEPORTADOR! QUÉ DECEPCIÓN PARA EL EQUIPO DE ESCONDITES.", "TELEPORTADOR EN ESCENA. LA PRODUCCIÓN LO ESCONDIÓ CON CARIÑO.", "EL TELEPORTADOR YA ESTÁ EN ESCENA. FINJAN SORPRESA, POR EL PÚBLICO."],
+  tele_ready: ["LA PUERTA ESTÁ ABIERTA. ¿SE QUEDAN O CAMBIAMOS DE CANAL?", "¡ELENCO LISTO! QUE NADIE OLVIDE RESPIRAR. DECIDAN.", "PUERTA LISTA. EL PÚBLICO ADMIRA A LOS QUE DECIDEN RÁPIDO."],
+  overload: ["SOBRECARGA EN EL TELEPORTADOR. LA CARGA ES LENTA, LOS VISITANTES NO.", "EL TELEPORTADOR SE ESTÁ CALENTANDO. AGUANTEN, QUE EL PÚBLICO APUESTA.", "CARGA AL LÍMITE. SI EXPLOTA, SERÁ UN GRAN NÚMERO FINAL."],
+  guest: ["EL TELEPORTADOR NECESITA UN INVITADO. VENZAN AL INVITADO Y LA PUERTA SE ABRE.", "PERMÍTANME PRESENTAR A UN ALLEGADO. NO LO HICIERON ENOJAR, SOLO LLEGÓ ASÍ.", "HAY UN INVITADO ESPECIAL. TRAJO SU PROPIO ESCÁNDALO."],
+  stay: ["¿SE QUEDAN? ¡ADORO LA INSISTENCIA! LA PRODUCCIÓN TAMBIÉN.", "OTRA TOMA, ENTONCES. LOS PELIGROS SE ESTIRAN, ASÍ QUE ESTÍRENSE.", "¿OTRA VEZ AQUÍ? LA PRODUCCIÓN LO TOMA COMO UN CUMPLIDO."],
+  pact_offer: ["TENGO DOS TRATOS PARA USTEDES. LA LETRA CHICA ESTÁ A LA VISTA.", "UN PACTO, SIN PRESIONES. BUENO, CON POCA PRESIÓN.", "HOY HAY OFERTA ESPECIAL. LA LETRA CHICA ES LO ÚNICO CHICO."],
+  pact_yes: ["¡TRATO HECHO! ME ENCANTAN LOS CLIENTES CON FE.", "FIRMADO. YO CUMPLO, ASÍ QUE CUMPLAN USTEDES.", "UNA FIRMA Y LISTO. QUÉ BONITA CALIGRAFÍA PARA SER CHATARRA."],
+  pact_no: ["¿NADA? PRUDENTE. ABURRIDO, PERO PRUDENTE.", "SIN TRATO, SIN RENCORES. LA OFERTA SE ENFRÍA.", "SIN PACTO. EL DIRECTOR ANOTA SU DECEPCIÓN EN LA LIBRETA."],
+  route_offer: ["DOS PUERTAS, DOS PROBLEMAS DISTINTOS. ELIJAN EL QUE MEJOR PAGUE.", "EL PRÓXIMO ESCENARIO TIENE DOS VERSIONES. LA RECOMPENSA CRECE CON EL RIESGO.", "DOS CAMINOS AL SIGUIENTE ACTO. NINGUNO TIENE BARANDA."],
+  advance: ["¡CAMBIO DE ESCENARIO! NO TOQUEN NADA, ES UTILERÍA.", "SIGUIENTE ESCENA. EL ESCENARIO ES NUEVO, LOS PROBLEMAS SON DE ARCHIVO.", "TELÓN NUEVO, MISMA FUNCIÓN. PROHIBIDO IMPROVISAR CON EL DECORADO."],
+  vote: ["¡FIN DEL CUARTO ACTO! EL PÚBLICO VOTA: ¡ENCORE! O FINAL ACT.", "EL PÚBLICO ESTÁ DIVIDIDO. YO, NO: QUIERO UN FINAL ESPECTACULAR.", "CAE EL TELÓN DEL ACTO. EL PÚBLICO VOTA Y YO TOMO NOTA."],
+  encore: ["¡OTRA VUELTA! EL PÚBLICO EXIGE MÁS. Y YO SOY EL PÚBLICO.", "¡QUE EMPIECE EL BIS! ESTA VEZ CON MÁS ENTUSIASMO DE MI PARTE.", "EL PÚBLICO PIDIÓ BIS. QUÉ GENEROSIDAD LA SUYA CON SU VIDA."],
+  final_act: ["¡EL ÚLTIMO ACTO! NADIE ABANDONA EL ESCENARIO ANTES DEL APLAUSO.", "FINAL ACT. APAGUEN SUS CELULARES, ENCIENDAN SUS MOTORES.", "SE ACABAN LOS ENSAYOS. ESTE ACTO SÍ SALE EN LA ETIQUETA."],
+  boss_intro: ["LES PREPARÉ UN INVITADO. NO ESPEREN BUENOS MODALES.", "EL INVITADO ESTELAR YA SALIÓ. NO LE MOLESTEN LA ENTRADA.", "ÚLTIMO INVITADO DE LA NOCHE. DE RECIBIRLO ME OCUPO YO, DESDE LEJOS."],
+  won: ["¡GANADORES! NO CONFUNDAN ESTO CON HABER ESCAPADO.", "APLAUSOS, DE VERDAD. QUÉ RARO: ES LA PRIMERA VEZ QUE NO MIENTO.", "FIN DE LA FUNCIÓN. LA GANANCIA ES MÍA, LA GLORIA ES SUYA."],
 };
 /** Memoria entre runs (save.encore): la primera frase de la expedición la menciona. */
 export type Mem = { best: { loop: number }; runs: number; lastLoop: number; lastCause: string };
@@ -305,7 +311,8 @@ export function line(id: LineId, r: Run, mem?: Mem): string {
   if (id === "hint") return hint(r) ?? "";
   if (id === "start") { const o = openingLine(mem); if (o) return o; }
   const v = LINES[id];
-  return v[(r.loop * ENC.stages + r.stage + r.stays) % v.length];
+  const h = [...id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, r.seed);
+  return v[(Math.floor(mix(h + 0x11e5) * v.length) + r.loop * ENC.stages + r.stage + r.stays) % v.length]; // desfase por hash (semilla, momento) + avance de escenario: hay variedad entre runs y nunca se repite seguida
 }
 
 // ---------- Cola del Director (R3): sus frases no se pisan ni se pierden con la radio ----------

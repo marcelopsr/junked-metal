@@ -108,6 +108,20 @@ describe("semillas y frases", () => {
     expect(stageSeed(1234, 1, 2)).toBe(stageSeed(1234, 1, 2));
   });
 
+  it("las frases alternativas varían por semilla y escenario, son deterministas y nunca repiten seguidas", () => {
+    const ids = ["start", "tele_land", "tele_ready", "overload", "guest", "stay", "pact_offer", "pact_yes", "pact_no", "route_offer", "advance", "vote", "encore", "final_act", "boss_intro", "won"] as const;
+    for (const id of ids) {
+      const seen = new Set<string>();
+      for (let seed = 1; seed <= 30; seed++) for (let stage = 0; stage < ENC.stages; stage++) {
+        const r = { ...newRun(seed), stage }, l = line(id, r);
+        expect(l).toBe(line(id, { ...r })); expect(l.length).toBeLessThan(80); expect(l).not.toMatch(/\b(querés|tenés|podés|sos|vos|elegí|decidí)\b/i);
+        if (stage) expect(l).not.toBe(line(id, { ...r, stage: stage - 1 }));
+        seen.add(l);
+      }
+      expect(seen.size).toBeGreaterThanOrEqual(3);
+    }
+  });
+
   it("toda fase con evento tiene frase corta del Director, sin voseo", () => {
     const r = newRun(1);
     for (const id of ["start", "tele_land", "tele_ready", "stay", "pact_offer", "pact_yes", "pact_no", "route_offer", "advance", "vote", "encore", "final_act", "boss_intro", "won"] as const) {
@@ -124,7 +138,7 @@ describe("variantes de escenario", () => {
   const cycle = (seed: number, loop: number) => Array.from({ length: ENC.stages }, (_, stage) => variantOf({ ...newRun(seed), loop, stage }));
 
   it("cada vuelta usa las variantes sin repetir; el primer escenario de la run es LA TARIMA", () => {
-    expect(VARIANTS.length).toBe(ENC.stages);
+    expect(VARIANTS.length).toBe(6); // más variantes que escenarios: una vuelta de 4 no las usa todas
     for (const seed of [1, 7, 1234, 99999]) for (let loop = 0; loop < 4; loop++) {
       const c = cycle(seed, loop);
       expect(new Set(c).size).toBe(ENC.stages);
@@ -148,7 +162,8 @@ describe("variantes de escenario", () => {
 
   it("LA TARIMA es el escenario neutro y las demás se distinguen en lugar de llegada", () => {
     expect(VARIANTS[0]).toMatchObject({ at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null });
-    expect(new Set(VARIANTS.map((v) => v.at)).size).toBe(VARIANTS.length);
+    expect(new Set(VARIANTS.map((v) => v.name)).size).toBe(VARIANTS.length);
+    expect(new Set(VARIANTS.slice(0, 4).map((v) => v.at)).size).toBe(4);
   });
 
   it("los cráteres extra salen de la semilla del escenario, lejos de la llegada y sin pasar el tope", () => {

@@ -130,7 +130,7 @@ function renderEncP() {
   if (isTouch) encCfg.players = 1;
   if (encCfg.players > encMax()) encCfg.players = encMax() as 2 | 3;
   const n = encCfg.players, m = encMax();
-  $("encPlayers").textContent = `Jugadores · ${n}${n > 1 ? " (pantalla dividida)" : ""}${m === 2 ? " · 3 o 4 piden 3 o 4 joysticks" : m === 3 ? " · 4 pide 4 joysticks" : ""}`;
+  $("encPlayers").textContent = `Jugadores · ${n}${n > 1 ? " (pantalla dividida)" : ""}${n > 1 && m === 2 ? " · 3 o 4 piden 3 o 4 joysticks" : n > 1 && m === 3 ? " · 4 pide 4 joysticks" : ""}`;
   $("encPlayers").classList.toggle("hidden", isTouch);
 }
 for (const ev of ["gamepadconnected", "gamepaddisconnected"]) addEventListener(ev, () => renderEncP());

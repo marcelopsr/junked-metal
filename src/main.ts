@@ -1002,9 +1002,12 @@ function leave(e: Enemy) {
 }
 
 // Juego de autos: menos bichos pero más duros, para esquivarlos manejando (decisión del usuario 2026-10-04)
+const coopHp = () => 1 + R.coop_vida_por_jugador * mates.length, coopRate = () => 1 + R.coop_ritmo_por_jugador * mates.length; // R7c: mates.length = jugadores - 1 (con 1 solo valen 1)
 const TOUGH = { count: R.dureza_cantidad, hp: R.dureza_vida, dmg: R.dureza_dano, xp: R.dureza_xp };
 function spawnEnemy(kind: Kind, p: B.Vector3) {
-  enemies.push(new Enemy(kind, p, (1 + (time + paceS) / R.vida_escala_seg) * TOUGH.hp)); // los jefes ignoran hpMul
+  const en = new Enemy(kind, p, (1 + (time + paceS) / R.vida_escala_seg) * TOUGH.hp); // los jefes ignoran hpMul
+  en.hp = en.maxHp *= coopHp(); // R7c: vida por jugador (jefes incluidos)
+  enemies.push(en);
   if (MOON.on && !isAlien(kind) && kind !== "gusano") enemyLights(enemies[enemies.length - 1].node, kind, DEF[kind].size); // los aliens traen sus luces (aliens.ts); luna: versión "robot con luces" (ojos y baliza que atraviesan la niebla)
   if (!LAB.on && !save.seen.includes(kind)) save.seen.push(kind); // bestiario
   if (!LAB.on && !simulating) { const b = beastRec(kind); b.first ??= today(); if (!b.zones.includes(zoneId)) b.zones.push(zoneId); } // registro propio
@@ -1203,14 +1206,14 @@ function update(dt: number) {
   // --- Aparición de enemigos ---
   // Tope de vivos y ritmo: con el bot que pelea jefes (devbot.ts) quedó en ~50% de victorias (__sim, 40 semillas).
   // ponytail: más densidad casi no baja la tasa (más bichos = más XP); el techo real está en las fusiones repetidas
-  const maxAlive = duel >= 0 ? duel : calm ? 0 : Math.min(low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + tp / R.tope_vivos_seg) * hordeK * TOUGH.count) * (MOON.on ? R.luna_tope_mult : 1); // Horda: +50%. Tope 100 en compu, 60 en táctil
+  const maxAlive = duel >= 0 ? duel : calm ? 0 : Math.min(low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + tp / R.tope_vivos_seg) * hordeK * TOUGH.count * coopRate()) * (MOON.on ? R.luna_tope_mult : 1); // Horda: +50%. Tope 100 en compu, 60 en táctil
   // Aparecen sesgados hacia donde vas: manejar no es escapar gratis
   const cv = c.body.getLinearVelocity();
   hflat(_spawnOff.copyFrom(cv), c.pos).scaleInPlace(R.spawn_adelanto_s);
   _ahead.copyFrom(c.pos).addInPlace(_spawnOff);
   let normals = 0;
   for (const e of enemies) if (!e.def.boss) normals++;
-  spawnAcc += (R.spawn_base + tp / R.spawn_seg) * wdt * hordeK * TOUGH.count * (MOON.on ? R.luna_aparicion_mult : 1);
+  spawnAcc += (R.spawn_base + tp / R.spawn_seg) * wdt * hordeK * TOUGH.count * coopRate() * (MOON.on ? R.luna_aparicion_mult : 1);
   // Con la cámara más alejada que el zoom por defecto (1.35) el anillo de aparición se abre igual, para no verlos nacer
   // Anillo fijo, fuera de cuadro aun con el zoom máximo (2): la partida no cambia según el zoom elegido
   while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(tp, profile.plague)), spawnPoint(ms.length && (spawnN = (spawnN + 1) % (ms.length + 1)) ? ms[spawnN - 1].car!.pos : _ahead, R.spawn_anillo_min, R.spawn_anillo_max)); } // R7a: con 2 autos, una aparición alrededor de cada uno
@@ -1235,7 +1238,7 @@ function update(dt: number) {
     evtPre.swarm = false;
     swarmT = profile.swarmEvery;
     radioEvent("enjambre");
-    const ov = erun?.phase === "overload", ns0 = Math.round((R.enjambre_base + tp / R.enjambre_seg) * hordeK * TOUGH.count * (ov ? E.ENC.overloadK : 1)), ns = ov ? Math.min(ns0, E.ENC.overloadMax) : ns0; // el enjambre crece con la partida
+    const ov = erun?.phase === "overload", ns0 = Math.round((R.enjambre_base + tp / R.enjambre_seg) * hordeK * TOUGH.count * coopRate() * (ov ? E.ENC.overloadK : 1)), ns = ov ? Math.min(ns0, E.ENC.overloadMax) : ns0; // el enjambre crece con la partida
     for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = MOON.on ? ringAt(c.pos, a, R.enjambre_radio) : new B.Vector3(c.pos.x + Math.cos(a) * R.enjambre_radio, 1, c.pos.z + Math.sin(a) * R.enjambre_radio); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
   if (time - Math.max(hitAt, 300) >= 60) grant("intacto"); // 60 s sin daño, contando desde el minuto 5
