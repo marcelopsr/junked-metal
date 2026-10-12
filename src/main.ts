@@ -23,11 +23,11 @@ import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
-import { craterHumeante, evBase, evFog, evInit, evPace, evReset, lunaDev, lunaEv, panTo } from "./moon_events";
+import { craterHumeante, evBase, evFog, evInit, evPace, evReset, evShow, lunaDev, lunaEv, panTo } from "./moon_events";
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import * as E from "./encore";
-import { goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset } from "./moon_goals";
+import { chestsOpened, goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset, spotsPlan } from "./moon_goals";
 import { skyClear, skyInfo, skyLaunch, skyPace, skyTick } from "./moon_sky";
 import { ALIENS, alienWave, armorMul, healTick, isAlien } from "./aliens";
 import { wormForce, wormHeadTpl, wormOut } from "./moon_worm";
@@ -194,6 +194,7 @@ function dropPickup(pos: B.Vector3, type: Pickup["type"]) {
 // ---------- Flujo ----------
 function recompute() {
   st = pilotStats(passiveStats(passives, save.perm), save.pilot);
+  if (erun) { const g = grossScrap(); encExtra += E.scrapExtra(g, encG, pfx.scrap); encG = g; } // ENCORE: lo ganado con el efecto que se va se cobra con ese efecto
   pfx = E.pactFx(erun); // ENCORE: pactos activos (neutros en Supervivencia: x1, +0)
   st.dmg *= pfx.dmg; st.speedMul *= pfx.speed; st.xp *= pfx.xp; st.regen += pfx.regen;
   if (pfx.taken !== 1) st.armor = 1 - (1 - st.armor) * pfx.taken; // daño recibido x taken
@@ -223,7 +224,7 @@ function previewOffer(i: number) {
 }
 
 function clearRun() {
-  erun = null; encPrior = paceS = 0; GOAL_IO.tele = false; pfx = E.NO_FX;
+  erun = null; encPrior = paceS = 0; encExtra = encG = 0; GOAL_IO.tele = false; pfx = E.NO_FX;
   setMoon(false); // la luna se enciende solo en una partida de Supervivencia en la luna (startRun)
   evReset(); // luna: meteoritos, erupciones, tinte rojo y ambiente (moon_events.ts)
   shipsClear(); // naves de la luna (moon_ships.ts)
@@ -254,6 +255,9 @@ let daily = false, encore = import.meta.env.DEV && /[?&]encore\b/.test(location.
 // (`time` es el reloj del escenario); paceS = segundos de dificultad extra que suman escenario, vuelta y estadía (E.paceOf).
 let dirq = E.newDirQ(), ovT = 0, guestE: Enemy | null = null; // R3: cola del Director, reloj de enjambres del OVERLOAD, invitado del BOSS_GUEST
 let erun: E.Run | null = null, encPrior = 0, paceS = 0, pfx: E.Fx = E.NO_FX; // pfx = efecto de los pactos activos (recompute)
+let encExtra = 0, encG = 0; // R5: tornillos extra de pactos y rutas ya liquidados, y los brutos de la run al liquidarlos (se liquida al cambiar el efecto, no al morir)
+/** Tornillos brutos de la run: partida + tiempo + bajas (sin maldiciones ni pactos). */
+const grossScrap = () => runScrap + Math.floor((time + encPrior) / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas);
 const zoneFor = (d: boolean) => d ? "patio" : encore ? "luna" : (import.meta.env.DEV && new URLSearchParams(location.search).get("zone")) || save.zone;
 function startRun(d = false) {
   daily = d;
@@ -307,7 +311,7 @@ function startRun(d = false) {
   $("hud").classList.remove("hidden");
   hudBoss(null);
   hudWorkshop(save.perm);
-  if (erun) say("start"); else banner(`${profile.climate.name} · ${profile.plague.name}`, 3);
+  if (erun) { say("start"); const h = E.hint(erun); if (h) say("hint", h); } else banner(`${profile.climate.name} · ${profile.plague.name}`, 3);
   // Guía de controles los primeros segundos (se va sola)
   const hint = $("hint");
   for (const k of hint.querySelectorAll<HTMLElement>("kbd[data-k]")) k.textContent = keyName(KEYS[k.dataset.k as keyof typeof KEYS][0]); // teclas reasignadas
@@ -323,8 +327,8 @@ const say = (id: E.LineId, txt = E.line(id, erun!, save.encore)) => E.dirPush(di
 /** Agenda del escenario según la fase: un minijefe (nave); en la votación y el FINAL ACT, arena vacía donde solo entra el jefe. */
 function encPlan() {
   const r = erun!, calm = r.phase === "vote" || r.phase === "final";
-  finalKind = E.ENC.finalBoss; // en ENCORE solo el jefe del FINAL ACT cierra la partida (el gusano lunar no sale)
-  RUN_BOSSES = r.phase === "final" ? [[E.ENC.bossIntroS, E.ENC.finalBoss]] : calm ? [] : [[E.ENC.miniS, profile.minis[0]]];
+  finalKind = E.finalOf(r.seed); // R5: jefe secreto sorteado por la semilla de la run; en ENCORE solo el jefe del FINAL ACT cierra la partida (el gusano lunar no sale)
+  RUN_BOSSES = r.phase === "final" ? [[E.ENC.bossIntroS, finalKind]] : calm ? [] : [[E.ENC.miniS, profile.minis[0]]];
   if (calm) { swarmT = chestT = ballT = Infinity; profile.elites = []; }
 }
 /** Escenario nuevo con el mismo auto, armas, nivel, XP y vida: borra lo del anterior y lo rearma con la semilla derivada (runSeed, escenario). */
@@ -379,11 +383,18 @@ const ARRIVE: Record<E.Variant["at"], [B.Vector3, B.Vector3]> = {
 function encScene(first = false) {
   const v = E.variantOf(erun!);
   evPace(v?.rain, v?.quake); skyPace(v?.sky);
-  if (!v) return; // votación y FINAL ACT: sin cambios
+  if (!v) { if (erun!.phase === "final") finalArena(); return; } // votación: sin cambios
   const [d, aim] = ARRIVE[v.at], c0 = moonPt(d);
   for (const k of E.craterPlan(v, erun!)) deform(ringAt(c0, k.a, k.d, 0), k.r, k.r * 0.28); // profundidad como los cráteres fijos grandes
   shopPlan(erun!.seed, E.sceneIdx(erun!), c0); // cofres de pago y máquina de opciones (moon_goals.ts)
   if (!first) moonPlace(d, aim);
+}
+/** FINAL ACT (R5): arena propia en la salida: cráteres en anillo, focos y luz de show; el auto vuelve al centro. */
+function finalArena() {
+  const [d, aim] = ARRIVE.salida, c0 = moonPt(d), a = E.arenaPlan(erun!);
+  for (const k of a.craters) deform(ringAt(c0, k.a, k.d, 0), k.r, k.r * 0.28);
+  spotsPlan(c0, a.spots); evShow(true); evPace(E.ARENA.rain); skyPace(E.ARENA.sky);
+  moonPlace(d, aim);
 }
 /** Minijefe i-ésimo de la luna: el de la variante o, sin ella, el que elige la semilla. */
 const minorShip = (i: number) => (erun && E.variantOf(erun)?.ship) || shipFor(i, runSeed);
@@ -398,6 +409,7 @@ function encApply(ev: E.Ev | null) {
   if (ev === "guest") { const g = erun.guest!, c = car!; spawnEnemy(g, spawnPoint(c.pos, 30, 36)); guestE = enemies[enemies.length - 1]; hudBoss(DEF[g].name, 1, g); SFX.boss(); }
   if (pact) { say(ev); if (erun.phase === "route") say("route_offer"); } // la respuesta al trato y, enseguida, la oferta de destinos
   if (v) say("advance", `${v.name}. ${v.line}`);
+  if (ev === "advance" || ev === "encore") { const h = E.hint(erun); if (h) say("hint", h); } // R5: pista del jefe secreto de este escenario
   else if (!pact) say(ev);
 }
 const encPick = (i: 0 | 1 | 2) => { if (state === "play" && erun) encApply(E.pick(erun, i)); };
@@ -435,9 +447,11 @@ function endRun(win: boolean, why: string) {
   state = simulating ? "over" : "outro"; // el cierre en cámara lenta (outroTick) abre los resultados
   engineStop(); music("over"); rainSfx(0); moonAmbience(false);
   // Tornillos: los de la partida más tiempo y bajas, con el extra de las maldiciones (+30% cada una)
-  const earned = Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK * pfx.scrap);
+  const gross = grossScrap(), earned = Math.floor((gross + (erun ? encExtra + E.scrapExtra(gross, encG, pfx.scrap) : 0)) * curseK * (erun ? 1 : pfx.scrap)); // ENCORE: el extra de pactos y rutas se acumuló por escenario; el tramo actual se liquida con el efecto vigente
   const eb = save.encore.best, encBetter = !!erun && (erun.loop > eb.loop || (erun.loop === eb.loop && (erun.stage > eb.stage || (erun.stage === eb.stage && Math.floor(time) > eb.t))));
   const prevBest = erun ? eb.t : save.best, record = erun ? encBetter : Math.floor(time) > save.best;
+  const topHit = (Object.entries(dmgBy).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "accidente").replace(/[^\p{L}\d .,-]/gu, "").slice(0, 40);
+  const enc = erun ? E.report(erun, { chests: chestsOpened(), cause: win ? "Venció al jefe del FINAL ACT" : `Daño de ${topHit}` }) : undefined; // R5: reporte de la expedición
   const rec: RunRec = { t: Math.floor(time), kills, lv: level, seed: runSeed, win };
   if (!simulating && !LAB.on) { // las pruebas de dev no tocan el guardado real
     save.scrap += earned - (bank?.scrap ?? 0); // al terminar el modo sin fin, solo lo que faltaba cobrar
@@ -445,7 +459,7 @@ function endRun(win: boolean, why: string) {
     if (!erun) save.best = Math.max(save.best, Math.floor(time));
     // Estadísticas de carrera (Bestiario): totales, daño por arma y mejor marca de la zona jugada
     const S = save.stats, zr = S.zone[zoneId] ?? { t: 0, kills: 0 };
-    if (erun) { const E = save.encore; E.runs++; if (win) E.wins++; E.lastLoop = erun.loop; E.lastCause = win ? "" : (Object.entries(dmgBy).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "accidente").replace(/[^\p{L}\d .,-]/gu, "").slice(0, 40); if (encBetter) E.best = { loop: erun.loop, stage: erun.stage, t: Math.floor(time) }; } // ENCORE: récord propio; tornillos, tiempo, daño y bestiario sí cuentan
+    if (erun) { const E = save.encore; E.runs++; if (win) E.wins++; E.lastLoop = erun.loop; E.lastCause = win ? "" : topHit; if (encBetter) E.best = { loop: erun.loop, stage: erun.stage, t: Math.floor(time) }; } // ENCORE: récord propio; tornillos, tiempo, daño y bestiario sí cuentan
     else if (!bank) { S.runs++; if (win) S.wins++; }
     S.time += time - (bank?.t ?? 0); S.dist += runDist; // runDist vuelve a 0 al seguir en modo sin fin
     for (const [src, v] of Object.entries(dmgOut)) S.dmg[src] = (S.dmg[src] ?? 0) + v - (bank?.dmg[src] ?? 0);
@@ -460,7 +474,7 @@ function endRun(win: boolean, why: string) {
   const more = win && !endless; // venció al jefe final: los resultados ofrecen "Seguir jugando"
   bank = { t: time, scrap: earned, dmg: { ...dmgOut }, rec };
   const evos = weapons.filter((w) => w.evolved).map((w) => WEAPONS[w.id].evoName);
-  const res = { win, title: endless ? "FIN DEL SIN FIN" : undefined, why, time, kills, level, scrap: earned, record, more, dmg: { ...dmgOut }, hurt: { ...dmgBy }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`, prevBest, bestStreak, bestHit: Math.round(bestHit), bestDrive: bestDriveMul, bossKills, evos, ach: [...runAch], car: save.car };
+  const res = { win, title: endless ? "FIN DEL SIN FIN" : undefined, why, time, kills, level, scrap: earned, record, more, dmg: { ...dmgOut }, hurt: { ...dmgBy }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`, prevBest, bestStreak, bestHit: Math.round(bestHit), bestDrive: bestDriveMul, bossKills, evos, ach: [...runAch], car: save.car, enc };
   if (simulating) openOver(res); else startOutro(res);
 }
 

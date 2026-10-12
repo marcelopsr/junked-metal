@@ -1449,7 +1449,7 @@ export function openPause(k: Kit) {
   reset("pause");
 }
 
-export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; hurt?: Record<string, number>; seed: string; more?: boolean; title?: string; prevBest?: number; bestStreak?: number; bestHit?: number; bestDrive?: number; bossKills?: number; evos?: string[]; ach?: string[]; car?: string }) {
+export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; hurt?: Record<string, number>; seed: string; more?: boolean; title?: string; prevBest?: number; bestStreak?: number; bestHit?: number; bestDrive?: number; bossKills?: number; evos?: string[]; ach?: string[]; car?: string; enc?: [string, string][] }) {
   $("overEndless").classList.toggle("hidden", !r.more); // venció al jefe final: puede seguir en modo sin fin
   $("overTitle").textContent = r.title ?? (r.win ? "VICTORIA" : "FIN DE LA PARTIDA");
   $("overTxt").textContent = r.why;
@@ -1460,6 +1460,8 @@ export function openOver(r: { win: boolean; why: string; time: number; kills: nu
   if (r.evos?.length) best.push(["Evoluciones", r.evos.join(" · ")]);
   $("overBest").innerHTML = best.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("overRew").innerHTML = [`<li><span>Tornillos</span><b>+${r.scrap}</b></li>`, ...(r.ach ?? []).map((a) => `<li><span>Logro</span><b>${a}</b></li>`)].join("");
+  $("overEncT").classList.toggle("hidden", !r.enc); $("overEnc").classList.toggle("hidden", !r.enc);
+  $("overEnc").innerHTML = (r.enc ?? []).map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join(""); // ENCORE: reporte de la expedición
   $("overRepeat").textContent = "Repetir";
   $("overRec").classList.toggle("hidden", !r.record);
   $("overShop").classList.toggle("hidden", !canBuy());

@@ -40,6 +40,9 @@ const teleFrameTpl = () => template("obj_tele_marco", () => { const L = teleMats
   tor(5.4, 0.5, L.hull, [0, 3.6, 0], [Math.PI / 2, 0, 0], 14), tor(4.4, 0.15, L.rust, [0, 3.6, 0], [Math.PI / 2, 0, 0], 14),
   ...Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4; return sph(0.55, L.bulb, [Math.sin(a) * 2.7, 3.6 + Math.cos(a) * 2.7, 0], undefined, 4); }),
   box(0.4, 1.4, 0.4, L.rust, [0, 0.9, 0.3], [0.2, 0, 0.1])]; });
+// R5: foco del FINAL ACT: pie de chapa, cabeza con lámpara y haz alto (sin niebla); se coloca en anillo (spotsPlan).
+const spotTpl = () => template("obj_foco", () => { const L = teleMats(); return [
+  cyl(0.9, 1.4, 1, L.dark, [0, 0.5, 0], undefined, 8), cyl(0.2, 0.3, 5, L.hull, [0, 3.5, 0], undefined, 6), sph(1.1, L.bulb, [0, 6.2, 0], undefined, 5), cyl(4, 0.8, 70, L.beam, [0, 41, 0], undefined, 10)]; });
 const ringTpl = () => template("obj_aro", () => { const L = mats(); return [tor(2, 0.08, L.y, [0, 0, 0], undefined, 32)]; }); // zona: aro escalado al radio
 
 // ---------- ENCORE: cofres de pago y máquina de opciones (docs/ENCORE/R0/R1_SLICE.md, "Cofres") ----------
@@ -56,6 +59,8 @@ const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t 
 export const chestPrice = (open: number, stage: number) => Math.round(30 * (1 + 0.6 * open) * (1 + 0.25 * stage));
 /** Nueva expedición: cuenta de cofres abiertos en cero. */
 export const shopReset = () => { opened = 0; };
+/** Cofres de pago abiertos en la run (para el reporte de ENCORE). */
+export const chestsOpened = () => opened;
 /** Coloca 3 cofres y 1 máquina alrededor de c0 (llegada del escenario); orden, ángulo y distancia salen de (seed, stage). */
 export function shopPlan(seed: number, stage: number, c0: B.Vector3) {
   shopDrop(); shopStage = stage;
@@ -66,6 +71,9 @@ export function shopPlan(seed: number, stage: number, c0: B.Vector3) {
     shops.push({ kind, p, prog: 0, ms: [put(kind === "cofre" ? chestTpl : machineTpl, p, kind), r] });
   }
 }
+let spots: B.InstancedMesh[] = [];
+/** Focos del FINAL ACT alrededor de c0 (posiciones de encore.arenaPlan); goalsClear los quita. */
+export function spotsPlan(c0: B.Vector3, ps: { a: number; d: number }[]) { for (const m of spots) m.dispose(); spots = ps.map((s) => put(spotTpl, ringAt(c0, s.a, s.d, 0), "foco")); }
 function shopDrop() { for (const s of shops) for (const m of s.ms) m.dispose(); shops = []; }
 const shopNear = (car: B.Vector3) => shops.find((s) => hd(car, s.p) < SHOP_RADIO);
 function shopTick(dt: number, time: number, car: B.Vector3, quiet: boolean) {
@@ -175,7 +183,7 @@ export function goalsTick(dt: number, time: number, car: B.Vector3, quiet: boole
 
 /** Partida nueva / fin. */
 export function goalsClear() {
-  if (goal) drop(goal); if (rocket) drop(rocket); shopDrop();
+  if (goal) drop(goal); if (rocket) drop(rocket); shopDrop(); for (const m of spots) m.dispose(); spots = [];
   goal = rocket = null; next = A.luna_obj_primero_s; alt = 0;
   stats.hechos = stats.aparecidos = 0;
 }

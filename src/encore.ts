@@ -26,8 +26,17 @@ export const ENC = {
   dirShowS: 3.6,       // Director: segundos que dura el subtítulo
   dirTtlS: 15,         // Director: una frase que espera más que esto ya quedó vieja y se descarta
   dirCap: 4,           // Director: frases en espera; al pasarse se pierde la de menor prioridad
-  finalBoss: "aspiradora" as const, // jefe secreto de prueba (R0_SURVIVOR.md §10); el sorteo entre FINALS llega con la run completa
 };
+
+// ---------- R5: jefe secreto del FINAL ACT (D-029) ----------
+// ponytail: `perro` queda fuera del sorteo. En la Luna su salto lanza hacia el +Y del mundo (UP.scale(22)) y su embestida fija la velocidad con ejes del mundo
+// (dir = sin/cos(aim)), mientras que `to`, `fwd` y `vel()` están en el marco local de la esfera: fuera del polo el salto sale torcido y la embestida corre hacia un lado
+// que no es el del carril rojo. Entra al sorteo cuando enemies.ts lo pase al marco local (flatL/upAt/toWorld) como ya hacen la tarántula y el gato.
+export const FINAL_POOL = ["aspiradora", "cortacercos"] as const;
+export type FinalKind = (typeof FINAL_POOL)[number];
+export const FINAL_NAME: Record<FinalKind, string> = { aspiradora: "LA ASPIRADORA ROBOT", cortacercos: "EL CORTACERCOS ELÉCTRICO" };
+/** Jefe secreto de la expedición: hash de la semilla de la run (sin rng()), fijo en todas las vueltas. */
+export const finalOf = (seed: number): FinalKind => FINAL_POOL[Math.floor(mix(seed + 0xf1a1) * FINAL_POOL.length)];
 
 export type Phase = "stage" | "teleporter" | "stay" | "pact" | "route" | "overload" | "guest" | "vote" | "final" | "won";
 /** Lo que pasó en un paso; es también la clave de la frase del Director. */
@@ -44,12 +53,14 @@ export type Run = {
   routes: [number, number] | null;       // índices de VARIANTS ofrecidos mientras la fase es `route` (destinos del escenario siguiente)
   route: number | null;                  // destino elegido para el escenario actual (null = el que sortea variantOf)
   guest: (typeof GUESTS)[number] | null; // minijefe invitado mientras la fase es `guest`
+  taken: string[];  // R5: ids de los pactos aceptados en toda la run, en orden (para el reporte)
+  went: number[];   // R5: índices de VARIANTS elegidos como destino en toda la run, en orden
 };
 /** R3: eventos del teleportador al abordarlo. */
 export type TeleEvent = "OVERLOAD" | "BOSS_GUEST" | "NINGUNO";
 export const GUESTS = ["rey", "cortadora", "tarantula", "gato"] as const;
 
-export const newRun = (seed: number): Run => ({ seed, loop: 0, stage: 0, phase: "stage", stageT: 0, timer: 0, landed: false, stayT: 0, stays: 0, pacts: [], offer: null, routes: null, route: null, guest: null });
+export const newRun = (seed: number): Run => ({ seed, loop: 0, stage: 0, phase: "stage", stageT: 0, timer: 0, landed: false, stayT: 0, stays: 0, pacts: [], offer: null, routes: null, route: null, guest: null, taken: [], went: [] });
 
 /** Semilla de cada escenario: (seed, 0, 0) es la de la run; la votación y el FINAL ACT usan los índices `stages` y `stages + 1`. */
 export const stageSeed = (seed: number, loop: number, stage: number) => (seed + loop * 0x9e3779b1 + stage * 0x85ebca6b) >>> 0;
@@ -83,7 +94,7 @@ function go(r: Run): Ev {
 /** Responde a la oferta: 0 o 1 acepta ese pacto, 2 (o ventana vencida) rechaza sin penalidad. Después carga el escenario siguiente. */
 function choosePact(r: Run, i: 0 | 1 | 2): Ev {
   const id = i === 2 ? undefined : r.offer?.[i];
-  if (id) r.pacts.push({ id, left: pactOf(id).stages + 1 }); // el +1 lo descuenta el `leave` de este mismo avance
+  if (id) { r.taken.push(id); r.pacts.push({ id, left: pactOf(id).stages + 1 }); } // el +1 lo descuenta el `leave` de este mismo avance
   advance(r);
   return id ? "pact_yes" : "pact_no";
 }
@@ -131,6 +142,7 @@ export function guestDown(r: Run): Ev | null { if (r.phase !== "guest") return n
 /** Responde a la oferta de destinos: el escenario siguiente toma la variante elegida (y su recompensa). */
 function chooseRoute(r: Run, i: 0 | 1): Ev {
   const v = r.routes![i];
+  r.went.push(v);
   r.stage++; reset(r); r.route = v;
   return "advance";
 }
@@ -262,8 +274,8 @@ export function tag(r: Run): [string, string, boolean] {
 
 // ---------- El Director (docs/ENCORE/02_NARRATIVE/01_DIRECTOR_BIBLE.md, 05_DATA/dialogue_cues.csv) ----------
 // Presentador macabro de show. Frases cortas para el aviso de radio; no revelan quién es. La variante sale del escenario, nunca del rng() de la partida.
-export type LineId = Ev | "start" | "boss_intro";
-const LINES: Record<LineId, string[]> = {
+export type LineId = Ev | "start" | "boss_intro" | "hint";
+const LINES: Record<Exclude<LineId, "hint">, string[]> = {
   start: ["¡LUCES ENCENDIDAS! GRAVEDAD OPCIONAL, DIGNIDAD NO INCLUIDA.", "SONRÍAN PARA EL PÚBLICO. NO PREGUNTEN DÓNDE ESTÁ EL PÚBLICO."],
   tele_land: ["¡LLEGÓ EL TELEPORTADOR! QUÉ DECEPCIÓN PARA EL EQUIPO DE ESCONDITES.", "TELEPORTADOR EN ESCENA. LA PRODUCCIÓN LO ESCONDIÓ CON CARIÑO."],
   tele_ready: ["LA PUERTA ESTÁ ABIERTA. ¿SE QUEDAN O CAMBIAMOS DE CANAL?", "¡ELENCO LISTO! QUE NADIE OLVIDE RESPIRAR. DECIDAN."],
@@ -290,6 +302,7 @@ export function openingLine(m: Mem | undefined): string | null {
   return `OTRA VEZ AQUÍ. EXPEDICIÓN ${m.runs + 1} Y EL PÚBLICO SIGUE SIN APLAUDIR.`;
 }
 export function line(id: LineId, r: Run, mem?: Mem): string {
+  if (id === "hint") return hint(r) ?? "";
   if (id === "start") { const o = openingLine(mem); if (o) return o; }
   const v = LINES[id];
   return v[(r.loop * ENC.stages + r.stage + r.stays) % v.length];
@@ -300,7 +313,7 @@ export function line(id: LineId, r: Run, mem?: Mem): string {
 // Una frase que espera más de `dirTtlS` ya describe algo pasado y se descarta; si hay más de `dirCap` en espera se pierde la de menor prioridad.
 export type DirQ = { q: { txt: string; pri: number; age: number }[]; cool: number };
 export const newDirQ = (): DirQ => ({ q: [], cool: 0 });
-const PRI: Record<LineId, number> = { start: 3, won: 5, final_act: 5, boss_intro: 4, overload: 4, guest: 4, tele_ready: 3, vote: 3, encore: 3, tele_land: 2, advance: 2, pact_offer: 2, pact_yes: 2, pact_no: 2, route_offer: 2, stay: 1 };
+const PRI: Record<LineId, number> = { start: 3, won: 5, final_act: 5, boss_intro: 4, overload: 4, guest: 4, tele_ready: 3, vote: 3, encore: 3, tele_land: 2, advance: 2, pact_offer: 2, pact_yes: 2, pact_no: 2, route_offer: 2, hint: 2, stay: 1 };
 export const dirPri = (id: LineId) => PRI[id];
 export function dirPush(d: DirQ, txt: string, pri: number) {
   if (d.q.some((x) => x.txt === txt)) return;
@@ -317,3 +330,51 @@ export function dirTick(d: DirQ, dt: number): string | null {
   d.cool = ENC.dirGapS;
   return d.q.splice(b, 1)[0].txt;
 }
+
+// ---------- R5: pistas del jefe secreto, arena del FINAL ACT, reporte y tornillos ----------
+// Una pista por jefe y por escenario (se repiten en cada vuelta). Insinúan el jefe sin nombrarlo ni describir su forma entera.
+const HINTS: Record<FinalKind, string[]> = {
+  aspiradora: [
+    "ALGO EN LA PRODUCCIÓN TIENE HAMBRE DE POLVO. NO PREGUNTEN POR QUÉ ESTÁ TAN LIMPIO.",
+    "ESCUCHEN ESE ZUMBIDO REDONDO. SI EL PISO SE DESLIZA HACIA USTEDES, NO ES IMPRESIÓN.",
+    "EL BIS TIENE UN EMPLEADO QUE NUNCA TERMINA DE BARRER. LE QUEDA POCA PACIENCIA Y MUCHA SUCCIÓN.",
+    "EN BAMBALINAS HAY UN DISCO CON LUZ INTERMITENTE. SE CARGA SOLO Y NO SE DEJA ATRAPAR EN LAS ESQUINAS.",
+  ],
+  cortacercos: [
+    "EL FINAL ACT USA CABLES. MUCHOS. NO LOS PISEN, QUE NO SON DECORACIÓN.",
+    "HUELE A OZONO Y A PASTO RECIÉN CORTADO. LA PRODUCCIÓN PLANEA UN RECORTE DE PERSONAL.",
+    "ALGO CHISPEA AL FONDO DEL ESCENARIO. DIRECTO, PAREJO Y CON MUY MALAS MANERAS.",
+    "TIENEN UN INVITADO CON FILO. ESTÁ ENCHUFADO A TODO Y LE GUSTA PODAR EN LÍNEA RECTA.",
+  ],
+};
+/** Pista del jefe secreto para el escenario actual (null en la votación y el FINAL ACT, donde ya no hace falta). */
+export const hint = (r: Run): string | null => { const h = sceneIdx(r) < ENC.stages ? HINTS[finalOf(r.seed)] : null; return h ? h[r.stage % h.length] : null; };
+
+/** Arena propia del FINAL ACT: cráteres en anillo y focos alrededor de la salida, con luz de show (moon_events.evShow). Ángulo inicial por hash de la run. */
+export const ARENA = { craters: 8, ringD: 36, craterR: 6.5, spots: 6, spotD: 58, rain: 1.5, sky: 0.8 }; // rain/sky: intervalos de meteoritos y del Sol (> 1 = menos seguido)
+export function arenaPlan(r: Run): { craters: { a: number; d: number; r: number }[]; spots: { a: number; d: number }[] } {
+  const base = stageSeed(r.seed, r.loop, ENC.stages + 1), a0 = mix(base) * Math.PI * 2, T = Math.PI * 2;
+  return {
+    craters: Array.from({ length: ARENA.craters }, (_, i) => ({ a: a0 + (i * T) / ARENA.craters, d: ARENA.ringD, r: ARENA.craterR * (0.85 + mix(base + i + 1) * 0.3) })),
+    spots: Array.from({ length: ARENA.spots }, (_, i) => ({ a: a0 + ((i + 0.5) * T) / ARENA.spots, d: ARENA.spotD })),
+  };
+}
+
+/** Escenarios superados: los de las vueltas anteriores, los de esta, y los cuatro si ya se llegó a la votación o más allá. */
+export const cleared = (r: Run) => r.loop * ENC.stages + r.stage + (r.phase === "vote" || r.phase === "final" || r.phase === "won" ? 1 : 0);
+/** Reporte de la run para la pantalla de resultados: [etiqueta, valor]. El jefe secreto se revela aquí, haya llegado o no al FINAL ACT. */
+export function report(r: Run, o: { chests: number; cause: string }): [string, string][] {
+  const list = (a: string[]) => (a.length ? a.join(", ") : "Ninguno");
+  return [
+    ["Vueltas", String(r.loop + 1)],
+    ["Escenarios superados", String(cleared(r))],
+    ["Pactos tomados", list(r.taken.map((id) => pactOf(id).name))],
+    ["Rutas elegidas", list(r.went.map((i) => VARIANTS[i].name))],
+    ["Cofres abiertos", String(o.chests)],
+    ["Jefe secreto", FINAL_NAME[finalOf(r.seed)]],
+    ["Causa de fin", o.cause],
+  ];
+}
+
+/** Tornillos extra (o de menos) de un tramo con el multiplicador `k` de pactos y rutas vigente: lo ganado desde la última liquidación x (k - 1). main.ts lo acumula al cambiar el efecto y al salir de cada escenario. */
+export const scrapExtra = (gross: number, last: number, k: number) => (gross - last) * (k - 1);

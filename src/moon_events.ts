@@ -35,20 +35,35 @@ type Clim = Parameters<typeof applyClimate>[0];
 const RED = { sunColor: "#ff6b3d", amb: "#7a2a1c", ground: "#401208", fog: "#3a0a05", sky: ["#1c0402", "#40100a", "#6a2410", "#1c0603"] };
 const mixHex = (a: string, b: string, k: number) => B.Color3.Lerp(B.Color3.FromHexString(a), B.Color3.FromHexString(b), k).toHexString();
 let tintK = 0, tintTo = 0, tintStep = 0;
-/** El clima k con el tinte actual (tinte 0 = el mismo objeto). */
+/** El clima k con el tinte actual (tinte 0 = el mismo objeto) y, en el FINAL ACT de ENCORE, la luz de show encima. */
 export function evClimate(k: Clim): Clim {
   const f = tintK;
-  if (f < 0.005) return k;
+  if (f >= 0.005) {
+    k = {
+      ...k, sunColor: mixHex(k.sunColor, RED.sunColor, f), sunI: k.sunI * (1 + 0.15 * f), hemiI: k.hemiI * (1 + 0.6 * f), fog: k.fog * (1 + 0.3 * f),
+      sky: k.sky.map((c, i) => mixHex(c, RED.sky[i], f)) as Clim["sky"], amb: mixHex(k.amb ?? k.sky[1], RED.amb, f), ground: mixHex(k.ground ?? "#1c1812", RED.ground, f),
+    };
+  }
+  if (showK < 0.005) return k;
   return {
-    ...k, sunColor: mixHex(k.sunColor, RED.sunColor, f), sunI: k.sunI * (1 + 0.15 * f), hemiI: k.hemiI * (1 + 0.6 * f), fog: k.fog * (1 + 0.3 * f),
-    sky: k.sky.map((c, i) => mixHex(c, RED.sky[i], f)) as Clim["sky"], amb: mixHex(k.amb ?? k.sky[1], RED.amb, f), ground: mixHex(k.ground ?? "#1c1812", RED.ground, f),
+    ...k, sunColor: mixHex(k.sunColor, SHOW.sunColor, showK), sunI: k.sunI * (1 + 0.2 * showK), hemiI: k.hemiI * (1 + 0.5 * showK),
+    sky: k.sky.map((c, i) => mixHex(c, SHOW.sky[i], showK)) as Clim["sky"], amb: mixHex(k.amb ?? k.sky[1], SHOW.amb, showK), ground: mixHex(k.ground ?? "#1c1812", SHOW.ground, showK),
   };
 }
 /** Tras moonTick(): la niebla (que moonTick pisa cada cuadro) también se tiñe. */
 export function evFog(scene: B.Scene) {
-  if (tintK < 0.005) return;
-  B.Color3.LerpToRef(scene.fogColor, B.Color3.FromHexString(RED.fog), tintK * 0.8, scene.fogColor);
-  scene.fogDensity *= 1 + 0.25 * tintK;
+  if (tintK >= 0.005) {
+    B.Color3.LerpToRef(scene.fogColor, B.Color3.FromHexString(RED.fog), tintK * 0.8, scene.fogColor);
+    scene.fogDensity *= 1 + 0.25 * tintK;
+  }
+  if (showK >= 0.005) B.Color3.LerpToRef(scene.fogColor, B.Color3.FromHexString(SHOW.fog), showK * 0.8, scene.fogColor);
+}
+// Luz de show (ENCORE, arena del FINAL ACT): cálida de frente y violeta de ambiente, fija toda la arena. evShow(true) repinta ya; evReset() la apaga.
+const SHOW = { sunColor: "#ffd9a0", amb: "#4a2a66", ground: "#1c0f2a", fog: "#1a0c26", sky: ["#0c0614", "#2a1442", "#4a2468", "#0c0614"] };
+let showK = 0;
+export function evShow(on: boolean) {
+  showK = on ? 0.7 : 0;
+  if (base && !H.sim()) applyClimate(evClimate(base));
 }
 
 // ---------- Piezas visibles: instancias de plantillas, en pozas que se reciclan ----------
@@ -107,7 +122,7 @@ export function evReset() {
   for (const k of Object.keys(pools)) delete pools[k];
   mets.length = smokes.length = 0;
   rain = quake = null; rainAt = quakeAt = -1; rainPre = ambOn = false; evPace();
-  tintK = tintTo = 0; tintStep = 0;
+  tintK = tintTo = 0; tintStep = 0; showK = 0;
   SPACE.lava(0); moonAmbience(false);
 }
 
