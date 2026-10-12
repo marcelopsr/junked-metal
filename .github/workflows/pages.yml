@@ -19,6 +19,8 @@ jobs:
       - run: npm ci
       - run: npm test # si falla una prueba no se publica
       - run: npm run build # incluye tsc --noEmit
+        env: # R6c: servidor de red propio (docs/ENCORE/R0/R6_RED.md §8), variable de repo NO secreta; vacía = PeerJS Cloud
+          VITE_NET_HOST: ${{ vars.NET_HOST }}
       - uses: actions/upload-pages-artifact@v3
         with: { path: dist }
       - id: deploy

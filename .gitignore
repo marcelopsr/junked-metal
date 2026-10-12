@@ -21,3 +21,7 @@ assets-src/_oleada2_baseline/
 __pycache__/
 .vite-test/
 scratch/
+
+# Credenciales locales (TURN, R6c)
+.env.local
+.env.*.local

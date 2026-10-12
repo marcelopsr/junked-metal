@@ -39,10 +39,11 @@ try {
   await wait(h, () => window.__net.info().netIn.throttle > 0, null, 5000).catch(() => {});
   const h1 = await info(h);
   check("input del cliente llega al anfitrión (netIn)", h1.netIn.throttle > 0, JSON.stringify(h1.netIn));
-  const p1a = (await info(h)).p[1].pos;
+  const p1a = (await info(h)).p[1].pos, b0 = (await info(h)).bytes, t0 = Date.now();
   await sleep(2500);
   await c.keyboard.up("KeyW");
-  const p1b = (await info(h)).p[1].pos;
+  const p1b = (await info(h)).p[1].pos, kbs = ((await info(h)).bytes - b0) / 1024 / ((Date.now() - t0) / 1000);
+  check("ancho de banda del snapshot medido (JSON, anfitrión -> cliente)", kbs > 0 && kbs < 64, `${kbs.toFixed(1)} kB/s`);
   const d1 = Math.hypot(p1b[0] - p1a[0], p1b[1] - p1a[1]);
   check("players[1] se mueve en el anfitrión con el input del cliente", d1 > 1, `${d1.toFixed(1)} m`);
   const c1 = await info(c);
@@ -53,15 +54,56 @@ try {
   const e0 = await info(c); await sleep(1500); const e1 = await info(c);
   check("el cliente ve bichos y se mueven", e0.enemies > 0 && e0.e0 && e1.e0 && (e0.e0[0] !== e1.e0[0] || e0.e0[1] !== e1.e0[1]), `${e1.enemies} bichos`);
 
-  // Teleportador: el anfitrión lo hace aterrizar y lo activa; el cliente elige con su tecla (Z = opción 0) -> applyCommand en el anfitrión
-  await h.evaluate(() => { window.__enc.land(); window.__enc.board(); });
+  await wait(c, () => window.__net.info().shots > 0, null, 15000).catch(() => {});
+  check("el cliente ve proyectiles (snapshot j/w)", (await info(c)).shots > 0, `${(await info(c)).shots} proyectiles`);
+
+  // Cartas: dos niveles de golpe; la primera oferta la elige el anfitrión, la segunda el cliente (se alternan)
+  const lv0 = (await info(h)).level;
+  await h.evaluate((lv0) => { for (let n = 0; n < 500 && window.__net.info().level < lv0 + 2; n++) window.__xp(2); }, lv0); // justo 2 niveles
+  await wait(h, () => !!window.__net.info().cards, null, 10000).catch(() => {});
+  await wait(c, () => !!window.__net.info().cards, null, 5000).catch(() => {});
+  const k1 = await info(h), kc1 = await info(c);
+  check("primera oferta: elige el anfitrión y el cliente ve las cartas", k1.cards?.by === 1 && kc1.cards?.n === k1.cards?.n && /J1/.test(kc1.cards?.sub ?? ""), `by=${k1.cards?.by} cliente="${kc1.cards?.sub}"`);
+  await c.keyboard.press("Digit1"); await sleep(800);
+  check("el cliente no puede elegir fuera de su turno", (await info(h)).cards?.by === 1);
+  await h.keyboard.press("Digit1");
+  await wait(h, () => window.__net.info().cards?.by === 2, null, 10000).catch(() => {});
+  await wait(c, () => /Turno/.test(window.__net.info().cards?.sub ?? ""), null, 5000).catch(() => {});
+  const kc2 = await info(c);
+  check("segunda oferta: le toca al cliente y la ve", (await info(h)).cards?.by === 2 && /Turno/.test(kc2.cards?.sub ?? ""), `"${kc2.cards?.sub}"`);
+  await h.keyboard.press("Digit1"); await sleep(800);
+  check("el anfitrión no puede elegir en el turno del cliente", (await info(h)).cards?.by === 2);
+  await c.keyboard.press("Digit1");
+  await wait(h, () => window.__net.info().cards?.by !== 2, null, 10000).catch(() => {});
+  const k3 = await info(h);
+  check("carta del cliente aplicada en el anfitrión", k3.cards?.by !== 2 && k3.level > lv0, `nivel ${lv0} -> ${k3.level}`);
+  for (let n = 0; n < 6 && (await info(h)).cards; n++) { // niveles pendientes: elige quien toque
+    const by = (await info(h)).cards.by;
+    await (by === 2 ? c : h).keyboard.press("Digit1");
+    await wait(h, (s) => JSON.stringify(window.__net.info().cards) !== s, JSON.stringify((await info(h)).cards), 5000).catch(() => {});
+    await sleep(300);
+  }
+  await wait(c, () => !window.__net.info().cards, null, 5000).catch(() => {});
+  check("todas las cartas cerradas en los dos", !(await info(h)).cards && !(await info(c)).cards);
+
+  // Teleportador: votos. El voto del cliente solo no decide; con los dos gana el anfitrión (empate en 2 jugadores)
+  await h.evaluate(() => { window.__enc.land(); if (window.__enc.board() === "overload") window.__enc.tick(999); }); // seed 7 sale con OVERLOAD: se agota la carga
   const ph0 = (await info(h)).phase;
   await wait(c, (ph) => window.__net.info().phase === ph, ph0, 5000).catch(() => {});
   check("el cliente recibe la fase del teleportador", (await info(c)).phase === ph0, ph0);
   await c.keyboard.press("KeyZ");
+  await wait(h, () => window.__net.info().votes === 1, null, 5000).catch(() => {});
+  const v1 = await info(h);
+  check("voto del cliente registrado y solo no decide", v1.votes === 1 && v1.phase === ph0, `votos=${v1.votes} fase=${v1.phase}`);
+  await h.keyboard.press("KeyZ");
   await wait(h, (ph) => window.__net.info().phase !== ph, ph0, 5000).catch(() => {});
   const ph1 = (await info(h)).phase;
-  check("decisión del cliente aplicada en el anfitrión (applyCommand)", ph1 !== ph0, `${ph0} -> ${ph1}`);
+  check("los dos votan lo mismo: se aplica (applyCommand)", ph1 === "stay", `${ph0} -> ${ph1}`);
+  await c.keyboard.press("KeyX"); await sleep(500); await h.keyboard.press("KeyZ"); await sleep(500);
+  check("empate (cliente X, anfitrión Z): gana el anfitrión", (await info(h)).phase === "stay" && (await info(h)).votes === 0, (await info(h)).phase);
+  await c.keyboard.press("KeyX"); await sleep(500); await h.keyboard.press("KeyX");
+  await wait(h, () => window.__net.info().phase !== "stay", null, 5000).catch(() => {});
+  check("los dos votan avanzar: sale de la estadía", (await info(h)).phase !== "stay", (await info(h)).phase);
 
   // 2) Cierra el cliente: el anfitrión sigue solo
   await c.ctx.close();

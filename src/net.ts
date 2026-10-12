@@ -1,8 +1,8 @@
 // R6b (docs/ENCORE/R0/R6_RED.md, opción A): transporte online de 2 jugadores con WebRTC DataChannel y PeerJS Cloud.
 // Sala = peer id del anfitrión ("jm-" + código de 6). El cliente abre dos canales: "u" no fiable y desordenado (inputs y snapshots) y "r" fiable (comandos y eventos).
 // peerjs se importa dinámico (chunk aparte): no pesa en la carga inicial.
-// ponytail: sin TURN propio (STUN por defecto de PeerJS): redes simétricas o móviles pueden no conectar; TURN con Worker de credenciales en R6c.
-// ponytail: sin rejoin: una caída cierra la sesión (R6d). JSON por canal (sin binario ni deltas): medir kB/s antes de cuantizar en bytes.
+// R6c: servidor propio opcional de build (VITE_NET_HOST, p. ej. junkedmetal.duckdns.org; ver R6_RED.md §8): PeerServer en https://<host>/peer y
+// credenciales TURN temporales de coturn en GET https://<host>/api/turn con el token del login (localStorage jm_net_token). Sin host: PeerJS Cloud como R6b.
 import type { DataConnection, Peer } from "peerjs";
 
 export type Msg = { t: string; [k: string]: unknown };
@@ -17,6 +17,29 @@ export type Net = {
 };
 
 const PFX = "jm-";
+export const NET_HOST = String(import.meta.env.VITE_NET_HOST ?? "").trim();
+const TOKEN = "jm_net_token", STUN = [{ urls: "stun:stun.l.google.com:19302" }]; // el STUN que PeerJS usa por defecto
+export const getToken = () => { try { return localStorage.getItem(TOKEN) ?? ""; } catch { return ""; } };
+/** Al volver del login el servidor deja `#token=...`: se guarda y se limpia el hash. Devuelve si había token. */
+export function takeToken() {
+  const t = new URLSearchParams(location.hash.slice(1)).get("token");
+  if (!t) return false;
+  try { localStorage.setItem(TOKEN, t); } catch { /* sin almacenamiento: vale solo esta carga */ }
+  history.replaceState(null, "", location.pathname + location.search);
+  return true;
+}
+export const loginUrl = () => `https://${NET_HOST}/auth/login?return=${encodeURIComponent(location.href)}`;
+/** Opciones de Peer. Con host propio: su PeerServer y los iceServers temporales de /api/turn (si falla o no hay token, solo STUN). Sin host: PeerJS Cloud y su config por defecto. */
+async function opts() {
+  if (!NET_HOST) return { debug: 0 };
+  let iceServers: RTCIceServer[] = STUN;
+  try {
+    const r = await fetch(`https://${NET_HOST}/api/turn`, { headers: { Authorization: `Bearer ${getToken()}` } });
+    const j = r.ok ? await r.json() : null;
+    if (Array.isArray(j?.iceServers) && j.iceServers.length) iceServers = j.iceServers;
+  } catch { /* red o CORS: sigue con STUN */ }
+  return { debug: 0, host: NET_HOST, port: 443, secure: true, path: "/peer", config: { iceServers } };
+}
 const ABC = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin 0/O ni 1/I
 export const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => ABC[b % ABC.length]).join("");
 export const cleanCode = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
@@ -53,7 +76,7 @@ function wrap(peer: Peer, host: boolean, code: string): Net & { attach(c: DataCo
 /** Anfitrión: abre la sala y resuelve cuando el cliente tiene los dos canales abiertos. Acepta un solo cliente (2 jugadores). */
 export async function hostRoom(onCode: (code: string) => void) {
   const { Peer } = await import("peerjs");
-  const code = newCode(), peer = new Peer(PFX + code, { debug: 0 });
+  const code = newCode(), peer = new Peer(PFX + code, await opts());
   const net = wrap(peer, true, code);
   peer.on("open", () => onCode(code));
   let guest = "";
@@ -67,7 +90,7 @@ export async function hostRoom(onCode: (code: string) => void) {
 /** Cliente: se une a la sala del código y resuelve cuando los dos canales están abiertos. */
 export async function joinRoom(code: string) {
   const { Peer } = await import("peerjs");
-  const peer = new Peer({ debug: 0 });
+  const peer = new Peer(await opts());
   const net = wrap(peer, false, code);
   peer.on("open", () => {
     net.attach(peer.connect(PFX + code, { label: "r", reliable: true, serialization: "json" }));
