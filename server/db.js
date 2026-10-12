@@ -22,6 +22,8 @@ export function openDb(file, invitesJson = null) {
   CREATE TABLE IF NOT EXISTS plans(id TEXT PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL CHECK(price > 0), currency TEXT NOT NULL, period TEXT NOT NULL CHECK(period IN ('month','year')));
   CREATE TABLE IF NOT EXISTS subscriptions(email TEXT PRIMARY KEY, planId TEXT, status TEXT NOT NULL CHECK(status IN ('active','canceled')),
     provider TEXT NOT NULL CHECK(provider IN ('manual','stripe','paypal')), providerRef TEXT, currentPeriodEnd INTEGER NOT NULL);
+  CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY, at INTEGER NOT NULL, uid TEXT NOT NULL, type TEXT NOT NULL, data TEXT);
+  CREATE INDEX IF NOT EXISTS events_at ON events(at);
   CREATE TABLE IF NOT EXISTS payments(ref TEXT PRIMARY KEY, provider TEXT NOT NULL, email TEXT NOT NULL, planId TEXT NOT NULL, amount INTEGER, at INTEGER NOT NULL);`);
   const q = (sql) => db.prepare(sql);
   const one = (sql, ...a) => q(sql).get(...a);
@@ -100,6 +102,10 @@ export function openDb(file, invitesJson = null) {
     newAdminCode(now = Date.now()) { const c = randomBytes(9).toString("base64url"); run("INSERT INTO admin_codes(code,expiresAt) VALUES(?,?)", c, now + 15 * 60e3); return c; },
     useAdminCode: (code, now = Date.now()) => run("UPDATE admin_codes SET usedAt=? WHERE code=? AND usedAt IS NULL AND expiresAt>?", now, String(code), now).changes > 0,
 
+    // Telemetría mínima: eventos del juego (sesión, partidas) por uid, data en JSON.
+    track: (uid, type, data, now = Date.now()) => run("INSERT INTO events(at,uid,type,data) VALUES(?,?,?,?)", now, uid, type, data),
+    events: (limit = 300) => all("SELECT * FROM events ORDER BY id DESC LIMIT ?", limit),
+    eventStats: (since) => all("SELECT type, COUNT(*) n, COUNT(DISTINCT uid) users FROM events WHERE at>? GROUP BY type ORDER BY n DESC", since),
     plans: () => all("SELECT * FROM plans ORDER BY price"),
     plan: (id) => one("SELECT * FROM plans WHERE id=?", String(id)),
     savePlan({ id, name, price, currency, period }) {

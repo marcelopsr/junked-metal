@@ -50,7 +50,7 @@ label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--jm-t
 </section>
 
 <div id="app" class="hidden">
-  <nav aria-label="Secciones"><button data-v="usuarios" aria-pressed="true">Usuarios</button><button data-v="pagos">Pagos</button><button data-v="auditoria">Auditoría</button><button data-v="red">Red</button></nav>
+  <nav aria-label="Secciones"><button data-v="usuarios" aria-pressed="true">Usuarios</button><button data-v="pagos">Pagos</button><button data-v="auditoria">Auditoría</button><button data-v="telemetria">Telemetría</button><button data-v="red">Red</button></nav>
   <p id="msg" class="msg" role="status"></p>
 
   <section data-s="usuarios">
@@ -80,6 +80,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--jm-t
   </section>
 
   <section data-s="auditoria" class="hidden"><div class="panel"><h2>Registro de auditoría</h2><div class="scroll"><table><thead><tr><th>Fecha</th><th>Quién</th><th>Acción</th><th>Objetivo</th><th>Detalle</th><th>IP</th></tr></thead><tbody id="tAudit"></tbody></table></div></div></section>
+
+  <section data-s="telemetria" class="hidden"><div class="panel"><h2>Últimos 7 días</h2><div class="scroll"><table><thead><tr><th>Evento</th><th>Cantidad</th><th>Usuarios</th></tr></thead><tbody id="tTelS"></tbody></table></div></div>
+    <div class="panel"><h2>Últimos eventos</h2><div class="scroll"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Evento</th><th>Datos</th></tr></thead><tbody id="tTel"></tbody></table></div></div></section>
 
   <section data-s="red" class="hidden"><div class="panel"><h2>Sesiones y salas activas</h2><div id="red"></div></div></section>
 </div>
@@ -142,6 +145,7 @@ const cargar = intentar(async () => {
   pintarUsers(); pintarPlans();
   if (vista === "auditoria") pintarAudit();
   if (vista === "red") pintarRed();
+  if (vista === "telemetria") pintarTel();
 });
 
 document.querySelectorAll("nav button").forEach((b) => b.onclick = () => {
@@ -219,6 +223,11 @@ async function pintarRed() {
   $("red").innerHTML = `<p>Servidor activo hace ${h} h ${m} min. Salas: ${s.peers.filter((p) => p.sala).length}. Peers: ${s.peers.length}. Usuarios conectados: ${s.usuarios.length}.</p>
   <div class="scroll"><table><thead><tr><th>Id</th><th>Usuario</th><th>Tipo</th><th>Conectado</th></tr></thead><tbody>${s.peers.map((p) => `<tr><td class="mono">${esc(p.id)}</td><td class="mono">${esc(p.uid)}</td><td>${p.sala ? "Sala" : "Invitado"}</td><td>${Math.round(p.seg / 60)} min</td></tr>`).join("") || `<tr><td colspan="4">Ninguno</td></tr>`}</tbody></table></div>
   <h3 style="margin-top:14px">Últimas sesiones TURN</h3><pre>${esc(s.turn.join("\n") || "Sin sesiones")}</pre>`;
+}
+async function pintarTel() {
+  const t = await api("telemetry");
+  $("tTelS").innerHTML = t.stats.map((s) => `<tr><td>${esc(s.type)}</td><td>${s.n}</td><td>${s.users}</td></tr>`).join("") || `<tr><td colspan="3">Sin eventos</td></tr>`;
+  $("tTel").innerHTML = t.events.map((e) => `<tr><td>${fecha(e.at)}</td><td class="mono">${esc(e.uid)}</td><td>${esc(e.type)}</td><td class="mono">${esc(e.data)}</td></tr>`).join("") || `<tr><td colspan="4">Sin eventos</td></tr>`;
 }
 setInterval(() => { if (vista === "red" && !$("app").classList.contains("hidden")) intentar(pintarRed)(); }, 10000);
 arrancar();

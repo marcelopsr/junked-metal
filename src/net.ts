@@ -29,6 +29,12 @@ export function takeToken() {
   try { localStorage.removeItem(INVITE); } catch { /* sin almacenamiento */ }
   return true;
 }
+/** Telemetría mínima a la VPS (POST /api/telemetry): solo con servidor propio y sesión; nunca bloquea ni falla en voz alta. */
+export function track(type: string, data: Record<string, unknown> = {}) {
+  const token = getToken();
+  if (!NET_HOST || !token) return;
+  try { void fetch(`https://${NET_HOST}/api/telemetry`, { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, type, data }) }).catch(() => {}); } catch { /* sin red */ }
+}
 export const setToken = (t: string) => { try { t ? localStorage.setItem(TOKEN, t) : localStorage.removeItem(TOKEN); } catch { /* sin almacenamiento */ } };
 /** Login con la clave de grupo: POST /api/login y guarda el token. Lanza con un mensaje legible si falla. */
 export async function loginKey(clave: string) {

@@ -72,3 +72,15 @@ test("pagos: webhook Stripe con firma inválida 400; PayPal sin credenciales 503
   assert.equal((await fetch(B + "/api/pay/paypal/webhook", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" })).status, 503);
   assert.equal((await fetch(B + "/api/pay/checkout?plan=x&provider=stripe")).status, 401);
 });
+test("telemetría: sin token 401; con token 204 y aparece en el admin", async () => {
+  assert.equal((await post("/api/telemetry", { type: "session" })).status, 401);
+  const lr = await post("/admin/api/login", { key: "clave-admin" });
+  const ck = { Cookie: lr.headers.get("set-cookie").split(";")[0] };
+  await post("/admin/api/plan", { id: "mes", name: "Mensual", price: 500, currency: "USD", period: "month" }, ck);
+  const code = (await (await post("/admin/api/invite", { email: "t@x.com", planId: "mes" }, ck)).json()).link.split("invite=")[1];
+  const { token } = await (await post("/api/invite-redeem", { code })).json();
+  assert.equal((await post("/api/telemetry", { token, type: "Mal tipo" })).status, 400);
+  assert.equal((await post("/api/telemetry", { token, type: "run_end", data: { win: true, t: 600 } })).status, 204);
+  const t = await (await fetch(B + "/admin/api/telemetry", { headers: ck })).json();
+  assert.ok(t.events.some((e) => e.uid === "cf-t@x.com" && e.type === "run_end"));
+});

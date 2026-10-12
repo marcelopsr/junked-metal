@@ -62,6 +62,10 @@ cd server/cf-login && set -a && . ~/.config/junkedmetal/cloudflare.env && set +a
 ```
 Admin: botón "Ingresar con Cloudflare" (mail de `ADMIN_EMAILS`); clave y código quedan en "Otras credenciales". "Enviar por mail" abre Gmail con el link ya escrito.
 
+## Telemetría
+
+`POST /api/telemetry {token, type, data}` (token del login en el cuerpo; tipo `[a-z_]`, data JSON hasta 1,5 kB; 120/min por IP; sin token 401) → tabla `events(at, uid, type, data)` en la misma SQLite. El cliente (`track()` en `src/net.ts`, solo con `VITE_NET_HOST` y sesión) manda `session` al abrir el juego, `run_start` y `run_end` (modo, victoria, tiempo, bajas, nivel, semilla, auto, causa, vuelta y escenario de ENCORE). Panel: pestaña Telemetría (conteo por tipo y usuarios de los últimos 7 días, últimos 200 eventos). Sesiones de usuario: `lastSeen` en Usuarios y los `session` de acá.
+
 ## Portal admin
 
 URL: https://junkedmetal.duckdns.org/admin (HTML/CSS/JS sin build en `server/admin.html`; API en `/admin/api/*`).

@@ -169,6 +169,16 @@ const stats = async () => {
   const list = [...peers].map(([id, p]) => ({ id, uid: p.uid, sala: id.startsWith("jm-"), seg: Math.round((Date.now() - p.since) / 1000) }));
   return { uptime: Math.round((Date.now() - started) / 1000), peers: list, usuarios: [...new Set(list.map((p) => p.uid))], turn: await turnTail() };
 };
+// Telemetría: solo con token válido (el token va en el cuerpo para poder usar keepalive/beacon). Tipos y tamaño acotados.
+const telOk = limiter(120, 60e3);
+app.post("/api/telemetry", (req, res) => {
+  if (!telOk(ipOf(req))) return res.status(429).end();
+  const { token, type, data } = req.body || {}, w = who(String(token || ""));
+  if (!w) return res.status(401).end();
+  if (!/^[a-z_]{1,32}$/.test(type || "")) return res.status(400).end();
+  db.track(w.uid, type, JSON.stringify(data ?? {}).slice(0, 1500));
+  res.status(204).end();
+});
 app.get("/api/stats", async (req, res) => {
   if (!bearer(req)) return res.status(401).json({ error: "Token inválido" });
   res.json(await stats());
@@ -211,6 +221,7 @@ app.get("/admin/api/me", (req, res) => res.json({ admin: req.admin, admins: ADMI
 app.get("/admin/api/users", (req, res) => res.json(db.users()));
 app.get("/admin/api/audit", (req, res) => res.json(db.auditList(300)));
 app.get("/admin/api/stats", async (req, res) => res.json(await stats()));
+app.get("/admin/api/telemetry", (req, res) => res.json({ stats: db.eventStats(Date.now() - 7 * 86400e3), events: db.events(200) }));
 app.get("/admin/api/plans", (req, res) => res.json(db.plans()));
 const act = (fn) => (req, res) => {
   try {

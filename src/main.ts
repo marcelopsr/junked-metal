@@ -20,7 +20,7 @@ import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setSco
 import { setDrawDist, buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, heavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
-import { cfLoginUrl, getToken, LOGIN_URL, loginKey, loginUrl, NET_HOST, redeemInvite, setToken, takeToken, type Msg, type Net } from "./net"; // net.ts es chico; peerjs sigue en su chunk dinámico
+import { cfLoginUrl, getToken, LOGIN_URL, loginKey, loginUrl, NET_HOST, redeemInvite, setToken, takeToken, track, type Msg, type Net } from "./net"; // net.ts es chico; peerjs sigue en su chunk dinámico
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
@@ -279,6 +279,7 @@ const grossScrap = () => runScrap + Math.floor((time + encPrior) / R.tornillos_d
 const zoneFor = (d: boolean) => d ? "patio" : encore ? "luna" : (import.meta.env.DEV && new URLSearchParams(location.search).get("zone")) || save.zone;
 function startRun(d = false) {
   daily = d;
+  if (!simulating && !LAB.on) track("run_start", { mode: encore ? "encore" : d ? "diario" : "supervivencia", car: save.car });
   initAudio(); music("run", 0); musicS = "run";
   menuOff(); // ?lab arranca desde el título
   clearRun();
@@ -664,6 +665,7 @@ if (NET_HOST) {
     for (const id of ["netCfLogin", "netAlt"]) $(id).classList.toggle("hidden", on);
   };
   sess();
+  track("session", { ua: navigator.userAgent.slice(0, 120), w: innerWidth, h: innerHeight, touch: matchMedia("(pointer: coarse)").matches });
   $("netKeyGo").onclick = async () => {
     const k = $("netKey") as HTMLInputElement;
     if (!k.value.trim()) { netStatus("Escribir la clave de grupo."); return; }
@@ -856,6 +858,7 @@ function endRun(win: boolean, why: string) {
   const topHit = (Object.entries(dmgBy).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "accidente").replace(/[^\p{L}\d .,-]/gu, "").slice(0, 40);
   const enc = erun ? E.report(erun, { chests: chestsOpened(), cause: win ? "Venció al jefe del FINAL ACT" : `Daño de ${topHit}` }) : undefined; // R5: reporte de la expedición
   const rec: RunRec = { t: Math.floor(time), kills, lv: level, seed: runSeed, win };
+  if (!simulating && !LAB.on) track("run_end", { mode: erun ? "encore" : daily ? "diario" : "supervivencia", win, t: Math.floor(time), kills, lv: level, seed: runSeed, car: save.car, cause: win ? "" : topHit, ...(erun ? { loop: erun.loop, stage: erun.stage } : {}) });
   if (!simulating && !LAB.on) { // las pruebas de dev no tocan el guardado real
     save.scrap += earned - (bank?.scrap ?? 0); // al terminar el modo sin fin, solo lo que faltaba cobrar
     save.endless = Math.max(save.endless, lasted);
