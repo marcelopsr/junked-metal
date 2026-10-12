@@ -64,6 +64,8 @@ export const shopReset = () => { opened = 0; };
 export const chestsLeft = () => shops.filter((s) => s.kind === "cofre").length;
 /** Cofres de pago abiertos en la run (para el reporte de ENCORE). */
 export const chestsOpened = () => opened;
+/** Solo dev (__enc.shop): mueve el primer cofre o máquina que quede al punto c (el auto lo activa quedándose ahí). */
+export const shopDev = (k: "cofre" | "maquina", c: B.Vector3) => { const s = shops.find((x) => x.kind === k); if (s) s.p.copyFrom(c); return !!s; };
 /** Coloca 3 cofres y 1 máquina alrededor de c0 (llegada del escenario); orden, ángulo y distancia salen de (seed, stage). */
 export function shopPlan(seed: number, stage: number, c0: B.Vector3) {
   shopDrop(); shopStage = stage;

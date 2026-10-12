@@ -304,6 +304,15 @@ describe("rutas: destino del escenario siguiente", () => {
     expect(calls).toBe(0);
   });
 
+  it("una vuelta jugada por rutas no repite variante (QA final: LA TARIMA salía dos veces)", () => {
+    for (let seed = 1; seed <= 60; seed++) for (const choice of [0, 1] as const) {
+      const r = newRun(seed); r.loop = 1;
+      const seen = [variantOf(r)];
+      for (let st = 1; st < ENC.stages; st++) { toDecision(r); adv0(r); expect(r.phase).toBe("route"); pick(r, choice); seen.push(variantOf(r)); }
+      expect(new Set(seen).size).toBe(ENC.stages);
+    }
+  });
+
   it("ask muestra riesgo y recompensa de cada destino, sin botón de rechazo", () => {
     const r = atRoute(), a = ask(r)!;
     expect(a).toMatchObject({ total: ENC.routeS });

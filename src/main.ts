@@ -1,4 +1,4 @@
-import { hudMate, hudQuad, banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
+import { hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
@@ -28,7 +28,7 @@ import { craterHumeante, evBase, evFog, evInit, evPace, evReset, evShow, lunaDev
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import * as E from "./encore";
-import { COOP, chestsLeft, chestsOpened, goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset, spotsPlan } from "./moon_goals";
+import { COOP, chestsLeft, chestsOpened, shopDev, goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset, spotsPlan } from "./moon_goals";
 import { skyClear, skyInfo, skyLaunch, skyPace, skyTick } from "./moon_sky";
 import { ALIENS, alienWave, armorMul, healTick, isAlien } from "./aliens";
 import { wormForce, wormHeadTpl, wormOut } from "./moon_worm";
@@ -796,7 +796,7 @@ function endRun(win: boolean, why: string) {
     persist();
   }
   $("hud").classList.add("hidden");
-  $("banner").classList.add("hidden");
+  bannerClear();
   const more = win && !endless; // venció al jefe final: los resultados ofrecen "Seguir jugando"
   bank = { t: time, scrap: earned, dmg: { ...dmgOut }, rec };
   const evos = weapons.filter((w) => w.evolved).map((w) => WEAPONS[w.id].evoName);
@@ -1639,7 +1639,7 @@ function update(dt: number) {
   const gb = (MOON.on || erun) && lead.car ? goalBar(lead.car.pos) : null; // luna: progreso de la antena o del cohete en la barra de jefe
   if (gb) hudBoss(gb.name, gb.pct);
   else if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp), boss.kind, boss.enraged);
-  else if (MOON.on) { const sb = shipBar(); if (sb) hudBoss(sb.name, sb.pct); } // naves de la luna: misma barra de jefe
+  else { const sb = MOON.on ? shipBar() : null; hudBoss(sb?.name ?? null, sb?.pct); } // naves de la luna: misma barra de jefe; sin nada, la barra se va (si no, quedaba la del último cofre o máquina)
   { const ms = boss ? "boss" : apagon ? "blackout" : "run"; if (!simulating && (ms !== musicS || (musicT -= dt) <= 0)) { musicS = ms; musicT = 1; music(ms, time / 600); } } // música: cambio de estado al instante, intensidad cada ~1 s
 
   // --- Ácido de escupidoras ---
@@ -2311,6 +2311,7 @@ if (import.meta.env.DEV) Object.assign(window, {
     board: () => { if (erun) encApply(E.boarded(erun)); return erun?.phase; },
     pick: (i: 0 | 1) => { applyCommand(lead.id, { k: "enc", i }); return erun?.phase; },
     tick: (secs: number) => { if (erun) encApply(E.tick(erun, secs)); return erun?.phase; },
+    shop: (k: "cofre" | "maquina" = "cofre") => { if (!lead.car) return false; runScrap = Math.max(runScrap, 999); return shopDev(k, lead.car.pos); }, // trae un cofre o la máquina al auto (con tornillos de sobra)
   },
   __tick: (n: number) => { const g = engine.getDeltaTime; engine.getDeltaTime = () => 1000 / 60; for (let i = 0; i < n; i++) { engine.beginFrame(); scene.render(); engine.endFrame(); } engine.getDeltaTime = g; },
   __killAll: () => enemies.forEach((e) => { if (!e.def.boss) e.hp = 0; }),

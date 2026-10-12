@@ -251,9 +251,12 @@ export function variantOf(r: Run): Variant | null {
   if (!r.loop) o.unshift(...o.splice(o.indexOf(0), 1)); // vuelta 0: LA TARIMA primero
   return VARIANTS[o[idx % o.length]];
 }
-/** Los dos destinos del escenario siguiente: variantes distintas, estables por (semilla, vuelta, escenario) con hash propio (no gasta el rng() de la partida). */
+/** Variantes ya jugadas en la vuelta: la del primer escenario (sorteo) y los destinos elegidos después (los últimos `stage` de `went`). */
+const playedInLoop = (r: Run) => [VARIANTS.indexOf(variantOf({ ...r, stage: 0, route: null, phase: "stage" })!), ...(r.stage ? r.went.slice(-r.stage) : [])];
+/** Los dos destinos del escenario siguiente: variantes distintas y no jugadas en esta vuelta, estables por (semilla, vuelta, escenario) con hash propio (no gasta el rng() de la partida). */
 export function routeOffer(r: Run): [number, number] {
-  const o = VARIANTS.map((_, i) => ({ i, k: mix(r.seed + 0x70e1 + r.loop * 6151 + (r.stage + 1) * 32452843 + i * 49979687) })).sort((a, b) => a.k - b.k);
+  const played = playedInLoop(r);
+  const o = VARIANTS.map((_, i) => ({ i, k: mix(r.seed + 0x70e1 + r.loop * 6151 + (r.stage + 1) * 32452843 + i * 49979687) })).filter(({ i }) => !played.includes(i)).sort((a, b) => a.k - b.k);
   return [o[0].i, o[1].i];
 }
 /** Riesgo de un destino: el producto de su recompensa (el Director paga más por lo más peligroso). */

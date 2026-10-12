@@ -459,6 +459,8 @@ export function dirSub(txt: string | null, secs = 3.6) {
   b.classList.toggle("hidden", !txt);
   if (txt) b.querySelector(".dtxt")!.textContent = txt;
 }
+/** Fin de partida: se va el aviso en pantalla y los que esperaban (QA final: el aviso encolado salía sobre los resultados). */
+export function bannerClear() { bannerQ.length = 0; hideBanner(); }
 function hideBanner() {
   bannerOn = false; bannerTyping = false; bannerHold = 0;
   const b = $("banner");
