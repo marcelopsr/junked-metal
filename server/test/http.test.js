@@ -170,6 +170,16 @@ test("diario: /api/daily, solo el primer intento cuenta, board sin mails", async
   assert.ok(!JSON.stringify(r).includes("@"));
 });
 
+test("ranking semanal: 401 sin token, mejor kills por usuario, sin mails", async () => {
+  assert.equal((await fetch(B + "/api/ranking/semanal")).status, 401);
+  const a = await tokenFor("wka@x.com"), b = await tokenFor("wkb@x.com");
+  const send = (t, kills) => post("/api/telemetry", { token: t, type: "run_end", data: { mode: "normal", kills, lv: 3, t: 100, win: false } });
+  await send(a.token, 7); await send(a.token, 12); await send(b.token, 9);
+  const r = await (await fetch(B + "/api/ranking/semanal", { headers: { Authorization: "Bearer " + a.token } })).json();
+  assert.deepEqual(r.filter((x) => x.name.startsWith("wk")), [{ name: "wka…", score: 12 }, { name: "wkb…", score: 9 }]);
+  assert.ok(!JSON.stringify(r).includes("@"));
+});
+
 test("/api/me/stats: sin token 401; cada usuario ve solo lo suyo", async () => {
   assert.equal((await fetch(B + "/api/me/stats")).status, 401);
   const ck = { Cookie: (await post("/admin/api/login", { key: "clave-admin" })).headers.get("set-cookie").split(";")[0] };
@@ -384,4 +394,24 @@ test("lista de espera: 202 siempre, honeypot, CORS, panel invitar/descartar, 401
   const H = { ...O, "X-Forwarded-For": "10.9.9.9" };
   for (let k = 0; k < 5; k++) assert.equal((await post("/api/waitlist", { email: `r${k}@x.com` }, H)).status, 202);
   assert.equal((await post("/api/waitlist", { email: "r5@x.com" }, H)).status, 429, "6.º intento de la hora por IP");
+});
+
+test("T34: /api/salas lista salas (no espectadores) con conteo de espectadores", async () => {
+  const { WebSocket } = await import("ws");
+  const { token } = await (await post("/api/login", { clave: "g" })).json();
+  const open = (id) => new Promise((ok, no) => { const w = new WebSocket(`ws://127.0.0.1:${PORT}/peer/peerjs?key=peerjs&id=${id}&token=${encodeURIComponent(token)}`); w.once("message", () => ok(w)); w.once("error", no); w.once("unexpected-response", (_, r) => no(new Error("HTTP " + r.statusCode))); });
+  assert.equal((await fetch(B + "/api/salas")).status, 401);
+  const ws = [await open("jm-ABC123"), await open("jmv-ABC123-x1"), await open("jmv-ABC123-x2")];
+  const l = await (await fetch(B + "/api/salas", { headers: { Authorization: "Bearer " + token } })).json();
+  ws.forEach((w) => w.close());
+  assert.equal(l.length, 1);
+  assert.deepEqual([l[0].id, l[0].code, l[0].espectadores], ["jm-ABC123", "ABC123", 2]);
+  assert.ok(!JSON.stringify(l).includes("@"));
+});
+test("uso: /admin/api/uso exige admin y agrega partidas, modos y abandono", async () => {
+  assert.equal((await fetch(B + "/admin/api/uso")).status, 401);
+  const lr = await post("/admin/api/login", { key: "clave-admin" }, { "X-Forwarded-For": "10.7.7.9" });
+  const ck = { Cookie: lr.headers.get("set-cookie").split(";")[0] };
+  const u = await (await fetch(B + "/admin/api/uso", { headers: ck })).json();
+  assert.ok(Array.isArray(u.perDay) && Array.isArray(u.modes) && typeof u.abandonPct === "number");
 });

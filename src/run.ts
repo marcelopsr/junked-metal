@@ -115,3 +115,11 @@ export function previewProfile(seed: number): Profile {
   });
 }
 
+
+// Modo Tranquilo (accesibilidad): el jugador recibe ~50% del daño y los bichos (no jefes) nacen con ~70% de vida. El guardado lo pone en `save.tranquilo` (savefmt.ts).
+let tranquilo = false;
+export const setModoTranquilo = (on: boolean) => { tranquilo = on; };
+export const getModoTranquilo = () => tranquilo;
+export const TRANQUILO = { dano: 0.5, vida: 0.7 };
+/** Daño que recibe el jugador tras el modo (main.ts: usarlo en hurt() y mateHurt()). */
+export const danoRecibido = (n: number) => (tranquilo ? n * TRANQUILO.dano : n);

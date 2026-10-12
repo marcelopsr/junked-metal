@@ -165,3 +165,25 @@ test("pruneEvents borra solo los eventos más viejos que el corte", () => {
   assert.equal(db.pruneEvents(now - 90 * DAY), 1);
   assert.equal(db.events().length, 1);
 });
+
+test("userLogros: podio semana cerrada, rachas del diario y veterano", () => {
+  const db = openDb(":memory:"), D = 86400e3, mon = Date.UTC(2026, 0, 5); // lunes
+  const run = (uid, at, d) => db.track(uid, "run_end", JSON.stringify(d), at);
+  run("u", mon + 1, { kills: 10 }); run("a", mon + 2, { kills: 50 }); run("b", mon + 3, { kills: 40 }); run("c", mon + 4, { kills: 30 });
+  const now = mon + 8 * D, L = (uid) => Object.fromEntries(db.userLogros(uid, now).map((l) => [l.id, l]));
+  assert.equal(L("u").podio.done, false, "4º puesto");
+  assert.equal(L("c").podio.done, true);
+  assert.equal(db.userLogros("c", mon + 2 * D)[0].done, false, "semana en curso no cuenta");
+  for (let i = 0; i < 7; i++) run("u", mon + 9 * D + i, { kills: 1, daily: new Date(mon + (9 + i) * D).toISOString().slice(0, 10) });
+  assert.deepEqual([L("u").racha3.done, L("u").racha7.done, L("u").veterano.progress], [true, true, 8]);
+  for (let i = 0; i < 50; i++) run("v", mon + i, { kills: 0 });
+  assert.equal(L("v").veterano.done, true);
+});
+test("usageStats: partidas por día, modos y abandono", () => {
+  const db = openDb(":memory:"), now = Date.now();
+  db.track("u", "run_start", '{"mode":"encore"}', now); db.track("u", "run_start", '{"mode":"encore"}', now);
+  db.track("u", "run_start", '{"mode":"diario"}', now); db.track("u", "run_end", "{}", now);
+  db.track("u", "run_start", '{"mode":"x"}', now - 40 * DAY);
+  const r = db.usageStats(now - 30 * DAY);
+  assert.equal(r.started, 3); assert.equal(r.modes[0].mode, "encore"); assert.equal(r.perDay[0].n, 3); assert.equal(r.abandonPct, 67);
+});

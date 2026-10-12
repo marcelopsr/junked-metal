@@ -1328,6 +1328,18 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         ...[[-1.3, 1.9], [1.3, 1.9]].map(([x, z]) => cyl(0.35, 0.35, 0.3, dark, [x, 0.5, z], [0, 0, Math.PI / 2], 8)),
       ];
     }
+    if (kind === "payaso") {
+      // Payaso de resorte (desván): caja violeta, resorte de acero, cabeza blanca con nariz roja y sombrero, mira hacia +z
+      const box0 = M.plastic("#7c3aed"), steel = M.metal("#9ca3af"), white = M.plastic("#f5f5f4"), red = M.glow("#ff2a1a"), dark = M.matte("#1a1a1a");
+      return [
+        box(3.2, 1.6, 3.2, box0, [0, 0.8, 0]),
+        tube([[0, 1.6, 0], [0.6, 2.2, 0], [-0.6, 2.8, 0], [0.6, 3.4, 0], [0, 4, 0]], 0.22, steel),
+        sph(1.2, white, [0, 5.1, 0], undefined, 10),
+        sph(0.35, red, [0, 5, 1.15], undefined, 6),
+        cyl(0.1, 0.9, 1.2, dark, [0, 6.5, 0], undefined, 8),
+        ...[-1, 1].map((s) => sph(0.22, dark, [s * 0.45, 5.4, 1.0], undefined, 5)),
+      ];
+    }
     if (kind === "cortacercos") {
       // Herramienta eléctrica toy: bloque naranja atrás, mango en D, espada larga dentada hacia +z
       const body = M.plastic("#e0a030"), dark = M.matte("#1a1a1a"), steel = M.metal("#9ca3af");
@@ -1364,6 +1376,26 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         box(0.66, 0.05, 0.08, rust, [0, 0.46, 0.2]), cyl(0.36, 0.26, 0.22, rust, [0, 0.46, -0.7], [Math.PI / 2, 0, 0], 8), sph(0.34, M.glow("#ff9138"), [0, 0.46, -0.84], [1, 1, 1.5], 6),
         ...[-1, 1].flatMap((s) => [box(0.06, 0.34, 0.36, red, [s * 0.36, 0.5, -0.5], [0, 0, s * 0.5]), box(0.08, 0.1, 1.1, rust, [s * 0.26, 0.05, 0])]),
         box(0.06, 0.34, 0.36, red, [0, 0.82, -0.5]), sph(0.18, M.glow("#ffe566"), [0, 0.72, 0.3], undefined, 6),
+      ];
+    }
+    if (kind === "grillo") {
+      const g = M.plastic("#5a8a2a"), d = M.matte("#2f4a16"), eye = M.glow("#ffe040");
+      return [
+        sph(0.5, g, [0, 0.55, -0.15], [0.9, 0.8, 1.5], 8), sph(0.36, g, [0, 0.62, 0.55], undefined, 6),
+        sph(0.09, eye, [0.15, 0.72, 0.8], undefined, 4), sph(0.09, eye, [-0.15, 0.72, 0.8], undefined, 4),
+        ...[-1, 1].flatMap((s) => [
+          tube([[s * 0.3, 0.5, -0.3], [s * 0.6, 1.05, -0.65], [s * 0.55, 0.1, -1]], 0.07, d), // pata trasera de salto
+          tube([[s * 0.1, 0.8, 0.8], [s * 0.3, 1.2, 0.9], [s * 0.45, 1.5, 0.7]], 0.02, d), // antena
+          tube([[s * 0.25, 0.45, 0.2], [s * 0.45, 0.3, 0.4], [s * 0.5, 0.05, 0.5]], 0.05, d),
+        ]),
+      ];
+    }
+    if (kind === "mosca") {
+      const b = M.matte("#2a2a35"), wing = M.glass(), eye = M.glow("#ff3a2a");
+      return [
+        sph(0.3, b, [0, 0.45, -0.1], [0.9, 0.8, 1.3], 6), sph(0.22, b, [0, 0.48, 0.3], undefined, 6),
+        sph(0.12, eye, [0.13, 0.52, 0.42], undefined, 4), sph(0.12, eye, [-0.13, 0.52, 0.42], undefined, 4),
+        ...[-1, 1].map((s) => box(0.5, 0.02, 0.28, wing, [s * 0.34, 0.68, -0.1], [0, s * 0.3, s * 0.15])),
       ];
     }
     throw new Error(`enemyTemplate: ${kind} no tiene modelo procedural (los GLB van por glb.ts)`);

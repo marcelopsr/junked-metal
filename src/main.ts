@@ -317,7 +317,7 @@ function startRun(d = false) {
   const curses: typeof save.curses = [];
   horde = curses.includes("horda") ? R.maldicion_horda : 1; noRepair = curses.includes("sinrep"); curseK = 1 + R.maldicion_tornillos * curses.length;
   endless = false; bank = null;
-  abil = save.ability; abilLv = save.abilLv[abil] ?? 0; abilCd = abilOn = bombs = 0; worldK = 1; shieldM = null;
+  abil = save.ability; abilLv = (save.abilLv[abil] ?? 0) + (PILOTS[save.pilot]?.abil === abil ? 1 : 0); // afinidad: la habilidad del piloto rinde un nivel más abilCd = abilOn = bombs = 0; worldK = 1; shieldM = null;
   driveMul = 1; driftT = airT = trickT = 0; jumpCd = 0; boostSec = 0; motorFxT = 0; hudDrive(1);
   lead.car = new Car(scene, save.car, carOpts());
   lastHpFrac = 1;
@@ -995,6 +995,7 @@ function kill(e: Enemy) {
   }
   if (e.elite) { dropPickup(e.pos, "cofre"); e.aura?.dispose(); } // la élite suelta cofre; el aura no queda en el cadáver
   // Los insectos quedan patas arriba unos segundos; el resto desaparece
+  if (e.kind === "grillo" && !MOON.on) for (let i = 0; i < 2; i++) spawnEnemy("mosca", e.pos.add(new B.Vector3(i ? 0.7 : -0.7, 0.3, 0))); // plaga: el grillo se parte en 2 moscas (e.pos se lee antes de borrar)
   if (juice && BUG_GOO[e.kind]) { e.agg.dispose(); corpse(e.node, e.def.size[1] * (e.def.scale ?? 1)); } else leave(e);
 }
 // Jefes GLB con clips (Felipe, Eulalio): quedan en el piso reproduciendo su muerte; el resto de los jefes desaparece
@@ -1082,7 +1083,7 @@ function update(dt: number) {
   lampBoost = boosting;
   boostSec = boosting ? boostSec + dt : 0;
   lead.boost = boosting ? lead.boost - R.turbo_gasto * st.boostUse * dt : Math.min(100, lead.boost + st.boostRegen * dt);
-  const maxSpeed = c.def.speed * st.speedMul * (boosting ? R.turbo_vel : 1);
+  const maxSpeed = c.def.speed * st.speedMul * (boosting ? R.turbo_vel : 1) * (abil === "turbo" && abilOn > 0 ? R.turbo_hab_vel : 1);
   const r = drive(c.body, c.root, dt, {
     throttle: boosting ? 1 : throttle, steer, speed: maxSpeed,
     accel: c.def.accel * (boosting ? R.turbo_acel : 1),
@@ -1354,7 +1355,7 @@ function update(dt: number) {
       const rel = B.Vector3.Dot(cv, dir); // solo cuenta TU velocidad hacia el enemigo
       if (rel > R.embestida_vel_min && e.ramCd <= 0) {
         const lanza = weapons.find((w) => w.id === "lanza");
-        const dmg = rel * c.def.ram * (1 + BAL.armas.lanza.dano_nivel * (lanza?.lv ?? 0)) * (boosting ? (c.kind === "axel" ? R.embestida_turbo_axel : R.embestida_turbo) : 1) * st.dmg * st.ram * (lanza?.evolved ? BAL.armas.lanza.dano_evo_mult : 1);
+        const dmg = rel * c.def.ram * (1 + BAL.armas.lanza.dano_nivel * (lanza?.lv ?? 0)) * (boosting ? (c.kind === "axel" ? R.embestida_turbo_axel : R.embestida_turbo) : 1) * (abil === "turbo" && abilOn > 0 ? R.turbo_hab_embestida : 1) * st.dmg * st.ram * (lanza?.evolved ? BAL.armas.lanza.dano_evo_mult : 1);
         dmgSrc = "embestida";
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(upv(e.pos, rel * 0.2)), true);
         FX.sparks(e.pos.add(upv(e.pos, 0.5)));
@@ -1625,7 +1626,7 @@ function useAbility(c: Car) {
   const a = ABILITIES[abil];
   const k = abilK(abilLv); // nivel del Taller: más petardos, más segundos de escudo y de cámara lenta, más aturdido
   abilCar = c;
-  abilCd = abilCdOf(abil, abilLv); abilOn = a.dur * (abil === "escudo" || abil === "lenta" ? k : 1);
+  abilCd = abilCdOf(abil, abilLv); abilOn = a.dur * (abil === "escudo" || abil === "lenta" || abil === "turbo" ? k : 1);
   if (abil === "bombardeo") { bombs = Math.round(R.bombardeo_petardos * k); bombT = 0; }
   else if (abil === "escudo") {
     if (!shieldM) { shieldM = sph(Math.max(...c.def.size) * 1.5, pbr("escudo", { color: "#8dff6a", emissive: "#3f9a2a", alpha: 0.18 }), [0, 0.2, 0]); shieldM.parent = c.root; shieldM.isPickable = false; }

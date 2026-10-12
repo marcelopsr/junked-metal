@@ -119,6 +119,7 @@
   </div>
   <div id="dirSub" class="hidden" role="status" aria-live="polite"><span class="rx-tag">DIRECTOR</span><span class="dtxt"></span></div>
   <div id="fps" class="hidden">-- fps</div>
+  <div id="rpBar" class="hidden"><span>REPETICIÓN</span><button id="rpSpeed">x1</button><button id="rpExit">Salir</button></div>
   <div id="muted" class="hidden">SONIDO APAGADO · M</div>
   <div id="outro" class="hidden"><span class="o-tag">CÁMARA LENTA</span><span class="o-stat" id="outroStat"></span><span class="o-skip" id="outroSkip"></span></div>
 
@@ -137,6 +138,7 @@
 
   <!-- Front-end: pantallas manejadas por src/menu.ts (una visible por vez) -->
   <div id="fe" class="overlay">
+    <div id="scrAnnounce" class="sr-only" role="status"></div>
     <div id="ask" class="ask hidden" role="dialog" aria-modal="true" aria-labelledby="askTitle"><div class="askbox"><div class="otitle" id="askTitle">Confirmar compra</div><p id="askD"></p>
       <div class="btns"><button data-act="askno">Cancelar</button><button data-act="askyes" class="primary">Comprar</button></div></div></div>
     <section id="scr-title" class="scr">
@@ -184,9 +186,12 @@
         </details>
         <button id="netLogout" class="hidden">Cerrar sesión</button>
         <button id="netAcct" class="hidden" data-go="cuenta">Mi cuenta</button>
+        <button data-act="pcar" id="encCarBtn"><span class="bt"></span></button>
         <button id="netHost">Online: crear sala</button>
         <input id="netCode" class="netCode" maxlength="6" placeholder="Código de sala" autocomplete="off" spellcheck="false" aria-label="Código de sala">
         <button id="netJoin">Unirse con código</button>
+        <button id="netWatch">Mirar partidas</button>
+        <ol id="netSalas" class="hidden"></ol>
         <div class="foot" id="netStatus" role="status" aria-live="polite"></div>
         <button data-act="back">Volver</button>
       </nav>
@@ -203,6 +208,7 @@
       <nav class="list">
         <button data-act="playgo" class="primary">Largar</button>
         <button data-act="zone" id="zoneBtn"><span class="bt"></span></button>
+        <button data-act="pcar" id="pcarBtn"><span class="bt"></span></button>
         <button data-act="curse" id="curseBtn" class="hidden"></button><!-- maldiciones ocultas por ahora (decisión del usuario 2026-10-04) -->
         <button data-act="back">Volver</button>
       </nav>
@@ -263,7 +269,7 @@
       <div class="otitle">Garaje</div>
       <div class="sect">Banco <span id="bankG"></span></div>
       <div class="garage-banner jm-panel"><img src="./images/workshop-backdrop.webp" alt="Garaje y mesa de trabajo" width="1024" height="512" loading="lazy" /></div>
-      <div id="gtabs" class="tabs"></div>
+      <div id="gtabs" role="tablist" class="tabs"></div>
       <div id="cars"></div>
       <div id="paint"></div>
       <div class="btns"><button data-act="back" class="primary">Guardar</button></div>
@@ -273,7 +279,7 @@
       <div class="otitle">Taller</div>
       <div class="sect">Banco <span id="bank"></span></div>
       <div class="shop-banner jm-panel"><img src="./images/workshop-backdrop.webp" alt="Taller de chatarra y banco de trabajo" width="1024" height="512" loading="lazy" /></div>
-      <div id="stabs" class="tabs"></div>
+      <div id="stabs" role="tablist" class="tabs"></div>
       <div id="sfilt" class="tabs"></div>
       <div id="shop"></div>
       <div id="sinfo" class="note"></div>
@@ -282,7 +288,7 @@
 
     <section id="scr-config" class="scr">
       <div class="otitle">Configuración</div>
-      <div id="tabs"></div>
+      <div id="tabs" role="tablist"></div>
       <div id="opts"></div>
       <div class="btns"><button data-act="back">Volver</button></div>
     </section>
@@ -290,8 +296,8 @@
     <section id="scr-bestiary" class="scr wide">
       <div class="otitle">Chatarroteca</div>
       <div class="bestiary-banner jm-panel"><img src="./images/bestiary-backdrop.webp" alt="Chatarroteca y vitrina de especímenes" width="1024" height="512" loading="lazy" /></div>
-      <div id="btabs" class="tabs"></div>
-      <div id="bfilts" class="tabs hidden"></div>
+      <div id="btabs" role="tablist" class="tabs"></div>
+      <div id="bfilts" role="tablist" class="tabs hidden"></div>
       <div id="beasts"></div>
       <div class="sect">Mejores partidas</div>
       <table id="records"></table>
@@ -337,6 +343,8 @@
         <button id="acctSave">Guardar</button>
         <div class="foot" id="acctMsg" role="status" aria-live="polite"></div>
       </div>
+      <div class="briefCard jm-panel"><div class="briefRec">Logros online</div><ul class="briefRec" id="acctLogros"></ul></div>
+      <div class="briefCard jm-panel"><div class="briefRec">Ranking semanal (bajas)</div><ol class="briefRec" id="acctRank"></ol></div>
       <div class="btns"><button data-act="back">Volver</button><button id="acctOut">Cerrar sesión</button></div>
     </section>
 
@@ -361,6 +369,7 @@
       <nav class="list row3">
         <button data-act="resume" class="primary">Seguir</button>
         <button data-act="controls">Controles</button>
+        <button id="photoBtn">Foto (F)</button>
         <button data-go="config">Configuración</button>
         <button data-act="quit">Abandonar</button>
       </nav>
@@ -369,9 +378,9 @@
 
     <section id="scr-over" class="scr">
       <div class="brand small" id="overTitle"></div>
-      <div class="tag" id="overTxt"></div>
-      <div class="stamp hidden" id="overRec">RÉCORD NUEVO</div>
-      <div class="tag hidden" id="overShop">Alcanza para algo nuevo en el Taller</div>
+      <div class="tag" id="overTxt" role="status"></div>
+      <div class="stamp hidden" id="overRec" role="status">RÉCORD NUEVO</div>
+      <div class="tag hidden" id="overShop" role="status">Alcanza para algo nuevo en el Taller</div>
       <ul class="kit stats" id="overStats"></ul>
       <div class="overRow overGrid">
         <div class="overCol card">
@@ -395,6 +404,7 @@
         <button data-act="play" class="primary" id="overRepeat">Repetir</button>
         <button data-go="shop">Ir al Taller</button>
         <button data-act="quit">Menú</button>
+        <button id="overReplay" class="hidden">Ver repetición</button>
         <button data-act="endless" id="overEndless" class="hidden">Seguir jugando</button>
       </nav>
     </section>

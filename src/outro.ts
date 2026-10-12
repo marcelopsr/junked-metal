@@ -377,7 +377,7 @@ export function endOutro() {
   outroUi(false);
   ctx.scene.physicsEnabled = true;
   openOver(outroRes!);
-  $("overReplay")?.classList.toggle("hidden", !RR.rec.done);
+  $("overReplay")?.classList.toggle("hidden", !RR.rec.done || !import.meta.env.DEV); // ponytail: solo en dev hasta que la repetición sea fiel (hoy diverge: enemigos sin snapshot)
   void showPhoto({
     zone: ZONES[ctx.zoneId].name,
     time: fmt(ctx.time),

@@ -3,5 +3,11 @@
 {"fecha":"2026-10-12","titulo":"ENCORE es el modo principal","texto":"La expedición ENCORE pasa a ser la forma de jugar por defecto."},
 {"fecha":"2026-10-12","titulo":"Récords online con apodo","texto":"El servidor ya guarda los récords de ENCORE junto a un apodo público. La pantalla para elegirlo llega en una próxima entrega."},
 {"fecha":"2026-10-12","titulo":"Tres pactos nuevos y «Ensayo de medianoche»","texto":"Se suman tres pactos al repertorio de ENCORE y una variante nueva: «Ensayo de medianoche»."},
-{"fecha":"2026-10-12","titulo":"Primera partida guiada","texto":"Cinco avisos únicos acompañan la primera expedición y explican lo esencial sin interrumpir después."}
+{"fecha":"2026-10-12","titulo":"Primera partida guiada","texto":"Cinco avisos únicos acompañan la primera expedición y explican lo esencial sin interrumpir después."},
+{"fecha":"2026-10-12","titulo":"Modo Tranquilo","texto":"En Opciones: mitad de daño recibido y bichos al 70% de vida. Los jefes no cambian."},
+{"fecha":"2026-10-12","titulo":"Modo foto","texto":"En pausa, F lo activa; se arrastra para orbitar, C captura un PNG y Esc vuelve."},
+{"fecha":"2026-10-12","titulo":"Mirar partidas","texto":"Se puede mirar una partida como espectador desde la pantalla online."},
+{"fecha":"2026-10-12","titulo":"Ranking semanal y Logros online","texto":"Ya están disponibles en Mi cuenta."},
+{"fecha":"2026-10-12","titulo":"Afinidad de piloto","texto":"Si la habilidad elegida coincide con la del piloto, sube +1 nivel."},
+{"fecha":"2026-10-12","titulo":"Desafío diario","texto":"Ahora usa una semilla oficial."}
 ]

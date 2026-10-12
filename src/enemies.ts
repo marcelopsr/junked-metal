@@ -3,13 +3,13 @@ import { auraTemplate, cableTemplate, enemyTemplate, legTemplate, LEGS, sectorTe
 import { FX } from "./fx";
 import { rng } from "./rng";
 import { BAL } from "./balance";
-import type { Elite } from "./run";
+import { type Elite, getModoTranquilo, TRANQUILO } from "./run";
 import { GLB, glbAnimate, glbPlay, glbTpl, glbVat } from "./glb";
 import { alignYaw, alt, at, flatL, hflat, MOON, onFloor, orient, toLocal, toWorld, yawOf } from "./moon";
 import { ALIEN_AI, ALIENS, type Alien } from "./aliens";
 import { WORM_AI, wormDispose, wormHeadTpl } from "./moon_worm";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "proyector" | "grua" | "fuego" | "cohete" | "gusano" | Alien;
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "proyector" | "grua" | "payaso" | "fuego" | "cohete" | "gusano" | "grillo" | "mosca" | Alien;
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; final?: boolean; scale?: number; color: string };
 const ATK = BAL.ataques;
@@ -23,6 +23,9 @@ export const DEF: Record<Kind, Def> = {
   robot: { name: "Robot a cuerda", ...stats("robot"), size: [1.2, 1.7, 1], color: "#ef4444" },
   polilla: { name: "Polilla", ...stats("polilla"), size: [1.4, 0.5, 1.1], color: "#d8c690" },
   escarabajo: { name: "Escarabajo", ...stats("escarabajo"), size: [1.7, 1.1, 2.3], color: "#2f7d4a" },
+  // Plagas nuevas de la Tierra: grillo (salta en arco) y mosca (zigzaguea)
+  grillo: { name: "Grillo saltarín", ...stats("grillo"), size: [0.9, 0.9, 1.3], color: "#5a8a2a" },
+  mosca: { name: "Mosca zigzag", ...stats("mosca"), size: [0.9, 0.7, 1.1], color: "#3d5a8a" },
   // Luna (moon_sky.ts): salen del impacto de lo que lanzan el Sol (fuego: corre derecho como la hormiga) y la Tierra (cohete: carga como el robot)
   fuego: { name: "Bicho de fuego", ...stats("fuego"), size: [0.8, 0.55, 1.3], color: "#ff7a1a" },
   cohete: { name: "Bicho-cohete", ...stats("cohete"), size: [0.8, 0.8, 1.6], color: "#8a8f98" },
@@ -42,6 +45,7 @@ export const DEF: Record<Kind, Def> = {
   gato: { name: "EULALIO EL MICHU", ...stats("gato"), size: [3.4, 3.6, 6.4], boss: true, color: "#d9782a" },
   aspiradora: { name: "LA ASPIRADORA ROBOT", ...stats("aspiradora"), size: [6.4, 1.6, 6.4], boss: true, color: "#7a8fa6" },
   proyector: { name: "EL PROYECTOR DEL DIRECTOR", ...stats("proyector"), size: [3.6, 4.2, 4.6], boss: true, color: "#e0a030" },
+  payaso: { name: "EL PAYASO DE RESORTE", ...stats("payaso"), size: [3.2, 5, 3.2], boss: true, color: "#7c3aed" },
   grua: { name: "LA GRÚA DE FERIA", ...stats("grua"), size: [3.4, 5, 5.2], boss: true, color: "#c2410c" },
   gusano: { name: "GUSANO LUNAR", ...stats("gusano"), size: [2.2, 2.2, 2.4], boss: true, color: "#2f4f56" }, // jefe final de la luna (moon_worm.ts)
   cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", ...stats("cortacercos"), size: [3, 2.4, 9], boss: true, color: "#e0a030" },
@@ -143,7 +147,7 @@ export class Enemy {
 
   constructor(public kind: Kind, pos: B.Vector3, hpMul: number) {
     const d = (this.def = DEF[kind]);
-    this.hp = this.maxHp = d.hp * (d.boss ? 1 : hpMul);
+    this.hp = this.maxHp = d.hp * (d.boss ? 1 : hpMul * (getModoTranquilo() ? TRANQUILO.vida : 1));
     const [w, h, l] = d.size;
     this.radius = Math.max(w, l) / 2;
     const glb = glbTpl(kind); // modelo importado con VAT (glb.ts); los demás bichos usan su procedural de models.ts
@@ -200,8 +204,8 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
-    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano" || kind === "proyector" || kind === "grua") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
-    if (kind === "proyector" || kind === "grua") this.timer = 2.5;
+    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano" || kind === "proyector" || kind === "grua" || kind === "payaso") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
+    if (kind === "proyector" || kind === "grua" || kind === "payaso") this.timer = 2.5;
     if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
@@ -476,6 +480,18 @@ export class Enemy {
       }
     }
 
+    if (this.kind === "mosca") { // zigzag: el rumbo oscila a los lados del auto
+      const a = Math.sin(this.clock * ATK.mosca_zigzag_hz + this.maxHp) * ATK.mosca_zigzag_ang, c = Math.cos(a), s = Math.sin(a);
+      move = new B.Vector3(to.x * c - to.z * s, 0, to.x * s + to.z * c);
+    }
+
+    if (this.kind === "grillo") { // agachada con aviso, salto en arco fijo hacia donde estaba el auto, y espera
+      this.timer -= dt;
+      if (this.state === 0) { if (this.timer <= 0 && dist < ATK.grillo_salto_alcance) { this.state = 1; this.timer = ATK.grillo_aviso_s; } }
+      else if (this.state === 1) { speed = 0; turn = 8; if (this.timer <= 0) { this.state = 2; this.timer = ATK.grillo_vuelo_s; this.body.setLinearVelocity(new B.Vector3(to.x * ATK.grillo_salto_vel, ATK.grillo_salto_alto, to.z * ATK.grillo_salto_vel)); } }
+      else { if (this.timer <= 0) { this.state = 0; this.timer = ATK.grillo_cada_s; } return; } // en el aire no corrige
+    }
+
     if (this.kind === "escarabajo") {
       // Embestida al compás de su animación: se agacha apuntando, arremete (el golpe es el contacto) y se recupera
       const g = GLB.escarabajo!;
@@ -725,6 +741,29 @@ export class Enemy {
       }
     }
 
+    if (this.kind === "payaso") {
+      // Bloque propio (desván): persigue y, cada tanto, anuncia un aro rojo sobre el auto y salta a aplastarlo; al caer sacude el piso ("slam")
+      this.timer -= dt;
+      if (this.airborne) {
+        this.showTele(this.land, ATK.salto_radio, 1);
+        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; this.state = 0; this.timer = ATK.payaso_descanso_s; this.showTele(null); return "slam"; }
+        return;
+      }
+      if (this.state === 0) {
+        if (this.timer <= 0 && dist < ATK.payaso_distancia) { this.state = 1; this.timer = ATK.payaso_aviso_s; }
+      } else {
+        speed = 0; turn = 5;
+        if (this.timer > 0.4) this.land.set(target.x, target.y - 0.3, target.z);
+        this.showTele(this.land, ATK.salto_radio, 1 - this.timer / ATK.payaso_aviso_s);
+        if (this.timer <= 0) {
+          const T = (2 * 14) / 25, j = this.land.subtract(this.pos); j.y = 0;
+          this.body.setLinearVelocity(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)));
+          this.airborne = true;
+          return;
+        }
+      }
+    }
+
     if (this.kind === "perro") {
       // Felipe: bulldog francés desquiciado. Salta, embiste en línea recta, hace zoomies (corre zigzagueando al doble de velocidad) o gira como loco
       this.timer -= dt;
@@ -872,7 +911,7 @@ export class Enemy {
 // La plaga de la partida multiplica pesos y puede adelantar la llegada (minuto) de cada tipo
 export function spawnTable(t: number, plague?: { mult: Partial<Record<Kind, number>>; from: Partial<Record<Kind, number>> }): [Kind, number][] {
   const m = t / 60;
-  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", ...(MOON.on ? ALIENS : [])] as Kind[]).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
+  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", ...(MOON.on ? ALIENS : ["grillo", "mosca"])] as Kind[]).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
   return base.filter(([k, from]) => m >= (plague?.from[k] ?? from)).map(([k, , w]) => [k, w * (plague?.mult[k] ?? 1)]);
 }
 

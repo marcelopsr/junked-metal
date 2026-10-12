@@ -16,7 +16,7 @@ export type Net = {
   close(): void;
 };
 
-const PFX = "jm-";
+const PFX = "jm-", VPFX = "jmv-";
 export const NET_HOST = String(import.meta.env.VITE_NET_HOST ?? "").trim();
 const TOKEN = "jm_net_token", STUN = [{ urls: "stun:stun.l.google.com:19302" }]; // el STUN que PeerJS usa por defecto
 export const getToken = () => { try { return localStorage.getItem(TOKEN) ?? ""; } catch { return ""; } };
@@ -51,6 +51,13 @@ const authGet = async <T>(path: string): Promise<T | null> => {
 };
 /** GET /api/me y /api/me/stats: null sin servidor, sin sesión o con error. */
 export const me = () => authGet<Me>("/api/me");
+/** GET /api/daily: fecha y semilla oficiales del desafío (null sin servidor/sesión/red; el cliente cae a su semilla local). */
+export const daily = () => authGet<{ date: string; seed: number }>("/api/daily");
+/** GET /api/ranking/semanal: top 20 desde el lunes 00:00 UTC (null sin servidor/sesión/red). */
+export const rankingSemanal = () => authGet<{ name: string; score: number }[]>("/api/ranking/semanal");
+export type Logro = { id: string; name: string; done: boolean; progress: number; goal: number };
+/** GET /api/me/logros: logros online del usuario (null sin servidor/sesión/red). */
+export const misLogros = () => authGet<Logro[]>("/api/me/logros");
 export const myStats = () => authGet<MyStats>("/api/me/stats");
 /** POST /api/alias: devuelve null si se guardó, o el motivo del servidor. */
 export async function setAlias(alias: string): Promise<string | null> {
@@ -147,8 +154,17 @@ export async function hostRoom(onCode: (code: string) => void) {
   const code = newCode(), peer = new Peer(PFX + code, await opts());
   const net = wrap(peer, true, code);
   peer.on("open", () => onCode(code));
-  let guest = "";
+  let guest = "", go: Msg | null = null;
+  const specs = new Set<DataConnection>(); // espectadores (peer "jmv-..."): reciben snapshots "u" y eventos "r"; sus mensajes se descartan; sin slot ni resultados
+  const send = net.send;
+  net.send = (msg, rel = false) => { if (msg.t === "go") go = msg; send(msg, rel); for (const c of specs) if (c.open && c.label === (rel ? "r" : "u")) void c.send(msg); };
   peer.on("connection", (c) => { // un solo invitado: las conexiones de otro peer se cierran
+    if (c.peer.startsWith(VPFX)) {
+      if (c.label !== "r" && c.label !== "u") return c.close();
+      specs.add(c); c.on("close", () => specs.delete(c)); c.on("error", () => specs.delete(c));
+      if (c.label === "r") c.on("open", () => { if (go) void c.send(go); }); // el que llega tarde también recibe la largada
+      return;
+    }
     guest ||= c.peer;
     if (c.peer === guest && (c.label === "r" || c.label === "u")) net.attach(c); else c.close();
   });
@@ -166,3 +182,19 @@ export async function joinRoom(code: string) {
   });
   return net;
 }
+
+/** Espectador: Peer "jmv-<code>-<rand>" con el mismo token; mira la sala sin ocupar slot. Resuelve con los dos canales abiertos. */
+export async function espectar(code: string) {
+  const { Peer } = await import("peerjs");
+  const peer = new Peer(`${VPFX}${code}-${newCode()}`, await opts());
+  const net = wrap(peer, false, code);
+  peer.on("open", () => {
+    net.attach(peer.connect(PFX + code, { label: "r", reliable: true, serialization: "json" }));
+    net.attach(peer.connect(PFX + code, { label: "u", reliable: false, serialization: "json" }));
+  });
+  return net;
+}
+
+export type Sala = { id: string; code: string; host: string; seg: number; espectadores: number };
+/** GET /api/salas: partidas en curso (null sin servidor/sesión/red). */
+export const salas = () => authGet<Sala[]>("/api/salas");

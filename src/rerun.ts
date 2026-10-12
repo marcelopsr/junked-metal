@@ -5,10 +5,10 @@
 // momento de ver la repetición, no del de la partida; si cambian, puede divergir. Subir a repetición con snapshot del perfil si hace falta.
 export type Inp = { throttle: number; steer: number; boost: boolean; drift: boolean; ability: boolean; jump: boolean; moveX: number; moveY: number; move: boolean };
 const W = 6; // números por cuadro: dt, throttle, steer, bits, moveX, moveY
-export const rec = { on: false, seed: 0, daily: false, f: [] as number[], cards: [] as number[], done: false };
+export const rec = { on: false, seed: 0, daily: false, f: [] as number[], cards: [] as number[], snap: [] as number[][], done: false };
 export const rp = { on: false, i: 0, c: 0, x: 1 };
 
-export function recStart(seed: number, daily: boolean) { Object.assign(rec, { on: true, seed, daily, f: [], cards: [], done: false }); }
+export function recStart(seed: number, daily: boolean) { Object.assign(rec, { on: true, seed, daily, f: [], cards: [], snap: [], done: false }); }
 export function recFrame(dt: number, n: Inp) {
   rec.f.push(dt, n.throttle, n.steer, +n.boost | (+n.drift << 1) | (+n.ability << 2) | (+n.jump << 3) | (+n.move << 4), n.moveX, n.moveY);
 }

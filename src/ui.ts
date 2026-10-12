@@ -705,6 +705,8 @@ const kindLabel = (o: Offer) => (
 const EVO_ART: Record<string, string> = {
   torbellino: "./images/evo-torbellino.webp",
   trompo: "./images/evo-torbellino.webp",
+  tuercas: "./images/evo-mortero.webp",
+  bobinas: "./images/evo-lanzallamas.webp",
   sierra: "./images/evo-sierra.webp",
   lanzallamas: "./images/evo-lanzallamas.webp",
   chispero: "./images/evo-lanzallamas.webp",

@@ -640,6 +640,8 @@ class Bocina extends Weapon {
 class Trompo extends Weapon {
   tops: { m: B.InstancedMesh; target: Enemy | null; life: number; ang: number; trail: number }[] = [];
   blades: { m: B.InstancedMesh; life: number }[] = [];
+  t = 0;
+  touched = new WeakMap<Enemy, number>(); // Ciclón: último golpe de contacto por enemigo
   tpl = template("trompo_w", () => [
     cyl(0.9, 0.05, 0.8, pbr("topBody", { color: "#b783ff", rough: 0.3, emissive: "#3a1a66" }), [0, 0.3, 0], undefined, 10),
     cyl(1.1, 1.1, 0.1, M.metal("#e6e9ee"), [0, 0.65, 0], undefined, 12),
@@ -660,6 +662,7 @@ class Trompo extends Weapon {
         this.tops.push({ m, target: t, life: cfg.duracion_base + cfg.duracion_nivel * this.lv, ang: 0, trail: 0 });
       }
     }
+    this.t += c.dt;
     const dmg = this.dano(cfg) * c.st.dmg * (ev ? cfg.dano_evo_mult : 1);
     for (let i = this.tops.length - 1; i >= 0; i--) {
       const tp = this.tops[i];
@@ -677,7 +680,8 @@ class Trompo extends Weapon {
         else tp.m.position.addInPlace(to.scale((cfg.velocidad * c.dt) / Math.max(d, 0.01)));
         if (d < tp.target.radius + 0.8) { c.damage(tp.target, dmg, to.scale(X.trompo_empuje / Math.max(d, 0.01))); tp.target = nearest(tp.m.position, c.enemies.filter((e) => e !== tp.target), X.trompo_retarget); }
       }
-      for (const e of c.enemies) if (ev && hd(tp.m.position, e.pos) < e.radius + 1.1 && rng() < c.dt * X.trompo_evo_golpes_s) { c.damage(e, dmg * X.trompo_evo_contacto_mult, e.pos.subtract(tp.m.position).normalize().scale(X.trompo_empuje)); }
+      // El trompo orbital pasa a ~22 m/s: el sorteo por cuadro casi nunca pegaba (H25). Golpea al tocar y re-golpea cada 1/golpes_s mientras siga en contacto.
+      for (const e of c.enemies) if (ev && hd(tp.m.position, e.pos) < e.radius + 1.1 && this.t - (this.touched.get(e) ?? -9) >= 1 / X.trompo_evo_golpes_s) { this.touched.set(e, this.t); c.damage(e, dmg * X.trompo_evo_contacto_mult, e.pos.subtract(tp.m.position).normalize().scale(X.trompo_empuje)); }
       if ((tp.trail -= c.dt) <= 0) { // estela: un disco que corta un rato
         tp.trail = X.trompo_estela_cada_s;
         const b = this.bladeTpl.createInstance("b");

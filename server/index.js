@@ -165,7 +165,7 @@ server.on("upgrade", (req, socket) => {
   const u = new URL(req.url, "http://x");
   if (!u.pathname.startsWith("/peer")) return socket.destroy();
   const w = who(u.searchParams.get("token"));
-  const sala = String(u.searchParams.get("id") || "").startsWith("jm-");
+  const pid = String(u.searchParams.get("id") || ""), sala = pid.startsWith("jm-") || pid.startsWith("jmv-"); // jmv- = espectador: mismo requisito de suscripción, pero no cuenta como sala
   if (!w || !peerOpenOk(ipOf(req)) || (sala && !subOk(w))) { socket.write("HTTP/1.1 403 Forbidden\r\n\r\n"); return socket.destroy(); }
   req.jmUid = w.uid;
 });
@@ -177,6 +177,17 @@ peerApp.on("connection", (c) => {
 });
 peerApp.on("disconnect", (c) => peers.delete(c.getId()));
 app.use("/peer", peerApp);
+
+// Salas en curso para espectar (T34): sala = peer "jm-<código>"; espectador = peer "jmv-<código>-<rand>" (no ocupa cupo ni cuenta como sala).
+const salasOk = limiter(60, 60e3);
+app.get("/api/salas", (req, res) => {
+  if (!salasOk(ipOf(req))) return res.status(429).end();
+  const w = bearerWho(req);
+  if (!w) return res.status(401).json({ error: "Token inválido" });
+  const viewers = {};
+  for (const id of peers.keys()) { const m = /^jmv-([^-]+)-/.exec(id); if (m) viewers[m[1]] = (viewers[m[1]] || 0) + 1; }
+  res.json([...peers].filter(([id]) => id.startsWith("jm-")).map(([id, p]) => ({ id, code: id.slice(3), host: pubName(p.uid), seg: Math.round((Date.now() - p.since) / 1000), espectadores: viewers[id.slice(3)] || 0 })));
+});
 
 // Panel.
 async function turnTail() {
@@ -219,6 +230,13 @@ app.get("/api/daily", (req, res) => {
   const i = all.findIndex((r) => r.uid === w.uid);
   res.json({ date, seed, board: all.slice(0, 10).map(row), mine: i < 0 ? null : { ...row(all[i]), rank: i + 1 } });
 });
+// Ranking semanal: top 20 (alias + mejor kills) desde el lunes 00:00 UTC.
+app.get("/api/ranking/semanal", (req, res) => {
+  if (!dailyOk(ipOf(req))) return res.status(429).end();
+  if (!bearerWho(req)) return res.status(401).json({ error: "Token inválido" });
+  const d = new Date(), since = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  res.json(db.weeklyTop(since).map((r) => ({ name: pubName(r.uid), score: r.score })));
+});
 const lbOk = limiter(60, 60e3);
 const lbRows = (n) => db.encoreTop(10).map((r) => ({ ...r, name: n(r.uid) }));
 app.get("/api/leaderboard", (req, res) => {
@@ -250,6 +268,12 @@ app.get("/api/me/stats", (req, res) => {
   const w = bearerWho(req);
   if (!w?.email) return res.status(401).json({ error: "Token inválido" });
   res.json(db.userStats(w.uid));
+});
+app.get("/api/me/logros", (req, res) => {
+  if (!meStatsOk(ipOf(req))) return res.status(429).end();
+  const w = bearerWho(req);
+  if (!w?.email) return res.status(401).json({ error: "Token inválido" });
+  res.json(db.userLogros(w.uid));
 });
 app.get("/api/stats", async (req, res) => {
   if (!bearer(req)) return res.status(401).json({ error: "Token inválido" });
@@ -304,6 +328,7 @@ app.get("/admin/api/expiring", (req, res) => res.json(db.expiring(3)));
 app.get("/admin/api/audit", (req, res) => res.json(db.auditList(300)));
 app.get("/admin/api/stats", async (req, res) => res.json(await stats()));
 app.get("/admin/api/telemetry", (req, res) => res.json({ daily: { date: dayOf(), board: db.dailyBoard(dayOf(), dailySeed(E.JM_SECRET, dayOf())).slice(0, 10) }, stats: db.eventStats(Date.now() - 7 * 86400e3), events: db.events(200), leaderboard: db.encoreTop(10), analysis: db.telemetryAnalysis(Date.now() - 30 * 86400e3) }));
+app.get("/admin/api/uso", (req, res) => res.json(db.usageStats(Date.now() - 30 * 86400e3)));
 app.get("/admin/api/export", (req, res) => {
   const what = req.query.what, days = Math.min(Math.max(Math.floor(+req.query.days) || 30, 1), 3650);
   if (what !== "events" && what !== "analysis") return res.status(400).json({ error: "what debe ser events o analysis" });

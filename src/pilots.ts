@@ -3,6 +3,7 @@
 import { rng } from "./rng";
 import { WEAPONS, type PStats, type WeaponId } from "./weapons";
 import { BAL } from "./balance";
+import type { AbilityId } from "./abilities";
 
 export type PilotId = "soldadito" | "muneca" | "robot" | "dino" | "figura";
 type Rec = { ach: string[] }; // logros del guardado (achievements.ts)
@@ -13,17 +14,17 @@ const modOf = (id: PilotId) => (st: PStats) => {
   if (p.blindaje_mult !== 1) st.armor = 1 - (1 - st.armor) * p.blindaje_mult; // sin esta guarda, 1 - (1 - x) cambiaría el último decimal
   st.armor += p.blindaje_mas; st.speedMul *= p.velocidad_mult; st.mass *= p.peso_mult; st.cooldown *= p.recarga_mult; st.xp *= p.xp_mult;
 };
-export const PILOTS: Record<PilotId, { name: string; pros: string[]; con: string; cost: number; lore: string; ach?: { txt: string; ok: (s: Rec) => boolean }; start: WeaponId; mod: (st: PStats) => void }> = {
-  soldadito: { name: "El Sargento Sin Pensión", pros: ["+10% daño", "+10 vida"], con: "-10% imán", cost: BAL.pilotos.soldadito.precio, lore: "Treinta años de servicio en la caja de juguetes y ni una medalla. Pelea por rencor.", start: BAL.pilotos.soldadito.arma_inicial as WeaponId,
+export const PILOTS: Record<PilotId, { name: string; pros: string[]; con: string; cost: number; lore: string; abil: AbilityId; abilTxt: string; ach?: { txt: string; ok: (s: Rec) => boolean }; start: WeaponId; mod: (st: PStats) => void }> = {
+  soldadito: { name: "El Sargento Sin Pensión", pros: ["+10% daño", "+10 vida"], con: "-10% imán", cost: BAL.pilotos.soldadito.precio, lore: "Treinta años de servicio en la caja de juguetes y ni una medalla. Pelea por rencor.", start: BAL.pilotos.soldadito.arma_inicial as WeaponId, abil: BAL.pilotos.soldadito.habilidad as AbilityId, abilTxt: BAL.pilotos.soldadito.habilidad_txt,
     mod: modOf("soldadito") },
-  muneca: { name: "La Divorciada de Trapo", pros: ["Regenera +1 vida/s", "+25% imán"], con: "-20 vida máxima", cost: BAL.pilotos.muneca.precio, lore: "Remendada tantas veces que ya nada la rompe. Se cura sola, como después del divorcio.", start: BAL.pilotos.muneca.arma_inicial as WeaponId,
+  muneca: { name: "La Divorciada de Trapo", pros: ["Regenera +1 vida/s", "+25% imán"], con: "-20 vida máxima", cost: BAL.pilotos.muneca.precio, lore: "Remendada tantas veces que ya nada la rompe. Se cura sola, como después del divorcio.", start: BAL.pilotos.muneca.arma_inicial as WeaponId, abil: BAL.pilotos.muneca.habilidad as AbilityId, abilTxt: BAL.pilotos.muneca.habilidad_txt,
     mod: modOf("muneca") },
-  robot: { name: "El Robot en Crisis", pros: ["Arranca con Antena Tesla", "+12% blindaje"], con: "-8% velocidad", cost: BAL.pilotos.robot.precio, lore: "Lo programaron para servir y ahora se pregunta para qué. Mientras tanto, electrocuta.", start: BAL.pilotos.robot.arma_inicial as WeaponId,
+  robot: { name: "El Robot en Crisis", pros: ["Arranca con Antena Tesla", "+12% blindaje"], con: "-8% velocidad", cost: BAL.pilotos.robot.precio, lore: "Lo programaron para servir y ahora se pregunta para qué. Mientras tanto, electrocuta.", start: BAL.pilotos.robot.arma_inicial as WeaponId, abil: BAL.pilotos.robot.habilidad as AbilityId, abilTxt: BAL.pilotos.robot.habilidad_txt,
     mod: modOf("robot") },
-  dino: { name: "El Rex Jubilado", pros: ["+40 vida", "+25% peso al embestir"], con: "Armas 10% más lentas", cost: BAL.pilotos.dino.precio, lore: "Fue el terror de la juguetería; hoy le duele la cadera, pero sigue pesando una tonelada.", start: BAL.pilotos.dino.arma_inicial as WeaponId,
+  dino: { name: "El Rex Jubilado", pros: ["+40 vida", "+25% peso al embestir"], con: "Armas 10% más lentas", cost: BAL.pilotos.dino.precio, lore: "Fue el terror de la juguetería; hoy le duele la cadera, pero sigue pesando una tonelada.", start: BAL.pilotos.dino.arma_inicial as WeaponId, abil: BAL.pilotos.dino.habilidad as AbilityId, abilTxt: BAL.pilotos.dino.habilidad_txt,
     ach: { txt: "Derrota a un minijefe", ok: (s) => ["rey", "cortadora", "tarantula"].some((a) => s.ach.includes(a)) },
     mod: modOf("dino") },
-  figura: { name: "El Mega Macho", pros: ["+15% XP", "+6% velocidad", "Arranca con Petardos"], con: "Recibe 10% más daño", cost: BAL.pilotos.figura.precio, lore: "Músculos de plástico hueco y cero articulaciones. Aprende rápido porque no piensa demasiado.", start: BAL.pilotos.figura.arma_inicial as WeaponId,
+  figura: { name: "El Mega Macho", pros: ["+15% XP", "+6% velocidad", "Arranca con Petardos"], con: "Recibe 10% más daño", cost: BAL.pilotos.figura.precio, lore: "Músculos de plástico hueco y cero articulaciones. Aprende rápido porque no piensa demasiado.", start: BAL.pilotos.figura.arma_inicial as WeaponId, abil: BAL.pilotos.figura.habilidad as AbilityId, abilTxt: BAL.pilotos.figura.habilidad_txt,
     ach: { txt: "Sobrevive 10 minutos", ok: (s) => s.ach.includes("diez") },
     mod: modOf("figura") },
 };

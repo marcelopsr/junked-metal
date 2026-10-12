@@ -37,6 +37,7 @@ export function initAudio() {
   eng = { src, f, g, tf, tg, duck };
   setEngineKind(engKind);
   if (mState) startMusic(); // música pedida antes del primer gesto
+  if (encPend) encoreAmbience(encPend[0], encPend[1]); // ambiente ENCORE pedido antes del primer gesto
 }
 
 export function setAudio(o: Partial<typeof vol>) {
@@ -693,7 +694,9 @@ export function moonAmbience(on: boolean) {
 let encCur: { id: string; g: GainNode; src: AudioScheduledSourceNode[] } | null = null, encWant = false;
 export const encoreAmbId = () => (encWant ? encCur?.id ?? null : null);
 const encLvl = () => { if (encCur && ctx) encCur.g.gain.setTargetAtTime(encWant && !duck ? 1 : 0, ctx.currentTime, 1); };
+let encPend: [string | null, string] | null = null;
 export function encoreAmbience(zone: string | null, variant = "") {
+  encPend = zone ? [zone, variant] : null; // se recuerda el último pedido: initAudio lo arranca
   if (!ctx) return;
   const id = zone ? `${zone}|${variant}` : null;
   if (!id) { encWant = false; return encLvl(); }

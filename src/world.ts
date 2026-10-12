@@ -144,7 +144,7 @@ const bare: { x: number; z: number; r: number }[] = [];
 const isBare = (x: number, z: number) => bare.some((b) => Math.hypot(x - b.x, z - b.z) < b.r) || Z.rects.some(([cx, cz, w, d]) => Math.abs(x - cx) < w && Math.abs(z - cz) < d);
 
 // ---------- Tabla de zonas ----------
-export type ZoneId = "patio" | "garaje" | "jardin" | "luna" | "galpon";
+export type ZoneId = "patio" | "garaje" | "jardin" | "luna" | "galpon" | "desvan";
 type Zone = {
   name: string; short: string; desc: string; half: number; // short: botón del menú principal
   cost: number; // tornillos en el Taller (0 = siempre abierta)
@@ -163,7 +163,7 @@ const TABLE = { x: -70, z: -60, w: 44, d: 28, h: 12 };
 
 // ponytail: precios provisorios (Taller → Zonas), a calibrar con el balance de tornillos
 export const ZONE_COST = { garaje: precio("zona_garaje"), jardin: precio("zona_jardin") }; // curva de precios: como un auto o algo más (menu.ts, Taller)
-const ZONES_BASE: Record<Exclude<ZoneId, "galpon">, Zone> = {
+const ZONES_BASE: Record<Exclude<ZoneId, "galpon" | "desvan">, Zone> = {
   patio: { name: "Patio trasero", short: "Patio", desc: "Pileta, mesa de jardín y una huerta abandonada junto con los buenos propósitos.", half: 160, cost: 0, grass: 1, grassH: 1,
     rects: [[0, -30, 24, 17], [50, 45, 21, 16], [-48, 20, 24, 18]],
     roof: (p) => Math.abs(p.x) < 17 && Math.abs(p.z + 30) < 15 && p.y < 16, // tapa de la mesa: 34x30 en (0,-30), a 16 de alto
@@ -179,13 +179,17 @@ const ZONES_BASE: Record<Exclude<ZoneId, "galpon">, Zone> = {
   luna: { name: "Luna", short: "Luna", desc: "Un planeta chico: el horizonte se curva a cada metro y del lado oscuro solo se ven las luces de lo que se acerca.", half: 1000, cost: 0, grass: 0, grassH: 1,
     rects: [], climate: LUNA_CLIMATE, build: () => moonBuild(scene, lowQ), layout: moonReset },
 };
-export const ZONES = ZONES_BASE as Record<ZoneId, Zone>; // el galpón se agrega abajo
+export const ZONES = ZONES_BASE as Record<ZoneId, Zone>; // galpón y desván se agregan abajo
 // Galpón de utilería: solo lo usa ENCORE (variante EL GALPÓN DE UTILERÍA). No enumerable: los menús recorren Object.keys(ZONES) y no debe aparecer como zona elegible ni comprable.
 ZONES.galpon = { name: "Galpón de utilería", short: "Galpón", desc: "Cemento manchado, estantes de atrezo y una mesa de trabajo que hace de tarima.", half: 140, cost: 0, grass: 0, grassH: 1,
   rects: [[TABLE.x, TABLE.z, TABLE.w / 2 + 2, TABLE.d / 2 + 2]],
   roof: (p) => Math.abs(p.x - TABLE.x) < TABLE.w / 2 - 2 && Math.abs(p.z - TABLE.z) < TABLE.d / 2 - 2 && p.y < TABLE.h - 3,
   build: shedBuild, layout: shedLayout };
 Object.defineProperty(ZONES, "galpon", { enumerable: false });
+// Desván de los juguetes rotos: solo ENCORE (variante EL DESVÁN DE LOS JUGUETES ROTOS). No enumerable, igual que el galpón.
+ZONES.desvan = { name: "Desván de los juguetes rotos", short: "Desván", desc: "Tablones torcidos, un baúl del tamaño de un auto y juguetes que ya nadie arregla.", half: 140, cost: 0, grass: 0, grassH: 1,
+  rects: [], build: atticBuild, layout: atticLayout };
+Object.defineProperty(ZONES, "desvan", { enumerable: false });
 let Z: Zone = ZONES.patio;
 export let zoneId: ZoneId = "patio";
 /** Luz fija de la zona (garaje) o undefined: la partida sigue el ciclo de la semilla. */
@@ -194,6 +198,7 @@ export const zoneClimate = () => Z.climate;
 export type Floor = "pasto" | "baldosa" | "tierra" | "cemento";
 export function floorAt(x: number, z: number): Floor {
   if (zoneId === "garaje" || zoneId === "galpon") return "cemento";
+  if (zoneId === "desvan") return "baldosa"; // tablones: el sonido de madera/baldosa, sin tierra ni pasto
   if (zoneId === "luna") return "tierra";
   if (zoneId === "jardin") return z < -HALF + 16 || Math.abs(x - 12) < 4 ? "baldosa" : "pasto"; // vereda y camino de lajas
   if (Math.abs(x) < 24 && Math.abs(z + 30) < 17) return "baldosa";
@@ -670,6 +675,31 @@ function shedLayout() {
   ball();
 }
 
+// ---------- Desván de los juguetes rotos (solo ENCORE) ----------
+// Tablones oscuros, paredes de chapa, vigas bajas y juguetes gigantes rotos como obstáculos. Mismo tamaño y reglas que el galpón (salida (0, 0) libre).
+function atticBuild() {
+  floor("attic", "#b79a74", TEX.wood, 0.85, "concrete", 22);
+  const paint = M.matte("#5b4a3a"), band = M.matte("#2e241c");
+  for (const [x, z, w, d] of [[0, -HALF - 1, HALF * 2 + 4, 2], [HALF + 1, 0, 2, HALF * 2 + 4], [-HALF - 1, 0, 2, HALF * 2 + 4], [0, HALF + 1, HALF * 2 + 4, 2]]) occluders.push(merge("gwall", [box(w, 56, d, paint, [x, 28, z]), box(w + 0.6, 5, d + 0.6, band, [x, 2.5, z])]));
+}
+function atticLayout() {
+  toyRamps(int(2, 3), [0, 1]);
+  // Baúles de juguetes: obstáculos macizos
+  const wood = M.matte("#7a4a24"), strap = M.metal("#a4aab0");
+  for (let i = 0, n = int(4, 6); i < n; i++) {
+    const p = freeSpot(10); if (!p) continue;
+    skin(stat(box(14, 8, 8, wood, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [p[0], 4, p[1], rng() * 6.3]), "baulJuguetes", () => [
+      box(14, 6, 8, wood, [0, -1, 0]), box(14.4, 2, 8.4, M.matte("#5c3718"), [0, 3, 0]), box(1.2, 8, 8.5, strap, [-4, 0, 0]), box(1.2, 8, 8.5, strap, [4, 0, 0]),
+    ]);
+    bare.push({ x: p[0], z: p[1], r: 9 });
+  }
+  giantTools();
+  paintCans(int(4, 7));
+  piles(int(3, 4), ["#d94a3a", "#e0b030", "#3a7bd9", "#4aa860"], (c) => M.plastic(c), 3); // cubos de letras
+  puddles(int(2, 4), pbr("dust", { color: "#3a3028", rough: 0.9, alpha: 0.6 }));
+  ball();
+}
+
 // Parpadeo del tubo: baja luz y emisivo en ráfagas cortas. Solo visual (Math.random); se apaga con "calma".
 // Se aplica antes de dibujar la cámara y se deshace después: el ciclo y el apagón de main.ts no se enteran.
 function flicker(mat: B.PBRMaterial) {
@@ -940,7 +970,7 @@ function pots(n: number) {
     if (FOLDED_SLICE) {
       pot.isVisible = false;
       const pk = template("potF", potFold).createInstance("potF");
-      pk.parent = pot; pk.scaling.setAll(sc); pk.isPickable = false; pk.receiveShadows = true; shadows.addShadowCaster(pk);
+      pk.position.setAll(0); pk.parent = pot; pk.scaling.setAll(sc); pk.isPickable = false; pk.receiveShadows = true; shadows.addShadowCaster(pk);
     }
     const plant: B.Mesh[] = []; // hojas y flor en una sola malla (se rompe junto con la maceta: extras)
     for (let k = 0; k < 7; k++) {

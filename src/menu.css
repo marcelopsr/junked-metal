@@ -11,6 +11,14 @@
 @keyframes zap { 0% { opacity: .95; background-position: 0 0, 0 0; } 40% { opacity: .7; background-position: 0 9px, 17px 0; } 70% { opacity: .35; background-position: 0 3px, 5px 0; } 100% { opacity: 0; } }
 body.calm #fe.zap::after, body.calm .press, body.calm .stamp, body.calm .bindnote { animation: none; }
 body.calm .scr.on { animation-duration: .05s; }
+body.calm .bindnote, body.calm .stamp, body.calm .offer .art svg, body.calm #bmsg.pop { animation: none; }
+/* Sistema con "reducir movimiento": mismo efecto que Reducir parpadeos, sin tocar el guardado */
+@media (prefers-reduced-motion: reduce) {
+  .scr.on, #fe.zap::after, .press, .stamp, .bindnote, .offer .art svg, #bmsg.pop { animation: none !important; }
+}
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* Estado sobre la escena 3D: chapa opaca, no texto suelto (contraste estable sin depender de la cámara) */
+#scr-encore :is(#netSession, #netStatus):not(:empty), #mainInfo:not(:empty), #netAlt > summary { background: rgba(11, 15, 20, .9); padding: 6px 10px; border: 1px solid var(--jm-borde); text-shadow: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .scr.on, #fe.zap::after, .press, .stamp, .bindnote, .offer .art svg { animation: none !important; }
@@ -458,6 +466,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 @media (pointer: coarse) {
   .tab, .slot .opt, #opts .row, #opts .row select, .btns button, .list button { min-height: 44px; }
   #tabs .tab { min-height: 44px; }
+  .polaroid button, #opts .row.prof button, #opts .row.prof input, .list.row3 button { min-height: 44px; }
   #opts .row input[type=range] { height: 44px; }
   #paint .pal { grid-template-columns: repeat(6, 1fr); } #paint .pal .sw { height: 44px; }
   #paint .hrow input { height: 44px; }
@@ -549,7 +558,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #scr-main .mainGrid .mm-links button.lnk.hidden { display: none; }
 #scr-main .mainGrid .mm-links button.lnk:not(:focus) { background: var(--jm-fondo); border: 1px solid var(--jm-borde); box-shadow: none; color: var(--jm-texto2); }
 @media (pointer: coarse) { #scr-main .mainGrid .mm-links button.lnk { min-height: 44px; } }
-@media (orientation: landscape) and (max-height: 500px) { #scr-main .mainGrid .mm-links button.lnk { min-height: 36px; padding-block: 4px; } #scr-main .mainGrid .mm-lab { margin: 2px 0 -2px; } }
+@media (orientation: landscape) and (max-height: 500px) { #scr-main .mainGrid .mm-links button.lnk { min-height: 44px; padding-block: 4px; } #scr-main .mainGrid .mm-lab { margin: 2px 0 -2px; } }
 
 /* Más modos: una placa por modo con su descripción */
 .list.modeList:not(.row3) { display: flex; flex-direction: column; width: min(480px, 92vw); }
@@ -662,10 +671,10 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #opts .row.multi { padding: 6px 8px 6px 12px; }
 #opts .row.multi .lb { flex: 1; }
 #opts .row .slot2 { min-width: 112px; margin: 0; padding: 6px 10px; font: 400 15px/1.1 var(--data); color: var(--lcd-ink); background: var(--lcd); border: 1px solid var(--line); box-shadow: none; text-transform: none; }
-#opts .row .slot2:focus-visible, #opts .row .slot2:focus { border-color: var(--turbo); }
+#opts .row .slot2:focus-visible, #opts .row .slot2:focus { border-color: var(--turbo); } /* el anillo cian de kit.css se conserva */
 #opts .row.dup button, #opts .row.prof button { margin: 0; padding: 6px 10px; font-size: 14px; box-shadow: none; }
 #opts .row.prof input { flex: 0 1 190px; min-width: 0; padding: 6px 8px; font: 400 16px var(--data); color: var(--txt); background: var(--lcd); border: 1px solid var(--line); border-radius: 0; user-select: text; }
-#opts .row.prof input:focus { outline: none; border-color: var(--turbo); }
+#opts .row.prof input:focus { border-color: var(--turbo); }
 #opts .bindnote { color: var(--turbo); border: 1px solid var(--turbo); background: #ffb02e14; animation: blink 1s steps(2, end) infinite; }
 .pb { min-width: 26px; color: #10170d; background: var(--lcd-ink); border-color: #0008; }
 .pb.ps { background: #9ec5ff; } .pb.switch { background: #ff8f8f; } .pb.gen { background: #d6dde4; }
@@ -686,7 +695,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .pt-tr b { display: block; height: 10px; margin-top: 3px; background: var(--lcd); border: 1px solid var(--line); }
 .pt-tr i { display: block; height: 100%; width: 0; background: var(--turbo); }
 .pt-bt { display: flex; flex-wrap: wrap; gap: 4px; }
-.pt-bt kbd { opacity: .35; }
+.pt-bt kbd { opacity: .6; }
 .pt-bt kbd.on { opacity: 1; outline: 2px solid var(--turbo); }
 
 /* Editor de controles táctiles: el menú se oculta, los controles se ven con marco y la esquina de agrandar */
@@ -777,10 +786,9 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 .netCode { min-height: 44px; padding: 0 12px; font: 700 18px/1 var(--jm-titulo); letter-spacing: .3em; text-transform: uppercase; color: var(--jm-texto); background: var(--jm-fondo); border: 1px solid var(--jm-borde); border-radius: 2px; }
 .netKey { min-height: 44px; padding: 0 12px; font: 700 16px/1 var(--jm-titulo); color: var(--jm-texto); background: var(--jm-fondo); border: 1px solid var(--jm-borde); border-radius: 2px; width: 100%; box-sizing: border-box; }
 .netKey:focus { outline: 2px solid var(--jm-naranja); outline-offset: 1px; }
-#netKeyBox { display: grid; gap: 8px; }
-#netKeyBox.hidden { display: none; }
 .netCode:focus { outline: 2px solid var(--jm-naranja); outline-offset: 1px; }
 
 /* ENCORE: récords online compactos (10 filas de 2 renglones empujaban Largar fuera de la pantalla en celular) */
 #encLbList { margin: 0; max-height: 26vh; overflow-y: auto; overscroll-behavior: contain; font-size: 12px; line-height: 1.2; letter-spacing: .03em; padding: 4px 9px; }
 #encLbList li { padding: 2px 0; }
+#netAlt > summary:focus { outline: 3px solid var(--jm-cian); outline-offset: 3px; }

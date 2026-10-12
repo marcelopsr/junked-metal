@@ -72,7 +72,7 @@ summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-
 </section>
 
 <div id="app" class="hidden">
-  <nav aria-label="Secciones"><button data-v="usuarios" aria-pressed="true">Usuarios</button><button data-v="pagos">Pagos</button><button data-v="auditoria">Auditoría</button><button data-v="telemetria">Telemetría</button><button data-v="red">Red</button></nav>
+  <nav aria-label="Secciones"><button data-v="usuarios" aria-pressed="true">Usuarios</button><button data-v="pagos">Pagos</button><button data-v="auditoria">Auditoría</button><button data-v="uso">Uso</button><button data-v="telemetria">Telemetría</button><button data-v="red">Red</button></nav>
   <p id="msg" class="msg" role="status"></p>
 
   <section data-s="usuarios">
@@ -119,6 +119,7 @@ summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-
 
   <section data-s="auditoria" class="hidden"><div class="panel"><h2>Registro de auditoría</h2><div class="scroll"><table><thead><tr><th>Fecha</th><th>Quién</th><th>Acción</th><th>Objetivo</th><th>Detalle</th><th>IP</th></tr></thead><tbody id="tAudit"></tbody></table></div></div></section>
 
+  <section data-s="uso" class="hidden"><div class="panel"><h2>Partidas por día (30 días)</h2><div id="uDay"></div></div><div class="panel"><h2>Modos más jugados</h2><div id="uModes"></div></div><div class="panel"><h2>Abandono</h2><p id="uAb" class="muted"></p></div></section>
   <section data-s="telemetria" class="hidden"><div class="panel"><a class="btn" href="/admin/api/export?what=events&days=30" download>Descargar eventos</a> <a class="btn" href="/admin/api/export?what=analysis&days=30" download>Descargar análisis</a></div><div class="panel"><h2>Últimos 7 días</h2><div class="scroll"><table><thead><tr><th>Evento</th><th>Cantidad</th><th>Usuarios</th></tr></thead><tbody id="tTelS"></tbody></table></div></div>
     <div class="panel"><h2>Análisis 30 días</h2>
       <h3>Pactos</h3><div class="scroll"><table><thead><tr><th>Pacto</th><th>Aceptado</th><th>Rechazado</th></tr></thead><tbody id="tPact"></tbody></table></div>
@@ -207,6 +208,7 @@ const cargar = intentar(async () => {
   pintarWait(await api("waitlist"));
   if (vista === "auditoria") pintarAudit();
   if (vista === "red") pintarRed();
+  if (vista === "uso") pintarUso();
   if (vista === "telemetria") pintarTel();
 });
 
@@ -387,6 +389,12 @@ async function pintarRed() {
   $("red").innerHTML = `<p>Servidor activo hace ${h} h ${m} min. Salas: ${s.peers.filter((p) => p.sala).length}. Peers: ${s.peers.length}. Usuarios conectados: ${s.usuarios.length}.</p>
   <div class="scroll"><table><thead><tr><th>Id</th><th>Usuario</th><th>Tipo</th><th>Conectado</th></tr></thead><tbody>${s.peers.map((p) => `<tr><td class="mono">${esc(p.id)}</td><td class="mono">${esc(p.uid)}</td><td>${p.sala ? "Sala" : "Invitado"}</td><td>${Math.round(p.seg / 60)} min</td></tr>`).join("") || `<tr><td colspan="4">Ninguno</td></tr>`}</tbody></table></div>
   <h3 style="margin-top:14px">Últimas sesiones TURN</h3><pre>${esc(s.turn.join("\n") || "Sin sesiones")}</pre>`;
+}
+async function pintarUso() {
+  const u = await api("uso"), max = Math.max(1, ...u.perDay.map((d) => d.n)), mm = Math.max(1, ...u.modes.map((m) => m.n));
+  $("uDay").innerHTML = u.perDay.length ? `<svg viewBox="0 0 ${u.perDay.length * 12} 100" preserveAspectRatio="none" style="width:100%;height:120px" role="img" aria-label="Partidas por día">${u.perDay.map((d, i) => `<rect x="${i * 12 + 1}" y="${100 - 100 * d.n / max}" width="10" height="${100 * d.n / max}" fill="currentColor"><title>${esc(d.day)}: ${d.n}</title></rect>`).join("")}</svg><p class="muted">${esc(u.perDay[0].day)} a ${esc(u.perDay.at(-1).day)}, máx. ${max}/día</p>` : "Sin datos";
+  $("uModes").innerHTML = u.modes.map((m) => `<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><span style="min-width:90px">${esc(m.mode)}</span><div style="flex:1;background:#8883;height:14px"><div style="width:${100 * m.n / mm}%;height:100%;background:currentColor"></div></div><span>${m.n}</span></div>`).join("") || "Sin datos";
+  $("uAb").textContent = `${u.abandonPct}% de abandono (${u.started} inicios, ${u.ended} finales)`;
 }
 async function pintarTel() {
   const t = await api("telemetry");

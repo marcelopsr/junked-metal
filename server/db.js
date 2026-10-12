@@ -208,6 +208,20 @@ export function openDb(file, invitesJson = null) {
     dailyBoard: (date, seed) => all(`SELECT uid, win, t, kills, lv FROM (SELECT id, uid, json_extract(data,'$.win') win, json_extract(data,'$.t') t, json_extract(data,'$.kills') kills, json_extract(data,'$.lv') lv,
       ROW_NUMBER() OVER (PARTITION BY uid ORDER BY id) rn FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.daily')=? AND json_extract(data,'$.seed')=?) WHERE rn=1
       ORDER BY win DESC, CASE WHEN win THEN t ELSE -t END ASC, uid`, date, seed),
+    // Logros online: podio semanal (top 3 de una semana UTC lun-dom ya cerrada), racha diaria (días seguidos con run_end del diario) y veterano (50 run_end).
+    userLogros: (uid, now = Date.now()) => {
+      const wk = (at) => Math.floor((at / 86400e3 + 3) / 7); // semana lun-dom UTC (día 0 epoch = jueves)
+      const best = all("SELECT CAST((at/86400000.0+3)/7 AS INTEGER) wk, uid, MAX(json_extract(data,'$.kills')) s FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.kills') IS NOT NULL GROUP BY wk, uid");
+      const podio = best.some((r) => r.uid === uid && r.wk < wk(now) && best.filter((o) => o.wk === r.wk && (o.s > r.s || (o.s === r.s && o.uid < uid))).length < 3);
+      const days = all("SELECT DISTINCT json_extract(data,'$.daily') d FROM events WHERE uid=? AND type='run_end' AND json_valid(data) AND json_extract(data,'$.daily') IS NOT NULL ORDER BY d", uid).map((r) => Date.parse(r.d) / 86400e3).filter(Number.isFinite);
+      let streak = 0, run = 0;
+      days.forEach((d, i) => { run = i && d - days[i - 1] === 1 ? run + 1 : 1; streak = Math.max(streak, run); });
+      const n = one("SELECT COUNT(*) n FROM events WHERE uid=? AND type='run_end'", uid).n;
+      const L = (id, name, done, progress, goal) => ({ id, name, done, progress: Math.min(progress, goal), goal });
+      return [L("podio", "Podio semanal", podio, +podio, 1), L("racha3", "Racha diaria x3", streak >= 3, streak, 3), L("racha7", "Racha diaria x7", streak >= 7, streak, 7), L("veterano", "Veterano", n >= 50, n, 50)];
+    },
+    // Semanal: mejor puntaje (kills) por uid entre run_end con at>=since.
+    weeklyTop: (since, limit = 20) => all("SELECT uid, MAX(json_extract(data,'$.kills')) score FROM events WHERE type='run_end' AND json_valid(data) AND at>=? AND json_extract(data,'$.kills') IS NOT NULL GROUP BY uid ORDER BY score DESC, uid LIMIT ?", since, limit),
     eventsSince: (since, limit = EXPORT_MAX) => all("SELECT * FROM events WHERE at>? ORDER BY id DESC LIMIT ?", since, limit),
     events: (limit = 300) => all("SELECT * FROM events ORDER BY id DESC LIMIT ?", limit),
     // Mejor expedición ENCORE por uid (vuelta, escenario, tiempo).
@@ -224,6 +238,15 @@ export function openDb(file, invitesJson = null) {
         routes: all(`SELECT ${J("variant")} variant, COUNT(*) n FROM events ${W}'route_pick' AND ${J("variant")} IS NOT NULL GROUP BY variant ORDER BY n DESC, variant`, ...A),
         perDay: all(`SELECT date(at/1000,'unixepoch') day, SUM(type='run_start') started, SUM(type='run_end') ended FROM events WHERE at>?1 ${uid ? "AND uid=?2 " : ""}AND type IN ('run_start','run_end') GROUP BY day ORDER BY day DESC`, ...A),
       };
+    },
+    // Uso (admin): partidas por día (UTC), modos de run_start y abandono = run_start sin run_end (aprox. por conteo: max(0, inicios-fines)/inicios).
+    usageStats(since) {
+      const ev = all("SELECT type, date(at/1000,'unixepoch') day, CASE WHEN json_valid(data) THEN json_extract(data,'$.mode') END mode FROM events WHERE at>? AND type IN ('run_start','run_end')", since);
+      const days = {}, modes = {}; let started = 0, ended = 0;
+      for (const e of ev) {
+        if (e.type === "run_start") { started++; (days[e.day] ||= { day: e.day, n: 0 }).n++; modes[e.mode || "?"] = (modes[e.mode || "?"] || 0) + 1; } else ended++;
+      }
+      return { perDay: Object.values(days).sort((x, y) => x.day < y.day ? -1 : 1), modes: Object.entries(modes).map(([mode, n]) => ({ mode, n })).sort((x, y) => y.n - x.n), started, ended, abandonPct: started ? Math.round(100 * Math.max(0, started - ended) / started) : 0 };
     },
     // Estadísticas históricas de un usuario (T41a): reusa telemetryAnalysis(0, uid). Sin datos → ceros/listas vacías.
     userStats(uid) {

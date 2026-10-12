@@ -17,10 +17,10 @@ import { camCycle, isTouch, padsConnected } from "./input";
 import { bestRace, MEDAL, medalOf, medalTimes, raceCfg, saveRaceCfg, TRACKS, trackName, type RaceCtl } from "./kart_cfg";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, abilCd, abilK, CURSES, type AbilityId, type CurseId } from "./abilities";
-import { FINALS, previewProfile, type Elite } from "./run";
+import { FINALS, previewProfile, setModoTranquilo, type Elite } from "./run";
 import { CAM_MODES, CAM_NAMES, parseSave } from "./savefmt";
 import { PACTS, SECRETS, VARIANTS } from "./encore";
-import { leaderboard, me, myStats, setAlias } from "./net";
+import { daily, leaderboard, me, misLogros, myStats, rankingSemanal, salas, setAlias } from "./net";
 
 const $ = (id: string) => document.getElementById(id)!;
 export const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -45,7 +45,7 @@ export type Save = {
   // Controles (input.ts): teclas [principal, alternativa], joystick, carrera, disposición táctil y 3 perfiles con nombre (null = vacío)
   keys: Record<Action, string[]>; pad: typeof PAD0; race: { kb1: Binds<string>; kb2: Binds<string>; pad: Binds<number> }; tlay: TLays; rumble: boolean; touch: number;
   profiles: (Profile | null)[];
-  hud: number; calm: boolean; dmgNums: boolean;
+  hud: number; calm: boolean; dmgNums: boolean; tranquilo: boolean;
   decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
   stats: Stats;
   seen: Kind[]; slain: Partial<Record<Kind, number>>; beast: Partial<Record<Kind, BeastRec>>; runs: RunRec[]; daily: { day: string; best: number }; zone: ZoneId;
@@ -64,7 +64,7 @@ const DEFAULT: Save = {
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, gpu: "webgl", scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1,
-  calm: typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false), dmgNums: true,
+  calm: typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false), dmgNums: true, tranquilo: false,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
@@ -73,6 +73,8 @@ const DEFAULT: Save = {
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego
 export const save: Save = parseSave((() => { try { return localStorage.getItem("rcfight2"); } catch { return null; } })(), DEFAULT, { abilities: ABILITIES, weapons: ARSENAL, curses: CURSES, kinds: Object.keys(DEF), zones: ZONES, isTouch, validDecal, presetOf, presets: PRESETS });
+// Instalación nueva: "Reducir parpadeos" parte activado si el sistema pide menos movimiento (quien ya tiene guardado conserva su elección)
+try { if (localStorage.getItem("rcfight2") === null) save.calm = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { /* sin almacenamiento */ }
 // Solo en la Mac del autor (localhost): ?tornillos=N fija los tornillos del guardado y se limpia de la dirección. La versión publicada no lo atiende.
 { const q = new URLSearchParams(location.search), t = Number(q.get("tornillos"));
   if (["localhost", "127.0.0.1"].includes(location.hostname) && Number.isFinite(t) && t >= 0 && q.has("tornillos")) {
@@ -206,6 +208,7 @@ export function applySettings() {
   root.setProperty("--touch-scale", String(save.touch));
   applyTouchLayouts(save.tlay, save.touch);
   document.body.classList.toggle("calm", save.calm);
+  setModoTranquilo(!!save.tranquilo);
 }
 const commit = () => { save.preset = presetOf(save); persist(); saveRaceCfg(); applySettings(); };
 /** Vuelve las opciones (imagen, audio, controles, accesibilidad) a los valores de fábrica; el progreso no se toca. */
@@ -216,9 +219,16 @@ function resetCfg() {
 }
 
 // ---------- Pila de pantallas ----------
+/** T34: lista de salas en curso con botón Mirar; Mirar emite el evento "mirar" (detail = código) y main.ts conecta con espectar(). */
+$("netWatch").onclick = async () => {
+  const ol = $("netSalas"), rows = await salas();
+  ol.classList.remove("hidden");
+  ol.replaceChildren(...(rows ?? []).map((r) => { const li = document.createElement("li"), b = document.createElement("button"); li.append(`${r.host} · ${fmt(r.seg)} · ${r.espectadores} mirando `); b.textContent = "Mirar"; b.onclick = () => dispatchEvent(new CustomEvent("mirar", { detail: r.code })); li.append(b); return li; }));
+  if (!rows?.length) { const li = document.createElement("li"); li.textContent = rows ? "No hay partidas en curso." : "Sin sesión o sin conexión."; ol.append(li); }
+};
 /** Codex de ENCORE: lo descubierto con su texto; lo pendiente, "???". Todo con textContent. */
 function renderCodex() {
-  const e = save.encore, fill = (id: string, rows: [string, string][]) => $(id).replaceChildren(...rows.map(([a, b]) => { const li = document.createElement("li"), t = document.createElement("b"); t.textContent = a; li.append(t, b ? ` · ${b}` : ""); return li; }));
+  const e = save.encore, fill = (id: string, rows: [string, string][]) => $(id).replaceChildren(...rows.map(([a, b]) => { const li = document.createElement("li"), t = document.createElement("b"); t.textContent = a; if (a.startsWith("???")) { t.setAttribute("role", "img"); t.setAttribute("aria-label", a === "???" ? "Sin descubrir" : `${a.slice(4)} sin descubrir`); } li.append(t, b ? ` · ${b}` : ""); return li; }));
   const NM: Record<string, string> = { dmg: "daño", speed: "velocidad", maxHp: "vida máx.", xp: "XP", scrap: "tornillos", spawn: "enemigos", taken: "daño recibido", regen: "regeneración", heal: "reparación" };
   const fx = (g: object) => Object.entries(g).map(([k, v]) => `${NM[k] ?? k} x${v}`).join(", ");
   const miss = (n: number): [string, string][] => n ? [[`??? x${n}`, "sin descubrir"]] : []; // lo pendiente va en una sola línea con contador
@@ -229,14 +239,15 @@ function renderCodex() {
   fill("cdxVar", [...va.map((v): [string, string] => [v.name, v.line]), ...miss(VARIANTS.length - va.length)]);
 }
 /** Tus estadísticas del servidor (Codex): sin sesión o sin respuesta, el bloque queda oculto. */
+const MODE_NM: Record<string, string> = { survivor: "Supervivencia", encore: "ENCORE", race: "Carrera", duel: "Demolición", match3: "Junket Crush", daily: "Desafío diario" };
 function renderMyStats() {
   const box = $("cdxMe"), ul = $("cdxMeList"), li = (a: string, b: string) => { const x = document.createElement("li"), t = document.createElement("b"); t.textContent = a; x.append(t, ` · ${b}`); return x; };
   box.classList.add("hidden");
   void myStats().then((s) => {
     if (!s) return;
-    const rows = s.modes.map((m) => li(m.mode, `${m.played} ${m.played === 1 ? "jugada" : "jugadas"}, ${m.won} ${m.won === 1 ? "ganada" : "ganadas"}`));
+    const rows = s.modes.map((m) => li(MODE_NM[m.mode] ?? m.mode, `${m.played} ${m.played === 1 ? "jugada" : "jugadas"}, ${m.won} ${m.won === 1 ? "ganada" : "ganadas"}`));
     if (s.encore) rows.push(li("Mejor ENCORE", `vuelta ${s.encore.loop + 1}, escenario ${s.encore.stage + 1}`));
-    if (s.pacts.top.length) rows.push(li("Pactos favoritos", s.pacts.top.map((p) => p.id).join(", ")));
+    if (s.pacts.top.length) rows.push(li("Pactos favoritos", s.pacts.top.map((p) => PACTS.find((x) => x.id === p.id)?.name ?? p.id).join(", ")));
     if (s.stages.stay + s.stages.advance) rows.push(li("Quedarse", `${Math.round(s.stages.stayPct)} %`));
     ul.replaceChildren(...rows); box.classList.toggle("hidden", !rows.length);
   });
@@ -252,6 +263,10 @@ function renderAcct() {
     ul.replaceChildren(...([["Correo", m.email], ["Licencia", lic]] as const).map(([a, b]) => { const x = document.createElement("li"), t = document.createElement("b"); t.textContent = a; x.append(t, ` · ${b}`); return x; }));
     al.value = m.alias ?? "";
   });
+  const lg = $("acctLogros"); lg.textContent = "Cargando…";
+  void misLogros().then((rows) => { if (!rows) { lg.textContent = "Sin conexión"; return; } lg.replaceChildren(...rows.map((r) => { const li = document.createElement("li"); li.textContent = `${r.done ? "✔" : "·"} ${r.name} · ${r.progress}/${r.goal}`; return li; })); });
+  const rk = $("acctRank"); rk.textContent = "Cargando…";
+  void rankingSemanal().then((rows) => { rk.replaceChildren(...(rows ?? []).slice(0, 20).map((r) => { const li = document.createElement("li"); li.textContent = `${r.name} · ${r.score} bajas`; return li; })); if (!rows) rk.textContent = "Sin conexión"; else if (!rows.length) rk.textContent = "Sin datos esta semana"; });
 }
 $("acctSave").onclick = async () => { const a = ($("acctAlias") as HTMLInputElement).value.trim(), e = await setAlias(a); $("acctMsg").textContent = e ?? "Apodo guardado."; };
 $("acctOut").onclick = () => { $("netLogout").click(); back(); }; // el cierre real vive en main.ts (sess())
@@ -267,13 +282,15 @@ function show() {
   const s = current();
   $("fe").classList.toggle("hidden", !s);
   $("fe").classList.toggle("ingame", stack[0] === "pause" || stack[0] === "over"); // en partida: velo oscuro también en Configuración
+  if (s) $("scrAnnounce").textContent = document.querySelector(`#scr-${s} [role=heading]`)?.textContent ?? "";
+  const hud = document.getElementById("hud"); if (hud) hud.inert = !!s; // con menú abierto el HUD no recibe Tab
   if (!s) return;
   for (const el of document.querySelectorAll<HTMLElement>(".scr")) el.classList.toggle("on", el.id === "scr-" + s);
   if (s === "garage") renderGarage();
   if (s === "shop") renderShop();
   if (s === "main") renderMain();
   if (s === "play") renderPlay();
-  if (s === "encore") { renderEncP(); const e = save.encore; $("encRec").textContent = e.runs ? `Mejor expedición: vuelta ${e.best.loop + 1}, escenario ${e.best.stage + 1} · ${fmt(e.best.t)} · ${e.wins} ${e.wins === 1 ? "ganada" : "ganadas"} de ${e.runs}` : "Sin expediciones registradas todavía."; $("encSec").innerHTML = SECRETS.filter((x) => e.secrets.includes(x.id)).map((x) => `<li><b>${x.name}</b> · ${x.lore}</li>`).join("") || `<li>Secretos del Director: ${SECRETS.length} sin descubrir.</li>`; } // Contenido 3: secretos descubiertos (textos propios, sin HTML del guardado)
+  if (s === "encore") { renderEncP(); carLbl(); const e = save.encore; $("encRec").textContent = e.runs ? `Mejor expedición: vuelta ${e.best.loop + 1}, escenario ${e.best.stage + 1} · ${fmt(e.best.t)} · ${e.wins} ${e.wins === 1 ? "ganada" : "ganadas"} de ${e.runs}` : "Sin expediciones registradas todavía."; $("encSec").innerHTML = SECRETS.filter((x) => e.secrets.includes(x.id)).map((x) => `<li><b>${x.name}</b> · ${x.lore}</li>`).join("") || `<li>Secretos del Director: ${SECRETS.length} sin descubrir.</li>`; } // Contenido 3: secretos descubiertos (textos propios, sin HTML del guardado)
   if (s === "codex") { renderCodex(); renderMyStats(); }
   if (s === "cuenta") renderAcct();
   if (s === "encore") void leaderboard().then((rows) => { const box = $("encLb"), ol = $("encLbList"); box.classList.toggle("hidden", !rows?.length); ol.replaceChildren(...(rows ?? []).slice(0, 10).map((r) => { const li = document.createElement("li"); li.textContent = `${r.name} · vuelta ${r.loop + 1}, escenario ${r.stage + 1} · ${fmt(r.t)}`; return li; })); });
@@ -305,9 +322,12 @@ function askBuy(name: string, cost: number, then: () => void) {
   askFn = then; askBack = document.activeElement as HTMLElement;
   $("askD").textContent = `¿Comprar ${name} por ${cost} tornillos? Después de la compra quedan ${save.scrap - cost}.`;
   $("ask").classList.remove("hidden");
+  askInert(true);
   ($("ask").querySelector('[data-act="askyes"]') as HTMLElement).focus();
 }
-function askClose() { $("ask").classList.add("hidden"); askFn = null; askBack?.focus(); }
+function askClose() { $("ask").classList.add("hidden"); askFn = null; askInert(false); askBack?.focus(); }
+/** Con el modal abierto lo de atrás no recibe foco ni Tab (inert) y el lector lo trata como diálogo. */
+function askInert(on: boolean) { for (const el of document.querySelectorAll<HTMLElement>("#fe > .scr")) el.inert = on; }
 
 let m3ConfigReturn = false;
 /** Configuración global mientras el arcade match-3 sigue en pausa (sin duplicar opciones). */
@@ -468,11 +488,13 @@ function kitStripHtml() {
     + `<div><span>Habilidad</span><b class="wi">${icon(ABIL_ICON[ab], 16)}${ABILITIES[ab].name}</b></div>`
     + `</div>`;
 }
+const carLbl = () => document.querySelectorAll('[data-act="pcar"] .bt').forEach((e) => { e.textContent = `Auto · ${CARS[save.car].name}`; });
 function renderPlay() {
   if (!owns("zone:" + save.zone)) save.zone = "patio"; // guardado importado con una zona sin comprar
   const z = ZONES[save.zone], zr = save.stats.zone[save.zone];
   $("zoneBtn").querySelector(".bt")!.textContent = `Zona · ${z.name}`;
   $("zoneDesc").textContent = z.desc;
+  carLbl();
   const zRow = `<div class="zoneRow">${(Object.keys(ZONES) as ZoneId[]).map((zid) => {
     const r = save.stats.zone[zid], own = owns("zone:" + zid), win = !!r && r.t >= 600;
     return `<span class="zchip ${zid === save.zone ? "on" : ""} ${win ? "win" : ""}"><b>${ZONES[zid].short}</b><em>${!own ? "Bloq." : r ? `${fmt(r.t)}${win ? " ★" : ""}` : "—"}</em></span>`;
@@ -482,16 +504,20 @@ function renderPlay() {
   $("curseBtn").textContent = curseTxt();
 }
 function renderDaily() {
-  const b = save.daily.day === today() ? save.daily.best : 0;
-  const seed = Number(new URLSearchParams(location.search).get("seed")) || dailySeed();
-  const p = previewProfile(seed);
-  $("dailyBrief").innerHTML = `<div class="briefRec">DESAFÍO DIARIO · ${today()} · SEMILLA #${seed}</div><div class="briefGrid">`
-    + `<div><span>Escenario</span><b>Patio · ${p.climate.name}${Number.isFinite(p.rainAt) ? " (Lluvia)" : ""}</b></div>`
-    + `<div><span>Plaga dominante</span><b>${p.plague.name}</b></div>`
-    + `<div><span>Minijefes</span><b class="briefMinis"><span class="wi">${beastIcon(p.minis[0], 16)}${DEF[p.minis[0]].name}</span><span class="wi">${beastIcon(p.minis[1], 16)}${DEF[p.minis[1]].name}</span></b></div>`
-    + `<div><span>Jefe final (10:00)</span><b class="wi">${beastIcon(p.final, 18)}${DEF[p.final].name}</b></div>`
-    + `</div>` + kitStripHtml();
-  $("dailyInfo").textContent = `Semilla #${seed} · ${b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy. El mejor tiempo del día queda como récord."}`;
+  const b = save.daily.day === today() ? save.daily.best : 0, forced = Number(new URLSearchParams(location.search).get("seed"));
+  const draw = (seed: number, date: string) => {
+    const p = previewProfile(seed);
+    $("dailyBrief").innerHTML = `<div class="briefRec">DESAFÍO DIARIO · ${date} · SEMILLA #${seed}</div><div class="briefGrid">`
+      + `<div><span>Escenario</span><b>Patio · ${p.climate.name}${Number.isFinite(p.rainAt) ? " (Lluvia)" : ""}</b></div>`
+      + `<div><span>Plaga dominante</span><b>${p.plague.name}</b></div>`
+      + `<div><span>Minijefes</span><b class="briefMinis"><span class="wi">${beastIcon(p.minis[0], 16)}${DEF[p.minis[0]].name}</span><span class="wi">${beastIcon(p.minis[1], 16)}${DEF[p.minis[1]].name}</span></b></div>`
+      + `<div><span>Jefe final (10:00)</span><b class="wi">${beastIcon(p.final, 18)}${DEF[p.final].name}</b></div>`
+      + `</div>` + kitStripHtml();
+    $("dailyInfo").textContent = `Semilla #${seed} · ${b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy. El mejor tiempo del día queda como récord."}`;
+  };
+  const seed = forced || dailySeed();
+  draw(seed, today());
+  if (!forced) void daily().then((d) => { if (d && d.seed !== seed && $("dailyBrief").isConnected) draw(d.seed, d.date); }); // semilla oficial: el resumen sale de ella, no de la local
 }
 function refreshModes() {
   const rb = (save as { raceBest?: Record<string, number> }).raceBest ?? {};
@@ -546,7 +572,7 @@ const PERKS: { k: PermK; cat: "chasis" | "equipo"; name: string; desc: string; c
   { k: "cards", cat: "equipo", name: "Cuarta ranura", desc: "+1 opción en cada mejora y cofre", cost: costos("cards"), fx: ["Opciones por carta", (l) => `${3 + l}`] },
 ];
 // Íconos: también los usará la mesa de taller 3D para mostrar cada mejora como pieza (id = clave de perm, hab:<habilidad>, arma:<arma>)
-export const ABIL_ICON: Record<AbilityId, string> = { bombardeo: "petardos", escudo: "heal", emp: "tesla", lenta: "reloj" };
+export const ABIL_ICON: Record<AbilityId, string> = { bombardeo: "petardos", escudo: "heal", emp: "tesla", lenta: "reloj", turbo: "turbo" };
 const abilCost = (k: AbilityId) => costos("hab_" + k);
 const opts = (sl: Slot) => PARTS[sl].opts as Record<string, readonly [string, number]>;
 // Desbloqueables: car:<auto>, pilot:<piloto>, part:<ranura>:<opción>. Los pilotos con logro no se compran.
@@ -633,7 +659,7 @@ addEventListener("focusin", (e) => {
 });
 
 const bar = (v: number, max: number) => `<span class="stb"><i style="width:${Math.min(100, (v / max) * 100)}%"></i></span>`;
-const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" data-${attr}="${id}">${n}</button>`).join("");
+const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" role="tab" aria-selected="${id === on}" data-${attr}="${id}">${n}</button>`).join("");
 const STABS = { chasis: "Chasis", equipo: "Equipo de partida", habilidades: "Habilidades", arsenal: "Arsenal", autos: "Autos", pilotos: "Pilotos", piezas: "Piezas", zonas: "Zonas" };
 let stab: keyof typeof STABS = "chasis";
 // Filtro y orden del Taller (valen para todas las pestañas)
@@ -760,7 +786,7 @@ function renderGarage() {
       const highRevTag = isHighRev ? '<span class="high-rev">ALTO RÉGIMEN</span>' : "";
       const allParts = (Object.keys(PARTS) as Slot[]).every((sl) => Object.keys(opts(sl)).every((o) => owns("part:" + sl + ":" + o)));
       const completeTag = owns("car:" + k) && allParts ? '<span class="parts-complete">TOTALMENTE EQUIPADO</span>' : "";
-      return `<div tabindex="0" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><div class="stc"><span>Carrocería <em>${c.hp}${dTag(c.hp, eq.hp)}</em></span>${bar(c.hp, 300)}</div><div class="stc"><span>Velocidad <em>${Math.round(c.speed * 3.6)}${dTag(Math.round(c.speed * 3.6), Math.round(eq.speed * 3.6))}</em></span>${bar(c.speed, 21)}</div><div class="stc"><span>Embestida <em>×${n1(c.ram)}${dTag(c.ram, eq.ram, true)}</em></span>${bar(c.ram, 5.5)}</div></div>${vicTag}${armorTag}${heavyTag}${lightTag}${awdTag}${highRevTag}${completeTag}${owns("car:" + k) ? `<div class="price">${save.car === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock("car:" + k)}</div>`;
+      return `<div tabindex="0" role="button" aria-pressed="${save.car === k}" aria-disabled="${!owns("car:" + k)}" class="carc ${save.car === k ? "sel" : ""} ${owns("car:" + k) ? "" : "locked"}" data-k="${k}"><b>${c.name}</b>${c.desc}<div class="st"><div class="stc"><span>Carrocería <em>${c.hp}${dTag(c.hp, eq.hp)}</em></span>${bar(c.hp, 300)}</div><div class="stc"><span>Velocidad <em>${Math.round(c.speed * 3.6)}${dTag(Math.round(c.speed * 3.6), Math.round(eq.speed * 3.6))}</em></span>${bar(c.speed, 21)}</div><div class="stc"><span>Embestida <em>×${n1(c.ram)}${dTag(c.ram, eq.ram, true)}</em></span>${bar(c.ram, 5.5)}</div></div>${vicTag}${armorTag}${heavyTag}${lightTag}${awdTag}${highRevTag}${completeTag}${owns("car:" + k) ? `<div class="price">${save.car === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock("car:" + k)}</div>`;
     }).join("");
   }
   else if (gtab === "piloto") $("cars").innerHTML = (Object.keys(PILOTS) as PilotId[]).map((k) => {
@@ -770,18 +796,18 @@ function renderGarage() {
     const portraitHtml = portraitSrc
       ? `<div class="pilot-portrait"><img src="${portraitSrc}" alt="${p.name}" width="64" height="64" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`
       : "";
-    return `<div tabindex="0" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}">${portraitHtml}<b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div>${vet ? '<span class="vet-badge">★ VETERANO</span>' : ''}<div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div>${owns(id) ? `<div class="price">${save.pilot === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id, p.ach?.txt)}</div>`;
+    return `<div tabindex="0" role="button" aria-pressed="${save.pilot === k}" aria-disabled="${!owns(id)}" class="carc pilot ${save.pilot === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-pilot="${k}">${portraitHtml}<b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="wsyn"><span>Afinidad (+1 nv): <b>${ABILITIES[p.abil].name}</b> · ${p.abilTxt}</span></div>${vet ? '<span class="vet-badge">★ VETERANO</span>' : ''}<div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div>${owns(id) ? `<div class="price">${save.pilot === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id, p.ach?.txt)}</div>`;
   }).join("");
   else if (gtab === "habilidad") $("cars").innerHTML = (Object.keys(ABILITIES) as AbilityId[]).map((k) => {
     const a = ABILITIES[k];
     const l = save.abilLv[k] ?? 0;
-    return `<div tabindex="0" class="carc pilot ${save.ability === k ? "sel" : ""}" data-abil="${k}"><b class="wi">${icon(ABIL_ICON[k], 22)}${a.name}</b>${a.desc}<div class="price">Nivel ${l + 1} · Enfriamiento ${n1(abilCd(k, l))} s · ${save.ability === k ? "EN USO" : "DISPONIBLE"}</div></div>`;
+    return `<div tabindex="0" role="button" aria-pressed="${save.ability === k}" class="carc pilot ${save.ability === k ? "sel" : ""}" data-abil="${k}"><b class="wi">${icon(ABIL_ICON[k], 22)}${a.name}</b>${a.desc}<div class="price">Nivel ${l + 1} · Enfriamiento ${n1(abilCd(k, l))} s · ${save.ability === k ? "EN USO" : "DISPONIBLE"}</div></div>`;
   }).join("");
   else if (gtab === "arma") { // Arsenal: una sola arma inicial; Gomitas siempre está. Elegir otra reemplaza la del piloto (ver startWeapons)
     const own = PILOTS[save.pilot].start, first = startPick() === "gomitas" ? own : startPick();
     $("cars").innerHTML = `<div class="note">Arranca con: ${WEAPONS[first].name}${first !== own ? ` (en lugar de ${WEAPONS[own].name}, la del piloto)` : ""}</div>` + ARSENAL.map((k) => {
       const id = "arma:" + k, w = WEAPONS[k];
-      return `<div tabindex="0" class="carc pilot ${startPick() === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-arma="${k}"><b class="wi">${icon(k, 22)}${w.name}</b>${k === "gomitas" ? "De serie. Piloto con arma propia: arranca con la suya" : w.desc}<div class="wsyn">${icon(w.evo, 14)}<span>Evoluciona con <b>${PASSIVES[w.evo].name}</b> → ${w.evoName}</span></div>${owns(id) ? `<div class="price">${startPick() === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id)}</div>`;
+      return `<div tabindex="0" role="button" aria-pressed="${startPick() === k}" aria-disabled="${!owns(id)}" class="carc pilot ${startPick() === k ? "sel" : ""} ${owns(id) ? "" : "locked"}" data-arma="${k}"><b class="wi">${icon(k, 22)}${w.name}</b>${k === "gomitas" ? "De serie. Piloto con arma propia: arranca con la suya" : w.desc}<div class="wsyn">${icon(w.evo, 14)}<span>Evoluciona con <b>${PASSIVES[w.evo].name}</b> → ${w.evoName}</span></div>${owns(id) ? `<div class="price">${startPick() === k ? "EN USO" : "EN EL GARAJE"}</div>` : lock(id)}</div>`;
     }).join("");
   }
   else if (gtab === "piezas") $("cars").innerHTML = editing ? "" : (Object.keys(PARTS) as Slot[]).map((sl) => {
@@ -987,6 +1013,7 @@ const DESC: Record<string, string> = {
   hud: "Escala de todo el HUD (barras, reloj, radar).",
   hudSolid: "Fondo casi opaco en el HUD para leerlo mejor sobre pasto claro.",
   calm: "Quita parpadeos, destellos y sacudidas que molestan.",
+  tranquilo: "Modo Tranquilo: recibís la mitad del daño y los bichos tienen 70% de vida (los jefes no).",
   "pad.dead": "Cuánto hay que mover el stick antes de que cuente.",
   "pad.sens": "Qué tan rápido responde el stick.",
   rumble: "Vibración del mando en golpes.",
@@ -1074,7 +1101,7 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
     ["Lectura", "sect"],
     ["Tamaño del HUD", "range", "hud", 0.8, 1.5, 0.05, "x"], ["HUD con fondo sólido", "tog", "hudSolid"], ["Números de daño", "tog", "dmgNums"],
     ["Movimiento", "sect"],
-    ["Reducir parpadeos y destellos", "tog", "calm"], ["Temblor de pantalla", "tog", "shake"],
+    ["Modo Tranquilo", "tog", "tranquilo"], ["Reducir parpadeos y destellos", "tog", "calm"], ["Temblor de pantalla", "tog", "shake"],
   ] },
   data: { name: "Datos", rows: [
     ["El progreso se guarda en este navegador. Un archivo de respaldo permite llevarlo a otro dispositivo.", "note"],
@@ -1110,7 +1137,7 @@ const choices = (path: string, list: [string, string][]): [string, string, boole
   return [v, n, false] as [string, string, boolean];
 }).filter((o): o is [string, string, boolean] => !!o);
 function renderConfig() {
-  $("tabs").innerHTML = Object.entries(TABS).map(([id, t]) => `<button class="tab ${id === tab ? "on" : ""}" data-tab="${id}">${t.name}</button>`).join("");
+  $("tabs").innerHTML = Object.entries(TABS).map(([id, t]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}">${t.name}</button>`).join("");
   // En táctil, Controles deja solo lo táctil (sin teclas ni gamepad)
   // (y Perfiles); el editor táctil solo existe con pantalla táctil y J2 nunca en teléfono
   const touchOnly = tab === "ctl" && ctl === "touch";
@@ -1133,7 +1160,7 @@ function renderConfig() {
     if (r[1] === "prof") { const p = save.profiles[r[2]], a = `psave:${r[2]}`;
       return `<div class="row multi prof"><input type="text" data-pname="${r[2]}" maxlength="20" value="${esc(p?.name ?? r[0])}" aria-label="Nombre del perfil ${r[2] + 1}"><span class="lb"><small>${p ? "Guardado" : "Vacío"}</small></span>`
         + `<button data-act="${a}">${armed === a ? "¿Sobrescribir?" : "Guardar"}</button><button data-act="pload:${r[2]}" ${p ? "" : "disabled"}>Usar</button></div>`; }
-    if (r[1] === "tog") return `<button class="row" data-tog="${r[2]}"><span class="lb">${r[0]}${d(r[2])}</span><b class="jm-sw${val(r[2]) ? " on" : ""}">${val(r[2]) ? "SÍ" : "NO"}</b></button>`;
+    if (r[1] === "tog") return `<button class="row" role="switch" aria-checked="${!!val(r[2])}" data-tog="${r[2]}"><span class="lb">${r[0]}${d(r[2])}</span><b class="jm-sw${val(r[2]) ? " on" : ""}">${val(r[2]) ? "SÍ" : "NO"}</b></button>`;
     if (r[1] === "sel") return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><select data-set="${r[2]}">${choices(r[2], r[3]).map(([v, n, no]) => `<option value="${v}" ${String(val(r[2])) === v ? "selected" : ""} ${no ? "disabled" : ""}>${n}</option>`).join("")}</select></label>`;
     const v = val(r[2]) as number;
     return `<label class="row"><span class="lb">${r[0]}${d(r[2])}</span><input type="range" data-set="${r[2]}" data-u="${r[6]}" min="${r[3]}" max="${r[4]}" step="${r[5]}" value="${v}"><output>${show2(v, r[6])}</output></label>`;
@@ -1240,6 +1267,9 @@ function padTest() {
 
 // Trasfondo de cada bicho (el de los pilotos vive en pilots.ts)
 const LORE: Record<Kind, string> = {
+  payaso: "Salió de un baúl del desván y nadie lo volvió a guardar. Rebota sin parar y siempre cae donde estabas.",
+  grillo: "Se cree atleta y entrena saltando sobre vos. Se agacha, avisa, salta en arco y no corrige: cae donde estabas.",
+  mosca: "No sabe ir derecho: zumba de un lado a otro y llega igual. Chica, rápida y con muy poca vida.",
   hormiga: "Trabaja doce horas, cobra en migas y no tiene sindicato. Jura que el patio era suyo antes que la casa. Nunca viene sola: donde hay una, hay una fila entera con ganas de hablar con el gerente.",
   escupidora: "Hizo un curso de comunicación asertiva y lo entendió mal: ahora escupe ácido para expresar su opinión. Sabe que el blanco que va derecho es el más fácil, y lo disfruta.",
   friccion: "Una sola velocidad: adelante. Frenar nunca figuró en el manual ni en su plan de vida. Lo cargaron una tarde entera contra la alfombra y todavía le queda envión y rencor.",
@@ -1269,6 +1299,9 @@ const LORE: Record<Kind, string> = {
 };
 // Cómo ataca y cómo esquivarlo (sale del comportamiento real de enemies.ts)
 const HOW: Record<Kind, [string, string]> = {
+  payaso: ["Anuncia cada salto con un aro rojo sobre el auto; tras aterrizar queda quieto un momento.", "Salir del aro antes de que caiga y aprovechar la pausa para pegarle."],
+  grillo: ["Se agacha 0,4 s y salta en arco fijo hacia donde estabas; en el aire no corrige.", "Moverse apenas se agacha; queda quieto al aterrizar, a tiro."],
+  mosca: ["Zigzaguea mientras persigue; es rápida y frágil.", "Armas de área o de cono: el golpe directo falla por el zigzag."],
   hormiga: ["Corre derecho al auto y muerde por contacto. Llega en grupos y en columnas detrás de una líder, porque alguien tiene que coordinar.", "Sola no es nada: lo peligroso es quedar rodeado. Mantener el auto en movimiento y abrir paso con embestidas; quedarse quieto equivale a una reunión."],
   escupidora: ["Se frena a unos 16 metros, apunta y escupe ácido hacia donde el auto va a estar. Pasivo-agresiva, pero con puntería.", "El disparo calcula el rumbo: un volantazo justo después de que se detiene lo hace fallar. Es previsible, como casi todos."],
   friccion: ["Rápido y sin frenos: va en línea recta contra el auto y golpea por contacto. No hay plan B, ni plan A.", "Se pasa de largo con facilidad. Un giro corto en el último momento lo deja atrás, cuestionando sus decisiones."],
@@ -1298,6 +1331,9 @@ const HOW: Record<Kind, [string, string]> = {
 };
 // Biometría y debilidades mecánicas de campo (blindaje, maniobrabilidad y punto ciego táctico)
 const BIOMETRICS: Record<Kind, { armor: string; agility: string; blindSpot: string }> = {
+  payaso: { armor: "Caja de chapa y resorte; la cabeza es lo más frágil", agility: "Rápido al perseguir, torpe tras aterrizar", blindSpot: "Justo después de caer" },
+  grillo: { armor: "Caparazón ligero", agility: "Salto de trayectoria fija", blindSpot: "Aterrizaje: queda quieto" },
+  mosca: { armor: "Sin blindaje", agility: "Zigzag errático", blindSpot: "Vida muy baja" },
   hormiga: { armor: "Quitina delgada (nula)", agility: "Direccional directa en enjambre", blindSpot: "Flancos al marchar en fila" },
   escupidora: { armor: "Cutícula blanda", agility: "Estática al fijar disparo", blindSpot: "Cuerpo a cuerpo a quemarropa" },
   friccion: { armor: "Chapa estampada liviana", agility: "Rectilínea rígida sin corrección", blindSpot: "Lateral durante la inercia" },
@@ -1391,7 +1427,7 @@ function renderBestiary() {
       jefes: "Jefes y minijefes",
     };
     bfiltsEl.innerHTML = (Object.keys(BFILT_LABELS) as (typeof bfilt)[]).map((f) =>
-      `<button class="tab ${bfilt === f ? "on" : ""}" data-bfilt="${f}">${BFILT_LABELS[f]}</button>`
+      `<button class="tab ${bfilt === f ? "on" : ""}" role="tab" aria-selected="${bfilt === f}" data-bfilt="${f}">${BFILT_LABELS[f]}</button>`
     ).join("");
   } else {
     bfiltsEl.classList.add("hidden");
@@ -1416,7 +1452,7 @@ function renderBestiary() {
       const portraitHtml = portraitSrc
         ? `<div class="pilot-portrait"><img src="${portraitSrc}" alt="${p.name}" width="64" height="64" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`
         : "";
-      return `<div tabindex="0" class="carc ficha pilot ${save.pilot === k ? "sel" : ""} ${own ? "" : "locked"}">${portraitHtml}<b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div><div class="lore">${p.lore}</div><div class="price">${st}</div></div>`;
+      return `<div tabindex="0" class="carc ficha pilot ${save.pilot === k ? "sel" : ""} ${own ? "" : "locked"}">${portraitHtml}<b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="wsyn"><span>Afinidad (+1 nv): <b>${ABILITIES[p.abil].name}</b> · ${p.abilTxt}</span></div><div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div><div class="lore">${p.lore}</div><div class="price">${st}</div></div>`;
     }).join("")
     : filteredKinds.map((k) => {
       // Todo visible desde el inicio; lo propio (bajas) dice "Sin registros todavía" hasta que aparezca. Clic, Enter o A abren la ficha completa.
@@ -1485,13 +1521,13 @@ function renderBeast() {
     + `<div class="bctl"><div class="slot"><span>Animación</span>${btn("banim", "walk", "Caminar", BV.anim === "walk")}${btn("banim", "attack", "Atacar")}${btn("banim", "hit", "Recibir golpe")}${btn("banim", "die", "Morir")}${d.boss ? btn("banim", "phase", "Fase 2") : ""}</div>`
     + (d.boss ? "" : `<div class="slot"><span>Variante</span>${btn("belite", "", "Normal", !el)}${btn("belite", "rapida", "Rápida", el === "rapida")}${btn("belite", "blindada", "Blindada", el === "blindada")}</div>`) + `</div>`
     + `<div id="binfo">`
-    + `<div class="bblock" tabindex="0"><div class="sect">Datos</div><div class="st bst">${row(d.boss ? "Vida" : "Vida inicial", hp, d.boss ? 8000 : 270, num(hp))}${row("Velocidad", sp, 25, num(sp))}${row("Daño", d.dmg, d.boss ? 45 : 12, num(d.dmg))}${row("Peso", mass, d.boss ? 100 : 15, num(mass))}${row("XP", d.xp, d.boss ? 120 : 6, d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"}` : "Fin de la partida")}</div>`
+    + `<div class="bblock"><div class="sect">Datos</div><div class="st bst">${row(d.boss ? "Vida" : "Vida inicial", hp, d.boss ? 8000 : 270, num(hp))}${row("Velocidad", sp, 25, num(sp))}${row("Daño", d.dmg, d.boss ? 45 : 12, num(d.dmg))}${row("Peso", mass, d.boss ? 100 : 15, num(mass))}${row("XP", d.xp, d.boss ? 120 : 6, d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"}` : "Fin de la partida")}</div>`
     + (el ? `<p class="bnote">${el === "rapida" ? "Élite rápida: doble velocidad y 60% de la vida." : "Élite blindada: triple vida y cinco veces más pesada, casi no se la empuja."} Al caer suelta un cofre.</p>` : d.boss ? "" : `<p class="bnote">La vida de las plagas crece con el tiempo de partida.</p>`) + `</div>`
-    + `<div class="bblock" tabindex="0"><div class="sect">Cómo ataca</div><p>${HOW[k][0]}</p><div class="sect">Cómo esquivarlo</div><p>${HOW[k][1]}</p>${d.boss ? `<p class="bnote">${d.final ? `Fase 2: al vaciar la primera barra ruge, exige hablar con un superior, llena una segunda y pega más fuerte` : "Fase 2: por debajo de la mitad de vida pierde la paciencia y la compostura"}, va un 20% más rápido${PHASE2[k] ?? ""}.</p>` : ""}</div>`
-    + `<div class="bblock" tabindex="0"><div class="sect">Biometría y debilidades mecánicas</div>${BIOMETRICS[k] ? kv("Blindaje", BIOMETRICS[k].armor) + kv("Maniobrabilidad", BIOMETRICS[k].agility) + kv("Punto ciego", BIOMETRICS[k].blindSpot) : "<p>Sin datos biométricos.</p>"}</div>`
-    + `<div class="bblock" tabindex="0"><div class="sect">Trasfondo</div><p class="lore">${LORE[k]}</p></div>`
-    + `<div class="bblock" tabindex="0"><div class="sect">Registro propio</div>${met ? kv("Bajas", n) + kv("Primera vez", first) + kv("Daño recibido", Math.round(r?.hurt ?? 0)) + kv("Zonas", r?.zones.map((z) => ZONES[z].short).join(", ") || "Sin registros todavía") : `<p>Sin registros todavía.</p>`}</div>`
-    + `<div class="bblock" tabindex="0"><div class="sect">Debilidades</div>${weak.length ? `<div class="st bst">${weak.map(([id, v]) => row(wname(id), v, weak[0][1], String(Math.round(v)))).join("")}</div><p class="bnote">Daño infligido por arma, según el historial propio.</p>` : `<p>Sin registros todavía.</p>`}</div>`
+    + `<div class="bblock"><div class="sect">Cómo ataca</div><p>${HOW[k][0]}</p><div class="sect">Cómo esquivarlo</div><p>${HOW[k][1]}</p>${d.boss ? `<p class="bnote">${d.final ? `Fase 2: al vaciar la primera barra ruge, exige hablar con un superior, llena una segunda y pega más fuerte` : "Fase 2: por debajo de la mitad de vida pierde la paciencia y la compostura"}, va un 20% más rápido${PHASE2[k] ?? ""}.</p>` : ""}</div>`
+    + `<div class="bblock"><div class="sect">Biometría y debilidades mecánicas</div>${BIOMETRICS[k] ? kv("Blindaje", BIOMETRICS[k].armor) + kv("Maniobrabilidad", BIOMETRICS[k].agility) + kv("Punto ciego", BIOMETRICS[k].blindSpot) : "<p>Sin datos biométricos.</p>"}</div>`
+    + `<div class="bblock"><div class="sect">Trasfondo</div><p class="lore">${LORE[k]}</p></div>`
+    + `<div class="bblock"><div class="sect">Registro propio</div>${met ? kv("Bajas", n) + kv("Primera vez", first) + kv("Daño recibido", Math.round(r?.hurt ?? 0)) + kv("Zonas", r?.zones.map((z) => ZONES[z].short).join(", ") || "Sin registros todavía") : `<p>Sin registros todavía.</p>`}</div>`
+    + `<div class="bblock"><div class="sect">Debilidades</div>${weak.length ? `<div class="st bst">${weak.map(([id, v]) => row(wname(id), v, weak[0][1], String(Math.round(v)))).join("")}</div><p class="bnote">Daño infligido por arma, según el historial propio.</p>` : `<p>Sin registros todavía.</p>`}</div>`
     + `</div><div class="bfoot"><div class="hint">${BHINT[ctl]()}</div><button data-act="back">Volver</button></div>`;
   if (wasSel) focusSel(wasSel);
 }
@@ -1605,6 +1641,11 @@ export function initMenu(a: Api) {
   $("tPause").addEventListener("click", () => (current() === "pause" ? api.resume() : api.pause())); // botón táctil: igual que Esc/Start
   $("tCam").addEventListener("click", camCycle); // botón táctil: igual que C / View
   const fe = $("fe");
+  $("c").tabIndex = -1; $("c").setAttribute("aria-hidden", "true"); // el canvas no es parada de Tab (Babylon le pone tabindex)
+  for (const sc of document.querySelectorAll<HTMLElement>(".scr")) { // título de cada pantalla = encabezado y nombre de la sección
+    const t = sc.querySelector<HTMLElement>(".otitle, .brand");
+    if (t) { t.id ||= sc.id + "-t"; t.setAttribute("role", "heading"); t.setAttribute("aria-level", "1"); sc.setAttribute("aria-labelledby", t.id); }
+  }
   fe.addEventListener("focusin", () => SFX.blip());
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
@@ -1640,6 +1681,7 @@ export function initMenu(a: Api) {
       const zs = ownedZones(); save.zone = zs[(zs.indexOf(save.zone) + 1) % zs.length]; persist(); renderPlay();
       fe.classList.remove("zap"); void fe.offsetWidth; fe.classList.add("zap"); SFX.static();
     }
+    else if (d.act === "pcar") { const cs = save.cars.length ? save.cars : [save.car]; save.car = cs[(cs.indexOf(save.car) + 1) % cs.length]; persist(); renderPlay(); carLbl(); } // T46: auto elegido antes de largar, queda en el guardado
     else if (d.act === "back") back();
     else if (d.act === "fullscreen") { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.(); }
     else if (d.act === "resetcfg") { // dos pasos: el primer clic pide confirmar (se desarma solo a los 4 s)

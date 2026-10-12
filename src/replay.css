@@ -23,3 +23,7 @@ body.calm #outro .o-tag::before, body.calm #outro::before, body.calm #outro::aft
 .polaroid::before { content: ""; position: absolute; top: -9px; left: 50%; width: 72px; height: 20px; translate: -50% 0; rotate: 3deg; background: #d8cfa8bb; mix-blend-mode: screen; pointer-events: none; z-index: 1; }
 .polaroid button { font-size: 13px; padding: 8px 14px; border: 1px solid var(--jm-chapa, #b5651d); background: rgba(11, 15, 20, .92); color: var(--jm-amarillo2, #ffd24a); font-weight: 700; letter-spacing: .06em; transition: transform .12s, box-shadow .12s; border-radius: var(--jm-r, 3px); }
 .polaroid button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, .5); }
+
+/* Barra de la repetición (rerun.ts): velocidad y salida */
+#rpBar { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5; display: flex; gap: 8px; align-items: center; font: 700 14px/1 var(--display); letter-spacing: .08em; color: var(--turbo); text-shadow: 2px 2px 0 #000; }
+#rpBar button { font: inherit; padding: 6px 10px; cursor: pointer; }
