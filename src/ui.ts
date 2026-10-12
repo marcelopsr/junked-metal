@@ -427,6 +427,14 @@ export function radioEvent(id: RadioEvent) {
   const e = RADIO[id];
   banner(e.line, e.secs, { tag: e.tag, ico: e.ico, tone: e.tone });
 }
+// ---------- Subtítulo del Director (ENCORE): la cola vive en encore.ts (dirTick); acá solo se muestra ----------
+let dirLeft = 0;
+export function dirSub(txt: string | null, secs = 3.6) {
+  const b = $("dirSub");
+  dirLeft = txt ? secs : 0;
+  b.classList.toggle("hidden", !txt);
+  if (txt) b.querySelector(".dtxt")!.textContent = txt;
+}
 function hideBanner() {
   bannerOn = false; bannerTyping = false; bannerHold = 0;
   const b = $("banner");
@@ -609,6 +617,7 @@ function drawRadar() {
 
 export function uiTick(dt: number, live = true) {
   tickBanner(dt);
+  if (dirLeft > 0 && (dirLeft -= dt) <= 0) $("dirSub").classList.add("hidden");
   tickCombo(dt, live);
   tickDrive(dt);
   tickNumbers(dt);

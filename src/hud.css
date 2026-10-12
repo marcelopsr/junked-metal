@@ -438,3 +438,16 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
   }
 }
 
+
+/* ---------- Subtítulo del Director (ENCORE): placa de chapa como el aviso de radio, abajo al centro ---------- */
+#dirSub {
+  position: fixed; left: 50%; bottom: 14vh; translate: -50% 0; scale: var(--hud-scale); transform-origin: 50% 100%;
+  max-width: min(520px, 92vw); padding: 6px 12px 7px; pointer-events: none; text-align: center;
+  border-radius: var(--jm-r); background: linear-gradient(180deg, rgba(31, 41, 55, .96), rgba(20, 24, 31, .97));
+  border: 2px solid var(--jm-chapa); outline: 2px solid var(--jm-fondo); box-shadow: inset 0 0 0 1px var(--jm-chapa-osc), 0 10px 28px rgba(0, 0, 0, .55);
+  animation: h-bannerin .35s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+#dirSub .rx-tag { display: block; margin-bottom: 3px; padding-bottom: 3px; border-bottom: 1px solid var(--jm-borde); font: 700 11px/1 var(--jm-titulo); letter-spacing: .16em; color: var(--jm-amarillo); }
+#dirSub .dtxt { font: 700 clamp(14px, 2vw, 18px)/1.15 var(--jm-titulo); letter-spacing: .04em; text-transform: uppercase; color: var(--jm-texto); text-shadow: 0 2px 0 #000; }
+@media (pointer: coarse) { #dirSub { bottom: 26vh; } }
+body.calm #dirSub { animation: none !important; }

@@ -1381,13 +1381,32 @@ Decisión del usuario: Completar las 3 oportunidades seleccionadas:
    - `npm run test:restart` y `npm run shots -- --only bestiario,partida`: 11 capturas aprobadas en PC y móvil en 18.5 s.
    - `graphify update .`: grafo actualizado (4240 nodos, 10345 aristas, 201 comunidades).
 
+## 2026-10-11 · Destellos de Faro Rasante, Filtros Tácticos en Chatarroteca y Derrapes en Aceite (Ciclo #38)
+
+Decisión del usuario: Completar las 3 oportunidades seleccionadas:
+
+1. **Destellos de Chispas bajo el Haz del Faro (`src/main.ts`):**
+   - Detección geométrica del haz de luz del auto incidiendo rasante sobre tambores y chapas en la oscuridad: emite ráfagas de chispas tangenciales (`FX.sparks`) a alta velocidad (>11 km/h) sin requerir colisión física directa.
+2. **Filtros Tácticos en Chatarroteca (`src/menu.ts`, `src/menu.css`, `index.html`):**
+   - Barra `#bfilts` con categorías tácticas operativas (*Todas las criaturas*, *Plagas ágiles*, *Criaturas blindadas*, *Jefes y minijefes*).
+   - Resaltado visual en tipografía `Rajdhani` con `.b-kills` indicando el conteo de bajas registradas por espécimen.
+3. **Humo y Chirrido en Derrapes sobre Aceite y Cemento (`src/main.ts`):**
+   - Integrado en el loop de tracción/patinada: al derrapar sobre cemento, tierra o en el suelo aceitoso del Garaje, las ruedas traseras despiden volutas de caucho (`FX.tireFriction`) y chirridos acústicos reactivos (`SFX.brakeScreech()`).
+4. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado TypeScript.
+   - `npx vitest run test/run.test.ts test/stats.test.ts test/save.test.ts`: 35/35 tests unitarios aprobados.
+   - `npm run build`: bundle compilado limpiamente en 683 ms.
+   - `npm run test:restart` y `npm run shots -- --only bestiario,partida`: 11 capturas aprobadas en PC y móvil en 35.9 s.
+   - `graphify update .`: grafo actualizado (5191 nodos, 11648 aristas, 265 comunidades).
+
 ---
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Ciclo #37 (Audio diferenciado de props en colisiones, chips tácticos directos en Bestiario y abolladura/deformación visual de tambores).
+- **Último trabajo completado:** Ciclo #38 (Destellos de chispas en haz de faro, Filtros por categoría táctica en Bestiario con bajas visibles y Humo/chirrido en derrapes sobre cemento/aceite).
 - **Invariantes activas:** Gemini Flash Low Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
+
 
 
 

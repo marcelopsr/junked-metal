@@ -1,4 +1,4 @@
-import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
+import { banner, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive } from "./car";
@@ -252,6 +252,7 @@ function clearRun() {
 let daily = false, encore = import.meta.env.DEV && /[?&]encore\b/.test(location.search); // encore: modo ENCORE (docs/ENCORE); ?encore (dev) lo deja armado y arranca solo
 // ENCORE: erun = estado de la expedición (encore.ts; null = Supervivencia, que no toca nada de esto). encPrior = segundos de los escenarios anteriores
 // (`time` es el reloj del escenario); paceS = segundos de dificultad extra que suman escenario, vuelta y estadía (E.paceOf).
+let dirq = E.newDirQ(), ovT = 0, guestE: Enemy | null = null; // R3: cola del Director, reloj de enjambres del OVERLOAD, invitado del BOSS_GUEST
 let erun: E.Run | null = null, encPrior = 0, paceS = 0, pfx: E.Fx = E.NO_FX; // pfx = efecto de los pactos activos (recompute)
 const zoneFor = (d: boolean) => d ? "patio" : encore ? "luna" : (import.meta.env.DEV && new URLSearchParams(location.search).get("zone")) || save.zone;
 function startRun(d = false) {
@@ -294,6 +295,7 @@ function startRun(d = false) {
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
   spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; wasGrounded = true; coyoteT = 0; apagon = false;
+  dirq = E.newDirQ(); ovT = 0; guestE = null; dirSub(null);
   if (encore && MOON.on) { erun = E.newRun(runSeed); GOAL_IO.tele = true; shopReset(); encPlan(); encScene(true); }
   camYaw = 0; dynK = 1; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1); camH.set(0, 0, 1); camUp.set(0, 1, 0);
   state = "play";
@@ -317,7 +319,7 @@ const HINT_S = 7;
 
 // ---------- ENCORE (encore.ts): escenarios encadenados con teleportador, votación y FINAL ACT ----------
 /** Frase del Director por el aviso de radio. */
-const say = (id: E.LineId, tone: "warn" | "now" = "now") => banner(E.line(id, erun!), 3.4, { tag: "DIRECTOR", ico: "senal", tone });
+const say = (id: E.LineId, txt = E.line(id, erun!, save.encore)) => E.dirPush(dirq, txt, E.dirPri(id)); // cola propia (encore.ts): no se pisa con la radio ni entre frases
 /** Agenda del escenario según la fase: un minijefe (nave); en la votación y el FINAL ACT, arena vacía donde solo entra el jefe. */
 function encPlan() {
   const r = erun!, calm = r.phase === "vote" || r.phase === "final";
@@ -328,6 +330,7 @@ function encPlan() {
 /** Escenario nuevo con el mismo auto, armas, nivel, XP y vida: borra lo del anterior y lo rearma con la semilla derivada (runSeed, escenario). */
 function encEnter() {
   const r = erun!;
+  guestE = null; ovT = 0;
   evReset(); shipsClear(); goalsClear(); skyClear();
   for (const e of enemies) { e.hp = -1e9; e.dispose(); } // hp negativo: las armas con blanco fijo (trompo) lo sueltan
   for (const g of gems) g.m.dispose();
@@ -391,9 +394,11 @@ function encApply(ev: E.Ev | null) {
   else if (ev === "advance" || ev === "encore" || ev === "vote" || ev === "final_act") encEnter(); // pact_* y route_offer no cargan nada: el escenario nuevo llega al elegir destino ("advance")
   if (ev === "pact_yes") { recompute(); const p = E.pactOf(erun.pacts[erun.pacts.length - 1].id); if (p.gain.heal) hp = Math.min(maxHp, hp + maxHp * p.gain.heal); } // el pacto ya está en `pfx` (encEnter → recompute); falta la cura instantánea
   const pact = ev === "pact_yes" || ev === "pact_no", v = ev === "advance" || ev === "encore" ? E.variantOf(erun) : null; // al llegar a un escenario nuevo, el Director anuncia su variante en vez de la frase suelta
-  if (pact) { say(ev); if (erun.phase === "route") say("route_offer", "warn"); } // la respuesta al trato y, enseguida, la oferta de destinos
-  if (v) banner(`${v.name}. ${v.line}`, 3.8, { tag: "DIRECTOR", ico: "senal", tone: "now" });
-  else if (!pact) say(ev, ev === "tele_ready" || ev === "vote" || ev === "pact_offer" || ev === "route_offer" ? "warn" : "now");
+  if (ev === "overload") ovT = 0; // el primer enjambre de la carga sale ya
+  if (ev === "guest") { const g = erun.guest!, c = car!; spawnEnemy(g, spawnPoint(c.pos, 30, 36)); guestE = enemies[enemies.length - 1]; hudBoss(DEF[g].name, 1, g); SFX.boss(); }
+  if (pact) { say(ev); if (erun.phase === "route") say("route_offer"); } // la respuesta al trato y, enseguida, la oferta de destinos
+  if (v) say("advance", `${v.name}. ${v.line}`);
+  else if (!pact) say(ev);
 }
 const encPick = (i: 0 | 1 | 2) => { if (state === "play" && erun) encApply(E.pick(erun, i)); };
 $("encA").onpointerdown = (ev) => { ev.preventDefault(); encPick(0); }; // pointerdown + sin foco: Espacio (turbo) no vuelve a apretar el botón
@@ -440,7 +445,7 @@ function endRun(win: boolean, why: string) {
     if (!erun) save.best = Math.max(save.best, Math.floor(time));
     // Estadísticas de carrera (Bestiario): totales, daño por arma y mejor marca de la zona jugada
     const S = save.stats, zr = S.zone[zoneId] ?? { t: 0, kills: 0 };
-    if (erun) { const E = save.encore; E.runs++; if (win) E.wins++; if (encBetter) E.best = { loop: erun.loop, stage: erun.stage, t: Math.floor(time) }; } // ENCORE: récord propio; tornillos, tiempo, daño y bestiario sí cuentan
+    if (erun) { const E = save.encore; E.runs++; if (win) E.wins++; E.lastLoop = erun.loop; E.lastCause = win ? "" : (Object.entries(dmgBy).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "accidente").replace(/[^\p{L}\d .,-]/gu, "").slice(0, 40); if (encBetter) E.best = { loop: erun.loop, stage: erun.stage, t: Math.floor(time) }; } // ENCORE: récord propio; tornillos, tiempo, daño y bestiario sí cuentan
     else if (!bank) { S.runs++; if (win) S.wins++; }
     S.time += time - (bank?.t ?? 0); S.dist += runDist; // runDist vuelve a 0 al seguir en modo sin fin
     for (const [src, v] of Object.entries(dmgOut)) S.dmg[src] = (S.dmg[src] ?? 0) + v - (bank?.dmg[src] ?? 0);
@@ -860,7 +865,7 @@ SHIP_IO.reward = (p, xp, boss) => { dropGems(p, xp); dropPickup(p, "cofre"); if 
 function update(dt: number) {
   const c = car!;
   time += dt;
-  if (erun) encApply(E.tick(erun, dt)); // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
+  if (erun) { encApply(E.tick(erun, dt)); const d = E.dirTick(dirq, dt); if (d) dirSub(d, E.ENC.dirShowS); } // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
   const calm = erun?.phase === "vote" || erun?.phase === "final", tp = time + paceS, hordeK = horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
   if (hintOn && (time > HINT_S || input.throttle || input.steer || input.move || input.boost || input.drift || input.jump || input.ability)) { hintOn = false; $("hint").classList.add("fade"); }
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
@@ -1067,11 +1072,12 @@ function update(dt: number) {
     if (!simulating) banner(ant ? "COLUMNA" : "ESCOLTA", 1.2);
   }
   if (!evtPre.swarm && swarmT > 0 && swarmT <= warnS) { evtPre.swarm = true; radioEvent("enjambre_pre"); }
+  if (erun?.phase === "overload" && (ovT -= dt) <= 0) { ovT = E.ENC.overloadEvery; swarmT = 0; } // OVERLOAD: enjambres seguidos durante la carga
   if ((swarmT -= dt) <= 0) {
     evtPre.swarm = false;
     swarmT = profile.swarmEvery;
     radioEvent("enjambre");
-    const ns = Math.round((R.enjambre_base + tp / R.enjambre_seg) * hordeK * TOUGH.count); // el enjambre crece con la partida
+    const ov = erun?.phase === "overload", ns0 = Math.round((R.enjambre_base + tp / R.enjambre_seg) * hordeK * TOUGH.count * (ov ? E.ENC.overloadK : 1)), ns = ov ? Math.min(ns0, E.ENC.overloadMax) : ns0; // el enjambre crece con la partida
     for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = MOON.on ? ringAt(c.pos, a, R.enjambre_radio) : new B.Vector3(c.pos.x + Math.cos(a) * R.enjambre_radio, 1, c.pos.z + Math.sin(a) * R.enjambre_radio); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
   if (time - Math.max(hitAt, 300) >= 60) grant("intacto"); // 60 s sin daño, contando desde el minuto 5
@@ -1081,7 +1087,7 @@ function update(dt: number) {
     if (!evtPre.boss.has(bi) && time >= bt - bossWarnS && time < bt) {
       evtPre.boss.add(bi);
       const fin = !endless && bi === RUN_BOSSES.length - 1 && bk === finalKind;
-      if (!simulating && erun?.phase === "final") say("boss_intro", "warn"); // FINAL ACT: la presentación la hace el Director
+      if (!simulating && erun?.phase === "final") say("boss_intro"); // FINAL ACT: la presentación la hace el Director
       else if (!simulating) radioBoss("pre", MOON.on && bk !== finalKind ? SHIP_NAME[minorShip(bi)] : DEF[bk].name, fin); // luna: los minijefes son naves
     }
   }
@@ -1277,6 +1283,7 @@ function update(dt: number) {
     if (e.hp < -1e8) e.dispose(); else kill(e);
     if (state !== "play") return;
   }
+  if (guestE && !enemies.includes(guestE)) { guestE = null; if (erun) encApply(E.guestDown(erun)); } // BOSS_GUEST: el invitado cayó
   const boss = enemies.find((e) => e.def.boss);
   const gb = MOON.on && car ? goalBar(car.pos) : null; // luna: progreso de la antena o del cohete en la barra de jefe
   if (gb) hudBoss(gb.name, gb.pct);

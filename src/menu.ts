@@ -50,7 +50,7 @@ export type Save = {
   ach: AchId[];
   ability: AbilityId; curses: CurseId[]; endless: number; // habilidad activa elegida, maldiciones de la próxima partida y récord del modo sin fin (s)
   abilLv: Partial<Record<AbilityId, number>>; weapon: WeaponId; // nivel de cada habilidad (Taller) y arma inicial elegida en el garaje (Arsenal)
-  encore: { best: { loop: number; stage: number; t: number }; wins: number; runs: number }; // ENCORE: mejor expedición (vuelta, escenario, segundos), ganadas y partidas; aparte de Supervivencia
+  encore: { best: { loop: number; stage: number; t: number }; wins: number; runs: number; lastLoop: number; lastCause: string }; // ENCORE: mejor expedición (vuelta, escenario, segundos), ganadas, partidas y la última derrota (vuelta y causa, "" = sin derrota; memoria del Director); aparte de Supervivencia
   m3: { stars: Record<string, number>; best: Record<string, number>; tools: Record<string, number> }; // Junket Crush: estrellas y récord por nivel, herramientas guardadas
 };
 // Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
@@ -65,7 +65,7 @@ const DEFAULT: Save = {
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
-  encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0 },
+  encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "" },
   m3: { stars: {}, best: {}, tools: {} },
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego

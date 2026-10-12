@@ -15,12 +15,23 @@ export const ENC = {
   voteS: 20,           // ventana de la votación; si vence, ¡ENCORE!
   pactS: 15,           // ventana de la oferta de pactos (al elegir AVANZAR); si vence, se rechaza sin penalidad
   bossIntroS: 12,      // segundos de arena vacía antes de que entre el jefe del FINAL ACT
+  eventP0: 0.2,        // R3: probabilidad de evento al abordar el teleportador en el primer escenario...
+  eventStep: 0.08,     // ...más esto por cada escenario jugado (vuelta * stages + escenario), hasta eventMax
+  eventMax: 0.75,
+  overloadS: 25,       // OVERLOAD: segundos de carga que hay que aguantar
+  overloadEvery: 6,    // OVERLOAD: segundos entre enjambres durante la carga
+  overloadK: 2.5,      // OVERLOAD: multiplicador del tamaño del enjambre
+  overloadMax: 80,     // OVERLOAD: tope de bichos por enjambre
+  dirGapS: 5,          // Director: segundos mínimos entre el inicio de una frase y la siguiente (incluye los dirShowS en pantalla)
+  dirShowS: 3.6,       // Director: segundos que dura el subtítulo
+  dirTtlS: 15,         // Director: una frase que espera más que esto ya quedó vieja y se descarta
+  dirCap: 4,           // Director: frases en espera; al pasarse se pierde la de menor prioridad
   finalBoss: "aspiradora" as const, // jefe secreto de prueba (R0_SURVIVOR.md §10); el sorteo entre FINALS llega con la run completa
 };
 
-export type Phase = "stage" | "teleporter" | "stay" | "pact" | "route" | "vote" | "final" | "won";
+export type Phase = "stage" | "teleporter" | "stay" | "pact" | "route" | "overload" | "guest" | "vote" | "final" | "won";
 /** Lo que pasó en un paso; es también la clave de la frase del Director. */
-export type Ev = "tele_land" | "tele_ready" | "stay" | "pact_offer" | "pact_yes" | "pact_no" | "route_offer" | "advance" | "vote" | "encore" | "final_act" | "won";
+export type Ev = "tele_land" | "tele_ready" | "overload" | "guest" | "stay" | "pact_offer" | "pact_yes" | "pact_no" | "route_offer" | "advance" | "vote" | "encore" | "final_act" | "won";
 export type Run = {
   seed: number; loop: number; stage: number; phase: Phase;
   stageT: number;   // segundos en el escenario (solo corre en `stage`)
@@ -32,9 +43,13 @@ export type Run = {
   offer: [string, string] | null;        // ids ofrecidos mientras la fase es `pact`
   routes: [number, number] | null;       // índices de VARIANTS ofrecidos mientras la fase es `route` (destinos del escenario siguiente)
   route: number | null;                  // destino elegido para el escenario actual (null = el que sortea variantOf)
+  guest: (typeof GUESTS)[number] | null; // minijefe invitado mientras la fase es `guest`
 };
+/** R3: eventos del teleportador al abordarlo. */
+export type TeleEvent = "OVERLOAD" | "BOSS_GUEST" | "NINGUNO";
+export const GUESTS = ["rey", "cortadora", "tarantula", "gato"] as const;
 
-export const newRun = (seed: number): Run => ({ seed, loop: 0, stage: 0, phase: "stage", stageT: 0, timer: 0, landed: false, stayT: 0, stays: 0, pacts: [], offer: null, routes: null, route: null });
+export const newRun = (seed: number): Run => ({ seed, loop: 0, stage: 0, phase: "stage", stageT: 0, timer: 0, landed: false, stayT: 0, stays: 0, pacts: [], offer: null, routes: null, route: null, guest: null });
 
 /** Semilla de cada escenario: (seed, 0, 0) es la de la run; la votación y el FINAL ACT usan los índices `stages` y `stages + 1`. */
 export const stageSeed = (seed: number, loop: number, stage: number) => (seed + loop * 0x9e3779b1 + stage * 0x85ebca6b) >>> 0;
@@ -45,7 +60,7 @@ export const sceneIdx = (r: Run) => (r.phase === "vote" ? ENC.stages : r.phase =
 /** Segundos de dificultad que se suman al reloj del escenario: sube por escenario, por vuelta y mientras uno se queda. */
 export const paceOf = (r: Run) => (r.loop * ENC.stages + r.stage) * ENC.paceStageS + r.stayT * ENC.stayRamp;
 
-const reset = (r: Run) => { r.phase = "stage"; r.stageT = 0; r.timer = 0; r.landed = false; r.stayT = 0; r.stays = 0; r.offer = null; r.routes = null; r.route = null; };
+const reset = (r: Run) => { r.phase = "stage"; r.stageT = 0; r.timer = 0; r.landed = false; r.stayT = 0; r.stays = 0; r.offer = null; r.routes = null; r.route = null; r.guest = null; };
 /** Se sale de un escenario (o de la votación): cada pacto con duración pierde uno y los vencidos se van. */
 const leave = (r: Run) => { r.pacts = r.pacts.map((a) => ({ id: a.id, left: a.left - 1 })).filter((a) => a.left > 0); };
 function advance(r: Run): Ev {
@@ -80,6 +95,8 @@ export function tick(r: Run, dt: number): Ev | null {
     if (!r.landed && r.stageT >= ENC.teleS) { r.landed = true; return "tele_land"; }
   } else if (r.phase === "teleporter") {
     if ((r.timer -= dt) <= 0) return advance(r); // el show no espera
+  } else if (r.phase === "overload") {
+    if ((r.timer -= dt) <= 0) return ready(r);
   } else if (r.phase === "stay") {
     r.stayT += dt;
     if ((r.timer -= dt) <= 0) { r.phase = "teleporter"; r.timer = ENC.decideS; r.stays++; return "tele_ready"; }
@@ -93,11 +110,23 @@ export function tick(r: Run, dt: number): Ev | null {
   return null;
 }
 
-/** El auto activó el teleportador: abre la decisión. */
+const ready = (r: Run): Ev => { r.phase = "teleporter"; r.timer = ENC.decideS; return "tele_ready"; };
+/** Evento del teleportador de este escenario: hash propio de (semilla, vuelta, escenario), sin gastar el rng() de la partida; la probabilidad sube con el escenario y la vuelta. */
+export function teleEvent(r: Run): TeleEvent {
+  const p = Math.min(ENC.eventMax, ENC.eventP0 + ENC.eventStep * (r.loop * ENC.stages + r.stage));
+  const u = mix(r.seed + 0x3e1f + r.loop * 104723 + r.stage * 15485867);
+  return u >= p ? "NINGUNO" : u < p / 2 ? "OVERLOAD" : "BOSS_GUEST";
+}
+/** El auto activó el teleportador: abre la decisión, o antes un evento (OVERLOAD: aguantar la carga; BOSS_GUEST: vencer al invitado). */
 export function boarded(r: Run): Ev | null {
   if (r.phase !== "stage" || !r.landed) return null;
-  r.phase = "teleporter"; r.timer = ENC.decideS; return "tele_ready";
+  const e = teleEvent(r);
+  if (e === "OVERLOAD") { r.phase = "overload"; r.timer = ENC.overloadS; return "overload"; }
+  if (e === "BOSS_GUEST") { r.phase = "guest"; r.guest = GUESTS[Math.floor(mix(r.seed + 0x6e57 + r.loop * 7907 + r.stage * 32452867) * GUESTS.length)]; return "guest"; }
+  return ready(r);
 }
+/** El invitado cayó: el teleportador queda listo. */
+export function guestDown(r: Run): Ev | null { return r.phase === "guest" ? ready(r) : null; }
 
 /** Responde a la oferta de destinos: el escenario siguiente toma la variante elegida (y su recompensa). */
 function chooseRoute(r: Run, i: 0 | 1): Ev {
@@ -217,6 +246,7 @@ export function craterPlan(v: Variant, r: Run): { a: number; d: number; r: numbe
 export function ask(r: Run): { title: string; opts: [string | null, string | null]; total: number; pacts?: [PactView, PactView]; reject?: string } | null {
   if (r.phase === "pact" && r.offer) { const [a, b] = r.offer.map((id) => viewOf(pactOf(id))); return { title: "PACTO DEL DIRECTOR", opts: [a.name, b.name], total: ENC.pactS, pacts: [a, b], reject: "RECHAZAR" }; }
   if (r.phase === "route" && r.routes) { const [a, b] = [routeView(r.routes[0]), routeView(r.routes[1])]; return { title: "ELIJAN EL DESTINO", opts: [a.name, b.name], total: ENC.routeS, pacts: [a, b] }; }
+  if (r.phase === "overload") return { title: "SOBRECARGA · AGUANTEN LA CARGA", opts: [null, null], total: ENC.overloadS };
   if (r.phase === "teleporter") return { title: "TELEPORTADOR LISTO", opts: ["QUEDARSE", "AVANZAR"], total: ENC.decideS };
   if (r.phase === "stay") return { title: "SIGUE LA FUNCIÓN · PRÓXIMA DECISIÓN", opts: [null, "AVANZAR YA"], total: ENC.stayS };
   if (r.phase === "vote") return { title: "EL PÚBLICO VOTA", opts: ["¡ENCORE!", "FINAL ACT"], total: ENC.voteS };
@@ -237,6 +267,8 @@ const LINES: Record<LineId, string[]> = {
   start: ["¡LUCES ENCENDIDAS! GRAVEDAD OPCIONAL, DIGNIDAD NO INCLUIDA.", "SONRÍAN PARA EL PÚBLICO. NO PREGUNTEN DÓNDE ESTÁ EL PÚBLICO."],
   tele_land: ["¡LLEGÓ EL TELEPORTADOR! QUÉ DECEPCIÓN PARA EL EQUIPO DE ESCONDITES.", "TELEPORTADOR EN ESCENA. LA PRODUCCIÓN LO ESCONDIÓ CON CARIÑO."],
   tele_ready: ["LA PUERTA ESTÁ ABIERTA. ¿SE QUEDAN O CAMBIAMOS DE CANAL?", "¡ELENCO LISTO! QUE NADIE OLVIDE RESPIRAR. DECIDAN."],
+  overload: ["SOBRECARGA EN EL TELEPORTADOR. LA CARGA ES LENTA, LOS VISITANTES NO.", "EL TELEPORTADOR SE ESTÁ CALENTANDO. AGUANTEN, QUE EL PÚBLICO APUESTA."],
+  guest: ["EL TELEPORTADOR NECESITA UN INVITADO. VENZAN AL INVITADO Y LA PUERTA SE ABRE.", "PERMÍTANME PRESENTAR A UN ALLEGADO. NO LO HICIERON ENOJAR, SOLO LLEGÓ ASÍ."],
   stay: ["¿SE QUEDAN? ¡ADORO LA INSISTENCIA! LA PRODUCCIÓN TAMBIÉN.", "OTRA TOMA, ENTONCES. LOS PELIGROS SE ESTIRAN, ASÍ QUE ESTÍRENSE."],
   pact_offer: ["TENGO DOS TRATOS PARA USTEDES. LA LETRA CHICA ESTÁ A LA VISTA.", "UN PACTO, SIN PRESIONES. BUENO, CON POCA PRESIÓN."],
   pact_yes: ["¡TRATO HECHO! ME ENCANTAN LOS CLIENTES CON FE.", "FIRMADO. YO CUMPLO, ASÍ QUE CUMPLAN USTEDES."],
@@ -249,7 +281,39 @@ const LINES: Record<LineId, string[]> = {
   boss_intro: ["LES PREPARÉ UN INVITADO. NO ESPEREN BUENOS MODALES."],
   won: ["¡GANADORES! NO CONFUNDAN ESTO CON HABER ESCAPADO."],
 };
-export function line(id: LineId, r: Run): string {
+/** Memoria entre runs (save.encore): la primera frase de la expedición la menciona. */
+export type Mem = { best: { loop: number }; runs: number; lastLoop: number; lastCause: string };
+export function openingLine(m: Mem | undefined): string | null {
+  if (!m || !m.runs) return null;
+  if (m.lastCause) return `VOLVIÓ QUIEN CAYÓ EN LA VUELTA ${m.lastLoop + 1}. LA CULPA FUE DE «${m.lastCause.toUpperCase()}». EL PÚBLICO NO OLVIDA.`;
+  if (m.best.loop > 0) return `OTRA VEZ AQUÍ. EXPEDICIÓN ${m.runs + 1}. LA MEJOR LLEGÓ A LA VUELTA ${m.best.loop + 1}: SUPÉRENLA.`;
+  return `OTRA VEZ AQUÍ. EXPEDICIÓN ${m.runs + 1} Y EL PÚBLICO SIGUE SIN APLAUDIR.`;
+}
+export function line(id: LineId, r: Run, mem?: Mem): string {
+  if (id === "start") { const o = openingLine(mem); if (o) return o; }
   const v = LINES[id];
   return v[(r.loop * ENC.stages + r.stage + r.stays) % v.length];
+}
+
+// ---------- Cola del Director (R3): sus frases no se pisan ni se pierden con la radio ----------
+// Se muestran en un subtítulo propio (ui.ts dirSub), de a una, con `dirGapS` mínimo entre inicios. Gana la prioridad más alta (empate: la más vieja).
+// Una frase que espera más de `dirTtlS` ya describe algo pasado y se descarta; si hay más de `dirCap` en espera se pierde la de menor prioridad.
+export type DirQ = { q: { txt: string; pri: number; age: number }[]; cool: number };
+export const newDirQ = (): DirQ => ({ q: [], cool: 0 });
+const PRI: Record<LineId, number> = { start: 3, won: 5, final_act: 5, boss_intro: 4, overload: 4, guest: 4, tele_ready: 3, vote: 3, encore: 3, tele_land: 2, advance: 2, pact_offer: 2, pact_yes: 2, pact_no: 2, route_offer: 2, stay: 1 };
+export const dirPri = (id: LineId) => PRI[id];
+export function dirPush(d: DirQ, txt: string, pri: number) {
+  if (d.q.some((x) => x.txt === txt)) return;
+  d.q.push({ txt, pri, age: 0 });
+  if (d.q.length > ENC.dirCap) { let w = 0; d.q.forEach((x, i) => { if (x.pri < d.q[w].pri) w = i; }); d.q.splice(w, 1); }
+}
+/** Avanza dt segundos; devuelve la frase que toca mostrar ahora, si hay. */
+export function dirTick(d: DirQ, dt: number): string | null {
+  d.cool = Math.max(0, d.cool - dt);
+  for (const x of d.q) x.age += dt;
+  d.q = d.q.filter((x) => x.age < ENC.dirTtlS);
+  if (d.cool > 0 || !d.q.length) return null;
+  let b = 0; d.q.forEach((x, i) => { if (x.pri > d.q[b].pri) b = i; });
+  d.cool = ENC.dirGapS;
+  return d.q.splice(b, 1)[0].txt;
 }
