@@ -1,6 +1,6 @@
 // Fases de ENCORE sin motor (src/encore.ts): escenario → teleportador → decidir → ... → votación → ENCORE! o FINAL ACT → victoria.
 import { describe, expect, it } from "vitest";
-import { activePacts, ARENA, arenaPlan, ask, cleared, FINAL_POOL, finalOf, hint, report, scrapExtra, boarded, bossDown, craterPlan, dirPri, dirPush, dirTick, ENC, fxText, GUESTS, guestDown, line, newDirQ, openingLine, teleEvent, NO_FX, newRun, pactFx, pactOffer, PACTS, paceOf, routeOffer, pick, sceneIdx, stageSeed, tag, tick, variantOf, VARIANTS, type Ev, type Run } from "../src/encore";
+import { activePacts, ARENA, arenaPlan, ask, cleared, FINAL_POOL, finalOf, hint, report, scrapExtra, boarded, bossDown, craterPlan, dirPri, dirPush, dirTick, ENC, fxText, GUESTS, guestDown, line, newDirQ, openingLine, teleEvent, NO_FX, newRun, pactFx, pactOffer, PACTS, paceOf, routeOffer, pick, sceneIdx, stageSeed, tag, tick, variantOf, VARIANTS, type Ev, type Run, zoneOf, earthStage, EARTH, SECRETS, discover, secretLine, riskOf } from "../src/encore";
 
 /** Corre el reloj de a 1 s hasta que pase algo (o se pase de `max` s). */
 const until = (r: Run, max = 1000): Ev | null => { for (let i = 0; i < max; i++) { const e = tick(r, 1); if (e) return e; } return null; };
@@ -470,5 +470,48 @@ describe("R5: jefe secreto, pistas, arena, reporte y tornillos", () => {
     expect(extra + scrapExtra(200, last, 1)).toBe(50); // muere con el efecto neutro: los 50 siguen
     expect(scrapExtra(200, 0, 1)).toBe(0); // el cobro viejo (efecto vigente al morir) los perdía
     expect(extra + scrapExtra(200, last, 0.7)).toBeCloseTo(50 - 12); // un costo vigente solo pega en su tramo
+  });
+});
+
+describe("Contenido 3: escenarios terrestres", () => {
+  it("vuelta 0 toda en la luna; desde la vuelta 1, un escenario por vuelta en una zona plana, fijo por semilla", () => {
+    for (const seed of [1, 7, 42, 999]) {
+      const r = newRun(seed);
+      for (let s = 0; s < ENC.stages; s++) { r.stage = s; expect(zoneOf(r)).toBe("luna"); }
+      for (let loop = 1; loop < 6; loop++) {
+        r.loop = loop;
+        const zs = Array.from({ length: ENC.stages }, (_, s) => { r.stage = s; return zoneOf(r); });
+        expect(zs.filter((z) => z !== "luna")).toHaveLength(1);
+        expect(Object.keys(EARTH)).toContain(zs[earthStage(r)]);
+        r.stage = earthStage(r); expect(zoneOf(r)).toBe(zs[earthStage(r)]); // determinista
+      }
+      r.loop = 2; r.phase = "vote"; expect(zoneOf(r)).toBe("luna"); r.phase = "final"; expect(zoneOf(r)).toBe("luna");
+    }
+  });
+});
+
+describe("Contenido 3: secretos del Director", () => {
+  /** Juega una vuelta: pactos (aceptar o rechazar) y destino (el de más riesgo o el otro). */
+  const loop = (r: Run, o: { pact: boolean; bold: boolean }) => {
+    for (let k = 0; k < ENC.stages; k++) {
+      toDecision(r);
+      let e = pick(r, 1);
+      if (e === "pact_offer") e = pick(r, o.pact ? 0 : 2);
+      if (e === "route_offer" || e === "pact_no" || e === "pact_yes") { const [a, b] = r.routes!, hi = riskOf(a) >= riskOf(b) ? 0 : 1; pick(r, (o.bold ? hi : 1 - hi) as 0 | 1); }
+    }
+    expect(r.phase).toBe("vote");
+  };
+  it("rechazar todos los pactos de la vuelta revela CERO ESPECTADORES; aceptar uno no", () => {
+    const a = newRun(5); loop(a, { pact: false, bold: false }); expect(a.found).toContain("audiencia");
+    const b = newRun(5); loop(b, { pact: true, bold: false }); expect(b.found).not.toContain("audiencia");
+  });
+  it("elegir siempre el destino de más riesgo revela SEÑAL IMPOSIBLE", () => {
+    const a = newRun(11); loop(a, { pact: true, bold: true }); expect(a.found).toEqual(["bambalinas"]);
+    const b = newRun(11); loop(b, { pact: true, bold: false }); expect(b.found).not.toContain("bambalinas");
+  });
+  it("discover no repite; la frase del Director es fija por semilla y trae el fragmento sin nombrar a nadie", () => {
+    const r = newRun(3); discover(r, "aplausos"); discover(r, "aplausos"); expect(r.found).toEqual(["aplausos"]);
+    expect(secretLine(r, "aplausos")).toBe(secretLine(newRun(3), "aplausos"));
+    for (const s of SECRETS) expect(secretLine(r, s.id)).toContain(s.lore);
   });
 });

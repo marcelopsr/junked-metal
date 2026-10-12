@@ -229,3 +229,19 @@ Fecha 2026-10-12. Solo datos en `src/encore.ts` (más pruebas); sin tocar `main.
 - **Pactos (+4, ahora 10):** ENSAYO GENERAL (+15% daño y velocidad / +20% daño recibido, 2 esc.), ENTRADAS AGOTADAS (+25% XP y tornillos / -20% vida máx. y +15% enemigos, resto de la run), CAMERINO BLINDADO (+30% vida máx. / -15% velocidad, 2 esc.), SEGURO DE ESCENA (+1 vida/s y -15% daño recibido / -15% daño, 2 esc.). Solo usan efectos de `Fx` ya aplicados por `pactFx`. `ponytail:` valores sin playtest.
 - **Director:** cada momento tiene 3 frases. `line()` elige con hash de (semilla, momento) más el avance de escenario: varía entre runs, es determinista, no usa `rng()` y nunca repite la misma en dos escenarios seguidos.
 - **Variantes (+2, ahora 6):** LLUVIA DE CHATARRA (lado oscuro, meteoritos x0.45, caza, +40% tornillos) y NOCHE DE ESTRENO (de frente al Sol, cielo x0.7, abductora, +25% XP). Usan solo `at/rain/quake/sky/ship/craters` existentes; `moon_*.ts` no cambió. Con 6 variantes y 4 escenarios, la mezcla Fisher-Yates sigue sin repetir dentro de la vuelta (salen 4 de 6); la vuelta 0 empieza en LA TARIMA. `at` ya no es único entre variantes (la prueba pide solo que las 4 primeras lo sean).
+
+## Contenido 3
+
+**Segundo mundo (escenarios terrestres).** Desde la vuelta 1 (la segunda), un escenario de cada vuelta se juega en una zona plana presentada como escenografía del show: `EL PATIO DE ENSAYO` (patio) o `EL JARDÍN DE UTILERÍA` (jardín). Escenario y zona salen de un hash de (semilla, vuelta), sin `rng()` (`encore.ts` `earthStage`, `zoneOf`); la votación y el FINAL ACT siguen en la Luna. `encEnter` (main.ts) cambia de zona con `setZone(z, false)` + `setMoon`, conserva auto, armas, nivel, XP y vida, y usa el spawner de Supervivencia de la zona. El teleportador (modelo `obj_tele_*` y su zona de abordaje) y los cofres de `moon_goals.ts` funcionan sin `MOON.on` cuando `GOAL_IO.tele` está activo; `GOAL_IO.half` los recorta 12 m antes del borde. Los objetivos de superficie (celdas, antena) quedan solo en la Luna. La recompensa del destino elegido vale igual.
+- ponytail: garaje fuera (160 m de lado: cohete a 80 m y cofres a 40-110 m quedan amontonados contra la pared).
+- ponytail: el teleportador o un cofre pueden caer sobre un mueble (solo se recortan al borde).
+- Online (R6b): el snapshot lleva `z` (zoneId) y el cliente rearma la zona al cambiar.
+
+**Secretos del Director.** Tres hallazgos por conducta, deterministas (sin `rng()`; el desliz de la frase sale de un hash de semilla y secreto), cada uno con un fragmento de `02_LORE_AND_SECRETS.md` que no revela la identidad:
+| id | Condición | Fragmento |
+|---|---|---|
+| `aplausos` | Abrir los tres cofres de un escenario | Pantalla con «APLAUSOS» sin cable (acto 1) |
+| `audiencia` | Rechazar todos los pactos de una vuelta (al menos 2 ofertas) | Cuatro participantes, cero espectadores (acto 2) |
+| `bambalinas` | Elegir en toda la vuelta el destino de más riesgo (`riskOf`: producto de la recompensa) | Pantallas con señal desde lugares imposibles (acto 4) |
+
+Se marcan en `Run.found`, el Director los dice al descubrirlos, `endRun` los suma a `save.encore.secrets` (validado en `parseSave`: solo ids conocidos, sin repetir) y la pantalla de ENCORE los lista (`#encSec`).

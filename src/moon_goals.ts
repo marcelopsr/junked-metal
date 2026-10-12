@@ -14,7 +14,7 @@ import { banner } from "./ui";
 // Al salir el gusano (jefe final) aterriza el cohete: quedarse luna_cohete_s en su zona = victoria "Escape". Premio de objetivo = el de la nodriza (SHIP_IO.reward).
 const A = BAL.ataques;
 /** main.ts llena win: victoria alternativa por escape (en ENCORE, activar el teleportador: tele = true cambia el rótulo de la barra). */
-export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean; scrap: () => number; hpFrac: (who: number) => number; pay: (scrap: number, hpFrac: number, who: number) => void; offer: (kind: "cofre" | "maquina", who: number) => void } = { win: () => {}, tele: false, scrap: () => 0, hpFrac: () => 1, pay: () => {}, offer: () => {} };
+export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean; scrap: () => number; hpFrac: (who: number) => number; pay: (scrap: number, hpFrac: number, who: number) => void; offer: (kind: "cofre" | "maquina", who: number) => void; half: number } = { win: () => {}, tele: false, half: 0, scrap: () => 0, hpFrac: () => 1, pay: () => {}, offer: () => {} };
 
 const mats = () => {
   const glow = (n: string, c: string, a = 1) => { const m = pbr(n, { color: c, rough: 0.3, emissive: c, alpha: a }); m.fogEnabled = false; m.emissiveIntensity = 2.4; return m; };
@@ -60,6 +60,8 @@ const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t 
 export const chestPrice = (open: number, stage: number) => Math.round(30 * (1 + 0.6 * open) * (1 + 0.25 * stage));
 /** Nueva expedición: cuenta de cofres abiertos en cero. */
 export const shopReset = () => { opened = 0; };
+/** Cofres de pago que quedan en el escenario (secreto "aplausos": 0 tras abrir el último). */
+export const chestsLeft = () => shops.filter((s) => s.kind === "cofre").length;
 /** Cofres de pago abiertos en la run (para el reporte de ENCORE). */
 export const chestsOpened = () => opened;
 /** Coloca 3 cofres y 1 máquina alrededor de c0 (llegada del escenario); orden, ángulo y distancia salen de (seed, stage). */
@@ -67,7 +69,7 @@ export function shopPlan(seed: number, stage: number, c0: B.Vector3) {
   shopDrop(); shopStage = stage;
   const base = seed + 0x7c3 + stage * 15485863, rot = mix(base) * 4, a0 = mix(base + 1) * Math.PI * 2, mach = Math.floor(mix(base + 2) * 4);
   for (let i = 0; i < 4; i++) {
-    const kind = i === mach ? "maquina" : "cofre", p = ringAt(c0, a0 + ((i + rot) % 4) * Math.PI / 2 + (mix(base + 10 + i) - 0.5) * 0.5, 40 + mix(base + 20 + i) * 70, 0);
+    const kind = i === mach ? "maquina" : "cofre", p = inYard(ringAt(c0, a0 + ((i + rot) % 4) * Math.PI / 2 + (mix(base + 10 + i) - 0.5) * 0.5, 40 + mix(base + 20 + i) * 70, 0));
     const r = put(ringTpl, p, "aro"); r.position.copyFrom(onFloor(p, 0.15)); r.scaling.setAll(SHOP_RADIO / 2);
     shops.push({ kind, p, prog: 0, ms: [put(kind === "cofre" ? chestTpl : machineTpl, p, kind), r] });
   }
@@ -99,9 +101,12 @@ type Goal = { kind: "celdas" | "antena" | "cohete"; p: B.Vector3; t: number; pro
 let goal: Goal | null = null, rocket: Goal | null = null, next = A.luna_obj_primero_s, alt = 0;
 const stats = { hechos: 0, aparecidos: 0 };
 
+/** Contenido 3 (ENCORE en zona plana): GOAL_IO.half > 0 recorta el punto al patio, 12 m antes del borde. */
+// ponytail: solo recorta al borde; el teleportador o un cofre pueden caer sobre un mueble (la zona de abordaje mide 6 m y se alcanza igual). Si molesta, probar con spawnPoint de world.ts.
+const inYard = (p: B.Vector3) => { const h = GOAL_IO.half - 12; if (!MOON.on && h > 0) { p.x = Math.max(-h, Math.min(h, p.x)); p.z = Math.max(-h, Math.min(h, p.z)); } return p; };
 function put(tpl: () => B.Mesh, p: B.Vector3, name: string) { const m = tpl().createInstance(name); onFloor(p, 0, m.position); m.rotationQuaternion = alignYaw(m.position, 0); return m; }
 function make(kind: Goal["kind"], car: B.Vector3, dist: number, ang = rng() * Math.PI * 2): Goal {
-  const p = ringAt(car, ang, dist, 0), g: Goal = { kind, p, t: 0, prog: 0, drop: 0, cells: [], ms: [put(beaconTpl, p, "baliza")] };
+  const p = inYard(ringAt(car, ang, dist, 0)), g: Goal = { kind, p, t: 0, prog: 0, drop: 0, cells: [], ms: [put(beaconTpl, p, "baliza")] };
   if (kind === "celdas") {
     const n = A.luna_obj_celdas_min + (rng() < 0.5 ? 1 : 0);
     for (let i = 0; i < n; i++) { const c = ringAt(p, (i / n) * Math.PI * 2 + rng(), A.luna_obj_celdas_radio * (0.4 + rng() * 0.6), 0); g.cells.push({ p: c, m: put(cellTpl, c, "celda") }); }
@@ -116,7 +121,7 @@ function drop(g: Goal) { for (const m of g.ms) m.dispose(); for (const c of g.ce
 
 /** Al salir el jefe final de la luna: aterriza el cohete lejos del auto. */
 export function rocketLand(car: B.Vector3, quiet: boolean) {
-  if (!MOON.on || rocket) return;
+  if ((!MOON.on && !GOAL_IO.tele) || rocket) return; // ENCORE: el teleportador también aterriza en los escenarios terrestres
   rocket = make("cohete", car, A.luna_cohete_dist);
   if (!quiet) { banner("COHETE DE ESCAPE EN LA SUPERFICIE", 3, { tag: "RADIO", ico: "jefe", tone: "now" }); FX.shock(rocket.p); }
 }
@@ -139,11 +144,11 @@ export const goalStats = () => `objetivos ${stats.hechos}/${stats.aparecidos}${r
 /** Cada cuadro (solo luna). */
 /** cars = autos vivos (0 = el que guía: los objetivos aparecen alrededor suyo); cualquiera junta celdas, mantiene la antena, compra y aborda (R7b). */
 export function goalsTick(dt: number, time: number, cars: B.Vector3[], quiet: boolean) {
-  if (!MOON.on) return;
+  if (!MOON.on && !GOAL_IO.tele) return;
   const car = cars[0], near = (p: B.Vector3, r: number) => cars.some((c) => hd(c, p) < r);
   if (GOAL_IO.tele && shops.length) shopTick(dt, time, cars, quiet);
   for (const m of goal?.cells ?? []) m.m.rotationQuaternion = alignYaw(m.m.position, time * 1.5);
-  if (!goal && time >= next) {
+  if (MOON.on && !goal && time >= next) { // objetivos de superficie: solo en la luna
     const kind = (alt++ + (rng() < 0.5 ? 0 : 1)) % 2 ? "antena" : "celdas"; // alternados, el primero al azar
     goal = make(kind, car, A.luna_obj_dist); stats.aparecidos++;
     if (!quiet) banner(kind === "celdas" ? "CELDAS DE ENERGÍA EN LA SUPERFICIE · RECOGER ANTES DEL CORTE" : "ANTENA EN LA SUPERFICIE · MANTENER LA ZONA", 3.2, { tag: "RADIO", ico: "cofre", tone: "warn" });

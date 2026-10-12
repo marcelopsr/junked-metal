@@ -55,12 +55,14 @@ export type Run = {
   guest: (typeof GUESTS)[number] | null; // minijefe invitado mientras la fase es `guest`
   taken: string[];  // R5: ids de los pactos aceptados en toda la run, en orden (para el reporte)
   went: number[];   // R5: índices de VARIANTS elegidos como destino en toda la run, en orden
+  lp: { off: number; yes: number; bold: number }; // vuelta actual: pactos ofrecidos y aceptados, destinos elegidos que eran los de más riesgo (secretos)
+  found: SecretId[]; // secretos del Director descubiertos en esta run (main.ts los pasa a save.encore.secrets)
 };
 /** R3: eventos del teleportador al abordarlo. */
 export type TeleEvent = "OVERLOAD" | "BOSS_GUEST" | "NINGUNO";
 export const GUESTS = ["rey", "cortadora", "tarantula", "gato"] as const;
 
-export const newRun = (seed: number): Run => ({ seed, loop: 0, stage: 0, phase: "stage", stageT: 0, timer: 0, landed: false, stayT: 0, stays: 0, pacts: [], offer: null, routes: null, route: null, guest: null, taken: [], went: [] });
+export const newRun = (seed: number): Run => ({ seed, loop: 0, stage: 0, phase: "stage", stageT: 0, timer: 0, landed: false, stayT: 0, stays: 0, pacts: [], offer: null, routes: null, route: null, guest: null, taken: [], went: [], lp: { off: 0, yes: 0, bold: 0 }, found: [] });
 
 /** Semilla de cada escenario: (seed, 0, 0) es la de la run; la votación y el FINAL ACT usan los índices `stages` y `stages + 1`. */
 export const stageSeed = (seed: number, loop: number, stage: number) => (seed + loop * 0x9e3779b1 + stage * 0x85ebca6b) >>> 0;
@@ -77,11 +79,13 @@ const leave = (r: Run) => { r.pacts = r.pacts.map((a) => ({ id: a.id, left: a.le
 function advance(r: Run): Ev {
   leave(r);
   if (r.stage + 1 < ENC.stages) { r.phase = "route"; r.offer = null; r.routes = routeOffer(r); r.timer = ENC.routeS; return "route_offer"; } // el escenario siguiente se elige antes de cargarlo
+  if (r.lp.off >= 2 && !r.lp.yes) discover(r, "audiencia"); // la vuelta se cerró sin firmar nada
+  if (r.lp.bold >= ENC.stages - 1) discover(r, "bambalinas"); // todos los destinos de la vuelta fueron los de más riesgo
   r.phase = "vote"; r.timer = ENC.voteS; return "vote";
 }
 function vote(r: Run, i: 0 | 1): Ev {
   leave(r);
-  if (i === 0) { r.loop++; r.stage = 0; reset(r); return "encore"; }
+  if (i === 0) { r.loop++; r.stage = 0; reset(r); r.lp = { off: 0, yes: 0, bold: 0 }; return "encore"; }
   r.phase = "final"; r.stageT = 0; return "final_act";
 }
 
@@ -89,12 +93,12 @@ function vote(r: Run, i: 0 | 1): Ev {
 function go(r: Run): Ev {
   const o = r.stage + 1 < ENC.stages ? pactOffer(r) : null;
   if (!o) return advance(r);
-  r.phase = "pact"; r.offer = o; r.timer = ENC.pactS; return "pact_offer";
+  r.phase = "pact"; r.offer = o; r.timer = ENC.pactS; r.lp.off++; return "pact_offer";
 }
 /** Responde a la oferta: 0 o 1 acepta ese pacto, 2 (o ventana vencida) rechaza sin penalidad. Después carga el escenario siguiente. */
 function choosePact(r: Run, i: 0 | 1 | 2): Ev {
   const id = i === 2 ? undefined : r.offer?.[i];
-  if (id) { r.taken.push(id); r.pacts.push({ id, left: pactOf(id).stages + 1 }); } // el +1 lo descuenta el `leave` de este mismo avance
+  if (id) { r.lp.yes++; r.taken.push(id); r.pacts.push({ id, left: pactOf(id).stages + 1 }); } // el +1 lo descuenta el `leave` de este mismo avance
   advance(r);
   return id ? "pact_yes" : "pact_no";
 }
@@ -141,7 +145,8 @@ export function guestDown(r: Run): Ev | null { if (r.phase !== "guest") return n
 
 /** Responde a la oferta de destinos: el escenario siguiente toma la variante elegida (y su recompensa). */
 function chooseRoute(r: Run, i: 0 | 1): Ev {
-  const v = r.routes![i];
+  const [a, b] = r.routes!, v = r.routes![i];
+  if (riskOf(v) >= riskOf(i ? a : b)) r.lp.bold++;
   r.went.push(v);
   r.stage++; reset(r); r.route = v;
   return "advance";
@@ -251,6 +256,8 @@ export function routeOffer(r: Run): [number, number] {
   const o = VARIANTS.map((_, i) => ({ i, k: mix(r.seed + 0x70e1 + r.loop * 6151 + (r.stage + 1) * 32452843 + i * 49979687) })).sort((a, b) => a.k - b.k);
   return [o[0].i, o[1].i];
 }
+/** Riesgo de un destino: el producto de su recompensa (el Director paga más por lo más peligroso). */
+export const riskOf = (i: number) => Object.values(VARIANTS[i].reward).reduce((a, x) => a * (x ?? 1), 1);
 /** Riesgo y recompensa de un destino para la UI (misma forma que un pacto: VENTAJA = recompensa, COSTO = riesgo). */
 const routeView = (i: number): PactView => { const v = VARIANTS[i]; return { name: v.name, gain: fxText(v.reward), cost: [v.risk], dur: "PRÓXIMO ESCENARIO" }; };
 
@@ -385,3 +392,36 @@ export function report(r: Run, o: { chests: number; cause: string }): [string, s
 
 /** Tornillos extra (o de menos) de un tramo con el multiplicador `k` de pactos y rutas vigente: lo ganado desde la última liquidación x (k - 1). main.ts lo acumula al cambiar el efecto y al salir de cada escenario. */
 export const scrapExtra = (gross: number, last: number, k: number) => (gross - last) * (k - 1);
+
+// ---------- Contenido 3: escenarios terrestres (docs/ENCORE/01_DESIGN/04_WORLDS_AND_ROUTES.md) ----------
+// Desde la vuelta 1 (la segunda), un escenario de cada vuelta se juega en una zona plana presentada como escenografía del show. Zona y escenario salen de un hash de
+// (semilla, vuelta), sin rng(). La votación y el FINAL ACT siguen en la Luna. La recompensa del destino elegido vale igual (pactFx lee r.route).
+// ponytail: garaje fuera. Mide 160 m de lado y el teleportador cae a luna_cohete_dist (80 m) y los cofres a 40-110 m: con el recorte al borde quedan todos amontonados
+// contra la pared. Entra si el plan de cofres y cohete escala con HALF.
+export const EARTH = { patio: ["EL PATIO DE ENSAYO", "DECORADO DE CARTÓN, BICHOS DE VERDAD. ES SOLO UN ENSAYO, DICEN."], jardin: ["EL JARDÍN DE UTILERÍA", "PASTO DE PLÁSTICO Y ASPERSORES CON CONTRATO. NADA AQUÍ ES CASUAL."] } as const;
+export type EarthZone = keyof typeof EARTH;
+const EARTH_ZONES = Object.keys(EARTH) as EarthZone[];
+/** Escenario terrestre de la vuelta (-1 en la vuelta 0). */
+export const earthStage = (r: Run) => (r.loop < 1 ? -1 : Math.floor(mix(r.seed + 0xea27 + r.loop * 7907) * ENC.stages));
+/** Zona del escenario actual: "luna" o la escenografía terrestre que le toca. */
+export function zoneOf(r: Run): "luna" | EarthZone {
+  if (sceneIdx(r) >= ENC.stages || r.stage !== earthStage(r)) return "luna";
+  return EARTH_ZONES[Math.floor(mix(r.seed + 0x2a7d + r.loop * 104723) * EARTH_ZONES.length)];
+}
+
+// ---------- Contenido 3: secretos del Director (docs/ENCORE/02_NARRATIVE/02_LORE_AND_SECRETS.md) ----------
+// Tres hallazgos por conducta, deterministas (sin rng()): cada uno revela un fragmento del arco sin decir quién controla las pantallas.
+export const SECRETS = [
+  { id: "aplausos", name: "APLAUSOS SIN CABLE", how: "Abrir los tres cofres de un escenario.", lore: "UNA PANTALLA MUESTRA «APLAUSOS». NO TIENE CABLE. NUNCA LO TUVO." },
+  { id: "audiencia", name: "CERO ESPECTADORES", how: "Rechazar todos los pactos de una vuelta.", lore: "UNA TERMINAL REGISTRA LA FUNCIÓN: CUATRO PARTICIPANTES, CERO ESPECTADORES." },
+  { id: "bambalinas", name: "SEÑAL IMPOSIBLE", how: "Elegir siempre el destino de más riesgo en una vuelta.", lore: "DETRÁS DEL TELÓN, LAS PANTALLAS RECIBEN SEÑAL DESDE LUGARES QUE NO EXISTEN." },
+] as const;
+export type SecretId = (typeof SECRETS)[number]["id"];
+export const SECRET_IDS: readonly string[] = SECRETS.map((s) => s.id);
+export function discover(r: Run, id: SecretId) { if (!r.found.includes(id)) r.found.push(id); }
+const SLIP = ["ESO NO ESTABA EN EL GUION.", "CORTEN. NO, NO CORTEN.", "LA PRODUCCIÓN NIEGA HABER DICHO ESTO."];
+/** Frase del Director al descubrir un secreto: el desliz sale de un hash de (semilla, secreto), el fragmento es fijo. */
+export function secretLine(r: Run, id: SecretId): string {
+  const s = SECRETS.find((x) => x.id === id)!, h = [...id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, r.seed);
+  return `${SLIP[Math.floor(mix(h + 0x5ec7) * SLIP.length)]} ${s.lore}`;
+}

@@ -1,6 +1,7 @@
 // Lectura y validación del guardado (localStorage "rcfight2"), sin DOM ni motor: menu.ts le pasa lo que depende del juego (listas válidas, calcos, presets)
 // y los tests (test/save.test.ts) lo prueban solo. Un guardado viejo, editado a mano o importado nunca debe romper el arranque ni el render.
 import type { Save } from "./menu";
+import { SECRET_IDS } from "./encore";
 
 /** Lo que `sanitize` necesita saber del juego: qué ids son válidos y cómo validar calcos y presets. */
 export type SaveDeps = {
@@ -105,7 +106,8 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     const ni = (v: unknown) => (Number.isInteger(v) && (v as number) >= 0 ? Math.min(1e9, v as number) : 0), eb = s.encore?.best;
     // R3: memoria del Director. La causa es texto libre que luego se muestra: solo letras, números y puntuación simple, corta
     const ec = typeof s.encore?.lastCause === "string" ? s.encore.lastCause.replace(/[^\p{L}\d .,-]/gu, "").trim().slice(0, 40) : "";
-    s.encore = { best: { loop: ni(eb?.loop), stage: ni(eb?.stage), t: ni(eb?.t) }, wins: ni(s.encore?.wins), runs: ni(s.encore?.runs), lastLoop: ec ? ni(s.encore?.lastLoop) : 0, lastCause: ec };
+    s.encore = { best: { loop: ni(eb?.loop), stage: ni(eb?.stage), t: ni(eb?.t) }, wins: ni(s.encore?.wins), runs: ni(s.encore?.runs), lastLoop: ec ? ni(s.encore?.lastLoop) : 0, lastCause: ec,
+      secrets: Array.isArray(s.encore?.secrets) ? [...new Set((s.encore.secrets as unknown[]).filter((x): x is string => typeof x === "string" && SECRET_IDS.includes(x)))] : [] }; // Contenido 3: solo ids conocidos, sin repetir
     s.preset = deps.presetOf({ shadowQ: s.shadowQ, detail: s.detail, texRes: s.texRes, aniso: s.aniso, bloom: s.bloom });
     return { ...structuredClone(D), ...s, decals, decalSel, perm: { ...D.perm, ...s.perm }, kit: { ...D.kit, ...s.kit }, vol: { ...D.vol, ...s.vol },
       stats: { ...D.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };
