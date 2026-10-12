@@ -246,3 +246,15 @@ Fecha 2026-10-12. Solo datos en `src/encore.ts` (más pruebas); sin tocar `main.
 | `bambalinas` | Elegir en toda la vuelta el destino de más riesgo (`riskOf`: producto de la recompensa) | Pantallas con señal desde lugares imposibles (acto 4) |
 
 Se marcan en `Run.found`, el Director los dice al descubrirlos, `endRun` los suma a `save.encore.secrets` (validado en `parseSave`: solo ids conocidos, sin repetir) y la pantalla de ENCORE los lista (`#encSec`).
+
+## R6c: cliente completo y servidor de red propio
+
+Fecha 2026-10-12. Fase R6c de `R6_RED.md` (§8 para la red).
+
+- **Red:** `VITE_NET_HOST` opcional: PeerServer propio en `https://<host>/peer` y credenciales TURN temporales de `GET /api/turn` con el token del login (`localStorage.jm_net_token`, botón "Iniciar sesión" en ENCORE, vuelta con `#token=`). Sin la variable, PeerJS Cloud como R6b. Workflow: `vars.NET_HOST`.
+- **Cartas:** online se alterna quién elige en cada oferta (nivel o cofre), empieza el anfitrión (`cardBy`, `cardTurn`). Los dos ven las cartas; el que no elige ve "Elige Jn" y sus clics no cuentan; el anfitrión valida (`applyCommand` rechaza cartas y re-sorteo de quien no tiene el turno). Mensajes fiables `lv` (título, cartas, quién) y `lvx` (cerrar). Si el J2 se corta en su turno, elige el anfitrión. Decisión: alternar es simple y justo; "elige quien junta la gema" no aplica porque la XP es compartida.
+- **Votos:** online de 2 cada decisión del teleportador (pactos, rutas, votación) es un voto por jugador (`encVote`); con los dos votos se aplica el del anfitrión, que cubre coincidencia y empate. Si el cliente no vota, decide el reloj de la ventana como siempre. Aviso "VOTO ENVIADO" / "VOTO Jn · FALTA Jm".
+- **Proyectiles:** el snapshot lleva `j` (escupidas de bichos) y `w` (proyectiles de armas: todo arreglo de un arma con `{ m: InstancedMesh }`), `[x, y, z]` planos a 0,1 m, tope 60 por tipo y radio 70 m del J2. El cliente los dibuja con un pool de instancias, sin interpolar.
+- **Medido:** snapshot JSON ~6 kB/s al inicio de la run (1 bicho, 1 proyectil); con muchos bichos crece (sin medir en pelea grande).
+- `ponytail:` proyectiles aproximados (sin interpolar, una sola forma para los de armas); el gamepad del cliente no navega las cartas (teclado y clic sí); en el anfitrión, si cae el J1 y guía el J2, los botones del anfitrión votan como J2 (`lead.id`, heredado de R6b).
+- **Verificado R6c:** `tsc` limpio, `vitest` 133/133, `build` OK, `npm run test:net` 23/23 (ver `FINAL_QA_5_online.md`). Sin probar contra el VPS (no existe aún) ni entre máquinas.

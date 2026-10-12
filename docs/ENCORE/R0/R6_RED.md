@@ -93,3 +93,15 @@ Lo que **no** se toca: `weapons.ts` (se reutiliza vía `Ctx` por jugador, como h
 
 - Cloudflare Realtime TURN FAQ (precio y STUN gratis): https://developers.cloudflare.com/realtime/turn/faq/ (consultado 2026-10-12)
 - PeerJS (servidor cloud gratis o PeerServer propio): https://peerjs.com/ (consultado 2026-10-12; sin límites publicados en esa página)
+
+## 8. R6c: servidor de red propio y TURN (implementado)
+
+Cambio de plan (usuario, 2026-10-12): la señalización y el TURN se alojan en el VPS del usuario, no en Cloudflare. Otro encargo arma allí un PeerServer, coturn con credenciales temporales (`static-auth-secret`, API REST de TURN) y un endpoint HTTPS. El cliente (`src/net.ts`) queda así:
+
+- **`VITE_NET_HOST`** (de build, p. ej. `junkedmetal.duckdns.org`). Si está definida, PeerJS usa `https://<host>:443/peer` (`secure: true`, `path: "/peer"`) en vez de PeerJS Cloud. Si no está, todo sigue igual que R6b: PeerJS Cloud con su config ICE por defecto (STUN de Google más el TURN público de PeerJS, `eu-0/us-0.turn.peerjs.com`, comprobado en `node_modules/peerjs`).
+- **Credenciales TURN temporales:** antes de crear la sala o unirse, `GET https://<host>/api/turn` con `Authorization: Bearer <token>`; la respuesta `{ iceServers: [...] }` va a `config.iceServers` de PeerJS. Si falla (red, CORS, 401, sin token), sigue solo con STUN (`stun:stun.l.google.com:19302`).
+- **Token:** `localStorage["jm_net_token"]` (lectura y escritura en try/catch). En `#scr-encore`, con host definido, aparece "Iniciar sesión", que abre `https://<host>/auth/login?return=<url actual>`; el servidor vuelve con `#token=...`, el juego lo guarda y limpia el hash (`takeToken`). OAuth y la clave de grupo son del servidor.
+- **Desarrollo:** `.env.local` en la raíz con `VITE_NET_HOST=junkedmetal.duckdns.org` (Vite lo lee solo; `.env.local` está en `.gitignore`).
+- **Publicado:** `.github/workflows/pages.yml` pasa `VITE_NET_HOST: ${{ vars.NET_HOST }}` al build. Es una **variable de repo** (Settings → Secrets and variables → Actions → Variables), no un secreto: el host termina igual en el bundle público. Vacía = PeerJS Cloud.
+- **Por qué no credenciales TURN fijas en el build:** todo lo que entra al bundle de un sitio estático es público; un usuario/clave fijo de TURN deja el relay abierto a cualquiera (costo y abuso). Por eso las credenciales son temporales y salen de un endpoint con login. El riesgo que queda es el del token: vive en `localStorage` (lo lee cualquier script de la página) y su duración y revocación las define el servidor.
+- Referencia del formato de credenciales temporales (TURN REST API, mismo esquema `iceServers` que devuelve Cloudflare): https://developers.cloudflare.com/realtime/turn/generate-credentials/ (consultado 2026-10-12). La alternativa Cloudflare (clave TURN + Worker que llama a `.../credentials/generate-ice-servers`) queda descartada por el cambio de plan.

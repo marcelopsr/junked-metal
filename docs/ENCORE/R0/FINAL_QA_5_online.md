@@ -39,7 +39,29 @@ OK   sin errores en el cliente
 
 El input del cliente se manda con teclas reales (`W`, `Z`) en su pestaña. El teleportador lo hace aterrizar el anfitrión con `__enc.land()/board()` y decide el cliente.
 
+## R6c (2026-10-12): cartas, votos, proyectiles y kB/s
+
+`npm run test:net` ampliado, 23/23 en Chromium headless:
+
+```
+OK   ancho de banda del snapshot medido (JSON, anfitrión -> cliente)  6.1 kB/s
+OK   el cliente ve proyectiles (snapshot j/w)  1 proyectiles
+OK   primera oferta: elige el anfitrión y el cliente ve las cartas  by=1 cliente="Elige J1"
+OK   el cliente no puede elegir fuera de su turno
+OK   segunda oferta: le toca al cliente y la ve  "Turno de elegir: J2"
+OK   el anfitrión no puede elegir en el turno del cliente
+OK   carta del cliente aplicada en el anfitrión  nivel 1 -> 3
+OK   todas las cartas cerradas en los dos
+OK   voto del cliente registrado y solo no decide  votos=1 fase=teleporter
+OK   los dos votan lo mismo: se aplica (applyCommand)  teleporter -> stay
+OK   empate (cliente X, anfitrión Z): gana el anfitrión  stay
+OK   los dos votan avanzar: sale de la estadía  pact
+23 OK, 0 fallas
+```
+
+kB/s = bytes JSON de los snapshots enviados por el anfitrión (`__net.info().bytes`, solo dev) durante 2,5 s de manejo al inicio (pocos bichos). Con la semilla 7 el teleportador sale con OVERLOAD: la prueba agota la carga con `__enc.tick`.
+
 ## Sin verificar
 
-- kB/s y RTT. Conexión entre dos máquinas o redes distintas (NAT simétrica, sin TURN).
+- RTT y kB/s con muchos bichos (solo medido al inicio). El servidor propio (`VITE_NET_HOST`, login, `/api/turn`): sin servidor todavía. Conexión entre dos máquinas o redes distintas (NAT simétrica, sin TURN).
 - Con 1 bicho en el radio de 70 m al principio, la prueba de bichos es mínima (se mueven, pero son pocos).

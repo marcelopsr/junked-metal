@@ -20,7 +20,7 @@ import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setSco
 import { setDrawDist, buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, heavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
-import type { Msg, Net } from "./net";
+import { getToken, loginUrl, NET_HOST, takeToken, type Msg, type Net } from "./net"; // net.ts es chico; peerjs sigue en su chunk dinámico
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
@@ -457,12 +457,26 @@ const encPick = (i: 0 | 1 | 2) => { if (state === "play" && erun) encApply(E.pic
 // Hoy los menús y botones son locales y las mandan como el que guía; la compra en la máquina, como quien la activó.
 type Cmd = { k: "card"; i: number } | { k: "reroll" } | { k: "enc"; i: 0 | 1 | 2 } | { k: "buy"; scrap: number; hpFrac: number };
 function applyCommand(playerId: number, cmd: Cmd) {
-  if (net && !net.host) { if (cmd.k === "enc") net.send({ t: "c", c: cmd }, true); return; } // R6b: el cliente no decide, le pide al anfitrión
+  if (net && !net.host) { if (cmd.k !== "buy") { net.send({ t: "c", c: cmd }, true); if (cmd.k === "enc") banner("VOTO ENVIADO", 1.2); } return; } // R6b: el cliente no decide, le pide al anfitrión
   const p = players.find((x) => x.id === playerId) ?? lead;
+  if ((cmd.k === "card" || cmd.k === "reroll") && net?.host && p.id !== cardBy) return; // R6c: online elige las cartas uno por vez (cardBy)
   if (cmd.k === "card") choose(cmd.i, p); // cartas: compartidas; la reparación cura a quien elige
   else if (cmd.k === "reroll") reroll();
-  else if (cmd.k === "enc") encPick(cmd.i); // pactos, rutas y votos del teleportador (encore.ts pick)
+  else if (cmd.k === "enc") encVote(p.id, cmd.i); // pactos, rutas y votos del teleportador (encore.ts pick)
   else { runScrap -= cmd.scrap; p.hp -= p.hp * cmd.hpFrac; } // máquina de opciones: tornillos y vida de quien compra
+}
+/** R6c: online de 2 cada decisión del teleportador es un voto; con los dos votos gana el del anfitrión (J1): coincidir o empatar da lo mismo.
+ *  Si el cliente no vota, decide el reloj de la ventana (encore.ts tick), como en solitario. Sin red o sin J2 decide el primero que vota. */
+const votes = new Map<number, 0 | 1 | 2>();
+let voteKey = "";
+function encVote(id: number, i: 0 | 1 | 2) {
+  const host = players[0].id, mate = players.find((x) => x.id !== host);
+  if (!net?.host || !mate) { votes.clear(); encPick(i); return; }
+  const k = erun ? `${erun.phase}:${erun.loop}:${erun.stage}:${erun.stays}` : "";
+  if (k !== voteKey) { votes.clear(); voteKey = k; } // otra ventana: los votos viejos no cuentan
+  votes.set(id, i);
+  if (votes.size < 2) { banner(`VOTO J${id} · FALTA J${id === host ? mate.id : host}`, 1.5); return; }
+  const v = votes.get(host)!; votes.clear(); encPick(v);
 }
 /** Jugador de un índice `who` de los eventos (0 = el que guía, 1.. = compañeros vivos). */
 const whoP = (who = 0) => (who && liveM()[who - 1]) || lead;
@@ -475,17 +489,28 @@ $("encC").onpointerdown = (ev) => { ev.preventDefault(); applyCommand(lead.id, {
 // Cliente = J2: no simula (state "net", física apagada); dibuja autos y bichos de los snapshots con 100 ms de interpolación y su cámara sigue a su auto.
 // ponytail: sin compensar latencia ni predecir el auto propio (R6c): el cliente ve su auto con RTT/2 + 100 ms de retraso.
 // ponytail: sin rejoin (R6d): si se corta, el anfitrión sigue solo y el cliente vuelve al menú.
-// ponytail: el cliente no replica proyectiles, gemas, efectos ni cartas (elige el anfitrión); ve los autos con el modelo de su propio garaje.
+// ponytail: el cliente no replica gemas ni efectos; proyectiles aproximados y cartas por turnos (R6c); ve los autos con el modelo de su propio garaje.
 let net: Net | null = null, netSeed = 0, netT = 0;
 const NET_HZ = 15, NET_DELAY = 100;
 let netIn = { ...NO_IN };
-const q2 = (n: number) => Math.round(n * 100) / 100, q3 = (n: number) => Math.round(n * 1000) / 1000;
+const q1 = (n: number) => Math.round(n * 10) / 10, q2 = (n: number) => Math.round(n * 100) / 100, q3 = (n: number) => Math.round(n * 1000) / 1000;
 const quatOf = (n: B.TransformNode) => n.rotationQuaternion ?? B.Quaternion.FromEulerVector(n.rotation);
 const netIds = new WeakMap<Enemy, number>();
 let netNext = 1;
 type PSnap = [number, ...number[]]; // [id] = caído; [id, x, y, z, qx, qy, qz, qw, vx, vy, vz, hp, maxHp]
 type ESnap = [number, Kind, number, number, number, number, number, number, number, number, number]; // id, tipo, pos, quat, vida, vida máx.
-type Snap = { T: number; z: string; xp: number; lv: number; sc: number; run: E.Run | null; p: PSnap[]; e: ESnap[] };
+type Snap = { T: number; z: string; xp: number; lv: number; sc: number; run: E.Run | null; p: PSnap[]; e: ESnap[]; j: number[]; w: number[] }; // j/w: proyectiles de bichos y de armas, [x, y, z] planos a 0,1 m
+const NET_PROJ = 60; // tope por tipo de proyectil y snapshot (los más allá del radio no van)
+let netBytes = 0; // solo dev: bytes de snapshot enviados (JSON), para medir kB/s en test:net
+/** Proyectiles de armas (aproximado): todo arreglo de un arma con { m: InstancedMesh } (balas, trompos, olas...). */
+function weaponShots(out: number[], near: (v: B.Vector3) => boolean) {
+  for (const w of [...weapons, ...players.flatMap((m) => (m === lead ? [] : m.weapons))])
+    for (const v of Object.values(w)) if (Array.isArray(v)) for (const o of v) {
+      if (out.length >= NET_PROJ * 3) return;
+      const m = (o as { m?: unknown })?.m;
+      if (m instanceof B.InstancedMesh && m.isEnabled() && near(m.position)) out.push(q1(m.position.x), q1(m.position.y), q1(m.position.z));
+    }
+}
 function netSnap() {
   const c2 = players[1]?.car?.pos ?? lead.car?.pos, R2 = 70 * 70, e: ESnap[] = [];
   for (const en of enemies) {
@@ -499,7 +524,12 @@ function netSnap() {
     const q = quatOf(c.root), v = c.body.getLinearVelocity();
     return [pl.id, q2(c.pos.x), q2(c.pos.y), q2(c.pos.z), q3(q.x), q3(q.y), q3(q.z), q3(q.w), q2(v.x), q2(v.y), q2(v.z), Math.ceil(pl.hp), pl.maxHp];
   });
-  net!.send({ t: "s", s: { T: q2(time), z: zoneId, xp, lv: level, sc: runScrap, run: erun, p, e } satisfies Snap });
+  const near = (v: B.Vector3) => !!c2 && B.Vector3.DistanceSquared(v, c2) <= R2, j: number[] = [], w: number[] = [];
+  for (const sp of spits) if (j.length < NET_PROJ * 3 && near(sp.m.position)) j.push(q1(sp.m.position.x), q1(sp.m.position.y), q1(sp.m.position.z));
+  weaponShots(w, near);
+  const msg = { t: "s", s: { T: q2(time), z: zoneId, xp, lv: level, sc: runScrap, run: erun, p, e, j, w } satisfies Snap };
+  if (import.meta.env.DEV) netBytes += JSON.stringify(msg).length;
+  net!.send(msg);
 }
 const bool = (v: unknown) => v === true;
 const axis = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0);
@@ -508,14 +538,35 @@ function netHostMsg(m: Msg) {
   if (m.t === "i" && m.i && typeof m.i === "object") {
     const i = m.i as Record<string, unknown>;
     netIn = { throttle: axis(i.throttle), steer: axis(i.steer), moveX: axis(i.moveX), moveY: axis(i.moveY), boost: bool(i.boost), drift: bool(i.drift), ability: bool(i.ability), jump: bool(i.jump), move: bool(i.move) };
-  } else if (m.t === "c") { const c = m.c as Cmd; if (c?.k === "enc" && (c.i === 0 || c.i === 1 || c.i === 2) && players[1]) applyCommand(players[1].id, c); } // ponytail: solo decisiones del teleportador; cartas y compras siguen del anfitrión
+  } else if (m.t === "c" && players[1]) { // R6c: votos del teleportador, cartas (en su turno) y re-sorteo; las compras siguen del anfitrión
+    const c = m.c as Cmd;
+    if (c?.k === "enc" && (c.i === 0 || c.i === 1 || c.i === 2)) applyCommand(players[1].id, { k: "enc", i: c.i });
+    else if (c?.k === "card" && Number.isInteger(c.i) && c.i >= 0 && c.i < offers.length && state === "level") applyCommand(players[1].id, { k: "card", i: c.i });
+    else if (c?.k === "reroll") applyCommand(players[1].id, { k: "reroll" });
+  }
 }
 const netBuf: { at: number; s: Snap; e: Map<number, ESnap> }[] = [];
 const netE = new Map<number, Enemy>();
+let netLv = false; // cliente: cartas a la vista (las elige quien diga el anfitrión)
+let cardBy = 1, cardTurn = 0; // R6c: id de quien elige las cartas abiertas; online se alterna en cada oferta (nivel o cofre), empieza el anfitrión
+// Proyectiles en el cliente: un pool de instancias por tipo, sin interpolar (aproximado, 15 Hz).
+const netShotTpl = () => template("netshot", () => [sph(0.35, pbr("netshot", { color: "#ffd23f", emissive: "#a07000" }), [0, 0, 0])]);
+const netPools: Record<"j" | "w", B.InstancedMesh[]> = { j: [], w: [] };
+function netShots(k: "j" | "w", xs: number[] = []) {
+  const pool = netPools[k], n = Math.min(xs.length / 3, NET_PROJ);
+  while (pool.length < n) pool.push((k === "j" ? spitTpl() : netShotTpl()).createInstance("ns" + k));
+  pool.forEach((m, i) => { m.setEnabled(i < n); if (i < n) m.position.set(xs[i * 3], xs[i * 3 + 1], xs[i * 3 + 2]); });
+}
 function netClientMsg(m: Msg) {
   if (m.t === "go" && typeof m.seed === "number") { netSeed = m.seed; launchRun(false, true, 2, netClientBegin); }
   else if (m.t === "s") { const s = m.s as Snap; netBuf.push({ at: performance.now(), s, e: new Map(s.e.map((x) => [x[0], x])) }); if (netBuf.length > 8) netBuf.shift(); }
   else if (m.t === "end") { netEnd(); netBack("La partida terminó en el anfitrión."); }
+  else if (m.t === "lv" && Array.isArray(m.o) && state === "net") { // R6c: cartas abiertas en el anfitrión; elige el cliente si by es su id
+    const list = m.o as Offer[], mine = m.by === lead.id, title = String(m.title);
+    offers = list; offerSel = 0; netLv = true;
+    const show = () => showOffers(title, list, 0, (i) => (mine ? applyCommand(lead.id, { k: "card", i }) : show()), undefined, mine ? `Turno de elegir: J${lead.id}` : `Elige J${m.by}`);
+    show(); SFX.levelUp();
+  } else if (m.t === "lvx") { netLv = false; $("levelup").classList.add("hidden"); }
 }
 /** Cliente: ya armada la run con la semilla del anfitrión, pasa a dibujar lo que llega. J2 guía la cámara principal. */
 function netClientBegin() {
@@ -556,10 +607,12 @@ function netClientTick() {
     en.animate(engine.getDeltaTime() / 1000);
   }
   enemies = [...netE.values()]; // radar y flechas del HUD
+  netShots("j", s.j); netShots("w", s.w);
 }
 /** Cierra la conexión (sin avisar a nadie). Los bichos de muestra del cliente se van con clearRun (están en `enemies`). */
 function netEnd() {
-  const n = net; net = null; netSeed = 0; netE.clear(); netBuf.length = 0;
+  const n = net; net = null; netSeed = 0; netE.clear(); netBuf.length = 0; netLv = false;
+  for (const k of ["j", "w"] as const) { for (const m of netPools[k]) m.dispose(); netPools[k] = []; }
   n?.close();
 }
 function netStatus(t: string) { $("netStatus").textContent = t; }
@@ -577,6 +630,7 @@ async function netHost() {
       if (net !== n) return;
       if (state === "menu") { netStatus(why); net = null; return; }
       mateClear(); net = null; banner("J2 DESCONECTADO · SE SIGUE EN SOLITARIO", 3); // el anfitrión sigue jugando solo
+      if (state === "level" && cardBy !== players[0].id) { cardBy = players[0].id; openOffers(offers, offerTitle, true); } // le tocaba al J2: elige el anfitrión
     };
     await n.ready;
     if (net !== n) return;
@@ -595,6 +649,12 @@ async function netJoin() {
   n.onClose = (why) => { if (net !== n) return; netEnd(); netBack(why); };
   await n.ready;
   if (net === n) netStatus(`Conectado a ${code} · esperando la largada`);
+}
+// R6c: login del servidor propio (solo con VITE_NET_HOST): vuelve con #token=... y queda en localStorage
+if (NET_HOST) {
+  if (takeToken()) netStatus("Sesión iniciada.");
+  const b = $("netLogin"); b.classList.remove("hidden"); if (getToken()) b.textContent = "Sesión iniciada · volver a entrar";
+  b.onclick = () => location.assign(loginUrl());
 }
 $("netHost").onclick = () => void netHost();
 $("netJoin").onclick = () => void netJoin();
@@ -873,8 +933,11 @@ function offersFor() {
   const n = 3 + save.perm.cards;
   return noRepair ? levelOffers(weapons, passives, n + 1).filter((o) => o.kind !== "heal" && o.id !== "litio").slice(0, n) : levelOffers(weapons, passives, n);
 }
-function openOffers(list: Offer[], title: string) {
+function openOffers(list: Offer[], title: string, keep = false) {
   if (!list.length) return; // Sin reparaciones con todo al máximo: no hay nada que ofrecer
+  if (!keep) cardBy = net?.host && players[1] && cardTurn++ % 2 ? players[1].id : players[0].id; // R6c: online se alterna quién elige
+  const mine = !net || cardBy === players[0].id; // en el anfitrión el jugador local es players[0] aunque guíe el J2
+  net?.send({ t: "lv", title, o: list, by: cardBy }, true);
   state = "level";
   scene.physicsEnabled = false;
   offers = list;
@@ -890,16 +953,17 @@ function openOffers(list: Offer[], title: string) {
   }
   const threat = bossNear ? "boss" : near ? "near" : "";
   const sub = bossNear ? "Jefe en radio corto" : near ? `${near} contacto${near === 1 ? "" : "s"} en radio` : "";
-  showOffers(title, list, 0, (i) => applyCommand(lead.id, { k: "card", i }), previewOffer, sub, threat);
+  const show = () => showOffers(title, list, 0, (i) => (mine ? applyCommand(cardBy, { k: "card", i }) : show()), previewOffer, mine ? sub : `Elige J${cardBy}`, mine ? threat : "");
+  show();
   offerTitle = title;
   const frac = lead.hp / lead.maxHp;
   $("luHpFill").style.transform = `scaleX(${frac})`;
   $("luHpN").textContent = `${Math.ceil(lead.hp)}/${lead.maxHp}`;
   $("luHp").classList.toggle("lu-hp--low", frac < 0.35);
-  const can = rerolls > 0 && list[0]?.kind !== "evo";
+  const can = mine && rerolls > 0 && list[0]?.kind !== "evo";
   const rr = $("luReroll");
   rr.classList.toggle("hidden", !can);
-  if (can) { rr.textContent = `Re-sortear (${rerolls})`; rr.onclick = () => applyCommand(lead.id, { k: "reroll" }); } else rr.onclick = null;
+  if (can) { rr.textContent = `Re-sortear (${rerolls})`; rr.onclick = () => applyCommand(cardBy, { k: "reroll" }); } else rr.onclick = null;
   $("luHint").textContent = isTouch ? "Toca una carta para elegirla" : `${list.map((_, i) => i + 1).join(" · ")} o clic — Enter confirma${can ? ` · ${keyName(KEYS.reroll[0])} o ${btnName(pb("reroll"))}` : ""}`;
   $("luHint").onclick = null;
 }
@@ -909,7 +973,7 @@ function reroll() {
   rerolls--;
   preview?.dispose();
   preview = null;
-  openOffers(offersFor(), offerTitle);
+  openOffers(offersFor(), offerTitle, true);
 }
 
 function choose(i: number, by = lead) {
@@ -935,6 +999,7 @@ function choose(i: number, by = lead) {
   }
   state = "play";
   scene.physicsEnabled = true;
+  net?.send({ t: "lvx" }, true); // R6c: el cliente cierra las cartas
 }
 
 /** R7b: " · J2" si con 2 jugadores lo activó el otro (who = 1) o el que guía es el J2; vacío con 1 jugador. Las cartas son de los dos y elige cualquiera. */
@@ -967,9 +1032,10 @@ function resume() {
 
 // Esc / P / M y la navegación de menús viven en menu.ts; acá solo las cartas de mejora
 addEventListener("keydown", (e) => {
-  if (state === "level" && /^Digit[1-4]$/.test(e.code)) { const i = +e.code.slice(5) - 1; if (i < offers.length) pickOffer(i); }
-  if (e.code === "Enter" && state === "level") pickOffer(offerSel);
-  if (keyHit("reroll", e.code) && state === "level") applyCommand(lead.id, { k: "reroll" });
+  const lv = state === "level" || netLv; // R6c: el cliente online también ve las cartas
+  if (lv && /^Digit[1-4]$/.test(e.code)) { const i = +e.code.slice(5) - 1; if (i < offers.length) pickOffer(i); }
+  if (e.code === "Enter" && lv) pickOffer(offerSel);
+  if (keyHit("reroll", e.code) && lv) applyCommand(lead.id, { k: "reroll" });
 });
 // ---------- Carga (loading.ts) ----------
 // Tareas pesadas que se hacen solas en los menús (un hueco libre por vez) y que launch() completa tras Jugar / Carrera con pantalla de carga.
@@ -2320,7 +2386,7 @@ if (import.meta.env.DEV) Object.assign(window, {
   },
   // R6b (solo dev, scripts/net-test.mjs): estado del online
   __net: {
-    info: () => ({ state, net: net && { host: net.host, code: net.code }, status: $("netStatus").textContent, phase: erun?.phase ?? null, time: +time.toFixed(2), enemies: enemies.length, buf: netBuf.length, netIn, p: players.map((pl) => ({ id: pl.id, hp: Math.round(pl.hp), pos: pl.car ? [+pl.car.pos.x.toFixed(2), +pl.car.pos.z.toFixed(2)] : null })), e0: enemies[0] ? [+enemies[0].pos.x.toFixed(2), +enemies[0].pos.z.toFixed(2)] : null }),
+    info: () => ({ state, net: net && { host: net.host, code: net.code }, bytes: netBytes, cards: state === "level" || netLv ? { by: netLv ? null : cardBy, n: offers.length, sub: $("luSub").textContent } : null, level, votes: votes.size, shots: netPools.j.filter((m) => m.isEnabled()).length + netPools.w.filter((m) => m.isEnabled()).length, status: $("netStatus").textContent, phase: erun?.phase ?? null, time: +time.toFixed(2), enemies: enemies.length, buf: netBuf.length, netIn, p: players.map((pl) => ({ id: pl.id, hp: Math.round(pl.hp), pos: pl.car ? [+pl.car.pos.x.toFixed(2), +pl.car.pos.z.toFixed(2)] : null })), e0: enemies[0] ? [+enemies[0].pos.x.toFixed(2), +enemies[0].pos.z.toFixed(2)] : null }),
   },
   __tick: (n: number) => { const g = engine.getDeltaTime; engine.getDeltaTime = () => 1000 / 60; for (let i = 0; i < n; i++) { engine.beginFrame(); scene.render(); engine.endFrame(); } engine.getDeltaTime = g; },
   __killAll: () => enemies.forEach((e) => { if (!e.def.boss) e.hp = 0; }),
