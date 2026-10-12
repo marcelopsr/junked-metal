@@ -221,6 +221,7 @@ Fecha 2026-10-12. Opción A de `R6_RED.md`: `peerjs` 1.5.5 (versión fija), `src
 - **UI:** en `#scr-encore`, "Online: crear sala", campo de código, "Unirse con código" y estado. Corte: el anfitrión sigue solo (`mateClear`, aviso); el cliente vuelve a ENCORE con el motivo. Fin de partida del anfitrión = `end` al cliente.
 - `ponytail:` sin rejoin (R6d), sin TURN propio (STUN por defecto de PeerJS), sin compensar latencia ni predecir el auto propio, sin proyectiles/gemas/efectos/cartas en el cliente, autos con el modelo del garaje local, JSON sin deltas.
 - **Verificado R6b:** `tsc` limpio, `vitest` 128/128, `build` OK. Prueba headless de 2 páginas: la señalización por PeerJS Cloud funciona (oferta y respuesta llegan), pero el DataChannel no abre ni siquiera con PeerJS a pelo en Chromium headless de esta Mac (ICE sin pareja): falta probar en dos navegadores reales. Sin medir kB/s ni RTT.
+- **QA 5 (FINAL_QA_5_online.md):** el DataChannel no abría porque sin permiso de medios Chrome solo usa la interfaz de la ruta por defecto (WARP en esta Mac). Con micrófono falso abre. `npm run test:net` prueba de punta a punta (12/12). Arreglo en net.ts: corte por `pagehide` y por ICE `disconnected` 3 s.
 
 ## Contenido 2
 

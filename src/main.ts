@@ -2313,6 +2313,10 @@ if (import.meta.env.DEV) Object.assign(window, {
     tick: (secs: number) => { if (erun) encApply(E.tick(erun, secs)); return erun?.phase; },
     shop: (k: "cofre" | "maquina" = "cofre") => { if (!lead.car) return false; runScrap = Math.max(runScrap, 999); return shopDev(k, lead.car.pos); }, // trae un cofre o la máquina al auto (con tornillos de sobra)
   },
+  // R6b (solo dev, scripts/net-test.mjs): estado del online
+  __net: {
+    info: () => ({ state, net: net && { host: net.host, code: net.code }, status: $("netStatus").textContent, phase: erun?.phase ?? null, time: +time.toFixed(2), enemies: enemies.length, buf: netBuf.length, netIn, p: players.map((pl) => ({ id: pl.id, hp: Math.round(pl.hp), pos: pl.car ? [+pl.car.pos.x.toFixed(2), +pl.car.pos.z.toFixed(2)] : null })), e0: enemies[0] ? [+enemies[0].pos.x.toFixed(2), +enemies[0].pos.z.toFixed(2)] : null }),
+  },
   __tick: (n: number) => { const g = engine.getDeltaTime; engine.getDeltaTime = () => 1000 / 60; for (let i = 0; i < n; i++) { engine.beginFrame(); scene.render(); engine.endFrame(); } engine.getDeltaTime = g; },
   __killAll: () => enemies.forEach((e) => { if (!e.def.boss) e.hp = 0; }),
   __time: (s: number) => (time = s),

@@ -35,8 +35,15 @@ function wrap(peer: Peer, host: boolean, code: string): Net & { attach(c: DataCo
       c.on("open", () => { if (r?.open && u?.open) ok(); });
       c.on("close", () => end("Se cortó la conexión con el otro jugador."));
       c.on("error", () => end("Error en la conexión con el otro jugador."));
+      // Una pestaña que se cierra de golpe no cierra el canal: ICE pasa a "disconnected" y recién a "failed" tras ~30 s. 3 s seguidos sin ICE = corte.
+      let t = 0; const pc = c.peerConnection;
+      pc?.addEventListener("iceconnectionstatechange", () => {
+        clearTimeout(t);
+        if (pc.iceConnectionState === "disconnected") t = window.setTimeout(() => end("Se cortó la conexión con el otro jugador."), 3000);
+      });
     },
   };
+  addEventListener("pagehide", () => net.close()); // al cerrar o recargar la pestaña el otro se entera ya (peer.destroy cierra los canales)
   const end = (why: string) => { if (closed) return; net.close(); net.onClose(why); };
   peer.on("disconnected", () => { if (!r?.open) end("Se perdió el servidor de salas."); }); // ya conectados, la señalización no hace falta
   peer.on("error", (e) => end(e.type === "peer-unavailable" ? "No existe una sala con ese código." : `Error de red (${e.type}).`));
