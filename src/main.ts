@@ -2311,7 +2311,8 @@ if (import.meta.env.DEV) Object.assign(window, {
     board: () => { if (erun) encApply(E.boarded(erun)); return erun?.phase; },
     pick: (i: 0 | 1) => { applyCommand(lead.id, { k: "enc", i }); return erun?.phase; },
     tick: (secs: number) => { if (erun) encApply(E.tick(erun, secs)); return erun?.phase; },
-    shop: (k: "cofre" | "maquina" = "cofre") => { if (!lead.car) return false; runScrap = Math.max(runScrap, 999); return shopDev(k, lead.car.pos); }, // trae un cofre o la máquina al auto (con tornillos de sobra)
+    tele: (who = 1) => { const c = players.find((x) => x.id === who)?.car; if (!c) return false; rocketForce(c.pos, 0, 0); return true; }, // R7 QA: teleportador (cohete) justo bajo el auto del jugador `who`
+    shop: (k: "cofre" | "maquina" = "cofre", who = 0) => { const c = who ? players.find((x) => x.id === who)?.car : lead.car; if (!c) return false; runScrap = Math.max(runScrap, 999); return shopDev(k, c.pos); }, // trae un cofre o la máquina al auto (con tornillos de sobra)
   },
   // R6b (solo dev, scripts/net-test.mjs): estado del online
   __net: {
