@@ -102,6 +102,8 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     // Junket Crush: solo números enteros no negativos (estrellas 0-3)
     const nums = (o: unknown, hi: number) => Object.fromEntries(Object.entries(typeof o === "object" && o ? o : {}).filter(([, v]) => Number.isInteger(v) && (v as number) >= 0).map(([k, v]) => [k, Math.min(hi, v as number)]));
     s.m3 = { stars: nums(s.m3?.stars, 3), best: nums(s.m3?.best, 1e9), tools: nums(s.m3?.tools, 99) };
+    const ni = (v: unknown) => (Number.isInteger(v) && (v as number) >= 0 ? Math.min(1e9, v as number) : 0), eb = s.encore?.best;
+    s.encore = { best: { loop: ni(eb?.loop), stage: ni(eb?.stage), t: ni(eb?.t) }, wins: ni(s.encore?.wins), runs: ni(s.encore?.runs) };
     s.preset = deps.presetOf({ shadowQ: s.shadowQ, detail: s.detail, texRes: s.texRes, aniso: s.aniso, bloom: s.bloom });
     return { ...structuredClone(D), ...s, decals, decalSel, perm: { ...D.perm, ...s.perm }, kit: { ...D.kit, ...s.kit }, vol: { ...D.vol, ...s.vol },
       stats: { ...D.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };

@@ -23,12 +23,12 @@ import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
-import { craterHumeante, evBase, evFog, evInit, evReset, lunaDev, lunaEv, panTo } from "./moon_events";
+import { craterHumeante, evBase, evFog, evInit, evPace, evReset, lunaDev, lunaEv, panTo } from "./moon_events";
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import * as E from "./encore";
 import { goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand } from "./moon_goals";
-import { skyClear, skyInfo, skyLaunch, skyTick } from "./moon_sky";
+import { skyClear, skyInfo, skyLaunch, skyPace, skyTick } from "./moon_sky";
 import { ALIENS, alienWave, armorMul, healTick, isAlien } from "./aliens";
 import { wormForce, wormHeadTpl, wormOut } from "./moon_worm";
 import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
@@ -290,7 +290,7 @@ function startRun(d = false) {
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
   spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; wasGrounded = true; coyoteT = 0; apagon = false;
-  if (encore && MOON.on) { erun = E.newRun(runSeed); GOAL_IO.tele = true; encPlan(); }
+  if (encore && MOON.on) { erun = E.newRun(runSeed); GOAL_IO.tele = true; encPlan(); encScene(true); }
   camYaw = 0; dynK = 1; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1); camH.set(0, 0, 1); camUp.set(0, 1, 0);
   state = "play";
   scene.physicsEnabled = true;
@@ -341,17 +341,51 @@ function encEnter() {
   profile = makeProfile(runSeed);
   profile.rainAt = Infinity; // en la luna no llueve
   buildLayout(); // luna: vuelve a como la armó el mundo (sin cráteres)
+  encScene(); // variante: cráteres extra, ritmo de eventos y llegada del auto (encore.ts)
   paceS = E.paceOf(r);
   spawnAcc = groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0;
   encPlan();
   shake = Math.max(shake, 1.2);
 }
+/** Punto del piso de la luna en la dirección d (unitaria, desde el centro). */
+const moonPt = (d: B.Vector3, lift = 0) => onFloor(d.scale(MOON.R).addInPlace(new B.Vector3(0, -MOON.R, 0)), lift);
+/** Lleva el auto (quieto) a la dirección d de la luna, mirando hacia aim, y recoloca la cámara detrás. */
+function moonPlace(d: B.Vector3, aim: B.Vector3) {
+  const c = car!, p = moonPt(d, c.def.size[1] / 2 + 0.3);
+  c.root.position.copyFrom(p); c.root.rotationQuaternion = alignYaw(p, yawOf(aim, p));
+  c.body.setLinearVelocity(B.Vector3.Zero()); c.body.setAngularVelocity(B.Vector3.Zero());
+  moonCar(c.body, upAt(p));
+  teleport(c.body);
+  camH.copyFrom(hflat(aim.clone(), p).normalize()); camUp.copyFrom(upAt(p)); camYaw = yawOf(camH, p);
+  cam.position.copyFrom(p).addInPlace(camH.scale(-15)).addInPlace(camUp.scale(13)); camTarget.copyFrom(p);
+  return p;
+}
+// Llegada de cada variante (E.Variant.at): dirección del lugar y hacia dónde mira el auto. Las mismas que __luna.go.
+const ARRIVE: Record<E.Variant["at"], [B.Vector3, B.Vector3]> = {
+  salida: [B.Vector3.Up(), new B.Vector3(0, 0, 1)],
+  oscuro: [SUN_DIR.scale(-1).addInPlace(new B.Vector3(0.25, 0.2, 0)).normalize(), SUN_DIR], // de espaldas al Sol, mirando hacia la luz
+  tierra: [new B.Vector3(0, 1, 0).addInPlace(EARTH_DIR.scale(-0.66)).normalize(), EARTH_DIR],
+  sol: [SUN_DIR.add(B.Vector3.Up()).normalize(), SUN_DIR],
+};
+/** Variante del escenario (encore.ts): ritmo de eventos, cráteres extra alrededor de la llegada y, salvo el primer escenario (ya está en su lugar), llegada del auto. */
+function encScene(first = false) {
+  const v = E.variantOf(erun!);
+  evPace(v?.rain, v?.quake); skyPace(v?.sky);
+  if (!v) return; // votación y FINAL ACT: sin cambios
+  const [d, aim] = ARRIVE[v.at], c0 = moonPt(d);
+  for (const k of E.craterPlan(v, erun!)) deform(ringAt(c0, k.a, k.d, 0), k.r, k.r * 0.28); // profundidad como los cráteres fijos grandes
+  if (!first) moonPlace(d, aim);
+}
+/** Minijefe i-ésimo de la luna: el de la variante o, sin ella, el que elige la semilla. */
+const minorShip = (i: number) => (erun && E.variantOf(erun)?.ship) || shipFor(i, runSeed);
 /** Aplica lo que pasó en la expedición: efectos en el mundo y frase del Director. */
 function encApply(ev: E.Ev | null) {
   if (!ev || !erun) return;
   if (ev === "tele_land") rocketLand(car!.pos, true); // el cohete de moon_goals.ts hace de teleportador; el aviso es el del Director
   else if (ev === "advance" || ev === "encore" || ev === "vote" || ev === "final_act") encEnter();
-  say(ev, ev === "tele_ready" || ev === "vote" ? "warn" : "now");
+  const v = ev === "advance" || ev === "encore" ? E.variantOf(erun) : null; // al llegar a un escenario nuevo, el Director anuncia su variante en vez de la frase suelta
+  if (v) banner(`${v.name}. ${v.line}`, 3.8, { tag: "DIRECTOR", ico: "senal", tone: "now" });
+  else say(ev, ev === "tele_ready" || ev === "vote" ? "warn" : "now");
 }
 const encPick = (i: 0 | 1) => { if (state === "play" && erun) encApply(E.pick(erun, i)); };
 $("encA").onpointerdown = (ev) => { ev.preventDefault(); encPick(0); }; // pointerdown + sin foco: Espacio (turbo) no vuelve a apretar el botón
@@ -378,7 +412,7 @@ function endRun(win: boolean, why: string) {
   if (erun) { time += encPrior; encPrior = 0; runSeed = erun.seed; } // ENCORE: el tiempo y la semilla de la expedición, no los del último escenario
   if (win) grant(`gana_${save.car}`);
   if (win && daily) grant("diario");
-  if (time >= 600) grant("diez");
+  if (time >= 600 && !erun) grant("diez"); // ENCORE no cuenta para el logro de Supervivencia
   // Modo sin fin: récord propio de lo aguantado después de vencer al jefe final
   const lasted = endless ? Math.floor(time - bank!.t) : 0;
   if (endless) why += ` Modo sin fin: ${fmt(lasted)} más${lasted > save.endless ? ", récord nuevo" : ""}.`;
@@ -388,21 +422,23 @@ function endRun(win: boolean, why: string) {
   engineStop(); music("over"); rainSfx(0); moonAmbience(false);
   // Tornillos: los de la partida más tiempo y bajas, con el extra de las maldiciones (+30% cada una)
   const earned = Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK);
-  const prevBest = save.best, record = Math.floor(time) > save.best;
+  const eb = save.encore.best, encBetter = !!erun && (erun.loop > eb.loop || (erun.loop === eb.loop && (erun.stage > eb.stage || (erun.stage === eb.stage && Math.floor(time) > eb.t))));
+  const prevBest = erun ? eb.t : save.best, record = erun ? encBetter : Math.floor(time) > save.best;
   const rec: RunRec = { t: Math.floor(time), kills, lv: level, seed: runSeed, win };
   if (!simulating && !LAB.on) { // las pruebas de dev no tocan el guardado real
     save.scrap += earned - (bank?.scrap ?? 0); // al terminar el modo sin fin, solo lo que faltaba cobrar
     save.endless = Math.max(save.endless, lasted);
-    save.best = Math.max(save.best, Math.floor(time));
+    if (!erun) save.best = Math.max(save.best, Math.floor(time));
     // Estadísticas de carrera (Bestiario): totales, daño por arma y mejor marca de la zona jugada
     const S = save.stats, zr = S.zone[zoneId] ?? { t: 0, kills: 0 };
-    if (!bank) { S.runs++; if (win) S.wins++; }
+    if (erun) { const E = save.encore; E.runs++; if (win) E.wins++; if (encBetter) E.best = { loop: erun.loop, stage: erun.stage, t: Math.floor(time) }; } // ENCORE: récord propio; tornillos, tiempo, daño y bestiario sí cuentan
+    else if (!bank) { S.runs++; if (win) S.wins++; }
     S.time += time - (bank?.t ?? 0); S.dist += runDist; // runDist vuelve a 0 al seguir en modo sin fin
     for (const [src, v] of Object.entries(dmgOut)) S.dmg[src] = (S.dmg[src] ?? 0) + v - (bank?.dmg[src] ?? 0);
-    S.zone[zoneId] = { t: Math.max(zr.t, Math.floor(time)), kills: Math.max(zr.kills, kills) };
+    if (!erun) S.zone[zoneId] = { t: Math.max(zr.t, Math.floor(time)), kills: Math.max(zr.kills, kills) };
     // Top 5 por tiempo (y bajas para desempatar)
     if (daily) save.daily = { day: today(), best: Math.max(save.daily.day === today() ? save.daily.best : 0, Math.floor(time)) };
-    save.runs = [...save.runs.filter((r) => r !== bank?.rec), rec].sort((a, b) => b.t - a.t || b.kills - a.kills).slice(0, 5);
+    if (!erun) save.runs = [...save.runs.filter((r) => r !== bank?.rec), rec].sort((a, b) => b.t - a.t || b.kills - a.kills).slice(0, 5);
     persist();
   }
   $("hud").classList.add("hidden");
@@ -1033,7 +1069,7 @@ function update(dt: number) {
       evtPre.boss.add(bi);
       const fin = !endless && bi === RUN_BOSSES.length - 1 && bk === finalKind;
       if (!simulating && erun?.phase === "final") say("boss_intro", "warn"); // FINAL ACT: la presentación la hace el Director
-      else if (!simulating) radioBoss("pre", MOON.on && bk !== finalKind ? SHIP_NAME[shipFor(bi, runSeed)] : DEF[bk].name, fin); // luna: los minijefes son naves
+      else if (!simulating) radioBoss("pre", MOON.on && bk !== finalKind ? SHIP_NAME[minorShip(bi)] : DEF[bk].name, fin); // luna: los minijefes son naves
     }
   }
   // Apagón: 4 s antes de cada jefe se apagan luna y ambiente (queda el faro); vuelve en 3 s tras la entrada
@@ -1045,7 +1081,7 @@ function update(dt: number) {
   }
   if (bossIdx < RUN_BOSSES.length && time >= RUN_BOSSES[bossIdx][0]) {
     apagon = false;
-    const kind = RUN_BOSSES[bossIdx++][1], ship = MOON.on && kind !== finalKind ? shipFor(bossIdx - 1, runSeed) : null; // luna: minijefe = nave (moon_ships.ts)
+    const kind = RUN_BOSSES[bossIdx++][1], ship = MOON.on && kind !== finalKind ? minorShip(bossIdx - 1) : null; // luna: minijefe = nave (moon_ships.ts)
     if (ship) shipSpawn(ship, c.pos, time); else spawnEnemy(kind, spawnPoint(c.pos, 30, 36));
     if (MOON.on && kind === finalKind && !endless && !erun) rocketLand(c.pos, simulating); // luna: con el gusano aterriza el cohete de escape (moon_goals.ts)
     if (endless) { // modo sin fin: otro jefe repetido en 2 min (rotan los tres de la partida) y cada vez con más vida
@@ -1868,7 +1904,7 @@ if (import.meta.env.DEV && /[?&]encore\b/.test(location.search)) void devReady()
 if (import.meta.env.DEV) Object.assign(window, {
   // ENCORE (solo dev): info() fase y reloj; land() hace aterrizar el teleportador ya; board() lo activa; pick(0|1) decide o vota; tick(s) corre s segundos de relojes de fase
   __enc: {
-    info: () => erun && { ...erun, pace: paceS, time: +time.toFixed(1), prior: Math.round(encPrior), seed: runSeed, enemies: enemies.length, tag: E.tag(erun), ask: E.ask(erun), boss: enemies.find((e) => e.def.boss)?.kind ?? null },
+    info: () => erun && { ...erun, variant: E.variantOf(erun)?.name ?? null, pace: paceS, time: +time.toFixed(1), prior: Math.round(encPrior), seed: runSeed, enemies: enemies.length, tag: E.tag(erun), ask: E.ask(erun), boss: enemies.find((e) => e.def.boss)?.kind ?? null },
     land: () => { if (!erun) return "sin ENCORE"; erun.stageT = E.ENC.teleS - 0.01; encApply(E.tick(erun, 0.02)); return erun.phase; },
     board: () => { if (erun) encApply(E.boarded(erun)); return erun?.phase; },
     pick: (i: 0 | 1) => { encPick(i); return erun?.phase; },
@@ -1933,14 +1969,8 @@ if (import.meta.env.DEV) Object.assign(window, {
     go: (where: "oscuro" | "sol" | "tierra" | [number, number, number] = "oscuro", faceSun = false) => { // faceSun: de frente al Sol (moon_sky.ts: que se vea en cuadro) // [x, y, z]: una dirección cualquiera desde el centro
       if (!car || !MOON.on) return "sin luna";
       const d = (Array.isArray(where) ? new B.Vector3(...where) : where === "oscuro" ? SUN_DIR.scale(-1).addInPlace(new B.Vector3(0.25, 0.2, 0)) : where === "tierra" ? new B.Vector3(0, 1, 0).addInPlace(EARTH_DIR.scale(-0.66)) : SUN_DIR.add(B.Vector3.Up())).normalize(); // tierra: queda ~15° bajo la horizontal, sobre el horizonte que ve la cámara
-      const p = onFloor(d.scale(60).addInPlace(new B.Vector3(0, -60, 0)), car.def.size[1] / 2 + 0.3);
       const aim = faceSun ? SUN_DIR : Array.isArray(where) ? new B.Vector3(0, 0, 1) : where === "tierra" ? EARTH_DIR : where === "sol" ? SUN_DIR.scale(-1) : SUN_DIR; // de frente a la Tierra; de espaldas al Sol; del lado oscuro, mirando hacia la luz
-      car.root.position.copyFrom(p); car.root.rotationQuaternion = alignYaw(p, yawOf(aim, p));
-      car.body.setLinearVelocity(B.Vector3.Zero()); car.body.setAngularVelocity(B.Vector3.Zero());
-      moonCar(car.body, upAt(p));
-      teleport(car.body);
-      camH.copyFrom(hflat(aim.clone(), p).normalize()); camUp.copyFrom(upAt(p)); camYaw = yawOf(camH, p);
-      cam.position.copyFrom(p).addInPlace(camH.scale(-15)).addInPlace(camUp.scale(13)); camTarget.copyFrom(p);
+      const p = moonPlace(d, aim);
       return { p, alt: alt(p) };
     },
     ring: (n = 12, r = 22, kind: Kind = "hormiga") => { if (!car) return 0; for (let i = 0; i < n; i++) spawnEnemy(kind, MOON.on ? ringAt(car.pos, (i / n) * Math.PI * 2, r) : car.pos.add(new B.Vector3(Math.cos((i / n) * 6.28) * r, 1, Math.sin((i / n) * 6.28) * r))); return enemies.length; },

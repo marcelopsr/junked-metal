@@ -29,9 +29,20 @@ const rocketTpl = () => template("obj_cohete", () => { const L = mats(); return 
   cyl(2.6, 3, 9, L.hull, [0, 6, 0], undefined, 10), cyl(0.2, 2.6, 3, L.rust, [0, 12, 0], undefined, 10), cyl(3, 2.4, 1.2, L.dark, [0, 1.2, 0], undefined, 10),
   ...[0, 2.1, 4.2].map((a) => box(0.5, 4, 0.5, L.dark, [Math.sin(a) * 2.2, 1.6, Math.cos(a) * 2.2], [Math.cos(a) * 0.4, 0, -Math.sin(a) * 0.4])),
   sph(0.5, L.y, [0, 8, 1.45], undefined, 4), tor(1.6, 0.25, L.y, [0, 0.4, 0], undefined, 12)]; });
+// ENCORE: el cohete es el teleportador. Escenario de show de chatarra: tarima con focos + marco giratorio de bombillas + haz. Un solo dibujo estático y un marco que gira (2 instancias).
+const teleMats = () => { const L = mats(), bulb = pbr("teleFoco", { color: "#ffd9a0", rough: 0.3, emissive: "#ffb347" }); bulb.fogEnabled = false; return { ...L, bulb, beam: pbr("teleHaz", { color: "#ffb347", rough: 0.3, emissive: "#ffb347", alpha: 0.18 }) }; };
+const teleBaseTpl = () => template("obj_tele_base", () => { const L = teleMats(); return [
+  cyl(7, 7.4, 0.5, L.dark, [0, 0.25, 0], undefined, 12), cyl(5.2, 5.6, 0.3, L.rust, [0, 0.65, 0], undefined, 12), cyl(4.4, 4.4, 0.1, L.bulb, [0, 0.83, 0], undefined, 12),
+  ...[0, 1, 2, 3].map((i) => { const a = i * Math.PI / 2 + 0.78; return box(0.5, 2.6, 0.5, L.hull, [Math.sin(a) * 3.3, 1.5, Math.cos(a) * 3.3], [0.15 * Math.cos(a), 0, -0.15 * Math.sin(a)]); }), // trusses torcidos
+  ...[0, 1, 2, 3].map((i) => { const a = i * Math.PI / 2 + 0.78; return sph(0.6, L.bulb, [Math.sin(a) * 3.5, 2.9, Math.cos(a) * 3.5], undefined, 4); }),
+  cyl(3.6, 3.6, 14, L.beam, [0, 7.8, 0], undefined, 10)]; });
+const teleFrameTpl = () => template("obj_tele_marco", () => { const L = teleMats(); return [ // aro vertical de chapa con focos, gira sobre su eje
+  tor(5.4, 0.5, L.hull, [0, 3.6, 0], [Math.PI / 2, 0, 0], 14), tor(4.4, 0.15, L.rust, [0, 3.6, 0], [Math.PI / 2, 0, 0], 14),
+  ...Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4; return sph(0.55, L.bulb, [Math.sin(a) * 2.7, 3.6 + Math.cos(a) * 2.7, 0], undefined, 4); }),
+  box(0.4, 1.4, 0.4, L.rust, [0, 0.9, 0.3], [0.2, 0, 0.1])]; });
 const ringTpl = () => template("obj_aro", () => { const L = mats(); return [tor(2, 0.08, L.y, [0, 0, 0], undefined, 32)]; }); // zona: aro escalado al radio
 
-type Goal = { kind: "celdas" | "antena" | "cohete"; p: B.Vector3; t: number; prog: number; drop: number; cells: { p: B.Vector3; m: B.InstancedMesh }[]; ms: B.InstancedMesh[] };
+type Goal = { kind: "celdas" | "antena" | "cohete"; p: B.Vector3; t: number; prog: number; drop: number; cells: { p: B.Vector3; m: B.InstancedMesh }[]; ms: B.InstancedMesh[]; spin?: B.InstancedMesh };
 let goal: Goal | null = null, rocket: Goal | null = null, next = A.luna_obj_primero_s, alt = 0;
 const stats = { hechos: 0, aparecidos: 0 };
 
@@ -42,7 +53,8 @@ function make(kind: Goal["kind"], car: B.Vector3, dist: number, ang = rng() * Ma
     const n = A.luna_obj_celdas_min + (rng() < 0.5 ? 1 : 0);
     for (let i = 0; i < n; i++) { const c = ringAt(p, (i / n) * Math.PI * 2 + rng(), A.luna_obj_celdas_radio * (0.4 + rng() * 0.6), 0); g.cells.push({ p: c, m: put(cellTpl, c, "celda") }); }
   } else {
-    g.ms.push(put(kind === "antena" ? antennaTpl : rocketTpl, p, kind));
+    if (kind === "cohete" && GOAL_IO.tele) { g.ms.push(put(teleBaseTpl, p, "tele")); g.spin = put(teleFrameTpl, p, "teleMarco"); g.ms.push(g.spin); }
+    else g.ms.push(put(kind === "antena" ? antennaTpl : rocketTpl, p, kind));
     const r = put(ringTpl, p, "aro"); r.position.copyFrom(onFloor(p, 0.15)); r.scaling.setAll((kind === "antena" ? A.luna_obj_antena_radio : A.luna_cohete_radio) / 2); g.ms.push(r);
   }
   return g;
@@ -104,6 +116,10 @@ export function goalsTick(dt: number, time: number, car: B.Vector3, quiet: boole
       if (!quiet) banner(done ? "OBJETIVO CUMPLIDO · CARGA LIBERADA" : "OBJETIVO PERDIDO · SEÑAL CORTADA", 2.4, { tag: "RADIO", ico: "cofre", tone: done ? "now" : undefined });
       drop(g); goal = null; next = time + A.luna_obj_cada_s;
     }
+  }
+  if (rocket?.spin) { // giro del marco y pulso de los focos (el material es solo del teleportador)
+    rocket.spin.rotationQuaternion = alignYaw(rocket.spin.position, time * (rocket.prog > 0 ? 3 : 0.8));
+    (teleMats().bulb as B.PBRMaterial).emissiveIntensity = 2.2 + Math.sin(time * 5) * 1.2 + (rocket.prog > 0 ? 1.5 : 0);
   }
   if (rocket) {
     if (hd(car, rocket.p) < A.luna_cohete_radio) rocket.prog += dt; else rocket.prog = 0;

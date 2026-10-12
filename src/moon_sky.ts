@@ -44,7 +44,9 @@ const rocketTpl = () => { // a lo largo de +y: la punta va hacia donde viaja
 };
 
 /** Intervalo entre lanzamientos de un astro: baja con el tiempo de partida hasta su piso. */
-const every = (time: number) => Math.max(R.luna_astro_cada_min_s, R.luna_astro_cada_s - R.luna_astro_baja_por_min * (time / 60)) * (0.8 + 0.4 * rng());
+let skyK = 1; // ENCORE (variantes): multiplica el intervalo de cada escenario (< 1 = más seguido); Supervivencia: 1
+export const skyPace = (k = 1) => { skyK = k; };
+const every = (time: number) => Math.max(R.luna_astro_cada_min_s, R.luna_astro_cada_s - R.luna_astro_baja_por_min * (time / 60)) * (0.8 + 0.4 * rng()) * skyK;
 
 /** Lanza un proyectil del Sol (sun) o de la Tierra hacia un punto cerca de car. Público para __luna.astro (pruebas). */
 export function skyLaunch(sun: boolean, car: B.Vector3) {
@@ -114,6 +116,6 @@ export function skyTick(dt: number, time: number, car: B.Vector3, cam: B.Camera 
 }
 
 /** Partida nueva o fin: sin proyectiles ni relojes. */
-export function skyClear() { for (const s of shots) drop(s); shots.length = 0; cd.sun = cd.earth = 0; fireT = 0; }
+export function skyClear() { for (const s of shots) drop(s); shots.length = 0; cd.sun = cd.earth = 0; fireT = 0; skyK = 1; }
 /** Estado para pruebas (__luna.astros). */
 export const skyInfo = () => ({ shots: shots.map((s) => ({ sol: s.sun, t: +s.t.toFixed(2) })), cd: { ...cd } });

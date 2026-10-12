@@ -97,13 +97,16 @@ const mets: Met[] = [];
 const smokes: { p: B.Vector3; left: number; t: number }[] = [];
 let rain: { left: number; acc: number; rate: number } | null = null, quake: Quake | null = null;
 let rainAt = -1, quakeAt = -1, rainPre = false, ambOn = false, now = 0;
+// ENCORE (encore.ts, variantes): multiplica los intervalos de lluvia y erupción de cada escenario (< 1 = más seguido). Supervivencia: 1 (x * 1 no cambia nada).
+const pace = { rain: 1, quake: 1 };
+export const evPace = (rain = 1, quake = 1) => { pace.rain = rain; pace.quake = quake; };
 
 /** Partida nueva (o fin): nada queda en pie. */
 export function evReset() {
   for (const p of Object.values(pools)) for (const m of p) m.dispose();
   for (const k of Object.keys(pools)) delete pools[k];
   mets.length = smokes.length = 0;
-  rain = quake = null; rainAt = quakeAt = -1; rainPre = ambOn = false;
+  rain = quake = null; rainAt = quakeAt = -1; rainPre = ambOn = false; evPace();
   tintK = tintTo = 0; tintStep = 0;
   SPACE.lava(0); moonAmbience(false);
 }
@@ -196,7 +199,7 @@ function tickQuake(q: Quake, dt: number, car: B.Vector3, carR: number, camYaw: n
     drop(q.lava); drop(q.core); SPACE.lava(0);
     if (vis) mark("scorch", q.C, 0, q.rMax * 0.95, 150);
     if (smokes.length < 10) smokes.push({ p: onFloor(q.C, 0.4), left: 20, t: 0 });
-    quake = null; quakeAt = now + R.luna_erupcion_cada_s + jitter();
+    quake = null; quakeAt = now + R.luna_erupcion_cada_s * pace.quake + jitter();
   }
 }
 
@@ -206,15 +209,15 @@ export function lunaEv(dt: number, time: number, car: B.Vector3, carR: number, c
   const vis = !H.sim(), warnS = R.aviso_evento_s;
   now = time;
   if (vis && !ambOn) { ambOn = true; moonAmbience(true); }
-  if (rainAt < 0) rainAt = R.luna_meteoros_desde_s + jitter();
-  if (quakeAt < 0) quakeAt = R.luna_erupcion_desde_s + jitter();
+  if (rainAt < 0) rainAt = R.luna_meteoros_desde_s * pace.rain + jitter();
+  if (quakeAt < 0) quakeAt = R.luna_erupcion_desde_s * pace.quake + jitter();
   const busy = !!quake || !!rain || mets.length > 0;
   // --- Lluvia de meteoritos ---
   if (!rain && !quake && !rainPre && time >= rainAt - warnS && time < rainAt) { rainPre = true; if (vis) warn("RADAR", "LLUVIA DE METEORITOS · IMPACTOS EN ~6 S", 3.4, "warn"); }
   if (!rain && time >= rainAt) {
     if (busy) rainAt = time + 8;
     else {
-      rain = { left: R.luna_meteoros_dur_s, acc: 0, rate: R.luna_meteoros_por_s }; rainPre = false; rainAt = time + R.luna_meteoros_cada_s + jitter(); tintTo = 1;
+      rain = { left: R.luna_meteoros_dur_s, acc: 0, rate: R.luna_meteoros_por_s }; rainPre = false; rainAt = time + R.luna_meteoros_cada_s * pace.rain + jitter(); tintTo = 1;
       if (vis) warn("ALERTA", "METEORITOS · ZONA DE IMPACTO ABIERTA", 2.6, "now");
     }
   }

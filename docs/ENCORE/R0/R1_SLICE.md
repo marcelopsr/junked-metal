@@ -47,7 +47,7 @@ Bucle jugable completo, de punta a punta, verificado en headless (ver pruebas):
 ## Riesgos y atajos deliberados
 
 - El teleportador **reutiliza el modelo del cohete** (`obj_cohete`): visualmente sigue siendo un cohete. Ubicación fija a `luna_cohete_dist` (80 m) en dirección aleatoria; el radar marca el cohete desde que aterriza: no hay búsqueda con pistas (D-026) todavía.
-- El escenario nuevo es **la misma esfera lunar** sin cráteres (`moonReset`), con el auto donde estaba: no hay otra geografía ni transición visual (solo sacudida y el aviso). La "arena exclusiva" del FINAL ACT es esa misma luna vacía.
+- El escenario nuevo es **la misma esfera lunar** (`moonReset`), pero cada uno llega a otro lugar de la esfera y con otro ritmo de eventos (ver § Variantes). No hay otra geografía ni transición visual (solo sacudida y el aviso). La "arena exclusiva" del FINAL ACT es esa misma luna vacía.
 - El reloj de escenario se reinicia en 0 (`time`) y la dificultad va aparte (`paceS`); `endRun` suma `encPrior`, así que `save.best` y el logro "diez" (10 min) cuentan el tiempo total de la expedición, mezclado con Supervivencia. Decidir si ENCORE debe tener su propio récord.
 - Un solo jefe final fijo (`aspiradora`, R0 §10); el sorteo secreto entre `FINALS` (D-029) queda pendiente. Los jefes finales ignoran `hpMul` y no escalan por vuelta.
 - Z/X para decidir, no 1/2: 1/2 eligen carta y un mismo golpe de tecla cruzaría ambas acciones.
@@ -60,5 +60,25 @@ Bucle jugable completo, de punta a punta, verificado en headless (ver pruebas):
 1. Playtest con las 3 preguntas del playbook y ajustar `ENC` (sobre todo `teleS`, `stayRamp`, `paceStageS`).
 2. Teleportador propio (modelo, pistas progresivas y evento de carga de 'defensa' al activarlo) en vez del cohete.
 3. Guardado de checkpoint al completar escenario (`savefmt.ts`/`Save`), reanudar y récord propio de ENCORE.
-4. Segundo bioma o variaciones de la luna por escenario y arena propia para el FINAL ACT; sorteo del jefe secreto con pistas.
+4. Segundo bioma (las variantes de la luna ya existen, ver § Variantes; falta geografía propia y gusano como minijefe) y arena propia para el FINAL ACT; sorteo del jefe secreto con pistas.
 5. Director: memoria entre runs (1 evento real guardado), estados de ánimo y cola de prioridad en lugar del `banner` simple.
+
+## Variantes (escenarios que se sienten distintos)
+
+Problema: los 4 escenarios de un ciclo eran la misma luna con el auto en el mismo lugar; solo cambiaban la semilla y la dificultad. Ahora cada escenario trae una **variante** (tabla `VARIANTS` en `src/encore.ts`, 4 filas de datos) que el Director anuncia por banner al llegar ("EL LADO OSCURO. SIN SOL NI PÚBLICO...", en vez de la frase suelta de `advance` / `encore`).
+
+| Variante | Llega a | Cráteres extra | Meteoritos / erupciones / Sol y Tierra | Minijefe |
+|---|---|---|---|---|
+| LA TARIMA | la salida (polo, de día), sin mover el auto | 0 | x1 / x1 / x1 | el que elige la semilla |
+| EL LADO OSCURO | lado oscuro (niebla negra, sin Sol: no lo lanza) | 5 de 4-8 m | x1,4 (más espaciados) / x0,55 (erupciones seguidas, alumbran) / x1 | nave abductora |
+| CAMPO DE CRÁTERES | bajo la Tierra (mira hacia ella) | 10 de 5-11 m | x0,6 (llueve seguido) / x1,6 / x1 | caza rápido |
+| SOL DE FRENTE | de frente al Sol (no hay noche) | 3 de 3-6 m | x1,2 / x1 / x0,55 (el Sol tira más) | nave bombardera |
+
+- **Selección** (`variantOf(run)`): hash propio `mix` de (semilla, vuelta); sin gastar el `rng()` de la partida. Cada vuelta usa las 4 variantes sin repetir (Fisher-Yates determinista); en la vuelta 0 el escenario 1 es siempre LA TARIMA (es donde arranca el auto, no hace falta mover nada). La votación y el FINAL ACT no tienen variante (sin cambios).
+- **Cráteres** (`craterPlan`): posiciones y radios del hash del escenario, nunca a menos de 14 m de la llegada; se aplican con `deform` tras `moonReset`. Máximo 10 para dejar sitio a los de meteoritos / gusano / naves bajo `DENT_CAP` (40).
+- **Pegamento** (`main.ts`): `encScene()` (variante: ritmo, cráteres y llegada), `moonPlace()` (la misma lógica que `__luna.go`, que ahora la reutiliza), `minorShip()` (nave fija de la variante o la de `shipFor`).
+- **Perillas nuevas** (neutras en Supervivencia, `x * 1`): `evPace(rain, quake)` en `moon_events.ts` y `skyPace(k)` en `moon_sky.ts`; se reinician en `evReset()` / `skyClear()`.
+- **Dev:** `__enc.info()` suma `variant`.
+- **Pruebas:** `test/encore.test.ts` (6 nuevas: sin repetir por vuelta, LA TARIMA primero, determinismo y variación por semilla, sin variante en votación / final, plan de cráteres, frases cortas sin voseo).
+- **Verificado:** capturas headless en `scratch/encore-var-*.png` (LA TARIMA, SOL DE FRENTE, EL LADO OSCURO, CAMPO DE CRÁTERES), 0 errores de consola; Supervivencia igual que en `HEAD` (`sim --seeds 1,2 --secs 600`, patio y `--zone luna`).
+- **Atajos y límites:** gusano lunar como minijefe de variante no entra (6000 de vida, pensado para el cierre de Supervivencia; el minijefe es una nave); el banner de la variante entra en la misma cola de 3 avisos de radio, así que se puede demorar unos segundos si la decisión llegó con avisos pendientes; la variante no cambia la dificultad (`paceOf` sigue siendo por escenario), solo el carácter; todos los multiplicadores son provisorios y sin playtest.

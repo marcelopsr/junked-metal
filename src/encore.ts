@@ -85,6 +85,39 @@ export function bossDown(r: Run): Ev | null {
   r.phase = "won"; return "won";
 }
 
+// ---------- Variantes de escenario (docs/ENCORE/R0/R1_SLICE.md § Variantes) ----------
+// Cada escenario de una vuelta usa una variante distinta: dónde llega el auto en la esfera, cráteres extra, ritmo de meteoritos / erupciones / astros y la nave del minijefe.
+// Todo sale de (semilla, vuelta, escenario) con un hash propio (`mix`): no gasta el rng() de la partida. Los intervalos son multiplicadores (< 1 = más seguido).
+export type Variant = {
+  name: string; line: string;               // el Director las anuncia por banner al llegar: "NOMBRE. línea"
+  at: "salida" | "oscuro" | "tierra" | "sol"; // dónde llega el auto: salida (polo, de día), lado oscuro, bajo la Tierra, de frente al Sol
+  craters: [n: number, rMin: number, rMax: number]; // cráteres extra alrededor de la llegada (tope total de la luna: DENT_CAP, hoy 40; con n <= 10 sobra para los de la partida)
+  rain: number; quake: number; sky: number; // intervalo de meteoritos, de erupciones y de lanzamientos del Sol / la Tierra
+  ship: "bombardera" | "abductora" | "caza" | null; // minijefe fijo (null = el que elija la semilla)
+};
+export const VARIANTS: Variant[] = [
+  { name: "LA TARIMA", line: "EL CLÁSICO: LUZ, POLVO Y NADA QUE ENVIDIAR.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null },
+  { name: "EL LADO OSCURO", line: "SIN SOL NI PÚBLICO. SOLO LAS ERUPCIONES ALUMBRAN.", at: "oscuro", craters: [5, 4, 8], rain: 1.4, quake: 0.55, sky: 1, ship: "abductora" },
+  { name: "CAMPO DE CRÁTERES", line: "EL PISO ES UN QUESO. LOS METEORITOS ESTÁN DE GIRA.", at: "tierra", craters: [10, 5, 11], rain: 0.6, quake: 1.6, sky: 1, ship: "caza" },
+  { name: "SOL DE FRENTE", line: "REFLECTORES AL MÁXIMO. EL SOL TAMBIÉN TIRA.", at: "sol", craters: [3, 3, 6], rain: 1.2, quake: 1, sky: 0.55, ship: "bombardera" },
+];
+/** Hash sin estado: n → [0, 1). Un paso de mulberry32. */
+const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+/** Variante del escenario actual (null en la votación y el FINAL ACT). Una vuelta usa todas las variantes sin repetir; el primer escenario de la run es siempre LA TARIMA, donde arranca el auto. */
+export function variantOf(r: Run): Variant | null {
+  const idx = sceneIdx(r);
+  if (idx >= ENC.stages) return null;
+  const o = VARIANTS.map((_, i) => i);
+  for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(mix(r.seed + r.loop * 7919 + i * 104729) * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; } // Fisher-Yates con el hash
+  if (!r.loop) o.unshift(...o.splice(o.indexOf(0), 1)); // vuelta 0: LA TARIMA primero
+  return VARIANTS[o[idx % o.length]];
+}
+/** Cráteres extra de la variante: ángulo, distancia (m) a la llegada y radio; nunca a menos de 14 m de la llegada. */
+export function craterPlan(v: Variant, r: Run): { a: number; d: number; r: number }[] {
+  const base = stageSeed(r.seed, r.loop, sceneIdx(r)), [n, lo, hi] = v.craters;
+  return Array.from({ length: n }, (_, i) => { const rad = lo + mix(base + i * 3 + 1) * (hi - lo); return { a: mix(base + i * 3) * Math.PI * 2, d: 14 + rad + mix(base + i * 3 + 2) * 32, r: rad }; });
+}
+
 /** Para el HUD: título de la ventana abierta, textos de los dos botones (null = sin botón) y duración total. */
 export function ask(r: Run): { title: string; opts: [string | null, string | null]; total: number } | null {
   if (r.phase === "teleporter") return { title: "TELEPORTADOR LISTO", opts: ["QUEDARSE", "AVANZAR"], total: ENC.decideS };

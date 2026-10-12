@@ -108,4 +108,10 @@ describe("parseSave", () => {
     expect(load({ paint: "red", trim: '#000" onclick="x', rim: 5 })).toMatchObject({ paint: "", trim: "", rim: "" });
     expect(load({ paint: "#aabbcc", trim: "#112233", rim: "#445566" })).toMatchObject({ paint: "#aabbcc", trim: "#112233", rim: "#445566" });
   });
+  it("ENCORE: récord propio con round-trip, default y descarte de basura", () => {
+    const e = { best: { loop: 1, stage: 2, t: 345 }, wins: 2, runs: 5 };
+    expect(load(JSON.stringify(load({ encore: e }))).encore).toEqual(e);
+    expect(load({}).encore).toEqual({ best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0 });
+    expect(load({ encore: { best: { loop: -1, stage: "x", t: 1.5 }, wins: null, runs: 3 } }).encore).toEqual({ best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 3 });
+  });
 });
