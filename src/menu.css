@@ -472,6 +472,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #scr-over .overGrid .card ul { list-style: none; margin: 0; padding: 6px 10px; width: 100%; display: flex; flex-direction: column; gap: 5px; }
 .kv li { display: flex; justify-content: space-between; font-size: 17px; }
 .kv li span { color: var(--dim); }
+#overEnc li { gap: 2px 10px; flex-wrap: wrap; } #overEnc li span { flex: none; } #overEnc li b { flex: 1 1 11em; white-space: normal; text-align: right; } /* QA final 2: pactos y rutas largos se salían del panel */
 #scr-over .overGrid .polaroid { flex: 0 1 220px; margin: 0; justify-content: center; }
 #scr-over .overGrid .polaroid img { rotate: -1.5deg; border-radius: var(--jm-r, 3px); border: 2px solid var(--jm-chapa, #b5651d); image-rendering: auto; box-shadow: 0 10px 24px rgba(0, 0, 0, .55); }
 #scr-over .overGrid .polaroid::before { display: none; }
