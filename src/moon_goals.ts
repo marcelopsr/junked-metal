@@ -3,6 +3,7 @@ import { BAL } from "./balance";
 import { FX } from "./fx";
 import { box, cyl, sph, template, tor } from "./models";
 import { alignYaw, hd, LUNA, MOON, onFloor, ringAt } from "./moon";
+export { COOP } from "./moon_events";
 import { nodrizaDrops, SHIP_IO } from "./moon_ships";
 import { pbr } from "./render";
 import { rng } from "./rng";

@@ -6,7 +6,7 @@ import { debris, FX } from "./fx";
 import { box, cyl, sph, teleTemplate, template, tor } from "./models";
 import { alignYaw, alt, arc, at, deform, hd, hover, LUNA, MOON, onFloor, ringAt, upAt, yawTo } from "./moon";
 import { ALIENS } from "./aliens";
-import { panTo } from "./moon_events";
+import { coopHp, coopRate, panTo } from "./moon_events";
 import { pbr } from "./render";
 import { pickIdx, rng } from "./rng";
 import { SFX, SPACE } from "./sfx";
@@ -81,7 +81,7 @@ const RAD: Record<ShipId, number> = { nodriza: 5.5, bombardera: 3, abductora: 3,
 
 function spawn(id: ShipId, car: B.Vector3, near: boolean, time: number) {
   const a = rng() * Math.PI * 2, pos = near ? onFloor(car, ALT[id]) : ringAt(car, a, 50, 22); // desde el horizonte, alto
-  const hp = id === "nodriza" ? A.nave_nodriza_vida * (1 + time / 600) : A["nave_" + id + "_vida"];
+  const hp = (id === "nodriza" ? A.nave_nodriza_vida * (1 + time / 600) : A["nave_" + id + "_vida"]) * coopHp();
   const s: Ship = { id, m: shipTpl(id).createInstance(id), pos, yaw: a + Math.PI, hp, maxHp: hp, t: 0, d: 0, fire: 2, drop: 3, state: near ? "chase" : "in", st: 0, spot: new B.Vector3(), goal: new B.Vector3(), target: null! };
   const anchor = new B.Vector3();
   s.target = { get pos() { return onFloor(s.pos, 1.5, anchor); }, radius: RAD[id], get hp() { return s.state === "out" ? 0 : s.hp; }, set hp(v) { /* lo resta hitShip */ }, maxHp: hp, hitCd: 0, slow: 0, stun: 0, ship: s };
@@ -205,7 +205,7 @@ function tickMother(s: Ship, dt: number, cp: B.Vector3, quiet: boolean, time: nu
     s.drop = A.nave_nodriza_suelta_cada_s;
     const base = onFloor(s.pos, 0);
     const drops = nodrizaDrops(time);
-    for (let k = 0; k < A.nave_nodriza_suelta_cantidad; k++) LUNA.spawn(drops[Math.floor(rng() * drops.length)], at(base, (rng() - 0.5) * 6, 0, (rng() - 0.5) * 6));
+    for (let k = 0; k < Math.round(A.nave_nodriza_suelta_cantidad * coopRate()); k++) LUNA.spawn(drops[Math.floor(rng() * drops.length)], at(base, (rng() - 0.5) * 6, 0, (rng() - 0.5) * 6));
     if (!quiet) FX.shock(base);
   }
   if (s.st > A.nave_nodriza_dura_s) { leave(s, quiet, false); nextMother = time + A.nave_nodriza_cada_s; }

@@ -761,3 +761,6 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
   #scr-garage #gtabs .tab { flex: none; }
   #scr-garage .btns button { min-height: 40px; padding-block: 6px; }
 }
+/* R6b: código de sala online (ENCORE) */
+.netCode { min-height: 44px; padding: 0 12px; font: 700 18px/1 var(--jm-titulo); letter-spacing: .3em; text-transform: uppercase; color: var(--jm-texto); background: var(--jm-fondo); border: 1px solid var(--jm-borde); border-radius: 2px; }
+.netCode:focus { outline: 2px solid var(--jm-naranja); outline-offset: 1px; }

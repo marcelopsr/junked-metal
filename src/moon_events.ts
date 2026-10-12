@@ -127,6 +127,9 @@ export function evReset() {
 }
 
 const warn = (tag: string, line: string, secs: number, tone: "warn" | "now") => banner(line, secs, { tag, ico: tone === "warn" ? "senal" : "jefe", tone });
+/** R7c: cantidad de jugadores (main.ts la asigna); 1 = todo ×1. Escala con las mismas filas de ritmo que los bichos. */
+export const COOP = { n: () => 1 };
+export const coopHp = () => 1 + BAL.ritmo.coop_vida_por_jugador * (COOP.n() - 1), coopRate = () => 1 + BAL.ritmo.coop_ritmo_por_jugador * (COOP.n() - 1);
 const jitter = () => (rng() - 0.5) * 30;
 
 function spawnMeteor(car: B.Vector3, vis: boolean) {
@@ -233,7 +236,7 @@ export function lunaEv(dt: number, time: number, cars: B.Vector3[], carR: number
   if (!rain && time >= rainAt) {
     if (busy) rainAt = time + 8;
     else {
-      rain = { left: R.luna_meteoros_dur_s, acc: 0, rate: R.luna_meteoros_por_s }; rainPre = false; rainAt = time + R.luna_meteoros_cada_s * pace.rain + jitter(); tintTo = 1;
+      rain = { left: R.luna_meteoros_dur_s, acc: 0, rate: R.luna_meteoros_por_s * coopRate() }; rainPre = false; rainAt = time + R.luna_meteoros_cada_s * pace.rain + jitter(); tintTo = 1;
       if (vis) warn("ALERTA", "METEORITOS · ZONA DE IMPACTO ABIERTA", 2.6, "now");
     }
   }

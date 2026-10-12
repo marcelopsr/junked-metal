@@ -189,7 +189,7 @@ Fecha 2026-10-12. `mate` pasó a `mates: Mate[]` (main.ts), cada uno con su núm
 - **Caídas:** un compañero caído queda fuera hasta el próximo escenario (`mateDown`); si cae el que guía, guía el primer compañero vivo (`mateLead` cruza auto, vida, armas, cámara y número de jugador). Si caen todos, termina la partida.
 - **Rendimiento** (`ponytail:` en render.ts): con 3-4 cuadros (2 o más cámaras extra en `setSplit`, que ahora lleva una lista) la escala de render baja al 70 % de la elegida y partículas y distancia de dibujo pasan a Bajo; el pasto no cambia (se arma con el mundo). Techo: escala medida por tiempo de cuadro real.
 - `ponytail:` las copias de armas son por compañero: con 4 el daño total se cuadruplica (balance sin ajustar, como en R7a).
-- **Escala coop:** vida de bichos y jefes × (1 + 0,6·(N−1)) (`coop_vida_por_jugador`) y aparición, tope de vivos y enjambres × (1 + 0,35·(N−1)) (`coop_ritmo_por_jugador`) en `ritmo` de balance.json; con 1 jugador ×1. No cubre las naves de la luna (moon*.ts).
+- **Escala coop:** vida de bichos y jefes × (1 + 0,6·(N−1)) (`coop_vida_por_jugador`) y aparición, tope de vivos y enjambres × (1 + 0,35·(N−1)) (`coop_ritmo_por_jugador`) en `ritmo` de balance.json; con 1 jugador ×1. Naves de la luna (`COOP.n` en moon_events.ts, lo asigna main.ts): vida de cada nave × vida coop, meteoritos por segundo y aliens que suelta la nodriza × ritmo coop; cofres, daños y eventos no escalan.
 - **Verificado R7c:** `tsc` limpio, `vitest` 127/127. Sin recorrido headless, capturas, `perf` ni prueba con 3-4 joysticks reales.
 
 ### Qué falta (y para 3-4 jugadores)
@@ -210,6 +210,17 @@ Fecha 2026-10-12. Primera fase de `R6_RED.md` §5: separar el estado por jugador
 - Diferencia conocida (solo coop 3-4): tras dos cambios de guía con un caído que volvió, el orden de `others()` es siempre por número de jugador; antes podía quedar desordenado. Cambia qué compañero recibe la próxima aparición o el lugar de llegada, nada más.
 - **Verificado R6a:** `tsc` limpio, `vitest` 128/128, `sim --seeds 1 --secs 600` = 166.9 s, nv 4, 24 bajas (igual que R1). Sin recorrido headless del cooperativo ni capturas.
 - Falta para R6b: `InputSource` remota, `damage/kill` como eventos, ofertas de cartas por jugador sin pausa global, `simRng`/`visRng`.
+
+## R6b: online de 2 con PeerJS
+
+Fecha 2026-10-12. Opción A de `R6_RED.md`: `peerjs` 1.5.5 (versión fija), `src/net.ts` importado dinámico (chunk `bundler-*.js` ~87 kB fuera de la carga inicial).
+
+- **Sala:** el anfitrión abre `jm-` + código de 6 (sin 0/O/1/I); acepta un solo invitado. El cliente abre dos canales: `u` no fiable (inputs cada cuadro, snapshots a 15 Hz) y `r` fiable (`go` con la semilla, comandos `c`, `end`).
+- **Anfitrión (J1):** simula todo con `coop = 2` sin pantalla dividida; `players[1].in` = último input remoto (validado y acotado). Comandos del cliente por `applyCommand` (solo `enc`). Snapshot JSON redondeado: autos (pos, cuaternión, velocidad, vida), bichos a 70 m del J2 (tope 120, id estable, tipo, pos, rotación, vida), tiempo, XP, nivel, tornillos y `erun` (fase y ventana abierta).
+- **Cliente (J2):** arma la run con la misma semilla, pasa a `state = "net"` con la física apagada y no corre `update()`; interpola 100 ms (extrapola con la velocidad hasta 0,2 s), bichos como `Enemy` de muestra, HUD normal, cámara principal sobre su auto. Las ventanas del teleportador se responden con los mismos botones y van al anfitrión.
+- **UI:** en `#scr-encore`, "Online: crear sala", campo de código, "Unirse con código" y estado. Corte: el anfitrión sigue solo (`mateClear`, aviso); el cliente vuelve a ENCORE con el motivo. Fin de partida del anfitrión = `end` al cliente.
+- `ponytail:` sin rejoin (R6d), sin TURN propio (STUN por defecto de PeerJS), sin compensar latencia ni predecir el auto propio, sin proyectiles/gemas/efectos/cartas en el cliente, autos con el modelo del garaje local, JSON sin deltas.
+- **Verificado R6b:** `tsc` limpio, `vitest` 128/128, `build` OK. Prueba headless de 2 páginas: la señalización por PeerJS Cloud funciona (oferta y respuesta llegan), pero el DataChannel no abre ni siquiera con PeerJS a pelo en Chromium headless de esta Mac (ICE sin pareja): falta probar en dos navegadores reales. Sin medir kB/s ni RTT.
 
 ## Contenido 2
 
