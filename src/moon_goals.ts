@@ -13,7 +13,7 @@ import { banner } from "./ui";
 // Al salir el gusano (jefe final) aterriza el cohete: quedarse luna_cohete_s en su zona = victoria "Escape". Premio de objetivo = el de la nodriza (SHIP_IO.reward).
 const A = BAL.ataques;
 /** main.ts llena win: victoria alternativa por escape (en ENCORE, activar el teleportador: tele = true cambia el rótulo de la barra). */
-export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean } = { win: () => {}, tele: false };
+export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean; scrap: () => number; hpFrac: () => number; pay: (scrap: number, hpFrac: number) => void; offer: (kind: "cofre" | "maquina") => void } = { win: () => {}, tele: false, scrap: () => 0, hpFrac: () => 1, pay: () => {}, offer: () => {} };
 
 const mats = () => {
   const glow = (n: string, c: string, a = 1) => { const m = pbr(n, { color: c, rough: 0.3, emissive: c, alpha: a }); m.fogEnabled = false; m.emissiveIntensity = 2.4; return m; };
@@ -41,6 +41,49 @@ const teleFrameTpl = () => template("obj_tele_marco", () => { const L = teleMats
   ...Array.from({ length: 8 }, (_, i) => { const a = i * Math.PI / 4; return sph(0.55, L.bulb, [Math.sin(a) * 2.7, 3.6 + Math.cos(a) * 2.7, 0], undefined, 4); }),
   box(0.4, 1.4, 0.4, L.rust, [0, 0.9, 0.3], [0.2, 0, 0.1])]; });
 const ringTpl = () => template("obj_aro", () => { const L = mats(); return [tor(2, 0.08, L.y, [0, 0, 0], undefined, 32)]; }); // zona: aro escalado al radio
+
+// ---------- ENCORE: cofres de pago y máquina de opciones (docs/ENCORE/R0/R1_SLICE.md, "Cofres") ----------
+// 3 cofres (cuestan tornillos de la run) y 1 máquina (cobra vida actual) por escenario; sitio y orden salen de un hash de (semilla, escenario), nunca del rng() de la partida.
+const chestTpl = () => template("obj_cofre_pago", () => { const L = mats(); return [
+  box(2.2, 1.2, 1.5, L.rust, [0, 0.6, 0]), box(2.3, 0.5, 1.6, L.hull, [0, 1.35, 0], [0, 0, 0.06]), box(0.4, 0.5, 0.2, L.y, [0, 1, 0.8]), box(0.2, 1.3, 1.6, L.dark, [0.7, 0.65, 0]), box(0.2, 1.3, 1.6, L.dark, [-0.7, 0.65, 0])]; });
+const machineTpl = () => template("obj_maquina", () => { const L = mats(); return [
+  box(2, 3.4, 1.6, L.hull, [0, 1.7, 0], [0, 0.1, 0.04]), box(1.4, 1, 0.2, L.y, [0, 2.3, 0.85]), box(1.6, 0.3, 0.5, L.dark, [0, 0.9, 0.95]), cyl(0.12, 0.12, 1.4, L.rust, [1.3, 2, 0], [0, 0, 0.7], 6), sph(0.3, L.y, [1.9, 2.6, 0], undefined, 4), box(2.4, 0.3, 2, L.rust, [0, 3.5, 0], [0.05, 0.3, 0])]; });
+type Shop = { kind: "cofre" | "maquina"; p: B.Vector3; prog: number; ms: B.InstancedMesh[] };
+const SHOP_RADIO = 4.5, SHOP_S = 1.6, SHOP_VIDA = 0.25; // zona (m), segundos que hay que permanecer, fracción de vida actual que cobra la máquina
+let shops: Shop[] = [], shopStage = 0, opened = 0, warnAt = 0;
+const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; // el mismo hash que encore.ts (allá no se exporta)
+/** Precio en tornillos: sube con cada cofre abierto de la run (+60 % c/u) y con el escenario (+25 % c/u). */
+export const chestPrice = (open: number, stage: number) => Math.round(30 * (1 + 0.6 * open) * (1 + 0.25 * stage));
+/** Nueva expedición: cuenta de cofres abiertos en cero. */
+export const shopReset = () => { opened = 0; };
+/** Coloca 3 cofres y 1 máquina alrededor de c0 (llegada del escenario); orden, ángulo y distancia salen de (seed, stage). */
+export function shopPlan(seed: number, stage: number, c0: B.Vector3) {
+  shopDrop(); shopStage = stage;
+  const base = seed + 0x7c3 + stage * 15485863, rot = mix(base) * 4, a0 = mix(base + 1) * Math.PI * 2, mach = Math.floor(mix(base + 2) * 4);
+  for (let i = 0; i < 4; i++) {
+    const kind = i === mach ? "maquina" : "cofre", p = ringAt(c0, a0 + ((i + rot) % 4) * Math.PI / 2 + (mix(base + 10 + i) - 0.5) * 0.5, 40 + mix(base + 20 + i) * 70, 0);
+    const r = put(ringTpl, p, "aro"); r.position.copyFrom(onFloor(p, 0.15)); r.scaling.setAll(SHOP_RADIO / 2);
+    shops.push({ kind, p, prog: 0, ms: [put(kind === "cofre" ? chestTpl : machineTpl, p, kind), r] });
+  }
+}
+function shopDrop() { for (const s of shops) for (const m of s.ms) m.dispose(); shops = []; }
+const shopNear = (car: B.Vector3) => shops.find((s) => hd(car, s.p) < SHOP_RADIO);
+function shopTick(dt: number, time: number, car: B.Vector3, quiet: boolean) {
+  for (const s of shops) if (s !== shopNear(car)) s.prog = 0;
+  const s = shopNear(car); if (!s) return;
+  const price = chestPrice(opened, shopStage), short = s.kind === "cofre" ? price - GOAL_IO.scrap() : 0, weak = s.kind === "maquina" && GOAL_IO.hpFrac() * (1 - SHOP_VIDA) < 0.05;
+  if (short > 0 || weak) { // sin fondos: aviso cada 4 s, no avanza
+    if (!quiet && time > warnAt) { warnAt = time + 4; banner(weak ? "VIDA INSUFICIENTE PARA LA MÁQUINA" : `FALTAN ${short} TORNILLOS`, 1.6, { tag: "RADIO", ico: "cofre", tone: "warn" }); }
+    s.prog = 0; return;
+  }
+  s.prog += dt;
+  if (s.prog < SHOP_S) return;
+  if (s.kind === "cofre") { GOAL_IO.pay(price, 0); opened++; } else GOAL_IO.pay(0, SHOP_VIDA);
+  if (!quiet) FX.shock(s.p);
+  for (const m of s.ms) m.dispose();
+  shops.splice(shops.indexOf(s), 1);
+  GOAL_IO.offer(s.kind);
+}
 
 type Goal = { kind: "celdas" | "antena" | "cohete"; p: B.Vector3; t: number; prog: number; drop: number; cells: { p: B.Vector3; m: B.InstancedMesh }[]; ms: B.InstancedMesh[]; spin?: B.InstancedMesh };
 let goal: Goal | null = null, rocket: Goal | null = null, next = A.luna_obj_primero_s, alt = 0;
@@ -72,11 +115,13 @@ export function goalForce(kind: "celdas" | "antena", car: B.Vector3, dist = 20, 
 export function rocketForce(car: B.Vector3, dist = 20, ang?: number) { if (rocket) drop(rocket); rocket = make("cohete", car, dist, ang); }
 
 /** Radar: objetivo activo, celdas que faltan y cohete. */
-export const goalBlips = () => [...(goal ? (goal.cells.length ? goal.cells.map((c) => c.p) : [goal.p]) : []), ...(rocket ? [rocket.p] : [])];
+export const goalBlips = () => [...(goal ? (goal.cells.length ? goal.cells.map((c) => c.p) : [goal.p]) : []), ...(rocket ? [rocket.p] : []), ...shops.map((s) => s.p)];
 /** Barra (la del jefe): progreso del objetivo o del cohete. Cohete primero (solo con el auto adentro). */
 export function goalBar(car: B.Vector3) {
   if (rocket && rocket.prog > 0 && hd(car, rocket.p) < A.luna_cohete_radio) return { name: GOAL_IO.tele ? "TELEPORTADOR · ACTIVANDO" : "ABORDAJE DEL COHETE", pct: rocket.prog / A.luna_cohete_s };
   if (goal?.kind === "antena" && goal.prog > 0) return { name: "ANTENA · ENLACE", pct: goal.prog / A.luna_obj_antena_s };
+  const s = shops.find((x) => x.prog > 0) ?? shopNear(car);
+  if (s) return { name: s.kind === "cofre" ? `COFRE · ${chestPrice(opened, shopStage)} TORNILLOS` : `MÁQUINA DE OPCIONES · -${SHOP_VIDA * 100} % DE VIDA`, pct: s.prog / SHOP_S };
   return null;
 }
 export const goalStats = () => `objetivos ${stats.hechos}/${stats.aparecidos}${rocket ? " · cohete" : ""}`;
@@ -84,6 +129,7 @@ export const goalStats = () => `objetivos ${stats.hechos}/${stats.aparecidos}${r
 /** Cada cuadro (solo luna). */
 export function goalsTick(dt: number, time: number, car: B.Vector3, quiet: boolean) {
   if (!MOON.on) return;
+  if (GOAL_IO.tele && shops.length) shopTick(dt, time, car, quiet);
   for (const m of goal?.cells ?? []) m.m.rotationQuaternion = alignYaw(m.m.position, time * 1.5);
   if (!goal && time >= next) {
     const kind = (alt++ + (rng() < 0.5 ? 0 : 1)) % 2 ? "antena" : "celdas"; // alternados, el primero al azar
@@ -129,7 +175,7 @@ export function goalsTick(dt: number, time: number, car: B.Vector3, quiet: boole
 
 /** Partida nueva / fin. */
 export function goalsClear() {
-  if (goal) drop(goal); if (rocket) drop(rocket);
+  if (goal) drop(goal); if (rocket) drop(rocket); shopDrop();
   goal = rocket = null; next = A.luna_obj_primero_s; alt = 0;
   stats.hechos = stats.aparecidos = 0;
 }

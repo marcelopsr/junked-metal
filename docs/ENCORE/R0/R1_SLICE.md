@@ -106,3 +106,27 @@ Al elegir **AVANZAR** (teleportador o "AVANZAR YA" durante la estadía), si qued
 - **Pruebas**: `test/encore.test.ts` (8 nuevas: oferta de 2 distintos y estable, aceptar / rechazar / vencer, sin oferta con avance automático, hacia la votación o sin pactos libres, sin repetir activos, expiración por escenarios y persistencia tras ENCORE!, combinación de efectos, texto verdadero). Verificado solo con `tsc` y esa suite; **sin sim, capturas ni perf** (se hará al cierre del proyecto).
 - **No verificado**: el aspecto de la oferta en compu y celular 390x844 (pendiente de captura), que la cruceta del mando y el toque funcionen en dispositivo, y que Supervivencia siga idéntico en `sim` (por diseño todo es x1 / +0 sin `erun`). Valores sin playtest (`ponytail:` en `PACTS`); `pactS` y los números se afinan con el playbook.
 - **Límites**: acumular varios pactos de "enemigos" multiplica la presión (hasta x2,3 con los tres); no hay tope. Los pactos que suben la vida máxima no existen aún (al vencer SALUD EN GARANTÍA la vida máxima vuelve y suma la diferencia a la vida actual).
+
+## Cofres
+
+En cada escenario con variante (no en votación ni FINAL ACT) hay 3 cofres y 1 máquina de opciones repartidos alrededor de la llegada, a 40-110 m. Solo en ENCORE (`GOAL_IO.tele`); Supervivencia no cambia.
+
+- **Colocación** (`shopPlan` en `moon_goals.ts`, llamada desde `encScene`): hash propio de (semilla, escenario), sin gastar el `rng()` de la partida; los 4 objetos van a ~90° entre sí con jitter, y la máquina cae en un cuadrante distinto en cada escenario.
+- **Activación**: patrón zona + permanecer (radio 4,5 m, 1,6 s), con la barra del jefe como progreso (`goalBar`). Sin fondos: aviso cada 4 s y no avanza.
+- **Cofre**: cuesta tornillos de la run (`chestPrice`: 30 x (1 + 0,6 por cofre abierto) x (1 + 0,25 por escenario)); se descuentan de `runScrap` y se ve en la barra. Abre `openChest()` (evolución o fusión si hay, si no cartas de nivel).
+- **Máquina de opciones**: cobra 25 % de la vida actual (no abre con vida muy baja) y ofrece 3 cartas con `offersFor()`.
+- **Modelos**: plantillas `obj_cofre_pago` y `obj_maquina` (instancias) más el aro de zona existente. Radar: puntos "obj" mientras no se usan.
+- **Pegamento** (`main.ts`): `GOAL_IO.scrap / hpFrac / pay / offer`, `shopReset()` al iniciar ENCORE, `shopPlan` en `encScene`.
+- **Verificado**: `tsc` y `vitest` (104 pruebas). **No verificado**: aspecto, balance de precios, sim ni capturas; sin prueba unitaria propia. Valores provisorios.
+
+## Rutas
+
+Al AVANZAR (tras la oferta de pactos, si la hay) y si queda un escenario por jugar, el Director abre la fase `route`: **2 destinos** (dos variantes distintas de `VARIANTS`) en `#encAsk`, con riesgo (COSTO) y recompensa (VENTAJA). Z / X eligen (mando: cruceta izquierda / derecha; táctil: botones); no hay rechazo. Con la ventana vencida (`ENC.routeS`, 15 s) se toma el primero. El escenario se carga recién al elegir (evento `advance`); también se pasa por la ruta cuando el teleportador avanza solo.
+
+- **Datos** (`src/encore.ts`): cada `Variant` suma `risk` (texto) y `reward` (`Fx`: multiplicadores de XP o tornillos). Hoy: LA TARIMA +10% XP; EL LADO OSCURO +30% XP; CAMPO DE CRÁTERES +30% tornillos; SOL DE FRENTE +15% tornillos y +15% XP. El texto de la oferta sale de `fxText(reward)`, o sea de los números que se aplican.
+- **Selección determinista** (`routeOffer`): hash propio `mix` de (semilla, vuelta, escenario siguiente, variante); no gasta el `rng()` de la partida.
+- **Aplicación**: `Run.route` guarda el destino elegido; `variantOf` lo devuelve (cráteres, ritmo de eventos, llegada y nave salen de ahí) y `pactFx` multiplica su `reward` junto con los pactos. Se borra al salir del escenario (`reset`), así que vale solo en ese escenario. Sin ruta (votación, ¡ENCORE!, vuelta nueva) manda el sorteo de siempre.
+- **UI**: reusa la forma de la oferta de pactos (`pacts` en `ask`), sin cambios en `ui.ts` / `hud.css` / `index.html`.
+- **Director**: frase `route_offer` tras aceptar o rechazar el pacto (o sola); al elegir, el anuncio de la variante elegida.
+- **Pruebas**: `test/encore.test.ts` (describe "rutas": 6 nuevas; los flujos existentes ahora pasan por `route`).
+- **Límites**: los tornillos se cobran al terminar la partida con el `pfx` vigente (igual que DOBLE O CHATARRA), así que la recompensa en tornillos cuenta solo si el destino sigue activo al morir. No verificado: aspecto en compu y celular, ni juego real (solo `tsc` y `vitest`). Valores provisorios.

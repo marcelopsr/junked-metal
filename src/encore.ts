@@ -11,15 +11,16 @@ export const ENC = {
   stayS: 60,           // segundos extra al quedarse, antes de volver a preguntar
   stayRamp: 1,         // segundos de dificultad extra por segundo quedándose: la amenaza sube al doble de ritmo
   paceStageS: 120,     // segundos de dificultad que suma cada escenario (y cada vuelta suma `stages` escenarios)
+  routeS: 15,          // ventana para elegir destino entre dos variantes (tras la oferta de pactos); si vence, el primero
   voteS: 20,           // ventana de la votación; si vence, ¡ENCORE!
   pactS: 15,           // ventana de la oferta de pactos (al elegir AVANZAR); si vence, se rechaza sin penalidad
   bossIntroS: 12,      // segundos de arena vacía antes de que entre el jefe del FINAL ACT
   finalBoss: "aspiradora" as const, // jefe secreto de prueba (R0_SURVIVOR.md §10); el sorteo entre FINALS llega con la run completa
 };
 
-export type Phase = "stage" | "teleporter" | "stay" | "pact" | "vote" | "final" | "won";
+export type Phase = "stage" | "teleporter" | "stay" | "pact" | "route" | "vote" | "final" | "won";
 /** Lo que pasó en un paso; es también la clave de la frase del Director. */
-export type Ev = "tele_land" | "tele_ready" | "stay" | "pact_offer" | "pact_yes" | "pact_no" | "advance" | "vote" | "encore" | "final_act" | "won";
+export type Ev = "tele_land" | "tele_ready" | "stay" | "pact_offer" | "pact_yes" | "pact_no" | "route_offer" | "advance" | "vote" | "encore" | "final_act" | "won";
 export type Run = {
   seed: number; loop: number; stage: number; phase: Phase;
   stageT: number;   // segundos en el escenario (solo corre en `stage`)
@@ -29,9 +30,11 @@ export type Run = {
   stays: number;    // veces que se eligió quedarse en este escenario
   pacts: { id: string; left: number }[]; // pactos activos; left = escenarios que les quedan contando el actual (Infinity = resto de la run)
   offer: [string, string] | null;        // ids ofrecidos mientras la fase es `pact`
+  routes: [number, number] | null;       // índices de VARIANTS ofrecidos mientras la fase es `route` (destinos del escenario siguiente)
+  route: number | null;                  // destino elegido para el escenario actual (null = el que sortea variantOf)
 };
 
-export const newRun = (seed: number): Run => ({ seed, loop: 0, stage: 0, phase: "stage", stageT: 0, timer: 0, landed: false, stayT: 0, stays: 0, pacts: [], offer: null });
+export const newRun = (seed: number): Run => ({ seed, loop: 0, stage: 0, phase: "stage", stageT: 0, timer: 0, landed: false, stayT: 0, stays: 0, pacts: [], offer: null, routes: null, route: null });
 
 /** Semilla de cada escenario: (seed, 0, 0) es la de la run; la votación y el FINAL ACT usan los índices `stages` y `stages + 1`. */
 export const stageSeed = (seed: number, loop: number, stage: number) => (seed + loop * 0x9e3779b1 + stage * 0x85ebca6b) >>> 0;
@@ -42,12 +45,12 @@ export const sceneIdx = (r: Run) => (r.phase === "vote" ? ENC.stages : r.phase =
 /** Segundos de dificultad que se suman al reloj del escenario: sube por escenario, por vuelta y mientras uno se queda. */
 export const paceOf = (r: Run) => (r.loop * ENC.stages + r.stage) * ENC.paceStageS + r.stayT * ENC.stayRamp;
 
-const reset = (r: Run) => { r.phase = "stage"; r.stageT = 0; r.timer = 0; r.landed = false; r.stayT = 0; r.stays = 0; r.offer = null; };
+const reset = (r: Run) => { r.phase = "stage"; r.stageT = 0; r.timer = 0; r.landed = false; r.stayT = 0; r.stays = 0; r.offer = null; r.routes = null; r.route = null; };
 /** Se sale de un escenario (o de la votación): cada pacto con duración pierde uno y los vencidos se van. */
 const leave = (r: Run) => { r.pacts = r.pacts.map((a) => ({ id: a.id, left: a.left - 1 })).filter((a) => a.left > 0); };
 function advance(r: Run): Ev {
   leave(r);
-  if (r.stage + 1 < ENC.stages) { r.stage++; reset(r); return "advance"; }
+  if (r.stage + 1 < ENC.stages) { r.phase = "route"; r.offer = null; r.routes = routeOffer(r); r.timer = ENC.routeS; return "route_offer"; } // el escenario siguiente se elige antes de cargarlo
   r.phase = "vote"; r.timer = ENC.voteS; return "vote";
 }
 function vote(r: Run, i: 0 | 1): Ev {
@@ -82,6 +85,8 @@ export function tick(r: Run, dt: number): Ev | null {
     if ((r.timer -= dt) <= 0) { r.phase = "teleporter"; r.timer = ENC.decideS; r.stays++; return "tele_ready"; }
   } else if (r.phase === "pact") {
     if ((r.timer -= dt) <= 0) return choosePact(r, 2);
+  } else if (r.phase === "route") {
+    if ((r.timer -= dt) <= 0) return chooseRoute(r, 0);
   } else if (r.phase === "vote") {
     if ((r.timer -= dt) <= 0) return vote(r, 0);
   } else if (r.phase === "final") r.stageT += dt;
@@ -94,10 +99,18 @@ export function boarded(r: Run): Ev | null {
   r.phase = "teleporter"; r.timer = ENC.decideS; return "tele_ready";
 }
 
+/** Responde a la oferta de destinos: el escenario siguiente toma la variante elegida (y su recompensa). */
+function chooseRoute(r: Run, i: 0 | 1): Ev {
+  const v = r.routes![i];
+  r.stage++; reset(r); r.route = v;
+  return "advance";
+}
+
 /** Elige la opción 0 o 1 de lo que muestre `ask` (2 = rechazar, solo en la oferta de pactos). */
 export function pick(r: Run, i: 0 | 1 | 2): Ev | null {
   if (r.phase === "pact") return choosePact(r, i);
   if (i === 2) return null;
+  if (r.phase === "route") return chooseRoute(r, i);
   if (r.phase === "teleporter") { if (i === 1) return go(r); r.phase = "stay"; r.timer = ENC.stayS; return "stay"; }
   if (r.phase === "stay") return i === 1 ? go(r) : null;
   if (r.phase === "vote") return vote(r, i);
@@ -131,7 +144,9 @@ const FX_KEYS = Object.keys(NO_FX) as (keyof Fx)[];
 /** Efecto combinado de los pactos activos (multiplica; regen suma). Con null o sin pactos es NO_FX: la Supervivencia no cambia. */
 export function pactFx(r: Run | null): Fx {
   const f = { ...NO_FX };
-  if (r) for (const a of r.pacts) { const p = pactOf(a.id); for (const o of [p.gain, p.cost]) for (const k of FX_KEYS) { const v = o[k]; if (v !== undefined) f[k] = k === "regen" ? f[k] + v : f[k] * v; } }
+  const objs: Partial<Fx>[] = [];
+  if (r) { for (const a of r.pacts) { const p = pactOf(a.id); objs.push(p.gain, p.cost); } if (r.route !== null) objs.push(VARIANTS[r.route].reward); } // la recompensa del destino elegido vale solo en ese escenario (reset la borra)
+  for (const o of objs) for (const k of FX_KEYS) { const v = o[k]; if (v !== undefined) f[k] = k === "regen" ? f[k] + v : f[k] * v; }
   return f;
 }
 /** Los dos pactos de la oferta de este escenario, o null si no quedan dos libres. Hash propio de (semilla, vuelta, escenario): no gasta el rng() de la partida. */
@@ -164,12 +179,13 @@ export type Variant = {
   craters: [n: number, rMin: number, rMax: number]; // cráteres extra alrededor de la llegada (tope total de la luna: DENT_CAP, hoy 40; con n <= 10 sobra para los de la partida)
   rain: number; quake: number; sky: number; // intervalo de meteoritos, de erupciones y de lanzamientos del Sol / la Tierra
   ship: "bombardera" | "abductora" | "caza" | null; // minijefe fijo (null = el que elija la semilla)
+  risk: string; reward: Partial<Fx>; // cómo se ofrece como destino: riesgo (texto) y recompensa (se aplica de verdad en pactFx; el texto sale de ella)
 };
 export const VARIANTS: Variant[] = [
-  { name: "LA TARIMA", line: "EL CLÁSICO: LUZ, POLVO Y NADA QUE ENVIDIAR.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null },
-  { name: "EL LADO OSCURO", line: "SIN SOL NI PÚBLICO. SOLO LAS ERUPCIONES ALUMBRAN.", at: "oscuro", craters: [5, 4, 8], rain: 1.4, quake: 0.55, sky: 1, ship: "abductora" },
-  { name: "CAMPO DE CRÁTERES", line: "EL PISO ES UN QUESO. LOS METEORITOS ESTÁN DE GIRA.", at: "tierra", craters: [10, 5, 11], rain: 0.6, quake: 1.6, sky: 1, ship: "caza" },
-  { name: "SOL DE FRENTE", line: "REFLECTORES AL MÁXIMO. EL SOL TAMBIÉN TIRA.", at: "sol", craters: [3, 3, 6], rain: 1.2, quake: 1, sky: 0.55, ship: "bombardera" },
+  { name: "LA TARIMA", line: "EL CLÁSICO: LUZ, POLVO Y NADA QUE ENVIDIAR.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, risk: "SIN SORPRESAS", reward: { xp: 1.1 } },
+  { name: "EL LADO OSCURO", line: "SIN SOL NI PÚBLICO. SOLO LAS ERUPCIONES ALUMBRAN.", at: "oscuro", craters: [5, 4, 8], rain: 1.4, quake: 0.55, sky: 1, ship: "abductora", risk: "SIN SOL · MÁS METEORITOS", reward: { xp: 1.3 } },
+  { name: "CAMPO DE CRÁTERES", line: "EL PISO ES UN QUESO. LOS METEORITOS ESTÁN DE GIRA.", at: "tierra", craters: [10, 5, 11], rain: 0.6, quake: 1.6, sky: 1, ship: "caza", risk: "MÁS CRÁTERES Y ERUPCIONES", reward: { scrap: 1.3 } },
+  { name: "SOL DE FRENTE", line: "REFLECTORES AL MÁXIMO. EL SOL TAMBIÉN TIRA.", at: "sol", craters: [3, 3, 6], rain: 1.2, quake: 1, sky: 0.55, ship: "bombardera", risk: "EL SOL DISPARA MÁS", reward: { scrap: 1.15, xp: 1.15 } },
 ];
 /** Hash sin estado: n → [0, 1). Un paso de mulberry32. */
 const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -177,11 +193,20 @@ const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t 
 export function variantOf(r: Run): Variant | null {
   const idx = sceneIdx(r);
   if (idx >= ENC.stages) return null;
+  if (r.route !== null) return VARIANTS[r.route]; // destino elegido
   const o = VARIANTS.map((_, i) => i);
   for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(mix(r.seed + r.loop * 7919 + i * 104729) * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; } // Fisher-Yates con el hash
   if (!r.loop) o.unshift(...o.splice(o.indexOf(0), 1)); // vuelta 0: LA TARIMA primero
   return VARIANTS[o[idx % o.length]];
 }
+/** Los dos destinos del escenario siguiente: variantes distintas, estables por (semilla, vuelta, escenario) con hash propio (no gasta el rng() de la partida). */
+export function routeOffer(r: Run): [number, number] {
+  const o = VARIANTS.map((_, i) => ({ i, k: mix(r.seed + 0x70e1 + r.loop * 6151 + (r.stage + 1) * 32452843 + i * 49979687) })).sort((a, b) => a.k - b.k);
+  return [o[0].i, o[1].i];
+}
+/** Riesgo y recompensa de un destino para la UI (misma forma que un pacto: VENTAJA = recompensa, COSTO = riesgo). */
+const routeView = (i: number): PactView => { const v = VARIANTS[i]; return { name: v.name, gain: fxText(v.reward), cost: [v.risk], dur: "PRÓXIMO ESCENARIO" }; };
+
 /** Cráteres extra de la variante: ángulo, distancia (m) a la llegada y radio; nunca a menos de 14 m de la llegada. */
 export function craterPlan(v: Variant, r: Run): { a: number; d: number; r: number }[] {
   const base = stageSeed(r.seed, r.loop, sceneIdx(r)), [n, lo, hi] = v.craters;
@@ -191,6 +216,7 @@ export function craterPlan(v: Variant, r: Run): { a: number; d: number; r: numbe
 /** Para el HUD: título de la ventana abierta, textos de los dos botones (null = sin botón) y duración total; en la oferta, además los términos de cada pacto y el botón de rechazo. */
 export function ask(r: Run): { title: string; opts: [string | null, string | null]; total: number; pacts?: [PactView, PactView]; reject?: string } | null {
   if (r.phase === "pact" && r.offer) { const [a, b] = r.offer.map((id) => viewOf(pactOf(id))); return { title: "PACTO DEL DIRECTOR", opts: [a.name, b.name], total: ENC.pactS, pacts: [a, b], reject: "RECHAZAR" }; }
+  if (r.phase === "route" && r.routes) { const [a, b] = [routeView(r.routes[0]), routeView(r.routes[1])]; return { title: "ELIJAN EL DESTINO", opts: [a.name, b.name], total: ENC.routeS, pacts: [a, b] }; }
   if (r.phase === "teleporter") return { title: "TELEPORTADOR LISTO", opts: ["QUEDARSE", "AVANZAR"], total: ENC.decideS };
   if (r.phase === "stay") return { title: "SIGUE LA FUNCIÓN · PRÓXIMA DECISIÓN", opts: [null, "AVANZAR YA"], total: ENC.stayS };
   if (r.phase === "vote") return { title: "EL PÚBLICO VOTA", opts: ["¡ENCORE!", "FINAL ACT"], total: ENC.voteS };
@@ -215,6 +241,7 @@ const LINES: Record<LineId, string[]> = {
   pact_offer: ["TENGO DOS TRATOS PARA USTEDES. LA LETRA CHICA ESTÁ A LA VISTA.", "UN PACTO, SIN PRESIONES. BUENO, CON POCA PRESIÓN."],
   pact_yes: ["¡TRATO HECHO! ME ENCANTAN LOS CLIENTES CON FE.", "FIRMADO. YO CUMPLO, ASÍ QUE CUMPLAN USTEDES."],
   pact_no: ["¿NADA? PRUDENTE. ABURRIDO, PERO PRUDENTE.", "SIN TRATO, SIN RENCORES. LA OFERTA SE ENFRÍA."],
+  route_offer: ["DOS PUERTAS, DOS PROBLEMAS DISTINTOS. ELIJAN EL QUE MEJOR PAGUE.", "EL PRÓXIMO ESCENARIO TIENE DOS VERSIONES. LA RECOMPENSA CRECE CON EL RIESGO."],
   advance: ["¡CAMBIO DE ESCENARIO! NO TOQUEN NADA, ES UTILERÍA.", "SIGUIENTE ESCENA. EL ESCENARIO ES NUEVO, LOS PROBLEMAS SON DE ARCHIVO."],
   vote: ["¡FIN DEL CUARTO ACTO! EL PÚBLICO VOTA: ¡ENCORE! O FINAL ACT.", "EL PÚBLICO ESTÁ DIVIDIDO. YO, NO: QUIERO UN FINAL ESPECTACULAR."],
   encore: ["¡OTRA VUELTA! EL PÚBLICO EXIGE MÁS. Y YO SOY EL PÚBLICO.", "¡QUE EMPIECE EL BIS! ESTA VEZ CON MÁS ENTUSIASMO DE MI PARTE."],

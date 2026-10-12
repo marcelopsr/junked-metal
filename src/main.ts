@@ -27,7 +27,7 @@ import { craterHumeante, evBase, evFog, evInit, evPace, evReset, lunaDev, lunaEv
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import * as E from "./encore";
-import { goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand } from "./moon_goals";
+import { goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset } from "./moon_goals";
 import { skyClear, skyInfo, skyLaunch, skyPace, skyTick } from "./moon_sky";
 import { ALIENS, alienWave, armorMul, healTick, isAlien } from "./aliens";
 import { wormForce, wormHeadTpl, wormOut } from "./moon_worm";
@@ -294,7 +294,7 @@ function startRun(d = false) {
   xp = 0; level = 1; pendingLevels = 0;
   time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
   spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; wasGrounded = true; coyoteT = 0; apagon = false;
-  if (encore && MOON.on) { erun = E.newRun(runSeed); GOAL_IO.tele = true; encPlan(); encScene(true); }
+  if (encore && MOON.on) { erun = E.newRun(runSeed); GOAL_IO.tele = true; shopReset(); encPlan(); encScene(true); }
   camYaw = 0; dynK = 1; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1); camH.set(0, 0, 1); camUp.set(0, 1, 0);
   state = "play";
   scene.physicsEnabled = true;
@@ -379,6 +379,7 @@ function encScene(first = false) {
   if (!v) return; // votación y FINAL ACT: sin cambios
   const [d, aim] = ARRIVE[v.at], c0 = moonPt(d);
   for (const k of E.craterPlan(v, erun!)) deform(ringAt(c0, k.a, k.d, 0), k.r, k.r * 0.28); // profundidad como los cráteres fijos grandes
+  shopPlan(erun!.seed, E.sceneIdx(erun!), c0); // cofres de pago y máquina de opciones (moon_goals.ts)
   if (!first) moonPlace(d, aim);
 }
 /** Minijefe i-ésimo de la luna: el de la variante o, sin ella, el que elige la semilla. */
@@ -387,12 +388,12 @@ const minorShip = (i: number) => (erun && E.variantOf(erun)?.ship) || shipFor(i,
 function encApply(ev: E.Ev | null) {
   if (!ev || !erun) return;
   if (ev === "tele_land") rocketLand(car!.pos, true); // el cohete de moon_goals.ts hace de teleportador; el aviso es el del Director
-  else if (ev === "advance" || ev === "encore" || ev === "vote" || ev === "final_act" || ev === "pact_yes" || ev === "pact_no") encEnter(); // pact_*: la respuesta a la oferta ya avanzó la fase
-  if (ev === "pact_yes") { const p = E.pactOf(erun.pacts[erun.pacts.length - 1].id); if (p.gain.heal) hp = Math.min(maxHp, hp + maxHp * p.gain.heal); } // el pacto ya está en `pfx` (encEnter → recompute); falta la cura instantánea
-  const pact = ev === "pact_yes" || ev === "pact_no", v = pact || ev === "advance" || ev === "encore" ? E.variantOf(erun) : null; // al llegar a un escenario nuevo, el Director anuncia su variante en vez de la frase suelta
-  if (pact) say(ev); // la respuesta al trato y, enseguida, la variante
+  else if (ev === "advance" || ev === "encore" || ev === "vote" || ev === "final_act") encEnter(); // pact_* y route_offer no cargan nada: el escenario nuevo llega al elegir destino ("advance")
+  if (ev === "pact_yes") { recompute(); const p = E.pactOf(erun.pacts[erun.pacts.length - 1].id); if (p.gain.heal) hp = Math.min(maxHp, hp + maxHp * p.gain.heal); } // el pacto ya está en `pfx` (encEnter → recompute); falta la cura instantánea
+  const pact = ev === "pact_yes" || ev === "pact_no", v = ev === "advance" || ev === "encore" ? E.variantOf(erun) : null; // al llegar a un escenario nuevo, el Director anuncia su variante en vez de la frase suelta
+  if (pact) { say(ev); if (erun.phase === "route") say("route_offer", "warn"); } // la respuesta al trato y, enseguida, la oferta de destinos
   if (v) banner(`${v.name}. ${v.line}`, 3.8, { tag: "DIRECTOR", ico: "senal", tone: "now" });
-  else if (!pact) say(ev, ev === "tele_ready" || ev === "vote" || ev === "pact_offer" ? "warn" : "now");
+  else if (!pact) say(ev, ev === "tele_ready" || ev === "vote" || ev === "pact_offer" || ev === "route_offer" ? "warn" : "now");
 }
 const encPick = (i: 0 | 1 | 2) => { if (state === "play" && erun) encApply(E.pick(erun, i)); };
 $("encA").onpointerdown = (ev) => { ev.preventDefault(); encPick(0); }; // pointerdown + sin foco: Espacio (turbo) no vuelve a apretar el botón
@@ -849,6 +850,10 @@ evInit({ // moon_events.ts: daño y sacudida viven acá
 });
 SHIP_IO.hurt = (n, src) => hurt(n, false, src);
 GOAL_IO.win = (p) => { if (state !== "play" || endless) return; if (erun) return encApply(E.boarded(erun)); /* ENCORE: el cohete es el teleportador, no el final */ outroAt = p.clone(); endRun(true, ESCAPE_WIN); };
+GOAL_IO.scrap = () => Math.floor(runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas));
+GOAL_IO.hpFrac = () => hp / maxHp;
+GOAL_IO.pay = (n, h) => { runScrap -= n; hp -= hp * h; };
+GOAL_IO.offer = (k) => { if (k === "cofre") openChest(); else openOffers(offersFor(), "Máquina de opciones"); };
 SHIP_IO.reward = (p, xp, boss) => { dropGems(p, xp); dropPickup(p, "cofre"); if (boss) { bossKills++; runScrap += R.tornillos_jefe; shake = 1.5; } };
 
 // ---------- Update ----------
