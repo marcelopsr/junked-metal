@@ -26,7 +26,7 @@ if (cmd === "ls") {
 } else {
   await lock();
   for (const p of procs()) if (p.name !== "rc-test" && !existsSync(p.pm2_env.pm_cwd)) { console.log("borrando huérfano " + p.name); sh(`pm2 delete ${p.name}`); }
-  if (!WT) sh("pm2 restart rc-test");
+  if (!WT) sh("pm2 restart rc-test --update-env");
   else {
     const env = { ...process.env, RC_TEST_NAME: WT.name, RC_TEST_PORT: String(WT.port) };
     if (procs().some((p) => p.name === WT.name)) sh(`pm2 restart ${WT.name} --update-env`, { env });

@@ -764,4 +764,8 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 }
 /* R6b: código de sala online (ENCORE) */
 .netCode { min-height: 44px; padding: 0 12px; font: 700 18px/1 var(--jm-titulo); letter-spacing: .3em; text-transform: uppercase; color: var(--jm-texto); background: var(--jm-fondo); border: 1px solid var(--jm-borde); border-radius: 2px; }
+.netKey { min-height: 44px; padding: 0 12px; font: 700 16px/1 var(--jm-titulo); color: var(--jm-texto); background: var(--jm-fondo); border: 1px solid var(--jm-borde); border-radius: 2px; width: 100%; box-sizing: border-box; }
+.netKey:focus { outline: 2px solid var(--jm-naranja); outline-offset: 1px; }
+#netKeyBox { display: grid; gap: 8px; }
+#netKeyBox.hidden { display: none; }
 .netCode:focus { outline: 2px solid var(--jm-naranja); outline-offset: 1px; }

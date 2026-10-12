@@ -28,6 +28,17 @@ export function takeToken() {
   history.replaceState(null, "", location.pathname + location.search);
   return true;
 }
+export const setToken = (t: string) => { try { t ? localStorage.setItem(TOKEN, t) : localStorage.removeItem(TOKEN); } catch { /* sin almacenamiento */ } };
+/** Login con la clave de grupo: POST /api/login y guarda el token. Lanza con un mensaje legible si falla. */
+export async function loginKey(clave: string) {
+  let r: Response;
+  try { r = await fetch(`https://${NET_HOST}/api/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clave }) }); }
+  catch { throw new Error("No se pudo contactar al servidor."); }
+  if (r.status === 401 || r.status === 403) throw new Error("Clave incorrecta.");
+  const j = r.ok ? await r.json().catch(() => null) : null;
+  if (!j?.token) throw new Error(`El servidor respondió ${r.status}.`);
+  setToken(j.token);
+}
 export const loginUrl = () => `https://${NET_HOST}/auth/login?return=${encodeURIComponent(location.href)}`;
 /** Opciones de Peer. Con host propio: su PeerServer y los iceServers temporales de /api/turn (si falla o no hay token, solo STUN). Sin host: PeerJS Cloud y su config por defecto. */
 async function opts() {

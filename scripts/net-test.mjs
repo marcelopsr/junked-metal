@@ -7,6 +7,11 @@
 import { launch, open } from "./lib/browser.mjs";
 
 const ARGS = ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--disable-features=WebRtcHideLocalIpsWithMdns", "--allow-loopback-in-peer-connection"];
+// Servidor propio (R6c): con NET_HOST (+ NET_KEY, la clave de grupo; nunca va en el repo ni se imprime) cada pestaña inicia sesión por la UI antes de crear o unirse.
+// El servidor de pruebas debe arrancar con VITE_NET_HOST=<mismo host> (`VITE_NET_HOST=... npm run test:restart`). NET_RELAY=1 fuerza iceTransportPolicy "relay" (solo en la prueba: valida coturn).
+const NET_HOST = process.env.NET_HOST ?? "", KEY = process.env.NET_KEY ?? "", RELAY = process.env.NET_RELAY === "1";
+if (NET_HOST && !KEY) throw new Error("NET_HOST requiere NET_KEY (clave de grupo) en el entorno");
+const seen = { peer: 0, turn: 0 }; // pedidos al PeerServer propio y a /api/turn (todas las pestañas)
 const ok = [], fail = [];
 const check = (name, cond, extra = "") => { (cond ? ok : fail).push(name); console.log(`${cond ? "OK  " : "FALLA"} ${name}${extra ? "  " + extra : ""}`); };
 const wait = (page, fn, arg, ms = 30000) => page.waitForFunction(fn, arg, { timeout: ms, polling: 100 });
@@ -17,6 +22,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function pair(browser) {
   const [h, c] = await Promise.all([open(browser, "?mute&seed=7"), open(browser, "?mute")]);
   for (const p of [h, c]) {
+    if (NET_HOST) {
+      p.on("request", (r) => { const u = r.url(); if (u.includes(`${NET_HOST}/peer`)) seen.peer++; if (u.includes(`${NET_HOST}/api/turn`)) seen.turn++; });
+      await p.evaluate(async ([k]) => { document.getElementById("netKey").value = k; document.getElementById("netKeyGo").click(); }, [KEY]);
+      await wait(p, () => document.getElementById("netSession").textContent === "Sesión iniciada", null, 15000);
+    }
+    if (RELAY) await p.evaluate(() => { const P = RTCPeerConnection; window.RTCPeerConnection = function (cfg, ...r) { return new P({ ...cfg, iceTransportPolicy: "relay" }, ...r); }; window.RTCPeerConnection.prototype = P.prototype; });
     await p.ctx.grantPermissions(["microphone"]);
     await p.evaluate(async () => (await navigator.mediaDevices.getUserMedia({ audio: true })).getTracks().forEach((t) => t.stop()));
   }
@@ -34,6 +45,7 @@ try {
   // 1) Conexión, snapshots, input y teleportador
   let { h, c, code } = await pair(browser);
   check("sala creada y cliente unido", true, code);
+  if (NET_HOST) check("sala por el PeerServer propio y credenciales de /api/turn", seen.peer > 0 && seen.turn >= 2, `peer=${seen.peer} turn=${seen.turn}${RELAY ? " (relay forzado)" : ""}`);
   const c0 = await info(c);
   await c.keyboard.down("KeyW");
   await wait(h, () => window.__net.info().netIn.throttle > 0, null, 5000).catch(() => {});

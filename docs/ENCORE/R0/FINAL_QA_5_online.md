@@ -61,7 +61,21 @@ OK   los dos votan avanzar: sale de la estadía  pact
 
 kB/s = bytes JSON de los snapshots enviados por el anfitrión (`__net.info().bytes`, solo dev) durante 2,5 s de manejo al inicio (pocos bichos). Con la semilla 7 el teleportador sale con OVERLOAD: la prueba agota la carga con `__enc.tick`.
 
+## R6c contra el servidor real (2026-10-12): junkedmetal.duckdns.org
+
+UI: #scr-encore tiene "Entrar con clave de grupo" (campo + botón, `loginKey` en net.ts: `POST /api/login`, guarda `jm_net_token`), estado "Sesión iniciada" / "Sin sesión" y "Cerrar sesión" (borra el token). Solo aparece con `VITE_NET_HOST`.
+
+`scripts/net-test.mjs` con `NET_HOST` inicia sesión por esa UI en las dos pestañas (clave de `NET_KEY`, no se imprime ni se guarda) y comprueba que hubo pedidos al PeerServer propio (`/peer`) y a `/api/turn` (2, uno por pestaña). El servidor de pruebas debe arrancar con la variable (`test:restart` ahora usa `pm2 restart --update-env`):
+
+```
+export VITE_NET_HOST=junkedmetal.duckdns.org
+npm run test:restart
+NET_KEY=$(ssh vps "grep ^GROUP_KEY= /opt/junkedmetal/.env | cut -d= -f2") NET_HOST=junkedmetal.duckdns.org npm run test:net
+```
+
+Resultado: 24 OK, 0 fallas, también con `NET_RELAY=1` (la prueba fuerza `iceTransportPolicy: "relay"`: valida coturn). Sin `NET_RELAY` el DataChannel abrió por WARP gracias al permiso de micrófono falso. No se tocó server/. `vitest` ahora excluye `server/**` (sus pruebas son de `node --test`).
+
 ## Sin verificar
 
-- RTT y kB/s con muchos bichos (solo medido al inicio). El servidor propio (`VITE_NET_HOST`, login, `/api/turn`): sin servidor todavía. Conexión entre dos máquinas o redes distintas (NAT simétrica, sin TURN).
+- RTT y kB/s con muchos bichos (solo medido al inicio). Conexión entre dos máquinas o redes distintas (NAT simétrica, sin TURN).
 - Con 1 bicho en el radio de 70 m al principio, la prueba de bichos es mínima (se mueven, pero son pocos).
