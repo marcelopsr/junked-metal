@@ -156,7 +156,7 @@ Fecha 2026-10-12. Solo modo ENCORE; Supervivencia intacta (`erun` null: la cuent
 - **Pruebas**: `test/encore.test.ts` +5 (sorteo, pistas, arena, reporte, tornillos). `npx tsc --noEmit -p .` limpio; `npx vitest run` 126/126.
 - **No verificado**: la arena y la luz de show no se vieron en pantalla (sin captura); los focos usan `put` de `moon_goals.ts` y el tinte repinta la sonda del cielo una vez al entrar al FINAL ACT. Conviene `?encore&seed=N` con `__enc` hasta `final` y una captura.
 
-## R7a: ENCORE para 2 en compu (pantalla dividida)
+## R7a/b: ENCORE para 2 en compu (pantalla dividida)
 
 Fecha 2026-10-12. Primer paso del cooperativo local. Todo cuelga de `coop` (main.ts): con 1 jugador `mate` es null y ENCORE y Supervivencia no cambian (`sim --seeds 1 --secs 600` igual que en R1: 166.9 s, nv 4, 24 bajas).
 
@@ -168,10 +168,17 @@ Fecha 2026-10-12. Primer paso del cooperativo local. Todo cuelga de `coop` (main
 - **Vida por auto:** si cae el otro, queda fuera hasta el próximo escenario (`mateDown`, vuelve con la vida llena en `encEnter`). Si cae el que guía, el otro pasa a guiar (`mateLead`: se cruzan auto, vida, armas, cámaras e input; cada jugador conserva su mitad de pantalla). Si caen los 2, termina la partida.
 - **Compartido** (`ponytail:`): XP, nivel, armas, pasivas, tornillos y pactos. El J2 dispara **copias** de las armas desde su auto (`mateArm`, se rehacen al cambiar armas o niveles): no se tocó `weapons.ts`, pero el daño total se duplica con 2.
 - **HUD:** vida del otro jugador compacta sobre la línea divisoria (`#mateHp`, `hudMate`); "FUERA" cuando cayó.
-- **Verificado:** `tsc`, `vitest` 126/126, recorrido headless (dos cámaras, J2 maneja con flechas, J2 cae y revive al avanzar, J1 cae y J2 guía, los 2 caen → cierre), 0 errores de consola, captura vista de la pantalla dividida. Sin playtest con dos personas ni con dos joysticks reales.
+- **R7b (2026-10-12), J2 completo:**
+  - **Salto y habilidad del J2:** Teclado 2 suma `KEYS2` (input.ts): salto `/` (Slash) o Numpad 0, habilidad `´` (Quote) o Numpad 1; con segundo joystick, `pollMate` usa el mapeo de siempre (`PAD`, forzado a gatillos) en vez del de la carrera. Salto propio (`carJump`, enfriamiento y coyote en `Mate`). La habilidad es la misma y con enfriamiento compartido: sale desde el auto de quien la dispara (`abilCar`: petardos alrededor suyo, burbuja en su auto, EMP desde ahí); el escudo protege y cura a los dos.
+  - **Cofres, máquina y teleportador:** `goalsTick` recibe los autos vivos: cualquiera junta celdas, mantiene la antena, compra y aborda. La máquina cobra vida a quien la activa (`GOAL_IO.hpFrac/pay(…, who)`). Cartas: compartidas como las armas y elige cualquiera (los menús ya leen todos los controles); el título dice quién abrió (`byTag`: "Cofre · J2").
+  - **Eventos de la luna:** `lunaEv`, `skyTick`, `shipsTick` reciben los autos vivos (0 = el que guía: sonido y reloj del horizonte). Cada meteorito, erupción y tiro del cielo cae cerca de uno al azar y cada nave elige un blanco (`pickIdx` en rng.ts: con 1 auto no gasta `rng()`, así la semilla da lo mismo); el daño va a quien golpea (`hurtWho`). El gusano ya perseguía al más cercano; ahora su salida también golpea al otro.
+  - **Recuadro de controles:** en coop (`#hint.coop`) se pega a la división desde la mitad de arriba y suma una línea con las teclas del J2 (`#hintJ2`).
+  - `ponytail:` la erupción se ubica delante de la cámara del que guía aunque apunte al otro auto.
+- **Verificado R7b:** `tsc` limpio, `vitest` 127/127 (nueva: con 2 autos los meteoritos dañan a los dos). Sin `sim`, capturas ni recorrido headless de esta parte.
+- **Verificado R7a:** `tsc`, `vitest` 126/126, recorrido headless (dos cámaras, J2 maneja con flechas, J2 cae y revive al avanzar, J1 cae y J2 guía, los 2 caen → cierre), 0 errores de consola, captura vista de la pantalla dividida. Sin playtest con dos personas ni con dos joysticks reales.
 
 ### Qué falta (y para 3-4 jugadores)
 - `mate` es uno: para 3-4, lista de mates, viewports 2x2 y `coopCtl` por índice de joystick (Teclado 1/2 alcanzan para 2).
-- El que guía tiene todo lo que no es del auto: habilidad, salto, combo de manejo, recolección con imán, cofres y cartas, abordar el teleportador, objetivos, naves, eventos y cielo (`lunaEv`, `skyTick`, `shipsTick`, `goalsTick` reciben un solo auto). Los ataques especiales de jefes (barrido, cables, salto, succión) y la pelota apuntan solo a él.
-- Niebla, `moonTick` y el cielo se calculan con la cámara del que guía; números de daño y flechas de jefe solo se proyectan en su mitad. El recuadro de controles del arranque tapa el centro de la mitad de abajo.
+- Del que guía siguen: combo de manejo, recolección con imán y el indicador de habilidad del HUD (muestra su tecla). Los ataques especiales de jefes (barrido, cables, salto, succión) y la pelota apuntan solo a él.
+- Niebla, `moonTick` y el cielo se calculan con la cámara del que guía; números de daño y flechas de jefe solo se proyectan en su mitad.
 - Balance sin ajustar para 2 (armas duplicadas, misma cantidad de bichos).

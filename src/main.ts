@@ -5,7 +5,7 @@ import { Car, CARS, drive } from "./car";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
 import { engineSfx, engineStop, initAudio, music, moonAmbience, musicDuck, rainSfx, setEngineKind, SFX, SPACE } from "./sfx";
 import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
-import { activePad, btnName, camCycle, coopCtl, coopSkip, ctl, input, isTouch, keyHit, KEYS, padPressed, pads, padSnap, pb, pollInput, pollPlayer, setupTouch } from "./input";
+import { activePad, btnName, camCycle, coopCtl, coopSkip, ctl, input, isTouch, keyHit, KEYS, KEYS2, padPressed, pads, padSnap, pb, pollInput, pollMate, RACE, setupTouch } from "./input";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
 import { GLB, glbFootprint, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
@@ -137,6 +137,7 @@ const evoNotified = new Set<string>();
 
 // Habilidad activa (abilities.ts): enfriamiento, segundos activa, petardos por caer y ritmo del mundo (cámara lenta)
 let abil: AbilityId = "bombardeo", abilLv = 0, abilCd = 0, abilOn = 0, worldK = 1, bombs = 0, bombT = 0;
+let abilCar: Car | null = null; // R7b: auto que disparó la habilidad (bombardeo alrededor suyo)
 let shieldM: B.Mesh | null = null; // burbuja del escudo, hija del auto (se libera con él)
 // Combo de manejo: multiplicador de XP (x1 a x2) que se pierde al recibir daño
 let driveMul = 1, driftT = 0, airT = 0, airHit = false, trickT = 0, jumpCd = 0; // trickT: segundos desde el último truco
@@ -322,6 +323,8 @@ function startRun(d = false) {
   // Guía de controles los primeros segundos (se va sola)
   const hint = $("hint");
   for (const k of hint.querySelectorAll<HTMLElement>("kbd[data-k]")) k.textContent = keyName(KEYS[k.dataset.k as keyof typeof KEYS][0]); // teclas reasignadas
+  hint.classList.toggle("coop", !!mate); // R7b: con 2 jugadores, sobre la línea divisoria (no tapa la mitad de abajo) y con las teclas del J2
+  if (mate) { const kb = (c: string) => `<kbd>${keyName(c)}</kbd>`, k2 = RACE.kb2; $("hintJ2").innerHTML = coopCtl() === "kbd2" ? `J2 ${kb(k2.up[0])}${kb(k2.down[0])}${kb(k2.left[0])}${kb(k2.right[0])} manejo · ${kb(k2.item[0])} turbo · ${kb(k2.drift[0])} derrape · ${kb(KEYS2.jump[0])} salto · ${kb(KEYS2.ability[0])} habilidad` : `J2 segundo joystick · ${btnName(pb("jump"))} salto · ${btnName(pb("ability"))} habilidad`; }
   if (save.hint) hint.classList.remove("hidden", "fade"); else hint.classList.add("hidden");
   hintOn = save.hint; // se apaga en update() con la primera entrada o a los HINT_S de partida
 }
@@ -427,21 +430,21 @@ $("encC").onpointerdown = (ev) => { ev.preventDefault(); encPick(2); }; // RECHA
 
 // ---------- R7a: ENCORE para 2 en compu, pantalla dividida arriba (J1) / abajo (J2) ----------
 // `car`, `hp`, `input` y la cámara `cam` son siempre del que guía; `mate` es el otro. Si cae el que guía, el otro pasa a guiar (mateLead) y nada más del juego cambia.
-// ponytail: XP, nivel, armas, pasivas, tornillos, habilidad, salto y combo de manejo son del que guía (compartidos); 3-4 jugadores = lista de mates (ver R1_SLICE.md § R7a)
-type Mate = { car: Car | null; hp: number; maxHp: number; boost: number; fs: number; touch: number; cam: B.FreeCamera; h: B.Vector3; up: B.Vector3; tgt: B.Vector3; weapons: Weapon[]; sig: string };
+// ponytail: XP, nivel, armas, pasivas, tornillos, combo de manejo y el enfriamiento de la habilidad son compartidos (R7b: cualquiera la dispara desde su auto); 3-4 jugadores = lista de mates (ver R1_SLICE.md § R7a/b)
+type Mate = { car: Car | null; hp: number; maxHp: number; boost: number; fs: number; touch: number; jumpCd: number; coyote: number; cam: B.FreeCamera; h: B.Vector3; up: B.Vector3; tgt: B.Vector3; weapons: Weapon[]; sig: string };
 const TOP = new B.Viewport(0, 0.5, 1, 0.5), BOTTOM = new B.Viewport(0, 0, 1, 0.5), _camM2 = new B.Matrix();
 const mateColor = () => (save.paint || "").toLowerCase() === "#1f6feb" ? "#f2c230" : "#1f6feb"; // J2: otro color que J1 para distinguirlos
 function mateCar() {
   const m = mate!;
   m.car = new Car(scene, save.car, { ...carOpts(), paint: mateColor() });
-  m.hp = m.maxHp = maxHp; m.boost = 100; m.fs = 0; m.touch = 0; m.sig = "";
+  m.hp = m.maxHp = maxHp; m.boost = 100; m.fs = 0; m.touch = 0; m.jumpCd = m.coyote = 0; m.sig = "";
   m.car.setMass(m.car.def.mass * st.mass);
   mateArm();
 }
 function mateStart() {
   const cam2 = new B.FreeCamera("cam2", cam.position.clone(), scene);
   cam2.minZ = cam.minZ; cam2.maxZ = cam.maxZ;
-  mate = { car: null, hp: 0, maxHp, boost: 100, fs: 0, touch: 0, cam: cam2, h: new B.Vector3(0, 0, 1), up: new B.Vector3(0, 1, 0), tgt: new B.Vector3(), weapons: [], sig: "" };
+  mate = { car: null, hp: 0, maxHp, boost: 100, fs: 0, touch: 0, jumpCd: 0, coyote: 0, cam: cam2, h: new B.Vector3(0, 0, 1), up: new B.Vector3(0, 1, 0), tgt: new B.Vector3(), weapons: [], sig: "" };
   leadPn = 1; spawnN = 0;
   mateCar(); matePlace(); mateViews(); setSplit(cam2, true); // una sola vez: addCamera dos veces reusa el postproceso
 }
@@ -483,13 +486,14 @@ function mateSync() {
   if (m.car) { m.hp = Math.min(maxHp, m.hp + Math.max(0, maxHp - m.maxHp)); m.car.setMass(m.car.def.mass * st.mass); mateArm(); }
   m.maxHp = maxHp;
 }
-function mateHurt(n: number) { if (!god && mate?.car) mate.hp -= n * (1 - st.armor); }
+function mateHurt(n: number) { if (!god && !(abil === "escudo" && abilOn > 0) && mate?.car) mate.hp -= n * (1 - st.armor); } // escudo: protege a los dos
 function mateBoom(c: Car) { FX.explosion(c.pos.add(upv(c.pos, 0.5)), 2); debris(c.pos, save.paint || "#d62828", 14, 9, 0.9); SFX.explosion(); }
 /** Cae el otro: se desarma y queda fuera hasta el próximo escenario. */
 function mateDown() {
   const m = mate!;
   mateBoom(m.car!);
   for (const w of m.weapons) w.dispose();
+  if (shieldM?.parent === m.car!.root) shieldM = null; // la burbuja se va con el auto
   m.weapons = []; m.sig = ""; m.car!.dispose(); m.car = null; m.hp = 0;
   banner(`J${leadPn === 1 ? 2 : 1} FUERA HASTA EL PRÓXIMO ESCENARIO`, 2.5);
 }
@@ -499,7 +503,8 @@ function mateLead() {
   mateBoom(dead);
   for (const w of weapons) w.dispose();
   weapons = m.weapons; m.weapons = []; m.sig = "";
-  dead.dispose(); shieldM = null; preview = null;
+  if (shieldM?.parent === dead.root) shieldM = null; // R7b: si la puso el otro, sigue en su auto
+  dead.dispose(); preview = null;
   car = alive; m.car = null;
   hp = m.hp; m.hp = 0; lastHpFrac = hp / maxHp;
   const p = cam.position.clone(); cam.position.copyFrom(m.cam.position); m.cam.position.copyFrom(p);
@@ -517,10 +522,10 @@ function mateRevive() {
 /** Input de cada jugador: J1 teclado (sin las teclas de J2) y primer joystick; J2 Teclado 2 o segundo joystick (input.ts coopCtl). */
 function mateInput() {
   pollInput({ skip: coopSkip(), pad: pads()[0] ?? null });
-  const q = pollPlayer(coopCtl()), p2 = { ...NO_IN, throttle: q.throttle, steer: q.steer, drift: q.drift, boost: q.item }; // ponytail: J2 sin salto, habilidad ni stick 2D (pollPlayer es el de la carrera)
+  const p2 = pollMate(); // R7b: con salto y habilidad (input.ts KEYS2 o el joystick)
   if (leadPn === 1) mateIn = p2; else { mateIn = { ...input }; Object.assign(input, p2); }
 }
-/** Manejo del otro auto: el mismo drive() con turbo propio; sin combo, salto ni marcas. */
+/** Manejo del otro auto: el mismo drive() con turbo y salto propios; sin combo ni marcas. */
 function mateTick(dt: number) {
   const m = mate!, c = m.car!, i = mateIn;
   const boosting = i.boost && m.boost > R.turbo_umbral && i.throttle >= 0;
@@ -529,6 +534,8 @@ function mateTick(dt: number) {
   const r = drive(c.body, c.root, dt, { throttle: boosting ? 1 : i.throttle, steer: i.steer, speed: maxSpeed, accel: c.def.accel * (boosting ? R.turbo_acel : 1), turn: c.def.turn * (i.drift ? R.derrape_giro : 1), grip: i.drift ? R.derrape_agarre : c.def.grip });
   c.animate(dt, i.steer, r.fs, maxSpeed);
   m.fs = r.fs;
+  m.jumpCd = Math.max(0, m.jumpCd - dt); m.coyote = r.grounded ? R.salto_coyote_s : Math.max(0, m.coyote - dt);
+  if (i.jump && (r.grounded || m.coyote > 0) && m.jumpCd <= 0) { m.jumpCd = R.salto_cd_s; m.coyote = 0; carJump(c, r); }
   if (alt(c.pos) < -5) m.hp = 0;
   m.hp = Math.min(maxHp, m.hp + st.regen * dt);
   c.wear(Math.max(0, m.hp / maxHp));
@@ -741,9 +748,11 @@ function choose(i: number) {
   scene.physicsEnabled = true;
 }
 
-function openChest() {
+/** R7b: " · J2" si con 2 jugadores lo activó el otro (who = 1) o el que guía es el J2; vacío con 1 jugador. Las cartas son de los dos y elige cualquiera. */
+const byTag = (who = 0) => (mate ? ` · J${who ? (leadPn === 1 ? 2 : 1) : leadPn}` : "");
+function openChest(who = 0) {
   const evo = evoOffer(weapons, passives);
-  openOffers(evo ? [evo] : offersFor(), evo ? (evo.kind === "fusion" ? "Cofre · Fusión" : "Cofre · Evolución") : "Cofre");
+  openOffers(evo ? [evo] : offersFor(), (evo ? (evo.kind === "fusion" ? "Cofre · Fusión" : "Cofre · Evolución") : "Cofre") + byTag(who));
 }
 
 function pause() {
@@ -993,17 +1002,18 @@ function spawnEnemy(kind: Kind, p: B.Vector3) {
 // Fase 2 de la luna (moon.ts LUNA.spawn): un bicho en cualquier punto de la esfera (se apoya en el piso del lugar)
 LUNA.spawn = (kind, p) => spawnEnemy(kind, onFloor(p, 0.5));
 evInit({ // moon_events.ts: daño y sacudida viven acá
-  hurt: (n, continuous, src) => hurt(n, continuous, src),
+  hurt: (n, continuous, src, who) => hurtWho(n, continuous, src, who),
   blast: (p, r, dmg, src) => { dmgSrc = src; for (const e of enemies) if (B.Vector3.Distance(e.pos, p) < r + e.radius) damage(e, dmg, e.pos.subtract(p).normalize().addInPlace(upv(e.pos, 0.6)).scale(6)); dmgSrc = ""; },
   shake: (k) => { shake = Math.max(shake, k); },
   sim: () => simulating,
 });
-SHIP_IO.hurt = (n, src) => hurt(n, false, src);
+SHIP_IO.hurt = (n, src, who) => hurtWho(n, false, src, who);
 GOAL_IO.win = (p) => { if (state !== "play" || endless) return; if (erun) return encApply(E.boarded(erun)); /* ENCORE: el cohete es el teleportador, no el final */ outroAt = p.clone(); endRun(true, ESCAPE_WIN); };
 GOAL_IO.scrap = () => Math.floor(runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas));
-GOAL_IO.hpFrac = () => hp / maxHp;
-GOAL_IO.pay = (n, h) => { runScrap -= n; hp -= hp * h; };
-GOAL_IO.offer = (k) => { if (k === "cofre") openChest(); else openOffers(offersFor(), "Máquina de opciones"); };
+// R7b: who = índice en los autos vivos (0 = el que guía, 1 = el otro); la máquina cobra vida a quien la activa y las cartas (compartidas) dicen quién abrió
+GOAL_IO.hpFrac = (who) => (who && mate ? mate.hp : hp) / maxHp;
+GOAL_IO.pay = (n, h, who) => { runScrap -= n; if (who && mate) mate.hp -= mate.hp * h; else hp -= hp * h; };
+GOAL_IO.offer = (k, who) => { if (k === "cofre") openChest(who); else openOffers(offersFor(), "Máquina de opciones" + byTag(who)); };
 SHIP_IO.reward = (p, xp, boss) => { dropGems(p, xp); dropPickup(p, "cofre"); if (boss) { bossKills++; runScrap += R.tornillos_jefe; shake = 1.5; } };
 
 // ---------- Update ----------
@@ -1026,15 +1036,16 @@ function update(dt: number) {
   // --- Habilidad activa (efectos con el reloj real; wdt = paso del mundo, más corto en cámara lenta) ---
   abilCd -= dt;
   if (input.ability && abilCd <= 0) useAbility(c);
+  else if (mateIn.ability && mate?.car && abilCd <= 0) useAbility(mate.car); // R7b: el otro la dispara desde su auto (enfriamiento compartido)
   if (abilOn > 0 && (abilOn -= dt) <= 0) { worldK = 1; fxSpeed(1); if (shieldM) shieldM.isVisible = false; }
-  if (abil === "escudo" && abilOn > 0) hp = Math.min(maxHp, hp + maxHp * R.escudo_cura_s * dt); // 30% en 3 s
+  if (abil === "escudo" && abilOn > 0) { hp = Math.min(maxHp, hp + maxHp * R.escudo_cura_s * dt); if (mate?.car) mate.hp = Math.min(maxHp, mate.hp + maxHp * R.escudo_cura_s * dt); } // 30% en 3 s (a los dos)
   if (bombs > 0 && (bombT -= dt) <= 0) {
     bombs--; bombT = R.bombardeo_intervalo_s;
-    const a = rng() * Math.PI * 2, d = 3 + rng() * 11;
+    const a = rng() * Math.PI * 2, d = 3 + rng() * 11, c = abilCar && !abilCar.root.isDisposed() ? abilCar : car!; // R7b: caen alrededor de quien la disparó
     dmgSrc = "bombardeo"; explode(MOON.on ? onFloor(at(c.pos, Math.cos(a) * d, 0, Math.sin(a) * d), 0) : new B.Vector3(c.pos.x + Math.cos(a) * d, 0, c.pos.z + Math.sin(a) * d), R.bombardeo_radio, R.bombardeo_dano * st.dmg); dmgSrc = "";
   }
-  const wdt = dt * worldK;
-  if (MOON.on && !calm) lunaEv(wdt, time, c.pos, Math.max(c.def.size[0], c.def.size[2]) / 2, camYaw); // luna: lluvia de meteoritos y erupciones (moon_events.ts)
+  const wdt = dt * worldK, cars = mate?.car ? [c, mate.car] : [c], carPs = cars.map((x) => x.pos); // R7b: autos vivos (0 = el que guía) para los eventos de la luna
+  if (MOON.on && !calm) lunaEv(wdt, time, carPs, Math.max(c.def.size[0], c.def.size[2]) / 2, camYaw); // luna: lluvia de meteoritos y erupciones (moon_events.ts)
 
   // --- Manejo ---
   let throttle = input.throttle, steer = input.steer;
@@ -1075,18 +1086,7 @@ function update(dt: number) {
   if (r.grounded) coyoteT = R.salto_coyote_s;
   else coyoteT = Math.max(0, coyoteT - dt);
   const canJump = (r.grounded || coyoteT > 0) && jumpCd <= 0;
-  if (input.jump && canJump) {
-    jumpCd = R.salto_cd_s;
-    coyoteT = 0;
-    const m = c.body.getMassProperties().mass || c.def.mass;
-    const fwd = MOON.on ? flatL(c.root.forward, c.pos) : c.root.forward.clone(); fwd.y = 0;
-    if (fwd.lengthSquared() > 1e-6) fwd.normalize();
-    const ramp = r.slope ?? 0;
-    const hx = Math.abs(r.fs) * R.salto_horiz * (1 + ramp * R.salto_rampa_h) * m;
-    const vy = R.salto_impulso_v * (1 + ramp * R.salto_rampa_v) * m;
-    c.body.applyImpulse(W(fwd.x * hx, vy, fwd.z * hx, c.pos), c.pos);
-    if (!simulating) { SFX.boing(); const rear = c.pos.add(c.root.forward.scale(-0.8)); FX.dust(rear); shake = Math.max(shake, 0.18); }
-  }
+  if (input.jump && canJump) { jumpCd = R.salto_cd_s; coyoteT = 0; carJump(c, r); }
   const mc = mate?.car ?? null; // R7a: auto del otro jugador (null = no hay o está fuera)
   if (mc) mateTick(dt);
   if (yardPulseIdx < YARD_PULSES.length && time >= YARD_PULSES[yardPulseIdx]) {
@@ -1296,6 +1296,7 @@ function update(dt: number) {
     if (ev === "worm_up" || ev === "worm_down") { // gusano lunar (moon_worm.ts): cráter al salir y al hundirse; al salir golpea lo que esté encima
       deform(e.land, ATK.gusano_aviso_radio, ATK.gusano_crater_hondo); craterHumeante(e.land, ATK.gusano_aviso_radio, !simulating);
       if (!simulating) { FX.dust(e.land); FX.sparks(onFloor(e.land, 0.5), 14); shake = Math.max(shake, 0.4); }
+      if (ev === "worm_up" && mc && hd(mc.pos, e.land) < ATK.gusano_aviso_radio + mateR) mateHurt(e.def.dmg * TOUGH.dmg * (e.enraged ? ATK.segunda_barra_dano : 1)); // R7b: también al otro auto
       if (ev === "worm_up" && hd(c.pos, e.land) < ATK.gusano_aviso_radio + carR) hurt(e.def.dmg * TOUGH.dmg * (e.enraged ? ATK.segunda_barra_dano : 1), false, "salida " + e.kind, e.kind);
     }
     if (ev === "boom") { boom(e); e.hp = -1e9; continue; } // explosivo alien (aliens.ts): se fue sin dejar premio
@@ -1461,11 +1462,11 @@ function update(dt: number) {
     else if (mc && B.Vector3.Distance(s.m.position, mc.pos) < mateR + 0.3) { mateHurt(ATK.acido_dano); FX.hit(s.m.position); dead = true; }
     if (dead) { mark("scorch", s.m.position, Math.random() * 6, 0.6, 5); s.m.dispose(); spits.splice(i, 1); }
   }
-  if (MOON.on && !calm) skyTick(wdt, time, c.pos, simulating ? null : cam, hurt, enemies, camYaw); // luna: el Sol y la Tierra lanzan bichos (moon_sky.ts)
+  if (MOON.on && !calm) skyTick(wdt, time, carPs, simulating ? null : cam, hurtWho, enemies, camYaw); // luna: el Sol y la Tierra lanzan bichos (moon_sky.ts)
 
   // --- Armas ---
-  if (MOON.on && !calm) shipsTick(dt, time, c, simulating, camYaw); // naves alienígenas (moon_ships.ts): nodriza recurrente y minijefes
-  if (MOON.on && !calm) { goalsTick(dt, time, c.pos, simulating); if (state !== "play") return; } // objetivos y cohete (moon_goals.ts); el cohete puede ganar la partida
+  if (MOON.on && !calm) shipsTick(dt, time, cars, simulating, camYaw); // naves alienígenas (moon_ships.ts): nodriza recurrente y minijefes
+  if (MOON.on && !calm) { goalsTick(dt, time, carPs, simulating); if (state !== "play") return; } // objetivos y cohete (moon_goals.ts); el cohete puede ganar la partida
   const ctx: Ctx = { scene, car: c, enemies: MOON.on ? shipTargets(enemies.some((e) => e.kind === "gusano" && !wormOut(e)) ? enemies.filter((e) => e.kind !== "gusano" || wormOut(e)) : enemies, c.pos) : enemies, dt, st, fs: r.fs, damage, explode };
   for (const w of weapons) { dmgSrc = w.id; w.update(ctx); }
   if (mc) { const mctx: Ctx = { ...ctx, car: mc, fs: mate!.fs }; for (const w of mate!.weapons) { dmgSrc = w.id; w.update(mctx); } } // R7a: el otro auto dispara copias de las mismas armas desde su lugar
@@ -1513,7 +1514,7 @@ function update(dt: number) {
       if (p.type === "pila" && byMate) mate!.hp = Math.min(maxHp, mate!.hp + R.pila_cura);
       else if (p.type === "pila") hp = Math.min(maxHp, hp + R.pila_cura);
       else if (p.type === "iman") for (const g of gems) g.pull = true;
-      else openChest();
+      else openChest(byMate ? 1 : 0);
       p.m.dispose();
       pickups.splice(i, 1);
       if (state !== "play") return;
@@ -1569,6 +1570,8 @@ addEventListener("keydown", (ev) => {
 });
 const LAB = { on: false, back: 15, up: 13, t: 1 }; // modo lab (solo dev): mundo congelado para probar el look
 const dmgBy: Record<string, number> = {}; // solo dev: de dónde viene el daño
+/** Daño de los eventos de la luna al auto `who` (0 = el que guía, 1 = el otro; R7b). */
+function hurtWho(n: number, continuous: boolean, src: string, who: number) { if (who) mateHurt(n); else hurt(n, continuous, src); }
 function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   if (god || (abil === "escudo" && abilOn > 0)) return; // escudo: invulnerable
   if (by && DEF[by].final && enemies.some((e) => e.kind === by && e.enraged)) n *= ATK.segunda_barra_dano; // segunda barra: pega más fuerte
@@ -1586,15 +1589,28 @@ function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   }
 }
 
+/** Impulso del salto (con rampa) y su efecto; R7b: lo usan el que guía y el otro auto. */
+function carJump(c: Car, r: { fs: number; slope?: number }) {
+  const m = c.body.getMassProperties().mass || c.def.mass;
+  const fwd = MOON.on ? flatL(c.root.forward, c.pos) : c.root.forward.clone(); fwd.y = 0;
+  if (fwd.lengthSquared() > 1e-6) fwd.normalize();
+  const ramp = r.slope ?? 0;
+  const hx = Math.abs(r.fs) * R.salto_horiz * (1 + ramp * R.salto_rampa_h) * m;
+  const vy = R.salto_impulso_v * (1 + ramp * R.salto_rampa_v) * m;
+  c.body.applyImpulse(W(fwd.x * hx, vy, fwd.z * hx, c.pos), c.pos);
+  if (!simulating) { SFX.boing(); const rear = c.pos.add(c.root.forward.scale(-0.8)); FX.dust(rear); shake = Math.max(shake, 0.18); }
+}
+
 // ---------- Habilidad activa ----------
 function useAbility(c: Car) {
   const a = ABILITIES[abil];
   const k = abilK(abilLv); // nivel del Taller: más petardos, más segundos de escudo y de cámara lenta, más aturdido
+  abilCar = c;
   abilCd = abilCdOf(abil, abilLv); abilOn = a.dur * (abil === "escudo" || abil === "lenta" ? k : 1);
   if (abil === "bombardeo") { bombs = Math.round(R.bombardeo_petardos * k); bombT = 0; }
   else if (abil === "escudo") {
     if (!shieldM) { shieldM = sph(Math.max(...c.def.size) * 1.5, pbr("escudo", { color: "#8dff6a", emissive: "#3f9a2a", alpha: 0.18 }), [0, 0.2, 0]); shieldM.parent = c.root; shieldM.isPickable = false; }
-    shieldM.isVisible = true;
+    shieldM.parent = c.root; shieldM.isVisible = true; // R7b: en el auto de quien la disparó
     SFX.pickup();
   } else if (abil === "emp") {
     for (const e of enemies) if (!e.def.boss && !e.airborne && B.Vector3.Distance(e.pos, c.pos) < R.emp_radio + e.radius) e.stun = R.emp_aturde_s * k;

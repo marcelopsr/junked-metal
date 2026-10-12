@@ -8,7 +8,7 @@ import { alignYaw, alt, arc, at, deform, hd, hover, LUNA, MOON, onFloor, ringAt,
 import { ALIENS } from "./aliens";
 import { panTo } from "./moon_events";
 import { pbr } from "./render";
-import { rng } from "./rng";
+import { pickIdx, rng } from "./rng";
 import { SFX, SPACE } from "./sfx";
 import { banner, hudBoss } from "./ui";
 
@@ -24,7 +24,7 @@ const MINORS: ShipId[] = ["bombardera", "abductora", "caza"];
 /** Bichos que suelta la nodriza: los aliens que ya pueden aparecer a esa altura de la partida (aparece_min de balance.json; enjambre siempre). */
 export const nodrizaDrops = (time: number): Kind[] => ALIENS.filter((k) => k === "enjambre" || BAL.enemigos[k].aparece_min * 60 <= time);
 /** Lo que llena main.ts: daño al auto y premio (gemas + cofre; boss = cuenta como minijefe vencido). */
-export const SHIP_IO: { hurt: (n: number, src: string) => void; reward: (p: B.Vector3, xp: number, boss: boolean) => void } = { hurt: () => {}, reward: () => {} };
+export const SHIP_IO: { hurt: (n: number, src: string, who: number) => void; reward: (p: B.Vector3, xp: number, boss: boolean) => void } = { hurt: () => {}, reward: () => {} };
 
 /** Minijefe i-ésimo de la luna: dos naves distintas seguidas, elegidas por la semilla sin gastar rng() (como el jefe final). */
 export const shipFor = (i: number, seed: number) => MINORS[(Math.floor(((seed * 0.4142135) % 1) * 3) + i) % 3];
@@ -72,7 +72,7 @@ type Shot = { m: B.InstancedMesh; tele: B.InstancedMesh; from: B.Vector3; to: B.
 type Target = { readonly pos: B.Vector3; radius: number; hp: number; maxHp: number; hitCd: number; slow: number; stun: number; ship: Ship };
 type Ship = {
   id: ShipId; m: B.InstancedMesh; pos: B.Vector3; yaw: number; hp: number; maxHp: number; t: number; fire: number; drop: number;
-  state: "in" | "chase" | "aim" | "beam" | "out"; st: number; d: number; spot: B.Vector3; goal: B.Vector3; target: Target; beam?: B.InstancedMesh; tele?: B.InstancedMesh;
+  state: "in" | "chase" | "aim" | "beam" | "out"; st: number; d: number; spot: B.Vector3; goal: B.Vector3; target: Target; beam?: B.InstancedMesh; tele?: B.InstancedMesh; who?: number; // who: índice del auto al que apunta (R7b, se elige al primer cuadro)
 };
 const ships: Ship[] = [], shots: Shot[] = [];
 let nextMother = A.nave_nodriza_primera_s;
@@ -136,9 +136,10 @@ const snd = { quiet: true, cp: new B.Vector3(), yaw: 0 };
 const sfxAt = (p: B.Vector3, f: (pan: number, dist: number) => unknown) => { if (!snd.quiet) f(panTo(snd.cp, p, snd.yaw), hd(snd.cp, p)); };
 
 /** Cada cuadro (solo luna): agenda de la nodriza, vuelo y ataques de las naves y sus proyectiles. camYaw: paneo del sonido. */
-export function shipsTick(dt: number, time: number, car: Car, quiet: boolean, camYaw = 0) {
+/** cars = autos vivos (0 = el que guía: sonido y nodriza); cada nave persigue a uno al azar y los disparos dañan a cualquiera (R7b). */
+export function shipsTick(dt: number, time: number, cars: Car[], quiet: boolean, camYaw = 0) {
   if (!MOON.on) return;
-  const cp = car.pos;
+  const cp = cars[0].pos;
   snd.quiet = quiet; snd.cp = cp; snd.yaw = camYaw;
   // Nodriza: aviso unos segundos antes, entra desde el horizonte; no se superpone con otra nodriza
   if (time >= nextMother - BAL.ritmo.aviso_evento_s && nextMother > 0 && !ships.some((s) => s.id === "nodriza")) {
@@ -148,7 +149,7 @@ export function shipsTick(dt: number, time: number, car: Car, quiet: boolean, ca
   if (nextMother < 0 && time >= -nextMother) { spawn("nodriza", cp, false, time); nextMother = Infinity; }
 
   for (let i = ships.length - 1; i >= 0; i--) {
-    const s = ships[i], alt0 = ALT[s.id];
+    const s = ships[i], alt0 = ALT[s.id], w = (s.who ??= pickIdx(cars.length)) < cars.length ? s.who : 0, car = cars[w];
     s.t += dt; s.st += dt; s.target.hitCd -= dt;
     if (s.state === "out") { // se va: sube y se aleja; desaparece pasado el horizonte
       hover(s.pos, s.goal, alt0 + s.st * 6, 22, dt);
@@ -161,11 +162,11 @@ export function shipsTick(dt: number, time: number, car: Car, quiet: boolean, ca
         hudBoss(null); destroy(s, i); continue;
       }
     } else if (s.state === "in") { // entra desde lejos, bajando a medida que se acerca
-      const d = hover(s.pos, cp, alt0 + Math.max(0, hd(s.pos, cp) - 14) * 0.4, s.id === "caza" ? 26 : 14, dt);
+      const d = hover(s.pos, car.pos, alt0 + Math.max(0, hd(s.pos, car.pos) - 14) * 0.4, s.id === "caza" ? 26 : 14, dt);
       if (d < 16) { s.state = "chase"; s.st = 0; }
-    } else if (s.id === "nodriza") tickMother(s, dt, cp, quiet, time);
+    } else if (s.id === "nodriza") tickMother(s, dt, car.pos, quiet, time);
     else if (s.id === "bombardera") tickBomber(s, dt, car);
-    else if (s.id === "abductora") tickAbductor(s, dt, car);
+    else if (s.id === "abductora") tickAbductor(s, dt, car, w);
     else tickFighter(s, dt, car);
     // Pose: parada en el lugar con su rumbo; los platillos giran sobre sí mismos
     const spin = s.id === "nodriza" || s.id === "abductora";
@@ -185,7 +186,7 @@ export function shipsTick(dt: number, time: number, car: Car, quiet: boolean, ca
     arc(p.from, p.to, Math.min(1, p.t), p.h, p.m.position);
     if (!quiet && Math.random() < 0.4) FX.trail(p.m.position, p.src === "bomba nave" ? "#c86bff" : "#6dffb0");
     if (p.t < 1) continue;
-    if (hd(cp, p.to) < p.r + 1 && alt(cp) < 3) SHIP_IO.hurt(p.dmg, p.src);
+    cars.forEach((c, j) => { if (hd(c.pos, p.to) < p.r + 1 && alt(c.pos) < 3) SHIP_IO.hurt(p.dmg, p.src, j); });
     if (!quiet) { if (p.dent) FX.explosion(p.to, p.r * 0.7); else FX.shock(p.to); }
     if (p.dent) sfxAt(p.to, (pan, d) => SPACE.meteorImpact(pan, d, 0.7)); // bomba: golpe sordo como el meteorito, más chico
     if (p.dent) deform(p.to, p.r, p.dent); // cada impacto fuerte deja cráter de verdad (moon.ts)
@@ -219,7 +220,7 @@ function tickBomber(s: Ship, dt: number, car: Car) { // pasa por encima con adel
     shoot(at(s.pos, 0, -1, 0), onFloor(s.pos, 0), "bomba", 0.7, 0, A.nave_bomba_radio, A.nave_bomba_dano, A.nave_bomba_crater, "bomba nave");
   }
 }
-function tickAbductor(s: Ship, dt: number, car: Car) { // se para encima, marca el piso y prende el rayo: quien queda adentro sube y se frena
+function tickAbductor(s: Ship, dt: number, car: Car, who: number) { // se para encima, marca el piso y prende el rayo: quien queda adentro sube y se frena
   if (s.state === "chase") {
     hover(s.pos, car.pos, ALT.abductora, A.nave_abductora_vel, dt);
     // marca adonde va a estar el auto: cambiar de rumbo lo esquiva
@@ -235,7 +236,7 @@ function tickAbductor(s: Ship, dt: number, car: Car) { // se para encima, marca 
       const h = v.subtract(up.scale(vu)).scaleInPlace(Math.max(0, 1 - 3 * dt)); // lo frena
       const lift = (alt(car.pos) < A.nave_rayo_altura ? MOON.g + 14 : MOON.g * 0.95) * dt; // sube hasta la altura del rayo y queda flotando
       car.body.setLinearVelocity(h.addInPlace(up.scaleInPlace(Math.min(vu + lift, 6))));
-      SHIP_IO.hurt(A.nave_rayo_dano_s * dt, "rayo nave");
+      SHIP_IO.hurt(A.nave_rayo_dano_s * dt, "rayo nave", who);
     }
     if (s.st > A.nave_rayo_dura_s) { s.state = "chase"; s.st = 0; b.isVisible = false; s.tele!.isVisible = false; }
   }

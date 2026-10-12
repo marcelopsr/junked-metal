@@ -65,8 +65,8 @@ addEventListener("gamepadconnected", (e) => padToast(`CONTROL ${pads().length} C
 addEventListener("gamepaddisconnected", () => padToast(`CONTROL DESCONECTADO · ${pads().length} conectado${pads().length === 1 ? "" : "s"}`));
 
 const keys = new Set<string>();
-let jumpPulse = false;
-addEventListener("keydown", (e) => { keys.add(e.code); if (keyHit("jump", e.code)) jumpPulse = true; });
+let jumpPulse = false, jump2Pulse = false;
+addEventListener("keydown", (e) => { keys.add(e.code); if (keyHit("jump", e.code)) jumpPulse = true; if (KEYS2.jump.includes(e.code)) jump2Pulse = true; });
 addEventListener("keyup", (e) => keys.delete(e.code));
 addEventListener("blur", () => keys.clear());
 
@@ -181,36 +181,30 @@ const dz = (v: number) => (Math.abs(v) < PAD.dead ? 0 : Math.max(-1, Math.min(1,
 export const stickXY = (gp: Gamepad) => { const i = PAD.stick === "right" ? 2 : 0; return [dz(gp.axes[i] ?? 0) * (PAD.invX ? -1 : 1), dz(gp.axes[i + 1] ?? 0) * (PAD.invY ? -1 : 1)]; };
 const bv = (gp: Gamepad, i: number) => (i < 0 ? 0 : gp.buttons[i]?.value || +!!gp.buttons[i]?.pressed);
 
+/** Botones de acción de un joystick sobre `o` (mapeo de ENCORE/Supervivencia, PAD). mode "trig": gatillos y giro; "stick": dirección en pantalla. */
+function padInto(o: typeof input, gp: Gamepad, mode: typeof PAD.mode) {
+  const b = (i: number) => +!!gp.buttons[i]?.pressed, on = (a: PadAct) => bv(gp, pb(a)) > 0.5;
+  const [sx, sy] = stickXY(gp), cx = b(15) - b(14), cy = b(12) - b(13); // stick o cruceta
+  if (mode === "trig") { const trig = bv(gp, pb("accel")) - bv(gp, pb("brake")); if (trig) o.throttle = trig; if (sx || cx) o.steer = sx || cx; }
+  else { o.moveX = sx || cx; o.moveY = -sy || cy; }
+  o.boost ||= on("boost");
+  o.drift ||= on("drift");
+  o.ability ||= on("ability");
+  o.jump ||= on("jump");
+}
+
 /** coop (ENCORE para 2, R7a): `skip` = teclas del jugador 2 que el 1 no lee; `pad` = joystick fijo del jugador 1 (null = ninguno). Sin argumento, lo de siempre. */
 export function pollInput(coop?: { skip: string[]; pad: Gamepad | null }) {
   const k = (a: Action) => KEYS[a].some((x) => keys.has(x) && !coop?.skip.includes(x));
-  let throttle = (k("up") ? 1 : 0) - (k("down") ? 1 : 0);
-  let steer = (k("right") ? 1 : 0) - (k("left") ? 1 : 0);
-  let boost = k("boost");
-  let drift = k("drift");
-  let ability = k("ability");
-  let jump = jumpPulse;
-
-  let moveX = 0, moveY = 0;
+  const o = { throttle: (k("up") ? 1 : 0) - (k("down") ? 1 : 0), steer: (k("right") ? 1 : 0) - (k("left") ? 1 : 0), boost: k("boost"), drift: k("drift"), ability: k("ability"), jump: jumpPulse, moveX: 0, moveY: 0, move: false };
   const gp = coop ? coop.pad : activePad();
-  if (gp) {
-    const b = (i: number) => +!!gp.buttons[i]?.pressed, on = (a: PadAct) => bv(gp, pb(a)) > 0.5;
-    const [sx, sy] = stickXY(gp), cx = b(15) - b(14), cy = b(12) - b(13); // stick o cruceta
-    const trig = PAD.mode === "stick" ? 0 : bv(gp, pb("accel")) - bv(gp, pb("brake"));
-    if (PAD.mode === "trig") { if (trig) throttle = trig; if (sx || cx) steer = sx || cx; }
-    else { moveX = sx || cx; moveY = -sy || cy; }
-    boost ||= on("boost");
-    drift ||= on("drift");
-    ability ||= on("ability");
-    jump ||= on("jump");
-  }
-
-  if (touch.x || touch.y) { moveX = touch.x; moveY = -touch.y; }
-  boost ||= touch.boost;
-  drift ||= touch.drift;
-  ability ||= touch.ability;
-
-  Object.assign(input, { throttle, steer, boost, drift, ability, jump, moveX, moveY, move: !!(moveX || moveY) });
+  if (gp) padInto(o, gp, PAD.mode);
+  if (touch.x || touch.y) { o.moveX = touch.x; o.moveY = -touch.y; }
+  o.boost ||= touch.boost;
+  o.drift ||= touch.drift;
+  o.ability ||= touch.ability;
+  o.move = !!(o.moveX || o.moveY);
+  Object.assign(input, o);
   jumpPulse = false;
 }
 
@@ -249,4 +243,16 @@ export function pollPlayer(c: PlayerCtl) {
 }
 /** ENCORE para 2 (R7a): el jugador 2 usa el segundo joystick si hay dos, si no Teclado 2 (flechas); el 1 se queda con el teclado y el primer joystick. */
 export const coopCtl = (): PlayerCtl => (pads().length >= 2 ? { pad: 1 } : "kbd2");
-export const coopSkip = () => Object.values(RACE.kb2).flat().filter(Boolean);
+// R7b: salto y habilidad del J2 en Teclado 2 (fijas, junto a las flechas; el resto es RACE.kb2: Enter/Coma turbo, Shift der./Punto derrape)
+export const KEYS2 = { jump: ["Slash", "Numpad0"], ability: ["Quote", "Numpad1"] };
+export const coopSkip = () => [...Object.values(RACE.kb2).flat(), ...KEYS2.jump, ...KEYS2.ability].filter(Boolean);
+/** Entrada completa del J2 (R7b): Teclado 2 (turbo = el objeto de la carrera) o el segundo joystick con el mapeo de siempre (siempre gatillos: el J2 no tiene stick 2D). */
+export function pollMate(): typeof input {
+  const c = coopCtl(), o = { throttle: 0, steer: 0, boost: false, drift: false, ability: false, jump: false, moveX: 0, moveY: 0, move: false };
+  if (typeof c === "string") {
+    const q = pollPlayer(c);
+    Object.assign(o, { throttle: q.throttle, steer: q.steer, drift: q.drift, boost: q.item, ability: KEYS2.ability.some((x) => keys.has(x)), jump: jump2Pulse });
+  } else { const gp = pads()[c.pad]; if (gp) padInto(o, gp, "trig"); }
+  jump2Pulse = false;
+  return o;
+}

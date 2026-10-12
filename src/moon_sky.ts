@@ -3,7 +3,7 @@ import { BAL } from "./balance";
 import { burst, FX } from "./fx";
 import { box, cyl, sph, teleTemplate, template } from "./models";
 import { M, pbr, shadows } from "./render";
-import { rng } from "./rng";
+import { pickIdx, rng } from "./rng";
 import { SPACE } from "./sfx";
 import { panTo } from "./moon_events";
 import { at, deform, EARTH_DIR, hd, hflat, LUNA, onFloor, orient, SUN_DIR, upAt } from "./moon";
@@ -66,14 +66,15 @@ export function skyLaunch(sun: boolean, car: B.Vector3) {
 const drop = (s: Shot) => { s.m.dispose(); s.zone.dispose(); s.fill.dispose(); };
 const _p = new B.Vector3();
 /** Cada cuadro de la partida en la luna. cam = null en __sim (sin dibujar): mismo criterio de horizonte, sin efectos ni sonido. camYaw: paneo del sonido. */
-export function skyTick(dt: number, time: number, car: B.Vector3, cam: B.Camera | null, hurt: (n: number, continuous: boolean, src: string) => void, bugs: readonly { kind: string; pos: B.Vector3 }[], camYaw = 0) {
-  const up = upAt(car);
+/** cars = autos vivos (0 = el que guía: su horizonte marca el reloj y el sonido); cada tiro cae cerca de uno al azar y daña a cualquiera en el radio (R7b). */
+export function skyTick(dt: number, time: number, cars: B.Vector3[], cam: B.Camera | null, hurt: (n: number, continuous: boolean, src: string, who: number) => void, bugs: readonly { kind: string; pos: B.Vector3 }[], camYaw = 0) {
+  const car = cars[0], up = upAt(car);
   for (const sun of [true, false]) {
     const dir = sun ? SUN_DIR : EARTH_DIR, k = sun ? "sun" : "earth";
     if (B.Vector3.Dot(up, dir) <= R.luna_astro_horizonte) continue; // el reloj corre solo con el astro sobre el horizonte del auto
     if (cd[k] <= 0) cd[k] = every(time); // primera vez sobre el horizonte: arranca su cuenta
     else if ((cd[k] -= dt) <= 0) {
-      skyLaunch(sun, car); cd[k] = every(time);
+      skyLaunch(sun, cars[pickIdx(cars.length)]); cd[k] = every(time);
       if (cam) { const to = shots[shots.length - 1].to; (sun ? SPACE.sunLaunch : SPACE.earthLaunch)(panTo(car, to, camYaw), hd(car, to)); }
     }
   }
@@ -102,7 +103,7 @@ export function skyTick(dt: number, time: number, car: B.Vector3, cam: B.Camera 
       _p.copyFrom(up).scaleInPlace(0.4).addInPlace(s.to);
       if (s.sun) { FX.explosion(_p, 1.3); FX.ignite(_p); } else { FX.explosion(_p, 0.9); burst(_p, { n: 10, color: "#6b6e74", size: [0.8, 1.8], power: [1, 4], life: [0.8, 1.4], gravity: 1, add: false }); FX.sparks(_p, 12); }
     }
-    if (hd(car, s.to) < R.luna_astro_radio) hurt(R.luna_astro_dano, false, s.sun ? "bola de fuego" : "cohete");
+    cars.forEach((p, w) => { if (hd(p, s.to) < R.luna_astro_radio) hurt(R.luna_astro_dano, false, s.sun ? "bola de fuego" : "cohete", w); });
     const n = 1 + Math.floor(time / 60 / R.luna_astro_bichos_cada_min);
     for (let j = 0; j < n; j++) LUNA.spawn?.(s.sun ? "fuego" : "cohete", j ? at(s.to, Math.cos(j * 2.4) * 1.6, 0, Math.sin(j * 2.4) * 1.6) : s.to);
     drop(s); shots.splice(i, 1);

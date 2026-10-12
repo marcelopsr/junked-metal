@@ -3,7 +3,7 @@ import { BAL } from "./balance";
 import { burst, debris, FX, mark } from "./fx";
 import { template, sph, tor } from "./models";
 import { applyClimate, pbr, shadows } from "./render";
-import { rng } from "./rng";
+import { pickIdx, rng } from "./rng";
 import { SPACE, moonAmbience } from "./sfx";
 import { banner } from "./ui";
 import { arc, at, deform, hd, MOON, onFloor, orient, rel, ringAt, upAt } from "./moon";
@@ -16,7 +16,7 @@ const TAU = Math.PI * 2;
 
 /** Lo que el evento necesita de main.ts (daño y sacudida viven allá). */
 export type EvHooks = {
-  hurt(n: number, continuous: boolean, src: string): void; // daño al auto (ya descuenta blindaje)
+  hurt(n: number, continuous: boolean, src: string, who: number): void; // daño al auto `who` (índice en cars: 0 = el que guía; ya descuenta blindaje)
   blast(p: B.Vector3, r: number, dmg: number, src: string): void; // daño a los bichos dentro del radio
   shake(k: number): void;
   sim(): boolean;
@@ -147,10 +147,10 @@ export function craterHumeante(T: B.Vector3, r: number, vis: boolean) {
   if (vis) mark("scorch", T, Math.random() * 6, r * 0.9, 30);
 }
 
-function landMeteor(m: Met, car: B.Vector3, carR: number, camYaw: number, vis: boolean) {
-  const T = m.T, r = R.luna_meteoro_radio * m.size;
+function landMeteor(m: Met, cars: B.Vector3[], carR: number, camYaw: number, vis: boolean) {
+  const T = m.T, r = R.luna_meteoro_radio * m.size, car = cars[0];
   deform(T, R.luna_meteoro_crater_r * m.size, R.luna_meteoro_crater_hondo * m.size);
-  if (hd(car, T) < r + carR) H.hurt(R.luna_meteoro_dano, false, "meteorito");
+  cars.forEach((p, i) => { if (hd(p, T) < r + carR) H.hurt(R.luna_meteoro_dano, false, "meteorito", i); });
   H.blast(T, r, R.luna_meteoro_dano_bicho, "meteoritos");
   craterHumeante(T, r, vis);
   if (!vis) return;
@@ -170,8 +170,8 @@ function startQuake(car: B.Vector3, camYaw: number, aviso: number) {
 
 const rp = (C: B.Vector3, rad: number) => { const a = Math.random() * TAU, d = rad * Math.sqrt(Math.random()); return onFloor(at(C, Math.cos(a) * d, 0, Math.sin(a) * d), 0.3); };
 
-function tickQuake(q: Quake, dt: number, car: B.Vector3, carR: number, camYaw: number, vis: boolean) {
-  const prevT = q.t; q.t += dt;
+function tickQuake(q: Quake, dt: number, cars: B.Vector3[], carR: number, camYaw: number, vis: boolean) {
+  const prevT = q.t, car = cars[0]; q.t += dt;
   const dist = hd(car, q.C), pan = panTo(car, q.C, camYaw);
   if (q.t < 0) { // la falla se agrieta: anillo pulsante en el límite y chispas por todo el suelo
     if (vis) {
@@ -196,7 +196,7 @@ function tickQuake(q: Quake, dt: number, car: B.Vector3, carR: number, camYaw: n
   const dur = R.luna_erupcion_dur_s, cool = 3;
   q.r = q.t < dur ? q.rMax * (1 - (1 - q.t / dur) ** 2) : q.rMax * Math.max(0, 1 - (q.t - dur) / cool); // se expande rápido y se frena; luego se enfría de afuera hacia adentro
   if (q.t < dur + cool) {
-    if ((q.dmgT -= dt) <= 0) { q.dmgT = 0.25; if (dist < q.r + carR * 0.6) H.hurt(R.luna_erupcion_dano_s * 0.25, true, "erupción"); }
+    if ((q.dmgT -= dt) <= 0) { q.dmgT = 0.25; cars.forEach((p, i) => { if (hd(p, q.C) < q.r + carR * 0.6) H.hurt(R.luna_erupcion_dano_s * 0.25, true, "erupción", i); }); }
     if ((q.blastT -= dt) <= 0) { q.blastT = 0.5; if (q.r > 0.5) H.blast(q.C, q.r, R.luna_erupcion_dano_bicho_s * 0.5, "erupción"); }
   }
   if (vis && q.lava) {
@@ -218,9 +218,10 @@ function tickQuake(q: Quake, dt: number, car: B.Vector3, carR: number, camYaw: n
   }
 }
 
-/** Un cuadro de eventos (solo luna). time = segundos de partida; camYaw = rumbo de la cámara en el marco local del auto. */
-export function lunaEv(dt: number, time: number, car: B.Vector3, carR: number, camYaw: number) {
+/** Un cuadro de eventos (solo luna). cars = autos vivos (0 = el que guía: sonido y humo); cada meteorito y cada erupción eligen uno al azar (R7b). camYaw = rumbo de la cámara en el marco local del auto. */
+export function lunaEv(dt: number, time: number, cars: B.Vector3[], carR: number, camYaw: number) {
   if (!MOON.on) return;
+  const car = cars[0];
   const vis = !H.sim(), warnS = R.aviso_evento_s;
   now = time;
   if (vis && !ambOn) { ambOn = true; moonAmbience(true); }
@@ -238,13 +239,13 @@ export function lunaEv(dt: number, time: number, car: B.Vector3, carR: number, c
   }
   if (rain) {
     rain.left -= dt; rain.acc += dt * rain.rate;
-    while (rain.acc >= 1) { rain.acc -= 1; if (mets.length < 8) spawnMeteor(car, vis); }
+    while (rain.acc >= 1) { rain.acc -= 1; if (mets.length < 8) spawnMeteor(cars[pickIdx(cars.length)], vis); }
     if (rain.left <= 0) rain = null;
   }
   for (let i = mets.length - 1; i >= 0; i--) {
     const m = mets[i], aviso = R.luna_meteoro_aviso_s, caida = R.luna_meteoro_caida_s, t0 = aviso - caida;
     m.t += dt;
-    if (m.t >= aviso) { landMeteor(m, car, carR, camYaw, vis); drop(m.m); drop(m.ring); drop(m.area); mets.splice(i, 1); continue; }
+    if (m.t >= aviso) { landMeteor(m, cars, carR, camYaw, vis); drop(m.m); drop(m.ring); drop(m.area); mets.splice(i, 1); continue; }
     if (!vis) continue;
     const pulse = 1 + 0.08 * Math.sin(m.t * 14), r = R.luna_meteoro_radio * m.size;
     if (m.ring) layRing(m.ring, m.T, 0.25, r * pulse);
@@ -260,9 +261,9 @@ export function lunaEv(dt: number, time: number, car: B.Vector3, carR: number, c
   // --- Erupción / falla lunar ---
   if (!quake && time >= quakeAt) {
     if (busy) quakeAt = time + 8;
-    else { startQuake(car, camYaw, R.luna_erupcion_aviso_s); quakeAt = Infinity; }
+    else { startQuake(cars[pickIdx(cars.length)], camYaw, R.luna_erupcion_aviso_s); quakeAt = Infinity; } // ponytail: delante de la cámara del que guía aunque apunte al otro auto
   }
-  if (quake) tickQuake(quake, dt, car, carR, camYaw, vis);
+  if (quake) tickQuake(quake, dt, cars, carR, camYaw, vis);
   // --- Humo de los cráteres ---
   for (let i = smokes.length - 1; i >= 0; i--) {
     const s = smokes[i];

@@ -13,7 +13,7 @@ import { banner } from "./ui";
 // Al salir el gusano (jefe final) aterriza el cohete: quedarse luna_cohete_s en su zona = victoria "Escape". Premio de objetivo = el de la nodriza (SHIP_IO.reward).
 const A = BAL.ataques;
 /** main.ts llena win: victoria alternativa por escape (en ENCORE, activar el teleportador: tele = true cambia el rótulo de la barra). */
-export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean; scrap: () => number; hpFrac: () => number; pay: (scrap: number, hpFrac: number) => void; offer: (kind: "cofre" | "maquina") => void } = { win: () => {}, tele: false, scrap: () => 0, hpFrac: () => 1, pay: () => {}, offer: () => {} };
+export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean; scrap: () => number; hpFrac: (who: number) => number; pay: (scrap: number, hpFrac: number, who: number) => void; offer: (kind: "cofre" | "maquina", who: number) => void } = { win: () => {}, tele: false, scrap: () => 0, hpFrac: () => 1, pay: () => {}, offer: () => {} };
 
 const mats = () => {
   const glow = (n: string, c: string, a = 1) => { const m = pbr(n, { color: c, rough: 0.3, emissive: c, alpha: a }); m.fogEnabled = false; m.emissiveIntensity = 2.4; return m; };
@@ -76,21 +76,22 @@ let spots: B.InstancedMesh[] = [];
 export function spotsPlan(c0: B.Vector3, ps: { a: number; d: number }[]) { for (const m of spots) m.dispose(); spots = ps.map((s) => put(spotTpl, ringAt(c0, s.a, s.d, 0), "foco")); }
 function shopDrop() { for (const s of shops) for (const m of s.ms) m.dispose(); shops = []; }
 const shopNear = (car: B.Vector3) => shops.find((s) => hd(car, s.p) < SHOP_RADIO);
-function shopTick(dt: number, time: number, car: B.Vector3, quiet: boolean) {
+function shopTick(dt: number, time: number, cars: B.Vector3[], quiet: boolean) {
+  const who = Math.max(0, cars.findIndex(shopNear)), car = cars[who]; // R7b: activa el primero que esté en una (ese paga y elige)
   for (const s of shops) if (s !== shopNear(car)) s.prog = 0;
   const s = shopNear(car); if (!s) return;
-  const price = chestPrice(opened, shopStage), short = s.kind === "cofre" ? price - GOAL_IO.scrap() : 0, weak = s.kind === "maquina" && GOAL_IO.hpFrac() * (1 - SHOP_VIDA) < 0.05;
+  const price = chestPrice(opened, shopStage), short = s.kind === "cofre" ? price - GOAL_IO.scrap() : 0, weak = s.kind === "maquina" && GOAL_IO.hpFrac(who) * (1 - SHOP_VIDA) < 0.05;
   if (short > 0 || weak) { // sin fondos: aviso cada 4 s, no avanza
     if (!quiet && time > warnAt) { warnAt = time + 4; banner(weak ? "VIDA INSUFICIENTE PARA LA MÁQUINA" : `FALTAN ${short} TORNILLOS`, 1.6, { tag: "RADIO", ico: "cofre", tone: "warn" }); }
     s.prog = 0; return;
   }
   s.prog += dt;
   if (s.prog < SHOP_S) return;
-  if (s.kind === "cofre") { GOAL_IO.pay(price, 0); opened++; } else GOAL_IO.pay(0, SHOP_VIDA);
+  if (s.kind === "cofre") { GOAL_IO.pay(price, 0, who); opened++; } else GOAL_IO.pay(0, SHOP_VIDA, who);
   if (!quiet) FX.shock(s.p);
   for (const m of s.ms) m.dispose();
   shops.splice(shops.indexOf(s), 1);
-  GOAL_IO.offer(s.kind);
+  GOAL_IO.offer(s.kind, who);
 }
 
 type Goal = { kind: "celdas" | "antena" | "cohete"; p: B.Vector3; t: number; prog: number; drop: number; cells: { p: B.Vector3; m: B.InstancedMesh }[]; ms: B.InstancedMesh[]; spin?: B.InstancedMesh };
@@ -135,9 +136,11 @@ export function goalBar(car: B.Vector3) {
 export const goalStats = () => `objetivos ${stats.hechos}/${stats.aparecidos}${rocket ? " · cohete" : ""}`;
 
 /** Cada cuadro (solo luna). */
-export function goalsTick(dt: number, time: number, car: B.Vector3, quiet: boolean) {
+/** cars = autos vivos (0 = el que guía: los objetivos aparecen alrededor suyo); cualquiera junta celdas, mantiene la antena, compra y aborda (R7b). */
+export function goalsTick(dt: number, time: number, cars: B.Vector3[], quiet: boolean) {
   if (!MOON.on) return;
-  if (GOAL_IO.tele && shops.length) shopTick(dt, time, car, quiet);
+  const car = cars[0], near = (p: B.Vector3, r: number) => cars.some((c) => hd(c, p) < r);
+  if (GOAL_IO.tele && shops.length) shopTick(dt, time, cars, quiet);
   for (const m of goal?.cells ?? []) m.m.rotationQuaternion = alignYaw(m.m.position, time * 1.5);
   if (!goal && time >= next) {
     const kind = (alt++ + (rng() < 0.5 ? 0 : 1)) % 2 ? "antena" : "celdas"; // alternados, el primero al azar
@@ -148,14 +151,14 @@ export function goalsTick(dt: number, time: number, car: B.Vector3, quiet: boole
     const g = goal; g.t += dt;
     let done = false, lost = false;
     if (g.kind === "celdas") {
-      for (let i = g.cells.length - 1; i >= 0; i--) if (hd(car, g.cells[i].p) < A.luna_obj_celda_toma) {
+      for (let i = g.cells.length - 1; i >= 0; i--) if (near(g.cells[i].p, A.luna_obj_celda_toma)) {
         if (!quiet) FX.shock(g.cells[i].p);
         g.cells[i].m.dispose(); g.cells.splice(i, 1);
         if (!quiet && g.cells.length) banner(`CELDA RECOGIDA · FALTAN ${g.cells.length}`, 1.4, { tag: "RADIO", ico: "cofre" });
       }
       done = !g.cells.length; lost = g.t > A.luna_obj_celdas_s;
     } else {
-      if (hd(car, g.p) < A.luna_obj_antena_radio) {
+      if (near(g.p, A.luna_obj_antena_radio)) {
         g.prog += dt;
         if ((g.drop -= dt) <= 0 && LUNA.spawn) { // llegan bichos desde el borde de la zona
           g.drop = A.luna_obj_antena_bichos_cada_s;
@@ -176,7 +179,7 @@ export function goalsTick(dt: number, time: number, car: B.Vector3, quiet: boole
     (teleMats().bulb as B.PBRMaterial).emissiveIntensity = 2.2 + Math.sin(time * 5) * 1.2 + (rocket.prog > 0 ? 1.5 : 0);
   }
   if (rocket) {
-    if (hd(car, rocket.p) < A.luna_cohete_radio) rocket.prog += dt; else rocket.prog = 0;
+    if (near(rocket.p, A.luna_cohete_radio)) rocket.prog += dt; else rocket.prog = 0;
     if (rocket.prog >= A.luna_cohete_s) { const p = rocket.p.clone(); rocket.prog = 0; GOAL_IO.win(p); }
   }
 }

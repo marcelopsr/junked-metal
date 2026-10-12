@@ -19,12 +19,22 @@ describe("luna: eventos", () => {
     const car = new Vector3(0, 0.9, 0), h0 = L.heightAt(new Vector3(0, 1, 0));
     E.lunaDev.meteors(16);
     let maxTint = 0;
-    for (let i = 0; i < 60 * 14; i++) { E.lunaEv(1 / 60, 50 + i / 60, car, 1, 0); maxTint = Math.max(maxTint, E.evClimate(clima).fog / clima.fog - 1); }
+    for (let i = 0; i < 60 * 14; i++) { E.lunaEv(1 / 60, 50 + i / 60, [car], 1, 0); maxTint = Math.max(maxTint, E.evClimate(clima).fog / clima.fog - 1); }
     const fell = blasts.filter((b) => b === "meteoritos").length;
     expect(fell).toBeGreaterThanOrEqual(16); expect(fell).toBeLessThanOrEqual(17); // cada meteorito cae una vez
     expect(maxTint).toBeGreaterThan(0.25); // el tinte llegó a rojo pleno (fog × 1,3)
     expect(E.evClimate(clima)).toBe(clima); // y volvió: mismo objeto, sin tinte
     expect(L.heightAt(new Vector3(0, 1, 0))).not.toBe(h0); // los cráteres cambiaron el piso
+    L.moonReset(); L.MOON.on = false;
+  });
+  it("R7b: con 2 autos los meteoritos apuntan a los dos y el daño va al que golpean", () => {
+    L.MOON.on = true;
+    const who = new Set<number>();
+    E.evInit({ hurt: (_n, _c, _s, w) => who.add(w), blast: () => {}, shake: () => {}, sim: () => true });
+    const a = new Vector3(0, 0.9, 0), b = L.ringAt(a, 0, 60, 0.9);
+    E.lunaDev.meteors(40);
+    for (let i = 0; i < 60 * 14; i++) E.lunaEv(1 / 60, 50 + i / 60, [a, b], 1, 0);
+    expect([...who].sort()).toEqual([0, 1]);
     L.moonReset(); L.MOON.on = false;
   });
   it("la erupción se abre tras el aviso, quema solo dentro de la zona y termina", () => {
@@ -35,7 +45,7 @@ describe("luna: eventos", () => {
     const away = new Vector3(0, 0.9, 0);
     E.lunaDev.erupt(away, 0);
     const C = E.lunaDev.zone()!.C, inside = L.onFloor(C, 1);
-    for (; t < 40; t += 1 / 60) E.lunaEv(1 / 60, 50 + t, t < 6 ? away : inside, 1, 0); // 0-6 s lejos, después encima de la falla
+    for (; t < 40; t += 1 / 60) E.lunaEv(1 / 60, 50 + t, [t < 6 ? away : inside], 1, 0); // 0-6 s lejos, después encima de la falla
     expect(hurts.length).toBeGreaterThan(0);
     expect(hurts.every((h) => h.at >= 6)).toBe(true); // lejos no quema
     expect(E.lunaDev.zone()).toBeNull(); // terminó
@@ -49,7 +59,7 @@ describe("luna: eventos", () => {
     E.evInit({ hurt: () => {}, blast: (_p, _r, _d, src) => { (src === "meteoritos" ? rains : quakes).push(t); if (src === "meteoritos" && E.lunaDev.zone()) overlap++; }, shake: () => {}, sim: () => true });
     E.evReset();
     const car = new Vector3(0, 0.9, 0);
-    for (; t < 600; t += 1 / 30) E.lunaEv(1 / 30, t, car, 1, 0);
+    for (; t < 600; t += 1 / 30) E.lunaEv(1 / 30, t, [car], 1, 0);
     const groups = (a: number[]) => a.filter((x, i) => i === 0 || x - a[i - 1] > 20).length; // saltos de más de 20 s = otro evento
     expect(groups(rains)).toBeGreaterThanOrEqual(3);
     expect(groups(quakes)).toBeGreaterThanOrEqual(3);
