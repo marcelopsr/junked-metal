@@ -1330,7 +1330,9 @@ function renderBestiary() {
       const portraitHtml = portraitSrc
         ? `<div class="beast-portrait"><img src="${portraitSrc}" alt="${d.name}" width="58" height="58" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`
         : "";
-      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}" data-beast="${k}">${portraitHtml}<span class="bthumb">${beastIcon(k, 38)}</span><b class="wi">${d.boss ? icon("jefe", 22) : ""}${d.name}</b>${rankOf(k)} · ${met ? `${n} ${n === 1 ? "baja" : "bajas"}` : "Sin registros todavía"}<div class="lore">${LORE[k]}</div><div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"} de XP` : "Fin de la partida"}</div></div>`;
+      const bio = BIOMETRICS[k];
+      const bioFast = bio ? `<div class="b-tactical"><span class="b-bio-chip"><b>BLINDAJE:</b> ${bio.armor}</span><span class="b-bio-chip blind"><b>PUNTO CIEGO:</b> ${bio.blindSpot}</span></div>` : "";
+      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}" data-beast="${k}">${portraitHtml}<span class="bthumb">${beastIcon(k, 38)}</span><b class="wi">${d.boss ? icon("jefe", 22) : ""}${d.name}</b>${rankOf(k)} · ${met ? `${n} ${n === 1 ? "baja" : "bajas"}` : "Sin registros todavía"}<div class="lore">${LORE[k]}</div>${bioFast}<div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"} de XP` : "Fin de la partida"}</div></div>`;
     }).join("");
   rec.innerHTML = save.runs.length
     ? `<tr><th>#</th><th>Tiempo</th><th>Bajas</th><th>Nivel</th><th>Semilla</th></tr>` + save.runs.map((r, i) => `<tr><td>${i + 1}</td><td>${fmt(r.t)}${r.win ? " V" : ""}</td><td>${r.kills}</td><td>${r.lv}</td><td>${r.seed}</td></tr>`).join("")

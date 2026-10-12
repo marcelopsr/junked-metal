@@ -82,6 +82,13 @@ export const breakables: Breakable[] = [];
 const breakable = (m: B.Mesh, hp: number, r: number, color: string, pot: boolean | string[] = false, extras: B.Mesh[] = []) =>
   (breakables.push({ m, hp, r, color, extras, pot: !!pot, bits: Array.isArray(pot) ? pot : undefined }), m);
 
+export type HeavyProp = { m: B.Mesh; type: "drum" | "tire"; pos: B.Vector3; hits: number };
+export const heavyProps: HeavyProp[] = [];
+export const registerHeavyProp = (m: B.Mesh, type: "drum" | "tire") => {
+  heavyProps.push({ m, type, pos: m.position.clone(), hits: 0 });
+  return m;
+};
+
 // Daño en área a objetos de la zona. Devuelve dónde se rompieron los "cofres" (sueltan premios).
 export function hitBreakables(pos: B.Vector3, r: number, dmg: number) {
   const pots: B.Vector3[] = [];
@@ -101,6 +108,30 @@ export function hitBreakables(pos: B.Vector3, r: number, dmg: number) {
     breakables.splice(i, 1);
   }
   return pots;
+}
+
+// Impacto contra tambores y neumáticos pesados: abolladura / deformación visual y respuesta de material
+export function hitHeavyProps(pos: B.Vector3, r: number, spd: number): "drum" | "tire" | null {
+  for (const hp of heavyProps) {
+    if (B.Vector3.Distance(hp.m.position, pos) <= r + 2.4) {
+      hp.hits++;
+      if (hp.type === "drum") {
+        // Abolladura de chapa y leve inclinación por impacto
+        const pushDir = hp.m.position.subtract(pos).normalize();
+        hp.m.scaling.x = Math.max(0.82, hp.m.scaling.x - 0.04);
+        hp.m.scaling.z = Math.max(0.82, hp.m.scaling.z - 0.04);
+        hp.m.scaling.y = Math.min(1.08, hp.m.scaling.y + 0.02);
+        hp.m.rotation.z += pushDir.x * 0.05;
+        hp.m.rotation.x -= pushDir.z * 0.05;
+        return "drum";
+      } else if (hp.type === "tire") {
+        // Amortiguación elástica de caucho
+        hp.m.scaling.y = Math.max(0.88, hp.m.scaling.y - 0.03);
+        return "tire";
+      }
+    }
+  }
+  return null;
 }
 
 // Mallas fijas que pueden tapar al auto: la cámara las tramea (main.ts). Las copas quedan fuera: están por encima de la cámara.
@@ -179,6 +210,7 @@ export function buildWorld(s: B.Scene, low: boolean, id: ZoneId = "patio") {
   tuftCount = Math.round(12000 * Z.grass * (HALF / 160) ** 2); // 12000 en el patio de 320: base fija, el Detalle (G.grass) recorta o agrega después sin tocar rng()
   occluders.length = 0;
   bare.length = 0;
+  heavyProps.length = 0;
   Z.build();
   // Paredes físicas del borde (lo visible lo pone cada zona); la luna no tiene borde
   if (id !== "luna") for (const [x, z, w, d] of [[0, HALF, HALF * 2 + 10, 2], [0, -HALF, HALF * 2 + 10, 2], [HALF, 0, 2, HALF * 2 + 10], [-HALF, 0, 2, HALF * 2 + 10]]) {
@@ -400,11 +432,11 @@ function patioBuild() {
   // Rampa de chapa oxidada para saltos acrobáticos dentro de la zona
   ramp(FOLDED_SLICE ? FOLD.rust() : M.metal("#7a5038"), -48, 8, 0, 4.2, 6.5, 1.6);
   // Neumáticos de descarte apilados en el borde oeste con textura PBR y normales
-  stat(tor(2.8, 0.95, tireStackM(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
-  stat(tor(2.6, 0.9, tireStackM(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
+  registerHeavyProp(stat(tor(2.8, 0.95, tireStackM(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
+  registerHeavyProp(stat(tor(2.6, 0.9, tireStackM(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   // Tambores metálicos de combustible oxidados (PBR con relieve y desgaste)
-  stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-42, 2.4, 30], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 });
-  stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-45.5, 2.4, 32], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 });
+  registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-42, 2.4, 30], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
+  registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-45.5, 2.4, 32], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
   // Cajas industriales de madera con textura PBR y normales en el borde este
   const scrapCrate = woodCrateM();
   crateFold(stat(box(2.6, 2.4, 2.6, scrapCrate, [-33, 1.2, 24], [0, 0.35, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.6, 2.4, 2.6);

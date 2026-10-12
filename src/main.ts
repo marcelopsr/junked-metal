@@ -17,7 +17,7 @@ import { pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
 import { applyClimate, gfxInfo, glitchHit, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setupRender, shadows } from "./render";
 import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
-import { buildLayout, floorAt, HALF, initWorld, hitBreakables, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
+import { buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 import { BAL, xpNeed } from "./balance";
@@ -879,13 +879,22 @@ function update(dt: number) {
   const spd = Math.abs(r.fs);
   if (spd > 9 && (smashCd -= dt) <= 0) {
     const pots = hitBreakables(c.pos, 1.3, spd * c.def.ram * 1.5);
-    if (pots.length) {
-      smashCd = 0.3;
-      smashed(pots);
+    const heavyHit = hitHeavyProps(c.pos, 1.3, spd);
+    if (pots.length || heavyHit) {
+      smashCd = 0.25;
+      if (pots.length) smashed(pots);
       if (!simulating) {
-        SFX.bodyThud(spd * 0.4);
-        FX.rustSparks(c.pos, 14);
-        if (spd > 14) FX.tireFriction(c.pos, 10);
+        if (heavyHit === "drum") {
+          SFX.propCrash("drum", spd);
+          FX.rustSparks(c.pos, 18);
+        } else if (heavyHit === "tire") {
+          SFX.propCrash("tire", spd);
+          FX.tireFriction(c.pos, 14);
+        } else {
+          SFX.bodyThud(spd * 0.4);
+          FX.rustSparks(c.pos, 14);
+          if (spd > 14) FX.tireFriction(c.pos, 10);
+        }
       }
     }
   }

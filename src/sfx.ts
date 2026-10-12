@@ -369,6 +369,25 @@ export const SFX = {
     tone("sine", 140, 50, 0.12, vol, 0, p);
     hiss("lowpass", cutoff, 150, 0.1, vol * 0.8, p, dist);
   },
+  /** Choque contra props de taller y patio: sonido metálico sordo y resonante en tambores vs. crujido sordo elástico en neumáticos */
+  propCrash: (type: "drum" | "tire" | "wood", spd = 12, pan?: number) => {
+    if (!gate("prop-crash", 6)) return;
+    const intensity = Math.min(2.5, Math.max(0.6, spd / 10));
+    if (type === "drum") {
+      // Tambor de chapa de combustible: gong/resonancia metálica hueca
+      tone("square", 180, 85, 0.22, 0.18 * intensity, 0, pan);
+      tone("triangle", 340, 110, 0.28, 0.14 * intensity, 0.02, pan);
+      hiss("bandpass", 1600, 320, 0.2, 0.22 * intensity, pan);
+    } else if (type === "tire") {
+      // Pila de neumáticos: crujido de caucho comprimido sordo y amortiguado
+      tone("sine", 110, 45, 0.25, 0.22 * intensity, 0, pan);
+      hiss("lowpass", 320, 90, 0.22, 0.26 * intensity, pan);
+    } else {
+      // Madera/cajas: crujido seco
+      tone("triangle", 240, 90, 0.12, 0.16 * intensity, 0, pan);
+      hiss("bandpass", 850, 200, 0.15, 0.2 * intensity, pan);
+    }
+  },
   lipoLowWarn: () => {
     if (!gate("lipo-warn", 0.4)) return;
     tone("square", 2400, 2400, 0.04, 0.06);

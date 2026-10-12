@@ -1364,13 +1364,31 @@ Decisión del usuario: Implementar las 3 mejoras del ciclo:
    - `npm run shots -- --only bestiario,partida`: 11 capturas aprobadas en PC y móvil.
    - `graphify update .`: grafo actualizado (4194 nodos, 10133 aristas, 204 comunidades).
 
+## 2026-10-11 · Audio Reactivo de Props, Biometría Táctica Rápida en Bestiario y Deformación de Tambores (Ciclo #37)
+
+Decisión del usuario: Completar las 3 oportunidades seleccionadas:
+
+1. **Audio Reactivo en Colisión con Props (`src/sfx.ts`, `src/main.ts`):**
+   - Implementado `SFX.propCrash(type, spd, pan)`: resonancia metálica/gong hueca en tambores de chapa oxidada (`drum`), crujido sordo elástico en pilas de neumáticos (`tire`), y astillado seco en cajas de madera (`wood`).
+2. **Inspección Rápida de Biometría Táctica en Bestiario (`src/menu.ts`, `src/menu.css`):**
+   - Mini-bloque táctico `.b-tactical` con micro-etiquetas `.b-bio-chip` en cada tarjeta de `#scr-bestiary` mostrando de un vistazo el *BLINDAJE* y *PUNTO CIEGO* de cada criatura y jefe sin obligar al jugador a entrar a la ficha 3D individual.
+3. **Deformación Física y Abolladura de Tambores (`src/world.ts`, `src/main.ts`):**
+   - Sistema `hitHeavyProps()` que detecta embestidas a alta velocidad (>9 km/h): deforma la escala axial de los tambores de combustible (abolladura) y aplica inclinación angular en la dirección del empuje, con compresión elástica en pilas de neumáticos.
+4. **Verificación Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado TypeScript.
+   - `npx vitest run test/run.test.ts test/stats.test.ts test/save.test.ts`: 34/34 tests unitarios pasando al 100%.
+   - `npm run build`: compilación limpia en 716 ms.
+   - `npm run test:restart` y `npm run shots -- --only bestiario,partida`: 11 capturas aprobadas en PC y móvil en 18.5 s.
+   - `graphify update .`: grafo actualizado (4240 nodos, 10345 aristas, 201 comunidades).
+
 ---
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Ciclo #36 (Alarma FM industrial de jefes, Chispas/fricción de props en colisión y Biometría táctica en Bestiario).
+- **Último trabajo completado:** Ciclo #37 (Audio diferenciado de props en colisiones, chips tácticos directos en Bestiario y abolladura/deformación visual de tambores).
 - **Invariantes activas:** Gemini Flash Low Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
+
 
 
 
