@@ -270,6 +270,7 @@ let dirq = E.newDirQ(), ovT = 0, guestE: Enemy | null = null; // R3: cola del Di
 let erun: E.Run | null = null, encPrior = 0, paceS = 0, pfx: E.Fx = E.NO_FX; // pfx = efecto de los pactos activos (recompute)
 // R7a/c (ENCORE de 2 a 4, solo compu): coop = jugadores pedidos al largar (1 = solo); los jugadores viven en `players` (R6a)
 let coop = 1, spawnN = 0;
+const encLog: { loop: number; stage: number; t: number }[] = []; // solo dev (__encBot): cuándo se entró a cada escenario (segundos totales de la expedición)
 /** Compañeros con auto (los caídos esperan el próximo escenario); su orden es el de los índices `who` 1.. de los eventos. */
 const liveM = () => others().filter((m) => m.car);
 let encExtra = 0, encG = 0; // R5: tornillos extra de pactos y rutas ya liquidados, y los brutos de la run al liquidarlos (se liquida al cambiar el efecto, no al morir)
@@ -2349,6 +2350,32 @@ if (import.meta.env.DEV) import("./devbot").then((m) => devReady().then(() => Ob
     const boss = enemies.find((e) => e.def.boss);
     return `${fmt(time)} nv${level} hp${Math.round(lead.hp)}/${lead.maxHp} en${enemies.length} bajas ${kills} [${weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)).join(" ")}] ${state}${boss ? ` JEFE ${boss.def.name} ${Math.round((boss.hp / boss.maxHp) * 100)}%` : ""}${state === "over" ? " · " + $("overTitle").textContent + ": " + $("overTxt").textContent : ""} · ${profile.climate.name}/${profile.plague.name} · semilla ${runSeed}${MOON.on ? " · " + goalStats() : ""} · tornillos ${Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK)} · ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
   },
+  // ENCORE (balance): el bot juega la expedición sin dibujar. Aborda el teleportador al aterrizar (no lo conduce hasta él), AVANZA siempre, rechaza pactos, toma el primer destino y en la votación
+  // elige ¡ENCORE! mientras la vuelta sea < `encores` (0 = FINAL ACT tras el primer ciclo). Cada llamada corre hasta ~30 s reales: encadenar hasta `done`. Con 2-4 jugadores los compañeros quedan quietos (solo suman armas y escala de bichos) o, con `follow`, se recolocan junto al líder cada 0,75 s.
+  __encBot: (o: { encores?: number; players?: number; follow?: boolean } = {}) => {
+    const w0 = performance.now();
+    let n = 0;
+    if (!erun) { if (state !== "menu") toMenu(); encore = true; coop = o.players ?? 1; encLog.length = 0; startRun(); encLog.push({ loop: 0, stage: 0, t: 0 }); }
+    simulating = true; m.resetBot();
+    while (erun && (state === "play" || state === "level") && erun.phase !== "won" && performance.now() - w0 < 30000) {
+      const r = erun, pick = (i: 0 | 1 | 2) => applyCommand(lead.id, { k: "enc", i });
+      if (state === "play") {
+        if (r.phase === "stage" && r.landed) encApply(E.boarded(r));
+        else if (r.phase === "teleporter" || r.phase === "stay") pick(1);
+        else if (r.phase === "pact") pick(2);
+        else if (r.phase === "route") pick(0);
+        else if (r.phase === "vote") pick(r.loop < (o.encores ?? 0) ? 0 : 1);
+      }
+      botStep(m, 1 / 60);
+      if (o.follow && ++n % 45 === 0) for (const t of liveM()) matePlace(t); // compañeros pegados al líder (cota optimista: una persona se separa más)
+      const l = encLog[encLog.length - 1];
+      if (erun && (erun.loop !== l.loop || erun.stage !== l.stage)) encLog.push({ loop: erun.loop, stage: erun.stage, t: +(time + encPrior).toFixed(1) });
+    }
+    simulating = false;
+    $("levelup").classList.add("hidden");
+    const r = erun;
+    return { done: !r || state === "over" || r.phase === "won", state, won: r?.phase === "won", loop: r?.loop, stage: r?.stage, phase: r?.phase, t: +(time + encPrior).toFixed(1), hp: Math.round(lead.hp), maxHp: lead.maxHp, level, kills, log: encLog, weapons: weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)), cause: state === "over" ? $("overTxt").textContent : "", real: +((performance.now() - w0) / 1000).toFixed(1) };
+  },
   // Arranca una partida normal desde la consola (para __sim sin pasar por el menú): __play(3)
   __play: (seed = 1) => { if (state !== "menu") toMenu(); forceSeed = seed; startRun(); forceSeed = 0; return runSeed; },
   __team: () => ({ level, weapons: weapons.map((w) => [w.id, w.lv, w.evolved]), passives }), // el equipo actual con la forma de DUEL_TEAMS (para anotar equipos de __sim)
@@ -2390,6 +2417,7 @@ if (import.meta.env.DEV) Object.assign(window, {
     goto: (kind: "cofre" | "maquina" = "cofre", i = 0) => { const p = shopAt(kind, i); return !!(p && lead.car && carPlace(onFloor(p.clone(), lead.car.def.size[1] / 2 + 0.3), p.add(lead.car.root.forward))); }, // solo dev: teletransporta el auto de J1 a un cofre o a la máquina (cuerpo, no solo malla)
     jump: (loop: number, stage: number) => { if (!erun) return "sin ENCORE"; erun.loop = loop; erun.stage = stage; erun.phase = "stage"; erun.stageT = 0; encApply("advance"); return E.zoneOf(erun); }, // solo dev: salta a (vuelta, escenario) como si se hubiera elegido el destino
     free: () => goalBlips().map((p) => ({ x: +p.x.toFixed(1), z: +p.z.toFixed(1), gap: +Math.min(...obstacles().map((b) => Math.hypot(p.x - b.x, p.z - b.z) - b.r)).toFixed(1) })), // solo dev: puntos de objetivos (teleportador, cofres, máquina) y holgura al mueble más cercano
+    evo: (id: WeaponId = "lanza") => { const w = makeWeapon(id); w.lv = 5; weapons = weapons.filter((x) => x.id !== id).concat(w); passives[WEAPONS[id].evo] = 1; recompute(); return evoOffer(weapons, passives)?.kind ?? null; }, // solo dev: arma a nivel máximo más su pasiva (lo que pide un cofre para ofrecer la evolución)
     scrap: (n?: number) => { if (n !== undefined) runScrap += n - GOAL_IO.scrap(); return GOAL_IO.scrap(); }, // solo dev: fija (si se pasa n) y devuelve los tornillos totales
     shop: (k: "cofre" | "maquina" = "cofre", who = 0) => { const c = who ? players.find((x) => x.id === who)?.car : lead.car; if (!c) return false; runScrap = Math.max(runScrap, 999); return shopDev(k, c.pos); }, // trae un cofre o la máquina al auto (con tornillos de sobra)
   },

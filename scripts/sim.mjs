@@ -1,6 +1,7 @@
 // Simulaciones y duelos de balance con el bot, SIN dibujar, en Chromium headless contra pm2 rc-test (:5174). Uso (npm run sim):
 //   npm run sim -- --seeds 1,2,3 --secs 600      partidas completas del bot (una página limpia por semilla: Havok es determinista solo desde carga limpia)
 //   npm run sim -- --duel perro,aspiradora       duelos contra jefes finales con el equipo del minuto 10 (--seeds los varía; --adds 100 --max 180 --god --team N)
+//   npm run sim -- --encore [--players 1,2,4] [--encores N] [--follow: compañeros pegados al bot] [--seeds 1,2,3]   expedición ENCORE con el bot (aborda el teleportador, AVANZA, rechaza pactos); --encores = vueltas extra antes del FINAL ACT (0 = FINAL ACT tras el primer ciclo)
 //   --zone luna juega en otro mapa (patio por defecto) · --par 2 corre varias a la vez (más rápido, más CPU; no afecta al resultado) · --json imprime solo JSON (la tabla va a stderr)
 // ponytail: no corre en Node puro: main.ts es DOM+WebGL+Vite de punta a punta (top-level await, ?url, CSS, canvas); NullEngine+Havok en Node funcionarían
 // (Havok WASM sí corre) pero habría que partir main.ts en lógica y presentación. Hasta entonces el navegador headless sin dibujar cuesta ~1 s de arranque por corrida.
@@ -9,10 +10,10 @@ import { launch, open } from "./lib/browser.mjs";
 
 const { values: a } = parseArgs({ options: {
   seeds: { type: "string", default: "1,2" }, secs: { type: "string", default: "600" }, duel: { type: "string" }, adds: { type: "string" }, max: { type: "string" },
-  team: { type: "string" }, god: { type: "boolean" }, par: { type: "string", default: "1" }, json: { type: "boolean" }, zone: { type: "string" }, // --zone luna: mapa (solo dev, ?zone=)
+  team: { type: "string" }, god: { type: "boolean" }, par: { type: "string", default: "1" }, json: { type: "boolean" }, zone: { type: "string" }, encore: { type: "boolean" }, players: { type: "string", default: "1" }, encores: { type: "string", default: "0" }, follow: { type: "boolean" }, // --zone luna: mapa (solo dev, ?zone=)
 } });
 const seeds = a.seeds.split(",").map(Number), secs = Number(a.secs);
-const jobs = a.duel ? a.duel.split(",").flatMap((kind) => seeds.map((seed) => ({ kind, seed }))) : seeds.map((seed) => ({ seed }));
+const jobs = a.encore ? a.players.split(",").flatMap((n) => seeds.map((seed) => ({ seed, players: Number(n) }))) : a.duel ? a.duel.split(",").flatMap((kind) => seeds.map((seed) => ({ kind, seed }))) : seeds.map((seed) => ({ seed }));
 
 // El juego usa Math.random en algunas cosas que sí cambian el resultado (dispersión y daño de ciertas armas: weapons.ts) además de lo visual. Se reemplaza por un
 // generador con semilla justo antes de arrancar: así la misma semilla da el mismo resultado corrida tras corrida (sin tocar el código del juego).
@@ -23,6 +24,11 @@ async function run(job) {
   const page = await open(browser, `?mute&seed=${job.seed}${a.zone ? "&zone=" + a.zone : ""}`, "pc", { freeze: true });
   try {
     await page.evaluate(seedMath, job.seed);
+    if (a.encore) { // expedición ENCORE: __encBot corre ~30 s reales por llamada; se encadena hasta que muere o gana
+      let r;
+      do r = await page.evaluate((o) => window.__encBot(o), { encores: Number(a.encores), players: job.players, follow: a.follow }); while (!r.done && r.real > 0);
+      return { ...job, ...r };
+    }
     if (job.kind) {
       if (!a.json) process.stderr.write(`[Duelo ${job.kind} · Semilla ${job.seed}] Simulando combate contra jefe...\n`);
       const o = { seed: job.seed, god: a.god, adds: a.adds && Number(a.adds), max: a.max && Number(a.max), team: a.team && Number(a.team) };
@@ -56,10 +62,15 @@ try { await Promise.all(Array.from({ length: par }, async () => { while (next < 
 finally { await browser.close(); }
 
 const log = a.json ? console.error : console.log, pad = (v, n) => String(v ?? "-").padEnd(n);
-log(a.duel
+log(a.encore
+  ? `${pad("semilla", 8)}${pad("jug", 5)}${pad("resultado", 11)}${pad("vuelta", 7)}${pad("esc", 5)}${pad("fase", 11)}${pad("tiempo", 8)}${pad("nv", 4)}${pad("bajas", 7)}${pad("s/escenario", 22)}armas`
+  : a.duel
   ? `${pad("jefe", 12)}${pad("semilla", 8)}${pad("segundos", 9)}${pad("ganó", 6)}${pad("jefe %vida", 11)}${pad("auto hp", 8)}real s`
   : `${pad("semilla", 8)}${pad("tiempo", 8)}${pad("nv", 4)}${pad("hp", 6)}${pad("bajas", 7)}${pad("estado", 8)}${pad("mundo", 34)}armas`);
-for (const r of out) log(r.error ? `${r.kind ?? ""} ${r.seed}: ERROR ${r.error}` : a.duel
+const durs = (l, end) => l.map((e, i) => `${e.loop}.${e.stage}:${Math.round((l[i + 1]?.t ?? end) - e.t)}`).join(" ");
+for (const r of out) log(r.error ? `${r.kind ?? ""} ${r.seed}: ERROR ${r.error}` : a.encore
+  ? `${pad(r.seed, 8)}${pad(r.players, 5)}${pad(r.won ? "GANÓ" : "murió", 11)}${pad(r.loop, 7)}${pad(r.stage, 5)}${pad(r.phase, 11)}${pad(r.t, 8)}${pad(r.level, 4)}${pad(r.kills, 7)}${pad(durs(r.log, r.t), 22)}${r.weapons.join(" ")}`
+  : a.duel
   ? `${pad(r.kind, 12)}${pad(r.seed, 8)}${pad(r.segundos, 9)}${pad(r.ganó ? "sí" : "no", 6)}${pad(r.vidaRestante, 11)}${pad(r.auto, 8)}${r.real}`
   : `${pad(r.seed, 8)}${pad(r.tiempo, 8)}${pad(r.nivel, 4)}${pad(r.hp, 6)}${pad(r.bajas, 7)}${pad(r.estado, 8)}${pad(r.mundo, 34)}${r.armas}`);
 log(`\n${out.length} corrida(s) en ${((Date.now() - t0) / 1000).toFixed(1)} s (par ${par})`);
