@@ -44,11 +44,23 @@ export async function loginKey(clave: string) {
 export const LOGIN_URL = String(import.meta.env.VITE_LOGIN_URL ?? "").trim();
 // Invitación del portal admin: `?invite=CODE` se guarda, se quita de la URL y viaja al login de Cloudflare para que /api/cf-exchange la canjee.
 const INVITE = "jm_invite";
+let directInvite = ""; // sin VITE_LOGIN_URL el código se canjea directo contra el servidor (no se guarda: es de un solo uso)
 try {
   const u = new URL(location.href), inv = u.searchParams.get("invite");
-  if (inv) { localStorage.setItem(INVITE, inv.slice(0, 64)); u.searchParams.delete("invite"); history.replaceState(null, "", u.pathname + u.search + u.hash); }
+  if (inv) { if (LOGIN_URL || !NET_HOST) localStorage.setItem(INVITE, inv.slice(0, 64)); else directInvite = inv.slice(0, 64); u.searchParams.delete("invite"); history.replaceState(null, "", u.pathname + u.search + u.hash); }
 } catch { /* sin almacenamiento: la invitación se pierde y el administrador puede validar a mano */ }
 const invite = () => { try { return localStorage.getItem(INVITE) ?? ""; } catch { return ""; } };
+/** Canje directo de `?invite=CODE` (POST /api/invite-redeem). null = no había código; si no, el mensaje para la UI. */
+export async function redeemInvite(): Promise<string | null> {
+  const code = directInvite; if (!code) return null;
+  directInvite = "";
+  try {
+    const r = await fetch(`https://${NET_HOST}/api/invite-redeem`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
+    const j = await r.json().catch(() => null);
+    if (r.ok && j?.token) { setToken(j.token); return "Invitación aceptada"; }
+    return j?.error ? `Invitación rechazada: ${j.error}.` : `La invitación falló (${r.status}).`;
+  } catch { return "No se pudo contactar al servidor para canjear la invitación."; }
+}
 export const cfLoginUrl = () => `${LOGIN_URL}${LOGIN_URL.includes("?") ? "&" : "?"}return=${encodeURIComponent(location.href)}${invite() ? `&invite=${encodeURIComponent(invite())}` : ""}`;
 export const loginUrl = () => `https://${NET_HOST}/auth/login?return=${encodeURIComponent(location.href)}`;
 /** Opciones de Peer. Con host propio: su PeerServer y los iceServers temporales de /api/turn (si falla o no hay token, solo STUN). Sin host: PeerJS Cloud y su config por defecto. */

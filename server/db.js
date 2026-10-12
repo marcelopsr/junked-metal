@@ -50,13 +50,13 @@ export function openDb(file, invitesJson = null) {
     seen: (email, now = Date.now()) => run("UPDATE users SET lastSeen=? WHERE email=?", now, normMail(email)),
     setNote: (email, note) => run("UPDATE users SET note=? WHERE email=?", String(note).slice(0, 500), normMail(email)).changes > 0,
 
-    // Invitar: crea (o reinvita) al usuario y un código de 7 días. Un activo sigue activo.
+    // Invitar: crea (o reinvita) al usuario y un código de 7 días. Activo y revocado no cambian de estado (reactivar es explícito).
     invite(email, now = Date.now(), days = 7) {
       const m = normMail(email);
       if (!validMail(m)) throw new Error("Mail inválido");
       const code = randomBytes(12).toString("base64url");
       tx(() => {
-        run("INSERT INTO users(email,status,invitedAt) VALUES(?, 'invited', ?) ON CONFLICT(email) DO UPDATE SET invitedAt=excluded.invitedAt, status=CASE WHEN status='active' THEN 'active' ELSE 'invited' END", m, now);
+        run("INSERT INTO users(email,status,invitedAt) VALUES(?, 'invited', ?) ON CONFLICT(email) DO UPDATE SET invitedAt=excluded.invitedAt, status=CASE WHEN status IN ('active','revoked') THEN status ELSE 'invited' END", m, now);
         run("INSERT INTO invites(code,email,expiresAt) VALUES(?,?,?)", code, m, now + days * DAY);
       });
       return { code, expiresAt: now + days * DAY };
@@ -73,6 +73,19 @@ export function openDb(file, invitesJson = null) {
         run("UPDATE users SET status='active', activatedAt=? WHERE email=?", now, m);
       });
       return api.user(m);
+    },
+    // Canje directo (sin Cloudflare): el código identifica al mail. Un solo uso; sirve también para reingresar un usuario activo desde otro dispositivo.
+    // Devuelve {user} o {error}.
+    redeemCode(code, now = Date.now()) {
+      const inv = one("SELECT * FROM invites WHERE code=?", String(code ?? ""));
+      if (!inv) return { error: "Código inválido" };
+      const u = api.user(inv.email);
+      if (!u || u.status === "revoked") return { error: "Usuario revocado" };
+      if (inv.usedAt) return { error: "Código ya usado" };
+      if (inv.expiresAt <= now) return { error: "Código vencido" };
+      const used = tx(() => run("UPDATE invites SET usedAt=? WHERE code=? AND usedAt IS NULL", now, inv.code).changes > 0
+        && (run("UPDATE users SET status='active', activatedAt=COALESCE(activatedAt,?) WHERE email=?", now, inv.email), true));
+      return used ? { user: api.user(inv.email) } : { error: "Código ya usado" };
     },
     setStatus(email, status, now = Date.now()) {
       const m = normMail(email);

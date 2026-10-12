@@ -152,12 +152,14 @@ function planDe(u) {
 function pintarUsers() {
   $("tUsers").innerHTML = users.map((u, i) => `<tr><td class="mono">${esc(u.email)}</td><td><span class="st ${u.status}">${ESTADO[u.status]}</span></td><td>${fecha(u.lastSeen)}</td><td>${planDe(u)}</td><td>${esc(u.note)}</td><td class="fila">
     ${u.status === "active" ? `<button class="mal" data-op="revoke" data-i="${i}">Revocar</button>` : `<button data-op="activate" data-i="${i}">${u.status === "invited" ? "Validar" : "Reactivar"}</button>`}
+    <button data-op="link" data-i="${i}">Nuevo link</button>
     <button data-op="gestionar" data-i="${i}">Gestionar</button></td></tr>`).join("") || `<tr><td colspan="6">Sin usuarios</td></tr>`;
 }
 $("tUsers").onclick = intentar(async (e) => {
   const b = e.target.closest("button"); if (!b) return;
   const u = users[b.dataset.i];
   if (b.dataset.op === "gestionar") return abrir(u);
+  if (b.dataset.op === "link") { const r = await api("invite", { email: u.email }); $("iLink").textContent = r.link; $("iVence").textContent = `Para ${u.email} · vence ${fecha(r.expiresAt)}`; $("iOut").classList.remove("hidden"); $("iOut").scrollIntoView(); return aviso("Nuevo link generado."); }
   if (b.dataset.op === "revoke" && !confirm(`Revocar a ${u.email}? Sus tokens dejan de valer al instante.`)) return;
   await api("user", { email: u.email, op: b.dataset.op });
   aviso(b.dataset.op === "revoke" ? `${u.email} revocado.` : `${u.email} activo.`); cargar();

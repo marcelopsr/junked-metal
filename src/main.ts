@@ -20,7 +20,7 @@ import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setSco
 import { setDrawDist, buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, heavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
-import { cfLoginUrl, getToken, LOGIN_URL, loginKey, loginUrl, NET_HOST, setToken, takeToken, type Msg, type Net } from "./net"; // net.ts es chico; peerjs sigue en su chunk dinámico
+import { cfLoginUrl, getToken, LOGIN_URL, loginKey, loginUrl, NET_HOST, redeemInvite, setToken, takeToken, type Msg, type Net } from "./net"; // net.ts es chico; peerjs sigue en su chunk dinámico
 import { BAL, xpNeed } from "./balance";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
 import { introOn, playIntro } from "./intro";
@@ -665,6 +665,7 @@ if (NET_HOST) {
     try { await loginKey(k.value.trim()); k.value = ""; netStatus("Sesión iniciada."); } catch (e) { netStatus((e as Error).message); }
     sess();
   };
+  void redeemInvite().then((m) => { if (m) { netStatus(m); sess(); } });
   $("netLogout").onclick = () => { setToken(""); netStatus("Sesión cerrada."); sess(); };
 }
 $("netHost").onclick = () => void netHost();

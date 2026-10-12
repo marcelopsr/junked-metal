@@ -77,6 +77,17 @@ app.post("/api/cf-exchange", async (req, res) => {
   res.json({ token: mailToken(email) });
 });
 
+// Canje directo de la invitación (sin Cloudflare): el código de un solo uso identifica al mail; mismo token que cf-exchange.
+const redeemOk = limiter(10, 15 * 60e3);
+app.post("/api/invite-redeem", (req, res) => {
+  if (!redeemOk(ipOf(req))) return res.status(429).json({ error: "Demasiados intentos, probá más tarde" });
+  const code = typeof req.body?.code === "string" ? req.body.code.slice(0, 64) : "";
+  const r = db.redeemCode(code);
+  if (!r.user) { db.audit("?", "invitacion-rechazada", null, r.error, ipOf(req)); return res.status(403).json({ error: r.error }); }
+  db.audit(r.user.email, "invitacion-canjeada", r.user.email, "directo", ipOf(req));
+  res.json({ token: mailToken(r.user.email) });
+});
+
 app.get("/api/turn", (req, res) => {
   const w = bearerWho(req);
   if (!w) return res.status(401).json({ error: "Token inválido" });

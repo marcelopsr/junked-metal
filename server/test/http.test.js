@@ -45,6 +45,26 @@ test("portal: sin sesión 401; clave → invitar → canjear → revocar corta /
   const audit = await (await fetch(B + "/admin/api/audit", { headers: ck })).json();
   assert.ok(audit.some((a) => a.action === "user" && a.target === "z@x.com"));
 });
+test("invite-redeem: canje directo, reuso 403, revocar corta el token", async () => {
+  const lr = await post("/admin/api/login", { key: "clave-admin" });
+  const ck = { Cookie: lr.headers.get("set-cookie").split(";")[0] };
+  const mk = async () => (await (await post("/admin/api/invite", { email: "d@x.com" }, ck)).json()).link.split("invite=")[1];
+  const code = await mk();
+  const ok = await post("/api/invite-redeem", { code }, { Origin: "https://marcelopsr.github.io" });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.headers.get("access-control-allow-origin"), "https://marcelopsr.github.io");
+  const { token } = await ok.json();
+  const turn = () => fetch(B + "/api/turn", { headers: { Authorization: "Bearer " + token } }).then((r) => r.status);
+  assert.equal(await turn(), 200);
+  assert.equal((await post("/api/invite-redeem", { code })).status, 403, "reuso");
+  assert.equal((await post("/api/invite-redeem", { code: "x" })).status, 403);
+  const again = await mk(); // "Nuevo link" para un activo
+  assert.equal((await post("/api/invite-redeem", { code: again })).status, 200);
+  assert.equal(await turn(), 200, "el token anterior sigue valiendo");
+  await post("/admin/api/user", { email: "d@x.com", op: "revoke" }, ck);
+  assert.equal(await turn(), 401);
+  assert.equal((await post("/api/invite-redeem", { code: await mk() })).status, 403, "revocado");
+});
 test("pagos: webhook Stripe con firma inválida 400; PayPal sin credenciales 503", async () => {
   const r = await fetch(B + "/api/pay/stripe/webhook", { method: "POST", headers: { "Content-Type": "application/json", "Stripe-Signature": "t=1,v1=00" }, body: "{}" });
   assert.equal(r.status, 400);

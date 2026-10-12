@@ -54,3 +54,18 @@ test("suscripción: pago extiende desde el vencimiento vigente, idempotente por 
   assert.equal(extendEnd(0, 365, 5), 5 + 365 * DAY);
   assert.throws(() => db.savePlan({ id: "X Y", name: "", price: 0, currency: "us", period: "week" }));
 });
+
+test("redeemCode: válido una vez, reusado, vencido, revocado, activo con link nuevo", () => {
+  const db = openDb(":memory:");
+  const { code } = db.invite("c@x.com", 0);
+  assert.equal(db.redeemCode("nope", 1).error, "Código inválido");
+  assert.equal(db.redeemCode(code, 8 * DAY).error, "Código vencido");
+  const r = db.redeemCode(code, 1);
+  assert.equal(r.user.status, "active"); assert.equal(r.user.activatedAt, 1);
+  assert.equal(db.redeemCode(code, 2).error, "Código ya usado");
+  const { code: c2 } = db.invite("c@x.com", 3); // activo pide otro dispositivo
+  assert.equal(db.redeemCode(c2, 4).user.activatedAt, 1);
+  const { code: c3 } = db.invite("c@x.com", 5);
+  db.setStatus("c@x.com", "revoked");
+  assert.equal(db.redeemCode(c3, 6).error, "Usuario revocado");
+});
