@@ -235,7 +235,7 @@ Fecha 2026-10-12. Solo datos en `src/encore.ts` (más pruebas); sin tocar `main.
 
 **Segundo mundo (escenarios terrestres).** Desde la vuelta 1 (la segunda), un escenario de cada vuelta se juega en una zona plana presentada como escenografía del show: `EL PATIO DE ENSAYO` (patio) o `EL JARDÍN DE UTILERÍA` (jardín). Escenario y zona salen de un hash de (semilla, vuelta), sin `rng()` (`encore.ts` `earthStage`, `zoneOf`); la votación y el FINAL ACT siguen en la Luna. `encEnter` (main.ts) cambia de zona con `setZone(z, false)` + `setMoon`, conserva auto, armas, nivel, XP y vida, y usa el spawner de Supervivencia de la zona. El teleportador (modelo `obj_tele_*` y su zona de abordaje) y los cofres de `moon_goals.ts` funcionan sin `MOON.on` cuando `GOAL_IO.tele` está activo; `GOAL_IO.half` los recorta 12 m antes del borde. Los objetivos de superficie (celdas, antena) quedan solo en la Luna. La recompensa del destino elegido vale igual.
 - ponytail: garaje fuera (160 m de lado: cohete a 80 m y cofres a 40-110 m quedan amontonados contra la pared).
-- ponytail: el teleportador o un cofre pueden caer sobre un mueble (solo se recortan al borde).
+- Teleportador, cofres y máquina se recortan al borde y se empujan fuera de los muebles (`inYard` usa `obstacles()` de world.ts, +4 m de holgura). Hooks dev: `__enc.goto(kind, i)`, `jump(vuelta, escenario)`, `free()`, `scrap(n)`.
 - Online (R6b): el snapshot lleva `z` (zoneId) y el cliente rearma la zona al cambiar.
 
 **Secretos del Director.** Tres hallazgos por conducta, deterministas (sin `rng()`; el desliz de la frase sale de un hash de semilla y secreto), cada uno con un fragmento de `02_LORE_AND_SECRETS.md` que no revela la identidad:

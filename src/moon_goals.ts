@@ -7,6 +7,7 @@ export { COOP } from "./moon_events";
 import { nodrizaDrops, SHIP_IO } from "./moon_ships";
 import { pbr } from "./render";
 import { rng } from "./rng";
+import { obstacles } from "./world";
 import { banner } from "./ui";
 
 // ---------- Objetivos en la superficie y cohete de escape (fase 3, docs/LUNA.md puntos 2 y 3) ----------
@@ -66,6 +67,8 @@ export const chestsLeft = () => shops.filter((s) => s.kind === "cofre").length;
 export const chestsOpened = () => opened;
 /** Solo dev (__enc.shop): mueve el primer cofre o máquina que quede al punto c (el auto lo activa quedándose ahí). */
 export const shopDev = (k: "cofre" | "maquina", c: B.Vector3) => { const s = shops.find((x) => x.kind === k); if (s) s.p.copyFrom(c); return !!s; };
+/** Solo dev (__enc.goto): posición del i-ésimo cofre o de la máquina que queda en el escenario. */
+export const shopAt = (k: "cofre" | "maquina", i = 0) => shops.filter((x) => x.kind === k)[i]?.p;
 /** Coloca 3 cofres y 1 máquina alrededor de c0 (llegada del escenario); orden, ángulo y distancia salen de (seed, stage). */
 export function shopPlan(seed: number, stage: number, c0: B.Vector3) {
   shopDrop(); shopStage = stage;
@@ -103,9 +106,18 @@ type Goal = { kind: "celdas" | "antena" | "cohete"; p: B.Vector3; t: number; pro
 let goal: Goal | null = null, rocket: Goal | null = null, next = A.luna_obj_primero_s, alt = 0;
 const stats = { hechos: 0, aparecidos: 0 };
 
-/** Contenido 3 (ENCORE en zona plana): GOAL_IO.half > 0 recorta el punto al patio, 12 m antes del borde. */
-// ponytail: solo recorta al borde; el teleportador o un cofre pueden caer sobre un mueble (la zona de abordaje mide 6 m y se alcanza igual). Si molesta, probar con spawnPoint de world.ts.
-const inYard = (p: B.Vector3) => { const h = GOAL_IO.half - 12; if (!MOON.on && h > 0) { p.x = Math.max(-h, Math.min(h, p.x)); p.z = Math.max(-h, Math.min(h, p.z)); } return p; };
+/** Contenido 3 (ENCORE en zona plana): GOAL_IO.half > 0 recorta el punto al patio, 12 m antes del borde, y lo saca de los muebles (obstacles de world.ts, +4 m de holgura). */
+// ponytail: empuja radialmente hasta 12 pasadas; si el patio está tan lleno que no hay salida, queda donde terminó (no pasa en los layouts actuales).
+const inYard = (p: B.Vector3) => {
+  const h = GOAL_IO.half - 12; if (MOON.on || h <= 0) return p;
+  const fit = () => { p.x = Math.max(-h, Math.min(h, p.x)); p.z = Math.max(-h, Math.min(h, p.z)); };
+  fit();
+  for (let i = 0; i < 12; i++) {
+    const o = obstacles().find((b) => Math.hypot(p.x - b.x, p.z - b.z) < b.r + 4); if (!o) break;
+    const d = Math.hypot(p.x - o.x, p.z - o.z) || 1, k = (o.r + 4.5) / d; p.x = o.x + (p.x - o.x) * k; p.z = o.z + (p.z - o.z) * k; fit();
+  }
+  return p;
+};
 function put(tpl: () => B.Mesh, p: B.Vector3, name: string) { const m = tpl().createInstance(name); onFloor(p, 0, m.position); m.rotationQuaternion = alignYaw(m.position, 0); return m; }
 function make(kind: Goal["kind"], car: B.Vector3, dist: number, ang = rng() * Math.PI * 2): Goal {
   const p = inYard(ringAt(car, ang, dist, 0)), g: Goal = { kind, p, t: 0, prog: 0, drop: 0, cells: [], ms: [put(beaconTpl, p, "baliza")] };

@@ -18,3 +18,25 @@ Recorrido cubierto: menú, Largar, escenario 1, teleportador (sin evento, OVERLO
 - Aviso de radio "SEÑAL" del jefe (decodificación) tapa el reloj y la barra de jefe unos segundos en celular.
 - Pantalla de resultados en celular: la foto polaroid se superpone al borde derecho del panel (diseño previo, no de ENCORE).
 - Patio (el otro mundo terrestre) no salió en la semilla 3; solo jardín.
+
+## Cofres y patio
+
+Fecha 2026-10-12. Hooks de dev nuevos en `__enc` (main.ts): `goto("cofre"|"maquina", i)` teletransporta el auto de J1 con `carPlace` (malla y cuerpo Havok, con `teleport()`), `jump(vuelta, escenario)`, `free()` (holgura de teleportador, cofres y máquina al mueble más cercano) y `scrap(n)`. Scripts en `scratch/qa7/` (no versionado), capturas ahí.
+
+Cofres (seed 3, escenario 1, PC):
+
+| Prueba | Resultado |
+|---|---|
+| Sin tornillos | No abre, la barra queda en 0 % y la radio avisa "FALTAN 30 TORNILLOS" |
+| Cofres 1, 2 y 3 | Cobran 30, 48 y 66 tornillos (30 x (1 + 0,6 por cofre abierto)); cada uno abre 3 cartas ("Cofre") |
+| Secreto | Al abrir el tercero se descubre "aplausos" |
+| Máquina | Vida 160 -> 120 (25 %), 3 cartas "Máquina de opciones" |
+| Evolución en cofre | No cubierto (sin arma al nivel 5 con su pieza no se ofrece; `evoOffer` no cambió) |
+
+Patio (seed 10: vuelta 2, escenario 1 cae en el patio; holguras también medidas en 4, 6, 7, 8, 13 y 14):
+
+| # | Falla | Arreglo | Estado |
+|---|---|---|---|
+| 1 | Un cofre quedaba dentro de un mueble (holgura -10,6 m) | `inYard` (moon_goals.ts) empuja el punto fuera de `obstacles()` con 4 m de holgura | Arreglada: holgura mínima 4 m en las 6 semillas (teleportador, 3 cofres y máquina) |
+
+El teleportador queda dentro del patio, cofres y máquina se abren igual que en la Luna, y al abordar (invitado, decisión, pacto, ruta) el escenario siguiente vuelve a la Luna sin errores de consola. Pendiente sin cambios: franjas del cielo en el jardín y el resto de la lista de arriba.

@@ -28,7 +28,7 @@ import { craterHumeante, evBase, evFog, evInit, evPace, evReset, evShow, lunaDev
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import * as E from "./encore";
-import { COOP, chestsLeft, chestsOpened, shopDev, goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset, spotsPlan } from "./moon_goals";
+import { COOP, chestsLeft, chestsOpened, shopAt, shopDev, goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset, spotsPlan } from "./moon_goals";
 import { skyClear, skyInfo, skyLaunch, skyPace, skyTick } from "./moon_sky";
 import { ALIENS, alienWave, armorMul, healTick, isAlien } from "./aliens";
 import { wormForce, wormHeadTpl, wormOut } from "./moon_worm";
@@ -2312,6 +2312,10 @@ if (import.meta.env.DEV) Object.assign(window, {
     pick: (i: 0 | 1) => { applyCommand(lead.id, { k: "enc", i }); return erun?.phase; },
     tick: (secs: number) => { if (erun) encApply(E.tick(erun, secs)); return erun?.phase; },
     tele: (who = 1) => { const c = players.find((x) => x.id === who)?.car; if (!c) return false; rocketForce(c.pos, 0, 0); return true; }, // R7 QA: teleportador (cohete) justo bajo el auto del jugador `who`
+    goto: (kind: "cofre" | "maquina" = "cofre", i = 0) => { const p = shopAt(kind, i); return !!(p && lead.car && carPlace(onFloor(p.clone(), lead.car.def.size[1] / 2 + 0.3), p.add(lead.car.root.forward))); }, // solo dev: teletransporta el auto de J1 a un cofre o a la máquina (cuerpo, no solo malla)
+    jump: (loop: number, stage: number) => { if (!erun) return "sin ENCORE"; erun.loop = loop; erun.stage = stage; erun.phase = "stage"; erun.stageT = 0; encApply("advance"); return E.zoneOf(erun); }, // solo dev: salta a (vuelta, escenario) como si se hubiera elegido el destino
+    free: () => goalBlips().map((p) => ({ x: +p.x.toFixed(1), z: +p.z.toFixed(1), gap: +Math.min(...obstacles().map((b) => Math.hypot(p.x - b.x, p.z - b.z) - b.r)).toFixed(1) })), // solo dev: puntos de objetivos (teleportador, cofres, máquina) y holgura al mueble más cercano
+    scrap: (n?: number) => { if (n !== undefined) runScrap += n - GOAL_IO.scrap(); return GOAL_IO.scrap(); }, // solo dev: fija (si se pasa n) y devuelve los tornillos totales
     shop: (k: "cofre" | "maquina" = "cofre", who = 0) => { const c = who ? players.find((x) => x.id === who)?.car : lead.car; if (!c) return false; runScrap = Math.max(runScrap, 999); return shopDev(k, c.pos); }, // trae un cofre o la máquina al auto (con tornillos de sobra)
   },
   // R6b (solo dev, scripts/net-test.mjs): estado del online
