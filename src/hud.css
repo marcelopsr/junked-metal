@@ -115,7 +115,7 @@
 #encAsk.pact .encBtns button.primary { color: var(--jm-texto); font-size: 15px; background: linear-gradient(180deg, #2b3442, var(--jm-panel) 55%, #161c25); outline: 1px solid rgba(181, 101, 29, .55); outline-offset: -4px; } /* QA final: las dos ofertas valen lo mismo; el relleno verde dejaba ilegibles VENTAJA/COSTO y sus términos */
 #encC { width: 100%; margin-top: 8px; touch-action: manipulation; }
 #encC.hidden { display: none; }
-@media (max-width: 520px) { /* celular: las dos opciones lado a lado y compactas, para que RECHAZAR quede arriba de los controles táctiles */
+@media (max-width: 520px), (orientation: landscape) and (max-height: 500px) { /* celular (vertical y apaisado): las dos opciones lado a lado y compactas, para que RECHAZAR quede arriba de los controles táctiles */
   #encAsk.pact { top: 28%; padding: 10px 10px 10px; }
   #encAsk.pact .encBtns { gap: 6px; margin-top: 8px; }
   #encAsk.pact .encBtns button { padding: 6px 7px 8px; }
@@ -364,7 +364,7 @@
 }
 /* Celular apaisado: el aviso de radio sube a una franja arriba, entre progreso (izq.) y II/CAM/radar (der.); centrado tapaba el auto */
 @media (orientation: landscape) and (max-height: 500px) {
-  #banner { top: max(8px, env(safe-area-inset-top)); max-width: min(380px, calc(100vw - 480px)); min-width: 0; padding: 4px 10px 5px; }
+  #banner, #hud:has(#bossbar:not(.hidden)) ~ #banner { top: max(8px, env(safe-area-inset-top)); max-width: min(380px, calc(100vw - 480px)); min-width: 0; padding: 4px 10px 5px; } /* con jefe, la regla :has de arriba (más específica) lo mandaba a +192 px, al medio de la pantalla; la barra de jefe (+104) queda debajo */
   #banner .rxh { margin-bottom: 2px; padding-bottom: 2px; }
   body #banner.evt-warn #bannerTxt, body #banner.evt-now #bannerTxt, body #banner:not(.evt-warn):not(.evt-now) #bannerTxt { font-size: 17px; }
   #bannerIco .ico { width: 18px; height: 18px; }
@@ -467,6 +467,13 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 @media (pointer: coarse) { /* celular: arriba de los controles táctiles (que ocupan el ~42 % de abajo); con la oferta de pactos o destinos abierta, arriba, bajo el reloj */
   #dirSub { bottom: 43vh; max-width: calc(100vw - 120px); } /* sin pisar PAUSA y CÁMARA (columna de la derecha) */
   body:has(#encAsk.pact:not(.hidden)) #dirSub { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 134px); }
+}
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) { /* apaisado: bajo la barra de jefe (hasta +193 px) y sobre el panel de batería (#txl, desde y=261 de 390) */
+  #dirSub { bottom: 35vh; }
+  /* la oferta de pactos (decisión de 9 s) manda: bajo el reloj, sobre el panel de batería y sin el subtítulo, que no cabe sin tapar la oferta o el joystick */
+  #encAsk.pact { top: 120px; width: min(460px, calc(100vw / var(--hud-scale) - 24px)); z-index: 5; }
+  #encAsk.pact .encBtns small, #encAsk.pact .encBtns em { display: none; }
+  body:has(#encAsk.pact:not(.hidden)) #dirSub { display: none; }
 }
 body.calm #dirSub { animation: none !important; }
 
