@@ -1,5 +1,6 @@
 import { rng } from "../rng";
 import { FUSIONS, isFusion, NMAX, WEAPONS, type Weapon, type WeaponId } from "./base";
+import { BAL } from "../balance";
 import { PASSIVES, type PassiveId } from "./passives";
 
 // ---------- Opciones al subir de nivel ----------
@@ -45,7 +46,10 @@ export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>
     const l = ps[id] ?? 0;
     if ((l || owned < 6) && l < NMAX) pool.push({ kind: "passive", id, title: PASSIVES[id].name, icon: id, desc: PASSIVES[id].desc, lv: l + 1, syn: passiveSyn(id, ws) });
   }
-  pool.sort(() => rng() - 0.5);
+  // Sorteo ponderado (una rng() por carta): subir un arma que ya se tiene pesa más que sumar una nueva, para que el catálogo grande no diluya las ofertas
+  const wt = (o: Offer) => (o.kind === "weapon" ? (o.lv === 1 ? BAL.ritmo.oferta_peso_nueva : BAL.ritmo.oferta_peso_propia) : 1);
+  const key = new Map(pool.map((o) => [o, rng() ** (1 / wt(o))])); // clave de Efraimidis-Spirakis: una rng() por carta
+  pool.sort((a, b) => key.get(b)! - key.get(a)!);
   const out = pool.slice(0, n);
   const fu = fusionOffer(ws);
   if (fu) out[0] = fu; // si hay fusión disponible, siempre es la primera carta

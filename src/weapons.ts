@@ -4,6 +4,14 @@ import { box, cyl, merge, sph, tor } from "./models";
 import { M, pbr } from "./render";
 import { FUSIONS, isFusion, NMAX, type FusionId, type Weapon, type WeaponId } from "./weapons/base";
 import { Agua } from "./weapons/agua";
+import { Burbujas } from "./weapons/burbujas";
+import { Chapitas } from "./weapons/chapitas";
+import { Paraguas } from "./weapons/paraguas";
+import { Cohete } from "./weapons/cohete";
+import { Serpentinas } from "./weapons/serpentinas";
+import { Tambor } from "./weapons/tambor";
+import { Dardos } from "./weapons/dardos";
+import { Matamoscas } from "./weapons/matamoscas";
 import { Bengalas } from "./weapons/bengalas";
 import { Bobinas } from "./weapons/bobinas";
 import { Bocina } from "./weapons/bocina";
@@ -61,6 +69,14 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
     bobinas: () => [cyl(0.2, 0.26, 0.5, M.metal("#b87333"), [0.3, top + 0.1, rear + 0.2], undefined, 8), ...[0, 1].map((i) => tor(0.28, 0.05, M.metal("#8a5a2b"), [0.3, top + 0.02 + i * 0.14, rear + 0.2], undefined, 8)), sph(0.15, M.glow("#35d0ff"), [0.3, top + 0.42, rear + 0.2])],
     ventilador: () => [cyl(0.1, 0.1, 0.45, M.matte("#2b2d31"), [0, top + 0.1, -0.1], undefined, 6), cyl(0.36, 0.36, 0.06, M.plastic("#9be3ff"), [0, top + 0.45, -0.1], [Math.PI / 2, 0, 0], 12), box(0.7, 0.05, 0.1, M.plastic("#e6e9ee"), [0, top + 0.45, -0.04])],
     canicas: () => [box(0.1, 0.5, 0.1, M.matte("#8a5a2b"), [0.3, top + 0.2, 0.1]), box(0.1, 0.1, 0.5, M.matte("#8a5a2b"), [0.3, top + 0.4, 0.1]), sph(0.2, M.glow("#7de8a8"), [0.3, top + 0.45, 0.35])],
+    burbujas: () => [box(0.3, 0.2, 0.4, M.plastic("#38bdf8"), [0.3, top, 0.1]), cyl(0.07, 0.07, 0.5, M.plastic("#e6e9ee"), [0.3, top + 0.02, 0.5], [Math.PI / 2, 0, 0], 8), sph(0.22, pbr("bubbleMount", { color: "#bfeaff", rough: 0.05, alpha: 0.5, emissive: "#3a7aa0" }), [0.3, top + 0.1, 0.9])],
+    matamoscas: () => [cyl(0.06, 0.06, 0.9, M.matte("#2b2d31"), [-0.3, top + 0.1, 0.1], [0.5, 0, 0], 6), box(0.5, 0.05, 0.5, M.plastic("#facc15"), [-0.3, top + 0.5, 0.45]), box(0.36, 0.07, 0.36, M.glow("#7de8ff"), [-0.3, top + 0.5, 0.45])],
+    dardos: () => [box(0.3, 0.2, 0.4, M.plastic("#ef4444"), [0, top, 0.05]), cyl(0.1, 0.1, 0.7, M.matte("#2b2d31"), [0, top + 0.05, 0.5], [Math.PI / 2, 0, 0], 8), sph(0.14, M.plastic("#facc15"), [0, top + 0.05, 0.9])],
+    chapitas: () => [cyl(0.5, 0.5, 0.08, M.metal("#c8372d"), [0, top, -0.2], undefined, 12), cyl(0.3, 0.3, 0.12, M.metal("#e6e9ee"), [0, top + 0.08, -0.2], undefined, 12), cyl(0.06, 0.02, 0.2, M.metal("#71717a"), [0, top + 0.2, -0.2], undefined, 6)],
+    paraguas: () => [cyl(0.05, 0.05, 0.9, M.matte("#2b2d31"), [0.3, top + 0.1, 0.3], undefined, 6), cyl(0.04, 0.55, 0.3, M.plastic("#e11d48"), [0.3, top + 0.65, 0.3], undefined, 8)],
+    cohete: () => [cyl(0.16, 0.16, 0.7, M.plastic("#4ade80"), [0, top + 0.1, rear + 0.2], [-0.5, 0, 0], 8), sph(0.12, M.glow("#ffb02e"), [0, top + 0.02, rear - 0.05])],
+    serpentinas: () => [cyl(0.2, 0.2, 0.3, M.plastic("#f472b6"), [-0.3, top + 0.1, 0.1], undefined, 8), tor(0.22, 0.05, M.plastic("#facc15"), [-0.3, top + 0.25, 0.1], undefined, 8)],
+    tambor: () => [cyl(0.4, 0.4, 0.35, M.metal("#cbd5e1"), [0, top + 0.1, -0.1], undefined, 12), cyl(0.42, 0.42, 0.06, M.plastic("#dc2626"), [0, top + 0.3, -0.1], undefined, 12)],
     yoyoelec: () => [...parts.yoyo(), ...parts.tesla()],
     vapor: () => [...parts.bengalas(), ...parts.agua()],
     chispazo: () => [...parts.petardos(), ...parts.tesla()],
@@ -74,7 +90,7 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
 
 // Registro. Arma nueva = un archivo src/weapons/<id>.ts (clase que extiende Weapon) + 1 línea acá en CLASSES
 // (+ su entrada en WeaponId/WEAPONS de weapons/base.ts y su pieza en mountFor).
-const CLASSES: Record<Exclude<WeaponId, FusionId>, new (id: WeaponId) => Weapon> = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza, agua: Agua, yoyo: Yoyo, bengalas: Bengalas, regla: Regla, helado: Helado, bocina: Bocina, trompo: Trompo, tuercas: Tuercas, bobinas: Bobinas, ventilador: Ventilador, canicas: Canicas };
+const CLASSES: Record<Exclude<WeaponId, FusionId>, new (id: WeaponId) => Weapon> = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza, agua: Agua, yoyo: Yoyo, bengalas: Bengalas, regla: Regla, helado: Helado, bocina: Bocina, trompo: Trompo, tuercas: Tuercas, bobinas: Bobinas, ventilador: Ventilador, canicas: Canicas, burbujas: Burbujas, matamoscas: Matamoscas, dardos: Dardos, chapitas: Chapitas, paraguas: Paraguas, cohete: Cohete, serpentinas: Serpentinas, tambor: Tambor };
 
 export function makeWeapon(id: WeaponId): Weapon {
   return isFusion(id) ? new Fusion(id, makeWeapon) : new CLASSES[id](id);

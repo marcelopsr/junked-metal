@@ -11,7 +11,7 @@ import { AI } from "./enemies/ai";
 import { DOG_RAM } from "./enemies/ai/util";
 import { WORM_AI, wormDispose, wormHeadTpl } from "./moon_worm";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "caja" | "proyector" | "grua" | "payaso" | "fuego" | "cohete" | "gusano" | "grillo" | "mosca" | "babosa" | Alien;
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "caja" | "proyector" | "grua" | "payaso" | "muneco" | "limpiafondos" | "falso" | "fuego" | "cohete" | "gusano" | "grillo" | "mosca" | "babosa" | Alien;
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; final?: boolean; scale?: number; color: string };
 const ATK = BAL.ataques;
@@ -50,6 +50,9 @@ export const DEF: Record<Kind, Def> = {
   aspiradora: { name: "LA ASPIRADORA ROBOT", ...stats("aspiradora"), size: [6.4, 1.6, 6.4], boss: true, color: "#7a8fa6" },
   proyector: { name: "EL PROYECTOR DEL DIRECTOR", ...stats("proyector"), size: [3.6, 4.2, 4.6], boss: true, color: "#e0a030" },
   payaso: { name: "EL PAYASO DE RESORTE", ...stats("payaso"), size: [3.2, 5, 3.2], boss: true, color: "#7c3aed" },
+  muneco: { name: "EL MUÑECO DE VENTRÍLOCUO", ...stats("muneco"), size: [2.4, 5, 2.4], boss: true, color: "#b91c1c" }, // minijefe del desván (ai/muneco.ts)
+  limpiafondos: { name: "EL LIMPIAFONDOS", ...stats("limpiafondos"), size: [4.2, 1.8, 4.6], boss: true, color: "#0e7490" }, // minijefe de la pileta (ai/limpiafondos.ts)
+  falso: { name: "Muñeco falso", ...stats("falso"), size: [1.6, 3.4, 1.6], color: "#b91c1c" }, // copia del muñeco al enojarse (se deshace solo)
   grua: { name: "LA GRÚA DE FERIA", ...stats("grua"), size: [3.4, 5, 5.2], boss: true, color: "#c2410c" },
   gusano: { name: "GUSANO LUNAR", ...stats("gusano"), size: [2.2, 2.2, 2.4], boss: true, color: "#2f4f56" }, // jefe final de la luna (moon_worm.ts)
   cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", ...stats("cortacercos"), size: [3, 2.4, 9], boss: true, color: "#e0a030" },
@@ -129,6 +132,7 @@ export class Enemy {
   fan: B.Vector3[] = []; // aspiradora: direcciones de la ráfaga de tuercas del evento "fan"
   cables: { m: B.InstancedMesh; a: B.Vector3; b: B.Vector3; life: number }[] = []; // cortacercos: cables con chispas en el piso
   shockCd = 0;
+  split = false; // muñeco de ventrílocuo: ya se desdobló en esta vida
   waves: { r: number; hit: boolean; m: B.InstancedMesh }[] = []; // caja de música: ondas de sonido en anillo (se saltan)
   dancers: { a: number; m: B.InstancedMesh }[] = []; // caja de música: bailarinas que giran
   danceT = 0; hBase = 99; // segundos que les quedan a las bailarinas; altura mínima vista del auto (suelo) para saber si salta
@@ -216,8 +220,8 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
-    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano" || kind === "proyector" || kind === "grua" || kind === "payaso" || kind === "caja") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
-    if (kind === "proyector" || kind === "grua" || kind === "payaso" || kind === "caja") this.timer = 2.5;
+    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano" || kind === "proyector" || kind === "grua" || kind === "payaso" || kind === "muneco" || kind === "limpiafondos" || kind === "caja") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
+    if (kind === "proyector" || kind === "grua" || kind === "payaso" || kind === "muneco" || kind === "limpiafondos" || kind === "caja") this.timer = 2.5;
     if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado

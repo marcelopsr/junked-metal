@@ -259,6 +259,7 @@ export const VARIANTS: Variant[] = [
   { name: "ENSAYO DE MEDIANOCHE", line: "NADIE DUERME. LA PRODUCCIÓN TAMPOCO, Y SE NOTA.", at: "tierra", craters: [8, 4, 9], rain: 0.5, quake: 1.4, sky: 0.8, ship: null, mini: "proyector", risk: "METEORITOS, ERUPCIONES Y LANZAMIENTOS", reward: { xp: 1.2, scrap: 1.2 } },
   { name: "EL GALPÓN DE UTILERÍA", line: "LA GRÚA DE FERIA ENSAYA SU NÚMERO ENTRE CAJAS.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, mini: "grua", zone: "galpon", risk: "SIN LUNA · LA GRÚA DE FERIA COMO MINIJEFE", reward: { scrap: 1.35, xp: 1.15 } },
   { name: "EL DESVÁN DE JUGUETES ROTOS", line: "UN PAYASO DE RESORTE SALTA SOLO.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, mini: "payaso", zone: "desvan", risk: "SIN LUNA · EL PAYASO DE RESORTE COMO MINIJEFE", reward: { scrap: 1.3, xp: 1.2 } },
+  { name: "LA PILETA VACÍA", line: "EL LIMPIAFONDOS SIGUE DE GUARDIA, SIN AGUA Y SIN NADIE.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, mini: "limpiafondos", zone: "pileta", risk: "SIN LUNA · EL LIMPIAFONDOS COMO MINIJEFE · DESNIVELES", reward: { scrap: 1.35, xp: 1.25 } },
 ];
 /** Hash sin estado: n → [0, 1). Un paso de mulberry32. */
 const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -271,6 +272,12 @@ export function variantOf(r: Run): Variant | null {
   for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(mix(r.seed + r.loop * 7919 + i * 104729) * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; } // Fisher-Yates con el hash
   if (!r.loop) o.unshift(...o.splice(o.indexOf(0), 1)); // vuelta 0: LA TARIMA primero
   return VARIANTS[o[idx % o.length]];
+}
+/** Minijefe de enemigo de la variante actual (H13). El desván alterna entre el payaso y el muñeco de ventrílocuo según la semilla; el resto usa el fijo de la variante. */
+export function miniOf(r: Run): Kind | null {
+  const v = variantOf(r);
+  if (v?.zone === "desvan") return mix(r.seed + 0xd357 + r.loop * 7919 + r.stage * 104729) < 0.5 ? "payaso" : "muneco";
+  return v?.mini ?? null;
 }
 /** Variantes ya jugadas en la vuelta: la del primer escenario (sorteo) y los destinos elegidos después (los últimos `stage` de `went`). */
 const playedInLoop = (r: Run) => [VARIANTS.indexOf(variantOf({ ...r, stage: 0, route: null, phase: "stage" })!), ...(r.stage ? r.went.slice(-r.stage) : [])];
@@ -442,9 +449,10 @@ export const scrapExtra = (gross: number, last: number, k: number) => (gross - l
 // el galpón (140 m, como el jardín) entra solo por la variante EL GALPÓN DE UTILERÍA (VARIANTS, `zone`): no sale en el sorteo de la vuelta.
 export const EARTH = { patio: ["EL PATIO DE ENSAYO", "DECORADO DE CARTÓN, BICHOS DE VERDAD. ES SOLO UN ENSAYO, DICEN."], jardin: ["EL JARDÍN DE UTILERÍA", "PASTO DE PLÁSTICO Y ASPERSORES CON CONTRATO. NADA AQUÍ ES CASUAL."],
   galpon: ["EL GALPÓN DE UTILERÍA", "CEMENTO MANCHADO, ESTANTES DE ATREZO Y UNA MESA DE TRABAJO HACIENDO DE TARIMA."],
-  desvan: ["EL DESVÁN DE LOS JUGUETES ROTOS", "TABLONES TORCIDOS, BAÚLES GIGANTES Y JUGUETES QUE YA NADIE ARREGLA."] } as const;
+  desvan: ["EL DESVÁN DE LOS JUGUETES ROTOS", "TABLONES TORCIDOS, BAÚLES GIGANTES Y JUGUETES QUE YA NADIE ARREGLA."],
+  pileta: ["LA PILETA VACÍA", "AZULEJOS, UNA PLAYA, UN FONDO CON RAMPA Y UN TRAMPOLÍN QUE YA NO TIENE A QUIÉN LANZAR."] } as const;
 export type EarthZone = keyof typeof EARTH;
-const EARTH_ZONES: EarthZone[] = ["patio", "jardin"]; // el galpón y el desván solo entran por su variante, no por el sorteo
+const EARTH_ZONES: EarthZone[] = ["patio", "jardin"]; // el galpón, el desván y la pileta solo entran por su variante, no por el sorteo
 /** Escenario terrestre de la vuelta (-1 en la vuelta 0). */
 export const earthStage = (r: Run) => (r.loop < 1 ? -1 : Math.floor(mix(r.seed + 0xea27 + r.loop * 7907) * ENC.stages));
 /** Zona del escenario actual: "luna" o la escenografía terrestre que le toca. */

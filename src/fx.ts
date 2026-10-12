@@ -105,6 +105,8 @@ export const FX = {
   overheat: (p: B.Vector3) => burst(p, { n: 5, color: "#fca5a5", color2: "#ea580c", size: [0.3, 0.8], power: [0.6, 2.0], life: [0.4, 0.8], gravity: -2, add: true }),
   sparkZap: (p: B.Vector3) => burst(p, { n: 8, color: "#38bdf8", color2: "#2563eb", size: [0.08, 0.2], power: [2.0, 5.0], life: [0.1, 0.25], gravity: -4, add: true }),
   nitrogenFreeze: (p: B.Vector3) => burst(p, { n: 10, color: "#e0f2fe", color2: "#38bdf8", size: [0.3, 0.9], power: [0.8, 2.5], life: [0.5, 1.0], gravity: -0.2, add: false }),
+  gemTrail: (p: B.Vector3) => burst(p, { n: 1, color: "#9be7ff", color2: "#ffffff", size: [0.18, 0.32], power: [0, 0.3], life: [0.25, 0.4], gravity: 0 }),
+  gemLand: (p: B.Vector3) => burst(p, { n: 6, color: "#caf3ff", color2: "#38bdf8", size: [0.1, 0.3], power: [1.5, 4], life: [0.15, 0.3], gravity: -8 }),
   xp: (p: B.Vector3) => burst(p, { n: 5, color: "#9be7ff", size: [0.1, 0.25], power: [1, 3], life: [0.2, 0.4] }),
   smoke: (p: B.Vector3, dark = false) => burst(p, { n: 2, color: dark ? "#a8a8a8" : "#f4f4f4", size: [0.5, 1.1], power: [0.5, 1.5], life: [0.8, 1.4], gravity: 3, add: false }),
   // Estela de proyectil: una voluta chica que se apaga rápido (llamar con probabilidad, no cada cuadro)

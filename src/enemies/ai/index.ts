@@ -12,8 +12,10 @@ import { gruaAI } from "./grua";
 import { cortacercosAI } from "./cortacercos";
 import { gatoAI } from "./gato";
 import { payasoAI } from "./payaso";
+import { limpiafondosAI } from "./limpiafondos";
 import { perroAI } from "./perro";
 import { cajaAI } from "./caja";
+import { falsoAI, munecoAI } from "./muneco";
 
 // Comportamiento propio por bicho. Bicho nuevo = DEF + 1 archivo en ai/ + 1 línea acá. think() corre esto en el punto del flujo donde estaban los ifs.
 export const AI: Partial<Record<Kind, Think>> = {
@@ -33,6 +35,9 @@ export const AI: Partial<Record<Kind, Think>> = {
   cortacercos: cortacercosAI,
   gato: gatoAI,
   payaso: payasoAI,
+  limpiafondos: limpiafondosAI,
+  muneco: munecoAI,
+  falso: falsoAI,
   perro: perroAI,
   caja: cajaAI,
 };

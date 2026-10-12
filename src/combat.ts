@@ -13,7 +13,7 @@ import { hitShip } from "./moon_ships";
 import { wormOut } from "./moon_worm";
 import { armorMul, isAlien } from "./aliens";
 import { GLB } from "./glb";
-import { hitBreakables } from "./world";
+import { groundY, hitBreakables } from "./world";
 import { banner, damageNumber, hudBoss, hudKill } from "./ui";
 import { grant, endRun, setOutroAt } from "./outro";
 import { erun } from "./encore_run";
@@ -23,7 +23,7 @@ import { Enemy, type Kind } from "./enemies";
 import type { Player } from "./coop";
 
 const R = BAL.ritmo, ATK = BAL.ataques;
-export type Gem = { m: B.InstancedMesh; xp: number; pull: boolean; vy: number };
+export type Gem = { m: B.InstancedMesh; xp: number; pull: boolean; vy: number; fall?: boolean };
 export type Pickup = { m: B.AbstractMesh; type: "pila" | "iman" | "cofre" };
 
 // Combate: daño, explosiones, muertes y drops. Estado de partida: `run`; el resto entra por initCombat.
@@ -57,15 +57,17 @@ export const gemTpl = (v: 1 | 5 | 20) => template("gem" + v, () => [
   cyl(0.22, 0.22, 0.24, M.matte("#1e293b"), [0, 0.3, 0], [0.4, 0, 0], 6),
 ], v === 20 ? 1.5 : 1);
 
-export function dropGems(pos: B.Vector3, amount: number) {
+export function dropGems(pos: B.Vector3, amount: number, fall = false) {
   if (c.gems.length > R.gemas_tope) { c.gainXp(amount); return; } // tope: se absorbe directo
   while (amount > 0) {
     const v: 1 | 5 | 20 = amount >= 20 ? 20 : amount >= 5 ? 5 : 1;
     amount -= v;
     const m = gemTpl(v).createInstance("gem");
     const jx = (rng() - 0.5) * 1.5, jz = (rng() - 0.5) * 1.5;
-    if (MOON.on) onFloor(at(pos, jx, 0, jz), 0, m.position); else m.position.set(pos.x + jx, 0, pos.z + jz);
-    c.gems.push({ m, xp: v, pull: false, vy: 5 + Math.random() * 4 }); // salta al caer (visual: Math.random, no toca la semilla)
+    if (MOON.on) onFloor(at(pos, jx, 0, jz), 0, m.position); else m.position.set(pos.x + jx, groundY(pos.x + jx, pos.z + jz), pos.z + jz);
+    const drop = fall && !c.simulating && !MOON.on; // lluvia de tornillos: caen desde ~13 m con estela (solo visual; en sim y luna, como antes)
+    if (drop) m.position.y += 12 + Math.random() * 3;
+    c.gems.push({ m, xp: v, pull: false, vy: drop ? 0 : 5 + Math.random() * 4, fall: drop }); // salta al caer (visual: Math.random, no toca la semilla)
   }
 }
 

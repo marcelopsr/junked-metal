@@ -12,7 +12,7 @@ let stuck = 0, back = 0;
 export const resetBot = () => { stuck = back = 0; };
 type P = { x: number; z: number };
 export type BotBoss = { x: number; z: number; kind: string; fx: number; fz: number; charge: boolean; ram: boolean };
-const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14, gato: 12, aspiradora: 6, cortacercos: 14, caja: 14, proyector: 14, grua: 14, payaso: 12 }; // aspiradora: de cerca, como la juega una persona (a 22 m las armas no llegan y el duelo dura ~85 s en vez de ~11 s)
+const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14, gato: 12, aspiradora: 6, cortacercos: 14, caja: 14, proyector: 14, grua: 14, payaso: 12, muneco: 12, limpiafondos: 9 }; // aspiradora: de cerca, como la juega una persona (a 22 m las armas no llegan y el duelo dura ~85 s en vez de ~11 s)
 export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVelocity(): P } }, threats?: P[], obs?: { x: number; z: number; r: number }[], boss?: BotBoss | null, zones: { x: number; z: number; r: number }[] = [], gems: P[] = []) {
   const v = c.body.getLinearVelocity();
   stuck = Math.hypot(v.x, v.z) < 2 ? stuck + 1 : 0;

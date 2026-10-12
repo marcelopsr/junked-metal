@@ -736,11 +736,11 @@ export function renderGarage() {
       const c = CARS[k];
       const won = save.ach.includes(("gana_" + k) as AchId);
       const vicTag = owns("car:" + k) ? (won ? '<span class="car-vic won">★ VICTORIA REGISTRADA</span>' : '<span class="car-vic pending">PENDIENTE DE VICTORIA</span>') : "";
-      const isArmored = k === "tanque" || k === "monster" || k === "combi";
+      const isArmored = k === "tanque" || k === "monster" || k === "combi" || k === "topadora";
       const armorTag = isArmored ? '<span class="armor-badge">CHASIS REFORZADO</span>' : "";
       const isHeavy = c.hp >= 250;
       const heavyTag = isHeavy ? '<span class="heavy-armor">BLINDAJE PESADO</span>' : "";
-      const isLight = k === "formula" || k === "carrera" || k === "axel";
+      const isLight = k === "formula" || k === "carrera" || k === "axel" || k === "triciclo";
       const lightTag = isLight ? '<span class="light-frame">CHASIS LIVIANO</span>' : "";
       const isAwd = k === "monster" || k === "tanque" || (k as string) === "pickup";
       const awdTag = isAwd ? '<span class="all-wheel">TRACCIÓN TOTAL</span>' : "";

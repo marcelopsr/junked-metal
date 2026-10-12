@@ -136,6 +136,19 @@ for (const vp of vps) {
     if (!(await qe(() => JSON.parse(localStorage.getItem("rcfight2") ?? "{}").tranquilo))) return "tranquilo no quedó en el guardado";
   });
   await q.ctx.close();
+  // --- extra: la pileta vacía (desnivel + Limpiafondos), pestaña propia ---
+  const r = await open(browser, `?mute&seed=${seed}&zone=pileta`, vp, { freeze: true });
+  const t0 = Date.now(); let why = "";
+  try {
+    await r.evaluate(() => window.__play(58)); await r.evaluate(() => window.__tick(30));
+    await r.evaluate(() => window.__spawn("limpiafondos")); await r.evaluate(() => window.__tick(60));
+    const i = await r.evaluate(() => window.__info());
+    if (i.state !== "play" || i.enemies < 1) why = "estado " + i.state + ", enemigos " + i.enemies;
+  } catch (e) { why = e.message.split("\n")[0]; }
+  const errs = r.logs.splice(0); if (errs.length) why += ` consola: ${errs.join(" | ").slice(0, 150)}`;
+  try { await r.screenshot({ path: `${dir}/${vp}-x-pileta-limpiafondos.png` }); } catch {}
+  rows.push({ vp, paso: "pileta-limpiafondos", ok: why ? "FALLA" : "OK", s: ((Date.now() - t0) / 1000).toFixed(1), nota: why });
+  await r.ctx.close();
 }
 await browser.close();
 console.table(rows);

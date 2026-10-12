@@ -140,7 +140,7 @@ export function finalArena() {
 }
 /** Minijefe i-ésimo de la luna: el de la variante o, sin ella, el que elige la semilla. */
 export const minorShip = (i: number) => (erun && E.variantOf(erun)?.ship) || shipFor(i, cx.runSeed);
-export const minorMini = () => { const v = erun && E.variantOf(erun); return (v && (MOON.on || v.zone) && v.mini) || null; }; // H13: variante con minijefe propio (enemigo, no nave); en tierra solo si la variante trae su zona
+export const minorMini = () => { const v = erun && E.variantOf(erun); return (v && (MOON.on || v.zone) && E.miniOf(erun!)) || null; }; // H13: variante con minijefe propio (enemigo, no nave); en tierra solo si la variante trae su zona
 /** Aplica lo que pasó en la expedición: efectos en el mundo y frase del Director. */
 let pactOff = ""; // ids ofrecidos del último pacto (para telemetría si se rechaza)
 export function encApply(ev: E.Ev | null) {

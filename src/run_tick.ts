@@ -13,7 +13,7 @@ import { encApply, erun } from "./encore_run";
 import { gainXp, openChest } from "./progression";
 import { goalBar, goalsTick } from "./moon_goals";
 import { mateHurt } from "./coop";
-import { nutTemplate as nutTpl } from "./models";
+import { dirtyWaterTemplate, nutTemplate as nutTpl } from "./models";
 import { rng } from "./rng";
 import { run } from "./run_state";
 import { grant } from "./outro";
@@ -21,6 +21,7 @@ import { shipBar, shipTargets, shipsTick } from "./moon_ships";
 import { skyTick } from "./moon_sky";
 import { tut } from "./tutorial";
 import { wormOut } from "./moon_worm";
+import { HALF, groundY } from "./world";
 import * as B from "@babylonjs/core";
 import type { Car, drive } from "./car";
 import type { Player } from "./coop";
@@ -29,7 +30,7 @@ import type { Weapon, PStats } from "./weapons";
 
 // Fases de update() de la partida (bichos, armas, recolectables): estado compartido por T (initRunTick), lo de la partida en `run`.
 const R = BAL.ritmo, ATK = BAL.ataques;
-export type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number; k?: Kind; float?: boolean; big?: boolean };
+export type Spit = { m: B.InstancedMesh; v: B.Vector3; life: number; k?: Kind; float?: boolean; big?: boolean; bounce?: number; dmg?: number };
 export type Frame = { c: NonNullable<Player["car"]>; calm: boolean; tp: number; hordeK: number; warnS: number; carR: number; wdt: number; cars: Car[]; carPs: B.Vector3[]; ms: Player[]; r: ReturnType<typeof drive>; boosting: boolean; ariete: boolean; cv: B.Vector3 };
 export interface RunTickContext {
   readonly cam: B.FreeCamera;
@@ -111,7 +112,21 @@ export function tickEnemies(F: Frame, dt: number): boolean {
       for (const o of T.enemies) if (o !== e && B.Vector3.Distance(o.pos, e.pos) < ATK.salto_aplasta_radio) damage(o, 999);
     }
     // Jefes finales nuevos (T.enemies.ts): tuercas en abanico, barrido en arco, cables y succión
-    if (ev === "fan") for (const d of e.fan) { const m = nutTpl().createInstance("nut"); at(e.pos, d.x * 3.4, 0.7, d.z * 3.4, m.position); T.pushSpit({ m, v: W(d.x, d.y, d.z, e.pos).scale(ATK.acido_vel), life: 2.2, k: e.kind }); } // e.fan: marco local del jefe
+    if (ev === "fan") for (const d of e.fan) { const m = (e.kind === "limpiafondos" ? dirtyWaterTemplate() : nutTpl()).createInstance("nut"); at(e.pos, d.x * 3.4, 0.7, d.z * 3.4, m.position); T.pushSpit({ m, v: W(d.x, d.y, d.z, e.pos).scale(ATK.acido_vel), life: 2.2, k: e.kind }); } // e.fan: marco local del jefe
+    // Muñeco de ventrílocuo (ai/muneco.ts): la voz rebota en las paredes y, enojado, deja copias falsas
+    if (ev === "voz") {
+      const f2 = e.enraged, n = f2 ? ATK.muneco_voz_n_f2 : ATK.muneco_voz_n, base = Math.atan2(c.pos.x - e.pos.x, c.pos.z - e.pos.z);
+      for (let i = 0; i < n; i++) {
+        const a = base + (i - (n - 1) / 2) * ATK.muneco_voz_ang, m = T.spitTpl().createInstance("voz");
+        m.scaling.setAll(2); m.position.set(e.pos.x, e.pos.y + 1.6, e.pos.z);
+        T.pushSpit({ m, v: new B.Vector3(Math.sin(a), 0, Math.cos(a)).scaleInPlace(ATK.muneco_voz_vel), life: 9, k: e.kind, bounce: ATK.muneco_voz_rebotes, dmg: ATK.muneco_voz_dano });
+      }
+      if (!T.simulating) FX.sparks(e.pos.add(upv(e.pos, 3)));
+    }
+    if (ev === "desdoble") {
+      banner("¡EL MUÑECO SE DESDOBLA!", 1.6);
+      for (let i = 0; i < ATK.muneco_copias; i++) { const a = (i / ATK.muneco_copias) * 6.28 + 1; T.spawnEnemy("falso", at(e.pos, Math.sin(a) * 7, 0.5, Math.cos(a) * 7)); }
+    }
     if (ev === "slash") { T.hurt(ATK.cortacercos_barrido_dano, false, "barrido " + e.kind, e.kind); FX.sparks(c.pos); }
     if (ev === "onda") { T.hurt(ATK.caja_onda_dano, false, "barrido " + e.kind, e.kind); FX.sparks(c.pos); T.shake = Math.max(T.shake, 0.6); }
     if (ev === "bailarina") { T.hurt(ATK.caja_bail_dano, false, "contacto " + e.kind, e.kind); FX.sparks(c.pos); }
@@ -245,11 +260,17 @@ export function tickEnemies(F: Frame, dt: number): boolean {
       advance(p, hflat(s.v, p), wdt);
       const u = upAt(p); p.addInPlace(u.scale(vr * wdt)); s.v.addInPlace(u.scaleInPlace(vr));
     }
+    else if (s.bounce !== undefined) { // la voz del muñeco: vuela a ras y rebota en las paredes del desván
+      const p = s.m.position; p.addInPlace(s.v.scale(wdt));
+      if (Math.abs(p.x) > HALF - 1 && p.x * s.v.x > 0) { s.v.x *= -1; s.bounce--; }
+      if (Math.abs(p.z) > HALF - 1 && p.z * s.v.z > 0) { s.v.z *= -1; s.bounce--; }
+    }
     else { s.m.position.addInPlace(s.v.scale(wdt)); s.v.y -= 3 * wdt; }
-    let dead = (s.life -= wdt) <= 0 || below(s.m.position, 0.1);
+    let dead = (s.life -= wdt) <= 0 || (s.bounce === undefined ? below(s.m.position, 0.1) : s.bounce < 0);
+    const sd = s.dmg ?? (s.big ? ATK.babosa_dano : ATK.acido_dano);
     const sr = s.big ? 0.3 * ATK.babosa_flema_escala : 0.3;
-    if (B.Vector3.Distance(s.m.position, c.pos) < carR + sr) { T.hurt(s.big ? ATK.babosa_dano : ATK.acido_dano, false, "ácido", s.k); FX.hit(s.m.position); dead = true; }
-    else { const j = ms.findIndex((m, k) => B.Vector3.Distance(s.m.position, m.car!.pos) < mateR[k] + sr); if (j >= 0) { mateHurt(ms[j], s.big ? ATK.babosa_dano : ATK.acido_dano); FX.hit(s.m.position); dead = true; } }
+    if (B.Vector3.Distance(s.m.position, c.pos) < carR + sr) { T.hurt(sd, false, "ácido", s.k); FX.hit(s.m.position); dead = true; }
+    else { const j = ms.findIndex((m, k) => B.Vector3.Distance(s.m.position, m.car!.pos) < mateR[k] + sr); if (j >= 0) { mateHurt(ms[j], sd); FX.hit(s.m.position); dead = true; } }
     if (dead) { mark("scorch", s.m.position, Math.random() * 6, 0.6, 5); s.m.dispose(); T.spits.splice(i, 1); }
   }
   if (MOON.on && !calm) skyTick(wdt, run.time, carPs, T.simulating ? null : T.cam, T.hurtWho, T.enemies, T.camYaw); // luna: el Sol y la Tierra lanzan bichos (moon_sky.ts)
@@ -294,7 +315,9 @@ export function tickPickups(F: Frame, dt: number): boolean {
     const dx = c.pos.x - g.m.position.x, dz = c.pos.z - g.m.position.z, d2 = dx * dx + dz * dz;
     if (d2 < mag2) g.pull = true;
     g.m.rotation.y += dt * 2;
-    if (g.vy !== 0 || g.m.position.y > 0) { g.vy -= 22 * dt; g.m.position.y = Math.max(0, g.m.position.y + g.vy * dt); if (g.m.position.y === 0) g.vy = g.vy < -4 ? -g.vy * 0.35 : 0; } // rebota una o dos veces
+    const gy = groundY(g.m.position.x, g.m.position.z); // pileta: el pozo está bajo y=0
+    if (g.vy !== 0 || g.m.position.y > gy) { g.vy -= 22 * dt; g.m.position.y = Math.max(gy, g.m.position.y + g.vy * dt); if (g.m.position.y === gy) g.vy = g.vy < -4 ? -g.vy * 0.35 : 0; } // rebota una o dos veces
+    if (g.fall) { if (g.m.position.y > gy) { if (Math.random() < 0.7) FX.gemTrail(g.m.position); } else { g.fall = false; FX.gemLand(g.m.position); SFX.gem(); } }
     if (g.pull) { const d = Math.sqrt(d2) || 0.01, sp = Math.min(d, (22 + 28 / (d + 0.5)) * dt); g.m.position.x += (dx / d) * sp; g.m.position.z += (dz / d) * sp; }
     if (!T.simulating) {
       const gl = Math.sqrt(d2), lampK = gl > 0.4 && gl < 20 && fwdFlat.lengthSquared() > 0 ? Math.max(0, (fwdFlat.x * (-dx) + fwdFlat.z * (-dz)) / gl) * (1 - gl / 20) : 0;

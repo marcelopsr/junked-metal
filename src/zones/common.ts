@@ -148,7 +148,7 @@ export const underRoof = (p: B.Vector3) => !!Z.roof?.(p);
 export const bare: { x: number; z: number; r: number }[] = [];
 export const isBare = (x: number, z: number) => bare.some((b) => Math.hypot(x - b.x, z - b.z) < b.r) || Z.rects.some(([cx, cz, w, d]) => Math.abs(x - cx) < w && Math.abs(z - cz) < d);
 
-export type ZoneId = "patio" | "garaje" | "jardin" | "luna" | "galpon" | "desvan";
+export type ZoneId = "patio" | "garaje" | "jardin" | "luna" | "galpon" | "desvan" | "pileta";
 export type Zone = {
   name: string; short: string; desc: string; half: number; // short: botón del menú principal
   cost: number; // tornillos en el Taller (0 = siempre abierta)

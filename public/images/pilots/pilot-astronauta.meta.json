@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "c9e2d5e4-2fe5-4c55-8008-bab29ae4931a",
+  "prompt": "cinematic macro portrait of a cheap plastic toy astronaut figurine, scuffed white helmet with gold visor reflecting a garage, molded plastic seams, dark night garage workshop background, warm tungsten illumination, shallow depth of field, photorealistic, intricate detail, no text",
+  "negative": "text, watermark, logo, anime, blurry, oversaturated, human skin, realistic person",
+  "seed": 402,
+  "steps": 24,
+  "cfg": 7,
+  "sampler": "euler",
+  "scheduler": "normal",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 22.1,
+  "date": "2026-10-12T18:33:01.686Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/batch_2_00002_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/pilots/pilot-astronauta.webp"
+}

@@ -68,11 +68,12 @@ const NAMES = ["Soldadito", "Muñeca", "Robot", "Dino", "Figura", "Chispa", "Tue
 const PAINTS = ["#d62828", "#1d4ed8", "#16a34a", "#e0a030", "#9a6fb5", "#2a9d8f", "#f08dbd", "#ff7a3a", "#35c9ff", "#b6ff6a"];
 // Personalidad de la IA: [agresividad 0..1 (ataca antes y se pega a los rivales), usa derrape de mini-turbo]
 const PERSONA: [number, boolean][] = [[0.9, true], [0.3, false], [0.6, true], [0.8, false], [0.2, true], [0.5, false], [1, true], [0.4, true], [0.7, false], [0.1, false]];
-const PILOT_IDS = ["soldadito", "muneca", "robot", "dino", "figura"];
+const PILOT_IDS = ["soldadito", "muneca", "robot", "dino", "figura", "abuela", "astronauta", "dinogoma", "rusa"];
 // Estadísticas de carrera por auto: [velocidad máx, aceleración, giro, agarre en derrape]
 const KSTAT: Record<CarKind, [number, number, number, number]> = {
   buggy: [26, 34, 2.6, 7], monster: [24, 28, 2.3, 8], formula: [29, 38, 2.9, 6], tanque: [22, 24, 2.0, 9], carrera: [28, 40, 3.1, 5],
   axel: [27, 36, 3.0, 6], helado: [24, 30, 2.4, 8], combi: [23, 26, 2.2, 9],
+  hover: [25, 22, 2.0, 3], topadora: [20, 22, 1.9, 10], triciclo: [26, 36, 3.4, 8],
 };
 
 // ---------- Construcción del circuito ----------

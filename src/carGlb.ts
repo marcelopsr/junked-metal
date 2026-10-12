@@ -6,7 +6,7 @@ import { M, pbr } from "./render";
 
 // Autos RC estáticos (oleada 2). Sin esqueleto: una malla multi-material por CarKind.
 // Archivo: public/models/cars/<kind>.glb — ver docs/OLEADA2_CARS_BLENDER.md
-export const CAR_GLB: Record<CarKind, { file: string }> = {
+export const CAR_GLB: Partial<Record<CarKind, { file: string }>> = { // sin entrada = solo procedural
   buggy: { file: "buggy" },
   monster: { file: "monster" },
   formula: { file: "formula" },
@@ -48,7 +48,7 @@ function applyCarMats(mesh: B.Mesh, paint: string, trim: string) {
 
 async function loadOne(scene: B.Scene, kind: CarKind) {
   if (FOLDED_SLICE) return;
-  const o = CAR_GLB[kind], gltf = "@babylonjs/loaders/glTF/2.0";
+  const o = CAR_GLB[kind]!, gltf = "@babylonjs/loaders/glTF/2.0";
   try {
     await import(/* @vite-ignore */ gltf);
     const c = await B.LoadAssetContainerAsync(`models/cars/${o.file}.glb`, scene);

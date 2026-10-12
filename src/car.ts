@@ -23,6 +23,9 @@ export const CARS: Record<CarKind, { name: string; desc: string; cost: number; h
   axel: { name: "El Sin Licencia", desc: "Dos ruedas, cero carnet y mucha confianza. Rápido y ágil, pero frágil.", ...stats("axel"), size: [1.9, 1.0, 1.7], drive: "rwd" },
   helado: { name: "El Tío del Helado", desc: "Pone musiquita, sonríe y reparte golpes fríos. Lento pero aguantador.", ...stats("helado"), size: [1.3, 0.95, 2.4], drive: "fwd" },
   combi: { name: "El Tío Raro", desc: "Nadie sabe a qué se dedica, pero siempre vuelve con tuercas de más. Mucho aguante, poca prisa.", ...stats("combi"), size: [1.45, 1.0, 2.4], drive: "rwd" },
+  hover: { name: "El Capitán de Bañera", desc: "Navega el patio como si fuera un lago. Casi no agarra el piso: se desliza y gira ancho.", ...stats("hover"), size: [1.5, 0.7, 2.3], drive: "fwd" },
+  topadora: { name: "El Capataz", desc: "Trabaja a su ritmo y empuja todo lo que se le cruce. Lentísimo, pero la pala no perdona.", ...stats("topadora"), size: [1.7, 1.2, 2.5], drive: "awd" },
+  triciclo: { name: "El Repartidor", desc: "Entrega a domicilio, sin demoras. Muy ágil y de giro cerrado, pero poco aguante.", ...stats("triciclo"), size: [1.2, 0.9, 2.0], drive: "rwd" },
 };
 
 // Manejo arcade sobre un cuerpo Havok: la física resuelve choques,

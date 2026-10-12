@@ -3,7 +3,7 @@ import * as B from "@babylonjs/core";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
 import { GLB, glbProgress, loadGlbs } from "./glb";
 import { idle, launch, type Task } from "./loading";
-import { enemyTemplate, LEGS, legTemplate, nutTemplate, wingTemplate } from "./models";
+import { dirtyWaterTemplate, enemyTemplate, LEGS, legTemplate, nutTemplate, wingTemplate } from "./models";
 import { DEF, type Kind } from "./enemies";
 import { wormHeadTpl } from "./moon_worm";
 import { worldReady } from "./world";
@@ -33,7 +33,7 @@ export const T_BICHOS: Task = { id: "bichos", label: "Cargando bichos", w: 3, do
 export const T_AUTOS: Task = { id: "autos", label: "Cargando autos", w: 2, done: () => autosOk, run: async () => { await loadCarGlbs(c.scene); autosOk = true; }, prog: carGlbProgress };
 // Plantillas instanciadas que la partida crearía al vuelo (un hipo al primer bicho, tuerca o pila): se arman antes, de a una por hueco libre
 export const T_PLANTILLAS: Task = { id: "plantillas", label: "Cargando bichos", w: 2, done: () => plantillasOk, prog: () => fxN / fxTotal, run: async () => {
-  const jobs: (() => unknown)[] = [...c.tpls, nutTemplate];
+  const jobs: (() => unknown)[] = [...c.tpls, nutTemplate, dirtyWaterTemplate];
   for (const k of Object.keys(DEF) as Kind[]) {
     if (!GLB[k]) jobs.push(() => (k === "gusano" ? wormHeadTpl() : enemyTemplate(k, DEF[k].scale)));
     if (LEGS[k]) jobs.push(() => legTemplate(k));

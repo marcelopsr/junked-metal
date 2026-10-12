@@ -59,7 +59,7 @@ export const SCENES: Record<string, MenuScene> = {
     ] },
   beast: { set: "shelf", cam: { pos: [0, 3, 8], target: [0, 1, 0] } }, // main.ts recalcula SHOTS.beast según el bicho
   credits: { set: "shelf", cam: { pos: [10, 3.2, 15], target: [4, 10.5, -60] } },
-  garage: { set: "bench", cam: { pos: [2, 4, 11], target: [-2.2, 2.2, 1] }, camV: { pos: [2.6, 3.8, 14], target: [0, -2.8, 1] }, car: [0, 0, 1],
+  garage: { set: "bench", cam: { pos: [2, 4, 11], target: [-2.2, 2.2, 1] }, camV: { pos: [2.6, 3.8, 14], target: [0, -2.8, 1] }, car: [0, 0.9, 1], // 0.9 = tope de la peana (stand): a y=0 el auto quedaba enterrado en ella
     props: [
       { kit: "toolbox", u: 3.4, at: [-9, 0, -7], rot: [0, 0.3, 0] }, { kit: "crate", u: 4, at: [13, 0, -12.5], rot: [0, 0.15, 0] },
       { kit: "sign", u: 6, at: [-1, 9.5, -16.2], v: "playfix" },

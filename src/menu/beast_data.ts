@@ -3,6 +3,9 @@ import { type Kind } from "../enemies";
 
 // Trasfondo de cada bicho (el de los pilotos vive en pilots.ts)
 export const LORE: Record<Kind, string> = {
+  muneco: "Heredó la voz de un ventrílocuo que se jubiló y se quedó sin nadie a quien hablarle. Aparece donde menos se lo espera, siempre junto a un baúl, y repite lo que le dijeron.",
+  falso: "Una copia mal cosida del muñeco. Dura lo que dura un chiste malo.",
+  limpiafondos: "Lo dejaron de guardia cuando vaciaron la pileta y nadie le avisó que ya no hay agua. Aspira todo lo que se mueve en el fondo y lo devuelve en chorros sucios, porque eso es lo único que sabe hacer.",
   payaso: "Salió de un baúl del desván y nadie lo volvió a guardar. Rebota sin parar y siempre cae donde estabas.",
   grillo: "Se cree atleta y entrena saltando sobre vos. Se agacha, avisa, salta en arco y no corrige: cae donde estabas.",
   babosa: "Camina como si no tuviera apuro, se planta a medio patio y te escupe una flema del tamaño de una pelota. No apunta mal; solo llega tarde.",
@@ -37,6 +40,9 @@ export const LORE: Record<Kind, string> = {
 };
 // Cómo ataca y cómo esquivarlo (sale del comportamiento real de enemies.ts)
 export const HOW: Record<Kind, [string, string]> = {
+  muneco: ["Marca con un aro rojo el baúl al que salta, aparece ahí y suelta voces que rebotan en las paredes. Al enojarse se desdobla en copias falsas y grita más fuerte.", "Mirar el aro para saber dónde aparece, moverse en diagonal para que la voz rebote lejos y pegarle al original: las copias se deshacen solas."],
+  falso: ["Persigue como un bicho común y se deshace a los pocos segundos.", "Ignorarlo y seguir peleando contra el original."],
+  limpiafondos: ["Un aro azul enorme anuncia la succión: arrastra al auto hacia él y después barre de lado a lado con ráfagas de agua sucia en abanico.", "Acelerar hacia afuera del aro apenas aparece y, cuando barre, ir en dirección contraria al giro del abanico: siempre quedan huecos."],
   payaso: ["Anuncia cada salto con un aro rojo sobre el auto; tras aterrizar queda quieto un momento.", "Salir del aro antes de que caiga y aprovechar la pausa para pegarle."],
   grillo: ["Se agacha 0,4 s y salta en arco fijo hacia donde estabas; en el aire no corrige.", "Moverse apenas se agacha; queda quieto al aterrizar, a tiro."],
   babosa: ["Avanza muy lento; a unos 18 metros se planta casi un segundo y escupe una flema grande que vuela despacio.", "Un volantazo después del escupitajo alcanza: la flema es lenta. Aguanta bastante, conviene daño sostenido."],
@@ -71,6 +77,9 @@ export const HOW: Record<Kind, [string, string]> = {
 };
 // Biometría y debilidades mecánicas de campo (blindaje, maniobrabilidad y punto ciego táctico)
 export const BIOMETRICS: Record<Kind, { armor: string; agility: string; blindSpot: string }> = {
+  muneco: { armor: "Traje relleno de aserrín; la mandíbula de madera es lo más frágil", agility: "Aparece de golpe, torpe al caminar", blindSpot: "Los segundos tras decir su frase" },
+  falso: { armor: "Tela y alambre, casi nada", agility: "Rápido pero efímero", blindSpot: "Cualquier golpe lo deshace" },
+  limpiafondos: { armor: "Carcasa de plástico y una bolsa de filtro; la bolsa es lo más frágil", agility: "Lento, gira como un barco", blindSpot: "El costado, fuera del aro y del abanico" },
   payaso: { armor: "Caja de chapa y resorte; la cabeza es lo más frágil", agility: "Rápido al perseguir, torpe tras aterrizar", blindSpot: "Justo después de caer" },
   grillo: { armor: "Caparazón ligero", agility: "Salto de trayectoria fija", blindSpot: "Aterrizaje: queda quieto" },
   babosa: { armor: "Baba viscosa", agility: "Casi inmóvil al escupir", blindSpot: "Flema lenta y telegrafiada" },

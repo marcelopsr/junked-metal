@@ -5,7 +5,7 @@ import { WEAPONS, type PStats, type WeaponId } from "./weapons";
 import { BAL } from "./balance";
 import type { AbilityId } from "./abilities";
 
-export type PilotId = "soldadito" | "muneca" | "robot" | "dino" | "figura";
+export type PilotId = "soldadito" | "muneca" | "robot" | "dino" | "figura" | "abuela" | "astronauta" | "dinogoma" | "rusa";
 type Rec = { ach: string[] }; // logros del guardado (achievements.ts)
 // Modificadores de cada piloto: columnas de la tabla pilotos de balance.json (neutros: multiplicadores en 1 y sumas en 0)
 const modOf = (id: PilotId) => (st: PStats) => {
@@ -27,6 +27,15 @@ export const PILOTS: Record<PilotId, { name: string; pros: string[]; con: string
   figura: { name: "El Mega Macho", pros: ["+15% XP", "+6% velocidad", "Arranca con Petardos"], con: "Recibe 10% más daño", cost: BAL.pilotos.figura.precio, lore: "Músculos de plástico hueco y cero articulaciones. Aprende rápido porque no piensa demasiado.", start: BAL.pilotos.figura.arma_inicial as WeaponId, abil: BAL.pilotos.figura.habilidad as AbilityId, abilTxt: BAL.pilotos.figura.habilidad_txt,
     ach: { txt: "Sobrevive 10 minutos", ok: (s) => s.ach.includes("diez") },
     mod: modOf("figura") },
+  abuela: { name: "La Abuela de Porcelana", pros: ["+12% blindaje"], con: "-15 vida máxima y -5% velocidad", cost: BAL.pilotos.abuela.precio, lore: "Heredada de la vitrina, con una grieta por cada nieto. Pega como si la fueran a desheredar.", start: BAL.pilotos.abuela.arma_inicial as WeaponId, abil: BAL.pilotos.abuela.habilidad as AbilityId, abilTxt: BAL.pilotos.abuela.habilidad_txt,
+    mod: modOf("abuela") },
+  astronauta: { name: "El Astronauta de Plástico", pros: ["+30% imán", "+8% velocidad"], con: "-10 vida máxima", cost: BAL.pilotos.astronauta.precio, lore: "Prometieron la Luna y le dieron el patio. Recoge tornillos como quien junta polvo estelar.", start: BAL.pilotos.astronauta.arma_inicial as WeaponId, abil: BAL.pilotos.astronauta.habilidad as AbilityId, abilTxt: BAL.pilotos.astronauta.habilidad_txt,
+    mod: modOf("astronauta") },
+  dinogoma: { name: "El Dinosaurio de Goma Mordida", pros: ["+20% daño"], con: "Armas 10% más lentas", cost: BAL.pilotos.dinogoma.precio, lore: "Juguete de perro retirado con honores. Chilla al morder y nadie le discute el hueso.", start: BAL.pilotos.dinogoma.arma_inicial as WeaponId, abil: BAL.pilotos.dinogoma.habilidad as AbilityId, abilTxt: BAL.pilotos.dinogoma.habilidad_txt,
+    ach: { txt: "Derrota a Eulalio el michu", ok: (s) => s.ach.includes("gato") },
+    mod: modOf("dinogoma") },
+  rusa: { name: "La Muñeca Rusa Desconfiada", pros: ["+25 vida", "+15% peso al embestir", "+10% XP"], con: "-10% daño y -5% velocidad", cost: BAL.pilotos.rusa.precio, lore: "Dentro de cada muñeca hay otra muñeca que tampoco se fía de ti. Aprende de todas.", start: BAL.pilotos.rusa.arma_inicial as WeaponId, abil: BAL.pilotos.rusa.habilidad as AbilityId, abilTxt: BAL.pilotos.rusa.habilidad_txt,
+    mod: modOf("rusa") },
 };
 
 export const pilotStats = (st: PStats, id: PilotId) => { (PILOTS[id] ?? PILOTS.soldadito).mod(st); return st; };
@@ -38,6 +47,10 @@ export const PILOT_PORTRAITS: Partial<Record<PilotId | "veterano" | "novato", st
   robot: "./images/pilots/pilot-robot.webp",
   novato: "./images/pilots/pilot-novato.webp",
   figura: "./images/pilots/pilot-novato.webp", // Novato / temerario joven
+  abuela: "./images/pilots/pilot-abuela.webp",
+  astronauta: "./images/pilots/pilot-astronauta.webp",
+  dinogoma: "./images/pilots/pilot-dinogoma.webp",
+  rusa: "./images/pilots/pilot-rusa.webp",
 };
 
 /** Arsenal inicial (Taller → Arsenal, Garaje → Arma): Gomitas de serie y las armas base con fila arma_<id> en precios. Sin fusiones ni Lápiz-lanza (no dispara). */

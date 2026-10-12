@@ -15,6 +15,7 @@ import { erun, minorMini, minorShip, say } from "./encore_run";
 import { mateDown, mateLead, mateTick } from "./coop";
 import type { Player } from "./coop";
 import { offersFor, openOffers } from "./progression";
+import { PIT } from "./zones/pileta";
 import { HALF, floorAt, heavyProps, hitBreakables, hitHeavyProps, spawnPoint, zoneClimate, zoneId, zoneTick } from "./world";
 import { MOON, alt, at, flatL, FOOT, ROLL, hflat, onFloor, ringAt, upv, yawOf } from "./moon";
 import { evBase, lunaEv } from "./moon_events";
@@ -226,7 +227,7 @@ export function tickRam(F: Frame, dt: number) {
       }
     }
   }
-  if (MOON.on ? alt(c.pos) < -5 : Math.abs(c.pos.x) > HALF + 5 || Math.abs(c.pos.z) > HALF + 5 || c.pos.y < -5) D.lead.hp = 0;
+  if (MOON.on ? alt(c.pos) < -5 : Math.abs(c.pos.x) > HALF + 5 || Math.abs(c.pos.z) > HALF + 5 || c.pos.y < (zoneId === "pileta" ? PIT.lo - 6 : -5)) D.lead.hp = 0; // el abismo: bajo el fondo de la pileta (la parte honda queda a -16)
 }
 
 // Eventos de mitad de partida (modo normal): 1 cada ~3-4 min, elegido con rng (semilla); aviso en el HUD antes. 1 lluvia de tornillos, 2 invasión, 3 apagón (este último lo aplica tickSpawner con setDark).
@@ -235,7 +236,7 @@ function tickMidEvent(F: Frame, dt: number) {
   const { c } = F;
   if (!run.evtT) { if (!run.evtEnd) evR = rngFrom(run.runSeed ^ 0x9e3779b9); run.evtT = run.time + R.evento_cada_min_s + evR() * R.evento_cada_rango_s; run.evtNext = 1 + Math.floor(evR() * 3); run.evtWarned = false; }
   if (run.evtId) {
-    if (run.evtId === 1 && (run.evtGemT -= dt) <= 0) { run.evtGemT = R.evento_lluvia_cada_s; dropGems(spawnPoint(c.pos, 4, 18), R.evento_lluvia_xp); }
+    if (run.evtId === 1 && (run.evtGemT -= dt) <= 0) { run.evtGemT = R.evento_lluvia_cada_s; dropGems(spawnPoint(c.pos, 4, 18), R.evento_lluvia_xp, true); }
     if (run.time >= run.evtEnd) { run.evtId = 0; run.evtT = 0; }
     return;
   }

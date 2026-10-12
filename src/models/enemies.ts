@@ -194,6 +194,20 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         ...[[-1.3, 1.9], [1.3, 1.9]].map(([x, z]) => cyl(0.35, 0.35, 0.3, dark, [x, 0.5, z], [0, 0, Math.PI / 2], 8)),
       ];
     }
+    if (kind === "muneco" || kind === "falso") {
+      // Muñeco de ventrílocuo (desván): traje rojo, cabeza de madera con mandíbula articulada, palo en la espalda; el falso es el mismo, descolorido; mira hacia +z
+      const f = kind === "falso", suit = M.plastic(f ? "#6b7280" : "#b91c1c"), wood = M.plastic(f ? "#d6c7a8" : "#e0b27a"), dark = M.matte("#1a1a1a"), white = M.plastic("#f5f5f4"), gold = M.metal("#d4a017");
+      return [
+        box(1.8, 2.4, 1.2, suit, [0, 1.2, 0]),
+        box(0.5, 1.6, 0.5, wood, [-0.55, 0.8, 0.1]), box(0.5, 1.6, 0.5, wood, [0.55, 0.8, 0.1]),
+        sph(1.0, wood, [0, 3.5, 0], undefined, 10),
+        box(1.3, 0.55, 0.9, wood, [0, 2.55, 0.35]),
+        ...[-1, 1].map((s) => sph(0.24, white, [s * 0.42, 3.8, 0.85], undefined, 6)),
+        ...[-1, 1].map((s) => sph(0.1, dark, [s * 0.42, 3.8, 1.05], undefined, 5)),
+        cyl(0.7, 0.7, 0.35, dark, [0, 4.4, 0], undefined, 8), cyl(0.45, 0.45, 0.5, dark, [0, 4.75, 0], undefined, 8),
+        box(0.12, 3.2, 0.12, gold, [0, 2.6, -0.8]),
+      ];
+    }
     if (kind === "payaso") {
       // Payaso de resorte (desván): caja violeta, resorte de acero, cabeza blanca con nariz roja y sombrero, mira hacia +z
       const box0 = M.plastic("#7c3aed"), steel = M.metal("#9ca3af"), white = M.plastic("#f5f5f4"), red = M.glow("#ff2a1a"), dark = M.matte("#1a1a1a");
@@ -204,6 +218,20 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         sph(0.35, red, [0, 5, 1.15], undefined, 6),
         cyl(0.1, 0.9, 1.2, dark, [0, 6.5, 0], undefined, 8),
         ...[-1, 1].map((s) => sph(0.22, dark, [s * 0.45, 5.4, 1.0], undefined, 5)),
+      ];
+    }
+    if (kind === "limpiafondos") {
+      // Limpiafondos de pileta (minijefe de la pileta): disco celeste de plástico sobre orugas, bolsa de filtro atrás, manguera de succión al frente (+z) con boca y ojos; mira hacia +z
+      const shell = M.plastic("#0e7490"), cyan = M.plastic("#38bdf8"), dark = M.matte("#1a1a1a"), steel = M.metal("#9ca3af"), eye = M.glow("#ffe040");
+      return [
+        cyl(2.1, 2.3, 1.1, shell, [0, 0.95, 0], undefined, 14),
+        cyl(1.5, 1.6, 0.5, cyan, [0, 1.75, 0], undefined, 12),
+        ...[-1, 1].map((sx) => box(0.9, 0.8, 4.6, dark, [sx * 2.1, 0.4, 0])),
+        box(2.2, 1.6, 1.8, M.matte("#7c8a6a"), [0, 1.6, -2.2]),
+        tube([[0, 1.3, 1.8], [0, 0.9, 3], [0.3, 0.7, 4.2]], 0.5, steel),
+        cyl(0.9, 0.7, 0.5, dark, [0.3, 0.7, 4.4], [Math.PI / 2, 0, 0], 10),
+        ...[-1, 1].map((sx) => sph(0.28, eye, [sx * 0.7, 2.0, 1.1], undefined, 6)),
+        cyl(0.08, 0.08, 1.4, dark, [0.9, 2.6, -0.4], undefined, 5), sph(0.22, M.glow("#ff2a1a"), [0.9, 3.35, -0.4], undefined, 5),
       ];
     }
     if (kind === "caja") {
@@ -419,6 +447,12 @@ export function cableTemplate() {
 export const nutTemplate = () => template("tuerca", () => [
   tor(0.78, 0.28, pbr("nutRed", { color: "#ff3a1f", rough: 0.3, metal: 0.6, emissive: "#c01800" }), [0, 0, 0], [Math.PI / 2, 0, 0], 6),
   cyl(0.32, 0.32, 0.12, M.matte("#1a1a1a"), [0, 0, 0], [Math.PI / 2, 0, 0], 6),
+]);
+
+// Bola de agua sucia que escupe el Limpiafondos: gota marrón turbia con una salpicadura más oscura (no la tuerca de la aspiradora)
+export const dirtyWaterTemplate = () => template("aguaSucia", () => [
+  sph(1.6, pbr("dirtyWater", { color: "#6b4a26", rough: 0.15, metal: 0.1, emissive: "#3a2410" }), [0, 0, 0], [1, 1.2, 1], 8),
+  sph(0.8, M.matte("#3b2a14"), [0.45, 0.4, 0.4], undefined, 6),
 ]);
 
 // Onda de sonido de la caja de música: aro ámbar en el piso (radio 1, se escala por instancia); es ataque enemigo
