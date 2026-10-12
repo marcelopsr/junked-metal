@@ -170,7 +170,7 @@ function renderRace() {
 }
 
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(daily?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; duel(): void; match3(): void };
+type Api = { scene: Scene; play(daily?: boolean, encore?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; duel(): void; match3(): void };
 let api: Api;
 
 export function applySettings() {
@@ -198,7 +198,7 @@ function resetCfg() {
 }
 
 // ---------- Pila de pantallas ----------
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3" | "play" | "modes";
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3" | "play" | "modes" | "encore";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -1260,6 +1260,7 @@ const BIOMETRICS: Record<Kind, { armor: string; agility: string; blindSpot: stri
 const PHASE2: Partial<Record<Kind, string>> = { gato: " y maúlla para convocar polillas, refuerzos que nadie pidió", perro: " y salta más seguido, ya sin importarle el cansancio" };
 const BTABS = { bichos: "Bichos", pilotos: "Pilotos", logros: "Logros", stats: "Estadísticas" };
 let btab: keyof typeof BTABS = "bichos";
+let bfilt: "todos" | "agiles" | "blindados" | "jefes" = "todos";
 /** Nombre visible de un premio de logro (part:<ranura>:<opción> o pilot:<id>). */
 const rewardName = (id: string) => {
   const [t, k, o] = id.split(":");
@@ -1310,6 +1311,30 @@ function renderBestiary() {
     stats: "Estadísticas",
   };
   $("btabs").innerHTML = tabsHtml(bCounts, btab, "btab");
+  const bfiltsEl = $("bfilts");
+  if (btab === "bichos") {
+    bfiltsEl.classList.remove("hidden");
+    const BFILT_LABELS: Record<typeof bfilt, string> = {
+      todos: "Todas las criaturas",
+      agiles: "Plagas ágiles",
+      blindados: "Criaturas blindadas",
+      jefes: "Jefes y minijefes",
+    };
+    bfiltsEl.innerHTML = (Object.keys(BFILT_LABELS) as (typeof bfilt)[]).map((f) =>
+      `<button class="tab ${bfilt === f ? "on" : ""}" data-bfilt="${f}">${BFILT_LABELS[f]}</button>`
+    ).join("");
+  } else {
+    bfiltsEl.classList.add("hidden");
+  }
+  const isAgile = (k: Kind) => DEF[k].speed >= 8.5 && !DEF[k].boss;
+  const isArmored = (k: Kind) => (DEF[k].mass >= 5 || DEF[k].hp >= 40) && !DEF[k].boss;
+  const matchFilt = (k: Kind) => {
+    if (bfilt === "jefes") return DEF[k].boss;
+    if (bfilt === "agiles") return isAgile(k);
+    if (bfilt === "blindados") return isArmored(k);
+    return true;
+  };
+  const filteredKinds = (Object.keys(DEF) as Kind[]).filter(matchFilt);
   $("beasts").innerHTML = btab === "stats" ? statsHtml() : btab === "logros" ? (Object.keys(ACH) as AchId[]).map((k) => {
     const a: { name: string; txt: string; reward?: string; scrap?: number } = ACH[k], ok = save.ach.includes(k);
     const near = isAchNear(k, ok);
@@ -1323,7 +1348,7 @@ function renderBestiary() {
         : "";
       return `<div tabindex="0" class="carc ficha pilot ${save.pilot === k ? "sel" : ""} ${own ? "" : "locked"}">${portraitHtml}<b>${p.name}</b>${p.pros.map((x) => `<div class="pro">${x}</div>`).join("")}<div class="con">${p.con}</div><div class="wsyn">${icon(p.start, 14)}<span>Arma de serie: <b>${WEAPONS[p.start].name}</b></span></div><div class="lore">${p.lore}</div><div class="price">${st}</div></div>`;
     }).join("")
-    : (Object.keys(DEF) as Kind[]).map((k) => {
+    : filteredKinds.map((k) => {
       // Todo visible desde el inicio; lo propio (bajas) dice "Sin registros todavía" hasta que aparezca. Clic, Enter o A abren la ficha completa.
       const d = DEF[k], n = save.slain[k] ?? 0, met = save.seen.includes(k) || n > 0;
       const portraitSrc = BEAST_PORTRAITS[k];
@@ -1332,7 +1357,7 @@ function renderBestiary() {
         : "";
       const bio = BIOMETRICS[k];
       const bioFast = bio ? `<div class="b-tactical"><span class="b-bio-chip"><b>BLINDAJE:</b> ${bio.armor}</span><span class="b-bio-chip blind"><b>PUNTO CIEGO:</b> ${bio.blindSpot}</span></div>` : "";
-      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}" data-beast="${k}">${portraitHtml}<span class="bthumb">${beastIcon(k, 38)}</span><b class="wi">${d.boss ? icon("jefe", 22) : ""}${d.name}</b>${rankOf(k)} · ${met ? `${n} ${n === 1 ? "baja" : "bajas"}` : "Sin registros todavía"}<div class="lore">${LORE[k]}</div>${bioFast}<div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"} de XP` : "Fin de la partida"}</div></div>`;
+      return `<div tabindex="0" class="carc ficha ${d.boss ? "boss" : ""}" data-beast="${k}">${portraitHtml}<span class="bthumb">${beastIcon(k, 38)}</span><b class="wi">${d.boss ? icon("jefe", 22) : ""}${d.name}</b>${rankOf(k)} · <span class="b-kills">${met ? `${n} ${n === 1 ? "baja registrada" : "bajas registradas"}` : "Sin registros todavía"}</span><div class="lore">${LORE[k]}</div>${bioFast}<div class="st"><span>Vida</span>${bar(d.hp, d.boss ? 8000 : 90)}<span>Velocidad</span>${bar(d.speed, 18)}<span>Daño</span>${bar(d.dmg, d.boss ? 45 : 12)}<span>Peso</span>${bar(d.mass, d.boss ? 100 : 3)}</div><div class="price">${d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"} de XP` : "Fin de la partida"}</div></div>`;
     }).join("");
   rec.innerHTML = save.runs.length
     ? `<tr><th>#</th><th>Tiempo</th><th>Bajas</th><th>Nivel</th><th>Semilla</th></tr>` + save.runs.map((r, i) => `<tr><td>${i + 1}</td><td>${fmt(r.t)}${r.win ? " V" : ""}</td><td>${r.kills}</td><td>${r.lv}</td><td>${r.seed}</td></tr>`).join("")
@@ -1496,8 +1521,8 @@ export function initMenu(a: Api) {
   api = a;
   // Íconos de la familia de interfaz en los botones fijos (solo presentación: no cambia texto ni acción)
   for (const b of document.querySelectorAll<HTMLButtonElement>("#fe button[data-go], #fe button[data-act]")) {
-    const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k] ?? (k === "playmenu" || k === "playgo" ? "jugar" : undefined);
-    if (id && !b.classList.contains("lnk") && (!b.classList.contains("primary") || /^(play|playmenu|playgo|resume|race|daily)$/.test(k))) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
+    const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k] ?? (k === "playmenu" || k === "playgo" || k === "encorego" ? "jugar" : undefined);
+    if (id && !b.classList.contains("lnk") && (!b.classList.contains("primary") || /^(play|playmenu|playgo|encorego|resume|race|daily)$/.test(k))) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
   }
   $("tPause").innerHTML = uiIcon("pausa", 26);
   $("tJump").innerHTML = uiIcon("salto", 28) + "SALTO";
@@ -1530,6 +1555,7 @@ export function initMenu(a: Api) {
     else if (d.act === "duelgo") api.duel();
     else if (d.act === "match3go") api.match3();
     else if (d.act === "play" || d.act === "playgo") api.play();
+    else if (d.act === "encorego") api.play(false, true);
     else if (d.act === "playmenu") { if (ownedZones().length > 1) go("play"); else api.play(); } // con una sola zona no hay nada que elegir: largar directo
     else if (d.act === "daily") api.play(true);
     else if (d.act === "endless") api.endless();
@@ -1602,6 +1628,7 @@ export function initMenu(a: Api) {
     }
     else if (d.belite !== undefined) { BV.elite = d.belite as Elite | ""; BV.anim = ""; renderBeast(); }
     else if (d.btab) { btab = d.btab as typeof btab; renderBestiary(); $("beasts").scrollTop = 0; focusSel(`[data-btab="${btab}"]`); }
+    else if (d.bfilt) { bfilt = d.bfilt as typeof bfilt; renderBestiary(); $("beasts").scrollTop = 0; focusSel(`[data-bfilt="${bfilt}"]`); }
     else if (d.stab) { stab = d.stab as typeof stab; renderShop(); $("shop").scrollTop = 0; focusSel(`[data-stab="${stab}"]`); }
     else if (d.buy) {
       const id = d.buy, c = priceOf(id);

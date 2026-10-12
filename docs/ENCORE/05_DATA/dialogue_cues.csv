@@ -1,0 +1,21 @@
+cueId,trigger,mood,priority,cooldownGroup,subtitle_es,audioAssetKey,memoryPredicate,status
+cue_moon_01,RUN_STARTED,ENTERTAINED,20,opening,¡Luces encendidas! ¡Gravedad opcional! ¡Dignidad no incluida!,NOT_RECORDED,ANY,PROTOTYPE
+cue_moon_02,RUN_STARTED,ENTERTAINED,20,opening,Sonrían para el público. No pregunten dónde está el público.,NOT_RECORDED,ANY,PROTOTYPE
+cue_portal_found_01,TELEPORTER_DISCOVERED,ANY,30,portal,¡Lo encontraron! ¡Qué decepción para el equipo de escondites!,NOT_RECORDED,ANY,PROTOTYPE
+cue_portal_ready_01,TELEPORTER_READY,ANY,60,portal,¡El elenco está listo! Que nadie olvide respirar.,NOT_RECORDED,ANY,PROTOTYPE
+cue_pact_01,PACT_OFFERED,ENTERTAINED,15,pact,Tengo una oferta y una letra pequeña perfectamente legible.,NOT_RECORDED,ANY,PROTOTYPE
+cue_pact_reject_01,PACT_DECLINED,BORED,10,pact,Una decisión sana. Qué decepción.,NOT_RECORDED,ANY,PROTOTYPE
+cue_pact_secret_reveal_01,PACT_SECRET_REVEALED,ANY,40,secret,¡Este desastre fue patrocinado por uno de sus compañeros!,NOT_RECORDED,ANY,PROTOTYPE
+cue_rescue_01,PLAYER_REVIVED,IMPRESSED,20,rescue,"¡Qué acto de solidaridad! Producción, ¿esto estaba permitido?",NOT_RECORDED,ANY,PROTOTYPE
+cue_down_01,PLAYER_DOWNED,ENTERTAINED,10,down,¡Pausa dramática! Espero que alguien venga con repuestos.,NOT_RECORDED,ANY,PROTOTYPE
+cue_loop_01,LOOP_STARTED,ENTERTAINED,50,loop,¡OTRA VUELTA! El público exige más. Y yo soy el público.,NOT_RECORDED,ANY,PROTOTYPE
+cue_loop_02,LOOP_STARTED,OBSESSED,60,loop,Qué raro. Los anteriores no volvieron tantas veces.,NOT_RECORDED,ANY,PROTOTYPE
+cue_stage_secret_01,SECRET_FOUND,ANY,25,mystery,Ninguno de ustedes debía ver esa sala. [silencio] ¡Broma de producción!,NOT_RECORDED,ANY,PROTOTYPE
+cue_evolution_01,ITEM_EVOLVED,IMPRESSED,20,build,"¡Eso no estaba en el manual! Bueno, quemamos el manual.",NOT_RECORDED,ANY,PROTOTYPE
+cue_final_01,FINAL_ACT_SELECTED,ANY,90,final,¡El último acto! Nadie abandona el escenario antes del aplauso.,NOT_RECORDED,ANY,PROTOTYPE
+cue_final_02,BOSS_INTRO,ANY,80,final,Les preparé un invitado. No esperen buenos modales.,NOT_RECORDED,ANY,PROTOTYPE
+cue_victory_01,BOSS_DEFEATED,IMPRESSED,100,victory,¡GANADORES! No confundan esto con haber escapado.,NOT_RECORDED,ANY,PROTOTYPE
+cue_wipe_01,TEAM_WIPED,ANY,100,wipe,Se acabó el episodio. Todavía me quedan muchísimos.,NOT_RECORDED,ANY,PROTOTYPE
+cue_return_01,PLAYER_REJOINED,ENTERTAINED,15,rejoin,¡Regresó el concursante! ¡Cambio de guion!,NOT_RECORDED,ANY,PROTOTYPE
+cue_new_player_01,LATE_JOIN,ANY,40,join,¡Un invitado que llega tarde! Le guardamos los mejores peligros.,NOT_RECORDED,ANY,PROTOTYPE
+cue_boss_memory_01,RUN_STARTED,OBSESSED,30,memory,"Otra vez. Sí, recuerdo aquel último enfrentamiento.",NOT_RECORDED,REQUIRES_REAL_EVENT,PROTOTYPE

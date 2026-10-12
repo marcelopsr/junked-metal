@@ -1,0 +1,49 @@
+{
+  "status": "EVENT_TEMPLATES_NOT_IMPLEMENTED",
+  "schemaVersion": "0.1-prototype",
+  "eventTypes": [
+    {
+      "id": "BOSS_GUEST",
+      "announcement": "Invitado especial",
+      "objective": "Derrotar minijefe existente compatible",
+      "rewardType": "BOSS_EVENT_LOOT",
+      "requiresBossAdapter": true
+    },
+    {
+      "id": "OVERLOAD",
+      "announcement": "Sobrecarga",
+      "objective": "Defender teleportador hasta completar carga",
+      "rewardType": "TEAM_LOOT"
+    },
+    {
+      "id": "DIRECTOR_WHEEL",
+      "announcement": "Ruleta del Director",
+      "objective": "Resolver variante visible tras sorteo acotado",
+      "rewardType": "MODIFIER_LOOT"
+    },
+    {
+      "id": "EXTRACTION",
+      "announcement": "Escape desesperado",
+      "objective": "Alcanzar zona de extracción",
+      "rewardType": "SPEED_LOOT"
+    },
+    {
+      "id": "INTERFERENCE",
+      "announcement": "Interferencia",
+      "objective": "Resistir hazard con telegraph",
+      "rewardType": "SECRET_LOOT"
+    },
+    {
+      "id": "GRAND_SHOW",
+      "announcement": "Gran espectáculo",
+      "objective": "Completar fases múltiples anunciadas",
+      "rewardType": "EXCEPTIONAL_TEAM_LOOT"
+    }
+  ],
+  "requirements": {
+    "previewBeforeReady": true,
+    "allActiveReady": true,
+    "idempotentResolution": true,
+    "soloCompletable": true
+  }
+}

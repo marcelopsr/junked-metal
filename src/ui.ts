@@ -334,6 +334,24 @@ export function hudBoss(name: string | null, pct = 1, kind?: string, enraged = f
   }
 }
 
+// ---------- ENCORE: contador de escenario y ventana de decisión (encore.ts) ----------
+/** null = Supervivencia: todo oculto. tag = [prefijo, texto, numerado]; ask = ventana abierta con sus dos botones (null = sin botón) y lo que queda. */
+export function hudEnc(d: { tag: [string, string, boolean]; ask: { title: string; opts: [string | null, string | null]; left: number; frac: number } | null } | null) {
+  if (ch("encOn", !!d)) $("encTag").classList.toggle("hidden", !d);
+  if (!d) { if (ch("encAskOn", false)) $("encAsk").classList.add("hidden"); return; }
+  txt("encW", d.tag[0]); txt("encN", d.tag[1]);
+  if (ch("encSt", d.tag[2])) $("encTag").classList.toggle("st", d.tag[2]);
+  const a = d.ask;
+  if (ch("encAskOn", !!a)) $("encAsk").classList.toggle("hidden", !a);
+  if (!a) return;
+  txt("encTitle", a.title); txt("encS", `${Math.ceil(a.left)} S`);
+  bar("encBar", a.frac * 100);
+  a.opts.forEach((o, i) => {
+    const b = $(i ? "encB" : "encA");
+    if (ch("encO" + i, o ?? "")) { b.classList.toggle("hidden", !o); b.innerHTML = o ? `${o}${isTouch ? "" : ` <kbd>${i ? "X" : "Z"}</kbd>`}` : ""; }
+  });
+}
+
 // ---------- Aviso de radio: entra con interferencia y el texto se va tecleando ----------
 const STATIC = "#%/\\&@0123456789"; // el último carácter tecleado llega como estática
 type BannerOpts = { tag?: string; ico?: string; tone?: "warn" | "now" };

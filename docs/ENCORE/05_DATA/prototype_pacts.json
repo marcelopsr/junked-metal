@@ -1,0 +1,70 @@
+{
+  "status": "EXAMPLES_REQUIRE_BALANCING",
+  "schemaVersion": "0.1-prototype",
+  "contractRules": {
+    "severeTeamImpactNeedsVote": true,
+    "privateTeamImpactMax": "MINOR_TEMPORARY",
+    "mechanicalTermsMustBeTruthful": true,
+    "rewardsIdempotent": true
+  },
+  "pacts": [
+    {
+      "id": "prototype_doble_o_chatarra",
+      "name": "Doble o chatarra",
+      "duration": "QUICK",
+      "scope": "TEAM",
+      "visibility": "PUBLIC",
+      "consent": "TEAM_VOTE",
+      "risk": "Emboscada anunciada de duración configurada",
+      "reward": "Cofre superior para equipo",
+      "seconds": "TBD",
+      "maxImpact": "MODERATE"
+    },
+    {
+      "id": "prototype_salud_en_garantia",
+      "name": "Salud en garantía",
+      "duration": "RUN",
+      "scope": "PERSONAL",
+      "visibility": "PUBLIC",
+      "consent": "TARGET",
+      "risk": "Reducción acotada de salud máxima de run",
+      "reward": "Objeto extraordinario",
+      "minimumHP": "TBD",
+      "maxImpact": "PERSONAL"
+    },
+    {
+      "id": "prototype_produccion_sorpresa",
+      "name": "Producción sorpresa",
+      "duration": "QUICK",
+      "scope": "TEMPTATION",
+      "visibility": "PRIVATE_UNTIL_REVEAL",
+      "consent": "TARGET",
+      "risk": "Aparición adicional pequeña y señalizada para equipo",
+      "reward": "Carta individual extra",
+      "seconds": "TBD",
+      "maxImpact": "MINOR_TEMPORARY"
+    },
+    {
+      "id": "prototype_programa_nocturno",
+      "name": "Programa nocturno",
+      "duration": "STAGE",
+      "scope": "TEAM",
+      "visibility": "PUBLIC",
+      "consent": "TEAM_VOTE",
+      "risk": "Modificador ambiental visible y reversible en este escenario",
+      "reward": "Recompensa de etapa mejorada",
+      "maxImpact": "MODERATE"
+    },
+    {
+      "id": "prototype_patrocinio_falso",
+      "name": "Patrocinio defectuoso",
+      "duration": "QUICK",
+      "scope": "PERSONAL",
+      "visibility": "PUBLIC",
+      "consent": "TARGET",
+      "risk": "Mayor coste en máquina concreta durante período anunciado",
+      "reward": "Oportunidad especial en tienda",
+      "maxImpact": "PERSONAL"
+    }
+  ]
+}

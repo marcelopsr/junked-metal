@@ -1,0 +1,25 @@
+flowchart TD
+    A[LOBBY / 1-4 participantes] --> B[RUN INIT: semilla + boss secreto]
+    B --> C[LUNA - primera etapa]
+    C --> D[Explorar + combate + recursos + secretos]
+    D --> E{Teleportador descubierto?}
+    E -- No --> D
+    E -- Sí --> F[Anunciar evento / solicitud de READY]
+    F --> G{Participantes activos listos?}
+    G -- No --> D
+    G -- Sí --> H[Evento del teleportador]
+    H --> I{Equipo eliminado?}
+    I -- Sí --> Z[WIPE / informe / run cerrada]
+    I -- No --> J[Recompensas + checkpoint]
+    J --> K{Al menos 4 etapas en ciclo?}
+    K -- No --> L[Votar ruta ramificada]
+    L --> M[Siguiente mapa / seed válida]
+    M --> D
+    K -- Sí --> N{Voto ENCORE! vs FINAL ACT}
+    N -- Empate --> N
+    N -- ENCORE! --> O[Nuevo loop: amenaza y rutas evolucionan]
+    O --> L
+    N -- FINAL ACT --> P[Arena exclusiva / Boss fijo + sabotajes]
+    P --> Q{Jefe derrotado?}
+    Q -- Sí --> R[VICTORIA / informe / meta / run cerrada]
+    Q -- No / wipe --> Z

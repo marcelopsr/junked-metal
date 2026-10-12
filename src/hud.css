@@ -90,6 +90,18 @@
 #lcd.endless { border-color: #ffd24a; box-shadow: 0 0 12px rgba(255, 210, 74, .28); }
 #clock.endless { border-color: rgba(255, 210, 74, .6); box-shadow: 0 0 10px rgba(255, 210, 74, .3); }
 #lcd.endless #timer, #clock.endless #timer { color: #ffd24a; }
+/* ENCORE: contador de escenario (dentro del reloj) y ventana de decisión del teleportador / votación (encore.ts) */
+#encTag { font: 700 15px/1 var(--hf); letter-spacing: .08em; color: var(--jm-cian, #00C2FF); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (pointer: coarse), (max-width: 720px) { #encTag.st #encW { display: none; } #encTag.st #encN::before { content: "ESC "; } }
+#encAsk { position: absolute; top: 32%; left: 50%; translate: -50% 0; scale: var(--hud-scale); transform-origin: 50% 0; width: min(380px, calc(100vw / var(--hud-scale) - 24px)); padding: 12px 16px 14px; pointer-events: auto; border-top-color: var(--jm-amarillo, #FFB400); }
+#encAsk .encHd { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 8px; font: 700 18px/1 var(--hf); letter-spacing: .1em; color: var(--jm-amarillo2, #FFD166); }
+#encAsk .encHd b { font: 700 22px/1 var(--hf); color: var(--g-txt); font-variant-numeric: tabular-nums; }
+#encAsk .h-track { height: 10px; }
+#encBar { background: linear-gradient(90deg, #ff9138, #ffd166); }
+#encAsk .encBtns { display: flex; gap: 10px; margin-top: 12px; }
+#encAsk .encBtns button { flex: 1; touch-action: manipulation; }
+#encAsk .encBtns button.hidden { display: none; }
+#encAsk kbd { margin: 0 0 0 6px; }
 .rf-interference { filter: contrast(1.4) drop-shadow(0 0 2px rgba(239, 68, 68, .6)); opacity: .85; }
 
 #wshop { top: calc(max(10px, env(safe-area-inset-top)) + 108px); left: 14px; transform-origin: 0 0; display: flex; align-items: center; gap: 8px; padding: 6px 10px; max-width: min(320px, 70vw); }

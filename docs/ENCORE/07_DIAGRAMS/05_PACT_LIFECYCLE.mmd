@@ -1,0 +1,18 @@
+stateDiagram-v2
+    [*] --> GENERATED
+    GENERATED --> OFFERED
+    OFFERED --> DECLINED
+    OFFERED --> EXPIRED
+    OFFERED --> CONSENT_PENDING: impacto de equipo
+    OFFERED --> ACTIVE: consentimiento individual válido
+    CONSENT_PENDING --> ACTIVE: voto válido
+    CONSENT_PENDING --> DECLINED: voto rechazado
+    ACTIVE --> SUCCEEDED
+    ACTIVE --> FAILED
+    ACTIVE --> CANCELED: fin de run / política
+    SUCCEEDED --> SETTLED
+    FAILED --> SETTLED
+    CANCELED --> SETTLED
+    SETTLED --> REVEALED: si había secreto menor
+    SETTLED --> [*]: público
+    REVEALED --> [*]

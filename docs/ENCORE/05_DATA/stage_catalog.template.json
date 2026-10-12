@@ -1,0 +1,23 @@
+{
+  "status": "TEMPLATE_REPLACE_WITH_REPO_STAGE_IDS",
+  "stages": [
+    {
+      "id": "placeholder_moon",
+      "label": "Luna (nivel existente; ID real por auditar)",
+      "existingAssetConfirmedByUser": true,
+      "repoPath": "UNKNOWN",
+      "firstRunOpening": true,
+      "canAppearLater": true,
+      "teleporterSocketCount": "TBD",
+      "routeSockets": "TBD",
+      "availableEvents": "TBD",
+      "proceduralValidation": "REQUIRED"
+    }
+  ],
+  "routes": {
+    "firstStageId": "placeholder_moon",
+    "minStagesPerLoop": 4,
+    "otherStageIds": "FILL_AFTER_REPO_AUDIT",
+    "loopUnlocks": "CONTENT_DEPENDENT"
+  }
+}

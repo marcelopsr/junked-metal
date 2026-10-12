@@ -1,0 +1,16 @@
+caseId,title,procedure,expected
+QA-001,seed determinism,"run seed, same action order",same route and boss
+QA-002,timer pause,suspend and resume,active ms does not increase
+QA-003,shared xp,4 players separated,level credits for all
+QA-004,portal ready,one player not ready,event not started
+QA-005,boss chosen once,migrate host twice,boss id same
+QA-006,money concurrent,same chest 2 simultaneous purchase,no negative or dupes
+QA-007,coop rejoin,player disconnect and reconnect,same inventory
+QA-008,late join,new user tries during boss,denied; allowed between stages
+QA-009,director pact consent,"severe team impact, no vote",not executed
+QA-010,private pact privacy,viewer open on phone,private offer hidden
+QA-011,phone role,viewer sends input,ignored
+QA-012,host migration,host crashes during stage,"safe recovery, one authority"
+QA-013,final victory,boss defeated,run closed no loop
+QA-014,1000 stage layouts,procedural seed sweep,portal reachable every time
+QA-015,proc chain cap,stack many effects,no runaway loop

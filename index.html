@@ -46,7 +46,13 @@
       <span id="lvl" class="h-scr">NV 01</span>
     </div>
 
-    <div id="lcd" class="h-scr"><span id="timer" class="h-g" data-g="88:88">00:00</span><span class="sub"><span id="kills" class="h-g" data-g="8888">0000</span> BAJAS</span></div>
+    <div id="lcd" class="h-scr"><span id="timer" class="h-g" data-g="88:88">00:00</span><span class="sub"><span id="kills" class="h-g" data-g="8888">0000</span> BAJAS</span><span id="encTag" class="hidden"><span id="encW"></span><span id="encN"></span></span></div>
+
+    <div id="encAsk" class="h-panel hidden" role="group" aria-label="Decisión del Director">
+      <div class="encHd"><span id="encTitle"></span><b id="encS"></b></div>
+      <div class="h-track"><div id="encBar"></div></div>
+      <div class="encBtns"><button id="encA" type="button" tabindex="-1"></button><button id="encB" type="button" tabindex="-1" class="primary"></button></div>
+    </div>
 
     <div id="wshop" class="h-panel hidden" aria-label="Mejoras del taller"></div>
 
@@ -136,7 +142,7 @@
     <section id="scr-main" class="scr">
       <div class="brand small">JUNKED METAL</div>
       <nav class="list mainGrid">
-        <button data-act="playmenu" class="primary wide">Jugar</button>
+        <button data-go="encore" class="primary wide">Jugar</button>
         <button data-go="daily" id="dailyBtn" class="wide"><span class="bt">Desafío diario</span><small class="bs" id="dailyRec"></small></button>
         <button data-go="modes" class="wide more"><span class="bt">Más modos</span></button>
         <div class="mm-lab wide">Auto</div>
@@ -151,6 +157,16 @@
       </nav>
       <div class="foot" id="mainInfo"></div>
       <div class="foot hidden" id="iosHint">Para instalar: Compartir → Agregar a inicio</div>
+    </section>
+
+    <section id="scr-encore" class="scr">
+      <div class="otitle">ENCORE</div>
+      <div class="foot">The show must go on. Expedición desde la Luna, escenario tras escenario, bajo la mirada del Director.</div>
+      <div class="foot">Cada escenario termina en un teleportador: quedarse da tiempo para mejorar con la amenaza en aumento, avanzar lleva al siguiente. Tras el cuarto, el público vota: ¡ENCORE! (otra vuelta, más difícil) o FINAL ACT (el jefe del show).</div>
+      <nav class="list">
+        <button data-act="encorego" class="primary">Largar</button>
+        <button data-act="back">Volver</button>
+      </nav>
     </section>
 
     <section id="scr-play" class="scr">
@@ -172,6 +188,7 @@
     <section id="scr-modes" class="scr">
       <div class="otitle">Más modos</div>
       <nav class="list modeList">
+        <button data-act="playmenu"><span class="mtx"><b>Supervivencia</b><small>Diez minutos contra la plaga: esquivar, mejorar el auto y llegar al final.</small></span></button>
         <button data-go="race"><span class="mtx"><b>Carrera</b><small>Circuito en el patio contra 10 corredores, con objetos, derrape y mini-turbo.</small><small class="mprog" id="progRace"></small></span></button>
         <button data-go="duel"><span class="mtx"><b>Demolición</b><small>Arena de acero, mejor de tres asaltos. Solo chasis, ruedas y un arma de contacto.</small></span></button>
         <button data-go="match3"><span class="mtx"><b>Junket Crush</b><small>Gabinete arcade en el taller: intercambiar piezas de chatarra y completar el pedido.</small><small class="mprog" id="progM3"></small></span></button>
@@ -251,6 +268,7 @@
       <div class="otitle">Chatarroteca</div>
       <div class="bestiary-banner jm-panel"><img src="./images/bestiary-backdrop.webp" alt="Chatarroteca y vitrina de especímenes" width="1024" height="512" loading="lazy" /></div>
       <div id="btabs" class="tabs"></div>
+      <div id="bfilts" class="tabs hidden"></div>
       <div id="beasts"></div>
       <div class="sect">Mejores partidas</div>
       <table id="records"></table>

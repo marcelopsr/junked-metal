@@ -1,0 +1,18 @@
+flowchart LR
+    A[Run Host: motor + renderer] --> R[Camera + Viewport Router]
+    R --> L[Split screen local]
+    R --> W[Ventana extra]
+    R --> T[TV / OS mirroring o web receiver]
+    R --> E[Encoder de cámara individual]
+    E --> V[WebRTC video]
+    V --> M[Teléfono: Viewer]
+    V --> F[Teléfono: Full player]
+    Q[QR / código temporal] --> H[Aprobación anfitrión]
+    H --> X[Role assignment]
+    X --> M
+    X --> F
+    X --> K[Teléfono: Controller]
+    K --> I[Input router]
+    F --> I
+    I --> A
+    M -. sin input de gameplay .-> Z[solo ver]

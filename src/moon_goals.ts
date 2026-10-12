@@ -12,8 +12,8 @@ import { banner } from "./ui";
 // Cada luna_obj_cada_s aparece un objetivo lejos del auto (baliza alta + radar): juntar celdas a tiempo o quedarse en la zona de una antena.
 // Al salir el gusano (jefe final) aterriza el cohete: quedarse luna_cohete_s en su zona = victoria "Escape". Premio de objetivo = el de la nodriza (SHIP_IO.reward).
 const A = BAL.ataques;
-/** main.ts llena win: victoria alternativa por escape. */
-export const GOAL_IO: { win: (p: B.Vector3) => void } = { win: () => {} };
+/** main.ts llena win: victoria alternativa por escape (en ENCORE, activar el teleportador: tele = true cambia el rótulo de la barra). */
+export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean } = { win: () => {}, tele: false };
 
 const mats = () => {
   const glow = (n: string, c: string, a = 1) => { const m = pbr(n, { color: c, rough: 0.3, emissive: c, alpha: a }); m.fogEnabled = false; m.emissiveIntensity = 2.4; return m; };
@@ -63,7 +63,7 @@ export function rocketForce(car: B.Vector3, dist = 20, ang?: number) { if (rocke
 export const goalBlips = () => [...(goal ? (goal.cells.length ? goal.cells.map((c) => c.p) : [goal.p]) : []), ...(rocket ? [rocket.p] : [])];
 /** Barra (la del jefe): progreso del objetivo o del cohete. Cohete primero (solo con el auto adentro). */
 export function goalBar(car: B.Vector3) {
-  if (rocket && rocket.prog > 0 && hd(car, rocket.p) < A.luna_cohete_radio) return { name: "ABORDAJE DEL COHETE", pct: rocket.prog / A.luna_cohete_s };
+  if (rocket && rocket.prog > 0 && hd(car, rocket.p) < A.luna_cohete_radio) return { name: GOAL_IO.tele ? "TELEPORTADOR · ACTIVANDO" : "ABORDAJE DEL COHETE", pct: rocket.prog / A.luna_cohete_s };
   if (goal?.kind === "antena" && goal.prog > 0) return { name: "ANTENA · ENLACE", pct: goal.prog / A.luna_obj_antena_s };
   return null;
 }

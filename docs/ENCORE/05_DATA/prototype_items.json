@@ -1,0 +1,221 @@
+{
+  "status": "CONCEPT_ART_ONLY_NOT_IMPLEMENTED",
+  "schemaVersion": "0.1-prototype",
+  "items": [
+    {
+      "id": "prototype_bobina_oxidada",
+      "name": "Bobina oxidada",
+      "rarity": "UNCOMMON",
+      "tags": [
+        "ELECTRIC",
+        "CHAIN"
+      ],
+      "concept": "Un rebote eléctrico con límite de objetivos.",
+      "stackPolicy": "STACK",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_fuelle_carmesi",
+      "name": "Fuelle carmesí",
+      "rarity": "COMMON",
+      "tags": [
+        "FIRE",
+        "BURN"
+      ],
+      "concept": "Incrementa duración de quemadura con rendimientos decrecientes.",
+      "stackPolicy": "STACK",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_remache_helado",
+      "name": "Remache helado",
+      "rarity": "UNCOMMON",
+      "tags": [
+        "FROST",
+        "SLOW"
+      ],
+      "concept": "Impactos enfrían, preparan reacciones.",
+      "stackPolicy": "STACK",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_tambor_bis",
+      "name": "Tambor del bis",
+      "rarity": "RARE",
+      "tags": [
+        "LOOP",
+        "TEMPO"
+      ],
+      "concept": "Tras portal exitoso otorga bonificación temporal con cooldown.",
+      "stackPolicy": "UNIQUE",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_casete_reverso",
+      "name": "Casete reverso",
+      "rarity": "RARE",
+      "tags": [
+        "DIRECTOR",
+        "UTILITY"
+      ],
+      "concept": "Permite una opción extra bajo condición, no rehace el boss.",
+      "stackPolicy": "UNIQUE",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_sirena_oxidada",
+      "name": "Sirena oxidada",
+      "rarity": "COMMON",
+      "tags": [
+        "SUPPORT",
+        "SHIELD"
+      ],
+      "concept": "Al auxiliar concede escudo breve al salvador.",
+      "stackPolicy": "STACK",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_aplausometro",
+      "name": "Aplausómetro defectuoso",
+      "rarity": "UNCOMMON",
+      "tags": [
+        "EXPLOSION",
+        "ON_KILL"
+      ],
+      "concept": "Eliminaciones marcadas pueden producir pulso de chatarra.",
+      "stackPolicy": "STACK",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_visor_ciego",
+      "name": "Visor que mira atrás",
+      "rarity": "RARE",
+      "tags": [
+        "SCOUT",
+        "SECRET"
+      ],
+      "concept": "Mejora pistas visuales sin revelar secretos automáticamente.",
+      "stackPolicy": "UNIQUE",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_cinta_doble",
+      "name": "Cinta doble cara",
+      "rarity": "COMMON",
+      "tags": [
+        "MOVEMENT",
+        "MOBILITY"
+      ],
+      "concept": "Pequeña mejora de giro y freno.",
+      "stackPolicy": "STACK",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_tiquetera",
+      "name": "Tiquetera de producción",
+      "rarity": "LEGENDARY",
+      "tags": [
+        "LOOT",
+        "DIRECTOR"
+      ],
+      "concept": "Una recompensa especial con cooldown largo y riesgo declarado.",
+      "stackPolicy": "UNIQUE",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_pararrayos",
+      "name": "Pararrayos portátil",
+      "rarity": "UNCOMMON",
+      "tags": [
+        "ELECTRIC",
+        "DEFENSE"
+      ],
+      "concept": "Absorbe parte de un tipo de amenaza con cooldown.",
+      "stackPolicy": "STACK",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    },
+    {
+      "id": "prototype_inyector_de_ruido",
+      "name": "Inyector de ruido",
+      "rarity": "RARE",
+      "tags": [
+        "STATUS",
+        "CHAOS"
+      ],
+      "concept": "Crea efecto visual y breve disrupción contra enemigos, no jugadores.",
+      "stackPolicy": "UNIQUE",
+      "effectHandler": "NOT_IMPLEMENTED",
+      "stackCap": "TBD",
+      "fxBudget": "TBD"
+    }
+  ],
+  "synergyRecipes": [
+    {
+      "id": "prototype_tormenta_combustion",
+      "needs": [
+        "FIRE",
+        "ELECTRIC"
+      ],
+      "effect": "Combustión-electrificación encadenada con procDepth cap",
+      "soloAccessible": true,
+      "implemented": false
+    },
+    {
+      "id": "prototype_criogolpe",
+      "needs": [
+        "FROST",
+        "IMPACT"
+      ],
+      "effect": "Impacto en enemigo congelado causa metralla limitada",
+      "soloAccessible": true,
+      "implemented": false
+    },
+    {
+      "id": "prototype_rescate_de_hierro",
+      "needs": [
+        "SUPPORT",
+        "SHIELD"
+      ],
+      "effect": "Rescate crea escudo temporal sin inmunidad absoluta",
+      "soloAccessible": true,
+      "implemented": false
+    },
+    {
+      "id": "prototype_bis_ensamblado",
+      "needs": [
+        "LOOP",
+        "EXPLOSION"
+      ],
+      "effect": "Bono limitado tras evento y pulso de crowd-control",
+      "soloAccessible": true,
+      "implemented": false
+    }
+  ],
+  "rules": {
+    "noInfiniteProcChains": true,
+    "transactionalInventory": true,
+    "noGuaranteedBuild": true
+  }
+}

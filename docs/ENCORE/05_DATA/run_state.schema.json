@@ -1,0 +1,214 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:junked-metal:encore:prototype-run-state",
+  "title": "ENCORE run snapshot (proposal)",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "runId",
+    "revision",
+    "authorityEpoch",
+    "phase",
+    "runSeed",
+    "completedStages",
+    "completedLoops",
+    "bossId",
+    "activeTimeMs",
+    "scrap",
+    "participants",
+    "rngStreams"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contentVersion": {
+      "type": "string"
+    },
+    "runId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "authorityEpoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "phase": {
+      "enum": [
+        "LOBBY",
+        "RUN_INIT",
+        "STAGE_EXPLORE",
+        "PORTAL_READY",
+        "PORTAL_EVENT",
+        "STAGE_RESOLVE",
+        "ROUTE_VOTE",
+        "FORK_VOTE",
+        "STAGE_LOAD",
+        "FINAL_ACT_PREP",
+        "BOSS_ARENA",
+        "WIN",
+        "WIPE",
+        "RUN_REPORT",
+        "CLOSED",
+        "SUSPENDED"
+      ]
+    },
+    "runSeed": {
+      "type": "string"
+    },
+    "stageId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "stageSeed": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "completedStages": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "completedLoops": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "bossId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "activeTimeMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "stageActiveTimeMs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "scrap": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "participants": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "participantId",
+          "state",
+          "level",
+          "inventory"
+        ],
+        "properties": {
+          "participantId": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "ALIVE",
+              "DOWNED",
+              "ELIMINATED_UNTIL_NEXT_STAGE",
+              "DISCONNECTED_RESERVED",
+              "LEFT_PERMANENT"
+            ]
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "inventory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "instanceId",
+                "itemId"
+              ],
+              "properties": {
+                "instanceId": {
+                  "type": "string"
+                },
+                "itemId": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "pendingChoices": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "rngStreams": {
+      "type": "object",
+      "required": [
+        "loot",
+        "encounters",
+        "routes",
+        "boss",
+        "pacts",
+        "secrets",
+        "dialogue"
+      ],
+      "properties": {
+        "loot": {
+          "type": "string"
+        },
+        "encounters": {
+          "type": "string"
+        },
+        "routes": {
+          "type": "string"
+        },
+        "boss": {
+          "type": "string"
+        },
+        "pacts": {
+          "type": "string"
+        },
+        "secrets": {
+          "type": "string"
+        },
+        "dialogue": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "director": {
+      "type": "object"
+    },
+    "pacts": {
+      "type": "array"
+    },
+    "votes": {
+      "type": "object"
+    },
+    "arenaModifiers": {
+      "type": "array"
+    },
+    "appliedTransactionIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "description": "Datos de muestra. Las invariantes cruzadas (boss inmutable, unique participant IDs, epochs) requieren validadores de dominio."
+}

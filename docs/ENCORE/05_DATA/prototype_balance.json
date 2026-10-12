@@ -1,0 +1,54 @@
+{
+  "status": "PROTOTYPE_UNBALANCED",
+  "schemaVersion": "0.1-prototype",
+  "hardRules": {
+    "maxPlayers": 4,
+    "minStagesPerLoop": 4,
+    "firstStageKey": "placeholder_moon",
+    "friendlyFire": false,
+    "sharedXP": true,
+    "sharedScrap": true,
+    "finalVictoryClosesRun": true,
+    "newJoinsOnlyBetweenStages": true
+  },
+  "run": {
+    "targetInitialMinutesLow": 40,
+    "targetInitialMinutesHigh": 60,
+    "pauseFreezesActiveTimers": true
+  },
+  "threat": {
+    "timeWeightPerMinute": 0.02,
+    "completedStageFactor": 1.11,
+    "completedLoopFactor": 1.12,
+    "upperThreatClamp": "TBD",
+    "directorTickMs": "TBD",
+    "spawnBudgetCap": "TBD",
+    "safetyWarningRequired": true
+  },
+  "prices": {
+    "perMinuteFactor": 0.012,
+    "completedLoopFactor": 1.08,
+    "maxPriceMultiplier": "TBD",
+    "neverDeleteCurrencyAutomatically": true
+  },
+  "player": {
+    "levelChoiceCount": 3,
+    "rerollsPerChoice": "TBD",
+    "downedBleedoutSeconds": "TBD",
+    "rescueChannelSeconds": "TBD",
+    "newJoinKitScale": "TBD"
+  },
+  "multiscreen": {
+    "mobileProfiles": [
+      "VIEWER",
+      "CONTROLLER",
+      "FULL_PLAYER"
+    ],
+    "qualityTargets": [
+      "eco",
+      "balanced",
+      "high"
+    ],
+    "authorizationRequired": true
+  }
+}

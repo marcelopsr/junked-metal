@@ -1,0 +1,24 @@
+flowchart TD
+    subgraph CLIENT_A[Dispositivo A]
+      P1[Participante 1 local]
+      P2[Participante 2 local]
+      C1[Split viewports + input]
+      P1 --> C1
+      P2 --> C1
+    end
+    subgraph CLIENT_B[Dispositivo B]
+      P3[Participante 3 remoto]
+    end
+    subgraph CLIENT_C[Dispositivo C]
+      P4[Participante 4 remoto]
+    end
+    C1 --> H[Host authority / run orchestrator]
+    P3 --> H
+    P4 --> H
+    H --> D[State snapshots y event log]
+    D --> B[Réplicas elegibles]
+    B -. pérdida de host / election epoch .-> H2[Nueva autoridad]
+    H2 --> C1
+    H2 --> P3
+    H2 --> P4
+    H --> S[Storage persistente / suspensión]

@@ -1,0 +1,19 @@
+{
+  "status": "EMPTY_UNTIL_SURVIVOR_AUDIT",
+  "bosses": [],
+  "requiredFields": [
+    "bossId",
+    "survivorFilePath",
+    "compatible",
+    "requiredArenaSize",
+    "movementConstraints",
+    "attackTags",
+    "telegraphs",
+    "coopScalability",
+    "introAsset",
+    "lootTableId",
+    "arenaModifiersSupported"
+  ],
+  "selectionRule": "chooseOnceAtRunStartFromCompatibleBosses",
+  "doNotFabricateBosses": true
+}
