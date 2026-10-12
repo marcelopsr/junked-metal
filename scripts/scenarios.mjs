@@ -397,4 +397,40 @@ export const sessions = [
     } },
   ] },
 ];
+// ---------- ENCORE: la Luna con 1, 2 y 4 jugadores y el FINAL ACT (solo compu: en celular ENCORE es de 1) ----------
+// Joysticks simulados 0..n-1 (sticks corridos distinto para que cada auto se mueva); para 3-4 jugadores el juego los espera conectados.
+const fakePads = (n) => (p) => p.evaluate((n) => {
+  const b = (on, v = on ? 1 : 0) => ({ pressed: on, touched: on, value: v });
+  const pads = Array.from({ length: n }, (_, i) => ({ id: "Xbox Wireless Controller (STANDARD GAMEPAD Vendor: 045e Product: 0b13)", index: i, connected: true, mapping: "standard", timestamp: 1,
+    axes: [0.5 - i * 0.3, -0.4 + i * 0.2, 0.1, 0], buttons: Array.from({ length: 17 }, (_, k) => b(k === 7)) }));
+  navigator.getGamepads = () => [...pads, ...Array(4 - n).fill(null)];
+}, n);
+const encoreIn = (n) => async (p) => { // ?encore arranca solo; se espera la partida, se arma la fila de bichos de la Luna y se corren cuadros
+  if (n > 2) await fakePads(n)(p);
+  await wait(p, () => window.__enc?.info?.() && window.__info().state === "play");
+  await p.evaluate(() => { window.__god(); window.__luna.ring(10, 13); window.__luna.ring(14, 24); });
+  await tick(p, 120);
+};
+// Salta de escenario en escenario por la API de __enc (aterrizar, abordar, avanzar, votar "final") hasta la fase final
+const finalAct = async (p) => {
+  await wait(p, () => window.__enc?.info?.());
+  for (let i = 0; i < 60 && (await p.evaluate(() => window.__enc.info().phase)) !== "final"; i++) await p.evaluate(() => {
+    const E = window.__enc, ph = E.info().phase;
+    if (ph === "stage") { E.land(); E.board(); }
+    else if (ph === "teleporter" || ph === "stay") E.pick(1);
+    else if (ph === "vote") E.pick(1);
+    else if (ph === "guest") { window.__killBoss(); E.tick(1); }
+    else if (ph === "pact" || ph === "route") E.pick(0);
+    else E.tick(60); // overload y demás: que corra el reloj de fase
+    window.__tick(2);
+  });
+  if ((await p.evaluate(() => window.__enc.info().phase)) !== "final") throw new Error("no se llegó al FINAL ACT");
+  await tick(p, 150);
+};
+const encoreSession = (n) => ({ id: `encore${n}`, query: `?mute&seed=3&encore&players=${n}`, vps: ["pc"], shots: [
+  { id: "luna", act: encoreIn(n) },
+  { id: "final", act: finalAct },
+] });
+
+sessions.push(encoreSession(1), encoreSession(2), encoreSession(4));
 export { tick, info };
