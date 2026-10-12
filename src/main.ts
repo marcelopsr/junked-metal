@@ -654,11 +654,16 @@ async function netJoin() {
 // R6c: login del servidor propio (solo con VITE_NET_HOST): vuelve con #token=... y queda en localStorage
 if (NET_HOST) {
   if (takeToken()) netStatus("Sesión iniciada.");
-  const b = $("netLogin"); b.classList.remove("hidden"); if (getToken()) b.textContent = "Sesión iniciada · volver a entrar";
-  b.onclick = () => location.assign(loginUrl());
-  if (LOGIN_URL) { const c = $("netCfLogin"); c.classList.remove("hidden"); c.onclick = () => location.assign(cfLoginUrl()); } // opción principal; GitHub y clave quedan de alternativa
-  const sess = () => { const on = !!getToken(); $("netSession").textContent = on ? "Sesión iniciada" : "Sin sesión"; $("netLogout").classList.toggle("hidden", !on); };
-  $("netKeyBox").classList.remove("hidden"); sess();
+  $("netLogin").onclick = () => location.assign(loginUrl());
+  $("netCfLogin").onclick = () => location.assign(LOGIN_URL ? cfLoginUrl() : loginUrl());
+  // Un solo estado a la vista: con sesión = "Online: sesión iniciada" + Cerrar sesión + salas; sin sesión = iniciar sesión (Cloudflare, o GitHub sin LOGIN_URL) y alternativas plegadas, sin botones de sala.
+  const sess = () => {
+    const on = !!getToken();
+    $("netSession").textContent = on ? "Online: sesión iniciada" : "";
+    for (const id of ["netSession", "netLogout", "netHost", "netCode", "netJoin"]) $(id).classList.toggle("hidden", !on);
+    for (const id of ["netCfLogin", "netAlt"]) $(id).classList.toggle("hidden", on);
+  };
+  sess();
   $("netKeyGo").onclick = async () => {
     const k = $("netKey") as HTMLInputElement;
     if (!k.value.trim()) { netStatus("Escribir la clave de grupo."); return; }
