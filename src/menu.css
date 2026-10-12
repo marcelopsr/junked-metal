@@ -792,3 +792,17 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 #encLbList { margin: 0; max-height: 26vh; overflow-y: auto; overscroll-behavior: contain; font-size: 12px; line-height: 1.2; letter-spacing: .03em; padding: 4px 9px; }
 #encLbList li { padding: 2px 0; }
 #netAlt > summary:focus { outline: 3px solid var(--jm-cian); outline-offset: 3px; }
+
+#aviso { position: fixed; left: 50%; top: max(10px, env(safe-area-inset-top)); translate: -50% 0; z-index: 70; display: flex; gap: 10px; align-items: center; max-width: min(92vw, 560px); padding: 8px 12px; background: #b36a00; color: #fff; border-radius: 6px; }
+#aviso.hidden { display: none; }
+#aviso button { background: none; border: 0; color: inherit; font-size: 20px; cursor: pointer; }
+.linkBtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
+
+#novedades { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; background: rgba(0,0,0,.7); }
+#novedades .nv-box { width: min(92vw, 480px); max-height: 86vh; overflow-y: auto; padding: 16px 18px; background: var(--jm-fondo); color: var(--jm-texto); border: 1px solid var(--jm-borde); border-radius: 4px; }
+#novedades h2 { margin: 0 0 8px; font: 700 20px/1.1 var(--jm-titulo); }
+#novedades ul { list-style: none; margin: 0 0 12px; padding: 0; }
+#novedades li { padding: 6px 0; border-bottom: 1px solid var(--jm-borde); }
+#novedades p { margin: 2px 0 0; font-size: 13px; line-height: 1.3; }
+#novedades button { min-height: 44px; width: 100%; font: 700 16px/1 var(--jm-titulo); cursor: pointer; }
+#novedades button:focus-visible { outline: 3px solid var(--jm-cian); outline-offset: 2px; }

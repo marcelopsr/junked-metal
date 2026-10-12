@@ -28,6 +28,13 @@ export const ACH = {
   encore_eco: { name: "Toma 47", txt: "Quédate tres veces en un mismo escenario y gana la expedición", scrap: BAL.ritmo.logro_gato_tornillos },
   encore_medianoche: { name: "Turno de noche", txt: "Gana ENCORE tras elegir ENSAYO DE MEDIANOCHE como destino", scrap: BAL.ritmo.logro_gato_tornillos },
   encore_impecable: { name: "Ensayo sin rasguños", txt: "Termina un escenario de ENCORE sin recibir daño", scrap: BAL.ritmo.logro_gato_tornillos },
+  payaso: { name: "Payaso desarmado", txt: "Derrota al Payaso de Resorte. Se le acabó el resorte", scrap: BAL.ritmo.logro_gato_tornillos },
+  zen: { name: "Zen del patio", txt: "Sobrevive 10 minutos con el Modo Tranquilo activado", scrap: BAL.ritmo.logro_gato_tornillos },
+  foto: { name: "Fotógrafo", txt: "Saca una foto en el modo foto. Sonrían, bichos", scrap: BAL.ritmo.logro_gato_tornillos },
+  lluvia: { name: "Ola de tornillos", txt: "Junta 50 gemas durante una Lluvia de tornillos", scrap: BAL.ritmo.logro_gato_tornillos },
+  mosca: { name: "Cazamoscas", txt: "Mata 100 moscas en total. Ni una se salvó del chancho", scrap: BAL.ritmo.logro_gato_tornillos },
+  babosa: { name: "Babosa a la sal", txt: "Mata 25 babosas en total. Con una pizca alcanza", scrap: BAL.ritmo.logro_gato_tornillos },
+  sinfin: { name: "Sin fin, sin descanso", txt: "Sobrevive 15 minutos en el modo sin fin", scrap: BAL.ritmo.logro_gato_tornillos },
   diario: { name: "Atrapado en la rutina", txt: "Gana un desafío diario", scrap: BAL.ritmo.logro_diario_tornillos },
 } as const satisfies Record<string, { name: string; txt: string; reward?: string; scrap?: number }>;
 export type AchId = keyof typeof ACH;

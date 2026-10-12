@@ -60,6 +60,8 @@ try {
       await tel("stage_end", { stage: n % 5, t: 120 + n });
       if (Date.now() - lastEnd > 20000) { lastEnd = Date.now(); await tel("run_end", { mode: "encore", win: Math.random() < 0.5, t: 700, loop: 1, stage: 2, kills: 300, lv: 12 }); }
       const g = n % 3;
+      for (const e of ["weekly", "weekly/ranking", "ranking/semanal", "salas"]) await call("GET /api/" + e, "/api/" + e, { headers: H });
+      await call("GET /api/aviso", "/api/aviso");
       if (g === 0) await call("GET /api/leaderboard", "/api/leaderboard", { headers: H });
       else if (g === 1) await call("GET /api/daily", "/api/daily", { headers: H });
       else await call("GET /api/me/stats", "/api/me/stats", { headers: H });
@@ -67,6 +69,27 @@ try {
     }
   };
   await Promise.all(players.map(player));
+
+  // Espectadores simultáneos: host "jm-<code>" + K peers "jmv-<code>-<rand>" (como server/test/http.test.js), cada uno con su token/IP, 3 s abiertos mientras se consulta /api/salas.
+  const { createRequire } = await import("node:module");
+  const { WebSocket } = createRequire(new URL("../server/", import.meta.url).pathname + "x.js")("ws");
+  const open = (id, { token, xf }) => new Promise((ok, no) => { const w = new WebSocket(`ws://127.0.0.1:${PORT}/peer/peerjs?key=peerjs&id=${id}&token=${encodeURIComponent(token)}`, { headers: xf }); const t = setTimeout(() => no(new Error("timeout")), 8000); w.once("message", () => { clearTimeout(t); ok(w); }); w.once("error", no); w.once("unexpected-response", (_, r) => no(new Error("HTTP " + r.statusCode))); });
+  const specRows = [];
+  for (const K of (process.argv.includes("--espectadores") ? process.argv[process.argv.indexOf("--espectadores") + 1] : "5,20,50").split(",").map(Number)) {
+    const code = "CG" + K, errs = {}, socks = [];
+    const host = await open("jm-" + code, players[0]).catch((e) => { errs["host " + e.message] = 1; });
+    if (host) socks.push(host);
+    const t0 = performance.now();
+    const rs = await Promise.allSettled(Array.from({ length: K }, (_, i) => open(`jmv-${code}-${Math.random().toString(36).slice(2, 8)}`, players[(i + 1) % N])));
+    const tAll = performance.now() - t0;
+    rs.forEach((r) => r.status === "fulfilled" ? socks.push(r.value) : (errs[r.reason.message] = (errs[r.reason.message] || 0) + 1));
+    const sr = await (await call("GET /api/salas (con " + K + " esp.)", "/api/salas", { headers: { Authorization: "Bearer " + players[0].token, ...players[0].xf } }))?.json().catch(() => []);
+    await sleep(3000); // ponytail: caída de un socket a mitad de espera no se cuenta
+    const vivos = socks.filter((w) => w.readyState === 1).length - (host ? 1 : 0);
+    specRows.push({ espectadores: K, conectados: rs.filter((r) => r.status === "fulfilled").length, vivos3s: vivos, vistosEnSalas: sr?.find?.((x) => x.code === code)?.espectadores ?? "?", msTodos: +tAll.toFixed(0), errores: JSON.stringify(errs) });
+    socks.forEach((w) => w.close()); await sleep(500);
+  }
+  console.table(specRows);
 
   const q = (a, p) => a.length ? [...a].sort((x, y) => x - y)[Math.min(a.length - 1, Math.floor(p * a.length))] : 0;
   const rows = [...stats].sort(([a], [b]) => a.localeCompare(b)).map(([endpoint, s]) => ({ endpoint, pedidos: s.lat.length, ok: s.ok, r429: s.r429, errores: s.err,
@@ -77,6 +100,6 @@ try {
   console.log(`Servidor: RSS ${proceso.rssMB} MB, tiempo CPU total ${cpuTime} (incluye arranque y setup) | ${N} jugadores, ${SEG}s`);
   mkdirSync(".carga", { recursive: true });
   const f = `.carga/${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-  writeFileSync(f, JSON.stringify({ jugadores: N, segundos: SEG, rows, proceso }, null, 2));
+  writeFileSync(f, JSON.stringify({ jugadores: N, segundos: SEG, rows, specRows, proceso }, null, 2));
   console.log("Guardado en " + f);
 } finally { cleanup(); }

@@ -1,6 +1,6 @@
 import * as B from "@babylonjs/core";
 import { ACH, type AchId } from "./achievements";
-import { fmt, openOver, persist, today, type RunRec, type Save } from "./menu";
+import { fmt, openOver, persist, reset, today, type RunRec, type Save } from "./menu";
 import type { Profile } from "./run";
 import { bannerClear } from "./ui";
 import { getNet, netEnd } from "./net_client";
@@ -14,6 +14,7 @@ import { CARS } from "./car";
 import { WEAPONS, type Weapon } from "./weapons";
 import * as RR from "./rerun";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
+import { cardBlob, sharePng, type Card } from "./share";
 import { padPressed } from "./input";
 import { upv } from "./moon";
 import type { Player } from "./coop";
@@ -32,6 +33,7 @@ export interface OutroContext {
   setRunSeed: (s: number) => void;
   readonly daily: boolean;
   readonly dailyInfo: { date: string; seed: number } | null;
+  readonly weeklyInfo?: { week: string; seed: number } | null;
   readonly bank: { t: number; scrap: number; dmg: Record<string, number>; rec?: RunRec } | null;
   setBank: (b: { t: number; scrap: number; dmg: Record<string, number>; rec?: RunRec }) => void;
   readonly endless: boolean;
@@ -157,7 +159,9 @@ export function endRun(win: boolean, why: string) {
       kills: ctx.kills,
       lv: ctx.level,
       seed: ctx.runSeed,
+      ...(ctx.endless ? { endless: true, lasted } : {}),
       ...(ctx.daily && ctx.dailyInfo?.seed === ctx.runSeed ? { daily: ctx.dailyInfo.date } : {}),
+      ...(ctx.weeklyInfo?.seed === ctx.runSeed ? { weekly: ctx.weeklyInfo.week } : {}),
       car: ctx.save.car,
       cause: win ? "" : topHit,
       ...(ctx.erun ? { loop: ctx.erun.loop, stage: ctx.erun.stage } : {}),
@@ -238,45 +242,38 @@ export function endRun(win: boolean, why: string) {
   }
 }
 
-// ---------- Repetición (T39, rerun.ts) ----------
+// ---------- Repetición tipo película (rerun.ts; la reproduce main.ts rpPlay) ----------
 export const rp = RR.rp;
-export const replaying = () => rp.on;
-export let rpSave = "";
 
 export function rpBar() {
-  const b = $("rpBar");
-  if (b) b.classList.toggle("hidden", !rp.on);
+  $("rpBar")?.classList.toggle("hidden", !rp.on);
   const s = $("rpSpeed");
   if (s) s.textContent = `x${rp.x}`;
 }
+/** HUD básico de la repetición: tiempo, bajas y nivel de la muestra. */
+export function rpHud(t: number, kills: number, level: number) {
+  const s = $("rpBar")?.querySelector("span");
+  if (s) s.textContent = `REPETICIÓN · ${fmt(t)} · ${kills} bajas · Nv ${level}`;
+}
 
 export function rpStart() {
-  if (!RR.rec.done || rp.on) return;
-  rpSave = JSON.stringify(ctx.save);
-  const seed = RR.rec.seed,
-    daily0 = RR.rec.daily;
-  Object.assign(rp, { on: true, i: 0, c: 0, x: 1 });
-  ctx.setForceSeed(seed);
-  ctx.launchRun(daily0, false, 0, () => {
-    ctx.setForceSeed(0);
-    rpBar();
-  });
+  if (!RR.rec.done || rp.on || ctx.state !== "over") return;
+  Object.assign(rp, { on: true, t: 0, x: 1 });
+  rp.en.clear();
+  for (const e of ctx.enemies.splice(0)) e.dispose(); // la película pone sus propios enemigos
+  ctx.scene.physicsEnabled = false;
+  reset(null);
+  rpBar();
 }
 
 export function rpEnd() {
   if (!rp.on) return;
-  const ended = ctx.state === "outro" || ctx.state === "over";
   rp.on = false;
+  for (const e of ctx.enemies.splice(0)) e.dispose();
+  rp.en.clear();
+  ctx.scene.physicsEnabled = true;
   rpBar();
-  const o = JSON.parse(rpSave) as Record<string, unknown>;
-  for (const k of Object.keys(ctx.save)) delete (ctx.save as Record<string, unknown>)[k];
-  Object.assign(ctx.save, o);
-  persist();
-  if (!ended) ctx.toMenu();
-}
-
-export function rpWatch() {
-  if (rp.on && outroT > 0) rpEnd();
+  reset("over");
 }
 
 // ---------- Cierre en cámara lenta ----------
@@ -377,7 +374,8 @@ export function endOutro() {
   outroUi(false);
   ctx.scene.physicsEnabled = true;
   openOver(outroRes!);
-  $("overReplay")?.classList.toggle("hidden", !RR.rec.done || !import.meta.env.DEV); // ponytail: solo en dev hasta que la repetición sea fiel (hoy diverge: enemigos sin snapshot)
+  $("overReplay")?.classList.toggle("hidden", !RR.rec.done); // película: siempre fiel (graba lo visible)
+  lastCard = { kills: ctx.kills, time: fmt(ctx.time), level: ctx.level, car: CARS[ctx.lead.car!.kind].name, win: outroRes!.win };
   void showPhoto({
     zone: ZONES[ctx.zoneId].name,
     time: fmt(ctx.time),
@@ -387,6 +385,8 @@ export function endOutro() {
   });
   outroRes = null;
 }
+
+let lastCard: Card | null = null;
 
 export const skipOutro = (e: Event) => {
   if (
@@ -404,13 +404,18 @@ let outroListenersBound = false;
 export function initOutro(c: OutroContext) {
   ctx = c;
 
-  for (const k of ["rey", "cortadora", "tarantula", "gato"] as const) {
+  for (const k of ["rey", "cortadora", "tarantula", "gato", "payaso"] as const) {
     if (ctx.save.slain[k] && !ctx.save.ach.includes(k)) ctx.save.ach.push(k);
   }
   if (ctx.save.best >= 600 && !ctx.save.ach.includes("diez")) ctx.save.ach.push("diez");
 
   const overReplay = $("overReplay");
   if (overReplay) overReplay.onclick = rpStart;
+  const overShare = $("overShare");
+  if (overShare) overShare.onclick = async () => {
+    const b = lastCard && (await cardBlob(lastCard));
+    if (b) void sharePng(b, `junked_metal_${Date.now()}.png`);
+  };
   const rpSpeed = $("rpSpeed");
   if (rpSpeed) rpSpeed.onclick = () => {
     rp.x = rp.x === 1 ? 2 : 1;

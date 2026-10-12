@@ -1,0 +1,19 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "949ff573-26fc-44a8-bf10-4e614ae411a9",
+  "prompt": "Night, giant broken antique wooden music box boss, cracked lid hanging open, rusted gold comb, creepy porcelain ballerina figurine on a spring, dusty attic, harsh flashlight",
+  "seed": 2014,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 37,
+  "date": "2026-10-12T16:52:48.043Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/var_s2014_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-caja.webp"
+}

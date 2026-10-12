@@ -13,6 +13,7 @@
 </head>
 <body>
   <canvas id="c"></canvas>
+  <div id="aviso" class="hidden" role="status"><span></span><button type="button" aria-label="Cerrar aviso">×</button></div>
 
   <!-- Pantalla de carga (src/loading.ts): visible desde el primer cuadro; el JS la cierra al llegar a la portada -->
   <div id="load" role="status" aria-live="polite">
@@ -152,6 +153,7 @@
       <nav class="list mainGrid">
         <button data-go="encore" class="primary wide">Jugar</button>
         <button data-go="daily" id="dailyBtn" class="wide"><span class="bt">Desafío diario</span><small class="bs" id="dailyRec"></small></button>
+        <button data-go="weekly" id="weeklyBtn" class="wide"><span class="bt">Desafío semanal</span><small class="bs" id="weeklyRule"></small></button>
         <button data-go="modes" class="wide more"><span class="bt">Más modos</span></button>
         <div class="mm-lab wide">Auto</div>
         <button data-go="garage">Garaje</button>
@@ -304,6 +306,15 @@
       <div class="btns"><button data-act="back">Volver</button></div>
     </section>
 
+    <section id="scr-weekly" class="scr">
+      <div class="otitle">Desafío semanal</div>
+      <div class="roll briefCard jm-panel">
+        <p id="weeklyInfo">Una regla distinta cada semana.</p>
+        <ol id="weeklyRank" class="dim"></ol>
+      </div>
+      <div class="btns"><button data-act="back">Volver</button><button data-act="weekly" class="primary">Jugar</button></div>
+    </section>
+
     <section id="scr-beast" class="scr">
       <div id="bstage"><div id="bmsg"></div></div>
       <div id="bpanel"></div>
@@ -344,7 +355,10 @@
         <div class="foot" id="acctMsg" role="status" aria-live="polite"></div>
       </div>
       <div class="briefCard jm-panel"><div class="briefRec">Logros online</div><ul class="briefRec" id="acctLogros"></ul></div>
+      <div class="briefCard jm-panel"><div class="briefRec">Sin fin (tiempo sobrevivido)</div><div class="briefRec" id="acctEndlessMine"></div><ol class="briefRec" id="acctEndless"></ol></div>
       <div class="briefCard jm-panel"><div class="briefRec">Ranking semanal (bajas)</div><ol class="briefRec" id="acctRank"></ol></div>
+      <div class="briefCard jm-panel"><div class="briefRec">Historial</div><ul class="briefRec" id="acctHist"></ul></div>
+      <div class="briefCard jm-panel hidden" id="perfilBox"><div class="briefRec" id="perfilName"></div><ul class="briefRec" id="perfilList"></ul><button id="perfilX">Cerrar</button></div>
       <div class="btns"><button data-act="back">Volver</button><button id="acctOut">Cerrar sesión</button></div>
     </section>
 
@@ -404,6 +418,7 @@
         <button data-act="play" class="primary" id="overRepeat">Repetir</button>
         <button data-go="shop">Ir al Taller</button>
         <button data-act="quit">Menú</button>
+        <button id="overShare">Compartir</button>
         <button id="overReplay" class="hidden">Ver repetición</button>
         <button data-act="endless" id="overEndless" class="hidden">Seguir jugando</button>
       </nav>
@@ -422,6 +437,7 @@
   <!-- Editor de controles táctiles (Configuración → Controles; src/menu.ts tedit) -->
   <div id="tedit" class="hidden"><span>Arrastrar mueve · Arrastrar la esquina agranda · Cada orientación guarda la suya</span><button id="teReset">Restablecer</button><button id="teDone">Listo</button></div>
 
+  <div id="quickchat-bubble"></div><div id="quickchat-menu"></div><button id="quickchat-btn" type="button" aria-label="Chat rápido">💬</button>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

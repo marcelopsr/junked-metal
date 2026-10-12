@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "bc19e329-2066-47a8-b579-5feec931bf52",
+  "prompt": "Night, macro flashlight portrait of a menacing giant housefly made of scrap metal and toy chitin, blurred buzzing wings, big compound blue-red eyes, dirt yard background, grainy 35mm film retro game aesthetic, sharp shadows, low-poly textures",
+  "negative": "blurry, smooth 3d render, soft lighting, cartoon anime, cute, friendly, text, watermark, logo, clean studio photo, oversaturated daylight",
+  "seed": 2022,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 22.3,
+  "date": "2026-10-12T14:09:10.303Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/beast_mosca_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-mosca.webp"
+}

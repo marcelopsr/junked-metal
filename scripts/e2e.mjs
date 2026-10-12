@@ -96,6 +96,46 @@ for (const vp of vps) {
   });
   rows.push({ vp, paso: "(info) votación vista", ok: seen.vote ? "sí" : "no", s: "", nota: "" });
   await p.ctx.close();
+  // --- extras: zona desvan, modo foto, Modo Tranquilo (pestaña propia, run en el desvan) ---
+  const q = await open(browser, `?mute&seed=${seed}&zone=desvan`, vp, { freeze: true });
+  const qe = (f, a) => q.evaluate(f, a), qt = (n = 3) => qe((n) => window.__tick(n), n);
+  const xstep = async (name, fn) => {
+    const t0 = Date.now(); let ok = false, why = "";
+    try { const r = await fn(); ok = r === undefined || r === true; why = ok ? "" : String(r); } catch (e) { why = e.message.split("\n")[0]; }
+    const errs = q.logs.splice(0); if (errs.length) { ok = false; why += ` consola: ${errs.join(" | ").slice(0, 150)}`; }
+    try { await q.screenshot({ path: `${dir}/${vp}-x-${name}.png` }); } catch {}
+    rows.push({ vp, paso: name, ok: ok ? "OK" : "FALLA", s: ((Date.now() - t0) / 1000).toFixed(1), nota: why });
+  };
+  await xstep("desvan-payaso", async () => {
+    await qe(() => window.__play(58)); await qt(30);
+    await qe(() => window.__spawn("payaso")); await qt(60);
+    const i = await qe(() => window.__info());
+    if (i.state !== "play" || i.enemies < 1) return "estado " + i.state + ", enemigos " + i.enemies;
+  });
+  await xstep("modo-foto", async () => {
+    await q.keyboard.press("Escape"); await qt(3);
+    if ((await qe(() => window.__info().state)) !== "pause") return "no entró en pausa";
+    const hud = () => qe(() => getComputedStyle(document.getElementById("hud")).display);
+    await q.keyboard.press("KeyF"); await qt(2);
+    if ((await hud()) !== "none") return "F no ocultó el HUD";
+    const dl = q.waitForEvent("download", { timeout: 5000 });
+    await q.keyboard.press("KeyC");
+    for (let i = 0; i < 5; i++) await qt(2); // la captura espera al próximo cuadro dibujado
+    const d = await dl.catch(() => null);
+    if (!d || !/^rc_fight_.*\.png$/.test(d.suggestedFilename())) return "C no disparó la descarga PNG";
+    await q.keyboard.press("Escape"); await qt(2);
+    if ((await hud()) === "none") return "Esc no salió del modo foto";
+    if ((await qe(() => window.__info().state)) !== "pause") return "no volvió a la pausa";
+  });
+  await xstep("modo-tranquilo", async () => {
+    await q.dispatchEvent('#scr-pause [data-go="config"]', "click"); await qt(2);
+    await q.dispatchEvent('[data-tab="a11y"]', "click"); await qt(2);
+    await q.dispatchEvent('[data-tog="tranquilo"]', "click"); await qt(2);
+    if ((await q.getAttribute('[data-tog="tranquilo"]', "aria-checked")) !== "true") return "el toggle no quedó activo";
+    await q.waitForTimeout(600);
+    if (!(await qe(() => JSON.parse(localStorage.getItem("rcfight2") ?? "{}").tranquilo))) return "tranquilo no quedó en el guardado";
+  });
+  await q.ctx.close();
 }
 await browser.close();
 console.table(rows);

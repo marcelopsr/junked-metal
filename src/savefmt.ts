@@ -96,7 +96,8 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     s.aa = one(s.aa, ["none", "fxaa", "msaa2", "msaa4", "msaa8"], D.aa);
     s.shadowQ = one(s.shadowQ, ["off", "low", "mid", "high"], D.shadowQ); s.detail = one(s.detail, ["bajo", "medio", "alto", "ultra"], D.detail);
     s.texRes = one(s.texRes, [128, 256, 512], D.texRes); s.aniso = one(s.aniso, [1, 2, 4, 8, 16], D.aniso); s.camMode = one(s.camMode, CAM_MODES, D.camMode);
-    s.tranquilo = s.tranquilo === true; // modo Tranquilo (run.ts)
+    s.novedadesVistas = typeof s.novedadesVistas === "string" && /^\d{4}-\d\d-\d\d$/.test(s.novedadesVistas) ? s.novedadesVistas : "";
+    s.tutorialHecho = s.tutorialHecho === true; s.tranquilo = s.tranquilo === true; // modo Tranquilo (run.ts)
     s.fpsCap = one(s.fpsCap, [0, 30, 60, 120], 0); s.menuFps = one(s.menuFps, [0, 30, 60], D.menuFps);
     // Colores del auto por zona: solo "#rrggbb" (un color libre llega al HTML del garaje); el guardado viejo ya trae paint y rim, trim (detalles) es nuevo
     for (const k of ["paint", "trim", "rim"]) s[k] = typeof s[k] === "string" && /^#[0-9a-f]{6}$/i.test(s[k]) ? s[k].toLowerCase() : "";

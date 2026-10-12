@@ -1,0 +1,20 @@
+{
+  "source": "local-comfyui-mps",
+  "model": "sd_xl_base_1.0.safetensors",
+  "license": "Stability AI SDXL 1.0 Non-Commercial/Research/Commercial License (see /Users/msalas/CreativeStack/SDXL-LICENSE.md)",
+  "workflow": "/Users/msalas/CreativeStack/workflows/sdxl-web.json",
+  "prompt_id": "7582ba8e-1460-4907-8b26-47d91a8663a5",
+  "prompt": "Night, macro flashlight portrait of a menacing giant garden cricket made of scrap metal and toy chitin, huge spring-loaded hind legs coiled to jump, glowing green eyes, dirt yard background, grainy 35mm film retro game aesthetic, sharp shadows, low-poly textures",
+  "negative": "blurry, smooth 3d render, soft lighting, cartoon anime, cute, friendly, text, watermark, logo, clean studio photo, oversaturated daylight",
+  "seed": 2021,
+  "steps": 20,
+  "cfg": 7,
+  "sampler": "dpmpp_2m",
+  "scheduler": "karras",
+  "width": 512,
+  "height": 512,
+  "duration_seconds": 46,
+  "date": "2026-10-12T14:08:47.898Z",
+  "raw_output": "/Users/msalas/CreativeStack/ComfyUI/output/creative/beast_grillo_00001_.png",
+  "final_output": "/Users/msalas/Documents/Devs/Varios/rc_fight/public/images/beasts/beast-grillo.webp"
+}

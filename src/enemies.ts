@@ -1,5 +1,5 @@
 import * as B from "@babylonjs/core";
-import { auraTemplate, cableTemplate, enemyTemplate, legTemplate, LEGS, sectorTemplate, teleTemplate, wingTemplate, windKeyTemplate } from "./models";
+import { auraTemplate, bailarinaTemplate, cableTemplate, ondaTemplate, enemyTemplate, legTemplate, LEGS, sectorTemplate, teleTemplate, wingTemplate, windKeyTemplate } from "./models";
 import { FX } from "./fx";
 import { rng } from "./rng";
 import { BAL } from "./balance";
@@ -7,9 +7,11 @@ import { type Elite, getModoTranquilo, TRANQUILO } from "./run";
 import { GLB, glbAnimate, glbPlay, glbTpl, glbVat } from "./glb";
 import { alignYaw, alt, at, flatL, hflat, MOON, onFloor, orient, toLocal, toWorld, yawOf } from "./moon";
 import { ALIEN_AI, ALIENS, type Alien } from "./aliens";
+import { AI } from "./enemies/ai";
+import { DOG_RAM } from "./enemies/ai/util";
 import { WORM_AI, wormDispose, wormHeadTpl } from "./moon_worm";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "proyector" | "grua" | "payaso" | "fuego" | "cohete" | "gusano" | "grillo" | "mosca" | Alien;
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "caja" | "proyector" | "grua" | "payaso" | "fuego" | "cohete" | "gusano" | "grillo" | "mosca" | "babosa" | Alien;
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; final?: boolean; scale?: number; color: string };
 const ATK = BAL.ataques;
@@ -26,6 +28,8 @@ export const DEF: Record<Kind, Def> = {
   // Plagas nuevas de la Tierra: grillo (salta en arco) y mosca (zigzaguea)
   grillo: { name: "Grillo saltarín", ...stats("grillo"), size: [0.9, 0.9, 1.3], color: "#5a8a2a" },
   mosca: { name: "Mosca zigzag", ...stats("mosca"), size: [0.9, 0.7, 1.1], color: "#3d5a8a" },
+  // Plaga lenta: se planta y escupe una flema grande y lenta (esquivable)
+  babosa: { name: "Babosa Flemática", ...stats("babosa"), size: [1.2, 0.7, 1.9], color: "#8a9a3a" },
   // Luna (moon_sky.ts): salen del impacto de lo que lanzan el Sol (fuego: corre derecho como la hormiga) y la Tierra (cohete: carga como el robot)
   fuego: { name: "Bicho de fuego", ...stats("fuego"), size: [0.8, 0.55, 1.3], color: "#ff7a1a" },
   cohete: { name: "Bicho-cohete", ...stats("cohete"), size: [0.8, 0.8, 1.6], color: "#8a8f98" },
@@ -49,10 +53,15 @@ export const DEF: Record<Kind, Def> = {
   grua: { name: "LA GRÚA DE FERIA", ...stats("grua"), size: [3.4, 5, 5.2], boss: true, color: "#c2410c" },
   gusano: { name: "GUSANO LUNAR", ...stats("gusano"), size: [2.2, 2.2, 2.4], boss: true, color: "#2f4f56" }, // jefe final de la luna (moon_worm.ts)
   cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", ...stats("cortacercos"), size: [3, 2.4, 9], boss: true, color: "#e0a030" },
+  caja: { name: "LA CAJA DE MÚSICA ROTA", ...stats("caja"), size: [5.6, 6.4, 5.6], boss: true, color: "#b45309" }, // jefe final del desván (ai/caja.ts)
 };
 
 /** Retratos cinemáticos de bichos y jefes para la Chatarroteca */
 export const BEAST_PORTRAITS: Partial<Record<Kind, string>> = {
+  babosa: "./images/beasts/beast-babosa.webp",
+  grillo: "./images/beasts/beast-grillo.webp",
+  mosca: "./images/beasts/beast-mosca.webp",
+  payaso: "./images/beasts/beast-payaso.webp",
   hormiga: "./images/beasts/beast-hormiga.webp",
   escupidora: "./images/beasts/beast-escupidora.webp",
   friccion: "./images/beasts/beast-friccion.webp",
@@ -66,17 +75,16 @@ export const BEAST_PORTRAITS: Partial<Record<Kind, string>> = {
   gato: "./images/beasts/beast-gato.webp",
   aspiradora: "./images/beasts/beast-aspiradora.webp",
   cortacercos: "./images/beasts/beast-cortacercos.webp",
+  caja: "./images/beasts/beast-caja.webp",
 };
 
-const UP = B.Vector3.Up();
 export const ROAR = ATK.fase2_rugido_s; // segundos que un jefe ruge, quieto, al entrar en fase 2
 // Embestida de Felipe: segundos apuntando (normal / enfurecido), velocidad y largo de la carga (m), ancho del carril, segundos de frenada
-export const DOG_RAM = { wind: ATK.perro_embestida_aviso_s, windRage: ATK.perro_embestida_aviso_furia_s, speed: ATK.perro_embestida_vel, len: ATK.perro_embestida_largo, width: ATK.perro_embestida_ancho, brake: ATK.perro_embestida_frenada_s };
+export { DOG_RAM };
 // Fase 2 visible: color por instancia (multiplica el albedo) sobre las plantillas de los jefes; blanco = sin tinte
 const WHITE = new B.Color4(1, 1, 1, 1), RAGE = new B.Color4(1, 0.3, 0.24, 1);
 const IC = B.VertexBuffer.ColorInstanceKind; // "instanceColor": el que los materiales leen como color por instancia
 const tintable = (m: B.Mesh) => { if (!m.instancedBuffers?.[IC]) { m.registerInstancedBuffer(IC, 4); m.instancedBuffers[IC] = WHITE; } }; // antes de la primera instancia: las nuevas copian el blanco
-const rot = (v: B.Vector3, a: number) => new B.Vector3(v.x * Math.cos(a) + v.z * Math.sin(a), 0, -v.x * Math.sin(a) + v.z * Math.cos(a));
 const ray = new B.PhysicsRaycastResult(), rayFrom = new B.Vector3(), rayTo = new B.Vector3();
 const _wq = B.Quaternion.Identity(), _lq = B.Quaternion.Identity(), _ws = new B.Vector3(), _wp = new B.Vector3();
 
@@ -107,6 +115,7 @@ export class Enemy {
   attachRoot: B.TransformNode | null = null; // bestiario: patas/alas bajo un TransformNode (no InstancedMesh→InstancedMesh)
   tele: B.InstancedMesh[] = []; // tarántula: aro fijo (zona) + aro que crece (cuenta regresiva)
   land = new B.Vector3(); // tarántula: dónde va a caer el salto
+  ringsLeft = 0; // caja de música: ondas que faltan soltar
   shots = 0; // tarántula: escupitajos que quedan en la ráfaga
   slow = 0; // segundos de ralentización (Pistola de agua)
   stun = 0; // segundos aturdido (Pulso EMP): main.ts no corre su IA ni su golpe de contacto
@@ -120,6 +129,9 @@ export class Enemy {
   fan: B.Vector3[] = []; // aspiradora: direcciones de la ráfaga de tuercas del evento "fan"
   cables: { m: B.InstancedMesh; a: B.Vector3; b: B.Vector3; life: number }[] = []; // cortacercos: cables con chispas en el piso
   shockCd = 0;
+  waves: { r: number; hit: boolean; m: B.InstancedMesh }[] = []; // caja de música: ondas de sonido en anillo (se saltan)
+  dancers: { a: number; m: B.InstancedMesh }[] = []; // caja de música: bailarinas que giran
+  danceT = 0; hBase = 99; // segundos que les quedan a las bailarinas; altura mínima vista del auto (suelo) para saber si salta
   aim = 0; // cortacercos y Felipe: rumbo fijo del barrido o la embestida anunciados
   pose = 0; // stop-motion: las patas cambian de pose a 10 fps
   clock = 0; // reloj propio para los zigzags de Eulalio y Felipe
@@ -204,8 +216,8 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
-    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano" || kind === "proyector" || kind === "grua" || kind === "payaso") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
-    if (kind === "proyector" || kind === "grua" || kind === "payaso") this.timer = 2.5;
+    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano" || kind === "proyector" || kind === "grua" || kind === "payaso" || kind === "caja") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
+    if (kind === "proyector" || kind === "grua" || kind === "payaso" || kind === "caja") this.timer = 2.5;
     if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.state = 3; this.timer = 1.6; this.land.copyFrom(pos); // entra con un salto anunciado
@@ -454,367 +466,12 @@ export class Enemy {
       return;
     }
 
-    if (this.kind === "robot" || this.kind === "cortadora" || this.kind === "cohete") {
-      // Apunta quieto, después sale disparado en línea recta (el bicho-cohete de la luna, con los tiempos del robot)
-      this.timer -= dt;
-      const mow = this.kind === "cortadora";
-      if (this.state === 0) { speed = 0; turn = mow ? 2 : 5; if (this.timer <= 0) { this.state = 1; this.timer = mow ? ATK.cortadora_carga_s : ATK.robot_carga_s; } }
-      else { move = fwd; turn = 0.3; if (this.timer <= 0) { this.state = 0; this.timer = mow ? ATK.cortadora_pausa_s : ATK.robot_pausa_s; } }
-    }
-
-    if (this.kind === "escupidora") {
-      // Se frena a distancia, te apunta y arranca su animación de ataque: escupe en el cuadro del latigazo (GLB hit)
-      this.timer -= dt;
-      const g = GLB.escupidora!, at = g.atk! * g.hit!;
-      if (this.atk >= 0) {
-        speed = 0; turn = 5;
-        const a0 = this.atk;
-        if ((this.atk += dt) >= g.atk!) this.atk = -1;
-        if (a0 < at && a0 + dt >= at) { this.body.setAngularVelocity(B.Vector3.Zero()); return "spit"; }
-      } else if (dist < ATK.escupidora_distancia) {
-        speed = 0; turn = 5;
-        if (this.timer <= 0 && Math.abs(diff) < 0.4) {
-          this.timer = ATK.escupidora_cada_s;
-          if (this.atk < 0) { this.atk = 0; return "spit_aim"; }
-        }
-      }
-    }
-
-    if (this.kind === "mosca") { // zigzag: el rumbo oscila a los lados del auto
-      const a = Math.sin(this.clock * ATK.mosca_zigzag_hz + this.maxHp) * ATK.mosca_zigzag_ang, c = Math.cos(a), s = Math.sin(a);
-      move = new B.Vector3(to.x * c - to.z * s, 0, to.x * s + to.z * c);
-    }
-
-    if (this.kind === "grillo") { // agachada con aviso, salto en arco fijo hacia donde estaba el auto, y espera
-      this.timer -= dt;
-      if (this.state === 0) { if (this.timer <= 0 && dist < ATK.grillo_salto_alcance) { this.state = 1; this.timer = ATK.grillo_aviso_s; } }
-      else if (this.state === 1) { speed = 0; turn = 8; if (this.timer <= 0) { this.state = 2; this.timer = ATK.grillo_vuelo_s; this.body.setLinearVelocity(new B.Vector3(to.x * ATK.grillo_salto_vel, ATK.grillo_salto_alto, to.z * ATK.grillo_salto_vel)); } }
-      else { if (this.timer <= 0) { this.state = 0; this.timer = ATK.grillo_cada_s; } return; } // en el aire no corrige
-    }
-
-    if (this.kind === "escarabajo") {
-      // Embestida al compás de su animación: se agacha apuntando, arremete (el golpe es el contacto) y se recupera
-      const g = GLB.escarabajo!;
-      if (this.atk >= 0) {
-        const k = (this.atk += dt) / g.atk!;
-        if (k < g.hit!) { speed = 0; turn = 4; } else if (k < g.hit! + 0.17) { move = fwd; speed *= ATK.escarabajo_vel_mult; turn = 0.5; } else speed *= 0.3;
-        if (k >= 1) { this.atk = -1; this.timer = ATK.escarabajo_espera_s; }
-      } else if ((this.timer -= dt) <= 0 && dist < ATK.escarabajo_distancia && Math.abs(diff) < 0.5) this.atk = 0;
-    }
-
-    if (this.kind === "polilla") {
-      // Va al faro: revolotea delante del auto (hacia donde avanza) y cada tanto se tira contra el parabrisas
-      const cv = this.lastT ? target.subtract(this.lastT).scaleInPlace(1 / Math.max(dt, 1e-3)) : B.Vector3.Zero();
-      (this.lastT ??= new B.Vector3()).copyFrom(target);
-      hflat(cv, target);
-      const cs = cv.length();
-      this.timer -= dt;
-      if (this.timer <= 0) { this.state = 1 - this.state; this.timer = this.state ? ATK.polilla_picada_s : ATK.polilla_vuelo_min + rng() * ATK.polilla_vuelo_rango; }
-      const dive = this.state === 1;
-      const goal = dive ? target.clone() : target.add(cs > 2 ? cv.scaleInPlace(4.5 / cs) : this.pos.subtract(target).normalize().scaleInPlace(3.5));
-      if (!dive) goal.addInPlace(new B.Vector3(Math.sin(this.walk * 0.11) * 1.6, 0, Math.cos(this.walk * 0.07) * 1.6));
-      const g = MOON.on ? flatL(goal.subtract(this.pos), this.pos) : goal.subtract(this.pos); g.y = 0;
-      const gd = g.length();
-      const sp = (dive ? d.speed * ATK.polilla_picada_vel : Math.min(d.speed, gd * 3)) * this.spd * (this.slow > 0 ? 0.45 : 1);
-      const want = gd > 0.01 ? g.scaleInPlace(sp / gd) : g;
-      const floor = MOON.on ? 0 : this.groundY(4) ?? this.pos.y - 1.7; // vuela a altura fija sobre el piso (montículos, rampas)
-      const hy = MOON.on ? (dive ? 0.5 : 1.7 + Math.sin(this.walk * 0.05) * 0.3) - alt(this.pos) : floor + (dive ? 0.5 : 1.7 + Math.sin(this.walk * 0.05) * 0.3) - this.pos.y;
-      const k = Math.min(1, dt * 5);
-      this.body.setLinearVelocity(new B.Vector3(v.x + (want.x - v.x) * k, hy * 4, v.z + (want.z - v.z) * k));
-      this.body.setAngularVelocity(new B.Vector3(0, B.Scalar.Clamp(diff * 8, -8, 8), 0));
-      return;
-    }
-
-    if (this.kind === "tarantula") {
-      // Dos ataques, siempre anunciados en rojo en el piso:
-      // ráfaga (aro alrededor suyo, después 6 escupitajos) y salto (aro donde va a caer, radio del golpe = 11 en main.ts)
-      this.timer -= dt;
-      if (this.airborne) {
-        this.showTele(this.land, ATK.salto_radio, 1);
-        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; this.state = 0; this.timer = ATK.tarantula_salto_descanso_s; this.showTele(null); return "slam"; }
-        return;
-      }
-      if (this.state === 0) {
-        this.showTele(null);
-        if (this.timer <= 0) {
-          this.state = rng() < ATK.tarantula_prob_rafaga ? 1 : 3;
-          this.timer = this.state === 1 ? ATK.tarantula_rafaga_aviso_s : ATK.tarantula_salto_aviso_s;
-        }
-      } else if (this.state === 1 || this.state === 2) {
-        speed = 0; turn = 5;
-        if (this.state === 1) {
-          this.showTele(this.pos, ATK.tarantula_rafaga_radio, 1 - this.timer / ATK.tarantula_rafaga_aviso_s);
-          if (this.timer <= 0) { this.state = 2; this.shots = ATK.tarantula_rafaga_n; this.timer = 0; }
-        } else if (this.timer <= 0) {
-          this.timer = ATK.tarantula_rafaga_intervalo_s;
-          if (this.shots-- > 0) return "spit";
-          this.state = 0; this.timer = ATK.tarantula_rafaga_descanso_s; this.showTele(null);
-        }
-      } else if (this.state === 3) {
-        speed = 0; turn = 4;
-        // Apunta durante la primera mitad y después fija el punto: quedarse quieto = recibir el golpe
-        if (this.timer > 0.65) { const reach = Math.min(dist, ATK.tarantula_salto_alcance); if (MOON.on) onFloor(at(this.pos, to.x * reach, 0, to.z * reach), 0, this.land); else this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
-        this.showTele(this.land, ATK.salto_radio, 1 - this.timer / ATK.tarantula_salto_aviso_s);
-        if (this.timer <= 0) {
-          const T = (2 * 14) / 25; // vuelo con vy = 14 y gravedad 25
-          const j = MOON.on ? flatL(this.land.subtract(this.pos), this.pos) : this.land.subtract(this.pos); j.y = 0;
-          this.body.setLinearVelocity(toWorld(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)), this.pos)); // j es del marco local (flatL): luna, al mundo
-          this.airborne = true;
-          return;
-        }
-      }
-    }
-
-    if (this.kind === "aspiradora") {
-      // Ciclo: anda hacia el auto → aro rojo de succión que se llena (1,4 s) → succiona 2,6 s → aro chico (0,8 s) → 3 ráfagas de tuercas en abanico
-      this.timer -= dt;
-      this.pull = 0;
-      if (this.state === 0) {
-        this.showTele(null);
-        if (this.timer <= 0) { this.state = 1; this.timer = ATK.aspiradora_aviso_s; }
-      } else if (this.state === 1 || this.state === 2) {
-        speed = this.state === 2 ? ATK.aspiradora_succion_vel : 0; turn = 2;
-        this.showTele(this.pos, ATK.aspiradora_radio, this.state === 1 ? 1 - this.timer / ATK.aspiradora_aviso_s : 1);
-        if (this.state === 2) {
-          this.pull = dist < ATK.aspiradora_radio ? ATK.aspiradora_succion_min + ATK.aspiradora_succion_extra * (1 - dist / ATK.aspiradora_radio) : 0;
-          if (Math.random() < dt * 25) { const a = Math.random() * 6.3, r = 5 + Math.random() * 14; FX.dust(at(this.pos, Math.sin(a) * r, 0.3, Math.cos(a) * r)); } // solo visual
-        }
-        if (this.timer <= 0) { if (this.state === 1) { this.state = 2; this.timer = ATK.aspiradora_succion_s; } else { this.state = 3; this.timer = ATK.aspiradora_tuercas_aviso_s; } }
-      } else if (this.state === 3) {
-        speed = 0; turn = 5;
-        this.showTele(this.pos, 5, 1 - this.timer / ATK.aspiradora_tuercas_aviso_s);
-        if (this.timer <= 0) { this.state = 4; this.shots = ATK.aspiradora_rafagas; this.timer = 0; }
-      } else if (this.timer <= 0) {
-        speed = 0;
-        this.timer = ATK.aspiradora_rafaga_intervalo_s;
-        if (this.shots-- > 0) {
-          const base = Math.atan2(to.x, to.z) + (this.shots - 1) * 0.09; // cada ráfaga corrida un poco: hay huecos para pasar
-          const nf = ATK.aspiradora_abanico_n;
-          this.fan = Array.from({ length: nf }, (_, i) => { const a = base + (i - (nf - 1) / 2) * ATK.aspiradora_abanico_ang; return new B.Vector3(Math.sin(a), 0.12, Math.cos(a)).normalize(); });
-          this.body.setAngularVelocity(B.Vector3.Zero());
-          return "fan";
-        }
-        this.state = 0; this.timer = ATK.aspiradora_descanso_s; this.showTele(null);
-      } else speed = 0;
-    }
-
-    if (this.kind === "proyector") {
-      // Se planta a distancia y proyecta, siempre con aro rojo de aviso: abanico de tuercas (aro chico) o anillo de tuercas en 360 grados (aro grande, hay huecos)
-      this.timer -= dt;
-      if (this.state === 0) {
-        this.showTele(null);
-        if (dist < ATK.proyector_distancia) speed = 0;
-        if (this.timer <= 0 && dist < ATK.proyector_distancia * 1.6) { this.state = rng() < ATK.proyector_prob_anillo ? 3 : 1; this.timer = this.state === 3 ? ATK.proyector_anillo_aviso_s : ATK.proyector_abanico_aviso_s; }
-      } else {
-        const ring = this.state === 3, aviso = ring ? ATK.proyector_anillo_aviso_s : ATK.proyector_abanico_aviso_s;
-        speed = 0; turn = 3;
-        this.showTele(this.pos, ring ? ATK.proyector_anillo_radio : 5, 1 - this.timer / aviso);
-        if (this.timer <= 0) {
-          const n = ring ? ATK.proyector_anillo_n : ATK.proyector_abanico_n, base = Math.atan2(to.x, to.z);
-          this.fan = Array.from({ length: n }, (_, i) => { const a = ring ? base + (i + 0.5) * (6.2832 / n) : base + (i - (n - 1) / 2) * ATK.proyector_abanico_ang; return new B.Vector3(Math.sin(a), 0.12, Math.cos(a)).normalize(); });
-          this.state = 0; this.timer = ATK.proyector_descanso_s; this.showTele(null);
-          this.body.setAngularVelocity(B.Vector3.Zero());
-          return "fan";
-        }
-      }
-    }
-
-    if (this.kind === "grua") {
-      // Dos ataques con aviso rojo. RIEL: carril largo, se clava el rumbo y carga en línea (moverse de costado). GARRA: aro que se CIERRA sobre la grúa y después suelta chatarra en espiral (rodear, no huir en línea recta)
-      this.timer -= dt;
-      const dir = new B.Vector3(Math.sin(this.aim), 0, Math.cos(this.aim));
-      if (this.state === 0) {
-        this.showTele(null);
-        if (this.timer <= 0 && dist < ATK.grua_distancia) {
-          if (rng() < ATK.grua_prob_riel) { this.state = 3; this.timer = ATK.grua_riel_aviso_s; this.aim = Math.atan2(to.x, to.z); } else { this.state = 1; this.timer = ATK.grua_garra_aviso_s; }
-        }
-      } else if (this.state === 1) { // garra: el aro rojo baja de grua_garra_radio al mínimo
-        speed = 0; turn = 3;
-        const k = 1 - Math.max(0, this.timer) / ATK.grua_garra_aviso_s;
-        this.showTele(this.pos, ATK.grua_garra_radio + (ATK.grua_garra_radio_min - ATK.grua_garra_radio) * k, 1);
-        if (this.timer <= 0) { this.state = 2; this.shots = ATK.grua_garra_rafagas; this.timer = 0; this.aim = Math.atan2(to.x, to.z); this.showTele(null); }
-      } else if (this.state === 2) { // espiral de chatarra: cada ráfaga gira un poco, hay huecos
-        speed = 0; turn = 0;
-        if (this.timer <= 0) {
-          if (this.shots-- > 0) {
-            const n = ATK.grua_garra_rafaga_n, base = this.aim + (ATK.grua_garra_rafagas - this.shots) * ATK.grua_garra_giro;
-            this.fan = Array.from({ length: n }, (_, i) => { const a = base + i * (6.2832 / n); return new B.Vector3(Math.sin(a), 0.12, Math.cos(a)).normalize(); });
-            this.timer = ATK.grua_garra_intervalo_s;
-            this.body.setAngularVelocity(B.Vector3.Zero());
-            return "fan";
-          }
-          this.state = 0; this.timer = ATK.grua_garra_descanso_s;
-        }
-      } else if (this.state === 3) { // riel: carril rojo que se llena y se clava el rumbo
-        this.showLane(dir, 1 - Math.max(0, this.timer) / ATK.grua_riel_aviso_s, ATK.grua_riel_largo, ATK.grua_riel_ancho);
-        const a = Math.atan2(B.Vector3.Cross(fwd, dir).y, B.Vector3.Dot(fwd, dir));
-        this.body.setLinearVelocity(new B.Vector3(v.x * 0.8, v.y, v.z * 0.8));
-        this.body.setAngularVelocity(new B.Vector3(0, B.Scalar.Clamp(a * 8, -8, 8), 0));
-        if (this.timer <= 0) { this.state = 4; this.timer = ATK.grua_riel_largo / ATK.grua_riel_vel; }
-        return;
-      } else if (this.state === 4) { // carga: no dobla
-        this.body.setLinearVelocity(new B.Vector3(dir.x * ATK.grua_riel_vel, v.y, dir.z * ATK.grua_riel_vel));
-        this.body.setAngularVelocity(B.Vector3.Zero());
-        if (this.timer <= 0) { this.state = 5; this.timer = ATK.grua_riel_frenada_s; this.showTele(null); }
-        return;
-      } else { // frenada
-        const f = Math.max(0, this.timer) / ATK.grua_riel_frenada_s;
-        this.body.setLinearVelocity(new B.Vector3(dir.x * ATK.grua_riel_vel * 0.5 * f, v.y, dir.z * ATK.grua_riel_vel * 0.5 * f));
-        if (this.timer <= 0) { this.state = 0; this.timer = ATK.grua_riel_descanso_s; }
-        return;
-      }
-    }
-
-    if (this.kind === "cortacercos") {
-      // Persigue y cada tanto anuncia un barrido en arco (sector rojo de 10 m que se llena en 1 s); al barrer deja un cable con chispas
-      this.timer -= dt;
-      this.shockCd -= dt;
-      for (let i = this.cables.length - 1; i >= 0; i--) {
-        const cb = this.cables[i];
-        if (Math.random() < dt * 2) FX.sparks(B.Vector3.Lerp(cb.a, cb.b, Math.random())); // solo visual
-        if ((cb.life -= dt) <= 0) { cb.m.dispose(); this.cables.splice(i, 1); }
-      }
-      if (this.state === 0) {
-        this.showTele(null);
-        if (this.timer <= 0 && dist < ATK.cortacercos_distancia) { this.state = 1; this.timer = ATK.cortacercos_aviso_s; this.aim = Math.atan2(to.x, to.z); }
-        else if (this.timer <= -ATK.cortacercos_siembra_s) { this.dropCable(); this.timer = 0; } // lejos: igual va sembrando cables
-      } else {
-        speed = 0; turn = 0;
-        this.showTele(this.pos, ATK.cortacercos_radio, 1 - this.timer / ATK.cortacercos_aviso_s);
-        if (this.timer <= 0) {
-          this.state = 0; this.timer = ATK.cortacercos_descanso_s; this.showTele(null);
-          this.dropCable();
-          for (let k = -2; k <= 2; k++) { const a = this.aim + k * 0.5; FX.sparks(at(this.pos, Math.sin(a) * 8, 0.6, Math.cos(a) * 8)); }
-          // ¿El auto quedó dentro del sector (±60°, 10 m)?
-          const off = Math.atan2(Math.sin(Math.atan2(to.x, to.z) - this.aim), Math.cos(Math.atan2(to.x, to.z) - this.aim));
-          if (dist < ATK.cortacercos_radio + 1 && Math.abs(off) < Math.PI / 3) return "slash";
-          return "swing";
-        }
-      }
-      if (this.shockCd <= 0 && this.onCable(target)) { this.shockCd = ATK.cortacercos_cable_recarga_s; return "shock"; }
-    }
-
-    if (this.kind === "gato") {
-      // Eulalio: errático. Zigzaguea a ritmo cambiante y cada tanto elige al azar entre salto (aro rojo), trompo o arranque.
-      // Fase 2: maúlla y llama polillas
-      this.timer -= dt;
-      if (this.airborne) {
-        this.showTele(this.land, ATK.salto_radio, 1);
-        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; this.state = 0; this.timer = ATK.gato_salto_descanso_s; this.showTele(null); return "slam"; }
-        return;
-      }
-      if (this.state === 0) {
-        const w = Math.sin(this.clock * 2.3) * 0.9 + Math.sin(this.clock * 5.1) * 0.35;
-        move = rot(to, w); speed *= 0.7 + 0.5 * Math.sin(this.clock * 1.7 + 1) ** 2 * 1.6;
-        if (this.enraged && (this.meowCd -= dt) <= 0) { this.meowCd = ATK.gato_maullido_cada_s; return "meow"; }
-        if (this.timer <= 0 && dist < ATK.gato_distancia) {
-          const r = rng();
-          if (r < ATK.gato_prob_salto) { this.state = 1; this.timer = ATK.gato_salto_aviso_s; }
-          else if (r < ATK.gato_prob_salto + ATK.gato_prob_trompo) { this.state = 2; this.timer = ATK.gato_trompo_aviso_s; }
-          else { this.state = 4; this.timer = ATK.gato_arranque_aviso_s; this.dir = (rng() < 0.5 ? -1 : 1) * (0.6 + rng() * 0.9); }
-        }
-      } else if (this.state === 1) { // salto anunciado
-        speed = 0; turn = 5;
-        if (this.timer > 0.4) { const reach = Math.min(dist, ATK.gato_salto_alcance); if (MOON.on) onFloor(at(this.pos, to.x * reach, 0, to.z * reach), 0, this.land); else this.land.set(this.pos.x + to.x * reach, reach < dist ? this.pos.y : target.y - 0.3, this.pos.z + to.z * reach); }
-        this.showTele(this.land, ATK.salto_radio, 1 - this.timer / ATK.gato_salto_aviso_s);
-        if (this.timer <= 0) {
-          const T = (2 * 14) / 25;
-          const j = MOON.on ? flatL(this.land.subtract(this.pos), this.pos) : this.land.subtract(this.pos); j.y = 0;
-          this.body.setLinearVelocity(toWorld(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)), this.pos)); // j es del marco local (flatL): luna, al mundo
-          this.airborne = true;
-          return;
-        }
-      } else if (this.state === 2 || this.state === 3) { // trompo: se frena girando y sale rodando hacia el auto
-        if (this.state === 2) {
-          speed = 0; this.body.setAngularVelocity(B.Vector3.Zero()); // el giro lo hace la acción spin (no el cuerpo)
-          if (this.timer <= 0) { this.state = 3; this.timer = ATK.gato_trompo_s; }
-          return;
-        }
-        move = rot(to, Math.sin(this.clock * 3) * 0.35); speed = ATK.gato_trompo_vel;
-        this.body.setLinearVelocity(new B.Vector3(v.x + (move.x * speed - v.x) * Math.min(1, dt * 5), v.y, v.z + (move.z * speed - v.z) * Math.min(1, dt * 5)));
-        this.body.setAngularVelocity(B.Vector3.Zero());
-        if (this.timer <= 0) { this.state = 0; this.timer = ATK.gato_trompo_pausa_min + rng() * ATK.gato_trompo_pausa_rango; this.landT = this.landD = 0.17; this.recSeq = "spin"; }
-        return;
-      } else { // arranque: se tira de costado a toda velocidad (a veces hacia el auto, a veces no)
-        move = rot(to, this.dir); speed = ATK.gato_arranque_vel; turn = 12;
-        if (this.timer <= 0) { this.state = 0; this.timer = ATK.gato_arranque_pausa_min + rng() * ATK.gato_arranque_pausa_rango; }
-      }
-    }
-
-    if (this.kind === "payaso") {
-      // Bloque propio (desván): persigue y, cada tanto, anuncia un aro rojo sobre el auto y salta a aplastarlo; al caer sacude el piso ("slam")
-      this.timer -= dt;
-      if (this.airborne) {
-        this.showTele(this.land, ATK.salto_radio, 1);
-        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; this.state = 0; this.timer = ATK.payaso_descanso_s; this.showTele(null); return "slam"; }
-        return;
-      }
-      if (this.state === 0) {
-        if (this.timer <= 0 && dist < ATK.payaso_distancia) { this.state = 1; this.timer = ATK.payaso_aviso_s; }
-      } else {
-        speed = 0; turn = 5;
-        if (this.timer > 0.4) this.land.set(target.x, target.y - 0.3, target.z);
-        this.showTele(this.land, ATK.salto_radio, 1 - this.timer / ATK.payaso_aviso_s);
-        if (this.timer <= 0) {
-          const T = (2 * 14) / 25, j = this.land.subtract(this.pos); j.y = 0;
-          this.body.setLinearVelocity(j.scaleInPlace(1 / T).addInPlace(new B.Vector3(0, 14, 0)));
-          this.airborne = true;
-          return;
-        }
-      }
-    }
-
-    if (this.kind === "perro") {
-      // Felipe: bulldog francés desquiciado. Salta, embiste en línea recta, hace zoomies (corre zigzagueando al doble de velocidad) o gira como loco
-      this.timer -= dt;
-      if (this.airborne) {
-        if (v.y <= 0 && this.groundY(0.3) !== null) { this.airborne = false; return "slam"; }
-        return;
-      }
-      if (this.state === 1) { // zoomies
-        move = rot(to, Math.sin(this.clock * 4.2) * 1.2 + Math.sin(this.clock * 9) * 0.4); speed *= ATK.perro_zoomies_vel; turn = 10;
-        if (this.timer <= 0) { this.state = 0; this.timer = ATK.perro_pausa_s; }
-      } else if (this.state === 2) { // giro
-        speed *= 0.9; this.body.setAngularVelocity(new B.Vector3(0, 14, 0));
-        const want = to.scale(speed), k = Math.min(1, dt * 4);
-        this.body.setLinearVelocity(new B.Vector3(v.x + (want.x - v.x) * k, v.y, v.z + (want.z - v.z) * k));
-        if (this.timer <= 0) { this.state = 0; this.timer = ATK.perro_pausa_s; }
-        return;
-      } else if (this.state >= 3) { // embestida: apunta con el carril en rojo, carga en línea recta y frena torpe
-        const dir = new B.Vector3(Math.sin(this.aim), 0, Math.cos(this.aim));
-        if (this.state === 3) {
-          const w = this.enraged ? DOG_RAM.windRage : DOG_RAM.wind, k = 1 - Math.max(0, this.timer) / w;
-          this.showLane(dir, k);
-          const a = Math.atan2(B.Vector3.Cross(fwd, dir).y, B.Vector3.Dot(fwd, dir));
-          this.body.setLinearVelocity(new B.Vector3(v.x * 0.8, v.y, v.z * 0.8));
-          this.body.setAngularVelocity(new B.Vector3(0, B.Scalar.Clamp(a * 8, -8, 8), 0));
-          if (this.timer <= 0) { this.state = 4; this.timer = DOG_RAM.len / DOG_RAM.speed; }
-          return;
-        }
-        if (this.state === 4) { // carga: no dobla
-          this.body.setLinearVelocity(new B.Vector3(dir.x * DOG_RAM.speed, v.y, dir.z * DOG_RAM.speed));
-          this.body.setAngularVelocity(B.Vector3.Zero());
-          if (this.timer <= 0) { this.state = 5; this.timer = DOG_RAM.brake; this.showTele(null); }
-          return;
-        }
-        // frenada: patina con las patas, culea de un lado al otro y recién después vuelve a perseguir
-        const s = this.timer / DOG_RAM.brake;
-        this.body.setLinearVelocity(new B.Vector3(dir.x * DOG_RAM.speed * 0.5 * s, v.y, dir.z * DOG_RAM.speed * 0.5 * s));
-        this.body.setAngularVelocity(new B.Vector3(0, Math.sin(this.clock * 18) * 6 * s, 0));
-        if (this.timer <= 0) { this.state = 0; this.timer = ATK.perro_embestida_pausa_s; }
-        return;
-      } else if (this.timer <= 0 && dist < ATK.perro_distancia) {
-        const r = rng(), p1 = ATK.perro_prob_salto, p2 = p1 + ATK.perro_prob_embestida;
-        if (r >= p1 && r < p2) { this.state = 3; this.timer = this.enraged ? DOG_RAM.windRage : DOG_RAM.wind; this.aim = Math.atan2(to.x, to.z); return; }
-        if (r < p1) {
-          this.timer = this.enraged ? ATK.perro_salto_descanso_furia_s : ATK.perro_salto_descanso_s;
-          this.airborne = true;
-          const jump = to.scale(Math.min(dist, ATK.perro_salto_alcance) * 1.1).addInPlace(UP.scale(22));
-          this.body.setLinearVelocity(jump);
-          return;
-        }
-        this.state = r < p2 + ATK.perro_prob_zoomies ? 1 : 2; this.timer = this.state === 1 ? ATK.perro_zoomies_s : ATK.perro_giro_s;
-      }
+    const fn = AI[this.kind]; // comportamiento propio del bicho (enemies/ai); mueve move/speed/turn o devuelve evento
+    if (fn) {
+      const c = { dt, to, dist, fwd, diff, v, target, move, speed, turn };
+      const r = fn(this, c);
+      if (r) return r === true ? undefined : r;
+      ({ move, speed, turn } = c);
     }
 
     // Velocidad objetivo directa (hordas: barato y legible); la física separa a los enemigos
@@ -872,8 +529,12 @@ export class Enemy {
     FX.vapor(at(this.pos, (Math.random() - 0.5) * w * 0.7, h * 0.85, (Math.random() - 0.5) * l * 0.7), Math.max(w, l) * 0.12);
   }
 
+  // Caja de música: nueva onda de sonido desde el cuerpo / bailarinas con su ángulo inicial
+  addWave() { const m = ondaTemplate().createInstance("onda"); m.isVisible = false; this.waves.push({ r: this.radius, hit: false, m }); }
+  addDancers(n: number) { for (let i = 0; i < n; i++) this.dancers.push({ a: (i / n) * 6.2832, m: bailarinaTemplate().createInstance("bailarina") }); }
+
   // Cortacercos: un cable de 7 m tirado en el piso detrás suyo (dura 14 s, como mucho 8)
-  private dropCable() {
+  dropCable() {
     const back = this.node.forward.scale(-this.def.size[2] * 0.55), side = this.node.right.scale(3.5);
     const c = this.pos.add(back);
     if (MOON.on) onFloor(c, 0.08, c); else c.y = (this.groundY(3) ?? this.pos.y) + 0.08;
@@ -903,6 +564,8 @@ export class Enemy {
     if (this.windKey) this.windKey.m.dispose();
     for (const t of this.tele) t.dispose();
     for (const c of this.cables) c.m.dispose();
+    for (const w of this.waves) w.m.dispose();
+    for (const d of this.dancers) d.m.dispose();
     if (this.kind === "gusano") wormDispose(this);
   }
 }
@@ -911,7 +574,7 @@ export class Enemy {
 // La plaga de la partida multiplica pesos y puede adelantar la llegada (minuto) de cada tipo
 export function spawnTable(t: number, plague?: { mult: Partial<Record<Kind, number>>; from: Partial<Record<Kind, number>> }): [Kind, number][] {
   const m = t / 60;
-  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", ...(MOON.on ? ALIENS : ["grillo", "mosca"])] as Kind[]).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
+  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", ...(MOON.on ? ALIENS : ["grillo", "mosca", "babosa"])] as Kind[]).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
   return base.filter(([k, from]) => m >= (plague?.from[k] ?? from)).map(([k, , w]) => [k, w * (plague?.mult[k] ?? 1)]);
 }
 

@@ -59,6 +59,10 @@ export const analysisCsv = (an) => [
 ].map(csvRows).join("\r\n\r\n");
 
 export const dayOf = (now = Date.now()) => new Date(now).toISOString().slice(0, 10);
+// Desafío semanal: lunes UTC de la semana (id), y regla rotando por número de semana.
+export const REGLAS_SEMANA = ["solo_gomitas", "doble_velocidad", "sin_curas"];
+export const weekOf = (now = Date.now()) => dayOf(now - ((new Date(now).getUTCDay() + 6) % 7) * 86400e3);
+export const reglaOf = (week) => REGLAS_SEMANA[Math.floor(Date.parse(week) / 604800e3) % REGLAS_SEMANA.length];
 export const dailySeed = (secret, date) => (createHmac("sha256", secret).update("daily:" + date).digest().readUInt32BE(0) % 2147483647) + 1;
 export const WAITLIST_MSG_MAX = 300;
 export const validMail = (m) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m) && m.length <= 254;
@@ -109,8 +113,27 @@ export function openDb(file, invitesJson = null) {
     } catch (e) { console.error("import invites.json", e.message); }
   }
 
+  db.exec("CREATE TABLE IF NOT EXISTS ranking_ban(uid TEXT PRIMARY KEY); CREATE TABLE IF NOT EXISTS hidden_events(id INTEGER PRIMARY KEY)");
+  const OK = "AND id NOT IN (SELECT id FROM hidden_events) AND uid NOT IN (SELECT uid FROM ranking_ban)"; // moderación: filtro común de rankings
   const api = {
     db,
+    // Moderación de rankings (admin): excluir usuario (uid) o partida (id de run_end).
+    rankBan: (uid, on) => on ? run("INSERT OR IGNORE INTO ranking_ban(uid) VALUES(?)", uid) : run("DELETE FROM ranking_ban WHERE uid=?", uid),
+    rankBanned: (uid) => !!one("SELECT 1 FROM ranking_ban WHERE uid=?", uid),
+    hideEvent: (id, on) => on ? run("INSERT OR IGNORE INTO hidden_events(id) SELECT id FROM events WHERE id=? AND type='run_end'", id).changes || (() => { throw new Error("Partida inexistente"); })() : run("DELETE FROM hidden_events WHERE id=?", id),
+    // Mejores partidas (30 días) para moderar, con flag hidden y uid vetado.
+    rankingRuns: (since, limit = 30) => all("SELECT id, at, uid, json_extract(data,'$.mode') mode, json_extract(data,'$.kills') kills, json_extract(data,'$.t') t, id IN (SELECT id FROM hidden_events) hidden, uid IN (SELECT uid FROM ranking_ban) banned FROM events WHERE type='run_end' AND json_valid(data) AND at>? AND json_extract(data,'$.kills') IS NOT NULL ORDER BY kills DESC LIMIT ?", since, limit),
+    // Aviso de mantenimiento: {texto, hasta(ms)} en settings; vencido o vacío → null.
+    aviso(now = Date.now()) {
+      try { const a = JSON.parse(one("SELECT value FROM settings WHERE key='aviso'")?.value || "null"); return a?.texto && a.hasta > now ? a : null; } catch { return null; }
+    },
+    saveAviso(texto, hasta) {
+      texto = String(texto || "").trim().slice(0, 300);
+      if (!texto) return run("DELETE FROM settings WHERE key='aviso'"), null;
+      if (!Number.isFinite(hasta) || hasta <= Date.now()) throw new Error("Vencimiento inválido o pasado");
+      run("INSERT INTO settings(key,value) VALUES('aviso',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", JSON.stringify({ texto, hasta }));
+      return { texto, hasta };
+    },
     // Plantillas de correo del panel (se guardan como JSON en settings). Lo guardado pisa los textos por defecto, clave por clave.
     templates() {
       let saved = {}; try { saved = JSON.parse(one("SELECT value FROM settings WHERE key='templates'")?.value || "{}"); } catch {}
@@ -145,6 +168,7 @@ export function openDb(file, invitesJson = null) {
       if (!api.user(m)) throw new Error("Usuario inexistente");
       try { run("UPDATE users SET alias=? WHERE email=?", a, m); } catch (e) { if (/UNIQUE/.test(e.message)) throw new Error("Ese alias ya está en uso"); throw e; }
     },
+    uidOfAlias: (alias) => { const r = one("SELECT email FROM users WHERE alias=? COLLATE NOCASE", String(alias)); return r ? "cf-" + r.email : null; },
     aliasOf: (uid) => one("SELECT alias FROM users WHERE email=?", normMail(String(uid).replace(/^cf-/, "")))?.alias || null,
     seen: (email, now = Date.now()) => run("UPDATE users SET lastSeen=? WHERE email=?", now, normMail(email)),
     setNote: (email, note) => run("UPDATE users SET note=? WHERE email=?", String(note).slice(0, 500), normMail(email)).changes > 0,
@@ -206,12 +230,12 @@ export function openDb(file, invitesJson = null) {
     recentCount: (uid, type, since) => one("SELECT COUNT(*) n FROM events WHERE uid=? AND type=? AND at>?", uid, type, since).n,
     // Diario: solo el PRIMER run_end guardado de cada usuario para (fecha, semilla). Orden: victoria primero; ganadores por menor t, perdedores por mayor t.
     dailyBoard: (date, seed) => all(`SELECT uid, win, t, kills, lv FROM (SELECT id, uid, json_extract(data,'$.win') win, json_extract(data,'$.t') t, json_extract(data,'$.kills') kills, json_extract(data,'$.lv') lv,
-      ROW_NUMBER() OVER (PARTITION BY uid ORDER BY id) rn FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.daily')=? AND json_extract(data,'$.seed')=?) WHERE rn=1
+      ROW_NUMBER() OVER (PARTITION BY uid ORDER BY id) rn FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.daily')=? AND json_extract(data,'$.seed')=? ${OK}) WHERE rn=1
       ORDER BY win DESC, CASE WHEN win THEN t ELSE -t END ASC, uid`, date, seed),
     // Logros online: podio semanal (top 3 de una semana UTC lun-dom ya cerrada), racha diaria (días seguidos con run_end del diario) y veterano (50 run_end).
     userLogros: (uid, now = Date.now()) => {
       const wk = (at) => Math.floor((at / 86400e3 + 3) / 7); // semana lun-dom UTC (día 0 epoch = jueves)
-      const best = all("SELECT CAST((at/86400000.0+3)/7 AS INTEGER) wk, uid, MAX(json_extract(data,'$.kills')) s FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.kills') IS NOT NULL GROUP BY wk, uid");
+      const best = all(`SELECT CAST((at/86400000.0+3)/7 AS INTEGER) wk, uid, MAX(json_extract(data,'$.kills')) s FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.kills') IS NOT NULL ${OK} GROUP BY wk, uid`);
       const podio = best.some((r) => r.uid === uid && r.wk < wk(now) && best.filter((o) => o.wk === r.wk && (o.s > r.s || (o.s === r.s && o.uid < uid))).length < 3);
       const days = all("SELECT DISTINCT json_extract(data,'$.daily') d FROM events WHERE uid=? AND type='run_end' AND json_valid(data) AND json_extract(data,'$.daily') IS NOT NULL ORDER BY d", uid).map((r) => Date.parse(r.d) / 86400e3).filter(Number.isFinite);
       let streak = 0, run = 0;
@@ -221,11 +245,15 @@ export function openDb(file, invitesJson = null) {
       return [L("podio", "Podio semanal", podio, +podio, 1), L("racha3", "Racha diaria x3", streak >= 3, streak, 3), L("racha7", "Racha diaria x7", streak >= 7, streak, 7), L("veterano", "Veterano", n >= 50, n, 50)];
     },
     // Semanal: mejor puntaje (kills) por uid entre run_end con at>=since.
-    weeklyTop: (since, limit = 20) => all("SELECT uid, MAX(json_extract(data,'$.kills')) score FROM events WHERE type='run_end' AND json_valid(data) AND at>=? AND json_extract(data,'$.kills') IS NOT NULL GROUP BY uid ORDER BY score DESC, uid LIMIT ?", since, limit),
+    // Sin fin: mejor tiempo sobrevivido (lasted, acotado por t) por usuario; run_end con endless:true.
+    endlessTop: (limit = 20) => all(`SELECT uid, MAX(MIN(json_extract(data,'$.lasted'), json_extract(data,'$.t'))) score FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.endless')=1 AND json_extract(data,'$.lasted') IS NOT NULL ${OK} GROUP BY uid ORDER BY score DESC, uid LIMIT ?`, limit),
+    weeklyTop: (since, limit = 20) => all(`SELECT uid, MAX(json_extract(data,'$.kills')) score FROM events WHERE type='run_end' AND json_valid(data) AND at>=? AND json_extract(data,'$.kills') IS NOT NULL ${OK} GROUP BY uid ORDER BY score DESC, uid LIMIT ?`, since, limit),
+    // Semanal con regla: mejor kills por uid entre run_end con weekly===week y seed===seed.
+    weeklyBoard: (week, seed, limit = 20) => all(`SELECT uid, MAX(json_extract(data,'$.kills')) score FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.weekly')=? AND json_extract(data,'$.seed')=? AND json_extract(data,'$.kills') IS NOT NULL ${OK} GROUP BY uid ORDER BY score DESC, uid LIMIT ?`, week, seed, limit),
     eventsSince: (since, limit = EXPORT_MAX) => all("SELECT * FROM events WHERE at>? ORDER BY id DESC LIMIT ?", since, limit),
     events: (limit = 300) => all("SELECT * FROM events ORDER BY id DESC LIMIT ?", limit),
     // Mejor expedición ENCORE por uid (vuelta, escenario, tiempo).
-    encoreTop: (limit = 10) => all(`SELECT uid, loop, stage, t, win FROM (SELECT uid, json_extract(data,'$.loop') loop, json_extract(data,'$.stage') stage, json_extract(data,'$.t') t, json_extract(data,'$.win') win, ROW_NUMBER() OVER (PARTITION BY uid ORDER BY json_extract(data,'$.loop') DESC, json_extract(data,'$.win') DESC, json_extract(data,'$.stage') DESC, json_extract(data,'$.t') DESC) rn FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.mode')='encore' AND json_extract(data,'$.loop') IS NOT NULL) WHERE rn=1 ORDER BY loop DESC, win DESC, stage DESC, t DESC LIMIT ?`, limit),
+    encoreTop: (limit = 10) => all(`SELECT uid, loop, stage, t, win FROM (SELECT uid, json_extract(data,'$.loop') loop, json_extract(data,'$.stage') stage, json_extract(data,'$.t') t, json_extract(data,'$.win') win, ROW_NUMBER() OVER (PARTITION BY uid ORDER BY json_extract(data,'$.loop') DESC, json_extract(data,'$.win') DESC, json_extract(data,'$.stage') DESC, json_extract(data,'$.t') DESC) rn FROM events WHERE type='run_end' AND json_valid(data) AND json_extract(data,'$.mode')='encore' AND json_extract(data,'$.loop') IS NOT NULL ${OK}) WHERE rn=1 ORDER BY loop DESC, win DESC, stage DESC, t DESC LIMIT ?`, limit),
     eventStats: (since) => all("SELECT type, COUNT(*) n, COUNT(DISTINCT uid) users FROM events WHERE at>? GROUP BY type ORDER BY n DESC", since),
     // Análisis de telemetría desde `since` (ms): pactos, quedarse/avanzar, mejoras por modo, variantes, partidas por día (UTC).
     // Con `uid` filtra a ese usuario (mismas consultas; lo usa userStats).

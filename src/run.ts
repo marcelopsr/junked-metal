@@ -45,7 +45,7 @@ export type Plague = { name: string; mult: Partial<Record<Kind, number>>; from: 
 // Los valores salen de la tabla plagas de balance.json: mult_<bicho> = multiplicador de peso (1 = igual), desde_<bicho> = minuto de llegada (-1 = el de siempre)
 export const PLAGUES: Plague[] = BAL.plagas.map((p) => {
   const r = p as unknown as Record<string, number>, mult: Plague["mult"] = {}, from: Plague["from"] = {};
-  for (const k of ["hormiga", "friccion", "escupidora", "robot", "polilla", "escarabajo"] as const) { mult[k] = r["mult_" + k]; if (r["desde_" + k] >= 0) from[k] = r["desde_" + k]; }
+  for (const k of ["hormiga", "friccion", "escupidora", "robot", "polilla", "escarabajo", "grillo", "mosca", "babosa"] as const) { mult[k] = r["mult_" + k]; if (r["desde_" + k] >= 0) from[k] = r["desde_" + k]; }
   return { name: p.nombre, mult, from };
 });
 
@@ -71,13 +71,14 @@ const pickMinis = (r: number): Kind[] => { const n = MINIS.length, i = Math.floo
 const rainAt = (seed: number) => { const r = (seed * 0.6180339887) % 1; return r < RAIN.chance ? RAIN.from[0] + (r / RAIN.chance) * (RAIN.from[1] - RAIN.from[0]) : Infinity; };
 
 // Jefe final de las 10:00: uno de 3, con UNA tirada derivada de la semilla (sin gastar rng(), como la lluvia).
-export const FINALS: Kind[] = ["perro", "aspiradora", "cortacercos"];
+export const FINALS: Kind[] = ["perro", "aspiradora", "cortacercos", "caja"];
 export const ESCAPE_WIN = "Escape: el cohete despegó con el auto a bordo. El gusano lunar se queda con el regolito.";
 export const FINAL_WIN: Partial<Record<Kind, string>> = {
   perro: "¡Felipe fue derrotado! Pasará la tarde ofendido.",
   gusano: "¡El gusano lunar no vuelve a salir! El regolito queda en paz, lleno de pozos.",
   aspiradora: "¡La aspiradora robot quedó sin batería y sin propósito de vida!",
   cortacercos: "¡El cortacercos eléctrico hizo cortocircuito! Nadie presentó una queja.",
+  caja: "¡La caja de música se quedó sin cuerda! Por fin, silencio en el desván.",
 };
 const frac = (x: number) => x - Math.floor(x);
 const pickFinal = (seed: number) => FINALS[Math.floor(frac(seed * 0.7548776662) * FINALS.length)];

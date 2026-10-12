@@ -680,6 +680,7 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
       ctx.spawnEnemy(kd, ctx.lead.car!.pos.add(f.scale(dist)).addInPlace(new B.Vector3(0, 1, 0)));
       return ctx.enemies.length;
     },
+    __enemies: () => ctx.enemies, // solo dev: inspeccionar jefes (estado de ataques, fase 2)
     __minis: (a: Kind, b: Kind) => {
       ctx.RUN_BOSSES[0][1] = a;
       ctx.RUN_BOSSES[1][1] = b;

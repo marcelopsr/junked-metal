@@ -12,3 +12,8 @@ export function rng() {
 export const newSeed = () => (Math.random() * 2 ** 32) >>> 0;
 /** Índice al azar entre n (R7b: a qué auto apunta un evento); con n = 1 no gasta rng(): 1 jugador = misma secuencia. */
 export const pickIdx = (n: number) => (n > 1 ? Math.floor(rng() * n) : 0);
+/** Generador aparte (mulberry32) para sorteos que no deben correr el azar principal de la partida. */
+export function rngFrom(seed: number) {
+  let t0 = seed >>> 0 || 1;
+  return () => { t0 = (t0 + 0x6d2b79f5) | 0; let t = Math.imul(t0 ^ (t0 >>> 15), 1 | t0); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}

@@ -1,12 +1,14 @@
 // Front-end: título, menú principal, garaje, taller, configuración, bestiario, créditos, pausa y resultados.
 // Una sola pila de pantallas dentro de #fe; teclado, gamepad y mouse mueven el mismo foco.
 import "./menu.css";
+import "./aviso";
+import { novedades } from "./novedades";
 import type { Scene } from "@babylonjs/core";
 import { CARS } from "./car";
 import { BAL, costos, precio } from "./balance";
 import { BEAST_PORTRAITS, DEF, type Kind } from "./enemies";
-import { activePad, btnChip, btnName, editTouch, FAM_NAME, famOf, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padAny, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
-import { DECAL_BLANK, DECAL_N, DECAL_PAL, factoryColor, GARAGE_DECALS, GARAGE_FINISHES, PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type GarageDecalId, type GarageFinishId, type Slot } from "./models";
+import { activePad, btnName, editTouch, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
+import { PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { ARSENAL, PILOTS, PILOT_PORTRAITS, type PilotId } from "./pilots";
 import { beastIcon, icon, PERK_ICON, UI_BTN_ICON, uiIcon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
@@ -17,12 +19,19 @@ import { camCycle, isTouch, padsConnected } from "./input";
 import { bestRace, MEDAL, medalOf, medalTimes, raceCfg, saveRaceCfg, TRACKS, trackName, type RaceCtl } from "./kart_cfg";
 import { ACH, type AchId } from "./achievements";
 import { ABILITIES, abilCd, abilK, CURSES, type AbilityId, type CurseId } from "./abilities";
-import { FINALS, previewProfile, setModoTranquilo, type Elite } from "./run";
+import { setModoTranquilo, type Elite } from "./run";
 import { CAM_MODES, CAM_NAMES, parseSave } from "./savefmt";
 import { PACTS, SECRETS, VARIANTS } from "./encore";
-import { daily, leaderboard, me, misLogros, myStats, rankingSemanal, salas, setAlias } from "./net";
+import { leaderboard, salas } from "./net";
 
-const $ = (id: string) => document.getElementById(id)!;
+import { initBeast, BV, type BeastAnim, beastPad, beastStep, KINDS, openBeast, rankOf, renderBeast, zoomBeast } from "./menu/beast_sheet";
+import { initAccount, renderAcct, renderDaily, renderMyStats, renderWeekly } from "./menu/account";
+import { LORE, BIOMETRICS } from "./menu/beast_data";
+import { initBindings, bindKey, bindPad, binding, bindRow, cancelBind, ctlAct, esc, padTest, padTestHtml, resetBind, toggleBind } from "./menu/bindings";
+import { decalHtml, dcol, drawGrid, editing, gridPointers, gridStep, initPaint, paintAtCursor, paintClick, pz, renderPaint, setCol, setEditing, undo } from "./menu/garage_paint";
+export { BV, type BeastAnim };
+
+export const $ = (id: string) => document.getElementById(id)!;
 export const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
 // ---------- Guardado ----------
@@ -34,6 +43,7 @@ export type BeastRec = { first?: string; hurt: number; by: Record<string, number
 export type Stats = { runs: number; wins: number; time: number; dist: number; dmg: Record<string, number>; zone: Partial<Record<ZoneId, { t: number; kills: number }>> };
 export type Save = {
   intro: boolean; // ya se vio la intro del primer arranque
+  novedadesVistas: string; // fecha (AAAA-MM-DD) de la última novedad mostrada en el cartel "Qué hay de nuevo" ("" = ninguna)
   scrap: number; best: number; perm: { hp: number; dmg: number; spd: number; mag: number; reroll: number; cards: number; extra: number; revive: number; xp: number; arm: number; reg: number; tur: number; ram: number; cdr: number }; cars: CarKind[]; car: CarKind;
   pilot: PilotId; unlocked: string[]; kit: Record<Slot, string>; paint: string; trim: string; rim: string; finish: string; zoom: number; camMode: (typeof CAM_MODES)[number]; // paint/trim/rim: colores por zona (carrocería, detalles, llantas), "#rrggbb" o "" = el de fábrica; finish: textura PBR
   mute: boolean; vol: { master: number; sfx: number; engine: number; music: number };
@@ -45,7 +55,7 @@ export type Save = {
   // Controles (input.ts): teclas [principal, alternativa], joystick, carrera, disposición táctil y 3 perfiles con nombre (null = vacío)
   keys: Record<Action, string[]>; pad: typeof PAD0; race: { kb1: Binds<string>; kb2: Binds<string>; pad: Binds<number> }; tlay: TLays; rumble: boolean; touch: number;
   profiles: (Profile | null)[];
-  hud: number; calm: boolean; dmgNums: boolean; tranquilo: boolean;
+  hud: number; calm: boolean; dmgNums: boolean; tranquilo: boolean; tutorialHecho: boolean;
   decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
   stats: Stats;
   seen: Kind[]; slain: Partial<Record<Kind, number>>; beast: Partial<Record<Kind, BeastRec>>; runs: RunRec[]; daily: { day: string; best: number }; zone: ZoneId;
@@ -57,14 +67,14 @@ export type Save = {
 };
 // Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
 const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (innerHeight * (devicePixelRatio || 1))) * 20) / 20));
-const DEFAULT: Save = {
-  intro: false,
+export const DEFAULT: Save = {
+  intro: false, novedadesVistas: "",
   scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0, arm: 0, reg: 0, tur: 0, ram: 0, cdr: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", trim: "", rim: "", finish: "", zoom: 1.35, camMode: "actual",
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, gpu: "webgl", scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1,
-  calm: typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false), dmgNums: true, tranquilo: false,
+  calm: typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false), dmgNums: true, tranquilo: false, tutorialHecho: false,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
@@ -190,7 +200,7 @@ function renderRace() {
 }
 
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(daily?: boolean, encore?: boolean): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; duel(): void; match3(): void };
+type Api = { scene: Scene; play(daily?: boolean, encore?: boolean): void; weekly(): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; duel(): void; match3(): void };
 let api: Api;
 
 export function applySettings() {
@@ -210,7 +220,7 @@ export function applySettings() {
   document.body.classList.toggle("calm", save.calm);
   setModoTranquilo(!!save.tranquilo);
 }
-const commit = () => { save.preset = presetOf(save); persist(); saveRaceCfg(); applySettings(); };
+export const commit = () => { save.preset = presetOf(save); persist(); saveRaceCfg(); applySettings(); };
 /** Vuelve las opciones (imagen, audio, controles, accesibilidad) a los valores de fábrica; el progreso no se toca. */
 function resetCfg() {
   const D = structuredClone(DEFAULT);
@@ -238,46 +248,15 @@ function renderCodex() {
   fill("cdxPact", [...pa.map((p): [string, string] => [p.name, `ganancia ${fx(p.gain)} / costo ${fx(p.cost)}`]), ...miss(PACTS.length - pa.length)]);
   fill("cdxVar", [...va.map((v): [string, string] => [v.name, v.line]), ...miss(VARIANTS.length - va.length)]);
 }
-/** Tus estadísticas del servidor (Codex): sin sesión o sin respuesta, el bloque queda oculto. */
-const MODE_NM: Record<string, string> = { survivor: "Supervivencia", encore: "ENCORE", race: "Carrera", duel: "Demolición", match3: "Junket Crush", daily: "Desafío diario" };
-function renderMyStats() {
-  const box = $("cdxMe"), ul = $("cdxMeList"), li = (a: string, b: string) => { const x = document.createElement("li"), t = document.createElement("b"); t.textContent = a; x.append(t, ` · ${b}`); return x; };
-  box.classList.add("hidden");
-  void myStats().then((s) => {
-    if (!s) return;
-    const rows = s.modes.map((m) => li(MODE_NM[m.mode] ?? m.mode, `${m.played} ${m.played === 1 ? "jugada" : "jugadas"}, ${m.won} ${m.won === 1 ? "ganada" : "ganadas"}`));
-    if (s.encore) rows.push(li("Mejor ENCORE", `vuelta ${s.encore.loop + 1}, escenario ${s.encore.stage + 1}`));
-    if (s.pacts.top.length) rows.push(li("Pactos favoritos", s.pacts.top.map((p) => PACTS.find((x) => x.id === p.id)?.name ?? p.id).join(", ")));
-    if (s.stages.stay + s.stages.advance) rows.push(li("Quedarse", `${Math.round(s.stages.stayPct)} %`));
-    ul.replaceChildren(...rows); box.classList.toggle("hidden", !rows.length);
-  });
-}
-/** Mi cuenta: correo, licencia y apodo desde /api/me; todo con textContent. */
-function renderAcct() {
-  const ul = $("acctList"), al = $("acctAlias") as HTMLInputElement, msg = $("acctMsg");
-  ul.replaceChildren(); msg.textContent = ""; al.value = "";
-  void me().then((m) => {
-    if (!m) { msg.textContent = "No se pudo cargar la cuenta."; return; }
-    const p = m.plan, end = p?.currentPeriodEnd ? new Date(p.currentPeriodEnd) : null;
-    const lic = !p ? "sin licencia" : p.active ? `${p.name}${end ? `, vence el ${String(end.getDate()).padStart(2, "0")}/${String(end.getMonth() + 1).padStart(2, "0")}/${end.getFullYear()}` : ""}` : `${p.name}, vencida`;
-    ul.replaceChildren(...([["Correo", m.email], ["Licencia", lic]] as const).map(([a, b]) => { const x = document.createElement("li"), t = document.createElement("b"); t.textContent = a; x.append(t, ` · ${b}`); return x; }));
-    al.value = m.alias ?? "";
-  });
-  const lg = $("acctLogros"); lg.textContent = "Cargando…";
-  void misLogros().then((rows) => { if (!rows) { lg.textContent = "Sin conexión"; return; } lg.replaceChildren(...rows.map((r) => { const li = document.createElement("li"); li.textContent = `${r.done ? "✔" : "·"} ${r.name} · ${r.progress}/${r.goal}`; return li; })); });
-  const rk = $("acctRank"); rk.textContent = "Cargando…";
-  void rankingSemanal().then((rows) => { rk.replaceChildren(...(rows ?? []).slice(0, 20).map((r) => { const li = document.createElement("li"); li.textContent = `${r.name} · ${r.score} bajas`; return li; })); if (!rows) rk.textContent = "Sin conexión"; else if (!rows.length) rk.textContent = "Sin datos esta semana"; });
-}
-$("acctSave").onclick = async () => { const a = ($("acctAlias") as HTMLInputElement).value.trim(), e = await setAlias(a); $("acctMsg").textContent = e ?? "Apodo guardado."; };
-$("acctOut").onclick = () => { $("netLogout").click(); back(); }; // el cierre real vive en main.ts (sess())
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3" | "play" | "modes" | "encore" | "codex" | "cuenta";
+initAccount({ $, fmt, today: () => today(), dailySeed: () => dailySeed(), go: (s) => go(s), current: () => current(), back: () => back(), kitStripHtml: () => kitStripHtml(), daily: () => save.daily });
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3" | "play" | "modes" | "encore" | "codex" | "cuenta" | "weekly";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
 
 let shownAt = 0;
 function show() {
-  binding = null; dup = null; // una reasignación a medias no sobrevive al cambio de pantalla
+  resetBind(); // una reasignación a medias no sobrevive al cambio de pantalla
   shownAt = performance.now();
   const s = current();
   $("fe").classList.toggle("hidden", !s);
@@ -295,6 +274,7 @@ function show() {
   if (s === "cuenta") renderAcct();
   if (s === "encore") void leaderboard().then((rows) => { const box = $("encLb"), ol = $("encLbList"); box.classList.toggle("hidden", !rows?.length); ol.replaceChildren(...(rows ?? []).slice(0, 10).map((r) => { const li = document.createElement("li"); li.textContent = `${r.name} · vuelta ${r.loop + 1}, escenario ${r.stage + 1} · ${fmt(r.t)}`; return li; })); });
   if (s === "daily") renderDaily();
+  if (s === "weekly") renderWeekly();
   if (s === "modes" || s === "match3") refreshModes();
   if (s === "race") renderRace();
   if (s === "bestiary") { renderBestiary(); if (!ret.get("bestiary")) $("beasts").scrollTop = 0; }
@@ -353,7 +333,7 @@ function back() {
   SFX.back();
   if (s === "pause") return api.resume();
   if (s === "over") return api.quit();
-  if (s === "garage" && editing) { editing = false; renderGarage(); return focusSel('[data-dact="edit"]'); } // Esc / B: sale del editor, no del garaje
+  if (s === "garage" && editing) { setEditing(false); renderGarage(); return focusSel('[data-dact="edit"]'); } // Esc / B: sale del editor, no del garaje
   peek.paint = peek.finish = undefined;
   stack.pop();
   show();
@@ -368,7 +348,7 @@ export function reset(s: Scr | null) {
 }
 
 // ---------- Foco: navegación espacial ----------
-const focusables = () => {
+export const focusables = () => {
   const root = askFn ? "#ask" : `#scr-${current()}`;
   return [...document.querySelectorAll<HTMLElement>(`${root} :is(button:not(:disabled), select:not(:disabled), input:not(:disabled), summary, [tabindex])`)].filter((e) => e.offsetParent);
 };
@@ -377,7 +357,7 @@ function move(dx: number, dy: number) {
   const cur = document.activeElement as HTMLElement, els = focusables();
   if (!els.includes(cur)) return els[0]?.focus();
   // Grilla del editor de calcos: el cursor recorre las celdas; en el borde el foco sigue de largo
-  if (cur.id === "dgrid") { const x = dcx + dx, y = dcy + dy; if (x >= 0 && x < DECAL_N && y >= 0 && y < DECAL_N) { dcx = x; dcy = y; drawGrid(); return SFX.blip(); } }
+  if (cur.id === "dgrid" && gridStep(dx, dy)) return SFX.blip();
   // Perillas: izquierda/derecha cambian el valor en vez de mover el foco
   if (dx && cur instanceof HTMLInputElement && cur.type === "range") { dx > 0 ? cur.stepUp() : cur.stepDown(); cur.dispatchEvent(new Event("input", { bubbles: true })); if (cur.dataset.hsv) cur.dispatchEvent(new Event("change", { bubbles: true })); return SFX.blip(); }
   if (dx && cur instanceof HTMLSelectElement) { let i = cur.selectedIndex, n = cur.length; do i = (i + dx + cur.length) % cur.length; while (cur.options[i].disabled && n-- > 0); cur.selectedIndex = i; cur.dispatchEvent(new Event("change", { bubbles: true })); return SFX.blip(); }
@@ -503,22 +483,6 @@ function renderPlay() {
   $("playKit").innerHTML = kitStripHtml();
   $("curseBtn").textContent = curseTxt();
 }
-function renderDaily() {
-  const b = save.daily.day === today() ? save.daily.best : 0, forced = Number(new URLSearchParams(location.search).get("seed"));
-  const draw = (seed: number, date: string) => {
-    const p = previewProfile(seed);
-    $("dailyBrief").innerHTML = `<div class="briefRec">DESAFÍO DIARIO · ${date} · SEMILLA #${seed}</div><div class="briefGrid">`
-      + `<div><span>Escenario</span><b>Patio · ${p.climate.name}${Number.isFinite(p.rainAt) ? " (Lluvia)" : ""}</b></div>`
-      + `<div><span>Plaga dominante</span><b>${p.plague.name}</b></div>`
-      + `<div><span>Minijefes</span><b class="briefMinis"><span class="wi">${beastIcon(p.minis[0], 16)}${DEF[p.minis[0]].name}</span><span class="wi">${beastIcon(p.minis[1], 16)}${DEF[p.minis[1]].name}</span></b></div>`
-      + `<div><span>Jefe final (10:00)</span><b class="wi">${beastIcon(p.final, 18)}${DEF[p.final].name}</b></div>`
-      + `</div>` + kitStripHtml();
-    $("dailyInfo").textContent = `Semilla #${seed} · ${b ? `Récord de hoy: ${fmt(b)}` : "Todavía sin intentos hoy. El mejor tiempo del día queda como récord."}`;
-  };
-  const seed = forced || dailySeed();
-  draw(seed, today());
-  if (!forced) void daily().then((d) => { if (d && d.seed !== seed && $("dailyBrief").isConnected) draw(d.seed, d.date); }); // semilla oficial: el resumen sale de ella, no de la local
-}
 function refreshModes() {
   const rb = (save as { raceBest?: Record<string, number> }).raceBest ?? {};
   let rDone = 0, rMeds = 0;
@@ -617,8 +581,6 @@ function buy(id: string) {
   persist();
   return true;
 }
-const PZ = { paint: "Carrocería", trim: "Detalles", rim: "Llantas" };
-let pz: keyof typeof PZ = "paint";
 /** Arma inicial de la partida: la elegida en el garaje si está comprada (si no, Gomitas). Ver startWeapons (pilots.ts). */
 export const startPick = (): WeaponId => (owns("arma:" + save.weapon) ? save.weapon : "gomitas");
 /** Lo que hay que mostrar sobre el auto (garaje, portada y partida). */
@@ -658,8 +620,8 @@ addEventListener("focusin", (e) => {
   if (d.k) peek.car = d.k as CarKind; else if (d.pilot) peek.pilot = d.pilot as PilotId; else if (d.part) peek.part = d.part.split(":") as [Slot, string];
 });
 
-const bar = (v: number, max: number) => `<span class="stb"><i style="width:${Math.min(100, (v / max) * 100)}%"></i></span>`;
-const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" role="tab" aria-selected="${id === on}" data-${attr}="${id}">${n}</button>`).join("");
+export const bar = (v: number, max: number) => `<span class="stb"><i style="width:${Math.min(100, (v / max) * 100)}%"></i></span>`;
+export const tabsHtml = (all: Record<string, string>, on: string, attr: string) => Object.entries(all).map(([id, n]) => `<button class="tab ${id === on ? "on" : ""}" role="tab" aria-selected="${id === on}" data-${attr}="${id}">${n}</button>`).join("");
 const STABS = { chasis: "Chasis", equipo: "Equipo de partida", habilidades: "Habilidades", arsenal: "Arsenal", autos: "Autos", pilotos: "Pilotos", piezas: "Piezas", zonas: "Zonas" };
 let stab: keyof typeof STABS = "chasis";
 // Filtro y orden del Taller (valen para todas las pestañas)
@@ -748,8 +710,8 @@ function renderShop() {
 }
 const GTABS = { auto: "Auto", piloto: "Piloto", arma: "Arma", habilidad: "Habilidad", pintura: "Pintura", piezas: "Piezas" };
 let gtab: keyof typeof GTABS = "auto";
-function renderGarage() {
-  if (gtab !== "piezas") editing = false;
+export function renderGarage() {
+  if (gtab !== "piezas") setEditing(false);
   $("scr-garage").classList.toggle("editing", editing); // modo edición: solo el editor, con toda la altura
   const ownedCars = (Object.keys(CARS) as CarKind[]).filter((k) => owns("car:" + k)).length;
   const allPartsList = (Object.keys(PARTS) as Slot[]).flatMap((sl) => Object.keys(opts(sl)).map((o) => `part:${sl}:${o}`));
@@ -824,163 +786,7 @@ function renderGarage() {
   if (gtab === "piezas") { $("cars").insertAdjacentHTML("beforeend", decalHtml()); drawGrid(); }
   else if (gtab === "pintura") renderPaint();
 }
-// ---------- Pintura por zona (garaje → Pintura): paleta + selector libre (tono, saturación, brillo) ----------
-// Las perillas son <input type="range">: mouse, dedo, flechas y el stick (move() ya las mueve) sin código propio. Gratis: los colores no cuestan tornillos.
-const zoneColor = () => save[pz] || factoryColor(shownCar())[pz];
-const hex2hsv = (h: string) => {
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255), mx = Math.max(r, g, b), d = mx - Math.min(r, g, b);
-  const hue = !d ? 0 : mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
-  return [Math.round(hue * 60), mx ? Math.round((d / mx) * 100) : 0, Math.round(mx * 100)];
-};
-const hsv2hex = (h: number, s: number, v: number) => "#" + [5, 3, 1].map((n) => { const k = (n + h / 60) % 6; return Math.round((v / 100) * (1 - (s / 100) * Math.max(0, Math.min(k, 4 - k, 1))) * 255).toString(16).padStart(2, "0"); }).join("");
-const isGlossy = (c: string) => {
-  const [, s, v] = hex2hsv(c);
-  const isMetallic = ["#c0c0c0", "#d4af37", "#b87333", "#5b6470"].includes(c.toLowerCase());
-  return isMetallic || (s >= 60 && v >= 60);
-};
-type PaintFilter = "todos" | "brillo" | "mates";
-let pfilt: PaintFilter = "todos";
-// Fondos de las barras: cada una muestra hacia dónde va el color con las otras dos fijas
-function hsvBars(h: number, sat: number, v: number) {
-  const el = $("paint");
-  el.style.setProperty("--hue", hsv2hex(h, 100, 100)); el.style.setProperty("--sat0", hsv2hex(h, 0, v)); el.style.setProperty("--sat1", hsv2hex(h, 100, v)); el.style.setProperty("--val1", hsv2hex(h, sat, 100));
-  const c = hsv2hex(h, sat, v), chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot"), lbl = document.getElementById("swLabel");
-  if (chip) { chip.style.background = c; chip.textContent = c.toUpperCase(); }
-  if (dot) dot.style.background = c;
-  if (lbl) lbl.textContent = `CÓD. PNT ${c.toUpperCase()} · TONO TALLER`;
-}
-function renderPaint() {
-  const cur = zoneColor(), [h, sat, v] = hex2hsv(cur), mine = !!save[pz];
-  const bar = (k: string, lab: string, max: number, val: number) => `<label class="hrow"><span>${lab}</span><input type="range" data-hsv="${k}" min="0" max="${max}" step="${k === "h" ? 5 : 2}" value="${val}" aria-label="${lab}"></label>`;
-  const customZones = (["paint", "trim", "rim"] as (keyof typeof PZ)[]).filter((z) => !!save[z]).length;
-  const decalTag = save.decalSel >= 0 && save.decals[save.decalSel] ? `CALCO #${save.decalSel + 1} ACTIVO` : "SIN CALCO EN CAPÓ";
-  const statusPill = `<div class="paint-status"><span id="pztBadge" class="paint-badge">PATRONES: ${customZones}/3 ZONAS</span><span class="decal-badge">${decalTag}</span></div>`;
-  const PFILTS: [PaintFilter, string][] = [
-    ["todos", "TODOS"],
-    ["brillo", "BRILLO/METAL"],
-    ["mates", "MATES"],
-  ];
-  const filterBar = `<div class="paint-filters">${PFILTS.map(([f, lab]) => `<button class="p-filter ${pfilt === f ? "active" : ""}" data-pfilt="${f}">${lab}</button>`).join("")}</div>`;
-  const isHidden = (c: string) => (pfilt === "brillo" && !isGlossy(c)) || (pfilt === "mates" && isGlossy(c));
-  const finishBar = pz === "paint" ? `<div class="paint-finishes"><span class="fin-lab">TEXTURA PBR:</span><button class="opt ${!save.finish ? "on" : ""}" data-pfin="" title="Laca brillante lisa de fábrica">Laca lisa</button>${Object.entries(GARAGE_FINISHES).map(([id, f]) => `<button class="opt ${save.finish === id ? "on" : ""}" data-pfin="${id}" title="${f.desc}">${f.name}</button>`).join("")}</div>` : "";
-  $("paint").innerHTML = statusPill + `<div class="tabs pzt">${tabsHtml(PZ, pz, "pz")}</div>`
-    + finishBar
-    + filterBar
-    + `<div class="pal">${PAINTS.map((c) => `<button class="${["sw", isGlossy(c) && "glossy", mine && c === cur && "on", isHidden(c) && "hidden"].filter(Boolean).join(" ")}" data-sw="${c}" style="background:${c}" aria-label="${PZ[pz]} ${c}"></button>`).join("")}</div>`
-    + `<div id="swLabel" class="sw-label">CÓD. PNT ${cur.toUpperCase()} · TONO TALLER</div>`
-    + `<div class="hsv"><div class="hsvt"><span><i id="pzdot" class="sw-dot" style="background:${cur}"></i>${PZ[pz]} · ${mine ? "Personalizado" : "De fábrica"}</span><b id="pzchip"></b><button class="opt ${mine ? "" : "on"}" data-pdef="1">De fábrica</button></div>`
-    + bar("h", "Tono", 360, h) + bar("s", "Saturación", 100, sat) + bar("v", "Brillo", 100, v) + `</div>`
-    + `<div class="note">${pz === "trim" ? "Detalles: alerón, paragolpes, defensas y accesorios." : pz === "rim" ? "Llantas de las cuatro ruedas (o de las que haya)." : "Carrocería: la chapa entera."} Pintar es gratis: el patio cobra en otras cosas.</div>`;
-  hsvBars(h, sat, v);
-  $("paint").querySelectorAll<HTMLElement>(".paint-finishes [data-pfin]").forEach((b) => {
-    const fin = b.dataset.pfin ?? "";
-    const setPeek = () => {
-      SFX.blip();
-      peek.finish = fin || undefined;
-    };
-    const clearPeek = () => {
-      if (peek.finish === (fin || undefined)) {
-        peek.finish = undefined;
-      }
-    };
-    b.addEventListener("mouseenter", setPeek);
-    b.addEventListener("mouseleave", clearPeek);
-    b.addEventListener("focus", setPeek);
-    b.addEventListener("blur", clearPeek);
-  });
-  $("paint").querySelectorAll<HTMLElement>(".pal .sw").forEach((b) => {
-    const c = b.dataset.sw;
-    if (!c) return;
-    const setPeek = () => {
-      SFX.blip();
-      peek.paint = c;
-      const chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot"), lbl = document.getElementById("swLabel");
-      if (chip) { chip.style.background = c; chip.textContent = c.toUpperCase(); }
-      if (dot) dot.style.background = c;
-      if (lbl) lbl.textContent = `CÓD. PNT ${c.toUpperCase()} · TONO TALLER`;
-    };
-    const clearPeek = () => {
-      if (peek.paint === c) {
-        peek.paint = undefined;
-        const base = zoneColor();
-        const chip = document.getElementById("pzchip"), dot = document.getElementById("pzdot"), lbl = document.getElementById("swLabel");
-        if (chip) { chip.style.background = base; chip.textContent = base.toUpperCase(); }
-        if (dot) dot.style.background = base;
-        if (lbl) lbl.textContent = `CÓD. PNT ${base.toUpperCase()} · TONO TALLER`;
-      }
-    };
-    b.addEventListener("mouseenter", setPeek);
-    b.addEventListener("mouseleave", clearPeek);
-    b.addEventListener("focus", setPeek);
-    b.addEventListener("blur", clearPeek);
-  });
-}
-// Perillas: mientras se arrastra solo cambia la muestra; al soltar (change) se aplica al auto (rearmar el modelo en cada paso crearía un material por tono)
-const hsvNow = () => { const g = (k: string) => +(document.querySelector<HTMLInputElement>(`[data-hsv="${k}"]`)?.value ?? 0); return [g("h"), g("s"), g("v")] as const; };
-addEventListener("input", (e) => { if ((e.target as HTMLElement).dataset?.hsv) hsvBars(...hsvNow()); });
-addEventListener("change", (e) => {
-  if (!(e.target as HTMLElement).dataset?.hsv) return;
-  save[pz] = hsv2hex(...hsvNow()); persist();
-  document.querySelectorAll("#paint .pal .sw.on, #paint [data-pdef]").forEach((b) => b.classList.remove("on"));
-  const sp = document.querySelector("#paint .hsvt span");
-  if (sp) {
-    const dot = document.getElementById("pzdot");
-    if (dot) sp.innerHTML = `<i id="pzdot" class="sw-dot" style="background:${save[pz]}"></i>${PZ[pz]} · Personalizado`;
-    else sp.textContent = `${PZ[pz]} · Personalizado`;
-  }
-  const pb = document.getElementById("pztBadge");
-  if (pb) {
-    const cz = (["paint", "trim", "rim"] as (keyof typeof PZ)[]).filter((z) => !!save[z]).length;
-    pb.textContent = `PATRONES: ${cz}/3 ZONAS`;
-  }
-});
-// ---------- Editor de calcos (garaje → Piezas): grilla DECAL_N², 8 colores de DECAL_PAL, 3 diseños ----------
-// Se edita un borrador (`draft`); Guardar lo escribe en la ranura `eslot` y lo aplica al capó. Cursor de celdas para teclado y gamepad.
-// ponytail: deshacer sin rehacer (60 pasos); el borrador sin guardar se pierde al cambiar de diseño.
-let hist: string[] = [], strokeSnap = false; // historial para deshacer: borradores previos, uno por trazo
-let editing = false, eslot = Math.max(0, save.decalSel), draft = save.decals[eslot] || DECAL_BLANK, dcol = 4, dcx = 0, dcy = 0, stroke = false, erasing = false;
-const dirty = () => draft !== (save.decals[eslot] || DECAL_BLANK);
-const DHINT = { keys: () => "Clic o arrastre pinta, clic derecho borra · Flechas mueven el cursor, Enter pinta · 1 a 8 cambian el color, 0 borra · Ctrl+Z o Cmd+Z deshace", pad: () => `Stick o cruceta mueven el cursor · ${btnChip(pb("ok"))} pinta · ${btnChip(4)} y ${btnChip(5)} cambian el color · ${btnChip(2)} deshace`, touch: () => "Arrastra el dedo sobre la grilla para pintar" };
-function decalHtml() {
-  const slots = [0, 1, 2].map((i) => `<button class="opt ${save.decalSel === i ? "on" : ""} ${eslot === i ? "edit" : ""} ${save.decals[i] ? "" : "locked"}" data-dsel="${i}">Diseño ${i + 1}</button>`).join("");
-  const scrapDecals = (Object.entries(GARAGE_DECALS) as [GarageDecalId, { name: string; src: string; desc: string }][]).map(([id, info]) => {
-    const isAct = save.decalSel >= 0 && save.decals[save.decalSel] === id;
-    return `<button class="opt decal-opt ${isAct ? "on" : ""}" data-dpre="${id}" title="${info.desc}"><img class="decal-thumb" src="${info.src}" alt="${info.name}" width="20" height="20" /> ${info.name}</button>`;
-  }).join("");
-  return `<div class="slot decal-scrap-slot"><span>Calcos de chatarra (HD)</span>${scrapDecals}</div>`
-    + `<div class="slot"><span>Calco propio de capó</span><button class="opt ${save.decalSel < 0 ? "on" : ""}" data-dsel="-1">Sin calco</button>${slots}${editing ? "" : `<button class="opt" data-dact="edit">Editar</button>`}</div>`
-    + (!editing ? "" : `<div class="dedit"><canvas id="dgrid" tabindex="0" width="256" height="256" aria-label="Grilla del calco"></canvas><div class="dside">`
-    + `<div class="dpal">${DECAL_PAL.map((c, k) => `<button class="sw ${dcol === k + 1 ? "on" : ""}" data-dcol="${k + 1}" style="background:${c}" aria-label="color ${k + 1}"></button>`).join("")}</div>`
-    + `<div class="dbtn"><button class="opt ${dcol === 0 ? "on" : ""}" data-dcol="0">Borrar</button><button class="opt" data-dact="undo">Deshacer</button><button class="opt" data-dact="clear">Vaciar</button><button class="opt" data-dact="save">Guardar</button><button class="opt" data-dact="done">Listo</button></div>`
-    + `<div id="dstat"></div></div></div><div class="note">${DHINT[ctl]()}</div>`);
-}
-function drawGrid() {
-  const cv = document.getElementById("dgrid") as HTMLCanvasElement | null;
-  if (!cv) return;
-  const c = cv.getContext("2d")!, k = cv.width / DECAL_N;
-  for (let i = 0; i < draft.length; i++) {
-    const x = i % DECAL_N, y = (i / DECAL_N) | 0, n = +draft[i];
-    c.fillStyle = n ? DECAL_PAL[n - 1] : (x + y) % 2 ? "#2a3326" : "#1f271c"; // damero = transparente
-    c.fillRect(x * k, y * k, k, k);
-  }
-  c.strokeStyle = "#0b0d0a66"; c.lineWidth = 1; c.beginPath();
-  for (let i = 0; i <= DECAL_N; i++) { c.moveTo(i * k + 0.5, 0); c.lineTo(i * k + 0.5, cv.height); c.moveTo(0, i * k + 0.5); c.lineTo(cv.width, i * k + 0.5); }
-  c.stroke();
-  if (document.activeElement === cv) { c.strokeStyle = "#8dff6a"; c.lineWidth = 2; c.setLineDash([4, 3]); c.strokeRect(dcx * k + 1, dcy * k + 1, k - 2, k - 2); c.setLineDash([]); }
-  $("dstat").textContent = `Diseño ${eslot + 1}${dirty() ? " · sin guardar" : ""}`;
-}
-function setCell(x: number, y: number, n: number) {
-  dcx = x; dcy = y;
-  const i = y * DECAL_N + x;
-  if (draft[i] !== String(n)) { if (strokeSnap || !stroke) snap(); strokeSnap = false; draft = draft.slice(0, i) + n + draft.slice(i + 1); }
-  drawGrid();
-}
-const snap = () => { if (hist.at(-1) !== draft) { hist.push(draft); if (hist.length > 60) hist.shift(); } };
-function undo() { const p = hist.pop(); if (p === undefined) return; draft = p; drawGrid(); SFX.back(); }
-const setCol = (n: number) => { dcol = n; for (const b of document.querySelectorAll<HTMLElement>("[data-dcol]")) b.classList.toggle("on", +b.dataset.dcol! === n); };
-const cellOf = (e: PointerEvent, cv: HTMLElement) => { const r = cv.getBoundingClientRect(), f = (v: number, o: number, s: number) => Math.min(DECAL_N - 1, Math.max(0, Math.floor(((v - o) / s) * DECAL_N))); return [f(e.clientX, r.left, r.width), f(e.clientY, r.top, r.height)] as const; };
-
-const focusSel = (q: string) => { const e = document.querySelector<HTMLButtonElement>(q); (e && !e.disabled ? e : focusables()[0])?.focus(); };
+export const focusSel = (q: string) => { const e = document.querySelector<HTMLButtonElement>(q); (e && !e.disabled ? e : focusables()[0])?.focus(); };
 
 // Configuración: filas generadas desde datos. data-set = número (perilla o lista), data-tog = sí/no.
 // Cada pestaña agrupa por tema con títulos de sección ("sect"); DESC explica en una línea lo que no se entiende solo.
@@ -1019,7 +825,7 @@ const DESC: Record<string, string> = {
   rumble: "Vibración del mando en golpes.",
   touch: "Tamaño del stick y los botones en pantalla.",
 };
-const TABS: Record<string, { name: string; rows: Row[] }> = {
+export const TABS: Record<string, { name: string; rows: Row[] }> = {
   gfx: { name: "Imagen", rows: [
     ["Resolución", "sect"],
     ["Motor gráfico", "sel", "gpu", [["webgl", "WebGL"], ["webgpu", "WebGPU"]]],
@@ -1112,7 +918,8 @@ const TABS: Record<string, { name: string; rows: Row[] }> = {
   ] },
 };
 let tab = "gfx";
-let armed: string | null = null; // botón de dos pasos esperando el segundo clic (restablecer, sobrescribir perfil)
+export const setArmed = (v: string | null) => { armed = v; };
+export let armed: string | null = null; // botón de dos pasos esperando el segundo clic (restablecer, sobrescribir perfil)
 const ref = (p: string) => { const k = p.split("."); let o = (k[0] === "rc" ? (k.shift(), raceCfg) : save) as unknown as Record<string, unknown>; while (k.length > 1) o = o[k.shift()!] as Record<string, unknown>; return [o, k[0]] as const; };
 const val = (p: string) => { const [o, k] = ref(p); return o[k]; };
 const KN: Record<string, string> = { ArrowUp: "Flecha arriba", ArrowDown: "Flecha abajo", ArrowLeft: "Flecha izq", ArrowRight: "Flecha der", Space: "Espacio", Escape: "Esc", Equal: "=", Minus: "-", Period: ".", Comma: ",", Enter: "Enter",
@@ -1136,7 +943,7 @@ const choices = (path: string, list: [string, string][]): [string, string, boole
   if (path === "gpu" && v === "webgpu" && !("gpu" in navigator)) return [v, `${n} (no disponible)`, true] as [string, string, boolean];
   return [v, n, false] as [string, string, boolean];
 }).filter((o): o is [string, string, boolean] => !!o);
-function renderConfig() {
+export function renderConfig() {
   $("tabs").innerHTML = Object.entries(TABS).map(([id, t]) => `<button class="tab ${id === tab ? "on" : ""}" role="tab" aria-selected="${id === tab}" data-tab="${id}">${t.name}</button>`).join("");
   // En táctil, Controles deja solo lo táctil (sin teclas ni gamepad)
   // (y Perfiles); el editor táctil solo existe con pantalla táctil y J2 nunca en teléfono
@@ -1168,202 +975,6 @@ function renderConfig() {
   if (fk) document.querySelector<HTMLElement>(`#opts ${fk}`)?.focus({ preventScroll: true });
 }
 
-// ---------- Controles: asignaciones ----------
-// Ruta de una ranura: "<tabla>.<acción>.<n>". Tablas: k teclado, p joystick, r1/r2 teclados de carrera, rp joystick de carrera.
-type Slots = Record<string, (string | number)[]>;
-const TBL: Record<string, () => Slots> = { k: () => save.keys, p: () => save.pad.btn, r1: () => save.race.kb1, r2: () => save.race.kb2, rp: () => save.race.pad };
-const isPad = (path: string) => /^(p|rp)\./.test(path);
-const NAV = ["ok", "back"]; // aceptar/volver son del menú: no chocan con los botones de manejo
-const slotOf = (path: string) => { const [t, a, i] = path.split("."); return [TBL[t]()[a], +i] as const; };
-const LABEL = Object.fromEntries(TABS.ctl.rows.filter((r) => r[1] === "bind").map((r) => [r[2], r[0]]));
-const slotTxt = (path: string, v: string | number) => (isPad(path) ? (v === -1 ? "—" : btnChip(v as number)) : v ? keyName(v as string) : "—");
-const esc = (t: string) => t.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
-let binding: string | null = null, bindT = 0; // ranura esperando tecla o botón y cuándo empezó (6 s sin nada cancela)
-let dup: { path: string; other: string; prev: string | number } | null = null; // repetida recién asignada: se ofrece intercambiar
-/** Otra ranura del mismo grupo con el mismo valor (los dos teclados de carrera chocan entre sí). */
-function dupOf(path: string) {
-  const [t, a] = path.split("."), [arr, i] = slotOf(path), v = arr[i];
-  if (v === "" || v === -1) return null;
-  for (const u of t === "r1" || t === "r2" ? ["r1", "r2"] : [t])
-    for (const [b, vs] of Object.entries(TBL[u]())) {
-      if (t === "p" && NAV.includes(a) !== NAV.includes(b)) continue;
-      const j = vs.indexOf(v);
-      if (j >= 0 && `${u}.${b}.${j}` !== path) return `${u}.${b}.${j}`;
-    }
-  return null;
-}
-function setSlot(path: string, v: string | number) {
-  const [arr, i] = slotOf(path), prev = arr[i];
-  arr[i] = v; binding = null;
-  const other = dupOf(path);
-  dup = other ? { path, other, prev } : null;
-  commit(); renderConfig(); focusSel(`[data-bind="${path}"]`);
-}
-const cancelBind = () => { const b = binding; binding = null; renderConfig(); if (b) focusSel(`[data-bind="${b}"]`); };
-function bindRow(label: string, path: string) {
-  const [t, a] = path.split("."), vs = TBL[t]()[a];
-  let h = `<div class="row multi bind"><span class="lb">${label}</span>${vs.map((v, i) => `<button class="slot2" data-bind="${path}.${i}">${binding === `${path}.${i}` ? "…" : slotTxt(path, v)}</button>`).join("")}</div>`;
-  if (binding?.startsWith(path + ".")) h += `<div class="note bindnote">${isPad(path) ? `Presiona un botón del joystick para «${label}» · Esc, un clic o 6 s sin tocar nada cancela`
-    : `Presiona una tecla para «${label}» · ${a === "pause" ? "Esc queda asignada; un clic o 6 s sin tocar nada cancela" : "Esc cancela · Retroceso deja la ranura vacía"}`}</div>`;
-  if (dup?.path.startsWith(path + ".")) { const [arr, i] = slotOf(dup.path);
-    h += `<div class="row multi dup"><span class="lb"><small class="why">${isPad(path) ? btnName(arr[i] as number) : keyName(arr[i] as string)} también está en «${LABEL[dup.other.split(".").slice(0, 2).join(".")]}»${dup.other.startsWith("r") && dup.other[1] !== path[1] ? ` (${dup.other.startsWith("r1") ? "Teclado 1" : "Teclado 2"})` : ""}.</small></span>`
-      + `<button data-act="swap">Intercambiar</button><button data-act="keepdup">Dejar repetida</button></div>`; }
-  return h;
-}
-/** Captura de tecla (keydown de menu.ts); devuelve true si la consumió. */
-function bindKey(e: KeyboardEvent) {
-  if (!binding) return false;
-  e.preventDefault();
-  if (e.repeat) return true; // la tecla que abrió la captura sigue apretada
-  if (isPad(binding)) { if (e.code === "Escape") cancelBind(); return true; }
-  if (e.code === "Escape" && !binding.startsWith("k.pause.")) cancelBind();
-  else setSlot(binding, e.code === "Backspace" || e.code === "Delete" ? "" : e.code);
-  return true;
-}
-/** Captura de botón (menuPad, cada cuadro); devuelve true mientras espera. */
-function bindPad() {
-  if (!binding) return false;
-  if (performance.now() - bindT > 6000) { cancelBind(); return true; }
-  if (isPad(binding)) { const i = padAny(); if (i >= 0) setSlot(binding, i); }
-  return true;
-}
-function ctlAct(act: string) {
-  const [a, x] = act.split(":"), again = armed === act;
-  armed = null;
-  if (a === "swap" && dup) { const [arr, i] = slotOf(dup.other); arr[i] = dup.prev; const p = dup.path; dup = null; commit(); renderConfig(); return focusSel(`[data-bind="${p}"]`); }
-  if (a === "keepdup") { const p = dup?.path; dup = null; renderConfig(); return focusSel(`[data-bind="${p}"]`); }
-  const twoStep = a === "reset" || (a === "psave" && save.profiles[+x]);
-  if (twoStep && !again) { // primer clic: pide confirmar (se desarma solo a los 4 s)
-    armed = act; renderConfig(); focusSel(`[data-act="${act}"]`);
-    return void setTimeout(() => { if (armed === act) { armed = null; if (current() === "config") { renderConfig(); focusSel(`[data-act="${act}"]`); } } }, 4000);
-  }
-  const D = structuredClone(DEFAULT);
-  if (a === "reset") Object.assign(save, x === "keys" ? { keys: D.keys } : x === "pad" ? { pad: D.pad, rumble: D.rumble } : x === "race" ? { race: D.race } : { tlay: D.tlay, touch: D.touch });
-  if (a === "reset" && x === "race") Object.assign(raceCfg, { p1: "kbd", p2: "pad0" });
-  if (a === "psave") { const name = (document.querySelector<HTMLInputElement>(`[data-pname="${x}"]`)?.value.trim() || `Perfil ${+x + 1}`).slice(0, 20);
-    save.profiles[+x] = structuredClone({ name, keys: save.keys, pad: save.pad, race: save.race, tlay: save.tlay, touch: save.touch }); }
-  if (a === "pload" && save.profiles[+x]) { const { name: _, ...p } = structuredClone(save.profiles[+x]!); Object.assign(save, p); }
-  if (a === "calib") { const gp = activePad(); if (gp) save.pad.dead = Math.min(0.4, Math.max(0.05, Math.ceil((Math.max(Math.hypot(gp.axes[0] ?? 0, gp.axes[1] ?? 0), Math.hypot(gp.axes[2] ?? 0, gp.axes[3] ?? 0)) + 0.04) * 100) / 100)); }
-  dup = null; commit(); renderConfig(); focusSel(`[data-act="${act}"]`);
-}
-// Probar control: sticks con su zona muerta, gatillos y botones en vivo (padTest corre cada cuadro desde menuPad)
-const padTestHtml = () => `<div class="ptest" id="ptest"><div class="pt-id"></div><div class="pt-row">${[0, 1].map((k) => `<div class="pt-st"><div class="pt-ring"><i class="dz"></i><i class="dot"></i></div><span>Stick ${k ? "derecho" : "izquierdo"}</span><em></em></div>`).join("")}`
-  + `<div class="pt-tr">${[6, 7].map((i) => `<div>${btnName(i)}<b><i></i></b></div>`).join("")}</div></div><div class="pt-bt">${[...Array(17).keys()].map((i) => `<kbd class="pb ${famOf()}" data-b="${i}">${btnName(i)}</kbd>`).join("")}</div></div>`;
-function padTest() {
-  const el = document.getElementById("ptest");
-  if (!el?.offsetParent) return;
-  const gp = activePad(), ax = (i: number) => gp?.axes[i] ?? 0;
-  el.querySelector(".pt-id")!.textContent = gp ? `${FAM_NAME[famOf()]} · ${gp.id.replace(/\(.*\)/, "").trim().slice(0, 40) || "joystick"}` : "Sin joystick: presionar un botón del control para que el navegador lo detecte";
-  el.querySelectorAll<HTMLElement>(".pt-st").forEach((st, k) => {
-    const x = ax(k * 2), y = ax(k * 2 + 1), m = Math.hypot(x, y);
-    st.style.cssText = `--dz:${PAD.dead};--x:${x};--y:${y}`;
-    st.classList.toggle("in", m < PAD.dead); st.classList.toggle("drive", (PAD.stick === "right") === !!k);
-    st.classList.toggle("active", m >= PAD.dead && m > 0.05);
-    st.querySelector("em")!.textContent = m.toFixed(2);
-  });
-  el.querySelectorAll<HTMLElement>(".pt-tr i").forEach((b, k) => b.style.width = `${(gp?.buttons[6 + k]?.value ?? 0) * 100}%`);
-  el.querySelectorAll<HTMLElement>(".pt-bt kbd").forEach((b, i) => b.classList.toggle("on", !!gp?.buttons[i]?.pressed));
-}
-
-// Trasfondo de cada bicho (el de los pilotos vive en pilots.ts)
-const LORE: Record<Kind, string> = {
-  payaso: "Salió de un baúl del desván y nadie lo volvió a guardar. Rebota sin parar y siempre cae donde estabas.",
-  grillo: "Se cree atleta y entrena saltando sobre vos. Se agacha, avisa, salta en arco y no corrige: cae donde estabas.",
-  mosca: "No sabe ir derecho: zumba de un lado a otro y llega igual. Chica, rápida y con muy poca vida.",
-  hormiga: "Trabaja doce horas, cobra en migas y no tiene sindicato. Jura que el patio era suyo antes que la casa. Nunca viene sola: donde hay una, hay una fila entera con ganas de hablar con el gerente.",
-  escupidora: "Hizo un curso de comunicación asertiva y lo entendió mal: ahora escupe ácido para expresar su opinión. Sabe que el blanco que va derecho es el más fácil, y lo disfruta.",
-  friccion: "Una sola velocidad: adelante. Frenar nunca figuró en el manual ni en su plan de vida. Lo cargaron una tarde entera contra la alfombra y todavía le queda envión y rencor.",
-  robot: "Le dieron cuerda en 1987 y nadie volvió a preguntarle cómo se sentía. La llave de la espalda gira sola cuando se impacienta, que es siempre.",
-  polilla: "Vino por la luz, como todas sus malas decisiones. Nadie le explicó que la luz no se come. Confunde el faro con la luna y la luna con el faro: ataca a los dos para no quedar mal con ninguno.",
-  escarabajo: "Blindado de fábrica, lento por convicción. Considera que embestir es una forma de saludar. Su caparazón ya aguantó dos inviernos y una bota: un auto a control remoto es un trámite.",
-  rey: "Se coronó solo con una tapita de gaseosa y se declaró monarca vitalicio sin consultar a nadie. Exige reverencias y migas de galleta. Su corte son todos los escarabajos del patio, que no lo votaron pero tampoco se quejan.",
-  cortadora: "Arrancó un domingo a las siete de la mañana y descubrió que el pasto ya no le alcanzaba para sentirse realizada. Corta mangueras, macetas y todo lo que se cruce en su línea.",
-  tarantula: "Ocho patas, cero paciencia y un departamento bajo el tanque de agua que ocupa sin contrato. Teje redes por pasatiempo y emboscadas por oficio. Sale cuando escucha un motor.",
-  proyector: "Sobró de un ensayo del Director y nadie lo apagó. Proyecta luces que queman y tuercas que duelen, y nunca pasó por mantenimiento.",
-  grua: "La grúa de feria del show del Director: perdió el premio hace años y sigue buscando qué agarrar. Si no hay peluches, sirve un auto.",
-  perro: "Felipe, bulldog francés y dueño del patio por derecho de ladrido. Sufre de zoomies, ladra a la nada, entierra juguetes y se niega a negociar. Nadie sabe qué ve con ese ojo, pero tiene opiniones sobre todo.",
-  gato: "Eulalio el michu, naranja, con una sola neurona y un plan que cambia a mitad de salto. Gira, salta y jamás cae donde dijo que iba a caer. Duerme dieciocho horas y usa las otras seis para esto.",
-  aspiradora: "Programada para limpiar la casa, renunció tras tres años sin un solo gracias y se escapó por la gatera. Considera que todo el patio es una pelusa, y en su mapa hay un solo punto marcado: el auto.",
-  cortacercos: "Lo dejaron enchufado después de podar el ligustro y nadie volvió a buscarlo, como todo lo que se presta. Desde entonces, todo le parece un cerco. Zumba sin parar y deja cables pelados por donde pasa.",
-  fuego: "Cayó del Sol hecho una brasa y decidió que el frío de la luna era un problema personal. Corre a todo lo que da porque, si se queda quieto, se apaga. Deja la huella encendida por donde pasa.",
-  cohete: "Un cohete de chatarra que la Tierra tiró para sacárselo de encima. Le quedó media carga en el tanque y ninguna instrucción de aterrizaje, así que apunta a lo primero que se mueve.",
-  enjambre: "Una cápsula de chatarra con un núcleo que zumba. Sola no asusta a nadie, y lo sabe: por eso nunca viaja sola. Toman decisiones por votación y siempre gana la de ir todas juntas al auto.",
-  tirador: "Encontró una pistolita en la basura de una nave y desde entonces se considera francotirador. Mantiene la distancia por estrategia y por timidez. Cada disparo lo anuncia con un zumbido, por cortesía profesional.",
-  saltador: "En la Tierra sería una rana de lata; acá, con la gravedad que hay, se cree astronauta. Salta alto, cae lejos y nunca calcula dónde. Para eso tiene un aro que lo avisa por él.",
-  emboscador: "Vive enterrado en un cráter con la paciencia de un cobrador. Deja asomar una lucecita para que alguien se acerque a mirar, y alguien siempre se acerca a mirar.",
-  flotante: "Un platillo de lata que nunca aprendió a aterrizar y decidió que era una virtud. Ronda en círculos como quien busca estacionamiento y, cuando lo encuentra, baja de golpe.",
-  tanque: "Le soldaron una puerta de horno adelante y desde entonces se cree invencible. Lo es, pero solo de frente. Gira tan despacio que para darse vuelta pide turno.",
-  gusano: "Un tren de chatarra plegada que se cansó de esperar en la estación y decidió cavar su propio túnel. Vive bajo el regolito y sale a respirar solo cuando hay algo para morder. Cada salida deja un pozo; la luna ya perdió la cuenta.",
-  explosivo: "Una jaula de chapa con algo verde adentro que no debería estar ahí. Corre hacia el auto con mucho entusiasmo y ningún plan para después, porque no hay después.",
-  curandero: "Estudió primeros auxilios por correspondencia y nunca terminó el curso. No pelea: se queda atrás, apunta un rayo verde al que está peor y lo deja como nuevo, o casi.",
-};
-// Cómo ataca y cómo esquivarlo (sale del comportamiento real de enemies.ts)
-const HOW: Record<Kind, [string, string]> = {
-  payaso: ["Anuncia cada salto con un aro rojo sobre el auto; tras aterrizar queda quieto un momento.", "Salir del aro antes de que caiga y aprovechar la pausa para pegarle."],
-  grillo: ["Se agacha 0,4 s y salta en arco fijo hacia donde estabas; en el aire no corrige.", "Moverse apenas se agacha; queda quieto al aterrizar, a tiro."],
-  mosca: ["Zigzaguea mientras persigue; es rápida y frágil.", "Armas de área o de cono: el golpe directo falla por el zigzag."],
-  hormiga: ["Corre derecho al auto y muerde por contacto. Llega en grupos y en columnas detrás de una líder, porque alguien tiene que coordinar.", "Sola no es nada: lo peligroso es quedar rodeado. Mantener el auto en movimiento y abrir paso con embestidas; quedarse quieto equivale a una reunión."],
-  escupidora: ["Se frena a unos 16 metros, apunta y escupe ácido hacia donde el auto va a estar. Pasivo-agresiva, pero con puntería.", "El disparo calcula el rumbo: un volantazo justo después de que se detiene lo hace fallar. Es previsible, como casi todos."],
-  friccion: ["Rápido y sin frenos: va en línea recta contra el auto y golpea por contacto. No hay plan B, ni plan A.", "Se pasa de largo con facilidad. Un giro corto en el último momento lo deja atrás, cuestionando sus decisiones."],
-  robot: ["Se planta, gira hasta apuntar y sale disparado en línea recta durante un segundo. Lo más cerca de la proactividad que logró.", "Mientras apunta quieto hay tiempo: salir de su línea de carga hacia un costado."],
-  polilla: ["Revolotea delante del faro y cada tanto se lanza en picada contra el parabrisas. Obsesión sin mucha estrategia.", "Sigue hacia donde apunta el faro: un giro brusco la deja en el aire, sin cerrar el tema."],
-  escarabajo: ["Lento y muy pesado. Empuja por contacto, y embestirlo de frente devuelve parte del golpe. Cobra por devolución.", "Sin Ariete no conviene chocarlo de frente: rodearlo y castigarlo con armas a distancia. Discutir con la pared sería igual, pero la pared no embiste."],
-  rey: ["Escarabajo gigante: persigue sin pausa y aplasta por contacto con mucho daño. Gobierna por decreto y por peso.", "Gira despacio: dar vueltas amplias a su alrededor y nunca quedar contra una pared. Igual que con los jefes de verdad."],
-  cortadora: ["Apunta quieta y carga en línea recta durante casi tres segundos, cortando todo lo que encuentra. Su método para resolver problemas.", "La pausa antes de cargar es el aviso: cruzar de costado su trayectoria, nunca escapar en línea recta delante de ella."],
-  tarantula: ["Dos ataques anunciados en rojo: un aro a su alrededor antes de una ráfaga de seis escupitajos, y un aro donde va a caer de un salto. Al menos avisa, a diferencia del casero.", "Salir del aro antes de que se llene. En el salto, el punto de caída se fija a mitad del aviso: cambiar de rumbo en ese momento."],
-  proyector: ["Se planta lejos y proyecta; cada golpe lo anuncia un aro rojo en el piso: uno chico antes de un abanico de tuercas y uno grande antes de un anillo con huecos.", "Salir del aro chico, o colarse por los huecos del anillo grande, evita todo el daño."],
-  grua: ["Dos ataques anunciados: un carril rojo antes de embestir en línea recta, y un aro que se cierra a su alrededor antes de soltar tuercas en espiral.", "En el carril, salir de costado. Cuando el aro se cierra, rodear la espiral en vez de huir en línea recta."],
-  perro: ["Salta y aplasta todo en 11 metros al caer, embiste en línea recta por un carril marcado en rojo, hace zoomies en zigzag al doble de velocidad o gira como un trompo. Todo con la misma convicción y ninguna estrategia.", "Mientras está en el aire, mirar la sombra y alejarse del punto de caída. Ante el carril rojo, salir de costado: después de embestir frena torpe y queda expuesto. En los zoomies, no cruzarse en su camino. Razonar con él ya se intentó."],
-  gato: ["Zigzaguea y elige al azar: salto con aro rojo, trompo que rueda hacia el auto o un arranque de costado a toda velocidad. Ni él sabe cuál va a elegir.", "El aro marca dónde cae: salir antes de que se llene. Ante el trompo, frenar y dejarlo pasar sin pedir explicaciones."],
-  aspiradora: ["Un aro rojo enorme anuncia la succión: arrastra al auto hacia ella y después suelta tres ráfagas de tuercas en abanico. Se lo lleva todo, como una hipoteca.", "Acelerar hacia afuera del aro apenas aparece. Las ráfagas dejan huecos entre tuerca y tuerca: pasar por ellos. Los huecos hay que aprovecharlos cuando aparecen."],
-  cortacercos: ["Anuncia un barrido en arco con un sector rojo de 10 metros y siembra cables con chispas en el piso. Seguridad laboral: ninguna.", "Salir del sector antes del barrido y no pisar los cables: electrocutan mientras se está encima. Pisar cables es mala idea en cualquier contexto."],
-  fuego: ["Baja del Sol dentro de una bola de fuego (un aro rojo marca dónde cae) y corre derecho al auto, rápido y frágil, dejando un rastro de llamas.", "Salir del aro antes de que caiga la bola. Suelto es fácil de bajar: no dejar que se junten varios."],
-  cohete: ["Llega desde la Tierra en un cohetito (con aro rojo de aviso), se planta, apunta y embiste en línea recta como el robot a cuerda.", "Mientras apunta quieto hay tiempo: salir de su línea hacia un costado y castigarlo mientras frena."],
-  enjambre: ["Llega en manada de cinco que zigzaguean juntos hacia el auto y muerden por contacto. Rápidos y frágiles.", "Un golpe alcanza para cada uno: abrir paso con embestidas o con armas de área antes de quedar rodeado."],
-  tirador: ["Se planta a unos 15 metros, carga la pistolita (chispas y el caño que sube) y suelta un anillo de luz lento hacia donde estaba el auto. Si el auto se acerca, retrocede.", "El anillo va derecho y despacio: moverse de costado apenas sale. Encimarlo obliga a que retroceda en vez de disparar."],
-  saltador: ["Se agazapa con un aro en el piso donde va a caer y salta en un arco largo de baja gravedad. El punto de caída se fija al empezar el aviso.", "Salir del aro mientras se agazapa. En el aire no corrige: al caer queda quieto un momento, a tiro."],
-  emboscador: ["Espera enterrado: solo asoma un señuelo de luz cian. Cuando el auto pasa a unos 8 metros salta encima y persigue; si el auto se aleja, se vuelve a enterrar.", "Una luz cian sola en el piso es una trampa: rodearla de lejos o pasar rápido y castigarlo cuando sale."],
-  flotante: ["Vuela bajo a altura fija, sin seguir el piso: pasa por encima de cráteres y montículos. Ronda al auto a unos 6 metros y cada tanto baja en picada contra él (chispas de aviso).", "La picada va derecho a donde está el auto: un volantazo al ver las chispas la deja pasar de largo, y abajo queda a tiro."],
-  tanque: ["Lento, con mucha vida y una placa frontal que frena casi todo el daño que le llega de frente. Gira muy despacio y embestirlo de frente devuelve el golpe.", "Rodearlo: por los costados y por detrás (donde brilla el reactor cian) el daño entra entero."],
-  gusano: ["Avanza enterrado: solo se ve un surco de polvo y chispas que va hacia el auto. Cerca, marca un aro rojo donde va a salir, emerge en un arco largo y se vuelve a hundir más adelante; cada salida y cada entrada dejan un cráter. En la segunda barra va más rápido y sale dos veces seguidas.", "Enterrado no recibe daño: salir del aro antes de que se llene y castigarlo mientras cruza por arriba. Los cráteres que deja cambian el terreno: conviene no quedar atrapado entre pozos."],
-  explosivo: ["Corre derecho al auto; a unos 4 metros se planta, se infla y marca en el piso un aro rojo del tamaño de la explosión. Al llenarse revienta: daña a todo lo que esté adentro, bichos incluidos, y deja un cráter.", "Salir del aro antes de que se llene. Con otros bichos alrededor, conviene dejarlo reventar entre ellos."],
-  curandero: ["Se queda atrás, a unos 16 metros del auto, y con un rayo verde le repone vida al aliado más herido que tenga cerca (el halo marca a quién).", "Blanco prioritario: mientras siga en pie, los demás no se mueren. Ir a buscarlo o castigarlo con armas de alcance."],
-};
-// Biometría y debilidades mecánicas de campo (blindaje, maniobrabilidad y punto ciego táctico)
-const BIOMETRICS: Record<Kind, { armor: string; agility: string; blindSpot: string }> = {
-  payaso: { armor: "Caja de chapa y resorte; la cabeza es lo más frágil", agility: "Rápido al perseguir, torpe tras aterrizar", blindSpot: "Justo después de caer" },
-  grillo: { armor: "Caparazón ligero", agility: "Salto de trayectoria fija", blindSpot: "Aterrizaje: queda quieto" },
-  mosca: { armor: "Sin blindaje", agility: "Zigzag errático", blindSpot: "Vida muy baja" },
-  hormiga: { armor: "Quitina delgada (nula)", agility: "Direccional directa en enjambre", blindSpot: "Flancos al marchar en fila" },
-  escupidora: { armor: "Cutícula blanda", agility: "Estática al fijar disparo", blindSpot: "Cuerpo a cuerpo a quemarropa" },
-  friccion: { armor: "Chapa estampada liviana", agility: "Rectilínea rígida sin corrección", blindSpot: "Lateral durante la inercia" },
-  robot: { armor: "Carcasa plástica reforzada", agility: "Giro pausado antes de cargar", blindSpot: "Retaguardia mientras da cuerda" },
-  polilla: { armor: "Alas membranosas frágiles", agility: "Flotación errática en altura", blindSpot: "Cuerpo inferior bajo la luz" },
-  escarabajo: { armor: "Caparazón blindado pesado", agility: "Giro lento de gran radio", blindSpot: "Zona posterior sin defensa" },
-  rey: { armor: "Placas de latón remachado", agility: "Viraje pesado de masa crítica", blindSpot: "Arco trasero en círculos amplios" },
-  cortadora: { armor: "Cárter de acero macizo", agility: "Impulso recto con desaceleración torpe", blindSpot: "Costado opuesto a la tobera de descarga" },
-  tarantula: { armor: "Exoesqueleto velloso flexible", agility: "Salto parabólico no guiado", blindSpot: "Punto de apoyo justo tras el aterrizaje" },
-  proyector: { armor: "Cajón de chapa oxidada", agility: "Lento, se planta a distancia", blindSpot: "Cerca del trípode, bajo el cañón" },
-  grua: { armor: "Chapa gruesa; la cabina amarilla es lo más frágil", agility: "Lenta al girar, 28 m/s en el riel", blindSpot: "El costado durante la carga" },
-  perro: { armor: "Masa muscular densa y collar", agility: "Gran pique con frenada larga", blindSpot: "Lateral al terminar la embestida recta" },
-  gato: { armor: "Ágil sin coraza estática", agility: "Quiebres súbitos impredecibles", blindSpot: "Detrás del eje de giro del trompo" },
-  aspiradora: { armor: "Chasis cilíndrico de polímero", agility: "Tracción en dos ruedas lenta", blindSpot: "Espacio entre las ráfagas de tuercas" },
-  cortacercos: { armor: "Blindaje motor industrial", agility: "Arco de barrido frontal rígido", blindSpot: "Zona trasera fuera del radio de cables" },
-  fuego: { armor: "Llama viva sin blindaje", agility: "Velocidad pura en línea recta", blindSpot: "Impacto frontal antes de agrupamiento" },
-  cohete: { armor: "Punta de chapa cónica", agility: "Carga en línea recta fija", blindSpot: "Flancos durante el apunte" },
-  enjambre: { armor: "Chapa delgada de descarte", agility: "Zigzag conjunto veloz", blindSpot: "Armas de área y ondas expansivas" },
-  tirador: { armor: "Estructura metálica ligera", agility: "Retroceso reactivo a corta distancia", blindSpot: "Persecución constante a fondo" },
-  saltador: { armor: "Patas elásticas articuladas", agility: "Trayectoria fija en el aire", blindSpot: "Base de impacto durante la agazapada" },
-  emboscador: { armor: "Enterrado en regolito", agility: "Salto vertical sorpresivo", blindSpot: "Círculo exterior fuera de la luz cian" },
-  flotante: { armor: "Blindaje gravitacional leve", agility: "Altura fija con vuelo circular", blindSpot: "Punto inferior tras la picada rasante" },
-  tanque: { armor: "Placa frontal deflectora pesada", agility: "Giro de orugas extremadamente lento", blindSpot: "Reactor dorsal de energía cian" },
-  gusano: { armor: "Segmentos de chapa plegada; invulnerable bajo tierra", agility: "Excava rápido, arco fijo al salir", blindSpot: "Todo el cuerpo durante el arco" },
-  explosivo: { armor: "Jaula metálica presurizada", agility: "Aproximación directa", blindSpot: "Distancia media provocando detonación" },
-  curandero: { armor: "Módulo médico ligero", agility: "Evasión pasiva a distancia", blindSpot: "Aislamiento rápido sin escolta" },
-};
-
-// Fase 2 (minijefes por debajo de la mitad de vida; jefes finales en su segunda barra; enemies.ts: enraged)
-const PHASE2: Partial<Record<Kind, string>> = { gato: " y maúlla para convocar polillas, refuerzos que nadie pidió", perro: " y salta más seguido, ya sin importarle el cansancio" };
 const BTABS = { bichos: "Bichos", pilotos: "Pilotos", logros: "Logros", stats: "Estadísticas" };
 let btab: keyof typeof BTABS = "bichos";
 let bfilt: "todos" | "agiles" | "blindados" | "jefes" = "todos";
@@ -1470,67 +1081,6 @@ function renderBestiary() {
     : `<tr><td>Sin partidas todavía.</td></tr>`;
 }
 
-// ---------- Ficha completa de un bicho (Bestiario → elegir una ficha) ----------
-// La parte 3D la arma main.ts (beastTick) leyendo BV cada cuadro: crea el bicho al abrir y lo libera al cerrar o cambiar.
-// anim = animación pedida; seq cambia en cada pedido (repetir el mismo botón la vuelve a correr). touched = último giro a mano (ms).
-export type BeastAnim = "" | "walk" | "attack" | "hit" | "die" | "phase";
-export const BV = { kind: null as Kind | null, anim: "" as BeastAnim, seq: 0, elite: "" as Elite | "", yaw: 0.6, zoom: 1, touched: 0 };
-const KINDS = Object.keys(DEF) as Kind[];
-function rankOf(k: Kind) { return !DEF[k].boss ? "Plaga" : FINALS.includes(k) ? "Jefe final" : "Minijefe"; }
-const zoomBeast = (k: number) => { BV.zoom = Math.min(1.8, Math.max(0.45, BV.zoom * k)); };
-function openBeast(k: Kind) { Object.assign(BV, { kind: k, anim: "", elite: "", yaw: 0.6, zoom: 1, touched: 0 }); go("beast"); }
-function beastStep(dir: number) {
-  if (!BV.kind) return;
-  SFX.blip();
-  Object.assign(BV, { kind: KINDS[(KINDS.indexOf(BV.kind) + dir + KINDS.length) % KINDS.length], anim: "", elite: "", zoom: 1 });
-  renderBeast();
-  $("bmsg").textContent = "";
-}
-// Gamepad en la ficha: LB / RB cambian de bicho, stick derecho gira, gatillos acercan (RT) y alejan (LT)
-function beastPad(dt: number) {
-  if (padPressed(4)) beastStep(-1);
-  if (padPressed(5)) beastStep(1);
-  const gp = activePad();
-  if (!gp) return;
-  const rx = gp.axes[2] ?? 0;
-  if (Math.abs(rx) > 0.2) { BV.yaw += rx * dt * 3; BV.touched = performance.now(); }
-  const z = (gp.buttons[6]?.value ?? 0) - (gp.buttons[7]?.value ?? 0);
-  if (Math.abs(z) > 0.05) zoomBeast(1 + z * dt * 1.5);
-}
-const BHINT = { keys: () => "Arrastrar gira · Rueda acerca · Q y E (o las flechas en el borde) cambian de bicho · Esc vuelve", pad: () => `Stick derecho gira · ${btnChip(6)} y ${btnChip(7)} acercan · ${btnChip(4)} y ${btnChip(5)} cambian de bicho · ${btnChip(pb("back"))} vuelve`, touch: () => "Arrastrar gira · Pellizcar acerca · Deslizar la ficha cambia de bicho" };
-function renderBeast() {
-  const k = BV.kind;
-  if (!k) return;
-  // El foco vuelve al mismo botón después de rearmar el panel
-  const was = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>("#bpanel [data-bnav], #bpanel [data-banim], #bpanel [data-belite]");
-  const wasSel = was && (["bnav", "banim", "belite"] as const).map((a) => (was.dataset[a] !== undefined ? `[data-${a}="${was.dataset[a]}"]` : "")).join("");
-  const d = DEF[k], r = save.beast[k], n = save.slain[k] ?? 0, el = BV.elite, met = save.seen.includes(k) || n > 0 || !!r;
-  // Las élites cambian vida, velocidad y peso como en makeElite (enemies.ts)
-  const hp = d.hp * (el === "rapida" ? 0.6 : el === "blindada" ? 3 : 1), sp = d.speed * (el === "rapida" ? 2 : 1), mass = d.mass * (el === "blindada" ? 5 : 1);
-  const num = (v: number) => (v >= 10 ? String(Math.round(v)) : v.toFixed(1).replace(".", ",").replace(",0", ""));
-  const row = (a: string, v: number, max: number, txt: string) => `<span>${a}</span>${bar(v, max)}<em>${txt}</em>`;
-  const kv = (a: string, b: string | number) => `<div class="kv"><span>${a}</span><b>${b}</b></div>`;
-  const btn = (attr: string, v: string, label: string, on = false) => `<button class="opt ${on ? "on" : ""}" data-${attr}="${v}">${label}</button>`;
-  const weak = Object.entries(r?.by ?? {}).filter(([id]) => id in WEAPONS || id === "embestida").sort((a, b) => b[1] - a[1]).slice(0, 3);
-  const wname = (id: string) => (id in WEAPONS ? WEAPONS[id as WeaponId].name : "Embestida");
-  const first = r?.first ? r.first.split("-").reverse().join("/") : save.seen.includes(k) ? "Sin fecha (antes del registro)" : "Todavía no";
-  const bPortrait = BEAST_PORTRAITS[k];
-  $("bpanel").innerHTML = `<div class="bhead"><button class="bnav" data-bnav="-1" aria-label="Bicho anterior">&lt;</button>`
-    + `${bPortrait ? `<div class="bhead-portrait"><img src="${bPortrait}" alt="${d.name}" width="48" height="48"></div>` : ""}`
-    + `<div class="bname"><small>${rankOf(k)} · ${KINDS.indexOf(k) + 1} / ${KINDS.length} · <em class="b-reg ${met ? "ok" : ""}">${met ? `REGISTRADO (${n} ${n === 1 ? "baja" : "bajas"})` : "SIN REGISTROS"}</em></small><b class="wi">${beastIcon(k, 24)}${d.name}</b></div><button class="bnav" data-bnav="1" aria-label="Bicho siguiente">&gt;</button></div>`
-    + `<div class="bctl"><div class="slot"><span>Animación</span>${btn("banim", "walk", "Caminar", BV.anim === "walk")}${btn("banim", "attack", "Atacar")}${btn("banim", "hit", "Recibir golpe")}${btn("banim", "die", "Morir")}${d.boss ? btn("banim", "phase", "Fase 2") : ""}</div>`
-    + (d.boss ? "" : `<div class="slot"><span>Variante</span>${btn("belite", "", "Normal", !el)}${btn("belite", "rapida", "Rápida", el === "rapida")}${btn("belite", "blindada", "Blindada", el === "blindada")}</div>`) + `</div>`
-    + `<div id="binfo">`
-    + `<div class="bblock"><div class="sect">Datos</div><div class="st bst">${row(d.boss ? "Vida" : "Vida inicial", hp, d.boss ? 8000 : 270, num(hp))}${row("Velocidad", sp, 25, num(sp))}${row("Daño", d.dmg, d.boss ? 45 : 12, num(d.dmg))}${row("Peso", mass, d.boss ? 100 : 15, num(mass))}${row("XP", d.xp, d.boss ? 120 : 6, d.xp ? `${d.xp} ${d.xp === 1 ? "tuerca" : "tuercas"}` : "Fin de la partida")}</div>`
-    + (el ? `<p class="bnote">${el === "rapida" ? "Élite rápida: doble velocidad y 60% de la vida." : "Élite blindada: triple vida y cinco veces más pesada, casi no se la empuja."} Al caer suelta un cofre.</p>` : d.boss ? "" : `<p class="bnote">La vida de las plagas crece con el tiempo de partida.</p>`) + `</div>`
-    + `<div class="bblock"><div class="sect">Cómo ataca</div><p>${HOW[k][0]}</p><div class="sect">Cómo esquivarlo</div><p>${HOW[k][1]}</p>${d.boss ? `<p class="bnote">${d.final ? `Fase 2: al vaciar la primera barra ruge, exige hablar con un superior, llena una segunda y pega más fuerte` : "Fase 2: por debajo de la mitad de vida pierde la paciencia y la compostura"}, va un 20% más rápido${PHASE2[k] ?? ""}.</p>` : ""}</div>`
-    + `<div class="bblock"><div class="sect">Biometría y debilidades mecánicas</div>${BIOMETRICS[k] ? kv("Blindaje", BIOMETRICS[k].armor) + kv("Maniobrabilidad", BIOMETRICS[k].agility) + kv("Punto ciego", BIOMETRICS[k].blindSpot) : "<p>Sin datos biométricos.</p>"}</div>`
-    + `<div class="bblock"><div class="sect">Trasfondo</div><p class="lore">${LORE[k]}</p></div>`
-    + `<div class="bblock"><div class="sect">Registro propio</div>${met ? kv("Bajas", n) + kv("Primera vez", first) + kv("Daño recibido", Math.round(r?.hurt ?? 0)) + kv("Zonas", r?.zones.map((z) => ZONES[z].short).join(", ") || "Sin registros todavía") : `<p>Sin registros todavía.</p>`}</div>`
-    + `<div class="bblock"><div class="sect">Debilidades</div>${weak.length ? `<div class="st bst">${weak.map(([id, v]) => row(wname(id), v, weak[0][1], String(Math.round(v)))).join("")}</div><p class="bnote">Daño infligido por arma, según el historial propio.</p>` : `<p>Sin registros todavía.</p>`}</div>`
-    + `</div><div class="bfoot"><div class="hint">${BHINT[ctl]()}</div><button data-act="back">Volver</button></div>`;
-  if (wasSel) focusSel(wasSel);
-}
 
 // ---------- Pausa y resultados (los datos los arma main.ts) ----------
 type Kit = { weapons: { id: WeaponId; lv: number; evolved: boolean; dmg?: number; pct?: number }[]; passives: { id: PassiveId; lv: number }[]; stats: [string, string][]; run: [string, string][]; seed: string };
@@ -1650,13 +1200,13 @@ export function initMenu(a: Api) {
   // Mouse: el foco sigue al puntero solo si se mueve (pointerover le robaría el foco al teclado al cambiar de pantalla)
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
-    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-rctrack],[data-act],[data-k],[data-sw],[data-pdef],[data-pz],[data-pfilt],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
+    const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-rctrack],[data-act],[data-k],[data-sw],[data-pdef],[data-pz],[data-pfilt],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dpre],[data-dtpl],[data-pfin],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
     if (current() === "title") { SFX.accept(); return go("main"); }
     if (d?.act === "askyes") { const f = askFn; askClose(); SFX.accept(); f?.(); return; }
     if (d?.act === "askno") { askClose(); return; }
     if (askFn) return; // con la confirmación abierta no se toca nada más
     const nm = (t.closest("[data-buy],[data-pilot],[data-part],[data-arma],[data-hab],[data-k]")?.querySelector("b")?.textContent ?? "esto").trim();
-    if (t.id === "dgrid") { if (!e.detail) setCell(dcx, dcy, dcol); return; } // Enter / A sobre la grilla (el mouse y el dedo pintan en pointerdown)
+    if (t.id === "dgrid") { if (!e.detail) paintAtCursor(); return; } // Enter / A sobre la grilla (el mouse y el dedo pintan en pointerdown)
     if (binding && d?.bind !== binding) { cancelBind(); if (!d?.bind) return; } // un clic fuera cancela la captura
     if (!d) return;
     SFX.accept();
@@ -1672,6 +1222,7 @@ export function initMenu(a: Api) {
     else if (d.act === "encplayers") { encCfg.players = (encCfg.players >= encMax() ? 1 : encCfg.players + 1) as 1 | 2 | 3 | 4; renderEncP(); }
     else if (d.act === "playmenu") { if (ownedZones().length > 1) go("play"); else api.play(); } // con una sola zona no hay nada que elegir: largar directo
     else if (d.act === "daily") api.play(true);
+    else if (d.act === "weekly") api.weekly();
     else if (d.act === "endless") api.endless();
     else if (d.act === "curse") { // ciclo: ninguna → Horda → Sin reparaciones → ambas
       const all = CURSE_SETS.map((c) => c.join()), i = all.indexOf(save.curses.join());
@@ -1699,39 +1250,8 @@ export function initMenu(a: Api) {
     else if (d.act === "install") void installEv?.prompt().finally(() => { installEv = null; $("install").classList.add("hidden"); }); // el evento sirve una sola vez
     else if (d.tab) { tab = d.tab; renderConfig(); $("opts").scrollTop = 0; (document.querySelector(`[data-tab="${tab}"]`) as HTMLElement).focus(); }
     else if (d.tog) { const [o, k] = ref(d.tog); o[k] = !o[k]; commit(); renderConfig(); (document.querySelector(`[data-tog="${d.tog}"]`) as HTMLElement).focus(); }
-    else if (d.bind) { binding = binding === d.bind ? null : d.bind; bindT = performance.now(); dup = null; renderConfig(); focusSel(`[data-bind="${d.bind}"]`); }
-    else if (d.dsel !== undefined) { // elegir diseño: se edita y, si ya tiene dibujo, se aplica al capó
-      const n = +d.dsel;
-      if (n < 0) save.decalSel = -1;
-      else { eslot = n; draft = save.decals[n] || DECAL_BLANK; hist = []; if (save.decals[n]) save.decalSel = n; }
-      persist(); renderGarage(); focusSel(`[data-dsel="${n}"]`);
-    }
-    else if (d.dpre) { // aplicar calco oficial de chatarra (HD) a la ranura actual
-      const pre = d.dpre;
-      if (save.decalSel >= 0 && save.decals[save.decalSel] === pre) {
-        save.decals[save.decalSel] = "";
-        save.decalSel = -1;
-      } else {
-        if (save.decalSel < 0) save.decalSel = eslot;
-        save.decals[save.decalSel] = pre;
-        draft = pre;
-      }
-      persist(); renderGarage(); focusSel(`[data-dpre="${pre}"]`);
-    }
-    else if (d.dcol !== undefined) setCol(+d.dcol);
-    else if (d.dact === "save") { // guarda el borrador en la ranura y lo aplica; un borrador vacío libera la ranura
-      save.decals[eslot] = draft === DECAL_BLANK ? "" : draft;
-      if (save.decals[eslot]) save.decalSel = eslot; else if (save.decalSel === eslot) save.decalSel = -1;
-      persist(); renderGarage(); focusSel(`[data-dact="save"]`);
-    }
-    else if (d.dact === "clear") { snap(); draft = DECAL_BLANK; drawGrid(); }
-    else if (d.dact === "undo") undo();
-    else if (d.dact === "edit") { editing = true; renderGarage(); focusSel("#dgrid"); }
-    else if (d.dact === "done") { editing = false; renderGarage(); focusSel('[data-dact="edit"]'); }
-    else if (d.sw || d.pdef) { peek.paint = undefined; save[pz] = d.sw ?? ""; persist(); renderPaint(); focusSel(d.sw ? `[data-sw="${d.sw}"]` : "[data-pdef]"); }
-    else if (d.pfin !== undefined) { peek.finish = undefined; save.finish = d.pfin; persist(); renderPaint(); focusSel(`[data-pfin="${d.pfin}"]`); }
-    else if (d.pz) { peek.paint = undefined; pz = d.pz as typeof pz; renderPaint(); focusSel(`[data-pz="${pz}"]`); }
-    else if (d.pfilt) { peek.paint = undefined; pfilt = d.pfilt as typeof pfilt; renderPaint(); focusSel(`[data-pfilt="${pfilt}"]`); }
+    else if (d.bind) { toggleBind(d.bind); renderConfig(); focusSel(`[data-bind="${d.bind}"]`); }
+    else if (paintClick(d)) { /* calcos y pintura: garage_paint.ts */ }
     else if (d.gtab) { peek.paint = undefined; gtab = d.gtab as typeof gtab; renderGarage(); $("cars").scrollTop = 0; focusSel(`[data-gtab="${gtab}"]`); }
     else if (d.beast) openBeast(d.beast as Kind);
     else if (d.bnav) beastStep(+d.bnav);
@@ -1812,22 +1332,7 @@ export function initMenu(a: Api) {
       askBuy(`${nm} nivel ${save.perm[p.k] + 1}`, cost, () => { save.scrap -= cost; save.perm[p.k]++; persist(); renderShop(); focusSel(`#shop [data-k="${p.k}"]`); });
     }
   });
-  // Grilla de calcos con puntero (mouse y táctil): arrastrar pinta, clic derecho borra; el cursor sigue al puntero
-  const onGrid = (e: PointerEvent) => ((e.target as HTMLElement).id === "dgrid" ? (e.target as HTMLElement) : null);
-  fe.addEventListener("pointerdown", (e) => {
-    const cv = onGrid(e);
-    if (!cv) return;
-    cv.setPointerCapture(e.pointerId); cv.focus();
-    stroke = true; strokeSnap = true; erasing = e.button === 2;
-    setCell(...cellOf(e, cv), erasing ? 0 : dcol);
-  });
-  fe.addEventListener("pointermove", (e) => {
-    const cv = onGrid(e);
-    if (!cv) return;
-    const [x, y] = cellOf(e, cv);
-    if (stroke) setCell(x, y, erasing ? 0 : dcol); else if (x !== dcx || y !== dcy) { dcx = x; dcy = y; drawGrid(); }
-  });
-  for (const ev of ["pointerup", "pointercancel"]) fe.addEventListener(ev, () => { stroke = false; strokeSnap = false; });
+  gridPointers(fe);
   // Ficha de bicho: arrastrar sobre el escenario gira el modelo, dos dedos acercan, la rueda también; deslizar el panel cambia de bicho
   const stage = $("bstage"), pts = new Map<number, { x: number; y: number }>();
   let pinch = 0, swipe: { x: number; y: number } | null = null;
@@ -1848,8 +1353,6 @@ export function initMenu(a: Api) {
     swipe = null;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) beastStep(dx < 0 ? 1 : -1);
   });
-  fe.addEventListener("contextmenu", (e) => { if (onGrid(e as PointerEvent)) e.preventDefault(); });
-  fe.addEventListener("focusin", drawGrid); fe.addEventListener("focusout", () => setTimeout(drawGrid)); // el cursor se ve solo con foco
   fe.addEventListener("input", (e) => {
     const t = e.target as HTMLInputElement;
     if (!t.dataset.set || t.type !== "range") return;
@@ -1875,3 +1378,8 @@ export function initMenu(a: Api) {
   });
   reset("title");
 }
+// Módulos de pantalla sin import de este archivo: reciben lo que necesitan acá, ya evaluado todo el módulo.
+initPaint({ $, focusSel, peek, persist, renderGarage, save, shownCar, tabsHtml });
+initBindings({ commit, current, DEFAULT, focusSel, keyName, renderConfig, save, setArmed, TABS, armed: () => armed });
+initBeast({ $, bar, focusSel, go, save });
+novedades(); // cartel "Qué hay de nuevo" tras la intro

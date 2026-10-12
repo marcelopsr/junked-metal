@@ -54,10 +54,18 @@ export const me = () => authGet<Me>("/api/me");
 /** GET /api/daily: fecha y semilla oficiales del desafío (null sin servidor/sesión/red; el cliente cae a su semilla local). */
 export const daily = () => authGet<{ date: string; seed: number }>("/api/daily");
 /** GET /api/ranking/semanal: top 20 desde el lunes 00:00 UTC (null sin servidor/sesión/red). */
+/** GET /api/weekly: semana (lunes UTC), semilla y regla del desafío semanal. */
+export const weekly = () => authGet<{ week: string; seed: number; regla: string }>("/api/weekly");
+export const weeklyRanking = () => authGet<{ week: string; regla: string; board: { name: string; score: number }[] }>("/api/weekly/ranking");
 export const rankingSemanal = () => authGet<{ name: string; score: number }[]>("/api/ranking/semanal");
+export const endlessRanking = () => authGet<{ board: { name: string; score: number }[]; mine: { name: string; score: number; rank: number } | null }>("/api/endless/ranking");
 export type Logro = { id: string; name: string; done: boolean; progress: number; goal: number };
 /** GET /api/me/logros: logros online del usuario (null sin servidor/sesión/red). */
 export const misLogros = () => authGet<Logro[]>("/api/me/logros");
+export type Partida = { at: number; modo?: string; kills?: number; tiempo?: number; auto?: boolean; victoria: boolean };
+export const miHistorial = () => authGet<Partida[]>("/api/me/historial");
+export type Perfil = { alias: string; records: { modes: { mode: string; played: number; won: number; bestTime: number | null }[]; encore: { loop: number; stage: number; t: number; win: boolean } | null }; logros: Logro[] };
+export const perfil = (alias: string) => authGet<Perfil>("/api/perfil/" + encodeURIComponent(alias));
 export const myStats = () => authGet<MyStats>("/api/me/stats");
 /** POST /api/alias: devuelve null si se guardó, o el motivo del servidor. */
 export async function setAlias(alias: string): Promise<string | null> {

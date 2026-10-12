@@ -1,6 +1,7 @@
 // T59 modo foto: desde la pausa (tecla F o botón "Foto") oculta HUD/menú y orbita la cámara al auto; C captura PNG; Esc vuelve a la pausa.
 // main.ts solo llama photoApply(cam, p) cada cuadro tras posicionar la cámara; al salir la cámara normal retoma sola.
 import * as B from "./bjs";
+import { sharePng } from "./share";
 
 let on = false, az = 0, el = 0.5, rad = 15, canvas: HTMLCanvasElement, ui: HTMLElement;
 const css = document.createElement("style");
@@ -12,20 +13,23 @@ export function photoApply(cam: B.FreeCamera, p: B.Vector3) {
   cam.position.set(p.x + rad * Math.cos(el) * Math.sin(az), p.y + 1 + rad * Math.sin(el), p.z + rad * Math.cos(el) * Math.cos(az));
   cam.setTarget(new B.Vector3(p.x, p.y + 0.8, p.z));
 }
-function shoot() { // canvas.toBlob: sin preserveDrawingBuffer hay que pedirlo justo tras render, por eso se espera al próximo cuadro
+let onShot: (() => void) | undefined;
+function shoot(share = false) {
+  onShot?.(); // canvas.toBlob: sin preserveDrawingBuffer hay que pedirlo justo tras render, por eso se espera al próximo cuadro
   const sc = (window as unknown as { __scene?: B.Scene }).__scene;
-  const go = () => canvas.toBlob((b) => { if (!b) return; const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `rc_fight_${Date.now()}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }, "image/png");
+  const go = () => canvas.toBlob((b) => { if (!b) return; if (share) { void sharePng(b, `rc_fight_${Date.now()}.png`); return; } const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `rc_fight_${Date.now()}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }, "image/png");
   if (sc) sc.onAfterRenderObservable.addOnce(go); else go();
 }
-export function initPhoto(o: { scene: B.Scene; canvas: HTMLCanvasElement; inPause(): boolean }) {
-  canvas = o.canvas; (window as unknown as { __scene?: B.Scene }).__scene = o.scene;
+export function initPhoto(o: { scene: B.Scene; canvas: HTMLCanvasElement; inPause(): boolean; onShot?(): void }) {
+  canvas = o.canvas; onShot = o.onShot; (window as unknown as { __scene?: B.Scene }).__scene = o.scene;
   ui = document.createElement("div"); ui.id = "photoUi";
-  ui.innerHTML = '<button id="photoShot">Capturar (C)</button><button id="photoBack">Salir (Esc)</button>';
+  ui.innerHTML = '<button id="photoShot">Capturar (C)</button><button id="photoShare">Compartir</button><button id="photoBack">Salir (Esc)</button>';
   document.body.append(ui);
   const exit = () => { on = false; document.body.classList.remove("photo"); };
   const enter = () => { if (o.inPause()) { on = true; document.body.classList.add("photo"); } };
   document.getElementById("photoBtn")?.addEventListener("click", enter);
-  document.getElementById("photoShot")!.onclick = shoot;
+  document.getElementById("photoShot")!.onclick = () => shoot();
+  document.getElementById("photoShare")!.onclick = () => shoot(true);
   document.getElementById("photoBack")!.onclick = exit;
   addEventListener("keydown", (e) => {
     if (!on) { if (e.code === "KeyF" && !e.repeat) enter(); return; }

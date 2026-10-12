@@ -17,6 +17,8 @@ const P: Record<string, string> = {
   bocina: `<path d="M4 9.5v5h3.5L13 19V5L7.5 9.5H4Z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>`,
   tuercas: `<path d="M12 3.5 19 7.5v9l-7 4-7-4v-9Z"/><circle cx="12" cy="12" r="3"/>`,
   bobinas: `<path d="M7 5h10M7 19h10"/><path d="M8 5c0 2 8 2 8 4s-8 2-8 4 8 2 8 4"/><path d="M12 19v2"/>`,
+  ventilador: `<circle cx="12" cy="10" r="7"/><path d="M12 10l3-4M12 10l-4 1M12 10l1 4.5"/><path d="M12 17v4M8 21h8"/>`,
+  canicas: `<circle cx="9" cy="14" r="4.5"/><circle cx="17" cy="8" r="3"/><path d="M7 12.5a3 3 0 0 1 2-1.5"/>`,
   trompo: `<path d="M12 2.5v3"/><path d="M5 8h14l-5.2 10h-3.6Z"/><path d="M12 18v3.5M8 11.5h8"/>`,
   // Fusiones
   yoyoelec: `<path d="M9.5 2.5v5"/><circle cx="9.5" cy="14" r="6"/><circle cx="9.5" cy="14" r="1.6"/><path d="M19.5 3 16.5 8.5h3.5l-3 5.5"/>`,
@@ -60,7 +62,7 @@ const P: Record<string, string> = {
 const COL: Record<string, [string, string]> = {
   gomitas: ["#b6ff6a", "#3ed87a"], clips: ["#f0f5fa", "#9bb0c2"], chispero: ["#ffd84d", "#ff5a36"], petardos: ["#ff8a6b", "#ff3a3a"], tesla: ["#9bf0ff", "#4a8bff"],
   lanza: ["#ffe27a", "#ff9d2e"], agua: ["#9be3ff", "#3a8bff"], yoyo: ["#ff9bd4", "#b783ff"], bengalas: ["#ffd84d", "#ff5a5a"], regla: ["#ffe9a0", "#f0a030"],
-  helado: ["#ff9bd4", "#9be3ff"], bocina: ["#ffe27a", "#ff7a3a"], trompo: ["#b783ff", "#35c9ff"], tuercas: ["#e6e9ee", "#7d9bff"], bobinas: ["#ffb36b", "#35d0ff"],
+  helado: ["#ff9bd4", "#9be3ff"], bocina: ["#ffe27a", "#ff7a3a"], trompo: ["#b783ff", "#35c9ff"], tuercas: ["#e6e9ee", "#7d9bff"], bobinas: ["#ffb36b", "#35d0ff"], ventilador: ["#d8f3ff", "#5aa9c9"], canicas: ["#7de8a8", "#35c9ff"],
   yoyoelec: ["#ff9bd4", "#7de8ff"], vapor: ["#ffffff", "#ff9d6b"], chispazo: ["#ffd84d", "#7de8ff"], globos: ["#9be3ff", "#ff9bd4"], anillo: ["#ffd84d", "#ff7a3a"],
   iman: ["#ff7a7a", "#7d9bff"], resorte: ["#d9b8ff", "#8a6bff"], turbo: ["#ffe27a", "#ffa02e"], litio: ["#9bff9b", "#2fcf6a"], capacitor: ["#9bf0ff", "#4a8bff"], lego: ["#ffa07a", "#ff4d4d"], lupa: ["#fff0a0", "#6bd8ff"],
   heal: ["#9bff9b", "#2fcf6a"], evo: ["#fff0a0", "#ffb02e"], cofre: ["#ffe27a", "#c47a2e"], jefe: ["#ff9b9b", "#ff4d4d"], senal: ["#9bf0ff", "#7dffb0"], reloj: ["#9be3ff", "#ffd84d"],
@@ -134,6 +136,11 @@ const BEAST_SVG: Record<string, { d: string; c: [string, string]; e?: string }> 
   perro: { d: `<rect x="6.5" y="6.5" width="11" height="9.5" rx="2"/><path d="M5 7.5 6.8 12V7.5ZM19 7.5 17.2 12V7.5Z"/><rect x="8" y="12.5" width="8" height="4.8" rx="1.2"/><rect x="7.5" y="17.2" width="9" height="2.4" rx=".8"/>`, c: ["#9ca3af", "#4b5563"], e: `<rect x="8.2" y="16.6" width="7.6" height="1.4" fill="#ef4444"/><circle cx="9.6" cy="10" r="1.1" fill="#ffb02e"/><circle cx="14.4" cy="10" r="1.1" fill="#ffb02e"/>` },
   gato: { d: `<path d="M6.5 9.5 7.2 4l3.4 3.5h2.8L16.8 4l.7 5.5a5.5 5.5 0 0 1-11 0Z"/><rect x="7" y="8" width="10" height="8.5" rx="2.4"/><rect x="7.8" y="16.5" width="8.4" height="3" rx="1"/>`, c: ["#fb923c", "#9a3412"], e: `<circle cx="9.6" cy="11.5" r="1.1" fill="#a8ff3a"/><circle cx="14.4" cy="11.5" r="1.1" fill="#a8ff3a"/><rect x="8.2" y="16" width="7.6" height="1.3" fill="#3b82f6"/>` },
   aspiradora: { d: `<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5.2"/><circle cx="12" cy="9.5" r="2.2"/>`, c: ["#94a3b8", "#475569"], e: `<path d="M6.5 6.5a8 8 0 0 1 11 0" stroke="#ff3b2e" stroke-width="2" fill="none"/><circle cx="12" cy="9.5" r="1" fill="#ff3b2e"/>` },
+  grillo: { d: `<ellipse cx="11" cy="13" rx="5.5" ry="3.4"/><rect x="15" y="9.6" width="4" height="3.4" rx="1"/><path d="M17 9.6 20.5 4M18.5 9.6 22 6.5"/><path d="M8 11.5 4.5 6l3 5.5M9.5 15.5 5 20l-2-4M12 16l1.5 4M7 15l-3 1"/>`, c: ["#8fc04a", "#4a7a1e"], e: `<circle cx="17.6" cy="10.8" r=".8" fill="#ff4a28"/>` },
+  babosa: { d: `<path d="M3 17c0-4 3-5 6-5h6c3 0 5 2 5 5z"/><path d="M17 12c0-2 1-4 2-5M20 12c1-2 2-3 3-3"/>`, c: ["#9acd32", "#4a5a1a"], e: `<circle cx="19" cy="6.6" r=".8" fill="#ffe040"/>` },
+  mosca: { d: `<ellipse cx="12" cy="15" rx="3.4" ry="4.6"/><circle cx="12" cy="8" r="2.8"/><path d="M9.6 12 2.5 6.5l1.5 7.5ZM14.4 12l7.1-5.5L20 14ZM10 19l-2 3M14 19l2 3"/>`, c: ["#7aa0d8", "#2e4a7a"], e: `<circle cx="10.8" cy="7.6" r="1" fill="#ff4a28"/><circle cx="13.2" cy="7.6" r="1" fill="#ff4a28"/>` },
+  payaso: { d: `<circle cx="12" cy="8.5" r="4.2"/><path d="M8.5 5.2 6 2l4 1.6ZM15.5 5.2 18 2l-4 1.6Z"/><path d="M9 14.5 12 13l3 1.5-1 2.5h-4Z"/><path d="M9.5 17c-1.6.8 1.6 1.6 0 2.4s1.6 1.6 0 2.4M14.5 17c1.6.8-1.6 1.6 0 2.4s-1.6 1.6 0 2.4"/>`, c: ["#a78bfa", "#6d28d9"], e: `<circle cx="10.4" cy="8" r=".8" fill="#ffe14a"/><circle cx="13.6" cy="8" r=".8" fill="#ffe14a"/><circle cx="12" cy="9.8" r=".9" fill="#ff4a28"/>` },
+  caja: { d: `<rect x="4" y="11" width="16" height="9" rx="1"/><path d="M4 11 7 6h10l3 5"/><path d="M12 6V3M10 3h4"/><circle cx="12" cy="15.5" r="2"/>`, c: ["#d97706", "#7c2d12"] },
   cortacercos: { d: `<rect x="10.2" y="2.2" width="3.6" height="11" rx=".6"/><path d="M8.2 4h2v1.4h-2ZM13.8 4h2v1.4h-2ZM8.2 7h2v1.4h-2ZM13.8 7h2v1.4h-2ZM8.2 10h2v1.4h-2ZM13.8 10h2v1.4h-2Z"/><rect x="7.5" y="13" width="9" height="7.5" rx="1.4"/>`, c: ["#fbbf24", "#b45309"], e: `<rect x="8.8" y="14.6" width="2" height="1.4" fill="#ff3b2e"/><rect x="13.2" y="14.6" width="2" height="1.4" fill="#ff3b2e"/>` },
   // Aliens de la luna (aliens.ts): chapa petróleo con luces verde y cian
   enjambre: { d: `<path d="M8 9.5 12 7l4 2.5v5L12 17l-4-2.5Z"/><path d="M8.5 11 4 8.5M15.5 11 20 8.5M8.5 13.5 4 16M15.5 13.5 20 16M12 17v3.5"/>`, c: ["#4f7f88", "#1f3f46"], e: `<circle cx="12" cy="11.6" r="2.2" fill="#3ff2ff"/><rect x="10.4" y="14.2" width="3.2" height=".9" fill="#7dff5a"/>` },

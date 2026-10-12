@@ -17,7 +17,7 @@ button{cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:.0
 a.btn{display:inline-block;text-decoration:none;font:inherit;color:var(--jm-texto);border:1px solid var(--jm-borde);border-radius:var(--jm-r);padding:6px 10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 a.btn:hover,a.btn:focus-visible,button:hover,button:focus-visible{border-color:var(--jm-naranja);outline:none}
 button.pri{background:var(--jm-naranja);color:#111;border-color:var(--jm-naranja)}
-button.mal{border-color:var(--jm-rojo);color:var(--jm-rojo)}
+button.mal,button.danger{border-color:var(--jm-rojo);color:var(--jm-rojo)}
 nav button[aria-pressed=true]{border-color:var(--jm-naranja);color:var(--jm-naranja)}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--jm-naranja);outline-offset:1px}
 .fila{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -53,6 +53,7 @@ button.lnk{background:none;border:0;padding:0;min-height:0;text-transform:none;l
   td.fila{display:flex}
   dialog{max-height:calc(100dvh - 24px);overflow:auto}
 }
+h2,h3,dialog{overflow-wrap:anywhere}#uDay,#uModes{color:var(--jm-naranja)}#uDay svg{display:block}
 summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-height:44px}
 </style></head><body><main>
 <div id="caidas" class="msg hidden" role="alert" style="background:#b00020;color:#fff;padding:10px 14px;border-radius:6px;margin-bottom:10px"></div>
@@ -72,7 +73,7 @@ summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-
 </section>
 
 <div id="app" class="hidden">
-  <nav aria-label="Secciones"><button data-v="usuarios" aria-pressed="true">Usuarios</button><button data-v="pagos">Pagos</button><button data-v="auditoria">Auditoría</button><button data-v="uso">Uso</button><button data-v="telemetria">Telemetría</button><button data-v="red">Red</button></nav>
+  <nav aria-label="Secciones"><button data-v="usuarios" aria-pressed="true">Usuarios</button><button data-v="pagos">Pagos</button><button data-v="auditoria">Auditoría</button><button data-v="uso">Uso</button><button data-v="telemetria">Telemetría</button><button data-v="red">Red</button><button data-v="aviso">Aviso</button></nav>
   <p id="msg" class="msg" role="status"></p>
 
   <section data-s="usuarios">
@@ -117,6 +118,8 @@ summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-
     </div>
   </section>
 
+  <section data-s="aviso" class="hidden"><div class="panel"><h2>Aviso de mantenimiento</h2>
+    <form id="fAviso" style="display:grid;gap:8px"><label>Texto (vacío = quitar aviso)<input id="avT" maxlength="300"></label><label>Vence<input id="avH" type="datetime-local"></label><div><button class="pri">Publicar</button></div></form></div></section>
   <section data-s="auditoria" class="hidden"><div class="panel"><h2>Registro de auditoría</h2><div class="scroll"><table><thead><tr><th>Fecha</th><th>Quién</th><th>Acción</th><th>Objetivo</th><th>Detalle</th><th>IP</th></tr></thead><tbody id="tAudit"></tbody></table></div></div></section>
 
   <section data-s="uso" class="hidden"><div class="panel"><h2>Partidas por día (30 días)</h2><div id="uDay"></div></div><div class="panel"><h2>Modos más jugados</h2><div id="uModes"></div></div><div class="panel"><h2>Abandono</h2><p id="uAb" class="muted"></p></div></section>
@@ -128,6 +131,7 @@ summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-
       <h3>Variantes más jugadas</h3><div class="scroll"><table><thead><tr><th>Variante</th><th>Veces</th></tr></thead><tbody id="tRoute"></tbody></table></div>
       <h3>Partidas por día</h3><div class="scroll"><table><thead><tr><th>Día (UTC)</th><th>Iniciadas</th><th>Terminadas</th></tr></thead><tbody id="tDay"></tbody></table></div></div>
     <div class="panel"><h2>Desafío diario <span id="tDDate"></span></h2><div class="scroll"><table><thead><tr><th>Usuario</th><th>Victoria</th><th>Tiempo (s)</th><th>Bajas</th><th>Nivel</th></tr></thead><tbody id="tDaily"></tbody></table></div></div>
+    <div class="panel"><h2>Moderar partidas (top 30 días)</h2><div class="scroll"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Modo</th><th>Bajas</th><th>Tiempo (s)</th><th></th></tr></thead><tbody id="tMod"></tbody></table></div></div>
     <div class="panel"><h2>Récords ENCORE</h2><div class="scroll"><table><thead><tr><th>Usuario</th><th>Vuelta</th><th>Escenario</th><th>Tiempo (s)</th><th>Victoria</th></tr></thead><tbody id="tLb"></tbody></table></div></div>
     <div class="panel"><h2>Últimos eventos</h2><div class="scroll"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Evento</th><th>Datos</th></tr></thead><tbody id="tTel"></tbody></table></div></div></section>
 
@@ -335,9 +339,11 @@ async function ficha(u) {
     <p class="muted">ENCORE: ${st.encore ? esc(`vuelta ${st.encore.loop + 1}, escenario ${st.encore.stage + 1}, ${st.encore.t} s, ${st.encore.win ? "victoria" : "derrota"}`) : "sin expediciones"} · Pactos: ${esc(st.pacts.accepted)} aceptados, ${esc(st.pacts.rejected)} rechazados · Quedarse ${esc(st.stages.stayPct)}% / avanzar ${esc(st.stages.advancePct)}%</p>
     <h3>Últimas partidas</h3>
     ${tabla(["Fecha", "Modo", "Victoria", "Tiempo (s)", "Bajas", "Nivel", "Vuelta/esc."], d.runs.map(({ at, d: r }) => [fecha(at), r.mode ?? "", sino(r.win), r.t ?? "", r.kills ?? "", r.lv ?? "", r.loop == null ? "" : `${r.loop + 1}/${r.stage + 1}`]))}
+    <p><button id="fBan" class="${d.banned ? "" : "danger"}">${d.banned ? "Volver a incluir en rankings" : "Excluir de rankings"}</button></p>
     <h3>Últimas sesiones</h3>
     ${tabla(["Fecha", "Navegador", "Pantalla", "Táctil"], d.sessions.map(({ at, d: x }) => [fecha(at), x.ua ?? "", x.w && x.h ? `${x.w}×${x.h}` : "", x.touch == null ? "" : sino(x.touch)]))}`;
 }
+$("fCuerpo").onclick = intentar(async (e) => { if (e.target.id !== "fBan") return; const on = e.target.textContent.startsWith("Excluir"); await api("ranking/user", { email: actual.email, on }); aviso(on ? "Excluido de rankings." : "Incluido en rankings."); ficha(actual); });
 $("fCerrar").onclick = () => $("dFicha").close();
 $("fGest").onclick = () => { $("dFicha").close(); abrir(actual); };
 
@@ -374,6 +380,8 @@ $("tPlans").onclick = intentar(async (e) => {
   if (!confirm(`Borrar el plan ${p.name}?`)) return;
   await api("plan/delete", { id: p.id }); aviso("Plan borrado."); cargar();
 });
+$("fAviso").onsubmit = intentar(async (e) => { e.preventDefault(); await api("aviso", { texto: $("avT").value, hasta: new Date($("avH").value).getTime() }); aviso("Aviso guardado"); });
+api("aviso").then((a) => { if (a.texto) { $("avT").value = a.texto; $("avH").value = new Date(a.hasta - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 16); } }, () => {});
 $("fPlan").onsubmit = intentar(async (e) => {
   e.preventDefault(); const f = e.target.elements;
   await api("plan", { id: f.id.value.trim(), name: f.name.value.trim(), price: Math.round(+f.price.value * 100), currency: f.currency.value.trim(), period: f.period.value });
@@ -396,6 +404,7 @@ async function pintarUso() {
   $("uModes").innerHTML = u.modes.map((m) => `<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><span style="min-width:90px">${esc(m.mode)}</span><div style="flex:1;background:#8883;height:14px"><div style="width:${100 * m.n / mm}%;height:100%;background:currentColor"></div></div><span>${m.n}</span></div>`).join("") || "Sin datos";
   $("uAb").textContent = `${u.abandonPct}% de abandono (${u.started} inicios, ${u.ended} finales)`;
 }
+$("tMod").onclick = intentar(async (e) => { const b = e.target.closest("button[data-mod]"); if (!b) return; await api("ranking/event", { id: b.dataset.mod, on: b.dataset.on === "1" }); aviso("Ranking actualizado."); pintarTel(); });
 async function pintarTel() {
   const t = await api("telemetry");
   $("tTelS").innerHTML = t.stats.map((s) => `<tr><td>${esc(s.type)}</td><td>${s.n}</td><td>${s.users}</td></tr>`).join("") || `<tr><td colspan="3">Sin eventos</td></tr>`;
@@ -408,6 +417,7 @@ async function pintarTel() {
   $("tDDate").textContent = t.daily.date;
   $("tDaily").innerHTML = rows(t.daily.board, 5, (r) => `<tr><td class="mono">${esc(r.uid)}</td><td>${r.win ? "Sí" : "No"}</td><td>${esc(r.t)}</td><td>${esc(r.kills)}</td><td>${esc(r.lv)}</td></tr>`);
   $("tLb").innerHTML = t.leaderboard.map((r) => `<tr><td class="mono">${esc(r.uid)}</td><td>${r.loop + 1}</td><td>${r.stage + 1}</td><td>${r.t}</td><td>${r.win ? "Sí" : "No"}</td></tr>`).join("") || `<tr><td colspan="5">Sin expediciones</td></tr>`;
+  $("tMod").innerHTML = rows(await api("ranking/runs"), 6, (r) => `<tr><td>${fecha(r.at)}</td><td class="mono">${esc(r.uid)}${r.banned ? " (excluido)" : ""}</td><td>${esc(r.mode)}</td><td>${esc(r.kills)}</td><td>${esc(r.t)}</td><td><button data-mod="${r.id}" data-on="${r.hidden ? 0 : 1}">${r.hidden ? "Mostrar" : "Ocultar"}</button></td></tr>`);
   $("tTel").innerHTML = t.events.map((e) => `<tr><td>${fecha(e.at)}</td><td class="mono">${esc(e.uid)}</td><td>${esc(e.type)}</td><td class="mono">${esc(e.data)}</td></tr>`).join("") || `<tr><td colspan="4">Sin eventos</td></tr>`;
 }
 setInterval(() => { if (vista === "red" && !$("app").classList.contains("hidden")) intentar(pintarRed)(); }, 10000);

@@ -234,11 +234,11 @@ export type Gfx = { scaler: "simple" | "fsr" | "ia"; scale: number; fsr: Exclude
 /** Sombras del sol: [mapa, cascadas, filtrado, distancia]. Con 1 cascada el mapa cubre solo lo cercano al auto. "off" apaga la luz de sombras. */
 const SHADOW = { low: [128, 1, B.ShadowGenerator.QUALITY_LOW, 28], mid: [256, 1, B.ShadowGenerator.QUALITY_LOW, 36], high: [1024, 2, B.ShadowGenerator.QUALITY_MEDIUM, 80] } as const;
 /** Detalle del mundo: densidad de pasto (x el patio base; pide partida nueva), partículas y restos (x), y distancia de dibujo de props (0 = sin límite). */
-export const DETAIL = { bajo: { grass: 0.33, fx: 0.35, draw: 95 }, medio: { grass: 0.66, fx: 0.65, draw: 145 }, alto: { grass: 1, fx: 1, draw: 220 }, ultra: { grass: 1.5, fx: 1.4, draw: 0 } } as const;
+export const DETAIL = { bajo: { grass: 0.33, fx: 0.35, draw: 95 }, medio: { grass: 0.66, fx: 0.6, draw: 145 }, alto: { grass: 1, fx: 1, draw: 220 }, ultra: { grass: 1.5, fx: 1.4, draw: 0 } } as const;
 /** Preajustes de Calidad: fijan de una vez los cinco ajustes de abajo. */
 export const PRESETS = {
   bajo: { shadowQ: "off", detail: "bajo", texRes: 128, aniso: 2, bloom: false },
-  medio: { shadowQ: "mid", detail: "medio", texRes: 256, aniso: 8, bloom: true }, // el piso se ve casi siempre rasante: con 2 se lavaba a 15 m
+  medio: { shadowQ: "low", detail: "medio", texRes: 256, aniso: 8, bloom: true }, // el piso se ve casi siempre rasante: con 2 se lavaba a 15 m
   alto: { shadowQ: "mid", detail: "alto", texRes: 512, aniso: 16, bloom: true },
   ultra: { shadowQ: "high", detail: "ultra", texRes: 512, aniso: 16, bloom: true },
 } as const satisfies Record<string, Pick<Gfx, "shadowQ" | "detail" | "texRes" | "aniso" | "bloom">>;

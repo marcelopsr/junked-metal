@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
+    "test:server": "node --test 'server/test/*.test.js'",
+    "test:all": "npm test & a=$! ; npm run test:server & b=$! ; wait $a && wait $b",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "demo": "vite preview --port 4173 --strictPort",

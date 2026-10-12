@@ -426,7 +426,7 @@ export function banner(txt: string, secs = 2, opts?: BannerOpts) {
 /** Avisos de patio (enjambre, élite, lluvia, pelota, cofre): copy y duración fijos para lectura en ~6 s de anticipación. */
 export type RadioEvent =
   | "lluvia_pre" | "lluvia" | "enjambre_pre" | "enjambre" | "pelota_pre" | "pelota"
-  | "elite_rapida_pre" | "elite_blindada_pre" | "elite_rapida" | "elite_blindada" | "cofre";
+  | "ev1_pre" | "ev1" | "ev2_pre" | "ev2" | "ev3_pre" | "ev3" | "elite_rapida_pre" | "elite_blindada_pre" | "elite_rapida" | "elite_blindada" | "cofre";
 /** Minijefe / jefe final: el nombre coincide con la barra superior (hudBoss). */
 export function radioBoss(phase: "pre" | "now", name: string, final = false) {
   const line = phase === "pre"
@@ -445,6 +445,12 @@ const RADIO: Record<RadioEvent, { line: string; secs: number; tag: string; ico: 
   elite_blindada_pre: { tag: "SEÑAL", line: "ÉLITE BLINDADA · ENTRADA ~6 S", secs: 3.2, ico: "jefe", tone: "warn" },
   elite_rapida: { tag: "SEÑAL", line: "ÉLITE ACTIVA · VELOZ", secs: 2.2, ico: "jefe", tone: "now" },
   elite_blindada: { tag: "SEÑAL", line: "ÉLITE ACTIVA · BLINDADA", secs: 2.2, ico: "jefe", tone: "now" },
+  ev1_pre: { tag: "METEO", line: "LLUVIA DE TORNILLOS · EN 3 S", secs: 3, ico: "tuercas", tone: "warn" },
+  ev1: { tag: "METEO", line: "LLUVIA DE TORNILLOS · A RECOGER", secs: 2.2, ico: "tuercas", tone: "now" },
+  ev2_pre: { tag: "RADAR", line: "INVASIÓN REPENTINA · EN 3 S", secs: 3, ico: "gomitas", tone: "warn" },
+  ev2: { tag: "RADAR", line: "INVASIÓN REPENTINA · AGUANTAR", secs: 2.2, ico: "gomitas", tone: "now" },
+  ev3_pre: { tag: "RED", line: "APAGÓN · EN 3 S", secs: 3, ico: "jefe", tone: "warn" },
+  ev3: { tag: "RED", line: "APAGÓN · SOLO QUEDA EL FARO", secs: 2.2, ico: "jefe", tone: "now" },
   cofre: { tag: "RADAR", line: "COFRE · SIN CUSTODIA", secs: 2.6, ico: "cofre", tone: "now" },
 };
 export function radioEvent(id: RadioEvent) {
@@ -707,6 +713,8 @@ const EVO_ART: Record<string, string> = {
   trompo: "./images/evo-torbellino.webp",
   tuercas: "./images/evo-mortero.webp",
   bobinas: "./images/evo-lanzallamas.webp",
+  ventilador: "./images/evo-sierra.webp",
+  canicas: "./images/evo-torbellino.webp",
   sierra: "./images/evo-sierra.webp",
   lanzallamas: "./images/evo-lanzallamas.webp",
   chispero: "./images/evo-lanzallamas.webp",

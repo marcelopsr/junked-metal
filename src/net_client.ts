@@ -26,6 +26,10 @@ import { template, sph } from "./models";
 import { pbr } from "./render";
 import { showOffers } from "./ui";
 import { SFX } from "./sfx";
+import { initQuickChat, onQuickMsg } from "./quickchat";
+import { me } from "./net";
+// Nombre del chat rápido: el apodo de la cuenta si hay; si no, el rol (J1/J2/Espectador)
+let alias: string | null = null; void me().then((m) => { alias = m?.alias ?? null; }).catch(() => {});
 
 const $ = (id: string) => document.getElementById(id)!;
 
@@ -114,6 +118,7 @@ export const NET_PROJ = 60; // tope por tipo de proyectil y snapshot (los más a
 
 let ctx!: NetClientContext;
 
+let stopQ: (() => void) | null = null; // limpieza del chat rápido
 let net: Net | null = null, netSeed = 0, netT = 0, spectating = false; // spectating: cliente que solo mira (cámara en J1, sin enviar inputs ni comandos)
 let netIn = { ...NO_IN };
 const netIds = new WeakMap<Enemy, number>();
@@ -188,6 +193,7 @@ export function netSnap(dt?: number) {
 
 /** Mensajes del cliente al anfitrión: se validan (frontera de confianza). */
 function netHostMsg(m: Msg) {
+  if (m.t === "q") { onQuickMsg(m); return; }
   if (m.t === "i" && m.i && typeof m.i === "object") {
     const i = m.i as Record<string, unknown>;
     netIn = { throttle: axis(i.throttle), steer: axis(i.steer), moveX: axis(i.moveX), moveY: axis(i.moveY), boost: bool(i.boost), drift: bool(i.drift), ability: bool(i.ability), jump: bool(i.jump), move: bool(i.move) };
@@ -209,6 +215,7 @@ function netShots(k: "j" | "w", xs: number[] = []) {
 }
 
 function netClientMsg(m: Msg) {
+  if (m.t === "q") { onQuickMsg(m); return; }
   if (m.t === "go" && typeof m.seed === "number") { netSeed = m.seed; ctx.launchRun(false, true, 2, netClientBegin); }
   else if (m.t === "s") { const s = m.s as Snap; netBuf.push({ at: performance.now(), s, e: new Map(s.e.map((x) => [x[0], x])) }); if (netBuf.length > 8) netBuf.shift(); }
   else if (m.t === "end") { netEnd(); netBack("La partida terminó en el anfitrión."); }
@@ -268,6 +275,7 @@ export function netClientTick() {
 export function netEnd() {
   const n = net; net = null; netSeed = 0; spectating = false; netE.clear(); netBuf.length = 0; netLv = false;
   for (const k of ["j", "w"] as const) { for (const m of netPools[k]) m.dispose(); netPools[k] = []; }
+  stopQ?.(); stopQ = null;
   n?.close();
 }
 
@@ -283,11 +291,11 @@ export async function netHost() {
   netEnd(); netStatus("Creando sala…");
   try {
     const n = (net = await hostRoom((code) => netStatus(`Sala ${code} · esperando al otro jugador`)));
-    n.onMsg = netHostMsg;
+    n.onMsg = netHostMsg; stopQ = initQuickChat(n, alias ?? "J1");
     n.onClose = (why) => {
       if (net !== n) return;
-      if (ctx.state === "menu") { netStatus(why); net = null; return; }
-      ctx.mateClear(); net = null; ctx.banner("J2 DESCONECTADO · SE SIGUE EN SOLITARIO", 3); // el anfitrión sigue jugando solo
+      if (ctx.state === "menu") { netStatus(why); net = null; stopQ?.(); stopQ = null; return; }
+      ctx.mateClear(); net = null; stopQ?.(); stopQ = null; ctx.banner("J2 DESCONECTADO · SE SIGUE EN SOLITARIO", 3); // el anfitrión sigue jugando solo
       if (ctx.state === "level" && cardBy !== ctx.players[0].id) { cardBy = ctx.players[0].id; ctx.openOffers(ctx.offers, ctx.offerTitle, true); } // le tocaba al J2: elige el anfitrión
     };
     await n.ready;
@@ -304,7 +312,7 @@ export async function netJoin() {
   if (code.length !== 6) { netStatus("El código tiene 6 caracteres."); return; }
   netEnd(); netStatus(`Conectando a ${code}…`);
   const n = (net = await joinRoom(code));
-  n.onMsg = netClientMsg;
+  n.onMsg = netClientMsg; stopQ = initQuickChat(n, alias ?? "J2");
   n.onClose = (why) => { if (net !== n) return; netEnd(); netBack(why); };
   await n.ready;
   if (net === n) netStatus(`Conectado a ${code} · esperando la largada`);
@@ -318,7 +326,7 @@ export function initNetClient(c: NetClientContext) {
     netEnd(); netStatus(`Conectando a ${code} (espectador)…`);
     try {
       const n = (net = await espectar(code)); spectating = true;
-      n.onMsg = netClientMsg;
+      n.onMsg = netClientMsg; stopQ = initQuickChat(n, alias ?? "Espectador", true);
       n.onClose = (why) => { if (net !== n) return; netEnd(); netBack(why); };
       await n.ready;
       if (net === n) netStatus(`Mirando ${code} · esperando la largada`);

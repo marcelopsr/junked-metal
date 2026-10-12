@@ -35,9 +35,9 @@ export const ENC = {
 // ponytail: `perro` queda fuera del sorteo. En la Luna su salto lanza hacia el +Y del mundo (UP.scale(22)) y su embestida fija la velocidad con ejes del mundo
 // (dir = sin/cos(aim)), mientras que `to`, `fwd` y `vel()` están en el marco local de la esfera: fuera del polo el salto sale torcido y la embestida corre hacia un lado
 // que no es el del carril rojo. Entra al sorteo cuando enemies.ts lo pase al marco local (flatL/upAt/toWorld) como ya hacen la tarántula y el gato.
-export const FINAL_POOL = ["aspiradora", "cortacercos"] as const;
+export const FINAL_POOL = ["aspiradora", "cortacercos", "caja"] as const;
 export type FinalKind = (typeof FINAL_POOL)[number];
-export const FINAL_NAME: Record<FinalKind, string> = { aspiradora: "LA ASPIRADORA ROBOT", cortacercos: "EL CORTACERCOS ELÉCTRICO" };
+export const FINAL_NAME: Record<FinalKind, string> = { aspiradora: "LA ASPIRADORA ROBOT", cortacercos: "EL CORTACERCOS ELÉCTRICO", caja: "LA CAJA DE MÚSICA ROTA" };
 /** Jefe secreto de la expedición: hash de la semilla de la run (sin rng()), fijo en todas las vueltas. */
 export const finalOf = (seed: number): FinalKind => FINAL_POOL[Math.floor(mix(seed + 0xf1a1) * FINAL_POOL.length)];
 
@@ -395,6 +395,12 @@ const HINTS: Record<FinalKind, string[]> = {
     "HUELE A OZONO Y A PASTO RECIÉN CORTADO. LA PRODUCCIÓN PLANEA UN RECORTE DE PERSONAL.",
     "ALGO CHISPEA AL FONDO DEL ESCENARIO. DIRECTO, PAREJO Y CON MUY MALAS MANERAS.",
     "TIENEN UN INVITADO CON FILO. ESTÁ ENCHUFADO A TODO Y LE GUSTA PODAR EN LÍNEA RECTA.",
+  ],
+  caja: [
+    "SE OYE UNA MELODÍA DESAFINADA DESDE EL DESVÁN. NADIE LE DIO CUERDA. NADIE SE ATREVE A PREGUNTAR.",
+    "UN JUGUETE QUE SUENA SOLO NO ES UN JUGUETE, ES UN AVISO. SALTEN CUANDO EL SONIDO LES LLEGUE.",
+    "ALGUIEN TIENE BAILARINAS DE PORCELANA SUELTAS POR EL ESCENARIO. NO ACEPTEN EL PRIMER VALS.",
+    "LA ORQUESTA ESTÁ ROTA PERO TOCA IGUAL. EL PÚBLICO APLAUDE POR COMPASIÓN, NO POR OFICIO.",
   ],
 };
 /** Pista del jefe secreto para el escenario actual (null en la votación y el FINAL ACT, donde ya no hace falta). */

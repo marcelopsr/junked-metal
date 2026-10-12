@@ -187,3 +187,16 @@ test("usageStats: partidas por día, modos y abandono", () => {
   const r = db.usageStats(now - 30 * DAY);
   assert.equal(r.started, 3); assert.equal(r.modes[0].mode, "encore"); assert.equal(r.perDay[0].n, 3); assert.equal(r.abandonPct, 67);
 });
+test("moderación: usuario vetado y partida oculta salen de los rankings", () => {
+  const db = openDb(":memory:"), now = Date.now(), d = (k) => JSON.stringify({ kills: k, mode: "encore", loop: k, stage: 0, t: 1, weekly: "w", seed: 1 });
+  db.track("cf-a", "run_end", d(10), now); db.track("cf-b", "run_end", d(5), now); db.track("cf-b", "run_end", d(3), now);
+  assert.deepEqual(db.weeklyTop(0).map((r) => r.uid), ["cf-a", "cf-b"]);
+  db.rankBan("cf-a", true);
+  assert.deepEqual(db.weeklyTop(0).map((r) => r.uid), ["cf-b"]);
+  assert.deepEqual(db.encoreTop().map((r) => r.uid), ["cf-b"]);
+  db.rankBan("cf-a", false); assert.equal(db.weeklyBoard("w", 1).length, 2);
+  const top = db.rankingRuns(0).find((r) => r.uid === "cf-b" && r.kills === 5);
+  db.hideEvent(top.id, true);
+  assert.equal(db.weeklyBoard("w", 1).find((r) => r.uid === "cf-b").score, 3);
+  assert.throws(() => db.hideEvent(999, true));
+});

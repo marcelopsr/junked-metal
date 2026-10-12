@@ -35,6 +35,7 @@ export const BATK: Partial<Record<Kind, { tele?: "self" | "land" | "arc"; r?: nu
   gato: { tele: "land", r: ATK.salto_radio, wind: ATK.gato_salto_aviso_s, hit: "hop" },
   perro: { wind: 0.5, hit: "hop" }, // perro: ver DOG_LANE (alterna con la embestida)
   aspiradora: { tele: "self", r: ATK.aspiradora_radio, wind: ATK.aspiradora_aviso_s, hit: "suck" },
+  caja: { tele: "self", r: ATK.caja_onda_radio, wind: ATK.caja_onda_aviso_s, hit: "hop" },
   cortacercos: { tele: "arc", r: ATK.cortacercos_radio, wind: ATK.cortacercos_aviso_s, hit: "swing" },
 };
 
