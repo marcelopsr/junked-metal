@@ -463,7 +463,7 @@
     {"id":"alien_curandero_escudo","valor":0.5,"descripcion":"Luna, curandero: multiplicador del daño que recibe el aliado al que apunta el rayo (0.5 = la mitad) mientras lo cura"},
     {"id":"gusano_hondo","valor":4,"descripcion":"Luna, gusano: metros bajo la superficie a los que avanza enterrado (no recibe daño ni muerde)"},
     {"id":"gusano_emerge_dist","valor":7,"descripcion":"Luna, gusano: distancia (m) al auto a la que deja de perseguir enterrado y marca en el piso dónde va a salir"},
-    {"id":"gusano_aviso_s","valor":1.3,"descripcion":"Luna, gusano: segundos del aro en el piso antes de emerger (fijo: moverse es esquivarlo)"},
+    {"id":"gusano_aviso_s","valor":2,"descripcion":"Luna, gusano: segundos del aro en el piso antes de emerger (fijo: moverse es esquivarlo)"},
     {"id":"gusano_aviso_radio","valor":4,"descripcion":"Luna, gusano: radio (m) del aro y del golpe al emerger; también el radio de los cráteres que deja"},
     {"id":"gusano_crater_hondo","valor":1.3,"descripcion":"Luna, gusano: profundidad (m) de los cráteres que deja al salir y al hundirse"},
     {"id":"gusano_arco_s","valor":3.2,"descripcion":"Luna, gusano: segundos que tarda la cabeza en recorrer el arco fuera de la superficie (solo recibe daño mientras está afuera)"},
