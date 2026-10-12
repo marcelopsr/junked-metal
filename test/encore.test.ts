@@ -1,9 +1,11 @@
 // Fases de ENCORE sin motor (src/encore.ts): escenario → teleportador → decidir → ... → votación → ENCORE! o FINAL ACT → victoria.
 import { describe, expect, it } from "vitest";
-import { ask, boarded, bossDown, craterPlan, ENC, line, newRun, paceOf, pick, sceneIdx, stageSeed, tag, tick, variantOf, VARIANTS, type Ev, type Run } from "../src/encore";
+import { activePacts, ask, boarded, bossDown, craterPlan, ENC, fxText, line, NO_FX, newRun, pactFx, pactOffer, PACTS, paceOf, pick, sceneIdx, stageSeed, tag, tick, variantOf, VARIANTS, type Ev, type Run } from "../src/encore";
 
 /** Corre el reloj de a 1 s hasta que pase algo (o se pase de `max` s). */
 const until = (r: Run, max = 1000): Ev | null => { for (let i = 0; i < max; i++) { const e = tick(r, 1); if (e) return e; } return null; };
+/** AVANZAR y, si el Director ofrece pactos, rechazarlos (sin penalidad). */
+const adv = (r: Run) => { const e = pick(r, 1); return e === "pact_offer" ? pick(r, 2) : e; };
 /** Lleva el escenario hasta la decisión abierta. */
 const toDecision = (r: Run) => { expect(until(r)).toBe("tele_land"); expect(boarded(r)).toBe("tele_ready"); };
 
@@ -39,7 +41,9 @@ describe("flujo de fases", () => {
     const r = newRun(5); const paces = [paceOf(r)];
     for (let k = 1; k < ENC.stages; k++) {
       toDecision(r);
-      expect(pick(r, 1)).toBe("advance");
+      expect(pick(r, 1)).toBe("pact_offer"); // AVANZAR abre la oferta; rechazarla carga el escenario
+      expect(r.stage).toBe(k - 1);
+      expect(pick(r, 2)).toBe("pact_no");
       expect(r).toMatchObject({ stage: k, phase: "stage", stageT: 0, landed: false, stays: 0, stayT: 0 });
       paces.push(paceOf(r));
     }
@@ -57,7 +61,7 @@ describe("flujo de fases", () => {
 
   it("tras el escenario 4: votación; FINAL ACT → jefe → victoria", () => {
     const r = newRun(9);
-    for (let k = 0; k < ENC.stages - 1; k++) { toDecision(r); pick(r, 1); }
+    for (let k = 0; k < ENC.stages - 1; k++) { toDecision(r); adv(r); }
     toDecision(r);
     expect(pick(r, 1)).toBe("vote");
     expect(r.phase).toBe("vote");
@@ -76,9 +80,9 @@ describe("flujo de fases", () => {
   it("¡ENCORE! (o votación vencida) abre otra vuelta más difícil, de vuelta al escenario 1", () => {
     for (const how of ["pick", "timeout"] as const) {
       const r = newRun(9);
-      for (let k = 0; k < ENC.stages - 1; k++) { toDecision(r); pick(r, 1); }
+      for (let k = 0; k < ENC.stages - 1; k++) { toDecision(r); adv(r); }
       const before = paceOf(r);
-      toDecision(r); pick(r, 1);
+      toDecision(r); adv(r);
       expect(how === "pick" ? pick(r, 0) : until(r)).toBe("encore");
       expect(r).toMatchObject({ loop: 1, stage: 0, phase: "stage" });
       expect(paceOf(r)).toBeGreaterThan(before);
@@ -98,7 +102,7 @@ describe("semillas y frases", () => {
 
   it("toda fase con evento tiene frase corta del Director, sin voseo", () => {
     const r = newRun(1);
-    for (const id of ["start", "tele_land", "tele_ready", "stay", "advance", "vote", "encore", "final_act", "boss_intro", "won"] as const) {
+    for (const id of ["start", "tele_land", "tele_ready", "stay", "pact_offer", "pact_yes", "pact_no", "advance", "vote", "encore", "final_act", "boss_intro", "won"] as const) {
       const l = line(id, r);
       expect(l.length).toBeGreaterThan(10);
       expect(l.length).toBeLessThan(75);
@@ -156,6 +160,99 @@ describe("variantes de escenario", () => {
       const t = `${v.name}. ${v.line}`;
       expect(t.length).toBeLessThan(75);
       expect(t).not.toMatch(/\b(querés|tenés|podés|sos|vos|elegí|decidí)\b/i);
+    }
+  });
+});
+
+describe("pactos del Director", () => {
+  /** Run en la decisión del escenario `stage` con AVANZAR ya elegido (oferta abierta). */
+  const offered = (seed = 5, stage = 0, loop = 0) => { const r = { ...newRun(seed), stage, loop }; toDecision(r); expect(pick(r, 1)).toBe("pact_offer"); return r; };
+
+  it("la oferta son 2 pactos distintos, estable por (semilla, vuelta, escenario) y variable entre semillas", () => {
+    const r = offered();
+    expect(r.phase).toBe("pact");
+    expect(r.offer).toHaveLength(2);
+    expect(r.offer![0]).not.toBe(r.offer![1]);
+    expect(pactOffer(newRun(5))).toEqual(r.offer);
+    expect(pactOffer(newRun(5))).toEqual(pactOffer(newRun(5)));
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 40; seed++) for (let st = 0; st < ENC.stages - 1; st++) seen.add(pactOffer({ ...newRun(seed), stage: st })!.join());
+    expect(seen.size).toBeGreaterThan(6);
+    expect(ask(r)).toMatchObject({ title: "PACTO DEL DIRECTOR", total: ENC.pactS, reject: "RECHAZAR" });
+  });
+
+  it("aceptar activa el pacto y carga el escenario; rechazar o dejar vencer la ventana no cuesta nada", () => {
+    const r = offered(), id = r.offer![1];
+    expect(pick(r, 1)).toBe("pact_yes");
+    expect(r).toMatchObject({ stage: 1, phase: "stage", offer: null });
+    expect(r.pacts.map((a) => a.id)).toEqual([id]);
+    expect(pactFx(r)).not.toEqual(NO_FX);
+    for (const how of ["no", "timeout"] as const) {
+      const q = offered(7);
+      expect(how === "no" ? pick(q, 2) : until(q)).toBe("pact_no");
+      expect(q).toMatchObject({ stage: 1, phase: "stage", pacts: [] });
+      expect(pactFx(q)).toEqual(NO_FX);
+    }
+  });
+
+  it("si vence la decisión del teleportador no hay oferta: el show avanza solo", () => {
+    const r = newRun(5); toDecision(r);
+    expect(until(r)).toBe("advance");
+    expect(r.pacts).toEqual([]);
+  });
+
+  it("no hay oferta al pasar a la votación ni con menos de 2 pactos libres", () => {
+    const r = { ...newRun(5), stage: ENC.stages - 1 }; toDecision(r);
+    expect(pick(r, 1)).toBe("vote");
+    const s = newRun(5); s.pacts = PACTS.slice(0, PACTS.length - 1).map((p) => ({ id: p.id, left: Infinity }));
+    expect(pactOffer(s)).toBeNull();
+    toDecision(s);
+    expect(pick(s, 1)).toBe("advance");
+  });
+
+  it("no se vuelve a ofrecer un pacto activo", () => {
+    const r = newRun(3); r.pacts = [{ id: PACTS[0].id, left: Infinity }, { id: PACTS[1].id, left: 2 }];
+    for (let st = 0; st < ENC.stages - 1; st++) for (const id of pactOffer({ ...r, stage: st })!) expect(r.pacts.map((a) => a.id)).not.toContain(id);
+  });
+
+  it("duración: N escenarios jugados y se va; los de la run duran toda la expedición (también tras ENCORE!)", () => {
+    const r = newRun(5);
+    r.offer = [PACTS.find((p) => p.stages === 2)!.id, PACTS.find((p) => p.stages === Infinity)!.id]; r.phase = "pact";
+    pick(r, 0);
+    expect(activePacts(r)).toMatchObject([{ left: "2 ESC" }]);
+    toDecision(r); adv(r); // sale del escenario 2: queda 1
+    expect(r.pacts[0].left).toBe(1);
+    toDecision(r); adv(r); // sale del escenario 3: vence
+    expect(r.pacts).toEqual([]);
+    const q = newRun(5); q.offer = [PACTS.find((p) => p.stages === Infinity)!.id, PACTS[0].id]; q.phase = "pact";
+    pick(q, 0);
+    for (let k = 0; k < ENC.stages - 2; k++) { toDecision(q); adv(q); }
+    toDecision(q); adv(q); // al voto
+    pick(q, 0); // ENCORE!
+    expect(q.loop).toBe(1);
+    expect(activePacts(q)).toMatchObject([{ left: "RUN" }]);
+  });
+
+  it("los efectos se combinan (multiplican; la regeneración suma) y sin pactos son neutros", () => {
+    expect(pactFx(null)).toEqual(NO_FX);
+    expect(pactFx(newRun(1))).toEqual(NO_FX);
+    const r = newRun(1); r.pacts = [{ id: "garantia", left: Infinity }, { id: "nocturno", left: 1 }, { id: "sorpresa", left: 2 }, { id: "chatarra", left: Infinity }];
+    const f = pactFx(r);
+    expect(f.dmg).toBeCloseTo(1.35); expect(f.maxHp).toBeCloseTo(0.7); expect(f.regen).toBe(2); expect(f.xp).toBeCloseTo(1.5); expect(f.scrap).toBeCloseTo(1.5);
+    expect(f.spawn).toBeCloseTo(1.4 * 1.3 * 1.25);
+  });
+
+  it("cada pacto tiene ventaja y costo reales, y el texto sale de los números aplicados", () => {
+    expect(fxText({ dmg: 1.35 })).toEqual(["+35% DAÑO"]);
+    expect(fxText({ maxHp: 0.7 })).toEqual(["-30% VIDA MÁXIMA"]);
+    expect(fxText({ regen: 2 })).toEqual(["+2 VIDA/S"]);
+    expect(fxText({ heal: 0.6 })).toEqual(["REPARA 60% DE LA VIDA AL ACEPTAR"]);
+    expect(new Set(PACTS.map((p) => p.id)).size).toBe(PACTS.length);
+    expect(PACTS.length).toBeGreaterThanOrEqual(5);
+    for (const p of PACTS) {
+      expect(fxText(p.gain).length).toBeGreaterThan(0);
+      expect(fxText(p.cost).length).toBeGreaterThan(0);
+      expect(`${p.name}${p.tag}`).not.toMatch(/\b(querés|tenés|podés|sos|vos|elegí|decidí)\b/i);
     }
   });
 });

@@ -102,6 +102,22 @@
 #encAsk .encBtns button { flex: 1; touch-action: manipulation; }
 #encAsk .encBtns button.hidden { display: none; }
 #encAsk kbd { margin: 0 0 0 6px; }
+/* Oferta de pactos: dos cartas (ventaja / costo) y rechazar; en pantalla angosta se apilan */
+#encAsk.pact { width: min(560px, calc(100vw / var(--hud-scale) - 24px)); top: 24%; }
+#encAsk.pact .encBtns button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 10px 10px; text-align: left; line-height: 1.15; }
+#encAsk.pact .encBtns b { font: 700 16px/1.1 var(--hf); letter-spacing: .06em; color: var(--jm-amarillo2, #FFD166); }
+#encAsk.pact .encBtns small { margin-top: 5px; font: 700 10px/1 var(--hf); letter-spacing: .14em; color: var(--g-dim); }
+#encAsk.pact .encBtns span { font: 700 14px/1.15 var(--hf); letter-spacing: .04em; }
+#encAsk.pact .encBtns .pg { color: #7dffb0; }
+#encAsk.pact .encBtns .pc { color: #ff7a6b; }
+#encAsk.pact .encBtns em { margin-top: 5px; font: 500 11px/1 var(--hf); font-style: normal; letter-spacing: .1em; color: var(--g-dim); }
+#encAsk.pact .encBtns kbd { margin: 6px 0 0; }
+#encC { width: 100%; margin-top: 8px; touch-action: manipulation; }
+#encC.hidden { display: none; }
+@media (max-width: 520px) { #encAsk.pact .encBtns { flex-direction: column; gap: 6px; } #encAsk.pact { top: 20%; } }
+#encPacts { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 106px); left: 14px; scale: var(--hud-scale); transform-origin: 0 0; display: flex; flex-wrap: wrap; gap: 4px; max-width: 220px; pointer-events: none; }
+#encPacts i { font: 700 11px/1 var(--hf); font-style: normal; letter-spacing: .08em; padding: 3px 6px; color: var(--g-dim); background: rgba(14, 12, 10, .88); border: 1px solid var(--jm-naranja, #ff7a1a); }
+#encPacts i b { color: var(--jm-amarillo2, #FFD166); }
 .rf-interference { filter: contrast(1.4) drop-shadow(0 0 2px rgba(239, 68, 68, .6)); opacity: .85; }
 
 #wshop { top: calc(max(10px, env(safe-area-inset-top)) + 108px); left: 14px; transform-origin: 0 0; display: flex; align-items: center; gap: 8px; padding: 6px 10px; max-width: min(320px, 70vw); }

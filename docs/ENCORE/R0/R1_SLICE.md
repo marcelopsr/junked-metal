@@ -82,3 +82,27 @@ Problema: los 4 escenarios de un ciclo eran la misma luna con el auto en el mism
 - **Pruebas:** `test/encore.test.ts` (6 nuevas: sin repetir por vuelta, LA TARIMA primero, determinismo y variación por semilla, sin variante en votación / final, plan de cráteres, frases cortas sin voseo).
 - **Verificado:** capturas headless en `scratch/encore-var-*.png` (LA TARIMA, SOL DE FRENTE, EL LADO OSCURO, CAMPO DE CRÁTERES), 0 errores de consola; Supervivencia igual que en `HEAD` (`sim --seeds 1,2 --secs 600`, patio y `--zone luna`).
 - **Atajos y límites:** gusano lunar como minijefe de variante no entra (6000 de vida, pensado para el cierre de Supervivencia; el minijefe es una nave); el banner de la variante entra en la misma cola de 3 avisos de radio, así que se puede demorar unos segundos si la decisión llegó con avisos pendientes; la variante no cambia la dificultad (`paceOf` sigue siendo por escenario), solo el carácter; todos los multiplicadores son provisorios y sin playtest.
+
+## Pactos (primera versión, un jugador)
+
+Al elegir **AVANZAR** (teleportador o "AVANZAR YA" durante la estadía), si queda un escenario por jugar, el Director abre la fase `pact` antes de cargarlo: ofrece **2 pactos** o **RECHAZAR** (sin penalidad). Cada pacto = una ventaja y un costo, ambos en pantalla y con los mismos números que se aplican (el texto sale de la tabla: `fxText`). Se acepta uno o ninguno; la ventana (`pactS` = 15 s) vencida equivale a rechazar. Si vence la decisión del teleportador y el show avanza solo, **no hay oferta**; tampoco al pasar a la votación (tras el escenario 4), ni con menos de 2 pactos libres. Doc de diseño: `01_DESIGN/08_PACTS.md`; origen: `05_DATA/prototype_pacts.json`. Quedan fuera (necesitan cooperativo/secreto/máquinas): voto de equipo, privados hasta revelar, QUICK por segundos.
+
+| Pacto | Dura | Ventaja | Costo |
+|---|---|---|---|
+| SALUD EN GARANTÍA | resto de la run | +35% daño | -30% vida máxima (recorta también la vida actual) |
+| PRODUCCIÓN SORPRESA | próximos 2 escenarios | +50% XP | +30% enemigos (aparición, tope y enjambres) |
+| DOBLE O CHATARRA | resto de la run | +50% tornillos (se cobran al terminar la partida) | +25% enemigos |
+| PATROCINIO DEFECTUOSO | próximos 2 escenarios | +20% velocidad | +25% daño recibido |
+| RETOQUE DE MAQUILLAJE | próximos 2 escenarios | repara 60% de la vida al aceptar | -20% daño |
+| PROGRAMA NOCTURNO | próximo escenario | +2 vida/s | +40% enemigos |
+
+- **Datos** (`src/encore.ts`): tabla `PACTS` (`gain` / `cost` con multiplicadores `Fx`: `dmg, speed, maxHp, xp, scrap, spawn, taken, regen`; `heal` instantáneo; `stages`, `Infinity` = resto de la run). Estado en el `Run`: `pacts: {id, left}[]` (`left` = escenarios que quedan contando el actual) y `offer`. Funciones puras: `pactOffer`, `pactFx`, `activePacts`, `fxText`; fases `pact`, eventos `pact_offer / pact_yes / pact_no`.
+- **Selección determinista** (`pactOffer`): hash propio `mix` de (semilla, vuelta, escenario, pacto); no gasta el `rng()` de la partida; no repite pactos activos; quedarse no cambia la oferta.
+- **Duración**: cada salida de escenario (`advance`, `vote`) descuenta uno; al llegar a 0 el pacto se va. Los de la run siguen tras ¡ENCORE!.
+- **Aplicación** (`main.ts`): `pfx = E.pactFx(erun)` dentro de `recompute()` (daño, velocidad, XP, regeneración, daño recibido vía `st.armor`, vida máxima), `hordeK = horde * pfx.spawn` en aparición / tope / enjambre, `* pfx.scrap` en los tornillos de `endRun`, cura del `heal` en `encApply`. Todo neutro (x1, +0) en Supervivencia; `recompute()` también corre al cargar cada escenario para expirar pactos.
+- **UI** (`ui.ts` `hudEnc`, `hud.css`, `index.html`): se reusa `#encAsk` (clase `pact`): dos cartas con nombre, VENTAJA en verde, COSTO en rojo y duración, barra de tiempo y botón RECHAZAR; en pantallas de hasta 520 px se apilan. Pactos activos como fichas compactas bajo el reloj (`#encPacts`: etiqueta + "N ESC" o "RUN", término completo en `title`).
+- **Controles**: **Z / X** eligen el pacto 1 / 2 (como la decisión), **V** rechaza (C es cámara); mando: cruceta izquierda / derecha eligen, cruceta abajo rechaza; táctil: botones.
+- **Director**: frases `pact_offer`, `pact_yes`, `pact_no` por el aviso de radio; tras aceptar o rechazar sigue el anuncio de la variante del escenario.
+- **Pruebas**: `test/encore.test.ts` (8 nuevas: oferta de 2 distintos y estable, aceptar / rechazar / vencer, sin oferta con avance automático, hacia la votación o sin pactos libres, sin repetir activos, expiración por escenarios y persistencia tras ENCORE!, combinación de efectos, texto verdadero). Verificado solo con `tsc` y esa suite; **sin sim, capturas ni perf** (se hará al cierre del proyecto).
+- **No verificado**: el aspecto de la oferta en compu y celular 390x844 (pendiente de captura), que la cruceta del mando y el toque funcionen en dispositivo, y que Supervivencia siga idéntico en `sim` (por diseño todo es x1 / +0 sin `erun`). Valores sin playtest (`ponytail:` en `PACTS`); `pactS` y los números se afinan con el playbook.
+- **Límites**: acumular varios pactos de "enemigos" multiplica la presión (hasta x2,3 con los tres); no hay tope. Los pactos que suben la vida máxima no existen aún (al vencer SALUD EN GARANTÍA la vida máxima vuelve y suma la diferencia a la vida actual).

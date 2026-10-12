@@ -12,6 +12,7 @@ const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram",
 import { WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
 import { SFX } from "./sfx";
+import type { PactView } from "./encore";
 import { BEAST_PORTRAITS, type Kind } from "./enemies";
 
 const $ = (id: string) => (document.getElementById(id) ?? (id === "jump" ? document.getElementById("jumpRow") : null))!;
@@ -336,20 +337,26 @@ export function hudBoss(name: string | null, pct = 1, kind?: string, enraged = f
 
 // ---------- ENCORE: contador de escenario y ventana de decisión (encore.ts) ----------
 /** null = Supervivencia: todo oculto. tag = [prefijo, texto, numerado]; ask = ventana abierta con sus dos botones (null = sin botón) y lo que queda. */
-export function hudEnc(d: { tag: [string, string, boolean]; ask: { title: string; opts: [string | null, string | null]; left: number; frac: number } | null } | null) {
+type EncAsk = { title: string; opts: [string | null, string | null]; left: number; frac: number; pacts?: [PactView, PactView]; reject?: string };
+const pactHtml = (p: PactView) => `<b>${p.name}</b><small>VENTAJA</small>${p.gain.map((t) => `<span class="pg">${t}</span>`).join("")}<small>COSTO</small>${p.cost.map((t) => `<span class="pc">${t}</span>`).join("")}<em>${p.dur}</em>`;
+export function hudEnc(d: { tag: [string, string, boolean]; pacts: { tag: string; left: string; terms: string }[]; ask: EncAsk | null } | null) {
   if (ch("encOn", !!d)) $("encTag").classList.toggle("hidden", !d);
+  if (ch("encPk", d ? d.pacts.map((p) => p.tag + p.left).join("|") : "")) $("encPacts").innerHTML = d ? d.pacts.map((p) => `<i title="${p.terms}"><b>${p.tag}</b> ${p.left}</i>`).join("") : ""; // pactos activos, compactos bajo el reloj
   if (!d) { if (ch("encAskOn", false)) $("encAsk").classList.add("hidden"); return; }
   txt("encW", d.tag[0]); txt("encN", d.tag[1]);
   if (ch("encSt", d.tag[2])) $("encTag").classList.toggle("st", d.tag[2]);
   const a = d.ask;
   if (ch("encAskOn", !!a)) $("encAsk").classList.toggle("hidden", !a);
   if (!a) return;
+  if (ch("encPact", !!a.pacts)) $("encAsk").classList.toggle("pact", !!a.pacts);
   txt("encTitle", a.title); txt("encS", `${Math.ceil(a.left)} S`);
   bar("encBar", a.frac * 100);
+  const kb = (k: string) => (isTouch ? "" : ` <kbd>${k}</kbd>`);
   a.opts.forEach((o, i) => {
     const b = $(i ? "encB" : "encA");
-    if (ch("encO" + i, o ?? "")) { b.classList.toggle("hidden", !o); b.innerHTML = o ? `${o}${isTouch ? "" : ` <kbd>${i ? "X" : "Z"}</kbd>`}` : ""; }
+    if (ch("encO" + i, o ?? "")) { b.classList.toggle("hidden", !o); b.innerHTML = o ? `${a.pacts ? pactHtml(a.pacts[i]) : o}${kb(i ? "X" : "Z")}` : ""; }
   });
+  if (ch("encRj", a.reject ?? "")) { const c = $("encC"); c.classList.toggle("hidden", !a.reject); c.innerHTML = a.reject ? `${a.reject}${kb("V")}` : ""; }
 }
 
 // ---------- Aviso de radio: entra con interferencia y el texto se va tecleando ----------

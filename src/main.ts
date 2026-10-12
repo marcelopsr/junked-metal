@@ -194,10 +194,14 @@ function dropPickup(pos: B.Vector3, type: Pickup["type"]) {
 // ---------- Flujo ----------
 function recompute() {
   st = pilotStats(passiveStats(passives, save.perm), save.pilot);
+  pfx = E.pactFx(erun); // ENCORE: pactos activos (neutros en Supervivencia: x1, +0)
+  st.dmg *= pfx.dmg; st.speedMul *= pfx.speed; st.xp *= pfx.xp; st.regen += pfx.regen;
+  if (pfx.taken !== 1) st.armor = 1 - (1 - st.armor) * pfx.taken; // daño recibido x taken
   if (noRepair) st.regen = 0; // maldición Sin reparaciones
-  const newMax = car!.def.hp + st.maxHp;
+  const newMax = pfx.maxHp === 1 ? car!.def.hp + st.maxHp : Math.round((car!.def.hp + st.maxHp) * pfx.maxHp);
   hp += Math.max(0, newMax - maxHp);
   maxHp = newMax;
+  if (pfx.maxHp !== 1) hp = Math.min(hp, maxHp); // el pacto que baja la vida máxima recorta también la vida actual
   car!.setMass(car!.def.mass * st.mass);
   // Cada arma se ve montada en el auto y crece con el nivel
   for (const w of weapons) {
@@ -219,7 +223,7 @@ function previewOffer(i: number) {
 }
 
 function clearRun() {
-  erun = null; encPrior = paceS = 0; GOAL_IO.tele = false;
+  erun = null; encPrior = paceS = 0; GOAL_IO.tele = false; pfx = E.NO_FX;
   setMoon(false); // la luna se enciende solo en una partida de Supervivencia en la luna (startRun)
   evReset(); // luna: meteoritos, erupciones, tinte rojo y ambiente (moon_events.ts)
   shipsClear(); // naves de la luna (moon_ships.ts)
@@ -248,7 +252,7 @@ function clearRun() {
 let daily = false, encore = import.meta.env.DEV && /[?&]encore\b/.test(location.search); // encore: modo ENCORE (docs/ENCORE); ?encore (dev) lo deja armado y arranca solo
 // ENCORE: erun = estado de la expedición (encore.ts; null = Supervivencia, que no toca nada de esto). encPrior = segundos de los escenarios anteriores
 // (`time` es el reloj del escenario); paceS = segundos de dificultad extra que suman escenario, vuelta y estadía (E.paceOf).
-let erun: E.Run | null = null, encPrior = 0, paceS = 0;
+let erun: E.Run | null = null, encPrior = 0, paceS = 0, pfx: E.Fx = E.NO_FX; // pfx = efecto de los pactos activos (recompute)
 const zoneFor = (d: boolean) => d ? "patio" : encore ? "luna" : (import.meta.env.DEV && new URLSearchParams(location.search).get("zone")) || save.zone;
 function startRun(d = false) {
   daily = d;
@@ -345,6 +349,7 @@ function encEnter() {
   paceS = E.paceOf(r);
   spawnAcc = groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0;
   encPlan();
+  recompute(); // pactos vencidos al salir del escenario anterior
   shake = Math.max(shake, 1.2);
 }
 /** Punto del piso de la luna en la dirección d (unitaria, desde el centro). */
@@ -382,14 +387,17 @@ const minorShip = (i: number) => (erun && E.variantOf(erun)?.ship) || shipFor(i,
 function encApply(ev: E.Ev | null) {
   if (!ev || !erun) return;
   if (ev === "tele_land") rocketLand(car!.pos, true); // el cohete de moon_goals.ts hace de teleportador; el aviso es el del Director
-  else if (ev === "advance" || ev === "encore" || ev === "vote" || ev === "final_act") encEnter();
-  const v = ev === "advance" || ev === "encore" ? E.variantOf(erun) : null; // al llegar a un escenario nuevo, el Director anuncia su variante en vez de la frase suelta
+  else if (ev === "advance" || ev === "encore" || ev === "vote" || ev === "final_act" || ev === "pact_yes" || ev === "pact_no") encEnter(); // pact_*: la respuesta a la oferta ya avanzó la fase
+  if (ev === "pact_yes") { const p = E.pactOf(erun.pacts[erun.pacts.length - 1].id); if (p.gain.heal) hp = Math.min(maxHp, hp + maxHp * p.gain.heal); } // el pacto ya está en `pfx` (encEnter → recompute); falta la cura instantánea
+  const pact = ev === "pact_yes" || ev === "pact_no", v = pact || ev === "advance" || ev === "encore" ? E.variantOf(erun) : null; // al llegar a un escenario nuevo, el Director anuncia su variante en vez de la frase suelta
+  if (pact) say(ev); // la respuesta al trato y, enseguida, la variante
   if (v) banner(`${v.name}. ${v.line}`, 3.8, { tag: "DIRECTOR", ico: "senal", tone: "now" });
-  else say(ev, ev === "tele_ready" || ev === "vote" ? "warn" : "now");
+  else if (!pact) say(ev, ev === "tele_ready" || ev === "vote" || ev === "pact_offer" ? "warn" : "now");
 }
-const encPick = (i: 0 | 1) => { if (state === "play" && erun) encApply(E.pick(erun, i)); };
+const encPick = (i: 0 | 1 | 2) => { if (state === "play" && erun) encApply(E.pick(erun, i)); };
 $("encA").onpointerdown = (ev) => { ev.preventDefault(); encPick(0); }; // pointerdown + sin foco: Espacio (turbo) no vuelve a apretar el botón
 $("encB").onpointerdown = (ev) => { ev.preventDefault(); encPick(1); };
+$("encC").onpointerdown = (ev) => { ev.preventDefault(); encPick(2); }; // RECHAZAR (solo en la oferta de pactos)
 
 // Logros (achievements.ts): las pruebas de dev (__sim, lab, god) no otorgan nada ni tocan el guardado
 let runAch: string[] = [], hitAt = 0; // logros de esta partida (pantalla final) y último golpe recibido
@@ -421,7 +429,7 @@ function endRun(win: boolean, why: string) {
   state = simulating ? "over" : "outro"; // el cierre en cámara lenta (outroTick) abre los resultados
   engineStop(); music("over"); rainSfx(0); moonAmbience(false);
   // Tornillos: los de la partida más tiempo y bajas, con el extra de las maldiciones (+30% cada una)
-  const earned = Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK);
+  const earned = Math.floor((runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas)) * curseK * pfx.scrap);
   const eb = save.encore.best, encBetter = !!erun && (erun.loop > eb.loop || (erun.loop === eb.loop && (erun.stage > eb.stage || (erun.stage === eb.stage && Math.floor(time) > eb.t))));
   const prevBest = erun ? eb.t : save.best, record = erun ? encBetter : Math.floor(time) > save.best;
   const rec: RunRec = { t: Math.floor(time), kills, lv: level, seed: runSeed, win };
@@ -848,7 +856,7 @@ function update(dt: number) {
   const c = car!;
   time += dt;
   if (erun) encApply(E.tick(erun, dt)); // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
-  const calm = erun?.phase === "vote" || erun?.phase === "final", tp = time + paceS; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
+  const calm = erun?.phase === "vote" || erun?.phase === "final", tp = time + paceS, hordeK = horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
   if (hintOn && (time > HINT_S || input.throttle || input.steer || input.move || input.boost || input.drift || input.jump || input.ability)) { hintOn = false; $("hint").classList.add("fade"); }
   // Ciclo de luz: se reaplica solo cuando cambió lo suficiente (repinta cielo y sonda)
   // Lluvia: empieza a la fracción profile.rainAt de la partida; la intensidad sube suave
@@ -1027,14 +1035,14 @@ function update(dt: number) {
   // --- Aparición de enemigos ---
   // Tope de vivos y ritmo: con el bot que pelea jefes (devbot.ts) quedó en ~50% de victorias (__sim, 40 semillas).
   // ponytail: más densidad casi no baja la tasa (más bichos = más XP); el techo real está en las fusiones repetidas
-  const maxAlive = duel >= 0 ? duel : calm ? 0 : Math.min(low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + tp / R.tope_vivos_seg) * horde * TOUGH.count) * (MOON.on ? R.luna_tope_mult : 1); // Horda: +50%. Tope 100 en compu, 60 en táctil
+  const maxAlive = duel >= 0 ? duel : calm ? 0 : Math.min(low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + tp / R.tope_vivos_seg) * hordeK * TOUGH.count) * (MOON.on ? R.luna_tope_mult : 1); // Horda: +50%. Tope 100 en compu, 60 en táctil
   // Aparecen sesgados hacia donde vas: manejar no es escapar gratis
   const cv = c.body.getLinearVelocity();
   hflat(_spawnOff.copyFrom(cv), c.pos).scaleInPlace(R.spawn_adelanto_s);
   _ahead.copyFrom(c.pos).addInPlace(_spawnOff);
   let normals = 0;
   for (const e of enemies) if (!e.def.boss) normals++;
-  spawnAcc += (R.spawn_base + tp / R.spawn_seg) * wdt * horde * TOUGH.count * (MOON.on ? R.luna_aparicion_mult : 1);
+  spawnAcc += (R.spawn_base + tp / R.spawn_seg) * wdt * hordeK * TOUGH.count * (MOON.on ? R.luna_aparicion_mult : 1);
   // Con la cámara más alejada que el zoom por defecto (1.35) el anillo de aparición se abre igual, para no verlos nacer
   // Anillo fijo, fuera de cuadro aun con el zoom máximo (2): la partida no cambia según el zoom elegido
   while (spawnAcc >= 1) { spawnAcc--; if (normals < maxAlive) spawnEnemy(pickWeighted(spawnTable(tp, profile.plague)), spawnPoint(_ahead, R.spawn_anillo_min, R.spawn_anillo_max)); }
@@ -1058,7 +1066,7 @@ function update(dt: number) {
     evtPre.swarm = false;
     swarmT = profile.swarmEvery;
     radioEvent("enjambre");
-    const ns = Math.round((R.enjambre_base + tp / R.enjambre_seg) * horde * TOUGH.count); // el enjambre crece con la partida
+    const ns = Math.round((R.enjambre_base + tp / R.enjambre_seg) * hordeK * TOUGH.count); // el enjambre crece con la partida
     for (let i = 0; i < ns; i++) { const a = (i / ns) * Math.PI * 2; const p = MOON.on ? ringAt(c.pos, a, R.enjambre_radio) : new B.Vector3(c.pos.x + Math.cos(a) * R.enjambre_radio, 1, c.pos.z + Math.sin(a) * R.enjambre_radio); if (Math.abs(p.x) < HALF - 3 && Math.abs(p.z) < HALF - 3) spawnEnemy("hormiga", p); }
   }
   if (time - Math.max(hitAt, 300) >= 60) grant("intacto"); // 60 s sin daño, contando desde el minuto 5
@@ -1384,7 +1392,7 @@ addEventListener("wheel", (ev) => state === "play" && zoomBy(ev.deltaY > 0 ? 1.0
 addEventListener("keydown", (ev) => {
   if (keyHit("zoomOut", ev.code)) zoomBy(1.1); else if (keyHit("zoomIn", ev.code)) zoomBy(1 / 1.1);
   if (!ev.repeat && (state === "play" || state === "race") && keyHit("cam", ev.code)) camCycle(); // cambiar cámara: solo el evento (input.ts)
-  if (!ev.repeat && erun) { if (ev.code === "KeyZ") encPick(0); else if (ev.code === "KeyX") encPick(1); } // ENCORE: decisión del teleportador y votación (Z/X, no 1/2: esas eligen carta y el mismo golpe de tecla las cruzaría)
+  if (!ev.repeat && erun) { if (ev.code === "KeyZ") encPick(0); else if (ev.code === "KeyX") encPick(1); else if (ev.code === "KeyV") encPick(2); } // ENCORE: decisión del teleportador, pactos y votación (Z/X, no 1/2: esas eligen carta y el mismo golpe de tecla las cruzaría; V rechaza el pacto, C ya es cámara)
 });
 const LAB = { on: false, back: 15, up: 13, t: 1 }; // modo lab (solo dev): mundo congelado para probar el look
 const dmgBy: Record<string, number> = {}; // solo dev: de dónde viene el daño
@@ -1491,7 +1499,7 @@ function updateHud(dt: number) {
   car!.wear(frac);
   for (const t of [0.5, 0.25]) if (lastHpFrac > t && frac <= t) { debris(car!.pos, save.paint || "#d62828", 8, 7, 0.8); FX.sparks(car!.pos); shake = Math.max(shake, 0.6); }
   lastHpFrac = frac;
-  if (erun) { const a = E.ask(erun); hudEnc({ tag: E.tag(erun), ask: a && { title: a.title, opts: a.opts, left: erun.timer, frac: Math.max(0, erun.timer) / a.total } }); } else hudEnc(null);
+  if (erun) { const a = E.ask(erun); hudEnc({ tag: E.tag(erun), pacts: E.activePacts(erun), ask: a && { title: a.title, opts: a.opts, left: erun.timer, frac: Math.max(0, erun.timer) / a.total, pacts: a.pacts, reject: a.reject } }); } else hudEnc(null);
   hudUpdate({
     hp, maxHp, boost, xp, need: xpNeed(level), level, pending: pendingLevels, time: time + encPrior, kills, kmh: lastKmh, maxKmh: lastMaxKmh,
     shield: abil === "escudo" && abilOn > 0,
@@ -1637,7 +1645,7 @@ scene.onBeforeRenderObservable.add(() => {
     if (padPressed(15)) { offerSel = (offerSel + 1) % offers.length; selectOffer(offerSel); }
     if (padPressed(pb("ok"))) pickOffer(offerSel);
     if (padPressed(pb("reroll"))) reroll();
-  } else if (state === "play") { if (padPressed(pb("pause"))) pause(); else if (padPressed(pb("cam"))) camCycle(); else if (erun && padPressed(14)) encPick(0); else if (erun && padPressed(15)) encPick(1); } // ENCORE: cruceta izquierda/derecha = opción 1/2
+  } else if (state === "play") { if (padPressed(pb("pause"))) pause(); else if (padPressed(pb("cam"))) camCycle(); else if (erun && padPressed(14)) encPick(0); else if (erun && padPressed(15)) encPick(1); else if (erun && padPressed(13)) encPick(2); } // ENCORE: cruceta izquierda/derecha = opción 1/2, abajo = rechazar el pacto
   else if (state === "outro") outroTick(dt);
   else if (state === "race") { const k = kartM!; if (padPressed(pb("pause"))) k.racePause(); if (padPressed(pb("ok"))) k.raceClick(); if (padPressed(pb("cam"))) camCycle(); if (padPressed(14)) k.racePadMenu(-1); if (padPressed(15)) k.racePadMenu(1); k.raceTick(dt); }
   else if (state === "duel") duelM!.duelTick(dt);
