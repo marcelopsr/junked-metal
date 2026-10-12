@@ -20,10 +20,12 @@ import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setSco
 import { setDrawDist, buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, heavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, danoRecibido, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
-import { cfLoginUrl, getToken, LOGIN_URL, loginKey, loginUrl, NET_HOST, redeemInvite, daily as fetchDaily, setToken, takeToken, track, type Msg, type Net } from "./net"; // net.ts es chico; peerjs sigue en su chunk dinámico
+import { daily as fetchDaily, track, type Msg, type Net } from "./net";
+import { initNetClient, netSnap, netClientTick, netEnd, getNet, getNetBytes, getNetLv, getCardBy, setCardBy, advanceCardBy, getNetPools, getNetBuf, getNetIn, getNetSeed, isSpectating } from "./net_client";
 import { BAL, xpNeed } from "./balance";
 import * as RR from "./rerun";
-import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
+import { initCoop, mateStart, mateViews, mateClear, matePlace, mateSync, hurtP, mateDown, mateLead, mateRevive, mateInput, mateTick, mateCam, mateHurt, type Player } from "./coop";
+import { initOutro, grant, endRun, startOutro, outroTick, endOutro, rpStart, rpEnd, rpWatch, replaying, rp, stageHurt, setStageHurt, hitAt, setHitAt, recordHit, runAch, resetRunAch, outroAt, setOutroAt, ts, outroZ, resetOutroState } from "./outro";
 import { introOn, playIntro } from "./intro";
 import { craterHumeante, evBase, evFog, evInit, evPace, evReset, evShow, lunaDev, lunaEv, panTo } from "./moon_events";
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
@@ -72,6 +74,8 @@ const cam = new B.FreeCamera("cam", new B.Vector3(0, 30, -40), scene);
 cam.fov = 0.85;
 cam.minZ = 1; // más cerca el z-buffer pierde precisión y los decales del piso parpadean
 cam.maxZ = 1500;
+const camTarget = new B.Vector3();
+const camH = new B.Vector3(0, 0, 1), camUp = new B.Vector3(0, 1, 0), _camM = new B.Matrix();
 
 setupRender(scene, cam, low);
 initModels(scene);
@@ -93,7 +97,14 @@ let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" | "du
 // y las armas de verdad (`weapons`); los otros llevan copias montadas en su auto. car === null = caído (vuelve en el próximo escenario).
 // Compartidos (como antes): XP, nivel, armas, pasivas, tornillos y pactos.
 const NO_IN = { throttle: 0, steer: 0, boost: false, drift: false, ability: false, jump: false, moveX: 0, moveY: 0, move: false };
-type Player = { id: number; in: typeof NO_IN; car: Car | null; hp: number; maxHp: number; boost: number; fs: number; touch: number; jumpCd: number; coyote: number; cam: B.FreeCamera; h: B.Vector3; up: B.Vector3; tgt: B.Vector3; weapons: Weapon[]; sig: string };
+const rrTake = () => { const c = lead.car!, p = c.root.position, q = c.root.rotationQuaternion ?? B.Quaternion.Identity(), v = c.body.getLinearVelocity(), w = c.body.getAngularVelocity(); return [p.x, p.y, p.z, q.x, q.y, q.z, q.w, v.x, v.y, v.z, w.x, w.y, w.z, lead.hp, time]; };
+function rrApply(a?: number[]) {
+  if (!a || !lead.car) return;
+  const c = lead.car;
+  c.root.position.set(a[0], a[1], a[2]); c.root.rotationQuaternion = new B.Quaternion(a[3], a[4], a[5], a[6]);
+  c.body.setLinearVelocity(new B.Vector3(a[7], a[8], a[9])); c.body.setAngularVelocity(new B.Vector3(a[10], a[11], a[12]));
+  teleport(c.body); lead.hp = a[13]; time = a[14]; // ponytail: solo el auto del jugador; enemigos siguen su propia deriva
+}
 const newPlayer = (id: number, c: B.FreeCamera): Player => ({ id, in: id === 1 ? input : NO_IN, car: null, hp: 100, maxHp: 100, boost: 100, fs: 0, touch: 0, jumpCd: 0, coyote: 0, cam: c, h: new B.Vector3(0, 0, 1), up: new B.Vector3(0, 1, 0), tgt: new B.Vector3(), weapons: [], sig: "" });
 const players: Player[] = [newPlayer(1, cam)];
 let lead = players[0];
@@ -272,7 +283,6 @@ let daily = false, encore = import.meta.env.DEV && /[?&]encore\b/.test(location.
 // (`time` es el reloj del escenario); paceS = segundos de dificultad extra que suman escenario, vuelta y estadía (E.paceOf).
 let dirq = E.newDirQ(), ovT = 0, guestE: Enemy | null = null; // R3: cola del Director, reloj de enjambres del OVERLOAD, invitado del BOSS_GUEST
 let erun: E.Run | null = null, encPrior = 0, paceS = 0, pfx: E.Fx = E.NO_FX; // pfx = efecto de los pactos activos (recompute)
-const rp = RR.rp, replaying = () => rp.on;
 // R7a/c (ENCORE de 2 a 4, solo compu): coop = jugadores pedidos al largar (1 = solo); los jugadores viven en `players` (R6a)
 let coop = 1, spawnN = 0;
 const encLog: { loop: number; stage: number; t: number }[] = []; // solo dev (__encBot): cuándo se entró a cada escenario (segundos totales de la expedición)
@@ -292,9 +302,9 @@ function startRun(d = false) {
   // Zona: el diario siempre en el patio; ?zone=garaje|jardin (solo dev) la fuerza. Se arma antes de sembrar: no toca la semilla.
   setZone(zoneFor(daily)); // ya armado por la precarga (tarea "patio") salvo que cambie la zona o el tope de texturas
   setMoon(zoneId === "luna");
-  runSeed = forceSeed || netSeed || Number(new URLSearchParams(location.search).get("seed")) || (daily ? dailyInfo?.seed || dailySeed() : newSeed());
+  runSeed = forceSeed || getNetSeed() || Number(new URLSearchParams(location.search).get("seed")) || (daily ? dailyInfo?.seed || dailySeed() : newSeed());
   seedRng(runSeed);
-  if (!replaying()) { if (!encore && coop === 1 && !net && !simulating && !LAB.on && duel < 0) RR.recStart(runSeed, daily); else RR.rec.on = false, RR.rec.done = false; } // T39: se graba solo la partida solitaria
+  if (!replaying()) { if (!encore && coop === 1 && !getNet() && !simulating && !LAB.on && duel < 0) RR.recStart(runSeed, daily); else RR.rec.on = false, RR.rec.done = false; } // T39: se graba solo la partida solitaria
   // Perfil de la partida: clima, plaga, orden de minijefes, ritmo de eventos y un patio distinto
   profile = makeProfile(runSeed);
   profile.climate = zoneClimate() ?? profile.climate; // interior (garaje): luz fija
@@ -322,14 +332,14 @@ function startRun(d = false) {
   recompute();
   lead.hp = lead.maxHp; lead.boost = 100;
   xp = 0; level = 1; pendingLevels = 0;
-  time = 0; kills = 0; runScrap = 0; runDist = 0; runAch = []; hitAt = 0;
+  time = 0; kills = 0; runScrap = 0; runDist = 0; resetRunAch(); setHitAt(0);
   spawnAcc = 0; groupT = 0; swarmT = R.enjambre_primero_base + profile.swarmEvery * R.enjambre_primero_mult; chestT = profile.chestEvery; ballT = profile.ballEvery; bossIdx = 0; wasGrounded = true; coyoteT = 0; apagon = false;
   dirq = E.newDirQ(); ovT = 0; guestE = null; dirSub(null); saidSecrets = [];
   if (encore && MOON.on) { erun = E.newRun(runSeed, save.encore.secrets); GOAL_IO.tele = true; shopReset(); encPlan(); encScene(true); }
   if (erun && coop > 1) mateStart(coop); // R7a/c: de 2 a 4 jugadores en pantalla dividida (solo compu)
-  camYaw = 0; dynK = 1; ts = 1; outroZ = 1; outroAt = null; fxSpeed(1); camH.set(0, 0, 1); camUp.set(0, 1, 0);
+  camYaw = 0; dynK = 1; resetOutroState(); fxSpeed(1); camH.set(0, 0, 1); camUp.set(0, 1, 0);
   state = "play";
-  scene.physicsEnabled = true;
+  scene.physicsEnabled = false; // T39: en play el mundo avanza a mano (update + _step); con true Babylon da un paso extra con dt real y la repetición diverge
   reset(null);
   $("levelup").classList.add("hidden");
   for (const k in dmgOut) delete dmgOut[k];
@@ -341,8 +351,8 @@ function startRun(d = false) {
   // Guía de controles los primeros segundos (se va sola)
   const hint = $("hint");
   for (const k of hint.querySelectorAll<HTMLElement>("kbd[data-k]")) k.textContent = keyName(KEYS[k.dataset.k as keyof typeof KEYS][0]); // teclas reasignadas
-  hint.classList.toggle("coop", players.length > 1 && !net); // R7b: con 2 jugadores, sobre la línea divisoria (no tapa la mitad de abajo) y con las teclas del J2
-  if (players.length > 1 && !net) { const kb = (c: string) => `<kbd>${keyName(c)}</kbd>`, k2 = RACE.kb2; $("hintJ2").innerHTML = coopCtl() === "kbd2" ? `J2 ${kb(k2.up[0])}${kb(k2.down[0])}${kb(k2.left[0])}${kb(k2.right[0])} manejo · ${kb(k2.item[0])} turbo · ${kb(k2.drift[0])} derrape · ${kb(KEYS2.jump[0])} salto · ${kb(KEYS2.ability[0])} habilidad` : `J2 segundo joystick · ${btnName(pb("jump"))} salto · ${btnName(pb("ability"))} habilidad`; if (coop > 2) $("hintJ2").innerHTML += ` · ${coop === 3 ? "J3 tercer joystick" : "J3 y J4 tercer y cuarto joystick"}`; }
+  hint.classList.toggle("coop", players.length > 1 && !getNet()); // R7b: con 2 jugadores, sobre la línea divisoria (no tapa la mitad de abajo) y con las teclas del J2
+  if (players.length > 1 && !getNet()) { const kb = (c: string) => `<kbd>${keyName(c)}</kbd>`, k2 = RACE.kb2; $("hintJ2").innerHTML = coopCtl() === "kbd2" ? `J2 ${kb(k2.up[0])}${kb(k2.down[0])}${kb(k2.left[0])}${kb(k2.right[0])} manejo · ${kb(k2.item[0])} turbo · ${kb(k2.drift[0])} derrape · ${kb(KEYS2.jump[0])} salto · ${kb(KEYS2.ability[0])} habilidad` : `J2 segundo joystick · ${btnName(pb("jump"))} salto · ${btnName(pb("ability"))} habilidad`; if (coop > 2) $("hintJ2").innerHTML += ` · ${coop === 3 ? "J3 tercer joystick" : "J3 y J4 tercer y cuarto joystick"}`; }
   if (save.hint) hint.classList.remove("hidden", "fade"); else hint.classList.add("hidden");
   hintOn = save.hint; // se apaga en update() con la primera entrada o a los HINT_S de partida
 }
@@ -380,7 +390,7 @@ function encEnter() {
   if (z !== zoneId) { setZone(z, false); setMoon(z === "luna"); cycleS = -1; }
   encoreAmbience(z, v0?.name); // ambiente propio del escenario (crossfade)
   GOAL_IO.half = MOON.on ? 0 : HALF; // teleportador y cofres dentro del patio
-  encPrior += time; time = 0; hitAt = 0; stageHurt = false;
+  encPrior += time; time = 0; setHitAt(0); setStageHurt(false);
   runSeed = E.stageSeed(r.seed, r.loop, E.sceneIdx(r));
   seedRng(runSeed);
   profile = makeProfile(runSeed);
@@ -480,9 +490,10 @@ const encPick = (i: 0 | 1 | 2) => { if (state === "play" && erun) encApply(E.pic
 // Hoy los menús y botones son locales y las mandan como el que guía; la compra en la máquina, como quien la activó.
 type Cmd = { k: "card"; i: number } | { k: "reroll" } | { k: "enc"; i: 0 | 1 | 2 } | { k: "buy"; scrap: number; hpFrac: number };
 function applyCommand(playerId: number, cmd: Cmd) {
-  if (net && !net.host) { if (spectating) return; if (cmd.k !== "buy") { net.send({ t: "c", c: cmd }, true); if (cmd.k === "enc") banner("VOTO ENVIADO", 1.2); } return; } // R6b: el cliente no decide, le pide al anfitrión
+  const net = getNet();
+  if (net && !net.host) { if (isSpectating()) return; if (cmd.k !== "buy") { net.send({ t: "c", c: cmd }, true); if (cmd.k === "enc") banner("VOTO ENVIADO", 1.2); } return; } // R6b: el cliente no decide, le pide al anfitrión
   const p = players.find((x) => x.id === playerId) ?? lead;
-  if ((cmd.k === "card" || cmd.k === "reroll") && net?.host && p.id !== cardBy) return; // R6c: online elige las cartas uno por vez (cardBy)
+  if ((cmd.k === "card" || cmd.k === "reroll") && net?.host && p.id !== getCardBy()) return; // R6c: online elige las cartas uno por vez (cardBy)
   if (RR.rec.on && (cmd.k === "card" || cmd.k === "reroll")) RR.rec.cards.push(cmd.k === "card" ? cmd.i : -1);
   if (cmd.k === "card") choose(cmd.i, p); // cartas: compartidas; la reparación cura a quien elige
   else if (cmd.k === "reroll") reroll();
@@ -495,7 +506,7 @@ const votes = new Map<number, 0 | 1 | 2>();
 let voteKey = "";
 function encVote(id: number, i: 0 | 1 | 2) {
   const host = players[0].id, mate = players.find((x) => x.id !== host);
-  if (!net?.host || !mate) { votes.clear(); encPick(i); return; }
+  if (!getNet()?.host || !mate) { votes.clear(); encPick(i); return; }
   const k = erun ? `${erun.phase}:${erun.loop}:${erun.stage}:${erun.stays}` : "";
   if (k !== voteKey) { votes.clear(); voteKey = k; } // otra ventana: los votos viejos no cuentan
   votes.set(id, i);
@@ -508,489 +519,144 @@ $("encA").onpointerdown = (ev) => { ev.preventDefault(); applyCommand(lead.id, {
 $("encB").onpointerdown = (ev) => { ev.preventDefault(); applyCommand(lead.id, { k: "enc", i: 1 }); };
 $("encC").onpointerdown = (ev) => { ev.preventDefault(); applyCommand(lead.id, { k: "enc", i: 2 }); }; // RECHAZAR (solo en la oferta de pactos)
 
-// ---------- R6b: ENCORE online de 2 (net.ts, docs/ENCORE/R0/R6_RED.md opción A) ----------
-// Anfitrión = J1 y simula todo; el input del cliente mueve a players[1] como un control local y sus comandos pasan por applyCommand.
-// Cliente = J2: no simula (state "net", física apagada); dibuja autos y bichos de los snapshots con 100 ms de interpolación y su cámara sigue a su auto.
-// ponytail: sin compensar latencia ni predecir el auto propio (R6c): el cliente ve su auto con RTT/2 + 100 ms de retraso.
-// ponytail: sin rejoin (R6d): si se corta, el anfitrión sigue solo y el cliente vuelve al menú.
-// ponytail: el cliente no replica gemas ni efectos; proyectiles aproximados y cartas por turnos (R6c); ve los autos con el modelo de su propio garaje.
-let net: Net | null = null, netSeed = 0, netT = 0, spectating = false; // spectating: cliente que solo mira (cámara en J1, sin enviar inputs ni comandos)
-const NET_HZ = 15, NET_DELAY = 100;
-let netIn = { ...NO_IN };
-const q1 = (n: number) => Math.round(n * 10) / 10, q2 = (n: number) => Math.round(n * 100) / 100, q3 = (n: number) => Math.round(n * 1000) / 1000;
-const quatOf = (n: B.TransformNode) => n.rotationQuaternion ?? B.Quaternion.FromEulerVector(n.rotation);
-const netIds = new WeakMap<Enemy, number>();
-let netNext = 1;
-type PSnap = [number, ...number[]]; // [id] = caído; [id, x, y, z, qx, qy, qz, qw, vx, vy, vz, hp, maxHp]
-type ESnap = [number, Kind, number, number, number, number, number, number, number, number, number]; // id, tipo, pos, quat, vida, vida máx.
-type Snap = { T: number; z: string; xp: number; lv: number; sc: number; run: E.Run | null; p: PSnap[]; e: ESnap[]; j: number[]; w: number[] }; // j/w: proyectiles de bichos y de armas, [x, y, z] planos a 0,1 m
-const NET_PROJ = 60; // tope por tipo de proyectil y snapshot (los más allá del radio no van)
-let netBytes = 0; // solo dev: bytes de snapshot enviados (JSON), para medir kB/s en test:net
-/** Proyectiles de armas (aproximado): todo arreglo de un arma con { m: InstancedMesh } (balas, trompos, olas...). */
-function weaponShots(out: number[], near: (v: B.Vector3) => boolean) {
-  for (const w of [...weapons, ...players.flatMap((m) => (m === lead ? [] : m.weapons))])
-    for (const v of Object.values(w)) if (Array.isArray(v)) for (const o of v) {
-      if (out.length >= NET_PROJ * 3) return;
-      const m = (o as { m?: unknown })?.m;
-      if (m instanceof B.InstancedMesh && m.isEnabled() && near(m.position)) out.push(q1(m.position.x), q1(m.position.y), q1(m.position.z));
-    }
-}
-function netSnap() {
-  const c2 = players[1]?.car?.pos ?? lead.car?.pos, R2 = 70 * 70, e: ESnap[] = [];
-  for (const en of enemies) {
-    if (e.length >= 120 || !c2 || B.Vector3.DistanceSquared(en.pos, c2) > R2) continue; // solo lo que el cliente puede ver cerca de su auto
-    let id = netIds.get(en); if (!id) netIds.set(en, (id = netNext++));
-    const q = quatOf(en.node);
-    e.push([id, en.kind, q2(en.pos.x), q2(en.pos.y), q2(en.pos.z), q3(q.x), q3(q.y), q3(q.z), q3(q.w), Math.ceil(en.hp), Math.ceil(en.maxHp)]);
-  }
-  const p = players.map((pl): PSnap => {
-    const c = pl.car; if (!c) return [pl.id];
-    const q = quatOf(c.root), v = c.body.getLinearVelocity();
-    return [pl.id, q2(c.pos.x), q2(c.pos.y), q2(c.pos.z), q3(q.x), q3(q.y), q3(q.z), q3(q.w), q2(v.x), q2(v.y), q2(v.z), Math.ceil(pl.hp), pl.maxHp];
-  });
-  const near = (v: B.Vector3) => !!c2 && B.Vector3.DistanceSquared(v, c2) <= R2, j: number[] = [], w: number[] = [];
-  for (const sp of spits) if (j.length < NET_PROJ * 3 && near(sp.m.position)) j.push(q1(sp.m.position.x), q1(sp.m.position.y), q1(sp.m.position.z));
-  weaponShots(w, near);
-  const msg = { t: "s", s: { T: q2(time), z: zoneId, xp, lv: level, sc: runScrap, run: erun, p, e, j, w } satisfies Snap };
-  if (import.meta.env.DEV) netBytes += JSON.stringify(msg).length;
-  net!.send(msg);
-}
-const bool = (v: unknown) => v === true;
-const axis = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.max(-1, Math.min(1, v)) : 0);
-/** Mensajes del cliente al anfitrión: se validan (frontera de confianza). */
-function netHostMsg(m: Msg) {
-  if (m.t === "i" && m.i && typeof m.i === "object") {
-    const i = m.i as Record<string, unknown>;
-    netIn = { throttle: axis(i.throttle), steer: axis(i.steer), moveX: axis(i.moveX), moveY: axis(i.moveY), boost: bool(i.boost), drift: bool(i.drift), ability: bool(i.ability), jump: bool(i.jump), move: bool(i.move) };
-  } else if (m.t === "c" && players[1]) { // R6c: votos del teleportador, cartas (en su turno) y re-sorteo; las compras siguen del anfitrión
-    const c = m.c as Cmd;
-    if (c?.k === "enc" && (c.i === 0 || c.i === 1 || c.i === 2)) applyCommand(players[1].id, { k: "enc", i: c.i });
-    else if (c?.k === "card" && Number.isInteger(c.i) && c.i >= 0 && c.i < offers.length && state === "level") applyCommand(players[1].id, { k: "card", i: c.i });
-    else if (c?.k === "reroll") applyCommand(players[1].id, { k: "reroll" });
-  }
-}
-const netBuf: { at: number; s: Snap; e: Map<number, ESnap> }[] = [];
-const netE = new Map<number, Enemy>();
-let netLv = false; // cliente: cartas a la vista (las elige quien diga el anfitrión)
-let cardBy = 1, cardTurn = 0; // R6c: id de quien elige las cartas abiertas; online se alterna en cada oferta (nivel o cofre), empieza el anfitrión
-// Proyectiles en el cliente: un pool de instancias por tipo, sin interpolar (aproximado, 15 Hz).
-const netShotTpl = () => template("netshot", () => [sph(0.35, pbr("netshot", { color: "#ffd23f", emissive: "#a07000" }), [0, 0, 0])]);
-const netPools: Record<"j" | "w", B.InstancedMesh[]> = { j: [], w: [] };
-function netShots(k: "j" | "w", xs: number[] = []) {
-  const pool = netPools[k], n = Math.min(xs.length / 3, NET_PROJ);
-  while (pool.length < n) pool.push((k === "j" ? spitTpl() : netShotTpl()).createInstance("ns" + k));
-  pool.forEach((m, i) => { m.setEnabled(i < n); if (i < n) m.position.set(xs[i * 3], xs[i * 3 + 1], xs[i * 3 + 2]); });
-}
-function netClientMsg(m: Msg) {
-  if (m.t === "go" && typeof m.seed === "number") { netSeed = m.seed; launchRun(false, true, 2, netClientBegin); }
-  else if (m.t === "s") { const s = m.s as Snap; netBuf.push({ at: performance.now(), s, e: new Map(s.e.map((x) => [x[0], x])) }); if (netBuf.length > 8) netBuf.shift(); }
-  else if (m.t === "end") { netEnd(); netBack("La partida terminó en el anfitrión."); }
-  else if (m.t === "lv" && Array.isArray(m.o) && state === "net") { // R6c: cartas abiertas en el anfitrión; elige el cliente si by es su id
-    const list = m.o as Offer[], mine = m.by === lead.id, title = String(m.title);
-    offers = list; offerSel = 0; netLv = true;
-    const show = () => showOffers(title, list, 0, (i) => (mine ? applyCommand(lead.id, { k: "card", i }) : show()), undefined, mine ? `Turno de elegir: J${lead.id}` : `Elige J${m.by}`);
-    show(); SFX.levelUp();
-  } else if (m.t === "lvx") { netLv = false; $("levelup").classList.add("hidden"); }
-}
-/** Cliente: ya armada la run con la semilla del anfitrión, pasa a dibujar lo que llega. J2 guía la cámara principal. */
-function netClientBegin() {
-  const [j1, j2] = players;
-  if (!spectating) { [j1.cam, j2.cam] = [j2.cam, j1.cam]; lead = j2; }
-  for (const w of weapons) w.dispose(); weapons = []; // las armas son del anfitrión
-  state = "net"; scene.physicsEnabled = false; netBuf.length = 0;
-}
-const _nq = new B.Quaternion(), _nv = new B.Vector3();
-function netClientTick() {
-  if (net && !spectating) net.send({ t: "i", i: { ...input } }); // input del cliente cada cuadro, canal no fiable
-  if (!netBuf.length) return;
-  const rt = performance.now() - NET_DELAY;
-  let i = netBuf.length - 1; while (i > 0 && netBuf[i - 1].at > rt) i--;
-  const b = netBuf[i], a = netBuf[Math.max(0, i - 1)], k = b === a || b.at === a.at ? 1 : Math.max(0, Math.min(1, (rt - a.at) / (b.at - a.at))), ext = b.at < rt ? Math.min(0.2, (rt - b.at) / 1000) : 0;
-  const s = b.s;
-  time = s.T; xp = s.xp; level = s.lv; runScrap = s.sc;
-  if (s.z !== zoneId && s.z in ZONES) { setZone(s.z); setMoon(s.z === "luna"); cycleS = -1; } // Contenido 3: el anfitrión cambió de zona (escenario terrestre o vuelta a la luna)
-  if (s.run) { erun = s.run; for (const p of erun.pacts) p.left ??= Infinity; } // JSON: Infinity llega como null
-  for (const ps of s.p) {
-    const pl = players.find((x) => x.id === ps[0]), c = pl?.car; if (!pl || !c) continue;
-    c.root.setEnabled(ps.length > 1);
-    if (ps.length === 1) { pl.hp = 0; continue; }
-    const pa = a.s.p.find((x) => x[0] === ps[0]), A = pa && pa.length > 1 ? pa : ps;
-    B.Vector3.LerpToRef(_nv.set(A[1], A[2], A[3]), new B.Vector3(ps[1], ps[2], ps[3]), k, c.root.position);
-    c.root.position.addInPlaceFromFloats(ps[8] * ext, ps[9] * ext, ps[10] * ext); // sin snapshot nuevo: sigue con su velocidad un rato
-    B.Quaternion.SlerpToRef(_nq.set(A[4], A[5], A[6], A[7]), new B.Quaternion(ps[4], ps[5], ps[6], ps[7]), k, (c.root.rotationQuaternion ??= new B.Quaternion()));
-    pl.hp = ps[11]; pl.maxHp = ps[12];
-  }
-  for (const [id, en] of netE) if (!b.e.has(id)) { en.dispose(); netE.delete(id); }
-  for (const [id, x] of b.e) {
-    let en = netE.get(id);
-    if (!en || en.kind !== x[1]) { en?.dispose(); en = new Enemy(x[1], new B.Vector3(x[2], x[3], x[4]), 1); netE.set(id, en); }
-    const y = a.e.get(id) ?? x;
-    B.Vector3.LerpToRef(_nv.set(y[2], y[3], y[4]), new B.Vector3(x[2], x[3], x[4]), k, en.node.position);
-    B.Quaternion.SlerpToRef(_nq.set(y[5], y[6], y[7], y[8]), new B.Quaternion(x[5], x[6], x[7], x[8]), k, (en.node.rotationQuaternion ??= new B.Quaternion()));
-    en.hp = x[9]; en.maxHp = x[10];
-    en.animate(engine.getDeltaTime() / 1000);
-  }
-  enemies = [...netE.values()]; // radar y flechas del HUD
-  netShots("j", s.j); netShots("w", s.w);
-}
-/** Cierra la conexión (sin avisar a nadie). Los bichos de muestra del cliente se van con clearRun (están en `enemies`). */
-function netEnd() {
-  const n = net; net = null; netSeed = 0; spectating = false; netE.clear(); netBuf.length = 0; netLv = false;
-  for (const k of ["j", "w"] as const) { for (const m of netPools[k]) m.dispose(); netPools[k] = []; }
-  n?.close();
-}
-function netStatus(t: string) { $("netStatus").textContent = t; }
-/** Cliente: vuelve a la pantalla de ENCORE con el aviso. */
-function netBack(why: string) {
-  if (state !== "menu") toMenu();
-  reset("encore"); netStatus(why);
-}
-async function netHost() {
-  netEnd(); netStatus("Creando sala…");
-  try {
-    const n = (net = await (await import("./net")).hostRoom((code) => netStatus(`Sala ${code} · esperando al otro jugador`)));
-    n.onMsg = netHostMsg;
-    n.onClose = (why) => {
-      if (net !== n) return;
-      if (state === "menu") { netStatus(why); net = null; return; }
-      mateClear(); net = null; banner("J2 DESCONECTADO · SE SIGUE EN SOLITARIO", 3); // el anfitrión sigue jugando solo
-      if (state === "level" && cardBy !== players[0].id) { cardBy = players[0].id; openOffers(offers, offerTitle, true); } // le tocaba al J2: elige el anfitrión
-    };
-    await n.ready;
-    if (net !== n) return;
-    const seed = newSeed(); netSeed = seed;
-    n.send({ t: "go", seed }, true);
-    netStatus(`Sala ${n.code} · conectado`);
-    launchRun(false, true, 2);
-  } catch (e) { netStatus(`No se pudo crear la sala (${(e as Error).message}).`); net = null; }
-}
-async function netJoin() {
-  const code = (await import("./net")).cleanCode(($("netCode") as HTMLInputElement).value);
-  if (code.length !== 6) { netStatus("El código tiene 6 caracteres."); return; }
-  netEnd(); netStatus(`Conectando a ${code}…`);
-  const n = (net = await (await import("./net")).joinRoom(code));
-  n.onMsg = netClientMsg;
-  n.onClose = (why) => { if (net !== n) return; netEnd(); netBack(why); };
-  await n.ready;
-  if (net === n) netStatus(`Conectado a ${code} · esperando la largada`);
-}
-addEventListener("mirar", async (e) => {
-  const code = String((e as CustomEvent).detail ?? ""); if (!code) return;
-  netEnd(); netStatus(`Conectando a ${code} (espectador)…`);
-  try {
-    const n = (net = await (await import("./net")).espectar(code)); spectating = true;
-    n.onMsg = netClientMsg;
-    n.onClose = (why) => { if (net !== n) return; netEnd(); netBack(why); };
-    await n.ready;
-    if (net === n) netStatus(`Mirando ${code} · esperando la largada`);
-  } catch (err) { netEnd(); netStatus(`No se pudo mirar (${(err as Error).message}).`); }
+// ---------- R6b: ENCORE online de 2 (net_client.ts, docs/ENCORE/R0/R6_RED.md opción A) ----------
+initNetClient({
+  get lead() { return lead; },
+  setLead: (p) => (lead = p),
+  get players() { return players; },
+  get enemies() { return enemies; },
+  setEnemies: (e) => (enemies = e),
+  get weapons() { return weapons; },
+  setWeapons: (w) => (weapons = w),
+  get spits() { return spits; },
+  scene,
+  engine,
+  get state() { return state; },
+  setState: (s) => (state = s),
+  get time() { return time; },
+  setTime: (t) => (time = t),
+  get level() { return level; },
+  setLevel: (lv) => (level = lv),
+  get xp() { return xp; },
+  setXp: (x) => (xp = x),
+  get runScrap() { return runScrap; },
+  setRunScrap: (s) => (runScrap = s),
+  get erun() { return erun; },
+  setErun: (r) => (erun = r),
+  get zoneId() { return zoneId; },
+  setZone: (z, b) => setZone(z, b),
+  setMoon: (m) => setMoon(m),
+  setCycleS: (c) => (cycleS = c),
+  get offers() { return offers; },
+  setOffers: (o) => (offers = o),
+  get offerTitle() { return offerTitle; },
+  get offerSel() { return offerSel; },
+  setOfferSel: (s) => (offerSel = s),
+  save,
+  input,
+  applyCommand: (id, cmd) => applyCommand(id, cmd),
+  launchRun: (d, netOnline, n, then) => launchRun(d, netOnline, n, then),
+  toMenu: () => toMenu(),
+  banner: (t, s) => banner(t, s),
+  openOffers: (list, title, keep) => openOffers(list, title, keep),
+  mateClear: () => mateClear(),
+  newSeed: () => newSeed(),
+  reset: (mode) => reset(mode),
+  spitTpl: () => spitTpl(),
 });
-// R6c: login del servidor propio (solo con VITE_NET_HOST): vuelve con #token=... y queda en localStorage
-if (NET_HOST) {
-  if (takeToken()) netStatus("Sesión iniciada.");
-  $("netLogin").onclick = () => location.assign(loginUrl());
-  $("netCfLogin").onclick = () => location.assign(LOGIN_URL ? cfLoginUrl() : loginUrl());
-  // Un solo estado a la vista: con sesión = "Online: sesión iniciada" + Cerrar sesión + salas; sin sesión = iniciar sesión (Cloudflare, o GitHub sin LOGIN_URL) y alternativas plegadas, sin botones de sala.
-  const sess = () => {
-    const on = !!getToken();
-    $("netSession").textContent = on ? "Online: sesión iniciada" : "";
-    for (const id of ["netSession", "netLogout", "netAcct", "netHost", "netCode", "netJoin", "netWatch"]) $(id).classList.toggle("hidden", !on);
-    for (const id of ["netCfLogin", "netAlt"]) $(id).classList.toggle("hidden", on);
-  };
-  sess();
-  track("session", { ua: navigator.userAgent.slice(0, 120), w: innerWidth, h: innerHeight, touch: matchMedia("(pointer: coarse)").matches });
-  $("netKeyGo").onclick = async () => {
-    const k = $("netKey") as HTMLInputElement;
-    if (!k.value.trim()) { netStatus("Escribir la clave de grupo."); return; }
-    try { await loginKey(k.value.trim()); k.value = ""; netStatus("Sesión iniciada."); } catch (e) { netStatus((e as Error).message); }
-    sess();
-  };
-  void redeemInvite().then((m) => { if (m) { netStatus(m); sess(); } });
-  $("netLogout").onclick = () => { setToken(""); netStatus("Sesión cerrada."); sess(); };
-}
-$("netHost").onclick = () => void netHost();
-$("netJoin").onclick = () => void netJoin();
 
-// ---------- R7a/c: ENCORE de 2 a 4 en compu, pantalla dividida (2: arriba J1 / abajo J2; 3-4: 2x2 J1 J2 / J3 J4) ----------
-// `lead` (el que guía) usa `input`, la cámara `cam` y las armas de verdad; los demás de `players` usan su `in`, su cámara y copias de las armas. Si cae el que guía, el primer compañero vivo pasa a guiar (mateLead) y nada más del juego cambia.
-// ponytail: XP, nivel, armas, pasivas, tornillos, combo de manejo y el enfriamiento de la habilidad son compartidos (R7b: cualquiera la dispara desde su auto)
-const TOP = new B.Viewport(0, 0.5, 1, 0.5), BOTTOM = new B.Viewport(0, 0, 1, 0.5), _camM2 = new B.Matrix();
-const QUAD = [new B.Viewport(0, 0.5, 0.5, 0.5), new B.Viewport(0.5, 0.5, 0.5, 0.5), new B.Viewport(0, 0, 0.5, 0.5), new B.Viewport(0.5, 0, 0.5, 0.5)];
-const vpOf = (pn: number) => (coop === 2 ? (pn === 1 ? TOP : BOTTOM) : QUAD[pn - 1]); // cada jugador conserva su cuadro aunque pase a guiar
-const mateColor = (pn: number) => pn === 3 ? "#2ea043" : pn === 4 ? "#e8e8e8" : (save.paint || "").toLowerCase() === "#1f6feb" ? "#f2c230" : "#1f6feb"; // otro color por jugador para distinguirlos
-function mateCar(m: Player) {
-  m.car = new Car(scene, save.car, { ...carOpts(), paint: mateColor(m.id) });
-  m.hp = m.maxHp = lead.maxHp; m.boost = 100; m.fs = 0; m.touch = 0; m.jumpCd = m.coyote = 0; m.sig = "";
-  m.car.setMass(m.car.def.mass * st.mass);
-  mateArm(m);
-}
-function mateStart(n: number) {
-  spawnN = 0;
-  for (let pn = 2; pn <= n; pn++) {
-    const c2 = new B.FreeCamera(`cam${pn}`, cam.position.clone(), scene);
-    c2.minZ = cam.minZ; c2.maxZ = cam.maxZ;
-    const m = newPlayer(pn, c2);
-    players.push(m);
-    mateCar(m); matePlace(m); if (!net) setSplit(c2, true); // una sola vez por cámara: addCamera dos veces reusa el postproceso
-  }
-  mateViews();
-  if (n > 2) setDrawDist(G.draw); // R7c: setSplit bajó el detalle (render.ts quadK); la distancia de dibujo se aplica sobre el mundo ya armado
-}
-/** Viewports por jugador (vpOf); las cámaras extra comparten el postproceso (setSplit, como la carrera). */
-function mateViews() {
-  if (net) { scene.activeCameras = null; scene.activeCamera = cam; return; } // R6b: online cada uno ve solo su auto, pantalla entera
-  for (const p of players) p.cam.viewport = vpOf(p.id); // lead.cam === cam
-  scene.activeCameras = [cam, ...others().map((m) => m.cam)];
-}
-/** Fin de la partida: queda solo J1 (con el auto y la cámara del que guiaba, que clearRun desarma). */
-function mateClear() {
-  if (players.length === 1) return;
-  const quad = players.length > 2, j1 = players[0];
-  for (const m of others()) {
-    for (const w of m.weapons) w.dispose();
-    m.car?.dispose();
-    if (scene.activeCameras?.includes(m.cam)) setSplit(m.cam, false); // solo las de pantalla dividida (online no se suman)
-    m.cam.dispose();
-  }
-  if (lead !== j1) { j1.car = lead.car; j1.hp = lead.hp; j1.maxHp = lead.maxHp; j1.boost = lead.boost; }
-  j1.cam = cam; j1.in = input; j1.weapons = []; j1.sig = "";
-  players.length = 1; lead = j1;
-  cam.viewport = new B.Viewport(0, 0, 1, 1); scene.activeCameras = null; scene.activeCamera = cam;
-  if (quad) setDrawDist(G.draw);
-}
-/** Cada compañero junto al que guía (4 m a su derecha; el J3 a la izquierda y el J4 a 8 m), quieto y mirando para el mismo lado; la cámara detrás. */
-function matePlace(m: Player) {
-  const c = m.car!, p = onFloor(at(lead.car!.pos, [4, -4, 8][others().indexOf(m)] ?? 4, 0, 0), c.def.size[1] / 2 + 0.3);
-  c.root.position.copyFrom(p); c.root.rotationQuaternion = alignYaw(p, yawOf(lead.car!.root.forward, lead.car!.pos));
-  c.body.setLinearVelocity(B.Vector3.Zero()); c.body.setAngularVelocity(B.Vector3.Zero());
-  moonCar(c.body, upAt(p)); teleport(c.body);
-  const f = flatL(lead.car!.root.forward, lead.car!.pos);
-  m.up.copyFrom(upAt(p)); m.h.copyFrom(W(f.x, 0, f.z, p).normalize());
-  m.cam.position.copyFrom(p).addInPlace(m.h.scale(-15)).addInPlace(m.up.scale(13)); m.tgt.copyFrom(p);
-}
-/** Copias de las armas del que guía, montadas en el auto del compañero (se rehacen solo si cambió algo). */
-function mateArm(m: Player) {
-  const sig = weapons.map((w) => w.id + w.lv + (w.evolved ? "E" : "")).join();
-  if (!m.car || sig === m.sig) return;
-  for (const w of m.weapons) { w.dispose(); w.mount?.dispose(); }
-  m.weapons = weapons.map((w) => { const x = makeWeapon(w.id); x.lv = w.lv; x.evolved = w.evolved; x.mount = mountFor(x.id, m.car!); x.mount.scaling.setAll(1 + (x.lv - 1) * 0.06 + (x.evolved ? 0.25 : 0)); return x; });
-  m.sig = sig;
-}
-/** recompute(): misma vida máxima, masa y armas que el que guía. */
-function mateSync(m: Player) {
-  if (m.car) { m.hp = Math.min(lead.maxHp, m.hp + Math.max(0, lead.maxHp - m.maxHp)); m.car.setMass(m.car.def.mass * st.mass); mateArm(m); }
-  m.maxHp = lead.maxHp;
-}
-function mateHurt(m: Player | undefined, n: number) { if (!god && !(abil === "escudo" && abilOn > 0) && m?.car) m.hp -= danoRecibido(n) * (1 - st.armor); } // escudo: protege a todos
-/** Daño a un jugador: el que guía pasa por hurt() (combo, sacudida, registro); los demás solo pierden vida. */
-const hurtP = (p: Player | undefined, n: number, continuous: boolean, src: string) => (p === lead ? hurt(n, continuous, src) : mateHurt(p, n));
-function mateBoom(c: Car) { FX.explosion(c.pos.add(upv(c.pos, 0.5)), 2); debris(c.pos, save.paint || "#d62828", 14, 9, 0.9); SFX.explosion(); }
-/** Cae un compañero: se desarma y queda fuera hasta el próximo escenario. */
-function mateDown(m: Player) {
-  mateBoom(m.car!);
-  for (const w of m.weapons) w.dispose();
-  if (shieldM?.parent === m.car!.root) shieldM = null; // la burbuja se va con el auto
-  m.weapons = []; m.sig = ""; m.car!.dispose(); m.car = null; m.hp = 0;
-  banner(`J${m.id} FUERA HASTA EL PRÓXIMO ESCENARIO`, 2.5);
-}
-/** Cae el que guía con algún compañero vivo: el primero vivo pasa a guiar con sus copias de las armas; la cámara principal y el estado de cámara se cruzan (cada uno conserva su cuadro). */
-function mateLead() {
-  const m = liveM()[0], d = lead, dead = d.car!;
-  mateBoom(dead);
-  for (const w of weapons) w.dispose();
-  weapons = m.weapons; m.weapons = []; m.sig = "";
-  if (shieldM?.parent === dead.root) shieldM = null; // R7b: si la puso otro, sigue en su auto
-  dead.dispose(); preview = null;
-  d.car = null; d.hp = 0;
-  m.boost = d.boost; // como en R7a: el turbo no se cruza, lo hereda quien pasa a guiar
-  const p = cam.position.clone(); cam.position.copyFrom(m.cam.position); m.cam.position.copyFrom(p);
-  const h = camH.clone(), u = camUp.clone(), t = camTarget.clone(); camH.copyFrom(m.h); camUp.copyFrom(m.up); camTarget.copyFrom(m.tgt); m.h.copyFrom(h); m.up.copyFrom(u); m.tgt.copyFrom(t);
-  [d.cam, m.cam] = [m.cam, d.cam]; [d.h, m.h] = [m.h, d.h]; [d.up, m.up] = [m.up, d.up]; [d.tgt, m.tgt] = [m.tgt, d.tgt]; // el caído se queda con la cámara extra y su estado
-  lead = m; lastHpFrac = lead.hp / lead.maxHp;
-  camYaw = yawOf(camH, lead.car!.pos);
-  mateViews();
-  banner(`J${d.id} FUERA HASTA EL PRÓXIMO ESCENARIO`, 2.5);
-}
-/** Escenario nuevo: el caído vuelve con la vida llena; todos juntos en la llegada. */
-function mateRevive(m: Player) {
-  if (!m.car) mateCar(m);
-  matePlace(m);
-}
-/** Input por jugador: J1 teclado (sin las teclas de J2) y primer joystick; J2 Teclado 2 o segundo joystick (input.ts coopCtl); J3 y J4 solo joysticks 3 y 4 (pollPad). */
-function mateInput() {
-  pollInput({ skip: coopSkip(), pad: pads()[0] ?? null });
-  const by = [{ ...input }, pollMate()]; // R7b: J2 con salto y habilidad (input.ts KEYS2 o el joystick)
-  for (let pn = 3; pn <= coop; pn++) by.push(pollPad(pn - 1));
-  for (const p of players) p.in = by[p.id - 1];
-  Object.assign(input, lead.in);
-}
-/** Manejo de un compañero: el mismo drive() con turbo y salto propios; sin combo ni marcas. */
-function mateTick(m: Player, dt: number) {
-  const c = m.car!, i = m.in;
-  const boosting = i.boost && m.boost > R.turbo_umbral && i.throttle >= 0;
-  m.boost = boosting ? m.boost - R.turbo_gasto * st.boostUse * dt : Math.min(100, m.boost + st.boostRegen * dt);
-  const maxSpeed = c.def.speed * st.speedMul * (boosting ? R.turbo_vel : 1);
-  const r = drive(c.body, c.root, dt, { throttle: boosting ? 1 : i.throttle, steer: i.steer, speed: maxSpeed, accel: c.def.accel * (boosting ? R.turbo_acel : 1), turn: c.def.turn * (i.drift ? R.derrape_giro : 1), grip: i.drift ? R.derrape_agarre : c.def.grip });
-  c.animate(dt, i.steer, r.fs, maxSpeed);
-  m.fs = r.fs;
-  m.jumpCd = Math.max(0, m.jumpCd - dt); m.coyote = r.grounded ? R.salto_coyote_s : Math.max(0, m.coyote - dt);
-  if (i.jump && (r.grounded || m.coyote > 0) && m.jumpCd <= 0) { m.jumpCd = R.salto_cd_s; m.coyote = 0; carJump(c, r); }
-  if (alt(c.pos) < -5) m.hp = 0;
-  m.hp = Math.min(lead.maxHp, m.hp + st.regen * dt);
-  c.wear(Math.max(0, m.hp / lead.maxHp));
-}
-/** Cámara de un compañero: persecución "actual" con el zoom del jugador, en el marco local de la luna (como moonCam, sin modos). */
-function mateCam(m: Player, dt: number) {
-  const c = m.car!, k = 1 - Math.exp(-5 * dt);
-  B.Vector3.LerpToRef(m.up, upAt(c.pos), 1 - Math.exp(-8 * dt), m.up).normalize();
-  let hy = yawOf(hflat(m.h, c.pos), c.pos);
-  const t = yawOf(c.root.forward, c.pos); hy += Math.atan2(Math.sin(t - hy), Math.cos(t - hy)) * (1 - Math.exp(-2 * dt));
-  m.h.copyFrom(W(Math.sin(hy), 0, Math.cos(hy), c.pos));
-  const P = CAMS.actual, z = save.zoom;
-  B.Vector3.LerpToRef(m.cam.position, c.pos.subtract(m.h.scale(P.back * z)).addInPlace(m.up.scale(P.up * z)), k, m.cam.position);
-  B.Vector3.LerpToRef(m.tgt, c.pos.add(m.h.scale(P.look)), k * 1.5, m.tgt);
-  m.cam.fov = cam.fov;
-  B.Matrix.LookAtLHToRef(m.cam.position, m.tgt, m.up, _camM2); _camM2.invert();
-  B.Quaternion.FromRotationMatrixToRef(_camM2, (m.cam.rotationQuaternion ??= new B.Quaternion()));
-}
+// ---------- R7a/c: ENCORE de 2 a 4 en compu, pantalla dividida (coop.ts) ----------
+initCoop({
+  get coop() { return coop; },
+  get lead() { return lead; },
+  setLead: (p) => (lead = p),
+  players,
+  others,
+  liveM,
+  scene,
+  cam,
+  camH,
+  camUp,
+  camTarget,
+  get st() { return st; },
+  get god() { return god; },
+  save,
+  input,
+  get weapons() { return weapons; },
+  setWeapons: (w) => (weapons = w),
+  carOpts,
+  newPlayer,
+  getNet,
+  setSpawnN: (n) => (spawnN = n),
+  getShieldM: () => shieldM,
+  clearShieldM: () => { shieldM = null; },
+  clearPreview: () => { preview = null; },
+  setLastHpFrac: (f) => (lastHpFrac = f),
+  setCamYaw: (y) => (camYaw = y),
+  banner: (t, s) => banner(t, s),
+  hurt: (n, continuous, src) => hurt(n, continuous, src),
+  get abil() { return abil; },
+  get abilOn() { return abilOn; },
+  carJump: (c, r) => carJump(c, r),
+  cams: CAMS,
+});
 
-// Logros (achievements.ts): las pruebas de dev (__sim, lab, god) no otorgan nada ni tocan el guardado
-let stageHurt = false; // ENCORE: recibió daño en este escenario (logro encore_impecable)
-let runAch: string[] = [], hitAt = 0; // logros de esta partida (pantalla final) y último golpe recibido
-function grant(id: AchId) {
-  if (simulating || LAB.on || god || save.ach.includes(id)) return;
-  save.ach.push(id);
-  const a: { name: string; reward?: string; scrap?: number } = ACH[id];
-  if (a.scrap) runScrap += a.scrap; // endRun lo suma al guardado y se ve en "Tornillos" de la pantalla final
-  if (a.reward?.startsWith("part:") && !save.unlocked.includes(a.reward)) save.unlocked.push(a.reward);
-  runAch.push(a.name);
-  persist();
-  // ponytail: aviso diferido 1,5 s para no pisar el cartel del evento que lo disparó (fusión, jefe); sin cola de carteles
-  setTimeout(() => state === "play" && banner(`LOGRO · ${a.name.toUpperCase()}`, 2.5), 1500);
-}
-// Guardados anteriores a los logros: minijefes ya derrotados y récord de 10 minutos cuentan (sin aviso)
-for (const k of ["rey", "cortadora", "tarantula", "gato"] as const) if (save.slain[k] && !save.ach.includes(k)) save.ach.push(k);
-if (save.best >= 600 && !save.ach.includes("diez")) save.ach.push("diez");
-
-function endRun(win: boolean, why: string) {
-  if (erun) { time += encPrior; encPrior = 0; runSeed = erun.seed; } // ENCORE: el tiempo y la semilla de la expedición, no los del último escenario
-  if (win) grant(`gana_${save.car}`);
-  if (win && daily) grant("diario");
-  if (time >= 600 && !erun) grant("diez"); // ENCORE no cuenta para el logro de Supervivencia
-  // Modo sin fin: récord propio de lo aguantado después de vencer al jefe final
-  const lasted = endless ? Math.floor(time - bank!.t) : 0;
-  if (endless) why += ` Modo sin fin: ${fmt(lasted)} más${lasted > save.endless ? ", récord nuevo" : ""}.`;
-  worldK = 1; abilOn = bombs = 0; fxSpeed(1); // ninguna habilidad sigue durante el cierre
-  if (runAch.length) why += ` Logros: ${runAch.join(", ")}.`;
-  if (net?.host) { net.send({ t: "end" }, true); setTimeout(netEnd, 1000); } // R6b: el cliente vuelve al menú con el aviso
-  state = simulating ? "over" : "outro"; // el cierre en cámara lenta (outroTick) abre los resultados
-  engineStop(); music("over"); rainSfx(0); moonAmbience(false); encoreAmbience(null);
-  // Tornillos: los de la partida más tiempo y bajas, con el extra de las maldiciones (+30% cada una)
-  const gross = grossScrap(), earned = Math.floor((gross + (erun ? encExtra + E.scrapExtra(gross, encG, pfx.scrap) : 0)) * curseK * (erun ? 1 : pfx.scrap)); // ENCORE: el extra de pactos y rutas se acumuló por escenario; el tramo actual se liquida con el efecto vigente
-  const eb = save.encore.best, encBetter = !!erun && (erun.loop > eb.loop || (erun.loop === eb.loop && (erun.stage > eb.stage || (erun.stage === eb.stage && Math.floor(time) > eb.t))));
-  const prevBest = erun ? eb.t : save.best, record = erun ? encBetter : Math.floor(time) > save.best;
-  const topHit = (Object.entries(dmgBy).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "accidente").replace(/[^\p{L}\d .,-]/gu, "").slice(0, 40);
-  const enc = erun ? E.report(erun, { chests: chestsOpened(), cause: win ? "Venció al jefe del FINAL ACT" : `Daño de ${topHit}` }) : undefined; // R5: reporte de la expedición
-  const rec: RunRec = { t: Math.floor(time), kills, lv: level, seed: runSeed, win };
-  if (!simulating && !LAB.on) track("run_end", { mode: erun ? "encore" : daily ? "diario" : "supervivencia", win, t: Math.floor(time), kills, lv: level, seed: runSeed, ...(daily && dailyInfo?.seed === runSeed ? { daily: dailyInfo.date } : {}), car: save.car, cause: win ? "" : topHit, ...(erun ? { loop: erun.loop, stage: erun.stage } : {}) });
-  if (!simulating && !LAB.on) { // las pruebas de dev no tocan el guardado real
-    save.scrap += earned - (bank?.scrap ?? 0); // al terminar el modo sin fin, solo lo que faltaba cobrar
-    save.endless = Math.max(save.endless, lasted);
-    if (!erun) save.best = Math.max(save.best, Math.floor(time));
-    // Estadísticas de carrera (Bestiario): totales, daño por arma y mejor marca de la zona jugada
-    const S = save.stats, zr = S.zone[zoneId] ?? { t: 0, kills: 0 };
-    if (erun) { const E = save.encore; E.runs++; if (win) E.wins++; E.lastLoop = erun.loop; E.lastCause = win ? "" : topHit; if (encBetter) E.best = { loop: erun.loop, stage: erun.stage, t: Math.floor(time) }; for (const id of erun.found) if (!E.secrets.includes(id)) E.secrets.push(id); } // ENCORE: récord propio; tornillos, tiempo, daño y bestiario sí cuentan
-    else if (!bank) { S.runs++; if (win) S.wins++; }
-    if (erun) for (const id of E.endAch(erun, win, save.encore.secrets)) grant(id as AchId); // ENCORE: logros de fin de expedición
-    S.time += time - (bank?.t ?? 0); S.dist += runDist; // runDist vuelve a 0 al seguir en modo sin fin
-    for (const [src, v] of Object.entries(dmgOut)) S.dmg[src] = (S.dmg[src] ?? 0) + v - (bank?.dmg[src] ?? 0);
-    if (!erun) S.zone[zoneId] = { t: Math.max(zr.t, Math.floor(time)), kills: Math.max(zr.kills, kills) };
-    // Top 5 por tiempo (y bajas para desempatar)
-    if (daily) save.daily = { day: today(), best: Math.max(save.daily.day === today() ? save.daily.best : 0, Math.floor(time)) };
-    if (!erun) save.runs = [...save.runs.filter((r) => r !== bank?.rec), rec].sort((a, b) => b.t - a.t || b.kills - a.kills).slice(0, 5);
-    persist();
-  }
-  $("hud").classList.add("hidden");
-  bannerClear();
-  const more = win && !endless && !erun; // venció al jefe final: los resultados ofrecen "Seguir jugando"
-  bank = { t: time, scrap: earned, dmg: { ...dmgOut }, rec };
-  const evos = weapons.filter((w) => w.evolved).map((w) => WEAPONS[w.id].evoName);
-  const res = { win, title: endless ? "FIN DEL SIN FIN" : undefined, why, time, kills, level, scrap: earned, record, more, dmg: { ...dmgOut }, hurt: { ...dmgBy }, seed: `${profile.climate.name} · ${profile.plague.name} · Semilla ${runSeed}`, prevBest, bestStreak, bestHit: Math.round(bestHit), bestDrive: bestDriveMul, bossKills, evos, ach: [...runAch], car: save.car, enc };
-  console.error("DBG orig", time.toFixed(2), kills, level, RR.frames());
-  RR.recStop();
-  if (simulating) { openOver(res); $("overReplay").classList.add("hidden"); } else startOutro(res);
-}
-
-// ---------- Repetición (T39, rerun.ts) ----------
-let rpSave = "";
-$("overReplay").onclick = rpStart;
-$("rpSpeed").onclick = () => { rp.x = rp.x === 1 ? 2 : 1; rpBar(); };
-$("rpExit").onclick = () => { rpEnd(); };
-function rpBar() { const b = $("rpBar"); b.classList.toggle("hidden", !rp.on); $("rpSpeed").textContent = `x${rp.x}`; }
-function rpStart() {
-  if (!RR.rec.done || rp.on) return;
-  rpSave = JSON.stringify(save); // la repetición no debe sumar tornillos, récords ni logros por segunda vez
-  const seed = RR.rec.seed, daily0 = RR.rec.daily;
-  Object.assign(rp, { on: true, i: 0, c: 0, x: 1 });
-  forceSeed = seed;
-  launchRun(daily0, false, 0, () => { forceSeed = 0; rpBar(); });
-}
-/** Fin de la repetición: restaura el guardado y vuelve a los resultados (o al menú si divergió). */
-function rpEnd() {
-  if (!rp.on) return;
-  const ended = state === "outro" || state === "over";
-  console.error("DBG rpEnd", state, time.toFixed(2), kills, level, Math.round(lead.hp), rp.i, RR.frames());
-  rp.on = false; rpBar();
-  const o = JSON.parse(rpSave) as Record<string, unknown>;
-  for (const k of Object.keys(save)) delete (save as Record<string, unknown>)[k];
-  Object.assign(save, o); persist();
-  if (!ended) toMenu();
-}
-/** Mientras suena el cierre en cámara lenta la repetición ya terminó: se restaura el guardado en cuanto se pasa a los resultados. */
-function rpWatch() { if (rp.on && outroT > 0) rpEnd(); }
-
-
-// ---------- Cierre en cámara lenta ----------
-// Al morir o ganar el mundo sigue vivo ~5 s reales a 0,2x (física, bichos, partículas, lluvia) con la cámara orbitando el auto; luego los resultados.
-// Cualquier tecla, botón o toque lo salta. La foto de los resultados se toma a los 0,5 s (replay.ts).
-let outroAt: B.Vector3 | null = null; // victoria: dónde murió el jefe final; la cámara del cierre apunta ahí (derrota: null = el auto)
-let ts = 1, outroZ = 1, outroT = 0, outroSkip = false, outroShot = false, outroRes: Parameters<typeof openOver>[0] | null = null;
-function startOutro(res: NonNullable<typeof outroRes>) {
-  outroRes = res; outroT = 0; outroSkip = false; outroShot = false;
-  scene.physicsEnabled = false; // se avanza a mano, con el tiempo escalado
-  for (const sp of spits) sp.m.dispose();
-  spits = [];
-  if (lead.hp <= 0 && lead.car) { // el auto se desarma
-    FX.explosion(lead.car.pos.add(upv(lead.car.pos, 0.5)), 2);
-    debris(lead.car.pos, save.paint || "#d62828", 14, 9, 0.9);
-    SFX.explosion();
-  }
-  outroUi(true, outroStatLine({ time: fmt(time), kills, level, drive: res.bestDrive ?? 1, evos: res.evos ?? [] }));
-}
-function outroTick(dt: number) {
-  outroT += dt;
-  if (outroT >= OUTRO_GUARD) for (let i = 0; i < 12; i++) if (i < 6 || i > 7) outroSkip ||= padPressed(i); // botones, no gatillos ni cruceta (el stick cuenta como cruceta)
-  ts = slowScale(outroT);
-  const sdt = dt * ts;
-  for (const e of enemies) { e.update(sdt, lead.car!.pos); e.animate(sdt); }
-  (scene.getPhysicsEngine() as unknown as { _step(d: number): void })._step(sdt);
-  fxSpeed(ts);
-  outroZ = 1 - 0.5 * Math.min(1, outroT / 3);
-  camYaw += dt * 0.45;
-  if (!outroShot && outroT >= OUTRO_SNAP) { outroShot = true; snap(engine); }
-  if (outroT >= OUTRO_S || outroSkip) endOutro();
-}
-function endOutro() {
-  state = "over";
-  ts = 1; outroZ = 1; outroAt = null; fxSpeed(1); outroUi(false);
-  scene.physicsEnabled = true;
-  openOver(outroRes!); $("overReplay").classList.toggle("hidden", !RR.rec.done);
-  void showPhoto({ zone: ZONES[zoneId].name, time: fmt(time), kills, car: CARS[lead.car!.kind].name, win: outroRes!.win });
-  outroRes = null;
-}
-const skipOutro = (e: Event) => { if (state === "outro" && outroT >= OUTRO_GUARD && !(e instanceof KeyboardEvent && (e.repeat || /^(Shift|Control|Alt|Meta)/.test(e.code)))) outroSkip = true; };
-addEventListener("keydown", skipOutro);
-addEventListener("pointerdown", skipOutro);
+// ---------- Logros, Repetición y Cierre en cámara lenta (outro.ts) ----------
+initOutro({
+  save,
+  get erun() { return erun; },
+  get time() { return time; },
+  setTime: (t) => (time = t),
+  get encPrior() { return encPrior; },
+  setEncPrior: (p) => (encPrior = p),
+  get runSeed() { return runSeed; },
+  setRunSeed: (s) => (runSeed = s),
+  get daily() { return daily; },
+  get dailyInfo() { return dailyInfo; },
+  get bank() { return bank; },
+  setBank: (b) => (bank = b),
+  get endless() { return endless; },
+  get lead() { return lead; },
+  players,
+  get weapons() { return weapons; },
+  get dmgBy() { return dmgBy; },
+  get dmgOut() { return dmgOut; },
+  get profile() { return profile; },
+  get kills() { return kills; },
+  get level() { return level; },
+  get simulating() { return simulating; },
+  get god() { return god; },
+  get labOn() { return LAB.on; },
+  get state() { return state; },
+  setState: (s) => (state = s),
+  get zoneId() { return zoneId; },
+  get runDist() { return runDist; },
+  grossScrap: () => grossScrap(),
+  get encExtra() { return encExtra; },
+  get encG() { return encG; },
+  get curseK() { return curseK; },
+  get pfx() { return pfx; },
+  get bestStreak() { return bestStreak; },
+  get bestHit() { return bestHit; },
+  get bestDriveMul() { return bestDriveMul; },
+  get bossKills() { return bossKills; },
+  setWorldK: (k) => (worldK = k),
+  resetAbil: () => { abilOn = bombs = 0; },
+  addRunScrap: (s) => (runScrap += s),
+  banner: (t, s) => banner(t, s),
+  launchRun: (d, netOnline, n, then) => launchRun(d, netOnline, n, then),
+  toMenu: () => toMenu(),
+  setForceSeed: (s) => (forceSeed = s),
+  scene,
+  engine,
+  get enemies() { return enemies; },
+  get spits() { return spits; },
+  clearSpits: () => {
+    for (const sp of spits) sp.m.dispose();
+    spits = [];
+  },
+  addCamYaw: (dy) => (camYaw += dy),
+});
 
 function toMenu() {
   netEnd();
@@ -1021,7 +687,8 @@ function offersFor() {
 }
 function openOffers(list: Offer[], title: string, keep = false) {
   if (!list.length) return; // Sin reparaciones con todo al máximo: no hay nada que ofrecer
-  if (!keep) cardBy = net?.host && players[1] && cardTurn++ % 2 ? players[1].id : players[0].id; // R6c: online se alterna quién elige
+  const net = getNet();
+  const cardBy = advanceCardBy(keep); // R6c: online se alterna quién elige
   const mine = !net || cardBy === players[0].id; // en el anfitrión el jugador local es players[0] aunque guíe el J2
   net?.send({ t: "lv", title, o: list, by: cardBy }, true);
   state = "level";
@@ -1085,8 +752,8 @@ function choose(i: number, by = lead) {
     }
   }
   state = "play";
-  scene.physicsEnabled = true;
-  net?.send({ t: "lvx" }, true); // R6c: el cliente cierra las cartas
+  scene.physicsEnabled = false; // T39: en play el paso es manual
+  getNet()?.send({ t: "lvx" }, true); // R6c: el cliente cierra las cartas
 }
 
 /** R7b: " · J2" si con 2 jugadores lo activó el otro (who = 1) o el que guía es el J2; vacío con 1 jugador. Las cartas son de los dos y elige cualquiera. */
@@ -1114,12 +781,12 @@ function pause() {
 }
 function resume() {
   if (state !== "pause") return;
-  state = "play"; scene.physicsEnabled = true; reset(null); musicDuck(false);
+  state = "play"; scene.physicsEnabled = false; reset(null); musicDuck(false);
 }
 
 // Esc / P / M y la navegación de menús viven en menu.ts; acá solo las cartas de mejora
 addEventListener("keydown", (e) => {
-  const lv = state === "level" || netLv; // R6c: el cliente online también ve las cartas
+  const lv = state === "level" || getNetLv(); // R6c: el cliente online también ve las cartas
   if (lv && /^Digit[1-4]$/.test(e.code)) { const i = +e.code.slice(5) - 1; if (i < offers.length) pickOffer(i); }
   if (e.code === "Enter" && lv) pickOffer(offerSel);
   if (keyHit("reroll", e.code) && lv) applyCommand(lead.id, { k: "reroll" });
@@ -1315,7 +982,7 @@ function kill(e: Enemy) {
     runScrap += R.tornillos_jefe;
     if (e.kind === "rey" || e.kind === "cortadora" || e.kind === "tarantula" || e.kind === "gato") grant(e.kind);
     if (e.kind === finalKind && !endless) {
-      outroAt = e.pos.clone(); leave(e);
+      setOutroAt(e.pos.clone()); leave(e);
       const why = FINAL_WIN[finalKind] ?? "El jefe final quedó fuera de combate. Su seguro ya fue notificado.";
       return endRun(true, erun && E.bossDown(erun) ? `${E.line("won", erun)} ${why}` : why); // ENCORE: el Director cierra el show en los resultados
     }
@@ -1357,7 +1024,7 @@ evInit({ // moon_events.ts: daño y sacudida viven acá
 });
 SHIP_IO.hurt = (n, src, who) => hurtWho(n, false, src, who);
 COOP.n = () => players.length;
-GOAL_IO.win = (p) => { if (state !== "play" || endless) return; if (erun) return encApply(E.boarded(erun)); /* ENCORE: el cohete es el teleportador, no el final */ outroAt = p.clone(); endRun(true, ESCAPE_WIN); };
+GOAL_IO.win = (p) => { if (state !== "play" || endless) return; if (erun) return encApply(E.boarded(erun)); /* ENCORE: el cohete es el teleportador, no el final */ setOutroAt(p.clone()); endRun(true, ESCAPE_WIN); };
 GOAL_IO.scrap = () => Math.floor(runScrap + Math.floor(time / R.tornillos_div_tiempo) + Math.floor(kills * TOUGH.xp / R.tornillos_div_bajas));
 // R7b: who = índice en los autos vivos (0 = el que guía, 1 = el otro); la máquina cobra vida a quien la activa y las cartas (compartidas) dicen quién abrió
 GOAL_IO.hpFrac = (who) => whoP(who).hp / lead.maxHp;
@@ -1930,7 +1597,7 @@ function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   if (by && !simulating && !LAB.on) beastRec(by).hurt += n * (1 - st.armor); // daño recibido por tipo (ficha del bestiario)
   airHit = true;
   if (driveMul > 1) { driveMul = 1; hudDrive(1); } // el combo de manejo cae con cualquier golpe
-  hitAt = time; stageHurt = true;
+  recordHit(time);
   dmgBy[src] = (dmgBy[src] ?? 0) + n * (1 - st.armor);
   lead.hp -= n * (1 - st.armor);
   if (!simulating && lead.car && !save.calm) { FX.sparks(lead.car.pos.add(upv(lead.car.pos, 0.5))); if (!continuous) debris(lead.car.pos, save.paint || "#d62828", 2, 5, 0.5); } // chispas (y pedazos de pintura en los golpes fuertes) al recibir daño
@@ -2005,7 +1672,7 @@ function trick(name: string, k: number) { trickT = 0; driveMul = Math.min(R.comb
 function goEndless() {
   if (state !== "over" || endless || !lead.car || !bank) return;
   endless = true; runDist = 0; // lo manejado hasta acá ya se sumó a las estadísticas
-  state = "play"; scene.physicsEnabled = true; reset(null);
+  state = "play"; scene.physicsEnabled = false; reset(null);
   music("run", 1); musicS = "run";
   $("hud").classList.remove("hidden");
   RUN_BOSSES.push([time + R.sinfin_cada_s, RUN_BOSSES[RUN_BOSSES.length % 3][1]]);
@@ -2057,10 +1724,8 @@ function updateHud(dt: number) {
 }
 
 // ---------- Loop ----------
-const camTarget = new B.Vector3();
 // Luna: la cámara guarda un rumbo (vector tangente) que viaja con el auto alrededor de la esfera y un "arriba" que sigue la vertical del lugar.
 // camYaw = ese rumbo medido en el marco local del auto: el stick, el radar y el resto lo leen igual que en el patio.
-const camH = new B.Vector3(0, 0, 1), camUp = new B.Vector3(0, 1, 0), _camM = new B.Matrix();
 function moonCam(c: Car, dt: number, follow: boolean) {
   B.Vector3.LerpToRef(camUp, upAt(c.pos), 1 - Math.exp(-8 * dt), camUp).normalize();
   let hy = yawOf(hflat(camH, c.pos), c.pos);
@@ -2077,7 +1742,8 @@ let previewKey = "", previewR = 0;
 scene.onBeforeRenderObservable.add(() => {
   padSnap();
   const dt = Math.min((frameAcc || engine.getDeltaTime()) / 1000, 0.05);
-  if (net) { pollInput(); players[0].in = input; if (net.host && players[1]) players[1].in = netIn; } // R6b: J2 remoto = su último input, como un control local
+  const net = getNet();
+  if (net) { pollInput(); players[0].in = input; if (net.host && players[1]) players[1].in = getNetIn(); } // R6b: J2 remoto = su último input, como un control local
   else if (players.length > 1) mateInput(); else pollInput();
 
   if (state === "level") {
@@ -2093,7 +1759,7 @@ scene.onBeforeRenderObservable.add(() => {
   else if (state === "match3") { if (padPressed(pb("pause"))) m3M?.match3PauseToggle(); m3M?.match3Tick(dt); }
   else if (state === "net") { // R6c: el cliente online navega cartas (netLv) y pactos/rutas/votos con el mando; el anfitrión valida el turno
     netClientTick(); updateHud(dt);
-    if (netLv) {
+    if (getNetLv()) {
       if (padPressed(14)) { offerSel = (offerSel + offers.length - 1) % offers.length; selectOffer(offerSel); }
       if (padPressed(15)) { offerSel = (offerSel + 1) % offers.length; selectOffer(offerSel); }
       if (padPressed(pb("ok"))) pickOffer(offerSel);
@@ -2109,15 +1775,17 @@ scene.onBeforeRenderObservable.add(() => {
     if (hitStop > 0) hitStop -= dt;
     else for (let n = rp.on ? rp.x : 1; n-- > 0 && state === "play";) {
       let sdt = dt;
-      if (rp.on) { const r = RR.replayFrame(rp.i++, input); if (r === null) { rpEnd(); break; } sdt = r; }
+      if (n < (rp.on ? rp.x : 1) - 1) { lead.car!.root.computeWorldMatrix(true); for (const e of enemies) e.node.computeWorldMatrix(true); } // 2.º paso del mismo cuadro: sincroniza los nodos con la física (como botStep)
+      if (rp.on && rp.i % 30 === 0) rrApply(RR.rec.snap[rp.i / 30]); // Havok diverge por milésimas tras choques: cada 30 cuadros se re-ancla al estado grabado
+      else if (RR.rec.on && RR.frames() % 30 === 0) RR.rec.snap.push(rrTake());
+      if (rp.on) { const r = RR.replayFrame(rp.i++, input); if (r === null) { rpEnd(); banner("FIN DE LA REPETICIÓN", 3); break; } sdt = r; }
       else if (RR.rec.on) RR.recFrame(dt, input);
-      if (((rp.on ? rp.i : RR.frames()) % 120) === 1) console.error("DBG", rp.on ? "R" : "O", rp.on ? rp.i : RR.frames(), time.toFixed(3), kills, enemies.length, lead.car!.pos.x.toFixed(3), lead.car!.pos.z.toFixed(3), Math.round(lead.hp));
       update(LAB.on ? 1e-4 : sdt);
       (scene.getPhysicsEngine() as unknown as { _step(d: number): void })._step(LAB.on ? 1e-4 : sdt);
     }
     updateHud(dt);
   }
-  if (net?.host && (state === "play" || state === "level") && (netT -= dt) <= 0) { netT = 1 / NET_HZ; netSnap(); }
+  if (getNet()?.host && (state === "play" || state === "level")) netSnap(dt);
   tickFx(dt * ts);
   uiTick(dt, state === "play" || state === "duel" || state === "match3");
   if (save.fps && (fpsT -= dt) <= 0) { // estadísticas: fps y ms de los cuadros dibujados (no los del navegador), resolución interna real y escala o modo FSR
@@ -2308,7 +1976,7 @@ if (import.meta.env.DEV) {
       shopAt, shopDev, carPlace, onFloor, goalBlips,
       get runScrap() { return runScrap; }, setRunScrap: (s) => (runScrap = s),
       GOAL_IO,
-      get net() { return net; }, get netBytes() { return netBytes; }, get netLv() { return netLv; }, get cardBy() { return cardBy; }, get offers() { return offers; }, get votes() { return votes; }, get netPools() { return netPools; }, get netBuf() { return netBuf; }, get netIn() { return netIn; },
+      get net() { return getNet(); }, get netBytes() { return getNetBytes(); }, get netLv() { return getNetLv(); }, get cardBy() { return getCardBy(); }, get offers() { return offers; }, get votes() { return votes; }, get netPools() { return getNetPools(); }, get netBuf() { return getNetBuf(); }, get netIn() { return getNetIn(); },
       get MOON() { return MOON; }, SUN_DIR, EARTH_DIR, moonPlace, goalStats, get curseK() { return curseK; }, get TOUGH() { return TOUGH; }, get R() { return R; }, get LAB() { return LAB; },
       get abil() { return abil; }, setAbil: (a) => (abil = a),
       get abilLv() { return abilLv; }, setAbilLv: (lv) => (abilLv = lv),

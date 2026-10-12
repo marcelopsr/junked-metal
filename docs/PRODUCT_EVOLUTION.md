@@ -1447,9 +1447,40 @@ Trabajo ejecutado bajo metodología E2E y modularización de arquitectura:
 
 ---
 
+## 2026-10-12 · Modularización Completa de main.ts: net_client.ts, coop.ts y outro.ts (Ciclo #41)
+
+Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
+
+1. **Paso 2 (`src/net_client.ts`):**
+   - Extraída toda la lógica de multijugador online (~200 líneas): snapshots `Snap`, `ESnap`, `PSnap`, compresión delta, pooling de proyectiles `netPools`, interpolación con retraso `NET_DELAY` de 100 ms, listeners de espectadores y sesión de cuentas `NET_HOST`.
+   - `src/main.ts` interactúa mediante `initNetClient(ctx)` y getters tipados limpios, preservando compatibilidad absoluta con `dev-hooks.ts`.
+
+2. **Paso 4 (`src/coop.ts`):**
+   - Extraído todo el sistema cooperativo local y split-screen (~140 líneas): layouts `TOP`, `BOTTOM`, `QUAD`, asignación de mandos `mateInput`, gestión de cámaras divididas `mateViews`/`mateCam`, autos de acompañantes `mateCar`/`mateSync`/`mateArm`, rescates, revividos y sucesión de líder `mateLead`.
+   - `src/main.ts` interactúa mediante `initCoop(ctx)` exportando la interfaz `Player` y tipos de entrada.
+
+3. **Paso 5 (`src/outro.ts`):**
+   - Extraída la lógica de finalización y repetición (~140 líneas): otorgamiento de logros `grant`/`runAch`, liquidación de tornillos y récords `endRun`, controlador de repetición determinista `rpStart`/`rpEnd`/`rpBar`, y secuencia cinematográfica en cámara lenta `startOutro`/`outroTick`/`endOutro`.
+   - `src/main.ts` interactúa mediante `initOutro(ctx)`.
+
+4. **Impacto en Arquitectura y Código:**
+   - `src/main.ts` reducido de 2546 líneas originales a **1991 líneas** (reducción acumulada de más de 550 líneas).
+   - Separación estricta de responsabilidades sin pérdida de determinismo ni degradación de rendimiento.
+
+5. **Verificación E2E Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de tipado TypeScript estricto.
+   - `npm test`: 146/146 pruebas unitarias aprobadas al 100% en 12 suites (20.3 s).
+   - `npm run test:restart`: reinicio limpio de `rc-test` en pm2.
+   - `node scripts/e2e.mjs`: 18/18 pasos superados exitosamente en PC y celular (largada, avisos, bots, saltos de fase, pactos, votación y resultados).
+   - `npm run build`: bundle de producción generado limpiamente en 593 ms.
+   - `npm run sim -- --seeds 1,2 --secs 60`: 2 partidas completas simuladas sin fallas en 3.6 s.
+   - `graphify update .`: grafo de conocimiento actualizado (5958 nodos, 13833 aristas, 297 comunidades).
+
+---
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Ciclo #40 (Extracción Dinámica de Dev-Hooks fuera de `src/main.ts` con exclusión total en el bundle de producción).
+- **Último trabajo completado:** Ciclo #41 (Modularización de `main.ts` con `src/net_client.ts`, `src/coop.ts` y `src/outro.ts`).
 - **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 
