@@ -1426,10 +1426,31 @@ Trabajo ejecutado bajo metodología E2E y orquestación con 2 subagentes:
 
 ---
 
+## 2026-10-12 · Extracción Dinámica de Dev-Hooks fuera de main.ts (Ciclo #40)
+
+Trabajo ejecutado bajo metodología E2E y modularización de arquitectura:
+
+1. **Extracción de `src/dev-hooks.ts`:**
+   - Creado [`src/dev-hooks.ts`](file:///Users/msalas/Documents/Devs/Varios/rc_fight/src/dev-hooks.ts) aislando ~230 líneas de hooks de depuración (`__bot`, `__sim`, `__encBot`, `__bossDuel`, `__enc`, `__net`, `__tick`, `__time`, `__god`, `__lab`, `__luna`, etc.) y el soporte para el bot de pruebas (`botStep`).
+   - `src/main.ts` ahora carga `dev-hooks.ts` exclusivamente en modo desarrollo mediante import dinámico condicional (`if (import.meta.env.DEV) void import("./dev-hooks").then(...)`).
+   - Los hooks se exponen inmediatamente en `window` para que las herramientas headless (`sim`, `shots`, `e2e`) no sufran retardos, mientras que las utilidades pesadas de simulación (`devbot`) se importan de forma perezosa en paralelo.
+   - En el build de producción (`npm run build`), `dev-hooks.ts` queda completamente excluido del bundle compilado (0 bytes de `dev-hooks` en `dist/assets/`).
+
+2. **Verificación E2E Realizada con Evidencia:**
+   - `npx tsc --noEmit -p .`: 0 errores de compilación TypeScript estricto.
+   - `npx vitest run`: 146/146 tests unitarios aprobados en 12 suites (19.3 s).
+   - `npm run test:restart`: reinicio limpio de `rc-test` en pm2.
+   - `node scripts/e2e.mjs`: 18/18 pasos aprobados al 100% en PC y celular (con aviso del Director, saltos de fase ENCORE, teletransportadores y resultados).
+   - `npm run build`: compilación de producción exitosa en 574 ms (confirmado que ningún asset incluye `dev-hooks`).
+   - `npm run sim -- --seeds 1,2 --secs 60`: 2 partidas simuladas deterministas idénticas en 3.4 s.
+   - `graphify update .`: grafo de conocimiento actualizado (5872 nodos, 13514 aristas, 297 comunidades).
+
+---
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Ciclo #39 (Accesibilidad de Menús C1/C2/A1/A2/A3/A4 y Modularización del Visor 3D del Bestiario hacia `src/bestiary_preview.ts`).
-- **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Low Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
+- **Último trabajo completado:** Ciclo #40 (Extracción Dinámica de Dev-Hooks fuera de `src/main.ts` con exclusión total en el bundle de producción).
+- **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 
 
