@@ -2114,7 +2114,15 @@ scene.onBeforeRenderObservable.add(() => {
   else if (state === "race") { const k = kartM!; if (padPressed(pb("pause"))) k.racePause(); if (padPressed(pb("ok"))) k.raceClick(); if (padPressed(pb("cam"))) camCycle(); if (padPressed(14)) k.racePadMenu(-1); if (padPressed(15)) k.racePadMenu(1); k.raceTick(dt); }
   else if (state === "duel") duelM!.duelTick(dt);
   else if (state === "match3") { if (padPressed(pb("pause"))) m3M?.match3PauseToggle(); m3M?.match3Tick(dt); }
-  else if (state === "net") { netClientTick(); updateHud(dt); }
+  else if (state === "net") { // R6c: el cliente online navega cartas (netLv) y pactos/rutas/votos con el mando; el anfitrión valida el turno
+    netClientTick(); updateHud(dt);
+    if (netLv) {
+      if (padPressed(14)) { offerSel = (offerSel + offers.length - 1) % offers.length; selectOffer(offerSel); }
+      if (padPressed(15)) { offerSel = (offerSel + 1) % offers.length; selectOffer(offerSel); }
+      if (padPressed(pb("ok"))) pickOffer(offerSel);
+      if (padPressed(pb("reroll"))) applyCommand(lead.id, { k: "reroll" });
+    } else if (erun) { if (padPressed(14)) applyCommand(lead.id, { k: "enc", i: 0 }); else if (padPressed(15)) applyCommand(lead.id, { k: "enc", i: 1 }); else if (padPressed(13)) applyCommand(lead.id, { k: "enc", i: 2 }); }
+  }
   else if (!introOn()) menuPad(dt); // con la intro encima el menú no escucha el gamepad
 
   if (state === "play") {

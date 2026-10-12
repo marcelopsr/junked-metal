@@ -85,7 +85,8 @@ try {
   check("segunda oferta: le toca al cliente y la ve", (await info(h)).cards?.by === 2 && /Turno/.test(kc2.cards?.sub ?? ""), `"${kc2.cards?.sub}"`);
   await h.keyboard.press("Digit1"); await sleep(800);
   check("el anfitrión no puede elegir en el turno del cliente", (await info(h)).cards?.by === 2);
-  await c.keyboard.press("Digit1");
+  await c.evaluate(() => { window.__gpB = []; navigator.getGamepads = () => [{ id: "fake", connected: true, timestamp: performance.now(), axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: !!window.__gpB[i], value: +!!window.__gpB[i] })) }]; });
+  for (const b of [15, 0]) { await c.evaluate((b) => { window.__gpB[b] = true; }, b); await sleep(250); await c.evaluate((b) => { window.__gpB[b] = false; }, b); await sleep(250); } // mando simulado del cliente: cruceta der. + A
   await wait(h, () => window.__net.info().cards?.by !== 2, null, 10000).catch(() => {});
   const k3 = await info(h);
   check("carta del cliente aplicada en el anfitrión", k3.cards?.by !== 2 && k3.level > lv0, `nivel ${lv0} -> ${k3.level}`);

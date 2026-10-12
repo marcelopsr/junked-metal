@@ -79,3 +79,5 @@ Resultado: 24 OK, 0 fallas, también con `NET_RELAY=1` (la prueba fuerza `iceTra
 
 - RTT y kB/s con muchos bichos (solo medido al inicio). Conexión entre dos máquinas o redes distintas (NAT simétrica, sin TURN).
 - Con 1 bicho en el radio de 70 m al principio, la prueba de bichos es mínima (se mueven, pero son pocos).
+
+- R6c (mando del cliente): el cliente online navega cartas (cruceta, A, re-sorteo) y pactos/rutas/votos (cruceta izq./der./abajo) con el gamepad; `net-test` lo prueba con `navigator.getGamepads` simulado.
