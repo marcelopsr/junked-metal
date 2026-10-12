@@ -354,6 +354,8 @@
   #muted { top: calc(max(10px, env(safe-area-inset-top)) + 118px); right: 8px; }
   /* celular: arriba no hay hueco entre progreso y radar; la banda va bajo la racha/jefe, todavía lejos del auto */
   #banner { top: calc(max(10px, env(safe-area-inset-top)) + 176px); max-width: 92vw; min-width: 0; }
+  /* con la barra de jefe (+104 px, ~80 px de alto) la regla de escritorio (:has, +74 px) pisaba esta y el aviso tapaba el reloj: debajo de la barra */
+  #hud:has(#bossbar:not(.hidden)) ~ #banner { top: calc(max(10px, env(safe-area-inset-top)) + 192px); }
 }
 /* Celular vertical: el estado del auto se ancla a la izquierda del velocímetro (centrado lo pisaba y cortaba "160 / 160") */
 @media (orientation: portrait) and (max-width: 720px) {

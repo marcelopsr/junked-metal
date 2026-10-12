@@ -620,7 +620,7 @@ function flicker(mat: B.PBRMaterial) {
 function frontBuild() {
   floor("lawn", "#b8f0a0", TEX.grassMacro, 0.9);
   // Franjas de corte del césped
-  const mow = pbr("mow", { color: "#e8ffd0", rough: 0.9, alpha: 0.08 });
+  const mow = pbr("mow", { color: "#e8ffd0", rough: 0.9, alpha: 0.02 }); // con 0.08 el sol HDR lo amplificaba a bandas pálidas de borde duro hasta el horizonte
   for (let i = 0; i < 12; i += 2) decal("mow", HALF * 2, (HALF * 2) / 12, 0, -HALF + ((i + 0.5) * HALF * 2) / 12, mow, 0.015);
   // Vereda (baldosas), cordón y calle: la calle es el límite (pared física en z = -HALF)
   const vt = tex("vereda", TEX.tiles);

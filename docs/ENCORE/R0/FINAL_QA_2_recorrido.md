@@ -18,3 +18,11 @@ Recorrido cubierto: menú, Largar, escenario 1, teleportador (sin evento, OVERLO
 - Aviso de radio "SEÑAL" del jefe (decodificación) tapa el reloj y la barra de jefe unos segundos en celular.
 - Pantalla de resultados en celular: la foto polaroid se superpone al borde derecho del panel (diseño previo, no de ENCORE).
 - Patio (el otro mundo terrestre) no salió en la semilla 3; solo jardín.
+
+## Pendientes cerrados
+
+Capturas antes/después en `scratch/qa6/` (`shot.mjs` y `sky.mjs` las generan; `probe.mjs` fue el diagnóstico).
+
+- **Aviso de radio sobre el reloj (celular 390x844):** causa real, la regla de escritorio `#hud:has(#bossbar:not(.hidden)) ~ #banner { top: +74px }` (`src/hud.css`) tiene más especificidad que la regla táctil `#banner { top: +176px }` y la pisaba cuando hay barra de jefe; el aviso quedaba en y=84..178 sobre el reloj (64..115). Arreglo: la misma regla `:has` dentro del bloque táctil con `top: +192px` (bajo la barra, 114..193). Medido: aviso en y=202, reloj y barra libres (`radio-cel-antes.png` / `radio-cel-despues.png`). Sin tocar: celular apaisado (`celh`) sigue con la regla de arriba, no se probó con jefe.
+- **Franjas claras en el jardín:** no eran del cielo ni de ENCORE sino las "franjas de corte" del césped (`mow` en `frontBuild`, `src/world.ts`): 6 decales con `alpha: 0.08` que con la luz HDR se veían como bandas pálidas de borde duro hasta el horizonte (con `mow` oculto desaparecen; con `alpha 0.02` quedan casi imperceptibles). Es previo a ENCORE (existe desde bf38d96, zona Jardín), así que también afectaba a Supervivencia `?zone=jardin`. Arreglo: `alpha: 0.02`. Capturas `cielo-jardin-medio-antes.png` / `-despues.png` y `horizonte`.
+- Verificado: `npx tsc --noEmit -p .` OK; `npm run shots -- --changed` 92 capturas OK (sin diff contra referencia pedida).
