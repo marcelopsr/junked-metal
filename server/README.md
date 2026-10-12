@@ -1,6 +1,6 @@
 # jm-net: servidor de red de Junked Metal
 
-Señalización PeerJS propia (`/peer`), login (clave de grupo o GitHub con lista blanca), credenciales TURN temporales y panel. Node 20.6+ (VPS: 24), ESM, dependencias fijas: `express` 4.21.2 y `peer` 1.0.2.
+Señalización PeerJS propia (`/peer`), login (clave de grupo o GitHub con lista blanca), credenciales TURN temporales y panel. Node 22.13+ (VPS: 24.21.0, por `node:sqlite`), ESM, dependencias fijas: `express` 4.21.2 y `peer` 1.0.2.
 
 ## Rutas
 - `GET /api/health`
@@ -16,7 +16,7 @@ Señalización PeerJS propia (`/peer`), login (clave de grupo o GitHub con lista
 - Actualizar: `rsync -a --exclude node_modules --exclude test --exclude .env server/ vps:/opt/junkedmetal/ && ssh vps 'cd /opt/junkedmetal && npm ci --omit=dev && pm2 restart jm-net'`.
 - Caddy: `/etc/caddy/junkedmetal.caddy` (reverse_proxy a 3310, websockets incluidos) importado al final de `/etc/caddy/Caddyfile`. Siempre `sudo caddy validate --config /etc/caddy/Caddyfile` antes de `sudo systemctl reload caddy`.
 - coturn: `/etc/turnserver.conf` (3478 UDP/TCP, relay 49160-49200 UDP, `use-auth-secret`, IPs privadas y loopback denegadas). Log `/var/log/coturn/turn.log` (logrotate diario, 7 copias). ufw: 3478/udp, 3478/tcp, 49160:49200/udp.
-- Config en `/opt/junkedmetal/.env` (600): `JM_SECRET`, `TURN_SECRET`, `GROUP_KEY`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `ALLOW_GITHUB` (logins separados por coma), `PORT`, `TURN_HOST`.
+- Config en `/opt/junkedmetal/.env` (600): `JM_SECRET`, `TURN_SECRET`, `GROUP_KEY`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `ALLOW_GITHUB` (logins separados por coma), `PORT`, `TURN_HOST`, `ADMIN_KEY`, `ADMIN_EMAILS`, `REQUIRE_SUBSCRIPTION`, `PAYPAL_MODE` (ver § Portal admin).
 - Ver la clave de grupo: `ssh vps "grep ^GROUP_KEY= /opt/junkedmetal/.env"`.
 
 ## Límites (presupuesto: Junked Metal hasta 75 % de la VPS = 6 CPU / 11 GB; redserva 25 %)
@@ -52,3 +52,28 @@ ssh vps "grep ^JM_SECRET= /opt/junkedmetal/.env | cut -d= -f2" | npx wrangler se
 gh variable set LOGIN_URL -R marcelopsr/junked-metal --body "https://jm-login.<sub>.workers.dev/"
 ```
 Pruebas: `node --test server/cf-login/test/*.test.js` (firma compatible, ventana, return, JWT).
+
+## Portal admin
+
+URL: https://junkedmetal.duckdns.org/admin (HTML/CSS/JS sin build en `server/admin.html`; API en `/admin/api/*`).
+
+**Datos**: SQLite con `node:sqlite` (incluido en Node 24.21.0 de la VPS, sin dependencias nuevas) en `/opt/junkedmetal/data/jm.db` (variable `DB_FILE`), código en `server/db.js`. Tablas: `users(email, status invited|active|revoked, invitedAt, activatedAt, revokedAt, note, lastSeen, tokenVersion)`, `invites(code, email, expiresAt, usedAt)`, `audit(at, actor, action, target, detail, ip)` (ingresos, canjes, acciones del admin y pagos), `admin_codes`, `plans(id, name, price en centavos, currency, period month|year)`, `subscriptions(email, planId, status, provider manual|stripe|paypal, providerRef, currentPeriodEnd)` y `payments(ref)` (idempotencia de pagos). Al arrancar con la tabla `users` vacía importa los activos de `invites.json` (ese archivo ya no se usa después).
+
+**Revocación**: el token lleva `v` = `tokenVersion` del usuario. Los uid `cf-<mail>` se validan en cada uso (`/api/turn`, `/api/stats`, PeerServer) contra la tabla: activo y misma versión. Revocar sube la versión (los tokens viejos mueren, también al reactivar) y cierra sus peers abiertos. Tokens de grupo (`g-`) y GitHub por `ALLOW_GITHUB` (`gh-`) no pasan por la tabla.
+
+**Login de usuarios**: `/api/cf-exchange` acepta `invite` además del mail firmado: activo = token; invitado + código vigente de ese mismo mail = se activa; revocado o sin código = 403. GitHub pide `user:email` y entra por el primer mail verificado que esté activo en la tabla (token `cf-<mail>`, revocable); si ninguno, cae a `ALLOW_GITHUB` por login. El cliente (`src/net.ts`) guarda `?invite=CODE`, lo quita de la URL y lo agrega al link de `VITE_LOGIN_URL`; el Worker (`server/cf-login/worker.js`) lo reenvía en el canje.
+
+**Acceso admin**: cookie `jm_admin` (HttpOnly, Secure, SameSite=Strict, path `/admin`, 12 h). Credenciales: `ADMIN_KEY` del `.env`, código de un solo uso de 15 min (`ssh vps "cd /opt/junkedmetal && npm run admin-code"`) o un token `cf-` de un mail de `ADMIN_EMAILS` (por defecto `mertenmsalas@gmail.com`). CSRF: SameSite estricto, escrituras solo `application/json` y `Origin` propio si viene. Rate limit: 10 ingresos / 15 min y 300 llamadas / min por IP. Ver la clave: `ssh vps "grep ^ADMIN_KEY= /opt/junkedmetal/.env"`.
+
+**Pantallas**: Usuarios (estado, última conexión, plan; validar, revocar, reactivar; Gestionar = nota, asignar plan con vencimiento, marcar pagado +1 período, cancelar), Invitar (link `https://marcelopsr.github.io/junked-metal/?invite=CODE`, 7 días, botón Copiar), Pagos (estado de pasarelas, CRUD de planes), Auditoría, Red (lo de `/panel`).
+
+**Pagos** (`server/pay.js`, fetch contra REST, sin SDK; responden 503 si faltan credenciales):
+- `GET /api/pay/checkout?plan=<id>&provider=stripe|paypal` con `Authorization: Bearer <token cf->` → `{url}`.
+- Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`): Checkout Session `mode=payment` con `price_data` y `client_reference_id = plan|mail`; webhook `POST /api/pay/stripe/webhook` verifica `Stripe-Signature` (HMAC-SHA256 de `t.cuerpo` crudo, tolerancia 300 s) y aplica `checkout.session.completed` / `async_payment_succeeded` con `payment_status=paid`. Configurar en el dashboard el endpoint `https://junkedmetal.duckdns.org/api/pay/stripe/webhook` con esos dos eventos.
+- PayPal (`PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_WEBHOOK_ID`, `PAYPAL_MODE=sandbox|live`): OAuth client_credentials, Orders v2 `intent=CAPTURE` con `custom_id = plan|mail` y `experience_context.return_url = /api/pay/paypal/return` (captura y vuelve al juego con `?pago=ok|error`); webhook `POST /api/pay/paypal/webhook` verificado con `POST /v1/notifications/verify-webhook-signature` (`verification_status = SUCCESS`), evento `PAYMENT.CAPTURE.COMPLETED`.
+- Un pago se aplica solo si monto y moneda coinciden con el plan; activa o extiende un período desde el vencimiento vigente (o desde ahora si venció); idempotente por id de sesión/captura.
+- `REQUIRE_SUBSCRIPTION=false` en `.env`. En `true`, `/api/turn` (402) y abrir sala (peer id `jm-*`, 403) exigen suscripción vigente; admins exentos.
+
+Fuentes: Stripe Checkout Sessions https://docs.stripe.com/api/checkout/sessions/create, firma de webhooks https://docs.stripe.com/webhooks#verify-manually; PayPal autenticación https://developer.paypal.com/api/rest/authentication/, Orders v2 https://developer.paypal.com/docs/api/orders/v2/, verificación de webhooks https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature_post, eventos https://developer.paypal.com/api/rest/webhooks/event-names/; SQLite de Node https://nodejs.org/api/sqlite.html.
+
+**Pendiente**: credenciales de Stripe y PayPal en `/opt/junkedmetal/.env` (más registrar los webhooks); redesplegar el Worker `jm-login` (reenvía `invite`) con un token de Cloudflare con permisos de Workers Scripts:Edit y Access; `VITE_LOGIN_URL` en el build. Tests: `cd server && npm test` (tokens, invitar/canjear/revocar, suscripción, firmas de webhooks, integración HTTP del portal).

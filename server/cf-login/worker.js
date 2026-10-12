@@ -47,7 +47,7 @@ export default {
     if (!mail) return page(403, "Sesión de Cloudflare Access inválida.");
     const ts = Date.now();
     let r;
-    try { r = await fetch(env.EXCHANGE_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: mail, ts, sig: await exchangeSig(env.JM_SECRET, mail, ts) }) }); }
+    try { r = await fetch(env.EXCHANGE_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: mail, ts, sig: await exchangeSig(env.JM_SECRET, mail, ts), invite: (url.searchParams.get("invite") || "").slice(0, 64) || undefined }) }); }
     catch { return page(502, "No se pudo contactar al servidor del juego."); }
     if (r.status === 403) return page(403, "Sin invitación: pedí acceso al administrador.");
     const j = r.ok ? await r.json().catch(() => null) : null;

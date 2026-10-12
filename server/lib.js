@@ -5,21 +5,24 @@ export const ORIGINS = ["https://marcelopsr.github.io", "http://localhost:5173",
 const b64u = (s) => Buffer.from(s).toString("base64url");
 const mac = (secret, s) => createHmac("sha256", secret).update(s).digest("base64url");
 
-export function sign(secret, uid, ttlSec = 30 * 86400, now = Date.now()) {
-  const p = b64u(JSON.stringify({ u: uid, exp: Math.floor(now / 1000) + ttlSec }));
+// v = tokenVersion del usuario: revocar sube la versión y los tokens viejos dejan de valer (ver db.js).
+export function sign(secret, uid, ttlSec = 30 * 86400, now = Date.now(), v = 0) {
+  const p = b64u(JSON.stringify({ u: uid, exp: Math.floor(now / 1000) + ttlSec, v }));
   return p + "." + mac(secret, p);
 }
 
 // Devuelve el uid o null.
-export function verify(secret, token, now = Date.now()) {
+export const verify = (secret, token, now = Date.now()) => decode(secret, token, now)?.u ?? null;
+// Devuelve {u, v} o null (v = 0 en tokens anteriores a tokenVersion).
+export function decode(secret, token, now = Date.now()) {
   if (typeof token !== "string" || token.length > 512) return null;
   const [p, s] = token.split(".");
   if (!p || !s) return null;
   const a = Buffer.from(s), b = Buffer.from(mac(secret, p));
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
   try {
-    const { u, exp } = JSON.parse(Buffer.from(p, "base64url").toString());
-    return typeof u === "string" && exp * 1000 > now ? u : null;
+    const { u, exp, v = 0 } = JSON.parse(Buffer.from(p, "base64url").toString());
+    return typeof u === "string" && exp * 1000 > now ? { u, v: +v || 0 } : null;
   } catch { return null; }
 }
 

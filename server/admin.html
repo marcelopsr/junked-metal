@@ -1,0 +1,215 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Junked Metal admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--jm-naranja:#FF9138;--jm-amarillo:#FFB400;--jm-rojo:#FF3B2E;--jm-verde:#22C55E;--jm-cian:#00C2FF;--jm-fondo:#0B0F14;--jm-fondo2:#14181F;--jm-panel:#1F2937;--jm-borde:#374151;--jm-texto:#F8FAFC;--jm-texto2:#9CA3AF;--jm-r:3px;--f:"Rajdhani",system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--jm-fondo);color:var(--jm-texto);font:500 16px/1.4 var(--f)}
+main{max-width:1180px;margin:0 auto;padding:16px}
+h1,h2,h3{font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0 0 10px}
+h1{font-size:30px;color:var(--jm-naranja)}h2{font-size:20px}h3{font-size:16px;color:var(--jm-texto2)}
+.panel{background:var(--jm-fondo2);border:2px solid var(--jm-naranja);border-radius:var(--jm-r);padding:14px;margin-bottom:14px;box-shadow:0 14px 40px rgba(0,0,0,.6)}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+nav{display:flex;flex-wrap:wrap;gap:6px}
+button,input,select,textarea{font:inherit;color:var(--jm-texto);background:var(--jm-panel);border:1px solid var(--jm-borde);border-radius:var(--jm-r);padding:6px 10px}
+button{cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+button:hover,button:focus-visible{border-color:var(--jm-naranja);outline:none}
+button.pri{background:var(--jm-naranja);color:#111;border-color:var(--jm-naranja)}
+button.mal{border-color:var(--jm-rojo);color:var(--jm-rojo)}
+nav button[aria-pressed=true]{border-color:var(--jm-naranja);color:var(--jm-naranja)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--jm-naranja);outline-offset:1px}
+.fila{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{border-bottom:1px solid var(--jm-borde);padding:6px;text-align:left;vertical-align:top}
+th{color:var(--jm-texto2);font-weight:700;text-transform:uppercase;font-size:13px}
+.st{font-weight:700;text-transform:uppercase;font-size:13px}.st.active{color:var(--jm-verde)}.st.invited{color:var(--jm-amarillo)}.st.revoked{color:var(--jm-rojo)}
+.muted{color:var(--jm-texto2);font-size:14px}
+.msg{min-height:1.4em;color:var(--jm-amarillo)}
+code,.mono{font-family:ui-monospace,monospace;font-size:13px;word-break:break-all}
+pre{white-space:pre-wrap;font-size:12px;background:var(--jm-fondo);padding:8px;border:1px solid var(--jm-borde)}
+.hidden{display:none}
+dialog{background:var(--jm-fondo2);color:var(--jm-texto);border:2px solid var(--jm-naranja);border-radius:var(--jm-r);max-width:520px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--jm-texto2)}
+</style></head><body><main>
+<header><h1>Junked Metal: administración</h1><div class="fila"><span id="quien" class="muted"></span><button id="salir" class="hidden">Salir</button></div></header>
+
+<section id="login" class="panel hidden">
+  <h2>Ingreso</h2>
+  <form id="fLogin" class="fila">
+    <select id="lTipo" aria-label="Tipo de credencial"><option value="key">Clave de admin</option><option value="code">Código de un solo uso</option><option value="token">Token de ingreso (cf-)</option></select>
+    <input id="lVal" type="password" required autocomplete="current-password" aria-label="Credencial" placeholder="Credencial">
+    <button class="pri">Ingresar</button>
+  </form>
+  <p class="muted">El código se genera en el servidor con <code>npm run admin-code</code> y vence en 15 minutos.</p>
+  <p id="lMsg" class="msg" role="status"></p>
+</section>
+
+<div id="app" class="hidden">
+  <nav aria-label="Secciones"><button data-v="usuarios" aria-pressed="true">Usuarios</button><button data-v="pagos">Pagos</button><button data-v="auditoria">Auditoría</button><button data-v="red">Red</button></nav>
+  <p id="msg" class="msg" role="status"></p>
+
+  <section data-s="usuarios">
+    <div class="panel">
+      <h2>Invitar</h2>
+      <form id="fInv" class="fila"><input id="iMail" type="email" required placeholder="mail@ejemplo.com" aria-label="Mail a invitar"><button class="pri">Generar invitación</button></form>
+      <div id="iOut" class="fila hidden" style="margin-top:10px"><code id="iLink"></code><button id="iCopy">Copiar</button><span id="iVence" class="muted"></span></div>
+    </div>
+    <div class="panel"><h2>Usuarios</h2><div class="scroll"><table><thead><tr><th>Mail</th><th>Estado</th><th>Última conexión</th><th>Plan</th><th>Nota</th><th>Acciones</th></tr></thead><tbody id="tUsers"></tbody></table></div></div>
+  </section>
+
+  <section data-s="pagos" class="hidden">
+    <div class="panel"><h2>Pasarelas</h2><p id="pasarelas" class="muted"></p></div>
+    <div class="panel">
+      <h2>Planes</h2>
+      <div class="scroll"><table><thead><tr><th>Id</th><th>Nombre</th><th>Precio</th><th>Período</th><th></th></tr></thead><tbody id="tPlans"></tbody></table></div>
+      <h3 style="margin-top:14px">Crear o editar (mismo id = editar)</h3>
+      <form id="fPlan" class="fila">
+        <input name="id" required pattern="[a-z0-9-]{1,32}" placeholder="id (mensual)" aria-label="Id">
+        <input name="name" required placeholder="Nombre" aria-label="Nombre">
+        <input name="price" required type="number" min="0.01" step="0.01" placeholder="Precio (5.00)" aria-label="Precio">
+        <input name="currency" required pattern="[A-Za-z]{3}" maxlength="3" placeholder="USD" aria-label="Moneda" style="width:80px">
+        <select name="period" aria-label="Período"><option value="month">Mensual (30 días)</option><option value="year">Anual (365 días)</option></select>
+        <button class="pri">Guardar plan</button>
+      </form>
+    </div>
+  </section>
+
+  <section data-s="auditoria" class="hidden"><div class="panel"><h2>Registro de auditoría</h2><div class="scroll"><table><thead><tr><th>Fecha</th><th>Quién</th><th>Acción</th><th>Objetivo</th><th>Detalle</th><th>IP</th></tr></thead><tbody id="tAudit"></tbody></table></div></div></section>
+
+  <section data-s="red" class="hidden"><div class="panel"><h2>Sesiones y salas activas</h2><div id="red"></div></div></section>
+</div>
+
+<dialog id="dUser"><form method="dialog" id="fUser">
+  <h2 id="dTitulo"></h2>
+  <label>Nota<textarea id="dNota" rows="3" maxlength="500"></textarea></label>
+  <div class="fila" style="margin:8px 0 14px"><button type="button" id="dGuardarNota">Guardar nota</button></div>
+  <h3>Suscripción</h3><p id="dSub" class="muted"></p>
+  <div class="fila"><label>Plan<select id="dPlan"></select></label><label>Vence<input id="dHasta" type="date"></label></div>
+  <div class="fila" style="margin-top:8px">
+    <button type="button" id="dAsignar">Asignar con vencimiento</button>
+    <button type="button" id="dPagado" class="pri">Marcar pagado (+1 período)</button>
+    <button type="button" id="dCancelar" class="mal">Cancelar suscripción</button>
+  </div>
+  <div class="fila" style="margin-top:14px;justify-content:flex-end"><button value="cerrar">Cerrar</button></div>
+</form></dialog>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fecha = (t) => (t ? new Date(t).toLocaleString("es", { dateStyle: "short", timeStyle: "short" }) : "Nunca");
+const dinero = (c, m) => (c / 100).toFixed(2) + " " + m;
+const ESTADO = { active: "Activo", invited: "Invitado", revoked: "Revocado" };
+let users = [], plans = [], actual = null, vista = "usuarios";
+
+async function api(path, body) {
+  const r = await fetch("/admin/api/" + path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && path !== "login") { mostrarLogin(); throw new Error("Sesión vencida"); }
+  if (!r.ok) throw new Error(j.error || "Error " + r.status);
+  return j;
+}
+const aviso = (t) => { $("msg").textContent = t; };
+const intentar = (fn) => async (...a) => { try { await fn(...a); } catch (e) { aviso(e.message); } };
+
+function mostrarLogin() { $("login").classList.remove("hidden"); $("app").classList.add("hidden"); $("salir").classList.add("hidden"); $("quien").textContent = ""; }
+$("fLogin").onsubmit = async (e) => {
+  e.preventDefault();
+  try { await api("login", { [$("lTipo").value]: $("lVal").value.trim() }); $("lVal").value = ""; $("lMsg").textContent = ""; arrancar(); }
+  catch (er) { $("lMsg").textContent = er.message; }
+};
+$("salir").onclick = intentar(async () => { await api("logout", {}); mostrarLogin(); });
+
+async function arrancar() {
+  let me;
+  try { me = await api("me"); } catch { return mostrarLogin(); }
+  $("login").classList.add("hidden"); $("app").classList.remove("hidden"); $("salir").classList.remove("hidden");
+  $("quien").textContent = "Sesión: " + me.admin;
+  $("pasarelas").innerHTML = `Stripe: <b>${me.pay.stripe ? "configurado" : "sin credenciales"}</b>. PayPal: <b>${me.pay.paypal ? "configurado" : "sin credenciales"}</b>. Suscripción obligatoria: <b>${me.requireSubscription ? "sí" : "no"}</b>.`;
+  cargar();
+}
+const cargar = intentar(async () => {
+  [users, plans] = await Promise.all([api("users"), api("plans")]);
+  pintarUsers(); pintarPlans();
+  if (vista === "auditoria") pintarAudit();
+  if (vista === "red") pintarRed();
+});
+
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => {
+  vista = b.dataset.v;
+  document.querySelectorAll("nav button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+  document.querySelectorAll("[data-s]").forEach((s) => s.classList.toggle("hidden", s.dataset.s !== vista));
+  aviso(""); cargar();
+});
+
+function planDe(u) {
+  if (!u.planId && !u.currentPeriodEnd) return "Sin plan";
+  const vig = u.subStatus === "active" && u.currentPeriodEnd > Date.now();
+  return `${esc(u.planName || u.planId || "Manual")} <span class="muted">(${vig ? "vence" : u.subStatus === "canceled" ? "cancelada" : "vencida"} ${new Date(u.currentPeriodEnd).toLocaleDateString("es")}, ${esc(u.provider)})</span>`;
+}
+function pintarUsers() {
+  $("tUsers").innerHTML = users.map((u, i) => `<tr><td class="mono">${esc(u.email)}</td><td><span class="st ${u.status}">${ESTADO[u.status]}</span></td><td>${fecha(u.lastSeen)}</td><td>${planDe(u)}</td><td>${esc(u.note)}</td><td class="fila">
+    ${u.status === "active" ? `<button class="mal" data-op="revoke" data-i="${i}">Revocar</button>` : `<button data-op="activate" data-i="${i}">${u.status === "invited" ? "Validar" : "Reactivar"}</button>`}
+    <button data-op="gestionar" data-i="${i}">Gestionar</button></td></tr>`).join("") || `<tr><td colspan="6">Sin usuarios</td></tr>`;
+}
+$("tUsers").onclick = intentar(async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const u = users[b.dataset.i];
+  if (b.dataset.op === "gestionar") return abrir(u);
+  if (b.dataset.op === "revoke" && !confirm(`Revocar a ${u.email}? Sus tokens dejan de valer al instante.`)) return;
+  await api("user", { email: u.email, op: b.dataset.op });
+  aviso(b.dataset.op === "revoke" ? `${u.email} revocado.` : `${u.email} activo.`); cargar();
+});
+
+$("fInv").onsubmit = intentar(async (e) => {
+  e.preventDefault();
+  const r = await api("invite", { email: $("iMail").value.trim() });
+  $("iLink").textContent = r.link; $("iVence").textContent = "Vence " + fecha(r.expiresAt);
+  $("iOut").classList.remove("hidden"); $("iMail").value = ""; aviso("Invitación generada."); cargar();
+});
+$("iCopy").onclick = intentar(async () => { await navigator.clipboard.writeText($("iLink").textContent); aviso("Link copiado."); });
+
+function abrir(u) {
+  actual = u; $("dTitulo").textContent = u.email; $("dNota").value = u.note || "";
+  $("dSub").innerHTML = planDe(u);
+  $("dPlan").innerHTML = plans.map((p) => `<option value="${esc(p.id)}" ${p.id === u.planId ? "selected" : ""}>${esc(p.name)} (${dinero(p.price, p.currency)})</option>`).join("") || `<option value="">Sin planes</option>`;
+  const d = new Date(u.currentPeriodEnd || Date.now() + 30 * 864e5); $("dHasta").value = d.toISOString().slice(0, 10);
+  $("dUser").showModal();
+}
+const enUser = (fn, ok) => intentar(async () => { await fn(); aviso(ok); $("dUser").close(); cargar(); });
+$("dGuardarNota").onclick = enUser(() => api("user", { email: actual.email, op: "note", note: $("dNota").value }), "Nota guardada.");
+$("dAsignar").onclick = enUser(() => api("sub", { email: actual.email, op: "set", planId: $("dPlan").value, until: $("dHasta").value + "T23:59:59Z" }), "Suscripción asignada.");
+$("dPagado").onclick = enUser(() => api("sub", { email: actual.email, op: "paid", planId: $("dPlan").value }), "Pago manual registrado.");
+$("dCancelar").onclick = enUser(() => api("sub", { email: actual.email, op: "cancel" }), "Suscripción cancelada.");
+
+function pintarPlans() {
+  $("tPlans").innerHTML = plans.map((p, i) => `<tr><td class="mono">${esc(p.id)}</td><td>${esc(p.name)}</td><td>${dinero(p.price, p.currency)}</td><td>${p.period === "year" ? "Anual" : "Mensual"}</td><td class="fila"><button data-e="${i}">Editar</button><button class="mal" data-d="${i}">Borrar</button></td></tr>`).join("") || `<tr><td colspan="5">Sin planes</td></tr>`;
+}
+$("tPlans").onclick = intentar(async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.e) { const p = plans[b.dataset.e], f = $("fPlan").elements; f.id.value = p.id; f.name.value = p.name; f.price.value = (p.price / 100).toFixed(2); f.currency.value = p.currency; f.period.value = p.period; return; }
+  const p = plans[b.dataset.d];
+  if (!confirm(`Borrar el plan ${p.name}?`)) return;
+  await api("plan/delete", { id: p.id }); aviso("Plan borrado."); cargar();
+});
+$("fPlan").onsubmit = intentar(async (e) => {
+  e.preventDefault(); const f = e.target.elements;
+  await api("plan", { id: f.id.value.trim(), name: f.name.value.trim(), price: Math.round(+f.price.value * 100), currency: f.currency.value.trim(), period: f.period.value });
+  e.target.reset(); aviso("Plan guardado."); cargar();
+});
+
+async function pintarAudit() {
+  const a = await api("audit");
+  $("tAudit").innerHTML = a.map((r) => `<tr><td>${fecha(r.at)}</td><td class="mono">${esc(r.actor)}</td><td>${esc(r.action)}</td><td class="mono">${esc(r.target)}</td><td class="mono">${esc(r.detail)}</td><td class="mono">${esc(r.ip)}</td></tr>`).join("") || `<tr><td colspan="6">Sin registros</td></tr>`;
+}
+async function pintarRed() {
+  const s = await api("stats"), h = Math.floor(s.uptime / 3600), m = Math.floor(s.uptime / 60) % 60;
+  $("red").innerHTML = `<p>Servidor activo hace ${h} h ${m} min. Salas: ${s.peers.filter((p) => p.sala).length}. Peers: ${s.peers.length}. Usuarios conectados: ${s.usuarios.length}.</p>
+  <div class="scroll"><table><thead><tr><th>Id</th><th>Usuario</th><th>Tipo</th><th>Conectado</th></tr></thead><tbody>${s.peers.map((p) => `<tr><td class="mono">${esc(p.id)}</td><td class="mono">${esc(p.uid)}</td><td>${p.sala ? "Sala" : "Invitado"}</td><td>${Math.round(p.seg / 60)} min</td></tr>`).join("") || `<tr><td colspan="4">Ninguno</td></tr>`}</tbody></table></div>
+  <h3 style="margin-top:14px">Últimas sesiones TURN</h3><pre>${esc(s.turn.join("\n") || "Sin sesiones")}</pre>`;
+}
+setInterval(() => { if (vista === "red" && !$("app").classList.contains("hidden")) intentar(pintarRed)(); }, 10000);
+arrancar();
+</script></main></body></html>

@@ -2,7 +2,16 @@
   "name": "junkedmetal-net",
   "private": true,
   "type": "module",
-  "scripts": { "start": "node --env-file=.env index.js", "test": "node --test" },
-  "engines": { "node": ">=20.6" },
-  "dependencies": { "express": "4.21.2", "peer": "1.0.2" }
+  "scripts": {
+    "start": "node --env-file=.env index.js",
+    "test": "node --test",
+    "admin-code": "node --env-file=.env admin-code.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "express": "4.21.2",
+    "peer": "1.0.2"
+  }
 }
