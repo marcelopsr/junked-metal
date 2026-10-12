@@ -479,7 +479,7 @@ body.calm #dirSub { animation: none !important; }
 #quadVoid { position: absolute; left: 50%; top: 50%; right: 0; bottom: 0; background: #000; }
 #quadHp > div { position: absolute; display: flex; align-items: center; gap: 6px; padding: 3px 8px; scale: var(--hud-scale); font: 700 12px/1 var(--hf); letter-spacing: .08em; color: var(--g-dim); background: rgba(14, 12, 10, .88); border: 1px solid var(--jm-naranja, #ff7a1a); }
 #quadHp .q1, #quadHp .q2 { bottom: calc(50% + 8px); transform-origin: 0 100%; }
-#quadHp .q3, #quadHp .q4 { bottom: 8px; transform-origin: 0 100%; }
+#quadHp .q3, #quadHp .q4 { top: calc(50% + 8px); transform-origin: 0 0; } /* arriba de su cuadro: abajo los tapan el panel de telemetría (J4) y el ícono de habilidad (J3) */
 #quadHp .q1, #quadHp .q3 { left: 14px; }
 #quadHp .q2, #quadHp .q4 { left: calc(50% + 14px); }
 #quadHp b { color: var(--jm-amarillo2, #FFD166); }
