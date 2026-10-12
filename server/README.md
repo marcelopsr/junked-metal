@@ -36,7 +36,7 @@ Señalización PeerJS propia (`/peer`), login (clave de grupo o GitHub con lista
 
 ## Login Cloudflare
 
-Login por mail sin dominio propio: Worker `jm-login` (`server/cf-login/`, wrangler 4.149.0) en `jm-login.mesr-96.workers.dev`, protegido por Cloudflare Access (Zero Trust gratis, team `junkedmetal`, método One-time PIN, política Allow con Include: Everyone; la verificación del mail es la autenticación, la lista de invitados vive en la VPS).
+Login por mail sin dominio propio: Worker `jm-login` (`server/cf-login/`, wrangler 4.149.0) en `jm-login.mesr-96.workers.dev`, protegido por Cloudflare Access (Zero Trust gratis, team `junkedmetal`, método One-time PIN, política Allow «Mail verificado» cuya lista de mails la reescribe la VPS (`server/access.js`) al arrancar y tras cada invitar, revocar o reactivar: no revocados con licencia vigente + `ADMIN_EMAILS` (invitar exige licencia); requiere `CF_API_TOKEN`, `CF_ACCOUNT_ID`, `CF_ACCESS_APP`, `CF_ACCESS_POLICY` en `.env`, sin ellas no toca nada; errores en Auditoría como `access-error`).
 
 Flujo: `GET /?return=<url>` (orígenes de `ORIGINS`) → Access pide el mail y el PIN → el Worker verifica `Cf-Access-Jwt-Assertion` (RS256 contra `<TEAM_DOMAIN>/cdn-cgi/access/certs`, `aud` = `POLICY_AUD`, `iss` = `TEAM_DOMAIN`, `exp`) → `POST /api/cf-exchange` en la VPS con `{email, ts, sig}`, `sig = base64url(HMAC-SHA256(JM_SECRET, "cf-exchange:<mail>:<ts>"))`, ventana de 60 s → la VPS busca el mail en `/opt/junkedmetal/data/invites.json` (`[{email, status: "active"|"revoked", createdAt}]`, variable `INVITES_FILE` para cambiarla) y, si está activo, devuelve `{token}` (formato `sign()`, uid `cf-<mail>`); si no, 403 y el Worker muestra "Sin invitación: pedí acceso al administrador" → redirección a `return#token=...`.
 
@@ -53,6 +53,15 @@ gh variable set LOGIN_URL -R marcelopsr/junked-metal --body "https://jm-login.me
 ```
 Pruebas: `node --test server/cf-login/test/*.test.js` (firma compatible, ventana, return, JWT).
 
+## Juego detrás de Access
+
+GitHub Pages publica solo `portada/` (pública, botón Ingresar). El juego completo lo sirve el Worker `jm-login` (`[assets]` = `dist/`, `/login` = canje de token) y todo ese dominio está detrás de Access: la política solo lista mails con licencia vigente + `ADMIN_EMAILS` (la VPS la reescribe al cambiar usuarios o licencias y cada hora). Sesión de Access: 6 h (quien pierde la licencia sale como mucho a las 6 h). Publicar el juego:
+```sh
+VITE_NET_HOST=junkedmetal.duckdns.org VITE_LOGIN_URL=https://jm-login.mesr-96.workers.dev/login npm run build
+cd server/cf-login && set -a && . ~/.config/junkedmetal/cloudflare.env && set +a && npx wrangler deploy
+```
+Admin: botón "Ingresar con Cloudflare" (mail de `ADMIN_EMAILS`); clave y código quedan en "Otras credenciales". "Enviar por mail" abre Gmail con el link ya escrito.
+
 ## Portal admin
 
 URL: https://junkedmetal.duckdns.org/admin (HTML/CSS/JS sin build en `server/admin.html`; API en `/admin/api/*`).
@@ -67,7 +76,7 @@ URL: https://junkedmetal.duckdns.org/admin (HTML/CSS/JS sin build en `server/adm
 
 **Acceso admin**: cookie `jm_admin` (HttpOnly, Secure, SameSite=Strict, path `/admin`, 12 h). Credenciales: `ADMIN_KEY` del `.env`, código de un solo uso de 15 min (`ssh vps "cd /opt/junkedmetal && npm run admin-code"`) o un token `cf-` de un mail de `ADMIN_EMAILS` (por defecto `mertenmsalas@gmail.com`). CSRF: SameSite estricto, escrituras solo `application/json` y `Origin` propio si viene. Rate limit: 10 ingresos / 15 min y 300 llamadas / min por IP. Ver la clave: `ssh vps "grep ^ADMIN_KEY= /opt/junkedmetal/.env"`.
 
-**Pantallas**: Usuarios (estado, última conexión, plan; validar, revocar, reactivar; Gestionar = nota, asignar plan con vencimiento, marcar pagado +1 período, cancelar), Invitar (link `https://marcelopsr.github.io/junked-metal/?invite=CODE`, 7 días, botón Copiar), Pagos (estado de pasarelas, CRUD de planes), Auditoría, Red (lo de `/panel`).
+**Pantallas**: Usuarios (estado, última conexión, plan; validar, revocar, reactivar; Gestionar = nota, asignar plan con vencimiento, marcar pagado +1 período, cancelar), Agregar amigo (mail + licencia opcional = un período del plan; link `https://marcelopsr.github.io/junked-metal/?invite=CODE`, 7 días, botón Copiar), Pagos (estado de pasarelas, CRUD de planes), Auditoría, Red (lo de `/panel`).
 
 **Pagos** (`server/pay.js`, fetch contra REST, sin SDK; responden 503 si faltan credenciales):
 - `GET /api/pay/checkout?plan=<id>&provider=stripe|paypal` con `Authorization: Bearer <token cf->` → `{url}`.

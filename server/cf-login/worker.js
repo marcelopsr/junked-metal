@@ -1,6 +1,6 @@
 // jm-login: Cloudflare Access (One-time PIN) delante. Verifica el JWT de Access y canjea el mail en la VPS (POST /api/cf-exchange,
 // firmado con JM_SECRET); la VPS decide si está invitado y devuelve el token de server/lib.js con uid "cf-<mail>".
-export const ORIGINS = ["https://marcelopsr.github.io", "http://localhost:5173", "http://localhost:5174"]; // igual que server/lib.js
+export const ORIGINS = ["https://jm-login.mesr-96.workers.dev", "https://junkedmetal.duckdns.org", "https://marcelopsr.github.io", "http://localhost:5173", "http://localhost:5174"]; // igual que server/lib.js
 const enc = new TextEncoder();
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const unb64u = (s) => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
@@ -39,7 +39,8 @@ export async function accessEmail(jwt, team, aud, now = Date.now(), certs = null
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
-    if (url.pathname !== "/") return new Response("No encontrado", { status: 404 });
+    // Todo el dominio está detrás de Access (solo mails con licencia vigente): fuera de /login se sirve el juego (dist/).
+    if (url.pathname !== "/login") return env.ASSETS.fetch(req);
     const ret = safeReturn(url.searchParams.get("return") || "");
     if (!ret) return new Response("return no permitido", { status: 400 });
     let mail = null;

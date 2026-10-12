@@ -4,6 +4,12 @@ compatibility_date = "2026-09-01"
 workers_dev = true
 
 # TEAM_DOMAIN y POLICY_AUD los fija la app de Access (ver server/README.md § Login Cloudflare). JM_SECRET va como secreto.
+# El juego completo (build de dist/ con VITE_LOGIN_URL=<este worker>/login) se sirve desde acá, protegido por Access.
+[assets]
+directory = "../../dist"
+binding = "ASSETS"
+run_worker_first = ["/login"]
+
 [vars]
 TEAM_DOMAIN = "https://icy-cloud-e7b5.cloudflareaccess.com"
 POLICY_AUD = "ed720dd5a2e287416f8f0b9a5f7e0d87198774f419b92ba99fc648a80c680017"

@@ -38,12 +38,14 @@ label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--jm-t
 
 <section id="login" class="panel hidden">
   <h2>Ingreso</h2>
+  <p><a class="pri" id="lCf" style="display:inline-block;padding:10px 16px;text-decoration:none">Ingresar con Cloudflare</a></p>
+  <details><summary class="muted">Otras credenciales</summary>
   <form id="fLogin" class="fila">
     <select id="lTipo" aria-label="Tipo de credencial"><option value="key">Clave de admin</option><option value="code">Código de un solo uso</option><option value="token">Token de ingreso (cf-)</option></select>
     <input id="lVal" type="password" required autocomplete="current-password" aria-label="Credencial" placeholder="Credencial">
     <button class="pri">Ingresar</button>
   </form>
-  <p class="muted">El código se genera en el servidor con <code>npm run admin-code</code> y vence en 15 minutos.</p>
+  <p class="muted">El código se genera en el servidor con <code>npm run admin-code</code> y vence en 15 minutos.</p></details>
   <p id="lMsg" class="msg" role="status"></p>
 </section>
 
@@ -53,9 +55,9 @@ label{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--jm-t
 
   <section data-s="usuarios">
     <div class="panel">
-      <h2>Invitar</h2>
-      <form id="fInv" class="fila"><input id="iMail" type="email" required placeholder="mail@ejemplo.com" aria-label="Mail a invitar"><button class="pri">Generar invitación</button></form>
-      <div id="iOut" class="fila hidden" style="margin-top:10px"><code id="iLink"></code><button id="iCopy">Copiar</button><span id="iVence" class="muted"></span></div>
+      <h2>Agregar amigo</h2>
+      <form id="fInv" class="fila"><input id="iMail" type="email" required placeholder="mail@ejemplo.com" aria-label="Mail a invitar"><select id="iPlan" aria-label="Licencia"></select><button class="pri">Generar invitación</button></form>
+      <div id="iOut" class="fila hidden" style="margin-top:10px"><code id="iLink"></code><button id="iCopy">Copiar</button><a id="iMailto" target="_blank" rel="noopener">Enviar por mail</a><span id="iVence" class="muted"></span></div>
     </div>
     <div class="panel"><h2>Usuarios</h2><div class="scroll"><table><thead><tr><th>Mail</th><th>Estado</th><th>Última conexión</th><th>Plan</th><th>Nota</th><th>Acciones</th></tr></thead><tbody id="tUsers"></tbody></table></div></div>
   </section>
@@ -114,6 +116,10 @@ async function api(path, body) {
 const aviso = (t) => { $("msg").textContent = t; };
 const intentar = (fn) => async (...a) => { try { await fn(...a); } catch (e) { aviso(e.message); } };
 
+// Ingreso con Cloudflare: el Worker jm-login vuelve con #token=<cf-...> de un mail de ADMIN_EMAILS.
+$("lCf").href = "https://jm-login.mesr-96.workers.dev/login?return=" + encodeURIComponent(location.origin + location.pathname);
+const cfTok = new URLSearchParams(location.hash.slice(1)).get("token");
+if (cfTok) { history.replaceState(null, "", location.pathname); api("login", { token: cfTok }).then(() => arrancar(), (e) => { $("lMsg").textContent = e.message; }); }
 function mostrarLogin() { $("login").classList.remove("hidden"); $("app").classList.add("hidden"); $("salir").classList.add("hidden"); $("quien").textContent = ""; }
 $("fLogin").onsubmit = async (e) => {
   e.preventDefault();
@@ -132,6 +138,7 @@ async function arrancar() {
 }
 const cargar = intentar(async () => {
   [users, plans] = await Promise.all([api("users"), api("plans")]);
+  $("iPlan").innerHTML = (plans.length ? "" : `<option value="">Crear un plan en Pagos</option>`) + plans.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
   pintarUsers(); pintarPlans();
   if (vista === "auditoria") pintarAudit();
   if (vista === "red") pintarRed();
@@ -167,8 +174,9 @@ $("tUsers").onclick = intentar(async (e) => {
 
 $("fInv").onsubmit = intentar(async (e) => {
   e.preventDefault();
-  const r = await api("invite", { email: $("iMail").value.trim() });
+  const r = await api("invite", { email: $("iMail").value.trim(), planId: $("iPlan").value });
   $("iLink").textContent = r.link; $("iVence").textContent = "Vence " + fecha(r.expiresAt);
+  $("iMailto").href = "https://mail.google.com/mail/?view=cm&to=" + encodeURIComponent($("iMail").value.trim()) + "&su=" + encodeURIComponent("Acceso a Junked Metal") + "&body=" + encodeURIComponent(`Ya hay acceso a Junked Metal. Para entrar: ${r.link}\nEl ingreso pide este mismo correo y un código que llega por mail. El link vence ${fecha(r.expiresAt)}.`);
   $("iOut").classList.remove("hidden"); $("iMail").value = ""; aviso("Invitación generada."); cargar();
 });
 $("iCopy").onclick = intentar(async () => { await navigator.clipboard.writeText($("iLink").textContent); aviso("Link copiado."); });

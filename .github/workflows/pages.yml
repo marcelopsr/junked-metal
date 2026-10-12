@@ -23,6 +23,6 @@ jobs:
           VITE_NET_HOST: ${{ vars.NET_HOST }}
           VITE_LOGIN_URL: ${{ vars.LOGIN_URL }} # Worker jm-login (Login Cloudflare); vacía = sin ese botón
       - uses: actions/upload-pages-artifact@v3
-        with: { path: dist }
+        with: { path: portada } # portada pública; el juego completo va en el Worker jm-login detrás de Access (server/README.md)
       - id: deploy
         uses: actions/deploy-pages@v4

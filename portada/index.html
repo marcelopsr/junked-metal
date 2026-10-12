@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Junked Metal</title>
+<meta name="description" content="Roguelite de autos RC en un patio gigante. Acceso por invitación.">
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap">
+<!-- Portada pública: el juego completo vive detrás de Cloudflare Access (solo correos con licencia vigente). -->
+<style>
+:root{--jm-naranja:#f08a24;--jm-texto:#eee6da;--jm-fondo:#0d0f13;--jm-panel:#161a21}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%}
+body{background:var(--jm-fondo) url(credits-hero.webp) center/cover no-repeat fixed;color:var(--jm-texto);font:500 18px/1.4 Rajdhani,system-ui,sans-serif;display:grid;min-height:100vh;place-items:end start}
+main{margin:0 16px 8vh;max-width:520px;background:var(--jm-panel);border:2px solid var(--jm-naranja);padding:24px}
+h1{margin:0 0 8px;font-size:clamp(40px,9vw,72px);line-height:.9;letter-spacing:.04em;text-transform:uppercase;color:var(--jm-naranja)}
+p{margin:0 0 20px}
+a{display:inline-block;background:var(--jm-naranja);color:#111;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;padding:14px 28px}
+a:focus-visible{outline:3px solid var(--jm-texto);outline-offset:3px}
+small{display:block;margin-top:16px;opacity:.75}
+</style></head><body><main>
+<h1>Junked Metal</h1>
+<p>Roguelite de autos RC en un patio gigante: chatarra, plagas y jefes enormes.</p>
+<a id="go" href="https://jm-login.mesr-96.workers.dev/">Ingresar</a>
+<small>Acceso por invitación. El ingreso pide el correo invitado y un código que llega por mail.</small>
+</main>
+<script>
+// Un link de invitación viejo (?invite=CODE) se reenvía al juego para no perder el canje.
+const inv = new URLSearchParams(location.search).get("invite");
+if (inv) document.getElementById("go").href += "?invite=" + encodeURIComponent(inv);
+</script>
+</body></html>

@@ -29,9 +29,10 @@ test("portal: sin sesión 401; clave → invitar → canjear → revocar corta /
   assert.equal(lr.status, 200);
   const ck = { Cookie: lr.headers.get("set-cookie").split(";")[0] };
   assert.equal((await fetch(B + "/admin", { headers: ck })).status, 200);
-  assert.equal((await post("/admin/api/invite", { email: "z@x.com" }, { ...ck, Origin: "https://evil.com" })).status, 403, "CSRF por Origin");
-  const inv = await (await post("/admin/api/invite", { email: "Z@x.com" }, ck)).json();
-  assert.match(inv.link, /^https:\/\/marcelopsr\.github\.io\/junked-metal\/\?invite=[\w-]+$/);
+  await post("/admin/api/plan", { id: "mes", name: "Mensual", price: 500, currency: "USD", period: "month" }, ck);
+  assert.equal((await post("/admin/api/invite", { email: "z@x.com", planId: "mes" }, { ...ck, Origin: "https://evil.com" })).status, 403, "CSRF por Origin");
+  const inv = await (await post("/admin/api/invite", { email: "Z@x.com", planId: "mes" }, ck)).json();
+  assert.match(inv.link, /^https:\/\/jm-login\.mesr-96\.workers\.dev\/\?invite=[\w-]+$/);
   const code = inv.link.split("invite=")[1];
   assert.equal((await exchange("z@x.com")).status, 403, "invitado sin código");
   const { token } = await (await exchange("z@x.com", code)).json();
@@ -48,7 +49,7 @@ test("portal: sin sesión 401; clave → invitar → canjear → revocar corta /
 test("invite-redeem: canje directo, reuso 403, revocar corta el token", async () => {
   const lr = await post("/admin/api/login", { key: "clave-admin" });
   const ck = { Cookie: lr.headers.get("set-cookie").split(";")[0] };
-  const mk = async () => (await (await post("/admin/api/invite", { email: "d@x.com" }, ck)).json()).link.split("invite=")[1];
+  const mk = async () => (await (await post("/admin/api/invite", { email: "d@x.com", planId: "mes" }, ck)).json()).link.split("invite=")[1];
   const code = await mk();
   const ok = await post("/api/invite-redeem", { code }, { Origin: "https://marcelopsr.github.io" });
   assert.equal(ok.status, 200);
@@ -63,7 +64,7 @@ test("invite-redeem: canje directo, reuso 403, revocar corta el token", async ()
   assert.equal(await turn(), 200, "el token anterior sigue valiendo");
   await post("/admin/api/user", { email: "d@x.com", op: "revoke" }, ck);
   assert.equal(await turn(), 401);
-  assert.equal((await post("/api/invite-redeem", { code: await mk() })).status, 403, "revocado");
+  assert.equal((await post("/admin/api/invite", { email: "d@x.com", planId: "mes" }, ck)).status, 400, "revocado: primero Reactivar");
 });
 test("pagos: webhook Stripe con firma inválida 400; PayPal sin credenciales 503", async () => {
   const r = await fetch(B + "/api/pay/stripe/webhook", { method: "POST", headers: { "Content-Type": "application/json", "Stripe-Signature": "t=1,v1=00" }, body: "{}" });

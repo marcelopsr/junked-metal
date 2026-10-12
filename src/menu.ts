@@ -1540,8 +1540,8 @@ export function initMenu(a: Api) {
   api = a;
   // Íconos de la familia de interfaz en los botones fijos (solo presentación: no cambia texto ni acción)
   for (const b of document.querySelectorAll<HTMLButtonElement>("#fe button[data-go], #fe button[data-act]")) {
-    const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k] ?? (k === "playmenu" || k === "playgo" || k === "encorego" ? "jugar" : undefined);
-    if (id && !b.classList.contains("lnk") && (!b.classList.contains("primary") || /^(play|playmenu|playgo|encorego|resume|race|daily)$/.test(k))) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
+    const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k] ?? (k === "playmenu" || k === "playgo" || k === "encorego" || k === "encore" ? "jugar" : undefined);
+    if (id && !b.classList.contains("lnk") && (!b.classList.contains("primary") || /^(play|playmenu|playgo|encore|encorego|resume|race|daily)$/.test(k))) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
   }
   $("tPause").innerHTML = uiIcon("pausa", 26);
   $("tJump").innerHTML = uiIcon("salto", 28) + "SALTO";

@@ -7,6 +7,7 @@ import { ExpressPeerServer } from "peer";
 import { ORIGINS, sign, verify, decode, turnCred, safeReturn, limiter, exchangeOk } from "./lib.js";
 import { openDb, normMail } from "./db.js";
 import * as pay from "./pay.js";
+import { syncAccess } from "./access.js";
 
 const E = process.env;
 for (const k of ["JM_SECRET", "TURN_SECRET", "GROUP_KEY"]) if (!E[k]) throw new Error(`falta ${k} en .env`);
@@ -17,7 +18,7 @@ const started = Date.now();
 // Portal admin (server/README.md § Portal admin).
 const db = openDb(E.DB_FILE || "/opt/junkedmetal/data/jm.db", E.INVITES_FILE || "/opt/junkedmetal/data/invites.json");
 const ADMINS = (E.ADMIN_EMAILS || "mertenmsalas@gmail.com").split(",").map(normMail).filter(Boolean);
-const PUBLIC = E.PUBLIC_URL || "https://junkedmetal.duckdns.org", GAME_URL = E.GAME_URL || "https://marcelopsr.github.io/junked-metal/";
+const PUBLIC = E.PUBLIC_URL || "https://junkedmetal.duckdns.org", GAME_URL = E.GAME_URL || "https://jm-login.mesr-96.workers.dev/";
 const REQUIRE_SUB = E.REQUIRE_SUBSCRIPTION === "true";
 
 const app = express();
@@ -218,25 +219,35 @@ const act = (fn) => (req, res) => {
     res.json(r ?? { ok: true });
   } catch (e) { res.status(400).json({ error: e.message }); }
 };
-app.post("/admin/api/invite", act(({ email }) => {
+// Access solo deja pasar mails no revocados con licencia vigente (y admins); se re-sincroniza tras cada cambio y cada hora (vencimientos).
+let accessQ = Promise.resolve(); // en cadena: dos PUT nunca se cruzan y el último lleva la lista más nueva
+const accessSync = () => (accessQ = accessQ.then(() => syncAccess(E, [...ADMINS, ...db.users().filter((u) => u.status !== "revoked" && db.subActive(u.email)).map((u) => u.email)]))
+  .catch((e) => { console.error(e.message); db.audit("sistema", "access-error", null, e.message.slice(0, 300)); }));
+accessSync(); setInterval(accessSync, 3600e3).unref();
+app.post("/admin/api/invite", act(({ email, planId }) => {
+  if (!db.plan(planId)) throw new Error("Elegir una licencia: sin licencia no hay acceso al juego");
+  if (db.user(email)?.status === "revoked") throw new Error("Usuario revocado: primero Reactivar");
   const { code, expiresAt } = db.invite(email);
+  db.applyPayment({ ref: "manual:" + randomBytes(8).toString("hex"), provider: "manual", email, planId }); // licencia inicial: un período
+  accessSync();
   return { link: `${GAME_URL}?invite=${code}`, expiresAt };
 }));
 app.post("/admin/api/user", act(({ email, op, note }) => {
   if (!db.user(email)) throw new Error("Usuario inexistente");
   if (op === "note") return void db.setNote(email, note ?? "");
-  if (op === "revoke") { db.setStatus(email, "revoked"); return void kick(normMail(email)); }
-  if (op === "activate") return void db.setStatus(email, "active");
+  if (op === "revoke") { db.setStatus(email, "revoked"); kick(normMail(email)); return void accessSync(); }
+  if (op === "activate") { db.setStatus(email, "active"); return void accessSync(); }
   throw new Error("Operación inválida");
 }));
 app.post("/admin/api/plan", act((p) => void db.savePlan(p)));
 app.post("/admin/api/plan/delete", act(({ id }) => { if (!db.deletePlan(id)) throw new Error("Plan inexistente"); }));
 // Suscripción a mano: set = plan y vencimiento exactos; paid = registrar un pago manual (extiende un período); cancel.
 app.post("/admin/api/sub", act(({ email, op, planId, until }) => {
-  if (op === "set") return void db.setSub(email, planId, Date.parse(until));
-  if (op === "paid") { if (!db.user(email)) throw new Error("Usuario inexistente"); return void db.applyPayment({ ref: "manual:" + randomBytes(8).toString("hex"), provider: "manual", email, planId }); }
-  if (op === "cancel") { if (!db.cancelSub(email)) throw new Error("Sin suscripción"); return; }
-  throw new Error("Operación inválida");
+  if (op === "set") db.setSub(email, planId, Date.parse(until));
+  else if (op === "paid") { if (!db.user(email)) throw new Error("Usuario inexistente"); db.applyPayment({ ref: "manual:" + randomBytes(8).toString("hex"), provider: "manual", email, planId }); }
+  else if (op === "cancel") { if (!db.cancelSub(email)) throw new Error("Sin suscripción"); }
+  else throw new Error("Operación inválida");
+  accessSync();
 }));
 const adminHtml = await readFile(new URL("./admin.html", import.meta.url), "utf8");
 app.get("/admin", (req, res) => res.status(adminOf(req) ? 200 : 401).set("Cache-Control", "no-store").type("html").send(adminHtml));
@@ -248,7 +259,7 @@ function settle(p, src) {
   if (!p) return false;
   const plan = db.plan(p.planId);
   if (!plan || !db.user(p.email) || p.amount !== plan.price || p.currency !== plan.currency) { db.audit(src, "pago-rechazado", p.email, JSON.stringify(p)); return false; }
-  if (db.applyPayment(p)) db.audit(src, "pago-aplicado", p.email, `${p.planId} ${p.ref}`);
+  if (db.applyPayment(p)) { db.audit(src, "pago-aplicado", p.email, `${p.planId} ${p.ref}`); accessSync(); }
   return true;
 }
 app.get("/api/pay/checkout", async (req, res) => {

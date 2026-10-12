@@ -1,7 +1,7 @@
 // Funciones puras: tokens, credenciales TURN, validación de return, rate limit.
 import { createHmac, timingSafeEqual } from "node:crypto";
 
-export const ORIGINS = ["https://marcelopsr.github.io", "http://localhost:5173", "http://localhost:5174"];
+export const ORIGINS = ["https://jm-login.mesr-96.workers.dev", "https://junkedmetal.duckdns.org", "https://marcelopsr.github.io", "http://localhost:5173", "http://localhost:5174"];
 const b64u = (s) => Buffer.from(s).toString("base64url");
 const mac = (secret, s) => createHmac("sha256", secret).update(s).digest("base64url");
 
