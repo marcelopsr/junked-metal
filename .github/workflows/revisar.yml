@@ -1,0 +1,20 @@
+name: Revisar cambios
+# Corre en cada Pull Request y en cada push a las ramas de colaboradores (palmbeach-branch y palmbeach/*):
+# si algo no compila o una prueba falla, el PR lo muestra en rojo antes de integrarlo. No publica nada.
+on:
+  pull_request:
+  push:
+    branches: [palmbeach-branch, "palmbeach/**"]
+permissions:
+  contents: read
+concurrency: { group: "revisar-${{ github.ref }}", cancel-in-progress: true }
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build # incluye tsc --noEmit
