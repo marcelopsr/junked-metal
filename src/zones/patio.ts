@@ -164,10 +164,10 @@ export function patioBuild() {
   tracks.useRadianceOverAlpha = tracks.useSpecularOverAlpha = false;
   tracks.alpha = 0.78;
   tracks.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
-  decal("patioTireMarks", 27, 27, -18, 0, tracks, 0.03).rotation.y = 0.32;
-  decal("patioTireMarksFar", 23, 24, 16, 32, tracks, 0.03).rotation.y = 0.72;
+  decal("patioTireMarks", 14, 25, -12, 7, tracks, 0.03).rotation.y = 0.87;
+  decal("patioTireMarksFar", 15, 23, 25, 35, tracks, 0.03).rotation.y = 1.16;
   decal("scrapZoneTireMarks", 21, 22, -48, 20, tracks, 0.03).rotation.y = 2.1;
-  decal("workshopTireMarks", 15, 18, -5, -7, tracks, 0.035).rotation.y = -0.45;
+  decal("workshopTireMarks", 12, 18, -4, -5, tracks, 0.035).rotation.y = -0.49;
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
@@ -177,8 +177,13 @@ export function patioBuild() {
   registerHeavyProp(stat(tor(2.8, 0.95, tireStackM(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   registerHeavyProp(stat(tor(2.6, 0.9, tireStackM(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   // Tambores metálicos de combustible oxidados (PBR con relieve y desgaste)
-  const capMat = surface(pbr("drumCap", { color: "#765f4c", rough: 0.84, metal: 0.3 }), "steel", 4, 0.45);
-  const capTpl = template("drumCap", () => [cyl(3.18, 3.18, 0.025, capMat, [0, 0, 0], undefined, 16)]);
+  const capMat = surface(pbr("drumCap", { color: "#d5dbe0", rough: 0.84, metal: 0.3, tex: tex("p_drum_alb", () => new B.Texture("./textures/props/prop-rusty-drum-folded-v2.webp", scene)) }), "steel", 4, 0.35);
+  const trimMat = surface(pbr("drumTrim", { color: "#737b80", rough: 0.72, metal: 0.55 }), "steel", 4, 0.25);
+  const capTpl = template("drumCap", () => [
+    cyl(3.18, 3.18, 0.025, capMat, [0, 0, 0], undefined, 16),
+    tor(3.08, 0.055, trimMat, [0, 0.025, 0], undefined, 16),
+    cyl(0.24, 0.24, 0.08, trimMat, [0.55, 0.05, -0.3], undefined, 8),
+  ]);
   for (const [x, z] of [[-42, 30], [-45.5, 32]]) {
     const drum = registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [x, 2.4, z], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
     const cap = capTpl.createInstance("drumCap");
