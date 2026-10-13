@@ -57,3 +57,12 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
 - Se independiza `triciclo` de la rama fallback de `carrera` creándole su propia carrocería Folded en `src/folded_slice.ts` (cuadro central, horquilla delantera, manubrio chopper y cajón de carga trasero) con genes en `GENES.triciclo` (`cajon_ancho`, `cajon_alto`, `cajon_largo`, `cuadro_ancho` y `...RUEDAS` sin batalla_k).
 - Con esto, todas las carrocerías que antes caían en el fallback de `carrera` (hover, topadora, triciclo) tienen su propia rama procedimental Folded.
 - Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
+
+## 2026-10-13 · gemini · Flota cerrada (misterio, clásico, jeep, moto) y soporte helado
+
+- Helado: se agrega base de fijación y collar de soporte visible en chapa (`cucurucho_soporte`) bajo el cono del techo, cerrando el pedido de los evaluadores de la ronda 1.
+- Misterio: carrocería convertida a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.misterio` (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`, `techo_alto`, `parrilla_alto`, `...RUEDAS`).
+- Clásico: proporciones de tres volúmenes convertidas a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.clasico` (`cuerpo_ancho`, `trompa_largo`, `cabina_alto`, `cola_largo`, `...RUEDAS`).
+- Jeep: carrocería abierta convertida a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.jeep` (`tina_ancho`, `tina_alto`, `tina_largo`, `jaula_alto`, `auxilio_d`, `...RUEDAS`).
+- Moto: carenado deportivo convertido a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.moto` (`tanque_alto`, `carenado_largo`, `cola_alto`, `...RUEDAS` sin trocha_k).
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde. 16 de los 17 vehículos de la flota cuentan con genes propios.

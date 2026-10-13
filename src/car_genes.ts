@@ -112,6 +112,7 @@ export const GENES: Record<string, Gene[]> = {
     g("cabina", "cabina_alto", 0.34, 0.26, 0.44),
     g("accesorios", "toldo_ancho", 0.22, 0.14, 0.34),
     g("accesorios", "cucurucho", 1, 1.1, 1.35), // escala del cucurucho del techo: su identidad (piso elevado a 1.1 para consolidar tamaño)
+    g("accesorios", "cucurucho_soporte", 0.06, 0.04, 0.14), // altura del soporte de chapa del cucurucho
     ...RUEDAS,
   ],
   combi: [
@@ -160,6 +161,35 @@ export const GENES: Record<string, Gene[]> = {
     g("cajon", "cajon_largo", 0.8, 0.65, 1.05),
     g("chasis", "cuadro_ancho", 0.5, 0.38, 0.65),
     ...RUEDAS.filter((x) => x.id !== "batalla_k"), // un solo eje trasero
+  ],
+  misterio: [
+    g("carroceria", "cuerpo_ancho", 1.1, 0.95, 1.25),
+    g("carroceria", "cuerpo_alto", 0.5, 0.38, 0.62),
+    g("carroceria", "cuerpo_largo", 2.3, 2.0, 2.5),
+    g("cabina", "techo_alto", 0.44, 0.32, 0.56),
+    g("accesorios", "parrilla_alto", 0.1, 0.06, 0.18),
+    ...RUEDAS,
+  ],
+  clasico: [
+    g("carroceria", "cuerpo_ancho", 1.06, 0.92, 1.2),
+    g("capo", "trompa_largo", 0.85, 0.7, 1.05),
+    g("cabina", "cabina_alto", 0.3, 0.22, 0.4),
+    g("cola", "cola_largo", 0.6, 0.45, 0.8),
+    ...RUEDAS,
+  ],
+  jeep: [
+    g("carroceria", "tina_ancho", 1.1, 0.95, 1.25),
+    g("carroceria", "tina_alto", 0.34, 0.24, 0.44),
+    g("carroceria", "tina_largo", 1.9, 1.65, 2.15),
+    g("cabina", "jaula_alto", 0.5, 0.38, 0.65),
+    g("accesorios", "auxilio_d", 0.5, 0.4, 0.65),
+    ...RUEDAS,
+  ],
+  moto: [
+    g("carroceria", "tanque_alto", 0.26, 0.2, 0.34),
+    g("carroceria", "carenado_largo", 0.45, 0.35, 0.6),
+    g("cola", "cola_alto", 0.16, 0.12, 0.24),
+    ...RUEDAS.filter((x) => x.id !== "trocha_k"), // dos ruedas en línea
   ],
 };
 
