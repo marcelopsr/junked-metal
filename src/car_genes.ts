@@ -114,6 +114,14 @@ export const GENES: Record<string, Gene[]> = {
     g("accesorios", "cucurucho", 1, 1.1, 1.35), // escala del cucurucho del techo: su identidad (piso elevado a 1.1 para consolidar tamaño)
     ...RUEDAS,
   ],
+  combi: [
+    g("carroceria", "cuerpo_ancho", 1.08, 0.95, 1.25),
+    g("carroceria", "cuerpo_alto", 0.5, 0.38, 0.62),
+    g("carroceria", "cuerpo_largo", 2.3, 2.0, 2.5),
+    g("cabina", "techo_alto", 0.42, 0.32, 0.54),
+    g("accesorios", "v_escala", 1.0, 0.8, 1.3),
+    ...RUEDAS,
+  ],
 };
 
 let override: Record<string, Genome> = {}; // solo la sonda de evolución (evo_probe.ts) lo usa: prueba genomas sin tocar el JSON

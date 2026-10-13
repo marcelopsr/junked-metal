@@ -32,3 +32,9 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
 
 - Relevo tomado por Gemini. Ajuste del genoma de `helado` en `src/car_genes.ts`: se eleva el piso de `cucurucho` de 0,85 a 1,1 (rango 1,1–1,35; `def` 1 intacto) para consolidar el cucurucho grande que ambos evaluadores destacaron en la ronda 1 (`20261013-2030-s1`).
 - Verificación: `npx tsc --noEmit -p .` (0 errores) y suite completa de Vitest (26 archivos, 178 tests pasados). Pendiente: corrida de evolución visual con `npm run evo` contra `rc-test`.
+
+## 2026-10-13 · gemini · Parametrización de combi
+
+- Se parametriza la carrocería de `combi` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", preservando 100% la huella geométrica original en `def`.
+- Se agregan sus genes en `GENES.combi` (`src/car_genes.ts`): chasis/carrocería (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`), habitáculo (`techo_alto`), identidad (`v_escala`) y multiplicadores `...RUEDAS`.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.

@@ -693,13 +693,15 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     lamps(0.4, 0.4, 1.2, 0.14); tails(0.4, 0.5, -1.13); bumper(1.1, 0.14, 1.22); num(0.555, 0.45, -0.75, 0.3);
   } else if (kind === "combi") { // combi: dos tonos, techo crema, ventanillas, V en la trompa
     const cream = FOLD.painted("#d9cba6", 0.5, 251);
-    G.box(1.0, 0.12, 2.3, dark, [0, 0.05, 0]);
-    G.box(1.08, 0.5, 2.3, paint, [0, 0.36, 0]); G.box(1.08, 0.42, 2.1, cream, [0, 0.82, -0.05]); edges(1.08, 1.03, -1.1, 1.0, cream);
-    G.box(0.7, 0.07, 1.9, cream, [0, 1.06, -0.05]);
-    G.box(0.9, 0.3, 0.03, FOLD.glass(), [0, 0.84, 1.0], [-0.3, 0, 0]);
-    for (const s of [-1, 1]) for (const z of [0.6, -0.05, -0.7]) G.box(0.02, 0.28, 0.5, FOLD.glass(), [s * 0.55, 0.84, z]);
-    for (const sd of [-1, 1]) G.box(0.32, 0.06, 0.03, cream, [sd * 0.11, 0.5, 1.16], [0, 0, sd * 1.0]); // V
-    lamps(0.4, 0.4, 1.17, 0.18); tails(0.42, 0.45, -1.16); bumper(1.1, 0.14, 1.22); bumper(1.1, 0.14, -1.2); num(0.545, 0.36, -0.2, 0.3);
+    const w = q.cuerpo_ancho, h = q.cuerpo_alto, L = q.cuerpo_largo, th = q.techo_alto, vk = q.v_escala; // genes: car_genes.ts
+    const dh = h - 0.5, dL = L - 2.3, dth = th - 0.42, dw = w - 1.08;
+    G.box(1.0 + dw * 0.9, 0.12, L, dark, [0, 0.05, 0]);
+    G.box(w, h, L, paint, [0, 0.36 + dh / 2, 0]); G.box(w, th, 2.1 + dL, cream, [0, 0.61 + dh + th / 2, -0.05]); edges(w, 0.61 + dh + th, -1.1 - dL / 2, 1.0 + dL / 2, cream);
+    G.box(0.7 + dw * 0.65, 0.07, 1.9 + dL, cream, [0, 0.64 + dh + th, -0.05]);
+    G.box(0.9 + dw * 0.85, 0.3 + dth * 0.7, 0.03, FOLD.glass(), [0, 0.84 + dh + dth * 0.5, 1.0 + dL / 2], [-0.3, 0, 0]);
+    for (const s of [-1, 1]) for (const z of [0.6 + dL * 0.35, -0.05, -0.7 - dL * 0.35]) G.box(0.02, 0.28 + dth * 0.6, 0.5 + dL * 0.2, FOLD.glass(), [s * (w / 2 + 0.01), 0.84 + dh + dth * 0.5, z]);
+    for (const sd of [-1, 1]) G.box(0.32 * vk, 0.06 * vk, 0.03, cream, [sd * 0.11 * vk, 0.5 + dh * 0.6, 1.16 + dL / 2], [0, 0, sd * 1.0]); // V
+    lamps(0.4 + dw * 0.35, 0.4 + dh * 0.5, 1.17 + dL / 2, 0.18); tails(0.42 + dw * 0.35, 0.45 + dh * 0.5, -1.16 - dL / 2); bumper(w + 0.02, 0.14, 1.22 + dL / 2); bumper(w + 0.02, 0.14, -1.2 - dL / 2); num(w / 2 + 0.005, 0.36 + dh / 2, -0.2, 0.3);
   } else if (kind === "murcielago") { // murciélago: negro, largo y bajo, cabina de burbuja, aletas traseras y turbina con brillo naranja
     const glow = FOLD.emissive("#ff7a1a");
     G.box(0.9, 0.14, 2.6, dark, [0, 0.07, 0]);
