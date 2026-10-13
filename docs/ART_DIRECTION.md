@@ -149,7 +149,7 @@ Nota: lo de sombras de noche, faro y resplandor aplica solo a los climas nocturn
 - **Goma con polvo:** `FOLD.rubber` lleva franjas de tierra en los cantos de su celda (hombros de la banda y borde de apoyo), más mates (rugosidad 1); el centro de la banda queda goma negra.
 - **Uniones oxidadas:** tornillos y remaches del kit usan `FOLD.bolt` (cabeza de acero con anillo de óxido) y la maza de la rueda es `FOLD.rust`. La pintura Folded baja a rugosidad 0,42 para separarse de la chapa expuesta (0,35 metal) y del óxido (0,95); el centro de cada cara conserva pintura.
 - **Quitina:** `FOLD.chitin(color)` para bichos (hormiga, escupidora, escarabajo, polilla en las bandas, tarántula en cuerpo y bandas): color liso, rugosidad 0,28, cantos oscuros y mates, un reflejo ancho. Sin desgaste de chapa: la diferencia bicho/máquina se lee por material.
-- **Máquinas:** robot y fricción con más desgaste de pintura (0,75-0,9). Todo es celda del atlas compartido: cero texturas ni materiales nuevos por objeto.
+- **Máquinas:** robot, fricción y grúa con desgaste de pintura (0,75-0,9). La grúa deja ver sus premios por el frente y los costados, apoyados sobre una bandeja interior. Todo opaco va al atlas compartido; el cristal reutiliza su textura/material.
 
 ---
 

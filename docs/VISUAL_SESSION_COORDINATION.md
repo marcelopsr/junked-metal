@@ -30,6 +30,7 @@ Las siguientes carpetas son destinos propuestos, no una lista exhaustiva ni trab
 
 | Línea | Responsable / estado | Archivos asignados | Entrega esperada |
 |---|---|---|---|
+| Grúa Folded de gameplay | Codex / validado (2026-10-13) | `src/folded_slice.ts` | Cristal frontal y lateral, marcos y bandeja oxidada; ficha PC/móvil y giro 360° capturados. +108 triángulos, mismos draws. Reserva liberada. |
 | Composición e integración del banco visual | Gemini Orquestador / validado y disponible (2026-10-10) | `art-lab.html`, `src/art_lab.ts`, `src/art_lab.css`, `scripts/cinematic-check.mjs`, archivos directamente bajo `assets-src/cinematic-3d/` | Integración general de modelos PBR, iluminación cinematográfica, selector Frenchie/Eulalio/Dúo, cámaras y mediciones verificadas |
 | Frenchie: anatomía y pelo | Gemini Frenchie Specialist / validado y disponible (2026-10-10) | `assets-src/cinematic-3d/gemini-frenchie/`, `assets-src/cinematic-3d/frenchie.glb` | Modelo refinado de bulldog francés con mancha marfil visible, orejas de murciélago erguidas, 7 clips intactos, pelaje mate PBR |
 | Buggy industrial y chatarra | Gemini Buggy Specialist / validado y disponible (2026-10-10) | `assets-src/cinematic-3d/gemini-buggy/`, `assets-src/cinematic-3d/buggy.glb` | Buggy amarillo con chatarra ensamblada, remaches, pintura gastada, suspensión A-arms, amortiguadores coilover 3D y 4 ruedas independientes con tacos profundos |
