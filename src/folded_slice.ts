@@ -780,8 +780,28 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(aw, 0.04, 0.26, cyan, [0, top + 0.28 + td / 2, -0.95]); // alerón estabilizador
     lamps(cw * 0.35, 0.18, fl / 2 - 0.04, 0.12); tails(cw * 0.35, 0.18, -fl / 2 + 0.04);
     num(cw / 2 + 0.005, 0.18, 0.2, 0.22);
+  } else if (kind === "topadora") { // topadora: chasis pesado, cabina alta con jaula, pala delantera articulada y chimenea
+    const pw = q.pala_ancho, ph = q.pala_alto, bw = q.cuerpo_ancho, bh = q.cuerpo_alto, bl = q.cuerpo_largo; // genes: car_genes.ts
+    const kw = q.cabina_ancho, kh = q.cabina_alto, eh = q.escape_alto;
+    const top = 0.2 + bh;
+    for (const s of [-1, 1]) { // orugas laterales
+      G.box(0.38, 0.44, 2.2, FOLD.rubber(), [s * 0.78, 0.06, 0]);
+      for (const z of [-0.95, 0.95]) G.cyl(0.44, 0.38, FOLD.rubber(), [s * 0.78, 0.06, z], [0, 0, Math.PI / 2], 8);
+    }
+    G.box(bw, bh, bl, paint, [0, 0.2 + bh / 2, 0]); edges(bw, top, -bl / 2, bl / 2, paint); // cuerpo central
+    G.box(bw * 0.85, 0.42, 0.9, paint, [0, top + 0.21, 0.5]); // capó delantero
+    G.grate([0, top + 0.21, 0.5 + 0.46], [0, Math.PI, 0], 0.65, 0.28, 4, steel); // rejilla
+    G.box(kw * 0.92, kh * 0.92, 0.8, FOLD.glass(), [0, top + kh / 2, -0.3]); // vidrio cabina
+    G.box(kw, 0.08, 0.95, dark, [0, top + kh + 0.04, -0.3]); // techo cabina
+    for (const x of [-kw * 0.45, kw * 0.45]) for (const z of [-0.7, 0.1]) strut([x, top, z], [x, top + kh, z], 0.06, 0.06, steel); // postes de jaula
+    G.box(pw, ph, 0.12, FOLD.bare(), [0, 0.35, 1.48], [-0.15, 0, 0]); // pala frontal
+    G.box(pw * 0.96, 0.06, 0.08, dark, [0, 0.08, 1.54]); // cuchilla inferior
+    for (const x of [-pw * 0.38, pw * 0.38]) strut([x, 0.28, 0.95], [x, 0.35, 1.44], 0.1, 0.1, dark); // brazos de empuje
+    G.cyl(0.09, eh, dark, [0.38, top + 0.1 + eh / 2, 0.35], undefined, 8); // chimenea de escape
+    lamps(kw * 0.32, top + kh + 0.08, 0.1, 0.12); tails(bw * 0.38, 0.4, -bl / 2 - 0.02);
+    num(bw / 2 + 0.005, 0.35, 0, 0.25);
   } else { // autito de carreras a cuerda: carrocería baja, cabina, paragolpes de caño y llave de cuerda
-    const c = kind === "carrera" ? q : original("carrera"); // topadora y triciclo también caen acá: con la forma original
+    const c = kind === "carrera" ? q : original("carrera"); // triciclo también cae acá: con la forma original
     const bw = c.cuerpo_ancho, bh = c.cuerpo_alto, bl = c.cuerpo_largo, top = 0.13 + bh / 2, kw = c.cabina_ancho, kh = c.cabina_alto, kl = c.cabina_largo, kz = c.cabina_z, ky = top + kh / 2; // genes: car_genes.ts
     G.box(0.7, 0.06, 1.7, dark, [0, 0.0, 0]);
     G.box(bw, bh, bl, paint, [0, 0.13, 0]); edges(bw, top, -bl / 2, bl / 2, paint);

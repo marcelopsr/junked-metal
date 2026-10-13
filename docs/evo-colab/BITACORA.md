@@ -44,3 +44,9 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
 - Se crea la rama propia para `hover` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", reemplazando la caída genérica en `carrera`. Geometría Folded con falda de goma, casco plegado, cúpula de burbuja y turbina trasera con aspas.
 - Se agregan sus genes en `GENES.hover` (`src/car_genes.ts`): `falda_ancho`, `falda_largo`, `casco_ancho`, `casco_alto`, `casco_largo`, `turbina_d`, `cupula_k`, `aleron_ancho` y multiplicadores `...RUEDAS`.
 - Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
+
+## 2026-10-13 · gemini · Parametrización de topadora
+
+- Se crea la rama propia para `topadora` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", reemplazando la caída genérica en `carrera`. Geometría Folded con orugas laterales de goma, chasis pesado, capó con rejilla, cabina de obra con jaula y pala frontal con brazos de empuje.
+- Se agregan sus genes en `GENES.topadora` (`src/car_genes.ts`): pala (`pala_ancho`, `pala_alto`), carrocería (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`), cabina (`cabina_ancho`, `cabina_alto`), chimenea (`escape_alto`) y multiplicadores `...RUEDAS`.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
