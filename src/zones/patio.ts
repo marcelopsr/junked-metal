@@ -16,6 +16,18 @@ export function patioBuild() {
 
   // Suelo: césped + baldosas + huerta + zona de combate de chatarra
   floor("grass", "#ffffff", TEX.grassMacro);
+  const leavesTex = tex("dryLeaves", () => new B.Texture("./images/decals/dry-leaves.webp", scene));
+  leavesTex.hasAlpha = true;
+  const leaves = pbr("dryLeaves", { color: "#ffffff", rough: 0.92, tex: leavesTex });
+  leaves.useAlphaFromAlbedoTexture = true;
+  leaves.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  for (const [x, z, ry] of [[-34, 25, 0.3], [34, 25, -0.6], [-34, -18, 1.1], [34, -18, -1.2]]) decal("dryLeaves", 9, 7, x, z, leaves, 0.025).rotation.y = ry;
+  const scrapTex = tex("smallScrap", () => new B.Texture("./images/decals/small-scrap.webp", scene));
+  scrapTex.hasAlpha = true;
+  const scrap = pbr("smallScrap", { color: "#ffffff", rough: 0.8, tex: scrapTex });
+  scrap.useAlphaFromAlbedoTexture = true;
+  scrap.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  for (const [x, z, ry] of [[-40, 30, -0.4], [40, -23, 0.8]]) decal("smallScrap", 4, 3, x, z, scrap, 0.03).rotation.y = ry;
   decal("patio", 48, 34, 0, -30, surface(pbr("tiles", { color: "#ffffff", rough: 0.6, tex: tex("tiles", TEX.tiles) }), "concrete", 28, 0.7));
 
   // Huerta: tierra compactada y gravilla (scrapEarth/dirt) con surcos elevados y cultivos

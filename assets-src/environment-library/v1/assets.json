@@ -99,7 +99,8 @@
       "prompt": "prompts/03-dry-leaves.txt",
       "source": "sources/03-dry-leaves.png",
       "texture": "textures/03-dry-leaves.webp",
-      "status": "generated-not-integrated",
+      "status": "integrated",
+      "gameplayUse": "Cuatro decals alpha junto a los árboles en los bordes del patio (src/zones/patio.ts).",
       "kind": "static-alpha-decal",
       "colorSpace": "sRGB",
       "maps": {
@@ -136,7 +137,8 @@
       "prompt": "prompts/04-small-scrap.txt",
       "source": "sources/04-small-scrap.png",
       "texture": "textures/04-small-scrap.webp",
-      "status": "generated-not-integrated",
+      "status": "integrated",
+      "gameplayUse": "Dos decals alpha en los rincones arbolados del patio (src/zones/patio.ts).",
       "kind": "static-alpha-decal",
       "colorSpace": "sRGB",
       "maps": {
