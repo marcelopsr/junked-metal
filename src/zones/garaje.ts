@@ -3,14 +3,17 @@ import { box, cyl, merge, tor, tube } from "../models";
 import { M, pbr, shadows } from "../render";
 import { rng } from "../rng";
 import { FOLD, FOLD_PAINT } from "../folded";
-import { HALF, concreteTex, dyn, floor, occluders, realCar, scene, stat, tireStackM, undo, woodM } from "./common";
+import { HALF, concreteTex, decal, dyn, floor, occluders, realCar, scene, stat, tex, tireStackM, undo, woodM } from "./common";
 import { ball, between, giantTools, int, paintCans, piles, plankBridge, puddles, toyRamps } from "../world_layout";
 
 export function garageBuild() {
   floor("concrete", "#ffffff", concreteTex, 0.75, "concrete", 18);
-  // Manchas de aceite fijas: debajo del auto y frente al banco
-  const oil = pbr("oilStain", { color: "#16130f", rough: 0.35, alpha: 0.7 });
-  for (const [x, z, sx, sz] of [[30, 20, 9, 6], [26, -18, 6, 5], [-40, -55, 7, 4], [-10, 40, 5, 4]]) { const d = B.MeshBuilder.CreateDisc("oilStain", { radius: 1, tessellation: 14 }, scene); d.rotation.x = Math.PI / 2; d.scaling.set(sx, sz, 1); d.position.set(x, 0.025, z); d.material = oil; d.receiveShadows = true; }
+  // El alpha de la textura conserva bordes irregulares sin geometría extra.
+  const oilTex = tex("oilStain", () => new B.Texture("./images/decals/oil-stain.webp", scene));
+  const oil = pbr("oilStain", { color: "#ffffff", rough: 0.65, tex: oilTex });
+  oil.useAlphaFromAlbedoTexture = true;
+  oil.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  for (const [x, z, w, h, ry] of [[30, 20, 2.8, 1.5, 0], [26, -18, 2.2, 1.3, 0.7], [-40, -55, 2.5, 1.4, -0.5], [-10, 40, 2, 1.2, 1.2]]) decal("oilStain", w, h, x, z, oil, 0.025).rotation.y = ry;
   // Paredes altas (se tramean si tapan al auto); al frente, el portón de chapa
   const paint = M.matte("#6f7d78"), band = M.matte("#3c4542"), steel = M.metal("#a4aab0");
   for (const [x, z, w, d] of [[0, -HALF - 1, HALF * 2 + 4, 2], [HALF + 1, 0, 2, HALF * 2 + 4], [-HALF - 1, 0, 2, HALF * 2 + 4], [0, HALF + 1, HALF * 2 + 4, 2]]) {

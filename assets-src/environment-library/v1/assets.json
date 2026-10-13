@@ -18,7 +18,8 @@
       "prompt": "prompts/01-oil-stain.txt",
       "source": "sources/01-oil-stain.png",
       "texture": "textures/01-oil-stain.webp",
-      "status": "generated-not-integrated",
+      "status": "integrated",
+      "gameplayUse": "Cuatro decals alpha compartidos en el suelo del garaje (src/zones/garaje.ts).",
       "kind": "static-alpha-decal",
       "colorSpace": "sRGB",
       "maps": {
