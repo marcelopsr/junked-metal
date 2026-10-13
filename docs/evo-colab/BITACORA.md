@@ -27,3 +27,8 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
   2. **Flota completa, barata:** seguir auto por auto con las medidas existentes, un evaluador, regla de +2.
   3. **Evaluador humano + ChatGPT:** pausar la geometría y calibrar la rúbrica con puntajes del usuario y de ChatGPT sobre
      hojas de todos los autos.
+
+## 2026-10-13 · gemini · Helado ronda 2 (preparación paramétrica)
+
+- Relevo tomado por Gemini. Ajuste del genoma de `helado` en `src/car_genes.ts`: se eleva el piso de `cucurucho` de 0,85 a 1,1 (rango 1,1–1,35; `def` 1 intacto) para consolidar el cucurucho grande que ambos evaluadores destacaron en la ronda 1 (`20261013-2030-s1`).
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite completa de Vitest (26 archivos, 178 tests pasados). Pendiente: corrida de evolución visual con `npm run evo` contra `rc-test`.

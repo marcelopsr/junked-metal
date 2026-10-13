@@ -111,7 +111,7 @@ export const GENES: Record<string, Gene[]> = {
     g("carroceria", "caja_largo", 1.45, 1.25, 1.6),
     g("cabina", "cabina_alto", 0.34, 0.26, 0.44),
     g("accesorios", "toldo_ancho", 0.22, 0.14, 0.34),
-    g("accesorios", "cucurucho", 1, 0.85, 1.35), // escala del cucurucho del techo: su identidad
+    g("accesorios", "cucurucho", 1, 1.1, 1.35), // escala del cucurucho del techo: su identidad (piso elevado a 1.1 para consolidar tamaño)
     ...RUEDAS,
   ],
 };
