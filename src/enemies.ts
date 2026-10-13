@@ -121,6 +121,7 @@ export class Enemy {
   ringsLeft = 0; // caja de música: ondas que faltan soltar
   shots = 0; // tarántula: escupitajos que quedan en la ráfaga
   slow = 0; // segundos de ralentización (Pistola de agua)
+  paint = 0; // segundos pintado (Lata de pintura): recibe más daño de todo (combat.damage)
   stun = 0; // segundos aturdido (Pulso EMP): main.ts no corre su IA ni su golpe de contacto
   lastT: B.Vector3 | null = null; // polilla: posición anterior del auto (estima hacia dónde apunta el faro)
   walk = rng() * 6;
@@ -457,6 +458,7 @@ export class Enemy {
     let move = to;
     let speed = d.speed * this.spd;
     let turn = 6;
+    if (this.paint > 0) this.paint -= dt;
     if (this.slow > 0) { this.slow -= dt; speed *= d.boss ? ATK.jefe_lento_mult : ATK.bicho_lento_mult; } // empapado: se arrastra
     this.clock += dt;
     if (d.boss && !d.final && !this.enraged && this.hp < this.maxHp * ATK.fase2_vida) { this.enraged = true; this.phaseUp = true; this.setRage(true); this.roar = -1; } // fase 2: aviso en main.ts

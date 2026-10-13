@@ -17,11 +17,12 @@ export interface Ctx {
   dt: number;
   st: PStats;
   fs: number;
+  gems?: { m: B.InstancedMesh; pull: boolean }[]; // gemas sueltas en el piso (Drones gemelos las atraen)
   damage(e: Enemy, dmg: number, knock?: B.Vector3): void;
   explode(pos: B.Vector3, r: number, dmg: number): void;
 }
 
-export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza" | "agua" | "yoyo" | "bengalas" | "regla" | "helado" | "bocina" | "trompo" | "tuercas" | "bobinas" | "ventilador" | "canicas" | "burbujas" | "matamoscas" | "dardos" | "chapitas" | "paraguas" | "cohete" | "serpentinas" | "tambor" | FusionId;
+export type WeaponId = "gomitas" | "clips" | "chispero" | "petardos" | "tesla" | "lanza" | "agua" | "yoyo" | "bengalas" | "regla" | "helado" | "bocina" | "trompo" | "tuercas" | "bobinas" | "ventilador" | "canicas" | "burbujas" | "matamoscas" | "dardos" | "chapitas" | "paraguas" | "cohete" | "serpentinas" | "tambor" | "domino" | "avioncito" | "pintura" | "bumeran" | "confeti" | "lupasolar" | "dron" | FusionId;
 export type FusionId = "chispazo" | "globos" | "anillo" | "yoyoelec" | "vapor";
 export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: PassiveId; evoName: string; evoDesc: string }> = {
   gomitas: { name: "Lanza-gomitas", desc: "Dispara gomitas al enemigo más cercano. Artillería de papelería", evo: "resorte", evoName: "Gomitas Saltarinas", evoDesc: "5 gomitas que rebotan entre enemigos. Culpa repartida" },
@@ -50,6 +51,13 @@ export const WEAPONS: Record<WeaponId, { name: string; desc: string; evo: Passiv
   cohete: { name: "Cohete de botella", desc: "Cohete lento que gira hacia el bicho más cercano y explota en área. Fiesta patria con riesgo de incendio", evo: "turbo", evoName: "Enjambre de botellas", evoDesc: "Cuatro cohetes por tanda, explosión más ancha. Queda botella para el brindis" },
   serpentinas: { name: "Serpentinas", desc: "Cinta en línea que ata y frena a todos los que cruza. Cumpleaños con rehenes en fila", evo: "resorte", evoName: "Cintas de fiesta", evoDesc: "Tres cintas en abanico, más anchas y largas; los atados quedan inmóviles. Confeti con cadena perpetua" },
   tambor: { name: "Tambor de hojalata", desc: "Onda de choque rítmica alrededor del auto; cada cuarto golpe es un bombo más fuerte que empuja. Ensayo a las siete de la mañana", evo: "lupa", evoName: "Banda de hojalata", evoDesc: "Ritmo más rápido, bombo cada tercer golpe y aturde. Los vecinos ya llamaron" },
+  domino: { name: "Fichas de dominó", desc: "Deja fichas de pie detrás del auto; cuando un bicho toca una, caen todas en cadena y cada caída pega. Efecto dominó, versión plaga", evo: "paragolpes", evoName: "Fichas de metal", evoDesc: "Más fichas, más grandes, y cada una explota al caer. Efecto dominó con detonador" },
+  avioncito: { name: "Avioncitos de papel", desc: "Planeadores de papel que orbitan ancho alrededor del auto cortando lo que cruzan; cuanto más rápido va el auto, más abierta es la órbita. Clase de manualidades, con filo", evo: "antena", evoName: "Escuadrilla de chapa", evoDesc: "Cinco aviones de chapa que además sueltan minibombas al volar. Fuerza aérea de oficina" },
+  pintura: { name: "Lata de pintura", desc: "Rocía manchas en el piso: los bichos que las pisan van lentos y reciben más daño de todo. Retoque de último momento", evo: "bidon", evoName: "Pintura explosiva", evoDesc: "Manchas más grandes y duraderas que explotan al secarse. Secado rápido, muy rápido" },
+  bumeran: { name: "Bumerán cazador", desc: "Se lanza contra el bicho más fuerte, lo atraviesa y vuelve, pegando a la ida y a la vuelta. Siempre regresa, como la deuda", evo: "llavero", evoName: "Bumeranes cruzados", evoDesc: "Dos bumeranes que se cruzan en el aire, más grandes y rápidos. Doble vuelta, doble reclamo" },
+  confeti: { name: "Cañón de confeti", desc: "Ráfaga corta en cono con un empuje fuerte que deja aturdido a lo que alcanza. Cumpleaños con efectos secundarios", evo: "pila", evoName: "Confeti metálico", evoDesc: "Cono más largo, daño mucho mayor: el confeti ahora corta. Fiesta con papeleo de urgencias" },
+  lupasolar: { name: "Lupa solar", desc: "Rayo continuo sobre el bicho más cercano: cuanto más tiempo se sostiene, más quema. En la luna, del lado del sol, pega el doble. Travesura de patio, a escala industrial", evo: "llamas", evoName: "Lupa triple", evoDesc: "El rayo se reparte en tres blancos a la vez, con más alcance. Sol para todos" },
+  dron: { name: "Mini dron", desc: "Un dron que acompaña al auto y dispara a los bichos que quedan atrás. Vigilancia aérea de bajo presupuesto", evo: "cinta", evoName: "Drones gemelos", evoDesc: "Dos drones que disparan más rápido y además atraen gemas. Logística en el aire" },
   // Fusiones: nunca salen sueltas en las cartas (ver FUSIONS); evoName = nombre porque nacen evolucionadas
   chispazo: { name: "Petardos eléctricos", desc: "", evo: "capacitor", evoName: "Petardos eléctricos", evoDesc: "" },
   globos: { name: "Globos de agua", desc: "", evo: "resorte", evoName: "Globos de agua", evoDesc: "" },

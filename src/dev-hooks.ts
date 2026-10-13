@@ -560,6 +560,11 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
       ctx.recompute();
       return ctx.weapons.map((x) => x.id + x.lv + (x.evolved ? "E" : ""));
     },
+    __pas: (id: string, lv = 1) => { // solo dev: pone una pasiva en el nivel lv
+      ctx.setPassives({ ...ctx.passives, [id]: lv });
+      ctx.recompute();
+      return ctx.passives;
+    },
     __abil: (id?: AbilityId) => {
       if (!ctx.lead.car || ctx.state !== "play") return "sin partida";
       if (id) {

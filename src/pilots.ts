@@ -5,7 +5,7 @@ import { WEAPONS, type PStats, type WeaponId } from "./weapons";
 import { BAL } from "./balance";
 import type { AbilityId } from "./abilities";
 
-export type PilotId = "soldadito" | "muneca" | "robot" | "dino" | "figura" | "abuela" | "astronauta" | "dinogoma" | "rusa";
+export type PilotId = "soldadito" | "muneca" | "robot" | "dino" | "figura" | "abuela" | "astronauta" | "dinogoma" | "rusa" | "pirata" | "caballero" | "bombero";
 type Rec = { ach: string[] }; // logros del guardado (achievements.ts)
 // Modificadores de cada piloto: columnas de la tabla pilotos de balance.json (neutros: multiplicadores en 1 y sumas en 0)
 const modOf = (id: PilotId) => (st: PStats) => {
@@ -36,6 +36,12 @@ export const PILOTS: Record<PilotId, { name: string; pros: string[]; con: string
     mod: modOf("dinogoma") },
   rusa: { name: "La Muñeca Rusa Desconfiada", pros: ["+25 vida", "+15% peso al embestir", "+10% XP"], con: "-10% daño y -5% velocidad", cost: BAL.pilotos.rusa.precio, lore: "Dentro de cada muñeca hay otra muñeca que tampoco se fía de ti. Aprende de todas.", start: BAL.pilotos.rusa.arma_inicial as WeaponId, abil: BAL.pilotos.rusa.habilidad as AbilityId, abilTxt: BAL.pilotos.rusa.habilidad_txt,
     mod: modOf("rusa") },
+  pirata: { name: "El Pirata de Bañera", pros: ["+15 vida", "+15% imán", "+5% daño", "Arranca con Pistola de agua"], con: "-4% velocidad", cost: BAL.pilotos.pirata.precio, lore: "Naufragó en cada baño de espuma de la casa. Ahora busca tesoros entre las tuercas.", start: BAL.pilotos.pirata.arma_inicial as WeaponId, abil: BAL.pilotos.pirata.habilidad as AbilityId, abilTxt: BAL.pilotos.pirata.habilidad_txt,
+    mod: modOf("pirata") },
+  caballero: { name: "El Caballero de Lata Oxidada", pros: ["+15% blindaje", "+20 vida", "+20% peso al embestir"], con: "-10% velocidad", cost: BAL.pilotos.caballero.precio, lore: "Juró defender el castillo de cartón. El castillo se mojó; el juramento sigue en pie.", start: BAL.pilotos.caballero.arma_inicial as WeaponId, abil: BAL.pilotos.caballero.habilidad as AbilityId, abilTxt: BAL.pilotos.caballero.habilidad_txt,
+    mod: modOf("caballero") },
+  bombero: { name: "El Bombero Sin Manguera", pros: ["Armas 8% más rápidas", "Regenera +0,5 vida/s", "+5% velocidad"], con: "Sin ventajas de vida", cost: BAL.pilotos.bombero.precio, lore: "Perdió la manguera en una mudanza. Apaga los problemas a bengalazos.", start: BAL.pilotos.bombero.arma_inicial as WeaponId, abil: BAL.pilotos.bombero.habilidad as AbilityId, abilTxt: BAL.pilotos.bombero.habilidad_txt,
+    mod: modOf("bombero") },
 };
 
 export const pilotStats = (st: PStats, id: PilotId) => { (PILOTS[id] ?? PILOTS.soldadito).mod(st); return st; };

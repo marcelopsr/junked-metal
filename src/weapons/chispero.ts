@@ -5,16 +5,18 @@ import { pbr } from "../render";
 import { hd, onFloor, orient } from "../moon";
 import { Weapon, W, X, type Ctx } from "./base";
 
+export const fireTpl = () => template("fire", () => { // también la usa el Caño de escape (extras.ts)
+  const d = B.MeshBuilder.CreateDisc("f", { radius: 1, tessellation: 9 });
+  d.rotation.x = Math.PI / 2;
+  d.position.y = 0.05;
+  d.material = pbr("fireMat", { color: "#ff6a00", rough: 1, emissive: "#ff5a00", alpha: 0.85 });
+  return [d];
+});
+
 export class Chispero extends Weapon {
   fires: { m: B.InstancedMesh; life: number; r: number }[] = [];
   t = 0;
-  tpl = template("fire", () => {
-    const d = B.MeshBuilder.CreateDisc("f", { radius: 1, tessellation: 9 });
-    d.rotation.x = Math.PI / 2;
-    d.position.y = 0.05;
-    d.material = pbr("fireMat", { color: "#ff6a00", rough: 1, emissive: "#ff5a00", alpha: 0.85 });
-    return [d];
-  });
+  tpl = fireTpl();
   update(c: Ctx) {
     const cfg = W.chispero;
     const r = (this.evolved ? cfg.area_evo : cfg.area_base + cfg.area_nivel * this.lv) * c.st.area;

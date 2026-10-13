@@ -10,6 +10,13 @@ import { Paraguas } from "./weapons/paraguas";
 import { Cohete } from "./weapons/cohete";
 import { Serpentinas } from "./weapons/serpentinas";
 import { Tambor } from "./weapons/tambor";
+import { Domino } from "./weapons/domino";
+import { Avioncito } from "./weapons/avioncito";
+import { Pintura } from "./weapons/pintura";
+import { Bumeran } from "./weapons/bumeran";
+import { Confeti } from "./weapons/confeti";
+import { LupaSolar } from "./weapons/lupasolar";
+import { Dron } from "./weapons/dron";
 import { Dardos } from "./weapons/dardos";
 import { Matamoscas } from "./weapons/matamoscas";
 import { Bengalas } from "./weapons/bengalas";
@@ -34,6 +41,7 @@ import { Yoyo } from "./weapons/yoyo";
 export * from "./weapons/base";
 export * from "./weapons/passives";
 export * from "./weapons/offers";
+export { escapeReset, escapeTick } from "./weapons/extras";
 export { setScoop } from "./weapons/gomitas";
 
 // Pieza visible de cada arma, montada sobre el auto (también se usa como vista previa en las cartas)
@@ -77,6 +85,13 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
     cohete: () => [cyl(0.16, 0.16, 0.7, M.plastic("#4ade80"), [0, top + 0.1, rear + 0.2], [-0.5, 0, 0], 8), sph(0.12, M.glow("#ffb02e"), [0, top + 0.02, rear - 0.05])],
     serpentinas: () => [cyl(0.2, 0.2, 0.3, M.plastic("#f472b6"), [-0.3, top + 0.1, 0.1], undefined, 8), tor(0.22, 0.05, M.plastic("#facc15"), [-0.3, top + 0.25, 0.1], undefined, 8)],
     tambor: () => [cyl(0.4, 0.4, 0.35, M.metal("#cbd5e1"), [0, top + 0.1, -0.1], undefined, 12), cyl(0.42, 0.42, 0.06, M.plastic("#dc2626"), [0, top + 0.3, -0.1], undefined, 12)],
+    domino: () => [box(0.5, 0.34, 0.1, M.plastic("#f5f1e6"), [0, top + 0.1, rear + 0.2]), box(0.4, 0.04, 0.12, M.matte("#111"), [0, top + 0.1, rear + 0.2])],
+    avioncito: () => [box(0.1, 0.12, 0.7, M.plastic("#f8fafc"), [0, top + 0.1, -0.1]), box(0.7, 0.03, 0.4, M.plastic("#f8fafc"), [0, top + 0.07, -0.2])],
+    pintura: () => [cyl(0.2, 0.2, 0.34, M.metal("#9ca3af"), [0, top + 0.15, -0.1], undefined, 10), cyl(0.21, 0.21, 0.08, M.plastic("#e11d8f"), [0, top + 0.28, -0.1], undefined, 10)],
+    bumeran: () => [box(0.5, 0.05, 0.14, M.plastic("#f59e0b"), [0.14, top + 0.1, 0.1], [0, 0.6, 0]), box(0.5, 0.05, 0.14, M.plastic("#f59e0b"), [-0.14, top + 0.1, 0.1], [0, -0.6, 0])],
+    confeti: () => [cyl(0.3, 0.12, 0.5, M.plastic("#ff5fa8"), [0, top + 0.1, nose - 0.1], [Math.PI / 2, 0, 0], 10)],
+    lupasolar: () => [tor(0.4, 0.05, M.metal("#e5e7eb"), [0, top + 0.3, 0], [Math.PI / 2, 0, 0], 12), cyl(0.04, 0.04, 0.3, M.matte("#2b2d31"), [0, top + 0.1, 0], undefined, 6)],
+    dron: () => [box(0.34, 0.1, 0.34, M.metal("#4b5563"), [0.3, top + 0.35, -0.3]), cyl(0.5, 0.5, 0.03, M.glow("#7de8ff"), [0.3, top + 0.44, -0.3], undefined, 10)],
     yoyoelec: () => [...parts.yoyo(), ...parts.tesla()],
     vapor: () => [...parts.bengalas(), ...parts.agua()],
     chispazo: () => [...parts.petardos(), ...parts.tesla()],
@@ -90,7 +105,7 @@ export function mountFor(id: WeaponId, car: Car): B.Mesh {
 
 // Registro. Arma nueva = un archivo src/weapons/<id>.ts (clase que extiende Weapon) + 1 línea acá en CLASSES
 // (+ su entrada en WeaponId/WEAPONS de weapons/base.ts y su pieza en mountFor).
-const CLASSES: Record<Exclude<WeaponId, FusionId>, new (id: WeaponId) => Weapon> = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza, agua: Agua, yoyo: Yoyo, bengalas: Bengalas, regla: Regla, helado: Helado, bocina: Bocina, trompo: Trompo, tuercas: Tuercas, bobinas: Bobinas, ventilador: Ventilador, canicas: Canicas, burbujas: Burbujas, matamoscas: Matamoscas, dardos: Dardos, chapitas: Chapitas, paraguas: Paraguas, cohete: Cohete, serpentinas: Serpentinas, tambor: Tambor };
+const CLASSES: Record<Exclude<WeaponId, FusionId>, new (id: WeaponId) => Weapon> = { gomitas: Gomitas, clips: Clips, chispero: Chispero, petardos: Petardos, tesla: Tesla, lanza: Lanza, agua: Agua, yoyo: Yoyo, bengalas: Bengalas, regla: Regla, helado: Helado, bocina: Bocina, trompo: Trompo, tuercas: Tuercas, bobinas: Bobinas, ventilador: Ventilador, canicas: Canicas, burbujas: Burbujas, matamoscas: Matamoscas, dardos: Dardos, chapitas: Chapitas, paraguas: Paraguas, cohete: Cohete, serpentinas: Serpentinas, tambor: Tambor, domino: Domino, avioncito: Avioncito, pintura: Pintura, bumeran: Bumeran, confeti: Confeti, lupasolar: LupaSolar, dron: Dron };
 
 export function makeWeapon(id: WeaponId): Weapon {
   return isFusion(id) ? new Fusion(id, makeWeapon) : new CLASSES[id](id);

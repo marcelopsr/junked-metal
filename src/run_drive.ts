@@ -196,6 +196,7 @@ export function tickRam(F: Frame, dt: number) {
     if (pots.length || heavyHit) {
       smashCd = 0.25;
       if (pots.length) smashed(pots);
+      if (heavyHit && D.st.bumper > 0) { cs.src = "paragolpes"; explode(c.pos, D.st.bumperR, D.st.bumper * D.st.dmg); cs.src = ""; if (!D.simulating) FX.sparks(c.pos, 12); } // Defensa de caucho: el choque suelta una onda que daña y empuja
       if (!D.simulating) {
         if (heavyHit === "drum") {
           SFX.propCrash("drum", spd);
@@ -291,7 +292,7 @@ export function tickSpawner(F: Frame, dt: number) {
   if (getModoTranquilo() && run.time >= 600) grant("zen");
   if (run.endless && run.time - (run.bank?.t ?? 0) >= 900) grant("sinfin");
   if (run.time - Math.max(hitAt, 300) >= 60) grant("intacto"); // 60 s sin daño, contando desde el minuto 5
-  const bossWarnS = R.aviso_jefe_s;
+  const bossWarnS = R.aviso_jefe_s * D.st.aviso; // Antena de radio: más anticipación
   for (let bi = run.bossIdx; bi < D.RUN_BOSSES.length; bi++) {
     const [bt, bk] = D.RUN_BOSSES[bi];
     if (!D.evtPre.boss.has(bi) && run.time >= bt - bossWarnS && run.time < bt) {

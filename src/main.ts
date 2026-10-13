@@ -19,7 +19,7 @@ import { ABILITIES, abilCd as abilCdOf, abilK, type AbilityId } from "./abilitie
 import { PILOTS, pilotStats, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
 import { applyClimate, gfxInfo, glitchHit, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setSplit, setupRender, shadows, G } from "./render";
-import { evoOffer, fuse, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
+import { escapeReset, evoOffer, fuse, LIVE, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
 import { setDrawDist, buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, heavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
 import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, danoRecibido, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
@@ -182,7 +182,7 @@ let shieldM: B.Mesh | null = null; // burbuja del escudo, hija del auto (se libe
 // Maldiciones (horde = multiplicador de enemigos, curseK = de tornillos) y modo sin fin
 // Lo ya cobrado en el endRun anterior (vencer al jefe final y seguir en modo sin fin): el siguiente suma solo la diferencia
 
-let hitStop = 0, lastHpFrac = 1, motorFxT = 0;
+let hitStop = 0, lastHpFrac = 1, motorFxT = 0, cintaUntil = 0, cintaAt = -1e9; // Cinta aislante: hasta cuándo no recibe daño y cuándo tapó el último golpe
 
 
 // ---------- Flujo ----------
@@ -193,7 +193,8 @@ function recompute() {
   st.dmg *= pfx.dmg; st.speedMul *= pfx.speed; st.xp *= pfx.xp; st.regen += pfx.regen;
   if (pfx.taken !== 1) st.armor = 1 - (1 - st.armor) * pfx.taken; // daño recibido x taken
   if (run.noRepair) st.regen = 0; // maldición Sin reparaciones
-  const newMax = pfx.maxHp === 1 ? lead.car!.def.hp + st.maxHp : Math.round((lead.car!.def.hp + st.maxHp) * pfx.maxHp);
+  const newMax = Math.round((lead.car!.def.hp + st.maxHp) * st.hpMul * pfx.maxHp); // Tanque extra: vida máxima x hpMul
+  LIVE.luck = st.luck; LIVE.radar = st.radar; LIVE.aviso = st.aviso;
   lead.hp += Math.max(0, newMax - lead.maxHp);
   lead.maxHp = newMax;
   if (pfx.maxHp !== 1) lead.hp = Math.min(lead.hp, lead.maxHp); // el pacto que baja la vida máxima recorta también la vida actual
@@ -282,7 +283,7 @@ function startRun(d = false) {
   run.driveMul = 1; run.driftT = run.airT = run.trickT = 0; run.jumpCd = 0; run.boostSec = 0; motorFxT = 0; hudDrive(1);
   lead.car = new Car(scene, save.car, carOpts());
   lastHpFrac = 1;
-  run.passives = {};
+  run.passives = {}; escapeReset(); cintaAt = -1e9;
   run.bestStreak = run.bestHit = run.bossKills = 0; run.bestDriveMul = 1;
   setScoop(save.car === "helado"); setEngineKind(save.car);
   weapons = startWeapons(save.pilot, save.perm.extra, startPick()).map(makeWeapon);
@@ -475,7 +476,7 @@ initOutro({
   grossScrap: () => grossScrap(),
   get encExtra() { return encExtra; },
   get encG() { return encG; },
-  get curseK() { return run.curseK; },
+  get curseK() { return run.curseK * st.scrap; }, // maldiciones x Llavero de la suerte
   get pfx() { return pfx; },
   get bestStreak() { return run.bestStreak; },
   get bestHit() { return run.bestHit; },
@@ -632,7 +633,7 @@ function update(dt: number) {
   const calm = erun?.phase === "vote" || erun?.phase === "final", tp = run.time + paceS, hordeK = run.horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
   if (tutOn() && (input.throttle || input.steer || input.move)) tut("move");
   if (hintOn && (run.time > HINT_S || input.throttle || input.steer || input.move || input.boost || input.drift || input.jump || input.ability)) { hintOn = false; $("hint").classList.add("fade"); }
-  const F = { c, calm, tp, hordeK, warnS: R.aviso_evento_s, carR: Math.max(c.def.size[0], c.def.size[2]) / 2 } as Frame;
+  const F = { c, calm, tp, hordeK, warnS: R.aviso_evento_s * st.aviso, carR: Math.max(c.def.size[0], c.def.size[2]) / 2 } as Frame;
   tickWeather(F, dt);
   tickAbility(F, dt);
   tickDrive(F, dt);
@@ -679,6 +680,10 @@ function hurtWho(n: number, continuous: boolean, src: string, who: number) { hur
 function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   n = danoRecibido(n);
   if (god || (run.abil === "escudo" && run.abilOn > 0)) return; // escudo: invulnerable
+  if (st.cinta > 0) { // Cinta aislante: tapa un golpe cada tanto (y deja un respiro para que no la gaste el daño continuo)
+    if (run.time < cintaUntil) return;
+    if (run.time - cintaAt >= st.cinta) { cintaAt = run.time; cintaUntil = run.time + BAL.armasExtra.cinta_gracia_s; if (!simulating && lead.car) FX.sparks(lead.car.pos.add(upv(lead.car.pos, 0.8)), 14); return; }
+  }
   if (by && DEF[by].final && enemies.some((e) => e.kind === by && e.enraged)) n *= ATK.segunda_barra_dano; // segunda barra: pega más fuerte
   if (by && !simulating && !LAB.on) beastRec(by).hurt += n * (1 - st.armor); // daño recibido por tipo (ficha del bestiario)
   run.airHit = true;
@@ -712,7 +717,7 @@ function useAbility(c: Car) {
   const a = ABILITIES[run.abil];
   const k = abilK(run.abilLv); // nivel del Taller: más petardos, más segundos de escudo y de cámara lenta, más aturdido
   abilCar = c;
-  run.abilCd = abilCdOf(run.abil, run.abilLv); run.abilOn = a.dur * (run.abil === "escudo" || run.abil === "lenta" || run.abil === "turbo" ? k : 1);
+  run.abilCd = abilCdOf(run.abil, run.abilLv) / st.abilRate; run.abilOn = a.dur * (run.abil === "escudo" || run.abil === "lenta" || run.abil === "turbo" ? k : 1);
   if (run.abil === "bombardeo") { run.bombs = Math.round(R.bombardeo_petardos * k); run.bombT = 0; }
   else if (run.abil === "escudo") {
     if (!shieldM) { shieldM = sph(Math.max(...c.def.size) * 1.5, pbr("escudo", { color: "#8dff6a", emissive: "#3f9a2a", alpha: 0.18 }), [0, 0.2, 0]); shieldM.parent = c.root; shieldM.isPickable = false; }

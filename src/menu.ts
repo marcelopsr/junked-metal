@@ -69,7 +69,7 @@ export type Save = {
 const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (innerHeight * (devicePixelRatio || 1))) * 20) / 20));
 export const DEFAULT: Save = {
   intro: false, novedadesVistas: "",
-  scrap: 0, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0, arm: 0, reg: 0, tur: 0, ram: 0, cdr: 0 }, cars: ["buggy"], car: "buggy",
+  scrap: 2000, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0, arm: 0, reg: 0, tur: 0, ram: 0, cdr: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", trim: "", rim: "", finish: "", zoom: 1.35, camMode: "actual",
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, gpu: "webgl", scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
@@ -83,6 +83,9 @@ export const DEFAULT: Save = {
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego
 export const save: Save = parseSave((() => { try { return localStorage.getItem("rcfight2"); } catch { return null; } })(), DEFAULT, { abilities: ABILITIES, weapons: ARSENAL, curses: CURSES, kinds: Object.keys(DEF), zones: ZONES, isTouch, validDecal, presetOf, presets: PRESETS });
+// ponytail: por ahora autos y zonas vienen liberados (y pilotos y piezas en owns, 2000 tornillos en DEFAULT); borrar estas líneas cuando vuelvan a comprarse
+for (const k of Object.keys(CARS) as CarKind[]) if (!save.cars.includes(k)) save.cars.push(k);
+for (const k of Object.keys(ZONES)) if (!save.unlocked.includes("zone:" + k)) save.unlocked.push("zone:" + k);
 // Instalación nueva: "Reducir parpadeos" parte activado si el sistema pide menos movimiento (quien ya tiene guardado conserva su elección)
 try { if (localStorage.getItem("rcfight2") === null) save.calm = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { /* sin almacenamiento */ }
 // Solo en la Mac del autor (localhost): ?tornillos=N fija los tornillos del guardado y se limpia de la dirección. La versión publicada no lo atiende.
@@ -555,10 +558,10 @@ function owns(id: string) {
   const [t, k, o] = id.split(":");
   if (t === "car") return save.cars.includes(k as CarKind);
   if (t === "zone") return k in ZONES && (!ZONES[k as ZoneId].cost || save.unlocked.includes(id));
-  if (t === "pilot") { const p = PILOTS[k as PilotId]; return !!p && (p.ach ? p.ach.ok(save) : !p.cost || save.unlocked.includes(id)); }
+  if (t === "pilot") return k in PILOTS; // ponytail: pilotos liberados para la prueba con amigos; antes: logro o compra
   if (t === "arma") return k === "gomitas" || save.unlocked.includes(id);
   if (t === "paint") return true;
-  return opts(k as Slot)?.[o]?.[1] === 0 || save.unlocked.includes(id);
+  return o in (opts(k as Slot) ?? {}); // ponytail: piezas liberadas para la prueba con amigos; antes: gratis o compradas
 }
 const ownedZones = () => (Object.keys(ZONES) as ZoneId[]).filter((k) => owns("zone:" + k));
 function priceOf(id: string) {

@@ -4,6 +4,7 @@ import { debris, FX, impact, mark, splat, corpse } from "./fx";
 import { cyl, sph, template } from "./models";
 import { M, pbr, shadows } from "./render";
 import { BAL } from "./balance";
+import { LIVE } from "./weapons/passives";
 import { rng } from "./rng";
 import { run } from "./run_state";
 import { save, beastRec } from "./menu";
@@ -100,6 +101,7 @@ export const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.Identity
 export const dmgOut: Record<string, number> = {};
 export const cs = { src: "" }; // arma/fuente que está actuando (antes `cs.src` en main.ts)
 export function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
+  dmg *= LIVE.dmg * (e.paint > 0 ? BAL.armasExtra.pintura_vuln : 1); // Calcomanía de llamas (bono a velocidad máxima) y Lata de pintura
   if (e.kind === "gusano" && !wormOut(e)) return; // gusano lunar: enterrado no recibe daño
   if (hitShip(e, dmg)) return; // luna: las naves son blancos de las armas (moon_ships.ts shipTargets)
   if (c.lead.car && isAlien(e.kind)) { const k = armorMul(e, c.lead.car.pos); if (k < 1) { dmg *= k; if (e.kind === "tanque" && !c.simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } } // tanque alien (aliens.ts): placa frontal y escudo del curandero
@@ -181,7 +183,7 @@ export function kill(e: Enemy) {
     dropPickup(e.pos, "cofre");
     hudBoss(null);
   } else {
-    const r = rng();
+    const r = rng() / LIVE.luck; // Llavero de la suerte: más pilas e imanes
     if (r < R.drop_pila_prob) dropPickup(e.pos, "pila");
     else if (r < R.drop_pila_prob + R.drop_iman_prob) dropPickup(e.pos, "iman");
   }

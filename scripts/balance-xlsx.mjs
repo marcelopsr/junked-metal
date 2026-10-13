@@ -38,10 +38,10 @@ const DESC = {
   },
   pasivas: {
     id: "Identificador (no cambiar)", nombre: "Nombre (referencia)",
-    base: "Valor base (solo Imán: radio de recolección en m)",
-    por_nivel: "Efecto por nivel: Imán, Resorte y Lupa +fracción; Turbo +fracción de velocidad; Litio +vida máxima; Capacitor y LEGO: multiplicador compuesto (0,92 = −8% por nivel)",
-    base2: "Base del efecto secundario (Turbo: recarga del turbo por s; Litio: regeneración por s)",
-    por_nivel2: "Efecto secundario por nivel (Turbo: +fracción de recarga; Litio: regeneración por s; LEGO: +fracción de peso)",
+    base: "Valor base (Imán: radio de recolección en m; Cinta: segundos entre golpes tapados; Escape: daño por s del fuego; Defensa de caucho: daño de la onda)",
+    por_nivel: "Efecto por nivel: Imán, Resorte y Lupa +fracción; Turbo +fracción de velocidad; Litio +vida máxima; Capacitor y LEGO: multiplicador compuesto (0,92 = −8% por nivel); Cinta: −segundos por nivel; Pila: +fracción de recarga de la habilidad; Llavero: +fracción de tornillos; Antena: +fracción de radar; Tanque: +fracción de vida; Llamas: +fracción de daño; Escape y Defensa: daño por nivel",
+    base2: "Base del efecto secundario (Turbo: recarga del turbo por s; Litio: regeneración por s; Escape y Defensa: radio en m; Tanque: fracción de vida que cura cada nivel; Llamas: bono a velocidad máxima)",
+    por_nivel2: "Efecto secundario por nivel (Turbo: +fracción de recarga; Litio: regeneración por s; LEGO: +fracción de peso; Llavero: +fracción de probabilidad de pilas e imanes; Antena: +fracción de anticipación de avisos; Escape y Defensa: +radio)",
   },
   autos: {
     id: "Identificador (no cambiar)", nombre: "Nombre (referencia)", precio: "Precio en tornillos (0 = de serie)", vida: "Vida máxima", velocidad: "Velocidad máxima (m/s)",

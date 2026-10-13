@@ -9,7 +9,7 @@ import { beastIcon, icon, PERK_ICON, uiIconUrl } from "./icons";
 import { isTouch, KEYS } from "./input";
 
 const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram", "cdr"] as const;
-import { WEAPONS, type Offer, type WeaponId } from "./weapons";
+import { LIVE, WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
 import { SFX } from "./sfx";
 import type { PactView } from "./encore";
@@ -577,7 +577,7 @@ function tickCombo(dt: number, live: boolean) {
 }
 
 // ---------- Radar de la radio: barrido, estela y blips (lienzo de 64 px escalado sin filtrar) ----------
-const RS = 64, RH = RS / 2, RR = 50, RK = (RH - 1) / RR; // lado, centro, alcance en metros, píxeles por metro
+const RS = 64, RH = RS / 2, RR = 50; let RK = (RH - 1) / RR; // lado, centro, alcance en metros, píxeles por metro
 type Blip = { x: number; z: number; kind: "enemigo" | "elite" | "jefe" | "cofre" | "gema" | "rec" | "obj" };
 let rCtx: CanvasRenderingContext2D, rBg: HTMLCanvasElement;
 let rCar = { x: 0, z: 0, yaw: 0, up: 0 }, rBlips: Blip[] = [], rAge = 9, rSweep = 0, rAcc = 0;
@@ -600,6 +600,7 @@ export function hudRadar(car: { x: number; z: number; yaw: number; up?: number }
   if (ch("radCh", +hasCh)) (document.getElementById("radar") ?? $("radarC").parentElement)?.classList.toggle("has-chest", hasCh);
 }
 function drawRadar() {
+  RK = (RH - 1) / (RR * LIVE.radar); // Antena de radio: más alcance
   const g = rCtx, u = rCar.up, c = Math.cos(u), s = Math.sin(u);
   g.globalAlpha = 1; g.drawImage(rBg, 0, 0);
   g.save(); g.beginPath(); g.arc(RH, RH, RH - 1, 0, 7); g.clip();
@@ -723,6 +724,13 @@ const EVO_ART: Record<string, string> = {
   cohete: "./images/evo-mortero.webp",
   serpentinas: "./images/evo-torbellino.webp",
   tambor: "./images/evo-sierra.webp",
+  domino: "./images/evo-sierra.webp",
+  avioncito: "./images/evo-sierra.webp",
+  pintura: "./images/evo-torbellino.webp",
+  bumeran: "./images/evo-sierra.webp",
+  confeti: "./images/evo-torbellino.webp",
+  lupasolar: "./images/evo-lanzallamas.webp",
+  dron: "./images/evo-sierra.webp",
   sierra: "./images/evo-sierra.webp",
   lanzallamas: "./images/evo-lanzallamas.webp",
   chispero: "./images/evo-lanzallamas.webp",

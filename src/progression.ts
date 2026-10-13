@@ -61,7 +61,7 @@ export function previewOffer(i: number) {
 export function gainXp(n: number) {
   const early = run.time < R.xp_temprana_s ? R.xp_temprana_mult : 1;
   run.xp += n * c.st.xp * run.driveMul * early;
-  while (run.xp >= xpNeed(run.level)) { run.xp -= xpNeed(run.level); run.level++; run.pendingLevels++; }
+  while (run.xp >= xpNeed(run.level)) { run.xp -= xpNeed(run.level); run.level++; run.pendingLevels++; if (c.st.lvHeal > 0) c.lead.hp = Math.min(c.lead.maxHp, c.lead.hp + c.lead.maxHp * c.st.lvHeal); } // Tanque extra: cura al subir de nivel
 }
 
 // Sin reparaciones: fuera las cartas de curación y la Pila de litio (regenera); se pide una de más para no quedar corto

@@ -1,5 +1,5 @@
 import { BAL } from "./balance";
-import type { Ctx } from "./weapons";
+import { escapeTick, LIVE, type Ctx } from "./weapons";
 import * as E from "./encore";
 import { FX, mark } from "./fx";
 import type { Kind, Enemy } from "./enemies";
@@ -287,7 +287,9 @@ export function tickWeapons(F: Frame, dt: number): boolean {
   // --- Armas ---
   if (MOON.on && !calm) shipsTick(dt, run.time, cars, T.simulating, T.camYaw); // naves alienígenas (moon_ships.ts): nodriza recurrente y minijefes
   if ((MOON.on || erun) && !calm) { goalsTick(dt, run.time, carPs, T.simulating); if (T.state !== "play") return true; } // objetivos y cohete (moon_goals.ts); el cohete puede ganar la partida
-  const ctx: Ctx = { scene: T.scene, car: c, enemies: MOON.on ? shipTargets(T.enemies.some((e) => e.kind === "gusano" && !wormOut(e)) ? T.enemies.filter((e) => e.kind !== "gusano" || wormOut(e)) : T.enemies, c.pos) : T.enemies, dt, st: T.st, fs: r.fs, damage, explode };
+  const ctx: Ctx = { scene: T.scene, car: c, enemies: MOON.on ? shipTargets(T.enemies.some((e) => e.kind === "gusano" && !wormOut(e)) ? T.enemies.filter((e) => e.kind !== "gusano" || wormOut(e)) : T.enemies, c.pos) : T.enemies, dt, st: T.st, fs: r.fs, gems: T.gems, damage, explode };
+  LIVE.dmg = T.st.llamasVel && Math.abs(r.fs) >= BAL.armasExtra.llamas_vel_frac * c.def.speed * T.st.speedMul ? 1 + T.st.llamasVel : 1; // Calcomanía de llamas: bono a velocidad máxima
+  cs.src = "escape"; escapeTick(ctx, F.boosting || Math.abs(r.ls) > BAL.armasExtra.escape_lateral); // Caño de escape (pasiva)
   for (const w of T.weapons) { cs.src = w.id; w.update(ctx); }
   for (const m of ms) { const mctx: Ctx = { ...ctx, car: m.car!, fs: m.fs }; for (const w of m.weapons) { cs.src = w.id; w.update(mctx); } } // R7a/c: los otros autos disparan copias de las mismas armas desde su lugar
   cs.src = "";
