@@ -82,6 +82,13 @@ export async function loadDuel() {
 export async function loadMatch3() {
   if (!m3M) { const m = await import("./match3"); m.initMatch3(modeOpts()); m3M = m; if (import.meta.env.DEV) Object.assign(window, { __match3: m.match3Dev }); }
 }
+// Al pasar el mouse / tocar el botón de un modo se baja su chunk (solo el import: el init sigue en loadKart/loadDuel/loadMatch3 al entrar)
+const PRE: Record<string, () => Promise<unknown>> = { race: () => import("./kart"), duel: () => import("./duel"), match3: () => import("./match3") };
+export function prefetchMode(e: Event) {
+  const t = (e.target as Element | null)?.closest?.("[data-go],[data-act]") as HTMLElement | null;
+  const id = t?.dataset.go ?? ({ duelgo: "duel", match3go: "match3" } as Record<string, string>)[t?.dataset.act ?? ""] ?? t?.dataset.act;
+  if (id && PRE[id]) void PRE[id]().catch(() => {});
+}
 export function launchRun(d = false, enc = false, n = 0, then?: () => void, wk = false) {
   c.setRun.encore(enc); c.setRun.coop(n || (enc && !isTouch ? Math.min(encCfg.players, encMax()) : 1)); // R7a/c: de 2 a 4 jugadores solo en ENCORE y solo en compu (3-4 si siguen conectados los joysticks)
   initAudio(); // el gesto del jugador es este clic: el audio se activa acá, no tras la carga

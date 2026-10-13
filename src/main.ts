@@ -9,7 +9,7 @@ import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, i
 import { activePad, btnName, camCycle, coopCtl, coopSkip, ctl, input, isTouch, keyHit, KEYS, KEYS2, padPressed, pads, padSnap, pb, pollInput, pollMate, pollPad, RACE, setupTouch } from "./input";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
 import { GLB, glbFootprint, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
-import { initRunLoader, runTasks, loaderOk, T_BICHOS, T_EFECTOS, worldTask, afterFrames, launchRun, goRace, goDuel, goMatch3, kartM, duelM, m3M } from "./run_loader";
+import { initRunLoader, runTasks, loaderOk, T_BICHOS, T_EFECTOS, worldTask, afterFrames, launchRun, prefetchMode, goRace, goDuel, goMatch3, kartM, duelM, m3M } from "./run_loader";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
 import { CAM_MODES, CAM_NAMES, type CamMode } from "./savefmt";
@@ -566,6 +566,7 @@ await Promise.race([Promise.all(['500 16px Rajdhani', '700 16px Rajdhani'].map((
 boot("Armando el menú", 0.9);
 void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
 initPhoto({ scene, canvas, inPause: () => state === "pause", onShot: () => grant("foto") });
+for (const ev of ['pointerover', 'touchstart', 'focusin']) document.addEventListener(ev, prefetchMode, { passive: true, capture: true });
 initMenu({ scene, play: launchRun, weekly: () => launchRun(false, false, 0, undefined, true), resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), duel: goDuel, match3: goMatch3 });
 music("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: en cada carga de la página o apertura de la app instalada (cualquier tecla la salta); ?mute y ?lab (pruebas) no la muestran, ?intro la fuerza
