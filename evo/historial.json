@@ -1071,5 +1071,223 @@
       }
     ],
     "motivo": "Ciclo 2: evaluador visual 39 vs 38 de i192; alerón dentro de la trocha en cámara de partida; pintura visible 0,177→0,201"
+  },
+  {
+    "car": "monster",
+    "accion": "corrida",
+    "run": "20261013-1939-s1",
+    "fecha": "20261013",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 1,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.12,
+      0.2,
+      1,
+      0.605
+    ],
+    "recomendado": {
+      "id": "i201",
+      "gen": 10,
+      "obj": [
+        0.11,
+        0.09,
+        1,
+        0.57
+      ],
+      "cambios": [
+        {
+          "id": "caja_alto",
+          "comp": "carroceria",
+          "def": 0.36,
+          "val": 0.2886051260762886,
+          "pct": -39.7
+        },
+        {
+          "id": "cabina_z",
+          "comp": "cabina",
+          "def": -0.2,
+          "val": -0.3356339402652261,
+          "pct": -33.9
+        },
+        {
+          "id": "cabina_alto",
+          "comp": "cabina",
+          "def": 0.36,
+          "val": 0.4202285409074119,
+          "pct": 30.1
+        },
+        {
+          "id": "cabina_largo",
+          "comp": "cabina",
+          "def": 1,
+          "val": 0.8822615321420104,
+          "pct": -29.4
+        },
+        {
+          "id": "batalla_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.0523708223170734,
+          "pct": 26.2
+        },
+        {
+          "id": "cabina_ancho",
+          "comp": "cabina",
+          "def": 1,
+          "val": 1.0631977305439384,
+          "pct": 25.3
+        },
+        {
+          "id": "caja_largo",
+          "comp": "carroceria",
+          "def": 2.1,
+          "val": 2.1753738932989752,
+          "pct": 21.5
+        },
+        {
+          "id": "caja_y",
+          "comp": "carroceria",
+          "def": 0.62,
+          "val": 0.587758454554296,
+          "pct": -16.1
+        },
+        {
+          "id": "paragolpe_ancho",
+          "comp": "paragolpes",
+          "def": 1.3,
+          "val": 1.350256819446737,
+          "pct": 14.4
+        },
+        {
+          "id": "trocha_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.0166260565883727,
+          "pct": 13.9
+        },
+        {
+          "id": "amort_grosor",
+          "comp": "suspension",
+          "def": 0.09,
+          "val": 0.08887021658870631,
+          "pct": -1.6
+        }
+      ]
+    }
+  },
+  {
+    "car": "monster",
+    "accion": "export",
+    "run": "20261013-1939-s1",
+    "id": "i188",
+    "fecha": "2026-10-13",
+    "obj": [
+      0.12,
+      0.135,
+      1,
+      0.56
+    ],
+    "obj_original": [
+      0.12,
+      0.2,
+      1,
+      0.605
+    ],
+    "cambios": [
+      {
+        "id": "rueda_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 1.1045134634122615,
+        "pct": 47.5
+      },
+      {
+        "id": "caja_alto",
+        "comp": "carroceria",
+        "def": 0.36,
+        "val": 0.29146290887382037,
+        "pct": -38.1
+      },
+      {
+        "id": "cabina_largo",
+        "comp": "cabina",
+        "def": 1,
+        "val": 0.8476779211102978,
+        "pct": -38.1
+      },
+      {
+        "id": "amort_grosor",
+        "comp": "suspension",
+        "def": 0.09,
+        "val": 0.11297772524874927,
+        "pct": 32.8
+      },
+      {
+        "id": "cabina_z",
+        "comp": "cabina",
+        "def": -0.2,
+        "val": -0.2864413040730051,
+        "pct": -21.6
+      },
+      {
+        "id": "cabina_alto",
+        "comp": "cabina",
+        "def": 0.36,
+        "val": 0.3965459041280448,
+        "pct": 18.3
+      },
+      {
+        "id": "caja_largo",
+        "comp": "carroceria",
+        "def": 2.1,
+        "val": 2.156882539510602,
+        "pct": 16.3
+      },
+      {
+        "id": "caja_y",
+        "comp": "carroceria",
+        "def": 0.62,
+        "val": 0.6483723389343307,
+        "pct": 14.2
+      },
+      {
+        "id": "caja_ancho",
+        "comp": "carroceria",
+        "def": 1.15,
+        "val": 1.1842715794162895,
+        "pct": 11.4
+      },
+      {
+        "id": "batalla_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 0.9843979809956357,
+        "pct": -7.8
+      },
+      {
+        "id": "cabina_ancho",
+        "comp": "cabina",
+        "def": 1,
+        "val": 1.0157990093627427,
+        "pct": 6.3
+      },
+      {
+        "id": "trocha_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 1.0056049820966821,
+        "pct": 4.7
+      }
+    ],
+    "motivo": "Evaluador visual 38 vs 35: ruedas +10 %, caja y cabina más compactas; mejora en garaje, mínima en cámara de partida"
   }
 ]

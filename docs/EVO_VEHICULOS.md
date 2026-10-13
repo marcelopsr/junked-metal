@@ -113,3 +113,13 @@ angosto. Pendiente: el alerón sigue cruzando casi todo el ancho en la vista de 
   dentro de la trocha en la cámara de partida; pintura visible 0,201. Exportada.
 - **Ciclo 3:** piso sin iluminación (#4d5844) bajo las ruedas en todas las imágenes para mirar; la medida de color sigue
   renderizando sin piso (fondo liso), verificado: el original sigue dando 0,177.
+
+## Flota (ciclos por auto, desde 2026-10-13)
+
+- Autos sin bandas propias usan `autoBands`: proporciones a ±10 % del original (barandas) y pintura visible ≥ +15 %; ruedas
+  con multiplicadores `rueda_k`, `trocha_k`, `batalla_k`.
+- Corrección de la medida de color: dependía del orden (armar los 16 autos de la flota cambia estado de la escena); ahora la
+  flota se arma antes de medir. Solo afectaba al i0 de cada corrida previa.
+- **Monster** (20261013-1939-s1): exportado i188 (evaluador 38 vs 35): ruedas +10 %, caja −38 % de alto, cabina más corta.
+  La métrica recomendaba i201 (34). Mejora en garaje, mínima en cámara de partida. `rueda_k` del monster ≥ 1 desde ahora.
+- Colaboración con otros modelos (ChatGPT): `docs/evo-colab/`.

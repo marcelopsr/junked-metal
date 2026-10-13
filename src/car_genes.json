@@ -47,5 +47,33 @@
       0.63
     ],
     "motivo": "Ciclo 2: evaluador visual 39 vs 38 de i192; alerón dentro de la trocha en cámara de partida; pintura visible 0,177→0,201"
+  },
+  "monster": {
+    "g": {
+      "caja_y": 0.6483723389343307,
+      "caja_ancho": 1.1842715794162895,
+      "caja_alto": 0.29146290887382037,
+      "caja_largo": 2.156882539510602,
+      "cabina_ancho": 1.0157990093627427,
+      "cabina_alto": 0.3965459041280448,
+      "cabina_largo": 0.8476779211102978,
+      "cabina_z": -0.2864413040730051,
+      "amort_grosor": 0.11297772524874927,
+      "paragolpe_ancho": 1.299916461133407,
+      "rueda_k": 1.1045134634122615,
+      "trocha_k": 1.0056049820966821,
+      "batalla_k": 0.9843979809956357
+    },
+    "run": "20261013-1939-s1",
+    "id": "i188",
+    "gen": 9,
+    "fecha": "2026-10-13",
+    "obj": [
+      0.12,
+      0.135,
+      1,
+      0.56
+    ],
+    "motivo": "Evaluador visual 38 vs 35: ruedas +10 %, caja y cabina más compactas; mejora en garaje, mínima en cámara de partida"
   }
 }

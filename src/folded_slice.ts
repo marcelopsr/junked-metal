@@ -632,22 +632,24 @@ export const PETS: Record<string, { build: () => B.Mesh[]; bones: number; clips:
 // Las ruedas son foldWheel en las anclas de siempre (carModel), que giran y viran como antes.
 export function carHull(kind: string, paint: B.Material, lamp: string) {
   if (kind === "buggy") return buggyHull(paint, lamp);
-  const { G, done, strut } = kit();
+  const { G, done, strut } = kit(), q = genome(kind);
   const dark = FOLD.dark(), steel = FOLD.bare(), L = FOLD.emissive(lamp), tail = FOLD.emissive("#ff3a2a");
   const num = (x: number, y: number, z: number, s: number) => { for (const sd of [-1, 1]) G.decal([sd * x, y, z], [0, -sd * Math.PI / 2, 0], "numero", s); };
   const edges = (w: number, y: number, z0: number, z1: number, m: B.Material) => { for (const s of [-1, 1]) G.bend([s * w / 2, y, z0], [s * w / 2, y, z1], 0.022, m); };
   const lamps = (x: number, y: number, z: number, d: number) => { for (const s of x ? [1, -1] : [1]) { G.box(d * 1.4, d * 1.1, 0.05, dark, [x * s, y, z - 0.02]); G.box(d, d * 0.7, 0.04, L, [x * s, y, z]); } };
   const tails = (x: number, y: number, z: number) => { for (const s of [-1, 1]) G.box(0.14, 0.06, 0.03, tail, [s * x, y, z]); };
   const bumper = (w: number, y: number, z: number) => { strut([-w / 2, y, z], [w / 2, y, z], 0.06, 0.06, steel); for (const s of [-1, 1]) strut([s * w * 0.3, y, z], [s * w * 0.3, y, z - Math.sign(z) * 0.12], 0.04, 0.04, steel); };
-  if (kind === "monster") { // monster truck: caja alta, cabina, barra de luces, amortiguadores rojos y paragolpes de caño
-    G.box(1.0, 0.14, 1.9, dark, [0, 0.35, 0]);
-    G.box(1.15, 0.36, 2.1, paint, [0, 0.62, 0]); edges(1.15, 0.8, -1.05, 1.05, paint);
-    G.box(1.0, 0.36, 1.0, paint, [0, 0.98, -0.2]); edges(1.0, 1.16, -0.7, 0.3, paint);
-    G.box(0.9, 0.28, 0.03, FOLD.glass(), [0, 1.0, 0.33], [-0.4, 0, 0]);
-    G.box(1.0, 0.08, 0.2, dark, [0, 1.2, 0.15]); lamps(0.36, 1.23, 0.26, 0.1); lamps(0.12, 1.23, 0.26, 0.1);
-    G.grate([0, 0.62, 1.06], [0, Math.PI, 0], 0.6, 0.22, 4, steel); lamps(0.42, 0.66, 1.06, 0.1); tails(0.42, 0.66, -1.06);
-    bumper(1.3, 0.5, 1.15); bumper(1.3, 0.5, -1.15); num(0.58, 0.62, 0.1, 0.3);
-    for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) strut([x * 0.3, 0.42, z * 0.62], [x * 0.62, 0.05, z * 0.72], 0.09, 0.09, FOLD.painted("#ef4444", 0.6, 211));
+  if (kind === "monster") { // monster truck: caja alta, cabina, barra de luces, amortiguadores rojos y paragolpes de caño (genes: car_genes.ts)
+    const cy = q.caja_y, cw = q.caja_ancho, ch = q.caja_alto, cl = q.caja_largo, top = cy + ch / 2;
+    const kw = q.cabina_ancho, kh = q.cabina_alto, kl = q.cabina_largo, kz = q.cabina_z, ky = top + kh / 2, ktop = ky + kh / 2;
+    G.box(1.0, 0.14, 1.9, dark, [0, cy - 0.27, 0]);
+    G.box(cw, ch, cl, paint, [0, cy, 0]); edges(cw, top, -cl / 2, cl / 2, paint);
+    G.box(kw, kh, kl, paint, [0, ky, kz]); edges(kw, ktop, kz - kl / 2, kz + kl / 2, paint);
+    G.box(kw - 0.1, kh - 0.08, 0.03, FOLD.glass(), [0, ky + 0.02, kz + kl / 2 + 0.03], [-0.4, 0, 0]);
+    G.box(kw, 0.08, 0.2, dark, [0, ktop + 0.04, kz + 0.35]); lamps(kw * 0.36, ktop + 0.07, kz + 0.46, 0.1); lamps(kw * 0.12, ktop + 0.07, kz + 0.46, 0.1);
+    G.grate([0, cy, cl / 2 + 0.01], [0, Math.PI, 0], 0.6, 0.22, 4, steel); lamps(0.42, cy + 0.04, cl / 2 + 0.01, 0.1); tails(0.42, cy + 0.04, -cl / 2 - 0.01);
+    bumper(q.paragolpe_ancho, cy - 0.12, cl / 2 + 0.1); bumper(q.paragolpe_ancho, cy - 0.12, -cl / 2 - 0.1); num(cw / 2 + 0.005, cy, 0.1, 0.3);
+    for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) strut([x * 0.3, cy - 0.2, z * 0.62], [x * (0.8 * q.trocha_k - 0.18), 0.05, z * 0.72 * q.batalla_k], q.amort_grosor, q.amort_grosor, FOLD.painted("#ef4444", 0.6, 211));
   } else if (kind === "formula") { // fórmula: trompa baja, pontones, alerón delantero, halo de caño
     G.box(0.5, 0.16, 1.2, paint, [0, 0.12, 0.75]); G.box(0.8, 0.24, 1.3, paint, [0, 0.16, -0.25]); edges(0.8, 0.28, -0.9, 0.4, paint);
     for (const s of [-1, 1]) G.box(0.28, 0.2, 0.8, paint, [s * 0.46, 0.12, -0.2]);

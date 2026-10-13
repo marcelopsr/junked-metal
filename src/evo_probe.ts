@@ -157,10 +157,18 @@ const BANDS: Record<string, Record<string, [number, number]>> = {
     masa_alta: [0, 0.065], // techo: lo alto (alerón, jaula) no crece sobre la bañera (evaluación visual, ronda 1); el original da 0,052
   },
 };
+/** Autos sin bandas propias: las proporciones quedan a ±10 % de su original (barandas, no empujan) y la pintura visible tiene que crecer ≥ 15 %. */
+const AUTO = ["ruedas_visibles", "stance", "masa_atras", "llenado_lateral", "alto_largo", "masa_alta"];
+function autoBands(b: { m: Record<string, unknown>; paint?: number }) {
+  const out: Record<string, [number, number]> = {};
+  for (const k of AUTO) { const v = b.m[k] as number, t = Math.max(0.03, Math.abs(v) * 0.1); out[k] = [v - t, v + t]; }
+  out.pintura_visible = [(b.paint ?? 0) * 1.15, 0.7];
+  return out;
+}
 const band = (x: number, [lo, hi]: [number, number]) => Math.max(0, lo - x, x - hi) / (hi - lo);
 
 // ---------- Evaluación ----------
-type Base = { masks: Record<View, Mask>; tris: number; size: number[]; comps: number; height: number; hits: number; degen: number };
+type Base = { masks: Record<View, Mask>; tris: number; size: number[]; comps: number; height: number; hits: number; degen: number; m: Record<string, unknown>; paint?: number };
 const bases = new Map<string, Base>();
 let others: Mask[] | null = null;
 
@@ -197,13 +205,17 @@ function measure(kind: CarKind, g: Genome | null) {
   return { m, masks };
 }
 
+let warm = false;
 async function evaluate(scene: B.Scene, kind: CarKind, g: Genome) {
+  others ??= (Object.keys(CARS) as CarKind[]).filter((k) => k !== kind).map((k) => measure(k, null).masks.lateral); // primero: armar autos cambia estado de la escena (luz del faro) y la medida de color tiene que verlo siempre igual
+  if (!warm) { warm = true; await paintShare(scene, kind, original(kind)); } // y una captura de calentamiento
   const base = baseline(kind), { m, masks } = measure(kind, g);
   (m as Record<string, unknown>).pintura_visible = await paintShare(scene, kind, g);
   const ident = { lateral: iou(masks.lateral, base.masks.lateral), frontal: iou(masks.frontal, base.masks.frontal), superior: iou(masks.superior, base.masks.superior) };
   others ??= (Object.keys(CARS) as CarKind[]).filter((k) => k !== kind).map((k) => measure(k, null).masks.lateral);
   const parecido = Math.max(...others.map((o) => iou(masks.lateral, o)));
-  const bands = BANDS[kind] ?? {};
+  base.paint ??= await paintShare(scene, kind, original(kind));
+  const bands = BANDS[kind] ?? autoBands(base);
   const prop = Object.fromEntries(Object.entries(bands).map(([k, b]) => [k, band((m as unknown as Record<string, number>)[k], b)]));
   // Objetivos a minimizar (Pareto): ninguno se suma a otro, así una mejora no puede comprarse sacrificando un aspecto esencial.
   const obj = [
@@ -228,7 +240,7 @@ async function evaluate(scene: B.Scene, kind: CarKind, g: Genome) {
 
 function baseline(kind: CarKind): Base {
   let b = bases.get(kind);
-  if (!b) { const { m, masks } = measure(kind, original(kind)); b = { masks, tris: m.tris, size: [m.ancho, m.alto, m.largo], comps: m.piezas, height: m.alto, hits: m.choques_rueda, degen: m.degenerados }; bases.set(kind, b); }
+  if (!b) { const { m, masks } = measure(kind, original(kind)); b = { masks, tris: m.tris, size: [m.ancho, m.alto, m.largo], comps: m.piezas, height: m.alto, hits: m.choques_rueda, degen: m.degenerados, m }; bases.set(kind, b); }
   return b;
 }
 
@@ -271,6 +283,7 @@ let floorM: B.StandardMaterial | null = null;
 /** `floor`: piso gris verdoso bajo las ruedas para que el negro de las gomas no se funda con el fondo (solo imágenes para mirar; la medida de color usa fondo liso). */
 async function views(scene: B.Scene, kind: CarKind, g: Genome, size = 256, only?: string[], floor = true) {
   const cm = build(kind, g), out: Record<string, string> = {};
+  await scene.whenReadyAsync(); // texturas del atlas cargadas: sin esto la primera captura de la página sale sin color
   let fl: B.Mesh | null = null;
   if (floor) {
     fl = B.MeshBuilder.CreateGround("evoFloor", { width: 6, height: 6 }, scene);

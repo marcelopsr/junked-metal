@@ -9,6 +9,9 @@ export type Genome = Record<string, number>;
 
 const g = (comp: string, id: string, def: number, min: number, max: number, int = false): Gene => ({ id, comp, def, min, max, ...(int ? { int } : {}) });
 
+// Ruedas de los autos que no son el buggy: multiplicadores sobre las anclas de carModel (1 = original)
+const RUEDAS = [g("ruedas", "rueda_k", 1, 0.9, 1.12), g("ruedas", "trocha_k", 1, 0.94, 1.06), g("ruedas", "batalla_k", 1, 0.9, 1.1)];
+
 export const GENES: Record<string, Gene[]> = {
   buggy: [
     g("chasis", "stance", 0, -0.06, 0.08), // altura de toda la carrocería sobre el eje
@@ -45,6 +48,19 @@ export const GENES: Record<string, Gene[]> = {
     g("aleron", "aleron_cuerda", 0.38, 0.26, 0.42),
     g("aleron", "aleron_incl", 0.12, 0, 0.3),
     g("aleron", "aleron_ancho", 1.35, 1.05, 1.4),
+  ],
+  monster: [
+    g("carroceria", "caja_y", 0.62, 0.55, 0.75),
+    g("carroceria", "caja_ancho", 1.15, 1.0, 1.3),
+    g("carroceria", "caja_alto", 0.36, 0.28, 0.46),
+    g("carroceria", "caja_largo", 2.1, 1.9, 2.25),
+    g("cabina", "cabina_ancho", 1.0, 0.85, 1.1),
+    g("cabina", "cabina_alto", 0.36, 0.28, 0.48),
+    g("cabina", "cabina_largo", 1.0, 0.8, 1.2),
+    g("cabina", "cabina_z", -0.2, -0.4, 0),
+    g("suspension", "amort_grosor", 0.09, 0.06, 0.13),
+    g("paragolpes", "paragolpe_ancho", 1.3, 1.1, 1.45),
+    ...RUEDAS.map((x) => (x.id === "rueda_k" ? { ...x, min: 1 } : x)), // las ruedas enormes son su identidad: nunca más chicas (evaluador, ciclo monster)
   ],
 };
 

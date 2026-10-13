@@ -97,7 +97,9 @@ const HOVER_W = [[-0.6, 0.8], [0.6, 0.8], [-0.6, -0.8], [0.6, -0.8]];
 const TRI_W: [number, number, number][] = [[0, 0.8, 0.7], [-0.58, -0.65, 0.85], [0.58, -0.65, 0.85]];
 export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   const q = genome(kind);
-  const A = kind === "buggy" ? { ...ANCH.buggy, seat: [0, 0.38 + q.stance, 0.02, 0.8] as [number, number, number, number] } : ANCH[kind]; // el piloto sigue a la butaca
+  const A = kind === "buggy" ? { ...ANCH.buggy, seat: [0, 0.38 + q.stance, 0.02, 0.8] as [number, number, number, number] } // el piloto sigue a la butaca
+    : kind === "monster" ? { ...ANCH.monster, deck: [0.8 + (q.caja_y - 0.62) + (q.caja_alto - 0.36) / 2, -0.95] as [number, number], seat: [0, 0.78 + (q.caja_y - 0.62), -0.12, 0.9] as [number, number, number, number] } // alerón y piloto siguen a la caja
+    : ANCH[kind];
   setTessK(2.5);
   const ws: { pos: V3; d: number; w: number; steer?: boolean }[] = [];
   let parts: B.Mesh[];
@@ -879,7 +881,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   // Calco del capó (textura HD oficial o grilla NEAREST 16x16 propia con alfa; el material se reusa por diseño)
   if (validDecal(o.sticker) && o.sticker !== DECAL_BLANK) {
     const onWing = kind !== "monster" && (o.wing === "alto" || o.wing === "doble"); // plato del alerón: top = el mismo de arriba, +0,033 = medio grosor y holgura
-    const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : kind === "buggy" ? [q.aleron_alto + 0.033, -1.0, 0.34, q.aleron_incl] : SPOT[kind];
+    const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : kind === "buggy" ? [q.aleron_alto + 0.033, -1.0, 0.34, q.aleron_incl] : kind === "monster" ? [1.212 + (q.caja_y - 0.62) + (q.caja_alto - 0.36) + (q.cabina_alto - 0.36), q.cabina_z, 0.54, 0] : SPOT[kind];
     const isHd = o.sticker in GARAGE_DECALS;
     const mat = pbr("calco" + o.sticker, { color: "#ffffff", rough: isHd ? 0.45 : 0.4 });
     if (!mat.albedoTexture) {
@@ -966,6 +968,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     cap.parent = ant;
     cast.push(ant);
   }
+  if (q.rueda_k !== undefined) for (const w of ws) { w.pos = [w.pos[0] * q.trocha_k, w.pos[1], w.pos[2] * q.batalla_k]; w.d *= q.rueda_k; } // genes de rueda (car_genes.ts): 1 = original
   const wheels = ws.map((w) => {
     const { inst: m, cast: c } = wheelInst(w.d, w.w, rim, fb && (!o.tires || o.tires === "serie") && kind !== "tanque" ? "fold" : o.tires === "serie" ? "" : o.tires === "lisas" ? "lisa" : o.tires ?? "");
     m.position = v(w.pos);
