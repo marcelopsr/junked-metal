@@ -57,9 +57,9 @@ export const propTex = (name: string) => {
 };
 export const rustyDrumM = () =>
   pbr("propRustyDrum", {
-    color: "#ffffff",
-    rough: 0.72,
-    metal: 0.55,
+    color: "#d5dbe0",
+    rough: 0.82,
+    metal: 0.3,
     tex: tex("p_drum_alb", () => propTex("prop-rusty-drum")),
     bump: tex("p_drum_bmp", () => propTex("prop-rusty-drum_normal")),
   });
@@ -73,9 +73,9 @@ export const tireStackM = () =>
   });
 export const woodCrateM = () =>
   pbr("propWoodCrate", {
-    color: "#ffffff",
-    rough: 0.78,
-    metal: 0.02,
+    color: "#e1d6c2",
+    rough: 0.92,
+    metal: 0,
     tex: tex("p_crate_alb", () => propTex("prop-wood-crate")),
     bump: tex("p_crate_bmp", () => propTex("prop-wood-crate_normal")),
   });

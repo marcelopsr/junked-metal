@@ -10,7 +10,15 @@ function soilEdgeMask() {
   const t = new B.DynamicTexture("soilEdgeMask", 128, scene, false);
   const c = t.getContext() as unknown as CanvasRenderingContext2D;
   c.fillStyle = "#000"; c.fillRect(0, 0, 128, 128);
-  c.filter = "blur(7px)"; c.fillStyle = "#fff"; c.beginPath(); c.roundRect(8, 8, 112, 112, 20); c.fill(); c.filter = "none";
+  c.filter = "blur(7px)"; c.fillStyle = "#fff"; c.beginPath(); c.moveTo(18, 14);
+  c.bezierCurveTo(42, 4, 60, 20, 88, 10);
+  c.bezierCurveTo(118, 3, 114, 29, 108, 48);
+  c.bezierCurveTo(101, 67, 125, 84, 113, 106);
+  c.bezierCurveTo(103, 125, 79, 109, 59, 115);
+  c.bezierCurveTo(36, 123, 9, 115, 14, 91);
+  c.bezierCurveTo(19, 69, 3, 55, 11, 35);
+  c.bezierCurveTo(14, 25, 9, 18, 18, 14);
+  c.closePath(); c.fill(); c.filter = "none";
   t.update(); t.getAlphaFromRGB = true;
   t.wrapU = t.wrapV = B.Texture.CLAMP_ADDRESSMODE;
   return t;
@@ -58,15 +66,15 @@ export function patioBuild() {
   compactedTex.uScale = 16.8; compactedTex.vScale = 13;
   const dirtMat = surface(
     pbr("dirt", {
-      color: "#ffffff",
+      color: "#d0d8df",
       rough: 0.94,
       tex: compactedTex,
     }),
     "soil",
     24,
-    0.85
+    0.55
   );
-  const dirtGroundMat = surface(pbr("dirtGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.85);
+  const dirtGroundMat = surface(pbr("dirtGround", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
   dirtGroundMat.opacityTexture = edgeMask;
   dirtGroundMat.alphaCutOff = 0.02;
   dirtGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
@@ -79,16 +87,16 @@ export function patioBuild() {
   decal("gardenSoilTransition", 50, 40, 50, 45, grassEarthMat, 0.015);
   decal("workshopGrassTransition", 22, 18, -4, -9, grassEarthMat, 0.016);
   const dirt = decal("dirt", 42, 32, 50, 45, dirtGroundMat, 0.025);
-  const pathMat = surface(pbr("soilPath", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.85);
+  const pathMat = surface(pbr("soilPath", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
   pathMat.opacityTexture = edgeMask;
   pathMat.alphaCutOff = 0.02;
   pathMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   const paths: B.Mesh[] = [];
   for (const [x, z, w, len, angle] of [
-    [-33, 10, 15, 37, 2.16],
-    [-1, 16, 14, 47, 0.82],
-    [33, 38.5, 15, 37, 1.21],
-    [-7, 1, 12, 36, -0.45],
+    [-33, 10, 16, 38, 2.11],
+    [-1, 16, 12.5, 48, 0.87],
+    [33, 38.5, 14, 38, 1.16],
+    [-7, 1, 11, 37, -0.49],
   ]) {
     const path = decal("soilPath", w, len, x, z, pathMat, 0.018);
     path.rotation.y = angle;
@@ -107,15 +115,15 @@ export function patioBuild() {
   // Zona de combate de chatarra: misma tierra y transición compartidas con la huerta
   const scrapMat = surface(
     pbr("scrapEarth", {
-      color: "#ffffff",
+      color: "#d0d8df",
       rough: 0.94,
       tex: compactedTex,
     }),
     "soil",
     26,
-    0.85
+    0.55
   );
-  const scrapGroundMat = surface(pbr("scrapGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 26, 0.85);
+  const scrapGroundMat = surface(pbr("scrapGround", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 26, 0.55);
   scrapGroundMat.opacityTexture = edgeMask;
   scrapGroundMat.alphaCutOff = 0.02;
   scrapGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
