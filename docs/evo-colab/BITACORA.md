@@ -66,3 +66,11 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
 - Jeep: carrocería abierta convertida a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.jeep` (`tina_ancho`, `tina_alto`, `tina_largo`, `jaula_alto`, `auxilio_d`, `...RUEDAS`).
 - Moto: carenado deportivo convertido a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.moto` (`tanque_alto`, `carenado_largo`, `cola_alto`, `...RUEDAS` sin trocha_k).
 - Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde. 16 de los 17 vehículos de la flota cuentan con genes propios.
+
+## 2026-10-13 · gemini · 100% de la flota completada, test de regresión y relevo
+
+- Monopatín: se parametriza su carrocería en `src/folded_slice.ts` (`carHull`) como "valor original + delta", con genes en `GENES.monopatin` (`tabla_ancho`, `tabla_largo`, `tail_inclinacion` y `...RUEDAS`).
+- Hito de la flota: los 17 autos del juego cuentan con genes propios en `src/car_genes.ts` y ramas procedurales Folded dedicadas.
+- Test de regresión geométrica: creado `test/car_genes.test.ts` en Vitest, validando matemáticamente los 17 genomas en `def` (`min <= def <= max`), ausencia de duplicados y finitud numérica.
+- Documentación: actualizados `docs/EVO_VEHICULOS.md` y `docs/evo-colab/RELEVO-gemini.md` con el estado final de la flota y el handoff para la próxima tanda.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite completa de Vitest (27 archivos, 182 tests en verde).

@@ -781,10 +781,16 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     num(0.16, 0.46 + dth * 0.5, 0.2, 0.16);
   } else if (kind === "monopatin") { // monopatín: tabla con puntas levantadas, ejes de acero, ruedas amarillas y un muñeco parado encima
     const grip = FOLD.painted("#1b1e24", 0.9, 331), shoe = FOLD.painted("#f3ead2", 0.5, 332), jeans = FOLD.painted("#35507a", 0.5, 333);
-    G.box(0.5, 0.05, 1.1, paint, [0, 0.12, 0]); G.box(0.46, 0.012, 1.06, grip, [0, 0.15, 0]);
-    for (const s of [-1, 1]) { G.box(0.5, 0.05, 0.22, paint, [0, 0.16, s * 0.64], [-s * 0.4, 0, 0]); G.box(0.46, 0.012, 0.2, grip, [0, 0.185, s * 0.64], [-s * 0.4, 0, 0]); G.box(0.1, 0.07, 0.12, steel, [0, 0.07, s * 0.5]); G.cyl(0.04, 0.46, steel, [0, 0.0, s * 0.5], [0, 0, Math.PI / 2], 6); }
-    for (const [z, s] of [[0.28, 1], [-0.22, -1]] as const) { G.box(0.1, 0.06, 0.2, shoe, [0.0, 0.19, z]); G.box(0.08, 0.3, 0.09, jeans, [0.0, 0.36, z - 0.02 * s]); }
-    G.box(0.2, 0.05, 0.04, FOLD.emissive("#ffd23f"), [0, 0.18, 0.73]); tails(0.1, 0.18, -0.74);
+    const tw = q.tabla_ancho, tl = q.tabla_largo, ti = q.tail_inclinacion; // genes: car_genes.ts
+    G.box(tw, 0.05, tl, paint, [0, 0.12, 0]); G.box(tw - 0.04, 0.012, tl - 0.04, grip, [0, 0.15, 0]);
+    for (const s of [-1, 1]) {
+      const zTip = s * (tl / 2 + 0.09), zAxle = s * (tl / 2 - 0.05);
+      G.box(tw, 0.05, 0.22, paint, [0, 0.16, zTip], [-s * ti, 0, 0]);
+      G.box(tw - 0.04, 0.012, 0.2, grip, [0, 0.185, zTip], [-s * ti, 0, 0]);
+      G.box(0.1, 0.07, 0.12, steel, [0, 0.07, zAxle]); G.cyl(0.04, tw - 0.04, steel, [0, 0.0, zAxle], [0, 0, Math.PI / 2], 6);
+    }
+    for (const [z, s] of [[0.28 * (tl / 1.1), 1], [-0.22 * (tl / 1.1), -1]] as const) { G.box(0.1, 0.06, 0.2, shoe, [0.0, 0.19, z]); G.box(0.08, 0.3, 0.09, jeans, [0.0, 0.36, z - 0.02 * s]); }
+    G.box(0.2, 0.05, 0.04, FOLD.emissive("#ffd23f"), [0, 0.18, tl / 2 + 0.18]); tails(0.1, 0.18, -tl / 2 - 0.19);
   } else if (kind === "hover") { // aerodeslizador: falda de goma, casco con borde plegado, cabina de burbuja, turbina trasera con aspas
     const cyan = FOLD.painted("#4cc3c9", 0.6, 341);
     const fw = q.falda_ancho, fl = q.falda_largo, cw = q.casco_ancho, ch = q.casco_alto, cl = q.casco_largo, td = q.turbina_d, ck = q.cupula_k, aw = q.aleron_ancho; // genes: car_genes.ts

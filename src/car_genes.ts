@@ -111,7 +111,7 @@ export const GENES: Record<string, Gene[]> = {
     g("carroceria", "caja_largo", 1.45, 1.25, 1.6),
     g("cabina", "cabina_alto", 0.34, 0.26, 0.44),
     g("accesorios", "toldo_ancho", 0.22, 0.14, 0.34),
-    g("accesorios", "cucurucho", 1, 1.1, 1.35), // escala del cucurucho del techo: su identidad (piso elevado a 1.1 para consolidar tamaño)
+    g("accesorios", "cucurucho", 1, 1.0, 1.35), // escala del cucurucho del techo: piso en 1.0 para no achicarlo respecto al original
     g("accesorios", "cucurucho_soporte", 0.06, 0.04, 0.14), // altura del soporte de chapa del cucurucho
     ...RUEDAS,
   ],
@@ -190,6 +190,12 @@ export const GENES: Record<string, Gene[]> = {
     g("carroceria", "carenado_largo", 0.45, 0.35, 0.6),
     g("cola", "cola_alto", 0.16, 0.12, 0.24),
     ...RUEDAS.filter((x) => x.id !== "trocha_k"), // dos ruedas en línea
+  ],
+  monopatin: [
+    g("tabla", "tabla_ancho", 0.5, 0.4, 0.65),
+    g("tabla", "tabla_largo", 1.1, 0.95, 1.3),
+    g("tabla", "tail_inclinacion", 0.4, 0.25, 0.55),
+    ...RUEDAS,
   ],
 };
 
