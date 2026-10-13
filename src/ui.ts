@@ -709,43 +709,44 @@ const kindLabel = (o: Offer) => (
   `${o.kind === "weapon" ? "Arma" : "Pieza"} · NV ${(o.lv ?? 2) - 1} → NV ${o.lv}${o.lv === 5 && o.syn?.ready ? " · ¡EVO LISTA!" : o.lv === 5 ? " · MÁX" : ""}`
 );
 
-const EVO_ART: Record<string, string> = {
-  torbellino: "./images/evo-torbellino.webp",
-  trompo: "./images/evo-torbellino.webp",
-  tuercas: "./images/evo-mortero.webp",
-  bobinas: "./images/evo-lanzallamas.webp",
-  ventilador: "./images/evo-sierra.webp",
-  canicas: "./images/evo-torbellino.webp",
-  burbujas: "./images/evo-torbellino.webp",
-  matamoscas: "./images/evo-sierra.webp",
-  dardos: "./images/evo-mortero.webp",
-  chapitas: "./images/evo-sierra.webp",
-  paraguas: "./images/evo-sierra.webp",
-  cohete: "./images/evo-mortero.webp",
-  serpentinas: "./images/evo-torbellino.webp",
-  tambor: "./images/evo-sierra.webp",
-  domino: "./images/evo-sierra.webp",
-  avioncito: "./images/evo-sierra.webp",
-  pintura: "./images/evo-torbellino.webp",
-  bumeran: "./images/evo-sierra.webp",
-  confeti: "./images/evo-torbellino.webp",
-  lupasolar: "./images/evo-lanzallamas.webp",
-  dron: "./images/evo-sierra.webp",
-  sierra: "./images/evo-sierra.webp",
-  lanzallamas: "./images/evo-lanzallamas.webp",
-  chispero: "./images/evo-lanzallamas.webp",
-  mortero: "./images/evo-mortero.webp",
-  petardos: "./images/evo-mortero.webp",
+const EVO_ART: Partial<Record<WeaponId, string>> = {
+  gomitas: "./images/evolutions/evo-gomitas.webp",
+  clips: "./images/evolutions/evo-clips.webp",
+  chispero: "./images/evolutions/evo-chispero.webp",
+  petardos: "./images/evolutions/evo-petardos.webp",
+  tesla: "./images/evolutions/evo-tesla.webp",
+  lanza: "./images/evolutions/evo-lanza.webp",
+  agua: "./images/evolutions/evo-agua.webp",
+  yoyo: "./images/evolutions/evo-yoyo.webp",
+  bengalas: "./images/evolutions/evo-bengalas.webp",
+  regla: "./images/evolutions/evo-regla.webp",
+  helado: "./images/evolutions/evo-helado.webp",
+  bocina: "./images/evolutions/evo-bocina.webp",
+  trompo: "./images/evolutions/evo-trompo.webp",
+  tuercas: "./images/evolutions/evo-tuercas.webp",
+  bobinas: "./images/evolutions/evo-bobinas.webp",
+  ventilador: "./images/evolutions/evo-ventilador.webp",
+  canicas: "./images/evolutions/evo-canicas.webp",
+  burbujas: "./images/evolutions/evo-burbujas.webp",
+  matamoscas: "./images/evolutions/evo-matamoscas.webp",
+  dardos: "./images/evolutions/evo-dardos.webp",
+  chapitas: "./images/evolutions/evo-chapitas.webp",
+  paraguas: "./images/evolutions/evo-paraguas.webp",
+  cohete: "./images/evolutions/evo-cohete.webp",
+  serpentinas: "./images/evolutions/evo-serpentinas.webp",
+  tambor: "./images/evolutions/evo-tambor.webp",
+  domino: "./images/evolutions/evo-domino.webp",
+  avioncito: "./images/evolutions/evo-avioncito.webp",
+  pintura: "./images/evolutions/evo-pintura.webp",
+  bumeran: "./images/evolutions/evo-bumeran.webp",
+  confeti: "./images/evolutions/evo-confeti.webp",
+  lupasolar: "./images/evolutions/evo-lupasolar.webp",
+  dron: "./images/evolutions/evo-dron.webp",
 };
 
 const evoImage = (o: Offer): string | null => {
   if (o.kind !== "evo") return null;
-  const key = o.id.toLowerCase();
-  const title = o.title.toLowerCase();
-  for (const [k, v] of Object.entries(EVO_ART)) {
-    if (key.includes(k) || title.includes(k)) return v;
-  }
-  return null;
+  return EVO_ART[o.id as WeaponId] ?? null;
 };
 
 let pickCb: ((i: number) => void) | null = null;

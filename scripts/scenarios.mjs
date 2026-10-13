@@ -201,6 +201,19 @@ export const sessions = [
     { id: "outro", perf: false, act: async (p) => { await p.evaluate(() => window.__outro()); await tick(p, 40); await wait(p, () => !document.getElementById("outro").classList.contains("hidden")); await p.waitForTimeout(150); } },
     { id: "resultados", perf: false, act: async (p) => { await tick(p, 270); await wait(p, () => document.querySelector("#scr-over.on") && !document.getElementById("overPhoto").classList.contains("hidden") && document.getElementById("overPhotoImg").complete); await p.waitForTimeout(200); } },
   ] },
+  // Muestra una evolución real en su carta: canicas + pasiva preparada, cofre lunar forzado con hooks de dev.
+  { id: "evo-cards", query: "?mute&encore&seed=58", shots: [
+    { id: "canicas", act: async (p) => {
+      await wait(p, () => window.__enc?.info());
+      await wait(p, () => window.__info?.().state === "play");
+      const setup = await p.evaluate(() => { window.__god(); const evo = window.__enc.evo("canicas"); return { evo, chest: window.__enc.shop("cofre") }; });
+      if (setup.evo !== "evo" || !setup.chest) throw new Error(`evo-cards setup: ${JSON.stringify(setup)}`);
+      await tick(p, 120);
+      await wait(p, () => !document.getElementById("levelup").classList.contains("hidden"));
+      await wait(p, () => { const img = document.querySelector(".offer.evo .evo-thumb-img"); return !!img?.complete && img.naturalWidth > 0; });
+      await p.waitForTimeout(150);
+    } },
+  ] },
   // ENCORE en la Luna con 1, 2 y 4 jugadores (compu; split screen solo en compu): escenario 1 tras 25 s del bot y oferta de pactos abierta (__enc)
   ...[1, 2, 4].map((n) => ({ id: `encore_pacto${n}`, query: `?mute&encore&seed=58&players=${n}`, vps: ["pc"], shots: [
     { id: "juego", act: async (p) => { await wait(p, () => window.__enc?.info()); await p.evaluate(() => { window.__god(); window.__sim(25); }); await tick(p, 45); } },
