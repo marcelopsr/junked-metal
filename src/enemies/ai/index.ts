@@ -15,6 +15,7 @@ import { payasoAI } from "./payaso";
 import { limpiafondosAI } from "./limpiafondos";
 import { perroAI } from "./perro";
 import { cajaAI } from "./caja";
+import { brincadorAI, escudoAI, francotiradorAI, kamikazeAI, ladronAI } from "./comunes";
 import { falsoAI, munecoAI } from "./muneco";
 
 // Comportamiento propio por bicho. Bicho nuevo = DEF + 1 archivo en ai/ + 1 línea acá. think() corre esto en el punto del flujo donde estaban los ifs.
@@ -40,4 +41,9 @@ export const AI: Partial<Record<Kind, Think>> = {
   falso: falsoAI,
   perro: perroAI,
   caja: cajaAI,
+  kamikaze: kamikazeAI,
+  escudo: escudoAI,
+  brincador: brincadorAI,
+  francotirador: francotiradorAI,
+  ladron: ladronAI,
 };

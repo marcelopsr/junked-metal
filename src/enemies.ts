@@ -11,7 +11,7 @@ import { AI } from "./enemies/ai";
 import { DOG_RAM } from "./enemies/ai/util";
 import { WORM_AI, wormDispose, wormHeadTpl } from "./moon_worm";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "caja" | "proyector" | "grua" | "payaso" | "muneco" | "limpiafondos" | "falso" | "fuego" | "cohete" | "gusano" | "grillo" | "mosca" | "babosa" | Alien;
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "caja" | "proyector" | "grua" | "payaso" | "muneco" | "limpiafondos" | "falso" | "fuego" | "cohete" | "gusano" | "grillo" | "mosca" | "babosa" | "kamikaze" | "escudo" | "brincador" | "francotirador" | "divisor" | "cria" | "ladron" | Alien;
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; final?: boolean; scale?: number; color: string };
 const ATK = BAL.ataques;
@@ -42,6 +42,14 @@ export const DEF: Record<Kind, Def> = {
   tanque: { name: "Tanque de chatarra", ...stats("tanque"), size: [1.6, 1.1, 2], color: "#8a8f92" },
   explosivo: { name: "Explosivo", ...stats("explosivo"), size: [0.8, 0.8, 0.8], color: "#7dff5a" },
   curandero: { name: "Curandero", ...stats("curandero"), size: [0.8, 1.6, 0.8], color: "#7dff5a" },
+  // Comunes de ritmo medio (ai/comunes.ts, enemies/logic.ts): kamikaze, escudero, brincador, francotirador, divisor (+ sus crías) y ladrón de tuercas
+  kamikaze: { name: "Kamikaze", ...stats("kamikaze"), size: [0.9, 0.9, 1.1], color: "#e8431f" },
+  escudo: { name: "Escudero", ...stats("escudo"), size: [1.5, 1.4, 1.3], color: "#4f7cc4" },
+  brincador: { name: "Brincador", ...stats("brincador"), size: [0.9, 0.8, 1.2], color: "#8fd13a" },
+  francotirador: { name: "Francotirador", ...stats("francotirador"), size: [0.9, 1.3, 1.1], color: "#8b5cf6" },
+  divisor: { name: "Divisor", ...stats("divisor"), size: [1.4, 1.1, 1.4], color: "#e04aa8" },
+  cria: { name: "Cría de divisor", ...stats("cria"), size: [0.7, 0.55, 0.7], scale: 0.5, color: "#e04aa8" },
+  ladron: { name: "Ladrón de tuercas", ...stats("ladron"), size: [0.9, 1, 1.1], color: "#f2c230" },
   rey: { name: "ESCARABAJO REY", ...stats("rey"), size: [6, 3.8, 8], boss: true, scale: 3.5, color: "#d4a017" },
   cortadora: { name: "CORTADORA DE CÉSPED", ...stats("cortadora"), size: [7, 4.5, 6.4], boss: true, color: "#dc2626" },
   tarantula: { name: "TARÁNTULA", ...stats("tarantula"), size: [6, 2.6, 6.5], boss: true, scale: 3, color: "#7a55a8" },
@@ -133,6 +141,7 @@ export class Enemy {
   fan: B.Vector3[] = []; // aspiradora: direcciones de la ráfaga de tuercas del evento "fan"
   cables: { m: B.InstancedMesh; a: B.Vector3; b: B.Vector3; life: number }[] = []; // cortacercos: cables con chispas en el piso
   shockCd = 0;
+  loot = 0; // ladrón: XP robado (las gemas que levantó); combat.kill lo suelta al morir
   split = false; // muñeco de ventrílocuo: ya se desdobló en esta vida
   waves: { r: number; hit: boolean; m: B.InstancedMesh }[] = []; // caja de música: ondas de sonido en anillo (se saltan)
   dancers: { a: number; m: B.InstancedMesh }[] = []; // caja de música: bailarinas que giran
@@ -221,7 +230,7 @@ export class Enemy {
       for (let i = 0; i < 2; i++) { const t = tpl.createInstance("tele"); t.isVisible = false; this.tele.push(t); }
       this.timer = 2.5;
     }
-    if (kind === "perro" || kind === "saltador" || kind === "explosivo" || kind === "gusano" || kind === "proyector" || kind === "grua" || kind === "payaso" || kind === "muneco" || kind === "limpiafondos" || kind === "caja") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
+    if (kind === "perro" || kind === "kamikaze" || kind === "francotirador" || kind === "saltador" || kind === "explosivo" || kind === "gusano" || kind === "proyector" || kind === "grua" || kind === "payaso" || kind === "muneco" || kind === "limpiafondos" || kind === "caja") for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); } // carril de la embestida (saltador: aro de caída; explosivo: aro de la explosión)
     if (kind === "proyector" || kind === "grua" || kind === "payaso" || kind === "muneco" || kind === "limpiafondos" || kind === "caja") this.timer = 2.5;
     if (kind === "tarantula" || kind === "gato") {
       for (let i = 0; i < 2; i++) { const t = teleTemplate().createInstance("tele"); t.isVisible = false; this.tele.push(t); }
@@ -433,6 +442,14 @@ export class Enemy {
     return ray.hasHit ? ray.hitPointWorld.y : null;
   }
 
+  // ¿Hay un cuerpo fijo (prop, árbol, pared) a menos de `look` m en el rumbo dir? Rayo horizontal a ras; autos y bichos (dinámicos) no cuentan.
+  obstacleAhead(dir: B.Vector3, look: number) {
+    rayFrom.copyFrom(this.pos); rayFrom.y += 0.4;
+    rayTo.copyFrom(rayFrom); rayTo.x += dir.x * look; rayTo.z += dir.z * look;
+    (this.node.getScene().getPhysicsEngine() as B.PhysicsEngineV2).raycastToRef(rayFrom, rayTo, ray, { ignoreBody: this.body });
+    return ray.hasHit && ray.body?.getMotionType() === B.PhysicsMotionType.STATIC;
+  }
+
   // Devuelve "slam" cuando el perro aterriza de un salto.
   // Luna: la IA piensa en el marco local del bicho (Y = vertical del lugar, X/Z = el plano tangente): la velocidad entra y sale convertida
   // y `to`/`fwd` se miden en ese marco, así el resto de la IA (escrita para el patio) no cambia.
@@ -580,7 +597,7 @@ export class Enemy {
 // La plaga de la partida multiplica pesos y puede adelantar la llegada (minuto) de cada tipo
 export function spawnTable(t: number, plague?: { mult: Partial<Record<Kind, number>>; from: Partial<Record<Kind, number>> }): [Kind, number][] {
   const m = t / 60;
-  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", ...(MOON.on ? ALIENS : ["grillo", "mosca", "babosa"])] as Kind[]).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
+  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", ...(MOON.on ? ALIENS : ["grillo", "mosca", "babosa", "kamikaze", "escudo", "brincador", "francotirador", "divisor", "ladron"])] as Kind[]).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
   return base.filter(([k, from]) => m >= (plague?.from[k] ?? from)).map(([k, , w]) => [k, w * (plague?.mult[k] ?? 1)]);
 }
 

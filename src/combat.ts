@@ -1,3 +1,4 @@
+import { inFront, splitSpots } from "./enemies/logic";
 import * as B from "@babylonjs/core";
 import { SFX } from "./sfx";
 import { debris, FX, impact, mark, splat, corpse } from "./fx";
@@ -105,6 +106,7 @@ export function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
   if (e.kind === "gusano" && !wormOut(e)) return; // gusano lunar: enterrado no recibe daño
   if (hitShip(e, dmg)) return; // luna: las naves son blancos de las armas (moon_ships.ts shipTargets)
   if (c.lead.car && isAlien(e.kind)) { const k = armorMul(e, c.lead.car.pos); if (k < 1) { dmg *= k; if (e.kind === "tanque" && !c.simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } } // tanque alien (aliens.ts): placa frontal y escudo del curandero
+  if (e.kind === "escudo" && c.lead.car && inFront(e.node.forward, e.pos, c.lead.car.pos, ATK.escudo_frente_cos)) { dmg *= ATK.escudo_blindaje; if (!c.simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } // escudero: placa frontal (ponytail: el origen es el auto, como armorMul; techo: pasar el origen real del golpe)
   if (cs.src) {
     const eff = Math.min(dmg, Math.max(0, e.hp));
     dmgOut[cs.src] = (dmgOut[cs.src] ?? 0) + eff;
@@ -146,11 +148,20 @@ export function boom(e: Enemy) {
   if (MOON.on) { deform(e.pos, ATK.alien_explosivo_crater_r, ATK.alien_explosivo_crater_hondo); craterHumeante(e.pos, ATK.alien_explosivo_crater_r, !c.simulating); }
 }
 
+// Kamikaze: explosión con sus números (boom() es la del explosivo alien); una sola por bicho
+export function boomK(e: Enemy) {
+  if (boomed.has(e) || !c.lead.car) return;
+  boomed.add(e);
+  if (hd(c.lead.car.pos, e.pos) < ATK.kamikaze_radio + Math.max(c.lead.car.def.size[0], c.lead.car.def.size[2]) / 2) c.hurt(ATK.kamikaze_dano, false, "explosión " + e.kind, e.kind);
+  explode(e.pos, ATK.kamikaze_radio, ATK.kamikaze_dano_bicho);
+}
+
 // Color del charco de cada insecto = color de sus ojos (models.ts)
 const BUG_GOO: Partial<Record<Kind, string>> = { hormiga: "#ff3020", escupidora: "#ffb020", escarabajo: "#9acd32", polilla: "#c9a0ff" };
 const CONFETI = ["#ffd84d", "#ff9bd4", "#7de8ff", "#b6ff6a", "#ffa05a"];
 export function kill(e: Enemy) {
   if (e.kind === "explosivo" && e.hp > -1e8) boom(e); // murió por daño (clear/boom ponen -1e9)
+  if (e.kind === "kamikaze" && e.hp > -1e8) boomK(e);
   run.kills++;
   const s = hudKill(); // una sola llamada: cada hudKill() suma una baja (antes se llamaba 5 veces y el cartel mostraba otro número)
   run.bestStreak = Math.max(run.bestStreak, s); if (e.def.boss) run.bossKills++;
@@ -170,6 +181,7 @@ export function kill(e: Enemy) {
   const juice = !c.simulating && !e.def.boss;
   if (juice && BUG_GOO[e.kind]) splat(e.pos, BUG_GOO[e.kind]!, Math.max(e.def.size[0], e.def.size[2]) * 0.55);
   if (juice && (e.kind === "friccion" || e.kind === "robot")) { debris(e.pos, "#b8bcc2", 5, 8, 0.45); debris(e.pos, "#d4a017", 3, 9, 0.35); FX.sparks(e.pos.add(upv(e.pos, 0.5))); }
+  if (e.loot > 0) dropGems(e.pos, e.loot); // ladrón: devuelve lo robado
   if (e.def.xp) dropGems(e.pos, e.def.xp * (e.def.boss ? 1 : c.toughXp * (MOON.on ? R.luna_xp_mult : 1)));
   if (e.def.boss) {
     c.addShake(1.5);
@@ -189,6 +201,7 @@ export function kill(e: Enemy) {
   }
   if (e.elite) { dropPickup(e.pos, "cofre"); e.aura?.dispose(); } // la élite suelta cofre; el aura no queda en el cadáver
   // Los insectos quedan patas arriba unos segundos; el resto desaparece
+  if (e.kind === "divisor" && e.hp > -1e8 && !MOON.on) for (const o of splitSpots(ATK.divisor_crias, ATK.divisor_cria_radio)) c.spawnEnemy("cria", e.pos.add(new B.Vector3(o.x, 0.3, o.z))); // se parte en crías (si lo borra clear/reciclado, no)
   if (e.kind === "grillo" && !MOON.on) for (let i = 0; i < 2; i++) c.spawnEnemy("mosca", e.pos.add(new B.Vector3(i ? 0.7 : -0.7, 0.3, 0))); // plaga: el grillo se parte en 2 moscas (e.pos se lee antes de borrar)
   if (juice && BUG_GOO[e.kind]) { e.agg.dispose(); corpse(e.node, e.def.size[1] * (e.def.scale ?? 1)); } else leave(e);
 }

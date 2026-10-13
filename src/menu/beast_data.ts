@@ -3,6 +3,13 @@ import { type Kind } from "../enemies";
 
 // Trasfondo de cada bicho (el de los pilotos vive en pilots.ts)
 export const LORE: Record<Kind, string> = {
+  kamikaze: "Un petardo con patas que nunca entendió para qué sirve una mecha. Corre hasta el auto, se enciende y listo.",
+  escudo: "Se pegó una puerta de heladera al frente y se cree invencible. Por delante no le entra nada; por los costados es un soldadito más.",
+  brincador: "Rana de resorte que se niega a rodear nada. Si algo le tapa el camino, lo salta, y casi siempre le sale.",
+  francotirador: "Flaco, callado y con un fusil más largo que él. Avisa con una línea roja en el piso y confía en que nadie se mueva.",
+  divisor: "Gelatina de feria con una costura en el medio. Cuando revienta, resulta que eran dos.",
+  cria: "La mitad de un divisor. Chica, rápida y sin ninguna idea de lo que pasó.",
+  ladron: "Antifaz, saco y cero escrúpulos: levanta las tuercas que quedan en el piso y sale corriendo. Si se lo frena a tiempo, las devuelve.",
   muneco: "Heredó la voz de un ventrílocuo que se jubiló y se quedó sin nadie a quien hablarle. Aparece donde menos se lo espera, siempre junto a un baúl, y repite lo que le dijeron.",
   falso: "Una copia mal cosida del muñeco. Dura lo que dura un chiste malo.",
   limpiafondos: "Lo dejaron de guardia cuando vaciaron la pileta y nadie le avisó que ya no hay agua. Aspira todo lo que se mueve en el fondo y lo devuelve en chorros sucios, porque eso es lo único que sabe hacer.",
@@ -40,6 +47,13 @@ export const LORE: Record<Kind, string> = {
 };
 // Cómo ataca y cómo esquivarlo (sale del comportamiento real de enemies.ts)
 export const HOW: Record<Kind, [string, string]> = {
+  kamikaze: ["Acelera al acercarse y prende una mecha con un aro rojo del tamaño de la explosión; después revienta.", "Frenar o desviarse antes de que cierre el aro, o matarlo de lejos."],
+  escudo: ["Gira despacio para mantener la placa de frente; casi todo el daño que entra por delante se pierde.", "Rodearlo y pegarle por un costado o por la espalda."],
+  brincador: ["Corre derecho al auto y, si un obstáculo fijo le corta el paso, salta por encima en arco sin corregir.", "Usar los obstáculos no sirve de refugio: pegarle cuando aterriza."],
+  francotirador: ["Se mantiene lejos, fija el rumbo con una línea roja en el piso y dispara una bala rápida por esa línea.", "Salir de la línea antes de que termine el aviso; acercarse lo obliga a retroceder."],
+  divisor: ["Persigue como un bicho común y, al morir, se parte en dos crías rápidas.", "Matarlo con espacio para no quedar rodeado por las crías."],
+  cria: ["Persigue rápido y sin trucos.", "Cualquier golpe la deshace."],
+  ladron: ["Va por las gemas del piso y se las lleva; con el botín lleno huye del auto.", "Matarlo antes de que escape: suelta todo lo robado."],
   muneco: ["Marca con un aro rojo el baúl al que salta, aparece ahí y suelta voces que rebotan en las paredes. Al enojarse se desdobla en copias falsas y grita más fuerte.", "Mirar el aro para saber dónde aparece, moverse en diagonal para que la voz rebote lejos y pegarle al original: las copias se deshacen solas."],
   falso: ["Persigue como un bicho común y se deshace a los pocos segundos.", "Ignorarlo y seguir peleando contra el original."],
   limpiafondos: ["Un aro azul enorme anuncia la succión: arrastra al auto hacia él y después barre de lado a lado con ráfagas de agua sucia en abanico.", "Acelerar hacia afuera del aro apenas aparece y, cuando barre, ir en dirección contraria al giro del abanico: siempre quedan huecos."],
@@ -77,6 +91,13 @@ export const HOW: Record<Kind, [string, string]> = {
 };
 // Biometría y debilidades mecánicas de campo (blindaje, maniobrabilidad y punto ciego táctico)
 export const BIOMETRICS: Record<Kind, { armor: string; agility: string; blindSpot: string }> = {
+  kamikaze: { armor: "Cáscara fina", agility: "Veloz en línea recta", blindSpot: "Mientras arde la mecha casi no se mueve" },
+  escudo: { armor: "Placa frontal de chapa", agility: "Lento, gira como un camión", blindSpot: "Costados y espalda" },
+  brincador: { armor: "Caparazón ligero", agility: "Salto de trayectoria fija sobre obstáculos", blindSpot: "Aterrizaje: queda quieto" },
+  francotirador: { armor: "Chasis de lata", agility: "Lento, retrocede al ser alcanzado", blindSpot: "Durante el aviso no se mueve" },
+  divisor: { armor: "Gelatina blanda", agility: "Pesado y pausado", blindSpot: "El instante en que se parte: las crías aparecen juntas" },
+  cria: { armor: "Casi nada", agility: "Rápida y torpe", blindSpot: "Cualquier golpe" },
+  ladron: { armor: "Pelaje y tela", agility: "Muy veloz al huir", blindSpot: "Cuando levanta una gema" },
   muneco: { armor: "Traje relleno de aserrín; la mandíbula de madera es lo más frágil", agility: "Aparece de golpe, torpe al caminar", blindSpot: "Los segundos tras decir su frase" },
   falso: { armor: "Tela y alambre, casi nada", agility: "Rápido pero efímero", blindSpot: "Cualquier golpe lo deshace" },
   limpiafondos: { armor: "Carcasa de plástico y una bolsa de filtro; la bolsa es lo más frágil", agility: "Lento, gira como un barco", blindSpot: "El costado, fuera del aro y del abanico" },

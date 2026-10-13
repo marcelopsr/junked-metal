@@ -318,6 +318,64 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         ...[-1, 1].flatMap((s) => [tube([[s * 0.12, 0.8, 0.8], [s * 0.2, 1.1, 0.95], [s * 0.3, 1.35, 0.9]], 0.03, d), sph(0.08, eye, [s * 0.3, 1.36, 0.9], undefined, 4)]), // tentáculos con ojos
       ];
     }
+    // Comunes de ritmo medio: juguetes de chatarra de colores vivos (ver docs/ART_DIRECTION.md); frente = +Z
+    if (kind === "kamikaze") { // bomba de caricatura con patas de resorte y mecha encendida
+      const body = M.plastic("#e8431f"), band = M.matte("#2b2b33"), fuse = M.glow("#ffd24a");
+      return [
+        sph(0.9, body, [0, 0.55, 0], [1, 0.95, 1.1], 10), tor(0.95, 0.08, band, [0, 0.55, 0], [Math.PI / 2, 0, 0], 12),
+        cyl(0.18, 0.22, 0.2, band, [0, 1.04, -0.05], undefined, 8), tube([[0, 1.1, -0.05], [0.12, 1.35, -0.12], [0.02, 1.55, -0.05]], 0.03, band), sph(0.2, fuse, [0.02, 1.58, -0.05], undefined, 5),
+        sph(0.2, M.glow("#fff2c0"), [0.22, 0.7, 0.5], undefined, 5), sph(0.2, M.glow("#fff2c0"), [-0.22, 0.7, 0.5], undefined, 5),
+        sph(0.09, band, [0.22, 0.7, 0.62], undefined, 4), sph(0.09, band, [-0.22, 0.7, 0.62], undefined, 4),
+        ...[-1, 1].map((x) => tube([[x * 0.3, 0.2, 0.1], [x * 0.38, 0.1, 0.25], [x * 0.3, 0, 0.4]], 0.06, band)),
+      ];
+    }
+    if (kind === "escudo") { // soldadito con una placa de chapa enorme por delante
+      const body = M.plastic("#4f7cc4"), plate = M.metal("#c9d2dc"), rim = M.matte("#e8b020"), dark = M.matte("#22304a");
+      return [
+        sph(0.8, body, [0, 0.62, -0.1], [1, 0.9, 1], 10), sph(0.5, body, [0, 1.12, -0.05], undefined, 8),
+        sph(0.12, M.glow("#ffe040"), [0.14, 1.2, 0.34], undefined, 4), sph(0.12, M.glow("#ffe040"), [-0.14, 1.2, 0.34], undefined, 4),
+        box(1.5, 1.25, 0.12, plate, [0, 0.72, 0.62]), box(1.62, 0.1, 0.18, rim, [0, 1.36, 0.62]), box(1.62, 0.1, 0.18, rim, [0, 0.08, 0.62]),
+        box(0.1, 1.25, 0.18, rim, [0.8, 0.72, 0.62]), box(0.1, 1.25, 0.18, rim, [-0.8, 0.72, 0.62]), cyl(0.16, 0.16, 0.06, rim, [0, 0.78, 0.7], [Math.PI / 2, 0, 0], 8),
+        box(0.5, 0.3, 0.7, dark, [0.45, 0.15, -0.2]), box(0.5, 0.3, 0.7, dark, [-0.45, 0.15, -0.2]),
+      ];
+    }
+    if (kind === "brincador") { // rana de resorte: cuerpo lima sobre muelles
+      const g = M.plastic("#8fd13a"), d = M.matte("#3d6a14"), eye = M.glow("#fff2c0"), sp = M.metal("#b8bcc2");
+      return [
+        sph(0.8, g, [0, 0.8, -0.05], [1, 0.8, 1.2], 9), sph(0.3, eye, [0.26, 1.2, 0.35], undefined, 5), sph(0.3, eye, [-0.26, 1.2, 0.35], undefined, 5),
+        sph(0.14, d, [0.26, 1.22, 0.5], undefined, 4), sph(0.14, d, [-0.26, 1.22, 0.5], undefined, 4),
+        ...[-1, 1].flatMap((x) => [tube([[x * 0.3, 0.55, -0.3], [x * 0.38, 0.28, -0.35], [x * 0.3, 0.45, -0.4], [x * 0.38, 0.12, -0.45], [x * 0.3, 0.0, -0.5]], 0.07, sp), box(0.3, 0.05, 0.5, d, [x * 0.3, 0.02, -0.4])]),
+        ...[-1, 1].map((x) => tube([[x * 0.35, 0.6, 0.3], [x * 0.5, 0.35, 0.5], [x * 0.5, 0.04, 0.6]], 0.06, d)),
+      ];
+    }
+    if (kind === "francotirador") { // robot flaco de visera con fusil largo
+      const body = M.plastic("#8b5cf6"), dark = M.matte("#2a1f4a"), met = M.metal("#9aa0aa"), lens = M.glow("#ff3a2a");
+      return [
+        cyl(0.55, 0.75, 1.0, body, [0, 0.62, -0.05], undefined, 8), sph(0.55, body, [0, 1.3, 0], undefined, 8), box(0.62, 0.2, 0.3, dark, [0, 1.34, 0.28]), sph(0.14, lens, [0, 1.34, 0.45], undefined, 5),
+        box(0.72, 0.1, 0.72, dark, [0, 1.7, -0.02]), box(0.9, 0.06, 0.9, dark, [0, 1.62, -0.02]),
+        cyl(0.05, 0.05, 1.9, met, [0.4, 0.95, 0.65], [Math.PI / 2, 0, 0], 6), box(0.14, 0.18, 0.5, dark, [0.4, 0.88, -0.1]), cyl(0.1, 0.1, 0.35, met, [0.4, 1.12, 0.45], [Math.PI / 2, 0, 0], 6),
+        ...[-1, 1].map((x) => tube([[x * 0.25, 0.2, 0], [x * 0.3, 0.1, 0.2], [x * 0.25, 0, 0.35]], 0.07, dark)),
+      ];
+    }
+    if (kind === "divisor" || kind === "cria") { // gelatina rosa con una costura al medio (la cría es la misma silueta, DEF.scale)
+      const j = pbr("divisorGel", { color: "#e04aa8", rough: 0.2, metal: 0.1, emissive: "#8a1c64", alpha: 0.95 }), seam = M.matte("#5a1040"), eye = M.glow("#fff2c0");
+      return [
+        sph(1.0, j, [-0.32, 0.55, -0.05], [0.95, 0.85, 1], 9), sph(1.0, j, [0.32, 0.55, -0.05], [0.95, 0.85, 1], 9),
+        box(0.05, 0.7, 0.9, seam, [0, 0.62, -0.05]),
+        sph(0.2, eye, [-0.34, 0.8, 0.42], undefined, 5), sph(0.2, eye, [0.34, 0.8, 0.42], undefined, 5), sph(0.09, seam, [-0.34, 0.8, 0.54], undefined, 4), sph(0.09, seam, [0.34, 0.8, 0.54], undefined, 4),
+      ];
+    }
+    if (kind === "ladron") { // ardilla-mapache de chatarra con antifaz y un saco al hombro
+      const f = M.plastic("#f2c230"), mask = M.matte("#1d1d26"), bag = M.matte("#9a6a3a"), eye = M.glow("#ffffff");
+      return [
+        sph(0.7, f, [0, 0.55, -0.1], [0.9, 0.85, 1.35], 8), sph(0.42, f, [0, 0.8, 0.5], undefined, 7), box(0.62, 0.18, 0.3, mask, [0, 0.9, 0.7]),
+        sph(0.1, eye, [0.13, 0.9, 0.84], undefined, 4), sph(0.1, eye, [-0.13, 0.9, 0.84], undefined, 4),
+        cyl(0.04, 0.12, 0.25, f, [0.2, 1.22, 0.45], undefined, 4), cyl(0.04, 0.12, 0.25, f, [-0.2, 1.22, 0.45], undefined, 4),
+        sph(0.62, bag, [0, 0.95, -0.4], [1, 1, 0.9], 7), sph(0.16, M.glow("#ffd24a"), [0.2, 1.4, -0.4], undefined, 4),
+        tube([[0, 0.5, -0.8], [0.1, 0.9, -1.2], [0, 1.5, -1.1]], 0.12, f),
+        ...[-1, 1].map((x) => tube([[x * 0.3, 0.3, 0.2], [x * 0.4, 0.15, 0.35], [x * 0.35, 0, 0.5]], 0.07, mask)),
+      ];
+    }
     throw new Error(`enemyTemplate: ${kind} no tiene modelo procedural (los GLB van por glb.ts)`);
   }, vis1c(kind, scale));
 }

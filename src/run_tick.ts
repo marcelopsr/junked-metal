@@ -7,7 +7,7 @@ import { MOON, W, advance, alt, at, below, deform, hd, hflat, onFloor, orient, r
 import { SFX, SPACE, music } from "./sfx";
 import { alienWave, healTick } from "./aliens";
 import { banner, hudBoss } from "./ui";
-import { boom, cs, damage, explode, kill } from "./combat";
+import { boom, boomK, cs, damage, explode, kill } from "./combat";
 import { craterHumeante, panTo } from "./moon_events";
 import { encApply, erun } from "./encore_run";
 import { gainXp, openChest } from "./progression";
@@ -15,6 +15,7 @@ import { goalBar, goalsTick } from "./moon_goals";
 import { mateHurt } from "./coop";
 import { dirtyWaterTemplate, nutTemplate as nutTpl } from "./models";
 import { rng } from "./rng";
+import { nearestIdx } from "./enemies/logic";
 import { CP } from "./car";
 import { run } from "./run_state";
 import { grant } from "./outro";
@@ -81,7 +82,16 @@ export function tickEnemies(F: Frame, dt: number): boolean {
     const scared = CP.scare && d1 < BAL.ritmo.rasgo_misterio_radio; // rasgo del Detective Peludo
     if (scared) e.spd *= BAL.ritmo.rasgo_misterio_lento;
     if (CP.trail && !e.def.boss && cv.length() > BAL.ritmo.rasgo_murcielago_vel * c.def.speed * T.st.speedMul && d1 < 5 && B.Vector3.Dot(e.pos.subtract(c.pos), c.root.forward) < 0) { damage(e, BAL.ritmo.rasgo_murcielago_dps * wdt); if (rng() < 0.05) FX.sparks(e.pos, 2); } // estela del Vigilante
-    const ev = e.stun > 0 && e.kind !== "gusano" ? T.stunned(e, wdt) : e.update(wdt, tgt); // el gusano no se aturde (lo mueve su IA, también enterrado)
+    let aimAt = tgt;
+    if (e.kind === "ladron" && e.state === 0) { // ladrón (ai/comunes.ts): va por la gema más cercana y se la lleva; con el botín lleno huye
+      const gi = nearestIdx(e.pos, T.gems, (g) => g.m.position, ATK.ladron_alcance);
+      if (gi >= 0) {
+        const g = T.gems[gi];
+        if (hd(e.pos, g.m.position) < ATK.ladron_robo_dist) { e.loot += g.xp; g.m.dispose(); T.gems.splice(gi, 1); if (e.loot >= ATK.ladron_tope_xp) e.state = 1; if (!T.simulating) FX.sparks(e.pos.add(upv(e.pos, 0.5)), 4); }
+        else aimAt = g.m.position;
+      }
+    }
+    const ev = e.stun > 0 && e.kind !== "gusano" ? T.stunned(e, wdt) : e.update(wdt, aimAt); // el gusano no se aturde (lo mueve su IA, también enterrado)
     if (scared) e.spd /= BAL.ritmo.rasgo_misterio_lento;
     if (ev === "spit_aim" && !T.simulating) { const f = e.node.forward; FX.sparks(e.pos.add(upv(e.pos, 0.5))); mark("scorch", e.pos, yawOf(f, e.pos), 0.35, 4); }
     if (ev === "worm_up" || ev === "worm_down") { // gusano lunar (moon_worm.ts): cráter al salir y al hundirse; al salir golpea lo que esté encima
@@ -89,6 +99,13 @@ export function tickEnemies(F: Frame, dt: number): boolean {
       if (!T.simulating) { FX.dust(e.land); FX.sparks(onFloor(e.land, 0.5), 14); T.shake = Math.max(T.shake, 0.4); }
       if (ev === "worm_up") ms.forEach((m, j) => hd(m.car!.pos, e.land) < ATK.gusano_aviso_radio + mateR[j] && mateHurt(m, e.def.dmg * T.TOUGH.dmg * (e.enraged ? ATK.segunda_barra_dano : 1))); // R7b/c: también a los otros autos
       if (ev === "worm_up" && hd(c.pos, e.land) < ATK.gusano_aviso_radio + carR) T.hurt(e.def.dmg * T.TOUGH.dmg * (e.enraged ? ATK.segunda_barra_dano : 1), false, "salida " + e.kind, e.kind);
+    }
+    if (ev === "kaboom") { boomK(e); e.hp = -1e9; continue; } // kamikaze (ai/comunes.ts): se fue sin dejar premio
+    if (ev === "snipe") { // francotirador (ai/comunes.ts): bala recta por la línea marcada, sin caída; solo daña si el auto sigue ahí
+      const m = T.spitTpl().createInstance("bala"), d = new B.Vector3(Math.sin(e.aim), 0, Math.cos(e.aim));
+      m.scaling.set(0.5, 0.5, 2.4); m.rotation.y = e.aim; m.position.copyFrom(at(e.pos, 0, 0.7, 0));
+      T.pushSpit({ m, v: d.scale(ATK.francotirador_vel), life: ATK.francotirador_largo / ATK.francotirador_vel + 0.3, k: e.kind, bounce: 0, dmg: ATK.francotirador_dano });
+      if (!T.simulating) FX.sparks(e.pos.add(upv(e.pos, 0.7)));
     }
     if (ev === "boom") { boom(e); e.hp = -1e9; continue; } // explosivo alien (aliens.ts): se fue sin dejar premio
     if (e.kind === "curandero" && e.stun <= 0) healTick(e, T.enemies, wdt, !T.simulating); // rayo que cura (aliens.ts)
