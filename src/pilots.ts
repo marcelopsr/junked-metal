@@ -50,13 +50,18 @@ export const pilotStats = (st: PStats, id: PilotId) => { (PILOTS[id] ?? PILOTS.s
 export const PILOT_PORTRAITS: Partial<Record<PilotId | "veterano" | "novato", string>> = {
   veterano: "./images/pilots/pilot-veterano.webp",
   soldadito: "./images/pilots/pilot-soldadito.webp",
+  muneca: "./images/pilots/pilot-muneca.webp",
   robot: "./images/pilots/pilot-robot.webp",
+  dino: "./images/pilots/pilot-dino.webp",
   novato: "./images/pilots/pilot-novato.webp",
   figura: "./images/pilots/pilot-novato.webp", // Novato / temerario joven
   abuela: "./images/pilots/pilot-abuela.webp",
   astronauta: "./images/pilots/pilot-astronauta.webp",
   dinogoma: "./images/pilots/pilot-dinogoma.webp",
   rusa: "./images/pilots/pilot-rusa.webp",
+  pirata: "./images/pilots/pilot-pirata.webp",
+  caballero: "./images/pilots/pilot-caballero.webp",
+  bombero: "./images/pilots/pilot-bombero.webp",
 };
 
 /** Arsenal inicial (Taller → Arsenal, Garaje → Arma): Gomitas de serie y las armas base con fila arma_<id> en precios. Sin fusiones ni Lápiz-lanza (no dispara). */
