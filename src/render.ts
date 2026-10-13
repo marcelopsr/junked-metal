@@ -569,6 +569,16 @@ export const TEX = {
     t.wrapU = t.wrapV = B.Constants.TEXTURE_WRAP_ADDRESSMODE;
     return t;
   },
+  compactedEarth: () => {
+    const t = new B.Texture("./textures/10-compacted-earth.webp", scene);
+    t.wrapU = t.wrapV = B.Constants.TEXTURE_WRAP_ADDRESSMODE;
+    return t;
+  },
+  grassEarth: () => {
+    const t = new B.Texture("./textures/11-grass-earth.webp", scene);
+    t.wrapU = t.wrapV = B.Constants.TEXTURE_WRAP_ADDRESSMODE;
+    return t;
+  },
   dirt: () => {
     const t = TEX.scrapEarth();
     t.uScale = t.vScale = 8;

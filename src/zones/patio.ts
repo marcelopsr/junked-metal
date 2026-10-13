@@ -6,6 +6,16 @@ import { FOLD, FOLDED_SLICE } from "../folded";
 import { HALF, bare, crateFold, decal, floor, house, leafM, occluders, plankTpl, registerHeavyProp, rustyDrumM, scene, stat, tex, tireStackM, tree, woodCrateM } from "./common";
 import { ball, brickWalls, gnomes, hose, int, jumpScrap, piles, plankBridge, planterAlley, pots, puddles, ramp, rocks, toyRamps, toyScatter, wateringCan } from "../world_layout";
 
+function soilEdgeMask() {
+  const t = new B.DynamicTexture("soilEdgeMask", 128, scene, false);
+  const c = t.getContext() as unknown as CanvasRenderingContext2D;
+  c.fillStyle = "#000"; c.fillRect(0, 0, 128, 128);
+  c.filter = "blur(7px)"; c.fillStyle = "#fff"; c.beginPath(); c.roundRect(8, 8, 112, 112, 20); c.fill(); c.filter = "none";
+  t.update(); t.getAlphaFromRGB = true;
+  t.wrapU = t.wrapV = B.Texture.CLAMP_ADDRESSMODE;
+  return t;
+}
+
 export function patioBuild() {
   const K = HALF / 100; // escala de lo que se diseñó para el patio de 200
   // Mesa de jardín gigante: la cámara se mete abajo (roof) y la tapa se tramea si tapa el auto (occluders)
@@ -30,26 +40,32 @@ export function patioBuild() {
   for (const [x, z, ry] of [[-40, 30, -0.4], [40, -23, 0.8]]) decal("smallScrap", 4, 3, x, z, scrap, 0.03).rotation.y = ry;
   decal("patio", 48, 34, 0, -30, surface(pbr("tiles", { color: "#ffffff", rough: 0.6, tex: tex("tiles", TEX.tiles) }), "concrete", 28, 0.7));
 
-  // Huerta: tierra compactada y gravilla (scrapEarth/dirt) con surcos elevados y cultivos
+  // Huerta: tierra compactada y gravilla con bordes fundidos al césped
+  const edgeMask = soilEdgeMask();
+  const compactedTex = tex("compactedEarth", TEX.compactedEarth);
+  compactedTex.uScale = 16.8; compactedTex.vScale = 13;
   const dirtMat = surface(
     pbr("dirt", {
       color: "#ffffff",
       rough: 0.94,
-      metal: 0.05,
-      tex: tex("dirt", () => {
-        const t = TEX.scrapEarth();
-        t.uScale = 7;
-        t.vScale = 5.33;
-        return t;
-      }),
+      tex: compactedTex,
     }),
     "soil",
     24,
     0.85
   );
-  const dirt = decal("dirt", 42, 32, 50, 45, dirtMat);
+  const dirtGroundMat = surface(pbr("dirtGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.85);
+  dirtGroundMat.opacityTexture = edgeMask;
+  dirtGroundMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  const grassEarthTex = tex("grassEarth", TEX.grassEarth);
+  grassEarthTex.uScale = 11; grassEarthTex.vScale = 9;
+  const grassEarthMat = pbr("grassEarthTransition", { color: "#ffffff", rough: 0.95, tex: grassEarthTex });
+  grassEarthMat.opacityTexture = edgeMask;
+  grassEarthMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  decal("gardenSoilTransition", 50, 40, 50, 45, grassEarthMat, 0.015);
+  const dirt = decal("dirt", 42, 32, 50, 45, dirtGroundMat, 0.025);
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
-  for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirt.material!, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
+  for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirtMat, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   const crops: B.Mesh[] = [];
   for (let r = 0; r < 4; r++) for (let i = 0; i < 7; i++) {
     const x = 34 + i * 5.3, z = 35 + r * 7;
@@ -57,24 +73,22 @@ export function patioBuild() {
   }
   shadows.addShadowCaster(merge("huerta", crops)); // 112 hojas sueltas = 112 dibujos por pasada; fusionadas, una
 
-  // Zona de combate de chatarra (scrapZone): arena árida con virutas, tornillos y lomos de combate
+  // Zona de combate de chatarra: misma tierra y transición compartidas con la huerta
   const scrapMat = surface(
     pbr("scrapEarth", {
       color: "#ffffff",
       rough: 0.94,
-      metal: 0.05,
-      tex: tex("scrapEarth", () => {
-        const t = TEX.scrapEarth();
-        t.uScale = 7.67;
-        t.vScale = 6;
-        return t;
-      }),
+      tex: compactedTex,
     }),
     "soil",
     26,
     0.85
   );
-  decal("scrapZone", 46, 36, -48, 20, scrapMat);
+  const scrapGroundMat = surface(pbr("scrapGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 26, 0.85);
+  scrapGroundMat.opacityTexture = edgeMask;
+  scrapGroundMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  decal("scrapSoilTransition", 54, 44, -48, 20, grassEarthMat, 0.015);
+  decal("scrapZone", 46, 36, -48, 20, scrapGroundMat, 0.025);
   const tracksTex = tex("patioTireMarks", () => new B.Texture("./images/decals/tire-marks.webp", scene));
   tracksTex.hasAlpha = true;
   const tracks = pbr("patioTireMarks", { color: "#ffffff", rough: 0.95, tex: tracksTex });
@@ -82,6 +96,7 @@ export function patioBuild() {
   tracks.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
   decal("patioTireMarks", 30, 30, -18, 0, tracks, 0.03);
   decal("patioTireMarksFar", 26, 26, 16, 32, tracks, 0.03);
+  decal("scrapZoneTireMarks", 24, 24, -48, 20, tracks, 0.03);
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);

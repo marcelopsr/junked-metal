@@ -28,8 +28,14 @@
         "normal": null,
         "orm": null
       },
-      "status": "generated-not-integrated",
-      "tileability": "review-on-target; not certified seamless"
+      "status": "integrated",
+      "tileability": "review-on-target; not certified seamless",
+      "runtimeTexture": {
+        "path": "public/textures/10-compacted-earth.webp",
+        "width": 256,
+        "height": 256,
+        "bytes": 28508
+      }
     },
     {
       "id": "02-grass-earth",
@@ -55,8 +61,14 @@
         "normal": null,
         "orm": null
       },
-      "status": "generated-not-integrated",
-      "tileability": "review-on-target; not certified seamless"
+      "status": "integrated",
+      "tileability": "review-on-target; not certified seamless",
+      "runtimeTexture": {
+        "path": "public/textures/11-grass-earth.webp",
+        "width": 256,
+        "height": 256,
+        "bytes": 34720
+      }
     },
     {
       "id": "03-worn-concrete",
