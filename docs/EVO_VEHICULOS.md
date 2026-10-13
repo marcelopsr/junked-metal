@@ -111,4 +111,5 @@ angosto. Pendiente: el alerón sigue cruzando casi todo el ancho en la vista de 
   en una sola lectura en vez de ~30 PNG.
 - **Validación (20261013-1851-s5):** i190 reemplaza a i192 (evaluador 39 vs 38; original 32): primera variante con el alerón
   dentro de la trocha en la cámara de partida; pintura visible 0,201. Exportada.
-- Pendiente: fondo con piso en las vistas (el negro de las ruedas se funde), requiere otra detección de fondo para el color.
+- **Ciclo 3:** piso sin iluminación (#4d5844) bajo las ruedas en todas las imágenes para mirar; la medida de color sigue
+  renderizando sin piso (fondo liso), verificado: el original sigue dando 0,177.

@@ -243,7 +243,7 @@ async function pixels(url: string) {
 }
 /** Fracción de los píxeles del auto (los que no son fondo) con el tono de su pintura de fábrica (±22°, saturados). */
 async function paintShare(scene: B.Scene, kind: CarKind, g: Genome) {
-  const url = (await views(scene, kind, g, 48, ["juego"])).juego, d = await pixels(url);
+  const url = (await views(scene, kind, g, 48, ["juego"], false)).juego, d = await pixels(url);
   const [ph] = hue(...(B.Color3.FromHexString(factoryColor(kind).paint).asArray() as [number, number, number]));
   let car = 0, paint = 0;
   for (let i = 0; i < d.length; i += 4) {
@@ -267,8 +267,17 @@ async function sheet(scene: B.Scene, kind: CarKind, gs: Genome[], names: string[
   }
   return c.toDataURL("image/png");
 }
-async function views(scene: B.Scene, kind: CarKind, g: Genome, size = 256, only?: string[]) {
+let floorM: B.StandardMaterial | null = null;
+/** `floor`: piso gris verdoso bajo las ruedas para que el negro de las gomas no se funda con el fondo (solo imágenes para mirar; la medida de color usa fondo liso). */
+async function views(scene: B.Scene, kind: CarKind, g: Genome, size = 256, only?: string[], floor = true) {
   const cm = build(kind, g), out: Record<string, string> = {};
+  let fl: B.Mesh | null = null;
+  if (floor) {
+    fl = B.MeshBuilder.CreateGround("evoFloor", { width: 6, height: 6 }, scene);
+    fl.position.y = Math.min(...cm.wheels.map((w) => w.m.position.y - w.r)) - 0.01;
+    floorM ??= Object.assign(new B.StandardMaterial("evoFloor", scene), { emissiveColor: B.Color3.FromHexString("#4d5844"), disableLighting: true });
+    fl.material = floorM;
+  }
   const cam = new B.FreeCamera("evoCam", B.Vector3.Zero(), scene);
   cam.mode = B.Camera.ORTHOGRAPHIC_CAMERA; cam.minZ = 0.1; cam.maxZ = 50;
   const h = FRAME / 2 * 0.92; cam.orthoLeft = -h; cam.orthoRight = h; cam.orthoTop = h; cam.orthoBottom = -h;
@@ -280,7 +289,7 @@ async function views(scene: B.Scene, kind: CarKind, g: Genome, size = 256, only?
   }
   if (!only) { cam.position = tgt.add(new B.Vector3(...CAMS.juego).normalize().scale(12)); cam.setTarget(tgt); } // a lo lejos: cámara de partida a 48 px (tamaño aproximado en pantalla)
   if (!only) out.lejos = await shot(scene.getEngine(), cam, { width: 48, height: 48 }, "image/png", 1);
-  cam.dispose(); cm.body.dispose();
+  cam.dispose(); cm.body.dispose(); fl?.dispose();
   return out;
 }
 function obj(kind: CarKind, g: Genome) {
