@@ -242,6 +242,7 @@ export const PROC: Record<string, { build: (vis: number) => B.Mesh[]; bones: num
   cortadora: { build: cortadoraBody, bones: 5, pose: cortadoraPose },
   aspiradora: { build: aspiradoraBody, bones: 3, pose: aspiradoraPose },
   cortacercos: { build: cortacercosBody, bones: 2, pose: cortacercosPose },
+  grua: { build: gruaBody, bones: 3, pose: gruaPose },
 };
 
 // ---------- Buggy: piso, bañera y trompa pintadas (pintura del garaje), guardabarros amarillos, jaula de caño, motor con rejilla ----------
@@ -451,6 +452,39 @@ export function cortacercosBody() {
 export function cortacercosPose(_v: number, walk: number, atk: number) {
   const S = BOSS_S.cortacercos;
   return [B.Matrix.RotationX(-0.08 * Math.sin(atk * Math.PI)), B.Matrix.Translation(0, 0, 0.22 * S * Math.sin(walk * Math.PI * 8))];
+}
+
+/** Máquina de garra de feria: gabinete de premios, pórtico y pinza suspendida. Huesos: cuerpo, cable y dedos. */
+export function gruaBody() {
+  const { G, done, bone } = kit();
+  const orange = FOLD.painted("#e87816", 0.8, 181), yellow = FOLD.painted("#f5b91b", 0.65, 182);
+  const dark = FOLD.dark(), steel = FOLD.bare(), glass = FOLD.screen("#83c9d2");
+  G.foldBox([0, 0.18, 0], undefined, 2.8, 0.72, 2.45, orange);
+  for (const x of [-1.17, 1.17]) G.wheel([x, 0.2, 0.05], undefined, 0.42, 0.22);
+  G.box(0.24, 2.05, 0.2, yellow, [-1.23, 1.87, 1.12]); G.box(0.24, 2.05, 0.2, yellow, [1.23, 1.87, 1.12]);
+  G.box(2.7, 0.24, 0.2, orange, [0, 2.9, 1.12]); G.box(2.7, 0.2, 0.2, orange, [0, 0.83, 1.12]);
+  G.box(2.38, 1.82, 0.035, glass, [0, 1.87, 1.105]); G.box(2.45, 1.82, 0.12, dark, [0, 1.87, -0.15]);
+  for (const [x, y, c] of [[-0.65, 1.35, "#cf7770"], [0, 1.22, "#d0ad72"], [0.65, 1.38, "#e8cb42"]] as [number, number, string][]) {
+    G.sph(0.52, FOLD.plastic(c), [x, y, 0.65]); G.box(0.22, 0.34, 0.28, FOLD.plastic(c), [x, y - 0.28, 0.65]);
+    G.sph(0.07, FOLD.dark(), [x - 0.12, y + 0.02, 0.9]); G.sph(0.07, FOLD.dark(), [x + 0.12, y + 0.02, 0.9]);
+  }
+  G.trimStrip([0, 0.94, 1.23], undefined, 2.65, 0.12, "hazard", 0.025);
+  G.box(0.56, 0.42, 0.12, dark, [0, 0.45, 1.27]); G.box(0.3, 0.11, 0.04, FOLD.emissive("#ff3b2e"), [0, 0.47, 1.35]);
+  for (const s of [-1, 1]) { G.plate([s * 1.22, 1.86, 1.24], undefined, 0.16, 1.65, steel); G.rivets([s * 1.19, 0.98, 1.24], [s * 1.19, 2.72, 1.24], 7, [0, 0, 1]); }
+  G.box(0.18, 0.2, 2.55, yellow, [0, 3.05, -0.02]); G.box(2.55, 0.24, 0.28, orange, [0, 3.28, 0.2]);
+  G.cyl(0.42, 0.18, steel, [0, 3.08, 0.2], [0, 0, Math.PI / 2], 8);
+  bone(1);
+  G.box(0.08, 0.92, 0.08, dark, [0, 2.58, 0.75]);
+  G.cyl(0.32, 0.16, steel, [0, 2.12, 0.75], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.2, 0.16, FOLD.emissive("#ffb400"), [0, 2.0, 0.75], [Math.PI / 2, 0, 0], 8);
+  bone(2);
+  for (const s of [-1, 1]) G.tube([[0, 2.0, 0.75], [s * 0.34, 1.72, 0.94], [s * 0.28, 1.38, 0.98]], 0.085, steel);
+  G.tube([[0, 2.0, 0.75], [0, 1.7, 1.12], [0, 1.39, 1.04]], 0.085, yellow);
+  return done(2.2);
+}
+export function gruaPose(_vis: number, walk: number, atk: number) {
+  const up = Math.sin(atk * Math.PI), body = B.Matrix.Translation(0, 0.025 * Math.abs(Math.sin(walk * Math.PI * 2)), 0);
+  return [body, piv(new B.Vector3(0, 3.1, 0.2), B.Matrix.Translation(0, -0.2 * up, 0).multiply(body)), piv(new B.Vector3(0, 2.0, 0.75), B.Matrix.RotationZ(0.18 + 0.22 * up + 0.035 * Math.sin(walk * Math.PI * 2)).multiply(body))];
 }
 
 /** Pata articulada Folded (rey, tarántula): fémur y tibia de perfil, rodilla de bisagra emisiva, tobillo y pie de goma. Misma geometría que la vieja (LEGS). */

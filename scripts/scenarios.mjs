@@ -114,6 +114,13 @@ export const sessions = [
       await tick(p, 90);
       await p.waitForTimeout(300);
     } },
+    { id: "ficha-grua", act: async (p) => {
+      await view("bestiary")(p);
+      await p.dispatchEvent('[data-beast="grua"]', "click");
+      await wait(p, () => document.querySelector("#scr-beast.on"));
+      await tick(p, 90);
+      await p.waitForTimeout(300);
+    } },
     { id: "creditos", act: view("credits") },
     { id: "jugar", perf: false, act: async (p) => {
       await p.evaluate(() => window.__cfg({ unlocked: ["zone:jardin"], stats: { runs: 4, wins: 1, time: 1800, dist: 5000, dmg: {}, zone: { patio: { t: 612, kills: 420 } } } }));

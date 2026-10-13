@@ -37,6 +37,7 @@ export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla 
   cortadora: { file: "cortadora", scale: 1 },
   aspiradora: { file: "aspiradora", scale: 1, eye: "#ff2a1a" },
   cortacercos: { file: "cortacercos", scale: 1, eye: "#ff2a1a" },
+  grua: { file: "grua", scale: 1 },
   polilla: { file: "polilla", scale: 1, visual: 1.05, eye: "#c9a0ff" }, // assets-src/polilla — cuerpo GLB; alas en wingTemplate
   perro: { file: "perro", scale: 1, eye: "#3a2418", clips: [2.3, 13] }, // assets-src/perro (Felipe)
   gato: { file: "gato", scale: 1.1, eye: "#a8ff3a", clips: [2.3, 15.4] }, // assets-src/gato (Eulalio)
