@@ -16,6 +16,7 @@ import { mateDown, mateLead, mateTick } from "./coop";
 import type { Player } from "./coop";
 import { offersFor, openOffers } from "./progression";
 import { PIT } from "./zones/pileta";
+import { kitchenPlague } from "./zones/cocina";
 import { HALF, floorAt, heavyProps, hitBreakables, hitHeavyProps, spawnPoint, zoneClimate, zoneId, zoneTick } from "./world";
 import { MOON, alt, at, flatL, FOOT, ROLL, hflat, onFloor, ringAt, upv, yawOf } from "./moon";
 import { evBase, lunaEv } from "./moon_events";
@@ -264,7 +265,7 @@ export function tickSpawner(F: Frame, dt: number) {
   run.spawnAcc += (R.spawn_base + tp / R.spawn_seg) * wdt * hordeK * D.TOUGH.count * D.coopRate() * (MOON.on ? R.luna_aparicion_mult : 1);
   // Con la cámara más alejada que el zoom por defecto (1.35) el anillo de aparición se abre igual, para no verlos nacer
   // Anillo fijo, fuera de cuadro aun con el zoom máximo (2): la partida no cambia según el zoom elegido
-  while (run.spawnAcc >= 1) { run.spawnAcc--; if (normals < maxAlive) D.spawnEnemy(pickWeighted(spawnTable(tp, D.profile.plague)), spawnPoint(ms.length && (D.spawnN = (D.spawnN + 1) % (ms.length + 1)) ? ms[D.spawnN - 1].car!.pos : _ahead, R.spawn_anillo_min, R.spawn_anillo_max)); } // R7a: con 2 autos, una aparición alrededor de cada uno
+  while (run.spawnAcc >= 1) { run.spawnAcc--; if (normals < maxAlive) D.spawnEnemy(pickWeighted(spawnTable(tp, zoneId === "cocina" ? kitchenPlague(D.profile.plague) : D.profile.plague)), spawnPoint(ms.length && (D.spawnN = (D.spawnN + 1) % (ms.length + 1)) ? ms[D.spawnN - 1].car!.pos : _ahead, R.spawn_anillo_min, R.spawn_anillo_max)); } // R7a: con 2 autos, una aparición alrededor de cada uno
   // Formaciones: columna de hormigas (ordenadas tras una líder) o escarabajo con escolta de autitos a fricción
   if (tp > R.formacion_desde_s && (run.groupT -= dt) <= 0 && normals < maxAlive - R.formacion_margen) {
     run.groupT = R.formacion_cada_min + rng() * R.formacion_cada_rango;

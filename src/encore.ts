@@ -260,6 +260,8 @@ export const VARIANTS: Variant[] = [
   { name: "EL GALPÓN DE UTILERÍA", line: "LA GRÚA DE FERIA ENSAYA SU NÚMERO ENTRE CAJAS.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, mini: "grua", zone: "galpon", risk: "SIN LUNA · LA GRÚA DE FERIA COMO MINIJEFE", reward: { scrap: 1.35, xp: 1.15 } },
   { name: "EL DESVÁN DE JUGUETES ROTOS", line: "UN PAYASO DE RESORTE SALTA SOLO.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, mini: "payaso", zone: "desvan", risk: "SIN LUNA · EL PAYASO DE RESORTE COMO MINIJEFE", reward: { scrap: 1.3, xp: 1.2 } },
   { name: "LA PILETA VACÍA", line: "EL LIMPIAFONDOS SIGUE DE GUARDIA, SIN AGUA Y SIN NADIE.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, mini: "limpiafondos", zone: "pileta", risk: "SIN LUNA · EL LIMPIAFONDOS COMO MINIJEFE · DESNIVELES", reward: { scrap: 1.35, xp: 1.25 } },
+  // Minijefe: el de la semilla (sin `mini`) hasta que exista uno de cocina (TODO(enemigos-cocina) en zones/cocina.ts)
+  { name: "LA COCINA", line: "EL HORNO QUEDÓ PRENDIDO Y ALGO SE MUEVE ENTRE LAS MIGAS.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, zone: "cocina", risk: "SIN LUNA · MÁS BICHOS DE COCINA", reward: { scrap: 1.3, xp: 1.2 } },
 ];
 /** Hash sin estado: n → [0, 1). Un paso de mulberry32. */
 const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
@@ -450,9 +452,10 @@ export const scrapExtra = (gross: number, last: number, k: number) => (gross - l
 export const EARTH = { patio: ["EL PATIO DE ENSAYO", "DECORADO DE CARTÓN, BICHOS DE VERDAD. ES SOLO UN ENSAYO, DICEN."], jardin: ["EL JARDÍN DE UTILERÍA", "PASTO DE PLÁSTICO Y ASPERSORES CON CONTRATO. NADA AQUÍ ES CASUAL."],
   galpon: ["EL GALPÓN DE UTILERÍA", "CEMENTO MANCHADO, ESTANTES DE ATREZO Y UNA MESA DE TRABAJO HACIENDO DE TARIMA."],
   desvan: ["EL DESVÁN DE LOS JUGUETES ROTOS", "TABLONES TORCIDOS, BAÚLES GIGANTES Y JUGUETES QUE YA NADIE ARREGLA."],
-  pileta: ["LA PILETA VACÍA", "AZULEJOS, UNA PLAYA, UN FONDO CON RAMPA Y UN TRAMPOLÍN QUE YA NO TIENE A QUIÉN LANZAR."] } as const;
+  pileta: ["LA PILETA VACÍA", "AZULEJOS, UNA PLAYA, UN FONDO CON RAMPA Y UN TRAMPOLÍN QUE YA NO TIENE A QUIÉN LANZAR."],
+  cocina: ["LA COCINA", "BALDOSAS EN DAMERO, MESADAS COMO MURALLAS Y UNA MESA QUE HACE DE TECHO."] } as const;
 export type EarthZone = keyof typeof EARTH;
-const EARTH_ZONES: EarthZone[] = ["patio", "jardin"]; // el galpón, el desván y la pileta solo entran por su variante, no por el sorteo
+const EARTH_ZONES: EarthZone[] = ["patio", "jardin"]; // el galpón, el desván, la pileta y la cocina solo entran por su variante, no por el sorteo
 /** Escenario terrestre de la vuelta (-1 en la vuelta 0). */
 export const earthStage = (r: Run) => (r.loop < 1 ? -1 : Math.floor(mix(r.seed + 0xea27 + r.loop * 7907) * ENC.stages));
 /** Zona del escenario actual: "luna" o la escenografía terrestre que le toca. */

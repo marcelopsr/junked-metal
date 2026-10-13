@@ -40,7 +40,7 @@ describe("variantes de escenario", () => {
   const cycle = (seed: number, loop: number) => Array.from({ length: ENC.stages }, (_, stage) => variantOf({ ...newRun(seed), loop, stage }));
 
   it("cada vuelta usa las variantes sin repetir; el primer escenario de la run es LA TARIMA", () => {
-    expect(VARIANTS.length).toBe(10); // más variantes que escenarios: una vuelta de 4 no las usa todas (las del galpón, el desván y la pileta solo se juegan por elección)
+    expect(VARIANTS.length).toBe(11); // más variantes que escenarios: una vuelta de 4 no las usa todas (las del galpón, el desván, la pileta y la cocina solo se juegan por elección)
     for (const seed of [1, 7, 1234, 99999]) for (let loop = 0; loop < 4; loop++) {
       const c = cycle(seed, loop);
       expect(new Set(c).size).toBe(ENC.stages);

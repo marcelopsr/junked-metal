@@ -13,6 +13,7 @@ import { TABLE, shedBuild, shedLayout } from "./zones/galpon";
 import { atticBuild, atticLayout } from "./zones/desvan";
 import { frontBuild, frontLayout } from "./zones/jardin";
 import { PIT, pitY, poolBuild, poolLayout } from "./zones/pileta";
+import { KITCHEN_CLIMATE, TABLE_K, kitchenBuild, kitchenLayout } from "./zones/cocina";
 
 
 // Zonas de juego. Un auto RC mide ~2 unidades (1 u ≈ 4,5 cm): una maceta es un edificio, un auto real es una montaña.
@@ -25,8 +26,8 @@ export { setWind } from "./grass";
 export { zoneTick } from "./zones/jardin";
 const TUBO: Climate = { id: "tubo", name: "TUBO FLUORESCENTE", sun: [0.4, -1, 0.3], sunColor: "#dff2e6", sunI: 3, hemiI: 1.2, sky: ["#0b0d0d", "#121615", "#161b1a", "#0b0d0d"], exposure: 1.1, fog: 0.005, ramp: ["#0c1214", "#4a6a62", "#eef6e8"] };
 // ponytail: precios provisorios (Taller → Zonas), a calibrar con el balance de tornillos
-export const ZONE_COST = { garaje: precio("zona_garaje"), jardin: precio("zona_jardin"), desvan: precio("zona_desvan"), pileta: precio("zona_pileta") }; // curva de precios: como un auto o algo más (menu.ts, Taller)
-const ZONES_BASE: Record<Exclude<ZoneId, "galpon" | "desvan" | "pileta">, Zone> = {
+export const ZONE_COST = { garaje: precio("zona_garaje"), jardin: precio("zona_jardin"), desvan: precio("zona_desvan"), pileta: precio("zona_pileta"), cocina: precio("zona_cocina") }; // curva de precios: como un auto o algo más (menu.ts, Taller)
+const ZONES_BASE: Record<Exclude<ZoneId, "galpon" | "desvan" | "pileta" | "cocina">, Zone> = {
   patio: { name: "Patio trasero", short: "Patio", desc: "Pileta, mesa de jardín y una huerta abandonada junto con los buenos propósitos.", half: 160, cost: 0, grass: 1, grassH: 1,
     rects: [[0, -30, 24, 17], [50, 45, 21, 16], [-48, 20, 24, 18]],
     roof: (p) => Math.abs(p.x) < 17 && Math.abs(p.z + 30) < 15 && p.y < 16, // tapa de la mesa: 34x30 en (0,-30), a 16 de alto
@@ -55,6 +56,11 @@ ZONES.desvan = { name: "Desván de los juguetes rotos", short: "Desván", desc: 
 // La pileta vacía: zona comprable y variante de ENCORE. Un pozo de 100x100 (playa a -5, parte honda a -16, unidos por rampa) en una explanada de cemento.
 ZONES.pileta = { name: "La pileta vacía", short: "Pileta", desc: "Una pileta sin agua: playa, parte honda con rampa, escalones, un trampolín roto y hojas secas. Se baja con ganas y se vuelve a subir por la rampa.", half: 140, cost: ZONE_COST.pileta, grass: 0, grassH: 1,
   rects: [[(PIT.x0 + PIT.x1) / 2, 0, (PIT.x1 - PIT.x0) / 2 + 2, PIT.z1 + 2]], build: poolBuild, layout: poolLayout };
+// La cocina: zona comprable y variante de ENCORE. Baldosas, mesadas en L, heladera, horno y una mesa con sillas que hace de techo.
+ZONES.cocina = { name: "La cocina", short: "Cocina", desc: "Baldosas en damero, mesadas en L, una heladera que zumba y una mesa con sillas para pasar por abajo. Algo huele a quemado.", half: 140, cost: ZONE_COST.cocina, grass: 0, grassH: 1,
+  rects: [[-20, HALF - 13, 92, 15], [-HALF + 13, 35, 15, 77], [105, HALF - 22, 24, 22], [TABLE_K.x, TABLE_K.z, TABLE_K.w / 2 + 14, TABLE_K.d / 2 + 14]],
+  roof: (p) => Math.abs(p.x - TABLE_K.x) < TABLE_K.w / 2 - 2 && Math.abs(p.z - TABLE_K.z) < TABLE_K.d / 2 - 2 && p.y < TABLE_K.h - 3,
+  climate: KITCHEN_CLIMATE, build: kitchenBuild, layout: kitchenLayout };
 setZ(ZONES.patio, "patio");
 /** Luz fija de la zona (garaje) o undefined: la partida sigue el ciclo de la semilla. */
 export const zoneClimate = () => Z.climate;
@@ -62,7 +68,7 @@ export const zoneClimate = () => Z.climate;
 export type Floor = "pasto" | "baldosa" | "tierra" | "cemento";
 export function floorAt(x: number, z: number): Floor {
   if (zoneId === "garaje" || zoneId === "galpon") return "cemento";
-  if (zoneId === "desvan") return "baldosa"; // tablones: el sonido de madera/baldosa, sin tierra ni pasto
+  if (zoneId === "desvan" || zoneId === "cocina") return "baldosa"; // tablones: el sonido de madera/baldosa, sin tierra ni pasto
   if (zoneId === "pileta") return x > PIT.x0 && x < PIT.x1 && Math.abs(z) < PIT.z1 ? "baldosa" : "cemento"; // azulejo dentro del pozo, cemento en la explanada
   if (zoneId === "luna") return "tierra";
   if (zoneId === "jardin") return z < -HALF + 16 || Math.abs(x - 12) < 4 ? "baldosa" : "pasto"; // vereda y camino de lajas
