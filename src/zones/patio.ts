@@ -127,6 +127,19 @@ export function patioBuild() {
   scrapGroundMat.opacityTexture = edgeMask;
   scrapGroundMat.alphaCutOff = 0.02;
   scrapGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
+  const soilTone = new B.DynamicTexture("soilTone", 128, scene, false);
+  const tone = soilTone.getContext() as unknown as CanvasRenderingContext2D;
+  tone.fillStyle = "#fff"; tone.fillRect(0, 0, 128, 128);
+  for (const [x, y, r, shade] of [[24, 35, 48, 0.2], [98, 90, 55, 0.25], [85, 16, 32, 0.12]]) {
+    const g = tone.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(0,0,0,${shade})`); g.addColorStop(1, "rgba(0,0,0,0)");
+    tone.fillStyle = g; tone.fillRect(0, 0, 128, 128);
+  }
+  soilTone.update(); soilTone.gammaSpace = false;
+  soilTone.wrapU = soilTone.wrapV = B.Texture.CLAMP_ADDRESSMODE;
+  for (const mat of [dirtMat, dirtGroundMat, pathMat, scrapMat, scrapGroundMat]) {
+    mat.lightmapTexture = soilTone; mat.useLightmapAsShadowmap = true;
+  }
   decal("scrapSoilTransition", 54, 44, -48, 20, grassEarthMat, 0.015);
   decal("scrapZone", 46, 36, -48, 20, scrapGroundMat, 0.025);
   const tracksTex = tex("patioTireMarks", () => new B.Texture("./images/decals/tire-marks.webp", scene));
