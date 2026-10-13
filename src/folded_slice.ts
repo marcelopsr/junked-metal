@@ -767,8 +767,21 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     for (const s of [-1, 1]) { G.box(0.5, 0.05, 0.22, paint, [0, 0.16, s * 0.64], [-s * 0.4, 0, 0]); G.box(0.46, 0.012, 0.2, grip, [0, 0.185, s * 0.64], [-s * 0.4, 0, 0]); G.box(0.1, 0.07, 0.12, steel, [0, 0.07, s * 0.5]); G.cyl(0.04, 0.46, steel, [0, 0.0, s * 0.5], [0, 0, Math.PI / 2], 6); }
     for (const [z, s] of [[0.28, 1], [-0.22, -1]] as const) { G.box(0.1, 0.06, 0.2, shoe, [0.0, 0.19, z]); G.box(0.08, 0.3, 0.09, jeans, [0.0, 0.36, z - 0.02 * s]); }
     G.box(0.2, 0.05, 0.04, FOLD.emissive("#ffd23f"), [0, 0.18, 0.73]); tails(0.1, 0.18, -0.74);
+  } else if (kind === "hover") { // aerodeslizador: falda de goma, casco con borde plegado, cabina de burbuja, turbina trasera con aspas
+    const cyan = FOLD.painted("#4cc3c9", 0.6, 341);
+    const fw = q.falda_ancho, fl = q.falda_largo, cw = q.casco_ancho, ch = q.casco_alto, cl = q.casco_largo, td = q.turbina_d, ck = q.cupula_k, aw = q.aleron_ancho; // genes: car_genes.ts
+    const top = 0.08 + ch;
+    G.box(fw, 0.14, fl, FOLD.rubber(), [0, 0.04, 0]); // falda perimetral de goma
+    G.box(cw, ch, cl, paint, [0, 0.08 + ch / 2, 0.05]); edges(cw, top, -cl / 2 + 0.05, cl / 2 + 0.05, paint); // casco
+    G.sph(0.52 * ck, FOLD.glass(), [0, top + 0.12 * ck, 0.4]); // cúpula de burbuja
+    G.cyl(td, 0.14, dark, [0, top + 0.28, -0.95], [Math.PI / 2, 0, 0], 8, td); // anillo de turbina
+    for (const a of [0.5, -0.5]) G.box(td * 0.88, 0.04, 0.1, cyan, [0, top + 0.28, -0.95], [0, 0, a]); // aspas de la hélice
+    for (const s of [-1, 1]) strut([s * 0.42, top - 0.05, -0.95], [s * 0.42, top + 0.28, -0.95], 0.05, 0.05, steel); // montantes de turbina
+    G.box(aw, 0.04, 0.26, cyan, [0, top + 0.28 + td / 2, -0.95]); // alerón estabilizador
+    lamps(cw * 0.35, 0.18, fl / 2 - 0.04, 0.12); tails(cw * 0.35, 0.18, -fl / 2 + 0.04);
+    num(cw / 2 + 0.005, 0.18, 0.2, 0.22);
   } else { // autito de carreras a cuerda: carrocería baja, cabina, paragolpes de caño y llave de cuerda
-    const c = kind === "carrera" ? q : original("carrera"); // hover, topadora y triciclo también caen acá: con la forma original
+    const c = kind === "carrera" ? q : original("carrera"); // topadora y triciclo también caen acá: con la forma original
     const bw = c.cuerpo_ancho, bh = c.cuerpo_alto, bl = c.cuerpo_largo, top = 0.13 + bh / 2, kw = c.cabina_ancho, kh = c.cabina_alto, kl = c.cabina_largo, kz = c.cabina_z, ky = top + kh / 2; // genes: car_genes.ts
     G.box(0.7, 0.06, 1.7, dark, [0, 0.0, 0]);
     G.box(bw, bh, bl, paint, [0, 0.13, 0]); edges(bw, top, -bl / 2, bl / 2, paint);

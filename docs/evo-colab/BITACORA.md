@@ -38,3 +38,9 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
 - Se parametriza la carrocería de `combi` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", preservando 100% la huella geométrica original en `def`.
 - Se agregan sus genes en `GENES.combi` (`src/car_genes.ts`): chasis/carrocería (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`), habitáculo (`techo_alto`), identidad (`v_escala`) y multiplicadores `...RUEDAS`.
 - Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
+
+## 2026-10-13 · gemini · Parametrización de hover
+
+- Se crea la rama propia para `hover` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", reemplazando la caída genérica en `carrera`. Geometría Folded con falda de goma, casco plegado, cúpula de burbuja y turbina trasera con aspas.
+- Se agregan sus genes en `GENES.hover` (`src/car_genes.ts`): `falda_ancho`, `falda_largo`, `casco_ancho`, `casco_alto`, `casco_largo`, `turbina_d`, `cupula_k`, `aleron_ancho` y multiplicadores `...RUEDAS`.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
