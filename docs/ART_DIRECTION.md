@@ -12,7 +12,7 @@ Reglas que mandan:
 - **Mundo Folded, volumen real a 360°:** orden de diseño silueta, material, color, detalle. No es papel, cartón ni sprites. Detalle en "Folded 2.5D" más abajo.
 - **Desgaste con intención:** pintura saltada en bordes y esquinas, óxido desde las uniones; más desgaste en piezas de contacto, menos en paneles grandes.
 - **Lectura clara:** la escena se lee siempre bien (no es terror). Rojo = amenaza enemiga; no usar rojo para nada del jugador.
-- **Rendimiento primero:** instancias y plantillas, atlas único, texturas ≤256 sin filtrar, nada de mallas sueltas por entidad.
+- **Rendimiento primero:** instancias y plantillas, atlas opaco compartido y cristal 64 px reutilizado, texturas ≤256 sin filtrar, nada de mallas sueltas por entidad.
 
 **Tokens reales (src/kit.css, `:root`; fuente única de la paleta: `PAL`/`M3C` en `src/kit3d.ts`, si cambia un HEX cambiar los dos):**
 
@@ -83,7 +83,7 @@ oxido #5c3a24, chapa #b5651d). `kit.css` copia los mismos HEX en `--jm-*`: si ca
 apagadas para utilería (no compiten con enemigos).
 
 **Materiales (`FOLD`, `src/folded.ts`):** `painted(color, wear, seed)`, `bare`, `rust`, `dark`, `rubber`, `plastic(color)`,
-`screen(color)`, `emissive(color)`, `trim`, `decal`. Todos PBR estándar con `snapMat` (vértices pixelados del mundo, igual
+`glass`, `screen(color)`, `emissive(color)`, `trim`, `decal`. Todos PBR estándar con `snapMat` (vértices pixelados del mundo, igual
 que `pbr()`); se crean una vez por combinación y se cachean. Variantes por parámetro, nunca un pipeline nuevo.
 
 **Desgaste:** `wear` 0..1 controla pintura saltada en bordes y esquinas y mugre (no ruido uniforme); sobre 0,5 asoma óxido bajo
@@ -115,8 +115,8 @@ como hoy. Mirarlo en `?folded` a 360° antes de llevarlo a la partida.
 (`carHull` + `foldWheel`, también en Carrera), cerca, cajas y utilería del mundo (lata, herramientas, regadera, auto real, labio de
 rampa). Los GLB viejos (`public/models/*.glb`, `public/models/cars/`) y los procedurales anteriores siguen en el repo sin usarse.
 
-**Atlas:** las piezas armadas con `kit()` llevan sus UV a una celda de 64 px de un atlas único de 1024 (albedo + metal/rugosidad +
-emisivo; 256 celdas): una plantilla Folded queda en 2-3 submallas (atlas, trim, calcos) en vez de una por color.
+**Atlas:** las piezas opacas armadas con `kit()` llevan sus UV a una celda de 64 px de un atlas de 1024 (albedo + metal/rugosidad +
+emisivo; 256 celdas). El cristal translúcido usa una textura 64 px compartida fuera del atlas para dejar ver el interior; solo los modelos con ventanas suman esa submalla.
 
 **procBake (`src/glb.ts`):** un modelo Folded se arma en piezas, cada pieza móvil marcada con `bone(i)` (peso 1), y sus poses se
 hornean al mismo VAT y escala de nodo (`GLB[k].visual`) que un GLB: cientos de instancias animadas con los draws de una. Bichos y

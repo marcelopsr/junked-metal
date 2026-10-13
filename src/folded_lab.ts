@@ -39,7 +39,7 @@ export function foldedLab(scene: B.Scene, cam: B.FreeCamera) {
   // Fila 2: materiales (esferas y cubos) con wear 0 / 0,5 / 1
   const mats: [string, B.Material][] = [];
   for (const c of [PAL.naranja, PAL.petroleo, PAL.rojoChapa]) for (const w of [0, 0.5, 1]) mats.push([`${c}-${w}`, FOLD.painted(c, w)]);
-  mats.push(["bare", FOLD.bare()], ["rust", FOLD.rust()], ["rubber", FOLD.rubber()], ["plastic", FOLD.plastic(PAL.amarillo)], ["screen", FOLD.screen()], ["emissive", FOLD.emissive(PAL.rojo)]);
+  mats.push(["bare", FOLD.bare()], ["rust", FOLD.rust()], ["rubber", FOLD.rubber()], ["plastic", FOLD.plastic(PAL.amarillo)], ["glass", FOLD.glass()], ["screen", FOLD.screen()], ["emissive", FOLD.emissive(PAL.rojo)]);
   mats.forEach(([, m], i) => cell(-5.4 + i * 0.72, -2.5, (G) => G.box(0.45, 0.45, 0.45, m, [0, 0.25, 0])));
 
   // Fila 3: trim sheet (cada franja con volumen) y calcos sobre placas

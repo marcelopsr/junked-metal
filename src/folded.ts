@@ -76,15 +76,40 @@ export function toTile(m: B.Mesh, t: number) {
 /** Biblioteca de materiales. `wear` 0..1: pintura saltada en bordes y mugre; sobre 0,4 el óxido avanza desde esquinas y el borde de apoyo. */
 export const FOLD = {
   painted: (c: string, wear = 0.6, seed = 11) => once(`p${c}|${wear}|${seed}`, (m) => {
-    const t = wornTex(sc(), seed, c, null, 64, wear, Math.max(0, wear - 0.4) / 0.6); // óxido en esquinas y apoyo, no manchas
+    const edgeRust = Math.max(0, wear - 0.4) / 0.6;
+    const t = wornTex(sc(), seed, c, null, 64, wear, edgeRust, true); // escamas Folded legibles en el atlas, sin alterar los materiales viejos del taller
     m.albedoTexture = t.alb; m.metallicTexture = t.orm; m.roughness = 1; m.metallic = 1;
     m.useRoughnessFromMetallicTextureGreen = true; m.useMetallnessFromMetallicTextureBlue = true; m.useRoughnessFromMetallicTextureAlpha = false;
     m.metadata = { tile: () => tile(`p${c}|${wear}|${seed}`, (a, o, _e, x, y) => {
-      const w = wornCanvas(seed, c, null, wear, Math.max(0, wear - 0.4) / 0.6); a.drawImage(w.a, x, y, TS, TS); o.drawImage(w.o, x, y, TS, TS);
+      const w = wornCanvas(seed, c, null, wear, edgeRust, true); a.drawImage(w.a, x, y, TS, TS); o.drawImage(w.o, x, y, TS, TS);
     }) };
   }),
-  bare: () => flat("bare", PAL.metalClaro, 0.32, 1),
-  rust: () => flat("rust", PAL.oxido, 0.95, 0.25),
+  bare: () => once("bare", (m) => {
+    m.albedoColor = B.Color3.White(); m.roughness = 1; m.metallic = 1;
+    m.metadata = { tile: () => tile("bare", (a, o, _e, x, y) => {
+      a.fillStyle = PAL.metalClaro; a.fillRect(x, y, TS, TS); o.fillStyle = orm(0.38, 0.95); o.fillRect(x, y, TS, TS);
+      const r = lcg(417);
+      for (let i = 0; i < 34; i++) {
+        const sx = x + r() * TS, sy = y + r() * TS, len = 3 + r() * 15;
+        a.strokeStyle = r() < 0.5 ? "rgba(35,40,45,.55)" : "rgba(238,240,238,.65)"; a.lineWidth = r() < 0.25 ? 1.5 : 0.7;
+        a.beginPath(); a.moveTo(sx, sy); a.lineTo(sx + len, sy + (r() - 0.5) * 1.5); a.stroke();
+        o.fillStyle = orm(r() < 0.4 ? 0.68 : 0.24, r() < 0.4 ? 0.7 : 1); o.fillRect(sx, sy, len, 1);
+      }
+    }) };
+  }),
+  rust: () => once("rust", (m) => {
+    m.albedoColor = B.Color3.White(); m.roughness = 1; m.metallic = 1;
+    m.metadata = { tile: () => tile("rust", (a, o, _e, x, y) => {
+      a.fillStyle = PAL.oxido; a.fillRect(x, y, TS, TS); o.fillStyle = orm(0.96, 0.2); o.fillRect(x, y, TS, TS);
+      const r = lcg(592);
+      for (let i = 0; i < 58; i++) {
+        const px = x + r() * TS, py = y + r() * TS, w = 1 + r() * 6, h = 1 + r() * 5;
+        const c = ["#7a4524", "#3a2414", "#a45a28", "#202126"][Math.floor(r() * 4)];
+        a.fillStyle = c; a.fillRect(px, py, w, h); o.fillStyle = orm(0.92 + r() * 0.06, c === "#a45a28" ? 0.35 : 0.12); o.fillRect(px, py, w, h);
+      }
+      a.fillStyle = "rgba(210,145,75,.35)"; a.fillRect(x + 4, y + 8, 2, 18);
+    }) };
+  }),
   dark: () => flat("dark", PAL.negro, 0.7, 0.4),
   /** Goma con polvo de tierra que se junta hacia los cantos de la celda (hombros de la banda, borde de apoyo de los tacos). */
   rubber: () => once("rubber", (m) => {
@@ -117,6 +142,17 @@ export const FOLD = {
   }),
   plastic: (c: string) => flat("ip" + c, c, 0.55, 0),
   screen: (c: string = PAL.cian) => flat("scr" + c, "#05080b", 0.15, 0, c),
+  /** Cristal tintado translúcido; conserva los objetos detrás y comparte una sola textura/material. */
+  glass: () => once("glass", (m) => {
+    const t = new B.DynamicTexture("foldGlass", { width: TS, height: TS }, sc(), true, B.Texture.NEAREST_SAMPLINGMODE);
+    t.hasAlpha = true;
+    const c = cx(t);
+    c.clearRect(0, 0, TS, TS); c.fillStyle = "rgba(17,38,48,.38)"; c.fillRect(0, 0, TS, TS);
+    const g = c.createLinearGradient(0, TS, TS, 0); g.addColorStop(0, "rgba(35,75,91,.03)"); g.addColorStop(0.46, "rgba(155,220,232,.12)"); g.addColorStop(0.55, "rgba(220,248,250,.46)"); g.addColorStop(0.66, "rgba(50,100,115,.12)"); g.addColorStop(1, "rgba(10,20,26,.04)");
+    c.fillStyle = g; c.fillRect(0, 0, TS, TS); c.fillStyle = "rgba(215,245,250,.32)"; c.fillRect(9, 0, 3, TS); t.update(false);
+    m.albedoColor = B.Color3.White(); m.albedoTexture = t; m.useAlphaFromAlbedoTexture = true;
+    m.transparencyMode = B.PBRMaterial.PBRMATERIAL_ALPHABLEND; m.roughness = 0.16; m.metallic = 0.32; m.environmentIntensity = 0.9;
+  }),
   emissive: (c: string) => flat("em" + c, c, 0.4, 0, c),
   /** Trim sheet (franjas de TRIM) sobre chapa. */
   trim: () => once("trim", (m) => { m.albedoTexture = trimTex(); m.roughness = 0.6; m.metallic = 0.5; }),

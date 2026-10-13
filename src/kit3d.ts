@@ -23,8 +23,8 @@ export function lcg(seed: number) { let k = seed; return () => ((k = (k * 16807)
 /** Textura de chapa: albedo + mapa metal/rugosidad (G = rugosidad, B = metal) pintados con los mismos golpes.
  *  El desgaste se concentra en los bordes de cada cara (las cajas mapean cada cara entera) y en manchas sueltas, no uniforme. */
 /** `edgeRust` 0..1 (Folded): el óxido crece desde esquinas y el borde de apoyo, con pocas manchas sueltas; 0 = como siempre (match-3). */
-export function wornTex(scene: B.Scene, seed: number, base: string, patches: string | null, px = 128, wear = 1, edgeRust = 0) {
-  const { a, o } = wornCanvas(seed, base, patches, wear, edgeRust);
+export function wornTex(scene: B.Scene, seed: number, base: string, patches: string | null, px = 128, wear = 1, edgeRust = 0, folded = false) {
+  const { a, o } = wornCanvas(seed, base, patches, wear, edgeRust, folded);
   const mk = (src: HTMLCanvasElement, name: string) => {
     const t = new B.DynamicTexture(name, px, scene, false, B.Texture.NEAREST_SAMPLINGMODE);
     (t.getContext() as unknown as Ctx).drawImage(src, 0, 0, px, px);
@@ -34,7 +34,7 @@ export function wornTex(scene: B.Scene, seed: number, base: string, patches: str
   return { alb: mk(a, "m3alb" + seed), orm: mk(o, "m3orm" + seed) };
 }
 /** Los dos lienzos de 256 de wornTex (albedo y metal/rugosidad); el atlas Folded los copia a sus celdas. */
-export function wornCanvas(seed: number, base: string, patches: string | null, wear = 1, edgeRust = 0) {
+export function wornCanvas(seed: number, base: string, patches: string | null, wear = 1, edgeRust = 0, folded = false) {
   const S = 256, a = document.createElement("canvas"), o = document.createElement("canvas");
   a.width = a.height = o.width = o.height = S;
   const ca = a.getContext("2d")!, co = o.getContext("2d")!;
@@ -51,8 +51,24 @@ export function wornCanvas(seed: number, base: string, patches: string | null, w
   co.fillStyle = orm(edgeRust ? 0.42 : 0.55, 0.08); co.fillRect(0, 0, S, S); // Folded: esmalte algo más liso, contrasta con la chapa expuesta (0,35/0,9) y el óxido (0,95)
   if (patches) for (let i = 0; i < 15; i++) { const x = rnd() * S, y = rnd() * S; for (let j = 0; j < 4; j++) blob(x + (rnd() - 0.5) * 50, y + (rnd() - 0.5) * 50, 12 + rnd() * 22, patches, 0.6, 0.08); }
   for (let i = 0; i < Math.round((edgeRust ? 14 : 70) * wear); i++) blob(rnd() * S, rnd() * S, 1.5 + rnd() * 5, rnd() < 0.5 ? "#17110c" : "#5a2f17", 0.92, 0.12); // óxido y mugre
-  // Bordes y esquinas: pintura saltada que deja ver chapa y óxido
-  for (let i = 0; i < Math.round(160 * wear); i++) {
+  // Bordes: escamas legibles después de reducirlas a las celdas de 64 px del atlas.
+  if (folded) {
+    const flake = (x: number, y: number, r: number) => {
+      const n = 7, pts: [number, number][] = [];
+      for (let i = 0; i < n; i++) { const a0 = i * Math.PI * 2 / n, rr = r * (0.55 + rnd() * 0.55); pts.push([x + Math.cos(a0) * rr, y + Math.sin(a0) * rr]); }
+      const path = (c: Ctx, k: number) => { c.beginPath(); pts.forEach(([px, py], i) => (i ? c.lineTo : c.moveTo).call(c, x + (px - x) * k, y + (py - y) * k)); c.closePath(); };
+      const metal = rnd() < 0.58;
+      path(ca, 1); ca.fillStyle = "#3a2414"; ca.fill();
+      path(co, 1); co.fillStyle = orm(0.95, 0.15); co.fill();
+      path(ca, 0.72); ca.fillStyle = metal ? "#9aa0a8" : "#6b3a1c"; ca.fill();
+      path(co, 0.72); co.fillStyle = metal ? orm(0.32, 0.92) : orm(0.94, 0.22); co.fill();
+      if (metal) { ca.beginPath(); ca.moveTo(x - r * 0.35, y - r * 0.22); ca.lineTo(x + r * 0.2, y - r * 0.48); ca.lineWidth = Math.max(1, r * 0.1); ca.strokeStyle = "#d4d7d8"; ca.stroke(); }
+    };
+    for (let i = 0; i < Math.round(46 * wear); i++) {
+      const side = (rnd() * 4) | 0, t = rnd() * S, d = rnd() ** 1.8 * 20;
+      flake(side === 0 ? d : side === 1 ? S - d : t, side === 2 ? d : side === 3 ? S - d : t, 7 + rnd() * 19);
+    }
+  } else for (let i = 0; i < Math.round(160 * wear); i++) {
     const side = (rnd() * 4) | 0, t = rnd() * S, d = rnd() ** 2.2 * 26;
     const x = side === 0 ? d : side === 1 ? S - d : t, y = side === 2 ? d : side === 3 ? S - d : t;
     const metal = rnd() < 0.55;

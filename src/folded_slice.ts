@@ -216,7 +216,7 @@ export function frictionBody() {
   G.box(0.8, 0.22, 1.7, orange, [0, 0.3, 0]); // carrocería
   for (const s of [-1, 1]) G.bend([s * 0.4, 0.41, -0.85], [s * 0.4, 0.41, 0.85], 0.025, orange);
   G.box(0.66, 0.2, 0.7, orange, [0, 0.5, -0.12]); // cabina
-  G.box(0.56, 0.16, 0.03, FOLD.screen("#9be7ff"), [0, 0.52, 0.25], [-0.5, 0, 0]); // parabrisas
+  G.box(0.56, 0.16, 0.03, FOLD.glass(), [0, 0.52, 0.25], [-0.5, 0, 0]); // parabrisas
   G.box(0.6, 0.04, 0.16, orange, [0, 0.52, -0.84]); for (const s of [-1, 1]) G.box(0.03, 0.14, 0.08, dark, [s * 0.26, 0.46, -0.84]); // alerón
   G.decal([0, 0.413, 0.5], [Math.PI / 2, 0, 0], "flecha", 0.3);
   strut([-0.38, 0.24, 0.9], [0.38, 0.24, 0.9], 0.06, 0.06, steel); // paragolpes
@@ -458,7 +458,7 @@ export function cortacercosPose(_v: number, walk: number, atk: number) {
 export function gruaBody() {
   const { G, done, bone } = kit();
   const orange = FOLD.painted("#e87816", 0.8, 181), yellow = FOLD.painted("#f5b91b", 0.65, 182);
-  const dark = FOLD.dark(), steel = FOLD.bare(), glass = FOLD.screen("#83c9d2");
+  const dark = FOLD.dark(), steel = FOLD.bare(), glass = FOLD.glass();
   G.foldBox([0, 0.18, 0], undefined, 2.8, 0.72, 2.45, orange);
   for (const x of [-1.17, 1.17]) G.wheel([x, 0.2, 0.05], undefined, 0.42, 0.22);
   G.box(0.24, 2.05, 0.2, yellow, [-1.23, 1.87, 1.12]); G.box(0.24, 2.05, 0.2, yellow, [1.23, 1.87, 1.12]);
@@ -624,7 +624,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(1.0, 0.14, 1.9, dark, [0, 0.35, 0]);
     G.box(1.15, 0.36, 2.1, paint, [0, 0.62, 0]); edges(1.15, 0.8, -1.05, 1.05, paint);
     G.box(1.0, 0.36, 1.0, paint, [0, 0.98, -0.2]); edges(1.0, 1.16, -0.7, 0.3, paint);
-    G.box(0.9, 0.28, 0.03, FOLD.screen("#9be7ff"), [0, 1.0, 0.33], [-0.4, 0, 0]);
+    G.box(0.9, 0.28, 0.03, FOLD.glass(), [0, 1.0, 0.33], [-0.4, 0, 0]);
     G.box(1.0, 0.08, 0.2, dark, [0, 1.2, 0.15]); lamps(0.36, 1.23, 0.26, 0.1); lamps(0.12, 1.23, 0.26, 0.1);
     G.grate([0, 0.62, 1.06], [0, Math.PI, 0], 0.6, 0.22, 4, steel); lamps(0.42, 0.66, 1.06, 0.1); tails(0.42, 0.66, -1.06);
     bumper(1.3, 0.5, 1.15); bumper(1.3, 0.5, -1.15); num(0.58, 0.62, 0.1, 0.3);
@@ -661,8 +661,8 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(1.0, 0.14, 2.3, dark, [0, 0.05, 0]);
     G.box(1.1, 0.95, 1.45, cream, [0, 0.58, -0.4]); edges(1.1, 1.05, -1.12, 0.32, cream);
     G.box(1.1, 0.5, 0.85, paint, [0, 0.38, 0.75]); G.box(1.1, 0.34, 0.5, paint, [0, 0.75, 0.55]);
-    G.box(0.95, 0.28, 0.03, FOLD.screen("#9be7ff"), [0, 0.72, 0.82], [-0.5, 0, 0]);
-    for (const s of [-1, 1]) { G.box(0.02, 0.38, 0.7, FOLD.screen("#3f7f96"), [s * 0.56, 0.72, -0.4]); G.box(0.22, 0.03, 0.85, s > 0 ? pink : cream, [s * 0.64, 0.97, -0.4], [0, 0, -s * 0.35]); }
+    G.box(0.95, 0.28, 0.03, FOLD.glass(), [0, 0.72, 0.82], [-0.5, 0, 0]);
+    for (const s of [-1, 1]) { G.box(0.02, 0.38, 0.7, FOLD.glass(), [s * 0.56, 0.72, -0.4]); G.box(0.22, 0.03, 0.85, s > 0 ? pink : cream, [s * 0.64, 0.97, -0.4], [0, 0, -s * 0.35]); }
     G.cyl(0.46, 0.62, FOLD.painted("#d9a15a", 0.6, 243), [0, 1.37, -0.4], undefined, 6, 0.04);
     G.sph(0.5, pink, [0, 1.78, -0.4]); G.sph(0.4, cream, [0, 2.06, -0.4]); G.box(0.12, 0.12, 0.12, FOLD.painted("#c1121f", 0.4, 244), [0, 2.3, -0.4]);
     lamps(0.4, 0.4, 1.2, 0.14); tails(0.4, 0.5, -1.13); bumper(1.1, 0.14, 1.22); num(0.555, 0.45, -0.75, 0.3);
@@ -671,8 +671,8 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(1.0, 0.12, 2.3, dark, [0, 0.05, 0]);
     G.box(1.08, 0.5, 2.3, paint, [0, 0.36, 0]); G.box(1.08, 0.42, 2.1, cream, [0, 0.82, -0.05]); edges(1.08, 1.03, -1.1, 1.0, cream);
     G.box(0.7, 0.07, 1.9, cream, [0, 1.06, -0.05]);
-    G.box(0.9, 0.3, 0.03, FOLD.screen("#9be7ff"), [0, 0.84, 1.0], [-0.3, 0, 0]);
-    for (const s of [-1, 1]) for (const z of [0.6, -0.05, -0.7]) G.box(0.02, 0.28, 0.5, FOLD.screen("#3f7f96"), [s * 0.55, 0.84, z]);
+    G.box(0.9, 0.3, 0.03, FOLD.glass(), [0, 0.84, 1.0], [-0.3, 0, 0]);
+    for (const s of [-1, 1]) for (const z of [0.6, -0.05, -0.7]) G.box(0.02, 0.28, 0.5, FOLD.glass(), [s * 0.55, 0.84, z]);
     for (const sd of [-1, 1]) G.box(0.32, 0.06, 0.03, cream, [sd * 0.11, 0.5, 1.16], [0, 0, sd * 1.0]); // V
     lamps(0.4, 0.4, 1.17, 0.18); tails(0.42, 0.45, -1.16); bumper(1.1, 0.14, 1.22); bumper(1.1, 0.14, -1.2); num(0.545, 0.36, -0.2, 0.3);
   } else if (kind === "murcielago") { // murciélago: negro, largo y bajo, cabina de burbuja, aletas traseras y turbina con brillo naranja
@@ -690,10 +690,10 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(1.0, 0.12, 2.3, dark, [0, 0.05, 0]);
     G.box(1.1, 0.5, 1.5, paint, [0, 0.38, -0.45]); G.box(1.08, 0.44, 1.3, paint, [0, 0.82, -0.5]); edges(1.08, 1.03, -1.1, 0.15, paint);
     G.box(1.1, 0.4, 0.8, paint, [0, 0.3, 0.85]); G.box(1.04, 0.06, 0.7, lite, [0, 0.52, 0.85]);
-    G.box(0.9, 0.3, 0.03, FOLD.screen("#9be7ff"), [0, 0.8, 0.2], [-0.25, 0, 0]);
+    G.box(0.9, 0.3, 0.03, FOLD.glass(), [0, 0.8, 0.2], [-0.25, 0, 0]);
     G.box(1.1, 0.07, 1.5, lite, [0, 0.58, -0.45]);
     for (const s of [-1, 1]) {
-      G.box(0.02, 0.26, 0.5, FOLD.screen("#3f7f96"), [s * 0.55, 0.88, 0.0]);
+      G.box(0.02, 0.26, 0.5, FOLD.glass(), [s * 0.55, 0.88, 0.0]);
       for (const [z, y] of [[-0.45, 0.4], [-0.85, 0.72]] as const) { G.cyl(0.26, 0.03, flower, [s * 0.56, y, z], [0, 0, Math.PI / 2], 8); G.cyl(0.1, 0.04, eyeC, [s * 0.57, y, z], [0, 0, Math.PI / 2], 8); }
     }
     for (const x of [-0.45, 0.45]) for (const z of [-1.0, 0.0]) strut([x, 1.04, z], [x, 1.14, z], 0.04, 0.04, steel);
@@ -718,7 +718,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(0.5, 0.2, 0.5, dark, [-0.27, 0.54, -0.1]); G.box(0.5, 0.2, 0.5, dark, [0.27, 0.54, -0.1]);
     for (const s of [-1, 1]) { G.box(0.2, 0.2, 0.8, paint, [s * 0.5, 0.52, 0.65]); G.box(0.2, 0.22, 0.6, paint, [s * 0.55, 0.5, -0.8]); }
     strut([-0.5, 0.5, 0.25], [-0.5, 0.95, 0.35], 0.05, 0.05, steel); strut([0.5, 0.5, 0.25], [0.5, 0.95, 0.35], 0.05, 0.05, steel); strut([-0.5, 0.95, 0.35], [0.5, 0.95, 0.35], 0.05, 0.05, steel);
-    G.box(0.96, 0.4, 0.03, FOLD.screen("#9be7ff"), [0, 0.74, 0.3], [-0.2, 0, 0]);
+    G.box(0.96, 0.4, 0.03, FOLD.glass(), [0, 0.74, 0.3], [-0.2, 0, 0]);
     for (const [z0, z1] of [[-0.55, -0.55]] as const) { strut([-0.45, 0.5, z0], [-0.45, 1.0, z1], 0.05, 0.05, steel); strut([0.45, 0.5, z0], [0.45, 1.0, z1], 0.05, 0.05, steel); strut([-0.45, 1.0, z1], [0.45, 1.0, z1], 0.05, 0.05, steel); }
     G.cyl(0.5, 0.16, FOLD.rubber(), [0, 0.5, -1.06], [Math.PI / 2, 0, 0], 10); G.cyl(0.24, 0.18, steel, [0, 0.5, -1.07], [Math.PI / 2, 0, 0], 8);
     G.box(0.62, 0.3, 0.05, dark, [0, 0.38, 0.97]); for (let i = 0; i < 7; i++) G.box(0.05, 0.26, 0.06, steel, [(i - 3) * 0.085, 0.38, 0.98]);
@@ -728,7 +728,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     const stripeC = FOLD.painted("#f3ead2", 0.5, 321);
     G.box(0.18, 0.1, 1.2, dark, [0, 0.2, 0]);
     G.box(0.3, 0.26, 0.75, paint, [0, 0.46, 0.2]); G.box(0.2, 0.04, 0.6, stripeC, [0, 0.6, 0.2]);
-    G.box(0.32, 0.22, 0.45, paint, [0, 0.4, 0.78], [0.3, 0, 0]); G.box(0.24, 0.2, 0.04, FOLD.screen("#9be7ff"), [0, 0.6, 0.72], [-0.7, 0, 0]);
+    G.box(0.32, 0.22, 0.45, paint, [0, 0.4, 0.78], [0.3, 0, 0]); G.box(0.24, 0.2, 0.04, FOLD.glass(), [0, 0.6, 0.72], [-0.7, 0, 0]);
     G.box(0.26, 0.1, 0.5, dark, [0, 0.52, -0.25]); G.box(0.24, 0.16, 0.5, paint, [0, 0.5, -0.75], [-0.25, 0, 0]);
     for (const s of [-1, 1]) { strut([s * 0.1, 0.55, 0.85], [s * 0.1, 0.0, 0.85], 0.04, 0.04, steel); G.cyl(0.07, 0.4, steel, [s * 0.17, 0.2, -0.45], [Math.PI / 2, 0, 0], 8); strut([s * 0.1, 0.35, -0.25], [s * 0.08, 0.0, -0.85], 0.04, 0.04, steel); }
     strut([-0.3, 0.7, 0.62], [0.3, 0.7, 0.62], 0.04, 0.04, steel);
@@ -743,7 +743,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
   } else { // autito de carreras a cuerda: carrocería baja, cabina, paragolpes de caño y llave de cuerda
     G.box(0.7, 0.06, 1.7, dark, [0, 0.0, 0]);
     G.box(0.8, 0.22, 2.0, paint, [0, 0.13, 0]); edges(0.8, 0.24, -1.0, 1.0, paint);
-    G.box(0.62, 0.18, 0.7, paint, [0, 0.33, -0.25]); G.box(0.58, 0.15, 0.03, FOLD.screen("#9be7ff"), [0, 0.35, 0.12], [-0.6, 0, 0]);
+    G.box(0.62, 0.18, 0.7, paint, [0, 0.33, -0.25]); G.box(0.58, 0.15, 0.03, FOLD.glass(), [0, 0.35, 0.12], [-0.6, 0, 0]);
     bumper(0.76, 0.1, 1.08); bumper(0.76, 0.1, -1.06); lamps(0.25, 0.2, 1.01, 0.12); tails(0.28, 0.18, -1.01);
     G.cyl(0.08, 0.14, steel, [0.43, 0.18, -0.2], [0, 0, Math.PI / 2], 6); G.box(0.03, 0.2, 0.06, steel, [0.52, 0.18, -0.2]); // llave de cuerda
     num(0.405, 0.15, 0.35, 0.18); G.decal([0, 0.242, 0.6], [Math.PI / 2, 0, 0], "flecha", 0.25);
