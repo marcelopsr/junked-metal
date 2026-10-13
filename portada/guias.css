@@ -1,0 +1,26 @@
+/* Estilos compartidos de las guías de la portada (como-se-juega, primeros-pasos, cambios, estado). Rutas relativas: base "./". */
+:root{--jm-naranja:#f08a24;--jm-amarillo:#FFB400;--jm-cian:#00C2FF;--jm-verde:#22C55E;--jm-rojo:#FF3B2E;--jm-texto:#eee6da;--jm-texto2:#a3a9b3;--jm-fondo:#0d0f13;--jm-panel:#161a21;--jm-borde:#374151}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--jm-fondo) url(credits-hero.webp) center/cover no-repeat fixed;color:var(--jm-texto);font:500 18px/1.5 Rajdhani,system-ui,sans-serif;padding:24px 16px 48px}
+main{max-width:760px;margin:0 auto}
+section,header{background:linear-gradient(180deg,#1a1f27,var(--jm-panel));border:2px solid var(--jm-naranja);padding:20px 22px;margin:0 0 16px;overflow-wrap:anywhere;box-shadow:0 14px 40px rgba(0,0,0,.6)}
+header{border-width:3px;border-left-width:8px}
+h1{margin:0 0 10px;font-size:clamp(34px,9vw,64px);line-height:.9;letter-spacing:.04em;text-transform:uppercase;color:var(--jm-naranja);text-wrap:balance}
+h2{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--jm-borde);font-size:26px;line-height:1.1;letter-spacing:.06em;text-transform:uppercase;color:var(--jm-naranja)}
+h2::before{content:"";flex:none;width:6px;height:20px;background:var(--jm-naranja)}
+h3{margin:18px 0 6px;font-size:19px;letter-spacing:.06em;text-transform:uppercase;color:var(--jm-amarillo)}
+p{margin:0 0 12px;max-width:68ch}p:last-child{margin-bottom:0}
+ul,ol{margin:0 0 12px;padding-left:22px}li{margin-bottom:4px}li::marker{color:var(--jm-naranja)}
+b{color:var(--jm-naranja)}
+.tbl{overflow-x:auto;margin:0 0 12px}
+table{border-collapse:collapse;width:100%;font-size:17px}
+th,td{border:1px solid var(--jm-borde);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--jm-fondo);color:var(--jm-naranja);text-transform:uppercase;letter-spacing:.05em;font-size:15px}
+tbody tr:nth-child(even){background:rgba(255,255,255,.03)}
+kbd{display:inline-block;min-width:1.6em;text-align:center;background:var(--jm-fondo);border:1px solid var(--jm-naranja);border-bottom-width:3px;border-radius:3px;padding:0 6px;font:700 15px Rajdhani,system-ui,sans-serif;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;min-height:48px;background:var(--jm-naranja);color:#111;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;padding:12px 28px}
+.btn:hover{background:var(--jm-amarillo)}
+a:not(.btn){color:var(--jm-naranja);text-underline-offset:3px}a:not(.btn):hover{color:var(--jm-amarillo)}
+a:focus-visible{outline:3px solid var(--jm-cian);outline-offset:3px}
+time{display:block;color:var(--jm-texto2);font-size:15px;letter-spacing:.06em}
+@media (max-width:480px){body{padding:16px 16px 40px}section,header{padding:16px}h2{font-size:22px}}

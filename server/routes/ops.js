@@ -32,6 +32,7 @@ app.get("/api/pay/checkout", async (req, res) => {
   if (!w?.email) return res.status(401).json({ error: "Se requiere ingresar con mail" });
   const plan = db.plan(String(req.query.plan || "")), prov = String(req.query.provider || "");
   if (!plan) return res.status(404).json({ error: "Plan inexistente" });
+  if (!plan.price || plan.period === "forever") return res.status(400).json({ error: "Ese plan solo se asigna desde el admin" });
   if (prov !== "stripe" && prov !== "paypal") return res.status(400).json({ error: "provider debe ser stripe o paypal" });
   if (!(prov === "stripe" ? pay.stripeOn(E) : pay.paypalOn(E))) return res.status(503).json({ error: `Pagos con ${prov} no configurados en el servidor` });
   try {

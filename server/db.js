@@ -4,7 +4,7 @@ import { randomBytes, createHmac } from "node:crypto";
 import { readFileSync, existsSync } from "node:fs";
 
 const DAY = 86400e3;
-export const PERIODS = { month: 30, year: 365 }; // días que suma un pago
+export const PERIODS = { month: 30, year: 365, forever: 36500 }; // días que suma un pago; ponytail: "sin vencimiento" = 100 años, sin caso especial (nunca entra en avisos)
 export const normMail = (m) => String(m || "").trim().toLowerCase();
 // Alias público de récords: 3-16, letras/números/espacio/guion/guion bajo; lista corta de insultos (subcadena, sin tildes ni mayúsculas).
 export const BLOCKED_ALIAS = ["puta", "puto", "mierda", "pendejo", "pelotudo", "boludo", "forro", "concha", "verga", "cagon", "culo", "carajo", "chingar", "joder", "maricon", "zorra", "idiota", "estupido", "imbecil", "gilipollas"];
@@ -85,7 +85,7 @@ export function openDb(file, invitesJson = null) {
   CREATE TABLE IF NOT EXISTS invites(code TEXT PRIMARY KEY, email TEXT NOT NULL, expiresAt INTEGER NOT NULL, usedAt INTEGER);
   CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, at INTEGER NOT NULL, actor TEXT NOT NULL, action TEXT NOT NULL, target TEXT, detail TEXT, ip TEXT);
   CREATE TABLE IF NOT EXISTS admin_codes(code TEXT PRIMARY KEY, expiresAt INTEGER NOT NULL, usedAt INTEGER);
-  CREATE TABLE IF NOT EXISTS plans(id TEXT PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL CHECK(price > 0), currency TEXT NOT NULL, period TEXT NOT NULL CHECK(period IN ('month','year')));
+  CREATE TABLE IF NOT EXISTS plans(id TEXT PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL CHECK(price >= 0), currency TEXT NOT NULL, period TEXT NOT NULL CHECK(period IN ('month','year','forever')));
   CREATE TABLE IF NOT EXISTS subscriptions(email TEXT PRIMARY KEY, planId TEXT, status TEXT NOT NULL CHECK(status IN ('active','canceled')),
     provider TEXT NOT NULL CHECK(provider IN ('manual','stripe','paypal')), providerRef TEXT, currentPeriodEnd INTEGER NOT NULL);
   CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY, at INTEGER NOT NULL, uid TEXT NOT NULL, type TEXT NOT NULL, data TEXT);
@@ -113,6 +113,10 @@ export function openDb(file, invitesJson = null) {
     } catch (e) { console.error("import invites.json", e.message); }
   }
 
+  // Migración: plans viejo (precio > 0, solo month|year) → admite gratis y sin vencimiento. SQLite no altera CHECK: se rearma la tabla.
+  if (one("SELECT sql FROM sqlite_master WHERE name='plans'")?.sql.includes("price > 0")) tx(() => db.exec(`ALTER TABLE plans RENAME TO plans_old;
+    CREATE TABLE plans(id TEXT PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL CHECK(price >= 0), currency TEXT NOT NULL, period TEXT NOT NULL CHECK(period IN ('month','year','forever')));
+    INSERT INTO plans SELECT id,name,price,currency,period FROM plans_old; DROP TABLE plans_old;`));
   db.exec("CREATE TABLE IF NOT EXISTS ranking_ban(uid TEXT PRIMARY KEY); CREATE TABLE IF NOT EXISTS hidden_events(id INTEGER PRIMARY KEY)");
   const OK = "AND id NOT IN (SELECT id FROM hidden_events) AND uid NOT IN (SELECT uid FROM ranking_ban)"; // moderación: filtro común de rankings
   const api = {
@@ -210,6 +214,12 @@ export function openDb(file, invitesJson = null) {
         && (run("UPDATE users SET status='active', activatedAt=COALESCE(activatedAt,?) WHERE email=?", now, inv.email), true));
       return used ? { user: api.user(inv.email) } : { error: "Código ya usado" };
     },
+    // Borrar usuario: sale de users, invitaciones, licencia, avisos y lista de espera; pagos y telemetría quedan como registro.
+    deleteUser(email) {
+      const m = normMail(email);
+      for (const t of ["invites", "subscriptions", "notices", "waitlist"]) run(`DELETE FROM ${t} WHERE email=?`, m);
+      return run("DELETE FROM users WHERE email=?", m).changes > 0;
+    },
     setStatus(email, status, now = Date.now()) {
       const m = normMail(email);
       if (status === "revoked") return run("UPDATE users SET status='revoked', revokedAt=?, tokenVersion=tokenVersion+1 WHERE email=?", now, m).changes > 0;
@@ -298,7 +308,7 @@ export function openDb(file, invitesJson = null) {
     plan: (id) => one("SELECT * FROM plans WHERE id=?", String(id)),
     savePlan({ id, name, price, currency, period }) {
       id = String(id || "").trim(); name = String(name || "").trim(); currency = String(currency || "").trim().toUpperCase(); price = Math.round(+price);
-      if (!/^[a-z0-9-]{1,32}$/.test(id) || !name || !/^[A-Z]{3}$/.test(currency) || !(price > 0) || !PERIODS[period]) throw new Error("Plan inválido: id [a-z0-9-], nombre, precio en centavos > 0, moneda ISO de 3 letras, período month|year");
+      if (!/^[a-z0-9-]{1,32}$/.test(id) || !name || !/^[A-Z]{3}$/.test(currency) || !(price >= 0) || !PERIODS[period]) throw new Error("Plan inválido: id [a-z0-9-], nombre, precio en centavos (0 = gratis), moneda ISO de 3 letras, período month|year|forever");
       run("INSERT INTO plans(id,name,price,currency,period) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, price=excluded.price, currency=excluded.currency, period=excluded.period", id, name, price, currency, period);
     },
     deletePlan: (id) => run("DELETE FROM plans WHERE id=?", String(id)).changes > 0,

@@ -114,6 +114,7 @@ app.post("/admin/api/user", act(({ email, op, note, alias }) => {
   if (op === "alias") return void db.setAlias(email, alias);
   if (op === "revoke") { db.setStatus(email, "revoked"); kick(normMail(email)); return void accessSync(); }
   if (op === "activate") { db.setStatus(email, "active"); return void accessSync(); }
+  if (op === "delete") { const m = normMail(email); if (ADMINS.includes(m)) throw new Error("No se puede borrar un admin"); kick(m); db.deleteUser(m); return void accessSync(); }
   throw new Error("Operación inválida");
 }));
 app.post("/admin/api/templates", act((b) => ({ templates: db.saveTemplates(b) })));

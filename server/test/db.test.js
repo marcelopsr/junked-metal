@@ -200,3 +200,22 @@ test("moderación: usuario vetado y partida oculta salen de los rankings", () =>
   assert.equal(db.weeklyBoard("w", 1).find((r) => r.uid === "cf-b").score, 3);
   assert.throws(() => db.hideEvent(999, true));
 });
+
+test("borrar usuario: desaparece con su invitación y deja de valer el token", () => {
+  const db = openDb(":memory:");
+  db.invite("d@x.com"); db.setStatus("d@x.com", "active");
+  const v = db.user("d@x.com").tokenVersion;
+  assert.ok(db.deleteUser("D@x.com"));
+  assert.equal(db.user("d@x.com"), undefined);
+  assert.ok(!db.tokenOk("d@x.com", v));
+  assert.ok(!db.deleteUser("d@x.com"), "borrar dos veces no rompe");
+});
+
+test("planes gratis y sin vencimiento: se guardan y el alta dura ~100 años", () => {
+  const db = openDb(":memory:");
+  db.savePlan({ id: "amigos", name: "Amigos", price: 0, currency: "USD", period: "forever" });
+  db.invite("f@x.com");
+  db.applyPayment({ ref: "manual:1", provider: "manual", email: "f@x.com", planId: "amigos" }, 0);
+  assert.ok(db.sub("f@x.com").currentPeriodEnd > 99 * 365 * 86400e3);
+  assert.throws(() => db.savePlan({ id: "x", name: "X", price: -1, currency: "USD", period: "month" }));
+});

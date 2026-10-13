@@ -14,9 +14,9 @@ header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:s
 nav{display:flex;flex-wrap:wrap;gap:6px}
 button,input,select,textarea{font:inherit;color:var(--jm-texto);background:var(--jm-panel);border:1px solid var(--jm-borde);border-radius:var(--jm-r);padding:6px 10px}
 button{cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-a.btn{display:inline-block;text-decoration:none;font:inherit;color:var(--jm-texto);border:1px solid var(--jm-borde);border-radius:var(--jm-r);padding:6px 10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+a.btn{display:inline-flex;align-items:center;text-decoration:none;font:inherit;color:var(--jm-texto);border:1px solid var(--jm-borde);border-radius:var(--jm-r);padding:6px 10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 a.btn:hover,a.btn:focus-visible,button:hover,button:focus-visible{border-color:var(--jm-naranja);outline:none}
-button.pri{background:var(--jm-naranja);color:#111;border-color:var(--jm-naranja)}
+button.pri,a.pri{background:var(--jm-naranja);color:#111;border-color:var(--jm-naranja)}
 button.mal,button.danger{border-color:var(--jm-rojo);color:var(--jm-rojo)}
 nav button[aria-pressed=true]{border-color:var(--jm-naranja);color:var(--jm-naranja)}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--jm-naranja);outline-offset:1px}
@@ -55,13 +55,75 @@ button.lnk{background:none;border:0;padding:0;min-height:0;text-transform:none;l
 }
 h2,h3,dialog{overflow-wrap:anywhere}#uDay,#uModes{color:var(--jm-naranja)}#uDay svg{display:block}
 summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-height:44px}
+/* pulida visual */
+body{background:radial-gradient(1200px 500px at 50% -200px,#2a1a0c 0,var(--jm-fondo) 70%) no-repeat,var(--jm-fondo)}
+header{padding-bottom:12px;border-bottom:3px solid var(--jm-naranja)}
+h1{font-size:34px;margin:0}h1 small{display:block;font-size:13px;letter-spacing:.2em;color:var(--jm-texto2);font-weight:500}
+.panel{background:linear-gradient(180deg,#171c25,var(--jm-fondo2));border-color:#b5651d;position:relative}
+.panel h2{display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--jm-borde);margin-bottom:12px}
+.panel h2::before{content:"";width:6px;height:18px;background:var(--jm-naranja)}
+button,a.btn,select,input,textarea{min-height:44px}
+button,a.btn{padding:6px 14px}
+button:hover,a.btn:hover{background:#2b3544}
+button.pri:hover{background:var(--jm-amarillo);border-color:var(--jm-amarillo)}
+button:focus-visible,a.btn:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--jm-cian);outline-offset:2px}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--jm-cian);outline-offset:1px}
+nav{gap:0;border-bottom:2px solid var(--jm-borde);margin-bottom:12px}
+nav button{background:transparent;border:0;border-bottom:4px solid transparent;border-radius:0;color:var(--jm-texto2);padding:6px 16px;margin-bottom:-2px;display:inline-flex;align-items:center;gap:8px}
+nav button:hover{color:var(--jm-texto);background:var(--jm-fondo2)}
+nav button[aria-pressed=true]{color:var(--jm-amarillo);border-bottom-color:var(--jm-amarillo);background:var(--jm-fondo2)}
+.badge{background:var(--jm-naranja);color:#111;border-radius:999px;min-width:22px;padding:0 7px;font-size:13px;line-height:22px;text-align:center}
+.msg:empty{display:none}
+.msg{margin:0 0 12px;padding:10px 14px;background:#2a2210;border:1px solid var(--jm-amarillo);border-left:6px solid var(--jm-amarillo);color:var(--jm-texto);border-radius:var(--jm-r)}
+.msg.ok{background:#0f2418;border-color:var(--jm-verde)}.msg.err{background:#2c1311;border-color:var(--jm-rojo)}
+#lMsg.msg{margin-top:10px}
+tbody tr:nth-child(even){background:rgba(255,255,255,.03)}tbody tr:hover{background:rgba(255,145,56,.08)}
+th,td{padding:10px 8px}th{border-bottom:2px solid var(--jm-borde);position:sticky;top:0}
+.st{display:inline-block;padding:2px 10px;border-radius:999px;border:1px solid currentColor;font-size:12px;letter-spacing:.06em;white-space:nowrap}
+.st.active,.st.vigente{color:var(--jm-verde);background:rgba(34,197,94,.12)}.st.invited{color:var(--jm-amarillo);background:rgba(255,180,0,.12)}
+.st.revoked,.st.vencida{color:var(--jm-rojo);background:rgba(255,59,46,.12)}.st.sin{color:var(--jm-texto2);background:rgba(156,163,175,.1)}
+.vacio{padding:22px 10px;text-align:center;color:var(--jm-texto2);border:1px dashed var(--jm-borde)}
+#wLista{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card{background:var(--jm-panel);border:1px solid var(--jm-borde);border-left:4px solid var(--jm-naranja);border-radius:var(--jm-r);padding:12px;display:grid;gap:8px;align-content:start}
+.card .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.card .mono{font-size:15px;font-weight:700}
+.card q{display:block;quotes:none;background:var(--jm-fondo);border-left:3px solid var(--jm-amarillo);padding:8px 10px;color:var(--jm-texto);font-style:italic;overflow-wrap:anywhere}
+.card .acc{display:flex;gap:8px;flex-wrap:wrap}.card .acc select{flex:1 1 100%}.card .acc button{flex:1}
+#vLista .fila{padding:8px 0;border-bottom:1px solid var(--jm-borde)}
+#caidas{margin:0 0 12px;padding:12px 16px;background:#2c1311;border:2px solid var(--jm-rojo);border-left-width:8px;border-radius:var(--jm-r);color:var(--jm-texto);font-weight:700;letter-spacing:.02em}
+#caidas b{color:var(--jm-rojo);text-transform:uppercase}
+td{font-variant-numeric:tabular-nums}
+td[colspan]{padding:22px 10px;text-align:center;color:var(--jm-texto2);border-bottom:1px dashed var(--jm-borde)}
+.panel h3{margin:18px 0 8px;letter-spacing:.08em}.panel h2+h3{margin-top:0}
+.panel h2 span{color:var(--jm-amarillo);font-size:16px;letter-spacing:.06em}
+#uDay{padding:10px 0 0;border-bottom:2px solid var(--jm-borde)}#uDay p{margin:8px 0}
+.barra{display:grid;grid-template-columns:minmax(90px,160px) 1fr 3.5em;gap:10px;align-items:center;margin:6px 0}
+.barra span:first-child{color:var(--jm-texto);text-transform:uppercase;font-weight:700;letter-spacing:.04em;font-size:14px}
+.barra span:last-child{color:var(--jm-texto);text-align:right;font-variant-numeric:tabular-nums}
+.barra>div{height:14px;background:var(--jm-fondo);border:1px solid var(--jm-borde)}.barra>div>div{height:100%;background:currentColor}
+#uAb{font-size:18px;color:var(--jm-texto)}
+#red>p{padding:10px 14px;background:var(--jm-panel);border-left:4px solid var(--jm-verde);border-radius:var(--jm-r)}
+pre{border-radius:var(--jm-r);color:var(--jm-texto2);max-height:260px;overflow:auto}
+dialog{padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.8)}dialog h3{margin-top:6px}
+#fAviso{max-width:560px}
+#login{max-width:520px;margin:40px auto}
+.borrar{margin-left:auto}
+:root{color-scheme:dark}
+select{appearance:none;-webkit-appearance:none;padding-right:36px;background:var(--jm-panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23FF9138' stroke-width='2.2'/%3E%3C/svg%3E") no-repeat right 12px center;cursor:pointer}
+select:hover:not(:disabled){border-color:var(--jm-naranja)}
+option{background:var(--jm-panel);color:var(--jm-texto)}
+select:disabled,button:disabled{opacity:.5;cursor:not-allowed}
+#iPlan,#bPlan{min-width:220px}
+.sinplan{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 12px;padding:10px 14px;background:#2a2210;border:1px solid var(--jm-amarillo);border-left:6px solid var(--jm-amarillo);border-radius:var(--jm-r)}
+.sinplan.hidden{display:none}#pWait .sinplan{grid-column:1/-1}
+@media(max-width:640px){nav{overflow-x:auto;flex-wrap:nowrap}nav button{flex:0 0 auto}h1{font-size:26px}#wLista{grid-template-columns:1fr}tbody tr:nth-child(even){background:var(--jm-panel)}}
 </style></head><body><main>
-<div id="caidas" class="msg hidden" role="alert" style="background:#b00020;color:#fff;padding:10px 14px;border-radius:6px;margin-bottom:10px"></div>
-<header><h1>Junked Metal: administración</h1><div class="fila"><span id="quien" class="muted"></span><button id="salir" class="hidden">Salir</button></div></header>
+<div id="caidas" class="hidden" role="alert"></div>
+<header><h1><small>Junked Metal</small>Administración</h1><div class="fila"><span id="quien" class="muted"></span><button id="salir" class="hidden">Salir</button></div></header>
 
 <section id="login" class="panel hidden">
   <h2>Ingreso</h2>
-  <p><a class="pri" id="lCf" style="display:inline-block;padding:10px 16px;text-decoration:none">Ingresar con Cloudflare</a></p>
+  <p><a class="btn pri" id="lCf">Ingresar con Cloudflare</a></p>
   <details><summary class="muted">Otras credenciales</summary>
   <form id="fLogin" class="fila">
     <select id="lTipo" aria-label="Tipo de credencial"><option value="key">Clave de admin</option><option value="code">Código de un solo uso</option><option value="token">Token de ingreso (cf-)</option></select>
@@ -79,6 +141,7 @@ summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-
   <section data-s="usuarios">
     <div class="panel">
       <h2>Agregar amigo</h2>
+      <div class="sinplan hidden" role="note"><span><b>No hay planes.</b> Sin un plan no se puede dar de alta a nadie: el servidor exige una licencia.</span><button type="button" class="pri" data-ir="pagos">Crear un plan en Pagos</button></div>
       <form id="fInv" class="fila"><input id="iMail" type="email" required placeholder="mail@ejemplo.com" aria-label="Mail a invitar"><select id="iPlan" aria-label="Licencia"></select><button class="pri">Generar invitación</button></form>
       <div id="iOut" class="fila hidden" style="margin-top:10px"><code id="iLink"></code><button id="iCopy">Copiar</button><a class="btn" id="iMailto" target="_blank" rel="noopener">Enviar por mail</a><span id="iVence" class="muted"></span></div>
       <details style="margin-top:12px"><summary class="muted">Invitar varios (hasta 50)</summary>
@@ -88,7 +151,7 @@ summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-
       </details>
     </div>
     <div class="panel hidden" id="pVence"><h2 id="vTit"></h2><div id="vLista"></div></div>
-    <div class="panel hidden" id="pWait"><h2 id="wTit"></h2><div id="wLista"></div></div>
+    <div class="panel hidden" id="pWait"><h2 id="wTit"></h2><div class="sinplan hidden" role="note"><span><b>No hay planes.</b> Sin un plan no se puede dar de alta a nadie: el servidor exige una licencia.</span><button type="button" class="pri" data-ir="pagos">Crear un plan en Pagos</button></div><div id="wLista"></div></div>
     <div class="panel"><h2>Usuarios</h2>
       <div class="bf"><input id="qUser" type="search" placeholder="Buscar mail, alias o nota" aria-label="Buscar usuarios">
         <select id="fEstado" aria-label="Estado"><option value="">Todos los estados</option><option value="active">Activo</option><option value="invited">Invitado</option><option value="revoked">Revocado</option></select>
@@ -105,11 +168,12 @@ summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-
       <form id="fPlan" class="fila">
         <input name="id" required pattern="[a-z0-9-]{1,32}" placeholder="id (mensual)" aria-label="Id">
         <input name="name" required placeholder="Nombre" aria-label="Nombre">
-        <input name="price" required type="number" min="0.01" step="0.01" placeholder="Precio (5.00)" aria-label="Precio">
+        <input name="price" required type="number" min="0" step="0.01" placeholder="Precio (5.00)" aria-label="Precio" title="0 = gratis, solo se asigna desde el admin">
         <input name="currency" required pattern="[A-Za-z]{3}" maxlength="3" placeholder="USD" aria-label="Moneda" style="width:80px">
-        <select name="period" aria-label="Período"><option value="month">Mensual (30 días)</option><option value="year">Anual (365 días)</option></select>
+        <select name="period" aria-label="Período"><option value="month">Mensual (30 días)</option><option value="year">Anual (365 días)</option><option value="forever">Sin vencimiento</option></select>
         <button class="pri">Guardar plan</button>
       </form>
+      <p class="muted">Precio 0 = gratis, solo se asigna desde el admin.</p>
     </div>
     <div class="panel">
       <h2>Plantillas de correo</h2>
@@ -123,7 +187,7 @@ summary{min-height:44px;display:flex;align-items:center;cursor:pointer}#lCf{min-
   <section data-s="auditoria" class="hidden"><div class="panel"><h2>Registro de auditoría</h2><div class="scroll"><table><thead><tr><th>Fecha</th><th>Quién</th><th>Acción</th><th>Objetivo</th><th>Detalle</th><th>IP</th></tr></thead><tbody id="tAudit"></tbody></table></div></div></section>
 
   <section data-s="uso" class="hidden"><div class="panel"><h2>Partidas por día (30 días)</h2><div id="uDay"></div></div><div class="panel"><h2>Modos más jugados</h2><div id="uModes"></div></div><div class="panel"><h2>Abandono</h2><p id="uAb" class="muted"></p></div></section>
-  <section data-s="telemetria" class="hidden"><div class="panel"><a class="btn" href="/admin/api/export?what=events&days=30" download>Descargar eventos</a> <a class="btn" href="/admin/api/export?what=analysis&days=30" download>Descargar análisis</a></div><div class="panel"><h2>Últimos 7 días</h2><div class="scroll"><table><thead><tr><th>Evento</th><th>Cantidad</th><th>Usuarios</th></tr></thead><tbody id="tTelS"></tbody></table></div></div>
+  <section data-s="telemetria" class="hidden"><div class="panel fila"><a class="btn" href="/admin/api/export?what=events&days=30" download>Descargar eventos</a><a class="btn" href="/admin/api/export?what=analysis&days=30" download>Descargar análisis</a></div><div class="panel"><h2>Últimos 7 días</h2><div class="scroll"><table><thead><tr><th>Evento</th><th>Cantidad</th><th>Usuarios</th></tr></thead><tbody id="tTelS"></tbody></table></div></div>
     <div class="panel"><h2>Análisis 30 días</h2>
       <h3>Pactos</h3><div class="scroll"><table><thead><tr><th>Pacto</th><th>Aceptado</th><th>Rechazado</th></tr></thead><tbody id="tPact"></tbody></table></div>
       <h3>Quedarse vs avanzar</h3><div class="scroll"><table><thead><tr><th>Escenario</th><th>Quedarse</th><th>Avanzar</th><th>% quedarse</th></tr></thead><tbody id="tStage"></tbody></table></div>
@@ -161,6 +225,10 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fecha = (t) => (t ? new Date(t).toLocaleString("es", { dateStyle: "short", timeStyle: "short" }) : "Nunca");
 const dinero = (c, m) => (c / 100).toFixed(2) + " " + m;
+const precioTxt = (p) => (p.price ? `${esc(p.currency)} ${+(p.price / 100).toFixed(2)}` : "Gratis");
+const periodoTxt = (p) => ({ year: "Anual", forever: "Permanente" })[p.period] || "Mensual";
+const planEt = (p) => `${esc(p.name)} · ${precioTxt(p)}${p.period === "forever" ? " · sin vencimiento" : ` / ${p.period === "year" ? "año" : "mes"}`}`;
+const permanente = (t) => t > Date.now() + 50 * 365 * 864e5;
 const ESTADO = { active: "Activo", invited: "Invitado", revoked: "Revocado" };
 let users = [], plans = [], actual = null, vista = "usuarios";
 
@@ -171,8 +239,9 @@ async function api(path, body) {
   if (!r.ok) throw new Error(j.error || "Error " + r.status);
   return j;
 }
-const aviso = (t) => { $("msg").textContent = t; };
-const intentar = (fn) => async (...a) => { try { await fn(...a); } catch (e) { aviso(e.message); } };
+const aviso = (t, err) => { $("msg").textContent = t; $("msg").className = "msg" + (t ? (err ? " err" : " ok") : ""); };
+const intentar = (fn) => async (...a) => { try { await fn(...a); } catch (e) { aviso(e.message, true); } };
+const hace = (t) => { const m = Math.max(0, (Date.now() - t) / 6e4); return m < 1 ? "hace un momento" : m < 60 ? `hace ${Math.floor(m)} min` : m < 1440 ? `hace ${Math.floor(m / 60)} h` : `hace ${Math.floor(m / 1440)} d`; };
 
 // Ingreso con Cloudflare: el Worker jm-login vuelve con #token=<cf-...> de un mail de ADMIN_EMAILS.
 $("lCf").href = "https://jm-login.mesr-96.workers.dev/login?return=" + encodeURIComponent(location.origin + location.pathname);
@@ -204,8 +273,10 @@ async function salud() {
 setInterval(() => { if (!$("app").classList.contains("hidden")) salud(); }, 60e3);
 const cargar = intentar(async () => {
   [users, plans] = await Promise.all([api("users"), api("plans")]);
-  $("iPlan").innerHTML = (plans.length ? "" : `<option value="">Crear un plan en Pagos</option>`) + plans.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
+  $("iPlan").innerHTML = (plans.length ? "" : `<option value="">Sin planes</option>`) + plans.map((p) => `<option value="${esc(p.id)}">${planEt(p)}</option>`).join("");
   $("bPlan").innerHTML = $("iPlan").innerHTML;
+  ["iPlan", "bPlan"].forEach((id) => { $(id).disabled = !plans.length; $(id).form.querySelector("button.pri").disabled = !plans.length; });
+  document.querySelectorAll(".sinplan").forEach((d) => d.classList.toggle("hidden", plans.length > 0));
   pintarUsers(); pintarPlans();
   if (!tpls) { tpls = await api("templates"); pintarTpls(); }
   pintarVence(await api("expiring"));
@@ -216,6 +287,7 @@ const cargar = intentar(async () => {
   if (vista === "telemetria") pintarTel();
 });
 
+document.addEventListener("click", (e) => { const b = e.target.closest("[data-ir]"); if (b) document.querySelector(`nav [data-v="${b.dataset.ir}"]`).click(); });
 document.querySelectorAll("nav button").forEach((b) => b.onclick = () => {
   vista = b.dataset.v;
   document.querySelectorAll("nav button").forEach((x) => x.setAttribute("aria-pressed", x === b));
@@ -224,17 +296,17 @@ document.querySelectorAll("nav button").forEach((b) => b.onclick = () => {
 });
 
 function planDe(u) {
-  if (!u.planId && !u.currentPeriodEnd) return "Sin plan";
+  if (!u.planId && !u.currentPeriodEnd) return `<span class="st sin">Sin licencia</span>`;
   const vig = u.subStatus === "active" && u.currentPeriodEnd > Date.now();
-  return `${esc(u.planName || u.planId || "Manual")} <span class="muted">(${vig ? "vence" : u.subStatus === "canceled" ? "cancelada" : "vencida"} ${new Date(u.currentPeriodEnd).toLocaleDateString("es")}, ${esc(u.provider)})</span>`;
+  return `${esc(u.planName || u.planId || "Manual")} <span class="st ${vig ? "vigente" : "vencida"}">${vig ? "Vigente" : u.subStatus === "canceled" ? "Cancelada" : "Vencida"}</span> <span class="muted">${permanente(u.currentPeriodEnd) ? "Permanente" : `${vig ? "vence" : "venció"} ${new Date(u.currentPeriodEnd).toLocaleDateString("es")}`}, ${esc(u.provider)}</span>`;
 }
 let vence = [];
 function pintarVence(r) {
   vence = [...r.soon.map((u) => ({ ...u, lapsed: false })), ...r.lapsed.map((u) => ({ ...u, lapsed: true }))];
   $("pVence").classList.toggle("hidden", !vence.length);
   $("vTit").textContent = `${r.soon.length} licencias vencen en 3 días` + (r.lapsed.length ? ` · ${r.lapsed.length} vencidas esta semana` : "");
-  $("vLista").innerHTML = vence.map((u, i) => `<div class="fila"><span class="mono">${esc(u.email)}</span> ${esc(u.planName || u.planId || "Manual")} <span class="muted">${u.lapsed ? "venció" : "vence"} ${esc(new Date(u.currentPeriodEnd).toLocaleDateString("es"))}</span>
-    ${u.planId ? `<button data-vi="${i}">Marcar pagado (+1 período)</button>` : ""}
+  $("vLista").innerHTML = vence.map((u, i) => `<div class="fila"><span class="mono">${esc(u.email)}</span> ${esc(u.planName || u.planId || "Manual")} <span class="muted">${u.lapsed ? "venció" : "vence"} ${esc(fechaCorta(u.currentPeriodEnd))}</span>
+    ${u.planId && !(u.currentPeriodEnd > Date.now() + 50 * 365 * 86400e3) ? `<button data-vi="${i}">Marcar pagado (+1 período)</button>` : ""}
     <a class="btn" target="_blank" rel="noopener" href="${esc(gmail(u.email, tpls[u.lapsed ? "lapsed" : "expiring"], { plan: u.planName || u.planId || "Manual", vence: fechaCorta(u.currentPeriodEnd) }))}">Avisar por mail</a></div>`).join("");
 }
 $("vLista").onclick = intentar(async (e) => {
@@ -247,14 +319,17 @@ function pintarWait(l) {
   espera = l;
   $("pWait").classList.toggle("hidden", !l.length);
   $("wTit").textContent = `Lista de espera (${l.length})`;
-  $("wLista").innerHTML = l.map((w, i) => `<div class="fila"><span class="muted">${esc(fecha(w.at))}</span> <span class="mono">${esc(w.email)}</span> <span>${esc(w.mensaje)}</span>
-    <select data-wp="${i}" aria-label="Licencia">${$("iPlan").innerHTML}</select><button data-wi="${i}">Invitar</button><button class="mal" data-wd="${i}">Descartar</button></div>`).join("");
+  document.querySelector('nav [data-v="usuarios"]').innerHTML = l.length ? `Usuarios <span class="badge" title="${l.length} pedidos">${l.length} pedidos</span>` : "Usuarios"; // aviso de pedidos pendientes
+  $("wLista").innerHTML = l.map((w, i) => `<div class="card"><div class="top"><span class="mono">${esc(w.email)}</span><span class="muted" title="${esc(fecha(w.at))}">${esc(hace(w.at))}</span></div>
+    ${w.mensaje ? `<q>${esc(w.mensaje)}</q>` : `<span class="muted">Sin mensaje</span>`}
+    <div class="acc"><select data-wp="${i}" aria-label="Licencia de ${esc(w.email)}" ${plans.length ? "" : "disabled"}>${$("iPlan").innerHTML}</select><button class="pri" data-wi="${i}" ${plans.length ? "" : "disabled"}>Invitar</button><button class="mal" data-wd="${i}">Descartar</button></div></div>`).join("");
 }
 $("wLista").onclick = intentar(async (e) => {
   const b = e.target.closest("button"); if (!b) return;
   const i = b.dataset.wi ?? b.dataset.wd, w = espera[i];
   if (b.dataset.wd !== undefined) { await api("waitlist/discard", { email: w.email }); aviso("Descartado."); return cargar(); }
-  const r = await api("waitlist/invite", { email: w.email, planId: b.parentNode.querySelector("select").value });
+  const sel = b.parentNode.querySelector("select"), r = await api("waitlist/invite", { email: w.email, planId: sel.value });
+  $("iMailto").href = gmail(w.email, tpls.invite, { link: r.link, vence: fecha(r.expiresAt), plan: plans.find((p) => p.id === sel.value)?.name ?? "" });
   $("iLink").textContent = r.link; $("iVence").textContent = `Para ${w.email} · vence ${fecha(r.expiresAt)}`; $("iOut").classList.remove("hidden"); $("iOut").scrollIntoView();
   aviso("Invitado."); cargar();
 });
@@ -266,7 +341,8 @@ function pintarUsers() {
   $("tUsers").innerHTML = vis.map(([u, i]) => `<tr><td class="mono" data-l="Mail"><button class="lnk" data-op="ficha" data-i="${i}">${esc(u.email)}</button></td><td>${esc(u.alias)}</td><td><span class="st ${u.status}">${ESTADO[u.status]}</span></td><td>${fecha(u.lastSeen)}</td><td>${planDe(u)}</td><td>${esc(u.note)}</td><td class="fila">
     ${u.status === "active" ? `<button class="mal" data-op="revoke" data-i="${i}">Revocar</button>` : `<button data-op="activate" data-i="${i}">${u.status === "invited" ? "Validar" : "Reactivar"}</button>`}
     <button data-op="link" data-i="${i}">Nuevo link</button>
-    <button data-op="gestionar" data-i="${i}">Gestionar</button></td></tr>`).join("") || `<tr><td colspan="7">Sin usuarios</td></tr>`;
+    <button data-op="gestionar" data-i="${i}">Gestionar</button>
+    <button class="danger borrar" data-op="delete" data-i="${i}">Borrar</button></td></tr>`).join("") || `<tr><td colspan="7" class="vacio">${users.length ? "Ningún usuario coincide con el filtro." : "Aún no hay usuarios. Genera una invitación arriba para sumar al primero."}</td></tr>`;
 }
 ["qUser", "fEstado", "fLic"].forEach((id) => $(id).oninput = pintarUsers);
 // Celular: cada celda lleva el título de su columna (data-l) para mostrar las filas como tarjetas.
@@ -280,6 +356,10 @@ $("tUsers").onclick = intentar(async (e) => {
   if (b.dataset.op === "gestionar") return abrir(u);
   if (b.dataset.op === "ficha") return ficha(u);
   if (b.dataset.op === "link") { const r = await api("invite", { email: u.email }); $("iLink").textContent = r.link; $("iVence").textContent = `Para ${u.email} · vence ${fecha(r.expiresAt)}`; $("iOut").classList.remove("hidden"); $("iOut").scrollIntoView(); return aviso("Nuevo link generado."); }
+  if (b.dataset.op === "delete") {
+    if (!confirm("Borrar " + u.email + "? Pierde el acceso y la licencia; no se puede deshacer.")) return;
+    await api("user", { email: u.email, op: "delete" }); aviso("Usuario borrado."); return cargar();
+  }
   if (b.dataset.op === "revoke" && !confirm(`Revocar a ${u.email}? Sus tokens dejan de valer al instante.`)) return;
   await api("user", { email: u.email, op: b.dataset.op });
   aviso(b.dataset.op === "revoke" ? `${u.email} revocado.` : `${u.email} activo.`); cargar();
@@ -287,9 +367,9 @@ $("tUsers").onclick = intentar(async (e) => {
 
 // Plantillas: {alias} {mail} {link} {vence} {plan}. Todo valor va por encodeURIComponent a la URL de Gmail compose.
 const fill = (t, v) => String(t).replace(/\{(alias|mail|link|vence|plan)\}/g, (_, k) => v[k] ?? "");
-const fechaCorta = (t) => new Date(t).toLocaleDateString("es");
+const fechaCorta = (t) => (permanente(t) ? "Permanente" : new Date(t).toLocaleDateString("es"));
 const gmail = (email, tpl, v) => { const d = { mail: email, alias: users.find((u) => u.email === email)?.alias || email.split("@")[0], ...v }; return "https://mail.google.com/mail/?view=cm&to=" + encodeURIComponent(email) + "&su=" + encodeURIComponent(fill(tpl.subject, d)) + "&body=" + encodeURIComponent(fill(tpl.body, d)); };
-const planTxt = (id) => $(id).selectedOptions[0]?.textContent || "";
+const planTxt = (id) => plans.find((p) => p.id === $(id).value)?.name || ""; // nombre solo, sin precio, para el correo
 let tpls = null;
 const TPL_NOMBRES = { invite: "Invitación", expiring: "Recordatorio de vencimiento (3 días antes)", lapsed: "Renovación / licencia vencida" };
 const EJEMPLO = { alias: "Ana", mail: "ana@ejemplo.com", link: "https://ejemplo.com/?invite=abc123", vence: "31/12/2026", plan: "Mensual" };
@@ -359,7 +439,7 @@ $("iCopy").onclick = intentar(async () => { await navigator.clipboard.writeText(
 function abrir(u) {
   actual = u; $("dTitulo").textContent = u.email; $("dNota").value = u.note || ""; $("dAlias").value = u.alias || "";
   $("dSub").innerHTML = planDe(u);
-  $("dPlan").innerHTML = plans.map((p) => `<option value="${esc(p.id)}" ${p.id === u.planId ? "selected" : ""}>${esc(p.name)} (${dinero(p.price, p.currency)})</option>`).join("") || `<option value="">Sin planes</option>`;
+  $("dPlan").innerHTML = plans.map((p) => `<option value="${esc(p.id)}" ${p.id === u.planId ? "selected" : ""}>${planEt(p)}</option>`).join("") || `<option value="">Sin planes</option>`;
   const d = new Date(u.currentPeriodEnd || Date.now() + 30 * 864e5); $("dHasta").value = d.toISOString().slice(0, 10);
   $("dUser").showModal();
 }
@@ -371,7 +451,7 @@ $("dPagado").onclick = enUser(() => api("sub", { email: actual.email, op: "paid"
 $("dCancelar").onclick = enUser(() => api("sub", { email: actual.email, op: "cancel" }), "Suscripción cancelada.");
 
 function pintarPlans() {
-  $("tPlans").innerHTML = plans.map((p, i) => `<tr><td class="mono">${esc(p.id)}</td><td>${esc(p.name)}</td><td>${dinero(p.price, p.currency)}</td><td>${p.period === "year" ? "Anual" : "Mensual"}</td><td class="fila"><button data-e="${i}">Editar</button><button class="mal" data-d="${i}">Borrar</button></td></tr>`).join("") || `<tr><td colspan="5">Sin planes</td></tr>`;
+  $("tPlans").innerHTML = plans.map((p, i) => `<tr><td class="mono">${esc(p.id)}</td><td>${esc(p.name)}</td><td>${p.price ? dinero(p.price, p.currency) : "Gratis"}</td><td>${periodoTxt(p)}</td><td class="fila"><button data-e="${i}">Editar</button><button class="mal" data-d="${i}">Borrar</button></td></tr>`).join("") || `<tr><td colspan="5">Sin planes</td></tr>`;
 }
 $("tPlans").onclick = intentar(async (e) => {
   const b = e.target.closest("button"); if (!b) return;
@@ -380,7 +460,7 @@ $("tPlans").onclick = intentar(async (e) => {
   if (!confirm(`Borrar el plan ${p.name}?`)) return;
   await api("plan/delete", { id: p.id }); aviso("Plan borrado."); cargar();
 });
-$("fAviso").onsubmit = intentar(async (e) => { e.preventDefault(); await api("aviso", { texto: $("avT").value, hasta: new Date($("avH").value).getTime() }); aviso("Aviso guardado"); });
+$("fAviso").onsubmit = intentar(async (e) => { e.preventDefault(); await api("aviso", { texto: $("avT").value, hasta: new Date($("avH").value).getTime() }); aviso("Aviso guardado."); });
 api("aviso").then((a) => { if (a.texto) { $("avT").value = a.texto; $("avH").value = new Date(a.hasta - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 16); } }, () => {});
 $("fPlan").onsubmit = intentar(async (e) => {
   e.preventDefault(); const f = e.target.elements;
@@ -400,8 +480,8 @@ async function pintarRed() {
 }
 async function pintarUso() {
   const u = await api("uso"), max = Math.max(1, ...u.perDay.map((d) => d.n)), mm = Math.max(1, ...u.modes.map((m) => m.n));
-  $("uDay").innerHTML = u.perDay.length ? `<svg viewBox="0 0 ${u.perDay.length * 12} 100" preserveAspectRatio="none" style="width:100%;height:120px" role="img" aria-label="Partidas por día">${u.perDay.map((d, i) => `<rect x="${i * 12 + 1}" y="${100 - 100 * d.n / max}" width="10" height="${100 * d.n / max}" fill="currentColor"><title>${esc(d.day)}: ${d.n}</title></rect>`).join("")}</svg><p class="muted">${esc(u.perDay[0].day)} a ${esc(u.perDay.at(-1).day)}, máx. ${max}/día</p>` : "Sin datos";
-  $("uModes").innerHTML = u.modes.map((m) => `<div style="display:flex;gap:8px;align-items:center;margin:4px 0"><span style="min-width:90px">${esc(m.mode)}</span><div style="flex:1;background:#8883;height:14px"><div style="width:${100 * m.n / mm}%;height:100%;background:currentColor"></div></div><span>${m.n}</span></div>`).join("") || "Sin datos";
+  $("uDay").innerHTML = u.perDay.length ? `<svg viewBox="0 0 ${u.perDay.length * 12} 100" preserveAspectRatio="none" style="width:100%;height:140px" role="img" aria-label="Partidas por día">${u.perDay.map((d, i) => `<rect x="${i * 12 + 1}" y="${100 - 100 * d.n / max}" width="10" height="${100 * d.n / max}" fill="currentColor"><title>${esc(d.day)}: ${d.n}</title></rect>`).join("")}</svg><p class="muted">${esc(u.perDay[0].day)} a ${esc(u.perDay.at(-1).day)}, máx. ${max}/día</p>` : "Sin datos";
+  $("uModes").innerHTML = u.modes.map((m) => `<div class="barra"><span>${esc(m.mode)}</span><div><div style="width:${100 * m.n / mm}%"></div></div><span>${m.n}</span></div>`).join("") || "Sin datos";
   $("uAb").textContent = `${u.abandonPct}% de abandono (${u.started} inicios, ${u.ended} finales)`;
 }
 $("tMod").onclick = intentar(async (e) => { const b = e.target.closest("button[data-mod]"); if (!b) return; await api("ranking/event", { id: b.dataset.mod, on: b.dataset.on === "1" }); aviso("Ranking actualizado."); pintarTel(); });
