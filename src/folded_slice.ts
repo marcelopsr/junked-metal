@@ -651,23 +651,25 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     bumper(q.paragolpe_ancho, cy - 0.12, cl / 2 + 0.1); bumper(q.paragolpe_ancho, cy - 0.12, -cl / 2 - 0.1); num(cw / 2 + 0.005, cy, 0.1, 0.3);
     for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) strut([x * 0.3, cy - 0.2, z * 0.62], [x * (0.8 * q.trocha_k - 0.18), 0.05, z * 0.72 * q.batalla_k], q.amort_grosor, q.amort_grosor, FOLD.painted("#ef4444", 0.6, 211));
   } else if (kind === "formula") { // fórmula: trompa baja, pontones, alerón delantero, halo de caño
-    G.box(0.5, 0.16, 1.2, paint, [0, 0.12, 0.75]); G.box(0.8, 0.24, 1.3, paint, [0, 0.16, -0.25]); edges(0.8, 0.28, -0.9, 0.4, paint);
-    for (const s of [-1, 1]) G.box(0.28, 0.2, 0.8, paint, [s * 0.46, 0.12, -0.2]);
-    G.box(1.4, 0.04, 0.3, dark, [0, 0.02, 1.35]); for (const s of [-1, 1]) G.box(0.04, 0.14, 0.32, dark, [s * 0.7, 0.07, 1.35]);
-    G.box(0.42, 0.14, 0.5, dark, [0, 0.32, 0.05]); strut([-0.2, 0.3, -0.15], [0, 0.46, 0.15], 0.03, 0.03, steel); strut([0.2, 0.3, -0.15], [0, 0.46, 0.15], 0.03, 0.03, steel);
-    G.box(0.3, 0.2, 0.6, paint, [0, 0.38, -0.55]); G.trimStrip([0, 0.12, -0.91], undefined, 0.7, 0.08, "hazard", 0.02);
-    G.decal([0, 0.205, 0.8], [Math.PI / 2, 0, 0], "numero", 0.22); lamps(0.18, 0.08, 1.36, 0.08); tails(0.25, 0.2, -0.92);
+    const tw = q.trompa_ancho, tl = q.trompa_largo, th = q.trompa_alto, bw = q.cuerpo_ancho, bh = q.cuerpo_alto, top = 0.16 + bh / 2, pw = q.ponton_ancho, ah = q.toma_alto, fw = q.aleron_del_ancho; // genes: car_genes.ts
+    G.box(tw, th, tl, paint, [0, 0.12, 1.35 - tl / 2]); G.box(bw, bh, 1.3, paint, [0, 0.16, -0.25]); edges(bw, top, -0.9, 0.4, paint);
+    for (const s of [-1, 1]) G.box(pw, 0.2, q.ponton_largo, paint, [s * (bw / 2 + pw / 2 - 0.08), 0.12, -0.2]);
+    G.box(fw, 0.04, 0.3, dark, [0, 0.02, 1.35]); for (const s of [-1, 1]) G.box(0.04, 0.14, 0.32, dark, [s * fw / 2, 0.07, 1.35]);
+    G.box(0.42, 0.14, 0.5, dark, [0, top + 0.04, 0.05]); strut([-0.2, top + 0.02, -0.15], [0, top + 0.18, 0.15], 0.03, 0.03, steel); strut([0.2, top + 0.02, -0.15], [0, top + 0.18, 0.15], 0.03, 0.03, steel);
+    G.box(0.3, ah, 0.6, paint, [0, top + ah / 2, -0.55]); G.trimStrip([0, 0.12, -0.91], undefined, 0.7, 0.08, "hazard", 0.02);
+    G.decal([0, 0.12 + th / 2 + 0.005, 0.8], [Math.PI / 2, 0, 0], "numero", 0.22); lamps(0.18, 0.08, 1.36, 0.08); tails(0.25, 0.2, -0.92);
   } else if (kind === "tanque") { // tanque: orugas con faldones, casco con frente inclinado, torreta plegada, cañón de caño
     const olive = FOLD.painted("#3f4628", 0.8, 221);
+    const oh = q.oruga_alto, cw = q.casco_ancho, ch = q.casco_alto, top = 0.36 + ch / 2, tw = q.torreta_ancho, th = q.torreta_alto, tl = q.torreta_largo, ty = top + th / 2, cl = q.canon_largo; // genes: car_genes.ts
     for (const x of [-0.72, 0.72]) {
-      G.box(0.3, 0.42, 2.0, FOLD.rubber(), [x, 0.02, 0]); for (const z of [-1, 1]) G.cyl(0.42, 0.3, FOLD.rubber(), [x, 0.02, z], [0, 0, Math.PI / 2], 8);
-      G.box(0.36, 0.05, 2.3, olive, [x, 0.28, 0]); G.rivets([x + Math.sign(x) * 0.19, 0.2, -1.0], [x + Math.sign(x) * 0.19, 0.2, 1.0], 8, [Math.sign(x), 0, 0]);
+      G.box(0.3, oh, 2.0, FOLD.rubber(), [x, 0.02, 0]); for (const z of [-1, 1]) G.cyl(oh, 0.3, FOLD.rubber(), [x, 0.02, z], [0, 0, Math.PI / 2], 8);
+      G.box(0.36, 0.05, 2.3, olive, [x, 0.07 + oh / 2, 0]); G.rivets([x + Math.sign(x) * 0.19, 0.2, -1.0], [x + Math.sign(x) * 0.19, 0.2, 1.0], 8, [Math.sign(x), 0, 0]);
     }
-    G.box(1.1, 0.32, 1.8, paint, [0, 0.36, -0.1]); G.box(1.1, 0.06, 0.45, paint, [0, 0.42, 0.95], [0.5, 0, 0]); edges(1.1, 0.52, -1.0, 0.8, paint);
-    G.box(0.9, 0.3, 0.9, paint, [0, 0.67, -0.15]); edges(0.9, 0.82, -0.6, 0.3, paint);
-    G.cyl(0.42, 0.08, olive, [0, 0.86, -0.25], undefined, 8);
-    G.cyl(0.13, 1.1, steel, [0, 0.68, 0.75], [Math.PI / 2, 0, 0], 8); G.cyl(0.18, 0.16, dark, [0, 0.68, 1.3], [0, 0, Math.PI / 2], 8);
-    num(0.455, 0.67, -0.15, 0.24); lamps(0.38, 0.42, 1.08, 0.12); G.trimStrip([0, 0.36, -1.01], undefined, 1.0, 0.1, "hazard", 0.02);
+    G.box(cw, ch, 1.8, paint, [0, 0.36, -0.1]); G.box(cw, 0.06, 0.45, paint, [0, top - 0.1, 0.95], [0.5, 0, 0]); edges(cw, top, -1.0, 0.8, paint);
+    G.box(tw, th, tl, paint, [0, ty, -0.15]); edges(tw, ty + th / 2, -0.15 - tl / 2, -0.15 + tl / 2, paint);
+    G.cyl(0.42, 0.08, olive, [0, ty + th / 2 + 0.04, -0.25], undefined, 8);
+    G.cyl(q.canon_d, cl, steel, [0, ty + 0.01, -0.15 + tl / 2 + cl / 2 - 0.1], [Math.PI / 2, 0, 0], 8); G.cyl(q.canon_d + 0.05, 0.16, dark, [0, ty + 0.01, -0.15 + tl / 2 + cl - 0.1], [0, 0, Math.PI / 2], 8);
+    num(tw / 2 + 0.005, ty, -0.15, 0.24); lamps(0.38, 0.42, 1.08, 0.12); G.trimStrip([0, 0.36, -1.01], undefined, 1.0, 0.1, "hazard", 0.02);
   } else if (kind === "axel") { // Axel: eje de caño entre dos ruedas gigantes y jaula-cabina colgando
     const red = FOLD.painted("#b8321f", 0.6, 231);
     G.cyl(0.16, 1.9, steel, [0, 0, 0], [0, 0, Math.PI / 2], 8);

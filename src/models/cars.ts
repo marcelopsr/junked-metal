@@ -881,7 +881,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   // Calco del capó (textura HD oficial o grilla NEAREST 16x16 propia con alfa; el material se reusa por diseño)
   if (validDecal(o.sticker) && o.sticker !== DECAL_BLANK) {
     const onWing = kind !== "monster" && (o.wing === "alto" || o.wing === "doble"); // plato del alerón: top = el mismo de arriba, +0,033 = medio grosor y holgura
-    const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : kind === "buggy" ? [q.aleron_alto + 0.033, -1.0, 0.34, q.aleron_incl] : kind === "monster" ? [1.212 + (q.caja_y - 0.62) + (q.caja_alto - 0.36) + (q.cabina_alto - 0.36), q.cabina_z, 0.54, 0] : SPOT[kind];
+    const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : kind === "buggy" ? [q.aleron_alto + 0.033, -1.0, 0.34, q.aleron_incl] : kind === "tanque" ? [0.825 + (q.casco_alto - 0.32) / 2 + (q.torreta_alto - 0.3), -0.15, 0.6, 0] : kind === "monster" ? [1.212 + (q.caja_y - 0.62) + (q.caja_alto - 0.36) + (q.cabina_alto - 0.36), q.cabina_z, 0.54, 0] : SPOT[kind];
     const isHd = o.sticker in GARAGE_DECALS;
     const mat = pbr("calco" + o.sticker, { color: "#ffffff", rough: isHd ? 0.45 : 0.4 });
     if (!mat.albedoTexture) {

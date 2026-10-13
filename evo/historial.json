@@ -1289,5 +1289,230 @@
       }
     ],
     "motivo": "Evaluador visual 38 vs 35: ruedas +10 %, caja y cabina más compactas; mejora en garaje, mínima en cámara de partida"
+  },
+  {
+    "car": "formula",
+    "accion": "corrida",
+    "run": "20261013-1945-s1",
+    "fecha": "20261013",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 1,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.23,
+      0.17,
+      1,
+      0.59
+    ],
+    "recomendado": {
+      "id": "i117",
+      "gen": 5,
+      "obj": [
+        0.22,
+        0.075,
+        1,
+        0.565
+      ],
+      "cambios": [
+        {
+          "id": "rueda_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 0.9055133521384471,
+          "pct": -42.9
+        },
+        {
+          "id": "trompa_largo",
+          "comp": "capo",
+          "def": 1.2,
+          "val": 1.3317823965772555,
+          "pct": 32.9
+        },
+        {
+          "id": "toma_alto",
+          "comp": "tomas",
+          "def": 0.2,
+          "val": 0.24872231172468715,
+          "pct": 24.4
+        },
+        {
+          "id": "ponton_ancho",
+          "comp": "pontones",
+          "def": 0.28,
+          "val": 0.31631112213928214,
+          "pct": 22.7
+        },
+        {
+          "id": "trocha_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 0.9768483078388306,
+          "pct": -19.3
+        },
+        {
+          "id": "ponton_largo",
+          "comp": "pontones",
+          "def": 0.8,
+          "val": 0.8691240333610961,
+          "pct": 17.3
+        },
+        {
+          "id": "trompa_ancho",
+          "comp": "capo",
+          "def": 0.5,
+          "val": 0.5347926389982911,
+          "pct": 14.5
+        },
+        {
+          "id": "cuerpo_ancho",
+          "comp": "carroceria",
+          "def": 0.8,
+          "val": 0.8236445910070026,
+          "pct": 9.9
+        },
+        {
+          "id": "trompa_alto",
+          "comp": "capo",
+          "def": 0.16,
+          "val": 0.16795597655333097,
+          "pct": 8
+        },
+        {
+          "id": "aleron_del_ancho",
+          "comp": "aleron",
+          "def": 1.4,
+          "val": 1.376607611193958,
+          "pct": -6.7
+        },
+        {
+          "id": "cuerpo_alto",
+          "comp": "carroceria",
+          "def": 0.24,
+          "val": 0.2337761809892464,
+          "pct": -4.4
+        },
+        {
+          "id": "batalla_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.00882937823541,
+          "pct": 4.4
+        }
+      ]
+    }
+  },
+  {
+    "car": "formula",
+    "accion": "export",
+    "run": "20261013-1945-s1",
+    "id": "i138",
+    "fecha": "2026-10-13",
+    "obj": [
+      0.205,
+      0.12,
+      1,
+      0.62
+    ],
+    "obj_original": [
+      0.23,
+      0.17,
+      1,
+      0.59
+    ],
+    "cambios": [
+      {
+        "id": "ponton_largo",
+        "comp": "pontones",
+        "def": 0.8,
+        "val": 0.9841083095246619,
+        "pct": 46
+      },
+      {
+        "id": "ponton_ancho",
+        "comp": "pontones",
+        "def": 0.28,
+        "val": 0.3507133309547965,
+        "pct": 44.2
+      },
+      {
+        "id": "rueda_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 1.0644432566493307,
+        "pct": 29.3
+      },
+      {
+        "id": "trompa_ancho",
+        "comp": "capo",
+        "def": 0.5,
+        "val": 0.5628212515792443,
+        "pct": 26.2
+      },
+      {
+        "id": "aleron_del_ancho",
+        "comp": "aleron",
+        "def": 1.4,
+        "val": 1.4866131683061152,
+        "pct": 24.7
+      },
+      {
+        "id": "trompa_largo",
+        "comp": "capo",
+        "def": 1.2,
+        "val": 1.1296388371214348,
+        "pct": -17.6
+      },
+      {
+        "id": "cuerpo_alto",
+        "comp": "carroceria",
+        "def": 0.24,
+        "val": 0.2629169808188768,
+        "pct": 16.4
+      },
+      {
+        "id": "batalla_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 0.9708816110435619,
+        "pct": -14.6
+      },
+      {
+        "id": "cuerpo_ancho",
+        "comp": "carroceria",
+        "def": 0.8,
+        "val": 0.7675882330907526,
+        "pct": -13.5
+      },
+      {
+        "id": "trocha_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 0.9867733610398528,
+        "pct": -11
+      },
+      {
+        "id": "trompa_alto",
+        "comp": "capo",
+        "def": 0.16,
+        "val": 0.16944986621644625,
+        "pct": 9.4
+      },
+      {
+        "id": "toma_alto",
+        "comp": "tomas",
+        "def": 0.2,
+        "val": 0.1960464883637728,
+        "pct": -2
+      }
+    ],
+    "motivo": "Evaluador visual 37 vs 34: pontones más largos y anchos, ruedas más grandes; mejora en garaje, leve en partida"
   }
 ]

@@ -75,5 +75,32 @@
       0.56
     ],
     "motivo": "Evaluador visual 38 vs 35: ruedas +10 %, caja y cabina más compactas; mejora en garaje, mínima en cámara de partida"
+  },
+  "formula": {
+    "g": {
+      "trompa_ancho": 0.5628212515792443,
+      "trompa_largo": 1.1296388371214348,
+      "trompa_alto": 0.16944986621644625,
+      "cuerpo_ancho": 0.7675882330907526,
+      "cuerpo_alto": 0.2629169808188768,
+      "ponton_ancho": 0.3507133309547965,
+      "ponton_largo": 0.9841083095246619,
+      "toma_alto": 0.1960464883637728,
+      "aleron_del_ancho": 1.4866131683061152,
+      "rueda_k": 1.0644432566493307,
+      "trocha_k": 0.9867733610398528,
+      "batalla_k": 0.9708816110435619
+    },
+    "run": "20261013-1945-s1",
+    "id": "i138",
+    "gen": 6,
+    "fecha": "2026-10-13",
+    "obj": [
+      0.205,
+      0.12,
+      1,
+      0.62
+    ],
+    "motivo": "Evaluador visual 37 vs 34: pontones más largos y anchos, ruedas más grandes; mejora en garaje, leve en partida"
   }
 }

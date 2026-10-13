@@ -157,12 +157,12 @@ const BANDS: Record<string, Record<string, [number, number]>> = {
     masa_alta: [0, 0.065], // techo: lo alto (alerón, jaula) no crece sobre la bañera (evaluación visual, ronda 1); el original da 0,052
   },
 };
-/** Autos sin bandas propias: las proporciones quedan a ±10 % de su original (barandas, no empujan) y la pintura visible tiene que crecer ≥ 15 %. */
+/** Autos sin bandas propias: las proporciones quedan a ±10 % de su original (barandas, no empujan) y la pintura visible tiene que crecer ≥ 5 %. */
 const AUTO = ["ruedas_visibles", "stance", "masa_atras", "llenado_lateral", "alto_largo", "masa_alta"];
 function autoBands(b: { m: Record<string, unknown>; paint?: number }) {
   const out: Record<string, [number, number]> = {};
   for (const k of AUTO) { const v = b.m[k] as number, t = Math.max(0.03, Math.abs(v) * 0.1); out[k] = [v - t, v + t]; }
-  out.pintura_visible = [(b.paint ?? 0) * 1.15, 0.7];
+  out.pintura_visible = [(b.paint ?? 0) * 1.05, 0.7]; // empuje suave: con +15 % la evolución engordaba carrocerías a costa de las ruedas (evaluador, monster y fórmula)
   return out;
 }
 const band = (x: number, [lo, hi]: [number, number]) => Math.max(0, lo - x, x - hi) / (hi - lo);

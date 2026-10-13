@@ -10,7 +10,8 @@ export type Genome = Record<string, number>;
 const g = (comp: string, id: string, def: number, min: number, max: number, int = false): Gene => ({ id, comp, def, min, max, ...(int ? { int } : {}) });
 
 // Ruedas de los autos que no son el buggy: multiplicadores sobre las anclas de carModel (1 = original)
-const RUEDAS = [g("ruedas", "rueda_k", 1, 0.9, 1.12), g("ruedas", "trocha_k", 1, 0.94, 1.06), g("ruedas", "batalla_k", 1, 0.9, 1.1)];
+// Evaluador visual (monster, fórmula): achicar ruedas o meterlas rompe el juguete RC en todos los autos → rueda_k ≥ 1, trocha_k ≥ 0,97
+const RUEDAS = [g("ruedas", "rueda_k", 1, 1, 1.15), g("ruedas", "trocha_k", 1, 0.97, 1.06), g("ruedas", "batalla_k", 1, 0.9, 1.1)];
 
 export const GENES: Record<string, Gene[]> = {
   buggy: [
@@ -60,7 +61,29 @@ export const GENES: Record<string, Gene[]> = {
     g("cabina", "cabina_z", -0.2, -0.4, 0),
     g("suspension", "amort_grosor", 0.09, 0.06, 0.13),
     g("paragolpes", "paragolpe_ancho", 1.3, 1.1, 1.45),
-    ...RUEDAS.map((x) => (x.id === "rueda_k" ? { ...x, min: 1 } : x)), // las ruedas enormes son su identidad: nunca más chicas (evaluador, ciclo monster)
+    ...RUEDAS,
+  ],
+  formula: [
+    g("capo", "trompa_ancho", 0.5, 0.36, 0.6),
+    g("capo", "trompa_largo", 1.2, 1.0, 1.4),
+    g("capo", "trompa_alto", 0.16, 0.12, 0.22),
+    g("carroceria", "cuerpo_ancho", 0.8, 0.66, 0.9),
+    g("carroceria", "cuerpo_alto", 0.24, 0.18, 0.265), // techo +10 %: alto deja de ser fórmula (evaluador)
+    g("pontones", "ponton_ancho", 0.28, 0.2, 0.36),
+    g("pontones", "ponton_largo", 0.8, 0.6, 1.0),
+    g("tomas", "toma_alto", 0.2, 0.14, 0.34),
+    g("aleron", "aleron_del_ancho", 1.4, 1.15, 1.5),
+    ...RUEDAS,
+  ],
+  tanque: [ // orugas fijas (sin genes de rueda): las ruedas de rodaje no se ven y la oruga es casco
+    g("orugas", "oruga_alto", 0.42, 0.36, 0.5),
+    g("carroceria", "casco_ancho", 1.1, 0.95, 1.2),
+    g("carroceria", "casco_alto", 0.32, 0.26, 0.4),
+    g("torreta", "torreta_ancho", 0.9, 0.75, 1.0),
+    g("torreta", "torreta_alto", 0.3, 0.24, 0.4),
+    g("torreta", "torreta_largo", 0.9, 0.75, 1.05),
+    g("canon", "canon_largo", 1.1, 0.8, 1.4),
+    g("canon", "canon_d", 0.13, 0.1, 0.18),
   ],
 };
 
