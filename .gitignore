@@ -14,6 +14,7 @@ logs/
 # Resultados de las herramientas de prueba (npm run shots / perf)
 .shots/
 .perf/
+.evo/
 assets-src/_oleada2_baseline/
 
 # Respaldos de Blender y caché de Python

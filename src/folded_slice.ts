@@ -5,6 +5,7 @@
 import * as B from "@babylonjs/core";
 import { FOLD, foldAtlas, foldTile, geoKit, toTile, type GeoKit } from "./folded";
 import { PAL } from "./kit3d";
+import { genome, type Genome } from "./car_genes";
 
 type V3 = [number, number, number];
 const sc = () => B.Engine.LastCreatedScene!;
@@ -246,32 +247,44 @@ export const PROC: Record<string, { build: (vis: number) => B.Mesh[]; bones: num
 };
 
 // ---------- Buggy: piso, bañera y trompa pintadas (pintura del garaje), guardabarros amarillos, jaula de caño, motor con rejilla ----------
+// Paramétrico: cada medida sale del genoma (src/car_genes.ts); con el genoma original da los mismos números que antes.
 /** `paint`: material de la pintura del jugador (se sigue gastando en partida). `lamp`: color de las ópticas. Origen = altura del eje. */
-export function buggyHull(paint: B.Material, lamp: string) {
+export function buggyHull(paint: B.Material, lamp: string, q: Genome = genome("buggy")) {
   const { G, done, strut } = kit();
   const dark = FOLD.dark(), yel = FOLD.painted(PAL.amarillo, 0.7, 91), steel = FOLD.bare();
-  G.box(1.0, 0.06, 2.0, dark, [0, 0.0, 0]); // piso
-  G.box(0.82, 0.26, 1.5, paint, [0, 0.2, -0.05]); // bañera
-  for (const s of [-1, 1]) G.bend([s * 0.41, 0.33, -0.8], [s * 0.41, 0.33, 0.7], 0.025, paint);
-  G.box(0.72, 0.12, 0.56, paint, [0, 0.2, 0.92], [0.3, 0, 0]); // trompa
-  for (const sd of [-1, 1]) G.decal([sd * 0.413, 0.2, -0.2], [0, -sd * Math.PI / 2, 0], "numero", 0.22); // número a los costados (se lee igual de los dos lados)
-  G.box(1.0, 0.1, 0.08, FOLD.rubber(), [0, 0.1, 1.2]); strut([-0.42, 0.1, 1.2], [-0.3, 0.06, 0.95], 0.04, 0.04, steel); strut([0.42, 0.1, 1.2], [0.3, 0.06, 0.95], 0.04, 0.04, steel); // paragolpes
-  for (const s of [-1, 1]) { G.box(0.1, 0.06, 0.03, FOLD.emissive(lamp), [s * 0.24, 0.24, 1.17]); G.box(0.14, 0.1, 0.04, dark, [s * 0.24, 0.24, 1.15]); } // ópticas
-  G.box(0.62, 0.22, 0.42, dark, [0, 0.42, -0.62]); // motor
-  G.grate([0, 0.42, -0.84], undefined, 0.5, 0.18, 4, steel);
-  G.trimStrip([0, 0.1, -1.06], undefined, 0.9, 0.08, "hazard", 0.03);
-  for (const s of [-1, 1]) G.cyl(0.07, 0.3, steel, [s * 0.2, 0.42, -0.98], [Math.PI / 2, 0, 0], 6); // escapes
-  G.box(0.36, 0.28, 0.06, dark, [0, 0.46, -0.24], [-0.2, 0, 0]); G.box(0.36, 0.06, 0.3, dark, [0, 0.34, -0.1]); // butaca
-  for (const z of [-0.42, 0.3]) { // jaula
-    const h = z < 0 ? 0.98 : 0.82, w = z < 0 ? 0.36 : 0.3;
-    strut([-0.4, 0.33, z], [-w, h, z - 0.1], 0.05, 0.05, steel); strut([0.4, 0.33, z], [w, h, z - 0.1], 0.05, 0.05, steel); strut([-w, h, z - 0.1], [w, h, z - 0.1], 0.05, 0.05, steel);
-  }
-  strut([-0.36, 0.98, -0.52], [-0.3, 0.82, 0.2], 0.04, 0.04, steel); strut([0.36, 0.98, -0.52], [0.3, 0.82, 0.2], 0.04, 0.04, steel);
+  const y0 = q.stance, tw = q.tina_ancho, th = q.tina_alto, tl = q.tina_largo, tz = q.tina_z, top = y0 + 0.07 + th; // borde de la bañera
+  const fx = q.trocha, fz = q.batalla, wr = q.rueda_d / 2;
+  G.box(1.0, 0.06, q.piso_largo, dark, [0, y0, 0]); // piso
+  G.box(tw, th, tl, paint, [0, y0 + 0.07 + th / 2, tz]); // bañera
+  for (const s of [-1, 1]) G.bend([s * tw / 2, top, tz - tl / 2], [s * tw / 2, top, tz + tl / 2], 0.025, paint);
+  const half = (l: number, a: number) => (l / 2) * Math.cos(a), fe0 = 0.92 + half(0.56, 0.3); // trompa: sigue al frente de la bañera (valores originales + delta)
+  const nz = 0.92 + (tz + tl / 2 - 0.7) + (half(q.trompa_largo, q.trompa_incl) - half(0.56, 0.3)), fe = nz + half(q.trompa_largo, q.trompa_incl);
+  G.box(q.trompa_ancho, 0.12, q.trompa_largo, paint, [0, y0 + 0.2, nz], [q.trompa_incl, 0, 0]);
+  for (const sd of [-1, 1]) G.decal([sd * (tw / 2 + 0.003), y0 + 0.2, tz - 0.15], [0, -sd * Math.PI / 2, 0], "numero", Math.min(0.22, th * 0.85)); // número a los costados (se lee igual de los dos lados)
+  const bz = 1.2 + Math.max(q.piso_largo / 2 - 1.0, fe - fe0), bw = q.paragolpe_ancho / 2; // paragolpes
+  G.box(q.paragolpe_ancho, 0.1, 0.08, FOLD.rubber(), [0, y0 + 0.1, bz]); strut([-bw * 0.84, y0 + 0.1, bz], [-0.3, y0 + 0.06, bz - 0.25], 0.04, 0.04, steel); strut([bw * 0.84, y0 + 0.1, bz], [0.3, y0 + 0.06, bz - 0.25], 0.04, 0.04, steel);
+  const lw = q.faro_ancho, lz = bz - 0.03; // ópticas
+  for (const s of [-1, 1]) { G.box(lw, lw * 0.6, 0.03, FOLD.emissive(lamp), [s * q.faro_x, y0 + 0.24, lz]); G.box(lw * 1.4, lw, 0.04, dark, [s * q.faro_x, y0 + 0.24, lz - 0.02]); }
+  const mz = q.motor_z, mh = q.motor_alto, my = y0 + 0.31 + mh / 2; // motor
+  const mw = q.motor_ancho, el = q.escape_largo;
+  G.box(mw, mh, 0.42, dark, [0, my, mz]);
+  G.grate([0, my, mz - 0.22], undefined, 0.5 + (mw - 0.62), 0.18 + (mh - 0.22) * 0.82, 4, steel);
+  G.trimStrip([0, y0 + 0.1, -q.piso_largo / 2 - 0.06], undefined, 0.9, 0.08, "hazard", 0.03);
+  for (const s of [-1, 1]) G.cyl(q.escape_d, el, steel, [s * (0.2 + (mw - 0.62) / 2), my, mz - 0.36 - (el - 0.3) / 2], [Math.PI / 2 + q.escape_alza * 2, 0, 0], 6); // escapes
+  G.box(0.36, 0.28, 0.06, dark, [0, y0 + 0.46, -0.24], [-0.2, 0, 0]); G.box(0.36, 0.06, 0.3, dark, [0, y0 + 0.34, -0.1]); // butaca
+  const hoop = (z: number, h: number, w: number) => { // arco de la jaula: de la bañera a h, inclinado hacia atrás por jaula_rake
+    const zt = z - q.jaula_rake;
+    strut([-tw / 2 + 0.01, top, z], [-w, y0 + h, zt], 0.05, 0.05, steel); strut([tw / 2 - 0.01, top, z], [w, y0 + h, zt], 0.05, 0.05, steel); strut([-w, y0 + h, zt], [w, y0 + h, zt], 0.05, 0.05, steel);
+    return zt;
+  };
+  const rz = hoop(-0.42, q.jaula_alto, q.jaula_ancho), fw = q.jaula_ancho - 0.06, fzz = hoop(0.3, q.jaula_frente, fw);
+  strut([-q.jaula_ancho, y0 + q.jaula_alto, rz], [-fw, y0 + q.jaula_frente, fzz], 0.04, 0.04, steel); strut([q.jaula_ancho, y0 + q.jaula_alto, rz], [fw, y0 + q.jaula_frente, fzz], 0.04, 0.04, steel);
+  const R = q.guarda_radio, arc = q.guarda_arco;
   for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) { // guardabarros + soporte + amortiguador
-    for (const a of [-0.75, -0.25, 0.25, 0.75]) G.box(0.4, 0.025, 0.25, yel, [x * 0.72, 0.47 * Math.cos(a), z * 0.72 + 0.47 * Math.sin(a)], [a, 0, 0]); // guardabarros en arco
-    strut([x * 0.4, 0.3, z * 0.72], [x * 0.56, 0.45, z * 0.72], 0.05, 0.03, steel);
-    strut([x * 0.38, 0.1, z * 0.72], [x * 0.52, 0.0, z * 0.72], 0.04, 0.04, steel); // brazo de suspensión
-    strut([x * 0.38, 0.33, z * 0.6], [x * 0.5, 0.06, z * 0.66], 0.06, 0.06, yel); // amortiguador
+    for (let i = 0; i < 4; i++) { const a = arc * (i / 1.5 - 1); G.box(q.guarda_ancho, 0.025, 0.25 * (R * arc) / (0.47 * 0.75), yel, [x * fx, R * Math.cos(a), z * fz + R * Math.sin(a)], [a, 0, 0]); } // guardabarros en arco (4 placas)
+    strut([x * tw / 2 - x * 0.01, y0 + 0.3, z * fz], [x * (fx - q.guarda_ancho * 0.4), 0.45 + (R - 0.47), z * fz], 0.05, 0.03, steel);
+    strut([x * Math.min(0.38, tw / 2), y0 + 0.1, z * fz], [x * (fx - q.rueda_w / 2 - 0.02), 0.0, z * fz], 0.04, 0.04, steel); // brazo de suspensión
+    strut([x * Math.min(0.38, tw / 2), top, z * (fz - 0.12)], [x * (fx - q.rueda_w / 2 - 0.04), Math.min(0.06, wr * 0.15), z * (fz - 0.06)], q.amort_grosor, q.amort_grosor, yel); // amortiguador
   }
   return done(2);
 }

@@ -21,6 +21,7 @@
     "sim": "node scripts/sim.mjs",
     "dps": "node scripts/dps.mjs",
     "oleadas": "node scripts/oleadas.mjs",
+    "evo": "node scripts/evo.mjs",
     "shots": "node scripts/shots.mjs",
     "perf": "node scripts/perf.mjs",
     "perf:cel": "node scripts/perf-cel.mjs",

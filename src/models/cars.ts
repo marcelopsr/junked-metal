@@ -4,6 +4,7 @@ import { carGlbHull, carGlbTpl } from "../carGlb";
 import { M, pbr, shadows } from "../render";
 import { FOLDED_SLICE } from "../folded";
 import { carHull } from "../folded_slice";
+import { genome } from "../car_genes";
 import { type V3, box, cyl, sph, tor, tube, extrude, merge, wheelInst, shadowProxy, v, scene, setTessK } from "./common";
 
 // ---------- Autos del jugador ----------
@@ -95,7 +96,8 @@ const CARS_SIZE: Record<CarKind, [number, number, number]> = { buggy: [1.3, 0.7,
 const HOVER_W = [[-0.6, 0.8], [0.6, 0.8], [-0.6, -0.8], [0.6, -0.8]];
 const TRI_W: [number, number, number][] = [[0, 0.8, 0.7], [-0.58, -0.65, 0.85], [0.58, -0.65, 0.85]];
 export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
-  const A = ANCH[kind];
+  const q = genome(kind);
+  const A = kind === "buggy" ? { ...ANCH.buggy, seat: [0, 0.38 + q.stance, 0.02, 0.8] as [number, number, number, number] } : ANCH[kind]; // el piloto sigue a la butaca
   setTessK(2.5);
   const ws: { pos: V3; d: number; w: number; steer?: boolean }[] = [];
   let parts: B.Mesh[];
@@ -283,7 +285,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
 
   // Ruedas (mismas anclas con hull GLB o procedural)
   if ((useGlb || fb) && ws.length === 0) {
-    if (kind === "buggy") for (const [x, z] of [[-0.72, 0.72], [0.72, 0.72], [-0.72, -0.72], [0.72, -0.72]]) ws.push({ pos: [x, 0, z], d: 0.8, w: 0.36 });
+    if (kind === "buggy") for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) ws.push({ pos: [x * q.trocha, 0, z * q.batalla], d: q.rueda_d, w: q.rueda_w });
     else if (kind === "monster") for (const [x, z] of [[-0.8, 0.72], [0.8, 0.72], [-0.8, -0.72], [0.8, -0.72]]) ws.push({ pos: [x, -0.05, z], d: 1.15, w: 0.5 });
     else if (kind === "formula") for (const [x, z] of [[-0.62, 0.9], [0.62, 0.9], [-0.66, -0.85], [0.66, -0.85]]) ws.push({ pos: [x, 0, z], d: z < 0 ? 0.72 : 0.6, w: z < 0 ? 0.42 : 0.3 });
     else if (kind === "tanque") for (const z of [-0.6, -0.2, 0.2, 0.6]) for (const x of [-0.72, 0.72]) ws.push({ pos: [x, 0.02, z], d: 0.36, w: 0.34, steer: false });
@@ -301,10 +303,11 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     else if (kind === "monopatin") for (const [x, z] of [[-0.2, 0.5], [0.2, 0.5], [-0.2, -0.5], [0.2, -0.5]]) ws.push({ pos: [x, 0, z], d: 0.28, w: 0.14 });
     else for (const [x, z] of [[-0.46, 0.66], [0.46, 0.66], [-0.46, -0.66], [0.46, -0.66]]) ws.push({ pos: [x, 0, z], d: 0.52, w: 0.18 });
     if (kind === "buggy" || kind === "formula") {
+      const wy = kind === "buggy" ? q.aleron_alto : 0.9, sh = wy - 0.9; // alerón de serie (genes del buggy); los soportes estiran la punta, la base queda
       stock = [
-        box(1.35, 0.05, 0.38, M.plastic("#ffc300"), [0, 0.9, -1.0], [0.12, 0, 0]),
-        box(0.05, 0.4, 0.15, M.matte("#222"), [0.4, 0.68, -0.95]),
-        box(0.05, 0.4, 0.15, M.matte("#222"), [-0.4, 0.68, -0.95]),
+        box(q.aleron_ancho ?? 1.35, 0.05, q.aleron_cuerda ?? 0.38, M.plastic("#ffc300"), [0, wy, -1.0], [q.aleron_incl ?? 0.12, 0, 0]),
+        box(0.05, 0.4 + sh, 0.15, M.matte("#222"), [0.4, 0.68 + sh / 2, -0.95]),
+        box(0.05, 0.4 + sh, 0.15, M.matte("#222"), [-0.4, 0.68 + sh / 2, -0.95]),
       ];
       if (kind === "formula") {
         stock = [
@@ -876,7 +879,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   // Calco del capó (textura HD oficial o grilla NEAREST 16x16 propia con alfa; el material se reusa por diseño)
   if (validDecal(o.sticker) && o.sticker !== DECAL_BLANK) {
     const onWing = kind !== "monster" && (o.wing === "alto" || o.wing === "doble"); // plato del alerón: top = el mismo de arriba, +0,033 = medio grosor y holgura
-    const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : SPOT[kind];
+    const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : kind === "buggy" ? [q.aleron_alto + 0.033, -1.0, 0.34, q.aleron_incl] : SPOT[kind];
     const isHd = o.sticker in GARAGE_DECALS;
     const mat = pbr("calco" + o.sticker, { color: "#ffffff", rough: isHd ? 0.45 : 0.4 });
     if (!mat.albedoTexture) {

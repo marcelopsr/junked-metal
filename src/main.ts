@@ -559,6 +559,11 @@ if (import.meta.env.DEV && /[?&]folded\b/.test(location.search)) setTimeout(() =
   clearRun(); menuOff(); showWorld(false); state = "match3"; reset(null); $("hud").classList.add("hidden");
   void import("./folded_lab").then((m) => { applyClimate(DUSK); setDark(0.22); m.foldedLab(scene, cam); });
 }, () => afterFrames(2)), 1500);
+// Sonda de evolución de autos (`?evo`, solo dev): la maneja `npm run evo` (scripts/evo.mjs); mismo arreglo que el banco Folded
+if (import.meta.env.DEV && /[?&]evo\b/.test(location.search)) setTimeout(() => void launch([], "Evolución", () => {
+  clearRun(); menuOff(); showWorld(false); state = "match3"; reset(null); $("hud").classList.add("hidden");
+  void import("./evo_probe").then((m) => { applyClimate(CLIMATES.find((c) => c.day) ?? DUSK); m.evoProbe(scene); });
+}, () => afterFrames(2)), 1500);
 if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2" && !isTouch) { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
 // Portada: fuentes del menú, dos cuadros dibujados (arma la escena del estante) y recién ahí se cierra la pantalla de carga; la precarga arranca con la portada ya a la vista
 boot("Cargando fuentes", 0.7);
