@@ -17,6 +17,7 @@ export const GENES: Record<string, Gene[]> = {
   buggy: [
     g("chasis", "stance", 0, -0.06, 0.08), // altura de toda la carrocería sobre el eje
     g("chasis", "piso_largo", 2.0, 1.7, 2.15),
+    g("chasis", "chasis_alto", 0.06, 0.06, 0.22), // piso con volumen (bandeja) en vez de tabla
     g("carroceria", "tina_ancho", 0.82, 0.74, 0.95), // más angosta deja huecos con la trocha (ronda 1)
     g("carroceria", "tina_alto", 0.26, 0.18, 0.36),
     g("carroceria", "tina_largo", 1.5, 1.2, 1.7),
@@ -34,13 +35,13 @@ export const GENES: Record<string, Gene[]> = {
     g("escapes", "escape_largo", 0.3, 0.2, 0.46),
     g("escapes", "escape_d", 0.07, 0.05, 0.11),
     g("escapes", "escape_alza", 0, -0.08, 0.25), // cuánto suben las bocas (0 = horizontales)
-    g("guardabarros", "guarda_radio", 0.47, 0.44, 0.58),
+    g("guardabarros", "guarda_radio", 0.47, 0.44, 0.72),
     g("guardabarros", "guarda_ancho", 0.4, 0.3, 0.48),
     g("guardabarros", "guarda_arco", 0.75, 0.5, 1.05),
     g("suspension", "amort_grosor", 0.06, 0.04, 0.09),
-    g("ruedas", "rueda_d", 0.8, 0.7, 0.9),
+    g("ruedas", "rueda_d", 0.8, 0.7, 1.1), // juguete RC exagerado (ciclo estructural): hasta +38 %
     g("ruedas", "rueda_w", 0.36, 0.3, 0.44),
-    g("ruedas", "trocha", 0.72, 0.66, 0.78),
+    g("ruedas", "trocha", 0.72, 0.66, 0.82),
     g("ruedas", "batalla", 0.72, 0.62, 0.84),
     g("faros", "faro_ancho", 0.1, 0.07, 0.16),
     g("faros", "faro_x", 0.24, 0.16, 0.3),
@@ -49,8 +50,10 @@ export const GENES: Record<string, Gene[]> = {
     g("aleron", "aleron_cuerda", 0.38, 0.26, 0.42),
     g("aleron", "aleron_incl", 0.12, 0, 0.3),
     g("aleron", "aleron_ancho", 1.35, 1.05, 1.4),
+    g("aleron", "aleron_soporte", 0.05, 0.05, 0.14), // soportes más gruesos: que el alerón no se lea flotando
   ],
   monster: [
+    g("chasis", "chasis_alto", 0.14, 0.14, 0.4), // chasis que baja hacia los ejes: la caja no queda despegada
     g("carroceria", "caja_y", 0.62, 0.55, 0.75),
     g("carroceria", "caja_ancho", 1.15, 1.0, 1.3),
     g("carroceria", "caja_alto", 0.36, 0.28, 0.46),
@@ -61,7 +64,7 @@ export const GENES: Record<string, Gene[]> = {
     g("cabina", "cabina_z", -0.2, -0.4, 0),
     g("suspension", "amort_grosor", 0.09, 0.06, 0.13),
     g("paragolpes", "paragolpe_ancho", 1.3, 1.1, 1.45),
-    ...RUEDAS,
+    ...RUEDAS.map((x) => (x.id === "rueda_k" ? { ...x, max: 1.4 } : x)), // juguete RC exagerado: ruedas hasta +40 %
   ],
   formula: [
     g("capo", "trompa_ancho", 0.5, 0.36, 0.6),
@@ -102,6 +105,14 @@ export const GENES: Record<string, Gene[]> = {
     g("cabina", "jaula_alto", 0.76, 0.6, 0.9),
     g("ruedas", "tapa_d", 0.5, 0.4, 0.7),
     ...RUEDAS.filter((x) => x.id !== "batalla_k"), // un solo eje
+  ],
+  helado: [
+    g("carroceria", "caja_alto", 0.95, 0.8, 1.05),
+    g("carroceria", "caja_largo", 1.45, 1.25, 1.6),
+    g("cabina", "cabina_alto", 0.34, 0.26, 0.44),
+    g("accesorios", "toldo_ancho", 0.22, 0.14, 0.34),
+    g("accesorios", "cucurucho", 1, 0.85, 1.35), // escala del cucurucho del techo: su identidad
+    ...RUEDAS,
   ],
 };
 

@@ -308,8 +308,8 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       const sh = q.aleron_alto - 0.9; // alerón de serie (genes del buggy); los soportes estiran la punta, la base queda
       stock = [
         box(q.aleron_ancho, 0.05, q.aleron_cuerda, M.plastic("#ffc300"), [0, q.aleron_alto, -1.0], [q.aleron_incl, 0, 0]),
-        box(0.05, 0.4 + sh, 0.15, M.matte("#222"), [0.4, 0.68 + sh / 2, -0.95]),
-        box(0.05, 0.4 + sh, 0.15, M.matte("#222"), [-0.4, 0.68 + sh / 2, -0.95]),
+        box(q.aleron_soporte, 0.4 + sh, 0.15, M.matte("#222"), [0.4, 0.68 + sh / 2, -0.95]),
+        box(q.aleron_soporte, 0.4 + sh, 0.15, M.matte("#222"), [-0.4, 0.68 + sh / 2, -0.95]),
       ];
     } else if (kind === "formula") { // antes el fórmula armaba también el alerón del buggy y lo dejaba huérfano en la escena (flotando cerca del origen)
       stock = [

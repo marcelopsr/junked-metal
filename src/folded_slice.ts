@@ -254,7 +254,7 @@ export function buggyHull(paint: B.Material, lamp: string, q: Genome = genome("b
   const dark = FOLD.dark(), yel = FOLD.painted(PAL.amarillo, 0.7, 91), steel = FOLD.bare();
   const y0 = q.stance, tw = q.tina_ancho, th = q.tina_alto, tl = q.tina_largo, tz = q.tina_z, top = y0 + 0.07 + th; // borde de la bañera
   const fx = q.trocha, fz = q.batalla, wr = q.rueda_d / 2;
-  G.box(1.0, 0.06, q.piso_largo, dark, [0, y0, 0]); // piso
+  G.box(1.0, q.chasis_alto, q.piso_largo, dark, [0, y0 + 0.03 - q.chasis_alto / 2, 0]); // piso (bandeja con volumen si chasis_alto crece)
   G.box(tw, th, tl, paint, [0, y0 + 0.07 + th / 2, tz]); // bañera
   for (const s of [-1, 1]) G.bend([s * tw / 2, top, tz - tl / 2], [s * tw / 2, top, tz + tl / 2], 0.025, paint);
   const half = (l: number, a: number) => (l / 2) * Math.cos(a), fe0 = 0.92 + half(0.56, 0.3); // trompa: sigue al frente de la bañera (valores originales + delta)
@@ -642,7 +642,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
   if (kind === "monster") { // monster truck: caja alta, cabina, barra de luces, amortiguadores rojos y paragolpes de caño (genes: car_genes.ts)
     const cy = q.caja_y, cw = q.caja_ancho, ch = q.caja_alto, cl = q.caja_largo, top = cy + ch / 2;
     const kw = q.cabina_ancho, kh = q.cabina_alto, kl = q.cabina_largo, kz = q.cabina_z, ky = top + kh / 2, ktop = ky + kh / 2;
-    G.box(1.0, 0.14, 1.9, dark, [0, cy - 0.27, 0]);
+    G.box(1.0, q.chasis_alto, 1.9, dark, [0, cy - 0.2 - q.chasis_alto / 2, 0]); // chasis: baja hacia los ejes si crece
     G.box(cw, ch, cl, paint, [0, cy, 0]); edges(cw, top, -cl / 2, cl / 2, paint);
     G.box(kw, kh, kl, paint, [0, ky, kz]); edges(kw, ktop, kz - kl / 2, kz + kl / 2, paint);
     G.box(kw - 0.1, kh - 0.08, 0.03, FOLD.glass(), [0, ky + 0.02, kz + kl / 2 + 0.03], [-0.4, 0, 0]);
@@ -683,12 +683,13 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
   } else if (kind === "helado") { // camioncito de helados: cabina, caja crema con ventanilla y toldo, cucurucho de chapa en el techo
     const cream = FOLD.painted("#f3ead2", 0.5, 241), pink = FOLD.painted("#f08dbd", 0.5, 242);
     G.box(1.0, 0.14, 2.3, dark, [0, 0.05, 0]);
-    G.box(1.1, 0.95, 1.45, cream, [0, 0.58, -0.4]); edges(1.1, 1.05, -1.12, 0.32, cream);
-    G.box(1.1, 0.5, 0.85, paint, [0, 0.38, 0.75]); G.box(1.1, 0.34, 0.5, paint, [0, 0.75, 0.55]);
+    const dh = q.caja_alto - 0.95, dl = q.caja_largo - 1.45, k = q.cucurucho, b0 = 1.06 + dh; // genes: car_genes.ts; b0 = techo de la caja (base del cucurucho)
+    G.box(1.1, q.caja_alto, q.caja_largo, cream, [0, 0.58 + dh / 2, -0.4]); edges(1.1, 1.05 + dh, -1.12 - dl / 2, 0.32 + dl / 2, cream);
+    G.box(1.1, 0.5, 0.85, paint, [0, 0.38, 0.75]); G.box(1.1, q.cabina_alto, 0.5, paint, [0, 0.58 + q.cabina_alto / 2, 0.55]);
     G.box(0.95, 0.28, 0.03, FOLD.glass(), [0, 0.72, 0.82], [-0.5, 0, 0]);
-    for (const s of [-1, 1]) { G.box(0.02, 0.38, 0.7, FOLD.glass(), [s * 0.56, 0.72, -0.4]); G.box(0.22, 0.03, 0.85, s > 0 ? pink : cream, [s * 0.64, 0.97, -0.4], [0, 0, -s * 0.35]); }
-    G.cyl(0.46, 0.62, FOLD.painted("#d9a15a", 0.6, 243), [0, 1.37, -0.4], undefined, 6, 0.04);
-    G.sph(0.5, pink, [0, 1.78, -0.4]); G.sph(0.4, cream, [0, 2.06, -0.4]); G.box(0.12, 0.12, 0.12, FOLD.painted("#c1121f", 0.4, 244), [0, 2.3, -0.4]);
+    for (const s of [-1, 1]) { G.box(0.02, 0.38, 0.7, FOLD.glass(), [s * 0.56, 0.72, -0.4]); G.box(q.toldo_ancho, 0.03, 0.85, s > 0 ? pink : cream, [s * (0.53 + q.toldo_ancho / 2), 0.97 + dh, -0.4], [0, 0, -s * 0.35]); }
+    G.cyl(0.46 * k, 0.62 * k, FOLD.painted("#d9a15a", 0.6, 243), [0, b0 + 0.31 * k, -0.4], undefined, 6, 0.04 * k);
+    G.sph(0.5 * k, pink, [0, b0 + 0.72 * k, -0.4]); G.sph(0.4 * k, cream, [0, b0 + 1.0 * k, -0.4]); G.box(0.12 * k, 0.12 * k, 0.12 * k, FOLD.painted("#c1121f", 0.4, 244), [0, b0 + 1.24 * k, -0.4]);
     lamps(0.4, 0.4, 1.2, 0.14); tails(0.4, 0.5, -1.13); bumper(1.1, 0.14, 1.22); num(0.555, 0.45, -0.75, 0.3);
   } else if (kind === "combi") { // combi: dos tonos, techo crema, ventanillas, V en la trompa
     const cream = FOLD.painted("#d9cba6", 0.5, 251);

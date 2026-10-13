@@ -148,7 +148,7 @@ const b64 = (m: Mask) => { let s = ""; for (let i = 0; i < m.length; i += 8) { l
 const BANDS: Record<string, Record<string, [number, number]>> = {
   buggy: {
     ruedas_visibles: [0.6, 0.85], // RC: se lee por las ruedas grandes y expuestas
-    stance: [0.6, 0.75], // diámetro de rueda / alto total: juguete chato y "pisador"
+    stance: [0.72, 0.88], // diámetro de rueda / alto total; ciclo "juguete RC exagerado": ruedas claramente más grandes (antes 0,60–0,75)
     masa_atras: [-0.3, -0.02], // centroide lateral detrás del centro (motor trasero), en batallas
     llenado_lateral: [0.42, 0.62], // < flaco y ruidoso (se pierde a lo lejos), > ladrillo
     alto_largo: [0.48, 0.6],
@@ -165,6 +165,10 @@ function autoBands(b: { m: Record<string, unknown>; paint?: number }) {
   out.pintura_visible = [(b.paint ?? 0) * 1.05, 0.7]; // empuje suave: con +15 % la evolución engordaba carrocerías a costa de las ruedas (evaluador, monster y fórmula)
   return out;
 }
+/** Empujes de un ciclo sobre las bandas automáticas (juguete RC exagerado: ruedas más grandes que el original). */
+const PUSH: Record<string, (b: { m: Record<string, unknown> }) => Record<string, [number, number]>> = {
+  monster: (b) => ({ stance: [(b.m.stance as number) * 1.12, (b.m.stance as number) * 1.35] }),
+};
 const band = (x: number, [lo, hi]: [number, number]) => Math.max(0, lo - x, x - hi) / (hi - lo);
 
 // ---------- Evaluación ----------
@@ -215,7 +219,7 @@ async function evaluate(scene: B.Scene, kind: CarKind, g: Genome) {
   others ??= (Object.keys(CARS) as CarKind[]).filter((k) => k !== kind).map((k) => measure(k, null).masks.lateral);
   const parecido = Math.max(...others.map((o) => iou(masks.lateral, o)));
   base.paint ??= await paintShare(scene, kind, original(kind));
-  const bands = BANDS[kind] ?? autoBands(base);
+  const bands = { ...(BANDS[kind] ?? autoBands(base)), ...(PUSH[kind]?.(base) ?? {}) };
   const prop = Object.fromEntries(Object.entries(bands).map(([k, b]) => [k, band((m as unknown as Record<string, number>)[k], b)]));
   // Objetivos a minimizar (Pareto): ninguno se suma a otro, así una mejora no puede comprarse sacrificando un aspecto esencial.
   const obj = [
@@ -229,7 +233,7 @@ async function evaluate(scene: B.Scene, kind: CarKind, g: Genome) {
     identidad: Math.max(0, 0.75 - ident.lateral) + Math.max(0, 0.75 - ident.superior) + Math.max(0, 0.8 - ident.frontal),
     choques_rueda: m.choques_rueda > base.hits ? 0.1 + (m.choques_rueda - base.hits) / 50 : 0, // relativas al original: lo que ya se juega es válido por definición
     despeje: Math.max(0, Math.min(0.25, base.despeje) - 0.005 - m.despeje), // ≥ 0,25 m o lo del original si es menos (orugas del tanque)
-    caja: Math.max(0, m.ancho - base.size[0] * 1.06) + Math.max(0, m.largo - base.size[2] * 1.08) + Math.max(0, m.alto - base.height - 0.15),
+    caja: Math.max(0, m.ancho - base.size[0] * 1.12) + Math.max(0, m.largo - base.size[2] * 1.08) + Math.max(0, m.alto - base.height - 0.25), // margen visual ampliado en el ciclo estructural (el colisionador no cambia)
     triangulos: Math.max(0, m.tris / base.tris - 1.3),
     piezas_sueltas: Math.max(0, m.piezas - base.comps),
     errores: (m.nan ? 1 : 0) + Math.max(0, m.degenerados - base.degen) / 10,
