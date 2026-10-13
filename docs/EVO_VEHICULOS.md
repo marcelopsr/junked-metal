@@ -129,3 +129,14 @@ angosto. Pendiente: el alerón sigue cruzando casi todo el ancho en la vista de 
   el ciclo 2, monster, fórmula, tanque, carrera). Las exportaciones se reevalúan con `--hoja <run> --ids ...` (hoja limpia).
 - Tanque: 2 rondas, sin exportar (la mejor supera al original por 1 punto; regla: exportar solo con ≥ 2). Despeje relativo
   al original (las orugas llegan al piso). Pisos de torreta y orugas.
+- **Reevaluación limpia (evaluador nuevo):** solo el monster supera al original por 2 a la vista; se conservan buggy (corrige
+  el clipeo de ruedas al doblar: 242 → ~140 puntos) y monster; el fórmula vuelve al original.
+- **Ciclo "juguete RC exagerado"** (genes: rueda hasta +38-40 %, chasis con volumen, soportes de alerón; banda de stance más
+  alta). Dos evaluadores independientes, exportar solo si ambos dan ≥ +2:
+  - Buggy (s7, s8): empate con el vigente; las restricciones (goma contra bañera al doblar, alto total) frenan las ruedas grandes.
+  - Monster (s7, s8): los evaluadores no coinciden (uno +2 en garaje, otro prefiere el vigente). Sin exportar.
+  - Helado (s1): los dos ven mejora con el cucurucho más grande, pero eligen variantes distintas (+2 / +1). Sin exportar;
+    dirección clara para la próxima ronda (cucurucho 1,2-1,35 con soporte visible).
+- **Lección:** las diferencias de ±2 puntos están en el ruido entre evaluadores. Ajustar medidas de piezas existentes da
+  mejoras métricas reales pero casi invisibles en la cámara de partida; lo que se nota pide piezas o materiales nuevos.
+- Observado sin tocar: el desgaste (`wear` 0,5) sobre la caja crema del helado se lee como manchas negras.
