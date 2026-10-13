@@ -194,6 +194,7 @@ export const sessions = [
     // Teléfono apaisado (último: deja el viewport girado para el resto de la sesión)
     { id: "cam-baja-apaisado", perf: false, vps: ["cel"], act: async (p) => { await p.setViewportSize({ width: 844, height: 390 }); await p.waitForTimeout(100); await labReady(p); await p.evaluate(() => { window.__cfg({ camMode: "baja" }); window.__lab({}); }); } },
   ] },
+  { id: "lab-luz-mediodia", query: "?mute&seed=3&lab&climate=mediodia", shots: [{ id: "jefes", act: lab({ boss: true }) }] },
   { id: "partida", query: "?mute&seed=3", shots: [
     { id: "curso", act: partida(90) },
     { id: "cartas", act: async (p) => { await p.evaluate(() => window.__xp(9999)); await tick(p, 4); await wait(p, () => !document.getElementById("levelup").classList.contains("hidden")); await p.waitForTimeout(300); } },

@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { snap: 1, lampI: 17.5, glowI: 2.35, cone: 1.28, fogMul: 0.92, ambMul: 1.55, moonMul: 0.62, exposure: 0.88 };
+export const LOOK = { snap: 1, lampI: 17.5, glowI: 2.35, cone: 1.28, fogMul: 0.92, ambMul: 0.85, moonMul: 1, exposure: 0.88 };
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -51,7 +51,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   scene.imageProcessingConfiguration.toneMappingEnabled = true;
   scene.imageProcessingConfiguration.toneMappingType = B.ImageProcessingConfiguration.TONEMAPPING_STANDARD;
   scene.imageProcessingConfiguration.exposure = 1.1;
-  scene.imageProcessingConfiguration.contrast = 1.15;
+  scene.imageProcessingConfiguration.contrast = 1.3;
 
   // Cielo: esfera con gradiente, capturada una vez en una sonda de reflejos
   const sky = B.MeshBuilder.CreateSphere("sky", { diameter: 1200, segments: 16, sideOrientation: B.Mesh.BACKSIDE }, scene);
@@ -95,7 +95,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   shadows.stabilizeCascades = true;
   shadows.usePercentageCloserFiltering = true;
   shadows.filteringQuality = SHADOW.mid[2];
-  shadows.darkness = 0.5; // sombras suaves: que den volumen sin ensuciar el suelo
+  shadows.darkness = 0.72; // sombras más legibles sin cambiar el tamaño del mapa
   shadows.bias = 0.004;
   shadows.normalBias = 0.02;
   scene.onBeforeRenderObservable.add(() => { const rt = shadows.getShadowMap(); if (rt && rt.getCustomRenderList !== shadowList) rt.getCustomRenderList = shadowList; }); // applyGfx recrea el mapa al cambiar el nivel: se vuelve a enganchar
