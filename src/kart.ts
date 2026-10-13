@@ -74,6 +74,7 @@ const KSTAT: Record<CarKind, [number, number, number, number]> = {
   buggy: [26, 34, 2.6, 7], monster: [24, 28, 2.3, 8], formula: [29, 38, 2.9, 6], tanque: [22, 24, 2.0, 9], carrera: [28, 40, 3.1, 5],
   axel: [27, 36, 3.0, 6], helado: [24, 30, 2.4, 8], combi: [23, 26, 2.2, 9],
   hover: [25, 22, 2.0, 3], topadora: [20, 22, 1.9, 10], triciclo: [26, 36, 3.4, 8],
+  murcielago: [28, 30, 2.5, 7], misterio: [22, 24, 2.1, 9], clasico: [25, 30, 2.7, 8], jeep: [24, 30, 2.6, 10], moto: [30, 42, 3.4, 5], monopatin: [24, 38, 3.5, 6],
 };
 
 // ---------- Construcción del circuito ----------

@@ -10,7 +10,7 @@ import * as E from "./encore";
 import { chestsOpened } from "./moon_goals";
 import { track } from "./net";
 import { ZONES, type ZoneId } from "./world";
-import { CARS } from "./car";
+import { CARS, CP } from "./car";
 import { WEAPONS, type Weapon } from "./weapons";
 import * as RR from "./rerun";
 import { OUTRO_GUARD, OUTRO_S, OUTRO_SNAP, outroStatLine, outroUi, showPhoto, slowScale, snap } from "./replay";
@@ -139,7 +139,7 @@ export function endRun(win: boolean, why: string) {
   encoreAmbience(null);
 
   const gross = ctx.grossScrap(),
-    earned = Math.floor((gross + (ctx.erun ? ctx.encExtra + E.scrapExtra(gross, ctx.encG, ctx.pfx.scrap) : 0)) * ctx.curseK * (ctx.erun ? 1 : ctx.pfx.scrap));
+    earned = Math.floor((gross + (ctx.erun ? ctx.encExtra + E.scrapExtra(gross, ctx.encG, ctx.pfx.scrap) : 0)) * ctx.curseK * CP.scrap * (ctx.erun ? 1 : ctx.pfx.scrap));
   const eb = ctx.save.encore.best,
     encBetter =
       !!ctx.erun &&

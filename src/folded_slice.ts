@@ -641,6 +641,71 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     for (const s of [-1, 1]) for (const z of [0.6, -0.05, -0.7]) G.box(0.02, 0.28, 0.5, FOLD.screen("#3f7f96"), [s * 0.55, 0.84, z]);
     for (const sd of [-1, 1]) G.box(0.32, 0.06, 0.03, cream, [sd * 0.11, 0.5, 1.16], [0, 0, sd * 1.0]); // V
     lamps(0.4, 0.4, 1.17, 0.18); tails(0.42, 0.45, -1.16); bumper(1.1, 0.14, 1.22); bumper(1.1, 0.14, -1.2); num(0.545, 0.36, -0.2, 0.3);
+  } else if (kind === "murcielago") { // murciélago: negro, largo y bajo, cabina de burbuja, aletas traseras y turbina con brillo naranja
+    const glow = FOLD.emissive("#ff7a1a");
+    G.box(0.9, 0.14, 2.6, dark, [0, 0.07, 0]);
+    G.box(0.95, 0.16, 1.5, paint, [0, 0.2, 0.7]); G.box(0.2, 0.1, 0.5, paint, [0, 0.3, 1.2]); G.box(1.0, 0.04, 0.3, dark, [0, 0.03, 1.4]);
+    G.box(0.98, 0.26, 1.2, paint, [0, 0.27, -0.55]); edges(0.95, 0.34, -1.1, 1.4, paint);
+    G.box(0.55, 0.22, 0.75, FOLD.screen("#6a7f8f"), [0, 0.44, -0.05], [-0.15, 0, 0]); G.box(0.6, 0.06, 0.6, paint, [0, 0.57, -0.15]);
+    for (const s of [-1, 1]) { G.box(0.05, 0.55, 0.8, paint, [s * 0.45, 0.58, -1.05], [-0.4, 0, s * 0.12]); G.box(0.05, 0.25, 0.5, paint, [s * 0.5, 0.36, -0.2], [-0.2, 0, 0]); }
+    G.cyl(0.42, 0.5, dark, [0, 0.38, -1.4], [Math.PI / 2, 0, 0], 8); G.cyl(0.34, 0.04, glow, [0, 0.38, -1.66], [Math.PI / 2, 0, 0], 8);
+    G.trimStrip([0, 0.36, 0.95], [0, 0, 0], 0.9, 0.05, "hazard", 0.02);
+    lamps(0.3, 0.2, 1.46, 0.1); tails(0.3, 0.2, -1.17);
+  } else if (kind === "misterio") { // furgoneta del misterio: verde agua, parrilla de techo, flores naranjas y capó corto
+    const lite = FOLD.painted("#c9efe4", 0.5, 301), flower = FOLD.painted("#ff8a1f", 0.5, 302), eyeC = FOLD.painted("#ffd23f", 0.5, 303);
+    G.box(1.0, 0.12, 2.3, dark, [0, 0.05, 0]);
+    G.box(1.1, 0.5, 1.5, paint, [0, 0.38, -0.45]); G.box(1.08, 0.44, 1.3, paint, [0, 0.82, -0.5]); edges(1.08, 1.03, -1.1, 0.15, paint);
+    G.box(1.1, 0.4, 0.8, paint, [0, 0.3, 0.85]); G.box(1.04, 0.06, 0.7, lite, [0, 0.52, 0.85]);
+    G.box(0.9, 0.3, 0.03, FOLD.screen("#9be7ff"), [0, 0.8, 0.2], [-0.25, 0, 0]);
+    G.box(1.1, 0.07, 1.5, lite, [0, 0.58, -0.45]);
+    for (const s of [-1, 1]) {
+      G.box(0.02, 0.26, 0.5, FOLD.screen("#3f7f96"), [s * 0.55, 0.88, 0.0]);
+      for (const [z, y] of [[-0.45, 0.4], [-0.85, 0.72]] as const) { G.cyl(0.26, 0.03, flower, [s * 0.56, y, z], [0, 0, Math.PI / 2], 8); G.cyl(0.1, 0.04, eyeC, [s * 0.57, y, z], [0, 0, Math.PI / 2], 8); }
+    }
+    for (const x of [-0.45, 0.45]) for (const z of [-1.0, 0.0]) strut([x, 1.04, z], [x, 1.14, z], 0.04, 0.04, steel);
+    for (const x of [-0.45, 0.45]) strut([x, 1.14, -1.0], [x, 1.14, 0.0], 0.04, 0.04, steel);
+    for (const z of [-0.75, -0.5, -0.25]) strut([-0.45, 1.14, z], [0.45, 1.14, z], 0.04, 0.04, steel);
+    lamps(0.4, 0.34, 1.26, 0.16); tails(0.42, 0.45, -1.16); bumper(1.1, 0.14, 1.28); bumper(1.1, 0.14, -1.2);
+  } else if (kind === "clasico") { // sedán clásico: tres volúmenes, plateado con faldón azul oscuro y parrilla cromada vertical
+    const navy = FOLD.painted("#1c2a4a", 0.5, 311), chrome = FOLD.bare();
+    G.box(0.9, 0.1, 2.3, dark, [0, 0.05, 0]);
+    G.box(1.06, 0.14, 2.3, navy, [0, 0.14, 0]);
+    G.box(1.06, 0.2, 0.85, paint, [0, 0.3, 0.8]); edges(1.06, 0.4, 0.4, 1.2, paint);
+    G.box(0.98, 0.3, 0.95, paint, [0, 0.5, -0.1]); G.box(0.86, 0.04, 0.8, navy, [0, 0.66, -0.1]);
+    G.box(1.06, 0.22, 0.6, paint, [0, 0.31, -0.95]); edges(1.06, 0.42, -1.25, -0.65, paint);
+    G.box(0.9, 0.2, 0.03, FOLD.screen("#9be7ff"), [0, 0.52, 0.38], [-0.7, 0, 0]); G.box(0.8, 0.18, 0.03, FOLD.screen("#9be7ff"), [0, 0.52, -0.58], [0.7, 0, 0]);
+    for (const s of [-1, 1]) G.box(0.02, 0.2, 0.8, FOLD.screen("#3f7f96"), [s * 0.495, 0.52, -0.1]);
+    G.box(0.4, 0.16, 0.04, chrome, [0, 0.31, 1.24]); for (const x of [-0.15, -0.075, 0, 0.075, 0.15]) G.box(0.015, 0.14, 0.05, dark, [x, 0.31, 1.245]);
+    lamps(0.37, 0.3, 1.23, 0.14); tails(0.4, 0.34, -1.26); bumper(1.1, 0.14, 1.26); bumper(1.1, 0.14, -1.26);
+    num(0.535, 0.3, -0.1, 0.22);
+  } else if (kind === "jeep") { // 4x4 descapotable: tina abierta, parabrisas de caño, barra antivuelco, rueda de auxilio y parrilla de 7 ranuras
+    G.box(0.95, 0.12, 2.0, dark, [0, 0.08, 0]);
+    G.box(1.1, 0.34, 1.9, paint, [0, 0.32, 0]); edges(1.1, 0.5, -0.95, 0.95, paint);
+    G.box(0.5, 0.2, 0.5, dark, [-0.27, 0.54, -0.1]); G.box(0.5, 0.2, 0.5, dark, [0.27, 0.54, -0.1]);
+    for (const s of [-1, 1]) { G.box(0.2, 0.2, 0.8, paint, [s * 0.5, 0.52, 0.65]); G.box(0.2, 0.22, 0.6, paint, [s * 0.55, 0.5, -0.8]); }
+    strut([-0.5, 0.5, 0.25], [-0.5, 0.95, 0.35], 0.05, 0.05, steel); strut([0.5, 0.5, 0.25], [0.5, 0.95, 0.35], 0.05, 0.05, steel); strut([-0.5, 0.95, 0.35], [0.5, 0.95, 0.35], 0.05, 0.05, steel);
+    G.box(0.96, 0.4, 0.03, FOLD.screen("#9be7ff"), [0, 0.74, 0.3], [-0.2, 0, 0]);
+    for (const [z0, z1] of [[-0.55, -0.55]] as const) { strut([-0.45, 0.5, z0], [-0.45, 1.0, z1], 0.05, 0.05, steel); strut([0.45, 0.5, z0], [0.45, 1.0, z1], 0.05, 0.05, steel); strut([-0.45, 1.0, z1], [0.45, 1.0, z1], 0.05, 0.05, steel); }
+    G.cyl(0.5, 0.16, FOLD.rubber(), [0, 0.5, -1.06], [Math.PI / 2, 0, 0], 10); G.cyl(0.24, 0.18, steel, [0, 0.5, -1.07], [Math.PI / 2, 0, 0], 8);
+    G.box(0.62, 0.3, 0.05, dark, [0, 0.38, 0.97]); for (let i = 0; i < 7; i++) G.box(0.05, 0.26, 0.06, steel, [(i - 3) * 0.085, 0.38, 0.98]);
+    lamps(0.4, 0.46, 0.97, 0.16); tails(0.42, 0.36, -0.97); bumper(1.2, 0.2, 1.06); bumper(1.2, 0.2, -1.12);
+    num(0.555, 0.4, 0.15, 0.22);
+  } else if (kind === "moto") { // moto deportiva: dos ruedas en línea, tanque, carenado, cola alta, escape y manubrio
+    const stripeC = FOLD.painted("#f3ead2", 0.5, 321);
+    G.box(0.18, 0.1, 1.2, dark, [0, 0.2, 0]);
+    G.box(0.3, 0.26, 0.75, paint, [0, 0.46, 0.2]); G.box(0.2, 0.04, 0.6, stripeC, [0, 0.6, 0.2]);
+    G.box(0.32, 0.22, 0.45, paint, [0, 0.4, 0.78], [0.3, 0, 0]); G.box(0.24, 0.2, 0.04, FOLD.screen("#9be7ff"), [0, 0.6, 0.72], [-0.7, 0, 0]);
+    G.box(0.26, 0.1, 0.5, dark, [0, 0.52, -0.25]); G.box(0.24, 0.16, 0.5, paint, [0, 0.5, -0.75], [-0.25, 0, 0]);
+    for (const s of [-1, 1]) { strut([s * 0.1, 0.55, 0.85], [s * 0.1, 0.0, 0.85], 0.04, 0.04, steel); G.cyl(0.07, 0.4, steel, [s * 0.17, 0.2, -0.45], [Math.PI / 2, 0, 0], 8); strut([s * 0.1, 0.35, -0.25], [s * 0.08, 0.0, -0.85], 0.04, 0.04, steel); }
+    strut([-0.3, 0.7, 0.62], [0.3, 0.7, 0.62], 0.04, 0.04, steel);
+    lamps(0, 0.46, 1.03, 0.14); tails(0.07, 0.56, -1.0);
+    num(0.16, 0.46, 0.2, 0.16);
+  } else if (kind === "monopatin") { // monopatín: tabla con puntas levantadas, ejes de acero, ruedas amarillas y un muñeco parado encima
+    const grip = FOLD.painted("#1b1e24", 0.9, 331), shoe = FOLD.painted("#f3ead2", 0.5, 332), jeans = FOLD.painted("#35507a", 0.5, 333);
+    G.box(0.5, 0.05, 1.1, paint, [0, 0.12, 0]); G.box(0.46, 0.012, 1.06, grip, [0, 0.15, 0]);
+    for (const s of [-1, 1]) { G.box(0.5, 0.05, 0.22, paint, [0, 0.16, s * 0.64], [-s * 0.4, 0, 0]); G.box(0.46, 0.012, 0.2, grip, [0, 0.185, s * 0.64], [-s * 0.4, 0, 0]); G.box(0.1, 0.07, 0.12, steel, [0, 0.07, s * 0.5]); G.cyl(0.04, 0.46, steel, [0, 0.0, s * 0.5], [0, 0, Math.PI / 2], 6); }
+    for (const [z, s] of [[0.28, 1], [-0.22, -1]] as const) { G.box(0.1, 0.06, 0.2, shoe, [0.0, 0.19, z]); G.box(0.08, 0.3, 0.09, jeans, [0.0, 0.36, z - 0.02 * s]); }
+    G.box(0.2, 0.05, 0.04, FOLD.emissive("#ffd23f"), [0, 0.18, 0.73]); tails(0.1, 0.18, -0.74);
   } else { // autito de carreras a cuerda: carrocería baja, cabina, paragolpes de caño y llave de cuerda
     G.box(0.7, 0.06, 1.7, dark, [0, 0.0, 0]);
     G.box(0.8, 0.22, 2.0, paint, [0, 0.13, 0]); edges(0.8, 0.24, -1.0, 1.0, paint);

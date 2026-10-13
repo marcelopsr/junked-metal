@@ -2,7 +2,7 @@ import * as B from "@babylonjs/core";
 import { BAL } from "./balance";
 import { burst, debris, FX, mark } from "./fx";
 import { template, sph, tor } from "./models";
-import { applyClimate, pbr, shadows } from "./render";
+import { applyClimate, pbr, setDark, shadows } from "./render";
 import { pickIdx, rng } from "./rng";
 import { SPACE, moonAmbience } from "./sfx";
 import { banner } from "./ui";
@@ -111,7 +111,7 @@ type Quake = { C: B.Vector3; top: B.Vector3; t: number; erupted: boolean; r: num
 const mets: Met[] = [];
 const smokes: { p: B.Vector3; left: number; t: number }[] = [];
 let rain: { left: number; acc: number; rate: number } | null = null, quake: Quake | null = null;
-let rainAt = -1, quakeAt = -1, rainPre = false, ambOn = false, now = 0;
+let eclAt = -1, eclLeft = 0, eclK = 1, rainAt = -1, quakeAt = -1, rainPre = false, ambOn = false, now = 0;
 // ENCORE (encore.ts, variantes): multiplica los intervalos de lluvia y erupción de cada escenario (< 1 = más seguido). Supervivencia: 1 (x * 1 no cambia nada).
 const pace = { rain: 1, quake: 1 };
 export const evPace = (rain = 1, quake = 1) => { pace.rain = rain; pace.quake = quake; };
@@ -121,6 +121,8 @@ export function evReset() {
   for (const p of Object.values(pools)) for (const m of p) m.dispose();
   for (const k of Object.keys(pools)) delete pools[k];
   mets.length = smokes.length = 0;
+  if (eclK < 1) setDark(1);
+  eclAt = -1; eclLeft = 0; eclK = 1;
   rain = quake = null; rainAt = quakeAt = -1; rainPre = ambOn = false; evPace();
   tintK = tintTo = 0; tintStep = 0; showK = 0;
   SPACE.lava(0); moonAmbience(false);
@@ -267,6 +269,13 @@ export function lunaEv(dt: number, time: number, cars: B.Vector3[], carR: number
     else { startQuake(cars[pickIdx(cars.length)], camYaw, R.luna_erupcion_aviso_s); quakeAt = Infinity; } // ponytail: delante de la cámara del que guía aunque apunte al otro auto
   }
   if (quake) tickQuake(quake, dt, cars, carR, camYaw, vis);
+  // --- Eclipse: la Tierra tapa al Sol un rato; queda el faro y las luces de los bichos (solo visual: oscurece, no daña) ---
+  if (eclAt < 0) eclAt = R.luna_eclipse_desde_s + jitter();
+  if (!eclLeft && time >= eclAt - warnS && time < eclAt - warnS + dt * 1.5 && vis) warn("RADAR", "ECLIPSE EN ~6 S · LUZ MÍNIMA", 3.4, "warn");
+  if (!eclLeft && time >= eclAt) { eclLeft = R.luna_eclipse_dur_s; eclAt = time + R.luna_eclipse_cada_s + jitter(); if (vis) warn("ALERTA", "ECLIPSE", 2.4, "now"); }
+  if (eclLeft) eclLeft = Math.max(0, eclLeft - dt);
+  const eclTo = eclLeft > 0 ? R.luna_eclipse_luz : 1;
+  if (eclK !== eclTo || eclLeft > 0) { eclK += B.Scalar.Clamp(eclTo - eclK, -dt / 2, dt / 2); if (vis) setDark(eclK); } // cada cuadro: applyClimate (tinte) repone la luz
   // --- Humo de los cráteres ---
   for (let i = smokes.length - 1; i >= 0; i--) {
     const s = smokes[i];

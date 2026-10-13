@@ -5,6 +5,7 @@ const ENGINES: Record<string, [number, number, number, number]> = {
   buggy: [1, 95, 0.45, 0.25], monster: [0.75, 70, 0.4, 0.35], formula: [1.35, 120, 0.55, 0.15], tanque: [0.6, 60, 0.35, 0.4],
   carrera: [1.25, 110, 0.6, 0.2], axel: [1.45, 130, 0.5, 0.2], helado: [0.9, 85, 0.3, 0.3], combi: [0.7, 75, 0.4, 0.45],
   hover: [1.1, 100, 0.7, 0.1], topadora: [0.55, 55, 0.4, 0.5], triciclo: [1.15, 105, 0.45, 0.2],
+  murcielago: [0.9, 80, 0.5, 0.35], misterio: [0.7, 75, 0.4, 0.4], clasico: [0.95, 90, 0.4, 0.25], jeep: [0.85, 85, 0.45, 0.35], moto: [1.5, 135, 0.5, 0.15], monopatin: [1.3, 120, 0.25, 0.1],
 };
 const BASE_HZ = 40; // frecuencia de encendido con la que se graba el bucle; playbackRate la lleva a las rpm reales
 const bufs = new Map<string, AudioBuffer>();

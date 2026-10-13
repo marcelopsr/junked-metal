@@ -15,6 +15,7 @@ import { goalBar, goalsTick } from "./moon_goals";
 import { mateHurt } from "./coop";
 import { dirtyWaterTemplate, nutTemplate as nutTpl } from "./models";
 import { rng } from "./rng";
+import { CP } from "./car";
 import { run } from "./run_state";
 import { grant } from "./outro";
 import { shipBar, shipTargets, shipsTick } from "./moon_ships";
@@ -77,7 +78,11 @@ export function tickEnemies(F: Frame, dt: number): boolean {
     const ld = e.leader && e.leader.hp > 0 && nd > 14 ? e.leader : null;
     if (e.leader && !ld && nd <= 14) e.leader = null;
     const tgt = ld ? ld.pos.add(ld.node.right.scale(e.slot.x)).addInPlace(ld.node.forward.scale(-e.slot.z)) : near;
+    const scared = CP.scare && d1 < BAL.ritmo.rasgo_misterio_radio; // rasgo del Detective Peludo
+    if (scared) e.spd *= BAL.ritmo.rasgo_misterio_lento;
+    if (CP.trail && !e.def.boss && cv.length() > BAL.ritmo.rasgo_murcielago_vel * c.def.speed * T.st.speedMul && d1 < 5 && B.Vector3.Dot(e.pos.subtract(c.pos), c.root.forward) < 0) { damage(e, BAL.ritmo.rasgo_murcielago_dps * wdt); if (rng() < 0.05) FX.sparks(e.pos, 2); } // estela del Vigilante
     const ev = e.stun > 0 && e.kind !== "gusano" ? T.stunned(e, wdt) : e.update(wdt, tgt); // el gusano no se aturde (lo mueve su IA, también enterrado)
+    if (scared) e.spd /= BAL.ritmo.rasgo_misterio_lento;
     if (ev === "spit_aim" && !T.simulating) { const f = e.node.forward; FX.sparks(e.pos.add(upv(e.pos, 0.5))); mark("scorch", e.pos, yawOf(f, e.pos), 0.35, 4); }
     if (ev === "worm_up" || ev === "worm_down") { // gusano lunar (moon_worm.ts): cráter al salir y al hundirse; al salir golpea lo que esté encima
       deform(e.land, ATK.gusano_aviso_radio, ATK.gusano_crater_hondo); craterHumeante(e.land, ATK.gusano_aviso_radio, !T.simulating);

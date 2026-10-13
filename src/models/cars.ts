@@ -9,7 +9,7 @@ import { type V3, box, cyl, sph, tor, tube, extrude, merge, wheelInst, shadowPro
 // ---------- Autos del jugador ----------
 /** `cast`: lo que entra a la lista de proyectores de sombra (gemelas de una submalla; ver shadowProxy), en vez de la carrocería y las ruedas. */
 export type CarModel = { body: B.Mesh; wheels: { m: B.AbstractMesh; front: boolean; r: number }[]; paint: B.PBRMaterial; cast: B.AbstractMesh[]; antenna?: B.Mesh };
-export type CarKind = "buggy" | "monster" | "formula" | "tanque" | "carrera" | "axel" | "helado" | "combi" | "hover" | "topadora" | "triciclo";
+export type CarKind = "buggy" | "monster" | "formula" | "tanque" | "carrera" | "axel" | "helado" | "combi" | "hover" | "topadora" | "triciclo" | "murcielago" | "misterio" | "clasico" | "jeep" | "moto" | "monopatin";
 
 // Paletas del taller
 // Una sola paleta para las tres zonas (carrocería, detalles, llantas): vivos, pasteles y tonos metálicos. Los primeros 8 son los de siempre.
@@ -63,6 +63,7 @@ export const validDecal = (s: unknown): s is string => typeof s === "string" && 
 const SPOT: Record<CarKind, [number, number, number, number]> = {
   buggy: [0.933, -1.0, 0.34, 0.12], monster: [1.212, -0.2, 0.54, 0], formula: [0.653, -1.15, 0.28, 0], tanque: [0.825, -0.15, 0.6, 0], carrera: [0.352, -0.72, 0.4, -0.38], axel: [0.66, -0.3, 0.34, 0], helado: [0.97, 0.55, 0.34, 0], combi: [1.04, -0.1, 0.4, 0],
   hover: [0.62, -0.5, 0.45, 0], topadora: [1.12, -0.5, 0.45, 0], triciclo: [0.78, -0.55, 0.38, 0],
+  murcielago: [0.6, -0.5, 0.36, 0], misterio: [1.18, -0.5, 0.4, 0], clasico: [0.7, -0.1, 0.3, 0], jeep: [0.52, 0.1, 0.4, 0], moto: [0.62, -0.1, 0.0, 0], monopatin: [0.2, -0.2, 0.0, 0],
 };
 
 // Dónde va cada cosa en cada auto: deck = [y, z] del alerón, side = calco lateral [x, y, z], exh = [y, z] del escape,
@@ -79,12 +80,18 @@ const ANCH: Record<CarKind, { deck: [number, number]; side: V3; exh: [number, nu
   hover: { deck: [0.62, -1.0], side: [0.6, 0.3, 0], exh: [0.4, -1.1], seat: [0, 0.4, 0.1, 0.8], lamps: [[0.4, 0.38, 1.1, 0.12]], paint: "#f3f4f6", rim: "#4cc3c9" },
   topadora: { deck: [1.12, -0.95], side: [0.62, 0.45, -0.2], exh: [0.9, 0.6], seat: [0, 0.62, -0.3, 0.8], lamps: [[0.4, 0.55, 1.15, 0.14]], paint: "#f5b301", rim: "#2b2d31" },
   triciclo: { deck: [0.78, -0.82], side: [0.5, 0.35, -0.55], exh: [0.18, -0.95], seat: [0, 0.42, 0.1, 0.7], lamps: [[0, 0.5, 0.95, 0.14]], paint: "#e8553d", rim: "#f3ead2" },
+  murcielago: { deck: [0.6, -1.1], side: [0.5, 0.3, -0.2], exh: [0.38, -1.5], seat: [0, 0.36, -0.05, 0.7], lamps: [[0.3, 0.2, 1.46, 0.1]], paint: "#262a33", rim: "#ff7a1a" },
+  misterio: { deck: [1.14, -0.95], side: [0.56, 0.55, -0.1], exh: [0.2, -1.15], seat: [0, 0.5, 0.2, 0.7], lamps: [[0.4, 0.34, 1.26, 0.16]], paint: "#7fd6b8", rim: "#f3ead2" },
+  clasico: { deck: [0.62, -1.0], side: [0.54, 0.3, -0.1], exh: [0.2, -1.3], seat: [0, 0.4, -0.1, 0.65], lamps: [[0.37, 0.3, 1.23, 0.14]], paint: "#aab2bf", rim: "#e5e7eb" },
+  jeep: { deck: [0.9, -1.0], side: [0.56, 0.4, 0.1], exh: [0.2, -1.1], seat: [0, 0.5, -0.1, 0.75], lamps: [[0.4, 0.46, 0.97, 0.16]], paint: "#667a2e", rim: "#2b2d31" },
+  moto: { deck: [0.55, -0.9], side: [0.17, 0.46, 0.2], exh: [0.2, -0.95], seat: [0, 0.62, -0.25, 0.55], lamps: [[0, 0.46, 1.03, 0.14]], paint: "#1d6fd6", rim: "#e5e7eb" },
+  monopatin: { deck: [0.3, -0.7], side: [0.25, 0.14, 0], exh: [0.1, -0.7], seat: [0, 0.55, 0, 0.55], lamps: [[0, 0.18, 0.73, 0.06]], paint: "#e8553d", rim: "#ffd23f" },
 };
 /** Colores de fábrica por zona (el garaje arranca el selector libre desde acá cuando no hay uno elegido). */
 export const factoryColor = (k: CarKind) => ({ paint: ANCH[k].paint, trim: "#c9ccd1", rim: ANCH[k].rim });
 
 // Tamaño [ancho, alto, largo] de cada auto (el mismo de CARS en car.ts; se repite aquí para no crear un import circular)
-const CARS_SIZE: Record<CarKind, [number, number, number]> = { buggy: [1.3, 0.7, 2.3], monster: [1.8, 1.1, 2.4], formula: [1.3, 0.55, 2.8], tanque: [1.75, 0.9, 2.4], carrera: [1.1, 0.5, 2.1], axel: [1.9, 1.0, 1.7], helado: [1.3, 0.95, 2.4], combi: [1.45, 1.0, 2.4], hover: [1.5, 0.7, 2.3], topadora: [1.7, 1.2, 2.5], triciclo: [1.2, 0.9, 2.0] };
+const CARS_SIZE: Record<CarKind, [number, number, number]> = { buggy: [1.3, 0.7, 2.3], monster: [1.8, 1.1, 2.4], formula: [1.3, 0.55, 2.8], tanque: [1.75, 0.9, 2.4], carrera: [1.1, 0.5, 2.1], axel: [1.9, 1.0, 1.7], helado: [1.3, 0.95, 2.4], combi: [1.45, 1.0, 2.4], hover: [1.5, 0.7, 2.3], topadora: [1.7, 1.2, 2.5], triciclo: [1.2, 0.9, 2.0], murcielago: [1.3, 0.6, 2.8], misterio: [1.45, 1.1, 2.4], clasico: [1.15, 0.75, 2.5], jeep: [1.25, 1.0, 2.1], moto: [0.8, 0.9, 2.1], monopatin: [0.7, 0.5, 1.5] };
 const HOVER_W = [[-0.6, 0.8], [0.6, 0.8], [-0.6, -0.8], [0.6, -0.8]];
 const TRI_W: [number, number, number][] = [[0, 0.8, 0.7], [-0.58, -0.65, 0.85], [0.58, -0.65, 0.85]];
 export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
@@ -286,6 +293,12 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     else if (kind === "hover") for (const [x, z] of HOVER_W) ws.push({ pos: [x, 0, z], d: 0.3, w: 0.2 });
     else if (kind === "topadora") for (const z of [-0.7, -0.25, 0.25, 0.7]) for (const x of [-0.78, 0.78]) ws.push({ pos: [x, 0.02, z], d: 0.4, w: 0.36, steer: false });
     else if (kind === "triciclo") for (const [x, z, d] of TRI_W) ws.push({ pos: [x, 0, z], d, w: 0.26 });
+    else if (kind === "murcielago") for (const [x, z] of [[-0.62, 0.95], [0.62, 0.95], [-0.65, -0.9], [0.65, -0.9]]) ws.push({ pos: [x, 0, z], d: z < 0 ? 0.7 : 0.58, w: z < 0 ? 0.4 : 0.3 });
+    else if (kind === "misterio") for (const [x, z] of [[-0.62, 0.8], [0.62, 0.8], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
+    else if (kind === "clasico") for (const [x, z] of [[-0.56, 0.82], [0.56, 0.82], [-0.56, -0.85], [0.56, -0.85]]) ws.push({ pos: [x, 0, z], d: 0.56, w: 0.26 });
+    else if (kind === "jeep") for (const [x, z] of [[-0.66, 0.7], [0.66, 0.7], [-0.66, -0.7], [0.66, -0.7]]) ws.push({ pos: [x, 0, z], d: 0.72, w: 0.32 });
+    else if (kind === "moto") for (const z of [0.85, -0.85]) ws.push({ pos: [0, 0, z], d: 0.8, w: 0.2 });
+    else if (kind === "monopatin") for (const [x, z] of [[-0.2, 0.5], [0.2, 0.5], [-0.2, -0.5], [0.2, -0.5]]) ws.push({ pos: [x, 0, z], d: 0.28, w: 0.14 });
     else for (const [x, z] of [[-0.46, 0.66], [0.46, 0.66], [-0.46, -0.66], [0.46, -0.66]]) ws.push({ pos: [x, 0, z], d: 0.52, w: 0.18 });
     if (kind === "buggy" || kind === "formula") {
       stock = [

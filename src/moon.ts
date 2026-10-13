@@ -12,7 +12,7 @@ import type { Kind } from "./enemies";
 // Todo vive en el mundo real (Havok sin gravedad): cada cuerpo dinámico cae hacia el centro y el piso es ANALÍTICO (radio = R + altura(dirección)),
 // así los cráteres que se agregan en la partida (deform) cambian el piso del auto, los bichos, el spawn y las gemas con la misma función.
 // Fuera de la luna (MOON.on = false) cada ayudante de abajo hace EXACTAMENTE la cuenta plana de siempre: el patio no cambia ni un bit.
-export const MOON = { on: false, R: 60, g: 25 }; // g = la gravedad del patio (25): los saltos de jefes están calculados con ella
+export const MOON = { on: false, R: 87, g: 25 }; // R 60→87 (usuario 2026-10-12); g = la gravedad del patio (25): los saltos de jefes están calculados con ella
 export const CENTER = new B.Vector3(0, -MOON.R, 0); // el polo de arriba queda en el origen: la salida es la misma del patio
 export const SUN_DIR = new B.Vector3(-0.62, 0.48, -0.62).normalize(); // hacia el Sol (la luz va al revés): la salida queda en la cara iluminada
 export const EARTH_DIR = new B.Vector3(0.25, 0.42, 0.87).normalize(); // la Tierra, delante de la salida (el auto arranca mirando +z)
@@ -305,8 +305,8 @@ export function moonBuild(s: B.Scene, low: boolean) {
   scene = s;
   fixed.length = 0; dents.length = 0; faces.length = 0; rocks.length = 0;
   // Cráteres fijos: ninguno a menos de 16 m de la salida; grandes pocos, chicos muchos
-  for (let i = 0; i < 72; i++) {
-    const d = new B.Vector3(rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1).normalize(), big = i < 10;
+  for (let i = 0; i < 86; i++) { // 72→86 y 12 grandes: +20 % con la luna de R 72
+    const d = new B.Vector3(rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1).normalize(), big = i < 12;
     const r = big ? 9 + rng() * 7 : 2.5 + rng() * 4.5, dep = r * (big ? 0.22 : 0.3) * (0.7 + rng() * 0.5);
     if (MOON.R * Math.acos(d.y) < 16 + r) continue;
     fixed.push(mkDent(d, r, dep));
@@ -343,7 +343,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
   // Rocas: unas grandes con colisionador (estático, pose antes del cuerpo) y muchas piedritas (thin instances, solo visuales)
   const rockM = pbr("moonRock", { color: "#7b7c80", rough: 0.95 });
   const rockTpl = template("moonRock", () => [sph(1, rockM, [0, 0, 0], [1.25, 0.7, 1], 4), sph(0.62, rockM, [0.42, 0.12, 0.18], [1, 0.75, 1.1], 4), sph(0.5, rockM, [-0.35, 0.05, -0.3], [1.1, 0.6, 1], 4)]);
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < 84; i++) {
     const d = new B.Vector3(rng() * 2 - 1, rng() * 2 - 1, rng() * 2 - 1).normalize(), sz = 1.6 + rng() * 2.6, yaw = rng() * 6.3;
     if (MOON.R * Math.acos(d.y) < 14 || heightAt(d) < -0.6) continue;
     const k: Rock = { m: rockTpl.createInstance("roca"), d, sz, body: null! }, m = k.m;
@@ -356,7 +356,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
   }
   const peb = B.MeshBuilder.CreatePolyhedron("moonPebble", { type: 3, sizeX: 0.46, sizeY: 0.22, sizeZ: 0.38 }, scene); // icosaedro achatado: 20 triángulos por piedrita
   peb.material = rockM;
-  const np = low ? 500 : 1100, mats = new Float32Array(np * 16), q = new B.Quaternion(), mx = new B.Matrix(), sc = new B.Vector3(), pp = new B.Vector3();
+  const np = low ? 600 : 1320, mats = new Float32Array(np * 16), q = new B.Quaternion(), mx = new B.Matrix(), sc = new B.Vector3(), pp = new B.Vector3();
   for (let i = 0; i < np; i++) {
     const d = new B.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1).normalize(), s = 0.25 + Math.random() * 0.7;
     B.Quaternion.FromUnitVectorsToRef(Y, d, q).multiplyInPlace(B.Quaternion.RotationAxis(Y, Math.random() * 6.3));
@@ -380,7 +380,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
   const stM = skyMat("starsMat"); stM.emissiveColor = B.Color3.White(); stM.diffuseColor = B.Color3.Black();
   stars.material = stM; stars.infiniteDistance = true; stars.alwaysSelectAsActiveMesh = true; // el cielo no entra al recorte por distancia (setDrawDist) ni al de cámara stars.isPickable = false; stars.applyFog = false;
   // Tierra: continentes y nubes en una textura chica, iluminada por el mismo Sol (se ve su fase) y con un halo azul
-  earth = B.MeshBuilder.CreateSphere("earth", { diameter: 72, segments: 24 }, scene);
+  earth = B.MeshBuilder.CreateSphere("earth", { diameter: 100, segments: 24 }, scene);
   const eM = (scene.getMaterialByName("earthMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("earthMat", scene);
   eM.diffuseTexture ??= canvasTex(256, (c, z) => {
     c.fillStyle = "#1d4f9c"; c.fillRect(0, 0, z, z);
@@ -399,8 +399,28 @@ export function moonBuild(s: B.Scene, low: boolean) {
     m.material = mm; m.position.copyFrom(at); m.billboardMode = B.Mesh.BILLBOARDMODE_ALL; m.infiniteDistance = true; m.alwaysSelectAsActiveMesh = true; m.isPickable = false; m.applyFog = false;
     return m;
   };
-  disc("earthHalo", 92, EARTH_DIR.scale(495), [[0, "rgba(120,180,255,0)"], [0.72, "rgba(120,180,255,0.5)"], [1, "rgba(120,180,255,0)"]]); // atmósfera: un aro azul detrás del disco
+  disc("earthHalo", 128, EARTH_DIR.scale(495), [[0, "rgba(120,180,255,0)"], [0.72, "rgba(120,180,255,0.5)"], [1, "rgba(120,180,255,0)"]]); // atmósfera: un aro azul detrás del disco
   disc("sunDisc", 72, SUN_DIR.scale(520), [[0, "rgba(255,250,235,1)"], [0.3, "rgba(255,246,225,1)"], [1, "rgba(255,200,120,0)"]]);
+  // Marte y Saturno: más chicos y lejos que la Tierra, con el mismo Sol (se ve su fase); el anillo es un toro aplastado sin luz
+  const planet = (name: string, diam: number, dir: B.Vector3, paint: (c: CanvasRenderingContext2D, z: number) => void) => {
+    const m = B.MeshBuilder.CreateSphere(name, { diameter: diam, segments: 16 }, scene), pm = (scene.getMaterialByName(name + "Mat") as B.StandardMaterial | null) ?? new B.StandardMaterial(name + "Mat", scene);
+    pm.diffuseTexture ??= canvasTex(128, paint); pm.specularColor = B.Color3.Black(); pm.emissiveColor = new B.Color3(0.06, 0.05, 0.05); pm.fogEnabled = false;
+    m.material = pm; m.position.copyFrom(dir).normalize().scaleInPlace(500);
+    m.infiniteDistance = true; m.alwaysSelectAsActiveMesh = true; m.isPickable = false; m.applyFog = false;
+    return m;
+  };
+  planet("mars", 26, new B.Vector3(-0.7, 0.35, 0.45), (c, z) => {
+    c.fillStyle = "#b5522b"; c.fillRect(0, 0, z, z);
+    for (let i = 0; i < 18; i++) { c.fillStyle = Math.random() < 0.5 ? "#8c3a1e" : "#d07a48"; c.beginPath(); c.ellipse(Math.random() * z, z * (0.15 + Math.random() * 0.7), 6 + Math.random() * 16, 3 + Math.random() * 7, Math.random() * 3, 0, 7); c.fill(); }
+    c.fillStyle = "#f3ece4"; c.fillRect(0, 0, z, z * 0.06);
+  });
+  const sat = planet("saturn", 50, new B.Vector3(0.75, 0.5, -0.3), (c, z) => {
+    ["#d9bf8c", "#c9a56a", "#e6d2a6", "#b8925a", "#dcc596", "#c4a271"].forEach((col, i, a) => { c.fillStyle = col; c.fillRect(0, (i * z) / a.length, z, z / a.length + 1); });
+  });
+  sat.rotation.set(0.45, 0, 0.3);
+  const ring = B.MeshBuilder.CreateTorus("saturnRing", { diameter: 84, thickness: 22, tessellation: 48 }, scene), rm = skyMat("saturnRingMat");
+  rm.emissiveColor = B.Color3.FromHexString("#b9a27a"); rm.diffuseColor = B.Color3.Black(); rm.alpha = 0.75;
+  ring.material = rm; ring.scaling.y = 0.04; ring.parent = sat; ring.isPickable = false; ring.applyFog = false; ring.alwaysSelectAsActiveMesh = true;
   shoot = B.MeshBuilder.CreateLines("shoot", { points: [shootA, shootB], colors: [new B.Color4(1, 1, 1, 1), new B.Color4(0.6, 0.8, 1, 0)], updatable: true, useVertexAlpha: true }, scene);
   shoot.infiniteDistance = true; shoot.alwaysSelectAsActiveMesh = true; shoot.isPickable = false; shoot.applyFog = false; shoot.isVisible = false;
   if (shoot.material) shoot.material.fogEnabled = false;

@@ -26,6 +26,12 @@ export const CARS: Record<CarKind, { name: string; desc: string; cost: number; h
   hover: { name: "El Capitán de Bañera", desc: "Navega el patio como si fuera un lago. Casi no agarra el piso: se desliza y gira ancho.", ...stats("hover"), size: [1.5, 0.7, 2.3], drive: "fwd" },
   topadora: { name: "El Capataz", desc: "Trabaja a su ritmo y empuja todo lo que se le cruce. Lentísimo, pero la pala no perdona.", ...stats("topadora"), size: [1.7, 1.2, 2.5], drive: "awd" },
   triciclo: { name: "El Repartidor", desc: "Entrega a domicilio, sin demoras. Muy ágil y de giro cerrado, pero poco aguante.", ...stats("triciclo"), size: [1.2, 0.9, 2.0], drive: "rwd" },
+  murcielago: { name: "El Vigilante Nocturno", desc: "Sale de noche, sin presentarse. Largo, bajo y pesado: rápido en recta y difícil de frenar. Rasgo: su estela quema a los bichos que van detrás a más del 80% de velocidad.", ...stats("murcielago"), size: [1.3, 0.6, 2.8], drive: "rwd" },
+  misterio: { name: "El Detective Peludo", desc: "Resuelve todo con una galleta de por medio. Mucho aguante, poca prisa y flores por todas partes. Rasgo: los bichos cercanos se asustan y van 15% más lentos.", ...stats("misterio"), size: [1.45, 1.1, 2.4], drive: "rwd" },
+  clasico: { name: "El Jefe de Zona", desc: "Siempre bien peinado y con el motor al día. Equilibrado en todo: no luce, pero tampoco falla. Rasgo: +15% de tornillos ganados.", ...stats("clasico"), size: [1.15, 0.75, 2.5], drive: "rwd" },
+  jeep: { name: "El Explorador", desc: "Ningún camino le parece demasiado feo. Tracción total y buen agarre, sin techo para la lluvia. Rasgo: +20% de blindaje contra choques.", ...stats("jeep"), size: [1.25, 1.0, 2.1], drive: "awd" },
+  moto: { name: "El Mensajero del Viento", desc: "Dos ruedas y ninguna paciencia. Muy rápida y de giro filoso, pero se rompe con cualquier golpe. Rasgo: +8% de velocidad máxima.", ...stats("moto"), size: [0.8, 0.9, 2.1], drive: "rwd" },
+  monopatin: { name: "El Patinador", desc: "Un muñeco, una tabla y mucha fe. Diminuto y ágil, pero se desarma con un susto. Rasgo: +25% de imán de gemas.", ...stats("monopatin"), size: [0.7, 0.5, 1.5], drive: "rwd" },
 };
 
 // Manejo arcade sobre un cuerpo Havok: la física resuelve choques,
@@ -259,4 +265,14 @@ export class Car {
   }
 
   dispose() { this.agg.dispose(); this.root.dispose(); }
+}
+
+/** Rasgos pasivos de los autos nuevos (filas rasgo_* de la tabla ritmo). `CP` lo llena main.ts al armar la partida; neutro para el resto de autos. */
+export const CP = { trail: 0, scare: 0, scrap: 1 };
+export function setCarPassive(kind: CarKind, st: { armor: number; magnet: number; speedMul: number }) {
+  const R = BAL.ritmo;
+  CP.trail = kind === "murcielago" ? 1 : 0; CP.scare = kind === "misterio" ? 1 : 0; CP.scrap = kind === "clasico" ? R.rasgo_clasico_tornillos : 1;
+  if (kind === "jeep") st.armor = 1 - (1 - st.armor) * (1 - R.rasgo_jeep_blindaje); // ponytail: sin la parte de terreno/pasto, solo blindaje
+  if (kind === "moto") st.speedMul *= R.rasgo_moto_vel; // ponytail: fijo, no solo al derrapar
+  if (kind === "monopatin") st.magnet *= R.rasgo_monopatin_iman; // ponytail: sin pisotón al caer de un salto
 }

@@ -2,7 +2,7 @@ import { tut, tutEnd, tutOffers, tutOn, tutStart } from "./tutorial";
 import { hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
-import { Car, CARS, drive } from "./car";
+import { Car, CARS, drive, setCarPassive } from "./car";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
 import { engineSfx, engineStop, initAudio, music, moonAmbience, encoreAmbience, musicDuck, rainSfx, setEngineKind, SFX, SPACE } from "./sfx";
 import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
@@ -188,6 +188,7 @@ let hitStop = 0, lastHpFrac = 1, motorFxT = 0;
 // ---------- Flujo ----------
 function recompute() {
   st = pilotStats(passiveStats(run.passives, save.perm), save.pilot);
+  setCarPassive(save.car, st);
   encRecompute(grossScrap()); // ENCORE: cobra lo ganado con el efecto que se va y toma los pactos activos (neutros en Supervivencia)
   st.dmg *= pfx.dmg; st.speedMul *= pfx.speed; st.xp *= pfx.xp; st.regen += pfx.regen;
   if (pfx.taken !== 1) st.armor = 1 - (1 - st.armor) * pfx.taken; // daño recibido x taken
