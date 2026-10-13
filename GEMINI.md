@@ -73,6 +73,20 @@ EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECI
 
 ## Evolución de la geometría de los autos (relevo de Claude, 2026-10-13)
 
+**Autorización explícita del usuario (2026-10-13), prevalece sobre las restricciones de arriba para esta línea de trabajo:**
+- Gemini trabaja con **autonomía total**, al mismo nivel que Claude: elegir, ejecutar, verificar, exportar, commitear y seguir en ciclos
+  sin pedir permiso para cada paso.
+- Puede **leer** cualquier archivo del repo, incluidos `CLAUDE.md`, `.claude/` y `docs/`, como referencia (no modificarlos). Los
+  archivos `docs/evo-colab/*`, `docs/EVO_VEHICULOS.md`, `src/car_genes.*`, `src/evo_probe.ts`, `scripts/evo*` son suyos para editar.
+- Puede correr **cualquier script de `package.json`** (`npm run evo`, `test:restart`, `test:down`, `test:ls`, `shots`, `perf`, `sim`,
+  `test`, `build`) y `npx tsc`, `git` local (add, commit, worktree, log, diff) y `graphify`. `npm run test:restart` es la forma
+  autorizada de reiniciar `rc-test` (usa pm2 por dentro: está permitido).
+- Puede abrir el navegador (headless de las herramientas o el de Antigravity) contra `http://localhost:5173`, `:5174` y los
+  puertos `52xx` de los worktrees.
+- Puede lanzar subagentes Gemini en paralelo (por ejemplo, evaluadores visuales independientes) cuando acorten el camino.
+- Lo único que sigue prohibido: `git push`, borrar datos del usuario, modificar `.claude/` o `CLAUDE.md`, levantar servidores
+  sueltos fuera de pm2.
+
 Línea de trabajo autorizada por el usuario para seguir con Gemini a su ritmo. Antes de tocar nada leer, en orden:
 `docs/evo-colab/RELEVO-gemini.md` (estado, próximos pasos y ciclo paso a paso), `docs/EVO_VEHICULOS.md` (sistema, criterios,
 lecciones) y `docs/evo-colab/PROTOCOLO.md` + `plantillas/` (evaluaciones y relevos en .md, compartidos con Claude y ChatGPT).
