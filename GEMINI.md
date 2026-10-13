@@ -68,3 +68,12 @@ EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECI
 2. **Perspectiva renovada por ciclo:** Alterna lentes según el estado del producto (Calidad/Impeccable, Experiencia UX/UI, Integración Folded 2.5D, Simplificación/YAGNI, Rendimiento, Funcionalidades, Arquitectura, Producto). Evita repetir propuestas ya descartadas o inventar defectos artificiales.
 3. **Propuestas y criterio propio (2 a 4 opciones):** Para cada oportunidad detalla brevemente *qué es, qué problema resuelve, qué valor aporta, complejidad estimada y por qué conviene desarrollarla*. Emite siempre una **recomendación fundamentada** (impacto, valor, coherencia, riesgo, reutilización) y consulta al usuario mediante `ask_question` cómo desea continuar (elegir una, combinar, modificar, descartar, explorar otra lente o delegar).
 
+
+---
+
+## Evolución de la geometría de los autos (relevo de Claude, 2026-10-13)
+
+Línea de trabajo autorizada por el usuario para seguir con Gemini a su ritmo. Antes de tocar nada leer, en orden:
+`docs/evo-colab/RELEVO-gemini.md` (estado, próximos pasos y ciclo paso a paso), `docs/EVO_VEHICULOS.md` (sistema, criterios,
+lecciones) y `docs/evo-colab/PROTOCOLO.md` + `plantillas/` (evaluaciones y relevos en .md, compartidos con Claude y ChatGPT).
+Herramienta: `npm run evo` (sin dependencias nuevas; usa `rc-test` como todo lo demás). Un commit local por ciclo, sin push.
