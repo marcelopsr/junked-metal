@@ -470,7 +470,7 @@ export function cortacercosPose(_v: number, walk: number, atk: number) {
 /** Máquina de garra de feria: gabinete de premios, pórtico y pinza suspendida. Huesos: cuerpo, cable y dedos. */
 export function gruaBody() {
   const { G, done, bone } = kit();
-  const orange = FOLD.painted("#e87816", 0.8, 181), yellow = FOLD.painted("#f5b91b", 0.65, 182);
+  const orange = FOLD.drumPaint(), yellow = orange;
   const dark = FOLD.dark(), steel = FOLD.bare(), glass = FOLD.glass();
   G.foldBox([0, 0.18, 0], undefined, 2.8, 0.72, 2.45, orange);
   for (const x of [-1.17, 1.17]) G.wheel([x, 0.2, 0.05], undefined, 0.42, 0.22);

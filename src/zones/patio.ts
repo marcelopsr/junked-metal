@@ -53,7 +53,7 @@ export function patioBuild() {
   scrap.useRadianceOverAlpha = scrap.useSpecularOverAlpha = false;
   scrap.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   const scrapDecals: B.Mesh[] = [];
-  for (const [x, z, ry, scale] of [[-40, 30, -0.4, 0.45], [40, -23, 0.8, 0.36], [-12, -10, 0.5, 0.5], [10, -12, -0.7, 0.4]]) {
+  for (const [x, z, ry, scale] of [[-40, 30, -0.4, 0.45], [40, -23, 0.8, 0.36], [-12, -10, 0.5, 0.5], [10, -12, -0.7, 0.4], [-43, 28, 0.6, 0.32], [-46.7, 31, -0.8, 0.28], [-31.5, 25, 1.2, 0.35]]) {
     const patch = decal("smallScrap", 4 * scale, 3 * scale, x, z, scrap, 0.03);
     patch.rotation.y = ry; scrapDecals.push(patch);
   }
@@ -183,6 +183,8 @@ export function patioBuild() {
     cyl(3.18, 3.18, 0.025, capMat, [0, 0, 0], undefined, 16),
     tor(3.08, 0.055, trimMat, [0, 0.025, 0], undefined, 16),
     cyl(0.24, 0.24, 0.08, trimMat, [0.55, 0.05, -0.3], undefined, 8),
+    tor(3.18, 0.09, capMat, [0, -1.2, 0], undefined, 16),
+    tor(3.18, 0.09, capMat, [0, -3.6, 0], undefined, 16),
   ]);
   for (const [x, z] of [[-42, 30], [-45.5, 32]]) {
     const drum = registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [x, 2.4, z], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");

@@ -75,6 +75,10 @@ export function toTile(m: B.Mesh, t: number) {
 }
 /** Biblioteca de materiales. `wear` 0..1: pintura saltada en bordes y mugre; sobre 0,4 el óxido avanza desde esquinas y el borde de apoyo. */
 export const FOLD = {
+  drumPaint: () => once("drumPaint", (m) => {
+    m.albedoTexture = new B.Texture("./textures/props/prop-rusty-drum-folded-v2.webp", sc(), true, false, B.Texture.NEAREST_SAMPLINGMODE);
+    m.roughness = 0.84; m.metallic = 0.3;
+  }),
   painted: (c: string, wear = 0.6, seed = 11) => once(`p${c}|${wear}|${seed}`, (m) => {
     const edgeRust = Math.max(0, wear - 0.4) / 0.6;
     const t = wornTex(sc(), seed, c, null, 64, wear, edgeRust, true); // escamas Folded legibles en el atlas, sin alterar los materiales viejos del taller
