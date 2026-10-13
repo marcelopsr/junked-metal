@@ -229,7 +229,7 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 
 /* ---------- Táctil: targets de 44 px ---------- */
 @media (pointer: coarse) {
-  .tab, .slot .opt, .dside .opt, #paint .hsvt .opt { min-height: 44px; }
+  .tab, .slot .opt, .dside .opt, #paint .hsvt .opt, #tabs .tab, #stabs .tab, #sfilt .tab, #bfilts .tab { min-height: 44px; }
   .mainGrid button, .list button { min-height: 46px; }
 }
 @media (max-width: 640px) {

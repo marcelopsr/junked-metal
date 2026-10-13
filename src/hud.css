@@ -302,7 +302,8 @@
   --ban-ink: #b9d3a4; --ban-dim: #5f7355; --ban-warn: #e0a030; --ban-now: #8dff6a;
   /* banda superior compacta: en el borde superior cuando no hay barra de jefe; baja si aparece el jefe */
   position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; translate: -50% 0; scale: var(--hud-scale); transform-origin: 50% 0;
-  max-width: min(400px, calc(100vw - 640px)); min-width: 230px;
+  /* 100vw - 604px: deja libre el panel NV de la señal (294 px) a la izquierda con 8 px de aire; el mínimo evita que el aviso quede ilegible */
+  max-width: min(400px, max(190px, calc(100vw - 604px))); min-width: 190px;
   padding: 5px 11px 6px; text-align: left; pointer-events: none; overflow: hidden;
   animation: h-bannerin .35s cubic-bezier(.2, 1.4, .4, 1) both;
 }
@@ -500,3 +501,7 @@ body.calm #dirSub { animation: none !important; }
 
 /* compu: el failsafe coincidía con #dirSub (misma altura y centro); va a su izquierda, fuera de su ancho máximo (520 px) */
 @media (pointer: fine) { .rf-failsafe { left: max(8px, calc(50% - 270px * var(--hud-scale, 1))); transform: translateX(-100%); } }
+
+/* Saltar tutorial: debajo del radar (que crece a 1.3x en pantalla grande y a .9x en celular); 44 px de alto táctil */
+.tut-skip { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 122px); right: 14px; z-index: 30; pointer-events: auto; padding: 6px 12px; min-height: 36px; font: 700 13px var(--hf, Rajdhani, sans-serif); letter-spacing: .08em; color: var(--jm-naranja, #ff9138); background: var(--jm-fondo, #0b0f14); border: 1px solid var(--jm-chapa, #b5651d); cursor: pointer; }
+@media (pointer: coarse), (max-width: 720px) { .tut-skip { top: calc(max(10px, env(safe-area-inset-top)) + 66px); right: 8px; min-height: 44px; } }

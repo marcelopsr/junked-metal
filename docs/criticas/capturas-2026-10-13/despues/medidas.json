@@ -1,0 +1,217 @@
+{
+ "w412-principal": {
+  "overflowX": false,
+  "small": []
+ },
+ "w412-modos": {
+  "overflowX": false,
+  "small": []
+ },
+ "w412-config": {
+  "overflowX": false,
+  "small": []
+ },
+ "w412-garaje": {
+  "overflowX": false,
+  "small": []
+ },
+ "w412-taller": {
+  "overflowX": false,
+  "small": []
+ },
+ "w412-bestiario": {
+  "overflowX": false,
+  "small": []
+ },
+ "w412-hud": {
+  "overflowX": false,
+  "small": []
+ },
+ "w412-cartas": {
+  "overflowX": false,
+  "small": []
+ },
+ "w412-logs": [],
+ "w800-principal": {
+  "overflowX": false,
+  "small": [
+   "lnk:146x40",
+   "lnk:150x40",
+   "lnk:112x40"
+  ]
+ },
+ "w800-modos": {
+  "overflowX": false,
+  "small": []
+ },
+ "w800-config": {
+  "overflowX": false,
+  "small": [
+   "tab on:77x38",
+   "tab :69x38",
+   "tab :67x38",
+   "tab :101x38",
+   "tab :124x38",
+   "SELECT:94x36",
+   "SELECT:234x36",
+   "INPUT:131x10",
+   "SELECT:80x36",
+   "SELECT:211x36",
+   "SELECT:84x36",
+   "SELECT:63x36",
+   "SELECT:175x36",
+   "INPUT:200x10",
+   "INPUT:167x10",
+   "SELECT:103x36",
+   "SELECT:155x36",
+   "INPUT:145x10"
+  ]
+ },
+ "w800-garaje": {
+  "overflowX": false,
+  "small": [
+   "tab on:58x36",
+   "tab :68x36",
+   "tab :61x36",
+   "tab :88x36",
+   "tab :77x36",
+   "tab :69x36",
+   "primary:117x42"
+  ]
+ },
+ "w800-taller": {
+  "overflowX": false,
+  "small": [
+   "tab on:71x36",
+   "tab :143x36",
+   "tab :105x36",
+   "tab :81x36",
+   "tab :66x36",
+   "tab :76x36",
+   "tab :70x36",
+   "tab :67x36",
+   "tab on:58x36",
+   "tab :170x36",
+   "tab :104x36",
+   "tab :100x36",
+   "tab:139x36"
+  ]
+ },
+ "w800-bestiario": {
+  "overflowX": false,
+  "small": [
+   "tab on:112x36",
+   "tab :121x36",
+   "tab :115x36",
+   "tab :111x36",
+   "tab on:138x28",
+   "tab :101x28",
+   "tab :140x28",
+   "tab :120x28"
+  ]
+ },
+ "w800-hud": {
+  "overflowX": false,
+  "small": [
+   "tut-skip:134x36"
+  ]
+ },
+ "w800-cartas": {
+  "overflowX": false,
+  "small": [
+   "tut-skip:134x36"
+  ]
+ },
+ "w800-logs": [],
+ "w1366-principal": {
+  "overflowX": false,
+  "small": [
+   "lnk:126x40",
+   "lnk:130x40",
+   "lnk:92x40"
+  ]
+ },
+ "w1366-modos": {
+  "overflowX": false,
+  "small": []
+ },
+ "w1366-config": {
+  "overflowX": false,
+  "small": [
+   "tab on:77x38",
+   "tab :69x38",
+   "tab :67x38",
+   "tab :101x38",
+   "tab :124x38",
+   "SELECT:94x36",
+   "SELECT:234x36",
+   "INPUT:131x10",
+   "SELECT:80x36",
+   "SELECT:211x36",
+   "SELECT:84x36",
+   "SELECT:63x36",
+   "SELECT:175x36",
+   "INPUT:200x10",
+   "INPUT:167x10",
+   "SELECT:103x36",
+   "SELECT:155x36",
+   "INPUT:145x10"
+  ]
+ },
+ "w1366-garaje": {
+  "overflowX": false,
+  "small": [
+   "tab on:58x36",
+   "tab :68x36",
+   "tab :61x36",
+   "tab :88x36",
+   "tab :77x36",
+   "tab :69x36",
+   "primary:117x42"
+  ]
+ },
+ "w1366-taller": {
+  "overflowX": false,
+  "small": [
+   "tab on:71x36",
+   "tab :143x36",
+   "tab :105x36",
+   "tab :81x36",
+   "tab :66x36",
+   "tab :76x36",
+   "tab :70x36",
+   "tab :67x36",
+   "tab on:58x36",
+   "tab :170x36",
+   "tab :104x36",
+   "tab :100x36",
+   "tab:139x36"
+  ]
+ },
+ "w1366-bestiario": {
+  "overflowX": false,
+  "small": [
+   "tab on:112x36",
+   "tab :121x36",
+   "tab :115x36",
+   "tab :111x36",
+   "tab on:138x28",
+   "tab :101x28",
+   "tab :140x28",
+   "tab :120x28"
+  ]
+ },
+ "w1366-hud": {
+  "overflowX": false,
+  "small": [
+   "tut-skip:134x36"
+  ]
+ },
+ "w1366-cartas": {
+  "overflowX": false,
+  "small": [
+   "tut-skip:134x36"
+  ]
+ },
+ "w1366-logs": []
+}

@@ -19,7 +19,6 @@ const TXT: Record<TutEv, () => string> = {
 export function tutStart(onDone: () => void) {
   done = onDone; step = 0; banner(TXT.move(), 5);
   btn ??= Object.assign(document.createElement("button"), { textContent: "SALTAR TUTORIAL", className: "tut-skip", onclick: () => tutEnd() });
-  btn.style.cssText = "position:absolute;top:64px;pointer-events:auto;right:12px;z-index:30;font:600 13px Rajdhani,sans-serif;padding:6px 10px;background:#1a1a1a;color:#ff8a1f;border:1px solid #ff8a1f;cursor:pointer";
   (document.getElementById("hud") ?? document.body).appendChild(btn);
 }
 export function tutEnd() { if (step < 0) return; step = -1; btn?.remove(); done(); }
@@ -31,5 +30,5 @@ export const tutOn = () => step >= 0;
 /** Evento del juego: solo cuenta si es el del paso actual. */
 export function tut(ev: TutEv) {
   if (step < 0 || ORDER[step] !== ev) return;
-  if (++step >= ORDER.length) { banner("¡LISTO, SOBREVIVÍ!", 3); tutEnd(); } else banner(TXT[ORDER[step]](), 5);
+  if (++step >= ORDER.length) { banner("¡LISTO! A SOBREVIVIR", 3); tutEnd(); } else banner(TXT[ORDER[step]](), 5);
 }

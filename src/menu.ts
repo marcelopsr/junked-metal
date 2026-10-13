@@ -687,7 +687,7 @@ function renderShop() {
     const priceText = isOwnedPart ? (isMounted ? "MONTADO EN AUTO" : "EN GARAJE · TOCAR PARA MONTAR") : price;
     return `<button class="carc perk ${canClick ? "" : "no"} ${isMounted ? "active-part" : ""}" ${i.attr} data-info="${info}" aria-disabled="${!canClick}">${slotBadge}<b class="wi">${i.ico ? icon(i.ico, 22) : ""}${i.name}</b>${i.desc}${i.fx ? `<span class="sfx">${i.fx}</span>` : ""}${pips}<div class="price">${isOwnedPart ? `<span class="mount-hint ${isMounted ? "on" : ""}">${priceText}</span>` : price}</div></button>`;
   }).join("") || `<div class="note">Nada por acá con este filtro. El patio no regala nada.</div>`;
-  $("sinfo").textContent = "Enfoca una mejora para ver qué cambia y cuánto falta.";
+  $("sinfo").textContent = (matchMedia("(hover: none)").matches ? "Tocar" : "Enfocar") + " una mejora para ver qué cambia y cuánto falta.";
   if (stab === "piezas") {
     $("shop").querySelectorAll<HTMLElement>('[data-buy^="part:"]').forEach((b) => {
       const parts = (b.dataset.buy ?? "").split(":");
