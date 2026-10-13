@@ -92,17 +92,19 @@ export function patioBuild() {
   pathMat.alphaCutOff = 0.02;
   pathMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   const paths: B.Mesh[] = [];
-  for (const [x, z, w, len, angle] of [
+  const grassPaths = [
     [-33, 10, 16, 38, 2.11],
     [-1, 16, 12.5, 48, 0.87],
     [33, 38.5, 14, 38, 1.16],
     [-7, 1, 11, 37, -0.49],
-  ]) {
+  ];
+  for (const [x, z, w, len, angle] of grassPaths) {
     const path = decal("soilPath", w, len, x, z, pathMat, 0.018);
     path.rotation.y = angle;
     paths.push(path);
   }
   const soilPaths = merge("soilPaths", paths, [pathMat]);
+  soilPaths.metadata = { grassPaths };
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirtMat, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   const crops: B.Mesh[] = [];

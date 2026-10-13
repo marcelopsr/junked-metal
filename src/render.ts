@@ -95,9 +95,9 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   shadows.stabilizeCascades = true;
   shadows.usePercentageCloserFiltering = true;
   shadows.filteringQuality = SHADOW.mid[2];
-  shadows.darkness = 0.72; // sombras más legibles sin cambiar el tamaño del mapa
-  shadows.bias = 0.004;
-  shadows.normalBias = 0.02;
+  shadows.darkness = 0.62; // más peso bajo los props con el mismo mapa
+  shadows.bias = 0.0025;
+  shadows.normalBias = 0.012;
   scene.onBeforeRenderObservable.add(() => { const rt = shadows.getShadowMap(); if (rt && rt.getCustomRenderList !== shadowList) rt.getCustomRenderList = shadowList; }); // applyGfx recrea el mapa al cambiar el nivel: se vuelve a enganchar
 
   // Faro del auto: el único foco duro de la escena. Sin sombras propias (ponytail: sombras solo de la luna; si hace falta, ShadowGenerator sobre el spot).

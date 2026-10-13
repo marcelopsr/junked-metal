@@ -387,6 +387,18 @@ export function buildGrass() {
   let k = scatter(rng, st.tuftCount, 0);
   const want = Math.round(k * G.grass);
   k = want > k ? scatter(Math.random, want - k, k) : want;
+  // Recortar después de scatter conserva todas las llamadas al RNG y el layout de la semilla.
+  const paths: number[][] = scene.getMeshByName("soilPaths")?.metadata?.grassPaths ?? [];
+  let kept = 0;
+  for (let i = 0; i < k; i++) {
+    const x = mats[i * 16 + 12], z = mats[i * 16 + 14];
+    if (paths.some(([cx, cz, w, len, angle]) => {
+      const dx = x - cx, dz = z - cz, sn = Math.sin(angle), cs = Math.cos(angle);
+      return Math.abs(dx * cs - dz * sn) < w * 0.25 && Math.abs(dx * sn + dz * cs) < len * 0.42;
+    })) continue;
+    mats.copyWithin(kept++ * 16, i * 16, i * 16 + 16);
+  }
+  k = kept;
   st.tuft.isVisible = k > 0;
   if (k) { st.tuft.thinInstanceSetBuffer("matrix", mats.subarray(0, k * 16), 16, true); st.tuft.alwaysSelectAsActiveMesh = true; } // la caja original queda en el origen: sin esto el pasto se descarta al mirar lejos
   setDrawDist(G.draw);

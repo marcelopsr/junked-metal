@@ -4,6 +4,7 @@ import { G, M, pbr, TEX, wetGround } from "./render";
 import { RAIN } from "./run";
 import { FOLD, FOLDED_SLICE } from "./folded";
 import { alt, at, grav, MOON, onFloor, orient, toWorld, upAt } from "./moon";
+import { heavyProps } from "./zones/common";
 
 // Partículas con un pool de sistemas reutilizables (cero creación por golpe).
 let scene: B.Scene;
@@ -423,6 +424,12 @@ export function contactShadows(carPos: B.Vector3 | null, enemies: { pos: B.Vecto
     return;
   }
   put(cShadows, k++, carPos.x, 0.032, carPos.z, 1.05, 1.35);
+  for (const prop of heavyProps) {
+    if (k >= cShadows.n) break;
+    if (prop.m.isDisposed() || !prop.m.isEnabled()) continue;
+    const p = prop.m.position, radius = prop.type === "drum" ? 1.65 : 1.5;
+    put(cShadows, k++, p.x, 0.034, p.z, radius, radius);
+  }
   for (let i = 0; i < enemies.length && k < cShadows.n; i++) {
     const e = enemies[i], p = e.pos, s = e.def.size, air = Math.max(0.45, 1 - Math.max(0, p.y - s[1] * 0.5) * 0.04);
     put(cShadows, k++, p.x, 0.031, p.z, s[0] * 0.65 * air, s[2] * 0.65 * air);
