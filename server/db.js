@@ -117,6 +117,8 @@ export function openDb(file, invitesJson = null) {
   if (one("SELECT sql FROM sqlite_master WHERE name='plans'")?.sql.includes("price > 0")) tx(() => db.exec(`ALTER TABLE plans RENAME TO plans_old;
     CREATE TABLE plans(id TEXT PRIMARY KEY, name TEXT NOT NULL, price INTEGER NOT NULL CHECK(price >= 0), currency TEXT NOT NULL, period TEXT NOT NULL CHECK(period IN ('month','year','forever')));
     INSERT INTO plans SELECT id,name,price,currency,period FROM plans_old; DROP TABLE plans_old;`));
+  // Plan fijo "beta": gratis y sin vencimiento; el acceso dura hasta que el admin lo revoque o lo borre (botón "Dar acceso beta" del panel).
+  run("INSERT OR IGNORE INTO plans(id,name,price,currency,period) VALUES('beta','Beta tester',0,'USD','forever')");
   db.exec("CREATE TABLE IF NOT EXISTS ranking_ban(uid TEXT PRIMARY KEY); CREATE TABLE IF NOT EXISTS hidden_events(id INTEGER PRIMARY KEY)");
   const OK = "AND id NOT IN (SELECT id FROM hidden_events) AND uid NOT IN (SELECT uid FROM ranking_ban)"; // moderación: filtro común de rankings
   const api = {

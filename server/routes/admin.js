@@ -119,7 +119,7 @@ app.post("/admin/api/user", act(({ email, op, note, alias }) => {
 }));
 app.post("/admin/api/templates", act((b) => ({ templates: db.saveTemplates(b) })));
 app.post("/admin/api/plan", act((p) => void db.savePlan(p)));
-app.post("/admin/api/plan/delete", act(({ id }) => { if (!db.deletePlan(id)) throw new Error("Plan inexistente"); }));
+app.post("/admin/api/plan/delete", act(({ id }) => { if (id === "beta") throw new Error("El plan Beta tester es fijo"); if (!db.deletePlan(id)) throw new Error("Plan inexistente"); }));
 // Suscripción a mano: set = plan y vencimiento exactos; paid = registrar un pago manual (extiende un período); cancel.
 app.post("/admin/api/sub", act(({ email, op, planId, until }) => {
   if (op === "set") db.setSub(email, planId, Date.parse(until));

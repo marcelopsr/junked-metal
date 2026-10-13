@@ -140,6 +140,11 @@ select:disabled,button:disabled{opacity:.5;cursor:not-allowed}
 
   <section data-s="usuarios">
     <div class="panel">
+      <h2>Acceso beta tester</h2>
+      <p class="muted">Escribe el correo y toca el botón: puede jugar todo el juego hasta que lo revoques o lo borres. Entra con ese correo por Cloudflare (le llega un código).</p>
+      <form id="fBeta" class="fila"><input id="betaMail" type="email" required placeholder="mail@ejemplo.com" aria-label="Correo del beta tester"><button class="pri">Dar acceso beta</button></form>
+    </div>
+    <div class="panel">
       <h2>Agregar amigo</h2>
       <div class="sinplan hidden" role="note"><span><b>No hay planes.</b> Sin un plan no se puede dar de alta a nadie: el servidor exige una licencia.</span><button type="button" class="pri" data-ir="pagos">Crear un plan en Pagos</button></div>
       <form id="fInv" class="fila"><input id="iMail" type="email" required placeholder="mail@ejemplo.com" aria-label="Mail a invitar"><select id="iPlan" aria-label="Licencia"></select><button class="pri">Generar invitación</button></form>
@@ -427,6 +432,13 @@ $("fCuerpo").onclick = intentar(async (e) => { if (e.target.id !== "fBan") retur
 $("fCerrar").onclick = () => $("dFicha").close();
 $("fGest").onclick = () => { $("dFicha").close(); abrir(actual); };
 
+$("fBeta").onsubmit = intentar(async (e) => {
+  e.preventDefault();
+  const m = $("betaMail").value.trim(), r = await api("invite", { email: m, planId: "beta" });
+  $("iLink").textContent = r.link; $("iVence").textContent = `Para ${m} · link opcional, vence ${fecha(r.expiresAt)}`;
+  $("iMailto").href = gmail(m, tpls.invite, { link: r.link, vence: fecha(r.expiresAt), plan: "Beta tester" });
+  $("iOut").classList.remove("hidden"); $("betaMail").value = ""; aviso(`Acceso beta dado a ${m}.`); cargar();
+});
 $("fInv").onsubmit = intentar(async (e) => {
   e.preventDefault();
   const r = await api("invite", { email: $("iMail").value.trim(), planId: $("iPlan").value });
