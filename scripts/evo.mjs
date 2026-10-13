@@ -37,6 +37,24 @@ if (has("export")) {
   process.exit(0);
 }
 
+// --hoja <run> --ids a,b: rehace solo la hoja comparativa (original, vigente y esas variantes) con el código actual de la sonda
+if (has("hoja")) {
+  const run = arg("hoja"), dir = join(".evo", car, run), R = readJson(join(dir, "run.json"), null);
+  if (!R) throw new Error("no existe " + join(dir, "run.json"));
+  const ids = arg("ids", "").split(",").filter(Boolean), pick = ids.map((id) => R.individuos.find((x) => x.id === id));
+  const browser = await launch();
+  try {
+    const page = await open(browser, "?mute&evo", "pc");
+    await page.waitForFunction(() => window.__evo, null, { timeout: 60000 });
+    const vig = await page.evaluate((c) => window.__evo.vigente(c), car);
+    const gs = [R.original.g, vig, ...pick.map((x) => x.g)], ev = await page.evaluate(([c, g]) => window.__evo.eval(c, g), [car, gs]);
+    const notes = ev.map((e) => `rojo ${e.m.pintura_visible.toFixed(3)}\nleg ${e.obj[0].toFixed(3)} prop ${e.obj[1].toFixed(2)}`);
+    const url = await page.evaluate(([c, g, n, nt]) => window.__evo.sheet(c, g, n, nt), [car, gs, ["original", "vigente", ...ids], notes]);
+    writeFileSync(join(dir, "hoja-limpia.png"), Buffer.from(url.split(",")[1], "base64"));
+    console.log("hoja: " + join(dir, "hoja-limpia.png"));
+  } finally { await browser.close(); }
+  process.exit(0);
+}
 const P = { pop: +arg("pop", 16), gens: +arg("gens", 8), seed: +arg("seed", 1), F: +arg("F", 0.5), CR: +arg("CR", 0.7), sigma: +arg("sigma", 0.15), from: arg("from", null) };
 const run = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/^(\d{8})/, "$1-") + `-s${P.seed}`;
 const dir = join(".evo", car, run), img = join(dir, "img");

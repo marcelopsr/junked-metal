@@ -76,14 +76,32 @@ export const GENES: Record<string, Gene[]> = {
     ...RUEDAS,
   ],
   tanque: [ // orugas fijas (sin genes de rueda): las ruedas de rodaje no se ven y la oruga es casco
-    g("orugas", "oruga_alto", 0.42, 0.36, 0.5),
+    g("orugas", "oruga_alto", 0.42, 0.38, 0.5), // pisos del evaluador: orugas, torreta y cañón son la identidad
     g("carroceria", "casco_ancho", 1.1, 0.95, 1.2),
     g("carroceria", "casco_alto", 0.32, 0.26, 0.4),
-    g("torreta", "torreta_ancho", 0.9, 0.75, 1.0),
+    g("torreta", "torreta_ancho", 0.9, 0.9, 1.05),
     g("torreta", "torreta_alto", 0.3, 0.24, 0.4),
-    g("torreta", "torreta_largo", 0.9, 0.75, 1.05),
+    g("torreta", "torreta_largo", 0.9, 0.81, 1.05),
     g("canon", "canon_largo", 1.1, 0.8, 1.4),
     g("canon", "canon_d", 0.13, 0.1, 0.18),
+  ],
+  carrera: [
+    g("carroceria", "cuerpo_ancho", 0.8, 0.7, 0.9),
+    g("carroceria", "cuerpo_alto", 0.22, 0.18, 0.28),
+    g("carroceria", "cuerpo_largo", 2.0, 1.8, 2.1),
+    g("cabina", "cabina_ancho", 0.62, 0.5, 0.72),
+    g("cabina", "cabina_alto", 0.18, 0.14, 0.26),
+    g("cabina", "cabina_largo", 0.7, 0.55, 0.9),
+    g("cabina", "cabina_z", -0.25, -0.4, -0.1),
+    ...RUEDAS,
+  ],
+  axel: [
+    g("cabina", "cabina_ancho", 0.9, 0.78, 1.0),
+    g("cabina", "cabina_alto", 0.3, 0.24, 0.4),
+    g("cabina", "cabina_largo", 1.2, 1.0, 1.4),
+    g("cabina", "jaula_alto", 0.76, 0.6, 0.9),
+    g("ruedas", "tapa_d", 0.5, 0.4, 0.7),
+    ...RUEDAS.filter((x) => x.id !== "batalla_k"), // un solo eje
   ],
 };
 

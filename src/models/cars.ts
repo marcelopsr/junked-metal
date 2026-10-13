@@ -304,20 +304,19 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     else if (kind === "moto") for (const z of [0.85, -0.85]) ws.push({ pos: [0, 0, z], d: 0.8, w: 0.2 });
     else if (kind === "monopatin") for (const [x, z] of [[-0.2, 0.5], [0.2, 0.5], [-0.2, -0.5], [0.2, -0.5]]) ws.push({ pos: [x, 0, z], d: 0.28, w: 0.14 });
     else for (const [x, z] of [[-0.46, 0.66], [0.46, 0.66], [-0.46, -0.66], [0.46, -0.66]]) ws.push({ pos: [x, 0, z], d: 0.52, w: 0.18 });
-    if (kind === "buggy" || kind === "formula") {
-      const wy = kind === "buggy" ? q.aleron_alto : 0.9, sh = wy - 0.9; // alerón de serie (genes del buggy); los soportes estiran la punta, la base queda
+    if (kind === "buggy") {
+      const sh = q.aleron_alto - 0.9; // alerón de serie (genes del buggy); los soportes estiran la punta, la base queda
       stock = [
-        box(q.aleron_ancho ?? 1.35, 0.05, q.aleron_cuerda ?? 0.38, M.plastic("#ffc300"), [0, wy, -1.0], [q.aleron_incl ?? 0.12, 0, 0]),
+        box(q.aleron_ancho, 0.05, q.aleron_cuerda, M.plastic("#ffc300"), [0, q.aleron_alto, -1.0], [q.aleron_incl, 0, 0]),
         box(0.05, 0.4 + sh, 0.15, M.matte("#222"), [0.4, 0.68 + sh / 2, -0.95]),
         box(0.05, 0.4 + sh, 0.15, M.matte("#222"), [-0.4, 0.68 + sh / 2, -0.95]),
       ];
-      if (kind === "formula") {
-        stock = [
-          box(1.2, 0.05, 0.3, paint, [0, 0.62, -1.15]),
-          box(0.05, 0.3, 0.3, M.plastic("#111"), [0.55, 0.47, -1.15]),
-          box(0.05, 0.3, 0.3, M.plastic("#111"), [-0.55, 0.47, -1.15]),
-        ];
-      }
+    } else if (kind === "formula") { // antes el fórmula armaba también el alerón del buggy y lo dejaba huérfano en la escena (flotando cerca del origen)
+      stock = [
+        box(1.2, 0.05, 0.3, paint, [0, 0.62, -1.15]),
+        box(0.05, 0.3, 0.3, M.plastic("#111"), [0.55, 0.47, -1.15]),
+        box(0.05, 0.3, 0.3, M.plastic("#111"), [-0.55, 0.47, -1.15]),
+      ];
     }
   }
 
@@ -881,7 +880,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   // Calco del capó (textura HD oficial o grilla NEAREST 16x16 propia con alfa; el material se reusa por diseño)
   if (validDecal(o.sticker) && o.sticker !== DECAL_BLANK) {
     const onWing = kind !== "monster" && (o.wing === "alto" || o.wing === "doble"); // plato del alerón: top = el mismo de arriba, +0,033 = medio grosor y holgura
-    const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : kind === "buggy" ? [q.aleron_alto + 0.033, -1.0, 0.34, q.aleron_incl] : kind === "tanque" ? [0.825 + (q.casco_alto - 0.32) / 2 + (q.torreta_alto - 0.3), -0.15, 0.6, 0] : kind === "monster" ? [1.212 + (q.caja_y - 0.62) + (q.caja_alto - 0.36) + (q.cabina_alto - 0.36), q.cabina_z, 0.54, 0] : SPOT[kind];
+    const [hy, hz, hs, hp] = onWing ? [dy + (o.wing === "alto" ? 0.5 : 0.48) * (small ? 0.7 : 1) + 0.033, dz - 0.04, 0.34, 0.14] : kind === "buggy" ? [q.aleron_alto + 0.033, -1.0, 0.34, q.aleron_incl] : kind === "carrera" ? [0.352 + q.cuerpo_alto / 2 - 0.11, -0.72 * q.cuerpo_largo / 2, 0.4, -0.38] : kind === "tanque" ? [0.825 + (q.casco_alto - 0.32) / 2 + (q.torreta_alto - 0.3), -0.15, 0.6, 0] : kind === "monster" ? [1.212 + (q.caja_y - 0.62) + (q.caja_alto - 0.36) + (q.cabina_alto - 0.36), q.cabina_z, 0.54, 0] : SPOT[kind];
     const isHd = o.sticker in GARAGE_DECALS;
     const mat = pbr("calco" + o.sticker, { color: "#ffffff", rough: isHd ? 0.45 : 0.4 });
     if (!mat.albedoTexture) {
@@ -968,7 +967,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     cap.parent = ant;
     cast.push(ant);
   }
-  if (q.rueda_k !== undefined) for (const w of ws) { w.pos = [w.pos[0] * q.trocha_k, w.pos[1], w.pos[2] * q.batalla_k]; w.d *= q.rueda_k; } // genes de rueda (car_genes.ts): 1 = original
+  if (q.rueda_k !== undefined) for (const w of ws) { w.pos = [w.pos[0] * (q.trocha_k ?? 1), w.pos[1], w.pos[2] * (q.batalla_k ?? 1)]; w.d *= q.rueda_k; } // genes de rueda (car_genes.ts): 1 = original
   const wheels = ws.map((w) => {
     const { inst: m, cast: c } = wheelInst(w.d, w.w, rim, fb && (!o.tires || o.tires === "serie") && kind !== "tanque" ? "fold" : o.tires === "serie" ? "" : o.tires === "lisas" ? "lisa" : o.tires ?? "");
     m.position = v(w.pos);

@@ -5,7 +5,7 @@
 import * as B from "@babylonjs/core";
 import { FOLD, foldAtlas, foldTile, geoKit, toTile, type GeoKit } from "./folded";
 import { PAL } from "./kit3d";
-import { genome, type Genome } from "./car_genes";
+import { genome, original, type Genome } from "./car_genes";
 
 type V3 = [number, number, number];
 const sc = () => B.Engine.LastCreatedScene!;
@@ -673,12 +673,13 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
   } else if (kind === "axel") { // Axel: eje de caño entre dos ruedas gigantes y jaula-cabina colgando
     const red = FOLD.painted("#b8321f", 0.6, 231);
     G.cyl(0.16, 1.9, steel, [0, 0, 0], [0, 0, Math.PI / 2], 8);
-    G.box(0.95, 0.12, 1.25, dark, [0, -0.12, 0]); G.box(0.9, 0.3, 1.2, paint, [0, 0.1, 0]); edges(0.9, 0.25, -0.6, 0.6, paint);
-    for (const z of [-0.5, 0.45]) { strut([-0.42, 0.25, z], [-0.42, 0.76, z * 0.4], 0.05, 0.05, steel); strut([0.42, 0.25, z], [0.42, 0.76, z * 0.4], 0.05, 0.05, steel); }
-    for (const x of [-0.42, 0.42]) strut([x, 0.76, -0.2], [x, 0.76, 0.18], 0.05, 0.05, steel);
-    strut([-0.42, 0.76, -0.2], [0.42, 0.76, -0.2], 0.05, 0.05, steel);
-    for (const s of [-1, 1]) { G.cyl(0.5, 0.06, red, [s * 0.98, 0, 0], [0, 0, Math.PI / 2], 8); G.cyl(0.02, 0.2, steel, [s * 1.1, 0, 0], [0, 0, -s * Math.PI / 2], 6, 0.16); }
-    lamps(0.28, 0.3, 0.62, 0.16); num(0.455, 0.1, 0, 0.22);
+    const w = q.cabina_ancho, h = q.cabina_alto, L = q.cabina_largo, top = 0.1 + h / 2, x = w / 2 - 0.03, jy = q.jaula_alto, wx = 0.82 * q.trocha_k; // genes: car_genes.ts
+    G.box(w + 0.05, 0.12, L + 0.05, dark, [0, -0.12, 0]); G.box(w, h, L, paint, [0, 0.1, 0]); edges(w, top, -L / 2, L / 2, paint);
+    for (const z of [-0.5, 0.45]) { strut([-x, top, z], [-x, jy, z * 0.4], 0.05, 0.05, steel); strut([x, top, z], [x, jy, z * 0.4], 0.05, 0.05, steel); }
+    for (const xx of [-x, x]) strut([xx, jy, -0.2], [xx, jy, 0.18], 0.05, 0.05, steel);
+    strut([-x, jy, -0.2], [x, jy, -0.2], 0.05, 0.05, steel);
+    for (const s of [-1, 1]) { G.cyl(q.tapa_d, 0.06, red, [s * (wx + 0.16), 0, 0], [0, 0, Math.PI / 2], 8); G.cyl(0.02, 0.2, steel, [s * (wx + 0.28), 0, 0], [0, 0, -s * Math.PI / 2], 6, 0.16); }
+    lamps(0.28, top + 0.05, L / 2 + 0.02, 0.16); num(w / 2 + 0.005, 0.1, 0, 0.22);
   } else if (kind === "helado") { // camioncito de helados: cabina, caja crema con ventanilla y toldo, cucurucho de chapa en el techo
     const cream = FOLD.painted("#f3ead2", 0.5, 241), pink = FOLD.painted("#f08dbd", 0.5, 242);
     G.box(1.0, 0.14, 2.3, dark, [0, 0.05, 0]);
@@ -764,12 +765,14 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     for (const [z, s] of [[0.28, 1], [-0.22, -1]] as const) { G.box(0.1, 0.06, 0.2, shoe, [0.0, 0.19, z]); G.box(0.08, 0.3, 0.09, jeans, [0.0, 0.36, z - 0.02 * s]); }
     G.box(0.2, 0.05, 0.04, FOLD.emissive("#ffd23f"), [0, 0.18, 0.73]); tails(0.1, 0.18, -0.74);
   } else { // autito de carreras a cuerda: carrocería baja, cabina, paragolpes de caño y llave de cuerda
+    const c = kind === "carrera" ? q : original("carrera"); // hover, topadora y triciclo también caen acá: con la forma original
+    const bw = c.cuerpo_ancho, bh = c.cuerpo_alto, bl = c.cuerpo_largo, top = 0.13 + bh / 2, kw = c.cabina_ancho, kh = c.cabina_alto, kl = c.cabina_largo, kz = c.cabina_z, ky = top + kh / 2; // genes: car_genes.ts
     G.box(0.7, 0.06, 1.7, dark, [0, 0.0, 0]);
-    G.box(0.8, 0.22, 2.0, paint, [0, 0.13, 0]); edges(0.8, 0.24, -1.0, 1.0, paint);
-    G.box(0.62, 0.18, 0.7, paint, [0, 0.33, -0.25]); G.box(0.58, 0.15, 0.03, FOLD.glass(), [0, 0.35, 0.12], [-0.6, 0, 0]);
-    bumper(0.76, 0.1, 1.08); bumper(0.76, 0.1, -1.06); lamps(0.25, 0.2, 1.01, 0.12); tails(0.28, 0.18, -1.01);
-    G.cyl(0.08, 0.14, steel, [0.43, 0.18, -0.2], [0, 0, Math.PI / 2], 6); G.box(0.03, 0.2, 0.06, steel, [0.52, 0.18, -0.2]); // llave de cuerda
-    num(0.405, 0.15, 0.35, 0.18); G.decal([0, 0.242, 0.6], [Math.PI / 2, 0, 0], "flecha", 0.25);
+    G.box(bw, bh, bl, paint, [0, 0.13, 0]); edges(bw, top, -bl / 2, bl / 2, paint);
+    G.box(kw, kh, kl, paint, [0, ky, kz]); G.box(kw - 0.04, kh - 0.03, 0.03, FOLD.glass(), [0, ky + 0.02, kz + kl / 2 + 0.02], [-0.6, 0, 0]);
+    bumper(0.76, 0.1, bl / 2 + 0.08); bumper(0.76, 0.1, -bl / 2 - 0.06); lamps(0.25, 0.2, bl / 2 + 0.01, 0.12); tails(0.28, 0.18, -bl / 2 - 0.01);
+    G.cyl(0.08, 0.14, steel, [bw / 2 + 0.03, 0.18, -0.2], [0, 0, Math.PI / 2], 6); G.box(0.03, 0.2, 0.06, steel, [bw / 2 + 0.12, 0.18, -0.2]); // llave de cuerda
+    num(bw / 2 + 0.005, 0.15, 0.35, 0.18); G.decal([0, top + 0.002, 0.6], [Math.PI / 2, 0, 0], "flecha", 0.25);
   }
   return done(2);
 }

@@ -1514,5 +1514,278 @@
       }
     ],
     "motivo": "Evaluador visual 37 vs 34: pontones más largos y anchos, ruedas más grandes; mejora en garaje, leve en partida"
+  },
+  {
+    "car": "tanque",
+    "accion": "corrida",
+    "run": "20261013-1954-s1",
+    "fecha": "20261013",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 1,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.14,
+      0.09,
+      1,
+      0.59
+    ],
+    "recomendado": {
+      "id": "i150",
+      "gen": 7,
+      "obj": [
+        0.135,
+        0,
+        1,
+        0.585
+      ],
+      "cambios": [
+        {
+          "id": "torreta_largo",
+          "comp": "torreta",
+          "def": 0.9,
+          "val": 0.8159995517183188,
+          "pct": -28
+        },
+        {
+          "id": "oruga_alto",
+          "comp": "orugas",
+          "def": 0.42,
+          "val": 0.38399445892478024,
+          "pct": -25.7
+        },
+        {
+          "id": "torreta_alto",
+          "comp": "torreta",
+          "def": 0.3,
+          "val": 0.2592551952036508,
+          "pct": -25.5
+        },
+        {
+          "id": "casco_ancho",
+          "comp": "carroceria",
+          "def": 1.1,
+          "val": 1.1596560154363829,
+          "pct": 23.9
+        },
+        {
+          "id": "torreta_ancho",
+          "comp": "torreta",
+          "def": 0.9,
+          "val": 0.8428337835789231,
+          "pct": -22.9
+        },
+        {
+          "id": "casco_alto",
+          "comp": "carroceria",
+          "def": 0.32,
+          "val": 0.30406262018381086,
+          "pct": -11.4
+        },
+        {
+          "id": "canon_d",
+          "comp": "canon",
+          "def": 0.13,
+          "val": 0.12650494734992773,
+          "pct": -4.4
+        },
+        {
+          "id": "canon_largo",
+          "comp": "canon",
+          "def": 1.1,
+          "val": 1.1144812926082348,
+          "pct": 2.4
+        }
+      ]
+    }
+  },
+  {
+    "car": "tanque",
+    "accion": "corrida",
+    "run": "20261013-2001-s2",
+    "fecha": "20261013",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 2,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.25,
+      "from": "20261013-1954-s1"
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.14,
+      0.09,
+      1,
+      0.59
+    ],
+    "recomendado": {
+      "id": "i107",
+      "gen": 5,
+      "obj": [
+        0.135,
+        0,
+        1,
+        0.58
+      ],
+      "cambios": [
+        {
+          "id": "casco_ancho",
+          "comp": "carroceria",
+          "def": 1.1,
+          "val": 1.1859992990787216,
+          "pct": 34.4
+        },
+        {
+          "id": "torreta_largo",
+          "comp": "torreta",
+          "def": 0.9,
+          "val": 0.8244895277413404,
+          "pct": -31.5
+        },
+        {
+          "id": "oruga_alto",
+          "comp": "orugas",
+          "def": 0.42,
+          "val": 0.3843978074281352,
+          "pct": -29.7
+        },
+        {
+          "id": "torreta_ancho",
+          "comp": "torreta",
+          "def": 0.9,
+          "val": 0.9268395425501764,
+          "pct": 17.9
+        },
+        {
+          "id": "casco_alto",
+          "comp": "carroceria",
+          "def": 0.32,
+          "val": 0.29581000294868387,
+          "pct": -17.3
+        },
+        {
+          "id": "canon_d",
+          "comp": "canon",
+          "def": 0.13,
+          "val": 0.13561046758765355,
+          "pct": 7
+        },
+        {
+          "id": "torreta_alto",
+          "comp": "torreta",
+          "def": 0.3,
+          "val": 0.29032389027779526,
+          "pct": -6
+        }
+      ]
+    }
+  },
+  {
+    "car": "carrera",
+    "accion": "corrida",
+    "run": "20261013-2003-s1",
+    "fecha": "20261013",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 1,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.225,
+      0.135,
+      1,
+      0.765
+    ],
+    "recomendado": {
+      "id": "i196",
+      "gen": 9,
+      "obj": [
+        0.195,
+        0.09,
+        1,
+        0.69
+      ],
+      "cambios": [
+        {
+          "id": "cabina_alto",
+          "comp": "cabina",
+          "def": 0.18,
+          "val": 0.2554655690242693,
+          "pct": 62.9
+        },
+        {
+          "id": "cabina_z",
+          "comp": "cabina",
+          "def": -0.25,
+          "val": -0.36864312196192084,
+          "pct": -39.5
+        },
+        {
+          "id": "cuerpo_alto",
+          "comp": "carroceria",
+          "def": 0.22,
+          "val": 0.2509314778704357,
+          "pct": 30.9
+        },
+        {
+          "id": "cuerpo_largo",
+          "comp": "carroceria",
+          "def": 2,
+          "val": 2.075385011583034,
+          "pct": 25.1
+        },
+        {
+          "id": "cabina_ancho",
+          "comp": "cabina",
+          "def": 0.62,
+          "val": 0.6676583643813694,
+          "pct": 21.7
+        },
+        {
+          "id": "batalla_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.0337773514255508,
+          "pct": 16.9
+        },
+        {
+          "id": "cuerpo_ancho",
+          "comp": "carroceria",
+          "def": 0.8,
+          "val": 0.8328179447187535,
+          "pct": 16.4
+        },
+        {
+          "id": "rueda_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.0091070813595828,
+          "pct": 6.1
+        },
+        {
+          "id": "cabina_largo",
+          "comp": "cabina",
+          "def": 0.7,
+          "val": 0.6852496765094913,
+          "pct": -4.2
+        }
+      ]
+    }
   }
 ]

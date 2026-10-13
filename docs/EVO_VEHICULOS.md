@@ -123,3 +123,9 @@ angosto. Pendiente: el alerón sigue cruzando casi todo el ancho en la vista de 
 - **Monster** (20261013-1939-s1): exportado i188 (evaluador 38 vs 35): ruedas +10 %, caja −38 % de alto, cabina más corta.
   La métrica recomendaba i201 (34). Mejora en garaje, mínima en cámara de partida. `rueda_k` del monster ≥ 1 desde ahora.
 - Colaboración con otros modelos (ChatGPT): `docs/evo-colab/`.
+- **Bug previo encontrado (corregido):** `carModel("formula")` armaba también el alerón amarillo del buggy y lo dejaba
+  huérfano en la escena (cerca del origen). En el juego quedaba una malla suelta por cada fórmula armado; en la sonda
+  aparecía en todas las imágenes y en la medida de color de los autos evaluados después del fórmula (rondas del buggy desde
+  el ciclo 2, monster, fórmula, tanque, carrera). Las exportaciones se reevalúan con `--hoja <run> --ids ...` (hoja limpia).
+- Tanque: 2 rondas, sin exportar (la mejor supera al original por 1 punto; regla: exportar solo con ≥ 2). Despeje relativo
+  al original (las orugas llegan al piso). Pisos de torreta y orugas.

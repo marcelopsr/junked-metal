@@ -168,7 +168,7 @@ function autoBands(b: { m: Record<string, unknown>; paint?: number }) {
 const band = (x: number, [lo, hi]: [number, number]) => Math.max(0, lo - x, x - hi) / (hi - lo);
 
 // ---------- Evaluación ----------
-type Base = { masks: Record<View, Mask>; tris: number; size: number[]; comps: number; height: number; hits: number; degen: number; m: Record<string, unknown>; paint?: number };
+type Base = { masks: Record<View, Mask>; despeje: number; tris: number; size: number[]; comps: number; height: number; hits: number; degen: number; m: Record<string, unknown>; paint?: number };
 const bases = new Map<string, Base>();
 let others: Mask[] | null = null;
 
@@ -228,7 +228,7 @@ async function evaluate(scene: B.Scene, kind: CarKind, g: Genome) {
   const r = {
     identidad: Math.max(0, 0.75 - ident.lateral) + Math.max(0, 0.75 - ident.superior) + Math.max(0, 0.8 - ident.frontal),
     choques_rueda: m.choques_rueda > base.hits ? 0.1 + (m.choques_rueda - base.hits) / 50 : 0, // relativas al original: lo que ya se juega es válido por definición
-    despeje: Math.max(0, 0.25 - m.despeje),
+    despeje: Math.max(0, Math.min(0.25, base.despeje) - 0.005 - m.despeje), // ≥ 0,25 m o lo del original si es menos (orugas del tanque)
     caja: Math.max(0, m.ancho - base.size[0] * 1.06) + Math.max(0, m.largo - base.size[2] * 1.08) + Math.max(0, m.alto - base.height - 0.15),
     triangulos: Math.max(0, m.tris / base.tris - 1.3),
     piezas_sueltas: Math.max(0, m.piezas - base.comps),
@@ -240,7 +240,7 @@ async function evaluate(scene: B.Scene, kind: CarKind, g: Genome) {
 
 function baseline(kind: CarKind): Base {
   let b = bases.get(kind);
-  if (!b) { const { m, masks } = measure(kind, original(kind)); b = { masks, tris: m.tris, size: [m.ancho, m.alto, m.largo], comps: m.piezas, height: m.alto, hits: m.choques_rueda, degen: m.degenerados, m }; bases.set(kind, b); }
+  if (!b) { const { m, masks } = measure(kind, original(kind)); b = { masks, despeje: m.despeje, tris: m.tris, size: [m.ancho, m.alto, m.largo], comps: m.piezas, height: m.alto, hits: m.choques_rueda, degen: m.degenerados, m }; bases.set(kind, b); }
   return b;
 }
 
