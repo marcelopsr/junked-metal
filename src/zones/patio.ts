@@ -81,6 +81,7 @@ export function patioBuild() {
   tracks.useAlphaFromAlbedoTexture = true;
   tracks.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
   decal("patioTireMarks", 30, 30, -18, 0, tracks, 0.03);
+  decal("patioTireMarksFar", 26, 26, 16, 32, tracks, 0.03);
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
