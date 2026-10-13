@@ -87,13 +87,13 @@ export const FOLD = {
   bare: () => once("bare", (m) => {
     m.albedoColor = B.Color3.White(); m.roughness = 1; m.metallic = 1;
     m.metadata = { tile: () => tile("bare", (a, o, _e, x, y) => {
-      a.fillStyle = PAL.metalClaro; a.fillRect(x, y, TS, TS); o.fillStyle = orm(0.38, 0.95); o.fillRect(x, y, TS, TS);
+      a.fillStyle = PAL.metalClaro; a.fillRect(x, y, TS, TS); o.fillStyle = orm(0.52, 0.9); o.fillRect(x, y, TS, TS);
       const r = lcg(417);
       for (let i = 0; i < 34; i++) {
         const sx = x + r() * TS, sy = y + r() * TS, len = 3 + r() * 15;
         a.strokeStyle = r() < 0.5 ? "rgba(35,40,45,.55)" : "rgba(238,240,238,.65)"; a.lineWidth = r() < 0.25 ? 1.5 : 0.7;
         a.beginPath(); a.moveTo(sx, sy); a.lineTo(sx + len, sy + (r() - 0.5) * 1.5); a.stroke();
-        o.fillStyle = orm(r() < 0.4 ? 0.68 : 0.24, r() < 0.4 ? 0.7 : 1); o.fillRect(sx, sy, len, 1);
+        o.fillStyle = orm(r() < 0.4 ? 0.72 : 0.38, r() < 0.4 ? 0.7 : 0.95); o.fillRect(sx, sy, len, 1);
       }
     }) };
   }),

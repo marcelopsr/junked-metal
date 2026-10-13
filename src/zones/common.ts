@@ -77,7 +77,7 @@ export const tireStackM = () =>
   });
 export const woodCrateM = () =>
   pbr("propWoodCrate", {
-    color: "#e1d6c2",
+    color: "#e9dec9",
     rough: 0.92,
     metal: 0,
     tex: tex("p_crate_alb", () => propTex("prop-wood-crate")),

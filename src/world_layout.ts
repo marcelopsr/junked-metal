@@ -394,7 +394,9 @@ export function buildGrass() {
     const x = mats[i * 16 + 12], z = mats[i * 16 + 14];
     if (paths.some(([cx, cz, w, len, angle]) => {
       const dx = x - cx, dz = z - cz, sn = Math.sin(angle), cs = Math.cos(angle);
-      return Math.abs(dx * cs - dz * sn) < w * 0.25 && Math.abs(dx * sn + dz * cs) < len * 0.42;
+      const across = dx * cs - dz * sn, along = dx * sn + dz * cs;
+      const width = w * 0.25 * (0.9 + 0.17 * Math.sin(along * 0.5 + cx * 0.11) + 0.08 * Math.sin(along * 0.19 + cz * 0.13));
+      return Math.abs(across) < width && Math.abs(along) < len * 0.42;
     })) continue;
     mats.copyWithin(kept++ * 16, i * 16, i * 16 + 16);
   }
