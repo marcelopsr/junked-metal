@@ -1,5 +1,5 @@
 import * as B from "@babylonjs/core";
-import { box, cyl, merge, sph, tor } from "../models";
+import { box, cyl, merge, sph, template, tor } from "../models";
 import { M, pbr, shadows, surface, TEX } from "../render";
 import { rng } from "../rng";
 import { FOLD, FOLDED_SLICE } from "../folded";
@@ -41,8 +41,8 @@ export function patioBuild() {
   leaves.useRadianceOverAlpha = leaves.useSpecularOverAlpha = false;
   leaves.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   const leafDecals: B.Mesh[] = [];
-  for (const [x, z, ry] of [[-34, 25, 0.3], [34, 25, -0.6], [-34, -18, 1.1], [34, -18, -1.2], [-15, -7, 0.7], [8, -8, -0.4], [-23, 12, 1.3]]) {
-    const patch = decal("dryLeaves", 9, 7, x, z, leaves, 0.025);
+  for (const [x, z, ry, scale] of [[-34, 25, 0.3, 0.46], [34, 25, -0.6, 0.38], [-34, -18, 1.1, 0.42], [34, -18, -1.2, 0.5], [-15, -7, 0.7, 0.35], [8, -8, -0.4, 0.4], [-23, 12, 1.3, 0.44]]) {
+    const patch = decal("dryLeaves", 9 * scale, 7 * scale, x, z, leaves, 0.025);
     patch.rotation.y = ry; leafDecals.push(patch);
   }
   merge("patioLeafDecals", leafDecals, [leaves]);
@@ -102,7 +102,7 @@ export function patioBuild() {
     path.rotation.y = angle;
     paths.push(path);
   }
-  merge("soilPaths", paths, [pathMat]);
+  const soilPaths = merge("soilPaths", paths, [pathMat]);
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirtMat, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   const crops: B.Mesh[] = [];
@@ -137,11 +137,24 @@ export function patioBuild() {
   }
   soilTone.update(); soilTone.gammaSpace = false;
   soilTone.wrapU = soilTone.wrapV = B.Texture.CLAMP_ADDRESSMODE;
-  for (const mat of [dirtMat, dirtGroundMat, pathMat, scrapMat, scrapGroundMat]) {
+  soilTone.coordinatesIndex = 1;
+  for (const mat of [dirtGroundMat, pathMat, scrapGroundMat]) {
     mat.lightmapTexture = soilTone; mat.useLightmapAsShadowmap = true;
   }
   decal("scrapSoilTransition", 54, 44, -48, 20, grassEarthMat, 0.015);
-  decal("scrapZone", 46, 36, -48, 20, scrapGroundMat, 0.025);
+  const scrapZone = decal("scrapZone", 46, 36, -48, 20, scrapGroundMat, 0.025);
+  // UV2 en coordenadas del patio: el tono coincide donde dos parches se superponen.
+  for (const ground of [dirt, soilPaths, scrapZone]) {
+    const positions = ground.getVerticesData(B.VertexBuffer.PositionKind)!;
+    const uv = new Float32Array(positions.length / 3 * 2);
+    const world = ground.computeWorldMatrix(true), point = new B.Vector3();
+    for (let i = 0; i < positions.length / 3; i++) {
+      B.Vector3.TransformCoordinatesFromFloatsToRef(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2], world, point);
+      uv[i * 2] = (point.x + HALF) / (HALF * 2);
+      uv[i * 2 + 1] = (point.z + HALF) / (HALF * 2);
+    }
+    ground.setVerticesData(B.VertexBuffer.UV2Kind, uv);
+  }
   const tracksTex = tex("patioTireMarks", () => new B.Texture("./images/decals/tire-marks.webp", scene));
   tracksTex.hasAlpha = true;
   const tracks = pbr("patioTireMarks", { color: "#ffffff", rough: 0.95, tex: tracksTex });
@@ -162,8 +175,13 @@ export function patioBuild() {
   registerHeavyProp(stat(tor(2.8, 0.95, tireStackM(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   registerHeavyProp(stat(tor(2.6, 0.9, tireStackM(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   // Tambores metálicos de combustible oxidados (PBR con relieve y desgaste)
-  registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-42, 2.4, 30], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
-  registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-45.5, 2.4, 32], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
+  const capMat = surface(pbr("drumCap", { color: "#765f4c", rough: 0.84, metal: 0.3 }), "steel", 4, 0.45);
+  const capTpl = template("drumCap", () => [cyl(3.18, 3.18, 0.025, capMat, [0, 0, 0], undefined, 16)]);
+  for (const [x, z] of [[-42, 30], [-45.5, 32]]) {
+    const drum = registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [x, 2.4, z], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
+    const cap = capTpl.createInstance("drumCap");
+    cap.parent = drum; cap.position.set(0, 2.4, 0); cap.isPickable = false; cap.receiveShadows = true;
+  }
   // Cajas industriales de madera con textura PBR y normales en el borde este
   const scrapCrate = woodCrateM();
   crateFold(stat(box(2.6, 2.4, 2.6, scrapCrate, [-33, 1.2, 24], [0, 0.35, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.6, 2.4, 2.6);
