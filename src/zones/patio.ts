@@ -75,6 +75,12 @@ export function patioBuild() {
     0.85
   );
   decal("scrapZone", 46, 36, -48, 20, scrapMat);
+  const tracksTex = tex("patioTireMarks", () => new B.Texture("./images/decals/tire-marks.webp", scene));
+  tracksTex.hasAlpha = true;
+  const tracks = pbr("patioTireMarks", { color: "#ffffff", rough: 0.95, tex: tracksTex });
+  tracks.useAlphaFromAlbedoTexture = true;
+  tracks.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  for (const [x, z] of [[-12, -12], [0, 0], [12, 12]]) decal("patioTireMarks", 10, 20, x, z, tracks, 0.03).rotation.y = 0.65;
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
