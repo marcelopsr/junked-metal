@@ -61,7 +61,8 @@
       "prompt": "prompts/02-tire-marks.txt",
       "source": "sources/02-tire-marks.png",
       "texture": "textures/02-tire-marks.webp",
-      "status": "generated-not-integrated",
+      "status": "integrated",
+      "gameplayUse": "Tres decals alpha compartidos en acceso y giros del garaje (src/zones/garaje.ts).",
       "kind": "static-alpha-decal",
       "colorSpace": "sRGB",
       "maps": {

@@ -10,10 +10,17 @@ export function garageBuild() {
   floor("concrete", "#ffffff", concreteTex, 0.75, "concrete", 18);
   // El alpha de la textura conserva bordes irregulares sin geometría extra.
   const oilTex = tex("oilStain", () => new B.Texture("./images/decals/oil-stain.webp", scene));
+  oilTex.hasAlpha = true;
   const oil = pbr("oilStain", { color: "#ffffff", rough: 0.65, tex: oilTex });
   oil.useAlphaFromAlbedoTexture = true;
   oil.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
   for (const [x, z, w, h, ry] of [[30, 20, 2.8, 1.5, 0], [26, -18, 2.2, 1.3, 0.7], [-40, -55, 2.5, 1.4, -0.5], [-10, 40, 2, 1.2, 1.2]]) decal("oilStain", w, h, x, z, oil, 0.025).rotation.y = ry;
+  const tracksTex = tex("tireMarks", () => new B.Texture("./images/decals/tire-marks.webp", scene));
+  tracksTex.hasAlpha = true;
+  const tracks = pbr("tireMarks", { color: "#ffffff", rough: 0.95, tex: tracksTex });
+  tracks.useAlphaFromAlbedoTexture = true;
+  tracks.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  for (const [x, z, ry] of [[0, 24, 0], [12, 38, -0.35], [28, 50, -0.7]]) decal("tireMarks", 10, 14, x, z, tracks, 0.03).rotation.y = ry;
   // Paredes altas (se tramean si tapan al auto); al frente, el portón de chapa
   const paint = M.matte("#6f7d78"), band = M.matte("#3c4542"), steel = M.metal("#a4aab0");
   for (const [x, z, w, d] of [[0, -HALF - 1, HALF * 2 + 4, 2], [HALF + 1, 0, 2, HALF * 2 + 4], [-HALF - 1, 0, 2, HALF * 2 + 4], [0, HALF + 1, HALF * 2 + 4, 2]]) {
