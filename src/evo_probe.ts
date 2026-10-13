@@ -2,8 +2,8 @@
 // mide su geometría y sus siluetas, y opcionalmente renderiza las vistas. Criterios y bandas: docs/EVO_VEHICULOS.md.
 // Siluetas por rasterizado propio de triángulos (sin GPU): deterministas y baratas. Vistas PNG con la GPU y los materiales reales.
 import * as B from "@babylonjs/core";
-import { carModel, type CarKind } from "./models";
-import { GENES, original, setGenomeOverride, type Genome } from "./car_genes";
+import { carModel, factoryColor, type CarKind } from "./models";
+import { GENES, genome, original, setGenomeOverride, type Genome } from "./car_genes";
 import { SHADOW_ONLY } from "./models/common";
 import { CARS } from "./car";
 import { CreateScreenshotUsingRenderTargetAsync as shot } from "@babylonjs/core/Misc/screenshotTools.js"; // ruta profunda: solo esta sonda dev la usa (fuera de la fachada bjs.ts)
@@ -153,6 +153,7 @@ const BANDS: Record<string, Record<string, [number, number]>> = {
     llenado_lateral: [0.42, 0.62], // < flaco y ruidoso (se pierde a lo lejos), > ladrillo
     alto_largo: [0.48, 0.6],
     aleron_ancho: [0.55, 0.7], // rondas 2-3: el alerón de serie no debe cruzar todo el ancho entre ruedas (se cumplía agrandando la bañera); el original da 0,75
+    pintura_visible: [0.22, 0.45], // ciclo 2: desde la cámara de partida, a 48 px, más presencia del color de identidad (el original da 0,18)
     masa_alta: [0, 0.065], // techo: lo alto (alerón, jaula) no crece sobre la bañera (evaluación visual, ronda 1); el original da 0,052
   },
 };
@@ -196,8 +197,9 @@ function measure(kind: CarKind, g: Genome | null) {
   return { m, masks };
 }
 
-function evaluate(kind: CarKind, g: Genome) {
+async function evaluate(scene: B.Scene, kind: CarKind, g: Genome) {
   const base = baseline(kind), { m, masks } = measure(kind, g);
+  (m as Record<string, unknown>).pintura_visible = await paintShare(scene, kind, g);
   const ident = { lateral: iou(masks.lateral, base.masks.lateral), frontal: iou(masks.frontal, base.masks.frontal), superior: iou(masks.superior, base.masks.superior) };
   others ??= (Object.keys(CARS) as CarKind[]).filter((k) => k !== kind).map((k) => measure(k, null).masks.lateral);
   const parecido = Math.max(...others.map((o) => iou(masks.lateral, o)));
@@ -232,18 +234,52 @@ function baseline(kind: CarKind): Base {
 
 // ---------- Vistas PNG (materiales reales) y OBJ ----------
 const CAMS: Record<string, [number, number, number]> = { frontal: [0, 0, 1], lateral: [1, 0, 0], trasera: [0, 0, -1], superior: [0, 1, -0.001], tres_cuartos: [1, 0.75, 1], juego: [0, 0.84, -1] }; // juego: detrás y arriba ~40°, como la cámara de partida
-async function views(scene: B.Scene, kind: CarKind, g: Genome, size = 256) {
+// ---------- Color (ciclo 2): render real desde la cámara de partida a 48 px ----------
+const hue = (r: number, g: number, b: number) => { const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; if (!d) return [0, 0, mx]; const h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [(h * 60 + 360) % 360, d / mx, mx]; };
+async function pixels(url: string) {
+  const im = new Image(); im.src = url; await im.decode();
+  const c = document.createElement("canvas"); c.width = im.width; c.height = im.height; const x = c.getContext("2d")!; x.drawImage(im, 0, 0);
+  return x.getImageData(0, 0, c.width, c.height).data;
+}
+/** Fracción de los píxeles del auto (los que no son fondo) con el tono de su pintura de fábrica (±22°, saturados). */
+async function paintShare(scene: B.Scene, kind: CarKind, g: Genome) {
+  const url = (await views(scene, kind, g, 48, ["juego"])).juego, d = await pixels(url);
+  const [ph] = hue(...(B.Color3.FromHexString(factoryColor(kind).paint).asArray() as [number, number, number]));
+  let car = 0, paint = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    const [h, s, v] = hue(d[i] / 255, d[i + 1] / 255, d[i + 2] / 255);
+    if (Math.abs(d[i] - 31) + Math.abs(d[i + 1] - 33) + Math.abs(d[i + 2] - 38) < 18) continue; // fondo (clearColor)
+    car++; if (s > 0.45 && v > 0.2 && Math.min(Math.abs(h - ph), 360 - Math.abs(h - ph)) < 22) paint++;
+  }
+  return paint / Math.max(1, car);
+}
+/** Hoja comparativa: una fila por variante (la primera, el original), una columna por vista. Para el evaluador visual. */
+async function sheet(scene: B.Scene, kind: CarKind, gs: Genome[], names: string[], vs = ["juego", "tres_cuartos", "trasera", "lateral"], notes: string[] = []) {
+  const S = 192, c = document.createElement("canvas"); c.width = S * (vs.length + 1) + 170; c.height = S * gs.length; const x = c.getContext("2d")!;
+  x.fillStyle = "#0b0f14"; x.fillRect(0, 0, c.width, c.height); x.font = "bold 16px sans-serif"; x.fillStyle = "#ff9138";
+  for (let i = 0; i < gs.length; i++) {
+    const v = await views(scene, kind, gs[i], S, vs);
+    x.fillText(names[i], 6, i * S + 24);
+    x.font = "12px monospace"; x.fillStyle = "#d8dde3"; (notes[i] ?? "").split("\n").forEach((l, k) => x.fillText(l, 6, i * S + 48 + k * 15)); x.font = "bold 16px sans-serif"; x.fillStyle = "#ff9138";
+    const far = new Image(); far.src = (await views(scene, kind, gs[i], 48, ["juego"])).juego; await far.decode();
+    x.imageSmoothingEnabled = false; x.drawImage(far, 170 + vs.length * S, i * S, S, S); x.imageSmoothingEnabled = true; // lejos: 48 px ampliados sin suavizar
+    for (let j = 0; j < vs.length; j++) { const im = new Image(); im.src = v[vs[j]]; await im.decode(); x.drawImage(im, 170 + j * S, i * S); }
+  }
+  return c.toDataURL("image/png");
+}
+async function views(scene: B.Scene, kind: CarKind, g: Genome, size = 256, only?: string[]) {
   const cm = build(kind, g), out: Record<string, string> = {};
   const cam = new B.FreeCamera("evoCam", B.Vector3.Zero(), scene);
   cam.mode = B.Camera.ORTHOGRAPHIC_CAMERA; cam.minZ = 0.1; cam.maxZ = 50;
   const h = FRAME / 2 * 0.92; cam.orthoLeft = -h; cam.orthoRight = h; cam.orthoTop = h; cam.orthoBottom = -h;
   const tgt = new B.Vector3(0, CY, 0);
   for (const [name, d] of Object.entries(CAMS)) {
+    if (only && !only.includes(name)) continue;
     cam.position = tgt.add(new B.Vector3(...d).normalize().scale(12)); cam.setTarget(tgt);
     out[name] = await shot(scene.getEngine(), cam, { width: size, height: size }, "image/png", 4);
   }
-  cam.position = tgt.add(new B.Vector3(...CAMS.juego).normalize().scale(12)); cam.setTarget(tgt); // a lo lejos: cámara de partida a 48 px (tamaño aproximado en pantalla)
-  out.lejos = await shot(scene.getEngine(), cam, { width: 48, height: 48 }, "image/png", 1);
+  if (!only) { cam.position = tgt.add(new B.Vector3(...CAMS.juego).normalize().scale(12)); cam.setTarget(tgt); } // a lo lejos: cámara de partida a 48 px (tamaño aproximado en pantalla)
+  if (!only) out.lejos = await shot(scene.getEngine(), cam, { width: 48, height: 48 }, "image/png", 1);
   cam.dispose(); cm.body.dispose();
   return out;
 }
@@ -262,7 +298,9 @@ export function evoProbe(scene: B.Scene) {
   const round = (g: Genome) => { const o = { ...g }; for (const k of ["rueda_d", "rueda_w"]) if (k in o) o[k] = Math.round(o[k] * 100) / 100; return o; };
   Object.assign(window, { __evo: {
     spec: (kind: string) => GENES[kind] ?? null,
-    eval: (kind: CarKind, gs: Genome[]) => gs.map((g) => { const r = round(g); return { g: r, ...evaluate(kind, r) }; }),
+    eval: async (kind: CarKind, gs: Genome[]) => { const out = []; for (const g of gs) { const r = round(g); out.push({ g: r, ...await evaluate(scene, kind, r) }); } return out; },
+    sheet: (kind: CarKind, gs: Genome[], names: string[], notes?: string[]) => sheet(scene, kind, gs.map(round), names, undefined, notes),
+    vigente: (kind: string) => genome(kind),
     views: (kind: CarKind, g: Genome, size?: number) => views(scene, kind, round(g), size),
     obj: (kind: CarKind, g: Genome) => obj(kind, round(g)),
   } });

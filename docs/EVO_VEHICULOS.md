@@ -100,3 +100,15 @@ puntos de la bañera que entran en la goma al doblar 242 → 140, despeje 0,39 �
 según el proxy; el evaluador visual la juzga mejor desde la cámara de partida porque el motor trasero ahora se lee).
 Componentes: bañera más alta y larga, motor trasero más ancho y alto, guardabarros más grandes y envolventes, alerón 26 % más
 angosto. Pendiente: el alerón sigue cruzando casi todo el ancho en la vista de partida; la banda no alcanzó para achicarlo.
+
+## Ciclo 2: evaluador (2026-10-13)
+
+- **Color:** `pintura_visible` = % de píxeles del auto con el tono de su pintura de fábrica, render real desde la cámara de
+  partida a 48 px; banda 0,22–0,45 (el original da 0,18). Desmintió una impresión visual: i192 no era "más roja" (0,171).
+- **Hoja comparativa** (`hoja.png` en cada corrida): filas original, vigente (lo que usa el juego) y hasta 7 finalistas
+  elegidas lejos entre sí en genes; columnas cámara de partida, 3/4, trasera, lateral y "lejos" (48 px ampliados sin
+  suavizar); debajo, % de rojo, objetivos y los 3 genes que más cambiaron. El evaluador la prefiere: ve diferencias de 2-3 px
+  en una sola lectura en vez de ~30 PNG.
+- **Validación (20261013-1851-s5):** i190 reemplaza a i192 (evaluador 39 vs 38; original 32): primera variante con el alerón
+  dentro de la trocha en la cámara de partida; pintura visible 0,201. Exportada.
+- Pendiente: fondo con piso en las vistas (el negro de las ruedas se funde), requiere otra detección de fondo para el color.

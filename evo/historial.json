@@ -713,5 +713,363 @@
       }
     ],
     "motivo": "Evaluación visual ronda 4: 38/50 vs 32 del original; bañera y motor traseros se leen desde la cámara de partida"
+  },
+  {
+    "car": "buggy",
+    "accion": "corrida",
+    "run": "20261013-1851-s5",
+    "fecha": "20261013",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 5,
+      "F": 0.7,
+      "CR": 0.7,
+      "sigma": 0.25,
+      "from": "20261013-1832-s4"
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.165,
+      0.565,
+      1,
+      0.665
+    ],
+    "recomendado": {
+      "id": "i190",
+      "gen": 9,
+      "obj": [
+        0.17,
+        0.085,
+        0.995,
+        0.63
+      ],
+      "cambios": [
+        {
+          "id": "aleron_ancho",
+          "comp": "aleron",
+          "def": 1.35,
+          "val": 1.1566531483413,
+          "pct": -55.2
+        },
+        {
+          "id": "motor_ancho",
+          "comp": "motor",
+          "def": 0.62,
+          "val": 0.7714796005688105,
+          "pct": 50.5
+        },
+        {
+          "id": "tina_alto",
+          "comp": "carroceria",
+          "def": 0.26,
+          "val": 0.34887595489680345,
+          "pct": 49.4
+        },
+        {
+          "id": "faro_x",
+          "comp": "faros",
+          "def": 0.24,
+          "val": 0.17299446391416645,
+          "pct": -47.9
+        },
+        {
+          "id": "motor_z",
+          "comp": "motor",
+          "def": -0.62,
+          "val": -0.5033372192455838,
+          "pct": 44.9
+        },
+        {
+          "id": "tina_ancho",
+          "comp": "carroceria",
+          "def": 0.82,
+          "val": 0.8898896169747457,
+          "pct": 33.3
+        },
+        {
+          "id": "guarda_radio",
+          "comp": "guardabarros",
+          "def": 0.47,
+          "val": 0.5165874998763446,
+          "pct": 33.3
+        },
+        {
+          "id": "jaula_frente",
+          "comp": "cabina",
+          "def": 0.82,
+          "val": 0.925675322805757,
+          "pct": 33
+        },
+        {
+          "id": "batalla",
+          "comp": "ruedas",
+          "def": 0.72,
+          "val": 0.7861537044811399,
+          "pct": 30.1
+        },
+        {
+          "id": "guarda_ancho",
+          "comp": "guardabarros",
+          "def": 0.4,
+          "val": 0.4453691626153886,
+          "pct": 25.2
+        },
+        {
+          "id": "tina_z",
+          "comp": "carroceria",
+          "def": -0.05,
+          "val": -0.12484951643978205,
+          "pct": -24.9
+        },
+        {
+          "id": "motor_alto",
+          "comp": "motor",
+          "def": 0.22,
+          "val": 0.2581730204534576,
+          "pct": 23.9
+        }
+      ]
+    }
+  },
+  {
+    "car": "buggy",
+    "accion": "export",
+    "run": "20261013-1851-s5",
+    "id": "i190",
+    "fecha": "2026-10-13",
+    "obj": [
+      0.17,
+      0.085,
+      0.995,
+      0.63
+    ],
+    "obj_original": [
+      0.165,
+      0.565,
+      1,
+      0.665
+    ],
+    "cambios": [
+      {
+        "id": "aleron_ancho",
+        "comp": "aleron",
+        "def": 1.35,
+        "val": 1.1566531483413,
+        "pct": -55.2
+      },
+      {
+        "id": "motor_ancho",
+        "comp": "motor",
+        "def": 0.62,
+        "val": 0.7714796005688105,
+        "pct": 50.5
+      },
+      {
+        "id": "tina_alto",
+        "comp": "carroceria",
+        "def": 0.26,
+        "val": 0.34887595489680345,
+        "pct": 49.4
+      },
+      {
+        "id": "faro_x",
+        "comp": "faros",
+        "def": 0.24,
+        "val": 0.17299446391416645,
+        "pct": -47.9
+      },
+      {
+        "id": "motor_z",
+        "comp": "motor",
+        "def": -0.62,
+        "val": -0.5033372192455838,
+        "pct": 44.9
+      },
+      {
+        "id": "tina_ancho",
+        "comp": "carroceria",
+        "def": 0.82,
+        "val": 0.8898896169747457,
+        "pct": 33.3
+      },
+      {
+        "id": "guarda_radio",
+        "comp": "guardabarros",
+        "def": 0.47,
+        "val": 0.5165874998763446,
+        "pct": 33.3
+      },
+      {
+        "id": "jaula_frente",
+        "comp": "cabina",
+        "def": 0.82,
+        "val": 0.925675322805757,
+        "pct": 33
+      },
+      {
+        "id": "batalla",
+        "comp": "ruedas",
+        "def": 0.72,
+        "val": 0.7861537044811399,
+        "pct": 30.1
+      },
+      {
+        "id": "guarda_ancho",
+        "comp": "guardabarros",
+        "def": 0.4,
+        "val": 0.4453691626153886,
+        "pct": 25.2
+      },
+      {
+        "id": "tina_z",
+        "comp": "carroceria",
+        "def": -0.05,
+        "val": -0.12484951643978205,
+        "pct": -24.9
+      },
+      {
+        "id": "motor_alto",
+        "comp": "motor",
+        "def": 0.22,
+        "val": 0.2581730204534576,
+        "pct": 23.9
+      },
+      {
+        "id": "jaula_ancho",
+        "comp": "cabina",
+        "def": 0.36,
+        "val": 0.3324865468410858,
+        "pct": -22.9
+      },
+      {
+        "id": "jaula_rake",
+        "comp": "cabina",
+        "def": 0.1,
+        "val": 0.054849154626097546,
+        "pct": -18.1
+      },
+      {
+        "id": "rueda_w",
+        "comp": "ruedas",
+        "def": 0.36,
+        "val": 0.34,
+        "pct": -14.3
+      },
+      {
+        "id": "aleron_alto",
+        "comp": "aleron",
+        "def": 0.9,
+        "val": 0.924391170229957,
+        "pct": 14.3
+      },
+      {
+        "id": "guarda_arco",
+        "comp": "guardabarros",
+        "def": 0.75,
+        "val": 0.8190446214721493,
+        "pct": 12.6
+      },
+      {
+        "id": "jaula_alto",
+        "comp": "cabina",
+        "def": 0.98,
+        "val": 0.9477897450124219,
+        "pct": -11.5
+      },
+      {
+        "id": "trompa_incl",
+        "comp": "capo",
+        "def": 0.3,
+        "val": 0.2414065348554187,
+        "pct": -11.3
+      },
+      {
+        "id": "trompa_ancho",
+        "comp": "capo",
+        "def": 0.72,
+        "val": 0.75397057837575,
+        "pct": 11
+      },
+      {
+        "id": "paragolpe_ancho",
+        "comp": "paragolpes",
+        "def": 1,
+        "val": 1.0340894167176498,
+        "pct": 10.7
+      },
+      {
+        "id": "aleron_cuerda",
+        "comp": "aleron",
+        "def": 0.38,
+        "val": 0.3632342576409497,
+        "pct": -10.5
+      },
+      {
+        "id": "tina_largo",
+        "comp": "carroceria",
+        "def": 1.5,
+        "val": 1.4496916827464261,
+        "pct": -10.1
+      },
+      {
+        "id": "escape_alza",
+        "comp": "escapes",
+        "def": 0,
+        "val": -0.03238795201846663,
+        "pct": -9.8
+      },
+      {
+        "id": "trompa_largo",
+        "comp": "capo",
+        "def": 0.56,
+        "val": 0.5833605209164708,
+        "pct": 6.7
+      },
+      {
+        "id": "escape_largo",
+        "comp": "escapes",
+        "def": 0.3,
+        "val": 0.28425590646804466,
+        "pct": -6.1
+      },
+      {
+        "id": "aleron_incl",
+        "comp": "aleron",
+        "def": 0.12,
+        "val": 0.10312046988457867,
+        "pct": -5.6
+      },
+      {
+        "id": "rueda_d",
+        "comp": "ruedas",
+        "def": 0.8,
+        "val": 0.81,
+        "pct": 5
+      },
+      {
+        "id": "piso_largo",
+        "comp": "chasis",
+        "def": 2,
+        "val": 1.9877113118612317,
+        "pct": -2.7
+      },
+      {
+        "id": "escape_d",
+        "comp": "escapes",
+        "def": 0.07,
+        "val": 0.06932169244833318,
+        "pct": -1.1
+      },
+      {
+        "id": "trocha",
+        "comp": "ruedas",
+        "def": 0.72,
+        "val": 0.7187241800948364,
+        "pct": -1.1
+      }
+    ],
+    "motivo": "Ciclo 2: evaluador visual 39 vs 38 de i192; alerón dentro de la trocha en cámara de partida; pintura visible 0,177→0,201"
   }
 ]

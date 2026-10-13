@@ -100,6 +100,16 @@ try {
     const ind = all.find((x) => x.id === id), v = await page.evaluate(([c, g]) => window.__evo.views(c, g), [car, ind.g]);
     for (const [name, url] of Object.entries(v)) writeFileSync(join(img, `${id}-${name}.png`), Buffer.from(url.split(",")[1], "base64"));
   }
+  // Hoja comparativa para el evaluador visual: original + hasta 7 del frente, elegidas lejos entre sí en genes (sin gemelas), la recomendada primero
+  const dist = (a, b) => Math.hypot(...spec.map((x) => (a.g[x.id] - b.g[x.id]) / (x.max - x.min)));
+  const pick = rec ? [rec] : [];
+  for (const c of final) if (!pick.includes(c) && pick.length < 7) { const far = final.filter((x) => !pick.includes(x) && x.id !== orig.id).sort((a, b) => Math.min(...pick.map((p) => dist(b, p)), 9) - Math.min(...pick.map((p) => dist(a, p)), 9))[0]; if (far) pick.push(far); }
+  // Filas: original, auto vigente en el juego (car_genes.json) y finalistas; debajo de cada una, métricas clave y los 3 genes que más cambiaron
+  const vig = await page.evaluate((c) => window.__evo.vigente(c), car), vigEv = (await page.evaluate(([c, g]) => window.__evo.eval(c, [g]), [car, vig]))[0];
+  const rows = [{ ...orig, id: "original" }, { id: "vigente", g: vig, obj: vigEv.obj, m: vigEv.m }, ...pick];
+  const note = (x) => `rojo ${(x.m.pintura_visible ?? 0).toFixed(3)}\nleg ${x.obj[0].toFixed(3)} prop ${x.obj[1].toFixed(2)}\n` + diff(spec, x.g).slice(0, 3).map((d) => `${d.id} ${d.pct > 0 ? "+" : ""}${d.pct}%`).join("\n");
+  const hoja = await page.evaluate(([c, gs, ns, nt]) => window.__evo.sheet(c, gs, ns, nt), [car, rows.map((x) => x.g), rows.map((x) => x.id), rows.map(note)]);
+  writeFileSync(join(dir, "hoja.png"), Buffer.from(hoja.split(",")[1], "base64"));
   for (const ind of [orig, rec].filter(Boolean)) writeFileSync(join(dir, `${ind.id}.obj`), await page.evaluate(([c, g]) => window.__evo.obj(c, g), [car, ind.g]));
 
   const R = { car, run, params: P, spec, original: orig, recomendado: rec?.id ?? null, final: final.map((x) => x.id), generaciones: gens,
