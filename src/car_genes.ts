@@ -144,6 +144,23 @@ export const GENES: Record<string, Gene[]> = {
     g("escapes", "escape_alto", 0.55, 0.4, 0.75),
     ...RUEDAS,
   ],
+  murcielago: [
+    g("carroceria", "cuerpo_ancho", 0.98, 0.85, 1.15),
+    g("carroceria", "cuerpo_alto", 0.26, 0.18, 0.36),
+    g("carroceria", "cuerpo_largo", 2.6, 2.3, 2.9),
+    g("cabina", "cabina_alto", 0.22, 0.16, 0.32),
+    g("aletas", "aleta_alto", 0.55, 0.4, 0.75),
+    g("aletas", "aleta_largo", 0.8, 0.6, 1.05),
+    g("propulsion", "turbina_d", 0.42, 0.32, 0.56),
+    ...RUEDAS,
+  ],
+  triciclo: [
+    g("cajon", "cajon_ancho", 0.9, 0.75, 1.15),
+    g("cajon", "cajon_alto", 0.5, 0.38, 0.68),
+    g("cajon", "cajon_largo", 0.8, 0.65, 1.05),
+    g("chasis", "cuadro_ancho", 0.5, 0.38, 0.65),
+    ...RUEDAS.filter((x) => x.id !== "batalla_k"), // un solo eje trasero
+  ],
 };
 
 let override: Record<string, Genome> = {}; // solo la sonda de evolución (evo_probe.ts) lo usa: prueba genomas sin tocar el JSON

@@ -50,3 +50,10 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
 - Se crea la rama propia para `topadora` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", reemplazando la caída genérica en `carrera`. Geometría Folded con orugas laterales de goma, chasis pesado, capó con rejilla, cabina de obra con jaula y pala frontal con brazos de empuje.
 - Se agregan sus genes en `GENES.topadora` (`src/car_genes.ts`): pala (`pala_ancho`, `pala_alto`), carrocería (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`), cabina (`cabina_ancho`, `cabina_alto`), chimenea (`escape_alto`) y multiplicadores `...RUEDAS`.
 - Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
+
+## 2026-10-13 · gemini · Parametrización de murciélago y triciclo
+
+- Se parametriza `murcielago` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", con genes en `GENES.murcielago` (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`, `cabina_alto`, `aleta_alto`, `aleta_largo`, `turbina_d` y `...RUEDAS`).
+- Se independiza `triciclo` de la rama fallback de `carrera` creándole su propia carrocería Folded en `src/folded_slice.ts` (cuadro central, horquilla delantera, manubrio chopper y cajón de carga trasero) con genes en `GENES.triciclo` (`cajon_ancho`, `cajon_alto`, `cajon_largo`, `cuadro_ancho` y `...RUEDAS` sin batalla_k).
+- Con esto, todas las carrocerías que antes caían en el fallback de `carrera` (hover, topadora, triciclo) tienen su propia rama procedimental Folded.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.

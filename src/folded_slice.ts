@@ -704,14 +704,17 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     lamps(0.4 + dw * 0.35, 0.4 + dh * 0.5, 1.17 + dL / 2, 0.18); tails(0.42 + dw * 0.35, 0.45 + dh * 0.5, -1.16 - dL / 2); bumper(w + 0.02, 0.14, 1.22 + dL / 2); bumper(w + 0.02, 0.14, -1.2 - dL / 2); num(w / 2 + 0.005, 0.36 + dh / 2, -0.2, 0.3);
   } else if (kind === "murcielago") { // murciélago: negro, largo y bajo, cabina de burbuja, aletas traseras y turbina con brillo naranja
     const glow = FOLD.emissive("#ff7a1a");
-    G.box(0.9, 0.14, 2.6, dark, [0, 0.07, 0]);
-    G.box(0.95, 0.16, 1.5, paint, [0, 0.2, 0.7]); G.box(0.2, 0.1, 0.5, paint, [0, 0.3, 1.2]); G.box(1.0, 0.04, 0.3, dark, [0, 0.03, 1.4]);
-    G.box(0.98, 0.26, 1.2, paint, [0, 0.27, -0.55]); edges(0.95, 0.34, -1.1, 1.4, paint);
-    G.box(0.55, 0.22, 0.75, FOLD.screen("#6a7f8f"), [0, 0.44, -0.05], [-0.15, 0, 0]); G.box(0.6, 0.06, 0.6, paint, [0, 0.57, -0.15]);
-    for (const s of [-1, 1]) { G.box(0.05, 0.55, 0.8, paint, [s * 0.45, 0.58, -1.05], [-0.4, 0, s * 0.12]); G.box(0.05, 0.25, 0.5, paint, [s * 0.5, 0.36, -0.2], [-0.2, 0, 0]); }
-    G.cyl(0.42, 0.5, dark, [0, 0.38, -1.4], [Math.PI / 2, 0, 0], 8); G.cyl(0.34, 0.04, glow, [0, 0.38, -1.66], [Math.PI / 2, 0, 0], 8);
-    G.trimStrip([0, 0.36, 0.95], [0, 0, 0], 0.9, 0.05, "hazard", 0.02);
-    lamps(0.3, 0.2, 1.46, 0.1); tails(0.3, 0.2, -1.17);
+    const w = q.cuerpo_ancho, h = q.cuerpo_alto, L = q.cuerpo_largo; // genes: car_genes.ts
+    const kh = q.cabina_alto, ah = q.aleta_alto, al = q.aleta_largo, td = q.turbina_d;
+    const dw = w - 0.98, dh = h - 0.26, dL = L - 2.6;
+    G.box(0.9 + dw * 0.9, 0.14, L, dark, [0, 0.07, 0]);
+    G.box(w - 0.03, 0.16 + dh * 0.5, 1.5 + dL * 0.5, paint, [0, 0.2 + dh * 0.3, 0.7 + dL * 0.25]); G.box(0.2, 0.1, 0.5, paint, [0, 0.3 + dh * 0.4, 1.2 + dL * 0.4]); G.box(1.0 + dw, 0.04, 0.3, dark, [0, 0.03, 1.4 + dL * 0.5]);
+    G.box(w, h, 1.2 + dL * 0.5, paint, [0, 0.27 + dh / 2, -0.55 - dL * 0.25]); edges(w - 0.03, 0.34 + dh, -1.1 - dL * 0.5, 1.4 + dL * 0.5, paint);
+    G.box(0.55 + dw * 0.4, kh, 0.75, FOLD.screen("#6a7f8f"), [0, 0.44 + dh + (kh - 0.22) / 2, -0.05], [-0.15, 0, 0]); G.box(0.6 + dw * 0.4, 0.06, 0.6, paint, [0, 0.57 + dh + (kh - 0.22), -0.15]);
+    for (const s of [-1, 1]) { G.box(0.05, ah, al, paint, [s * (w / 2 - 0.04), 0.58 + dh + (ah - 0.55) / 2, -1.05 - dL * 0.35], [-0.4, 0, s * 0.12]); G.box(0.05, 0.25, 0.5, paint, [s * (w / 2 + 0.01), 0.36 + dh * 0.5, -0.2], [-0.2, 0, 0]); }
+    G.cyl(td, 0.5, dark, [0, 0.38 + dh * 0.5, -1.4 - dL * 0.5], [Math.PI / 2, 0, 0], 8); G.cyl(td * 0.81, 0.04, glow, [0, 0.38 + dh * 0.5, -1.66 - dL * 0.5], [Math.PI / 2, 0, 0], 8);
+    G.trimStrip([0, 0.36 + dh * 0.5, 0.95 + dL * 0.35], [0, 0, 0], 0.9 + dw, 0.05, "hazard", 0.02);
+    lamps(0.3 + dw * 0.3, 0.2 + dh * 0.4, 1.46 + dL * 0.5, 0.1); tails(0.3 + dw * 0.3, 0.2 + dh * 0.4, -1.17 - dL * 0.4);
   } else if (kind === "misterio") { // furgoneta del misterio: verde agua, parrilla de techo, flores naranjas y capó corto
     const lite = FOLD.painted("#c9efe4", 0.5, 301), flower = FOLD.painted("#ff8a1f", 0.5, 302), eyeC = FOLD.painted("#ffd23f", 0.5, 303);
     G.box(1.0, 0.12, 2.3, dark, [0, 0.05, 0]);
@@ -800,8 +803,19 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.cyl(0.09, eh, dark, [0.38, top + 0.1 + eh / 2, 0.35], undefined, 8); // chimenea de escape
     lamps(kw * 0.32, top + kh + 0.08, 0.1, 0.12); tails(bw * 0.38, 0.4, -bl / 2 - 0.02);
     num(bw / 2 + 0.005, 0.35, 0, 0.25);
+  } else if (kind === "triciclo") { // triciclo de reparto: cuadro delantero, horquilla con manubrio chopper, cajón de carga trasero
+    const cw = q.cajon_ancho, ch = q.cajon_alto, cl = q.cajon_largo, qw = q.cuadro_ancho; // genes: car_genes.ts
+    G.box(qw, 0.26, 1.4, paint, [0, 0.32, 0.05]); edges(qw, 0.45, -0.65, 0.75, paint); // cuadro central
+    G.box(cw, ch, cl, FOLD.painted("#f3ead2", 0.5, 351), [0, 0.32 + ch / 2, -0.7]); // cajón de carga
+    G.box(cw + 0.05, 0.05, cl + 0.05, paint, [0, 0.32 + ch + 0.025, -0.7]); // tapa del cajón
+    for (const s of [-1, 1]) strut([s * 0.08, 0.1, 0.75], [s * 0.08, 0.75, 0.65], 0.04, 0.04, steel); // horquilla delantera
+    strut([-0.32, 0.82, 0.58], [0.32, 0.82, 0.58], 0.035, 0.035, dark); // manubrio
+    for (const s of [-1, 1]) G.box(0.08, 0.04, 0.04, FOLD.rubber(), [s * 0.34, 0.82, 0.58]); // puños
+    G.box(0.32, 0.08, 0.42, dark, [0, 0.52, 0.05], [-0.15, 0, 0]); // asiento
+    lamps(0, 0.65, 0.78, 0.14); tails(cw * 0.42, 0.45, -0.7 - cl / 2 - 0.02);
+    num(cw / 2 + 0.005, 0.5, -0.7, 0.22);
   } else { // autito de carreras a cuerda: carrocería baja, cabina, paragolpes de caño y llave de cuerda
-    const c = kind === "carrera" ? q : original("carrera"); // triciclo también cae acá: con la forma original
+    const c = kind === "carrera" ? q : original("carrera"); // solo carrera llega al else final
     const bw = c.cuerpo_ancho, bh = c.cuerpo_alto, bl = c.cuerpo_largo, top = 0.13 + bh / 2, kw = c.cabina_ancho, kh = c.cabina_alto, kl = c.cabina_largo, kz = c.cabina_z, ky = top + kh / 2; // genes: car_genes.ts
     G.box(0.7, 0.06, 1.7, dark, [0, 0.0, 0]);
     G.box(bw, bh, bl, paint, [0, 0.13, 0]); edges(bw, top, -bl / 2, bl / 2, paint);
