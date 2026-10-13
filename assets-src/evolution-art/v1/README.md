@@ -26,3 +26,11 @@ La salida de la herramienta no expone identificador del modelo, semilla ni pará
 - Las imágenes son raster cuadradas con fondo opaco. No sirven como calcos transparentes ni como sprites animados.
 - `dardos` es una excepción de encuadre: se generó como pieza individual para que las ventosas de goma y la batería se lean mejor en la carta.
 - Las cuatro ilustraciones antiguas `public/images/evo-*.webp` se conservan sin borrar; el HUD deja de referenciarlas.
+
+## Armas de juguete nuevas (placeholder)
+
+`evo-lapices`, `evo-jabon`, `evo-teledirigido` y `evo-imanchatarra` son ilustraciones procedurales provisorias (PIL, 292x292, mismo fondo gris cálido). Sustituir por arte generado con el pipeline de la lámina cuando haya una pasada de refinamiento.
+
+## Armas de juguete nuevas (placeholder)
+
+`evo-lapices`, `evo-jabon`, `evo-teledirigido` y `evo-imanchatarra` son ilustraciones procedurales provisorias (Pillow, 292x292, mismo fondo gris cálido). Sustituir por arte generado con el pipeline de las láminas en una pasada de refinamiento.

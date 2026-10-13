@@ -26,6 +26,10 @@ const P: Record<string, string> = {
   serpentinas: `<path d="M4 8c4-4 5 4 8 0s4 4 8 0"/><path d="M4 15c4-4 5 4 8 0s4 4 8 0"/>`,
   tambor: `<ellipse cx="12" cy="9" rx="8" ry="3"/><path d="M4 9v7c0 1.7 3.6 3 8 3s8-1.3 8-3V9"/><path d="M8 3l4 6M16 3l-4 6"/>`,
   domino: `<rect x="3" y="7" width="5" height="12" rx="1"/><rect x="9.5" y="7" width="5" height="12" rx="1" transform="rotate(12 12 13)"/><rect x="15" y="9" width="5" height="10" rx="1" transform="rotate(32 17 14)"/><path d="M5.5 11h0M5.5 15h0"/>`,
+  lapices: `<path d="M4 20l1-4L16 5l3 3L8 19l-4 1Z"/><path d="M14 7l3 3"/>`,
+  jabon: `<circle cx="9" cy="14" r="5"/><circle cx="17" cy="8" r="3"/><path d="M7 12a3 3 0 0 1 2-1"/>`,
+  teledirigido: `<path d="M3 11 21 4l-6 16-3-6-9-3Z"/><path d="M5 20h4M7 20v-3"/>`,
+  imanchatarra: `<path d="M5 20v-8a7 7 0 0 1 14 0v8h-4v-8a3 3 0 0 0-6 0v8H5Z"/><path d="M5 17h4M15 17h4"/>`,
   avioncito: `<path d="M3 11 21 4l-6 16-3-6-9-3Z"/><path d="M21 4 12 14"/>`,
   pintura: `<path d="M7 9h10v11H7Z"/><path d="M7 9a5 2 0 0 1 10 0"/><path d="M12 4v3"/><circle cx="12" cy="14" r="2"/>`,
   bumeran: `<path d="M4 6c6 0 12 4 14 14-3-4-8-7-14-8Z"/><path d="M8 9l6 4"/>`,
@@ -87,6 +91,7 @@ const COL: Record<string, [string, string]> = {
   lanza: ["#ffe27a", "#ff9d2e"], agua: ["#9be3ff", "#3a8bff"], yoyo: ["#ff9bd4", "#b783ff"], bengalas: ["#ffd84d", "#ff5a5a"], regla: ["#ffe9a0", "#f0a030"],
   helado: ["#ff9bd4", "#9be3ff"], bocina: ["#ffe27a", "#ff7a3a"], trompo: ["#b783ff", "#35c9ff"], tuercas: ["#e6e9ee", "#7d9bff"], bobinas: ["#ffb36b", "#35d0ff"], ventilador: ["#d8f3ff", "#5aa9c9"], canicas: ["#7de8a8", "#35c9ff"],
   burbujas: ["#bfeaff", "#7d9bff"], matamoscas: ["#ffe27a", "#7de8ff"], dardos: ["#ff8a6b", "#ffd84d"], chapitas: ["#ff7a6b", "#e6e9ee"], paraguas: ["#ff7a9b", "#2b2d31"], cohete: ["#8dff9b", "#ffb02e"], serpentinas: ["#ff9bd4", "#ffe27a"], tambor: ["#e6e9ee", "#ff5a5a"],
+  lapices: ["#ff7a6b", "#4a8bff"], jabon: ["#bfeaff", "#b783ff"], teledirigido: ["#f8fafc", "#4a8bff"], imanchatarra: ["#ff5a4d", "#e6e9ee"],
   domino: ["#f5f1e6", "#7d9bff"], avioncito: ["#f8fafc", "#7de8ff"], pintura: ["#ff5fa8", "#b783ff"], bumeran: ["#ffd84d", "#ff9d2e"], confeti: ["#ff9bd4", "#ffe27a"], lupasolar: ["#fff0a0", "#ff9d2e"], dron: ["#7de8ff", "#9ca3af"],
   cinta: ["#e6e9ee", "#6b7280"], pila: ["#9bff9b", "#ffe27a"], escape: ["#ffb36b", "#ff5a36"], llavero: ["#ffe27a", "#c47a2e"], paragolpes: ["#ffa07a", "#9ca3af"], antena: ["#9bf0ff", "#7dffb0"], bidon: ["#ff7a7a", "#ffb02e"], llamas: ["#ffd84d", "#ff4d4d"],
   yoyoelec: ["#ff9bd4", "#7de8ff"], vapor: ["#ffffff", "#ff9d6b"], chispazo: ["#ffd84d", "#7de8ff"], globos: ["#9be3ff", "#ff9bd4"], anillo: ["#ffd84d", "#ff7a3a"],
@@ -145,7 +150,7 @@ export const uiIcon = (id: string, size = 24, plate = false) => {
 export const uiIconUrl = (id: string) => `url("data:image/svg+xml,${encodeURIComponent(uiIcon(id).replace(' class="ico jm-ico"', ' xmlns="http://www.w3.org/2000/svg"'))}")`;
 /** Botones fijos del HTML que llevan ícono, por data-go / data-act. */
 export const UI_BTN_ICON: Record<string, string> = {
-  play: "jugar", daily: "nivel", race: "vehiculo", duel: "armas", match3: "arcade", garage: "garaje", shop: "taller", bestiary: "bestiario",
+  play: "jugar", daily: "nivel", weekly: "nivel", race: "vehiculo", duel: "armas", match3: "arcade", garage: "garaje", shop: "taller", bestiary: "bestiario",
   config: "ajustes", credits: "info", back: "atras", quit: "inicio", resume: "jugar", controls: "ajustes",
 };
 

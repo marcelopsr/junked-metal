@@ -742,6 +742,10 @@ const EVO_ART: Partial<Record<WeaponId, string>> = {
   confeti: "./images/evolutions/evo-confeti.webp",
   lupasolar: "./images/evolutions/evo-lupasolar.webp",
   dron: "./images/evolutions/evo-dron.webp",
+  lapices: "./images/evolutions/evo-lapices.webp",
+  jabon: "./images/evolutions/evo-jabon.webp",
+  teledirigido: "./images/evolutions/evo-teledirigido.webp",
+  imanchatarra: "./images/evolutions/evo-imanchatarra.webp",
 };
 
 const evoImage = (o: Offer): string | null => {
