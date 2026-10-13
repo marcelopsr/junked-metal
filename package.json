@@ -19,6 +19,7 @@
     "pm2:logs": "pm2 logs rc-dev rc-demo --lines 50",
     "demo:refresh": "npm run build && pm2 restart rc-demo",
     "sim": "node scripts/sim.mjs",
+    "dps": "node scripts/dps.mjs",
     "shots": "node scripts/shots.mjs",
     "perf": "node scripts/perf.mjs",
     "perf:cel": "node scripts/perf-cel.mjs",
