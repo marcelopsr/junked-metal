@@ -1787,5 +1787,82 @@
         }
       ]
     }
+  },
+  {
+    "car": "axel",
+    "accion": "corrida",
+    "run": "20261013-2008-s1",
+    "fecha": "20261013",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 1,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.165,
+      0,
+      1,
+      0.465
+    ],
+    "recomendado": {
+      "id": "i110",
+      "gen": 5,
+      "obj": [
+        0.155,
+        0,
+        1,
+        0.465
+      ],
+      "cambios": [
+        {
+          "id": "cabina_largo",
+          "comp": "cabina",
+          "def": 1.2,
+          "val": 1.0825474718663903,
+          "pct": -29.4
+        },
+        {
+          "id": "cabina_ancho",
+          "comp": "cabina",
+          "def": 0.9,
+          "val": 0.9533833793478739,
+          "pct": 24.3
+        },
+        {
+          "id": "jaula_alto",
+          "comp": "cabina",
+          "def": 0.76,
+          "val": 0.7000213072506409,
+          "pct": -20
+        },
+        {
+          "id": "tapa_d",
+          "comp": "ruedas",
+          "def": 0.5,
+          "val": 0.5520653669964306,
+          "pct": 17.4
+        },
+        {
+          "id": "cabina_alto",
+          "comp": "cabina",
+          "def": 0.3,
+          "val": 0.3246866328579203,
+          "pct": 15.4
+        },
+        {
+          "id": "trocha_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.008126274270685,
+          "pct": 9
+        }
+      ]
+    }
   }
 ]

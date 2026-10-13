@@ -16,3 +16,14 @@ Se crea el mecanismo de colaboración (`docs/evo-colab/`). Estado del sistema a 
 - Otros 15 autos sin genes (ver "Límites conocidos" en `docs/EVO_VEHICULOS.md`).
 
 Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la `hoja.png` de monster a ChatGPT con el prompt del README y pega la respuesta usando `plantillas/EVALUACION.md`.
+
+## 2026-10-13 — Reevaluación limpia y opciones de rumbo
+
+- Bug del alerón huérfano del fórmula corregido; hojas limpias reevaluadas por un evaluador nuevo: solo el monster supera al
+  original por 2 a la vista. Se conservan buggy (corrige clipeo de ruedas al doblar) y monster; fórmula vuelve al original.
+- Opciones de rumbo propuestas al usuario (guardadas a pedido):
+  1. **Juguete RC exagerado:** genes estructurales (ruedas hasta +40 % con trocha y guardabarros acompañando, chasis con
+     volumen, soportes visibles de piezas que flotan); primero buggy y monster, con dos evaluadores.
+  2. **Flota completa, barata:** seguir auto por auto con las medidas existentes, un evaluador, regla de +2.
+  3. **Evaluador humano + ChatGPT:** pausar la geometría y calibrar la rúbrica con puntajes del usuario y de ChatGPT sobre
+     hojas de todos los autos.

@@ -37,6 +37,24 @@ if (has("export")) {
   process.exit(0);
 }
 
+// --calibrar: una hoja por auto (original y vigente) en docs/evo-colab/calibracion/, para puntuar a mano o con ChatGPT
+if (has("calibrar")) {
+  const out = "docs/evo-colab/calibracion"; mkdirSync(out, { recursive: true });
+  const browser = await launch();
+  try {
+    const page = await open(browser, "?mute&evo", "pc");
+    await page.waitForFunction(() => window.__evo, null, { timeout: 60000 });
+    const kinds = await page.evaluate(() => window.__evo.kinds());
+    for (const k of kinds) {
+      const vig = await page.evaluate((c) => window.__evo.vigente(c), k), orig = await page.evaluate((c) => window.__evo.original(c), k);
+      const same = JSON.stringify(vig) === JSON.stringify(orig);
+      const url = await page.evaluate(([c, g, n]) => window.__evo.sheet(c, g, n, []), [k, same ? [orig] : [orig, vig], same ? ["original"] : ["original", "vigente"]]);
+      writeFileSync(join(out, k + ".png"), Buffer.from(url.split(",")[1], "base64"));
+      console.log(k + (same ? "" : " (evolucionado)"));
+    }
+  } finally { await browser.close(); }
+  process.exit(0);
+}
 // --hoja <run> --ids a,b: rehace solo la hoja comparativa (original, vigente y esas variantes) con el código actual de la sonda
 if (has("hoja")) {
   const run = arg("hoja"), dir = join(".evo", car, run), R = readJson(join(dir, "run.json"), null);

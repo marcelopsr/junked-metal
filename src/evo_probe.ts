@@ -323,6 +323,8 @@ export function evoProbe(scene: B.Scene) {
     eval: async (kind: CarKind, gs: Genome[]) => { const out = []; for (const g of gs) { const r = round(g); out.push({ g: r, ...await evaluate(scene, kind, r) }); } return out; },
     sheet: (kind: CarKind, gs: Genome[], names: string[], notes?: string[]) => sheet(scene, kind, gs.map(round), names, undefined, notes),
     vigente: (kind: string) => genome(kind),
+    original: (kind: string) => original(kind),
+    kinds: () => Object.keys(CARS),
     views: (kind: CarKind, g: Genome, size?: number) => views(scene, kind, round(g), size),
     obj: (kind: CarKind, g: Genome) => obj(kind, round(g)),
   } });
