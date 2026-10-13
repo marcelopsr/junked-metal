@@ -64,6 +64,20 @@ export function patioBuild() {
   grassEarthMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
   decal("gardenSoilTransition", 50, 40, 50, 45, grassEarthMat, 0.015);
   const dirt = decal("dirt", 42, 32, 50, 45, dirtGroundMat, 0.025);
+  const pathMat = surface(pbr("soilPath", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.85);
+  pathMat.opacityTexture = edgeMask;
+  pathMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  const paths: B.Mesh[] = [];
+  for (const [x, z, w, len, angle] of [
+    [-33, 10, 15, 37, 2.16],
+    [-1, 16, 14, 47, 0.82],
+    [33, 38.5, 15, 37, 1.21],
+  ]) {
+    const path = decal("soilPath", w, len, x, z, pathMat, 0.018);
+    path.rotation.y = angle;
+    paths.push(path);
+  }
+  merge("soilPaths", paths, [pathMat]);
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirtMat, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   const crops: B.Mesh[] = [];
@@ -93,10 +107,11 @@ export function patioBuild() {
   tracksTex.hasAlpha = true;
   const tracks = pbr("patioTireMarks", { color: "#ffffff", rough: 0.95, tex: tracksTex });
   tracks.useAlphaFromAlbedoTexture = true;
+  tracks.alpha = 0.78;
   tracks.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
-  decal("patioTireMarks", 30, 30, -18, 0, tracks, 0.03);
-  decal("patioTireMarksFar", 26, 26, 16, 32, tracks, 0.03);
-  decal("scrapZoneTireMarks", 24, 24, -48, 20, tracks, 0.03);
+  decal("patioTireMarks", 27, 27, -18, 0, tracks, 0.03).rotation.y = 0.32;
+  decal("patioTireMarksFar", 23, 24, 16, 32, tracks, 0.03).rotation.y = 0.72;
+  decal("scrapZoneTireMarks", 21, 22, -48, 20, tracks, 0.03).rotation.y = 2.1;
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
