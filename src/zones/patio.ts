@@ -3,6 +3,7 @@ import { box, cyl, merge, sph, template, tor } from "../models";
 import { M, pbr, shadows, surface, TEX } from "../render";
 import { rng } from "../rng";
 import { FOLD, FOLDED_SLICE } from "../folded";
+import { cropLeafPixels } from "../../assets-src/procedural-textures/v1/pixels.mjs";
 import { HALF, bare, crateFold, decal, floor, house, leafM, occluders, plankTpl, registerHeavyProp, rustyDrumM, scene, stat, tex, tireStackM, tree, woodCrateM } from "./common";
 import { ball, brickWalls, gnomes, hose, int, jumpScrap, piles, plankBridge, planterAlley, pots, puddles, ramp, rocks, toyRamps, toyScatter, wateringCan } from "../world_layout";
 
@@ -108,9 +109,20 @@ export function patioBuild() {
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirtMat, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   const crops: B.Mesh[] = [];
+  const cropTex = tex("gardenCropLeaves", () => {
+    const t = new B.DynamicTexture("gardenCropLeaves", { width: 128, height: 32 }, scene, false, B.Texture.NEAREST_SAMPLINGMODE);
+    (t.getContext() as unknown as CanvasRenderingContext2D).putImageData(new ImageData(cropLeafPixels(), 128, 32), 0, 0);
+    t.update(false); t.wrapU = t.wrapV = B.Texture.CLAMP_ADDRESSMODE; return t;
+  });
+  const cropMat = pbr("gardenCropLeaves", { color: "#ffffff", rough: 0.9, tex: cropTex });
   for (let r = 0; r < 4; r++) for (let i = 0; i < 7; i++) {
     const x = 34 + i * 5.3, z = 35 + r * 7;
-    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte(["#3f8f2f", "#4b9636", "#579b3c", "#478b35"][(r + i + k) % 4]), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4); l.rotation.y = k * 1.6; crops.push(l); }
+    for (let k = 0; k < 4; k++) {
+      const l = sph(1.4, cropMat, [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4);
+      const uv = l.getVerticesData(B.VertexBuffer.UVKind)!;
+      for (let j = 0; j < uv.length; j += 2) { uv[j] = 0.01 + ((r + i + k) % 4) * 0.25 + uv[j] * 0.23; uv[j + 1] = 0.04 + uv[j + 1] * 0.92; }
+      l.setVerticesData(B.VertexBuffer.UVKind, uv); l.rotation.y = k * 1.6; crops.push(l);
+    }
   }
   shadows.addShadowCaster(merge("huerta", crops)); // 112 hojas sueltas = 112 dibujos por pasada; fusionadas, una
 

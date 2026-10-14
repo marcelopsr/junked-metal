@@ -1550,9 +1550,18 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
 
 ---
 
+## 2026-10-14 · Textura de hojas y caucho con banda (ciclo local)
+
+- Se generaron localmente una textura de hojas pixeladas con cuatro tonos y nervaduras, y caucho con dibujo de banda y hombros polvorientos. Ambas se integraron al material fusionado de la huerta y al atlas Folded del auto sobre caballetes.
+- La hoja conceptual se generó desde los mismos píxeles de las texturas; no se capturó gameplay. Fuentes, metadatos y artefactos en `assets-src/procedural-textures/v1/`.
+- Conserva geometría, distribución, posiciones y colisiones. Ficha de ciclo: `docs/VISUAL_CYCLE_LEAF_TREAD_TEXTURES.md`.
+- Cierre local sin publicación.
+
+---
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** huerta del patio y neumáticos del auto sobre caballetes (2026-10-14). Ver `docs/VISUAL_CYCLE_HUERTA_CAR_STANDS.md`.
+- **Último trabajo completado:** texturas procedurales de huerta y auto sobre caballetes (2026-10-14). Ver `docs/VISUAL_CYCLE_LEAF_TREAD_TEXTURES.md`.
 - **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 
