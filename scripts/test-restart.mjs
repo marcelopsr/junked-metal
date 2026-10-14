@@ -1,13 +1,17 @@
 // Servidor de pruebas, con candado. `npm run test:restart` (arranca/reinicia), `test:down` (borra el del worktree actual), `test:ls` (lista servidores y candados).
 // Carpeta principal: pm2 `rc-test` :5174. Worktree: `rc-test-<carpeta>` en 5200-5299 (ver WT en lib/browser.mjs).
 import { execSync } from "node:child_process";
-import { existsSync, readdirSync, symlinkSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 // node_modules del worktree = symlink al de la carpeta principal. Va ANTES de importar browser.mjs (que importa playwright desde ahí).
 const common = execSync("git rev-parse --path-format=absolute --git-common-dir", { encoding: "utf8" }).trim();
-if (dirname(common) !== process.cwd() && !existsSync("node_modules")) symlinkSync(join(dirname(common), "node_modules"), "node_modules");
+if (dirname(common) !== process.cwd()) {
+  // carpeta real sin playwright (p. ej. solo node_modules/.vite creada por vitest): se borra para poder armar el symlink
+  if (existsSync("node_modules") && !lstatSync("node_modules").isSymbolicLink() && !existsSync("node_modules/playwright")) rmSync("node_modules", { recursive: true, force: true });
+  if (!existsSync("node_modules")) symlinkSync(join(dirname(common), "node_modules"), "node_modules");
+}
 const { PERF_LOCK, SERVER_LOCK, WT, lock, lockInfo, readers } = await import("./lib/browser.mjs");
 
 const sh = (c, o = {}) => execSync(c, { stdio: "inherit", ...o });
