@@ -69,7 +69,7 @@ const beamTpl = () => { // cono del rayo: base en y = 0, punta en y = 1 (se esti
 
 // ---------- Estado ----------
 type Shot = { m: B.InstancedMesh; tele: B.InstancedMesh; from: B.Vector3; to: B.Vector3; t: number; dur: number; h: number; r: number; dmg: number; dent: number; src: string };
-type Target = { readonly pos: B.Vector3; radius: number; hp: number; maxHp: number; hitCd: number; slow: number; stun: number; ship: Ship };
+type Target = { readonly pos: B.Vector3; radius: number; hp: number; maxHp: number; hitCd: number; slow: number; stun: number; def: { boss: true }; ship: Ship };
 type Ship = {
   id: ShipId; m: B.InstancedMesh; pos: B.Vector3; yaw: number; hp: number; maxHp: number; t: number; fire: number; drop: number;
   state: "in" | "chase" | "aim" | "beam" | "out"; st: number; d: number; spot: B.Vector3; goal: B.Vector3; target: Target; beam?: B.InstancedMesh; tele?: B.InstancedMesh; who?: number; // who: índice del auto al que apunta (R7b, se elige al primer cuadro)
@@ -84,7 +84,7 @@ function spawn(id: ShipId, car: B.Vector3, near: boolean, time: number) {
   const hp = (id === "nodriza" ? A.nave_nodriza_vida * (1 + time / 600) : A["nave_" + id + "_vida"]) * coopHp();
   const s: Ship = { id, m: shipTpl(id).createInstance(id), pos, yaw: a + Math.PI, hp, maxHp: hp, t: 0, d: 0, fire: 2, drop: 3, state: near ? "chase" : "in", st: 0, spot: new B.Vector3(), goal: new B.Vector3(), target: null! };
   const anchor = new B.Vector3();
-  s.target = { get pos() { return onFloor(s.pos, 1.5, anchor); }, radius: RAD[id], get hp() { return s.state === "out" ? 0 : s.hp; }, set hp(v) { /* lo resta hitShip */ }, maxHp: hp, hitCd: 0, slow: 0, stun: 0, ship: s };
+  s.target = { get pos() { return onFloor(s.pos, 1.5, anchor); }, radius: RAD[id], get hp() { return s.state === "out" ? 0 : s.hp; }, set hp(v) { /* lo resta hitShip */ }, maxHp: hp, hitCd: 0, slow: 0, stun: 0, def: { boss: true }, ship: s }; // def: las armas leen e.def.boss (burbujas...) y la nave cuenta como jefe
   s.m.position.copyFrom(pos);
   ships.push(s);
   return s;
