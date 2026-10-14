@@ -12,11 +12,10 @@ if (dirname(common) !== process.cwd()) {
   if (existsSync("node_modules") && !lstatSync("node_modules").isSymbolicLink() && !existsSync("node_modules/playwright")) rmSync("node_modules", { recursive: true, force: true });
   if (!existsSync("node_modules")) symlinkSync(join(dirname(common), "node_modules"), "node_modules");
 }
-const { PERF_LOCK, SERVER_LOCK, WT, lock, lockInfo, readers } = await import("./lib/browser.mjs");
+const { PERF_LOCK, SERVER_LOCK, WT, lock, lockInfo, portOf, rcProcs, readers } = await import("./lib/browser.mjs");
 
 const sh = (c, o = {}) => execSync(c, { stdio: "inherit", ...o });
-const procs = () => JSON.parse(execSync("pm2 jlist", { encoding: "utf8", maxBuffer: 1e8 }).replace(/^[^[]*/, "")).filter((p) => /^rc-test(-|$)/.test(p.name));
-const portOf = (p) => p.pm2_env.RC_TEST_PORT ?? p.pm2_env.env?.RC_TEST_PORT ?? 5174;
+const procs = rcProcs;
 const cmd = process.argv[2] ?? "restart";
 
 if (cmd === "ls") {
