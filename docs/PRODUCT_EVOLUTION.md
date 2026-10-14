@@ -1505,9 +1505,18 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
 
 ---
 
+## 2026-10-13 · Restos del patio y sombras del garaje (ciclo local)
+
+- Tres decals de restos reubicados al perímetro de cajas/bidones y ampliados moderadamente; se conserva el conjunto de props y sus colisiones.
+- Las capturas enfocadas PC/cel muestran sombras distinguibles del banco y estanterías sobre el cemento; no se cambió la iluminación ni los materiales del garaje.
+- Evidencia y límites en `docs/VISUAL_CYCLE_PATIO_DEBRIS_GARAGE_SHADOWS.md`; capturas finales en `.shots/actual/` sin errores de consola.
+- Cierre local sin publicación.
+
+---
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** integración de manchas de aceite, contraste de cajas junto a tambores y lectura de chatarra en noche, niebla y farol (2026-10-13). Ver `docs/VISUAL_CYCLE_GARAGE_OIL_CRATES_CLIMATES.md`.
+- **Último trabajo completado:** restos alrededor de cajas y bidones, con revisión de sombras del banco y estanterías (2026-10-13). Ver `docs/VISUAL_CYCLE_PATIO_DEBRIS_GARAGE_SHADOWS.md`.
 - **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

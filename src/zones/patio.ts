@@ -53,7 +53,7 @@ export function patioBuild() {
   scrap.useRadianceOverAlpha = scrap.useSpecularOverAlpha = false;
   scrap.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   const scrapDecals: B.Mesh[] = [];
-  for (const [x, z, ry, scale] of [[-40, 30, -0.4, 0.45], [40, -23, 0.8, 0.36], [-12, -10, 0.5, 0.5], [10, -12, -0.7, 0.4], [-43, 28, 0.6, 0.32], [-46.7, 31, -0.8, 0.28], [-31.5, 25, 1.2, 0.35]]) {
+  for (const [x, z, ry, scale] of [[-50.5, 35, -0.4, 0.75], [40, -23, 0.8, 0.36], [-12, -10, 0.5, 0.5], [10, -12, -0.7, 0.4], [-38.5, 35.5, 0.6, 0.65], [-37, 25.5, -0.8, 0.6], [-31.5, 25, 1.2, 0.35]]) {
     const patch = decal("smallScrap", 4 * scale, 3 * scale, x, z, scrap, 0.03);
     patch.rotation.y = ry; scrapDecals.push(patch);
   }
