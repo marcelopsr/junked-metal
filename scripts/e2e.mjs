@@ -34,7 +34,7 @@ for (const vp of vps) {
     if (!(await p.$("#scr-encore.on, [data-act=\"encorego\"]:visible"))) return "no se ve la pantalla ENCORE";
   });
   await step("largar-aviso-primera-partida", async () => {
-    await p.dispatchEvent('[data-act="encorego"]', "click");
+    await p.dispatchEvent('#scr-encore [data-act="encorego"]', "click");
     await p.waitForFunction(() => window.__enc.info(), null, { timeout: 60000 });
     await ev(() => window.__god());
     await tick(90);
