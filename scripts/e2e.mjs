@@ -35,7 +35,7 @@ for (const vp of vps) {
     if (!(await ev(() => document.activeElement?.dataset?.act === "encorego"))) return "Largar no tiene el foco al entrar a ENCORE";
   });
   await step("largar-aviso-primera-partida", async () => {
-    await p.dispatchEvent('[data-act="encorego"]', "click");
+    await p.dispatchEvent('#scr-encore [data-act="encorego"]', "click");
     if (!(await p.waitForSelector("#ctlg:not(.hidden)", { timeout: 3000 }).catch(() => null))) return "no apareció la guía de controles de la primera partida";
     await p.dispatchEvent('#ctlg [data-act="askyes"]', "click"); // Entendido: sigue la partida
     if (!(await p.waitForFunction(() => JSON.parse(localStorage.getItem("rcfight2") ?? "{}").controlesVistos === true, null, { timeout: 3000 }).catch(() => null))) return "controlesVistos no quedó en el guardado"; // persist() espera 300 ms

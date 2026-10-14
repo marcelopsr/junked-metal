@@ -46,6 +46,15 @@ const garajePiezas = (car, kit) => async (p) => { await p.evaluate(([car, kit, u
   await view("garage")(p); await p.dispatchEvent('[data-gtab="piezas"]', "click"); await tick(p, 150); await p.waitForTimeout(100); }; // 150 cuadros: la cámara viaja desde el Taller
 
 export const sessions = [
+  // Portada de quien ya largó una expedición: aparece «Seguir» (siembra el guardado y recarga; sin congelar, por eso tol alta)
+  { id: "portada_seguir", query: "?mute&seed=3", shots: [
+    { id: "portada-seguir", tol: 0.08, act: async (p) => {
+      await p.evaluate(() => localStorage.setItem("rcfight2", JSON.stringify({ encore: { runs: 3, wins: 1, best: { loop: 0, stage: 2, t: 400 } } })));
+      p.removeAllListeners("framenavigated"); await p.reload({ waitUntil: "domcontentloaded" });
+      await p.waitForFunction(() => typeof window.__sim === "function", null, { timeout: 150000, polling: 50 });
+      await wait(p, () => document.querySelector("#scr-title.on #titleGo:not(.hidden)")); await sinCarga(p); await p.waitForTimeout(600);
+    } },
+  ] },
   { id: "menu", query: "?mute&seed=3", shots: [
     { id: "carga", act: carga, perf: false },
     { id: "portada", act: sinCarga },

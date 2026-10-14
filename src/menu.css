@@ -826,3 +826,5 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 #novedades p { margin: 2px 0 0; font-size: 13px; line-height: 1.3; }
 #novedades button { min-height: 44px; width: 100%; font: 700 16px/1 var(--jm-titulo); cursor: pointer; }
 #novedades button:focus-visible { outline: 3px solid var(--jm-cian); outline-offset: 2px; }
+#scr-title #titleGo { margin-top: auto; align-self: center; min-width: 220px; }
+#scr-title #titleGo:not(.hidden) + .press { margin-top: 18px; }

@@ -268,6 +268,7 @@ function show() {
   const hud = document.getElementById("hud"); if (hud) hud.inert = !!s; // con menú abierto el HUD no recibe Tab
   if (!s) return;
   for (const el of document.querySelectorAll<HTMLElement>(".scr")) el.classList.toggle("on", el.id === "scr-" + s);
+  if (s === "title") $("titleGo").classList.toggle("hidden", !save.encore.runs); // «Seguir» solo para quien ya largó una expedición
   if (s === "garage") renderGarage();
   if (s === "shop") renderShop();
   if (s === "main") renderMain();
@@ -437,7 +438,7 @@ addEventListener("keydown", (e) => {
   if (keyHit("mute", e.code)) { save.mute = !save.mute; return commit(); }
   const s = current();
   if (!s) { if (keyHit("pause", e.code)) api.pause(); return; }
-  if (s === "title") { if (!e.repeat && !/^(Shift|Control|Alt|Meta)/.test(e.code)) { e.preventDefault(); SFX.accept(); go("main"); } return; }
+  if (s === "title") { if (document.activeElement?.id === "titleGo" && /^(Enter|Space|NumpadEnter)$/.test(e.code)) return; /* el clic nativo del botón largar */ if (!e.repeat && !/^(Shift|Control|Alt|Meta)/.test(e.code)) { e.preventDefault(); SFX.accept(); go("main"); } return; }
   if (s === "garage" && editing && (e.ctrlKey || e.metaKey) && e.code === "KeyZ") { e.preventDefault(); return undo(); }
   if (s === "garage" && document.activeElement?.id === "dgrid" && /^Digit[0-8]$/.test(e.code)) { e.preventDefault(); return setCol(+e.code[5]); }
   if (s === "beast" && /^(KeyQ|KeyE|PageUp|PageDown)$/.test(e.code)) { e.preventDefault(); return beastStep(e.code === "KeyE" || e.code === "PageDown" ? 1 : -1); } // ficha: bicho anterior / siguiente
@@ -456,7 +457,7 @@ export function menuPad(dt: number) {
   if (bindPad()) return; // esperando un botón: el resto del menú no escucha
   if (document.body.classList.contains("tedit")) { if (padPressed(pb("back")) || padPressed(pb("ok"))) tedit(false); return; }
   const btn = [pb("ok"), pb("back"), pb("pause"), 12, 13, 14, 15].map((i) => padPressed(i)); // aceptar, volver, pausa, cruceta
-  if (s === "title") { if (btn.some(Boolean)) { initAudio(); SFX.accept(); go("main"); } return; }
+  if (s === "title") { if (btn[0] && document.activeElement?.id === "titleGo") { if (performance.now() - shownAt > 400) $("titleGo").click(); return; } if (btn.some(Boolean)) { initAudio(); SFX.accept(); go("main"); } return; }
   if (btn[0]) activate();
   if (btn[1]) back();
   if (btn[2] && s === "pause") back();
@@ -1230,7 +1231,7 @@ export function initMenu(a: Api) {
   fe.addEventListener("pointermove", (e) => { const el = (e.target as HTMLElement).closest<HTMLElement>("button:not(:disabled), select, input, [tabindex]"); if (el && el !== document.activeElement) el.focus({ preventScroll: true }); });
   fe.addEventListener("click", (e) => {
     const t = e.target as HTMLElement, d = (t.closest("[data-go],[data-rc],[data-rctrack],[data-act],[data-k],[data-sw],[data-pdef],[data-pz],[data-pfilt],[data-tab],[data-tog],[data-bind],[data-gtab],[data-stab],[data-btab],[data-buy],[data-pilot],[data-part],[data-abil],[data-hab],[data-sf],[data-ss],[data-arma],[data-dsel],[data-dpre],[data-dtpl],[data-pfin],[data-dcol],[data-dact],[data-beast],[data-bnav],[data-banim],[data-belite]") as HTMLElement | null)?.dataset;
-    if (current() === "title") { SFX.accept(); return go("main"); }
+    if (current() === "title" && d?.act !== "encorego") { SFX.accept(); return go("main"); }
     if (d?.act === "askyes") { const f = askFn; askClose(); SFX.accept(); f?.(); return; }
     if (d?.act === "askno") { askClose(); return; }
     if (askFn) return; // con la confirmación abierta no se toca nada más
