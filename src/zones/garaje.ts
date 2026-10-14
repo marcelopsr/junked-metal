@@ -68,8 +68,13 @@ export function garageBuild() {
   occluders.push(bike);
   stat(box(6, 34, 46, band, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [-76, 17, 40]).isVisible = false;
   // Pila de cubiertas con material PBR y normales
+  const baseTire = tireStackM();
+  const garageTire = pbr("garageTireStack", {
+    color: "#bfc3c1", rough: 0.96, metal: 0, emissive: "#040404",
+    tex: baseTire.albedoTexture as B.Texture, bump: baseTire.bumpTexture as B.Texture,
+  });
   const tires = [0, 1, 2, 3].map((i) => {
-    const tire = tor(16, 5.5, tireStackM(), [0, 2.75 + i * 5.3, 0], undefined, 18);
+    const tire = tor(16, 5.5, garageTire, [0, 2.75 + i * 5.3, 0], undefined, 18);
     const uv = tire.getVerticesData(B.VertexBuffer.UVKind)!;
     for (let k = 0; k < uv.length; k += 2) uv[k] *= 4;
     tire.setVerticesData(B.VertexBuffer.UVKind, uv);

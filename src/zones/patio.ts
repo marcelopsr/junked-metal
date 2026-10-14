@@ -207,7 +207,7 @@ export function patioBuild() {
   crateFold(stat(box(2.6, 2.4, 2.6, scrapCrate, [-33, 1.2, 24], [0, 0.35, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.6, 2.4, 2.6);
   crateFold(stat(box(2.2, 2.0, 2.2, scrapCrate, [-34, 1.0, 28], [0, -0.2, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.2, 2.0, 2.2);
   // Plancha de chapa oxidada en el suelo
-  const scrapPlate = FOLDED_SLICE ? FOLD.painted("#7a5038", 0.8, 304) : M.metal("#6a5a4e");
+  const scrapPlate = FOLDED_SLICE ? FOLD.painted("#987050", 0.8, 304) : M.metal("#6a5a4e");
   stat(box(4.5, 0.18, 5.5, scrapPlate, [-54, 0.09, 14], [0.03, 0.5, 0]), B.PhysicsShapeType.BOX, { friction: 0.65 });
 
   // Cerca de madera (instancias)
