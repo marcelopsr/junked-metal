@@ -86,11 +86,19 @@ export function renderDaily() {
   };
   const seed = forced || c.dailySeed();
   draw(seed, c.today());
-  if (!forced) void daily().then((d) => {
+  // ponytail: __dailyMock solo en dev; permite capturar el ranking sin servidor (scripts/scenarios.mjs)
+  const mock = import.meta.env.DEV ? (window as any).__dailyMock as Awaited<ReturnType<typeof daily>> : null;
+  if (!forced || mock) void (mock ? Promise.resolve(mock) : daily()).then((d) => {
     if (!d || !$("dailyBrief").isConnected) return;
     if (d.seed !== seed) draw(d.seed, d.date); // semilla oficial: el resumen sale de ella, no de la local
     const m = d.mine; // marca del servidor: solo cuenta el primer intento del día
     $("dailyInfo").textContent += m ? ` · Marca oficial del día: #${m.rank} (${m.win ? "victoria " : ""}${fmt(m.t)})` : " · Sin marca oficial hoy. Puntúa el primer intento del día.";
+    $("dailyBoard").replaceChildren(...(d.board ?? []).slice(0, 10).map((r, i) => {
+      const li = document.createElement("li"), cell = (t: string, k = "") => { const e = document.createElement("span"); e.className = k; e.textContent = t; return e; };
+      if (m && m.rank === i + 1) li.className = "mine";
+      li.append(cell(String(i + 1), "pos"), cell(r.name, "nom"), cell(`${r.win ? "Victoria · " : ""}${fmt(r.t)}`, "res"));
+      return li;
+    }));
   });
 }
 export function initAccount(ctx: AccountCtx) {

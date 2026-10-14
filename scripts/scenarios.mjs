@@ -144,6 +144,11 @@ export const sessions = [
       await p.waitForTimeout(150);
     } },
     { id: "diario", perf: false, act: view("daily") },
+    { id: "diario-ranking", perf: false, act: async (p) => {
+      await p.evaluate(() => { window.__dailyMock = { date: "2026-10-13", seed: 4242, mine: { win: true, t: 541, rank: 3 }, board: ["Tuerca", "Chasis", "MarceloS", "Pistón", "Oruga", "Bujía", "Remache", "Cadena", "Llanta", "Resorte"].map((name, i) => ({ name, win: i < 6, t: 600 - i * 17 })) }; });
+      await view("daily")(p);
+      await p.waitForTimeout(300);
+    } },
     { id: "carrera-menu", perf: false, act: async (p) => {
       await toMain(p);
       await p.dispatchEvent('#scr-main [data-go="modes"]', "click");
