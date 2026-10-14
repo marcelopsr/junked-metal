@@ -83,3 +83,9 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
 - Ajuste paramétrico: se eleva el piso de `caja_alto` en `src/car_genes.ts` de 0.8 a 0.9 (`g("carroceria", "caja_alto", 0.95, 0.9, 1.05)`), impidiendo que la caja se reduzca más de un 5%.
 - Verificación: `npx tsc --noEmit -p .` (0 errores) y suite completa de Vitest (27 archivos, 182 tests en verde).
 - Pendiente: siguiente corrida de helado con la restricción de altura de caja fijada, o avanzar con las corridas evolutivas de los vehículos recién independizados (combi, hover, topadora, triciclo).
+
+## 2026-10-14 · claude · Helado exportado, monster con piezas nuevas
+
+- **Helado:** segunda evaluación independiente de la corrida `20261014-0108-s3` (`evaluaciones/2026-10-14-helado-s3-segunda.md`): i252 da +2 (35 contra 33); la primera dio +3. Exportado i252 (caja_alto 1,03, cabina_alto 0,28, cucurucho 1,12).
+- **Monster:** genes nuevos `jaula_alto` y `escape_alto` (piezas: jaula antivuelco y escapes cromados, valor 0 = original). Corridas s1 a s5; con las bandas automáticas la métrica los mantiene en 0, así que se ensancharon `masa_alta` y `alto_largo` del monster y se usaron pisos temporales de gen. Exportado i10 de `20261014-0130-s5` (36 contra 33 vigente y 32 original, evaluador único: `evaluaciones/2026-10-14-monster-s5-claude.md`).
+- Pendiente: segundo evaluador para el monster; probar defensa frontal y barra de luces con foco central; recalibrar `docs/evo-colab/calibracion/` (`npm run evo -- --calibrar`) cuando se quiera actualizar helado y monster.

@@ -50,30 +50,57 @@
   },
   "monster": {
     "g": {
-      "caja_y": 0.6483723389343307,
-      "caja_ancho": 1.1842715794162895,
-      "caja_alto": 0.29146290887382037,
-      "caja_largo": 2.156882539510602,
-      "cabina_ancho": 1.0157990093627427,
-      "cabina_alto": 0.3965459041280448,
-      "cabina_largo": 0.8476779211102978,
-      "cabina_z": -0.2864413040730051,
-      "amort_grosor": 0.11297772524874927,
-      "paragolpe_ancho": 1.299916461133407,
-      "rueda_k": 1.1045134634122615,
-      "trocha_k": 1.0056049820966821,
-      "batalla_k": 0.9843979809956357
+      "chasis_alto": 0.15498397906439565,
+      "caja_y": 0.5927956892673326,
+      "caja_ancho": 1.281708516200577,
+      "caja_alto": 0.29169333739705405,
+      "caja_largo": 2.2385833493155385,
+      "cabina_ancho": 1.0643348750445631,
+      "cabina_alto": 0.28127572408339985,
+      "cabina_largo": 1.180345583856658,
+      "cabina_z": -0.14676602499558258,
+      "amort_grosor": 0.10720554066830976,
+      "paragolpe_ancho": 1.3193822232435468,
+      "jaula_alto": 0.2,
+      "escape_alto": 0.38,
+      "rueda_k": 1.0709008045934016,
+      "trocha_k": 1.0061125366095094,
+      "batalla_k": 1.0213397542924254
     },
-    "run": "20261013-1939-s1",
-    "id": "i188",
-    "gen": 9,
-    "fecha": "2026-10-13",
+    "run": "20261014-0130-s5",
+    "id": "i10",
+    "gen": 0,
+    "fecha": "2026-10-14",
     "obj": [
       0.12,
-      0.135,
-      1,
-      0.56
+      0.29,
+      1.08,
+      0.575
     ],
-    "motivo": "Evaluador visual 38 vs 35: ruedas +10 %, caja y cabina más compactas; mejora en garaje, mínima en cámara de partida"
+    "motivo": "Piezas nuevas (jaula antivuelco y escapes cromados): evaluador 36 vs vigente 33 y original 32; proporciones 0,29 (original 0,61)"
+  },
+  "helado": {
+    "g": {
+      "caja_alto": 1.0296055184520836,
+      "caja_largo": 1.4522057111648405,
+      "cabina_alto": 0.27920256626417694,
+      "toldo_ancho": 0.2374206542363787,
+      "cucurucho": 1.1192939258149293,
+      "cucurucho_soporte": 0.06395904021001297,
+      "rueda_k": 1,
+      "trocha_k": 1.023247851989662,
+      "batalla_k": 0.999411524624093
+    },
+    "run": "20261014-0108-s3",
+    "id": "i252",
+    "gen": 12,
+    "fecha": "2026-10-14",
+    "obj": [
+      0.15,
+      0,
+      1,
+      0.8
+    ],
+    "motivo": "Segunda evaluacion independiente: i252 +2 sobre el original (35 vs 33), primera +3 (39 vs 36); caja mas alta, cabina mas baja, cucurucho 1,12 con soporte visible"
   }
 }
