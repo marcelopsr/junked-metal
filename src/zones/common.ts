@@ -66,9 +66,10 @@ export const rustyDrumM = () =>
   }), "steel", 6, 0.35);
 export const tireStackM = () =>
   pbr("propTireStack", {
-    color: "#778184",
+    color: "#858b89",
     rough: 0.96,
     metal: 0,
+    emissive: "#050505",
     tex: tex("p_tire_alb", () => propTex("prop-tire-stack")),
     bump: tex("p_tire_bmp", () => propTex("prop-tire-stack_normal")),
   });

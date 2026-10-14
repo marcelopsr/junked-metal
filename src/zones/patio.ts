@@ -1,6 +1,6 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph, template, tor } from "../models";
-import { M, pbr, shadows, surface, TEX } from "../render";
+import { M, canvasTex, pbr, shadows, surface, TEX } from "../render";
 import { rng } from "../rng";
 import { FOLD, FOLDED_SLICE } from "../folded";
 import { HALF, bare, crateFold, decal, floor, house, leafM, occluders, plankTpl, registerHeavyProp, rustyDrumM, scene, stat, tex, tireStackM, tree, woodCrateM } from "./common";
@@ -166,7 +166,19 @@ export function patioBuild() {
   tracks.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   decal("patioTireMarks", 14, 25, -12, 7, tracks, 0.03).rotation.y = 0.87;
   decal("patioTireMarksFar", 15, 23, 25, 35, tracks, 0.03).rotation.y = 1.16;
-  decal("scrapZoneTireMarks", 21, 22, -48, 20, tracks, 0.03).rotation.y = 2.1;
+  const scrapTracks = pbr("scrapZoneTireMarks", { color: "#ffffff", rough: 0.95, tex: tracksTex });
+  scrapTracks.useAlphaFromAlbedoTexture = true;
+  scrapTracks.useRadianceOverAlpha = scrapTracks.useSpecularOverAlpha = false;
+  scrapTracks.alpha = 0.78;
+  scrapTracks.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
+  scrapTracks.opacityTexture = canvasTex(64, (c, s) => {
+    const fade = c.createLinearGradient(0, 0, 0, s);
+    fade.addColorStop(0, "#000"); fade.addColorStop(0.24, "#fff");
+    fade.addColorStop(0.78, "#fff"); fade.addColorStop(1, "#000");
+    c.fillStyle = fade; c.fillRect(0, 0, s, s);
+  });
+  scrapTracks.opacityTexture.getAlphaFromRGB = true;
+  decal("scrapZoneTireMarks", 21, 22, -48, 20, scrapTracks, 0.03).rotation.y = 2.1;
   decal("workshopTireMarks", 12, 18, -4, -5, tracks, 0.035).rotation.y = -0.49;
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona

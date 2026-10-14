@@ -483,7 +483,7 @@ export function gruaBody() {
     G.box(0.11, 0.1, 1.18, orange, [s * 1.18, 2.79, 0.47]); G.box(0.11, 0.1, 1.18, FOLD.rust(), [s * 1.18, 0.96, 0.47]);
   }
   G.box(2.2, 0.1, 1.1, FOLD.rust(), [0, 0.82, 0.43]); // piso oxidado: los premios apoyan dentro del gabinete
-  for (const [x, y, c] of [[-0.65, 1.35, "#cf7770"], [0, 1.22, "#d0ad72"], [0.65, 1.38, "#e8cb42"]] as [number, number, string][]) {
+  for (const [x, y, c] of [[-0.65, 1.35, "#f0a6a0"], [0, 1.22, "#a9d6d0"], [0.65, 1.38, "#f6de78"]] as [number, number, string][]) {
     G.sph(0.52, FOLD.plastic(c), [x, y, 0.65]); G.box(0.22, 0.34, 0.28, FOLD.plastic(c), [x, y - 0.28, 0.65]);
     G.sph(0.07, FOLD.dark(), [x - 0.12, y + 0.02, 0.9]); G.sph(0.07, FOLD.dark(), [x + 0.12, y + 0.02, 0.9]);
   }

@@ -1498,7 +1498,7 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** integración del patio, tapas de tambores y encuadre móvil de la grúa (2026-10-13).
+- **Último trabajo completado:** neumáticos, extremos de huellas y contraste de premios de la grúa (2026-10-13). Ver `docs/VISUAL_CYCLE_TIRES_TRACKS_PRIZES.md`.
 - **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 
