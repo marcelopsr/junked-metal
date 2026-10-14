@@ -3772,5 +3772,636 @@
       }
     ],
     "motivo": "Piezas corregidas: jaula amarilla con parantes hasta la caja y zapatas, escapes gruesos plateados; evaluador 38 vs vigente i188 33 (+5); pendiente segundo voto"
+  },
+  {
+    "car": "buggy",
+    "accion": "corrida",
+    "run": "20261014-0259-s1",
+    "fecha": "20261014",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 1,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.165,
+      1.35,
+      1,
+      0.62
+    ],
+    "recomendado": {
+      "id": "i185",
+      "gen": 9,
+      "obj": [
+        0.195,
+        1.18,
+        1.03,
+        0.595
+      ],
+      "cambios": [
+        {
+          "id": "barra_luces",
+          "comp": "luces",
+          "def": 0,
+          "val": 0.07,
+          "pct": 100
+        },
+        {
+          "id": "snorkel_alto",
+          "comp": "snorkel",
+          "def": 0,
+          "val": 0.25,
+          "pct": 100
+        },
+        {
+          "id": "trompa_largo",
+          "comp": "capo",
+          "def": 0.56,
+          "val": 0.7002875927391018,
+          "pct": 40.1
+        },
+        {
+          "id": "batalla",
+          "comp": "ruedas",
+          "def": 0.72,
+          "val": 0.8050021407506315,
+          "pct": 38.6
+        },
+        {
+          "id": "aleron_ancho",
+          "comp": "aleron",
+          "def": 1.35,
+          "val": 1.216975610730453,
+          "pct": -38
+        },
+        {
+          "id": "escape_alza",
+          "comp": "escapes",
+          "def": 0,
+          "val": -0.07263915157991745,
+          "pct": -22
+        },
+        {
+          "id": "tina_ancho",
+          "comp": "carroceria",
+          "def": 0.82,
+          "val": 0.7752102078764753,
+          "pct": -21.3
+        },
+        {
+          "id": "tina_largo",
+          "comp": "carroceria",
+          "def": 1.5,
+          "val": 1.3968016641281478,
+          "pct": -20.6
+        },
+        {
+          "id": "trompa_ancho",
+          "comp": "capo",
+          "def": 0.72,
+          "val": 0.6628330191565619,
+          "pct": -18.4
+        },
+        {
+          "id": "aleron_soporte",
+          "comp": "aleron",
+          "def": 0.05,
+          "val": 0.06602297951785197,
+          "pct": 17.8
+        },
+        {
+          "id": "jaula_ancho",
+          "comp": "cabina",
+          "def": 0.36,
+          "val": 0.37708385839819125,
+          "pct": 14.2
+        },
+        {
+          "id": "aleron_alto",
+          "comp": "aleron",
+          "def": 0.9,
+          "val": 0.8777851199283349,
+          "pct": -13.1
+        }
+      ]
+    }
+  },
+  {
+    "car": "buggy",
+    "accion": "corrida",
+    "run": "20261014-0303-s2",
+    "fecha": "20261014",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 2,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": "20261014-0259-s1"
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.17,
+      1.46,
+      1.035,
+      0.625
+    ],
+    "recomendado": {
+      "id": "i164",
+      "gen": 8,
+      "obj": [
+        0.185,
+        1.035,
+        1.03,
+        0.59
+      ],
+      "cambios": [
+        {
+          "id": "snorkel_alto",
+          "comp": "snorkel",
+          "def": 0,
+          "val": 0.3125,
+          "pct": 125
+        },
+        {
+          "id": "barra_luces",
+          "comp": "luces",
+          "def": 0,
+          "val": 0.07,
+          "pct": 100
+        },
+        {
+          "id": "faro_x",
+          "comp": "faros",
+          "def": 0.24,
+          "val": 0.1603098345477258,
+          "pct": -56.9
+        },
+        {
+          "id": "tina_ancho",
+          "comp": "carroceria",
+          "def": 0.82,
+          "val": 0.9027293144358648,
+          "pct": 39.4
+        },
+        {
+          "id": "trompa_largo",
+          "comp": "capo",
+          "def": 0.56,
+          "val": 0.42688967152070095,
+          "pct": -38
+        },
+        {
+          "id": "trompa_ancho",
+          "comp": "capo",
+          "def": 0.72,
+          "val": 0.8262647540735202,
+          "pct": 34.3
+        },
+        {
+          "id": "paragolpe_ancho",
+          "comp": "paragolpes",
+          "def": 1,
+          "val": 0.8947970049511995,
+          "pct": -32.9
+        },
+        {
+          "id": "aleron_ancho",
+          "comp": "aleron",
+          "def": 1.35,
+          "val": 1.2512797772260784,
+          "pct": -28.2
+        },
+        {
+          "id": "batalla",
+          "comp": "ruedas",
+          "def": 0.72,
+          "val": 0.781905385828826,
+          "pct": 28.1
+        },
+        {
+          "id": "faro_ancho",
+          "comp": "faros",
+          "def": 0.1,
+          "val": 0.07820721933778287,
+          "pct": -24.2
+        },
+        {
+          "id": "aleron_incl",
+          "comp": "aleron",
+          "def": 0.12,
+          "val": 0.19139634976201725,
+          "pct": 23.8
+        },
+        {
+          "id": "escape_largo",
+          "comp": "escapes",
+          "def": 0.3,
+          "val": 0.36153369313964256,
+          "pct": 23.7
+        }
+      ]
+    }
+  },
+  {
+    "car": "buggy",
+    "accion": "corrida",
+    "run": "20261014-0306-s3",
+    "fecha": "20261014",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 3,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": "20261014-0303-s2"
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.17,
+      1.475,
+      1.035,
+      0.615
+    ],
+    "recomendado": {
+      "id": "i188",
+      "gen": 9,
+      "obj": [
+        0.185,
+        1.245,
+        1.03,
+        0.58
+      ],
+      "cambios": [
+        {
+          "id": "barra_luces",
+          "comp": "luces",
+          "def": 0,
+          "val": 0.11,
+          "pct": 366.7
+        },
+        {
+          "id": "snorkel_alto",
+          "comp": "snorkel",
+          "def": 0,
+          "val": 0.38,
+          "pct": 316.7
+        },
+        {
+          "id": "faro_x",
+          "comp": "faros",
+          "def": 0.24,
+          "val": 0.1790175150024544,
+          "pct": -43.6
+        },
+        {
+          "id": "batalla",
+          "comp": "ruedas",
+          "def": 0.72,
+          "val": 0.802616576580921,
+          "pct": 37.6
+        },
+        {
+          "id": "aleron_ancho",
+          "comp": "aleron",
+          "def": 1.35,
+          "val": 1.2271093939050628,
+          "pct": -35.1
+        },
+        {
+          "id": "escape_largo",
+          "comp": "escapes",
+          "def": 0.3,
+          "val": 0.20893365454152335,
+          "pct": -35
+        },
+        {
+          "id": "trompa_incl",
+          "comp": "capo",
+          "def": 0.3,
+          "val": 0.47873311716472466,
+          "pct": 34.4
+        },
+        {
+          "id": "paragolpe_ancho",
+          "comp": "paragolpes",
+          "def": 1,
+          "val": 1.077278585726575,
+          "pct": 24.1
+        },
+        {
+          "id": "amort_grosor",
+          "comp": "suspension",
+          "def": 0.06,
+          "val": 0.04872956757731663,
+          "pct": -22.5
+        },
+        {
+          "id": "motor_alto",
+          "comp": "motor",
+          "def": 0.22,
+          "val": 0.18728323669263514,
+          "pct": -20.4
+        },
+        {
+          "id": "faro_ancho",
+          "comp": "faros",
+          "def": 0.1,
+          "val": 0.1178288036708192,
+          "pct": 19.8
+        },
+        {
+          "id": "aleron_soporte",
+          "comp": "aleron",
+          "def": 0.05,
+          "val": 0.06745659378311758,
+          "pct": 19.4
+        }
+      ]
+    }
+  },
+  {
+    "car": "tanque",
+    "accion": "corrida",
+    "run": "20261014-0311-s1",
+    "fecha": "20261014",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 1,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.14,
+      0.085,
+      1,
+      0.65
+    ],
+    "recomendado": {
+      "id": "i141",
+      "gen": 7,
+      "obj": [
+        0.135,
+        0,
+        1.01,
+        0.66
+      ],
+      "cambios": [
+        {
+          "id": "cajas_herr",
+          "comp": "cajas",
+          "def": 0,
+          "val": 0.12,
+          "pct": 120
+        },
+        {
+          "id": "canon_largo",
+          "comp": "canon",
+          "def": 1.1,
+          "val": 0.9864558817888449,
+          "pct": -18.9
+        },
+        {
+          "id": "torreta_largo",
+          "comp": "torreta",
+          "def": 0.9,
+          "val": 0.9445915838594315,
+          "pct": 18.6
+        },
+        {
+          "id": "torreta_alto",
+          "comp": "torreta",
+          "def": 0.3,
+          "val": 0.2740324458777177,
+          "pct": -16.2
+        },
+        {
+          "id": "casco_alto",
+          "comp": "carroceria",
+          "def": 0.32,
+          "val": 0.33397711528316676,
+          "pct": 10
+        },
+        {
+          "id": "casco_ancho",
+          "comp": "carroceria",
+          "def": 1.1,
+          "val": 1.1219276141796415,
+          "pct": 8.8
+        },
+        {
+          "id": "torreta_ancho",
+          "comp": "torreta",
+          "def": 0.9,
+          "val": 0.9046816795335941,
+          "pct": 3.1
+        },
+        {
+          "id": "oruga_alto",
+          "comp": "orugas",
+          "def": 0.42,
+          "val": 0.42292798033333223,
+          "pct": 2.4
+        },
+        {
+          "id": "canon_d",
+          "comp": "canon",
+          "def": 0.13,
+          "val": 0.13102593537300855,
+          "pct": 1.3
+        }
+      ]
+    }
+  },
+  {
+    "car": "tanque",
+    "accion": "corrida",
+    "run": "20261014-0314-s2",
+    "fecha": "20261014",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 2,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.14,
+      0.085,
+      1,
+      0.65
+    ],
+    "recomendado": {
+      "id": "i180",
+      "gen": 9,
+      "obj": [
+        0.14,
+        0,
+        1.01,
+        0.65
+      ],
+      "cambios": [
+        {
+          "id": "cajas_herr",
+          "comp": "cajas",
+          "def": 0,
+          "val": 0.12,
+          "pct": 120
+        },
+        {
+          "id": "casco_ancho",
+          "comp": "carroceria",
+          "def": 1.1,
+          "val": 1.1824441124452278,
+          "pct": 33
+        },
+        {
+          "id": "canon_d",
+          "comp": "canon",
+          "def": 0.13,
+          "val": 0.1561307752884441,
+          "pct": 32.7
+        },
+        {
+          "id": "oruga_alto",
+          "comp": "orugas",
+          "def": 0.42,
+          "val": 0.38916246155923573,
+          "pct": -25.7
+        },
+        {
+          "id": "torreta_largo",
+          "comp": "torreta",
+          "def": 0.9,
+          "val": 0.8747116887389813,
+          "pct": -10.5
+        },
+        {
+          "id": "canon_largo",
+          "comp": "canon",
+          "def": 1.1,
+          "val": 1.1229872661313576,
+          "pct": 3.8
+        },
+        {
+          "id": "torreta_alto",
+          "comp": "torreta",
+          "def": 0.3,
+          "val": 0.29618936076650204,
+          "pct": -2.4
+        },
+        {
+          "id": "torreta_ancho",
+          "comp": "torreta",
+          "def": 0.9,
+          "val": 0.9023103732929139,
+          "pct": 1.5
+        }
+      ]
+    }
+  },
+  {
+    "car": "tanque",
+    "accion": "export",
+    "run": "20261014-0314-s2",
+    "id": "i187",
+    "fecha": "2026-10-14",
+    "obj": [
+      0.145,
+      0,
+      1.02,
+      0.645
+    ],
+    "obj_original": [
+      0.14,
+      0.085,
+      1,
+      0.65
+    ],
+    "cambios": [
+      {
+        "id": "cajas_herr",
+        "comp": "cajas",
+        "def": 0,
+        "val": 0.18,
+        "pct": 180
+      },
+      {
+        "id": "antena_alto",
+        "comp": "antena",
+        "def": 0,
+        "val": 0.6000000000000001,
+        "pct": 120
+      },
+      {
+        "id": "canon_d",
+        "comp": "canon",
+        "def": 0.13,
+        "val": 0.1672876543001352,
+        "pct": 46.6
+      },
+      {
+        "id": "torreta_largo",
+        "comp": "torreta",
+        "def": 0.9,
+        "val": 0.9969893056377913,
+        "pct": 40.4
+      },
+      {
+        "id": "casco_ancho",
+        "comp": "carroceria",
+        "def": 1.1,
+        "val": 1.1700694575761943,
+        "pct": 28
+      },
+      {
+        "id": "torreta_alto",
+        "comp": "torreta",
+        "def": 0.3,
+        "val": 0.2688851168492943,
+        "pct": -19.4
+      },
+      {
+        "id": "oruga_alto",
+        "comp": "orugas",
+        "def": 0.42,
+        "val": 0.4026834358036683,
+        "pct": -14.4
+      },
+      {
+        "id": "casco_alto",
+        "comp": "carroceria",
+        "def": 0.32,
+        "val": 0.3068842954166673,
+        "pct": -9.4
+      },
+      {
+        "id": "canon_largo",
+        "comp": "canon",
+        "def": 1.1,
+        "val": 1.0861691207092874,
+        "pct": -2.3
+      }
+    ],
+    "motivo": "Antena con banderin naranja y cajas de herramientas amarillas (piezas nuevas); evaluador 36 vs vigente 32 (+4); pendiente segundo voto"
   }
 ]

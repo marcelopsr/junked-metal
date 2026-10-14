@@ -102,5 +102,30 @@
       0.8
     ],
     "motivo": "Segunda evaluacion independiente: i252 +2 sobre el original (35 vs 33), primera +3 (39 vs 36); caja mas alta, cabina mas baja, cucurucho 1,12 con soporte visible"
+  },
+  "tanque": {
+    "g": {
+      "oruga_alto": 0.4026834358036683,
+      "casco_ancho": 1.1700694575761943,
+      "casco_alto": 0.3068842954166673,
+      "torreta_ancho": 0.9,
+      "torreta_alto": 0.2688851168492943,
+      "torreta_largo": 0.9969893056377913,
+      "canon_largo": 1.0861691207092874,
+      "canon_d": 0.1672876543001352,
+      "antena_alto": 0.6000000000000001,
+      "cajas_herr": 0.18
+    },
+    "run": "20261014-0314-s2",
+    "id": "i187",
+    "gen": 9,
+    "fecha": "2026-10-14",
+    "obj": [
+      0.145,
+      0,
+      1.02,
+      0.645
+    ],
+    "motivo": "Antena con banderin naranja y cajas de herramientas amarillas (piezas nuevas); evaluador 36 vs vigente 32 (+4); pendiente segundo voto"
   }
 }
