@@ -38,7 +38,7 @@ export function garageBuild() {
   ]);
   shadows.addShadowCaster(bench);
   occluders.push(bench);
-  const tools = [box(3, 14, 0.6, M.matte("#2b2f36"), [-62, 32, -HALF + 0.6]), box(10, 2, 0.6, M.matte("#2b2f36"), [-50, 36, -HALF + 0.6]), box(2, 12, 0.6, M.matte("#8a1810"), [-40, 30, -HALF + 0.6]), tor(6, 1, M.matte("#2b2f36"), [-30, 33, -HALF + 0.6], [Math.PI / 2, 0, 0], 12)];
+  const tools = [box(3, 14, 0.6, M.matte("#82909a"), [-62, 32, -HALF + 0.6]), box(10, 2, 0.6, M.matte("#82909a"), [-50, 36, -HALF + 0.6]), box(2, 12, 0.6, M.matte("#c65a43"), [-40, 30, -HALF + 0.6]), tor(6, 1, M.matte("#82909a"), [-30, 33, -HALF + 0.6], [Math.PI / 2, 0, 0], 12)];
   merge("pegboard", [box(50, 24, 0.5, M.matte("#b89a6a"), [-45, 32, -HALF + 0.3]), ...tools]);
   // Tubos fluorescentes: uno sobre el banco y dos en el techo. Parpadean (luz del sol del clima TUBO + emisivo)
   const tubeM = pbr("tubo", { color: "#eafff4", rough: 0.4, emissive: "#d8f5ea" });
