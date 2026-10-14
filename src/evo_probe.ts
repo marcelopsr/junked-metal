@@ -168,6 +168,9 @@ function autoBands(b: { m: Record<string, unknown>; paint?: number }) {
 /** Empujes de un ciclo sobre las bandas automáticas (juguete RC exagerado: ruedas más grandes que el original). */
 const PUSH: Record<string, (b: { m: Record<string, unknown> }) => Record<string, [number, number]>> = {
   // ciclo de piezas nuevas (jaula antivuelco, escapes): lo alto puede pesar hasta ~1,9x en la silueta lateral y el alto/largo crecer 15 %
+  // buggy y tanque: mismo empuje para barra de luces/snorkel y antena/cajas
+  buggy: (b) => ({ masa_alta: [0, (b.m.masa_alta as number) * 1.9], alto_largo: [(b.m.alto_largo as number) * 0.9, (b.m.alto_largo as number) * 1.15] }),
+  tanque: (b) => ({ masa_alta: [0, (b.m.masa_alta as number) * 1.9], alto_largo: [(b.m.alto_largo as number) * 0.9, (b.m.alto_largo as number) * 1.15] }),
   monster: (b) => ({ stance: [(b.m.stance as number) * 1.12, (b.m.stance as number) * 1.35], masa_alta: [0, (b.m.masa_alta as number) * 1.9], alto_largo: [(b.m.alto_largo as number) * 0.9, (b.m.alto_largo as number) * 1.15] }),
 };
 const band = (x: number, [lo, hi]: [number, number]) => Math.max(0, lo - x, x - hi) / (hi - lo);

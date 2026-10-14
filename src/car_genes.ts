@@ -51,6 +51,8 @@ export const GENES: Record<string, Gene[]> = {
     g("aleron", "aleron_incl", 0.12, 0, 0.3),
     g("aleron", "aleron_ancho", 1.35, 1.05, 1.4),
     g("aleron", "aleron_soporte", 0.05, 0.05, 0.14), // soportes más gruesos: que el alerón no se lea flotando
+    g("luces", "barra_luces", 0, 0, 0.14), // pieza nueva: barra de luces amarilla sobre el arco delantero de la jaula; 0 = sin barra (original), se arma desde 0,03
+    g("snorkel", "snorkel_alto", 0, 0, 0.5), // pieza nueva: snorkel de acero al costado derecho de la bañera, con codo a la toma; 0 = sin snorkel (original), se arma desde 0,06
   ],
   monster: [
     g("chasis", "chasis_alto", 0.14, 0.14, 0.4), // chasis que baja hacia los ejes: la caja no queda despegada
@@ -89,6 +91,8 @@ export const GENES: Record<string, Gene[]> = {
     g("torreta", "torreta_largo", 0.9, 0.81, 1.05),
     g("canon", "canon_largo", 1.1, 0.8, 1.4),
     g("canon", "canon_d", 0.13, 0.1, 0.18),
+    g("antena", "antena_alto", 0, 0, 0.9), // pieza nueva: antena de RC con banderín naranja atrás del casco; 0 = sin antena (original), se arma desde 0,1
+    g("cajas", "cajas_herr", 0, 0, 0.22), // pieza nueva: cajas de herramientas amarillas sobre los faldones de las orugas; 0 = sin cajas (original), se arman desde 0,05
   ],
   carrera: [
     g("carroceria", "cuerpo_ancho", 0.8, 0.7, 0.9),
