@@ -50,33 +50,34 @@
   },
   "monster": {
     "g": {
-      "caja_y": 0.6483723389343307,
-      "caja_ancho": 1.1842715794162895,
-      "caja_alto": 0.29146290887382037,
-      "caja_largo": 2.156882539510602,
-      "cabina_ancho": 1.0157990093627427,
-      "cabina_alto": 0.3965459041280448,
-      "cabina_largo": 0.8476779211102978,
-      "cabina_z": -0.2864413040730051,
-      "amort_grosor": 0.11297772524874927,
-      "paragolpe_ancho": 1.299916461133407,
-      "rueda_k": 1.1045134634122615,
-      "trocha_k": 1.0056049820966821,
-      "batalla_k": 0.9843979809956357,
-      "jaula_alto": 0,
-      "escape_alto": 0
+      "chasis_alto": 0.1606727121756998,
+      "caja_y": 0.6098259764123362,
+      "caja_ancho": 1.1602190002789978,
+      "caja_alto": 0.29964796655652187,
+      "caja_largo": 2.2157891256731665,
+      "cabina_ancho": 0.8682039154478158,
+      "cabina_alto": 0.3646647911582971,
+      "cabina_largo": 1.0362426531369553,
+      "cabina_z": -0.21523673738961763,
+      "amort_grosor": 0.09699234234645131,
+      "paragolpe_ancho": 1.3751160490615961,
+      "jaula_alto": 0.21125187840425158,
+      "escape_alto": 0.41130209641845705,
+      "rueda_k": 1.1874777778844139,
+      "trocha_k": 0.9924577843324032,
+      "batalla_k": 0.9098426791085938
     },
-    "run": "20261013-1939-s1",
-    "id": "i188",
-    "gen": 9,
+    "run": "20261014-0150-s10",
+    "id": "i349",
+    "gen": 14,
     "fecha": "2026-10-14",
     "obj": [
-      0.12,
-      0.135,
-      1,
-      0.56
+      0.115,
+      0.455,
+      1.095,
+      0.565
     ],
-    "motivo": "Reversión a i188: i10 (20261014-0130-s5) quedó con un solo voto firme, el segundo evaluador dio +1 (no alcanza +2); jaula roja (prohibida para el jugador), plana y sin anclaje al chasis, escapes invisibles a 48 px"
+    "motivo": "Piezas corregidas: jaula amarilla con parantes hasta la caja y zapatas, escapes gruesos plateados; evaluador 38 vs vigente i188 33 (+5); pendiente segundo voto"
   },
   "helado": {
     "g": {
