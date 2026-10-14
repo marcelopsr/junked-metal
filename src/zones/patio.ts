@@ -1,6 +1,6 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph, template, tor } from "../models";
-import { M, canvasTex, pbr, shadows, surface, TEX } from "../render";
+import { M, pbr, shadows, surface, TEX } from "../render";
 import { rng } from "../rng";
 import { FOLD, FOLDED_SLICE } from "../folded";
 import { HALF, bare, crateFold, decal, floor, house, leafM, occluders, plankTpl, registerHeavyProp, rustyDrumM, scene, stat, tex, tireStackM, tree, woodCrateM } from "./common";
@@ -166,25 +166,22 @@ export function patioBuild() {
   tracks.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   decal("patioTireMarks", 14, 25, -12, 7, tracks, 0.03).rotation.y = 0.87;
   decal("patioTireMarksFar", 15, 23, 25, 35, tracks, 0.03).rotation.y = 1.16;
-  const scrapTracks = pbr("scrapZoneTireMarks", { color: "#ffffff", rough: 0.95, tex: tracksTex });
-  scrapTracks.useAlphaFromAlbedoTexture = true;
-  scrapTracks.useRadianceOverAlpha = scrapTracks.useSpecularOverAlpha = false;
-  scrapTracks.alpha = 0.78;
-  scrapTracks.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
-  scrapTracks.opacityTexture = canvasTex(64, (c, s) => {
-    const fade = c.createLinearGradient(0, 0, 0, s);
-    fade.addColorStop(0, "#000"); fade.addColorStop(0.24, "#fff");
-    fade.addColorStop(0.78, "#fff"); fade.addColorStop(1, "#000");
-    c.fillStyle = fade; c.fillRect(0, 0, s, s);
-  });
-  scrapTracks.opacityTexture.getAlphaFromRGB = true;
-  decal("scrapZoneTireMarks", 21, 22, -48, 20, scrapTracks, 0.03).rotation.y = 2.1;
+  const scrapTracks = B.MeshBuilder.CreateGround("scrapZoneTireMarks", { width: 21, height: 22, subdivisions: 8 }, scene);
+  scrapTracks.position.set(-48, 0.03, 20); scrapTracks.rotation.y = 2.1;
+  scrapTracks.material = tracks; scrapTracks.receiveShadows = true; scrapTracks.hasVertexAlpha = true;
+  const marksPos = scrapTracks.getVerticesData(B.VertexBuffer.PositionKind)!;
+  const marksColor: number[] = [];
+  for (let i = 0; i < marksPos.length; i += 3) {
+    const z = marksPos[i + 2];
+    marksColor.push(1, 1, 1, Math.min(1, (11 - Math.abs(z)) / 4));
+  }
+  scrapTracks.setVerticesData(B.VertexBuffer.ColorKind, marksColor);
   decal("workshopTireMarks", 12, 18, -4, -5, tracks, 0.035).rotation.y = -0.49;
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   // Rampa de chapa oxidada para saltos acrobáticos dentro de la zona
-  ramp(FOLDED_SLICE ? FOLD.rust() : M.metal("#7a5038"), -48, 8, 0, 4.2, 6.5, 1.6);
+  ramp(FOLDED_SLICE ? FOLD.painted("#7a5038", 0.8, 304) : M.metal("#7a5038"), -48, 8, 0, 4.2, 6.5, 1.6);
   // Neumáticos de descarte apilados en el borde oeste con textura PBR y normales
   registerHeavyProp(stat(tor(2.8, 0.95, tireStackM(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   registerHeavyProp(stat(tor(2.6, 0.9, tireStackM(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
@@ -210,7 +207,7 @@ export function patioBuild() {
   crateFold(stat(box(2.6, 2.4, 2.6, scrapCrate, [-33, 1.2, 24], [0, 0.35, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.6, 2.4, 2.6);
   crateFold(stat(box(2.2, 2.0, 2.2, scrapCrate, [-34, 1.0, 28], [0, -0.2, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.2, 2.0, 2.2);
   // Plancha de chapa oxidada en el suelo
-  const scrapPlate = FOLDED_SLICE ? FOLD.rust() : M.metal("#6a5a4e");
+  const scrapPlate = FOLDED_SLICE ? FOLD.painted("#7a5038", 0.8, 304) : M.metal("#6a5a4e");
   stat(box(4.5, 0.18, 5.5, scrapPlate, [-54, 0.09, 14], [0.03, 0.5, 0]), B.PhysicsShapeType.BOX, { friction: 0.65 });
 
   // Cerca de madera (instancias)

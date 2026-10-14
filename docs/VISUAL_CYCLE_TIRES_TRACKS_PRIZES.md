@@ -20,3 +20,5 @@ Fecha: 2026-10-13. El usuario eligió las tres opciones de pulido visual.
 - El decal de chatarra usa su propio material y una máscara de 64 px que desvanece ambos extremos. Los otros tres decales conservan su material.
 - Los premios usan tres colores más claros en los materiales Folded existentes. La geometría y las instancias de la grúa no cambiaron.
 - Capturas finales PC/cel: `.shots/actual/{pc,cel}-{tire,tracks,crane}-final.png`. El navegador no registró errores. TypeScript, 178 tests y build pasaron. Grafo actualizado. Cierre local sin publicación.
+
+**Corrección posterior:** esa máscara oscureció el rectángulo completo en el juego. El ciclo `VISUAL_CYCLE_SCRAP_RAMP_GARAGE.md` la sustituyó por alfa de vértices y verificó el resultado en PC y celular.
