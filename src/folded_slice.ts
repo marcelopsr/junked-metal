@@ -633,13 +633,13 @@ export const PETS: Record<string, { build: () => B.Mesh[]; bones: number; clips:
 export function carHull(kind: string, paint: B.Material, lamp: string) {
   if (kind === "buggy") return buggyHull(paint, lamp);
   const { G, done, strut } = kit(), q = genome(kind);
-  const dark = FOLD.dark(), steel = FOLD.bare(), L = FOLD.emissive(lamp), tail = FOLD.emissive("#ff3a2a");
+  const dark = FOLD.dark(), steel = FOLD.bare(), L = FOLD.emissive(lamp), tail = FOLD.emissive("#ff9a1a");
   const num = (x: number, y: number, z: number, s: number) => { for (const sd of [-1, 1]) G.decal([sd * x, y, z], [0, -sd * Math.PI / 2, 0], "numero", s); };
   const edges = (w: number, y: number, z0: number, z1: number, m: B.Material) => { for (const s of [-1, 1]) G.bend([s * w / 2, y, z0], [s * w / 2, y, z1], 0.022, m); };
   const lamps = (x: number, y: number, z: number, d: number) => { for (const s of x ? [1, -1] : [1]) { G.box(d * 1.4, d * 1.1, 0.05, dark, [x * s, y, z - 0.02]); G.box(d, d * 0.7, 0.04, L, [x * s, y, z]); } };
   const tails = (x: number, y: number, z: number) => { for (const s of [-1, 1]) G.box(0.14, 0.06, 0.03, tail, [s * x, y, z]); };
   const bumper = (w: number, y: number, z: number) => { strut([-w / 2, y, z], [w / 2, y, z], 0.06, 0.06, steel); for (const s of [-1, 1]) strut([s * w * 0.3, y, z], [s * w * 0.3, y, z - Math.sign(z) * 0.12], 0.04, 0.04, steel); };
-  if (kind === "monster") { // monster truck: caja alta, cabina, barra de luces, amortiguadores rojos y paragolpes de caño (genes: car_genes.ts)
+  if (kind === "monster") { // monster truck: caja alta, cabina, barra de luces, amortiguadores amarillos y paragolpes de caño (genes: car_genes.ts)
     const cy = q.caja_y, cw = q.caja_ancho, ch = q.caja_alto, cl = q.caja_largo, top = cy + ch / 2;
     const kw = q.cabina_ancho, kh = q.cabina_alto, kl = q.cabina_largo, kz = q.cabina_z, ky = top + kh / 2, ktop = ky + kh / 2;
     G.box(1.0, q.chasis_alto, 1.9, dark, [0, cy - 0.2 - q.chasis_alto / 2, 0]); // chasis: baja hacia los ejes si crece
@@ -649,7 +649,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(kw, 0.08, 0.2, dark, [0, ktop + 0.04, kz + 0.35]); lamps(kw * 0.36, ktop + 0.07, kz + 0.46, 0.1); lamps(kw * 0.12, ktop + 0.07, kz + 0.46, 0.1);
     G.grate([0, cy, cl / 2 + 0.01], [0, Math.PI, 0], 0.6, 0.22, 4, steel); lamps(0.42, cy + 0.04, cl / 2 + 0.01, 0.1); tails(0.42, cy + 0.04, -cl / 2 - 0.01);
     bumper(q.paragolpe_ancho, cy - 0.12, cl / 2 + 0.1); bumper(q.paragolpe_ancho, cy - 0.12, -cl / 2 - 0.1); num(cw / 2 + 0.005, cy, 0.1, 0.3);
-    for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) strut([x * 0.3, cy - 0.2, z * 0.62], [x * (0.8 * q.trocha_k - 0.18), 0.05, z * 0.72 * q.batalla_k], q.amort_grosor, q.amort_grosor, FOLD.painted("#ef4444", 0.6, 211));
+    for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) strut([x * 0.3, cy - 0.2, z * 0.62], [x * (0.8 * q.trocha_k - 0.18), 0.05, z * 0.72 * q.batalla_k], q.amort_grosor, q.amort_grosor, FOLD.painted("#facc15", 0.6, 211));
   } else if (kind === "formula") { // fórmula: trompa baja, pontones, alerón delantero, halo de caño
     const tw = q.trompa_ancho, tl = q.trompa_largo, th = q.trompa_alto, bw = q.cuerpo_ancho, bh = q.cuerpo_alto, top = 0.16 + bh / 2, pw = q.ponton_ancho, ah = q.toma_alto, fw = q.aleron_del_ancho; // genes: car_genes.ts
     G.box(tw, th, tl, paint, [0, 0.12, 1.35 - tl / 2]); G.box(bw, bh, 1.3, paint, [0, 0.16, -0.25]); edges(bw, top, -0.9, 0.4, paint);
@@ -671,7 +671,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.cyl(q.canon_d, cl, steel, [0, ty + 0.01, -0.15 + tl / 2 + cl / 2 - 0.1], [Math.PI / 2, 0, 0], 8); G.cyl(q.canon_d + 0.05, 0.16, dark, [0, ty + 0.01, -0.15 + tl / 2 + cl - 0.1], [0, 0, Math.PI / 2], 8);
     num(tw / 2 + 0.005, ty, -0.15, 0.24); lamps(0.38, 0.42, 1.08, 0.12); G.trimStrip([0, 0.36, -1.01], undefined, 1.0, 0.1, "hazard", 0.02);
   } else if (kind === "axel") { // Axel: eje de caño entre dos ruedas gigantes y jaula-cabina colgando
-    const red = FOLD.painted("#b8321f", 0.6, 231);
+    const red = FOLD.painted("#f97316", 0.6, 231);
     G.cyl(0.16, 1.9, steel, [0, 0, 0], [0, 0, Math.PI / 2], 8);
     const w = q.cabina_ancho, h = q.cabina_alto, L = q.cabina_largo, top = 0.1 + h / 2, x = w / 2 - 0.03, jy = q.jaula_alto, wx = 0.82 * q.trocha_k; // genes: car_genes.ts
     G.box(w + 0.05, 0.12, L + 0.05, dark, [0, -0.12, 0]); G.box(w, h, L, paint, [0, 0.1, 0]); edges(w, top, -L / 2, L / 2, paint);
@@ -689,7 +689,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(0.95, 0.28, 0.03, FOLD.glass(), [0, 0.72, 0.82], [-0.5, 0, 0]);
     for (const s of [-1, 1]) { G.box(0.02, 0.38, 0.7, FOLD.glass(), [s * 0.56, 0.72, -0.4]); G.box(q.toldo_ancho, 0.03, 0.85, s > 0 ? pink : cream, [s * (0.53 + q.toldo_ancho / 2), 0.97 + dh, -0.4], [0, 0, -s * 0.35]); }
     G.cyl(0.46 * k, 0.62 * k, FOLD.painted("#d9a15a", 0.6, 243), [0, b0 + 0.31 * k, -0.4], undefined, 6, 0.04 * k);
-    G.sph(0.5 * k, pink, [0, b0 + 0.72 * k, -0.4]); G.sph(0.4 * k, cream, [0, b0 + 1.0 * k, -0.4]); G.box(0.12 * k, 0.12 * k, 0.12 * k, FOLD.painted("#c1121f", 0.4, 244), [0, b0 + 1.24 * k, -0.4]);
+    G.sph(0.5 * k, pink, [0, b0 + 0.72 * k, -0.4]); G.sph(0.4 * k, cream, [0, b0 + 1.0 * k, -0.4]); G.box(0.12 * k, 0.12 * k, 0.12 * k, FOLD.painted("#f97316", 0.4, 244), [0, b0 + 1.24 * k, -0.4]);
     lamps(0.4, 0.4, 1.2, 0.14); tails(0.4, 0.5, -1.13); bumper(1.1, 0.14, 1.22); num(0.555, 0.45, -0.75, 0.3);
   } else if (kind === "combi") { // combi: dos tonos, techo crema, ventanillas, V en la trompa
     const cream = FOLD.painted("#d9cba6", 0.5, 251);
