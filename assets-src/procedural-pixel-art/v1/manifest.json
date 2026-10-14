@@ -1,0 +1,327 @@
+{
+  "generator": "generate.mjs",
+  "version": 1,
+  "deterministic": true,
+  "references": "ImageGen batch 04 (solo color y densidad de detalle; no usado como pixel source)",
+  "recipes": [
+    {
+      "id": "suelo-tierra",
+      "family": "material",
+      "output": "materials/suelo-tierra-basecolor.png",
+      "size": "128x128",
+      "seed": 3101,
+      "palette": [
+        "#30221b",
+        "#493126",
+        "#654533",
+        "#80583b",
+        "#a66a3d",
+        "#c47a43"
+      ],
+      "parameters": {
+        "pattern": "clods",
+        "tileable": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "exact opposite edges",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "suelo-concreto",
+      "family": "material",
+      "output": "materials/suelo-concreto-basecolor.png",
+      "size": "128x128",
+      "seed": 3102,
+      "palette": [
+        "#353638",
+        "#49494a",
+        "#5c5a56",
+        "#746e64",
+        "#938879"
+      ],
+      "parameters": {
+        "pattern": "concrete",
+        "tileable": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "exact opposite edges",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "madera-tablas",
+      "family": "material",
+      "output": "materials/madera-tablas-basecolor.png",
+      "size": "128x128",
+      "seed": 3103,
+      "palette": [
+        "#39271c",
+        "#573821",
+        "#76502d",
+        "#986638",
+        "#b47c43",
+        "#d19854"
+      ],
+      "parameters": {
+        "pattern": "wood",
+        "tileable": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "exact opposite edges",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "metal-oxidado",
+      "family": "material",
+      "output": "materials/metal-oxidado-basecolor.png",
+      "size": "128x128",
+      "seed": 3104,
+      "palette": [
+        "#292725",
+        "#42352b",
+        "#60422e",
+        "#805036",
+        "#a35a35",
+        "#c06c3d"
+      ],
+      "parameters": {
+        "pattern": "rust",
+        "tileable": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "exact opposite edges",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "caucho-neumatico",
+      "family": "material",
+      "output": "materials/caucho-neumatico-basecolor.png",
+      "size": "128x128",
+      "seed": 3105,
+      "palette": [
+        "#17191a",
+        "#242626",
+        "#333433",
+        "#454440",
+        "#625d52"
+      ],
+      "parameters": {
+        "pattern": "rubber",
+        "tileable": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "exact opposite edges",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "cesped-hojas",
+      "family": "material",
+      "output": "materials/cesped-hojas-basecolor.png",
+      "size": "128x128",
+      "seed": 3106,
+      "palette": [
+        "#26301d",
+        "#384329",
+        "#4b5732",
+        "#687142",
+        "#89804b",
+        "#ad8a4c"
+      ],
+      "parameters": {
+        "pattern": "grass",
+        "tileable": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "exact opposite edges",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "oil-splat",
+      "family": "decal",
+      "output": "decals/oil-splat.png",
+      "size": "128x128",
+      "seed": 4101,
+      "palette": [
+        "#211d19",
+        "#40352a",
+        "#63513a"
+      ],
+      "parameters": {
+        "pattern": "splatter",
+        "alpha": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "non-empty alpha",
+        "transparent corners",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "tire-skids",
+      "family": "decal",
+      "output": "decals/tire-skids.png",
+      "size": "128x128",
+      "seed": 4102,
+      "palette": [
+        "#252322",
+        "#3d3934",
+        "#574c3d"
+      ],
+      "parameters": {
+        "pattern": "skid",
+        "alpha": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "non-empty alpha",
+        "transparent corners",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "dry-leaf-cluster",
+      "family": "decal",
+      "output": "decals/dry-leaf-cluster.png",
+      "size": "128x128",
+      "seed": 4103,
+      "palette": [
+        "#824323",
+        "#b75c2c",
+        "#d9803b",
+        "#d9a45a"
+      ],
+      "parameters": {
+        "pattern": "leaves",
+        "alpha": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "non-empty alpha",
+        "transparent corners",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "mud-splatter",
+      "family": "decal",
+      "output": "decals/mud-splatter.png",
+      "size": "128x128",
+      "seed": 4104,
+      "palette": [
+        "#38261d",
+        "#563725",
+        "#805335"
+      ],
+      "parameters": {
+        "pattern": "splatter",
+        "alpha": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "non-empty alpha",
+        "transparent corners",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "scrap-shards",
+      "family": "decal",
+      "output": "decals/scrap-shards.png",
+      "size": "128x128",
+      "seed": 4105,
+      "palette": [
+        "#514237",
+        "#806145",
+        "#a06c47",
+        "#b59162"
+      ],
+      "parameters": {
+        "pattern": "shards",
+        "alpha": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "non-empty alpha",
+        "transparent corners",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "rust-drips",
+      "family": "decal",
+      "output": "decals/rust-drips.png",
+      "size": "128x128",
+      "seed": 4106,
+      "palette": [
+        "#6e3827",
+        "#a95131",
+        "#cc7040"
+      ],
+      "parameters": {
+        "pattern": "drips",
+        "alpha": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "non-empty alpha",
+        "transparent corners",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "chipped-paint-scuff",
+      "family": "decal",
+      "output": "decals/chipped-paint-scuff.png",
+      "size": "128x128",
+      "seed": 4107,
+      "palette": [
+        "#343a3c",
+        "#6b4731",
+        "#c16c36"
+      ],
+      "parameters": {
+        "pattern": "chips",
+        "alpha": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "non-empty alpha",
+        "transparent corners",
+        "deterministic bytes"
+      ]
+    },
+    {
+      "id": "hazard-stripe",
+      "family": "decal",
+      "output": "decals/hazard-stripe.png",
+      "size": "128x128",
+      "seed": 4108,
+      "palette": [
+        "#252321",
+        "#d29a35"
+      ],
+      "parameters": {
+        "pattern": "hazard",
+        "alpha": true
+      },
+      "checks": [
+        "rgba dimensions",
+        "non-empty alpha",
+        "transparent corners",
+        "deterministic bytes"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Junked Metal — Dirección de arte
 
+> **Actualización 2026-10-14:** la dirección aprobada para el arte nuevo es Pixel Art 3D HD, con volumen real a 360° y texturas de clusters pixelados; Folded 2.5D deja de ser requisito. La guía normativa, el inventario completo y los criterios de generación están en [PIXEL_ART_3D_ASSET_BIBLE.md](./PIXEL_ART_3D_ASSET_BIBLE.md). El contenido histórico debajo se conserva para consultar identidad, UI y contratos previos; cualquier regla visual que contradiga la biblia queda reemplazada.
+
 Referencia para cualquier asset, shader o pantalla nueva. Actualizada el 2026-10-08. Todo lo anterior a esta fecha que contradiga la sección "Vigente" está en "Historia (no vigente)" al final.
 
 ## Vigente (2026-10-08)
