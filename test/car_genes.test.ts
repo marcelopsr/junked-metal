@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import chosen from "../src/car_genes.json";
 import { GENES, genome, original } from "../src/car_genes";
 import type { CarKind } from "../src/models/cars";
 
@@ -66,5 +67,26 @@ describe("car_genes - Flota completa (17 vehículos)", () => {
     const soporte = GENES.helado.find((g) => g.id === "cucurucho_soporte");
     expect(soporte).toBeDefined();
     expect(soporte!.def).toBe(0.06);
+  });
+
+  it("monster: jaula antivuelco y escapes son piezas nuevas que el original no arma (valor 0)", () => {
+    for (const id of ["jaula_alto", "escape_alto"]) {
+      const x = GENES.monster.find((g) => g.id === id);
+      expect(x, id).toBeDefined();
+      expect(x!.def).toBe(0);
+      expect(x!.min).toBe(0);
+    }
+    expect(original("monster").jaula_alto).toBe(0);
+  });
+
+  it("los genomas exportados (car_genes.json) están dentro de los rangos de GENES", () => {
+    for (const [car, e] of Object.entries(chosen as Record<string, { g: Record<string, number> }>)) {
+      for (const x of GENES[car]) {
+        const v = e.g[x.id];
+        if (v === undefined) continue;
+        expect(v, `${car}.${x.id}`).toBeGreaterThanOrEqual(x.min - 1e-9);
+        expect(v, `${car}.${x.id}`).toBeLessThanOrEqual(x.max + 1e-9);
+      }
+    }
   });
 });

@@ -647,6 +647,18 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(kw, kh, kl, paint, [0, ky, kz]); edges(kw, ktop, kz - kl / 2, kz + kl / 2, paint);
     G.box(kw - 0.1, kh - 0.08, 0.03, FOLD.glass(), [0, ky + 0.02, kz + kl / 2 + 0.03], [-0.4, 0, 0]);
     G.box(kw, 0.08, 0.2, dark, [0, ktop + 0.04, kz + 0.35]); lamps(kw * 0.36, ktop + 0.07, kz + 0.46, 0.1); lamps(kw * 0.12, ktop + 0.07, kz + 0.46, 0.1);
+    if (q.jaula_alto > 0.03) { // jaula antivuelco de caño rojo sobre la cabina, detrás de la barra de luces (0 = sin jaula, el diseño original)
+      const red = FOLD.painted("#ef4444", 0.6, 211), jx = kw / 2 - 0.07, ty = ktop + q.jaula_alto, zf = kz + 0.08, zr = kz - kl / 2 + 0.1, ix = jx * 0.88;
+      for (const s of [-1, 1]) {
+        for (const z of [zf, zr]) strut([s * jx, ktop, z], [s * ix, ty, z], 0.06, 0.06, red); // arcos delantero y trasero
+        strut([s * ix, ty, zr], [s * ix, ty, zf], 0.06, 0.06, red); strut([s * jx, ktop, zr], [s * ix, ty, zf], 0.05, 0.05, red); // riel de techo y diagonal
+      }
+      strut([-ix, ty, zf], [ix, ty, zf], 0.06, 0.06, red); strut([-ix, ty, zr], [ix, ty, zr], 0.06, 0.06, red);
+    }
+    if (q.escape_alto > 0.05) for (const s of [-1, 1]) { // escapes verticales de cromo a los lados del capó, con boca oscura
+      const ex = s * (cw / 2 - 0.1), ez = kz + kl / 2 + 0.2, eh = q.escape_alto, chrome = FOLD.painted("#c3cbd2", 0.3, 212);
+      G.cyl(0.11, 0.04, dark, [ex, top + 0.02, ez], undefined, 8); G.cyl(0.07, eh, chrome, [ex, top + eh / 2, ez], undefined, 8); G.cyl(0.1, 0.05, dark, [ex, top + eh + 0.02, ez], undefined, 8);
+    }
     G.grate([0, cy, cl / 2 + 0.01], [0, Math.PI, 0], 0.6, 0.22, 4, steel); lamps(0.42, cy + 0.04, cl / 2 + 0.01, 0.1); tails(0.42, cy + 0.04, -cl / 2 - 0.01);
     bumper(q.paragolpe_ancho, cy - 0.12, cl / 2 + 0.1); bumper(q.paragolpe_ancho, cy - 0.12, -cl / 2 - 0.1); num(cw / 2 + 0.005, cy, 0.1, 0.3);
     for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) strut([x * 0.3, cy - 0.2, z * 0.62], [x * (0.8 * q.trocha_k - 0.18), 0.05, z * 0.72 * q.batalla_k], q.amort_grosor, q.amort_grosor, FOLD.painted("#ef4444", 0.6, 211));

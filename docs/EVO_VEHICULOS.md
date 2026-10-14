@@ -153,3 +153,12 @@ angosto. Pendiente: el alerón sigue cruzando casi todo el ancho en la vista de 
 - Recomendado i176; el frente achica la caja (−40 a −57 % de alto) y abre la trocha. A la vista la caja baja le quita
   identidad de camioncito de helados; el único con cucurucho +20 % (i254) aplasta la caja. Sin exportar.
 - Próximo paso: fijar piso de `caja_alto` (≥ −20 %) y dejar que la búsqueda mueva solo cucurucho, soporte y ruedas.
+
+## Ciclo de piezas nuevas (2026-10-14)
+
+- **Helado** (20261014-0108-s3): exportado i252 tras segunda evaluación independiente (+2: 35 contra 33 del original; la primera dio +3). Caja más alta, cabina más baja, cucurucho 1,12 con soporte de chapa visible; triángulos sin cambio (4036). Evaluaciones en `docs/evo-colab/evaluaciones/2026-10-14-helado-s3-*.md`.
+- **Monster, piezas nuevas:** `jaula_alto` (jaula antivuelco de caño rojo sobre la cabina) y `escape_alto` (dos escapes cromados a los lados del capó), ambos con valor original 0 = sin pieza (el original sigue idéntico; se arman desde 0,03 y 0,05). Armado en `carHull("monster")` (`src/folded_slice.ts`) con `strut`/`G.cyl` dentro de la malla fusionada del auto: sin mallas sueltas.
+  - Lo que no se vio en las medidas: con las bandas automáticas la evolución deja las piezas en 0 (la métrica castiga lo alto: `masa_alta`, `alto_largo`). Para evaluarlas hubo que (1) ensanchar `masa_alta` (hasta 1,9x) y `alto_largo` (+15 %) del monster en `PUSH` de `evo_probe.ts`, (2) usar pisos temporales de gen en la corrida (`jaula_alto` >= 0,2, `escape_alto` >= 0,38; el `--from` los aplica también al i0, por eso la `hoja.png` de s4/s5 muestra el "original" con piezas: usar `hoja-limpia.png`, que arma original y vigente verdaderos). Los pisos se quitaron al exportar (rangos 0 a 0,3 y 0 a 0,5).
+  - Tamaños elegidos con una hoja hecha a mano (vigente + piezas): jaula 0,22 con escapes 0,4 se lee; jaula 0,3 con escapes 0,55 incumple la caja (`viol` 0,04).
+  - Corridas: s1 (sin ensanchar bandas), s2 (bandas ensanchadas), s3 y s4 (pisos), s5 (`--from` s4, pisos finales). **Exportado i10 de s5** (evaluador 36 contra 33 del vigente y 32 del original; proporciones 0,29 contra 0,61 del original; triángulos 4034 contra 3728): ver `docs/evo-colab/evaluaciones/2026-10-14-monster-s5-claude.md`. Evaluador único: conviene un segundo.
+- **Lección confirmada:** las piezas nuevas se ven; para que la evolución las use hay que ajustar bandas y pisos, porque las métricas por silueta las castigan.
