@@ -75,5 +75,29 @@
       0.56
     ],
     "motivo": "Evaluador visual 38 vs 35: ruedas +10 %, caja y cabina más compactas; mejora en garaje, mínima en cámara de partida"
+  },
+  "helado": {
+    "g": {
+      "caja_alto": 1.0296055184520836,
+      "caja_largo": 1.4522057111648405,
+      "cabina_alto": 0.27920256626417694,
+      "toldo_ancho": 0.2374206542363787,
+      "cucurucho": 1.1192939258149293,
+      "cucurucho_soporte": 0.06395904021001297,
+      "rueda_k": 1,
+      "trocha_k": 1.023247851989662,
+      "batalla_k": 0.999411524624093
+    },
+    "run": "20261014-0108-s3",
+    "id": "i252",
+    "gen": 12,
+    "fecha": "2026-10-14",
+    "obj": [
+      0.15,
+      0,
+      1,
+      0.8
+    ],
+    "motivo": "Segunda evaluacion independiente: i252 +2 sobre el original (35 vs 33), primera +3 (39 vs 36); caja mas alta, cabina mas baja, cucurucho 1,12 con soporte visible"
   }
 }

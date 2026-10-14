@@ -2424,5 +2424,251 @@
         }
       ]
     }
+  },
+  {
+    "car": "helado",
+    "accion": "corrida",
+    "run": "20261014-0046-s2",
+    "fecha": "20261014",
+    "params": {
+      "pop": 20,
+      "gens": 12,
+      "seed": 2,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 260,
+    "generaciones": 12,
+    "obj_original": [
+      0.165,
+      0.005,
+      1,
+      0.82
+    ],
+    "recomendado": {
+      "id": "i176",
+      "gen": 8,
+      "obj": [
+        0.16,
+        0,
+        1,
+        0.745
+      ],
+      "cambios": [
+        {
+          "id": "caja_alto",
+          "comp": "carroceria",
+          "def": 0.95,
+          "val": 0.8476316241606596,
+          "pct": -40.9
+        },
+        {
+          "id": "caja_largo",
+          "comp": "carroceria",
+          "def": 1.45,
+          "val": 1.3502168235207925,
+          "pct": -28.5
+        },
+        {
+          "id": "trocha_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.0212585002866845,
+          "pct": 23.6
+        },
+        {
+          "id": "cucurucho_soporte",
+          "comp": "accesorios",
+          "def": 0.06,
+          "val": 0.07655340292968991,
+          "pct": 16.6
+        },
+        {
+          "id": "cabina_alto",
+          "comp": "cabina",
+          "def": 0.34,
+          "val": 0.3133648763565193,
+          "pct": -14.8
+        },
+        {
+          "id": "cucurucho",
+          "comp": "accesorios",
+          "def": 1,
+          "val": 1.0473291231750261,
+          "pct": 13.5
+        },
+        {
+          "id": "batalla_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.015413621828105,
+          "pct": 7.7
+        },
+        {
+          "id": "toldo_ancho",
+          "comp": "accesorios",
+          "def": 0.22,
+          "val": 0.20651240446412922,
+          "pct": -6.7
+        },
+        {
+          "id": "rueda_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.0036020831325012,
+          "pct": 2.4
+        }
+      ]
+    }
+  },
+  {
+    "car": "helado",
+    "accion": "corrida",
+    "run": "20261014-0108-s3",
+    "fecha": "20261014",
+    "params": {
+      "pop": 20,
+      "gens": 12,
+      "seed": 3,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 260,
+    "generaciones": 12,
+    "obj_original": [
+      0.165,
+      0.005,
+      1,
+      0.82
+    ],
+    "recomendado": {
+      "id": "i228",
+      "gen": 11,
+      "obj": [
+        0.155,
+        0,
+        1,
+        0.785
+      ],
+      "cambios": [
+        {
+          "id": "caja_alto",
+          "comp": "carroceria",
+          "def": 0.95,
+          "val": 1.0487039597941346,
+          "pct": 65.8
+        },
+        {
+          "id": "cabina_alto",
+          "comp": "cabina",
+          "def": 0.34,
+          "val": 0.26642952449553436,
+          "pct": -40.9
+        },
+        {
+          "id": "toldo_ancho",
+          "comp": "accesorios",
+          "def": 0.22,
+          "val": 0.2648577549131814,
+          "pct": 22.4
+        },
+        {
+          "id": "cucurucho_soporte",
+          "comp": "accesorios",
+          "def": 0.06,
+          "val": 0.07240275263712961,
+          "pct": 12.4
+        },
+        {
+          "id": "batalla_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.015009146845967,
+          "pct": 7.5
+        },
+        {
+          "id": "caja_largo",
+          "comp": "carroceria",
+          "def": 1.45,
+          "val": 1.430463911038693,
+          "pct": -5.6
+        },
+        {
+          "id": "trocha_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.0020726321639095,
+          "pct": 2.3
+        }
+      ]
+    }
+  },
+  {
+    "car": "helado",
+    "accion": "export",
+    "run": "20261014-0108-s3",
+    "id": "i252",
+    "fecha": "2026-10-14",
+    "obj": [
+      0.15,
+      0,
+      1,
+      0.8
+    ],
+    "obj_original": [
+      0.165,
+      0.005,
+      1,
+      0.82
+    ],
+    "cambios": [
+      {
+        "id": "caja_alto",
+        "comp": "carroceria",
+        "def": 0.95,
+        "val": 1.0296055184520836,
+        "pct": 53.1
+      },
+      {
+        "id": "cucurucho",
+        "comp": "accesorios",
+        "def": 1,
+        "val": 1.1192939258149293,
+        "pct": 34.1
+      },
+      {
+        "id": "cabina_alto",
+        "comp": "cabina",
+        "def": 0.34,
+        "val": 0.27920256626417694,
+        "pct": -33.8
+      },
+      {
+        "id": "trocha_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 1.023247851989662,
+        "pct": 25.8
+      },
+      {
+        "id": "toldo_ancho",
+        "comp": "accesorios",
+        "def": 0.22,
+        "val": 0.2374206542363787,
+        "pct": 8.7
+      },
+      {
+        "id": "cucurucho_soporte",
+        "comp": "accesorios",
+        "def": 0.06,
+        "val": 0.06395904021001297,
+        "pct": 4
+      }
+    ],
+    "motivo": "Segunda evaluacion independiente: i252 +2 sobre el original (35 vs 33), primera +3 (39 vs 36); caja mas alta, cabina mas baja, cucurucho 1,12 con soporte visible"
   }
 ]
