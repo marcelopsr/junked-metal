@@ -110,7 +110,7 @@ export function patioBuild() {
   const crops: B.Mesh[] = [];
   for (let r = 0; r < 4; r++) for (let i = 0; i < 7; i++) {
     const x = 34 + i * 5.3, z = 35 + r * 7;
-    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte("#3f8f2f"), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4); l.rotation.y = k * 1.6; crops.push(l); }
+    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte(["#3f8f2f", "#4b9636", "#579b3c", "#478b35"][(r + i + k) % 4]), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4); l.rotation.y = k * 1.6; crops.push(l); }
   }
   shadows.addShadowCaster(merge("huerta", crops)); // 112 hojas sueltas = 112 dibujos por pasada; fusionadas, una
 

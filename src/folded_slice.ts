@@ -942,7 +942,7 @@ export function gnomeFold() {
   return done(25);
 }
 /** Auto real oxidado en caballetes (1 u ≈ 4,5 cm). Paneles de chapa con óxido, vidrios oscuros, ópticas emisivas. */
-export function realCarFold(lift: number, paint: string) {
+export function realCarFold(lift: number, paint: string, tireColor: string = PAL.goma) {
   const { G, done } = kit();
   const pm = FOLD.painted(paint, 0.95, 291), dark = FOLD.dark(), glass = FOLD.dark(), hub = Math.max(7, lift + 1);
   G.box(40, 13, 96, pm, [0, lift + 6.5, 0]); G.box(36, 11, 50, pm, [0, lift + 18.5, -4]);
@@ -952,7 +952,7 @@ export function realCarFold(lift: number, paint: string) {
   for (const bx of [-13, 13]) { G.box(8, 3, 0.5, FOLD.emissive("#e8e4d0"), [bx, lift + 9, 48.2]); G.box(8, 3, 0.5, FOLD.emissive("#8a1810"), [bx, lift + 9, -48.2]); }
   G.grate([0, lift + 8, 48.4], [0, Math.PI, 0], 14, 4, 5, FOLD.bare());
   G.decal([0, lift + 13.05, 30], [Math.PI / 2, 0, 0], "rayon", 18); G.decal([20.3, lift + 6.5, 10], [0, -Math.PI / 2, 0], "mancha", 14);
-  for (const [wx, wz] of [[-19, 31], [19, 31], [-19, -31], [19, -31]]) { G.cyl(14, 8, FOLD.rubber(), [wx, hub, wz], [0, 0, Math.PI / 2], 12); G.cyl(8, 8.4, FOLD.rust(), [wx, hub, wz], [0, 0, Math.PI / 2], 8); }
+  for (const [wx, wz] of [[-19, 31], [19, 31], [-19, -31], [19, -31]]) { G.cyl(14, 8, tireColor === PAL.goma ? FOLD.rubber() : FOLD.painted(tireColor, 0.45, 294), [wx, hub, wz], [0, 0, Math.PI / 2], 12); G.cyl(8, 8.4, FOLD.rust(), [wx, hub, wz], [0, 0, Math.PI / 2], 8); }
   return done(1);
 }
 /** Labio de una rampa (coordenadas locales de ramp: sube hacia +z): franja hazard en el borde de arriba. */

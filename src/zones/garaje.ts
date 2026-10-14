@@ -83,7 +83,7 @@ export function garageBuild() {
   });
   stat(merge("tires", tires), B.PhysicsShapeType.CYLINDER, {}, [-68, 0, -50]);
   // El auto de la casa, en caballetes: abajo es zona techada
-  realCar(30, 0, 0, 9, true, "#8a2a2a");
+  realCar(30, 0, 0, 9, true, "#8a2a2a", "#4b4b46");
 }
 
 export function garageLayout() {

@@ -242,7 +242,7 @@ export function tree(x: number, z: number) {
   bare.push({ x, z, r: 6 });
 }
 // Auto real (1 u ≈ 4,5 cm: 96 de largo). lift = altura del piso de la carrocería; en caballetes el RC pasa por abajo.
-export function realCar(x: number, z: number, ry: number, lift: number, solid: boolean, paint: string) {
+export function realCar(x: number, z: number, ry: number, lift: number, solid: boolean, paint: string, tireColor?: string) {
   const pm = pbr("carPaint" + paint, { color: paint, rough: 0.35 }), dark = M.matte("#1a1a1a"), hub = Math.max(7, lift + 1);
   const parts = [
     box(40, 13, 96, pm, [0, lift + 6.5, 0]),
@@ -254,7 +254,7 @@ export function realCar(x: number, z: number, ry: number, lift: number, solid: b
     ...[-13, 13].map((bx) => box(8, 3, 0.5, M.matte("#8a1810"), [bx, lift + 9, -48.2])),
   ];
   const wheels: [number, number][] = [[-19, 31], [19, 31], [-19, -31], [19, -31]];
-  if (FOLDED_SLICE) { parts.forEach((p) => p.dispose()); parts.length = 0; parts.push(...realCarFold(lift, paint)); } // solo visual: el colisionador son las cajas de abajo
+  if (FOLDED_SLICE) { parts.forEach((p) => p.dispose()); parts.length = 0; parts.push(...realCarFold(lift, paint, tireColor)); } // solo visual: el colisionador son las cajas de abajo
   else for (const [wx, wz] of wheels) parts.push(cyl(14, 14, 8, M.rubber(), [wx, hub, wz], [0, 0, Math.PI / 2], 14), cyl(8, 8, 8.4, M.metal("#9aa0a6"), [wx, hub, wz], [0, 0, Math.PI / 2], 10));
   const m = merge("realCar", parts);
   m.position.set(x, 0, z); m.rotation.y = ry;
