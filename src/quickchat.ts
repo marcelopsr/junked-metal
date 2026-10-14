@@ -1,6 +1,7 @@
 // Chat rápido online: 6 frases fijas, mensaje {t:"q", i, who}. El anfitrión valida y limita (1 cada 2 s por jugador) y reenvía por "r".
 import type { Net, Msg } from "./net";
 import "./quickchat.css";
+import { uiIcon } from "./icons";
 
 export const PHRASES = ["¡Acá!", "¡Ayuda!", "¡Vamos!", "¡Cuidado, jefe!", "¡Gracias!", "¡Bien ahí!"] as const;
 const GAP = 2000, SHOW = 3000;
@@ -51,12 +52,14 @@ export function initQuickChat(n: Net, name: string, spectator = false) {
     PHRASES.forEach((p, i) => { const b = document.createElement("button"); b.textContent = `${i + 1}  ${p}`; b.onclick = () => { sendQuick(i); toggle(false); }; menu!.append(b); });
     document.getElementById("quickchat-btn")?.addEventListener("click", () => toggle());
   }
-  document.getElementById("quickchat-btn")?.toggleAttribute("hidden", spectator);
+  const btn = document.getElementById("quickchat-btn");
+  if (btn && !btn.firstChild) btn.innerHTML = uiIcon("chat", 26);
+  btn?.toggleAttribute("hidden", spectator);
   const key = (e: KeyboardEvent) => {
     if (!canSend || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.code === "KeyT") toggle();
     else if (menu?.classList.contains("on") && /^[1-6]$/.test(e.key)) { e.stopImmediatePropagation(); sendQuick(+e.key - 1); toggle(false); }
   };
   addEventListener("keydown", key, true); // captura: con la lista abierta los números no llegan a las cartas
-  return () => { removeEventListener("keydown", key, true); toggle(false); el?.classList.remove("on"); net = null; };
+  return () => { removeEventListener("keydown", key, true); toggle(false); el?.classList.remove("on"); btn?.toggleAttribute("hidden", true); net = null; };
 }
