@@ -929,7 +929,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
       const zs = side.map((w) => w.pos[2]), d = Math.max(...side.map((w) => w.d)), ww = side[0].w * 1.15;
       for (const up of [1, -1]) parts.push(box(ww, d * 0.1, Math.max(...zs) - Math.min(...zs) + d * 0.6, M.rubber(), [side[0].pos[0], side[0].pos[1] + up * d * 0.5, (Math.max(...zs) + Math.min(...zs)) / 2]));
     }
-    if (o.acc === "pelotita") parts.push(cyl(0.025, 0.025, 0.5, M.metal("#111"), [-0.38, 1.0, -0.7], undefined, 4), sph(0.3, acc("#ffd23f"), [-0.38, 1.35, -0.7]), tor(0.3, 0.04, M.plastic("#ff4d6d"), [-0.38, 1.35, -0.7], undefined, 6));
+    if (o.acc === "pelotita") parts.push(cyl(0.025, 0.025, 0.5, M.metal("#111"), [-0.38, 1.0, -0.7], undefined, 4), sph(0.3, acc("#ffd23f"), [-0.38, 1.35, -0.7]), tor(0.3, 0.04, M.plastic("#f97316"), [-0.38, 1.35, -0.7], undefined, 6));
     else if (o.acc === "bocina") { const x = bw * 0.3, y = bh * 0.7, z = bl * 0.25; parts.push(sph(0.2, acc("#e11d48"), [x, y, z - 0.12]), cyl(0.04, 0.16, 0.24, M.metal("#d4a72c"), [x, y, z + 0.06], [Math.PI / 2, 0, 0], 8)); }
     else if (o.acc === "matafuego") { const x = bw / 2 + 0.02, z = -bl * 0.18; parts.push(cyl(0.13, 0.13, 0.32, acc("#d62828"), [x, bh * 0.45, z], undefined, 8), cyl(0.06, 0.06, 0.06, M.matte("#111"), [x, bh * 0.45 + 0.19, z], undefined, 6), box(0.03, 0.03, 0.12, M.matte("#111"), [x, bh * 0.45 + 0.22, z + 0.05])); }
     else if (o.acc === "dados") for (const [dx, r] of [[-0.07, 0.4], [0.07, -0.3]] as const) parts.push(box(0.1, 0.1, 0.1, acc("#f9a8d4"), [px + 0.2 + dx, py + 0.5 * ps, pz + 0.35 * ps], [r, r, 0]), box(0.11, 0.025, 0.025, M.plastic("#111"), [px + 0.2 + dx, py + 0.5 * ps, pz + 0.35 * ps], [r, r, 0]));
@@ -941,7 +941,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   if (!useGlb || pilotId !== "soldadito") for (const m of pilotParts(pilotId)) { m.position.scaleInPlace(ps).addInPlaceFromFloats(px, py, pz); m.scaling.scaleInPlace(ps); parts.push(m); }
 
   // Antena, siempre: es un auto RC
-  if (kind !== "tanque") parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#ff4d6d"), [0.38, 1.6, -0.7]));
+  if (kind !== "tanque") parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#f97316"), [0.38, 1.6, -0.7]));
   const rim = o.rim ?? A.rim;
   // Hull GLB ya está aplanado (vertex color): fusionarlo con piezas del garaje suele hacer fallar MergeMeshes.
   let body: B.Mesh;
