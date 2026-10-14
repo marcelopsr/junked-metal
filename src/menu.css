@@ -797,6 +797,20 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 #encLbList li { padding: 2px 0; }
 #netAlt > summary:focus { outline: 3px solid var(--jm-cian); outline-offset: 3px; }
 
+/* ENCORE: "Cómo se juega" y grupo "Online" plegables (secundarios; Largar queda primero y destacado) */
+#scr-encore .how { width: min(460px, 92vw); box-sizing: border-box; text-align: left; background: rgba(11, 15, 20, .92); border: 1px solid var(--jm-borde); }
+#scr-encore :is(.how, .netGrp) > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; box-sizing: border-box; padding: 0 14px; cursor: pointer; list-style: none; font: 700 14px/1 var(--jm-titulo); letter-spacing: .08em; text-transform: uppercase; color: var(--jm-amarillo2); text-shadow: none; }
+#scr-encore :is(.how, .netGrp) > summary::-webkit-details-marker { display: none; }
+#scr-encore :is(.how, .netGrp) > summary::before { content: "\25B8"; display: inline-block; transition: rotate .12s; }
+#scr-encore :is(.how, .netGrp)[open] > summary::before { rotate: 90deg; }
+#scr-encore :is(.how, .netGrp) > summary:focus-visible { outline: 3px solid var(--jm-cian); outline-offset: 2px; }
+#scr-encore .how ul { margin: 0; padding: 2px 14px 12px 30px; display: flex; flex-direction: column; gap: 6px; font: 500 14px/1.35 var(--jm-texto-f); color: var(--jm-texto); }
+#scr-encore .how li { display: list-item; text-align: left; }
+#scr-encore .how b { color: var(--jm-amarillo2); }
+#scr-encore .netGrp { background: rgba(11, 15, 20, .92); border: 1px solid var(--jm-borde); }
+#scr-encore .netGrp > :not(summary) { margin: 0 8px 9px; }
+#scr-encore .netGrp > :not(summary):not(.hidden) { display: block; width: calc(100% - 16px); box-sizing: border-box; }
+
 #aviso { position: fixed; left: 50%; top: max(10px, env(safe-area-inset-top)); translate: -50% 0; z-index: 70; display: flex; gap: 10px; align-items: center; max-width: min(92vw, 560px); padding: 8px 12px; background: #b36a00; color: #fff; border-radius: 6px; }
 #aviso.hidden { display: none; }
 #aviso button { background: none; border: 0; color: inherit; font-size: 20px; cursor: pointer; }

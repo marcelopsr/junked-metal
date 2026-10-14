@@ -52,6 +52,9 @@ export const sessions = [
     { id: "garaje", act: view("garage") },
     { id: "garaje-vista-previa", act: async (p) => { await view("garage")(p); await p.focus('.carc.locked[data-k="tanque"]'); await p.waitForTimeout(400); } },
     { id: "taller", act: view("shop") },
+    { id: "encore", act: view("encore") },
+    // "Cómo se juega" y el grupo Online desplegados (el foco queda en Largar al entrar)
+    { id: "encore-abierto", act: async (p) => { await p.evaluate(() => document.querySelectorAll("#scr-encore .how, #scr-encore #netGrp").forEach((d) => { d.open = true; })); await p.waitForTimeout(150); } },
     { id: "config", act: view("config") },
     // Imagen con Escalado FSR: la escala % se oculta y aparece el modo FSR (fila dependiente)
     { id: "config-fsr", act: async (p) => { await p.evaluate(() => { const s = document.querySelector('select[data-set="scaler"]'); s.value = "fsr"; s.dispatchEvent(new Event("change", { bubbles: true })); }); await p.waitForTimeout(150); } },
