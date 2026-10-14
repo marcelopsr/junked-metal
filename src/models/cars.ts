@@ -941,7 +941,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   if (!useGlb || pilotId !== "soldadito") for (const m of pilotParts(pilotId)) { m.position.scaleInPlace(ps).addInPlaceFromFloats(px, py, pz); m.scaling.scaleInPlace(ps); parts.push(m); }
 
   // Antena, siempre: es un auto RC
-  parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#ff4d6d"), [0.38, 1.6, -0.7]));
+  if (kind !== "tanque") parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#ff4d6d"), [0.38, 1.6, -0.7]));
   const rim = o.rim ?? A.rim;
   // Hull GLB ya está aplanado (vertex color): fusionarlo con piezas del garaje suele hacer fallar MergeMeshes.
   let body: B.Mesh;
