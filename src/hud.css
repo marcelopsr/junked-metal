@@ -1,11 +1,11 @@
-/* Junked Metal — HUD de partida: vidrio oscuro translúcido, tipografía Rajdhani, barras con degradado.
+/* Junked Metal — HUD de partida: vidrio oscuro translúcido, tipografía Bebas Neue e Inter, barras con degradado.
    Disposición: arriba-izquierda progreso y reloj, arriba-derecha radar, abajo-centro estado del auto, abajo-derecha velocidad, abajo-izquierda armas.
    --hud-scale (1 por defecto) escala todo el HUD: cada pieza crece desde su esquina de anclaje. Reglas de arte: docs/ART_DIRECTION.md. */
 :root { --hud-scale: 1; --ink: #7dffb0; --scr: #1d2b3a; --sig: #35c9ff; --ok: #5be37a; --turbo: #ffb02e; --low: #ff4d4d; }
 
 #hud {
   --g-bg: rgba(12, 20, 30, .55); --g-line: rgba(255, 255, 255, .16); --g-txt: #f4f7fa; --g-dim: #a9b8c6;
-  --hf: "Rajdhani", system-ui, sans-serif; font-family: var(--hf); color: var(--g-txt);
+  --hf: "Bebas Neue", Impact, "Arial Narrow", sans-serif; font-family: var(--hf); color: var(--g-txt);
   position: fixed; inset: 0; pointer-events: none;
 }
 #hud.glitch { animation: hud-jitter .16s steps(2); filter: contrast(1.4) brightness(1.2); }
@@ -112,7 +112,7 @@
 #encAsk.pact .encBtns .pc { color: #ff7a6b; }
 #encAsk.pact .encBtns em { margin-top: 5px; font: 500 11px/1 var(--hf); font-style: normal; letter-spacing: .1em; color: var(--g-dim); }
 #encAsk.pact .encBtns kbd { margin: 6px 0 0; }
-#encAsk.pact .encBtns button.primary { color: var(--jm-texto); font-size: 15px; background: linear-gradient(180deg, #2b3442, var(--jm-panel) 55%, #161c25); outline: 1px solid rgba(181, 101, 29, .55); outline-offset: -4px; } /* QA final: las dos ofertas valen lo mismo; el relleno verde dejaba ilegibles VENTAJA/COSTO y sus términos */
+#encAsk.pact .encBtns button.primary { color: var(--jm-texto); font-size: 15px; background: linear-gradient(180deg, #2b3442, var(--jm-panel) 55%, #161c25); outline: 1px solid var(--jm-borde); outline-offset: -4px; } /* QA final: las dos ofertas valen lo mismo; el relleno verde dejaba ilegibles VENTAJA/COSTO y sus términos */
 #encC { width: 100%; margin-top: 8px; touch-action: manipulation; }
 #encC.hidden { display: none; }
 @media (max-width: 520px), (orientation: landscape) and (max-height: 500px) { /* celular (vertical y apaisado): las dos opciones lado a lado y compactas, para que RECHAZAR quede arriba de los controles táctiles */
@@ -138,7 +138,7 @@
 /* ---------- Jefe ---------- */
 #bossbar { top: max(10px, env(safe-area-inset-top)); left: 50%; translate: -50% 0; transform-origin: 50% 0; width: min(520px, calc(100vw / var(--hud-scale) - 640px)); padding: 10px 16px 12px; text-align: center; }
 #bossName { display: flex; align-items: center; justify-content: center; gap: 8px; font: 700 19px/1 var(--hf); letter-spacing: .12em; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
-.boss-banner-thumb { width: 34px; height: 34px; border-radius: 4px; overflow: hidden; border: 1.5px solid var(--jm-chapa, #b5651d); box-shadow: inset 0 0 6px rgba(0, 0, 0, .8), 0 2px 6px rgba(0, 0, 0, .6); flex-shrink: 0; background: #0b0f14; }
+.boss-banner-thumb { width: 34px; height: 34px; border-radius: 4px; overflow: hidden; border: 1.5px solid var(--jm-chapa, #3b424b); box-shadow: inset 0 0 6px rgba(0, 0, 0, .8), 0 2px 6px rgba(0, 0, 0, .6); flex-shrink: 0; background: #0b0f14; }
 .boss-banner-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: auto; }
 #bossName .b-rage { font: 800 11px/1 var(--hf); padding: 2px 6px; border-radius: 4px; background: #ff4d4d; color: #0b0f14; letter-spacing: .08em; }
 #bossName .b-pct { font: 700 14px/1 var(--hf); color: var(--g-dim); font-variant-numeric: tabular-nums; margin-left: 2px; }
@@ -376,7 +376,7 @@
 body.calm #hud *, body.calm #hud *::before, body.calm #hud *::after, body.calm #banner { animation: none !important; }
 
 /* Contador de fps (Configuración → Imagen) y HUD sólido (Accesibilidad) */
-#fps { position: fixed; left: 50%; top: 6px; translate: -50% 0; z-index: 9; white-space: pre; text-align: center; font: 700 14px/1.15 "Rajdhani", system-ui, sans-serif; color: #7dffb0; background: rgba(8, 14, 22, .7); padding: 3px 9px; border-radius: 8px; pointer-events: none; }
+#fps { position: fixed; left: 50%; top: 6px; translate: -50% 0; z-index: 9; white-space: pre; text-align: center; font: 700 14px/1.15 "Bebas Neue", Impact, "Arial Narrow", sans-serif; color: #7dffb0; background: rgba(8, 14, 22, .7); padding: 3px 9px; border-radius: 8px; pointer-events: none; }
 #fps.hidden { display: none; }
 body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 
@@ -459,7 +459,7 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 #dirSub {
   position: fixed; left: 50%; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 165px * var(--hud-scale)); translate: -50% 0; scale: var(--hud-scale); transform-origin: 50% 100%;
   width: max-content; max-width: min(520px, 92vw); padding: 6px 12px 7px; /* max-content: con left 50% el ancho disponible era la mitad de la pantalla y en celular partía la frase en 4 renglones */ pointer-events: none; text-align: center;
-  border-radius: var(--jm-r); background: linear-gradient(180deg, rgba(31, 41, 55, .96), rgba(20, 24, 31, .97));
+  border-radius: var(--jm-r); background: var(--jm-fondo2);
   border: 2px solid var(--jm-chapa); outline: 2px solid var(--jm-fondo); box-shadow: inset 0 0 0 1px var(--jm-chapa-osc), 0 10px 28px rgba(0, 0, 0, .55);
   animation: h-bannerin .35s cubic-bezier(.2, 1.4, .4, 1) both;
 }
@@ -468,7 +468,8 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 @media (pointer: fine) { body:has(#hint:not(.hidden):not(.fade):not(.coop)) #dirSub { bottom: calc(184px + 107px * var(--hud-scale)); } } /* QA final: arriba del panel de batería (#txl) y, mientras se ven los controles (#hint), arriba de ellos */
 @media (pointer: coarse) { /* celular: arriba de los controles táctiles (que ocupan el ~42 % de abajo); con la oferta de pactos o destinos abierta, arriba, bajo el reloj */
   #dirSub { bottom: 43vh; max-width: calc(100vw - 120px); } /* sin pisar PAUSA y CÁMARA (columna de la derecha) */
-  body:has(#encAsk.pact:not(.hidden)) #dirSub { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 134px); }
+  body:has(#encAsk.pact:not(.hidden)) #dirSub { display: none; } /* con la oferta abierta el subtítulo pisaba el aviso de radio (#banner, +78 px) */
+  body:has(#encAsk:not(.hidden)) #arrows { display: none; } /* el ícono del cofre (22M) tapaba el título de la primera carta */
 }
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) { /* apaisado: bajo la barra de jefe (hasta +193 px) y sobre el panel de batería (#txl, desde y=261 de 390) */
   #dirSub { bottom: 35vh; }
@@ -503,6 +504,7 @@ body.calm #dirSub { animation: none !important; }
 @media (pointer: fine) { .rf-failsafe { left: max(8px, calc(50% - 270px * var(--hud-scale, 1))); transform: translateX(-100%); } }
 
 /* Saltar tutorial: debajo del radar (que crece a 1.3x en pantalla grande y a .9x en celular); 44 px de alto táctil */
-.tut-skip { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 122px); right: 14px; z-index: 30; pointer-events: auto; padding: 6px 12px; min-height: 36px; font: 700 13px var(--hf, Rajdhani, sans-serif); letter-spacing: .08em; color: var(--jm-naranja, #ff9138); background: var(--jm-fondo, #0b0f14); border: 1px solid var(--jm-chapa, #b5651d); cursor: pointer; }
+.tut-skip { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 122px); right: 14px; z-index: 30; pointer-events: auto; padding: 6px 12px; min-height: 36px; font: 700 13px var(--hf, "Bebas Neue", Impact, "Arial Narrow", sans-serif); letter-spacing: .08em; color: var(--jm-naranja, #ff9138); background: var(--jm-fondo, #0b0f14); border: 1px solid var(--jm-chapa, #3b424b); cursor: pointer; }
 @media (pointer: coarse), (max-width: 720px) { .tut-skip { top: calc(max(10px, env(safe-area-inset-top)) + 66px); right: 8px; min-height: 44px; } }
 @media (max-width: 520px) { .sig-dbm, .sig-snr, .sig-pkt, .rx-div { display: none; } } /* celular: telemetría de radio (dBm, SNR, RX) fuera del HUD */
+body.photo #fe, body.photo #banner { display: none !important; } /* modo foto: el velo de la pausa (#fe, fondo 0.72) oscurecía la escena */

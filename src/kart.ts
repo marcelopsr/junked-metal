@@ -134,20 +134,20 @@ function buildTrack() {
     c.fillStyle = "#14181F"; c.fillRect(0, 0, s, s);
     c.fillStyle = "#b5651d"; c.fillRect(0, 0, s, 18); c.fillRect(0, s - 18, s, 18);
     c.fillStyle = "#FFB400"; for (let i = -s; i < s * 2; i += 32) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + 16, 0); c.lineTo(i + 4, 18); c.lineTo(i - 12, 18); c.fill(); c.beginPath(); c.moveTo(i, s - 18); c.lineTo(i + 16, s - 18); c.lineTo(i + 4, s); c.lineTo(i - 12, s); c.fill(); }
-    c.fillStyle = "#000000"; c.font = "700 84px Rajdhani, sans-serif"; c.textAlign = "center"; c.fillText("START", s / 2 + 4, s * 0.64 + 4);
+    c.fillStyle = "#000000"; c.font = "400 84px 'Bebas Neue', sans-serif"; c.textAlign = "center"; c.fillText("START", s / 2 + 4, s * 0.64 + 4);
     c.fillStyle = "#FFB400"; c.fillText("START", s / 2, s * 0.64);
   });
   banner.material = pbr("raceBanner", { color: "#ffffff", rough: 0.55, metal: 0.25, tex: bt, emissive: "#261c08" });
   arch.push(banner);
   for (const m of arch) { shadows.addShadowCaster(m); mesh.push(m); }
-  // Cajas de objetos (5 filas de 3): caja de telemetría con marco oscuro, remaches y signo en Rajdhani
+  // Cajas de objetos (5 filas de 3): caja de telemetría con marco oscuro, remaches y signo en Bebas Neue
   const boxMat = () => {
     const qt = canvasTex(128, (c, s) => {
       c.fillStyle = "#0e2938"; c.fillRect(0, 0, s, s);
       c.strokeStyle = "#00C2FF"; c.lineWidth = 10; c.strokeRect(8, 8, s - 16, s - 16);
       c.strokeStyle = "#14181F"; c.lineWidth = 4; c.strokeRect(2, 2, s - 4, s - 4);
       c.fillStyle = "#FFB400"; for (const [x, y] of [[16, 16], [s - 16, 16], [16, s - 16], [s - 16, s - 16]]) { c.beginPath(); c.arc(x, y, 4, 0, 7); c.fill(); }
-      c.fillStyle = "#000000"; c.font = "700 92px Rajdhani, sans-serif"; c.textAlign = "center"; c.fillText("?", s / 2 + 3, s * 0.76 + 3);
+      c.fillStyle = "#000000"; c.font = "400 92px 'Bebas Neue', sans-serif"; c.textAlign = "center"; c.fillText("?", s / 2 + 3, s * 0.76 + 3);
       c.fillStyle = "#7fe3ff"; c.fillText("?", s / 2, s * 0.76);
     });
     return pbr("raceBox", { color: "#ffffff", rough: 0.28, metal: 0.2, tex: qt, emissive: "#0d4a66" });
@@ -220,7 +220,7 @@ function buildArena() {
   const qt = canvasTex(128, (g, sz) => {
     g.fillStyle = "#0e2938"; g.fillRect(0, 0, sz, sz);
     g.strokeStyle = "#00C2FF"; g.lineWidth = 10; g.strokeRect(8, 8, sz - 16, sz - 16);
-    g.fillStyle = "#7fe3ff"; g.font = "700 92px Rajdhani, sans-serif"; g.textAlign = "center"; g.fillText("?", sz / 2, sz * 0.76);
+    g.fillStyle = "#7fe3ff"; g.font = "400 92px 'Bebas Neue', sans-serif"; g.textAlign = "center"; g.fillText("?", sz / 2, sz * 0.76);
   });
   const qm = pbr("raceBox", { color: "#ffffff", rough: 0.28, metal: 0.2, tex: qt, emissive: "#0d4a66" });
   const ring = (n: number, k0: number): [number, number][] => Array.from({ length: n }, (_, k) => [Math.cos((k / n) * 6.283 + k0) * r * (n > 6 ? 0.68 : 0.32), Math.sin((k / n) * 6.283 + k0) * r * (n > 6 ? 0.68 : 0.32)]);
@@ -976,7 +976,7 @@ function buildPodium(order: Racer[]) {
     const tx = canvasTex(64, (g, sz) => {
       g.fillStyle = "#14181F"; g.fillRect(0, 0, sz, sz);
       g.strokeStyle = col; g.lineWidth = 6; g.strokeRect(4, 4, sz - 8, sz - 8);
-      g.fillStyle = col; g.font = "900 44px Rajdhani, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillStyle = col; g.font = "400 44px 'Bebas Neue', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
       g.fillText(String(i + 1), sz / 2, sz / 2 + 2);
     });
     const pl = box(1.1, 1.1, 0.14, pbr("podPl" + i, { color: "#ffffff", rough: 0.5, metal: 0.2, tex: tx, emissive: "#1a1408" }), [cx + dir.x * 2.52, Math.max(0.65, h * 0.45), cz + dir.z * 2.52], [0, yaw + Math.PI, 0]);

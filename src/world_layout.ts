@@ -292,8 +292,8 @@ export function brickWalls(n: number) {
     const sp = freeSpot(8); if (!sp) continue;
     const [wx, wz] = sp;
     for (let i = 0; i < 8; i++) {
-      const b = dyn(box(3, 1.4, 1.5, FOLDED_SLICE ? FOLD.painted("#b45309", 0.8, 340 + (i % 4)) : M.matte("#b45309"), [wx + (i % 4) * 3.1 - 4.6, 0.7 + Math.floor(i / 4) * 1.45, wz]), B.PhysicsShapeType.BOX, 1.2);
-      breakable(FOLDED_SLICE ? crateFold(b, 3, 1.4, 1.5) : b, 60, 1.5, "#b45309");
+      const b = dyn(box(3, 1.4, 1.5, FOLDED_SLICE ? FOLD.painted("#FB8C00", 0.2, 340 + (i % 4)) : M.matte("#b45309"), [wx + (i % 4) * 3.1 - 4.6, 0.7 + Math.floor(i / 4) * 1.45, wz]), B.PhysicsShapeType.BOX, 1.2);
+      breakable(FOLDED_SLICE ? crateFold(b, 3, 1.4, 1.5) : b, 60, 1.5, "#FB8C00");
     }
     bare.push({ x: wx, z: wz, r: 7 });
   }

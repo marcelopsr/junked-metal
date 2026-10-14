@@ -9,7 +9,7 @@ import { ball, freeSpot, int, piles, puddles, toyRamps } from "../world_layout";
 
 // La cocina (ENCORE y Taller), muebles contra las paredes +z y -x (la cámara de partida mira hacia +z): baldosas en damero, mesadas con alacenas contra dos paredes, heladera, horno encendido, mesa con sillas
 // (techo: el auto pasa por abajo) y utensilios gigantes tirados. Mismo tamaño que el desván (half 140, salida (0, 0) libre).
-export const KITCHEN_CLIMATE: Climate = { id: "cocina", name: "LUZ DE COCINA", sun: [0.3, -1, 0.25], sunColor: "#ffd3a0", sunI: 2.8, hemiI: 1.3, sky: ["#140d08", "#1e140d", "#24180f", "#140d08"], exposure: 1.15, fog: 0.004, ramp: ["#1a1008", "#8a5a36", "#fff0d8"] };
+export const KITCHEN_CLIMATE: Climate = { id: "cocina", name: "LUZ DE COCINA", sun: [0.3, -1, 0.25], sunColor: "#ffd3a0", sunI: 2.8, hemiI: 1.3, sky: ["#6a4a3c", "#e8a878", "#ffd9a8", "#7a5a3c"], exposure: 1.05, fog: 0.004, ramp: ["#2a1810", "#c08050", "#fff0d8"] };
 export const TABLE_K = { x: 60, z: -55, w: 60, d: 40, h: 30 }; // mesa: centro, ancho, largo, alto de la tapa
 
 // Tabla de aparición de la cocina: multiplica los pesos de spawnTable (enemies.ts) para enemigos EXISTENTES; run_drive.ts la aplica cuando zoneId === "cocina".
@@ -26,9 +26,9 @@ export const kitchenPlague = (p?: Plague): Plague => {
 // Baldosas en damero crema/terracota (4 por lado de textura) con juntas y desgaste
 const tileTex = () => canvasTex(256, (c, s) => {
   const q = s / 4;
-  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { c.fillStyle = (i + j) % 2 ? "#b8573a" : "#efe2c4"; c.fillRect(i * q, j * q, q, q); }
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { c.fillStyle = (i + j) % 2 ? "#E53935" : "#FFF3D6"; c.fillRect(i * q, j * q, q, q); }
   for (let i = 0; i < 3000; i++) { c.fillStyle = ["#00000022", "#ffffff22", "#5a3a2a22"][i % 3]; c.fillRect(Math.random() * s, Math.random() * s, 1 + Math.random() * 3, 1 + Math.random() * 3); }
-  c.strokeStyle = "#8a7a66"; c.lineWidth = 3;
+  c.strokeStyle = "#ffffff"; c.lineWidth = 3;
   for (let i = 0; i <= 4; i++) { c.beginPath(); c.moveTo(i * q, 0); c.lineTo(i * q, s); c.moveTo(0, i * q); c.lineTo(s, i * q); c.stroke(); }
 });
 
@@ -44,11 +44,11 @@ const hiddenBox = (w: number, h: number, d: number, x: number, y: number, z: num
 
 export function kitchenBuild() {
   floor("kitchenTile", "#ffffff", tileTex, 0.55, "concrete", 18); // baldosa de ~4,5 m (dos autos)
-  const paint = M.matte("#d9c49a"), band = M.matte("#7a5a3a");
+  const paint = M.matte("#FFE082"), band = M.matte("#E53935");
   for (const [x, z, w, d] of [[0, -HALF - 1, HALF * 2 + 4, 2], [HALF + 1, 0, 2, HALF * 2 + 4], [-HALF - 1, 0, 2, HALF * 2 + 4], [0, HALF + 1, HALF * 2 + 4, 2]]) occluders.push(merge("kwall", [box(w, 110, d, paint, [x, 55, z]), box(w + 0.6, 5, d + 0.6, band, [x, 2.5, z])]));
 
   // Mesadas en L (norte y oeste): bajo mesada con puertas, tapa de granito, alacenas arriba. Una malla por mesada, un colisionador macizo.
-  const cab = M.matte("#e8dcc0"), top = pbr("granite", { color: "#3a3532", rough: 0.35 }), knob = M.metal("#b8bcc2"), D = 26, H = 36;
+  const cab = M.matte("#42A5F5"), top = pbr("granite", { color: "#FFF3D6", rough: 0.35 }), knob = M.metal("#b8bcc2"), D = 26, H = 36;
   const counter = (x0: number, x1: number, alongX: boolean) => {
     const L = x1 - x0, c = (x0 + x1) / 2, at = (u: number, y: number, v: number): [number, number, number] => (alongX ? [u, y, HALF - v] : [-HALF + v, y, u]);
     const sz = (a: number, b: number, d: number): [number, number, number] => (alongX ? [a, b, d] : [d, b, a]);
@@ -75,14 +75,14 @@ export function kitchenBuild() {
   // Heladera en la esquina noreste: maciza, con puertas, manijas y un imán
   const fx = 105, fz = HALF - 22;
   const fridge = merge("fridge", [
-    box(44, 110, 40, M.plastic("#e9eef0"), [0, 55, 0]), box(44.4, 0.8, 40.4, M.matte("#9aa0a6"), [0, 72, 0]),
+    box(44, 110, 40, M.plastic("#66BB6A"), [0, 55, 0]), box(44.4, 0.8, 40.4, M.matte("#9aa0a6"), [0, 72, 0]),
     box(1.6, 30, 2, knob, [-16, 88, -20.6]), box(1.6, 44, 2, knob, [-16, 46, -20.6]), box(5, 5, 0.6, M.plastic("#d62828"), [8, 92, -20.4]),
   ]);
   fridge.position.set(fx, 0, fz); shadows.addShadowCaster(fridge); occluders.push(fridge);
   hiddenBox(44, 110, 40, fx, 55, fz);
 
   // Mesa con cuatro sillas. Patas, asientos y respaldos en thin instances; colisionadores invisibles solo en las patas (el auto pasa por abajo).
-  const { x: tx, z: tz, w: tw, d: td, h: th } = TABLE_K, wood = pbr("kwood", { color: "#9a6a3e", rough: 0.6 });
+  const { x: tx, z: tz, w: tw, d: td, h: th } = TABLE_K, wood = pbr("kwood", { color: "#c98a4a", rough: 0.6 });
   const tableTop = box(tw, 2, td, wood, [tx, th + 1, tz]); shadows.addShadowCaster(tableTop); tableTop.receiveShadows = true; occluders.push(tableTop);
   const legs: B.Matrix[] = [], seats: B.Matrix[] = [], backs: B.Matrix[] = [];
   for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
@@ -102,10 +102,10 @@ export function kitchenBuild() {
   thin(box(16, 1.6, 16, wood, [0, 0, 0]), seats);
   thin(box(16, 18, 1.4, wood, [0, 0, 0]), backs);
   // Lámpara colgante cálida sobre la mesa
-  merge("lamp", [cyl(0.3, 0.3, 40, M.matte("#1a1a1a"), [tx, 90, tz], undefined, 4), cyl(4, 12, 8, M.matte("#7a3a1a"), [tx, 68, tz], undefined, 14), sph(3.4, M.glow("#ffd59a"), [tx, 64.5, tz], undefined, 10)]);
+  merge("lamp", [cyl(0.3, 0.3, 40, M.matte("#1a1a1a"), [tx, 90, tz], undefined, 4), cyl(4, 12, 8, M.matte("#E53935"), [tx, 68, tz], undefined, 14), sph(3.4, M.glow("#ffd59a"), [tx, 64.5, tz], undefined, 10)]);
 
   // Tachos de basura a pedal (se abollan al chocarlos: hitHeavyProps). Fijos: heavyProps se vacía al rearmar el mundo, no por partida.
-  const binM = M.metal("#a4aab0");
+  const binM = M.plastic("#FB8C00");
   for (const [x, z] of [[-HALF + 34, -60], [-HALF + 34, -74], [HALF - 14, -30]]) {
     const b = stat(merge("tacho", [cyl(10, 9, 16, binM, [0, 8, 0], undefined, 14), cyl(10.4, 10.4, 1.2, M.matte("#2b2f36"), [0, 16.4, 0], undefined, 14), box(4, 1, 3, M.matte("#2b2f36"), [0, 0.5, 5.5])]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z]);
     registerHeavyProp(b, "drum");
@@ -115,10 +115,10 @@ export function kitchenBuild() {
 
 // Utensilios gigantes tirados en el piso: cuchara, tenedor, espátula y cucharón (obstáculos macizos con casco convexo)
 const UTENSILS: (() => B.Mesh)[] = [
-  () => merge("cuchara", [cyl(1.2, 1.2, 26, M.metal("#c9ccd1"), [-6, 1.2, 0], [0, 0, Math.PI / 2], 8), sph(9, M.metal("#c9ccd1"), [12, 1.4, 0], [1.3, 0.3, 1], 12)]),
-  () => merge("tenedor", [box(24, 1.4, 2.4, M.metal("#c9ccd1"), [-6, 0.7, 0]), box(6, 1.4, 8, M.metal("#c9ccd1"), [8, 0.7, 0]), ...[-3, -1, 1, 3].map((dz) => box(9, 1.2, 1, M.metal("#c9ccd1"), [15.5, 0.6, dz]))]),
-  () => merge("espatula", [cyl(1.6, 1.6, 18, M.plastic("#1a1a1a"), [-8, 1.6, 0], [0, 0, Math.PI / 2], 8), box(12, 0.8, 10, M.metal("#b8bcc2"), [7, 0.4, 0])]),
-  () => merge("cucharon", [cyl(1, 1, 24, M.metal("#c9ccd1"), [-6, 1.2, 0], [0, 0, Math.PI / 2], 8), sph(10, M.metal("#c9ccd1"), [12, 3, 0], [1, 0.6, 1], 12)]),
+  () => merge("cuchara", [cyl(1.2, 1.2, 26, M.metal("#FB8C00"), [-6, 1.2, 0], [0, 0, Math.PI / 2], 8), sph(9, M.metal("#FB8C00"), [12, 1.4, 0], [1.3, 0.3, 1], 12)]),
+  () => merge("tenedor", [box(24, 1.4, 2.4, M.metal("#66BB6A"), [-6, 0.7, 0]), box(6, 1.4, 8, M.metal("#66BB6A"), [8, 0.7, 0]), ...[-3, -1, 1, 3].map((dz) => box(9, 1.2, 1, M.metal("#66BB6A"), [15.5, 0.6, dz]))]),
+  () => merge("espatula", [cyl(1.6, 1.6, 18, M.plastic("#795548"), [-8, 1.6, 0], [0, 0, Math.PI / 2], 8), box(12, 0.8, 10, M.metal("#FBC02D"), [7, 0.4, 0])]),
+  () => merge("cucharon", [cyl(1, 1, 24, M.metal("#8E24AA"), [-6, 1.2, 0], [0, 0, Math.PI / 2], 8), sph(10, M.metal("#8E24AA"), [12, 3, 0], [1, 0.6, 1], 12)]),
 ];
 export function kitchenLayout() {
   toyRamps(int(1, 2), [0, 1]);

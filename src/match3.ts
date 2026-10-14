@@ -256,9 +256,9 @@ function paintMap(c: CanvasRenderingContext2D) {
   const lv = LEVELS[mapSel];
   c.fillStyle = "rgba(11,15,20,0.9)"; c.fillRect(0, TEX_PX - 58, TEX_PX, 58);
   c.textAlign = "left"; c.textBaseline = "middle";
-  c.fillStyle = M3C.texto2; c.font = "700 16px Rajdhani, sans-serif"; c.fillText(`NIVEL ${mapSel + 1} · ${lv.zone.toUpperCase()}`, 14, TEX_PX - 42);
-  c.fillStyle = M3C.texto; c.font = "700 26px Rajdhani, sans-serif"; c.fillText(lv.name.toUpperCase(), 14, TEX_PX - 18);
-  c.textAlign = "right"; c.fillStyle = M3C.amarillo; c.font = "700 18px Rajdhani, sans-serif";
+  c.fillStyle = M3C.texto2; c.font = "400 16px 'Bebas Neue', sans-serif"; c.fillText(`NIVEL ${mapSel + 1} · ${lv.zone.toUpperCase()}`, 14, TEX_PX - 42);
+  c.fillStyle = M3C.texto; c.font = "400 26px 'Bebas Neue', sans-serif"; c.fillText(lv.name.toUpperCase(), 14, TEX_PX - 18);
+  c.textAlign = "right"; c.fillStyle = M3C.amarillo; c.font = "400 18px 'Bebas Neue', sans-serif";
   c.fillText(Math.sin(T * 4) > -0.3 ? "BOTÓN: JUGAR" : "", TEX_PX - 14, TEX_PX - 18);
 }
 
@@ -353,7 +353,7 @@ function paintBoard(c: CanvasRenderingContext2D) {
   c.globalAlpha = 1;
   for (const f of floats) {
     const k = f.t / 0.9; c.globalAlpha = Math.min(1, 2 * (1 - k)); c.textAlign = "center"; c.textBaseline = "middle";
-    c.font = `700 ${f.big ? 34 : 24}px Rajdhani, sans-serif`; c.lineWidth = 4; c.strokeStyle = M3C.fondo; c.strokeText(f.txt, f.x, f.y - k * 40); c.fillStyle = f.col; c.fillText(f.txt, f.x, f.y - k * 40);
+    c.font = `400 ${f.big ? 34 : 24}px "Bebas Neue", sans-serif`; c.lineWidth = 4; c.strokeStyle = M3C.fondo; c.strokeText(f.txt, f.x, f.y - k * 40); c.fillStyle = f.col; c.fillText(f.txt, f.x, f.y - k * 40);
   }
   c.globalAlpha = 1;
   c.restore();
@@ -368,22 +368,22 @@ function paintBoard(c: CanvasRenderingContext2D) {
   if (comboTxt) {
     const k = comboTxt.t / 1.1, s = 1 + Math.max(0, 0.3 - comboTxt.t) * 2;
     c.save(); c.globalAlpha = Math.min(1, 3 * (1 - k)); c.translate(TEX_PX / 2, TEX_PX * 0.3); c.scale(s, s);
-    c.font = "700 40px Rajdhani, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.lineWidth = 6; c.strokeStyle = M3C.fondo; c.strokeText(comboTxt.txt, 0, 0); c.fillStyle = M3C.amarillo; c.fillText(comboTxt.txt, 0, 0);
+    c.font = "400 40px 'Bebas Neue', sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.lineWidth = 6; c.strokeStyle = M3C.fondo; c.strokeText(comboTxt.txt, 0, 0); c.fillStyle = M3C.amarillo; c.fillText(comboTxt.txt, 0, 0);
     c.restore();
   }
   if (banner) {
     c.fillStyle = "rgba(11,15,20,0.88)"; c.fillRect(0, TEX_PX / 2 - 30, TEX_PX, 60);
-    c.fillStyle = banner.col; c.font = "700 32px Rajdhani, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(banner.txt, TEX_PX / 2, TEX_PX / 2 + 2);
+    c.fillStyle = banner.col; c.font = "400 32px 'Bebas Neue', sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(banner.txt, TEX_PX / 2, TEX_PX / 2 + 2);
   }
   if (st.lv.hazard && st.phase === "play") { // cuenta regresiva de la trituradora
     const left = st.lv.hazard.every - (st.used % st.lv.hazard.every);
     c.fillStyle = "rgba(11,15,20,0.88)"; c.fillRect(TEX_PX - 150, 0, 150, 30);
-    c.fillStyle = left === 1 ? M3C.rojo : M3C.texto2; c.font = "700 18px Rajdhani, sans-serif"; c.textAlign = "right"; c.textBaseline = "middle";
+    c.fillStyle = left === 1 ? M3C.rojo : M3C.texto2; c.font = "400 18px 'Bebas Neue', sans-serif"; c.textAlign = "right"; c.textBaseline = "middle";
     c.fillText(left === 1 ? "TRITURADORA: YA" : `TRITURADORA: ${left}`, TEX_PX - 8, 16);
   }
   if (tool && st.phase === "play") {
     c.fillStyle = "rgba(11,15,20,0.85)"; c.fillRect(0, TEX_PX - 34, TEX_PX, 34);
-    c.fillStyle = M3C.naranja; c.font = "700 20px Rajdhani, sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(TOOL_HELP[tool], TEX_PX / 2, TEX_PX - 16);
+    c.fillStyle = M3C.naranja; c.font = "400 20px 'Bebas Neue', sans-serif"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(TOOL_HELP[tool], TEX_PX / 2, TEX_PX - 16);
   }
 }
 /** Placa de la trituradora: chapa roja con dientes y franja de peligro (caja de 2 golpes del jefe). */
@@ -425,15 +425,15 @@ function paintDisplay() {
   c.textBaseline = "middle";
   if (mode === "map" || !st) {
     const lv = LEVELS[mapSel] ?? LEVELS[0], p = prog(), stN = p.stars[lv.id] ?? 0, best = p.best[lv.id] ?? 0;
-    c.fillStyle = M3C.texto2; c.font = "700 18px Rajdhani, sans-serif"; c.textAlign = "center";
+    c.fillStyle = M3C.texto2; c.font = "400 18px 'Bebas Neue', sans-serif"; c.textAlign = "center";
     c.fillText(lv.boss ? "JEFE · NV" : "NIVEL", 74, 20);
-    c.font = "700 62px Rajdhani, sans-serif";
+    c.font = "400 62px 'Bebas Neue', sans-serif";
     c.fillStyle = "rgba(255,180,0,0.08)"; c.fillText("88", 74, 64);
     c.fillStyle = lv.boss ? M3C.error : M3C.amarillo; c.fillText(String(mapSel + 1).padStart(2, "0"), 74, 64);
     c.textAlign = "left";
-    c.fillStyle = M3C.amarillo; c.font = "700 28px Rajdhani, sans-serif";
+    c.fillStyle = M3C.amarillo; c.font = "400 28px 'Bebas Neue', sans-serif";
     c.fillText(lv.name.toUpperCase(), 166, 34);
-    c.fillStyle = M3C.texto2; c.font = "700 17px Rajdhani, sans-serif";
+    c.fillStyle = M3C.texto2; c.font = "400 17px 'Bebas Neue', sans-serif";
     c.fillText(`${lv.moves} MOVIMIENTOS · ${best ? `RÉCORD ${best} PTS` : "SIN MARCA REGISTRADA"}`, 166, 70);
     for (let k = 0; k < 3; k++) drawStar(c, W - 78 + k * 26, 32, 10, k < stN);
   } else {
@@ -443,9 +443,9 @@ function paintDisplay() {
       c.fillStyle = "rgba(255,180,0,0.07)"; c.strokeStyle = "rgba(255,180,0,0.25)"; c.lineWidth = 1;
       c.beginPath(); c.roundRect(8, 4, 132, 68, 4); c.fill(); c.stroke();
     }
-    c.fillStyle = M3C.texto2; c.font = "700 18px Rajdhani, sans-serif"; c.textAlign = "center";
+    c.fillStyle = M3C.texto2; c.font = "400 18px 'Bebas Neue', sans-serif"; c.textAlign = "center";
     c.fillText(st.movesLeft === 1 && st.phase === "play" ? "ÚLTIMO" : low ? "¡ÚLTIMOS!" : "MOVIMIENTOS", 74, 20);
-    c.font = "700 62px Rajdhani, sans-serif";
+    c.font = "400 62px 'Bebas Neue', sans-serif";
     c.fillStyle = "rgba(255,180,0,0.08)"; c.fillText("88", 74, 64);
     c.fillStyle = low ? M3C.error : M3C.amarillo; c.fillText(String(st.movesLeft).padStart(2, "0"), 74, 64);
     const gs = st.lv.goals, gw = (W - 164) / gs.length;
@@ -464,12 +464,12 @@ function paintDisplay() {
         c.fillRect(sx, 16, 2, 8);
       }
       drawGoalIcon(c, g, x + 26, 42, 48);
-      c.textAlign = "left"; c.fillStyle = done ? M3C.exito : M3C.texto; c.font = `700 ${g.k === "score" ? 26 : 36}px Rajdhani, sans-serif`;
+      c.textAlign = "left"; c.fillStyle = done ? M3C.exito : M3C.texto; c.font = `400 ${g.k === "score" ? 26 : 36}px "Bebas Neue", sans-serif`;
       c.fillText(done ? "OK" : String(left), x + 54, 44);
     });
     const totNeed = st.lv.goals.reduce((a, g) => a + g.n, 0), totLeft = st.lv.goals.reduce((a, g) => a + goalLeft(g), 0), hpPct = Math.max(0, Math.ceil((totLeft / Math.max(1, totNeed)) * 100));
     const nvTxt = st.lv.boss ? `JEFE ${hpPct}% · NV ${lvIdx + 1}/${LEVELS.length}` : `NV ${lvIdx + 1}/${LEVELS.length}`;
-    c.font = "700 15px Rajdhani, sans-serif";
+    c.font = "400 15px 'Bebas Neue', sans-serif";
     const nw = Math.ceil(c.measureText(nvTxt).width) + 12;
     c.fillStyle = "#0b0f14"; c.strokeStyle = st.lv.boss ? M3C.error : M3C.borde; c.lineWidth = 1;
     c.beginPath(); c.roundRect(W - 8 - nw, 6, nw, 20, 4); c.fill(); c.stroke();
@@ -493,7 +493,7 @@ function paintDisplay() {
       c.fillRect(sx - 1, by - 2, 2, 16);
       drawStar(c, sx, by + 6, 9, shownScore >= s);
     });
-    c.fillStyle = M3C.texto; c.font = "700 18px Rajdhani, sans-serif"; c.textAlign = "left"; c.fillText(String(Math.round(shownScore)), 12, H - 14);
+    c.fillStyle = M3C.texto; c.font = "400 18px 'Bebas Neue', sans-serif"; c.textAlign = "left"; c.fillText(String(Math.round(shownScore)), 12, H - 14);
   }
   c.fillStyle = "rgba(0,0,0,0.14)"; for (let i = 0; i < H; i += 3) c.fillRect(0, i, W, 1);
   dispTex?.update();

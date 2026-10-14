@@ -310,11 +310,11 @@ export function foldWheel(d: number, w: number, rim: string) {
 export function fencePanel() {
   // ~110 triángulos: la cerca rodea el patio con cientos de instancias (con remaches de verdad eran 460k triángulos)
   const { G, done } = kit();
-  const sheet = FOLD.painted("#3f5f63", 0.9, 101);
+  const sheet = FOLD.painted("#42A5F5", 0.2, 101); // chapa pintada de juguete, sin óxido
   G.box(2.0, 6.6, 0.06, sheet, [0, 3.5, 0]);
   for (let i = 0; i < 4; i++) G.box(0.16, 6.6, 0.16, sheet, [-0.6 + i * 0.4, 3.5, 0]); // canales (asoman de las dos caras)
   for (const y of [0.4, 6.0]) G.trimStrip([0, y, 0], undefined, 2.08, 0.22, "remaches", 0.24); // rieles remachados (trim)
-  G.box(0.22, 7.2, 0.22, FOLD.rust(), [-1.0, 3.6, 0]); // poste
+  G.box(0.22, 7.2, 0.22, FOLD.painted("#9E9E9E", 0.2, 103), [-1.0, 3.6, 0]); // poste
   G.box(2.0, 0.3, 0.5, FOLD.painted(PAL.metalOsc, 0.8, 102), [0, 6.9, 0]); // tapa (la misma que el tablón)
   return done();
 }
@@ -883,7 +883,7 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
 /** Lata de pintura (4,4 × 5): chapa, etiqueta del color, tapa, asa de alambre, chorreadura y calco. */
 export function paintCanFold(c: string) {
   const { G, done } = kit();
-  const tin = FOLD.painted("#b8bcc2", 0.7, 261), label = FOLD.painted(c, 0.6, 262);
+  const tin = FOLD.painted("#cfd2d6", 0.15, 261), label = FOLD.painted(c, 0.15, 262);
   G.cyl(4.4, 5, tin, [0, 2.5, 0], undefined, 12);
   G.cyl(4.52, 2.6, label, [0, 2.6, 0], undefined, 12);
   G.cyl(4.2, 0.22, FOLD.dark(), [0, 5.05, 0], undefined, 12); G.cyl(4.5, 0.3, tin, [0, 4.9, 0], undefined, 12);
@@ -898,7 +898,7 @@ export function paintCanFold(c: string) {
 /** Herramientas gigantes del garaje (mismo contorno que las viejas, que siguen siendo el colisionador). */
 export function toolFold(kind: 0 | 1 | 2) {
   const { G, done } = kit();
-  const steel = FOLD.painted("#8f969e", 0.7, 271);
+  const steel = FOLD.painted("#b4bac2", 0.15, 271);
   if (kind === 0) { // llave fija / combinada
     // Vástago central con acanalado drop-forged, perfil estampado y numeración diegética "10"
     G.box(14, 1, 2.6, steel, [-0.5, 0.5, 0]);
@@ -942,7 +942,7 @@ export function toolFold(kind: 0 | 1 | 2) {
       G.box(0.2, 1.02, 0.25, steel, [-8.8 + Math.cos(a) * 1.5, 0.5, Math.sin(a) * 1.5], [0, a, 0]);
     }
   } else if (kind === 1) { // martillo
-    const wood = FOLD.painted("#8a5a2b", 0.6, 272);
+    const wood = FOLD.painted("#B07A4A", 0.2, 272);
     // Mango de madera con empuñadura de goma antideslizante estriada
     G.cyl(1.6, 14.5, wood, [0.3, 0.8, 0], [0, 0, Math.PI / 2], 8);
     G.cyl(1.82, 4.5, FOLD.rubber(), [-4.8, 0.8, 0], [0, 0, Math.PI / 2], 8);
@@ -1045,15 +1045,15 @@ export function gnomeFold() {
 /** Auto real oxidado en caballetes (1 u ≈ 4,5 cm). Paneles de chapa con óxido, vidrios oscuros, ópticas emisivas. */
 export function realCarFold(lift: number, paint: string) {
   const { G, done } = kit();
-  const pm = FOLD.painted(paint, 0.95, 291), dark = FOLD.dark(), glass = FOLD.dark(), hub = Math.max(7, lift + 1);
+  const pm = FOLD.painted(paint, 0.25, 291), dark = FOLD.dark(), glass = FOLD.dark(), hub = Math.max(7, lift + 1);
   G.box(40, 13, 96, pm, [0, lift + 6.5, 0]); G.box(36, 11, 50, pm, [0, lift + 18.5, -4]);
   for (const s of [-1, 1]) { G.bend([s * 20, lift + 13, -48], [s * 20, lift + 13, 48], 0.6, pm); G.box(0.4, 7, 44, glass, [s * 18.2, lift + 19, -4]); G.box(0.6, 1.2, 80, FOLD.bare(), [s * 20.2, lift + 7, 0]); }
   G.box(33, 7, 0.4, glass, [0, lift + 19, 21.1]); G.box(33, 7, 0.4, glass, [0, lift + 19, -29.1]);
-  for (const bz of [48.5, -48.5]) G.box(41, 3, 3, FOLD.rust(), [0, lift + 3, bz]);
+  for (const bz of [48.5, -48.5]) G.box(41, 3, 3, FOLD.painted("#9E9E9E", 0.2, 292), [0, lift + 3, bz]);
   for (const bx of [-13, 13]) { G.box(8, 3, 0.5, FOLD.emissive("#e8e4d0"), [bx, lift + 9, 48.2]); G.box(8, 3, 0.5, FOLD.emissive("#8a1810"), [bx, lift + 9, -48.2]); }
   G.grate([0, lift + 8, 48.4], [0, Math.PI, 0], 14, 4, 5, FOLD.bare());
   G.decal([0, lift + 13.05, 30], [Math.PI / 2, 0, 0], "rayon", 18); G.decal([20.3, lift + 6.5, 10], [0, -Math.PI / 2, 0], "mancha", 14);
-  for (const [wx, wz] of [[-19, 31], [19, 31], [-19, -31], [19, -31]]) { G.cyl(14, 8, FOLD.rubber(), [wx, hub, wz], [0, 0, Math.PI / 2], 12); G.cyl(8, 8.4, FOLD.rust(), [wx, hub, wz], [0, 0, Math.PI / 2], 8); }
+  for (const [wx, wz] of [[-19, 31], [19, 31], [-19, -31], [19, -31]]) { G.cyl(14, 8, FOLD.rubber(), [wx, hub, wz], [0, 0, Math.PI / 2], 12); G.cyl(8, 8.4, FOLD.bare(), [wx, hub, wz], [0, 0, Math.PI / 2], 8); }
   return done(1);
 }
 /** Labio de una rampa (coordenadas locales de ramp: sube hacia +z): franja hazard en el borde de arriba. */

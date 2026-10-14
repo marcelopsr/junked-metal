@@ -87,6 +87,7 @@ export function skyTick(dt: number, time: number, cars: B.Vector3[], cam: B.Came
     if (!s.sun && k > 0) B.Quaternion.FromUnitVectorsToRef(B.Vector3.Up(), _p.subtractInPlace(s.m.position).scaleInPlace(-1).normalize(), s.m.rotationQuaternion!); // la punta, hacia donde va
     s.m.scaling.setAll(1 + 0.8 * (1 - e)); // arriba un poco más grande: que se lea al entrar en cuadro
     if (s.sun) s.m.rotation.z += dt * 6;
+    if (cam) s.m.setEnabled(B.Vector3.DistanceSquared(s.m.position, cam.globalPosition) > 625); // solo visual: a menos de 25 m de la cámara tapaba el cuadro
     const f = Math.max(0.05, R.luna_astro_radio * k);
     s.fill.scaling.set(f, 1, f);
     if (cam && (s.puff -= dt) <= 0) { // estela del pool de fx.ts (0,05 s: no acapara el pool)

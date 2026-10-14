@@ -5,6 +5,7 @@ import { M, pbr, shadows } from "../render";
 import { FOLDED_SLICE } from "../folded";
 import { carHull } from "../folded_slice";
 import { genome } from "../car_genes";
+import { miniHull, MINI_COLORS } from "./mini";
 import { type V3, box, cyl, sph, tor, tube, extrude, merge, wheelInst, shadowProxy, v, scene, setTessK } from "./common";
 
 // ---------- Autos del jugador ----------
@@ -88,6 +89,7 @@ const ANCH: Record<CarKind, { deck: [number, number]; side: V3; exh: [number, nu
   moto: { deck: [0.55, -0.9], side: [0.17, 0.46, 0.2], exh: [0.2, -0.95], seat: [0, 0.62, -0.25, 0.55], lamps: [[0, 0.46, 1.03, 0.14]], paint: "#1d6fd6", rim: "#e5e7eb" },
   monopatin: { deck: [0.3, -0.7], side: [0.25, 0.14, 0], exh: [0.1, -0.7], seat: [0, 0.55, 0, 0.55], lamps: [[0, 0.18, 0.73, 0.06]], paint: "#e8553d", rim: "#ffd23f" },
 };
+for (const k of Object.keys(ANCH)) [ANCH[k as CarKind].paint, ANCH[k as CarKind].rim] = MINI_COLORS[k]; // Mini Worlds: pintura y acento de fábrica de cada auto (paleta del arte)
 /** Colores de fábrica por zona (el garaje arranca el selector libre desde acá cuando no hay uno elegido). */
 export const factoryColor = (k: CarKind) => ({ paint: ANCH[k].paint, trim: "#c9ccd1", rim: ANCH[k].rim });
 
@@ -126,10 +128,37 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   }
   const paint = pbr(paintKey, paintMatOpts);
   const trimHex = o.trim ?? "#c9ccd1";
-  const fb = FOLDED_SLICE; // Folded (?folded2): carrocerías de chapa (carHull), ruedas foldWheel en las anclas de siempre
+  const mini = true; // dirección de arte "RC Race Mini Worlds" (models/mini.ts): reemplaza a Folded en los autos
+  const fb = FOLDED_SLICE || mini; // Folded (?folded2): carrocerías de chapa (carHull), ruedas foldWheel en las anclas de siempre
+  const fillWs = () => {
+    if (kind === "buggy") for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) ws.push({ pos: [x * q.trocha, 0, z * q.batalla], d: q.rueda_d, w: q.rueda_w });
+    else if (kind === "monster") for (const [x, z] of [[-0.8, 0.72], [0.8, 0.72], [-0.8, -0.72], [0.8, -0.72]]) ws.push({ pos: [x, -0.05, z], d: 1.15, w: 0.5 });
+    else if (kind === "formula") for (const [x, z] of [[-0.62, 0.9], [0.62, 0.9], [-0.66, -0.85], [0.66, -0.85]]) ws.push({ pos: [x, 0, z], d: z < 0 ? 0.72 : 0.6, w: z < 0 ? 0.42 : 0.3 });
+    else if (kind === "tanque") for (const z of [-0.6, -0.2, 0.2, 0.6]) for (const x of [-0.72, 0.72]) ws.push({ pos: [x, 0.02, z], d: 0.36, w: 0.34, steer: false });
+    else if (kind === "axel") for (const x of [-0.82, 0.82]) ws.push({ pos: [x, 0, 0], d: 1.6, w: 0.42, steer: false });
+    else if (kind === "helado") for (const [x, z] of [[-0.62, 0.78], [0.62, 0.78], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
+    else if (kind === "combi") for (const [x, z] of [[-0.62, 0.75], [0.62, 0.75], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
+    else if (kind === "hover") for (const [x, z] of HOVER_W) ws.push({ pos: [x, 0, z], d: 0.3, w: 0.2 });
+    else if (kind === "topadora") for (const z of [-0.7, -0.25, 0.25, 0.7]) for (const x of [-0.78, 0.78]) ws.push({ pos: [x, 0.02, z], d: 0.4, w: 0.36, steer: false });
+    else if (kind === "triciclo") for (const [x, z, d] of TRI_W) ws.push({ pos: [x, 0, z], d, w: 0.26 });
+    else if (kind === "murcielago") for (const [x, z] of [[-0.62, 0.95], [0.62, 0.95], [-0.65, -0.9], [0.65, -0.9]]) ws.push({ pos: [x, 0, z], d: z < 0 ? 0.7 : 0.58, w: z < 0 ? 0.4 : 0.3 });
+    else if (kind === "misterio") for (const [x, z] of [[-0.62, 0.8], [0.62, 0.8], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
+    else if (kind === "clasico") for (const [x, z] of [[-0.56, 0.82], [0.56, 0.82], [-0.56, -0.85], [0.56, -0.85]]) ws.push({ pos: [x, 0, z], d: 0.56, w: 0.26 });
+    else if (kind === "jeep") for (const [x, z] of [[-0.66, 0.7], [0.66, 0.7], [-0.66, -0.7], [0.66, -0.7]]) ws.push({ pos: [x, 0, z], d: 0.72, w: 0.32 });
+    else if (kind === "moto") for (const z of [0.85, -0.85]) ws.push({ pos: [0, 0, z], d: 0.8, w: 0.2 });
+    else if (kind === "monopatin") for (const [x, z] of [[-0.2, 0.5], [0.2, 0.5], [-0.2, -0.5], [0.2, -0.5]]) ws.push({ pos: [x, 0, z], d: 0.28, w: 0.14 });
+    else for (const [x, z] of [[-0.46, 0.66], [0.46, 0.66], [-0.46, -0.66], [0.46, -0.66]]) ws.push({ pos: [x, 0, z], d: 0.52, w: 0.18 });
+  };
+  let scaled = false;
   const useGlb = !fb && !!carGlbTpl(kind);
   const glbHull = useGlb ? carGlbHull(kind, o.paint ?? A.paint, trimHex) : null;
   if (glbHull) parts = [glbHull];
+  else if (mini) { // los anclajes de rueda (con sus genes) se fijan antes: la carrocería se arma entre ellas
+    fillWs();
+    if (q.rueda_k !== undefined && !scaled) for (const w of ws) { w.pos = [w.pos[0] * (q.trocha_k ?? 1), w.pos[1], w.pos[2] * (q.batalla_k ?? 1)]; w.d *= q.rueda_k; }
+    scaled = true;
+    ({ parts, stock } = miniHull(kind, paint, o.trim ?? A.rim, LAMPS[o.lamp ?? "calido"]?.[0] ?? LAMPS.calido[0], ws, CARS_SIZE[kind]));
+  }
   else if (fb) parts = carHull(kind, paint, LAMPS[o.lamp ?? "calido"]?.[0] ?? LAMPS.calido[0]); // ruedas y alerón de serie: bloque de abajo
   else if (kind === "buggy") {
     parts = [
@@ -287,24 +316,8 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
 
   // Ruedas (mismas anclas con hull GLB o procedural)
   if ((useGlb || fb) && ws.length === 0) {
-    if (kind === "buggy") for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) ws.push({ pos: [x * q.trocha, 0, z * q.batalla], d: q.rueda_d, w: q.rueda_w });
-    else if (kind === "monster") for (const [x, z] of [[-0.8, 0.72], [0.8, 0.72], [-0.8, -0.72], [0.8, -0.72]]) ws.push({ pos: [x, -0.05, z], d: 1.15, w: 0.5 });
-    else if (kind === "formula") for (const [x, z] of [[-0.62, 0.9], [0.62, 0.9], [-0.66, -0.85], [0.66, -0.85]]) ws.push({ pos: [x, 0, z], d: z < 0 ? 0.72 : 0.6, w: z < 0 ? 0.42 : 0.3 });
-    else if (kind === "tanque") for (const z of [-0.6, -0.2, 0.2, 0.6]) for (const x of [-0.72, 0.72]) ws.push({ pos: [x, 0.02, z], d: 0.36, w: 0.34, steer: false });
-    else if (kind === "axel") for (const x of [-0.82, 0.82]) ws.push({ pos: [x, 0, 0], d: 1.6, w: 0.42, steer: false });
-    else if (kind === "helado") for (const [x, z] of [[-0.62, 0.78], [0.62, 0.78], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
-    else if (kind === "combi") for (const [x, z] of [[-0.62, 0.75], [0.62, 0.75], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
-    else if (kind === "hover") for (const [x, z] of HOVER_W) ws.push({ pos: [x, 0, z], d: 0.3, w: 0.2 });
-    else if (kind === "topadora") for (const z of [-0.7, -0.25, 0.25, 0.7]) for (const x of [-0.78, 0.78]) ws.push({ pos: [x, 0.02, z], d: 0.4, w: 0.36, steer: false });
-    else if (kind === "triciclo") for (const [x, z, d] of TRI_W) ws.push({ pos: [x, 0, z], d, w: 0.26 });
-    else if (kind === "murcielago") for (const [x, z] of [[-0.62, 0.95], [0.62, 0.95], [-0.65, -0.9], [0.65, -0.9]]) ws.push({ pos: [x, 0, z], d: z < 0 ? 0.7 : 0.58, w: z < 0 ? 0.4 : 0.3 });
-    else if (kind === "misterio") for (const [x, z] of [[-0.62, 0.8], [0.62, 0.8], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
-    else if (kind === "clasico") for (const [x, z] of [[-0.56, 0.82], [0.56, 0.82], [-0.56, -0.85], [0.56, -0.85]]) ws.push({ pos: [x, 0, z], d: 0.56, w: 0.26 });
-    else if (kind === "jeep") for (const [x, z] of [[-0.66, 0.7], [0.66, 0.7], [-0.66, -0.7], [0.66, -0.7]]) ws.push({ pos: [x, 0, z], d: 0.72, w: 0.32 });
-    else if (kind === "moto") for (const z of [0.85, -0.85]) ws.push({ pos: [0, 0, z], d: 0.8, w: 0.2 });
-    else if (kind === "monopatin") for (const [x, z] of [[-0.2, 0.5], [0.2, 0.5], [-0.2, -0.5], [0.2, -0.5]]) ws.push({ pos: [x, 0, z], d: 0.28, w: 0.14 });
-    else for (const [x, z] of [[-0.46, 0.66], [0.46, 0.66], [-0.46, -0.66], [0.46, -0.66]]) ws.push({ pos: [x, 0, z], d: 0.52, w: 0.18 });
-    if (kind === "buggy") {
+    fillWs();
+    if (mini) { /* alerón y ruedas: miniHull */ } else if (kind === "buggy") {
       const sh = q.aleron_alto - 0.9; // alerón de serie (genes del buggy); los soportes estiran la punta, la base queda
       stock = [
         box(q.aleron_ancho, 0.05, q.aleron_cuerda, M.plastic("#ffc300"), [0, q.aleron_alto, -1.0], [q.aleron_incl, 0, 0]),
@@ -941,7 +954,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   if (!useGlb || pilotId !== "soldadito") for (const m of pilotParts(pilotId)) { m.position.scaleInPlace(ps).addInPlaceFromFloats(px, py, pz); m.scaling.scaleInPlace(ps); parts.push(m); }
 
   // Antena, siempre: es un auto RC
-  if (kind !== "tanque") parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#f97316"), [0.38, 1.6, -0.7]));
+  if (!mini && kind !== "tanque") parts.push(cyl(0.03, 0.03, 1.3, M.metal("#111"), [0.38, 0.95, -0.7], undefined, 4), sph(0.12, M.plastic("#f97316"), [0.38, 1.6, -0.7]));
   const rim = o.rim ?? A.rim;
   // Hull GLB ya está aplanado (vertex color): fusionarlo con piezas del garaje suele hacer fallar MergeMeshes.
   let body: B.Mesh;
@@ -959,17 +972,17 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
   if (kind !== "tanque") {
     const [bw, bh, bl] = CARS_SIZE[kind];
     const ax = bw * 0.35, ay = bh * 0.7, az = -bl * 0.42;
-    ant = cyl(0.007, 0.007, 0.65, M.metal("#71717a"), [0, 0.325, 0], undefined, 4);
+    ant = cyl(mini ? 0.022 : 0.007, mini ? 0.022 : 0.007, 0.65, mini ? M.matte("#17181c") : M.metal("#71717a"), [0, 0.325, 0], undefined, mini ? 6 : 4);
     ant.position.set(ax, ay, az);
     ant.parent = body;
     // Pequeño banderín o capuchón en el extremo
-    const cap = cyl(0.004, 0.004, 0.02, M.plastic("#ef4444"), [0, 0.64, 0], undefined, 4);
+    const cap = mini ? sph(0.1, M.plastic("#E53935"), [0, 0.66, 0], undefined, 4) : cyl(0.004, 0.004, 0.02, M.plastic("#ef4444"), [0, 0.64, 0], undefined, 4); // punta roja
     cap.parent = ant;
     cast.push(ant);
   }
   if (q.rueda_k !== undefined) for (const w of ws) { w.pos = [w.pos[0] * (q.trocha_k ?? 1), w.pos[1], w.pos[2] * (q.batalla_k ?? 1)]; w.d *= q.rueda_k; } // genes de rueda (car_genes.ts): 1 = original
   const wheels = ws.map((w) => {
-    const { inst: m, cast: c } = wheelInst(w.d, w.w, rim, fb && (!o.tires || o.tires === "serie") && kind !== "tanque" ? "fold" : o.tires === "serie" ? "" : o.tires === "lisas" ? "lisa" : o.tires ?? "");
+    const { inst: m, cast: c } = wheelInst(w.d, w.w, rim, mini && (!o.tires || o.tires === "serie") ? "mini" : fb && (!o.tires || o.tires === "serie") && kind !== "tanque" ? "fold" : o.tires === "serie" ? "" : o.tires === "lisas" ? "lisa" : o.tires ?? "");
     m.position = v(w.pos);
     m.parent = body;
     cast.push(c);

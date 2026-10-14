@@ -1,0 +1,28 @@
+
+escenario                            ms    p95    cpu  draws  tris k mallas  heap MB   vs 2026-10-12-0145.json
+pc-lab-noche                        6.5   10.9    3.3    304   622.1    988     93.3   
+pc-lab-jefes                        6.7    8.4    3.8    341   630.7   1036     95.8   
+pc-lab-niebla                       5.2    6.9    2.6    248   580.1    986     94.2   
+pc-lab-farol                        5.2    7.1    2.6    252   585.5    986     95.5   
+pc-lab-hormigas300                  9.3   13.2    5.9    305  1170.6   1286    100.9   
+pc-lab-preset-bajo                  3.7    4.5    1.5     77   251.6    986    107.8   
+pc-lab-fsr-fxaa                     5.1    7.4    3.0    302   621.5    988    109.8   
+pc-partida-curso                    5.3   11.5    2.9    187   588.8   1148     99.1   ms -63% draws -5% tris +2% heap +11%  ▼ más rápido
+pc-partida-cartas                   3.8    7.3    1.4    117   526.4   1028     97.1   ms -73% draws -32% tris +3% heap +8%  ▼ más rápido
+pc-partida-pausa                    4.3    5.1    1.4    166   540.5    976     95.6   ms -67% draws -7% tris +4% heap +7%  ▼ más rápido
+pc-partida_llena-llena              9.1   16.8    5.8    340   588.4   1463    112.8   
+pc-encore1-luna                     3.8    5.9    1.7     88   278.1    228     69.8   
+pc-encore1-final                    3.1    4.9    0.9     70   217.4    186     76.1   
+cel-lab-noche                       3.9    6.6    2.2    173   319.0    988     88.9   
+cel-lab-jefes                       4.5    7.2    2.7    218   337.6   1036     92.2   
+cel-lab-niebla                      3.2    6.1    1.6    137   279.1    986     90.8   
+cel-lab-farol                       3.2    6.6    1.6    140   279.3    986     90.3   
+cel-lab-hormigas300                 7.4    8.9    5.0    173   517.6   1286     99.3   
+cel-lab-preset-bajo                 2.7    4.1    1.4     44   223.8    986     99.5   
+cel-lab-fsr-fxaa                    3.5    4.7    1.9    174   318.8    988    100.8   
+cel-partida-curso                   4.0    6.3    2.4     99   285.7   1147     95.8   
+cel-partida-cartas                  3.4    5.4    1.3     80   272.3   1029     94.3   
+cel-partida-pausa                   2.7    5.0    1.0     79   258.9    976     91.2   
+cel-partida_llena-llena             6.7    9.6    4.7    195   279.0   1464    105.9   
+
+carga (ms desde el inicio): pc-lab portada 756 · listo 1689 | pc-partida portada 576 · listo 1535 (antes 621/1732) | pc-partida_llena portada 596 · listo 1567 | pc-encore1 portada 653 · listo 1542 | cel-lab portada 537 · listo 1510 | cel-partida portada 546 · listo 1513 | cel-partida_llena portada 550 · listo 1491

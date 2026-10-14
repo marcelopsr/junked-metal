@@ -173,7 +173,7 @@ export function drawGoalIcon(c: C, g: Goal, cx: number, cy: number, s: number) {
   else if (g.k === "rust") { c.fillStyle = M3C.fondo2; c.fillRect(cx - s * 0.42, cy - s * 0.42, s * 0.84, s * 0.84); drawRust(c, cx - s * 0.42, cy - s * 0.42, s * 0.84); }
   else if (g.k === "chain") { drawPiece(c, 4, cx, cy, s * 0.8); drawChain(c, cx, cy, s * 0.9); }
   else if (g.k === "cargo") drawCargo(c, cx, cy, s * 0.36);
-  else { c.fillStyle = M3C.amarillo; c.font = `700 ${s * 0.42}px Rajdhani, sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("PTS", cx, cy); }
+  else { c.fillStyle = M3C.amarillo; c.font = `400 ${s * 0.42}px "Bebas Neue", sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("PTS", cx, cy); }
 }
 export function drawToolIcon(c: C, tool: Tool, cx: number, cy: number, s: number) {
   const r = s * 0.4;
@@ -241,7 +241,7 @@ export function drawMap(c: C, W: number, m: MapView) {
     const top = ZONES[i + 1]?.y ?? 0;
     c.fillStyle = z.tint; c.fillRect(0, top, W, z.y - top);
     c.fillStyle = "rgba(255,255,255,0.04)"; for (let yy = top; yy < z.y; yy += 22) c.fillRect(0, yy, W, 1);
-    c.save(); c.fillStyle = "rgba(181,101,29,0.35)"; c.font = "700 20px Rajdhani, sans-serif"; c.textAlign = "left"; c.fillText(z.name, 12, z.y - 14); c.restore();
+    c.save(); c.fillStyle = "rgba(181,101,29,0.35)"; c.font = "400 20px 'Bebas Neue', sans-serif"; c.textAlign = "left"; c.fillText(z.name, 12, z.y - 14); c.restore();
   });
   drawScenery(c, W, m.t);
   // camino de huellas: encendido hasta el último nivel abierto
@@ -255,7 +255,7 @@ export function drawMap(c: C, W: number, m: MapView) {
   c.restore();
   // marco de título fijo
   c.fillStyle = "rgba(11,15,20,0.88)"; c.fillRect(0, 0, W, 44);
-  c.fillStyle = M3C.amarillo; c.font = "700 28px Rajdhani, sans-serif"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("RUTA DEL DESGUACE", 14, 23);
+  c.fillStyle = M3C.amarillo; c.font = "400 28px 'Bebas Neue', sans-serif"; c.textAlign = "left"; c.textBaseline = "middle"; c.fillText("RUTA DEL DESGUACE", 14, 23);
   const tot = m.stars.reduce((a, b) => a + b, 0);
   c.textAlign = "right"; c.fillStyle = M3C.texto; c.fillText(`${tot}/${m.levels.length * 3}`, W - 14, 23);
   drawStar(c, W - 92, 22, 11, true);
@@ -286,7 +286,7 @@ function drawNode(c: C, i: number, lv: LevelDef, m: MapView) {
   if (locked) { // candado
     c.strokeStyle = M3C.texto2; c.lineWidth = 3; c.beginPath(); c.arc(x, y - 4, 6, Math.PI, 0); c.stroke();
     c.fillStyle = M3C.texto2; c.fillRect(x - 8, y - 3, 16, 12);
-  } else { c.fillStyle = M3C.texto; c.font = `700 ${lv.boss ? 32 : 28}px Rajdhani, sans-serif`; c.fillText(String(i + 1), x, y + 1); }
+  } else { c.fillStyle = M3C.texto; c.font = `400 ${lv.boss ? 32 : 28}px "Bebas Neue", sans-serif`; c.fillText(String(i + 1), x, y + 1); }
   if (lv.boss) {
     const by = y - r - 9;
     c.fillStyle = locked ? "#2a2f37" : M3C.rojo;
@@ -294,7 +294,7 @@ function drawNode(c: C, i: number, lv: LevelDef, m: MapView) {
     c.lineWidth = 2;
     c.beginPath(); c.roundRect(x - 22, by - 7, 44, 14, 3); c.fill(); c.stroke();
     c.fillStyle = locked ? M3C.texto2 : "#ffffff";
-    c.font = "800 11px Rajdhani, sans-serif";
+    c.font = "400 11px 'Bebas Neue', sans-serif";
     c.fillText("JEFE", x, by + 1);
   }
   if (done) for (let s = 0; s < 3; s++) drawStar(c, x - 22 + s * 22, y + r + 11, 10, s < m.stars[i]);

@@ -1,5 +1,5 @@
 import * as B from "@babylonjs/core";
-import { box, cyl, merge, sph, tube } from "../models";
+import { box, cyl, merge, rbox, sph, tube } from "../models";
 import { M, pbr, shadows, TEX } from "../render";
 import { rng } from "../rng";
 import { HALF, bare, decal, floor, house, leafM, occluders, onClear, realCar, scene, stat, tex, tree, woodM } from "./common";
@@ -15,13 +15,17 @@ export function frontBuild() {
   const vereda = decal("vereda", HALF * 2 + 60, 16, 0, -HALF + 8, pbr("vereda", { color: "#ffffff", rough: 0.85, tex: vt }), 0.03);
   vt.uScale = Math.round((HALF * 2 + 60) / 16); vt.vScale = 1;
   vereda.receiveShadows = true;
+  // Calle de juguete: asfalto gris azulado con rayas amarillas y blancas, cordón rojo/blanco en el borde de la vereda
+  const toy = (c: string, rough = 0.55) => pbr(`toy${c}`, { color: c, rough, metal: 0 });
   merge("street", [
-    box(HALF * 2 + 60, 1.4, 2, M.matte("#a8a8a0"), [0, 0.7, -HALF - 1]),
-    box(HALF * 2 + 260, 0.1, 90, M.matte("#2a2c2e"), [0, 0.02, -HALF - 47]),
-    ...Array.from({ length: 16 }, (_, i) => box(12, 0.12, 1.2, M.matte("#c9a227"), [-HALF - 60 + i * 28, 0.05, -HALF - 47])),
-    cyl(2, 2.4, 90, M.metal("#5a6068"), [70, 45, -HALF - 5], undefined, 8), box(2, 2, 24, M.metal("#5a6068"), [70, 89, -HALF - 15]),
+    ...Array.from({ length: Math.ceil((HALF * 2 + 60) / 8) }, (_, i) => box(8, 1.4, 2, toy(i % 2 ? "#FAFAFA" : "#E53935", 0.45), [-HALF - 26 + i * 8, 0.7, -HALF - 1])),
+    box(HALF * 2 + 260, 0.1, 90, toy("#5b6573", 0.85), [0, 0.02, -HALF - 47]),
+    ...Array.from({ length: 16 }, (_, i) => box(12, 0.12, 1.2, toy("#FBC02D"), [-HALF - 60 + i * 28, 0.05, -HALF - 47])),
+    box(HALF * 2 + 260, 0.12, 0.8, toy("#FAFAFA"), [0, 0.05, -HALF - 8]), box(HALF * 2 + 260, 0.12, 0.8, toy("#FAFAFA"), [0, 0.05, -HALF - 86]),
+    cyl(2, 2.4, 90, toy("#9E9E9E"), [70, 45, -HALF - 5], undefined, 8), box(2, 2, 24, toy("#9E9E9E"), [70, 89, -HALF - 15]),
     box(5, 2, 8, M.glow("#ffcf8a"), [70, 87.5, -HALF - 25]),
   ]);
+  cityBlocks(toy);
   realCar(-50, -HALF - 20, Math.PI / 2, 4, false, "#2f4f7a"); // estacionado en la calle (solo se ve)
   // Camino de lajas a la puerta
   const stone = pbr("stone", { color: "#ffffff", rough: 0.9, tex: tex("stone", TEX.stone) });
@@ -52,6 +56,25 @@ export function frontBuild() {
   for (let k = -2; k <= 2; k++) bare.push({ x: cx + k * 10, z: cz, r: 7.5 }); // para la IA y el bot: el cantero es un obstáculo
   ramp(brick, cx + 34, cz, -Math.PI / 2, 9, 10, 2.6, 0, 0, 0, [slopeBoard(9.4, 10, 2.6, woodM())]);
   tree(78, 70);
+}
+
+/** Ciudad miniatura al fondo, al otro lado de la calle: edificios de bloques (ladrillos de juguete con tetones en el techo y ventanas). Solo visual, sin colisión ni rng(). */
+function cityBlocks(toy: (c: string, rough?: number) => B.Material) {
+  const cols = ["#E53935", "#FBC02D", "#42A5F5", "#66BB6A", "#FB8C00", "#8E24AA", "#FAFAFA"], z = -HALF - 120, parts: B.Mesh[] = [];
+  let x = -HALF - 190;
+  for (let i = 0; x < HALF + 190; i++) {
+    const w = 34 + ((i * 7) % 5) * 7, h = 36 + ((i * 11) % 6) * 14, d = 36, c = cols[i % cols.length], cx = x + w / 2;
+    parts.push(rbox(w, h, d, 1.2, toy(c, 0.5), [cx, h / 2, z]), rbox(w + 2, 2.4, d + 2, 0.8, toy("#FAFAFA", 0.5), [cx, h + 1.2, z]));
+    for (let sx = -w / 2 + 4; sx < w / 2 - 2; sx += 7) for (let sy = 7; sy < h - 6; sy += 11) {
+      parts.push(box(4, 5.5, 0.6, toy(((i + sx + sy) | 0) % 3 ? "#B3E5FC" : "#FFF59D", 0.2), [cx + sx + 2, sy + 2.7, z + d / 2 + 0.1]));
+    }
+    for (let sx = -w / 2 + 4; sx < w / 2 - 2; sx += 6) for (const sz of [-6, 6]) parts.push(cyl(2.4, 2.4, 1.2, toy(c, 0.5), [cx + sx, h + 3, z + sz], undefined, 10));
+    parts.push(rbox(8, 1, d * 0.5, 0.3, toy("#795548", 0.7), [cx, 0.5, z + d / 2 + d * 0.25])); // acera de entrada
+    x += w + 4;
+  }
+  const city = merge("cityBlocks", parts);
+  city.isPickable = false; city.receiveShadows = true;
+  shadows.addShadowCaster(city);
 }
 
 export function frontLayout() {

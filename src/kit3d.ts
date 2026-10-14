@@ -128,7 +128,7 @@ export function marquee(c: Ctx) {
   gear(c, 46, 72, 26, M3C.naranja); gear(c, W - 46, 72, 26, M3C.naranja);
   c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round";
   const word = (t: string, y: number, size: number, top: string, bot: string) => {
-    c.font = `700 ${size}px Rajdhani, sans-serif`;
+    c.font = `400 ${size}px 'Bebas Neue', sans-serif`;
     c.lineWidth = 10; c.strokeStyle = "#1a0d06"; c.strokeText(t, W / 2, y);
     const g = c.createLinearGradient(0, y - size / 2, 0, y + size / 2); g.addColorStop(0, top); g.addColorStop(1, bot);
     c.fillStyle = g; c.fillText(t, W / 2, y);
@@ -143,18 +143,18 @@ export function sideDecal(c: Ctx) {
   c.fillStyle = "#e9dcc4"; c.fillRect(110, 70, 36, 44); // tuerca/calavera simplificada
   c.fillStyle = M3C.fondo; c.fillRect(116, 82, 9, 9); c.fillRect(132, 82, 9, 9);
   c.fillStyle = "#14100d"; c.fillRect(38, 190, 180, 170);
-  c.fillStyle = "#e9dcc4"; c.textAlign = "center"; c.font = "700 46px Rajdhani, sans-serif";
-  c.font = "700 38px Rajdhani, sans-serif"; ["PLAY", "FIX - FIX", "REPEAT"].forEach((t, i) => c.fillText(t, 128, 238 + i * 52));
+  c.fillStyle = "#e9dcc4"; c.textAlign = "center"; c.font = "400 46px 'Bebas Neue', sans-serif";
+  c.font = "400 38px 'Bebas Neue', sans-serif"; ["PLAY", "FIX - FIX", "REPEAT"].forEach((t, i) => c.fillText(t, 128, 238 + i * 52));
 }
 
 export function poster(c: Ctx) {
   c.fillStyle = "#c9a36a"; c.fillRect(0, 0, 256, 360);
   c.fillStyle = "#2a1d14"; c.fillRect(14, 14, 228, 332);
-  c.fillStyle = M3C.naranja; c.textAlign = "center"; c.font = "700 44px Rajdhani, sans-serif";
+  c.fillStyle = M3C.naranja; c.textAlign = "center"; c.font = "400 44px 'Bebas Neue', sans-serif";
   c.fillText("GOOD METAL", 128, 64);
   gear(c, 128, 180, 62, "#b8612a");
   c.fillStyle = "#e9c48a"; c.fillRect(102, 150, 52, 56); c.fillStyle = "#2a1d14"; c.fillRect(110, 166, 12, 12); c.fillRect(134, 166, 12, 12);
-  c.fillStyle = "#e9c48a"; c.font = "700 32px Rajdhani, sans-serif"; c.fillText("BRIGHTER DAYS", 128, 320);
+  c.fillStyle = "#e9c48a"; c.font = "400 32px 'Bebas Neue', sans-serif"; c.fillText("BRIGHTER DAYS", 128, 320);
 }
 
 // ---------- Utilería del taller (en unidades libres: `u` = lado de una caja chica) ----------
@@ -202,12 +202,12 @@ export const SIGNS: Record<string, { w: number; h: number; draw: (c: Ctx) => voi
   playfix: { w: 256, h: 384, draw: sideDecal },
   junked: { w: 512, h: 144, draw: (c) => {
     c.fillStyle = M3C.fondo; c.fillRect(0, 0, 512, 144); gear(c, 46, 72, 26, M3C.naranja); gear(c, 466, 72, 26, M3C.naranja);
-    c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round"; c.font = "700 60px Rajdhani, sans-serif";
+    c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round"; c.font = "400 60px 'Bebas Neue', sans-serif";
     c.lineWidth = 10; c.strokeStyle = "#1a0d06"; c.strokeText("JUNKED METAL", 256, 72); c.fillStyle = M3C.amarillo; c.fillText("JUNKED METAL", 256, 72);
   } },
   specimens: { w: 384, h: 128, draw: (c) => {
     c.fillStyle = "#c9a36a"; c.fillRect(0, 0, 384, 128); c.fillStyle = "#2a1d14"; c.fillRect(8, 8, 368, 112);
-    c.fillStyle = M3C.amarilloClaro; c.textAlign = "center"; c.textBaseline = "middle"; c.font = "700 54px Rajdhani, sans-serif"; c.fillText("SPECIMENS", 192, 66);
+    c.fillStyle = M3C.amarilloClaro; c.textAlign = "center"; c.textBaseline = "middle"; c.font = "400 54px 'Bebas Neue', sans-serif"; c.fillText("SPECIMENS", 192, 66);
   } },
 };
 /** Piezas del kit. `c` = color de la variación (pintura de la chapa). */

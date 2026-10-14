@@ -33,3 +33,4 @@ server/node_modules/
 
 # Resultados de npm run carga
 .carga/
+.venv-ref/

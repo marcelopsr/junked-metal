@@ -15,7 +15,7 @@ import { carModel } from "./models";
 import { photoOn, photoApply } from "./photo-mode";
 import { evFog } from "./moon_events";
 import { ambient, tickRain } from "./fx";
-import { setLamp, shadows } from "./render";
+import { LOOK, setDof, setLamp, shadows } from "./render";
 import { underRoof, zoneDust } from "./world";
 import { rainSfx } from "./sfx";
 import { ensure } from "./loading";
@@ -23,6 +23,10 @@ import { T_BICHOS } from "./run_loader";
 
 // Cámara: seguimiento de partida (modos CAMS, luna, mesa de menú) y diorama de menús. Estado propio acá; lo compartido entra por initCameraRig.
 const R = BAL.ritmo;
+// Cámara de maqueta (diorama de juguete): FOV cerrado = 0,7 × el de Configuración (49° → ~34°, 0,6 rad) y distancia ×1,45 para conservar el encuadre
+// (tan(17°)/tan(24,5°) ≈ 0,67). Las proporciones back/up de CAMS no cambian, así que el cabeceo sigue ~41° (modo actual).
+const DIORAMA_FOV = 0.7, DIORAMA_DIST = 1.45;
+const DOF_FULL = 45, DOF_OFF = 90; // m: distancia cámara-auto hasta la que el DOF es pleno / desde la que se apaga
 export interface CameraContext {
   readonly engine: B.AbstractEngine;
   readonly scene: B.Scene;
@@ -116,7 +120,7 @@ export function cameraTick(dt: number) {
       const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 22;
       ambient("fly", new B.Vector3(c.lead.car.pos.x + Math.cos(a) * r, 0.5 + Math.random() * 2.5, c.lead.car.pos.z + Math.sin(a) * r));
     }
-    c.cam.fov = (save.fov * Math.PI) / 180; // Campo de visión (Configuración → Imagen): solo en partida; los encuadres de los menús usan el de fábrica
+    c.cam.fov = (save.fov * Math.PI) / 180 * DIORAMA_FOV; // Campo de visión (Configuración → Imagen): solo en partida; los encuadres de los menús usan el de fábrica
     const back = MOON.on ? W(Math.sin(yaw), 0, Math.cos(yaw), c.lead.car.pos) : new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw)); // luna: c.camYaw es del marco local del auto
     // Bajo la mesa la cámara baja y se acerca (roofK suaviza entrar y salir); afuera vuelve al zoom del usuario
     roofK += ((underRoof(c.lead.car.pos) ? 1 : 0) - roofK) * (1 - Math.exp(-3 * dt));
@@ -132,7 +136,7 @@ export function cameraTick(dt: number) {
     const lab = c.lab.on && save.camMode === "actual", P = CAMS.actual;
     const gb = B.Scalar.Lerp(lab ? c.lab.back : cm2.back, P.back, roofK), gl = B.Scalar.Lerp(cm2.look, P.look, roofK);
     let gu = B.Scalar.Lerp(lab ? c.lab.up : cm2.up, P.up, roofK);
-    const zm = (c.lab.on ? 1 : save.zoom) * outroZ * (save.camMode === "dinamica" ? dynK : 1), zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
+    const zm = (c.lab.on ? 1 : save.zoom) * DIORAMA_DIST * outroZ * (save.camMode === "dinamica" ? dynK : 1) * (MOON.on ? 0.82 : 1), zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
     gu *= zu;
     if (save.camMode === "cenital") { // la esquina del cuadro (a ras del piso) no pasa del anillo de aparición menos 3 m, con cualquier zoom, FOV y aspecto
       const th = Math.tan(c.cam.fov / 2), asp = c.engine.getAspectRatio(c.cam);
@@ -147,6 +151,12 @@ export function cameraTick(dt: number) {
       const to = c.lead.car.pos.add(new B.Vector3(0, 0.6, 0)).subtractInPlace(c.cam.position), len = to.length();
       const ray = new B.Ray(c.cam.position, to.scaleInPlace(1 / len), len);
       for (const m of c.occluders) m.visibility = ray.intersectsMesh(m, true).hit ? 0.999 : 1;
+    }
+    // Profundidad de campo de maqueta: foco en el auto, medido sobre el eje de la cámara (igual que en los menús)
+    if (c.low) setDof(0); else {
+      const fwd = c.camTarget.subtract(c.cam.position).normalize(), fd = Math.max(1, B.Vector3.Dot(c.lead.car.pos.subtract(c.cam.position), fwd));
+      const k = LOOK.dof * B.Scalar.Clamp((DOF_OFF - fd) / (DOF_OFF - DOF_FULL), 0, 1); // cámara alta/lejos: el desenfoque se apaga (a 45 m o menos pleno, a 90 m o más nada)
+      if (k < 0.02) setDof(0); else setDof(fd, k);
     }
   } else {
     // Diorama: cada pantalla del menú tiene su encuadre en su escena (SCENES, menuscene.ts); la cámara viaja con lerp suave y se mece un poco

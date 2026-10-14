@@ -208,15 +208,15 @@ function decalTex() {
     c.fillStyle = fill; c.beginPath(); c.moveTo(x, y - s + 12); c.lineTo(x + s * 1.1 - 14, y + s * 0.8 - 6); c.lineTo(x - s * 1.1 + 14, y + s * 0.8 - 6); c.fill();
   };
   const cell = (i: number, draw: (x: number, y: number) => void) => { const x = (i % 4) * 128 + 64, y = ((i / 4) | 0) * 128 + 64; draw(x, y); };
-  cell(0, (x, y) => { tri(x, y, 52, PAL.amarillo, PAL.fondo); c.fillStyle = PAL.fondo; c.font = "700 64px Rajdhani, sans-serif"; c.fillText("!", x, y + 10); });
-  cell(1, (x, y) => { c.font = "700 92px Rajdhani, sans-serif"; c.lineWidth = 8; c.strokeStyle = PAL.fondo; c.strokeText("07", x, y + 4); c.fillStyle = PAL.texto; c.fillText("07", x, y + 4); });
+  cell(0, (x, y) => { tri(x, y, 52, PAL.amarillo, PAL.fondo); c.fillStyle = PAL.fondo; c.font = "400 64px 'Bebas Neue', sans-serif"; c.fillText("!", x, y + 10); });
+  cell(1, (x, y) => { c.font = "400 92px 'Bebas Neue', sans-serif"; c.lineWidth = 8; c.strokeStyle = PAL.fondo; c.strokeText("07", x, y + 4); c.fillStyle = PAL.texto; c.fillText("07", x, y + 4); });
   cell(2, (x, y) => { c.fillStyle = PAL.amarillo; c.beginPath(); [[-50, -16], [8, -16], [8, -42], [54, 0], [8, 42], [8, 16], [-50, 16]].forEach(([a, b]) => c.lineTo(x + a, y + b)); c.fill(); });
   cell(3, (x, y) => {
     c.fillStyle = "#e9dcc4"; c.beginPath(); c.arc(x, y - 10, 40, 0, 7); c.fill(); c.fillRect(x - 24, y + 14, 48, 30);
     c.fillStyle = PAL.fondo; c.beginPath(); c.arc(x - 16, y - 10, 11, 0, 7); c.arc(x + 16, y - 10, 11, 0, 7); c.fill();
     for (let k = -1; k <= 1; k++) c.fillRect(x + k * 12 - 3, y + 24, 6, 20);
   });
-  cell(4, (x, y) => { c.fillStyle = PAL.grisChapa; c.fillRect(x - 58, y - 26, 116, 52); c.fillStyle = PAL.fondo; c.fillRect(x - 52, y - 20, 104, 40); c.fillStyle = PAL.amarillo; c.font = "700 34px Rajdhani, sans-serif"; c.fillText("JM-04", x, y + 2); });
+  cell(4, (x, y) => { c.fillStyle = PAL.grisChapa; c.fillRect(x - 58, y - 26, 116, 52); c.fillStyle = PAL.fondo; c.fillRect(x - 52, y - 20, 104, 40); c.fillStyle = PAL.amarillo; c.font = "400 34px 'Bebas Neue', sans-serif"; c.fillText("JM-04", x, y + 2); });
   cell(5, (x, y) => { c.strokeStyle = "rgba(200,205,210,.85)"; for (let k = 0; k < 6; k++) { c.lineWidth = 1 + r() * 2.5; c.beginPath(); const a = y - 40 + r() * 80; c.moveTo(x - 58, a); c.lineTo(x + 58, a - 30 + r() * 20); c.stroke(); } });
   cell(6, (x, y) => { c.fillStyle = "rgba(14,10,6,.8)"; for (let k = 0; k < 14; k++) { c.beginPath(); c.arc(x + (r() - 0.5) * 70, y + (r() - 0.5) * 60, 8 + r() * 22, 0, 7); c.fill(); } });
   cell(7, (x, y) => { tri(x, y, 52, PAL.amarillo, PAL.fondo); c.fillStyle = PAL.fondo; c.beginPath(); [[6, -26], [-14, 6], [0, 6], [-6, 34], [16, -2], [2, -2]].forEach(([a, b]) => c.lineTo(x + a, y + b)); c.fill(); });

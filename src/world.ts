@@ -2,11 +2,12 @@ import * as B from "@babylonjs/core";
 import { G } from "./render";
 import { rng, seedRng } from "./rng";
 import { precio } from "./balance";
-import type { Climate } from "./run";
+import { ENCORE_DUSK, type Climate } from "./run";
 import { LUNA_CLIMATE, MOON, moonBuild, moonReset, ringAt } from "./moon";
 import { HALF, Z, type Zone, type ZoneId, bare, heavyProps, layoutMeshes, lowQ, occluders, plankTpl, retex, scene, setHalf, setScene, setZ, st, texs, undo, worldMeshes, zoneId } from "./zones/common";
 import { buildLayout, clearLayout, grassTuft, setDrawDist } from "./world_layout";
 import { clouds } from "./grass";
+import { buildRcProps } from "./models/props_rc";
 import { patioBuild, patioLayout } from "./zones/patio";
 import { garageBuild, garageLayout } from "./zones/garaje";
 import { TABLE, shedBuild, shedLayout } from "./zones/galpon";
@@ -63,13 +64,16 @@ ZONES.cocina = { name: "La cocina", short: "Cocina", desc: "Baldosas en damero, 
   climate: KITCHEN_CLIMATE, build: kitchenBuild, layout: kitchenLayout };
 setZ(ZONES.patio, "patio");
 /** Luz fija de la zona (garaje) o undefined: la partida sigue el ciclo de la semilla. */
-export const zoneClimate = () => Z.climate;
+// ponytail: import dinámico para no cerrar el ciclo world ↔ encore_run (falla con "ZONES before initialization"); techo: si encore_run dejara de exportar `erun`, pasar el flag por un setter.
+let erunNow: () => unknown = () => null;
+void import("./encore_run").then((m) => { erunNow = () => m.erun; });
+export const zoneClimate = () => Z.climate ?? (erunNow() ? ENCORE_DUSK : undefined); // ENCORE: atardecer cálido fijo en las zonas sin luz propia (patio, jardín, galpón, desván, pileta); la luna y la cocina traen la suya
 /** Piso bajo un punto (ruido de ruedas en sfx.ts). Copia a mano los decals de cada build: si se mueven, actualizar acá. */
 export type Floor = "pasto" | "baldosa" | "tierra" | "cemento";
 export function floorAt(x: number, z: number): Floor {
   if (zoneId === "garaje" || zoneId === "galpon") return "cemento";
   if (zoneId === "desvan" || zoneId === "cocina") return "baldosa"; // tablones: el sonido de madera/baldosa, sin tierra ni pasto
-  if (zoneId === "pileta") return x > PIT.x0 && x < PIT.x1 && Math.abs(z) < PIT.z1 ? "baldosa" : "cemento"; // azulejo dentro del pozo, cemento en la explanada
+  if (zoneId === "pileta") return x > PIT.x0 && x < PIT.x1 && Math.abs(z) < PIT.z1 ? "baldosa" : "tierra"; // azulejo dentro del pozo, cemento en la explanada
   if (zoneId === "luna") return "tierra";
   if (zoneId === "jardin") return z < -HALF + 16 || Math.abs(x - 12) < 4 ? "baldosa" : "pasto"; // vereda y camino de lajas
   if (Math.abs(x) < 24 && Math.abs(z + 30) < 17) return "baldosa";
@@ -98,6 +102,7 @@ export function buildWorld(s: B.Scene, low: boolean, id: ZoneId = "patio") {
   bare.length = 0;
   heavyProps.length = 0;
   Z.build();
+  if (id === "patio") buildRcProps(); // props RC con posiciones fijas: registran su huella en bare antes del layout (el layout por semilla cambia respecto de antes)
   // Paredes físicas del borde (lo visible lo pone cada zona); la luna no tiene borde
   if (id !== "luna") for (const [x, z, w, d] of [[0, HALF, HALF * 2 + 10, 2], [0, -HALF, HALF * 2 + 10, 2], [HALF, 0, 2, HALF * 2 + 10], [-HALF, 0, 2, HALF * 2 + 10]]) {
     const wall = B.MeshBuilder.CreateBox("wall", { width: w, height: 60, depth: d }, scene);

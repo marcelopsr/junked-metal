@@ -1,6 +1,4 @@
 import "@fontsource/vt323/400.css";
-import "@fontsource/rajdhani/500.css";
-import "@fontsource/rajdhani/700.css";
 import "@fontsource/silkscreen/400.css";
 import "@fontsource/silkscreen/700.css";
 import "./style.css";
@@ -612,7 +610,7 @@ function drawRadar() {
   });
   g.stroke();
   // Marcas cardinales (N/E/S/O)
-  g.font = "700 6px Rajdhani, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.font = "700 6px Inter, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
   ([["N", 0, "#ffd24a"], ["E", 1.5708, "#8dff6a"], ["S", 3.1416, "#8dff6a"], ["O", -1.5708, "#8dff6a"]] as const).forEach(([lb, ang, col]) => {
     const a = ang - u, lx = RH + Math.sin(a) * (RH - 5.5), ly = RH - Math.cos(a) * (RH - 5.5);
     g.fillStyle = col; g.globalAlpha = lb === "N" ? 0.9 : 0.55; g.fillText(lb, lx, ly);

@@ -1,0 +1,85 @@
+{
+ "perFrame": {
+  "total": 5.980833333358168,
+  "activeEval": 1.9925000005712112,
+  "renderTargetsToEnd": 2.471666667362054,
+  "physics": 0
+ },
+ "rts": 0,
+ "lights": 4,
+ "shadowGens": 1,
+ "textures": 269,
+ "materials": 344,
+ "meshes": 1504,
+ "active": 196,
+ "freeze": 2,
+ "pe": 0,
+ "particleSystems": 23,
+ "skeletons": 21,
+ "geoms": 324,
+ "enemies": 53
+}
+
+-- self time por archivo --
+ 26.6%  ?
+ 13.0%  deps/scene.pure-Brhv2s3H.js
+  5.0%  deps/mesh.pure-Ba8icPEV.js
+  5.0%  deps/boundingBox-UNNR0NK3.js
+  4.9%  deps/abstractEngine.pure-D1WciHGc.js
+  4.0%  esm/HavokPhysics.wasm
+  3.6%  src/ui.ts
+  3.4%  deps/instancedMesh.pure-CtRRa9X6.js
+  2.9%  deps/thinEngine.pure-BqcOfkAF.js
+  2.4%  deps/pbrMaterial.pure-DQM-lQ4q.js
+  2.1%  deps/renderingManager-CQKFokaH.js
+  1.8%  deps/shadowGenerator-DrEroM1_.js
+  1.8%  deps/transformNode.pure-C5turVk8.js
+  1.7%  deps/renderTargetTexture.pure-BNjtP8Ez.js
+  1.6%  deps/abstractMesh.pure-DxUnRoCv.js
+  1.4%  deps/glowLayer.pure-CnmudkUq.js
+  1.1%  deps/@babylonjs_core_Particles_particleSystem__js.js
+  1.1%  deps/materialHelper.functions-BUxs28l6.js
+  1.1%  deps/material.pure-CGi2YIMo.js
+  0.9%  deps/math.vector.pure-B9HQJta9.js
+
+-- self time por función --
+ 23.1%  (program) :0
+  9.3%  _evaluateActiveMeshes deps/scene.pure-Brhv2s3H.js:5576
+  4.9%  _update deps/boundingBox-UNNR0NK3.js:116
+  3.0%  _renderForCamera deps/scene.pure-Brhv2s3H.js:5724
+  2.6%  drawRadar src/ui.ts:815
+  1.8%  _cacheFloat4 deps/abstractEngine.pure-D1WciHGc.js:126
+  1.5%  computeWorldMatrix deps/transformNode.pure-C5turVk8.js:831
+  1.5%  render deps/mesh.pure-Ba8icPEV.js:2700
+  1.1%  _updateInstancedBuffers deps/mesh.pure-Ba8icPEV.js:2420
+  1.0%  bindForSubMesh deps/pbrMaterial.pure-DQM-lQ4q.js:4855
+  1.0%  _bindBuffer deps/thinEngine.pure-BqcOfkAF.js:1138
+  1.0%  getLOD deps/instancedMesh.pure-CtRRa9X6.js:360
+  1.0%  isInFrustum deps/abstractMesh.pure-DxUnRoCv.js:1378
+  1.0%  _renderSubMeshForShadowMap deps/shadowGenerator-DrEroM1_.js:852
+  0.9%  _RenderSorted deps/renderingManager-CQKFokaH.js:307
+  0.9%  render deps/renderTargetTexture.pure-BNjtP8Ez.js:452
+  0.8%  _processRendering deps/mesh.pure-Ba8icPEV.js:2568
+  0.7%  _renderSubMesh deps/glowLayer.pure-CnmudkUq.js:575
+  0.6%  isReady deps/shadowGenerator-DrEroM1_.js:1004
+  0.6%  _updateBoundingInfo deps/instancedMesh.pure-CtRRa9X6.js:387
+  0.6%  _prepareRenderingManager deps/renderTargetTexture.pure-BNjtP8Ez.js:534
+  0.6%  fromWireType esm/HavokPhysics_es.js:9
+  0.6%  bufferSubData :0
+  0.6%  wasm-function[1926] esm/HavokPhysics.wasm:1
+  0.5%  uniform1fv :0
+  0.5%  isReady deps/instancedMesh.pure-CtRRa9X6.js:154
+  0.5%  _activate deps/instancedMesh.pure-CtRRa9X6.js:307
+  0.5%  get isVisible deps/node-DcNU-MPp.js:132
+  0.5%  dispatch deps/renderingManager-CQKFokaH.js:422
+  0.5%  _bindLight deps/@babylonjs_core_Lights_light__js.js:309
+  0.5%  _setTexture deps/thinEngine.pure-BqcOfkAF.js:2785
+  0.5%  _update deps/boundingInfo-eOCgeMil.js:75
+  0.4%  getTotalVertices deps/instancedMesh.pure-CtRRa9X6.js:118
+  0.4%  _prepareDefines deps/pbrMaterial.pure-DQM-lQ4q.js:4615
+  0.4%  isReadyForSubMesh deps/pbrMaterial.pure-DQM-lQ4q.js:4310
+  0.4%  tickEnemies src/run_tick.ts:34
+  0.4%  uniformMatrix4fv :0
+  0.4%  needAlphaTestingForMesh deps/material.pure-CGi2YIMo.js:1223
+  0.4%  _getWrapper deps/@babylonjs_core_Particles_particleSystem__js.js:4090
+  0.4%  shadowList src/render.ts:165

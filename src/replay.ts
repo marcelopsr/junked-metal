@@ -60,7 +60,7 @@ export async function showPhoto(i: PhotoInfo) {
   // Recorte 4:3 centrado (pantallas verticales: lo más ancho que se pueda hasta 4:5); sin suavizado: queda el píxel del render
   const ar = Math.min(4 / 3, Math.max(0.8, src.width / src.height));
   const cw = Math.min(src.width, Math.round(src.height * ar)), ch = Math.min(src.height, Math.round(src.width / ar));
-  const k = cw < 480 ? 2 : 1, pw = cw * k, ph = ch * k, pad = Math.round(pw * 0.045), foot = Math.round(ph * 0.3), u = pw / 800;
+  const k = cw < 480 ? 2 : 1, pw = cw * k, ph = ch * k, pad = Math.round(pw * 0.045), foot = Math.round(ph * 0.34), u = pw / 800;
   const c = document.createElement("canvas");
   c.width = pw + pad * 2; c.height = ph + pad + foot;
   const g = c.getContext("2d")!;
@@ -88,74 +88,25 @@ export async function showPhoto(i: PhotoInfo) {
   // Foto + hundido sutil del marco
   g.drawImage(src, (src.width - cw) / 2, (src.height - ch) / 2, cw, ch, pad, pad, pw, ph);
   g.strokeStyle = "#2a2618"; g.lineWidth = 2; g.strokeRect(pad - 1, pad - 1, pw + 2, ph + 2);
-  // Pie rotulado en Rajdhani: zona y tiempo, bajas y auto, resultado y fecha
+  // Pie rotulado en Bebas Neue: zona y tiempo, bajas y auto, resultado y fecha
   const ink = "#1b2418";
   g.fillStyle = ink; g.textBaseline = "alphabetic";
-  const y0 = pad + ph + foot * 0.32;
-  g.font = `700 ${Math.round(34 * u)}px Rajdhani, sans-serif`; g.textAlign = "left"; g.fillText(i.zone.toUpperCase(), pad, y0);
+  const y0 = pad + ph + foot * 0.25;
+  g.font = `400 ${Math.round(34 * u)}px "Bebas Neue", sans-serif`; g.textAlign = "left"; g.fillText(i.zone.toUpperCase(), pad, y0);
   g.textAlign = "right"; g.fillText(String(i.time), pad + pw, y0);
-  g.textAlign = "left"; g.font = `700 ${Math.round(50 * u)}px Rajdhani, sans-serif`;
+  g.textAlign = "left"; g.font = `400 ${Math.round(50 * u)}px "Bebas Neue", sans-serif`;
   g.fillText(`${i.kills} ${i.kills === 1 ? "BAJA" : "BAJAS"} · ${i.car.toUpperCase()}`, pad, y0 + 52 * u);
-  g.fillStyle = "#4d4c38"; g.font = `600 ${Math.round(30 * u)}px Rajdhani, sans-serif`;
+  g.fillStyle = "#4d4c38"; g.font = `400 ${Math.round(30 * u)}px "Bebas Neue", sans-serif`;
   g.fillText(`${i.win ? "VICTORIA" : "FIN DE LA PARTIDA"} · JUNKED METAL`, pad, y0 + 92 * u);
-  g.save();
-  g.font = `600 ${Math.round(16 * u)}px Rajdhani, sans-serif`;
-  g.fillStyle = "rgba(77, 76, 56, 0.7)";
-  g.textAlign = "left";
-  g.fillText(`REGISTRO TÉCNICO · ESCENARIO: ${i.zone.toUpperCase()}`, pad, y0 + 118 * u);
-  g.restore();
-  g.save();
-  g.font = `600 ${Math.round(14 * u)}px Rajdhani, sans-serif`;
-  g.fillStyle = "rgba(77, 76, 56, 0.55)";
-  g.textAlign = "left";
-  g.fillText("INSPECCIONADO · TALLER CENTRAL", pad, y0 + 138 * u);
-  g.restore();
-  g.save();
-  g.font = `600 ${Math.round(13 * u)}px Rajdhani, sans-serif`;
-  g.fillStyle = "rgba(77, 76, 56, 0.45)";
-  g.textAlign = "left";
-  g.fillText("GUARDIA NOCTURNA · PATIO CENTRAL", pad, y0 + 158 * u);
-  g.restore();
+  // Pie corto: una sola línea chica (odómetro) a 18u para que se lea con la polaroid a ~215 px
   const tSec = typeof i.time === "number" ? i.time : (typeof i.time === "string" && i.time.includes(":") ? i.time.split(":").reduce((acc, v) => acc * 60 + Number(v), 0) : Number(i.time) || 0);
   const km = ((tSec * 28) / 1000).toFixed(1);
-  g.save();
-  g.font = `600 ${Math.round(13 * u)}px Rajdhani, sans-serif`;
-  g.fillStyle = "rgba(77, 76, 56, 0.45)";
-  g.textAlign = "left";
-  g.fillText(`ODÓMETRO · REGISTRO ${km} KM`, pad, y0 + 178 * u);
-  g.restore();
-  const now = new Date();
-  const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  g.save();
-  g.font = `600 ${Math.round(13 * u)}px Rajdhani, sans-serif`;
-  g.fillStyle = "rgba(77, 76, 56, 0.45)";
-  g.textAlign = "left";
-  g.fillText(`HORA REGISTRO · ${timeStr}`, pad, y0 + 198 * u);
-  g.restore();
-  const lot = (Math.abs(Math.sin(tSec + i.kills) * 9000) + 1000) | 0;
-  g.save();
-  g.font = `600 ${Math.round(12 * u)}px Rajdhani, sans-serif`;
-  g.fillStyle = "rgba(77, 76, 56, 0.4)";
-  g.textAlign = "left";
-  g.fillText(`LOTE FOTOGRÁFICO #${lot}`, pad, y0 + 216 * u);
-  g.restore();
-  g.save();
-  g.font = `600 ${Math.round(11 * u)}px Rajdhani, sans-serif`;
-  g.fillStyle = "rgba(77, 76, 56, 0.4)";
-  g.textAlign = "left";
-  g.fillText("BATERÍA LiPo · DESCARGA TOTAL", pad, y0 + 232 * u);
-  g.restore();
-  if (tSec >= 300) {
-    g.save();
-    g.font = `600 ${Math.round(11 * u)}px Rajdhani, sans-serif`;
-    g.fillStyle = "rgba(77, 76, 56, 0.45)";
-    g.textAlign = "left";
-    g.fillText("ALCANCE MÁXIMO DE PATIO (5+ MIN)", pad, y0 + 248 * u);
-    g.restore();
-  }
+  g.font = `500 ${Math.round(18 * u)}px Inter, sans-serif`;
+  g.fillStyle = "rgba(77, 76, 56, 0.75)";
+  g.fillText(`ODÓMETRO · ${String(km).replace(".", ",")} KM`, pad, y0 + 122 * u);
   if (i.kills >= 100) {
     g.save();
-    g.font = `700 ${Math.round(15 * u)}px Rajdhani, sans-serif`;
+    g.font = `500 ${Math.round(15 * u)}px Inter, sans-serif`;
     g.fillStyle = "rgba(181, 101, 29, 0.9)";
     g.textAlign = "right";
     g.fillText("★ ALTA LETALIDAD (100+)", pad + pw, y0 + 44 * u);
@@ -163,32 +114,25 @@ export async function showPhoto(i: PhotoInfo) {
   }
   if (i.win) {
     g.save();
-    g.font = `700 ${Math.round(18 * u)}px Rajdhani, sans-serif`;
+    g.font = `400 ${Math.round(18 * u)}px "Bebas Neue", sans-serif`;
     g.fillStyle = "#ffd24a";
     g.textAlign = "right";
     g.fillText("★ RÉCORD DE ZONA", pad + pw, y0 + 26 * u);
     g.restore();
   }
   g.save();
-  g.translate(pad + 10 * u, pad + ph + foot - 14 * u);
-  g.rotate(-0.02);
-  g.font = `700 ${Math.round(18 * u)}px Rajdhani, sans-serif`;
-  g.fillStyle = "rgba(77, 76, 56, 0.75)";
-  g.fillText("ARCHIVADO · PATIO RC", 0, 0);
-  g.restore();
-  g.save();
   g.translate(pad + pw - 10 * u, pad + ph + foot - 14 * u);
   g.rotate(0.03);
-  g.font = `600 ${Math.round(15 * u)}px Rajdhani, sans-serif`;
+  g.font = `500 ${Math.round(15 * u)}px Inter, sans-serif`;
   g.fillStyle = "rgba(77, 76, 56, 0.65)";
   g.textAlign = "right";
   g.fillText("VºBº JEFE DE TALLER", 0, 0);
   g.restore();
   g.save();
-  g.translate(pad + pw - Math.round(135 * u), y0 + Math.round(64 * u));
+  g.translate(pad + pw - Math.round(135 * u), y0 + Math.round(84 * u));
   g.rotate(-0.1);
   const stCol = i.win ? "#1f6f3a" : "#9a2c2c", stTxt = i.win ? "INSPECCIÓN · VICTORIA" : "CHASIS SINIESTRADO";
-  g.font = `700 ${Math.round(22 * u)}px Rajdhani, sans-serif`;
+  g.font = `400 ${Math.round(22 * u)}px "Bebas Neue", sans-serif`;
   const sw = Math.round(g.measureText(stTxt).width + 24 * u), sh = Math.round(34 * u);
   g.strokeStyle = stCol; g.lineWidth = Math.max(2, Math.round(3 * u));
   g.strokeRect(-sw / 2, -sh / 2, sw, sh);

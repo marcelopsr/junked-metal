@@ -15,7 +15,7 @@
   --g-line: rgba(255, 255, 255, .16);
   --g-txt: #f4f7fa;
   --g-dim: #a9b8c6;
-  --hf: "Rajdhani", system-ui, sans-serif;
+  --hf: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
   font-family: var(--hf);
   color: var(--g-txt);
   background: linear-gradient(180deg, rgba(8, 12, 18, .82) 0%, rgba(8, 12, 18, .35) 32%, rgba(8, 12, 18, .55) 68%, rgba(8, 12, 18, .9) 100%);
@@ -259,7 +259,7 @@
 .duel-fab-coach {
   text-align: center; font-size: 0.72rem; line-height: 1.35; margin: 0.35rem 0.5rem 0;
   padding: 0.35rem 0.5rem; color: var(--fab-sig); border: 1px solid rgba(53, 201, 255, .28);
-  border-radius: 4px; background: rgba(12, 28, 36, .65); font-family: Rajdhani, sans-serif;
+  border-radius: 4px; background: rgba(12, 28, 36, .65); font-family: "Inter", system-ui, sans-serif;
 }
 .duel-fab-rot-hint { text-align: center; font-size: 0.7rem; color: var(--g-dim); margin: 0.28rem 0 0; min-height: 1.1em; }
 

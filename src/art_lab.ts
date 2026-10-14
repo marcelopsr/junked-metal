@@ -5,8 +5,8 @@ import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
 import '@babylonjs/loaders/glTF/index.js';
 import '@babylonjs/core/Meshes/thinInstanceMesh.js';
 import { canvasTexture, lcg } from './kit3d';
-import '@fontsource/rajdhani/500.css';
-import '@fontsource/rajdhani/700.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/700.css';
 import './art_lab.css';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#art-canvas')!;

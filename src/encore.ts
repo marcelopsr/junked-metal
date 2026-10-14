@@ -250,12 +250,12 @@ export type Variant = {
   risk: string; reward: Partial<Fx>; // cómo se ofrece como destino: riesgo (texto) y recompensa (se aplica de verdad en pactFx; el texto sale de ella)
 };
 export const VARIANTS: Variant[] = [
-  { name: "LA TARIMA", line: "EL CLÁSICO: LUZ, POLVO Y NADA QUE ENVIDIAR.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, risk: "SIN SORPRESAS", reward: { xp: 1.1 } },
-  { name: "EL LADO OSCURO", line: "SIN SOL NI PÚBLICO. SOLO LAS ERUPCIONES ALUMBRAN.", at: "oscuro", craters: [5, 4, 8], rain: 1.4, quake: 0.55, sky: 1, ship: "abductora", risk: "SIN SOL · MÁS METEORITOS", reward: { xp: 1.3 } },
+  { name: "LA TARIMA", line: "EL CLÁSICO: ARENA TIBIA Y ROCAS ROJAS.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, risk: "SIN SORPRESAS", reward: { xp: 1.1 } },
+  { name: "EL LADO OSCURO", line: "SIN SOL NI PÚBLICO. SOLO ALUMBRA EL NEÓN.", at: "oscuro", craters: [5, 4, 8], rain: 1.4, quake: 0.55, sky: 1, ship: "abductora", risk: "SIN SOL · MÁS METEORITOS", reward: { xp: 1.3 } },
   { name: "CAMPO DE CRÁTERES", line: "EL PISO ES UN QUESO. LOS METEORITOS ESTÁN DE GIRA.", at: "tierra", craters: [10, 5, 11], rain: 0.6, quake: 1.6, sky: 1, ship: "caza", risk: "MÁS CRÁTERES Y ERUPCIONES", reward: { scrap: 1.3 } },
   { name: "SOL DE FRENTE", line: "REFLECTORES AL MÁXIMO. EL SOL TAMBIÉN TIRA.", at: "sol", craters: [3, 3, 6], rain: 1.2, quake: 1, sky: 0.55, ship: "bombardera", risk: "EL SOL DISPARA MÁS", reward: { scrap: 1.15, xp: 1.15 } },
-  { name: "LLUVIA DE CHATARRA", line: "POCA LUZ Y CHATARRA DEL CIELO. NADIE PIDIÓ PARAGUAS.", at: "oscuro", craters: [4, 3, 6], rain: 0.45, quake: 1.2, sky: 1.3, ship: "caza", risk: "SIN SOL · METEORITOS SEGUIDOS", reward: { scrap: 1.4 } },
-  { name: "NOCHE DE ESTRENO", line: "FOCOS ENCENDIDOS Y NAVES DE INVITADAS. QUÉ GALA.", at: "sol", craters: [2, 3, 5], rain: 1.3, quake: 1.2, sky: 0.7, ship: "abductora", risk: "MÁS NAVES Y LANZAMIENTOS", reward: { xp: 1.25 } },
+  { name: "LLUVIA DE CHATARRA", line: "NEÓN Y CHATARRA DEL CIELO. NADIE PIDIÓ PARAGUAS.", at: "oscuro", craters: [4, 3, 6], rain: 0.45, quake: 1.2, sky: 1.3, ship: "caza", risk: "SIN SOL · METEORITOS SEGUIDOS", reward: { scrap: 1.4 } },
+  { name: "NOCHE DE ESTRENO", line: "CARTELES MAGENTA Y CIAN, NAVES DE INVITADAS. QUÉ GALA.", at: "sol", craters: [2, 3, 5], rain: 1.3, quake: 1.2, sky: 0.7, ship: "abductora", risk: "MÁS NAVES Y LANZAMIENTOS", reward: { xp: 1.25 } },
   { name: "ENSAYO DE MEDIANOCHE", line: "NADIE DUERME. LA PRODUCCIÓN TAMPOCO, Y SE NOTA.", at: "tierra", craters: [8, 4, 9], rain: 0.5, quake: 1.4, sky: 0.8, ship: null, mini: "proyector", risk: "METEORITOS, ERUPCIONES Y LANZAMIENTOS", reward: { xp: 1.2, scrap: 1.2 } },
   { name: "EL GALPÓN DE UTILERÍA", line: "LA GRÚA DE FERIA ENSAYA SU NÚMERO ENTRE CAJAS.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, mini: "grua", zone: "galpon", risk: "SIN LUNA · LA GRÚA DE FERIA COMO MINIJEFE", reward: { scrap: 1.35, xp: 1.15 } },
   { name: "EL DESVÁN DE JUGUETES ROTOS", line: "UN PAYASO DE RESORTE SALTA SOLO.", at: "salida", craters: [0, 0, 0], rain: 1, quake: 1, sky: 1, ship: null, mini: "payaso", zone: "desvan", risk: "SIN LUNA · EL PAYASO DE RESORTE COMO MINIJEFE", reward: { scrap: 1.3, xp: 1.2 } },

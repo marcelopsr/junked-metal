@@ -569,7 +569,7 @@ if (import.meta.env.DEV && /[?&]evo\b/.test(location.search)) setTimeout(() => v
 if (import.meta.env.DEV && /[?&]race\b/.test(location.search)) setTimeout(() => { const q = new URLSearchParams(location.search); if (q.get("players") === "2" && !isTouch) { raceCfg.players = 2; raceCfg.p2 = "kbd2"; } if (q.get("track")) { raceCfg.cup = false; raceCfg.track = Number(q.get("track")) as 0 | 1 | 2; } goRace(q.has("battle")); }, 1500); // solo dev: ?race[&players=2] arranca la carrera
 // Portada: fuentes del menú, dos cuadros dibujados (arma la escena del estante) y recién ahí se cierra la pantalla de carga; la precarga arranca con la portada ya a la vista
 boot("Cargando fuentes", 0.7);
-await Promise.race([Promise.all(['500 16px Rajdhani', '700 16px Rajdhani'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 1500))]);
+await Promise.race([Promise.all(['400 16px "Bebas Neue"', '500 16px Inter'].map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 1500))]);
 boot("Armando el menú", 0.9);
 void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
 initPhoto({ scene, canvas, inPause: () => state === "pause", onShot: () => grant("foto") });

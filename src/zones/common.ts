@@ -47,7 +47,7 @@ export function retex() {
     o.dispose(); texs[k] = n;
   }
 }
-export const woodM = () => (FOLDED_SLICE ? FOLD.painted("#8a6a44", 0.8, 301) : pbr("wood", { color: "#ffffff", rough: 0.75, tex: tex("wood", TEX.wood) })); // Folded: tablón de chapa
+export const woodM = () => (FOLDED_SLICE ? FOLD.painted("#B07A4A", 0.2, 301) : pbr("wood", { color: "#ffffff", rough: 0.75, tex: tex("wood", TEX.wood) })); // Folded: tablón de chapa
 
 // Materiales PBR con mapas de normales de utilería (props del patio y garaje)
 export const propTex = (name: string) => {
@@ -189,6 +189,13 @@ export const concreteTex = () => canvasTex(256, (c, s) => {
   for (let i = 0; i < 5000; i++) { c.fillStyle = ["#7a7c77", "#9a9c96", "#6c6e6a"][i % 3]; c.globalAlpha = 0.3 + Math.random() * 0.4; c.fillRect(Math.random() * s, Math.random() * s, 1 + Math.random() * 3, 1 + Math.random() * 3); }
   c.globalAlpha = 1;
   c.strokeStyle = "#5a5c58"; c.lineWidth = 3; c.strokeRect(0, 0, s, s);
+});
+
+// Arena clara (explanada de la pileta): base cálida con granos claros y oscuros, sin juntas de losa
+export const sandTex = () => canvasTex(256, (c, s) => {
+  c.fillStyle = "#e3cc9a"; c.fillRect(0, 0, s, s);
+  for (let i = 0; i < 6000; i++) { c.fillStyle = ["#f0dfb4", "#d4ba84", "#ecd8a8"][i % 3]; c.globalAlpha = 0.25 + Math.random() * 0.35; c.fillRect(Math.random() * s, Math.random() * s, 1 + Math.random() * 2, 1 + Math.random() * 2); }
+  c.globalAlpha = 1;
 });
 
 export const plankTpl = () => template("plank", () => (FOLDED_SLICE ? fencePanel() : [box(2, 7, 0.4, woodM(), [0, 3.5, 0]), box(2, 0.3, 0.6, M.matte("#6b4a2b"), [0, 5.5, -0.3])]));

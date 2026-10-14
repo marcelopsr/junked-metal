@@ -1,8 +1,57 @@
 # Junked Metal — Dirección de arte
 
-Referencia para cualquier asset, shader o pantalla nueva. Actualizada el 2026-10-08. Todo lo anterior a esta fecha que contradiga la sección "Vigente" está en "Historia (no vigente)" al final.
+Referencia para cualquier asset, shader o pantalla nueva. Actualizada el 2026-10-14. Manda la sección "Vigente (2026-10-14)"; lo anterior está en "Historia (no vigente)" al final.
 
-## Vigente (2026-10-08)
+## Vigente (2026-10-14): Junked Metal Encore — estilo diorama de juguete
+
+Nombre del juego: **Junked Metal Encore**. «RC Race: Mini Worlds» fue solo el nombre provisorio de las láminas de referencia aprobadas: no usarlo como título, logo ni texto del juego.
+
+**Decisión:** esta dirección reemplaza a Megabonk + Folded en TODO el juego (modos, HUD, menús, mundo y autos).
+
+**Estilo:** diorama / miniatura. Juguetes RC en un mundo cotidiano gigante, iluminación cinematográfica cálida (atardecer), profundidad de campo tilt-shift, texturas PBR pintadas, piezas modulares tipo Lego con bordes biselados, plástico de juguete.
+
+**Paleta oficial**
+
+| Rol | Color | HEX |
+|---|---|---|
+| Principal | rojo | `#E53935` |
+| Principal | amarillo | `#FBC02D` |
+| Principal | azul | `#42A5F5` |
+| Principal | verde | `#66BB6A` |
+| Secundario | naranja | `#FB8C00` |
+| Secundario | morado | `#8E24AA` |
+| Secundario | marrón | `#795548` |
+| Secundario | gris | `#9E9E9E` |
+
+Bordes de pista rojo/blanco.
+
+**Tipografía y UI:** Bebas Neue para títulos; Inter/Roboto para texto. Paneles oscuros, titulares en mayúscula, botones rojos tipo pegatina inclinada.
+
+**Vehículos:** Buggy, Truck, Rally, Monster, Drift, Toy. Chasis común + carrocería + alerón + ruedas + suspensión + antena + luces + calcas (27, RC, llamas). Las skins son color de material.
+
+**Pista modular:** recta, curva 90/45, rampa, salto, loop, puente, cruce, plataforma, túnel, soporte, baranda, cono, neumáticos, barrera, señal.
+
+**Props:** caja de herramientas, palets, cajas, tambores, neumáticos, rocas, conos, vallas, plantas, árboles, casa de perro.
+
+**Materiales:** madera, cartón, plástico, metal, tierra, asfalto, nieve, roca, pasto, goma, agua.
+
+**Biomas:** ciudad miniatura, garaje/taller, barrio/patio, bosque, desierto, industrial, nieve, noche neón.
+
+**Post-proceso:** DOF enfocado en el auto, viñeta cálida, saturación +, bloom en faros/neón. En táctil, DOF Low.
+
+**Reglas que se mantienen:** sin emojis ni UI genérica; textos del juego en español neutro impersonal (sin voseo); branding y textos del mundo en inglés.
+
+**Pendiente de migrar (no hecho aún, solo código):**
+- [x] Tokens `--jm-*` de `src/kit.css` (hecho 2026-10-14); `PAL`/`M3C` de `src/kit3d.ts` a la paleta oficial.
+- [x] Fuente Rajdhani a Bebas Neue (títulos) + Inter (texto) (hecho 2026-10-14, `kit.css`).
+- [x] HUD y menús (hecho 2026-10-14, `kit.css`/`hud.css`): de chapa naranja gastada a paneles oscuros con botones rojos tipo pegatina.
+- Mundo, autos, pistas, props y post-proceso: ver `assets-src/ref-rcrace/assets_manifest.json` (estado por elemento).
+- Hasta migrar, el código sigue con el estilo anterior; lo descrito abajo en "Historia" describe lo que hoy hay implementado.
+
+
+## Historia (no vigente)
+
+### Vigente anterior: Megabonk + Folded (2026-10-08, reemplazada el 2026-10-14)
 
 **Dirección:** partidas de **DÍA** al estilo Megabonk (sol alto, cielo azul, colores saturados, low-poly con texturas pixeladas y contornos suaves) sobre un mundo **Folded**: chatarra industrial plegada y ensamblada (chapa, perfiles, remaches), con desgaste y óxido. HUD y menús de **paneles de chapa oscura opaca con borde naranja gastado**, tipografía **Rajdhani** y tokens `--jm-*`.
 
@@ -31,26 +80,26 @@ Reglas que mandan:
 
 **Modos:** Supervivencia (principal), Carrera, Junket Crush (match-3) y Demolición comparten esta dirección; Carrera, Junket Crush y Demolición siguen en desarrollo y no dan tornillos ni logros (ver HANDOFF §5).
 
-### Personajes, mundo y combate (vigente)
+#### Personajes, mundo y combate (vigente)
 
-#### Personajes
+##### Personajes
 - **Enemigos:** anatomía creíble y amenazante. Patas articuladas animadas, mandíbulas, brillo de caparazón.
 - **Autos del jugador:** réplica RC detallada (carrocería de policarbonato con stickers de marca propia,
   amortiguadores visibles, llantas con taco). **Daño visible** (humo, chispas, piezas que se caen con
   poca vida). **Personalización** en el taller (color, llantas) y mejoras de la partida montadas en el auto.
 
-#### Mundo
+##### Mundo
 - Suelo rico: pasto que se mueve con el viento, marcas de neumático persistentes, tierra, charcos.
 - Objetos cotidianos detallados que cuentan la historia del patio.
 - Destrucción del entorno: macetas que se rompen, marcas de explosión, objetos que vuelan.
 
-#### Combate (efectos)
+##### Combate (efectos)
 - Impactos con peso: hit-stop, destello, esquirlas del material, sacudida proporcional.
 - Explosiones físicas: humo, fuego, onda que empuja, marcas quemadas en el piso.
 - Muertes con restos: insectos patas arriba / en pedazos con física; juguetes desarmados.
 - Números de daño (críticos más grandes).
 
-#### Combate (agregado 2026-10-03)
+##### Combate (agregado 2026-10-03)
 - Flash blanco breve en cada golpe; hit-stop solo en críticos y jefes.
 - Insectos muertos quedan patas arriba unos segundos con un charco del color de sus ojos; juguetes sueltan tornillos, resortes y chispas.
 - Feedback de impacto por arma (`fx.ts` `IMPACT`, `sfx.ts` `SFX.impact`): chispas del color del arma (verde fósforo = propias), pedazos del caparazón, squash de 3 pasos en el bicho, sacudida y sonido propios. Con "Reducir parpadeos" no hay destello ni chispas.
@@ -59,13 +108,13 @@ Reglas que mandan:
 
 Nota: de "Combate (agregado)" el resumen de impacto por arma, hit-stop, restos y cámara lenta final siguen vigentes; "verde fósforo = disparos propios" es de la etapa de terminal (ver Historia): hoy cada arma usa su color. La intro de 4 cuadros mantiene su arte pixelado de noche.
 
-## Referencia técnica vigente
+### Referencia técnica vigente
 
-### Giro a Megabonk (2026-10-03)
+#### Giro a Megabonk (2026-10-03)
 Las partidas son **de día**: sol alto, cielo azul, colores saturados (desat ~1), low-poly con texturas pixeladas y contornos suaves.
 Los climas nocturnos siguen en `CLIMATES` solo para el lab. El faro del auto queda casi apagado de día (`day` en `Climate`). Esta sección reemplaza lo de "noche" y "un solo foco duro" de arriba.
 
-### Folded 2.5D (sistema base, 2026-10-07)
+#### Folded 2.5D (sistema base, 2026-10-07)
 
 **Qué es:** mundo 3D completo construido como papercraft y fabricado como chatarra industrial: superficies simples plegadas y
 ensambladas (chapa, perfiles, remaches) cuya riqueza sale del material, la textura procedural, los trims, los calcos y la luz.
@@ -129,7 +178,7 @@ remaches de verdad eran 460k triángulos): usar la franja `remaches` del trim. U
 malla (cilindro, casco convexo) se viste con `skin()` de world.ts: el colisionador viejo queda invisible y una instancia Folded
 lo cubre, así la física y la semilla no cambian.
 
-### Superficies: macro + detalle (2026-10-08)
+#### Superficies: macro + detalle (2026-10-08)
 
 - Todo piso grande se arma en dos escalas: **macro** (textura de color que cubre ~90 m, manchas con intención: pisado, quemado, húmedo; sin grano) y **detalle** (`surface(mat, perfil, repeticiones)` en `render.ts`, detailMap de Babylon: grano + relieve + brillo salidos de UNA altura, así el brillo sigue a la forma).
 - Perfiles: `grass` (hojas peinadas), `soil`, `concrete`, `asphalt` (agregado pulido), `steel` (cepillado), `leaf` (follaje superpuesto), `brick`. Uno nuevo = un objeto en `SURF`.
@@ -137,7 +186,7 @@ lo cubre, así la física y la semilla no cambian.
 - Anisotropía por defecto 8 (Medio): el piso casi siempre se ve rasante.
 - `flatten()` (models.ts) no aplana materiales con detalle: si un prop fusionado tiene que conservar relieve, usar `surface()`.
 
-### Etapa 2: acabados (2026-10-08)
+#### Etapa 2: acabados (2026-10-08)
 
 Nota: lo de sombras de noche, faro y resplandor aplica solo a los climas nocturnos (lab); de día mandan el sol y el hemisférico.
 
@@ -153,7 +202,6 @@ Nota: lo de sombras de noche, faro y resplandor aplica solo a los climas nocturn
 
 ---
 
-## Historia (no vigente)
 
 Direcciones anteriores, conservadas como referencia. No usar para trabajo nuevo.
 

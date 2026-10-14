@@ -1,9 +1,9 @@
 import * as B from "@babylonjs/core";
-import { box, cyl, merge, sph, template, tor } from "../models";
+import { box, cyl, merge, rbox, sph, template, tor } from "../models";
 import { M, pbr, shadows, surface, TEX } from "../render";
 import { rng } from "../rng";
-import { FOLD, FOLDED_SLICE } from "../folded";
-import { HALF, bare, crateFold, decal, floor, house, leafM, occluders, plankTpl, registerHeavyProp, rustyDrumM, scene, stat, tex, tireStackM, tree, woodCrateM } from "./common";
+import { HALF, bare, crateFold, decal, floor, leafM, occluders, plankTpl, registerHeavyProp, scene, stat, tex } from "./common";
+import { toyHouse, toyTree } from "../models/props_rc";
 import { ball, brickWalls, gnomes, hose, int, jumpScrap, piles, plankBridge, planterAlley, pots, puddles, ramp, rocks, toyRamps, toyScatter, wateringCan } from "../world_layout";
 
 function soilEdgeMask() {
@@ -46,18 +46,6 @@ export function patioBuild() {
     patch.rotation.y = ry; leafDecals.push(patch);
   }
   merge("patioLeafDecals", leafDecals, [leaves]);
-  const scrapTex = tex("smallScrap", () => new B.Texture("./images/decals/small-scrap.webp", scene));
-  scrapTex.hasAlpha = true;
-  const scrap = pbr("smallScrap", { color: "#ffffff", rough: 0.8, tex: scrapTex });
-  scrap.useAlphaFromAlbedoTexture = true;
-  scrap.useRadianceOverAlpha = scrap.useSpecularOverAlpha = false;
-  scrap.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
-  const scrapDecals: B.Mesh[] = [];
-  for (const [x, z, ry, scale] of [[-40, 30, -0.4, 0.45], [40, -23, 0.8, 0.36], [-12, -10, 0.5, 0.5], [10, -12, -0.7, 0.4]]) {
-    const patch = decal("smallScrap", 4 * scale, 3 * scale, x, z, scrap, 0.03);
-    patch.rotation.y = ry; scrapDecals.push(patch);
-  }
-  merge("patioScrapDecals", scrapDecals, [scrap]);
   decal("patio", 48, 34, 0, -30, surface(pbr("tiles", { color: "#ffffff", rough: 0.6, tex: tex("tiles", TEX.tiles) }), "concrete", 28, 0.7));
 
   // Huerta: tierra compactada y gravilla con bordes fundidos al césped
@@ -171,31 +159,32 @@ export function patioBuild() {
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
-  // Rampa de chapa oxidada para saltos acrobáticos dentro de la zona
-  ramp(FOLDED_SLICE ? FOLD.rust() : M.metal("#7a5038"), -48, 8, 0, 4.2, 6.5, 1.6);
-  // Neumáticos de descarte apilados en el borde oeste con textura PBR y normales
-  registerHeavyProp(stat(tor(2.8, 0.95, tireStackM(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
-  registerHeavyProp(stat(tor(2.6, 0.9, tireStackM(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
-  // Tambores metálicos de combustible oxidados (PBR con relieve y desgaste)
-  const capMat = surface(pbr("drumCap", { color: "#d5dbe0", rough: 0.84, metal: 0.3, tex: tex("p_drum_alb", () => new B.Texture("./textures/props/prop-rusty-drum-folded-v2.webp", scene)) }), "steel", 4, 0.35);
-  const trimMat = surface(pbr("drumTrim", { color: "#737b80", rough: 0.72, metal: 0.55 }), "steel", 4, 0.25);
+  // Props de juguete: plástico pintado con la paleta oficial (docs/ART_DIRECTION.md Vigente), bordes biselados
+  const toy = (c: string, rough = 0.5) => pbr(`toy${c}`, { color: c, rough, metal: 0 });
+  // Rampa naranja para saltos acrobáticos dentro de la zona
+  ramp(toy("#FB8C00"), -48, 8, 0, 4.2, 6.5, 1.6);
+  // Neumáticos de juguete apilados en el borde oeste (azul y amarillo)
+  registerHeavyProp(stat(tor(2.8, 0.95, toy("#42A5F5"), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
+  registerHeavyProp(stat(tor(2.6, 0.9, toy("#FBC02D"), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
+  // Tambores de juguete: rojo con tapa y aro amarillos
+  const capMat = toy("#FBC02D"), trimMat = toy("#E53935", 0.4);
   const capTpl = template("drumCap", () => [
     cyl(3.18, 3.18, 0.025, capMat, [0, 0, 0], undefined, 16),
     tor(3.08, 0.055, trimMat, [0, 0.025, 0], undefined, 16),
     cyl(0.24, 0.24, 0.08, trimMat, [0.55, 0.05, -0.3], undefined, 8),
   ]);
   for (const [x, z] of [[-42, 30], [-45.5, 32]]) {
-    const drum = registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [x, 2.4, z], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
+    const drum = registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, toy("#E53935"), [x, 2.4, z], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
     const cap = capTpl.createInstance("drumCap");
     cap.parent = drum; cap.position.set(0, 2.4, 0); cap.isPickable = false; cap.receiveShadows = true;
   }
-  // Cajas industriales de madera con textura PBR y normales en el borde este
-  const scrapCrate = woodCrateM();
-  crateFold(stat(box(2.6, 2.4, 2.6, scrapCrate, [-33, 1.2, 24], [0, 0.35, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.6, 2.4, 2.6);
-  crateFold(stat(box(2.2, 2.0, 2.2, scrapCrate, [-34, 1.0, 28], [0, -0.2, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.2, 2.0, 2.2);
-  // Plancha de chapa oxidada en el suelo
-  const scrapPlate = FOLDED_SLICE ? FOLD.rust() : M.metal("#6a5a4e");
-  stat(box(4.5, 0.18, 5.5, scrapPlate, [-54, 0.09, 14], [0.03, 0.5, 0]), B.PhysicsShapeType.BOX, { friction: 0.65 });
+  // Cajas de juguete biseladas (verde y amarilla)
+  crateFold(stat(rbox(2.6, 2.4, 2.6, 0.3, toy("#66BB6A"), [-33, 1.2, 24], [0, 0.35, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.6, 2.4, 2.6);
+  crateFold(stat(rbox(2.2, 2.0, 2.2, 0.3, toy("#FBC02D"), [-34, 1.0, 28], [0, -0.2, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.2, 2.0, 2.2);
+  // Plancha marrón en el suelo
+  stat(rbox(4.5, 0.18, 5.5, 0.08, toy("#795548"), [-54, 0.09, 14], [0.03, 0.5, 0]), B.PhysicsShapeType.BOX, { friction: 0.65 });
+
+  toyFencesCurbsPines(toy, grassPaths);
 
   // Cerca de madera (instancias)
   const plank = plankTpl();
@@ -205,11 +194,51 @@ export function patioBuild() {
     p.rotation.y = ry;
     p.scaling.y = 0.9 + rng() * 0.2;
   }
-  house();
+  toyHouse();
   bushes();
-  for (const [x, z] of [[-75, -70], [78, -60], [-80, 70], [70, 85]]) tree(x * K, z * K);
+  for (const [x, z] of [[-75, -70], [78, -60], [-80, 70], [70, 85]]) toyTree(x * K, z * K);
 }
 
+
+/** Diorama de barrio: valla de postes de colores, bordillos rojo/blanco en los caminos y la baldosa, y pinos de juguete fuera de la cerca (paliativo de bosque). Solo visual, sin rng() ni colisiones. */
+function toyFencesCurbsPines(toy: (c: string, rough?: number) => B.Material, grassPaths: number[][]) {
+  const mat = (x: number, y: number, z: number, ry: number, sx: number, sy: number) => B.Matrix.Compose(new B.Vector3(sx, sy, sx), B.Quaternion.RotationYawPitchRoll(ry, 0, 0), new B.Vector3(x, y, z)).toArray();
+  const instances = (m: B.Mesh, mats: number[]) => { m.isPickable = false; m.thinInstanceSetBuffer("matrix", new Float32Array(mats), 16, true); m.alwaysSelectAsActiveMesh = true; m.receiveShadows = true; };
+
+  // Valla: un poste base por color con thin instances (unos 800 postes = 5 dibujos) y travesaños blancos
+  const L = HALF - 2.5, colors = ["#E53935", "#FBC02D", "#42A5F5", "#66BB6A", "#FAFAFA"];
+  const posts = colors.map((c) => ({ m: rbox(1, 3.4, 0.45, 0.12, toy(c), [0, 1.7, 0]), mats: [] as number[] }));
+  let n = 0;
+  for (let i = -L; i <= L; i += 1.6, n++) for (const [x, z, ry] of [[i, L, 0], [i, -L, 0], [L, i, Math.PI / 2], [-L, i, Math.PI / 2]] as const) posts[n % 5].mats.push(...mat(x, 0, z, ry, 1, 0.85 + ((n * 7) % 5) * 0.06));
+  for (const p of posts) instances(p.m, p.mats);
+  const rail = toy("#FAFAFA", 0.5);
+  merge("patioRails", [-1, 1].flatMap((s) => [1.1, 2.5].flatMap((y) => [box(L * 2 + 1.6, 0.3, 0.3, rail, [0, y, s * (L + 0.3)]), box(0.3, 0.3, L * 2 + 1.6, rail, [s * (L + 0.3), y, 0])]))).isPickable = false;
+
+  // Bordillos rojo/blanco: a los dos lados de cada camino de tierra y alrededor de la baldosa del taller
+  const red: B.Mesh[] = [], white: B.Mesh[] = [];
+  let k = 0;
+  const block = (x: number, z: number, ry: number) => { const odd = k++ % 2; (odd ? white : red).push(rbox(2.4, 0.3, 0.7, 0.1, toy(odd ? "#FAFAFA" : "#E53935", 0.45), [x, 0.15, z], [0, ry, 0])); };
+  for (const [x, z, w, len, ang] of grassPaths) {
+    const c = Math.cos(ang), s = Math.sin(ang);
+    for (const sx of [-1, 1]) for (let lz = -len * 0.4; lz <= len * 0.4; lz += 2.6) { const lx = sx * w * 0.42; block(x + lx * c + lz * s, z - lx * s + lz * c, ang); }
+  }
+  for (let t = -22; t <= 22; t += 2.6) { block(t, -30 + 17.2, 0); block(t, -30 - 17.2, 0); }
+  for (let t = -14; t <= 14; t += 2.6) { block(24.5, -30 + t, Math.PI / 2); block(-24.5, -30 + t, Math.PI / 2); }
+  for (const [name, arr] of [["curbRed", red], ["curbWhite", white]] as const) { const m = merge(name, arr); m.isPickable = false; m.receiveShadows = true; }
+
+  // Pinos de juguete (tres conos verdes sobre tronco marrón) en tres filas fuera de la cerca: lado norte y flancos, no del lado de la casa
+  const pine = merge("toyPine", [
+    cyl(1.6, 2, 5, toy("#795548", 0.8), [0, 2.5, 0], undefined, 8),
+    cyl(0.4, 11, 8, toy("#66BB6A", 0.6), [0, 8, 0], undefined, 8), cyl(0.4, 8.6, 7, toy("#4CAF50", 0.6), [0, 13, 0], undefined, 8), cyl(0.2, 6, 6, toy("#66BB6A", 0.6), [0, 18, 0], undefined, 8),
+  ]);
+  const pm: number[] = [];
+  for (let r = 0; r < 3; r++) for (let i = -HALF - 40, q = 0; i <= HALF + 40; i += 15 - r * 2, q++) {
+    const j = Math.sin(i * 12.9 + r * 78.2) * 4.5, d = HALF + 14 + r * 22 + j, sc = 1.1 + ((q * 13 + r * 5) % 9) * 0.09, ry = (q * 7) % 6.28;
+    pm.push(...mat(i, 0, -d, ry, sc, sc));
+    if (i < HALF + 5) pm.push(...mat(d, 0, i, ry, sc, sc), ...mat(-d, 0, i, ry, sc, sc));
+  }
+  instances(pine, pm);
+}
 
 // Arbustos a lo largo de la cerca: un solo mesh con thin instances, sin física (la cerca ya frena al auto)
 function bushes() {
@@ -266,7 +295,7 @@ export function patioLayout() {
   wateringCan();
   piles(int(1, 3), ["#ef4444", "#3b82f6", "#facc15", "#22c55e", "#a855f7"], M.plastic);
   brickWalls(int(1, 2));
-  puddles(int(3, 10), pbr("puddle", { color: "#3b4a52", rough: 0.03, metal: 0.2, alpha: 0.85 }));
+  puddles(int(3, 10), pbr("puddleToy", { color: "#90CAF9", rough: 0.15, alpha: 0.7 })); // antes #3b4a52 casi espejo: se veían como óvalos negros
   ball();
 }
 

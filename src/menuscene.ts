@@ -2,7 +2,7 @@ import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph, tor, tube, wheel } from "./models";
 import { applyClimate, canvasTex, glow, lamp, LOOK, M, menuLights, pbr, setDof, shadows } from "./render";
 import { ambient } from "./fx";
-import { brick, canvasTexture, KIT, kitPut, M3C, wornMat, type KitId } from "./kit3d";
+import { brick, canvasTexture, KIT, kitPut, M3C, type KitId } from "./kit3d";
 import { showWorld } from "./world";
 import { airCompressorFold, benchViseFold, drillPressFold, gasGeneratorFold, hoseReelFold, millingMachineFold } from "./folded_slice";
 
@@ -95,6 +95,8 @@ export const menuFov = (scr: string) => SCENES[sceneOf(scr)].cam.fov ?? 0.85;
 export const CAR_YAW = 0.95; // estante: el auto mira hacia la cámara en 3/4
 
 const PAST = ["#c98a5a", "#8a5a3a", "#5f8a9a", "#6f8f7a", "#c9a14a", "#a0452a", "#7f9a9c"];
+// Pintura limpia (plástico/madera pintada de la paleta): sin manchas de óxido. `_` conserva la firma vieja de wornMat.
+const wornMat = (base: string, _p?: string | null, _s?: number) => M.matte(base);
 const W = (c: string) => M.matte(c), P = (c: string) => M.plastic(c);
 const unfog = (key: string, c: string) => { const m = pbr(key, { color: c, emissive: c }); m.fogEnabled = false; return m; };
 
@@ -1070,6 +1072,10 @@ function buildSec(k: string) {
   const s = SCENES[k], o = SETS[s.set].origin, stat: B.Mesh[] = [], anim: { m: B.Mesh; a: "swing" | "spin"; ph: number }[] = [];
   for (const p of s.props ?? []) {
     const parts = KIT[p.kit](p.u, p.v as never);
+    for (const m of parts) { // el kit pinta con chapa gastada: en el menú todo es pintura lisa (el óxido pasa a madera pintada oscura)
+      const n = m.material?.name ?? "";
+      if (n === "kitrust") m.material = M.matte("#3a2f2a"); else if (n.startsWith("kit") && n.includes("|")) m.material = M.matte(n.slice(3).split("|")[0]);
+    }
     if (p.anim) { // animada: malla propia con el pivote en su punto de apoyo (la lámpara cuelga de él)
       const m = merge("menu_" + k + "_" + p.kit, kitPut(parts, [0, 0, 0], p.rot));
       m.position.set(...add(o, p.at)); m.isPickable = false; shadows.addShadowCaster(m);

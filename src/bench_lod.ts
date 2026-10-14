@@ -2,8 +2,8 @@
 import * as B from '@babylonjs/core';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera.js';
 import '@babylonjs/loaders/glTF/index.js';
-import '@fontsource/rajdhani/500.css';
-import '@fontsource/rajdhani/700.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/700.css';
 import './art_lab.css';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#bench-canvas')!;

@@ -127,6 +127,7 @@ for (const vp of vps) {
     for (let i = 0; i < 5; i++) await qt(2); // la captura espera al próximo cuadro dibujado
     const d = await dl.catch(() => null);
     if (!d || !/^rc_fight_.*\.png$/.test(d.suggestedFilename())) return "C no disparó la descarga PNG";
+    await q.screenshot({ path: `${dir}/${vp}-x-modo-foto-activo.png` }); // en modo foto, antes de salir (el xstep captura al final, ya en pausa)
     await q.keyboard.press("Escape"); await qt(2);
     if ((await hud()) === "none") return "Esc no salió del modo foto";
     if ((await qe(() => window.__info().state)) !== "pause") return "no volvió a la pausa";

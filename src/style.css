@@ -3,7 +3,7 @@
   --shell: #0f1a28; --panel: #17283a; --line: rgba(255, 255, 255, .2); --txt: #eaf1f7; --dim: #9bb0c2;
   --lcd: #0f1a28; --lcd-ink: #7dffb0; --sig: #35c9ff; --ok: #5bd65b; --low: #ff4d4d; --turbo: #ffb02e;
   --r-comun: #8a9a82; --r-rara: #6fb3c4; --r-epica: #9a6fb5; --r-evo: #e0a030; --r-fusion: #c8d84a;
-  --data: "Rajdhani", system-ui, sans-serif; --display: "Rajdhani", system-ui, sans-serif;
+  --data: "Inter", system-ui, sans-serif; --display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: #05070a; font-family: var(--data); font-size-adjust: .52; color: var(--txt); user-select: none; touch-action: none; }

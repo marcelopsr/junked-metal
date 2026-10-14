@@ -15,12 +15,15 @@ export const CLIMATES: Climate[] = [
   { id: "manana", name: "MAÑANA", day: true, sun: [-0.7, -0.6, 0.4], sunColor: "#fff0d0", sunI: 2.6, hemiI: 0.6, sky: ["#3b86e0", "#8cc4ff", "#d6eeff", "#8fbf5a"], exposure: 1.1, fog: 0.004, ramp: ["#1c2430", "#7a9a60", "#fff4dc"] },
   { id: "mediodia", name: "MEDIODÍA", day: true, sun: [-0.25, -1, 0.2], sunColor: "#fffaf0", sunI: 2.8, hemiI: 0.6, sky: ["#2f7ae0", "#7dbcff", "#cfe9ff", "#8fbf5a"], exposure: 1.1, fog: 0.004, ramp: ["#1c2430", "#7a9a60", "#fff4dc"] },
   { id: "atardecer", name: "ATARDECER", day: true, sun: [0.85, -0.3, -0.35], sunColor: "#ffa060", sunI: 2.6, hemiI: 0.5, sky: ["#34407a", "#e58a5a", "#ffd08a", "#5a5a40"], exposure: 1.05, fog: 0.006, ramp: ["#2a1428", "#c06040", "#ffe0a0"] },
+  // ENCORE (zonas planas): atardecer de diorama, sol bajo dorado (sombras largas), cielo y niebla cálidos. world.ts lo da por zona; el lab lo prueba con climate=encore.
+  { id: "encore", name: "ATARDECER DORADO", day: true, sun: [0.8, -0.32, -0.4], sunColor: "#ffb870", sunI: 3.1, hemiI: 0.62, sky: ["#5a5f9c", "#f2a070", "#ffdca0", "#8a7448"], exposure: 1.02, fog: 0.0035, ramp: ["#2e1a2c", "#d07048", "#ffe4a8"] },
   { id: "nublado", name: "NUBLADO", day: true, sun: [-0.3, -1, 0.3], sunColor: "#e8ecf0", sunI: 1.8, hemiI: 0.8, sky: ["#8a96a3", "#b8c2cc", "#d7dde2", "#6f7a5c"], exposure: 1.1, fog: 0.008, ramp: ["#1a1e22", "#6a7a70", "#eef0f0"] },
 ];
 
 // La partida va del atardecer (DUSK) a la noche de la semilla: anochece a mitad de partida y Felipe llega a medianoche.
 // Megabonk: toda la partida es de día. DUSK = clima de arranque (mañana); NIGHTS = climas finales posibles (los nocturnos quedan para el lab).
 export const DUSK = CLIMATES.find((c) => c.id === "manana")!;
+export const ENCORE_DUSK = CLIMATES.find((c) => c.id === "encore")!;
 export const NIGHTS = CLIMATES.filter((c) => ["mediodia", "atardecer", "nublado", "manana"].includes(c.id));
 const lerp = (a: number, b: number, s: number) => a + (b - a) * s;
 const lerpHex = (a: string, b: string, s: number) => {

@@ -1,0 +1,17 @@
+{
+ "medMs": 8.6,
+ "spikes": 5,
+ "spikesConGC": 1,
+ "spikesConShaderNuevo": 1,
+ "cuadrosConGC": 11,
+ "msMedioConGC": 11.8,
+ "mbLiberadosPorGC": 29.5,
+ "peores": [
+  "211:34.1ms gc=false fx=0",
+  "75:33.6ms gc=true fx=0",
+  "352:29.2ms gc=false fx=0",
+  "129:26.3ms gc=false fx=0",
+  "486:23.2ms gc=false fx=3",
+  "8:17.1ms gc=false fx=0"
+ ]
+}

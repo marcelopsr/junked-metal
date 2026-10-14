@@ -1,3 +1,8 @@
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/700.css";
+/* Fuentes: Bebas Neue (solo 400) se declara con rango de peso 100-900 para que `font-weight: 700` no genere negrita sintética. Archivo del paquete @fontsource, URL relativa (base "./"). */
+@font-face { font-family: "Bebas Neue"; font-style: normal; font-display: swap; font-weight: 100 900; src: url("../node_modules/@fontsource/bebas-neue/files/bebas-neue-latin-400-normal.woff2") format("woff2"); }
 /* Kit de UI de Junked Metal: lenguaje de Junket Crush (src/match3.css, docs/images/Guía UI industrial…) llevado a toda la UI.
    Chapa oscura con borde naranja gastado y tornillos, botones de chapa pintada, foco cian, números grandes legibles.
    Se carga ÚLTIMA (import en main.ts): pisa los estilos de vidrio de style.css/menu.css/hud.css sin tocar la lógica.
@@ -5,11 +10,11 @@
 
 /* ---------- Tokens: copia de PAL/M3C en src/kit3d.ts (fuente única de la paleta; si cambia un HEX, cambiarlo en los dos) ---------- */
 :root {
-  --jm-amarillo: #FFB400; --jm-amarillo2: #FFD166; --jm-naranja: #FF9138; --jm-rojo: #FF3B2E; --jm-cian: #00C2FF; --jm-verde: #22C55E; --jm-morado: #8B5CF6;
-  --jm-fondo: #0B0F14; --jm-fondo2: #14181F; --jm-panel: #1F2937; --jm-borde: #374151; --jm-texto2: #9CA3AF; --jm-texto: #F8FAFC;
-  --jm-chapa: #b5651d; --jm-chapa-osc: #3a2414; --jm-tornillo: #6b4a2a;
-  --jm-titulo: "Rajdhani", system-ui, sans-serif; /* industrial condensada: siempre 700 y mayúsculas */
-  --jm-texto-f: "Rajdhani", system-ui, sans-serif; /* funcional: 500 */
+  --jm-amarillo: #FBC02D; --jm-amarillo2: #FFD54F; --jm-naranja: #FB8C00; --jm-rojo: #E53935; --jm-cian: #42A5F5; --jm-verde: #66BB6A; --jm-morado: #8E24AA;
+  --jm-fondo: #101215; --jm-fondo2: #1a1d22; --jm-panel: #23272d; --jm-borde: #363c44; --jm-texto2: #A9B1BB; --jm-texto: #F5F7FA;
+  --jm-chapa: #3b424b; --jm-chapa-osc: #0d0f12; --jm-tornillo: transparent; /* sin chapa naranja ni tornillos: borde gris de panel oscuro */
+  --jm-titulo: "Bebas Neue", Impact, "Arial Narrow", sans-serif; /* títulos, números y botones: siempre mayúsculas */
+  --jm-texto-f: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif; /* texto general */
   --jm-r: 3px; --jm-gap: 10px; --jm-pad: 14px;
   --jm-t-h1: clamp(30px, 4.2vw, 44px); --jm-t-h2: 22px; --jm-t-kicker: 13px; --jm-t-body: 16px; --jm-t-small: 13px; --jm-t-num: 30px;
   --jm-sombra: 0 14px 40px rgba(0, 0, 0, .6);
@@ -20,15 +25,9 @@
 
 /* ---------- Panel de chapa (principal) y panel secundario ---------- */
 .jm-panel, #bpanel, .askbox, #scr-garage #cars, #scr-garage #paint, .overGrid .card, #opts, #tedit {
-  background:
-    radial-gradient(circle at 9px 9px, var(--jm-tornillo) 0 2.5px, transparent 3.5px),
-    radial-gradient(circle at calc(100% - 9px) 9px, var(--jm-tornillo) 0 2.5px, transparent 3.5px),
-    radial-gradient(circle at 9px calc(100% - 9px), var(--jm-tornillo) 0 2.5px, transparent 3.5px),
-    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), var(--jm-tornillo) 0 2.5px, transparent 3.5px),
-    linear-gradient(180deg, rgba(31, 41, 55, .96), rgba(20, 24, 31, .97));
-  border: 3px solid var(--jm-chapa); border-radius: var(--jm-r);
-  outline: 2px solid var(--jm-fondo);
-  box-shadow: inset 0 0 0 2px var(--jm-chapa-osc), inset 0 0 24px rgba(0, 0, 0, .55), var(--jm-sombra);
+  background: var(--jm-fondo2);
+  border: 2px solid var(--jm-chapa); border-radius: 6px;
+  box-shadow: inset 0 3px 0 var(--jm-rojo), var(--jm-sombra);
   backdrop-filter: none; -webkit-backdrop-filter: none;
 }
 .jm-panel2, .carc, .bblock, #opts .row, .ptest, .kit.stats li, #scr-over .kit.stats li, #fe ul:not(.kv) {
@@ -54,24 +53,25 @@
 
 /* ---------- Botón (secundario = chapa oscura; .primary = verde; .warn = amarillo; .danger = rojo) ---------- */
 button, .jm-btn {
-  font: 700 15px/1 var(--jm-titulo); letter-spacing: .06em; text-transform: uppercase; text-shadow: none;
-  min-height: 42px; padding: 10px 18px; border-radius: var(--jm-r); cursor: pointer;
-  color: var(--jm-texto); background: linear-gradient(180deg, #2b3442, var(--jm-panel) 55%, #161c25);
-  border: 2px solid var(--jm-fondo); outline: 1px solid rgba(181, 101, 29, .55); outline-offset: -4px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 -3px 0 rgba(0, 0, 0, .35), 0 3px 0 #000;
+  font: 400 18px/1 var(--jm-titulo); letter-spacing: .06em; text-transform: uppercase; text-shadow: none;
+  min-height: 42px; padding: 10px 18px; border-radius: 6px; cursor: pointer;
+  color: var(--jm-texto); background: var(--jm-panel);
+  border: 2px solid #4a515b;
+  box-shadow: 0 3px 0 #000;
   clip-path: none !important; transition: filter .08s, transform .08s;
 }
-button:hover:not(:disabled) { background: linear-gradient(180deg, #3a4556, #283241 55%, #1b222d); outline-color: var(--jm-amarillo); color: #fff; }
-button:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(0, 0, 0, .35), 0 1px 0 #000; }
+button:hover:not(:disabled) { background: #2d323a; border-color: var(--jm-amarillo); color: #fff; }
+button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
 button:disabled { filter: grayscale(1) brightness(.7); opacity: .6; cursor: default; }
+/* Primario: pegatina roja con borde blanco, leve inclinación y sombra dura. Texto blanco >=22px (texto grande: AA 3:1; blanco sobre #E53935 = 4.0:1). */
 button.primary, .jm-btn.primary {
-  color: var(--jm-fondo); outline: 0; font-size: 18px;
-  background: linear-gradient(#5ee08a, var(--jm-verde) 55%, #15803d);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .35), inset 0 -3px 0 rgba(0, 0, 0, .3), 0 3px 0 #000;
+  color: #fff; font-size: 22px; letter-spacing: .08em; background: var(--jm-rojo); border: 3px solid #fff; rotate: -2deg;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .35); box-shadow: 0 4px 0 #7f1412, 0 6px 0 #000;
 }
-button.primary:hover:not(:disabled) { background: linear-gradient(#7af0a2, #2fd36c 55%, #179247); color: var(--jm-fondo); }
-.jm-btn.warn { color: var(--jm-fondo); outline: 0; background: linear-gradient(var(--jm-amarillo2), var(--jm-amarillo) 55%, #c98a00); }
-.jm-btn.danger { outline: 0; background: linear-gradient(#ff7a70, var(--jm-rojo) 55%, #b91c1c); text-shadow: 0 1px 0 #000; }
+button.primary:hover:not(:disabled) { background: #EF4A47; border-color: #fff; color: #fff; }
+button.primary:active:not(:disabled) { translate: 0 3px; transform: none; box-shadow: 0 1px 0 #7f1412, 0 2px 0 #000; }
+.jm-btn.warn { color: var(--jm-fondo); background: var(--jm-amarillo); border-color: var(--jm-fondo); }
+.jm-btn.danger { background: #b71c1c; border-color: #ef9a9a; color: #fff; }
 /* Foco: cian, igual con teclado, joystick o mouse (como en el gabinete) */
 #fe :is(button, select, input, [tabindex]):focus, #levelup :is(button, .offer):focus, button:focus-visible { outline: 3px solid var(--jm-cian); outline-offset: 3px; }
 #fe .carc:focus { border-color: var(--jm-cian); }
@@ -83,8 +83,8 @@ button.primary:hover:not(:disabled) { background: linear-gradient(#7af0a2, #2fd3
 .tab { font-size: 13px; letter-spacing: .1em; padding: 8px 12px; min-height: 36px; }
 .tab.on, .slot .opt.on, .dside .opt.on, #paint .hsvt .opt.on {
   color: var(--jm-fondo); outline: 0; border-color: var(--jm-fondo);
-  background: linear-gradient(var(--jm-amarillo2), var(--jm-amarillo) 55%, #c98a00);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .35), 0 3px 0 #000;
+  background: var(--jm-amarillo);
+  box-shadow: 0 3px 0 #000;
 }
 .slot .opt, .dside .opt, #paint .hsvt .opt { font-size: 12px; padding: 7px 10px; min-height: 34px; }
 .slot .opt.locked { color: var(--jm-texto2); outline-style: dashed; }
@@ -141,13 +141,13 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 
 /* ---------- Menú principal: columna de placas a la izquierda; el auto queda libre en el centro ---------- */
 .mainGrid { gap: 6px; width: min(360px, 92vw); }
-.mainGrid button, .list button { font: 700 17px/1 var(--jm-titulo); letter-spacing: .08em; text-transform: uppercase; text-align: left; padding: 12px 16px 12px 22px; min-height: 44px; rotate: none; position: relative; }
-.list button::before { content: ""; position: absolute; left: 7px; top: 50%; width: 6px; height: 6px; translate: 0 -50%; background: var(--jm-tornillo); border-radius: 50%; opacity: 1; }
-.list button:focus { background: linear-gradient(var(--jm-amarillo2), var(--jm-amarillo) 55%, #c98a00); color: var(--jm-fondo); outline: 3px solid var(--jm-cian); outline-offset: 2px; box-shadow: 0 3px 0 #000; }
+.mainGrid button, .list button { font: 400 21px/1 var(--jm-titulo); letter-spacing: .08em; text-transform: uppercase; text-align: left; padding: 12px 16px 12px 22px; min-height: 46px; rotate: none; position: relative; }
+.list button::before { content: ""; position: absolute; left: 8px; top: 50%; width: 6px; height: 6px; translate: 0 -50%; background: var(--jm-rojo); border-radius: 50%; opacity: 1; }
+.list button:focus { background: var(--jm-amarillo); color: var(--jm-fondo); outline: 3px solid var(--jm-cian); outline-offset: 2px; box-shadow: 0 3px 0 #000; }
 .list button:focus::before { background: var(--jm-fondo); }
-.mainGrid .primary, .list button.primary { font-size: 24px; padding: 16px 22px; text-align: center; }
+.mainGrid .primary, .list button.primary { font-size: 30px; padding: 14px 22px; text-align: center; rotate: -2deg; }
 .list button.primary::before { display: none; }
-.list button.primary:focus { background: linear-gradient(#7af0a2, var(--jm-verde) 55%, #15803d); color: var(--jm-fondo); }
+.list button.primary:focus { background: #EF4A47; color: #fff; }
 .mainGrid .chip { min-height: 36px; font-size: 13px; letter-spacing: .12em; color: var(--jm-amarillo2); background: rgba(11, 15, 20, .88); outline-style: dashed; }
 .mainGrid .chip:focus { color: var(--jm-fondo); }
 @media (min-width: 900px) and (min-height: 501px) {
@@ -193,8 +193,8 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 #levelup .lu-reroll { min-height: 36px; }
 
 /* ---------- HUD de supervivencia: placas de chapa compactas, números grandes ---------- */
-#hud { --g-bg: rgba(11, 15, 20, .82); --g-line: var(--jm-borde); --g-txt: var(--jm-texto); --g-dim: var(--jm-texto2); --hf: var(--jm-titulo); }
-.h-panel, #lcd, #banner:not(.evt-warn):not(.evt-now) { border-radius: var(--jm-r); border: 1px solid var(--jm-borde); border-top: 2px solid rgba(181, 101, 29, .8);
+#hud { --g-bg: var(--jm-fondo2); --g-line: var(--jm-borde); --g-txt: var(--jm-texto); --g-dim: var(--jm-texto2); --hf: var(--jm-titulo); }
+.h-panel, #lcd, #banner:not(.evt-warn):not(.evt-now) { border-radius: var(--jm-r); border: 1px solid var(--jm-borde); border-top: 2px solid var(--jm-rojo);
   background: var(--g-bg); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: inset 0 0 0 1px #000, 0 6px 16px rgba(0, 0, 0, .35); }
 #radar.h-panel { border-radius: 50%; border: 3px solid #4b5563; box-shadow: 0 0 0 2px #000, 0 6px 16px rgba(0, 0, 0, .4); }
 #lvl { border-radius: var(--jm-r); background: var(--jm-amarillo); color: var(--jm-fondo); border: 2px solid var(--jm-fondo); box-shadow: 0 2px 0 #000; padding: 4px 8px; }
@@ -213,7 +213,7 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 #txl .h-track { height: 7px; }
 #speedo .arc { stroke: var(--jm-fondo); stroke-linecap: butt; } #speedo .arc.on { stroke: var(--jm-amarillo); filter: none; }
 #kmh { font-size: 32px; }
-#slots .slot { border-radius: var(--jm-r); background: var(--g-bg); border: 1px solid var(--jm-borde); border-top: 2px solid rgba(181, 101, 29, .8); backdrop-filter: none; }
+#slots .slot { border-radius: var(--jm-r); background: var(--g-bg); border: 1px solid var(--jm-borde); border-top: 2px solid var(--jm-rojo); backdrop-filter: none; }
 #slots .slot .pips i { border-radius: 0; } #slots .slot .pips i.on { background: var(--jm-amarillo); box-shadow: none; }
 #slots .slot.evo { border-color: var(--jm-amarillo); color: var(--jm-amarillo); }
 #bossName { color: var(--jm-rojo); text-transform: uppercase; }
@@ -251,7 +251,7 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 
 /* ---------- Aviso de radio: panel de chapa con la cabecera RADIO · MHz · CH como detalle ---------- */
 #banner, #banner.evt-warn, #banner.evt-now {
-  border-radius: var(--jm-r); background: linear-gradient(180deg, rgba(31, 41, 55, .96), rgba(20, 24, 31, .97));
+  border-radius: var(--jm-r); background: var(--jm-fondo2);
   border: 2px solid var(--jm-chapa); outline: 2px solid var(--jm-fondo); box-shadow: inset 0 0 0 1px var(--jm-chapa-osc), 0 10px 28px rgba(0, 0, 0, .55);
   --ban-ink: var(--jm-texto); --ban-dim: var(--jm-texto2); --ban-warn: var(--jm-amarillo); --ban-now: var(--jm-rojo);
 }
@@ -265,7 +265,7 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 
 /* ---------- HUD contextual: misma placa base para Survivor (#hud), Carrera (#race) y Demolición (#duel-hud) ---------- */
 .rp .rpos, .rp .rlap, .rp .ritem, .rp .rspd, #rmap, #rtab div, #duel-hud, #duel-flip {
-  background: rgba(11, 15, 20, .84); border: 1px solid var(--jm-borde); border-top: 2px solid rgba(181, 101, 29, .8); border-radius: var(--jm-r);
+  background: var(--jm-fondo2); border: 1px solid var(--jm-borde); border-top: 2px solid var(--jm-rojo); border-radius: var(--jm-r);
   backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: inset 0 0 0 1px #000, 0 6px 16px rgba(0, 0, 0, .35);
 }
 /* Carrera: posición enorme en amarillo, vuelta y tiempo como contador, objeto en una caja con marco */
@@ -296,7 +296,7 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 .duel-part-wear { font-family: var(--jm-titulo); font-size: 12px; color: var(--jm-texto2); }
 .duel-count-num { font-family: var(--jm-titulo); color: var(--jm-amarillo); -webkit-text-stroke: 6px var(--jm-fondo); paint-order: stroke fill; text-shadow: 0 8px 0 #000; }
 .duel-count-sub { font-family: var(--jm-titulo); font-size: 15px; color: var(--jm-amarillo2); }
-#duel-inter, #duel-res { font-family: var(--jm-texto-f); color: var(--jm-texto); background: linear-gradient(180deg, rgba(31, 41, 55, .97), rgba(20, 24, 31, .98)); border: 3px solid var(--jm-chapa); outline: 2px solid var(--jm-fondo); border-radius: var(--jm-r); box-shadow: inset 0 0 0 2px var(--jm-chapa-osc), var(--jm-sombra); }
+#duel-inter, #duel-res { font-family: var(--jm-texto-f); color: var(--jm-texto); background: var(--jm-fondo2); border: 3px solid var(--jm-chapa); outline: 2px solid var(--jm-fondo); border-radius: var(--jm-r); box-shadow: inset 0 0 0 2px var(--jm-chapa-osc), var(--jm-sombra); }
 .duel-inter-title { color: var(--jm-amarillo); font: 700 26px/1 var(--jm-titulo); text-transform: uppercase; }
 .duel-inter-pips { color: var(--jm-amarillo); } .duel-inter-tip { color: var(--jm-texto2); font-size: 15px; }
 #duel-inter button, #duel-res button, #duel-pause button { font: 700 15px/1 var(--jm-titulo); letter-spacing: .06em; text-transform: uppercase; color: var(--jm-texto); background: linear-gradient(180deg, #2b3442, var(--jm-panel) 55%, #161c25); border: 2px solid var(--jm-fondo); border-radius: var(--jm-r); box-shadow: 0 3px 0 #000; }
@@ -329,3 +329,21 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 @media (pointer: coarse) {
   #opts input[type=range] { height: 44px; border: 0; background: linear-gradient(var(--jm-borde), var(--jm-borde)) center / 100% 12px no-repeat, linear-gradient(var(--jm-fondo), var(--jm-fondo)) center / 100% 10px no-repeat; }
 }
+
+/* ---------- Encore (HUD de partida, teleportador, pactos, ruta, votación, resultados): Bebas escala menos que otras tipografías, se suben los tamaños chicos ---------- */
+#encAsk, #encAsk .encHd { font-family: var(--jm-titulo); }
+#encAsk { background: var(--jm-fondo2); border: 2px solid var(--jm-chapa); border-top: 4px solid var(--jm-rojo); border-radius: 6px; box-shadow: 0 10px 28px rgba(0, 0, 0, .55); backdrop-filter: none; }
+#encAsk .encHd { font-size: 22px; letter-spacing: .08em; } #encAsk .encHd b { font-size: 28px; }
+#encTag { font-size: 19px; }
+#encAsk .encBtns button { font-size: 20px; }
+#encAsk.pact .encBtns b { font-size: 21px; letter-spacing: .05em; }
+#encAsk.pact .encBtns small { font: 500 11px/1.1 var(--jm-texto-f); letter-spacing: .08em; text-transform: uppercase; }
+#encAsk.pact .encBtns span { font: 500 14px/1.25 var(--jm-texto-f); letter-spacing: 0; text-transform: none; overflow-wrap: anywhere; }
+#encAsk.pact .encBtns em { font: 500 12px/1.2 var(--jm-texto-f); letter-spacing: 0; text-transform: none; }
+#encAsk.pact .encBtns .pg { color: var(--jm-verde); } #encAsk.pact .encBtns .pc { color: #ff8a80; }
+#encAsk.pact .encBtns button.primary { rotate: none; border: 2px solid var(--jm-amarillo); color: var(--jm-texto); background: var(--jm-panel); text-shadow: none; box-shadow: 0 3px 0 #000; }
+#encPacts i { font-size: 14px; letter-spacing: .06em; border-color: var(--jm-borde); }
+#encBar { background: var(--jm-amarillo); }
+#hud .sub, #hud small { font-family: var(--jm-texto-f); }
+button { overflow-wrap: anywhere; }
+button.primary { max-width: 100%; }

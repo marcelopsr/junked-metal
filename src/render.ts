@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { snap: 1, lampI: 17.5, glowI: 2.35, cone: 1.28, fogMul: 0.92, ambMul: 0.85, moonMul: 1, exposure: 0.88 };
+export const LOOK = { snap: 1, lampI: 17.5, glowI: 2.35, cone: 1.28, fogMul: 0.92, ambMul: 0.85, moonMul: 1, exposure: 0.88, dof: 0.4 }; // dof: desenfoque diorama en partida (camera_rig lo enfoca al auto cada cuadro)
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -20,6 +20,13 @@ function paintSky(c4: [string, string, string, string]) {
   g.addColorStop(0, c4[0]); g.addColorStop(0.45, c4[1]); g.addColorStop(0.52, c4[2]); g.addColorStop(1, c4[3]);
   c.fillStyle = g; c.fillRect(0, 0, 256, 256);
   skyTex.update();
+}
+/** Cielo entre dos degradados (Luna: noche→día). Repinta solo si t cambia de escalón (16): el costo es un fillRect de 256² de vez en cuando. */
+let skyStep = -1;
+export function skyBlend(a: string[], b: string[], t: number) {
+  const k = Math.round(t * 16); if (k === skyStep) return; skyStep = k;
+  const c4 = a.map((h, i) => B.Color3.Lerp(B.Color3.FromHexString(h), B.Color3.FromHexString(b[i]), k / 16).toHexString()) as [string, string, string, string];
+  paintSky(c4); scene.clearColor = B.Color4.FromHexString(c4[1] + "ff");
 }
 
 // Clima de la partida: sol, cielo, luz ambiente, exposición y reflejos (la sonda se vuelve a capturar)
@@ -37,7 +44,7 @@ export function applyClimate(k: { sun: [number, number, number]; sunColor: strin
   hemi.intensity = k.hemiI * LOOK.ambMul;
   hemi.diffuse = B.Color3.FromHexString(k.amb ?? (k.day ? "#eef1ee" : k.sky[1])); // ambiente diurno neutro para separar los materiales
   hemi.groundColor = B.Color3.FromHexString(k.ground ?? (k.day ? "#7c8970" : NIGHT_GROUND)); // rebote del pasto menos saturado
-  paintSky(k.sky);
+  paintSky(k.sky); skyStep = -1;
   scene.clearColor = B.Color4.FromHexString(k.sky[1] + "ff");
   scene.imageProcessingConfiguration.exposure = k.exposure * LOOK.exposure * cur.bright;
   scene.fogColor = B.Color3.FromHexString(k.sky[1]);
@@ -123,9 +130,14 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   scene.materials.forEach(detach); scene.onNewMaterialAddedObservable.add(detach);
   pipe.fxaaEnabled = false; pipe.samples = 1; // el suavizado de bordes lo elige el jugador (Configuración → Imagen → applyGfx)
   pipe.bloomEnabled = true;
-  pipe.bloomThreshold = 0.95;
+  pipe.bloomThreshold = 0.8; // maqueta: los brillos sangran un poco más
   pipe.bloomWeight = 0.18; // brillo discreto: antes velaba todo el día
   pipe.bloomKernel = 32;
+  // Gradación de maqueta: viñeta cálida, saturación +22, luces cálidas. Las curvas quedan siempre activas: applyGfx suma el gamma (medios tonos) sobre esta base
+  const ip = scene.imageProcessingConfiguration;
+  ip.vignetteEnabled = true; ip.vignetteWeight = 1.5; ip.vignetteColor = new B.Color4(0.12, 0.06, 0.02, 0); ip.vignetteBlendMode = B.ImageProcessingConfiguration.VIGNETTEMODE_MULTIPLY;
+  ip.colorCurves = new B.ColorCurves(); ip.colorCurves.globalSaturation = 22; ip.colorCurves.highlightsHue = 38; ip.colorCurves.highlightsDensity = 18;
+  ip.colorCurvesEnabled = true;
   setupPixels(cam, low);
 }
 
@@ -195,13 +207,17 @@ export function menuLights(on: boolean) {
   glow.range = on ? 45 : 14;
 }
 /** Profundidad de campo de los menús: foco a `focus` unidades de la cámara (0 = apagada). `k` = desenfoque del fondo lejano (0..1).
- *  En táctil el desenfoque es el barato (Low). Al apagarla se libera el depth renderer: en partida no cuesta nada. */
+ *  En táctil el desenfoque es el barato (Low). Al apagarla se pausa el depth renderer: en partida no cuesta nada. */
 export function setDof(focus: number, k = 0.7) {
-  const on = focus > 0;
+  // Pantalla dividida: sin DOF. El foco sale del J1 (camera_rig) y no sirve a las otras vistas, y el depth renderer se pagaba una vez por cámara (~48 draws c/u con 4 jugadores).
+  const on = focus > 0 && !split.length;
   if (pipeline.depthOfFieldEnabled !== on) {
     if (on) pipeline.depthOfFieldBlurLevel = lowQ ? B.DepthOfFieldEffectBlurLevel.Low : B.DepthOfFieldEffectBlurLevel.Medium;
     pipeline.depthOfFieldEnabled = on;
-    if (!on) scene.disableDepthRenderer(mainCam);
+    // El de la cámara principal se pausa, no se libera: uno nuevo carga sus shaders con import() asíncrono y, hasta que llegan, su mapa queda vacío
+    // (todo a maxZ) y el CoC desenfoca la pantalla entera, auto incluido. Así se veía en cada vuelta de la cámara de lejos a cerca. Pausado no dibuja nada.
+    scene.enableDepthRenderer(mainCam).enabled = on;
+    if (!on) for (const c of split) scene.disableDepthRenderer(c); // los de pantalla dividida sí se liberan (uno por cámara del pipeline)
   }
   if (!on) return;
   // CoC de Babylon: k = apertura · focal / (foco − focal), con apertura = lente / f. Se despeja la focal para que el desenfoque no dependa de la distancia.
@@ -329,14 +345,10 @@ export function applyGfx(g: Gfx) {
   }
   // Pantalla: el brillo escala la exposición; el gamma sube o baja los medios tonos (curva de color de Babylon, sin tocar negros ni blancos)
   if (cur.bright !== was.bright && clim) scene.imageProcessingConfiguration.exposure = clim.exposure * LOOK.exposure * cur.bright;
-  if (cur.gamma !== was.gamma || (cur.gamma !== 1 && !scene.imageProcessingConfiguration.colorCurvesEnabled)) {
-    const ip = scene.imageProcessingConfiguration;
-    ip.colorCurvesEnabled = cur.gamma !== 1;
-    if (cur.gamma !== 1) {
-      ip.colorCurves ??= new B.ColorCurves();
-      ip.colorCurves.midtonesExposure = (cur.gamma - 1) * 90;
-      ip.colorCurves.midtonesDensity = (1 - cur.gamma) * 30;
-    }
+  if (cur.gamma !== was.gamma) {
+    const cc = scene.imageProcessingConfiguration.colorCurves!; // creadas en setupRender con la gradación; acá solo los medios tonos
+    cc.midtonesExposure = (cur.gamma - 1) * 90;
+    cc.midtonesDensity = (1 - cur.gamma) * 30;
   }
 }
 
@@ -361,9 +373,11 @@ export function setSplit(cam2: B.Camera | null, on: boolean) {
     applyGfx(cur);
     pipeline.addCamera(cam2);
   } else {
-    for (const c of cam2 ? [cam2] : [...split]) { pipeline.removeCamera(c); if (split.includes(c)) split.splice(split.indexOf(c), 1); }
+    for (const c of cam2 ? [cam2] : [...split]) { pipeline.removeCamera(c); scene.disableDepthRenderer(c); if (split.includes(c)) split.splice(split.indexOf(c), 1); }
     applyGfx(cur);
   }
+  // Bloom solo en la vista del J1: en las otras cada cámara redibujaba su mapa de brillo (con 4 jugadores, ~200 de los ~600 draws del FINAL ACT). Con 1 jugador, null = como siempre.
+  if (glowL) (glowL as unknown as { _thinEffectLayer: { camera: B.Camera | null } })._thinEffectLayer.camera = split.length ? mainCam : null;
 }
 
 // ---------- Materiales ----------

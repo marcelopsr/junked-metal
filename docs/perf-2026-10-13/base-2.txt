@@ -1,0 +1,4 @@
+pc-lab-hormigas300                  9.7   11.4    6.0    305  1170.6   1286    102.8   ms -3% draws +0% tris +0% heap +2%
+pc-partida_llena-llena              9.7   15.6    6.0    344   588.4   1462    107.8   
+cel-lab-hormigas300                 7.0   10.5    4.7    173   517.6   1286     97.6   
+cel-partida_llena-llena             6.9   10.2    4.8    191   278.9   1463    106.6   

@@ -31,6 +31,36 @@ export const cyl = (top: number, bot: number, h: number, mat: B.Material, pos: V
   place(B.MeshBuilder.CreateCylinder("p", { diameterTop: top, diameterBottom: bot, height: h, tessellation: tess <= 6 ? tess : Math.min(tess * 2, tier(Math.max(top, bot) * tessK, [8, 12, 16, 24, 32])) }, scene), mat, pos, rot);
 export const sph = (d: number, mat: B.Material, pos: V3, scl?: V3, seg = 8) =>
   place(B.MeshBuilder.CreateSphere("p", { diameter: d, segments: seg <= 4 ? seg : Math.min(seg * 2, tier(d * tessK * (scl ? Math.max(...scl) : 1), [4, 6, 8, 10, 12])) }, scene), mat, pos, undefined, scl);
+
+/** Caja de bordes redondeados (juguete): radio r, 2 tramos por arco, 108 triángulos (las piezas de menos de 0,11 son cajas comunes). Normales suaves: la luz resbala por el borde en vez de cortarse. */
+export function rbox(w: number, h: number, d: number, r: number, mat: B.Material, pos: V3, rot?: V3) {
+  if (Math.min(w, h, d) < 0.11) return box(w, h, d, mat, pos, rot); // piezas finas: el bisel no se ve y costaría 9 veces más
+  const H = [w / 2, h / 2, d / 2], rr = Math.min(r, ...H) * 0.999;
+  const g = (hh: number) => [-hh, -hh + rr, hh - rr, hh];
+  const P: number[] = [], N: number[] = [], U: number[] = [], I: number[] = [];
+  for (const ax of [0, 1, 2]) for (const sg of [-1, 1]) {
+    const a1 = (ax + 1) % 3, a2 = (ax + 2) % 3, base = P.length / 3;
+    for (const u of g(H[a1])) for (const t of g(H[a2])) {
+      const q = [0, 0, 0]; q[ax] = sg * H[ax]; q[a1] = u; q[a2] = t;
+      const dir = q.map((c, i) => c - Math.max(-(H[i] - rr), Math.min(H[i] - rr, c)));
+      const L = Math.hypot(dir[0], dir[1], dir[2]) || 1;
+      for (let i = 0; i < 3; i++) { P.push(q[i] - dir[i] + (dir[i] / L) * rr); N.push(dir[i] / L); }
+      U.push(u, t);
+    }
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+      const a = base + i * 4 + j, b = a + 4, c = a + 1, e = b + 1;
+      // Babylon (mano izquierda): el triángulo de frente tiene (b-a)×(c-a) opuesto a la normal; se comprueba y se invierte si hace falta
+      const p = (k: number) => [P[k * 3], P[k * 3 + 1], P[k * 3 + 2]], A = p(a), Bv = p(b), C = p(c), n = [N[a * 3], N[a * 3 + 1], N[a * 3 + 2]];
+      const u1 = Bv.map((x, i) => x - A[i]), v1 = C.map((x, i) => x - A[i]);
+      const dot = (u1[1] * v1[2] - u1[2] * v1[1]) * n[0] + (u1[2] * v1[0] - u1[0] * v1[2]) * n[1] + (u1[0] * v1[1] - u1[1] * v1[0]) * n[2];
+      if (dot < 0) I.push(a, b, c, c, b, e); else I.push(a, c, b, c, e, b);
+    }
+  }
+  const m = new B.Mesh("p", scene), vd = new B.VertexData();
+  Object.assign(vd, { positions: P, normals: N, uvs: U, indices: I });
+  vd.applyToMesh(m);
+  return place(m, mat, pos, rot);
+}
 // Toro propio: `na` lados alrededor y `nc` en el corte del tubo (el de Babylon usa los mismos para ambos: un aro fino de 40 → 3.200 triángulos)
 function ring(R: number, r: number, na: number, nc: number) {
   const P: number[] = [], N: number[] = [], U: number[] = [], I: number[] = [];
@@ -128,8 +158,15 @@ export function template(name: string, build: () => B.Mesh[], scale = 1) {
 // Estilo de rueda (garaje → Ruedas): "" de serie, oruga (tacos chatos; la banda va en la carrocería), todoterreno (tacos grandes),
 // lisa (de carrera: ancha y sin flancos) y rayos (8 rayos finos de colores). Todo en la misma malla: sigue siendo una instancia por rueda.
 const SPOKES = ["#ef4444", "#f59e0b", "#facc15", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#14b8a6"];
+const MINI_RUBBER = () => pbr("minirubber", { color: "#121316", rough: 0.9 });
 export function wheel(d: number, w: number, rim: string, style = "") {
   const around = (n: number, f: (a: number) => B.Mesh) => Array.from({ length: n }, (_, k) => f((k * Math.PI * 2) / n));
+  if (style === "mini") return merge("wheel", [ // Mini Worlds: goma negra con tacos, llanta de color, maza negra
+    cyl(d, d, w, MINI_RUBBER(), [0, 0, 0], [0, 0, Math.PI / 2], 16),
+    ...around(12, (a) => box(w * 1.02, d * 0.07, d * 0.12, MINI_RUBBER(), [0, Math.sin(a) * d * 0.5, Math.cos(a) * d * 0.5], [a, 0, 0])),
+    cyl(d * 0.6, d * 0.6, w * 1.06, pbr("mini" + rim, { color: rim, rough: 0.35, coat: 0.4 }), [0, 0, 0], [0, 0, Math.PI / 2], 14),
+    cyl(d * 0.28, d * 0.28, w * 1.12, M.matte("#17181c"), [0, 0, 0], [0, 0, Math.PI / 2], 8),
+  ]);
   if (style === "fold") return merge("wheel", foldWheel(d, w, rim)); // vertical slice Folded (?folded2)
   const lisa = style === "lisa", W = lisa ? w * 1.25 : w;
   return merge("wheel", [

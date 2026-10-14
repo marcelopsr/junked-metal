@@ -9,7 +9,7 @@ export const clouds: B.Mesh[] = [];
 export function cloudShadows(t: number, c: B.Vector3) {
   if (!clouds.length) {
     const mat = pbr("cloudShade", { color: "#102010", rough: 1, alpha: 0.2 });
-    mat.disableLighting = true; mat.zOffset = -3; mat.disableDepthWrite = true;
+    mat.disableLighting = true; mat.emissiveColor = B.Color3.FromHexString("#2c3a1c"); mat.alpha = 0.1; // sombra cálida y leve (antes manchas casi negras en el pasto) mat.zOffset = -3; mat.disableDepthWrite = true;
     const t = new B.DynamicTexture("cloudTex", 64, scene, false);
     const c = t.getContext() as unknown as CanvasRenderingContext2D, g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
     g.addColorStop(0, "#fff"); g.addColorStop(1, "#000"); c.fillStyle = g; c.fillRect(0, 0, 64, 64); t.update();

@@ -1,0 +1,619 @@
+{
+ "version": "2026-10-14",
+ "direccion": "Junked Metal Encore — diorama de juguete (láminas aprobadas, nombre provisorio RC Race)",
+ "paleta": {
+  "principales": {
+   "rojo": "#E53935",
+   "amarillo": "#FBC02D",
+   "azul": "#42A5F5",
+   "verde": "#66BB6A"
+  },
+  "secundarios": {
+   "naranja": "#FB8C00",
+   "morado": "#8E24AA",
+   "marron": "#795548",
+   "gris": "#9E9E9E"
+  },
+  "borde_pista": [
+   "rojo",
+   "blanco"
+  ]
+ },
+ "elementos": [
+  {
+   "id": "buggy",
+   "grupo": "vehiculos",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "CarKind buggy existe (gen. en car_genes.json); adaptar a chasis RC común"
+  },
+  {
+   "id": "truck",
+   "grupo": "vehiculos",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "no hay CarKind truck; candidato tanque/jeep"
+  },
+  {
+   "id": "rally",
+   "grupo": "vehiculos",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "parcial: carrera/clasico; sin variante rally"
+  },
+  {
+   "id": "monster",
+   "grupo": "vehiculos",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "CarKind monster existe (car_genes.json)"
+  },
+  {
+   "id": "drift",
+   "grupo": "vehiculos",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "sin equivalente; formula/carrera cercanos"
+  },
+  {
+   "id": "toy",
+   "grupo": "vehiculos",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "sin equivalente; helado/triciclo/monopatin cercanos"
+  },
+  {
+   "id": "chasis_comun",
+   "grupo": "piezas_auto",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "hoy cada CarKind (17) tiene su malla propia"
+  },
+  {
+   "id": "carroceria",
+   "grupo": "piezas_auto",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "carModel() arma body con pintura PBR"
+  },
+  {
+   "id": "aleron",
+   "grupo": "piezas_auto",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "PARTS.wing: serie/alto/doble"
+  },
+  {
+   "id": "ruedas",
+   "grupo": "piezas_auto",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "PARTS.tires y CarModel.wheels"
+  },
+  {
+   "id": "suspension",
+   "grupo": "piezas_auto",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "amortiguadores visibles en carModel (amort_grosor en car_genes.json)"
+  },
+  {
+   "id": "antena",
+   "grupo": "piezas_auto",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "CarModel.antenna y PARTS.acc pelotita"
+  },
+  {
+   "id": "luces",
+   "grupo": "piezas_auto",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "PARTS.lamp; faros emisivos"
+  },
+  {
+   "id": "calcos",
+   "grupo": "piezas_auto",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "textura",
+   "notas": "PARTS.decal (numero, rayo, damero) + GARAGE_DECALS; faltan 27, RC, llamas"
+  },
+  {
+   "id": "skins_color_material",
+   "grupo": "piezas_auto",
+   "estado": "existe",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "procedural",
+   "notas": "PAINTS y CarOpts.paint"
+  },
+  {
+   "id": "recta",
+   "grupo": "pista",
+   "estado": "adaptar",
+   "archivo_actual": "src/kart.ts",
+   "metodo": "procedural",
+   "notas": "pista de spline (trk) sin piezas modulares"
+  },
+  {
+   "id": "curva_90_45",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "pistas por spline, no por curva modular"
+  },
+  {
+   "id": "rampa",
+   "grupo": "pista",
+   "estado": "adaptar",
+   "archivo_actual": "src/kart.ts",
+   "metodo": "procedural",
+   "notas": "cajas 'ramp' en dos rectas, amarillas Folded"
+  },
+  {
+   "id": "salto",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "solo rampitas"
+  },
+  {
+   "id": "loop",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "puente",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "cruce",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "plataforma",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "tunel",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "soporte",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "baranda",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "cono",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "no hay en pista"
+  },
+  {
+   "id": "neumaticos",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "barrera",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "senal",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "borde_rojo_blanco",
+   "grupo": "pista",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "bordes de pista actuales sin patron rojo/blanco"
+  },
+  {
+   "id": "caja_herramientas",
+   "grupo": "props",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "palets",
+   "grupo": "props",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "cajas",
+   "grupo": "props",
+   "estado": "adaptar",
+   "archivo_actual": "src/zones/garaje.ts",
+   "metodo": "procedural",
+   "notas": "props de zona (garaje/galpon)"
+  },
+  {
+   "id": "tambores",
+   "grupo": "props",
+   "estado": "adaptar",
+   "archivo_actual": "src/zones/garaje.ts",
+   "metodo": "procedural",
+   "notas": "barriles Folded"
+  },
+  {
+   "id": "neumaticos",
+   "grupo": "props",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "rocas",
+   "grupo": "props",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "conos",
+   "grupo": "props",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "vallas",
+   "grupo": "props",
+   "estado": "adaptar",
+   "archivo_actual": "src/zones/patio.ts",
+   "metodo": "procedural",
+   "notas": "vallas/tablones (plankTpl)"
+  },
+  {
+   "id": "plantas",
+   "grupo": "props",
+   "estado": "adaptar",
+   "archivo_actual": "src/zones/patio.ts",
+   "metodo": "procedural",
+   "notas": "macetas y pasto (grass.ts)"
+  },
+  {
+   "id": "arboles",
+   "grupo": "props",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "fondo del patio sin arboles modulares"
+  },
+  {
+   "id": "casa_perro",
+   "grupo": "props",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "madera",
+   "grupo": "materiales",
+   "estado": "adaptar",
+   "archivo_actual": "src/zones/patio.ts",
+   "metodo": "textura",
+   "notas": "tablones en zones/"
+  },
+  {
+   "id": "carton",
+   "grupo": "materiales",
+   "estado": "falta",
+   "metodo": "textura",
+   "notas": ""
+  },
+  {
+   "id": "plastico",
+   "grupo": "materiales",
+   "estado": "adaptar",
+   "archivo_actual": "src/models/cars.ts",
+   "metodo": "shader",
+   "notas": "pbr() de juguetes"
+  },
+  {
+   "id": "metal",
+   "grupo": "materiales",
+   "estado": "existe",
+   "archivo_actual": "src/folded.ts",
+   "metodo": "textura",
+   "notas": "chapa Folded en src/folded.ts"
+  },
+  {
+   "id": "tierra",
+   "grupo": "materiales",
+   "estado": "adaptar",
+   "archivo_actual": "src/world.ts",
+   "metodo": "textura",
+   "notas": "floorAt en src/world.ts"
+  },
+  {
+   "id": "asfalto",
+   "grupo": "materiales",
+   "estado": "falta",
+   "metodo": "textura",
+   "notas": ""
+  },
+  {
+   "id": "nieve",
+   "grupo": "materiales",
+   "estado": "falta",
+   "metodo": "textura",
+   "notas": ""
+  },
+  {
+   "id": "roca",
+   "grupo": "materiales",
+   "estado": "falta",
+   "metodo": "textura",
+   "notas": ""
+  },
+  {
+   "id": "pasto",
+   "grupo": "materiales",
+   "estado": "existe",
+   "archivo_actual": "src/grass.ts",
+   "metodo": "shader",
+   "notas": "src/grass.ts con viento"
+  },
+  {
+   "id": "goma",
+   "grupo": "materiales",
+   "estado": "falta",
+   "metodo": "textura",
+   "notas": "neumaticos de auto sin material dedicado"
+  },
+  {
+   "id": "agua",
+   "grupo": "materiales",
+   "estado": "adaptar",
+   "archivo_actual": "src/zones/pileta.ts",
+   "metodo": "shader",
+   "notas": "pileta en zones/pileta.ts"
+  },
+  {
+   "id": "ciudad_miniatura",
+   "grupo": "biomas",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "garaje_taller",
+   "grupo": "biomas",
+   "estado": "adaptar",
+   "archivo_actual": "src/zones/garaje.ts",
+   "metodo": "procedural",
+   "notas": "zona garaje existe"
+  },
+  {
+   "id": "barrio_patio",
+   "grupo": "biomas",
+   "estado": "adaptar",
+   "archivo_actual": "src/zones/patio.ts",
+   "metodo": "procedural",
+   "notas": "zona patio/jardin"
+  },
+  {
+   "id": "bosque",
+   "grupo": "biomas",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "desierto",
+   "grupo": "biomas",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "industrial",
+   "grupo": "biomas",
+   "estado": "adaptar",
+   "archivo_actual": "src/zones/galpon.ts",
+   "metodo": "procedural",
+   "notas": "galpon"
+  },
+  {
+   "id": "nieve",
+   "grupo": "biomas",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": ""
+  },
+  {
+   "id": "noche_neon",
+   "grupo": "biomas",
+   "estado": "falta",
+   "metodo": "procedural",
+   "notas": "existe CLIMATES nocturno solo para lab"
+  },
+  {
+   "id": "dof_auto",
+   "grupo": "postproceso",
+   "estado": "adaptar",
+   "archivo_actual": "src/render.ts",
+   "metodo": "shader",
+   "notas": "setDof() existe, ajustar a foco en auto/tilt-shift; Low en tactil ya soportado"
+  },
+  {
+   "id": "vineta_calida",
+   "grupo": "postproceso",
+   "estado": "falta",
+   "archivo_actual": "src/render.ts",
+   "metodo": "shader",
+   "notas": ""
+  },
+  {
+   "id": "saturacion_plus",
+   "grupo": "postproceso",
+   "estado": "adaptar",
+   "archivo_actual": "src/render.ts",
+   "metodo": "shader",
+   "notas": "imageProcessingConfiguration contrast/exposure en render.ts; falta saturacion"
+  },
+  {
+   "id": "bloom_faros_neon",
+   "grupo": "postproceso",
+   "estado": "existe",
+   "archivo_actual": "src/render.ts",
+   "metodo": "shader",
+   "notas": "GlowLayer + pipeline.bloom en render.ts"
+  },
+  {
+   "id": "iluminacion_atardecer",
+   "grupo": "postproceso",
+   "estado": "adaptar",
+   "archivo_actual": "src/render.ts",
+   "metodo": "shader",
+   "notas": "Climate en run.ts/world.ts, hoy dia Megabonk"
+  },
+  {
+   "id": "tilt_shift",
+   "grupo": "postproceso",
+   "estado": "falta",
+   "archivo_actual": "src/render.ts",
+   "metodo": "shader",
+   "notas": ""
+  }
+ ],
+ "encore_escenarios": {
+  "doc": "docs/ENCORE_BIOMAS.md",
+  "eleccion": "E.zoneOf: escenario 0 patio; vuelta>=1 un escenario patio|jardin; destinos galpon|desvan|pileta|cocina por ruta; votacion y FINAL ACT en luna; garaje fuera de ENCORE",
+  "escenarios": [
+   {
+    "id": "patio",
+    "archivo": "src/zones/patio.ts",
+    "bioma": "barrio_patio",
+    "encaja": "parcial",
+    "costo": "medio"
+   },
+   {
+    "id": "jardin",
+    "archivo": "src/zones/jardin.ts",
+    "bioma": "ciudad_miniatura",
+    "encaja": "parcial",
+    "costo": "medio-alto"
+   },
+   {
+    "id": "galpon",
+    "archivo": "src/zones/galpon.ts",
+    "bioma": "industrial",
+    "encaja": "parcial",
+    "costo": "medio"
+   },
+   {
+    "id": "desvan",
+    "archivo": "src/zones/desvan.ts",
+    "bioma": "garaje_taller",
+    "encaja": "poco",
+    "costo": "bajo-medio"
+   },
+   {
+    "id": "pileta",
+    "archivo": "src/zones/pileta.ts",
+    "bioma": "desierto",
+    "encaja": "poco",
+    "costo": "medio"
+   },
+   {
+    "id": "cocina",
+    "archivo": "src/zones/cocina.ts",
+    "bioma": "nieve",
+    "encaja": "poco",
+    "costo": "medio"
+   },
+   {
+    "id": "luna_dia",
+    "archivo": "src/moon.ts",
+    "bioma": "desierto",
+    "encaja": "no",
+    "costo": "medio"
+   },
+   {
+    "id": "luna_noche",
+    "archivo": "src/moon.ts",
+    "bioma": "noche_neon",
+    "encaja": "parcial",
+    "costo": "medio-alto"
+   },
+   {
+    "id": "bosque",
+    "archivo": null,
+    "bioma": "bosque",
+    "encaja": "sin zona",
+    "costo": "alto"
+   }
+  ],
+  "paquetes": {
+   "p1_exteriores": [
+    "src/zones/patio.ts",
+    "src/zones/jardin.ts",
+    "src/zones/galpon.ts",
+    "src/models/props_rc.ts"
+   ],
+   "p2_interiores": [
+    "src/zones/desvan.ts",
+    "src/zones/cocina.ts",
+    "src/zones/pileta.ts"
+   ],
+   "p3_luna_noche": [
+    "src/moon.ts",
+    "src/moon_sky.ts",
+    "src/run.ts (CLIMATES)",
+    "src/encore.ts (VARIANTS)"
+   ],
+   "integrador": [
+    "src/world.ts",
+    "src/zones/common.ts",
+    "src/kit3d.ts",
+    "src/folded.ts"
+   ]
+  }
+ }
+}
