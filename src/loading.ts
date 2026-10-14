@@ -7,7 +7,7 @@ import { isTouch } from "./input";
 // - Solo se muestra si hay algo pendiente o si la carga pasa de DELAY ms; una vez visible queda HOLD ms para no parpadear.
 export type Task = { id: string; label: string; w: number; done: () => boolean; run: () => void | Promise<void>; prog?: () => number };
 
-const DELAY = 150, HOLD = 320, FADE = 200;
+const DELAY = 150, HOLD = 320, FADE = 200, TIP_MS = 6000; // TIP_MS: cada cuánto cambia el consejo mientras la pantalla sigue visible
 export const times: Record<string, number> = {}; // ms de cada tarea (dev: __loadTimes)
 
 const TIPS = [
@@ -30,6 +30,10 @@ const TIPS = [
   "En la Batalla de globos cada corredor tiene tres globos: gana el último en pie. Como en la vida, pero con globos.",
   "Al terminar una partida, la pantalla de resultados permite guardar una foto del último momento. Sirve como prueba ante el seguro.",
   "La pintura, las llantas y los calcos del auto se cambian en el Garaje. No arregla nada, pero se ve mejor.",
+  "En ENCORE, cada escenario termina en un teleportador: quedarse da más tiempo para juntar, avanzar sube la dificultad.",
+  "Los pactos del Director dan un beneficio a cambio de un riesgo. Se pueden rechazar, aunque al Director no le gusta.",
+  "Cofres y máquinas ofrecen mejoras. Conviene abrirlos antes de subir al teleportador.",
+  "Tras el cuarto escenario, el público vota: ENCORE para otra vuelta más difícil o FINAL ACT para enfrentar al jefe del show.",
 ];
 
 const $ = (id: string) => document.getElementById(id)!;
@@ -47,13 +51,18 @@ function paint() { // el auto lleva la pintura y las llantas elegidas (localStor
   } catch { /* sin guardado */ }
 }
 let lastTip = -1;
+/** Otro consejo al azar, distinto del anterior. */
+function nextTip() {
+  lastTip = (lastTip + 1 + Math.floor(Math.random() * (TIPS.length - 1))) % TIPS.length;
+  const t = $("ldTip"); t.textContent = TIPS[lastTip];
+  t.classList.remove("sw"); void t.offsetWidth; t.classList.add("sw"); // reinicia el fundido (apagado con "reducir movimiento")
+}
 function show() {
   if (shown) return;
   shown = true; shownAt = performance.now();
   clearTimeout(hideT);
-  const el = $("load"), tip = (lastTip + 1 + Math.floor(Math.random() * (TIPS.length - 1))) % TIPS.length; // al azar, sin repetir el anterior
-  lastTip = tip;
-  $("ldTip").textContent = TIPS[tip];
+  const el = $("load");
+  nextTip();
   paint();
   const bar = $("ldBar"); bar.style.transition = "none"; set("Preparando", 0); void bar.offsetWidth; bar.style.transition = ""; // la barra no retrocede a la vista
   el.classList.remove("hidden", "out");
@@ -77,6 +86,7 @@ function set(label: string, f: number) {
 export function boot(label: string, f: number) { set(label, f); }
 export function bootEnd() { shownAt = 0; paint(); return hide(); }
 paint(); $("ldTip").textContent = TIPS[(lastTip = Math.floor(Math.random() * TIPS.length))];
+setInterval(() => { if (shown && !$("load").classList.contains("out")) nextTip(); }, TIP_MS); // consejos rotativos mientras la carga se alarga
 
 // ---------- Tareas ----------
 const running = new Map<Task, Promise<void>>(), bad = new Set<Task>(); // bad: fallaron; la precarga no insiste (launch sí reintenta)
