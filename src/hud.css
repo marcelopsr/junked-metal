@@ -284,7 +284,7 @@
 #dmg span.crit { font-size: 48px; color: #ffd84d; -webkit-text-stroke: 5px #3a1c00; text-shadow: 0 0 16px rgba(255, 216, 77, .85), 0 3px 0 #3a1c00; }
 
 /* ---------- Ayuda de controles ---------- */
-#hint { bottom: 120px; left: 50%; translate: -50% 0; transform-origin: 50% 100%; display: grid; grid-template-columns: repeat(5, auto); gap: 6px 18px; align-items: center; padding: 10px 16px; font: 500 17px/1.3 var(--hf); transition: opacity .6s; }
+#hint { bottom: calc(176px * var(--hud-scale)); left: 50%; translate: -50% 0; transform-origin: 50% 100%; display: grid; grid-template-columns: repeat(5, auto); gap: 6px 18px; align-items: center; padding: 10px 16px; font: 500 17px/1.3 var(--hf); transition: opacity .6s; }
 #hint.fade { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .6s, visibility 0s .6s; }
 #hint .tip { grid-column: 1 / -1; color: var(--g-dim); text-align: center; }
 #hint:not(.coop) #hintJ2 { display: none; }
@@ -465,7 +465,7 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 }
 #dirSub .rx-tag { display: block; margin-bottom: 3px; padding-bottom: 3px; border-bottom: 1px solid var(--jm-borde); font: 700 11px/1 var(--jm-titulo); letter-spacing: .16em; color: var(--jm-amarillo); }
 #dirSub .dtxt { font: 700 clamp(14px, 2vw, 18px)/1.15 var(--jm-titulo); letter-spacing: .04em; text-transform: uppercase; color: var(--jm-texto); text-shadow: 0 2px 0 #000; }
-@media (pointer: fine) { body:has(#hint:not(.hidden):not(.fade):not(.coop)) #dirSub { bottom: calc(128px + 107px * var(--hud-scale)); } } /* QA final: arriba del panel de batería (#txl) y, mientras se ven los controles (#hint), arriba de ellos */
+@media (pointer: fine) { body:has(#hint:not(.hidden):not(.fade):not(.coop)) #dirSub { bottom: calc(184px + 107px * var(--hud-scale)); } } /* QA final: arriba del panel de batería (#txl) y, mientras se ven los controles (#hint), arriba de ellos */
 @media (pointer: coarse) { /* celular: arriba de los controles táctiles (que ocupan el ~42 % de abajo); con la oferta de pactos o destinos abierta, arriba, bajo el reloj */
   #dirSub { bottom: 43vh; max-width: calc(100vw - 120px); } /* sin pisar PAUSA y CÁMARA (columna de la derecha) */
   body:has(#encAsk.pact:not(.hidden)) #dirSub { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 134px); }

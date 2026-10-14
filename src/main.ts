@@ -316,8 +316,10 @@ function startRun(d = false) {
   for (const k of hint.querySelectorAll<HTMLElement>("kbd[data-k]")) k.textContent = keyName(KEYS[k.dataset.k as keyof typeof KEYS][0]); // teclas reasignadas
   hint.classList.toggle("coop", players.length > 1 && !getNet()); // R7b: con 2 jugadores, sobre la línea divisoria (no tapa la mitad de abajo) y con las teclas del J2
   if (players.length > 1 && !getNet()) { const kb = (c: string) => `<kbd>${keyName(c)}</kbd>`, k2 = RACE.kb2; $("hintJ2").innerHTML = coopCtl() === "kbd2" ? `J2 ${kb(k2.up[0])}${kb(k2.down[0])}${kb(k2.left[0])}${kb(k2.right[0])} manejo · ${kb(k2.item[0])} turbo · ${kb(k2.drift[0])} derrape · ${kb(KEYS2.jump[0])} salto · ${kb(KEYS2.ability[0])} habilidad` : `J2 segundo joystick · ${btnName(pb("jump"))} salto · ${btnName(pb("ability"))} habilidad`; if (coop > 2) $("hintJ2").innerHTML += ` · ${coop === 3 ? "J3 tercer joystick" : "J3 y J4 tercer y cuarto joystick"}`; }
-  if (save.hint) hint.classList.remove("hidden", "fade"); else hint.classList.add("hidden");
-  hintOn = save.hint; // se apaga en update() con la primera entrada o a los HINT_S de partida
+  hint.querySelector(".tip")!.textContent = erun ? "Las armas disparan solas. Embiste rápido, junta tuercas y llega al teleportador." : "Las armas disparan solas. Embiste rápido, junta tuercas y sobrevive 10 minutos.";
+  const showHint = save.hint && !(erun && save.controlesVistos); // T55: ENCORE no repite una guía ya vista
+  if (showHint) hint.classList.remove("hidden", "fade"); else hint.classList.add("hidden");
+  hintOn = showHint; // se apaga en update() con la primera entrada o a los HINT_S de partida
 }
 let hintOn = false;
 const HINT_S = 7;
@@ -574,8 +576,8 @@ initPhoto({ scene, canvas, inPause: () => state === "pause", onShot: () => grant
 for (const ev of ['pointerover', 'touchstart', 'focusin']) document.addEventListener(ev, prefetchMode, { passive: true, capture: true });
 initMenu({ scene, play: launchRun, weekly: () => launchRun(false, false, 0, undefined, true), resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), duel: goDuel, match3: goMatch3 });
 music("menu"); // suena cuando haya primer gesto (initAudio)
-// Intro de 4 cuadros: en cada carga de la página o apertura de la app instalada (cualquier tecla la salta); ?mute y ?lab (pruebas) no la muestran, ?intro la fuerza
-{ const force = /[?&]intro\b/.test(location.search); if (force || !/[?&](mute|lab)\b/.test(location.search)) playIntro(!force); }
+// Intro de 4 cuadros: solo con ?intro (cualquier tecla la salta)
+if (/[?&]intro\b/.test(location.search)) playIntro(); // T53: ya no sale sola; solo con ?intro o desde Créditos → Ver intro
 
 
 // Juego de autos: menos bichos pero más duros, para esquivarlos manejando (decisión del usuario 2026-10-04)
