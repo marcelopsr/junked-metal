@@ -143,8 +143,8 @@ export function patioBuild() {
   for (const mat of [dirtGroundMat, pathMat, scrapGroundMat]) {
     mat.lightmapTexture = soilTone; mat.useLightmapAsShadowmap = true;
   }
-  decal("scrapSoilTransition", 54, 44, -48, 20, grassEarthMat, 0.015);
-  const scrapZone = decal("scrapZone", 46, 36, -48, 20, scrapGroundMat, 0.025);
+  decal("scrapSoilTransition", 54, 52, -48, 20, grassEarthMat, 0.015);
+  const scrapZone = decal("scrapZone", 46, 46, -48, 20, scrapGroundMat, 0.025);
   // UV2 en coordenadas del patio: el tono coincide donde dos parches se superponen.
   for (const ground of [dirt, soilPaths, scrapZone]) {
     const positions = ground.getVerticesData(B.VertexBuffer.PositionKind)!;
@@ -181,8 +181,10 @@ export function patioBuild() {
   const trimMat = surface(pbr("drumTrim", { color: "#737b80", rough: 0.72, metal: 0.55 }), "steel", 4, 0.25);
   const capTpl = template("drumCap", () => [
     cyl(3.18, 3.18, 0.025, capMat, [0, 0, 0], undefined, 16),
-    tor(3.08, 0.055, trimMat, [0, 0.025, 0], undefined, 16),
+    tor(3.08, 0.1, trimMat, [0, 0.025, 0], undefined, 16),
+    box(0.62, 0.035, 0.48, trimMat, [0.55, 0.04, -0.3], [0, 0.3, 0]),
     cyl(0.24, 0.24, 0.08, trimMat, [0.55, 0.05, -0.3], undefined, 8),
+    tor(0.44, 0.07, trimMat, [0.55, 0.09, -0.3], undefined, 8),
     tor(3.25, 0.18, trimMat, [0, -1.2, 0], undefined, 16),
     tor(3.25, 0.18, trimMat, [0, -3.6, 0], undefined, 16),
   ]);

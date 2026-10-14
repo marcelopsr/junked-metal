@@ -1487,9 +1487,18 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
 
 ---
 
+## 2026-10-13 · Integración del patio, tapas y encuadre móvil (ciclo local)
+
+- La mancha de tierra de la zona de chatarra se extiende sobre la berma existente para evitar que aparezca como una franja aislada. El terreno físico no cambió.
+- Las tapas de los tambores ganaron aro exterior, placa y junta alrededor del tapón dentro de la plantilla compartida.
+- La cámara vertical del bestiario acerca solo la grúa; PC y los demás enemigos mantienen su encuadre. Capturas PC/cel y pruebas en `docs/VISUAL_CYCLE_SCRAP_DRUM_CRANE.md`.
+- Cierre local sin publicación.
+
+---
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** pulido visual local de la grúa Folded y los tambores del patio (2026-10-13).
+- **Último trabajo completado:** integración del patio, tapas de tambores y encuadre móvil de la grúa (2026-10-13).
 - **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 
