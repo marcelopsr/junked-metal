@@ -3385,5 +3385,392 @@
       }
     ],
     "motivo": "Piezas nuevas (jaula antivuelco y escapes cromados): evaluador 36 vs vigente 33 y original 32; proporciones 0,29 (original 0,61)"
+  },
+  {
+    "car": "monster",
+    "accion": "reversion",
+    "run": "20261013-1939-s1",
+    "id": "i188",
+    "fecha": "2026-10-14",
+    "obj": [
+      0.12,
+      0.135,
+      1,
+      0.56
+    ],
+    "revierte": "20261014-0130-s5/i10",
+    "motivo": "Reversión a i188: i10 (20261014-0130-s5) quedó con un solo voto firme, el segundo evaluador dio +1 (no alcanza +2); jaula roja (prohibida para el jugador), plana y sin anclaje al chasis, escapes invisibles a 48 px"
+  },
+  {
+    "car": "monster",
+    "accion": "corrida",
+    "run": "20261014-0146-s9",
+    "fecha": "20261014",
+    "params": {
+      "pop": 20,
+      "gens": 10,
+      "seed": 9,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": null
+    },
+    "evaluados": 220,
+    "generaciones": 10,
+    "obj_original": [
+      0.12,
+      0.61,
+      1,
+      0.605
+    ],
+    "recomendado": {
+      "id": "i206",
+      "gen": 10,
+      "obj": [
+        0.115,
+        0.725,
+        1.05,
+        0.585
+      ],
+      "cambios": [
+        {
+          "id": "escape_alto",
+          "comp": "escapes",
+          "def": 0,
+          "val": 0.38543876686434675,
+          "pct": 321.2
+        },
+        {
+          "id": "cabina_z",
+          "comp": "cabina",
+          "def": -0.2,
+          "val": -0.3983687185255114,
+          "pct": -49.6
+        },
+        {
+          "id": "trocha_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.0348963066071446,
+          "pct": 38.8
+        },
+        {
+          "id": "cabina_ancho",
+          "comp": "cabina",
+          "def": 1,
+          "val": 0.9155425031553183,
+          "pct": -33.8
+        },
+        {
+          "id": "caja_y",
+          "comp": "carroceria",
+          "def": 0.62,
+          "val": 0.6869709960138054,
+          "pct": 33.5
+        },
+        {
+          "id": "rueda_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.1317436929983835,
+          "pct": 32.9
+        },
+        {
+          "id": "cabina_largo",
+          "comp": "cabina",
+          "def": 1,
+          "val": 1.0580999953327488,
+          "pct": 14.5
+        },
+        {
+          "id": "paragolpe_ancho",
+          "comp": "paragolpes",
+          "def": 1.3,
+          "val": 1.3490135478617036,
+          "pct": 14
+        },
+        {
+          "id": "caja_ancho",
+          "comp": "carroceria",
+          "def": 1.15,
+          "val": 1.111214941003796,
+          "pct": -12.9
+        },
+        {
+          "id": "batalla_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 0.9805215724189534,
+          "pct": -9.7
+        },
+        {
+          "id": "cabina_alto",
+          "comp": "cabina",
+          "def": 0.36,
+          "val": 0.34855001868094826,
+          "pct": -5.7
+        },
+        {
+          "id": "caja_alto",
+          "comp": "carroceria",
+          "def": 0.36,
+          "val": 0.35231222572503224,
+          "pct": -4.3
+        }
+      ]
+    }
+  },
+  {
+    "car": "monster",
+    "accion": "corrida",
+    "run": "20261014-0150-s10",
+    "fecha": "20261014",
+    "params": {
+      "pop": 24,
+      "gens": 14,
+      "seed": 10,
+      "F": 0.5,
+      "CR": 0.7,
+      "sigma": 0.15,
+      "from": "20261014-0146-s9"
+    },
+    "evaluados": 360,
+    "generaciones": 14,
+    "obj_original": [
+      0.13,
+      1.15,
+      1.095,
+      0.6
+    ],
+    "recomendado": {
+      "id": "i349",
+      "gen": 14,
+      "obj": [
+        0.115,
+        0.455,
+        1.095,
+        0.565
+      ],
+      "cambios": [
+        {
+          "id": "escape_alto",
+          "comp": "escapes",
+          "def": 0,
+          "val": 0.41130209641845705,
+          "pct": 342.8
+        },
+        {
+          "id": "jaula_alto",
+          "comp": "jaula",
+          "def": 0,
+          "val": 0.21125187840425158,
+          "pct": 211.3
+        },
+        {
+          "id": "cabina_ancho",
+          "comp": "cabina",
+          "def": 1,
+          "val": 0.8682039154478158,
+          "pct": -52.7
+        },
+        {
+          "id": "rueda_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 1.1874777778844139,
+          "pct": 46.9
+        },
+        {
+          "id": "batalla_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 0.9098426791085938,
+          "pct": -45.1
+        },
+        {
+          "id": "caja_alto",
+          "comp": "carroceria",
+          "def": 0.36,
+          "val": 0.29964796655652187,
+          "pct": -33.5
+        },
+        {
+          "id": "caja_largo",
+          "comp": "carroceria",
+          "def": 2.1,
+          "val": 2.2157891256731665,
+          "pct": 33.1
+        },
+        {
+          "id": "paragolpe_ancho",
+          "comp": "paragolpes",
+          "def": 1.3,
+          "val": 1.3751160490615961,
+          "pct": 21.5
+        },
+        {
+          "id": "amort_grosor",
+          "comp": "suspension",
+          "def": 0.09,
+          "val": 0.09699234234645131,
+          "pct": 10
+        },
+        {
+          "id": "cabina_largo",
+          "comp": "cabina",
+          "def": 1,
+          "val": 1.0362426531369553,
+          "pct": 9.1
+        },
+        {
+          "id": "trocha_k",
+          "comp": "ruedas",
+          "def": 1,
+          "val": 0.9924577843324032,
+          "pct": -8.4
+        },
+        {
+          "id": "chasis_alto",
+          "comp": "chasis",
+          "def": 0.14,
+          "val": 0.1606727121756998,
+          "pct": 8
+        }
+      ]
+    }
+  },
+  {
+    "car": "monster",
+    "accion": "export",
+    "run": "20261014-0150-s10",
+    "id": "i349",
+    "fecha": "2026-10-14",
+    "obj": [
+      0.115,
+      0.455,
+      1.095,
+      0.565
+    ],
+    "obj_original": [
+      0.13,
+      1.15,
+      1.095,
+      0.6
+    ],
+    "cambios": [
+      {
+        "id": "escape_alto",
+        "comp": "escapes",
+        "def": 0,
+        "val": 0.41130209641845705,
+        "pct": 342.8
+      },
+      {
+        "id": "jaula_alto",
+        "comp": "jaula",
+        "def": 0,
+        "val": 0.21125187840425158,
+        "pct": 211.3
+      },
+      {
+        "id": "cabina_ancho",
+        "comp": "cabina",
+        "def": 1,
+        "val": 0.8682039154478158,
+        "pct": -52.7
+      },
+      {
+        "id": "rueda_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 1.1874777778844139,
+        "pct": 46.9
+      },
+      {
+        "id": "batalla_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 0.9098426791085938,
+        "pct": -45.1
+      },
+      {
+        "id": "caja_alto",
+        "comp": "carroceria",
+        "def": 0.36,
+        "val": 0.29964796655652187,
+        "pct": -33.5
+      },
+      {
+        "id": "caja_largo",
+        "comp": "carroceria",
+        "def": 2.1,
+        "val": 2.2157891256731665,
+        "pct": 33.1
+      },
+      {
+        "id": "paragolpe_ancho",
+        "comp": "paragolpes",
+        "def": 1.3,
+        "val": 1.3751160490615961,
+        "pct": 21.5
+      },
+      {
+        "id": "amort_grosor",
+        "comp": "suspension",
+        "def": 0.09,
+        "val": 0.09699234234645131,
+        "pct": 10
+      },
+      {
+        "id": "cabina_largo",
+        "comp": "cabina",
+        "def": 1,
+        "val": 1.0362426531369553,
+        "pct": 9.1
+      },
+      {
+        "id": "trocha_k",
+        "comp": "ruedas",
+        "def": 1,
+        "val": 0.9924577843324032,
+        "pct": -8.4
+      },
+      {
+        "id": "chasis_alto",
+        "comp": "chasis",
+        "def": 0.14,
+        "val": 0.1606727121756998,
+        "pct": 8
+      },
+      {
+        "id": "caja_y",
+        "comp": "carroceria",
+        "def": 0.62,
+        "val": 0.6098259764123362,
+        "pct": -5.1
+      },
+      {
+        "id": "cabina_z",
+        "comp": "cabina",
+        "def": -0.2,
+        "val": -0.21523673738961763,
+        "pct": -3.8
+      },
+      {
+        "id": "caja_ancho",
+        "comp": "carroceria",
+        "def": 1.15,
+        "val": 1.1602190002789978,
+        "pct": 3.4
+      },
+      {
+        "id": "cabina_alto",
+        "comp": "cabina",
+        "def": 0.36,
+        "val": 0.3646647911582971,
+        "pct": 2.3
+      }
+    ],
+    "motivo": "Piezas corregidas: jaula amarilla con parantes hasta la caja y zapatas, escapes gruesos plateados; evaluador 38 vs vigente i188 33 (+5); pendiente segundo voto"
   }
 ]

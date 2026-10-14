@@ -50,34 +50,34 @@
   },
   "monster": {
     "g": {
-      "chasis_alto": 0.15498397906439565,
-      "caja_y": 0.5927956892673326,
-      "caja_ancho": 1.281708516200577,
-      "caja_alto": 0.29169333739705405,
-      "caja_largo": 2.2385833493155385,
-      "cabina_ancho": 1.0643348750445631,
-      "cabina_alto": 0.28127572408339985,
-      "cabina_largo": 1.180345583856658,
-      "cabina_z": -0.14676602499558258,
-      "amort_grosor": 0.10720554066830976,
-      "paragolpe_ancho": 1.3193822232435468,
-      "jaula_alto": 0.2,
-      "escape_alto": 0.38,
-      "rueda_k": 1.0709008045934016,
-      "trocha_k": 1.0061125366095094,
-      "batalla_k": 1.0213397542924254
+      "chasis_alto": 0.1606727121756998,
+      "caja_y": 0.6098259764123362,
+      "caja_ancho": 1.1602190002789978,
+      "caja_alto": 0.29964796655652187,
+      "caja_largo": 2.2157891256731665,
+      "cabina_ancho": 0.8682039154478158,
+      "cabina_alto": 0.3646647911582971,
+      "cabina_largo": 1.0362426531369553,
+      "cabina_z": -0.21523673738961763,
+      "amort_grosor": 0.09699234234645131,
+      "paragolpe_ancho": 1.3751160490615961,
+      "jaula_alto": 0.21125187840425158,
+      "escape_alto": 0.41130209641845705,
+      "rueda_k": 1.1874777778844139,
+      "trocha_k": 0.9924577843324032,
+      "batalla_k": 0.9098426791085938
     },
-    "run": "20261014-0130-s5",
-    "id": "i10",
-    "gen": 0,
+    "run": "20261014-0150-s10",
+    "id": "i349",
+    "gen": 14,
     "fecha": "2026-10-14",
     "obj": [
-      0.12,
-      0.29,
-      1.08,
-      0.575
+      0.115,
+      0.455,
+      1.095,
+      0.565
     ],
-    "motivo": "Piezas nuevas (jaula antivuelco y escapes cromados): evaluador 36 vs vigente 33 y original 32; proporciones 0,29 (original 0,61)"
+    "motivo": "Piezas corregidas: jaula amarilla con parantes hasta la caja y zapatas, escapes gruesos plateados; evaluador 38 vs vigente i188 33 (+5); pendiente segundo voto"
   },
   "helado": {
     "g": {

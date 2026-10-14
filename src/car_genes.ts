@@ -64,7 +64,7 @@ export const GENES: Record<string, Gene[]> = {
     g("cabina", "cabina_z", -0.2, -0.4, 0),
     g("suspension", "amort_grosor", 0.09, 0.06, 0.13),
     g("paragolpes", "paragolpe_ancho", 1.3, 1.1, 1.45),
-    g("jaula", "jaula_alto", 0, 0, 0.3), // pieza nueva: jaula antivuelco de caño sobre la cabina; 0 = sin jaula (original), se arma desde 0,03; arriba de 0,3 rompe la caja
+    g("jaula", "jaula_alto", 0, 0, 0.3), // pieza nueva: jaula antivuelco de caño amarillo sobre la cabina, con parantes hasta la caja; 0 = sin jaula (original), se arma desde 0,03; arriba de 0,3 rompe la caja
     g("escapes", "escape_alto", 0, 0, 0.5), // pieza nueva: escapes cromados verticales a los lados del capó; 0 = sin escapes (original), se arman desde 0,05
     ...RUEDAS.map((x) => (x.id === "rueda_k" ? { ...x, max: 1.4 } : x)), // juguete RC exagerado: ruedas hasta +40 %
   ],

@@ -647,17 +647,17 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(kw, kh, kl, paint, [0, ky, kz]); edges(kw, ktop, kz - kl / 2, kz + kl / 2, paint);
     G.box(kw - 0.1, kh - 0.08, 0.03, FOLD.glass(), [0, ky + 0.02, kz + kl / 2 + 0.03], [-0.4, 0, 0]);
     G.box(kw, 0.08, 0.2, dark, [0, ktop + 0.04, kz + 0.35]); lamps(kw * 0.36, ktop + 0.07, kz + 0.46, 0.1); lamps(kw * 0.12, ktop + 0.07, kz + 0.46, 0.1);
-    if (q.jaula_alto > 0.03) { // jaula antivuelco de caño rojo sobre la cabina, detrás de la barra de luces (0 = sin jaula, el diseño original)
-      const red = FOLD.painted("#ef4444", 0.6, 211), jx = kw / 2 - 0.07, ty = ktop + q.jaula_alto, zf = kz + 0.08, zr = kz - kl / 2 + 0.1, ix = jx * 0.88;
+    if (q.jaula_alto > 0.03) { // jaula antivuelco de caño amarillo: parantes apoyados en la caja (con zapata) que suben por fuera de la cabina; 0 = sin jaula
+      const yel = FOLD.painted("#f5b91b", 0.6, 211), px = kw / 2 + 0.04, ty = ktop + q.jaula_alto, zf = kz + 0.08, zr = kz - kl / 2 + 0.1, t = 0.07;
       for (const s of [-1, 1]) {
-        for (const z of [zf, zr]) strut([s * jx, ktop, z], [s * ix, ty, z], 0.06, 0.06, red); // arcos delantero y trasero
-        strut([s * ix, ty, zr], [s * ix, ty, zf], 0.06, 0.06, red); strut([s * jx, ktop, zr], [s * ix, ty, zf], 0.05, 0.05, red); // riel de techo y diagonal
+        for (const z of [zf, zr]) { strut([s * px, top, z], [s * px, ty, z], t, t, yel); G.box(0.16, 0.04, 0.16, steel, [s * px, top + 0.02, z]); } // parante hasta la caja y zapata
+        strut([s * px, ty, zr], [s * px, ty, zf], t, t, yel); strut([s * px, top, zr], [s * px, ty, zf], 0.05, 0.05, yel); // riel de techo y diagonal
       }
-      strut([-ix, ty, zf], [ix, ty, zf], 0.06, 0.06, red); strut([-ix, ty, zr], [ix, ty, zr], 0.06, 0.06, red);
+      strut([-px, ty, zf], [px, ty, zf], t, t, yel); strut([-px, ty, zr], [px, ty, zr], t, t, yel);
     }
-    if (q.escape_alto > 0.05) for (const s of [-1, 1]) { // escapes verticales de cromo a los lados del capó, con boca oscura
-      const ex = s * (cw / 2 - 0.1), ez = kz + kl / 2 + 0.2, eh = q.escape_alto, chrome = FOLD.painted("#c3cbd2", 0.3, 212);
-      G.cyl(0.11, 0.04, dark, [ex, top + 0.02, ez], undefined, 8); G.cyl(0.07, eh, chrome, [ex, top + eh / 2, ez], undefined, 8); G.cyl(0.1, 0.05, dark, [ex, top + eh + 0.02, ez], undefined, 8);
+    if (q.escape_alto > 0.05) for (const s of [-1, 1]) { // escapes verticales gruesos a los lados del capó: collar oscuro, caño de acero y boca oscura ancha
+      const ex = s * (cw / 2 - 0.12), ez = kz + kl / 2 + 0.22, eh = q.escape_alto;
+      G.cyl(0.26, 0.05, dark, [ex, top + 0.025, ez], undefined, 8); G.cyl(0.16, eh, FOLD.painted("#d9dfe5", 0.35, 212), [ex, top + eh / 2, ez], undefined, 8); G.cyl(0.24, 0.08, dark, [ex, top + eh + 0.03, ez], undefined, 8);
     }
     G.grate([0, cy, cl / 2 + 0.01], [0, Math.PI, 0], 0.6, 0.22, 4, steel); lamps(0.42, cy + 0.04, cl / 2 + 0.01, 0.1); tails(0.42, cy + 0.04, -cl / 2 - 0.01);
     bumper(q.paragolpe_ancho, cy - 0.12, cl / 2 + 0.1); bumper(q.paragolpe_ancho, cy - 0.12, -cl / 2 - 0.1); num(cw / 2 + 0.005, cy, 0.1, 0.3);
