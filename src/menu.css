@@ -20,10 +20,6 @@ body.calm .bindnote, body.calm .stamp, body.calm .offer .art svg, body.calm #bms
 /* Estado sobre la escena 3D: chapa opaca, no texto suelto (contraste estable sin depender de la cámara) */
 #scr-encore :is(#netSession, #netStatus):not(:empty), #mainInfo:not(:empty), #netAlt > summary { background: rgba(11, 15, 20, .9); padding: 6px 10px; border: 1px solid var(--jm-borde); text-shadow: none; }
 
-@media (prefers-reduced-motion: reduce) {
-  .scr.on, #fe.zap::after, .press, .stamp, .bindnote, .offer .art svg { animation: none !important; }
-}
-
 /* Foco estilo terminal: siempre visible, igual con teclado, gamepad o mouse */
 
 /* Título: logo arriba y aviso abajo, la portada 3D respira en el medio */

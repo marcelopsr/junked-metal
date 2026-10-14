@@ -407,6 +407,9 @@ addEventListener("keydown", (e) => {
   initAudio();
   if (bindKey(e)) return; // reasignando una tecla o un botón
   if (document.body.classList.contains("tedit")) { if (e.code === "Escape" || e.code === "Enter") { e.preventDefault(); tedit(false); } return; }
+  if (askFn && e.code === "Tab") { // diálogo abierto: Tab da la vuelta dentro de él (afuera de #fe quedan el chat rápido y otros botones sueltos)
+    e.preventDefault(); const f = focusables(); f[(f.indexOf(document.activeElement as HTMLElement) + (e.shiftKey ? f.length - 1 : 1)) % f.length]?.focus(); return;
+  }
   const txt = e.target instanceof HTMLInputElement && /^(text|password|search|number)$/.test(e.target.type); // nombre de perfil o clave: se escribe; solo flechas arriba/abajo y Esc salen
   if (txt && !/^(ArrowUp|ArrowDown|Escape|Enter)$/.test(e.code)) return;
   if (txt && e.code === "Enter") { e.preventDefault(); return move(0, 1); }
@@ -822,7 +825,7 @@ const DESC: Record<string, string> = {
   hud: "Escala de todo el HUD (barras, reloj, radar).",
   hudSolid: "Fondo casi opaco en el HUD para leerlo mejor sobre pasto claro.",
   calm: "Quita parpadeos, destellos y sacudidas que molestan.",
-  tranquilo: "Modo Tranquilo: recibís la mitad del daño y los bichos tienen 70% de vida (los jefes no).",
+  tranquilo: "Modo Tranquilo: se recibe la mitad del daño y los bichos tienen 70% de vida (los jefes no).",
   "pad.dead": "Cuánto hay que mover el stick antes de que cuente.",
   "pad.sens": "Qué tan rápido responde el stick.",
   rumble: "Vibración del mando en golpes.",
