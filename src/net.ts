@@ -52,7 +52,7 @@ const authGet = async <T>(path: string): Promise<T | null> => {
 /** GET /api/me y /api/me/stats: null sin servidor, sin sesión o con error. */
 export const me = () => authGet<Me>("/api/me");
 /** GET /api/daily: fecha y semilla oficiales del desafío (null sin servidor/sesión/red; el cliente cae a su semilla local). */
-export const daily = () => authGet<{ date: string; seed: number }>("/api/daily");
+export const daily = () => authGet<{ date: string; seed: number; board?: { name: string; win: boolean; t: number }[]; mine?: { win: boolean; t: number; rank: number } | null }>("/api/daily");
 /** GET /api/ranking/semanal: top 20 desde el lunes 00:00 UTC (null sin servidor/sesión/red). */
 /** GET /api/weekly: semana (lunes UTC), semilla y regla del desafío semanal. */
 export const weekly = () => authGet<{ week: string; seed: number; regla: string }>("/api/weekly");

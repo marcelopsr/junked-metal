@@ -140,6 +140,28 @@ for (const vp of vps) {
     if (!(await qe(() => JSON.parse(localStorage.getItem("rcfight2") ?? "{}").tranquilo))) return "tranquilo no quedó en el guardado";
   });
   await q.ctx.close();
+  // --- extra: desafío diario (sin ?seed: semilla del día; sin red usa la local y no envía récord), pestaña propia ---
+  const d = await open(browser, `?mute`, vp, { freeze: true });
+  const d0 = Date.now(); let dwhy = "";
+  try {
+    await d.evaluate(() => document.querySelector("#scr-title.on") && document.dispatchEvent(new KeyboardEvent("keydown", { code: "Enter", key: "Enter" })));
+    await d.keyboard.press("Enter"); await d.evaluate(() => window.__tick(4)); await d.waitForTimeout(1200);
+    await d.dispatchEvent('#scr-main [data-go="daily"]', "click"); await d.waitForTimeout(600);
+    const txt = await d.evaluate(() => document.getElementById("dailyInfo")?.textContent ?? "");
+    if (!/Semilla #\d+/.test(txt)) dwhy = "la pantalla del diario no muestra la semilla: " + txt.slice(0, 80);
+    else {
+      try { await d.screenshot({ path: `${dir}/${vp}-x-diario-pantalla.png` }); } catch {}
+      await d.dispatchEvent('#scr-daily [data-act="daily"]', "click");
+      if (await d.waitForSelector("#ctlg:not(.hidden)", { timeout: 2000 }).catch(() => null)) await d.dispatchEvent('#ctlg [data-act="askyes"]', "click");
+      await d.waitForFunction(() => window.__info?.().state === "play", null, { timeout: 60000 });
+      await d.evaluate(() => window.__tick(30));
+      if (!(await d.evaluate(() => window.__daily?.() ?? true))) dwhy = "no es partida de diario";
+    }
+  } catch (e) { dwhy = e.message.split("\n")[0]; }
+  const derrs = d.logs.splice(0); if (derrs.length) dwhy += ` consola: ${derrs.join(" | ").slice(0, 150)}`;
+  try { await d.screenshot({ path: `${dir}/${vp}-x-diario-partida.png` }); } catch {}
+  rows.push({ vp, paso: "desafio-diario", ok: dwhy ? "FALLA" : "OK", s: ((Date.now() - d0) / 1000).toFixed(1), nota: dwhy });
+  await d.ctx.close();
   // --- extra: la pileta vacía (desnivel + Limpiafondos), pestaña propia ---
   const r = await open(browser, `?mute&seed=${seed}&zone=pileta`, vp, { freeze: true });
   const t0 = Date.now(); let why = "";
