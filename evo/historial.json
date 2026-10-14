@@ -3385,5 +3385,20 @@
       }
     ],
     "motivo": "Piezas nuevas (jaula antivuelco y escapes cromados): evaluador 36 vs vigente 33 y original 32; proporciones 0,29 (original 0,61)"
+  },
+  {
+    "car": "monster",
+    "accion": "reversion",
+    "run": "20261013-1939-s1",
+    "id": "i188",
+    "fecha": "2026-10-14",
+    "obj": [
+      0.12,
+      0.135,
+      1,
+      0.56
+    ],
+    "revierte": "20261014-0130-s5/i10",
+    "motivo": "Reversión a i188: i10 (20261014-0130-s5) quedó con un solo voto firme, el segundo evaluador dio +1 (no alcanza +2); jaula roja (prohibida para el jugador), plana y sin anclaje al chasis, escapes invisibles a 48 px"
   }
 ]
