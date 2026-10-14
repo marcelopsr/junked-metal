@@ -832,8 +832,8 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 
 .dailyBoard { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .dailyBoard:empty { display: none; }
-.dailyBoard li { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; padding: 3px 8px; font: 600 14px/1.25 var(--jm-texto-f); color: var(--jm-texto); background: rgba(255,255,255,.04); border-left: 3px solid transparent; }
-.dailyBoard li.mine { border-left-color: var(--jm-naranja, #ff8a1f); background: rgba(255,138,31,.16); }
+#dailyBoard li { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; padding: 3px 8px; font: 600 14px/1.25 var(--jm-texto-f); color: var(--jm-texto); background: rgba(255,255,255,.04); border-left: 3px solid transparent; }
+#dailyBoard li.mine { border-left-color: var(--jm-naranja, #ff8a1f); background: rgba(255,138,31,.16); }
 .dailyBoard .pos { text-align: left; color: var(--jm-texto2); }
-.dailyBoard .nom { text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#dailyBoard .nom { justify-self: stretch; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dailyBoard .res { text-align: right; color: var(--jm-texto2); font-variant-numeric: tabular-nums; }
