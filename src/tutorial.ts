@@ -9,10 +9,10 @@ let step = -1, btn: HTMLButtonElement | null = null, done: () => void = () => {}
 
 const dev = <T>(kbd: T, pad: T, touch: T) => (isTouch ? touch : ctl === "pad" ? pad : kbd);
 const TXT: Record<TutEv, () => string> = {
-  move: () => dev(`TUTORIAL 1/4 · MUEVE EL AUTO CON ${[KEYS.up, KEYS.left, KEYS.down, KEYS.right].map((k) => keyName(k[0])).join(" ")}`, "TUTORIAL 1/4 · MUEVE EL AUTO CON EL JOYSTICK", "TUTORIAL 1/4 · MUEVE EL AUTO CON EL JOYSTICK DE LA PANTALLA"),
-  pickup: () => "TUTORIAL 2/4 · ACERCA EL AUTO A TORNILLOS Y GEMAS PARA JUNTARLOS",
-  level: () => "TUTORIAL 3/4 · JUNTAR XP SUBE DE NIVEL: ELIGE UNA CARTA",
-  ability: () => dev(`TUTORIAL 4/4 · USA LA HABILIDAD CON ${keyName(KEYS.ability[0])}`, `TUTORIAL 4/4 · USA LA HABILIDAD CON ${btnName(pb("ability"))}`, "TUTORIAL 4/4 · TOCA EL BOTÓN DE HABILIDAD"),
+  move: () => dev(`TUTORIAL 1/4 · MOVER EL AUTO CON ${[KEYS.up, KEYS.left, KEYS.down, KEYS.right].map((k) => keyName(k[0])).join(" ")}`, "TUTORIAL 1/4 · MOVER EL AUTO CON EL JOYSTICK", "TUTORIAL 1/4 · MOVER EL AUTO CON EL JOYSTICK DE LA PANTALLA"),
+  pickup: () => "TUTORIAL 2/4 · ACERCAR EL AUTO A TORNILLOS Y GEMAS PARA JUNTARLOS",
+  level: () => "TUTORIAL 3/4 · JUNTAR XP SUBE DE NIVEL: ELEGIR UNA CARTA",
+  ability: () => dev(`TUTORIAL 4/4 · USAR LA HABILIDAD CON ${keyName(KEYS.ability[0])}`, `TUTORIAL 4/4 · USAR LA HABILIDAD CON ${btnName(pb("ability"))}`, "TUTORIAL 4/4 · TOCAR EL BOTÓN DE HABILIDAD"),
 };
 
 /** Arranca el tutorial; `onDone` marca el guardado (también al saltarlo). */
@@ -24,7 +24,7 @@ export function tutStart(onDone: () => void) {
 export function tutEnd() { if (step < 0) return; step = -1; btn?.remove(); done(); }
 /** Menú de cartas abierto en el paso 3: el banner explica cómo elegir. */
 export function tutOffers() {
-  if (ORDER[step] === "level") banner(dev("TUTORIAL 3/4 · ELIGE UNA CARTA: TECLAS 1 2 3 O CLIC (ENTER CONFIRMA)", `TUTORIAL 3/4 · ELIGE UNA CARTA: D-PAD Y ${btnName(pb("ok"))}`, "TUTORIAL 3/4 · TOCA UNA CARTA PARA ELEGIRLA"), 5);
+  if (ORDER[step] === "level") banner(dev("TUTORIAL 3/4 · ELEGIR UNA CARTA: TECLAS 1 2 3 O CLIC (ENTER CONFIRMA)", `TUTORIAL 3/4 · ELEGIR UNA CARTA: D-PAD Y ${btnName(pb("ok"))}`, "TUTORIAL 3/4 · TOCAR UNA CARTA PARA ELEGIRLA"), 5);
 }
 export const tutOn = () => step >= 0;
 /** Evento del juego: solo cuenta si es el del paso actual. */

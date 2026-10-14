@@ -384,7 +384,7 @@ export function hudEnc(d: { tag: [string, string, boolean]; pacts: { tag: string
 }
 
 // ---------- Aviso de radio: entra con interferencia y el texto se va tecleando ----------
-const STATIC = "#%/\\&@0123456789"; // el último carácter tecleado llega como estática
+const STATIC = "#%/\\&@"; // el último carácter tecleado llega como estática (solo símbolos: un dígito o letra se lee como texto corrupto)
 type BannerOpts = { tag?: string; ico?: string; tone?: "warn" | "now" };
 type BannerQ = { txt: string; secs: number; opts?: BannerOpts };
 let bannerOn = false, bannerTyping = false, bannerHold = 0, bannerMsg = "", bannerN = 0, bannerShown = -1, bannerTone: BannerOpts["tone"];
