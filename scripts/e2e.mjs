@@ -32,6 +32,7 @@ for (const vp of vps) {
     runs0 = (await saved()).runs ?? 0;
     await p.dispatchEvent('#scr-main [data-go="encore"]', "click"); await tick(4); await p.waitForTimeout(1200);
     if (!(await p.$("#scr-encore.on, [data-act=\"encorego\"]:visible"))) return "no se ve la pantalla ENCORE";
+    if (!(await ev(() => document.activeElement?.dataset?.act === "encorego"))) return "Largar no tiene el foco al entrar a ENCORE";
   });
   await step("largar-aviso-primera-partida", async () => {
     await p.dispatchEvent('[data-act="encorego"]', "click");

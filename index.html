@@ -173,29 +173,39 @@
 
     <section id="scr-encore" class="scr">
       <div class="otitle">ENCORE</div>
-      <div class="foot">The show must go on. Expedición desde la Luna, escenario tras escenario, bajo la mirada del Director.</div>
-      <div class="foot">Cada escenario termina en un teleportador: quedarse da tiempo para mejorar con la amenaza en aumento, avanzar lleva al siguiente. Tras el cuarto, el público vota: ¡ENCORE! (otra vuelta, más difícil) o FINAL ACT (el jefe del show).</div>
+      <div class="foot">Expedición por escenarios con amenaza creciente: sobrevivir, mejorar el auto y decidir cuándo avanzar.</div>
+      <details class="how jm-panel"><summary>Cómo se juega</summary>
+        <ul>
+          <li><b>Escenario:</b> una zona con enemigos; termina cuando se abre el teleportador.</li>
+          <li><b>Teleportador:</b> el portal de salida. Quedarse da tiempo para mejorar el auto, pero la amenaza sube; entrar lleva al escenario siguiente.</li>
+          <li><b>Director:</b> el sistema del juego que elige los enemigos y las sorpresas, y recuerda la última derrota.</li>
+          <li><b>¡ENCORE!</b> es la votación del público tras el cuarto escenario: otra vuelta, más difícil.</li>
+          <li><b>FINAL ACT</b> es la otra opción de la votación: el jefe final del show, que cierra la expedición.</li>
+        </ul>
+      </details>
       <div class="briefCard jm-panel"><div class="briefRec" id="encRec"></div><ul class="briefRec" id="encSec"></ul></div>
       <div class="briefCard jm-panel hidden" id="encLb"><div class="briefRec">Récords online</div><ol class="briefRec" id="encLbList"></ol></div>
       <nav class="list">
         <button data-act="encorego" class="primary">Largar</button>
         <button data-act="encplayers" id="encPlayers"></button>
+        <button data-act="pcar" id="encCarBtn"><span class="bt"></span></button>
         <button data-go="codex">Codex</button>
         <div class="foot hidden" id="netSession" role="status" aria-live="polite"></div>
-        <button id="netCfLogin" class="hidden">Online: iniciar sesión</button>
-        <details id="netAlt" class="hidden"><summary class="foot">Otras formas de entrar</summary>
-          <button id="netLogin">Iniciar sesión con GitHub</button>
-          <input id="netKey" class="netKey" type="password" placeholder="Clave de grupo" autocomplete="off" spellcheck="false" aria-label="Clave de grupo">
-          <button id="netKeyGo">Entrar con clave de grupo</button>
+        <details id="netGrp" class="netGrp"><summary>Online</summary>
+          <button id="netCfLogin" class="hidden">Online: iniciar sesión</button>
+          <details id="netAlt" class="hidden"><summary class="foot">Otras formas de entrar</summary>
+            <button id="netLogin">Iniciar sesión con GitHub</button>
+            <input id="netKey" class="netKey" type="password" placeholder="Clave de grupo" autocomplete="off" spellcheck="false" aria-label="Clave de grupo">
+            <button id="netKeyGo">Entrar con clave de grupo</button>
+          </details>
+          <button id="netLogout" class="hidden">Cerrar sesión</button>
+          <button id="netAcct" class="hidden" data-go="cuenta">Mi cuenta</button>
+          <button id="netHost">Online: crear sala</button>
+          <input id="netCode" class="netCode" maxlength="6" placeholder="Código de sala" autocomplete="off" spellcheck="false" aria-label="Código de sala">
+          <button id="netJoin">Unirse con código</button>
+          <button id="netWatch">Mirar partidas</button>
+          <ol id="netSalas" class="hidden"></ol>
         </details>
-        <button id="netLogout" class="hidden">Cerrar sesión</button>
-        <button id="netAcct" class="hidden" data-go="cuenta">Mi cuenta</button>
-        <button data-act="pcar" id="encCarBtn"><span class="bt"></span></button>
-        <button id="netHost">Online: crear sala</button>
-        <input id="netCode" class="netCode" maxlength="6" placeholder="Código de sala" autocomplete="off" spellcheck="false" aria-label="Código de sala">
-        <button id="netJoin">Unirse con código</button>
-        <button id="netWatch">Mirar partidas</button>
-        <ol id="netSalas" class="hidden"></ol>
         <div class="foot" id="netStatus" role="status" aria-live="polite"></div>
         <button data-act="back">Volver</button>
       </nav>

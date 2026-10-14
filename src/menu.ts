@@ -288,7 +288,7 @@ function show() {
   fe.classList.remove("zap"); void fe.offsetWidth; fe.classList.add("zap");
   SFX.static();
   const f = ret.get(s);
-  (f && f.isConnected && f.offsetParent ? f : focusables()[0])?.focus({ preventScroll: false });
+  (f && f.isConnected && f.offsetParent ? f : (s === "encore" ? document.querySelector<HTMLElement>('#scr-encore [data-act="encorego"]') : null) ?? focusables()[0])?.focus({ preventScroll: false }); // ENCORE: Largar primero aunque "Cómo se juega" (summary) esté antes en el orden
 }
 export function go(s: Scr) {
   peek.car = peek.pilot = peek.part = peek.paint = peek.finish = undefined; // la vista previa no sale del garaje
