@@ -1523,9 +1523,18 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
 
 ---
 
+## 2026-10-13 · Rampa oxidada y bicicleta del garaje (ciclo local)
+
+- La rampa de chatarra ganó un tono de chapa oxidada más claro para distinguirla de la tierra; mantiene geometría y colisión.
+- El caucho de la bicicleta ahora se separa mejor de la pared en noche y niebla, conservando cuadro, forma y ubicación.
+- Se compararon noche, niebla y farol con 36 capturas PC/cel normales y cercanas; detalle y límites en `docs/VISUAL_CYCLE_RUST_RAMP_BIKE.md`.
+- Cierre local sin publicación.
+
+---
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** legibilidad de neumáticos y contraste del tablero de herramientas (2026-10-13). Ver `docs/VISUAL_CYCLE_TIRE_STACK_TOOLBOARD.md`.
+- **Último trabajo completado:** rampa oxidada del patio y lectura de la bicicleta del garaje (2026-10-13). Ver `docs/VISUAL_CYCLE_RUST_RAMP_BIKE.md`.
 - **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

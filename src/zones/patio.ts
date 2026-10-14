@@ -181,7 +181,7 @@ export function patioBuild() {
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   // Rampa de chapa oxidada para saltos acrobáticos dentro de la zona
-  ramp(FOLDED_SLICE ? FOLD.painted("#7a5038", 0.8, 304) : M.metal("#7a5038"), -48, 8, 0, 4.2, 6.5, 1.6);
+  ramp(FOLDED_SLICE ? FOLD.painted("#b47e4d", 0.7, 304) : M.metal("#b47e4d"), -48, 8, 0, 4.2, 6.5, 1.6);
   // Neumáticos de descarte apilados en el borde oeste con textura PBR y normales
   registerHeavyProp(stat(tor(2.8, 0.95, tireStackM(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   registerHeavyProp(stat(tor(2.6, 0.9, tireStackM(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");

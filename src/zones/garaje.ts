@@ -59,8 +59,8 @@ export function garageBuild() {
   occluders.push(shelf);
   stat(box(36, 46, 10, band, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [38, 23, -HALF + 5.5]).isVisible = false;
   // Bicicleta apoyada en la pared izquierda
-  const frame = M.metal("#2a6fdb"), bp: B.Mesh[] = [];
-  for (const wz of [-20, 20]) bp.push(tor(28, 1.4, M.rubber(), [0, 14, wz], [0, 0, Math.PI / 2], 24), cyl(0.5, 0.5, 26, M.metal("#9aa0a6"), [0, 14, wz], [Math.PI / 2, 0, 0], 4));
+  const frame = M.metal("#2a6fdb"), bikeTire = pbr("bikeTire", { color: "#3f454a", rough: 0.96 }), bp: B.Mesh[] = [];
+  for (const wz of [-20, 20]) bp.push(tor(28, 1.4, bikeTire, [0, 14, wz], [0, 0, Math.PI / 2], 24), cyl(0.5, 0.5, 26, M.metal("#9aa0a6"), [0, 14, wz], [Math.PI / 2, 0, 0], 4));
   bp.push(tube([[0, 14, -20], [0, 16, -2], [0, 30, 4], [0, 30, 16], [0, 14, 20]], 0.8, frame), tube([[0, 16, -2], [0, 30, 16]], 0.8, frame), tube([[0, 30, 4], [0, 34, 2]], 0.6, frame));
   bp.push(box(4, 1.4, 8, M.matte("#1a1a1a"), [0, 35, 2]), cyl(0.8, 0.8, 16, M.metal("#9aa0a6"), [0, 36, 18], [0, 0, Math.PI / 2], 6));
   const bike = merge("bike", bp);
