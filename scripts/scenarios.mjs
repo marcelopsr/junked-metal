@@ -26,6 +26,7 @@ const sinCarga = (p) => p.evaluate(() => { document.getElementById("load").class
 const ctlTab = async (p) => { await view("config")(p); await p.dispatchEvent('[data-tab="ctl"]', "click");
   await p.evaluate(() => matchMedia("(pointer: coarse)").matches && dispatchEvent(new PointerEvent("pointerdown", { pointerType: "touch" }))); // en cel el último control es el dedo
   await tick(p, 2); await p.waitForTimeout(150); };
+const abrirGuia = async (p) => { await p.dispatchEvent('[data-act="ctlguide"]', "click"); await wait(p, () => !document.getElementById("ctlg").classList.contains("hidden")); await p.waitForTimeout(150); };
 // Joystick simulado (Xbox): sticks corridos, gatillos a medias, Y y RB apretados. Ninguno navega ni acepta en el menú.
 const fakePad = (p) => p.evaluate(() => {
   const b = (on, v = on ? 1 : 0) => ({ pressed: on, touched: on, value: v });
@@ -56,6 +57,7 @@ export const sessions = [
     // Imagen con Escalado FSR: la escala % se oculta y aparece el modo FSR (fila dependiente)
     { id: "config-fsr", act: async (p) => { await p.evaluate(() => { const s = document.querySelector('select[data-set="scaler"]'); s.value = "fsr"; s.dispatchEvent(new Event("change", { bubbles: true })); }); await p.waitForTimeout(150); } },
     { id: "controles", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ scaler: "simple" })); await ctlTab(p); } },
+    { id: "guia-controles", perf: false, act: async (p) => { await ctlTab(p); await abrirGuia(p); } }, // teclado en compu, táctil en celu
     { id: "bestiario", act: async (p) => { await view("bestiary")(p); } },
     { id: "ficha", act: async (p) => { await p.dispatchEvent("#beasts [data-beast]", "click"); await wait(p, () => document.querySelector("#scr-beast.on")); await tick(p, 90); await p.waitForTimeout(300); } },
     { id: "ficha-hormiga", act: async (p) => {
@@ -178,6 +180,15 @@ export const sessions = [
   ] },
   { id: "controles", query: "?mute&seed=3", vps: ["pc"], shots: [
     { id: "probar-control", perf: false, act: async (p) => { await ctlTab(p); await fakePad(p); await tick(p, 3); await p.evaluate(() => document.getElementById("ptest").scrollIntoView({ block: "center" })); await tick(p, 2); await p.waitForTimeout(100); } },
+    { id: "guia-mando", perf: false, act: async (p) => { await p.keyboard.press("Escape"); await ctlTab(p); await fakePad(p); await tick(p, 3); await abrirGuia(p); } },
+  ] },
+  // Primera partida: sin guardado, "Largar" muestra antes la guía de controles (compu: teclado; celu: táctil)
+  { id: "primera_vez", query: "?mute&seed=3", shots: [
+    { id: "guia", perf: false, act: async (p) => {
+      await p.dispatchEvent("#scr-title", "click"); await toMain(p);
+      await p.dispatchEvent('#scr-main [data-go="encore"]', "click"); await wait(p, () => document.querySelector("#scr-encore.on"));
+      await p.dispatchEvent('[data-act="encorego"]', "click"); await wait(p, () => !document.getElementById("ctlg").classList.contains("hidden")); await p.waitForTimeout(150);
+    } },
   ] },
   { id: "tactil", query: "?mute&seed=3", vps: ["cel"], shots: [
     { id: "editar", perf: false, act: async (p) => { await ctlTab(p); await p.dispatchEvent('[data-act="tedit"]', "click"); await wait(p, () => document.body.classList.contains("tedit")); await p.waitForTimeout(100); } },

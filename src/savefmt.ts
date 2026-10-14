@@ -98,6 +98,7 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     s.texRes = one(s.texRes, [128, 256, 512], D.texRes); s.aniso = one(s.aniso, [1, 2, 4, 8, 16], D.aniso); s.camMode = one(s.camMode, CAM_MODES, D.camMode);
     s.novedadesVistas = typeof s.novedadesVistas === "string" && /^\d{4}-\d\d-\d\d$/.test(s.novedadesVistas) ? s.novedadesVistas : "";
     s.tutorialHecho = s.tutorialHecho === true; s.tranquilo = s.tranquilo === true; // modo Tranquilo (run.ts)
+    s.controlesVistos = s.controlesVistos === true || s.tutorialHecho || s.stats?.runs > 0 || s.encore?.runs > 0; // guía de controles de la primera partida: quien ya jugó no la necesita
     s.fpsCap = one(s.fpsCap, [0, 30, 60, 120], 0); s.menuFps = one(s.menuFps, [0, 30, 60], D.menuFps);
     // Colores del auto por zona: solo "#rrggbb" (un color libre llega al HTML del garaje); el guardado viejo ya trae paint y rim, trim (detalles) es nuevo
     for (const k of ["paint", "trim", "rim"]) s[k] = typeof s[k] === "string" && /^#[0-9a-f]{6}$/i.test(s[k]) ? s[k].toLowerCase() : "";

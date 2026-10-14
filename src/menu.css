@@ -763,6 +763,12 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 .ask.hidden { display: none; }
 .askbox { max-width: min(460px, 92vw); text-align: center; } /* chapa: kit.css */
 .askbox p { font-size: 18px; margin: 10px 0 18px; }
+/* Guía de controles: filas acción / tecla, legibles también en celular (la tarjeta se queda en 92 vw) */
+.ctlg { display: grid; gap: 2px; margin: 8px 0 4px; text-align: left; }
+.ctlg .kv { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--jm-borde); font: 600 17px/1.2 var(--jm-titulo); color: var(--jm-texto); }
+.ctlg .kv b { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; text-align: right; font-weight: 600; letter-spacing: 0; color: var(--jm-amarillo2); }
+.ctlg kbd { min-width: 28px; padding: 3px 8px; font-size: 15px; color: var(--jm-texto); background: var(--jm-fondo); border: 1px solid var(--jm-chapa); border-radius: 2px; }
+.ctlg .note { margin: 10px 0 0; font-size: 15px; color: var(--jm-texto2); }
 /* Garaje en celular apaisado: panel angosto a la derecha con la altura de la pantalla y scroll propio; el auto queda libre a la izquierda */
 @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
   #scr-garage.on { height: 100%; margin: 0 0 0 auto; padding: 8px 12px 8px 0; box-sizing: border-box; gap: 6px; }

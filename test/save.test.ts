@@ -31,6 +31,14 @@ describe("parseSave", () => {
     expect(s.cars).toEqual(["buggy"]); expect(s.ach).toEqual([]); expect(s.keys).toEqual(D.keys); expect(s.stats).toMatchObject({ runs: 0 });
     expect(s.runs).toBeUndefined(); // el default de este test no trae runs: lo importante es que el 7 inválido no pasó
   });
+  it("guía de controles: nueva instalación la ve; quien ya jugó, no", () => {
+    expect(load({}).controlesVistos).toBe(false);
+    expect(load({ controlesVistos: "si" }).controlesVistos).toBe(false);
+    expect(load({ controlesVistos: true }).controlesVistos).toBe(true);
+    expect(load({ tutorialHecho: true }).controlesVistos).toBe(true);
+    expect(load({ stats: { runs: 3 } }).controlesVistos).toBe(true);
+    expect(load({ encore: { runs: 1 } }).controlesVistos).toBe(true);
+  });
   it("habilidad y maldiciones: solo ids conocidos", () => {
     expect(load({ ability: "inventada" }).ability).toBe("bombardeo");
     expect(load({ ability: "emp", curses: ["horda", "x"] })).toMatchObject({ ability: "emp", curses: ["horda"] });
