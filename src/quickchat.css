@@ -1,8 +1,8 @@
 #quickchat-bubble { position: fixed; left: 50%; bottom: 22%; transform: translateX(-50%); z-index: 60; padding: 6px 14px; border-radius: 14px; background: rgba(0,0,0,.75); color: #fff; font-weight: 700; pointer-events: none; opacity: 0; transition: opacity .2s; }
 #quickchat-bubble.on { opacity: 1; }
-#quickchat-menu { position: fixed; left: 12px; bottom: 90px; z-index: 61; display: none; flex-direction: column; gap: 4px; padding: 6px; border-radius: 10px; background: rgba(0,0,0,.85); }
+#quickchat-menu { position: fixed; right: 64px; top: 40%; z-index: 61; display: none; flex-direction: column; gap: 4px; padding: 6px; border-radius: 10px; background: rgba(0,0,0,.85); }
 #quickchat-menu.on { display: flex; }
 #quickchat-menu button { text-align: left; padding: 8px 12px; border: 0; border-radius: 6px; background: #222; color: #fff; font: inherit; cursor: pointer; }
 #quickchat-menu button:hover { background: #444; }
-#quickchat-btn { position: fixed; left: 12px; bottom: 36px; z-index: 61; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); font-size: 22px; display: none; }
-@media (pointer: coarse) { #quickchat-btn { display: block; } #quickchat-btn[hidden] { display: none; } }
+#quickchat-btn { position: fixed; right: 12px; top: 46%; z-index: 61; width: 44px; height: 44px; padding: 0; border-radius: 4px; border: 2px solid var(--jm-naranja); background: var(--jm-fondo2); display: none; place-items: center; }
+@media (pointer: coarse) { #quickchat-btn { display: grid; } #quickchat-btn[hidden] { display: none; } }

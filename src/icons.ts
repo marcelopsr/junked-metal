@@ -137,6 +137,7 @@ const UI: Record<string, { d: string; c: [string, string] }> = {
   taller: { d: `<path d="M14.7 3.3a5 5 0 0 0-4.6 6.8L3.3 16.9a2.2 2.2 0 0 0 3.1 3.1l6.8-6.8a5 5 0 0 0 6.8-4.6l-3 3-2.8-.4-.4-2.8Z"/>`, c: ["#e5e7eb", "#9CA3AF"] },
   info: { d: `<path fill-rule="evenodd" d="M12 2.5a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19Zm-1.4 8h2.8v7h-2.8Zm1.4-4.6a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2Z"/>`, c: ["#7fe3ff", "#00C2FF"] },
   salto: { d: `<path d="M12 2.5 20 11h-5v4.5H9V11H4Z"/><path d="M8 17.6h8v2.1H8ZM9.5 21h5v1.1h-5Z"/>`, c: ["#86efac", "#22C55E"] },
+  chat: { d: `<path d="M4 4.5h16v11H12.5L8 20v-4.5H4Z"/><path d="M7.5 8h9v1.6h-9ZM7.5 11.2h6v1.6h-6Z" fill="#0B0F14" stroke="none"/>`, c: ["#ffc08a", "#FF9138"] },
   arcade: { d: `<path d="M6 3h12v6l-2 2v10H8V11L6 9Z"/>`, c: ["#ffc08a", "#FF9138"] },
 };
 /** Ícono de interfaz. `plate`: sobre placa de chapa (navegación y botones cuadrados). */

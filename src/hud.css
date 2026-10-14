@@ -505,3 +505,4 @@ body.calm #dirSub { animation: none !important; }
 /* Saltar tutorial: debajo del radar (que crece a 1.3x en pantalla grande y a .9x en celular); 44 px de alto táctil */
 .tut-skip { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 122px); right: 14px; z-index: 30; pointer-events: auto; padding: 6px 12px; min-height: 36px; font: 700 13px var(--hf, Rajdhani, sans-serif); letter-spacing: .08em; color: var(--jm-naranja, #ff9138); background: var(--jm-fondo, #0b0f14); border: 1px solid var(--jm-chapa, #b5651d); cursor: pointer; }
 @media (pointer: coarse), (max-width: 720px) { .tut-skip { top: calc(max(10px, env(safe-area-inset-top)) + 66px); right: 8px; min-height: 44px; } }
+@media (max-width: 520px) { .sig-dbm, .sig-snr, .sig-pkt, .rx-div { display: none; } } /* celular: telemetría de radio (dBm, SNR, RX) fuera del HUD */
