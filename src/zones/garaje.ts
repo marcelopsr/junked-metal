@@ -49,10 +49,10 @@ export function garageBuild() {
   flicker(tubeM);
   // Estantería metálica con cajas y latas
   const parts: B.Mesh[] = [];
-  for (const [x, z] of [[20.5, -HALF + 1], [55.5, -HALF + 1], [20.5, -HALF + 10], [55.5, -HALF + 10]]) parts.push(box(1, 46, 1, M.metal("#7a8088"), [x, 23, z]));
+  for (const [x, z] of [[20.5, -HALF + 1], [55.5, -HALF + 1], [20.5, -HALF + 10], [55.5, -HALF + 10]]) parts.push(box(1, 46, 1, M.metal("#91989f"), [x, 23, z]));
   for (const y of [2, 14, 26, 38]) {
-    parts.push(box(36, 0.8, 10, M.metal("#8a9098"), [38, y, -HALF + 5.5]));
-    for (let x = 22; x < 52;) { const w = 5 + rng() * 6, h = 4 + rng() * 6; parts.push(box(w, h, 7, M.matte(["#b08850", "#9a7444", "#c49a64"][int(0, 2)]), [x + w / 2, y + 0.4 + h / 2, -HALF + 5.5])); x += w + 1 + rng() * 2; }
+    parts.push(box(36, 0.8, 10, M.metal("#a4aab0"), [38, y, -HALF + 5.5]));
+    for (let x = 22; x < 52;) { const w = 5 + rng() * 6, h = 4 + rng() * 6; parts.push(box(w, h, 7, M.matte(["#c19b66", "#b38a56", "#d2ae78"][int(0, 2)]), [x + w / 2, y + 0.4 + h / 2, -HALF + 5.5])); x += w + 1 + rng() * 2; }
   }
   const shelf = merge("shelf", parts);
   shadows.addShadowCaster(shelf);
