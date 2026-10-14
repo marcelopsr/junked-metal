@@ -7,7 +7,7 @@ import type { Scene } from "@babylonjs/core";
 import { CARS } from "./car";
 import { BAL, costos, precio } from "./balance";
 import { BEAST_PORTRAITS, DEF, type Kind } from "./enemies";
-import { activePad, btnName, editTouch, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padPressed, pb, RACE, RACE0, type Action, type Binds, type TLays, orient, applyTouchLayouts } from "./input";
+import { activePad, btnChip, btnName, editTouch, ctl, keyHit, KEYS, KEYS0, PAD, PAD0, padPressed, pb, RACE, RACE0, type Action, type Binds, type PadAct, type TLays, orient, applyTouchLayouts } from "./input";
 import { PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type Slot } from "./models";
 import { ARSENAL, PILOTS, PILOT_PORTRAITS, type PilotId } from "./pilots";
 import { beastIcon, icon, PERK_ICON, UI_BTN_ICON, uiIcon } from "./icons";
@@ -55,7 +55,7 @@ export type Save = {
   // Controles (input.ts): teclas [principal, alternativa], joystick, carrera, disposición táctil y 3 perfiles con nombre (null = vacío)
   keys: Record<Action, string[]>; pad: typeof PAD0; race: { kb1: Binds<string>; kb2: Binds<string>; pad: Binds<number> }; tlay: TLays; rumble: boolean; touch: number;
   profiles: (Profile | null)[];
-  hud: number; calm: boolean; dmgNums: boolean; tranquilo: boolean; tutorialHecho: boolean;
+  hud: number; calm: boolean; dmgNums: boolean; tranquilo: boolean; tutorialHecho: boolean; controlesVistos: boolean;
   decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
   stats: Stats;
   seen: Kind[]; slain: Partial<Record<Kind, number>>; beast: Partial<Record<Kind, BeastRec>>; runs: RunRec[]; daily: { day: string; best: number }; zone: ZoneId;
@@ -74,7 +74,7 @@ export const DEFAULT: Save = {
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
   gfxv: 2, gpu: "webgl", scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1,
-  calm: typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false), dmgNums: true, tranquilo: false, tutorialHecho: false,
+  calm: typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false), dmgNums: true, tranquilo: false, tutorialHecho: false, controlesVistos: false,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
@@ -299,16 +299,37 @@ export function go(s: Scr) {
   show();
 }
 // Confirmación de compra: toda compra (taller, garaje, arsenal, habilidades, chasis) pasa por acá antes de gastar tornillos
-let askFn: (() => void) | null = null, askBack: HTMLElement | null = null;
+let askFn: (() => void) | null = null, askBack: HTMLElement | null = null, askEl = "ask"; // askEl: #ask (compra) o #ctlg (guía de controles); mismos botones askyes/askno
+function askOpen(id: string, then: () => void) {
+  askEl = id; askFn = then; askBack = document.activeElement as HTMLElement;
+  $(id).classList.remove("hidden");
+  askInert(true);
+  ($(id).querySelector('[data-act="askyes"]') as HTMLElement).focus();
+}
 function askBuy(name: string, cost: number, then: () => void) {
   if (save.scrap < cost) return; // no alcanza: no hay nada que confirmar
-  askFn = then; askBack = document.activeElement as HTMLElement;
   $("askD").textContent = `¿Comprar ${name} por ${cost} tornillos? Después de la compra quedan ${save.scrap - cost}.`;
-  $("ask").classList.remove("hidden");
-  askInert(true);
-  ($("ask").querySelector('[data-act="askyes"]') as HTMLElement).focus();
+  askOpen("ask", then);
 }
-function askClose() { $("ask").classList.add("hidden"); askFn = null; askInert(false); askBack?.focus(); }
+function askClose() {
+  $(askEl).classList.add("hidden"); askFn = null; askInert(false); askBack?.focus();
+  if (askEl === "ctlg" && !save.controlesVistos) { save.controlesVistos = true; persist(); } // cerrarla de cualquier modo (Entendido, Esc, B) cuenta como vista
+}
+/** Guía de controles (T24): una tarjeta con lo del dispositivo en uso. Sale sola antes de la primera partida y se repite desde Configuración → Controles. */
+export function controlsGuide(then: () => void = () => {}) {
+  const k = (a: Action) => `<kbd>${esc(keyName(KEYS[a][0]))}</kbd>`, p = (a: PadAct) => btnChip(pb(a));
+  const rows: [string, string][] = ctl === "pad" ? [
+    ...(PAD.mode === "stick" ? [["Mover", `Stick ${PAD.stick === "left" ? "izquierdo" : "derecho"}, hacia donde ir`]] : [["Acelerar", p("accel")], ["Frenar", p("brake")], ["Girar", `Stick ${PAD.stick === "left" ? "izquierdo" : "derecho"}`]]) as [string, string][],
+    ["Turbo", p("boost")], ["Derrape", p("drift")], ["Salto", p("jump")], ["Habilidad", p("ability")], ["Pausa", p("pause")],
+  ] : ctl === "touch" ? [
+    ["Mover", "Stick de la pantalla"], ["Turbo, derrape, salto y habilidad", "Botones de la pantalla"], ["Pausa", "Botón II"],
+  ] : [
+    ["Mover", k("up") + k("left") + k("down") + k("right")], ["Turbo", k("boost")], ["Derrape", k("drift")], ["Salto", k("jump")], ["Habilidad", k("ability")], ["Pausa", k("pause")],
+  ];
+  $("ctlgB").innerHTML = rows.map(([a, b]) => `<div class="kv"><span>${a}</span><b>${b}</b></div>`).join("")
+    + `<p class="note">Las armas disparan solas: al auto le toca moverse, juntar tuercas y esquivar. Esta guía queda en Configuración, pestaña Controles.</p>`;
+  askOpen("ctlg", then);
+}
 /** Con el modal abierto lo de atrás no recibe foco ni Tab (inert) y el lector lo trata como diálogo. */
 function askInert(on: boolean) { for (const el of document.querySelectorAll<HTMLElement>("#fe > .scr")) el.inert = on; }
 
@@ -352,7 +373,7 @@ export function reset(s: Scr | null) {
 
 // ---------- Foco: navegación espacial ----------
 export const focusables = () => {
-  const root = askFn ? "#ask" : `#scr-${current()}`;
+  const root = askFn ? "#" + askEl : `#scr-${current()}`;
   return [...document.querySelectorAll<HTMLElement>(`${root} :is(button:not(:disabled), select:not(:disabled), input:not(:disabled), summary, [tabindex])`)].filter((e) => e.offsetParent);
 };
 const SCROLL = "#cars, #shop, #opts, #binfo, #beasts"; // listas con scroll propio
@@ -407,6 +428,9 @@ addEventListener("keydown", (e) => {
   initAudio();
   if (bindKey(e)) return; // reasignando una tecla o un botón
   if (document.body.classList.contains("tedit")) { if (e.code === "Escape" || e.code === "Enter") { e.preventDefault(); tedit(false); } return; }
+  if (askFn && e.code === "Tab") { // diálogo abierto: Tab da la vuelta dentro de él (afuera de #fe quedan el chat rápido y otros botones sueltos)
+    e.preventDefault(); const f = focusables(); f[(f.indexOf(document.activeElement as HTMLElement) + (e.shiftKey ? f.length - 1 : 1)) % f.length]?.focus(); return;
+  }
   const txt = e.target instanceof HTMLInputElement && /^(text|password|search|number)$/.test(e.target.type); // nombre de perfil o clave: se escribe; solo flechas arriba/abajo y Esc salen
   if (txt && !/^(ArrowUp|ArrowDown|Escape|Enter)$/.test(e.code)) return;
   if (txt && e.code === "Enter") { e.preventDefault(); return move(0, 1); }
@@ -822,7 +846,7 @@ const DESC: Record<string, string> = {
   hud: "Escala de todo el HUD (barras, reloj, radar).",
   hudSolid: "Fondo casi opaco en el HUD para leerlo mejor sobre pasto claro.",
   calm: "Quita parpadeos, destellos y sacudidas que molestan.",
-  tranquilo: "Modo Tranquilo: recibís la mitad del daño y los bichos tienen 70% de vida (los jefes no).",
+  tranquilo: "Modo Tranquilo: se recibe la mitad del daño y los bichos tienen 70% de vida (los jefes no).",
   "pad.dead": "Cuánto hay que mover el stick antes de que cuente.",
   "pad.sens": "Qué tan rápido responde el stick.",
   rumble: "Vibración del mando en golpes.",
@@ -872,6 +896,8 @@ export const TABS: Record<string, { name: string; rows: Row[] }> = {
     ["Probar motor", "btn", "engtest"],
   ] },
   ctl: { name: "Controles", rows: [
+    ["Guía", "sect"],
+    ["Ver guía de controles", "btn", "ctlguide"],
     ["Perfiles", "sect"],
     ["Tres perfiles con nombre guardan teclado, joystick, carrera y táctil juntos. Guardar copia lo actual; Usar lo carga.", "note"],
     ["Perfil 1", "prof", 0], ["Perfil 2", "prof", 1], ["Perfil 3", "prof", 2],
@@ -954,7 +980,7 @@ export function renderConfig() {
   let sec = "";
   const rows = TABS[tab].rows.filter((r) => {
     if (r[1] === "sect") sec = r[0];
-    if (touchOnly && sec !== "Táctil" && sec !== "Perfiles") return false;
+    if (touchOnly && sec !== "Táctil" && sec !== "Perfiles" && sec !== "Guía") return false;
     if ((r[2] === "tedit" && !isTouch) || (r[2] === "rc.p2" && isTouch)) return false;
     return !(typeof r[2] === "string" && hiddenRow(r[2]));
   });
@@ -1212,6 +1238,7 @@ export function initMenu(a: Api) {
     if (t.id === "dgrid") { if (!e.detail) paintAtCursor(); return; } // Enter / A sobre la grilla (el mouse y el dedo pintan en pointerdown)
     if (binding && d?.bind !== binding) { cancelBind(); if (!d?.bind) return; } // un clic fuera cancela la captura
     if (!d) return;
+    if (!save.controlesVistos && /^(play|playgo|encorego|daily|weekly)$/.test(d.act ?? "")) { const b = t.closest<HTMLElement>("[data-act]")!; SFX.accept(); controlsGuide(() => b.click()); return; } // primera partida: antes de largar, la guía de controles
     SFX.accept();
     if (d.go) go(d.go as Scr);
     else if (d.rc) { cycleRace(d.rc); renderRace(); }
@@ -1248,6 +1275,7 @@ export function initMenu(a: Api) {
     else if (d.act === "export") exportSave();
     else if (d.act === "import") importSave();
     else if (d.act === "controls") { tab = "ctl"; go("config"); }
+    else if (d.act === "ctlguide") controlsGuide();
     else if (d.act === "resume") api.resume();
     else if (d.act === "quit") api.quit();
     else if (d.act === "install") void installEv?.prompt().finally(() => { installEv = null; $("install").classList.add("hidden"); }); // el evento sirve una sola vez

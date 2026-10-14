@@ -1,5 +1,5 @@
 import * as B from "@babylonjs/core";
-import { box, cyl, merge, sph, tor } from "../models";
+import { box, cyl, merge, sph, template, tor } from "../models";
 import { M, pbr, shadows, surface, TEX } from "../render";
 import { rng } from "../rng";
 import { FOLD, FOLDED_SLICE } from "../folded";
@@ -10,7 +10,15 @@ function soilEdgeMask() {
   const t = new B.DynamicTexture("soilEdgeMask", 128, scene, false);
   const c = t.getContext() as unknown as CanvasRenderingContext2D;
   c.fillStyle = "#000"; c.fillRect(0, 0, 128, 128);
-  c.filter = "blur(7px)"; c.fillStyle = "#fff"; c.beginPath(); c.roundRect(8, 8, 112, 112, 20); c.fill(); c.filter = "none";
+  c.filter = "blur(7px)"; c.fillStyle = "#fff"; c.beginPath(); c.moveTo(18, 14);
+  c.bezierCurveTo(42, 4, 60, 20, 88, 10);
+  c.bezierCurveTo(118, 3, 114, 29, 108, 48);
+  c.bezierCurveTo(101, 67, 125, 84, 113, 106);
+  c.bezierCurveTo(103, 125, 79, 109, 59, 115);
+  c.bezierCurveTo(36, 123, 9, 115, 14, 91);
+  c.bezierCurveTo(19, 69, 3, 55, 11, 35);
+  c.bezierCurveTo(14, 25, 9, 18, 18, 14);
+  c.closePath(); c.fill(); c.filter = "none";
   t.update(); t.getAlphaFromRGB = true;
   t.wrapU = t.wrapV = B.Texture.CLAMP_ADDRESSMODE;
   return t;
@@ -30,14 +38,26 @@ export function patioBuild() {
   leavesTex.hasAlpha = true;
   const leaves = pbr("dryLeaves", { color: "#ffffff", rough: 0.92, tex: leavesTex });
   leaves.useAlphaFromAlbedoTexture = true;
-  leaves.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
-  for (const [x, z, ry] of [[-34, 25, 0.3], [34, 25, -0.6], [-34, -18, 1.1], [34, -18, -1.2]]) decal("dryLeaves", 9, 7, x, z, leaves, 0.025).rotation.y = ry;
+  leaves.useRadianceOverAlpha = leaves.useSpecularOverAlpha = false;
+  leaves.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
+  const leafDecals: B.Mesh[] = [];
+  for (const [x, z, ry, scale] of [[-34, 25, 0.3, 0.46], [34, 25, -0.6, 0.38], [-34, -18, 1.1, 0.42], [34, -18, -1.2, 0.5], [-15, -7, 0.7, 0.35], [8, -8, -0.4, 0.4], [-23, 12, 1.3, 0.44]]) {
+    const patch = decal("dryLeaves", 9 * scale, 7 * scale, x, z, leaves, 0.025);
+    patch.rotation.y = ry; leafDecals.push(patch);
+  }
+  merge("patioLeafDecals", leafDecals, [leaves]);
   const scrapTex = tex("smallScrap", () => new B.Texture("./images/decals/small-scrap.webp", scene));
   scrapTex.hasAlpha = true;
   const scrap = pbr("smallScrap", { color: "#ffffff", rough: 0.8, tex: scrapTex });
   scrap.useAlphaFromAlbedoTexture = true;
-  scrap.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
-  for (const [x, z, ry] of [[-40, 30, -0.4], [40, -23, 0.8]]) decal("smallScrap", 4, 3, x, z, scrap, 0.03).rotation.y = ry;
+  scrap.useRadianceOverAlpha = scrap.useSpecularOverAlpha = false;
+  scrap.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
+  const scrapDecals: B.Mesh[] = [];
+  for (const [x, z, ry, scale] of [[-40, 30, -0.4, 0.45], [40, -23, 0.8, 0.36], [-12, -10, 0.5, 0.5], [10, -12, -0.7, 0.4]]) {
+    const patch = decal("smallScrap", 4 * scale, 3 * scale, x, z, scrap, 0.03);
+    patch.rotation.y = ry; scrapDecals.push(patch);
+  }
+  merge("patioScrapDecals", scrapDecals, [scrap]);
   decal("patio", 48, 34, 0, -30, surface(pbr("tiles", { color: "#ffffff", rough: 0.6, tex: tex("tiles", TEX.tiles) }), "concrete", 28, 0.7));
 
   // Huerta: tierra compactada y gravilla con bordes fundidos al césped
@@ -46,24 +66,45 @@ export function patioBuild() {
   compactedTex.uScale = 16.8; compactedTex.vScale = 13;
   const dirtMat = surface(
     pbr("dirt", {
-      color: "#ffffff",
+      color: "#d0d8df",
       rough: 0.94,
       tex: compactedTex,
     }),
     "soil",
     24,
-    0.85
+    0.55
   );
-  const dirtGroundMat = surface(pbr("dirtGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.85);
+  const dirtGroundMat = surface(pbr("dirtGround", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
   dirtGroundMat.opacityTexture = edgeMask;
-  dirtGroundMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  dirtGroundMat.alphaCutOff = 0.02;
+  dirtGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   const grassEarthTex = tex("grassEarth", TEX.grassEarth);
   grassEarthTex.uScale = 11; grassEarthTex.vScale = 9;
   const grassEarthMat = pbr("grassEarthTransition", { color: "#ffffff", rough: 0.95, tex: grassEarthTex });
   grassEarthMat.opacityTexture = edgeMask;
-  grassEarthMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  grassEarthMat.alphaCutOff = 0.02;
+  grassEarthMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   decal("gardenSoilTransition", 50, 40, 50, 45, grassEarthMat, 0.015);
+  decal("workshopGrassTransition", 22, 18, -4, -9, grassEarthMat, 0.016);
   const dirt = decal("dirt", 42, 32, 50, 45, dirtGroundMat, 0.025);
+  const pathMat = surface(pbr("soilPath", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
+  pathMat.opacityTexture = edgeMask;
+  pathMat.alphaCutOff = 0.02;
+  pathMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
+  const paths: B.Mesh[] = [];
+  const grassPaths = [
+    [-33, 10, 16, 38, 2.11],
+    [-1, 16, 12.5, 48, 0.87],
+    [33, 38.5, 14, 38, 1.16],
+    [-7, 1, 11, 37, -0.49],
+  ];
+  for (const [x, z, w, len, angle] of grassPaths) {
+    const path = decal("soilPath", w, len, x, z, pathMat, 0.018);
+    path.rotation.y = angle;
+    paths.push(path);
+  }
+  const soilPaths = merge("soilPaths", paths, [pathMat]);
+  soilPaths.metadata = { grassPaths };
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirtMat, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   const crops: B.Mesh[] = [];
@@ -76,27 +117,57 @@ export function patioBuild() {
   // Zona de combate de chatarra: misma tierra y transición compartidas con la huerta
   const scrapMat = surface(
     pbr("scrapEarth", {
-      color: "#ffffff",
+      color: "#d0d8df",
       rough: 0.94,
       tex: compactedTex,
     }),
     "soil",
     26,
-    0.85
+    0.55
   );
-  const scrapGroundMat = surface(pbr("scrapGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 26, 0.85);
+  const scrapGroundMat = surface(pbr("scrapGround", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 26, 0.55);
   scrapGroundMat.opacityTexture = edgeMask;
-  scrapGroundMat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  scrapGroundMat.alphaCutOff = 0.02;
+  scrapGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
+  const soilTone = new B.DynamicTexture("soilTone", 128, scene, false);
+  const tone = soilTone.getContext() as unknown as CanvasRenderingContext2D;
+  tone.fillStyle = "#fff"; tone.fillRect(0, 0, 128, 128);
+  for (const [x, y, r, shade] of [[24, 35, 48, 0.2], [98, 90, 55, 0.25], [85, 16, 32, 0.12]]) {
+    const g = tone.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(0,0,0,${shade})`); g.addColorStop(1, "rgba(0,0,0,0)");
+    tone.fillStyle = g; tone.fillRect(0, 0, 128, 128);
+  }
+  soilTone.update(); soilTone.gammaSpace = false;
+  soilTone.wrapU = soilTone.wrapV = B.Texture.CLAMP_ADDRESSMODE;
+  soilTone.coordinatesIndex = 1;
+  for (const mat of [dirtGroundMat, pathMat, scrapGroundMat]) {
+    mat.lightmapTexture = soilTone; mat.useLightmapAsShadowmap = true;
+  }
   decal("scrapSoilTransition", 54, 44, -48, 20, grassEarthMat, 0.015);
-  decal("scrapZone", 46, 36, -48, 20, scrapGroundMat, 0.025);
+  const scrapZone = decal("scrapZone", 46, 36, -48, 20, scrapGroundMat, 0.025);
+  // UV2 en coordenadas del patio: el tono coincide donde dos parches se superponen.
+  for (const ground of [dirt, soilPaths, scrapZone]) {
+    const positions = ground.getVerticesData(B.VertexBuffer.PositionKind)!;
+    const uv = new Float32Array(positions.length / 3 * 2);
+    const world = ground.computeWorldMatrix(true), point = new B.Vector3();
+    for (let i = 0; i < positions.length / 3; i++) {
+      B.Vector3.TransformCoordinatesFromFloatsToRef(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2], world, point);
+      uv[i * 2] = (point.x + HALF) / (HALF * 2);
+      uv[i * 2 + 1] = (point.z + HALF) / (HALF * 2);
+    }
+    ground.setVerticesData(B.VertexBuffer.UV2Kind, uv);
+  }
   const tracksTex = tex("patioTireMarks", () => new B.Texture("./images/decals/tire-marks.webp", scene));
   tracksTex.hasAlpha = true;
   const tracks = pbr("patioTireMarks", { color: "#ffffff", rough: 0.95, tex: tracksTex });
   tracks.useAlphaFromAlbedoTexture = true;
-  tracks.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
-  decal("patioTireMarks", 30, 30, -18, 0, tracks, 0.03);
-  decal("patioTireMarksFar", 26, 26, 16, 32, tracks, 0.03);
-  decal("scrapZoneTireMarks", 24, 24, -48, 20, tracks, 0.03);
+  tracks.useRadianceOverAlpha = tracks.useSpecularOverAlpha = false;
+  tracks.alpha = 0.78;
+  tracks.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
+  decal("patioTireMarks", 14, 25, -12, 7, tracks, 0.03).rotation.y = 0.87;
+  decal("patioTireMarksFar", 15, 23, 25, 35, tracks, 0.03).rotation.y = 1.16;
+  decal("scrapZoneTireMarks", 21, 22, -48, 20, tracks, 0.03).rotation.y = 2.1;
+  decal("workshopTireMarks", 12, 18, -4, -5, tracks, 0.035).rotation.y = -0.49;
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
   stat(cyl(2.8, 2.8, 22, scrapMat, [-48, -0.9, 34], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
@@ -106,8 +177,18 @@ export function patioBuild() {
   registerHeavyProp(stat(tor(2.8, 0.95, tireStackM(), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   registerHeavyProp(stat(tor(2.6, 0.9, tireStackM(), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   // Tambores metálicos de combustible oxidados (PBR con relieve y desgaste)
-  registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-42, 2.4, 30], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
-  registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [-45.5, 2.4, 32], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
+  const capMat = surface(pbr("drumCap", { color: "#d5dbe0", rough: 0.84, metal: 0.3, tex: tex("p_drum_alb", () => new B.Texture("./textures/props/prop-rusty-drum-folded-v2.webp", scene)) }), "steel", 4, 0.35);
+  const trimMat = surface(pbr("drumTrim", { color: "#737b80", rough: 0.72, metal: 0.55 }), "steel", 4, 0.25);
+  const capTpl = template("drumCap", () => [
+    cyl(3.18, 3.18, 0.025, capMat, [0, 0, 0], undefined, 16),
+    tor(3.08, 0.055, trimMat, [0, 0.025, 0], undefined, 16),
+    cyl(0.24, 0.24, 0.08, trimMat, [0.55, 0.05, -0.3], undefined, 8),
+  ]);
+  for (const [x, z] of [[-42, 30], [-45.5, 32]]) {
+    const drum = registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [x, 2.4, z], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
+    const cap = capTpl.createInstance("drumCap");
+    cap.parent = drum; cap.position.set(0, 2.4, 0); cap.isPickable = false; cap.receiveShadows = true;
+  }
   // Cajas industriales de madera con textura PBR y normales en el borde este
   const scrapCrate = woodCrateM();
   crateFold(stat(box(2.6, 2.4, 2.6, scrapCrate, [-33, 1.2, 24], [0, 0.35, 0]), B.PhysicsShapeType.BOX, { friction: 0.5 }), 2.6, 2.4, 2.6);

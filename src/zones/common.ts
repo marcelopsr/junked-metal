@@ -53,29 +53,30 @@ export const woodM = () => (FOLDED_SLICE ? FOLD.painted("#8a6a44", 0.8, 301) : p
 export const propTex = (name: string) => {
   const t = new B.Texture(`./textures/props/${name}.webp`, scene, true, false, B.Texture.TRILINEAR_SAMPLINGMODE);
   t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE;
+  if (name.startsWith("prop-tire-stack")) { t.uScale = 1; t.vScale = 0.2; t.vOffset = 0.16; }
+  if (name === "prop-tire-stack_normal") t.level = 0.2;
   return t;
 };
 export const rustyDrumM = () =>
-  pbr("propRustyDrum", {
-    color: "#ffffff",
-    rough: 0.72,
-    metal: 0.55,
-    tex: tex("p_drum_alb", () => propTex("prop-rusty-drum")),
-    bump: tex("p_drum_bmp", () => propTex("prop-rusty-drum_normal")),
-  });
+  surface(pbr("propRustyDrum", {
+    color: "#d5dbe0",
+    rough: 0.82,
+    metal: 0.3,
+    tex: tex("p_drum_alb", () => propTex("prop-rusty-drum-folded-v2")),
+  }), "steel", 6, 0.35);
 export const tireStackM = () =>
   pbr("propTireStack", {
-    color: "#ffffff",
-    rough: 0.88,
-    metal: 0.05,
+    color: "#778184",
+    rough: 0.96,
+    metal: 0,
     tex: tex("p_tire_alb", () => propTex("prop-tire-stack")),
     bump: tex("p_tire_bmp", () => propTex("prop-tire-stack_normal")),
   });
 export const woodCrateM = () =>
   pbr("propWoodCrate", {
-    color: "#ffffff",
-    rough: 0.78,
-    metal: 0.02,
+    color: "#e9dec9",
+    rough: 0.92,
+    metal: 0,
     tex: tex("p_crate_alb", () => propTex("prop-wood-crate")),
     bump: tex("p_crate_bmp", () => propTex("prop-wood-crate_normal")),
   });

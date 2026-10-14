@@ -31,15 +31,17 @@ export function applyClimate(k: { sun: [number, number, number]; sunColor: strin
   k.ramp.forEach((h, i) => ramp[i].copyFrom(B.Color3.FromHexString(h)));
   sun.direction = new B.Vector3(...k.sun).normalize();
   sun.diffuse = B.Color3.FromHexString(k.sunColor);
+  if (k.day) sun.diffuse = B.Color3.Lerp(sun.diffuse, B.Color3.White(), 0.18);
   clim = k;
   sun.intensity = k.sunI * LOOK.moonMul;
   hemi.intensity = k.hemiI * LOOK.ambMul;
-  hemi.diffuse = B.Color3.FromHexString(k.amb ?? (k.day ? "#eef4e0" : k.sky[1])); // de día el ambiente es casi blanco: el cielo azul teñía las sombras de índigo
-  hemi.groundColor = B.Color3.FromHexString(k.ground ?? (k.day ? "#7a9a5a" : NIGHT_GROUND)); // rebote del pasto: las sombras de día no quedan azul marino
+  hemi.diffuse = B.Color3.FromHexString(k.amb ?? (k.day ? "#eef1ee" : k.sky[1])); // ambiente diurno neutro para separar los materiales
+  hemi.groundColor = B.Color3.FromHexString(k.ground ?? (k.day ? "#7c8970" : NIGHT_GROUND)); // rebote del pasto menos saturado
   paintSky(k.sky);
   scene.clearColor = B.Color4.FromHexString(k.sky[1] + "ff");
   scene.imageProcessingConfiguration.exposure = k.exposure * LOOK.exposure * cur.bright;
   scene.fogColor = B.Color3.FromHexString(k.sky[1]);
+  if (k.day) scene.fogColor = B.Color3.Lerp(scene.fogColor, B.Color3.FromHexString("#b2bdc6"), 0.4);
   scene.fogDensity = k.fog * LOOK.fogMul;
   probe.refreshRate = B.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
 }
@@ -95,9 +97,9 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   shadows.stabilizeCascades = true;
   shadows.usePercentageCloserFiltering = true;
   shadows.filteringQuality = SHADOW.mid[2];
-  shadows.darkness = 0.72; // sombras más legibles sin cambiar el tamaño del mapa
-  shadows.bias = 0.004;
-  shadows.normalBias = 0.02;
+  shadows.darkness = 0.62; // más peso bajo los props con el mismo mapa
+  shadows.bias = 0.0025;
+  shadows.normalBias = 0.012;
   scene.onBeforeRenderObservable.add(() => { const rt = shadows.getShadowMap(); if (rt && rt.getCustomRenderList !== shadowList) rt.getCustomRenderList = shadowList; }); // applyGfx recrea el mapa al cambiar el nivel: se vuelve a enganchar
 
   // Faro del auto: el único foco duro de la escena. Sin sombras propias (ponytail: sombras solo de la luna; si hace falta, ShadowGenerator sobre el spot).

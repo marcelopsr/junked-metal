@@ -36,7 +36,7 @@
       </div>
       <div class="ld-bar"><i id="ldBar"></i></div>
       <div class="ld-row"><span id="ldStep">Iniciando</span><span class="ld-pct" id="ldPct">0%</span></div>
-      <div class="ld-tip"><b>Consejo</b><span id="ldTip"></span></div>
+      <div class="ld-tip" aria-live="off"><b>Consejo</b><span id="ldTip"></span></div>
     </div>
   </div>
 
@@ -142,6 +142,8 @@
     <div id="scrAnnounce" class="sr-only" role="status"></div>
     <div id="ask" class="ask hidden" role="dialog" aria-modal="true" aria-labelledby="askTitle"><div class="askbox"><div class="otitle" id="askTitle">Confirmar compra</div><p id="askD"></p>
       <div class="btns"><button data-act="askno">Cancelar</button><button data-act="askyes" class="primary">Comprar</button></div></div></div>
+    <div id="ctlg" class="ask hidden" role="dialog" aria-modal="true" aria-labelledby="ctlgT"><div class="askbox"><div class="otitle" id="ctlgT">Controles</div><div id="ctlgB" class="ctlg"></div>
+      <div class="btns"><button data-act="askyes" class="primary">Entendido</button></div></div></div>
     <section id="scr-title" class="scr">
       <div class="brand">JUNKED METAL</div>
       <div class="tag">Un auto de juguete, diez minutos y ninguna cobertura médica.</div>
