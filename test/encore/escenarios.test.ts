@@ -5,7 +5,7 @@ describe("Contenido 3: escenarios terrestres", () => {
   it("vuelta 0 toda en la luna; desde la vuelta 1, un escenario por vuelta en una zona plana, fijo por semilla", () => {
     for (const seed of [1, 7, 42, 999]) {
       const r = newRun(seed);
-      for (let s = 0; s < ENC.stages; s++) { r.stage = s; expect(zoneOf(r)).toBe("luna"); }
+      for (let s = 0; s < ENC.stages; s++) { r.stage = s; expect(zoneOf(r)).toBe(s ? "luna" : "patio"); }
       for (let loop = 1; loop < 6; loop++) {
         r.loop = loop;
         const zs = Array.from({ length: ENC.stages }, (_, s) => { r.stage = s; return zoneOf(r); });
