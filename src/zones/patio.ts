@@ -63,11 +63,11 @@ export function patioBuild() {
 
   // Huerta: tierra compactada y gravilla con bordes fundidos al césped
   const edgeMask = soilEdgeMask();
-  const compactedTex = tex("compactedEarth", TEX.compactedEarth);
+  const compactedTex = tex("compactedEarthGenerated", () => new B.Texture("./textures/soil-clods-generated.webp", scene));
   compactedTex.uScale = 16.8; compactedTex.vScale = 13;
   const dirtMat = surface(
     pbr("dirt", {
-      color: "#d0d8df",
+      color: "#ffffff",
       rough: 0.94,
       tex: compactedTex,
     }),
@@ -75,7 +75,7 @@ export function patioBuild() {
     24,
     0.55
   );
-  const dirtGroundMat = surface(pbr("dirtGround", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
+  const dirtGroundMat = surface(pbr("dirtGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
   dirtGroundMat.opacityTexture = edgeMask;
   dirtGroundMat.alphaCutOff = 0.02;
   dirtGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
@@ -88,7 +88,7 @@ export function patioBuild() {
   decal("gardenSoilTransition", 50, 40, 50, 45, grassEarthMat, 0.015);
   decal("workshopGrassTransition", 22, 18, -4, -9, grassEarthMat, 0.016);
   const dirt = decal("dirt", 42, 32, 50, 45, dirtGroundMat, 0.025);
-  const pathMat = surface(pbr("soilPath", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
+  const pathMat = surface(pbr("soilPath", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
   pathMat.opacityTexture = edgeMask;
   pathMat.alphaCutOff = 0.02;
   pathMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
@@ -129,7 +129,7 @@ export function patioBuild() {
   // Zona de combate de chatarra: misma tierra y transición compartidas con la huerta
   const scrapMat = surface(
     pbr("scrapEarth", {
-      color: "#d0d8df",
+      color: "#ffffff",
       rough: 0.94,
       tex: compactedTex,
     }),
@@ -137,7 +137,7 @@ export function patioBuild() {
     26,
     0.55
   );
-  const scrapGroundMat = surface(pbr("scrapGround", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 26, 0.55);
+  const scrapGroundMat = surface(pbr("scrapGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 26, 0.55);
   scrapGroundMat.opacityTexture = edgeMask;
   scrapGroundMat.alphaCutOff = 0.02;
   scrapGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;

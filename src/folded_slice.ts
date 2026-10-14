@@ -41,6 +41,35 @@ export function kit() {
   };
   return { G, parts, done, strut, bone };
 }
+/** Bandeja magnética de tornillería para el banco; pieza ambiental, sin física. */
+export function partsTray() {
+  const { G, parts, done } = kit();
+  const steel = FOLD.bare(), interior = FOLD.dark(), rim = FOLD.painted("#72533b", 0.78, 93);
+  // Chapa plegada con pestañas bajas y esquinas remachadas.
+  G.box(8, 0.16, 5.4, interior, [0, 0.08, 0]);
+  G.box(8, 0.72, 0.16, steel, [0, 0.48, -2.62]);
+  G.box(8, 0.72, 0.16, steel, [0, 0.48, 2.62]);
+  G.box(0.16, 0.72, 5.1, steel, [-3.92, 0.48, 0]);
+  G.box(0.16, 0.72, 5.1, steel, [3.92, 0.48, 0]);
+  for (const x of [-3.92, 3.92]) for (const z of [-2.62, 2.62]) {
+    G.cyl(0.2, 0.12, rim, [x, 0.66, z], undefined, 6);
+    G.rivets([x, 0.48, z], [x, 0.48, z], 1, [0, 0, 1]);
+  }
+  // Un par de tornillos, tuercas y arandelas visibles en el fondo.
+  G.cyl(0.48, 0.18, steel, [-1.7, 0.28, -0.7], [0, 0.3, 0.55], 6, 0.34);
+  G.cyl(0.2, 0.72, rim, [-1.7, 0.28, -0.7], [0, 0.3, 0.55], 6, 0.2);
+  G.cyl(0.42, 0.16, rim, [1.5, 0.22, 0.9], undefined, 6);
+  G.cyl(0.48, 0.14, steel, [2.4, 0.22, -0.8], undefined, 6);
+  G.cyl(0.18, 0.66, steel, [2.4, 0.22, -0.8], [0.1, 0.4, 0.6], 6, 0.18);
+  // Calco de inspección del atlas generado, aplicado al frente de la bandeja.
+  const sticker = B.MeshBuilder.CreatePlane("inspectionSticker", { width: 0.65, height: 0.65 }, sc());
+  const uv = sticker.getVerticesData(B.VertexBuffer.UVKind)!;
+  for (let i = 0; i < uv.length; i += 2) { uv[i] = 0.25 + uv[i] * 0.25; uv[i + 1] = 2 / 3 + uv[i + 1] / 3; }
+  sticker.setVerticesData(B.VertexBuffer.UVKind, uv); sticker.position.set(0, 0.48, -2.711); sticker.rotation.y = Math.PI;
+  sticker.material = FOLD.inspectionDecals(); sticker.metadata = { bone: 0 }; parts.push(sticker);
+  for (const p of done()) p.position.set(p.position.x - 50, p.position.y + 18.62, p.position.z - 92);
+  return parts;
+}
 export const along = (G: GeoKit, d1: number, d2: number, len: number, m: B.Material, p: V3, tess = 6) => G.cyl(d1, len, m, p, [Math.PI / 2, 0, 0], tess, d2); // prisma a lo largo de z (d1 adelante)
 
 // ---------- Hormiga: gáster hexagonal con placa, cintura, tórax con lomo atornillado, cabeza con mandíbulas de acero ----------

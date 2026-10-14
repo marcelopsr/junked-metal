@@ -173,6 +173,12 @@ export const FOLD = {
     m.albedoTexture = decalTex(); m.useAlphaFromAlbedoTexture = true; m.transparencyMode = B.PBRMaterial.PBRMATERIAL_ALPHATEST;
     m.roughness = 0.75; m.metallic = 0; m.zOffset = -2;
   }),
+  /** Atlas generado de calcomanías de inspección; separado para conservar las celdas Folded existentes. */
+  inspectionDecals: () => once("inspectionDecals", (m) => {
+    const t = new B.Texture("./images/decals/inspection-atlas.webp", sc(), true, false, B.Texture.NEAREST_SAMPLINGMODE);
+    t.hasAlpha = true; m.albedoColor = B.Color3.White(); m.albedoTexture = t; m.useAlphaFromAlbedoTexture = true;
+    m.transparencyMode = B.PBRMaterial.PBRMATERIAL_ALPHATEST; m.roughness = 0.82; m.metallic = 0;
+  }),
 };
 /** Chapas para utilería del mundo (tonos de las láminas, un punto apagados para no competir con enemigos). */
 export const FOLD_PAINT = [PAL.petroleo, PAL.rojoChapa, "#c98a1a", "#4a5560", "#3d6b3a"] as const;

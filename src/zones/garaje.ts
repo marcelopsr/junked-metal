@@ -3,6 +3,7 @@ import { box, cyl, merge, tor, tube } from "../models";
 import { M, pbr, shadows } from "../render";
 import { rng } from "../rng";
 import { FOLD, FOLD_PAINT } from "../folded";
+import { partsTray } from "../folded_slice";
 import { HALF, concreteTex, decal, dyn, floor, occluders, realCar, scene, stat, tex, tireStackM, undo, woodM } from "./common";
 import { ball, between, giantTools, int, paintCans, piles, plankBridge, puddles, toyRamps } from "../world_layout";
 
@@ -38,6 +39,8 @@ export function garageBuild() {
   ]);
   shadows.addShadowCaster(bench);
   occluders.push(bench);
+  const tray = merge("garagePartsTray", partsTray());
+  shadows.addShadowCaster(tray);
   const tools = [box(3, 14, 0.6, M.matte("#82909a"), [-62, 32, -HALF + 0.6]), box(10, 2, 0.6, M.matte("#82909a"), [-50, 36, -HALF + 0.6]), box(2, 12, 0.6, M.matte("#c65a43"), [-40, 30, -HALF + 0.6]), tor(6, 1, M.matte("#82909a"), [-30, 33, -HALF + 0.6], [Math.PI / 2, 0, 0], 12)];
   merge("pegboard", [box(50, 24, 0.5, M.matte("#b89a6a"), [-45, 32, -HALF + 0.3]), ...tools]);
   // Tubos fluorescentes: uno sobre el banco y dos en el techo. Parpadean (luz del sol del clima TUBO + emisivo)
