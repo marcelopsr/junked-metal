@@ -11,13 +11,26 @@ import { basename, dirname } from "node:path";
 
 /** Worktree secundario de git (toplevel != carpeta padre del git-common-dir): su propio rc-test-<nombre> en un puerto 5200-5299 fijo por ruta. null en la carpeta principal. */
 const git = (a) => execSync("git " + a, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+/** Procesos pm2 rc-test / rc-test-*. */
+export const rcProcs = () => { try { return JSON.parse(execSync("pm2 jlist", { encoding: "utf8", maxBuffer: 1e8, stdio: ["ignore", "pipe", "ignore"] }).replace(/^[^[]*/, "")).filter((p) => /^rc-test(-|$)/.test(p.name)); } catch { return []; } };
+export const portOf = (p) => p.pm2_env.RC_TEST_PORT ?? p.pm2_env.env?.RC_TEST_PORT ?? 5174;
 export const WT = (() => {
   try {
     const top = git("rev-parse --show-toplevel");
     if (top === dirname(git("rev-parse --path-format=absolute --git-common-dir"))) return null;
-    // ponytail: hash de la ruta mod 100; dos worktrees pueden chocar de puerto (pm2 start falla con strictPort): renombrar uno. Subir a un registro si pasa seguido.
-    const port = 5200 + [...top].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 100;
-    return { top, port, name: "rc-test-" + basename(top) };
+    const h = [...top].reduce((x, c) => (x * 31 + c.charCodeAt(0)) >>> 0, 7);
+    const ps = rcProcs();
+    // mismo basename en otra ruta: sufijo del hash para que no choquen en pm2
+    let name = "rc-test-" + basename(top);
+    if (ps.some((p) => p.name === name && p.pm2_env.pm_cwd !== top)) name += "-" + (h % 1296).toString(36);
+    const mine = ps.find((p) => p.name === name);
+    if (mine) return { top, port: Number(portOf(mine)), name };
+    // puerto del hash; si otro rc-test-* de pm2 o cualquier proceso lo usa, el siguiente libre de 5200-5299
+    const used = new Set(ps.map(portOf).map(Number));
+    const busy = (q) => { try { return !!execSync(`lsof -ti tcp:${q} -sTCP:LISTEN`, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); } catch { return false; } };
+    let port = 5200 + h % 100;
+    for (let i = 0; i < 100 && (used.has(port) || busy(port)); i++) port = 5200 + ((port - 5200 + 1) % 100);
+    return { top, port, name };
   } catch { return null; }
 })();
 export const BASE = process.env.RC_URL ?? `http://localhost:${WT?.port ?? 5174}`;

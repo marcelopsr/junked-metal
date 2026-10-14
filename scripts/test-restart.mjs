@@ -8,11 +8,10 @@ import { dirname, join } from "node:path";
 // node_modules del worktree = symlink al de la carpeta principal. Va ANTES de importar browser.mjs (que importa playwright desde ahí).
 const common = execSync("git rev-parse --path-format=absolute --git-common-dir", { encoding: "utf8" }).trim();
 if (dirname(common) !== process.cwd() && !existsSync("node_modules")) symlinkSync(join(dirname(common), "node_modules"), "node_modules");
-const { PERF_LOCK, SERVER_LOCK, WT, lock, lockInfo } = await import("./lib/browser.mjs");
+const { PERF_LOCK, SERVER_LOCK, WT, lock, lockInfo, portOf, rcProcs } = await import("./lib/browser.mjs");
 
 const sh = (c, o = {}) => execSync(c, { stdio: "inherit", ...o });
-const procs = () => JSON.parse(execSync("pm2 jlist", { encoding: "utf8", maxBuffer: 1e8 }).replace(/^[^[]*/, "")).filter((p) => /^rc-test(-|$)/.test(p.name));
-const portOf = (p) => p.pm2_env.RC_TEST_PORT ?? p.pm2_env.env?.RC_TEST_PORT ?? 5174;
+const procs = rcProcs;
 const cmd = process.argv[2] ?? "restart";
 
 if (cmd === "ls") {
