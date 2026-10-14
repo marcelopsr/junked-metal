@@ -1478,9 +1478,18 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
 
 ---
 
+## 2026-10-13 · Pulido visual de grúa y tambores (ciclo local)
+
+- La grúa Folded combina la chapa mostaza compartida con marcos amarillos del atlas; conserva UV, plantilla, instancias y colisión.
+- Los dos aros de acero de cada tambor sobresalen de la silueta y se leen sobre la pintura. Solo cambió la plantilla visual; los cilindros físicos y el balance siguen iguales.
+- Capturas cercanas verificadas en PC y celular: `.shots/actual/{pc,cel}-{crane,drum}-polish.png`. TypeScript, 178 tests y build pasaron. Las capturas usaron el servidor PM2 de este checkout en `:5278`; `rc-test` en `:5174` sirve otro checkout.
+- Cierre local sin publicación.
+
+---
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Ciclo #41 (Modularización de `main.ts` con `src/net_client.ts`, `src/coop.ts` y `src/outro.ts`).
+- **Último trabajo completado:** pulido visual local de la grúa Folded y los tambores del patio (2026-10-13).
 - **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

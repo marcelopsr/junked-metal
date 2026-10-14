@@ -183,8 +183,8 @@ export function patioBuild() {
     cyl(3.18, 3.18, 0.025, capMat, [0, 0, 0], undefined, 16),
     tor(3.08, 0.055, trimMat, [0, 0.025, 0], undefined, 16),
     cyl(0.24, 0.24, 0.08, trimMat, [0.55, 0.05, -0.3], undefined, 8),
-    tor(3.18, 0.09, capMat, [0, -1.2, 0], undefined, 16),
-    tor(3.18, 0.09, capMat, [0, -3.6, 0], undefined, 16),
+    tor(3.25, 0.18, trimMat, [0, -1.2, 0], undefined, 16),
+    tor(3.25, 0.18, trimMat, [0, -3.6, 0], undefined, 16),
   ]);
   for (const [x, z] of [[-42, 30], [-45.5, 32]]) {
     const drum = registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, rustyDrumM(), [x, 2.4, z], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
