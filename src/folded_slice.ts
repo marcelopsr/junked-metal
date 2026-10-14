@@ -279,6 +279,16 @@ export function buggyHull(paint: B.Material, lamp: string, q: Genome = genome("b
   };
   const rz = hoop(-0.42, q.jaula_alto, q.jaula_ancho), fw = q.jaula_ancho - 0.06, fzz = hoop(0.3, q.jaula_frente, fw);
   strut([-q.jaula_ancho, y0 + q.jaula_alto, rz], [-fw, y0 + q.jaula_frente, fzz], 0.04, 0.04, steel); strut([q.jaula_ancho, y0 + q.jaula_alto, rz], [fw, y0 + q.jaula_frente, fzz], 0.04, 0.04, steel);
+  if (q.barra_luces > 0.03) { // barra de luces sobre el arco delantero de la jaula: caja amarilla con cuatro focos emisivos al frente; 0 = sin barra
+    const bh = q.barra_luces, bw2 = fw + 0.04, by = y0 + q.jaula_frente + bh / 2 + 0.03;
+    G.box(bw2 * 2, bh, 0.1, yel, [0, by, fzz + 0.02]);
+    for (const x of [-0.75, -0.25, 0.25, 0.75]) G.box(bw2 * 0.4, bh * 0.6, 0.04, FOLD.emissive(lamp), [x * bw2, by, fzz + 0.09]);
+  }
+  if (q.snorkel_alto > 0.05) { // snorkel de acero: caño vertical al costado derecho de la bañera y codo hacia adelante con la toma; 0 = sin snorkel
+    const sh = q.snorkel_alto, sx = tw / 2 + 0.05, sz = tz + tl / 2 - 0.25;
+    G.cyl(0.07, sh + 0.1, steel, [sx, top + sh / 2 - 0.05, sz], undefined, 8); G.cyl(0.11, 0.1, dark, [sx, top + sh + 0.03, sz + 0.06], [Math.PI / 2, 0, 0], 8);
+    strut([sx, top + sh, sz], [sx, top + sh, sz + 0.1], 0.07, 0.07, steel);
+  }
   const R = q.guarda_radio, arc = q.guarda_arco;
   for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) { // guardabarros + soporte + amortiguador
     for (let i = 0; i < 4; i++) { const a = arc * (i / 1.5 - 1); G.box(q.guarda_ancho, 0.025, 0.25 * (R * arc) / (0.47 * 0.75), yel, [x * fx, R * Math.cos(a), z * fz + R * Math.sin(a)], [a, 0, 0]); } // guardabarros en arco (4 placas)
@@ -681,6 +691,15 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(tw, th, tl, paint, [0, ty, -0.15]); edges(tw, ty + th / 2, -0.15 - tl / 2, -0.15 + tl / 2, paint);
     G.cyl(0.42, 0.08, olive, [0, ty + th / 2 + 0.04, -0.25], undefined, 8);
     G.cyl(q.canon_d, cl, steel, [0, ty + 0.01, -0.15 + tl / 2 + cl / 2 - 0.1], [Math.PI / 2, 0, 0], 8); G.cyl(q.canon_d + 0.05, 0.16, dark, [0, ty + 0.01, -0.15 + tl / 2 + cl - 0.1], [0, 0, Math.PI / 2], 8);
+    if (q.antena_alto > 0.1) { // antena de RC: caño fino sobre la cubierta trasera con banderín naranja; 0 = sin antena
+      const ah = q.antena_alto, ax = 0.4, az = -0.82, ay = top + 0.03;
+      G.cyl(0.14, 0.05, dark, [ax, ay, az], undefined, 8); G.cyl(0.04, ah, steel, [ax, ay + ah / 2, az], undefined, 6);
+      G.box(0.03, 0.16, 0.3, FOLD.painted(PAL.naranja, 0.6, 222), [ax, ay + ah - 0.1, az - 0.16]); G.box(0.07, 0.07, 0.07, steel, [ax, ay + ah + 0.02, az]);
+    }
+    if (q.cajas_herr > 0.05) for (const s of [-1, 1]) { // cajas de herramientas amarillas sobre los faldones de las orugas, con tapa y manija de acero
+      const bh = q.cajas_herr, bx = s * 0.72, bz = -0.55, by = 0.095 + oh / 2 + bh / 2;
+      G.box(0.3, bh, 0.55, FOLD.painted(PAL.amarillo, 0.7, 223), [bx, by, bz]); G.box(0.32, 0.03, 0.57, steel, [bx, by + bh / 2, bz]); G.box(0.2, 0.03, 0.04, dark, [bx, by + bh / 2 + 0.03, bz]);
+    }
     num(tw / 2 + 0.005, ty, -0.15, 0.24); lamps(0.38, 0.42, 1.08, 0.12); G.trimStrip([0, 0.36, -1.01], undefined, 1.0, 0.1, "hazard", 0.02);
   } else if (kind === "axel") { // Axel: eje de caño entre dos ruedas gigantes y jaula-cabina colgando
     const red = FOLD.painted("#f97316", 0.6, 231);
