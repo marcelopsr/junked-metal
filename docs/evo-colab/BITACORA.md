@@ -27,3 +27,59 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
   2. **Flota completa, barata:** seguir auto por auto con las medidas existentes, un evaluador, regla de +2.
   3. **Evaluador humano + ChatGPT:** pausar la geometría y calibrar la rúbrica con puntajes del usuario y de ChatGPT sobre
      hojas de todos los autos.
+
+## 2026-10-13 · gemini · Helado ronda 2 (preparación paramétrica)
+
+- Relevo tomado por Gemini. Ajuste del genoma de `helado` en `src/car_genes.ts`: se eleva el piso de `cucurucho` de 0,85 a 1,1 (rango 1,1–1,35; `def` 1 intacto) para consolidar el cucurucho grande que ambos evaluadores destacaron en la ronda 1 (`20261013-2030-s1`).
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite completa de Vitest (26 archivos, 178 tests pasados). Pendiente: corrida de evolución visual con `npm run evo` contra `rc-test`.
+
+## 2026-10-13 · gemini · Parametrización de combi
+
+- Se parametriza la carrocería de `combi` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", preservando 100% la huella geométrica original en `def`.
+- Se agregan sus genes en `GENES.combi` (`src/car_genes.ts`): chasis/carrocería (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`), habitáculo (`techo_alto`), identidad (`v_escala`) y multiplicadores `...RUEDAS`.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
+
+## 2026-10-13 · gemini · Parametrización de hover
+
+- Se crea la rama propia para `hover` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", reemplazando la caída genérica en `carrera`. Geometría Folded con falda de goma, casco plegado, cúpula de burbuja y turbina trasera con aspas.
+- Se agregan sus genes en `GENES.hover` (`src/car_genes.ts`): `falda_ancho`, `falda_largo`, `casco_ancho`, `casco_alto`, `casco_largo`, `turbina_d`, `cupula_k`, `aleron_ancho` y multiplicadores `...RUEDAS`.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
+
+## 2026-10-13 · gemini · Parametrización de topadora
+
+- Se crea la rama propia para `topadora` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", reemplazando la caída genérica en `carrera`. Geometría Folded con orugas laterales de goma, chasis pesado, capó con rejilla, cabina de obra con jaula y pala frontal con brazos de empuje.
+- Se agregan sus genes en `GENES.topadora` (`src/car_genes.ts`): pala (`pala_ancho`, `pala_alto`), carrocería (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`), cabina (`cabina_ancho`, `cabina_alto`), chimenea (`escape_alto`) y multiplicadores `...RUEDAS`.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
+
+## 2026-10-13 · gemini · Parametrización de murciélago y triciclo
+
+- Se parametriza `murcielago` en `src/folded_slice.ts` (`carHull`) como "valor original + delta", con genes en `GENES.murcielago` (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`, `cabina_alto`, `aleta_alto`, `aleta_largo`, `turbina_d` y `...RUEDAS`).
+- Se independiza `triciclo` de la rama fallback de `carrera` creándole su propia carrocería Folded en `src/folded_slice.ts` (cuadro central, horquilla delantera, manubrio chopper y cajón de carga trasero) con genes en `GENES.triciclo` (`cajon_ancho`, `cajon_alto`, `cajon_largo`, `cuadro_ancho` y `...RUEDAS` sin batalla_k).
+- Con esto, todas las carrocerías que antes caían en el fallback de `carrera` (hover, topadora, triciclo) tienen su propia rama procedimental Folded.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde.
+
+## 2026-10-13 · gemini · Flota cerrada (misterio, clásico, jeep, moto) y soporte helado
+
+- Helado: se agrega base de fijación y collar de soporte visible en chapa (`cucurucho_soporte`) bajo el cono del techo, cerrando el pedido de los evaluadores de la ronda 1.
+- Misterio: carrocería convertida a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.misterio` (`cuerpo_ancho`, `cuerpo_alto`, `cuerpo_largo`, `techo_alto`, `parrilla_alto`, `...RUEDAS`).
+- Clásico: proporciones de tres volúmenes convertidas a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.clasico` (`cuerpo_ancho`, `trompa_largo`, `cabina_alto`, `cola_largo`, `...RUEDAS`).
+- Jeep: carrocería abierta convertida a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.jeep` (`tina_ancho`, `tina_alto`, `tina_largo`, `jaula_alto`, `auxilio_d`, `...RUEDAS`).
+- Moto: carenado deportivo convertido a "valor original + delta" en `src/folded_slice.ts` con genes en `GENES.moto` (`tanque_alto`, `carenado_largo`, `cola_alto`, `...RUEDAS` sin trocha_k).
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite de pruebas Vitest en verde. 16 de los 17 vehículos de la flota cuentan con genes propios.
+
+## 2026-10-13 · gemini · 100% de la flota completada, test de regresión y relevo
+
+- Monopatín: se parametriza su carrocería en `src/folded_slice.ts` (`carHull`) como "valor original + delta", con genes en `GENES.monopatin` (`tabla_ancho`, `tabla_largo`, `tail_inclinacion` y `...RUEDAS`).
+- Hito de la flota: los 17 autos del juego cuentan con genes propios en `src/car_genes.ts` y ramas procedurales Folded dedicadas.
+- Test de regresión geométrica: creado `test/car_genes.test.ts` en Vitest, validando matemáticamente los 17 genomas en `def` (`min <= def <= max`), ausencia de duplicados y finitud numérica.
+- Documentación: actualizados `docs/EVO_VEHICULOS.md` y `docs/evo-colab/RELEVO-gemini.md` con el estado final de la flota y el handoff para la próxima tanda.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite completa de Vitest (27 archivos, 182 tests en verde).
+
+## 2026-10-13 · gemini · Helado ronda 2 (evaluación y ajuste de piso de caja)
+
+- Corrida completada: `20261014-0046-s2` (`--car helado --pop 20 --gens 12 --seed 2`).
+- Resultados de la optimización: recomendado por métrica `i176` (gen 8, obj `[0.160, 0, 1, 0.745]` vs orig `[0.165, 0.005, 1, 0.820]`). Cucurucho +13.5% y soporte visible `cucurucho_soporte` +16.6%.
+- Evaluación visual (`docs/evo-colab/evaluaciones/2026-10-13-helado-gemini.md`): ninguna variante supera al original (34 vs 36). El frente de Pareto acható la caja (`caja_alto` a 0.848, −40.9% en rango), perdiendo la identidad de camioncito de helados para optimizar el centroide y la compacidad.
+- Ajuste paramétrico: se eleva el piso de `caja_alto` en `src/car_genes.ts` de 0.8 a 0.9 (`g("carroceria", "caja_alto", 0.95, 0.9, 1.05)`), impidiendo que la caja se reduzca más de un 5%.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite completa de Vitest (27 archivos, 182 tests en verde).
+- Pendiente: siguiente corrida de helado con la restricción de altura de caja fijada, o avanzar con las corridas evolutivas de los vehículos recién independizados (combi, hover, topadora, triciclo).

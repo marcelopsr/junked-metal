@@ -107,11 +107,94 @@ export const GENES: Record<string, Gene[]> = {
     ...RUEDAS.filter((x) => x.id !== "batalla_k"), // un solo eje
   ],
   helado: [
-    g("carroceria", "caja_alto", 0.95, 0.8, 1.05),
+    g("carroceria", "caja_alto", 0.95, 0.9, 1.05),
     g("carroceria", "caja_largo", 1.45, 1.25, 1.6),
     g("cabina", "cabina_alto", 0.34, 0.26, 0.44),
     g("accesorios", "toldo_ancho", 0.22, 0.14, 0.34),
-    g("accesorios", "cucurucho", 1, 0.85, 1.35), // escala del cucurucho del techo: su identidad
+    g("accesorios", "cucurucho", 1, 1.0, 1.35), // escala del cucurucho del techo: piso en 1.0 para no achicarlo respecto al original
+    g("accesorios", "cucurucho_soporte", 0.06, 0.04, 0.14), // altura del soporte de chapa del cucurucho
+    ...RUEDAS,
+  ],
+  combi: [
+    g("carroceria", "cuerpo_ancho", 1.08, 0.95, 1.25),
+    g("carroceria", "cuerpo_alto", 0.5, 0.38, 0.62),
+    g("carroceria", "cuerpo_largo", 2.3, 2.0, 2.5),
+    g("cabina", "techo_alto", 0.42, 0.32, 0.54),
+    g("accesorios", "v_escala", 1.0, 0.8, 1.3),
+    ...RUEDAS,
+  ],
+  hover: [
+    g("carroceria", "falda_ancho", 1.5, 1.35, 1.65),
+    g("carroceria", "falda_largo", 2.3, 2.05, 2.55),
+    g("carroceria", "casco_ancho", 1.2, 1.05, 1.35),
+    g("carroceria", "casco_alto", 0.32, 0.24, 0.42),
+    g("carroceria", "casco_largo", 2.1, 1.85, 2.35),
+    g("propulsion", "turbina_d", 0.85, 0.7, 1.05),
+    g("cabina", "cupula_k", 1.0, 0.8, 1.25),
+    g("aleron", "aleron_ancho", 1.1, 0.9, 1.35),
+    ...RUEDAS,
+  ],
+  topadora: [
+    g("pala", "pala_ancho", 1.9, 1.6, 2.2),
+    g("pala", "pala_alto", 0.75, 0.6, 0.95),
+    g("carroceria", "cuerpo_ancho", 1.2, 1.05, 1.35),
+    g("carroceria", "cuerpo_alto", 0.4, 0.32, 0.52),
+    g("carroceria", "cuerpo_largo", 2.0, 1.75, 2.25),
+    g("cabina", "cabina_ancho", 1.0, 0.85, 1.15),
+    g("cabina", "cabina_alto", 0.6, 0.48, 0.75),
+    g("escapes", "escape_alto", 0.55, 0.4, 0.75),
+    ...RUEDAS,
+  ],
+  murcielago: [
+    g("carroceria", "cuerpo_ancho", 0.98, 0.85, 1.15),
+    g("carroceria", "cuerpo_alto", 0.26, 0.18, 0.36),
+    g("carroceria", "cuerpo_largo", 2.6, 2.3, 2.9),
+    g("cabina", "cabina_alto", 0.22, 0.16, 0.32),
+    g("aletas", "aleta_alto", 0.55, 0.4, 0.75),
+    g("aletas", "aleta_largo", 0.8, 0.6, 1.05),
+    g("propulsion", "turbina_d", 0.42, 0.32, 0.56),
+    ...RUEDAS,
+  ],
+  triciclo: [
+    g("cajon", "cajon_ancho", 0.9, 0.75, 1.15),
+    g("cajon", "cajon_alto", 0.5, 0.38, 0.68),
+    g("cajon", "cajon_largo", 0.8, 0.65, 1.05),
+    g("chasis", "cuadro_ancho", 0.5, 0.38, 0.65),
+    ...RUEDAS.filter((x) => x.id !== "batalla_k"), // un solo eje trasero
+  ],
+  misterio: [
+    g("carroceria", "cuerpo_ancho", 1.1, 0.95, 1.25),
+    g("carroceria", "cuerpo_alto", 0.5, 0.38, 0.62),
+    g("carroceria", "cuerpo_largo", 2.3, 2.0, 2.5),
+    g("cabina", "techo_alto", 0.44, 0.32, 0.56),
+    g("accesorios", "parrilla_alto", 0.1, 0.06, 0.18),
+    ...RUEDAS,
+  ],
+  clasico: [
+    g("carroceria", "cuerpo_ancho", 1.06, 0.92, 1.2),
+    g("capo", "trompa_largo", 0.85, 0.7, 1.05),
+    g("cabina", "cabina_alto", 0.3, 0.22, 0.4),
+    g("cola", "cola_largo", 0.6, 0.45, 0.8),
+    ...RUEDAS,
+  ],
+  jeep: [
+    g("carroceria", "tina_ancho", 1.1, 0.95, 1.25),
+    g("carroceria", "tina_alto", 0.34, 0.24, 0.44),
+    g("carroceria", "tina_largo", 1.9, 1.65, 2.15),
+    g("cabina", "jaula_alto", 0.5, 0.38, 0.65),
+    g("accesorios", "auxilio_d", 0.5, 0.4, 0.65),
+    ...RUEDAS,
+  ],
+  moto: [
+    g("carroceria", "tanque_alto", 0.26, 0.2, 0.34),
+    g("carroceria", "carenado_largo", 0.45, 0.35, 0.6),
+    g("cola", "cola_alto", 0.16, 0.12, 0.24),
+    ...RUEDAS.filter((x) => x.id !== "trocha_k"), // dos ruedas en línea
+  ],
+  monopatin: [
+    g("tabla", "tabla_ancho", 0.5, 0.4, 0.65),
+    g("tabla", "tabla_largo", 1.1, 0.95, 1.3),
+    g("tabla", "tail_inclinacion", 0.4, 0.25, 0.55),
     ...RUEDAS,
   ],
 };

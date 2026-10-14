@@ -688,85 +688,155 @@ export function carHull(kind: string, paint: B.Material, lamp: string) {
     G.box(1.1, 0.5, 0.85, paint, [0, 0.38, 0.75]); G.box(1.1, q.cabina_alto, 0.5, paint, [0, 0.58 + q.cabina_alto / 2, 0.55]);
     G.box(0.95, 0.28, 0.03, FOLD.glass(), [0, 0.72, 0.82], [-0.5, 0, 0]);
     for (const s of [-1, 1]) { G.box(0.02, 0.38, 0.7, FOLD.glass(), [s * 0.56, 0.72, -0.4]); G.box(q.toldo_ancho, 0.03, 0.85, s > 0 ? pink : cream, [s * (0.53 + q.toldo_ancho / 2), 0.97 + dh, -0.4], [0, 0, -s * 0.35]); }
-    G.cyl(0.46 * k, 0.62 * k, FOLD.painted("#d9a15a", 0.6, 243), [0, b0 + 0.31 * k, -0.4], undefined, 6, 0.04 * k);
-    G.sph(0.5 * k, pink, [0, b0 + 0.72 * k, -0.4]); G.sph(0.4 * k, cream, [0, b0 + 1.0 * k, -0.4]); G.box(0.12 * k, 0.12 * k, 0.12 * k, FOLD.painted("#c1121f", 0.4, 244), [0, b0 + 1.24 * k, -0.4]);
+    const sh = q.cucurucho_soporte ?? 0.06;
+    G.box(0.32 * Math.min(1.2, k), 0.03, 0.32 * Math.min(1.2, k), steel, [0, b0 + 0.015, -0.4]); // base de chapa
+    G.cyl(0.16 * k, sh, steel, [0, b0 + 0.03 + sh / 2, -0.4], undefined, 6); // collar de soporte
+    G.cyl(0.46 * k, 0.62 * k, FOLD.painted("#d9a15a", 0.6, 243), [0, b0 + 0.03 + sh + 0.31 * k, -0.4], undefined, 6, 0.04 * k);
+    G.sph(0.5 * k, pink, [0, b0 + 0.03 + sh + 0.72 * k, -0.4]); G.sph(0.4 * k, cream, [0, b0 + 0.03 + sh + 1.0 * k, -0.4]); G.box(0.12 * k, 0.12 * k, 0.12 * k, FOLD.painted("#c1121f", 0.4, 244), [0, b0 + 0.03 + sh + 1.24 * k, -0.4]);
     lamps(0.4, 0.4, 1.2, 0.14); tails(0.4, 0.5, -1.13); bumper(1.1, 0.14, 1.22); num(0.555, 0.45, -0.75, 0.3);
   } else if (kind === "combi") { // combi: dos tonos, techo crema, ventanillas, V en la trompa
     const cream = FOLD.painted("#d9cba6", 0.5, 251);
-    G.box(1.0, 0.12, 2.3, dark, [0, 0.05, 0]);
-    G.box(1.08, 0.5, 2.3, paint, [0, 0.36, 0]); G.box(1.08, 0.42, 2.1, cream, [0, 0.82, -0.05]); edges(1.08, 1.03, -1.1, 1.0, cream);
-    G.box(0.7, 0.07, 1.9, cream, [0, 1.06, -0.05]);
-    G.box(0.9, 0.3, 0.03, FOLD.glass(), [0, 0.84, 1.0], [-0.3, 0, 0]);
-    for (const s of [-1, 1]) for (const z of [0.6, -0.05, -0.7]) G.box(0.02, 0.28, 0.5, FOLD.glass(), [s * 0.55, 0.84, z]);
-    for (const sd of [-1, 1]) G.box(0.32, 0.06, 0.03, cream, [sd * 0.11, 0.5, 1.16], [0, 0, sd * 1.0]); // V
-    lamps(0.4, 0.4, 1.17, 0.18); tails(0.42, 0.45, -1.16); bumper(1.1, 0.14, 1.22); bumper(1.1, 0.14, -1.2); num(0.545, 0.36, -0.2, 0.3);
+    const w = q.cuerpo_ancho, h = q.cuerpo_alto, L = q.cuerpo_largo, th = q.techo_alto, vk = q.v_escala; // genes: car_genes.ts
+    const dh = h - 0.5, dL = L - 2.3, dth = th - 0.42, dw = w - 1.08;
+    G.box(1.0 + dw * 0.9, 0.12, L, dark, [0, 0.05, 0]);
+    G.box(w, h, L, paint, [0, 0.36 + dh / 2, 0]); G.box(w, th, 2.1 + dL, cream, [0, 0.61 + dh + th / 2, -0.05]); edges(w, 0.61 + dh + th, -1.1 - dL / 2, 1.0 + dL / 2, cream);
+    G.box(0.7 + dw * 0.65, 0.07, 1.9 + dL, cream, [0, 0.64 + dh + th, -0.05]);
+    G.box(0.9 + dw * 0.85, 0.3 + dth * 0.7, 0.03, FOLD.glass(), [0, 0.84 + dh + dth * 0.5, 1.0 + dL / 2], [-0.3, 0, 0]);
+    for (const s of [-1, 1]) for (const z of [0.6 + dL * 0.35, -0.05, -0.7 - dL * 0.35]) G.box(0.02, 0.28 + dth * 0.6, 0.5 + dL * 0.2, FOLD.glass(), [s * (w / 2 + 0.01), 0.84 + dh + dth * 0.5, z]);
+    for (const sd of [-1, 1]) G.box(0.32 * vk, 0.06 * vk, 0.03, cream, [sd * 0.11 * vk, 0.5 + dh * 0.6, 1.16 + dL / 2], [0, 0, sd * 1.0]); // V
+    lamps(0.4 + dw * 0.35, 0.4 + dh * 0.5, 1.17 + dL / 2, 0.18); tails(0.42 + dw * 0.35, 0.45 + dh * 0.5, -1.16 - dL / 2); bumper(w + 0.02, 0.14, 1.22 + dL / 2); bumper(w + 0.02, 0.14, -1.2 - dL / 2); num(w / 2 + 0.005, 0.36 + dh / 2, -0.2, 0.3);
   } else if (kind === "murcielago") { // murciélago: negro, largo y bajo, cabina de burbuja, aletas traseras y turbina con brillo naranja
     const glow = FOLD.emissive("#ff7a1a");
-    G.box(0.9, 0.14, 2.6, dark, [0, 0.07, 0]);
-    G.box(0.95, 0.16, 1.5, paint, [0, 0.2, 0.7]); G.box(0.2, 0.1, 0.5, paint, [0, 0.3, 1.2]); G.box(1.0, 0.04, 0.3, dark, [0, 0.03, 1.4]);
-    G.box(0.98, 0.26, 1.2, paint, [0, 0.27, -0.55]); edges(0.95, 0.34, -1.1, 1.4, paint);
-    G.box(0.55, 0.22, 0.75, FOLD.screen("#6a7f8f"), [0, 0.44, -0.05], [-0.15, 0, 0]); G.box(0.6, 0.06, 0.6, paint, [0, 0.57, -0.15]);
-    for (const s of [-1, 1]) { G.box(0.05, 0.55, 0.8, paint, [s * 0.45, 0.58, -1.05], [-0.4, 0, s * 0.12]); G.box(0.05, 0.25, 0.5, paint, [s * 0.5, 0.36, -0.2], [-0.2, 0, 0]); }
-    G.cyl(0.42, 0.5, dark, [0, 0.38, -1.4], [Math.PI / 2, 0, 0], 8); G.cyl(0.34, 0.04, glow, [0, 0.38, -1.66], [Math.PI / 2, 0, 0], 8);
-    G.trimStrip([0, 0.36, 0.95], [0, 0, 0], 0.9, 0.05, "hazard", 0.02);
-    lamps(0.3, 0.2, 1.46, 0.1); tails(0.3, 0.2, -1.17);
+    const w = q.cuerpo_ancho, h = q.cuerpo_alto, L = q.cuerpo_largo; // genes: car_genes.ts
+    const kh = q.cabina_alto, ah = q.aleta_alto, al = q.aleta_largo, td = q.turbina_d;
+    const dw = w - 0.98, dh = h - 0.26, dL = L - 2.6;
+    G.box(0.9 + dw * 0.9, 0.14, L, dark, [0, 0.07, 0]);
+    G.box(w - 0.03, 0.16 + dh * 0.5, 1.5 + dL * 0.5, paint, [0, 0.2 + dh * 0.3, 0.7 + dL * 0.25]); G.box(0.2, 0.1, 0.5, paint, [0, 0.3 + dh * 0.4, 1.2 + dL * 0.4]); G.box(1.0 + dw, 0.04, 0.3, dark, [0, 0.03, 1.4 + dL * 0.5]);
+    G.box(w, h, 1.2 + dL * 0.5, paint, [0, 0.27 + dh / 2, -0.55 - dL * 0.25]); edges(w - 0.03, 0.34 + dh, -1.1 - dL * 0.5, 1.4 + dL * 0.5, paint);
+    G.box(0.55 + dw * 0.4, kh, 0.75, FOLD.screen("#6a7f8f"), [0, 0.44 + dh + (kh - 0.22) / 2, -0.05], [-0.15, 0, 0]); G.box(0.6 + dw * 0.4, 0.06, 0.6, paint, [0, 0.57 + dh + (kh - 0.22), -0.15]);
+    for (const s of [-1, 1]) { G.box(0.05, ah, al, paint, [s * (w / 2 - 0.04), 0.58 + dh + (ah - 0.55) / 2, -1.05 - dL * 0.35], [-0.4, 0, s * 0.12]); G.box(0.05, 0.25, 0.5, paint, [s * (w / 2 + 0.01), 0.36 + dh * 0.5, -0.2], [-0.2, 0, 0]); }
+    G.cyl(td, 0.5, dark, [0, 0.38 + dh * 0.5, -1.4 - dL * 0.5], [Math.PI / 2, 0, 0], 8); G.cyl(td * 0.81, 0.04, glow, [0, 0.38 + dh * 0.5, -1.66 - dL * 0.5], [Math.PI / 2, 0, 0], 8);
+    G.trimStrip([0, 0.36 + dh * 0.5, 0.95 + dL * 0.35], [0, 0, 0], 0.9 + dw, 0.05, "hazard", 0.02);
+    lamps(0.3 + dw * 0.3, 0.2 + dh * 0.4, 1.46 + dL * 0.5, 0.1); tails(0.3 + dw * 0.3, 0.2 + dh * 0.4, -1.17 - dL * 0.4);
   } else if (kind === "misterio") { // furgoneta del misterio: verde agua, parrilla de techo, flores naranjas y capó corto
     const lite = FOLD.painted("#c9efe4", 0.5, 301), flower = FOLD.painted("#ff8a1f", 0.5, 302), eyeC = FOLD.painted("#ffd23f", 0.5, 303);
-    G.box(1.0, 0.12, 2.3, dark, [0, 0.05, 0]);
-    G.box(1.1, 0.5, 1.5, paint, [0, 0.38, -0.45]); G.box(1.08, 0.44, 1.3, paint, [0, 0.82, -0.5]); edges(1.08, 1.03, -1.1, 0.15, paint);
-    G.box(1.1, 0.4, 0.8, paint, [0, 0.3, 0.85]); G.box(1.04, 0.06, 0.7, lite, [0, 0.52, 0.85]);
-    G.box(0.9, 0.3, 0.03, FOLD.glass(), [0, 0.8, 0.2], [-0.25, 0, 0]);
-    G.box(1.1, 0.07, 1.5, lite, [0, 0.58, -0.45]);
+    const w = q.cuerpo_ancho, h = q.cuerpo_alto, L = q.cuerpo_largo, th = q.techo_alto, rh = q.parrilla_alto; // genes: car_genes.ts
+    const dw = w - 1.1, dh = h - 0.5, dL = L - 2.3, dth = th - 0.44;
+    G.box(1.0 + dw * 0.9, 0.12, L, dark, [0, 0.05, 0]);
+    G.box(w, h, 1.5 + dL * 0.65, paint, [0, 0.38 + dh / 2, -0.45 - dL * 0.2]);
+    G.box(w - 0.02, th, 1.3 + dL * 0.6, paint, [0, 0.6 + dh + th / 2, -0.5 - dL * 0.2]); edges(w - 0.02, 0.59 + dh + th, -1.1 - dL * 0.5, 0.15, paint);
+    G.box(w, 0.4 + dh * 0.8, 0.8 + dL * 0.35, paint, [0, 0.3 + dh * 0.4, 0.85 + dL * 0.4]);
+    G.box(w - 0.06, 0.06, 0.7 + dL * 0.35, lite, [0, 0.52 + dh * 0.8, 0.85 + dL * 0.4]);
+    G.box(0.9 + dw * 0.8, 0.3 + dth * 0.6, 0.03, FOLD.glass(), [0, 0.8 + dh + dth * 0.5, 0.2 + dL * 0.1], [-0.25, 0, 0]);
+    G.box(w, 0.07, 1.5 + dL * 0.65, lite, [0, 0.58 + dh * 0.8, -0.45 - dL * 0.2]);
     for (const s of [-1, 1]) {
-      G.box(0.02, 0.26, 0.5, FOLD.glass(), [s * 0.55, 0.88, 0.0]);
-      for (const [z, y] of [[-0.45, 0.4], [-0.85, 0.72]] as const) { G.cyl(0.26, 0.03, flower, [s * 0.56, y, z], [0, 0, Math.PI / 2], 8); G.cyl(0.1, 0.04, eyeC, [s * 0.57, y, z], [0, 0, Math.PI / 2], 8); }
+      G.box(0.02, 0.26 + dth * 0.5, 0.5, FOLD.glass(), [s * (w / 2), 0.88 + dh + dth * 0.5, 0.0]);
+      for (const [z, y] of [[-0.45, 0.4], [-0.85, 0.72]] as const) { G.cyl(0.26, 0.03, flower, [s * (w / 2 + 0.01), y + dh * 0.5, z], [0, 0, Math.PI / 2], 8); G.cyl(0.1, 0.04, eyeC, [s * (w / 2 + 0.02), y + dh * 0.5, z], [0, 0, Math.PI / 2], 8); }
     }
-    for (const x of [-0.45, 0.45]) for (const z of [-1.0, 0.0]) strut([x, 1.04, z], [x, 1.14, z], 0.04, 0.04, steel);
-    for (const x of [-0.45, 0.45]) strut([x, 1.14, -1.0], [x, 1.14, 0.0], 0.04, 0.04, steel);
-    for (const z of [-0.75, -0.5, -0.25]) strut([-0.45, 1.14, z], [0.45, 1.14, z], 0.04, 0.04, steel);
-    lamps(0.4, 0.34, 1.26, 0.16); tails(0.42, 0.45, -1.16); bumper(1.1, 0.14, 1.28); bumper(1.1, 0.14, -1.2);
+    const py0 = 0.59 + dh + th + 0.01, py1 = py0 + rh;
+    for (const x of [-w * 0.41, w * 0.41]) for (const z of [-1.0 - dL * 0.4, 0.0]) strut([x, py0, z], [x, py1, z], 0.04, 0.04, steel);
+    for (const x of [-w * 0.41, w * 0.41]) strut([x, py1, -1.0 - dL * 0.4], [x, py1, 0.0], 0.04, 0.04, steel);
+    for (const z of [-0.75, -0.5, -0.25]) strut([-w * 0.41, py1, z], [w * 0.41, py1, z], 0.04, 0.04, steel);
+    lamps(0.4 + dw * 0.35, 0.34 + dh * 0.5, 1.26 + dL / 2, 0.16); tails(0.42 + dw * 0.35, 0.45 + dh * 0.5, -1.16 - dL / 2); bumper(w, 0.14, 1.28 + dL / 2); bumper(w, 0.14, -1.2 - dL / 2);
   } else if (kind === "clasico") { // sedán clásico: tres volúmenes, plateado con faldón azul oscuro y parrilla cromada vertical
     const navy = FOLD.painted("#1c2a4a", 0.5, 311), chrome = FOLD.bare();
-    G.box(0.9, 0.1, 2.3, dark, [0, 0.05, 0]);
-    G.box(1.06, 0.14, 2.3, navy, [0, 0.14, 0]);
-    G.box(1.06, 0.2, 0.85, paint, [0, 0.3, 0.8]); edges(1.06, 0.4, 0.4, 1.2, paint);
-    G.box(0.98, 0.3, 0.95, paint, [0, 0.5, -0.1]); G.box(0.86, 0.04, 0.8, navy, [0, 0.66, -0.1]);
-    G.box(1.06, 0.22, 0.6, paint, [0, 0.31, -0.95]); edges(1.06, 0.42, -1.25, -0.65, paint);
-    G.box(0.9, 0.2, 0.03, FOLD.screen("#9be7ff"), [0, 0.52, 0.38], [-0.7, 0, 0]); G.box(0.8, 0.18, 0.03, FOLD.screen("#9be7ff"), [0, 0.52, -0.58], [0.7, 0, 0]);
-    for (const s of [-1, 1]) G.box(0.02, 0.2, 0.8, FOLD.screen("#3f7f96"), [s * 0.495, 0.52, -0.1]);
-    G.box(0.4, 0.16, 0.04, chrome, [0, 0.31, 1.24]); for (const x of [-0.15, -0.075, 0, 0.075, 0.15]) G.box(0.015, 0.14, 0.05, dark, [x, 0.31, 1.245]);
-    lamps(0.37, 0.3, 1.23, 0.14); tails(0.4, 0.34, -1.26); bumper(1.1, 0.14, 1.26); bumper(1.1, 0.14, -1.26);
-    num(0.535, 0.3, -0.1, 0.22);
+    const w = q.cuerpo_ancho, tl = q.trompa_largo, ch = q.cabina_alto, col = q.cola_largo; // genes: car_genes.ts
+    const dw = w - 1.06, dtl = tl - 0.85, dch = ch - 0.3, dcol = col - 0.6;
+    G.box(0.9 + dw * 0.85, 0.1, 2.3 + dtl + dcol, dark, [0, 0.05, (dtl - dcol) / 2]);
+    G.box(w, 0.14, 2.3 + dtl + dcol, navy, [0, 0.14, (dtl - dcol) / 2]);
+    G.box(w, 0.2, tl, paint, [0, 0.3, 0.8 + dtl / 2]); edges(w, 0.4, 0.8 - tl / 2, 0.8 + tl / 2, paint);
+    G.box(w - 0.08, ch, 0.95, paint, [0, 0.35 + ch / 2, -0.1]); G.box(w - 0.2, 0.04, 0.8, navy, [0, 0.36 + ch, -0.1]);
+    G.box(w, 0.22, col, paint, [0, 0.31, -0.95 - dcol / 2]); edges(w, 0.42, -0.95 - col / 2, -0.95 + col / 2, paint);
+    G.box(w - 0.16, 0.2 + dch * 0.6, 0.03, FOLD.screen("#9be7ff"), [0, 0.37 + ch / 2, 0.38], [-0.7, 0, 0]); G.box(w - 0.26, 0.18 + dch * 0.6, 0.03, FOLD.screen("#9be7ff"), [0, 0.37 + ch / 2, -0.58], [0.7, 0, 0]);
+    for (const s of [-1, 1]) G.box(0.02, 0.2 + dch * 0.6, 0.8, FOLD.screen("#3f7f96"), [s * (w / 2 - 0.035), 0.37 + ch / 2, -0.1]);
+    G.box(0.4 + dw * 0.3, 0.16, 0.04, chrome, [0, 0.31, 1.24 + dtl / 2]); for (const x of [-0.15, -0.075, 0, 0.075, 0.15]) G.box(0.015, 0.14, 0.05, dark, [x * (0.4 + dw * 0.3) / 0.4, 0.31, 1.245 + dtl / 2]);
+    lamps(0.37 + dw * 0.3, 0.3, 1.23 + dtl / 2, 0.14); tails(0.4 + dw * 0.3, 0.34, -1.26 - dcol / 2); bumper(w + 0.04, 0.14, 1.26 + dtl / 2); bumper(w + 0.04, 0.14, -1.26 - dcol / 2);
+    num(w / 2 + 0.005, 0.3, -0.1, 0.22);
   } else if (kind === "jeep") { // 4x4 descapotable: tina abierta, parabrisas de caño, barra antivuelco, rueda de auxilio y parrilla de 7 ranuras
-    G.box(0.95, 0.12, 2.0, dark, [0, 0.08, 0]);
-    G.box(1.1, 0.34, 1.9, paint, [0, 0.32, 0]); edges(1.1, 0.5, -0.95, 0.95, paint);
-    G.box(0.5, 0.2, 0.5, dark, [-0.27, 0.54, -0.1]); G.box(0.5, 0.2, 0.5, dark, [0.27, 0.54, -0.1]);
-    for (const s of [-1, 1]) { G.box(0.2, 0.2, 0.8, paint, [s * 0.5, 0.52, 0.65]); G.box(0.2, 0.22, 0.6, paint, [s * 0.55, 0.5, -0.8]); }
-    strut([-0.5, 0.5, 0.25], [-0.5, 0.95, 0.35], 0.05, 0.05, steel); strut([0.5, 0.5, 0.25], [0.5, 0.95, 0.35], 0.05, 0.05, steel); strut([-0.5, 0.95, 0.35], [0.5, 0.95, 0.35], 0.05, 0.05, steel);
-    G.box(0.96, 0.4, 0.03, FOLD.glass(), [0, 0.74, 0.3], [-0.2, 0, 0]);
-    for (const [z0, z1] of [[-0.55, -0.55]] as const) { strut([-0.45, 0.5, z0], [-0.45, 1.0, z1], 0.05, 0.05, steel); strut([0.45, 0.5, z0], [0.45, 1.0, z1], 0.05, 0.05, steel); strut([-0.45, 1.0, z1], [0.45, 1.0, z1], 0.05, 0.05, steel); }
-    G.cyl(0.5, 0.16, FOLD.rubber(), [0, 0.5, -1.06], [Math.PI / 2, 0, 0], 10); G.cyl(0.24, 0.18, steel, [0, 0.5, -1.07], [Math.PI / 2, 0, 0], 8);
-    G.box(0.62, 0.3, 0.05, dark, [0, 0.38, 0.97]); for (let i = 0; i < 7; i++) G.box(0.05, 0.26, 0.06, steel, [(i - 3) * 0.085, 0.38, 0.98]);
-    lamps(0.4, 0.46, 0.97, 0.16); tails(0.42, 0.36, -0.97); bumper(1.2, 0.2, 1.06); bumper(1.2, 0.2, -1.12);
-    num(0.555, 0.4, 0.15, 0.22);
+    const w = q.tina_ancho, h = q.tina_alto, L = q.tina_largo, jh = q.jaula_alto, ad = q.auxilio_d; // genes: car_genes.ts
+    const dw = w - 1.1, dh = h - 0.34, dL = L - 1.9, djh = jh - 0.5;
+    const topY = 0.15 + h;
+    G.box(0.95 + dw * 0.85, 0.12, L + 0.1, dark, [0, 0.08, 0]);
+    G.box(w, h, L, paint, [0, 0.15 + h / 2, 0]); edges(w, topY, -L / 2, L / 2, paint);
+    G.box(0.5, 0.2, 0.5, dark, [-0.27, 0.37 + h / 2, -0.1]); G.box(0.5, 0.2, 0.5, dark, [0.27, 0.37 + h / 2, -0.1]);
+    for (const s of [-1, 1]) { G.box(0.2, 0.2, 0.8 + dL * 0.4, paint, [s * (w / 2 - 0.05), 0.35 + h / 2, 0.65 + dL * 0.3]); G.box(0.2, 0.22, 0.6 + dL * 0.3, paint, [s * (w / 2), 0.33 + h / 2, -0.8 - dL * 0.3]); }
+    strut([-w * 0.45, topY, 0.25], [-w * 0.45, topY + 0.45 + djh * 0.8, 0.35], 0.05, 0.05, steel); strut([w * 0.45, topY, 0.25], [w * 0.45, topY + 0.45 + djh * 0.8, 0.35], 0.05, 0.05, steel); strut([-w * 0.45, topY + 0.45 + djh * 0.8, 0.35], [w * 0.45, topY + 0.45 + djh * 0.8, 0.35], 0.05, 0.05, steel);
+    G.box(w - 0.14, 0.4 + djh * 0.5, 0.03, FOLD.glass(), [0, topY + 0.24 + djh * 0.4, 0.3], [-0.2, 0, 0]);
+    for (const [z0, z1] of [[-0.55 - dL * 0.3, -0.55 - dL * 0.3]] as const) { strut([-w * 0.41, topY, z0], [-w * 0.41, topY + jh, z1], 0.05, 0.05, steel); strut([w * 0.41, topY, z0], [w * 0.41, topY + jh, z1], 0.05, 0.05, steel); strut([-w * 0.41, topY + jh, z1], [w * 0.41, topY + jh, z1], 0.05, 0.05, steel); }
+    G.cyl(ad, 0.16, FOLD.rubber(), [0, 0.33 + h / 2, -L / 2 - 0.11], [Math.PI / 2, 0, 0], 10); G.cyl(ad * 0.48, 0.18, steel, [0, 0.33 + h / 2, -L / 2 - 0.12], [Math.PI / 2, 0, 0], 8);
+    G.box(0.62 + dw * 0.5, 0.3, 0.05, dark, [0, 0.38 + dh * 0.5, L / 2 + 0.02]); for (let i = 0; i < 7; i++) G.box(0.05, 0.26, 0.06, steel, [(i - 3) * (0.085 * (0.62 + dw * 0.5) / 0.62), 0.38 + dh * 0.5, L / 2 + 0.03]);
+    lamps(0.4 + dw * 0.3, 0.46 + dh * 0.5, L / 2 + 0.02, 0.16); tails(0.42 + dw * 0.3, 0.36 + dh * 0.5, -L / 2 - 0.02); bumper(w + 0.1, 0.2, L / 2 + 0.11); bumper(w + 0.1, 0.2, -L / 2 - 0.17);
+    num(w / 2 + 0.005, 0.4 + dh * 0.5, 0.15, 0.22);
   } else if (kind === "moto") { // moto deportiva: dos ruedas en línea, tanque, carenado, cola alta, escape y manubrio
     const stripeC = FOLD.painted("#f3ead2", 0.5, 321);
+    const th = q.tanque_alto, cl = q.carenado_largo, ch = q.cola_alto; // genes: car_genes.ts
+    const dth = th - 0.26, dcl = cl - 0.45, dch = ch - 0.16;
     G.box(0.18, 0.1, 1.2, dark, [0, 0.2, 0]);
-    G.box(0.3, 0.26, 0.75, paint, [0, 0.46, 0.2]); G.box(0.2, 0.04, 0.6, stripeC, [0, 0.6, 0.2]);
-    G.box(0.32, 0.22, 0.45, paint, [0, 0.4, 0.78], [0.3, 0, 0]); G.box(0.24, 0.2, 0.04, FOLD.glass(), [0, 0.6, 0.72], [-0.7, 0, 0]);
-    G.box(0.26, 0.1, 0.5, dark, [0, 0.52, -0.25]); G.box(0.24, 0.16, 0.5, paint, [0, 0.5, -0.75], [-0.25, 0, 0]);
-    for (const s of [-1, 1]) { strut([s * 0.1, 0.55, 0.85], [s * 0.1, 0.0, 0.85], 0.04, 0.04, steel); G.cyl(0.07, 0.4, steel, [s * 0.17, 0.2, -0.45], [Math.PI / 2, 0, 0], 8); strut([s * 0.1, 0.35, -0.25], [s * 0.08, 0.0, -0.85], 0.04, 0.04, steel); }
-    strut([-0.3, 0.7, 0.62], [0.3, 0.7, 0.62], 0.04, 0.04, steel);
-    lamps(0, 0.46, 1.03, 0.14); tails(0.07, 0.56, -1.0);
-    num(0.16, 0.46, 0.2, 0.16);
+    G.box(0.3, th, 0.75, paint, [0, 0.33 + th / 2, 0.2]); G.box(0.2, 0.04, 0.6, stripeC, [0, 0.34 + th, 0.2]);
+    G.box(0.32, 0.22, cl, paint, [0, 0.4, 0.55 + cl / 2], [0.3, 0, 0]); G.box(0.24, 0.2, 0.04, FOLD.glass(), [0, 0.6 + dth * 0.5, 0.5 + cl / 2], [-0.7, 0, 0]);
+    G.box(0.26, 0.1, 0.5, dark, [0, 0.52 + dth * 0.5, -0.25]); G.box(0.24, ch, 0.5, paint, [0, 0.42 + ch / 2, -0.75], [-0.25, 0, 0]);
+    for (const s of [-1, 1]) { strut([s * 0.1, 0.55, 0.85 + dcl * 0.5], [s * 0.1, 0.0, 0.85 + dcl * 0.5], 0.04, 0.04, steel); G.cyl(0.07, 0.4, steel, [s * 0.17, 0.2, -0.45], [Math.PI / 2, 0, 0], 8); strut([s * 0.1, 0.35, -0.25], [s * 0.08, 0.0, -0.85], 0.04, 0.04, steel); }
+    strut([-0.3, 0.7 + dth * 0.5, 0.62 + dcl * 0.5], [0.3, 0.7 + dth * 0.5, 0.62 + dcl * 0.5], 0.04, 0.04, steel);
+    lamps(0, 0.46, 0.8 + cl * 0.5, 0.14); tails(0.07, 0.48 + ch * 0.5, -1.0);
+    num(0.16, 0.46 + dth * 0.5, 0.2, 0.16);
   } else if (kind === "monopatin") { // monopatín: tabla con puntas levantadas, ejes de acero, ruedas amarillas y un muñeco parado encima
     const grip = FOLD.painted("#1b1e24", 0.9, 331), shoe = FOLD.painted("#f3ead2", 0.5, 332), jeans = FOLD.painted("#35507a", 0.5, 333);
-    G.box(0.5, 0.05, 1.1, paint, [0, 0.12, 0]); G.box(0.46, 0.012, 1.06, grip, [0, 0.15, 0]);
-    for (const s of [-1, 1]) { G.box(0.5, 0.05, 0.22, paint, [0, 0.16, s * 0.64], [-s * 0.4, 0, 0]); G.box(0.46, 0.012, 0.2, grip, [0, 0.185, s * 0.64], [-s * 0.4, 0, 0]); G.box(0.1, 0.07, 0.12, steel, [0, 0.07, s * 0.5]); G.cyl(0.04, 0.46, steel, [0, 0.0, s * 0.5], [0, 0, Math.PI / 2], 6); }
-    for (const [z, s] of [[0.28, 1], [-0.22, -1]] as const) { G.box(0.1, 0.06, 0.2, shoe, [0.0, 0.19, z]); G.box(0.08, 0.3, 0.09, jeans, [0.0, 0.36, z - 0.02 * s]); }
-    G.box(0.2, 0.05, 0.04, FOLD.emissive("#ffd23f"), [0, 0.18, 0.73]); tails(0.1, 0.18, -0.74);
+    const tw = q.tabla_ancho, tl = q.tabla_largo, ti = q.tail_inclinacion; // genes: car_genes.ts
+    G.box(tw, 0.05, tl, paint, [0, 0.12, 0]); G.box(tw - 0.04, 0.012, tl - 0.04, grip, [0, 0.15, 0]);
+    for (const s of [-1, 1]) {
+      const zTip = s * (tl / 2 + 0.09), zAxle = s * (tl / 2 - 0.05);
+      G.box(tw, 0.05, 0.22, paint, [0, 0.16, zTip], [-s * ti, 0, 0]);
+      G.box(tw - 0.04, 0.012, 0.2, grip, [0, 0.185, zTip], [-s * ti, 0, 0]);
+      G.box(0.1, 0.07, 0.12, steel, [0, 0.07, zAxle]); G.cyl(0.04, tw - 0.04, steel, [0, 0.0, zAxle], [0, 0, Math.PI / 2], 6);
+    }
+    for (const [z, s] of [[0.28 * (tl / 1.1), 1], [-0.22 * (tl / 1.1), -1]] as const) { G.box(0.1, 0.06, 0.2, shoe, [0.0, 0.19, z]); G.box(0.08, 0.3, 0.09, jeans, [0.0, 0.36, z - 0.02 * s]); }
+    G.box(0.2, 0.05, 0.04, FOLD.emissive("#ffd23f"), [0, 0.18, tl / 2 + 0.18]); tails(0.1, 0.18, -tl / 2 - 0.19);
+  } else if (kind === "hover") { // aerodeslizador: falda de goma, casco con borde plegado, cabina de burbuja, turbina trasera con aspas
+    const cyan = FOLD.painted("#4cc3c9", 0.6, 341);
+    const fw = q.falda_ancho, fl = q.falda_largo, cw = q.casco_ancho, ch = q.casco_alto, cl = q.casco_largo, td = q.turbina_d, ck = q.cupula_k, aw = q.aleron_ancho; // genes: car_genes.ts
+    const top = 0.08 + ch;
+    G.box(fw, 0.14, fl, FOLD.rubber(), [0, 0.04, 0]); // falda perimetral de goma
+    G.box(cw, ch, cl, paint, [0, 0.08 + ch / 2, 0.05]); edges(cw, top, -cl / 2 + 0.05, cl / 2 + 0.05, paint); // casco
+    G.sph(0.52 * ck, FOLD.glass(), [0, top + 0.12 * ck, 0.4]); // cúpula de burbuja
+    G.cyl(td, 0.14, dark, [0, top + 0.28, -0.95], [Math.PI / 2, 0, 0], 8, td); // anillo de turbina
+    for (const a of [0.5, -0.5]) G.box(td * 0.88, 0.04, 0.1, cyan, [0, top + 0.28, -0.95], [0, 0, a]); // aspas de la hélice
+    for (const s of [-1, 1]) strut([s * 0.42, top - 0.05, -0.95], [s * 0.42, top + 0.28, -0.95], 0.05, 0.05, steel); // montantes de turbina
+    G.box(aw, 0.04, 0.26, cyan, [0, top + 0.28 + td / 2, -0.95]); // alerón estabilizador
+    lamps(cw * 0.35, 0.18, fl / 2 - 0.04, 0.12); tails(cw * 0.35, 0.18, -fl / 2 + 0.04);
+    num(cw / 2 + 0.005, 0.18, 0.2, 0.22);
+  } else if (kind === "topadora") { // topadora: chasis pesado, cabina alta con jaula, pala delantera articulada y chimenea
+    const pw = q.pala_ancho, ph = q.pala_alto, bw = q.cuerpo_ancho, bh = q.cuerpo_alto, bl = q.cuerpo_largo; // genes: car_genes.ts
+    const kw = q.cabina_ancho, kh = q.cabina_alto, eh = q.escape_alto;
+    const top = 0.2 + bh;
+    for (const s of [-1, 1]) { // orugas laterales
+      G.box(0.38, 0.44, 2.2, FOLD.rubber(), [s * 0.78, 0.06, 0]);
+      for (const z of [-0.95, 0.95]) G.cyl(0.44, 0.38, FOLD.rubber(), [s * 0.78, 0.06, z], [0, 0, Math.PI / 2], 8);
+    }
+    G.box(bw, bh, bl, paint, [0, 0.2 + bh / 2, 0]); edges(bw, top, -bl / 2, bl / 2, paint); // cuerpo central
+    G.box(bw * 0.85, 0.42, 0.9, paint, [0, top + 0.21, 0.5]); // capó delantero
+    G.grate([0, top + 0.21, 0.5 + 0.46], [0, Math.PI, 0], 0.65, 0.28, 4, steel); // rejilla
+    G.box(kw * 0.92, kh * 0.92, 0.8, FOLD.glass(), [0, top + kh / 2, -0.3]); // vidrio cabina
+    G.box(kw, 0.08, 0.95, dark, [0, top + kh + 0.04, -0.3]); // techo cabina
+    for (const x of [-kw * 0.45, kw * 0.45]) for (const z of [-0.7, 0.1]) strut([x, top, z], [x, top + kh, z], 0.06, 0.06, steel); // postes de jaula
+    G.box(pw, ph, 0.12, FOLD.bare(), [0, 0.35, 1.48], [-0.15, 0, 0]); // pala frontal
+    G.box(pw * 0.96, 0.06, 0.08, dark, [0, 0.08, 1.54]); // cuchilla inferior
+    for (const x of [-pw * 0.38, pw * 0.38]) strut([x, 0.28, 0.95], [x, 0.35, 1.44], 0.1, 0.1, dark); // brazos de empuje
+    G.cyl(0.09, eh, dark, [0.38, top + 0.1 + eh / 2, 0.35], undefined, 8); // chimenea de escape
+    lamps(kw * 0.32, top + kh + 0.08, 0.1, 0.12); tails(bw * 0.38, 0.4, -bl / 2 - 0.02);
+    num(bw / 2 + 0.005, 0.35, 0, 0.25);
+  } else if (kind === "triciclo") { // triciclo de reparto: cuadro delantero, horquilla con manubrio chopper, cajón de carga trasero
+    const cw = q.cajon_ancho, ch = q.cajon_alto, cl = q.cajon_largo, qw = q.cuadro_ancho; // genes: car_genes.ts
+    G.box(qw, 0.26, 1.4, paint, [0, 0.32, 0.05]); edges(qw, 0.45, -0.65, 0.75, paint); // cuadro central
+    G.box(cw, ch, cl, FOLD.painted("#f3ead2", 0.5, 351), [0, 0.32 + ch / 2, -0.7]); // cajón de carga
+    G.box(cw + 0.05, 0.05, cl + 0.05, paint, [0, 0.32 + ch + 0.025, -0.7]); // tapa del cajón
+    for (const s of [-1, 1]) strut([s * 0.08, 0.1, 0.75], [s * 0.08, 0.75, 0.65], 0.04, 0.04, steel); // horquilla delantera
+    strut([-0.32, 0.82, 0.58], [0.32, 0.82, 0.58], 0.035, 0.035, dark); // manubrio
+    for (const s of [-1, 1]) G.box(0.08, 0.04, 0.04, FOLD.rubber(), [s * 0.34, 0.82, 0.58]); // puños
+    G.box(0.32, 0.08, 0.42, dark, [0, 0.52, 0.05], [-0.15, 0, 0]); // asiento
+    lamps(0, 0.65, 0.78, 0.14); tails(cw * 0.42, 0.45, -0.7 - cl / 2 - 0.02);
+    num(cw / 2 + 0.005, 0.5, -0.7, 0.22);
   } else { // autito de carreras a cuerda: carrocería baja, cabina, paragolpes de caño y llave de cuerda
-    const c = kind === "carrera" ? q : original("carrera"); // hover, topadora y triciclo también caen acá: con la forma original
+    const c = kind === "carrera" ? q : original("carrera"); // solo carrera llega al else final
     const bw = c.cuerpo_ancho, bh = c.cuerpo_alto, bl = c.cuerpo_largo, top = 0.13 + bh / 2, kw = c.cabina_ancho, kh = c.cabina_alto, kl = c.cabina_largo, kz = c.cabina_z, ky = top + kh / 2; // genes: car_genes.ts
     G.box(0.7, 0.06, 1.7, dark, [0, 0.0, 0]);
     G.box(bw, bh, bl, paint, [0, 0.13, 0]); edges(bw, top, -bl / 2, bl / 2, paint);
