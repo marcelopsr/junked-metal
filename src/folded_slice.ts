@@ -312,7 +312,7 @@ export function fencePanel() {
 // ---------- Prop: detalle de caja de chapa (unidad 1×1×1 centrada; se escala al tamaño de la caja, que sigue siendo el colisionador) ----------
 export function crateDetail() {
   const { G, done } = kit();
-  const strap = FOLD.painted("#424d53", 0.32, 111), lip = FOLD.painted("#293238", 0.28, 112);
+  const strap = FOLD.painted("#59636a", 0.32, 111), lip = FOLD.painted("#293238", 0.28, 112);
   for (const y of [-0.38, 0.38]) G.box(1.03, 0.07, 1.03, strap, [0, y, 0]); // flejes
   for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) G.box(0.06, 1.02, 0.06, lip, [x * 0.5, 0, z * 0.5]); // cantoneras
   for (const s of [-1, 1]) {

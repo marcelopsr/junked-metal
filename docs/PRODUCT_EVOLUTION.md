@@ -1496,9 +1496,18 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
 
 ---
 
+## 2026-10-13 · Aceite de garaje, cajas de chatarra y lectura por clima (ciclo local)
+
+- Suavizada la integración del decal de aceite con alfa `0.84`; flejes de `crateDetail()` aclarados a `#59636a` para separarlos de la madera.
+- Noche, niebla y farol revisados en capturas lejanas PC/cel; no hizo falta cambiar iluminación, terreno, layout ni colisiones.
+- TSC, 178 pruebas, build y graphify pasaron. Capturas finales en `.shots/actual/` y detalles en `docs/VISUAL_CYCLE_GARAGE_OIL_CRATES_CLIMATES.md`.
+- Cierre local sin publicación.
+
+---
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** contraste del caucho del garaje y plancha, más revisión de la tierra en tres climas (2026-10-13). Ver `docs/VISUAL_CYCLE_GARAGE_CLIMATES_PLATE.md`.
+- **Último trabajo completado:** integración de manchas de aceite, contraste de cajas junto a tambores y lectura de chatarra en noche, niebla y farol (2026-10-13). Ver `docs/VISUAL_CYCLE_GARAGE_OIL_CRATES_CLIMATES.md`.
 - **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

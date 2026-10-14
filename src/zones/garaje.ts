@@ -13,6 +13,7 @@ export function garageBuild() {
   oilTex.hasAlpha = true;
   const oil = pbr("oilStain", { color: "#ffffff", rough: 0.65, tex: oilTex });
   oil.useAlphaFromAlbedoTexture = true;
+  oil.alpha = 0.84;
   oil.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
   for (const [x, z, w, h, ry] of [[30, 20, 2.8, 1.5, 0], [26, -18, 2.2, 1.3, 0.7], [-40, -55, 2.5, 1.4, -0.5], [-10, 40, 2, 1.2, 1.2]]) decal("oilStain", w, h, x, z, oil, 0.025).rotation.y = ry;
   const tracksTex = tex("tireMarks", () => new B.Texture("./images/decals/tire-marks.webp", scene));
