@@ -14,7 +14,7 @@ export const LORE: Record<Kind, string> = {
   falso: "Una copia mal cosida del muñeco. Dura lo que dura un chiste malo.",
   limpiafondos: "Lo dejaron de guardia cuando vaciaron la pileta y nadie le avisó que ya no hay agua. Aspira todo lo que se mueve en el fondo y lo devuelve en chorros sucios, porque eso es lo único que sabe hacer.",
   payaso: "Salió de un baúl del desván y nadie lo volvió a guardar. Rebota sin parar y siempre cae donde estabas.",
-  grillo: "Se cree atleta y entrena saltando sobre vos. Se agacha, avisa, salta en arco y no corrige: cae donde estabas.",
+  grillo: "Se cree atleta y entrena saltando sobre el auto. Se agacha, avisa, salta en arco y no corrige: cae donde estabas.",
   babosa: "Camina como si no tuviera apuro, se planta a medio patio y te escupe una flema del tamaño de una pelota. No apunta mal; solo llega tarde.",
   mosca: "No sabe ir derecho: zumba de un lado a otro y llega igual. Chica, rápida y con muy poca vida.",
   hormiga: "Trabaja doce horas, cobra en migas y no tiene sindicato. Jura que el patio era suyo antes que la casa. Nunca viene sola: donde hay una, hay una fila entera con ganas de hablar con el gerente.",

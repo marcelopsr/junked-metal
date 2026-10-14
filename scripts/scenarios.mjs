@@ -50,7 +50,7 @@ export const sessions = [
     { id: "portada", act: sinCarga },
     { id: "principal", act: async (p) => { await p.dispatchEvent("#scr-title", "click"); await wait(p, () => document.querySelector("#scr-main.on")); await tick(p, 180); await p.waitForTimeout(150); } }, // 180 cuadros: la cámara termina de viajar desde la portada
     { id: "garaje", act: view("garage") },
-    { id: "garaje-vista-previa", act: async (p) => { await view("garage")(p); await p.focus('.carc.locked[data-k="tanque"]'); await p.waitForTimeout(400); } },
+    { id: "garaje-vista-previa", act: async (p) => { await p.evaluate(() => window.__cfg({ cars: ["buggy"] })); /* menu.ts desbloquea todos los autos al cargar: se bloquea el tanque para tener la vista previa */ await view("garage")(p); await p.focus('.carc.locked[data-k="tanque"]'); await p.waitForTimeout(400); } },
     { id: "taller", act: view("shop") },
     { id: "config", act: view("config") },
     // Imagen con Escalado FSR: la escala % se oculta y aparece el modo FSR (fila dependiente)
@@ -125,7 +125,7 @@ export const sessions = [
     { id: "jugar", perf: false, act: async (p) => {
       await p.evaluate(() => window.__cfg({ unlocked: ["zone:jardin"], stats: { runs: 4, wins: 1, time: 1800, dist: 5000, dmg: {}, zone: { patio: { t: 612, kills: 420 } } } }));
       await toMain(p);
-      await p.dispatchEvent('#scr-main [data-act="playmenu"]', "click");
+      await p.dispatchEvent('#scr-main [data-go="modes"]', "click"); await wait(p, () => document.querySelector("#scr-modes.on")); await p.dispatchEvent('#scr-modes [data-act="playmenu"]', "click");
       await wait(p, () => document.querySelector("#scr-play.on"));
       await p.waitForTimeout(150);
     } },
@@ -235,7 +235,7 @@ export const sessions = [
     { id: "selector", perf: false, act: async (p) => {
       await labReady(p); await p.evaluate(() => window.__cfg({ zone: "luna" }));
       if (await p.$("#scr-title.on")) await p.dispatchEvent("#scr-title", "click");
-      await toMain(p); await p.dispatchEvent('#scr-main [data-act="playmenu"]', "click");
+      await toMain(p); await p.dispatchEvent('#scr-main [data-go="modes"]', "click"); await wait(p, () => document.querySelector("#scr-modes.on")); await p.dispatchEvent('#scr-modes [data-act="playmenu"]', "click");
       await wait(p, () => document.querySelector("#scr-play.on")); await p.waitForTimeout(150);
     } },
     { id: "sol", act: async (p) => { await labReady(p); await p.evaluate(() => { window.__play(3); window.__god(); window.__sim(30); window.__killAll(); window.__luna.go("sol"); window.__luna.ring(10, 13); }); await tick(p, 60); } },

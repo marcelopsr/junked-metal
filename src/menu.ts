@@ -822,7 +822,7 @@ const DESC: Record<string, string> = {
   hud: "Escala de todo el HUD (barras, reloj, radar).",
   hudSolid: "Fondo casi opaco en el HUD para leerlo mejor sobre pasto claro.",
   calm: "Quita parpadeos, destellos y sacudidas que molestan.",
-  tranquilo: "Modo Tranquilo: recibís la mitad del daño y los bichos tienen 70% de vida (los jefes no).",
+  tranquilo: "Modo Tranquilo: se recibe la mitad del daño y los bichos tienen 70% de vida (los jefes no).",
   "pad.dead": "Cuánto hay que mover el stick antes de que cuente.",
   "pad.sens": "Qué tan rápido responde el stick.",
   rumble: "Vibración del mando en golpes.",
