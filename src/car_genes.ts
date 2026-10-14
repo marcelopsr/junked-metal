@@ -107,7 +107,7 @@ export const GENES: Record<string, Gene[]> = {
     ...RUEDAS.filter((x) => x.id !== "batalla_k"), // un solo eje
   ],
   helado: [
-    g("carroceria", "caja_alto", 0.95, 0.8, 1.05),
+    g("carroceria", "caja_alto", 0.95, 0.9, 1.05),
     g("carroceria", "caja_largo", 1.45, 1.25, 1.6),
     g("cabina", "cabina_alto", 0.34, 0.26, 0.44),
     g("accesorios", "toldo_ancho", 0.22, 0.14, 0.34),

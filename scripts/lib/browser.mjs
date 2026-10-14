@@ -2,7 +2,7 @@
 // sin las banderas ANGLE/Metal cae a SwiftShader (CPU), que es ~10x más lento y no mide nada útil. Las tres "disable-*" evitan que Chrome
 // frene timers y render por creerse en segundo plano (ruido en mediciones). Server: pm2 `rc-test` (:5174, sin recarga) o, en un worktree, `rc-test-<carpeta>` (5200-5299); RC_URL lo cambia; RC_Q agrega parámetros a todas las URL.
 import { chromium } from "playwright";
-import { closeSync, openSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { closeSync, openSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -31,26 +31,47 @@ export const SERVER_LOCK = "rc-test-" + (new URL(BASE).port || 80); // un candad
 export const PERF_LOCK = "rc-perf"; // global: dos perf a la vez ensucian ms/cuadro aunque usen servidores distintos
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; } };
 export const lockInfo = (name) => { try { const t = readFileSync(lockFile(name), "utf8"); return alive(parseInt(t)) ? t : null; } catch { return null; } }; // quién lo tiene (null si libre o PID muerto)
-const held = new Set();
-const release = () => { for (const n of held) try { if (parseInt(readFileSync(lockFile(n), "utf8")) === process.pid) unlinkSync(lockFile(n)); } catch {} };
+const held = new Set(); // nombres de archivo propios (exclusivos y de lector)
+const release = () => { for (const f of held) try { if (parseInt(readFileSync(f, "utf8")) === process.pid) unlinkSync(f); } catch {} };
 const WAIT_MAX = 15 * 60; // s: tope de espera, por si quien tiene el candado quedó colgado
+const readerFile = (name, pid = process.pid) => join(tmpdir(), `${name}.r.${pid}.lock`);
+/** Lectores vivos de `name` (borra los de PID muerto). */
+export const readers = (name) => readdirSync(tmpdir()).filter((f) => f.startsWith(name + ".r.")).flatMap((f) => {
+  const pid = parseInt(f.slice(name.length + 3)); if (pid === process.pid) return [];
+  if (alive(pid)) { try { return [readFileSync(join(tmpdir(), f), "utf8")]; } catch { return []; } }
+  try { unlinkSync(join(tmpdir(), f)); } catch {} return [];
+});
+const stamp = () => `${process.pid}\n${process.argv.slice(1).join(" ")}\n${process.cwd()}`;
+async function wait(name, t, quien) {
+  if (t === 0) console.error(`${name} ocupado, esperando (máx ${WAIT_MAX / 60} min):\n  ${quien.replace(/\n/g, "\n  ")}`);
+  if (t >= WAIT_MAX) throw new Error(`${name} sigue ocupado tras ${WAIT_MAX / 60} min:\n${quien}`);
+  await new Promise((r) => setTimeout(r, 1000));
+}
 
-/** Candado (shots/perf/sim y `npm run test:restart` comparten servidor y CPU, también entre agentes): el segundo espera; un candado con PID muerto se ignora. */
-export async function lock(name = SERVER_LOCK) {
-  const f = lockFile(name);
-  for (let avisado = false, t = 0; ; avisado = true, t++) {
-    try { const fd = openSync(f, "wx"); writeFileSync(fd, `${process.pid}\n${process.argv.slice(1).join(" ")}\n${process.cwd()}`); closeSync(fd); break; }
+/**
+ * Candado lector/escritor entre procesos (también entre agentes). `shared` (shots, sim, evo, e2e): varios a la vez, solo esperan a un exclusivo.
+ * Exclusivo (`test:restart`, perf): toma el archivo primero (frena lectores nuevos) y espera a que los lectores terminen. PID muerto = libre.
+ */
+export async function lock(name = SERVER_LOCK, { shared = false } = {}) {
+  const f = lockFile(name), mine = shared ? readerFile(name) : f;
+  if (held.has(mine)) return;
+  if (!held.size) { process.on("exit", release); for (const sg of ["SIGINT", "SIGTERM"]) process.on(sg, () => process.exit(130)); }
+  for (let t = 0; ; t++) {
+    if (shared) {
+      const ex = lockInfo(name);
+      if (!ex) { writeFileSync(mine, stamp()); held.add(mine); if (!lockInfo(name)) return; unlinkSync(mine); held.delete(mine); }
+      await wait(name, t, ex ?? "exclusivo recién tomado");
+      continue;
+    }
+    try { const fd = openSync(f, "wx"); writeFileSync(fd, stamp()); closeSync(fd); held.add(f); break; }
     catch (e) {
       if (e.code !== "EEXIST") throw e;
-      let pid = 0, quien = ""; try { quien = readFileSync(f, "utf8"); pid = parseInt(quien); } catch {}
-      if (!pid || !alive(pid)) { try { unlinkSync(f); } catch {} continue; }
-      if (!avisado) console.error(`${name} ocupado por otra corrida, esperando (máx ${WAIT_MAX / 60} min):\n  ${quien.replace(/\n/g, "\n  ")}`);
-      if (t >= WAIT_MAX) throw new Error(`${name} sigue ocupado tras ${WAIT_MAX / 60} min por PID ${pid}; si está colgado: kill ${pid}`);
-      await new Promise((r) => setTimeout(r, 1000));
+      const quien = lockInfo(name);
+      if (!quien) { try { unlinkSync(f); } catch {} continue; }
+      await wait(name, t, quien);
     }
   }
-  if (!held.size) { process.on("exit", release); for (const sg of ["SIGINT", "SIGTERM"]) process.on(sg, () => process.exit(130)); }
-  held.add(name);
+  for (let t = 0, r; (r = readers(name)).length; t++) await wait(name, t, `${r.length} lector(es):\n` + r.join("\n---\n"));
 }
 
 /** Un solo navegador para toda la corrida. Espera hasta ~30 s a que rc-test responda (no levanta servidores propios: ver CLAUDE.md). */
@@ -65,8 +86,10 @@ export async function launch({ perf = false, args = [] } = {}) {
     }
   }
   if (!ok) throw new Error(`\nNo responde ${BASE} tras 24 s. Arrancarlo con: npm run test:restart`);
-  if (perf) await lock(PERF_LOCK); // primero el global, después el del servidor: sin espera circular
-  await lock();
+  // Primero el global, después el del servidor (mismo orden en todos: sin espera circular). perf: exclusivo en ambos (mide sin vecinos);
+  // el resto comparte, y solo frena mientras corre un perf o un test:restart.
+  await lock(PERF_LOCK, { shared: !perf });
+  await lock(SERVER_LOCK, { shared: !perf });
   return chromium.launch({ headless: true, args: [...ARGS, ...args] });
 }
 

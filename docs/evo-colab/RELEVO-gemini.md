@@ -8,16 +8,23 @@ Al terminar una tanda, dejar un relevo nuevo con `plantillas/RELEVO.md` y una l�
 - **Flota 100% parametrizada (17/17 autos con genes propios en `src/car_genes.ts` y ramas en `src/folded_slice.ts`):**
   buggy, monster, formula, tanque, carrera, axel, helado, combi, hover, topadora, triciclo, murcielago, misterio, clasico, jeep, moto, monopatin.
 - **Independización de ramas:** hover, topadora y triciclo cuentan con carrocería procedimental Folded propia (independizados del fallback de carrera). La rama `else` queda exclusivamente para `carrera`.
-- **Soporte de cucurucho del helado:** base de chapa y collar de soporte visible modelados bajo el cono (`cucurucho_soporte`), y piso de escala fijado en 1.0 para consolidar tamaño visible, resolviendo la observación de la ronda 1.
+- **Helado ronda 2 evaluada (`20261014-0046-s2`):**
+  - Corrida completada con éxito (`--car helado --pop 20 --gens 12 --seed 2`).
+  - Evaluación visual registrada en `docs/evo-colab/evaluaciones/2026-10-13-helado-gemini.md`.
+  - Veredicto: ninguna variante supera al original (34 vs 36). El soporte de cucurucho y el cucurucho grande funcionan bien, pero el frente de Pareto redujo la altura de la caja (`caja_alto` a 0.848, −40.9% en rango), perdiendo la silueta reconocible de furgón de helados.
+  - Corrección paramétrica: piso de `caja_alto` fijado en 0.9 en `src/car_genes.ts` (`g("carroceria", "caja_alto", 0.95, 0.9, 1.05)`) para preservar la proporción original sin aplastamiento.
 - **Test de regresión geométrica:** suite automatizada en `test/car_genes.test.ts` verificando que los 17 genomas en `def` cumplan `min <= def <= max`, sin IDs duplicados y con valores finitos.
 - **Exportados al juego:** **buggy** (i190, corrige el clipeo de ruedas al doblar) y **monster** (i188, ruedas más grandes). El resto usa su diseño original intacto.
 - Lecciones en `docs/EVO_VEHICULOS.md`: mejoras de ±2 puntos están en el ruido entre evaluadores; ajustar medidas da poco a la vista; lo que se nota pide piezas nuevas (como el soporte del cucurucho) o color/material.
 
 ## Próximos pasos (elegir según el tiempo disponible)
 
-1. **Helado, ronda 2** (lo más cerca de exportar): `npm run evo -- --car helado --pop 20 --gens 10 --seed 2 --sigma 0.25 --from 20261013-2030-s1`.
-   Ahora cuenta con soporte de chapa modelado (`cucurucho_soporte`) y piso del cucurucho en 1.0. Correr con `rc-test` activo en :5174.
-2. **Correr evolución visual en los nuevos autos parametrizados** (combi, hover, topadora, triciclo, etc.).
+1. **Helado, ronda 3** (con piso de `caja_alto` protegido en 0.9): correr `npm run evo -- --car helado --pop 20 --gens 10 --seed 3 --sigma 0.2` para buscar cucurucho y ruedas óptimas sin aplastar el cuerpo.
+2. **Correr evolución visual en los autos recién independizados**:
+   - `combi` (`npm run evo -- --car combi --pop 20 --gens 10 --seed 1`)
+   - `hover` (`npm run evo -- --car hover --pop 20 --gens 10 --seed 1`)
+   - `topadora` (`npm run evo -- --car topadora --pop 20 --gens 10 --seed 1`)
+   - `triciclo` (`npm run evo -- --car triciclo --pop 20 --gens 10 --seed 1`)
 3. **Piezas nuevas**: llantas con aro de contraste, faldones o barras adicionales con genes enteros (`int: true`).
 4. **Calibración humana**: el usuario puntúa `docs/evo-colab/calibracion/PUNTAJES.md` (hojas en esa carpeta) y se ajustan las bandas (`BANDS`, `PUSH`, `autoBands` en `src/evo_probe.ts`) a su criterio.
 
@@ -35,11 +42,3 @@ npx tsc --noEmit -p . && npm test && git commit                    # cerrar el c
 ```
 
 Evaluar la hoja con la plantilla `docs/evo-colab/plantillas/EVALUACION.md` y guardar la evaluación en `docs/evo-colab/evaluaciones/AAAA-MM-DD-<auto>-gemini.md`; anotar el resultado en `BITACORA.md`.
-
-## Trampas conocidas
-
-- La primera evaluación de la página medía mal el color si la flota no estaba armada: ya resuelto (no tocar el orden en `evaluate`).
-- `carModel("formula")` dejaba un alerón huérfano en la escena: ya resuelto.
-- Si `npm run evo` pasa un argumento con espacios a `--car`, crea carpetas raras en `.evo/`: escribir los argumentos sueltos.
-- El frente puede ser toda la población: hay ε-dominancia (`EPS` en `scripts/evo.mjs`).
-- Genes nuevos sin variación en la siembra (`--from`) se perturban solos; no hace falta nada.

@@ -48,7 +48,8 @@
     "assets:check": "node scripts/assets-optimize.mjs --check",
     "carga": "node scripts/carga.mjs",
     "doctor": "node scripts/doctor.mjs",
-    "doctor:fix": "node scripts/doctor.mjs --fix"
+    "doctor:fix": "node scripts/doctor.mjs --fix",
+    "check": "tsc --noEmit -p . & a=$!; vitest run --changed --passWithNoTests & b=$!; node scripts/shots.mjs --changed & c=$!; wait $a && wait $b && wait $c"
   },
   "keywords": [],
   "type": "module",

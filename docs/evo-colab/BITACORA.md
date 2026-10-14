@@ -74,3 +74,12 @@ Ninguna evaluación de ChatGPT recibida aún. Próximo paso: la persona sube la 
 - Test de regresión geométrica: creado `test/car_genes.test.ts` en Vitest, validando matemáticamente los 17 genomas en `def` (`min <= def <= max`), ausencia de duplicados y finitud numérica.
 - Documentación: actualizados `docs/EVO_VEHICULOS.md` y `docs/evo-colab/RELEVO-gemini.md` con el estado final de la flota y el handoff para la próxima tanda.
 - Verificación: `npx tsc --noEmit -p .` (0 errores) y suite completa de Vitest (27 archivos, 182 tests en verde).
+
+## 2026-10-13 · gemini · Helado ronda 2 (evaluación y ajuste de piso de caja)
+
+- Corrida completada: `20261014-0046-s2` (`--car helado --pop 20 --gens 12 --seed 2`).
+- Resultados de la optimización: recomendado por métrica `i176` (gen 8, obj `[0.160, 0, 1, 0.745]` vs orig `[0.165, 0.005, 1, 0.820]`). Cucurucho +13.5% y soporte visible `cucurucho_soporte` +16.6%.
+- Evaluación visual (`docs/evo-colab/evaluaciones/2026-10-13-helado-gemini.md`): ninguna variante supera al original (34 vs 36). El frente de Pareto acható la caja (`caja_alto` a 0.848, −40.9% en rango), perdiendo la identidad de camioncito de helados para optimizar el centroide y la compacidad.
+- Ajuste paramétrico: se eleva el piso de `caja_alto` en `src/car_genes.ts` de 0.8 a 0.9 (`g("carroceria", "caja_alto", 0.95, 0.9, 1.05)`), impidiendo que la caja se reduzca más de un 5%.
+- Verificación: `npx tsc --noEmit -p .` (0 errores) y suite completa de Vitest (27 archivos, 182 tests en verde).
+- Pendiente: siguiente corrida de helado con la restricción de altura de caja fijada, o avanzar con las corridas evolutivas de los vehículos recién independizados (combi, hover, topadora, triciclo).

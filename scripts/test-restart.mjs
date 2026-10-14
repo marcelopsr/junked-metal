@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 // node_modules del worktree = symlink al de la carpeta principal. Va ANTES de importar browser.mjs (que importa playwright desde ahí).
 const common = execSync("git rev-parse --path-format=absolute --git-common-dir", { encoding: "utf8" }).trim();
 if (dirname(common) !== process.cwd() && !existsSync("node_modules")) symlinkSync(join(dirname(common), "node_modules"), "node_modules");
-const { PERF_LOCK, SERVER_LOCK, WT, lock, lockInfo } = await import("./lib/browser.mjs");
+const { PERF_LOCK, SERVER_LOCK, WT, lock, lockInfo, readers } = await import("./lib/browser.mjs");
 
 const sh = (c, o = {}) => execSync(c, { stdio: "inherit", ...o });
 const procs = () => JSON.parse(execSync("pm2 jlist", { encoding: "utf8", maxBuffer: 1e8 }).replace(/^[^[]*/, "")).filter((p) => /^rc-test(-|$)/.test(p.name));
@@ -18,8 +18,11 @@ const cmd = process.argv[2] ?? "restart";
 if (cmd === "ls") {
   for (const p of procs()) console.log(`${p.name.padEnd(28)} :${portOf(p)}  ${p.pm2_env.status.padEnd(8)} ${p.pm2_env.pm_cwd}${existsSync(p.pm2_env.pm_cwd) ? "" : "  (HUERFANO)"}`);
   console.log("candados:");
-  const names = readdirSync(tmpdir()).filter((f) => /^rc-(test-\d+|perf)\.lock$/.test(f)).map((f) => f.slice(0, -5));
-  for (const n of [...new Set([SERVER_LOCK, PERF_LOCK, ...names])]) console.log(`  ${n}: ` + (lockInfo(n)?.replace(/\n/g, " | ") ?? "libre"));
+  const names = readdirSync(tmpdir()).map((f) => /^(rc-(?:test-\d+|perf))(?:\.r\.\d+)?\.lock$/.exec(f)?.[1]).filter(Boolean);
+  for (const n of [...new Set([SERVER_LOCK, PERF_LOCK, ...names])]) {
+    console.log(`  ${n}: exclusivo ` + (lockInfo(n)?.replace(/\n/g, " | ") ?? "libre"));
+    for (const r of readers(n)) console.log(`    lector ${r.replace(/\n/g, " | ")}`);
+  }
 } else if (cmd === "down") {
   if (!WT) throw new Error("test:down solo borra servidores de worktrees; rc-test de la carpeta principal queda corriendo");
   sh(`pm2 delete ${WT.name}`);
