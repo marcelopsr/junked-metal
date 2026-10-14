@@ -147,3 +147,9 @@ angosto. Pendiente: el alerón sigue cruzando casi todo el ancho en la vista de 
 - Se independizaron `hover`, `topadora` y `triciclo` de la rama genérica de `carrera`, dotando a cada uno de identidad Folded propia y dejando `carrera` exclusivamente en su rama.
 - `helado`: base de chapa y collar de soporte visible modelados bajo el cucurucho (`cucurucho_soporte`) y piso de escala en 1.0 para consolidar tamaño visible.
 - Suite de regresión automatizada en `test/car_genes.test.ts` validando integridad matemática, rango de límites (`min <= def <= max`), ausencia de duplicados y finitud numérica en toda la flota.
+
+## Helado, ronda con soporte de cucurucho (20261014-0046-s2)
+
+- Recomendado i176; el frente achica la caja (−40 a −57 % de alto) y abre la trocha. A la vista la caja baja le quita
+  identidad de camioncito de helados; el único con cucurucho +20 % (i254) aplasta la caja. Sin exportar.
+- Próximo paso: fijar piso de `caja_alto` (≥ −20 %) y dejar que la búsqueda mueva solo cucurucho, soporte y ruedas.
