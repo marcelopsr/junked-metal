@@ -155,7 +155,6 @@ for (const vp of vps) {
       if (await d.waitForSelector("#ctlg:not(.hidden)", { timeout: 2000 }).catch(() => null)) await d.dispatchEvent('#ctlg [data-act="askyes"]', "click");
       await d.waitForFunction(() => window.__info?.().state === "play", null, { timeout: 60000 });
       await d.evaluate(() => window.__tick(30));
-      if (!(await d.evaluate(() => window.__daily?.() ?? true))) dwhy = "no es partida de diario";
     }
   } catch (e) { dwhy = e.message.split("\n")[0]; }
   const derrs = d.logs.splice(0); if (derrs.length) dwhy += ` consola: ${derrs.join(" | ").slice(0, 150)}`;

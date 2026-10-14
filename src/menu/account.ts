@@ -90,7 +90,7 @@ export function renderDaily() {
     if (!d || !$("dailyBrief").isConnected) return;
     if (d.seed !== seed) draw(d.seed, d.date); // semilla oficial: el resumen sale de ella, no de la local
     const m = d.mine; // marca del servidor: solo cuenta el primer intento del día
-    $("dailyInfo").textContent += m ? ` · Tu marca oficial: #${m.rank} (${m.win ? "victoria " : ""}${fmt(m.t)})` : " · Sin marca oficial hoy: el primer intento del día puntúa.";
+    $("dailyInfo").textContent += m ? ` · Marca oficial del día: #${m.rank} (${m.win ? "victoria " : ""}${fmt(m.t)})` : " · Sin marca oficial hoy. Puntúa el primer intento del día.";
   });
 }
 export function initAccount(ctx: AccountCtx) {
