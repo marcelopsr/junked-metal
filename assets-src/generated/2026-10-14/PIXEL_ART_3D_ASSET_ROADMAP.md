@@ -1,6 +1,6 @@
 # Junked Metal — producción de recursos Pixel Art 3D
 
-La dirección nueva se produce por lotes. Los lotes 01 y 02 son candidatos generados; no cambian la dirección activa ni se conectan al juego todavía.
+La dirección nueva se produce por lotes. Los recursos generados siguen siendo candidatos: no cambian la dirección activa ni se conectan al juego todavía.
 
 ## Lotes de materiales
 
@@ -23,6 +23,7 @@ La dirección nueva se produce por lotes. Los lotes 01 y 02 son candidatos gener
 - `pixel-art-3d-batch-01/`: 20 materiales y hojas de contacto.
 - `pixel-art-3d-batch-02-decals/`: 8 decals transparentes y hoja de contacto.
 - `pixel-art-3d-batch-03-model-concepts/`: seis hojas de referencia para 17 autos, 41 tipos de enemigos y utilería del patio.
+- `pixel-art-3d-batch-04-standalone-surfaces/`: seis texturas de color base independientes para tierra, concreto, madera, metal, caucho y césped.
 - `docs/ASSET_INVENTORY.md`: inventario del arte actualmente activo e histórico.
 
 Los atlas y hojas están generados con OpenAI ImageGen. Las hojas del lote 03 son referencias visuales, no mallas ni texturas listas para producción; los modelos requerirán geometría/UV propios y validación con los contratos de animación y colisión existentes.
