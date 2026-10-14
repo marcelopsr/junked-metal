@@ -462,6 +462,7 @@ export const earthStage = (r: Run) => (r.loop < 1 ? -1 : Math.floor(mix(r.seed +
 export function zoneOf(r: Run): "luna" | EarthZone {
   if (sceneIdx(r) >= ENC.stages) return "luna";
   const vz = variantOf(r)?.zone; if (vz) return vz; // destino con zona propia (puede sumarse al escenario terrestre sorteado de la vuelta)
+  if (!r.loop && !r.stage) return "patio"; // T54: el primer escenario de la expedición es siempre el patio, de día; la Luna viene después
   if (r.stage !== earthStage(r)) return "luna";
   return EARTH_ZONES[Math.floor(mix(r.seed + 0x2a7d + r.loop * 104723) * EARTH_ZONES.length)];
 }
