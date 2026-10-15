@@ -405,8 +405,9 @@ export function hudEnc(d: { tag: [string, string, boolean]; pacts: { tag: string
   if (ch("encAskOn", !!a)) $("encAsk").classList.toggle("hidden", !a);
   if (!a) return;
   if (ch("encPact", !!a.pacts)) $("encAsk").classList.toggle("pact", !!a.pacts);
-  if (ch("encRoute", a.title === "ELIJAN EL DESTINO")) $("encAsk").classList.toggle("route", a.title === "ELIJAN EL DESTINO");
-  txt("encTitle", a.title === "ELIJAN EL DESTINO" ? "ELEGIR DESTINO" : a.title); // impersonal: vale para 1 o 2 jugadores txt("encS", a.left > 0 ? `${Math.ceil(a.left)} S` : "");
+  if (ch("encRoute", a.title === "ELEGIR DESTINO")) $("encAsk").classList.toggle("route", a.title === "ELEGIR DESTINO");
+  txt("encTitle", a.title);
+  txt("encS", a.left > 0 ? `${Math.ceil(a.left)} S` : "");
   bar("encBar", a.frac * 100);
   const kb = (k: string) => (isTouch ? "" : ` <kbd>${k}</kbd>`);
   a.opts.forEach((o, i) => {

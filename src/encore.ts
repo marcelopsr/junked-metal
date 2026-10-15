@@ -325,7 +325,7 @@ export function craterPlan(v: Variant, r: Run): { a: number; d: number; r: numbe
 /** Para el HUD: título de la ventana abierta, textos de los dos botones (null = sin botón) y duración total; en la oferta, además los términos de cada pacto y el botón de rechazo. */
 export function ask(r: Run): { title: string; opts: [string | null, string | null]; total: number; pacts?: [PactView, PactView]; reject?: string } | null {
   if (r.phase === "pact" && r.offer) { const [a, b] = r.offer.map((id) => viewOf(pactOf(id))); return { title: "PACTO DEL DIRECTOR", opts: [a.name, b.name], total: ENC.pactS, pacts: [a, b], reject: "RECHAZAR" }; }
-  if (r.phase === "route" && r.routes) { const [a, b] = [routeView(r.routes[0]), routeView(r.routes[1])]; return { title: "ELIJAN EL DESTINO", opts: [a.name, b.name], total: routeTotal(r), pacts: [a, b] }; }
+  if (r.phase === "route" && r.routes) { const [a, b] = [routeView(r.routes[0]), routeView(r.routes[1])]; return { title: "ELEGIR DESTINO", opts: [a.name, b.name], total: routeTotal(r), pacts: [a, b] }; }
   if (r.phase === "overload") return { title: "SOBRECARGA · AGUANTAR LA CARGA", opts: [null, null], total: ENC.overloadS };
   if (r.phase === "teleporter") return { title: "TELEPORTADOR LISTO", opts: [`QUEDARSE · COFRE EXTRA Y +${Math.round(ENC.stayScrap * 100)}% TORNILLOS`, "AVANZAR"], total: ENC.decideS };
   if (r.phase === "stay") return { title: "SIGUE LA FUNCIÓN · PRÓXIMA DECISIÓN", opts: [null, "AVANZAR YA"], total: ENC.stayS };
