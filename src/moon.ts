@@ -571,6 +571,31 @@ export function moonBuild(s: B.Scene, low: boolean) {
     let si = 0;
     for (let i = 0; i < 26; i++) { const w = 34 + kr() * 48, a = (kr() * 2 - 1) * 0.9; if (Math.abs(a) < 0.12 && w < 40) continue; night(stack(3 + (si % 3), si % 5), w, a, (kr() - 0.5) * 0.9 + (si % 2 ? 1.57 : 0)); si++; }
   }
+  // Contraste de la noche: faroles ámbar de juguete con pozo de luz cálida en el piso y rocas basálticas casi negras (siluetas) alrededor de la llegada.
+  // Semilla propia (lr), instancias de 3 plantillas fusionadas, sin colisión. ponytail: decorativo; si hace falta chocar, sumar SPHERE estático como las mesetas.
+  {
+    const lr = rngFrom(0x1a3b5c), amber = glowM("#ffb347"), basalt = pbr("moonBasalt", { color: "#0c0d11", rough: 0.9 });
+    // Pozo de luz: degradé radial ámbar (alfa 0,55 al centro, 0 en el borde), aditivo; textura nueva por armado, la anterior se libera
+    const warmPool = (scene.getMaterialByName("moonWarmPoolMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("moonWarmPoolMat", scene);
+    warmPool.emissiveTexture?.dispose();
+    const wt = new B.DynamicTexture("moonWarmTex", 64, scene, false), wc = wt.getContext() as unknown as CanvasRenderingContext2D, wg = wc.createRadialGradient(32, 32, 0, 32, 32, 32);
+    wg.addColorStop(0, "rgba(255,170,70,0.85)"); wg.addColorStop(0.5, "rgba(255,150,60,0.4)"); wg.addColorStop(1, "rgba(255,140,50,0)"); wc.fillStyle = wg; wc.fillRect(0, 0, 64, 64); wt.update(); wt.hasAlpha = true;
+    warmPool.emissiveTexture = warmPool.opacityTexture = wt; warmPool.diffuseColor = B.Color3.Black(); warmPool.specularColor = B.Color3.Black(); warmPool.disableLighting = true; warmPool.alphaMode = B.Constants.ALPHA_ADD; warmPool.fogEnabled = false; warmPool.backFaceCulling = false;
+    const lampPool = B.MeshBuilder.CreateGround("kitLampPool", { width: 2, height: 2 }, scene); lampPool.material = warmPool; lampPool.isVisible = false; lampPool.isPickable = false; // base de las instancias; radio 1 m
+    const lamp = template("kitLamp", () => [cyl(0.07, 0.1, 1.5, steel, [0, 0.75, 0]), sph(0.34, amber, [0, 1.65, 0], undefined, 5)]);
+    const rockB = template("moonBasalt", () => [poly("ba", 2, 0.6, 0.5, 0.55, basalt)]);
+    const place = (tpl: ReturnType<typeof template>, n: number, w0: number, w1: number, scale: (i: number) => number, pool = 0) => {
+      for (let i = 0; i < n; i++) {
+        const d = arcPos(w0 + lr() * (w1 - w0), lr() * 6.3), yaw = lr() * 6.3, s = scale(i);
+        if (B.Vector3.Dot(d, SUN_DIR) > -0.1 || heightAt(d) < -0.5 || MOON.R * Math.acos(d.y) < 12) continue;
+        const m = tpl.createInstance("kit"); m.isPickable = false; m.receiveShadows = true;
+        sol(d, 0, yaw, s).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position);
+        if (pool) { const f = lampPool.createInstance("kitLampPool"); f.isPickable = false; sol(d, 0.05, yaw).decompose(f.scaling, (f.rotationQuaternion = new B.Quaternion()), f.position); f.scaling.set(pool, 1, pool); }
+      }
+    };
+    place(lamp, 34 * lowK, 6, 38, () => 1.5, 2.5); // farol 1,5x; pozo de radio 2,5 m
+    place(rockB, 65 * lowK, 5, 50, () => 1.4 + lr() * 2.4);
+  }
   // Cielo: estrellas fijas en el mundo (al dar la vuelta a la luna, giran), Tierra, Sol y una estrella fugaz de vez en cuando.
   // Todo dentro de la esfera del cielo de render.ts (radio 600, infiniteDistance): más lejos lo taparía
   const ns = low ? 500 : 900, sp: number[] = [], scol: number[] = [], si: number[] = [];
