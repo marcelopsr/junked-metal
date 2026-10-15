@@ -67,14 +67,15 @@ export type Save = {
 };
 // Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
 const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (innerHeight * (devicePixelRatio || 1))) * 20) / 20));
+const reduceMotion = typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false);
 export const DEFAULT: Save = {
   intro: false, novedadesVistas: "",
   scrap: 2000, best: 0, perm: { hp: 0, dmg: 0, spd: 0, mag: 0, reroll: 0, cards: 0, extra: 0, revive: 0, xp: 0, arm: 0, reg: 0, tur: 0, ram: 0, cdr: 0 }, cars: ["buggy"], car: "buggy",
   pilot: "soldadito", unlocked: [], kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "nada", tires: "serie", acc: "nada" }, paint: "", trim: "", rim: "", finish: "", zoom: 1.35, camMode: "actual",
-  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: true, fps: false, hudSolid: false, hint: true,
+  mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: !reduceMotion, fps: false, hudSolid: false, hint: true,
   gfxv: 2, gpu: "webgl", scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1,
-  calm: typeof window !== "undefined" && (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false), dmgNums: true, tranquilo: false, tutorialHecho: false, controlesVistos: false,
+  calm: reduceMotion, dmgNums: true, tranquilo: false, tutorialHecho: false, controlesVistos: false,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
@@ -317,7 +318,7 @@ function askClose() {
   if (askEl === "ctlg" && !save.controlesVistos) { save.controlesVistos = true; persist(); } // cerrarla de cualquier modo (Entendido, Esc, B) cuenta como vista
 }
 /** Guía de controles (T24): una tarjeta con lo del dispositivo en uso. Sale sola antes de la primera partida y se repite desde Configuración → Controles. */
-export function controlsGuide(then: () => void = () => {}) {
+export function controlsGuide(then: () => void = () => {}, mini = false) {
   const k = (a: Action) => `<kbd>${esc(keyName(KEYS[a][0]))}</kbd>`, p = (a: PadAct) => btnChip(pb(a));
   const rows: [string, string][] = ctl === "pad" ? [
     ...(PAD.mode === "stick" ? [["Mover", `Stick ${PAD.stick === "left" ? "izquierdo" : "derecho"}, hacia donde ir`]] : [["Acelerar", p("accel")], ["Frenar", p("brake")], ["Girar", `Stick ${PAD.stick === "left" ? "izquierdo" : "derecho"}`]]) as [string, string][],
@@ -327,8 +328,11 @@ export function controlsGuide(then: () => void = () => {}) {
   ] : [
     ["Mover", k("up") + k("left") + k("down") + k("right")], ["Turbo", k("boost")], ["Derrape", k("drift")], ["Salto", k("jump")], ["Habilidad", k("ability")], ["Pausa", k("pause")],
   ];
-  $("ctlgB").innerHTML = rows.map(([a, b]) => `<div class="kv"><span>${a}</span><b>${b}</b></div>`).join("")
-    + `<p class="note">Las armas disparan solas: al auto le toca moverse, juntar tuercas y esquivar. Esta guía queda en Configuración, pestaña Controles.</p>`;
+  // mini (primera vez): solo lo de mover (táctil: más los botones) y que las armas disparan solas
+  const mov = ctl === "touch" ? 2 : ctl === "pad" && PAD.mode !== "stick" ? 3 : 1;
+  $("ctlgB").innerHTML = (mini ? rows.slice(0, mov) : rows).map(([a, b]) => `<div class="kv"><span>${a}</span><b>${b}</b></div>`).join("")
+    + (mini ? `<p class="note">Las armas disparan solas. El resto de los controles está en Configuración.</p>`
+      : `<p class="note">Las armas disparan solas: al auto le toca moverse, juntar tuercas y esquivar. Esta guía queda en Configuración, pestaña Controles.</p>`);
   askOpen("ctlg", then);
 }
 /** Con el modal abierto lo de atrás no recibe foco ni Tab (inert) y el lector lo trata como diálogo. */
@@ -484,6 +488,9 @@ function renderMain() {
   const b = save.daily.day === today() ? save.daily.best : 0;
   $("dailyRec").textContent = b ? fmt(b) : ""; // el texto va en <span>/<small>: tocar el botón entero borraría su ícono
   if (save.endless) $("mainInfo").textContent += ` · sin fin +${fmt(save.endless)}`;
+  const nuevo = !save.encore.runs; // hasta terminar la primera expedición, Jugar es lo único que compite en el menú
+  for (const id of ["dailyBtn", "weeklyBtn"]) $(id).classList.toggle("hidden", nuevo);
+  document.querySelector<HTMLElement>('#scr-main [data-go="modes"]')!.classList.toggle("hidden", nuevo);
 }
 
 // Supervivencia y Desafío diario: ficha de largada con el equipo actual, récord de zona y condiciones de la semilla del día
@@ -1239,6 +1246,7 @@ export function initMenu(a: Api) {
     if (t.id === "dgrid") { if (!e.detail) paintAtCursor(); return; } // Enter / A sobre la grilla (el mouse y el dedo pintan en pointerdown)
     if (binding && d?.bind !== binding) { cancelBind(); if (!d?.bind) return; } // un clic fuera cancela la captura
     if (!d) return;
+    if (d.go === "encore" && !save.encore.runs) { SFX.accept(); const largar = () => api.play(false, true); if (save.controlesVistos) largar(); else controlsGuide(largar, true); return; } // primera vez: Jugar va directo a largar (sin la pantalla ENCORE); la guía mínima es el único alto
     if (!save.controlesVistos && /^(play|playgo|encorego|daily|weekly)$/.test(d.act ?? "")) { const b = t.closest<HTMLElement>("[data-act]")!; SFX.accept(); controlsGuide(() => b.click()); return; } // primera partida: antes de largar, la guía de controles
     SFX.accept();
     if (d.go) go(d.go as Scr);

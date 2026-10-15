@@ -145,7 +145,7 @@ export const minorMini = () => { const v = erun && E.variantOf(erun); return (v 
 let pactOff = ""; // ids ofrecidos del último pacto (para telemetría si se rechaza)
 export function encApply(ev: E.Ev | null) {
   if (!ev || !erun) return;
-  if (ev === "pact_offer" && erun.offer) { const n = erun.offer.filter((id) => !save.encore.seenPacts.includes(id)); if (n.length) { save.encore.seenPacts.push(...n); persist(); } } // Codex: pactos vistos
+  if (ev === "pact_offer" && erun.offer) { if (!cx.simulating && !cx.LAB.on && !save.encore.seenPacts.length) erun.hold = true; const n = erun.offer.filter((id) => !save.encore.seenPacts.includes(id)); if (n.length) { save.encore.seenPacts.push(...n); persist(); } } // Codex: pactos vistos
   if (!cx.simulating && !cx.LAB.on) { // telemetría ENCORE (datos chicos; tipos [a-z_])
     const r = erun, base = { stage: r.stage, loop: r.loop };
     if (ev === "pact_offer") pactOff = r.offer ? r.offer.join("+") : "";
@@ -174,7 +174,11 @@ export function encSecrets() {
   if (!erun) return;
   for (const id of erun.found) if (!saidSecrets.includes(id)) { saidSecrets.push(id); E.dirPush(dirq, E.secretLine(erun, id), 4); }
 }
-export const encPick = (i: 0 | 1 | 2) => { if (cx.state === "play" && erun) encApply(E.pick(erun, i)); };
+/** Primera expedición del guardado (sin expediciones terminadas): sin pactos, arranque tranquilo y carta recomendada. Fuera de sim y lab. */
+export const primeraVez = () => !!erun && !cx.simulating && !cx.LAB.on && !save.encore.runs;
+/** Arranque tranquilo: true los primeros `ritmo.primera_calma_s` s de la primera expedición (el spawner de run_drive.ts debe tratarlo como `calm`). */
+export const calmFirst = () => primeraVez() && erun!.loop === 0 && erun!.stage === 0 && cx.time < BAL.ritmo.primera_calma_s;
+export const encPick = (i: 0 | 1 | 2) => { if (cx.state === "play" && erun) { erun.first = primeraVez(); encApply(E.pick(erun, i)); } };
 /** R6c: online de 2 cada decisión del teleportador es un voto; con los dos votos gana el del anfitrión (J1): coincidir o empatar da lo mismo.
  *  Si el cliente no vota, decide el reloj de la ventana (encore.ts tick), como en solitario. Sin red o sin J2 decide el primero que vota. */
 export const votes = new Map<number, 0 | 1 | 2>();

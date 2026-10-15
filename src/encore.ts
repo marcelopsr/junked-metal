@@ -62,6 +62,8 @@ export type Run = {
   stayN: number;    // H17: veces que se eligió quedarse en toda la expedición (cada una suma ENC.stayScrap de tornillos)
   known: readonly string[]; // secretos ya guardados en el perfil (save.encore.secrets): habilitan los pactos especiales
   found: SecretId[]; // secretos del Director descubiertos en esta run (main.ts los pasa a save.encore.secrets)
+  first?: boolean;  // primera expedición del guardado (encore_run.ts lo fija): no ofrece pactos
+  hold?: boolean;   // la oferta de pactos abierta es la primera de la vida del guardado: sin reloj, espera la elección
 };
 /** R3: eventos del teleportador al abordarlo. */
 export type TeleEvent = "OVERLOAD" | "BOSS_GUEST" | "NINGUNO";
@@ -96,12 +98,13 @@ function vote(r: Run, i: 0 | 1): Ev {
 
 /** AVANZAR elegido: si queda un escenario por jugar y hay dos pactos libres, el Director ofrece antes de cargarlo (con la ventana vencida, el show avanza solo y no ofrece). */
 function go(r: Run): Ev {
-  const o = r.stage + 1 < ENC.stages ? pactOffer(r) : null;
+  const o = r.stage + 1 < ENC.stages && !r.first ? pactOffer(r) : null;
   if (!o) return advance(r);
   r.phase = "pact"; r.offer = o; r.timer = ENC.pactS; r.lp.off++; return "pact_offer";
 }
 /** Responde a la oferta: 0 o 1 acepta ese pacto, 2 (o ventana vencida) rechaza sin penalidad. Después carga el escenario siguiente. */
 function choosePact(r: Run, i: 0 | 1 | 2): Ev {
+  r.hold = false;
   const id = i === 2 ? undefined : r.offer?.[i];
   if (id) { r.lp.yes++; r.taken.push(id); r.pacts.push({ id, left: pactOf(id).stages + 1 }); } // el +1 lo descuenta el `leave` de este mismo avance
   advance(r);
@@ -121,7 +124,7 @@ export function tick(r: Run, dt: number): Ev | null {
     r.stayT += dt;
     if ((r.timer -= dt) <= 0) { r.phase = "teleporter"; r.timer = ENC.decideS; if (++r.stays >= 3) discover(r, "eco"); return "tele_ready"; }
   } else if (r.phase === "pact") {
-    if ((r.timer -= dt) <= 0) return choosePact(r, 2);
+    if (!r.hold && (r.timer -= dt) <= 0) return choosePact(r, 2);
   } else if (r.phase === "route") {
     if ((r.timer -= dt) <= 0) return chooseRoute(r, 0);
   } else if (r.phase === "vote") {
@@ -385,15 +388,15 @@ export function dirTick(d: DirQ, dt: number): string | null {
 
 // ---------- Primera partida guiada: avisos que se muestran una sola vez (ids guardados en save.encore.tips) ----------
 export const TIPS = {
-  start: "PRIMERA EXPEDICIÓN: CADA ESCENARIO TERMINA EN UN TELEPORTADOR. ANTES DE SUBIR, QUEDARSE DA MÁS TIEMPO PARA JUNTAR; AVANZAR CAMBIA DE ESCENARIO Y SUBE LA DIFICULTAD.",
-  chest: "COFRES Y MÁQUINAS OFRECEN MEJORAS A CAMBIO DE ACERCARSE. ABRIRLOS ANTES DE SUBIR AL TELEPORTADOR.",
-  tele: "TELEPORTADOR A LA VISTA. SUBIR A BORDO DECIDE: QUEDARSE UN RATO MÁS O AVANZAR AL SIGUIENTE ESCENARIO.",
-  pact: "UN PACTO DA UN BENEFICIO A CAMBIO DE UN RIESGO QUE DURA UNOS ESCENARIOS (ALGUNOS, TODA LA EXPEDICIÓN). SE PUEDE RECHAZAR.",
+  start: "", // sin aviso largo al arrancar: cada mecánica se explica donde aparece (tele, chest, pact)
+  chest: "COFRES Y MÁQUINAS DAN MEJORAS AL ACERCARSE.",
+  tele: "TELEPORTADOR LISTO. ACERCARSE PARA SUBIR: QUEDARSE DA BOTÍN Y AMENAZA; AVANZAR CAMBIA DE ESCENARIO.",
+  pact: "UN PACTO DA UNA VENTAJA A CAMBIO DE UN COSTO, POR UNOS ESCENARIOS. SE PUEDE RECHAZAR.",
   vote: "VOTACIÓN: ENCORE SIGUE CON OTRA VUELTA MÁS DIFÍCIL; FINAL ACT ENFRENTA AL JEFE FINAL Y CIERRA LA EXPEDICIÓN.",
 } as const;
 export const TIP_IDS: string[] = Object.keys(TIPS);
 /** Texto del aviso si nunca se mostró (y lo marca como visto); null si ya se vio. */
-export function tipOnce(e: { tips: string[] }, id: keyof typeof TIPS): string | null { if (e.tips.includes(id)) return null; e.tips.push(id); return TIPS[id]; }
+export function tipOnce(e: { tips: string[] }, id: keyof typeof TIPS): string | null { if (!TIPS[id] || e.tips.includes(id)) return null; e.tips.push(id); return TIPS[id]; }
 
 // ---------- R5: pistas del jefe secreto, arena del FINAL ACT, reporte y tornillos ----------
 // Una pista por jefe y por escenario (se repiten en cada vuelta). Insinúan el jefe sin nombrarlo ni describir su forma entera.

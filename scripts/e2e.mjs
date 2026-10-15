@@ -24,28 +24,27 @@ for (const vp of vps) {
     return ok;
   };
   const seen = { pact: false, route: false, vote: false };
-  let runs0 = 0;
+  let runs0 = 0, toques = 0, palabras = 0;
 
-  await step("menu-jugar-encore", async () => {
+  await step("menu-jugar-directo", async () => { // guardado limpio: portada (1), Jugar (2) y la guía mínima (3); sin pantalla ENCORE ni desafíos
     await ev(() => document.querySelector("#scr-title.on") && document.dispatchEvent(new KeyboardEvent("keydown", { code: "Enter", key: "Enter" })));
     await p.keyboard.press("Enter"); await tick(4); await p.waitForTimeout(1200);
     runs0 = (await saved()).runs ?? 0;
-    await p.dispatchEvent('#scr-main [data-go="encore"]', "click"); await tick(4); await p.waitForTimeout(1200);
-    if (!(await p.$("#scr-encore.on, [data-act=\"encorego\"]:visible"))) return "no se ve la pantalla ENCORE";
-    if (!(await ev(() => document.activeElement?.dataset?.act === "encorego"))) return "Largar no tiene el foco al entrar a ENCORE";
+    if (runs0 !== 0) return "el e2e espera un guardado limpio (runs " + runs0 + ")";
+    const vis = (sel) => ev((s) => { const e = document.querySelector(s); return !!e && getComputedStyle(e).display !== "none"; }, sel);
+    if (await vis("#dailyBtn") || await vis("#weeklyBtn") || await vis('#scr-main [data-go="modes"]')) return "desafíos o Más modos visibles antes de la primera expedición";
+    await p.dispatchEvent('#scr-main [data-go="encore"]', "click"); await tick(4);
+    if (!(await p.waitForSelector("#ctlg:not(.hidden)", { timeout: 3000 }).catch(() => null))) return "Jugar no abrió la guía mínima directo";
+    if (await p.$("#scr-encore.on")) return "apareció la pantalla ENCORE en la primera vez";
+    toques = 3; palabras = await ev(() => document.getElementById("ctlg").innerText.split(/\s+/).filter(Boolean).length);
   });
-  await step("largar-aviso-primera-partida", async () => {
-    await p.dispatchEvent('#scr-encore [data-act="encorego"]', "click");
-    if (!(await p.waitForSelector("#ctlg:not(.hidden)", { timeout: 3000 }).catch(() => null))) return "no apareció la guía de controles de la primera partida";
+  await step("largar-primera-expedicion", async () => {
     await p.dispatchEvent('#ctlg [data-act="askyes"]', "click"); // Entendido: sigue la partida
     if (!(await p.waitForFunction(() => JSON.parse(localStorage.getItem("rcfight2") ?? "{}").controlesVistos === true, null, { timeout: 3000 }).catch(() => null))) return "controlesVistos no quedó en el guardado"; // persist() espera 300 ms
     await p.waitForFunction(() => window.__enc.info(), null, { timeout: 60000 });
     await ev(() => window.__god());
     await tick(90);
-    const shown = await p.waitForFunction(() => document.querySelector("#dirSub:not(.hidden) .dtxt")?.textContent, null, { timeout: 8000 }).catch(() => null);
-    if (!shown) return "no apareció el aviso del Director";
-    if (!(await saved()).tips?.includes("start")) await p.waitForTimeout(800);
-    if (!(await saved()).tips?.includes("start")) return "tips.start no quedó en el guardado";
+    if ((await saved()).tips?.includes("start")) return "el aviso largo de inicio no debe mostrarse";
   });
   await step("bot-hasta-teleportador", async () => {
     await ev(() => window.__bot(8)); await cards();
@@ -75,10 +74,8 @@ for (const vp of vps) {
     }
     return false;
   };
-  await step("oferta-de-pacto", async () => {
-    if ((await info()).phase !== "pact" && !(await drive("pact", 60))) return "no llegó oferta de pacto";
-    await ev(() => window.__enc.pick(0)); await tick(5); seen.pact = true;
-    if ((await info()).pacts.length < 1) return "pacto no aceptado";
+  await step("primera-expedicion-sin-pactos", async () => {
+    if ((await info()).phase !== "route") return "se esperaba la ruta, fase " + (await info()).phase;
   });
   await step("ruta", async () => {
     if ((await info()).phase !== "route" && !(await drive("route", 60))) return "no llegó la ruta";
@@ -98,6 +95,27 @@ for (const vp of vps) {
     const runs = (await saved()).runs ?? 0;
     if (runs !== runs0 + 1) return `save.encore.runs ${runs0} -> ${runs} (se esperaba +1)`;
   });
+  // guardado de jugador con una expedición: desafíos visibles, ENCORE con su pantalla, y el primer pacto de la vida espera sin reloj
+  await step("segunda-expedicion-pacto-sin-reloj", async () => {
+    p.removeAllListeners("framenavigated"); await p.reload({ waitUntil: "domcontentloaded" });
+    await p.waitForFunction(() => typeof window.__sim === "function", null, { timeout: 150000, polling: 50 });
+    await ev(() => { const e = window.__scene.getEngine(); e.stopRenderLoop(); e.getDeltaTime = () => 1000 / 60; });
+    await ev(() => document.querySelector("#scr-title.on") && document.dispatchEvent(new KeyboardEvent("keydown", { code: "Enter", key: "Enter" })));
+    await p.keyboard.press("Enter"); await tick(4); await p.waitForTimeout(1200);
+    if (!(await ev(() => getComputedStyle(document.getElementById("dailyBtn")).display !== "none"))) return "el desafío diario sigue oculto con una expedición terminada";
+    await p.dispatchEvent('#scr-main [data-go="encore"]', "click"); await tick(4); await p.waitForTimeout(600);
+    if (!(await p.$("#scr-encore.on"))) return "no se ve la pantalla ENCORE";
+    await p.dispatchEvent('#scr-encore [data-act="encorego"]', "click");
+    await p.waitForFunction(() => window.__enc.info(), null, { timeout: 60000 });
+    await ev(() => window.__god());
+    if (!(await drive("pact", 60))) return "no llegó oferta de pacto en la segunda expedición";
+    const t0 = (await info()).timer; await tick(60);
+    if ((await info()).phase !== "pact" || (await info()).timer < t0) return "el primer pacto tiene reloj";
+    await ev(() => window.__enc.pick(0)); await tick(5);
+    if ((await info()).pacts.length < 1) return "pacto no aceptado";
+    seen.pact = true;
+  });
+  rows.push({ vp, paso: "(info) toques y palabras antes de manejar", ok: toques + " toques", s: "", nota: palabras + " palabras en la guía (más la portada y el menú)" });
   rows.push({ vp, paso: "(info) votación vista", ok: seen.vote ? "sí" : "no", s: "", nota: "" });
   await p.ctx.close();
   // --- extras: zona desvan, modo foto, Modo Tranquilo (pestaña propia, run en el desvan) ---

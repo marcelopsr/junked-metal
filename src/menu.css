@@ -549,6 +549,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 @media (orientation: portrait) and (max-width: 1100px) { #scr-main .mainGrid button.more.wide { padding-left: 52px; } } /* kit.css da 20 px de relleno a los botones en celular vertical */
 #scr-main .mainGrid button.more.wide::after { content: "\203A"; margin-left: auto; font-size: 24px; line-height: .6; color: var(--jm-amarillo2); }
 #scr-main .mainGrid button.more.wide:focus::after { color: var(--jm-fondo); }
+#scr-main .mainGrid button.hidden { display: none !important; } /* desafíos y Más modos ocultos hasta la primera expedición terminada */
 /* Enlaces secundarios: placas planas y chicas, borde sólido (el punteado se leía como deshabilitado) */
 #scr-main .mainGrid .mm-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 2px; }
 #scr-main .mainGrid .mm-links button.lnk { flex: 1 1 auto; min-height: 40px; padding: 8px 10px; font-size: 12px; letter-spacing: .1em; text-align: center; }
