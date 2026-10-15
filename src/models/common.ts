@@ -1,7 +1,6 @@
 import * as B from "@babylonjs/core";
 import earcut from "earcut";
 import { M, pbr, shadows } from "../render";
-import { foldWheel } from "../folded_slice";
 
 // Modelos procedurales. Las piezas se fusionan en una sola malla (con multi-material)
 // y los enemigos se dibujan como instancias: cientos en pantalla con pocos draw calls.
@@ -188,6 +187,7 @@ const mudTex = () => canvasTex("mud", 256, (g, n) => { // goma negra con barro s
 });
 const MINI_RUBBER = () => pbr("minirubber2", { color: "#ffffff", rough: 0.9, tex: mudTex() });
 export function wheel(d: number, w: number, rim: string, style = "") {
+  if (style === "fold") style = "mini"; // Folded retirado: la rueda de juguete es la mini (tacos a d/2)
   const around = (n: number, f: (a: number) => B.Mesh) => Array.from({ length: n }, (_, k) => f((k * Math.PI * 2) / n));
   if (style === "mini") w *= 1.15; // ruedas RC de las láminas: más anchas (el diámetro no crece: la física apoya la rueda en d/2 y los tacos no pueden pasar de ahí)
   if (style === "mini") { // ref17: goma de bloques en dos hileras alternadas (silueta redonda), aro fino de color, llanta negra de 6 rayos, maza metálica
@@ -214,7 +214,6 @@ export function wheel(d: number, w: number, rim: string, style = "") {
       cyl(d * 0.2, d * 0.2, w * 1.16, M.metal("#9aa0a8"), [0, 0, 0], [0, 0, Math.PI / 2], 10), // maza
     ]);
   }
-  if (style === "fold") return merge("wheel", foldWheel(d, w, rim)); // vertical slice Folded (?folded2)
   const lisa = style === "lisa", W = lisa ? w * 1.25 : w;
   return merge("wheel", [
     cyl(d * (style === "todoterreno" ? 0.83 : style === "oruga" ? 0.91 : 1), d * (style === "todoterreno" ? 0.83 : style === "oruga" ? 0.91 : 1), W, M.rubber(), [0, 0, 0], [0, 0, Math.PI / 2], 16), // con tacos el núcleo se achica: las puntas quedan a d/2

@@ -357,14 +357,6 @@ export function buggyHull(paint: B.Material, lamp: string, q: Genome = genome("b
   }
   return done(2);
 }
-/** Rueda Folded (eje en x): banda con tacos, llanta de acero pintada con el color de llanta del garaje, maza con tornillos. */
-export function foldWheel(d: number, w: number, rim: string) {
-  const { G, done } = kit();
-  G.wheel([0, 0, 0], undefined, d, w);
-  G.cyl(d * 0.5, w * 1.06, FOLD.painted(rim, 0.6, 92), [0, 0, 0], [0, 0, Math.PI / 2], 8);
-  return done(3);
-}
-
 // ---------- Escenario: tramo de cerca de chapa acanalada (2 m de ancho, 7 de alto, como el tablón que reemplaza) ----------
 export function fencePanel() {
   // ~110 triángulos: la cerca rodea el patio con cientos de instancias (con remaches de verdad eran 460k triángulos)
@@ -401,25 +393,28 @@ const BOSS_S = { rey: 3.5, tarantula: 3, cortadora: 1.22, aspiradora: 1.22, cort
 /** Escarabajo rey: élitros dorados de chapa con costura soldada, faldón remachado, cabeza con corona de placas y cuerno. Huesos: 0 cuerpo, 1 cabeza. */
 export function reyBody() {
   const { G, done, strut, bone, add } = kit();
-  const gold = FOLD.painted("#a8702a", 0.4, 131), gold2 = FOLD.painted("#8a5420", 0.4, 133), dark = FOLD.painted("#3a2a1c", 0.8, 132), steel = FOLD.bare(), bronze = FOLD.painted(BRONZE, 0.6, 134), eye = FOLD.emissive("#ff7a1a"), red = FOLD.painted("#b02418", 0.7, 135), cream = FOLD.painted(CREAM, 0.85, 136);
+  // Juguete: plástico pintado con barniz (coat), metal pintado rayado (rough alto) y acero gastado; los pares de élitros alternan tono por el desgaste
+  const toyP = (c: string, rough = 0.38, metal = 0) => pbr("rey" + c + rough + metal, { color: c, rough, metal, coat: 0.4 });
+  const gold = toyP("#c8872e"), gold2 = toyP("#a86a26"), dark = toyP("#33261b", 0.55), steel = toyP("#9aa0a8", 0.45, 0.8), bronze = toyP(BRONZE, 0.4, 0.5), red = toyP("#c8281a", 0.3), cream = toyP(CREAM, 0.5);
+  const eye = pbr("reyOjo", { color: "#a85010", emissive: "#ff7a1a", rough: 0.3 }); eye.fogEnabled = false; eye.emissiveIntensity = 2; // mismo ojo ámbar que los aliens
   along(G, 1.2, 1.5, 2.5, dark, [0, 0.55, -0.25], 6); // vientre
   for (const s of [-1, 1]) { // élitros: dos cúpulas de chapa con nervios, remaches en el borde y parches crema
     ell(add, dark, [s * 0.5, 0.78, -0.25], [1.04, 1.44, 2.6], 10, 0.5); // base oscura bajo las placas
-    elytra(G, add, s < 0 ? [gold, FOLD.painted("#b88034", 0.4, 138)] : [gold2, FOLD.painted("#9a6228", 0.4, 139)], steel, [s * 0.5, 0.82, -0.25], [0.54, 0.75, 1.35], 5); // placas en teja + nervios
-    for (const z of [-1.05, -0.55, -0.05, 0.45]) { const f = (z + 0.25) / 1.35, k = Math.sqrt(1 - f * f); rib(G, steel, z, 0.52 * k, 0.75 * k, [s * 0.5, 0.82], 0.035); G.rivets([s * (0.5 + 0.52 * k), 0.84, z], [s * (0.5 + 0.52 * k), 0.84, z], 1, [s, 0.3, 0]); }
+    elytra(G, add, s < 0 ? [gold, toyP("#d9a04a", 0.5)] : [gold2, toyP("#8c5a22", 0.55)], steel, [s * 0.5, 0.82, -0.25], [0.54, 0.75, 1.35], 5); // placas en teja + nervios
+    for (const z of [-1.05, -0.55, -0.05, 0.45]) { const f = (z + 0.25) / 1.35, k = Math.sqrt(1 - f * f); rib(G, steel, z, 0.52 * k, 0.75 * k, [s * 0.5, 0.82], 0.035); G.sph(0.03, steel, [s * (0.5 + 0.52 * k), 0.84, z]); } // remache de juguete: esfera de acero (los remaches de kit() llevan celda de atlas y no se funden con materiales pbr)
     G.box(0.5, 0.02, 0.6, cream, [s * 0.62, 1.38, -0.5], [0, 0, s * 0.5]);
   }
   G.bend([0, 1.2, -1.5], [0, 1.58, -0.1], 0.07, steel); // costura soldada
   G.bend([0, 1.58, -0.1], [0, 1.4, 0.95], 0.07, steel);
   ell(add, gold2, [0, 0.95, 0.8], [1.5, 0.95, 1.0], 10, 0.5); // pronoto
-  G.rivets([-0.5, 1.35, 0.75], [0.5, 1.35, 0.75], 5, [0, 1, 0]);
+  for (let i = 0; i < 5; i++) G.sph(0.03, steel, [-0.5 + i * 0.25, 1.4, 0.75]);
   bone(1);
   ell(add, dark, [0, 0.56, 1.2], [1.06, 0.7, 0.86], 10); // cabeza redondeada
   G.box(0.86, 0.1, 0.6, bronze, [0, 0.9, 1.18]); // visera
   G.sph(0.16, steel, [0, 1.12, 1.05]); G.box(1.0, 0.12, 0.6, bronze, [0, 1.0, 1.1]); // aro de la corona
   for (let i = 0; i < 5; i++) G.box(0.14, 0.3 + (i === 2 ? 0.14 : 0), 0.05, bronze, [-0.36 + i * 0.18, 1.2 + (i === 2 ? 0.07 : 0), 1.08], [0.15, 0, 0]); // puntas de la corona
   for (const i of [0, 2, 4]) G.sph(0.14, red, [-0.36 + i * 0.18, 1.0 + (i === 2 ? 0.28 : 0.16) + 0.1, 1.1]); // gemas
-  for (const s of [-1, 1]) { G.sph(0.3, FOLD.painted("#0c0a0a", 0.2, 137), [s * 0.34, 0.66, 1.55]); G.sph(0.11, eye, [s * 0.4, 0.69, 1.76]); G.tube([[s * 0.28, 0.36, 1.5], [s * 0.52, 0.28, 1.95], [s * 0.2, 0.28, 2.3]], 0.1, bronze); } // mandíbulas curvas
+  for (const s of [-1, 1]) { G.sph(0.3, toyP("#0c0a0a", 0.15), [s * 0.34, 0.66, 1.55]); G.sph(0.11, eye, [s * 0.4, 0.69, 1.76]); G.tube([[s * 0.28, 0.36, 1.5], [s * 0.52, 0.28, 1.95], [s * 0.2, 0.28, 2.3]], 0.1, bronze); } // mandíbulas curvas
   G.tube([[0, 0.7, 1.6], [0, 0.82, 2.0], [0, 1.05, 2.2], [0, 1.3, 2.08]], 0.07, dark); // cuerno curvo corto, oscuro
   bone(0);
   return done(5, BOSS_S.rey);
@@ -769,7 +764,7 @@ export const PETS: Record<string, { build: () => B.Mesh[]; bones: number; clips:
 // ---------- Resto de los autos (CARS y Carrera): misma gramática que el buggy ----------
 // Piso oscuro, carrocería de chapa con la pintura del jugador y dobleces en las aristas, número a los costados, ópticas emisivas,
 // paragolpes de caño y una pieza de identidad. Proporciones del procedural viejo de carModel (mismo origen: altura del eje).
-// Las ruedas son foldWheel en las anclas de siempre (carModel), que giran y viran como antes.
+// Las ruedas son la mini (models/common.ts) en las anclas de siempre (carModel), que giran y viran como antes.
 export function carHull(kind: string, paint: B.Material, lamp: string) {
   if (kind === "buggy") return buggyHull(paint, lamp);
   const { G, done, strut } = kit(), q = genome(kind);
