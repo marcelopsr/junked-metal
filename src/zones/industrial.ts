@@ -41,6 +41,23 @@ export function industrialBuild() {
   lane(0, 0, L - 10, 10); lane(0, 0, 10, L - 10); // cruz que pasa por la salida
   lane(0, -80, L - 50, 9); lane(80, 0, 9, L - 50); // anillo
   for (let i = 0; i < 26; i++) parts.push(box(2 + r() * 5, 0.09, 1.5 + r() * 4, oil, [(r() - 0.5) * L * 0.9, 0.06, (r() - 0.5) * L * 0.9])); // manchas de aceite
+  // Contraste de composición: manchas de aceite grandes casi negras con brillo, y pintura blanca/amarilla clara sobre el hormigón cerca de la salida.
+  const wht = M.matte("#F2F0E6"), o2 = lcg(613);
+  { // una textura compartida: núcleo casi negro de forma irregular (lóbulos) que se funde en el borde; 14 decals de 3-9 m
+    const N = 256, t = new B.DynamicTexture("manchaTex", N, scene, true), c = t.getContext() as unknown as CanvasRenderingContext2D, q = lcg(5);
+    c.clearRect(0, 0, N, N);
+    for (let i = 0; i < 11; i++) { const bx = N / 2 + (q() - 0.5) * 110, by = N / 2 + (q() - 0.5) * 80, rr = 30 + q() * 40, g = c.createRadialGradient(bx, by, 0, bx, by, rr); g.addColorStop(0, "rgba(6,7,9,0.97)"); g.addColorStop(0.55, "rgba(8,9,12,0.85)"); g.addColorStop(1, "rgba(8,9,12,0)"); c.fillStyle = g; c.fillRect(bx - rr, by - rr, rr * 2, rr * 2); }
+    t.update(); t.hasAlpha = true;
+    const wet = pbr("indMancha" + scene.uniqueId, { color: "#ffffff", rough: 0.15, metal: 0.45, tex: t }) as B.PBRMaterial;
+    if (wet.albedoTexture !== t) t.dispose(); // material cacheado: la textura nueva sobra
+    wet.useAlphaFromAlbedoTexture = true; wet.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+    for (let i = 0; i < 14; i++) { const a = o2() * 6.283, d = 12 + o2() * 26, w = 3 + o2() * 6; decal("mancha" + i, w, w * (0.6 + o2() * 0.4), Math.cos(a) * d, Math.sin(a) * d, wet, 0.05 + i * 0.001).isPickable = false; }
+  }
+  for (const sg of [-1, 1]) { // cebra de peatones a ambos lados de la salida + líneas de borde blancas
+    for (let k = -3; k <= 3; k++) { parts.push(box(0.9, 0.1, 6, wht, [k * 1.5, 0.08, sg * 15])); parts.push(box(6, 0.1, 0.9, wht, [sg * 15, 0.08, k * 1.5])); }
+    parts.push(box(L - 20, 0.1, 0.35, wht, [0, 0.08, sg * 5.6]), box(0.35, 0.1, L - 20, wht, [sg * 5.6, 0.08, 0]));
+    for (let k = 0; k < 5; k++) parts.push(box(0.4, 0.1, 5, yel, [sg * (12 + k * 3), 0.08, -9]), box(5, 0.1, 0.4, yel, [-9, 0.08, sg * (12 + k * 3)])); // cuñas amarillas de estacionamiento
+  }
   const strip = merge("industrialLanes", parts); strip.isPickable = false; strip.receiveShadows = true;
 
   // Borde: cordón amarillo/negro + hilera de contenedores afuera (reemplaza la pared gris)
@@ -205,6 +222,14 @@ export function industrialLayout() {
       fput(3.2, 2.6, 1.2, x, z, ps);
     }
     n3++;
+  }
+  // Pilas altas de contenedores (3 pisos) cerca de la salida: sus sombras largas caen sobre el carril. Pasillo libre >= 14 u; colisión por pila.
+  for (const [x, z, ry] of [[-17, -13, 0], [18, -15, 0], [-19, 14, 0], [16, 17, 0]] as V3[]) {
+    if (!clear(x, z, 6, 10)) continue;
+    const pr = container((a, y, b) => [x + a, y, z + b], ry, 3);
+    parts.push(...pr.parts);
+    stat(box(pr.w, pr.h, pr.d, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, pr.h / 2, z]).isVisible = false;
+    bare.push({ x, z, r: 6 });
   }
   // Pórtico de reticulado negro/amarillo con 4 focos emisivos (columna garaje/industrial de ref273). Pilares a x=±7,5 (hueco libre 13 u), travesaño a 11-13,6 u. Solo los pilares chocan.
   { const glowM = M.glow("#fff1b0"), at = (a: number, y: number, b = 0): V3 => [a, y, GZ + b];
