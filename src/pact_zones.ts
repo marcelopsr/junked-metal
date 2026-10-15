@@ -76,7 +76,7 @@ function tpl(id: string) {
   return template("zona_" + id, () => {
     const mk = (key: string, color: string, emissive: string, alpha = 1) => { const m = pbr(key, { color, rough: 1, emissive, alpha }); m.fogEnabled = false; return m; };
     if (RISK.has(id)) {
-      const fill = { pegamento: ["#c98a2e", "#6a4410", 0.4], cables: ["#ff2a1a", "#a01008", 0.18], trampilla: ["#3a2618", "#1a0f08", 1] }[id] as [string, string, number];
+      const fill = { pegamento: ["#6b3f12", "#2e1a06", 0.55], cables: ["#ff2a1a", "#a01008", 0.18], trampilla: ["#3a2618", "#1a0f08", 1] }[id] as [string, string, number];
       const d = B.MeshBuilder.CreateDisc("p", { radius: 1, tessellation: 28 }, scene);
       d.rotation.x = Math.PI / 2; d.material = mk("zona_" + id, ...fill);
       const band = tor(2, 0.24, hazardMat(), [0, 0.03, 0], undefined, 28);
