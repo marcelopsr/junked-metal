@@ -2,7 +2,7 @@
 // sin las banderas ANGLE/Metal cae a SwiftShader (CPU), que es ~10x más lento y no mide nada útil. Las tres "disable-*" evitan que Chrome
 // frene timers y render por creerse en segundo plano (ruido en mediciones). Server: pm2 `rc-test` (:5174, sin recarga) o, en un worktree, `rc-test-<carpeta>` (5200-5299); RC_URL lo cambia; RC_Q agrega parámetros a todas las URL.
 import { chromium } from "playwright";
-import { closeSync, openSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { closeSync, openSync, readdirSync, readFileSync, statSync, unlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -43,21 +43,47 @@ export const lockFile = (name) => join(tmpdir(), name + ".lock");
 export const SERVER_LOCK = "rc-test-" + (new URL(BASE).port || 80); // un candado por servidor
 export const PERF_LOCK = "rc-perf"; // global: dos perf a la vez ensucian ms/cuadro aunque usen servidores distintos
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; } };
-export const lockInfo = (name) => { try { const t = readFileSync(lockFile(name), "utf8"); return alive(parseInt(t)) ? t : null; } catch { return null; } }; // quién lo tiene (null si libre o PID muerto)
+// Latido: cada candado propio se "toca" cada HB ms. Sin latido > STALE, o más viejo que TTL, el dueño se da por colgado: el que espera lo mata y libera.
+const HB = 10e3, STALE = 45e3, TTL = Number(process.env.RC_LOCK_TTL ?? 20) * 60e3; // TTL: tope de vida de un lector/exclusivo (min)
+/** Estado de un archivo de candado: {pid, text, edad (s), estado: vivo|muerto|sin latido|vencido}. Los candados sin "t=" (versión vieja, sin latido) solo vencen por TTL de mtime. */
+export const lockState = (path) => {
+  try {
+    const text = readFileSync(path, "utf8"), pid = parseInt(text), m = /^t=(\d+)$/m.exec(text), now = Date.now(), mt = statSync(path).mtimeMs;
+    const edad = Math.round((now - (m ? +m[1] : mt)) / 1000);
+    const estado = !alive(pid) ? "muerto" : (m ? now - +m[1] > TTL : now - mt > TTL) ? "vencido" : m && now - mt > STALE ? "sin latido" : "vivo";
+    return { pid, text: text.replace(/^t=\d+$/m, "").trim(), edad, estado };
+  } catch { return null; }
+};
+/** Si el candado no está vivo lo libera (mata al dueño si seguía en pie). Devuelve el estado si sigue vivo, null si estaba libre o se liberó. */
+const reap = (path) => {
+  const st = lockState(path); if (!st) return null;
+  if (st.estado === "vivo" || st.pid === process.pid) return st;
+  if (st.estado !== "muerto") { console.error(`candado ${path.split("/").pop()}: PID ${st.pid} ${st.estado} (${st.edad} s), se mata y se libera`); try { process.kill(st.pid, "SIGKILL"); } catch {} }
+  try { unlinkSync(path); } catch {}
+  return null;
+};
+export const lockInfo = (name) => { const st = reap(lockFile(name)); return st ? st.text : null; }; // quién lo tiene (null si libre, muerto o colgado)
 const held = new Set(); // nombres de archivo propios (exclusivos y de lector)
 const release = () => { for (const f of held) try { if (parseInt(readFileSync(f, "utf8")) === process.pid) unlinkSync(f); } catch {} };
-const WAIT_MAX = 15 * 60; // s: tope de espera, por si quien tiene el candado quedó colgado
+const WAIT_MAX = Number(process.env.RC_WAIT_MAX ?? 15) * 60; // s: tope de espera
+const EXCL_MAX = Number(process.env.RC_EXCL_WAIT ?? 3) * 60; // s: cuánto espera un exclusivo a que terminen los lectores
 const readerFile = (name, pid = process.pid) => join(tmpdir(), `${name}.r.${pid}.lock`);
-/** Lectores vivos de `name` (borra los de PID muerto). */
+/** Lectores vivos de `name` (libera los muertos/colgados). Con {todos:true} devuelve también su estado. */
 export const readers = (name) => readdirSync(tmpdir()).filter((f) => f.startsWith(name + ".r.")).flatMap((f) => {
   const pid = parseInt(f.slice(name.length + 3)); if (pid === process.pid) return [];
-  if (alive(pid)) { try { return [readFileSync(join(tmpdir(), f), "utf8")]; } catch { return []; } }
-  try { unlinkSync(join(tmpdir(), f)); } catch {} return [];
+  const st = reap(join(tmpdir(), f)); return st ? [st.text + `\n(${st.edad} s)`] : [];
 });
-const stamp = () => `${process.pid}\n${process.argv.slice(1).join(" ")}\n${process.cwd()}`;
-async function wait(name, t, quien) {
-  if (t === 0) console.error(`${name} ocupado, esperando (máx ${WAIT_MAX / 60} min):\n  ${quien.replace(/\n/g, "\n  ")}`);
-  if (t >= WAIT_MAX) throw new Error(`${name} sigue ocupado tras ${WAIT_MAX / 60} min:\n${quien}`);
+const stamp = () => `${process.pid}\n${process.argv.slice(1).join(" ")}\n${process.cwd()}\nt=${Date.now()}`;
+let hb;
+const startHeartbeat = () => {
+  if (hb) return;
+  hb = setInterval(() => { const n = new Date(); for (const f of held) try { utimesSync(f, n, n); } catch {} }, HB); hb.unref();
+  // si el propio proceso se cuelga en un paso, se corta solo al vencer el TTL
+  setTimeout(() => { console.error(`candado vencido (RC_LOCK_TTL=${TTL / 60e3} min): se aborta este proceso`); process.exit(124); }, TTL).unref();
+};
+async function wait(name, t, quien, max = WAIT_MAX) {
+  if (t === 0) console.error(`${name} ocupado, esperando (máx ${max / 60} min):\n  ${quien.replace(/\n/g, "\n  ")}`);
+  if (t >= max) throw new Error(`${name} sigue ocupado tras ${max / 60} min:\n${quien}`);
   await new Promise((r) => setTimeout(r, 1000));
 }
 
@@ -68,6 +94,7 @@ async function wait(name, t, quien) {
 export async function lock(name = SERVER_LOCK, { shared = false } = {}) {
   const f = lockFile(name), mine = shared ? readerFile(name) : f;
   if (held.has(mine)) return;
+  startHeartbeat();
   if (!held.size) { process.on("exit", release); for (const sg of ["SIGINT", "SIGTERM"]) process.on(sg, () => process.exit(130)); }
   for (let t = 0; ; t++) {
     if (shared) {
@@ -84,8 +111,20 @@ export async function lock(name = SERVER_LOCK, { shared = false } = {}) {
       await wait(name, t, quien);
     }
   }
-  for (let t = 0, r; (r = readers(name)).length; t++) await wait(name, t, `${r.length} lector(es):\n` + r.join("\n---\n"));
+  // El exclusivo frena lectores nuevos mientras espera: tope corto y, si se rinde, suelta la marca (no deja a todos bloqueados por un lector colgado).
+  try { for (let t = 0, r; (r = readers(name)).length; t++) await wait(name, t, `${r.length} lector(es):\n` + r.join("\n---\n"), EXCL_MAX); }
+  catch (e) { held.delete(f); try { unlinkSync(f); } catch {} throw e; }
 }
+
+/** Sello de test:restart: instante en que el servidor quedó sirviendo. Si algo de src/ es más nuevo, el servidor (sin recarga) tiene código viejo. */
+export const servedFile = (port = new URL(BASE).port || 80) => join(tmpdir(), `rc-test-${port}.served`);
+export const newestSrc = () => { let best = { t: 0, f: "" }; for (const d of ["src", "index.html", "public"]) { try { for (const f of readdirSync(d, { recursive: true })) { const p = d === "index.html" ? d : join(d, f); const st = statSync(p); if (st.mtimeMs > best.t && st.isFile()) best = { t: st.mtimeMs, f: p }; } } catch {} } return best; };
+const checkFresh = () => {
+  if (process.env.RC_URL) return; // servidor ajeno: no se sabe qué carpeta sirve
+  let at; try { at = +readFileSync(servedFile(), "utf8"); } catch { console.error("AVISO: sin sello de test:restart; no se sabe si el servidor sirve el código actual."); return; }
+  const n = newestSrc(), hh = (t) => new Date(t).toLocaleTimeString();
+  if (n.t > at) console.error(`AVISO: SERVIDOR DESACTUALIZADO. ${n.f} cambió a las ${hh(n.t)} y el servidor se reinició a las ${hh(at)}. Si ese cambio es tuyo: npm run test:restart.`);
+};
 
 /** Un solo navegador para toda la corrida. Espera hasta ~30 s a que rc-test responda (no levanta servidores propios: ver CLAUDE.md). */
 export async function launch({ perf = false, args = [] } = {}) {
@@ -101,6 +140,7 @@ export async function launch({ perf = false, args = [] } = {}) {
   if (!ok) throw new Error(`\nNo responde ${BASE} tras 24 s. Arrancarlo con: npm run test:restart`);
   // Primero el global, después el del servidor (mismo orden en todos: sin espera circular). perf: exclusivo en ambos (mide sin vecinos);
   // el resto comparte, y solo frena mientras corre un perf o un test:restart.
+  checkFresh();
   await lock(PERF_LOCK, { shared: !perf });
   await lock(SERVER_LOCK, { shared: !perf });
   return chromium.launch({ headless: true, args: [...ARGS, ...args] });

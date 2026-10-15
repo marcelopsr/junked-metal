@@ -64,7 +64,7 @@ function novedades() {
 const hayE2e = !!JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).scripts?.e2e;
 const pasos = [
   ["git status", () => sh("git", ["status", "--short", "--branch"], { soft: true })],
-  ["test juego", () => sh("npm", ["test"])],
+  ["test juego", () => sh("npm", ["run", "test:todo"])],
   ["test server", () => sh("npm", ["run", "test:server"])],
   ["test cf-login", () => sh("npm", ["test"], { cwd: join(ROOT, "server/cf-login") })],
   ["build", () => sh("npm", ["run", "build"], { env: buildEnv })],

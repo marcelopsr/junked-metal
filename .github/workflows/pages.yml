@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
-      - run: npm test # si falla una prueba no se publica
+      - run: npm run test:todo # si falla una prueba no se publica
       - run: npm run build # incluye tsc --noEmit
         env: # R6c: servidor de red propio (docs/ENCORE/R0/R6_RED.md §8), variable de repo NO secreta; vacía = PeerJS Cloud
           VITE_NET_HOST: ${{ vars.NET_HOST }}

@@ -5,6 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
+    "test:lento": "RC_LENTO=1 vitest run lento",
+    "test:todo": "RC_LENTO=1 vitest run",
+    "test:unlock": "node scripts/test-restart.mjs unlock",
     "test:server": "node --test 'server/test/*.test.js'",
     "test:all": "npm test & a=$! ; npm run test:server & b=$! ; wait $a && wait $b",
     "dev": "vite",
