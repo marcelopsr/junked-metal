@@ -4,6 +4,7 @@
 import * as B from "@babylonjs/core";
 import { BAL } from "./balance";
 import { box, cyl, hazardMat, scene, template, tor } from "./models";
+import { MOON, orient } from "./moon";
 import { pbr, shadows } from "./render";
 
 const R = BAL.ritmo;
@@ -75,18 +76,19 @@ function tpl(id: string) {
   return template("zona_" + id, () => {
     const mk = (key: string, color: string, emissive: string, alpha = 1) => { const m = pbr(key, { color, rough: 1, emissive, alpha }); m.fogEnabled = false; return m; };
     if (RISK.has(id)) {
-      const fill = { pegamento: ["#c98a2e", "#6a4410", 0.22], cables: ["#ff2a1a", "#a01008", 0.18], trampilla: ["#3a2618", "#1a0f08", 1] }[id] as [string, string, number];
+      const fill = { pegamento: ["#c98a2e", "#6a4410", 0.4], cables: ["#ff2a1a", "#a01008", 0.18], trampilla: ["#3a2618", "#1a0f08", 1] }[id] as [string, string, number];
       const d = B.MeshBuilder.CreateDisc("p", { radius: 1, tessellation: 28 }, scene);
       d.rotation.x = Math.PI / 2; d.material = mk("zona_" + id, ...fill);
-      const band = tor(2, 0.16, hazardMat(), [0, 0.03, 0], undefined, 28);
+      const band = tor(2, 0.24, hazardMat(), [0, 0.03, 0], undefined, 28);
       band.scaling.y = 0.6; band.bakeCurrentTransformIntoVertices(); // banda plana en el piso, como el telegráfico
       return [d, band];
     }
     // Alfombra cuadrada de esquinas redondeadas (lado 2, radio de esquina 0,25): dos cajas cruzadas + cuatro cilindros
-    const col = { camerino: ["#f1d49c", "#7a5f30"], iman: ["#2f7f86", "#123c40"], foco: ["#f1d49c", "#8a7040"] }[id] as [string, string];
+    const col = { camerino: ["#d9a86a", "#6a4a24"], iman: ["#2f7f86", "#123c40"], foco: ["#e8b53a", "#7a5a10"] }[id] as [string, string];
     const m = mk("zona_" + id, col[0], col[1]);
     const t = 0.05, c = 0.25, e = 1 - c;
     const parts = [box(2, t, 2 - 2 * c, m, [0, t / 2, 0]), box(2 - 2 * c, t, 2, m, [0, t / 2, 0]), ...[[-e, -e], [e, -e], [-e, e], [e, e]].map(([x, z]) => cyl(2 * c, 2 * c, t, m, [x, t / 2, z], undefined, 8))];
+    parts.push(tor(1.7, 0.05, mk("zona_borde_bien", "#7be08a", "#2f8a40"), [0, t, 0], undefined, 28)); // aro verde fino: "bien", distinto del rayado de riesgo y del rojo de los avisos de jefe
     if (id === "camerino") { const cinta = mk("zona_camerino_cinta", "#d7263d", "#5a0f18"); parts.push(box(0.2, t + 0.01, 0.8, cinta, [0, t / 2, 0]), box(0.8, t + 0.01, 0.2, cinta, [0, t / 2, 0])); } // cruz de cinta
     return parts;
   });
@@ -95,7 +97,8 @@ function show(s: Slot) {
   const m = (s.m ??= (() => { const t = tpl(s.d.id); shadows.removeShadowCaster(t); const i = t.createInstance("zona_" + s.d.id); i.isPickable = false; return i; })());
   m.setEnabled(true);
   const k = s.st === "warn" ? 0.2 + 0.8 * (1 - s.t / R.zona_aviso_s) : 1; // el aro crece durante el aviso
-  m.position.set(s.x, (ctx?.floorY?.(s.x, s.z) ?? 0) + 0.04, s.z); m.scaling.set(s.d.radio * k, 1, s.d.radio * k);
+  m.position.set(s.x, (ctx?.floorY?.(s.x, s.z) ?? 0) + 0.12 + (MOON.on ? (s.d.radio * s.d.radio) / (2 * MOON.R) : 0), s.z); // luna: patio: el relieve fino del suelo se comía la alfombra con 0,04; luna: además el piso se curva (flecha r²/2R) m.scaling.set(s.d.radio * k, 1, s.d.radio * k);
+  if (MOON.on) { m.rotation.set(0, 0, 0); orient(m); } // luna: la normal de la esfera; sin esto el disco queda inclinado y semienterrado
 }
 
 // ---------- Ciclo de vida ----------

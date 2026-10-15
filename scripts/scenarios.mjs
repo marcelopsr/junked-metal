@@ -206,6 +206,36 @@ export const sessions = [
       await p.waitForTimeout(150);
     } },
   ] },
+  // Zonas de pacto (src/pact_zones.ts): una por tipo, en el patio (escenario 0) y en la luna (escenario 1). Se fuerza el pacto en erun.pacts,
+  // se acerca el anillo de aparición a 4 m del auto (BAL vivo, mismo módulo que la app en dev) y se saltan al escenario; 260 cuadros = aviso de 2 s cumplido.
+  { id: "zonas", query: "?mute&encore&seed=58", shots: ["maquillaje:camerino", "cobro:iman", "sorpresa:foco", "blindaje:pegamento", "patrocinio:cables", "nocturno:trampilla"].flatMap((pz) => [["patio", 0], ["luna", 1]].map(([lugar, stage]) => ({ id: `${pz.split(":")[1]}-${lugar}`, perf: false, act: async (p) => {
+    await wait(p, () => window.__enc?.info());
+    await wait(p, () => window.__info?.().state === "play");
+    // Candidatos (vuelta, escenario): el hash de la zona decide el rumbo, así que se prueba hasta que caiga delante del auto (cámara de juego) y en el lugar pedido.
+    let ok = false;
+    for (const [lo, st] of [[0, 0], [1, 0], [1, 1], [1, 2], [1, 3], [2, 0], [2, 1], [2, 2], [2, 3], [0, 1], [0, 2], [0, 3]]) {
+      const zona = await p.evaluate(async ([pacto, lo, st]) => {
+        const { BAL } = await import("/src/balance.ts");
+        BAL.ritmo.zona_dist_min = 5; BAL.ritmo.zona_dist_max = 6;
+        window.__god(); document.getElementById("hint")?.classList.add("hidden"); document.getElementById("dirSub")?.classList.add("hidden");
+        const pacts = window.__enc.info().pacts; pacts.length = 0; pacts.push({ id: pacto, left: Infinity }); // info() devuelve el mismo arreglo que erun.pacts
+        const z = window.__enc.jump(lo, st); window.__killAll();
+        return z;
+      }, [pz.split(":")[0], lo, st]);
+      if ((zona === "luna") !== (lugar === "luna")) continue;
+      await tick(p, 4);
+      ok = await p.evaluate(async () => {
+        const Z = await import("/src/pact_zones.ts"), c = window.__car(), z = Z.zonesInfo()[0];
+        if (!z) return false;
+        const dx = z.x - c.p.x, dz = z.z - c.p.z, d = Math.hypot(dx, dz);
+        return (dx * c.f.x + dz * c.f.z) / d > 0.6;
+      });
+      if (ok) break;
+    }
+    if (!ok) throw new Error(`zonas: sin zona delante del auto (${pz} ${lugar})`);
+    await tick(p, 260);
+    await p.evaluate(() => { document.getElementById("hint")?.classList.add("hidden"); document.getElementById("dirSub")?.classList.add("hidden"); });
+  } }))) },
   // ENCORE en la Luna con 1, 2 y 4 jugadores (compu; split screen solo en compu): escenario 1 tras 25 s del bot y oferta de pactos abierta (__enc)
   ...[1, 2, 4].map((n) => ({ id: `encore_pacto${n}`, query: `?mute&encore&seed=58&players=${n}`, vps: ["pc"], shots: [
     { id: "juego", act: async (p) => { await wait(p, () => window.__enc?.info()); await p.evaluate(() => { window.__god(); window.__sim(25); }); await tick(p, 45); } },
@@ -279,34 +309,6 @@ export const sessions = [
   ] },
   { id: "carrera2j", query: "?mute&race&players=2", vps: ["pc"], shots: [
     { id: "pantalla-dividida", tol: 8, act: async (p) => { await wait(p, () => window.__info?.().state === "race" && document.getElementById("load").classList.contains("hidden")); await p.evaluate(() => { window.__race.auto(); window.__race.sim(5); }); } },
-  ] },
-  { id: "duel", query: "?mute&duel", vps: ["pc", "cel"], shots: [
-    { id: "armado", act: async (p) => {
-      await wait(p, () => document.getElementById("duel-ui")?.classList.contains("fabricar") && !!document.getElementById("duel-fab-grid"));
-      await p.evaluate(() => window.__duel.openDrawer(true));
-      await p.evaluate(() => window.__duel.loadTemplate("cuna"));
-      const info = await p.evaluate(() => window.__duel.info());
-      if (info.phase !== "fabricar") throw new Error(`fabricar: phase=${info.phase}`);
-      if (!info.build?.cells?.length) throw new Error("fabricar: build vacío");
-      if (info.cfg.chassis !== "cuna") throw new Error(`fabricar: cfg.chassis=${info.cfg.chassis}`);
-      await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
-      await p.evaluate(() => window.__duel.shotCam(true));
-      await tick(p, 15);
-    } },
-    { id: "countdown", act: async (p) => {
-      await p.evaluate(() => { window.__duel.confirm(); window.__duel.shotCam(true); });
-      await tick(p, 55);
-    } },
-    { id: "pelea", act: async (p) => {
-      await p.evaluate(() => {
-        const ph = window.__duel.info().phase;
-        if (ph === "fabricar" || ph === "armado") window.__duel.confirm();
-        window.__duel.auto(true);
-        window.__duel.shotCam(true);
-      });
-      await tick(p, 220);
-      await tick(p, 90);
-    } },
   ] },
   { id: "match3", query: "?mute&match3", vps: ["pc", "cel", "nb", "celh"], shots: [
     { id: "mapa", act: async (p) => {
@@ -383,22 +385,6 @@ export const sessions = [
       await p.click('#scr-modes [data-go="match3"]');
       await wait(p, () => document.getElementById("scr-match3")?.classList.contains("on"));
       await tick(p, 8);
-    } },
-  ] },
-  { id: "duel_menu", query: "?mute", vps: ["pc"], shots: [
-    { id: "fabricar", act: async (p) => {
-      await wait(p, () => document.getElementById("load")?.classList.contains("hidden"));
-      if (await p.evaluate(() => document.getElementById("scr-title")?.classList.contains("on"))) await p.keyboard.press("Space");
-      await toMain(p);
-      await p.click('#scr-main [data-go="modes"]');
-      await wait(p, () => document.getElementById("scr-modes")?.classList.contains("on"));
-      await p.click('#scr-modes [data-go="duel"]');
-      await wait(p, () => document.getElementById("scr-duel")?.classList.contains("on"));
-      await p.click('#scr-duel [data-act="duelgo"]');
-      await wait(p, () => document.getElementById("duel-ui")?.classList.contains("fabricar") && !!document.getElementById("duel-fab-grid"));
-      await p.evaluate(() => window.__duel.loadTemplate("cuna"));
-      await p.evaluate(() => { window.__duel.refreshGhost?.(); window.__duel.resetCam?.(); });
-      await tick(p, 20);
     } },
   ] },
 ];
