@@ -24,10 +24,14 @@ export function initAudio() {
   master = ctx.createGain();
   fxBus = ctx.createGain(); engBus = ctx.createGain(); musicBus = ctx.createGain();
   fxLP = ctx.createBiquadFilter(); fxLP.type = "lowpass"; fxLP.frequency.value = 22000; fxLP.Q.value = 0.5; // transparente; moonAmbience() lo cierra en la luna (sonidos amortiguados)
-  fxBus.connect(fxLP).connect(master); engBus.connect(master); musicBus.connect(master);
-  setAudio(vol);
+  // Compresor solo de efectos (la radio no pasa por él: no sube ni baja con cada golpe) y limitador suave maestro.
   const comp = ctx.createDynamicsCompressor(); // evita saturar con 100 golpes a la vez
-  master.connect(comp).connect(ctx.destination);
+  comp.threshold.value = -18; comp.ratio.value = 4;
+  fxBus.connect(fxLP).connect(comp).connect(master); engBus.connect(master); musicBus.connect(master);
+  setAudio(vol);
+  const lim = ctx.createDynamicsCompressor();
+  lim.threshold.value = -3; lim.knee.value = 3; lim.ratio.value = 12; lim.attack.value = 0.003; lim.release.value = 0.25;
+  master.connect(lim).connect(ctx.destination);
   noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
   const d = noise.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
