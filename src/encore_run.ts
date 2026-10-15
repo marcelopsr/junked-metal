@@ -197,6 +197,7 @@ export const ARRIVE: Record<E.Variant["at"], [B.Vector3, B.Vector3]> = {
 /** Variante del escenario (encore.ts): ritmo de eventos, cráteres extra alrededor de la llegada y, salvo el primer escenario (ya está en su lugar), llegada del auto. */
 export function encScene(first = false) {
   const v = E.variantOf(erun!);
+  if (first && v && !cx.simulating && !save.encore.seenVariants.includes(v.name)) { save.encore.seenVariants.push(v.name); cartel(); persist(); } // Codex/Cartelera: el primer escenario también cuenta como visto (encEnter solo corre al cambiar)
   if (!MOON.on) { // Contenido 3: escenario terrestre: llegada al centro de la zona (donde arranca la Supervivencia), sin cráteres ni eventos lunares
     const c0 = new B.Vector3(0, 0, 0);
     shopPlan(erun!.seed, E.sceneIdx(erun!), c0);
