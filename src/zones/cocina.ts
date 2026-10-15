@@ -9,7 +9,7 @@ import { ball, freeSpot, int, piles, puddles, toyRamps } from "../world_layout";
 
 // La cocina (ENCORE y Taller), muebles contra las paredes +z y -x (la cámara de partida mira hacia +z): baldosas en damero, mesadas con alacenas contra dos paredes, heladera, horno encendido, mesa con sillas
 // (techo: el auto pasa por abajo) y utensilios gigantes tirados. Mismo tamaño que el desván (half 140, salida (0, 0) libre).
-export const KITCHEN_CLIMATE: Climate = { id: "cocina", name: "LUZ DE COCINA", sun: [0.3, -1, 0.25], sunColor: "#ffd3a0", sunI: 3.4, hemiI: 0.5, sky: ["#6a4a3c", "#e8a878", "#ffd9a8", "#7a5a3c"], exposure: 0.85, fog: 0.004, ramp: ["#2a1810", "#c08050", "#fff0d8"] };
+export const KITCHEN_CLIMATE: Climate = { id: "cocina", name: "LUZ DE COCINA", sun: [0.3, -1, 0.25], sunColor: "#ffd3a0", sunI: 3.4, hemiI: 0.5, sky: ["#6a4a3c", "#e8a878", "#ffd9a8", "#7a5a3c"], exposure: 0.7, fog: 0.004, ramp: ["#2a1810", "#c08050", "#fff0d8"] };
 export const TABLE_K = { x: 60, z: -55, w: 60, d: 40, h: 30 }; // mesa: centro, ancho, largo, alto de la tapa
 
 // Tabla de aparición de la cocina: multiplica los pesos de spawnTable (enemies.ts) para enemigos EXISTENTES; run_drive.ts la aplica cuando zoneId === "cocina".

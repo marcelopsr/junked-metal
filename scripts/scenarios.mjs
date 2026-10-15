@@ -467,7 +467,7 @@ const escena = (z) => async (p) => {
     window.__god();
     const W = await import("/src/world.ts"), M = await import("/src/moon.ts"), R = await import("/src/encore_run.ts"), G = await import("/src/moon_goals.ts"), V = window.__carObj().root.position.constructor; // Vector3 de Babylon sin resolver el paquete desde la página
     const luna = z.startsWith("luna");
-    if (luna) window.__enc.jump(0, 1); else { G.goalsClear(); M.setMoon(false); W.setZone(z, false); W.buildLayout(); } // goalsClear: cofres y decorado del escenario anterior (TV, pieza amarilla) no pasan a la zona nueva
+    if (luna) window.__enc.jump(0, 1); else { G.goalsClear(); M.setMoon(false); W.setZone(z, false); W.buildLayout(); const cl = W.zoneClimate(); if (cl) (await import("/src/render.ts")).applyClimate(cl); } // clima propio de la zona (setZone no lo aplica y el ciclo solo reaplica al cambiar la hora) // goalsClear: cofres y decorado del escenario anterior (TV, pieza amarilla) no pasan a la zona nueva
     window.__killAll();
     if (luna) R.moonPlace(z === "luna-noche" ? M.DARK_DIR : V.Up(), z === "luna-noche" ? M.SUN_DIR : new V(0, 0, 1));
     else R.carPlace(new V(0, window.__carObj().def.size[1] / 2 + 0.3, 0), new V(0, 0, -1));
