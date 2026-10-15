@@ -3,7 +3,6 @@
 // hundirse main.ts deja un cráter real (deform + craterHumeante). Solo recibe daño mientras está afuera (wormOut). En la segunda barra
 // va más rápido y sale gusano_fase2_seguidas veces seguidas.
 import * as B from "@babylonjs/core";
-import { FOLD } from "./folded";
 import { pbr } from "./render";
 import { box, cyl, sph, template, tor } from "./models";
 import { BAL } from "./balance";
@@ -12,22 +11,23 @@ import { alt, arc, at, FOOT, onFloor, toLocal, upAt } from "./moon";
 import type { Enemy } from "./enemies";
 
 const ATK = BAL.ataques;
+const toy = (c: string) => pbr("gz" + c, { color: c, rough: 0.35, coat: 0.4 }); // plástico pintado de juguete
 const SEGS = 10, GAP = 0.07; // segmentos detrás de la cabeza y su retraso en el arco (fracción de t)
 const eyeMat = () => { const m = pbr("alienOjo", { color: "#a82a10", emissive: "#ff4a1a", rough: 0.3 }); m.fogEnabled = false; m.emissiveIntensity = 2; return m; }; // ojo ámbar/rojo de ref173 (mismo material que aliens.ts)
 
 /** Cabeza (también el modelo de la ficha del bestiario): tambor de chapa con mandíbulas y boca verde. Mira a +z. */
 export const wormHeadTpl = () => template("gusano", () => {
-  const hull = FOLD.painted("#8a3a1e", 0.85, 83), plate = FOLD.painted("#c9b48a", 0.8, 84), br = FOLD.painted("#a8803c", 0.6, 87), bolt = FOLD.bolt();
+  const hull = toy("#8a3a1e"), plate = toy("#c9b48a"), br = toy("#a8803c"), bolt = toy("#6e7276");
   // Boca circular de dientes (ref173 f3 c5): disco oscuro con corona de 10 colmillos crema; los ojos son lo único emisivo
   const teeth = Array.from({ length: 10 }, (_, i) => { const a = (i * Math.PI * 2) / 10; return cyl(0.01, 0.22, 0.55, plate, [Math.sin(a) * 1.05, 1.15 + Math.cos(a) * 1.05, 1.0], [Math.PI / 2 - Math.cos(a) * 0.5, Math.sin(a) * 0.5, 0], 5); });
   return [
     cyl(2, 2.3, 1.7, hull, [0, 1.15, 0], [Math.PI / 2, 0, 0], 8),
     box(1.5, 0.14, 1.4, plate, [0, 2.3, -0.1], [0.12, 0, 0]),
-    sph(1.3, FOLD.painted("#3a0f08", 0.5, 89), [0, 1.15, 0.85], [1, 1, 0.35], 8), // boca (gaznate oxidado, no un agujero negro)
+    sph(1.3, toy("#3a0f08"), [0, 1.15, 0.85], [1, 1, 0.35], 8), // boca (gaznate oxidado, no un agujero negro)
     tor(2.1, 0.16, br, [0, 1.15, 0.95], [Math.PI / 2, 0, 0], 10), // aro de bronce de la boca
     ...teeth,
     ...[-1, 1].flatMap((s) => [
-      box(0.32, 0.5, 1.3, FOLD.dark(), [s * 0.75, 1.0, 1.3], [0, -s * 0.35, 0]), // mandíbulas
+      box(0.32, 0.5, 1.3, toy("#17181c"), [s * 0.75, 1.0, 1.3], [0, -s * 0.35, 0]), // mandíbulas
       sph(0.42, eyeMat(), [s * 0.8, 1.7, 1.05], undefined, 6), // ojos
       sph(0.09, bolt, [s * 0.8, 2.25, 0.5], undefined, 4), sph(0.09, bolt, [s * 0.8, 2.25, -0.7], undefined, 4), // remaches de la placa
     ]),
@@ -35,12 +35,12 @@ export const wormHeadTpl = () => template("gusano", () => {
 });
 /** Segmento del cuerpo: anillo octogonal con placa dorsal, faja de luz y luces laterales. Centrado en su eje. */
 const segTpl = () => template("gusanoSeg", () => {
-  const hull = FOLD.painted("#8a3a1e", 0.85, 85), bolt = FOLD.bolt();
+  const hull = toy("#8a3a1e"), bolt = toy("#6e7276");
   return [
     cyl(1.8, 1.8, 1.3, hull, [0, 0, 0], [Math.PI / 2, 0, 0], 8),
-    box(1.2, 0.12, 1, FOLD.painted("#c9b48a", 0.8, 86), [0, 0.92, 0], [0.15, 0, 0]),
-    box(0.14, 0.5, 0.45, FOLD.bare(), [0, 1.15, -0.1]),
-    tor(1.85, 0.08, FOLD.painted("#a8803c", 0.6, 87), [0, 0, 0.55], [Math.PI / 2, 0, 0], 8), // faja de bronce
+    box(1.2, 0.12, 1, toy("#c9b48a"), [0, 0.92, 0], [0.15, 0, 0]),
+    box(0.14, 0.5, 0.45, toy("#a9adb3"), [0, 1.15, -0.1]),
+    tor(1.85, 0.08, toy("#a8803c"), [0, 0, 0.55], [Math.PI / 2, 0, 0], 8), // faja de bronce
     sph(0.14, eyeMat(), [0.9, 0.2, 0], undefined, 4), sph(0.14, eyeMat(), [-0.9, 0.2, 0], undefined, 4), // luces de costado
     ...[-0.4, 0, 0.4].map((x) => sph(0.08, bolt, [x, 0.95, 0.35], undefined, 4)), // remaches de la placa dorsal
   ];

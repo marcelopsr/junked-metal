@@ -2,7 +2,7 @@ import * as B from "@babylonjs/core";
 import { box, cyl, merge, rbox, tor, tube } from "../models";
 import { M, pbr, shadows } from "../render";
 import { rng } from "../rng";
-import { FOLD, FOLD_PAINT } from "../folded";
+import { FOLD_PAINT } from "../folded";
 import { HALF, bare, concreteTex, decal, dyn, floor, occluders, realCar, scene, stat, tex, tireStackM, undo, woodM } from "./common";
 import { ball, between, giantTools, int, paintCans, piles, puddles, ramp, slopeBoard, toyRamps } from "../world_layout";
 
@@ -93,7 +93,7 @@ export function garageLayout() {
   toyRamps(int(2, 3), [0, 1]);
   giantTools();
   paintCans(int(4, 7));
-  piles(int(2, 3), [FOLD_PAINT[0], FOLD_PAINT[1], FOLD_PAINT[2]], (c) => FOLD.painted(c, 0.8, 37), 3, true); // cajas de chapa (Folded 2.5D)
+  piles(int(2, 3), [FOLD_PAINT[0], FOLD_PAINT[1], FOLD_PAINT[2]], (c) => M.plastic(c), 3, true); // cajas de juguete
   puddles(int(3, 6), pbr("oil", { color: "#0c0b0a", rough: 0.05, metal: 0.4, alpha: 0.9 }));
   ball();
 }
