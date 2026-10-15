@@ -33,14 +33,17 @@ export const WT = (() => {
     return { top, port, name };
   } catch { return null; }
 })();
-export const BASE = process.env.RC_URL ?? `http://localhost:${WT?.port ?? 5174}`;
+/** Grupo de servidores de prueba sobre el MISMO árbol: rc-test :5174 + rc-test-2..6 :5175-5179 (RC_POOL=N cambia la cantidad). En worktree o con RC_URL: uno solo. */
+export const POOL = WT ? [{ name: WT.name, port: WT.port }] : Array.from({ length: Number(process.env.RC_POOL ?? 6) }, (_, i) => ({ name: i ? `rc-test-${i + 1}` : "rc-test", port: 5174 + i }));
+// let exportado: launch() lo reasigna al elegir servidor y los importadores (`import { BASE }`) ven el valor nuevo
+export let BASE = process.env.RC_URL ?? `http://localhost:${WT?.port ?? 5174}`;
 const ARGS = [
   ...(process.platform === "darwin" ? ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist"] : []), // ponytail: en Linux/Windows faltaría su propio backend (--use-angle=vulkan/d3d11); hoy solo se prueba en el Mac
   "--disable-renderer-backgrounding", "--disable-background-timer-throttling", "--disable-backgrounding-occluded-windows", "--mute-audio",
 ];
 
 export const lockFile = (name) => join(tmpdir(), name + ".lock");
-export const SERVER_LOCK = "rc-test-" + (new URL(BASE).port || 80); // un candado por servidor
+export let SERVER_LOCK = "rc-test-" + (new URL(BASE).port || 80); // un candado por servidor
 export const PERF_LOCK = "rc-perf"; // global: dos perf a la vez ensucian ms/cuadro aunque usen servidores distintos
 const alive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; } };
 // Latido: cada candado propio se "toca" cada HB ms. Sin latido > STALE, o más viejo que TTL, el dueño se da por colgado: el que espera lo mata y libera.
@@ -64,7 +67,10 @@ const reap = (path) => {
 };
 export const lockInfo = (name) => { const st = reap(lockFile(name)); return st ? st.text : null; }; // quién lo tiene (null si libre, muerto o colgado)
 const held = new Set(); // nombres de archivo propios (exclusivos y de lector)
-const release = () => { for (const f of held) try { if (parseInt(readFileSync(f, "utf8")) === process.pid) unlinkSync(f); } catch {} };
+const release = () => { for (const f of held) try { if (parseInt(readFileSync(f, "utf8")) === process.pid) unlinkSync(f); } catch {} held.clear(); };
+/** Suelta un candado exclusivo propio sin terminar el proceso. */
+export const unlock = (name = SERVER_LOCK) => { const f = lockFile(name); if (held.delete(f)) try { unlinkSync(f); } catch {} };
+export const releaseAll = release;
 const WAIT_MAX = Number(process.env.RC_WAIT_MAX ?? 15) * 60; // s: tope de espera
 const EXCL_MAX = Number(process.env.RC_EXCL_WAIT ?? 3) * 60; // s: cuánto espera un exclusivo a que terminen los lectores
 const readerFile = (name, pid = process.pid) => join(tmpdir(), `${name}.r.${pid}.lock`);
@@ -81,6 +87,8 @@ const startHeartbeat = () => {
   // si el propio proceso se cuelga en un paso, se corta solo al vencer el TTL
   setTimeout(() => { console.error(`candado vencido (RC_LOCK_TTL=${TTL / 60e3} min): se aborta este proceso`); process.exit(124); }, TTL).unref();
 };
+let hooked = false; // al primer candado/alquiler: latido y limpieza al salir
+const hook = () => { if (hooked) return; hooked = true; startHeartbeat(); process.on("exit", release); for (const sg of ["SIGINT", "SIGTERM"]) process.on(sg, () => process.exit(130)); };
 async function wait(name, t, quien, max = WAIT_MAX) {
   if (t === 0) console.error(`${name} ocupado, esperando (máx ${max / 60} min):\n  ${quien.replace(/\n/g, "\n  ")}`);
   if (t >= max) throw new Error(`${name} sigue ocupado tras ${max / 60} min:\n${quien}`);
@@ -94,8 +102,7 @@ async function wait(name, t, quien, max = WAIT_MAX) {
 export async function lock(name = SERVER_LOCK, { shared = false } = {}) {
   const f = lockFile(name), mine = shared ? readerFile(name) : f;
   if (held.has(mine)) return;
-  startHeartbeat();
-  if (!held.size) { process.on("exit", release); for (const sg of ["SIGINT", "SIGTERM"]) process.on(sg, () => process.exit(130)); }
+  hook();
   for (let t = 0; ; t++) {
     if (shared) {
       const ex = lockInfo(name);
@@ -126,8 +133,74 @@ const checkFresh = () => {
   if (n.t > at) console.error(`AVISO: SERVIDOR DESACTUALIZADO. ${n.f} cambió a las ${hh(n.t)} y el servidor se reinició a las ${hh(at)}. Si ese cambio es tuyo: npm run test:restart.`);
 };
 
-/** Un solo navegador para toda la corrida. Espera hasta ~30 s a que rc-test responda (no levanta servidores propios: ver CLAUDE.md). */
+// ── Grupo de servidores: alquiler por PROCESO ─────────────────────────────────────────────────────────────
+// Cada proceso (shots, e2e, sim, script suelto, test:restart) alquila un servidor libre mientras vive (el archivo se borra al salir o, si muere, deja de contar). Dos procesos de
+// agentes distintos nunca comparten servidor, así un test:restart solo toca uno que nadie usa. Preferencia (no exclusiva): el último servidor de esta sesión de agente (caché de Vite
+// tibio). RC_SRV=3 (o =5176) fuerza uno y se comparte como lector. Al alquilar uno nuevo con código viejo (sello anterior a algún src/) se reinicia solo.
+// ponytail: la sesión se reconoce por el ancestro `claude` solo para la preferencia; si más procesos que servidores, esperan al primero que se libere.
+const ROOT = join(dirname(new URL(import.meta.url).pathname), "..", "..");
+const SESSION = (() => { let p = process.ppid; for (let i = 0; i < 12 && p > 1; i++) { try { const [pp, ...c] = execSync(`ps -o ppid=,comm= -p ${p}`, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim().split(/\s+/); if (/(^|\/)claude$/.test(c.join(" "))) return p; p = +pp; } catch { break; } } return 0; })();
+const hintFile = () => join(tmpdir(), `rc-srv-hint-${SESSION}`);
+export const leaseFile = (port) => join(tmpdir(), `rc-srv-${port}.lease`);
+export const leaseState = (port) => { try { const t = readFileSync(leaseFile(port), "utf8"), owner = parseInt(t); return { owner, cmd: t.split("\n")[1] ?? "", edad: Math.round((Date.now() - statSync(leaseFile(port)).birthtimeMs) / 1000), alive: alive(owner) }; } catch { return null; } };
+/** Quién usa el servidor ahora: exclusivo (test:restart/perf) o lectores vivos. */
+export const srvBusy = (s) => { const n = "rc-test-" + s.port; return lockInfo(n) || readers(n).length > 0; };
+const mine = (s) => leaseState(s.port)?.owner === process.pid;
+const claim = (s) => {
+  if (mine(s)) return true;
+  const l = leaseState(s.port), f = leaseFile(s.port);
+  if ((l?.alive) || srvBusy(s)) return false;
+  try { unlinkSync(f); } catch {}
+  try { const fd = openSync(f, "wx"); writeFileSync(fd, `${process.pid}\n${process.argv.slice(1).join(" ")}\n${process.cwd()}`); closeSync(fd); } catch { return false; } // perdió la carrera con otro agente
+  hook(); held.add(f); // se borra al salir (release); el latido lo toca
+  return true;
+};
+const up = async (port) => { try { await fetch(`http://localhost:${port}`, { signal: AbortSignal.timeout(1500) }); return true; } catch { return false; } };
+/** (Re)inicia el servidor de pm2 `s` (lo crea desde ecosystem.config.cjs si no existe), espera a que responda y escribe el sello. Quien llama tiene el candado exclusivo. */
+export async function restartServer(s) {
+  const sh = (c) => execSync(c, { cwd: ROOT, stdio: ["ignore", "pipe", "inherit"] });
+  if (rcProcs().some((p) => p.name === s.name)) sh(`pm2 restart ${s.name} --update-env`); else sh(`pm2 start ecosystem.config.cjs --only ${s.name}`);
+  const t0 = Date.now(); while (!(await up(s.port))) { if (Date.now() - t0 > 60000) throw new Error(`:${s.port} no responde tras 60 s: pm2 logs ${s.name}`); await new Promise((r) => setTimeout(r, 500)); }
+  writeFileSync(servedFile(s.port), String(Date.now()));
+}
+/**
+ * Elige el servidor de este proceso: el de RC_SRV, el que su agente ya tiene alquilado, o el primero libre (sin alquiler vivo ni lectores). Si todos están ocupados espera al primero que se libere.
+ * Con RC_URL o en worktree no hace nada (un solo servidor). `restart:false` (test:restart) no arranca ni reinicia: lo hace quien llama. Devuelve el servidor.
+ */
+export async function pickServer({ restart = true } = {}) {
+  if (process.env.RC_URL || POOL.length < 2) return POOL[0];
+  const sel = process.env.RC_SRV;
+  let s = sel ? POOL.find((x, i) => String(x.port) === sel || String(i + 1) === sel) : POOL.find(mine);
+  if (sel && !s) throw new Error(`RC_SRV=${sel} no es un servidor del grupo (1-${POOL.length} o ${POOL[0].port}-${POOL.at(-1).port})`);
+  // nuevo = lo alquilo ahora (nadie lo usa): si sirve código viejo se reinicia una vez. Ya mío (otra launch() del mismo proceso) o forzado por RC_SRV (compartido): no se toca.
+  let nuevo = !!s && !mine(s) && claim(s);
+  let hint = 0; try { hint = +readFileSync(hintFile(), "utf8"); } catch {}
+  const orden = [...POOL.filter((x) => x.port === hint), ...POOL.filter((x) => x.port !== hint)];
+  for (let t = 0; !s; t++) {
+    s = orden.find(claim); nuevo = !!s;
+    if (!s) await wait("servidores de prueba", t, POOL.map((x) => `:${x.port} ${leaseState(x.port)?.cmd?.slice(0, 80) ?? "(en uso por un lector)"}`).join("\n"));
+  }
+  if (SESSION) writeFileSync(hintFile(), String(s.port));
+  BASE = `http://localhost:${s.port}`; SERVER_LOCK = "rc-test-" + s.port;
+  if (restart) {
+    // sirviendo código viejo (sello anterior a algún src/) o caído: reinicio propio bajo candado exclusivo (nadie más lo usa: acabamos de alquilarlo)
+    let at = 0; try { at = +readFileSync(servedFile(s.port), "utf8"); } catch {}
+    if (!(await up(s.port)) || (nuevo && newestSrc().t > at)) { await lock(SERVER_LOCK); try { process.stderr.write(`servidor :${s.port} (${s.name}) sin arrancar o con código viejo: reiniciando\n`); await restartServer(s); } finally { unlock(SERVER_LOCK); } }
+  }
+  return s;
+}
+
+/** Corre fn(browser) con timeout y cierre garantizado: el candado se suelta aunque fn falle o se cuelgue (a los `timeoutMs` el proceso sale con 124). Para scripts sueltos de agentes. */
+export async function withBrowser(fn, { perf = false, args = [], timeoutMs = 10 * 60e3 } = {}) {
+  const tm = setTimeout(() => { console.error(`withBrowser: más de ${timeoutMs / 60e3} min, se aborta`); process.exit(124); }, timeoutMs); tm.unref();
+  let b;
+  try { b = await launch({ perf, args }); return await fn(b); }
+  finally { clearTimeout(tm); await b?.close().catch(() => {}); release(); }
+}
+
+/** Un solo navegador para toda la corrida. Elige servidor del grupo (ver pickServer) y espera hasta ~30 s a que responda. */
 export async function launch({ perf = false, args = [] } = {}) {
+  await pickServer();
   let ok = false;
   for (let i = 0; i < 60 && !ok; i++) {
     try { await fetch(BASE, { signal: AbortSignal.timeout(1500) }); ok = true; }
@@ -159,6 +232,14 @@ export const VIEWPORTS = { pc: { width: 1280, height: 720 }, nb: { width: 1440, 
  */
 export async function open(browser, query, vp = "pc", { freeze = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width: VIEWPORTS[vp].width, height: VIEWPORTS[vp].height }, ...VIEWPORTS[vp] });
+  // Tope global de la apertura (carga + hooks): al vencer se cierra el contexto y las esperas de playwright fallan, en vez de quedar colgadas con el candado tomado
+  let vencio = false; const guard = setTimeout(() => { vencio = true; ctx.close().catch(() => {}); }, OPEN_MAX); guard.unref();
+  try { return await openIn(ctx, query, vp, freeze); }
+  catch (e) { throw vencio ? new Error(`open(${query}, ${vp}) superó ${OPEN_MAX / 1000} s (RC_OPEN_MAX): el servidor ${BASE} no terminó de cargar`) : e; }
+  finally { clearTimeout(guard); }
+}
+const OPEN_MAX = Number(process.env.RC_OPEN_MAX ?? 200) * 1000; // la precarga en frío tarda hasta ~90 s
+async function openIn(ctx, query, vp, freeze) {
   const page = await ctx.newPage();
   page.logs = [];
   page.on("pageerror", (e) => page.logs.push("pageerror: " + e.message));

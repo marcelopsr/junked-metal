@@ -5,7 +5,7 @@
 // Todo avanza con __tick y esperas por condición (waitForFunction), no con sleeps largos.
 
 const tick = (p, n = 3) => p.evaluate((n) => window.__tick(n), n);
-const wait = (p, fn, arg) => p.waitForFunction(fn, arg, { timeout: 30000, polling: 50 });
+const wait = (p, fn, arg) => p.waitForFunction(fn, arg, { timeout: 8000, polling: 50 }); // 8 s: un paso roto en cascada (30 s x 20 pasos) parecía un cuelgue de minutos al 0 % de CPU
 const info = (p) => p.evaluate(() => window.__info());
 
 // Todos los bichos del bestiario (el yaw inicial por bicho vive en src/menu/beast_sheet.ts; el arrastre de 1 px solo frena el giro lento).
@@ -442,6 +442,9 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
   { id: "acuatico", act: libreAt(152, 130) },
   { id: "nieve", act: libreAt(-150, -100, Math.PI) },
   { id: "obstaculos", act: libreAt(150, -100, Math.PI) },
+  { id: "tuerca", perf: false, act: libreAt(0, 24) }, // tuerca dorada a 14 m al frente (0, 1,4, 38)
+  // Cartel de truco y contador de tuercas: se disparan con las funciones del HUD (el truco real depende de la física; eso lo prueba la sonda de la tanda E6)
+  { id: "truco", perf: false, act: async (p) => { await libreAt(-150, 130)(p); await p.evaluate(async () => { const u = await import("/src/ui.ts"); u.hudTruco("GIRO 360 + VUELTA", 640, 2, true, "RÉCORD"); u.hudTuercas(7, 24); }); await p.waitForTimeout(450); } },
   { id: "pausa", perf: false, act: async (p) => { await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },
   { id: "pausa-noche", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:3"]', "click"); await tick(p, 4); await p.waitForTimeout(200); } },
   { id: "salir", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:4"]', "click"); await p.dispatchEvent('[data-act="quit"]', "click"); await wait(p, () => document.querySelector("#scr-main.on")); await p.waitForTimeout(150); } },
