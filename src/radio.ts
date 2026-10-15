@@ -1,8 +1,7 @@
 // Radio global: 4 estaciones de archivos (public/music/<estacion>/<tema>.m4a), siempre suena y se cambia desde cualquier pantalla.
 // Sale por musicBus (volumen "Música" de Configuración, pausa con musicDuck y ?mute ya resueltos en audio/context.ts).
 // AAC en .m4a y no OGG: Safari/iOS no reproduce Ogg Vorbis. Dos <audio> (A/B) para el crossfade; solo el tema en curso está cargado.
-import { ctx, musicBus, onInit } from "./audio/context";
-import { musicUnder } from "./audio/music";
+import { ctx, musicBus, onInit } from "./audio/context";import { musicUnder } from "./audio/music";
 
 export type StationId = "chatarra" | "aceite" | "astral" | "oxido-fritanga";
 export type Moment = "menu" | "encore" | "jefe" | "freeroam" | "noche" | "derrota";
@@ -42,16 +41,31 @@ const hist: string[] = [];      // temas ya sonados (prev)
 let base: Moment = "menu";      // último momento "de fondo" (para volver tras el jefe)
 let a = 0;                      // elemento activo (0/1)
 let els: { el: HTMLAudioElement; g: GainNode }[] | null = null;
+let duckG: GainNode | null = null;  // ducking de la radio (jefe, avisos críticos, hordas)
+let bossTrack = false;              // el tema en curso lo puso el jefe
+let horde = false, boss = false;
+
+/** Ducking con rampa suave: jefe o aviso crítico -6 dB, horda densa -4 dB. */
+function applyDuck() {
+  if (!ctx || !duckG) return;
+  const b = document.getElementById("banner"), alert = !!b && !b.classList.contains("hidden") && !b.classList.contains("out") && b.classList.contains("event-pulse");
+  const db = boss || alert ? -6 : horde ? -4 : 0;
+  duckG.gain.setTargetAtTime(10 ** (db / 20), ctx.currentTime, db ? 0.25 : 0.9); // baja rápido, sube lento
+}
 
 function wire() {
   if (els || !ctx) return;
+  duckG = ctx.createGain(); duckG.connect(musicBus);
   els = [0, 1].map(() => {
     const el = new Audio(); el.preload = "none";
     const g = ctx!.createGain(); g.gain.value = 0;
-    ctx!.createMediaElementSource(el).connect(g).connect(musicBus);
+    ctx!.createMediaElementSource(el).connect(g).connect(duckG!);
+    el.addEventListener("playing", () => musicUnder(true)); // suena la radio: la sintetizada se apaga
+    el.addEventListener("error", () => musicUnder(false));  // no cargó: queda la sintetizada de respaldo
     return { el, g };
   });
   els.forEach((e, i) => e.el.addEventListener("ended", () => { if (i === a) next(); }));
+  window.setInterval(applyDuck, 250); // ponytail: sondeo del aviso en el DOM (#banner); un evento de ui.ts lo haría directo
 }
 
 function pick(only?: string[]) {
@@ -66,7 +80,6 @@ function pick(only?: string[]) {
 function start(track: string, back = false) {
   wire();
   if (!els || !ctx) return; // sin audio (?mute o antes del primer gesto): onInit retoma
-  musicUnder(true); // la sintetizada baja a capa de fondo
   if (!back && cur) hist.push(`${st.id}/${cur}`);
   const old = els[a], nw = els[a ^ 1], t = ctx.currentTime;
   a ^= 1; cur = track;
@@ -103,14 +116,26 @@ export const radio = {
   prefer(m: Moment) {
     if (m !== "jefe" && m !== "derrota") base = m;
     if (manual) return;
+    bossTrack = m === "jefe";
     const p = MOMENTS[m];
     const sameSt = st.id === p.st;
     if (sameSt && (!p.only || p.only.includes(cur))) return;
     st = byId(p.st); if (!sameSt) bag = [];
     begin(p.only);
   },
-  /** Vuelve al momento de fondo (tras un jefe). */
-  resume() { radio.prefer(base); },
+  /** Vuelve al momento de fondo (tras un jefe) y cambia de tema sin esperar a que termine el del jefe. */
+  resume() {
+    const was = bossTrack, c = cur;
+    bossTrack = false;
+    radio.prefer(base);
+    if (was && cur === c) begin();
+  },
+  /** Ducking por estado de la partida: jefe vivo y horda densa (los avisos críticos se detectan solos). */
+  duck(o: { boss?: boolean; horde?: boolean }) {
+    if (o.boss === boss && o.horde === horde) return;
+    boss = !!o.boss; horde = !!o.horde; applyDuck();
+  },
+  duckGain: () => duckG?.gain.value ?? 1,
   /** Vuelve a dejar que los momentos elijan la estación. */
   auto() { manual = false; },
   stop() { want = false; musicUnder(false); els?.forEach(e => e.el.pause()); },

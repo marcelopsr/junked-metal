@@ -56,8 +56,8 @@ function applyMix(fast: boolean) {
 /** Estado musical; intensity 0..1 (solo importa en "run": más capas y más densidad). Se puede llamar seguido. */
 export function music(s: MusicState, intensity = 0) {
   mInt = Math.min(1, Math.max(0, intensity));
-  if (duck) { setDuck(false); setAudio({}); }
   const changed = s !== mState;
+  if (changed && duck) { setDuck(false); setAudio({}); } // solo un cambio de estado saca de la pausa (antes lo hacía cada llamada)
   mState = s;
   if (!ctx) return; // sin audio (?mute o antes del primer gesto): se arranca en initAudio
   if (!mixIn) return startMusic();
@@ -65,8 +65,9 @@ export function music(s: MusicState, intensity = 0) {
   if (!mTimer && s !== "over") { mNext = ctx.currentTime + 0.08; mStep = 0; mTick(); }
 }
 let synthOut: GainNode | null = null, under = 1;
-/** La radio suena: la música sintetizada queda como capa baja debajo (no se apaga). */
-export function musicUnder(on: boolean) { under = on ? 0.3 : 1; if (ctx && synthOut) synthOut.gain.setTargetAtTime(under, ctx.currentTime, 0.5); }
+/** La radio suena: la sintetizada se apaga (vuelve sola si la radio no carga o se detiene). */
+export function musicUnder(on: boolean) { under = on ? 0 : 1; if (ctx && synthOut) synthOut.gain.setTargetAtTime(under, ctx.currentTime, 0.5); }
+export const synthLevel = () => under; // para pruebas: 0 = radio sonando, 1 = sintetizada
 /** Pausa: baja el volumen de la música sin cortarla. */
 export function musicDuck(on: boolean) { setDuck(on); setAudio({}); }
 

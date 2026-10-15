@@ -280,6 +280,7 @@ export function tickEnemies(F: Frame, dt: number): boolean {
   if (gb) hudBoss(gb.name, gb.pct);
   else if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp), boss.kind, boss.enraged);
   else { const sb = MOON.on ? shipBar() : null; hudBoss(sb?.name ?? null, sb?.pct); } // naves de la luna: misma barra de jefe; sin nada, la barra se va (si no, quedaba la del último cofre o máquina)
+  if (!T.simulating) radio.duck({ boss: !!boss, horde: T.enemies.length > 60 }); // ducking de la radio: jefe -6 dB, horda densa -4 dB
   { const ms = boss ? "boss" : T.apagon ? "blackout" : "run"; if (!T.simulating && (ms !== T.musicS || (T.musicT -= dt) <= 0)) { if ((ms === "boss") !== (T.musicS === "boss")) { if (ms === "boss") radio.prefer("jefe"); else radio.resume(); } T.musicS = ms; T.musicT = 1; music(ms, run.time / 600); } } // música: cambio de estado al instante, intensidad cada ~1 s
 
   // --- Ácido de escupidoras ---

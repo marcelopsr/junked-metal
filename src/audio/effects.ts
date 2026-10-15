@@ -234,6 +234,7 @@ export const SFX = {
   hit: () => gate("hit", 18) && (tone("sine", 700, 320, 0.05, 0.12), hiss("bandpass", 2400, 900, 0.04, 0.08)),
   kill: (racha = 0) => gate("kill", racha >= 25 ? 22 : 14) && (tone("sine", 520, 180, 0.1, 0.14), tone("triangle", 260, 90, 0.12, 0.08)), // boing
   ram: (powerOrPan: number = 10, pan?: number, dist?: number) => {
+    if (!gate("ram", 10)) return; // ponytail: tope por tasa (10/s), no por voces vivas; contarlas si hace falta
     const isPanOnly = pan === undefined && Math.abs(powerOrPan) <= 1;
     const pwr = isPanOnly ? 10 : powerOrPan;
     const p = isPanOnly ? powerOrPan : pan;
@@ -242,7 +243,7 @@ export const SFX = {
     hiss("lowpass", 1800, 200, 0.12, 0.25 * dGain, p, dist);
   },
   explosion: () => gate("boom", 8) && (hiss("lowpass", 1400, 60, 0.6, 0.45), tone("sine", 90, 30, 0.45, 0.35)),
-  zap: (pan?: number) => { tone("sawtooth", 300, 1200, 0.06, 0.14, 0, pan); },
+  zap: (pan?: number) => { if (gate("zap", 14)) tone("sawtooth", 300, 1200, 0.06, 0.14, 0, pan); },
   hurt: () => gate("hurt", 6) && (tone("square", 300, 120, 0.16, 0.1), tone("triangle", 150, 70, 0.16, 0.12)), // chirrido de juguete
   ignite: () => { hiss("bandpass", 1800, 400, 0.35, 0.28); tone("sine", 120, 45, 0.3, 0.22); },
   radioChirp: () => { tone("sine", 1800, 1200, 0.04, 0.08); tone("sine", 2400, 1600, 0.04, 0.06, 0.03); },
@@ -265,7 +266,7 @@ export const SFX = {
     const dGain = dist !== undefined ? Math.max(0.15, 1 / (1 + dist * 0.04)) : 1;
     hiss(dur, 0.12 * dGain, 1200, 0, pan, dist);
   },
-  scrape: (pan?: number) => { hiss("bandpass", 2200, 600, 0.08, 0.14, pan); },
+  scrape: (pan?: number) => { if (gate("scrape", 10)) hiss("bandpass", 2200, 600, 0.08, 0.14, pan); },
   drift: (pwr?: number, pan?: number, floor?: "asfalto" | "tierra" | "hierba") => {
     if (!gate("drift", 16)) return;
     const isPanOnly = pan === undefined && pwr !== undefined && pwr < 0;
