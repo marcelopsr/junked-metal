@@ -34,3 +34,6 @@ server/node_modules/
 # Resultados de npm run carga
 .carga/
 .venv-ref/
+
+src-tauri/target/
+src-tauri/gen/
