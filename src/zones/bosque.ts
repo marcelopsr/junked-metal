@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph } from "../models";
 import { M, canvasTex, shadows } from "../render";
-import { HALF, bare, decal, floor, lowQ, occluders, scene, stat } from "./common";
+import { HALF, bare, decal, floor, lowQ, scene, stat } from "./common";
 import { clear, int, rocks, toyRamps } from "../world_layout";
 
 // Bioma Bosque (docs/art_direction/visual_reference_register.md, «Kits por bioma»; ref143/ref38/ref28a): suelo de tierra con agujas de pino,
@@ -159,7 +159,7 @@ export function forestBuild() {
   forestWater();
   // Fondo: barrera baja de roca-musgo continua detrás del borde, como oclusor (la cámara alta no ve el exterior del suelo).
   const back = M.matte("#4a6b2e");
-  for (const [x, z, w, d] of [[0, -HALF - 5, HALF * 2 + 14, 4], [HALF + 5, 0, 4, HALF * 2 + 14], [-HALF - 5, 0, 4, HALF * 2 + 14], [0, HALF + 5, HALF * 2 + 14, 4]]) occluders.push(merge("forestWall", [box(w, 3, d, back, [x, 1.5, z])]));
+  for (const [x, z, w, d] of [[0, -HALF - 5, HALF * 2 + 14, 4], [HALF + 5, 0, 4, HALF * 2 + 14], [-HALF - 5, 0, 4, HALF * 2 + 14], [0, HALF + 5, HALF * 2 + 14, 4]]) merge("forestWall", [box(w, 3, d, back, [x, 1.5, z])]);
 }
 
 export function forestLayout() {

@@ -102,7 +102,7 @@ export function snowBuild() {
       if (!(lowQ && r === 1)) pine(px, pz, s, trees); // lowQ: sin la hilera lejana (solo decorado)
     }
   }
-  for (const [n, parts] of [["nieveBordes", blocks], ["nieveCerco", fence], ["nievePinos", trees]] as const) { const m = merge(n, parts as B.Mesh[]); m.isPickable = false; shadows.addShadowCaster(m); occluders.push(m); }
+  for (const [n, parts] of [["nieveBordes", blocks], ["nieveCerco", fence], ["nievePinos", trees]] as const) { const m = merge(n, parts as B.Mesh[]); m.isPickable = false; shadows.addShadowCaster(m); }
 }
 
 // Montículo: casquete bajo de nieve con colisionador cilíndrico invisible (r útil 0,85 del visible).
