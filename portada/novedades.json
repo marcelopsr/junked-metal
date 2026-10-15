@@ -1,4 +1,5 @@
 [
+{"fecha":"2026-10-15","titulo":"Seguridad H6-H9 (IPv6 por /64, tope global de telemetría y de intentos de login, EXCHANGE_SECRET obligatorio en producción)","texto":"Seguridad H6-H9 (IPv6 por /64, tope global de telemetría y de intentos de login, EXCHANGE_SECRET obligatorio en producción)."},
 {"fecha":"2026-10-15","titulo":"El primer escenario de cada expedición también se anota como visto","texto":"El primer escenario de cada expedición también se anota como visto."},
 {"fecha":"2026-10-15","titulo":"El contador de segundos del panel de decisión volvía a quedar tapado por un comentario; título de ruta ELEGIR DESTINO desde el origen","texto":"El contador de segundos del panel de decisión volvía a quedar tapado por un comentario; título de ruta ELEGIR DESTINO desde el origen."},
 {"fecha":"2026-10-15","titulo":"La grúa (y todo bicho horneado a VAT) vuelve a dibujarse en celular: la marca _isActive pegada también se limpia en las fuentes de glb.ts","texto":"La grúa (y todo bicho horneado a VAT) vuelve a dibujarse en celular: la marca _isActive pegada también se limpia en las fuentes de glb.ts."},
