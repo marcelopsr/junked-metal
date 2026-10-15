@@ -24,6 +24,102 @@ function soilEdgeMask() {
   return t;
 }
 
+
+// ---------- Texturas del piso (láminas ref-rcrace: tierra cálida con piedritas, surcos y grumos; pasto en manchas de varios tonos) ----------
+// Generador local con semilla fija: el piso no cambia entre cargas ni toca rng() del layout.
+function lcg(seed: number) { let s = seed; return () => ((s = (s * 16807) % 2147483647) / 2147483647); }
+/** Ruido de valor tileable, varias octavas, 0..1 */
+function fbm(n: number, oct: number, r: () => number, f0 = 4) {
+  const out = new Float32Array(n * n); let amp = 1, tot = 0;
+  for (let o = 0; o < oct; o++) {
+    const g = f0 << o, grid = Float32Array.from({ length: g * g }, r);
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const fx = x / n * g, fy = y / n * g, x0 = Math.floor(fx), y0 = Math.floor(fy), tx = fx - x0, ty = fy - y0;
+      const sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty), a = (i: number, j: number) => grid[(j % g) * g + (i % g)];
+      out[y * n + x] += amp * (a(x0, y0) * (1 - sx) * (1 - sy) + a(x0 + 1, y0) * sx * (1 - sy) + a(x0, y0 + 1) * (1 - sx) * sy + a(x0 + 1, y0 + 1) * sx * sy);
+    }
+    tot += amp; amp *= 0.55;
+  }
+  for (let i = 0; i < out.length; i++) out[i] /= tot;
+  return out;
+}
+const hex = (h: string) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const lerpC = (a: number[], b: number[], t: number) => a.map((v, i) => v + (b[i] - v) * t);
+function rampC(stops: [number, string][], t: number) {
+  for (let i = 1; i < stops.length; i++) if (t <= stops[i][0]) return lerpC(hex(stops[i - 1][1]), hex(stops[i][1]), (t - stops[i - 1][0]) / (stops[i][0] - stops[i - 1][0]));
+  return hex(stops[stops.length - 1][1]);
+}
+function makeTex(name: string, n: number, fill: (px: Uint8ClampedArray) => void, repeat = 1) {
+  const t = new B.DynamicTexture(name, n, scene, true, B.Texture.TRILINEAR_SAMPLINGMODE);
+  const c = t.getContext() as unknown as CanvasRenderingContext2D, im = c.createImageData(n, n);
+  fill(im.data); c.putImageData(im, 0, 0); t.update();
+  t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE; t.uScale = t.vScale = repeat;
+  return t;
+}
+/** Tierra cálida: albedo + normal map (piedritas con luz arriba-izquierda y sombra abajo-derecha, grumos, surcos). */
+function dirtTextures(n = 512) {
+  const r = lcg(4242), h = fbm(n, 3, r, 8), grit = fbm(n, 2, r, 24), idx = (x: number, y: number) => ((y + n) % n) * n + ((x + n) % n);
+  // piedritas: domos
+  const stone = new Float32Array(n * n);
+  for (let i = 0; i < 700; i++) {
+    const big = i < 90, px = r() * n, py = r() * n, rad = big ? 4 + r() * 6 : 1 + r() * r() * 2.5, lift = big ? 0.55 + r() * 0.45 : 0.25 + r() * 0.3;
+    for (let dy = -rad - 1; dy <= rad + 1; dy++) for (let dx = -rad - 1; dx <= rad + 1; dx++) {
+      const d = Math.hypot(dx, dy) / rad; if (d >= 1) continue;
+      const k = idx(Math.round(px + dx), Math.round(py + dy)); stone[k] = Math.max(stone[k], lift * Math.sqrt(1 - d * d));
+    }
+  }
+  const H = new Float32Array(n * n);
+  for (let i = 0; i < H.length; i++) H[i] = h[i] * 0.8 + grit[i] * 0.2 + stone[i] * 1.1;
+  const pal: [number, string][] = [[0, "#5a2e18"], [0.25, "#8a4a2a"], [0.5, "#B5603A"], [0.75, "#D98A55"], [1, "#F0B57A"]]; // ref23: tierra rojiza clara al sol (con #24140B de base no había luces en cuadro)
+  const sx = 1.5, lx = -0.55, ly = -0.55; // luz desde arriba-izquierda
+  const alb = makeTex("patioDirt", n, px => {
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x, gx = (H[idx(x + 1, y)] - H[idx(x - 1, y)]) * sx, gy = (H[idx(x, y + 1)] - H[idx(x, y - 1)]) * sx;
+      const lit = -(gx * lx + gy * ly); // >0 mira a la luz
+      let t = Math.min(1, Math.max(0, (h[i] - 0.15) * 1.4 + stone[i] * 0.4 + lit * 0.7));
+      t = t * t * 0.4 + t * 0.6;
+      const col = rampC(pal, t), sh = 1 + lit * 0.6 - (stone[i] > 0 ? 0 : 0) , o = i * 4;
+      px[o] = Math.max(0, col[0] * sh); px[o + 1] = Math.max(0, col[1] * sh); px[o + 2] = Math.max(0, col[2] * sh); px[o + 3] = 255;
+    }
+  });
+  const nrm = makeTex("patioDirtN", n, px => {
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const gx = (H[idx(x + 1, y)] - H[idx(x - 1, y)]) * 0.8, gy = (H[idx(x, y + 1)] - H[idx(x, y - 1)]) * 0.8, l = Math.hypot(gx, gy, 1), o = (y * n + x) * 4;
+      px[o] = 128 + (-gx / l) * 127; px[o + 1] = 128 + (gy / l) * 127; px[o + 2] = 128 + (1 / l) * 127; px[o + 3] = 255;
+    }
+  });
+  alb.anisotropicFilteringLevel = nrm.anisotropicFilteringLevel = 8;
+  return { alb, nrm };
+}
+/** Pasto: manchas grandes de verdes cálidos y amarillentos + matas y briznas de varios tonos. */
+function grassTexture(n = 1024) {
+  const r = lcg(777), m = fbm(256, 4, r, 3), m2 = fbm(256, 3, r, 8);
+  const pal: [number, string][] = [[0, "#2f5f1f"], [0.3, "#4E8A2E"], [0.6, "#66BB6A"], [0.82, "#8fae45"], [1, "#b2a94c"]];
+  const small = document.createElement("canvas"); small.width = small.height = 256;
+  const sc = small.getContext("2d")!, im = sc.createImageData(256, 256);
+  for (let i = 0; i < 256 * 256; i++) {
+    const t = Math.min(1, Math.max(0, (m[i] - 0.3) * 2.3 + (m2[i] - 0.5) * 0.5)), col = rampC(pal, t), o = i * 4;
+    im.data[o] = col[0] * 0.8; im.data[o + 1] = col[1] * 0.8; im.data[o + 2] = col[2] * 0.78; im.data[o + 3] = 255; // un poco más oscuro y saturado
+  }
+  sc.putImageData(im, 0, 0);
+  const big = document.createElement("canvas"); big.width = big.height = n;
+  const c = big.getContext("2d")!; c.imageSmoothingEnabled = true; c.drawImage(small, 0, 0, n, n);
+  const cols = ["#2d5a1c", "#3f7a28", "#4E8A2E", "#66BB6A", "#7fae3c", "#a3a847", "#c2b556"];
+  c.lineCap = "round";
+  for (let i = 0; i < 26000; i++) {
+    const x = 6 + r() * (n - 12), y = 6 + r() * (n - 12), l = 4 + r() * 9, a = -Math.PI / 2 + (r() - 0.5) * 1.2;
+    c.strokeStyle = cols[(r() * cols.length) | 0]; c.globalAlpha = 0.35 + r() * 0.5; c.lineWidth = 1 + r() * 1.4;
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke();
+  }
+  for (let i = 0; i < 2500; i++) { // sombras de mata: oscuro abajo, luz arriba
+    const x = r() * n, y = r() * n, rad = 2 + r() * 4;
+    c.globalAlpha = 0.3; c.fillStyle = "#1c3a12"; c.beginPath(); c.arc(x + 1.5, y + 2, rad, 0, 7); c.fill();
+    c.globalAlpha = 0.4; c.fillStyle = cols[3 + ((r() * 4) | 0)]; c.beginPath(); c.arc(x, y, rad * 0.7, 0, 7); c.fill();
+  }
+  c.globalAlpha = 1;
+  return makeTex("patioGrass", n, px => px.set(c.getImageData(0, 0, n, n).data));
+}
+
 export function patioBuild() {
   const K = HALF / 100; // escala de lo que se diseñó para el patio de 200
   // Mesa de jardín gigante: la cámara se mete abajo (roof) y la tapa se tramea si tapa el auto (occluders)
@@ -33,7 +129,7 @@ export function patioBuild() {
   occluders.push(top);
 
   // Suelo: césped + baldosas + huerta + zona de combate de chatarra
-  floor("grass", "#ffffff", TEX.grassMacro);
+  floor("grass", "#ffffff", () => grassTexture(), 0.95, "grass", 45);
   const leavesTex = tex("dryLeaves", () => new B.Texture("./images/decals/dry-leaves.webp", scene));
   leavesTex.hasAlpha = true;
   const leaves = pbr("dryLeaves", { color: "#ffffff", rough: 0.92, tex: leavesTex });
@@ -50,19 +146,20 @@ export function patioBuild() {
 
   // Huerta: tierra compactada y gravilla con bordes fundidos al césped
   const edgeMask = soilEdgeMask();
-  const compactedTex = tex("compactedEarth", TEX.compactedEarth);
-  compactedTex.uScale = 16.8; compactedTex.vScale = 13;
+  const dirtT = dirtTextures(), compactedTex = dirtT.alb;
+  compactedTex.uScale = 5; compactedTex.vScale = 4;
+  dirtT.nrm.uScale = 5; dirtT.nrm.vScale = 4;
   const dirtMat = surface(
     pbr("dirt", {
-      color: "#d0d8df",
+      color: "#ffffff",
       rough: 0.94,
       tex: compactedTex,
     }),
     "soil",
     24,
-    0.55
+    0.2
   );
-  const dirtGroundMat = surface(pbr("dirtGround", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
+  const dirtGroundMat = surface(pbr("dirtGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.15);
   dirtGroundMat.opacityTexture = edgeMask;
   dirtGroundMat.alphaCutOff = 0.02;
   dirtGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
@@ -75,17 +172,19 @@ export function patioBuild() {
   decal("gardenSoilTransition", 50, 40, 50, 45, grassEarthMat, 0.015);
   decal("workshopGrassTransition", 22, 18, -4, -9, grassEarthMat, 0.016);
   const dirt = decal("dirt", 42, 32, 50, 45, dirtGroundMat, 0.025);
-  const pathMat = surface(pbr("soilPath", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 24, 0.55);
+  const pathMat = surface(pbr("soilPath", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.15);
+  pathMat.albedoColor = B.Color3.FromHexString("#FFF0E6"); // el rojizo de ref23 ya está en la paleta de dirtTextures; un tinte oscuro acá mataba las luces
   pathMat.opacityTexture = edgeMask;
   pathMat.alphaCutOff = 0.02;
   pathMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   const paths: B.Mesh[] = [];
+  // Ancho visual x2,1 (cinta de tierra dominante, ref23); el trazado y los colisionadores no cambian. world_layout recorta el pasto 3D con estos mismos anchos.
   const grassPaths = [
     [-33, 10, 16, 38, 2.11],
     [-1, 16, 12.5, 48, 0.87],
     [33, 38.5, 14, 38, 1.16],
     [-7, 1, 11, 37, -0.49],
-  ];
+  ].map(([x, z, w, len, a]) => [x, z, w * 2.1, len, a]);
   for (const [x, z, w, len, angle] of grassPaths) {
     const path = decal("soilPath", w, len, x, z, pathMat, 0.018);
     path.rotation.y = angle;
@@ -105,22 +204,22 @@ export function patioBuild() {
   // Zona de combate de chatarra: misma tierra y transición compartidas con la huerta
   const scrapMat = surface(
     pbr("scrapEarth", {
-      color: "#d0d8df",
+      color: "#ffffff",
       rough: 0.94,
       tex: compactedTex,
     }),
     "soil",
     26,
-    0.55
+    0.2
   );
-  const scrapGroundMat = surface(pbr("scrapGround", { color: "#d0d8df", rough: 0.94, tex: compactedTex }), "soil", 26, 0.55);
+  const scrapGroundMat = surface(pbr("scrapGround", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 26, 0.15);
   scrapGroundMat.opacityTexture = edgeMask;
   scrapGroundMat.alphaCutOff = 0.02;
   scrapGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   const soilTone = new B.DynamicTexture("soilTone", 128, scene, false);
   const tone = soilTone.getContext() as unknown as CanvasRenderingContext2D;
   tone.fillStyle = "#fff"; tone.fillRect(0, 0, 128, 128);
-  for (const [x, y, r, shade] of [[24, 35, 48, 0.2], [98, 90, 55, 0.25], [85, 16, 32, 0.12]]) {
+  for (const [x, y, r, shade] of [[24, 35, 48, 0.1], [98, 90, 55, 0.12], [85, 16, 32, 0.06]]) {
     const g = tone.createRadialGradient(x, y, 0, x, y, r);
     g.addColorStop(0, `rgba(0,0,0,${shade})`); g.addColorStop(1, "rgba(0,0,0,0)");
     tone.fillStyle = g; tone.fillRect(0, 0, 128, 128);
@@ -129,6 +228,7 @@ export function patioBuild() {
   soilTone.wrapU = soilTone.wrapV = B.Texture.CLAMP_ADDRESSMODE;
   soilTone.coordinatesIndex = 1;
   for (const mat of [dirtGroundMat, pathMat, scrapGroundMat]) {
+    mat.bumpTexture = dirtT.nrm; mat.bumpTexture.level = 0.8;
     mat.lightmapTexture = soilTone; mat.useLightmapAsShadowmap = true;
   }
   decal("scrapSoilTransition", 54, 44, -48, 20, grassEarthMat, 0.015);
@@ -173,7 +273,7 @@ export function patioBuild() {
     tor(3.08, 0.055, trimMat, [0, 0.025, 0], undefined, 16),
     cyl(0.24, 0.24, 0.08, trimMat, [0.55, 0.05, -0.3], undefined, 8),
   ]);
-  for (const [x, z] of [[-42, 30], [-45.5, 32]]) {
+  for (const [x, z] of [[-41, 27.5], [-45.5, 32]]) { // (-42, 30) dejaba ~1 m contra el lomo (-48, 34): el auto (1,6 m) se encajaba (sim 2026-10-14)
     const drum = registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, toy("#E53935"), [x, 2.4, z], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");
     const cap = capTpl.createInstance("drumCap");
     cap.parent = drum; cap.position.set(0, 2.4, 0); cap.isPickable = false; cap.receiveShadows = true;
@@ -217,14 +317,14 @@ function toyFencesCurbsPines(toy: (c: string, rough?: number) => B.Material, gra
   // Bordillos rojo/blanco: a los dos lados de cada camino de tierra y alrededor de la baldosa del taller
   const red: B.Mesh[] = [], white: B.Mesh[] = [];
   let k = 0;
-  const block = (x: number, z: number, ry: number) => { const odd = k++ % 2; (odd ? white : red).push(rbox(2.4, 0.3, 0.7, 0.1, toy(odd ? "#FAFAFA" : "#E53935", 0.45), [x, 0.15, z], [0, ry, 0])); };
+  const block = (x: number, z: number, ry: number) => { const odd = k++ % 2; (odd ? white : red).push(rbox(1.6, 0.45, 0.6, 0.14, toy(odd ? "#FAFAFA" : "#E53935", 0.45), [x, 0.225, z], [0, ry, 0])); };
   for (const [x, z, w, len, ang] of grassPaths) {
     const c = Math.cos(ang), s = Math.sin(ang);
-    for (const sx of [-1, 1]) for (let lz = -len * 0.4; lz <= len * 0.4; lz += 2.6) { const lx = sx * w * 0.42; block(x + lx * c + lz * s, z - lx * s + lz * c, ang); }
+    for (const sx of [-1, 1]) for (let lz = -len * 0.4; lz <= len * 0.4; lz += 1.7) { const lx = sx * w * 0.42; block(x + lx * c + lz * s, z - lx * s + lz * c, ang - Math.PI / 2); }
   }
-  for (let t = -22; t <= 22; t += 2.6) { block(t, -30 + 17.2, 0); block(t, -30 - 17.2, 0); }
-  for (let t = -14; t <= 14; t += 2.6) { block(24.5, -30 + t, Math.PI / 2); block(-24.5, -30 + t, Math.PI / 2); }
-  for (const [name, arr] of [["curbRed", red], ["curbWhite", white]] as const) { const m = merge(name, arr); m.isPickable = false; m.receiveShadows = true; }
+  for (let t = -22; t <= 22; t += 1.7) { block(t, -30 + 17.2, 0); block(t, -30 - 17.2, 0); }
+  for (let t = -14; t <= 14; t += 1.7) { block(24.5, -30 + t, Math.PI / 2); block(-24.5, -30 + t, Math.PI / 2); }
+  for (const [name, arr] of [["curbRed", red], ["curbWhite", white]] as const) { const m = merge(name, arr); m.isPickable = false; m.receiveShadows = true; shadows.addShadowCaster(m); }
 
   // Pinos de juguete (tres conos verdes sobre tronco marrón) en tres filas fuera de la cerca: lado norte y flancos, no del lado de la casa
   const pine = merge("toyPine", [
@@ -238,6 +338,54 @@ function toyFencesCurbsPines(toy: (c: string, rough?: number) => B.Material, gra
     if (i < HALF + 5) pm.push(...mat(d, 0, i, ry, sc, sc), ...mat(-d, 0, i, ry, sc, sc));
   }
   instances(pine, pm);
+  piedritasYMatas(toy, grassPaths, instances);
+}
+
+/** Piedritas angulosas sobre los caminos de tierra y matas con flores pegadas por fuera de los bordillos (ref9/ref14). Generador propio con semilla fija, sin colisiones. */
+function piedritasYMatas(toy: (c: string, rough?: number) => B.Material, grassPaths: number[][], instances: (m: B.Mesh, mats: number[]) => void) {
+  const r = lcg(4711), q = new B.Quaternion(), P = new B.Vector3(), S = new B.Vector3();
+  const put = (a: number[], x: number, y: number, z: number, yaw: number, sx: number, sy: number, sz: number, tilt = 0) => {
+    B.Quaternion.RotationYawPitchRollToRef(yaw, tilt, 0, q);
+    a.push(...B.Matrix.Compose(S.set(sx, sy, sz), q, P.set(x, y, z)).toArray());
+  };
+  const ok = (x: number, z: number) => Math.hypot(x, z) > 6;
+  // Puntos a lo largo de un camino: lx transversal (en múltiplos del semiancho w/2), lz longitudinal
+  const onPath = (f: (x: number, z: number) => void, lxRange: (w: number) => number) => {
+    const [x, z, w, len, ang] = grassPaths[Math.floor(r() * grassPaths.length)], c = Math.cos(ang), s = Math.sin(ang);
+    const lx = lxRange(w), lz = (r() - 0.5) * len * 0.8;
+    f(x + lx * c + lz * s, z - lx * s + lz * c);
+  };
+  // Piedritas: 3 colores = 3 mallas (3 dibujos), poliedro de 4 segmentos achatado
+  const rocks = ["#B08A68", "#6E4A33", "#C9A27A"].map((c) => ({ m: sph(1, toy(c, 0.95), [0, 0, 0], [1, 0.6, 1], 4), mats: [] as number[] }));
+  for (let i = 0; i < 700; i++) onPath((x, z) => {
+    if (!ok(x, z)) return;
+    const d = 0.14 + Math.pow(r(), 1.2) * 0.4, ar = 0.7 + r() * 0.7; // más chicas que grandes
+    put(rocks[Math.floor(r() * 3)].mats, x, d * 0.2, z, r() * 6.3, d * ar, d * (0.6 + r() * 0.5), d / ar, (r() - 0.5) * 0.6);
+  }, (w) => (r() - 0.5) * w * 1.15);
+  for (const k of rocks) instances(k.m, k.mats);
+
+  // Matas: 4 hojas cónicas aplastadas + flores (amarilla, blanca con centro amarillo) por fuera de los bordillos (lx = ±0.42w, bordillo 0,5 de ancho)
+  const gr = ["#4E8A2E", "#66BB6A"].map((c) => toy(c, 0.7));
+  const tuft = merge("tuft", [0, 1, 2, 3].map((j) => cyl(0.3, 0.02, 0.36, gr[j % 2], [Math.cos(j * 1.6) * 0.12, 0.2, Math.sin(j * 1.6) * 0.12], [Math.sin(j * 1.6) * 0.5, 0, -Math.cos(j * 1.6) * 0.5], 4)));
+  const disc = (c: string, d: number, y: number) => cyl(d, d, 0.04, toy(c, 0.5), [0, y, 0], undefined, 8);
+  const flY = merge("flowerY", [disc("#FBC02D", 0.34, 0.5)]), flW = merge("flowerW", [disc("#FAFAFA", 0.4, 0.5), disc("#FBC02D", 0.16, 0.53)]);
+  const tm: number[] = [], fy: number[] = [], fw: number[] = [];
+  for (let i = 0; i < 300; i++) onPath((x, z) => {
+    if (!ok(x, z)) return;
+    const k = 0.9 + r() * 0.9;
+    put(tm, x, 0, z, r() * 6.3, k, 0.8 + r() * 0.7, k);
+    if (r() < 0.4) put(r() < 0.5 ? fy : fw, x + (r() - 0.5) * 0.2, 0, z + (r() - 0.5) * 0.2, r() * 6.3, 1, 1, 1);
+  }, (w) => (r() < 0.5 ? -1 : 1) * (w * 0.42 + 0.25 + 0.3 + r() * 0.9));
+  // Islas de pasto entre caminos: matas grandes con flores en el interior (fuera de caminos, baldosa, huerta, chatarra y esquinas de pileta)
+  const inPath = (x: number, z: number, m: number) => grassPaths.some(([cx, cz, w, len, a]) => { const dx = x - cx, dz = z - cz, sn = Math.sin(a), cs = Math.cos(a); return Math.abs(dx * cs - dz * sn) < w * 0.5 + m && Math.abs(dx * sn + dz * cs) < len * 0.5 + m; });
+  const away = ([[50, 45, 28], [-48, 20, 26], [-48, 38, 22], [55, -20, 22], [-50, -55, 22], [-60, 5, 22]]);
+  for (let i = 0, n = 0; i < 4000 && n < 800; i++) {
+    const x = (r() * 2 - 1) * HALF * 0.85, z = (r() * 2 - 1) * HALF * 0.85, k = 1.7 + r() * 1.5, f = r(), j = r() * 6.3;
+    if (!ok(x, z) || inPath(x, z, 2.5) || (Math.abs(x) < 27 && Math.abs(z + 30) < 20) || away.some(([ax, az, ar]) => Math.hypot(x - ax, z - az) < ar)) continue;
+    n++; put(tm, x, 0, z, j, k, 0.9 + r() * 0.7, k);
+    if (f < 0.6) for (let q2 = 0; q2 < 3; q2++) put(r() < 0.5 ? fy : fw, x + (r() - 0.5) * k, 0, z + (r() - 0.5) * k, r() * 6.3, 1.2, 1.2, 1.2);
+  }
+  instances(tuft, tm); instances(flY, fy); instances(flW, fw);
 }
 
 // Arbustos a lo largo de la cerca: un solo mesh con thin instances, sin física (la cerca ya frena al auto)

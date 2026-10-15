@@ -615,5 +615,24 @@
     "src/folded.ts"
    ]
   }
- }
+ },
+ "referencias_extra": [
+  {
+   "archivo": "ref8.png",
+   "que": "Taller/garaje cálido: buggy amarillo sobre caballete rojo, banco de madera con herramientas, pila de neumáticos, carro de herramientas rojo, portón abierto a pista con torre de agua, banderines y bordillos. Luz dorada lateral, DOF fuerte."
+  },
+  {
+   "archivo": "ref9.png",
+   "que": "Patio/pista: buggy amarillo con jaula, ruedas de taco enormes, tierra con piedritas, bordillos rojo/blanco en bloques, rampa de madera, tambor azul, cono, plantas y flores; contraluz de atardecer, bokeh."
+  },
+  {
+   "archivo": "ref10.png",
+   "que": "Pieza: rampa de salto de madera curva con tablones, caballete triangular y bulones."
+  },
+  {
+   "archivo": "ref11.png",
+   "que": "Pieza: cono naranja con 2 franjas blancas reflectivas y base cuadrada negra."
+  }
+ ],
+ "nota_refs": "Imágenes generadas por ChatGPT: pueden diferir entre sí; manda el conjunto, no un detalle aislado."
 }

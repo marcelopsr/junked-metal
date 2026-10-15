@@ -14,6 +14,8 @@ export { Color4 } from "@babylonjs/core/Maths/math.color.js";
 export { ColorCurves } from "@babylonjs/core/Materials/colorCurves.js";
 export { Constants } from "@babylonjs/core/Engines/constants.js";
 export { DefaultRenderingPipeline } from "@babylonjs/core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline.js";
+export { PostProcess } from "@babylonjs/core/PostProcesses/postProcess.js"; // tilt-shift de maqueta (render.ts)
+export { Effect } from "@babylonjs/core/Materials/effect.js";
 export { DepthOfFieldEffectBlurLevel } from "@babylonjs/core/PostProcesses/depthOfFieldEffect.js";
 export { DirectionalLight } from "@babylonjs/core/Lights/directionalLight.js";
 export { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture.js";

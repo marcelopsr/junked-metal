@@ -158,15 +158,50 @@ export function template(name: string, build: () => B.Mesh[], scale = 1) {
 // Estilo de rueda (garaje → Ruedas): "" de serie, oruga (tacos chatos; la banda va en la carrocería), todoterreno (tacos grandes),
 // lisa (de carrera: ancha y sin flancos) y rayos (8 rayos finos de colores). Todo en la misma malla: sigue siendo una instancia por rueda.
 const SPOKES = ["#ef4444", "#f59e0b", "#facc15", "#22c55e", "#3b82f6", "#a855f7", "#ec4899", "#14b8a6"];
-const MINI_RUBBER = () => pbr("minirubber", { color: "#121316", rough: 0.9 });
+/** Textura de canvas cacheada (una por clave, no por auto). */
+const texCache = new Map<string, B.DynamicTexture>();
+export function canvasTex(key: string, size: number, draw: (g: CanvasRenderingContext2D, n: number) => void) {
+  let t = texCache.get(key);
+  if (!t) {
+    t = new B.DynamicTexture("tex" + key, size, scene, true);
+    draw(t.getContext() as unknown as CanvasRenderingContext2D, size);
+    t.update();
+    texCache.set(key, t);
+  }
+  return t;
+}
+const blobs = (g: CanvasRenderingContext2D, n: number, count: number, cols: string[], r0: number, r1: number, y: () => number) => {
+  for (let i = 0; i < count; i++) { // determinista (no usa rng() de la partida): semilla propia
+    seed = (seed * 16807) % 2147483647;
+    const x = (seed / 2147483647) * n; g.fillStyle = cols[i % cols.length];
+    g.globalAlpha = 0.55 + (i % 3) * 0.15;
+    g.beginPath(); g.ellipse(x, y(), r0 + (i % 7) * (r1 - r0) / 6, (r0 + (i % 5) * (r1 - r0) / 4) * 0.7, i, 0, 7); g.fill();
+  }
+  g.globalAlpha = 1;
+};
+let seed = 12345;
+const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const mudTex = () => canvasTex("mud", 256, (g, n) => { // goma negra con barro seco, más denso hacia los flancos (bordes de v)
+  g.fillStyle = "#121316"; g.fillRect(0, 0, n, n);
+  blobs(g, n, 90, ["#866E5C", "#5a4636"], 3, 12, () => (rnd() < 0.5 ? rnd() * 0.3 : 1 - rnd() * 0.3) * n);
+  blobs(g, n, 30, ["#5a4636"], 2, 8, () => rnd() * n);
+});
+const MINI_RUBBER = () => pbr("minirubber2", { color: "#ffffff", rough: 0.9, tex: mudTex() });
 export function wheel(d: number, w: number, rim: string, style = "") {
   const around = (n: number, f: (a: number) => B.Mesh) => Array.from({ length: n }, (_, k) => f((k * Math.PI * 2) / n));
-  if (style === "mini") return merge("wheel", [ // Mini Worlds: goma negra con tacos, llanta de color, maza negra
-    cyl(d, d, w, MINI_RUBBER(), [0, 0, 0], [0, 0, Math.PI / 2], 16),
-    ...around(12, (a) => box(w * 1.02, d * 0.07, d * 0.12, MINI_RUBBER(), [0, Math.sin(a) * d * 0.5, Math.cos(a) * d * 0.5], [a, 0, 0])),
-    cyl(d * 0.6, d * 0.6, w * 1.06, pbr("mini" + rim, { color: rim, rough: 0.35, coat: 0.4 }), [0, 0, 0], [0, 0, Math.PI / 2], 14),
-    cyl(d * 0.28, d * 0.28, w * 1.12, M.matte("#17181c"), [0, 0, 0], [0, 0, Math.PI / 2], 8),
-  ]);
+  if (style === "mini") { d *= 1.08; w *= 1.15; } // ruedas RC de las láminas: más gordas (solo visual; la física usa su propio radio)
+  if (style === "mini") { // ref17: goma de bloques en dos hileras alternadas (silueta redonda), aro fino de color, llanta negra de 6 rayos, maza metálica
+    const ring = pbr("mini" + rim, { color: rim, rough: 0.35, coat: 0.4 }), blk = pbr("miniwheelblk", { color: "#1c1c1c", rough: 0.5 });
+    const row = (x: number, off: number) => around(14, (a) => box(w * 0.4, d * 0.06, d * 0.1, MINI_RUBBER(), [x, Math.sin(a + off) * d * 0.5, Math.cos(a + off) * d * 0.5], [a + off, 0, 0])); // sobresalen 0,05·d
+    return merge("wheel", [
+      cyl(d, d, w, MINI_RUBBER(), [0, 0, 0], [0, 0, Math.PI / 2], 24),
+      ...row(-w * 0.24, 0), ...row(w * 0.24, Math.PI / 14),
+      cyl(d * 0.7, d * 0.7, w * 1.06, ring, [0, 0, 0], [0, 0, Math.PI / 2], 18), // aro fino de color
+      cyl(d * 0.63, d * 0.63, w * 1.1, M.matte("#0c0c0e"), [0, 0, 0], [0, 0, Math.PI / 2], 18), // fondo entre rayos
+      ...around(3, (a) => box(w * 1.14, d * 0.56, d * 0.07, blk, [0, 0, 0], [a / 2, 0, 0])), // 6 rayos negros (3 cajas que cruzan el centro)
+      cyl(d * 0.2, d * 0.2, w * 1.16, M.metal("#9aa0a8"), [0, 0, 0], [0, 0, Math.PI / 2], 10), // maza
+    ]);
+  }
   if (style === "fold") return merge("wheel", foldWheel(d, w, rim)); // vertical slice Folded (?folded2)
   const lisa = style === "lisa", W = lisa ? w * 1.25 : w;
   return merge("wheel", [

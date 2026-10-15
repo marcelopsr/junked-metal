@@ -1,5 +1,5 @@
 import * as B from "@babylonjs/core";
-import { box, cyl, merge, tor } from "../models";
+import { box, cyl, merge, sph, tor } from "../models";
 import { M, canvasTex, pbr, shadows, surface } from "../render";
 import { rng } from "../rng";
 import { HALF, bare, decal, occluders, sandTex, scene, stat, tex } from "./common";
@@ -43,7 +43,33 @@ const tileTex = () => canvasTex(256, (c, s) => {
   c.globalAlpha = 1;
 });
 
+// Juguetes de playa a escala del auto (2-3 m) en la explanada, lejos del pozo y de la salida (0, 0): una malla fusionada, un colisionador invisible por objeto, lugar reservado en `bare`.
+function beachToys() {
+  const parts: B.Mesh[] = [], R = M.plastic("#E53935"), Y = M.plastic("#FBC02D"), Bl = M.plastic("#42A5F5"), G = M.plastic("#66BB6A"), O = M.plastic("#FB8C00"), P = M.plastic("#8E24AA"), W = M.plastic("#FAFAFA"), sand = M.matte("#E6C27A");
+  const put = (x: number, z: number, w: number, h: number, d: number, r: number) => { hidden(stat(box(w, h, d, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, h / 2, z])); bare.push({ x, z, r }); };
+  const bucket = (x: number, z: number, c: B.Material, lid: B.Material) => { parts.push(cyl(6, 4.4, 5.2, c, [x, 2.6, z], undefined, 14), tor(6.2, 0.5, lid, [x, 5.1, z], undefined, 14), tor(5.4, 0.4, W, [x, 6, z], [0, 0, 0.0], 8)); put(x, z, 5.6, 5.2, 5.6, 5); };
+  const spade = (x: number, z: number, c: B.Material, ry: number) => { parts.push(box(3.2, 0.5, 3.6, c, [x, 0.25, z], [0, ry, 0]), box(0.8, 0.7, 5.6, c, [x + Math.sin(ry) * 4.6, 0.35, z + Math.cos(ry) * 4.6], [0, ry, 0])); put(x, z, 5, 0.7, 5, 5); };
+  const ring = (x: number, z: number, c: B.Material, s: B.Material) => { parts.push(tor(6.2, 2.2, c, [x, 1.1, z], undefined, 14), tor(6.25, 2.3, s, [x, 1.12, z], [0, 0.6, 0], 6)); put(x, z, 7, 2.2, 7, 6); };
+  const castle = (x: number, z: number) => { parts.push(cyl(5.6, 8, 3, sand, [x, 1.5, z], undefined, 14), cyl(3.6, 5, 2.6, sand, [x, 4.3, z], undefined, 12), cyl(0.2, 2.6, 2.6, sand, [x, 6.9, z], undefined, 10), box(0.15, 1.2, 0.8, R, [x + 0.4, 9.2, z]), box(0.15, 3.4, 0.15, Gy, [x, 8.6, z])); put(x, z, 7, 8, 7, 7); };
+  const Gy = M.metal("#9E9E9E");
+  bucket(-30, 30, R, Y); bucket(-45, -35, Bl, W); bucket(-80, 15, G, Y);
+  spade(-15, -30, Y, 0.4); spade(-55, 40, R, 2.2); spade(-75, -10, P, 4);
+  ring(-60, 10, Y, W); ring(-20, -55, O, W);
+  parts.push(sph(4.4, R, [10, 2.2, 40], undefined, 8), tor(4.5, 0.5, W, [10, 2.2, 40], [Math.PI / 2, 0, 0], 12), tor(4.5, 0.5, Y, [10, 2.2, 40], [0, 0, 0], 12)); put(10, 40, 4.4, 4.4, 4.4, 5); // pelota
+  castle(-35, 55); castle(5, -50); castle(-90, -50);
+  parts.push(sph(4, Y, [-70, 2, -30], [1, 0.9, 1.2], 6), sph(2.6, Y, [-70, 4.6, -28.6], undefined, 6), box(1.2, 0.5, 1, O, [-70, 4.5, -27.2]), box(0.5, 0.5, 0.2, M.matte("#222"), [-69.2, 5.1, -27.5])); put(-70, -30, 4.4, 6, 5, 5); // patito
+  // Segundo anillo (8-25 u de la salida, bajo < 1,5): conchas, paletas y estrellas de mar, hacia +z y los costados (el pozo empieza en x=25).
+  const shell = (x: number, z: number, c: B.Material) => { parts.push(sph(1.1, c, [x, 0.4, z], [1, 0.45, 0.8], 6), box(0.15, 0.5, 1.6, W, [x, 0.3, z], [0, 0.5, 0])); put(x, z, 2, 0.8, 2, 3); };
+  const star = (x: number, z: number, c: B.Material) => { for (let a = 0; a < 3; a++) parts.push(box(3, 0.3, 0.7, c, [x, 0.15, z], [0, a * 1.05, 0])); put(x, z, 3, 0.4, 3, 3); };
+  shell(-12, 14, W); shell(0, 23, Y); shell(-24, 5, W); shell(-8, 24, O);
+  star(11, 13, R); star(-21, 19, O); star(14, 24, P); star(-14, -12, R);
+  parts.push(cyl(2.2, 1.6, 1.4, Bl, [18, 0.7, 18], undefined, 10), tor(2.2, 0.25, W, [18, 1.4, 18], undefined, 10)); put(18, 18, 4, 1.4, 4, 3); // baldecito
+  parts.push(box(2.4, 0.4, 2.6, G, [-19, 0.2, -10], [0, 0.4, 0]), box(0.5, 0.5, 3, G, [-19, 0.25, -12.6], [0, 0.4, 0])); put(-19, -11, 3.4, 0.5, 4, 4); // palita
+  merge("juguetesPileta", parts).receiveShadows = true;
+}
+
 export function poolBuild() {
+  beachToys();
   const { x0, x1, z0, z1, hi, lo, r0, r1 } = PIT, GS = HALF * 2 + 700, h = GS / 2, W = x1 - x0, D = z1 - z0;
   // --- Explanada: cuatro tajadas alrededor del pozo (visible + colisionador). Misma textura y detalle que floor(), con UV de mundo.
   const tx = tex("sandPit", sandTex); tx.uScale = tx.vScale = GS / 18;

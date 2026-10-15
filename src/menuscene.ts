@@ -1,10 +1,9 @@
 import * as B from "@babylonjs/core";
-import { box, cyl, merge, sph, tor, tube, wheel } from "./models";
+import { box, cyl, merge, rbox, sph, tor, tube, wheel } from "./models";
 import { applyClimate, canvasTex, glow, lamp, LOOK, M, menuLights, pbr, setDof, shadows } from "./render";
 import { ambient } from "./fx";
 import { brick, canvasTexture, KIT, kitPut, M3C, type KitId } from "./kit3d";
 import { showWorld } from "./world";
-import { airCompressorFold, benchViseFold, drillPressFold, gasGeneratorFold, hoseReelFold, millingMachineFold } from "./folded_slice";
 
 // Escenas de los menús (no de la partida). Sistema de configuración:
 // - SETS: escenarios físicos (cuarto + utilería fija), armados la primera vez que se ven y lejos entre sí (solo uno encendido).
@@ -31,9 +30,9 @@ const SETS: Record<SetId, { origin: V3; build: (low: boolean) => [B.Mesh[], B.Me
     lamp: { spot: [8, 13, 8], to: [-1, 0, 0], glow: [22, 4.6, -3], spotI: 5, glowI: 2.2, cone: 0.9 } },
   // MESA de taller tipo diorama: flexo, tablero perforado, cajoneras
   bench: { origin: [0, 0, 400], build: (low) => benchBuild(low), dof: 0.65,
-    clim: { sun: [-0.3, -0.85, -0.45], sunColor: "#cfe4e2", sunI: 1.1, hemiI: 0.5, amb: "#e0c8b0", ground: "#5f8a88",
-      sky: ["#16353a", "#c98a5a", "#e0b090", "#16353a"], exposure: 1, fog: 0.005, ramp: ["#000000", "#808080", "#ffffff"] },
-    lamp: { spot: [2.5, 6.4, -1], to: [-0.5, 0, 1.5], glow: [3, 8.5, -1.5], spotI: 7, glowI: 1.4, cone: 1.2 } },
+    clim: { sun: [-0.3, -0.85, -0.45], sunColor: "#ffd9a0", sunI: 2.8, hemiI: 1.0, amb: "#f2cf9c", ground: "#b98f63",
+      sky: ["#2a5a8a", "#f0b070", "#ffd8a0", "#2a4a6a"], exposure: 1.5, fog: 0.005, ramp: ["#000000", "#808080", "#ffffff"] },
+    lamp: { spot: [2.5, 6.4, -1], to: [-0.5, 0, 1.5], glow: [3, 8.5, -1.5], spotI: 8.5, glowI: 1.8, cone: 1.2 } },
   // GALPÓN limpio (configuración): pared de ladrillo, piso de chapa, casi nada en el medio para que el panel respire
   clean: { origin: [0, 0, -400], build: () => cleanBuild(), dof: 0.5,
     clim: { sun: [0.2, -0.8, -0.5], sunColor: "#ffd6a8", sunI: 0.9, hemiI: 0.35, amb: "#8a7a6a", ground: "#3b3833",
@@ -183,33 +182,52 @@ function shelfBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
 }
 
 function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
-  const peach = W("#d8b094"), wood = wornMat("#8a5a36", "#5c3a24", 19), woodD = wornMat("#5c3a24", null, 27), metal = M.metal("#cfd3dc");
-  const fDark = wornMat("#262a30", null, 23), fTeal = wornMat("#3a6b7c", "#263840", 41), fOrange = wornMat(M3C.naranja, null, 11), fYellow = wornMat(M3C.amarillo, null, 37), fRed = wornMat("#a0452a", null, 31);
+  const peach = W("#c08650"), wood = wornMat("#b07a4a", "#5c3a24", 19), woodD = wornMat("#8c5a32", null, 27), metal = M.metal("#cfd3dc");
+  // paleta de juguete (ref8): madera, rojo #E53935, amarillo #FBC02D, azul #42A5F5; el negro mate queda para detalles
+  const fDark = wornMat("#4a2f1d", null, 23), fTeal = wornMat("#42A5F5", null, 41), fOrange = wornMat(M3C.naranja, null, 11), fYellow = wornMat("#FBC02D", null, 37), fRed = wornMat("#E53935", null, 31);
   const fDrawers = [fOrange, fTeal, fYellow, fRed, fTeal, fOrange, fYellow, fRed, fTeal];
   // Texturas que repiten distinto a lo ancho y a lo alto: agujeros del tablero perforado y grilla de la base de corte
   const tx = (c0: string, draw: (c: CanvasRenderingContext2D, s: number) => void, u: number, v: number) => { const t = canvasTex(64, (c, s) => { c.fillStyle = c0; c.fillRect(0, 0, s, s); draw(c, s); }); t.uScale = u; t.vScale = v; return t; };
-  const peg = pbr("pegboard", { color: "#ffffff", rough: 0.9, tex: tx("#d8c29e", (c, s) => { c.fillStyle = "#8a7054"; c.beginPath(); c.arc(s / 2, s / 2, s * 0.12, 0, 7); c.fill(); }, 68, 30) });
-  const mat = pbr("cutmat", { color: "#ffffff", rough: 0.85, tex: tx("#4c7c66", (c, s) => { c.strokeStyle = "#82b49c"; c.lineWidth = 1.5; c.strokeRect(0, 0, s, s); }, 16, 11) });
+  // tablones verticales de madera cálida: junta oscura a la izquierda y vetas; la base de corte pasa a tablas claras
+  const peg = pbr("pegboard", { color: "#ffffff", rough: 0.9, tex: tx("#B07A4A", (c, s) => { c.fillStyle = "#8C5A32"; c.fillRect(0, 0, s * 0.07, s); c.fillStyle = "#9a6538"; for (const x of [0.3, 0.55, 0.8]) c.fillRect(s * x, 0, 2, s); c.fillStyle = "#5c3a24"; c.fillRect(s * 0.4, s * 0.2, 3, 3); }, 34, 2) });
+  const mat = pbr("cutmat", { color: "#ffffff", rough: 0.85, tex: tx("#d9a76a", (c, s) => { c.strokeStyle = "#a8723f"; c.lineWidth = 2; c.strokeRect(0, 0, s, s); }, 16, 11) });
   // Cuarto: piso, techo, pared con el tablero perforado, laterales
   const room = [
-    box(180, 1, 140, W("#8a664c"), [0, -30.5, 0]), box(180, 2, 140, W("#3c5a5c"), [0, 50, 0]),
+    box(180, 1, 140, W("#b98f63"), [0, -30.5, 0]), box(180, 2, 140, W("#6a4326"), [0, 50, 0]),
     box(180, 82, 2, peach, [0, 10, -18]), box(2, 82, 140, peach, [-70, 10, 0]), box(2, 82, 140, peach, [70, 10, 0]),
     box(68, 30, 0.6, peg, [0, 15.5, -16.6]),
+    // estante de madera con cajas de colores (como en los estantes de ref8)
+    box(20, 0.8, 4, wood, [5, 8, -14.5]), box(5, 3.4, 3.4, fRed, [-1, 10.1, -14.5]), box(4.4, 2.8, 3.4, fTeal, [4, 9.8, -14.5]), box(4, 2.2, 3.4, fYellow, [8.4, 9.5, -14.5]),
     box(70, 1.2, 1.2, fDark, [0, 31, -16.4]), box(70, 1.2, 1.2, fDark, [0, 0.4, -16.4]),
   ];
   // Peana de calibración / soporte de pits (Pit Stand) y cargador inteligente LiPo digital con puertos XT60
-  const stand = [
-    box(2.8, 0.2, 4.2, M.metal("#0284c7"), [0, 0.1, 1]),
-    box(2.4, 0.8, 3.6, M.metal("#0f172a"), [0, 0.5, 1]),
-    box(2.6, 0.08, 0.6, M.rubber(), [0, 0.94, -0.6]),
-    box(2.6, 0.08, 0.6, M.rubber(), [0, 0.94, 2.6])
+  const stand = [ // caballete rojo (ref8): base ancha, dos patas inclinadas, travesaño y franja amarilla; el tope sigue en y = 0.9
+    box(3.4, 0.25, 4.6, fRed, [0, 0.12, 1]),
+    box(0.35, 0.8, 3.8, fRed, [-1.15, 0.5, 1], [0, 0, 0.18]), box(0.35, 0.8, 3.8, fRed, [1.15, 0.5, 1], [0, 0, -0.18]),
+    box(2.7, 0.18, 4, fRed, [0, 0.84, 1]), box(2.2, 0.06, 0.4, fYellow, [0, 0.95, 2.9]),
+    box(2.6, 0.08, 0.6, M.rubber(), [0, 0.94, -0.6]), box(2.6, 0.08, 0.6, M.rubber(), [0, 0.94, 2.6]),
   ];
   const charger = [
     box(1.8, 0.8, 2.4, M.matte("#18181b"), [4.5, 0.4, 2.5], [0, -0.2, 0]),
     box(1.2, 0.02, 0.9, M.glow("#38bdf8"), [4.5, 0.81, 2.5], [0, -0.2, 0]),
     box(0.4, 0.3, 0.3, M.plastic("#eab308"), [5.4, 0.4, 2.3], [0, -0.2, 0])
   ];
+  // pila de neumáticos, carro de herramientas rojo con cajones y dos tambores (ref8)
+  const rub = M.matte("#2e2824");
+  const tires = [0, 1, 2].flatMap((i) => [tor(3.6, 1.5, rub, [8, 0.75 + i * 1.5, -1 - i * 0.12], undefined, 12), cyl(1.2, 1.2, 0.2, fYellow, [8, 0.75 + i * 1.5, -1 - i * 0.12], undefined, 8)]);
+  const cart = [
+    box(7, 5.4, 4.2, fRed, [14, 2.7, -4]), box(7.4, 0.5, 4.6, fDark, [14, 5.6, -4]),
+    ...[0, 1, 2].flatMap((r) => [box(6.2, 1.4, 0.3, fRed, [14, 1 + r * 1.6, -1.8]), box(6, 0.18, 0.35, metal, [14, 1.55 + r * 1.6, -1.55]), box(6.2, 0.1, 0.35, rub, [14, 0.28 + r * 1.6, -1.75])]),
+    ...[[-3, 0], [3, 0]].map(([x]) => cyl(0.5, 0.5, 0.4, rub, [14 + x, 0.5, -1.9], [Math.PI / 2, 0, 0], 8)),
+    cyl(0.7, 0.8, 1.6, fYellow, [12.5, 6.6, -4]), tor(1.8, 0.2, metal, [12.5, 7.45, -4], undefined, 8),
+  ];
+  const drums = [[fRed, 5], [fTeal, 8.6]].flatMap(([m, x]) => [cyl(2, 2, 4.4, m as B.Material, [x as number, 2.2, -8], undefined, 12), tor(4, 0.2, metal, [x as number, 3.1, -8], undefined, 12), tor(4, 0.2, metal, [x as number, 1.3, -8], undefined, 12)]);
+  // achica un grupo de utilería sobre el suelo: (cx, cz) de origen -> (tx, tz)
+  const fit = (n: string, parts: B.Mesh[], [cx, cz]: [number, number], k: number, [tx, tz]: [number, number]) => {
+    const m = merge("bench_" + n, parts); m.scaling.setAll(k); m.position.set(tx - cx * k, 0, tz - cz * k); m.computeWorldMatrix(true); m.bakeCurrentTransformIntoVertices(); return m;
+  };
   const props = [
+    fit("tires", tires, [8, -1.2], 0.6, [5.5, -5]), fit("cart", cart, [14, -4], 0.75, [-1, -12.5]), fit("drums", drums, [6.8, -8], 0.55, [3.5, -12]),
     // mesa de taller con canto de chapa plegada y patas robustas, base de corte verde bajo el auto
     box(66, 2, 28, wood, [0, -1, -2]), box(66.2, 0.8, 0.5, fDark, [0, -1.4, 12.1]),
     ...[[-31, -14], [31, -14], [-31, 10], [31, 10]].map(([x, z]) => box(2.4, 28, 2.4, fDark, [x, -16, z])),
@@ -231,7 +249,7 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     // cajonera industrial de chapa plegada 3x3 (pantalla del taller)
     box(14.2, 8.6, 6, fDark, [22, 4.3, -10]),
     ...[0, 1, 2].flatMap((r) => [0, 1, 2].flatMap((k) => [box(4, 2.3, 0.35, fDrawers[(r * 3 + k) % fDrawers.length], [17.6 + k * 4.4, 1.5 + r * 2.7, -6.9]), box(1.4, 0.35, 0.4, metal, [17.6 + k * 4.4, 1.5 + r * 2.7, -6.65])])),
-    // flexo industrial Folded: base pesada de chapa, brazo articulado oscuro y pantalla facetada con foco adentro (sin atravesar el cono)
+    // flexo de juguete: base, brazo articulado y pantalla facetada con foco adentro (sin atravesar el cono)
     cyl(3.4, 3.8, 0.7, fTeal, [9, 0.35, -6], undefined, 8), cyl(2.2, 2.6, 0.35, fDark, [9, 0.8, -6], undefined, 8),
     tube([[9, 0.9, -6], [7.5, 7.2, -5]], 0.34, fDark), tube([[7.5, 7.2, -5], [3.5, 8.7, -1.9]], 0.34, fDark),
     sph(0.85, metal, [9, 0.95, -6]), sph(0.85, metal, [7.5, 7.2, -5]), sph(0.8, metal, [3.5, 8.7, -1.9]),
@@ -244,21 +262,21 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     ...pitStand(fDark, metal, M.rubber()),
     ...lipoCharger(fTeal, metal, fDark),
     ...siliconeOils(fYellow, fRed, metal),
-    // organizador escalonado de llaves Allen, comprobador de celdas LiPo, morsa, taladro y fresadora Folded
+    // organizador escalonado de llaves Allen, comprobador de celdas LiPo, morsa, taladro, fresadora, compresor, generador y carretel de juguete
     allenRack(metal, fDark),
     cellMeter(fDark, metal),
-    place(benchViseFold(), [-28, 0, 10], [0, 0.55, 0]),
-    place(drillPressFold(), [-30, 0, -8], [0, 0.35, 0]),
-    place(millingMachineFold(), [-33, 0, 5], [0, 0.4, 0]),
-    place(airCompressorFold(), [-30, 0, 16], [0, -0.3, 0]),
-    place(gasGeneratorFold(), [-28, 0, 20], [0, 0.2, 0]),
+    place(toy("benchVise"), [-28, 0, 10], [0, 0.55, 0]),
+    place(toy("drillPress"), [-30, 0, -8], [0, 0.35, 0]),
+    place(toy("millingMachine"), [-33, 0, 5], [0, 0.4, 0]),
+    place(toy("airCompressor"), [-30, 0, 16], [0, -0.3, 0]),
+    place(toy("gasGenerator"), [-28, 0, 20], [0, 0.2, 0]),
     digitalTireGauge(metal, fDark),
     airHoseAndBlowGun(metal, fDark),
     magnifierLamp(metal, fDark),
     machineLamp(metal, fDark),
     drillViseAndChips(metal, fDark),
     balanceLead(),
-    place(hoseReelFold(), [-33, 11, 14], [0, 0.4, 0]),
+    place(toy("hoseReel"), [-33, 11, 14], [0, 0.4, 0]),
     place(frlAirUnit(metal, fDark), [-33, 9, 8], [0, 0, 0]),
     // repuestos: dos ruedas, batería con bornes y cables, tornillos y tuercas, latas de pintura, destornillador suelto, taza enlozada
     place(wheel(2, 1, "#8a5a3a"), [6.5, 0.5, 6.5], [0, 0.4, Math.PI / 2]), place(wheel(2, 1, "#3a6b7c"), [8.6, 1.0, 4.4], [0, -0.3, 0]),
@@ -1045,6 +1063,34 @@ function transmitter(fDark: B.Material, fOrange: B.Material, fRed: B.Material, m
   return [t];
 }
 const place = (m: B.Mesh, pos: V3, rot: V3) => { m.position.set(...pos); m.rotation.set(...rot); return m; };
+
+// Máquinas de taller de juguete (paleta Encore): cajas redondeadas y cilindros con pintura lisa; mismas posiciones y tamaños que las viejas piezas Folded.
+function toy(kind: "benchVise" | "drillPress" | "millingMachine" | "airCompressor" | "gasGenerator" | "hoseReel"): B.Mesh {
+  const c = (h: string) => M.plastic(h), red = c("#E53935"), yel = c("#FBC02D"), blu = c("#42A5F5"), grn = c("#66BB6A"), org = c("#FB8C00"), brn = c("#795548"), gry = c("#9E9E9E");
+  const p: B.Mesh[] = [];
+  if (kind === "benchVise") p.push(
+    cyl(6.4, 6.8, 0.8, blu, [0, 0.4, 0]), rbox(3.6, 2.4, 4.4, 0.5, red, [0, 1.9, 0]), rbox(5.2, 1.4, 1.4, 0.4, red, [0, 2.4, 2.2]),
+    rbox(1.2, 1.6, 0.8, 0.3, gry, [-1.2, 2.4, 3.1]), rbox(1.2, 1.6, 0.8, 0.3, gry, [1.2, 2.4, 3.1]),
+    cyl(0.5, 0.5, 4.4, gry, [0, 1.2, 4.2], [Math.PI / 2, 0, 0], 8), cyl(0.5, 0.5, 3.6, yel, [0, 1.2, 6.2], [0, 0, Math.PI / 2], 8));
+  else if (kind === "drillPress") p.push(
+    rbox(3.4, 0.7, 4.2, 0.3, blu, [0, 0.35, 0.1]), cyl(1.1, 1.1, 8, gry, [0, 4.2, -1.1], undefined, 10), rbox(2.6, 2.2, 3.2, 0.5, yel, [0, 8.2, -0.3]),
+    rbox(2.2, 1.4, 1.4, 0.4, red, [0, 6.6, 0.6]), cyl(0.5, 0.5, 2.6, gry, [0, 5.2, 1.4], undefined, 8), rbox(3.2, 0.5, 3, 0.2, org, [0, 2.4, 0.9]),
+    cyl(0.3, 0.3, 2, gry, [2, 8.4, -0.3], [0, 0, Math.PI / 2], 6), sph(0.9, red, [2.9, 8.4, -0.3]));
+  else if (kind === "millingMachine") p.push(
+    rbox(3.8, 0.9, 4.8, 0.4, grn, [0, 0.45, -0.4]), rbox(2.2, 7, 2, 0.5, grn, [0, 4.2, -2]), rbox(3.4, 2.2, 3.4, 0.5, yel, [0, 8, -0.6]),
+    cyl(0.8, 0.8, 2.2, gry, [0, 6.3, 0.6], undefined, 8), rbox(3.2, 0.9, 2.6, 0.3, org, [0, 2.4, 0.8]), rbox(3.6, 0.6, 3, 0.3, gry, [0, 3.1, 0.8]),
+    sph(1, red, [2.6, 7.6, -0.6]));
+  else if (kind === "airCompressor") p.push(
+    cyl(4.4, 4.4, 7.6, red, [0, 2.6, 0], [Math.PI / 2, 0, 0], 16), rbox(1.6, 0.8, 4.4, 0.3, brn, [-1.3, 0.4, 0]), rbox(1.6, 0.8, 4.4, 0.3, brn, [1.3, 0.4, 0]),
+    rbox(2.4, 2, 2.4, 0.5, yel, [0, 5.6, 0.4]), cyl(1.2, 1.2, 0.5, blu, [-1.4, 5.1, -1.8], [Math.PI / 2, 0, 0], 12), sph(0.8, gry, [1.2, 5.2, -1.6]));
+  else if (kind === "gasGenerator") p.push(
+    rbox(2.2, 0.5, 2.8, 0.2, brn, [0, 0.25, 0]), rbox(2.0, 1.8, 2.6, 0.5, org, [0, 1.4, 0]), rbox(1.2, 0.5, 2.2, 0.2, yel, [0, 2.45, 0]),
+    sph(0.7, gry, [0.4, 2.9, 0.9]), rbox(0.7, 0.7, 0.3, 0.1, blu, [-0.6, 1.5, 1.4]));
+  else p.push(
+    rbox(1.4, 3.2, 0.3, 0.1, brn, [0, 0, -1.1]), cyl(2.8, 2.8, 0.7, org, [0, 0, -0.6], [Math.PI / 2, 0, 0], 16), cyl(1.4, 1.4, 1.1, yel, [0, 0, -0.5], [Math.PI / 2, 0, 0], 12),
+    cyl(2.2, 2.2, 0.5, org, [0, 0, 0], [Math.PI / 2, 0, 0], 16), sph(0.7, red, [0.9, -1.7, 0.2]));
+  return merge("toy_" + kind, p);
+}
 
 
 function cleanBuild(): [B.Mesh[], B.Mesh[]] {

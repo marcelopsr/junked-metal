@@ -468,7 +468,7 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 @media (pointer: fine) { body:has(#hint:not(.hidden):not(.fade):not(.coop)) #dirSub { bottom: calc(184px + 107px * var(--hud-scale)); } } /* QA final: arriba del panel de batería (#txl) y, mientras se ven los controles (#hint), arriba de ellos */
 @media (pointer: coarse) { /* celular: arriba de los controles táctiles (que ocupan el ~42 % de abajo); con la oferta de pactos o destinos abierta, arriba, bajo el reloj */
   #dirSub { bottom: 43vh; max-width: calc(100vw - 120px); } /* sin pisar PAUSA y CÁMARA (columna de la derecha) */
-  body:has(#encAsk.pact:not(.hidden)) #dirSub { display: none; } /* con la oferta abierta el subtítulo pisaba el aviso de radio (#banner, +78 px) */
+  body:has(#encAsk:not(.hidden)) #dirSub { display: none; } /* con cualquier oferta abierta (pactos o destino) el subtítulo pisaba el aviso de radio (#banner, +78 px) */
   body:has(#encAsk:not(.hidden)) #arrows { display: none; } /* el ícono del cofre (22M) tapaba el título de la primera carta */
 }
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) { /* apaisado: bajo la barra de jefe (hasta +193 px) y sobre el panel de batería (#txl, desde y=261 de 390) */

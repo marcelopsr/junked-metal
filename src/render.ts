@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 let scene: B.Scene;
 export let shadows: B.CascadedShadowGenerator;
 // Perillas del look: valores vivos que el modo lab (?lab, solo dev) cambia con __look({...}) sin recompilar.
-export const LOOK = { snap: 1, lampI: 17.5, glowI: 2.35, cone: 1.28, fogMul: 0.92, ambMul: 0.85, moonMul: 1, exposure: 0.88, dof: 0.4 }; // dof: desenfoque diorama en partida (camera_rig lo enfoca al auto cada cuadro)
+export const LOOK = { snap: 0, lampI: 17.5, glowI: 2.35, cone: 1.28, fogMul: 0.92, ambMul: 0.85, moonMul: 1, exposure: 0.88, dof: 0.6, tilt: 9 }; // dof: desenfoque diorama en partida (camera_rig lo enfoca al auto cada cuadro)
 const ramp = [B.Color3.Black(), B.Color3.Gray(), B.Color3.White()];
 type Clim = Parameters<typeof applyClimate>[0];
 let clim: Clim | null = null;
@@ -42,6 +42,8 @@ export function applyClimate(k: { sun: [number, number, number]; sunColor: strin
   clim = k;
   sun.intensity = k.sunI * LOOK.moonMul;
   hemi.intensity = k.hemiI * LOOK.ambMul;
+  scene.environmentIntensity = k.day ? 0.15 : 0.65;
+  shadows.darkness = k.day ? 0.05 : 0.2; // día: sombras casi negras de maqueta (registro visual: sombras #2A160A); noche: las suaviza el ambiente // día: menos reflejo del cielo para que el sol marque sombras de maqueta (láminas)
   hemi.diffuse = B.Color3.FromHexString(k.amb ?? (k.day ? "#eef1ee" : k.sky[1])); // ambiente diurno neutro para separar los materiales
   hemi.groundColor = B.Color3.FromHexString(k.ground ?? (k.day ? "#7c8970" : NIGHT_GROUND)); // rebote del pasto menos saturado
   paintSky(k.sky); skyStep = -1;
@@ -60,7 +62,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   scene.imageProcessingConfiguration.toneMappingEnabled = true;
   scene.imageProcessingConfiguration.toneMappingType = B.ImageProcessingConfiguration.TONEMAPPING_STANDARD;
   scene.imageProcessingConfiguration.exposure = 1.1;
-  scene.imageProcessingConfiguration.contrast = 1.3;
+  scene.imageProcessingConfiguration.contrast = 1.5;
 
   // Cielo: esfera con gradiente, capturada una vez en una sonda de reflejos
   const sky = B.MeshBuilder.CreateSphere("sky", { diameter: 1200, segments: 16, sideOrientation: B.Mesh.BACKSIDE }, scene);
@@ -104,7 +106,7 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   shadows.stabilizeCascades = true;
   shadows.usePercentageCloserFiltering = true;
   shadows.filteringQuality = SHADOW.mid[2];
-  shadows.darkness = 0.62; // más peso bajo los props con el mismo mapa
+  shadows.darkness = 0.2; // sombras de maqueta marcadas (láminas: contraste 0,25-0,28; con 0,62 el juego medía 0,11)
   shadows.bias = 0.0025;
   shadows.normalBias = 0.012;
   scene.onBeforeRenderObservable.add(() => { const rt = shadows.getShadowMap(); if (rt && rt.getCustomRenderList !== shadowList) rt.getCustomRenderList = shadowList; }); // applyGfx recrea el mapa al cambiar el nivel: se vuelve a enganchar
@@ -138,6 +140,18 @@ export function setupRender(s: B.Scene, cam: B.Camera, low: boolean) {
   ip.vignetteEnabled = true; ip.vignetteWeight = 1.5; ip.vignetteColor = new B.Color4(0.12, 0.06, 0.02, 0); ip.vignetteBlendMode = B.ImageProcessingConfiguration.VIGNETTEMODE_MULTIPLY;
   ip.colorCurves = new B.ColorCurves(); ip.colorCurves.globalSaturation = 22; ip.colorCurves.highlightsHue = 38; ip.colorCurves.highlightsDensity = 18;
   ip.colorCurvesEnabled = true;
+  // Tilt-shift de maqueta (registro visual: franja central nítida, arriba y abajo borrosos). Una pasada, 12 muestras en espiral; sin mapa de
+  // profundidad, así que también corre en táctil. LOOK.tilt = radio máximo en px a 720 de alto (0 = apagado); en pantalla dividida no aplica.
+  B.Effect.ShadersStore.tiltShiftFragmentShader = `precision highp float; varying vec2 vUV; uniform sampler2D textureSampler; uniform vec2 texel; uniform float radius, center, band;
+void main(void) { vec4 c = texture2D(textureSampler, vUV); float lo = center - band, hi = center + band; float d = vUV.y < lo ? (lo - vUV.y) / lo : max(vUV.y - hi, 0.) / (1. - hi); float r = radius * d * d;
+  if (r < .4) { gl_FragColor = c; return; } vec4 acc = c; for (int i = 0; i < 12; i++) { float a = float(i) * 2.39996; float rr = sqrt((float(i) + .5) / 12.);
+  acc += texture2D(textureSampler, vUV + vec2(cos(a), sin(a)) * rr * r * texel); } gl_FragColor = acc / 13.; }`;
+  const tilt = new B.PostProcess("tiltShift", "tiltShift", ["texel", "radius", "center", "band"], null, 1, cam);
+  tilt.onApply = (e: B.Effect) => {
+    e.setFloat2("texel", 1 / tilt.width, 1 / tilt.height);
+    e.setFloat("radius", split.length ? 0 : LOOK.tilt * (tilt.height / 720) * (lowQ ? 0.7 : 1));
+    e.setFloat("center", 0.4); e.setFloat("band", 0.16); // el auto queda a ~40 % desde abajo con la cámara de juego
+  };
   setupPixels(cam, low);
 }
 
@@ -250,7 +264,7 @@ export type Detail = "bajo" | "medio" | "alto" | "ultra";
 export type Gfx = { scaler: "simple" | "fsr" | "ia"; scale: number; fsr: Exclude<Fsr, "off">; aa: AA; sharpen: number; shadowQ: ShadowQ; detail: Detail; texRes: number; aniso: number; bloom: boolean; bright: number; gamma: number };
 
 /** Sombras del sol: [mapa, cascadas, filtrado, distancia]. Con 1 cascada el mapa cubre solo lo cercano al auto. "off" apaga la luz de sombras. */
-const SHADOW = { low: [128, 1, B.ShadowGenerator.QUALITY_LOW, 28], mid: [256, 1, B.ShadowGenerator.QUALITY_LOW, 36], high: [1024, 2, B.ShadowGenerator.QUALITY_MEDIUM, 80] } as const;
+const SHADOW = { low: [512, 1, B.ShadowGenerator.QUALITY_LOW, 60], mid: [1024, 1, B.ShadowGenerator.QUALITY_LOW, 75], high: [2048, 2, B.ShadowGenerator.QUALITY_MEDIUM, 110] } as const; // cámara de maqueta a ~20 m del auto: con 28-36 m las sombras morían junto al auto (perf: medir)
 /** Detalle del mundo: densidad de pasto (x el patio base; pide partida nueva), partículas y restos (x), y distancia de dibujo de props (0 = sin límite). */
 export const DETAIL = { bajo: { grass: 0.33, fx: 0.35, draw: 95 }, medio: { grass: 0.66, fx: 0.6, draw: 145 }, alto: { grass: 1, fx: 1, draw: 220 }, ultra: { grass: 1.5, fx: 1.4, draw: 0 } } as const;
 /** Preajustes de Calidad: fijan de una vez los cinco ajustes de abajo. */

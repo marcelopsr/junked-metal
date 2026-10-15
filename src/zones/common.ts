@@ -1,10 +1,8 @@
 import * as B from "@babylonjs/core";
-import { box, cyl, merge, sph, template } from "../models";
+import { box, cyl, merge, rbox, sph, template } from "../models";
 import { debris, splat } from "../fx";
 import { canvasTex, M, pbr, shadows, surface, TEX, type Surf } from "../render";
 import { rng } from "../rng";
-import { FOLD, FOLDED_SLICE } from "../folded";
-import { crateDetail, fencePanel, realCarFold } from "../folded_slice";
 import type { Climate } from "../run";
 
 export let HALF = 160;
@@ -47,7 +45,7 @@ export function retex() {
     o.dispose(); texs[k] = n;
   }
 }
-export const woodM = () => (FOLDED_SLICE ? FOLD.painted("#B07A4A", 0.2, 301) : pbr("wood", { color: "#ffffff", rough: 0.75, tex: tex("wood", TEX.wood) })); // Folded: tablón de chapa
+export const woodM = () => pbr("toyWood", { color: "#B07A4A", rough: 0.6, metal: 0 }); // madera de juguete lisa
 
 // Materiales PBR con mapas de normales de utilería (props del patio y garaje)
 export const propTex = (name: string) => {
@@ -149,7 +147,7 @@ export const underRoof = (p: B.Vector3) => !!Z.roof?.(p);
 export const bare: { x: number; z: number; r: number }[] = [];
 export const isBare = (x: number, z: number) => bare.some((b) => Math.hypot(x - b.x, z - b.z) < b.r) || Z.rects.some(([cx, cz, w, d]) => Math.abs(x - cx) < w && Math.abs(z - cz) < d);
 
-export type ZoneId = "patio" | "garaje" | "jardin" | "luna" | "galpon" | "desvan" | "pileta" | "cocina";
+export type ZoneId = "patio" | "garaje" | "jardin" | "luna" | "galpon" | "desvan" | "pileta" | "cocina" | "bosque" | "nieve" | "ciudad" | "industrial";
 export type Zone = {
   name: string; short: string; desc: string; half: number; // short: botón del menú principal
   cost: number; // tornillos en el Taller (0 = siempre abierta)
@@ -198,22 +196,10 @@ export const sandTex = () => canvasTex(256, (c, s) => {
   c.globalAlpha = 1;
 });
 
-export const plankTpl = () => template("plank", () => (FOLDED_SLICE ? fencePanel() : [box(2, 7, 0.4, woodM(), [0, 3.5, 0]), box(2, 0.3, 0.6, M.matte("#6b4a2b"), [0, 5.5, -0.3])]));
-// Slice Folded (?folded2): flejes, cantoneras, remaches y calcos de la caja de chapa, como instancia hija escalada a la caja (que sigue siendo el colisionador)
-export const crateFold = (m: B.Mesh, w: number, h: number, d: number) => {
-  if (!FOLDED_SLICE) return m;
-  const k = template("crateFold", crateDetail).createInstance("crateF");
-  k.position.setAll(0); k.parent = m; k.scaling.set(w, h, d); k.isPickable = false; // position.setAll(0): la instancia nace en la plantilla escondida (y -500)
-  return m;
-};
-// Folded: el colisionador viejo queda invisible (misma forma física, mismo rng) y lo viste una instancia de la plantilla de chapa
-export const skin = (m: B.Mesh, name: string, build: () => B.Mesh[]) => {
-  if (!FOLDED_SLICE) return m;
-  m.isVisible = false;
-  const k = template(name, build).createInstance(name);
-  k.position.setAll(0); k.parent = m; k.isPickable = false; k.receiveShadows = true; shadows.addShadowCaster(k); // position.setAll(0): sin eso la piel queda en y -500 y el colisionador invisible deja el prop sin dibujar
-  return m;
-};
+export const plankTpl = () => template("plank", () => [box(2, 7, 0.4, woodM(), [0, 3.5, 0]), box(2, 0.3, 0.6, M.matte("#6b4a2b"), [0, 5.5, -0.3])]);
+// Sin piel Folded: las cajas y props quedan con su material de juguete
+export const crateFold = (m: B.Mesh, _w: number, _h: number, _d: number) => m;
+export const skin = (m: B.Mesh, _name: string, _build: () => B.Mesh[]) => m;
 
 // Casa al fondo (da escala): fachada de ladrillo/revoque cálido con cornisas, marcos oscuros, ventanas encendidas y siluetas
 export function house() {
@@ -249,31 +235,30 @@ export function tree(x: number, z: number) {
 }
 // Auto real (1 u ≈ 4,5 cm: 96 de largo). lift = altura del piso de la carrocería; en caballetes el RC pasa por abajo.
 export function realCar(x: number, z: number, ry: number, lift: number, solid: boolean, paint: string) {
-  const pm = pbr("carPaint" + paint, { color: paint, rough: 0.35 }), dark = M.matte("#1a1a1a"), hub = Math.max(7, lift + 1);
-  const parts = [
-    box(40, 13, 96, pm, [0, lift + 6.5, 0]),
-    box(36, 11, 50, pm, [0, lift + 18.5, -4]),
-    box(36.4, 7, 44, M.glass(), [0, lift + 19, -4]), // ventanillas
-    box(33, 7, 0.4, M.glass(), [0, lift + 19, 21.1]), box(33, 7, 0.4, M.glass(), [0, lift + 19, -29.1]),
-    ...[48.5, -48.5].map((bz) => box(41, 3, 3, dark, [0, lift + 3, bz])),
-    ...[-13, 13].map((bx) => box(8, 3, 0.5, M.matte("#e8e4d0"), [bx, lift + 9, 48.2])),
-    ...[-13, 13].map((bx) => box(8, 3, 0.5, M.matte("#8a1810"), [bx, lift + 9, -48.2])),
-  ];
+  const toy = (c: string, r = 0.4) => pbr("ctoy" + c, { color: c, rough: r, metal: 0 }), hub = Math.max(7, lift + 1);
+  const pm = toy(paint), dark = toy("#2b2f36", 0.8), grey = toy("#9E9E9E"), yel = toy("#FBC02D"), glass = toy("#42A5F5", 0.2);
   const wheels: [number, number][] = [[-19, 31], [19, 31], [-19, -31], [19, -31]];
-  if (FOLDED_SLICE) { parts.forEach((p) => p.dispose()); parts.length = 0; parts.push(...realCarFold(lift, paint)); } // solo visual: el colisionador son las cajas de abajo
-  else for (const [wx, wz] of wheels) parts.push(cyl(14, 14, 8, M.rubber(), [wx, hub, wz], [0, 0, Math.PI / 2], 14), cyl(8, 8, 8.4, M.metal("#9aa0a6"), [wx, hub, wz], [0, 0, Math.PI / 2], 10));
+  const parts = [
+    rbox(40, 13, 96, 3, pm, [0, lift + 6.5, 0]), rbox(36, 11, 50, 3, pm, [0, lift + 18.5, -4]),
+    rbox(36.4, 7, 44, 1.5, glass, [0, lift + 19, -4]),
+    ...[48.5, -48.5].map((bz) => rbox(41, 3, 3, 1, grey, [0, lift + 3, bz])),
+    ...[-13, 13].map((bx) => rbox(8, 3, 0.5, 0.2, yel, [bx, lift + 9, 48.2])),
+    ...[-13, 13].map((bx) => rbox(8, 3, 0.5, 0.2, toy("#FB8C00"), [bx, lift + 9, -48.2])),
+    ...wheels.flatMap(([wx, wz]) => [cyl(14, 14, 8, dark, [wx, hub, wz], [0, 0, Math.PI / 2], 14), cyl(8, 8, 8.4, yel, [wx, hub, wz], [0, 0, Math.PI / 2], 10)]),
+  ];
   const m = merge("realCar", parts);
   m.position.set(x, 0, z); m.rotation.y = ry;
   shadows.addShadowCaster(m);
   if (!solid) return m;
   occluders.push(m);
+  const stand = toy("#FB8C00");
   const c = Math.cos(ry), s = Math.sin(ry), at = (lx: number, ly: number, lz: number): [number, number, number, number] => [x + lx * c + lz * s, ly, z - lx * s + lz * c, ry];
   stat(box(40, 24, 96, dark, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, at(0, lift + 12, 0)).isVisible = false;
   for (const [wx, wz] of wheels) {
     stat(box(8, 14, 14, dark, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, at(wx, hub, wz)).isVisible = false;
     // Caballete bajo cada rueda (lo único que estorba abajo)
     const [sx, , sz] = at(wx * 0.7, 0, wz);
-    stat(merge("stand", [cyl(1.2, 4.5, lift, M.metal("#b8322a"), [0, lift / 2, 0], undefined, 4), box(3, 0.8, 3, M.metal("#b8322a"), [0, lift, 0])]), B.PhysicsShapeType.CYLINDER, {}, [sx, 0, sz]);
+    stat(merge("stand", [cyl(1.2, 4.5, lift, stand, [0, lift / 2, 0], undefined, 4), box(3, 0.8, 3, stand, [0, lift, 0])]), B.PhysicsShapeType.CYLINDER, {}, [sx, 0, sz]);
     bare.push({ x: sx, z: sz, r: 3 });
   }
   return m;

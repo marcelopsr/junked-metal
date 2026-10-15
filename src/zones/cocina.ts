@@ -42,7 +42,31 @@ const thin = (m: B.Mesh, mats: B.Matrix[]) => {
 const T = (x: number, y: number, z: number, sx = 1, sy = 1, sz = 1, ry = 0) => B.Matrix.Compose(new B.Vector3(sx, sy, sz), B.Quaternion.FromEulerAngles(0, ry, 0), new B.Vector3(x, y, z));
 const hiddenBox = (w: number, h: number, d: number, x: number, y: number, z: number) => (stat(box(w, h, d, M.matte("#555"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, y, z]).isVisible = false);
 
+// Juguetes de cocina a escala del auto (2-3 m): una malla fusionada y un colisionador invisible por objeto. Fijos (no dependen de la semilla); reservan su lugar en `bare`.
+function kitchenToys() {
+  const parts: B.Mesh[] = [], R = M.plastic("#E53935"), Y = M.plastic("#FBC02D"), Bl = M.plastic("#42A5F5"), G = M.plastic("#66BB6A"), O = M.plastic("#FB8C00"), Br = M.matte("#795548"), Gy = M.metal("#9E9E9E");
+  const put = (x: number, z: number, w: number, h: number, d: number, r: number) => { hiddenBox(w, h, d, x, h / 2, z); bare.push({ x, z, r }); };
+  const jar = (x: number, z: number, body: B.Material, lid: B.Material) => { parts.push(cyl(4.4, 4.4, 5.6, body, [x, 2.8, z], undefined, 12), cyl(4.8, 4.8, 1, lid, [x, 6.1, z], undefined, 12), box(3.2, 2.2, 0.2, M.matte("#FFF3D6"), [x, 2.8, z - 2.25])); put(x, z, 4.4, 6.6, 4.4, 5); };
+  const cup = (x: number, z: number, c: B.Material) => { parts.push(cyl(5, 4, 4.4, c, [x, 2.2, z], undefined, 12), tor(3, 0.9, c, [x + 3.1, 2.4, z], [Math.PI / 2, 0, 0], 8)); put(x, z, 5, 4.4, 5, 5); };
+  const crumb = (x: number, z: number, s: number) => { parts.push(sph(s, Br, [x, s * 0.25, z], [1.2, 0.5, 0.9], 4)); put(x, z, s, s * 0.5, s, s); };
+  const block = (x: number, z: number, c: B.Material, s = 3) => parts.push(box(s, s, s, c, [x, s / 2, z], [0, rng() * 1.2, 0]));
+  jar(-30, 35, R, Y); jar(25, 45, Bl, R); jar(70, 15, G, Y);
+  cup(-45, -20, Y); cup(35, 15, G); cup(-70, 55, O);
+  parts.push(box(4.4, 1.4, 2.6, R, [15, 0.7, -30]), box(4.5, 0.5, 2.7, Br, [15, 0.9, -30])); put(15, -30, 4.4, 1.4, 2.6, 4); // caja de fósforos
+  block(-20, -45, R); block(-16.8, -45, Bl); block(-18.4, -45, Y, 3); parts.push(box(3, 3, 3, G, [-18.4, 4.5, -45])); put(-18, -45, 7, 6, 3.2, 6); // torre de bloques
+  block(60, 60, G); block(63.4, 60.8, O); block(61.6, 63.6, Bl); put(62, 61.5, 7, 3, 7, 6);
+  for (const [x, z, s] of [[45, 30, 2.2], [-60, 10, 1.8], [10, 70, 2.4], [-35, -70, 2]]) crumb(x, z, s);
+  parts.push(box(16, 0.6, 2.2, Gy, [-60, 0.3, -50], [0, 0.5, 0]), box(10, 1.2, 2.6, O, [-69, 0.6, -53.7], [0, 0.5, 0])); put(-64, -52, 22, 1.2, 4, 12); // cuchillo
+  // Segundo anillo (8-25 u de la salida, bajo < 1,5): bloques, migas y cucharas, hacia +z y los costados.
+  block(-12, 14, Bl, 1.6); block(-10.2, 14.6, R, 1.4); block(12, 13, Y, 1.5); block(0, 23, G, 1.6); block(1.8, 22.6, O, 1.3);
+  for (const [x, z, s] of [[-21, 19, 1.2], [20, 18, 1.1], [-24, 5, 1], [23, 4, 1.2], [-8, 24, 0.9], [14, 24, 1], [-14, -12, 1.1]]) crumb(x, z, s);
+  parts.push(box(6, 0.4, 1.2, Gy, [16, 0.2, -11], [0, 0.4, 0]), cyl(1.4, 1.4, 0.4, Gy, [19.4, 0.2, -10.2], undefined, 10)); put(17, -11, 7, 0.5, 2, 4); // cuchara
+  for (const [x, z] of [[-12, 14], [12, 13], [0, 23]]) put(x, z, 3.4, 1.6, 3, 3);
+  merge("juguetesCocina", parts).receiveShadows = true;
+}
+
 export function kitchenBuild() {
+  kitchenToys();
   floor("kitchenTile", "#ffffff", tileTex, 0.55, "concrete", 18); // baldosa de ~4,5 m (dos autos)
   const paint = M.matte("#FFE082"), band = M.matte("#E53935");
   for (const [x, z, w, d] of [[0, -HALF - 1, HALF * 2 + 4, 2], [HALF + 1, 0, 2, HALF * 2 + 4], [-HALF - 1, 0, 2, HALF * 2 + 4], [0, HALF + 1, HALF * 2 + 4, 2]]) occluders.push(merge("kwall", [box(w, 110, d, paint, [x, 55, z]), box(w + 0.6, 5, d + 0.6, band, [x, 2.5, z])]));

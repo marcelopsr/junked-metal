@@ -23,9 +23,9 @@ import { T_BICHOS } from "./run_loader";
 
 // Cámara: seguimiento de partida (modos CAMS, luna, mesa de menú) y diorama de menús. Estado propio acá; lo compartido entra por initCameraRig.
 const R = BAL.ritmo;
-// Cámara de maqueta (diorama de juguete): FOV cerrado = 0,7 × el de Configuración (49° → ~34°, 0,6 rad) y distancia ×1,45 para conservar el encuadre
+// Cámara de maqueta (diorama de juguete): FOV cerrado = 0,7 × el de Configuración (49° → ~34°, 0,6 rad) y distancia ×1,2 (algo más cerca que el encuadre original)
 // (tan(17°)/tan(24,5°) ≈ 0,67). Las proporciones back/up de CAMS no cambian, así que el cabeceo sigue ~41° (modo actual).
-const DIORAMA_FOV = 0.7, DIORAMA_DIST = 1.45;
+const DIORAMA_FOV = 0.7, DIORAMA_DIST = 1.2; // 1,45 dejaba auto y props diminutos frente a las láminas
 const DOF_FULL = 45, DOF_OFF = 90; // m: distancia cámara-auto hasta la que el DOF es pleno / desde la que se apaga
 export interface CameraContext {
   readonly engine: B.AbstractEngine;
@@ -59,7 +59,7 @@ export const camReset = () => { dynK = 1; };
 // Modos de cámara de partida (Configuración → Juego, se alternan con Cambiar cámara). back/up = metros detrás y arriba (por el zoom del usuario),
 // look = cuánto mira por delante del auto, yaw fijo = no gira con el auto (el stick sigue siendo "hacia dónde ir" en pantalla)
 export const CAMS: Record<CamMode, { back: number; up: number; look: number; yaw?: number }> = {
-  actual: { back: 15, up: 13, look: 3 },
+  actual: { back: 15, up: 9, look: 4 }, // más baja que antes (13): deja ver el horizonte, como las láminas
   cenital: { back: 2, up: 24, look: 0, yaw: 0 }, // casi vertical: norte (+z) arriba; ×1,8 en pantalla vertical (angosta); la altura se acota para que el anillo de aparición quede fuera de cuadro
   iso: { back: 12, up: 19, look: 0, yaw: Math.PI / 4 }, // diagonal 45° en planta, inclinada 58° hacia abajo (a 45° veía hasta el horizonte)
   baja: { back: 8, up: 4.5, look: 6 },
@@ -150,7 +150,7 @@ export function cameraTick(dt: number) {
     if (!c.simulating) {
       const to = c.lead.car.pos.add(new B.Vector3(0, 0.6, 0)).subtractInPlace(c.cam.position), len = to.length();
       const ray = new B.Ray(c.cam.position, to.scaleInPlace(1 / len), len);
-      for (const m of c.occluders) m.visibility = ray.intersectsMesh(m, true).hit ? 0.999 : 1;
+      for (const m of c.occluders) m.isVisible = !ray.intersectsMesh(m, true).hit; // oculta, no trama: con la cámara de maqueta la tapa de la mesa llenaba la pantalla de damero (bruma)
     }
     // Profundidad de campo de maqueta: foco en el auto, medido sobre el eje de la cámara (igual que en los menús)
     if (c.low) setDof(0); else {

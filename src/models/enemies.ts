@@ -2,11 +2,33 @@ import * as B from "@babylonjs/core";
 import { M, pbr, shadows } from "../render";
 import { FOLDED_SLICE } from "../folded";
 import { foldLeg, mothWing } from "../folded_slice";
-import { type V3, box, cyl, sph, tor, tube, extrude, template, scene } from "./common";
+import { type V3, box, cyl, sph, tor, tube, extrude, template, scene, canvasTex } from "./common";
 
 // ---------- Enemigos ----------
 
 const VIS_1C = 1.22; // oleada 1c: silueta más legible en bestiario (no toca DEF.size ni colisión)
+// Metal pintado de insecto mecánico (ref90-94): rugosidad .45, metálico .3, barniz suave. Un material cacheado por color.
+const paint = (c: string) => pbr("bug" + c, { color: c, rough: 0.45, metal: 0.3, coat: 0.25 });
+// Pintura de juguete gastada (ref169/171/173): textura 128 px por color con lascas en los bordes de la cara que dejan ver gris metálico y rayones. Semilla fija, una por color.
+const worn = (c: string) => pbr("worn" + c, { color: "#ffffff", rough: 0.45, metal: 0.3, coat: 0.25, tex: canvasTex("worn" + c, 128, (g, n) => {
+  let s = 7919; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+  g.fillStyle = c; g.fillRect(0, 0, n, n);
+  for (let i = 0; i < 44; i++) { // lascas pegadas a las 4 aristas de la cara (u/v = 0 o 1)
+    const e = i % 4, a = r() * n, d = r() * 7 + 1, w = 4 + r() * 12;
+    const x = e < 2 ? a : e === 2 ? d : n - d, y = e < 2 ? (e ? n - d : d) : a;
+    g.fillStyle = r() < 0.6 ? "#9aa1ab" : "#6f7680";
+    g.beginPath(); g.ellipse(x, y, e < 2 ? w : d + 1, e < 2 ? d + 1 : w, 0, 0, 7); g.fill();
+  }
+  g.strokeStyle = "#8c939d"; g.lineWidth = 1;
+  for (let i = 0; i < 5; i++) { const x = r() * n, y = r() * n; g.beginPath(); g.moveTo(x, y); g.lineTo(x + r() * 20 - 10, y + r() * 20 - 10); g.stroke(); }
+}) });
+// Remaches: semiesferas chicas en las esquinas de una placa (centro, mitad ancho x, mitad alto y/z, eje del plano), fusionadas en la plantilla.
+const rivMat = () => M.metal("#aeb4bd");
+const rivets = (c: V3, hx: number, hy: number, ax: "z" | "x" | "y" = "z", d = 0.08): B.Mesh[] =>
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => sph(d, rivMat(), ax === "z" ? [c[0] + a * hx, c[1] + b * hy, c[2]] : ax === "x" ? [c[0], c[1] + b * hy, c[2] + a * hx] : [c[0] + a * hx, c[1], c[2] + b * hy], undefined, 4));
+// Gelatina rosa translúcida (ref128/129): una sola para babosa y divisor.
+const gel = () => pbr("gelRosa", { color: "#e8508a", rough: 0.12, metal: 0, emissive: "#6a1838", alpha: 0.85, coat: 0.9 });
+const gelEye = () => pbr("gelOjo", { color: "#ffffff", rough: 0.3, emissive: "#8a8a8a" });
 const vis1c = (k: string, s: number) => s * (["friccion", "robot", "cortadora", "aspiradora", "cortacercos"].includes(k) ? VIS_1C : 1);
 
 export function enemyTemplate(kind: string, scale = 1): B.Mesh {
@@ -107,13 +129,13 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
     }
     if (kind === "polilla") {
       // Cuerpo peludo y antenas plumosas; las alas van aparte (wingTemplate) para aletear
-      const fur = M.matte("#d8c690");
+      const fur = M.matte("#8a6a45"), cream = M.matte("#e8d8b0");
       const eye = pbr("mothEye", { color: "#c9a0ff", emissive: "#f0d8ff", rough: 0.35 });
       const eyeCore = pbr("mothEyeCore", { color: "#ffffff", emissive: "#ffffff", rough: 0.2 });
       return [
         sph(0.54, fur, [0, 0, -0.38], [0.85, 0.78, 1.55]),
-        sph(0.46, M.matte("#a8966c"), [0, 0.03, 0.1]),
-        sph(0.34, fur, [0, 0.03, 0.4]),
+        sph(0.46, cream, [0, 0.03, 0.1]),
+        sph(0.34, cream, [0, 0.03, 0.4]),
         ...[-1, 1].flatMap((sx) => [
           tube([[sx * 0.08, 0.12, 0.44], [sx * 0.16, 0.25, 0.52], [sx * 0.25, 0.38, 0.55]], 0.02, fur),
           sph(0.06, fur, [sx * 0.14, 0.21, 0.48], [1.3, 0.6, 0.8]),
@@ -125,11 +147,11 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
     }
     if (kind === "tarantula") {
       // Cefalotórax + abdomen con banda naranja, quelíceros gruesos; 8 patas en LEGS
-      const hair = M.matte("#7a55a8"), band = M.plastic("#c87830"), dark = M.matte("#4a3228");
+      const hair = paint("#1a1a1e"), band = paint("#e0a020"), dark = paint("#101014");
       return [
         sph(1.5, hair, [0, 0.6, -0.82], [1, 0.88, 1.22], 10),
         tor(1.08, 0.24, band, [0, 0.64, -0.58], [Math.PI / 2, 0, 0], 12),
-        sph(1.0, M.matte("#8a4a22"), [0, 0.92, -0.9], [1, 0.38, 1.05], 8),
+        sph(1.0, paint("#d9661a"), [0, 0.92, -0.9], [1, 0.38, 1.05], 8),
         sph(1.08, dark, [0, 0.5, 0.34], [1, 0.68, 1.22], 10),
         cyl(0.07, 0.22, 0.48, M.plastic("#2a1810"), [0.17, 0.28, 0.98], [2.55, 0, 0], 5),
         cyl(0.07, 0.22, 0.48, M.plastic("#2a1810"), [-0.17, 0.28, 0.98], [2.55, 0, 0], 5),
@@ -179,29 +201,39 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
       ];
     }
     if (kind === "muneco" || kind === "falso") {
-      // Muñeco de ventrílocuo (desván): traje rojo, cabeza de madera con mandíbula articulada, palo en la espalda; el falso es el mismo, descolorido; mira hacia +z
-      const f = kind === "falso", suit = M.plastic(f ? "#6b7280" : "#b91c1c"), wood = M.plastic(f ? "#d6c7a8" : "#e0b27a"), dark = M.matte("#1a1a1a"), white = M.plastic("#f5f5f4"), gold = M.metal("#d4a017");
+      // Muñeco de ventrílocuo (desván; ref150): galera negra con cinta roja, cara de madera crema con mejillas y mandíbula, frac con ribetes dorados, chaleco negro, moño y manos de madera, palo con perilla en la espalda; el falso es el mismo, descolorido; mira hacia +z
+      const f = kind === "falso", suit = worn(f ? "#6b7280" : "#8e1c1c"), wood = M.plastic(f ? "#d6c7a8" : "#e6cfa0"), dark = M.matte("#1a1a1a"), white = M.plastic("#f5f5f4"), gold = M.metal("#d4a017"), cheek = M.plastic(f ? "#a8a29e" : "#d04a3a"), hat = worn("#2b2622");
       return [
-        box(1.8, 2.4, 1.2, suit, [0, 1.2, 0]),
-        box(0.5, 1.6, 0.5, wood, [-0.55, 0.8, 0.1]), box(0.5, 1.6, 0.5, wood, [0.55, 0.8, 0.1]),
-        sph(1.0, wood, [0, 3.5, 0], undefined, 10),
-        box(1.3, 0.55, 0.9, wood, [0, 2.55, 0.35]),
-        ...[-1, 1].map((s) => sph(0.24, white, [s * 0.42, 3.8, 0.85], undefined, 6)),
-        ...[-1, 1].map((s) => sph(0.1, dark, [s * 0.42, 3.8, 1.05], undefined, 5)),
-        cyl(0.7, 0.7, 0.35, dark, [0, 4.4, 0], undefined, 8), cyl(0.45, 0.45, 0.5, dark, [0, 4.75, 0], undefined, 8),
-        box(0.12, 3.2, 0.12, gold, [0, 2.6, -0.8]),
+        box(1.8, 1.9, 1.2, suit, [0, 1.65, 0]), box(1.5, 0.9, 0.5, suit, [0, 0.7, -0.55], [0.25, 0, 0]), // frac y faldón
+        ...rivets([0, 1.75, 0.69], 0.32, 0.6, "z", 0.1),
+        box(0.7, 1.3, 0.1, dark, [0, 1.75, 0.62]), box(0.36, 0.9, 0.1, white, [0, 2.05, 0.66]), // chaleco y pechera
+        box(0.1, 1.6, 0.06, gold, [0.5, 1.8, 0.64], [0, 0, -0.12]), box(0.1, 1.6, 0.06, gold, [-0.5, 1.8, 0.64], [0, 0, 0.12]), // ribetes
+        box(0.34, 0.2, 0.1, dark, [0.2, 2.62, 0.68]), box(0.34, 0.2, 0.1, dark, [-0.2, 2.62, 0.68]), sph(0.16, dark, [0, 2.62, 0.7], undefined, 5), // moño
+        box(0.55, 1.5, 0.55, suit, [-0.55, 0.75, 0.05]), box(0.55, 1.5, 0.55, suit, [0.55, 0.75, 0.05]),
+        box(0.7, 0.32, 1.0, dark, [-0.55, 0.16, 0.25]), box(0.7, 0.32, 1.0, dark, [0.55, 0.16, 0.25]), // zapatos
+        box(0.5, 1.5, 0.5, suit, [-1.25, 1.75, 0.3], [-0.5, 0, 0.2]), box(0.5, 1.5, 0.5, suit, [1.25, 1.75, 0.3], [-0.5, 0, -0.2]),
+        box(0.5, 0.55, 0.3, wood, [-1.45, 1.0, 0.75]), box(0.5, 0.55, 0.3, wood, [1.45, 1.0, 0.75]), // manos de madera
+        sph(1.6, wood, [0, 3.45, 0], [1, 1.05, 1], 10),
+        box(1.2, 0.5, 0.9, wood, [0, 2.8, 0.3]), box(0.9, 0.12, 0.5, M.matte("#7a1f1f"), [0, 3.0, 0.62]), // mandíbula y boca
+        ...[-1, 1].flatMap((s) => [sph(0.34, white, [s * 0.38, 3.65, 0.72], undefined, 6), sph(0.16, dark, [s * 0.38, 3.65, 0.9], undefined, 5), sph(0.3, cheek, [s * 0.62, 3.25, 0.62], [1, 1, 0.4], 5), box(0.4, 0.07, 0.1, dark, [s * 0.38, 3.98, 0.8], [0, 0, s * -0.25])]),
+        cyl(1.9, 1.9, 0.12, hat, [0, 4.05, 0], undefined, 12), cyl(1.15, 1.2, 0.9, hat, [0, 4.55, 0], undefined, 10), cyl(1.22, 1.22, 0.28, M.plastic(f ? "#6b7280" : "#b91c1c"), [0, 4.2, 0], undefined, 10), // galera con cinta
+        box(0.12, 3.0, 0.12, gold, [0, 2.2, -0.8]), sph(0.3, gold, [0, 3.8, -0.8], undefined, 5),
       ];
     }
     if (kind === "payaso") {
-      // Payaso de resorte (desván): caja violeta, resorte de acero, cabeza blanca con nariz roja y sombrero, mira hacia +z
-      const box0 = M.plastic("#7c3aed"), steel = M.metal("#9ca3af"), white = M.plastic("#f5f5f4"), red = M.glow("#ff2a1a"), dark = M.matte("#1a1a1a");
+      // Payaso de resorte (desván; ref151): caja violeta con estrellas amarillas y esquineros de bronce, manivela de mango rojo, resorte en espiral, cabeza blanca con nariz roja, sonrisa de dientes, pelo rojo facetado y gorro cónico negro con pompón; mira hacia +z
+      const box0 = M.plastic("#7c3aed"), bronze = M.plastic("#a8803c"), white = M.plastic("#f1ede4"), red = M.plastic("#d62a1e"), dark = M.matte("#1a1a1a"), star = M.matte("#e8b020");
       return [
         box(3.2, 1.6, 3.2, box0, [0, 0.8, 0]),
-        tube([[0, 1.6, 0], [0.6, 2.2, 0], [-0.6, 2.8, 0], [0.6, 3.4, 0], [0, 4, 0]], 0.22, steel),
-        sph(1.2, white, [0, 5.1, 0], undefined, 10),
-        sph(0.35, red, [0, 5, 1.15], undefined, 6),
-        cyl(0.1, 0.9, 1.2, dark, [0, 6.5, 0], undefined, 8),
-        ...[-1, 1].map((s) => sph(0.22, dark, [s * 0.45, 5.4, 1.0], undefined, 5)),
+        ...[-1, 1].flatMap((x) => [-1, 1].flatMap((z) => [box(0.5, 1.7, 0.5, bronze, [x * 1.55, 0.8, z * 1.55])])),
+        ...[0, 1.26, 2.51, 3.77, 5.03].map((a) => box(0.9, 0.26, 0.08, star, [0, 0.8, 1.62], [0, 0, a])), // estrella en el frente
+        cyl(0.26, 0.26, 0.5, bronze, [1.75, 0.9, 0], [0, 0, Math.PI / 2], 8), tube([[1.9, 0.9, 0], [2.2, 0.9, 0], [2.2, 0.9, 0.6]], 0.08, bronze), cyl(0.3, 0.3, 0.7, red, [2.2, 0.9, 0.95], [Math.PI / 2, 0, 0], 8), // manivela
+        tube([[0.7, 1.6, 0.0],[0.44, 1.79, 0.55],[-0.16, 1.98, 0.68],[-0.63, 2.17, 0.3],[-0.63, 2.36, -0.31],[-0.15, 2.55, -0.68],[0.44, 2.74, -0.54],[0.7, 2.93, 0.01],[0.43, 3.12, 0.56],[-0.17, 3.31, 0.68],[-0.64, 3.5, 0.29],[-0.62, 3.69, -0.32],[-0.14, 3.88, -0.69],[0.45, 4.07, -0.53],[0.7, 4.26, 0.02],[0.42, 4.45, 0.56],[-0.18, 4.64, 0.68],[-0.64, 4.83, 0.28]], 0.13, bronze),
+        sph(2.0, white, [0, 5.1, 0], undefined, 10),
+        sph(0.55, red, [0, 4.95, 0.95], undefined, 7),
+        box(1.0, 0.18, 0.1, red, [0, 4.35, 0.85]), ...[-0.3, 0, 0.3].map((x) => box(0.14, 0.2, 0.1, white, [x, 4.28, 0.9])), // sonrisa con dientes
+        ...[-1, 1].flatMap((s) => [box(0.34, 0.5, 0.08, dark, [s * 0.5, 5.4, 0.9], [0, 0, s * 0.5]), sph(0.2, dark, [s * 0.5, 5.3, 0.98], undefined, 5), sph(0.3, red, [s * 0.75, 4.75, 0.82], [1, 1, 0.3], 5), sph(0.85, red, [s * 1.1, 5.35, -0.25], [0.8, 1, 1], 5)]), // ojos, cachetes y pelo facetado
+        cyl(0.1, 1.3, 1.4, dark, [0, 6.65, 0], undefined, 8), cyl(1.4, 1.4, 0.14, bronze, [0, 6.05, 0], undefined, 10), sph(0.34, bronze, [0, 7.4, 0], undefined, 6),
       ];
     }
     if (kind === "limpiafondos") {
@@ -275,31 +307,48 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         box(0.06, 0.34, 0.36, red, [0, 0.82, -0.5]), sph(0.18, M.glow("#ffe566"), [0, 0.72, 0.3], undefined, 6),
       ];
     }
-    if (kind === "grillo") {
-      const g = M.plastic("#5a8a2a"), d = M.matte("#2f4a16"), eye = M.glow("#ffe040");
+    if (kind === "grillo") { // ref83: cuerpo verde alargado, ojos negros grandes, 2 antenas largas, patas traseras de salto en Λ, 4 patas delanteras
+      const g = worn("#6a9a3a"), d = paint("#2a2a22"), plate = worn("#4f7a2a"), eye = M.plastic("#0c0c0c");
       return [
-        sph(0.5, g, [0, 0.55, -0.15], [0.9, 0.8, 1.5], 8), sph(0.36, g, [0, 0.62, 0.55], undefined, 6),
-        sph(0.09, eye, [0.15, 0.72, 0.8], undefined, 4), sph(0.09, eye, [-0.15, 0.72, 0.8], undefined, 4),
+        sph(0.8, g, [0, 0.55, -0.2], [0.85, 0.8, 1.9], 8), sph(0.6, plate, [0, 0.62, 0.45], [1, 0.9, 1.1], 6), // abdomen y tórax
+        ...[-0.45, -0.1, 0.25].map((z) => box(0.62, 0.07, 0.1, plate, [0, 0.82 - (z < -0.3 ? 0.02 : 0), z])), // placas dorsales
+        ...rivets([0, 0.85, -0.1], 0.3, 0.35, "y", 0.07),
+        sph(0.52, eye, [0.21, 0.78, 0.85], [0.9, 1.1, 0.9], 6), sph(0.52, eye, [-0.21, 0.78, 0.85], [0.9, 1.1, 0.9], 6),
         ...[-1, 1].flatMap((s) => [
-          tube([[s * 0.3, 0.5, -0.3], [s * 0.6, 1.05, -0.65], [s * 0.55, 0.1, -1]], 0.07, d), // pata trasera de salto
-          tube([[s * 0.1, 0.8, 0.8], [s * 0.3, 1.2, 0.9], [s * 0.45, 1.5, 0.7]], 0.02, d), // antena
-          tube([[s * 0.25, 0.45, 0.2], [s * 0.45, 0.3, 0.4], [s * 0.5, 0.05, 0.5]], 0.05, d),
+          tube([[s * 0.28, 0.6, -0.45], [s * 0.55, 1.15, -0.8], [s * 0.6, 0.06, -1.3]], 0.11, d), // pata trasera en Λ
+          sph(0.24, plate, [s * 0.55, 1.15, -0.8], undefined, 4), box(0.05, 0.2, 0.05, d, [s * 0.58, 0.7, -1.1], [0.5, 0, 0]),
+          tube([[s * 0.1, 0.8, 0.9], [s * 0.35, 1.3, 1.1], [s * 0.7, 1.55, 0.6]], 0.025, d), // antena larga
+          tube([[s * 0.25, 0.5, 0.1], [s * 0.5, 0.3, 0.25], [s * 0.55, 0.03, 0.3]], 0.05, d),
+          tube([[s * 0.22, 0.5, 0.5], [s * 0.45, 0.3, 0.7], [s * 0.5, 0.03, 0.8]], 0.05, d),
         ]),
       ];
     }
-    if (kind === "mosca") {
-      const b = M.matte("#2a2a35"), wing = M.glass(), eye = M.glow("#ff3a2a");
+    if (kind === "mosca") { // ref82: tórax verde oliva y negro, 2 ojos compuestos rojos grandes, alas de celofán con nervios cobrizos, 6 patas finas
+      const b = worn("#5a6a2a"), k = paint("#15160f"), wing = pbr("moscaala", { color: "#c8d4e0", rough: 0.08, alpha: 0.45, coat: 0.6 }), eye = M.glow("#ff2a1a"), vein = paint("#b07040");
       return [
-        sph(0.3, b, [0, 0.45, -0.1], [0.9, 0.8, 1.3], 6), sph(0.22, b, [0, 0.48, 0.3], undefined, 6),
-        sph(0.12, eye, [0.13, 0.52, 0.42], undefined, 4), sph(0.12, eye, [-0.13, 0.52, 0.42], undefined, 4),
-        ...[-1, 1].map((s) => box(0.5, 0.02, 0.28, wing, [s * 0.34, 0.68, -0.1], [0, s * 0.3, s * 0.15])),
+        sph(0.6, b, [0, 0.45, -0.15], [0.9, 0.8, 1.4], 6), sph(0.44, b, [0, 0.5, 0.25], undefined, 6),
+        box(0.5, 0.06, 0.08, k, [0, 0.68, -0.05]), box(0.46, 0.06, 0.08, k, [0, 0.66, -0.25]), box(0.36, 0.06, 0.08, k, [0, 0.62, -0.45]),
+        sph(0.4, eye, [0.19, 0.55, 0.45], undefined, 6), sph(0.4, eye, [-0.19, 0.55, 0.45], undefined, 6),
+        ...rivets([0, 0.71, 0.1], 0.16, 0.2, "y", 0.05),
+        ...[-1, 1].flatMap((s) => [
+          ...(() => { // alas en V hacia arriba y atrás (~30°): gota aplanada de celofán + 3 nervios cobrizos; R = giro del ala, el origen local es la raíz en el tórax
+            const rx = -0.52, rz = s * 0.3, R = B.Matrix.RotationYawPitchRoll(0, rx, rz), root = new B.Vector3(s * 0.12, 0.7, -0.05);
+            const at = (x: number, z: number, y = 0.02): V3 => { const q = B.Vector3.TransformCoordinates(new B.Vector3(x, y, z), R).addInPlace(root); return [q.x, q.y, q.z]; };
+            const rot = (m: B.Mesh) => ((m.rotation = new B.Vector3(rx, 0, rz)), m);
+            return [
+              rot(sph(1, wing, at(0.05 * s, -0.6), [0.85, 0.035, 1.25], 8)), rot(sph(1, wing, at(0.02 * s, -0.25), [0.45, 0.035, 0.6], 6)), // gota: cuerpo ancho atrás, punta fina en la raíz
+              rot(box(0.025, 0.025, 1.0, vein, at(0.05 * s, -0.6, 0.04))), rot(box(0.025, 0.025, 0.8, vein, at(s * 0.2, -0.5, 0.04))), rot(box(0.025, 0.025, 0.7, vein, at(-s * 0.15, -0.5, 0.04))),
+            ];
+          })(),
+          ...[0.25, 0, -0.25].map((z) => tube([[s * 0.15, 0.4, z], [s * 0.4, 0.3, z + 0.08], [s * 0.45, 0.02, z + 0.1]], 0.025, k)),
+        ]),
       ];
     }
-    if (kind === "babosa") {
-      const b = M.plastic("#8a9a3a"), eye = M.glow("#ffe040"), d = M.matte("#4a5a1a");
+    if (kind === "babosa") { // ref129: domo bajo de gelatina rosa con 2 ojos blancos ovalados
+      const b = gel(), eye = gelEye(), pupil = M.plastic("#1a1018");
       return [
-        sph(0.55, b, [0, 0.42, -0.2], [1, 0.7, 1.9], 8), sph(0.34, b, [0, 0.55, 0.75], undefined, 6),
-        ...[-1, 1].flatMap((s) => [tube([[s * 0.12, 0.8, 0.8], [s * 0.2, 1.1, 0.95], [s * 0.3, 1.35, 0.9]], 0.03, d), sph(0.08, eye, [s * 0.3, 1.36, 0.9], undefined, 4)]), // tentáculos con ojos
+        sph(2, b, [0, 0.22, 0], [0.6, 0.5, 0.95], 10),
+        ...[-1, 1].flatMap((s) => [sph(0.36, eye, [s * 0.2, 0.62, 0.5], [0.85, 1.25, 0.7], 6), sph(0.14, pupil, [s * 0.2, 0.64, 0.64], undefined, 4)]),
       ];
     }
     // Comunes de ritmo medio: juguetes de chatarra de colores vivos (ver docs/ART_DIRECTION.md); frente = +Z
@@ -313,14 +362,18 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         ...[-1, 1].map((x) => tube([[x * 0.3, 0.2, 0.1], [x * 0.38, 0.1, 0.25], [x * 0.3, 0, 0.4]], 0.06, band)),
       ];
     }
-    if (kind === "escudo") { // soldadito con una placa de chapa enorme por delante
-      const body = M.plastic("#4f7cc4"), plate = M.metal("#c9d2dc"), rim = M.matte("#e8b020"), dark = M.matte("#22304a");
+    if (kind === "escudo") { // ref153: robot chico con capucha de tela crema con parches verdes, ojos amarillos, báculo de bronce con orbe verde y morral; ponytail: se conserva una placa chica al frente porque es la mecánica del escudero
+      const cream = M.matte("#e8dcc0"), green = M.matte("#6b8a3a"), dark = M.matte("#1d2418"), bronze = worn("#a8803c"), rim = worn("#a8803c"), orb = M.glow("#b8f040"), leather = M.matte("#7a4a28");
       return [
-        sph(0.8, body, [0, 0.62, -0.1], [1, 0.9, 1], 10), sph(0.5, body, [0, 1.12, -0.05], undefined, 8),
-        sph(0.12, M.glow("#ffe040"), [0.14, 1.2, 0.34], undefined, 4), sph(0.12, M.glow("#ffe040"), [-0.14, 1.2, 0.34], undefined, 4),
-        box(1.5, 1.25, 0.12, plate, [0, 0.72, 0.62]), box(1.62, 0.1, 0.18, rim, [0, 1.36, 0.62]), box(1.62, 0.1, 0.18, rim, [0, 0.08, 0.62]),
-        box(0.1, 1.25, 0.18, rim, [0.8, 0.72, 0.62]), box(0.1, 1.25, 0.18, rim, [-0.8, 0.72, 0.62]), cyl(0.16, 0.16, 0.06, rim, [0, 0.78, 0.7], [Math.PI / 2, 0, 0], 8),
-        box(0.5, 0.3, 0.7, dark, [0.45, 0.15, -0.2]), box(0.5, 0.3, 0.7, dark, [-0.45, 0.15, -0.2]),
+        cyl(0.55, 1.5, 1.2, cream, [0, 0.6, -0.05], undefined, 9), box(0.9, 0.5, 0.06, green, [0.2, 0.45, 0.5], [0, 0, 0.2]), box(0.5, 0.35, 0.06, green, [-0.45, 0.8, 0.4], [0, 0, -0.3]), // túnica y parches
+        sph(0.9, cream, [0, 1.3, -0.05], [1, 1.15, 1], 8), cyl(0.04, 0.5, 0.7, cream, [0, 1.95, -0.2], [-0.35, 0, 0], 6), box(0.5, 0.14, 0.3, green, [0, 1.72, 0.3], [0.3, 0, 0]), // capucha con punta y parche
+        sph(0.62, dark, [0, 1.22, 0.3], [1, 1, 0.75], 7), sph(0.2, M.glow("#ffe040"), [0.17, 1.26, 0.58], [0.7, 1.3, 0.5], 5), sph(0.2, M.glow("#ffe040"), [-0.17, 1.26, 0.58], [0.7, 1.3, 0.5], 5),
+        cyl(0.3, 0.3, 0.1, rim, [0.52, 1.35, 0.1], [0, 0, Math.PI / 2], 8),
+        box(0.5, 0.55, 0.3, leather, [0.62, 0.55, -0.15]), box(0.5, 0.2, 0.32, green, [0.62, 0.72, -0.15]), // morral
+        box(1.05, 0.9, 0.1, cream, [0, 0.62, 0.7]), box(1.15, 0.08, 0.14, rim, [0, 1.1, 0.7]), box(1.15, 0.08, 0.14, rim, [0, 0.15, 0.7]), box(0.45, 0.45, 0.04, green, [-0.2, 0.7, 0.77]), // placa chica de tela y chapa
+        ...rivets([0, 0.62, 0.77], 0.48, 0.4, "z", 0.08),
+        box(0.5, 0.3, 0.7, dark, [0.4, 0.15, -0.1]), box(0.5, 0.3, 0.7, dark, [-0.4, 0.15, -0.1]),
+        cyl(0.1, 0.12, 2.0, bronze, [-0.95, 1.0, 0.15], undefined, 6), sph(0.55, orb, [-0.95, 2.15, 0.15], undefined, 7), tor(0.7, 0.1, bronze, [-0.95, 2.15, 0.15], [Math.PI / 2, 0, 0], 10), box(0.3, 0.2, 0.3, bronze, [-0.95, 1.8, 0.15]),
       ];
     }
     if (kind === "brincador") { // rana de resorte: cuerpo lima sobre muelles
@@ -332,31 +385,38 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         ...[-1, 1].map((x) => tube([[x * 0.35, 0.6, 0.3], [x * 0.5, 0.35, 0.5], [x * 0.5, 0.04, 0.6]], 0.06, d)),
       ];
     }
-    if (kind === "francotirador") { // robot flaco de visera con fusil largo
-      const body = M.plastic("#8b5cf6"), dark = M.matte("#2a1f4a"), met = M.metal("#9aa0aa"), lens = M.glow("#ff3a2a");
+    if (kind === "francotirador") { // ref154: soldadito de plástico verde con casco de visera y placa naranja, ojos ovalados, correaje marrón y gomera de madera con elástico rojo (apunta a +z)
+      const g = worn("#4c8a30"), gd = worn("#3c7024"), brown = M.matte("#7a4a28"), orange = M.metal("#b8632a"), dark = M.matte("#3a3a36"), wood = M.matte("#a8743a"), red = M.plastic("#d62a1e"), cream = M.matte("#e8dcc0");
       return [
-        cyl(0.55, 0.75, 1.0, body, [0, 0.62, -0.05], undefined, 8), sph(0.55, body, [0, 1.3, 0], undefined, 8), box(0.62, 0.2, 0.3, dark, [0, 1.34, 0.28]), sph(0.14, lens, [0, 1.34, 0.45], undefined, 5),
-        box(0.72, 0.1, 0.72, dark, [0, 1.7, -0.02]), box(0.9, 0.06, 0.9, dark, [0, 1.62, -0.02]),
-        cyl(0.05, 0.05, 1.9, met, [0.4, 0.95, 0.65], [Math.PI / 2, 0, 0], 6), box(0.14, 0.18, 0.5, dark, [0.4, 0.88, -0.1]), cyl(0.1, 0.1, 0.35, met, [0.4, 1.12, 0.45], [Math.PI / 2, 0, 0], 6),
-        ...[-1, 1].map((x) => tube([[x * 0.25, 0.2, 0], [x * 0.3, 0.1, 0.2], [x * 0.25, 0, 0.35]], 0.07, dark)),
+        box(0.8, 0.8, 0.6, g, [0, 0.8, -0.05]), box(0.9, 0.12, 0.66, brown, [0, 0.5, -0.05]), box(0.14, 0.95, 0.66, brown, [0.1, 0.85, -0.05], [0, 0, 0.7]), // torso, cinto y bandolera
+        sph(0.8, g, [0, 1.5, 0], undefined, 8),
+        ...[-1, 1].map((s) => sph(0.22, dark, [s * 0.2, 1.46, 0.36], [0.7, 1.2, 0.5], 5)), ...[-1, 1].map((s) => sph(0.26, cream, [s * 0.2, 1.46, 0.34], [0.8, 1.3, 0.4], 5)),
+        sph(1.05, g, [0, 1.72, -0.04], [1, 0.78, 1.05], 8), cyl(1.28, 1.28, 0.08, gd, [0, 1.66, 0.12], undefined, 10), box(0.55, 0.16, 0.12, orange, [0, 1.95, 0.45]), // casco, ala y placa
+        ...rivets([0, 1.95, 0.52], 0.22, 0.05, "z", 0.06), ...rivets([0, 0.85, 0.27], 0.3, 0.3, "z", 0.07),
+        ...[-1, 1].map((s) => box(0.3, 0.55, 0.3, g, [s * 0.22, 0.2, 0])), ...[-1, 1].map((s) => box(0.4, 0.2, 0.55, dark, [s * 0.22, 0.04, 0.1])),
+        box(0.3, 0.3, 0.3, g, [-0.5, 1.0, 0.25]), box(0.28, 0.28, 0.3, g, [0.45, 1.0, 0.5]),
+        box(0.08, 0.5, 0.08, wood, [0.45, 1.05, 0.85]), box(0.08, 0.34, 0.08, wood, [0.58, 1.38, 0.85], [0, 0, -0.5]), box(0.08, 0.34, 0.08, wood, [0.32, 1.38, 0.85], [0, 0, 0.5]), // gomera en Y
+        tube([[0.58, 1.52, 0.85], [0.1, 1.4, 0.4], [-0.5, 1.2, 0.3], [0.1, 1.4, 0.4], [0.32, 1.52, 0.85]], 0.025, red),
       ];
     }
-    if (kind === "divisor" || kind === "cria") { // gelatina rosa con una costura al medio (la cría es la misma silueta, DEF.scale)
-      const j = pbr("divisorGel", { color: "#e04aa8", rough: 0.2, metal: 0.1, emissive: "#8a1c64", alpha: 0.95 }), seam = M.matte("#5a1040"), eye = M.glow("#fff2c0");
+    if (kind === "divisor" || kind === "cria") { // ref128: el domo de gelatina con una GRIETA oscura vertical al medio (la cría es la misma silueta, DEF.scale)
+      const j = gel(), crack = pbr("gelGrieta", { color: "#2a0614", rough: 0.6 }), eye = gelEye(), pupil = M.plastic("#1a1018");
       return [
-        sph(1.0, j, [-0.32, 0.55, -0.05], [0.95, 0.85, 1], 9), sph(1.0, j, [0.32, 0.55, -0.05], [0.95, 0.85, 1], 9),
-        box(0.05, 0.7, 0.9, seam, [0, 0.62, -0.05]),
-        sph(0.2, eye, [-0.34, 0.8, 0.42], undefined, 5), sph(0.2, eye, [0.34, 0.8, 0.42], undefined, 5), sph(0.09, seam, [-0.34, 0.8, 0.54], undefined, 4), sph(0.09, seam, [0.34, 0.8, 0.54], undefined, 4),
+        sph(2, j, [0, 0.3, 0], [0.7, 0.4, 0.7], 10),
+        box(0.08, 0.5, 0.06, crack, [0, 0.42, 0.68]), box(0.08, 0.05, 1.2, crack, [0, 0.68, 0.05]), // grieta: baja por el frente y cruza el domo
+        ...[-1, 1].flatMap((s) => [sph(0.4, eye, [s * 0.28, 0.58, 0.46], [0.85, 1.2, 0.7], 6), sph(0.16, pupil, [s * 0.28, 0.6, 0.6], undefined, 4)]),
       ];
     }
-    if (kind === "ladron") { // ardilla-mapache de chatarra con antifaz y un saco al hombro
-      const f = M.plastic("#f2c230"), mask = M.matte("#1d1d26"), bag = M.matte("#9a6a3a"), eye = M.glow("#ffffff");
+    if (kind === "ladron") { // ref152: mapache de chapa amarilla gastada con antifaz negro remachado, cola en espiral de punta negra y bolsa de tela marrón al hombro con una tuerca (mira a +z)
+      const f = worn("#E8B020"), cream = M.plastic("#e8d8a0"), mask = M.matte("#2a2622"), bag = M.matte("#8a5a30"), dark = M.matte("#3a2a20"), nut = M.metal("#c9ccd1");
       return [
-        sph(0.7, f, [0, 0.55, -0.1], [0.9, 0.85, 1.35], 8), sph(0.42, f, [0, 0.8, 0.5], undefined, 7), box(0.62, 0.18, 0.3, mask, [0, 0.9, 0.7]),
-        sph(0.1, eye, [0.13, 0.9, 0.84], undefined, 4), sph(0.1, eye, [-0.13, 0.9, 0.84], undefined, 4),
-        cyl(0.04, 0.12, 0.25, f, [0.2, 1.22, 0.45], undefined, 4), cyl(0.04, 0.12, 0.25, f, [-0.2, 1.22, 0.45], undefined, 4),
-        sph(0.62, bag, [0, 0.95, -0.4], [1, 1, 0.9], 7), sph(0.16, M.glow("#ffd24a"), [0.2, 1.4, -0.4], undefined, 4),
-        tube([[0, 0.5, -0.8], [0.1, 0.9, -1.2], [0, 1.5, -1.1]], 0.12, f),
+        sph(0.8, f, [0, 0.55, -0.1], [0.9, 0.85, 1.35], 8), sph(0.5, cream, [0, 0.45, 0.22], [0.8, 0.8, 0.6], 6), // cuerpo y panza
+        sph(0.62, f, [0, 0.92, 0.45], undefined, 8), sph(0.3, cream, [0, 0.82, 0.78], [1, 0.75, 1], 6), sph(0.1, dark, [0, 0.9, 0.98], undefined, 4), // cabeza, hocico y nariz
+        box(0.8, 0.2, 0.34, mask, [0, 1.0, 0.68]), ...[-1, 1].map((x) => sph(0.2, cream, [x * 0.16, 1.0, 0.8], [1, 1.1, 0.6], 5)), ...[-1, 1].map((x) => sph(0.1, dark, [x * 0.16, 1.0, 0.89], undefined, 4)), // antifaz y ojos
+        ...rivets([0, 1.0, 0.86], 0.34, 0.06, "z", 0.06),
+        cyl(0.04, 0.26, 0.42, f, [0.24, 1.38, 0.4], undefined, 4), cyl(0.04, 0.26, 0.42, f, [-0.24, 1.38, 0.4], undefined, 4),
+        sph(0.62, bag, [0.15, 0.95, -0.35], [1, 1, 0.9], 7), cyl(0.2, 0.2, 0.14, nut, [0.15, 1.42, -0.3], undefined, 6), // bolsa con tuerca
+        tube([[0, 0.4, -0.7], [0, 0.45, -1.1], [0, 0.9, -1.25], [0, 1.3, -1.05], [0, 1.45, -0.7], [0, 1.25, -0.5]], 0.13, f), sph(0.4, mask, [0, 1.25, -0.5], undefined, 5), // cola en espiral con punta negra
         ...[-1, 1].map((x) => tube([[x * 0.3, 0.3, 0.2], [x * 0.4, 0.15, 0.35], [x * 0.35, 0, 0.5]], 0.07, mask)),
       ];
     }

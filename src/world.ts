@@ -14,6 +14,10 @@ import { TABLE, shedBuild, shedLayout } from "./zones/galpon";
 import { atticBuild, atticLayout } from "./zones/desvan";
 import { frontBuild, frontLayout } from "./zones/jardin";
 import { PIT, pitY, poolBuild, poolLayout } from "./zones/pileta";
+import { forestBuild, forestLayout } from "./zones/bosque";
+import { snowBuild, snowLayout } from "./zones/nieve";
+import { cityBuild, cityLayout } from "./zones/ciudad";
+import { industrialBuild, industrialLayout } from "./zones/industrial";
 import { KITCHEN_CLIMATE, TABLE_K, kitchenBuild, kitchenLayout } from "./zones/cocina";
 
 
@@ -27,8 +31,8 @@ export { setWind } from "./grass";
 export { zoneTick } from "./zones/jardin";
 const TUBO: Climate = { id: "tubo", name: "TUBO FLUORESCENTE", sun: [0.4, -1, 0.3], sunColor: "#dff2e6", sunI: 3, hemiI: 1.2, sky: ["#0b0d0d", "#121615", "#161b1a", "#0b0d0d"], exposure: 1.1, fog: 0.005, ramp: ["#0c1214", "#4a6a62", "#eef6e8"] };
 // ponytail: precios provisorios (Taller → Zonas), a calibrar con el balance de tornillos
-export const ZONE_COST = { garaje: precio("zona_garaje"), jardin: precio("zona_jardin"), desvan: precio("zona_desvan"), pileta: precio("zona_pileta"), cocina: precio("zona_cocina") }; // curva de precios: como un auto o algo más (menu.ts, Taller)
-const ZONES_BASE: Record<Exclude<ZoneId, "galpon" | "desvan" | "pileta" | "cocina">, Zone> = {
+export const ZONE_COST = { garaje: precio("zona_garaje"), jardin: precio("zona_jardin"), desvan: precio("zona_desvan"), pileta: precio("zona_pileta"), cocina: precio("zona_cocina"), bosque: precio("zona_bosque"), nieve: precio("zona_nieve"), ciudad: precio("zona_ciudad"), industrial: precio("zona_industrial") }; // curva de precios: como un auto o algo más (menu.ts, Taller)
+const ZONES_BASE: Record<Exclude<ZoneId, "galpon" | "desvan" | "pileta" | "cocina" | "bosque" | "nieve" | "ciudad" | "industrial">, Zone> = {
   patio: { name: "Patio trasero", short: "Patio", desc: "Pileta, mesa de jardín y una huerta abandonada junto con los buenos propósitos.", half: 160, cost: 0, grass: 1, grassH: 1,
     rects: [[0, -30, 24, 17], [50, 45, 21, 16], [-48, 20, 24, 18]],
     roof: (p) => Math.abs(p.x) < 17 && Math.abs(p.z + 30) < 15 && p.y < 16, // tapa de la mesa: 34x30 en (0,-30), a 16 de alto
@@ -62,6 +66,17 @@ ZONES.cocina = { name: "La cocina", short: "Cocina", desc: "Baldosas en damero, 
   rects: [[-20, HALF - 13, 92, 15], [-HALF + 13, 35, 15, 77], [105, HALF - 22, 24, 22], [TABLE_K.x, TABLE_K.z, TABLE_K.w / 2 + 14, TABLE_K.d / 2 + 14]],
   roof: (p) => Math.abs(p.x - TABLE_K.x) < TABLE_K.w / 2 - 2 && Math.abs(p.z - TABLE_K.z) < TABLE_K.d / 2 - 2 && p.y < TABLE_K.h - 3,
   climate: KITCHEN_CLIMATE, build: kitchenBuild, layout: kitchenLayout };
+// Luz de cada bioma: parte del ATARDECER DORADO de ENCORE pero con sombras de su color (ramp oscura = contraste; la escena lavada venía de la niebla beige y la exposición del patio).
+const BIOME = (id: string, name: string, o: Partial<Climate>): Climate => ({ ...ENCORE_DUSK, id, name, ...o });
+const FOREST = BIOME("bosque", "BOSQUE AL ATARDECER", { sunColor: "#ffc27a", exposure: 1.35, fog: 0.0012, sky: ["#4f6a8c", "#c99a6a", "#f0d098", "#4a5a30"], ramp: ["#141a10", "#7a6a3a", "#ffe6b0"] });
+const SNOW = BIOME("nieve", "NIEVE AL ATARDECER", { sun: [0.85, -0.32, -0.4], sunColor: "#ffd9b0", exposure: 1.05, hemiI: 0.12, fog: 0.0012, sky: ["#4a5f96", "#9ab0d8", "#f0d8c0", "#7a88a8"], ramp: ["#141c34", "#6f86b0", "#fff4ea"] });
+const CITY = BIOME("ciudad", "CIUDAD AL ATARDECER", { exposure: 1.3, fog: 0.0012, ramp: ["#1a1414", "#9a6a4a", "#ffe0b0"] });
+const INDUSTRIAL = BIOME("industrial", "POLÍGONO AL ATARDECER", { exposure: 1.3, fog: 0.0015, sky: ["#4a5070", "#d08a5a", "#f0c890", "#6a6050"], ramp: ["#161616", "#8a6a48", "#ffe0a8"] });
+// Biomas (kits de ref143/ref146/ref133/ref145): comprables, variante de ENCORE y sorteo de la vuelta. Mismo tamaño que el galpón.
+ZONES.bosque = { name: "El bosque de pinos", short: "Bosque", desc: "Pinos de juguete, rocas con musgo y troncos caídos de borde de pista.", half: 140, cost: ZONE_COST.bosque, grass: 0.6, grassH: 0.8, rects: [], build: forestBuild, climate: FOREST, layout: forestLayout };
+ZONES.nieve = { name: "La pista nevada", short: "Nieve", desc: "Nieve con huellas, bloques rojo y blanco y un cerco que no frena a nadie.", half: 140, cost: ZONE_COST.nieve, grass: 0, grassH: 1, rects: [], build: snowBuild, climate: SNOW, layout: snowLayout };
+ZONES.ciudad = { name: "La ciudad en miniatura", short: "Ciudad", desc: "Adoquines, cordones de piedra y edificios de bloques que miran sin intervenir.", half: 140, cost: ZONE_COST.ciudad, grass: 0, grassH: 1, rects: [], build: cityBuild, climate: CITY, layout: cityLayout };
+ZONES.industrial = { name: "El polígono industrial", short: "Industrial", desc: "Hormigón con tierra, cordón amarillo y negro, contenedores y tambores.", half: 140, cost: ZONE_COST.industrial, grass: 0, grassH: 1, rects: [], build: industrialBuild, climate: INDUSTRIAL, layout: industrialLayout };
 setZ(ZONES.patio, "patio");
 /** Luz fija de la zona (garaje) o undefined: la partida sigue el ciclo de la semilla. */
 // ponytail: import dinámico para no cerrar el ciclo world ↔ encore_run (falla con "ZONES before initialization"); techo: si encore_run dejara de exportar `erun`, pasar el flag por un setter.
@@ -74,7 +89,8 @@ export function floorAt(x: number, z: number): Floor {
   if (zoneId === "garaje" || zoneId === "galpon") return "cemento";
   if (zoneId === "desvan" || zoneId === "cocina") return "baldosa"; // tablones: el sonido de madera/baldosa, sin tierra ni pasto
   if (zoneId === "pileta") return x > PIT.x0 && x < PIT.x1 && Math.abs(z) < PIT.z1 ? "baldosa" : "tierra"; // azulejo dentro del pozo, cemento en la explanada
-  if (zoneId === "luna") return "tierra";
+  if (zoneId === "luna" || zoneId === "bosque" || zoneId === "nieve") return "tierra";
+  if (zoneId === "ciudad" || zoneId === "industrial") return "cemento";
   if (zoneId === "jardin") return z < -HALF + 16 || Math.abs(x - 12) < 4 ? "baldosa" : "pasto"; // vereda y camino de lajas
   if (Math.abs(x) < 24 && Math.abs(z + 30) < 17) return "baldosa";
   if (Math.abs(x + 48) < 24 && Math.abs(z - 20) < 18) return "tierra";

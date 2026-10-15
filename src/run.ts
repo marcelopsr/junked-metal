@@ -16,7 +16,7 @@ export const CLIMATES: Climate[] = [
   { id: "mediodia", name: "MEDIODÍA", day: true, sun: [-0.25, -1, 0.2], sunColor: "#fffaf0", sunI: 2.8, hemiI: 0.6, sky: ["#2f7ae0", "#7dbcff", "#cfe9ff", "#8fbf5a"], exposure: 1.1, fog: 0.004, ramp: ["#1c2430", "#7a9a60", "#fff4dc"] },
   { id: "atardecer", name: "ATARDECER", day: true, sun: [0.85, -0.3, -0.35], sunColor: "#ffa060", sunI: 2.6, hemiI: 0.5, sky: ["#34407a", "#e58a5a", "#ffd08a", "#5a5a40"], exposure: 1.05, fog: 0.006, ramp: ["#2a1428", "#c06040", "#ffe0a0"] },
   // ENCORE (zonas planas): atardecer de diorama, sol bajo dorado (sombras largas), cielo y niebla cálidos. world.ts lo da por zona; el lab lo prueba con climate=encore.
-  { id: "encore", name: "ATARDECER DORADO", day: true, sun: [0.8, -0.32, -0.4], sunColor: "#ffb870", sunI: 3.1, hemiI: 0.62, sky: ["#5a5f9c", "#f2a070", "#ffdca0", "#8a7448"], exposure: 1.02, fog: 0.0035, ramp: ["#2e1a2c", "#d07048", "#ffe4a8"] },
+  { id: "encore", name: "ATARDECER DORADO", day: true, sun: [0.8, -0.45, -0.4], sunColor: "#ffb870", sunI: 8, hemiI: 0.08, sky: ["#5a5f9c", "#f2a070", "#ffdca0", "#8a7448"], exposure: 1.67, fog: 0.002, ramp: ["#2e1a2c", "#d07048", "#ffe4a8"] },
   { id: "nublado", name: "NUBLADO", day: true, sun: [-0.3, -1, 0.3], sunColor: "#e8ecf0", sunI: 1.8, hemiI: 0.8, sky: ["#8a96a3", "#b8c2cc", "#d7dde2", "#6f7a5c"], exposure: 1.1, fog: 0.008, ramp: ["#1a1e22", "#6a7a70", "#eef0f0"] },
 ];
 

@@ -27,10 +27,24 @@ const cellTpl = () => template("obj_celda", () => { const L = mats(); return [cy
 const antennaTpl = () => template("obj_antena", () => { const L = mats(); return [ // mástil de chapa plegada con plato torcido y luz
   box(2.4, 0.5, 2.4, L.rust, [0, 0.25, 0], [0, 0.4, 0]), cyl(0.35, 0.6, 7, L.hull, [0, 3.5, 0], undefined, 6), cyl(3.2, 0.6, 0.8, L.dark, [0, 6.6, 0.4], [0.6, 0, 0], 10),
   sph(0.6, L.y, [0, 7.4, 0], undefined, 4), box(1.6, 0.15, 0.6, L.rust, [0.6, 2.4, 0], [0, 0, 0.5])]; });
-const rocketTpl = () => template("obj_cohete", () => { const L = mats(); return [ // cohete de tanques soldados, tres patas y toberas encendidas
-  cyl(2.6, 3, 9, L.hull, [0, 6, 0], undefined, 10), cyl(0.2, 2.6, 3, L.rust, [0, 12, 0], undefined, 10), cyl(3, 2.4, 1.2, L.dark, [0, 1.2, 0], undefined, 10),
-  ...[0, 2.1, 4.2].map((a) => box(0.5, 4, 0.5, L.dark, [Math.sin(a) * 2.2, 1.6, Math.cos(a) * 2.2], [Math.cos(a) * 0.4, 0, -Math.sin(a) * 0.4])),
-  sph(0.5, L.y, [0, 8, 1.45], undefined, 4), tor(1.6, 0.25, L.y, [0, 0.4, 0], undefined, 12)]; });
+// Juguete de chapa pintada (ref318): huevo crema con paneles naranja, ojos de buey cian, banda luminosa, tres patas articuladas, puerta abierta con rampa y antena con bolita.
+const toy = (n: string, color: string, o: { rough?: number; metal?: number; glow?: boolean; alpha?: number } = {}) => { const m = pbr(n, { color, rough: o.rough ?? 0.55, metal: o.metal ?? 0.15, ...(o.glow ? { emissive: color } : {}), ...(o.alpha ? { alpha: o.alpha } : {}) }); if (o.glow) m.emissiveIntensity = 2; return m; };
+const rocketTpl = () => template("obj_cohete", () => {
+  const cream = toy("cohCrema", "#d9cdb4", { rough: 0.6 }), ora = toy("cohNaranja", "#e8731c"), steel = toy("cohAcero", "#6c6a68", { rough: 0.4, metal: 0.8 }), glow = toy("cohCian", "#3de6ff", { glow: true }), dark = toy("cohHueco", "#2a2623", { rough: 0.7 });
+  const legs = [0, 2.1, 4.2].flatMap((a) => { const s = Math.sin(a), c = Math.cos(a); return [
+    box(0.9, 3.4, 0.9, ora, [s * 2.9, 1.9, c * 2.9], [c * 0.55, a, -s * 0.55]), cyl(1.9, 2.3, 0.35, steel, [s * 3.6, 0.18, c * 3.6], undefined, 10), cyl(0.9, 0.9, 0.5, steel, [s * 2.3, 3.4, c * 2.3], [Math.PI / 2, 0, 0], 8)]; });
+  const rivets = Array.from({ length: 10 }, (_, i) => { const a = i * 0.63; return sph(0.28, steel, [Math.sin(a) * 2.78, 7.1, Math.cos(a) * 2.78], undefined, 4); });
+  return [
+    cyl(5.2, 5.8, 3.4, cream, [0, 3.6, 0], undefined, 12), cyl(3.4, 5.2, 3, cream, [0, 6.8, 0], undefined, 12), cyl(1, 3.4, 3.6, ora, [0, 10, 0], undefined, 12), // casco: panza, hombros, nariz naranja
+    cyl(5.45, 5.45, 0.5, steel, [0, 5.4, 0], undefined, 12), cyl(3.7, 3.7, 0.35, steel, [0, 8.3, 0], undefined, 12), // cinchas
+    cyl(5.5, 5.5, 0.18, glow, [0, 5.4, 0], undefined, 12), cyl(1.1, 1.1, 0.5, steel, [0, 11.9, 0], undefined, 8), cyl(0.18, 0.18, 1.6, steel, [0, 12.7, 0], undefined, 5), sph(0.6, ora, [0, 13.6, 0], undefined, 4), // banda luminosa, antena
+    cyl(1.5, 1.5, 0.35, steel, [0, 3.7, 3.0], [Math.PI / 2, 0, 0], 10), cyl(1.1, 1.1, 0.4, glow, [0, 3.7, 3.05], [Math.PI / 2, 0, 0], 10), // ojo de buey bajo
+    cyl(1.4, 1.4, 0.35, steel, [1.4, 7.3, 2.45], [Math.PI / 2 - 0.2, 0.5, 0], 10), cyl(1, 1, 0.4, glow, [1.4, 7.3, 2.5], [Math.PI / 2 - 0.2, 0.5, 0], 10),
+    box(2.2, 3.2, 0.5, dark, [-1.4, 2.3, 3.55], [0, -0.45, 0]), box(0.2, 3.2, 0.12, ora, [-0.4, 2.3, 3.85], [0, -0.45, 0]), box(2.2, 3.4, 0.35, ora, [-3.3, 2.7, 3.3], [0, -1.2, 0]), // puerta abierta con hueco y hoja naranja
+    box(1.6, 0.18, 3.2, steel, [-0.6, 0.6, 4.6], [0.38, -0.1, 0]), // rampa
+    cyl(0.9, 0.9, 2.2, steel, [0.4, 1.7, 3.6], undefined, 8), box(2.6, 0.5, 1.8, ora, [2.6, 3.7, 2.4], [0, -0.7, 0]), // caño y panel de ventilas
+    cyl(3.4, 4.2, 0.7, steel, [0, 0.35, 0], undefined, 12), tor(3.2, 0.25, glow, [0, 0.2, 0], undefined, 12), ...legs, ...rivets];
+});
 // ENCORE: el cohete es el teleportador. Escenario de show de chatarra: tarima con focos + marco giratorio de bombillas + haz. Un solo dibujo estático y un marco que gira (2 instancias).
 const teleMats = () => { const L = mats(), bulb = pbr("teleFoco", { color: "#ffd9a0", rough: 0.3, emissive: "#ffb347" }); bulb.fogEnabled = false; return { ...L, bulb, beam: pbr("teleHaz", { color: "#ffb347", rough: 0.3, emissive: "#ffb347", alpha: 0.18 }) }; };
 const teleBaseTpl = () => template("obj_tele_base", () => { const L = teleMats(); return [
@@ -49,10 +63,27 @@ const ringTpl = () => template("obj_aro", () => { const L = mats(); return [tor(
 
 // ---------- ENCORE: cofres de pago y máquina de opciones (docs/ENCORE/R0/R1_SLICE.md, "Cofres") ----------
 // 3 cofres (cuestan tornillos de la run) y 1 máquina (cobra vida actual) por escenario; sitio y orden salen de un hash de (semilla, escenario), nunca del rng() de la partida.
-const chestTpl = () => template("obj_cofre_pago", () => { const L = mats(); return [
-  box(2.2, 1.2, 1.5, L.rust, [0, 0.6, 0]), box(2.3, 0.5, 1.6, L.hull, [0, 1.35, 0], [0, 0, 0.06]), box(0.4, 0.5, 0.2, L.y, [0, 1, 0.8]), box(0.2, 1.3, 1.6, L.dark, [0.7, 0.65, 0]), box(0.2, 1.3, 1.6, L.dark, [-0.7, 0.65, 0])]; });
-const machineTpl = () => template("obj_maquina", () => { const L = mats(); return [
-  box(2, 3.4, 1.6, L.hull, [0, 1.7, 0], [0, 0.1, 0.04]), box(1.4, 1, 0.2, L.y, [0, 2.3, 0.85]), box(1.6, 0.3, 0.5, L.dark, [0, 0.9, 0.95]), cyl(0.12, 0.12, 1.4, L.rust, [1.3, 2, 0], [0, 0, 0.7], 6), sph(0.3, L.y, [1.9, 2.6, 0], undefined, 4), box(2.4, 0.3, 2, L.rust, [0, 3.5, 0], [0.05, 0.3, 0])]; });
+// Cofre de chatarra (ref312): caja de chapa turquesa, tapa de tablas con cinchas y esquineros amarillos, cierre central, asa y antena con bolita. Huella 2,2 x 1,5 como el anterior.
+const chestTpl = () => template("obj_cofre_pago", () => {
+  const teal = toy("cofTurquesa", "#2f7f86", { rough: 0.6, metal: 0.3 }), yel = toy("cofAmarillo", "#e0a420"), wood = toy("cofMadera", "#6b4529", { rough: 0.85, metal: 0 }), steel = toy("cofAcero", "#55524f", { rough: 0.45, metal: 0.8 }), rust = toy("cofOxido", "#8a4a24", { rough: 0.8, metal: 0.3 });
+  const corners = [-1, 1].flatMap((x) => [-1, 1].flatMap((z) => [box(0.5, 0.95, 0.5, steel, [x * 1.0, 0.55, z * 0.62]), box(0.62, 0.34, 0.62, yel, [x * 1.0, 1.35, z * 0.62]), sph(0.2, rust, [x * 1.0, 1.55, z * 0.62], undefined, 4), box(0.6, 0.18, 0.6, steel, [x * 1.0, 0.09, z * 0.62])]));
+  return [
+    box(2.0, 0.85, 1.4, teal, [0, 0.55, 0]), box(1.7, 0.6, 0.12, steel, [0, 0.62, 0.7]), box(1.9, 0.5, 1.3, wood, [0, 1.2, 0]), // cuerpo y tapa de tablas
+    box(0.3, 0.52, 1.5, steel, [0.45, 1.22, 0], [0, 0, 0]), box(0.3, 0.52, 1.5, steel, [-0.45, 1.22, 0]), box(2.2, 0.2, 1.55, steel, [0, 0.98, 0]), // cinchas y faja
+    box(0.8, 0.5, 0.18, steel, [0, 1.05, 0.78]), box(0.5, 0.6, 0.12, steel, [0, 0.6, 0.78]), box(0.32, 0.32, 0.1, yel, [0, 0.62, 0.86]), // cierre
+    box(0.55, 0.08, 0.1, yel, [0.9, 1.5, 0.3], [0, 0.15, 0]), box(0.55, 0.08, 0.1, yel, [0.9, 1.5, 0.05], [0, 0.15, 0]),
+    tor(0.55, 0.07, steel, [-1.12, 0.65, 0], [0, Math.PI / 2, 0], 8), cyl(0.12, 0.16, 0.9, steel, [0.95, 1.9, -0.5], undefined, 6), sph(0.3, rust, [0.95, 2.4, -0.5], undefined, 4), ...corners]; });
+// Máquina de opciones (ref320): caja azul con pintura saltada, tres vitrinas con piezas, placas de latón, perillas, bandeja, asa y antena. Huella 2 x 1,6, alto 3,4.
+const machineTpl = () => template("obj_maquina", () => {
+  const blue = toy("maqAzul", "#2f5f94", { rough: 0.6, metal: 0.35 }), brass = toy("maqLaton", "#b88a3c", { rough: 0.4, metal: 0.85 }), steel = toy("maqAcero", "#58565a", { rough: 0.45, metal: 0.8 }), glass = toy("maqVidrio", "#a9d6e8", { rough: 0.1, metal: 0, alpha: 0.35 }), dark = toy("maqHueco", "#26272b", { rough: 0.7 });
+  const col = [-0.62, 0, 0.62], bits = ["#c8683c", "#8a8f96", "#d9b05a"];
+  return [
+    box(2, 2.6, 1.5, blue, [0, 1.6, 0]), box(2.15, 0.25, 1.65, blue, [0, 3.0, 0]), box(1.9, 0.2, 1.4, steel, [0, 0.3, 0]), // caja, tapa y zócalo
+    ...[-1, 1].flatMap((x) => [-1, 1].flatMap((z) => [cyl(0.5, 0.6, 0.18, steel, [x * 0.85, 0.09, z * 0.6], undefined, 8), box(0.3, 0.3, 0.3, brass, [x * 1.0, 0.7, z * 0.7])])), // patas y escuadras
+    ...col.flatMap((x, i) => [box(0.58, 0.85, 0.12, dark, [x, 2.35, 0.78]), box(0.5, 0.75, 0.1, glass, [x, 2.35, 0.86]), sph(0.2, toy(`maqPieza${i}`, bits[i], { metal: 0.6 }), [x, 2.15, 0.76], undefined, 4), box(0.44, 0.14, 0.08, brass, [x, 1.72, 0.78]), cyl(0.36, 0.36, 0.14, brass, [x, 1.3, 0.78], [Math.PI / 2, 0, 0], 10), box(0.16, 0.26, 0.14, steel, [x, 1.3, 0.88], [0, 0, 0.5])]),
+    box(0.9, 0.3, 0.5, steel, [0, 0.8, 0.95], [0.25, 0, 0]), // bandeja
+    box(1.2, 0.06, 0.1, steel, [0, 3.35, 0]), box(0.1, 0.18, 0.1, steel, [-0.6, 3.25, 0]), box(0.1, 0.18, 0.1, steel, [0.6, 3.25, 0]), // asa
+    box(0.1, 0.9, 0.6, dark, [1.03, 1.2, 0.1]), cyl(0.05, 0.1, 1.4, steel, [-0.85, 3.8, -0.3], [0, 0, 0.18], 5), sph(0.3, brass, [-0.97, 4.5, -0.3], undefined, 4)]; });
 type Shop = { kind: "cofre" | "maquina"; p: B.Vector3; prog: number; ms: B.InstancedMesh[] };
 const SHOP_RADIO = 4.5, SHOP_S = 1.6, SHOP_VIDA = 0.25; // zona (m), segundos que hay que permanecer, fracción de vida actual que cobra la máquina
 let shops: Shop[] = [], shopStage = 0, opened = 0, warnAt = 0;
@@ -127,6 +158,7 @@ function make(kind: Goal["kind"], car: B.Vector3, dist: number, ang = rng() * Ma
   } else {
     if (kind === "cohete" && GOAL_IO.tele) { g.ms.push(put(teleBaseTpl, p, "tele")); g.spin = put(teleFrameTpl, p, "teleMarco"); g.ms.push(g.spin); }
     else g.ms.push(put(kind === "antena" ? antennaTpl : rocketTpl, p, kind));
+    if (kind === "cohete" && GOAL_IO.tele) { const r = put(rocketTpl, p, "teleCohete"); r.scaling.setAll(0.55); g.ms.push(r); } // ENCORE: el cohete de ref318 al centro del marco (escala 0,55 para que el aro gire por fuera)
     const r = put(ringTpl, p, "aro"); r.position.copyFrom(onFloor(p, 0.15)); r.scaling.setAll((kind === "antena" ? A.luna_obj_antena_radio : A.luna_cohete_radio) / 2); g.ms.push(r);
   }
   return g;

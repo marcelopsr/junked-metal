@@ -26,17 +26,17 @@ import { M, pbr, shadows } from "./render";
 // elige cuál mostrar con glbPlay. El valor son los m/s de suelo a los que el ciclo walk y el run no patinan (la zancada del modelo).
 // atk/hit (opcional): el bicho dispara su propio ataque (enemies.ts) y la animación dura atk segundos; el golpe (escupida,
 // arremetida) sale en la fracción hit de ella. Sin atk ataca al tocar al auto (touchCd), como la hormiga.
-export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla en pantalla sin tocar DEF.size (colisión) */ visual?: number; eye?: string; atk?: number; hit?: number; clips?: [walk: number, run: number]; /** procedural Folded (PROC) */ proc?: boolean }>> = {
-  hormiga: { file: "ant", scale: 2, visual: 1.24, eye: "#ff4a28" },
+export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla en pantalla sin tocar DEF.size (colisión) */ visual?: number; eye?: string; atk?: number; hit?: number; clips?: [walk: number, run: number]; /** procedural Folded (PROC) */ proc?: boolean; /** color de pintura del Body (metal pintado, ref90/81) */ paint?: string; /** pintura por nombre de material GLB: [color, rugosidad, metálico, clearcoat] */ mats?: Record<string, [string, number, number, number?]> }>> = {
+  hormiga: { file: "ant", scale: 2, visual: 1.24, eye: "#ff4a28", paint: "#8a3a22" },
   escupidora: { file: "escupidora", scale: 1, visual: 1.22, eye: "#ffc040", atk: 0.83, hit: 0.65 }, // assets-src/escupidora
-  escarabajo: { file: "escarabajo", scale: 1, visual: 1.22, eye: "#e8ff50", atk: 1, hit: 0.33 }, // assets-src/escarabajo
+  escarabajo: { file: "escarabajo", scale: 1, visual: 1.22, eye: "#40e060", atk: 1, hit: 0.33, paint: "#c9a227" }, // assets-src/escarabajo
   friccion: { file: "friccion", scale: 1, eye: "#fff8e8" }, // assets-src/proc2 — escala VIS_1c en export
-  robot: { file: "robot", scale: 1, eye: "#ffe566" },
+  robot: { file: "robot", scale: 1, eye: "#ffe566", paint: "#C62828", mats: { Dark: ["#8e1c1c", 0.45, 0.3, 0.25], Metal: ["#C9A227", 0.35, 0.8], Joint: ["#a3a8b0", 0.4, 0.8] } },
   rey: { file: "rey", scale: 1, eye: "#d0ff60" },
-  tarantula: { file: "tarantula", scale: 1, eye: "#ff4fd8" },
-  cortadora: { file: "cortadora", scale: 1 },
-  aspiradora: { file: "aspiradora", scale: 1, eye: "#ff2a1a" },
-  cortacercos: { file: "cortacercos", scale: 1, eye: "#ff2a1a" },
+  tarantula: { file: "tarantula", scale: 1, eye: "#ff4fd8", paint: "#17171b" },
+  cortadora: { file: "cortadora", scale: 1, paint: "#c4221e", mats: { Hood: ["#a81c1a", 0.45, 0.3, 0.25], Hub: ["#c62828", 0.45, 0.3, 0.25], Deck: ["#6e7076", 0.5, 0.8], Trim: ["#a9adb3", 0.4, 0.8] } },
+  aspiradora: { file: "aspiradora", scale: 1, eye: "#ff2a1a", paint: "#5a6a8a", mats: { Ring: ["#8a7660", 0.4, 0.8], Latch: ["#8a7660", 0.4, 0.8] } },
+  cortacercos: { file: "cortacercos", scale: 1, eye: "#ff2a1a", paint: "#E8601C", mats: { Accent: ["#E8601C", 0.45, 0.3, 0.25], Blade: ["#a9adb3", 0.35, 0.8], Tooth: ["#b9bcc2", 0.35, 0.8], Blade2: ["#4a4d52", 0.5, 0.7] } },
   grua: { file: "grua", scale: 1 },
   polilla: { file: "polilla", scale: 1, visual: 1.05, eye: "#c9a0ff" }, // assets-src/polilla — cuerpo GLB; alas en wingTemplate
   perro: { file: "perro", scale: 1, eye: "#3a2418", clips: [2.3, 13] }, // assets-src/perro (Felipe)
@@ -170,7 +170,10 @@ async function load(scene: B.Scene, kind: Kind) {
     if (m?.name.startsWith("Eye")) return pbr("glEye" + kind, { color: o.eye ?? "#ff3020", rough: 0.35, emissive: o.eye ?? "#ff3020" });
     if (!m) return M.plastic(DEF[kind].color);
     const p = m as B.PBRMaterial, hex = p.albedoColor ? p.albedoColor.toGammaSpace().toHexString() : "#888888";
+    const mo = o.mats?.[m.name];
+    if (mo) return pbr("glMat" + kind + m.name, { color: mo[0], rough: mo[1], metal: mo[2], coat: mo[3] });
     if (m.name === "Body" && !o.clips) {
+      if (o.paint) return pbr("glPaint" + kind, { color: o.paint, rough: 0.45, metal: 0.3, coat: 0.25 });
       const metal = p.metallic ?? 0;
       if (metal > 0.35) return pbr("glSh" + kind + hex, { color: hex, rough: p.roughness ?? 0.22, metal, coat: 0.45 });
       // Oleada 1c: color del GLB (más contraste que un solo DEF.color plano en bestiario)

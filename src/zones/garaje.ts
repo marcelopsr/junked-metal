@@ -1,13 +1,13 @@
 import * as B from "@babylonjs/core";
-import { box, cyl, merge, tor, tube } from "../models";
+import { box, cyl, merge, rbox, tor, tube } from "../models";
 import { M, pbr, shadows } from "../render";
 import { rng } from "../rng";
 import { FOLD, FOLD_PAINT } from "../folded";
-import { HALF, concreteTex, decal, dyn, floor, occluders, realCar, scene, stat, tex, tireStackM, undo, woodM } from "./common";
-import { ball, between, giantTools, int, paintCans, piles, plankBridge, puddles, toyRamps } from "../world_layout";
+import { HALF, bare, concreteTex, decal, dyn, floor, occluders, realCar, scene, stat, tex, tireStackM, undo, woodM } from "./common";
+import { ball, between, giantTools, int, paintCans, piles, puddles, ramp, slopeBoard, toyRamps } from "../world_layout";
 
 export function garageBuild() {
-  floor("concrete", "#ffffff", concreteTex, 0.75, "concrete", 18);
+  floor("r53hormigon", "#ffffff", () => { const x = new B.Texture("./textures/r53-hormigon.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; }, 0.85, "concrete", 10);
   // El alpha de la textura conserva bordes irregulares sin geometría extra.
   const oilTex = tex("oilStain", () => new B.Texture("./images/decals/oil-stain.webp", scene));
   oilTex.hasAlpha = true;
@@ -70,16 +70,25 @@ export function garageBuild() {
   // Pila de cubiertas con material PBR y normales
   stat(merge("tires", [0, 1, 2, 3].map((i) => tor(16, 5.5, tireStackM(), [0, 2.75 + i * 5.3, 0], undefined, 18))), B.PhysicsShapeType.CYLINDER, {}, [-68, 0, -50]);
   // El auto de la casa, en caballetes: abajo es zona techada
-  realCar(30, 0, 0, 9, true, "#8a2a2a");
+  realCar(30, 0, 0, 9, true, "#E53935");
+}
+
+// Puente de tablones de juguete (misma geometría y huella que plankBridge, sin madera texturada)
+function toyBridge(px: number, pz: number, bry: number) {
+  const mat = pbr("gplank", { color: "#FB8C00", rough: 0.45, metal: 0 }), rampM = pbr("gplankR", { color: "#E53935", rough: 0.45, metal: 0 });
+  const half = 15.2, L = 16, foot = half + L, dx = Math.sin(bry), dz = Math.cos(bry);
+  for (const s of [-1, 1]) ramp(rampM, px + dx * foot * s, pz + dz * foot * s, s < 0 ? bry : bry + Math.PI, 3.2, L, 7, 0, 0, 0, [slopeBoard(3.6, L, 7, mat)]);
+  stat(rbox(3.6, 0.5, half * 2, 0.2, mat, [px, 6.75, pz], [0, bry, 0]), B.PhysicsShapeType.BOX);
+  bare.push({ x: px, z: pz, r: 16 });
 }
 
 export function garageLayout() {
   // TRAMO: tablón sobre dos caballetes y, abajo, bulones sueltos que hacen patinar
   const px = between(-45, -28), pz = between(-8, 22), bry = (rng() < 0.5 ? 0 : Math.PI) + (rng() - 0.5) * 0.3;
-  plankBridge(px, pz, bry, M.metal("#b8322a"));
+  toyBridge(px, pz, bry);
   for (let k = 0; k < 16; k++) {
     const t = (rng() - 0.5) * 26, e = (rng() - 0.5) * 8;
-    dyn(cyl(1.4, 1.4, 0.9, M.metal("#9aa0a6"), [px + Math.sin(bry) * t + Math.cos(bry) * e, 0.45, pz + Math.cos(bry) * t - Math.sin(bry) * e], undefined, 6), B.PhysicsShapeType.CYLINDER, 0.2);
+    dyn(cyl(1.4, 1.4, 0.9, M.matte("#9E9E9E"), [px + Math.sin(bry) * t + Math.cos(bry) * e, 0.45, pz + Math.cos(bry) * t - Math.sin(bry) * e], undefined, 6), B.PhysicsShapeType.CYLINDER, 0.2);
   }
   toyRamps(int(2, 3), [0, 1]);
   giantTools();

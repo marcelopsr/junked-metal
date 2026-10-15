@@ -151,15 +151,16 @@ export function mothPose(vis: number, walk: number, atk: number) {
 /** Ala de polilla (bisagra en el origen, hacia +x·side): chapa fina de 12 mm con larguero, nervios y ocelo; gira en z en enemies.ts. */
 export function mothWing(side: 1 | -1) {
   const { G, done, strut } = kit();
-  const s = side, skin = FOLD.painted("#d4c090", 0.5, 73), skin2 = FOLD.painted("#a89068", 0.6, 74), spar = FOLD.dark();
+  const s = side, skin = FOLD.painted("#6b4a2e", 0.5, 73), skin2 = FOLD.painted("#7a3a22", 0.6, 74), cream = FOLD.painted("#e8d8b0", 0.5, 75), core = FOLD.painted("#3a2416", 0.6, 76), spar = FOLD.painted("#5a2e1c", 0.6, 77);
   G.cyl(0.06, 0.16, FOLD.bare(), [0, 0, 0], [Math.PI / 2, 0, 0], 6); // bisagra pegada al tórax
   G.box(0.86, 0.012, 0.44, skin, [s * 0.55, 0.01, 0.04], [0, s * 0.18, 0]); // ala anterior
   G.box(0.36, 0.012, 0.3, skin2, [s * 0.98, 0.01, -0.06], [0, s * 0.5, 0]); // punta plegada
   G.box(0.58, 0.012, 0.36, skin2, [s * 0.42, -0.012, -0.28], [0, -s * 0.25, 0]); // ala posterior
   strut([0, 0.02, 0.02], [s * 1.12, 0.02, 0.0], 0.03, 0.028, spar); // larguero de ataque
   for (const [x, z] of [[0.7, -0.22], [0.9, 0.12], [0.6, -0.42]]) strut([s * 0.08, 0.018, 0], [s * x, 0.018, z], 0.014, 0.014, spar); // nervios
-  for (const y of [0.018, -0.006]) G.cyl(0.2, 0.012, FOLD.dark(), [s * 0.74, y, -0.04], undefined, 8); // ocelo (arriba y abajo)
-  G.cyl(0.1, 0.014, FOLD.emissive("#c9a0ff"), [s * 0.74, 0.02, -0.04], undefined, 8);
+  for (const x of [0.3, 0.55, 1.0]) for (const y of [0.0185, -0.0125]) G.box(0.07, 0.012, 0.4, cream, [s * x, y, 0.02 - x * 0.1], [0, s * 0.18, 0]); // bandas crema
+  G.box(0.1, 0.012, 0.3, cream, [s * 0.55, -0.0125, -0.28]);
+  for (const y of [0.0185, -0.0125]) { G.cyl(0.3, 0.012, cream, [s * 0.74, y, -0.04], undefined, 12); G.cyl(0.15, 0.014, core, [s * 0.74, y + Math.sign(y) * 0.001, -0.04], undefined, 12); } // anillo ocular crema, centro marrón oscuro
   return done();
 }
 
@@ -168,7 +169,7 @@ export function mothWing(side: 1 | -1) {
 const ROBOT_K = 1.22, SH = 0.9;
 export function robotBody() {
   const { G, done, strut, bone } = kit();
-  const tin = FOLD.painted("#e0322a", 0.8, 81), dark = FOLD.painted("#282c34", 0.9, 82), steel = FOLD.bare(), lamp = FOLD.emissive("#ffe566");
+  const tin = FOLD.painted("#C62828", 0.75, 81), gold = FOLD.painted("#8f7418", 0.35, 83), dark = FOLD.painted("#282c34", 0.9, 82), steel = FOLD.bare(), lamp = FOLD.emissive("#ffe566");
   for (const s of [-1, 1]) {
     bone(s < 0 ? 1 : 2);
     G.box(0.28, 0.1, 0.42, dark, [s * 0.22, 0.06, 0.04]); G.box(0.29, 0.025, 0.43, FOLD.rubber(), [s * 0.22, 0.012, 0.04]); // pies
@@ -176,10 +177,13 @@ export function robotBody() {
   }
   bone(0);
   G.box(0.62, 0.1, 0.38, dark, [0, 0.36, 0]); // pelvis
+  for (const s of [-1, 1]) G.box(0.3, 0.03, 0.44, gold, [s * 0.22, 0.12, 0.04]); // remate dorado de los pies
   G.trimStrip([0, 0.44, 0.262], [0, Math.PI, 0], 0.78, 0.07, "hazard", 0.02);
   G.box(0.8, 0.56, 0.5, tin, [0, 0.72, 0]); // torso (BODY)
+  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) G.box(0.04, 0.56, 0.04, gold, [x * 0.4, 0.72, z * 0.25]); // aristas doradas
+  for (const s of [-1, 1]) G.box(0.82, 0.03, 0.04, gold, [0, 1.0, s * 0.25]);
   for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) G.bend([x * 0.4, 0.46, z * 0.25], [x * 0.4, 0.98, z * 0.25], 0.025, tin);
-  G.grate([0, 0.62, 0.255], [0, Math.PI, 0], 0.42, 0.18, 4, steel); // rejilla del pecho
+  G.grate([0, 0.62, 0.255], [0, Math.PI, 0], 0.42, 0.18, 4, gold); // rejilla dorada del pecho
   G.decal([0, 0.86, 0.255], [0, Math.PI, 0], "numero", 0.2); // número (IDENTITY)
   G.plate([0, 0.6, -0.255], undefined, 0.26, 0.26, dark); // placa de la llave (la llave gira aparte)
   G.rivets([-0.36, 0.98, 0.255], [0.36, 0.98, 0.255], 7, [0, 0, 1]); G.rivets([-0.36, 0.98, -0.255], [0.36, 0.98, -0.255], 7, [0, 0, -1]);
@@ -194,8 +198,10 @@ export function robotBody() {
   G.box(0.46, 0.3, 0.36, tin, [0, 1.22, 0.01]); // cabeza
   G.box(0.38, 0.08, 0.02, FOLD.screen("#ffe566"), [0, 1.24, 0.19]); // visor
   for (const s of [-1, 1]) G.box(0.06, 0.06, 0.03, lamp, [s * 0.11, 1.24, 0.2]);
-  G.box(0.48, 0.04, 0.38, dark, [0, 1.38, 0.01]); // tapa
-  G.tube([[0.1, 1.4, 0], [0.12, 1.58, -0.02]], 0.012, steel); G.box(0.05, 0.05, 0.05, FOLD.emissive("#e0a030"), [0.12, 1.6, -0.02]);
+  G.box(0.5, 0.05, 0.4, gold, [0, 1.38, 0.01]); // tapa dorada
+  G.cyl(0.14, 0.05, gold, [0, 1.43, 0.01], undefined, 8); // base dorada de la luz
+  for (const s of [-1, 1]) { G.cyl(0.11, 0.05, gold, [s * 0.11, 1.24, 0.19], [Math.PI / 2, 0, 0], 8); G.box(0.04, 0.2, 0.04, gold, [s * 0.24, 0.98, 0.2]); } // aros dorados de los ojos y remates del torso
+  G.tube([[0.1, 1.4, 0], [0.12, 1.58, -0.02]], 0.012, steel); G.box(0.05, 0.05, 0.05, FOLD.emissive("#e02020"), [0.12, 1.6, -0.02]);
   return done(2, ROBOT_K);
 }
 /** Paso de juguete a cuerda: pies que avanzan y se levantan alternados, brazos en contra; al atacar levanta los brazos. */
@@ -371,9 +377,9 @@ export function reyPose(_v: number, walk: number, atk: number) {
 /** Tarántula: cefalotórax de chapa con placa, abdomen en prisma con faja naranja y placa dorsal, quelíceros de acero, racimo de ojos. Huesos: 0 cuerpo, 1 abdomen. */
 export function tarantulaBody() {
   const { G, done, strut, bone } = kit();
-  const hair = FOLD.painted("#7a55a8", 0.7, 141), dark = FOLD.chitin("#4a3228"), band = FOLD.chitin("#c87830"), eye = FOLD.emissive("#ff4fd8");
+  const hair = FOLD.painted("#17171b", 0.55, 141), dark = FOLD.painted("#17171b", 0.45, 142), band = FOLD.painted("#d0622a", 0.7, 143), gold = FOLD.painted("#c9a227", 0.65, 144), eye = FOLD.emissive("#ff9a1a");
   G.box(1.0, 0.5, 1.1, dark, [0, 0.5, 0.32]); // cefalotórax
-  G.plate([0, 0.756, 0.3], [Math.PI / 2, 0, 0], 0.8, 0.9, hair);
+  G.plate([0, 0.756, 0.3], [Math.PI / 2, 0, 0], 0.8, 0.9, gold);
   for (const s of [-1, 1]) G.bend([s * 0.5, 0.75, -0.2], [s * 0.5, 0.75, 0.86], 0.04, dark);
   along(G, 0.24, 0.28, 0.3, FOLD.dark(), [0, 0.55, -0.32]); // cintura
   for (const s of [-1, 1]) {
@@ -384,7 +390,9 @@ export function tarantulaBody() {
   bone(1);
   along(G, 1.2, 1.5, 1.7, hair, [0, 0.66, -1.12], 8); // abdomen
   G.cyl(1.56, 0.2, band, [0, 0.66, -0.66], [Math.PI / 2, 0, 0], 8); // faja
-  G.plate([0, 1.3, -1.12], [Math.PI / 2 - 0.05, 0, 0], 0.7, 1.2, band); // placa dorsal
+  G.plate([0, 1.3, -1.12], [Math.PI / 2 - 0.05, 0, 0], 0.7, 1.2, gold);
+  for (const s of [-1, 1]) G.plate([s * 0.62, 1.12, -1.0], [Math.PI / 2 - 0.05, 0, s * 0.5], 0.4, 0.8, band); // placas laterales del lomo
+  G.rivets([-0.3, 1.31, -0.6], [0.3, 1.31, -0.6], 4, [0, 1, 0]); // placa dorsal
   G.decal([0, 1.31, -1.1], [Math.PI / 2 - 0.05, 0, 0], "calavera", 0.5);
   G.cyl(0.24, 0.2, FOLD.dark(), [0, 0.62, -2.0], [Math.PI / 2, 0, 0], 6); // hileras
   bone(0);
@@ -399,7 +407,7 @@ export function tarantulaPose(_v: number, walk: number, atk: number) {
 const CUT_W: V3[] = [[-2.95, 0.88, 2.35], [2.95, 0.88, 2.35], [-2.95, 0.88, -2.55], [2.95, 0.88, -2.55]];
 export function cortadoraBody() {
   const { G, done, strut, bone } = kit();
-  const red = FOLD.painted("#dc2626", 0.6, 151), red2 = FOLD.painted("#b91c1c", 0.7, 152), deck = FOLD.painted("#8b95a3", 0.8, 153), dark = FOLD.dark(), steel = FOLD.bare(), yel = FOLD.painted("#facc15", 0.6, 154);
+  const red = FOLD.painted("#c4221e", 0.65, 151), red2 = FOLD.dark(), deck = FOLD.painted("#6e7076", 0.85, 153), dark = FOLD.dark(), steel = FOLD.bare(), yel = FOLD.painted("#c62828", 0.6, 154);
   G.cyl(5.8, 1.0, deck, [0, 0.82, -0.15], undefined, 12, 6.2); // plataforma de corte
   G.box(6.4, 0.35, 2.2, dark, [0, 0.42, 2.85]); // boca
   G.trimStrip([0, 0.58, 3.97], [0, Math.PI, 0], 6.2, 0.4, "hazard", 0.1); // barra de corte
@@ -427,16 +435,16 @@ export function cortadoraPose(_v: number, walk: number, atk: number) {
 /** Aspiradora robot: disco de chapa con paragolpes de goma, domo, torreta con faro, sensores y 2 cepillos laterales que giran (huesos 1-2). */
 export function aspiradoraBody() {
   const { G, done, bone } = kit();
-  const shell = FOLD.painted("#7a8fa6", 0.6, 161), dark = FOLD.dark(), steel = FOLD.bare(), red = FOLD.emissive("#ff2a1a");
+  const shell = FOLD.painted("#5a6a8a", 0.7, 161), dark = FOLD.dark(), steel = FOLD.bare(), red = FOLD.emissive("#ff2a1a");
   G.cyl(6.45, 0.45, FOLD.rubber(), [0, 0.48, 0], undefined, 16); // paragolpes
   G.cyl(6.15, 0.75, shell, [0, 0.62, 0], undefined, 16, 6.45); // casco
   G.cyl(3.0, 0.5, shell, [0, 1.25, 0], undefined, 12, 4.2); // domo
-  G.cyl(5.4, 0.16, FOLD.painted("#5c6b7a", 0.7, 162), [0, 1.04, 0], undefined, 16);
+  G.cyl(5.4, 0.16, FOLD.painted("#44526e", 0.7, 162), [0, 1.04, 0], undefined, 16);
   G.trimStrip([0, 1.2, 1.6], [0, Math.PI, 0], 4.2, 0.2, "hazard", 0.3);
   G.cyl(1.45, 0.65, dark, [0, 1.75, -0.35], undefined, 8); G.box(0.8, 0.5, 0.8, red, [0, 2.1, -0.35]); // torreta y faro
   G.grate([0, 1.6, -2.3], undefined, 2.4, 0.5, 4, steel); // salida de aire
   G.box(3.6, 0.38, 0.55, dark, [0, 0.32, 3.05]); // barra de sensores
-  for (const s of [-1, 1]) { G.box(0.9, 0.6, 0.2, red, [s * 1.05, 0.88, 3.1]); G.decal([s * 2.4, 1.1, 2.0], [0.3, s * 2.4, 0], "voltaje", 0.9); }
+  for (const s of [-1, 1]) { G.cyl(0.62, 0.12, steel, [s * 1.05, 0.88, 3.08], [Math.PI / 2, 0, 0], 10); G.cyl(0.46, 0.2, red, [s * 1.05, 0.88, 3.14], [Math.PI / 2, 0, 0], 10); G.decal([s * 2.4, 1.1, 2.0], [0.3, s * 2.4, 0], "voltaje", 0.9); }
   G.rivets([-2.6, 1.0, -2.9], [2.6, 1.0, -2.9], 9, [0, 0.3, -1]);
   [-1, 1].forEach((s, i) => { // cepillos
     bone(i + 1);
@@ -454,7 +462,7 @@ export function aspiradoraPose(_v: number, walk: number, atk: number) {
 /** Cortacercos eléctrico: motor naranja plegado, mango en D de caño, espada con dientes que van y vienen (hueso 1), ojos y cable. */
 export function cortacercosBody() {
   const { G, done, strut, bone } = kit();
-  const body = FOLD.painted("#e0a030", 0.6, 171), dark = FOLD.dark(), steel = FOLD.bare(), orange = FOLD.painted("#c2410c", 0.7, 172);
+  const body = FOLD.painted("#E8601C", 0.6, 171), dark = FOLD.dark(), steel = FOLD.bare(), orange = FOLD.painted("#d9561a", 0.7, 172);
   G.box(2.65, 1.65, 3.2, body, [0, 1.12, -2.75]); // motor
   G.box(2.3, 0.5, 2.8, body, [0, 2.1, -2.75]); for (const s of [-1, 1]) G.bend([s * 1.15, 2.35, -4.15], [s * 1.15, 2.35, -1.35], 0.1, body);
   G.box(2.7, 0.55, 2.6, dark, [0, 0.42, -2.7]); // base

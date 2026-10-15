@@ -2,10 +2,10 @@ import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph, template, tor, tube } from "./models";
 import { canvasTex, G, M, pbr, shadows, TEX } from "./render";
 import { rng } from "./rng";
-import { FOLD, FOLDED_SLICE } from "./folded";
-import { gnomeFold, paintCanFold, potFold, rampLip, toolFold, wateringCanFold } from "./folded_slice";
-import { HALF, Z, worldMeshes, bare, breakable, breakables, crateFold, dyn, isBare, layoutMeshes, onClear, scene, skin, st, stat, tex, tireStackM, woodCrateM, woodM } from "./zones/common";
+import { HALF, Z, worldMeshes, bare, breakable, breakables, dyn, isBare, layoutMeshes, onClear, scene, st, stat, tex, tireStackM, woodCrateM, woodM } from "./zones/common";
 import { WindPlugin } from "./grass";
+
+const toyM = (c: string, r = 0.5) => pbr("wl" + c, { color: c, rough: r, metal: 0 }); // material de juguete liso
 
 /** Detalle del mundo: distancia de dibujo de los props (0 = sin límite; Bajo 95, Medio 145, Alto 220: DETAIL en render.ts). Un LOD vacío esconde la malla
  *  cuando ni su punto más cercano entra en la distancia (solo visibilidad: los colisionadores no se tocan); las mallas fusionadas (su esfera abarca todo
@@ -46,7 +46,6 @@ export function ramp(mat: B.Material, x: number, z: number, ry: number, W: numbe
   stat(m, B.PhysicsShapeType.MESH, { friction: 0.5 }, [x, y, z, ry]); // hull redondeaba la unión con tablones y el borde de salto
   const len = L + T + Lb;
   bare.push({ x: x + (Math.sin(ry) * len) / 2, z: z + (Math.cos(ry) * len) / 2, r: len / 2 + 1 });
-  if (FOLDED_SLICE && H > 1) deco.push(...rampLip(W, L, H)); // franja hazard en el borde de salto
   if (deco.length) { const d = merge("rampDeco", deco); d.position.set(x, y, z); d.rotation.y = ry; shadows.addShadowCaster(d); } // solo visual: se posa después sin problema
 }
 // Tablón apoyado sobre la subida de una rampa (adorno, coordenadas locales de ramp)
@@ -117,7 +116,7 @@ export function jumpScrap(n: number) {
     } else if (roll === 1) {
       stat(tor(2.4, 0.85, tireM, [x, 0.85, z], [Math.PI / 2, ry, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 });
     } else {
-      for (let k = 0; k < int(2, 3); k++) crateFold(stat(box(2.4, 2.2, 2.4, carton, [x, 1.1 + k * 2.05, z], [0, ry, 0]), B.PhysicsShapeType.BOX, { friction: 0.45 }), 2.4, 2.2, 2.4);
+      for (let k = 0; k < int(2, 3); k++) stat(box(2.4, 2.2, 2.4, carton, [x, 1.1 + k * 2.05, z], [0, ry, 0]), B.PhysicsShapeType.BOX, { friction: 0.45 });
     }
     bare.push({ x, z, r: 5 });
   }
@@ -128,13 +127,12 @@ export function planterAlley() {
   const sp = freeSpot(20);
   if (!sp) return;
   const ry = rng() * Math.PI, dx = Math.sin(ry), dz = Math.cos(ry), parts: B.Mesh[] = [];
-  const pMat = FOLDED_SLICE ? FOLD.painted("#6e7681", 0.85, 308) : M.matte("#8a8f94");
-  const l1 = FOLDED_SLICE ? FOLD.painted("#3f8f2f", 0.65, 309) : M.matte("#3f8f2f"), l2 = FOLDED_SLICE ? FOLD.painted("#4ea83a", 0.65, 310) : M.matte("#4ea83a");
+  const pMat = toyM("#9E9E9E", 0.6);
+  const l1 = toyM("#66BB6A", 0.6), l2 = toyM("#43A047", 0.6);
   for (let k = 0; k < 8; k++) for (const e of [-3.6, 3.6]) {
     const t = (k - 3.5) * 4.4, x = sp[0] + dx * t + dz * e, z = sp[1] + dz * t - dx * e;
     stat(cyl(3.2, 3.2, 2.6, pMat, [x, 1.3, z], undefined, 10), B.PhysicsShapeType.CYLINDER).isVisible = false;
-    parts.push(cyl(3.2, 2.6, 2.6, pMat, [x, 1.3, z], undefined, 10), cyl(2.8, 2.8, 0.2, FOLDED_SLICE ? FOLD.dark() : M.matte("#4a3420"), [x, 2.55, z], undefined, 10));
-    if (FOLDED_SLICE) parts.push(cyl(3.32, 3.32, 0.3, FOLD.rust(), [x, 2.4, z], undefined, 10));
+    parts.push(cyl(3.2, 2.6, 2.6, pMat, [x, 1.3, z], undefined, 10), cyl(2.8, 2.8, 0.2, toyM("#795548", 0.8), [x, 2.55, z], undefined, 10));
     for (let l = 0; l < 3; l++) { const a = l * 2.1 + k; const lf = sph(2, l % 2 ? l1 : l2, [x + Math.cos(a) * 0.6, 3.3, z + Math.sin(a) * 0.6], [0.4, 0.2, 1.4]); lf.rotation.set(0.6, -a + Math.PI / 2, 0); parts.push(lf); }
     bare.push({ x, z, r: 1.8 });
   }
@@ -145,12 +143,12 @@ export function planterAlley() {
 export function toyScatter() {
   const sp = freeSpot(13);
   if (!sp) return;
-  const toy = ["#ef4444", "#3b82f6", "#facc15", "#22c55e", "#a855f7"];
+  const toy = ["#E53935", "#42A5F5", "#FBC02D", "#66BB6A", "#8E24AA"];
   for (let k = 0; k < 26; k++) {
     const a = rng() * 6.3, r = Math.sqrt(rng()) * 11, s = between(0.7, 1.5), c = toy[int(0, 4)];
-    breakable(dyn(box(s, s * between(0.6, 1), s * between(1, 2), FOLDED_SLICE ? FOLD.painted(c, 0.55, 312 + (k % 5)) : M.plastic(c), [sp[0] + Math.cos(a) * r, s / 2, sp[1] + Math.sin(a) * r], [0, rng() * 6.3, 0]), B.PhysicsShapeType.BOX, 0.3), 25, s * 0.7, c);
+    breakable(dyn(box(s, s * between(0.6, 1), s * between(1, 2), toyM(c, 0.45), [sp[0] + Math.cos(a) * r, s / 2, sp[1] + Math.sin(a) * r], [0, rng() * 6.3, 0]), B.PhysicsShapeType.BOX, 0.3), 25, s * 0.7, c);
   }
-  for (let k = 0; k < 5; k++) { const a = rng() * 6.3, r = Math.sqrt(rng()) * 10; dyn(sph(1.4, FOLDED_SLICE ? FOLD.painted(toy[k], 0.5, 318 + k) : M.plastic(toy[k]), [sp[0] + Math.cos(a) * r, 0.7, sp[1] + Math.sin(a) * r], undefined, 10), B.PhysicsShapeType.SPHERE, 0.4); }
+  for (let k = 0; k < 5; k++) { const a = rng() * 6.3, r = Math.sqrt(rng()) * 10; dyn(sph(1.4, toyM(toy[k], 0.4), [sp[0] + Math.cos(a) * r, 0.7, sp[1] + Math.sin(a) * r], undefined, 10), B.PhysicsShapeType.SPHERE, 0.4); }
   bare.push({ x: sp[0], z: sp[1], r: 12 });
 }
 
@@ -158,29 +156,22 @@ export function toyScatter() {
 export function pots(n: number) {
   const list: [number, number, number][] = [];
   for (let i = 0; i < n; i++) { const sc = between(0.8, 1.35), p = freeSpot(6 * sc); if (p) { list.push([p[0], p[1], sc]); bare.push({ x: p[0], z: p[1], r: 3 * sc }); } }
-  const l1 = FOLDED_SLICE ? FOLD.painted("#3f8f2f", 0.65, 309) : M.matte("#3f8f2f"), l2 = FOLDED_SLICE ? FOLD.painted("#4ea83a", 0.65, 310) : M.matte("#4ea83a");
+  const l1 = toyM("#66BB6A", 0.6), l2 = toyM("#43A047", 0.6);
   for (const [x, z, sc] of list) {
     const pot = stat(merge("pot", [
-      cyl(5 * sc, 4 * sc, 4 * sc, M.matte("#c2410c"), [0, 2 * sc, 0], undefined, 16),
-      cyl(5.4 * sc, 5.4 * sc, 0.6 * sc, M.matte("#9a3412"), [0, 3.9 * sc, 0], undefined, 16),
-      cyl(4.6 * sc, 4.6 * sc, 0.2 * sc, M.matte("#4a3420"), [0, 4.1 * sc, 0], undefined, 16),
+      cyl(5 * sc, 4 * sc, 4 * sc, toyM("#FB8C00"), [0, 2 * sc, 0], undefined, 16),
+      cyl(5.4 * sc, 5.4 * sc, 0.6 * sc, toyM("#E65100"), [0, 3.9 * sc, 0], undefined, 16),
+      cyl(4.6 * sc, 4.6 * sc, 0.2 * sc, toyM("#795548", 0.8), [0, 4.1 * sc, 0], undefined, 16),
     ]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z]);
-    if (FOLDED_SLICE) {
-      pot.isVisible = false;
-      const pk = template("potF", potFold).createInstance("potF");
-      pk.position.setAll(0); pk.parent = pot; pk.scaling.setAll(sc); pk.isPickable = false; pk.receiveShadows = true; shadows.addShadowCaster(pk);
-    }
     const plant: B.Mesh[] = []; // hojas y flor en una sola malla (se rompe junto con la maceta: extras)
     for (let k = 0; k < 7; k++) {
       const a = (k / 7) * Math.PI * 2;
-      const leaf = FOLDED_SLICE
-        ? box(1.1 * sc, 0.16 * sc, 2.8 * sc, k % 2 ? l1 : l2, [x + Math.cos(a) * 1.3 * sc, 5.4 * sc, z + Math.sin(a) * 1.3 * sc], [0.55, -a + Math.PI / 2, 0])
-        : sph(3 * sc, k % 2 ? l1 : l2, [x + Math.cos(a) * 1.3 * sc, 5.5 * sc, z + Math.sin(a) * 1.3 * sc], [0.4, 0.2, 1.4]);
-      if (!FOLDED_SLICE) leaf.rotation.set(0.6, -a + Math.PI / 2, 0);
+      const leaf = sph(3 * sc, k % 2 ? l1 : l2, [x + Math.cos(a) * 1.3 * sc, 5.5 * sc, z + Math.sin(a) * 1.3 * sc], [0.4, 0.2, 1.4]);
+      leaf.rotation.set(0.6, -a + Math.PI / 2, 0);
       plant.push(leaf);
     }
-    const fc = ["#f43f5e", "#facc15", "#a855f7"][Math.floor(rng() * 3)];
-    plant.push(sph(1.2 * sc, FOLDED_SLICE ? FOLD.painted(fc, 0.5, 325) : M.plastic(fc), [x, 6.8 * sc, z]));
+    const fc = ["#E53935", "#FBC02D", "#8E24AA"][Math.floor(rng() * 3)];
+    plant.push(sph(1.2 * sc, toyM(fc, 0.4), [x, 6.8 * sc, z]));
     const leaves = merge("plant", plant);
     shadows.addShadowCaster(leaves);
     breakable(pot, 120 * sc, 2.6 * sc, "#c2410c", true, [leaves]);
@@ -195,7 +186,7 @@ export function canAt(x: number, y: number, z: number, ci: number) {
     cyl(4.4, 4.4, 5, tin, [0, 2.5, 0], undefined, 14), cyl(4.5, 4.5, 2.6, M.matte(c), [0, 2.6, 0], undefined, 14),
     cyl(4.2, 4.2, 0.2, M.metal("#8a8e94"), [0, 5.05, 0], undefined, 14), tor(3.4, 0.2, M.metal("#8a8e94"), [0, 5.4, 0], [Math.PI / 2, 0, 0], 10),
   ]), B.PhysicsShapeType.CYLINDER, {}, [x, y, z]);
-  breakable(skin(can, "lataF" + c, () => paintCanFold(c)), 90, 2.4, c, [c, "#b8bcc2"]);
+  breakable(can, 90, 2.4, c, [c, "#b8bcc2"]);
 }
 export function paintCans(n: number) {
   for (let i = 0; i < n; i++) {
@@ -214,7 +205,7 @@ export function giantTools() {
   ];
   for (const [i, make] of kit.entries()) {
     const sp = freeSpot(9); if (!sp) continue;
-    skin(stat(make(), B.PhysicsShapeType.CONVEX_HULL, {}, [sp[0], 0, sp[1], rng() * 6.3]), "toolF" + i, () => toolFold(i as 0 | 1 | 2));
+    stat(make(), B.PhysicsShapeType.CONVEX_HULL, {}, [sp[0], 0, sp[1], rng() * 6.3]);
     bare.push({ x: sp[0], z: sp[1], r: 8 });
   }
 }
@@ -244,21 +235,21 @@ export function rocks(n: number) {
 export function gnomes(n: number) {
   const list: [number, number, number][] = [];
   for (let i = 0; i < n; i++) { const p = freeSpot(5); if (p) { list.push([p[0], p[1], rng() * 6.3]); bare.push({ x: p[0], z: p[1], r: 2.5 }); } }
-  for (const [x, z, ry] of list) skin(stat(merge("gnome", [
+  for (const [x, z, ry] of list) stat(merge("gnome", [
     cyl(2.4, 3.6, 4, M.plastic("#2563eb"), [0, 2, 0], undefined, 12),
     cyl(2.6, 2.6, 0.5, M.plastic("#78350f"), [0, 2.6, 0], undefined, 12),
     sph(2.4, M.plastic("#f5c7a9"), [0, 5, 0]),
     cyl(0.1, 2.6, 2.4, M.plastic("#f8fafc"), [0, 3.6, 0.8], [Math.PI - 0.3, 0, 0], 10),
     cyl(0.05, 2.6, 3.4, M.plastic("#dc2626"), [0, 7, 0], [-0.2, 0, 0], 12),
     sph(0.6, M.plastic("#f59e9e"), [0, 5, 1.15]),
-  ]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z, ry]), "gnomeF", gnomeFold);
+  ]), B.PhysicsShapeType.CYLINDER, {}, [x, 0, z, ry]);
 }
 
 // Manguera enrollada con su tramo serpenteando por el pasto
 export function hose() {
   const hs = freeSpot(8);
   if (!hs) return;
-  const [hx, hz] = hs, hm = FOLDED_SLICE ? FOLD.painted("#1f9d4c", 0.65, 305) : M.plastic("#22c55e");
+  const [hx, hz] = hs, hm = toyM("#66BB6A", 0.5);
   const h = merge("hose", [0, 1, 2, 3].map((i) => tor(9 - i * 0.2, 0.9, hm, [0, 0.45 + i * 0.85, 0], undefined, 24)));
   h.position.set(hx, 0, hz);
   stat(h, B.PhysicsShapeType.MESH);
@@ -271,11 +262,11 @@ export function hose() {
 export function wateringCan() {
   const cs = freeSpot(5) ?? [-70, -40];
   bare.push({ x: cs[0], z: cs[1], r: 3 });
-  skin(stat(merge("can", [
+  stat(merge("can", [
     cyl(5, 5, 6, M.metal("#15803d"), [0, 3, 0], undefined, 16),
     tube([[0, 2, 2.4], [0, 5, 5], [0, 6.5, 6.5]], 0.35, M.metal("#15803d")),
     tor(4, 0.4, M.metal("#15803d"), [0, 6.8, -1], [0, Math.PI / 2, Math.PI / 2], 12),
-  ]), B.PhysicsShapeType.CYLINDER, {}, [cs[0], 0, cs[1]]), "regaderaF", wateringCanFold);
+  ]), B.PhysicsShapeType.CYLINDER, {}, [cs[0], 0, cs[1]]);
 }
 
 // Pilas de bloques o cajas (pirámides empujables y rompibles) de lado s
@@ -283,7 +274,7 @@ export function piles(np: number, cols: string[], mat: (c: string) => B.Material
   for (let pile = 0; pile < np; pile++) {
     const sp = freeSpot(8); if (!sp) continue;
     const [bx, bz] = sp, rows = int(2, 4);
-    for (let r = 0; r < rows; r++) for (let i = 0; i < rows - r + 1; i++) { const c = cols[int(0, cols.length - 1)]; const b = dyn(box(s, s, s, mat(c), [bx + (i - (rows - r) / 2) * s * 1.1, s / 2 + r * s * 1.025, bz]), B.PhysicsShapeType.BOX, 0.3 * s); breakable(fold ? crateFold(b, s, s, s) : b, 40, s * 0.6, c); }
+    for (let r = 0; r < rows; r++) for (let i = 0; i < rows - r + 1; i++) { const c = cols[int(0, cols.length - 1)]; const b = dyn(box(s, s, s, mat(c), [bx + (i - (rows - r) / 2) * s * 1.1, s / 2 + r * s * 1.025, bz]), B.PhysicsShapeType.BOX, 0.3 * s); breakable(b, 40, s * 0.6, c); }
     bare.push({ x: bx, z: bz, r: 3 * s });
   }
 }
@@ -292,8 +283,8 @@ export function brickWalls(n: number) {
     const sp = freeSpot(8); if (!sp) continue;
     const [wx, wz] = sp;
     for (let i = 0; i < 8; i++) {
-      const b = dyn(box(3, 1.4, 1.5, FOLDED_SLICE ? FOLD.painted("#FB8C00", 0.2, 340 + (i % 4)) : M.matte("#b45309"), [wx + (i % 4) * 3.1 - 4.6, 0.7 + Math.floor(i / 4) * 1.45, wz]), B.PhysicsShapeType.BOX, 1.2);
-      breakable(FOLDED_SLICE ? crateFold(b, 3, 1.4, 1.5) : b, 60, 1.5, "#FB8C00");
+      const b = dyn(box(3, 1.4, 1.5, toyM("#FB8C00", 0.5), [wx + (i % 4) * 3.1 - 4.6, 0.7 + Math.floor(i / 4) * 1.45, wz]), B.PhysicsShapeType.BOX, 1.2);
+      breakable(b, 60, 1.5, "#FB8C00");
     }
     bare.push({ x: wx, z: wz, r: 7 });
   }
@@ -317,32 +308,8 @@ export function puddles(n: number, mat: B.Material) {
 }
 export function ball() {
   const bs = freeSpot(4) ?? [10, 10];
-  if (!FOLDED_SLICE) {
-    const ballTex = tex("ball", () => canvasTex(256, (c, s) => { c.fillStyle = "#fafafa"; c.fillRect(0, 0, s, s); c.fillStyle = "#111"; for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) { c.beginPath(); c.arc(i * 32 + 16, j * 64 + 32, 12, 0, 7); c.fill(); } }));
-    dyn(sph(5, pbr("ball", { color: "#ffffff", rough: 0.4, tex: ballTex }), [bs[0], 2.5, bs[1]], undefined, 16), B.PhysicsShapeType.SPHERE, 2);
-    return;
-  }
-  const collider = dyn(sph(5, M.matte("#ffffff"), [bs[0], 2.5, bs[1]], undefined, 16), B.PhysicsShapeType.SPHERE, 2);
-  collider.isVisible = false;
-  const ballFiles = ["ball", "ball_tennis", "ball_beach"];
-  const variant = ballFiles[int(0, ballFiles.length - 1)];
-  import("@babylonjs/loaders/glTF/index.js").then(() => B.LoadAssetContainerAsync(`models/${variant}.glb`, scene)).then((c) => {
-    if (collider.isDisposed()) { c.dispose(); return; }
-    c.addAllToScene();
-    const root = new B.TransformNode("ballSkin", scene);
-    root.scaling.setAll(2.325);
-    root.position.set(0, -2.5, 0);
-    for (const node of c.rootNodes) node.parent = root;
-    for (const mesh of c.meshes) {
-      if (mesh.getTotalVertices()) {
-        shadows.addShadowCaster(mesh);
-        mesh.receiveShadows = true;
-      }
-    }
-    root.parent = collider;
-  }).catch(() => {
-    collider.isVisible = true;
-  });
+  const ballTex = tex("ball", () => canvasTex(256, (c, s) => { c.fillStyle = "#fafafa"; c.fillRect(0, 0, s, s); c.fillStyle = "#111"; for (let i = 0; i < 8; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2) { c.beginPath(); c.arc(i * 32 + 16, j * 64 + 32, 12, 0, 7); c.fill(); } }));
+  dyn(sph(5, pbr("ball", { color: "#ffffff", rough: 0.4, tex: ballTex }), [bs[0], 2.5, bs[1]], undefined, 16), B.PhysicsShapeType.SPHERE, 2);
 }
 
 export function clearLayout() {
