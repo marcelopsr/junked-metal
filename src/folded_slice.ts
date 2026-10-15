@@ -563,48 +563,48 @@ const GRUA_S = 1.7; // vitrina grande (ref302)
 /** Máquina de garra de feria: gabinete de premios, pórtico y pinza suspendida. Huesos: cuerpo, cable y dedos. */
 export function gruaBody() {
   const { G, done, bone } = kit();
-  const orange = FOLD.painted("#c85a1c", 0.95, 181), yellow = FOLD.painted("#c8902a", 0.9, 182);
-  const dark = FOLD.dark(), steel = FOLD.bare(), glass = FOLD.glass();
-  G.foldBox([0, 0.18, 0], undefined, 2.8, 0.72, 2.45, orange);
+  const orange = toyC("#c85a1c", 0.45, 0.05), yellow = toyC("#d9a02a", 0.45, 0.05), rust = toyC("#6a3a22", 0.7, 0.2);
+  const dark = toyDark(), steel = toySteel(), rubber = toyRubber(), plastic = (c: string) => toyC(c, 0.5, 0);
+  const glow = (c: string) => { const m = toy("gr" + c, c, { glow: true }); m.fogEnabled = false; return m; }; // luces: sin niebla (si no desaparecen en el horneado)
+  G.box(2.8, 0.72, 2.45, orange, [0, 0.18, 0]);
   for (const x of [-1.17, 1.17]) G.wheel([x, 0.2, 0.05], undefined, 0.42, 0.22);
   G.box(0.24, 2.05, 0.2, yellow, [-1.23, 1.87, 1.12]); G.box(0.24, 2.05, 0.2, yellow, [1.23, 1.87, 1.12]);
   G.box(2.7, 0.24, 0.2, orange, [0, 2.9, 1.12]); G.box(2.7, 0.2, 0.2, orange, [0, 0.83, 1.12]);
-  G.box(2.38, 1.82, 0.035, glass, [0, 1.87, 1.105]); G.box(2.45, 1.82, 0.12, dark, [0, 1.87, -0.15]);
+  G.box(2.45, 1.82, 0.12, dark, [0, 1.87, -0.15]);
   for (const s of [-1, 1]) {
-    G.box(0.035, 1.62, 1.14, glass, [s * 1.14, 1.87, 0.47]);
     G.box(0.11, 1.78, 0.1, yellow, [s * 1.18, 1.87, 1.07]); G.box(0.11, 1.78, 0.1, steel, [s * 1.18, 1.87, -0.13]);
-    G.box(0.11, 0.1, 1.18, orange, [s * 1.18, 2.79, 0.47]); G.box(0.11, 0.1, 1.18, FOLD.rust(), [s * 1.18, 0.96, 0.47]);
+    G.box(0.11, 0.1, 1.18, orange, [s * 1.18, 2.79, 0.47]); G.box(0.11, 0.1, 1.18, rust, [s * 1.18, 0.96, 0.47]);
   }
-  G.box(2.2, 0.1, 1.1, FOLD.rust(), [0, 0.82, 0.43]); // piso oxidado: los premios apoyan dentro del gabinete
+  G.box(2.2, 0.1, 1.1, rust, [0, 0.82, 0.43]); // piso oxidado: los premios apoyan dentro del gabinete
   // 7 peluches de juguete (oso, conejo, bicho azul, dino, patito, dos pelotas): esferas con orejas/ojos simples, apoyados en el piso del gabinete
-  const toy = (x: number, z: number, r: number, c: string, kind: "bear" | "bunny" | "dino" | "duck" | "ball" | "blob") => {
-    const y = 0.87 + r, m = FOLD.plastic(c);
+  const plush = (x: number, z: number, r: number, c: string, kind: "bear" | "bunny" | "dino" | "duck" | "ball" | "blob") => {
+    const y = 0.87 + r, m = plastic(c);
     G.sph(r, m, [x, y, z]);
     if (kind === "ball") return;
     G.sph(r * 0.7, m, [x, y + r * 0.95, z + r * 0.15]); // cabeza
     for (const e of [-1, 1]) {
-      G.sph(0.045, FOLD.dark(), [x + e * r * 0.26, y + r * 1.0, z + r * 0.8]);
+      G.sph(0.045, dark, [x + e * r * 0.26, y + r * 1.0, z + r * 0.8]);
       if (kind === "bear" || kind === "blob") G.sph(r * 0.24, m, [x + e * r * 0.55, y + r * 1.55, z]);
       if (kind === "bunny") G.box(r * 0.26, r * 1.1, r * 0.12, m, [x + e * r * 0.3, y + r * 1.9, z], [0, 0, -e * 0.15]);
-      if (kind === "dino") G.box(r * 0.2, r * 0.3, r * 0.2, FOLD.plastic("#c8402a"), [x, y + r * 1.45, z - e * r * 0.3]);
+      if (kind === "dino") G.box(r * 0.2, r * 0.3, r * 0.2, plastic("#c8402a"), [x, y + r * 1.45, z - e * r * 0.3]);
     }
-    if (kind === "duck") G.box(r * 0.55, r * 0.15, r * 0.4, FOLD.plastic("#e8802a"), [x, y + r * 0.9, z + r * 0.95]);
+    if (kind === "duck") G.box(r * 0.55, r * 0.15, r * 0.4, plastic("#e8802a"), [x, y + r * 0.9, z + r * 0.95]);
   };
-  toy(-0.55, 0.5, 0.38, "#8a5a30", "bear"); toy(0.5, 0.55, 0.34, "#e060a8", "bunny"); toy(-0.05, 0.2, 0.32, "#3a78d0", "blob"); toy(0.05, 0.78, 0.3, "#4a9a3a", "dino");
-  toy(0.8, 0.15, 0.28, "#e8cb42", "duck"); toy(-0.82, 0.12, 0.26, "#7a3ab8", "ball"); toy(0.3, 0.2, 0.24, "#d03a2a", "ball");
-  for (const s of [-1, 1]) { G.box(0.55, 0.1, 0.1, FOLD.emissive("#ffc04a"), [s * 0.85, 2.98, 1.25]); G.box(0.16, 0.1, 0.14, FOLD.emissive("#ffb400"), [s * 1.2, 3.28, 0.34]); } // luces del marco
-  G.trimStrip([0, 0.94, 1.23], undefined, 2.65, 0.12, "hazard", 0.025);
-  G.box(0.56, 0.42, 0.12, dark, [0, 0.45, 1.27]); G.box(0.3, 0.11, 0.04, FOLD.emissive("#ff3b2e"), [0, 0.47, 1.35]);
-  for (const s of [-1, 1]) { G.plate([s * 1.22, 1.86, 1.24], undefined, 0.16, 1.65, steel); G.rivets([s * 1.19, 0.98, 1.24], [s * 1.19, 2.72, 1.24], 7, [0, 0, 1]); }
+  plush(-0.55, 0.5, 0.38, "#8a5a30", "bear"); plush(0.5, 0.55, 0.34, "#e060a8", "bunny"); plush(-0.05, 0.2, 0.32, "#3a78d0", "blob"); plush(0.05, 0.78, 0.3, "#4a9a3a", "dino");
+  plush(0.8, 0.15, 0.28, "#e8cb42", "duck"); plush(-0.82, 0.12, 0.26, "#7a3ab8", "ball"); plush(0.3, 0.2, 0.24, "#d03a2a", "ball");
+  for (const s of [-1, 1]) { G.box(0.55, 0.1, 0.1, glow("#ffc04a"), [s * 0.85, 2.98, 1.25]); G.box(0.16, 0.1, 0.14, glow("#ffb400"), [s * 1.2, 3.28, 0.34]); } // luces del marco
+  for (let i = 0; i < 12; i++) G.box(0.11, 0.12, 0.025, i % 2 ? dark : yellow, [-1.2 + i * 0.218, 0.94, 1.23]); // franja de peligro
+  G.box(0.56, 0.42, 0.12, dark, [0, 0.45, 1.27]); G.box(0.3, 0.11, 0.04, glow("#ff3b2e"), [0, 0.47, 1.35]);
+  for (const s of [-1, 1]) { G.box(0.16, 1.65, 0.03, steel, [s * 1.22, 1.86, 1.24]); for (let i = 0; i < 7; i++) G.sph(0.04, steel, [s * 1.19, 0.98 + i * 0.29, 1.26]); }
   G.box(0.18, 0.2, 2.55, yellow, [0, 3.05, -0.02]); G.box(2.55, 0.24, 0.28, orange, [0, 3.28, 0.2]);
   G.cyl(0.42, 0.18, steel, [0, 3.08, 0.2], [0, 0, Math.PI / 2], 8);
   for (const s of [-1, 1]) for (const z of [-0.7, 0.1, 0.9]) { // 6 patas mecánicas (fijas)
-    G.tube([[s * 1.3, 0.45, z], [s * 1.75, 0.85, z], [s * 2.05, 0.04, z + 0.1]], 0.07, FOLD.painted("#6a4a2a", 0.9, 184)); G.box(0.3, 0.06, 0.3, FOLD.rubber(), [s * 2.05, 0.03, z + 0.1]);
+    G.tube([[s * 1.3, 0.45, z], [s * 1.75, 0.85, z], [s * 2.05, 0.04, z + 0.1]], 0.07, toyC("#6a4a2a", 0.7, 0.1)); G.box(0.3, 0.06, 0.3, rubber, [s * 2.05, 0.03, z + 0.1]);
   }
   bone(1);
   G.box(0.08, 0.92, 0.08, dark, [0, 2.58, 0.75]);
   G.cyl(0.32, 0.16, steel, [0, 2.12, 0.75], [Math.PI / 2, 0, 0], 8);
-  G.cyl(0.2, 0.16, FOLD.emissive("#ffb400"), [0, 2.0, 0.75], [Math.PI / 2, 0, 0], 8);
+  G.cyl(0.2, 0.16, glow("#ffb400"), [0, 2.0, 0.75], [Math.PI / 2, 0, 0], 8);
   bone(2);
   for (const s of [-1, 1]) G.tube([[0, 2.0, 0.75], [s * 0.34, 1.72, 0.94], [s * 0.28, 1.38, 0.98]], 0.085, steel);
   G.tube([[0, 2.0, 0.75], [0, 1.7, 1.12], [0, 1.39, 1.04]], 0.085, yellow);
@@ -648,25 +648,27 @@ const QLEGS: [number, number][] = [[1, 1], [-1, 1], [1, -1], [-1, -1]]; // [lado
 
 export function petBody(Q: Quad) {
   const { G, done, strut, bone } = kit();
-  const c = Q.cat, coat = FOLD.painted(c ? "#d9782a" : "#7a7f8e", 0.8, c ? 191 : 201), dark = FOLD.painted(c ? "#a8451a" : "#4a4a56", 0.8, c ? 192 : 202);
-  const light = FOLD.painted(c ? "#f2e6d0" : "#dccdb0", 0.7, c ? 193 : 203), steel = FOLD.bare(), eye = FOLD.emissive(c ? "#8adf2a" : "#e07a1a"), pink = FOLD.painted("#c8706a", 0.6, 206);
+  const c = Q.cat, coat = toyC(c ? "#d9782a" : "#7a7f8e", 0.5, 0.05), dark = toyC(c ? "#a8451a" : "#4a4a56", 0.5, 0.05);
+  const light = toyC(c ? "#f2e6d0" : "#dccdb0", 0.6, 0), steel = toySteel(), eye = toy("pe" + c, c ? "#8adf2a" : "#e07a1a", { glow: true }), pink = toyC("#c8706a", 0.5, 0);
+  eye.fogEnabled = false; // emisivo sin niebla: si no desaparece en el horneado
+  const nose = toyDark(), rubber = toyRubber(), rivet = (x: number, y: number, z: number) => G.sph(0.14, steel, [x, y, z]);
   const { hipX: hx, hipY: hy, hipZ: hz } = Q, tw = c ? 2.0 : 3.4, th = c ? 2.2 : 3.2, tl = c ? 6.0 : 6.4, ty = hy + th * 0.45;
   // Torso: caja de chapa con pechera clara, lomo atornillado y dobleces en las aristas
   G.box(tw, th, tl, coat, [0, ty, 0]);
   G.box(tw * 0.8, th * 0.7, 0.12, light, [0, ty - th * 0.1, tl / 2 + 0.06]);
   if (!c) { G.box(tw * 1.12, th * 0.9, 2.3, coat, [0, ty - 0.1, tl / 2 - 1.3]); G.box(tw * 0.7, th * 0.55, 0.14, light, [0, ty - 0.5, tl / 2 - 0.12]); } // hombros anchos de bulldog y pecho crema
-  G.plate([0, ty + th / 2 + 0.01, -0.3], [Math.PI / 2, 0, 0], tw * 0.6, tl * 0.6, dark);
+  G.box(tw * 0.6, 0.03, tl * 0.6, dark, [0, ty + th / 2 + 0.01, -0.3]);
   for (const s of [-1, 1]) {
     G.bend([s * tw / 2, ty + th / 2, -tl / 2], [s * tw / 2, ty + th / 2, tl / 2], 0.08, coat);
-    G.rivets([s * (tw / 2 + 0.01), ty - th * 0.35, -tl * 0.4], [s * (tw / 2 + 0.01), ty - th * 0.35, tl * 0.4], 7, [s, 0, 0]);
+    for (let i = 0; i < 5; i++) rivet(s * (tw / 2 + 0.01), ty - th * 0.35, -tl * 0.4 + i * tl * 0.2);
   }
   if (c) { for (let i = 0; i < 6; i++) G.box(tw + 0.06, 0.5, 0.36, dark, [0, ty + th / 2 - 0.2, -2.5 + i * 0.95]); for (const s of [-1, 1]) for (let i = 0; i < 4; i++) G.box(0.06, 0.45, 0.4, dark, [s * (tw / 2 + 0.02), ty + 0.2, -2 + i * 1.3], [0.4, 0, 0]); } // rayas del tigre: flejes oscuros sobre el lomo y los flancos
-  else { G.decal([tw / 2 + 0.01, ty, -0.8], [0, -Math.PI / 2, 0], "numero", 1.2); G.decal([-tw / 2 - 0.01, ty, -0.8], [0, Math.PI / 2, 0], "numero", 1.2); }
+  else for (const s of [-1, 1]) G.box(0.03, 1.2, 1.2, light, [s * (tw / 2 + 0.01), ty, -0.8]); // chapa crema del número
   // Cuello y collar
   const [nx, ny, nz] = Q.neck;
   strut([0, ty + th * 0.2, tl / 2 - 0.6], [nx, ny + 0.4, nz + 0.6], c ? 1.1 : 2.6, c ? 1.1 : 2.4, coat);
-  G.box(c ? 1.4 : 3.1, 0.5, c ? 1.3 : 2.6, FOLD.painted(c ? "#2f6fd0" : "#c0262a", 0.5, 204), [nx, ny, nz + 0.4], [-0.5, 0, 0]);
-  G.box(0.5, 0.5, 0.06, FOLD.painted(PAL.amarillo, 0.4, 205), [nx, ny - 0.5, nz + 0.95]); // chapita
+  G.box(c ? 1.4 : 3.1, 0.5, c ? 1.3 : 2.6, toyC(c ? "#2f6fd0" : "#c0262a", 0.4, 0.1), [nx, ny, nz + 0.4], [-0.5, 0, 0]);
+  G.box(0.5, 0.5, 0.06, toyC(PAL.amarillo, 0.4, 0.3), [nx, ny - 0.5, nz + 0.95]); // chapita
   if (!c) for (const s of [-1, 1]) for (let i = 0; i < 3; i++) G.cyl(0.02, 0.5, steel, [s * (0.5 + i * 0.5), ny + 0.35, nz + 0.2 + (i === 1 ? 0.2 : 0)], undefined, 4, 0.5); // pinches del collar
   if (!c) { // aro del collar y pinches hacia afuera (ref297/308)
     G.tube(Array.from({ length: 9 }, (_, k) => { const a = (k / 8) * Math.PI * 2; return [Math.cos(a) * 0.45, ny - 1.25 + Math.sin(a) * 0.45, nz + 1.55] as V3; }), 0.07, steel);
@@ -675,7 +677,7 @@ export function petBody(Q: Quad) {
   bone(1); // cabeza
   const hy0 = ny + (c ? 1.0 : 1.4), hz0 = nz + (c ? 1.0 : 1.2), hs = c ? 1.9 : 2.4;
   if (!c) { // cabeza de bulldog: ancha y baja, cachetes, hocico chato, mandíbula inferior saliente y boca abierta con colmillos
-    const hy1 = ny + 0.5, hz1 = nz + 1.4, red = FOLD.painted("#6a1a1a", 0.6, 208), fang = FOLD.painted("#efe2c4", 0.5, 209);
+    const hy1 = ny + 0.5, hz1 = nz + 1.4, red = toyC("#6a1a1a", 0.5, 0), fang = toyC("#efe2c4", 0.5, 0);
     G.box(3.7, 2.6, 2.7, coat, [0, hy1, hz1]);
     G.box(0.8, 0.06, 1.8, light, [0, hy1 + 1.32, hz1 + 0.1]); // mancha crema
     for (const s of [-1, 1]) {
@@ -687,19 +689,19 @@ export function petBody(Q: Quad) {
       G.cyl(0.4, 0.5, fang, [s * 0.95, hy1 - 0.88, hz1 + 1.65], undefined, 4, 0.02); // colmillo superior
     }
     G.box(2.4, 1.0, 1.1, light, [0, hy1 - 0.5, hz1 + 1.65]); // hocico chato
-    G.box(1.0, 0.55, 0.3, FOLD.dark(), [0, hy1 - 0.05, hz1 + 2.25]); // nariz
+    G.box(1.0, 0.55, 0.3, nose, [0, hy1 - 0.05, hz1 + 2.25]); // nariz
     G.box(1.9, 0.3, 1.5, red, [0, hy1 - 1.05, hz1 + 1.6]); // interior de la boca
     G.box(2.5, 0.7, 2.0, light, [0, hy1 - 1.55, hz1 + 1.95], [0.18, 0, 0]); // mandíbula inferior saliente, abierta
     G.box(1.6, 0.2, 0.3, dark, [0, hy1 - 1.15, hz1 + 2.95]); // labio
   } else {
   G.box(hs, hs * 0.9, hs, coat, [0, hy0, hz0]);
   G.box(hs * (c ? 0.55 : 0.68), hs * (c ? 0.35 : 0.5), hs * (c ? 0.4 : 0.75), light, [0, hy0 - hs * 0.22, hz0 + hs * (c ? 0.68 : 0.85)]); // hocico
-  G.box(hs * 0.3, hs * 0.2, 0.2, FOLD.dark(), [0, hy0 - hs * (c ? 0.1 : 0.05), hz0 + hs * (c ? 0.9 : 1.23)]); // nariz
+  G.box(hs * 0.3, hs * 0.2, 0.2, nose, [0, hy0 - hs * (c ? 0.1 : 0.05), hz0 + hs * (c ? 0.9 : 1.23)]); // nariz
   if (!c) G.box(hs * 0.6, hs * 0.16, hs * 0.65, dark, [0, hy0 - hs * 0.55, hz0 + hs * 0.75]); // mandíbula
   for (const s of [-1, 1]) {
     G.box(hs * 0.22, hs * 0.16, 0.1, eye, [s * hs * 0.27, hy0 + hs * 0.12, hz0 + hs / 2 + 0.05]);
     if (c) { G.cyl(0.04, 1.1, coat, [s * hs * 0.32, hy0 + hs * 0.45 + 0.5, hz0 - 0.1], undefined, 4, 0.95); G.cyl(0.03, 0.7, pink, [s * hs * 0.32, hy0 + hs * 0.45 + 0.4, hz0 + 0.02], undefined, 4, 0.6); } // oreja en punta con interior rosa
-    else { G.box(0.4, 1.9, 1.3, coat, [s * hs * 0.34, hy0 + hs * 0.45 + 0.9, hz0 - 0.2], [0.1, 0, s * 0.15]); G.box(0.1, 1.5, 1.0, pink, [s * hs * 0.34, hy0 + hs * 0.45 + 0.9, hz0 - 0.02], [0.1, 0, s * 0.15]); G.box(0.14, hs * 0.14, 0.14, FOLD.painted("#c0262a", 0.5, 207), [s * 0.3, ny - 0.4, nz + 1.0], undefined); } // oreja erguida (bulldog francés) con interior rosa; pinches del collar
+    else { G.box(0.4, 1.9, 1.3, coat, [s * hs * 0.34, hy0 + hs * 0.45 + 0.9, hz0 - 0.2], [0.1, 0, s * 0.15]); G.box(0.1, 1.5, 1.0, pink, [s * hs * 0.34, hy0 + hs * 0.45 + 0.9, hz0 - 0.02], [0.1, 0, s * 0.15]); G.box(0.14, hs * 0.14, 0.14, toyC("#c0262a", 0.4, 0.1), [s * 0.3, ny - 0.4, nz + 1.0], undefined); } // oreja erguida (bulldog francés) con interior rosa; pinches del collar
     if (c) for (const k of [-1, 1]) strut([s * hs * 0.3, hy0 - hs * 0.2, hz0 + hs * 0.85], [s * hs * 0.85, hy0 - hs * 0.2 + k * 0.15, hz0 + hs * 0.9], 0.04, 0.04, steel); // bigotes de alambre
   }
   }
@@ -717,7 +719,7 @@ export function petBody(Q: Quad) {
     G.box(lw * 1.15, hy * 0.56, lw * 1.25, coat, [x, hy * 0.74, z]);
     G.box(lw * 0.95, lw * 0.65, lw * 0.95, steel, [x, hy * 0.46, z]);
     G.box(lw * 0.82, hy * 0.44, lw * 0.88, f > 0 ? light : coat, [x, hy * 0.24, z]);
-    G.box(lw * 1.15, 0.42, lw * 1.45, FOLD.rubber(), [x, 0.21, z + 0.15]);
+    G.box(lw * 1.15, 0.42, lw * 1.45, rubber, [x, 0.21, z + 0.15]);
   });
   return done(c ? 9 : 11);
 }
