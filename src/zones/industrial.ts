@@ -178,7 +178,7 @@ export function industrialLayout() {
     for (let k = 0; k <= n; k++) for (const b of [-0.8, 0.8]) parts.push(box(0.3, 2, 0.3, yel, at(-9.6 + k * pw, 12.6, b)));
     for (let k = 0; k < n; k++) for (const b of [-0.8, 0.8]) { const a0 = -9.6 + k * pw, sgn = k % 2 ? -1 : 1; parts.push(box(0.22, Math.hypot(pw, 2), 0.22, blk, at(a0 + pw / 2, 12.6, b), [0, 0, sgn * Math.atan2(pw, 2)])); }
     parts.push(box(19.6, 0.3, 1.9, blk, at(0, 13.9)));
-    for (const a of [-5.4, -1.8, 1.8, 5.4]) parts.push(box(1.5, 1.1, 1.7, blk, at(a, 10.9)), box(1.15, 0.15, 1.3, glowM, at(a, 10.28)), box(1.15, 0.9, 0.15, glowM, at(a, 10.9, 0.9)));
+    for (const a of [-5.4, -1.8, 1.8, 5.4]) parts.push(box(1.9, 1.4, 2.1, blk, at(a, 10.7)), box(1.5, 0.15, 1.7, glowM, at(a, 9.95)), box(1.5, 1.1, 0.15, glowM, at(a, 10.7, 1.1)), box(1.5, 1.1, 0.15, glowM, at(a, 10.7, -1.1)));
     // Túnel de contenedores: dos muros de 3 pisos (2 contenedores de largo) a x=±7,2 y techo de dos contenedores atravesados. Hueco libre 11,6 x 8,4 u.
     const tr = lcg(53), cols = ["#b23a2a", "#2f5f9a", "#5a6b3a", "#9c5b22"].map((c) => M.matte(c));
     for (const sg of [-1, 1]) {

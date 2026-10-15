@@ -131,6 +131,10 @@ export function snowLayout() {
   toyRamps(int(2, 4), [0, 1, 2]);
   rocks(int(8, 16));
   const deco: B.Mesh[] = [];
+  // Arco de largada (a=π/2, ~26 u de la salida) y cobertizo pasable (a=0,8) sobre el camino: se reservan aquí y se arman al final.
+  const AA = Math.PI / 2, SA = 0.8, spots: [number, number, number][] = [[...roadPt(AA), 11], [...roadPt(SA), 13]];
+  for (const [x, z, r] of spots) bare.push({ x, z, r });
+  const nearSpot = (x: number, z: number, m = 0) => spots.some(([sx, sz, sr]) => Math.hypot(x - sx, z - sz) < sr + m);
   // Bordillo continuo de bloques rojo/blanco bajos a ambos lados del camino (decorativo: sin colisión, el auto cruza sin trabarse)
   // bloques chicos (~3 u) con gorrito de nieve, repartidos por largo de arco sobre la curva real
   for (const side of [-1, 1]) {
@@ -169,7 +173,7 @@ export function snowLayout() {
   // Anillo cercano a la salida (8-26 u), posiciones fijas: bloques rojo/blanco sueltos y montículos chicos para que siempre haya algo en cuadro.
   const NEAR: [number, number][] = [[-12, 14], [11, 13], [0, 23], [-21, 19], [20, 18], [-24, 5], [23, 4], [-8, 24], [14, 24], [-14, -12], [16, -11]];
   NEAR.forEach(([x, z], k) => {
-    if (roadDist(x, z) < ROAD_W / 2 + 6) return; // no sobre el bordillo del camino
+    if (roadDist(x, z) < ROAD_W / 2 + 6 || nearSpot(x, z)) return; // no sobre el bordillo del camino
     const ry = k * 0.9;
     if (k % 3 === 0) mound(x, z, 2.2, 0.7, deco, false);
     else { deco.push(box(2.6, 1.3, 1.3, M.plastic(k % 2 ? RED : WHITE), [x, 0.65, z], [0, ry, 0]), box(2.6, 1.3, 1.3, M.plastic(k % 2 ? WHITE : RED), [x + Math.cos(ry) * 2.7, 0.65, z - Math.sin(ry) * 2.7], [0, ry, 0]), sph(2, whiteM(), [x, 1.3, z], [1.3, 0.3, 0.7])); stat(box(5.3, 1.2, 1.4, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x + Math.cos(ry) * 1.35, 0.6, z - Math.sin(ry) * 1.35, ry]).isVisible = false; bare.push({ x, z, r: 4 }); }
@@ -181,7 +185,7 @@ export function snowLayout() {
   for (let a = 0; a < 6.2832; a += 0.07) for (const side of [1, -1]) {
     if (r2() < (side > 0 ? 0.25 : 0.7)) continue;
     const off = side * (ROAD_W / 2 + 4 + r2() * (side > 0 ? 8 : 3)), [x, z] = roadPt(a + (r2() - 0.5) * 0.04, off);
-    if (grove.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 14) || Math.hypot(x, z) < 22) continue;
+    if (grove.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 14) || Math.hypot(x, z) < 22 || nearSpot(x, z, 3)) continue;
     pine(x, z, (side > 0 ? 0.9 : 0.7) + r2() * 0.5, dark, "#1f3d26");
     stat(cyl(2, 2.4, 3, solid, [0, 0, 0]), B.PhysicsShapeType.CYLINDER, {}, [x, 1.5, z]).isVisible = false; bare.push({ x, z, r: 4 });
   }
@@ -191,7 +195,7 @@ export function snowLayout() {
   let last = -9;
   for (let i = 0; i < 90; i++) {
     const a = (i / 90) * 6.2832, k = Math.abs(wrap(hdg(a + 0.1) - hdg(a - 0.1)));
-    if (k < 0.22 || i - last < 3) continue;
+    if (k < 0.22 || i - last < 3 || nearSpot(...roadPt(a), 6)) continue;
     last = i;
     const [ox, oz] = roadPt(a, 1), [ix, iz] = roadPt(a, -1), side = Math.hypot(ox, oz) > Math.hypot(ix, iz) ? 1 : -1, ry = -hdg(a);
     const [x, z] = roadPt(a, side * (ROAD_W / 2 + 2.4)), [x2, z2] = roadPt(a, side * (ROAD_W / 2 + 5));
@@ -203,7 +207,7 @@ export function snowLayout() {
   // rocas oscuras semienterradas con gorro de nieve, a ambos lados del camino
   for (let a = 0.03; a < 6.2832; a += 0.3) {
     const side = r2() < 0.5 ? 1 : -1, [x, z] = roadPt(a, side * (ROAD_W / 2 + 2.2 + r2() * 4)), sz = 0.45 + r2() * 0.4;
-    if (grove.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 12) || Math.hypot(x, z) < 14) continue;
+    if (grove.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 12) || Math.hypot(x, z) < 14 || nearSpot(x, z, 2)) continue;
     const q = B.MeshBuilder.CreatePolyhedron("nr", { type: 2, size: 1 }, scene); q.convertToFlatShadedMesh();
     q.material = M.matte("#3a3a42"); q.scaling.set(1.8 * sz, 1.2 * sz, 1.5 * sz); q.position.set(x, 0.3 * sz, z); q.rotation.y = r2() * 6;
     dark.push(q, sph(2, whiteM(), [x, 1.05 * sz, z], [1.3 * sz, 0.4 * sz, 1.1 * sz]));
@@ -213,5 +217,31 @@ export function snowLayout() {
   // pinitos entre medio del campo, bajos
   const pines: B.Mesh[] = [];
   for (let i = 0, n = int(6, 10); i < n; i++) { const p = freeSpot(5, 14); if (!p) continue; pine(p[0], p[1], 0.8 + lr() * 0.4, pines); stat(cyl(2, 2.4, 3, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.CYLINDER, {}, [p[0], 1.5, p[1]]).isVisible = false; bare.push({ x: p[0], z: p[1], r: 5 }); }
+  // Arco de postes rojo/blanco con banderín de lona y gorros de nieve (ref273): pilares a ±9,2 del eje (hueco libre ~16 u, 12 u de alto), solo ellos chocan.
+  const gate = (a: number) => { const [x, z] = roadPt(a), ry = -hdg(a), c = Math.cos(ry), s = Math.sin(ry); return { x, z, ry, at: (u: number, y: number, v: number): V3 => [x + u * c + v * s, y, z - u * s + v * c] }; };
+  const solidM = M.matte("#9E9E9E"), pole = (g: ReturnType<typeof gate>, u: number, v: number, h: number, w: number, col: B.Material[]) => { for (let y = 0; y < h; y += 1.5) deco.push(box(w, Math.min(1.5, h - y), w, col[(y / 1.5) % 2], g.at(u, y + Math.min(1.5, h - y) / 2, v), [0, g.ry, 0])); };
+  const top: B.Mesh[] = []; // lo que cuelga sobre el camino: se oculta solo mientras tapa al auto (occluders)
+  { const g = gate(AA), flag = M.plastic(RED), stripes = [M.plastic(RED), M.plastic(WHITE)], R: V3 = [0, g.ry, 0];
+    for (const sg of [-1, 1]) {
+      const v = sg * 9.2;
+      pole(g, 0, v, 12, 1.6, stripes);
+      deco.push(sph(2, whiteM(), g.at(0, 12.1, v), [1.1, 0.55, 1.1]), cyl(0.15, 0.15, 2.4, M.matte("#3a3a42"), g.at(0, 13.2, v), undefined, 6), box(0.1, 1.1, 2.2, flag, g.at(0, 13.6, v + sg * 1.1), R));
+      stat(box(1.8, 12, 1.8, solidM, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [...g.at(0, 6, v), g.ry]).isVisible = false;
+    }
+    for (let k = 0; k < 8; k++) top.push(box(1.5, 1.5, 2.45, stripes[k % 2], g.at(0, 12.8, -9.8 + (k + 0.5) * 2.45), R));
+    for (const q of [-5, 5]) top.push(sph(2, whiteM(), g.at(0, 13.9, q), [2.4, 0.5, 2.4]));
+    top.push(box(0.12, 3.4, 13.6, M.matte("#f3efe6"), g.at(0, 10.3, 0), R), box(0.16, 0.9, 13.6, flag, g.at(0, 11.4, 0), R), box(0.16, 0.5, 13.6, flag, g.at(0, 9.3, 0), R));
+    for (let k = 0; k < 6; k++) top.push(cyl(0, 1.6, 1.5, stripes[k % 2], g.at(0, 8.4, -5.5 + k * 2.2), [0, g.ry, Math.PI], 3)); // gallardete de banderines
+  }
+  // Cobertizo de madera pasable (techo a dos aguas con nieve): 3 pares de postes a ±9,2, vigas de amarre a 6,6 u. Hueco libre ~16 x 6,6 u.
+  { const g = gate(SA), wd = M.matte(WOOD), wd2 = M.matte("#5a3a22"), snowTop = M.glow("#c9d6e8") /* ponytail: emisivo como en la cabaña */, T = 0.42;
+    for (const u of [-5, 0, 5]) {
+      for (const sg of [-1, 1]) { const v = sg * 9.2; deco.push(box(1.1, 7.4, 1.1, wd, g.at(u, 3.7, v), [0, g.ry, 0]), box(1.7, 0.5, 1.7, whiteM(), g.at(u, 7.6, v), [0, g.ry, 0])); stat(box(1.1, 7.4, 1.1, solidM, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [...g.at(u, 3.7, v), g.ry]).isVisible = false; }
+      top.push(box(0.6, 0.55, 19.4, wd2, g.at(u, 6.9, 0), [0, g.ry, 0]));
+    }
+    for (const sg of [-1, 1]) top.push(box(12.8, 0.45, 11.4, wd2, g.at(0, 8.5, sg * 5.2), [sg * T, g.ry, 0]), box(12.2, 0.6, 10.6, snowTop, g.at(0, 8.95, sg * 5.2), [sg * T, g.ry, 0]));
+    top.push(box(12.2, 0.9, 1.4, snowTop, g.at(0, 10.5, 0), [0, g.ry, 0]));
+  }
+  if (top.length) { const m = merge("nieveTecho", top); m.isPickable = false; shadows.addShadowCaster(m); occluders.push(m); }
   for (const [n, parts] of [["nieveProps", deco], ["nievePinitos", pines]] as const) if (parts.length) { const m = merge(n, parts); m.isPickable = false; shadows.addShadowCaster(m); }
 }

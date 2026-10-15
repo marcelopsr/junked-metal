@@ -58,7 +58,7 @@ export const SCENES: Record<string, MenuScene> = {
     ] },
   beast: { set: "shelf", cam: { pos: [0, 3, 8], target: [0, 1, 0] } }, // main.ts recalcula SHOTS.beast según el bicho
   credits: { set: "shelf", cam: { pos: [10, 3.2, 15], target: [4, 10.5, -60] } },
-  garage: { set: "bench", cam: { pos: [2, 4, 11], target: [-2.2, 2.2, 1] }, camV: { pos: [2.6, 3.8, 14], target: [0, -2.8, 1] }, car: [0, 0.9, 1], // 0.9 = tope de la peana (stand): a y=0 el auto quedaba enterrado en ella
+  garage: { set: "bench", clim: { sunI: 0.5, hemiI: 0.22, amb: "#7a5a3c", exposure: 1.7 }, lamp: { spotI: 55, cone: 0.5, glowI: 1.2 }, cam: { pos: [2, 4, 11], target: [-2.2, 2.2, 1] }, camV: { pos: [2.6, 3.8, 14], target: [0, -2.8, 1] }, car: [0, 0.9, 1], // 0.9 = tope de la peana (stand): a y=0 el auto quedaba enterrado en ella
     props: [
       { kit: "toolbox", u: 3.4, at: [-9, 0, -7], rot: [0, 0.3, 0] }, { kit: "crate", u: 4, at: [13, 0, -12.5], rot: [0, 0.15, 0] },
       { kit: "sign", u: 6, at: [-1, 9.5, -16.2], v: "playfix" },
@@ -189,12 +189,22 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
   // Texturas que repiten distinto a lo ancho y a lo alto: agujeros del tablero perforado y grilla de la base de corte
   const tx = (c0: string, draw: (c: CanvasRenderingContext2D, s: number) => void, u: number, v: number) => { const t = canvasTex(64, (c, s) => { c.fillStyle = c0; c.fillRect(0, 0, s, s); draw(c, s); }); t.uScale = u; t.vScale = v; return t; };
   // tablones verticales de madera cálida: junta oscura a la izquierda y vetas; la base de corte pasa a tablas claras
-  const peg = pbr("pegboard", { color: "#ffffff", rough: 0.9, tex: tx("#B07A4A", (c, s) => { c.fillStyle = "#8C5A32"; c.fillRect(0, 0, s * 0.07, s); c.fillStyle = "#9a6538"; for (const x of [0.3, 0.55, 0.8]) c.fillRect(s * x, 0, 2, s); c.fillStyle = "#5c3a24"; c.fillRect(s * 0.4, s * 0.2, 3, 3); }, 34, 2) });
-  const mat = pbr("cutmat", { color: "#ffffff", rough: 0.85, tex: tx("#d9a76a", (c, s) => { c.strokeStyle = "#a8723f"; c.lineWidth = 2; c.strokeRect(0, 0, s, s); }, 16, 11) });
+  const peg = pbr("pegboard", { color: "#8a7a6a", rough: 0.9, tex: tx("#B07A4A", (c, s) => { c.fillStyle = "#8C5A32"; c.fillRect(0, 0, s * 0.07, s); c.fillStyle = "#9a6538"; for (const x of [0.3, 0.55, 0.8]) c.fillRect(s * x, 0, 2, s); c.fillStyle = "#5c3a24"; c.fillRect(s * 0.4, s * 0.2, 3, 3); }, 34, 2) });
+  const mat = pbr("cutmat", { color: "#ffffff", rough: 0.85, tex: tx("#151a19", (c, s) => { c.strokeStyle = "#2a3a34"; c.lineWidth = 2; c.strokeRect(0, 0, s, s); }, 16, 11) });
   // Cuarto: piso, techo, pared con el tablero perforado, laterales
+  // garaje de noche (ref321): piso de hormigón con manchas, paredes oscuras para que la luz de taller recorte al auto
+  const conc = pbr("gConcrete", { color: "#8a8580", rough: 0.9, tex: (() => { const t = new B.Texture("./textures/c-hormigon-grietas.webp", lamp.getScene()); t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE; t.uScale = 6; t.vScale = 5; return t; })() });
+  const dark = W("#2a211b"), stain = M.matte("#0c0a09");
   const room = [
-    box(180, 1, 140, W("#b98f63"), [0, -30.5, 0]), box(180, 2, 140, W("#6a4326"), [0, 50, 0]),
-    box(180, 82, 2, peach, [0, 10, -18]), box(2, 82, 140, peach, [-70, 10, 0]), box(2, 82, 140, peach, [70, 10, 0]),
+    box(180, 1, 140, conc, [0, -30.5, 0]), box(180, 2, 140, W("#1a1412"), [0, 50, 0]),
+    box(180, 82, 2, dark, [0, 10, -18]), box(2, 82, 140, dark, [-70, 10, 0]), box(2, 82, 140, dark, [70, 10, 0]),
+    cyl(9, 9, 0.1, stain, [-12, -29.9, 22], undefined, 10), cyl(5, 5, 0.1, stain, [18, -29.9, 30], undefined, 8),
+    // estantes con cajas y latas (izquierda) y lámpara de taller colgante sobre el auto
+    box(26, 0.8, 4, wood, [-40, 20, -14.5]), box(26, 0.8, 4, wood, [-40, 11, -14.5]),
+    box(5, 4, 3.4, fYellow, [-48, 22.4, -14.5]), box(6, 3.2, 3.4, fTeal, [-41, 22, -14.5]), box(4.4, 5, 3.4, fRed, [-34, 22.8, -14.5]),
+    ...[0, 1, 2, 3, 4].map((i) => cyl(1.5, 1.5, 3.2, [fRed, fYellow, fTeal, fOrange, fYellow][i], [-48 + i * 3.6, 13, -14.5], undefined, 8)),
+    box(7, 4.4, 3.4, fDark, [-32, 13.4, -14.5]),
+    cyl(0.12, 0.12, 20, fDark, [-6, 40, -4], undefined, 4), cyl(1.2, 5.2, 3, fRed, [-6, 28.5, -4], undefined, 10), sph(1.3, M.glow("#ffe2a8"), [-6, 27.2, -4]),
     box(68, 30, 0.6, peg, [0, 15.5, -16.6]),
     // estante de madera con cajas de colores (como en los estantes de ref8)
     box(20, 0.8, 4, wood, [5, 8, -14.5]), box(5, 3.4, 3.4, fRed, [-1, 10.1, -14.5]), box(4.4, 2.8, 3.4, fTeal, [4, 9.8, -14.5]), box(4, 2.2, 3.4, fYellow, [8.4, 9.5, -14.5]),

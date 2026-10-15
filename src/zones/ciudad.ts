@@ -198,6 +198,22 @@ function town() {
   parts.push(rbox(2 * (AR + 4.6), 1.4, 5.4, 0.3, stone, [0, 17.5, AZ]));
   for (let k = 0; k < 5; k++) { const hh = 2 + (k % 3) * 1.4; parts.push(rbox(2.4, hh, 2.4, 0.3, M.matte(["#7aa6c9", "#e0b46a", "#cfc3a8", "#7aa6c9", "#e0b46a"][k]), [-8 + k * 4, 18.2 + hh / 2, AZ])); } // bloquecitos de ciudad sobre el arco
   parts.push(box(0.14, 2, 0.14, iron, [0, 15.2, AZ]), box(0.9, 1.1, 0.9, glow, [0, 14, AZ]));
+  // Callejón-túnel (ref282/ref300) sobre la calle norte-sur a z=32: dos muros de ladrillo con caño y faroles, y un puente de ladrillo encima. Hueco libre 12 x 7,5 u; solo los muros chocan.
+  { const TZ = 32, TL = 18, WX = 7.75, WT = 3.5, WH = 14, top: B.Mesh[] = [], pipe = M.metal("#6b5a4a"), brk = ["#b5562f", "#c9784a"].map((c) => tmat("c-ladrillo", c));
+    for (const sg of [-1, 1]) {
+      const x = sg * WX, ix = sg * (WX - WT / 2); // ix = cara interior
+      parts.push(uv(rbox(WT, WH, TL, 0.4, brk[sg > 0 ? 1 : 0], [x, WH / 2, TZ]), TB), rbox(WT + 0.8, 1, TL + 0.8, 0.3, stone, [x, 0.5, TZ]), rbox(WT + 0.8, 1.2, TL + 0.8, 0.3, stone, [x, WH + 0.6, TZ]));
+      parts.push(cyl(1, 1, TL, pipe, [ix - sg * 0.6, 4.2, TZ], [Math.PI / 2, 0, 0], 8), cyl(0.8, 0.8, 6, pipe, [ix - sg * 0.6, 7, TZ - TL / 2 + 1.5], undefined, 8));
+      for (const z of [-7, -2, 3, 7]) parts.push(box(0.5, 0.5, 0.7, iron, [ix - sg * 0.3, 4.2, TZ + z]));
+      for (const z of [-6, 6]) parts.push(box(0.5, 0.5, 1.4, iron, [ix - sg * 0.4, 6.2, TZ + z]), box(0.7, 1, 0.7, glow, [ix - sg * 1.1, 5.7, TZ + z]), box(0.9, 0.2, 0.9, iron, [ix - sg * 1.1, 6.35, TZ + z])); // faroles de pared
+      for (const z of [-3, 3]) parts.push(box(0.3, 2.6, 2.2, frame, [ix - sg * 0.1, 10.2, TZ + z]), box(0.3, 2.2, 1.8, glass, [ix - sg * 0.2, 10.2, TZ + z]));
+      stat(box(WT, WH, TL, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, WH / 2, TZ]).isVisible = false;
+    }
+    top.push(uv(box(2 * WX + WT, 1.6, 10, tmat("c-ladrillo", "#a14a2b"), [0, 8.3, TZ]), TB), uv(box(2 * WX + WT, WH - 9.1, 10, tmat("c-ladrillo", "#b5562f"), [0, (WH + 9.1) / 2, TZ]), TB), rbox(2 * WX + WT + 0.8, 1.2, 10.8, 0.3, stone, [0, WH + 0.6, TZ]));
+    top.push(box(0.14, 1.4, 0.14, iron, [0, 7, TZ]), box(1, 1.2, 1, glow, [0, 6, TZ]), box(1.2, 0.2, 1.2, iron, [0, 6.7, TZ]));
+    const t = merge("ciudadTecho", top); t.isPickable = false; t.receiveShadows = true; shadows.addShadowCaster(t); occluders.push(t);
+    bare.push({ x: 0, z: TZ, r: 13 });
+  }
   const m = merge("ciudadFachadas", parts);
   m.isPickable = false; m.receiveShadows = true;
   shadows.addShadowCaster(m);

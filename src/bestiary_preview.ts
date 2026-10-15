@@ -231,7 +231,7 @@ export function beastTick(ctx: BeastTickContext): number | null {
       roll = 0;
     }
   }
-  if (kind === "polilla") lift += 1.2 + Math.sin(performance.now() / 600) * 0.15; // vuela
+  if (kind === "polilla") lift += 0.5 + Math.sin(performance.now() / 600) * 0.15; // vuela
   if (kind === "robot" && (A === "walk" || A === "phase")) {
     roll = Math.sin(t * 14) * 0.08;
     pitch = Math.sin(t * 28) * 0.03;
@@ -253,11 +253,18 @@ export interface SetupBeastCamContext {
   dt: number;
 }
 
+let fitKind: string | null = null, fitSize = 0;
 export function setupBeastCam(bspan: number, ctx: SetupBeastCamContext): void {
   const { engine, cam, dt } = ctx;
   const d = DEF[BV.kind!], asp = engine.getAspectRatio(cam), th = Math.tan(cam.fov / 2), tall = asp < 1;
   const h = d.size[1] + (BV.kind === "polilla" ? 1.6 : 0), need = Math.max(bspan, d.size[2], h * 1.2) * (d.boss ? 1.9 : 1.5) + 1.5; // polilla: suma lo que vuela (lift en beastTick); los jefes abren patas y cola más allá de su caja
-  const dist = Math.max(need / (2 * th * asp * (tall ? 0.7 : 0.45)), (h + 1.5) / (2 * th * (tall ? 0.3 : 0.65))) * BV.zoom;
+  if (beast && beast.e.kind === BV.kind && fitKind !== BV.kind && beast.t > 0.3 && !BV.anim) { // mide la caja real una vez por bicho (quieto) y la cachea
+    const bb = beast.e.node.getHierarchyBoundingVectors(true), x = bb.max.x - bb.min.x, y = bb.max.y - bb.min.y, z = bb.max.z - bb.min.z;
+    fitKind = BV.kind; fitSize = Math.max(y, Math.max(x, z) * 0.6);
+  }
+  const fit = fitKind === BV.kind ? fitSize : 0; // ponytail: sin caja medida (primeros cuadros) cae a la fórmula vieja
+  const usable = Math.min(tall ? 0.3 : 0.65, asp * (tall ? 0.7 : 0.45)); // fracción del alto del visor que queda libre junto al panel
+  const dist = (fit ? fit / (0.6 * 2 * th * usable) : Math.max(need / (2 * th * asp * (tall ? 0.7 : 0.45)), (h + 1.5) / (2 * th * (tall ? 0.3 : 0.65)))) * BV.zoom;
   const W = dist * th * asp, H = dist * th, ty0 = PED_H + h * 0.45;
   SHOTS.beast = [tall ? 0 : -W * 0.42, ty0 + dist * 0.36, dist, tall ? 0 : -W * 0.42, ty0 - (tall ? H * 0.58 : 0), 0]; // desde +z: del otro lado queda la mesa del patio
   setLamp(new B.Vector3(dist * 0.3, ty0, dist * 0.6), new B.Vector3(-0.3, 0, -0.6).normalize(), false, dt); // el faro alumbra la vitrina de frente
