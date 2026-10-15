@@ -73,7 +73,7 @@ async function pedir(ruta, mkInit, id) {
     if (r.status === 429 && intento < 5) { const s = Number(r.headers.get("retry-after")) || 20; console.warn(`  [${id}] 429 ${code}: reintento en ${s} s`); await dormir(s); continue; }
     if ((r.status === 502 || r.status === 504) && intento < 1) { console.warn(`  [${id}] ${r.status} ${code}: reintento`); await dormir(5); continue; }
     if (r.status === 404 || (r.status === 400 && /param|unknown|unsupported|fit|remove_background|image/i.test(`${code} ${j.error?.message ?? ""} ${j.error?.param ?? ""}`)))
-      throw new Error(`${r.status} ${code} — ¿este Capataz aún no soporta fit/remove_background/edits? (param: ${j.error?.param ?? "?"}); quitá la opción o actualizá Capataz`);
+      throw new Error(`${r.status} ${code} — ¿este Capataz aún no soporta fit/remove_background/edits? (param: ${j.error?.param ?? "?"}); hay que quitar la opción o actualizar Capataz`);
     throw new Error(`${r.status} ${code}`);
   }
 }

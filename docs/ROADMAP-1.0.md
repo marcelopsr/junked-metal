@@ -54,3 +54,6 @@ Una expedición ENCORE completa, de punta a punta, que una persona nueva puede j
 | 2026-10-15 | Celular de referencia: Android gama media (~2022), 30 fps en preset Bajo en partida llena |
 | 2026-10-15 | 6 pilotos nuevos entran a la 1.0 (12 → 18): osito, mecánica, cocinero, mago de cartón, fantasma, doble de riesgo |
 | 2026-10-15 | Versiones de a 0.01 por update grande (v0.90.0, v0.91.0…); cada update cierra con la puerta de hito y se publica con OK |
+| 2026-10-15 | Balance 1.0: sobrevivir 10 min con el bot en 40-55 % de las semillas (la curva actual); solo se corrigen picos injustos |
+| 2026-10-15 | Fuera de 1.0 (lista 1.1): online/ranking semanal sin pulir, habilidades activas nuevas de pilotos. Seguridad del servidor H6-H9 entra en 0.99 |
+| 2026-10-15 | Retratos de pilotos generados = arte final; sus modelos 3D se rehacen siguiendo esas imágenes |
