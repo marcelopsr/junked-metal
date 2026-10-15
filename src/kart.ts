@@ -13,11 +13,15 @@ import { radio } from "./radio";
 import { engineSfx, engineStop, music, SFX } from "./sfx";
 import { buildGrass, buildLayout, clearLayout, setZone, zoneClimate } from "./world";
 import { DUSK } from "./run";
+import { tex } from "./zones/common";
+import { rcColsOff, rcColsOn } from "./models/props_rc";
 import { PAL, wornMat } from "./kit3d";
 import { FOLD, TRIM } from "./folded";
 import { buildTrackData, DS, MEDAL, medalOf, medalTimes, raceCfg, recordTime, times, TRACKS, type RaceCtl, type Track } from "./kart_cfg";
 // Luz de carrera: la misma mañana con sol bajo (sombras largas, volumen) con que arranca la partida, con menos niebla para separar planos
-const RACE_CLIM = { ...DUSK, fog: DUSK.fog * 0.4 };
+/** Texturas de la carrera: una por clave (tex de zones/common), no una nueva por cada startRace. */
+const ctex = (k: string, size: number, draw: (c: CanvasRenderingContext2D, s: number) => void) => tex("kart_" + k, () => canvasTex(size, draw));
+const RACE_CLIM ={ ...DUSK, fog: DUSK.fog * 0.4 };
 import { carOpts } from "./menu"; // kart.ts se carga a pedido (main.ts goRace): el menú ya está evaluado
 
 type Deps = { scene: B.Scene; cam: B.FreeCamera; onExit(): void; load?(label: string, zone: string, go: () => void): void }; // load: pantalla de carga entre carreras (main.ts)
@@ -111,7 +115,7 @@ function buildTrack() {
   const { P, T, R } = trk, s0 = P[0], yaw = Math.atan2(T[0].x, T[0].z);
   const line = B.MeshBuilder.CreatePlane("startLine", { width: W * 2, height: 3.2 }, D.scene);
   line.rotation = new B.Vector3(Math.PI / 2, yaw, 0); line.position.set(s0.x, 0.09, s0.z);
-  const chk = canvasTex(128, (c, s) => { const n = 8; for (let i = 0; i < n * 2; i++) for (let j = 0; j < 2; j++) { c.fillStyle = (i + j) % 2 ? "#14181F" : "#f3f4f6"; c.fillRect((i * s) / (n * 2), (j * s) / 2, s / (n * 2) + 1, s / 2 + 1); } });
+  const chk = ctex("chk", 128,(c, s) => { const n = 8; for (let i = 0; i < n * 2; i++) for (let j = 0; j < 2; j++) { c.fillStyle = (i + j) % 2 ? "#14181F" : "#f3f4f6"; c.fillRect((i * s) / (n * 2), (j * s) / 2, s / (n * 2) + 1, s / 2 + 1); } });
   const lm = line.material = pbr("raceLine", { color: "#ffffff", rough: 0.7, tex: chk });
   lm.zOffset = -4;
   mesh.push(line);
@@ -131,7 +135,7 @@ function buildTrack() {
   }
   const banner = B.MeshBuilder.CreateBox("arch", { width: (W + 3) * 2 + 1.6, height: 3.2, depth: 0.9 }, D.scene);
   banner.position.set(s0.x, 12.6, s0.z); banner.rotation.y = yaw;
-  const bt = canvasTex(256, (c, s) => {
+  const bt = ctex("banner", 256,(c, s) => {
     c.fillStyle = "#14181F"; c.fillRect(0, 0, s, s);
     c.fillStyle = "#b5651d"; c.fillRect(0, 0, s, 18); c.fillRect(0, s - 18, s, 18);
     c.fillStyle = "#FFB400"; for (let i = -s; i < s * 2; i += 32) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + 16, 0); c.lineTo(i + 4, 18); c.lineTo(i - 12, 18); c.fill(); c.beginPath(); c.moveTo(i, s - 18); c.lineTo(i + 16, s - 18); c.lineTo(i + 4, s); c.lineTo(i - 12, s); c.fill(); }
@@ -143,7 +147,7 @@ function buildTrack() {
   for (const m of arch) { shadows.addShadowCaster(m); mesh.push(m); }
   // Cajas de objetos (5 filas de 3): caja de telemetría con marco oscuro, remaches y signo en Bebas Neue
   const boxMat = () => {
-    const qt = canvasTex(128, (c, s) => {
+    const qt = ctex("box", 128, (c, s) => {
       c.fillStyle = "#0e2938"; c.fillRect(0, 0, s, s);
       c.strokeStyle = "#00C2FF"; c.lineWidth = 10; c.strokeRect(8, 8, s - 16, s - 16);
       c.strokeStyle = "#14181F"; c.lineWidth = 4; c.strokeRect(2, 2, s - 4, s - 4);
@@ -161,7 +165,7 @@ function buildTrack() {
     boxes.push({ m, at, t: 0 }); mesh.push(m);
   }
   // Placas de turbo
-  const ch = canvasTex(128, (c, s) => {
+  const ch = ctex("pad", 128,(c, s) => {
     c.fillStyle = "#14181F"; c.fillRect(0, 0, s, s);
     c.strokeStyle = "#b5651d"; c.lineWidth = 8; c.strokeRect(4, 4, s - 8, s - 8);
     for (let k = 0; k < 3; k++) {
@@ -204,7 +208,7 @@ function buildTrack() {
 // Arena de batalla: suelo de damero, muro circular físico de bloques rojos y blancos, cajas de objetos repartidas
 function buildArena() {
   const { c, r } = ARENA;
-  const floorTex = canvasTex(256, (g, sz) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.fillStyle = (i + j) % 2 ? "#8a8f9a" : "#6f7480"; g.fillRect((i * sz) / 8, (j * sz) / 8, sz / 8 + 1, sz / 8 + 1); } g.strokeStyle = "#ffd84d"; g.lineWidth = 6; g.beginPath(); g.arc(sz / 2, sz / 2, sz * 0.18, 0, 7); g.stroke(); });
+  const floorTex = ctex("floor", 256,(g, sz) => { for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.fillStyle = (i + j) % 2 ? "#8a8f9a" : "#6f7480"; g.fillRect((i * sz) / 8, (j * sz) / 8, sz / 8 + 1, sz / 8 + 1); } g.strokeStyle = "#ffd84d"; g.lineWidth = 6; g.beginPath(); g.arc(sz / 2, sz / 2, sz * 0.18, 0, 7); g.stroke(); });
   const fl = B.MeshBuilder.CreateDisc("arenaFloor", { radius: r, tessellation: 48 }, D.scene);
   fl.rotation.x = Math.PI / 2; fl.position.set(c.x, 0.06, c.z); fl.receiveShadows = true; fl.isPickable = false;
   const am = fl.material = pbr("arenaFloor", { color: "#ffffff", rough: 0.9, tex: floorTex }); am.zOffset = -2; mesh.push(fl);
@@ -218,7 +222,7 @@ function buildArena() {
     mesh.push(b);
   }
   // Cajas de objetos: anillo interior + centro
-  const qt = canvasTex(128, (g, sz) => {
+  const qt = ctex("boxB", 128, (g, sz) => {
     g.fillStyle = "#0e2938"; g.fillRect(0, 0, sz, sz);
     g.strokeStyle = "#00C2FF"; g.lineWidth = 10; g.strokeRect(8, 8, sz - 16, sz - 16);
     g.fillStyle = "#7fe3ff"; g.font = "400 92px 'Bebas Neue', sans-serif"; g.textAlign = "center"; g.fillText("?", sz / 2, sz * 0.76);
@@ -264,7 +268,7 @@ function decorate(crowd: boolean) {
   const bl = merge("balloons", [0, 1, 2, 3, 4, 5].map((k) => sph(2.2, FOLD.painted(colors[k % 4], 0.45, 340 + (k % 4)), [Math.cos(k * 1.1) * 1.4, 14.5 + (k % 3) * 1.2, Math.sin(k * 1.1) * 1.4], [1, 1.2, 1], 6)));
   place(bl, [-1, 1].map((sd) => { const q = P[0].add(R[0].scale(sd * (W + 3))); return mat(q.x, 0, q.z, 0); }));
   // Carteles de curva de chapa con marco industrial: uno por curva cerrada, a la salida de la recta, mirando al que llega
-  const sign = (dirRight: boolean) => canvasTex(128, (g, sz) => {
+  const sign = (dirRight: boolean) => ctex("sign" + dirRight, 128,(g, sz) => {
     g.fillStyle = "#FFB400"; g.fillRect(0, 0, sz, sz);
     g.strokeStyle = "#14181F"; g.lineWidth = 12; g.strokeRect(6, 6, sz - 12, sz - 12);
     g.fillStyle = "#14181F";
@@ -416,6 +420,7 @@ export function startRace(keepCup = false) {
   const def = TRACKS[trackNo];
   W = def.w; gridGap = def.gap; LAPS = raceCfg.laps + def.extra;
   trk = buildTrackData(def);
+  rcColsOff(trk.P, W + 1); stuckLog.length = 0; // props RC del patio sobre el trazado: sin colisión durante la carrera (cleanup los restaura)
   applyClimate(zoneClimate() ?? RACE_CLIM);
   seedRng(20261003 + raceNo);
   buildTrack();
@@ -473,6 +478,7 @@ export function endRace(silent = false) {
   dom?.classList.remove("split");
 }
 function cleanup() {
+  rcColsOn();
   for (const r of racers) { try { r.car.dispose(); } catch { /* el cuerpo ya se liberó (podio o eliminado) */ } }
   for (const p of projs) p.m.dispose();
   for (const c of chicles) c.m.dispose();
@@ -974,7 +980,7 @@ function buildPodium(order: Racer[]) {
     const cap = box(5.2, 0.18, 5.2, topM, [cx, h - 0.08, cz], [0, yaw, 0]);
     const band = B.MeshBuilder.CreateBox("podHaz", { width: 5.08, height: 0.28, depth: 5.08, faceUV: [uv, uv, uv, uv, uv, uv] }, D.scene);
     band.position.set(cx, h - 0.34, cz); band.rotation.set(0, yaw, 0); band.material = hazM;
-    const tx = canvasTex(64, (g, sz) => {
+    const tx = ctex("pod" + i + col, 64,(g, sz) => {
       g.fillStyle = "#14181F"; g.fillRect(0, 0, sz, sz);
       g.strokeStyle = col; g.lineWidth = 6; g.strokeRect(4, 4, sz - 8, sz - 8);
       g.fillStyle = col; g.font = "400 44px 'Bebas Neue', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";

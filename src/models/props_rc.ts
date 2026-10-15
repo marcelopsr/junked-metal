@@ -2,7 +2,7 @@ import * as B from "@babylonjs/core";
 import { box, cyl, merge, rbox, sph, tor } from "../models";
 import { M, pbr, shadows } from "../render";
 import { rng } from "../rng";
-import { HALF, bare, occluders, stat } from "../zones/common";
+import { HALF, bare, occluders, scene, stat } from "../zones/common";
 
 // Props "RC Race Mini Worlds" (docs/ART_DIRECTION.md Vigente): objetos cotidianos a escala gigante, juguete/diorama.
 // Todo el visual es UNA malla fusionada (un dibujo por submalla) + colisionadores invisibles. Registra su huella en `bare` ANTES del layout por semilla
@@ -229,8 +229,29 @@ const floodlight = (): Prop => {
   return { parts, r: 1.2, col: boxCol(1.2, 3.5, 1.2) };
 };
 
+/** Colisionadores invisibles de los props (el visual es una malla fusionada). Carrera: se apagan los que caen sobre el trazado (ver `rcColsOff`). */
+const rcCols: { m: B.AbstractMesh; x: number; z: number; r: number }[] = [];
+const rcOff = new Map<NonNullable<B.AbstractMesh["physicsBody"]>["shape"] & object, number>();
+/** Apaga (máscara de colisión 0) los colisionadores a menos de `pad` + su radio de algún punto del trazado. Devuelve cuántos. */
+export function rcColsOff(pts: { x: number; z: number }[], pad: number) {
+  rcColsOn();
+  let n = 0;
+  for (const c of rcCols) {
+    const sh = c.m.physicsBody?.shape;
+    if (!sh || c.m.isDisposed() || !pts.some((p) => Math.hypot(p.x - c.x, p.z - c.z) < pad + c.r)) continue;
+    rcOff.set(sh, sh.filterCollideMask); sh.filterCollideMask = 0; n++;
+  }
+  return n;
+}
+/** Restaura los colisionadores apagados por `rcColsOff` (al salir de la carrera: ENCORE los necesita). */
+export function rcColsOn() {
+  for (const [sh, mask] of rcOff) { try { sh.filterCollideMask = mask; } catch { /* la forma ya se liberó con el mundo */ } }
+  rcOff.clear();
+}
+
 /** Patio: coloca los props en posiciones fijas (lejos de rects, posibles esquinas de pileta y spawn). x, z, ry. */
 export function buildRcProps() {
+  rcCols.length = 0; rcOff.clear();
   const parts: B.Mesh[] = [];
   const put = (p: Prop, x: number, z: number, ry = 0, y = 0) => {
     const k = p.k ?? 1, S = B.Matrix.Scaling(k, k, k), R = B.Matrix.RotationY(ry), T = B.Matrix.Translation(x, y, z);
@@ -240,7 +261,9 @@ export function buildRcProps() {
       m.scaling.copyFrom(sc); m.rotationQuaternion = q; m.position.copyFrom(pos);
       parts.push(m);
     }
+    const n0 = scene.meshes.length;
     p.col?.(x, z, ry);
+    for (const m of scene.meshes.slice(n0)) rcCols.push({ m, x, z, r: p.r * k });
     bare.push({ x, z, r: p.r * k });
   };
   put(toolbox(), 30, 100, 0.4);
