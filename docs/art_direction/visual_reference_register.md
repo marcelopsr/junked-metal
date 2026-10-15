@@ -397,3 +397,16 @@ Importadas con `node scripts/imagegen.mjs --importar` (origen en `_origen_imageg
 | ref358 | arma-matamoscas |
 | ref359 | arma-dardos |
 | ref360 | piloto-osito |
+| ref361 | piloto-mecanica |
+| ref362 | piloto-cocinero |
+| ref363 | piloto-mago-g |
+| ref364 | piloto-mago |
+| ref365 | piloto-fantasma |
+| ref366 | piloto-doble |
+| ref367 | test-gemini-taladro |
+| ref368 | test-gpt-escorpion |
+| ref369 | test-auto-cofre |
+| ref370 | tex-nieve-huellas |
+| ref371 | tex-neon-asfalto |
+| ref372 | tex-industrial-hormigon |
+| ref373 | ref-taladro-estilo |
