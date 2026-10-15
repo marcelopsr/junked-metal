@@ -334,6 +334,10 @@ export function cityLayout() {
       const mh = [sg * 14.5, sg2 * 5.5]; parts.push(cyl(1.1, 1.1, 0.06, dk, [mh[0], Y + 0.04, mh[1]], undefined, 14), cyl(1.4, 1.4, 0.04, M.matte("#3a3f45"), [mh[0], Y + 0.03, mh[1]], undefined, 14)); // alcantarillas
     }
     for (let k = 0; k < 14; k++) { const a = (k / 14) * 6.283; flat(0.6, 2, Math.cos(a) * 6.6, Math.sin(a) * 6.6, ring, -a); }
+    { const q = lcg(97), tar = M.matte("#101215"), pale = M.matte("#e9e4d4"); // marcas de goma oscuras y sellador de grietas claro sobre el asfalto cercano (planos, sin colisión)
+      for (let i = 0, n = 0; i < 900 && n < 150; i++) { const x = (q() - 0.5) * 112, z = (q() - 0.5) * 112, l = 4 + q() * 10; // marcas alineadas con la calle (X si está en una calle E-O, Z si no) también sobre el anillo
+        if (!onRoad(x, z, -2.5) || Math.hypot(x, z) < 6) continue; const al = Math.abs(z) < RW / 2 || Math.abs(Math.abs(z) - RING) < RW / 2; flat(al ? l : 1.3, al ? 1.3 : l, x, z, n++ % 4 ? tar : pale); }
+      for (let i = 0; i < 30; i++) { const s = q() * 6.283, d = 6 + q() * 40; if (onRoad(Math.cos(s) * d, Math.sin(s) * d, -1)) flat(4 + q() * 5, 3 + q() * 4, Math.cos(s) * d, Math.sin(s) * d, tar, q() * 3); } } // ponytail: ~120 cajas planas fusionadas en ciudadProps; solo sobre calzada
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) put(9, sx * 12.4, sz * 12.4, 0.3 * sx * sz); // pilas de cajas oscuras en las esquinas de vereda junto a la salida
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const [d, k] of [[17, 10], [20.5, 8], [24, 8], [32, 10]] as [number, number][]) { put(k, sx * 12.8, sz * d, 0); put(k, sz * d, sx * 12.8, 0); }
   }

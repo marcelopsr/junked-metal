@@ -195,6 +195,8 @@ export function forestLayout() {
   for (let i = 0; i < 12; i++) { const p = spot(2, 20, 60); if (p) deco.push(...mush(p[0], p[1], 0.7 + g() * 0.5), ...mush(p[0] + 1.1, p[1] + 0.6, 0.5)); }
   // Matas y piedritas sin colisión: densidad alta de props bajos alrededor del auto y del resto del patio.
   for (let i = 0; i < 300; i++) { const p = spot(1, 19, i < 160 ? 55 : 125); if (!p || (lowQ && i & 1)) continue; ferns.push(...fern(r, p[0], p[1], 1.6 + r() * 1.8)); if (i % 3 === 0) ferns.push(...rock(r, p[0] + 1.5, p[1] + 1, 0.5 + r() * 0.5, r() * 6)); }
+  { const c = rnd(8803), dk = M.matte("#150d08"), pale = M.matte("#e6d5aa"); // contraste: hojarasca muy oscura y piedritas/flores claras planas cerca del auto (sin colisión)
+    for (let i = 0; i < 220; i++) { const p = spot(1, 10, 45); if (!p) continue; const dark = i % 2 === 0, s = dark ? 3 + c() * 3 : 1 + c() * 0.9; ferns.push(sph(s, dark ? dk : pale, [p[0], dark ? 0.04 : 0.1, p[1]], [1.3, 0.05, 1], 7)); } }
   for (const [n, parts] of [["forestDeco", deco], ["forestMatas", ferns]] as [string, B.Mesh[]][]) { if (!parts.length) continue; const m = merge(n, parts); m.isPickable = false; shadows.addShadowCaster(m); }
 }
 
