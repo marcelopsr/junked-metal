@@ -39,3 +39,6 @@ server/node_modules/
 
 src-tauri/target/
 src-tauri/gen/
+
+# Originales de música (245 MB); lo publicado está en public/music
+assets-src/musica/
