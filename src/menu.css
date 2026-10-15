@@ -669,15 +669,15 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   /* Garaje en celular vertical: el auto arriba (garage_v en menuscene.ts) y el panel abajo, con scroll propio */
   #scr-garage.on { justify-content: flex-end; margin: 0; height: 100%; padding: 0 0 10px; box-sizing: border-box; gap: 6px; }
   #scr-garage:not(.editing) :is(#cars, #paint) { max-height: 43vh; overflow: hidden auto; flex-wrap: nowrap; }
-  #scr-beast.on { grid-template-columns: 1fr; grid-template-rows: 38vh 1fr; padding: 10px; gap: 8px; }
-  #bpanel { padding: 10px 12px; gap: 8px; }
+  #scr-beast.on { grid-template-columns: minmax(0, 1fr); grid-template-rows: 38vh minmax(0, 1fr); padding: 10px; gap: 8px; }
+  #bpanel { padding: 10px 12px; gap: 8px; min-width: 0; }
   .bctl .slot > span { min-width: 0; width: 100%; }
   /* Ficha en celular: encabezado en 2 líneas (el retrato sobra: el ícono ya va junto al nombre), Volver sin partirse y barra inferior separada del texto */
   .bhead { gap: 6px; }
   .bhead-portrait { display: none; }
   .bnav { min-width: 40px; min-height: 40px; font-size: 18px; }
   .bname small { font-size: 12px; letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bname b { font-size: 22px; white-space: nowrap; }
+  .bname b { font-size: clamp(18px, 5.6vw, 22px); line-height: 1.05; white-space: normal; overflow-wrap: anywhere; text-wrap: balance; } /* nombres largos bajan de línea en vez de ensanchar el panel */
   .bfoot { flex: none; padding-top: 6px; border-top: 1px solid var(--jm-borde); }
   .bfoot .hint { font-size: 12px; letter-spacing: .02em; }
   .bfoot button { flex: none; white-space: nowrap; min-width: 92px; padding: 10px 14px; }

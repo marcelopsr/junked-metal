@@ -263,7 +263,7 @@ export function setupBeastCam(bspan: number, ctx: SetupBeastCamContext): void {
     fitKind = BV.kind; fitSize = Math.max(y, Math.max(x, z) * 0.6);
   }
   const fit = fitKind === BV.kind ? fitSize : 0; // ponytail: sin caja medida (primeros cuadros) cae a la fórmula vieja
-  const usable = Math.min(tall ? 0.3 : 0.65, asp * (tall ? 0.7 : 0.45)); // fracción del alto del visor que queda libre junto al panel
+  const usable = Math.min(tall ? (d.boss ? 0.4 : 0.3) : 0.65, asp * (tall ? (d.boss ? 0.9 : 0.7) : 0.45)); // jefes en celular: 40 % // fracción del alto del visor que queda libre junto al panel
   const dist = (fit ? fit / (0.6 * 2 * th * usable) : Math.max(need / (2 * th * asp * (tall ? 0.7 : 0.45)), (h + 1.5) / (2 * th * (tall ? 0.3 : 0.65)))) * BV.zoom;
   const W = dist * th * asp, H = dist * th, ty0 = PED_H + h * 0.45;
   SHOTS.beast = [tall ? 0 : -W * 0.42, ty0 + dist * 0.36, dist, tall ? 0 : -W * 0.42, ty0 - (tall ? H * 0.58 : 0), 0]; // desde +z: del otro lado queda la mesa del patio
