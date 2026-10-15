@@ -187,9 +187,8 @@ export function miniHull(kind: string, paint: B.Material, accent: string, lamp: 
     const sx = Wd * 0.5 + 0.22;
     for (const s of [-1, 1]) for (let i = 0; i < 6; i++) add(box(0.5, 0.04, Lc * 0.4 / 6, i % 2 ? wht : acc, [s * sx, H * 0.98, -Lc * 0.28 + (i - 2.5) * Lc * 0.4 / 6], [0, 0, -s * 0.35])); // toldo rayado rosa y blanco
   } else if (kind === "topadora") { // cargadora: pala ancha delante con dientes, brazos y pistones, cabina con jaula y faros de techo, motor atrás
-    const steel = toy("#6E7276"), zp = Lc * 0.47, bw = 2.0, az = Lc * 0.28, wr = 0.46, wy = 0.28; // pala 0,5 u por delante del casco; ruedas grandes de tacos sobre los ejes
-    for (const s of [-1, 1]) add(...[-1, 1].flatMap((f) => [cyl(wr, wr, 0.46, blk, [s * (tx + 0.08), wy, f * az], [0, 0, rx], 12), cyl(wr * 0.62, wr * 0.62, 0.5, acc, [s * (tx + 0.08), wy, f * az], [0, 0, rx], 10), cyl(wr * 0.4, wr * 0.4, 0.54, blk, [s * (tx + 0.08), wy, f * az], [0, 0, rx], 6), // neumático, llanta de color y cubo
-        ...Array.from({ length: 12 }, (_, k) => { const a = k * Math.PI / 6; return box(0.4, 0.09, 0.12, blk, [s * (tx + 0.08), wy + Math.sin(a) * (wr + 0.01), f * az + Math.cos(a) * (wr + 0.01)], [rx - a, 0, 0]); })]), // tacos
+    const steel = toy("#6E7276"), zp = Lc * 0.47, bw = 2.0;// pala 0,5 u por delante del casco
+    for (const s of [-1, 1]) add( // las ruedas grandes de tacos son las reales (cars.ts, giran)
       rbox(0.14, 0.18, 1.0, 0.04, paint, [s * (tx - 0.26), 0.4, Lc * 0.3], [0.12, 0, 0]), cyl(0.12, 0.12, 0.6, paint, [s * (tx - 0.38), 0.62, Lc * 0.22], [rx + 0.25, 0, 0], 8), cyl(0.06, 0.06, 0.7, chrome, [s * (tx - 0.38), 0.6, Lc * 0.3], [rx + 0.25, 0, 0], 6), // brazo, pistón y vástago
       box(0.1, 0.6, 0.6, paint, [s * (bw / 2 - 0.05), 0.15, zp + 0.2])); // lateral de la pala
     add(rbox(Wd * 0.8, H * 0.28, Lc * 0.62, 0.1, paint, [0, H * 0.28, -Lc * 0.06]), rbox(Wd * 0.82, H * 0.42, Lc * 0.34, 0.12, paint, [0, H * 0.46, -Lc * 0.36]), box(Wd * 0.5, 0.16, 0.03, blk, [0, H * 0.5, -Lc * 0.54]), // casco y capó del motor
