@@ -37,7 +37,7 @@ import { craterHumeante, evBase, evFog, evInit, evPace, evReset, evShow, lunaDev
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import * as E from "./encore";
-import { initEncoreRun, erun, encPrior, paceS, pfx, dirq, encExtra, encG, encLog, setErun, setEncPrior, encClear, encRecompute, encApply, encSecrets, encPick, votes, encVote, encPlan, encScene, minorShip, minorMini, moonPlace, carPlace, tip, say } from "./encore_run";
+import { initEncoreRun, erun, encPrior, paceS, pfx, dirq, encExtra, encG, encLog, setErun, setEncPrior, encClear, encRecompute, encApply, encSecrets, encPick, votes, encVote, encPlan, encScene, minorShip, minorMini, moonPlace, carPlace, tip, say, calmFirst } from "./encore_run";
 import { COOP, chestsLeft, chestsOpened, shopAt, shopDev, goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset, spotsPlan } from "./moon_goals";
 import { skyClear, skyInfo, skyLaunch, skyPace, skyTick } from "./moon_sky";
 import { aplicarRegla } from "./weekly";
@@ -679,7 +679,7 @@ function update(dt: number) {
   if (libre) { tickDrive({ c } as Frame, dt); return; } // Free Roam: solo manejo (sin reloj, spawner, armas ni vitales)
   run.time += dt;
   if (erun) { encApply(E.tick(erun, dt)); const d = E.dirTick(dirq, dt); if (d) { dirSub(d, E.ENC.dirShowS); if (!simulating && !LAB.on) SFX.radio((Object.values(E.TIPS) as string[]).includes(d)); } } // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
-  const calm = erun?.phase === "vote" || erun?.phase === "final", tp = run.time + paceS, hordeK = run.horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
+  const calm = erun?.phase === "vote" || erun?.phase === "final" || calmFirst(), tp = run.time + paceS, hordeK = run.horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
   if (tutOn() && (input.throttle || input.steer || input.move)) tut("move");
   if (hintOn && (run.time > HINT_S || input.throttle || input.steer || input.move || input.boost || input.drift || input.jump || input.ability)) { hintOn = false; $("hint").classList.add("fade"); }
   const F = { c, calm, tp, hordeK, warnS: R.aviso_evento_s * st.aviso, carR: Math.max(c.def.size[0], c.def.size[2]) / 2 } as Frame;
