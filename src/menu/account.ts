@@ -21,7 +21,7 @@ export type AccountCtx = {
 let c!: AccountCtx;
 const $ = (id: string) => c.$(id), fmt = (s: number) => c.fmt(s);
 /** Tus estadísticas del servidor (Codex): sin sesión o sin respuesta, el bloque queda oculto. */
-const MODE_NM: Record<string, string> = { survivor: "Supervivencia", encore: "ENCORE", race: "Carrera", duel: "Demolición", match3: "Junket Crush", daily: "Desafío diario" };
+const MODE_NM: Record<string, string> = { survivor: "Supervivencia", encore: "ENCORE", race: "Carrera", duel: "Demolición", match3: "Junket Crush", daily: "Desafío diario", diario: "Desafío diario", supervivencia: "Supervivencia" };
 export function renderMyStats() {
   const box = $("cdxMe"), ul = $("cdxMeList"), li = (a: string, b: string) => { const x = document.createElement("li"), t = document.createElement("b"); t.textContent = a; x.append(t, ` · ${b}`); return x; };
   box.classList.add("hidden");

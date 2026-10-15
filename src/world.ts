@@ -71,7 +71,7 @@ const BIOME = (id: string, name: string, o: Partial<Climate>): Climate => ({ ...
 const FOREST = BIOME("bosque", "BOSQUE AL ATARDECER", { sunColor: "#ffc27a", exposure: 1.35, fog: 0.0012, sky: ["#4f6a8c", "#c99a6a", "#f0d098", "#4a5a30"], ramp: ["#141a10", "#7a6a3a", "#ffe6b0"] });
 const SNOW = BIOME("nieve", "NIEVE AL ATARDECER", { sun: [0.85, -0.32, -0.4], sunColor: "#ffd9b0", exposure: 1.05, hemiI: 0.12, fog: 0.0012, sky: ["#4a5f96", "#9ab0d8", "#f0d8c0", "#7a88a8"], ramp: ["#141c34", "#6f86b0", "#fff4ea"] });
 const CITY = BIOME("ciudad", "CIUDAD AL ATARDECER", { exposure: 1.3, fog: 0.0012, ramp: ["#1a1414", "#9a6a4a", "#ffe0b0"] });
-const INDUSTRIAL = BIOME("industrial", "POLÍGONO AL ATARDECER", { exposure: 1.3, fog: 0.0015, sky: ["#4a5070", "#d08a5a", "#f0c890", "#6a6050"], ramp: ["#161616", "#8a6a48", "#ffe0a8"] });
+const INDUSTRIAL = BIOME("industrial", "POLÍGONO AL ATARDECER", { sunColor: "#ffe2c2", exposure: 1.25, fog: 0.0015, sky: ["#4a5070", "#d08a5a", "#f0c890", "#6a6050"], ramp: ["#0c0d10", "#6a6660", "#f6efe2"] }); // medios neutros: con ramp ámbar el hormigón gris salía marrón
 // Biomas (kits de ref143/ref146/ref133/ref145): comprables, variante de ENCORE y sorteo de la vuelta. Mismo tamaño que el galpón.
 ZONES.bosque = { name: "El bosque de pinos", short: "Bosque", desc: "Pinos de juguete, rocas con musgo y troncos caídos de borde de pista.", half: 140, cost: ZONE_COST.bosque, grass: 0.6, grassH: 0.8, rects: [], build: forestBuild, climate: FOREST, layout: forestLayout };
 ZONES.nieve = { name: "La pista nevada", short: "Nieve", desc: "Nieve con huellas, bloques rojo y blanco y un cerco que no frena a nadie.", half: 140, cost: ZONE_COST.nieve, grass: 0, grassH: 1, rects: [], build: snowBuild, climate: SNOW, layout: snowLayout };

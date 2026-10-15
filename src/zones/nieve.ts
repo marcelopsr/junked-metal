@@ -67,13 +67,16 @@ function pine(x: number, z: number, s: number, parts: B.Mesh[], col = PINE) {
   parts.push(cyl(0, 1.4 * s, 1.8 * s, w, [x, (2.2 + 6.9) * s + 0.8 * s, z], undefined, 8));
 }
 
+// Piso: nieve pisada con huellas (public/textures), un solo Texture por escena (WRAP como en desvan.ts)
+let snowT: B.Texture | undefined, snowS: B.Scene | undefined;
+const snowTex = () => {
+  if (snowS !== scene || !snowT) { snowS = scene; snowT = new B.Texture("./textures/g-nieve-huellas.webp", scene); snowT.wrapU = snowT.wrapV = B.Texture.WRAP_ADDRESSMODE; }
+  return snowT;
+};
+
 export function snowBuild() {
   // Nieve lisa (ref33a): base casi blanca con ondulaciones azuladas muy suaves; el contraste lo ponen los surcos y las sombras, no el grano.
-  floor("nieveLisa", "#cbd7e8", () => canvasTex(512, (c, s) => {
-    c.fillStyle = "#e6eef7"; c.fillRect(0, 0, s, s);
-    for (let i = 0; i < 220; i++) { const x = lr() * s, y = lr() * s, r = 8 + lr() * 22; for (const ox of [-s, 0, s]) for (const oy of [-s, 0, s]) { const g = c.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r); g.addColorStop(0, i % 3 ? "rgba(150,172,205,0.4)" : "rgba(255,255,255,0.3)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(x + ox - r, y + oy - r, r * 2, r * 2); } }
-    for (let i = 0; i < 1500; i++) { c.fillStyle = i % 2 ? "rgba(255,255,255,0.5)" : "rgba(170,190,215,0.25)"; c.fillRect(lr() * s, lr() * s, 1 + lr() * 2, 1 + lr()); }
-  }), 0.85, "concrete", 70);
+  floor("nieveLisa", "#ffffff", () => snowTex(), 0.85, "concrete", 26);
   ruts();
   // Borde: bloques de plástico rojo/blanco con gorro de nieve cada tanto, alineados con los cuatro lados.
   const red = M.plastic(RED), wht = M.plastic(WHITE), cap = whiteM(), blocks: B.Mesh[] = [], fence: B.Mesh[] = [], trees: B.Mesh[] = [];

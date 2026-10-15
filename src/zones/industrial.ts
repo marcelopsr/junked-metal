@@ -25,7 +25,7 @@ const tile = (m: B.Mesh, su: number, sv: number) => { // repite la textura por m
 };
 
 export function industrialBuild() {
-  floor("industrial-hormigon", "#ffffff", () => wrapTex("c-hormigon-grietas"), 0.9, "concrete", 24);
+  floor("industrial-hormigon", "#ffffff", () => wrapTex("g-industrial-hormigon"), 0.9, "concrete", 10);
   const r = lcg(41), parts: B.Mesh[] = [];
   const asph = asphM(), oil = M.matte("#1b1c1f"), yel = M.matte("#FBC02D"), blk = M.matte("#1e1e1e");
   const L = HALF * 2;
