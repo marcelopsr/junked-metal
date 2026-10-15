@@ -66,7 +66,8 @@ export const sessions = [
     { id: "garaje", act: async (p) => { await view("garage")(p); await tick(p, 40); } }, // espera el fundido de entrada de la escena (con 3 cuadros la exposición estaba al 16 %)
     { id: "garaje-vista-previa", act: async (p) => { await p.evaluate(() => window.__cfg({ cars: ["buggy"] })); /* menu.ts desbloquea todos los autos al cargar: se bloquea el tanque para tener la vista previa */ await view("garage")(p); await p.focus('.carc.locked[data-k="tanque"]'); await p.waitForTimeout(400); } },
     { id: "taller", act: view("shop") },
-    { id: "encore", act: view("encore") },
+    // Con runs===0 «Jugar» va directo a largar (menu.ts): para ver la pantalla ENCORE hay que simular una expedición ya jugada
+    { id: "encore", act: async (p) => { await p.evaluate(() => window.__cfg({ encore: { best: { loop: 0, stage: 2, t: 400 }, wins: 1, runs: 3, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] } })); await view("encore")(p); } },
     // "Cómo se juega" y el grupo Online desplegados (el foco queda en Largar al entrar)
     { id: "encore-abierto", act: async (p) => { await p.evaluate(() => document.querySelectorAll("#scr-encore .how, #scr-encore #netGrp").forEach((d) => { d.open = true; })); await p.waitForTimeout(150); } },
     { id: "config", act: view("config") },

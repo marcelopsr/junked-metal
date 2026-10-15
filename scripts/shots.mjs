@@ -62,7 +62,7 @@ const results = await pool(par, tasks, async ({ vp, s }, browser) => {
           if (a.update) { copyFileSync(`${ACT}/${id}.png`, `${REF}/${id}.png`); row.estado = "ref actualizada"; }
           else if (a.diff) { compare.tol = sh.tol; const c = compare(id); Object.assign(row, c, { out: undefined }); if (c.out && c.estado !== "igual") writeFileSync(`${DIF}/${id}.png`, PNG.sync.write(c.out)); }
           rows.push(row);
-        } catch (e) { rows.push({ id, estado: "ERROR", error: String(e).split("\n")[0] }); }
+        } catch (e) { rows.push({ id, estado: "ERROR", error: String(e).split("\n")[0] }); break; } // el resto depende de este paso: abortar evita encadenar timeouts
       }
       if (page.logs.length) console.log(`[${vp}-${s.id}] errores de consola:\n  ` + page.logs.join("\n  "));
       await page.ctx.close();
