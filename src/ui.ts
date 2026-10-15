@@ -484,10 +484,12 @@ function tickBanner(dt: number) {
   const cps = bannerTone ? 26 : 36;
   if (bannerTyping) {
     bannerN += dt * cps;
-    const n = Math.min(bannerMsg.length, bannerN | 0), typing = n < bannerMsg.length;
+    let n = Math.min(bannerMsg.length, bannerN | 0);
+    while (n > 0 && n < bannerMsg.length && /\d/.test(bannerMsg[n - 1]) && /\d/.test(bannerMsg[n])) n++; // las cifras entran enteras: un número a medio teclear con estática se leía «FALTAN @»
+    const typing = n < bannerMsg.length;
     if (typing || n !== bannerShown) {
       bannerShown = n;
-      ty.textContent = bannerMsg.slice(0, n) + (typing ? STATIC[(Math.random() * STATIC.length) | 0] : "");
+      ty.textContent = bannerMsg.slice(0, n) + (typing && !/\d/.test(bannerMsg[n]) ? STATIC[(Math.random() * STATIC.length) | 0] : "");
     }
     if (!typing) { bannerTyping = false; ty.textContent = bannerMsg; }
     return;

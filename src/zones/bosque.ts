@@ -9,6 +9,8 @@ import { clear, int, rocks, toyRamps } from "../world_layout";
 // Todo lo decorativo usa un generador local de semilla fija: no toca la secuencia rng() de la partida.
 const rnd = (seed: number) => () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
 
+const DKROCK = ["#3c3e3a", "#34362f", "#46463e"]; // rocas de orilla: caras en sombra
+const DKPINE = ["#16301a", "#1d3c1f", "#193519"]; // pinos junto al camino: siluetas oscuras
 const PINE = ["#2f5a2a", "#3f7a32", "#35682d"], MOSS = "#5a7a30", TRUNK = "#6b4428", ROCK = ["#6e6e66", "#5f6058", "#7c7a6c"];
 
 // Tierra rojiza con agujas de pino (trazos finos naranja/marrón) y guijarros: 512 px, mosaico por macro 14 u.
@@ -27,10 +29,10 @@ const dirtTex = () => canvasTex(512, (c, s) => {
 });
 
 // Roca facetada (icosaedro aplastado) con casquete de musgo en la cima. pos = base en el suelo.
-function rock(r: () => number, x: number, z: number, s: number, ry: number): B.Mesh[] {
+function rock(r: () => number, x: number, z: number, s: number, ry: number, pal = ROCK): B.Mesh[] {
   const sx = s * (1.2 + r() * 0.8), sy = s * (0.8 + r() * 0.7), sz = s * (1.2 + r() * 0.8);
   const m = B.MeshBuilder.CreatePolyhedron("p", { type: 2, size: 1 }, scene); m.convertToFlatShadedMesh();
-  m.material = M.matte(ROCK[Math.floor(r() * 3)]); m.scaling.set(sx, sy, sz); m.rotation.set(0, ry, 0); m.position.set(x, sy * 0.45, z);
+  m.material = M.matte(pal[Math.floor(r() * 3)]); m.scaling.set(sx, sy, sz); m.rotation.set(0, ry, 0); m.position.set(x, sy * 0.45, z);
   const cap = B.MeshBuilder.CreatePolyhedron("p", { type: 2, size: 1 }, scene); cap.convertToFlatShadedMesh();
   cap.material = M.matte(MOSS); cap.scaling.set(sx * 0.85, sy * 0.4, sz * 0.85); cap.rotation.set(0, ry + 1, 0); cap.position.set(x, sy * 0.95, z);
   return [m, cap];
@@ -49,12 +51,12 @@ function log(x: number, z: number, len: number, rad: number, ry: number, y = rad
 
 // Pino de juguete: tronco corto y 4 pisos de cono quebrados (inclinados, achatados y corridos), verdes alternados. h = altura total.
 // El quiebre sale de un hash de (x, z, piso): no consume r(), así el resto del layout queda igual.
-function pine(r: () => number, x: number, z: number, h: number): B.Mesh[] {
+function pine(r: () => number, x: number, z: number, h: number, pal = PINE): B.Mesh[] {
   const out: B.Mesh[] = [cyl(h * 0.05, h * 0.07, h * 0.22, M.matte(TRUNK), [x, h * 0.11, z], undefined, 6)], n = 4;
   const hs = (i: number, k: number) => { const v = Math.sin(x * 12.9898 + z * 78.233 + i * 37.719 + k * 4.581) * 43758.5453; return v - Math.floor(v) - 0.5; };
   for (let i = 0; i < n; i++) {
     const t = i / n, w = h * (0.34 - t * 0.2), ph = h * 0.36;
-    const m = cyl(0.02, w, ph, M.matte(PINE[(i + Math.floor(r() * 3)) % 3]), [x + hs(i, 0) * w * 0.25, h * (0.2 + t * 0.62) + ph / 2 - 0.1, z + hs(i, 1) * w * 0.25], [hs(i, 2) * 0.3, r() * 6, hs(i, 3) * 0.3], 8);
+    const m = cyl(0.02, w, ph, M.matte(pal[(i + Math.floor(r() * 3)) % 3]), [x + hs(i, 0) * w * 0.25, h * (0.2 + t * 0.62) + ph / 2 - 0.1, z + hs(i, 1) * w * 0.25], [hs(i, 2) * 0.3, r() * 6, hs(i, 3) * 0.3], 8);
     m.scaling.set(0.85 + (hs(i, 4) + 0.5) * 0.4, 1 + hs(i, 5) * 0.25, 0.85 + (hs(i, 6) + 0.5) * 0.4);
     out.push(m);
   }
@@ -101,10 +103,10 @@ export function forestBuild() {
   // Pinos del lado de afuera: dos filas escalonadas, altos para dar escala (14-30 u).
   for (let row = 0; row < 2; row++) for (let k = -HALF - 6; k <= HALF + 6; k += 7 + row * 2) for (const side of [0, 1, 2, 3]) {
     const off = HALF + 6 + row * 9 + r() * 4, p = k + (r() - 0.5) * 3, h = 16 + r() * 14 + row * 4;
+    const px = side === 0 ? off : side === 2 ? -off : p, pz = side === 1 ? off : side === 3 ? -off : p;
+    if (Math.hypot(px - FALL.x, pz - FALL.z) < 30) continue; // no tapar la cascada (r() ya se consumió: el resto no cambia)
     trees.push(...pine(r, side === 0 ? off : side === 2 ? -off : p, side === 1 ? off : side === 3 ? -off : p, h));
   }
-  const m = merge("forestEdge", edge), t = merge("forestPines", trees);
-  for (const q of [m, t]) { q.isPickable = false; shadows.addShadowCaster(q); }
   // Camino de tierra oscura (decal), bloques rojo/blanco bajos y neumáticos sueltos (decorativos, sin colisión), arco de troncos con faroles y tronco-túnel.
   const pt = pathTex(); // material propio (matte() cachea por color)
   const pmat = new B.PBRMaterial("bosquePath", scene); pmat.albedoTexture = pt; pt.hasAlpha = true; pmat.useAlphaFromAlbedoTexture = true; pmat.transparencyMode = B.Material.MATERIAL_ALPHABLEND; pmat.roughness = 1; pmat.metallic = 0;
@@ -143,7 +145,15 @@ export function forestBuild() {
     for (const [lx, lz, s] of [[len / 2 + 1.3, 3.8, 0.9], [len / 2 + 2, -3.4, 0.7], [-len / 2 - 1.4, 3.6, 0.8], [-len / 2 - 1.8, -3.9, 1], [len / 2 + 2.6, 4.9, 0.6], [-len / 2 - 2.6, -3, 0.65]] as [number, number, number][]) { const [px, pz] = at(lx, lz); kit.push(...mush(px, pz, s)); }
     bare.push({ x: cx, z: cz, r: 10 });
   }
+  const dg = rnd(5521); // pinos y matas oscuras junto al camino: siluetas de contraste
+  for (let z = -70; z <= 70; z += 9) for (const sd of [-1, 1]) {
+    const [nx, nz] = normal(z), d = 12.5 + dg() * 4, x = PX(z) + nx * sd * d, zz = z + nz * sd * d, h = 12 + dg() * 7;
+    if (!keep(x, zz) || Math.hypot(x, zz) < 12) continue;
+    trees.push(...pine(dg, x, zz, h, DKPINE)); stat(cyl(1, 1.4, 5, wood, [0, 0, 0]), B.PhysicsShapeType.CYLINDER, {}, [x, 2.5, zz]).isVisible = false;
+    kit.push(...fern(dg, x + 3, zz + 1, 2.2), ...fern(dg, x - 2.5, zz - 2, 1.8));
+  }
   { const km = merge("forestKit", kit); km.isPickable = false; shadows.addShadowCaster(km); }
+  { const m = merge("forestEdge", edge), t = merge("forestPines", trees); for (const q of [m, t]) { q.isPickable = false; shadows.addShadowCaster(q); } }
   forestWater();
   // Fondo: barrera baja de roca-musgo continua detrás del borde, como oclusor (la cámara alta no ve el exterior del suelo).
   const back = M.matte("#4a6b2e");
@@ -192,11 +202,12 @@ const SD: [number, number] = [0.94 / Math.hypot(0.94, 0.34), 0.34 / Math.hypot(0
 const sOff = (t: number) => 2.6 * Math.sin(t / 9) * Math.min(1, Math.abs(t) / 14), sW = (t: number) => 6.4 + 1.2 * Math.sin(t / 17 + 1);
 const sPt = (t: number, k = 0, y = 0.09) => new B.Vector3(SC[0] + SD[0] * t + SN[0] * (sOff(t) + k), y, SC[1] + SD[1] * t + SN[1] * (sOff(t) + k));
 const T0 = -120, T1 = 117;
+const FALL = sPt(T1 + 1, 0, 0);
 const inStream = (x: number, z: number, m = 1.5) => { const dx = x - SC[0], dz = z - SC[1], t = dx * SD[0] + dz * SD[1]; return t > T0 - 4 && t < T1 + 12 && Math.abs(dx * SN[0] + dz * SN[1] - sOff(t)) < sW(t) / 2 + m; }; // ¿cae sobre el cauce (con margen)?
 
-const rippleTex = () => canvasTex(256, (c, s) => {
-  const r = rnd(7); c.fillStyle = "#2a6e68"; c.fillRect(0, 0, s, s);
-  for (let i = 0; i < 90; i++) { c.strokeStyle = r() < 0.5 ? "#8fd0cc" : "#1f5f6c"; c.globalAlpha = 0.25 + r() * 0.3; c.lineWidth = 1 + r() * 2; const x = r() * s, y = r() * s; for (const ox of [0, -s, s]) for (const oy of [0, -s, s]) { c.beginPath(); c.moveTo(x + ox, y + oy); c.quadraticCurveTo(x + ox + 6, y + oy + 12, x + ox, y + oy + 26); c.stroke(); } }
+const rippleTex = (base = "#2a6e68", hi = "#8fd0cc", lo = "#1f5f6c") => canvasTex(256, (c, s) => {
+  const r = rnd(7); c.fillStyle = base; c.fillRect(0, 0, s, s);
+  for (let i = 0; i < 90; i++) { c.strokeStyle = r() < 0.5 ? hi : lo; c.globalAlpha = 0.25 + r() * 0.3; c.lineWidth = 1 + r() * 2; const x = r() * s, y = r() * s; for (const ox of [0, -s, s]) for (const oy of [0, -s, s]) { c.beginPath(); c.moveTo(x + ox, y + oy); c.quadraticCurveTo(x + ox + 6, y + oy + 12, x + ox, y + oy + 26); c.stroke(); } }
   c.globalAlpha = 1;
 });
 const bedTex = () => canvasTex(256, (c, s) => {
@@ -211,8 +222,8 @@ const mudTex = () => canvasTex(256, (c, s) => {
   c.globalAlpha = 0.9; c.fillStyle = "#3a2616"; c.beginPath(); c.ellipse(s / 2, s / 2, s * 0.3, s * 0.2, 0, 0, 6.3); c.fill();
   c.strokeStyle = "#9a7a56"; c.globalAlpha = 0.4; c.lineWidth = 2; c.beginPath(); c.ellipse(s / 2 - 10, s / 2 - 6, s * 0.18, s * 0.09, 0, 0.3, 4.2); c.stroke(); c.globalAlpha = 1; // brillo húmedo
 });
-const waterMat = (name: string, alpha: number, emis: string) => {
-  const t = rippleTex(); t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE;
+const waterMat = (name: string, alpha: number, emis: string, tex = rippleTex()) => {
+  const t = tex; t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE;
   const m = new B.PBRMaterial(name, scene); m.albedoTexture = t; m.roughness = 0.1; m.metallic = 0; m.alpha = alpha; m.transparencyMode = B.Material.MATERIAL_ALPHABLEND; m.emissiveColor = B.Color3.FromHexString(emis); m.backFaceCulling = false; m.zOffset = -4;
   return m;
 };
@@ -228,18 +239,19 @@ function forestWater() {
   const bt = bedTex(); bt.wrapU = bt.wrapV = B.Texture.WRAP_ADDRESSMODE; bt.vScale = (T1 - T0) / 5; bt.hasAlpha = true;
   const bm = new B.PBRMaterial("arroyoLecho", scene); bm.albedoTexture = bt; bm.useAlphaFromAlbedoTexture = true; bm.transparencyMode = B.Material.MATERIAL_ALPHABLEND; bm.roughness = 0.85; bm.metallic = 0; bm.backFaceCulling = false;
   ribbon("arroyoLecho", (t) => sW(t) / 2 + 0.9, 0.055, bm);
-  const wm = waterMat("arroyoAgua", 0.5, "#031418"); (wm.albedoTexture as B.Texture).vScale = (T1 - T0) / 6;
-  ribbon("arroyoAgua", (t) => sW(t) / 2, 0.09, wm);
+  const fo = M.matte("#c9d3c6"); fo.alpha = 0.9; ribbon("arroyoEspuma", (t) => sW(t) / 2 + 0.3, 0.075, fo); // orillas claras de espuma y piedra
+  const wm = waterMat("arroyoAgua", 0.82, "#02080a", rippleTex("#1e4a4a", "#5f9c98", "#12383a")); (wm.albedoTexture as B.Texture).vScale = (T1 - T0) / 6;
+  ribbon("arroyoAgua", (t) => sW(t) / 2 - 0.7, 0.09, wm); // centro profundo
   for (let t = T0; t <= T1; t += 8) bare.push({ x: sPt(t).x, z: sPt(t).z, r: 7 });
   // Orillas: rocas grandes con musgo (colisionador a las más grandes) y helechos; libre alrededor del puente.
   for (let t = T0 + 3; t <= T1 - 6; t += 4.5) for (const sd of [-1, 1]) {
-    if (Math.abs(t) < 10 || r() < 0.3) continue;
+    if (Math.abs(t) < 10 || r() < 0.3 || t > T1 - 16) continue; // sin rocas delante de la cascada
     const p = sPt(t, sd * (sW(t) / 2 + 1.2 + r() * 1.4)), s = 1.3 + r() * 1.6;
-    parts.push(...rock(r, p.x, p.z, s, r() * 6));
+    parts.push(...rock(r, p.x, p.z, s, r() * 6, DKROCK));
     if (s > 2.1) stat(box(s * 2.2, 2.2, s * 2.2, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [p.x, 1.1, p.z]).isVisible = false;
     if (r() < 0.7) parts.push(...fern(r, p.x + (r() - 0.5) * 3, p.z + (r() - 0.5) * 3, 1.5 + r()));
   }
-  for (let t = T0; t <= T1; t += 9) if (Math.abs(t + 2) > 9 && r() < 0.8) { const p = sPt(t + r() * 4, (r() - 0.5) * sW(t) * 0.6, 0.2); parts.push(...rock(r, p.x, p.z, 0.45 + r() * 0.4, r() * 6)); } // piedras bajas en el cauce
+  for (let t = T0; t <= T1; t += 9) if (Math.abs(t + 2) > 9 && r() < 0.8) { const p = sPt(t + r() * 4, (r() - 0.5) * sW(t) * 0.6, 0.2); parts.push(...rock(r, p.x, p.z, 0.45 + r() * 0.4, r() * 6, DKROCK)); } // piedras bajas en el cauce
   // Puente de tablones: cubierta a 0,55 u y dos rampas suaves (7 grados). Local z = cruce del arroyo, local x = a lo largo del arroyo.
   { const c = sPt(0), ry = Math.atan2(SN[0], SN[1]), H = 0.55, Lh = 4.8, al = Math.atan2(H, Lh), Lr = Math.hypot(Lh, H), WD = 10;
     const P = (lx: number, ly: number, lz: number): [number, number, number] => [c.x + lx * SD[0] + lz * SN[0], ly, c.z + lx * SD[1] + lz * SN[1]];
@@ -261,9 +273,9 @@ function forestWater() {
     for (let i = 0; i < 13; i++) { const lv = i < 6 ? 0 : i < 10 ? 1 : 2, a = (i % 6) / 5 - 0.5, q = [p.x + SD[0] * (6.4 + lv * 1.8) + SN[0] * a * (7 - lv * 2.2), p.z + SD[1] * (6.4 + lv * 1.8) + SN[1] * a * (7 - lv * 2.2)];
       const rr = rock(r, q[0], q[1], 2.4 + r() * 1.2 - lv * 0.3, r() * 6); for (const m of rr) m.position.y += lv * 2.1; parts.push(...rr); }
     stat(box(8, 7, 6, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [p.x + SD[0] * 8, 3.5, p.z + SD[1] * 8, ry]).isVisible = false;
-    const fm = waterMat("cascada", 0.6, "#0f4048"); (fm.albedoTexture as B.Texture).uScale = 1.5; (fm.albedoTexture as B.Texture).vScale = 3;
-    const fall = box(6.4, 7.2, 0.18, fm, [p.x + SD[0] * 3.0, 3.6, p.z + SD[1] * 3.0], [0, ry, 0]); fall.receiveShadows = false; fall.isPickable = false;
-    const foam = sph(1.8, waterMat("espuma", 0.55, "#5aa0a0"), [p.x + SD[0] * 1.6, 0.1, p.z + SD[1] * 1.6], [1.5, 0.12, 1.1], 8); foam.isPickable = false;
+    const fm = waterMat("cascada", 0.8, "#2c3c42", rippleTex("#b4cdd6", "#f4fbfc", "#6f98a8")); (fm.albedoTexture as B.Texture).uScale = 1.5; (fm.albedoTexture as B.Texture).vScale = 3;
+    const fall = box(8.4, 7.6, 0.18, fm, [p.x + SD[0] * 3.0, 3.8, p.z + SD[1] * 3.0], [0, ry, 0]); fall.receiveShadows = false; fall.isPickable = false;
+    const foam = sph(2.6, waterMat("espuma", 0.9, "#9fb4b4", rippleTex("#e8f0ee", "#ffffff", "#b4c8c8")), [p.x + SD[0] * 1.8, 0.12, p.z + SD[1] * 1.8], [1.7, 0.12, 1.3], 8); foam.isPickable = false;
     bare.push({ x: p.x + SD[0] * 3, z: p.z + SD[1] * 3, r: 10 });
   }
   { const m = merge("forestStream", parts); m.isPickable = false; shadows.addShadowCaster(m); }

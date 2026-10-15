@@ -56,17 +56,18 @@ function legPose(out: B.Matrix[], hips: Hip[], walk: number, amp = 0.42, lift = 
   return out;
 }
 
-// ---------- Enjambre: cápsula hexagonal chica con núcleo cian, aguijón y 4 patas. Huesos: 0 cuerpo, 1-4 patas ----------
+// ---------- Enjambre: esfera de chapa chica con ojo único, pinches y 4 patas. Huesos: 0 cuerpo, 1-4 patas ----------
 const SW_HIPS: Hip[] = [[[0.15, 0.28, 0.1], 0.5], [[0.15, 0.28, -0.1], -0.5]];
 function swarmBody() {
   const K = kit(), { G } = K;
-  along(G, 0.34, 0.42, 0.5, hull(), [0, 0.3, 0]);
-  G.plate([0, 0.5, -0.1], [Math.PI / 2, 0, 0], 0.24, 0.24, plate());
-  G.sph(0.24, plate(), [0, 0.46, 0.08]); // domo crema
-  G.sph(0.15, eye(), [0, 0.34, 0.26]); // ojo
-  for (const [x, z] of [[0, 0.1], [0.14, -0.04], [-0.14, -0.04], [0.1, -0.2], [-0.1, -0.2]]) G.cyl(0.01, 0.2, plate(), [x, 0.74, z], undefined, 5, 0.08); // pinches (ref169)
-  G.rivets([-0.2, 0.3, 0.3], [0.2, 0.3, 0.3], 4, [0, 0, 1]);
-  G.cyl(0.02, 0.22, FOLD.bare(), [0, 0.3, -0.35], [-Math.PI / 2, 0, 0], 6, 0.1); // aguijón
+  G.sph(0.27, hull(), [0, 0.34, 0]); // esfera de chapa (ref169 f3 c4)
+  G.plate([0, 0.52, -0.1], [Math.PI / 2, 0, 0], 0.2, 0.2, plate());
+  G.sph(0.15, eye(), [0, 0.36, 0.2]); // ojo único
+  for (const [dx, dy, dz] of [[0, 1, 0], [0.7, 0.7, 0], [-0.7, 0.7, 0], [0.5, 0.6, -0.6], [-0.5, 0.6, -0.6], [0, 0.6, -0.8]]) { // pinches
+    const n = Math.hypot(dx, dy, dz);
+    G.cyl(0.01, 0.2, plate(), [dx / n * 0.3, 0.34 + dy / n * 0.3, dz / n * 0.3], [Math.asin(dz / n), 0, -Math.asin(dx / n)], 5, 0.07);
+  }
+  G.rivets([-0.2, 0.3, 0.22], [0.2, 0.3, 0.22], 4, [0, 0, 1]);
   legs(K, SW_HIPS, [0.2, 0.12, 0], [0.4, -0.28, 0.02], 0.045, 1);
   return K.done(1.4);
 }
@@ -101,30 +102,21 @@ function shooterPose(_v: number, walk: number, atk: number) {
   return out;
 }
 
-// ---------- Saltador lunar: cuña con cabeza de rana, patas traseras de resorte y toberas. Huesos: 0 cuerpo, 1-2 traseras, 3-4 delanteras ----------
+// ---------- Saltador lunar: esfera de chapa con ojo único sobre 4 resortes de bronce. Huesos: 0 cuerpo, 1-2 traseras, 3-4 delanteras ----------
 function jumperBody() {
-  const K = kit(), { G, strut, bone } = K, g = eye(), sh = shell();
-  G.box(0.5, 0.3, 0.7, hull(), [0, 0.5, 0], [-0.25, 0, 0]);
-  G.box(0.42, 0.22, 0.3, sh, [0, 0.66, 0.38]);
-  G.plate([0, 0.67, -0.05], [Math.PI / 2 - 0.25, 0, 0], 0.34, 0.4, plate());
-  for (const s of [-1, 1]) {
-    G.sph(0.14, g, [s * 0.15, 0.79, 0.46]); // ojos
-    for (const y of [0.52, 0.58, 0.64]) G.box(0.12, 0.025, 0.12, bronze(), [s * 0.4, y, 0.02]); // aros del resorte
-    along(G, 0.14, 0.2, 0.22, FOLD.dark(), [s * 0.17, 0.5, -0.42]); // toberas
-    G.box(0.1, 0.1, 0.03, ember(), [s * 0.17, 0.5, -0.54]);
-  }
-  for (const s of [1, -1]) { // traseras: muslo hacia adelante y arriba, canilla larga atrás (resorte de rana)
-    bone(s > 0 ? 1 : 2);
-    const hip: V3 = [s * 0.27, 0.45, -0.18], kn: V3 = [s * 0.4, 0.62, 0.08], ft: V3 = [s * 0.38, 0.05, -0.3];
-    G.box(0.1, 0.1, 0.1, FOLD.bare(), hip); strut(hip, kn, 0.1, 0.12, sh); G.box(0.1, 0.1, 0.1, FOLD.bare(), kn);
-    strut(kn, ft, 0.07, 0.08, sh); G.box(0.14, 0.04, 0.3, FOLD.dark(), [ft[0], 0.02, -0.28]);
-  }
-  for (const s of [1, -1]) {
-    bone(s > 0 ? 3 : 4);
-    strut([s * 0.17, 0.42, 0.3], [s * 0.24, 0.04, 0.44], 0.06, 0.07, sh); G.box(0.1, 0.04, 0.12, FOLD.dark(), [s * 0.24, 0.02, 0.46]);
-  }
+  const K = kit(), { G, bone } = K, g = eye(), sh = shell(), br = bronze();
+  G.sph(0.38, hull(), [0, 0.78, 0.04]); // esfera de chapa con ojo único (ref169 f4 c2)
+  G.plate([0, 1.02, -0.05], [Math.PI / 2 - 0.3, 0, 0], 0.3, 0.3, plate());
+  G.sph(0.25, sh, [0, 0.8, 0.27]); // cuenca oscura
+  G.sph(0.21, g, [0, 0.8, 0.33]); // ojo grande
+  G.rivets([-0.22, 0.6, 0.3], [0.22, 0.6, 0.3], 4, [0, 0.3, 1]);
+  const coil = (a: V3, z: number, n: number) => { // resorte: aros de bronce apilados bajo la cadera y plato de pie
+    for (let i = 0; i < n; i++) G.box(0.17, 0.035, 0.17, i % 2 ? br : FOLD.dark(), [a[0], a[1] - 0.02 - i * (a[1] - 0.06) / n, a[2] + z * i / n]);
+    G.cyl(0.11, 0.04, FOLD.dark(), [a[0], 0.02, a[2] + z], undefined, 8, 0.11);
+  };
+  for (const s of [1, -1]) { bone(s > 0 ? 1 : 2); coil([s * 0.27, 0.5, -0.18], -0.1, 5); }
+  for (const s of [1, -1]) { bone(s > 0 ? 3 : 4); coil([s * 0.17, 0.42, 0.3], 0.1, 4); }
   bone(0);
-  G.rivets([-0.18, 0.7, 0.28], [0.18, 0.7, 0.28], 4, [0, 0.3, 1]);
   return K.done(2);
 }
 function jumperPose(_v: number, walk: number, atk: number) {
