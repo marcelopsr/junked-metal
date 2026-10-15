@@ -327,6 +327,15 @@
     {"id":"pelota_masa","valor":30,"descripcion":"Masa de la pelota"},
     {"id":"pelota_diametro","valor":8,"descripcion":"Diámetro (m) de la pelota; aplasta bichos normales a su paso"},
     {"id":"pelota_vida_s","valor":7,"descripcion":"Segundos que dura la pelota"},
+    {"id":"zona_aviso_s","valor":2,"descripcion":"Zonas de pacto (ENCORE): segundos de aviso (el aro crece) antes de que la zona haga efecto"},
+    {"id":"zona_dist_min","valor":14,"descripcion":"Zonas de pacto: distancia mínima (m) al auto al aparecer"},
+    {"id":"zona_dist_max","valor":30,"descripcion":"Zonas de pacto: distancia máxima (m) al auto al aparecer"},
+    {"id":"zona_tope","valor":4,"descripcion":"Zonas de pacto: máximo de zonas a la vez en el escenario"},
+    {"id":"zona_premio_cerca","valor":8,"descripcion":"Zonas de pacto: una zona de beneficio nueva aparece a esta distancia máxima (m) de una zona de riesgo activa"},
+    {"id":"zona_libre_m","valor":10,"descripcion":"Zonas de pacto: distancia mínima (m) a la salida, cofres y aros de objetivo"},
+    {"id":"cables_tic_s","valor":0.5,"descripcion":"Cables pelados: segundos entre chispas (solo visual) y entre cobros de daño"},
+    {"id":"trampilla_cada_s","valor":6,"descripcion":"Trampilla: segundos entre una tanda de bichos y la siguiente mientras está abierta"},
+    {"id":"zona_iman_tornillos","valor":1.25,"descripcion":"Imán de tornillos: multiplicador de tornillos de lo recogido dentro de la zona"},
     {"id":"pelota_dano","valor":20,"descripcion":"Daño que hace la pelota al auto"},
     {"id":"cofre_cada_min","valor":95,"descripcion":"Segundos mínimos entre cofres en el patio"},
     {"id":"cofre_cada_rango","valor":50,"descripcion":"Segundos extra al azar entre cofres"},
@@ -992,5 +1001,13 @@
   ],
   "duelo_rival": [
     {"id":"cuna_industrial","nombre":"CUÑA INDUSTRIAL","chasis_id":"cuna","ruedas_id":"orugas","arma_id":"pala","cuerpo_color":"#2a2d32","bandas_color":"#e85d04","pala_color":"#8a9098"}
+  ],
+  "pactos_zonas": [
+    {"id":"camerino","pacto":"maquillaje","radio":4,"dura":20,"pausa":35,"max":1,"efecto":"regen","valor":6},
+    {"id":"iman","pacto":"cobro","radio":4.5,"dura":20,"pausa":35,"max":1,"efecto":"iman_mult","valor":3},
+    {"id":"foco","pacto":"sorpresa","radio":4,"dura":20,"pausa":35,"max":1,"efecto":"xp_mult","valor":2},
+    {"id":"pegamento","pacto":"blindaje","radio":5,"dura":0,"pausa":0,"max":2,"efecto":"speed_mult","valor":0.6},
+    {"id":"cables","pacto":"patrocinio","radio":3,"dura":0,"pausa":0,"max":2,"efecto":"dps","valor":8},
+    {"id":"trampilla","pacto":"nocturno","radio":3,"dura":25,"pausa":15,"max":1,"efecto":"spawn_n","valor":4}
   ]
 }

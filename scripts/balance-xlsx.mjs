@@ -98,6 +98,13 @@ const DESC = {
     chasis_id: "Id en duelo_chasis", ruedas_id: "Id en duelo_ruedas", arma_id: "Id en duelo_armas",
     cuerpo_color: "Color hex cuerpo", bandas_color: "Color hex bandas/orugas", pala_color: "Color hex del arma",
   },
+  pactos_zonas: {
+    id: "Identificador de la zona (no cambiar)", pacto: "Id del pacto de ENCORE que la crea (no cambiar)",
+    radio: "Radio (m) de la zona", dura: "Segundos visible y activa (0 = todo el escenario)",
+    pausa: "Segundos cerrada antes de reaparecer en otro sitio (0 = no reaparece)", max: "Zonas de este tipo a la vez",
+    efecto: "Qué hace dentro (no cambiar): regen vida/s, iman_mult × radio del imán, xp_mult × XP de gemas, speed_mult × velocidad, dps daño por segundo, spawn_n bichos por tanda",
+    valor: "Número del efecto",
+  },
 };
 
 // ---------- utilidades ----------
@@ -117,7 +124,7 @@ const head = (cell) => { cell.fill = HEAD; cell.font = { bold: true, color: { ar
 const info = wb.addWorksheet("Leeme");
 [
   "Balance de Junked Metal. Esta planilla se genera desde src/balance.json (npm run balance:xlsx) y vuelve al juego con npm run balance:import.",
-  "Hojas de datos (se importan): enemigos, armas, armas_extra, pasivas, ritmo, ataques, autos, pilotos, precios, plagas, duelo, duelo_bloques, duelo_chasis, duelo_ruedas, duelo_armas, duelo_rival. Fila 1 = columnas, fila 2 = qué significa cada una.",
+  "Hojas de datos (se importan): enemigos, armas, armas_extra, pasivas, ritmo, ataques, autos, pilotos, precios, plagas, duelo, duelo_bloques, duelo_chasis, duelo_ruedas, duelo_armas, duelo_rival, pactos_zonas. Fila 1 = columnas, fila 2 = qué significa cada una.",
   "Se editan SOLO los números. No cambiar los id, no agregar ni borrar filas ni columnas (el importador lo rechaza). Las columnas nombre y tipo son referencia.",
   "Hojas calculadas (no se importan): Golpes para matar, Tiempo jefe, Partidas para comprar. Se actualizan solas. Las celdas amarillas son supuestos editables solo de la hoja calculada.",
   "Para volver al juego: Archivo > Descargar > Valores separados por tabulaciones (.tsv) de cada hoja de datos, juntar en un .txt con una línea '### nombre_hoja' antes de cada una y correr npm run balance:import -- archivo.txt.",
