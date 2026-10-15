@@ -194,9 +194,10 @@ export function snowLayout() {
   };
   const grove: [number, number, number][] = [[-52, 30, 0.4], [48, -42, 2.2], [8, 58, 3.6]];
   grove.forEach(([x, z, ry]) => cabin(x, z, ry));
-  const pines2: B.Mesh[] = [];
+  const pines2: B.Mesh[] = [], placed: [number, number][] = [];
   for (const [gx, gz] of [[-40, 44], [-62, 20], [38, -56], [60, -28], [24, 52], [-8, 64], [-34, -48], [55, 40], [-58, -20]]) for (let i = 0; i < 4; i++) {
-    const x = gx + (lr() - 0.5) * 16, z = gz + (lr() - 0.5) * 16, ps = 1 + lr() * 0.8; if (noPine(x, z)) continue; pine(x, z, ps, pines2);
+    const x = gx + (lr() - 0.5) * 16, z = gz + (lr() - 0.5) * 16, ps = 1 + lr() * 0.8; if (noPine(x, z) || placed.some(([px, pz]) => Math.hypot(x - px, z - pz) < 9)) continue; placed.push([x, z]); pine(x, z, ps, pines2); // separación 9 u: tres pinos a 3-4 u armaban una bolsa donde el auto quedaba atascado (semilla 39)
+   
     stat(cyl(2, 2.4, 3, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.CYLINDER, {}, [x, 1.5, z]).isVisible = false; bare.push({ x, z, r: 4 });
   }
   if (pines2.length) { const m = merge("nievePinares", pines2); m.isPickable = false; shadows.addShadowCaster(m); }

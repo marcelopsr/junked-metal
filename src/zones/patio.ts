@@ -246,7 +246,9 @@ export function patioBuild() {
   decal("scrapSoilTransition", 54, 44, -48, 20, grassEarthMat, 0.015);
   const scrapZone = decal("scrapZone", 46, 36, -48, 20, scrapGroundMat, 0.025);
   // UV2 en coordenadas del patio: el tono coincide donde dos parches se superponen.
+  // La tierra es ALPHATESTANDBLEND con alphaIndex por defecto (el máximo): se dibujaba DESPUÉS de las manchas (alphaIndex 100) y las tapaba en todo el camino.
   for (const ground of [dirt, soilPaths, scrapZone]) {
+    ground.alphaIndex = 10;
     const positions = ground.getVerticesData(B.VertexBuffer.PositionKind)!;
     const uv = new Float32Array(positions.length / 3 * 2);
     const world = ground.computeWorldMatrix(true), point = new B.Vector3();

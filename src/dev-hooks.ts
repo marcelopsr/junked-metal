@@ -172,8 +172,8 @@ export interface DevHooksContext {
 
 // Atascos del bot (criterio 1.0): aceleración pedida (throttle != 0) con velocidad < 0,5 m/s durante > 3 s de juego; un salto de posición (teleporte) reinicia la cuenta.
 // ponytail: un solo auto (el líder) y velocidad en el plano del mundo; en la luna cuenta igual (la curvatura no cambia la rapidez).
-export const atascos = { n: 0, maxS: 0, t: 0, x: 0, z: 0, hecho: false };
-export const resetAtascos = () => Object.assign(atascos, { n: 0, maxS: 0, t: 0, hecho: false });
+export const atascos = { n: 0, maxS: 0, t: 0, x: 0, z: 0, hecho: false, ev: [] as { x: number; z: number; t: number; zona: string; cerca: number; col: string[] }[] };
+export const resetAtascos = () => Object.assign(atascos, { n: 0, maxS: 0, t: 0, hecho: false, ev: [] });
 function medirAtasco(ctx: DevHooksContext, dt: number): void {
   const c = ctx.lead.car, a = atascos;
   if (!c) return;
@@ -182,7 +182,11 @@ function medirAtasco(ctx: DevHooksContext, dt: number): void {
   a.x = p.x; a.z = p.z;
   if (!pedido || Math.hypot(v.x, v.z) >= 0.5) { a.t = 0; a.hecho = false; return; }
   a.t += dt; a.maxS = Math.max(a.maxS, a.t);
-  if (a.t > 3 && !a.hecho) { a.n++; a.hecho = true; }
+  if (a.t > 3 && !a.hecho) {
+    a.n++; a.hecho = true;
+    // cerca = bichos a < 6 m: con horda encima es empuje, sin bichos es decorado (colisión)
+    a.ev.push({ x: +p.x.toFixed(1), z: +p.z.toFixed(1), t: +(ctx.time + ctx.encPrior).toFixed(0), zona: ctx.erun ? String(E.zoneOf(ctx.erun)) : "-", cerca: ctx.enemies.filter((e) => Math.hypot(e.node.position.x - p.x, e.node.position.z - p.z) < 6).length, col: ctx.scene.meshes.filter((m) => m.physicsBody && m !== c.root && Math.hypot(m.position.x - p.x, m.position.z - p.z) < 6).map((m) => `${m.name}@${m.position.x.toFixed(0)},${m.position.z.toFixed(0)}`).slice(0, 6) });
+  }
 }
 
 export function botStep(m: typeof import("./devbot"), dt: number, ctx: DevHooksContext): void {
@@ -384,6 +388,7 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
           phase: r?.phase,
           t: +(ctx.time + ctx.encPrior).toFixed(1),
           atascos: atascos.n,
+          atascoEv: atascos.ev,
           atascoMaxS: +atascos.maxS.toFixed(1),
           hp: Math.round(ctx.lead.hp),
           maxHp: ctx.lead.maxHp,
@@ -401,7 +406,7 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
           hitstopPerMin: +((((globalThis as any).__hs?.n ?? 0) - encMeter.hs0) / Math.max(1 / 60, (ctx.time + ctx.encPrior) / 60)).toFixed(1),
         };
       },
-      __atascos: () => ({ n: atascos.n, maxS: +atascos.maxS.toFixed(1) }),
+      __atascos: () => ({ n: atascos.n, maxS: +atascos.maxS.toFixed(1), ev: atascos.ev }),
       __play: (seed = 1) => {
         resetAtascos();
         if (ctx.state !== "menu") ctx.toMenu();
