@@ -28,7 +28,7 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
     return ok;
   };
   const seen = { pact: false, route: false, vote: false };
-  let runs0 = 0, toques = 0, palabras = 0;
+  let runs0 = 0, toques = 0, palabras = 0, radioMenu = "";
 
   await step("menu-jugar-directo", async () => { // guardado limpio: portada (1), Jugar (2) y la guía mínima (3); sin pantalla ENCORE ni desafíos
     await ev(() => document.querySelector("#scr-title.on") && document.dispatchEvent(new KeyboardEvent("keydown", { code: "Enter", key: "Enter" })));
@@ -41,6 +41,8 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
     await p.dispatchEvent('#scr-main [data-go="encore"]', "click"); await tick(4);
     if (!(await p.waitForSelector("#ctlg:not(.hidden)", { timeout: 3000 }).catch(() => null))) return "Jugar no abrió la guía mínima directo";
     if (await p.$("#scr-encore.on")) return "apareció la pantalla ENCORE en la primera vez";
+    radioMenu = (await ev(() => window.__radio?.info().station)) ?? "";
+    if (!radioMenu) return "radio.info() no indica estación en el menú";
     toques = 3; palabras = await ev(() => document.getElementById("ctlg").innerText.split(/\s+/).filter(Boolean).length);
   });
   await step("largar-primera-expedicion", async () => {
@@ -50,6 +52,16 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
     await ev(() => window.__god());
     await tick(90);
     if ((await saved()).tips?.includes("start")) return "el aviso largo de inicio no debe mostrarse";
+    const rs = await ev(() => window.__radio.info().station); // estado lógico: con ?mute puede no sonar
+    if (rs !== "chatarra" || rs === radioMenu) return `la radio debía pasar a chatarra (ENCORE) y es ${rs} (menú: ${radioMenu})`;
+  });
+  await step("calma-primera-expedicion", async () => { // primeros ~20 s: sin enemigos (spawner); el cielo/luna lo frena la misma calma (main.ts)
+    let t = 0;
+    for (let i = 0; i < 8 && t < 18; i++) {
+      await tick(150); const r = await ev(() => window.__info()); t = r.time;
+      if (r.enemies > 0) return `${r.enemies} enemigos a los ${t.toFixed(1)} s`;
+    }
+    if (t < 10) return "el reloj no avanzó lo suficiente: " + t.toFixed(1);
   });
   await step("bot-hasta-teleportador", async () => {
     await ev(() => window.__bot(8)); await cards();
@@ -198,6 +210,43 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
   try { await r.screenshot({ path: `${dir}/${vp}-x-pileta-limpiafondos.png` }); } catch {}
   rows.push({ vp, paso: "pileta-limpiafondos", ok: why ? "FALLA" : "OK", s: ((Date.now() - t0) / 1000).toFixed(1), nota: why });
   await r.ctx.close();
+  // --- extra: Paseo libre (Más modos -> Paseo libre -> auto -> Salir a pasear), pestaña propia ---
+  const f = await open(browser, `?mute&seed=${seed}`, vp, { freeze: true });
+  const fe = (fn, a) => f.evaluate(fn, a), ft = (n = 3) => fe((n) => window.__tick(n), n);
+  const f0 = Date.now(); let fwhy = "";
+  try {
+    await fe(() => document.querySelector("#scr-title.on") && document.dispatchEvent(new KeyboardEvent("keydown", { code: "Enter", key: "Enter" })));
+    await f.keyboard.press("Enter"); await ft(4); await f.waitForTimeout(1200);
+    for (const sel of ['#scr-main [data-go="modes"]', "#libreBtn"]) { await f.dispatchEvent(sel, "click"); await ft(3); await f.waitForTimeout(300); }
+    if (!(await f.$("#scr-libre.on"))) throw new Error("no se ve la pantalla Paseo libre");
+    const car0 = await f.textContent("#libreCarBtn .bt"); await f.dispatchEvent('[data-act="lcar"]', "click"); await ft(2);
+    if ((await f.textContent("#libreCarBtn .bt")) === car0) throw new Error("elegir auto no cambió el auto");
+    await f.dispatchEvent('[data-act="libregow"]', "click");
+    await f.waitForFunction(() => window.__info?.().state === "play", null, { timeout: 60000 });
+    await ft(60);
+    const pos = () => fe(() => { const p = window.__car().p; return [p.x, p.z]; });
+    const p0 = await pos();
+    await f.keyboard.down("KeyW"); await ft(120); await f.keyboard.up("KeyW");
+    const p1 = await pos(), mv = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+    if (mv < 2) throw new Error(`el auto no se movió (${mv.toFixed(1)} m)`);
+    await f.keyboard.press("Escape"); await ft(3);
+    if ((await fe(() => window.__info().state)) !== "pause") throw new Error("no entró en pausa");
+    await f.dispatchEvent('#libreLuz [data-act="luz:3"]', "click"); await ft(3);
+    if ((await f.getAttribute('#libreLuz [data-act="luz:3"]', "aria-pressed")) !== "true") throw new Error("la luz no quedó en Noche");
+    await f.dispatchEvent('#scr-pause [data-act="resume"]', "click"); await ft(3);
+    if ((await fe(() => window.__info().state)) !== "play") throw new Error("no volvió a jugar");
+    await fe(() => window.__paseo(40, true)); await ft(5); // el bot de paseo junta las primeras tuercas (plaza)
+    const nuts = await fe(() => document.getElementById("tuercas")?.textContent ?? "");
+    if (!/TUERCAS [1-9]\d*\/24/.test(nuts)) throw new Error("contador de tuercas sin avance: " + nuts);
+    await f.keyboard.press("Escape"); await ft(3);
+    await f.dispatchEvent('#scr-pause [data-act="quit"]', "click"); await ft(4); await f.waitForTimeout(600);
+    const st = await fe(() => window.__info().state);
+    if (st !== "menu") throw new Error("no volvió al menú: " + st);
+  } catch (e) { fwhy = e.message.split("\n")[0]; }
+  const ferrs = f.logs.splice(0); if (ferrs.length) fwhy += ` consola: ${ferrs.join(" | ").slice(0, 150)}`;
+  try { await f.screenshot({ path: `${dir}/${vp}-x-paseo-libre.png` }); } catch {}
+  rows.push({ vp, paso: "paseo-libre", ok: fwhy ? "FALLA" : "OK", s: ((Date.now() - f0) / 1000).toFixed(1), nota: fwhy });
+  await f.ctx.close();
   }
 });
 console.table(all);
