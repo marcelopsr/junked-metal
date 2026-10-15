@@ -624,6 +624,13 @@ export function hudMeta(title: string, txt: string) {
   e.classList.remove("show"); void e.offsetWidth; e.classList.add("show");
   clearTimeout(metaT); metaT = window.setTimeout(() => e.classList.remove("show"), 4200);
 }
+/** Cartel pegatina del HUD de libre (el mismo del nombre del barrio): marcador de bolos y goles; se apaga solo. */
+let cartelT = 0;
+export function hudCartel(txt: string) {
+  const b = document.getElementById("barrio"); if (!b) return;
+  b.textContent = txt; b.classList.remove("hidden", "show"); void b.offsetWidth; b.classList.add("show");
+  clearTimeout(cartelT); cartelT = window.setTimeout(() => b.classList.add("hidden"), 2500);
+}
 /** Limpia lo de Paseo libre al salir del modo. */
 export function hudLibreOff() { clearTimeout(trucoT); clearTimeout(metaT); hudSpinBtn(false); for (const id of ["truco", "aire", "avisoAire", "tuercas", "desafio", "meta"]) document.getElementById(id)?.remove(); }
 
