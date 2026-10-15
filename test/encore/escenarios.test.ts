@@ -54,8 +54,9 @@ describe("Contenido 3: secretos del Director", () => {
     }
     expect(r.phase).toBe("vote");
   };
-  it("rechazar todos los pactos de la vuelta revela CERO ESPECTADORES; aceptar uno no", () => {
-    const a = newRun(5); loop(a, { pact: false, bold: false }); expect(a.found).toContain("audiencia");
+  it("rechazar todos los pactos de la vuelta revela CERO ESPECTADORES solo si antes se firmó alguno (P8); aceptar uno no", () => {
+    const a = newRun(5); a.taken.push("sorpresa"); loop(a, { pact: false, bold: false }); expect(a.found).toContain("audiencia");
+    const c = newRun(5); loop(c, { pact: false, bold: false }); expect(c.found).not.toContain("audiencia"); // rechazar de entrada ya no basta
     const b = newRun(5); loop(b, { pact: true, bold: false }); expect(b.found).not.toContain("audiencia");
   });
   it("elegir siempre el destino de más riesgo revela SEÑAL IMPOSIBLE", () => {

@@ -140,7 +140,7 @@ export function encPlan() {
 export function encEnter() {
   const r = erun!;
   const v0 = E.variantOf(r); if (v0 && !save.encore.seenVariants.includes(v0.name)) { save.encore.seenVariants.push(v0.name); cartel(); persist(); } // Codex: destino jugado
-  cx.guestE = null; cx.ovT = 0;
+  cx.guestE = null; cx.ovT = 0; finalScaled = -1;
   evReset(); shipsClear(); goalsClear(); skyClear();
   for (const e of cx.enemies) { e.hp = -1e9; e.dispose(); } // hp negativo: las armas con blanco fijo (trompo) lo sueltan
   for (const g of cx.gems) g.m.dispose();
@@ -223,10 +223,14 @@ export const minorShip = (i: number) => (erun && E.variantOf(erun)?.ship) || shi
 export const minorMini = () => { const v = erun && E.variantOf(erun); return (v && (MOON.on || v.zone) && E.miniOf(erun!)) || null; }; // H13: variante con minijefe propio (enemigo, no nave); en tierra solo si la variante trae su zona
 /** Aplica lo que pasó en la expedición: efectos en el mundo y frase del Director. */
 let pactOff = ""; // ids ofrecidos del último pacto (para telemetría si se rechaza)
+let finalScaled = -1; // vida máxima ya escalada del jefe final de este escenario (-1 = aún no)
 export function encApply(ev: E.Ev | null) {
   zonesStep();
   if (erun) { erun.solo = cx.players.length < 2; if (E.decisionOpen(erun)) document.getElementById("hint")?.classList.add("hidden"); } // la guía de controles no tapa el pie de una oferta o decisión abierta
   if (erun && cx.lead.car) interruptStep();
+  if (erun && E.guestWaiting(erun)) cx.swarmT = Math.max(cx.swarmT, 1); // P9: el aviso del invitado es un respiro: ni enjambres (los bichos comunes los frena calmFirst)
+  else if (erun?.phase === "guest" && !cx.guestE && erun.guest) { const g = erun.guest, c = cx.lead.car!; cx.spawnEnemy(g, spawnPoint(c.pos, 30, 36)); cx.guestE = cx.enemies[cx.enemies.length - 1]; hudBoss(DEF[g].name, 1, g); SFX.boss(); } // P9: el invitado entra al vencer el aviso
+  if (erun?.phase === "final" && finalScaled < 0) { const f = cx.enemies.find((e) => e.kind === cx.finalKind); if (f) { const k = E.finalHpMul(erun); f.hp = f.maxHp *= k; finalScaled = f.maxHp; } } // P2: el jefe final sale más duro con lo jugado y lo arriesgado (una sola vez por jefe)
   if (!ev || !erun) return;
   if (ev === "pact_offer" && erun.offer) { if (!cx.simulating && !cx.LAB.on && !save.encore.seenPacts.length) erun.hold = true; const n = erun.offer.filter((id) => !save.encore.seenPacts.includes(id)); if (n.length) { save.encore.seenPacts.push(...n); cartel(); persist(); } } // Codex: pactos vistos
   if (!cx.simulating && !cx.LAB.on) { // telemetría ENCORE (datos chicos; tipos [a-z_])
@@ -243,7 +247,7 @@ export function encApply(ev: E.Ev | null) {
   if (ev === "tele_land" || ev === "tele_ready") tip("tele"); else if (ev === "pact_offer") tip("pact"); else if (ev === "vote") tip("vote");
   if (ev === "stay") cx.dropPickup(spawnPoint(cx.lead.car!.pos, 12, 25), "cofre"); // H17: cada quedarse garantiza un cofre extra
   if (ev === "overload") cx.ovT = 0; // el primer enjambre de la carga sale ya
-  if (ev === "guest") { const g = erun.guest!, c = cx.lead.car!; cx.spawnEnemy(g, spawnPoint(c.pos, 30, 36)); cx.guestE = cx.enemies[cx.enemies.length - 1]; hudBoss(DEF[g].name, 1, g); SFX.boss(); }
+  if (ev === "guest" && !cx.simulating) banner(`PELIGRO · INVITADO: ${DEF[erun.guest!].name}`, BAL.ritmo.invitado_aviso_s, { tone: "warn", tag: "DIRECTOR" }); // P9: aviso con la cola de banners; el invitado entra después
   if (pact) { say(ev); if (erun.phase === "route") say("route_offer"); } // la respuesta al trato y, enseguida, la oferta de destinos
   const z = E.zoneOf(erun);
   if (v) say("advance", z !== "luna" ? E.EARTH[z].join(". ") : `${v.name}. ${v.line}`); // Contenido 3: el escenario terrestre se presenta como escenografía
@@ -261,7 +265,7 @@ export function encSecrets() {
 /** Primera expedición del guardado (sin expediciones terminadas): sin pactos, arranque tranquilo y carta recomendada. Fuera de sim y lab. */
 export const primeraVez = () => !!erun && !cx.simulating && !cx.LAB.on && !save.encore.runs;
 /** Arranque tranquilo: true los primeros `ritmo.primera_calma_s` s de la primera expedición (el spawner de run_drive.ts debe tratarlo como `calm`). */
-export const calmFirst = () => primeraVez() && erun!.loop === 0 && erun!.stage === 0 && cx.time < BAL.ritmo.primera_calma_s;
+export const calmFirst = () => (!!erun && E.guestWaiting(erun)) || primeraVez() && erun!.loop === 0 && erun!.stage === 0 && cx.time < BAL.ritmo.primera_calma_s;
 export const encPick = (i: 0 | 1 | 2) => { if (cx.state === "play" && erun) { erun.first = primeraVez(); encApply(E.pick(erun, i)); } };
 /** R6c: online de 2 cada decisión del teleportador es un voto; con los dos votos gana el del anfitrión (J1): coincidir o empatar da lo mismo.
  *  Si el cliente no vota, decide el reloj de la ventana (encore.ts tick), como en solitario. Sin red o sin J2 decide el primero que vota. */
