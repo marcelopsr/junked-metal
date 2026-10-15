@@ -450,6 +450,17 @@ export function moonBuild(s: B.Scene, low: boolean) {
     const stone = poly("moonStone" + c, 3, 0.5, 0.32, 0.42, pbr("moonStone" + c, { color: c, rough: 0.9 })); // 0,1-0,5 m de tamaño
     thin(stone, low ? n >> 1 : n, 0.6, () => { const s = 0.2 + gr() ** 2 * 0.9; return new B.Vector3(s * (0.8 + gr() * 0.5), s * (0.6 + gr() * 0.5), s * (0.8 + gr() * 0.5)); }, 0.1);
   }
+  { // Variedad de suelo del lado iluminado: rocas oscuras (siluetas) y cráteres de sombra con degradé suave. Misma semilla gr de arriba; sin colisión (planos o muy bajos). ponytail: techo ~300 instancias; cráteres solo cerca de la salida
+    const dark = poly("moonDarkRock", 2, 0.5, 0.36, 0.45, pbr("moonDarkRock", { color: "#3a1f14", rough: 0.9 }));
+    thin(dark, low ? 60 : 130, 0.85, () => { const s = 0.5 + gr() ** 2 * 1.3; return new B.Vector3(s * (0.8 + gr() * 0.5), s * (0.6 + gr() * 0.6), s * (0.8 + gr() * 0.5)); }, 0.1);
+    const cm = (scene.getMaterialByName("moonCraterMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("moonCraterMat", scene);
+    cm.opacityTexture?.dispose(); // el material se reusa entre armados: libera el degradé anterior
+    const ct = new B.DynamicTexture("moonCraterTex", 64, scene, false), cc = ct.getContext() as unknown as CanvasRenderingContext2D, cg = cc.createRadialGradient(32, 32, 0, 32, 32, 32);
+    cg.addColorStop(0, "rgba(255,255,255,0.8)"); cg.addColorStop(0.7, "rgba(255,255,255,0.55)"); cg.addColorStop(0.88, "rgba(255,255,255,0.1)"); cg.addColorStop(1, "rgba(255,255,255,0)"); cc.fillStyle = cg; cc.fillRect(0, 0, 64, 64); ct.update(); ct.hasAlpha = true;
+    cm.opacityTexture = ct; cm.diffuseColor = new B.Color3(0.16, 0.07, 0.04); cm.specularColor = B.Color3.Black(); cm.fogEnabled = true; cm.backFaceCulling = false; cm.zOffset = -2;
+    const crater = B.MeshBuilder.CreateGround("moonCrater", { width: 2, height: 2 }, scene); crater.material = cm;
+    thin(crater, low ? 14 : 30, 1, () => { const s = 2.5 + gr() * 4; return new B.Vector3(s, 1, s * (0.7 + gr() * 0.3)); }, 0.03);
+  }
   for (const [c, n] of [["#a8954a", 70], ["#7d6b35", 55]] as const) { // mata seca: 4 hojas finas abiertas en abanico
     const mat = pbr("moonScrub" + c, { color: c, rough: 0.9 }), leaves = [0, 1, 2, 3].map((k) => { const l = poly("hoja", 1, 0.03, 0.22, 0.03, mat); l.scaling.set(1, 1, 1); l.position.set(Math.cos(k * 1.57) * 0.1, 0.2, Math.sin(k * 1.57) * 0.1); l.rotation.set(Math.sin(k * 1.57) * 0.5, 0, -Math.cos(k * 1.57) * 0.5); return l; });
     const t = B.Mesh.MergeMeshes(leaves, true, true)!; t.name = "moonScrub" + c; t.material = mat;
