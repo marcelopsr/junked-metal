@@ -46,7 +46,8 @@ export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVel
     const near = threats.map((e) => { const ex = e.x - c.pos.x, ez = e.z - c.pos.z; return { ex, ez, d: Math.hypot(ex, ez) }; }).filter((t) => t.d < 22);
     // Gemas cerca (como una persona: desvía la órbita para juntar XP); sin jefe. Vector suma pesado por cercanía
     let gx = 0, gz = 0;
-    if (!boss) for (const g of gems) { const ex = g.x - c.pos.x, ez = g.z - c.pos.z, d = Math.hypot(ex, ez); if (d > 1 && d < 30) { gx += ex / (d * d); gz += ez / (d * d); } }
+    const calm = !near.some((t) => t.d < 10); // sin bichos a menos de 10 m sale a buscar gemas lejanas (como una persona)
+    if (!boss) for (const g of gems) { const ex = g.x - c.pos.x, ez = g.z - c.pos.z, d = Math.hypot(ex, ez); if (d > 1 && d < (calm ? 60 : 30)) { gx += ex / (d * d); gz += ez / (d * d); } }
     const ben = crowd === 0 ? zi.filter((z) => !z.risk && z.active && Math.hypot(z.x - c.pos.x, z.z - c.pos.z) > z.r * 0.6).sort((a, b) => Math.hypot(a.x - c.pos.x, a.z - c.pos.z) - Math.hypot(b.x - c.pos.x, b.z - c.pos.z))[0] : undefined;
     const zb = ben ? Math.atan2(ben.x - c.pos.x, ben.z - c.pos.z) : null;
     const gem = Math.hypot(gx, gz) > 0.02 ? Math.atan2(gx, gz) : null;

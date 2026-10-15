@@ -14,7 +14,7 @@ const { values: a } = parseArgs({ options: {
   seeds: { type: "string", default: "1,2" }, secs: { type: "string", default: "600" }, duel: { type: "string" }, adds: { type: "string" }, max: { type: "string" },
   team: { type: "string" }, god: { type: "boolean" }, par: { type: "string", default: "3" }, json: { type: "boolean" }, zone: { type: "string" }, encore: { type: "boolean" }, players: { type: "string", default: "1" }, encores: { type: "string", default: "0" }, follow: { type: "boolean" }, pacts: { type: "string" }, stay: { type: "string" }, route: { type: "string" }, // --zone luna: mapa (solo dev, ?zone=)
 } });
-const seeds = a.seeds.split(",").map(Number), secs = Number(a.secs);
+const seeds = a.seeds.split(",").filter((x) => x.trim() !== "" || (console.error("sim: semilla vacía en --seeds, se omite"), false)).map(Number), secs = Number(a.secs);
 const jobs = a.encore ? a.players.split(",").flatMap((n) => seeds.map((seed) => ({ seed, players: Number(n) }))) : a.duel ? a.duel.split(",").flatMap((kind) => seeds.map((seed) => ({ kind, seed }))) : seeds.map((seed) => ({ seed }));
 
 // El juego usa Math.random en algunas cosas que sí cambian el resultado (dispersión y daño de ciertas armas: weapons.ts) además de lo visual. Se reemplaza por un
