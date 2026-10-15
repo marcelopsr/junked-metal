@@ -145,7 +145,12 @@ const templates = new Map<string, B.Mesh>();
 // solo `_isActiveIntermediate`, y desde ahí InstancedMesh._activate cree que la fuente ya está activa y no dibuja ninguna instancia
 // (en celular la ficha del muñeco, el falso y el limpiafondos quedaban solo con el carrete). Se limpian las dos marcas antes de cada cuadro.
 // ponytail: toca campos internos de Babylon 9; revisar si se actualiza el motor (o si Babylon corrige Mesh.render).
-const unstick = () => { for (const t of templates.values()) { const i = (t as unknown as { _internalAbstractMeshDataInfo: { _isActive: boolean; _isActiveIntermediate: boolean } })._internalAbstractMeshDataInfo; i._isActive = i._isActiveIntermediate = false; } };
+const extra = new Set<B.Mesh>(); // fuentes de instancias que no pasan por template() (bichos horneados a VAT en glb.ts)
+const unstick = () => { for (const t of [...templates.values(), ...extra]) { const i = (t as unknown as { _internalAbstractMeshDataInfo: { _isActive: boolean; _isActiveIntermediate: boolean } })._internalAbstractMeshDataInfo; i._isActive = i._isActiveIntermediate = false; } };
+export function unstickSource(m: B.Mesh) {
+  if (!templates.size && !extra.size) m.getScene().onBeforeRenderObservable.add(unstick);
+  extra.add(m);
+}
 export function template(name: string, build: () => B.Mesh[], scale = 1) {
   let t = templates.get(name);
   if (!t || t.isDisposed()) { // setZone libera las mallas del mundo al rearmar: una maestra destruida se reconstruye

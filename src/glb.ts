@@ -1,6 +1,6 @@
 import * as B from "@babylonjs/core";
 import { DEF, type Kind } from "./enemies";
-import { flatten, merge } from "./models";
+import { flatten, merge, unstickSource } from "./models";
 import { FOLDED_SLICE } from "./folded";
 import { PETS, PROC } from "./folded_slice";
 import { ALIEN_GLB, ALIEN_PROC } from "./aliens";
@@ -111,6 +111,7 @@ function finishVat(scene: B.Scene, kind: Kind, mesh: B.Mesh, sk: B.Skeleton, dat
   mesh.receiveShadows = true;
   mesh.position.y = -500; // la fuente queda escondida, como las plantillas de models.ts
   shadows.addShadowCaster(mesh);
+  unstickSource(mesh);
   tpls.set(kind, mesh);
 }
 
