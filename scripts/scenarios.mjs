@@ -456,6 +456,14 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
     const r = await p.evaluate(async () => (await import("/src/menu.ts")).save.libre.desafio.obs); if (!(r > 0)) throw new Error("el récord del contrarreloj no se guardó: " + r); } },
   { id: "pausa", perf: false, act: async (p) => { await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },
   { id: "pausa-noche", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:3"]', "click"); await tick(p, 4); await p.waitForTimeout(200); } },
+  // Modo foto (F desde la pausa): captura con marco de polaroid; se intercepta la descarga y se muestra el PNG en pantalla
+  { id: "polaroid", perf: false, act: async (p) => {
+    await p.evaluate(() => { window.__blobs = []; const o = URL.createObjectURL; URL.createObjectURL = (b) => (window.__blobs.push(b), o(b)); HTMLAnchorElement.prototype.click = function () {}; document.getElementById("barrio").textContent = "Skatepark"; });
+    await p.keyboard.press("KeyF"); await p.waitForTimeout(200); await p.keyboard.press("KeyC"); await tick(p, 3);
+    await wait(p, () => window.__blobs.length); await p.waitForTimeout(150);
+    await p.evaluate(async () => { const i = document.createElement("img"); i.src = URL.createObjectURL(window.__blobs[0]); i.style.cssText = "position:fixed;inset:0;margin:auto;max-width:92vw;max-height:92vh;z-index:9999;background:#000"; document.body.append(i); await i.decode(); });
+    await p.waitForTimeout(150); } },
+  { id: "polaroid-fin", perf: false, act: async (p) => { await p.evaluate(() => { document.querySelector("img[style*='9999']")?.remove(); }); await p.keyboard.press("Escape"); await p.waitForTimeout(150); } },
   { id: "salir", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:4"]', "click"); await p.dispatchEvent('[data-act="quit"]', "click"); await wait(p, () => document.querySelector("#scr-main.on")); await p.waitForTimeout(150); } },
 ] });
 
