@@ -55,3 +55,6 @@ undefined/
 .e2e/
 .shots/
 .verificar/
+
+# El enlace node_modules de los worktrees (sin barra: cubre también el symlink)
+node_modules
