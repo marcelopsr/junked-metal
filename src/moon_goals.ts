@@ -30,7 +30,7 @@ const antennaTpl = () => template("obj_antena", () => { const L = mats(); return
   sph(0.6, L.y, [0, 7.4, 0], undefined, 4), box(1.6, 0.15, 0.6, L.rust, [0.6, 2.4, 0], [0, 0, 0.5])]; });
 // Juguete de chapa pintada (ref318): huevo crema con paneles naranja, ojos de buey cian, banda luminosa, tres patas articuladas, puerta abierta con rampa y antena con bolita.
 const dim = (m: B.PBRMaterial, k: number) => { m.emissiveIntensity = k; return m; }; // pantallas y lentes: con 2 se queman a blanco
-const toy = (n: string, color: string, o: { rough?: number; metal?: number; glow?: boolean; alpha?: number } = {}) => { const m = pbr(n, { color, rough: o.rough ?? 0.55, metal: o.metal ?? 0.15, ...(o.glow ? { emissive: color } : {}), ...(o.alpha ? { alpha: o.alpha } : {}) }); if (o.glow) m.emissiveIntensity = 2; return m; };
+const toy = (n: string, color: string, o: { rough?: number; metal?: number; glow?: boolean; alpha?: number } = {}) => { const m = pbr(n, { color, rough: o.rough ?? 0.55, metal: o.metal ?? 0.15, ...(o.glow ? { emissive: color } : {}), ...(o.alpha ? { alpha: o.alpha } : {}) }); if (o.glow) { m.emissiveIntensity = 2; m.fogEnabled = false; } return m; };
 // Lascas de pintura (desgaste): cajitas finas pegadas a las aristas de la cara frontal (+z) de una caja; posiciones de un hash fijo, sin rng().
 const chips = (m: B.Material, cx: number, cy: number, cz: number, w: number, h: number, d: number, n: number, s: number) => Array.from({ length: n }, (_, i) => {
   const u = mix(s + i * 3), v = mix(s + i * 3 + 1), l = 0.14 + 0.22 * mix(s + i * 3 + 2), side = i % 2 ? 1 : -1;

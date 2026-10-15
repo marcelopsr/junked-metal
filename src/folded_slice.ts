@@ -97,7 +97,7 @@ const BUGS: Record<string, Bug> = {
 /** Plástico/metal pintado de juguete (diorama Encore, como toy() de moon_goals.ts): color liso con barniz suave, sin chapa plegada. */
 export const toy = (n: string, color: string, o: { rough?: number; metal?: number; glow?: boolean; coat?: number } = {}) => {
   const m = pbr("toy" + n, { color, rough: o.rough ?? 0.55, metal: o.metal ?? 0.15, coat: o.coat ?? 0.25, ...(o.glow ? { emissive: color } : {}) });
-  if (o.glow) m.emissiveIntensity = 2; return m;
+  if (o.glow) { m.emissiveIntensity = 2; m.fogEnabled = false; } return m; // emisivo con niebla desaparece al hornear
 };
 const CREAM = "#e8d4a8", BRONZE = "#94642c", RUSTD = "#5a2a18";
 const ell = (add: (m: B.Mesh, mat: B.Material) => B.Mesh, m: B.Material, p: V3, s: V3, seg = 8, slice = 1) => { // elipsoide (o cúpula con slice 0.5) de chapa
