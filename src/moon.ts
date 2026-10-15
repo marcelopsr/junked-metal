@@ -476,6 +476,21 @@ export function moonBuild(s: B.Scene, low: boolean) {
     thin(ant, low ? 26 : 40, 0.95, () => new B.Vector3(1, 3 + gr() * 3, 1), 0.5, 12);
     const rim = poly("moonRim", 2, 0.5, 0.3, 0.42, pbr("moonRim", { color: "#e6c9a0", rough: 0.85 }));
     thin(rim, low ? 180 : 300, 0.95, () => { const s = 0.3 + gr() * 0.6; return new B.Vector3(s * (0.8 + gr() * 0.5), s * 0.7, s * (0.8 + gr() * 0.5)); }, 0.1);
+    // Escenografía a mano junto a la salida (sin rng, sin colisión): rocas facetadas medianas, resto de cohete y torre de juguete; proyectan sombra larga y dejan libre el carril del auto (|x| ≥ 5)
+    const rkR = pbr("moonRocketR", { color: "#c4352a", rough: 0.5 }), rkW = pbr("moonRocketW", { color: "#efe8da", rough: 0.55 }), rkG = pbr("moonRocketG", { color: "#6a6f78", rough: 0.4, metal: 0.5 });
+    const dk = template("moonDecoRock", () => [poly("dr", 2, 0.55, 0.45, 0.5, pbr("moonDecoRock", { color: "#160a06", rough: 0.9 }))]);
+    const pl = template("moonDecoPale", () => [poly("dp", 2, 0.5, 0.3, 0.42, pbr("moonDecoPale", { color: "#fff0d0", rough: 0.8, emissive: "#3a3020" }))]);
+    const rocket = template("moonRocketWreck", () => [cyl(0.5, 0.5, 0.5, rkW, [0, 0.25, 0]), cyl(0.5, 0.5, 0.18, rkR, [0, 0.59, 0]), cyl(0.04, 0.5, 0.55, rkR, [0, 0.95, 0]), rbox(0.08, 0.34, 0.4, 0.02, rkR, [0.4, 0.17, 0]), rbox(0.4, 0.34, 0.08, 0.02, rkR, [0, 0.17, 0.4]), rbox(0.1, 0.34, 0.4, 0.02, rkR, [-0.4, 0.17, 0])]);
+    const tower = template("moonToyTower", () => [rbox(0.08, 1.8, 0.08, 0.02, rkG, [0.22, 0.9, 0.22]), rbox(0.08, 1.8, 0.08, 0.02, rkG, [-0.22, 0.9, 0.22]), rbox(0.08, 1.8, 0.08, 0.02, rkG, [0.22, 0.9, -0.22]), rbox(0.08, 1.8, 0.08, 0.02, rkG, [-0.22, 0.9, -0.22]), rbox(0.6, 0.06, 0.6, 0.02, rkR, [0, 0.9, 0]), rbox(0.5, 0.2, 0.5, 0.04, rkW, [0, 1.9, 0]), cyl(0.02, 0.03, 1.3, rkG, [0, 2.65, 0])]);
+    const put = (t: B.Mesh, x: number, z: number, s: number, yaw: number, up: number) => { const m = t.createInstance("deco"), d = new B.Vector3(x / MOON.R, 1, z / MOON.R).normalize(); m.isPickable = false; m.receiveShadows = true; sol(d, up, yaw, s).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position); };
+    for (const [x, z, s, y] of [[-9, 5, 2.4, 0.4], [11.5, 8, 2.8, 2], [-12.5, 14, 3, 4], [14, 20, 3.4, 1], [-17, 8, 3.2, 3], [-5, 8, 1.5, 1.3]] as const) put(dk, x, z, s, y, 0.15);
+    for (const [x, z, s, y] of [[-7.2, 4, 1.2, 1], [-10.5, 7, 0.9, 2], [9.2, 6.2, 1.2, 3], [13.4, 10, 0.9, 5], [-10.5, 13, 1.1, 0], [-14.5, 16, 0.9, 2], [12.5, 18, 1.1, 4], [-14, 5, 1, 1], [8, 11, 0.8, 2], [-3.8, 5.5, 0.7, 2], [-5.8, 6.2, 0.9, 0.5], [-2.6, 10.5, 0.6, 3]] as const) put(pl, x, z, s, y, 0.1);
+    for (const [cx, cz, r] of [[9, 14, 5.5], [-7, 6, 4.5]] as const) { // bordes de cráter iluminados: anillo de piedras pálidas con el piso interior oscuro
+      const g = B.MeshBuilder.CreateGround("decoPool", { width: 2, height: 2 }, scene), dd = new B.Vector3(cx / MOON.R, 1, cz / MOON.R).normalize(); g.material = bm; g.isPickable = false;
+      g.rotationQuaternion = B.Quaternion.FromUnitVectorsToRef(Y, dd, new B.Quaternion()); g.scaling.set(r * 0.8, 1, r * 0.6); g.position.copyFrom(dd).scaleInPlace(radiusAt(dd) + 0.05).addInPlace(CENTER);
+      for (let i = 0; i < 12; i++) { const an = i * 0.52 + cx; put(pl, cx + Math.cos(an) * r * 1.1, cz + Math.sin(an) * r * 0.8, 0.8 + (i % 3) * 0.4, i, 0.1); }
+    }
+    put(rocket, 7.6, 3.5, 1.8, 0.5, 0); put(tower, -7, 11, 1.5, 0.3, 0);
   }
   gr = grFis;
   for (const [c, n] of [["#a8954a", 70], ["#7d6b35", 55]] as const) { // mata seca: 4 hojas finas abiertas en abanico
