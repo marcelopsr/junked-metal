@@ -996,5 +996,15 @@
     {"id":"nieve","nombre":"LA PISTA NEVADA","arma1":"helado","arma2":"tesla","peso":2.5},
     {"id":"ciudad","nombre":"LA CIUDAD EN MINIATURA","arma1":"bocina","arma2":"domino","peso":2.5},
     {"id":"industrial","nombre":"EL POLÍGONO INDUSTRIAL","arma1":"bobinas","arma2":"dron","peso":2.5}
+  ],
+  "libre_medallas": [
+    {"id":"obs","bronce":80000,"plata":55000,"oro":40000},
+    {"id":"nieve","bronce":50000,"plata":32000,"oro":22000},
+    {"id":"skate","bronce":600,"plata":1500,"oro":3000},
+    {"id":"aire","bronce":1000,"plata":2000,"oro":3500},
+    {"id":"giro","bronce":180,"plata":360,"oro":720},
+    {"id":"vuelta","bronce":1,"plata":2,"oro":3},
+    {"id":"salto","bronce":500,"plata":1200,"oro":2500},
+    {"id":"combo","bronce":800,"plata":2000,"oro":4500}
   ]
 }

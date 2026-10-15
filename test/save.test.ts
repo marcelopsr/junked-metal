@@ -141,8 +141,10 @@ describe("parseSave", () => {
     expect(load({ encore: { seenPacts: "x" } }).encore.seenPacts).toEqual([]);
   });
   it("Paseo libre: un guardado viejo sin bloque libre migra a vacío; lo inválido se descarta", () => {
-    const vacio = { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false };
+    const vacio = { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, metas: [] };
     expect(load({}).libre).toEqual(vacio);
+    expect(load({ libre: { metas: ["skate_bowl", "skate_bowl", "inventada", 3] } }).libre.metas).toEqual(["skate_bowl"]); // objetivos de barrio: ids conocidos, sin repetir
+    expect(load({ libre: { metas: "skate_bowl" } }).libre.metas).toEqual([]);
     expect(load({ libre: { best: { aire: -3, giro: "x", salto: 450.5, combo: 1200 }, tuercas: "10" } }).libre).toEqual({ ...vacio, best: { ...vacio.best, combo: 1200 } });
     expect(load({ libre: { best: { vuelta: 3 }, tuercas: "1".repeat(24) } }).libre).toEqual({ ...vacio, best: { ...vacio.best, vuelta: 3 }, tuercas: "1".repeat(24) });
     expect(load({ libre: { desafio: { obs: 61234, skate: -5, nieve: "x" } } }).libre.desafio).toEqual({ obs: 61234, skate: 0, nieve: 0 }); // récords de desafíos: enteros no negativos

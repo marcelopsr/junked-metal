@@ -24,6 +24,7 @@ export const BAL = {
   pactosZonas: tab("pactos_zonas", raw.pactos_zonas),
   pactos: tab("pactos", raw.pactos),
   afinidad: tab("afinidad", raw.afinidad),
+  libreMedallas: tab("libre_medallas", raw.libre_medallas),
 };
 
 // Precio de cada nivel de una mejora (el largo es el nivel máximo): las columnas nivel1..nivel10 en 0 no existen

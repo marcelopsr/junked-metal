@@ -36,6 +36,11 @@ export const ACH = {
   babosa: { name: "Babosa a la sal", txt: "Mata 25 babosas en total. Con una pizca alcanza", scrap: BAL.ritmo.logro_gato_tornillos },
   sinfin: { name: "Sin fin, sin descanso", txt: "Sobrevive 15 minutos en el modo sin fin", scrap: BAL.ritmo.logro_gato_tornillos },
   tuercas: { name: "Ferretería completa", txt: "Junta las 24 tuercas doradas del Paseo libre. Regala la pintura Dorado tuerca" },
+  barrio_skate: { name: "Dueño del skatepark", txt: "Completa todos los objetivos del Skatepark en el Paseo libre. Regala la pintura Cian skatepark" },
+  barrio_parque: { name: "Vecino del parque", txt: "Completa todos los objetivos del Parque en el Paseo libre. Regala la pintura Verde césped" },
+  barrio_acuatico: { name: "Sin flotador", txt: "Completa todos los objetivos del Parque acuático en el Paseo libre. Regala la pintura Azul pileta" },
+  barrio_nieve: { name: "Cima y bajada", txt: "Completa todos los objetivos del Bosque nevado en el Paseo libre. Regala la pintura Blanco nevado" },
+  barrio_obstaculos: { name: "Cartón y carrera", txt: "Completa todos los objetivos del Circuito de obstáculos en el Paseo libre. Regala la pintura Naranja cono" },
   diario: { name: "Atrapado en la rutina", txt: "Gana un desafío diario", scrap: BAL.ritmo.logro_diario_tornillos },
 } as const satisfies Record<string, { name: string; txt: string; reward?: string; scrap?: number }>;
 export type AchId = keyof typeof ACH;

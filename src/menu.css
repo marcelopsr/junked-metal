@@ -873,10 +873,21 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tSpin, #tPause, #t
 /* Paseo libre: selector de auto y luz del día en la pausa (kit.css pisa los botones; ids para ganar) */
 #scr-libre .list > .foot { grid-column: 1 / -1; text-align: center; margin: 0; }
 #scr-pause .libreKit { display: none; flex-direction: column; align-items: center; gap: 8px; }
-#scr-pause.libre .libreKit { display: flex; }
-#libreRec { display: flex; flex-direction: column; gap: 4px; width: 100%; }
-#libreRec .rec { display: flex; justify-content: space-between; gap: 16px; padding: 4px 10px; background: #1a1d22; border-left: 3px solid var(--jm-rojo); font-family: "Bebas Neue", sans-serif; letter-spacing: .06em; font-size: 16px; }
-#libreRec .rec b { font-weight: 400; color: #ffc21a; }
+#scr-pause.libre .libreKit { display: flex; max-height: calc(100dvh - 230px); overflow-y: auto; padding-right: 6px; } /* con récords y objetivos no entra en pantalla: se desplaza y los botones quedan a la vista */
+@media (max-width: 700px) { #scr-pause.libre .libreKit { max-height: calc(100dvh - 330px); } }
+#libreRec, #libreTrucos, #libreMetas { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+#libreMetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px 10px; align-items: start; }
+#libreTrucosD summary { list-style: none; text-align: center; } #libreTrucosD[open] #libreTrucos { margin-top: 4px; }
+#libreMetas .metaB { display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; }
+#libreMetas .meta { text-align: left; display: flex; align-items: center; gap: 8px; padding: 2px 10px 2px 14px; font-size: 14px; color: #aab0ba; }
+#libreMetas .meta i { flex: none; width: 14px; height: 14px; border: 2px solid #5a606b; position: relative; }
+#libreMetas .meta.ok { color: #fff; }
+#libreMetas .meta.ok i { border-color: #ffc21a; background: #ffc21a; }
+#libreMetas .meta.ok i::after { content: ""; position: absolute; left: 3px; top: 0; width: 4px; height: 8px; border: solid #1a1d22; border-width: 0 2px 2px 0; rotate: 40deg; }
+.med { font-style: normal; margin-right: 8px; padding: 0 6px; font-size: 13px; color: #1a1d22; border-radius: 2px; }
+.med.m1 { background: #cd7f32; } .med.m2 { background: #c0c8d4; } .med.m3 { background: #ffc21a; }
+#libreRec .rec, #libreTrucos .rec, #libreMetas .rec { display: flex; justify-content: space-between; gap: 16px; padding: 4px 10px; background: #1a1d22; border-left: 3px solid var(--jm-rojo); font-family: "Bebas Neue", sans-serif; letter-spacing: .06em; font-size: 16px; }
+#libreRec .rec b, #libreTrucos .rec b, #libreMetas .rec b { font-weight: 400; color: #ffc21a; }
 #scr-pause.libre .kit4 { display: none; }
 #libreLuz { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 #libreLuz button { min-height: 44px; padding: 0 14px; }
