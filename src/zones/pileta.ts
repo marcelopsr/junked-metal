@@ -73,6 +73,7 @@ function beachToys() {
   const towel = canvasTex(128, (c, s) => { c.fillStyle = "#e8d8b4"; c.fillRect(0, 0, s, s); for (let i = 0; i < 4; i++) { c.fillStyle = i % 2 ? "#3a1d14" : "#1b2a4a"; c.fillRect(0, i * s / 4 + 4, s, s / 8); } });
   const tm = pbr("toallaPileta", { color: "#ffffff", rough: 0.95, tex: towel });
   decal("toalla1", 9, 6, 7, -12, tm, 0.03); decal("toalla2", 9, 6, -8, -30, tm, 0.03); decal("toalla3", 9, 6, 8, -34, tm, 0.03);
+  decal("toalla4", 8, 5.5, -2, 8, tm, 0.03); // tercio inferior del cuadro vertical (detrás del auto): el piso era un solo tono
   merge("juguetesPileta", parts).receiveShadows = true;
 }
 

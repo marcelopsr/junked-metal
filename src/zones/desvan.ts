@@ -26,6 +26,12 @@ function atticContrast() {
   if (ink.albedoTexture !== t) t.dispose(); // material cacheado: la textura nueva sobra
   ink.useAlphaFromAlbedoTexture = true; ink.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
   for (let i = 0; i < 38; i++) { const a = o() * 6.283, d = 5 + o() * 36, w = 7 + o() * 11; decal("desvanMan" + i, w, w * (0.6 + o() * 0.4), Math.cos(a) * d, Math.sin(a) * d, ink, 0.07 + i * 0.001).isPickable = false; }
+  { // Rayos de luz de ventana sobre el piso (aditivos, degradé): claros junto al auto para el cuadro vertical del celular
+    const lt = new B.DynamicTexture("desvanLuzTex", 64, scene, true), lc = lt.getContext() as unknown as CanvasRenderingContext2D, lg = lc.createRadialGradient(32, 32, 0, 32, 32, 32);
+    lg.addColorStop(0, "rgba(255,255,255,1)"); lg.addColorStop(0.6, "rgba(255,255,255,0.7)"); lg.addColorStop(1, "rgba(255,255,255,0)"); lc.fillStyle = lg; lc.fillRect(0, 0, 64, 64); lt.update(); lt.hasAlpha = true;
+    const lm = new B.StandardMaterial("desvanLuz" + scene.uniqueId, scene); lm.opacityTexture = lt; lm.disableLighting = true; lm.emissiveColor = new B.Color3(0.75, 0.55, 0.3); lm.diffuseColor = B.Color3.Black(); lm.specularColor = B.Color3.Black(); lm.alphaMode = B.Engine.ALPHA_ADD; lm.backFaceCulling = false;
+    decal("desvanLuz1", 16, 9, 2, -7, lm, 0.12).isPickable = false; decal("desvanLuz2", 16, 9, -3, 6, lm, 0.12).isPickable = false;
+  }
   // Cinta de enmascarar crema (dos rectas y una cruz junto a la salida) y círculos de tiza: marcas planas, el piso sigue libre
   const tape = M.matte("#F1E6C8"), blue = M.matte("#42A5F5"), parts: B.Mesh[] = [];
   for (const x of [-9, 9]) for (let z = -70; z < 48; z += 6) parts.push(box(1.4, 0.08, 6, ((z + 70) / 6 | 0) % 2 ? M.matte("#17181c") : tape, [x, 0.1, z + 3]));
