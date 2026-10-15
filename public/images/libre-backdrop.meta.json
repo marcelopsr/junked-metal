@@ -1,0 +1,13 @@
+{
+  "source": "capataz-imagegen",
+  "model": "gemini-3.1-flash-image",
+  "provider": "gemini",
+  "job": "assets-src/imagegen-production/encore-v1/jobs/ui-libre-barrio.json",
+  "prompt": "Huge toy neighborhood seen from high above at dusk: miniature houses, streets with tiny RC car tire marks, a small skatepark, a park with trees, a swimming pool, a snowy corner, scattered toy obstacles and ramps. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+  "negative": "no text, letters, logos, watermark, people (en el prompt)",
+  "width": 1024,
+  "height": 512,
+  "date": "2026-10-15T12:06:55.399Z",
+  "raw_output": "assets-src/imagegen-production/encore-v1/raw/ui-libre-barrio.png",
+  "final_output": "public/images/libre-backdrop.webp"
+}

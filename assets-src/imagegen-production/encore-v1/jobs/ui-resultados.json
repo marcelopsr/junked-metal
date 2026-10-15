@@ -1,0 +1,21 @@
+{
+  "id": "ui-resultados",
+  "name": "ui-resultados",
+  "category": "ui-backdrops",
+  "state": "imagegen-generated",
+  "prompt": "Battered toy RC car parked on a workbench under a warm lamp after a battle, scattered bent bolts, a small scrap-metal trophy cup, smoke wisps, dark moody pegboard background with only tools. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. Absolutely no text, no signs, no photos, no posters, no letters, no logos, no watermark, no people.",
+  "tool_arguments": {
+    "prompt": "Battered toy RC car parked on a workbench under a warm lamp after a battle, scattered bent bolts, a small scrap-metal trophy cup, smoke wisps, dark moody pegboard background with only tools. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. Absolutely no text, no signs, no photos, no posters, no letters, no logos, no watermark, no people.",
+    "transparent_background": false
+  },
+  "size": "1024x512",
+  "fit": "cover",
+  "output": "raw/ui-resultados.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 12071,
+    "at": "2026-10-15T12:07:24.084Z"
+  }
+}

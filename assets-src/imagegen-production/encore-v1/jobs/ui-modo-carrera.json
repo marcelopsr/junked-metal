@@ -1,0 +1,21 @@
+{
+  "id": "ui-modo-carrera",
+  "name": "ui-modo-carrera",
+  "category": "ui-backdrops",
+  "state": "imagegen-generated",
+  "prompt": "Toy RC kart race on a miniature circuit drawn on a backyard patio, several colorful toy RC cars drifting around a cone corner, checkered flags made of scrap. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+  "tool_arguments": {
+    "prompt": "Toy RC kart race on a miniature circuit drawn on a backyard patio, several colorful toy RC cars drifting around a cone corner, checkered flags made of scrap. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+    "transparent_background": false
+  },
+  "size": "1024x512",
+  "fit": "cover",
+  "output": "raw/ui-modo-carrera.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 12144,
+    "at": "2026-10-15T12:06:55.606Z"
+  }
+}

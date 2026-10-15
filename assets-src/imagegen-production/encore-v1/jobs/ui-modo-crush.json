@@ -1,0 +1,21 @@
+{
+  "id": "ui-modo-crush",
+  "name": "ui-modo-crush",
+  "category": "ui-backdrops",
+  "state": "imagegen-generated",
+  "prompt": "Glowing retro arcade cabinet made of scrap metal in a cluttered workshop, screen filled with colorful toy machine parts like bolts, gears and springs in a grid. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+  "tool_arguments": {
+    "prompt": "Glowing retro arcade cabinet made of scrap metal in a cluttered workshop, screen filled with colorful toy machine parts like bolts, gears and springs in a grid. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+    "transparent_background": false
+  },
+  "size": "1024x512",
+  "fit": "cover",
+  "output": "raw/ui-modo-crush.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 11343,
+    "at": "2026-10-15T12:06:54.749Z"
+  }
+}

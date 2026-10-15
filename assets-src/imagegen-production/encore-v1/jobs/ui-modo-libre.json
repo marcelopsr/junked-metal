@@ -1,0 +1,21 @@
+{
+  "id": "ui-modo-libre",
+  "name": "ui-modo-libre",
+  "category": "ui-backdrops",
+  "state": "imagegen-generated",
+  "prompt": "Single toy RC car jumping off a small wooden ramp in a sunny miniature toy neighborhood street, relaxed mood. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+  "tool_arguments": {
+    "prompt": "Single toy RC car jumping off a small wooden ramp in a sunny miniature toy neighborhood street, relaxed mood. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+    "transparent_background": false
+  },
+  "size": "1024x512",
+  "fit": "cover",
+  "output": "raw/ui-modo-libre.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 12201,
+    "at": "2026-10-15T12:06:55.609Z"
+  }
+}

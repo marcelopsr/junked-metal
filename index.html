@@ -233,6 +233,7 @@
 
     <section id="scr-libre" class="scr">
       <div class="otitle">Paseo libre</div>
+      <div class="libre-banner jm-panel"><img src="./images/libre-backdrop.webp" alt="Barrio de juguete visto desde arriba" width="1024" height="512" loading="lazy" decoding="async" /></div>
       <div class="foot">Un mapa grande para recorrer sin enemigos ni reloj. Todos los autos están disponibles.</div>
       <nav class="list">
         <button data-act="lcar" id="libreCarBtn"><span class="bt"></span></button>
@@ -245,10 +246,10 @@
     <section id="scr-modes" class="scr">
       <div class="otitle">Más modos</div>
       <nav class="list modeList">
-        <button data-act="playmenu"><span class="mtx"><b>Supervivencia</b><small>Diez minutos contra la plaga: esquivar, mejorar el auto y llegar al final.</small></span></button>
-        <button data-go="race"><span class="mtx"><b>Carrera</b><small>Circuito en el patio contra 10 corredores, con objetos, derrape y mini-turbo.</small><small class="mprog" id="progRace"></small></span></button>
-        <button data-go="match3"><span class="mtx"><b>Junket Crush</b><small>Gabinete arcade en el taller: intercambiar piezas de chatarra y completar el pedido.</small><small class="mprog" id="progM3"></small></span></button>
-        <button data-go="libre" id="libreBtn"><span class="mtx"><b>Paseo libre</b><small>Un barrio enorme para manejar sin enemigos ni reloj: skatepark, parque, pileta, nieve y obstáculos.</small></span></button>
+        <button data-act="playmenu" style="--mimg: url(./images/modes/supervivencia.webp)"><span class="mtx"><b>Supervivencia</b><small>Diez minutos contra la plaga: esquivar, mejorar el auto y llegar al final.</small></span></button>
+        <button data-go="race" style="--mimg: url(./images/modes/carrera.webp)"><span class="mtx"><b>Carrera</b><small>Circuito en el patio contra 10 corredores, con objetos, derrape y mini-turbo.</small><small class="mprog" id="progRace"></small></span></button>
+        <button data-go="match3" style="--mimg: url(./images/modes/crush.webp)"><span class="mtx"><b>Junket Crush</b><small>Gabinete arcade en el taller: intercambiar piezas de chatarra y completar el pedido.</small><small class="mprog" id="progM3"></small></span></button>
+        <button data-go="libre" id="libreBtn" style="--mimg: url(./images/modes/libre.webp)"><span class="mtx"><b>Paseo libre</b><small>Un barrio enorme para manejar sin enemigos ni reloj: skatepark, parque, pileta, nieve y obstáculos.</small></span></button>
         <button data-act="back">Volver</button>
       </nav>
     </section>

@@ -279,7 +279,7 @@ body.calm .bindnote, body.calm .stamp, body.calm .offer .art svg, body.calm #bms
 .scr.side.editing > #cars { width: min(520px, 94vw); max-height: none; overflow: visible; }
 
 /* Banner cinemático de Taller, Garaje y Chatarroteca (ComfyUI SDXL Base 1.0) */
-.garage-banner, .shop-banner, .bestiary-banner {
+.garage-banner, .shop-banner, .bestiary-banner, .libre-banner {
   width: 100%;
   border: 2px solid var(--jm-chapa, #3b424b);
   background: var(--jm-fondo, #0b0f14);
@@ -289,7 +289,7 @@ body.calm .bindnote, body.calm .stamp, body.calm .offer .art svg, body.calm #bms
   position: relative;
   flex: none;
 }
-.garage-banner img, .shop-banner img, .bestiary-banner img {
+.garage-banner img, .shop-banner img, .bestiary-banner img, .libre-banner img {
   display: block;
   width: 100%;
   object-fit: cover;
@@ -325,7 +325,10 @@ body.calm .bindnote, body.calm .stamp, body.calm .offer .art svg, body.calm #bms
   gap: 6px;
   padding-top: 6px;
 }
+.libre-banner { max-width: min(520px, 92vw); height: 150px; margin: 0 auto; }
+.libre-banner img { height: 150px; object-position: center 40%; }
 @media (max-width: 640px) {
+  .libre-banner, .libre-banner img { height: 120px; }
   .garage-banner { height: 48px; }
   .garage-banner img { height: 48px; }
   .shop-banner { height: 56px; }
@@ -334,7 +337,7 @@ body.calm .bindnote, body.calm .stamp, body.calm .offer .art svg, body.calm #bms
   .bestiary-banner img { height: 60px; }
 }
 @media (max-height: 500px) {
-  .garage-banner, .shop-banner, .bestiary-banner { display: none; }
+  .garage-banner, .shop-banner, .bestiary-banner, .libre-banner { display: none; }
 }
 
 /* Taller y bestiario: fichas .carc */
@@ -567,6 +570,12 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .modeList button:focus .mtx small { color: #3a2a1c; }
 .modeList button:has(> .mtx) { align-items: flex-start; }
 .modeList button:has(> .mtx) > .jm-ico { margin-top: 1px; }
+/* Ilustración tenue por modo (Gemini, public/images/modes/): a la derecha, fundida hacia el texto; isolation la deja sobre el fondo del botón y debajo del texto */
+.modeList button:has(> .mtx) { isolation: isolate; overflow: hidden; }
+.modeList button:has(> .mtx)::after { content: ""; position: absolute; inset: 0 0 0 30%; z-index: -1; pointer-events: none; background: var(--mimg) center / cover no-repeat; opacity: .42; -webkit-mask-image: linear-gradient(90deg, transparent, #000 75%); mask-image: linear-gradient(90deg, transparent, #000 75%); transition: opacity .18s; }
+.modeList button:has(> .mtx):focus::after { opacity: .2; }
+.modeList .mtx b, .modeList .mtx small { text-shadow: 0 1px 2px rgba(0, 0, 0, .85); }
+.modeList button:focus .mtx b, .modeList button:focus .mtx small { text-shadow: none; }
 #scr-play .list, #scr-daily .list { width: min(460px, 92vw); }
 #scr-play > .foot { max-width: min(460px, 92vw); text-align: center; }
 /* Ficha de largada (Supervivencia y Desafío diario) */

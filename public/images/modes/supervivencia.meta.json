@@ -1,0 +1,13 @@
+{
+  "source": "capataz-imagegen",
+  "model": "gemini-3.1-flash-image",
+  "provider": "gemini",
+  "job": "assets-src/imagegen-production/encore-v1/jobs/ui-modo-supervivencia.json",
+  "prompt": "A scrappy toy RC buggy surrounded by a swarm of toy insect robots in a backyard at night, sparks flying, headlight beam. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+  "negative": "no text, letters, logos, watermark, people (en el prompt)",
+  "width": 640,
+  "height": 320,
+  "date": "2026-10-15T12:06:55.935Z",
+  "raw_output": "assets-src/imagegen-production/encore-v1/raw/ui-modo-supervivencia.png",
+  "final_output": "public/images/modes/supervivencia.webp"
+}

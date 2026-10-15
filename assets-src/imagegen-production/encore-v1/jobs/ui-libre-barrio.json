@@ -1,0 +1,21 @@
+{
+  "id": "ui-libre-barrio",
+  "name": "ui-libre-barrio",
+  "category": "ui-backdrops",
+  "state": "imagegen-generated",
+  "prompt": "Huge toy neighborhood seen from high above at dusk: miniature houses, streets with tiny RC car tire marks, a small skatepark, a park with trees, a swimming pool, a snowy corner, scattered toy obstacles and ramps. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+  "tool_arguments": {
+    "prompt": "Huge toy neighborhood seen from high above at dusk: miniature houses, streets with tiny RC car tire marks, a small skatepark, a park with trees, a swimming pool, a snowy corner, scattered toy obstacles and ramps. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+    "transparent_background": false
+  },
+  "size": "1024x512",
+  "fit": "cover",
+  "output": "raw/ui-libre-barrio.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 11926,
+    "at": "2026-10-15T12:06:55.399Z"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "source": "capataz-imagegen",
+  "model": "gemini-3.1-flash-image",
+  "provider": "gemini",
+  "job": "assets-src/imagegen-production/encore-v1/jobs/ui-modo-libre.json",
+  "prompt": "Single toy RC car jumping off a small wooden ramp in a sunny miniature toy neighborhood street, relaxed mood. Handcrafted miniature toy diorama, warm tungsten light, junked metal salvage aesthetic, tactile painted toy materials, chipped paint, rivets, cinematic, wide panoramic composition. No text, no letters, no logos, no watermark, no people.",
+  "negative": "no text, letters, logos, watermark, people (en el prompt)",
+  "width": 640,
+  "height": 320,
+  "date": "2026-10-15T12:06:55.609Z",
+  "raw_output": "assets-src/imagegen-production/encore-v1/raw/ui-modo-libre.png",
+  "final_output": "public/images/modes/libre.webp"
+}
