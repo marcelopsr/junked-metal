@@ -89,6 +89,9 @@ export const save: Save = parseSave((() => { try { return localStorage.getItem("
 // ponytail: por ahora autos y zonas vienen liberados (y pilotos y piezas en owns, 2000 tornillos en DEFAULT); borrar estas líneas cuando vuelvan a comprarse
 for (const k of Object.keys(CARS) as CarKind[]) if (!save.cars.includes(k)) save.cars.push(k);
 for (const k of Object.keys(ZONES)) if (!save.unlocked.includes("zone:" + k)) save.unlocked.push("zone:" + k);
+// ponytail: PRUEBAS libera todo para probar sin jugar (armas, habilidades, menús completos, tornillos de sobra); poner en false al cerrar la etapa de pruebas
+export const PRUEBAS = true;
+if (PRUEBAS) { if (save.scrap < 99999) save.scrap = 99999; for (const k of Object.keys(ABILITIES) as AbilityId[]) if (!save.abilLv[k]) save.abilLv[k] = 1; }
 // Instalación nueva: "Reducir parpadeos" parte activado si el sistema pide menos movimiento (quien ya tiene guardado conserva su elección)
 try { if (localStorage.getItem("rcfight2") === null) save.calm = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { /* sin almacenamiento */ }
 // Solo en la Mac del autor (localhost): ?tornillos=N fija los tornillos del guardado y se limpia de la dirección. La versión publicada no lo atiende.
@@ -492,7 +495,7 @@ function renderMain() {
   const b = save.daily.day === today() ? save.daily.best : 0;
   $("dailyRec").textContent = b ? fmt(b) : ""; // el texto va en <span>/<small>: tocar el botón entero borraría su ícono
   if (save.endless) $("mainInfo").textContent += ` · sin fin +${fmt(save.endless)}`;
-  const nuevo = !save.encore.runs; // hasta terminar la primera expedición, Jugar es lo único que compite en el menú
+  const nuevo = !save.encore.runs && !PRUEBAS; // hasta terminar la primera expedición, Jugar es lo único que compite en el menú
   for (const id of ["dailyBtn", "weeklyBtn"]) $(id).classList.toggle("hidden", nuevo);
   document.querySelector<HTMLElement>('#scr-main [data-go="modes"]')!.classList.toggle("hidden", nuevo);
 }
@@ -601,7 +604,7 @@ function owns(id: string) {
   if (t === "car") return save.cars.includes(k as CarKind);
   if (t === "zone") return k in ZONES && (!ZONES[k as ZoneId].cost || save.unlocked.includes(id));
   if (t === "pilot") return k in PILOTS; // ponytail: pilotos liberados para la prueba con amigos; antes: logro o compra
-  if (t === "arma") return k === "gomitas" || save.unlocked.includes(id);
+  if (t === "arma") return PRUEBAS || k === "gomitas" || save.unlocked.includes(id);
   if (t === "paint") return true;
   return o in (opts(k as Slot) ?? {}); // ponytail: piezas liberadas para la prueba con amigos; antes: gratis o compradas
 }
