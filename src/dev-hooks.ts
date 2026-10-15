@@ -7,6 +7,9 @@ import type { AbilityId } from "./abilities";
 import type { ShipId } from "./moon_ships";
 import { shipsClear, shipSpawn } from "./moon_ships";
 import * as E from "./encore";
+import { zonaEn } from "./pact_zones";
+// __encBot: curación por camerino, tornillos extra del imán y hit-stop al inicio de la expedición medida
+const encMeter = { heal: 0, iman: 0, hs0: 0 };
 import { lunaDev } from "./moon_events";
 import { skyLaunch, skyInfo } from "./moon_sky";
 import { deform, alt, upAt, flatL, ringAt, rel, toLocal, onFloor, at, skyVisible } from "./moon";
@@ -302,6 +305,7 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
           ctx.encLog.length = 0;
           ctx.startRun();
           ctx.encLog.push({ loop: 0, stage: 0, t: 0 });
+          encMeter.heal = encMeter.iman = 0; encMeter.hs0 = (globalThis as any).__hs?.n ?? 0;
         }
         ctx.setSimulating(true);
         m.resetBot();
@@ -321,7 +325,11 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
               pick(o.route === "rand" ? (Math.random() < 0.5 ? 0 : 1) : 0);
             } else if (r.phase === "vote") pick(r.loop < (o.encores ?? 0) ? 0 : 1);
           }
+          // ponytail: medición aproximada desde afuera (zona bajo el auto al empezar el paso); techo: contadores dentro de encore_run.ts
+          const car = ctx.lead.car, zf = car && ctx.state === "play" ? zonaEn(car.pos.x, car.pos.z) : null, hp0 = ctx.lead.hp, sc0 = ctx.runScrap;
           botStep(m, 1 / 60, ctx);
+          if (zf?.regen) encMeter.heal += Math.max(0, Math.min(zf.regen / 60, ctx.lead.hp - hp0));
+          if (zf && zf.scrapMul > 1) encMeter.iman += Math.max(0, ctx.runScrap - sc0) * (zf.scrapMul - 1);
           if (o.follow && ++n % 45 === 0) for (const t of ctx.liveM()) ctx.matePlace(t);
           const l = ctx.encLog[ctx.encLog.length - 1];
           if (ctx.erun && (ctx.erun.loop !== l.loop || ctx.erun.stage !== l.stage)) ctx.encLog.push({ loop: ctx.erun.loop, stage: ctx.erun.stage, t: +(ctx.time + ctx.encPrior).toFixed(1) });
@@ -345,6 +353,12 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
           weapons: ctx.weapons.map((w) => w.id + (w.evolved ? "★" : w.lv)),
           cause: ctx.state === "over" ? ctx.$("overTxt").textContent : "",
           real: +((performance.now() - w0) / 1000).toFixed(1),
+          pacts: r?.taken ?? [],
+          camerinoHeal: Math.round(encMeter.heal),
+          imanScrap: Math.round(encMeter.iman),
+          cablesDmg: Math.round(ctx.dmgBy["zona cables"] ?? 0),
+          // hit-stop no corre en sim (combat.ts hitstop: `if (c.simulating) return` antes de contar): siempre 0 acá
+          hitstopPerMin: +((((globalThis as any).__hs?.n ?? 0) - encMeter.hs0) / Math.max(1 / 60, (ctx.time + ctx.encPrior) / 60)).toFixed(1),
         };
       },
       __play: (seed = 1) => {

@@ -66,12 +66,13 @@ describe("zonas de pacto", () => {
 
   it("efectos: cada zona suma lo suyo y las superpuestas se combinan", () => {
     const z = (id: string) => [{ id, x: 0, z: 0, r: 5 }];
-    expect(Z.zonaFx(z("cables"), 0, 0).dps).toBe(8);
-    expect(Z.zonaFx(z("pegamento"), 1, 1).speedMul).toBe(0.6);
-    expect(Z.zonaFx(z("foco"), 0, 0).xpMul).toBe(2);
-    expect(Z.zonaFx(z("iman"), 0, 0)).toMatchObject({ magnetMul: 3, scrapMul: BAL.ritmo.zona_iman_tornillos });
+    const PZ = BAL.pactosZonas;
+    expect(Z.zonaFx(z("cables"), 0, 0).dps).toBe(PZ.cables.valor);
+    expect(Z.zonaFx(z("pegamento"), 1, 1).speedMul).toBe(PZ.pegamento.valor);
+    expect(Z.zonaFx(z("foco"), 0, 0).xpMul).toBe(PZ.foco.valor);
+    expect(Z.zonaFx(z("iman"), 0, 0)).toMatchObject({ magnetMul: PZ.iman.valor, scrapMul: BAL.ritmo.zona_iman_tornillos });
     expect(Z.zonaFx(z("cables"), 9, 0)).toEqual(Z.NO_ZONE);
-    expect(Z.zonaFx([...z("cables"), ...z("cables")], 0, 0).dps).toBe(16);
+    expect(Z.zonaFx([...z("cables"), ...z("cables")], 0, 0).dps).toBe(2 * PZ.cables.valor);
   });
 
   it("la trampilla escupe bichos cada trampilla_cada_s mientras está abierta y no más", () => {

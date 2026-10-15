@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { BAL } from "../../src/balance";
 import { activePacts, ask, ENC, fxText, NO_FX, newRun, pactFx, pactOffer, pactOf, PACTS, pick, tag, Run, SECRETS, until, adv, toDecision } from "./_fixtures";
 
 describe("pactos del Director", () => {
@@ -91,15 +92,18 @@ describe("pactos del Director", () => {
     expect(pactFx(newRun(1))).toEqual(NO_FX);
     const r = newRun(1); r.pacts = [{ id: "garantia", left: Infinity }, { id: "nocturno", left: 1 }, { id: "sorpresa", left: 2 }, { id: "chatarra", left: Infinity }];
     const f = pactFx(r);
-    expect(f.dmg).toBeCloseTo(1.35); expect(f.maxHp).toBeCloseTo(0.7); expect(f.regen).toBe(2); expect(f.xp).toBeCloseTo(1.5); expect(f.scrap).toBeCloseTo(1.5);
-    expect(f.spawn).toBeCloseTo(1.4 * 1.3 * 1.25);
+    const g = (ids: string[], k: string) => ids.reduce((m, id) => m * (BAL.pactos as any)[id][`g_${k}`] * (BAL.pactos as any)[id][`c_${k}`], 1);
+    const ids = ["garantia", "nocturno", "sorpresa", "chatarra"];
+    for (const k of ["dmg", "maxHp", "xp", "scrap", "spawn"] as const) expect(f[k]).toBeCloseTo(g(ids, k));
+    expect(f.regen).toBe(ids.reduce((s, id) => s + (BAL.pactos as any)[id].g_regen + (BAL.pactos as any)[id].c_regen, 0));
   });
 
   it("pactos nuevos: COBRO, BIS y PERMANENCIA combinan sus efectos", () => {
-    const r = newRun(1); r.pacts = ["cobro", "bis", "permanencia"].map((id) => ({ id, left: 2 }));
-    const f = pactFx(r);
-    expect(f.scrap).toBeCloseTo(1.6 * 0.85); expect(f.xp).toBeCloseTo(0.75 * 1.25); expect(f.dmg).toBeCloseTo(1.25); expect(f.spawn).toBeCloseTo(1.35);
-    expect(f.regen).toBe(1); expect(f.maxHp).toBeCloseTo(1.2); expect(f.taken).toBeCloseTo(1.2);
+    const ids = ["cobro", "bis", "permanencia"];
+    const r = newRun(1); r.pacts = ids.map((id) => ({ id, left: 2 }));
+    const f = pactFx(r), P = BAL.pactos as any;
+    for (const k of ["dmg", "maxHp", "xp", "scrap", "spawn", "taken"] as const) expect(f[k]).toBeCloseTo(ids.reduce((m, id) => m * P[id][`g_${k}`] * P[id][`c_${k}`], 1));
+    expect(f.regen).toBe(ids.reduce((s, id) => s + P[id].g_regen + P[id].c_regen, 0));
   });
 
   it("cada pacto tiene ventaja y costo reales, y el texto sale de los números aplicados", () => {

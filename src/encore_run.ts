@@ -59,7 +59,7 @@ function zonesStep() {
   const p = cx.lead.car.pos, t = zonesTick(dt, p);
   const k = [t.regen, t.speedMul, t.xpMul, t.scrapMul, t.magnetMul].join(); // ponytail: sin histéresis; pisar el borde repite recompute (barato, pero no por cuadro)
   if (k !== zKey) { zKey = k; zfx = t; cx.recompute(); }
-  if (t.dps && dt) cx.hurt?.(t.dps * dt, true, "cables");
+  if (t.dps && dt) cx.hurt?.(t.dps * dt, true, "zona cables");
   if (!cx.simulating) for (const s of t.sparks) sparks(zpt(s.x, s.z, 0.3), 3);
   if (t.spawns.length) for (const s of t.spawns) for (let i = 0; i < s.n; i++) {
     const a = (i / s.n) * Math.PI * 2;
