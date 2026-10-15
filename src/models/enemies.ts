@@ -395,28 +395,37 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
       ];
     }
     // Comunes de ritmo medio: juguetes de chatarra de colores vivos (ver docs/ART_DIRECTION.md); frente = +Z
-    if (kind === "kamikaze") { // bomba de caricatura con patas de resorte y mecha encendida
-      const body = worn("#b4401e"), band = M.matte("#2b2220"), fuse = M.glow("#ffd24a"), amber = amberEye(), cream = worn("#d8c49a");
-      return [
-        sph(0.9, body, [0, 0.55, 0], [1, 0.95, 1.1], 10), tor(0.95, 0.08, band, [0, 0.55, 0], [Math.PI / 2, 0, 0], 12),
-        ...plates([0, 0.55, 0], [0.45, 0.43, 0.5], [[1.2, 0.55], [-1.2, 0.55], [0.4, 1.0], [-0.5, 0.95], [2.6, 0.5], [-2.6, 0.5], [3.14, 0.9], [1.0, -0.55], [-1.0, -0.55], [0, -0.75]], [cream, body], 0.22, 0.18), // parches crema y placas (ref283)
+    if (kind === "kamikaze") { // ref283: bomba roja con banda gris ancha y ojos crema de pupila vertical, patas de resorte con pies de bloque, mecha de cuerda con chispa
+      const body = worn("#b4401e"), band = worn("#4a4644"), fuse = M.glow("#ffd24a"), cream = worn("#d8c49a"), eyeW = pbr("ojoCrema", { color: "#e8dcc0", rough: 0.4, metal: 0 }), dark = M.matte("#141010"), rope = M.matte("#9c8056"), coil = M.metal("#4a4038"), bronze = worn("#a8803c");
+      const bw = cyl(0.92, 0.92, 0.26, band, [0, 0.66, 0], undefined, 10); bw.scaling.z = 1.1; // banda ecuatorial ancha
+      const top = [
+        sph(0.9, body, [0, 0.55, 0], [1, 0.95, 1.1], 10), bw,
+        ...plates([0, 0.55, 0], [0.45, 0.43, 0.5], [[1.2, 0.55], [-1.2, 0.55], [0.4, 1.0], [-0.5, 0.95], [2.6, 0.5], [-2.6, 0.5], [3.14, 0.9], [1.0, -0.6], [-1.0, -0.6], [0, -0.8]], [cream, body], 0.22, 0.18), // parches crema y placas
         ...rivets([0, 0.94, 0.12], 0.2, 0.14, "y", 0.035),
-        cyl(0.18, 0.22, 0.2, band, [0, 1.04, -0.05], undefined, 8), tube([[0, 1.1, -0.05], [0.12, 1.35, -0.12], [0.02, 1.55, -0.05]], 0.03, band), sph(0.2, fuse, [0.02, 1.58, -0.05], undefined, 5),
-        sph(0.2, amber, [0.22, 0.7, 0.5], undefined, 5), sph(0.2, amber, [-0.22, 0.7, 0.5], undefined, 5), ...rivets([0, 0.36, 0.46], 0.25, 0.08, "z", 0.04),
-        sph(0.09, band, [0.22, 0.7, 0.62], undefined, 4), sph(0.09, band, [-0.22, 0.7, 0.62], undefined, 4),
-        ...[-1, 1].map((x) => tube([[x * 0.3, 0.2, 0.1], [x * 0.38, 0.1, 0.25], [x * 0.3, 0, 0.4]], 0.06, band)),
+        ...[0.95, -0.95, 2.3, -2.3].map((az) => sph(0.07, rivMat(), [0.465 * Math.sin(az), 0.66, 0.51 * Math.cos(az)], undefined, 4)), // remaches de la banda
+        cyl(0.2, 0.24, 0.2, bronze, [0, 1.04, -0.05], undefined, 6), tube([[0, 1.08, -0.05], [0.0, 1.35, -0.05], [0.08, 1.52, -0.05], [0.28, 1.6, -0.05], [0.46, 1.52, -0.05]], 0.06, rope), sph(0.2, fuse, [0.48, 1.52, -0.05], undefined, 5), sph(0.09, fuse, [0.58, 1.62, -0.05], undefined, 4), // mecha de cuerda con chispa
+        ...[-1, 1].flatMap((x) => [tor(0.36, 0.05, bronze, [x * 0.2, 0.68, 0.45]), sph(0.32, eyeW, [x * 0.2, 0.68, 0.45], [1, 1, 0.6], 6), sph(0.2, dark, [x * 0.2 - 0.04, 0.68, 0.55], [0.4, 1, 0.3], 4)]), // ojo crema, pupila vertical
+      ];
+      top.forEach((m) => (m.position.y += 0.2)); // el cuerpo se levanta para dejar lugar a los resortes
+      return [
+        ...top,
+        ...[-1, 1].flatMap((x) => [
+          tube(Array.from({ length: 29 }, (_, k): V3 => { const t = k / 28, a = t * 3.5 * Math.PI * 2; return [x * 0.27 + 0.07 * Math.cos(a), 0.14 + 0.2 * t, 0.08 + 0.07 * Math.sin(a)]; }), 0.03, coil), // resorte en hélice
+          box(0.34, 0.14, 0.26, body, [x * 0.27, 0.07, 0.1]), box(0.34, 0.14, 0.16, band, [x * 0.27, 0.07, 0.31]), ...rivets([x * 0.27, 0.15, 0.1], 0.1, 0.05, "y", 0.05), // pie de bloque
+        ]),
       ];
     }
-    if (kind === "escudo") { // ref153: robot chico con capucha de tela crema con parches verdes, ojos amarillos, báculo de bronce con orbe verde y morral; ponytail: se conserva una placa chica al frente porque es la mecánica del escudero
-      const cream = worn("#a8532a"), green = worn("#5b6130"), dark = M.matte("#1d1810"), bronze = worn("#a8803c"), rim = worn("#a8803c"), orb = M.glow("#b8f040"), leather = M.matte("#7a4a28");
+    if (kind === "escudo") { // ref153: robot chico con capucha de tela crema con parches verdes, ojos amarillos, báculo de bronce con orbe verde y morral; ref289: escudo de chapa con marco amarillo, flejes en cruz y botón central
+      const cream = worn("#a8532a"), green = worn("#5b6130"), dark = M.matte("#1d1810"), bronze = worn("#a8803c"), rim = worn("#a8803c"), orb = M.glow("#b8f040"), steel = worn("#8d9199"), yel = worn("#d9a31c"), leather = M.matte("#7a4a28");
       return [
         cyl(0.55, 1.5, 1.2, cream, [0, 0.6, -0.05], undefined, 9), box(0.9, 0.5, 0.06, green, [0.2, 0.45, 0.5], [0, 0, 0.2]), box(0.5, 0.35, 0.06, green, [-0.45, 0.8, 0.4], [0, 0, -0.3]), // túnica y parches
         sph(0.9, cream, [0, 1.3, -0.05], [1, 1.15, 1], 8), cyl(0.04, 0.5, 0.7, cream, [0, 1.95, -0.2], [-0.35, 0, 0], 6), box(0.5, 0.14, 0.3, green, [0, 1.72, 0.3], [0.3, 0, 0]), // capucha con punta y parche
         sph(0.62, dark, [0, 1.22, 0.3], [1, 1, 0.75], 7), sph(0.2, M.glow("#ffe040"), [0.17, 1.26, 0.58], [0.7, 1.3, 0.5], 5), sph(0.2, M.glow("#ffe040"), [-0.17, 1.26, 0.58], [0.7, 1.3, 0.5], 5),
         cyl(0.3, 0.3, 0.1, rim, [0.52, 1.35, 0.1], [0, 0, Math.PI / 2], 8),
         box(0.5, 0.55, 0.3, leather, [0.62, 0.55, -0.15]), box(0.5, 0.2, 0.32, green, [0.62, 0.72, -0.15]), // morral
-        box(1.05, 1.3, 0.1, cream, [0, 0.72, 0.7]), box(1.15, 0.08, 0.14, rim, [0, 1.4, 0.7]), box(1.15, 0.08, 0.14, rim, [0, 0.1, 0.7]), ...[0.3, 0.75, 1.2].flatMap((y) => [box(1.0, 0.14, 0.04, M.matte("#a8801a"), [0, y, 0.77], [0, 0, 0.5]), box(1.0, 0.1, 0.04, dark, [0, y + 0.17, 0.77], [0, 0, 0.5])]), // placa chica de tela y chapa
-        ...rivets([0, 0.72, 0.8], 0.48, 0.55, "z", 0.08),
+        box(0.98, 1.08, 0.08, steel, [0, 0.6, 0.72]), box(1.14, 0.1, 0.14, yel, [0, 1.17, 0.72]), box(1.14, 0.1, 0.14, yel, [0, 0.03, 0.72]), ...[-1, 1].map((x) => box(0.1, 1.2, 0.14, yel, [x * 0.54, 0.6, 0.72])), // escudo de chapa con marco amarillo
+        box(0.14, 1.08, 0.1, dark, [0, 0.6, 0.75]), box(0.98, 0.12, 0.1, dark, [0, 0.6, 0.75]), sph(0.4, steel, [0, 0.6, 0.8], [1, 1, 0.5], 7), tor(0.5, 0.05, bronze, [0, 0.6, 0.79]), // cruz de flejes y botón central
+        ...rivets([0, 0.6, 0.8], 0.42, 0.5, "z", 0.08),
         box(0.5, 0.3, 0.7, dark, [0.4, 0.15, -0.1]), box(0.5, 0.3, 0.7, dark, [-0.4, 0.15, -0.1]),
         cyl(0.1, 0.12, 2.0, bronze, [-0.95, 1.0, 0.15], undefined, 6), sph(0.55, orb, [-0.95, 2.15, 0.15], undefined, 7), tor(0.7, 0.1, bronze, [-0.95, 2.15, 0.15], [Math.PI / 2, 0, 0], 10), box(0.3, 0.2, 0.3, bronze, [-0.95, 1.8, 0.15]),
       ];
