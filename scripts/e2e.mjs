@@ -1,14 +1,18 @@
 // E2E de una expedición ENCORE con el bot, headless contra rc-test. Uso: npm run e2e [-- --vp pc|cel|pc,cel] [--seed N]
 // Captura PNG por paso en .e2e/<fecha>/. Exit 1 si falla algún paso. Una pestaña limpia por viewport (guardado vacío).
-import { launch, open } from "./lib/browser.mjs";
+import { open } from "./lib/browser.mjs";
+import { pool } from "./lib/pool.mjs";
 import { mkdirSync } from "node:fs";
 const arg = (k, d) => { const i = process.argv.indexOf("--" + k); return i > 0 ? process.argv[i + 1] : d; };
-const vps = arg("vp", "pc,cel").split(","), seed = arg("seed", "58");
-const dir = `.e2e/${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}`;
-mkdirSync(dir, { recursive: true });
-const browser = await launch();
-const rows = [];
-for (const vp of vps) {
+// --seeds 1,2,3 (o --seed N) × --vp: cada combinación es un trabajo con su navegador; --par N a la vez (3 por defecto). Con varias semillas los PNG van a <dir>/s<semilla>/.
+const vps = arg("vp", "pc,cel").split(","), seeds = (arg("seeds", null) ?? arg("seed", "58")).split(",");
+const base = `.e2e/${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}`;
+const all = [];
+await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ seed, vp }))), async ({ seed, vp }, browser) => {
+  const dir = seeds.length > 1 ? `${base}/s${seed}` : base;
+  mkdirSync(dir, { recursive: true });
+  const rows = { push: (r) => all.push(seeds.length > 1 ? { seed, ...r } : r) };
+  {
   const p = await open(browser, `?mute&seed=${seed}`, vp, { freeze: true });
   const ev = (f, a) => p.evaluate(f, a), tick = (n = 3) => ev((n) => window.__tick(n), n);
   const info = () => ev(() => window.__enc.info());
@@ -193,9 +197,9 @@ for (const vp of vps) {
   try { await r.screenshot({ path: `${dir}/${vp}-x-pileta-limpiafondos.png` }); } catch {}
   rows.push({ vp, paso: "pileta-limpiafondos", ok: why ? "FALLA" : "OK", s: ((Date.now() - t0) / 1000).toFixed(1), nota: why });
   await r.ctx.close();
-}
-await browser.close();
-console.table(rows);
-console.log("capturas:", dir);
-if (rows.some((r) => r.ok === "FALLA")) { console.error("E2E FALLÓ"); process.exit(1); }
+  }
+});
+console.table(all);
+console.log("capturas:", base);
+if (all.some((r) => r.ok === "FALLA")) { console.error("E2E FALLÓ"); process.exit(1); }
 console.log("E2E OK");
