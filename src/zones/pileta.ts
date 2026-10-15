@@ -14,7 +14,7 @@ export const PIT = { x0: 25, x1: 115, z0: -50, z1: 50, hi: -5, lo: -16, r0: 50, 
 export function pitY(x: number, z: number) {
   const { x0, x1, z0, z1, hi, lo, r0, r1 } = PIT;
   if (x <= x0 || x >= x1 || Math.abs(z) >= z1) return 0;
-  if (x > 31 && x < 45 && z < z0 + 26) return hi + ((z0 + 26 - z) / 26) * -hi; // rampa de salida al borde norte
+  if (x > 31 && x < 45 && Math.abs(z) > z1 - 26) return hi + ((Math.abs(z) - (z1 - 26)) / 26) * -hi; // rampas de salida a los bordes norte y sur (simétricas; z0 = -z1)
   if (Math.abs(z) < 8 && x < x0 + 9) return x < x0 + 3 ? -1.25 : x < x0 + 6 ? -2.5 : -3.75; // escalones
   if (x < r0) return hi;
   if (x > r1) return lo;
@@ -127,6 +127,7 @@ export function poolBuild() {
   const wet = M.matte("#4FC3F7");
   ramp(wet, r1, 0, -Math.PI / 2, 24, r1 - r0, hi - lo, 0, 0, lo);
   ramp(wet, 38, z0 + 26, Math.PI, 14, 26, -hi, 0, 0, hi);
+  ramp(wet, 38, z1 - 26, 0, 14, 26, -hi, 0, 0, hi); // segunda salida al borde sur: con una sola, desde la mitad sur había 70 m de playa hasta salir con la horda encima
   // Charco verde de agua vieja en la parte honda
   decal("charcoPileta", 26, 18, x1 - 20, 16, pbr("pitWater", { color: "#29B6F6", rough: 0.05, metal: 0.3, alpha: 0.85 }), lo + 0.06);
   // Trampolín roto en la explanada sur: rampa de 3,5 que lanza hacia el pozo (cae en la parte honda); la tabla está partida y el pedestal oxidado

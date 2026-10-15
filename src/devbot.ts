@@ -1,4 +1,5 @@
-import { HALF } from "./world";
+import { HALF, zoneId } from "./world";
+import { PIT, pitY } from "./zones/pileta";
 
 // Solo dev: bot de playtest. Juega sin trampas (sin god ni saltos de tiempo): orbita el patio
 // esquivando macetas, se destraba con marcha atrás y elige mejoras (evolución > arma nueva > primera).
@@ -26,7 +27,13 @@ export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVel
     const cl = (u: number) => Math.max(-(HALF - 22), Math.min(HALF - 22, u));
     const cx = boss ? boss.x : 0, cz = boss ? boss.z : 0, R = boss ? ORBIT_R[boss.kind] ?? 12 : 55;
     const ang = Math.atan2(c.pos.z - cz, c.pos.x - cx) + (boss ? 0.6 : 0.35);
-    const orbit = boss?.ram ? Math.atan2(boss.x - c.pos.x, boss.z - c.pos.z) // Ariete: embestir de frente
+    // Pileta: dentro del pozo la órbita apunta afuera de la pared y el bot muere empujándola; una persona busca la rampa.
+    // Fondo → rampa honda → playa → rampa de salida (PIT). ponytail: el pozo se detecta por altura vs pitY y las rampas están fijas en x=38; si cambia la geometría, actualizar acá.
+    const py = (c.pos as P & { y?: number }).y, pool = zoneId === "pileta" && py !== undefined, inPit = pool && py! < -2 && Math.abs(py! - pitY(c.pos.x, c.pos.z)) < 2;
+    const exit = !inPit ? null : py! < PIT.hi - 1.5
+      ? (c.pos.x < PIT.r1 + 2 && Math.abs(c.pos.z) < 10 ? { x: PIT.r0 - 6, z: 0 } : { x: PIT.r1 + 8, z: 0 })
+      : (Math.abs(c.pos.x - 38) < 5 && Math.abs(c.pos.z) > PIT.z1 - 28 ? { x: 38, z: Math.sign(c.pos.z) * (PIT.z1 + 8) } : { x: 38, z: (c.pos.z < 0 ? -1 : 1) * (PIT.z1 - 30) }); // rampa norte o sur, la del mismo lado
+    const orbit = exit ? Math.atan2(exit.x - c.pos.x, exit.z - c.pos.z) : boss?.ram ? Math.atan2(boss.x - c.pos.x, boss.z - c.pos.z) // Ariete: embestir de frente
       : Math.atan2(cl(cx + Math.cos(ang) * R) - c.pos.x, cl(cz + Math.sin(ang) * R) - c.pos.z); // punto de órbita siempre lejos del borde
     const inZone = zones.find((zn) => Math.hypot(c.pos.x - zn.x, c.pos.z - zn.z) < zn.r + 1.5);
     // Rodeado y frenado: turbo hacia el hueco (una persona no se queda empujando la horda)
@@ -41,9 +48,12 @@ export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVel
     let best = -Infinity;
     for (let k = 0; k < 16; k++) {
       const a = (k / 16) * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a);
-      let sc = Math.cos(a - have) * 1.2 + Math.cos(a - orbit) * 2.5;
+      let sc = Math.cos(a - have) * 1.2 + Math.cos(a - orbit) * (exit ? 8 : 2.5); // en el pozo la rampa manda (una persona la busca aunque tenga bichos delante)
       if (gem !== null) sc += Math.cos(a - gem) * 2;
       for (const { ex, ez, d } of near) { const dot = (ex * dx + ez * dz) / d; sc -= dot * (22 - d) / 6; if (d < 6 && dot > 0.6) sc -= 2.5; } // muro de bichos pegado: buscar el hueco
+      if (pool) for (const t of [4, 9]) { const px = c.pos.x + dx * t, pz = c.pos.z + dz * t; // pileta: kitear en la explanada (en el pozo la horda acorrala); adentro, no empujar las paredes salvo en la boca de las rampas
+        const out = px < PIT.x0 + 1 || px > PIT.x1 - 1 || (Math.abs(pz) > PIT.z1 - 1 && Math.abs(px - 38) > 6);
+        if (inPit ? out : px > PIT.x0 - 2 && px < PIT.x1 + 2 && Math.abs(pz) < PIT.z1 + 2) sc -= 60 / t; }
       for (const o of obs!) { for (const t of [4, 9]) { const px = c.pos.x + dx * t, pz = c.pos.z + dz * t; if (Math.hypot(px - o.x, pz - o.z) < o.r + 2) sc -= 12 / t; } }
       // Bordes del patio: acorralarse contra la pared es la muerte (la horda empuja y no hay salida)
       for (const [t, pen] of [[5, 30], [14, 10]]) { const fx = c.pos.x + dx * t, fz = c.pos.z + dz * t; if (Math.abs(fx) > HALF - 10 || Math.abs(fz) > HALF - 10) sc -= pen; }
