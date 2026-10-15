@@ -25,10 +25,12 @@ export function libreBuild() {
   for (const s of [-1, 1]) { decal("anilloNS", 18, L, s * R, 0, road, 0.02); decal("anilloEO", L, 18, 0, s * R, road, 0.02); }
   // Atajos diagonales (10 m) del centro a cada barrio, con un trampolín de entrada
   const wood = pbr("libreTrampolin", { color: "#f2c230", rough: 0.55 });
+  // Cada atajo va de (28,28) a su fin; el noreste se tuerce hacia (62,130) para rodear el parque (x 60..200, z 14..88) y entrar al acuático por el oeste.
   for (const [sx, sz] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
-    const ry = Math.atan2(sx, sz), k = Math.SQRT1_2, g = B.MeshBuilder.CreateGround("atajo", { width: 10, height: 130 }, scene);
-    g.position.set(sx * k * 105, 0.025, sz * k * 105); g.rotation.y = ry; g.material = road; g.receiveShadows = true;
-    ramp(wood, sx * k * 52, sz * k * 52, ry, 6, 7, 0.9, 0, 2);
+    const ex = sx > 0 && sz > 0 ? 62 : sx * 120, ez = sx > 0 && sz > 0 ? 130 : sz * 120, dx = ex - sx * 28, dz = ez - sz * 28, len = Math.hypot(dx, dz), ry = Math.atan2(dx, dz);
+    const g = B.MeshBuilder.CreateGround("atajo", { width: 10, height: len }, scene);
+    g.position.set(sx * 28 + dx / 2, 0.025, sz * 28 + dz / 2); g.rotation.y = ry; g.material = road; g.receiveShadows = true;
+    ramp(wood, sx * 28 + (dx / len) * 12.7, sz * 28 + (dz / len) * 12.7, ry, 6, 7, 0.9, 0, 2);
   }
   // Marcas: raya amarilla discontinua en el centro de las avenidas, blanca en el anillo y líneas de borde (una malla fusionada)
   const yel = pbr("libreRayaA", { color: "#f2c230", rough: 0.7 }), wht = pbr("libreRayaB", { color: "#e8e2d0", rough: 0.7 }), marks: B.Mesh[] = [];
