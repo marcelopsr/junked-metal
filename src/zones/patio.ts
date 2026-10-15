@@ -99,12 +99,12 @@ function grassTexture(n = 1024) {
   const sc = small.getContext("2d")!, im = sc.createImageData(256, 256);
   for (let i = 0; i < 256 * 256; i++) {
     const t = Math.min(1, Math.max(0, (m[i] - 0.3) * 2.3 + (m2[i] - 0.5) * 0.5)), col = rampC(pal, t), o = i * 4;
-    im.data[o] = col[0] * 0.8; im.data[o + 1] = col[1] * 0.8; im.data[o + 2] = col[2] * 0.78; im.data[o + 3] = 255; // un poco más oscuro y saturado
+    im.data[o] = col[0] * 0.4; im.data[o + 1] = col[1] * 0.4; im.data[o + 2] = col[2] * 0.38; im.data[o + 3] = 255; // oscuro: el camino claro destaca (contraste de composición, ref23)
   }
   sc.putImageData(im, 0, 0);
   const big = document.createElement("canvas"); big.width = big.height = n;
   const c = big.getContext("2d")!; c.imageSmoothingEnabled = true; c.drawImage(small, 0, 0, n, n);
-  const cols = ["#2d5a1c", "#3f7a28", "#4E8A2E", "#66BB6A", "#7fae3c", "#a3a847", "#c2b556"];
+  const cols = ["#1f4014", "#2d5a1c", "#3a6e25", "#4E8A2E", "#5f9a38", "#7fae3c", "#a3a847"];
   c.lineCap = "round";
   for (let i = 0; i < 26000; i++) {
     const x = 6 + r() * (n - 12), y = 6 + r() * (n - 12), l = 4 + r() * 9, a = -Math.PI / 2 + (r() - 0.5) * 1.2;
@@ -173,7 +173,7 @@ export function patioBuild() {
   decal("workshopGrassTransition", 22, 18, -4, -9, grassEarthMat, 0.016);
   const dirt = decal("dirt", 42, 32, 50, 45, dirtGroundMat, 0.025);
   const pathMat = surface(pbr("soilPath", { color: "#ffffff", rough: 0.94, tex: compactedTex }), "soil", 24, 0.15);
-  pathMat.albedoColor = B.Color3.FromHexString("#FFF0E6"); // el rojizo de ref23 ya está en la paleta de dirtTextures; un tinte oscuro acá mataba las luces
+  pathMat.albedoColor = B.Color3.FromHexString("#FFF0E6").scale(1.5); // el rojizo de ref23 ya está en la paleta de dirtTextures; un tinte oscuro acá mataba las luces
   pathMat.opacityTexture = edgeMask;
   pathMat.alphaCutOff = 0.02;
   pathMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
@@ -339,6 +339,37 @@ function toyFencesCurbsPines(toy: (c: string, rough?: number) => B.Material, gra
   }
   instances(pine, pm);
   piedritasYMatas(toy, grassPaths, instances);
+  sombrasYTierra(toy, grassPaths, instances);
+}
+
+/** Contraste de composición (ref23): neumáticos oscuros tirados fuera de los bordillos (proyectan sombra larga, sin colisión, bajos) y manchas de tierra apisonada oscura sobre el pasto. Semilla fija propia. */
+function sombrasYTierra(toy: (c: string, rough?: number) => B.Material, grassPaths: number[][], instances: (m: B.Mesh, mats: number[]) => void) {
+  const r = lcg(9091), q = new B.Quaternion(), P = new B.Vector3(), S = new B.Vector3();
+  const tire = merge("darkTire", [tor(1.05, 0.5, toy("#15171a", 0.85), [0, 0.5, 0], undefined, 10), cyl(0.5, 0.5, 0.5, toy("#3a3d42", 0.6), [0, 0.35, 0], undefined, 8)]);
+  const tm: number[] = [];
+  for (const [x, z, w, len, ang] of grassPaths) {
+    const c = Math.cos(ang), s = Math.sin(ang);
+    for (const sx of [-1, 1]) for (let lz = -len * 0.42; lz <= len * 0.42; lz += 3) {
+      const lx = sx * (w * 0.42 + 2.2 + r() * 1.6 + (lz % 6 < 3 ? 0 : 3.5)), jz = lz + (r() - 0.5) * 2, px = x + lx * c + jz * s, pz = z - lx * s + jz * c;
+      if (Math.hypot(px, pz) < 5 || Math.hypot(px, pz) > 60 || (lowQ && r() < 0.5) || r() < 0.15) continue; // fuera de 60 m no se ve desde la cámara de partida
+      B.Quaternion.RotationYawPitchRollToRef(r() * 6.3, 0, 0, q);
+      const k = 0.8 + r() * 0.5; // algunos apilados de a dos (más alto = sombra más larga)
+      tm.push(...B.Matrix.Compose(S.set(k, k, k), q, P.set(px, 0, pz)).toArray());
+      if (r() < 0.45) tm.push(...B.Matrix.Compose(S.set(k * 0.9, k, k * 0.9), q, P.set(px, 0.9 * k, pz)).toArray());
+    }
+  }
+  instances(tire, tm); shadows.addShadowCaster(tire);
+  // Manchas de tierra oscura en el pasto: mismo borde fundido que la tierra del patio
+  const mask = soilEdgeMask(), mat = pbr("darkSoilPatch", { color: "#2a170c", rough: 1 });
+  mat.opacityTexture = mask; mat.alphaCutOff = 0.02; mat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
+  const inPath = (x: number, z: number) => grassPaths.some(([cx, cz, w, len, a]) => { const dx = x - cx, dz = z - cz; return Math.abs(dx * Math.cos(a) - dz * Math.sin(a)) < w * 0.5 + 3 && Math.abs(dx * Math.sin(a) + dz * Math.cos(a)) < len * 0.5 + 3; });
+  const patches: B.Mesh[] = [];
+  for (let i = 0, n = 0; i < 400 && n < 26; i++) {
+    const x = (r() * 2 - 1) * 55, z = -12 + r() * 62, w = 5 + r() * 8;
+    if (inPath(x, z) || Math.hypot(x, z) < 6 || Math.abs(x - 50) < 24 && Math.abs(z - 45) < 20 || Math.abs(x + 48) < 25 && Math.abs(z - 20) < 21) continue;
+    n++; const d = decal("darkSoil", w, w * (0.6 + r() * 0.5), x, z, mat, 0.022); d.rotation.y = r() * 6.3; patches.push(d);
+  }
+  merge("darkSoilPatches", patches, [mat]).isPickable = false;
 }
 
 /** Piedritas angulosas sobre los caminos de tierra y matas con flores pegadas por fuera de los bordillos (ref9/ref14). Generador propio con semilla fija, sin colisiones. */
