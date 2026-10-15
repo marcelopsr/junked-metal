@@ -22,7 +22,7 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
   const step = async (name, fn) => {
     const t0 = Date.now(); let ok = false, why = "";
     try { const r = await fn(); ok = r === undefined || r === true; why = ok ? "" : String(r); } catch (e) { why = e.message.split("\n")[0]; }
-    const errs = p.logs.splice(0); if (errs.length) { ok = false; why += ` consola: ${errs.join(" | ").slice(0, 150)}`; }
+    const errs = p.logs.splice(0); if (errs.length) { ok = false; why += ` consola: ${errs.join(" | ").slice(0, 400)}`; }
     try { await p.screenshot({ path: `${dir}/${vp}-${String(++k).padStart(2, "0")}-${name}.png` }); } catch {}
     rows.push({ vp, paso: name, ok: ok ? "OK" : "FALLA", s: ((Date.now() - t0) / 1000).toFixed(1), nota: why });
     return ok;
@@ -141,7 +141,7 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
   const xstep = async (name, fn) => {
     const t0 = Date.now(); let ok = false, why = "";
     try { const r = await fn(); ok = r === undefined || r === true; why = ok ? "" : String(r); } catch (e) { why = e.message.split("\n")[0]; }
-    const errs = q.logs.splice(0); if (errs.length) { ok = false; why += ` consola: ${errs.join(" | ").slice(0, 150)}`; }
+    const errs = q.logs.splice(0); if (errs.length) { ok = false; why += ` consola: ${errs.join(" | ").slice(0, 400)}`; }
     try { await q.screenshot({ path: `${dir}/${vp}-x-${name}.png` }); } catch {}
     rows.push({ vp, paso: name, ok: ok ? "OK" : "FALLA", s: ((Date.now() - t0) / 1000).toFixed(1), nota: why });
   };
@@ -193,7 +193,7 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
       await d.evaluate(() => window.__tick(30));
     }
   } catch (e) { dwhy = e.message.split("\n")[0]; }
-  const derrs = d.logs.splice(0); if (derrs.length) dwhy += ` consola: ${derrs.join(" | ").slice(0, 150)}`;
+  const derrs = d.logs.splice(0); if (derrs.length) dwhy += ` consola: ${derrs.join(" | ").slice(0, 400)}`;
   try { await d.screenshot({ path: `${dir}/${vp}-x-diario-partida.png` }); } catch {}
   rows.push({ vp, paso: "desafio-diario", ok: dwhy ? "FALLA" : "OK", s: ((Date.now() - d0) / 1000).toFixed(1), nota: dwhy });
   await d.ctx.close();
@@ -206,7 +206,7 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
     const i = await r.evaluate(() => window.__info());
     if (i.state !== "play" || i.enemies < 1) why = "estado " + i.state + ", enemigos " + i.enemies;
   } catch (e) { why = e.message.split("\n")[0]; }
-  const errs = r.logs.splice(0); if (errs.length) why += ` consola: ${errs.join(" | ").slice(0, 150)}`;
+  const errs = r.logs.splice(0); if (errs.length) why += ` consola: ${errs.join(" | ").slice(0, 400)}`;
   try { await r.screenshot({ path: `${dir}/${vp}-x-pileta-limpiafondos.png` }); } catch {}
   rows.push({ vp, paso: "pileta-limpiafondos", ok: why ? "FALLA" : "OK", s: ((Date.now() - t0) / 1000).toFixed(1), nota: why });
   await r.ctx.close();
@@ -243,7 +243,7 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
     const st = await fe(() => window.__info().state);
     if (st !== "menu") throw new Error("no volvió al menú: " + st);
   } catch (e) { fwhy = e.message.split("\n")[0]; }
-  const ferrs = f.logs.splice(0); if (ferrs.length) fwhy += ` consola: ${ferrs.join(" | ").slice(0, 150)}`;
+  const ferrs = f.logs.splice(0); if (ferrs.length) fwhy += ` consola: ${ferrs.join(" | ").slice(0, 400)}`;
   try { await f.screenshot({ path: `${dir}/${vp}-x-paseo-libre.png` }); } catch {}
   rows.push({ vp, paso: "paseo-libre", ok: fwhy ? "FALLA" : "OK", s: ((Date.now() - f0) / 1000).toFixed(1), nota: fwhy });
   await f.ctx.close();

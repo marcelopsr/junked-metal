@@ -52,7 +52,8 @@ async function run(job, browser) {
     }
     if (!a.json && par === 1) process.stderr.write(`\r                                                                         \r`);
     const i = await page.evaluate(() => window.__info()), m = (re) => resumen.match(re)?.[1];
-    return { ...job, tiempo: +i.time.toFixed(1), nivel: i.level, hp: Math.round(i.hp), estado: i.state, bajas: Number(m(/bajas (\d+)/) ?? 0), mundo: m(/ · ([^·]+\/[^·]+) · semilla/)?.trim(), armas: i.weapons.join(" "), resumen,
+    const at = await page.evaluate(() => window.__atascos());
+    return { ...job, atascos: at.n, atascoMaxS: at.maxS, tiempo: +i.time.toFixed(1), nivel: i.level, hp: Math.round(i.hp), estado: i.state, bajas: Number(m(/bajas (\d+)/) ?? 0), mundo: m(/ · ([^·]+\/[^·]+) · semilla/)?.trim(), armas: i.weapons.join(" "), resumen,
       dano_infligido: JSON.parse(await page.evaluate(() => window.__out())), dano_recibido: JSON.parse(await page.evaluate(() => window.__dmg())) };
   } catch (e) { return { ...job, error: String(e).split("\n")[0] }; }
   finally { if (page.logs.length) console.error(`[semilla ${job.seed}] errores de consola: ${page.logs.join(" | ")}`); await page.ctx.close(); }
@@ -62,16 +63,16 @@ const t0 = Date.now(), out = await pool(par, jobs, run); // un navegador por tra
 
 const log = a.json ? console.error : console.log, pad = (v, n) => String(v ?? "-").padEnd(n);
 log(a.encore
-  ? `${pad("semilla", 8)}${pad("jug", 5)}${pad("resultado", 11)}${pad("vuelta", 7)}${pad("esc", 5)}${pad("fase", 11)}${pad("tiempo", 8)}${pad("nv", 4)}${pad("bajas", 7)}${pad("s/escenario", 22)}armas`
+  ? `${pad("semilla", 8)}${pad("jug", 5)}${pad("resultado", 11)}${pad("vuelta", 7)}${pad("esc", 5)}${pad("fase", 11)}${pad("tiempo", 8)}${pad("nv", 4)}${pad("bajas", 7)}${pad("atascos", 8)}${pad("s/escenario", 22)}armas`
   : a.duel
   ? `${pad("jefe", 12)}${pad("semilla", 8)}${pad("segundos", 9)}${pad("ganó", 6)}${pad("jefe %vida", 11)}${pad("auto hp", 8)}real s`
-  : `${pad("semilla", 8)}${pad("tiempo", 8)}${pad("nv", 4)}${pad("hp", 6)}${pad("bajas", 7)}${pad("estado", 8)}${pad("mundo", 34)}armas`);
+  : `${pad("semilla", 8)}${pad("tiempo", 8)}${pad("nv", 4)}${pad("hp", 6)}${pad("bajas", 7)}${pad("atascos", 9)}${pad("estado", 8)}${pad("mundo", 34)}armas`);
 const durs = (l, end) => l.map((e, i) => `${e.loop}.${e.stage}:${Math.round((l[i + 1]?.t ?? end) - e.t)}`).join(" ");
 for (const r of out) log(r.error ? `${r.kind ?? ""} ${r.seed}: ERROR ${r.error}` : a.encore
-  ? `${pad(r.seed, 8)}${pad(r.players, 5)}${pad(r.won ? "GANÓ" : "murió", 11)}${pad(r.loop, 7)}${pad(r.stage, 5)}${pad(r.phase, 11)}${pad(r.t, 8)}${pad(r.level, 4)}${pad(r.kills, 7)}${pad(durs(r.log, r.t), 22)}${r.weapons.join(" ")}`
+  ? `${pad(r.seed, 8)}${pad(r.players, 5)}${pad(r.won ? "GANÓ" : "murió", 11)}${pad(r.loop, 7)}${pad(r.stage, 5)}${pad(r.phase, 11)}${pad(r.t, 8)}${pad(r.level, 4)}${pad(r.kills, 7)}${pad(r.atascos + (r.atascos ? ` (${r.atascoMaxS}s)` : ""), 8)}${pad(durs(r.log, r.t), 22)}${r.weapons.join(" ")}`
   : a.duel
   ? `${pad(r.kind, 12)}${pad(r.seed, 8)}${pad(r.segundos, 9)}${pad(r.ganó ? "sí" : "no", 6)}${pad(r.vidaRestante, 11)}${pad(r.auto, 8)}${r.real}`
-  : `${pad(r.seed, 8)}${pad(r.tiempo, 8)}${pad(r.nivel, 4)}${pad(r.hp, 6)}${pad(r.bajas, 7)}${pad(r.estado, 8)}${pad(r.mundo, 34)}${r.armas}`);
+  : `${pad(r.seed, 8)}${pad(r.tiempo, 8)}${pad(r.nivel, 4)}${pad(r.hp, 6)}${pad(r.bajas, 7)}${pad(r.atascos + (r.atascos ? ` (${r.atascoMaxS}s)` : ""), 9)}${pad(r.estado, 8)}${pad(r.mundo, 34)}${r.armas}`);
 log(`\n${out.length} corrida(s) en ${((Date.now() - t0) / 1000).toFixed(1)} s (par ${par})`);
 if (a.json) console.log(JSON.stringify(out, null, 1));
 process.exit(out.some((r) => r.error) ? 1 : 0);
