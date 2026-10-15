@@ -86,7 +86,7 @@ export function poolBuild() {
   // --- Pozo: fondo hondo, bloque de la playa, escalones. Colisionadores invisibles; el azulejo es una sola malla.
   slab(x0, x1, z0, z1, lo);
   // Paredes del pozo (invisibles, 6 de grosor, de bajo el fondo a la explanada) y piso de seguridad lejano: las losas de la explanada miden 2 y el auto las atravesaba.
-  const wall = (xa: number, xb: number, za: number, zb: number) => slab(xa, xb, za, zb, 0.5, 0.5 - lo + 4);
+  const wall = (xa: number, xb: number, za: number, zb: number) => slab(xa, xb, za, zb, 0, -lo + 4); // tapa a ras de la explanada (a 0,5 era un cordón que clavaba al auto en la boca de los escalones)
   wall(x0 - 6, x1 + 6, z0 - 6, z0); wall(x0 - 6, x1 + 6, z1, z1 + 6); wall(x0 - 6, x0, z0, z1); wall(x1, x1 + 6, z0, z1);
   slab(-h, h, -h, h, -30); // ponytail: red de seguridad bajo el mundo; la caída solo se corta, no se devuelve al auto
   hidden(stat(box(50 - x0, hi - lo, D, M.matte("#888"), [0, 0, 0]), B.PhysicsShapeType.BOX, { friction: 0.7 }, [(x0 + 50) / 2, (hi + lo) / 2, 0]));

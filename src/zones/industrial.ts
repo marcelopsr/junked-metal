@@ -128,6 +128,7 @@ export function industrialLayout() {
     const c = Math.cos(ry), s = Math.sin(ry);
     const pr = kit[k]((a, y, b) => [x + a * c + b * s, y, z - a * s + b * c], ry);
     bare.push({ x, z, r: Math.max(pr.w, pr.d) / 2 + 1.5 }); // se reserva igual: el resto del reparto no cambia
+    if (k === 3 && Math.hypot(x - 13, z - 57.6) < 2) { pr.parts.forEach((m) => m.dispose()); return; } // tambores que cerraban un rincón contra el muro este del túnel de contenedores
     if (k === 6 && Math.hypot(x + 12, z + 64.7) < 2) { pr.parts.forEach((m) => m.dispose()); return; } // bolardos que formaban un nicho sin salida con el muro bajo de (-9,-57)
     parts.push(...pr.parts);
     stat(box(pr.w, pr.h, pr.d, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, pr.h / 2, z, ry]).isVisible = false;
