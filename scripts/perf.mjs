@@ -13,7 +13,7 @@ import { sessions } from "./scenarios.mjs";
 
 const { values: a } = parseArgs({ options: { only: { type: "string" }, vp: { type: "string" }, frames: { type: "string", default: "180" }, "no-save": { type: "boolean" }, changed: { type: "boolean" }, base: { type: "string" } } });
 /** --changed [--base ref]: solo las sesiones que tocan los archivos cambiados (ver lib/changed.mjs). Nada visual → sale sin abrir el navegador. */
-function pickChanged(ref) { const { files, sessions } = changedSessions(ref || "HEAD", { cache: false }); // perf no llena ni usa la cache de shots console.log(`--changed: ${files.length} archivos → ${sessions.join(", ") || "nada que capturar"}`); if (!sessions.length) process.exit(0); return sessions; }
+function pickChanged(ref) { const { files, sessions } = changedSessions(ref || "HEAD", { cache: false }); /* perf no llena ni usa la cache de shots */ console.log(`--changed: ${files.length} archivos → ${sessions.join(", ") || "nada que capturar"}`); if (!sessions.length) process.exit(0); return sessions; }
 const FRAMES = Number(a.frames), only = a.changed ? pickChanged(a.base) : a.only?.split(","), DIR = ".perf";
 
 // Dentro de la página: calienta la GPU (los relojes tardan en subir) y mide 3 bloques de n/3 cuadros. ms = el MEJOR bloque (mediana de cada uno): el ruido de la Mac
