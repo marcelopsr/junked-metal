@@ -1,7 +1,7 @@
 // Paseo libre: trucos (aire, giros, vueltas, combo), tuercas y guardado. Lógica pura con secuencias sintéticas.
 import { describe, expect, it } from "vitest";
 import { BAL } from "../src/balance";
-import { bestUpdate, newTrick, NUTS, NUT_N, nutNear, nutsCount, trickLive, trickStep, type LibreBest } from "../src/free_tricks";
+import { bestUpdate, newSlow, newTrick, roam, slowStep, NUTS, NUT_N, nutNear, nutsCount, trickLive, trickStep, type LibreBest } from "../src/free_tricks";
 
 const R = BAL.ritmo, DT = 1 / 60;
 /** Salta: `secs` en el aire girando a wYaw/wFlip rad/s y aterriza con el techo a upY. */
@@ -64,5 +64,26 @@ describe("tuercas doradas", () => {
     // (medido con sondas y mapa de alturas: el suelo libre más cercano queda a > 4,3 m): 0-1 trampolín, 2 puente, 13 tobogán, 20 balancín, 21 túnel, 23 mesa; 5, 6, 14, 15: dentro de bowl o pileta.
     const bajas = NUTS.flatMap((n, i) => (n[1] - 0.35 < R.libre_radio_tuerca + (n[3] ?? 0) ? [i] : []));
     expect(bajas).toEqual([0, 1, 2, 5, 6, 13, 14, 15, 20, 21, 23]);
+  });
+});
+
+describe("cámara lenta del truco grande", () => {
+  const g = 9.81;
+  it("salto largo cerca del apogeo: baja a libre_lenta_k, vuelve al aterrizar y respeta la espera", () => {
+    const s = newSlow(); let min = 1;
+    for (let i = 0; i < 40; i++) min = Math.min(min, slowStep(s, DT, true, 0.9, 0, 0, 3, 0, g, false)); // 0,9 s + caída desde 3 m > 1,2 s
+    expect(min).toBeLessThan(R.libre_lenta_k + 0.05);
+    for (let i = 0; i < 40; i++) slowStep(s, DT, false, 0, 0, 0, 0, 0, g, false);
+    expect(roam.slow).toBeGreaterThan(0.95);
+    for (let i = 0; i < 30; i++) expect(slowStep(s, DT, true, 0.9, 0, 0, 3, 0, g, false)).toBeGreaterThan(0.95); // en espera
+  });
+  it("calm y saltos chicos no disparan", () => {
+    const a = newSlow(), b = newSlow();
+    for (let i = 0; i < 60; i++) { expect(slowStep(a, DT, true, 0.9, 0, 0, 3, 0, g, true)).toBe(1); expect(slowStep(b, DT, true, 0.4, 0, 0, 2, 0, g, false)).toBe(1); }
+  });
+  it("una vuelta de 360 grados dispara aunque el aire sea corto", () => {
+    const s = newSlow(); let min = 1;
+    for (let i = 0; i < 40; i++) min = Math.min(min, slowStep(s, DT, true, 0.5, 0, 6.5, 2, 0, g, false));
+    expect(min).toBeLessThan(0.5);
   });
 });

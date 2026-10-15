@@ -5,7 +5,7 @@ import { BAL } from "./balance";
 const R = BAL.ritmo;
 
 /** Estado del Paseo libre que comparten main.ts y run_drive.ts: no toca ENCORE (on = false fuera del modo). */
-export const roam = { on: false, hielo: null as { cx: number; cz: number; rx: number; rz: number } | null, extra: 0, air: 0, vol: 0, tramp: 0, fix: 0, dir: 1, ts: 0, arm: false, flip: 0 };
+export const roam = { on: false, hielo: null as { cx: number; cz: number; rx: number; rz: number } | null, extra: 0, air: 0, vol: 0, tramp: 0, fix: 0, dir: 1, ts: 0, arm: false, flip: 0, slow: 1 }; // slow: escala del tiempo del mundo (1 = normal; baja en la cámara lenta del truco grande, ver slowStep)
 /** Trampolines del acuático [x, z] (libre_acuatico.ts los dibuja): plataforma de 5 m de radio y 0,5 m de alto; run_drive.ts les da el rebote. */
 export const TRAMPS: [number, number][] = [[100, 120], [142, 114], [168, 152]];
 /** Dentro de la elipse del lago congelado (libre_nieve.ts: lagoHielo). */
@@ -90,4 +90,22 @@ export function nutNear(bits: string, x: number, y: number, z: number) {
     if ((x - n[0]) ** 2 + (y - n[1]) ** 2 + (z - n[2]) ** 2 < r * r) return i;
   }
   return -1;
+}
+
+// ---------- Cámara lenta del truco grande ----------
+export type SlowState = { k: number; left: number; cd: number };
+export const newSlow = (): SlowState => ({ k: 1, left: 0, cd: 0 });
+/** Un cuadro (dt REAL). Con un vuelo largo (aire previsto > libre_lenta_aire_s) o una vuelta/giro de 360° en curso, y cerca del apogeo (|vy| < 4, y > 1,5 m),
+ *  baja la escala del tiempo a libre_lenta_k durante libre_lenta_s; al aterrizar vuelve. Devuelve la escala (también en roam.slow). calm: nunca.
+ *  Los relojes de juego (desafío, fantasma, trucos) corren con dt*escala: miden tiempo del mundo, no de pared. */
+export function slowStep(s: SlowState, dt: number, inAir: boolean, air: number, yaw: number, flip: number, y: number, vy: number, g: number, calm: boolean): number {
+  s.cd = Math.max(0, s.cd - dt);
+  if (s.left > 0 && (!inAir || calm)) { s.left = 0; s.cd = R.libre_lenta_cada_s; }
+  if (s.left > 0) s.left -= dt;
+  else if (inAir && !calm && s.cd === 0 && Math.abs(vy) < 4 && y > 1.5 && air > 0.3) {
+    const total = air + Math.max(0, vy) / g + Math.sqrt(2 * (y + Math.max(0, vy) ** 2 / (2 * g)) / g) ; // ponytail: suelo en y = 0
+    if (total > R.libre_lenta_aire_s || Math.max(yaw, flip) >= 2 * Math.PI) s.left = R.libre_lenta_s;
+  }
+  s.k += ((s.left > 0 ? R.libre_lenta_k : 1) - s.k) * (1 - Math.exp(-10 * dt));
+  return (roam.slow = s.k);
 }

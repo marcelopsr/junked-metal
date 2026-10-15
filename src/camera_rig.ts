@@ -82,6 +82,7 @@ function moonCam(car: Car, dt: number, follow: boolean) {
 const shot = (scr: string) => (c.engine.getAspectRatio(c.cam) < 1 && SHOTS[scr + "_v"]) || SHOTS[scr] || SHOTS.main; // _v: encuadre de celular vertical
 let previewKey = "", previewR = 0;
 
+let slowO = 0, slowSeen = false; // cámara lenta del truco grande (Paseo libre)
 let fovK = 0; // grados de FOV extra por turbo / mini-turbo (run_drive.boostFov)
 export function cameraTick(dt: number) {
   HOLE.r = 0; // se enciende abajo solo en partida con auto (modos archivados lo dejaban activo)
@@ -99,7 +100,7 @@ export function cameraTick(dt: number) {
     }
     // Al elegir mejoras la cámara se acerca y gira a 3/4 frontal para ver la pieza montada
     const close = c.state === "level";
-    const yaw = close ? c.camYaw + 2.5 : c.camYaw;
+    const yaw = (close ? c.camYaw + 2.5 : c.camYaw) + slowO * 0.35;
     setLamp(c.lead.car.pos, c.lead.car.root.forward, c.lampBoost, dt, MOON.on ? c.lead.car.root.up : undefined);
     if (!c.simulating) { tickRain(dt * ts, c.lead.car.pos, c.lead.car.root.forward, c.rainK); rainSfx(c.rainK); }
     // Polvo que flota dentro del haz del faro
@@ -130,6 +131,11 @@ export function cameraTick(dt: number) {
     const spd = roam.on ? c.lead.car.body.getLinearVelocity().length() : 0;
     speedK += ((save.calm ? 0 : B.Scalar.Clamp((spd - 18) / 12, 0, 1)) - speedK) * (1 - Math.exp(-3 * dt));
     if (roam.on && prevAir > 0.5 && roam.air < 0.1 && !save.calm) zoomK = 1; // aterrizó tras un vuelo largo
+    // Cámara lenta del truco grande (roam.slow < 1; calm nunca la dispara): se abre y gira unos 20°; al aterrizar, un golpe corto
+    const slowK = roam.on ? Math.min(1, (1 - roam.slow) / 0.5) : 0;
+    if (slowK > 0.3) slowSeen = true;
+    if (roam.on && slowSeen && roam.air < 0.1 && prevAir > 0.3) { slowSeen = false; c.shake = Math.max(c.shake, 0.3); }
+    slowO += (slowK - slowO) * (1 - Math.exp(-6 * dt));
     prevAir = roam.air; zoomK = Math.max(0, zoomK - dt * 2.5);
     if (roam.on && !save.calm && !c.simulating && spd > 22 && (windT -= dt) <= 0) {
       windT = 0.05; const f = c.lead.car.root.forward, a = Math.random() * 6.283, r = 4 + Math.random() * 3;
@@ -155,7 +161,7 @@ export function cameraTick(dt: number) {
     const tl = isTouch && !c.lab.on && c.state === "play" && save.camMode !== "cenital" && c.engine.getAspectRatio(c.cam) < 1 ? 4 : 0; // solo en juego y fuera de la cenital; bajo techo se funde igual que el resto
     const gb = B.Scalar.Lerp(lab ? c.lab.back : cm2.back, P.back, roofK), gl = B.Scalar.Lerp(cm2.look - tl + 7 * libreK, P.look, roofK);
     let gu = B.Scalar.Lerp(lab ? c.lab.up : cm2.up, P.up, roofK);
-    const zm = (c.lab.on ? 1 : save.zoom) * DIORAMA_DIST * (1 + 0.5 * libreK) * outroZ * (save.camMode === "dinamica" ? dynK : 1) * (MOON.on ? 0.82 : 1), zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
+    const zm = (c.lab.on ? 1 : save.zoom) * DIORAMA_DIST * (1 + 0.5 * libreK + 0.15 * slowO) * outroZ * (save.camMode === "dinamica" ? dynK : 1) * (MOON.on ? 0.82 : 1), zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
     gu *= zu * (1 + 0.3 * libreK); // Paseo libre: más alta y lejana para ver horizonte y próximo salto
     if (save.camMode === "cenital") { // la esquina del cuadro (a ras del piso) no pasa del anillo de aparición menos 3 m, con cualquier zoom, FOV y aspecto
       const th = Math.tan(c.cam.fov / 2), asp = c.engine.getAspectRatio(c.cam);

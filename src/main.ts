@@ -4,7 +4,7 @@ import { BARRIO_LOGRO, BARRIO_NOMBRE, barrioCompleto, metasStep, type MetaEv } f
 import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, medalla, MEDALLA, newCh, fantasmaAt, fantasmaDif, fantasmaDec, fantasmaEnc, fmtDif, FANTASMA_DT, type ChEvent, type Muestra } from "./free_challenges";
 import { controlMarks } from "./zones/libre_control";
 import { ghostOn, ghostOff, ghostPose } from "./free_ghost";
-import { bestUpdate, newTrick, nutNear, nutsCount, roam, trickLive, trickStep, NUT_N } from "./free_tricks";
+import { bestUpdate, newSlow, newTrick, nutNear, slowStep, nutsCount, roam, trickLive, trickStep, NUT_N } from "./free_tricks";
 import { spawnNuts } from "./free_nuts";
 import { SECRETOS, SECRETOS_N, secretoNear, secretosCount } from "./free_secrets";
 import { hudHurt, scrapNumber, hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
@@ -223,7 +223,7 @@ let preview: B.Mesh | null = null;
 
 function clearRun() {
   libre = false; $("hud").classList.remove("libre"); clearTimeout(libreCartelT); $("barrio").classList.add("hidden");
-  ghostStop(); roam.on = false; roam.extra = roam.air = 0; libreNuts?.dispose(); libreNuts = null; hudLibreOff();
+  ghostStop(); roam.on = false; roam.extra = roam.air = 0; roam.slow = 1; libreSlow = newSlow(); libreNuts?.dispose(); libreNuts = null; hudLibreOff();
   Object.assign(run, freshRun()); resetDrive();
   mateClear();
   encClear(); GOAL_IO.tele = false; GOAL_IO.half = 0;
@@ -401,7 +401,7 @@ function libreChallenge(dt: number) {
   else if (chFinT > 0 && (chFinT -= dt) > 0) hudDesafio(chMsg.title, chMsg.big, chMsg.sub, true);
   else hudDesafio("");
 }
-let takeX = 0, takeZ = 0, avisoT = 0, libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick(), turns = 0;
+let takeX = 0, takeZ = 0, avisoT = 0, libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick(), libreSlow = newSlow(), turns = 0;
 /** Trucos (aire, giros, vueltas, aterrizaje, combo) y tuercas doradas; `grounded` sale de drive(). */
 function libreTricks(dt: number, grounded: boolean) {
   const c = lead.car!, body = c.body, w = body.getAngularVelocity(), up = c.root.up, fw = c.root.forward, rt = c.root.right, s = save.libre;
@@ -470,7 +470,7 @@ function startLibre() {
   menuOff();
   clearRun(); // deja libre = false y la luz de la zona (ya armada como "libre")
   libre = true; libreLugar = -1; libreT = 0; libreAcc = 0;
-  roam.on = true; roam.extra = 0; libreTrick = newTrick(); libreCh = newCh(); chFinT = 0;
+  roam.on = true; roam.extra = 0; roam.slow = 1; libreSlow = newSlow(); libreTrick = newTrick(); libreCh = newCh(); chFinT = 0;
   void import("./zones/libre").then((m) => { libreLugares = m.LUGARES; });
   void import("./zones/libre_nieve").then((m) => { roam.hielo = m.lagoHielo; });
   libreNuts = spawnNuts(save.libre.tuercas); hudTuercas(nutsCount(save.libre.tuercas), NUT_N);
@@ -1009,8 +1009,14 @@ scene.onBeforeRenderObservable.add(() => {
     scene.physicsEnabled = false;
     if (hitStop > 0) hitStop -= dt;
     else {
-      update(LAB.on ? 1e-4 : dt);
-      (scene.getPhysicsEngine() as unknown as { _step(d: number): void })._step(LAB.on ? 1e-4 : dt);
+      // Paseo libre: cámara lenta del truco grande. El mundo (física, relojes del desafío y fantasma, trucos) avanza con dt*roam.slow; HUD y cámara con el dt real
+      let wd = dt;
+      if (libre && lead.car && state === "play") {
+        const v = lead.car.body.getLinearVelocity(), pe = scene.getPhysicsEngine() as unknown as { gravity: B.Vector3 };
+        wd = dt * slowStep(libreSlow, dt, libreTrick.air > 0, libreTrick.air, libreTrick.yaw, libreTrick.flip, lead.car.pos.y, v.y, Math.abs(pe.gravity.y), save.calm);
+      }
+      update(LAB.on ? 1e-4 : wd);
+      (scene.getPhysicsEngine() as unknown as { _step(d: number): void })._step(LAB.on ? 1e-4 : wd);
       if (RR.rec.on && state === "play") RR.recTick(dt, rrTake);
     }
     updateHud(dt);
