@@ -127,13 +127,16 @@ export function industrialLayout() {
   const put = (k: number, x: number, z: number, ry: number) => {
     const c = Math.cos(ry), s = Math.sin(ry);
     const pr = kit[k]((a, y, b) => [x + a * c + b * s, y, z - a * s + b * c], ry);
+    bare.push({ x, z, r: Math.max(pr.w, pr.d) / 2 + 1.5 }); // se reserva igual: el resto del reparto no cambia
+    if (k === 6 && Math.hypot(x + 12, z + 64.7) < 2) { pr.parts.forEach((m) => m.dispose()); return; } // bolardos que formaban un nicho sin salida con el muro bajo de (-9,-57)
     parts.push(...pr.parts);
     stat(box(pr.w, pr.h, pr.d, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, pr.h / 2, z, ry]).isVisible = false;
-    bare.push({ x, z, r: Math.max(pr.w, pr.d) / 2 + 1.5 });
   };
   // Pórtico de largada (z=28) y túnel de contenedores (z=46) sobre el carril norte: se reservan antes del reparto y se arman al final (el reparto usa el mismo generador).
   const GZ = 28, TZ = 46;
   bare.push({ x: 0, z: GZ, r: 10 }, { x: 0, z: TZ, r: 12 });
+  const PILAS = [[-20, -20], [20, -20], [-20, 20], [20, 20]]; // pilas altas a ~28 u de la salida (clear() libera 24); el reparto denso no deja huecos, así que se reservan antes
+  for (const [x, z] of PILAS) bare.push({ x, z, r: 6 });
   // Charco de aceite iridiscente (ref Charcos) junto a dos grupos de tambores: decal oscuro brillante, tinte arcoíris tenue en textura de semilla fija.
   { const PX = 24, PZ = 26, o = lcg(907), N = 256;
     const t = new B.DynamicTexture("aceiteTex", N, scene, true), c = t.getContext() as unknown as CanvasRenderingContext2D;
@@ -223,9 +226,9 @@ export function industrialLayout() {
     }
     n3++;
   }
-  // Pilas altas de contenedores (3 pisos) cerca de la salida: sus sombras largas caen sobre el carril. Pasillo libre >= 14 u; colisión por pila.
-  for (const [x, z, ry] of [[-17, -13, 0], [18, -15, 0], [-19, 14, 0], [16, 17, 0]] as V3[]) {
-    if (!clear(x, z, 6, 10)) continue;
+  // Pilas altas de contenedores (3 pisos) cerca de la salida: sus sombras largas caen sobre el carril. Pasillos >= 10 u entre pilas y carriles; colisión por pila.
+  for (const [x, z] of PILAS) {
+    const ry = 0;
     const pr = container((a, y, b) => [x + a, y, z + b], ry, 3);
     parts.push(...pr.parts);
     stat(box(pr.w, pr.h, pr.d, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, pr.h / 2, z]).isVisible = false;

@@ -64,6 +64,23 @@ const ell = (add: (m: B.Mesh, mat: B.Material) => B.Mesh, m: B.Material, p: V3, 
 /** Nervio semielíptico (arco sobre una cúpula) a la altura z; r = semiancho, h = alto, c = centro (x, y). */
 const rib = (G: GeoKit, m: B.Material, z: number, r: number, h: number, c: [number, number], w = 0.022) =>
   G.tube(Array.from({ length: 9 }, (_, i) => { const a = (Math.PI * i) / 8; return [c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * h, z] as V3; }), w, m);
+/** Mechón: cono fino (punta en +dir) desde `p`; `tip` pinta el último 45 % (puntas naranja). */
+const tuft = (G: GeoKit, m: B.Material, tip: B.Material | undefined, p: V3, dir: V3, len: number, w: number) => {
+  const d = new B.Vector3(...dir).normalize(), q = B.Quaternion.FromUnitVectorsToRef(B.Vector3.Up(), d, new B.Quaternion());
+  const put = (mat: B.Material, l: number, w1: number, off: number) => {
+    const c = G.cyl(0.001, l, mat, [p[0] + d.x * off, p[1] + d.y * off, p[2] + d.z * off], undefined, 4, w1); c.rotationQuaternion = q.clone();
+  };
+  put(m, len, w, len / 2);
+  if (tip) put(tip, len * 0.45, w * 0.46, len * 0.775);
+};
+/** Placas de élitro en teja (4 domos que se pisan, tonos alternados) y 2 nervios longitudinales en relieve sobre la cúpula c con semiejes r. */
+const elytra = (G: GeoKit, add: (m: B.Mesh, mat: B.Material) => B.Mesh, mats: B.Material[], rib2: B.Material, c: V3, r: V3, n = 4) => {
+  for (let i = 0; i < n; i++) {
+    const t = -0.7 + (1.4 * i) / (n - 1), k = Math.sqrt(1 - t * t) * 1.035;
+    ell(add, mats[i % mats.length], [c[0], c[1], c[2] + r[2] * t], [r[0] * 2 * k, r[1] * 2 * k, r[2] * 0.95], 8, 0.5);
+  }
+  for (const phi of [0.9, 1.9]) G.tube(Array.from({ length: 11 }, (_, i) => { const t = -0.92 + (1.84 * i) / 10, k = Math.sqrt(1 - t * t) * 1.045; return [c[0] + Math.cos(phi) * r[0] * k, c[1] + Math.sin(phi) * r[1] * k, c[2] + r[2] * t] as V3; }), 0.028, rib2);
+};
 export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
   const { G, done, strut, bone, add } = kit();
   const body = FOLD.painted(o.color, 0.85, o.seed), plate = FOLD.painted(BRONZE, 0.8, 62), cream = FOLD.painted(CREAM, 0.8, 63), eye = FOLD.emissive(o.eye), bronze = FOLD.painted(BRONZE, 0.6, 65), dkr = FOLD.painted(RUSTD, 0.8, 66);
@@ -71,7 +88,8 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     const olive = FOLD.painted("#505624", 0.4, 68), rust = FOLD.painted("#7a3a1c", 0.4, 69);
     along(G, 0.6, 0.78, 0.9, dkr, [0, 0.4, -0.6]);
     for (const s of [-1, 1]) {
-      ell(add, s < 0 ? olive : rust, [s * 0.26, 0.5, -0.6], [0.56, 0.95, 1.3], 10, 0.5); // élitro
+      ell(add, dkr, [s * 0.26, 0.48, -0.6], [0.54, 0.9, 1.26], 8, 0.5); // base oscura bajo las placas
+      elytra(G, add, s < 0 ? [olive, FOLD.painted("#5e6430", 0.4, 72)] : [rust, FOLD.painted("#8e4a24", 0.4, 73)], bronze, [s * 0.26, 0.5, -0.6], [0.28, 0.475, 0.65]); // placas segmentadas con nervios
       rib(G, bronze, -0.28, 0.26, 0.3, [s * 0.26, 0.5]); rib(G, bronze, -0.9, 0.22, 0.24, [s * 0.26, 0.5]);
       G.rivets([s * 0.26, 0.8, -0.28], [s * 0.26, 0.8, -0.9], 4, [0, 1, 0]);
       G.box(0.2, 0.012, 0.3, cream, [s * 0.34, 0.9, -0.55], [0, 0, s * 0.35]); // parche de pintura saltada
@@ -79,10 +97,9 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     G.bend([0, 0.84, -1.18], [0, 0.84, -0.04], 0.03, FOLD.bare()); // costura
     ell(add, rust, [0, 0.52, 0.12], [0.5, 0.6, 0.5], 10, 0.5); // pronoto abombado
     G.tube([[0, 0.66, 0.9], [0, 0.78, 1.22], [0, 0.98, 1.34], [0, 1.16, 1.2]], 0.045, dkr); // cuerno curvo corto, color élitro oscuro
-    for (const s of [-1, 1]) { // cara: ojos grandes con brasa al frente y mandíbulas en pinza bajo el pronoto
-      G.sph(0.26, FOLD.painted("#0c0a0a", 0.2, 71), [s * 0.3, 0.6, 0.92]); G.sph(0.14, eye, [s * 0.33, 0.62, 1.07]);
-      G.tube([[s * 0.16, 0.4, 0.95], [s * 0.34, 0.32, 1.28], [s * 0.1, 0.3, 1.5]], 0.06, FOLD.bare());
-    }
+    ell(add, body, [0, 0.54, 0.76], [0.6, 0.46, 0.58], 9); // cabeza redondeada
+    G.plate([0, 0.77, 0.9], [Math.PI / 2 - 0.5, 0, 0], 0.34, 0.26, plate); // clípeo
+    for (const s of [-1, 1]) G.tube([[s * 0.16, 0.4, 0.96], [s * 0.36, 0.3, 1.28], [s * 0.12, 0.3, 1.5]], 0.07, FOLD.bare()); // mandíbulas en pinza
   } else {
     ell(add, body, [0, 0.46, -0.72], [0.8, 0.74, 1.05], 9); // gáster bulboso (BODY)
     for (const [z, d] of [[-0.45, 0.62], [-0.7, 0.72], [-0.95, 0.66]] as const) along(G, d, d, 0.04, plate, [0, 0.46, z], 8); // segmentos de bronce
@@ -98,13 +115,15 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     G.sph(0.09, FOLD.emissive("#b8e830"), [0, 0.4, 1.24]); G.sph(0.06, FOLD.emissive("#b8e830"), [0, 0.28, 1.28]);
   }
   along(G, 0.14, 0.18, 0.26, FOLD.dark(), [0, 0.46, -0.12]); // cintura
-  G.box(0.42, 0.3, 0.46, body, [0, 0.5, 0.14]); // tórax
+  if (o.look !== "beetle") G.box(0.42, 0.3, 0.46, body, [0, 0.5, 0.14]); // tórax
   for (const s of [-1, 1]) G.bend([s * 0.21, 0.65, -0.09], [s * 0.21, 0.65, 0.37], 0.03, bronze);
   G.plate([0, 0.655, 0.14], [Math.PI / 2, 0, 0], 0.26, 0.36, plate);
   along(G, 0.14, 0.14, 0.18, FOLD.dark(), [0, 0.52, 0.46]); // cuello
-  G.box(0.52, 0.38, 0.44, body, [0, 0.55, 0.7], [-0.18, 0, 0]); // cabeza grande
-  G.box(0.5, 0.08, 0.4, plate, [0, 0.79, 0.7], [-0.18, 0, 0]); // visera
-  G.rivets([-0.2, 0.84, 0.7], [0.2, 0.84, 0.7], 3, [0, 1, 0]);
+  if (o.look !== "beetle") {
+    G.box(0.52, 0.38, 0.44, body, [0, 0.55, 0.7], [-0.18, 0, 0]); // cabeza grande
+    G.box(0.5, 0.08, 0.4, plate, [0, 0.79, 0.7], [-0.18, 0, 0]); // visera
+    G.rivets([-0.2, 0.84, 0.7], [0.2, 0.84, 0.7], 3, [0, 1, 0]);
+  }
   for (const s of [-1, 1]) {
     G.sph(0.22, FOLD.painted("#0c0a0a", 0.2, 71), [s * 0.28, 0.62, 0.8]); G.sph(0.1, eye, [s * 0.34, 0.64, 0.9]); // ojo de vidrio con brasa
     strut([s * 0.12, 0.44, 0.9], [s * 0.05, 0.36, 1.22], 0.07, 0.06, FOLD.bare()); // mandíbula
@@ -186,7 +205,10 @@ export function mothWing(side: 1 | -1) {
   for (const x of [0.3, 0.55, 1.0]) for (const y of [0.0185, -0.0125]) G.box(0.06, 0.012, 0.4, cream, [s * x, y, 0.02 - x * 0.1], [0, s * 0.126, 0]); // bandas crema
   G.box(0.085, 0.012, 0.3, cream, [s * 0.385, -0.0125, -0.28]);
   for (const y of [0.0185, -0.0125]) { G.cyl(0.24, 0.012, cream, [s * 0.518, y, -0.04], undefined, 12); G.cyl(0.12, 0.014, core, [s * 0.518, y + Math.sign(y) * 0.001, -0.04], undefined, 12); } // anillo ocular crema, centro marrón oscuro
-  return done();
+  const R = B.Matrix.RotationY(side * 0.62); // alas plegadas en V hacia atrás (barrido de 35 grados)
+  const parts = done();
+  for (const m of parts) { m.computeWorldMatrix(true); m.bakeCurrentTransformIntoVertices(); m.bakeTransformIntoVertices(R); }
+  return parts;
 }
 
 // ---------- Robot a cuerda: pies de chapa, cintura hazard, torso plegado con rejilla y número, cabeza con visor ----------
@@ -380,7 +402,8 @@ export function reyBody() {
   const gold = FOLD.painted("#a8702a", 0.4, 131), gold2 = FOLD.painted("#8a5420", 0.4, 133), dark = FOLD.painted("#3a2a1c", 0.8, 132), steel = FOLD.bare(), bronze = FOLD.painted(BRONZE, 0.6, 134), eye = FOLD.emissive("#ff7a1a"), red = FOLD.painted("#b02418", 0.7, 135), cream = FOLD.painted(CREAM, 0.85, 136);
   along(G, 1.2, 1.5, 2.5, dark, [0, 0.55, -0.25], 6); // vientre
   for (const s of [-1, 1]) { // élitros: dos cúpulas de chapa con nervios, remaches en el borde y parches crema
-    ell(add, s < 0 ? gold : gold2, [s * 0.5, 0.82, -0.25], [1.08, 1.5, 2.7], 12, 0.5);
+    ell(add, dark, [s * 0.5, 0.78, -0.25], [1.04, 1.44, 2.6], 10, 0.5); // base oscura bajo las placas
+    elytra(G, add, s < 0 ? [gold, FOLD.painted("#b88034", 0.4, 138)] : [gold2, FOLD.painted("#9a6228", 0.4, 139)], steel, [s * 0.5, 0.82, -0.25], [0.54, 0.75, 1.35], 5); // placas en teja + nervios
     for (const z of [-1.05, -0.55, -0.05, 0.45]) { const f = (z + 0.25) / 1.35, k = Math.sqrt(1 - f * f); rib(G, steel, z, 0.52 * k, 0.75 * k, [s * 0.5, 0.82], 0.035); G.rivets([s * (0.5 + 0.52 * k), 0.84, z], [s * (0.5 + 0.52 * k), 0.84, z], 1, [s, 0.3, 0]); }
     G.box(0.5, 0.02, 0.6, cream, [s * 0.62, 1.38, -0.5], [0, 0, s * 0.5]);
   }
@@ -389,12 +412,12 @@ export function reyBody() {
   ell(add, gold2, [0, 0.95, 0.8], [1.5, 0.95, 1.0], 10, 0.5); // pronoto
   G.rivets([-0.5, 1.35, 0.75], [0.5, 1.35, 0.75], 5, [0, 1, 0]);
   bone(1);
-  G.box(1.0, 0.62, 0.74, dark, [0, 0.56, 1.2]); // cabeza
+  ell(add, dark, [0, 0.56, 1.2], [1.06, 0.7, 0.86], 10); // cabeza redondeada
   G.box(0.86, 0.1, 0.6, bronze, [0, 0.9, 1.18]); // visera
   G.sph(0.16, steel, [0, 1.12, 1.05]); G.box(1.0, 0.12, 0.6, bronze, [0, 1.0, 1.1]); // aro de la corona
   for (let i = 0; i < 5; i++) G.box(0.14, 0.3 + (i === 2 ? 0.14 : 0), 0.05, bronze, [-0.36 + i * 0.18, 1.2 + (i === 2 ? 0.07 : 0), 1.08], [0.15, 0, 0]); // puntas de la corona
   for (const i of [0, 2, 4]) G.sph(0.14, red, [-0.36 + i * 0.18, 1.0 + (i === 2 ? 0.28 : 0.16) + 0.1, 1.1]); // gemas
-  for (const s of [-1, 1]) { G.sph(0.3, FOLD.painted("#0c0a0a", 0.2, 137), [s * 0.34, 0.66, 1.55]); G.sph(0.11, eye, [s * 0.4, 0.69, 1.76]); strut([s * 0.3, 0.36, 1.5], [s * 0.12, 0.3, 1.9], 0.1, 0.08, steel); }
+  for (const s of [-1, 1]) { G.sph(0.3, FOLD.painted("#0c0a0a", 0.2, 137), [s * 0.34, 0.66, 1.55]); G.sph(0.11, eye, [s * 0.4, 0.69, 1.76]); G.tube([[s * 0.28, 0.36, 1.5], [s * 0.52, 0.28, 1.95], [s * 0.2, 0.28, 2.3]], 0.1, bronze); } // mandíbulas curvas
   G.tube([[0, 0.7, 1.6], [0, 0.82, 2.0], [0, 1.05, 2.2], [0, 1.3, 2.08]], 0.07, dark); // cuerno curvo corto, oscuro
   bone(0);
   return done(5, BOSS_S.rey);
@@ -407,11 +430,11 @@ export function reyPose(_v: number, walk: number, atk: number) {
 
 /** Tarántula: cefalotórax de chapa con placa, abdomen en prisma con faja naranja y placa dorsal, quelíceros de acero, racimo de ojos. Huesos: 0 cuerpo, 1 abdomen. */
 export function tarantulaBody() {
-  const { G, done, strut, bone } = kit();
-  const hair = FOLD.painted("#2a1a14", 0.85, 141), dark = FOLD.painted("#2a1a14", 0.8, 142), band = FOLD.painted("#a8461a", 0.85, 143), gold = FOLD.painted("#8a4a24", 0.9, 144), eye = FOLD.emissive("#d8300e"), bronze = FOLD.painted(BRONZE, 0.6, 145);
+  const { G, done, strut, bone, add } = kit();
+  const hair = FOLD.painted("#2a1a14", 0.85, 141), dark = FOLD.painted("#2a1a14", 0.8, 142), band = FOLD.painted("#a8461a", 0.85, 143), eye = FOLD.emissive("#d8300e"), tip = FOLD.painted("#d8661e", 0.85, 144);
   G.box(1.0, 0.5, 1.1, dark, [0, 0.5, 0.32]); // cefalotórax
-  for (let i = 0; i < 14; i++) { const x = -0.44 + (i % 7) * 0.147, z = i < 7 ? 0.02 : 0.62; G.box(0.07, 0.07, 0.3, i % 2 ? band : hair, [x, 0.8, z], [-0.5, 0, 0]); } // pelos de chapa
-  G.plate([0, 0.756, 0.3], [Math.PI / 2, 0, 0], 0.8, 0.9, gold);
+  ell(add, hair, [0, 0.74, 0.3], [0.96, 0.4, 1.0], 8, 0.5); // cúpula del cefalotórax bajo el pelo
+  for (let i = 0; i < 40; i++) { const a = i * 2.4, r = 0.18 + 0.4 * ((i * 0.618) % 1), x = Math.cos(a) * r * 0.9, z = 0.3 + Math.sin(a) * r; tuft(G, i % 3 ? hair : dark, i % 2 ? tip : undefined, [x, 0.8 + (0.4 - r * 0.3) * 0.3, z], [x * 0.6, 1, (z - 0.3) * 0.6 + 0.2], 0.2, 0.07); } // mechones del cefalotórax
   for (const s of [-1, 1]) G.bend([s * 0.5, 0.75, -0.2], [s * 0.5, 0.75, 0.86], 0.04, dark);
   along(G, 0.24, 0.28, 0.3, FOLD.dark(), [0, 0.55, -0.32]); // cintura
   for (const s of [-1, 1]) {
@@ -420,14 +443,15 @@ export function tarantulaBody() {
   }
   for (const [x, y, z, sz] of [[0.14, 0.84, 0.74, 0.1], [-0.14, 0.84, 0.74, 0.1], [0.3, 0.78, 0.66, 0.07], [-0.3, 0.78, 0.66, 0.07], [0, 0.88, 0.62, 0.06]]) G.box(sz, sz, sz, eye, [x, y, z]);
   bone(1);
-  along(G, 1.2, 1.5, 1.7, hair, [0, 0.66, -1.12], 8); // abdomen
-  G.cyl(1.56, 0.2, band, [0, 0.66, -0.66], [Math.PI / 2, 0, 0], 8); // faja
-  G.cyl(1.4, 0.2, band, [0, 0.66, -1.5], [Math.PI / 2, 0, 0], 8); // segunda faja
-  for (let i = 0; i < 30; i++) { const a = (i / 30) * Math.PI * 2, z = -0.4 - (i % 6) * 0.3; if (Math.sin(a) < 0.1) continue; const r = 0.62 + (z < -1 ? 0.0 : 0.1); G.box(0.05, 0.05, 0.3, i % 3 ? hair : band, [Math.cos(a) * r * 1.0, 0.66 + Math.sin(a) * r * 1.0, z], [Math.cos(a) * 0.5, 0, 0], undefined); } // cerdas del abdomen
-  G.plate([0, 1.3, -1.12], [Math.PI / 2 - 0.05, 0, 0], 0.7, 1.2, gold);
-  for (const s of [-1, 1]) G.plate([s * 0.62, 1.12, -1.0], [Math.PI / 2 - 0.05, 0, s * 0.5], 0.4, 0.8, band); // placas laterales del lomo
-  G.rivets([-0.3, 1.31, -0.6], [0.3, 1.31, -0.6], 4, [0, 1, 0]); G.rivets([-0.3, 1.31, -1.6], [0.3, 1.31, -1.6], 4, [0, 1, 0]); // placa dorsal
-  G.decal([0, 1.31, -1.1], [Math.PI / 2 - 0.05, 0, 0], "calavera", 0.5);
+  const cz = -1.12, R: V3 = [0.7, 0.68, 1.05]; // abdomen ovalado (elipsoide) con dibujo
+  ell(add, hair, [0, 0.66, cz], [R[0] * 2, R[1] * 2, R[2] * 2], 10);
+  for (const t of [-0.55, 0.0, 0.5]) { const k = Math.sqrt(1 - t * t) * 1.03; G.cyl(R[0] * 2 * k, 0.13, band, [0, 0.66, cz + R[2] * t], [Math.PI / 2, 0, 0], 10, R[0] * 2 * k); } // fajas
+  G.decal([0, 0.66 + R[1] * 1.0, cz + 0.05], [Math.PI / 2 - 0.05, 0, 0], "calavera", 0.55);
+  for (let i = 0; i < 110; i++) { // mechones: espiral sobre la mitad de arriba y los flancos, oscuros con punta naranja
+    const u = -0.95 + 1.9 * ((i * 0.618) % 1), ph = Math.PI * 0.08 + ((i * 0.37) % 1) * Math.PI * 0.84, k = Math.sqrt(1 - u * u);
+    const n: V3 = [Math.cos(ph) * k, Math.sin(ph) * k, u], p: V3 = [n[0] * R[0] * 0.94, 0.66 + n[1] * R[1] * 0.94, cz + n[2] * R[2] * 0.94];
+    for (const sx of [-1, 1]) tuft(G, i % 3 ? hair : dark, i % 2 ? tip : undefined, [p[0] * sx, p[1], p[2]], [n[0] * sx * 0.8, n[1] + 0.2, n[2] * 0.8 - 0.35], 0.22, 0.08);
+  }
   G.cyl(0.24, 0.2, FOLD.dark(), [0, 0.62, -2.0], [Math.PI / 2, 0, 0], 6); // hileras
   bone(0);
   return done(5, BOSS_S.tarantula);
@@ -593,9 +617,15 @@ export function foldLeg(L: { hips: [number, number, number][]; len: number; r: n
   const pal = LEG_PAL[L.color], hy = L.hips[0][1], leg = FOLD.painted(pal?.[0] ?? L.color, pal ? 0.9 : 0.75, 181), steel = pal ? FOLD.painted(BRONZE, 0.6, 182) : FOLD.bare(), knee: V3 = [L.len * 0.48, L.len * 0.32, 0], foot: V3 = [L.len * 0.98, -hy + 0.02, 0.06];
   G.cyl(L.r * 2.4, L.r * 2.4, steel, [-L.r * 0.4, 0, 0], [0, 0, Math.PI / 2], 6); // rótula hacia el caparazón
   G.box(L.r * 2.3, L.r * 2.3, L.r * 2.3, steel, [0, 0, 0]);
-  strut([0, 0, 0], knee, L.r * 1.75, L.r * 2.15, leg); strut(knee, foot, L.r * 1.35, L.r * 1.65, leg);
-  G.cyl(L.r * 2.1, L.r * 2.4, pal ? FOLD.painted(pal[1], 0.8, 184) : L.knee ? FOLD.emissive(L.knee) : steel, knee, [Math.PI / 2, 0, 0], 6); // rodilla
-  if (pal) for (const t of [0.3, 0.62, 0.84]) { const a = new B.Vector3(...knee), f = new B.Vector3(...foot), q = B.Vector3.Lerp(a, f, t); G.box(L.r * 1.9, L.r * 1.9, L.r * 1.4, pal[2] ? FOLD.painted(pal[2], 0.8, 183) : leg, [q.x, q.y, q.z], [0, 0, 0.9]); } // bandas / segmentos de la tibia
+  const tar = L.color === "#4a3228"; // tarántula: pata arqueada de 3 segmentos (fémur alto, tibia, metatarso) con codo marcado
+  const mid: V3 = [L.len * 0.78, L.len * 0.22, 0], top: V3 = [L.len * 0.34, L.len * 0.66, 0];
+  if (tar) { strut([0, 0, 0], top, L.r * 1.9, L.r * 2.3, leg); strut(top, mid, L.r * 1.6, L.r * 1.9, leg); strut(mid, foot, L.r * 1.25, L.r * 1.5, leg); G.sph(L.r * 2.5, FOLD.painted(pal[1], 0.8, 185), top); G.sph(L.r * 2.0, FOLD.painted(pal[1], 0.8, 186), mid); }
+  else { strut([0, 0, 0], knee, L.r * 1.75, L.r * 2.15, leg); strut(knee, foot, L.r * 1.35, L.r * 1.65, leg); }
+  if (!tar) G.cyl(L.r * 2.1, L.r * 2.4, pal ? FOLD.painted(pal[1], 0.8, 184) : L.knee ? FOLD.emissive(L.knee) : steel, knee, [Math.PI / 2, 0, 0], 6); // rodilla
+  if (tar) { // pelaje: mechones en 4 direcciones a lo largo de los 3 segmentos, oscuros con punta naranja
+    const fur = FOLD.painted(pal[0], 0.85, 187), tp = FOLD.painted("#d8661e", 0.85, 188), segs: [V3, V3][] = [[[0, 0, 0], top], [top, mid], [mid, foot]];
+    segs.forEach(([a, b], si) => { for (let k = 0; k < 5; k++) { const t = 0.1 + k * 0.2, q: V3 = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 0], f = new B.Vector3(b[0] - a[0], b[1] - a[1], 0).normalize(); for (const d of [[0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]] as V3[]) tuft(G, fur, (k + si) % 2 ? tp : undefined, [q[0], q[1], d[2] * L.r], [d[0] + f.x * 0.9, d[1] + f.y * 0.9, d[2]], L.r * 2.3, L.r * 1.0); } });
+  } else if (pal) for (const t of [0.3, 0.62, 0.84]) { const a = new B.Vector3(...knee), f = new B.Vector3(...foot), q = B.Vector3.Lerp(a, f, t); G.box(L.r * 1.9, L.r * 1.9, L.r * 1.4, pal[2] ? FOLD.painted(pal[2], 0.8, 183) : leg, [q.x, q.y, q.z], [0, 0, 0.9]); } // bandas / segmentos de la tibia
   G.cyl(L.r * 1.6, L.r * 1.9, steel, [foot[0], foot[1] + L.r * 0.72, foot[2]], [Math.PI / 2, 0, 0], 6); // tobillo
   G.box(L.r * 2.7, L.r * 0.9, L.r * 2.5, FOLD.rubber(), [foot[0], foot[1] + L.r * 0.42, foot[2]]);
   return done(3);
