@@ -20,6 +20,7 @@ import type { Cmd } from "./main";
 const R = BAL.ritmo;
 const ANTICIPA_MS = 230; // ponytail: constante de sensación (decisión de producto 200-250 ms); a balance.json si se afina
 const $ = (id: string) => document.getElementById(id)!;
+let recDone = false; // ponytail: una vez por sesión (no por guardado); alcanza porque runs > 0 lo apaga al cerrar la primera expedición
 
 // Progresión: XP, subida de nivel, cartas (ofertas, re-sorteo, elección) y cofres. Estado de partida: `run`; el resto entra por initProgression.
 export interface ProgressionContext {
@@ -95,7 +96,10 @@ export function openOffers(list: Offer[], title: string, keep = false) {
   }
   const threat = bossNear ? "boss" : near ? "near" : "";
   const sub = bossNear ? "Jefe en radio corto" : near ? `${near} contacto${near === 1 ? "" : "s"} en radio` : "";
-  const show = () => showOffers(title, list, 0, (i) => (mine ? c.applyCommand(cardBy, { k: "card", i }) : show()), previewOffer, mine ? sub : `Elige J${cardBy}`, mine ? threat : "");
+  // Primera subida de nivel de la primera expedición: una carta marcada RECOMENDADA (la primera de arma) para que la primera decisión sea confirmar
+  const rec = !keep && !chest && mine && !recDone && erun && !save.encore.runs && !c.simulating ? Math.max(0, list.findIndex((o) => o.kind === "weapon")) : -1;
+  if (rec >= 0) { recDone = true; c.setOfferSel(rec); }
+  const show = () => showOffers(title, list, Math.max(0, rec), (i) => (mine ? c.applyCommand(cardBy, { k: "card", i }) : show()), previewOffer, mine ? sub : `Elige J${cardBy}`, mine ? threat : "", rec);
   // El mundo ya está congelado (estado "level"); solo se retrasa el panel. Sin retraso al re-sortear, en sim ni en el lab.
   if (keep || c.simulating || c.lab.on) show();
   else setTimeout(() => { if (c.state === "level" && c.offers === list) show(); }, ANTICIPA_MS);

@@ -51,26 +51,26 @@
 #lvl { white-space: nowrap; font: 700 16px/1 var(--hf); letter-spacing: .06em; padding: 5px 9px; border: 0; border-radius: 99px; background: linear-gradient(135deg, #35c9ff, #7dffb0); color: #08202c; box-shadow: none; }
 #lvl.milestone { background: linear-gradient(135deg, #ffd24a, #ff9138); color: #1f1100; box-shadow: 0 0 10px rgba(255, 210, 74, .6); }
 #signal.up { animation: h-levelup .7s ease-out both; }
-#signal.fringe { opacity: .6; filter: grayscale(.4); }
+#signal.fringe { opacity: .85; filter: grayscale(.4); }
 #signal.rf-loss { animation: rf-loss .2s steps(2) infinite; filter: contrast(1.6) brightness(.8); }
-.sig-dbm { font: 700 10px/1 var(--hf); color: var(--g-dim); margin-left: 4px; letter-spacing: .04em; }
+.sig-dbm { font: 700 12px/1 var(--hf); color: var(--g-dim); margin-left: 4px; letter-spacing: .04em; }
 .sig-dbm.sig-warn { color: #f59e0b; text-shadow: 0 0 6px rgba(245, 158, 11, .6); animation: sigWarnFlicker .25s steps(2) infinite; }
-.sig-pkt { font: 700 9px/1 var(--hf); color: #f59e0b; margin-left: 3px; letter-spacing: .04em; }
-.sig-pkt.crc-err { color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, .8); animation: crcWarn .2s steps(2) infinite; }
-.sig-snr { font: 700 9px/1 var(--hf); color: #64748b; margin-left: 3px; letter-spacing: .03em; }
+.sig-pkt { font: 700 12px/1 var(--hf); color: #f59e0b; margin-left: 3px; letter-spacing: .04em; }
+.sig-pkt.crc-err { color: var(--jm-rojo-txt, #ff7b6b); text-shadow: 0 0 6px rgba(239, 68, 68, .8); animation: crcWarn .2s steps(2) infinite; }
+.sig-snr { font: 700 12px/1 var(--hf); color: var(--g-dim); margin-left: 3px; letter-spacing: .03em; }
 .sig-snr.snr-low { color: #f59e0b; text-shadow: 0 0 4px rgba(245, 158, 11, .5); }
-.sig-snr.snr-critical { color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, .8); animation: crcWarn .2s steps(2) infinite; }
+.sig-snr.snr-critical { color: var(--jm-rojo-txt, #ff7b6b); text-shadow: 0 0 6px rgba(239, 68, 68, .8); animation: crcWarn .2s steps(2) infinite; }
 .rx-div { font: 700 8px/1 var(--hf); color: #38bdf8; margin-left: 3px; border: 1px solid rgba(56, 189, 248, .3); padding: 1px 2px; border-radius: 2px; letter-spacing: .02em; }
 .rx-div.fhss-locked { animation: fhssLock .4s ease-out; }
 .sig-rssi { font: 700 8px/1 var(--hf); margin-left: 3px; letter-spacing: 1px; }
 .sig-rssi.bars-4 { color: var(--ok); }
 .sig-rssi.bars-3 { color: #eab308; }
 .sig-rssi.bars-2 { color: #f59e0b; }
-.sig-rssi.bars-1 { color: #ef4444; animation: crcWarn .2s steps(2) infinite; }
+.sig-rssi.bars-1 { color: var(--jm-rojo-txt, #ff7b6b); animation: crcWarn .2s steps(2) infinite; }
 @keyframes fhssLock { 0% { box-shadow: 0 0 8px #38bdf8; background: rgba(56, 189, 248, .4); } 100% { box-shadow: none; background: transparent; } }
 #signal.sig-fringing #sigIco, #signal.sig-critical #sigIco { display: inline-flex; }
 #signal.sig-fringing #sigIco { color: #f59e0b; filter: drop-shadow(0 0 3px rgba(245, 158, 11, .5)); }
-#signal.sig-critical #sigIco { color: #ef4444; filter: drop-shadow(0 0 4px rgba(239, 68, 68, .7)); }
+#signal.sig-critical #sigIco { color: var(--jm-rojo-txt, #ff7b6b); filter: drop-shadow(0 0 4px rgba(239, 68, 68, .7)); }
 #signal.pkt-loss #sigIco { display: inline-flex; animation: pktDrop .3s steps(2) infinite; }
 @keyframes crcWarn { 0% { opacity: 1; } 50% { opacity: .3; } 100% { opacity: 1; } }
 @keyframes pktDrop { 0% { opacity: 1; } 50% { opacity: .25; } 100% { opacity: 1; } }
@@ -109,11 +109,14 @@
 #encAsk.pact .encBtns small { margin-top: 5px; font: 700 10px/1 var(--hf); letter-spacing: .14em; color: var(--g-dim); }
 #encAsk.pact .encBtns span { font: 700 14px/1.15 var(--hf); letter-spacing: .04em; }
 #encAsk.pact .encBtns .pg { color: #7dffb0; }
-#encAsk.pact .encBtns .pc { color: #ff7a6b; }
+#encAsk.pact .encBtns .pc { color: var(--jm-rojo-txt, #ff7b6b); }
 #encAsk.pact .encBtns em { margin-top: 5px; font: 500 11px/1 var(--hf); font-style: normal; letter-spacing: .1em; color: var(--g-dim); }
 #encAsk.pact .encBtns kbd { margin: 6px 0 0; }
 #encAsk.pact .encBtns button.primary { color: var(--jm-texto); font-size: 15px; background: linear-gradient(180deg, #2b3442, var(--jm-panel) 55%, #161c25); outline: 1px solid var(--jm-borde); outline-offset: -4px; } /* QA final: las dos ofertas valen lo mismo; el relleno verde dejaba ilegibles VENTAJA/COSTO y sus términos */
-#encC { width: 100%; margin-top: 8px; touch-action: manipulation; }
+#encAsk.pact .encBtns span i { display: inline-grid; place-items: center; width: 14px; height: 14px; margin-right: 6px; vertical-align: 1px; font: 700 13px/1 var(--hf); font-style: normal; color: #101215; }
+#encAsk.pact .encBtns .pg i { background: #7dffb0; border-radius: 50%; } /* H6: ventaja = círculo con +, costo = cuadrado con −: se distinguen sin color (daltonismo) */
+#encAsk.pact .encBtns .pc i { background: var(--jm-rojo-txt, #ff7b6b); border-radius: 1px; }
+#encC { width: 100%; min-height: 44px; margin-top: 8px; touch-action: manipulation; }
 #encC.hidden { display: none; }
 @media (max-width: 520px), (orientation: landscape) and (max-height: 500px) { /* celular (vertical y apaisado): las dos opciones lado a lado y compactas, para que RECHAZAR quede arriba de los controles táctiles */
   #encAsk.pact { top: 28%; padding: 10px 10px 10px; }
@@ -124,6 +127,24 @@
   #encAsk.pact .encBtns small, #encAsk.pact .encBtns em { margin-top: 3px; }
   #encAsk.pact #encC { margin-top: 6px; padding-block: 8px; }
 }
+/* Celular vertical: las decisiones (pacto, destino, teleportador) suben a la franja superior, bajo la señal y a la izquierda de PAUSA/CÁMARA:
+   en el centro tapaban al auto (y ~190-440) y RECHAZAR quedaba bajo SALTO/DERRAPE (y 504) */
+@media (orientation: portrait) and (max-width: 520px) {
+  #encAsk, #encAsk.pact { top: calc(max(10px, env(safe-area-inset-top)) + 54px); left: 8px; translate: none; transform-origin: 0 0; width: calc((100vw - 60px) / var(--hud-scale)); z-index: 5; }
+  #encAsk .encBtns button { min-height: 44px; }
+  #encAsk.pact .encBtns small { display: none; } /* VENTAJA/COSTO: en vertical lo dicen las marcas + / − (forma y color); así el panel no baja hasta el auto */
+}
+@media (pointer: coarse) { #encAsk kbd { display: none; } } /* sin teclado: las teclas Z/X/V no aplican */
+/* Primera expedición: carta sugerida en la primera subida de nivel (progression.ts), pegatina roja ladeada */
+.offer .rec { position: absolute; top: -10px; right: -8px; z-index: 2; padding: 4px 8px 3px; font: 700 12px/1 var(--jm-titulo, var(--hf)); letter-spacing: .1em; color: #fff; background: #c62828; border: 2px solid #fff; rotate: 4deg; font-style: normal; box-shadow: 0 3px 0 #000a; pointer-events: none; animation: rec-in .22s cubic-bezier(.2, 1.6, .4, 1) .35s both; }
+@media (orientation: portrait) and (max-width: 720px) { .offer .rec { top: 6px; right: 8px; } }
+@keyframes rec-in { from { scale: 1.6; opacity: 0; } }
+body.calm .offer .rec { animation: none; }
+@media (prefers-reduced-motion: reduce) { .offer .rec { animation: none; } }
+/* Primera expedición: «SUBIR» anclado sobre el teleportador listo (moon_goals.ts teleTag) */
+#teleTag { position: fixed; left: 0; top: 0; margin: -34px 0 0 -36px; width: 72px; padding: 5px 0 4px; text-align: center; pointer-events: none; font: 700 18px/1 var(--jm-titulo, var(--hf)); letter-spacing: .12em; color: #fff; background: #c62828; border: 2px solid #fff; rotate: -3deg; box-shadow: 0 3px 0 #000a; }
+#teleTag::after { content: ""; position: absolute; left: 50%; bottom: -9px; translate: -50% 0; border: 7px solid transparent; border-top-color: #fff; border-bottom: 0; }
+#teleTag.hidden { display: none; }
 #encPacts { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 106px); left: 14px; scale: var(--hud-scale); transform-origin: 0 0; display: flex; flex-wrap: wrap; gap: 4px; max-width: 220px; pointer-events: none; }
 #encPacts i { font: 700 11px/1 var(--hf); font-style: normal; letter-spacing: .08em; padding: 3px 6px; color: var(--g-dim); background: rgba(14, 12, 10, .88); border: 1px solid var(--jm-naranja, #ff7a1a); }
 #encPacts i b { color: var(--jm-amarillo2, #FFD166); }
@@ -173,7 +194,7 @@
 #radar.has-chest { border-color: #ffd24a; box-shadow: 0 0 12px rgba(255, 210, 74, .35); }
 #radar.rf-jammed { filter: contrast(1.3) brightness(.9); animation: radarJam .2s steps(2) infinite; }
 #radar.rf-return { box-shadow: 0 0 12px rgba(239, 68, 68, .35), inset 0 0 8px rgba(239, 68, 68, .2); }
-#radar.rf-return::after { content: "▲ BASE"; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font: 700 8px/1 var(--hf); color: #ef4444; letter-spacing: .08em; animation: rfBasePulse .5s steps(2) infinite; pointer-events: none; }
+#radar.rf-return::after { content: "▲ BASE"; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font: 700 8px/1 var(--hf); color: var(--jm-rojo-txt, #ff7b6b); letter-spacing: .08em; animation: rfBasePulse .5s steps(2) infinite; pointer-events: none; }
 @keyframes rfBasePulse { 0% { opacity: 1; } 50% { opacity: .2; } 100% { opacity: 1; } }
 @keyframes radarJam {
   0% { opacity: .75; }
@@ -182,7 +203,7 @@
 }
 .telemetry-glitch { animation: telemGlitch .15s steps(2) 1; }
 @keyframes telemGlitch { 0% { opacity: .4; filter: blur(1px); } 50% { opacity: 1; filter: none; } 100% { opacity: .7; } }
-.rf-failsafe { position: fixed; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 165px * var(--hud-scale, 1)); /* arriba del panel de batería (#txl), que ocupa el mismo borde inferior */ left: 50%; transform: translateX(-50%); font: 700 11px/1 var(--hf); color: #ef4444; background: rgba(15, 23, 42, .92); border: 1px solid rgba(239, 68, 68, .6); padding: 4px 10px; border-radius: 4px; letter-spacing: .08em; animation: failPulse .3s steps(2) infinite; pointer-events: none; z-index: 10; }
+.rf-failsafe { position: fixed; bottom: calc(max(14px, env(safe-area-inset-bottom)) + 165px * var(--hud-scale, 1)); /* arriba del panel de batería (#txl), que ocupa el mismo borde inferior */ left: 50%; transform: translateX(-50%); font: 700 11px/1 var(--hf); color: var(--jm-rojo-txt, #ff7b6b); background: rgba(15, 23, 42, .92); border: 1px solid rgba(239, 68, 68, .6); padding: 4px 10px; border-radius: 4px; letter-spacing: .08em; animation: failPulse .3s steps(2) infinite; pointer-events: none; z-index: 10; }
 @keyframes failPulse { 0% { opacity: 1; } 50% { opacity: .3; } 100% { opacity: 1; } }
 #radarC { display: block; width: calc(64px * var(--rs)); aspect-ratio: 1; image-rendering: pixelated; border-radius: 50%; background: rgba(8, 16, 12, .6); }
 
@@ -211,8 +232,8 @@
 #txl.low #volt { color: #ff5252; text-shadow: 0 0 6px rgba(255, 82, 82, .65); animation: voltPulse .6s ease-in-out infinite alternate; }
 @keyframes voltPulse { from { opacity: .7; } to { opacity: 1; } }
 #volt.sag { color: #f59e0b; text-shadow: 0 0 10px rgba(245, 158, 11, .85), 0 0 3px rgba(255, 230, 160, .8); animation: voltPulse .2s infinite alternate; }
-#volt.thermal-stress { color: #ef4444; text-shadow: 0 0 10px rgba(239, 68, 68, .8); animation: voltPulse .15s infinite alternate; }
-.esc-temp { display: block; font: 700 9px/1 var(--hf); color: #ef4444; text-shadow: 0 0 6px rgba(239, 68, 68, .7); margin-top: 2px; letter-spacing: .05em; }
+#volt.thermal-stress { color: var(--jm-rojo-txt, #ff7b6b); text-shadow: 0 0 10px rgba(239, 68, 68, .8); animation: voltPulse .15s infinite alternate; }
+.esc-temp { display: block; font: 700 12px/1 var(--hf); color: var(--jm-rojo-txt, #ff7b6b); text-shadow: 0 0 6px rgba(239, 68, 68, .7); margin-top: 2px; letter-spacing: .05em; }
 #lipo.panic i:first-child.unbalanced { animation: lipo-cell-sag .25s steps(2) infinite; }
 @keyframes lipo-cell-sag {
   0% { opacity: .2; }
@@ -476,10 +497,10 @@ body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 }
 #dirSub .rx-tag { display: block; margin-bottom: 3px; padding-bottom: 3px; border-bottom: 1px solid var(--jm-borde); font: 700 11px/1 var(--jm-titulo); letter-spacing: .16em; color: var(--jm-amarillo); }
 #dirSub .dtxt { font: 700 clamp(14px, 2vw, 18px)/1.15 var(--jm-titulo); letter-spacing: .04em; text-transform: uppercase; color: var(--jm-texto); text-shadow: 0 2px 0 #000; }
+body:has(#encAsk:not(.hidden)) #dirSub { display: none; } /* con cualquier oferta abierta (pactos, destino, teleportador) el subtítulo tapaba RECHAZAR en pc y el aviso de radio en celular */
 @media (pointer: fine) { body:has(#hint:not(.hidden):not(.fade):not(.coop)) #dirSub { bottom: calc(184px + 107px * var(--hud-scale)); } } /* QA final: arriba del panel de batería (#txl) y, mientras se ven los controles (#hint), arriba de ellos */
 @media (pointer: coarse) { /* celular: arriba de los controles táctiles (que ocupan el ~42 % de abajo); con la oferta de pactos o destinos abierta, arriba, bajo el reloj */
   #dirSub { bottom: 43vh; max-width: calc(100vw - 120px); } /* sin pisar PAUSA y CÁMARA (columna de la derecha) */
-  body:has(#encAsk:not(.hidden)) #dirSub { display: none; } /* con cualquier oferta abierta (pactos o destino) el subtítulo pisaba el aviso de radio (#banner, +78 px) */
   body:has(#encAsk:not(.hidden)) #arrows { display: none; } /* el ícono del cofre (22M) tapaba el título de la primera carta */
 }
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) { /* apaisado: bajo la barra de jefe (hasta +193 px) y sobre el panel de batería (#txl, desde y=261 de 390) */

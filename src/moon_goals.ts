@@ -9,6 +9,7 @@ import { pbr } from "./render";
 import { rng } from "./rng";
 import { obstacles } from "./world";
 import { banner } from "./ui";
+import { primeraVez } from "./encore_run";
 
 // ---------- Objetivos en la superficie y cohete de escape (fase 3, docs/LUNA.md puntos 2 y 3) ----------
 // Cada luna_obj_cada_s aparece un objetivo lejos del auto (baliza alta + radar): juntar celdas a tiempo o quedarse en la zona de una antena.
@@ -344,14 +345,31 @@ export function goalsTick(dt: number, time: number, cars: B.Vector3[], quiet: bo
     rocket.spin.rotationQuaternion = alignYaw(rocket.spin.position, time * (rocket.prog > 0 ? 3 : 0.8));
     (teleMats().bulb as B.PBRMaterial).emissiveIntensity = 2.2 + Math.sin(time * 5) * 1.2 + (rocket.prog > 0 ? 1.5 : 0);
   }
+  teleTag(!quiet && GOAL_IO.tele && !!rocket && rocket.prog === 0 && GOAL_IO.phase() === "stage" && primeraVez());
   if (rocket) {
     if (near(rocket.p, A.luna_cohete_radio)) rocket.prog += dt; else rocket.prog = 0;
     if (rocket.prog >= A.luna_cohete_s) { const p = rocket.p.clone(); rocket.prog = 0; GOAL_IO.win(p); }
   }
 }
 
+/** Primera expedición: pegatina «SUBIR» anclada sobre el teleportador mientras está listo (se va al empezar a abordar). */
+let tag: HTMLElement | null = null;
+const TAG_UP = new B.Vector3(0, 5, 0);
+function teleTag(on: boolean) {
+  if (!on || !rocket) { tag?.classList.add("hidden"); return; }
+  const sc = rocket.ms[0].getScene(), cam = sc.activeCameras?.[0] ?? sc.activeCamera, e = sc.getEngine();
+  if (!cam) return;
+  const w = e.getRenderWidth(), h = e.getRenderHeight();
+  const v = B.Vector3.Project(rocket.p.add(TAG_UP), B.Matrix.IdentityReadOnly, sc.getTransformMatrix(), cam.viewport.toGlobal(w, h));
+  if (!tag) { tag = Object.assign(document.createElement("div"), { id: "teleTag", textContent: "SUBIR" }); (document.getElementById("hud") ?? document.body).appendChild(tag); }
+  const x = v.x * innerWidth / w, y = v.y * innerHeight / h, off = v.z < 0 || v.z > 1 || x < 0 || x > innerWidth || y < 0 || y > innerHeight; // fuera de cuadro la marca la da el radar
+  tag.classList.toggle("hidden", off);
+  if (!off) tag.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+}
+
 /** Partida nueva / fin. */
 export function goalsClear() {
+  teleTag(false);
   if (goal) drop(goal); if (rocket) drop(rocket); shopDrop(); decorDrop(); arrive = null; for (const m of spots) m.dispose(); spots = [];
   goal = rocket = null; next = A.luna_obj_primero_s; alt = 0;
   stats.hechos = stats.aparecidos = 0;

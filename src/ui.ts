@@ -367,7 +367,7 @@ export function hudBoss(name: string | null, pct = 1, kind?: string, enraged = f
 // ---------- ENCORE: contador de escenario y ventana de decisión (encore.ts) ----------
 /** null = Supervivencia: todo oculto. tag = [prefijo, texto, numerado]; ask = ventana abierta con sus dos botones (null = sin botón) y lo que queda. */
 type EncAsk = { title: string; opts: [string | null, string | null]; left: number; frac: number; pacts?: [PactView, PactView]; reject?: string };
-const pactHtml = (p: PactView) => `<b>${p.name}</b><small>VENTAJA</small>${p.gain.map((t) => `<span class="pg">${t}</span>`).join("")}<small>COSTO</small>${p.cost.map((t) => `<span class="pc">${t}</span>`).join("")}<em>${p.dur}</em>`;
+const pactHtml = (p: PactView) => `<b>${p.name}</b><small>VENTAJA</small>${p.gain.map((t) => `<span class="pg"><i aria-hidden="true">+</i>${t}</span>`).join("")}<small>COSTO</small>${p.cost.map((t) => `<span class="pc"><i aria-hidden="true">−</i>${t}</span>`).join("")}<em>${p.dur}</em>`;
 /** ENCORE para 2 (R7a): vida del otro jugador; down = fuera hasta el próximo escenario. */
 export function hudMate(d: { n: string; hp: number; max: number; down: boolean } | null) {
   if (ch("mateOn", !!d)) $("mateHp").classList.toggle("hidden", !d);
@@ -413,7 +413,7 @@ export function hudEnc(d: { tag: [string, string, boolean]; pacts: { tag: string
 }
 
 // ---------- Aviso de radio: entra con interferencia y el texto se va tecleando ----------
-const STATIC = "#%/\\&@"; // el último carácter tecleado llega como estática (solo símbolos: un dígito o letra se lee como texto corrupto)
+const STATIC = "#%/&@"; // el último carácter tecleado llega como estática (solo símbolos: un dígito o letra se lee como texto corrupto)
 type BannerOpts = { tag?: string; ico?: string; tone?: "warn" | "now" };
 type BannerQ = { txt: string; secs: number; opts?: BannerOpts };
 let bannerOn = false, bannerTyping = false, bannerHold = 0, bannerMsg = "", bannerN = 0, bannerShown = -1, bannerTone: BannerOpts["tone"];
@@ -437,7 +437,7 @@ function applyBannerSkin(b: HTMLElement, opts?: BannerOpts) {
 }
 function showBanner(txt: string, secs: number, opts?: BannerOpts) {
   const b = $("banner");
-  bannerMsg = txt; bannerN = 0; bannerShown = -1; bannerOn = true; bannerTyping = true; bannerHold = secs;
+  bannerMsg = txt; bannerN = opts?.tone ? 0 : txt.length; bannerShown = -1; bannerOn = true; bannerTyping = true; bannerHold = secs; // la chapa sin tono (tutorial, instrucciones) entra entera: tecleada se leía cortada; la radio sigue tecleando
   applyBannerSkin(b, opts);
   b.querySelector(".gh")!.textContent = txt;
   b.querySelector(".ty")!.textContent = "";
@@ -829,7 +829,7 @@ const evoImage = (o: Offer): string | null => {
 let pickCb: ((i: number) => void) | null = null;
 let hoverCb: ((i: number) => void) | null = null;
 let busy = false;
-export function showOffers(title: string, offers: Offer[], sel: number, onPick: (i: number) => void, onHover?: (i: number) => void, sub = "", threat: "" | "boss" | "near" = "") {
+export function showOffers(title: string, offers: Offer[], sel: number, onPick: (i: number) => void, onHover?: (i: number) => void, sub = "", threat: "" | "boss" | "near" = "", rec = -1) {
   pickCb = onPick;
   hoverCb = onHover ?? null;
   busy = false;
@@ -845,7 +845,7 @@ export function showOffers(title: string, offers: Offer[], sel: number, onPick: 
       : icon(o.kind === "evo" ? o.id : o.icon, 44);
     return `
     <div class="offer ${rarity(o)} ${o.kind === "heal" ? "heal" : ""} ${o.lv === 5 && o.syn?.ready ? "evo-rdy" : ""} ${evoImgSrc ? "has-evo-art" : ""} ${i === sel ? "sel" : ""}" data-i="${i}" style="--i:${i}">
-      <span class="kind">${kindLabel(o)}</span>
+      <span class="kind">${kindLabel(o)}</span>${i === rec ? `<i class="rec">RECOMENDADA</i>` : ""}
       <div class="art ${evoImgSrc ? "art-evo-thumb" : ""}">${artContent}</div>
       <b>${o.title}</b>
       <span>${o.desc}</span>
