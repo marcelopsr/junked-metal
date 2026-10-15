@@ -3,7 +3,7 @@ import type { Net, Msg } from "./net";
 import "./quickchat.css";
 import { uiIcon } from "./icons";
 
-export const PHRASES = ["¡Acá!", "¡Ayuda!", "¡Vamos!", "¡Cuidado, jefe!", "¡Gracias!", "¡Bien ahí!"] as const;
+export const PHRASES = ["¡Aquí!", "¡Ayuda!", "¡Vamos!", "¡Cuidado, jefe!", "¡Gracias!", "¡Bien ahí!"] as const;
 const GAP = 2000, SHOW = 3000;
 
 /** Anfitrión: devuelve el mensaje a reenviar (con `who` puesto por él, no por el cliente) o null si es inválido o va muy seguido. */

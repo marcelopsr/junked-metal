@@ -39,7 +39,7 @@ export const LORE: Record<Kind, string> = {
   cohete: "Un cohete de chatarra que la Tierra tiró para sacárselo de encima. Le quedó media carga en el tanque y ninguna instrucción de aterrizaje, así que apunta a lo primero que se mueve.",
   enjambre: "Una cápsula de chatarra con un núcleo que zumba. Sola no asusta a nadie, y lo sabe: por eso nunca viaja sola. Toman decisiones por votación y siempre gana la de ir todas juntas al auto.",
   tirador: "Encontró una pistolita en la basura de una nave y desde entonces se considera francotirador. Mantiene la distancia por estrategia y por timidez. Cada disparo lo anuncia con un zumbido, por cortesía profesional.",
-  saltador: "En la Tierra sería una rana de lata; acá, con la gravedad que hay, se cree astronauta. Salta alto, cae lejos y nunca calcula dónde. Para eso tiene un aro que lo avisa por él.",
+  saltador: "En la Tierra sería una rana de lata; aquí, con la gravedad que hay, se cree astronauta. Salta alto, cae lejos y nunca calcula dónde. Para eso tiene un aro que lo avisa por él.",
   emboscador: "Vive enterrado en un cráter con la paciencia de un cobrador. Deja asomar una lucecita para que alguien se acerque a mirar, y alguien siempre se acerca a mirar.",
   flotante: "Un platillo de lata que nunca aprendió a aterrizar y decidió que era una virtud. Ronda en círculos como quien busca estacionamiento y, cuando lo encuentra, baja de golpe.",
   tanque: "Le soldaron una puerta de horno adelante y desde entonces se cree invencible. Lo es, pero solo de frente. Gira tan despacio que para darse vuelta pide turno.",
