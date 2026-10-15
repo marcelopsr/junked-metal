@@ -592,13 +592,28 @@ export const windKeyTemplate = () => template("wind_key", () => {
     ),
   ];
 });
-// Telegráfico de ataque enemigo en el piso (rojo = amenaza): aro + disco tenue, radio 1, se escala por instancia
+// Rayado de peligro (regla de arte: amarillo y negro = daño en el piso). Una textura 32 px cacheada, una sola material compartida.
+// ponytail: las franjas se estiran con el radio de la instancia (aros de 6-10 m dan franjas anchas); techo aceptado, si molesta UV por longitud real.
+export function hazardMat() {
+  const tex = canvasTex("hazard", 32, (g, n) => {
+    g.fillStyle = "#101215"; g.fillRect(0, 0, n, n);
+    g.strokeStyle = "#FBC02D"; g.lineWidth = n / 4 / Math.SQRT2;
+    for (const c of [0, n / 2, n, n * 1.5, n * 2]) { g.beginPath(); g.moveTo(c, 0); g.lineTo(0, c); g.stroke(); } // x+y=c, período n/2: cierra al repetirse
+  });
+  tex.wrapU = tex.wrapV = B.Texture.WRAP_ADDRESSMODE; tex.uScale = 10; tex.updateSamplingMode(B.Texture.NEAREST_SAMPLINGMODE);
+  const m = pbr("hazard", { color: "#ffffff", rough: 1, tex, emissive: "#808080" });
+  m.emissiveTexture = tex; m.fogEnabled = false;
+  return m;
+}
+// Telegráfico de ataque enemigo en el piso (rojo = amenaza): aro rayado + disco tenue, radio 1, se escala por instancia
 export function teleTemplate() {
   const t = template("tele", () => {
     const d = B.MeshBuilder.CreateDisc("p", { radius: 1, tessellation: 28 }, scene);
     d.rotation.x = Math.PI / 2;
     d.material = pbr("teleFill", { color: "#ff2a1a", rough: 1, emissive: "#a01008", alpha: 0.22 });
-    return [d, tor(2, 0.05, M.glow("#ff2a1a"), [0, 0.01, 0], undefined, 28)];
+    const band = tor(2, 0.16, hazardMat(), [0, 0.03, 0], undefined, 28);
+    band.scaling.y = 0.6; band.bakeCurrentTransformIntoVertices(); // banda plana en el piso
+    return [d, band];
   });
   shadows.removeShadowCaster(t); // es luz en el piso, no un objeto
   return t;
@@ -611,7 +626,7 @@ export function sectorTemplate() {
     d.rotation.x = Math.PI / 2; d.bakeCurrentTransformIntoVertices(); // acostado: centro en +z
     d.material = pbr("teleFillArc", { color: "#ff2a1a", rough: 1, emissive: "#c01808", alpha: 0.28 });
     const edge: V3[] = [[0, 0.02, 0], ...Array.from({ length: 13 }, (_, i) => { const a = -Math.PI / 3 + (i * Math.PI) / 18; return [Math.sin(a), 0.02, Math.cos(a)] as V3; }), [0, 0.02, 0]];
-    return [d, tube(edge, 0.045, M.glow("#ff2a1a")), tor(1.88, 0.04, M.glow("#ff5a45"), [0, 0.02, 0], [Math.PI / 2, 0, 0], 20)];
+    return [d, tube(edge, 0.07, hazardMat()), tor(1.88, 0.07, hazardMat(), [0, 0.02, 0], [Math.PI / 2, 0, 0], 20)];
   });
   shadows.removeShadowCaster(t);
   return t;

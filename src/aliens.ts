@@ -6,7 +6,7 @@ import * as B from "@babylonjs/core";
 import { FOLD } from "./folded";
 import { along, kit, piv } from "./folded_slice";
 import { pbr, shadows } from "./render";
-import { cyl, template, tor, sph } from "./models";
+import { cyl, template, tor, sph, hazardMat } from "./models";
 import { BAL } from "./balance";
 import { rng } from "./rng";
 import { FX } from "./fx";
@@ -410,7 +410,7 @@ export const ALIEN_AI: Record<Alien, AI> = {
 };
 
 // ---------- Onda del tirador: anillo cian que viaja lento a la altura del auto (main.ts lo mueve como el ácido) ----------
-const waveTpl = () => template("alienOnda", () => [tor(1.5, 0.16, glow(CYAN), [0, 0, 0], [Math.PI / 2, 0, 0], 16), sph(0.36, glow(GREEN), [0, 0, 0], undefined, 6)]);
+const waveTpl = () => template("alienOnda", () => [tor(1.5, 0.16, hazardMat(), [0, 0, 0], [Math.PI / 2, 0, 0], 16), sph(0.36, glow(GREEN), [0, 0, 0], undefined, 6)]);
 /** Proyectil de la onda (forma de los escupitajos de main.ts): sale del caño y va derecho hacia donde estaba el auto al disparar. */
 export function alienWave(e: Enemy, car: B.Vector3) {
   const from = at(e.pos, 0, 1.2, 0), dir = car.subtract(from).normalize(), m = waveTpl().createInstance("onda");

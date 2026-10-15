@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import { BAL } from "./balance";
 import { burst, debris, FX, mark } from "./fx";
-import { template, sph, tor } from "./models";
+import { template, sph, tor, hazardMat } from "./models";
 import { applyClimate, pbr, setDark, shadows } from "./render";
 import { pickIdx, rng } from "./rng";
 import { SPACE, moonAmbience } from "./sfx";
@@ -91,7 +91,7 @@ const disc = (mat: B.Material) => {
 };
 const glow = (key: string, hex: string, k = 1.6) => { const m = pbr(key, { color: hex, rough: 0.6, emissive: hex }); m.fogEnabled = false; m.emissiveIntensity = k; return m; };
 const noShadow = (t: B.Mesh) => { shadows.removeShadowCaster(t); return t; };
-const ringTpl = () => noShadow(template("lunaAnillo", () => [tor(2, 0.06, glow("lunaAviso", "#ff3b2e", 1.2), [0, 0, 0], undefined, 14)]));
+const ringTpl = () => noShadow(template("lunaAnillo", () => [tor(2, 0.1, hazardMat(), [0, 0, 0], undefined, 14)]));
 const areaTpl = () => noShadow(flat("lunaArea", () => { const m = pbr("lunaAvisoArea", { color: "#ff3b2e", rough: 1, emissive: "#b01a10", alpha: 0.13 }); m.fogEnabled = false; m.zOffset = -4; m.disableDepthWrite = true; return disc(m); }));
 const lavaTpl = () => noShadow(flat("lunaLava", () => { const m = glow("lunaLava", "#ff4a0f", 1.5); m.zOffset = -5; return disc(m); }));
 const coreTpl = () => noShadow(flat("lunaLavaNucleo", () => { const m = glow("lunaLavaNucleo", "#ff9a2e", 1.7); m.zOffset = -6; return disc(m); }));
