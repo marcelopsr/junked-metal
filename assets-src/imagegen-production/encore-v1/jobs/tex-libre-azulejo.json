@@ -1,0 +1,19 @@
+{
+  "id": "tex-libre-azulejo",
+  "name": "tex-libre-azulejo",
+  "category": "texturas",
+  "state": "imagegen-generated",
+  "prompt": "Swimming pool ceramic tile floor: small square turquoise and aqua tiles with light grout lines, slightly wet glossy look, subtle variation between tiles. Seamless tileable top-down ground texture, perfectly flat orthographic view, flat even lighting, no cast shadows, no perspective, no text, no objects, no border, miniature toy diorama scale, worn painted look, soft warm palette.",
+  "tool_arguments": {
+    "transparent_background": false
+  },
+  "size": "1024x1024",
+  "output": "raw/tex-libre-azulejo.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 12233,
+    "at": "2026-10-15T12:06:44.444Z"
+  }
+}

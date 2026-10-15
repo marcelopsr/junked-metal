@@ -3,7 +3,7 @@ import { box, cyl, merge, rbox, sph } from "../models";
 import { M, pbr, shadows } from "../render";
 import { ramp } from "../world_layout";
 import type { Barrio } from "./libre";
-import { bare, lowQ, scene, stat, undo } from "./common";
+import { bare, decal, lowQ, scene, stat, tex, undo } from "./common";
 
 // Free Roam, barrio PARQUE (estilo Central Park de juguete): senderos, laguito con puente, árboles y arbustos, juegos de plaza y animales.
 // parqueBuild(cx, cz) arma un rectángulo de 140 x 74 m centrado en (cx, cz). Local: +x este, +z norte.
@@ -30,11 +30,9 @@ export function parqueBuild(cx: number, cz: number) {
   };
   const obras: B.Mesh[] = [], veg: B.Mesh[] = [];
 
-  // ---- Piso: césped en franjas de dos verdes (solo visual, el colisionador es el piso de la zona) ----
-  { const parts: B.Mesh[] = [];
-    for (let i = 0; i < 14; i++) parts.push(box(10, 0.06, 74, M.matte(i % 2 ? "#7aa84c" : "#6e9d44"), [cx - 65 + i * 10, 0, cz]));
-    const m = merge("parqueCesped", parts); m.isPickable = false; m.receiveShadows = true;
-  }
+  // ---- Piso: césped de juguete (textura generada) (solo visual, el colisionador es el piso de la zona) ----
+  { const t = tex("libreCesped", () => { const x = new B.Texture("./textures/g-libre-cesped.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; x.uScale = 7; x.vScale = 3.7; return x; }); // 140x74 m: ~20 m por repetición
+    const g = decal("parqueCesped", 140, 74, cx + 5, cz, pbr("parqueCesped", { color: "#ffffff", rough: 0.95, tex: t }), KEEP_Y.lawn); g.isPickable = false; }
 
   // ---- Senderos (anillo + cruz) y suelo de goma de los juegos: materiales con zOffset, por eso `keep` ----
   const pm = pbr("parqueSendero", { color: "#dcc89c", rough: 0.9 }), gm = pbr("parqueGoma", { color: "#c1633f", rough: 0.95 });

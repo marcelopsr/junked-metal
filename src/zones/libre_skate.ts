@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph } from "../models";
 import { M, pbr, shadows } from "../render";
-import { bare, decal, scene, stat } from "./common";
+import { bare, decal, scene, stat, tex } from "./common";
 import type { Barrio } from "./libre";
 
 // Skatepark de juguete de Free Roam (centro -150, +150). Física: cada pieza grande es UN colisionador MESH que es su propia malla visible
@@ -89,7 +89,7 @@ function kicker(R: number, deg: number, H: number) {
 function build(cx: number, cz: number) {
   const rnd = lcg(150150);
   const concrete = pbr("skateConcreto", { color: "#d9d2c0", rough: 0.85 }), wood = pbr("skateMadera", { color: "#b07a4a", rough: 0.6 }), red = pbr("skateRoja", { color: "#c8452c", rough: 0.55 });
-  const coping = M.plastic("#f2c230"), black = M.matte("#23262b"), steel = M.metal("#9aa0a8"), slab = pbr("skateLosa", { color: "#7a7d86", rough: 0.9 }), pool = pbr("skatePiso", { color: "#565b66", rough: 0.9 }); // losa oscura y rampas claras: las piezas se leen desde arriba
+  const coping = M.plastic("#f2c230"), black = M.matte("#23262b"), steel = M.metal("#9aa0a8"), slab = pbr("skateLosa", { color: "#8d8f98", rough: 0.9, tex: tex("libreSkate", () => { const x = new B.Texture("./textures/g-libre-skate.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; x.uScale = x.vScale = 8; return x; }) }), pool = pbr("skatePiso", { color: "#565b66", rough: 0.9 }); // losa oscura y rampas claras: las piezas se leen desde arriba
   const deco: B.Mesh[] = [];
 
   // Losa clara de todo el parque (decal: sin colisión) y manchas de pintura desgastada (generador local)

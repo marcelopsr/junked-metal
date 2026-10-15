@@ -2,7 +2,7 @@ import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph } from "../models";
 import { M, pbr, shadows } from "../render";
 import type { Barrio } from "./libre";
-import { bare, decal, scene, stat, undo } from "./common";
+import { bare, decal, scene, stat, tex, undo } from "./common";
 
 // Free Roam, barrio ACUATICO (x 42..262, z 98..262): torre con 3 toboganes de media caña, pileta grande y pileta vacía (cráteres suaves), piletas bajas con agua visual,
 // trampolines, sombrillas, reposeras, flotadores y un portal con cartel. Sin flotación: el agua es un plano visual sobre el piso.
@@ -68,7 +68,7 @@ const DS = 1.5, FLARE = 8, hHalf = (s: number) => 2.8 + 2.4 * Math.max(0, 1 - s 
 function build(cx: number, cz: number) {
   void cx; void cz; // el barrio se arma en coordenadas de mundo absolutas
   const rnd = lcg(150150);
-  const deck = pbr("acuaLosa", { color: "#dccfae", rough: 0.9 }), teal = pbr("acuaTorre", { color: "#1fb5ad", rough: 0.55 }), tile = pbr("acuaPileta", { color: "#8fe0dc", rough: 0.35 });
+  const deck = pbr("acuaLosa", { color: "#dccfae", rough: 0.9 }), teal = pbr("acuaTorre", { color: "#1fb5ad", rough: 0.55 }), tile = pbr("acuaPileta", { color: "#ffffff", rough: 0.35, tex: tex("libreAzulejo", () => { const x = new B.Texture("./textures/g-libre-azulejo.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; x.uScale = x.vScale = 3; return x; }) });
   const water = pbr("acuaAgua", { color: "#35b8e6", rough: 0.08, emissive: "#0a3d52", alpha: 0.72 });
   water.zOffset = -4; water.backFaceCulling = false; water.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
   const wRib = pbr("acuaCorriente", { color: "#6fd8ff", rough: 0.05, emissive: "#146a8a", alpha: 0.7 });

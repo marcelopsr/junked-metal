@@ -1,0 +1,19 @@
+{
+  "id": "tex-libre-cesped",
+  "name": "tex-libre-cesped",
+  "category": "texturas",
+  "state": "imagegen-generated",
+  "prompt": "Toy park lawn: saturated yet soft green grass with organic mottled patches of lighter and darker green, tiny blade clusters and a few clover leaves; no stripes, no grid, no checker pattern, no straight lines. Seamless tileable top-down ground texture, perfectly flat orthographic view, flat even lighting, no cast shadows, no perspective, no text, no objects, no border, miniature toy diorama scale, worn painted look, soft warm palette.",
+  "tool_arguments": {
+    "transparent_background": false
+  },
+  "size": "1024x1024",
+  "output": "raw/tex-libre-cesped.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 12839,
+    "at": "2026-10-15T12:07:13.766Z"
+  }
+}

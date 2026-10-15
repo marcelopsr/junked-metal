@@ -1,0 +1,19 @@
+{
+  "id": "tex-libre-hormigon",
+  "name": "tex-libre-hormigon",
+  "category": "texturas",
+  "state": "imagegen-generated",
+  "prompt": "Toy city plaza ground: warm light-grey painted concrete with soft darker stains, faint expansion joints and subtle wear, low contrast detail spread evenly so repetition is not noticeable. Seamless tileable top-down ground texture, perfectly flat orthographic view, flat even lighting, no cast shadows, no perspective, no text, no objects, no border, miniature toy diorama scale, worn painted look, soft warm palette.",
+  "tool_arguments": {
+    "transparent_background": false
+  },
+  "size": "1024x1024",
+  "output": "raw/tex-libre-hormigon.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 11626,
+    "at": "2026-10-15T12:06:43.834Z"
+  }
+}

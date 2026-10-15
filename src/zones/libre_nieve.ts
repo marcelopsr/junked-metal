@@ -89,8 +89,8 @@ export function nieveBuild(_cx: number, _cz: number) {
   const wood = M.matte("#a0683c"), dkw = M.matte("#6e4524"), red = M.plastic("#e53935"), wht = M.matte("#eef3f9"), blk = M.matte("#1b1d22"), glowM = M.glow("#ffd98a");
 
   // ---- Suelo nevado: la calle de los otros barrios es asfalto; aquí una losa de nieve (y 0,015, bajo el atajo de 0,025) ----
-  { const t = tex("libreNieve", () => { const x = new B.Texture("./textures/g-nieve-huellas.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; x.uScale = x.vScale = 9; return x; });
-    decal("nieveSuelo", 240, 240, -146, -146, pbr("nieveSuelo", { color: "#ffffff", rough: 0.85, tex: t }), 0.015); }
+  { const t = tex("libreNieve", () => { const x = new B.Texture("./textures/g-libre-nieve.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; x.uScale = x.vScale = 6; return x; });
+    decal("nieveSuelo", 240, 240, -146, -146, pbr("nieveSuelo", { color: "#d3dbe5", rough: 0.85, tex: t }), 0.015); }
 
   // ---- Relieve: mirador + campo de lomas (cada uno un colisionador MESH) ----
   stat(field("nieveMirador", MX - MR - 2, MZ - MR - 2, MX + MR + 2, MZ + MR + 2, 2.5, vc), B.PhysicsShapeType.MESH, { friction: 0.6 }, [0, 0, 0]);

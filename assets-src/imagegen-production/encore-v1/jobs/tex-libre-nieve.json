@@ -1,0 +1,19 @@
+{
+  "id": "tex-libre-nieve",
+  "name": "tex-libre-nieve",
+  "category": "texturas",
+  "state": "imagegen-generated",
+  "prompt": "Snow ground: soft white-blue snow with irregular scattered animal footprints and gentle drifts and small ice sparkles, organic, absolutely no grid, no tiles, no bricks, no straight lines. Seamless tileable top-down ground texture, perfectly flat orthographic view, flat even lighting, no cast shadows, no perspective, no text, no objects, no border, miniature toy diorama scale, worn painted look, soft warm palette.",
+  "tool_arguments": {
+    "transparent_background": false
+  },
+  "size": "1024x1024",
+  "output": "raw/tex-libre-nieve.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 11392,
+    "at": "2026-10-15T12:06:43.600Z"
+  }
+}
