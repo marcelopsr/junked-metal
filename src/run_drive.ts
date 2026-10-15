@@ -4,7 +4,7 @@ import { BAL } from "./balance";
 import * as E from "./encore";
 import { DEF, pickWeighted, spawnTable, type Kind, type Enemy } from "./enemies";
 import { FX, fxSpeed, mark } from "./fx";
-import { SFX, engineSfx } from "./sfx";
+import { FREE, SFX, engineSfx } from "./sfx";
 import { drive } from "./car";
 import type { Car } from "./car";
 import { input, spinHeld } from "./input";
@@ -99,12 +99,13 @@ function libreDrive(c: Car, r: ReturnType<typeof drive>, steer: number, throttle
   const body = c.body, v = body.getLinearVelocity();
   if (r.grounded && v.y < -0.5) roam.extra = Math.min(Math.max(0, R.libre_vel_bajada - base), roam.extra - v.y * R.libre_acel_bajada * dt);
   else roam.extra = Math.max(0, roam.extra - 6 * dt); // ponytail: sin distinguir subida de llano; techo: usar la pendiente de drive() si hace falta
+  if (r.grounded && !D.simulating) { if (enHielo(c.pos.x, c.pos.z) && Math.abs(r.fs) > 3) FREE.ice(); else if (roam.extra > 2) FREE.slide(); } // loops suaves: bajada rápida (tobogán) o hielo
   const up = c.root.up, fw = c.root.forward, rt = c.root.right;
   // Cabeceo: solo si se suelta o cambia el acelerador después de despegar; mantenerlo apretado desde el piso (salir de un bowl) no voltea el auto
   if (r.grounded || roam.air < 0.15) { roam.ts = throttle; roam.arm = false; } else if (throttle !== roam.ts) roam.arm = true;
   // Trampolín: al pisar la lona (y bajo, sobre la plataforma de 0,5 m) el impulso vertical lo da el código; la restitución de Havok casi no rebota con el auto conducido
   if (roam.tramp > 0) roam.tramp -= dt;
-  else if (c.pos.y < 1.4 && v.y < 3 && TRAMPS.some(([x, z]) => (c.pos.x - x) ** 2 + (c.pos.z - z) ** 2 < 25)) { roam.tramp = 0.5; body.setLinearVelocity(_w.set(v.x, R.libre_rebote_tramp, v.z)); return; }
+  else if (c.pos.y < 1.4 && v.y < 3 && TRAMPS.some(([x, z]) => (c.pos.x - x) ** 2 + (c.pos.z - z) ** 2 < 25)) { roam.tramp = 0.5; FREE.bounce(); body.setLinearVelocity(_w.set(v.x, R.libre_rebote_tramp, v.z)); return; }
   // Volcado en el piso (techo abajo, casi sin velocidad vertical) más de libre_volcado_s: salto suave y giro sobre el eje de avance hasta quedar de ruedas
   if (roam.fix > 0) { // enderezando: giro sostenido sobre el eje de avance hasta quedar de ruedas (drive() pisa la velocidad angular cada cuadro)
     roam.fix = up.y > 0.8 ? 0 : roam.fix - dt;
