@@ -98,7 +98,7 @@ export const PRUEBAS = true;
   try {
     if (PRUEBAS) { if (!localStorage.getItem(K)) localStorage.setItem(K, JSON.stringify({ scrap: save.scrap, abilLv: save.abilLv }));
       if (save.scrap < 99999) save.scrap = 99999; for (const k of Object.keys(ABILITIES) as AbilityId[]) if (!save.abilLv[k]) save.abilLv[k] = 1; }
-    else { const o = JSON.parse(localStorage.getItem(K) ?? "null"); if (o) { save.scrap = o.scrap; save.abilLv = o.abilLv; localStorage.removeItem(K); } }
+    else { const o = JSON.parse(localStorage.getItem(K) ?? "null"); if (o) { if (Number.isFinite(o.scrap)) save.scrap = o.scrap; if (o.abilLv && typeof o.abilLv === "object") save.abilLv = o.abilLv; localStorage.removeItem(K); } // copia corrupta: se ignora el campo }
   } catch { /* sin almacenamiento: PRUEBAS sigue aplicando en memoria */ if (PRUEBAS) save.scrap = Math.max(save.scrap, 99999); } }
 // Instalación nueva: "Reducir parpadeos" parte activado si el sistema pide menos movimiento (quien ya tiene guardado conserva su elección)
 try { if (localStorage.getItem("rcfight2") === null) save.calm = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { /* sin almacenamiento */ }
