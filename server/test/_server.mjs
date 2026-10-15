@@ -13,7 +13,7 @@ export const S = "secreto-test";
 const freePort = () => new Promise((ok, no) => { const s = createServer(); s.once("error", no); s.listen(0, "127.0.0.1", () => { const { port } = s.address(); s.close(() => ok(port)); }); });
 
 // Registra before/after del archivo que lo importa y devuelve { PORT, B, post, exchange, adminLogin, guardLog }.
-export function useServer() {
+export function useServer(extraEnv = {}) {
   const t = { S }; let proc;
   const post = (p, body, h = {}) => fetch(t.B + p, { method: "POST", headers: { "Content-Type": "application/json", ...h }, body: JSON.stringify(body) });
   const exchange = (email, invite) => { const ts = Date.now(); return post("/api/cf-exchange", { email, ts, sig: exchangeSig("canje-test", email, ts), invite }); };
@@ -30,7 +30,7 @@ export function useServer() {
     t.PORT = await freePort(); t.B = `http://127.0.0.1:${t.PORT}`;
     proc = spawn(process.execPath, ["--import", new URL("./net-guard.mjs", import.meta.url).pathname, "index.js"], { cwd: new URL("..", import.meta.url).pathname, stdio: "pipe", env: {
       ...cleanEnv(process.env), MONITOR_OFF: "1", NET_GUARD_LOG: t.guardLog, PORT: String(t.PORT), JM_SECRET: S, TURN_SECRET: "t", GROUP_KEY: "g", ADMIN_KEY: "clave-admin", DB_FILE: join(dir, "jm.db"), INVITES_FILE: join(dir, "no.json"),
-      EXCHANGE_SECRET: "canje-test", TEL_DAILY_MAX: "30", GITHUB_CLIENT_ID: "cid", GITHUB_CLIENT_SECRET: "cs", STRIPE_SECRET_KEY: "sk_test", STRIPE_WEBHOOK_SECRET: "whsec_test", REQUIRE_SUBSCRIPTION: "false" } });
+      EXCHANGE_SECRET: "canje-test", TEL_DAILY_MAX: "30", GITHUB_CLIENT_ID: "cid", GITHUB_CLIENT_SECRET: "cs", STRIPE_SECRET_KEY: "sk_test", STRIPE_WEBHOOK_SECRET: "whsec_test", REQUIRE_SUBSCRIPTION: "false", ...extraEnv } });
     for (let i = 0; i < 50; i++) { try { if ((await fetch(t.B + "/api/health")).ok) return; } catch {} await new Promise((r) => setTimeout(r, 100)); }
     throw new Error("no arrancó");
   });

@@ -3,9 +3,9 @@ import { sign, safeReturn, limiter, exchangeOk } from "../lib.js";
 import { normMail, validMail, WAITLIST_MSG_MAX } from "../db.js";
 
 export function register(app, { E, db, ipOf, eq, mailToken, EXCHANGE_SECRET, ALLOW_GH }) {
-const loginOk = limiter(10, 15 * 60e3);
+const loginOk = limiter(10, 15 * 60e3), loginAny = limiter(60, 15 * 60e3); // H9: tope global de intentos contra la clave de grupo (rotar IP no lo esquiva)
 app.post("/api/login", (req, res) => {
-  if (!loginOk(ipOf(req))) return res.status(429).json({ error: "Demasiados intentos, probá más tarde" });
+  if (!loginOk(ipOf(req)) || !loginAny("global")) return res.status(429).json({ error: "Demasiados intentos, probá más tarde" });
   if (!eq(req.body?.clave ?? "", E.GROUP_KEY)) return res.status(401).json({ error: "Clave incorrecta" });
   res.json({ token: sign(E.JM_SECRET, "g-" + randomBytes(4).toString("hex")) });
 });
@@ -24,9 +24,9 @@ app.post("/api/cf-exchange", async (req, res) => {
 });
 
 // Canje directo de la invitación (sin Cloudflare): el código de un solo uso identifica al mail; mismo token que cf-exchange.
-const redeemOk = limiter(10, 15 * 60e3);
+const redeemOk = limiter(10, 15 * 60e3), redeemAny = limiter(100, 15 * 60e3); // H9: tope global contra adivinar códigos
 app.post("/api/invite-redeem", (req, res) => {
-  if (!redeemOk(ipOf(req))) return res.status(429).json({ error: "Demasiados intentos, probá más tarde" });
+  if (!redeemOk(ipOf(req)) || !redeemAny("global")) return res.status(429).json({ error: "Demasiados intentos, probá más tarde" });
   const code = typeof req.body?.code === "string" ? req.body.code.slice(0, 64) : "";
   const r = db.redeemCode(code);
   if (!r.user) { db.audit("?", "invitacion-rechazada", null, r.error, ipOf(req)); return res.status(403).json({ error: r.error }); }

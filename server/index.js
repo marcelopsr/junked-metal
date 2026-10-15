@@ -4,7 +4,7 @@ import { dirname } from "node:path";
 import { timingSafeEqual } from "node:crypto";
 import { open } from "node:fs/promises";
 import express from "express";
-import { ORIGINS, sign, decode } from "./lib.js";
+import { ORIGINS, sign, decode, exchangeSecretOf, ipKey } from "./lib.js";
 import { openDb, normMail } from "./db.js";
 import { syncAccess } from "./access.js";
 import { register as registerAuth } from "./routes/auth.js";
@@ -26,14 +26,14 @@ const ADMINS = (E.ADMIN_EMAILS || "mertenmsalas@gmail.com").split(",").map(normM
 const PUBLIC = E.PUBLIC_URL || "https://junkedmetal.duckdns.org", GAME_URL = E.GAME_URL || "https://jm-login.mesr-96.workers.dev/";
 const REQUIRE_SUB = E.REQUIRE_SUBSCRIPTION === "true";
 // Secreto del canje con el Worker, aparte de JM_SECRET (que firma tokens y cookie admin). Sin él se usa JM_SECRET (transición).
-const EXCHANGE_SECRET = E.EXCHANGE_SECRET || E.JM_SECRET;
-if (!E.EXCHANGE_SECRET) console.warn("aviso: falta EXCHANGE_SECRET en .env; el canje del Worker usa JM_SECRET (ver server/README.md)");
+const EXCHANGE_SECRET = exchangeSecretOf(E); // en producción sin EXCHANGE_SECRET propio el arranque falla (H8)
+if (!E.EXCHANGE_SECRET) console.warn("aviso: falta EXCHANGE_SECRET en .env; el canje del Worker usa JM_SECRET (solo fuera de producción)");
 
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", "loopback"); // Caddy en 127.0.0.1 reescribe X-Forwarded-For
 const server = http.createServer(app);
-const ipOf = (req) => req.ip || req.socket.remoteAddress; // trust proxy loopback: req.ip ya sale de Caddy, no del XFF crudo
+const ipOf = (req) => ipKey(req.ip || req.socket.remoteAddress); // trust proxy loopback: req.ip ya sale de Caddy, no del XFF crudo
 
 app.use((req, res, next) => {
   const o = req.headers.origin;

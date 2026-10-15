@@ -38,6 +38,20 @@ export function exchangeOk(secret, body, now = Date.now()) {
   return a.length === b.length && timingSafeEqual(a, b) ? email.toLowerCase() : null;
 }
 
+// H8: en producción el canje exige EXCHANGE_SECRET propio y distinto de JM_SECRET (si no, quien conozca el secreto del Worker firma tokens). Fuera de producción cae a JM_SECRET.
+export function exchangeSecretOf(E) {
+  if (E.NODE_ENV === "production" && (!E.EXCHANGE_SECRET || E.EXCHANGE_SECRET === E.JM_SECRET)) throw new Error("falta EXCHANGE_SECRET (distinto de JM_SECRET) en .env de producción");
+  return E.EXCHANGE_SECRET || E.JM_SECRET;
+}
+
+// H6: IPv6 se agrupa por /64 (un atacante con un bloque propio rota los 64 bits bajos para esquivar los límites por IP).
+export const ipKey = (ip) => {
+  const s = String(ip || "").replace(/^::ffff:/i, "");
+  if (!s.includes(":")) return s;
+  const [a, b = ""] = s.split("::"), head = a.split(":"), tail = b ? b.split(":") : [];
+  return [...head, ...Array(Math.max(0, 8 - head.length - tail.length)).fill("0"), ...tail].slice(0, 4).join(":");
+};
+
 // TURN REST (coturn use-auth-secret): username "exp:uid", credencial = base64(HMAC-SHA1(secret, username)).
 export function turnCred(secret, uid, ttlSec = 3600, now = Date.now()) {
   const username = `${Math.floor(now / 1000) + ttlSec}:${uid.replace(/:/g, "-")}`;

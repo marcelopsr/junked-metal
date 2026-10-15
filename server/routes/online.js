@@ -45,12 +45,12 @@ app.get("/api/salas", (req, res) => {
 });
 // Telemetría: solo con token válido (el token va en el cuerpo para poder usar keepalive/beacon). Tipos y tamaño acotados.
 // run_end sospechoso (ver runEndSospechoso) o en ráfaga: no se guarda, se audita "telemetria-sospechosa" y se responde 204 igual (sin pistas al tramposo).
-const telOk = limiter(120, 60e3), TEL_DAILY_MAX = +(E.TEL_DAILY_MAX || 2000), telUid = limiter(TEL_DAILY_MAX, 86400e3); // cuota por uid: 2000 eventos/día (en memoria; se reinicia con el proceso)
+const telOk = limiter(120, 60e3), TEL_DAILY_MAX = +(E.TEL_DAILY_MAX || 2000), telUid = limiter(TEL_DAILY_MAX, 86400e3), telAll = limiter(+(E.TEL_GLOBAL_DAILY_MAX || 50000), 86400e3); // H7: tope global diario (uids "g-" se acuñan con la clave de grupo; la cuota por uid sola no acota la tabla) // cuota por uid: 2000 eventos/día (en memoria; se reinicia con el proceso)
 app.post("/api/telemetry", (req, res) => {
   if (!telOk(ipOf(req))) return res.status(429).end();
   const { token, type, data } = req.body || {}, w = who(String(token || ""));
   if (!w) return res.status(401).end();
-  if (!telUid(w.uid)) return res.status(429).end();
+  if (!telUid(w.uid) || !telAll("global")) return res.status(429).end();
   if (!/^[a-z_]{1,32}$/.test(type || "")) return res.status(400).end();
   if (type === "run_end") {
     const why = runEndSospechoso(data) || (db.recentCount(w.uid, "run_end", Date.now() - RUN_END_WINDOW) >= MAX_RUN_END ? `más de ${MAX_RUN_END} run_end en 10 min` : null);

@@ -18,7 +18,8 @@ const adminOf = (req) => {
   return i > 0 && +r.slice(i + 1) === adminEpoch ? r.slice(0, i) : null;
 };
 const setAdmin = (res, name) => res.cookie(COOKIE, sign(E.JM_SECRET, `admin:${name}:${adminEpoch}`, ADMIN_TTL), { httpOnly: true, secure: true, sameSite: "strict", path: "/admin", maxAge: ADMIN_TTL * 1000 });
-const adminLoginOk = limiter(10, 15 * 60e3), adminApiOk = limiter(300, 60e3);
+const adminLoginOk = limiter(10, 15 * 60e3), adminLoginAny = limiter(60, 15 * 60e3), // H9: tope global contra la clave admin
+ adminApiOk = limiter(300, 60e3);
 // CSRF: cookie SameSite=Strict + las escrituras exigen JSON (fuerza preflight entre orígenes) y, si viene Origin, que sea el propio.
 app.use("/admin/api", (req, res, next) => {
   if (!adminApiOk(ipOf(req))) return res.status(429).json({ error: "Demasiadas solicitudes" });
@@ -33,7 +34,7 @@ app.use("/admin/api", (req, res, next) => {
   next();
 });
 app.post("/admin/api/login", (req, res) => {
-  if (!adminLoginOk(ipOf(req))) return res.status(429).json({ error: "Demasiados intentos, esperar 15 minutos" });
+  if (!adminLoginOk(ipOf(req)) || !adminLoginAny("global")) return res.status(429).json({ error: "Demasiados intentos, esperar 15 minutos" });
   const { key, code, token } = req.body || {};
   let name = null;
   if (key && E.ADMIN_KEY && eq(key, E.ADMIN_KEY)) name = "clave";
