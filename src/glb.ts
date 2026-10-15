@@ -47,7 +47,7 @@ export const GLB: Partial<Record<Kind, { file: string; scale: number; /** Malla 
 // Folded (?folded2): estos bichos se arman en folded_slice.ts (PROC) y su caminata se hornea igual que la de un GLB (procBake);
 // el GLB viejo queda sin usar. Misma escala de nodo (visual) y misma colisión.
 Object.assign(PROC, ALIEN_PROC); // los aliens se hornean igual que el resto de los bichos Folded
-if (FOLDED_SLICE) for (const k of Object.keys(PROC) as Kind[]) if (GLB[k]) GLB[k]!.proc = true;
+if (FOLDED_SLICE) for (const k of [...Object.keys(PROC), "perro"] as Kind[]) if (GLB[k]) GLB[k]!.proc = true; // perro: bulldog procedural (folded_slice PETS); el gato sigue con su GLB, que se lee mejor que el procedural
 const WALK = 10, ATTACK = 6; // cuadros horneados: walk 0..9, attack 10..15
 const CLIP_FPS = 24, LOOPS = ["idle", "walk", "run", "rage"];
 const clips = new Map<Kind, Record<string, { from: number; n: number; loop: boolean }>>();
