@@ -107,6 +107,12 @@ export function engineTest(kind: string) {
 }
 export function engineStop() { if (ctx && eng) { eng.g.gain.setTargetAtTime(0, ctx.currentTime, 0.1); eng.tg.gain.setTargetAtTime(0, ctx.currentTime, 0.1); } }
 
+const TELE_CLAC: Record<string, [OscillatorType, number]> = {
+  generico: ["square", 520], rey: ["sawtooth", 200], cortadora: ["sawtooth", 330], tarantula: ["triangle", 640], perro: ["square", 260],
+  gato: ["triangle", 780], aspiradora: ["square", 400], proyector: ["triangle", 560], payaso: ["square", 880], muneco: ["sawtooth", 460],
+  limpiafondos: ["triangle", 300], grua: ["sawtooth", 240],
+};
+
 // ---------- Primitivas ----------
 const recent = new Map<string, number>();
 // Limita cuántas veces por segundo suena lo mismo (hordas = cientos de golpes)
@@ -401,6 +407,11 @@ export const SFX = {
       tone("sawtooth", 220, 110, 0.35, 0.18, 0.08),
       hiss("bandpass", 1800, 600, 0.18, 0.15, undefined, 0.05)
     );
+  },
+  // Aviso de ataque de jefe: clac mecánico corto (dos golpes + chasquido), timbre y tono propios por jefe; el que no figura usa el genérico
+  bossTele: (kind: string) => {
+    const [ty, f] = TELE_CLAC[kind] ?? TELE_CLAC.generico;
+    gate("tele-" + kind, 3) && (tone(ty, f * 1.6, f, 0.04, 0.12), tone(ty, f, f * 0.55, 0.07, 0.1, 0.07), hiss("bandpass", f * 4, f * 1.5, 0.03, 0.1));
   },
   break: () => { hiss("bandpass", 1600, 300, 0.25, 0.3); tone("triangle", 300, 120, 0.15, 0.15); },
   /** Bloque que se desprende en Demolición fabricación: rueda = goma, chapa = metal. */

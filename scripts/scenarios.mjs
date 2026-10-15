@@ -169,6 +169,8 @@ export const sessions = [
   { id: "lab", query: "?mute&seed=3&lab", shots: [
     { id: "noche", act: async (p) => { await wait(p, () => window.__lab); await labReady(p); await p.evaluate(() => window.__lab({})); } }, // se rearma a mano: el arranque solo del ?lab corre con tiempo real
     { id: "jefes", act: lab({ boss: true }) },
+    // Flechas de peligro en el borde (ui.ts threatAt): 4 avisos fuera de cámara en las cuatro direcciones
+    { id: "flecha-peligro", perf: false, act: async (p) => { await labReady(p); await p.evaluate(() => { window.__lab({}); for (const [x, z] of [[80, 0], [-80, 0], [0, 80], [0, -80]]) window.__threat(x, z); }); await tick(p, 6); } },
     { id: "niebla", act: lab({ climate: "niebla" }) },
     { id: "farol", act: lab({ climate: "farol" }) },
     { id: "hormigas300", act: labAnts, shot: false }, // solo medición: 300 instancias

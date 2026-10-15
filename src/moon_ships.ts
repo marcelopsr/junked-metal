@@ -8,6 +8,7 @@ import { alignYaw, alt, arc, at, deform, hd, hover, LUNA, MOON, onFloor, ringAt,
 import { ALIENS } from "./aliens";
 import { coopHp, coopRate, panTo } from "./moon_events";
 import { pbr } from "./render";
+import { threatAt } from "./ui";
 import { pickIdx, rng } from "./rng";
 import { SFX, SPACE } from "./sfx";
 import { banner, hudBoss } from "./ui";
@@ -141,6 +142,7 @@ export function shipsTick(dt: number, time: number, cars: Car[], quiet: boolean,
   if (!MOON.on) return;
   const cp = cars[0].pos;
   snd.quiet = quiet; snd.cp = cp; snd.yaw = camYaw;
+  if (!quiet) { for (const p of shots) threatAt(p.to, 0.25); for (const s of ships) if (s.state === "aim") threatAt(s.spot, 0.25); } // flecha de borde hacia los avisos fuera de cámara
   // Nodriza: aviso unos segundos antes, entra desde el horizonte; no se superpone con otra nodriza
   if (time >= nextMother - BAL.ritmo.aviso_evento_s && nextMother > 0 && !ships.some((s) => s.id === "nodriza")) {
     if (!quiet) banner("NAVE NODRIZA · ENTRADA DESDE EL HORIZONTE", 3.2, { tag: "RADAR", ico: "jefe", tone: "warn" });

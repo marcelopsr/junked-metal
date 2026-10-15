@@ -10,6 +10,9 @@ const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram",
 import { LIVE, WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
 import { SFX } from "./sfx";
+import { toScreen } from "./combat";
+import { EngineStore } from "@babylonjs/core/Engines/engineStore.js";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import type { PactView } from "./encore";
 import { BEAST_PORTRAITS, type Kind } from "./enemies";
 
@@ -682,6 +685,7 @@ export function uiTick(dt: number, live = true) {
   tickCombo(dt, live);
   tickDrive(dt);
   tickNumbers(dt);
+  tickThreats(dt);
   if ((rAge += dt) < 1) { rSweep = (rSweep + dt * 2.6) % 6.2832; if ((rAcc += dt) > 1 / 30) { rAcc = 0; drawRadar(); } } // ponytail: solo dibuja mientras main la alimenta
 }
 
@@ -733,6 +737,40 @@ export function hudArrows(list: { x: number; y: number; kind: "jefe" | "cofre"; 
     (e.firstElementChild as HTMLElement).style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
   });
 }
+
+// ---------- Flechas de peligro: ataque avisado fuera de cámara (rayado amarillo/negro = peligro), hasta 4 a la vez ----------
+const threats: { p: Vector3; t: number }[] = [];
+/** Marca un ataque en p durante secs; llamarla cada cuadro mientras dure el aviso (la repetida cerca de otra solo la refresca). */
+export function threatAt(p: Vector3, secs = 0.25) {
+  const h = threats.find((o) => (o.p.x - p.x) ** 2 + (o.p.z - p.z) ** 2 < 4);
+  if (h) { h.p.copyFrom(p); h.t = secs; return; }
+  if (threats.length >= 4) threats.shift();
+  threats.push({ p: p.clone(), t: secs });
+}
+let threatBox: HTMLElement | null = null;
+function tickThreats(dt: number) {
+  for (let i = threats.length - 1; i >= 0; i--) if ((threats[i].t -= dt) <= 0) threats.splice(i, 1);
+  if (!threatBox) {
+    if (!threats.length) return;
+    threatBox = $("arrows").parentElement!.appendChild(Object.assign(document.createElement("div"), { id: "threat" }));
+    for (let i = 0; i < 4; i++) threatBox.appendChild(document.createElement("i"));
+  }
+  const cv = document.getElementById("c") as HTMLCanvasElement | null, W = cv?.width || innerWidth, H = cv?.height || innerHeight, k = innerWidth / W, m = 22;
+  Array.from(threatBox.children).forEach((c, i) => {
+    const e = c as HTMLElement, th = threats[i], sp = th && toScreen(th.p);
+    if (!sp) { e.style.display = "none"; return; }
+    const vm = EngineStore.LastCreatedScene?.activeCamera?.getViewMatrix().m, p = th.p;
+    const behind = !!vm && p.x * vm[2] + p.y * vm[6] + p.z * vm[10] + vm[14] <= 0; // z > 1 de Project no sirve: también pasa con lo lejano
+    const cx = innerWidth / 2, cy = innerHeight / 2;
+    if (!behind && sp.x >= 0 && sp.x <= W && sp.y >= 0 && sp.y <= H) { e.style.display = "none"; return; } // a la vista: ya se ve el aviso en el piso
+    // detrás de la cámara la proyección se invierte: la flecha va abajo, del lado en que está
+    const dx = behind ? p.x * vm![0] + p.y * vm![4] + p.z * vm![8] + vm![12] : sp.x * k - cx, dy = behind ? cy : sp.y * k - cy;
+    const t = Math.min((cx - m) / Math.abs(dx || 1e-3), (cy - m) / Math.abs(dy || 1e-3));
+    e.style.display = "";
+    e.style.transform = `translate(${cx + dx * t}px, ${cy + dy * t}px) rotate(${Math.atan2(dy, dx)}rad)`;
+  });
+}
+if (import.meta.env.DEV) (window as unknown as { __threat: (x: number, z: number) => void }).__threat = (x, z) => threatAt(new Vector3(x, 0, z), 30); // dev: scripts/scenarios.mjs (flecha-peligro)
 
 // ---------- Cartas de mejora ----------
 const rarity = (o: Offer) => (o.kind === "evo" ? "evo" : o.kind === "fusion" ? "fusion" : o.lv === 5 ? "epica" : o.kind === "weapon" && o.lv === 1 ? "rara" : "comun");

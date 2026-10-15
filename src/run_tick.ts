@@ -6,7 +6,7 @@ import type { Kind, Enemy } from "./enemies";
 import { MOON, W, advance, alt, at, below, deform, hd, hflat, onFloor, orient, rad, upAt, upv, yawOf } from "./moon";
 import { SFX, SPACE, music } from "./sfx";
 import { alienWave, healTick } from "./aliens";
-import { banner, hudBoss } from "./ui";
+import { banner, hudBoss, threatAt } from "./ui";
 import { boom, boomK, cs, damage, explode, hitstop, kill } from "./combat";
 import { craterHumeante, panTo } from "./moon_events";
 import { encApply, erun } from "./encore_run";
@@ -65,6 +65,7 @@ export interface RunTickContext {
 let T!: RunTickContext;
 export function initRunTick(x: RunTickContext) { T = x; }
 let touchIFrame = 0;
+const teleOn = new WeakSet<Enemy>(); // enemigos con telegráfico visible el cuadro anterior (flanco de subida = sonido)
 
 export function tickEnemies(F: Frame, dt: number): boolean {
   const { c, ms, calm, cv, boosting, ariete, wdt, carR, carPs } = F;
@@ -93,6 +94,11 @@ export function tickEnemies(F: Frame, dt: number): boolean {
     }
     const ev = e.stun > 0 && e.kind !== "gusano" ? T.stunned(e, wdt) : e.update(wdt, aimAt); // el gusano no se aturde (lo mueve su IA, también enterrado)
     if (scared) e.spd /= BAL.ritmo.rasgo_misterio_lento;
+    if (!T.simulating) { // aviso de ataque: flecha en el borde si está fuera de cámara y, en jefes, clac propio al aparecer el telegráfico
+      const tz = e.tele[0], on = !!tz?.isVisible;
+      if (on) threatAt(tz.position, 0.25);
+      if (on !== teleOn.has(e)) { if (on) { teleOn.add(e); if (e.def.boss) SFX.bossTele(e.kind); } else teleOn.delete(e); }
+    }
     if (ev === "spit_aim" && !T.simulating) { const f = e.node.forward; FX.sparks(e.pos.add(upv(e.pos, 0.5))); mark("scorch", e.pos, yawOf(f, e.pos), 0.35, 4); }
     if (ev === "worm_up" || ev === "worm_down") { // gusano lunar (moon_worm.ts): cráter al salir y al hundirse; al salir golpea lo que esté encima
       deform(e.land, ATK.gusano_aviso_radio, ATK.gusano_crater_hondo); craterHumeante(e.land, ATK.gusano_aviso_radio, !T.simulating);
