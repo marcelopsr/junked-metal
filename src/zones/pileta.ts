@@ -3,6 +3,7 @@ import { box, cyl, merge, sph, tor } from "../models";
 import { M, canvasTex, pbr, shadows, surface } from "../render";
 import { rng } from "../rng";
 import { HALF, bare, decal, occluders, sandTex, scene, stat, tex } from "./common";
+import { manchas } from "./manchas";
 import { ball, giantTools, int, paintCans, piles, puddles, ramp, slopeBoard, toyRamps } from "../world_layout";
 
 // La pileta vacía (ENCORE y Taller): explanada de cemento (y = 0) con un pozo rectangular. De la explanada se baja por tres escalones a la playa (-5);
@@ -77,6 +78,11 @@ function beachToys() {
 
 export function poolBuild() {
   beachToys();
+  // Variación de gran escala en la explanada (encuadre de juego, x < 24 para no pisar el pozo): humedad oscura, arena clara, charcos de agua y baldosas pintadas de otro tono.
+  manchas("manchaPileta", 11, [-45, 22, -38, 38], [
+    { color: "#2a1608", alpha: 1, n: 18, w: [9, 20] }, { color: "#fff0c4", alpha: 0.95, n: 16, w: [8, 18] },
+    { color: "#2f9ad8", alpha: 0.9, n: 5, w: [5, 10] }, { color: "#1b2a4a", alpha: 0.85, n: 6, w: [3, 6], largo: 3, rot: 0 },
+  ]);
   const { x0, x1, z0, z1, hi, lo, r0, r1 } = PIT, GS = HALF * 2 + 700, h = GS / 2, W = x1 - x0, D = z1 - z0;
   // --- Explanada: cuatro tajadas alrededor del pozo (visible + colisionador). Misma textura y detalle que floor(), con UV de mundo.
   const tx = tex("sandPit", sandTex); tx.uScale = tx.vScale = GS / 18;
