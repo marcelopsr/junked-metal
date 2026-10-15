@@ -29,6 +29,10 @@ export function skyBlend(a: string[], b: string[], t: number) {
   paintSky(c4); scene.clearColor = B.Color4.FromHexString(c4[1] + "ff");
 }
 
+const SKY_DARK = ["#04060c", "#080d18", "#0a1020", "#06080f"];
+/** Apagón del Director: k = 1 cielo del clima, k = 0 noche cerrada (acompaña a setDark). */
+export function dimSky(k: number) { if (clim) skyBlend(clim.sky, SKY_DARK, 1 - k); }
+
 // Clima de la partida: sol, cielo, luz ambiente, exposición y reflejos (la sonda se vuelve a capturar)
 // Rebote de noche: tierra cálida apagada en vez de casi negro. Las caras de abajo (bajos del auto, panzas de los bichos) quedan
 // legibles y con tinte, sin sombra negra pura; el contraste lo sigue poniendo el faro (único foco duro). Costo: cero.

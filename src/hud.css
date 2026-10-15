@@ -391,7 +391,9 @@ body.calm #threat i { animation: none; }
   #txl { left: auto; right: calc(8px + 96px * var(--hud-scale) + 6px); translate: none; transform-origin: 100% 100%; width: min(250px, calc((100vw - 200px) / var(--hud-scale))); }
   #hpTxt { white-space: nowrap; }
   /* aviso de radio/Director: la cámara táctil sube el auto (y~185-255) y el aviso lo tapaba; baja a la banda libre sobre el panel de vida, compacto y sin cabecera */
-  #banner, #hud:has(#bossbar:not(.hidden)) ~ #banner { top: auto; bottom: calc(max(8px, env(safe-area-inset-bottom)) + 134px * var(--hud-scale)); transform-origin: 50% 100%; max-width: 92vw; padding: 3px 10px 4px; }
+  /* 2026-10-15: abajo quedaba pegado a SALTO/TURBO (zona del pulgar): sube a la franja bajo el reloj, a la izquierda de PAUSA/CAM (x > 340 px) */
+  #banner { top: calc(max(10px, env(safe-area-inset-top)) + 132px * var(--hud-scale)); bottom: auto; left: 8px; translate: none; transform-origin: 0 0; max-width: calc(100vw - 96px * var(--hud-scale)); padding: 3px 10px 4px; }
+  #hud:has(#bossbar:not(.hidden)) ~ #banner { top: calc(max(10px, env(safe-area-inset-top)) + 196px * var(--hud-scale)); bottom: auto; }
   #banner .rxh { display: none; }
   body #banner.evt-warn #bannerTxt, body #banner.evt-now #bannerTxt, body #banner:not(.evt-warn):not(.evt-now) #bannerTxt { font-size: 13px; }
   #bannerIco .ico { width: 16px; height: 16px; }
