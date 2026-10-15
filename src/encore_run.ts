@@ -21,7 +21,8 @@ import { skyClear, skyPace } from "./moon_sky";
 import { mateRevive, type Player } from "./coop";
 import * as IV from "./encore_events";
 import { lcg } from "./kit3d";
-import { setDark } from "./render";
+import { dimSky, setDark } from "./render";
+import { utilDispose, utilFree, utilNew, utilSet, type Util } from "./models/utileria";
 import { NO_ZONE, zonesDispose, zonesInit, zonesTick, type ZoneFx } from "./pact_zones";
 
 /** Lo que la expedición necesita del resto de main.ts: propiedades (get/set) y callbacks; lo que ya es export de otro módulo se importa directo. */
@@ -48,7 +49,7 @@ export const encLog: { loop: number; stage: number; t: number }[] = []; // solo 
 export const setErun = (r: E.Run | null) => { erun = r; };
 export const setEncPrior = (p: number) => { encPrior = p; };
 /** clearRun: vuelve a Supervivencia (sin expedición, cola del Director vacía). */
-export function encClear() { erun = null; encPrior = paceS = 0; encExtra = encG = 0; pfx = E.NO_FX; dirq = E.newDirQ(); saidSecrets = []; if (ip?.plan && ip.st.s && !ip.st.e) iIo.end(ip.plan.id); ip = null; zonesDispose(); zfx = NO_ZONE; zKey = ""; }
+export function encClear() { erun = null; encPrior = paceS = 0; encExtra = encG = 0; pfx = E.NO_FX; dirq = E.newDirQ(); saidSecrets = []; if (ip?.plan && ip.st.s && !ip.st.e) iIo.end(ip.plan.id); ip = null; dropsFree(); utilDispose(); zonesDispose(); zfx = NO_ZONE; zKey = ""; }
 // Zonas de pacto (pact_zones.ts): efecto del piso sobre el auto, sumado al de los pactos. zfx lo toma recompute (velocidad, XP, tornillos, regen) y main.ts lo lee para el imán (zoneMagnet).
 let zfx: ZoneFx = NO_ZONE, zKey = "", zT = 0;
 export const zoneMagnet = () => zfx.magnetMul;
@@ -71,11 +72,14 @@ function zonesStep() {
 }
 // Interrupción del Director a mitad de escenario (encore_events.ts): plan por escenario, reloj y efectos.
 let ip: { key: string; plan: IV.Plan | null; st: IV.St } | null = null, iT = 0, iKind: Kind = "hormiga";
-const iDrops: { p: B.Vector3; t: number }[] = []; // utilería en el aire: punto de impacto y segundos que faltan
+const iDrops: { p: B.Vector3; t: number; u: Util | null }[] = []; // utilería en el aire: punto de impacto, segundos que faltan y su malla (marca + objeto)
+const DROP_S = 1.5, DROP_R = 2.4; // segundos de aviso/caída y radio de daño (la marca de peligro cierra hasta este radio)
+let iN = 0;
+const dropsFree = () => { for (const d of iDrops) if (d.u) utilFree(d.u); iDrops.length = 0; };
 const iLcg = lcg(7); // ponytail: semilla fija; solo decide dónde cae la sombra (visual y daño), no el layout
 const iPt = (r: number) => { const c = cx.lead.car!.pos, a = iLcg() * Math.PI * 2, d = iLcg() * r; return zpt(c.x + Math.cos(a) * d, c.z + Math.sin(a) * d, 0.2); };
 const iIo: IV.Io = {
-  warn: (id) => { if (cx.simulating) return; const t = IV.INT_TXT[id]; E.dirPush(dirq, t.line, 5); banner(`PELIGRO · ${t.name}`, 2.5, { tone: "warn", tag: "DIRECTOR" }); SPACE.interrupt("aviso"); },
+  warn: (id) => { if (cx.simulating) return; const t = IV.INT_TXT[id]; E.dirPush(dirq, t.line, 9); dirq.cool = 0; /* prioridad máxima y sin esperar el hueco: la frase sale ya y no queda detrás de otra */ banner(`PELIGRO · ${t.name}`, 2.5, { tone: "warn", tag: "DIRECTOR" }); SPACE.interrupt("aviso"); },
   start: (id) => {
     if (!cx.simulating && !save.encore.seenInts.includes(id)) { save.encore.seenInts.push(id); persist(); } // Cartelera: interrupción vista
     const c = cx.lead.car!.pos, n = BAL.interrupciones[id].valor;
@@ -84,33 +88,33 @@ const iIo: IV.Io = {
     if (!cx.simulating) SPACE.interrupt(id === "utileria" ? "hit" : id);
   },
   frame: (id, dt, k) => {
-    if (id === "luces" && !cx.simulating) setDark(1 - BAL.interrupciones.luces.valor * k);
+    if (id === "luces" && !cx.simulating) { setDark(1 - BAL.interrupciones.luces.valor * k); if (!MOON.on) dimSky(1 - BAL.interrupciones.luces.valor * k); } // el cielo oscurece con la luz (en la luna lo pinta moon.ts)
     if (id === "corte") for (const e of cx.enemies) if (!e.def.boss) e.stun = Math.max(e.stun, 0.3); // congelados mientras dura
     if (id === "utileria") for (let i = iDrops.length - 1; i >= 0; i--) {
       const d = iDrops[i]; d.t -= dt;
-      if (d.t > 0) { if (!cx.simulating && Math.random() < dt * 5) sparks(d.p, 2); continue; } // aviso: chispas sobre la sombra (ponytail: sin malla de sombra; techo: no se ve el objeto cayendo)
-      iDrops.splice(i, 1);
+      if (d.t > 0) { if (d.u) utilSet(d.u, d.p, 1 - d.t / DROP_S, DROP_R); continue; } // aviso: aro de peligro en el piso que se cierra y el objeto bajando
+      iDrops.splice(i, 1); if (d.u) utilFree(d.u);
       if (!cx.simulating) { sparks(d.p, 14); SPACE.interrupt("hit"); }
       cx.shake = Math.max(cx.shake, 0.5);
       const c = cx.lead.car!.pos;
-      if (Math.hypot(c.x - d.p.x, c.z - d.p.z) < 2.4) cx.hurt?.(BAL.interrupciones.utileria.valor * cx.lead.maxHp, false, "utilería");
+      if (Math.hypot(c.x - d.p.x, c.z - d.p.z) < DROP_R) cx.hurt?.(BAL.interrupciones.utileria.valor * cx.lead.maxHp, false, "utilería");
     }
   },
   pulse: (id) => {
-    if (id === "utileria") iDrops.push({ p: iPt(7), t: 1.1 });
+    if (id === "utileria") iDrops.push({ p: iPt(7), t: DROP_S, u: cx.simulating ? null : utilNew(iN++) });
     if (id === "sangre") for (let i = 0; i < BAL.interrupciones.sangre.valor; i++) cx.spawnEnemy(iKind, spawnPoint(cx.lead.car!.pos, 24, 32));
   },
   end: (id) => {
-    if (id === "luces") setDark(1);
+    if (id === "luces") { setDark(1); dimSky(1); }
     if (id === "sangre") { cx.dropPickup(spawnPoint(cx.lead.car!.pos, 6, 10), "iman"); if (!cx.simulating) SPACE.interrupt("fin"); }
-    iDrops.length = 0;
+    dropsFree();
   },
 };
 function interruptStep() {
   const r = erun!, key = `${r.seed}:${r.loop}:${r.stage}`, t = cx.time;
   if (!ip || ip.key !== key) {
     if (ip?.plan && ip.st.s && !ip.st.e) iIo.end(ip.plan.id); // escenario nuevo con una en curso: apaga lo suyo
-    ip = { key, st: IV.newSt(), plan: r.phase === "stage" ? IV.planOf(r.seed, r.loop, r.stage, E.zoneOf(r) === "luna", primeraVez() && !r.loop && !r.stage) : null }; iDrops.length = 0; iT = t;
+    ip = { key, st: IV.newSt(), plan: r.phase === "stage" ? IV.planOf(r.seed, r.loop, r.stage, E.zoneOf(r) === "luna", primeraVez() && !r.loop && !r.stage) : null }; dropsFree(); iT = t;
   }
   const dt = Math.min(0.1, Math.max(0, t - iT)); iT = t;
   if (ip.plan) IV.step(ip.plan, ip.st, r.stageT, dt, iIo, r.phase !== "stage" || E.decisionOpen(r));

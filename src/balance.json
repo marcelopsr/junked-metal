@@ -958,7 +958,7 @@
   "interrupciones": [
     {"id":"luces","aviso_s":3,"dura_s":12,"peso_luna":3,"peso_tierra":2,"cada_s":0,"valor":0.85},
     {"id":"utileria","aviso_s":3,"dura_s":14,"peso_luna":2,"peso_tierra":3,"cada_s":1.1,"valor":0.06},
-    {"id":"corte","aviso_s":3,"dura_s":10,"peso_luna":2,"peso_tierra":2,"cada_s":0,"valor":1},
+    {"id":"corte","aviso_s":3,"dura_s":6,"peso_luna":2,"peso_tierra":2,"cada_s":0,"valor":1},
     {"id":"sangre","aviso_s":3,"dura_s":14,"peso_luna":2,"peso_tierra":2,"cada_s":3,"valor":4}
   ],
   "pactos_zonas": [
