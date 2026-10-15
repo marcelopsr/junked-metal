@@ -14,7 +14,7 @@ import type { Kind } from "./enemies";
 // Fuera de la luna (MOON.on = false) cada ayudante de abajo hace EXACTAMENTE la cuenta plana de siempre: el patio no cambia ni un bit.
 export const MOON = { on: false, R: 87, g: 25 }; // R 60→87 (usuario 2026-10-12); g = la gravedad del patio (25): los saltos de jefes están calculados con ella
 export const CENTER = new B.Vector3(0, -MOON.R, 0); // el polo de arriba queda en el origen: la salida es la misma del patio
-export const SUN_DIR = new B.Vector3(-0.62, 0.48, -0.62).normalize(); // hacia el Sol (la luz va al revés): la salida queda en la cara iluminada
+export const SUN_DIR = new B.Vector3(-0.66, 0.26, -0.66).normalize(); // hacia el Sol (la luz va al revés): la salida queda en la cara iluminada
 export const DARK_DIR = SUN_DIR.scale(-1).addInPlace(new B.Vector3(0.25, 0.2, 0)).normalize(); // punto de llegada de las variantes "oscuro" (igual que __luna.go)
 export const EARTH_DIR = new B.Vector3(0.25, 0.42, 0.87).normalize(); // la Tierra, delante de la salida (el auto arranca mirando +z)
 const Y = B.Vector3.Up();
