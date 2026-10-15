@@ -679,7 +679,7 @@ function update(dt: number) {
   const c = lead.car!;
   if (libre) { tickDrive({ c } as Frame, dt); return; } // Free Roam: solo manejo (sin reloj, spawner, armas ni vitales)
   run.time += dt;
-  if (erun) { encApply(E.tick(erun, dt)); const d = E.dirTick(dirq, dt); if (d) { dirSub(d, E.ENC.dirShowS); if (!simulating && !LAB.on) SFX.radio((Object.values(E.TIPS) as string[]).includes(d)); } } // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
+  if (erun) { encApply(E.tick(erun, dt)); const d = E.dirTick(dirq, dt, E.decisionOpen(erun)); if (d) { dirSub(d, E.ENC.dirShowS); if (!simulating && !LAB.on) SFX.radio((Object.values(E.TIPS) as string[]).includes(d)); } } // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
   const calm = erun?.phase === "vote" || erun?.phase === "final" || calmFirst(), tp = run.time + paceS, hordeK = run.horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
   if (tutOn() && (input.throttle || input.steer || input.move)) tut("move");
   if (hintOn && (run.time > HINT_S || input.throttle || input.steer || input.move || input.boost || input.drift || input.jump || input.ability)) { hintOn = false; $("hint").classList.add("fade"); }

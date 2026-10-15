@@ -79,3 +79,14 @@ describe("R3: memoria entre runs", () => {
     expect(line("start", newRun(1), m({ runs: 1 }))).toMatch(/OTRA VEZ AQUÍ/);
   });
 });
+
+describe("Director: cola retenida durante una decisión", () => {
+  it("no muestra ni envejece con hold; al soltar quedan las 2 más nuevas, en orden", () => {
+    const d = newDirQ();
+    dirPush(d, "a", 2); dirPush(d, "b", 2); dirPush(d, "c", 2);
+    for (let i = 0; i < 40; i++) expect(dirTick(d, 1, true)).toBeNull(); // pasa el TTL y nada se pierde
+    expect(dirTick(d, 0.1)).toBe("b");
+    expect(dirTick(d, ENC.dirGapS)).toBe("c");
+    expect(dirTick(d, ENC.dirGapS)).toBeNull();
+  });
+});

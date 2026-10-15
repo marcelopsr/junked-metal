@@ -29,6 +29,7 @@ export const ENC = {
   dirGapS: 5,          // Director: segundos mínimos entre el inicio de una frase y la siguiente (incluye los dirShowS en pantalla)
   dirShowS: 3.6,       // Director: segundos que dura el subtítulo
   dirTtlS: 15,         // Director: una frase que espera más que esto ya quedó vieja y se descarta
+  dirAfterHold: 2,     // Director: al cerrarse una decisión se muestran a lo sumo las 2 frases más nuevas retenidas
   dirCap: 4,           // Director: frases en espera; al pasarse se pierde la de menor prioridad
 };
 
@@ -374,7 +375,7 @@ export function line(id: LineId, r: Run, mem?: Mem): string {
 // ---------- Cola del Director (R3): sus frases no se pisan ni se pierden con la radio ----------
 // Se muestran en un subtítulo propio (ui.ts dirSub), de a una, con `dirGapS` mínimo entre inicios. Gana la prioridad más alta (empate: la más vieja).
 // Una frase que espera más de `dirTtlS` ya describe algo pasado y se descarta; si hay más de `dirCap` en espera se pierde la de menor prioridad.
-export type DirQ = { q: { txt: string; pri: number; age: number }[]; cool: number };
+export type DirQ = { q: { txt: string; pri: number; age: number }[]; cool: number; held?: boolean };
 export const newDirQ = (): DirQ => ({ q: [], cool: 0 });
 const PRI: Record<LineId, number> = { start: 3, won: 5, final_act: 5, boss_intro: 4, overload: 4, guest: 4, tele_ready: 3, vote: 3, encore: 3, tele_land: 2, advance: 2, pact_offer: 2, pact_yes: 2, pact_no: 2, route_offer: 2, hint: 2, stay: 1 };
 export const dirPri = (id: LineId) => PRI[id];
@@ -383,8 +384,12 @@ export function dirPush(d: DirQ, txt: string, pri: number) {
   d.q.push({ txt, pri, age: 0 });
   if (d.q.length > ENC.dirCap) { let w = 0; d.q.forEach((x, i) => { if (x.pri < d.q[w].pri) w = i; }); d.q.splice(w, 1); }
 }
-/** Avanza dt segundos; devuelve la frase que toca mostrar ahora, si hay. */
-export function dirTick(d: DirQ, dt: number): string | null {
+/** Hay una decisión abierta (teleportador, pacto, destino, votación): el subtítulo taparía las opciones. */
+export const decisionOpen = (r: Run | null) => !!r && (r.phase === "teleporter" || r.phase === "pact" || r.phase === "route" || r.phase === "vote");
+/** Avanza dt segundos; devuelve la frase que toca mostrar ahora, si hay. Con `hold` (decisión abierta) las frases esperan sin envejecer; al soltar quedan las 2 más nuevas. */
+export function dirTick(d: DirQ, dt: number, hold = false): string | null {
+  if (hold) { d.held = true; return null; }
+  if (d.held) { d.held = false; d.cool = 0; if (d.q.length > ENC.dirAfterHold) d.q.splice(0, d.q.length - ENC.dirAfterHold); } // ponytail: las viejas se descartan por orden de llegada, sin mirar prioridad
   d.cool = Math.max(0, d.cool - dt);
   for (const x of d.q) x.age += dt;
   d.q = d.q.filter((x) => x.age < ENC.dirTtlS);
