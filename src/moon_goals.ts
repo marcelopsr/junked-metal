@@ -30,6 +30,10 @@ const antennaTpl = () => template("obj_antena", () => { const L = mats(); return
 // Juguete de chapa pintada (ref318): huevo crema con paneles naranja, ojos de buey cian, banda luminosa, tres patas articuladas, puerta abierta con rampa y antena con bolita.
 const dim = (m: B.PBRMaterial, k: number) => { m.emissiveIntensity = k; return m; }; // pantallas y lentes: con 2 se queman a blanco
 const toy = (n: string, color: string, o: { rough?: number; metal?: number; glow?: boolean; alpha?: number } = {}) => { const m = pbr(n, { color, rough: o.rough ?? 0.55, metal: o.metal ?? 0.15, ...(o.glow ? { emissive: color } : {}), ...(o.alpha ? { alpha: o.alpha } : {}) }); if (o.glow) m.emissiveIntensity = 2; return m; };
+// Lascas de pintura (desgaste): cajitas finas pegadas a las aristas de la cara frontal (+z) de una caja; posiciones de un hash fijo, sin rng().
+const chips = (m: B.Material, cx: number, cy: number, cz: number, w: number, h: number, d: number, n: number, s: number) => Array.from({ length: n }, (_, i) => {
+  const u = mix(s + i * 3), v = mix(s + i * 3 + 1), l = 0.14 + 0.22 * mix(s + i * 3 + 2), side = i % 2 ? 1 : -1;
+  return i % 3 ? box(l, 0.09, 0.04, m, [cx + (u - 0.5) * w, cy + side * (h / 2 - 0.05), cz + d / 2 + 0.01]) : box(0.09, l, 0.04, m, [cx + side * (w / 2 - 0.05), cy + (v - 0.5) * h, cz + d / 2 + 0.01]); });
 const rocketTpl = () => template("obj_cohete", () => {
   const cream = toy("cohCrema", "#d9cdb4", { rough: 0.6 }), ora = toy("cohNaranja", "#e8731c"), steel = toy("cohAcero", "#6c6a68", { rough: 0.4, metal: 0.8 }), glow = toy("cohCian", "#3de6ff", { glow: true }), dark = toy("cohHueco", "#2a2623", { rough: 0.7 });
   const legs = [0, 2.1, 4.2].flatMap((a) => { const s = Math.sin(a), c = Math.cos(a); return [
@@ -73,18 +77,20 @@ const chestTpl = () => template("obj_cofre_pago", () => {
     box(0.3, 0.52, 1.5, steel, [0.45, 1.22, 0], [0, 0, 0]), box(0.3, 0.52, 1.5, steel, [-0.45, 1.22, 0]), box(2.2, 0.2, 1.55, steel, [0, 0.98, 0]), // cinchas y faja
     box(0.8, 0.5, 0.18, steel, [0, 1.05, 0.78]), box(0.5, 0.6, 0.12, steel, [0, 0.6, 0.78]), box(0.32, 0.32, 0.1, yel, [0, 0.62, 0.86]), // cierre
     box(0.55, 0.08, 0.1, yel, [0.9, 1.5, 0.3], [0, 0.15, 0]), box(0.55, 0.08, 0.1, yel, [0.9, 1.5, 0.05], [0, 0.15, 0]),
-    tor(0.55, 0.07, steel, [-1.12, 0.65, 0], [0, Math.PI / 2, 0], 8), cyl(0.12, 0.16, 0.9, steel, [0.95, 1.9, -0.5], undefined, 6), sph(0.3, rust, [0.95, 2.4, -0.5], undefined, 4), ...corners]; });
+    tor(0.55, 0.07, steel, [-1.12, 0.65, 0], [0, Math.PI / 2, 0], 8), cyl(0.12, 0.16, 0.9, steel, [0.95, 1.9, -0.5], undefined, 6), sph(0.3, rust, [0.95, 2.4, -0.5], undefined, 4), ...corners,
+    ...chips(rust, 0, 0.55, 0.7, 2.0, 0.85, 0, 12, 11), ...chips(toy("cofLasca", "#b4aca0", { rough: 0.5, metal: 0.7 }), 0, 0.55, 0.7, 2.0, 0.85, 0, 8, 41)]; });
 // Máquina de opciones (ref320): caja azul con pintura saltada, tres vitrinas con piezas, placas de latón, perillas, bandeja, asa y antena. Huella 2 x 1,6, alto 3,4.
 const machineTpl = () => template("obj_maquina", () => {
-  const blue = toy("maqAzul", "#2f5f94", { rough: 0.6, metal: 0.35 }), brass = toy("maqLaton", "#b88a3c", { rough: 0.4, metal: 0.85 }), steel = toy("maqAcero", "#58565a", { rough: 0.45, metal: 0.8 }), glass = toy("maqVidrio", "#a9d6e8", { rough: 0.1, metal: 0, alpha: 0.35 }), dark = toy("maqHueco", "#26272b", { rough: 0.7 });
+  const blue = toy("maqAzul", "#2f5f94", { rough: 0.6, metal: 0.35 }), brass = toy("maqLaton", "#b88a3c", { rough: 0.4, metal: 0.85 }), steel = toy("maqAcero", "#58565a", { rough: 0.45, metal: 0.8 }), glass = toy("maqVidrio", "#a9d6e8", { rough: 0.1, metal: 0, alpha: 0.35 }), dark = toy("maqHueco", "#26272b", { rough: 0.7 }), fondo = toy("maqFondo", "#a9b1b9", { rough: 0.5, metal: 0.3 });
   const col = [-0.62, 0, 0.62], bits = ["#c8683c", "#8a8f96", "#d9b05a"];
   return [
     box(2, 2.6, 1.5, blue, [0, 1.6, 0]), box(2.15, 0.25, 1.65, blue, [0, 3.0, 0]), box(1.9, 0.2, 1.4, steel, [0, 0.3, 0]), // caja, tapa y zócalo
     ...[-1, 1].flatMap((x) => [-1, 1].flatMap((z) => [cyl(0.5, 0.6, 0.18, steel, [x * 0.85, 0.09, z * 0.6], undefined, 8), box(0.3, 0.3, 0.3, brass, [x * 1.0, 0.7, z * 0.7])])), // patas y escuadras
-    ...col.flatMap((x, i) => [box(0.58, 0.85, 0.12, dark, [x, 2.35, 0.78]), box(0.5, 0.75, 0.1, glass, [x, 2.35, 0.86]), sph(0.2, toy(`maqPieza${i}`, bits[i], { metal: 0.6 }), [x, 2.15, 0.76], undefined, 4), box(0.44, 0.14, 0.08, brass, [x, 1.72, 0.78]), cyl(0.36, 0.36, 0.14, brass, [x, 1.3, 0.78], [Math.PI / 2, 0, 0], 10), box(0.16, 0.26, 0.14, steel, [x, 1.3, 0.88], [0, 0, 0.5])]),
+    ...col.flatMap((x, i) => [box(0.62, 0.89, 0.06, dark, [x, 2.35, 0.77]), box(0.5, 0.77, 0.06, fondo, [x, 2.35, 0.82]), sph(0.34, toy(`maqPieza${i}`, bits[i], { metal: 0.6 }), [x, 2.2, 0.92], undefined, 5), box(0.5, 0.75, 0.04, glass, [x, 2.35, 1.06]), box(0.44, 0.14, 0.08, brass, [x, 1.72, 0.78]), cyl(0.36, 0.36, 0.14, brass, [x, 1.3, 0.78], [Math.PI / 2, 0, 0], 10), box(0.16, 0.26, 0.14, steel, [x, 1.3, 0.88], [0, 0, 0.5])]),
     box(0.9, 0.3, 0.5, steel, [0, 0.8, 0.95], [0.25, 0, 0]), // bandeja
     box(1.2, 0.06, 0.1, steel, [0, 3.35, 0]), box(0.1, 0.18, 0.1, steel, [-0.6, 3.25, 0]), box(0.1, 0.18, 0.1, steel, [0.6, 3.25, 0]), // asa
-    box(0.1, 0.9, 0.6, dark, [1.03, 1.2, 0.1]), cyl(0.05, 0.1, 1.4, steel, [-0.85, 3.8, -0.3], [0, 0, 0.18], 5), sph(0.3, brass, [-0.97, 4.5, -0.3], undefined, 4)]; });
+    box(0.1, 0.9, 0.6, dark, [1.03, 1.2, 0.1]), cyl(0.05, 0.1, 1.4, steel, [-0.85, 3.8, -0.3], [0, 0, 0.18], 5), sph(0.3, brass, [-0.97, 4.5, -0.3], undefined, 4),
+    ...chips(toy("maqLasca", "#b8b0a4", { rough: 0.5, metal: 0.7 }), 0, 1.6, 0.75, 2, 2.6, 0, 10, 77), ...chips(toy("maqOxido", "#8a4a24", { rough: 0.8, metal: 0.3 }), 0, 1.6, 0.75, 2, 2.6, 0, 12, 91)]; });
 // ---------- ENCORE fase 1: escenografía del Director y objetos de pactos/rutas/sobrecarga (refs 311, 313-317, 319), solo decorativos ----------
 // Cofre especial (ref313): caja granate con tapa abovedada, fajas y esquineros de latón, cerradura redonda con ojo de cerradura, gema ámbar y patas.
 const specialChestTpl = () => template("obj_cofre_especial", () => {
@@ -103,25 +109,27 @@ const terminalTpl = () => template("obj_terminal_pactos", () => {
     box(1.2, 0.3, 1.2, steel, [0, 0.15, 0]), box(0.95, 1.6, 0.85, red, [0, 1.1, 0]), box(0.55, 0.9, 0.08, brass, [0, 1.0, 0.45]), box(0.1, 1.1, 0.6, steel, [-0.5, 1.4, -0.05]), // base, columna, placa
     box(1.15, 0.85, 0.95, red, [0, 2.3, 0.05], [0.35, 0, 0]), box(0.75, 0.5, 0.08, scr, [0, 2.55, 0.5], [0.35, 0, 0]), box(0.9, 0.62, 0.08, steel, [0, 2.55, 0.46], [0.35, 0, 0]), // cabeza y pantalla
     cyl(0.26, 0.26, 0.14, cream, [0.25, 2.1, 0.62], [1.2, 0, 0], 8), cyl(0.26, 0.26, 0.14, rbtn, [-0.25, 2.1, 0.62], [1.2, 0, 0], 8), box(0.7, 0.2, 0.06, brass, [0, 1.82, 0.62], [0.35, 0, 0]), box(0.5, 0.06, 0.06, steel, [0, 1.62, 0.5]),
-    tor(0.5, 0.07, brass, [-0.62, 2.3, 0.05], [0, Math.PI / 2, 0], 8), tor(0.5, 0.07, brass, [0.62, 2.3, 0.05], [0, Math.PI / 2, 0], 8),
+    tor(0.95, 0.13, brass, [-0.72, 2.3, 0.05], [0, 0, Math.PI / 2], 10), tor(0.95, 0.13, brass, [0.72, 2.3, 0.05], [0, 0, Math.PI / 2], 10),
+    ...chips(toy("terLasca", "#b8b0a4", { rough: 0.5, metal: 0.7 }), 0, 1.1, 0.425, 0.95, 1.6, 0, 8, 5), ...chips(toy("terOxido", "#8a4a24", { rough: 0.8, metal: 0.3 }), 0, 1.1, 0.425, 0.95, 1.6, 0, 8, 23),
     cyl(0.1, 0.12, 1.4, steel, [-0.5, 3.3, -0.3], undefined, 5), sph(0.26, brass, [-0.5, 4.05, -0.3], undefined, 4),
     ...[-1, 1].flatMap((x) => [-1, 1].map((z) => cyl(0.4, 0.55, 0.3, steel, [x * 0.55, 0.15, z * 0.5], undefined, 6)))]; });
 // TV del Director (ref314): caja crema y turquesa oxidada con pantalla cian en espiral, perillas, luz roja, rejillas, dos antenas y cuatro patas. Mira a +z. Ancho 2,6.
 const tvTpl = () => template("obj_tv_director", () => {
-  const cream = toy("tvCrema", "#cfc6a8", { rough: 0.6, metal: 0.2 }), teal = toy("tvTurquesa", "#3b7d7a", { rough: 0.65, metal: 0.3 }), rust = toy("tvOxido", "#7b4a2c", { rough: 0.8, metal: 0.4 }), dark = toy("tvOscuro", "#26272b", { rough: 0.7 }), scr = dim(toy("tvPantalla", "#46d4ee", { glow: true }), 0.7), red = toy("tvLuz", "#ff2a1a", { glow: true });
+  const cream = toy("tvCrema", "#cfc6a8", { rough: 0.6, metal: 0.2 }), teal = toy("tvTurquesa", "#3b7d7a", { rough: 0.65, metal: 0.3 }), rust = toy("tvOxido", "#7b4a2c", { rough: 0.8, metal: 0.4 }), dark = toy("tvOscuro", "#26272b", { rough: 0.7 }), scr = dim(toy("tvPantalla", "#0f4a58", { glow: true }), 0.35), spi = dim(toy("tvEspiral", "#6fe6ff", { glow: true }), 0.8), red = toy("tvLuz", "#ff2a1a", { glow: true });
   return [
     box(2.6, 1.8, 1.8, teal, [0, 1.5, 0]), box(2.6, 1.8, 0.14, cream, [0, 1.5, 0.84]), box(2.05, 1.4, 0.08, dark, [0.2, 1.5, 0.9]), box(1.8, 1.15, 0.08, scr, [0.2, 1.5, 0.95]), // casco, marco y pantalla
+    ...Array.from({ length: 44 }, (_, i) => { const t = i / 43, a = t * Math.PI * 4.2, r = 0.06 + 0.5 * t, x = 0.2 + Math.cos(a) * r, y = 1.5 + Math.sin(a) * r * 0.95; return box(0.12 + 0.1 * t, 0.045 + 0.04 * t, 0.03, spi, [x, y, 1.0], [0, 0, a + Math.PI / 2]); }), // espiral emisiva
     box(0.55, 1.5, 0.08, rust, [-1.05, 1.5, 0.92]), ...[0, 1].map((i) => [cyl(0.34, 0.34, 0.12, cream, [-1.05, 1.95 - i * 0.45, 0.98], [Math.PI / 2, 0, 0], 8), box(0.06, 0.3, 0.06, dark, [-1.05, 1.95 - i * 0.45, 1.06], [0, 0, 0.5 + i])]).flat(), sph(0.14, red, [-1.05, 1.0, 1.0], undefined, 4), box(0.4, 0.3, 0.06, dark, [-1.05, 0.7, 0.99]),
     box(0.1, 1.0, 0.7, dark, [1.32, 1.5, 0.2]), box(0.1, 0.5, 0.6, rust, [1.34, 1.2, 0.5]), // rejilla y parches del costado
     cyl(0.9, 1.1, 0.25, rust, [0, 2.5, -0.1], undefined, 8), cyl(0.05, 0.08, 2.2, rust, [-0.6, 3.5, -0.4], [0, 0, 0.9], 5), cyl(0.05, 0.08, 2.4, rust, [0.5, 3.6, -0.3], [0, 0, -0.45], 5), sph(0.16, rust, [-1.4, 4.35, -0.4], undefined, 4), sph(0.16, rust, [0.95, 4.65, -0.3], undefined, 4), // antenas
     ...[-1, 1].flatMap((x) => [-1, 1].map((z) => cyl(0.18, 0.3, 0.7, rust, [x * 1.1, 0.35, z * 0.7], [0.3 * z, 0, -0.3 * x], 5))), box(2.4, 0.1, 0.1, rust, [0, 0.55, 0.7]), box(2.4, 0.1, 0.1, rust, [0, 0.55, -0.7])]; });
 // Foco del Director (ref315): cuerpo granate tumbado sobre trípode, lente ámbar, cuatro aletas negras, perilla de latón, asa y cable enrollado. Mira a +z. Alto 2,6.
 const spotDirTpl = () => template("obj_foco_director", () => {
-  const red = toy("fdGranate", "#8e1b2a", { rough: 0.6, metal: 0.3 }), brass = toy("fdLaton", "#b88a2e", { rough: 0.4, metal: 0.85 }), dark = toy("fdNegro", "#1f1f22", { rough: 0.7, metal: 0.3 }), lens = dim(toy("fdLente", "#ffb23a", { glow: true }), 0.9);
+  const red = toy("fdGranate", "#8e1b2a", { rough: 0.6, metal: 0.3 }), brass = toy("fdLaton", "#b88a2e", { rough: 0.4, metal: 0.85 }), dark = toy("fdNegro", "#1f1f22", { rough: 0.7, metal: 0.3 }), lens = dim(toy("fdLente", "#ff9e2a", { glow: true }), 0.4);
   return [
-    cyl(1.1, 1.1, 1.3, red, [0, 1.9, 0], [Math.PI / 2, 0, 0], 12), cyl(1.25, 1.25, 0.2, dark, [0, 1.9, 0.7], [Math.PI / 2, 0, 0], 12), cyl(0.95, 0.95, 0.06, lens, [0, 1.9, 0.82], [Math.PI / 2, 0, 0], 12), // cuerpo, aro y lente
+    cyl(1.1, 1.1, 1.3, red, [0, 1.9, 0], [Math.PI / 2, 0, 0], 12), cyl(1.25, 1.25, 0.2, dark, [0, 1.9, 0.7], [Math.PI / 2, 0, 0], 12), sph(1.9, lens, [0, 1.9, 0.76], [1, 1, 0.32], 12), tor(1.3, 0.07, dark, [0, 1.9, 0.82], [Math.PI / 2, 0, 0], 12), // cuerpo, aro y lente abombada
     box(0.95, 0.75, 0.06, dark, [0, 2.75, 1.0], [-0.5, 0, 0]), box(0.95, 0.75, 0.06, dark, [0, 1.05, 1.0], [0.5, 0, 0]), box(0.06, 0.8, 0.8, dark, [0.95, 1.9, 1.0], [0, 0.5, 0]), box(0.06, 0.8, 0.8, dark, [-0.95, 1.9, 1.0], [0, -0.5, 0]), // aletas
-    box(0.9, 0.12, 0.12, brass, [0, 2.65, 0.1]), cyl(0.3, 0.3, 0.24, brass, [-0.7, 1.9, -0.1], [0, 0, Math.PI / 2], 8), tor(0.7, 0.12, dark, [-0.75, 1.5, -0.4], [0, Math.PI / 2, 0], 8),
+    box(0.9, 0.12, 0.12, brass, [0, 2.65, 0.1]), cyl(0.3, 0.3, 0.24, brass, [-0.7, 1.9, -0.1], [0, 0, Math.PI / 2], 8), ...[0, 1, 2, 3].map((i) => tor(0.85, 0.15, dark, [-0.7 - i * 0.17, 1.3, -0.4], [0, 0, Math.PI / 2], 10)), cyl(0.07, 0.07, 1.2, dark, [-1.1, 0.7, -0.35], [0.4, 0, 0.3], 5), // cable enrollado
     cyl(0.25, 0.25, 0.6, dark, [0, 1.0, 0], undefined, 6), ...[0, 1, 2].map((i) => { const a = i * Math.PI * 2 / 3 + 0.4; return cyl(0.12, 0.16, 1.3, red, [Math.sin(a) * 0.4, 0.5, Math.cos(a) * 0.4], [Math.cos(a) * 0.45, 0, -Math.sin(a) * 0.45], 5); })]; });
 // Baliza de ruta (ref311): caja naranja con trípode, plato satelital, antena, ojo cian y dos flechas (azul a la izquierda, amarilla a la derecha). Ancho 4,2, alto 3,6.
 const routeBeaconTpl = () => template("obj_baliza_ruta", () => {
@@ -141,7 +149,7 @@ const overloadCoreTpl = () => template("obj_nucleo", () => {
     box(4.2, 0.4, 1.6, steel, [0.2, 1.0, 0]), cyl(1.9, 1.9, 2.4, coreGlow(), [0.6, 2.1, 0], [0, 0, Math.PI / 2], 12), // zócalo y cápsula
     ...[-0.3, 0.7, 1.5].map((x) => cyl(2.1, 2.1, 0.22, steel, [x, 2.1, 0], [0, 0, Math.PI / 2], 12)), ...[0.2, 1.1].map((x) => cyl(2.12, 2.12, 0.1, ora, [x, 2.1, 0], [0, 0, Math.PI / 2], 12)), // aros y flejes
     box(1.2, 2.2, 1.7, steel, [-1.9, 2.0, 0]), box(0.6, 1.5, 1.75, ora, [-1.6, 2.0, 0]), box(1.4, 0.5, 1.2, ora, [-1.9, 3.35, 0]), cyl(0.45, 0.5, 0.5, ora, [-0.9, 3.3, 0.2], undefined, 8), // cabeza de máquina
-    ...[0, 1, 2].flatMap((i) => [tor(1.1 + i * 0.1, 0.28, hose, [-2.7, 1.6 + i * 0.5, -0.1], [0, Math.PI / 2, 0], 8), cyl(0.5, 0.5, 0.3, ora, [-2.4, 1.6 + i * 0.5, 0], [0, 0, Math.PI / 2], 8)]), // mangueras
+    ...[0, 1, 2].flatMap((i) => [tor(1.2 + i * 0.1, 0.24, hose, [-1.2 + i * 0.25, 1.9 + i * 0.3, 1.0 - i * 0.05], [Math.PI / 2, 0, 0.5 * i], 8), cyl(0.5, 0.5, 0.3, ora, [-1.9, 1.5 + i * 0.5, 0.95], [Math.PI / 2, 0, 0], 8)]), // mangueras en arco entre la cabeza y la cápsula
     cyl(0.1, 0.14, 1.4, dark, [-2.0, 4.2, 0.2], undefined, 5), sph(0.2, ora, [-2.0, 4.95, 0.2], undefined, 4),
     ...[-1, 1].flatMap((x) => [-1, 1].map((z) => box(0.9, 0.9, 0.7, ora, [x * 1.9 + 0.2, 0.45, z * 0.75], [0, 0, -0.2 * x]))), ...[-1, 1].map((z) => box(4.4, 0.25, 0.3, steel, [0.2, 1.4, z * 0.85]))]; });
 // Recicladora (ref317): tolva verde con franjas naranjas, rodillos de dientes, volante con manija, cubeta lateral, tubos de cobre y antena con luz ámbar. Huella 4 x 3,2, alto 3,6.
