@@ -71,3 +71,10 @@ Una expedición ENCORE completa, de punta a punta, que una persona nueva puede j
 | 2026-10-15 | Demolición archivado: rama y tag `archivo/demolicion` (GitHub); se quita de master. Carrera y Junked Crush siguen en el repo como hasta ahora |
 | 2026-10-15 | Radio y música sintetizada conviven (la sintetizada como capa baja en partida); música a 64 kbps |
 | 2026-10-15 | PRUEBAS (todo liberado, 99 999 tornillos) también va en la versión publicada, para que prueben todo |
+| 2026-10-15 | ENCORE: destinos terrestres desde la vuelta 1; cada escenario favorece 1-2 armas; interrupción del Director a mitad de escenario; cartelera de vistos con premios cosméticos |
+| 2026-10-15 | Paseo libre: juguetes con física, medallas bronce/plata/oro, objetivos por barrio con premio cosmético, foto polaroid para compartir (más cámara alta, cartel de truco chico y sensación de velocidad) |
+| 2026-10-15 | Música: solo radio mientras suena (la sintetizada queda de respaldo); nivelar los 29 temas; ducking de la radio en jefe y avisos |
+| 2026-10-15 | Balance medido en ENCORE: 60-70 % de victorias del bot sin pactos, 40-55 % con todos los pactos, sin muertes antes del primer teleportador |
+| 2026-10-15 | Celular de referencia: Redmi Note 11 (Adreno 610); iPhone 12 como prueba de humo iOS; calibrar una vez en aparato real |
+| 2026-10-15 | La 1.0 sale con PRUEBAS apagado (restaura tornillos y habilidades); hasta la RC sigue liberado |
+| 2026-10-15 | A la 1.1: pactos que cambian reglas, fase del jefe final con minijefes, variantes ref173, recicladora, online en Paseo libre |
