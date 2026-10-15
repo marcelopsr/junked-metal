@@ -65,7 +65,10 @@ const SOLID = (m: B.Mesh, x: number, z: number, ry: number) => stat(m, B.Physics
 /** Half-pipe: canal de 40 m en x, suelo plano f*2, curvas de radio R a 78°, cubierta de 6 m y bajada suave de `sl` m. Centro (cx, cz), eje en x. */
 function halfpipe(cx: number, cz: number, len: number, H: number, flat: number, mat: B.Material) {
   const R = H / (1 - Math.cos((78 * Math.PI) / 180)), a = arc(R, 78).map(([h, y]): P => [h, y + 0.04]), he = a[a.length - 1][0], deck = 6, sl = 32, f = flat / 2;
-  const half: P[] = [[f + he + deck + sl, BUR], [f + he + deck, H + 0.04], ...a.map(([h, y]): P => [f + h, y]).reverse()]; // de afuera hacia el suelo
+  // Labio redondeado (radio 0,9 m) entre la pared de 78° y la cubierta: la esquina viva enganchaba la trasera del auto a más de 18 m/s y lo mandaba de costado
+  const rf = 0.9, th = (78 * Math.PI) / 180, tl = rf * Math.tan(th / 2), s0: P = [he - Math.cos(th) * tl, H + 0.04 - Math.sin(th) * tl], ctr: P = [s0[0] + Math.sin(th) * rf, s0[1] - Math.cos(th) * rf];
+  const fillet = Array.from({ length: 7 }, (_, k): P => { const g = (th * k) / 6, vx = s0[0] - ctr[0], vy = s0[1] - ctr[1]; return [ctr[0] + vx * Math.cos(g) + vy * Math.sin(g), ctr[1] - vx * Math.sin(g) + vy * Math.cos(g)]; }); // gira en sentido horario de la tangente de la pared a la horizontal
+  const half: P[] = [[f + he + deck + sl, BUR], [f + he + deck, H + 0.04], ...[...fillet].reverse().map(([h, y]): P => [f + h, y]), ...a.slice(0, -1).map(([h, y]): P => [f + h, y]).reverse()]; // de afuera hacia el suelo
   const pts: P[] = [...half.map(([z, y]): P => [-z, y]), ...half.slice().reverse().map(([z, y]): P => [z, y])];
   const m = strip("halfpipe", pts, len, mat);
   return SOLID(m, cx, cz, 0); // perfil a lo ancho en z, canal a lo largo de x (ancho local)
