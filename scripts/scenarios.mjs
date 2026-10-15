@@ -155,8 +155,8 @@ export const sessions = [
   { id: "primera_vez", query: "?mute&seed=3", shots: [
     { id: "guia", perf: false, act: async (p) => {
       await p.dispatchEvent("#scr-title", "click"); await toMain(p);
-      await p.dispatchEvent('#scr-main [data-go="encore"]', "click"); await wait(p, () => document.querySelector("#scr-encore.on"));
-      await p.dispatchEvent('[data-act="encorego"]', "click"); await wait(p, () => !document.getElementById("ctlg").classList.contains("hidden")); await p.waitForTimeout(150);
+      // primera vez (runs=0): Jugar abre la guía mínima directo, sin pasar por la pantalla ENCORE
+      await p.dispatchEvent('#scr-main [data-go="encore"]', "click"); await wait(p, () => !document.getElementById("ctlg").classList.contains("hidden")); await p.waitForTimeout(150);
     } },
   ] },
   { id: "tactil", query: "?mute&seed=3", vps: ["cel"], shots: [

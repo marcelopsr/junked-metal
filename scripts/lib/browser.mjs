@@ -71,7 +71,7 @@ const release = () => { for (const f of held) try { if (parseInt(readFileSync(f,
 /** Suelta un candado exclusivo propio sin terminar el proceso. */
 export const unlock = (name = SERVER_LOCK) => { const f = lockFile(name); if (held.delete(f)) try { unlinkSync(f); } catch {} };
 export const releaseAll = release;
-const WAIT_MAX = Number(process.env.RC_WAIT_MAX ?? 15) * 60; // s: tope de espera
+export const WAIT_MAX =Number(process.env.RC_WAIT_MAX ?? 15) * 60; // s: tope de espera
 const EXCL_MAX = Number(process.env.RC_EXCL_WAIT ?? 3) * 60; // s: cuánto espera un exclusivo a que terminen los lectores
 const readerFile = (name, pid = process.pid) => join(tmpdir(), `${name}.r.${pid}.lock`);
 /** Lectores vivos de `name` (libera los muertos/colgados). Con {todos:true} devuelve también su estado. */
@@ -123,20 +123,11 @@ export async function lock(name = SERVER_LOCK, { shared = false } = {}) {
   catch (e) { held.delete(f); try { unlinkSync(f); } catch {} throw e; }
 }
 
-/** Sello de test:restart: instante en que el servidor quedó sirviendo. Si algo de src/ es más nuevo, el servidor (sin recarga) tiene código viejo. */
-export const servedFile = (port = new URL(BASE).port || 80) => join(tmpdir(), `rc-test-${port}.served`);
-export const newestSrc = () => { let best = { t: 0, f: "" }; for (const d of ["src", "index.html", "public"]) { try { for (const f of readdirSync(d, { recursive: true })) { const p = d === "index.html" ? d : join(d, f); const st = statSync(p); if (st.mtimeMs > best.t && st.isFile()) best = { t: st.mtimeMs, f: p }; } } catch {} } return best; };
-const checkFresh = () => {
-  if (process.env.RC_URL) return; // servidor ajeno: no se sabe qué carpeta sirve
-  let at; try { at = +readFileSync(servedFile(), "utf8"); } catch { console.error("AVISO: sin sello de test:restart; no se sabe si el servidor sirve el código actual."); return; }
-  const n = newestSrc(), hh = (t) => new Date(t).toLocaleTimeString();
-  if (n.t > at) console.error(`AVISO: SERVIDOR DESACTUALIZADO. ${n.f} cambió a las ${hh(n.t)} y el servidor se reinició a las ${hh(at)}. Si ese cambio es tuyo: npm run test:restart.`);
-};
-
+// Los servidores de prueba sirven SIEMPRE el código actual (Vite con watcher y sin HMR: cada página nueva carga lo último), así que nunca se reinician por código viejo.
 // ── Grupo de servidores: alquiler por PROCESO ─────────────────────────────────────────────────────────────
 // Cada proceso (shots, e2e, sim, script suelto, test:restart) alquila un servidor libre mientras vive (el archivo se borra al salir o, si muere, deja de contar). Dos procesos de
 // agentes distintos nunca comparten servidor, así un test:restart solo toca uno que nadie usa. Preferencia (no exclusiva): el último servidor de esta sesión de agente (caché de Vite
-// tibio). RC_SRV=3 (o =5176) fuerza uno y se comparte como lector. Al alquilar uno nuevo con código viejo (sello anterior a algún src/) se reinicia solo.
+// tibio). RC_SRV=3 (o =5176) fuerza uno y se comparte como lector. Nunca se reinicia por código viejo: solo se levanta si está caído.
 // ponytail: la sesión se reconoce por el ancestro `claude` solo para la preferencia; si más procesos que servidores, esperan al primero que se libere.
 const ROOT = join(dirname(new URL(import.meta.url).pathname), "..", "..");
 const SESSION = (() => { let p = process.ppid; for (let i = 0; i < 12 && p > 1; i++) { try { const [pp, ...c] = execSync(`ps -o ppid=,comm= -p ${p}`, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim().split(/\s+/); if (/(^|\/)claude$/.test(c.join(" "))) return p; p = +pp; } catch { break; } } return 0; })();
@@ -156,37 +147,43 @@ const claim = (s) => {
   return true;
 };
 const up = async (port) => { try { await fetch(`http://localhost:${port}`, { signal: AbortSignal.timeout(1500) }); return true; } catch { return false; } };
-/** (Re)inicia el servidor de pm2 `s` (lo crea desde ecosystem.config.cjs si no existe), espera a que responda y escribe el sello. Quien llama tiene el candado exclusivo. */
-export async function restartServer(s) {
+/**
+ * Asegura que el servidor de pm2 `s` responde. Arriba: no hace nada. Ausente o detenido: lo levanta. Online pero sin responder `hangS` s (colgado de verdad): lo reinicia.
+ * Quien llama garantiza que nadie más lo usa (alquiler propio o candado exclusivo). Devuelve true si tuvo que arrancarlo.
+ */
+export async function ensureServer(s, hangS = 30) {
+  if (await up(s.port)) return false;
   const sh = (c) => execSync(c, { cwd: ROOT, stdio: ["ignore", "pipe", "inherit"] });
-  if (rcProcs().some((p) => p.name === s.name)) sh(`pm2 restart ${s.name} --update-env`); else sh(`pm2 start ecosystem.config.cjs --only ${s.name}`);
+  const p = rcProcs().find((x) => x.name === s.name);
+  if (!p) sh(`pm2 start ecosystem.config.cjs --only ${s.name}`);
+  else if (p.pm2_env.status !== "online") sh(`pm2 restart ${s.name} --update-env`);
+  else { // online sin responder: puede estar arrancando; reinicio solo si sigue mudo tras hangS
+    const t0 = Date.now(); while (Date.now() - t0 < hangS * 1000) { if (await up(s.port)) return false; await new Promise((r) => setTimeout(r, 500)); }
+    process.stderr.write(`servidor :${s.port} (${s.name}) colgado (sin HTTP ${hangS} s): reiniciando\n`); sh(`pm2 restart ${s.name} --update-env`);
+  }
   const t0 = Date.now(); while (!(await up(s.port))) { if (Date.now() - t0 > 60000) throw new Error(`:${s.port} no responde tras 60 s: pm2 logs ${s.name}`); await new Promise((r) => setTimeout(r, 500)); }
-  writeFileSync(servedFile(s.port), String(Date.now()));
+  return true;
 }
 /**
  * Elige el servidor de este proceso: el de RC_SRV, el que su agente ya tiene alquilado, o el primero libre (sin alquiler vivo ni lectores). Si todos están ocupados espera al primero que se libere.
- * Con RC_URL o en worktree no hace nada (un solo servidor). `restart:false` (test:restart) no arranca ni reinicia: lo hace quien llama. Devuelve el servidor.
+ * Con RC_URL o en worktree no hace nada (un solo servidor). `ensure:false` (test:restart) no levanta nada: lo hace quien llama. Devuelve el servidor.
  */
-export async function pickServer({ restart = true } = {}) {
+export async function pickServer({ ensure = true } = {}) {
   if (process.env.RC_URL || POOL.length < 2) return POOL[0];
   const sel = process.env.RC_SRV;
   let s = sel ? POOL.find((x, i) => String(x.port) === sel || String(i + 1) === sel) : POOL.find(mine);
   if (sel && !s) throw new Error(`RC_SRV=${sel} no es un servidor del grupo (1-${POOL.length} o ${POOL[0].port}-${POOL.at(-1).port})`);
-  // nuevo = lo alquilo ahora (nadie lo usa): si sirve código viejo se reinicia una vez. Ya mío (otra launch() del mismo proceso) o forzado por RC_SRV (compartido): no se toca.
-  let nuevo = !!s && !mine(s) && claim(s);
+  if (s && !mine(s)) claim(s);
   let hint = 0; try { hint = +readFileSync(hintFile(), "utf8"); } catch {}
   const orden = [...POOL.filter((x) => x.port === hint), ...POOL.filter((x) => x.port !== hint)];
   for (let t = 0; !s; t++) {
-    s = orden.find(claim); nuevo = !!s;
+    s = orden.find(claim);
     if (!s) await wait("servidores de prueba", t, POOL.map((x) => `:${x.port} ${leaseState(x.port)?.cmd?.slice(0, 80) ?? "(en uso por un lector)"}`).join("\n"));
   }
   if (SESSION) writeFileSync(hintFile(), String(s.port));
   BASE = `http://localhost:${s.port}`; SERVER_LOCK = "rc-test-" + s.port;
-  if (restart) {
-    // sirviendo código viejo (sello anterior a algún src/) o caído: reinicio propio bajo candado exclusivo (nadie más lo usa: acabamos de alquilarlo)
-    let at = 0; try { at = +readFileSync(servedFile(s.port), "utf8"); } catch {}
-    if (!(await up(s.port)) || (nuevo && newestSrc().t > at)) { await lock(SERVER_LOCK); try { process.stderr.write(`servidor :${s.port} (${s.name}) sin arrancar o con código viejo: reiniciando\n`); await restartServer(s); } finally { unlock(SERVER_LOCK); } }
-  }
+  // caído: lo levanto yo bajo candado exclusivo (si lo alquilé, nadie más lo usa; forzado por RC_SRV compartido, el candado espera a sus lectores). Arriba: no se toca.
+  if (ensure && !(await up(s.port))) { await lock(SERVER_LOCK); try { await ensureServer(s); } finally { unlock(SERVER_LOCK); } }
   return s;
 }
 
@@ -210,10 +207,9 @@ export async function launch({ perf = false, args = [] } = {}) {
       await new Promise((r) => setTimeout(r, 400));
     }
   }
-  if (!ok) throw new Error(`\nNo responde ${BASE} tras 24 s. Arrancarlo con: npm run test:restart`);
+  if (!ok) throw new Error(`\nNo responde ${BASE} tras 24 s. Asegurarlo con: npm run test:restart`);
   // Primero el global, después el del servidor (mismo orden en todos: sin espera circular). perf: exclusivo en ambos (mide sin vecinos);
   // el resto comparte, y solo frena mientras corre un perf o un test:restart.
-  checkFresh();
   await lock(PERF_LOCK, { shared: !perf });
   await lock(SERVER_LOCK, { shared: !perf });
   return chromium.launch({ headless: true, args: [...ARGS, ...args] });

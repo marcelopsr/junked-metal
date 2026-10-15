@@ -6,7 +6,7 @@ const base = {
   exec_mode: "fork",
   instances: 1,
   autorestart: true,
-  watch: false, // Vite ya recarga solo (HMR); pm2 no debe reiniciar por cambios de archivos
+  watch: false, // pm2 no reinicia por cambios de archivos (Vite los vigila; los de prueba sin HMR sirven el código actual solo)
   min_uptime: "10s", // si muere antes de 10 s cuenta como arranque fallido
   max_restarts: 15, // tope de reintentos seguidos antes de quedar en "errored"
   exp_backoff_restart_delay: 200, // espera creciente entre reintentos (200 ms, 300, 450…) para no martillar
