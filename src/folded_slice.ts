@@ -463,25 +463,26 @@ export function tarantulaPose(_v: number, walk: number, atk: number) {
 const CUT_W: V3[] = [[-2.95, 0.88, 2.35], [2.95, 0.88, 2.35], [-2.95, 0.88, -2.55], [2.95, 0.88, -2.55]];
 export function cortadoraBody() {
   const { G, done, strut, bone } = kit();
-  const red = FOLD.painted("#a8281c", 0.95, 151), red2 = FOLD.dark(), deck = FOLD.painted("#6e7076", 0.85, 153), blade = FOLD.painted("#a0a4ac", 0.9, 155), dark = FOLD.dark(), steel = FOLD.bare(), yel = FOLD.painted("#c62828", 0.6, 154);
+  // Juguete: capó de plástico rojo barnizado, plataforma y cuchillas de metal pintado; sin atlas Folded (calcos, rejillas, remaches de kit)
+  const red = toyC("#c42a1c", 0.4, 0.05), red2 = toyC("#8a1c14", 0.5, 0.05), deck = toyC("#6e7076", 0.55, 0.4), blade = toySteel(), dark = toyDark(), steel = toySteel(), yel = toyC("#e0a020", 0.45, 0.1), cream = toyC(CREAM, 0.7, 0);
   G.cyl(5.8, 1.0, deck, [0, 0.82, -0.15], undefined, 12, 6.2); // plataforma de corte
   G.box(6.4, 0.35, 2.2, dark, [0, 0.42, 2.85]); // boca
-  G.trimStrip([0, 0.58, 3.97], [0, Math.PI, 0], 6.2, 0.4, "hazard", 0.1); // barra de corte
+  for (let i = 0; i < 12; i++) G.box(0.5, 0.1, 0.1, i % 2 ? dark : yel, [-3.0 + i * 0.55, 0.58, 3.97]); // barra de corte: franjas de peligro
   G.box(4.8, 1.1, 4.4, red, [0, 1.85, -0.3]); // capó
   G.box(4.8, 0.12, 2.4, red, [0, 2.62, 0.75], [0.5, 0, 0]); // trompa inclinada
-  for (const s of [-1, 1]) { G.bend([s * 2.4, 2.4, -2.5], [s * 2.4, 2.4, 1.9], 0.08, red); G.decal([s * 2.42, 1.85, -0.6], [0, -s * Math.PI / 2, 0], "numero", 1.0); }
-  G.grate([0, 1.85, 1.92], [0, Math.PI, 0], 2.6, 0.8, 5, steel); // parrilla
-  G.decal([1.6, 2.0, 1.93], [0, Math.PI, 0], "warning", 0.7);
+  for (const s of [-1, 1]) { G.bend([s * 2.4, 2.4, -2.5], [s * 2.4, 2.4, 1.9], 0.08, red); G.cyl(1.0, 0.04, cream, [s * 2.42, 1.85, -0.6], [0, 0, Math.PI / 2], 12); } // disco del número
+  for (let i = 0; i < 5; i++) G.box(2.6, 0.08, 0.06, steel, [0, 1.55 + i * 0.16, 1.93]); // parrilla
+  G.box(0.7, 0.7, 0.04, yel, [1.6, 2.0, 1.94], [0, 0, 0.78]); // placa de aviso
   G.box(2.2, 0.55, 1.4, red2, [0, 2.65, -1.0]); // asiento
   G.box(2.2, 1.1, 0.2, red2, [0, 3.2, -1.7], [-0.15, 0, 0]);
   G.cyl(0.2, 1.0, steel, [0, 2.9, 0.6], [0.5, 0, 0], 6); G.cyl(2.0, 0.16, dark, [0, 3.35, 0.85], [0.5, 0, 0], 10); // volante
   strut([-1, 3.4, 0.85], [1, 3.4, 0.85], 0.1, 0.1, steel);
   G.tube([[-2, 2.35, -2.95], [-2, 5.2, -5.2], [-2, 7.8, -6.35], [2, 7.8, -6.35], [2, 5.2, -5.2], [2, 2.35, -2.95]], 0.2, dark); // manija
   for (const s of [-1, 1]) G.box(0.85, 0.12, 3.6, yel, [s * 2.55, 1.35, -0.1]); // estribos
-  G.rivets([-2.3, 1.32, 2.5], [2.3, 1.32, 2.5], 9, [0, 0, 1]);
-  G.rivets([-2.2, 2.45, 1.95], [2.2, 2.45, 1.95], 8, [0, 1, 0.3]);
-  for (const s of [-1, 1]) { G.cyl(3.0, 0.12, blade, [s * 2.0, 0.45, 4.3], undefined, 14); G.cyl(0.6, 0.2, FOLD.rust(), [s * 2.0, 0.5, 4.3], undefined, 6); for (let k = 0; k < 6; k++) { const a = k * 1.05; G.box(0.5, 0.1, 0.3, steel, [s * 2.0 + Math.cos(a) * 1.5, 0.45, 4.3 + Math.sin(a) * 1.5], [0, -a, 0]); } } // cuchillas circulares a la vista
-  CUT_W.forEach((p, i) => { bone(i + 1); G.wheel(p, undefined, 2.0, 0.85); G.cyl(1.05, 0.9, yel, p, [0, 0, Math.PI / 2], 8); });
+  for (let i = 0; i < 9; i++) G.sph(0.09, steel, [-2.3 + i * 0.575, 1.32, 2.5]); // remaches de juguete: esferas de acero
+  for (let i = 0; i < 8; i++) G.sph(0.09, steel, [-2.2 + i * 0.63, 2.45, 1.95]);
+  for (const s of [-1, 1]) { G.cyl(3.0, 0.12, blade, [s * 2.0, 0.45, 4.3], undefined, 14); G.cyl(0.6, 0.2, toyC("#8a4a22", 0.6, 0.3), [s * 2.0, 0.5, 4.3], undefined, 6); for (let k = 0; k < 6; k++) { const a = k * 1.05; G.box(0.5, 0.1, 0.3, steel, [s * 2.0 + Math.cos(a) * 1.5, 0.45, 4.3 + Math.sin(a) * 1.5], [0, -a, 0]); } } // cuchillas circulares a la vista
+  CUT_W.forEach((p, i) => { bone(i + 1); const ax: V3 = [0, 0, Math.PI / 2]; G.cyl(2.0, 0.85, toyRubber(), p, ax, 12); G.cyl(1.25, 0.9, steel, p, ax, 10); G.cyl(1.05, 0.95, yel, p, ax, 8); G.sph(0.3, steel, [p[0] + Math.sign(p[0]) * 0.5, p[1], p[2]]); });
   return done(8, BOSS_S.cortadora);
 }
 export function cortadoraPose(_v: number, walk: number, atk: number) {
@@ -523,20 +524,22 @@ export function aspiradoraPose(_v: number, walk: number, atk: number) {
 /** Cortacercos eléctrico: motor naranja plegado, mango en D de caño, espada con dientes que van y vienen (hueso 1), ojos y cable. */
 export function cortacercosBody() {
   const { G, done, strut, bone } = kit();
-  const body = FOLD.painted("#6a5a2a", 0.95, 171), dark = FOLD.dark(), steel = FOLD.bare(), orange = FOLD.painted("#a8481c", 0.9, 172);
+  const body = toyC("#9a7a24", 0.4, 0.05), dark = toyDark(), steel = toySteel(), orange = toyC("#d0541c", 0.4, 0.05), grey = toyC("#6b7280", 0.5, 0.5), glow = toy("cc", "#ff8a1a", { glow: true }), yel = toyC("#e0a020", 0.45, 0.1);
+  glow.fogEnabled = false; // trampa del horneado: emisivo con niebla hace desaparecer el cuerpo
+  const slats = (p: V3, ry: number, w: number, h: number, n: number) => { for (let i = 0; i < n; i++) { const b = G.box(w, 0.06, 0.05, steel, [0, -h / 2 + (h * (i + 0.5)) / n, 0]); b.rotation.y = ry; b.position.addInPlace(new B.Vector3(...p)); } }; // rejilla de listones (sin atlas)
   G.box(2.65, 1.65, 3.2, body, [0, 1.12, -2.75]); // motor
   G.box(2.3, 0.5, 2.8, body, [0, 2.1, -2.75]); for (const s of [-1, 1]) G.bend([s * 1.15, 2.35, -4.15], [s * 1.15, 2.35, -1.35], 0.1, body);
   G.box(2.7, 0.55, 2.6, dark, [0, 0.42, -2.7]); // base
-  for (const s of [-1, 1]) { G.grate([s * 1.34, 1.2, -2.8], [0, -s * Math.PI / 2, 0], 1.8, 0.7, 4, steel); G.decal([s * 1.335, 1.75, -2.0], [0, -s * Math.PI / 2, 0], "voltaje", 0.7); }
+  for (const s of [-1, 1]) { slats([s * 1.34, 1.2, -2.8], Math.PI / 2, 1.8, 0.7, 4); G.box(0.04, 0.5, 0.5, yel, [s * 1.34, 1.75, -2.0], [0, 0, 0.78]); } // rejilla y placa de voltaje
   G.box(0.55, 0.35, 1.1, orange, [0, 1.05, -1.35]); // cuello
   G.tube([[0, 1.6, -1.15], [0, 2.9, -0.95], [0, 2.9, -0.35], [0, 1.4, -0.3]], 0.16, dark); // mango en D
   G.tube([[0, 1.75, -4.25], [0, 2.85, -4.85], [0, 2.55, -5.35], [0, 1.35, -5.05]], 0.22, dark); // manija trasera
-  G.box(2.0, 1.0, 0.2, dark, [0, 1.9, -1.1]); G.grate([0, 1.2, -1.1], [0, Math.PI, 0], 1.6, 0.5, 4, steel); // frente: cara oscura con parrilla
-  for (const s of [-1, 1]) { G.cyl(0.85, 0.2, steel, [s * 0.62, 1.95, -0.98], [Math.PI / 2, 0, 0], 10); G.cyl(0.65, 0.25, FOLD.emissive("#ff8a1a"), [s * 0.62, 1.95, -0.9], [Math.PI / 2, 0, 0], 10); G.cyl(0.8, 0.2, steel, [s * 1.38, 1.7, -1.5], [0, 0, Math.PI / 2], 10); G.cyl(0.6, 0.25, FOLD.emissive("#ff8a1a"), [s * 1.45, 1.7, -1.5], [0, 0, Math.PI / 2], 10); } // faros al frente y en los flancos (la ficha lo mira de costado)
+  G.box(2.0, 1.0, 0.2, dark, [0, 1.9, -1.1]); slats([0, 1.2, -1.1], 0, 1.6, 0.5, 4); // frente: cara oscura con parrilla
+  for (const s of [-1, 1]) { G.cyl(0.85, 0.2, steel, [s * 0.62, 1.95, -0.98], [Math.PI / 2, 0, 0], 10); G.cyl(0.65, 0.25, glow, [s * 0.62, 1.95, -0.9], [Math.PI / 2, 0, 0], 10); G.cyl(0.8, 0.2, steel, [s * 1.38, 1.7, -1.5], [0, 0, Math.PI / 2], 10); G.cyl(0.6, 0.25, glow, [s * 1.45, 1.7, -1.5], [0, 0, Math.PI / 2], 10); } // faros al frente y en los flancos (la ficha lo mira de costado)
   for (const s of [-1, 1]) { // dos espadas (ref271), más cortas que el motor para que la ficha entre en cuadro
-    G.box(0.7, 0.28, 3.4, steel, [s * 0.8, 0.92, 0.5]); G.box(0.42, 0.22, 3.1, FOLD.painted("#6b7280", 0.8, 173), [s * 0.8, 0.78, 0.5]);
+    G.box(0.7, 0.28, 3.4, steel, [s * 0.8, 0.92, 0.5]); G.box(0.42, 0.22, 3.1, grey, [s * 0.8, 0.78, 0.5]);
   }
-  G.trimStrip([0, 1.07, -1.0], [Math.PI / 2, 0, 0], 2.2, 0.5, "hazard", 0.02);
+  for (let i = 0; i < 6; i++) G.box(0.36, 0.04, 0.12, i % 2 ? dark : yel, [-1.0 + i * 0.4, 1.08, -1.0]); // franja de peligro
   for (const s of [-1, 1]) for (const z of [-1.5, -2.75, -4.0]) { // patas de insecto: fémur, rodilla y tibia al piso
     strut([s * 1.3, 1.0, z], [s * 2.1, 1.6, z + 0.3], 0.2, 0.2, orange); G.sph(0.3, steel, [s * 2.1, 1.6, z + 0.3]); strut([s * 2.1, 1.6, z + 0.3], [s * 2.9, 0.15, z + 0.55], 0.16, 0.16, dark);
   }
