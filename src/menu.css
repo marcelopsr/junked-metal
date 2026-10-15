@@ -874,6 +874,9 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tSpin, #tPause, #t
 #scr-libre .list > .foot { grid-column: 1 / -1; text-align: center; margin: 0; }
 #scr-pause .libreKit { display: none; flex-direction: column; align-items: center; gap: 8px; }
 #scr-pause.libre .libreKit { display: flex; }
+#libreRec { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+#libreRec .rec { display: flex; justify-content: space-between; gap: 16px; padding: 4px 10px; background: #1a1d22; border-left: 3px solid var(--jm-rojo); font-family: "Bebas Neue", sans-serif; letter-spacing: .06em; font-size: 16px; }
+#libreRec .rec b { font-weight: 400; color: #ffc21a; }
 #scr-pause.libre .kit4 { display: none; }
 #libreLuz { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 #libreLuz button { min-height: 44px; padding: 0 14px; }

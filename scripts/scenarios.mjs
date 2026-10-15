@@ -449,6 +449,11 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
     await p.evaluate(() => { const c = window.__carObj(); c.body.disablePreStep = false; c.root.position.y = 14; c.body.setLinearVelocity({ x: 0, y: 0, z: 0 }); }); await tick(p, 40); await p.evaluate(() => { window.__carObj().body.disablePreStep = true; }); await p.waitForTimeout(200); } },
   // Cartel de truco y contador de tuercas: se disparan con las funciones del HUD (el truco real depende de la física; eso lo prueba la sonda de la tanda E6)
   { id: "truco", perf: false, act: async (p) => { await libreAt(-150, 130)(p); await p.evaluate(async () => { const u = await import("/src/ui.ts"); u.hudTruco("GIRO 360 + VUELTA", 640, 2, true, "RÉCORD"); u.hudTuercas(7, 24); }); await p.waitForTimeout(450); } },
+  // Desafíos (free_challenges.ts): largada del contrarreloj, puntaje de trucos y llegada con récord guardado (la sonda falla si no se guarda)
+  { id: "desafio-obs", perf: false, act: libreAt(140, -140, Math.PI / 2) },
+  { id: "desafio-skate", perf: false, act: libreAt(-70, 40) },
+  { id: "desafio-fin", perf: false, act: async (p) => { await libreAt(0, -20)(p); await libreAt(140, -140, Math.PI / 2)(p); await libreAt(246, -230, Math.PI / 2)(p);
+    const r = await p.evaluate(async () => (await import("/src/menu.ts")).save.libre.desafio.obs); if (!(r > 0)) throw new Error("el récord del contrarreloj no se guardó: " + r); } },
   { id: "pausa", perf: false, act: async (p) => { await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },
   { id: "pausa-noche", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:3"]', "click"); await tick(p, 4); await p.waitForTimeout(200); } },
   { id: "salir", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:4"]', "click"); await p.dispatchEvent('[data-act="quit"]', "click"); await wait(p, () => document.querySelector("#scr-main.on")); await p.waitForTimeout(150); } },

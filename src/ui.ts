@@ -607,8 +607,14 @@ export function hudTuercas(n: number, total: number, flash = false) {
   const e = libreEl("tuercas"); e.textContent = `TUERCAS ${n}/${total}`; e.classList.toggle("full", n >= total);
   if (flash) { e.classList.remove("pop"); void e.offsetWidth; e.classList.add("pop"); }
 }
+/** Desafío en curso: título, valor grande (reloj o puntaje) y línea de récord; `title` vacío lo oculta. */
+export function hudDesafio(title: string, big = "", sub = "", fin = false) {
+  const e = libreEl("desafio"), h = `<b>${title}</b><i>${big}</i><small>${sub}</small>`;
+  if (e.innerHTML !== h) e.innerHTML = h;
+  e.classList.toggle("show", !!title); e.classList.toggle("fin", fin);
+}
 /** Limpia lo de Paseo libre al salir del modo. */
-export function hudLibreOff() { clearTimeout(trucoT); hudSpinBtn(false); for (const id of ["truco", "aire", "avisoAire", "tuercas"]) document.getElementById(id)?.remove(); }
+export function hudLibreOff() { clearTimeout(trucoT); hudSpinBtn(false); for (const id of ["truco", "aire", "avisoAire", "tuercas", "desafio"]) document.getElementById(id)?.remove(); }
 
 // ---------- Racha de bajas: se corta a los 2 s sin matar; crece y tiembla con la racha ----------
 const COMBO = ["RACHA", "BUEN RITMO", "A FONDO", "SOBRECARGA"];

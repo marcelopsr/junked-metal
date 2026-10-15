@@ -1,5 +1,6 @@
 import { tut, tutEnd, tutOffers, tutOn, tutStart } from "./tutorial";
-import { hudAire, hudAviso, hudSpinBtn, hudLibreOff, hudTruco, hudTuercas } from "./ui";
+import { hudDesafio, hudAire, hudAviso, hudSpinBtn, hudLibreOff, hudTruco, hudTuercas } from "./ui";
+import { chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, newCh } from "./free_challenges";
 import { bestUpdate, newTrick, nutNear, nutsCount, roam, trickLive, trickStep, NUT_N } from "./free_tricks";
 import { spawnNuts } from "./free_nuts";
 import { hudHurt, scrapNumber, hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
@@ -345,6 +346,22 @@ function libreLight() {
   const x = (libreT / LUZ_TRAMO_S) % LUZ_CICLO.length, i = Math.floor(x), f = x - i;
   applyClimate(mixClimate(climaId(LUZ_CICLO[i]), climaId(LUZ_CICLO[(i + 1) % LUZ_CICLO.length]), f * f * (3 - 2 * f)));
 }
+let libreCh = newCh(), chFinT = 0, chMsg = { title: "", big: "", sub: "" };
+/** Desafíos de Paseo libre: arco de inicio -> reloj/puntaje en el HUD -> récord en save.libre.desafio. */
+function libreChallenge(dt: number) {
+  const p = lead.car!.pos, best = save.libre.desafio, e = chStep(libreCh, dt, p.x, p.z, best);
+  if (e?.kind === "inicio") { SFX.pickup(); chFinT = 0; }
+  if (e && e.kind !== "inicio") {
+    SFX.pickup(); chFinT = 5; persist();
+    chMsg = e.kind === "fallo" ? { title: e.d.nombre, big: "TIEMPO AGOTADO", sub: "" }
+      : { title: e.d.nombre, big: e.d.tipo === "tiempo" ? fmtMs(e.ms) : `${e.pts} PTS`, sub: e.record ? "NUEVO RÉCORD" : `RÉCORD ${fmtMarca(e.d, best[e.d.id])}` };
+    if (e.record) FX.sparks(p.add(new B.Vector3(0, 0.8, 0)), 16);
+  }
+  const d = libreCh.d;
+  if (d) { chFinT = 0; const left = Math.max(0, d.limite - libreCh.t); hudDesafio(d.nombre, d.tipo === "tiempo" ? fmtMs(Math.round(libreCh.t * 1000)) : `${libreCh.pts} PTS · ${Math.ceil(left)} S`, `RÉCORD ${fmtMarca(d, best[d.id])}`); }
+  else if (chFinT > 0 && (chFinT -= dt) > 0) hudDesafio(chMsg.title, chMsg.big, chMsg.sub, true);
+  else hudDesafio("");
+}
 let avisoT = 0, libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick(), turns = 0;
 /** Trucos (aire, giros, vueltas, aterrizaje, combo) y tuercas doradas; `grounded` sale de drive(). */
 function libreTricks(dt: number, grounded: boolean) {
@@ -364,6 +381,7 @@ function libreTricks(dt: number, grounded: boolean) {
   if (end) {
     const up2 = bestUpdate(s.best, end), rec = up2.includes("salto") || up2.includes("combo") ? "RÉCORD" : "";
     hudTruco(end.name, end.pts, end.mult, end.clean, rec);
+    if (end.clean) chTruco(libreCh, end.pts);
     if (end.clean) { FREE.landClean(); if (end.mult > 1) FREE.combo(end.mult); FX.dust(c.pos); FX.sparks(c.pos.add(new B.Vector3(0, 0.6, 0)), end.mult > 1 || rec ? 14 : 8); }
     else FREE.landDirty();
     if (up2.length) persist();
@@ -379,7 +397,7 @@ function libreTricks(dt: number, grounded: boolean) {
   }
 }
 function libreHud(dt: number, grounded: boolean) {
-  libreTricks(dt, grounded);
+  libreTricks(dt, grounded); libreChallenge(dt);
   const c = lead.car!, p = c.pos;
   if (libreLuz === 4 && (libreAcc += dt) > 0.5) { libreAcc = 0; libreT += 0.5; libreLight(); } // ponytail: 2 Hz; si applyClimate pesa, subir el paso
   let best = -1, bd = 110; // cartel al acercarse a menos de 110 m del centro de un lugar
@@ -401,7 +419,7 @@ function startLibre() {
   menuOff();
   clearRun(); // deja libre = false y la luz de la zona (ya armada como "libre")
   libre = true; libreLugar = -1; libreT = 0; libreAcc = 0;
-  roam.on = true; roam.extra = 0; libreTrick = newTrick();
+  roam.on = true; roam.extra = 0; libreTrick = newTrick(); libreCh = newCh(); chFinT = 0;
   void import("./zones/libre").then((m) => { libreLugares = m.LUGARES; });
   void import("./zones/libre_nieve").then((m) => { roam.hielo = m.lagoHielo; });
   libreNuts = spawnNuts(save.libre.tuercas); hudTuercas(nutsCount(save.libre.tuercas), NUT_N);
