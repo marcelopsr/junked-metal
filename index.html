@@ -70,6 +70,8 @@
 
     <div id="combo" class="hidden"><span class="h-tape" id="comboLbl">RACHA</span><b id="comboN">x3</b><i id="comboBar"></i></div>
 
+    <div id="barrio" class="hidden" role="status"></div>
+
     <div id="radar" class="h-panel"><span class="h-tape">RADAR</span><canvas id="radarC" width="64" height="64"></canvas></div>
 
     <div id="txl" class="h-panel">
@@ -158,6 +160,7 @@
         <button data-go="daily" id="dailyBtn" class="wide"><span class="bt">Desafío diario</span><small class="bs" id="dailyRec"></small></button>
         <button data-go="weekly" id="weeklyBtn" class="wide"><span class="bt">Desafío semanal</span><small class="bs" id="weeklyRule"></small></button>
         <button data-go="modes" class="wide more"><span class="bt">Más modos</span></button>
+        <button data-go="libre" id="libreBtn" class="wide hidden"><span class="bt">Paseo libre</span></button>
         <div class="mm-lab wide">Auto</div>
         <button data-go="garage">Garaje</button>
         <button data-go="shop">Taller</button>
@@ -225,6 +228,17 @@
         <button data-act="zone" id="zoneBtn"><span class="bt"></span></button>
         <button data-act="pcar" id="pcarBtn"><span class="bt"></span></button>
         <button data-act="curse" id="curseBtn" class="hidden"></button><!-- maldiciones ocultas por ahora (decisión del usuario 2026-10-04) -->
+        <button data-act="back">Volver</button>
+      </nav>
+    </section>
+
+    <section id="scr-libre" class="scr">
+      <div class="otitle">Paseo libre</div>
+      <div class="foot">Un mapa grande para recorrer sin enemigos ni reloj. Todos los autos están disponibles.</div>
+      <nav class="list">
+        <button data-act="lcar" id="libreCarBtn"><span class="bt"></span></button>
+        <div class="foot" id="libreCarDesc"></div>
+        <button data-act="libregow" class="primary">Salir a pasear</button>
         <button data-act="back">Volver</button>
       </nav>
     </section>
@@ -383,12 +397,13 @@
         <div><div class="sect">Auto</div><ul id="kitS"></ul></div>
         <div><div class="sect">Partida</div><ul id="kitR"></ul></div>
       </div>
+      <div class="libreKit"><div class="sect">Luz del día</div><div id="libreLuz" role="group" aria-label="Luz del día"></div></div>
       <nav class="list row3">
         <button data-act="resume" class="primary">Seguir</button>
         <button data-act="controls">Controles</button>
         <button id="photoBtn">Foto (F)</button>
         <button data-go="config">Configuración</button>
-        <button data-act="quit">Abandonar</button>
+        <button data-act="quit"><span id="quitTxt">Abandonar</span></button>
       </nav>
       <div class="foot"><span id="pauseSeed"></span><span id="pauseHint"> · Esc sigue · M sonido</span></div>
     </section>

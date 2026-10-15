@@ -9,7 +9,10 @@ import { ramp } from "../world_layout";
 // Decorado con generador local (lcg), nunca rng().
 export type Barrio = { id: string; cx: number; cz: number; build(cx: number, cz: number): void };
 const BARRIOS = Object.values(import.meta.glob<{ barrio?: Barrio }>("./libre_*.ts", { eager: true })).flatMap((m) => (m.barrio ? [m.barrio] : [])).sort((a, b) => a.id.localeCompare(b.id));
-const hidden = (m: B.Mesh) => ((m.isVisible = false), m);
+const NOMBRES: Record<string, string> = { acuatico: "Parque acuático", obstaculos: "Circuito de obstáculos", nieve: "Bosque nevado", parque: "Parque", skate: "Skatepark" };
+/** Lugares con nombre para el cartel y el radar de main.ts (la plaza más cada barrio registrado). */
+export const LUGARES = [{ name: "Plaza central", cx: 0, cz: 0 }, ...BARRIOS.map((b) => ({ name: NOMBRES[b.id] ?? b.id, cx: b.cx, cz: b.cz }))];
+const hidden =(m: B.Mesh) => ((m.isVisible = false), m);
 
 export function libreBuild() {
   floor("libreAsfalto", "#ffffff", () => { const x = new B.Texture("./textures/r53-hormigon.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; }, 0.85, "concrete", 12);
@@ -42,7 +45,7 @@ export function libreBuild() {
     marks.push(box(HALF * 2, 0.02, 0.3, wht, [0, 0.05, s * 11.6]), box(0.3, 0.02, HALF * 2, wht, [s * 11.6, 0.05, 0]));
     for (const a of [-1, 1]) marks.push(box(0.3, 0.02, L, wht, [s * R + a * 8.6, 0.05, 0]), box(L, 0.02, 0.3, wht, [0, 0.05, s * R + a * 8.6]));
   }
-  const mk = merge("libreMarcas", marks); mk.isPickable = false; mk.position.y = 0.07; // sube sobre el asfalto (el decal lleva zOffset y tapaba las rayas) mk.receiveShadows = true;
+  const mk = merge("libreMarcas", marks); mk.isPickable = false; mk.position.y = 0.07; mk.receiveShadows = true; // sube sobre el asfalto (el decal lleva zOffset y tapaba las rayas)
 
   // Plaza central (r 40): losa cálida, fuente baja, 6 faroles y cartel de barrios (una placa de color por barrio, sin texto)
   const disc = B.MeshBuilder.CreateDisc("plaza", { radius: 40, tessellation: 48 }, scene);

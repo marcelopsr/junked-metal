@@ -558,3 +558,12 @@ body.calm #antic, body.calm #signal .h-track.pulse { animation: none !important;
   #vig { transition: none; }
   #antic, #signal .h-track.pulse { animation: none !important; }
 }
+
+/* Paseo libre: solo radar (barrios) y cartel del barrio; el resto de la telemetría no aplica */
+#hud.libre > :not(#radar, #barrio) { display: none; }
+#barrio { position: absolute; left: 50%; top: max(14px, env(safe-area-inset-top)); translate: -50% 0; padding: 8px 18px 6px; background: var(--jm-rojo); color: #fff; font: 400 28px/1 "Bebas Neue", sans-serif; letter-spacing: .08em; text-transform: uppercase; border-radius: 4px; box-shadow: 0 3px 0 #000; transform: rotate(-1.5deg); pointer-events: none; }
+#barrio.show { animation: barrioIn .2s cubic-bezier(0, 0, .2, 1); } /* main.ts lo oculta a los 3 s */
+@keyframes barrioIn { from { opacity: 0; transform: translateY(-10px) rotate(-1.5deg); } }
+@media (prefers-reduced-motion: reduce) { #barrio.show { animation: none; } }
+@media (max-width: 700px) { #barrio { left: 8px; translate: 0; max-width: calc(100vw - 130px); font-size: 22px; } } /* celular: a la izquierda del radar */
+#hud.libre #radar::after { display: none; } /* sin "▲ BASE": en Paseo libre no hay centro al que volver */

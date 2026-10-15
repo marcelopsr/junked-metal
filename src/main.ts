@@ -3,6 +3,7 @@ import { hudHurt, scrapNumber, hudMate, hudQuad, banner, bannerClear, damageNumb
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive, setCarPassive } from "./car";
+import type { CarKind } from "./models";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
 import { radio } from "./radio";
 import { engineSfx, engineStop, initAudio, music, moonAmbience, encoreAmbience, musicDuck, rainSfx, setEngineKind, SFX, SPACE } from "./sfx";
@@ -14,7 +15,7 @@ import { initRunLoader, runTasks, loaderOk, T_BICHOS, T_EFECTOS, worldTask, afte
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
 import { CAM_MODES, CAM_NAMES, type CamMode } from "./savefmt";
-import { encCfg, encMax, ABIL_ICON, applySettings, beastRec, BV, carOpts, current, shownCar, startPick, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
+import { encCfg, encMax, ABIL_ICON, applySettings, beastRec, BV, carOpts, current, shownCar, startPick, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, openPauseLibre, peek, persist, reset, save, type RunRec } from "./menu";
 import { run, freshRun } from "./run_state";
 import { ABILITIES, abilCd as abilCdOf, abilK, type AbilityId } from "./abilities";
 import { PILOTS, pilotStats, setPactCount, startWeapons } from "./pilots";
@@ -190,7 +191,7 @@ let hitStop = 0, lastHpFrac = 1, motorFxT = 0, cintaUntil = 0, cintaAt = -1e9; /
 function recompute() {
   setPactCount(erun ? erun.pacts.length : 0); // pactos vigentes (los vencidos ya salieron en leave); recompute corre al cambiar de fase (encEnter)
   st = pilotStats(passiveStats(run.passives, save.perm), save.pilot);
-  setCarPassive(save.car, st);
+  setCarPassive(libre ? libreKind : save.car, st);
   encRecompute(grossScrap()); // ENCORE: cobra lo ganado con el efecto que se va y toma los pactos activos (neutros en Supervivencia)
   st.dmg *= pfx.dmg; st.speedMul *= pfx.speed; st.magnet *= zoneMagnet(); st.xp *= pfx.xp; st.regen += pfx.regen;
   if (pfx.taken !== 1) st.armor = 1 - (1 - st.armor) * pfx.taken; // daño recibido x taken
@@ -213,7 +214,7 @@ function recompute() {
 let preview: B.Mesh | null = null;
 
 function clearRun() {
-  libre = false;
+  libre = false; $("hud").classList.remove("libre"); clearTimeout(libreCartelT); $("barrio").classList.add("hidden");
   Object.assign(run, freshRun());
   mateClear();
   encClear(); GOAL_IO.tele = false; GOAL_IO.half = 0;
@@ -330,13 +331,40 @@ const HINT_S = 7;
 
 // ---------- Free Roam (goLibre en run_loader.ts) ----------
 // ponytail: Free Roam reusa el estado "play" con este flag (cámara, pausa, modo foto y cartas ya funcionan); update() solo maneja, sin reloj, bichos ni derrota. Techo: un estado propio si el modo necesita su propia cámara o pausa.
-let libre = false;
+let libre = false, libreKind: CarKind = "buggy"; // libreKind: el auto del modo (todos disponibles; no toca el guardado)
+let libreLuz = 4, libreT = 0, libreAcc = 0, libreLugar = -1, libreCartelT = 0, libreLugares: { name: string; cx: number; cz: number }[] = []; // luz: 0 amanecer, 1 día, 2 atardecer, 3 noche, 4 automático
+const LUZ_FIJA = ["madrugada", "mediodia", "encore", "noche"], LUZ_CICLO = ["encore", "noche", "madrugada", "manana", "mediodia"], LUZ_TRAMO_S = 192; // ciclo completo = 5 × 192 s = 16 min
+const climaId = (id: string) => CLIMATES.find((c) => c.id === id)!;
+/** Luz del paseo: fija o ciclo lento mezclando climas que ya existen (mixClimate). */
+function libreLight() {
+  if (libreLuz < 4) return applyClimate(climaId(LUZ_FIJA[libreLuz]));
+  const x = (libreT / LUZ_TRAMO_S) % LUZ_CICLO.length, i = Math.floor(x), f = x - i;
+  applyClimate(mixClimate(climaId(LUZ_CICLO[i]), climaId(LUZ_CICLO[(i + 1) % LUZ_CICLO.length]), f * f * (3 - 2 * f)));
+}
+function libreHud(dt: number) {
+  const c = lead.car!, p = c.pos;
+  if (libreLuz === 4 && (libreAcc += dt) > 0.5) { libreAcc = 0; libreT += 0.5; libreLight(); } // ponytail: 2 Hz; si applyClimate pesa, subir el paso
+  let best = -1, bd = 110; // cartel al acercarse a menos de 110 m del centro de un lugar
+  libreLugares.forEach((l, i) => { const d = Math.hypot(p.x - l.cx, p.z - l.cz); if (d < bd) { bd = d; best = i; } });
+  if (best !== libreLugar) {
+    libreLugar = best;
+    if (best >= 0) { const b = $("barrio"); b.textContent = libreLugares[best].name; b.classList.remove("hidden", "show"); void b.offsetWidth; b.classList.add("show"); clearTimeout(libreCartelT); libreCartelT = window.setTimeout(() => b.classList.add("hidden"), 3000); }
+  }
+}
+/** Radar con los barrios; corre después de updateHud (que también lo alimenta, vacío, cada 0,05 s). */
+function libreRadar() {
+  const c = lead.car!, p = c.pos;
+  hudRadar({ x: p.x, z: p.z, yaw: Math.atan2(c.root.forward.x, c.root.forward.z), up: camYaw }, libreLugares.map((l) => ({ x: l.cx, z: l.cz, kind: "obj" as const })));
+}
 function startLibre() {
+  libreKind = peek.car ?? save.car; peek.car = undefined;
   initAudio(); music("run", 0); musicS = "run";
-  if (!simulating) track("run_start", { mode: "libre", car: save.car });
+  if (!simulating) track("run_start", { mode: "libre", car: libreKind });
   menuOff();
   clearRun(); // deja libre = false y la luz de la zona (ya armada como "libre")
-  libre = true;
+  libre = true; libreLugar = -1; libreT = 0; libreAcc = 0;
+  void import("./zones/libre").then((m) => { libreLugares = m.LUGARES; });
+  $("hud").classList.add("libre"); $("barrio").classList.add("hidden");
   setZone("libre"); setMoon(false);
   run.runSeed = 20261015; seedRng(run.runSeed); // el mapa es fijo; la semilla solo define el perfil que lee la cámara
   profile = makeProfile(run.runSeed);
@@ -344,8 +372,8 @@ function startLibre() {
   if (!simulating) { radio.auto(); radio.prefer("freeroam"); }
   cycleS = -1;
   buildLayout();
-  lead.car = new Car(scene, save.car, carOpts());
-  setScoop(save.car === "helado"); setEngineKind(save.car);
+  lead.car = new Car(scene, libreKind, carOpts());
+  setScoop(libreKind === "helado"); setEngineKind(libreKind);
   lead.maxHp = lead.car.def.hp;
   recompute();
   lead.hp = lead.maxHp; lead.boost = 100;
@@ -355,7 +383,8 @@ function startLibre() {
   scene.physicsEnabled = false;
   reset(null);
   $("levelup").classList.add("hidden");
-  $("hud").classList.add("hidden"); // HUD mínimo: sin vida, XP ni reloj (el de libre lo hace otro encargo)
+  $("hud").classList.remove("hidden"); // HUD mínimo: solo radar de barrios y cartel (hud.css #hud.libre)
+  if (libreLuz < 4) libreLight();
   $("hint").classList.add("hidden");
 }
 
@@ -556,6 +585,7 @@ function toMenu() {
 function pause() {
   if (state !== "play") return;
   state = "pause"; scene.physicsEnabled = false; engineStop(); musicDuck(true);
+  if (libre) return openPauseLibre(libreLuz);
   const evoLine = weapons.filter((w) => w.evolved).map((w) => WEAPONS[w.id].evoName).join(" · ");
   const totDmg = Object.values(dmgOut).reduce((a, b) => a + b, 0);
   openPause({
@@ -608,7 +638,7 @@ boot("Armando el menú", 0.9);
 void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
 initPhoto({ scene, canvas, inPause: () => state === "pause", onShot: () => grant("foto") });
 for (const ev of ['pointerover', 'touchstart', 'focusin']) document.addEventListener(ev, prefetchMode, { passive: true, capture: true });
-initMenu({ scene, play: launchRun, weekly: () => launchRun(false, false, 0, undefined, true), resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), match3: goMatch3 });
+initMenu({ scene, play: launchRun, weekly: () => launchRun(false, false, 0, undefined, true), resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), match3: goMatch3, libre: goLibre, luz: (i) => { libreLuz = i; libreAcc = 0; libreLight(); } });
 music("menu"); radio.play(); radio.prefer("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: solo con ?intro (cualquier tecla la salta)
 if (/[?&]intro\b/.test(location.search)) playIntro(); // T53: ya no sale sola; solo con ?intro o desde Créditos → Ver intro
@@ -677,7 +707,7 @@ initRunDrive({
 
 function update(dt: number) {
   const c = lead.car!;
-  if (libre) { tickDrive({ c } as Frame, dt); return; } // Free Roam: solo manejo (sin reloj, spawner, armas ni vitales)
+  if (libre) { tickDrive({ c } as Frame, dt); libreHud(dt); return; } // Free Roam: solo manejo (sin reloj, spawner, armas ni vitales)
   run.time += dt;
   if (erun) { encApply(E.tick(erun, dt)); const d = E.dirTick(dirq, dt, E.decisionOpen(erun)); if (d) { dirSub(d, E.ENC.dirShowS); if (!simulating && !LAB.on) SFX.radio((Object.values(E.TIPS) as string[]).includes(d)); } } // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
   const calm = erun?.phase === "vote" || erun?.phase === "final" || calmFirst(), tp = run.time + paceS, hordeK = run.horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
@@ -873,6 +903,7 @@ scene.onBeforeRenderObservable.add(() => {
       if (RR.rec.on && state === "play") RR.recTick(dt, rrTake);
     }
     updateHud(dt);
+    if (libre && lead.car) libreRadar();
   }
   if (getNet()?.host && (state === "play" || state === "level")) netSnap(dt);
   tickFx(dt * ts);

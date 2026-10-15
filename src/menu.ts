@@ -206,7 +206,7 @@ function renderRace() {
 }
 
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(daily?: boolean, encore?: boolean): void; weekly(): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; match3(): void };
+type Api = { scene: Scene; play(daily?: boolean, encore?: boolean): void; weekly(): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; match3(): void; libre(): void; luz(i: number): void };
 let api: Api;
 
 export function applySettings() {
@@ -256,7 +256,7 @@ function renderCodex() {
   fill("cdxVar", [...va.map((v): [string, string] => [v.name, v.line]), ...miss(VARIANTS.length - va.length)]);
 }
 initAccount({ $, fmt, today: () => today(), dailySeed: () => dailySeed(), go: (s) => go(s), current: () => current(), back: () => back(), kitStripHtml: () => kitStripHtml(), daily: () => save.daily });
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "match3" | "play" | "modes" | "encore" | "codex" | "cuenta" | "weekly";
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "match3" | "play" | "modes" | "encore" | "codex" | "cuenta" | "weekly" | "libre";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -276,6 +276,7 @@ function show() {
   if (s === "garage") renderGarage();
   if (s === "shop") renderShop();
   if (s === "main") renderMain();
+  if (s === "libre") renderLibre();
   if (s === "play") renderPlay();
   if (s === "encore") { renderEncP(); carLbl(); const e = save.encore; $("encRec").textContent = e.runs ? `Mejor expedición: vuelta ${e.best.loop + 1}, escenario ${e.best.stage + 1} · ${fmt(e.best.t)} · ${e.wins} ${e.wins === 1 ? "ganada" : "ganadas"} de ${e.runs}` : "Sin expediciones registradas todavía."; $("encSec").innerHTML = SECRETS.filter((x) => e.secrets.includes(x.id)).map((x) => `<li><b>${x.name}</b> · ${x.lore}</li>`).join("") || `<li>Secretos del Director: ${SECRETS.length} sin descubrir.</li>`; } // Contenido 3: secretos descubiertos (textos propios, sin HTML del guardado)
   if (s === "codex") { renderCodex(); renderMyStats(); }
@@ -494,6 +495,13 @@ function renderMain() {
   const nuevo = !save.encore.runs; // hasta terminar la primera expedición, Jugar es lo único que compite en el menú
   for (const id of ["dailyBtn", "weeklyBtn"]) $(id).classList.toggle("hidden", nuevo);
   document.querySelector<HTMLElement>('#scr-main [data-go="modes"]')!.classList.toggle("hidden", nuevo);
+  $("libreBtn").classList.toggle("hidden", nuevo); // Paseo libre: tras la primera expedición
+}
+// Paseo libre: todos los autos están disponibles en este modo (no toca save.cars ni save.car); la elección vive en peek.car, que main.ts lee y limpia al largar
+function renderLibre() {
+  peek.car ??= save.car;
+  $("libreCarBtn").querySelector(".bt")!.textContent = `Auto · ${CARS[peek.car].name}`;
+  $("libreCarDesc").textContent = CARS[peek.car].desc;
 }
 
 // Supervivencia y Desafío diario: ficha de largada con el equipo actual, récord de zona y condiciones de la semilla del día
@@ -1128,7 +1136,23 @@ function renderBestiary() {
 // ---------- Pausa y resultados (los datos los arma main.ts) ----------
 type Kit = { weapons: { id: WeaponId; lv: number; evolved: boolean; dmg?: number; pct?: number }[]; passives: { id: PassiveId; lv: number }[]; stats: [string, string][]; run: [string, string][]; seed: string };
 const pips = (l: number) => `<span class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(Math.max(0, 5 - l))}</span>`;
+const LUZ = ["Amanecer", "Día", "Atardecer", "Noche", "Automático"];
+const paintLuz = (n: number) => document.querySelectorAll<HTMLElement>("#libreLuz button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === n)));
+/** Pausa de Paseo libre: la misma sección de pausa sin armas ni estadísticas, con el selector de luz. */
+export function openPauseLibre(luz: number) {
+  const sc = $("scr-pause");
+  sc.classList.add("libre");
+  $("libreLuz").innerHTML = LUZ.map((n, i) => `<button data-act="luz:${i}" aria-pressed="false">${n}</button>`).join("");
+  paintLuz(luz);
+  $("pauseSeed").textContent = `${CARS[peek.car ?? save.car].name} · Paseo libre`;
+  $("quitTxt").textContent = "Salir al menú";
+  const foot = sc.querySelector(".foot")!;
+  if (!sc.querySelector(".radiobox")) foot.insertAdjacentHTML("beforebegin", radioBox()); else radioPaint();
+  reset("pause");
+}
 export function openPause(k: Kit) {
+  $("scr-pause").classList.remove("libre");
+  $("quitTxt").textContent = "Abandonar";
   $("kitW").innerHTML = k.weapons.map((w) => {
     const def = WEAPONS[w.id], ev = def.evo, hasP = k.passives.some((p) => p.id === ev);
     const syn = !w.evolved ? `<small class="wsynP ${hasP ? "on" : ""}">Evo: ${PASSIVES[ev].name}</small>` : "";
@@ -1284,6 +1308,9 @@ export function initMenu(a: Api) {
       fe.classList.remove("zap"); void fe.offsetWidth; fe.classList.add("zap"); SFX.static();
     }
     else if (d.act === "pcar") { const cs = save.cars.length ? save.cars : [save.car]; save.car = cs[(cs.indexOf(save.car) + 1) % cs.length]; persist(); renderPlay(); carLbl(); } // T46: auto elegido antes de largar, queda en el guardado
+    else if (d.act === "lcar") { const cs = Object.keys(CARS) as CarKind[]; peek.car = cs[(cs.indexOf(peek.car ?? save.car) + 1) % cs.length]; renderLibre(); }
+    else if (d.act === "libregow") api.libre();
+    else if (d.act?.startsWith("luz:")) { api.luz(+d.act.slice(4)); paintLuz(+d.act.slice(4)); }
     else if (d.act === "back") back();
     else if (d.act === "fullscreen") { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.(); }
     else if (d.act === "resetcfg") { // dos pasos: el primer clic pide confirmar (se desarma solo a los 4 s)

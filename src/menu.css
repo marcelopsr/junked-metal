@@ -859,3 +859,12 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 .radiobox .rnow b { font-family: "Bebas Neue", var(--data); font-size: 22px; letter-spacing: .04em; font-weight: 400; }
 .radiobox .rbtns { display: flex; gap: 8px; }
 .radiobox .rbtns button { min-height: 44px; min-width: 44px; padding: 0 14px; }
+
+/* Paseo libre: selector de auto y luz del día en la pausa (kit.css pisa los botones; ids para ganar) */
+#scr-libre .list > .foot { grid-column: 1 / -1; text-align: center; margin: 0; }
+#scr-pause .libreKit { display: none; flex-direction: column; align-items: center; gap: 8px; }
+#scr-pause.libre .libreKit { display: flex; }
+#scr-pause.libre .kit4 { display: none; }
+#libreLuz { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+#libreLuz button { min-height: 44px; padding: 0 14px; }
+#libreLuz button[aria-pressed="true"] { background: var(--jm-rojo); color: #fff; }

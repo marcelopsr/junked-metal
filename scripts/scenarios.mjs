@@ -423,5 +423,29 @@ const encoreSession = (n) => ({ id: `encore${n}`, query: `?mute&seed=3&encore&pl
   { id: "final", act: finalAct },
 ] });
 
+// Paseo libre: menú (botón + selección de auto), un shot por barrio en vista de juego y la pausa con el selector de luz.
+// El auto se coloca con el patrón de kart.ts (lakitu): cuerpo sin preStep, pose, velocidad cero y unos cuadros.
+const libreAt = (x, z, yaw = 0) => async (p) => {
+  await p.evaluate(([x, z, yaw]) => {
+    const c = window.__carObj(); c.body.disablePreStep = false;
+    c.root.position.set(x, 1.5, z); c.root.rotationQuaternion.copyFromFloats(0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2));
+    c.body.setLinearVelocity({ x: 0, y: 0, z: 0 }); c.body.setAngularVelocity({ x: 0, y: 0, z: 0 });
+  }, [x, z, yaw]);
+  await tick(p, 6); await p.evaluate(() => { window.__carObj().body.disablePreStep = true; }); await tick(p, 80); await p.waitForTimeout(150);
+};
+sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
+  { id: "menu-boton", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ controlesVistos: true, encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 1, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] } })); await toMain(p); await p.waitForTimeout(150); } },
+  { id: "menu-auto", perf: false, act: async (p) => { await view("libre")(p); await p.dispatchEvent('[data-act="lcar"]', "click"); await tick(p, 40); await p.waitForTimeout(150); } },
+  { id: "centro", act: async (p) => { await p.dispatchEvent('[data-act="libregow"]', "click"); await wait(p, () => window.__info?.().state === "play"); await libreAt(0, -20)(p); } },
+  { id: "skate", act: libreAt(-150, 130) },
+  { id: "parque", act: libreAt(130, 20) },
+  { id: "acuatico", act: libreAt(152, 130) },
+  { id: "nieve", act: libreAt(-150, -100, Math.PI) },
+  { id: "obstaculos", act: libreAt(150, -100, Math.PI) },
+  { id: "pausa", perf: false, act: async (p) => { await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },
+  { id: "pausa-noche", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:3"]', "click"); await tick(p, 4); await p.waitForTimeout(200); } },
+  { id: "salir", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:4"]', "click"); await p.dispatchEvent('[data-act="quit"]', "click"); await wait(p, () => document.querySelector("#scr-main.on")); await p.waitForTimeout(150); } },
+] });
+
 sessions.push(encoreSession(1), encoreSession(2), encoreSession(4));
 export { tick, info };
