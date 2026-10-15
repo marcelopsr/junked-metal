@@ -1,5 +1,5 @@
 {
-  "count": 10,
+  "count": 30,
   "records": [
     {
       "id": "encore-director-tv",
@@ -69,6 +69,146 @@
       "width": 1312,
       "height": 1199,
       "sha256": "29fb778c8267d06f9e43cecab080dcec008cdf511720ca554408b4a911ea768e",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-ensambladora",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "ceb412c3aef8e9fe1d71050fd31c0233fa4888f21ffe19820755fef22c3e4ba7",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-rele-lunar",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "c284f39cb978ba366f93fae90e111b7e40a116a23cb5b4c38fbc7658ff9010a1",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-bateria-run",
+      "width": 1374,
+      "height": 1145,
+      "sha256": "9eda9f1ceefeec224a54809e29da9d4e0340646b40e620e134874e90b11560e0",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-camara-director",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "db110c8650f3c5a71e2a7ddcf50e4a5dbdf67a9de018b3271412b233465792d8",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-bobina-cable",
+      "width": 1322,
+      "height": 1190,
+      "sha256": "5084c70a0f4f7a8a8cebbd297ce0e4a88af83ad80c6a525c2368107f1aa65941",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-compuerta-lunar",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "00161501d7190c24e9a630548133447b7c53539db1b7ba8c9bdc14acf27aa5dc",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-baliza-rescate",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "3b5e93f73ce9beb70b44e37233c0beee2c86335823053c18d17ab8baa131d517",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-caja-transmision",
+      "width": 1402,
+      "height": 1122,
+      "sha256": "36c4058295950187957957de8aaa8376e736e00829077cc250d37236b2592b48",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-material-regolito",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "0a65ca1f1a4b45c058a5c3087aab78a928e5ab78baa3888324b3890bd00be61d",
+      "realAlpha": false
+    },
+    {
+      "id": "encore-material-chapa-marfil",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "289d7921c443a54c921b951ad9b807bdfd0eaa4b8c8765bd6a8a09d62649cfac",
+      "realAlpha": false
+    },
+    {
+      "id": "encore-material-chapa-burdeos",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "2f0f94e25a54129260f8d03480bf5caccbfbe9787359caeea1f8d2640d8fed93",
+      "realAlpha": false
+    },
+    {
+      "id": "encore-material-metal-oxidado",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "9c26711fef3628cae5946af079bd216215d9fe795e9efa9ec702c8c540931124",
+      "realAlpha": false
+    },
+    {
+      "id": "encore-material-goma-cable",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "d41eee3ee1b6a0eb758d7be68e9fed8971962e9cb8ad2f4511eea512eaaa930a",
+      "realAlpha": false
+    },
+    {
+      "id": "encore-material-madera-plató",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "c080f614d7d4923714f63389648c162f8177a1aa1b9e2a1bf0a50bf067826af1",
+      "realAlpha": false
+    },
+    {
+      "id": "encore-material-rejilla-metal",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "c2b472aaa1de08faeacd3e181e4165f22bea780b61cabd02f7e601d722db9a96",
+      "realAlpha": false
+    },
+    {
+      "id": "encore-material-tela-filtro",
+      "width": 1254,
+      "height": 1254,
+      "sha256": "6383c00f06c96e2b9ad221a353ed4e6cabb08775ade2ae7cb21106b6b680c3ee",
+      "realAlpha": false
+    },
+    {
+      "id": "encore-decal-huellas-rc",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "c9c6edb83b5cbb892a6424c1f3a6320f8f548673907f2bd0e3b9054f3cf606fe",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-decal-aceite",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "0428bbfdb23860bf2dfe86ab192b40ef4fc0c0e7fb2711a3023c90b31a47f725",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-decal-flecha-ruta",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "32e7bc40c92b6d71215efbd4f0de65b9758bc2daed6c4da37c7d5dc6798cc3ce",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-decal-anillo-activacion",
+      "width": 1263,
+      "height": 1246,
+      "sha256": "f8900412f6ef000731525c0265f8574daed85dfddb576f5b63dac26d53b79870",
       "realAlpha": true
     }
   ]

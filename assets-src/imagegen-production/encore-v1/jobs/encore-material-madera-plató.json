@@ -1,0 +1,36 @@
+{
+  "id": "encore-material-madera-plató",
+  "name": "Madera de plató",
+  "category": "material",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "Warm reclaimed stage floorboards with believable woodgrain, a few worn teal paint remnants, restrained seams, no nails or props",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: Warm reclaimed stage floorboards with believable woodgrain, a few worn teal paint remnants, restrained seams, no nails or props. Single seamless tileable base-color texture, orthographic flat top view filling the entire square edge to edge. Neutral even diffuse color only, no directional illumination, cast shadow, highlight, perspective, sphere, label, border or collage. Carefully designed pixel-art color clusters, not blurry photographic noise. Opaque background. Material only.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: Warm reclaimed stage floorboards with believable woodgrain, a few worn teal paint remnants, restrained seams, no nails or props. Single seamless tileable base-color texture, orthographic flat top view filling the entire square edge to edge. Neutral even diffuse color only, no directional illumination, cast shadow, highlight, perspective, sphere, label, border or collage. Carefully designed pixel-art color clusters, not blurry photographic noise. Opaque background. Material only.",
+    "transparent_background": false
+  },
+  "output": "raw/encore-material-madera-plató.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-material-madera-plató.png",
+    "sha256": "c080f614d7d4923714f63389648c162f8177a1aa1b9e2a1bf0a50bf067826af1",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: Warm reclaimed stage floorboards with believable woodgrain, a few worn teal paint remnants, restrained seams, no nails or props. Single seamless tileable base-color texture, orthographic flat top view filling the entire square edge to edge. Neutral even diffuse color only, no directional illumination, cast shadow, highlight, perspective, sphere, label, border or collage. Carefully designed pixel-art color clusters, not blurry photographic noise. Opaque background. Material only.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-0b84e628-1a19-4670-b216-89bc52afd24b.png"
+  }
+}

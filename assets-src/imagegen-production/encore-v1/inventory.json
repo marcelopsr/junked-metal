@@ -1,8 +1,7 @@
 {
   "version": 1,
-  "batch": "batch-012",
   "direction": "3D miniature with painted pixel detail for Junked Metal ENCORE",
-  "generated_count": 10,
+  "generated_count": 30,
   "jobs": [
     {
       "id": "encore-director-tv",
@@ -63,6 +62,130 @@
       "job": "jobs/encore-foco-director.json",
       "output": "raw/encore-foco-director.png",
       "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-ensambladora",
+      "job": "jobs/encore-ensambladora.json",
+      "output": "raw/encore-ensambladora.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-rele-lunar",
+      "job": "jobs/encore-rele-lunar.json",
+      "output": "raw/encore-rele-lunar.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-bateria-run",
+      "job": "jobs/encore-bateria-run.json",
+      "output": "raw/encore-bateria-run.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-camara-director",
+      "job": "jobs/encore-camara-director.json",
+      "output": "raw/encore-camara-director.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-bobina-cable",
+      "job": "jobs/encore-bobina-cable.json",
+      "output": "raw/encore-bobina-cable.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-compuerta-lunar",
+      "job": "jobs/encore-compuerta-lunar.json",
+      "output": "raw/encore-compuerta-lunar.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-baliza-rescate",
+      "job": "jobs/encore-baliza-rescate.json",
+      "output": "raw/encore-baliza-rescate.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-caja-transmision",
+      "job": "jobs/encore-caja-transmision.json",
+      "output": "raw/encore-caja-transmision.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-material-regolito",
+      "job": "jobs/encore-material-regolito.json",
+      "output": "raw/encore-material-regolito.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-material-chapa-marfil",
+      "job": "jobs/encore-material-chapa-marfil.json",
+      "output": "raw/encore-material-chapa-marfil.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-material-chapa-burdeos",
+      "job": "jobs/encore-material-chapa-burdeos.json",
+      "output": "raw/encore-material-chapa-burdeos.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-material-metal-oxidado",
+      "job": "jobs/encore-material-metal-oxidado.json",
+      "output": "raw/encore-material-metal-oxidado.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-material-goma-cable",
+      "job": "jobs/encore-material-goma-cable.json",
+      "output": "raw/encore-material-goma-cable.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-material-madera-plató",
+      "job": "jobs/encore-material-madera-plató.json",
+      "output": "raw/encore-material-madera-plató.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-material-rejilla-metal",
+      "job": "jobs/encore-material-rejilla-metal.json",
+      "output": "raw/encore-material-rejilla-metal.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-material-tela-filtro",
+      "job": "jobs/encore-material-tela-filtro.json",
+      "output": "raw/encore-material-tela-filtro.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-decal-huellas-rc",
+      "job": "jobs/encore-decal-huellas-rc.json",
+      "output": "raw/encore-decal-huellas-rc.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-decal-aceite",
+      "job": "jobs/encore-decal-aceite.json",
+      "output": "raw/encore-decal-aceite.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-decal-flecha-ruta",
+      "job": "jobs/encore-decal-flecha-ruta.json",
+      "output": "raw/encore-decal-flecha-ruta.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-decal-anillo-activacion",
+      "job": "jobs/encore-decal-anillo-activacion.json",
+      "output": "raw/encore-decal-anillo-activacion.png",
+      "state": "imagegen-generated"
     }
+  ],
+  "batches": [
+    "batch-012",
+    "batch-013"
   ]
 }

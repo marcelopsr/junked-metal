@@ -1,0 +1,36 @@
+{
+  "id": "encore-decal-huellas-rc",
+  "name": "Huellas RC",
+  "category": "decal",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "One paired short RC tire tread imprint in gray-brown dust, two parallel tracks with chunky staggered tread, soft naturally broken ends, no ground",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One paired short RC tire tread imprint in gray-brown dust, two parallel tracks with chunky staggered tread, soft naturally broken ends, no ground. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One paired short RC tire tread imprint in gray-brown dust, two parallel tracks with chunky staggered tread, soft naturally broken ends, no ground. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-decal-huellas-rc.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-decal-huellas-rc.png",
+    "sha256": "c9c6edb83b5cbb892a6424c1f3a6320f8f548673907f2bd0e3b9054f3cf606fe",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One paired short RC tire tread imprint in gray-brown dust, two parallel tracks with chunky staggered tread, soft naturally broken ends, no ground. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-da3d338b-6fe2-4181-be3e-f85c3985c813.png"
+  }
+}

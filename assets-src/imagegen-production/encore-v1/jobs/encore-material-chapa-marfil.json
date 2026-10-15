@@ -1,0 +1,36 @@
+{
+  "id": "encore-material-chapa-marfil",
+  "name": "Chapa marfil",
+  "category": "material",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "Aged ivory painted steel, sparse chips exposing charcoal metal, tiny rust at chips, generous quiet painted regions",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: Aged ivory painted steel, sparse chips exposing charcoal metal, tiny rust at chips, generous quiet painted regions. Single seamless tileable base-color texture, orthographic flat top view filling the entire square edge to edge. Neutral even diffuse color only, no directional illumination, cast shadow, highlight, perspective, sphere, label, border or collage. Carefully designed pixel-art color clusters, not blurry photographic noise. Opaque background. Material only.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: Aged ivory painted steel, sparse chips exposing charcoal metal, tiny rust at chips, generous quiet painted regions. Single seamless tileable base-color texture, orthographic flat top view filling the entire square edge to edge. Neutral even diffuse color only, no directional illumination, cast shadow, highlight, perspective, sphere, label, border or collage. Carefully designed pixel-art color clusters, not blurry photographic noise. Opaque background. Material only.",
+    "transparent_background": false
+  },
+  "output": "raw/encore-material-chapa-marfil.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-material-chapa-marfil.png",
+    "sha256": "289d7921c443a54c921b951ad9b807bdfd0eaa4b8c8765bd6a8a09d62649cfac",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: Aged ivory painted steel, sparse chips exposing charcoal metal, tiny rust at chips, generous quiet painted regions. Single seamless tileable base-color texture, orthographic flat top view filling the entire square edge to edge. Neutral even diffuse color only, no directional illumination, cast shadow, highlight, perspective, sphere, label, border or collage. Carefully designed pixel-art color clusters, not blurry photographic noise. Opaque background. Material only.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-a9002e5d-bb40-431e-a059-0eded813954d.png"
+  }
+}

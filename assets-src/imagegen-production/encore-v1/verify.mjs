@@ -5,7 +5,7 @@ import { PNG } from 'pngjs';
 const root = new URL('./', import.meta.url);
 const inv = JSON.parse(readFileSync(new URL('inventory.json', root)));
 const hashes = new Set(), ids = new Set(), records = [];
-assert.equal(inv.jobs.length, 10);
+assert(inv.jobs.length > 0);
 for (const e of inv.jobs) {
   assert(!ids.has(e.id)); ids.add(e.id);
   const j = JSON.parse(readFileSync(new URL(e.job, root)));
@@ -19,9 +19,10 @@ for (const e of inv.jobs) {
   const p = PNG.sync.read(bytes); assert(p.width >= 512 && p.height >= 512);
   let clear = 0, visible = 0;
   for (let k = 3; k < p.data.length; k += 4) { if (p.data[k] === 0) clear++; else visible++; }
-  assert(clear > p.width * p.height * .1 && visible > 0);
-  records.push({id:e.id, width:p.width, height:p.height, sha256:sha, realAlpha:true});
+  assert(visible > 0);
+  if (j.tool_arguments.transparent_background) assert(clear > p.width * p.height * .1);
+  records.push({id:e.id, width:p.width, height:p.height, sha256:sha, realAlpha:clear > 0});
 }
 assert.equal(inv.generated_count, records.length);
 writeFileSync(new URL('validation.json', root), JSON.stringify({count:records.length, records}, null, 2) + '\n');
-console.log('10 PNG independientes: dimensiones, hashes, alfa, fuentes y JSON verificados.');
+console.log(`${records.length} PNG independientes: dimensiones, hashes, alfa solicitado, fuentes y JSON verificados.`);

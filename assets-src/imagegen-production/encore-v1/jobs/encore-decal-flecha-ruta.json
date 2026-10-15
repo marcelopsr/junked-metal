@@ -1,0 +1,36 @@
+{
+  "id": "encore-decal-flecha-ruta",
+  "name": "Flecha de ruta",
+  "category": "decal",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "One broad ivory painted directional arrow with orange outline, chipped pixel edges and localized abrasion, flat paint mark, no signboard",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One broad ivory painted directional arrow with orange outline, chipped pixel edges and localized abrasion, flat paint mark, no signboard. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One broad ivory painted directional arrow with orange outline, chipped pixel edges and localized abrasion, flat paint mark, no signboard. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-decal-flecha-ruta.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-decal-flecha-ruta.png",
+    "sha256": "32e7bc40c92b6d71215efbd4f0de65b9758bc2daed6c4da37c7d5dc6798cc3ce",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One broad ivory painted directional arrow with orange outline, chipped pixel edges and localized abrasion, flat paint mark, no signboard. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-8e638a28-9f14-4388-a7c1-765ba325db28.png"
+  }
+}

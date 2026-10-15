@@ -1,0 +1,36 @@
+{
+  "id": "encore-bobina-cable",
+  "name": "Bobina de cable",
+  "category": "prop",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "One squat wooden industrial cable spool with dark rubber cable neatly wrapped, orange metal end guards, attached loose plug held at side",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One squat wooden industrial cable spool with dark rubber cable neatly wrapped, orange metal end guards, attached loose plug held at side. Single complete isolated 3D object, three-quarter view, neutral studio light, true transparent background. Object occupies at most 75 percent canvas, all extremities visible with generous margins. No ground, halo, text, logo or collage.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One squat wooden industrial cable spool with dark rubber cable neatly wrapped, orange metal end guards, attached loose plug held at side. Single complete isolated 3D object, three-quarter view, neutral studio light, true transparent background. Object occupies at most 75 percent canvas, all extremities visible with generous margins. No ground, halo, text, logo or collage.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-bobina-cable.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-bobina-cable.png",
+    "sha256": "5084c70a0f4f7a8a8cebbd297ce0e4a88af83ad80c6a525c2368107f1aa65941",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One squat wooden industrial cable spool with dark rubber cable neatly wrapped, orange metal end guards, attached loose plug held at side. Single complete isolated 3D object, three-quarter view, neutral studio light, true transparent background. Object occupies at most 75 percent canvas, all extremities visible with generous margins. No ground, halo, text, logo or collage.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-5daec9ae-bf01-40dd-9a09-b4b65435c4da.png"
+  }
+}

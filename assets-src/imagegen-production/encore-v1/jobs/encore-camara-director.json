@@ -1,0 +1,36 @@
+{
+  "id": "encore-camara-director",
+  "name": "Cámara del Director",
+  "category": "prop",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "One vintage industrial television camera on three short tripod legs, boxy weathered teal body, large round dark lens, small red tally light, side cable reel",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One vintage industrial television camera on three short tripod legs, boxy weathered teal body, large round dark lens, small red tally light, side cable reel. Single complete isolated 3D object, three-quarter view, neutral studio light, true transparent background. Object occupies at most 75 percent canvas, all extremities visible with generous margins. No ground, halo, text, logo or collage.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One vintage industrial television camera on three short tripod legs, boxy weathered teal body, large round dark lens, small red tally light, side cable reel. Single complete isolated 3D object, three-quarter view, neutral studio light, true transparent background. Object occupies at most 75 percent canvas, all extremities visible with generous margins. No ground, halo, text, logo or collage.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-camara-director.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-camara-director.png",
+    "sha256": "db110c8650f3c5a71e2a7ddcf50e4a5dbdf67a9de018b3271412b233465792d8",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One vintage industrial television camera on three short tripod legs, boxy weathered teal body, large round dark lens, small red tally light, side cable reel. Single complete isolated 3D object, three-quarter view, neutral studio light, true transparent background. Object occupies at most 75 percent canvas, all extremities visible with generous margins. No ground, halo, text, logo or collage.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-f762c7fc-3210-47de-a6c3-25089d157e65.png"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "id": "encore-decal-anillo-activacion",
+  "name": "Anillo de activación",
+  "category": "decal",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "One flat worn cyan activation ring marking with four evenly spaced small outward rectangular ticks, broken painted industrial stencil texture, empty transparent center, no bloom",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One flat worn cyan activation ring marking with four evenly spaced small outward rectangular ticks, broken painted industrial stencil texture, empty transparent center, no bloom. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One flat worn cyan activation ring marking with four evenly spaced small outward rectangular ticks, broken painted industrial stencil texture, empty transparent center, no bloom. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-decal-anillo-activacion.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-decal-anillo-activacion.png",
+    "sha256": "f8900412f6ef000731525c0265f8574daed85dfddb576f5b63dac26d53b79870",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One flat worn cyan activation ring marking with four evenly spaced small outward rectangular ticks, broken painted industrial stencil texture, empty transparent center, no bloom. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-076d87cf-29a6-4559-84a2-9231b14a2347.png"
+  }
+}

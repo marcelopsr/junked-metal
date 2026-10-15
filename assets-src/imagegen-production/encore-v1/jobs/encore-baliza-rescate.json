@@ -1,0 +1,36 @@
+{
+  "id": "encore-baliza-rescate",
+  "name": "Baliza de rescate",
+  "category": "prop",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "One compact rescue signal unit, ivory and teal rounded box, amber rotating beacon protected by wire cage, two side handles, folded orange stabilizer feet, no medical cross",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One compact rescue signal unit, ivory and teal rounded box, amber rotating beacon protected by wire cage, two side handles, folded orange stabilizer feet, no medical cross. Single complete isolated 3D object, three-quarter view, neutral studio light, true transparent background. Object occupies at most 75 percent canvas, all extremities visible with generous margins. No ground, halo, text, logo or collage.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One compact rescue signal unit, ivory and teal rounded box, amber rotating beacon protected by wire cage, two side handles, folded orange stabilizer feet, no medical cross. Single complete isolated 3D object, three-quarter view, neutral studio light, true transparent background. Object occupies at most 75 percent canvas, all extremities visible with generous margins. No ground, halo, text, logo or collage.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-baliza-rescate.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-baliza-rescate.png",
+    "sha256": "3b5e93f73ce9beb70b44e37233c0beee2c86335823053c18d17ab8baa131d517",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One compact rescue signal unit, ivory and teal rounded box, amber rotating beacon protected by wire cage, two side handles, folded orange stabilizer feet, no medical cross. Single complete isolated 3D object, three-quarter view, neutral studio light, true transparent background. Object occupies at most 75 percent canvas, all extremities visible with generous margins. No ground, halo, text, logo or collage.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-8d5c0d0f-369f-4a76-9baa-f7351bd9c4ac.png"
+  }
+}

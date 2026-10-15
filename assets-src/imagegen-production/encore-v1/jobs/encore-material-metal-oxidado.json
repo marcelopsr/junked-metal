@@ -1,0 +1,36 @@
+{
+  "id": "encore-material-metal-oxidado",
+  "name": "Acero oxidado",
+  "category": "material",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "Dark salvaged steel with layered orange-brown oxidation islands, readable large value clusters and fine pixel pitting, no bolts",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: Dark salvaged steel with layered orange-brown oxidation islands, readable large value clusters and fine pixel pitting, no bolts. Single seamless tileable base-color texture, orthographic flat top view filling the entire square edge to edge. Neutral even diffuse color only, no directional illumination, cast shadow, highlight, perspective, sphere, label, border or collage. Carefully designed pixel-art color clusters, not blurry photographic noise. Opaque background. Material only.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: Dark salvaged steel with layered orange-brown oxidation islands, readable large value clusters and fine pixel pitting, no bolts. Single seamless tileable base-color texture, orthographic flat top view filling the entire square edge to edge. Neutral even diffuse color only, no directional illumination, cast shadow, highlight, perspective, sphere, label, border or collage. Carefully designed pixel-art color clusters, not blurry photographic noise. Opaque background. Material only.",
+    "transparent_background": false
+  },
+  "output": "raw/encore-material-metal-oxidado.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-material-metal-oxidado.png",
+    "sha256": "9c26711fef3628cae5946af079bd216215d9fe795e9efa9ec702c8c540931124",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: Dark salvaged steel with layered orange-brown oxidation islands, readable large value clusters and fine pixel pitting, no bolts. Single seamless tileable base-color texture, orthographic flat top view filling the entire square edge to edge. Neutral even diffuse color only, no directional illumination, cast shadow, highlight, perspective, sphere, label, border or collage. Carefully designed pixel-art color clusters, not blurry photographic noise. Opaque background. Material only.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-5eeb98fb-b14f-4b4d-b7bb-3372c2b4d4c2.png"
+  }
+}

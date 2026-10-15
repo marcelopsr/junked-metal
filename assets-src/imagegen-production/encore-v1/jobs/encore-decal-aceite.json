@@ -1,0 +1,36 @@
+{
+  "id": "encore-decal-aceite",
+  "name": "Mancha de aceite",
+  "category": "decal",
+  "state": "imagegen-generated",
+  "batch": "batch-013",
+  "subject": "One irregular dark brown-black old oil stain, asymmetric pooled center and small attached lobes, subtle translucent feathered edge, no reflection or ground",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One irregular dark brown-black old oil stain, asymmetric pooled center and small attached lobes, subtle translucent feathered edge, no reflection or ground. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One irregular dark brown-black old oil stain, asymmetric pooled center and small attached lobes, subtle translucent feathered edge, no reflection or ground. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-decal-aceite.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "deterministic seed and parameters pending",
+      "mesh and UV required for props",
+      "tile seams and PBR calibration required for materials",
+      "PNG is not an executable procedural recipe"
+    ]
+  },
+  "review": "concept RAW; integration pending",
+  "candidate": {
+    "path": "raw/encore-decal-aceite.png",
+    "sha256": "0428bbfdb23860bf2dfe86ab192b40ef4fc0c0e7fb2711a3023c90b31a47f725",
+    "review": "initial visual inspection; alpha halos, material tiling and integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE. Premium handcrafted miniature 3D art direction with crisp deliberate material-specific painted pixel clusters, beautiful readable shapes and localized wear. Retroindustrial salvaged theatrical equipment, not RC RACE branding. Subject: One irregular dark brown-black old oil stain, asymmetric pooled center and small attached lobes, subtle translucent feathered edge, no reflection or ground. Single flat top-down decal on true transparent background, whole motif centered with wide margins. Crisp painted pixel clusters. No 3D extrusion, cast shadows, glow, ground, text, border or collage.",
+    "batch": "batch-013",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-d3dcc1bf-5ad0-495b-884d-79c52939cbd5.png"
+  }
+}
