@@ -31,10 +31,16 @@ test("H8: en producción el canje exige EXCHANGE_SECRET propio", () => {
   assert.equal(exchangeSecretOf({ NODE_ENV: "production", JM_SECRET: "j", EXCHANGE_SECRET: "e" }), "e");
   assert.equal(exchangeSecretOf({ JM_SECRET: "j" }), "j");
 });
-test("H9: intentos de clave de grupo y de admin limitados globalmente (rotando IP)", async () => {
+test("H9: el tope global cuenta solo fallos: los aciertos no lo agotan, 61 fallos lo cierran y cerrado ni la clave correcta pasa", async () => {
   let last;
+  for (let i = 0; i < 70; i++) last = (await srv.post("/api/login", { clave: "g" }, xff("14.0.0." + i))).status;
+  assert.equal(last, 200, "70 aciertos desde IPs distintas no bloquean");
+  for (let i = 0; i < 70; i++) last = (await srv.post("/admin/api/login", { key: "clave-admin" }, xff("15.0.0." + i))).status;
+  assert.equal(last, 200);
   for (let i = 0; i < 61; i++) last = (await srv.post("/api/login", { clave: "mala" }, xff("12.0.0." + i))).status;
-  assert.equal(last, 429);
+  assert.equal(last, 429, "el fallo 61 ya recibe 429");
+  assert.equal((await srv.post("/api/login", { clave: "g" }, xff("12.9.9.9"))).status, 429, "clave correcta con tope lleno: 429 (sin oráculo)");
   for (let i = 0; i < 61; i++) last = (await srv.post("/admin/api/login", { key: "mala" }, xff("13.0.0." + i))).status;
   assert.equal(last, 429);
+  assert.equal((await srv.post("/admin/api/login", { key: "clave-admin" }, xff("13.9.9.9"))).status, 429);
 });

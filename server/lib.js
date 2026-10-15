@@ -69,6 +69,12 @@ export function safeReturn(ret, origins = ORIGINS) {
 // ponytail: rate limit en memoria por proceso; se pierde al reiniciar, suficiente para un solo nodo.
 // Con el mapa lleno solo se purgan las ventanas vencidas; si sigue lleno, la clave nueva se rechaza (nunca se vacía todo).
 const LIMITER_MAX_KEYS = 5000;
+// Tope global de FALLOS: full() consulta sin contar; fail() suma. Los aciertos nunca lo agotan y, lleno, se responde 429 sin evaluar la clave.
+export function failCap(max, windowMs) {
+  let n = 0, t = 0;
+  const live = () => { if (Date.now() - t > windowMs) n = 0; };
+  return { full: () => (live(), n >= max), fail: () => { live(); if (!n) t = Date.now(); n++; } };
+}
 export function limiter(max, windowMs, maxKeys = LIMITER_MAX_KEYS) {
   const hits = new Map();
   return (key, now = Date.now()) => {
