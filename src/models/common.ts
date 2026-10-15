@@ -141,6 +141,11 @@ export function flatten(m: B.Mesh, keep: B.Material[] = []) {
 
 // ---------- Plantillas instanciables ----------
 const templates = new Map<string, B.Mesh>();
+// Babylon deja pegado `_isActive` en la fuente cuando una pasada intermedia (sombras CSM) la activa y no la dibuja: Mesh.render limpia
+// solo `_isActiveIntermediate`, y desde ahí InstancedMesh._activate cree que la fuente ya está activa y no dibuja ninguna instancia
+// (en celular la ficha del muñeco, el falso y el limpiafondos quedaban solo con el carrete). Se limpian las dos marcas antes de cada cuadro.
+// ponytail: toca campos internos de Babylon 9; revisar si se actualiza el motor (o si Babylon corrige Mesh.render).
+const unstick = () => { for (const t of templates.values()) { const i = (t as unknown as { _internalAbstractMeshDataInfo: { _isActive: boolean; _isActiveIntermediate: boolean } })._internalAbstractMeshDataInfo; i._isActive = i._isActiveIntermediate = false; } };
 export function template(name: string, build: () => B.Mesh[], scale = 1) {
   let t = templates.get(name);
   if (!t) {
@@ -149,6 +154,7 @@ export function template(name: string, build: () => B.Mesh[], scale = 1) {
     if (scale !== 1) { t.scaling.setAll(scale); t.bakeCurrentTransformIntoVertices(); }
     t.position.y = -500; // la fuente queda escondida; se dibujan las instancias
     shadows.addShadowCaster(t);
+    if (!templates.size) t.getScene().onBeforeRenderObservable.add(unstick);
     templates.set(name, t);
   }
   return t;
