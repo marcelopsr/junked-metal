@@ -677,6 +677,15 @@ export const SPACE = {
     if (kind === "sol") { tone("sine", 80, 28, 0.5, 0.36 * g, 0, pan); hiss("lowpass", 1100, 80, 0.6, 0.3 * g, pan); }
     else { tone("triangle", 240, 110, 0.12, 0.14 * g, 0, pan); tone("sine", 100, 36, 0.4, 0.3 * g, 0.03, pan); hiss("bandpass", 1800, 300, 0.25, 0.16 * g, pan); }
   },
+  // Interrupción del Director (encore_events.ts): aviso = dos pitidos de alarma; luego un timbre por interrupción; "hit" = golpe de utilería; "fin" = aplauso corto
+  interrupt: (k: "aviso" | "luces" | "hit" | "corte" | "sangre" | "fin") => {
+    if (k === "aviso") { tone("square", 660, 660, 0.12, 0.07); tone("square", 880, 880, 0.12, 0.07, 0.16); tone("square", 660, 660, 0.12, 0.07, 0.32); }
+    else if (k === "luces") { sweep("sawtooth", 400, 50, 0.7, 0.09); tone("sine", 60, 40, 0.5, 0.2, 0.1); }
+    else if (k === "hit") { tone("sine", 140, 45, 0.25, 0.3); hiss("bandpass", 900, 200, 0.18, 0.18); }
+    else if (k === "corte") { tone("triangle", 880, 220, 0.5, 0.1); tone("triangle", 660, 165, 0.5, 0.08, 0.12); }
+    else if (k === "sangre") { [196, 247, 294].forEach((f, i) => tone("sawtooth", f, f, 0.35, 0.06, i * 0.12)); hiss("lowpass", 500, 150, 0.6, 0.12); }
+    else hiss("bandpass", 3000, 1500, 0.7, 0.12);
+  },
 };
 
 // ---------- Música ----------

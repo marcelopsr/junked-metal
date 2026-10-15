@@ -21,6 +21,7 @@ export const BAL = {
   pilotos: tab("pilotos", raw.pilotos),
   precios: tab("precios", raw.precios),
   plagas: raw.plagas,
+  interrupciones: tab("interrupciones", raw.interrupciones),
   pactosZonas: tab("pactos_zonas", raw.pactos_zonas),
   pactos: tab("pactos", raw.pactos),
   afinidad: tab("afinidad", raw.afinidad),

@@ -5,7 +5,7 @@ import { BAL } from "./balance";
 import { banner, hudBoss } from "./ui";
 import { clearFx, sparks } from "./fx";
 import { DEF, pickWeighted, spawnTable, type Enemy, type Kind } from "./enemies";
-import { encoreAmbience, SFX } from "./sfx";
+import { encoreAmbience, SFX, SPACE } from "./sfx";
 import { buildLayout, groundY, HALF, setZone, spawnPoint, zoneId } from "./world";
 import { makeProfile, type Profile } from "./run";
 import { seedRng } from "./rng";
@@ -19,6 +19,9 @@ import { GOAL_IO, goalBlips, goalsClear, rocketLand, shopPlan, spotsPlan } from 
 import { shipFor, shipsClear } from "./moon_ships";
 import { skyClear, skyPace } from "./moon_sky";
 import { mateRevive, type Player } from "./coop";
+import * as IV from "./encore_events";
+import { lcg } from "./kit3d";
+import { setDark } from "./render";
 import { NO_ZONE, zonesDispose, zonesInit, zonesTick, type ZoneFx } from "./pact_zones";
 
 /** Lo que la expedición necesita del resto de main.ts: propiedades (get/set) y callbacks; lo que ya es export de otro módulo se importa directo. */
@@ -45,7 +48,7 @@ export const encLog: { loop: number; stage: number; t: number }[] = []; // solo 
 export const setErun = (r: E.Run | null) => { erun = r; };
 export const setEncPrior = (p: number) => { encPrior = p; };
 /** clearRun: vuelve a Supervivencia (sin expedición, cola del Director vacía). */
-export function encClear() { erun = null; encPrior = paceS = 0; encExtra = encG = 0; pfx = E.NO_FX; dirq = E.newDirQ(); saidSecrets = []; zonesDispose(); zfx = NO_ZONE; zKey = ""; }
+export function encClear() { erun = null; encPrior = paceS = 0; encExtra = encG = 0; pfx = E.NO_FX; dirq = E.newDirQ(); saidSecrets = []; if (ip?.plan && ip.st.s && !ip.st.e) iIo.end(ip.plan.id); ip = null; zonesDispose(); zfx = NO_ZONE; zKey = ""; }
 // Zonas de pacto (pact_zones.ts): efecto del piso sobre el auto, sumado al de los pactos. zfx lo toma recompute (velocidad, XP, tornillos, regen) y main.ts lo lee para el imán (zoneMagnet).
 let zfx: ZoneFx = NO_ZONE, zKey = "", zT = 0;
 export const zoneMagnet = () => zfx.magnetMul;
@@ -65,6 +68,51 @@ function zonesStep() {
     const a = (i / s.n) * Math.PI * 2;
     cx.spawnEnemy(pickWeighted(spawnTable(cx.time + paceS, cx.profile.plague)), zpt(s.x + Math.cos(a) * 1.5, s.z + Math.sin(a) * 1.5, 0.5));
   }
+}
+// Interrupción del Director a mitad de escenario (encore_events.ts): plan por escenario, reloj y efectos.
+let ip: { key: string; plan: IV.Plan | null; st: IV.St } | null = null, iT = 0, iKind: Kind = "hormiga";
+const iDrops: { p: B.Vector3; t: number }[] = []; // utilería en el aire: punto de impacto y segundos que faltan
+const iLcg = lcg(7); // ponytail: semilla fija; solo decide dónde cae la sombra (visual y daño), no el layout
+const iPt = (r: number) => { const c = cx.lead.car!.pos, a = iLcg() * Math.PI * 2, d = iLcg() * r; return zpt(c.x + Math.cos(a) * d, c.z + Math.sin(a) * d, 0.2); };
+const iIo: IV.Io = {
+  warn: (id) => { if (cx.simulating) return; const t = IV.INT_TXT[id]; E.dirPush(dirq, t.line, 5); banner(`PELIGRO · ${t.name}`, 2.5, { tone: "warn", tag: "DIRECTOR" }); SPACE.interrupt("aviso"); },
+  start: (id) => {
+    const c = cx.lead.car!.pos, n = BAL.interrupciones[id].valor;
+    if (id === "corte") for (let i = 0; i < n; i++) cx.dropPickup(spawnPoint(c, 30, 40), "cofre");
+    if (id === "sangre") iKind = pickWeighted(spawnTable(cx.time + paceS, cx.profile.plague));
+    if (!cx.simulating) SPACE.interrupt(id === "utileria" ? "hit" : id);
+  },
+  frame: (id, dt, k) => {
+    if (id === "luces" && !cx.simulating) setDark(1 - BAL.interrupciones.luces.valor * k);
+    if (id === "corte") for (const e of cx.enemies) if (!e.def.boss) e.stun = Math.max(e.stun, 0.3); // congelados mientras dura
+    if (id === "utileria") for (let i = iDrops.length - 1; i >= 0; i--) {
+      const d = iDrops[i]; d.t -= dt;
+      if (d.t > 0) { if (!cx.simulating && Math.random() < dt * 5) sparks(d.p, 2); continue; } // aviso: chispas sobre la sombra (ponytail: sin malla de sombra; techo: no se ve el objeto cayendo)
+      iDrops.splice(i, 1);
+      if (!cx.simulating) { sparks(d.p, 14); SPACE.interrupt("hit"); }
+      cx.shake = Math.max(cx.shake, 0.5);
+      const c = cx.lead.car!.pos;
+      if (Math.hypot(c.x - d.p.x, c.z - d.p.z) < 2.4) cx.hurt?.(BAL.interrupciones.utileria.valor * cx.lead.maxHp, false, "utilería");
+    }
+  },
+  pulse: (id) => {
+    if (id === "utileria") iDrops.push({ p: iPt(7), t: 1.1 });
+    if (id === "sangre") for (let i = 0; i < BAL.interrupciones.sangre.valor; i++) cx.spawnEnemy(iKind, spawnPoint(cx.lead.car!.pos, 24, 32));
+  },
+  end: (id) => {
+    if (id === "luces") setDark(1);
+    if (id === "sangre") { cx.dropPickup(spawnPoint(cx.lead.car!.pos, 6, 10), "iman"); if (!cx.simulating) SPACE.interrupt("fin"); }
+    iDrops.length = 0;
+  },
+};
+function interruptStep() {
+  const r = erun!, key = `${r.seed}:${r.loop}:${r.stage}`, t = cx.time;
+  if (!ip || ip.key !== key) {
+    if (ip?.plan && ip.st.s && !ip.st.e) iIo.end(ip.plan.id); // escenario nuevo con una en curso: apaga lo suyo
+    ip = { key, st: IV.newSt(), plan: r.phase === "stage" ? IV.planOf(r.seed, r.loop, r.stage, E.zoneOf(r) === "luna", primeraVez() && !r.loop && !r.stage) : null }; iDrops.length = 0; iT = t;
+  }
+  const dt = Math.min(0.1, Math.max(0, t - iT)); iT = t;
+  if (ip.plan) IV.step(ip.plan, ip.st, r.stageT, dt, iIo, r.phase !== "stage" || E.decisionOpen(r));
 }
 /** recompute: liquida lo ganado con el efecto que se va y toma el de los pactos activos. */
 export function encRecompute(g: number) { if (erun) { encExtra += E.scrapExtra(g, encG, pfx.scrap); encG = g; } pfx = zoned(E.pactFx(erun)); }
@@ -168,6 +216,7 @@ export const minorMini = () => { const v = erun && E.variantOf(erun); return (v 
 let pactOff = ""; // ids ofrecidos del último pacto (para telemetría si se rechaza)
 export function encApply(ev: E.Ev | null) {
   zonesStep();
+  if (erun && cx.lead.car) interruptStep();
   if (!ev || !erun) return;
   if (ev === "pact_offer" && erun.offer) { if (!cx.simulating && !cx.LAB.on && !save.encore.seenPacts.length) erun.hold = true; const n = erun.offer.filter((id) => !save.encore.seenPacts.includes(id)); if (n.length) { save.encore.seenPacts.push(...n); persist(); } } // Codex: pactos vistos
   if (!cx.simulating && !cx.LAB.on) { // telemetría ENCORE (datos chicos; tipos [a-z_])

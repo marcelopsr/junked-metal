@@ -64,6 +64,11 @@ const DESC = {
     ...Object.fromEntries(["hormiga", "friccion", "escupidora", "robot", "polilla", "escarabajo"].flatMap((k) => [["mult_" + k, `Multiplicador del peso de aparición: ${k}`], ["desde_" + k, `Minuto desde el que aparece ${k} (−1 = su minuto normal)`]])),
   },
   armas_extra: LISTA, ritmo: LISTA, ataques: LISTA,
+  interrupciones: {
+    id: "Interrupción del Director a mitad de escenario (no cambiar; nombre y frase en src/encore_events.ts)", aviso_s: "Segundos de aviso antes de que empiece", dura_s: "Segundos que dura",
+    peso_luna: "Peso del sorteo en la Luna", peso_tierra: "Peso del sorteo en escenarios terrestres", cada_s: "Segundos entre repeticiones (utilería: caída; sangre: tanda; 0 = no repite)",
+    valor: "luces: oscuridad 0-1; utileria: fracción de vida por golpe; corte: cofres al otro lado; sangre: bichos por tanda",
+  },
   pactos_zonas: {
     id: "Identificador de la zona (no cambiar)", pacto: "Id del pacto de ENCORE que la crea (no cambiar)",
     radio: "Radio (m) de la zona", dura: "Segundos visible y activa (0 = todo el escenario)",
@@ -98,7 +103,7 @@ const head = (cell) => { cell.fill = HEAD; cell.font = { bold: true, color: { ar
 const info = wb.addWorksheet("Leeme");
 [
   "Balance de Junked Metal. Esta planilla se genera desde src/balance.json (npm run balance:xlsx) y vuelve al juego con npm run balance:import.",
-  "Hojas de datos (se importan): enemigos, armas, armas_extra, pasivas, ritmo, ataques, autos, pilotos, precios, plagas, pactos_zonas, pactos, afinidad, libre_medallas. Fila 1 = columnas, fila 2 = qué significa cada una.",
+  "Hojas de datos (se importan): enemigos, armas, armas_extra, pasivas, ritmo, ataques, autos, pilotos, precios, plagas, pactos_zonas, pactos, afinidad, libre_medallas, interrupciones. Fila 1 = columnas, fila 2 = qué significa cada una.",
   "Se editan SOLO los números. No cambiar los id, no agregar ni borrar filas ni columnas (el importador lo rechaza). Las columnas nombre y tipo son referencia.",
   "Hojas calculadas (no se importan): Golpes para matar, Tiempo jefe, Partidas para comprar. Se actualizan solas. Las celdas amarillas son supuestos editables solo de la hoja calculada.",
   "Para volver al juego: Archivo > Descargar > Valores separados por tabulaciones (.tsv) de cada hoja de datos, juntar en un .txt con una línea '### nombre_hoja' antes de cada una y correr npm run balance:import -- archivo.txt.",
