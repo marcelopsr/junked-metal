@@ -613,8 +613,16 @@ export function hudDesafio(title: string, big = "", sub = "", fin = false) {
   if (e.innerHTML !== h) e.innerHTML = h;
   e.classList.toggle("show", !!title); e.classList.toggle("fin", fin);
 }
+/** Aviso de objetivo de barrio cumplido (título + texto); se apaga solo. */
+let metaT = 0;
+export function hudMeta(title: string, txt: string) {
+  const e = libreEl("meta");
+  e.innerHTML = `<b>${title}</b><i>${txt}</i>`;
+  e.classList.remove("show"); void e.offsetWidth; e.classList.add("show");
+  clearTimeout(metaT); metaT = window.setTimeout(() => e.classList.remove("show"), 4200);
+}
 /** Limpia lo de Paseo libre al salir del modo. */
-export function hudLibreOff() { clearTimeout(trucoT); hudSpinBtn(false); for (const id of ["truco", "aire", "avisoAire", "tuercas", "desafio"]) document.getElementById(id)?.remove(); }
+export function hudLibreOff() { clearTimeout(trucoT); clearTimeout(metaT); hudSpinBtn(false); for (const id of ["truco", "aire", "avisoAire", "tuercas", "desafio", "meta"]) document.getElementById(id)?.remove(); }
 
 // ---------- Racha de bajas: se corta a los 2 s sin matar; crece y tiembla con la racha ----------
 const COMBO = ["RACHA", "BUEN RITMO", "A FONDO", "SOBRECARGA"];

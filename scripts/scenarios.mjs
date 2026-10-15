@@ -452,8 +452,14 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
   // Desafíos (free_challenges.ts): largada del contrarreloj, puntaje de trucos y llegada con récord guardado (la sonda falla si no se guarda)
   { id: "desafio-obs", perf: false, act: libreAt(140, -140, Math.PI / 2) },
   { id: "desafio-skate", perf: false, act: libreAt(-70, 40) },
-  { id: "desafio-fin", perf: false, act: async (p) => { await libreAt(0, -20)(p); await libreAt(140, -140, Math.PI / 2)(p); await libreAt(246, -230, Math.PI / 2)(p);
+  { id: "desafio-fin", perf: false, act: async (p) => { await libreAt(0, -20)(p); await libreAt(140, -140, Math.PI / 2)(p);
+    await libreAt(246, -230, Math.PI / 2)(p); // directo a la meta: sin puntos de control NO termina
+    const antes = await p.evaluate(async () => (await import("/src/menu.ts")).save.libre.desafio.obs); if (antes > 0) throw new Error("la meta contó sin pasar por los puntos de control: " + antes);
+    await libreAt(250, -162)(p); await libreAt(140, -207)(p); await libreAt(246, -230, Math.PI / 2)(p);
     const r = await p.evaluate(async () => (await import("/src/menu.ts")).save.libre.desafio.obs); if (!(r > 0)) throw new Error("el récord del contrarreloj no se guardó: " + r); } },
+  // Objetivo de barrio: bajar al bowl chico del skatepark lo tilda y avisa (sonda: falla si no queda en save.libre.metas)
+  { id: "objetivo", perf: false, act: async (p) => { await libreAt(-45, 140)(p); await p.waitForTimeout(300);
+    const m = await p.evaluate(async () => (await import("/src/menu.ts")).save.libre.metas); if (!m.includes("skate_bowl")) throw new Error("el objetivo del bowl no se tildó: " + m); } },
   { id: "pausa", perf: false, act: async (p) => { await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },
   { id: "pausa-noche", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:3"]', "click"); await tick(p, 4); await p.waitForTimeout(200); } },
   { id: "salir", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:4"]', "click"); await p.dispatchEvent('[data-act="quit"]', "click"); await wait(p, () => document.querySelector("#scr-main.on")); await p.waitForTimeout(150); } },

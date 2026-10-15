@@ -1,6 +1,7 @@
 import { tut, tutEnd, tutOffers, tutOn, tutStart } from "./tutorial";
-import { hudDesafio, hudAire, hudAviso, hudSpinBtn, hudLibreOff, hudTruco, hudTuercas } from "./ui";
-import { chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, newCh } from "./free_challenges";
+import { hudDesafio, hudAire, hudAviso, hudSpinBtn, hudLibreOff, hudMeta, hudTruco, hudTuercas } from "./ui";
+import { BARRIO_LOGRO, BARRIO_NOMBRE, barrioCompleto, metasStep, type MetaEv } from "./free_goals";
+import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, medalla, MEDALLA, newCh } from "./free_challenges";
 import { bestUpdate, newTrick, nutNear, nutsCount, roam, trickLive, trickStep, NUT_N } from "./free_tricks";
 import { spawnNuts } from "./free_nuts";
 import { hudHurt, scrapNumber, hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
@@ -347,22 +348,34 @@ function libreLight() {
   applyClimate(mixClimate(climaId(LUZ_CICLO[i]), climaId(LUZ_CICLO[(i + 1) % LUZ_CICLO.length]), f * f * (3 - 2 * f)));
 }
 let libreCh = newCh(), chFinT = 0, chMsg = { title: "", big: "", sub: "" };
+/** Objetivos de barrio (free_goals.ts): avisa cada uno nuevo y, al completar un barrio, otorga su pintura (logro barrio_*). */
+function libreMeta(ev: MetaEv) {
+  const hechas = save.libre.metas, nuevas = metasStep(hechas, ev);
+  if (!nuevas.length) return;
+  SFX.pickup(); persist();
+  const m = nuevas[0], b = m.barrio, fin = barrioCompleto(hechas, b);
+  hudMeta(fin ? `${BARRIO_NOMBRE[b]} COMPLETO` : "OBJETIVO CUMPLIDO", fin ? "NUEVA PINTURA EN EL GARAJE" : m.txt);
+  if (fin) grant(BARRIO_LOGRO[b]);
+}
 /** Desafíos de Paseo libre: arco de inicio -> reloj/puntaje en el HUD -> récord en save.libre.desafio. */
 function libreChallenge(dt: number) {
   const p = lead.car!.pos, best = save.libre.desafio, e = chStep(libreCh, dt, p.x, p.z, best);
-  if (e?.kind === "inicio") { SFX.pickup(); chFinT = 0; }
-  if (e && e.kind !== "inicio") {
+  if (e?.kind === "inicio" || e?.kind === "punto") { SFX.pickup(); chFinT = 0; }
+  if (e && e.kind !== "inicio" && e.kind !== "punto") {
     SFX.pickup(); chFinT = 5; persist();
+    const med = e.kind === "fin" ? medalla(e.d.id, e.d.tipo === "tiempo" ? e.ms : e.pts) : 0, medTxt = med ? `MEDALLA DE ${MEDALLA[med]}` : "";
     chMsg = e.kind === "fallo" ? { title: e.d.nombre, big: "TIEMPO AGOTADO", sub: "" }
-      : { title: e.d.nombre, big: e.d.tipo === "tiempo" ? fmtMs(e.ms) : `${e.pts} PTS`, sub: e.record ? "NUEVO RÉCORD" : `RÉCORD ${fmtMarca(e.d, best[e.d.id])}` };
-    if (e.record) FX.sparks(p.add(new B.Vector3(0, 0.8, 0)), 16);
+      : { title: e.d.nombre, big: e.d.tipo === "tiempo" ? fmtMs(e.ms) : `${e.pts} PTS`, sub: [medTxt, e.record ? "NUEVO RÉCORD" : `RÉCORD ${fmtMarca(e.d, best[e.d.id])}`].filter(Boolean).join(" · ") };
+    if (e.record || med) FX.sparks(p.add(new B.Vector3(0, 0.8, 0)), 16);
+    if (e.kind === "fin") libreMeta({ k: "fin", d: e.d.id, medalla: med });
   }
-  const d = libreCh.d;
-  if (d) { chFinT = 0; const left = Math.max(0, d.limite - libreCh.t); hudDesafio(d.nombre, d.tipo === "tiempo" ? fmtMs(Math.round(libreCh.t * 1000)) : `${libreCh.pts} PTS · ${Math.ceil(left)} S`, `RÉCORD ${fmtMarca(d, best[d.id])}`); }
+  const d = libreCh.d, ob = chObjetivo(libreCh);
+  // Contrarreloj: la línea de abajo guía al próximo punto de control (o la meta) con su distancia; trucos: récord
+  if (d) { chFinT = 0; const left = Math.max(0, d.limite - libreCh.t); hudDesafio(d.nombre, d.tipo === "tiempo" ? fmtMs(Math.round(libreCh.t * 1000)) : `${libreCh.pts} PTS · ${Math.ceil(left)} S`, ob ? `${ob.i < ob.n ? `PUNTO ${ob.i + 1}/${ob.n}` : "META"} · ${Math.round(Math.hypot(ob.x - p.x, ob.z - p.z))} M` : `RÉCORD ${fmtMarca(d, best[d.id])}`); }
   else if (chFinT > 0 && (chFinT -= dt) > 0) hudDesafio(chMsg.title, chMsg.big, chMsg.sub, true);
   else hudDesafio("");
 }
-let avisoT = 0, libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick(), turns = 0;
+let takeX = 0, takeZ = 0, avisoT = 0, libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick(), turns = 0;
 /** Trucos (aire, giros, vueltas, aterrizaje, combo) y tuercas doradas; `grounded` sale de drive(). */
 function libreTricks(dt: number, grounded: boolean) {
   const c = lead.car!, body = c.body, w = body.getAngularVelocity(), up = c.root.up, fw = c.root.forward, rt = c.root.right, s = save.libre;
@@ -371,6 +384,7 @@ function libreTricks(dt: number, grounded: boolean) {
   const prevAir = roam.air, prevTurns = turns;
   roam.flip = libreTrick.flip; roam.air = libreTrick.air; // lo lee libreDrive (control en el aire)
   turns = Math.floor(libreTrick.yaw / Math.PI) + Math.floor(libreTrick.flip / (2 * Math.PI)); // medios giros + vueltas completas en este vuelo
+  if (prevAir === 0 && libreTrick.air > 0) { takeX = c.pos.x; takeZ = c.pos.z; } // despegue: de acá se mide el largo del salto
   if (prevAir < 0.15 && roam.air >= 0.15) FREE.takeoff();
   else if (!grounded && turns > prevTurns) FREE.whoosh();
   hudAire(grounded ? "" : trickLive(libreTrick));
@@ -382,6 +396,7 @@ function libreTricks(dt: number, grounded: boolean) {
     const up2 = bestUpdate(s.best, end), rec = up2.includes("salto") || up2.includes("combo") ? "RÉCORD" : "";
     hudTruco(end.name, end.pts, end.mult, end.clean, rec);
     if (end.clean) chTruco(libreCh, end.pts);
+    libreMeta({ k: "truco", x: c.pos.x, z: c.pos.z, clean: end.clean, dist: Math.hypot(c.pos.x - takeX, c.pos.z - takeZ), mult: end.mult, yawDeg: end.yawDeg, flips: end.flips });
     if (end.clean) { FREE.landClean(); if (end.mult > 1) FREE.combo(end.mult); FX.dust(c.pos); FX.sparks(c.pos.add(new B.Vector3(0, 0.6, 0)), end.mult > 1 || rec ? 14 : 8); }
     else FREE.landDirty();
     if (up2.length) persist();
@@ -393,12 +408,13 @@ function libreTricks(dt: number, grounded: boolean) {
     libreNuts?.take(i); FREE.nut(); FX.sparks(c.pos.add(new B.Vector3(0, 0.8, 0)), 12);
     const n = nutsCount(s.tuercas); hudTuercas(n, NUT_N, true);
     if (n >= NUT_N) { FREE.nutAll(); grant("tuercas"); } // desbloquea la pintura Dorado tuerca (garaje, colores de logro)
-    persist();
+    persist(); libreMeta({ k: "tuercas", bits: s.tuercas });
   }
 }
 function libreHud(dt: number, grounded: boolean) {
   libreTricks(dt, grounded); libreChallenge(dt);
   const c = lead.car!, p = c.pos;
+  libreMeta({ k: "pos", x: p.x, z: p.z });
   if (libreLuz === 4 && (libreAcc += dt) > 0.5) { libreAcc = 0; libreT += 0.5; libreLight(); } // ponytail: 2 Hz; si applyClimate pesa, subir el paso
   let best = -1, bd = 110; // cartel al acercarse a menos de 110 m del centro de un lugar
   libreLugares.forEach((l, i) => { const d = Math.hypot(p.x - l.cx, p.z - l.cz); if (d < bd) { bd = d; best = i; } });
@@ -423,6 +439,7 @@ function startLibre() {
   void import("./zones/libre").then((m) => { libreLugares = m.LUGARES; });
   void import("./zones/libre_nieve").then((m) => { roam.hielo = m.lagoHielo; });
   libreNuts = spawnNuts(save.libre.tuercas); hudTuercas(nutsCount(save.libre.tuercas), NUT_N);
+  libreMeta({ k: "tuercas", bits: save.libre.tuercas }); // tuercas ya juntadas antes de existir los objetivos
   $("hud").classList.add("libre"); $("barrio").classList.add("hidden");
   setZone("libre"); setMoon(false);
   run.runSeed = 20261015; seedRng(run.runSeed); // el mapa es fijo; la semilla solo define el perfil que lee la cámara

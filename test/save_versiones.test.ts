@@ -18,7 +18,7 @@ const D = {
   calm: false, cb: false, dmgNums: true, tranquilo: false, tutorialHecho: false, controlesVistos: false, decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [], ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
   encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] }, m3: { stars: {}, best: {}, tools: {} },
-  libre: { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false },
+  libre: { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, metas: [] },
 } as unknown as Save;
 // ponytail: ids literales (importar menu.ts/abilities.ts/world.ts exige DOM); si cambian los ids del juego, actualizar acá
 const deps: SaveDeps = {
@@ -51,7 +51,7 @@ describe("migración de guardados publicados", () => {
         expect(s.profiles.map((p) => p?.name ?? null)).toEqual(old.profiles.map((p: { name: string } | null) => p?.name ?? null));
       });
       it("completa lo nuevo y no deja campos inválidos", () => {
-        expect(s.libre).toEqual(old.libre ? { ...old.libre, desafio: { obs: 0, skate: 0, nieve: 0 }, aviso: false } : D.libre);
+        expect(s.libre).toEqual(old.libre ? { ...old.libre, desafio: { obs: 0, skate: 0, nieve: 0 }, aviso: false, metas: [] } : D.libre);
         expect(s.lookv).toBe(6); expect(s.gfxv).toBe(2);
         expect(s.encore.secrets.length + s.encore.tips.length + s.encore.seenPacts.length).toBe(0);
         expect(s.preset).toBe(old.shadowQ === "high" ? "alto" : "medio");

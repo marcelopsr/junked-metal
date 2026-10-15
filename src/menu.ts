@@ -2,7 +2,8 @@
 // Una sola pila de pantallas dentro de #fe; teclado, gamepad y mouse mueven el mismo foco.
 import { hazardPalette } from "./models";
 import "./menu.css";
-import { DESAFIOS, fmtMarca } from "./free_challenges";
+import { DESAFIOS, fmtMarca, medalla, MEDALLA, RECORDS } from "./free_challenges";
+import { BARRIO_NOMBRE, BARRIOS, METAS } from "./free_goals";
 import "./aviso";
 import { novedades } from "./novedades";
 import type { Scene } from "@babylonjs/core";
@@ -67,7 +68,7 @@ export type Save = {
   abilLv: Partial<Record<AbilityId, number>>; weapon: WeaponId; // nivel de cada habilidad (Taller) y arma inicial elegida en el garaje (Arsenal)
   encore: { best: { loop: number; stage: number; t: number }; wins: number; runs: number; lastLoop: number; lastCause: string; secrets: string[]; tips: string[]; seenPacts: string[]; seenVariants: string[] }; // ENCORE: mejor expedición (vuelta, escenario, segundos), ganadas, partidas y la última derrota (vuelta y causa, "" = sin derrota; memoria del Director); aparte de Supervivencia
   m3: { stars: Record<string, number>; best: Record<string, number>; tools: Record<string, number> }; // Junket Crush: estrellas y récord por nivel, herramientas guardadas
-  libre: { best: { aire: number; giro: number; vuelta: number; salto: number; combo: number }; desafio: { obs: number; skate: number; nieve: number }; tuercas: string; aviso: boolean }; // Paseo libre: récords de trucos (aire en ms, giro en grados, vuelta en cantidad, truco y combo en puntos) y 24 tuercas doradas ("1" = juntada)
+  libre: { best: { aire: number; giro: number; vuelta: number; salto: number; combo: number }; desafio: { obs: number; skate: number; nieve: number }; tuercas: string; aviso: boolean; metas: string[] }; // Paseo libre: récords de trucos (aire en ms, giro en grados, vuelta en cantidad, truco y combo en puntos) y 24 tuercas doradas ("1" = juntada)
 };
 // Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
 const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (innerHeight * (devicePixelRatio || 1))) * 20) / 20));
@@ -85,7 +86,7 @@ export const DEFAULT: Save = {
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
   encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] },
   m3: { stars: {}, best: {}, tools: {} },
-  libre: { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false },
+  libre: { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, metas: [] },
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego
 export const save: Save = parseSave((() => { try { return localStorage.getItem("rcfight2"); } catch { return null; } })(), DEFAULT, { abilities: ABILITIES, weapons: ARSENAL, curses: CURSES, kinds: Object.keys(DEF), zones: ZONES, isTouch, validDecal, presetOf, presets: PRESETS });
@@ -1156,7 +1157,15 @@ export function openPauseLibre(luz: number) {
   $("libreLuz").innerHTML = LUZ.map((n, i) => `<button data-act="luz:${i}" aria-pressed="false">${n}</button>`).join("");
   paintLuz(luz);
   $("libreAire").innerHTML = ctl === "touch" ? "En el aire aparece el botón GIRO: mantenerlo da una vuelta." : `En el aire, mantener ${ctl === "pad" ? btnChip(pb("spin")) : `<kbd>${esc(keyName(KEYS.spin[0]))}</kbd>`} da una vuelta (con Frenar, hacia atrás). También sirve soltar y volver a acelerar.`;
-  $("libreRec").innerHTML = DESAFIOS.map((d) => `<div class="rec"><span>${d.nombre}</span><b>${fmtMarca(d, save.libre.desafio[d.id])}</b></div>`).join("");
+  const med = (id: string, v: number) => { const m = medalla(id, v); return m ? `<em class="med m${m}">${MEDALLA[m]}</em>` : ""; };
+  $("libreRec").innerHTML = DESAFIOS.map((d) => `<div class="rec"><span>${d.nombre}</span><b>${med(d.id, save.libre.desafio[d.id])}${fmtMarca(d, save.libre.desafio[d.id])}</b></div>`).join("");
+  $("libreTrucos").innerHTML = RECORDS.map((r) => { const v = save.libre.best[r.id as keyof Save["libre"]["best"]]; return `<div class="rec"><span>${r.nombre}</span><b>${med(r.id, v)}${v > 0 ? r.fmt(v) : "SIN MARCA"}</b></div>`; }).join("");
+  // Objetivos por barrio: tildados, con el premio (pintura) al completar los de cada uno
+  $("libreMetas").innerHTML = BARRIOS.map((b) => {
+    const ms = METAS.filter((m) => m.barrio === b), n = ms.filter((m) => save.libre.metas.includes(m.id)).length;
+    return `<div class="metaB"><div class="rec"><span>${BARRIO_NOMBRE[b]}</span><b>${n}/${ms.length}${n === ms.length ? " · PINTURA OBTENIDA" : ""}</b></div>`
+      + ms.map((m) => `<div class="meta ${save.libre.metas.includes(m.id) ? "ok" : ""}"><i aria-hidden="true"></i>${m.txt}</div>`).join("") + `</div>`;
+  }).join("");
   $("pauseSeed").textContent = `${CARS[peek.car ?? save.car].name} · Paseo libre`;
   $("quitTxt").textContent = "Salir al menú";
   $("photoBtn").classList.toggle("hidden", isTouch); $("pauseHint").classList.toggle("hidden", isTouch); // táctil: sin tecla F ni Esc/M; el botón de pausa del HUD ya sigue

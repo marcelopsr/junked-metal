@@ -979,5 +979,15 @@
     {"id":"audiencia","etapas":2,"g_dmg":1,"g_speed":1,"g_maxHp":1,"g_xp":1.6,"g_scrap":1.4,"g_spawn":1,"g_taken":1,"g_regen":0,"g_heal":0,"c_dmg":1,"c_speed":1,"c_maxHp":0.75,"c_xp":1,"c_scrap":1,"c_spawn":1,"c_taken":1,"c_regen":0,"c_heal":0},
     {"id":"eco","etapas":2,"g_dmg":1.2,"g_speed":1,"g_maxHp":1,"g_xp":1,"g_scrap":1,"g_spawn":1,"g_taken":1,"g_regen":2,"g_heal":0,"c_dmg":1,"c_speed":1,"c_maxHp":1,"c_xp":1,"c_scrap":1,"c_spawn":1.4,"c_taken":1,"c_regen":0,"c_heal":0},
     {"id":"bambalinas","etapas":2,"g_dmg":1.25,"g_speed":1.3,"g_maxHp":1,"g_xp":1,"g_scrap":1,"g_spawn":1,"g_taken":1,"g_regen":0,"g_heal":0,"c_dmg":1,"c_speed":1,"c_maxHp":1,"c_xp":1,"c_scrap":1,"c_spawn":1,"c_taken":1.35,"c_regen":0,"c_heal":0}
+  ],
+  "libre_medallas": [
+    {"id":"obs","bronce":80000,"plata":55000,"oro":40000},
+    {"id":"nieve","bronce":50000,"plata":32000,"oro":22000},
+    {"id":"skate","bronce":600,"plata":1500,"oro":3000},
+    {"id":"aire","bronce":1000,"plata":2000,"oro":3500},
+    {"id":"giro","bronce":180,"plata":360,"oro":720},
+    {"id":"vuelta","bronce":1,"plata":2,"oro":3},
+    {"id":"salto","bronce":500,"plata":1200,"oro":2500},
+    {"id":"combo","bronce":800,"plata":2000,"oro":4500}
   ]
 }

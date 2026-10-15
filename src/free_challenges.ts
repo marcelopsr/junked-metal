@@ -1,23 +1,34 @@
 // Paseo libre: desafíos opcionales (contrarreloj de obstáculos, trucos en el skatepark, bajada de la nieve). Lógica pura (sin motor ni DOM),
 // probada en test/free_challenges.test.ts. El cartel/arco de inicio vive en cada barrio (src/zones/libre_*.ts); main.ts (libreHud) la alimenta.
 
-export type DesafioId = "obs" | "skate" | "nieve";
+import { BAL } from "./balance";
+
+export type DesafioId ="obs" | "skate" | "nieve";
 /** tiempo: gana el menor tiempo (ms) al cruzar la meta (bx, bz, br); puntos: suma los trucos limpios durante `limite` segundos. */
-export type Desafio = { id: DesafioId; nombre: string; tipo: "tiempo" | "puntos"; ax: number; az: number; ar: number; bx?: number; bz?: number; br?: number; limite: number };
+export type Desafio = { id: DesafioId; nombre: string; tipo: "tiempo" | "puntos"; ax: number; az: number; ar: number; bx?: number; bz?: number; br?: number; limite: number; cp?: [number, number, number][] };
 export const DESAFIOS: Desafio[] = [
-  // Largada y meta del carril de la cinta (libre_obstaculos.ts: gate(140, -140) y gate(246, -230))
-  { id: "obs", nombre: "CONTRARRELOJ DE OBSTÁCULOS", tipo: "tiempo", ax: 140, az: -140, ar: 9, bx: 246, bz: -230, br: 11, limite: 300 },
+  // Largada y meta del carril de la cinta (libre_obstaculos.ts: gate(140, -140) y gate(246, -230)); cp = puntos de control en orden [x, z, radio]: las dos esquinas de la S
+  { id: "obs", nombre: "CONTRARRELOJ DE OBSTÁCULOS", tipo: "tiempo", ax: 140, az: -140, ar: 9, bx: 246, bz: -230, br: 11, limite: 300, cp: [[250, -162, 14], [140, -207, 14]] },
   // Arco del skatepark (libre_skate.ts, junto a la entrada de la avenida)
   { id: "skate", nombre: "TRUCOS EN EL SKATEPARK", tipo: "puntos", ax: -70, az: 40, ar: 8, limite: 60 },
   // Arco de largada de la pista (libre_nieve.ts, s = 26) y llegada al lago congelado
-  { id: "nieve", nombre: "BAJADA DE LA NIEVE", tipo: "tiempo", ax: -105, az: -200, ar: 9, bx: -196, bz: -94, br: 14, limite: 300 },
+  // cp: dos curvas de la pista (CP de libre_nieve.ts), fuera de la línea recta entre largada y lago
+  { id: "nieve", nombre: "BAJADA DE LA NIEVE", tipo: "tiempo", ax: -105, az: -200, ar: 9, bx: -196, bz: -94, br: 14, limite: 300, cp: [[-172, -164, 14], [-176, -116, 14]] },
 ];
 export type DesafioBest = Record<DesafioId, number>; // tiempo en ms (0 = sin marca) o puntos
 export const newBest = (): DesafioBest => ({ obs: 0, skate: 0, nieve: 0 });
 
-export type ChState = { d: Desafio | null; t: number; pts: number; lock: DesafioId | null }; // lock: arco ya cruzado (no reinicia hasta salir de él)
-export const newCh = (): ChState => ({ d: null, t: 0, pts: 0, lock: null });
-export type ChEvent = { kind: "inicio" | "fin" | "fallo"; d: Desafio; ms: number; pts: number; record: boolean } | null;
+export type ChState = { d: Desafio | null; t: number; pts: number; lock: DesafioId | null; cp: number }; // lock: arco ya cruzado (no reinicia hasta salir de él); cp: puntos de control ya pasados
+export const newCh = (): ChState => ({ d: null, t: 0, pts: 0, lock: null, cp: 0 });
+export type ChEvent = { kind: "inicio" | "punto" | "fin" | "fallo"; d: Desafio; ms: number; pts: number; record: boolean } | null;
+
+/** Próximo destino de la contrarreloj en curso (siguiente punto de control o la meta) con cuántos puntos van; null si no hay desafío de tiempo. */
+export function chObjetivo(s: ChState) {
+  const d = s.d;
+  if (!d || d.tipo !== "tiempo") return null;
+  const c = d.cp?.[s.cp], n = d.cp?.length ?? 0;
+  return { x: c ? c[0] : d.bx!, z: c ? c[1] : d.bz!, i: s.cp, n };
+}
 
 const dist = (x: number, z: number, cx: number, cz: number) => Math.hypot(x - cx, z - cz);
 
@@ -27,7 +38,7 @@ export const mejora = (d: Desafio, best: number, v: number) => v > 0 && (d.tipo 
 /** Un cuadro. Cruzar el arco de inicio lo arma; salir y volver a cruzarlo reinicia la contrarreloj. Guarda el récord en `best` y lo informa en el evento. */
 export function chStep(s: ChState, dt: number, x: number, z: number, best: DesafioBest): ChEvent {
   const dentro = DESAFIOS.find((d) => dist(x, z, d.ax, d.az) < d.ar);
-  if (dentro && dentro.id !== s.lock && !(s.d === dentro && dentro.tipo === "puntos")) { s.d = dentro; s.t = 0; s.pts = 0; s.lock = dentro.id; return { kind: "inicio", d: dentro, ms: 0, pts: 0, record: false }; }
+  if (dentro && dentro.id !== s.lock && !(s.d === dentro && dentro.tipo === "puntos")) { s.d = dentro; s.t = 0; s.pts = 0; s.cp = 0; s.lock = dentro.id; return { kind: "inicio", d: dentro, ms: 0, pts: 0, record: false }; }
   if (dentro?.id !== s.lock) s.lock = null;
   const d = s.d;
   if (!d) return null;
@@ -38,7 +49,9 @@ export function chStep(s: ChState, dt: number, x: number, z: number, best: Desaf
     s.d = null;
     return { kind, d, ms, pts, record };
   };
-  if (d.tipo === "tiempo" && dist(x, z, d.bx!, d.bz!) < d.br!) return fin("fin", Math.round(s.t * 1000), 0);
+  const c = d.cp?.[s.cp];
+  if (c && dist(x, z, c[0], c[1]) < c[2]) { s.cp++; return { kind: "punto", d, ms: Math.round(s.t * 1000), pts: 0, record: false }; }
+  if (d.tipo === "tiempo" && !c && dist(x, z, d.bx!, d.bz!) < d.br!) return fin("fin", Math.round(s.t * 1000), 0); // la meta solo cuenta con todos los puntos de control pasados
   if (s.t >= d.limite) return d.tipo === "puntos" ? fin("fin", 0, s.pts) : fin("fallo", 0, 0);
   return null;
 }
@@ -49,3 +62,22 @@ export const chTruco = (s: ChState, pts: number) => { if (s.d?.tipo === "puntos"
 /** Texto del reloj: "1:05,3". */
 export const fmtMs = (ms: number) => `${Math.floor(ms / 60000)}:${(((ms % 60000) / 1000).toFixed(1).replace(".", ",")).padStart(4, "0")}`;
 export const fmtMarca = (d: Desafio, v: number) => (v <= 0 ? "SIN MARCA" : d.tipo === "tiempo" ? fmtMs(v) : `${v} PTS`);
+
+// ---------- Medallas (bronce / plata / oro): umbrales en balance.json (libre_medallas) ----------
+export type Medalla = 0 | 1 | 2 | 3;
+export const MEDALLA = ["", "BRONCE", "PLATA", "ORO"];
+const MENOR = ["obs", "nieve"]; // en estos gana el tiempo menor
+/** Medalla de una marca (0 = sin medalla). */
+export function medalla(id: string, v: number): Medalla {
+  if (!(v > 0)) return 0;
+  const r = BAL.libreMedallas[id], ok = (m: number) => (MENOR.includes(id) ? v <= m : v >= m);
+  return ok(r.oro) ? 3 : ok(r.plata) ? 2 : ok(r.bronce) ? 1 : 0;
+}
+/** Récords de trucos (save.libre.best) con su nombre y formato, para la pausa. */
+export const RECORDS: { id: string; nombre: string; fmt: (v: number) => string }[] = [
+  { id: "aire", nombre: "MÁS TIEMPO EN EL AIRE", fmt: (v) => `${(v / 1000).toFixed(1).replace(".", ",")} S` },
+  { id: "giro", nombre: "GIRO MÁS LARGO", fmt: (v) => `${v}°` },
+  { id: "vuelta", nombre: "MÁS VUELTAS DE CAMPANA", fmt: (v) => `${v}` },
+  { id: "salto", nombre: "MEJOR TRUCO", fmt: (v) => `${v} PTS` },
+  { id: "combo", nombre: "MEJOR COMBO", fmt: (v) => `${v} PTS` },
+];
