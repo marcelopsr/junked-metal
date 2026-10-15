@@ -11,7 +11,7 @@ import { input } from "./input";
 import { cs, damage, dropGems, dropPickup, explode, smashed } from "./combat";
 import { endRun, grant, hitAt } from "./outro";
 import { banner, hudBoss, radioBoss, radioEvent, dirSub } from "./ui";
-import { erun, minorMini, minorShip, say } from "./encore_run";
+import { calmFirst, erun, minorMini, minorShip, say } from "./encore_run";
 import { mateDown, mateLead, mateTick } from "./coop";
 import type { Player } from "./coop";
 import { offersFor, openOffers } from "./progression";
@@ -266,7 +266,7 @@ export function tickSpawner(F: Frame, dt: number) {
   // --- Aparición de enemigos ---
   // Tope de vivos y ritmo: con el bot que pelea jefes (devbot.ts) quedó en ~50% de victorias (__sim, 40 semillas).
   // ponytail: más densidad casi no baja la tasa (más bichos = más XP); el techo real está en las fusiones repetidas
-  const maxAlive = D.duel >= 0 ? D.duel : calm ? 0 : Math.min(D.low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + tp / R.tope_vivos_seg) * hordeK * D.TOUGH.count * D.coopRate()) * (MOON.on ? R.luna_tope_mult : 1); // Horda: +50%. Tope 100 en compu, 60 en táctil
+  const maxAlive = D.duel >= 0 ? D.duel : calm || calmFirst() ? 0 : Math.min(D.low ? R.tope_vivos_tactil : R.tope_vivos_pc, (R.tope_vivos_base + tp / R.tope_vivos_seg) * hordeK * D.TOUGH.count * D.coopRate()) * (MOON.on ? R.luna_tope_mult : 1); // Horda: +50%. Tope 100 en compu, 60 en táctil
   // Aparecen sesgados hacia donde vas: manejar no es escapar gratis
   const cv = F.cv = c.body.getLinearVelocity();
   hflat(_spawnOff.copyFrom(cv), c.pos).scaleInPlace(R.spawn_adelanto_s);

@@ -71,7 +71,7 @@ export function updateHud(dt: number) {
   c.setLastHpFrac(frac);
   const o = c.others(); hudMate(o.length === 1 ? { n: `J${o[0].id}`, hp: o[0].hp, max: o[0].maxHp, down: !o[0].car } : null);
   hudQuad(c.players.length > 2 ? c.players.map((p) => ({ hp: p.hp, max: p.maxHp, down: !p.car })) : null); // R7c: 3-4 jugadores, una vida por cuadro
-  if (erun) { const a = E.ask(erun); hudEnc({ tag: E.tag(erun), pacts: E.activePacts(erun), ask: a && { title: a.title, opts: a.opts, left: erun.timer, frac: Math.max(0, erun.timer) / a.total, pacts: a.pacts, reject: a.reject } }); } else hudEnc(null);
+  if (erun) { const a = E.ask(erun); hudEnc({ tag: E.tag(erun), pacts: E.activePacts(erun), ask: a && { title: a.title, opts: a.opts, left: erun.hold ? 0 : erun.timer, frac: erun.hold ? 1 : Math.max(0, erun.timer) / a.total, pacts: a.pacts, reject: a.reject } }); } else hudEnc(null);
   hudUpdate({
     hp: c.lead.hp, maxHp: c.lead.maxHp, boost: c.lead.boost, xp: run.xp, need: xpNeed(run.level), level: run.level, pending: run.pendingLevels, time: run.time + encPrior, kills: run.kills, kmh: lastKmh, maxKmh: lastMaxKmh,
     shield: run.abil === "escudo" && run.abilOn > 0,
