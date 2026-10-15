@@ -131,5 +131,12 @@ export function fantasmaCp(d: Desafio, m: Muestra[]): number[] {
   while (out.length < pts.length) out.push(-1);
   return out;
 }
+/** Diferencia continua de tiempo: `t` del jugador menos el instante en que el fantasma estuvo más cerca de (x, z), buscando en una ventana de ±10 s alrededor de `t` (así la S no confunde tramos). */
+export function fantasmaDif(m: Muestra[], t: number, x: number, z: number): number {
+  const c = Math.round(t / FANTASMA_DT), w = 10 / FANTASMA_DT;
+  let bi = Math.min(m.length - 1, Math.max(0, c)), bd = Infinity;
+  for (let i = Math.max(0, c - w); i <= Math.min(m.length - 1, c + w); i++) { const d = dist(x, z, m[i][0], m[i][2]); if (d < bd) { bd = d; bi = i; } }
+  return t - bi * FANTASMA_DT;
+}
 /** Diferencia en vivo: "-0,8 S" (tiempo; negativo = adelante) o "+120 PTS". */
 export const fmtDif = (tipo: Desafio["tipo"], v: number) => tipo === "tiempo" ? `${v <= 0 ? "-" : "+"}${Math.abs(v).toFixed(1).replace(".", ",")} S` : `${v >= 0 ? "+" : "-"}${Math.abs(Math.round(v))} PTS`;

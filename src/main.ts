@@ -1,7 +1,8 @@
 import { tut, tutEnd, tutOffers, tutOn, tutStart } from "./tutorial";
 import { hudDesafio, hudAire, hudAviso, hudSpinBtn, hudLibreOff, hudMeta, hudTruco, hudTuercas } from "./ui";
 import { BARRIO_LOGRO, BARRIO_NOMBRE, barrioCompleto, metasStep, type MetaEv } from "./free_goals";
-import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, medalla, MEDALLA, newCh, fantasmaAt, fantasmaCp, fantasmaDec, fantasmaEnc, fmtDif, FANTASMA_DT, type ChEvent, type Muestra } from "./free_challenges";
+import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, medalla, MEDALLA, newCh, fantasmaAt, fantasmaDif, fantasmaDec, fantasmaEnc, fmtDif, FANTASMA_DT, type ChEvent, type Muestra } from "./free_challenges";
+import { controlMarks } from "./zones/libre_control";
 import { ghostOn, ghostOff, ghostPose } from "./free_ghost";
 import { bestUpdate, newTrick, nutNear, nutsCount, roam, trickLive, trickStep, NUT_N } from "./free_tricks";
 import { spawnNuts } from "./free_nuts";
@@ -360,28 +361,29 @@ function libreMeta(ev: MetaEv) {
   if (fin) grant(BARRIO_LOGRO[b]);
 }
 /** Desafíos de Paseo libre: arco de inicio -> reloj/puntaje en el HUD -> récord en save.libre.desafio. */
-// Fantasma del récord: grabación del intento en curso (rec) y reproducción del guardado (gRows, gCp = segundos del fantasma en cada punto de control y la meta)
-let rec: Muestra[] = [], gRows: Muestra[] | null = null, gCp: number[] = [], gDif = { txt: "", ok: true };
+// Fantasma del récord: grabación del intento en curso (rec) y reproducción del guardado (gRows,)
+let rec: Muestra[] = [], gRows: Muestra[] | null = null, gDif = { txt: "", ok: true };
 const ghostStop = () => { gRows = null; gDif.txt = ""; ghostOff(); };
-function libreGhost(e: ChEvent) {
+function libreGhost(e: ChEvent, dt: number) {
   const d = libreCh.d, c = lead.car!;
   if (e?.kind === "inicio") {
     ghostStop(); rec = [];
     gRows = save.libre.ghost ? fantasmaDec(save.libre.fantasma[e.d.id]) : null;
-    if (gRows) { gCp = fantasmaCp(e.d, gRows); ghostOn(scene, libreKind, carOpts()); }
+    if (gRows) { ghostOn(scene, libreKind, carOpts()); }
   }
   if (!d) { if (!gRows) return; ghostStop(); return; } // terminó o falló: el fantasma desaparece
   for (; rec.length * FANTASMA_DT <= libreCh.t; ) { const q = c.root.rotationQuaternion; rec.push([c.pos.x, c.pos.y, c.pos.z, q?.x ?? 0, q?.y ?? 0, q?.z ?? 0, q?.w ?? 1, libreCh.pts]); }
   if (!gRows) return;
   const g = fantasmaAt(gRows, libreCh.t);
-  ghostPose(g);
+  ghostPose(g, dt);
   if (d.tipo === "puntos") { const v = libreCh.pts - g[7]; gDif = { txt: fmtDif("puntos", v), ok: v >= 0 }; }
-  else if (e?.kind === "punto" && gCp[libreCh.cp - 1] >= 0) { const v = libreCh.t - gCp[libreCh.cp - 1]; gDif = { txt: fmtDif("tiempo", v), ok: v <= 0 }; }
+  else { const v = fantasmaDif(gRows, libreCh.t, c.pos.x, c.pos.z); gDif = { txt: fmtDif("tiempo", v), ok: v <= 0 }; }
 }
 function libreChallenge(dt: number) {
   const p = lead.car!.pos, best = save.libre.desafio, gPrev = gRows, gLast = best[libreCh.d?.id ?? "obs"] / 1000, gPts = gRows?.[gRows.length - 1][7] ?? 0; // el fantasma que se vencía (su tiempo es el récord anterior), antes de que el nuevo lo reemplace
   const e = chStep(libreCh, dt, p.x, p.z, best);
-  libreGhost(e);
+  libreGhost(e, dt);
+  controlMarks(libreCh.d?.id ?? null, libreCh.cp);
   if (e?.kind === "inicio" || e?.kind === "punto") { SFX.pickup(); chFinT = 0; }
   if (e && e.kind !== "inicio" && e.kind !== "punto") {
     SFX.pickup(); chFinT = 5; persist();

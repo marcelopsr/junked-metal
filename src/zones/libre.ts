@@ -11,7 +11,7 @@ export type Barrio = { id: string; cx: number; cz: number; build(cx: number, cz:
 const BARRIOS = Object.values(import.meta.glob<{ barrio?: Barrio }>("./libre_*.ts", { eager: true })).flatMap((m) => (m.barrio ? [m.barrio] : [])).sort((a, b) => a.id.localeCompare(b.id));
 const NOMBRES: Record<string, string> = { acuatico: "Parque acuático", obstaculos: "Circuito de obstáculos", nieve: "Bosque nevado", parque: "Parque", skate: "Skatepark" };
 /** Lugares con nombre para el cartel y el radar de main.ts (la plaza más cada barrio registrado). */
-export const LUGARES = [{ name: "Plaza central", cx: 0, cz: 0 }, ...BARRIOS.filter((b) => b.id !== "juguetes" && b.id !== "secretos").map((b) => ({ name: NOMBRES[b.id] ?? b.id, cx: b.cx, cz: b.cz }))];
+export const LUGARES = [{ name: "Plaza central", cx: 0, cz: 0 }, ...BARRIOS.filter((b) => b.id !== "juguetes" && b.id !== "secretos" && b.id !== "control").map((b) => ({ name: NOMBRES[b.id] ?? b.id, cx: b.cx, cz: b.cz }))];
 const hidden =(m: B.Mesh) => ((m.isVisible = false), m);
 // Textura generada (Gemini, sin costura) en caché; los UV de cada pieza se escalan a metros de mundo (T m por repetición) para que no se estire.
 const gtex = (k: string, f: string) => tex(k, () => { const x = new B.Texture(`./textures/${f}.webp`, scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; });

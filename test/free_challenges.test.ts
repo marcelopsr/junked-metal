@@ -1,7 +1,7 @@
 // Paseo libre: desafíos (inicio, meta, récord, tiempo límite). Lógica pura con recorridos sintéticos.
 import { describe, expect, it } from "vitest";
 import { BAL } from "../src/balance";
-import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, mejora, medalla, fantasmaAt, fantasmaCp, fantasmaDec, fantasmaEnc, fantasmaOk, fmtDif, newBest, newCh, type ChState, type DesafioBest } from "../src/free_challenges";
+import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, mejora, medalla, fantasmaAt, fantasmaCp, fantasmaDif, fantasmaDec, fantasmaEnc, fantasmaOk, fmtDif, newBest, newCh, type ChState, type DesafioBest } from "../src/free_challenges";
 
 const [OBS, SKATE] = [DESAFIOS[0], DESAFIOS[1]];
 const pasar = (s: ChState, b: DesafioBest) => { for (const c of OBS.cp!) chStep(s, 0, c[0], c[1], b); }; // pasa los puntos de control sin gastar tiempo
@@ -84,5 +84,14 @@ describe("fantasma", () => {
   });
   it("formatea la diferencia", () => {
     expect(fmtDif("tiempo", -0.84)).toBe("-0,8 S"); expect(fmtDif("tiempo", 1.26)).toBe("+1,3 S"); expect(fmtDif("puntos", 120)).toBe("+120 PTS"); expect(fmtDif("puntos", -30)).toBe("-30 PTS");
+  });
+});
+
+describe("fantasmaDif", () => {
+  it("diferencia continua entre puntos de control", () => {
+    const m = Array.from({ length: 101 }, (_, i) => [i * 0.1 * 10, 0, 0, 0, 0, 0, 1, 0]); // fantasma a 10 m/s en x
+    expect(fantasmaDif(m, 5, 50, 0)).toBeCloseTo(0, 5); // mismo ritmo
+    expect(fantasmaDif(m, 5, 40, 0)).toBeCloseTo(1, 5); // más lento: pasó por x=40 al segundo 4
+    expect(fantasmaDif(m, 5, 60, 0)).toBeCloseTo(-1, 5);
   });
 });

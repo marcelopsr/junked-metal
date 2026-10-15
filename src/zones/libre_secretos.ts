@@ -2,7 +2,7 @@ import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph } from "../models";
 import { M, pbr, shadows } from "../render";
 import { SECRETOS } from "../free_secrets";
-import { bare, scene, stat } from "./common";
+import { bare, occluders, scene, stat } from "./common";
 import type { Barrio } from "./libre";
 import { ramp } from "../world_layout";
 
@@ -29,9 +29,12 @@ function build() {
   // ---- Cueva tras la cascada (acuático): paredes, techo y fondo; la cortina de agua no tiene colisión ----
   { const { x, z } = at("cueva"), z0 = z - 9, z1 = z + 12; // boca en z0 (norte = fondo)
     for (const s of [-1, 1]) solid(3, 5.6, z1 - z0, x + s * 5.5, 2.8, (z0 + z1) / 2, rock);
-    solid(14, 1.6, z1 - z0 + 1.5, x, 6.4, (z0 + z1) / 2 - 0.75, rock); // techo con un labio al frente (de donde cae el agua)
+    const techo = solid(14, 1.6, z1 - z0 + 1.5, x, 6.4, (z0 + z1) / 2 - 0.75, rock); // techo con un labio al frente (de donde cae el agua); colisión intacta
+    occluders.push(techo); // la cámara lo oculta (isVisible) cuando tapa al auto, como la ciudad y los árboles
     solid(14, 5.6, 3, x, 2.8, z1 - 1.5, rock);
-    for (let i = 0; i < 9; i++) { const a = rnd(); deco.push(sph(3 + rnd() * 2.5, i % 2 ? rock : rockD, [x + (a - 0.5) * 10, 7.2 + rnd() * 0.8, z0 + 2 + rnd() * (z1 - z0 - 4)], [1.3, 0.55, 1.1])); } // lomo de piedras sobre el techo (sin colisión)
+    const lomo: B.Mesh[] = [];
+    for (let i = 0; i < 9; i++) { const a = rnd(); lomo.push(sph(3 + rnd() * 2.5, i % 2 ? rock : rockD, [x + (a - 0.5) * 10, 7.2 + rnd() * 0.8, z0 + 2 + rnd() * (z1 - z0 - 4)], [1.3, 0.55, 1.1])); } // lomo de piedras sobre el techo (sin colisión); malla aparte para que la cámara también la oculte
+    { const l = merge("secCuevaLomo", lomo); l.isPickable = false; l.receiveShadows = true; shadows.addShadowCaster(l); occluders.push(l); }
     const wat = pbr("secCascada", { color: "#6fd8ff", rough: 0.05, emissive: "#2a8fb5", alpha: 0.55 });
     wat.backFaceCulling = false; wat.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
     const cur = B.MeshBuilder.CreatePlane("secCascada", { width: 8.6, height: 5.6, sideOrientation: B.Mesh.DOUBLESIDE }, scene);
