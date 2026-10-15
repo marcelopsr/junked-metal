@@ -443,16 +443,24 @@ function applyBannerSkin(b: HTMLElement, opts?: BannerOpts) {
 function showBanner(txt: string, secs: number, opts?: BannerOpts) {
   const b = $("banner");
   bannerMsg = txt; bannerN = opts?.tone ? 0 : txt.length; bannerShown = -1; bannerOn = true; bannerTyping = true; bannerHold = secs; // la chapa sin tono (tutorial, instrucciones) entra entera: tecleada se leía cortada; la radio sigue tecleando
-  applyBannerSkin(b, opts);
+  applyBannerSkin(b, opts); bannerOpts = opts;
   b.querySelector(".gh")!.textContent = txt;
   b.querySelector(".ty")!.textContent = "";
   b.classList.remove("hidden", "out");
   b.style.animation = "none"; void b.offsetWidth; b.style.animation = "";
 }
+/** Convivencia de avisos (celular vertical): con una decisión abierta (#encAsk, franja de arriba) el aviso espera; en pc no se pisan. */
+const celV = matchMedia("(orientation: portrait) and (max-width: 720px)");
+const bannerBusy = () => !$("levelup").classList.contains("hidden") || (celV.matches && !$("encAsk").classList.contains("hidden"));
+let bannerOpts: BannerOpts | undefined;
+/** Aviso efímero compartido: uno a la vez; los de radio (con tono) pasan delante de los informativos en la cola (tope 3). */
 export function banner(txt: string, secs = 2, opts?: BannerOpts) {
   const q: BannerQ = { txt, secs, opts };
-  if (bannerOn) {
-    if (txt !== bannerMsg && !bannerQ.some((x) => x.txt === txt) && bannerQ.length < 3) bannerQ.push(q);
+  if (bannerOn || bannerBusy()) {
+    if (txt === bannerMsg && bannerOn || bannerQ.some((x) => x.txt === txt)) return;
+    const i = opts?.tone ? bannerQ.findIndex((x) => !x.opts?.tone) : -1;
+    bannerQ.splice(i < 0 ? bannerQ.length : i, 0, q);
+    if (bannerQ.length > 3) bannerQ.pop(); // se cae el de menor prioridad
     return;
   }
   showBanner(txt, secs, opts);
@@ -510,12 +518,13 @@ function hideBanner() {
 }
 function tickBanner(dt: number) {
   if (!bannerOn) {
-    if (bannerQ.length && $("levelup").classList.contains("hidden")) {
+    if (bannerQ.length && !bannerBusy()) {
       const n = bannerQ.shift()!;
       showBanner(n.txt, n.secs, n.opts);
     }
     return;
   }
+  if (bannerBusy()) { bannerQ.unshift({ txt: bannerMsg, secs: Math.max(1.2, bannerHold), opts: bannerOpts }); return hideBanner(); } // se abrió una decisión encima: el aviso vuelve a la cola y sale después entero
   const ty = $("banner").querySelector(".ty")!;
   const cps = bannerTone ? 26 : 36;
   if (bannerTyping) {
