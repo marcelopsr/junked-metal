@@ -193,7 +193,19 @@ export function wheel(d: number, w: number, rim: string, style = "") {
   if (style === "mini") { // ref17: goma de bloques en dos hileras alternadas (silueta redonda), aro fino de color, llanta negra de 6 rayos, maza metálica
     const ring = pbr("mini" + rim, { color: rim, rough: 0.35, coat: 0.4 }), blk = pbr("miniwheelblk", { color: "#1c1c1c", rough: 0.5 });
     const row = (x: number, off: number) => around(14, (a) => box(w * 0.4, d * 0.06, d * 0.1, MINI_RUBBER(), [x, Math.sin(a + off) * d * 0.5, Math.cos(a + off) * d * 0.5], [a + off, 0, 0])); // sobresalen 0,05·d
+    // Relieve de barro: grumos bajos y alargados (esferas de 4 segmentos aplanadas) en las ranuras entre tacos, pocos abajo en el flanco y una franja de polvo mate en su borde; generador local fijo
+    let s = 7;
+    const r = () => ((s = (s * 16807) % 2147483647) / 2147483647), mud = [pbr("minimud1", { color: "#5e4a38", rough: 1 }), pbr("minimud2", { color: "#4a3a2c", rough: 1 })];
+    const lump = (x: number, a: number, rad: number, k: number) => { // eje x = a lo largo de la ranura, z local = radial (rotación a sobre x, como los tacos)
+      const m = sph(d * k, mud[r() < 0.5 ? 0 : 1], [x, Math.sin(a) * rad, Math.cos(a) * rad], [1.6, 1, 0.35], 2); m.rotation.x = a; return m;
+    };
+    const mudLumps = [
+      ...[-1, 1].flatMap((sd) => Array.from({ length: 7 }, (_, k) => lump(sd * w * 0.24, ((k * 2 + 1) * Math.PI) / 14 + (sd > 0 ? Math.PI / 14 : 0) + (r() - 0.5) * 0.08, d * 0.5, 0.08 + r() * 0.03))), // ranuras entre tacos, nunca encima de ellos
+      ...[-1, 1].flatMap((sd) => Array.from({ length: 3 }, (_, k) => lump(sd * w * 0.5, -Math.PI * (0.35 + k * 0.15 + r() * 0.04), d * (0.4 + r() * 0.05), 0.09))), // flanco: pocos y abajo
+      ...[-1, 1].flatMap((sd) => Array.from({ length: 6 }, (_, k) => { const a = -Math.PI * (0.25 + k * 0.1), m = box(w * 0.04, d * 0.1, d * 0.05, mud[1], [sd * w * 0.5, Math.sin(a) * d * 0.46, Math.cos(a) * d * 0.46], [a, 0, 0]); return m; })), // franja de polvo mate en el borde inferior
+    ];
     return merge("wheel", [
+      ...mudLumps,
       cyl(d, d, w, MINI_RUBBER(), [0, 0, 0], [0, 0, Math.PI / 2], 24),
       ...row(-w * 0.24, 0), ...row(w * 0.24, Math.PI / 14),
       cyl(d * 0.7, d * 0.7, w * 1.06, ring, [0, 0, 0], [0, 0, Math.PI / 2], 18), // aro fino de color

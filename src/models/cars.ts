@@ -976,7 +976,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     ant.position.set(ax, ay, az);
     ant.parent = body;
     // Pequeño banderín o capuchón en el extremo
-    const cap = mini ? sph(0.1, M.plastic("#E53935"), [0, 0.66, 0], undefined, 4) : cyl(0.004, 0.004, 0.02, M.plastic("#ef4444"), [0, 0.64, 0], undefined, 4); // punta roja
+    const cap = mini ? sph(0.1, M.plastic("#f97316"), [0, 0.66, 0], undefined, 4) : cyl(0.004, 0.004, 0.02, M.plastic("#ef4444"), [0, 0.64, 0], undefined, 4); // punta roja
     cap.parent = ant;
     cast.push(ant);
   }

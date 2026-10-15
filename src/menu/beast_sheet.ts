@@ -18,13 +18,17 @@ import { BIOMETRICS, HOW, LORE, PHASE2 } from "./beast_data";
 export type BeastAnim = "" | "walk" | "attack" | "hit" | "die" | "phase";
 export const BV = { kind: null as Kind | null, anim: "" as BeastAnim, seq: 0, elite: "" as Elite | "", yaw: 0.6, zoom: 1, touched: 0 };
 export const KINDS = Object.keys(DEF) as Kind[];
+// Yaw inicial de la ficha por bicho: 3/4 frontal (medido con barridos de yaw: la familia antBody, tarántula y rey miran hacia -0.6 rad, el tanque alien hacia 3).
+const YAW0 = 0.2, FICHA_YAW: Partial<Record<Kind, number>> = { hormiga: 5.7, escupidora: 5.7, escarabajo: 5.7, tarantula: 5.7, rey: 5.7, tanque: 3 };
+export const fichaYaw = (k: Kind) => FICHA_YAW[k] ?? YAW0;
 export function rankOf(k: Kind) { return !DEF[k].boss ? "Plaga" : FINALS.includes(k) ? "Jefe final" : "Minijefe"; }
 export const zoomBeast = (k: number) => { BV.zoom = Math.min(1.8, Math.max(0.45, BV.zoom * k)); };
-export function openBeast(k: Kind) { Object.assign(BV, { kind: k, anim: "", elite: "", yaw: 0.6, zoom: 1, touched: 0 }); go("beast"); }
+export function openBeast(k: Kind) { Object.assign(BV, { kind: k, anim: "", elite: "", yaw: fichaYaw(k), zoom: 1, touched: 0 }); go("beast"); }
 export function beastStep(dir: number) {
   if (!BV.kind) return;
   SFX.blip();
   Object.assign(BV, { kind: KINDS[(KINDS.indexOf(BV.kind) + dir + KINDS.length) % KINDS.length], anim: "", elite: "", zoom: 1 });
+  BV.yaw = fichaYaw(BV.kind);
   renderBeast();
   $("bmsg").textContent = "";
 }

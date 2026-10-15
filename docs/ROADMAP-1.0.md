@@ -8,7 +8,7 @@ Una expedición ENCORE completa, de punta a punta, que una persona nueva puede j
 
 | Área | Criterio medible |
 |---|---|
-| Contenido | Escenarios: patio, jardín, galpón, desván, pileta, cocina, 4 biomas, Luna día/noche. Los 41 personajes del bestiario con ficha frontal. Objetos ENCORE en 3D juguete. **[producto]** lista final de contenido congelada |
+| Contenido | (ver decisiones, sección 5) Escenarios: patio, jardín, galpón, desván, pileta, cocina, 4 biomas, Luna día/noche. Los 41 personajes del bestiario con ficha frontal. Objetos ENCORE en 3D juguete. **[producto]** lista final de contenido congelada |
 | Arte | Cada escena con cámara de juego mide contraste 0,19-0,23 (`ref_measure`); checklist visual del registro pasado por escena; cero piezas Folded visibles |
 | Jugabilidad | `sim` 20 semillas × 600 s: 0 atascos del auto, curva de muertes dentro de la banda de balance; e2e pc y cel verdes en 5 semillas |
 | Rendimiento | Celular de referencia **[producto: cuál]** ≥ 30 fps en partida llena con preset Bajo; compu ≥ 60 fps en Medio; `perf` sin regresión > 20 % entre RC y 1.0 |
@@ -46,3 +46,6 @@ Una expedición ENCORE completa, de punta a punta, que una persona nueva puede j
 | Fecha | Decisión |
 |---|---|
 | 2026-10-15 | Biomas: sorteo de vuelta + destino de ruta + comprables en el Taller. Neón = Luna de noche |
+| 2026-10-15 | Alcance 1.0 congelado = lo existente a nivel lámina + criaturas nuevas de las refs (bicho taladro ref296, escorpión-cangrejo ref278, variantes ref173) + objetos ENCORE nuevos (cofre especial ref313, terminal de pactos, TV del Director en escena) + hovercraft (ref242) como auto comprable |
+| 2026-10-15 | Versiones: package.json 0.9.0-dev, un tag por hito, publicar solo al cerrar hito con OK del usuario. Commit local de respaldo 712c788 (refs de imágenes sin versionar: 636 MB) |
+| 2026-10-15 | Celular de referencia: Android gama media (~2022), 30 fps en preset Bajo en partida llena |

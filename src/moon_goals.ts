@@ -9,6 +9,7 @@ import { pbr } from "./render";
 import { rng } from "./rng";
 import { obstacles } from "./world";
 import { banner } from "./ui";
+import { erun } from "./encore_run"; // solo lectura (fase de la expedición); ciclo de imports sin uso al cargar
 
 // ---------- Objetivos en la superficie y cohete de escape (fase 3, docs/LUNA.md puntos 2 y 3) ----------
 // Cada luna_obj_cada_s aparece un objetivo lejos del auto (baliza alta + radar): juntar celdas a tiempo o quedarse en la zona de una antena.
@@ -28,6 +29,7 @@ const antennaTpl = () => template("obj_antena", () => { const L = mats(); return
   box(2.4, 0.5, 2.4, L.rust, [0, 0.25, 0], [0, 0.4, 0]), cyl(0.35, 0.6, 7, L.hull, [0, 3.5, 0], undefined, 6), cyl(3.2, 0.6, 0.8, L.dark, [0, 6.6, 0.4], [0.6, 0, 0], 10),
   sph(0.6, L.y, [0, 7.4, 0], undefined, 4), box(1.6, 0.15, 0.6, L.rust, [0.6, 2.4, 0], [0, 0, 0.5])]; });
 // Juguete de chapa pintada (ref318): huevo crema con paneles naranja, ojos de buey cian, banda luminosa, tres patas articuladas, puerta abierta con rampa y antena con bolita.
+const dim = (m: B.PBRMaterial, k: number) => { m.emissiveIntensity = k; return m; }; // pantallas y lentes: con 2 se queman a blanco
 const toy = (n: string, color: string, o: { rough?: number; metal?: number; glow?: boolean; alpha?: number } = {}) => { const m = pbr(n, { color, rough: o.rough ?? 0.55, metal: o.metal ?? 0.15, ...(o.glow ? { emissive: color } : {}), ...(o.alpha ? { alpha: o.alpha } : {}) }); if (o.glow) m.emissiveIntensity = 2; return m; };
 const rocketTpl = () => template("obj_cohete", () => {
   const cream = toy("cohCrema", "#d9cdb4", { rough: 0.6 }), ora = toy("cohNaranja", "#e8731c"), steel = toy("cohAcero", "#6c6a68", { rough: 0.4, metal: 0.8 }), glow = toy("cohCian", "#3de6ff", { glow: true }), dark = toy("cohHueco", "#2a2623", { rough: 0.7 });
@@ -84,6 +86,104 @@ const machineTpl = () => template("obj_maquina", () => {
     box(0.9, 0.3, 0.5, steel, [0, 0.8, 0.95], [0.25, 0, 0]), // bandeja
     box(1.2, 0.06, 0.1, steel, [0, 3.35, 0]), box(0.1, 0.18, 0.1, steel, [-0.6, 3.25, 0]), box(0.1, 0.18, 0.1, steel, [0.6, 3.25, 0]), // asa
     box(0.1, 0.9, 0.6, dark, [1.03, 1.2, 0.1]), cyl(0.05, 0.1, 1.4, steel, [-0.85, 3.8, -0.3], [0, 0, 0.18], 5), sph(0.3, brass, [-0.97, 4.5, -0.3], undefined, 4)]; });
+// ---------- ENCORE fase 1: escenografía del Director y objetos de pactos/rutas/sobrecarga (refs 311, 313-317, 319), solo decorativos ----------
+// Cofre especial (ref313): caja granate con tapa abovedada, fajas y esquineros de latón, cerradura redonda con ojo de cerradura, gema ámbar y patas.
+const specialChestTpl = () => template("obj_cofre_especial", () => {
+  const red = toy("cfeGranate", "#8e1b2a", { rough: 0.6, metal: 0.3 }), brass = toy("cfeLaton", "#b88a2e", { rough: 0.4, metal: 0.85 }), steel = toy("cfeAcero", "#3d3b3a", { rough: 0.5, metal: 0.8 }), gem = dim(toy("cfeGema", "#ff9a1f", { glow: true }), 1);
+  const corners = [-1, 1].flatMap((x) => [-1, 1].flatMap((z) => [box(0.5, 0.95, 0.5, brass, [x * 1.0, 0.55, z * 0.62]), box(0.3, 0.3, 0.3, steel, [x * 1.02, 0.15, z * 0.64]), cyl(0.55, 0.7, 0.2, steel, [x * 1.0, 0.1, z * 0.62], undefined, 6)]));
+  return [
+    box(2.0, 0.9, 1.4, red, [0, 0.65, 0]), box(2.1, 0.12, 1.5, steel, [0, 0.95, 0]), cyl(1.4, 1.4, 2.0, red, [0, 1.0, 0], [0, 0, Math.PI / 2], 14), // cuerpo, faja y tapa abovedada (cilindro tumbado)
+    ...[-0.62, 0.62].map((x) => cyl(1.5, 1.5, 0.16, brass, [x, 1.0, 0], [0, 0, Math.PI / 2], 14)), // dos arcos de latón sobre la tapa
+    tor(0.8, 0.14, brass, [0, 0.62, 0.74], [Math.PI / 2, 0, 0], 12), cyl(0.38, 0.38, 0.1, steel, [0, 0.62, 0.76], [Math.PI / 2, 0, 0], 8), box(0.1, 0.22, 0.06, red, [0, 0.62, 0.83]), // cerradura
+    box(0.3, 0.3, 0.3, brass, [0, 0.62, 0.78]), box(0.3, 0.3, 0.3, brass, [0, 1.15, 0.7]), tor(0.45, 0.07, brass, [0, 1.7, 0.1], undefined, 8), sph(0.36, gem, [0, 1.7, 0.1], undefined, 4), // ojo, gema ámbar
+    box(0.25, 0.1, 0.4, brass, [1.05, 0.7, 0], [0, 0, 0]), cyl(0.12, 0.12, 0.7, brass, [1.12, 0.65, 0], [Math.PI / 2, 0, 0], 6), ...corners]; });
+// Terminal de pactos (ref319): pedestal granate, cabeza inclinada con pantalla verde, botón crema y botón rojo, placas de latón, ranura, asas de tubo y antena con bolita. Alto 3,4.
+const terminalTpl = () => template("obj_terminal_pactos", () => {
+  const red = toy("terGranate", "#8e1b2a", { rough: 0.6, metal: 0.3 }), brass = toy("terLaton", "#b88a2e", { rough: 0.4, metal: 0.85 }), steel = toy("terAcero", "#3d3b3a", { rough: 0.5, metal: 0.8 }), scr = dim(toy("terPantalla", "#52d46a", { glow: true }), 0.7), cream = toy("terCrema", "#e8dcc0", { rough: 0.7 }), rbtn = toy("terRojo", "#d8231f", { rough: 0.5 });
+  return [
+    box(1.2, 0.3, 1.2, steel, [0, 0.15, 0]), box(0.95, 1.6, 0.85, red, [0, 1.1, 0]), box(0.55, 0.9, 0.08, brass, [0, 1.0, 0.45]), box(0.1, 1.1, 0.6, steel, [-0.5, 1.4, -0.05]), // base, columna, placa
+    box(1.15, 0.85, 0.95, red, [0, 2.3, 0.05], [0.35, 0, 0]), box(0.75, 0.5, 0.08, scr, [0, 2.55, 0.5], [0.35, 0, 0]), box(0.9, 0.62, 0.08, steel, [0, 2.55, 0.46], [0.35, 0, 0]), // cabeza y pantalla
+    cyl(0.26, 0.26, 0.14, cream, [0.25, 2.1, 0.62], [1.2, 0, 0], 8), cyl(0.26, 0.26, 0.14, rbtn, [-0.25, 2.1, 0.62], [1.2, 0, 0], 8), box(0.7, 0.2, 0.06, brass, [0, 1.82, 0.62], [0.35, 0, 0]), box(0.5, 0.06, 0.06, steel, [0, 1.62, 0.5]),
+    tor(0.5, 0.07, brass, [-0.62, 2.3, 0.05], [0, Math.PI / 2, 0], 8), tor(0.5, 0.07, brass, [0.62, 2.3, 0.05], [0, Math.PI / 2, 0], 8),
+    cyl(0.1, 0.12, 1.4, steel, [-0.5, 3.3, -0.3], undefined, 5), sph(0.26, brass, [-0.5, 4.05, -0.3], undefined, 4),
+    ...[-1, 1].flatMap((x) => [-1, 1].map((z) => cyl(0.4, 0.55, 0.3, steel, [x * 0.55, 0.15, z * 0.5], undefined, 6)))]; });
+// TV del Director (ref314): caja crema y turquesa oxidada con pantalla cian en espiral, perillas, luz roja, rejillas, dos antenas y cuatro patas. Mira a +z. Ancho 2,6.
+const tvTpl = () => template("obj_tv_director", () => {
+  const cream = toy("tvCrema", "#cfc6a8", { rough: 0.6, metal: 0.2 }), teal = toy("tvTurquesa", "#3b7d7a", { rough: 0.65, metal: 0.3 }), rust = toy("tvOxido", "#7b4a2c", { rough: 0.8, metal: 0.4 }), dark = toy("tvOscuro", "#26272b", { rough: 0.7 }), scr = dim(toy("tvPantalla", "#46d4ee", { glow: true }), 0.7), red = toy("tvLuz", "#ff2a1a", { glow: true });
+  return [
+    box(2.6, 1.8, 1.8, teal, [0, 1.5, 0]), box(2.6, 1.8, 0.14, cream, [0, 1.5, 0.84]), box(2.05, 1.4, 0.08, dark, [0.2, 1.5, 0.9]), box(1.8, 1.15, 0.08, scr, [0.2, 1.5, 0.95]), // casco, marco y pantalla
+    box(0.55, 1.5, 0.08, rust, [-1.05, 1.5, 0.92]), ...[0, 1].map((i) => [cyl(0.34, 0.34, 0.12, cream, [-1.05, 1.95 - i * 0.45, 0.98], [Math.PI / 2, 0, 0], 8), box(0.06, 0.3, 0.06, dark, [-1.05, 1.95 - i * 0.45, 1.06], [0, 0, 0.5 + i])]).flat(), sph(0.14, red, [-1.05, 1.0, 1.0], undefined, 4), box(0.4, 0.3, 0.06, dark, [-1.05, 0.7, 0.99]),
+    box(0.1, 1.0, 0.7, dark, [1.32, 1.5, 0.2]), box(0.1, 0.5, 0.6, rust, [1.34, 1.2, 0.5]), // rejilla y parches del costado
+    cyl(0.9, 1.1, 0.25, rust, [0, 2.5, -0.1], undefined, 8), cyl(0.05, 0.08, 2.2, rust, [-0.6, 3.5, -0.4], [0, 0, 0.9], 5), cyl(0.05, 0.08, 2.4, rust, [0.5, 3.6, -0.3], [0, 0, -0.45], 5), sph(0.16, rust, [-1.4, 4.35, -0.4], undefined, 4), sph(0.16, rust, [0.95, 4.65, -0.3], undefined, 4), // antenas
+    ...[-1, 1].flatMap((x) => [-1, 1].map((z) => cyl(0.18, 0.3, 0.7, rust, [x * 1.1, 0.35, z * 0.7], [0.3 * z, 0, -0.3 * x], 5))), box(2.4, 0.1, 0.1, rust, [0, 0.55, 0.7]), box(2.4, 0.1, 0.1, rust, [0, 0.55, -0.7])]; });
+// Foco del Director (ref315): cuerpo granate tumbado sobre trípode, lente ámbar, cuatro aletas negras, perilla de latón, asa y cable enrollado. Mira a +z. Alto 2,6.
+const spotDirTpl = () => template("obj_foco_director", () => {
+  const red = toy("fdGranate", "#8e1b2a", { rough: 0.6, metal: 0.3 }), brass = toy("fdLaton", "#b88a2e", { rough: 0.4, metal: 0.85 }), dark = toy("fdNegro", "#1f1f22", { rough: 0.7, metal: 0.3 }), lens = dim(toy("fdLente", "#ffb23a", { glow: true }), 0.9);
+  return [
+    cyl(1.1, 1.1, 1.3, red, [0, 1.9, 0], [Math.PI / 2, 0, 0], 12), cyl(1.25, 1.25, 0.2, dark, [0, 1.9, 0.7], [Math.PI / 2, 0, 0], 12), cyl(0.95, 0.95, 0.06, lens, [0, 1.9, 0.82], [Math.PI / 2, 0, 0], 12), // cuerpo, aro y lente
+    box(0.95, 0.75, 0.06, dark, [0, 2.75, 1.0], [-0.5, 0, 0]), box(0.95, 0.75, 0.06, dark, [0, 1.05, 1.0], [0.5, 0, 0]), box(0.06, 0.8, 0.8, dark, [0.95, 1.9, 1.0], [0, 0.5, 0]), box(0.06, 0.8, 0.8, dark, [-0.95, 1.9, 1.0], [0, -0.5, 0]), // aletas
+    box(0.9, 0.12, 0.12, brass, [0, 2.65, 0.1]), cyl(0.3, 0.3, 0.24, brass, [-0.7, 1.9, -0.1], [0, 0, Math.PI / 2], 8), tor(0.7, 0.12, dark, [-0.75, 1.5, -0.4], [0, Math.PI / 2, 0], 8),
+    cyl(0.25, 0.25, 0.6, dark, [0, 1.0, 0], undefined, 6), ...[0, 1, 2].map((i) => { const a = i * Math.PI * 2 / 3 + 0.4; return cyl(0.12, 0.16, 1.3, red, [Math.sin(a) * 0.4, 0.5, Math.cos(a) * 0.4], [Math.cos(a) * 0.45, 0, -Math.sin(a) * 0.45], 5); })]; });
+// Baliza de ruta (ref311): caja naranja con trípode, plato satelital, antena, ojo cian y dos flechas (azul a la izquierda, amarilla a la derecha). Ancho 4,2, alto 3,6.
+const routeBeaconTpl = () => template("obj_baliza_ruta", () => {
+  const ora = toy("brNaranja", "#e8731c", { rough: 0.6, metal: 0.3 }), steel = toy("brAcero", "#5d5a58", { rough: 0.45, metal: 0.8 }), blue = toy("brAzul", "#3a6fae"), yel = toy("brAmarillo", "#e8b81c"), eye = dim(toy("brOjo", "#34e0f5", { glow: true }), 1);
+  return [
+    box(1.5, 1.0, 1.1, ora, [0, 1.9, 0]), box(0.7, 0.14, 0.2, steel, [0, 2.5, 0]), cyl(0.5, 0.7, 0.3, steel, [0, 1.25, 0], undefined, 8), // caja, asa y cuello
+    tor(0.62, 0.1, steel, [0, 1.9, 0.56], undefined, 10), sph(0.5, eye, [0, 1.9, 0.52], [1, 1, 0.5], 4), // ojo cian
+    box(1.1, 0.5, 0.1, yel, [-1.4, 1.9, 0]), cyl(0.0, 0.9, 0.7, yel, [-2.2, 1.9, 0], [0, 0, Math.PI / 2], 3), box(1.0, 0.45, 0.1, blue, [1.35, 1.9, 0]), cyl(0.0, 0.8, 0.6, blue, [2.0, 1.9, 0], [0, 0, -Math.PI / 2], 3), // flechas
+    cyl(0.1, 0.14, 1.0, steel, [-0.55, 2.9, -0.2], undefined, 5), sph(0.2, steel, [-0.55, 3.45, -0.2], undefined, 4),
+    cyl(0.2, 0.2, 0.3, steel, [0.35, 2.55, -0.1], undefined, 6), cyl(1.9, 0.5, 0.5, ora, [0.55, 3.35, -0.1], [-0.9, 0.2, 0], 12), cyl(0.12, 0.12, 0.9, steel, [0.55, 3.55, 0.25], [-0.9, 0.2, 0], 5), sph(0.22, eye, [0.6, 3.95, 0.5], undefined, 4), // plato
+    ...[0, 1, 2].map((i) => { const a = i * Math.PI * 2 / 3 + 0.6; return cyl(0.2, 0.3, 1.4, ora, [Math.sin(a) * 0.5, 0.55, Math.cos(a) * 0.5], [Math.cos(a) * 0.5, 0, -Math.sin(a) * 0.5], 5); })]; });
+// Núcleo de sobrecarga (ref316): cápsula cian entre aros de chapa, carcasa naranja y gris, mangueras negras, patas y antena. Largo 5, alto 3,2. Pulsa en overloadPulse().
+const coreGlow = () => dim(toy("nucCian", "#38e8f8", { glow: true }), 1);
+const overloadCoreTpl = () => template("obj_nucleo", () => {
+  const ora = toy("nucNaranja", "#e8731c", { rough: 0.6, metal: 0.3 }), steel = toy("nucAcero", "#5d5a58", { rough: 0.45, metal: 0.8 }), hose = toy("nucManguera", "#222427", { rough: 0.7 }), dark = toy("nucOscuro", "#2b2a2a", { rough: 0.6, metal: 0.5 });
+  return [
+    box(4.2, 0.4, 1.6, steel, [0.2, 1.0, 0]), cyl(1.9, 1.9, 2.4, coreGlow(), [0.6, 2.1, 0], [0, 0, Math.PI / 2], 12), // zócalo y cápsula
+    ...[-0.3, 0.7, 1.5].map((x) => cyl(2.1, 2.1, 0.22, steel, [x, 2.1, 0], [0, 0, Math.PI / 2], 12)), ...[0.2, 1.1].map((x) => cyl(2.12, 2.12, 0.1, ora, [x, 2.1, 0], [0, 0, Math.PI / 2], 12)), // aros y flejes
+    box(1.2, 2.2, 1.7, steel, [-1.9, 2.0, 0]), box(0.6, 1.5, 1.75, ora, [-1.6, 2.0, 0]), box(1.4, 0.5, 1.2, ora, [-1.9, 3.35, 0]), cyl(0.45, 0.5, 0.5, ora, [-0.9, 3.3, 0.2], undefined, 8), // cabeza de máquina
+    ...[0, 1, 2].flatMap((i) => [tor(1.1 + i * 0.1, 0.28, hose, [-2.7, 1.6 + i * 0.5, -0.1], [0, Math.PI / 2, 0], 8), cyl(0.5, 0.5, 0.3, ora, [-2.4, 1.6 + i * 0.5, 0], [0, 0, Math.PI / 2], 8)]), // mangueras
+    cyl(0.1, 0.14, 1.4, dark, [-2.0, 4.2, 0.2], undefined, 5), sph(0.2, ora, [-2.0, 4.95, 0.2], undefined, 4),
+    ...[-1, 1].flatMap((x) => [-1, 1].map((z) => box(0.9, 0.9, 0.7, ora, [x * 1.9 + 0.2, 0.45, z * 0.75], [0, 0, -0.2 * x]))), ...[-1, 1].map((z) => box(4.4, 0.25, 0.3, steel, [0.2, 1.4, z * 0.85]))]; });
+// Recicladora (ref317): tolva verde con franjas naranjas, rodillos de dientes, volante con manija, cubeta lateral, tubos de cobre y antena con luz ámbar. Huella 4 x 3,2, alto 3,6.
+const recyclerTpl = () => template("obj_recicladora", () => {
+  const grn = toy("recVerde", "#6f7d3c", { rough: 0.7, metal: 0.35 }), ora = toy("recNaranja", "#e8731c"), steel = toy("recAcero", "#5d5a58", { rough: 0.45, metal: 0.8 }), cu = toy("recCobre", "#b0663a", { rough: 0.45, metal: 0.8 }), dark = toy("recHueco", "#25262a", { rough: 0.7 }), amb = dim(toy("recAmbar", "#ffb23a", { glow: true }), 1);
+  return [
+    box(3.4, 1.3, 2.5, grn, [0, 0.95, 0]), box(3.5, 0.7, 0.14, ora, [0, 0.7, 1.28], [0, 0, 0]), box(3.5, 0.7, 0.1, dark, [0.4, 0.7, 1.3]), ...[-1.4, -0.5, 0.4].map((x) => box(0.3, 0.7, 0.14, ora, [x, 0.7, 1.3], [0, 0, 0.6])), // cuerpo y franja de peligro
+    cyl(3.6, 2.4, 1.6, grn, [-0.2, 2.3, 0], [0, Math.PI / 4, 0], 4), cyl(3.1, 2.0, 1.5, dark, [-0.2, 2.35, 0], [0, Math.PI / 4, 0], 4), box(1.0, 1.1, 0.1, ora, [-0.2, 2.2, 1.45], [-0.45, 0, 0]), // tolva
+    cyl(0.9, 0.9, 2.4, steel, [-0.3, 1.7, 0.2], [0, 0, Math.PI / 2], 8), ...[-1, -0.4, 0.2, 0.8].map((x) => cyl(1.3, 1.3, 0.3, steel, [x - 0.3, 1.7, 0.2], [0, 0, Math.PI / 2], 6)), // rodillos con dientes
+    tor(1.5, 0.15, steel, [-2.0, 1.8, 0.2], [0, Math.PI / 2, 0], 12), cyl(0.2, 0.2, 1.4, steel, [-2.0, 1.8, 0.2], [0, 0, Math.PI / 2], 5), cyl(0.3, 0.3, 0.9, ora, [-2.5, 1.3, 0.2], [0, 0, Math.PI / 2], 6), // volante y manija
+    box(1.3, 0.9, 1.5, grn, [2.2, 0.9, 0.3]), box(1.1, 0.7, 1.3, dark, [2.2, 1.1, 0.3]), box(0.1, 0.7, 1.0, ora, [2.85, 0.9, 0.3]), // cubeta lateral
+    cyl(0.25, 0.25, 2.0, cu, [1.5, 2.3, -0.6], undefined, 6), cyl(0.5, 0.5, 0.9, amb, [1.5, 2.4, -0.6], undefined, 8), cyl(0.08, 0.08, 1.6, steel, [1.7, 3.4, -1.0], undefined, 5), sph(0.3, amb, [1.7, 4.2, -1.0], undefined, 4),
+    ...[-1, 1].flatMap((x) => [-1, 1].map((z) => box(0.9, 0.2, 0.9, steel, [x * 1.5, 0.1, z * 1.1])))]; });
+
+/** Escenografía ENCORE: solo mira (sin colisión ni lógica). c0 = llegada del escenario; todo sale de un hash de (semilla, escenario), nunca del rng(). */
+let arrive: B.Vector3 | null = null, directorSet: B.InstancedMesh[] = [], phaseSet: B.InstancedMesh[] = [], phaseSeen = "", decorSeed = 0, coreI: B.InstancedMesh | null = null;
+const face = (m: B.InstancedMesh, to: B.Vector3) => { m.rotationQuaternion = alignYaw(m.position, Math.atan2(to.x - m.position.x, to.z - m.position.z)); return m; }; // ponytail: asume +z local = adelante y plano cercano; en la luna curva el yaw es aproximado
+const decorAt = (a: number, d: number) => inYard(ringAt(arrive!, a, d, 0));
+/** Cofre especial en p (ref313), sin llamarla todavía: la lógica del cofre viene en la tarea siguiente. Devuelve las instancias (quien la llame las libera con dispose). */
+export function specialChestPlace(p: B.Vector3, to?: B.Vector3) { const m = put(specialChestTpl, p, "cofreEspecial"); return to ? face(m, to) : m; }
+/** Recicladora en p (ref317), sin llamarla todavía. */
+export function recyclerPlace(p: B.Vector3, to?: B.Vector3) { const m = put(recyclerTpl, p, "recicladora"); return to ? face(m, to) : m; }
+function decorDrop() { for (const m of directorSet) m.dispose(); for (const m of phaseSet) m.dispose(); directorSet = []; phaseSet = []; phaseSeen = ""; coreI = null; }
+/** TV y foco del Director junto a la llegada (se arma en shopPlan, cada escenario). */
+function decorPlan(seed: number, stage: number, c0: B.Vector3) {
+  decorDrop(); arrive = c0.clone(); decorSeed = seed + 0x51d + stage * 32452867;
+  const a = mix(decorSeed) * Math.PI * 2, tv = decorAt(a, 15), sp = decorAt(a + 0.32, 15.5);
+  directorSet = [face(put(tvTpl, tv, "tvDirector"), c0), face(put(spotDirTpl, sp, "focoDirector"), c0)];
+}
+/** Objetos por fase de la expedición (solo lectura de erun): terminal en pact, baliza junto al teleportador en route, núcleo en overload. */
+function decorTick(time: number) {
+  const ph = !arrive || !erun ? "" : erun.phase;
+  if (ph !== phaseSeen) {
+    for (const m of phaseSet) m.dispose(); phaseSet = []; coreI = null; phaseSeen = ph;
+    if (ph === "pact") phaseSet = [face(put(terminalTpl, decorAt(mix(decorSeed + 1) * Math.PI * 2, 11), "terminalPactos"), arrive!)];
+    else if (ph === "route") { const at = rocket?.p ?? decorAt(mix(decorSeed + 2) * Math.PI * 2, 20); phaseSet = [face(put(routeBeaconTpl, ringAt(at, mix(decorSeed + 3) * Math.PI * 2, 6, 0), "balizaRuta"), at)]; }
+    else if (ph === "overload") { coreI = face(put(overloadCoreTpl, decorAt(mix(decorSeed + 4) * Math.PI * 2, 13), "nucleoSobrecarga"), arrive!); phaseSet = [coreI]; }
+  }
+  if (coreI) coreI.scaling.setAll(1 + Math.sin(time * 6) * 0.02); // ponytail: latido por escala (la cápsula comparte material con otros usos: sin emisivo animado)
+}
+
 type Shop = { kind: "cofre" | "maquina"; p: B.Vector3; prog: number; ms: B.InstancedMesh[] };
 const SHOP_RADIO = 4.5, SHOP_S = 1.6, SHOP_VIDA = 0.25; // zona (m), segundos que hay que permanecer, fracción de vida actual que cobra la máquina
 let shops: Shop[] = [], shopStage = 0, opened = 0, warnAt = 0;
@@ -102,7 +202,7 @@ export const shopDev = (k: "cofre" | "maquina", c: B.Vector3) => { const s = sho
 export const shopAt = (k: "cofre" | "maquina", i = 0) => shops.filter((x) => x.kind === k)[i]?.p;
 /** Coloca 3 cofres y 1 máquina alrededor de c0 (llegada del escenario); orden, ángulo y distancia salen de (seed, stage). */
 export function shopPlan(seed: number, stage: number, c0: B.Vector3) {
-  shopDrop(); shopStage = stage;
+  shopDrop(); shopStage = stage; decorPlan(seed, stage, c0);
   const base = seed + 0x7c3 + stage * 15485863, rot = mix(base) * 4, a0 = mix(base + 1) * Math.PI * 2, mach = Math.floor(mix(base + 2) * 4);
   for (let i = 0; i < 4; i++) {
     const kind = i === mach ? "maquina" : "cofre", p = inYard(ringAt(c0, a0 + ((i + rot) % 4) * Math.PI / 2 + (mix(base + 10 + i) - 0.5) * 0.5, 40 + mix(base + 20 + i) * 70, 0));
@@ -193,6 +293,7 @@ export function goalsTick(dt: number, time: number, cars: B.Vector3[], quiet: bo
   if (!MOON.on && !GOAL_IO.tele) return;
   const car = cars[0], near = (p: B.Vector3, r: number) => cars.some((c) => hd(c, p) < r);
   if (GOAL_IO.tele && shops.length) shopTick(dt, time, cars, quiet);
+  if (GOAL_IO.tele) decorTick(time);
   for (const m of goal?.cells ?? []) m.m.rotationQuaternion = alignYaw(m.m.position, time * 1.5);
   if (MOON.on && !goal && time >= next) { // objetivos de superficie: solo en la luna
     const kind = (alt++ + (rng() < 0.5 ? 0 : 1)) % 2 ? "antena" : "celdas"; // alternados, el primero al azar
@@ -238,7 +339,7 @@ export function goalsTick(dt: number, time: number, cars: B.Vector3[], quiet: bo
 
 /** Partida nueva / fin. */
 export function goalsClear() {
-  if (goal) drop(goal); if (rocket) drop(rocket); shopDrop(); for (const m of spots) m.dispose(); spots = [];
+  if (goal) drop(goal); if (rocket) drop(rocket); shopDrop(); decorDrop(); arrive = null; for (const m of spots) m.dispose(); spots = [];
   goal = rocket = null; next = A.luna_obj_primero_s; alt = 0;
   stats.hechos = stats.aparecidos = 0;
 }

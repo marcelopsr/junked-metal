@@ -39,7 +39,7 @@ export function kit() {
     s.rotationQuaternion = B.Quaternion.FromLookDirectionLH(d.normalize(), Math.abs(d.y) > 0.99 * d.length() ? B.Vector3.Forward() : B.Vector3.Up());
     return s;
   };
-  return { G, parts, done, strut, bone };
+  return { G, parts, done, strut, bone, add };
 }
 export const along = (G: GeoKit, d1: number, d2: number, len: number, m: B.Material, p: V3, tess = 6) => G.cyl(d1, len, m, p, [Math.PI / 2, 0, 0], tess, d2); // prisma a lo largo de z (d1 adelante)
 
@@ -50,56 +50,76 @@ const ANT_HIPS: [V3, number][] = [[[0.2, 0.46, 0.3], 0.65], [[0.22, 0.46, 0.14],
 /** Insectos de 6 patas (hormiga, escupidora, escarabajo): mismo esqueleto y caminata; cambian color, tamaño (k) y la pieza de identidad. */
 type Bug = { color: string; k: number; eye: string; seed: number; look: "ant" | "spit" | "beetle" };
 const BUGS: Record<string, Bug> = {
-  hormiga: { color: ANT_COLOR, k: 1, eye: "#ff4a28", seed: 61, look: "ant" },
-  escupidora: { color: "#6b8a22", k: 1.3, eye: "#ffc040", seed: 64, look: "spit" },
-  escarabajo: { color: "#2f7d4a", k: 1.6, eye: "#e8ff50", seed: 67, look: "beetle" },
+  hormiga: { color: "#74301a", k: 1, eye: "#ff6a1a", seed: 61, look: "ant" },
+  escupidora: { color: "#6e3a1c", k: 1.3, eye: "#ff6a1a", seed: 64, look: "spit" },
+  escarabajo: { color: "#4c5024", k: 1.6, eye: "#ff7a1a", seed: 67, look: "beetle" },
 };
+// Paleta de chapa gastada de las láminas (ref169/171): óxido, bronce de articulaciones, crema de la pintura saltada, oliva.
+const CREAM = "#e8d4a8", BRONZE = "#94642c", RUSTD = "#5a2a18";
+const ell = (add: (m: B.Mesh, mat: B.Material) => B.Mesh, m: B.Material, p: V3, s: V3, seg = 8, slice = 1) => { // elipsoide (o cúpula con slice 0.5) de chapa
+  const e = B.MeshBuilder.CreateSphere("p", { diameter: 1, segments: seg, slice }, sc());
+  e.position.set(...p); e.scaling.set(...s); if (slice < 1) e.convertToFlatShadedMesh(); // cúpulas facetadas: sin brillo de bola lisa
+  return add(e, m);
+};
+/** Nervio semielíptico (arco sobre una cúpula) a la altura z; r = semiancho, h = alto, c = centro (x, y). */
+const rib = (G: GeoKit, m: B.Material, z: number, r: number, h: number, c: [number, number], w = 0.022) =>
+  G.tube(Array.from({ length: 9 }, (_, i) => { const a = (Math.PI * i) / 8; return [c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * h, z] as V3; }), w, m);
 export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
-  const { G, done, strut, bone } = kit();
-  const body = FOLD.chitin(o.color), plate = FOLD.painted(PAL.metalOsc, 0.6, 62), eye = FOLD.emissive(o.eye);
-  if (o.look === "beetle") { // élitros: dos chapas en techo a dos aguas sobre el abdomen, con costura y cuerno de acero (IDENTITY)
-    along(G, 0.62, 0.8, 0.9, plate, [0, 0.4, -0.6]);
-    for (const s of [-1, 1]) G.box(0.44, 0.04, 1.1, body, [s * 0.2, 0.74, -0.55], [0, 0, -s * 0.3]);
-    G.bend([0, 0.84, -1.1], [0, 0.84, 0.0], 0.04, FOLD.bare());
-    G.rivets([-0.2, 0.62, -1.08], [0.2, 0.62, -1.08], 5, [0, 0, -1]);
-    strut([0, 0.68, 0.8], [0, 1.02, 1.2], 0.08, 0.1, FOLD.bare()); G.box(0.14, 0.06, 0.1, FOLD.bare(), [0, 1.04, 1.22]);
+  const { G, done, strut, bone, add } = kit();
+  const body = FOLD.painted(o.color, 0.85, o.seed), plate = FOLD.painted(BRONZE, 0.8, 62), cream = FOLD.painted(CREAM, 0.8, 63), eye = FOLD.emissive(o.eye), bronze = FOLD.painted(BRONZE, 0.6, 65), dkr = FOLD.painted(RUSTD, 0.8, 66);
+  if (o.look === "beetle") { // domo de élitros: dos cúpulas de chapa (oliva / óxido) con nervios, costura, pronoto abombado y cuerno curvo (IDENTITY)
+    const olive = FOLD.painted("#505624", 0.4, 68), rust = FOLD.painted("#7a3a1c", 0.4, 69);
+    along(G, 0.6, 0.78, 0.9, dkr, [0, 0.4, -0.6]);
+    for (const s of [-1, 1]) {
+      ell(add, s < 0 ? olive : rust, [s * 0.26, 0.5, -0.6], [0.56, 0.95, 1.3], 10, 0.5); // élitro
+      rib(G, bronze, -0.28, 0.26, 0.3, [s * 0.26, 0.5]); rib(G, bronze, -0.9, 0.22, 0.24, [s * 0.26, 0.5]);
+      G.rivets([s * 0.26, 0.8, -0.28], [s * 0.26, 0.8, -0.9], 4, [0, 1, 0]);
+      G.box(0.2, 0.012, 0.3, cream, [s * 0.34, 0.9, -0.55], [0, 0, s * 0.35]); // parche de pintura saltada
+    }
+    G.bend([0, 0.84, -1.18], [0, 0.84, -0.04], 0.03, FOLD.bare()); // costura
+    ell(add, rust, [0, 0.52, 0.12], [0.5, 0.6, 0.5], 10, 0.5); // pronoto abombado
+    G.tube([[0, 0.66, 0.9], [0, 0.78, 1.22], [0, 0.98, 1.34], [0, 1.16, 1.2]], 0.045, dkr); // cuerno curvo corto, color élitro oscuro
   } else {
-    along(G, 0.5, 0.86, 0.82, body, [0, 0.44, -0.66]); // gáster (BODY)
-    along(G, 0.5, 0.3, 0.16, body, [0, 0.44, -1.15]); // tapa trasera plegada
-    G.plate([0, 0.83, -0.66], [Math.PI / 2, 0, 0], 0.32, 0.56, plate); // placa del lomo (PANELS)
-    G.trimStrip([0, 0.44, -0.27], undefined, 0.46, 0.46, "hazard", 0.05); // faja de peligro (IDENTITY)
+    ell(add, body, [0, 0.46, -0.72], [0.8, 0.74, 1.05], 9); // gáster bulboso (BODY)
+    for (const [z, d] of [[-0.45, 0.62], [-0.7, 0.72], [-0.95, 0.66]] as const) along(G, d, d, 0.04, plate, [0, 0.46, z], 8); // segmentos de bronce
+    G.rivets([-0.3, 0.7, -0.45], [0.3, 0.7, -0.45], 4, [0, 1, 0]);
+    G.plate([0, 0.83, -0.72], [Math.PI / 2, 0, 0], 0.3, 0.5, cream); // placa del lomo pintada en crema (PANELS)
   }
-  if (o.look === "spit") { // saco de ácido sobre el gáster y tobera de la escupida (IDENTITY)
-    G.sph(0.54, FOLD.emissive("#b8ff28"), [0, 0.9, -0.78]);
-    G.cyl(0.58, 0.08, FOLD.bare(), [0, 0.86, -0.78], undefined, 8);
+  if (o.look === "spit") { // globo de ácido enjaulado por flejes, con goteo en la tobera (IDENTITY)
+    G.sph(0.58, FOLD.painted("#6e8016", 0.7, 70), [0, 0.96, -0.78]);
+    for (const [y, d] of [[0.96, 0.64], [0.82, 0.52], [1.1, 0.5]] as const) G.cyl(d, 0.05, bronze, [0, y, -0.78], undefined, 8);
+    G.tube(Array.from({ length: 9 }, (_, i) => { const a = (Math.PI * i) / 8; return [0, 0.96 + Math.sin(a) * 0.31, -0.78 + Math.cos(a) * 0.31] as V3; }), 0.025, bronze);
+    G.cyl(0.14, 0.08, bronze, [0, 1.28, -0.78], undefined, 6);
     G.cyl(0.1, 0.32, FOLD.bare(), [0, 0.5, 1.02], [Math.PI / 2, 0, 0], 6, 0.14);
+    G.sph(0.09, FOLD.emissive("#b8e830"), [0, 0.4, 1.24]); G.sph(0.06, FOLD.emissive("#b8e830"), [0, 0.28, 1.28]);
   }
   along(G, 0.14, 0.18, 0.26, FOLD.dark(), [0, 0.46, -0.12]); // cintura
-  G.box(0.4, 0.28, 0.46, body, [0, 0.5, 0.14]); // tórax
-  for (const s of [-1, 1]) G.bend([s * 0.2, 0.64, -0.09], [s * 0.2, 0.64, 0.37], 0.03, body);
-  G.plate([0, 0.645, 0.14], [Math.PI / 2, 0, 0], 0.26, 0.36, plate);
-  along(G, 0.12, 0.12, 0.16, FOLD.dark(), [0, 0.52, 0.44]); // cuello
-  G.box(0.44, 0.32, 0.36, body, [0, 0.54, 0.66], [-0.18, 0, 0]); // cabeza
-  G.box(0.36, 0.08, 0.3, plate, [0, 0.72, 0.64], [-0.18, 0, 0]); // visera
+  G.box(0.42, 0.3, 0.46, body, [0, 0.5, 0.14]); // tórax
+  for (const s of [-1, 1]) G.bend([s * 0.21, 0.65, -0.09], [s * 0.21, 0.65, 0.37], 0.03, bronze);
+  G.plate([0, 0.655, 0.14], [Math.PI / 2, 0, 0], 0.26, 0.36, plate);
+  along(G, 0.14, 0.14, 0.18, FOLD.dark(), [0, 0.52, 0.46]); // cuello
+  G.box(0.52, 0.38, 0.44, body, [0, 0.55, 0.7], [-0.18, 0, 0]); // cabeza grande
+  G.box(0.5, 0.08, 0.4, plate, [0, 0.79, 0.7], [-0.18, 0, 0]); // visera
+  G.rivets([-0.2, 0.84, 0.7], [0.2, 0.84, 0.7], 3, [0, 1, 0]);
   for (const s of [-1, 1]) {
-    G.box(0.08, 0.1, 0.12, eye, [s * 0.22, 0.6, 0.74]);
-    strut([s * 0.1, 0.42, 0.8], [s * 0.04, 0.36, 1.08], 0.06, 0.05, FOLD.bare()); // mandíbula
-    G.box(0.05, 0.05, 0.1, FOLD.bare(), [s * 0.01, 0.36, 1.1], [0, -s * 0.9, 0]);
+    G.sph(0.22, FOLD.painted("#0c0a0a", 0.2, 71), [s * 0.28, 0.62, 0.8]); G.sph(0.1, eye, [s * 0.34, 0.64, 0.9]); // ojo de vidrio con brasa
+    strut([s * 0.12, 0.44, 0.9], [s * 0.05, 0.36, 1.22], 0.07, 0.06, FOLD.bare()); // mandíbula
+    G.box(0.06, 0.06, 0.12, FOLD.bare(), [s * 0.01, 0.36, 1.24], [0, -s * 0.9, 0]);
     bone(7);
-    G.tube([[s * 0.1, 0.7, 0.78], [s * 0.22, 0.98, 0.92], [s * 0.34, 0.96, 1.22]], 0.018, FOLD.dark()); // antena
-    G.box(0.05, 0.05, 0.08, FOLD.bare(), [s * 0.34, 0.96, 1.24]);
+    G.tube([[s * 0.12, 0.76, 0.84], [s * 0.24, 1.04, 0.98], [s * 0.36, 1.02, 1.28]], 0.035, FOLD.dark()); // antena
+    G.box(0.06, 0.06, 0.09, bronze, [s * 0.36, 1.02, 1.3]);
     bone(0);
   }
-  // Patas: fémur, rodilla de acero, tibia y pie de goma, cada una en su hueso (caminata horneada: 300 hormigas cuestan lo mismo que una)
-  const leg = FOLD.chitin(o.color);
+  // Patas: fémur, rodilla de bronce, tibia y pie de goma, cada una en su hueso (caminata horneada: 300 hormigas cuestan lo mismo que una)
+  const leg = FOLD.painted(o.color, 0.7, o.seed + 1);
   let b = 1;
   for (const [[hx, hy, hz], yaw] of ANT_HIPS) for (const s of [1, -1]) {
     bone(b++);
     const a = s > 0 ? yaw : Math.PI - yaw, P = (x: number, y: number, z: number): V3 => [hx * s + x * Math.cos(a) + z * Math.sin(a), hy + y, hz - x * Math.sin(a) + z * Math.cos(a)];
     const knee = P(0.36, 0.2, 0), foot = P(0.78, -0.44, 0.04);
-    G.box(0.09, 0.09, 0.09, FOLD.bare(), P(0.02, 0, 0));
-    strut(P(0.02, 0, 0), knee, 0.07, 0.09, leg); G.box(0.09, 0.09, 0.09, FOLD.bare(), knee);
-    strut(knee, foot, 0.05, 0.06, leg); G.box(0.1, 0.04, 0.12, FOLD.rubber(), [foot[0], foot[1] + 0.01, foot[2]]);
+    G.box(0.2, 0.2, 0.2, bronze, P(-0.04, 0, 0)); // cadera metida en el cuerpo
+    strut(P(-0.02, 0, 0), knee, 0.12, 0.14, leg); G.box(0.15, 0.15, 0.15, bronze, knee);
+    strut(knee, foot, 0.085, 0.1, leg); G.box(0.16, 0.06, 0.18, FOLD.rubber(), [foot[0], foot[1] + 0.02, foot[2]]);
   }
   return done(2.5, o.k / vis);
 }
@@ -120,19 +140,20 @@ export function antPose(vis: number, walk: number, atk: number, kk = 1) {
 
 // ---------- Polilla: tórax con collar, abdomen en anillos (se lee de atrás), ojos emisivos y antenas con plumas de chapa ----------
 // Huesos: 0 tórax y cabeza, 1 abdomen (bombea en vuelo), 2 antenas.
-const MOTH = "#d8c690";
+const MOTH = "#a8602c"; // pelo óxido (ref127/266); alas crema
 export function mothBody(vis = 1) {
   const { G, done, strut, bone } = kit();
-  const fur = FOLD.painted(MOTH, 0.55, 71), band = FOLD.chitin("#5a4830"), eye = FOLD.emissive("#c9a0ff");
+  const fur = FOLD.painted(MOTH, 0.8, 71), band = FOLD.painted("#5a2e1a", 0.8, 72), eye = FOLD.painted("#0c0a0a", 0.2, 78), glint = FOLD.emissive("#ff8a2a"), cream = FOLD.painted("#edc79a", 0.7, 79);
   along(G, 0.3, 0.34, 0.36, fur, [0, 0.42, -0.02], 8); // tórax
-  G.cyl(0.4, 0.06, band, [0, 0.42, 0.16], [Math.PI / 2, 0, 0], 8); // collar
+  G.cyl(0.42, 0.07, cream, [0, 0.42, 0.16], [Math.PI / 2, 0, 0], 8); // collar crema
+  G.rivets([-0.12, 0.6, -0.02], [0.12, 0.6, -0.02], 3, [0, 1, 0]);
   bone(1);
   [0.32, 0.28, 0.23, 0.16, 0.09].forEach((d, i) => along(G, d + 0.03, d, 0.13, i % 2 ? band : fur, [0, 0.42 - i * 0.012, -0.27 - i * 0.13], 8)); // abdomen anillado
   G.box(0.06, 0.06, 0.06, FOLD.emissive("#ffb400"), [0, 0.37, -0.92]); // luz de cola (lectura desde atrás)
   bone(0);
   along(G, 0.2, 0.26, 0.16, band, [0, 0.43, 0.26], 8); // cabeza
   for (const s of [-1, 1]) {
-    G.sph(0.14, eye, [s * 0.11, 0.45, 0.32]);
+    G.sph(0.19, eye, [s * 0.1, 0.45, 0.33]); G.sph(0.07, glint, [s * 0.13, 0.47, 0.41]); // ojo de vidrio negro con brasa
     const a: V3 = [s * 0.06, 0.52, 0.3], b: V3 = [s * 0.2, 0.7, 0.42], c: V3 = [s * 0.34, 0.78, 0.5];
     bone(2);
     G.tube([a, b, c], 0.012, FOLD.dark());
@@ -151,7 +172,7 @@ export function mothPose(vis: number, walk: number, atk: number) {
 /** Ala de polilla (bisagra en el origen, hacia +x·side): chapa fina de 12 mm con larguero, nervios y ocelo; gira en z en enemies.ts. */
 export function mothWing(side: 1 | -1) {
   const { G, done, strut } = kit();
-  const s = side, skin = FOLD.painted("#6b4a2e", 0.5, 73), skin2 = FOLD.painted("#7a3a22", 0.6, 74), cream = FOLD.painted("#e8d8b0", 0.5, 75), core = FOLD.painted("#3a2416", 0.6, 76), spar = FOLD.painted("#5a2e1c", 0.6, 77);
+  const s = side, skin = FOLD.painted("#edc79a", 0.75, 73), skin2 = FOLD.painted("#d9a574", 0.8, 74), cream = FOLD.painted("#b04a22", 0.8, 75), core = FOLD.painted("#5a2412", 0.7, 76), spar = FOLD.painted("#5a2e1c", 0.6, 77);
   G.cyl(0.06, 0.16, FOLD.bare(), [0, 0, 0], [Math.PI / 2, 0, 0], 6); // bisagra pegada al tórax
   G.box(0.86, 0.012, 0.44, skin, [s * 0.55, 0.01, 0.04], [0, s * 0.18, 0]); // ala anterior
   G.box(0.36, 0.012, 0.3, skin2, [s * 0.98, 0.01, -0.06], [0, s * 0.5, 0]); // punta plegada
@@ -169,7 +190,7 @@ export function mothWing(side: 1 | -1) {
 const ROBOT_K = 1.22, SH = 0.9;
 export function robotBody() {
   const { G, done, strut, bone } = kit();
-  const tin = FOLD.painted("#C62828", 0.75, 81), gold = FOLD.painted("#8f7418", 0.35, 83), dark = FOLD.painted("#282c34", 0.9, 82), steel = FOLD.bare(), lamp = FOLD.emissive("#ffe566");
+  const tin = FOLD.painted("#8e5a34", 0.95, 81), gold = FOLD.painted("#94642c", 0.6, 83), dark = FOLD.painted("#2e2622", 0.9, 82), steel = FOLD.bare(), lamp = FOLD.emissive("#ff9a20");
   for (const s of [-1, 1]) {
     bone(s < 0 ? 1 : 2);
     G.box(0.28, 0.1, 0.42, dark, [s * 0.22, 0.06, 0.04]); G.box(0.29, 0.025, 0.43, FOLD.rubber(), [s * 0.22, 0.012, 0.04]); // pies
@@ -196,8 +217,9 @@ export function robotBody() {
   }
   G.cyl(0.14, 0.08, steel, [0, 1.04, 0], undefined, 6); // cuello
   G.box(0.46, 0.3, 0.36, tin, [0, 1.22, 0.01]); // cabeza
-  G.box(0.38, 0.08, 0.02, FOLD.screen("#ffe566"), [0, 1.24, 0.19]); // visor
-  for (const s of [-1, 1]) G.box(0.06, 0.06, 0.03, lamp, [s * 0.11, 1.24, 0.2]);
+  G.box(0.3, 0.05, 0.02, FOLD.dark(), [0, 1.14, 0.19]); // boca
+  for (const s of [-1, 1]) G.cyl(0.13, 0.03, lamp, [s * 0.11, 1.24, 0.205], [Math.PI / 2, 0, 0], 10); // ojos redondos emisivos
+  G.rivets([-0.18, 1.35, 0.19], [0.18, 1.35, 0.19], 3, [0, 0, 1]);
   G.box(0.5, 0.05, 0.4, gold, [0, 1.38, 0.01]); // tapa dorada
   G.cyl(0.14, 0.05, gold, [0, 1.43, 0.01], undefined, 8); // base dorada de la luz
   for (const s of [-1, 1]) { G.cyl(0.11, 0.05, gold, [s * 0.11, 1.24, 0.19], [Math.PI / 2, 0, 0], 8); G.box(0.04, 0.2, 0.04, gold, [s * 0.24, 0.98, 0.2]); } // aros dorados de los ojos y remates del torso
@@ -218,18 +240,21 @@ const FR_W: V3[] = [[-0.42, 0.24, 0.55], [0.42, 0.24, 0.55], [-0.42, 0.24, -0.55
 const FR_K = 1.3; // largo del GLB viejo (2,6 m): escala calibrada con glbStats/bounding box, el colisionador no cambia
 export function frictionBody() {
   const { G, done, strut, bone } = kit();
-  const orange = FOLD.painted("#ff6b0a", 0.75, 121), dark = FOLD.dark(), steel = FOLD.bare();
+  const orange = FOLD.painted("#8a2616", 0.9, 121), cream = FOLD.painted(CREAM, 0.9, 122), bronze = FOLD.painted(BRONZE, 0.6, 123), dark = FOLD.dark(), steel = FOLD.bare();
   G.box(0.7, 0.06, 1.5, dark, [0, 0.16, 0]); // chasis
   G.box(0.8, 0.22, 1.7, orange, [0, 0.3, 0]); // carrocería
   for (const s of [-1, 1]) G.bend([s * 0.4, 0.41, -0.85], [s * 0.4, 0.41, 0.85], 0.025, orange);
   G.box(0.66, 0.2, 0.7, orange, [0, 0.5, -0.12]); // cabina
   G.box(0.56, 0.16, 0.03, FOLD.glass(), [0, 0.52, 0.25], [-0.5, 0, 0]); // parabrisas
   G.box(0.6, 0.04, 0.16, orange, [0, 0.52, -0.84]); for (const s of [-1, 1]) G.box(0.03, 0.14, 0.08, dark, [s * 0.26, 0.46, -0.84]); // alerón
-  G.decal([0, 0.413, 0.5], [Math.PI / 2, 0, 0], "flecha", 0.3);
+  for (const x of [-0.14, 0.14]) { G.box(0.1, 0.012, 1.62, cream, [x, 0.412, 0], undefined); G.box(0.1, 0.012, 0.5, cream, [x, 0.612, -0.12]); } // franjas crema saltadas
+  G.rivets([-0.36, 0.42, -0.7], [-0.36, 0.42, 0.7], 6, [0, 1, 0]); G.rivets([0.36, 0.42, -0.7], [0.36, 0.42, 0.7], 6, [0, 1, 0]);
+  for (const sx of [-1, 1]) { for (const z of [-0.42, 0.18]) { strut([sx * 0.32, 0.55, z], [sx * 0.32, 0.92, z], 0.045, 0.045, bronze); } strut([sx * 0.32, 0.92, -0.42], [sx * 0.32, 0.92, 0.18], 0.045, 0.045, bronze); } // jaula antivuelco
+  for (const z of [-0.42, 0.18]) strut([-0.32, 0.92, z], [0.32, 0.92, z], 0.045, 0.045, bronze);
   strut([-0.38, 0.24, 0.9], [0.38, 0.24, 0.9], 0.06, 0.06, steel); // paragolpes
-  for (const s of [-1, 1]) G.box(0.12, 0.08, 0.03, FOLD.emissive("#fff8e8"), [s * 0.26, 0.32, 0.86]);
+  for (const s of [-1, 1]) G.box(0.12, 0.08, 0.03, FOLD.emissive("#ffb040"), [s * 0.26, 0.32, 0.86]);
   G.box(0.08, 0.08, 0.2, steel, [0.3, 0.2, -0.88]); // escape
-  FR_W.forEach((p, i) => { bone(i + 1); G.wheel(p, undefined, 0.48, 0.18); });
+  FR_W.forEach((p, i) => { bone(i + 1); G.wheel(p, undefined, 0.54, 0.26); });
   return done(2, FR_K);
 }
 export function frictionPose(_vis: number, walk: number, atk: number) {
@@ -347,24 +372,26 @@ const BOSS_S = { rey: 3.5, tarantula: 3, cortadora: 1.22, aspiradora: 1.22, cort
 
 /** Escarabajo rey: élitros dorados de chapa con costura soldada, faldón remachado, cabeza con corona de placas y cuerno. Huesos: 0 cuerpo, 1 cabeza. */
 export function reyBody() {
-  const { G, done, strut, bone } = kit();
-  const gold = FOLD.painted("#d4a017", 0.6, 131), dark = FOLD.painted("#24201a", 0.7, 132), steel = FOLD.bare(), eye = FOLD.emissive("#d0ff60");
+  const { G, done, strut, bone, add } = kit();
+  const gold = FOLD.painted("#a8702a", 0.4, 131), gold2 = FOLD.painted("#8a5420", 0.4, 133), dark = FOLD.painted("#3a2a1c", 0.8, 132), steel = FOLD.bare(), bronze = FOLD.painted(BRONZE, 0.6, 134), eye = FOLD.emissive("#ff7a1a"), red = FOLD.painted("#b02418", 0.7, 135), cream = FOLD.painted(CREAM, 0.85, 136);
   along(G, 1.2, 1.5, 2.5, dark, [0, 0.55, -0.25], 6); // vientre
-  for (const s of [-1, 1]) {
-    G.box(1.0, 0.07, 2.6, gold, [s * 0.42, 1.08, -0.25], [0, 0, -s * 0.3]); // élitro
-    G.box(0.08, 0.44, 2.3, gold, [s * 0.86, 0.72, -0.25]); // faldón
-    G.trimStrip([s * 0.91, 0.72, -0.25], [0, -s * Math.PI / 2, 0], 2.1, 0.12, "remaches", 0.02);
-    G.box(0.1, 0.3, 1.3, FOLD.plastic("#f5f0c8"), [s * 0.66, 1.0, -0.2], [0, 0, -s * 0.34]); // franja clara
+  for (const s of [-1, 1]) { // élitros: dos cúpulas de chapa con nervios, remaches en el borde y parches crema
+    ell(add, s < 0 ? gold : gold2, [s * 0.5, 0.82, -0.25], [1.08, 1.5, 2.7], 12, 0.5);
+    for (const z of [-1.05, -0.55, -0.05, 0.45]) { const f = (z + 0.25) / 1.35, k = Math.sqrt(1 - f * f); rib(G, steel, z, 0.52 * k, 0.75 * k, [s * 0.5, 0.82], 0.035); G.rivets([s * (0.5 + 0.52 * k), 0.84, z], [s * (0.5 + 0.52 * k), 0.84, z], 1, [s, 0.3, 0]); }
+    G.box(0.5, 0.02, 0.6, cream, [s * 0.62, 1.38, -0.5], [0, 0, s * 0.5]);
   }
-  G.bend([0, 1.22, -1.5], [0, 1.22, 1.0], 0.06, steel); // costura
-  G.trimStrip([0, 0.6, -1.52], undefined, 1.1, 0.18, "hazard", 0.04);
+  G.bend([0, 1.2, -1.5], [0, 1.58, -0.1], 0.07, steel); // costura soldada
+  G.bend([0, 1.58, -0.1], [0, 1.4, 0.95], 0.07, steel);
+  ell(add, gold2, [0, 0.95, 0.8], [1.5, 0.95, 1.0], 10, 0.5); // pronoto
+  G.rivets([-0.5, 1.35, 0.75], [0.5, 1.35, 0.75], 5, [0, 1, 0]);
   bone(1);
   G.box(1.0, 0.62, 0.74, dark, [0, 0.56, 1.2]); // cabeza
-  G.box(0.86, 0.1, 0.6, gold, [0, 0.9, 1.18]); // visera
-  for (let i = 0; i < 5; i++) G.box(0.14, 0.24 + (i === 2 ? 0.12 : 0), 0.04, gold, [-0.32 + i * 0.16, 1.06 + (i === 2 ? 0.06 : 0), 0.95], [0.2, 0, 0]); // corona de placas
-  G.box(0.82, 0.06, 0.08, steel, [0, 0.95, 0.95]);
-  for (const s of [-1, 1]) { G.box(0.26, 0.22, 0.1, eye, [s * 0.32, 0.62, 1.57]); strut([s * 0.3, 0.36, 1.5], [s * 0.12, 0.3, 1.9], 0.1, 0.08, steel); }
-  strut([0, 0.78, 1.5], [0, 1.1, 2.05], 0.16, 0.2, gold); G.box(0.2, 0.14, 0.16, steel, [0, 1.12, 2.08]); // cuerno
+  G.box(0.86, 0.1, 0.6, bronze, [0, 0.9, 1.18]); // visera
+  G.sph(0.16, steel, [0, 1.12, 1.05]); G.box(1.0, 0.12, 0.6, bronze, [0, 1.0, 1.1]); // aro de la corona
+  for (let i = 0; i < 5; i++) G.box(0.14, 0.3 + (i === 2 ? 0.14 : 0), 0.05, bronze, [-0.36 + i * 0.18, 1.2 + (i === 2 ? 0.07 : 0), 1.08], [0.15, 0, 0]); // puntas de la corona
+  for (const i of [0, 2, 4]) G.sph(0.14, red, [-0.36 + i * 0.18, 1.0 + (i === 2 ? 0.28 : 0.16) + 0.1, 1.1]); // gemas
+  for (const s of [-1, 1]) { G.sph(0.3, FOLD.painted("#0c0a0a", 0.2, 137), [s * 0.34, 0.66, 1.55]); G.sph(0.11, eye, [s * 0.4, 0.69, 1.76]); strut([s * 0.3, 0.36, 1.5], [s * 0.12, 0.3, 1.9], 0.1, 0.08, steel); }
+  G.tube([[0, 0.7, 1.6], [0, 0.82, 2.0], [0, 1.05, 2.2], [0, 1.3, 2.08]], 0.07, dark); // cuerno curvo corto, oscuro
   bone(0);
   return done(5, BOSS_S.rey);
 }
@@ -377,8 +404,9 @@ export function reyPose(_v: number, walk: number, atk: number) {
 /** Tarántula: cefalotórax de chapa con placa, abdomen en prisma con faja naranja y placa dorsal, quelíceros de acero, racimo de ojos. Huesos: 0 cuerpo, 1 abdomen. */
 export function tarantulaBody() {
   const { G, done, strut, bone } = kit();
-  const hair = FOLD.painted("#17171b", 0.55, 141), dark = FOLD.painted("#17171b", 0.45, 142), band = FOLD.painted("#d0622a", 0.7, 143), gold = FOLD.painted("#c9a227", 0.65, 144), eye = FOLD.emissive("#ff9a1a");
+  const hair = FOLD.painted("#2a1a14", 0.85, 141), dark = FOLD.painted("#2a1a14", 0.8, 142), band = FOLD.painted("#a8461a", 0.85, 143), gold = FOLD.painted("#8a4a24", 0.9, 144), eye = FOLD.emissive("#d8300e"), bronze = FOLD.painted(BRONZE, 0.6, 145);
   G.box(1.0, 0.5, 1.1, dark, [0, 0.5, 0.32]); // cefalotórax
+  for (let i = 0; i < 14; i++) { const x = -0.44 + (i % 7) * 0.147, z = i < 7 ? 0.02 : 0.62; G.box(0.07, 0.07, 0.3, i % 2 ? band : hair, [x, 0.8, z], [-0.5, 0, 0]); } // pelos de chapa
   G.plate([0, 0.756, 0.3], [Math.PI / 2, 0, 0], 0.8, 0.9, gold);
   for (const s of [-1, 1]) G.bend([s * 0.5, 0.75, -0.2], [s * 0.5, 0.75, 0.86], 0.04, dark);
   along(G, 0.24, 0.28, 0.3, FOLD.dark(), [0, 0.55, -0.32]); // cintura
@@ -386,13 +414,15 @@ export function tarantulaBody() {
     strut([s * 0.18, 0.42, 0.86], [s * 0.16, 0.16, 1.08], 0.14, 0.16, FOLD.bare()); // quelícero
     strut([s * 0.36, 0.42, 0.8], [s * 0.42, 0.3, 1.22], 0.1, 0.1, dark); // pedipalpo
   }
-  for (const [x, y, z, sz] of [[0.14, 0.82, 0.72, 0.12], [-0.14, 0.82, 0.72, 0.12], [0.26, 0.78, 0.64, 0.08], [-0.26, 0.78, 0.64, 0.08], [0, 0.84, 0.6, 0.07]]) G.box(sz, sz, sz, eye, [x, y, z]);
+  for (const [x, y, z, sz] of [[0.14, 0.84, 0.74, 0.1], [-0.14, 0.84, 0.74, 0.1], [0.3, 0.78, 0.66, 0.07], [-0.3, 0.78, 0.66, 0.07], [0, 0.88, 0.62, 0.06]]) G.box(sz, sz, sz, eye, [x, y, z]);
   bone(1);
   along(G, 1.2, 1.5, 1.7, hair, [0, 0.66, -1.12], 8); // abdomen
   G.cyl(1.56, 0.2, band, [0, 0.66, -0.66], [Math.PI / 2, 0, 0], 8); // faja
+  G.cyl(1.4, 0.2, band, [0, 0.66, -1.5], [Math.PI / 2, 0, 0], 8); // segunda faja
+  for (let i = 0; i < 30; i++) { const a = (i / 30) * Math.PI * 2, z = -0.4 - (i % 6) * 0.3; if (Math.sin(a) < 0.1) continue; const r = 0.62 + (z < -1 ? 0.0 : 0.1); G.box(0.05, 0.05, 0.3, i % 3 ? hair : band, [Math.cos(a) * r * 1.0, 0.66 + Math.sin(a) * r * 1.0, z], [Math.cos(a) * 0.5, 0, 0], undefined); } // cerdas del abdomen
   G.plate([0, 1.3, -1.12], [Math.PI / 2 - 0.05, 0, 0], 0.7, 1.2, gold);
   for (const s of [-1, 1]) G.plate([s * 0.62, 1.12, -1.0], [Math.PI / 2 - 0.05, 0, s * 0.5], 0.4, 0.8, band); // placas laterales del lomo
-  G.rivets([-0.3, 1.31, -0.6], [0.3, 1.31, -0.6], 4, [0, 1, 0]); // placa dorsal
+  G.rivets([-0.3, 1.31, -0.6], [0.3, 1.31, -0.6], 4, [0, 1, 0]); G.rivets([-0.3, 1.31, -1.6], [0.3, 1.31, -1.6], 4, [0, 1, 0]); // placa dorsal
   G.decal([0, 1.31, -1.1], [Math.PI / 2 - 0.05, 0, 0], "calavera", 0.5);
   G.cyl(0.24, 0.2, FOLD.dark(), [0, 0.62, -2.0], [Math.PI / 2, 0, 0], 6); // hileras
   bone(0);
@@ -407,7 +437,7 @@ export function tarantulaPose(_v: number, walk: number, atk: number) {
 const CUT_W: V3[] = [[-2.95, 0.88, 2.35], [2.95, 0.88, 2.35], [-2.95, 0.88, -2.55], [2.95, 0.88, -2.55]];
 export function cortadoraBody() {
   const { G, done, strut, bone } = kit();
-  const red = FOLD.painted("#c4221e", 0.65, 151), red2 = FOLD.dark(), deck = FOLD.painted("#6e7076", 0.85, 153), dark = FOLD.dark(), steel = FOLD.bare(), yel = FOLD.painted("#c62828", 0.6, 154);
+  const red = FOLD.painted("#a8281c", 0.95, 151), red2 = FOLD.dark(), deck = FOLD.painted("#6e7076", 0.85, 153), blade = FOLD.painted("#a0a4ac", 0.9, 155), dark = FOLD.dark(), steel = FOLD.bare(), yel = FOLD.painted("#c62828", 0.6, 154);
   G.cyl(5.8, 1.0, deck, [0, 0.82, -0.15], undefined, 12, 6.2); // plataforma de corte
   G.box(6.4, 0.35, 2.2, dark, [0, 0.42, 2.85]); // boca
   G.trimStrip([0, 0.58, 3.97], [0, Math.PI, 0], 6.2, 0.4, "hazard", 0.1); // barra de corte
@@ -423,6 +453,8 @@ export function cortadoraBody() {
   G.tube([[-2, 2.35, -2.95], [-2, 5.2, -5.2], [-2, 7.8, -6.35], [2, 7.8, -6.35], [2, 5.2, -5.2], [2, 2.35, -2.95]], 0.2, dark); // manija
   for (const s of [-1, 1]) G.box(0.85, 0.12, 3.6, yel, [s * 2.55, 1.35, -0.1]); // estribos
   G.rivets([-2.3, 1.32, 2.5], [2.3, 1.32, 2.5], 9, [0, 0, 1]);
+  G.rivets([-2.2, 2.45, 1.95], [2.2, 2.45, 1.95], 8, [0, 1, 0.3]);
+  for (const s of [-1, 1]) { G.cyl(3.0, 0.12, blade, [s * 2.0, 0.45, 4.3], undefined, 14); G.cyl(0.6, 0.2, FOLD.rust(), [s * 2.0, 0.5, 4.3], undefined, 6); for (let k = 0; k < 6; k++) { const a = k * 1.05; G.box(0.5, 0.1, 0.3, steel, [s * 2.0 + Math.cos(a) * 1.5, 0.45, 4.3 + Math.sin(a) * 1.5], [0, -a, 0]); } } // cuchillas circulares a la vista
   CUT_W.forEach((p, i) => { bone(i + 1); G.wheel(p, undefined, 2.0, 0.85); G.cyl(1.05, 0.9, yel, p, [0, 0, Math.PI / 2], 8); });
   return done(8, BOSS_S.cortadora);
 }
@@ -435,16 +467,16 @@ export function cortadoraPose(_v: number, walk: number, atk: number) {
 /** Aspiradora robot: disco de chapa con paragolpes de goma, domo, torreta con faro, sensores y 2 cepillos laterales que giran (huesos 1-2). */
 export function aspiradoraBody() {
   const { G, done, bone } = kit();
-  const shell = FOLD.painted("#5a6a8a", 0.7, 161), dark = FOLD.dark(), steel = FOLD.bare(), red = FOLD.emissive("#ff2a1a");
+  const shell = FOLD.painted("#a4a8ae", 0.95, 161), orange = FOLD.painted("#b8602a", 0.95, 163), dark = FOLD.dark(), steel = FOLD.bare(), red = FOLD.emissive("#ff2a1a");
   G.cyl(6.45, 0.45, FOLD.rubber(), [0, 0.48, 0], undefined, 16); // paragolpes
   G.cyl(6.15, 0.75, shell, [0, 0.62, 0], undefined, 16, 6.45); // casco
   G.cyl(3.0, 0.5, shell, [0, 1.25, 0], undefined, 12, 4.2); // domo
-  G.cyl(5.4, 0.16, FOLD.painted("#44526e", 0.7, 162), [0, 1.04, 0], undefined, 16);
-  G.trimStrip([0, 1.2, 1.6], [0, Math.PI, 0], 4.2, 0.2, "hazard", 0.3);
-  G.cyl(1.45, 0.65, dark, [0, 1.75, -0.35], undefined, 8); G.box(0.8, 0.5, 0.8, red, [0, 2.1, -0.35]); // torreta y faro
+  G.cyl(5.4, 0.16, orange, [0, 1.04, 0], undefined, 16);
+  for (const [x, z] of [[-1.8, -1.2], [1.6, 1.4], [0.4, -2.4]]) G.cyl(1.2, 0.04, orange, [x, 1.5, z], undefined, 8); // óxido naranja
+  G.cyl(1.5, 0.3, dark, [0, 1.62, 0], undefined, 12); G.cyl(1.0, 0.35, red, [0, 1.9, 0], undefined, 12); // botón rojo central
   G.grate([0, 1.6, -2.3], undefined, 2.4, 0.5, 4, steel); // salida de aire
   G.box(3.6, 0.38, 0.55, dark, [0, 0.32, 3.05]); // barra de sensores
-  for (const s of [-1, 1]) { G.cyl(0.62, 0.12, steel, [s * 1.05, 0.88, 3.08], [Math.PI / 2, 0, 0], 10); G.cyl(0.46, 0.2, red, [s * 1.05, 0.88, 3.14], [Math.PI / 2, 0, 0], 10); G.decal([s * 2.4, 1.1, 2.0], [0.3, s * 2.4, 0], "voltaje", 0.9); }
+  for (const s of [-1, 1]) { G.cyl(0.62, 0.12, steel, [s * 1.05, 0.88, 3.08], [Math.PI / 2, 0, 0], 10); G.cyl(0.5, 0.2, red, [s * 1.05, 0.88, 3.14], [Math.PI / 2, 0, 0], 10); G.decal([s * 2.4, 1.1, 2.0], [0.3, s * 2.4, 0], "voltaje", 0.9); }
   G.rivets([-2.6, 1.0, -2.9], [2.6, 1.0, -2.9], 9, [0, 0.3, -1]);
   [-1, 1].forEach((s, i) => { // cepillos
     bone(i + 1);
@@ -462,7 +494,7 @@ export function aspiradoraPose(_v: number, walk: number, atk: number) {
 /** Cortacercos eléctrico: motor naranja plegado, mango en D de caño, espada con dientes que van y vienen (hueso 1), ojos y cable. */
 export function cortacercosBody() {
   const { G, done, strut, bone } = kit();
-  const body = FOLD.painted("#E8601C", 0.6, 171), dark = FOLD.dark(), steel = FOLD.bare(), orange = FOLD.painted("#d9561a", 0.7, 172);
+  const body = FOLD.painted("#6a5a2a", 0.95, 171), dark = FOLD.dark(), steel = FOLD.bare(), orange = FOLD.painted("#a8481c", 0.9, 172);
   G.box(2.65, 1.65, 3.2, body, [0, 1.12, -2.75]); // motor
   G.box(2.3, 0.5, 2.8, body, [0, 2.1, -2.75]); for (const s of [-1, 1]) G.bend([s * 1.15, 2.35, -4.15], [s * 1.15, 2.35, -1.35], 0.1, body);
   G.box(2.7, 0.55, 2.6, dark, [0, 0.42, -2.7]); // base
@@ -470,7 +502,8 @@ export function cortacercosBody() {
   G.box(0.55, 0.35, 1.1, orange, [0, 1.05, -1.35]); // cuello
   G.tube([[0, 1.6, -1.15], [0, 2.9, -0.95], [0, 2.9, -0.35], [0, 1.4, -0.3]], 0.16, dark); // mango en D
   G.tube([[0, 1.75, -4.25], [0, 2.85, -4.85], [0, 2.55, -5.35], [0, 1.35, -5.05]], 0.22, dark); // manija trasera
-  for (const s of [-1, 1]) G.box(0.5, 0.4, 0.12, FOLD.emissive("#ff2a1a"), [s * 0.72, 2.0, -1.14]);
+  G.box(2.0, 1.0, 0.2, dark, [0, 1.9, -1.2]); G.grate([0, 1.2, -1.22], [0, Math.PI, 0], 1.6, 0.5, 4, steel); // frente: cara oscura con parrilla
+  for (const s of [-1, 1]) { G.cyl(0.7, 0.2, steel, [s * 0.62, 1.95, -1.3], [Math.PI / 2, 0, 0], 10); G.cyl(0.5, 0.25, FOLD.emissive("#ff8a1a"), [s * 0.62, 1.95, -1.36], [Math.PI / 2, 0, 0], 10); }
   G.box(0.85, 0.28, 5.9, steel, [0, 0.92, 2.75]); // espada
   G.box(0.55, 0.22, 5.5, FOLD.painted("#6b7280", 0.8, 173), [0, 0.78, 2.75]);
   G.trimStrip([0, 1.07, 0.3], [Math.PI / 2, 0, 0], 0.84, 0.6, "hazard", 0.02);
@@ -488,7 +521,7 @@ export function cortacercosPose(_v: number, walk: number, atk: number) {
 /** Máquina de garra de feria: gabinete de premios, pórtico y pinza suspendida. Huesos: cuerpo, cable y dedos. */
 export function gruaBody() {
   const { G, done, bone } = kit();
-  const orange = FOLD.painted("#e87816", 0.8, 181), yellow = FOLD.painted("#f5b91b", 0.65, 182);
+  const orange = FOLD.painted("#c85a1c", 0.95, 181), yellow = FOLD.painted("#c8902a", 0.9, 182);
   const dark = FOLD.dark(), steel = FOLD.bare(), glass = FOLD.glass();
   G.foldBox([0, 0.18, 0], undefined, 2.8, 0.72, 2.45, orange);
   for (const x of [-1.17, 1.17]) G.wheel([x, 0.2, 0.05], undefined, 0.42, 0.22);
@@ -510,6 +543,9 @@ export function gruaBody() {
   for (const s of [-1, 1]) { G.plate([s * 1.22, 1.86, 1.24], undefined, 0.16, 1.65, steel); G.rivets([s * 1.19, 0.98, 1.24], [s * 1.19, 2.72, 1.24], 7, [0, 0, 1]); }
   G.box(0.18, 0.2, 2.55, yellow, [0, 3.05, -0.02]); G.box(2.55, 0.24, 0.28, orange, [0, 3.28, 0.2]);
   G.cyl(0.42, 0.18, steel, [0, 3.08, 0.2], [0, 0, Math.PI / 2], 8);
+  for (const s of [-1, 1]) for (const z of [-0.7, 0.1, 0.9]) { // 6 patas mecánicas (fijas)
+    G.tube([[s * 1.3, 0.45, z], [s * 1.75, 0.85, z], [s * 2.05, 0.04, z + 0.1]], 0.07, FOLD.painted("#6a4a2a", 0.9, 184)); G.box(0.3, 0.06, 0.3, FOLD.rubber(), [s * 2.05, 0.03, z + 0.1]);
+  }
   bone(1);
   G.box(0.08, 0.92, 0.08, dark, [0, 2.58, 0.75]);
   G.cyl(0.32, 0.16, steel, [0, 2.12, 0.75], [Math.PI / 2, 0, 0], 8);
@@ -524,14 +560,17 @@ export function gruaPose(_vis: number, walk: number, atk: number) {
   return [body, piv(new B.Vector3(0, 3.1, 0.2), B.Matrix.Translation(0, -0.2 * up, 0).multiply(body)), piv(new B.Vector3(0, 2.0, 0.75), B.Matrix.RotationZ(0.18 + 0.22 * up + 0.035 * Math.sin(walk * Math.PI * 2)).multiply(body))];
 }
 
+// ponytail: paleta por color de LEGS (models/enemies.ts, ajeno) para repintar rey y tarántula sin tocar ese archivo; [pata, rodilla, banda].
+const LEG_PAL: Record<string, [string, string, string?]> = { "#3c4450": ["#8a5420", "#94642c", "#e8d4a8"], "#4a3228": ["#2a1a14", "#1e130e", "#a8461a"] };
 /** Pata articulada Folded (rey, tarántula): fémur y tibia de perfil, rodilla de bisagra emisiva, tobillo y pie de goma. Misma geometría que la vieja (LEGS). */
 export function foldLeg(L: { hips: [number, number, number][]; len: number; r: number; color: string; knee?: string }) {
   const { G, done, strut } = kit();
-  const hy = L.hips[0][1], leg = FOLD.painted(L.color, 0.75, 181), steel = FOLD.bare(), knee: V3 = [L.len * 0.48, L.len * 0.32, 0], foot: V3 = [L.len * 0.98, -hy + 0.02, 0.06];
+  const pal = LEG_PAL[L.color], hy = L.hips[0][1], leg = FOLD.painted(pal?.[0] ?? L.color, pal ? 0.9 : 0.75, 181), steel = pal ? FOLD.painted(BRONZE, 0.6, 182) : FOLD.bare(), knee: V3 = [L.len * 0.48, L.len * 0.32, 0], foot: V3 = [L.len * 0.98, -hy + 0.02, 0.06];
   G.cyl(L.r * 2.4, L.r * 2.4, steel, [-L.r * 0.4, 0, 0], [0, 0, Math.PI / 2], 6); // rótula hacia el caparazón
   G.box(L.r * 2.3, L.r * 2.3, L.r * 2.3, steel, [0, 0, 0]);
   strut([0, 0, 0], knee, L.r * 1.75, L.r * 2.15, leg); strut(knee, foot, L.r * 1.35, L.r * 1.65, leg);
-  G.cyl(L.r * 2.1, L.r * 2.4, L.knee ? FOLD.emissive(L.knee) : steel, knee, [Math.PI / 2, 0, 0], 6); // rodilla
+  G.cyl(L.r * 2.1, L.r * 2.4, pal ? FOLD.painted(pal[1], 0.8, 184) : L.knee ? FOLD.emissive(L.knee) : steel, knee, [Math.PI / 2, 0, 0], 6); // rodilla
+  if (pal) for (const t of [0.3, 0.62, 0.84]) { const a = new B.Vector3(...knee), f = new B.Vector3(...foot), q = B.Vector3.Lerp(a, f, t); G.box(L.r * 1.9, L.r * 1.9, L.r * 1.4, pal[2] ? FOLD.painted(pal[2], 0.8, 183) : leg, [q.x, q.y, q.z], [0, 0, 0.9]); } // bandas / segmentos de la tibia
   G.cyl(L.r * 1.6, L.r * 1.9, steel, [foot[0], foot[1] + L.r * 0.72, foot[2]], [Math.PI / 2, 0, 0], 6); // tobillo
   G.box(L.r * 2.7, L.r * 0.9, L.r * 2.5, FOLD.rubber(), [foot[0], foot[1] + L.r * 0.42, foot[2]]);
   return done(3);
@@ -548,8 +587,8 @@ const QLEGS: [number, number][] = [[1, 1], [-1, 1], [1, -1], [-1, -1]]; // [lado
 
 export function petBody(Q: Quad) {
   const { G, done, strut, bone } = kit();
-  const c = Q.cat, coat = FOLD.painted(c ? "#d9782a" : "#6e7279", 0.55, c ? 191 : 201), dark = FOLD.painted(c ? "#7a3410" : "#3c4046", 0.7, c ? 192 : 202);
-  const light = FOLD.painted(c ? "#f2e6d0" : "#d8dadc", 0.5, c ? 193 : 203), steel = FOLD.bare(), eye = FOLD.emissive(c ? "#a8ff3a" : "#ffb02e");
+  const c = Q.cat, coat = FOLD.painted(c ? "#d9782a" : "#7a7f8e", 0.8, c ? 191 : 201), dark = FOLD.painted(c ? "#a8451a" : "#4a4a56", 0.8, c ? 192 : 202);
+  const light = FOLD.painted(c ? "#f2e6d0" : "#dccdb0", 0.7, c ? 193 : 203), steel = FOLD.bare(), eye = FOLD.emissive(c ? "#8adf2a" : "#e07a1a"), pink = FOLD.painted("#c8706a", 0.6, 206);
   const { hipX: hx, hipY: hy, hipZ: hz } = Q, tw = c ? 2.0 : 2.8, th = c ? 2.2 : 3.0, tl = c ? 6.0 : 6.6, ty = hy + th * 0.45;
   // Torso: caja de chapa con pechera clara, lomo atornillado y dobleces en las aristas
   G.box(tw, th, tl, coat, [0, ty, 0]);
@@ -559,13 +598,14 @@ export function petBody(Q: Quad) {
     G.bend([s * tw / 2, ty + th / 2, -tl / 2], [s * tw / 2, ty + th / 2, tl / 2], 0.08, coat);
     G.rivets([s * (tw / 2 + 0.01), ty - th * 0.35, -tl * 0.4], [s * (tw / 2 + 0.01), ty - th * 0.35, tl * 0.4], 7, [s, 0, 0]);
   }
-  if (c) for (let i = 0; i < 4; i++) G.box(tw + 0.06, 0.5, 0.36, dark, [0, ty + th / 2 - 0.2, -2.2 + i * 1.3]); // rayas: flejes oscuros sobre el lomo
+  if (c) { for (let i = 0; i < 6; i++) G.box(tw + 0.06, 0.5, 0.36, dark, [0, ty + th / 2 - 0.2, -2.5 + i * 0.95]); for (const s of [-1, 1]) for (let i = 0; i < 4; i++) G.box(0.06, 0.45, 0.4, dark, [s * (tw / 2 + 0.02), ty + 0.2, -2 + i * 1.3], [0.4, 0, 0]); } // rayas del tigre: flejes oscuros sobre el lomo y los flancos
   else { G.decal([tw / 2 + 0.01, ty, -0.8], [0, -Math.PI / 2, 0], "numero", 1.2); G.decal([-tw / 2 - 0.01, ty, -0.8], [0, Math.PI / 2, 0], "numero", 1.2); }
   // Cuello y collar
   const [nx, ny, nz] = Q.neck;
   strut([0, ty + th * 0.2, tl / 2 - 0.6], [nx, ny + 0.4, nz + 0.6], c ? 1.1 : 1.7, c ? 1.1 : 1.6, coat);
   G.box(c ? 1.4 : 2.0, 0.4, c ? 1.3 : 1.8, FOLD.painted(c ? "#2f6fd0" : "#c0262a", 0.5, 204), [nx, ny, nz + 0.4], [-0.5, 0, 0]);
   G.box(0.5, 0.5, 0.06, FOLD.painted(PAL.amarillo, 0.4, 205), [nx, ny - 0.5, nz + 0.95]); // chapita
+  if (!c) for (const s of [-1, 1]) for (let i = 0; i < 3; i++) G.cyl(0.02, 0.5, steel, [s * (0.5 + i * 0.5), ny + 0.35, nz + 0.2 + (i === 1 ? 0.2 : 0)], undefined, 4, 0.5); // pinches del collar
   bone(1); // cabeza
   const hy0 = ny + (c ? 1.0 : 1.4), hz0 = nz + (c ? 1.0 : 1.2), hs = c ? 1.9 : 2.4;
   G.box(hs, hs * 0.9, hs, coat, [0, hy0, hz0]);
@@ -574,13 +614,13 @@ export function petBody(Q: Quad) {
   if (!c) G.box(hs * 0.6, hs * 0.16, hs * 0.65, dark, [0, hy0 - hs * 0.55, hz0 + hs * 0.75]); // mandíbula
   for (const s of [-1, 1]) {
     G.box(hs * 0.22, hs * 0.16, 0.1, eye, [s * hs * 0.27, hy0 + hs * 0.12, hz0 + hs / 2 + 0.05]);
-    if (c) G.cyl(0.04, 1.1, coat, [s * hs * 0.32, hy0 + hs * 0.45 + 0.5, hz0 - 0.1], undefined, 4, 0.95); // oreja de chapa en punta
-    else G.box(0.2, 1.6, 1.0, dark, [s * (hs / 2 + 0.05), hy0 + 0.1, hz0 - 0.2], [0, 0, s * 0.25]); // oreja caída
+    if (c) { G.cyl(0.04, 1.1, coat, [s * hs * 0.32, hy0 + hs * 0.45 + 0.5, hz0 - 0.1], undefined, 4, 0.95); G.cyl(0.03, 0.7, pink, [s * hs * 0.32, hy0 + hs * 0.45 + 0.4, hz0 + 0.02], undefined, 4, 0.6); } // oreja en punta con interior rosa
+    else { G.box(0.4, 1.9, 1.3, coat, [s * hs * 0.34, hy0 + hs * 0.45 + 0.9, hz0 - 0.2], [0.1, 0, s * 0.15]); G.box(0.1, 1.5, 1.0, pink, [s * hs * 0.34, hy0 + hs * 0.45 + 0.9, hz0 - 0.02], [0.1, 0, s * 0.15]); G.box(0.14, hs * 0.14, 0.14, FOLD.painted("#c0262a", 0.5, 207), [s * 0.3, ny - 0.4, nz + 1.0], undefined); } // oreja erguida (bulldog francés) con interior rosa; pinches del collar
     if (c) for (const k of [-1, 1]) strut([s * hs * 0.3, hy0 - hs * 0.2, hz0 + hs * 0.85], [s * hs * 0.85, hy0 - hs * 0.2 + k * 0.15, hz0 + hs * 0.9], 0.04, 0.04, steel); // bigotes de alambre
   }
   bone(2); // cola
   const [tx, ty2, tz] = Q.tail;
-  if (c) { strut([tx, ty2, tz], [0, ty2 + 1.6, tz - 1.8], 0.45, 0.45, coat); strut([0, ty2 + 1.6, tz - 1.8], [0, ty2 + 2.8, tz - 2.6], 0.4, 0.4, dark); }
+  if (c) { strut([tx, ty2, tz], [0, ty2 + 1.6, tz - 1.8], 0.45, 0.45, coat); strut([0, ty2 + 1.6, tz - 1.8], [0, ty2 + 2.8, tz - 2.6], 0.4, 0.4, dark); G.box(0.5, 0.6, 0.6, light, [0, ty2 + 3.0, tz - 2.7]); } // punta crema
   else strut([tx, ty2, tz], [0, ty2 + 1.8, tz - 1.8], 0.55, 0.55, coat);
   // Patas: perno de cadera en el torso, muslo pintado, rodilla de acero, caña y pata de goma
   QLEGS.forEach(([s, f], i) => {

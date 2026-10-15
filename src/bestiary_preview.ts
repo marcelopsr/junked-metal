@@ -256,7 +256,7 @@ export interface SetupBeastCamContext {
 export function setupBeastCam(bspan: number, ctx: SetupBeastCamContext): void {
   const { engine, cam, dt } = ctx;
   const d = DEF[BV.kind!], asp = engine.getAspectRatio(cam), th = Math.tan(cam.fov / 2), tall = asp < 1;
-  const h = d.size[1], need = Math.max(bspan, d.size[2], h * 1.2) * (d.boss ? 1.9 : 1.5) + 1.5; // los jefes abren patas y cola más allá de su caja
+  const h = d.size[1] + (BV.kind === "polilla" ? 1.6 : 0), need = Math.max(bspan, d.size[2], h * 1.2) * (d.boss ? 1.9 : 1.5) + 1.5; // polilla: suma lo que vuela (lift en beastTick); los jefes abren patas y cola más allá de su caja
   const dist = Math.max(need / (2 * th * asp * (tall ? 0.7 : 0.45)), (h + 1.5) / (2 * th * (tall ? 0.3 : 0.65))) * BV.zoom;
   const W = dist * th * asp, H = dist * th, ty0 = PED_H + h * 0.45;
   SHOTS.beast = [tall ? 0 : -W * 0.42, ty0 + dist * 0.36, dist, tall ? 0 : -W * 0.42, ty0 - (tall ? H * 0.58 : 0), 0]; // desde +z: del otro lado queda la mesa del patio

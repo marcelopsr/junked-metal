@@ -8,6 +8,10 @@ const tick = (p, n = 3) => p.evaluate((n) => window.__tick(n), n);
 const wait = (p, fn, arg) => p.waitForFunction(fn, arg, { timeout: 30000, polling: 50 });
 const info = (p) => p.evaluate(() => window.__info());
 
+// Todos los bichos del bestiario (el yaw inicial por bicho vive en src/menu/beast_sheet.ts; el arrastre de 1 px solo frena el giro lento).
+// Depuración: FK="hormiga@0.785,rey" (bicho@giro en rad sobre el yaw inicial) captura solo esas fichas.
+const KINDS_FICHA = ["hormiga","escupidora","friccion","robot","polilla","escarabajo","grillo","mosca","babosa","fuego","cohete","enjambre","tirador","saltador","emboscador","flotante","tanque","explosivo","curandero","kamikaze","escudo","brincador","francotirador","divisor","cria","ladron","rey","cortadora","tarantula","perro","gato","aspiradora","proyector","payaso","muneco","limpiafondos","falso","grua","gusano","cortacercos","caja"];
+
 // ---------- menús ----------
 const toMain = async (p) => {
   for (let i = 0; i < 6 && !(await p.$("#scr-main.on")); i++) { await p.keyboard.press("Escape"); await p.waitForTimeout(60); }
@@ -43,7 +47,7 @@ const labAnts = async (p) => { await labReady(p); await p.evaluate(() => { windo
 
 const PIEZAS = ["wing:alto", "exhaust:chimenea", "bumper:cano", "bumper:antivuelco", "bumper:laterales", "tires:oruga", "tires:todoterreno", "tires:rayos", "acc:pelotita", "acc:banderita", "acc:matafuego"].map((x) => "part:" + x);
 const garajePiezas = (car, kit) => async (p) => { await p.evaluate(([car, kit, unlocked]) => window.__cfg({ car, cars: ["buggy", car], unlocked, kit: { wing: "serie", decal: "nada", lamp: "calido", exhaust: "nada", ...kit } }), [car, kit, PIEZAS]);
-  await view("garage")(p); await p.dispatchEvent('[data-gtab="piezas"]', "click"); await tick(p, 150); await p.waitForTimeout(100); }; // 150 cuadros: la cámara viaja desde el Taller
+  await view("garage")(p); await p.dispatchEvent('[data-gtab="piezas"]', "click"); await tick(p, 90); await p.waitForTimeout(100); }; // 150 cuadros: la cámara viaja desde el Taller
 
 export const sessions = [
   // Portada de quien ya largó una expedición: aparece «Seguir» (siembra el guardado y recarga; sin congelar, por eso tol alta)
@@ -72,69 +76,16 @@ export const sessions = [
     { id: "guia-controles", perf: false, act: async (p) => { await ctlTab(p); await abrirGuia(p); } }, // teclado en compu, táctil en celu
     { id: "bestiario", act: async (p) => { await view("bestiary")(p); } },
     { id: "ficha", act: async (p) => { await p.dispatchEvent("#beasts [data-beast]", "click"); await wait(p, () => document.querySelector("#scr-beast.on")); await tick(p, 90); await p.waitForTimeout(300); } },
-    { id: "ficha-hormiga", act: async (p) => {
+    // Ficha en 3/4 frontal: un arrastre corto sobre #bstage fija BV.yaw (yaw inicial de la ficha + dx*0.012) y frena el giro lento.
+    ...(process.env.FK ? process.env.FK.split(",") : KINDS_FICHA).map((kk) => { const [k, o = "0"] = kk.split("@"); return { id: "ficha-" + kk.replace("@", "_"), act: async (p) => {
       await view("bestiary")(p);
-      await p.dispatchEvent('[data-beast="hormiga"]', "click");
+      await p.dispatchEvent(`[data-beast="${k}"]`, "click");
       await wait(p, () => document.querySelector("#scr-beast.on"));
+      const b = await p.locator("#bstage").boundingBox(), x = b.x + b.width / 2, y = b.y + b.height / 2;
+      await p.mouse.move(x, y); await p.mouse.down(); await p.mouse.move(x + 1 + Math.round(+o / 0.012), y, { steps: 2 }); await p.mouse.up();
       await tick(p, 90);
       await p.waitForTimeout(300);
-    } },
-    { id: "ficha-escupidora", act: async (p) => {
-      await view("bestiary")(p);
-      await p.dispatchEvent('[data-beast="escupidora"]', "click");
-      await wait(p, () => document.querySelector("#scr-beast.on"));
-      await tick(p, 90);
-      await p.waitForTimeout(300);
-    } },
-    { id: "ficha-friccion", act: async (p) => {
-      await view("bestiary")(p);
-      await p.dispatchEvent('[data-beast="friccion"]', "click");
-      await wait(p, () => document.querySelector("#scr-beast.on"));
-      await tick(p, 90);
-      await p.waitForTimeout(300);
-    } },
-    { id: "ficha-rey", act: async (p) => {
-      await view("bestiary")(p);
-      await p.dispatchEvent('[data-beast="rey"]', "click");
-      await wait(p, () => document.querySelector("#scr-beast.on"));
-      await tick(p, 90);
-      await p.waitForTimeout(300);
-    } },
-    { id: "ficha-tarantula", act: async (p) => {
-      await view("bestiary")(p);
-      await p.dispatchEvent('[data-beast="tarantula"]', "click");
-      await wait(p, () => document.querySelector("#scr-beast.on"));
-      await tick(p, 90);
-      await p.waitForTimeout(300);
-    } },
-    { id: "ficha-polilla", act: async (p) => {
-      await view("bestiary")(p);
-      await p.dispatchEvent('[data-beast="polilla"]', "click");
-      await wait(p, () => document.querySelector("#scr-beast.on"));
-      await tick(p, 90);
-      await p.waitForTimeout(300);
-    } },
-    { id: "ficha-robot", act: async (p) => {
-      await view("bestiary")(p);
-      await p.dispatchEvent('[data-beast="robot"]', "click");
-      await wait(p, () => document.querySelector("#scr-beast.on"));
-      await tick(p, 90);
-      await p.waitForTimeout(300);
-    } },
-    { id: "ficha-cortacercos", act: async (p) => {
-      await view("bestiary")(p);
-      await p.dispatchEvent('[data-beast="cortacercos"]', "click");
-      await wait(p, () => document.querySelector("#scr-beast.on"));
-      await tick(p, 90);
-      await p.waitForTimeout(300);
-    } },
-    { id: "ficha-grua", act: async (p) => {
-      await view("bestiary")(p);
-      await p.dispatchEvent('[data-beast="grua"]', "click");
-      await wait(p, () => document.querySelector("#scr-beast.on"));
-      await tick(p, 90);
-      await p.waitForTimeout(300);
-    } },
+    } }; }),
     { id: "creditos", act: view("credits") },
     { id: "jugar", perf: false, act: async (p) => {
       await p.evaluate(() => window.__cfg({ unlocked: ["zone:jardin"], stats: { runs: 4, wins: 1, time: 1800, dist: 5000, dmg: {}, zone: { patio: { t: 612, kills: 420 } } } }));
@@ -189,10 +140,10 @@ export const sessions = [
     { id: "garaje-piezas-2", perf: false, act: garajePiezas("monster", { exhaust: "chimenea", bumper: "cano", tires: "oruga", acc: "banderita" }) },
     { id: "garaje-piezas-3", perf: false, act: garajePiezas("formula", { bumper: "laterales", tires: "rayos", acc: "matafuego" }) },
     // Pintura por zona: paleta, selector libre (perillas de tono/saturación/brillo) y detalles + llantas sobre piezas que los muestran
-    { id: "garaje-pintura", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ car: "buggy", paint: "#4cc3c9", trim: "", rim: "" })); await view("garage")(p); await p.dispatchEvent('[data-gtab="pintura"]', "click"); await tick(p, 150); await p.waitForTimeout(100); } },
+    { id: "garaje-pintura", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ car: "buggy", paint: "#4cc3c9", trim: "", rim: "" })); await view("garage")(p); await p.dispatchEvent('[data-gtab="pintura"]', "click"); await tick(p, 90); await p.waitForTimeout(100); } },
     { id: "garaje-pintura-libre", perf: false, act: async (p) => { await p.evaluate(() => { for (const [k, v] of [["h", 280], ["s", 70], ["v", 85]]) { const i = document.querySelector(`[data-hsv="${k}"]`); i.value = v; i.dispatchEvent(new Event("input", { bubbles: true })); i.dispatchEvent(new Event("change", { bubbles: true })); } document.querySelector('[data-hsv="s"]').focus(); }); await tick(p, 5); await p.waitForTimeout(100); } },
     { id: "garaje-pintura-zonas", perf: false, act: async (p) => { await p.evaluate((u) => window.__cfg({ unlocked: u, kit: { wing: "alto", decal: "nada", lamp: "calido", exhaust: "nada", bumper: "cano", tires: "serie", acc: "pelotita" }, paint: "#1d4ed8", trim: "#d4af37", rim: "#ff4fa3" }), PIEZAS);
-      await view("garage")(p); await p.dispatchEvent('[data-gtab="pintura"]', "click"); await p.dispatchEvent('[data-pz="trim"]', "click"); await tick(p, 150); await p.waitForTimeout(100); } },
+      await view("garage")(p); await p.dispatchEvent('[data-gtab="pintura"]', "click"); await p.dispatchEvent('[data-pz="trim"]', "click"); await tick(p, 90); await p.waitForTimeout(100); } },
     { id: "garaje-arma", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ pilot: "robot", unlocked: ["arma:clips"], weapon: "clips" })); await view("garage")(p); await p.dispatchEvent('[data-gtab="arma"]', "click"); await p.waitForTimeout(150); } },
   ] },
   { id: "controles", query: "?mute&seed=3", vps: ["pc"], shots: [
@@ -278,15 +229,15 @@ export const sessions = [
     } },
     { id: "crater", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.crater(8, 3, 13); window.__luna.crater(4, -1.6, 24); }); await tick(p, 40); } },
     // Eventos (src/moon_events.ts): lluvia de meteoritos (mapa en rojo, marcas en el piso, meteoros en vuelo, cráteres con humo) y erupción que se expande
-    { id: "meteoritos", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.meteor(14); }); await tick(p, 150); } },
+    { id: "meteoritos", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.meteor(14); }); await tick(p, 90); } },
     { id: "erupcion", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.erupt(); }); await tick(p, 360); } },
     // Sol y Tierra lanzan bichos (src/moon_sky.ts): __luna.astro(true|false) lanza ya; go(lugar, true) pone el auto de frente al Sol
     { id: "astro-fuego", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go([0.5, 0.2, 0], true); }); await tick(p, 30); await p.evaluate(() => window.__luna.astro(true)); await tick(p, 112); } }, // cae desde arriba: a 112 cuadros ya entró en cuadro
     { id: "astro-cohete", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("tierra"); }); await tick(p, 20); await p.evaluate(() => window.__luna.astro(false)); await tick(p, 120); } },
     { id: "astro-impacto", perf: false, act: async (p) => { await tick(p, 40); } }, // el cohete ya cayó: cráter, humo y el bicho-cohete saliendo
     // Naves (src/moon_ships.ts): __luna.ship(id) borra las naves y pone una 14 m delante del auto
-    { id: "nave-nodriza", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("nodriza"); }); await tick(p, 150); } },
-    { id: "nave-bombardera", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("bombardera"); }); await tick(p, 150); } },
+    { id: "nave-nodriza", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("nodriza"); }); await tick(p, 90); } },
+    { id: "nave-bombardera", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("bombardera"); }); await tick(p, 90); } },
     { id: "nave-abductora", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("abductora"); }); await tick(p, 230); } },
     { id: "nave-caza", perf: false, act: async (p) => { await p.evaluate(() => { window.__killAll(); window.__luna.go("sol"); window.__luna.ship("caza"); }); await tick(p, 24); } },
   ] },
@@ -296,7 +247,7 @@ export const sessions = [
     { id: "ocho", perf: false, act: async (p) => { await labReady(p); await p.evaluate(() => { window.__play(3); window.__god(); window.__luna.go("sol"); window.__luna.row(undefined, 11, 2.6); }); await tick(p, 30); } }, // 30 cuadros: ya salió la tanda inicial de bichos (nuevos la borra)
     { id: "nuevos", perf: false, act: async (p) => { await p.evaluate(() => { window.__luna.clear(); window.__luna.row(["flotante", "tanque", "explosivo", "curandero"], 9, 3.2); window.__luna.wound(0.5); }); await tick(p, 50); } },
     { id: "cadena", perf: false, act: async (p) => { await p.evaluate(() => { window.__luna.clear(); window.__luna.row(["explosivo", "explosivo", "explosivo"], 12, 2, false); }); await tick(p, 2); await p.evaluate(() => window.__luna.killOne?.("explosivo")); await tick(p, 8); } }, // 3 explosivos juntos, se mata uno: revientan en cadena
-    { id: "crater", perf: false, act: async (p) => { await tick(p, 150); } }, // 2,5 s después: la nube se fue, queda el cráter humeante y el piso quemado
+    { id: "crater", perf: false, act: async (p) => { await tick(p, 90); } }, // 2,5 s después: la nube se fue, queda el cráter humeante y el piso quemado
     { id: "boom", perf: false, act: async (p) => { // si las armas matan algo y sube de nivel, se elige la primera carta (última captura de la sesión)
       for (let i = 0; i < 9; i++) { await tick(p, 10); if (!(await p.evaluate(() => document.getElementById("levelup").classList.contains("hidden")))) { await p.keyboard.press("1"); await p.keyboard.press("Enter"); } }
     } },
@@ -477,7 +428,7 @@ const finalAct = async (p) => {
     window.__tick(2);
   });
   if ((await p.evaluate(() => window.__enc.info().phase)) !== "final") throw new Error("no se llegó al FINAL ACT");
-  await tick(p, 150);
+  await tick(p, 90);
 };
 const encoreSession = (n) => ({ id: `encore${n}`, query: `?mute&seed=3&encore&players=${n}`, vps: ["pc"], shots: [
   { id: "luna", act: encoreIn(n) },

@@ -114,6 +114,9 @@ export function industrialLayout() {
     stat(box(pr.w, pr.h, pr.d, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, pr.h / 2, z, ry]).isVisible = false;
     bare.push({ x, z, r: Math.max(pr.w, pr.d) / 2 + 1.5 });
   };
+  // Pórtico de largada (z=28) y túnel de contenedores (z=46) sobre el carril norte: se reservan antes del reparto y se arman al final (el reparto usa el mismo generador).
+  const GZ = 28, TZ = 46;
+  bare.push({ x: 0, z: GZ, r: 10 }, { x: 0, z: TZ, r: 12 });
   // Anillo cercano denso (15-45 u de la salida) + dispersión. Salida (0,0) libre: clear() deja 18 u.
   const K = [0, 1, 0, 3, 2, 3, 4, 5, 0, 6, 1, 3];
   let n = 0;
@@ -161,6 +164,32 @@ export function industrialLayout() {
       fput(3.2, 2.6, 1.2, x, z, ps);
     }
     n3++;
+  }
+  // Pórtico de reticulado negro/amarillo con 4 focos emisivos (columna garaje/industrial de ref273). Pilares a x=±7,5 (hueco libre 13 u), travesaño a 11-13,6 u. Solo los pilares chocan.
+  { const glowM = M.glow("#fff1b0"), at = (a: number, y: number, b = 0): V3 => [a, y, GZ + b];
+    for (const sg of [-1, 1]) {
+      const px = sg * 7.5;
+      parts.push(box(3.2, 0.8, 3.2, conc, at(px, 0.4)), box(1.8, 12.6, 1.8, blk, at(px, 7.1)));
+      for (let y = 1.6; y < 12.4; y += 1.8) parts.push(box(1.92, 0.7, 1.92, yel, at(px, y)));
+      stat(box(1.8, 13, 1.8, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [px, 6.5, GZ]).isVisible = false;
+    }
+    const n = 10, pw = 19.2 / n;
+    for (const y of [11.6, 13.6]) for (const b of [-0.8, 0.8]) parts.push(box(19.6, 0.35, 0.35, yel, at(0, y, b)));
+    for (let k = 0; k <= n; k++) for (const b of [-0.8, 0.8]) parts.push(box(0.3, 2, 0.3, yel, at(-9.6 + k * pw, 12.6, b)));
+    for (let k = 0; k < n; k++) for (const b of [-0.8, 0.8]) { const a0 = -9.6 + k * pw, sgn = k % 2 ? -1 : 1; parts.push(box(0.22, Math.hypot(pw, 2), 0.22, blk, at(a0 + pw / 2, 12.6, b), [0, 0, sgn * Math.atan2(pw, 2)])); }
+    parts.push(box(19.6, 0.3, 1.9, blk, at(0, 13.9)));
+    for (const a of [-5.4, -1.8, 1.8, 5.4]) parts.push(box(1.5, 1.1, 1.7, blk, at(a, 10.9)), box(1.15, 0.15, 1.3, glowM, at(a, 10.28)), box(1.15, 0.9, 0.15, glowM, at(a, 10.9, 0.9)));
+    // Túnel de contenedores: dos muros de 3 pisos (2 contenedores de largo) a x=±7,2 y techo de dos contenedores atravesados. Hueco libre 11,6 x 8,4 u.
+    const tr = lcg(53), cols = ["#b23a2a", "#2f5f9a", "#5a6b3a", "#9c5b22"].map((c) => M.matte(c));
+    for (const sg of [-1, 1]) {
+      for (const dz of [-4.7, 4.7]) {
+        const c = container((a, y, b) => [sg * 7.2 - b, y, TZ + dz - a], Math.PI / 2, 3);
+        parts.push(...c.parts);
+      }
+      stat(box(2.8, 8.4, 18.8, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [sg * 7.2, 4.2, TZ]).isVisible = false;
+    }
+    for (const dz of [-4.7, 4.7]) parts.push(rbox(16.4, 2.8, 2.6, 0.15, cols[Math.floor(tr() * 4)], [0, 9.8, TZ + dz]), box(16.6, 0.25, 0.25, yel, [0, 11.3, TZ + dz]));
+    for (const x of [-3.6, 0, 3.6]) parts.push(box(0.35, 0.35, 19, rust, [x, 8.55, TZ]));
   }
   if (parts.length) { const m = merge("industrialProps", parts); m.isPickable = false; shadows.addShadowCaster(m); }
 }
