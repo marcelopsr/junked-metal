@@ -15,7 +15,7 @@ import { carModel } from "./models";
 import { photoOn, photoApply } from "./photo-mode";
 import { evFog } from "./moon_events";
 import { ambient, tickRain } from "./fx";
-import { LOOK, setDof, setLamp, shadows } from "./render";
+import { HOLE, LOOK, setDof, setLamp, shadows } from "./render";
 import { underRoof, zoneDust } from "./world";
 import { rainSfx } from "./sfx";
 import { ensure } from "./loading";
@@ -154,6 +154,14 @@ export function cameraTick(dt: number) {
       const ray = new B.Ray(c.cam.position, to.scaleInPlace(1 / len), len);
       for (const m of c.occluders) m.isVisible = !ray.intersectsMesh(m, true).hit; // oculta, no trama: con la cámara de maqueta la tapa de la mesa llenaba la pantalla de damero (bruma)
     }
+    // Agujero en lo que tapa al auto (render.ts, SnapPlugin): ~2,2 m alrededor del auto, solo lo que está entre la cámara y el auto y más alto que él (.claude/trabajo/CAMARA-oclusion.md)
+    if (!c.simulating && c.state === "play" && !MOON.on) {
+      const e = c.engine, w = e.getRenderWidth(), h = e.getRenderHeight(), car = c.lead.car.pos;
+      const p = B.Vector3.Project(car, B.Matrix.IdentityReadOnly, c.scene.getTransformMatrix(), c.cam.viewport.toGlobal(w, h));
+      const d = B.Vector3.Distance(c.cam.position, car);
+      HOLE.x = p.x; HOLE.y = e.isWebGPU ? p.y : h - p.y; HOLE.r = (h * 2.2) / (d * Math.tan(c.cam.fov / 2));
+      HOLE.cam.copyFrom(c.cam.position); HOLE.d = d; HOLE.h = car.y + 0.8;
+    } else HOLE.r = 0;
     // Profundidad de campo de maqueta: foco en el auto, medido sobre el eje de la cámara (igual que en los menús)
     if (c.low) setDof(0); else {
       const fwd = c.camTarget.subtract(c.cam.position).normalize(), fd = Math.max(1, B.Vector3.Dot(c.lead.car.pos.subtract(c.cam.position), fwd));

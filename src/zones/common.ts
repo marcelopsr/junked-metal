@@ -40,7 +40,7 @@ export const tex = (k: string, f: () => B.Texture) => { texGen[k] = f; return (t
 /** Texturas 256/512 (Configuración → Imagen): al cambiar el tope se redibujan y se cambian en los materiales, que las referencian. Corre al armar la próxima partida. */
 export function retex() {
   for (const k of Object.keys(texs)) {
-    const o = texs[k], n = texGen[k]();
+    const o = texs[k], n = texGen[k](); if (n === o) continue; // generadores que cachean su textura (nieve, industrial): liberarla dejaba el piso negro
     for (const m of scene.materials) if (m instanceof B.PBRMaterial && m.albedoTexture === o) m.albedoTexture = n;
     o.dispose(); texs[k] = n;
   }

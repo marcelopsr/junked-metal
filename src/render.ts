@@ -427,25 +427,34 @@ export function snapMat(m: B.PBRMaterial) {
   return m;
 }
 
+// Agujero de cámara (camera_rig lo llena cada cuadro): x,y = auto en píxeles de dibujo, r = radio en px (0 = apagado); cam/d = cámara y distancia al auto; h = altura mínima a cortar (no se ahueca el piso ni el auto)
+export const HOLE = { x: 0, y: 0, r: 0, cam: new B.Vector3(), d: 0, h: 0 };
+
 // Temblor PS1: los vértices se ajustan a la grilla de píxeles internos (LOOK.snap = tamaño de celda en píxeles; 0 = apagado)
 class SnapPlugin extends B.MaterialPluginBase {
   constructor(m: B.Material) { super(m, "Snap", 300, { SNAP: false }); this._enable(true); }
   getClassName() { return "SnapPlugin"; }
   prepareDefines(d: B.MaterialDefines) { d["SNAP"] = true; }
   isCompatible() { return true; } // GLSL (WebGL) y WGSL (WebGPU)
-  getUniforms(lang?: number) { return { ubo: [{ name: "snapGrid", size: 2, type: "vec2" }], vertex: lang === 1 ? "uniform snapGrid: vec2f;" : "uniform vec2 snapGrid;" }; }
+  getUniforms(lang?: number) {
+    return { ubo: [{ name: "snapGrid", size: 2, type: "vec2" }, { name: "holeS", size: 4, type: "vec4" }, { name: "holeC", size: 4, type: "vec4" }],
+      vertex: lang === 1 ? "uniform snapGrid: vec2f;" : "uniform vec2 snapGrid;",
+      fragment: lang === 1 ? "uniform holeS: vec4f; uniform holeC: vec4f;" : "uniform vec4 holeS; uniform vec4 holeC;" };
+  }
   bindForSubMesh(ubo: B.UniformBuffer) {
     // Grilla de la resolución de dibujo (con FSR, la baja)
     const e = scene.getEngine(), k = LOOK.snap > 0 ? 0.5 / LOOK.snap : 1e5, f = fsrP ? FSR_K[fsrApplied as Exclude<Fsr, "off">] : 1;
     ubo.updateFloat2("snapGrid", (e.getRenderWidth() / f) * k, (e.getRenderHeight() / f) * k);
+    ubo.updateFloat4("holeS", HOLE.x / f, HOLE.y / f, Math.max(HOLE.r / f, 1e-3), HOLE.h);
+    ubo.updateFloat4("holeC", HOLE.cam.x, HOLE.cam.y, HOLE.cam.z, HOLE.r > 0 ? HOLE.d - 1.5 : -1);
   }
   getCustomCode(type: string, lang?: number): Record<string, string> {
     // Trama tipo screen-door: una malla con visibility < 1 (p. ej. lo que tapa al auto) descarta medio damero de píxeles
     if (lang === 1) return type === "vertex"
       ? { CUSTOM_VERTEX_MAIN_END: "{ let p = vertexOutputs.position; vertexOutputs.position = vec4f(floor(p.xy / p.w * uniforms.snapGrid + .5) / uniforms.snapGrid * p.w, p.zw); }" }
-      : { CUSTOM_FRAGMENT_MAIN_BEGIN: "if (mesh.visibility < 1. && (floor(fragmentInputs.position.x) + floor(fragmentInputs.position.y)) % 2. < 1.) { discard; }" };
+      : { CUSTOM_FRAGMENT_MAIN_BEGIN: "if (mesh.visibility < 1. && (floor(fragmentInputs.position.x) + floor(fragmentInputs.position.y)) % 2. < 1.) { discard; } if (uniforms.holeC.w > 0. && fragmentInputs.vPositionW.y > uniforms.holeS.w && distance(fragmentInputs.vPositionW, uniforms.holeC.xyz) < uniforms.holeC.w) { let q = distance(fragmentInputs.position.xy, uniforms.holeS.xy) / uniforms.holeS.z; if (q < 1. || (q < 1.25 && (floor(fragmentInputs.position.x) + floor(fragmentInputs.position.y)) % 2. < 1.)) { discard; } }" };
     return type === "vertex" ? { CUSTOM_VERTEX_MAIN_END: "gl_Position.xy = floor(gl_Position.xy / gl_Position.w * snapGrid + .5) / snapGrid * gl_Position.w;" }
-      : { CUSTOM_FRAGMENT_MAIN_BEGIN: "if (visibility < 1. && mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.) < 1.) discard;" };
+      : { CUSTOM_FRAGMENT_MAIN_BEGIN: "if (visibility < 1. && mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.) < 1.) discard; if (holeC.w > 0. && vPositionW.y > holeS.w && distance(vPositionW, holeC.xyz) < holeC.w) { float q = distance(gl_FragCoord.xy, holeS.xy) / holeS.z; if (q < 1. || (q < 1.25 && mod(floor(gl_FragCoord.x) + floor(gl_FragCoord.y), 2.) < 1.)) discard; }" };
   }
 }
 
