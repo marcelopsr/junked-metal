@@ -91,7 +91,7 @@ const routeTotal = (r: Run) => (r.solo ? Math.min(ENC.routeS, BAL.ritmo.ruta_sol
 function advance(r: Run): Ev {
   leave(r);
   if (r.stage + 1 < ENC.stages) { r.phase = "route"; r.offer = null; r.routes = routeOffer(r); r.timer = routeTotal(r); return "route_offer"; } // el escenario siguiente se elige antes de cargarlo
-  if (r.lp.off >= 2 && !r.lp.yes) discover(r, "audiencia"); // la vuelta se cerró sin firmar nada
+  if (r.lp.off >= 2 && !r.lp.yes && r.taken.length) discover(r, "audiencia"); // la vuelta se cerró sin firmar nada, habiendo firmado antes (rechazar de entrada era la jugada segura gratis)
   if (r.lp.bold >= ENC.stages - 1) discover(r, "bambalinas"); // todos los destinos de la vuelta fueron los de más riesgo
   r.phase = "vote"; r.timer = ENC.voteS; return "vote";
 }
@@ -134,9 +134,14 @@ export function tick(r: Run, dt: number): Ev | null {
     if ((r.timer -= dt) <= 0) return chooseRoute(r, 0);
   } else if (r.phase === "vote") {
     if ((r.timer -= dt) <= 0) return vote(r, 0);
-  } else if (r.phase === "final") r.stageT += dt;
+  } else if (r.phase === "guest") r.timer = Math.max(0, r.timer - dt); // P9: aviso y respiro; el invitado entra cuando llega a 0 (encore_run.ts)
+  else if (r.phase === "final") r.stageT += dt;
   return null;
 }
+/** P2: multiplicador de vida del jefe del FINAL ACT según lo recorrido (escenarios jugados) y lo arriesgado (pactos aceptados). */
+export const finalHpMul = (r: Run) => 1 + BAL.ritmo.final_vida_por_escenario * cleared(r) + BAL.ritmo.final_vida_por_pacto * r.taken.length;
+/** P9: el invitado del teleportador espera su entrada (aviso del Director en curso). */
+export const guestWaiting = (r: Run) => r.phase === "guest" && r.timer > 0;
 
 const ready = (r: Run): Ev => { r.phase = "teleporter"; r.timer = ENC.decideS; return "tele_ready"; };
 /** Evento del teleportador de este escenario: hash propio de (semilla, vuelta, escenario), sin gastar el rng() de la partida; la probabilidad sube con el escenario y la vuelta. */
@@ -150,7 +155,7 @@ export function boarded(r: Run): Ev | null {
   if (r.phase !== "stage" || !r.landed) return null;
   const e = teleEvent(r);
   if (e === "OVERLOAD") { r.phase = "overload"; r.timer = ENC.overloadS; return "overload"; }
-  if (e === "BOSS_GUEST") { r.phase = "guest"; r.guest = GUESTS[Math.floor(mix(r.seed + 0x6e57 + r.loop * 7907 + r.stage * 32452867) * GUESTS.length)]; return "guest"; }
+  if (e === "BOSS_GUEST") { r.phase = "guest"; r.timer = BAL.ritmo.invitado_aviso_s; r.guest = GUESTS[Math.floor(mix(r.seed + 0x6e57 + r.loop * 7907 + r.stage * 32452867) * GUESTS.length)]; return "guest"; }
   return ready(r);
 }
 /** El invitado cayó: el teleportador queda listo. */
@@ -501,7 +506,7 @@ export function zoneOf(r: Run): "luna" | EarthZone {
 // Cuatro hallazgos por conducta, deterministas (sin rng()): cada uno revela un fragmento del arco sin decir quién controla las pantallas.
 export const SECRETS = [
   { id: "aplausos", name: "APLAUSOS SIN CABLE", how: "Abrir los tres cofres de un escenario.", lore: "UNA PANTALLA MUESTRA «APLAUSOS». NO TIENE CABLE. NUNCA LO TUVO." },
-  { id: "audiencia", name: "CERO ESPECTADORES", how: "Rechazar todos los pactos de una vuelta.", lore: "UNA TERMINAL REGISTRA LA FUNCIÓN: CUATRO PARTICIPANTES, CERO ESPECTADORES." },
+  { id: "audiencia", name: "CERO ESPECTADORES", how: "Rechazar todos los pactos de una vuelta, después de haber firmado alguno en una vuelta anterior.", lore: "UNA TERMINAL REGISTRA LA FUNCIÓN: CUATRO PARTICIPANTES, CERO ESPECTADORES." },
   { id: "eco", name: "TOMA REPETIDA", how: "Quedarse tres veces en un mismo escenario.", lore: "EL DIRECTOR REPITE UNA FRASE QUE NADIE DIJO EN ESTA FUNCIÓN. LA DICE CON VOZ DE PARTICIPANTE." },
   { id: "bambalinas", name: "SEÑAL IMPOSIBLE", how: "Elegir siempre el destino de más riesgo en una vuelta.", lore: "DETRÁS DEL TELÓN, LAS PANTALLAS RECIBEN SEÑAL DESDE LUGARES QUE NO EXISTEN." },
 ] as const;
