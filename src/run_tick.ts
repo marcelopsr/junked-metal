@@ -7,7 +7,7 @@ import { MOON, W, advance, alt, at, below, deform, hd, hflat, onFloor, orient, r
 import { SFX, SPACE, music } from "./sfx";
 import { alienWave, healTick } from "./aliens";
 import { banner, hudBoss } from "./ui";
-import { boom, boomK, cs, damage, explode, kill } from "./combat";
+import { boom, boomK, cs, damage, explode, hitstop, kill } from "./combat";
 import { craterHumeante, panTo } from "./moon_events";
 import { encApply, erun } from "./encore_run";
 import { gainXp, openChest } from "./progression";
@@ -167,6 +167,7 @@ export function tickEnemies(F: Frame, dt: number): boolean {
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(upv(e.pos, rel * 0.2)), true);
         FX.sparks(e.pos.add(upv(e.pos, 0.5)));
         SFX.ram(rel);
+        if (rel > R.embestida_vel_min * R.hitstop_embestida_x) hitstop((rel - R.embestida_vel_min * R.hitstop_embestida_x) / 10);
         if ((e.def.boss || e.elite || e.def.mass > 50) && rel > 3.5) {
           const pan = panTo(c.pos, e.pos, T.camYaw); // luna: en el marco local del auto
           SFX.bodyThud(rel, pan);
