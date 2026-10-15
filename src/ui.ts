@@ -368,7 +368,7 @@ export function hudBoss(name: string | null, pct = 1, kind?: string, enraged = f
 // ---------- ENCORE: contador de escenario y ventana de decisión (encore.ts) ----------
 /** null = Supervivencia: todo oculto. tag = [prefijo, texto, numerado]; ask = ventana abierta con sus dos botones (null = sin botón) y lo que queda. */
 type EncAsk = { title: string; opts: [string | null, string | null]; left: number; frac: number; pacts?: [PactView, PactView]; reject?: string };
-const pactHtml = (p: PactView) => `<b>${p.name}</b><small>VENTAJA</small>${p.gain.map((t) => `<span class="pg"><i aria-hidden="true">+</i>${t}</span>`).join("")}<small>COSTO</small>${p.cost.map((t) => `<span class="pc"><i aria-hidden="true">−</i>${t}</span>`).join("")}<em>${p.dur}</em>`;
+const pactHtml = (p: PactView) => `<b>${p.name}</b><small>VENTAJA</small>${p.gain.map((t) => `<span class="pg"><i aria-hidden="true">+</i>${t}</span>`).join("")}<small>COSTO</small>${p.cost.map((t) => `<span class="pc"><i aria-hidden="true">−</i>${t}</span>`).join("")}${p.afin ? `<small>ARMAS AFINES</small><span class="pg"><i aria-hidden="true">+</i>${p.afin.map((w) => WEAPONS[w as WeaponId].name.toUpperCase()).join(" · ")}</span>` : ""}<em>${p.dur}</em>`;
 /** ENCORE para 2 (R7a): vida del otro jugador; down = fuera hasta el próximo escenario. */
 export function hudMate(d: { n: string; hp: number; max: number; down: boolean } | null) {
   if (ch("mateOn", !!d)) $("mateHp").classList.toggle("hidden", !d);

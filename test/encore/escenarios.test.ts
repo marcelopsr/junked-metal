@@ -29,7 +29,7 @@ describe("variante con zona: EL GALPÓN DE UTILERÍA", () => {
   it("nunca sale en el sorteo, ni se ofrece en la vuelta 0; desde la 1 puede ofrecerse y entonces zoneOf devuelve su zona", () => {
     let offered = 0;
     for (let seed = 1; seed <= 80; seed++) for (let loop = 0; loop < 3; loop++) {
-      const r = newRun(seed); r.loop = loop;
+      const r = newRun(seed); r.loop = loop; r.first = !loop; // la primera expedición no ofrece destinos terrestres en la vuelta 0
       for (let s = 0; s < ENC.stages; s++) { r.stage = s; expect(variantOf(r)!.zone).toBeUndefined(); }
       r.stage = 0; r.routes = null;
       const o = routeOffer(r);

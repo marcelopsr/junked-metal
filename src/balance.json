@@ -979,5 +979,22 @@
     {"id":"audiencia","etapas":2,"g_dmg":1,"g_speed":1,"g_maxHp":1,"g_xp":1.6,"g_scrap":1.4,"g_spawn":1,"g_taken":1,"g_regen":0,"g_heal":0,"c_dmg":1,"c_speed":1,"c_maxHp":0.75,"c_xp":1,"c_scrap":1,"c_spawn":1,"c_taken":1,"c_regen":0,"c_heal":0},
     {"id":"eco","etapas":2,"g_dmg":1.2,"g_speed":1,"g_maxHp":1,"g_xp":1,"g_scrap":1,"g_spawn":1,"g_taken":1,"g_regen":2,"g_heal":0,"c_dmg":1,"c_speed":1,"c_maxHp":1,"c_xp":1,"c_scrap":1,"c_spawn":1.4,"c_taken":1,"c_regen":0,"c_heal":0},
     {"id":"bambalinas","etapas":2,"g_dmg":1.25,"g_speed":1.3,"g_maxHp":1,"g_xp":1,"g_scrap":1,"g_spawn":1,"g_taken":1,"g_regen":0,"g_heal":0,"c_dmg":1,"c_speed":1,"c_maxHp":1,"c_xp":1,"c_scrap":1,"c_spawn":1,"c_taken":1.35,"c_regen":0,"c_heal":0}
+  ],
+  "afinidad": [
+    {"id":"tarima","nombre":"LA TARIMA","arma1":"dardos","arma2":"chapitas","peso":2.5},
+    {"id":"oscuro","nombre":"EL LADO OSCURO","arma1":"bengalas","arma2":"tesla","peso":2.5},
+    {"id":"crateres","nombre":"CAMPO DE CRÁTERES","arma1":"lanza","arma2":"bobinas","peso":2.5},
+    {"id":"sol","nombre":"SOL DE FRENTE","arma1":"lupasolar","arma2":"bengalas","peso":2.5},
+    {"id":"chatarra","nombre":"LLUVIA DE CHATARRA","arma1":"dron","arma2":"chapitas","peso":2.5},
+    {"id":"estreno","nombre":"NOCHE DE ESTRENO","arma1":"bocina","arma2":"avioncito","peso":2.5},
+    {"id":"ensayo","nombre":"ENSAYO DE MEDIANOCHE","arma1":"tesla","arma2":"dron","peso":2.5},
+    {"id":"galpon","nombre":"EL GALPÓN DE UTILERÍA","arma1":"bobinas","arma2":"lanza","peso":2.5},
+    {"id":"desvan","nombre":"EL DESVÁN DE JUGUETES ROTOS","arma1":"avioncito","arma2":"domino","peso":2.5},
+    {"id":"pileta","nombre":"LA PILETA VACÍA","arma1":"agua","arma2":"pintura","peso":2.5},
+    {"id":"cocina","nombre":"LA COCINA","arma1":"dardos","arma2":"jabon","peso":2.5},
+    {"id":"bosque","nombre":"EL BOSQUE DE PINOS","arma1":"lanza","arma2":"bumeran","peso":2.5},
+    {"id":"nieve","nombre":"LA PISTA NEVADA","arma1":"helado","arma2":"tesla","peso":2.5},
+    {"id":"ciudad","nombre":"LA CIUDAD EN MINIATURA","arma1":"bocina","arma2":"domino","peso":2.5},
+    {"id":"industrial","nombre":"EL POLÍGONO INDUSTRIAL","arma1":"bobinas","arma2":"dron","peso":2.5}
   ]
 }

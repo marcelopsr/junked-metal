@@ -71,6 +71,7 @@ const DESC = {
     efecto: "Qué hace dentro (no cambiar): regen vida/s, iman_mult × radio del imán, xp_mult × XP de gemas, speed_mult × velocidad, dps daño por segundo, spawn_n bichos por tanda",
     valor: "Número del efecto",
   },
+  afinidad: { id: "Identificador (no cambiar)", nombre: "Nombre del escenario en src/encore.ts (no cambiar)", arma1: "Arma favorecida (id, no cambiar)", arma2: "Segunda arma favorecida (id, no cambiar)", peso: "Multiplicador del peso de sorteo de las cartas de esas armas en ese escenario (1 = sin favor)" },
   pactos: Object.assign({ id: "Identificador del pacto de ENCORE (no cambiar; nombre y texto en src/encore.ts)", etapas: "Escenarios que dura (0 = resto de la expedición)" },
     ...["g", "c"].map((s) => Object.fromEntries(Object.entries({ dmg: "× daño", speed: "× velocidad", maxHp: "× vida máxima", xp: "× XP", scrap: "× tornillos", spawn: "× enemigos", taken: "× daño recibido", regen: "+ vida por segundo (0 = nada)", heal: "fracción de la vida reparada al aceptar (0 = nada)" })
       .map(([k, d]) => [`${s}_${k}`, `${s === "g" ? "Ventaja" : "Costo"}: ${d}${["regen", "heal"].includes(k) ? "" : " (1 = sin cambio)"}`])))),
@@ -93,7 +94,7 @@ const head = (cell) => { cell.fill = HEAD; cell.font = { bold: true, color: { ar
 const info = wb.addWorksheet("Leeme");
 [
   "Balance de Junked Metal. Esta planilla se genera desde src/balance.json (npm run balance:xlsx) y vuelve al juego con npm run balance:import.",
-  "Hojas de datos (se importan): enemigos, armas, armas_extra, pasivas, ritmo, ataques, autos, pilotos, precios, plagas, pactos_zonas, pactos. Fila 1 = columnas, fila 2 = qué significa cada una.",
+  "Hojas de datos (se importan): enemigos, armas, armas_extra, pasivas, ritmo, ataques, autos, pilotos, precios, plagas, pactos_zonas, pactos, afinidad. Fila 1 = columnas, fila 2 = qué significa cada una.",
   "Se editan SOLO los números. No cambiar los id, no agregar ni borrar filas ni columnas (el importador lo rechaza). Las columnas nombre y tipo son referencia.",
   "Hojas calculadas (no se importan): Golpes para matar, Tiempo jefe, Partidas para comprar. Se actualizan solas. Las celdas amarillas son supuestos editables solo de la hoja calculada.",
   "Para volver al juego: Archivo > Descargar > Valores separados por tabulaciones (.tsv) de cada hoja de datos, juntar en un .txt con una línea '### nombre_hoja' antes de cada una y correr npm run balance:import -- archivo.txt.",

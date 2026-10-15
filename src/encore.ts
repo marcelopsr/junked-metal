@@ -241,7 +241,7 @@ export function fxText(o: Pact["gain"]): string[] {
   return t;
 }
 const durText = (n: number) => (n === Infinity ? "RESTO DE LA RUN" : n === 1 ? "PRÓXIMO ESCENARIO" : `PRÓXIMOS ${n} ESCENARIOS`);
-export type PactView = { special: boolean; name: string; gain: string[]; cost: string[]; dur: string };
+export type PactView = { special: boolean; name: string; gain: string[]; cost: string[]; dur: string; afin?: string[] }; // afin: ids de las armas que el destino favorece en las cartas
 const viewOf = (p: Pact): PactView => ({ special: !!p.secret, name: p.secret ? `PACTO DEL DIRECTOR: ${p.name}` : p.name, gain: [...fxText(p.gain), ...(p.zona?.[1] === "gain" ? [p.zona[0]] : [])], cost: [...fxText(p.cost), ...(p.zona?.[1] === "cost" ? [p.zona[0]] : [])], dur: durText(p.stages) });
 /** Para el HUD: pactos activos con su etiqueta corta, lo que les queda y los términos completos (title). */
 export function activePacts(r: Run): { tag: string; left: string; terms: string }[] {
@@ -303,13 +303,15 @@ const playedInLoop = (r: Run) => [VARIANTS.indexOf(variantOf({ ...r, stage: 0, r
 /** Los dos destinos del escenario siguiente: variantes distintas y no jugadas en esta vuelta, estables por (semilla, vuelta, escenario) con hash propio (no gasta el rng() de la partida). */
 export function routeOffer(r: Run): [number, number] {
   const played = playedInLoop(r);
-  const o = VARIANTS.map((_, i) => ({ i, k: mix(r.seed + 0x70e1 + r.loop * 6151 + (r.stage + 1) * 32452843 + i * 49979687) })).filter(({ i }) => !played.includes(i) && (r.loop > 0 || !VARIANTS[i].zone)).sort((a, b) => a.k - b.k);
+  const o = VARIANTS.map((_, i) => ({ i, k: mix(r.seed + 0x70e1 + r.loop * 6151 + (r.stage + 1) * 32452843 + i * 49979687) })).filter(({ i }) => !played.includes(i) && (r.loop > 0 || !r.first || !VARIANTS[i].zone)).sort((a, b) => a.k - b.k);
   return [o[0].i, o[1].i];
 }
+/** Armas favorecidas de un destino y su multiplicador de peso en las cartas (balance.json, tabla afinidad). */
+export const afinOf = (v: Variant | null): { armas: string[]; peso: number } | null => { const a = v && Object.values(BAL.afinidad).find((x) => x.nombre === v.name); return a ? { armas: [a.arma1, a.arma2], peso: a.peso } : null; };
 /** Riesgo de un destino: el producto de su recompensa (el Director paga más por lo más peligroso). */
 export const riskOf = (i: number) => Object.values(VARIANTS[i].reward).reduce((a, x) => a * (x ?? 1), 1);
 /** Riesgo y recompensa de un destino para la UI (misma forma que un pacto: VENTAJA = recompensa, COSTO = riesgo). */
-const routeView = (i: number): PactView => { const v = VARIANTS[i]; return { special: false, name: v.name, gain: fxText(v.reward), cost: [v.risk], dur: "PRÓXIMO ESCENARIO" }; };
+const routeView = (i: number): PactView => { const v = VARIANTS[i]; return { special: false, name: v.name, gain: fxText(v.reward), cost: [v.risk], afin: afinOf(v)?.armas, dur: "PRÓXIMO ESCENARIO" }; };
 
 /** Cráteres extra de la variante: ángulo, distancia (m) a la llegada y radio; nunca a menos de 14 m de la llegada. */
 export function craterPlan(v: Variant, r: Run): { a: number; d: number; r: number }[] {

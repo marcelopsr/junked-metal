@@ -9,6 +9,7 @@ import { tut, tutOffers } from "./tutorial";
 import { ACH, type AchId } from "./achievements";
 import { grant } from "./outro";
 import { erun } from "./encore_run";
+import { afinOf, variantOf } from "./encore";
 import { hd } from "./moon";
 import { advanceCardBy, getNet } from "./net_client";
 import { track } from "./net";
@@ -68,9 +69,9 @@ export function gainXp(n: number) {
 
 // Sin reparaciones: fuera las cartas de curación y la Pila de litio (regenera); se pide una de más para no quedar corto
 export function offersFor() {
-  const n = 3 + save.perm.cards;
-  if (c.offerFilter) { const l = levelOffers(c.weapons, run.passives, 40).filter((o) => o.kind === "weapon" ? c.offerFilter!(o.id) : o.kind === "passive").slice(0, n); return run.noRepair ? l.filter((o) => o.id !== "litio") : l; } // solo_gomitas: armas filtradas, pasivas libres (ponytail: pool de 40 ≈ todo el catálogo)
-  return run.noRepair ? levelOffers(c.weapons, run.passives, n + 1).filter((o) => o.kind !== "heal" && o.id !== "litio").slice(0, n) : levelOffers(c.weapons, run.passives, n);
+  const n = 3 + save.perm.cards, af = erun ? afinOf(variantOf(erun)) : null;
+  if (c.offerFilter) { const l = levelOffers(c.weapons, run.passives, 40, af).filter((o) => o.kind === "weapon" ? c.offerFilter!(o.id) : o.kind === "passive").slice(0, n); return run.noRepair ? l.filter((o) => o.id !== "litio") : l; } // solo_gomitas: armas filtradas, pasivas libres (ponytail: pool de 40 ≈ todo el catálogo)
+  return run.noRepair ? levelOffers(c.weapons, run.passives, n + 1, af).filter((o) => o.kind !== "heal" && o.id !== "litio").slice(0, n) : levelOffers(c.weapons, run.passives, n, af);
 }
 export function openOffers(list: Offer[], title: string, keep = false) {
   if (!list.length) return; // Sin reparaciones con todo al máximo: no hay nada que ofrecer

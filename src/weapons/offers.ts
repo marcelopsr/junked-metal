@@ -32,7 +32,7 @@ function passiveSyn(id: PassiveId, ws: Weapon[]): Offer["syn"] {
   };
 }
 
-export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>, n = 3): Offer[] {
+export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>, n = 3, afin?: { armas: string[]; peso: number } | null): Offer[] {
   const pool: Offer[] = [];
   for (const id of Object.keys(WEAPONS) as WeaponId[]) {
     if (isFusion(id)) continue;
@@ -47,7 +47,7 @@ export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>
     if ((l || owned < 6) && l < NMAX) pool.push({ kind: "passive", id, title: PASSIVES[id].name, icon: id, desc: PASSIVES[id].desc, lv: l + 1, syn: passiveSyn(id, ws) });
   }
   // Sorteo ponderado (una rng() por carta): subir un arma que ya se tiene pesa más que sumar una nueva, para que el catálogo grande no diluya las ofertas
-  const wt = (o: Offer) => (o.kind === "weapon" ? (o.lv === 1 ? BAL.ritmo.oferta_peso_nueva : BAL.ritmo.oferta_peso_propia) : 1);
+  const wt = (o: Offer) => (o.kind === "weapon" ? (o.lv === 1 ? BAL.ritmo.oferta_peso_nueva : BAL.ritmo.oferta_peso_propia) * (afin?.armas.includes(o.id) ? afin.peso : 1) : 1); // escenario con armas afines: sus cartas pesan más
   const key = new Map(pool.map((o) => [o, rng() ** (1 / wt(o))])); // clave de Efraimidis-Spirakis: una rng() por carta
   pool.sort((a, b) => key.get(b)! - key.get(a)!);
   const out = pool.slice(0, n);
