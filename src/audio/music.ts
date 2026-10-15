@@ -38,7 +38,8 @@ function startMusic() {
       o.frequency.value = f; g.gain.value = depth;
       o.connect(g).connect(dl.delayTime); o.start();
     }
-    mixIn.connect(sat).connect(lp).connect(dl).connect(musicBus);
+    synthOut = ctx.createGain(); synthOut.gain.value = under;
+    mixIn.connect(sat).connect(lp).connect(dl).connect(synthOut).connect(musicBus);
     for (const l of LAYERS) { lay[l] = ctx.createGain(); lay[l].gain.value = 0; lay[l].connect(mixIn); }
     setAudio({});
   }
@@ -63,6 +64,9 @@ export function music(s: MusicState, intensity = 0) {
   if (changed) { applyMix(s !== "run" && s !== "menu"); if (s === "over") outro(); }
   if (!mTimer && s !== "over") { mNext = ctx.currentTime + 0.08; mStep = 0; mTick(); }
 }
+let synthOut: GainNode | null = null, under = 1;
+/** La radio suena: la música sintetizada queda como capa baja debajo (no se apaga). */
+export function musicUnder(on: boolean) { under = on ? 0.3 : 1; if (ctx && synthOut) synthOut.gain.setTargetAtTime(under, ctx.currentTime, 0.5); }
 /** Pausa: baja el volumen de la música sin cortarla. */
 export function musicDuck(on: boolean) { setDuck(on); setAudio({}); }
 

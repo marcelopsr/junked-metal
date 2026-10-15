@@ -5,6 +5,7 @@ import { FX, mark } from "./fx";
 import type { Kind, Enemy } from "./enemies";
 import { MOON, W, advance, alt, at, below, deform, hd, hflat, onFloor, orient, rad, upAt, upv, yawOf } from "./moon";
 import { SFX, SPACE, music } from "./sfx";
+import { radio } from "./radio";
 import { alienWave, healTick } from "./aliens";
 import { banner, hudBoss, threatAt } from "./ui";
 import { boom, boomK, cs, damage, explode, hitstop, kill } from "./combat";
@@ -278,7 +279,7 @@ export function tickEnemies(F: Frame, dt: number): boolean {
   if (gb) hudBoss(gb.name, gb.pct);
   else if (boss) hudBoss(boss.def.name, Math.max(0, boss.hp / boss.maxHp), boss.kind, boss.enraged);
   else { const sb = MOON.on ? shipBar() : null; hudBoss(sb?.name ?? null, sb?.pct); } // naves de la luna: misma barra de jefe; sin nada, la barra se va (si no, quedaba la del último cofre o máquina)
-  { const ms = boss ? "boss" : T.apagon ? "blackout" : "run"; if (!T.simulating && (ms !== T.musicS || (T.musicT -= dt) <= 0)) { T.musicS = ms; T.musicT = 1; music(ms, run.time / 600); } } // música: cambio de estado al instante, intensidad cada ~1 s
+  { const ms = boss ? "boss" : T.apagon ? "blackout" : "run"; if (!T.simulating && (ms !== T.musicS || (T.musicT -= dt) <= 0)) { if ((ms === "boss") !== (T.musicS === "boss")) { if (ms === "boss") radio.prefer("jefe"); else radio.resume(); } T.musicS = ms; T.musicT = 1; music(ms, run.time / 600); } } // música: cambio de estado al instante, intensidad cada ~1 s
 
   // --- Ácido de escupidoras ---
   for (let i = T.spits.length - 1; i >= 0; i--) {

@@ -2,6 +2,7 @@
 // Sale por musicBus (volumen "Música" de Configuración, pausa con musicDuck y ?mute ya resueltos en audio/context.ts).
 // AAC en .m4a y no OGG: Safari/iOS no reproduce Ogg Vorbis. Dos <audio> (A/B) para el crossfade; solo el tema en curso está cargado.
 import { ctx, musicBus, onInit } from "./audio/context";
+import { musicUnder } from "./audio/music";
 
 export type StationId = "chatarra" | "aceite" | "astral" | "oxido-fritanga";
 export type Moment = "menu" | "encore" | "jefe" | "freeroam" | "noche" | "derrota";
@@ -38,6 +39,7 @@ let st: Station = STATIONS[0];
 let cur = "";                   // tema en curso
 let bag: string[] = [];         // aleatorio sin repetir hasta agotar la estación
 const hist: string[] = [];      // temas ya sonados (prev)
+let base: Moment = "menu";      // último momento "de fondo" (para volver tras el jefe)
 let a = 0;                      // elemento activo (0/1)
 let els: { el: HTMLAudioElement; g: GainNode }[] | null = null;
 
@@ -64,6 +66,7 @@ function pick(only?: string[]) {
 function start(track: string, back = false) {
   wire();
   if (!els || !ctx) return; // sin audio (?mute o antes del primer gesto): onInit retoma
+  musicUnder(true); // la sintetizada baja a capa de fondo
   if (!back && cur) hist.push(`${st.id}/${cur}`);
   const old = els[a], nw = els[a ^ 1], t = ctx.currentTime;
   a ^= 1; cur = track;
@@ -98,6 +101,7 @@ export const radio = {
   nextStation() { radio.setStation(STATIONS[(STATIONS.indexOf(st) + 1) % STATIONS.length].id); },
   /** El juego pide la estación de su momento; no corta si ya suena y no pisa la elección manual. */
   prefer(m: Moment) {
+    if (m !== "jefe" && m !== "derrota") base = m;
     if (manual) return;
     const p = MOMENTS[m];
     const sameSt = st.id === p.st;
@@ -105,9 +109,11 @@ export const radio = {
     st = byId(p.st); if (!sameSt) bag = [];
     begin(p.only);
   },
+  /** Vuelve al momento de fondo (tras un jefe). */
+  resume() { radio.prefer(base); },
   /** Vuelve a dejar que los momentos elijan la estación. */
   auto() { manual = false; },
-  stop() { want = false; els?.forEach(e => e.el.pause()); },
+  stop() { want = false; musicUnder(false); els?.forEach(e => e.el.pause()); },
   info: () => ({ station: st.id, name: st.name, track: cur, playing: !!els && !els[a].el.paused, time: els?.[a].el.currentTime ?? 0, manual }),
 };
 

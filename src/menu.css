@@ -852,3 +852,10 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::af
 .dailyBoard .pos { text-align: left; color: var(--jm-texto2); }
 #dailyBoard .nom { justify-self: stretch; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dailyBoard .res { text-align: right; color: var(--jm-texto2); font-variant-numeric: tabular-nums; }
+
+/* Radio (pausa y Configuración → Audio): estación y tema con tres botones de ≥ 44 px */
+.radiobox { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 8px 12px; background: var(--shell, #1a1d22); border: 1px solid var(--line); border-left: 3px solid var(--jm-rojo, #e23a2e); text-align: left; }
+.radiobox .rnow { display: flex; flex-direction: column; min-width: 0; font: 400 15px/1.2 var(--data); color: var(--txt); }
+.radiobox .rnow b { font-family: "Bebas Neue", var(--data); font-size: 22px; letter-spacing: .04em; font-weight: 400; }
+.radiobox .rbtns { display: flex; gap: 8px; }
+.radiobox .rbtns button { min-height: 44px; min-width: 44px; padding: 0 14px; }

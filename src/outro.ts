@@ -4,6 +4,7 @@ import { fmt, openOver, persist, reset, today, type RunRec, type Save } from "./
 import type { Profile } from "./run";
 import { bannerClear } from "./ui";
 import { getNet, netEnd } from "./net_client";
+import { radio } from "./radio";
 import { engineStop, music, rainSfx, moonAmbience, encoreAmbience, SFX } from "./sfx";
 import { fxSpeed, FX, debris } from "./fx";
 import * as E from "./encore";
@@ -134,6 +135,7 @@ export function endRun(win: boolean, why: string) {
   ctx.setState(ctx.simulating ? "over" : "outro");
   engineStop();
   music("over");
+  if (!ctx.simulating) radio.prefer("derrota");
   rainSfx(0);
   moonAmbience(false);
   encoreAmbience(null);

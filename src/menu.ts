@@ -13,6 +13,7 @@ import { PAINTS, PARTS, validDecal, type CarKind, type CarOpts, type Slot } from
 import { ARSENAL, PILOTS, PILOT_PORTRAITS, type PilotId } from "./pilots";
 import { beastIcon, icon, PERK_ICON, UI_BTN_ICON, uiIcon } from "./icons";
 import { applyGfx, G, maxMsaa, PRESETS, presetOf, type AA, type Detail, type Fsr, type Preset, type ShadowQ } from "./render";
+import { radio } from "./radio";
 import { engineTest, initAudio, setAudio, SFX } from "./sfx";
 import { PASSIVES, WEAPONS, type PassiveId, type WeaponId } from "./weapons";
 import { setDrawDist, ZONES, type ZoneId } from "./world";
@@ -905,6 +906,8 @@ export const TABS: Record<string, { name: string; rows: Row[] }> = {
     ["Prueba de sonido", "sect"],
     ["Ralentí, aceleración, velocidad pareja, turbo, derrape y frenada con el auto elegido en el Garaje (~14 s).", "note"],
     ["Probar motor", "btn", "engtest"],
+    ["Radio", "sect"],
+    ["@radio", "note"],
   ] },
   ctl: { name: "Controles", rows: [
     ["Guía", "sect"],
@@ -1000,7 +1003,7 @@ export function renderConfig() {
   const d = (path: string) => (DESC[path] ? `<small>${DESC[path]}</small>` : "") + (warn(path) ? `<small class="why">${warn(path)}</small>` : "");
   $("opts").innerHTML = rows.map((r) => {
     if (r[1] === "sect") return `<div class="sect">${r[0]}</div>`;
-    if (r[1] === "note") return `<div class="note">${r[0]}</div>`;
+    if (r[1] === "note") return r[0] === "@radio" ? radioBox() : `<div class="note">${r[0]}</div>`;
     if (r[1] === "btn") return `<button class="row" data-act="${r[2]}"><span class="lb">${armed === r[2] ? "¿Seguro? Presiona otra vez para restablecer" : r[0]}${d(r[2])}</span><b>&gt;</b></button>`;
     if (r[1] === "bind") return bindRow(r[0], r[2]);
     if (r[1] === "padtest") return padTestHtml();
@@ -1139,8 +1142,15 @@ export function openPause(k: Kit) {
   $("kitS").innerHTML = k.stats.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("kitR").innerHTML = k.run.map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join("");
   $("pauseSeed").textContent = `${CARS[save.car].name} · ${PILOTS[save.pilot].name} · ${ABILITIES[save.ability].name} · ${ZONES[save.zone].short} · ${k.seed}`;
+  const foot = document.querySelector("#scr-pause .foot")!;
+  if (!document.querySelector("#scr-pause .radiobox")) foot.insertAdjacentHTML("beforebegin", radioBox()); else radioPaint();
   reset("pause");
 }
+
+/** Radio: estación y tema en curso con anterior / siguiente / estación (Configuración → Audio y pausa). */
+const trackName2 = (t: string) => t ? t.replace(/-/g, " ").replace(/^./, (c) => c.toUpperCase()) : "Sin señal";
+const radioBox = () => { const i = radio.info(); return `<div class="radiobox"><div class="rnow"><b>${i.name}</b><span>${trackName2(i.track)}</span></div><div class="rbtns"><button data-act="rprev">Anterior</button><button data-act="rnext">Siguiente</button><button data-act="rstation">Estación</button></div></div>`; };
+const radioPaint = () => { const i = radio.info(); document.querySelectorAll(".rnow").forEach((e) => { e.innerHTML = `<b>${i.name}</b><span>${trackName2(i.track)}</span>`; }); };
 
 export function openOver(r: { win: boolean; why: string; time: number; kills: number; level: number; scrap: number; record: boolean; dmg: Record<string, number>; hurt?: Record<string, number>; seed: string; more?: boolean; title?: string; prevBest?: number; bestStreak?: number; bestHit?: number; bestDrive?: number; bossKills?: number; evos?: string[]; ach?: string[]; car?: string; enc?: [string, string][] }) {
   $("overEndless").classList.toggle("hidden", !r.more); // venció al jefe final: puede seguir en modo sin fin
@@ -1288,6 +1298,7 @@ export function initMenu(a: Api) {
     else if (d.act === "import") importSave();
     else if (d.act === "controls") { tab = "ctl"; go("config"); }
     else if (d.act === "ctlguide") controlsGuide();
+    else if (d.act === "rprev" || d.act === "rnext" || d.act === "rstation") { if (d.act === "rprev") radio.prev(); else if (d.act === "rnext") radio.next(); else radio.nextStation(); radio.play(); radioPaint(); }
     else if (d.act === "resume") api.resume();
     else if (d.act === "quit") api.quit();
     else if (d.act === "install") void installEv?.prompt().finally(() => { installEv = null; $("install").classList.add("hidden"); }); // el evento sirve una sola vez

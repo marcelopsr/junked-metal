@@ -4,6 +4,7 @@ import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive, setCarPassive } from "./car";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
+import { radio } from "./radio";
 import { engineSfx, engineStop, initAudio, music, moonAmbience, encoreAmbience, musicDuck, rainSfx, setEngineKind, SFX, SPACE } from "./sfx";
 import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { activePad, btnName, camCycle, coopCtl, coopSkip, ctl, input, isTouch, keyHit, KEYS, KEYS2, padPressed, pads, padSnap, pb, pollInput, pollMate, pollPad, RACE, setupTouch } from "./input";
@@ -268,6 +269,7 @@ function startRun(d = false) {
   // Perfil de la partida: clima, plaga, orden de minijefes, ritmo de eventos y un patio distinto
   profile = makeProfile(run.runSeed);
   profile.climate = zoneClimate() ?? profile.climate; // interior (garaje): luz fija
+  if (encore && !simulating) { radio.auto(); radio.prefer(["noche", "farol", "madrugada"].includes(profile.climate.id) ? "noche" : "encore"); } // la radio de la expedición (noche pide Aceite Lento)
   if (MOON.on) profile.rainAt = Infinity; // en la luna no llueve
   cycleS = -1;
   buildLayout();
@@ -339,6 +341,7 @@ function startLibre() {
   run.runSeed = 20261015; seedRng(run.runSeed); // el mapa es fijo; la semilla solo define el perfil que lee la cámara
   profile = makeProfile(run.runSeed);
   profile.climate = zoneClimate() ?? profile.climate;
+  if (!simulating) { radio.auto(); radio.prefer("freeroam"); }
   cycleS = -1;
   buildLayout();
   lead.car = new Car(scene, save.car, carOpts());
@@ -540,7 +543,7 @@ function toMenu() {
   if (LAB.on) { LAB.on = false; god = false; }
   if (duelM?.duelActive()) duelM.exitDuel();
   if (m3M?.match3Active()) m3M.exitMatch3();
-  engineStop(); music("menu");
+  engineStop(); music("menu"); radio.prefer("menu");
   persist(); // bestiario visto en la partida abandonada
   clearRun();
   state = "menu";
@@ -582,7 +585,7 @@ addEventListener("keydown", (e) => {
 // ---------- Carga (run_loader.ts) ----------
 initRunLoader({ scene, cam, getState: () => state, setState: (s) => { state = s; }, zoneFor, setZone, showWorld,
   tpls: [() => gemTpl(1), () => gemTpl(5), () => gemTpl(20), pilaTpl, imanTpl, spitTpl],
-  onExitMode: () => { state = "menu"; music("menu"); reset("main"); },
+  onExitMode: () => { state = "menu"; music("menu"); radio.prefer("menu"); reset("main"); },
   clearRun, startRun, startLibre,
   setRun: { encore: (v) => { encore = v; }, coop: (v) => { coop = v; }, dailyInfo: (v) => { dailyInfo = v; }, weeklyInfo: (v) => { weeklyInfo = v; }, weeklyOn: (v) => { weeklyOn = v; } } });
 preload(runTasks(() => zoneFor(false)), () => state === "menu");
@@ -608,7 +611,7 @@ void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
 initPhoto({ scene, canvas, inPause: () => state === "pause", onShot: () => grant("foto") });
 for (const ev of ['pointerover', 'touchstart', 'focusin']) document.addEventListener(ev, prefetchMode, { passive: true, capture: true });
 initMenu({ scene, play: launchRun, weekly: () => launchRun(false, false, 0, undefined, true), resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), duel: goDuel, match3: goMatch3 });
-music("menu"); // suena cuando haya primer gesto (initAudio)
+music("menu"); radio.play(); radio.prefer("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: solo con ?intro (cualquier tecla la salta)
 if (/[?&]intro\b/.test(location.search)) playIntro(); // T53: ya no sale sola; solo con ?intro o desde Créditos → Ver intro
 

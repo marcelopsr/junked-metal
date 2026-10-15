@@ -5,7 +5,7 @@ import { template, sph, tor, hazardMat, hazardFill } from "./models";
 import { applyClimate, pbr, setDark, shadows } from "./render";
 import { pickIdx, rng } from "./rng";
 import { SPACE, moonAmbience } from "./sfx";
-import { banner } from "./ui";
+import { banner, threatAt } from "./ui";
 import { arc, at, deform, hd, MOON, onFloor, orient, rel, ringAt, upAt } from "./moon";
 
 // ---------- Eventos de la luna: lluvia de meteoritos y erupción / falla lunar (docs/LUNA.md, fase 2) ----------
@@ -162,7 +162,7 @@ function landMeteor(m: Met, cars: B.Vector3[], carR: number, camYaw: number, vis
   const p = onFloor(T, 0.5), dist = hd(car, T);
   FX.explosion(p, 2.2 * m.size);
   debris(T, "#7b7c80", 8, 9, 0.9);
-  SPACE.meteorImpact(panTo(car, T, camYaw), dist, m.size);
+  threatAt(T, 1.2); SPACE.meteorImpact(panTo(car, T, camYaw), dist, m.size);
   H.shake(0.55 * B.Scalar.Clamp(1 - dist / 28, 0, 1));
 }
 
@@ -177,7 +177,7 @@ const rp = (C: B.Vector3, rad: number) => { const a = Math.random() * TAU, d = r
 
 function tickQuake(q: Quake, dt: number, cars: B.Vector3[], carR: number, camYaw: number, vis: boolean) {
   const prevT = q.t, car = cars[0]; q.t += dt;
-  const dist = hd(car, q.C), pan = panTo(car, q.C, camYaw);
+  const dist = hd(car, q.C), pan = panTo(car, q.C, camYaw); threatAt(q.C, 1.2);
   if (q.t < 0) { // la falla se agrieta: anillo pulsante en el límite y chispas por todo el suelo
     if (vis) {
       if (!q.ring) { q.ring = grab("lunaAnillo", ringTpl); q.area = grab("lunaArea", areaTpl); SPACE.rumble(pan, dist, -prevT + 0.5, 0.22); }
@@ -256,7 +256,7 @@ export function lunaEv(dt: number, time: number, cars: B.Vector3[], carR: number
     if (m.ring) layRing(m.ring, m.T, 0.25, r * pulse);
     if (m.t >= t0) {
       if (!m.m) m.m = grab("lunaMeteoro", rockTpl);
-      if (!m.whistled) { m.whistled = true; SPACE.meteorWhistle(panTo(car, m.T, camYaw), hd(car, m.T), caida); }
+      if (!m.whistled) { m.whistled = true; threatAt(m.T, 1.2); SPACE.meteorWhistle(panTo(car, m.T, camYaw), hd(car, m.T), caida); }
       const k = (m.t - t0) / caida;
       arc(m.S, m.T, k ** 1.25, 0, m.m.position);
       m.m.scaling.setAll(m.size * 1.1);

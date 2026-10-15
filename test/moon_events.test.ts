@@ -6,7 +6,7 @@ vi.mock("../src/models", () => ({ sph: () => null, template: () => null, tor: ()
 vi.mock("../src/render", () => ({ canvasTex: () => null, pbr: () => null, shadows: null, surface: () => null, applyClimate: () => {} }));
 vi.mock("../src/fx", () => ({ burst: () => {}, debris: () => {}, FX: {}, mark: () => {} }));
 vi.mock("../src/sfx", () => ({ SPACE: { lava: () => {} }, moonAmbience: () => {} }));
-vi.mock("../src/ui", () => ({ banner: () => {} }));
+vi.mock("../src/ui", () => ({ banner: () => {}, threatAt: () => {} }));
 const L = await import("../src/moon");
 const E = await import("../src/moon_events");
 const clima = { sun: [0, -1, 0], sunColor: "#fff3df", sunI: 4, hemiI: 0.3, sky: ["#000000", "#020306", "#04060c", "#000000"], exposure: 1, fog: 0.02, ramp: ["#000000", "#808080", "#ffffff"], amb: "#4a5470", ground: "#4a5470" } as Parameters<typeof E.evClimate>[0];

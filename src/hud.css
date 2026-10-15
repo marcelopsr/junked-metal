@@ -45,7 +45,7 @@
 #xp { background: linear-gradient(90deg, #35c9ff, #7dffb0); }
 #xp.surge { animation: xp-surge .6s ease-out; }
 @keyframes xp-surge {
-  0% { box-shadow: 0 0 16px rgba(34, 197, 94, .95); filter: brightness(1.4); }
+  0% { box-shadow: 0 0 16px color-mix(in srgb, var(--ok) 95%, transparent); filter: brightness(1.4); }
   100% { box-shadow: none; filter: none; }
 }
 #lvl { white-space: nowrap; font: 700 16px/1 var(--hf); letter-spacing: .06em; padding: 5px 9px; border: 0; border-radius: 99px; background: linear-gradient(135deg, #35c9ff, #7dffb0); color: #08202c; box-shadow: none; }
@@ -63,7 +63,7 @@
 .rx-div { font: 700 8px/1 var(--hf); color: #38bdf8; margin-left: 3px; border: 1px solid rgba(56, 189, 248, .3); padding: 1px 2px; border-radius: 2px; letter-spacing: .02em; }
 .rx-div.fhss-locked { animation: fhssLock .4s ease-out; }
 .sig-rssi { font: 700 8px/1 var(--hf); margin-left: 3px; letter-spacing: 1px; }
-.sig-rssi.bars-4 { color: #22c55e; }
+.sig-rssi.bars-4 { color: var(--ok); }
 .sig-rssi.bars-3 { color: #eab308; }
 .sig-rssi.bars-2 { color: #f59e0b; }
 .sig-rssi.bars-1 { color: #ef4444; animation: crcWarn .2s steps(2) infinite; }
@@ -197,12 +197,12 @@
 #lipo.shielded i { border: 1px solid #00bcd4; filter: drop-shadow(0 0 4px rgba(0, 188, 212, .8)); }
 #lipo.healing { animation: lipo-heal .6s ease-out; }
 @keyframes lipo-heal {
-  0% { box-shadow: 0 0 14px rgba(34, 197, 94, .85); }
+  0% { box-shadow: 0 0 14px color-mix(in srgb, var(--ok) 85%, transparent); }
   100% { box-shadow: none; }
 }
 #lipo.full-flash { animation: lipo-full-glow .8s ease-out; }
 @keyframes lipo-full-glow {
-  0% { box-shadow: 0 0 18px rgba(34, 197, 94, .95); filter: brightness(1.5); }
+  0% { box-shadow: 0 0 18px color-mix(in srgb, var(--ok) 95%, transparent); filter: brightness(1.5); }
   100% { box-shadow: none; filter: none; }
 }
 #lipo.sag { filter: contrast(1.3) brightness(.85); transition: filter .25s ease-out; }
@@ -227,7 +227,7 @@
 #txl.ab-on .h-abil > div { background: #fff; animation: h-blink .25s steps(2) infinite; }
 #abName { display: inline-flex; align-items: center; gap: 4px; }
 #abName .ico { width: 13px; height: 13px; }
-#txl.ab-ready #abKey, #jumpRow.ready #jumpKey { color: #22c55e; }
+#txl.ab-ready #abKey, #jumpRow.ready #jumpKey { color: var(--ok); }
 #txl.ab-on #abKey { color: #ffd24a; }
 .h-ptitle.h-jump.ready b { color: #5be37a; text-shadow: 0 0 8px rgba(91, 227, 122, .6); }
 #jumpRow.warn #jumpKey { color: var(--g-dim); }
@@ -260,7 +260,7 @@
 #slots .slot { position: relative; width: 40px; height: 40px; display: grid; place-items: center; overflow: hidden; color: var(--g-txt); background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 12px; box-shadow: 0 6px 16px rgba(0, 0, 0, .25); backdrop-filter: blur(8px); }
 #slots .slot.small { width: 30px; height: 30px; color: var(--g-dim); }
 #slots .slot.syn-on { border-color: rgba(255, 194, 77, .65); }
-#slots .slot.evo-ready { border-color: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, .45); animation: h-glow 1.4s ease-in-out infinite; }
+#slots .slot.evo-ready { border-color: var(--ok); box-shadow: 0 0 10px color-mix(in srgb, var(--ok) 45%, transparent); animation: h-glow 1.4s ease-in-out infinite; }
 #slots .slot.evo { border-color: #ffc24d; color: #ffc24d; animation: h-glow 1.6s ease-in-out infinite; }
 #slots .slot.evo-max { border-color: #ffd24a; box-shadow: 0 0 14px rgba(255, 210, 74, .65); animation: h-glow 1s ease-in-out infinite; }
 #slots .slot .evo-tag { position: absolute; top: 2px; right: 2px; padding: 1px 3px; font: 700 8px/1 var(--hf); letter-spacing: .04em; color: #0b0f14; background: #ffd24a; border-radius: 3px; pointer-events: none; }
@@ -392,9 +392,9 @@ body.calm #hud *, body.calm #hud *::before, body.calm #hud *::after, body.calm #
 body.hud-solid #hud { --g-bg: rgba(10, 16, 24, .94); }
 
 /* ---------- Cartas de nivel: evolución lista y pip siguiente ---------- */
-.offer.evo-rdy { border-color: #22c55e; box-shadow: 0 0 18px rgba(34, 197, 94, .35); }
-.offer.evo-rdy .kind { color: #22c55e; }
-.offer.heal .kind { color: #22c55e; }
+.offer.evo-rdy { border-color: var(--ok); box-shadow: 0 0 18px color-mix(in srgb, var(--ok) 35%, transparent); }
+.offer.evo-rdy .kind { color: var(--ok); }
+.offer.heal .kind { color: var(--ok); }
 .offer .pips i.next { background: #ffd24a; box-shadow: 0 0 6px rgba(255, 210, 74, .85); }
 
 /* ---------- Miniatura de taller para armas evolucionadas ---------- */
