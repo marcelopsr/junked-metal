@@ -145,6 +145,10 @@ function build(cx: number, cz: number) {
     hidden(stat(cyl(0.8, 0.8, 3, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.CYLINDER, {}, [x, 1.5, z]));
   }
 
+  // Arco del desafío de trucos (free_challenges.ts: DESAFIOS skate, 60 s): postes rojos y viga con bloques rojo/blanco, cruzando el pasillo de entrada
+  for (const s of [-1, 1]) { deco.push(box(1.4, 6, 1.4, red, [-70 + s * 7, 3, 40])); hidden(stat(box(1.4, 6, 1.4, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [-70 + s * 7, 3, 40])); }
+  for (let k = 0; k < 7; k++) deco.push(box(2, 1.3, 0.6, k & 1 ? coping : red, [-70 + (k - 3) * 2, 6.6, 40]));
+
   const d = merge("skateDeco", deco); d.isPickable = false; d.receiveShadows = true; shadows.addShadowCaster(d);
 }
 
