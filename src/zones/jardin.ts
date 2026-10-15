@@ -147,9 +147,33 @@ function toyProps() {
   put(blk("#F4E7C8", 0), 10, -28, 0.3, 2.6, 3, 2, 3);
   put(toyCar("#FFD54F"), -9, -34, -0.3, 3, 3.6, 2.2, 2);
   gardenKit(put);
+  parts.push(...gardenBeds());
   const m = merge("jardinToys", parts);
   m.isPickable = false; m.freezeWorldMatrix?.();
   shadows.addShadowCaster(m);
+}
+
+/** Arte 0.95 (contraste del jardin): canteros de tierra oscura con borde de piedra clara, macizos de flores y un sendero de lajas claras en el cuadro de juego (±14 m de la salida). Solo visual, sin colisión (todo < 0,3 m salvo flores finas), generador local fijo. ponytail: rectángulos a mano; si hace falta más variedad, leerlos de una tabla. */
+function gardenBeds(): B.Mesh[] {
+  let s = 4242; const r = () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296);
+  const out: B.Mesh[] = [], soil = JP("#150a04", 1), stone = pbr("bedStone", { color: "#F6ECD2", rough: 0.85, emissive: "#4a4436" }), stem = JP("#2f6b2a", 0.7);
+  const fl = ["#FF4F6D", "#FFD23F", "#FFFFFF", "#FF8A3D", "#C77DFF"].map((c) => JP(c, 0.5));
+  // Cantero: x, z, ancho, fondo, giro, índice de color dominante
+  const bed = (x: number, z: number, w: number, d: number, ry: number, ci: number) => {
+    const c = Math.cos(ry), n = Math.sin(ry), at = (u: number, v: number): [number, number, number] => [x + u * c + v * n, 0, z - u * n + v * c];
+    const P = (u: number, v: number, y: number): [number, number, number] => { const p = at(u, v); p[1] = y; return p; };
+    out.push(box(w, 0.12, d, soil, P(0, 0, 0.06), [0, ry, 0]));
+    for (let u = -w / 2 + 0.9; u <= w / 2 - 0.5; u += 1.8) for (const v of [-d / 2, d / 2]) out.push(rbox(1.6, 0.3, 0.9, 0.12, stone, P(u, v, 0.15), [0, ry + (r() - 0.5) * 0.2, 0]));
+    for (const u of [-w / 2, w / 2]) for (let v = -d / 2 + 1.2; v <= d / 2 - 1.2; v += 1.8) out.push(rbox(0.9, 0.3, 1.6, 0.12, stone, P(u, v, 0.15), [0, ry + (r() - 0.5) * 0.2, 0]));
+    for (let i = 0, k = Math.round(w * d * 0.45); i < k; i++) {
+      const u = (r() - 0.5) * (w - 1.6), v = (r() - 0.5) * (d - 1.6), h = 0.9 + r() * 0.9, m = fl[r() < 0.7 ? ci : (r() * fl.length) | 0];
+      out.push(cyl(0.07, 0.07, h, stem, P(u, v, h / 2), undefined, 4), sph(0.5 + r() * 0.25, m, P(u, v, h + 0.2), [1, 0.7, 1], 5));
+    }
+  };
+  bed(10, -4, 14, 6, 0.25, 0); bed(-10, -9, 12, 5, -0.3, 1); bed(3, -24, 14, 5, 0.1, 4); bed(-9, 9, 13, 5, 0.3, 3); bed(8, 13, 11, 4.5, -0.2, 2); bed(22, 6, 12, 5, -0.15, 1); bed(-22, 4, 12, 5, 0.2, 0);
+  // Sendero claro de lajas sueltas que cruza el cuadro en diagonal
+  for (let i = 0; i < 22; i++) out.push(cyl(1.7 + r() * 0.6, 1.7, 0.14, stone, [-18 + i * 1.7 + (r() - 0.5), 0.07, 20 - i * 2.2 + (r() - 0.5)], undefined, 7));
+  return out;
 }
 
 type Put = (ps: B.Mesh[], x: number, z: number, ry: number, r: number, cw: number, ch: number, cd: number) => void;
