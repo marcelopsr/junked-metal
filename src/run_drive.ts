@@ -25,7 +25,7 @@ import { rocketLand } from "./moon_goals";
 import { getModoTranquilo, RAIN, mixClimate, nightfall, DUSK, type Profile } from "./run";
 import { applyClimate, pbr, setDark, shadows } from "./render";
 import { rng, rngFrom } from "./rng";
-import { enHielo, roam } from "./free_tricks";
+import { enHielo, roam, TRAMPS } from "./free_tricks";
 let evR = rngFrom(1); // sorteo de eventos de mitad de partida: azar propio derivado de la semilla, no corre el principal
 import { run } from "./run_state";
 import { sph } from "./models";
@@ -93,9 +93,27 @@ function libreDrive(c: Car, r: ReturnType<typeof drive>, steer: number, throttle
   const body = c.body, v = body.getLinearVelocity();
   if (r.grounded && v.y < -0.5) roam.extra = Math.min(Math.max(0, R.libre_vel_bajada - base), roam.extra - v.y * R.libre_acel_bajada * dt);
   else roam.extra = Math.max(0, roam.extra - 6 * dt); // ponytail: sin distinguir subida de llano; techo: usar la pendiente de drive() si hace falta
+  const up = c.root.up, fw = c.root.forward, rt = c.root.right;
+  // Cabeceo: solo si se suelta o cambia el acelerador después de despegar; mantenerlo apretado desde el piso (salir de un bowl) no voltea el auto
+  if (r.grounded || roam.air < 0.15) { roam.ts = throttle; roam.arm = false; } else if (throttle !== roam.ts) roam.arm = true;
+  // Trampolín: al pisar la lona (y bajo, sobre la plataforma de 0,5 m) el impulso vertical lo da el código; la restitución de Havok casi no rebota con el auto conducido
+  if (roam.tramp > 0) roam.tramp -= dt;
+  else if (c.pos.y < 1.4 && v.y < 3 && TRAMPS.some(([x, z]) => (c.pos.x - x) ** 2 + (c.pos.z - z) ** 2 < 25)) { roam.tramp = 0.5; body.setLinearVelocity(_w.set(v.x, R.libre_rebote_tramp, v.z)); return; }
+  // Volcado en el piso (techo abajo, casi sin velocidad vertical) más de libre_volcado_s: salto suave y giro sobre el eje de avance hasta quedar de ruedas
+  if (roam.fix > 0) { // enderezando: giro sostenido sobre el eje de avance hasta quedar de ruedas (drive() pisa la velocidad angular cada cuadro)
+    roam.fix = up.y > 0.8 ? 0 : roam.fix - dt;
+    body.setAngularVelocity(_w.set(fw.x * 7 * roam.dir, fw.y * 7 * roam.dir, fw.z * 7 * roam.dir));
+    return;
+  }
+  roam.vol = up.y < 0.2 && Math.abs(v.y) < 1.5 ? roam.vol + dt : 0;
+  if (roam.vol > R.libre_volcado_s) {
+    roam.vol = 0; roam.fix = 0.7; roam.dir = Math.sign(fw.z * up.x - fw.x * up.z) || 1; // dir: sentido del giro sobre fw que lleva el techo hacia arriba
+    body.setLinearVelocity(_w.set(v.x, 6, v.z));
+    return;
+  }
   if (r.grounded || roam.air < 0.15 || (!steer && !throttle)) return; // roam.air: la rampa empinada hace parpadear "grounded"; el control entra tras 0,15 s de vuelo real
-  const w = body.getAngularVelocity(), up = c.root.up, fw = c.root.forward, rt = c.root.right;
-  const wU = steer ? steer * R.libre_giro_aire : B.Vector3.Dot(w, up), wR = throttle ? throttle * R.libre_cabeceo_aire : B.Vector3.Dot(w, rt), wF = B.Vector3.Dot(w, fw);
+  const w = body.getAngularVelocity();
+  const wU = steer ? steer * R.libre_giro_aire : B.Vector3.Dot(w, up), wR = throttle && roam.arm && roam.air > R.libre_cabeceo_espera_s ? throttle * R.libre_cabeceo_aire : B.Vector3.Dot(w, rt), wF = B.Vector3.Dot(w, fw);
   _w.set(up.x * wU + rt.x * wR + fw.x * wF, up.y * wU + rt.y * wR + fw.y * wF, up.z * wU + rt.z * wR + fw.z * wF);
   body.setAngularVelocity(_w);
 }

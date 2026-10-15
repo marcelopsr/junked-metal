@@ -2,6 +2,7 @@ import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph } from "../models";
 import { M, pbr, shadows } from "../render";
 import type { Barrio } from "./libre";
+import { TRAMPS } from "../free_tricks";
 import { bare, decal, scene, stat, tex, undo } from "./common";
 
 // Free Roam, barrio ACUATICO (x 42..262, z 98..262): torre con 3 toboganes de media caña, pileta grande y pileta vacía (cráteres suaves), piletas bajas con agua visual,
@@ -149,9 +150,10 @@ function build(cx: number, cz: number) {
     deco.push(cyl(r * 2 + 1.6, r * 2 + 1.6, 0.04, tile, [x, 0.06, z], undefined, 24)); // aro de azulejo (visual)
     bare.push({ x, z, r: r + 2 });
   }
-  [[100, 120, "#ec407a"], [142, 114, "#fbc02d"], [168, 152, "#26c6da"]].forEach(([x, z, c]) => {
-    trampoline(x as number, z as number, pbr("acuaTrampolin" + c, { color: c as string, rough: 0.6 }));
-    deco.push(cyl(9, 9, 0.08, M.matte("#23262b"), [x as number, 0.52, z as number], undefined, 20)); // lona oscura sobre el aro de color
+  TRAMPS.forEach(([x, z], i) => {
+    const c = ["#ec407a", "#fbc02d", "#26c6da"][i];
+    trampoline(x, z, pbr("acuaTrampolin" + c, { color: c, rough: 0.6 }));
+    deco.push(cyl(9, 9, 0.08, M.matte("#23262b"), [x, 0.52, z], undefined, 20)); // lona oscura sobre el aro de color
   });
 
   // ---- Sombrillas y reposeras alrededor de la pileta grande y la plaza sur ----
