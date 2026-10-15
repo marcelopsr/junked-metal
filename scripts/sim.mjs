@@ -53,7 +53,7 @@ async function run(job, browser) {
     if (!a.json && par === 1) process.stderr.write(`\r                                                                         \r`);
     const i = await page.evaluate(() => window.__info()), m = (re) => resumen.match(re)?.[1];
     const at = await page.evaluate(() => window.__atascos());
-    return { ...job, atascos: at.n, atascoMaxS: at.maxS, tiempo: +i.time.toFixed(1), nivel: i.level, hp: Math.round(i.hp), estado: i.state, bajas: Number(m(/bajas (\d+)/) ?? 0), mundo: m(/ · ([^·]+\/[^·]+) · semilla/)?.trim(), armas: i.weapons.join(" "), resumen,
+    return { ...job, atascos: at.n, atascoMaxS: at.maxS, atascoEv: at.ev, tiempo: +i.time.toFixed(1), nivel: i.level, hp: Math.round(i.hp), estado: i.state, bajas: Number(m(/bajas (\d+)/) ?? 0), mundo: m(/ · ([^·]+\/[^·]+) · semilla/)?.trim(), armas: i.weapons.join(" "), resumen,
       dano_infligido: JSON.parse(await page.evaluate(() => window.__out())), dano_recibido: JSON.parse(await page.evaluate(() => window.__dmg())) };
   } catch (e) { return { ...job, error: String(e).split("\n")[0] }; }
   finally { if (page.logs.length) console.error(`[semilla ${job.seed}] errores de consola: ${page.logs.join(" | ")}`); await page.ctx.close(); }
