@@ -271,7 +271,9 @@ function paint(f: Face, i: number) {
   // Dunas: bandas suaves de claro/oscuro (ondulación fingida en el color, la geometría y la física no cambian), solo del lado del Sol
   const sunK = B.Scalar.Clamp((_vd.x * SUN_DIR.x + _vd.y * SUN_DIR.y + _vd.z * SUN_DIR.z - 0.05) * 4, 0, 1);
   const dune = 0.5 + 0.5 * Math.sin(_vd.x * 33 + _vd.z * 21 + Math.sin(_vd.y * 11 + _vd.x * 7) * 1.8), rip = Math.sin(_vd.x * 90 - _vd.z * 60 + dune * 4) * 0.5;
-  const g = shade(_vd.x, _vd.y, _vd.z, h) * (1 + sunK * ((dune - 0.5) * 0.32 + rip * 0.07));
+  // Zonas de regolito claro/oscuro a gran escala (decenas de metros), solo del lado del Sol
+  const zone = Math.sin(_vd.x * 14 + Math.sin(_vd.z * 9) * 1.4) * Math.sin(_vd.z * 13 + _vd.y * 5) * 1.3 + 0.5 * Math.sin(_vd.x * 31 - _vd.z * 23);
+  const g = shade(_vd.x, _vd.y, _vd.z, h) * (1 + sunK * ((dune - 0.5) * 0.32 + rip * 0.07 + B.Scalar.Clamp(zone, -1, 1) * 0.5));
   // Manchas grandes crema/lila (mares de juguete) y fondo de cráter frío: así el suelo se despega de las rocas rojas y de la niebla durazno
   const m = 0.5 + 0.5 * Math.sin(_vd.x * 6.1 + Math.sin(_vd.z * 4.3) * 1.7) * Math.sin(_vd.y * 5.3 + _vd.z * 3.1), cool = h < -0.5 ? 1 : B.Scalar.Clamp((m - 0.45) * 3, 0, 1);
   f.col[i * 4] = g * B.Scalar.Lerp(1, 0.6, cool); f.col[i * 4 + 1] = g * B.Scalar.Lerp(0.84, 0.62, cool); f.col[i * 4 + 2] = g * B.Scalar.Lerp(0.62, 0.92, cool); f.col[i * 4 + 3] = 1;
@@ -460,6 +462,12 @@ export function moonBuild(s: B.Scene, low: boolean) {
     cm.opacityTexture = ct; cm.disableLighting = true; cm.diffuseColor = new B.Color3(0.07, 0.06, 0.055); cm.specularColor = B.Color3.Black(); cm.fogEnabled = true; cm.backFaceCulling = false; cm.zOffset = -2;
     const crater = B.MeshBuilder.CreateGround("moonCrater", { width: 2, height: 2 }, scene); crater.material = cm;
     thin(crater, low ? 14 : 30, 1, () => { const s = 2.5 + gr() * 4; return new B.Vector3(s, 1, s * (0.7 + gr() * 0.3)); }, 0.03);
+    // Manchas grandes: regolito oscuro (6-13 m) y claro tipo ceniza cremosa (8-16 m), mismo degradé; sin colisión
+    const bm = (scene.getMaterialByName("moonPatchDarkMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("moonPatchDarkMat", scene), lm = (scene.getMaterialByName("moonPatchLightMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("moonPatchLightMat", scene);
+    for (const [m, c, o] of [[bm, new B.Color3(0.1, 0.045, 0.025), 0.95], [lm, new B.Color3(1, 0.78, 0.45), 0.18]] as const) { m.opacityTexture = ct; m.disableLighting = true; m.emissiveColor = c; m.diffuseColor = B.Color3.Black(); m.specularColor = B.Color3.Black(); m.alpha = o; m.fogEnabled = m === bm; m.backFaceCulling = false; m.zOffset = -3; }
+    const patchD = B.MeshBuilder.CreateGround("moonPatchD", { width: 2, height: 2 }, scene), patchL = B.MeshBuilder.CreateGround("moonPatchL", { width: 2, height: 2 }, scene); patchD.material = bm; patchL.material = lm;
+    thin(patchD, low ? 22 : 50, 0.9, () => { const s = 6 + gr() * 7; return new B.Vector3(s, 1, s * (0.5 + gr() * 0.4)); }, 0.04);
+    thin(patchL, low ? 3 : 6, 0.9, () => { const s = 8 + gr() * 6; return new B.Vector3(s, 1, s * (0.5 + gr() * 0.4)); }, 0.035);
   }
   for (const [c, n] of [["#a8954a", 70], ["#7d6b35", 55]] as const) { // mata seca: 4 hojas finas abiertas en abanico
     const mat = pbr("moonScrub" + c, { color: c, rough: 0.9 }), leaves = [0, 1, 2, 3].map((k) => { const l = poly("hoja", 1, 0.03, 0.22, 0.03, mat); l.scaling.set(1, 1, 1); l.position.set(Math.cos(k * 1.57) * 0.1, 0.2, Math.sin(k * 1.57) * 0.1); l.rotation.set(Math.sin(k * 1.57) * 0.5, 0, -Math.cos(k * 1.57) * 0.5); return l; });
@@ -606,6 +614,9 @@ export function moonBuild(s: B.Scene, low: boolean) {
     };
     place(lamp, 34 * lowK, 6, 38, () => 1.5, 2.8); // farol 1,5x; pozo de radio 2,8 m (más grande se leía como lava)
     place(rockB, 65 * lowK, 5, 50, () => 1.4 + lr() * 2.4);
+    // Acentos claros puntuales: rocas de ceniza pálida (lilas) que atrapan la luz de los neones y rompen el suelo oscuro
+    const ash = template("moonAsh", () => [poly("as", 1, 0.5, 0.4, 0.45, pbr("moonAsh", { color: "#b8b0d0", rough: 0.8, emissive: "#4a4470" }))]);
+    place(ash, 60, 4, 22, () => 0.5 + lr() * 0.9); // sin lowK: en celular son el acento que sostiene el contraste
   }
   // Cielo: estrellas fijas en el mundo (al dar la vuelta a la luna, giran), Tierra, Sol y una estrella fugaz de vez en cuando.
   // Todo dentro de la esfera del cielo de render.ts (radio 600, infiniteDistance): más lejos lo taparía
