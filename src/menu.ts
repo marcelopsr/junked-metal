@@ -69,7 +69,7 @@ export type Save = {
   abilLv: Partial<Record<AbilityId, number>>; weapon: WeaponId; // nivel de cada habilidad (Taller) y arma inicial elegida en el garaje (Arsenal)
   encore: { best: { loop: number; stage: number; t: number }; wins: number; runs: number; lastLoop: number; lastCause: string; secrets: string[]; tips: string[]; seenPacts: string[]; seenVariants: string[]; seenInts: string[] }; // ENCORE: mejor expedición (vuelta, escenario, segundos), ganadas, partidas y la última derrota (vuelta y causa, "" = sin derrota; memoria del Director); aparte de Supervivencia
   m3: { stars: Record<string, number>; best: Record<string, number>; tools: Record<string, number> }; // Junket Crush: estrellas y récord por nivel, herramientas guardadas
-  libre: { best: { aire: number; giro: number; vuelta: number; salto: number; combo: number }; desafio: { obs: number; skate: number; nieve: number }; tuercas: string; aviso: boolean; metas: string[] }; // Paseo libre: récords de trucos (aire en ms, giro en grados, vuelta en cantidad, truco y combo en puntos) y 24 tuercas doradas ("1" = juntada)
+  libre: { best: { aire: number; giro: number; vuelta: number; salto: number; combo: number }; desafio: { obs: number; skate: number; nieve: number }; tuercas: string; aviso: boolean; ghost: boolean; fantasma: { obs: string; skate: string; nieve: string }; metas: string[] }; // Paseo libre: récords de trucos (aire en ms, giro en grados, vuelta en cantidad, truco y combo en puntos) y 24 tuercas doradas ("1" = juntada)
 };
 // Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
 const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (innerHeight * (devicePixelRatio || 1))) * 20) / 20));
@@ -87,7 +87,7 @@ export const DEFAULT: Save = {
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
   encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [], seenInts: [] },
   m3: { stars: {}, best: {}, tools: {} },
-  libre: { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, metas: [] },
+  libre: { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, ghost: true, fantasma: { obs: "", skate: "", nieve: "" }, metas: [] },
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego
 export const save: Save = parseSave((() => { try { return localStorage.getItem("rcfight2"); } catch { return null; } })(), DEFAULT, { abilities: ABILITIES, weapons: ARSENAL, curses: CURSES, kinds: Object.keys(DEF), zones: ZONES, isTouch, validDecal, presetOf, presets: PRESETS });
@@ -1154,12 +1154,14 @@ type Kit = { weapons: { id: WeaponId; lv: number; evolved: boolean; dmg?: number
 const pips = (l: number) => `<span class="pips">${"<i class=on></i>".repeat(l)}${"<i></i>".repeat(Math.max(0, 5 - l))}</span>`;
 const LUZ = ["Amanecer", "Día", "Atardecer", "Noche", "Automático"];
 const paintLuz = (n: number) => document.querySelectorAll<HTMLElement>("#libreLuz button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === n)));
+const paintGhost = () => document.querySelectorAll<HTMLElement>("#libreGhost button").forEach((b, i) => b.setAttribute("aria-pressed", String((i === 0) === save.libre.ghost)));
 /** Pausa de Paseo libre: la misma sección de pausa sin armas ni estadísticas, con el selector de luz. */
 export function openPauseLibre(luz: number) {
   const sc = $("scr-pause");
   sc.classList.add("libre");
   $("libreLuz").innerHTML = LUZ.map((n, i) => `<button data-act="luz:${i}" aria-pressed="false">${n}</button>`).join("");
   paintLuz(luz);
+  $("libreGhost").innerHTML = `<button data-act="ghost:1" aria-pressed="false">Fantasma: sí</button><button data-act="ghost:0" aria-pressed="false">Fantasma: no</button>`; paintGhost();
   $("libreAire").innerHTML = ctl === "touch" ? "En el aire aparece el botón GIRO: mantenerlo da una vuelta." : `En el aire, mantener ${ctl === "pad" ? btnChip(pb("spin")) : `<kbd>${esc(keyName(KEYS.spin[0]))}</kbd>`} da una vuelta (con Frenar, hacia atrás). También sirve soltar y volver a acelerar.`;
   const med = (id: string, v: number) => { const m = medalla(id, v); return m ? `<em class="med m${m}">${MEDALLA[m]}</em>` : ""; };
   $("libreRec").innerHTML = DESAFIOS.map((d) => `<div class="rec"><span>${d.nombre}</span><b>${med(d.id, save.libre.desafio[d.id])}${fmtMarca(d, save.libre.desafio[d.id])}</b></div>`).join("");
@@ -1339,6 +1341,7 @@ export function initMenu(a: Api) {
     else if (d.act === "lcar") { const cs = Object.keys(CARS) as CarKind[]; peek.car = cs[(cs.indexOf(peek.car ?? save.car) + 1) % cs.length]; renderLibre(); }
     else if (d.act === "libregow") api.libre();
     else if (d.act?.startsWith("luz:")) { api.luz(+d.act.slice(4)); paintLuz(+d.act.slice(4)); }
+    else if (d.act?.startsWith("ghost:")) { save.libre.ghost = d.act === "ghost:1"; persist(); paintGhost(); }
     else if (d.act === "back") back();
     else if (d.act === "fullscreen") { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.(); }
     else if (d.act === "resetcfg") { // dos pasos: el primer clic pide confirmar (se desarma solo a los 4 s)

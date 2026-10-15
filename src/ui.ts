@@ -611,8 +611,8 @@ export function hudTuercas(n: number, total: number, flash = false) {
   if (flash) { e.classList.remove("pop"); void e.offsetWidth; e.classList.add("pop"); }
 }
 /** Desafío en curso: título, valor grande (reloj o puntaje) y línea de récord; `title` vacío lo oculta. */
-export function hudDesafio(title: string, big = "", sub = "", fin = false) {
-  const e = libreEl("desafio"), h = `<b>${title}</b><i>${big}</i><small>${sub}</small>`;
+export function hudDesafio(title: string, big = "", sub = "", fin = false, dif?: { txt: string; ok: boolean }) {
+  const e = libreEl("desafio"), h = `<b>${title}</b><i>${big}</i><small>${sub}</small>${dif?.txt ? `<u class="${dif.ok ? "ok" : "low"}">${dif.txt}</u>` : ""}`; // dif: ventaja o atraso contra el fantasma del récord
   if (e.innerHTML !== h) e.innerHTML = h;
   e.classList.toggle("show", !!title); e.classList.toggle("fin", fin);
 }

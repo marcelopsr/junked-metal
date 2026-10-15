@@ -81,3 +81,55 @@ export const RECORDS: { id: string; nombre: string; fmt: (v: number) => string }
   { id: "salto", nombre: "MEJOR TRUCO", fmt: (v) => `${v} PTS` },
   { id: "combo", nombre: "MEJOR COMBO", fmt: (v) => `${v} PTS` },
 ];
+
+// ---------- Fantasma del récord: el mejor intento de cada desafío, comprimido en una cadena base64 (save.libre.fantasma) ----------
+/** Una muestra: x, y, z, qx, qy, qz, qw, puntos acumulados. Cada 0,1 s. */
+export type Muestra = number[];
+export const FANTASMA_DT = 0.1;
+/** Tope de la cadena guardada (~20 KB): 11 bytes por muestra = ~1500 muestras (150 s). ponytail: un intento más largo no deja fantasma (sin delta ni zlib; subir el tope o comprimir si hiciera falta). */
+export const FANTASMA_MAX = 22000;
+const BYTES = 11;
+/** Codifica: posición en cm (int16), quaternion con w >= 0 en int8 (w se recalcula) y puntos (uint16). "" si no entra en el tope. */
+export function fantasmaEnc(m: Muestra[]): string {
+  if (m.length < 2 || Math.ceil(m.length * BYTES / 3) * 4 > FANTASMA_MAX) return "";
+  const dv = new DataView(new ArrayBuffer(m.length * BYTES));
+  m.forEach((r, i) => {
+    const o = i * BYTES, s = r[6] < 0 ? -1 : 1, c = (v: number, a: number) => Math.max(-a, Math.min(a, Math.round(v)));
+    for (let k = 0; k < 3; k++) dv.setInt16(o + k * 2, c(r[k] * 100, 32767), true);
+    for (let k = 0; k < 3; k++) dv.setInt8(o + 6 + k, c(r[3 + k] * s * 127, 127));
+    dv.setUint16(o + 9, Math.max(0, c(r[7], 65535)), true);
+  });
+  let bin = ""; new Uint8Array(dv.buffer).forEach((b) => { bin += String.fromCharCode(b); });
+  return btoa(bin);
+}
+/** Decodifica; null si la cadena está corrupta (no es base64, largo que no cuadra o demasiado larga). */
+export function fantasmaDec(s: unknown): Muestra[] | null {
+  if (typeof s !== "string" || s.length > FANTASMA_MAX || !/^[A-Za-z0-9+/]*={0,2}$/.test(s)) return null;
+  let raw: string;
+  try { raw = atob(s); } catch { return null; }
+  if (raw.length < 2 * BYTES || raw.length % BYTES) return null;
+  const u = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) u[i] = raw.charCodeAt(i);
+  const dv = new DataView(u.buffer), out: Muestra[] = [];
+  for (let o = 0; o < u.length; o += BYTES) {
+    const x = dv.getInt8(o + 6) / 127, y = dv.getInt8(o + 7) / 127, z = dv.getInt8(o + 8) / 127;
+    out.push([dv.getInt16(o, true) / 100, dv.getInt16(o + 2, true) / 100, dv.getInt16(o + 4, true) / 100, x, y, z, Math.sqrt(Math.max(0, 1 - x * x - y * y - z * z)), dv.getUint16(o + 9, true)]);
+  }
+  return out;
+}
+/** Lo que queda en el guardado: la cadena si es válida, si no vacío. */
+export const fantasmaOk = (s: unknown): string => (s === "" || fantasmaDec(s) ? (s as string) : "");
+/** Muestra interpolada a los `t` segundos (se queda en la última). Los quaternions se mezclan lineal: quien la usa normaliza. */
+export function fantasmaAt(m: Muestra[], t: number): Muestra {
+  const f = Math.max(0, t) / FANTASMA_DT, i = Math.min(m.length - 1, Math.floor(f)), j = Math.min(m.length - 1, i + 1), k = Math.min(1, f - i);
+  return m[i].map((v, n) => v + (m[j][n] - v) * k);
+}
+/** Segundos en que el fantasma pasó cada punto de control y la meta (mismo criterio que chStep); -1 si no llegó. */
+export function fantasmaCp(d: Desafio, m: Muestra[]): number[] {
+  const pts: [number, number, number][] = [...(d.cp ?? []), [d.bx ?? 0, d.bz ?? 0, d.br ?? 0]], out: number[] = [];
+  m.forEach((r, i) => { const p = pts[out.length]; if (p && dist(r[0], r[2], p[0], p[1]) < p[2]) out.push(i * FANTASMA_DT); });
+  while (out.length < pts.length) out.push(-1);
+  return out;
+}
+/** Diferencia en vivo: "-0,8 S" (tiempo; negativo = adelante) o "+120 PTS". */
+export const fmtDif = (tipo: Desafio["tipo"], v: number) => tipo === "tiempo" ? `${v <= 0 ? "-" : "+"}${Math.abs(v).toFixed(1).replace(".", ",")} S` : `${v >= 0 ? "+" : "-"}${Math.abs(Math.round(v))} PTS`;

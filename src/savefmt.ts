@@ -4,6 +4,7 @@ import type { Save } from "./menu";
 import { PACTS, SECRET_IDS, TIP_IDS, VARIANTS } from "./encore";
 import { INT_IDS } from "./encore_events";
 import { META_IDS } from "./free_goals";
+import { fantasmaOk } from "./free_challenges";
 
 /** Lo que `sanitize` necesita saber del juego: qué ids son válidos y cómo validar calcos y presets. */
 export type SaveDeps = {
@@ -118,7 +119,7 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
       seenPacts: ids(s.encore?.seenPacts, PACTS.map((p) => p.id)), seenVariants: ids(s.encore?.seenVariants, VARIANTS.map((v) => v.name)), seenInts: ids(s.encore?.seenInts, INT_IDS) }; // seenInts: interrupciones del Director vistas (Cartelera) // primera partida guiada: solo ids conocidos // Contenido 3: solo ids conocidos, sin repetir
     // Paseo libre: récords enteros no negativos y 24 bits de tuercas (cualquier otra cosa vuelve a vacío)
     const lb = s.libre?.best;
-    s.libre = { best: { aire: ni(lb?.aire), giro: ni(lb?.giro), vuelta: ni(lb?.vuelta), salto: ni(lb?.salto), combo: ni(lb?.combo) }, desafio: { obs: ni(s.libre?.desafio?.obs), skate: ni(s.libre?.desafio?.skate), nieve: ni(s.libre?.desafio?.nieve) }, tuercas: typeof s.libre?.tuercas === "string" && /^[01]{24}$/.test(s.libre.tuercas) ? s.libre.tuercas : "0".repeat(24), aviso: s.libre?.aviso === true, metas: ids(s.libre?.metas, META_IDS) }; // metas: objetivos de barrio hechos (free_goals.ts), solo ids conocidos
+    s.libre = { best: { aire: ni(lb?.aire), giro: ni(lb?.giro), vuelta: ni(lb?.vuelta), salto: ni(lb?.salto), combo: ni(lb?.combo) }, desafio: { obs: ni(s.libre?.desafio?.obs), skate: ni(s.libre?.desafio?.skate), nieve: ni(s.libre?.desafio?.nieve) }, tuercas: typeof s.libre?.tuercas === "string" && /^[01]{24}$/.test(s.libre.tuercas) ? s.libre.tuercas : "0".repeat(24), aviso: s.libre?.aviso === true, ghost: s.libre?.ghost !== false, fantasma: { obs: fantasmaOk(s.libre?.fantasma?.obs), skate: fantasmaOk(s.libre?.fantasma?.skate), nieve: fantasmaOk(s.libre?.fantasma?.nieve) }, metas: ids(s.libre?.metas, META_IDS) }; // metas: objetivos de barrio hechos (free_goals.ts), solo ids conocidos
     s.preset = deps.presetOf({ shadowQ: s.shadowQ, detail: s.detail, texRes: s.texRes, aniso: s.aniso, bloom: s.bloom });
     return { ...structuredClone(D), ...s, decals, decalSel, perm: { ...D.perm, ...s.perm }, kit: { ...D.kit, ...s.kit }, vol: { ...D.vol, ...s.vol },
       stats: { ...D.stats, ...s.stats, dmg: { ...s.stats?.dmg }, zone: { ...s.stats?.zone } } };

@@ -891,9 +891,9 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tSpin, #tPause, #t
 #libreRec .rec, #libreTrucos .rec, #libreMetas .rec { display: flex; justify-content: space-between; gap: 16px; padding: 4px 10px; background: #1a1d22; border-left: 3px solid var(--jm-rojo); font-family: "Bebas Neue", sans-serif; letter-spacing: .06em; font-size: 16px; }
 #libreRec .rec b, #libreTrucos .rec b, #libreMetas .rec b { font-weight: 400; color: #ffc21a; }
 #scr-pause.libre .kit4 { display: none; }
-#libreLuz { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-#libreLuz button { min-height: 44px; padding: 0 14px; }
-#libreLuz button[aria-pressed="true"] { background: var(--jm-rojo); color: #fff; }
+#libreLuz, #libreGhost { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+#libreLuz button, #libreGhost button { min-height: 44px; padding: 0 14px; }
+#libreLuz button[aria-pressed="true"], #libreGhost button[aria-pressed="true"] { background: var(--jm-rojo); color: #fff; }
 
 /* Cartelera de ENCORE: afiches teatrales de juguete (menu/cartelera.ts) */
 #scr-cartelera { overflow-y: auto; }
@@ -909,4 +909,4 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tSpin, #tPause, #t
 .afiche small { font: 500 12.5px/1.25 Inter, sans-serif; color: var(--jm-texto2); }
 .afiche.off { border-top-color: var(--jm-borde); border-style: dashed; opacity: .75; }
 .afiche.off b { color: var(--jm-texto2); }
-#libreLuz button[aria-pressed="true"] { background: var(--jm-fondo, #101215); color: var(--jm-amarillo2, #FFD166); box-shadow: inset 0 0 0 2px var(--jm-amarillo, #FFB400); } /* opción marcada en amarillo: el rojo de pegatina queda solo para Seguir */
+#libreLuz button[aria-pressed="true"], #libreGhost button[aria-pressed="true"] { background: var(--jm-fondo, #101215); color: var(--jm-amarillo2, #FFD166); box-shadow: inset 0 0 0 2px var(--jm-amarillo, #FFB400); } /* opción marcada en amarillo: el rojo de pegatina queda solo para Seguir */

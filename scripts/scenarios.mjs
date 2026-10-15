@@ -460,6 +460,16 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
     const antes = await p.evaluate(async () => (await import("/src/menu.ts")).save.libre.desafio.obs); if (antes > 0) throw new Error("la meta contó sin pasar por los puntos de control: " + antes);
     await libreAt(250, -162)(p); await libreAt(140, -207)(p); await libreAt(246, -230, Math.PI / 2)(p);
     const r = await p.evaluate(async () => (await import("/src/menu.ts")).save.libre.desafio.obs); if (!(r > 0)) throw new Error("el récord del contrarreloj no se guardó: " + r); } },
+  // Fantasma del récord (free_ghost.ts): un primer intento lento (queda 5 s en la largada) se guarda como fantasma; el segundo lo ve parado en la largada, 6 m al frente (sonda: falla si no aparece)
+  { id: "fantasma", perf: false, act: async (p) => {
+    await p.evaluate(async () => { const l = (await import("/src/menu.ts")).save.libre; l.desafio.obs = 0; l.fantasma.obs = ""; });
+    await libreAt(0, -20)(p); await libreAt(140, -140, Math.PI / 2)(p); await p.evaluate(() => window.__tick(300));
+    await libreAt(250, -162)(p); await libreAt(140, -207)(p); await libreAt(246, -230, Math.PI / 2)(p);
+    const f = await p.evaluate(async () => (await import("/src/menu.ts")).save.libre.fantasma.obs); if (!f) throw new Error("el fantasma no se grabó");
+    await libreAt(0, -20)(p); await libreAt(140, -140, Math.PI / 2)(p); await libreAt(146, -140, -Math.PI / 2)(p);
+    if (!(await p.evaluate(() => !!window.__scene.getTransformNodeByName("ghost")))) throw new Error("el fantasma no apareció"); } },
+  { id: "fantasma-dif", perf: false, act: async (p) => { await libreAt(250, -162)(p);
+    const u = await p.evaluate(() => document.querySelector("#desafio u")?.textContent ?? ""); if (!/^-\d+,\d S$/.test(u)) throw new Error("la diferencia con el fantasma no se muestra: " + u); } },
   // Objetivo de barrio: bajar al bowl chico del skatepark lo tilda y avisa (sonda: falla si no queda en save.libre.metas)
   { id: "objetivo", perf: false, act: async (p) => { await libreAt(-45, 140)(p); await p.waitForTimeout(300);
     const m = await p.evaluate(async () => (await import("/src/menu.ts")).save.libre.metas); if (!m.includes("skate_bowl")) throw new Error("el objetivo del bowl no se tildó: " + m); } },
