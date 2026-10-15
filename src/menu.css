@@ -652,7 +652,8 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .bst i { display: block; height: 6px; border-radius: 99px; background: linear-gradient(90deg, #35c9ff, #7dffb0); }
 .bst em { font-style: normal; color: var(--lcd-ink); text-align: right; min-width: 40px; }
 .bfoot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.bfoot .hint { font-size: 13px; letter-spacing: .04em; }
+.bfoot .hint { font-size: 13px; letter-spacing: .04em; flex: 1 1 0; min-width: 0; } /* la ayuda envuelve; Volver nunca se parte */
+.bfoot button { flex: none; white-space: nowrap; min-width: 92px; }
 /* Celular vertical: el bicho arriba, la ficha abajo */
 @media (orientation: portrait) and (max-width: 820px) {
   /* Garaje en celular vertical: el auto arriba (garage_v en menuscene.ts) y el panel abajo, con scroll propio */
