@@ -27,7 +27,7 @@ const rivMat = () => M.metal("#aeb4bd");
 const rivets = (c: V3, hx: number, hy: number, ax: "z" | "x" | "y" = "z", d = 0.08): B.Mesh[] =>
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => sph(d, rivMat(), ax === "z" ? [c[0] + a * hx, c[1] + b * hy, c[2]] : ax === "x" ? [c[0], c[1] + b * hy, c[2] + a * hx] : [c[0] + a * hx, c[1], c[2] + b * hy], undefined, 4));
 // Ojo de vidrio con brasa ámbar (sin el blanco quemado de M.glow).
-const amberEye = () => pbr("ambarOjo", { color: "#a84a10", emissive: "#d4600c", rough: 0.3 });
+const amberEye = () => pbr("ambarOjo2", { color: "#ff8a1a", emissive: "#b26112", rough: 0.3 });
 // Escala una lista de piezas (posición y tamaño) respecto del origen: acorta un modelo sin tocar cada coordenada.
 const shrink = (a: B.Mesh[], k: number) => a.map((m) => { m.position.scaleInPlace(k); m.scaling.scaleInPlace(k); return m; });
 // Placas finas pegadas a la superficie de un elipsoide (centro c, radios r): [azimut desde +z hacia +x, elevación]. Dan relieve donde worn() casi no se ve (esferas). Caja fina en z, orientada a la normal.
@@ -216,7 +216,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
     }
     if (kind === "muneco" || kind === "falso") {
       // Muñeco de ventrílocuo (desván; ref275): madera gastada gris pardo, galera negra, cara crema con mejillas y mandíbula articulada, moño rojo, articulaciones de bolilla, puños crema, palo con perilla de bronce en la espalda; el falso es el mismo, descolorido y de ojos encendidos; mira hacia +z
-      const f = kind === "falso", suit = worn(f ? "#8a8f98" : "#5b5149"), wood = M.plastic(f ? "#d6c7a8" : "#e6cfa0"), jaw = worn(f ? "#d6c7a8" : "#e6cfa0"), dark = M.matte("#1a1a1a"), white = M.plastic("#f5f5f4"), cuff = worn("#e0d4b0"), gold = M.metal("#d4a017"), cheek = M.plastic(f ? "#a8a29e" : "#d04a3a"), hat = worn("#2b2622"), joint = M.metal("#8a5a30"), pupil = f ? M.glow("#ff9a1a") : dark;
+      const f = kind === "falso", suit = worn(f ? "#8a8f98" : "#5b5149"), wood = M.plastic(f ? "#d6c7a8" : "#e6cfa0"), jaw = worn(f ? "#d6c7a8" : "#e6cfa0"), dark = M.matte("#1a1a1a"), white = M.plastic("#f5f5f4"), cuff = worn("#e0d4b0"), gold = M.metal("#d4a017"), cheek = M.plastic(f ? "#a8a29e" : "#d04a3a"), hat = worn("#2b2622"), joint = M.metal("#8a5a30"), pupil = f ? amberEye() : dark;
       return [
         box(1.8, 1.9, 1.2, suit, [0, 1.65, 0]), box(1.5, 0.9, 0.5, suit, [0, 0.7, -0.55], [0.25, 0, 0]), // frac y faldón
         ...rivets([0, 1.75, 0.69], 0.32, 0.6, "z", 0.1),
@@ -265,7 +265,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         box(2.2, 1.6, 1.8, worn("#6b6a2e"), [0, 1.6, -2.2]), ...rivets([0, 1.6, -3.12], 0.85, 0.6, "z", 0.1),
         tube([[0, 1.3, 1.8], [0, 0.9, 3], [0.3, 0.7, 4.2]], 0.5, hose),
         cyl(0.9, 0.7, 0.5, dark, [0.3, 0.7, 4.4], [Math.PI / 2, 0, 0], 10),
-        ...[-1, 1].flatMap((sx) => [sph(0.34, eye, [sx * 0.7, 2.0, 1.1], undefined, 6), tor(0.5, 0.08, M.metal("#a8803c"), [sx * 0.7, 2.0, 1.05], [Math.PI / 2, 0, 0], 8)]),
+        ...[-1, 1].flatMap((sx) => [sph(0.34, eye, [sx * 0.7, 2.0, 1.1], undefined, 6), tor(0.5, 0.08, M.metal("#a8803c"), [sx * 0.7, 2.0, 1.05], [Math.PI / 2, 0, 0], 8), sph(0.14, dark, [sx * 0.7, 2.0, 1.4], undefined, 4)]),
         cyl(0.08, 0.08, 1.4, dark, [0.9, 2.6, -0.4], undefined, 5), sph(0.22, M.glow("#ff2a1a"), [0.9, 3.35, -0.4], undefined, 5),
       ];
     }
@@ -392,7 +392,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
     }
     // Comunes de ritmo medio: juguetes de chatarra de colores vivos (ver docs/ART_DIRECTION.md); frente = +Z
     if (kind === "kamikaze") { // bomba de caricatura con patas de resorte y mecha encendida
-      const body = worn("#b4401e"), band = M.matte("#2b2220"), fuse = M.glow("#ffd24a"), amber = M.glow("#ff9a1a");
+      const body = worn("#b4401e"), band = M.matte("#2b2220"), fuse = M.glow("#ffd24a"), amber = amberEye();
       return [
         sph(0.9, body, [0, 0.55, 0], [1, 0.95, 1.1], 10), tor(0.95, 0.08, band, [0, 0.55, 0], [Math.PI / 2, 0, 0], 12),
         cyl(0.18, 0.22, 0.2, band, [0, 1.04, -0.05], undefined, 8), tube([[0, 1.1, -0.05], [0.12, 1.35, -0.12], [0.02, 1.55, -0.05]], 0.03, band), sph(0.2, fuse, [0.02, 1.58, -0.05], undefined, 5),
@@ -416,7 +416,7 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
       ];
     }
     if (kind === "brincador") { // rana de resorte: cuerpo lima sobre muelles
-      const g = worn("#d9671f"), d = M.matte("#3a1f12"), eye = M.glow("#ff9a1a"), sp = M.metal("#5a4a3a");
+      const g = worn("#d9671f"), d = M.matte("#3a1f12"), eye = amberEye(), sp = M.metal("#5a4a3a");
       return [
         sph(0.8, g, [0, 0.8, -0.05], [1, 0.8, 1.2], 9), sph(0.3, eye, [0.26, 1.2, 0.35], undefined, 5), sph(0.3, eye, [-0.26, 1.2, 0.35], undefined, 5),
         sph(0.14, d, [0.26, 1.22, 0.5], undefined, 4), sph(0.14, d, [-0.26, 1.22, 0.5], undefined, 4), ...rivets([0, 1.0, -0.3], 0.3, 0.3, "y", 0.05),

@@ -4,6 +4,8 @@ import { BAL } from "../src/balance";
 import type { PilotId } from "../src/pilots";
 
 // weapons.ts arrastra sfx/render/models, que miran el navegador al importarse (?mute, matchMedia...): se simulan solo esas dos cosas y no se usa nada de eso.
+const enc = vi.hoisted(() => ({ erun: null as null | { pacts: unknown[] } }));
+vi.mock("../src/encore_run", () => ({ get erun() { return enc.erun; } })); // evita arrastrar el motor entero
 vi.stubGlobal("location", { search: "?mute" });
 vi.stubGlobal("matchMedia", () => ({ matches: false }));
 const { passiveStats } = await import("../src/weapons");
@@ -108,5 +110,20 @@ describe("moveCell fabricación", () => {
     b = placeCell(seat, { x: 1, y: 1, z: 0, rot: 0, blockId: "chapa" })!;
     const moved = moveCell(b, 1, 1, 0, -1, 1, 0);
     expect(moved?.cells.some((c) => c.x === -1 && c.z === 0 && c.blockId === "chapa")).toBe(true);
+  });
+});
+
+describe("El Doble de Riesgo", () => {
+  const dmg = () => pilotStats({ ...passiveStats({}, none) }, "doble").dmg;
+  it("fuera de ENCORE (sin expedición) el bonus por pactos vale 0", () => {
+    enc.erun = null;
+    expect(dmg()).toBeCloseTo(BAL.pilotos.doble.dano_mult);
+  });
+  it("suma daño por pacto activo y se topa", () => {
+    const k = BAL.ritmo.doble_dano_por_pacto, tope = BAL.ritmo.doble_pactos_tope;
+    enc.erun = { pacts: [{}, {}] };
+    expect(dmg()).toBeCloseTo(BAL.pilotos.doble.dano_mult * (1 + 2 * k));
+    enc.erun = { pacts: Array(tope + 3).fill({}) };
+    expect(dmg()).toBeCloseTo(BAL.pilotos.doble.dano_mult * (1 + tope * k));
   });
 });

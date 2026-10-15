@@ -614,7 +614,13 @@ GOAL_IO.scrap = () => Math.floor(run.runScrap + Math.floor(run.time / R.tornillo
 // R7b: who = índice en los autos vivos (0 = el que guía, 1 = el otro); la máquina cobra vida a quien la activa y las cartas (compartidas) dicen quién abrió
 GOAL_IO.hpFrac = (who) => whoP(who).hp / lead.maxHp;
 GOAL_IO.pay = (n, h, who) => applyCommand(whoP(who).id, { k: "buy", scrap: n, hpFrac: h });
-GOAL_IO.offer = (k, who) => { if (erun) tip("chest"); if (k === "cofre" && erun && !chestsLeft()) { E.discover(erun, "aplausos"); encSecrets(); } if (k === "cofre") openChest(who); else openOffers(offersFor(), "Máquina de opciones" + byTag(who)); };
+/** Cofre especial: evolución o fusión si hay una lista; si no, primero las mejoras de lo que ya se tiene (subir armas y pasivas propias) y se completa con el sorteo común. */
+const openSpecial = (who: number) => {
+  const evo = evoOffer(weapons, run.passives);
+  const up = levelOffers(weapons, run.passives, 40).filter((o) => (o.kind === "weapon" || o.kind === "passive") && (o.lv ?? 1) > 1).slice(0, 3 + save.perm.cards);
+  openOffers(evo ? [evo] : [...up, ...offersFor().filter((o) => !up.some((u) => u.id === o.id))].slice(0, 3 + save.perm.cards), (evo ? "Cofre especial · Evolución" : "Cofre especial") + byTag(who));
+};
+GOAL_IO.offer = (k, who) => { if (erun) tip("chest"); if (k === "cofre" && erun && !chestsLeft()) { E.discover(erun, "aplausos"); encSecrets(); } if (k === "cofre") openChest(who); else if (k === "especial") openSpecial(who); else openOffers(offersFor(), "Máquina de opciones" + byTag(who)); };
 SHIP_IO.reward = (p, xp, boss) => { dropGems(p, xp); dropPickup(p, "cofre"); if (boss) { run.bossKills++; run.runScrap += R.tornillos_jefe; shake = 1.5; } };
 
 // ---------- Update ----------

@@ -116,14 +116,22 @@ export function miniHull(kind: string, paint: B.Material, accent: string, lamp: 
       bar(van ? H * 1.1 : H * 0.94, Lc * 0.28, Wd * 0.7);
     }
   } else { // toy
-    if (kind === "hover") { // ref242: faldón inflable negro, casco amarillo, cabina de vidrio, ventilador trasero en jaula, turbinas laterales
-      add(rbox(sw * 0.98, 0.22, Lc * 1.0, 0.11, toy("#26221e"), [0, 0.06, 0]), rbox(Wd, H * 0.46, Lc * 0.84, 0.16, paint, [0, H * 0.38, 0]), rbox(Wd * 0.7, 0.05, Lc * 0.62, 0.02, blk, [0, H * 0.62, 0]),
-        sph(0.55, glass, [0, H * 0.76, Lc * 0.1], [1, 0.7, 1.3], 6),
+    if (kind === "hover") { // ref242: faldón inflable negro, casco angular facetado amarillo, cabina de vidrio, barra de luces, ventilador en jaula, alerón con soportes, turbinas laterales
+      const hy = toy("#D9A21B"), y0 = H * 0.38, cz = -Lc * 0.04, ch = H * 1.0; // hy: amarillo de tubos y resortes
+      add(rbox(sw * 0.98, 0.22, Lc * 1.0, 0.11, toy("#26221e"), [0, 0.06, 0]),
+        rbox(Wd, H * 0.42, Lc * 0.8, 0.04, paint, [0, y0, 0]), // casco bajo, aristas vivas
+        rbox(Wd * 0.8, H * 0.2, Lc * 0.34, 0.03, paint, [0, y0 + H * 0.1, Lc * 0.36], [0.28, 0, 0]), rbox(Wd * 0.5, 0.05, Lc * 0.3, 0.02, blk, [0, y0 + H * 0.24, Lc * 0.38], [0.28, 0, 0]), // capó en cuña con panel oscuro
+        ...[-1, 1].flatMap((s) => [rbox(0.12, H * 0.3, Lc * 0.46, 0.03, paint, [s * Wd * 0.46, y0 + H * 0.3, cz - Lc * 0.04], [0, 0, s * 0.25]), box(0.04, H * 0.18, Lc * 0.2, blk, [s * (Wd / 2 + 0.01), y0 + H * 0.1, cz - Lc * 0.16])]), // hombros inclinados y rejillas
+        rbox(Wd * 0.6, H * 0.34, Lc * 0.3, 0.03, glass, [0, ch * 0.7, cz + Lc * 0.04], [-0.12, 0, 0]), rbox(Wd * 0.64, 0.06, Lc * 0.3, 0.02, blk, [0, ch * 0.7 + H * 0.2, cz - Lc * 0.02], [-0.1, 0, 0]), // cabina facetada y techo
+        ...[-1, 1].map((s) => box(0.05, H * 0.34, 0.05, hy, [s * Wd * 0.3, ch * 0.7, cz - Lc * 0.12], [0, 0, s * -0.1])), // parantes amarillos
+        tube([[-Wd * 0.38, y0 + H * 0.2, cz + Lc * 0.2], [-Wd * 0.3, ch * 0.7 + H * 0.2, cz + Lc * 0.12], [Wd * 0.3, ch * 0.7 + H * 0.2, cz + Lc * 0.12], [Wd * 0.38, y0 + H * 0.2, cz + Lc * 0.2]], 0.035, hy), // tubo de jaula sobre el parabrisas
         ...[-1, 1].flatMap((s) => [tor(0.5, 0.07, acc, [s * (Wd * 0.5 + 0.12), 0.3, Lc * 0.22], undefined, 12), cyl(0.12, 0.12, 0.12, blk, [s * (Wd * 0.5 + 0.12), 0.3, Lc * 0.22], undefined, 6)]), // turbinas laterales
         tor(0.95, 0.06, blk, [0, 0.95, -Lc * 0.4], [Math.PI / 2, 0, 0], 12), tor(0.95, 0.04, acc, [0, 0.95, -Lc * 0.4 - 0.12], [Math.PI / 2, 0, 0], 12), cyl(0.12, 0.12, 0.2, blk, [0, 0.95, -Lc * 0.4], [Math.PI / 2, 0, 0], 8),
         box(0.9, 0.04, 0.12, acc, [0, 0.95, -Lc * 0.4], [0, 0, 0.5]), box(0.9, 0.04, 0.12, acc, [0, 0.95, -Lc * 0.4], [0, 0, -0.5]), box(0.9, 0.04, 0.12, acc, [0, 0.95, -Lc * 0.4], [0, 0, 1.5]),
-        ...[-1, 1].map((s) => cyl(0.07, 0.07, 0.7, blk, [s * 0.45, 0.62, -Lc * 0.4], undefined, 6)));
-      bar(H * 0.62, Lc * 0.36, Wd * 0.6);
+        ...[-1, 1].map((s) => cyl(0.07, 0.07, 0.7, blk, [s * 0.45, 0.62, -Lc * 0.4], undefined, 6)),
+        rbox(Wd * 1.25, 0.06, 0.42, 0.02, hy, [0, 1.52, -Lc * 0.54], [0.1, 0, 0]), rbox(Wd * 0.5, 0.065, 0.3, 0.02, blk, [0, 1.525, -Lc * 0.54], [0.1, 0, 0]), // alerón: plato amarillo con centro negro
+        ...[-1, 1].flatMap((s) => [rbox(0.06, 0.26, 0.46, 0.015, hy, [s * Wd * 0.625, 1.56, -Lc * 0.54], [0.1, 0, 0]), cyl(0.045, 0.045, 0.62, blk, [s * Wd * 0.28, 1.2, -Lc * 0.5], [0, 0, s * 0.12], 6)])); // placas laterales y dos soportes
+      bar(ch * 0.7 + H * 0.28, cz + Lc * 0.1, Wd * 0.55); // barra de luces del techo
     } else if (kind === "triciclo") {
       add(rbox(0.6, H * 0.34, Lc * 0.6, 0.12, paint, [0, H * 0.38, Lc * 0.14]), rbox(Wd * 1.1, H * 0.5, 0.8, 0.1, toy(CREMA), [0, H * 0.55, -0.6]), rbox(Wd * 1.14, 0.06, 0.86, 0.03, acc, [0, H * 0.82, -0.6]),
         tube([[-0.32, H * 0.55, 0.62], [-0.3, H * 0.92, 0.5], [0.3, H * 0.92, 0.5], [0.32, H * 0.55, 0.62]], 0.035, blk));
@@ -227,7 +235,7 @@ export function miniHull(kind: string, paint: B.Material, accent: string, lamp: 
   if (xm > 0.2 && kind !== "tanque" && kind !== "topadora" && kind !== "axel" && kind !== "clasico") for (const w of ws) { // el clásico los lleva bajo los guardabarros
     const s = Math.sign(w.pos[0]), [wx, , wz] = w.pos, ya = lift + H * 0.5, xb = s * (Wd / 2 - 0.02), xw = s * (Math.abs(wx) - w.w / 2 - 0.02), yw = w.d * 0.25;
     const dx = xw - xb, dy = yw - ya, len = Math.hypot(dx, dy), rot: V3 = [0, 0, -Math.atan2(dx, dy)], mid: V3 = [(xb + xw) / 2, (ya + yw) / 2, wz];
-    add(cyl(0.06, 0.06, len, blk, mid, rot, 6), cyl(0.14, 0.14, len * 0.6, SPRING(), mid, rot, 8), sph(0.16, blk, [xb, ya, wz], undefined, 4));
+    add(cyl(0.06, 0.06, len, blk, mid, rot, 6), cyl(0.14, 0.14, len * 0.6, kind === "hover" ? toy(PAL.amarillo) : SPRING(), mid, rot, 8), sph(0.16, blk, [xb, ya, wz], undefined, 4));
   }
   // Luces delanteras de los costados
   if (kind !== "monopatin" && kind !== "moto" && kind !== "clasico" && kind !== "topadora") for (const s of [-1, 1]) add(cyl(0.12, 0.12, 0.05, blk, [s * Wd * 0.34, Math.max(H * 0.3, 0.2) + lift, Lc * 0.48 - 0.01], [Math.PI / 2, 0, 0], 8), sph(0.19, glow, [s * Wd * 0.34, Math.max(H * 0.3, 0.2) + lift, Lc * 0.48 + 0.02], undefined, 4));

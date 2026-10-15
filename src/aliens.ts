@@ -206,6 +206,11 @@ function tankBody() {
   G.rivets([-0.62, 1.04, 0.69], [0.62, 1.04, 0.69], 8, [0, 0.3, 1]);
   G.rivets([-0.62, 0.22, 0.95], [0.62, 0.22, 0.95], 8, [0, 0.3, 1]);
   for (const s of [-1, 1]) G.box(0.16, 0.1, 0.05, g, [s * 0.22, 0.76, 0.88], [-0.3, 0, 0]); // ojos de la mirilla
+  for (const s of [-1, 1]) { // orugas de juguete (ref287): bloque de goma con tacos y ruedas guía de bronce
+    G.box(0.3, 0.46, 1.9, FOLD.dark(), [s * 0.96, 0.3, -0.05]);
+    for (let i = 0; i < 6; i++) G.box(0.36, 0.5, 0.1, shell(), [s * 0.96, 0.3, -0.9 + i * 0.36]);
+    for (const z of [-0.85, 0.75]) G.cyl(0.42, 0.34, bronze(), [s * 1.14, 0.3, z], [0, 0, Math.PI / 2], 8);
+  }
   along(G, 0.52, 0.52, 0.3, shell(), [0, 0.7, -0.86]);
   G.sph(0.44, ember(), [0, 0.7, -1.0]); // reactor de atrás
   legs(K, TK_HIPS, [0.3, 0.25, 0], [0.62, -0.48, 0.02], 0.1, 1);

@@ -16,7 +16,7 @@ import { erun } from "./encore_run"; // solo lectura (fase de la expedición); c
 // Al salir el gusano (jefe final) aterriza el cohete: quedarse luna_cohete_s en su zona = victoria "Escape". Premio de objetivo = el de la nodriza (SHIP_IO.reward).
 const A = BAL.ataques;
 /** main.ts llena win: victoria alternativa por escape (en ENCORE, activar el teleportador: tele = true cambia el rótulo de la barra). */
-export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean; scrap: () => number; hpFrac: (who: number) => number; pay: (scrap: number, hpFrac: number, who: number) => void; offer: (kind: "cofre" | "maquina", who: number) => void; half: number } = { win: () => {}, tele: false, half: 0, scrap: () => 0, hpFrac: () => 1, pay: () => {}, offer: () => {} };
+export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean; scrap: () => number; hpFrac: (who: number) => number; pay: (scrap: number, hpFrac: number, who: number) => void; offer: (kind: "cofre" | "maquina" | "especial", who: number) => void; half: number } = { win: () => {}, tele: false, half: 0, scrap: () => 0, hpFrac: () => 1, pay: () => {}, offer: () => {} };
 
 const mats = () => {
   const glow = (n: string, c: string, a = 1) => { const m = pbr(n, { color: c, rough: 0.3, emissive: c, alpha: a }); m.fogEnabled = false; m.emissiveIntensity = 2.4; return m; };
@@ -184,12 +184,14 @@ function decorTick(time: number) {
   if (coreI) coreI.scaling.setAll(1 + Math.sin(time * 6) * 0.02); // ponytail: latido por escala (la cápsula comparte material con otros usos: sin emisivo animado)
 }
 
-type Shop = { kind: "cofre" | "maquina"; p: B.Vector3; prog: number; ms: B.InstancedMesh[] };
+type Shop = { kind: "cofre" | "maquina" | "especial"; p: B.Vector3; prog: number; ms: B.InstancedMesh[] };
 const SHOP_RADIO = 4.5, SHOP_S = 1.6, SHOP_VIDA = 0.25; // zona (m), segundos que hay que permanecer, fracción de vida actual que cobra la máquina
 let shops: Shop[] = [], shopStage = 0, opened = 0, warnAt = 0;
 const mix = (n: number) => { let t = (n + 0x6d2b79f5) | 0; t = Math.imul(t ^ (t >>> 15), 1 | t); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; // el mismo hash que encore.ts (allá no se exporta)
 /** Precio en tornillos: sube con cada cofre abierto de la run (+60 % c/u) y con el escenario (+25 % c/u). */
-export const chestPrice = (open: number, stage: number) => Math.round(30 * (1 + 0.6 * open) * (1 + 0.25 * stage));
+export const chestPrice = (open: number, stage: number) => Math.round(A.cofre_precio_base * (1 + 0.6 * open) * (1 + 0.25 * stage));
+/** Cofre especial: k × el precio de un cofre común en ese momento. */
+export const specialPrice = (open: number, stage: number) => Math.round(A.cofre_especial_precio_k * chestPrice(open, stage));
 /** Nueva expedición: cuenta de cofres abiertos en cero. */
 export const shopReset = () => { opened = 0; };
 /** Cofres de pago que quedan en el escenario (secreto "aplausos": 0 tras abrir el último). */
@@ -197,9 +199,9 @@ export const chestsLeft = () => shops.filter((s) => s.kind === "cofre").length;
 /** Cofres de pago abiertos en la run (para el reporte de ENCORE). */
 export const chestsOpened = () => opened;
 /** Solo dev (__enc.shop): mueve el primer cofre o máquina que quede al punto c (el auto lo activa quedándose ahí). */
-export const shopDev = (k: "cofre" | "maquina", c: B.Vector3) => { const s = shops.find((x) => x.kind === k); if (s) s.p.copyFrom(c); return !!s; };
+export const shopDev = (k: "cofre" | "maquina" | "especial", c: B.Vector3) => { const s = shops.find((x) => x.kind === k); if (s) s.p.copyFrom(c); return !!s; };
 /** Solo dev (__enc.goto): posición del i-ésimo cofre o de la máquina que queda en el escenario. */
-export const shopAt = (k: "cofre" | "maquina", i = 0) => shops.filter((x) => x.kind === k)[i]?.p;
+export const shopAt = (k: "cofre" | "maquina" | "especial", i = 0) => shops.filter((x) => x.kind === k)[i]?.p;
 /** Coloca 3 cofres y 1 máquina alrededor de c0 (llegada del escenario); orden, ángulo y distancia salen de (seed, stage). */
 export function shopPlan(seed: number, stage: number, c0: B.Vector3) {
   shopDrop(); shopStage = stage; decorPlan(seed, stage, c0);
@@ -208,6 +210,10 @@ export function shopPlan(seed: number, stage: number, c0: B.Vector3) {
     const kind = i === mach ? "maquina" : "cofre", p = inYard(ringAt(c0, a0 + ((i + rot) % 4) * Math.PI / 2 + (mix(base + 10 + i) - 0.5) * 0.5, 40 + mix(base + 20 + i) * 70, 0));
     const r = put(ringTpl, p, "aro"); r.position.copyFrom(onFloor(p, 0.15)); r.scaling.setAll(SHOP_RADIO / 2);
     shops.push({ kind, p, prog: 0, ms: [put(kind === "cofre" ? chestTpl : machineTpl, p, kind), r] });
+  }
+  if (stage >= 1) { // cofre especial: desde el 2.º escenario de la vuelta, uno por escenario, en un ángulo propio
+    const p = inYard(ringAt(c0, a0 + mix(base + 30) * Math.PI * 2, 40 + mix(base + 31) * 70, 0)), r = put(ringTpl, p, "aro"); r.position.copyFrom(onFloor(p, 0.15)); r.scaling.setAll(SHOP_RADIO / 2);
+    shops.push({ kind: "especial", p, prog: 0, ms: [specialChestPlace(p), r] });
   }
 }
 let spots: B.InstancedMesh[] = [];
@@ -219,14 +225,14 @@ function shopTick(dt: number, time: number, cars: B.Vector3[], quiet: boolean) {
   const who = Math.max(0, cars.findIndex(shopNear)), car = cars[who]; // R7b: activa el primero que esté en una (ese paga y elige)
   for (const s of shops) if (s !== shopNear(car)) s.prog = 0;
   const s = shopNear(car); if (!s) return;
-  const price = chestPrice(opened, shopStage), short = s.kind === "cofre" ? price - GOAL_IO.scrap() : 0, weak = s.kind === "maquina" && GOAL_IO.hpFrac(who) * (1 - SHOP_VIDA) < 0.05;
+  const price = s.kind === "especial" ? specialPrice(opened, shopStage) : chestPrice(opened, shopStage), short = s.kind !== "maquina" ? price - GOAL_IO.scrap() : 0, weak = s.kind === "maquina" && GOAL_IO.hpFrac(who) * (1 - SHOP_VIDA) < 0.05;
   if (short > 0 || weak) { // sin fondos: aviso cada 4 s, no avanza
     if (!quiet && time > warnAt) { warnAt = time + 4; banner(weak ? "VIDA INSUFICIENTE PARA LA MÁQUINA" : `FALTAN ${short} TORNILLOS`, 1.6, { tag: "RADIO", ico: "cofre", tone: "warn" }); }
     s.prog = 0; return;
   }
   s.prog += dt;
   if (s.prog < SHOP_S) return;
-  if (s.kind === "cofre") { GOAL_IO.pay(price, 0, who); opened++; } else GOAL_IO.pay(0, SHOP_VIDA, who);
+  if (s.kind !== "maquina") { GOAL_IO.pay(price, 0, who); if (s.kind === "cofre") opened++; } else GOAL_IO.pay(0, SHOP_VIDA, who);
   if (!quiet) FX.shock(s.p);
   for (const m of s.ms) m.dispose();
   shops.splice(shops.indexOf(s), 1);
@@ -282,7 +288,7 @@ export function goalBar(car: B.Vector3) {
   if (rocket && rocket.prog > 0 && hd(car, rocket.p) < A.luna_cohete_radio) return { name: GOAL_IO.tele ? "TELEPORTADOR · ACTIVANDO" : "ABORDAJE DEL COHETE", pct: rocket.prog / A.luna_cohete_s };
   if (goal?.kind === "antena" && goal.prog > 0) return { name: "ANTENA · ENLACE", pct: goal.prog / A.luna_obj_antena_s };
   const s = shops.find((x) => x.prog > 0) ?? shopNear(car);
-  if (s) return { name: s.kind === "cofre" ? `COFRE · ${chestPrice(opened, shopStage)} TORNILLOS` : `MÁQUINA DE OPCIONES · -${SHOP_VIDA * 100} % DE VIDA`, pct: s.prog / SHOP_S };
+  if (s) return { name: s.kind === "cofre" ? `COFRE · ${chestPrice(opened, shopStage)} TORNILLOS` : s.kind === "especial" ? `COFRE ESPECIAL · ${specialPrice(opened, shopStage)} TORNILLOS` : `MÁQUINA DE OPCIONES · -${SHOP_VIDA * 100} % DE VIDA`, pct: s.prog / SHOP_S };
   return null;
 }
 export const goalStats = () => `objetivos ${stats.hechos}/${stats.aparecidos}${rocket ? " · cohete" : ""}`;

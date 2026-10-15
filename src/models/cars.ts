@@ -985,6 +985,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     const { inst: m, cast: c } = wheelInst(w.d, w.w, rim, mini && (!o.tires || o.tires === "serie") ? "mini" : fb && (!o.tires || o.tires === "serie") && kind !== "tanque" ? "fold" : o.tires === "serie" ? "" : o.tires === "lisas" ? "lisa" : o.tires ?? "");
     m.position = v(w.pos);
     m.parent = body;
+    if (kind === "hover") m.isVisible = false; // flota sobre el faldón: la rueda visual queda oculta (el ancla sigue)
     cast.push(c);
     return { m, front: w.steer !== false && w.pos[2] > 0, r: w.d / 2 };
   });

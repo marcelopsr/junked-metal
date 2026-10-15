@@ -270,6 +270,8 @@
     {"id":"llamas","nombre":"Calcomanía de llamas","base":0,"por_nivel":0.05,"base2":0.1,"por_nivel2":0}
   ],
   "ritmo": [
+    {"id":"doble_dano_por_pacto","valor":0.05,"descripcion":"El Doble de Riesgo: fracción de daño extra por cada pacto activo de la expedición ENCORE (fuera de ENCORE vale 0)"},
+    {"id":"doble_pactos_tope","valor":4,"descripcion":"El Doble de Riesgo: máximo de pactos que cuentan para su bonus de daño"},
     {"id":"coop_vida_por_jugador","valor":0.6,"descripcion":"ENCORE cooperativo: vida de bichos y jefes × (1 + valor × (jugadores - 1)); compensa las copias de armas de cada compañero"},
     {"id":"coop_ritmo_por_jugador","valor":0.35,"descripcion":"ENCORE cooperativo: aparición y tope de vivos de bichos × (1 + valor × (jugadores - 1))"},
     {"id":"rasgo_murcielago_vel","valor":0.8,"descripcion":"El Vigilante Nocturno: fracción de su velocidad máxima desde la que la estela quema"},
@@ -478,6 +480,8 @@
     {"id":"luna_xp_mult","valor":0.65,"descripcion":"Luna: multiplicador de la experiencia de los bichos normales (en la esfera todos terminan llegando al auto: con la misma experiencia por bicho se sube mucho más rápido que en el patio)"}
   ],
   "ataques": [
+    {"id":"cofre_precio_base","valor":30,"descripcion":"ENCORE: precio base (tornillos) de un cofre común; sube +60 % por cofre abierto y +25 % por escenario"},
+    {"id":"cofre_especial_precio_k","valor":3,"descripcion":"ENCORE: el cofre especial (desde el 2.º escenario de la vuelta) cuesta esta cantidad de veces el precio de un cofre común"},
     {"id":"bicho_lento_mult","valor":0.45,"descripcion":"Velocidad de un bicho normal empapado o enfriado (multiplicador)"},
     {"id":"jefe_lento_mult","valor":0.8,"descripcion":"Velocidad de un jefe empapado o enfriado (multiplicador)"},
     {"id":"fase2_vida","valor":0.5,"descripcion":"Un jefe pasa a fase 2 con menos de esta fracción de su vida"},
@@ -817,7 +821,7 @@
     {"id":"cocinero","nombre":"El Cocinero de Tornillos","precio":700,"dano_mult":1,"vida_mas":-10,"iman_mult":1.6,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":0,"velocidad_mult":1,"peso_mult":1,"recarga_mult":1,"xp_mult":1,"arma_inicial":"chapitas","habilidad":"bombardeo","habilidad_txt":"Todo al sartén: lluvia de petardos alrededor del auto."},
     {"id":"mago","nombre":"El Mago de Cartón","precio":1100,"dano_mult":1.15,"vida_mas":-15,"iman_mult":1,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":0,"velocidad_mult":1,"peso_mult":1,"recarga_mult":1.08,"xp_mult":1,"arma_inicial":"confeti","habilidad":"bombardeo","habilidad_txt":"Truco de feria: lluvia de petardos que daña en área."},
     {"id":"fantasma","nombre":"El Fantasma de Sábana","precio":1300,"dano_mult":1,"vida_mas":-20,"iman_mult":1,"regen_mas":0,"blindaje_mult":0.9,"blindaje_mas":0,"velocidad_mult":1.1,"peso_mult":1,"recarga_mult":1,"xp_mult":1,"arma_inicial":"burbujas","habilidad":"lenta","habilidad_txt":"Atravesar paredes: el mundo va al 40% durante 3 s y el auto no se frena."},
-    {"id":"doble","nombre":"El Doble de Riesgo","precio":1500,"dano_mult":1.15,"vida_mas":0,"iman_mult":1,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":-0.1,"velocidad_mult":1,"peso_mult":1,"recarga_mult":1,"xp_mult":1.25,"arma_inicial":"cohete","habilidad":"turbo","habilidad_txt":"Sin red de seguridad: 4 s de turbo con embestida reforzada."}
+    {"id":"doble","nombre":"El Doble de Riesgo","precio":1500,"dano_mult":1.15,"vida_mas":0,"iman_mult":1,"regen_mas":0,"blindaje_mult":1,"blindaje_mas":-0.1,"velocidad_mult":1,"peso_mult":1,"recarga_mult":1,"xp_mult":1.25,"arma_inicial":"cohete","habilidad":"turbo","habilidad_txt":"Sin red de seguridad: 4 s de turbo con embestida reforzada. En ENCORE, cada pacto activo suma 5% de daño (hasta 4 pactos)."}
   ],
   "precios": [
     {"id":"hp","tipo":"mejora","nombre":"Chasis reforzado","efecto":10,"nivel1":20,"nivel2":40,"nivel3":60,"nivel4":80,"nivel5":100,"nivel6":180,"nivel7":275,"nivel8":385,"nivel9":515,"nivel10":660},

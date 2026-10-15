@@ -110,8 +110,8 @@ export interface DevHooksContext {
   encPrior: number;
   paceS: number;
   encApply: (act: any) => void;
-  shopAt: (kind: "cofre" | "maquina", i: number) => B.Vector3 | null;
-  shopDev: (kind: "cofre" | "maquina", pos: B.Vector3) => boolean;
+  shopAt: (kind: "cofre" | "maquina" | "especial", i: number) => B.Vector3 | null;
+  shopDev: (kind: "cofre" | "maquina" | "especial", pos: B.Vector3) => boolean;
   carPlace: (p: B.Vector3, aim: B.Vector3) => any;
   onFloor: (p: B.Vector3, yOff: number) => B.Vector3;
   goalBlips: () => Array<{ x: number; z: number }>;
@@ -477,7 +477,7 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
         rocketForce(c.pos, 0, 0);
         return true;
       },
-      goto: (kind: "cofre" | "maquina" = "cofre", i = 0) => {
+      goto: (kind: "cofre" | "maquina" | "especial" = "cofre", i = 0) => {
         const p = ctx.shopAt(kind, i);
         return !!(p && ctx.lead.car && ctx.carPlace(onFloor(p.clone(), ctx.lead.car.def.size[1] / 2 + 0.3), p.add(ctx.lead.car.root.forward)));
       },
@@ -509,7 +509,7 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
         if (n !== undefined) ctx.setRunScrap(ctx.runScrap + n - ctx.GOAL_IO.scrap());
         return ctx.GOAL_IO.scrap();
       },
-      shop: (k: "cofre" | "maquina" = "cofre", who = 0) => {
+      shop: (k: "cofre" | "maquina" | "especial" = "cofre", who = 0) => {
         const c = who ? ctx.players.find((x) => x.id === who)?.car : ctx.lead.car;
         if (!c) return false;
         ctx.setRunScrap(Math.max(ctx.runScrap, 999));
