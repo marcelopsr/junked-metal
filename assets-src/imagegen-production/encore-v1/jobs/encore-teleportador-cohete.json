@@ -1,0 +1,37 @@
+{
+  "id": "encore-teleportador-cohete",
+  "name": "Teleportador cohete",
+  "category": "encore-props",
+  "state": "imagegen-generated",
+  "scope": "Survivor systems and ENCORE mode; visual concept, not gameplay implementation",
+  "subject": "One compact retroindustrial landing rocket used as stage teleporter, upright ivory and rusty orange capsule, three broad landing feet, open side boarding hatch with small ramp, cyan power rings, no flame or floating portal",
+  "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One compact retroindustrial landing rocket used as stage teleporter, upright ivory and rusty orange capsule, three broad landing feet, open side boarding hatch with small ramp, cyan power rings, no flame or floating portal. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One compact retroindustrial landing rocket used as stage teleporter, upright ivory and rusty orange capsule, three broad landing feet, open side boarding hatch with small ramp, cyan power rings, no flame or floating portal. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-teleportador-cohete.png",
+  "design_source": "docs/ENCORE/01_DESIGN/05_TELEPORTERS.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "real 3D mesh with modular parts and UV",
+      "deterministic seed and material parameters",
+      "preserve gameplay scale, collision and instance contracts",
+      "generated PNG is not a procedural recipe"
+    ]
+  },
+  "review": "concept candidate; alpha, readability and model integration pending",
+  "candidate": {
+    "path": "raw/encore-teleportador-cohete.png",
+    "sha256": "ef5376a628b45ae97f41ee2a50385ce0420dc633da0bff87940c8291e411801c",
+    "review": "initial visual inspection; final alpha edges and in-engine readability pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One compact retroindustrial landing rocket used as stage teleporter, upright ivory and rusty orange capsule, three broad landing feet, open side boarding hatch with small ramp, cyan power rings, no flame or floating portal. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "batch": "batch-012",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-4b7215c1-1d96-4a7b-b858-4c8ff3f81af2.png",
+    "correction_prompt": "Use case: precise-object-edit. Keep this exact miniature orange and ivory teleportation rocket, all geometry, open hatch, ramp, feet, worn painted style, lighting and colors. Change only framing: zoom out so entire antenna tip and all feet and ramp fit comfortably, with 10 percent clear transparent margin on ALL sides. Reconstruct the clipped antenna extremity. True transparent background, no halo or extra objects."
+  }
+}

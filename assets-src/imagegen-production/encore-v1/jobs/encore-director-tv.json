@@ -1,0 +1,36 @@
+{
+  "id": "encore-director-tv",
+  "name": "Televisor del Director",
+  "category": "encore-props",
+  "state": "imagegen-generated",
+  "scope": "Survivor systems and ENCORE mode; visual concept, not gameplay implementation",
+  "subject": "One battered industrial CRT television on a squat welded stand, asymmetrical rabbit-ear antenna, rotary tuning knobs, dark curved glass with a subtle cyan scanline spiral only, red pilot lamp, no face or letters",
+  "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One battered industrial CRT television on a squat welded stand, asymmetrical rabbit-ear antenna, rotary tuning knobs, dark curved glass with a subtle cyan scanline spiral only, red pilot lamp, no face or letters. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One battered industrial CRT television on a squat welded stand, asymmetrical rabbit-ear antenna, rotary tuning knobs, dark curved glass with a subtle cyan scanline spiral only, red pilot lamp, no face or letters. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-director-tv.png",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "real 3D mesh with modular parts and UV",
+      "deterministic seed and material parameters",
+      "preserve gameplay scale, collision and instance contracts",
+      "generated PNG is not a procedural recipe"
+    ]
+  },
+  "review": "concept candidate; alpha, readability and model integration pending",
+  "candidate": {
+    "path": "raw/encore-director-tv.png",
+    "sha256": "e9cf5910d6f4d23406814295b3f4b064bcaa6c80232688672c85fbdde76f66f1",
+    "review": "initial visual inspection; final alpha edges and in-engine readability pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One battered industrial CRT television on a squat welded stand, asymmetrical rabbit-ear antenna, rotary tuning knobs, dark curved glass with a subtle cyan scanline spiral only, red pilot lamp, no face or letters. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "batch": "batch-012",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-0caf5abf-7cb7-46dd-b912-9dde56a2eb67.png"
+  }
+}

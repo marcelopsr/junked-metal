@@ -1,0 +1,36 @@
+{
+  "id": "encore-recicladora",
+  "name": "Recicladora",
+  "category": "encore-props",
+  "state": "imagegen-generated",
+  "scope": "Survivor systems and ENCORE mode; visual concept, not gameplay implementation",
+  "subject": "One compact industrial scrap recycler, olive steel hopper with safe dark recessed opening, visible heavy toothed rollers inside housing, crank wheel, copper pipes and small side output bin attached, orange warning panels without text",
+  "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One compact industrial scrap recycler, olive steel hopper with safe dark recessed opening, visible heavy toothed rollers inside housing, crank wheel, copper pipes and small side output bin attached, orange warning panels without text. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One compact industrial scrap recycler, olive steel hopper with safe dark recessed opening, visible heavy toothed rollers inside housing, crank wheel, copper pipes and small side output bin attached, orange warning panels without text. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-recicladora.png",
+  "design_source": "docs/ENCORE/01_DESIGN/07_LOOT_AND_ECONOMY.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "real 3D mesh with modular parts and UV",
+      "deterministic seed and material parameters",
+      "preserve gameplay scale, collision and instance contracts",
+      "generated PNG is not a procedural recipe"
+    ]
+  },
+  "review": "concept candidate; alpha, readability and model integration pending",
+  "candidate": {
+    "path": "raw/encore-recicladora.png",
+    "sha256": "f83f8f5ddff4727535d4fb73752e3d07f28d8d90e68682a2a5ccaac916254cd6",
+    "review": "initial visual inspection; final alpha edges and in-engine readability pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One compact industrial scrap recycler, olive steel hopper with safe dark recessed opening, visible heavy toothed rollers inside housing, crank wheel, copper pipes and small side output bin attached, orange warning panels without text. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "batch": "batch-012",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-40ad2c9a-6ac2-450b-acd8-bfbd73f467d1.png"
+  }
+}

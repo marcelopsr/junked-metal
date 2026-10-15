@@ -1,0 +1,36 @@
+{
+  "id": "encore-terminal-pactos",
+  "name": "Terminal de pactos",
+  "category": "encore-props",
+  "state": "imagegen-generated",
+  "scope": "Survivor systems and ENCORE mode; visual concept, not gameplay implementation",
+  "subject": "One theatrical Director pact terminal, tall narrow burgundy riveted pedestal, small green CRT, two large separated ivory and red mechanical choice buttons, brass side handles, blank term display plates and slot, no writing or faces",
+  "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One theatrical Director pact terminal, tall narrow burgundy riveted pedestal, small green CRT, two large separated ivory and red mechanical choice buttons, brass side handles, blank term display plates and slot, no writing or faces. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One theatrical Director pact terminal, tall narrow burgundy riveted pedestal, small green CRT, two large separated ivory and red mechanical choice buttons, brass side handles, blank term display plates and slot, no writing or faces. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-terminal-pactos.png",
+  "design_source": "docs/ENCORE/01_DESIGN/08_PACTS.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "real 3D mesh with modular parts and UV",
+      "deterministic seed and material parameters",
+      "preserve gameplay scale, collision and instance contracts",
+      "generated PNG is not a procedural recipe"
+    ]
+  },
+  "review": "concept candidate; alpha, readability and model integration pending",
+  "candidate": {
+    "path": "raw/encore-terminal-pactos.png",
+    "sha256": "fb15c205c59031c71824fb6c97661daa02fe1b13c9968e3fec9b02b17c25bb7b",
+    "review": "initial visual inspection; final alpha edges and in-engine readability pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One theatrical Director pact terminal, tall narrow burgundy riveted pedestal, small green CRT, two large separated ivory and red mechanical choice buttons, brass side handles, blank term display plates and slot, no writing or faces. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "batch": "batch-012",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-8c7731c2-5d4a-4375-971e-c33ddbbfb4e0.png"
+  }
+}

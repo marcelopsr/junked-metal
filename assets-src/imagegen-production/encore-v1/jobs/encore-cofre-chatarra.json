@@ -1,0 +1,36 @@
+{
+  "id": "encore-cofre-chatarra",
+  "name": "Cofre de chatarra",
+  "category": "encore-props",
+  "state": "imagegen-generated",
+  "scope": "Survivor systems and ENCORE mode; visual concept, not gameplay implementation",
+  "subject": "One closed salvage loot chest made from riveted steel and reclaimed wood, chunky front latch, mustard yellow lid corners, worn teal lower panels, readable low rectangular silhouette",
+  "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One closed salvage loot chest made from riveted steel and reclaimed wood, chunky front latch, mustard yellow lid corners, worn teal lower panels, readable low rectangular silhouette. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One closed salvage loot chest made from riveted steel and reclaimed wood, chunky front latch, mustard yellow lid corners, worn teal lower panels, readable low rectangular silhouette. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-cofre-chatarra.png",
+  "design_source": "docs/ENCORE/01_DESIGN/07_LOOT_AND_ECONOMY.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "real 3D mesh with modular parts and UV",
+      "deterministic seed and material parameters",
+      "preserve gameplay scale, collision and instance contracts",
+      "generated PNG is not a procedural recipe"
+    ]
+  },
+  "review": "concept candidate; alpha, readability and model integration pending",
+  "candidate": {
+    "path": "raw/encore-cofre-chatarra.png",
+    "sha256": "6ac921bcbf14da1abf78fb872ff640b2460a9713454a8936441e771b03670f02",
+    "review": "initial visual inspection; final alpha edges and in-engine readability pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One closed salvage loot chest made from riveted steel and reclaimed wood, chunky front latch, mustard yellow lid corners, worn teal lower panels, readable low rectangular silhouette. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "batch": "batch-012",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-42e27105-2254-43bf-8758-5b641b6a07ca.png"
+  }
+}

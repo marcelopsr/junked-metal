@@ -1,0 +1,36 @@
+{
+  "id": "encore-nucleo-sobrecarga",
+  "name": "Dispositivo de sobrecarga",
+  "category": "encore-props",
+  "state": "imagegen-generated",
+  "scope": "Survivor systems and ENCORE mode; visual concept, not gameplay implementation",
+  "subject": "One squat lunar overload event power apparatus, four stable feet, exposed cyan cylindrical capacitor behind protective metal ribs, three thick attached cable loops, gray regolith-dusted metal, orange service plates, no unattached effects",
+  "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One squat lunar overload event power apparatus, four stable feet, exposed cyan cylindrical capacitor behind protective metal ribs, three thick attached cable loops, gray regolith-dusted metal, orange service plates, no unattached effects. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One squat lunar overload event power apparatus, four stable feet, exposed cyan cylindrical capacitor behind protective metal ribs, three thick attached cable loops, gray regolith-dusted metal, orange service plates, no unattached effects. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "transparent_background": true
+  },
+  "output": "raw/encore-nucleo-sobrecarga.png",
+  "design_source": "docs/ENCORE/01_DESIGN/05_TELEPORTERS.md",
+  "procedural": {
+    "state": "reconstruction-pending",
+    "requirements": [
+      "real 3D mesh with modular parts and UV",
+      "deterministic seed and material parameters",
+      "preserve gameplay scale, collision and instance contracts",
+      "generated PNG is not a procedural recipe"
+    ]
+  },
+  "review": "concept candidate; alpha, readability and model integration pending",
+  "candidate": {
+    "path": "raw/encore-nucleo-sobrecarga.png",
+    "sha256": "de9d4fe84d9248c89dd666b499d03b0e8f4c6e1f58f93a57eae7509e72858c48",
+    "review": "initial visual inspection; final alpha edges and in-engine readability pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE Survivor asset candidate. Premium real 3D miniature, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear, rich material separation and tactile detail. Keep the approved handcrafted miniature direction, with retroindustrial theatrical salvage character. Subject: One squat lunar overload event power apparatus, four stable feet, exposed cyan cylindrical capacitor behind protective metal ribs, three thick attached cable loops, gray regolith-dusted metal, orange service plates, no unattached effects. Single complete isolated object in three-quarter view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins including antenna and feet. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. No RC RACE branding. Crisp detailed game art reference, not a screenshot.",
+    "batch": "batch-012",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-11bc37c5-9207-418c-94d7-47181d40300d.png"
+  }
+}

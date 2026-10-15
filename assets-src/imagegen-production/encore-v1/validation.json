@@ -1,0 +1,75 @@
+{
+  "count": 10,
+  "records": [
+    {
+      "id": "encore-director-tv",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "e9cf5910d6f4d23406814295b3f4b064bcaa6c80232688672c85fbdde76f66f1",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-teleportador-cohete",
+      "width": 1333,
+      "height": 1180,
+      "sha256": "ef5376a628b45ae97f41ee2a50385ce0420dc633da0bff87940c8291e411801c",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-cofre-chatarra",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "6ac921bcbf14da1abf78fb872ff640b2460a9713454a8936441e771b03670f02",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-cofre-especial",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "3c2cc3e591933362e282f71086c29438fcc95782ee0260da2ec1e51336ef4ca9",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-tienda-maquina",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "f7429b5db5df181a055e00ace5a75b3db5aaefe48d0b490b819dc824750c58e3",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-recicladora",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "f83f8f5ddff4727535d4fb73752e3d07f28d8d90e68682a2a5ccaac916254cd6",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-terminal-pactos",
+      "width": 1024,
+      "height": 1536,
+      "sha256": "fb15c205c59031c71824fb6c97661daa02fe1b13c9968e3fec9b02b17c25bb7b",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-baliza-ruta",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "a4530bee0fd1c8af65b01ab43300710776cb3b0266af4d66d6ee4251e5074252",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-nucleo-sobrecarga",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "de9d4fe84d9248c89dd666b499d03b0e8f4c6e1f58f93a57eae7509e72858c48",
+      "realAlpha": true
+    },
+    {
+      "id": "encore-foco-director",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "29fb778c8267d06f9e43cecab080dcec008cdf511720ca554408b4a911ea768e",
+      "realAlpha": true
+    }
+  ]
+}

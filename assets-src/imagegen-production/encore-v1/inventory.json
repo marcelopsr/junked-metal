@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "batch": "batch-012",
+  "direction": "3D miniature with painted pixel detail for Junked Metal ENCORE",
+  "generated_count": 10,
+  "jobs": [
+    {
+      "id": "encore-director-tv",
+      "job": "jobs/encore-director-tv.json",
+      "output": "raw/encore-director-tv.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-teleportador-cohete",
+      "job": "jobs/encore-teleportador-cohete.json",
+      "output": "raw/encore-teleportador-cohete.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-cofre-chatarra",
+      "job": "jobs/encore-cofre-chatarra.json",
+      "output": "raw/encore-cofre-chatarra.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-cofre-especial",
+      "job": "jobs/encore-cofre-especial.json",
+      "output": "raw/encore-cofre-especial.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-tienda-maquina",
+      "job": "jobs/encore-tienda-maquina.json",
+      "output": "raw/encore-tienda-maquina.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-recicladora",
+      "job": "jobs/encore-recicladora.json",
+      "output": "raw/encore-recicladora.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-terminal-pactos",
+      "job": "jobs/encore-terminal-pactos.json",
+      "output": "raw/encore-terminal-pactos.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-baliza-ruta",
+      "job": "jobs/encore-baliza-ruta.json",
+      "output": "raw/encore-baliza-ruta.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-nucleo-sobrecarga",
+      "job": "jobs/encore-nucleo-sobrecarga.json",
+      "output": "raw/encore-nucleo-sobrecarga.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "encore-foco-director",
+      "job": "jobs/encore-foco-director.json",
+      "output": "raw/encore-foco-director.png",
+      "state": "imagegen-generated"
+    }
+  ]
+}
