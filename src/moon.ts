@@ -433,16 +433,16 @@ export function moonBuild(s: B.Scene, low: boolean) {
   peb.thinInstanceSetBuffer("matrix", mats, 16, true); peb.thinInstanceRefreshBoundingInfo(); peb.isPickable = false; peb.receiveShadows = true; // chicas: sin sombra propia
   // Relieve del suelo (ref31b/ref77): piedritas facetadas, matas secas y rocas rojas facetadas. Semilla propia; sin colisión salvo las rocas grandes
   const gr = rngFrom(0x5a9d1e), poly = (name: string, type: number, x: number, y: number, z: number, mat: B.Material) => { const p = B.MeshBuilder.CreatePolyhedron(name, { type, sizeX: x, sizeY: y, sizeZ: z }, scene); p.material = mat; return p; };
-  const ground = (near: number) => { // near: fracción cerca de la salida (6-45 m); el resto, repartido por toda la luna
+  const ground = (near: number, minD = 6) => { // near: fracción cerca de la salida (6-45 m); el resto, repartido por toda la luna
     for (;;) {
-      const d = gr() < near ? ((w, a) => new B.Vector3(Math.sin(w) * Math.cos(a), Math.cos(w), Math.sin(w) * Math.sin(a)))((6 + gr() * 39) / MOON.R, gr() * 6.3) : new B.Vector3(gr() * 2 - 1, gr() * 2 - 1, gr() * 2 - 1).normalize();
-      if (MOON.R * Math.acos(d.y) >= 6 && heightAt(d) > -0.6) return d;
+      const d = gr() < near ? ((w, a) => new B.Vector3(Math.sin(w) * Math.cos(a), Math.cos(w), Math.sin(w) * Math.sin(a)))((minD + gr() * (45 - minD)) / MOON.R, gr() * 6.3) : new B.Vector3(gr() * 2 - 1, gr() * 2 - 1, gr() * 2 - 1).normalize();
+      if (MOON.R * Math.acos(d.y) >= minD && heightAt(d) > -0.6) return d;
     }
   };
-  const thin = (m: B.Mesh, n: number, near: number, size: (i: number) => B.Vector3, lift: number) => {
+  const thin = (m: B.Mesh, n: number, near: number, size: (i: number) => B.Vector3, lift: number, minD = 6) => {
     const buf = new Float32Array(n * 16), qq = new B.Quaternion(), p3 = new B.Vector3();
     for (let i = 0; i < n; i++) {
-      const d = ground(near), s = size(i);
+      const d = ground(near, minD), s = size(i);
       B.Quaternion.FromUnitVectorsToRef(Y, d, qq).multiplyInPlace(B.Quaternion.RotationAxis(Y, gr() * 6.3));
       B.Matrix.ComposeToRef(s, qq, p3.copyFrom(d).scaleInPlace(radiusAt(d) + s.y * lift).addInPlace(CENTER), new B.Matrix()).copyToArray(buf, i * 16);
     }
@@ -468,6 +468,13 @@ export function moonBuild(s: B.Scene, low: boolean) {
     const patchD = B.MeshBuilder.CreateGround("moonPatchD", { width: 2, height: 2 }, scene), patchL = B.MeshBuilder.CreateGround("moonPatchL", { width: 2, height: 2 }, scene); patchD.material = bm; patchL.material = lm;
     thin(patchD, low ? 22 : 50, 0.9, () => { const s = 6 + gr() * 7; return new B.Vector3(s, 1, s * (0.5 + gr() * 0.4)); }, 0.04);
     thin(patchL, low ? 3 : 6, 0.9, () => { const s = 8 + gr() * 6; return new B.Vector3(s, 1, s * (0.5 + gr() * 0.4)); }, 0.035);
+    // Día: piezas oscuras altas (monolitos y antenas de juguete) que proyectan sombra larga y piedras claras de borde de cráter. Misma semilla gr, sin colisión.
+    const mono = B.MeshBuilder.CreateBox("moonMono", { size: 1 }, scene); mono.material = pbr("moonMono", { color: "#1d120e", rough: 0.85 });
+    thin(mono, low ? 16 : 26, 0.95, () => new B.Vector3(0.9 + gr() * 0.9, 3 + gr() * 3, 0.9 + gr() * 0.9), 0.5, 16); // mín. 16 m: uno cerca tapaba al auto
+    const ant = B.MeshBuilder.CreateCylinder("moonAnt", { diameterTop: 0.04, diameterBottom: 0.14, height: 1, tessellation: 5 }, scene); ant.material = pbr("moonAnt", { color: "#15110f", rough: 0.7 });
+    thin(ant, low ? 26 : 40, 0.95, () => new B.Vector3(1, 3 + gr() * 3, 1), 0.5, 12);
+    const rim = poly("moonRim", 2, 0.5, 0.3, 0.42, pbr("moonRim", { color: "#e6c9a0", rough: 0.85 }));
+    thin(rim, low ? 180 : 300, 0.95, () => { const s = 0.3 + gr() * 0.6; return new B.Vector3(s * (0.8 + gr() * 0.5), s * 0.7, s * (0.8 + gr() * 0.5)); }, 0.1);
   }
   for (const [c, n] of [["#a8954a", 70], ["#7d6b35", 55]] as const) { // mata seca: 4 hojas finas abiertas en abanico
     const mat = pbr("moonScrub" + c, { color: c, rough: 0.9 }), leaves = [0, 1, 2, 3].map((k) => { const l = poly("hoja", 1, 0.03, 0.22, 0.03, mat); l.scaling.set(1, 1, 1); l.position.set(Math.cos(k * 1.57) * 0.1, 0.2, Math.sin(k * 1.57) * 0.1); l.rotation.set(Math.sin(k * 1.57) * 0.5, 0, -Math.cos(k * 1.57) * 0.5); return l; });
@@ -613,10 +620,10 @@ export function moonBuild(s: B.Scene, low: boolean) {
       }
     };
     place(lamp, 34 * lowK, 6, 38, () => 1.5, 2.8); // farol 1,5x; pozo de radio 2,8 m (más grande se leía como lava)
-    place(rockB, 65 * lowK, 5, 50, () => 1.4 + lr() * 2.4);
+    place(rockB, 65 * lowK, 22, 55, () => 1.2 + lr() * 1.6); // lejos de la salida: cerca de la cámara angosta del celular tapaban el piso y bajaban la luminancia
     // Acentos claros puntuales: rocas de ceniza pálida (lilas) que atrapan la luz de los neones y rompen el suelo oscuro
     const ash = template("moonAsh", () => [poly("as", 1, 0.5, 0.4, 0.45, pbr("moonAsh", { color: "#b8b0d0", rough: 0.8, emissive: "#4a4470" }))]);
-    place(ash, 60, 4, 22, () => 0.5 + lr() * 0.9); // sin lowK: en celular son el acento que sostiene el contraste
+    place(ash, 90, 4, 26, () => 0.5 + lr() * 0.9); // sin lowK: en celular son el acento que sostiene el contraste
   }
   // Cielo: estrellas fijas en el mundo (al dar la vuelta a la luna, giran), Tierra, Sol y una estrella fugaz de vez en cuando.
   // Todo dentro de la esfera del cielo de render.ts (radio 600, infiniteDistance): más lejos lo taparía
