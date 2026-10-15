@@ -51,6 +51,7 @@ function ruts() {
   })(); // el camino va último: los surcos azules del campo no lo pintan encima
   t.update(); t.hasAlpha = true;
   const m = pbr("nieveSurcos", { color: "#ffffff", rough: 1, tex: t }) as B.PBRMaterial;
+  if (m.albedoTexture !== t) t.dispose(); // pbr() devuelve el material cacheado con la textura de la primera vez: la nueva sobra
   m.useAlphaFromAlbedoTexture = true; m.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
   const d = decal("surcos", S, S, 0, 0, m, 0.05); d.isPickable = false;
 }

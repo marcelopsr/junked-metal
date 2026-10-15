@@ -176,15 +176,15 @@ export function mothPose(vis: number, walk: number, atk: number) {
 /** Ala de polilla (bisagra en el origen, hacia +x·side): chapa fina de 12 mm con larguero, nervios y ocelo; gira en z en enemies.ts. */
 export function mothWing(side: 1 | -1) {
   const { G, done, strut } = kit();
-  const s = side, skin = FOLD.painted("#edc79a", 0.75, 73), skin2 = FOLD.painted("#d9a574", 0.8, 74), cream = FOLD.painted("#b04a22", 0.8, 75), core = FOLD.painted("#5a2412", 0.7, 76), spar = FOLD.painted("#5a2e1c", 0.6, 77);
+  const s = side * 0.85, skin = FOLD.painted("#edc79a", 0.75, 73), skin2 = FOLD.painted("#d9a574", 0.8, 74), cream = FOLD.painted("#b04a22", 0.8, 75), core = FOLD.painted("#5a2412", 0.7, 76), spar = FOLD.painted("#5a2e1c", 0.6, 77);
   G.cyl(0.06, 0.16, FOLD.bare(), [0, 0, 0], [Math.PI / 2, 0, 0], 6); // bisagra pegada al tórax
-  G.box(0.6, 0.012, 0.44, skin, [s * 0.385, 0.01, 0.04], [0, s * 0.126, 0]); // ala anterior
-  G.box(0.25, 0.012, 0.3, skin2, [s * 0.686, 0.01, -0.06], [0, s * 0.35, 0]); // punta plegada
-  G.box(0.4, 0.012, 0.36, skin2, [s * 0.294, -0.012, -0.28], [0, -s * 0.175, 0]); // ala posterior
+  G.box(0.51, 0.012, 0.44, skin, [s * 0.385, 0.01, 0.04], [0, s * 0.126, 0]); // ala anterior
+  G.box(0.21, 0.012, 0.3, skin2, [s * 0.686, 0.01, -0.06], [0, s * 0.35, 0]); // punta plegada
+  G.box(0.34, 0.012, 0.36, skin2, [s * 0.294, -0.012, -0.28], [0, -s * 0.175, 0]); // ala posterior
   strut([0, 0.02, 0.02], [s * 0.784, 0.02, 0.0], 0.03, 0.028, spar); // larguero de ataque
   for (const [x, z] of [[0.7, -0.22], [0.9, 0.12], [0.6, -0.42]]) strut([s * 0.056, 0.018, 0], [s * x, 0.018, z], 0.014, 0.014, spar); // nervios
-  for (const x of [0.3, 0.55, 1.0]) for (const y of [0.0185, -0.0125]) G.box(0.07, 0.012, 0.4, cream, [s * x, y, 0.02 - x * 0.1], [0, s * 0.126, 0]); // bandas crema
-  G.box(0.1, 0.012, 0.3, cream, [s * 0.385, -0.0125, -0.28]);
+  for (const x of [0.3, 0.55, 1.0]) for (const y of [0.0185, -0.0125]) G.box(0.06, 0.012, 0.4, cream, [s * x, y, 0.02 - x * 0.1], [0, s * 0.126, 0]); // bandas crema
+  G.box(0.085, 0.012, 0.3, cream, [s * 0.385, -0.0125, -0.28]);
   for (const y of [0.0185, -0.0125]) { G.cyl(0.24, 0.012, cream, [s * 0.518, y, -0.04], undefined, 12); G.cyl(0.12, 0.014, core, [s * 0.518, y + Math.sign(y) * 0.001, -0.04], undefined, 12); } // anillo ocular crema, centro marrón oscuro
   return done();
 }

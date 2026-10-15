@@ -245,7 +245,7 @@ export type Variant = {
   craters: [n: number, rMin: number, rMax: number]; // cráteres extra alrededor de la llegada (tope total de la luna: DENT_CAP, hoy 40; con n <= 10 sobra para los de la partida)
   rain: number; quake: number; sky: number; // intervalo de meteoritos, de erupciones y de lanzamientos del Sol / la Tierra
   ship: "bombardera" | "abductora" | "caza" | null;
-  zone?: EarthZone;                         // escenario terrestre propio: solo se juega eligiéndolo como destino (nunca en el sorteo ni en la vuelta 0)
+  zone?: EarthZone;                         // escenario terrestre propio: se juega eligiéndolo como destino; los biomas terrestres (EARTH_ZONES) también entran en el sorteo del escenario terrestre de cada vuelta
   mini?: Kind;                              // H13: si existe, el minijefe es este enemigo en vez de una nave // minijefe fijo (null = el que elija la semilla)
   risk: string; reward: Partial<Fx>; // cómo se ofrece como destino: riesgo (texto) y recompensa (se aplica de verdad en pactFx; el texto sale de ella)
 };

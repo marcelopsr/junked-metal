@@ -263,7 +263,7 @@ export function buildRcProps() {
     const w = w0 * 2.1; // mismo ancho que patio.ts
     const dx = Math.sin(a), dz = Math.cos(a), nx = Math.cos(a), nz = -Math.sin(a);
     for (const s of [-1, 1]) for (let t = -len * 0.45; t <= len * 0.45; t += 6, n++) {
-      const off = s * (w / 2 + 5 + (n % 3) * 1.2), px = x + dx * t + nx * off, pz = z + dz * t + nz * off;
+      const off = s * (w / 2 + 9 + (n % 3) * 1.2), px = x + dx * t + nx * off, pz = z + dz * t + nz * off; // +9 (antes +5): con +5 quedaban pasillos de 2-5 m contra muros de neumáticos y barreras donde el auto se trababa (sim semilla 17)
       if (Math.hypot(px, pz) < 16 || Math.abs(px) > 130 || Math.abs(pz) > 130) continue;
       if (n % 2) { const q = off - s * 2.6; put(tireHalf(n % 4 === 1), x + dx * t + nx * q, z + dz * t + nz * q, a + Math.PI / 2); }
       put(kinds[n % kinds.length](), px, pz, n % 3 === 1 ? a - Math.PI / 2 : n * 1.3);
@@ -278,7 +278,7 @@ export function buildRcProps() {
     const at = (t: number, off: number) => [x + dx * t + nx * off, z + dz * t + nz * off] as const, ok = (px: number, pz: number) => Math.hypot(px, pz) >= 16 && Math.abs(px) < 130 && Math.abs(pz) < 130;
     const so = pi % 2 ? 1 : -1; // lado exterior del tramo
     for (const t of [-len * 0.42, -len * 0.2, len * 0.02, len * 0.24, len * 0.44]) { const [px, pz] = at(t, so * (w / 2 + 2.6)); if (ok(px, pz)) put(tireWall(8 + ((pi + Math.round(t)) % 3 + 3 * 0) * 3), px, pz, a - Math.PI / 2); }
-    for (let i = 0; i < 12; i++) { const [px, pz] = at(-len * 0.4 + i * 1.7 + (i > 5 ? 8 : 0), -so * (w / 2 + 2.2)); if (ok(px, pz)) put(jerseyBarrier((i + pi) % 2 === 0), px, pz, a - Math.PI / 2); }
+    for (let i = 0; i < 12; i++) { const [px, pz] = at(-len * 0.4 + i * 3.6 + (i > 5 ? 8 : 0), -so * (w / 2 + 2.2)); if (ok(px, pz)) put(jerseyBarrier((i + pi) % 2 === 0), px, pz, a - Math.PI / 2); } // huecos de 2 m: con 1,7 m las barreras formaban una pared continua y el auto quedaba encajonado contra los props (sim semillas 2/13/17)
     if (pi !== 3) { const [px, pz] = at(len * 0.32, so * (w / 2 + 1.8)); if (ok(px, pz)) put(chevronSign(), px, pz, Math.atan2(-so * nx, -so * nz)); }
     if (pi < 3) { const [px, pz] = at(-len * 0.1, -so * (w / 2 + 9)); if (ok(px, pz)) put(floodlight(), px, pz); }
   });

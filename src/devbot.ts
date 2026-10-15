@@ -9,15 +9,16 @@ type W = { __info(): { time: number; state: string; level: number; hp: number; e
 // Con jefe: lo rodea a distancia de combate (las armas le pegan), sale de los aros rojos y de la línea de carga.
 // Sin trampas: solo usa lo que una persona ve (telegráficos, el jefe en el aire, hacia dónde mira la cortadora).
 let stuck = 0, back = 0;
-export const resetBot = () => { stuck = back = 0; };
+export const resetBot = () => { stuck = back = 0; side = 1; };
+let side = 1; // lado del giro en marcha atrás: alterna en cada intento (siempre al mismo lado no sacaba al auto de bolsillos entre props)
 type P = { x: number; z: number };
 export type BotBoss = { x: number; z: number; kind: string; fx: number; fz: number; charge: boolean; ram: boolean };
 const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14, gato: 12, aspiradora: 6, cortacercos: 14, caja: 14, proyector: 14, grua: 14, payaso: 12, muneco: 12, limpiafondos: 9 }; // aspiradora: de cerca, como la juega una persona (a 22 m las armas no llegan y el duelo dura ~85 s en vez de ~11 s)
 export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVelocity(): P } }, threats?: P[], obs?: { x: number; z: number; r: number }[], boss?: BotBoss | null, zones: { x: number; z: number; r: number }[] = [], gems: P[] = []) {
   const v = c.body.getLinearVelocity();
   stuck = Math.hypot(v.x, v.z) < 2 ? stuck + 1 : 0;
-  if (stuck > 50) { back = 40; stuck = 0; }
-  if (back > 0) { back--; return { throttle: -1, steer: 1, boost: false }; }
+  if (stuck > 50) { back = 40; stuck = 0; side = -side; }
+  if (back > 0) { back--; return { throttle: -1, steer: side, boost: false }; }
   const have = Math.atan2(c.root.forward.x, c.root.forward.z);
   let want = have, escaping = false;
   if (threats) {

@@ -9,14 +9,13 @@ import { pbr } from "./render";
 import { rng } from "./rng";
 import { obstacles } from "./world";
 import { banner } from "./ui";
-import { erun } from "./encore_run"; // solo lectura (fase de la expedición); ciclo de imports sin uso al cargar
 
 // ---------- Objetivos en la superficie y cohete de escape (fase 3, docs/LUNA.md puntos 2 y 3) ----------
 // Cada luna_obj_cada_s aparece un objetivo lejos del auto (baliza alta + radar): juntar celdas a tiempo o quedarse en la zona de una antena.
 // Al salir el gusano (jefe final) aterriza el cohete: quedarse luna_cohete_s en su zona = victoria "Escape". Premio de objetivo = el de la nodriza (SHIP_IO.reward).
 const A = BAL.ataques;
 /** main.ts llena win: victoria alternativa por escape (en ENCORE, activar el teleportador: tele = true cambia el rótulo de la barra). */
-export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean; scrap: () => number; hpFrac: (who: number) => number; pay: (scrap: number, hpFrac: number, who: number) => void; offer: (kind: "cofre" | "maquina" | "especial", who: number) => void; half: number } = { win: () => {}, tele: false, half: 0, scrap: () => 0, hpFrac: () => 1, pay: () => {}, offer: () => {} };
+export const GOAL_IO: { win: (p: B.Vector3) => void; tele: boolean; scrap: () => number; hpFrac: (who: number) => number; pay: (scrap: number, hpFrac: number, who: number) => void; offer: (kind: "cofre" | "maquina" | "especial", who: number) => void; half: number; phase: () => string } = { win: () => {}, tele: false, half: 0, scrap: () => 0, hpFrac: () => 1, pay: () => {}, offer: () => {}, phase: () => "" };
 
 const mats = () => {
   const glow = (n: string, c: string, a = 1) => { const m = pbr(n, { color: c, rough: 0.3, emissive: c, alpha: a }); m.fogEnabled = false; m.emissiveIntensity = 2.4; return m; };
@@ -174,7 +173,7 @@ function decorPlan(seed: number, stage: number, c0: B.Vector3) {
 }
 /** Objetos por fase de la expedición (solo lectura de erun): terminal en pact, baliza junto al teleportador en route, núcleo en overload. */
 function decorTick(time: number) {
-  const ph = !arrive || !erun ? "" : erun.phase;
+  const ph = arrive ? GOAL_IO.phase() : "";
   if (ph !== phaseSeen) {
     for (const m of phaseSet) m.dispose(); phaseSet = []; coreI = null; phaseSeen = ph;
     if (ph === "pact") phaseSet = [face(put(terminalTpl, decorAt(mix(decorSeed + 1) * Math.PI * 2, 11), "terminalPactos"), arrive!)];

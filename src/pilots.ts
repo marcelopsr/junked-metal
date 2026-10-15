@@ -4,7 +4,9 @@ import { rng } from "./rng";
 import { WEAPONS, type PStats, type WeaponId } from "./weapons";
 import { BAL } from "./balance";
 import type { AbilityId } from "./abilities";
-import { erun } from "./encore_run"; // solo lectura: pactos activos (enlace vivo; se lee al calcular stats, no al importar)
+/** Pactos vigentes (ENCORE); main.ts lo actualiza en recompute() antes de calcular stats. Sin import de encore_run (evita ciclo). */
+let pactCount = 0;
+export const setPactCount = (n: number) => { pactCount = n; };
 
 export type PilotId = "soldadito" | "muneca" | "robot" | "dino" | "figura" | "abuela" | "astronauta" | "dinogoma" | "rusa" | "pirata" | "caballero" | "bombero" | "osito" | "mecanica" | "cocinero" | "mago" | "fantasma" | "doble";
 type Rec = { ach: string[] }; // logros del guardado (achievements.ts)
@@ -54,7 +56,7 @@ export const PILOTS: Record<PilotId, { name: string; pros: string[]; con: string
   fantasma: { name: "El Fantasma de Sábana", pros: ["+10% velocidad", "+10% blindaje", "Arranca con Burbujas"], con: "-20 vida máxima", cost: BAL.pilotos.fantasma.precio, lore: "Una sábana con dos agujeros y mucho rencor. Los golpes le pasan de largo, casi siempre.", start: BAL.pilotos.fantasma.arma_inicial as WeaponId, abil: BAL.pilotos.fantasma.habilidad as AbilityId, abilTxt: BAL.pilotos.fantasma.habilidad_txt,
     mod: modOf("fantasma") },
   doble: { name: "El Doble de Riesgo", pros: ["+15% daño", "+25% XP", "En ENCORE: +5% daño por pacto activo (hasta 4)", "Arranca con Cohete"], con: "Recibe 10% más daño", cost: BAL.pilotos.doble.precio, lore: "Hace las escenas peligrosas por otros. Cuanto más arriesga, más rápido aprende.", start: BAL.pilotos.doble.arma_inicial as WeaponId, abil: BAL.pilotos.doble.habilidad as AbilityId, abilTxt: BAL.pilotos.doble.habilidad_txt,
-    mod: (st) => { modOf("doble")(st); st.dmg *= 1 + BAL.ritmo.doble_dano_por_pacto * Math.min(erun?.pacts.length ?? 0, BAL.ritmo.doble_pactos_tope); } }, // main.ts recompute corre al aceptar/vencer un pacto
+    mod: (st) => { modOf("doble")(st); st.dmg *= 1 + BAL.ritmo.doble_dano_por_pacto * Math.min(pactCount, BAL.ritmo.doble_pactos_tope); } }, // main.ts recompute corre al aceptar/vencer un pacto
 };
 
 export const pilotStats = (st: PStats, id: PilotId) => { (PILOTS[id] ?? PILOTS.soldadito).mod(st); return st; };

@@ -28,6 +28,8 @@ const glow = (c: string) => { const m = pbr("alienGlow" + c, { color: c, rough: 
 const hull = () => FOLD.painted("#8a3a1e", 0.85, 81), plate = () => FOLD.painted("#c9b48a", 0.8, 82), shell = () => FOLD.painted("#4a2a18", 0.7, 86);
 const bronze = () => FOLD.painted("#a8803c", 0.6, 87), olive = () => FOLD.painted("#5b6130", 0.8, 85), red = () => FOLD.painted("#c42a14", 0.7, 88);
 const eye = () => { const m = pbr("alienOjo", { color: "#a82a10", emissive: "#ff4a1a", rough: 0.3 }); m.fogEnabled = false; m.emissiveIntensity = 2; return m; };
+// Ojo mate de enjambre y saltador: sin brillo especular (la ficha lo lavaba a amarillo pálido), emisivo rojo-naranja moderado
+const eyeMatte = () => { const m = pbr("alienOjoMate", { color: "#6a1a08", emissive: "#e0400c", rough: 0.95, metal: 0 }); m.fogEnabled = false; m.emissiveIntensity = 1.1; return m; };
 const ember = () => { const m = pbr("alienBrasa", { color: "#d4600c", emissive: "#ff9a1a", rough: 0.3 }); m.fogEnabled = false; m.emissiveIntensity = 2; return m; };
 
 // ---------- Patas (mismo esquema que la hormiga de folded_slice.ts: un hueso por pata, cadera + rumbo) ----------
@@ -57,12 +59,13 @@ function legPose(out: B.Matrix[], hips: Hip[], walk: number, amp = 0.42, lift = 
 }
 
 // ---------- Enjambre: esfera de chapa chica con ojo único, pinches y 4 patas. Huesos: 0 cuerpo, 1-4 patas ----------
-const SW_HIPS: Hip[] = [[[0.15, 0.28, 0.1], 0.5], [[0.15, 0.28, -0.1], -0.5]];
+const SW_HIPS: Hip[] = [[[0.15, 0.28, 0.16], 0.5], [[0.17, 0.28, 0], 0], [[0.15, 0.28, -0.16], -0.5]]; // 6 patas (ref169 f3 c4)
 function swarmBody() {
   const K = kit(), { G } = K;
   G.sph(0.27, hull(), [0, 0.34, 0]); // esfera de chapa (ref169 f3 c4)
   G.plate([0, 0.52, -0.1], [Math.PI / 2, 0, 0], 0.2, 0.2, plate());
-  G.sph(0.15, eye(), [0, 0.36, 0.2]); // ojo único
+  G.sph(0.15, eyeMatte(), [0, 0.36, 0.2]); // ojo único
+  G.sph(0.06, FOLD.dark(), [0, 0.36, 0.33]); // pupila
   for (const [dx, dy, dz] of [[0, 1, 0], [0.7, 0.7, 0], [-0.7, 0.7, 0], [0.5, 0.6, -0.6], [-0.5, 0.6, -0.6], [0, 0.6, -0.8]]) { // pinches
     const n = Math.hypot(dx, dy, dz);
     G.cyl(0.01, 0.2, plate(), [dx / n * 0.3, 0.34 + dy / n * 0.3, dz / n * 0.3], [Math.asin(dz / n), 0, -Math.asin(dx / n)], 5, 0.07);
@@ -104,18 +107,21 @@ function shooterPose(_v: number, walk: number, atk: number) {
 
 // ---------- Saltador lunar: esfera de chapa con ojo único sobre 4 resortes de bronce. Huesos: 0 cuerpo, 1-2 traseras, 3-4 delanteras ----------
 function jumperBody() {
-  const K = kit(), { G, bone } = K, g = eye(), sh = shell(), br = bronze();
+  const K = kit(), { G, bone, strut } = K, g = eyeMatte(), sh = shell(), br = bronze();
   G.sph(0.38, hull(), [0, 0.78, 0.04]); // esfera de chapa con ojo único (ref169 f4 c2)
   G.plate([0, 1.02, -0.05], [Math.PI / 2 - 0.3, 0, 0], 0.3, 0.3, plate());
   G.sph(0.25, sh, [0, 0.8, 0.27]); // cuenca oscura
   G.sph(0.21, g, [0, 0.8, 0.33]); // ojo grande
+  G.sph(0.09, FOLD.dark(), [0, 0.8, 0.52]); // pupila
   G.rivets([-0.22, 0.6, 0.3], [0.22, 0.6, 0.3], 4, [0, 0.3, 1]);
-  const coil = (a: V3, z: number, n: number) => { // resorte: aros de bronce apilados bajo la cadera y plato de pie
-    for (let i = 0; i < n; i++) G.box(0.17, 0.035, 0.17, i % 2 ? br : FOLD.dark(), [a[0], a[1] - 0.02 - i * (a[1] - 0.06) / n, a[2] + z * i / n]);
+  const coil = (a: V3, z: number) => { // resorte en hélice (6 vueltas, 4 tramos por vuelta) desde la panza (a[1] = tope) hasta el plato de pie
+    const N = 24, R = 0.075, pt = (k: number): V3 => { const t = k / N, an = t * 6 * Math.PI * 2; return [a[0] + R * Math.cos(an), a[1] + (0.04 - a[1]) * t, a[2] + z * t + R * Math.sin(an)]; };
+    G.cyl(0.2, 0.04, br, [a[0], a[1], a[2]], undefined, 8, 0.2); // tapa de bronce pegada a la esfera
+    for (let k = 0; k < N; k++) strut(pt(k), pt(k + 1), 0.03, 0.03, FOLD.dark());
     G.cyl(0.11, 0.04, FOLD.dark(), [a[0], 0.02, a[2] + z], undefined, 8, 0.11);
   };
-  for (const s of [1, -1]) { bone(s > 0 ? 1 : 2); coil([s * 0.27, 0.5, -0.18], -0.1, 5); }
-  for (const s of [1, -1]) { bone(s > 0 ? 3 : 4); coil([s * 0.17, 0.42, 0.3], 0.1, 4); }
+  for (const s of [1, -1]) { bone(s > 0 ? 1 : 2); coil([s * 0.27, 0.62, -0.18], -0.1); }
+  for (const s of [1, -1]) { bone(s > 0 ? 3 : 4); coil([s * 0.17, 0.55, 0.3], 0.1); }
   bone(0);
   return K.done(2);
 }
@@ -261,7 +267,7 @@ function healerPose(_v: number, walk: number, atk: number) {
 
 /** Plantillas Folded con caminata horneada (glb.ts las agrega a PROC). */
 export const ALIEN_PROC: Record<Alien, { build: (vis: number) => B.Mesh[]; bones: number; pose: (vis: number, walk: number, atk: number) => B.Matrix[] }> = {
-  enjambre: { build: swarmBody, bones: 5, pose: swarmPose },
+  enjambre: { build: swarmBody, bones: 7, pose: swarmPose },
   tirador: { build: shooterBody, bones: 6, pose: shooterPose },
   saltador: { build: jumperBody, bones: 5, pose: jumperPose },
   emboscador: { build: ambushBody, bones: 6, pose: ambushPose },

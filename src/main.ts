@@ -16,7 +16,7 @@ import { CAM_MODES, CAM_NAMES, type CamMode } from "./savefmt";
 import { encCfg, encMax, ABIL_ICON, applySettings, beastRec, BV, carOpts, current, shownCar, startPick, dailySeed, fmt, initMenu, keyName, today, menuPad, openOver, openPause, persist, reset, save, type RunRec } from "./menu";
 import { run, freshRun } from "./run_state";
 import { ABILITIES, abilCd as abilCdOf, abilK, type AbilityId } from "./abilities";
-import { PILOTS, pilotStats, startWeapons } from "./pilots";
+import { PILOTS, pilotStats, setPactCount, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
 import { applyClimate, gfxInfo, glitchHit, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setSplit, setupRender, shadows, G } from "./render";
 import { escapeReset, evoOffer, fuse, LIVE, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
@@ -187,6 +187,7 @@ let hitStop = 0, lastHpFrac = 1, motorFxT = 0, cintaUntil = 0, cintaAt = -1e9; /
 
 // ---------- Flujo ----------
 function recompute() {
+  setPactCount(erun ? erun.pacts.length : 0); // pactos vigentes (los vencidos ya salieron en leave); recompute corre al cambiar de fase (encEnter)
   st = pilotStats(passiveStats(run.passives, save.perm), save.pilot);
   setCarPassive(save.car, st);
   encRecompute(grossScrap()); // ENCORE: cobra lo ganado con el efecto que se va y toma los pactos activos (neutros en Supervivencia)
@@ -610,6 +611,7 @@ evInit({ // moon_events.ts: daño y sacudida viven acá
 SHIP_IO.hurt = (n, src, who) => hurtWho(n, false, src, who);
 COOP.n = () => players.length;
 GOAL_IO.win = (p) => { if (state !== "play" || run.endless) return; if (erun) return encApply(E.boarded(erun)); /* ENCORE: el cohete es el teleportador, no el final */ setOutroAt(p.clone()); endRun(true, ESCAPE_WIN); };
+GOAL_IO.phase = () => erun?.phase ?? "";
 GOAL_IO.scrap = () => Math.floor(run.runScrap + Math.floor(run.time / R.tornillos_div_tiempo) + Math.floor(run.kills * TOUGH.xp / R.tornillos_div_bajas));
 // R7b: who = índice en los autos vivos (0 = el que guía, 1 = el otro); la máquina cobra vida a quien la activa y las cartas (compartidas) dicen quién abrió
 GOAL_IO.hpFrac = (who) => whoP(who).hp / lead.maxHp;
@@ -618,7 +620,7 @@ GOAL_IO.pay = (n, h, who) => applyCommand(whoP(who).id, { k: "buy", scrap: n, hp
 const openSpecial = (who: number) => {
   const evo = evoOffer(weapons, run.passives);
   const up = levelOffers(weapons, run.passives, 40).filter((o) => (o.kind === "weapon" || o.kind === "passive") && (o.lv ?? 1) > 1).slice(0, 3 + save.perm.cards);
-  openOffers(evo ? [evo] : [...up, ...offersFor().filter((o) => !up.some((u) => u.id === o.id))].slice(0, 3 + save.perm.cards), (evo ? "Cofre especial · Evolución" : "Cofre especial") + byTag(who));
+  openOffers(evo ? [evo] : [...up, ...offersFor().filter((o) => !up.some((u) => u.id === o.id))].slice(0, 3 + save.perm.cards), (evo ? (evo.kind === "fusion" ? "Cofre especial · Fusión" : "Cofre especial · Evolución") : "Cofre especial") + byTag(who));
 };
 GOAL_IO.offer = (k, who) => { if (erun) tip("chest"); if (k === "cofre" && erun && !chestsLeft()) { E.discover(erun, "aplausos"); encSecrets(); } if (k === "cofre") openChest(who); else if (k === "especial") openSpecial(who); else openOffers(offersFor(), "Máquina de opciones" + byTag(who)); };
 SHIP_IO.reward = (p, xp, boss) => { dropGems(p, xp); dropPickup(p, "cofre"); if (boss) { run.bossKills++; run.runScrap += R.tornillos_jefe; shake = 1.5; } };

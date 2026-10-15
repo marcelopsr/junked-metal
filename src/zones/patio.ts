@@ -262,7 +262,7 @@ export function patioBuild() {
   // Props de juguete: plástico pintado con la paleta oficial (docs/ART_DIRECTION.md Vigente), bordes biselados
   const toy = (c: string, rough = 0.5) => pbr(`toy${c}`, { color: c, rough, metal: 0 });
   // Rampa naranja para saltos acrobáticos dentro de la zona
-  ramp(toy("#FB8C00"), -48, 8, 0, 4.2, 6.5, 1.6);
+  ramp(toy("#FB8C00"), -48, 8, 0, 4.2, 6.5, 1.6, 0, 3); // baja en vez de cortar en seco: el corte vertical de 1,6 m trababa al auto (sim)
   // Neumáticos de juguete apilados en el borde oeste (azul y amarillo)
   registerHeavyProp(stat(tor(2.8, 0.95, toy("#42A5F5"), [-63, 0.95, 26], [Math.PI / 2, 0.4, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");
   registerHeavyProp(stat(tor(2.6, 0.9, toy("#FBC02D"), [-63, 2.7, 26], [Math.PI / 2, -0.25, 0], 14), B.PhysicsShapeType.CONVEX_HULL, { friction: 0.6 }), "tire");

@@ -126,6 +126,7 @@ export function industrialLayout() {
     for (let i = 0; i < 6; i++) { const hx = N / 2 + (o() - 0.5) * 110, hy = N / 2 + (o() - 0.5) * 70, rr = 36 + o() * 34, g = c.createRadialGradient(hx, hy, 0, hx, hy, rr); g.addColorStop(0, `hsla(${(i * 62 + 170) % 360},75%,60%,0.5)`); g.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = g; c.fillRect(hx - rr, hy - rr, rr * 2, rr * 2); }
     t.update(); t.hasAlpha = true;
     const m = pbr("indAceite" + scene.uniqueId, { color: "#ffffff", rough: 0.1, metal: 0.55, tex: t }) as B.PBRMaterial;
+    if (m.albedoTexture !== t) t.dispose(); // material cacheado: la textura nueva sobra
     m.useAlphaFromAlbedoTexture = true; m.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
     decal("aceiteCharco", 13, 10, PX, PZ, m, 0.06).isPickable = false;
     bare.push({ x: PX, z: PZ, r: 8 });

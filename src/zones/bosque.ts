@@ -108,6 +108,7 @@ export function forestBuild() {
     trees.push(...pine(r, side === 0 ? off : side === 2 ? -off : p, side === 1 ? off : side === 3 ? -off : p, h));
   }
   // Camino de tierra oscura (decal), bloques rojo/blanco bajos y neumáticos sueltos (decorativos, sin colisión), arco de troncos con faroles y tronco-túnel.
+  for (const n of ["bosquePath", "arroyoLecho", "arroyoAgua", "cascada", "espuma", "barro"]) scene.getMaterialByName(n)?.dispose(true, true); // al rearmar, libera los materiales con textura propia de la vez anterior
   const pt = pathTex(); // material propio (matte() cachea por color)
   const pmat = new B.PBRMaterial("bosquePath", scene); pmat.albedoTexture = pt; pt.hasAlpha = true; pmat.useAlphaFromAlbedoTexture = true; pmat.transparencyMode = B.Material.MATERIAL_ALPHABLEND; pmat.roughness = 1; pmat.metallic = 0;
   decal("bosquePath", 160, 160, 0, 0, pmat, 0.04).isPickable = false;

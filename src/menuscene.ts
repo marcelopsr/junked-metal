@@ -60,7 +60,7 @@ export const SCENES: Record<string, MenuScene> = {
   credits: { set: "shelf", cam: { pos: [10, 3.2, 15], target: [4, 10.5, -60] } },
   garage: { set: "bench", clim: { sunI: 0.5, hemiI: 0.07, amb: "#55524e", ground: "#2a2928", sunColor: "#e6e1d8", exposure: 1.7 },
     // ref321: foco blanco-cálido con borde suave (exp alto) y contorno frío desde atrás-arriba (el `glow` pasa a luz de contorno)
-    lamp: { spotI: 130, cone: 0.58, col: "#fff2e0", exp: 30, glow: [-1.5, 6, -5], glowI: 26, gcol: "#a9c8ff" }, cam: { pos: [2, 4, 11], target: [-2.2, 2.2, 1] }, camV: { pos: [2.6, 3.8, 14], target: [0, -2.8, 1] }, car: [0, 0.9, 1], // 0.9 = tope de la peana (stand): a y=0 el auto quedaba enterrado en ella
+    lamp: { spotI: 130, cone: 0.46, col: "#fff2e0", exp: 30, glow: [-2.5, 4.5, -3], glowI: 28, gcol: "#a9c8ff" }, cam: { pos: [2, 4, 11], target: [-2.2, 2.2, 1] }, camV: { pos: [2.6, 3.8, 14], target: [0, -2.8, 1] }, car: [0, 0.9, 1], // 0.9 = tope de la peana (stand): a y=0 el auto quedaba enterrado en ella
     props: [
       { kit: "toolbox", u: 3.4, at: [-9, 0, -7], rot: [0, 0.3, 0] }, { kit: "crate", u: 4, at: [13, 0, -12.5], rot: [0, 0.15, 0] },
       { kit: "sign", u: 6, at: [-1, 9.5, -16.2], v: "playfix" },
@@ -186,13 +186,13 @@ function shelfBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
 function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
   const peach = W("#c08650"), wood = wornMat("#5c5248", "#33291f", 19), woodD = wornMat("#4a4036", null, 27), metal = M.metal("#cfd3dc");
   // paleta de juguete (ref8): madera, rojo #E53935, amarillo #FBC02D, azul #42A5F5; el negro mate queda para detalles
-  const fDark = wornMat("#4a2f1d", null, 23), fTeal = wornMat("#42A5F5", null, 41), fOrange = wornMat(M3C.naranja, null, 11), fYellow = wornMat("#FBC02D", null, 37), fRed = wornMat("#E53935", null, 31), fStand = wornMat("#1c1e22", null, 29);
+  const fDark = wornMat("#4a2f1d", null, 23), fTeal = wornMat("#42A5F5", null, 41), fOrange = wornMat(M3C.naranja, null, 11), fYellow = wornMat("#FBC02D", null, 37), fRed = wornMat("#E53935", null, 31), fStand = wornMat("#0b0c0e", null, 29);
   const fDrawers = [fOrange, fTeal, fYellow, fRed, fTeal, fOrange, fYellow, fRed, fTeal];
   // Texturas que repiten distinto a lo ancho y a lo alto: agujeros del tablero perforado y grilla de la base de corte
   const tx = (c0: string, draw: (c: CanvasRenderingContext2D, s: number) => void, u: number, v: number) => { const t = canvasTex(64, (c, s) => { c.fillStyle = c0; c.fillRect(0, 0, s, s); draw(c, s); }); t.uScale = u; t.vScale = v; return t; };
   // tablones verticales de madera cálida: junta oscura a la izquierda y vetas; la base de corte pasa a tablas claras
   const peg = pbr("pegboard", { color: "#8a7a6a", rough: 0.9, tex: tx("#7d7468", (c, s) => { c.fillStyle = "#5e564d"; c.fillRect(0, 0, s * 0.07, s); c.fillStyle = "#6c6358"; for (const x of [0.3, 0.55, 0.8]) c.fillRect(s * x, 0, 2, s); c.fillStyle = "#3e3730"; c.fillRect(s * 0.4, s * 0.2, 3, 3); }, 34, 2) });
-  const mat = pbr("cutmat", { color: "#ffffff", rough: 0.85, tex: tx("#151a19", (c, s) => { c.strokeStyle = "#2a3a34"; c.lineWidth = 2; c.strokeRect(0, 0, s, s); }, 16, 11) });
+  const mat = pbr("cutmat", { color: "#3a3d3c", rough: 0.85, tex: tx("#080a0a", (c, s) => { c.strokeStyle = "#151c19"; c.lineWidth = 2; c.strokeRect(0, 0, s, s); }, 16, 11) });
   // Cuarto: piso, techo, pared con el tablero perforado, laterales
   // garaje de noche (ref321): piso de hormigón con manchas, paredes oscuras para que la luz de taller recorte al auto
   const conc = pbr("gConcrete", { color: "#4a4846", rough: 0.9, tex: (() => { const t = new B.Texture("./textures/c-hormigon-grietas.webp", lamp.getScene()); t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE; t.uScale = 6; t.vScale = 5; return t; })() });
@@ -243,7 +243,7 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     // mesa de taller con canto de chapa plegada y patas robustas, base de corte verde bajo el auto
     box(66, 2, 28, wood, [0, -1, -2]), box(66.2, 0.8, 0.5, fDark, [0, -1.4, 12.1]),
     ...[[-31, -14], [31, -14], [-31, 10], [31, 10]].map(([x, z]) => box(2.4, 28, 2.4, fDark, [x, -16, z])),
-    box(16, 0.08, 11, mat, [0, 0.04, 1.5]),
+    box(30, 0.08, 20, mat, [0, 0.04, 1.5]),
     ...stand,
     ...charger,
     xt60Lead(metal, fDark),
@@ -271,7 +271,7 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
     // transmisor RC de chapa gastada
     ...transmitter(fDark, fOrange, fRed, metal),
     // soporte de pits (Pit Stand), cargador inteligente LiPo digital y botes de silicona/spray
-    ...pitStand(fDark, metal, M.rubber()),
+    ...pitStand(fDark, M.metal("#3a3d44"), M.rubber()),
     ...lipoCharger(fTeal, metal, fDark),
     ...siliconeOils(fYellow, fRed, metal),
     // organizador escalonado de llaves Allen, comprobador de celdas LiPo, morsa, taladro, fresadora, compresor, generador y carretel de juguete

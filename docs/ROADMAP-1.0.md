@@ -17,6 +17,9 @@ Una expedición ENCORE completa, de punta a punta, que una persona nueva puede j
 
 ## 2. Hitos
 
+**Versionado (decisión 2026-10-15):** se sube de a 0.01 por cada update grande (0.90 → 0.91 → 0.92…), sin fijar de antemano cuántas faltan para la 1.0. Los nombres de la tabla de abajo (contenido completo, arte completo, beta) son etapas, no números: una etapa puede ocupar varias versiones. La 1.0.0 sale cuando se cumple la sección 1, no por número.
+
+
 | Versión | Nombre | Se cierra cuando | Qué entra |
 |---|---|---|---|
 | 0.9.0 | Contenido completo | Todo el contenido de 1.0 existe y es jugable, aunque feo | Biomas registrados (hecho), objetos ENCORE faltantes (terminal de pactos, Director, baliza, recicladora, núcleo), jefes del elenco, autos |
@@ -50,3 +53,4 @@ Una expedición ENCORE completa, de punta a punta, que una persona nueva puede j
 | 2026-10-15 | Versiones: package.json 0.9.0-dev, un tag por hito, publicar solo al cerrar hito con OK del usuario. Commit local de respaldo 712c788 (refs de imágenes sin versionar: 636 MB) |
 | 2026-10-15 | Celular de referencia: Android gama media (~2022), 30 fps en preset Bajo en partida llena |
 | 2026-10-15 | 6 pilotos nuevos entran a la 1.0 (12 → 18): osito, mecánica, cocinero, mago de cartón, fantasma, doble de riesgo |
+| 2026-10-15 | Versiones de a 0.01 por update grande (v0.90.0, v0.91.0…); cada update cierra con la puerta de hito y se publica con OK |
