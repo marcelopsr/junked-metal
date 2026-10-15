@@ -616,6 +616,20 @@ function swell(filter: BiquadFilterType, f0: number, f1: number, dur: number, vo
   p.pan.value = Math.max(-1, Math.min(1, pan));
   s.connect(fl).connect(g).connect(p).connect(fxBus); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
 }
+// Paseo libre: sonidos cortos y de juguete, agudos y secos (bajo volumen) para no tapar la radio. Todos pasan por fxBus: respetan volumen de efectos y ?mute.
+export const FREE = {
+  takeoff: () => gate("f-up", 4) && (tone("sine", 260, 620, 0.12, 0.07), hiss("bandpass", 1800, 3200, 0.1, 0.05)),
+  whoosh: () => gate("f-wh", 6) && (hiss("bandpass", 900, 3000, 0.22, 0.07), tone("triangle", 500, 900, 0.18, 0.025)),
+  landClean: () => gate("f-lc", 4) && (tone("sine", 190, 70, 0.14, 0.14), tone("triangle", 420, 840, 0.12, 0.06, 0.05), tone("triangle", 330, 660, 0.1, 0.04, 0.1)), // golpe con resorte
+  landDirty: () => gate("f-ld", 4) && (hiss("bandpass", 1300, 300, 0.18, 0.12), tone("square", 150, 60, 0.12, 0.07), tone("square", 2400, 1500, 0.05, 0.03, 0.04)), // chapa
+  combo: (mult = 1) => { const f = 520 * 2 ** (Math.min(mult, 6) / 6); gate("f-cb", 4) && (tone("triangle", f, f, 0.09, 0.07), tone("triangle", f * 1.5, f * 1.5, 0.12, 0.06, 0.07)); },
+  nut: () => gate("f-nut", 6) && [1568, 2093, 2637].forEach((f, i) => tone("triangle", f, f * 0.99, 0.14, 0.05, i * 0.045)),
+  nutAll: () => [523, 659, 784, 1047, 784, 1047, 1318].forEach((f, i) => tone("square", f, f, 0.16, 0.05, i * 0.1)),
+  bounce: () => gate("f-bo", 4) && (tone("sine", 160, 700, 0.22, 0.1), tone("triangle", 320, 1400, 0.18, 0.04, 0.02)), // boing
+  slide: () => gate("f-sl", 3) && hiss("bandpass", 1500, 1100, 0.4, 0.035), // se llama en cada cuadro mientras desliza: la compuerta arma el loop
+  ice: () => gate("f-ice", 3) && (hiss("highpass", 5200, 4200, 0.4, 0.03), tone("sine", 2400, 2300, 0.3, 0.012)),
+  sign: () => gate("f-sg", 1) && [660, 880].forEach((f, i) => tone("triangle", f, f, 0.12, 0.05, i * 0.1)),
+};
 let lavaG: GainNode | null = null, shipN: { g: GainNode; f: BiquadFilterNode; o: OscillatorNode[]; p: StereoPannerNode } | null = null;
 export const SPACE = {
   meteorWhistle: (pan = 0, dist?: number, dur = 1.4) => { const g = dGain(dist); sweep("sine", 2600, 520, dur, 0.06 * g, pan, 0.7); swell("bandpass", 3400, 700, dur, 0.09 * g, pan, 0.8); },

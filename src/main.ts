@@ -9,7 +9,7 @@ import { Car, CARS, drive, setCarPassive } from "./car";
 import type { CarKind } from "./models";
 import { DEF, DOG_RAM, Enemy, pickWeighted, spawnTable, type Kind, ROAR } from "./enemies";
 import { radio } from "./radio";
-import { engineSfx, engineStop, initAudio, music, moonAmbience, encoreAmbience, musicDuck, rainSfx, setEngineKind, SFX, SPACE } from "./sfx";
+import { engineSfx, engineStop, initAudio, music, moonAmbience, encoreAmbience, musicDuck, rainSfx, setEngineKind, SFX, SPACE, FREE } from "./sfx";
 import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, impact, initFx, mark, rainWet, splat, tickFx, tickRain } from "./fx";
 import { activePad, btnName, camCycle, coopCtl, coopSkip, ctl, input, isTouch, keyHit, KEYS, KEYS2, padPressed, pads, padSnap, pb, pollInput, pollMate, pollPad, RACE, setupTouch } from "./input";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
@@ -345,13 +345,17 @@ function libreLight() {
   const x = (libreT / LUZ_TRAMO_S) % LUZ_CICLO.length, i = Math.floor(x), f = x - i;
   applyClimate(mixClimate(climaId(LUZ_CICLO[i]), climaId(LUZ_CICLO[(i + 1) % LUZ_CICLO.length]), f * f * (3 - 2 * f)));
 }
-let avisoT = 0, libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick();
+let avisoT = 0, libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick(), turns = 0;
 /** Trucos (aire, giros, vueltas, aterrizaje, combo) y tuercas doradas; `grounded` sale de drive(). */
 function libreTricks(dt: number, grounded: boolean) {
   const c = lead.car!, body = c.body, w = body.getAngularVelocity(), up = c.root.up, fw = c.root.forward, rt = c.root.right, s = save.libre;
   const wU = Math.abs(B.Vector3.Dot(w, up)), wF = B.Vector3.Dot(w, fw), wR = B.Vector3.Dot(w, rt);
   const end = trickStep(libreTrick, dt, grounded, wU, Math.hypot(wF, wR), up.y);
+  const prevAir = roam.air, prevTurns = turns;
   roam.flip = libreTrick.flip; roam.air = libreTrick.air; // lo lee libreDrive (control en el aire)
+  turns = Math.floor(libreTrick.yaw / Math.PI) + Math.floor(libreTrick.flip / (2 * Math.PI)); // medios giros + vueltas completas en este vuelo
+  if (prevAir < 0.15 && roam.air >= 0.15) FREE.takeoff();
+  else if (!grounded && turns > prevTurns) FREE.whoosh();
   hudAire(grounded ? "" : trickLive(libreTrick));
   hudSpinBtn(!grounded && roam.air > 0.15);
   if (!s.aviso && !grounded && roam.air > 0.4) { s.aviso = true; avisoT = 3.5; persist(); } // una sola vez en la vida del guardado
@@ -360,16 +364,17 @@ function libreTricks(dt: number, grounded: boolean) {
   if (end) {
     const up2 = bestUpdate(s.best, end), rec = up2.includes("salto") || up2.includes("combo") ? "RÉCORD" : "";
     hudTruco(end.name, end.pts, end.mult, end.clean, rec);
-    if (end.clean) { SFX.pickup(); FX.dust(c.pos); FX.sparks(c.pos.add(new B.Vector3(0, 0.6, 0)), end.mult > 1 || rec ? 14 : 8); }
+    if (end.clean) { FREE.landClean(); if (end.mult > 1) FREE.combo(end.mult); FX.dust(c.pos); FX.sparks(c.pos.add(new B.Vector3(0, 0.6, 0)), end.mult > 1 || rec ? 14 : 8); }
+    else FREE.landDirty();
     if (up2.length) persist();
   }
   libreNuts?.tick(dt);
   const i = nutNear(s.tuercas, c.pos.x, c.pos.y, c.pos.z);
   if (i >= 0) {
     s.tuercas = s.tuercas.slice(0, i) + "1" + s.tuercas.slice(i + 1);
-    libreNuts?.take(i); SFX.pickup(); FX.sparks(c.pos.add(new B.Vector3(0, 0.8, 0)), 12);
+    libreNuts?.take(i); FREE.nut(); FX.sparks(c.pos.add(new B.Vector3(0, 0.8, 0)), 12);
     const n = nutsCount(s.tuercas); hudTuercas(n, NUT_N, true);
-    if (n >= NUT_N) grant("tuercas"); // desbloquea la pintura Dorado tuerca (garaje, colores de logro)
+    if (n >= NUT_N) { FREE.nutAll(); grant("tuercas"); } // desbloquea la pintura Dorado tuerca (garaje, colores de logro)
     persist();
   }
 }
@@ -381,7 +386,7 @@ function libreHud(dt: number, grounded: boolean) {
   libreLugares.forEach((l, i) => { const d = Math.hypot(p.x - l.cx, p.z - l.cz); if (d < bd) { bd = d; best = i; } });
   if (best !== libreLugar) {
     libreLugar = best;
-    if (best >= 0) { const b = $("barrio"); b.textContent = libreLugares[best].name; b.classList.remove("hidden", "show"); void b.offsetWidth; b.classList.add("show"); clearTimeout(libreCartelT); libreCartelT = window.setTimeout(() => b.classList.add("hidden"), 3000); }
+    if (best >= 0) { FREE.sign(); const b = $("barrio"); b.textContent = libreLugares[best].name; b.classList.remove("hidden", "show"); void b.offsetWidth; b.classList.add("show"); clearTimeout(libreCartelT); libreCartelT = window.setTimeout(() => b.classList.add("hidden"), 3000); }
   }
 }
 /** Radar con los barrios; corre después de updateHud (que también lo alimenta, vacío, cada 0,05 s). */
