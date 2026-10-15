@@ -60,7 +60,7 @@ const TA = 14, TC = 7, TB = 8; // metros por tile: asfalto, adoquín, ladrillo
 const RW = 18, RING = 45;
 const onRoad = (x: number, z: number, m = 0) => { const a = Math.abs(x), b = Math.abs(z), h = RW / 2 + m; return a < h || b < h || (Math.abs(a - RING) < h && b < RING + h) || (Math.abs(b - RING) < h && a < RING + h); };
 function roads() {
-  const parts: B.Mesh[] = [], asphalt: B.Mesh[] = [], asph = tmat("c-asfalto", "#ffffff", 0.9), patchM = M.matte("#26282c"), side = pbr("ciu-vereda", { color: "#dfe8ff", rough: 0.9, metal: 0, tex: scene.getMaterialByName("ciu-vereda") ? undefined : sidewalkTex() }), line = M.matte("#FAFAFA"), red = M.matte("#E53935"), wh = M.matte("#FAFAFA");
+  const parts: B.Mesh[] = [], asphalt: B.Mesh[] = [], asph = tmat("c-asfalto", "#ffffff", 0.9), patchM = M.matte("#26282c"), side = pbr("ciu-vereda", { color: "#dfe8ff", rough: 0.9, metal: 0, tex: ctex("g-ciudad-adoquin") }), line = M.matte("#FAFAFA"), red = M.matte("#E53935"), wh = M.matte("#FAFAFA");
   const L = HALF - 4, strips: [number, number, number, number][] = [[0, 0, L * 2, RW], [0, 0, RW, L * 2]]; // cx, cz, largo X, largo Z
   for (const k of [-RING, RING]) strips.push([0, k, (RING + RW / 2) * 2, RW], [k, 0, RW, (RING + RW / 2) * 2]);
   const inRoad = (x: number, z: number) => strips.some(([qx, qz, qw, qd]) => Math.abs(x - qx) < qw / 2 - 0.3 && Math.abs(z - qz) < qd / 2 - 0.3);
@@ -94,7 +94,7 @@ function block(parts: B.Mesh[], x: number, z: number, w: number, h: number, d: n
 }
 
 export function cityBuild() {
-  floor("ciudad-adoquin", "#ffffff", cobbleTex, 0.9, "concrete", 6);
+  floor("ciudad-adoquin", "#ffffff", () => { const x = new B.Texture("./textures/g-ciudad-adoquin.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; }, 0.9, "concrete", 7); // instancia propia: floor() le fija la escala y las veredas usan la de caché a escala 1
   const r = lcg(11), parts: B.Mesh[] = [];
   const red = M.matte("#E53935"), white = M.matte("#FAFAFA"), stone = M.matte("#8a8580");
   const E = HALF + 3; // cordón: anillo de bloques rojo/blanco alternados + zócalo de piedra

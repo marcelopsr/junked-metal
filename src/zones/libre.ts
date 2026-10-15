@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge } from "../models";
 import { pbr, shadows } from "../render";
-import { HALF, bare, decal, floor, scene, stat } from "./common";
+import { HALF, bare, decal, floor, scene, stat, tex } from "./common";
 import { ramp } from "../world_layout";
 
 // Free Roam (docs en .claude/trabajo/FREEROAM-diseno.md): 600x600 m sin enemigos. Centro (plaza, avenidas, anillo, atajos) + registro de barrios.
@@ -13,6 +13,9 @@ const NOMBRES: Record<string, string> = { acuatico: "Parque acuático", obstacul
 /** Lugares con nombre para el cartel y el radar de main.ts (la plaza más cada barrio registrado). */
 export const LUGARES = [{ name: "Plaza central", cx: 0, cz: 0 }, ...BARRIOS.map((b) => ({ name: NOMBRES[b.id] ?? b.id, cx: b.cx, cz: b.cz }))];
 const hidden =(m: B.Mesh) => ((m.isVisible = false), m);
+// Textura generada (Gemini, sin costura) en caché; los UV de cada pieza se escalan a metros de mundo (T m por repetición) para que no se estire.
+const gtex = (k: string, f: string) => tex(k, () => { const x = new B.Texture(`./textures/${f}.webp`, scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; });
+const uvm = <T extends B.Mesh>(m: T, w: number, h: number, t: number) => { const u = m.getVerticesData(B.VertexBuffer.UVKind); if (u) m.setVerticesData(B.VertexBuffer.UVKind, u.map((v, i) => v * (i % 2 ? h : w) / t)); return m; };
 
 export function libreBuild() {
   floor("libreAsfalto", "#9d988e", () => { const x = new B.Texture("./textures/g-libre-hormigon.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; }, 0.85, "concrete", 32); // macro 32 m por repetición: la textura generada trae manchas grandes y la repetición se pierde a 50 m
@@ -22,17 +25,18 @@ export function libreBuild() {
   const edge = merge("libreBorde", parts); edge.isPickable = false; edge.receiveShadows = true; shadows.addShadowCaster(edge);
 
   // Calles: avenidas en cruz (24 m) y anillo (18 m a 275), asfalto pintado sin colisión (el cordón es pintura: nada que trabe)
-  const road = pbr("libreCalle", { color: "#4a4d52", rough: 0.9 }), tile = pbr("librePlaza", { color: "#c9b99a", rough: 0.85 });
-  decal("avenidaEO", HALF * 2, 24, 0, 0, road, 0.02); decal("avenidaNS", 24, HALF * 2, 0, 0, road, 0.02);
+  const road = pbr("libreCalleTx", { color: "#ffffff", rough: 0.9, tex: gtex("libreAsfaltoG", "g-libre-asfalto") }), tile = pbr("librePlaza", { color: "#c9b99a", rough: 0.85 }), plazaTx = pbr("librePlazaTx", { color: "#9a8f80", rough: 0.85, tex: gtex("librePlazaG", "g-libre-plaza") });
+  const TA = 16, TP = 10; // metros por repetición: asfalto y baldosas
+  uvm(decal("avenidaEO", HALF * 2, 24, 0, 0, road, 0.02), HALF * 2, 24, TA); uvm(decal("avenidaNS", 24, HALF * 2, 0, 0, road, 0.02), 24, HALF * 2, TA);
   const R = 275, L = R * 2 + 18;
-  for (const s of [-1, 1]) { decal("anilloNS", 18, L, s * R, 0, road, 0.02); decal("anilloEO", L, 18, 0, s * R, road, 0.02); }
+  for (const s of [-1, 1]) { uvm(decal("anilloNS", 18, L, s * R, 0, road, 0.02), 18, L, TA); uvm(decal("anilloEO", L, 18, 0, s * R, road, 0.02), L, 18, TA); }
   // Atajos diagonales (10 m) del centro a cada barrio, con un trampolín de entrada
   const wood = pbr("libreTrampolin", { color: "#f2c230", rough: 0.55 });
   // Cada atajo va de (28,28) a su fin; el noreste se tuerce hacia (62,130) para rodear el parque (x 60..200, z 14..88) y entrar al acuático por el oeste.
   for (const [sx, sz] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
     const ex = sx > 0 && sz > 0 ? 62 : sx * 120, ez = sx > 0 && sz > 0 ? 130 : sz * 120, dx = ex - sx * 28, dz = ez - sz * 28, len = Math.hypot(dx, dz), ry = Math.atan2(dx, dz);
     const g = B.MeshBuilder.CreateGround("atajo", { width: 10, height: len }, scene);
-    g.position.set(sx * 28 + dx / 2, 0.025, sz * 28 + dz / 2); g.rotation.y = ry; g.material = road; g.receiveShadows = true;
+    uvm(g, 10, len, TA); g.position.set(sx * 28 + dx / 2, 0.025, sz * 28 + dz / 2); g.rotation.y = ry; g.material = road; g.receiveShadows = true;
     ramp(wood, sx * 28 + (dx / len) * 12.7, sz * 28 + (dz / len) * 12.7, ry, 6, 7, 0.9, 0, 2);
   }
   // Marcas: raya amarilla discontinua en el centro de las avenidas, blanca en el anillo y líneas de borde (una malla fusionada)
@@ -49,7 +53,7 @@ export function libreBuild() {
 
   // Plaza central (r 40): losa cálida, fuente baja, 6 faroles y cartel de barrios (una placa de color por barrio, sin texto)
   const disc = B.MeshBuilder.CreateDisc("plaza", { radius: 40, tessellation: 48 }, scene);
-  disc.rotation.x = Math.PI / 2; disc.position.y = 0.035; disc.material = tile; tile.zOffset = -3; disc.receiveShadows = true;
+  disc.rotation.x = Math.PI / 2; disc.position.y = 0.035; uvm(disc, 80, 80, TP); disc.material = plazaTx; plazaTx.zOffset = -3; disc.receiveShadows = true;
   const blue = pbr("libreAgua", { color: "#4fc3f7", rough: 0.15 }), lamp = pbr("libreFarol", { color: "#fff3c0", rough: 0.3, emissive: "#ffd98a" }), dark = pbr("librePoste", { color: "#23262b", rough: 0.6 }), deco: B.Mesh[] = [];
   deco.push(cyl(11.2, 12, 0.7, tile, [0, 0.35, 0], undefined, 24), cyl(9, 9, 0.12, blue, [0, 0.76, 0], undefined, 24), cyl(1, 1.4, 2.6, tile, [0, 1.3, 0], undefined, 12));
   hidden(stat(cyl(12, 12, 0.8, tile, [0, 0, 0], undefined, 12), B.PhysicsShapeType.CYLINDER, {}, [0, 0.4, 0]));

@@ -91,7 +91,7 @@ function fern(r: () => number, x: number, z: number, s: number): B.Mesh[] {
 }
 
 export function forestBuild() {
-  floor("r53-bosque", "#ffffff", () => { const x = dirtTex(); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; }, 0.95, "concrete", 14);
+  floor("r53-bosque", "#ffffff", () => { const x = new B.Texture("./textures/g-bosque-agujas.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; }, 0.95, "concrete", 14);
   const r = rnd(1403), edge: B.Mesh[] = [], trees: B.Mesh[] = [];
   // Borde perimetral: rocas musgosas y troncos alternados, un poco irregulares, cada ~4,5 u; muro invisible-liviano detrás (oclusor) para tapar el horizonte.
   for (let side = 0; side < 4; side++) for (let k = -HALF; k <= HALF; k += 4.5) {
