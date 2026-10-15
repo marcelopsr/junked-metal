@@ -30,7 +30,7 @@ function lawnTexture() {
 export function frontBuild() {
   floor("lawn", "#ffffff", lawnTexture, 0.9, "grass", 45);
   // Franjas de corte del césped
-  const mow = pbr("mow", { color: "#e8ffd0", rough: 0.9, alpha: 0.02 }); // con 0.08 el sol HDR lo amplificaba a bandas pálidas de borde duro hasta el horizonte
+  const mow = pbr("mow", { color: "#0c260a", rough: 0.9, alpha: 0.3 }); // bandas OSCURAS (arte 0.95: contraste por composición); las claras con alpha 0.08 el sol HDR las volvía pálidas de borde duro hasta el horizonte
   for (let i = 0; i < 12; i += 2) decal("mow", HALF * 2, (HALF * 2) / 12, 0, -HALF + ((i + 0.5) * HALF * 2) / 12, mow, 0.015);
   // Vereda (baldosas), cordón y calle: la calle es el límite (pared física en z = -HALF)
   const vt = tex("vereda", TEX.tiles);
@@ -134,6 +134,12 @@ function toyProps() {
   put(pot(JC.rojo), -40, 0, 0, 2, 3, 3, 3);
   put(pot(JC.amarillo), -8, -52, 0, 2, 3, 3, 3);
   put(can, 50, -20, 0.6, 3, 3.6, 2.4, 3);
+  // Arte 0.95 (contraste 0,11-0,16, césped parejo): siluetas oscuras (pila de neumáticos, autito carbón) y acentos claros (bloque crema, autito amarillo) a 10-35 m al norte de la salida
+  const tires = [0, 1, 2].map((k) => tor(2.6, 0.6, JP("#1d1a18", 0.9), [0, 0.6 + k * 1.1, 0], undefined, 12));
+  put(tires, 11, -14, 0, 2.6, 4, 3.4, 4);
+  put(toyCar("#2a2420"), -12, -20, 0.4, 3, 3.6, 2.2, 2);
+  put(blk("#F4E7C8", 0), 10, -28, 0.3, 2.6, 3, 2, 3);
+  put(toyCar("#FFD54F"), -9, -34, -0.3, 3, 3.6, 2.2, 2);
   gardenKit(put);
   const m = merge("jardinToys", parts);
   m.isPickable = false; m.freezeWorldMatrix?.();

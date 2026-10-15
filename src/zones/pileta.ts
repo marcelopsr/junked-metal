@@ -65,6 +65,13 @@ function beachToys() {
   star(11, 13, R); star(-21, 19, O); star(14, 24, P); star(-14, -12, R);
   parts.push(cyl(2.2, 1.6, 1.4, Bl, [18, 0.7, 18], undefined, 10), tor(2.2, 0.25, W, [18, 1.4, 18], undefined, 10)); put(18, 18, 4, 1.4, 4, 3); // baldecito
   parts.push(box(2.4, 0.4, 2.6, G, [-19, 0.2, -10], [0, 0.4, 0]), box(0.5, 0.5, 3, G, [-19, 0.25, -12.6], [0, 0.4, 0])); put(-19, -11, 3.4, 0.5, 4, 4); // palita
+  // Siluetas oscuras dentro del encuadre de la salida (arte 0.95: la explanada era un solo tono; contraste 0,08-0,11): cubos y flotador azul marino / marrón, a 18-40 m al norte.
+  const Dn = M.plastic("#1b2a4a"), Dr = M.plastic("#3a1d14");
+  bucket(13, -18, Dr, Dn); bucket(-13, -38, Dn, Dr); ring(-13, -22, Dn, Dr); bucket(-16, 4, Dn, Dr);
+  // Toallas rayadas planas (sin colisión) al norte de la salida: rayas azul marino y marrón sobre crema, visibles también en la vista angosta del celular.
+  const towel = canvasTex(128, (c, s) => { c.fillStyle = "#e8d8b4"; c.fillRect(0, 0, s, s); for (let i = 0; i < 4; i++) { c.fillStyle = i % 2 ? "#3a1d14" : "#1b2a4a"; c.fillRect(0, i * s / 4 + 4, s, s / 8); } });
+  const tm = pbr("toallaPileta", { color: "#ffffff", rough: 0.95, tex: towel });
+  decal("toalla1", 9, 6, 7, -12, tm, 0.03); decal("toalla2", 9, 6, -8, -30, tm, 0.03); decal("toalla3", 9, 6, 8, -34, tm, 0.03);
   merge("juguetesPileta", parts).receiveShadows = true;
 }
 
@@ -73,7 +80,7 @@ export function poolBuild() {
   const { x0, x1, z0, z1, hi, lo, r0, r1 } = PIT, GS = HALF * 2 + 700, h = GS / 2, W = x1 - x0, D = z1 - z0;
   // --- Explanada: cuatro tajadas alrededor del pozo (visible + colisionador). Misma textura y detalle que floor(), con UV de mundo.
   const tx = tex("sandPit", sandTex); tx.uScale = tx.vScale = GS / 18;
-  const deckM = surface(pbr("sandPit", { color: "#ffffff", rough: 0.92, tex: tx }), "concrete", Math.round(GS / 4.5));
+  const deckM = surface(pbr("sandPit", { color: "#7d5f40", rough: 0.92, tex: tx }), "concrete", Math.round(GS / 4.5));
   for (const [a, b, c, d] of [[-h, h, -h, z0], [-h, h, z1, h], [-h, x0, z0, z1], [x1, h, z0, z1]]) {
     const g = B.MeshBuilder.CreateGround("deck", { width: b - a, height: d - c, subdivisions: Math.max(2, Math.round((b - a) / 14)) }, scene);
     g.position.set((a + b) / 2, 0, (c + d) / 2);

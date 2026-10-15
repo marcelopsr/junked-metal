@@ -461,14 +461,14 @@ const escena = (z) => async (p) => {
   await wait(p, () => window.__enc?.info?.() && window.__info().state === "play");
   await p.evaluate(async (z) => {
     window.__god();
-    const W = await import("/src/world.ts"), M = await import("/src/moon.ts"), R = await import("/src/encore_run.ts"), V = window.__carObj().root.position.constructor; // Vector3 de Babylon sin resolver el paquete desde la página
+    const W = await import("/src/world.ts"), M = await import("/src/moon.ts"), R = await import("/src/encore_run.ts"), G = await import("/src/moon_goals.ts"), V = window.__carObj().root.position.constructor; // Vector3 de Babylon sin resolver el paquete desde la página
     const luna = z.startsWith("luna");
-    if (luna) window.__enc.jump(0, 1); else { M.setMoon(false); W.setZone(z, false); }
+    if (luna) window.__enc.jump(0, 1); else { G.goalsClear(); M.setMoon(false); W.setZone(z, false); W.buildLayout(); } // goalsClear: cofres y decorado del escenario anterior (TV, pieza amarilla) no pasan a la zona nueva
     window.__killAll();
     if (luna) R.moonPlace(z === "luna-noche" ? M.DARK_DIR : V.Up(), z === "luna-noche" ? M.SUN_DIR : new V(0, 0, 1));
     else R.carPlace(new V(0, window.__carObj().def.size[1] / 2 + 0.3, 0), new V(0, 0, -1));
   }, z);
-  await tick(p, 90);
+  await tick(p, 90); await p.waitForTimeout(600); await tick(p, 5); // la textura webp del piso de nieve carga async: sin la espera la primera captura salía celeste liso
   await p.evaluate(() => { window.__killAll(); for (const e of document.querySelectorAll("body *")) if (e.tagName !== "CANVAS" && !e.querySelector("canvas")) e.style.visibility = "hidden"; });
   await tick(p, 2); await p.waitForTimeout(150);
 };
