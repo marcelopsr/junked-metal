@@ -584,6 +584,27 @@ export function hudDrive(mul: number, trick?: string) {
 }
 function tickDrive(dt: number) { if (drvT > 0 && (drvT -= dt) <= 0) $("drvLbl").textContent = "MANEJO"; }
 
+// ---------- Paseo libre: cartel de truco, contador en vuelo y tuercas doradas (se crean al primer uso; hud.css #truco, #aire, #tuercas) ----------
+const libreEl = (id: string) => { let e = document.getElementById(id); if (!e) { e = document.createElement("div"); e.id = id; $("hud").appendChild(e); } return e; };
+let trucoT = 0;
+/** Cartel al aterrizar: nombre, puntos y combo; sucio = gris y sin puntos; `rec` = récord batido. */
+export function hudTruco(name: string, pts: number, mult: number, clean: boolean, rec: string) {
+  const e = libreEl("truco");
+  e.className = clean ? "" : "sucio";
+  e.innerHTML = `<b>${name}</b><i>${clean ? "+" + pts : "ATERRIZAJE SUCIO"}</i>${clean && (mult > 1 || rec) ? `<small>${[mult > 1 && "COMBO ×" + mult, rec].filter(Boolean).join(" · ")}</small>` : ""}`;
+  void e.offsetWidth; e.classList.add("show");
+  clearTimeout(trucoT); trucoT = window.setTimeout(() => e.classList.remove("show"), 2200);
+}
+/** Contador mientras el auto está en el aire ("" lo oculta). */
+export function hudAire(t: string) { const e = libreEl("aire"); if (e.textContent !== t) e.textContent = t; e.classList.toggle("show", !!t); }
+/** Tuercas juntadas / total; `flash` hace saltar el contador al juntar una. */
+export function hudTuercas(n: number, total: number, flash = false) {
+  const e = libreEl("tuercas"); e.textContent = `TUERCAS ${n}/${total}`; e.classList.toggle("full", n >= total);
+  if (flash) { e.classList.remove("pop"); void e.offsetWidth; e.classList.add("pop"); }
+}
+/** Limpia lo de Paseo libre al salir del modo. */
+export function hudLibreOff() { clearTimeout(trucoT); for (const id of ["truco", "aire", "tuercas"]) document.getElementById(id)?.remove(); }
+
 // ---------- Racha de bajas: se corta a los 2 s sin matar; crece y tiembla con la racha ----------
 const COMBO = ["RACHA", "BUEN RITMO", "A FONDO", "SOBRECARGA"];
 let streak = 0, streakT = 0, pop = 0, cDirty = false, cShown = false, cTier = -1, cShake = 0, sx = 0, sy = 0;

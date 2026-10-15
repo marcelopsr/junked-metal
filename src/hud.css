@@ -560,10 +560,27 @@ body.calm #antic, body.calm #signal .h-track.pulse { animation: none !important;
 }
 
 /* Paseo libre: solo radar (barrios) y cartel del barrio; el resto de la telemetría no aplica */
-#hud.libre > :not(#radar, #barrio) { display: none; }
+#hud.libre > :not(#radar, #barrio, #truco, #aire, #tuercas) { display: none; }
 #barrio { position: absolute; left: 50%; top: max(14px, env(safe-area-inset-top)); translate: -50% 0; padding: 8px 18px 6px; background: var(--jm-rojo); color: #fff; font: 400 28px/1 "Bebas Neue", sans-serif; letter-spacing: .08em; text-transform: uppercase; border-radius: 4px; box-shadow: 0 3px 0 #000; transform: rotate(-1.5deg); pointer-events: none; }
 #barrio.show { animation: barrioIn .2s cubic-bezier(0, 0, .2, 1); } /* main.ts lo oculta a los 3 s */
 @keyframes barrioIn { from { opacity: 0; transform: translateY(-10px) rotate(-1.5deg); } }
 @media (prefers-reduced-motion: reduce) { #barrio.show { animation: none; } }
 @media (max-width: 700px) { #barrio { left: 8px; translate: 0; max-width: calc(100vw - 130px); font-size: 22px; } } /* celular: a la izquierda del radar */
+/* Paseo libre: cartel de truco (pegatina roja), contador en vuelo y tuercas doradas; bajo el cartel del barrio para no tapar al auto */
+#truco, #aire, #tuercas { position: absolute; pointer-events: none; font-family: "Bebas Neue", sans-serif; text-transform: uppercase; }
+#truco { left: 50%; top: 76px; translate: -50% 0; display: none; padding: 8px 20px 6px; background: var(--jm-rojo); color: #fff; border-radius: 4px; box-shadow: 0 3px 0 #000; text-align: center; transform: rotate(-2deg); }
+#truco.show { display: block; animation: trucoIn .18s cubic-bezier(0, 0, .2, 1); }
+#truco b { display: block; font-weight: 400; font-size: 34px; line-height: 1; letter-spacing: .06em; }
+#truco i { display: block; font-style: normal; font-size: 26px; line-height: 1.1; color: #ffd84d; }
+#truco small { display: block; font-size: 18px; letter-spacing: .1em; }
+#truco.sucio { background: #3a3d44; color: #aab0ba; } #truco.sucio i { color: #aab0ba; font-size: 18px; }
+@keyframes trucoIn { from { opacity: 0; transform: scale(1.35) rotate(-2deg); } }
+#aire { left: 50%; top: 76px; translate: -50% 0; display: none; font-size: 26px; letter-spacing: .08em; color: #fff; text-shadow: 0 2px 0 #000, 0 0 6px #000; }
+#aire.show { display: block; }
+#tuercas { left: 12px; top: max(14px, env(safe-area-inset-top)); padding: 6px 12px 4px; background: #1a1d22; border-left: 3px solid var(--jm-rojo); color: #ffc21a; font-size: 24px; letter-spacing: .08em; }
+#tuercas.full { background: #ffc21a; color: #1a1d22; }
+#tuercas.pop { animation: tuercaPop .22s cubic-bezier(0, 0, .2, 1); }
+@keyframes tuercaPop { 50% { transform: scale(1.25); } }
+@media (prefers-reduced-motion: reduce) { #truco.show, #tuercas.pop { animation: none; } }
+@media (max-width: 700px) { #tuercas { top: 62px; left: 8px; font-size: 20px; } #truco { top: 100px; } #truco b { font-size: 26px; } #aire { top: 100px; font-size: 22px; } }
 #hud.libre #radar::after { display: none; } /* sin "▲ BASE": en Paseo libre no hay centro al que volver */

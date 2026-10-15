@@ -136,4 +136,11 @@ describe("parseSave", () => {
     expect(load({ encore: { seenPacts: ["garantia", "garantia", "<x>", 3], seenVariants: ["LA TARIMA", "nada"] } }).encore).toMatchObject({ seenPacts: ["garantia"], seenVariants: ["LA TARIMA"] }); // Codex: ids conocidos, sin repetir
     expect(load({ encore: { seenPacts: "x" } }).encore.seenPacts).toEqual([]);
   });
+  it("Paseo libre: un guardado viejo sin bloque libre migra a vacío; lo inválido se descarta", () => {
+    const vacio = { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, tuercas: "0".repeat(24) };
+    expect(load({}).libre).toEqual(vacio);
+    expect(load({ libre: { best: { aire: -3, giro: "x", salto: 450.5, combo: 1200 }, tuercas: "10" } }).libre).toEqual({ ...vacio, best: { ...vacio.best, combo: 1200 } });
+    expect(load({ libre: { best: { vuelta: 3 }, tuercas: "1".repeat(24) } }).libre).toEqual({ best: { ...vacio.best, vuelta: 3 }, tuercas: "1".repeat(24) });
+    expect(load({ libre: 5 }).libre).toEqual(vacio);
+  });
 });

@@ -25,6 +25,7 @@ import { rocketLand } from "./moon_goals";
 import { getModoTranquilo, RAIN, mixClimate, nightfall, DUSK, type Profile } from "./run";
 import { applyClimate, pbr, setDark, shadows } from "./render";
 import { rng, rngFrom } from "./rng";
+import { enHielo, roam } from "./free_tricks";
 let evR = rngFrom(1); // sorteo de eventos de mitad de partida: azar propio derivado de la semilla, no corre el principal
 import { run } from "./run_state";
 import { sph } from "./models";
@@ -84,6 +85,19 @@ export function tickAbility(F: Frame, dt: number) {
   if (MOON.on && !calm) lunaEv(wdt, run.time, carPs, Math.max(c.def.size[0], c.def.size[2]) / 2, D.camYaw); // luna: lluvia de meteoritos y erupciones (moon_events.ts)
 }
 
+const _w = new B.Vector3();
+/** Paseo libre: control en el aire (dirigir gira, acelerar/frenar cabecea; sin tecla se conserva el giro que traía) y velocidad ganada al bajar pendientes hasta libre_vel_bajada. */
+function libreDrive(c: Car, r: ReturnType<typeof drive>, steer: number, throttle: number, dt: number, base: number) {
+  const body = c.body, v = body.getLinearVelocity();
+  if (r.grounded && v.y < -0.5) roam.extra = Math.min(Math.max(0, R.libre_vel_bajada - base), roam.extra - v.y * R.libre_acel_bajada * dt);
+  else roam.extra = Math.max(0, roam.extra - 6 * dt); // ponytail: sin distinguir subida de llano; techo: usar la pendiente de drive() si hace falta
+  if (r.grounded || roam.air < 0.15 || (!steer && !throttle)) return; // roam.air: la rampa empinada hace parpadear "grounded"; el control entra tras 0,15 s de vuelo real
+  const w = body.getAngularVelocity(), up = c.root.up, fw = c.root.forward, rt = c.root.right;
+  const wU = steer ? steer * R.libre_giro_aire : B.Vector3.Dot(w, up), wR = throttle ? throttle * R.libre_cabeceo_aire : B.Vector3.Dot(w, rt), wF = B.Vector3.Dot(w, fw);
+  _w.set(up.x * wU + rt.x * wR + fw.x * wF, up.y * wU + rt.y * wR + fw.y * wF, up.z * wU + rt.z * wR + fw.z * wF);
+  body.setAngularVelocity(_w);
+}
+
 export function tickDrive(F: Frame, dt: number) {
   const { c } = F;
   // --- Manejo ---
@@ -108,7 +122,7 @@ export function tickDrive(F: Frame, dt: number) {
   if (miniT > 0) miniT -= dt;
   run.boostSec = boosting ? run.boostSec + dt : 0;
   D.lead.boost = boosting ? D.lead.boost - R.turbo_gasto * D.st.boostUse * dt : Math.min(100, D.lead.boost + D.st.boostRegen * dt);
-  const maxSpeed = c.def.speed * D.st.speedMul * (boosting ? R.turbo_vel : 1) * (run.abil === "turbo" && run.abilOn > 0 ? R.turbo_hab_vel : 1) * (miniT > 0 ? R.mini_turbo_vel : 1);
+  const maxSpeed = c.def.speed * D.st.speedMul * (boosting ? R.turbo_vel : 1) * (run.abil === "turbo" && run.abilOn > 0 ? R.turbo_hab_vel : 1) * (miniT > 0 ? R.mini_turbo_vel : 1) + roam.extra; // roam.extra: velocidad ganada en bajadas (solo Paseo libre, 0 en el resto)
   const r = F.r = drive(c.body, c.root, dt, {
     throttle: boosting || miniT > 0 ? 1 : throttle, steer, speed: maxSpeed,
     accel: c.def.accel * (boosting ? R.turbo_acel : 1),
@@ -116,9 +130,11 @@ export function tickDrive(F: Frame, dt: number) {
     grip: (() => {
       let g = (input.drift ? R.derrape_agarre : c.def.grip) * (1 - (1 - RAIN.grip) * D.rainK);
       if (!input.drift && D.rainK > 0) g *= 1 + R.lluvia_control * (1 - D.rainK);
+      if (roam.on && enHielo(c.pos.x, c.pos.z)) g *= R.libre_agarre_hielo; // lago congelado
       return g;
     })(),
   });
+  if (roam.on) libreDrive(c, r, steer, throttle, dt, c.def.speed * D.st.speedMul);
   if (r.impactSpeed > 4.0 && !D.simulating) {
     SFX.bodyThud(r.impactSpeed, r.impactPan);
     D.shake = Math.max(D.shake, Math.min(0.45, r.impactSpeed * 0.035));

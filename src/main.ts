@@ -1,4 +1,7 @@
 import { tut, tutEnd, tutOffers, tutOn, tutStart } from "./tutorial";
+import { hudAire, hudLibreOff, hudTruco, hudTuercas } from "./ui";
+import { bestUpdate, newTrick, nutNear, nutsCount, roam, trickLive, trickStep, NUT_N } from "./free_tricks";
+import { spawnNuts } from "./free_nuts";
 import { hudHurt, scrapNumber, hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
@@ -215,6 +218,7 @@ let preview: B.Mesh | null = null;
 
 function clearRun() {
   libre = false; $("hud").classList.remove("libre"); clearTimeout(libreCartelT); $("barrio").classList.add("hidden");
+  roam.on = false; roam.extra = roam.air = 0; libreNuts?.dispose(); libreNuts = null; hudLibreOff();
   Object.assign(run, freshRun());
   mateClear();
   encClear(); GOAL_IO.tele = false; GOAL_IO.half = 0;
@@ -341,7 +345,32 @@ function libreLight() {
   const x = (libreT / LUZ_TRAMO_S) % LUZ_CICLO.length, i = Math.floor(x), f = x - i;
   applyClimate(mixClimate(climaId(LUZ_CICLO[i]), climaId(LUZ_CICLO[(i + 1) % LUZ_CICLO.length]), f * f * (3 - 2 * f)));
 }
-function libreHud(dt: number) {
+let libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick();
+/** Trucos (aire, giros, vueltas, aterrizaje, combo) y tuercas doradas; `grounded` sale de drive(). */
+function libreTricks(dt: number, grounded: boolean) {
+  const c = lead.car!, body = c.body, w = body.getAngularVelocity(), up = c.root.up, fw = c.root.forward, rt = c.root.right, s = save.libre;
+  const wU = Math.abs(B.Vector3.Dot(w, up)), wF = B.Vector3.Dot(w, fw), wR = B.Vector3.Dot(w, rt);
+  const end = trickStep(libreTrick, dt, grounded, wU, Math.hypot(wF, wR), up.y);
+  roam.air = libreTrick.air; // lo lee libreDrive (control en el aire)
+  hudAire(grounded ? "" : trickLive(libreTrick));
+  if (end) {
+    const up2 = bestUpdate(s.best, end), rec = up2.includes("salto") || up2.includes("combo") ? "RÉCORD" : "";
+    hudTruco(end.name, end.pts, end.mult, end.clean, rec);
+    if (end.clean) { SFX.pickup(); FX.dust(c.pos); FX.sparks(c.pos.add(new B.Vector3(0, 0.6, 0)), end.mult > 1 || rec ? 14 : 8); }
+    if (up2.length) persist();
+  }
+  libreNuts?.tick(dt);
+  const i = nutNear(s.tuercas, c.pos.x, c.pos.y, c.pos.z);
+  if (i >= 0) {
+    s.tuercas = s.tuercas.slice(0, i) + "1" + s.tuercas.slice(i + 1);
+    libreNuts?.take(i); SFX.pickup(); FX.sparks(c.pos.add(new B.Vector3(0, 0.8, 0)), 12);
+    const n = nutsCount(s.tuercas); hudTuercas(n, NUT_N, true);
+    if (n >= NUT_N) grant("tuercas"); // desbloquea la pintura Dorado tuerca (garaje, colores de logro)
+    persist();
+  }
+}
+function libreHud(dt: number, grounded: boolean) {
+  libreTricks(dt, grounded);
   const c = lead.car!, p = c.pos;
   if (libreLuz === 4 && (libreAcc += dt) > 0.5) { libreAcc = 0; libreT += 0.5; libreLight(); } // ponytail: 2 Hz; si applyClimate pesa, subir el paso
   let best = -1, bd = 110; // cartel al acercarse a menos de 110 m del centro de un lugar
@@ -363,7 +392,10 @@ function startLibre() {
   menuOff();
   clearRun(); // deja libre = false y la luz de la zona (ya armada como "libre")
   libre = true; libreLugar = -1; libreT = 0; libreAcc = 0;
+  roam.on = true; roam.extra = 0; libreTrick = newTrick();
   void import("./zones/libre").then((m) => { libreLugares = m.LUGARES; });
+  void import("./zones/libre_nieve").then((m) => { roam.hielo = m.lagoHielo; });
+  libreNuts = spawnNuts(save.libre.tuercas); hudTuercas(nutsCount(save.libre.tuercas), NUT_N);
   $("hud").classList.add("libre"); $("barrio").classList.add("hidden");
   setZone("libre"); setMoon(false);
   run.runSeed = 20261015; seedRng(run.runSeed); // el mapa es fijo; la semilla solo define el perfil que lee la cámara
@@ -707,7 +739,7 @@ initRunDrive({
 
 function update(dt: number) {
   const c = lead.car!;
-  if (libre) { tickDrive({ c } as Frame, dt); libreHud(dt); return; } // Free Roam: solo manejo (sin reloj, spawner, armas ni vitales)
+  if (libre) { const F = { c } as Frame; tickDrive(F, dt); libreHud(dt, F.r.grounded); return; } // Free Roam: solo manejo (sin reloj, spawner, armas ni vitales)
   run.time += dt;
   if (erun) { encApply(E.tick(erun, dt)); const d = E.dirTick(dirq, dt, E.decisionOpen(erun)); if (d) { dirSub(d, E.ENC.dirShowS); if (!simulating && !LAB.on) SFX.radio((Object.values(E.TIPS) as string[]).includes(d)); } } // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
   const calm = erun?.phase === "vote" || erun?.phase === "final" || calmFirst(), tp = run.time + paceS, hordeK = run.horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad

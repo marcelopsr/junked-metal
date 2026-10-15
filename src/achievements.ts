@@ -35,6 +35,7 @@ export const ACH = {
   mosca: { name: "Cazamoscas", txt: "Mata 100 moscas en total. Ni una se salvó del chancho", scrap: BAL.ritmo.logro_gato_tornillos },
   babosa: { name: "Babosa a la sal", txt: "Mata 25 babosas en total. Con una pizca alcanza", scrap: BAL.ritmo.logro_gato_tornillos },
   sinfin: { name: "Sin fin, sin descanso", txt: "Sobrevive 15 minutos en el modo sin fin", scrap: BAL.ritmo.logro_gato_tornillos },
+  tuercas: { name: "Ferretería completa", txt: "Junta las 24 tuercas doradas del Paseo libre. Regala la pintura Dorado tuerca" },
   diario: { name: "Atrapado en la rutina", txt: "Gana un desafío diario", scrap: BAL.ritmo.logro_diario_tornillos },
 } as const satisfies Record<string, { name: string; txt: string; reward?: string; scrap?: number }>;
 export type AchId = keyof typeof ACH;

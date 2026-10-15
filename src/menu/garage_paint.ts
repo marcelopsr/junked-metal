@@ -12,7 +12,7 @@ let { $, focusSel, peek, persist, renderGarage, save, shownCar, tabsHtml } = {} 
 const A = (rows: string[]) => rows.join("");
 export const LOCKED_PAINTS: Record<string, [string, string]> = { // color -> [logro, nombre]
   "#39ff14": ["chispazo", "Verde cortocircuito"], "#ff2d95": ["globos", "Magenta cumpleaños"], "#7a1f1f": ["rey", "Burdeos real"],
-  "#e8d9a8": ["tarantula", "Hueso de inquilina"], "#0a2a6b": ["encore_final", "Azul telón"], "#ffd23f": ["diez", "Amarillo horas extra"],
+  "#e8d9a8": ["tarantula", "Hueso de inquilina"], "#0a2a6b": ["encore_final", "Azul telón"], "#ffd23f": ["diez", "Amarillo horas extra"], "#ffb400": ["tuercas", "Dorado tuerca"],
 };
 export const DECAL_TPL: Record<string, { name: string; ach: string; grid: string }> = {
   rayo: { name: "Rayo", ach: "gana_formula", grid: A(["0000000000000000","0000000066600000","0000000666000000","0000006660000000","0000066600000000","0000666666666000","0000066666660000","0000000066600000","0000000666000000","0000006660000000","0000006600000000","0000066000000000","0000060000000000","0000000000000000","0000000000000000","0000000000000000"]) },
