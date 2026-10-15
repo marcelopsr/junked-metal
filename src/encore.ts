@@ -65,6 +65,7 @@ export type Run = {
   known: readonly string[]; // secretos ya guardados en el perfil (save.encore.secrets): habilitan los pactos especiales
   found: SecretId[]; // secretos del Director descubiertos en esta run (main.ts los pasa a save.encore.secrets)
   first?: boolean;  // primera expedición del guardado (encore_run.ts lo fija): no ofrece pactos
+  solo?: boolean;   // un solo jugador (encore_run.ts lo fija cada cuadro): la ventana de destino es más corta (ritmo.ruta_solo_s)
   hold?: boolean;   // la oferta de pactos abierta es la primera de la vida del guardado: sin reloj, espera la elección
 };
 /** R3: eventos del teleportador al abordarlo. */
@@ -85,9 +86,11 @@ export const paceOf = (r: Run) => (r.loop * ENC.stages + r.stage) * ENC.paceStag
 const reset = (r: Run) => { r.phase = "stage"; r.stageT = 0; r.timer = 0; r.landed = false; r.stayT = 0; r.stays = 0; r.offer = null; r.routes = null; r.route = null; r.guest = null; };
 /** Se sale de un escenario (o de la votación): cada pacto con duración pierde uno y los vencidos se van. */
 const leave = (r: Run) => { r.pacts = r.pacts.map((a) => ({ id: a.id, left: a.left - 1 })).filter((a) => a.left > 0); };
+/** Ventana para elegir destino: con un solo jugador no hay a quién esperar, y el panel tapa el tercio de arriba del celular. */
+const routeTotal = (r: Run) => (r.solo ? Math.min(ENC.routeS, BAL.ritmo.ruta_solo_s) : ENC.routeS);
 function advance(r: Run): Ev {
   leave(r);
-  if (r.stage + 1 < ENC.stages) { r.phase = "route"; r.offer = null; r.routes = routeOffer(r); r.timer = ENC.routeS; return "route_offer"; } // el escenario siguiente se elige antes de cargarlo
+  if (r.stage + 1 < ENC.stages) { r.phase = "route"; r.offer = null; r.routes = routeOffer(r); r.timer = routeTotal(r); return "route_offer"; } // el escenario siguiente se elige antes de cargarlo
   if (r.lp.off >= 2 && !r.lp.yes) discover(r, "audiencia"); // la vuelta se cerró sin firmar nada
   if (r.lp.bold >= ENC.stages - 1) discover(r, "bambalinas"); // todos los destinos de la vuelta fueron los de más riesgo
   r.phase = "vote"; r.timer = ENC.voteS; return "vote";
@@ -322,8 +325,8 @@ export function craterPlan(v: Variant, r: Run): { a: number; d: number; r: numbe
 /** Para el HUD: título de la ventana abierta, textos de los dos botones (null = sin botón) y duración total; en la oferta, además los términos de cada pacto y el botón de rechazo. */
 export function ask(r: Run): { title: string; opts: [string | null, string | null]; total: number; pacts?: [PactView, PactView]; reject?: string } | null {
   if (r.phase === "pact" && r.offer) { const [a, b] = r.offer.map((id) => viewOf(pactOf(id))); return { title: "PACTO DEL DIRECTOR", opts: [a.name, b.name], total: ENC.pactS, pacts: [a, b], reject: "RECHAZAR" }; }
-  if (r.phase === "route" && r.routes) { const [a, b] = [routeView(r.routes[0]), routeView(r.routes[1])]; return { title: "ELIJAN EL DESTINO", opts: [a.name, b.name], total: ENC.routeS, pacts: [a, b] }; }
-  if (r.phase === "overload") return { title: "SOBRECARGA · AGUANTEN LA CARGA", opts: [null, null], total: ENC.overloadS };
+  if (r.phase === "route" && r.routes) { const [a, b] = [routeView(r.routes[0]), routeView(r.routes[1])]; return { title: "ELIJAN EL DESTINO", opts: [a.name, b.name], total: routeTotal(r), pacts: [a, b] }; }
+  if (r.phase === "overload") return { title: "SOBRECARGA · AGUANTAR LA CARGA", opts: [null, null], total: ENC.overloadS };
   if (r.phase === "teleporter") return { title: "TELEPORTADOR LISTO", opts: [`QUEDARSE · COFRE EXTRA Y +${Math.round(ENC.stayScrap * 100)}% TORNILLOS`, "AVANZAR"], total: ENC.decideS };
   if (r.phase === "stay") return { title: "SIGUE LA FUNCIÓN · PRÓXIMA DECISIÓN", opts: [null, "AVANZAR YA"], total: ENC.stayS };
   if (r.phase === "vote") return { title: "EL PÚBLICO VOTA", opts: ["¡ENCORE!", "FINAL ACT"], total: ENC.voteS };
@@ -341,29 +344,29 @@ export function tag(r: Run): [string, string, boolean] {
 // Presentador macabro de show. Frases cortas para el aviso de radio; no revelan quién es. La variante sale del escenario, nunca del rng() de la partida.
 export type LineId = Ev | "start" | "boss_intro" | "hint";
 const LINES: Record<Exclude<LineId, "hint">, string[]> = {
-  start: ["¡LUCES ENCENDIDAS! GRAVEDAD OPCIONAL, DIGNIDAD NO INCLUIDA.", "SONRÍAN PARA EL PÚBLICO. NO PREGUNTEN DÓNDE ESTÁ EL PÚBLICO.", "EL TELÓN SUBE. EL SEGURO DE VIDA, EN CAMBIO, BAJÓ."],
-  tele_land: ["¡LLEGÓ EL TELEPORTADOR! QUÉ DECEPCIÓN PARA EL EQUIPO DE ESCONDITES.", "TELEPORTADOR EN ESCENA. LA PRODUCCIÓN LO ESCONDIÓ CON CARIÑO.", "EL TELEPORTADOR YA ESTÁ EN ESCENA. FINJAN SORPRESA, POR EL PÚBLICO."],
-  tele_ready: ["LA PUERTA ESTÁ ABIERTA. ¿SE QUEDAN O CAMBIAMOS DE CANAL?", "¡ELENCO LISTO! QUE NADIE OLVIDE RESPIRAR. DECIDAN.", "PUERTA LISTA. EL PÚBLICO ADMIRA A LOS QUE DECIDEN RÁPIDO."],
-  overload: ["SOBRECARGA EN EL TELEPORTADOR. LA CARGA ES LENTA, LOS VISITANTES NO.", "EL TELEPORTADOR SE ESTÁ CALENTANDO. AGUANTEN, QUE EL PÚBLICO APUESTA.", "CARGA AL LÍMITE. SI EXPLOTA, SERÁ UN GRAN NÚMERO FINAL."],
-  guest: ["EL TELEPORTADOR NECESITA UN INVITADO. VENZAN AL INVITADO Y LA PUERTA SE ABRE.", "PERMÍTANME PRESENTAR A UN ALLEGADO. NO LO HICIERON ENOJAR, SOLO LLEGÓ ASÍ.", "HAY UN INVITADO ESPECIAL. TRAJO SU PROPIO ESCÁNDALO."],
-  stay: ["¿SE QUEDAN? ¡ADORO LA INSISTENCIA! LA PRODUCCIÓN TAMBIÉN.", "OTRA TOMA, ENTONCES. LOS PELIGROS SE ESTIRAN, ASÍ QUE ESTÍRENSE.", "¿OTRA VEZ AQUÍ? LA PRODUCCIÓN LO TOMA COMO UN CUMPLIDO."],
-  pact_offer: ["TENGO DOS TRATOS PARA USTEDES. LA LETRA CHICA ESTÁ A LA VISTA.", "UN PACTO, SIN PRESIONES. BUENO, CON POCA PRESIÓN.", "HOY HAY OFERTA ESPECIAL. LA LETRA CHICA ES LO ÚNICO CHICO."],
-  pact_yes: ["¡TRATO HECHO! ME ENCANTAN LOS CLIENTES CON FE.", "FIRMADO. YO CUMPLO, ASÍ QUE CUMPLAN USTEDES.", "UNA FIRMA Y LISTO. QUÉ BONITA CALIGRAFÍA PARA SER CHATARRA."],
+  start: ["¡LUCES ENCENDIDAS! GRAVEDAD OPCIONAL, DIGNIDAD NO INCLUIDA.", "SE SONRÍE PARA EL PÚBLICO. NO SE PREGUNTA DÓNDE ESTÁ EL PÚBLICO.", "EL TELÓN SUBE. EL SEGURO DE VIDA, EN CAMBIO, BAJÓ."],
+  tele_land: ["¡LLEGÓ EL TELEPORTADOR! QUÉ DECEPCIÓN PARA EL EQUIPO DE ESCONDITES.", "TELEPORTADOR EN ESCENA. LA PRODUCCIÓN LO ESCONDIÓ CON CARIÑO.", "EL TELEPORTADOR YA ESTÁ EN ESCENA. SE FINGE SORPRESA, POR EL PÚBLICO."],
+  tele_ready: ["LA PUERTA ESTÁ ABIERTA. ¿SE QUEDA EL ELENCO O CAMBIAMOS DE CANAL?", "¡ELENCO LISTO! QUE NADIE OLVIDE RESPIRAR. SE DECIDE YA.", "PUERTA LISTA. EL PÚBLICO ADMIRA A LOS QUE DECIDEN RÁPIDO."],
+  overload: ["SOBRECARGA EN EL TELEPORTADOR. LA CARGA ES LENTA, LOS VISITANTES NO.", "EL TELEPORTADOR SE ESTÁ CALENTANDO. HAY QUE AGUANTAR, QUE EL PÚBLICO APUESTA.", "CARGA AL LÍMITE. SI EXPLOTA, SERÁ UN GRAN NÚMERO FINAL."],
+  guest: ["EL TELEPORTADOR NECESITA UN INVITADO. SE VENCE AL INVITADO Y LA PUERTA SE ABRE.", "PERMÍTANME PRESENTAR A UN ALLEGADO. NADIE LO HIZO ENOJAR, SOLO LLEGÓ ASÍ.", "HAY UN INVITADO ESPECIAL. TRAJO SU PROPIO ESCÁNDALO."],
+  stay: ["¿SE QUEDA? ¡ADORO LA INSISTENCIA! LA PRODUCCIÓN TAMBIÉN.", "OTRA TOMA, ENTONCES. LOS PELIGROS SE ESTIRAN, ASÍ QUE HAY QUE ESTIRARSE.", "¿OTRA VEZ AQUÍ? LA PRODUCCIÓN LO TOMA COMO UN CUMPLIDO."],
+  pact_offer: ["HAY DOS TRATOS SOBRE LA MESA. LA LETRA CHICA ESTÁ A LA VISTA.", "UN PACTO, SIN PRESIONES. BUENO, CON POCA PRESIÓN.", "HOY HAY OFERTA ESPECIAL. LA LETRA CHICA ES LO ÚNICO CHICO."],
+  pact_yes: ["¡TRATO HECHO! ME ENCANTAN LOS CLIENTES CON FE.", "FIRMADO. YO CUMPLO, Y LA OTRA PARTE TAMBIÉN.", "UNA FIRMA Y LISTO. QUÉ BONITA CALIGRAFÍA PARA SER CHATARRA."],
   pact_no: ["¿NADA? PRUDENTE. ABURRIDO, PERO PRUDENTE.", "SIN TRATO, SIN RENCORES. LA OFERTA SE ENFRÍA.", "SIN PACTO. EL DIRECTOR ANOTA SU DECEPCIÓN EN LA LIBRETA."],
-  route_offer: ["DOS PUERTAS, DOS PROBLEMAS DISTINTOS. ELIJAN EL QUE MEJOR PAGUE.", "EL PRÓXIMO ESCENARIO TIENE DOS VERSIONES. LA RECOMPENSA CRECE CON EL RIESGO.", "DOS CAMINOS AL SIGUIENTE ACTO. NINGUNO TIENE BARANDA."],
-  advance: ["¡CAMBIO DE ESCENARIO! NO TOQUEN NADA, ES UTILERÍA.", "SIGUIENTE ESCENA. EL ESCENARIO ES NUEVO, LOS PROBLEMAS SON DE ARCHIVO.", "TELÓN NUEVO, MISMA FUNCIÓN. PROHIBIDO IMPROVISAR CON EL DECORADO."],
+  route_offer: ["DOS PUERTAS, DOS PROBLEMAS DISTINTOS. SE ELIGE EL QUE MEJOR PAGUE.", "EL PRÓXIMO ESCENARIO TIENE DOS VERSIONES. LA RECOMPENSA CRECE CON EL RIESGO.", "DOS CAMINOS AL SIGUIENTE ACTO. NINGUNO TIENE BARANDA."],
+  advance: ["¡CAMBIO DE ESCENARIO! NADA SE TOCA, ES UTILERÍA.", "SIGUIENTE ESCENA. EL ESCENARIO ES NUEVO, LOS PROBLEMAS SON DE ARCHIVO.", "TELÓN NUEVO, MISMA FUNCIÓN. PROHIBIDO IMPROVISAR CON EL DECORADO."],
   vote: ["¡FIN DEL CUARTO ACTO! EL PÚBLICO VOTA: ¡ENCORE! O FINAL ACT.", "EL PÚBLICO ESTÁ DIVIDIDO. YO, NO: QUIERO UN FINAL ESPECTACULAR.", "CAE EL TELÓN DEL ACTO. EL PÚBLICO VOTA Y YO TOMO NOTA."],
-  encore: ["¡OTRA VUELTA! EL PÚBLICO EXIGE MÁS. Y YO SOY EL PÚBLICO.", "¡QUE EMPIECE EL BIS! ESTA VEZ CON MÁS ENTUSIASMO DE MI PARTE.", "EL PÚBLICO PIDIÓ BIS. QUÉ GENEROSIDAD LA SUYA CON SU VIDA."],
-  final_act: ["¡EL ÚLTIMO ACTO! NADIE ABANDONA EL ESCENARIO ANTES DEL APLAUSO.", "FINAL ACT. APAGUEN SUS CELULARES, ENCIENDAN SUS MOTORES.", "SE ACABAN LOS ENSAYOS. ESTE ACTO SÍ SALE EN LA ETIQUETA."],
-  boss_intro: ["LES PREPARÉ UN INVITADO. NO ESPEREN BUENOS MODALES.", "EL INVITADO ESTELAR YA SALIÓ. NO LE MOLESTEN LA ENTRADA.", "ÚLTIMO INVITADO DE LA NOCHE. DE RECIBIRLO ME OCUPO YO, DESDE LEJOS."],
-  won: ["¡GANADORES! NO CONFUNDAN ESTO CON HABER ESCAPADO.", "APLAUSOS, DE VERDAD. QUÉ RARO: ES LA PRIMERA VEZ QUE NO MIENTO.", "FIN DE LA FUNCIÓN. LA GANANCIA ES MÍA, LA GLORIA ES SUYA."],
+  encore: ["¡OTRA VUELTA! EL PÚBLICO EXIGE MÁS. Y YO SOY EL PÚBLICO.", "¡QUE EMPIECE EL BIS! ESTA VEZ CON MÁS ENTUSIASMO DE MI PARTE.", "EL PÚBLICO PIDIÓ BIS. QUÉ GENEROSIDAD CON LA VIDA AJENA."],
+  final_act: ["¡EL ÚLTIMO ACTO! NADIE ABANDONA EL ESCENARIO ANTES DEL APLAUSO.", "FINAL ACT. SE APAGAN LOS CELULARES Y SE ENCIENDEN LOS MOTORES.", "SE ACABAN LOS ENSAYOS. ESTE ACTO SÍ SALE EN LA ETIQUETA."],
+  boss_intro: ["HAY UN INVITADO PREPARADO. BUENOS MODALES, NO INCLUIDOS.", "EL INVITADO ESTELAR YA SALIÓ. SU ENTRADA NO SE INTERRUMPE.", "ÚLTIMO INVITADO DE LA NOCHE. DE RECIBIRLO ME OCUPO YO, DESDE LEJOS."],
+  won: ["¡GANADORES! QUE NADIE CONFUNDA ESTO CON HABER ESCAPADO.", "APLAUSOS, DE VERDAD. QUÉ RARO: ES LA PRIMERA VEZ QUE NO MIENTO.", "FIN DE LA FUNCIÓN. LA GANANCIA ES MÍA, LA GLORIA ES DEL ELENCO."],
 };
 /** Memoria entre runs (save.encore): la primera frase de la expedición la menciona. */
 export type Mem = { best: { loop: number }; runs: number; lastLoop: number; lastCause: string };
 export function openingLine(m: Mem | undefined): string | null {
   if (!m || !m.runs) return null;
   if (m.lastCause) return `VOLVIÓ QUIEN CAYÓ EN LA VUELTA ${m.lastLoop + 1}. LA CULPA FUE DE «${m.lastCause.toUpperCase()}». EL PÚBLICO NO OLVIDA.`;
-  if (m.best.loop > 0) return `OTRA VEZ AQUÍ. EXPEDICIÓN ${m.runs + 1}. LA MEJOR LLEGÓ A LA VUELTA ${m.best.loop + 1}: SUPÉRENLA.`;
+  if (m.best.loop > 0) return `OTRA VEZ AQUÍ. EXPEDICIÓN ${m.runs + 1}. LA MEJOR LLEGÓ A LA VUELTA ${m.best.loop + 1}: QUEDA SUPERARLA.`;
   return `OTRA VEZ AQUÍ. EXPEDICIÓN ${m.runs + 1} Y EL PÚBLICO SIGUE SIN APLAUDIR.`;
 }
 export function line(id: LineId, r: Run, mem?: Mem): string {
@@ -417,21 +420,21 @@ export function tipOnce(e: { tips: string[] }, id: keyof typeof TIPS): string | 
 // Una pista por jefe y por escenario (se repiten en cada vuelta). Insinúan el jefe sin nombrarlo ni describir su forma entera.
 const HINTS: Record<FinalKind, string[]> = {
   aspiradora: [
-    "ALGO EN LA PRODUCCIÓN TIENE HAMBRE DE POLVO. NO PREGUNTEN POR QUÉ ESTÁ TAN LIMPIO.",
-    "ESCUCHEN ESE ZUMBIDO REDONDO. SI EL PISO SE DESLIZA HACIA USTEDES, NO ES IMPRESIÓN.",
+    "ALGO EN LA PRODUCCIÓN TIENE HAMBRE DE POLVO. NADIE PREGUNTA POR QUÉ ESTÁ TAN LIMPIO.",
+    "SE OYE UN ZUMBIDO REDONDO. SI EL PISO SE DESLIZA HACIA EL ELENCO, NO ES IMPRESIÓN.",
     "EL BIS TIENE UN EMPLEADO QUE NUNCA TERMINA DE BARRER. LE QUEDA POCA PACIENCIA Y MUCHA SUCCIÓN.",
     "EN BAMBALINAS HAY UN DISCO CON LUZ INTERMITENTE. SE CARGA SOLO Y NO SE DEJA ATRAPAR EN LAS ESQUINAS.",
   ],
   cortacercos: [
-    "EL FINAL ACT USA CABLES. MUCHOS. NO LOS PISEN, QUE NO SON DECORACIÓN.",
+    "EL FINAL ACT USA CABLES. MUCHOS. NO SE PISAN, QUE NO SON DECORACIÓN.",
     "HUELE A OZONO Y A PASTO RECIÉN CORTADO. LA PRODUCCIÓN PLANEA UN RECORTE DE PERSONAL.",
     "ALGO CHISPEA AL FONDO DEL ESCENARIO. DIRECTO, PAREJO Y CON MUY MALAS MANERAS.",
-    "TIENEN UN INVITADO CON FILO. ESTÁ ENCHUFADO A TODO Y LE GUSTA PODAR EN LÍNEA RECTA.",
+    "HAY UN INVITADO CON FILO. ESTÁ ENCHUFADO A TODO Y LE GUSTA PODAR EN LÍNEA RECTA.",
   ],
   caja: [
     "SE OYE UNA MELODÍA DESAFINADA DESDE EL DESVÁN. NADIE LE DIO CUERDA. NADIE SE ATREVE A PREGUNTAR.",
-    "UN JUGUETE QUE SUENA SOLO NO ES UN JUGUETE, ES UN AVISO. SALTEN CUANDO EL SONIDO LES LLEGUE.",
-    "ALGUIEN TIENE BAILARINAS DE PORCELANA SUELTAS POR EL ESCENARIO. NO ACEPTEN EL PRIMER VALS.",
+    "UN JUGUETE QUE SUENA SOLO NO ES UN JUGUETE, ES UN AVISO. SE SALTA CUANDO EL SONIDO LLEGUE.",
+    "ALGUIEN TIENE BAILARINAS DE PORCELANA SUELTAS POR EL ESCENARIO. EL PRIMER VALS NO SE ACEPTA.",
     "LA ORQUESTA ESTÁ ROTA PERO TOCA IGUAL. EL PÚBLICO APLAUDE POR COMPASIÓN, NO POR OFICIO.",
   ],
 };
@@ -516,7 +519,7 @@ export function endAch(r: Run, win: boolean, secrets: readonly string[]): string
   if (r.went.includes(VARIANTS.findIndex((v) => v.name === "ENSAYO DE MEDIANOCHE"))) out.push("encore_medianoche");
   return out;
 }
-const SLIP = ["ESO NO ESTABA EN EL GUION.", "CORTEN. NO, NO CORTEN.", "LA PRODUCCIÓN NIEGA HABER DICHO ESTO."];
+const SLIP = ["ESO NO ESTABA EN EL GUION.", "CORTE. NO, NO CORTE.", "LA PRODUCCIÓN NIEGA HABER DICHO ESTO."];
 /** Frase del Director al descubrir un secreto: el desliz sale de un hash de (semilla, secreto), el fragmento es fijo. */
 export function secretLine(r: Run, id: SecretId): string {
   const s = SECRETS.find((x) => x.id === id)!, h = [...id].reduce((a, c) => (a * 31 + c.charCodeAt(0)) | 0, r.seed);

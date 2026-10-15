@@ -274,6 +274,7 @@
   "ritmo": [
     {"id":"doble_dano_por_pacto","valor":0.05,"descripcion":"El Doble de Riesgo: fracción de daño extra por cada pacto activo de la expedición ENCORE (fuera de ENCORE vale 0)"},
     {"id":"doble_pactos_tope","valor":4,"descripcion":"El Doble de Riesgo: máximo de pactos que cuentan para su bonus de daño"},
+    {"id":"ruta_solo_s","valor":8,"descripcion":"ENCORE: segundos para elegir destino cuando juega una sola persona (con más jugadores vale encore.ts routeS); al elegir, la decisión se cierra al instante"},
     {"id":"coop_vida_por_jugador","valor":0.6,"descripcion":"ENCORE cooperativo: vida de bichos y jefes × (1 + valor × (jugadores - 1)); compensa las copias de armas de cada compañero"},
     {"id":"coop_ritmo_por_jugador","valor":0.35,"descripcion":"ENCORE cooperativo: aparición y tope de vivos de bichos × (1 + valor × (jugadores - 1))"},
     {"id":"rasgo_murcielago_vel","valor":0.8,"descripcion":"El Vigilante Nocturno: fracción de su velocidad máxima desde la que la estela quema"},

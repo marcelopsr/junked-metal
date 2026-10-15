@@ -221,6 +221,7 @@ export const minorMini = () => { const v = erun && E.variantOf(erun); return (v 
 let pactOff = ""; // ids ofrecidos del último pacto (para telemetría si se rechaza)
 export function encApply(ev: E.Ev | null) {
   zonesStep();
+  if (erun) { erun.solo = cx.players.length < 2; if (E.decisionOpen(erun)) document.getElementById("hint")?.classList.add("hidden"); } // la guía de controles no tapa el pie de una oferta o decisión abierta
   if (erun && cx.lead.car) interruptStep();
   if (!ev || !erun) return;
   if (ev === "pact_offer" && erun.offer) { if (!cx.simulating && !cx.LAB.on && !save.encore.seenPacts.length) erun.hold = true; const n = erun.offer.filter((id) => !save.encore.seenPacts.includes(id)); if (n.length) { save.encore.seenPacts.push(...n); persist(); } } // Codex: pactos vistos
@@ -242,6 +243,7 @@ export function encApply(ev: E.Ev | null) {
   if (pact) { say(ev); if (erun.phase === "route") say("route_offer"); } // la respuesta al trato y, enseguida, la oferta de destinos
   const z = E.zoneOf(erun);
   if (v) say("advance", z !== "luna" ? E.EARTH[z].join(". ") : `${v.name}. ${v.line}`); // Contenido 3: el escenario terrestre se presenta como escenografía
+  if (v) { const af = E.afinOf(v); if (af) say("advance", `EL PÚBLICO APLAUDE ${af.armas.map((id) => BAL.armas[id].nombre.toUpperCase()).join(" Y ")} EN ESTE ESCENARIO.`); } // afinidad del destino elegido (balance.json, tabla afinidad)
   encSecrets();
   if (ev === "advance" || ev === "encore") { const h = E.hint(erun); if (h) say("hint", h); } // R5: pista del jefe secreto de este escenario
   else if (!pact) say(ev);
