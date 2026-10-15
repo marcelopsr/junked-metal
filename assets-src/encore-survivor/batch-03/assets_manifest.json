@@ -1,0 +1,230 @@
+{
+  "title": "Junked Metal Encore — Survivor and modular catalog, batch 03",
+  "version": 1,
+  "created": "2026-10-15",
+  "style_source": "docs/ART_DIRECTION.md",
+  "kind": "concept_reference",
+  "assets": [
+    {
+      "file": "01_buggy_modular.png",
+      "category": "vehicle_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale; derive chassis fit from actual car assets",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production-ready visual reference, no text, no logo, no UI, no watermark. Clean vehicle concept sheet, yellow off-road buggy with black roll cage: three-quarter front, side, rear and exploded modules. Separate body shell, common chassis, rear wing, four knobby wheels, red coilover suspensions, antenna, lights; consistent proportions across views."
+    },
+    {
+      "file": "02_truck_modular.png",
+      "category": "vehicle_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale; derive chassis fit from actual car assets",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production-ready visual reference, no text, no logo, no UI, no watermark. Clean vehicle concept sheet, blue RC truck: three-quarter front, side, rear and exploded modules. Same reusable chassis family, truck body shell, bumper, wide off-road tires, suspension, antenna and lights; rugged toy plastic."
+    },
+    {
+      "file": "03_rally_modular.png",
+      "category": "vehicle_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale; derive chassis fit from actual car assets",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production-ready visual reference, no text, no logo, no UI, no watermark. Clean vehicle concept sheet, white-green RC rally car: three-quarter front, side, rear and exploded modules. Same reusable chassis family, low body shell, rally wheels, compact wing, suspension, antenna and lamps."
+    },
+    {
+      "file": "04_monster_modular.png",
+      "category": "vehicle_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale; derive chassis fit from actual car assets",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production-ready visual reference, no text, no logo, no UI, no watermark. Clean vehicle concept sheet, purple RC monster truck: three-quarter front, side, rear and exploded modules. Same reusable chassis family, tall body shell, massive tread wheels, long exposed coilover suspension, antenna, lights."
+    },
+    {
+      "file": "05_drift_modular.png",
+      "category": "vehicle_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale; derive chassis fit from actual car assets",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production visual reference, no text, no logo, no UI, no watermark. Clean vehicle concept sheet, orange-yellow RC drift coupe: front three-quarter, side, rear and exploded modules. Low shell, smooth tires, short wing, shared chassis, suspension, antenna, lights."
+    },
+    {
+      "file": "06_toy_modular.png",
+      "category": "vehicle_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale; derive chassis fit from actual car assets",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production visual reference, no text, no logo, no UI, no watermark. Clean vehicle concept sheet, small blue playful toy RC car: front three-quarter, side, rear and exploded modules. Rounded smiling but no face-like text, shared chassis, compact wheels, playful roof light and antenna."
+    },
+    {
+      "file": "07_track_straight_curve.png",
+      "category": "track_module_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Common track width and connector language; measure in engine before modeling",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production visual reference, no text, no logo, no UI, no watermark. Modular track concept sheet with isolated top-down and three-quarter views of one straight, one 45-degree curve and one 90-degree curve. Toy construction pieces with matching edge connectors, red-white borders, consistent track width, no labels."
+    },
+    {
+      "file": "08_track_ramp_jump.png",
+      "category": "track_module_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Common track width and connector language; measure in engine before modeling",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production visual reference, no text, no logo, no UI, no watermark. Modular track concept sheet with separate ramp and jump pieces, top-down plus side three-quarter views, matching modular connectors and red-white borders, simple supports, believable RC car trajectory, no labels."
+    },
+    {
+      "file": "09_track_loop_bridge.png",
+      "category": "track_module_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Common track width and connector language; measure in engine before modeling",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production visual reference, no text, no logo, no UI, no watermark. Modular track concept sheet: standalone vertical loop and low bridge with support pieces, matching red-white borders and connectors, front side and isometric views, clearly separable geometry, RC toy scale."
+    },
+    {
+      "file": "10_track_cross_tunnel.png",
+      "category": "track_module_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Common track width and connector language; measure in engine before modeling",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production visual reference, no text, no logo, no UI, no watermark. Modular track concept sheet: four-way crossing, low tunnel and raised platform pieces with support legs, matching red-white borders and connectors, top-down and isometric views, RC toy scale."
+    },
+    {
+      "file": "11_track_safety.png",
+      "category": "track_module_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Common track width and connector language; measure in engine before modeling",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production visual reference, no text, no logo, no UI, no watermark. Modular track safety prop sheet: guardrail, red-white barrier, traffic cone, tire wall, arrow sign and scaffold support in separate cells, consistent attachment points and toy-scale, no labels."
+    },
+    {
+      "file": "12_track_combination.png",
+      "category": "track_module_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Common track width and connector language; measure in engine before modeling",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore concept art for Survivor mode. Miniature RC toy diorama, painted stylized PBR, beveled modular toy shapes, warm cinematic key light, macro photography, tilt-shift lens, production visual reference, no text, no logo, no UI, no watermark. One compact RC modular route assembled from straight, 45-degree and 90-degree curves, ramp, bridge, tunnel and junction; isometric view clearly showing how pieces connect, laid inside a backyard survivor diorama."
+    },
+    {
+      "file": "13_material_wood_cardboard.png",
+      "category": "material_reference",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Visual reference only; no fixed world meters",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore visual material reference sheet for miniature RC toy diorama. Painted stylized PBR appearance, warm neutral studio light with gentle shadows, no text, no logo, no UI, no watermark. Show large clean material swatches and small toy-scale application samples, maintain each material clearly distinct; this is visual reference, not a claimed exported PBR map. Material sheet featuring weathered rustic wood planks and corrugated cardboard, close-up grain, edge wear, cut faces and two small sample props: pallet and box. Neat panel arrangement."
+    },
+    {
+      "file": "14_material_plastic_rubber.png",
+      "category": "material_reference",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Visual reference only; no fixed world meters",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore visual material reference sheet for miniature RC toy diorama. Painted stylized PBR appearance, warm neutral studio light with gentle shadows, no text, no logo, no UI, no watermark. Show large clean material swatches and small toy-scale application samples, maintain each material clearly distinct; this is visual reference, not a claimed exported PBR map. Material sheet featuring glossy molded toy plastic in official bright red yellow blue and green plus matte dark tire rubber with knobby tread; molded seam details, subtle scratches, four small sample parts."
+    },
+    {
+      "file": "15_material_metal_asphalt.png",
+      "category": "material_reference",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Visual reference only; no fixed world meters",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore visual material reference sheet for miniature RC toy diorama. Painted stylized PBR appearance, warm neutral studio light with gentle shadows, no text, no logo, no UI, no watermark. Show large clean material swatches and small toy-scale application samples, maintain each material clearly distinct; this is visual reference, not a claimed exported PBR map. Material sheet featuring painted rusty steel and granular asphalt, close-up chipping, oxidation on corners, coarse aggregate, tiny drum and track-tile sample props; distinguish roughness and reflectance visually."
+    },
+    {
+      "file": "16_material_earth_nature.png",
+      "category": "material_reference",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Visual reference only; no fixed world meters",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore visual material reference sheet for miniature RC toy diorama. Painted stylized PBR appearance, warm neutral studio light with gentle shadows, no text, no logo, no UI, no watermark. Show large clean material swatches and small toy-scale application samples, maintain each material clearly distinct; this is visual reference, not a claimed exported PBR map. Material sheet featuring compact dirt with pebbles, sandy dust, mossy rock, short grass, snow and shallow water as six adjacent distinct swatches with tiny diorama samples; no words."
+    },
+    {
+      "file": "17_desert_biome.png",
+      "category": "biome_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Visual reference only; no fixed world meters",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor concept art. Miniature RC toy diorama, painted stylized PBR, beveled chunky modular shapes, macro photography, tilt-shift focus on RC vehicle, cinematic high-quality composition, readable combat paths, no text, no logo, no UI, no watermark. Desert miniature set arena at warm sunset: red sandstone toy mesas, compact sandy lanes, scattered rocks, old toy ruin, small cacti, shallow dune ramps, yellow RC buggy in a broad open combat zone."
+    },
+    {
+      "file": "18_neon_night_biome.png",
+      "category": "biome_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "Visual reference only; no fixed world meters",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor concept art. A miniature empty toy-city square at neon night, wet reflective cobblestones, colorful pink and blue signs with no legible words, tiny storefronts, red-white track barriers, warm headlights on one yellow off-road RC buggy. Only tiny insect and wind-up toy robot threats at the distant edges; absolutely no people, humanoids, zombies or crowds. Broad clear center and readable escape lanes. Painted stylized PBR, beveled toy shapes, macro photography, tilt-shift, no text, no logo, no UI, no watermark."
+    },
+    {
+      "file": "19_weapon_canicas_chapitas.png",
+      "category": "weapon_concept",
+      "pixel_dimensions": [
+        1774,
+        887
+      ],
+      "logical_dimensions": "Visual reference only; no fixed world meters",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor concept art. Miniature RC toy diorama, painted stylized PBR, beveled chunky modular shapes, macro photography, tilt-shift focus on RC vehicle, cinematic high-quality composition, readable combat paths, no text, no logo, no UI, no watermark. Two-panel visual concept sheet of RC buggy survivor weapons: left, colorful glass marbles rolling outward across patio paving; right, spinning metal bottle caps arcing around buggy. Clear trajectories and toy-scale impact effects, no labels."
+    },
+    {
+      "file": "20_weapon_dron_bobinas.png",
+      "category": "weapon_concept",
+      "pixel_dimensions": [
+        1774,
+        887
+      ],
+      "logical_dimensions": "Visual reference only; no fixed world meters",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor concept art. Miniature RC toy diorama, painted stylized PBR, beveled chunky modular shapes, macro photography, tilt-shift focus on RC vehicle, cinematic high-quality composition, readable combat paths, no text, no logo, no UI, no watermark. Two-panel visual concept sheet of RC buggy survivor weapons: left, small hovering toy drone defending buggy; right, compact copper coils producing clean electric arcs between nearby hostile toy robots. Clear silhouettes and effects, no labels."
+    }
+  ],
+  "integration": "Use vehicle sheets to guide separate body/chassis/wheels/suspension modules; use track sheets to model matched connectors and broad Survivor lanes. Material sheets are visual shader references, not PBR maps or seamless textures. Biomes and weapon sheets are concept art only; map them to existing zones and weapons after checking current implementation. Generated proportions and mechanics require code and gameplay review."
+}
