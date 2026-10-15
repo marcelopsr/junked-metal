@@ -63,6 +63,10 @@ function kitchenToys() {
   parts.push(box(6, 0.4, 1.2, Gy, [16, 0.2, -11], [0, 0.4, 0]), cyl(1.4, 1.4, 0.4, Gy, [19.4, 0.2, -10.2], undefined, 10)); put(17, -11, 7, 0.5, 2, 4); // cuchara
   for (const [x, z] of [[-12, 14], [12, 13], [0, 23]]) put(x, z, 3.4, 1.6, 3, 3);
   merge("juguetesCocina", parts).receiveShadows = true;
+  // Contraste: dos libros apilados oscuros y altos a los lados de la salida (fuera del carril), proyectan sombra larga sobre el damero.
+  const bk = [box(7, 2.2, 5, M.matte("#2b3a55"), [-17, 1.1, -22], [0, 0.3, 0]), box(6.4, 2, 4.6, M.matte("#3b2a22"), [-17, 3.2, -22], [0, 0.1, 0]), box(5.6, 8, 3.2, M.matte("#243b2e"), [-17, 8.2, -22], [0, 0.45, 0]), box(3.6, 11, 3.6, M.matte("#2b3a55"), [22, 5.5, -24], [0, 0.6, 0])];
+  put(-17, -22, 7, 12, 5.4, 6); put(22, -24, 3.8, 11, 3.8, 4);
+  const bm = merge("librosCocina", bk); bm.receiveShadows = true; shadows.addShadowCaster(bm);
 }
 
 export function kitchenBuild() {

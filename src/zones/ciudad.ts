@@ -246,7 +246,7 @@ export function cityLayout() {
   town();
   toyRamps(int(2, 4), [0, 1, 2]);
   rocks(int(8, 16));
-  const r = lcg(23), parts: B.Mesh[] = [];
+  const r = lcg(23), parts: B.Mesh[] = [], flats: B.Mesh[] = [];
   { // Desagüe con rejilla y charco con hojas secas (ref Charcos): decal de agua oscura con brillo de cielo; textura de semilla fija.
     const PX = 24, PZ = 22, o = lcg(613), N = 256, t = new B.DynamicTexture("charcoCiudadTex", N, scene, true), c = t.getContext() as unknown as CanvasRenderingContext2D;
     c.clearRect(0, 0, N, N);
@@ -321,7 +321,7 @@ export function cityLayout() {
     if (wet.albedoTexture !== t) t.dispose(); // material cacheado: la textura nueva sobra
     wet.useAlphaFromAlbedoTexture = true; wet.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
     for (let i = 0; i < 12; i++) { const arm = i % 4, d = 10 + o() * 26, v = (i % 8 < 4 ? 1 : -1) * (5.8 + o() * 2), w = 2.6 + o() * 2.4, sg = i < 6 ? 1 : -1, [x, z] = arm % 2 ? [sg * d, v] : [v, sg * d]; decal("manchaCiu" + i, w, w * (0.6 + o() * 0.4), x, z, wet, 0.17 + i * 0.001).isPickable = false; }
-    const Y = 0.1, flat = (w: number, d: number, x: number, z: number, m: B.Material, ry = 0) => parts.push(box(w, 0.06, d, m, [x, Y + 0.04, z], [0, ry, 0]));
+    const Y = 0.1, flat = (w: number, d: number, x: number, z: number, m: B.Material, ry = 0) => flats.push(box(w, 0.06, d, m, [x, Y + 0.04, z], [0, ry, 0]));
     for (const sg of [-1, 1]) for (const sg2 of [-1, 1]) {
       flat(21, 0.4, sg * 25.5, sg2 * 8.3, wp); flat(0.4, 21, sg2 * 8.3, sg * 25.5, wp); // líneas de borde blancas continuas
       flat(0.7, 8, sg * 16.8, sg2 * 4.4, wp); flat(8, 0.7, sg2 * 4.4, sg * 16.8, wp); // líneas de pare
@@ -334,17 +334,18 @@ export function cityLayout() {
       const mh = [sg * 14.5, sg2 * 5.5]; parts.push(cyl(1.1, 1.1, 0.06, dk, [mh[0], Y + 0.04, mh[1]], undefined, 14), cyl(1.4, 1.4, 0.04, M.matte("#3a3f45"), [mh[0], Y + 0.03, mh[1]], undefined, 14)); // alcantarillas
     }
     for (let k = 0; k < 14; k++) { const a = (k / 14) * 6.283; flat(0.6, 2, Math.cos(a) * 6.6, Math.sin(a) * 6.6, ring, -a); }
-    { const q = lcg(97), tar = M.matte("#101215"), pale = M.matte("#e9e4d4"); // marcas de goma oscuras y sellador de grietas claro sobre el asfalto cercano (planos, sin colisión)
+    { const q = lcg(97), tar = M.matte("#22252a"), pale = M.matte("#e9e4d4"); // marcas de goma oscuras y sellador de grietas claro sobre el asfalto cercano (planos, sin colisión)
       for (let i = 0, n = 0; i < 900 && n < 150; i++) { const x = (q() - 0.5) * 112, z = (q() - 0.5) * 112, l = 4 + q() * 10; // marcas alineadas con la calle (X si está en una calle E-O, Z si no) también sobre el anillo
         if (!onRoad(x, z, -2.5) || Math.hypot(x, z) < 6) continue; const al = Math.abs(z) < RW / 2 || Math.abs(Math.abs(z) - RING) < RW / 2; flat(al ? l : 1.3, al ? 1.3 : l, x, z, n++ % 4 ? tar : pale); }
-      for (let i = 0; i < 30; i++) { const s = q() * 6.283, d = 6 + q() * 40; if (onRoad(Math.cos(s) * d, Math.sin(s) * d, -1)) flat(4 + q() * 5, 3 + q() * 4, Math.cos(s) * d, Math.sin(s) * d, i % 2 ? tar : pale, q() * 3); } } // ponytail: ~120 cajas planas fusionadas en ciudadProps; solo sobre calzada
+      for (let i = 0; i < 30; i++) { const s = q() * 6.283, d = 6 + q() * 40; if (onRoad(Math.cos(s) * d, Math.sin(s) * d, -1)) flat(1.5 + q() * 2.5, 1 + q() * 2, Math.cos(s) * d, Math.sin(s) * d, i % 2 ? tar : pale, q() * 3); } } // ponytail: ~120 cajas planas fusionadas en ciudadProps; solo sobre calzada
     { const pil = M.matte("#14161a"), cap = M.matte("#2a2d33"); // siluetas verticales oscuras en la vereda de la calle de salida (colisionador caja oculto en la vereda, x = ±14,6: no toca la calle)
       for (const sx of [-1, 1]) for (const [z, h] of [[-19, 9], [-30, 13], [-42, 10]] as [number, number][]) stat(box(2.2, h, 2.2, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [sx * 14.6, h / 2, z]).isVisible = false, parts.push(box(2.2, h, 2.2, pil, [sx * 14.6, h / 2, z]), box(2.8, 0.6, 2.8, cap, [sx * 14.6, h + 0.3, z]));
-      for (let i = 0; i < 8; i++) flat(7 + (i % 3) * 2, 4 + (i % 2) * 2, (i % 2 ? 1 : -1) * (3.5 + (i % 4) * 1.6), -(9 + i * 4), M.matte("#d9d2bf"), 0.2 * i); } // parches claros de cemento sobre la calzada de salida (contraste: luces anchas junto a las sombras)
+      for (let i = 0; i < 8; i++) flat(4 + (i % 3), 2.5 + (i % 2), (i % 2 ? 1 : -1) * (3.5 + (i % 4) * 1.6), -(9 + i * 4), M.matte("#d9d2bf"), 0.2 * i); } // parches claros de cemento sobre la calzada de salida (contraste: luces anchas junto a las sombras)
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) put(9,sx * 12.4, sz * 12.4, 0.3 * sx * sz); // pilas de cajas oscuras en las esquinas de vereda junto a la salida
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const [d, k] of [[17, 10], [20.5, 8], [24, 8], [32, 10]] as [number, number][]) { put(k, sx * 12.8, sz * d, 0); put(k, sz * d, sx * 12.8, 0); }
   }
   // Faroles y bancos sobre las veredas, a ambos lados de las calles (ref31a/ref133)
   for (let t = -HALF + 20, k = 0; t < HALF - 10; t += 26, k++) for (const [x, z, ry] of [[12.5, t, -Math.PI / 2], [-12.5, t + 13, Math.PI / 2], [t, 12.5, Math.PI], [t + 13, -12.5, 0], [RING + 12.5, t * 0.7, -Math.PI / 2], [-RING - 12.5, t * 0.7 + 9, Math.PI / 2]] as V3[]) if (Math.hypot(x, z) > 16 && Math.abs(x) < HALF - 8 && Math.abs(z) < HALF - 8) put(k % 3 ? 0 : 1, x, z, ry);
+  if (flats.length) { const f = merge("ciudadPintura", flats); f.isPickable = false; f.receiveShadows = true; } // piezas planas del piso: reciben sombra pero no la proyectan (acné/cuadriláteros negros)
   if (parts.length) { const m = merge("ciudadProps", parts); m.isPickable = false; shadows.addShadowCaster(m); }
 }
