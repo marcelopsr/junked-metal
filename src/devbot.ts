@@ -1,5 +1,6 @@
 import { HALF, zoneId } from "./world";
 import { PIT, pitY } from "./zones/pileta";
+import { zonesInfo } from "./pact_zones";
 
 // Solo dev: bot de playtest. Juega sin trampas (sin god ni saltos de tiempo): orbita el patio
 // esquivando macetas, se destraba con marcha atrás y elige mejoras (evolución > arma nueva > primera).
@@ -17,6 +18,8 @@ export type BotBoss = { x: number; z: number; kind: string; fx: number; fz: numb
 const ORBIT_R: Record<string, number> = { rey: 10, tarantula: 13, cortadora: 15, perro: 14, gato: 12, aspiradora: 6, cortacercos: 14, caja: 14, proyector: 14, grua: 14, payaso: 12, muneco: 12, limpiafondos: 9 }; // aspiradora: de cerca, como la juega una persona (a 22 m las armas no llegan y el duelo dura ~85 s en vez de ~11 s)
 export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVelocity(): P } }, threats?: P[], obs?: { x: number; z: number; r: number }[], boss?: BotBoss | null, zones: { x: number; z: number; r: number }[] = [], gems: P[] = []) {
   const v = c.body.getLinearVelocity();
+  const zi = zonesInfo(); // zonas de pacto (ENCORE): las de riesgo se esquivan como un aro rojo; las de beneficio atraen cuando no hay bichos a 6 m
+  if (zi.length) zones = zones.concat(zi.filter((z) => z.risk));
   stuck = Math.hypot(v.x, v.z) < 2 ? stuck + 1 : 0;
   if (stuck > 50) { back = 40; stuck = 0; side = -side; }
   if (back > 0) { back--; return { throttle: -1, steer: side, boost: false }; }
@@ -44,12 +47,15 @@ export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVel
     // Gemas cerca (como una persona: desvía la órbita para juntar XP); sin jefe. Vector suma pesado por cercanía
     let gx = 0, gz = 0;
     if (!boss) for (const g of gems) { const ex = g.x - c.pos.x, ez = g.z - c.pos.z, d = Math.hypot(ex, ez); if (d > 1 && d < 30) { gx += ex / (d * d); gz += ez / (d * d); } }
+    const ben = crowd === 0 ? zi.filter((z) => !z.risk && z.active && Math.hypot(z.x - c.pos.x, z.z - c.pos.z) > z.r * 0.6).sort((a, b) => Math.hypot(a.x - c.pos.x, a.z - c.pos.z) - Math.hypot(b.x - c.pos.x, b.z - c.pos.z))[0] : undefined;
+    const zb = ben ? Math.atan2(ben.x - c.pos.x, ben.z - c.pos.z) : null;
     const gem = Math.hypot(gx, gz) > 0.02 ? Math.atan2(gx, gz) : null;
     let best = -Infinity;
     for (let k = 0; k < 16; k++) {
       const a = (k / 16) * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a);
       let sc = Math.cos(a - have) * 1.2 + Math.cos(a - orbit) * (exit ? 8 : 2.5); // en el pozo la rampa manda (una persona la busca aunque tenga bichos delante)
       if (gem !== null) sc += Math.cos(a - gem) * 2;
+      if (zb !== null) sc += Math.cos(a - zb) * 3;
       for (const { ex, ez, d } of near) { const dot = (ex * dx + ez * dz) / d; sc -= dot * (22 - d) / 6; if (d < 6 && dot > 0.6) sc -= 2.5; } // muro de bichos pegado: buscar el hueco
       if (pool) for (const t of [4, 9]) { const px = c.pos.x + dx * t, pz = c.pos.z + dz * t; // pileta: kitear en la explanada (en el pozo la horda acorrala); adentro, no empujar las paredes salvo en la boca de las rampas
         const out = px < PIT.x0 + 1 || px > PIT.x1 - 1 || (Math.abs(pz) > PIT.z1 - 1 && Math.abs(px - 38) > 6);

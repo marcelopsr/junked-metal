@@ -182,20 +182,20 @@ export function bossDown(r: Run): Ev | null {
 // Se aceptan o se rechazan sin penalidad; la ventana vencida es rechazar. Duran `stages` escenarios (Infinity = resto de la run). Cambiar a mano los números de
 // la tabla basta: el texto, la oferta y la aplicación los leen de ahí. Multiplicadores: 1 = sin cambio (regen suma vida por segundo, heal repara una fracción al aceptar).
 export type Fx = { dmg: number; speed: number; maxHp: number; xp: number; scrap: number; spawn: number; taken: number; regen: number };
-export type Pact = { id: string; name: string; tag: string; stages: number; gain: Partial<Fx> & { heal?: number }; cost: Partial<Fx> & { heal?: number }; secret?: string };
+export type Pact = { id: string; name: string; tag: string; stages: number; gain: Partial<Fx> & { heal?: number }; cost: Partial<Fx> & { heal?: number }; secret?: string; zona?: [string, "gain" | "cost"] }; // zona: línea de la carta que nombra la zona del piso (src/pact_zones.ts) y de qué lado cae
 // ponytail: valores provisorios y sin playtest; el voto de equipo, el secreto y los pactos QUICK del diseño necesitan cooperativo y quedan fuera.
 export const PACTS: Pact[] = [
   { id: "garantia", name: "SALUD EN GARANTÍA", tag: "GARANTÍA", stages: Infinity, gain: { dmg: 1.35 }, cost: { maxHp: 0.7 } },
-  { id: "sorpresa", name: "PRODUCCIÓN SORPRESA", tag: "SORPRESA", stages: 2, gain: { xp: 1.5 }, cost: { spawn: 1.3 } },
+  { id: "sorpresa", name: "PRODUCCIÓN SORPRESA", tag: "SORPRESA", stages: 2, gain: { xp: 1.5 }, cost: { spawn: 1.3 }, zona: ["ZONA FOCO EN EL PISO: XP x2", "gain"] },
   { id: "chatarra", name: "DOBLE O CHATARRA", tag: "CHATARRA", stages: Infinity, gain: { scrap: 1.5 }, cost: { spawn: 1.25 } },
-  { id: "patrocinio", name: "PATROCINIO DEFECTUOSO", tag: "PATROCINIO", stages: 2, gain: { speed: 1.2 }, cost: { taken: 1.25 } },
-  { id: "maquillaje", name: "RETOQUE DE MAQUILLAJE", tag: "RETOQUE", stages: 2, gain: { heal: 0.6 }, cost: { dmg: 0.8 } },
+  { id: "patrocinio", name: "PATROCINIO DEFECTUOSO", tag: "PATROCINIO", stages: 2, gain: { speed: 1.2 }, cost: { taken: 1.25 }, zona: ["ZONA CABLES PELADOS EN EL PISO: DAÑAN", "cost"] },
+  { id: "maquillaje", name: "RETOQUE DE MAQUILLAJE", tag: "RETOQUE", stages: 2, gain: { heal: 0.6 }, cost: { dmg: 0.8 }, zona: ["ZONA CAMERINO EN EL PISO: CURA", "gain"] },
   { id: "ensayo", name: "ENSAYO GENERAL", tag: "ENSAYO", stages: 2, gain: { dmg: 1.15, speed: 1.15 }, cost: { taken: 1.2 } },
   { id: "entradas", name: "ENTRADAS AGOTADAS", tag: "ENTRADAS", stages: Infinity, gain: { xp: 1.25, scrap: 1.25 }, cost: { maxHp: 0.8, spawn: 1.15 } },
-  { id: "blindaje", name: "CAMERINO BLINDADO", tag: "BLINDAJE", stages: 2, gain: { maxHp: 1.3 }, cost: { speed: 0.85 } },
+  { id: "blindaje", name: "CAMERINO BLINDADO", tag: "BLINDAJE", stages: 2, gain: { maxHp: 1.3 }, cost: { speed: 0.85 }, zona: ["ZONA PEGAMENTO EN EL PISO: FRENA", "cost"] },
   { id: "seguro", name: "SEGURO DE ESCENA", tag: "SEGURO", stages: 2, gain: { regen: 1, taken: 0.85 }, cost: { dmg: 0.85 } },
-  { id: "nocturno", name: "PROGRAMA NOCTURNO", tag: "NOCTURNO", stages: 1, gain: { regen: 2 }, cost: { spawn: 1.4 } },
-  { id: "cobro", name: "COBRO AL FINAL", tag: "COBRO", stages: 2, gain: { scrap: 1.6 }, cost: { xp: 0.75 } },
+  { id: "nocturno", name: "PROGRAMA NOCTURNO", tag: "NOCTURNO", stages: 1, gain: { regen: 2 }, cost: { spawn: 1.4 }, zona: ["ZONA TRAMPILLA EN EL PISO: ESCUPE ENEMIGOS", "cost"] },
+  { id: "cobro", name: "COBRO AL FINAL", tag: "COBRO", stages: 2, gain: { scrap: 1.6 }, cost: { xp: 0.75 }, zona: ["ZONA IMÁN EN EL PISO: ATRAE TORNILLOS", "gain"] },
   { id: "bis", name: "¿UN BIS?", tag: "BIS", stages: 3, gain: { dmg: 1.25, xp: 1.25 }, cost: { spawn: 1.35 } },
   { id: "permanencia", name: "CLÁUSULA DE PERMANENCIA", tag: "PERMANENCIA", stages: Infinity, gain: { regen: 1, maxHp: 1.2 }, cost: { taken: 1.2, scrap: 0.85 } },
   // Pactos del Director: uno por secreto del perfil, solo se ofrecen con ese secreto descubierto (más fuertes que los comunes; el costo habla del arco).
@@ -233,7 +233,7 @@ export function fxText(o: Pact["gain"]): string[] {
 }
 const durText = (n: number) => (n === Infinity ? "RESTO DE LA RUN" : n === 1 ? "PRÓXIMO ESCENARIO" : `PRÓXIMOS ${n} ESCENARIOS`);
 export type PactView = { special: boolean; name: string; gain: string[]; cost: string[]; dur: string };
-const viewOf = (p: Pact): PactView => ({ special: !!p.secret, name: p.secret ? `PACTO DEL DIRECTOR: ${p.name}` : p.name, gain: fxText(p.gain), cost: fxText(p.cost), dur: durText(p.stages) });
+const viewOf = (p: Pact): PactView => ({ special: !!p.secret, name: p.secret ? `PACTO DEL DIRECTOR: ${p.name}` : p.name, gain: [...fxText(p.gain), ...(p.zona?.[1] === "gain" ? [p.zona[0]] : [])], cost: [...fxText(p.cost), ...(p.zona?.[1] === "cost" ? [p.zona[0]] : [])], dur: durText(p.stages) });
 /** Para el HUD: pactos activos con su etiqueta corta, lo que les queda y los términos completos (title). */
 export function activePacts(r: Run): { tag: string; left: string; terms: string }[] {
   return r.pacts.map((a) => { const p = pactOf(a.id); return { tag: p.tag, left: a.left === Infinity ? "RUN" : `${a.left} ESC`, terms: `${p.name}: ${fxText(p.gain).join(", ")} / ${fxText(p.cost).join(", ")}` }; });

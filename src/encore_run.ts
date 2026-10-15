@@ -3,22 +3,23 @@ import * as B from "@babylonjs/core";
 import * as E from "./encore";
 import { BAL } from "./balance";
 import { banner, hudBoss } from "./ui";
-import { clearFx } from "./fx";
-import { DEF, type Enemy, type Kind } from "./enemies";
+import { clearFx, sparks } from "./fx";
+import { DEF, pickWeighted, spawnTable, type Enemy, type Kind } from "./enemies";
 import { encoreAmbience, SFX } from "./sfx";
-import { buildLayout, HALF, setZone, spawnPoint, zoneId } from "./world";
+import { buildLayout, groundY, HALF, setZone, spawnPoint, zoneId } from "./world";
 import { makeProfile, type Profile } from "./run";
 import { seedRng } from "./rng";
 import { track } from "./net";
 import { persist, save } from "./menu";
 import { getNet } from "./net_client";
 import { grant, setHitAt, setStageHurt, stageHurt } from "./outro";
-import { alignYaw, deform, EARTH_DIR, hflat, MOON, moonCar, onFloor, ringAt, setMoon, SUN_DIR, teleport, upAt, yawOf } from "./moon";
+import { alignYaw, CENTER, deform, EARTH_DIR, hflat, MOON, moonCar, onFloor, ringAt, setMoon, SUN_DIR, teleport, upAt, yawOf } from "./moon";
 import { evPace, evReset, evShow } from "./moon_events";
-import { GOAL_IO, goalsClear, rocketLand, shopPlan, spotsPlan } from "./moon_goals";
+import { GOAL_IO, goalBlips, goalsClear, rocketLand, shopPlan, spotsPlan } from "./moon_goals";
 import { shipFor, shipsClear } from "./moon_ships";
 import { skyClear, skyPace } from "./moon_sky";
 import { mateRevive, type Player } from "./coop";
+import { NO_ZONE, zonesDispose, zonesInit, zonesTick, type ZoneFx } from "./pact_zones";
 
 /** Lo que la expedición necesita del resto de main.ts: propiedades (get/set) y callbacks; lo que ya es export de otro módulo se importa directo. */
 export interface EncoreRunContext {
@@ -31,7 +32,7 @@ export interface EncoreRunContext {
   enemies: Enemy[]; gems: { m: B.InstancedMesh }[]; pickups: { m: B.AbstractMesh }[]; spits: { m: B.InstancedMesh }[];
   ball: { m: B.Mesh; agg: B.PhysicsAggregate; life: number; hit?: boolean } | null;
   evtPre: { swarm: boolean; ball: boolean; rain: boolean; elites: Set<number>; boss: Set<number> };
-  recompute: () => void; spawnEnemy: (kind: Kind, p: B.Vector3) => void; dropPickup: (pos: B.Vector3, type: "pila" | "iman" | "cofre") => void;
+  recompute: () => void; hurt?: (n: number, continuous?: boolean, src?: string) => void; /* zonas de pacto: el daño de los cables; main.ts debe pasar hurt */ spawnEnemy: (kind: Kind, p: B.Vector3) => void; dropPickup: (pos: B.Vector3, type: "pila" | "iman" | "cofre") => void;
 }
 let cx!: EncoreRunContext;
 export function initEncoreRun(ctx: EncoreRunContext) { cx = ctx; }
@@ -44,9 +45,29 @@ export const encLog: { loop: number; stage: number; t: number }[] = []; // solo 
 export const setErun = (r: E.Run | null) => { erun = r; };
 export const setEncPrior = (p: number) => { encPrior = p; };
 /** clearRun: vuelve a Supervivencia (sin expedición, cola del Director vacía). */
-export function encClear() { erun = null; encPrior = paceS = 0; encExtra = encG = 0; pfx = E.NO_FX; dirq = E.newDirQ(); saidSecrets = []; }
+export function encClear() { erun = null; encPrior = paceS = 0; encExtra = encG = 0; pfx = E.NO_FX; dirq = E.newDirQ(); saidSecrets = []; zonesDispose(); zfx = NO_ZONE; zKey = ""; }
+// Zonas de pacto (pact_zones.ts): efecto del piso sobre el auto, sumado al de los pactos. zfx lo toma recompute (velocidad, XP, tornillos, regen) y main.ts lo lee para el imán (zoneMagnet).
+let zfx: ZoneFx = NO_ZONE, zKey = "", zT = 0;
+export const zoneMagnet = () => zfx.magnetMul;
+const zoned = (f: E.Fx): E.Fx => (f === E.NO_FX ? f : { ...f, speed: f.speed * zfx.speedMul, xp: f.xp * zfx.xpMul, scrap: f.scrap * zfx.scrapMul, regen: f.regen + zfx.regen });
+/** Punto del piso bajo (x,z) del plano de las zonas. ponytail: en la luna se proyecta a la esfera; lejos del polo la distancia se distorsiona y el disco no se inclina (techo: ~40 m del polo). */
+const zpt = (x: number, z: number, h = 0) => MOON.on ? onFloor(new B.Vector3(x, CENTER.y + Math.sqrt(Math.max(0, MOON.R * MOON.R - x * x - z * z)), z), h) : new B.Vector3(x, groundY(x, z) + h, z);
+/** Cada cuadro (desde encApply, que main.ts llama siempre): avanza las zonas con el reloj del escenario y aplica daño, chispas y trampilla; si el efecto cambia, recompute. */
+function zonesStep() {
+  if (!erun || !cx.lead.car) return;
+  const dt = Math.min(0.1, Math.max(0, cx.time - zT)); zT = cx.time;
+  const p = cx.lead.car.pos, t = zonesTick(dt, p);
+  const k = [t.regen, t.speedMul, t.xpMul, t.scrapMul, t.magnetMul].join(); // ponytail: sin histéresis; pisar el borde repite recompute (barato, pero no por cuadro)
+  if (k !== zKey) { zKey = k; zfx = t; cx.recompute(); }
+  if (t.dps && dt) cx.hurt?.(t.dps * dt, true, "cables");
+  if (!cx.simulating) for (const s of t.sparks) sparks(zpt(s.x, s.z, 0.3), 3);
+  if (t.spawns.length) for (const s of t.spawns) for (let i = 0; i < s.n; i++) {
+    const a = (i / s.n) * Math.PI * 2;
+    cx.spawnEnemy(pickWeighted(spawnTable(cx.time + paceS, cx.profile.plague)), zpt(s.x + Math.cos(a) * 1.5, s.z + Math.sin(a) * 1.5, 0.5));
+  }
+}
 /** recompute: liquida lo ganado con el efecto que se va y toma el de los pactos activos. */
-export function encRecompute(g: number) { if (erun) { encExtra += E.scrapExtra(g, encG, pfx.scrap); encG = g; } pfx = E.pactFx(erun); }
+export function encRecompute(g: number) { if (erun) { encExtra += E.scrapExtra(g, encG, pfx.scrap); encG = g; } pfx = zoned(E.pactFx(erun)); }
 
 // ---------- ENCORE (encore.ts): escenarios encadenados con teleportador, votación y FINAL ACT ----------
 /** Frase del Director por el aviso de radio. */
@@ -89,6 +110,8 @@ export function encEnter() {
   paceS = E.paceOf(r);
   cx.spawnAcc = cx.groupT = 0; cx.swarmT = BAL.ritmo.enjambre_primero_base + cx.profile.swarmEvery * BAL.ritmo.enjambre_primero_mult; cx.chestT = cx.profile.chestEvery; cx.ballT = cx.profile.ballEvery; cx.bossIdx = 0;
   encPlan();
+  zfx = NO_ZONE; zKey = ""; zT = 0;
+  if (r.pacts.length && r.phase !== "vote" && r.phase !== "final") zonesInit({ seed: cx.runSeed, loop: r.loop, stage: r.stage, pacts: r.pacts.map((a) => a.id), avoid: goalBlips(), floorY: (x, z) => zpt(x, z).y }); else zonesDispose();
   cx.recompute(); // pactos vencidos al salir del escenario anterior
   cx.others().forEach(mateRevive); // R7a: los caídos vuelven en el escenario nuevo, junto al que guía
   cx.shake = Math.max(cx.shake, 1.2);
@@ -144,6 +167,7 @@ export const minorMini = () => { const v = erun && E.variantOf(erun); return (v 
 /** Aplica lo que pasó en la expedición: efectos en el mundo y frase del Director. */
 let pactOff = ""; // ids ofrecidos del último pacto (para telemetría si se rechaza)
 export function encApply(ev: E.Ev | null) {
+  zonesStep();
   if (!ev || !erun) return;
   if (ev === "pact_offer" && erun.offer) { if (!cx.simulating && !cx.LAB.on && !save.encore.seenPacts.length) erun.hold = true; const n = erun.offer.filter((id) => !save.encore.seenPacts.includes(id)); if (n.length) { save.encore.seenPacts.push(...n); persist(); } } // Codex: pactos vistos
   if (!cx.simulating && !cx.LAB.on) { // telemetría ENCORE (datos chicos; tipos [a-z_])

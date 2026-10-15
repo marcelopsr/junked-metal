@@ -37,7 +37,7 @@ import { craterHumeante, evBase, evFog, evInit, evPace, evReset, evShow, lunaDev
 import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, shipsTick, shipTargets, type ShipId } from "./moon_ships";
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import * as E from "./encore";
-import { initEncoreRun, erun, encPrior, paceS, pfx, dirq, encExtra, encG, encLog, setErun, setEncPrior, encClear, encRecompute, encApply, encSecrets, encPick, votes, encVote, encPlan, encScene, minorShip, minorMini, moonPlace, carPlace, tip, say, calmFirst } from "./encore_run";
+import { initEncoreRun, erun, encPrior, paceS, pfx, dirq, encExtra, encG, encLog, setErun, setEncPrior, encClear, encRecompute, encApply, encSecrets, encPick, votes, encVote, encPlan, encScene, minorShip, minorMini, moonPlace, carPlace, tip, say, calmFirst, zoneMagnet } from "./encore_run";
 import { COOP, chestsLeft, chestsOpened, shopAt, shopDev, goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset, spotsPlan } from "./moon_goals";
 import { skyClear, skyInfo, skyLaunch, skyPace, skyTick } from "./moon_sky";
 import { aplicarRegla } from "./weekly";
@@ -191,7 +191,7 @@ function recompute() {
   st = pilotStats(passiveStats(run.passives, save.perm), save.pilot);
   setCarPassive(save.car, st);
   encRecompute(grossScrap()); // ENCORE: cobra lo ganado con el efecto que se va y toma los pactos activos (neutros en Supervivencia)
-  st.dmg *= pfx.dmg; st.speedMul *= pfx.speed; st.xp *= pfx.xp; st.regen += pfx.regen;
+  st.dmg *= pfx.dmg; st.speedMul *= pfx.speed; st.magnet *= zoneMagnet(); st.xp *= pfx.xp; st.regen += pfx.regen;
   if (pfx.taken !== 1) st.armor = 1 - (1 - st.armor) * pfx.taken; // daño recibido x taken
   if (run.noRepair) st.regen = 0; // maldición Sin reparaciones
   const newMax = Math.round((lead.car!.def.hp + st.maxHp) * st.hpMul * pfx.maxHp); // Tanque extra: vida máxima x hpMul
@@ -708,6 +708,7 @@ addEventListener("keydown", (ev) => {
 });
 const LAB = { on: false, back: 15, up: 13, t: 1 }; // modo lab (solo dev): mundo congelado para probar el look
 initEncoreRun({
+  hurt: (n, k, src) => hurt(n, k, src),
   get simulating() { return simulating; }, LAB, get state() { return state; }, get level() { return run.level; },
   get lead() { return lead; }, players, others,
   cam, camH, camUp, camTarget, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; },
