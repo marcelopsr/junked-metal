@@ -80,7 +80,7 @@ const ANCH: Record<CarKind, { deck: [number, number]; side: V3; exh: [number, nu
   helado: { deck: [0.95, -1.0], side: [0.56, 0.5, -0.4], exh: [0.2, -1.1], seat: [0, 0.5, 0.72, 0.7], lamps: [[0.4, 0.4, 1.22, 0.14]], paint: "#f08dbd", rim: "#f3ead2" },
   combi: { deck: [1.0, -0.95], side: [0.54, 0.55, -0.1], exh: [0.2, -1.15], seat: [0, 0.42, 0.45, 0.7], lamps: [[0.4, 0.4, 1.2, 0.18]], paint: "#4cc3c9", rim: "#e5e7eb" },
   hover: { deck: [0.62, -1.0], side: [0.6, 0.3, 0], exh: [0.4, -1.1], seat: [0, 0.4, 0.1, 0.8], lamps: [[0.4, 0.38, 1.1, 0.12]], paint: "#f3f4f6", rim: "#4cc3c9" },
-  topadora: { deck: [1.12, -0.95], side: [0.62, 0.45, -0.2], exh: [0.9, 0.6], seat: [0, 0.62, -0.3, 0.8], lamps: [[0.4, 0.55, 1.15, 0.14]], paint: "#f5b301", rim: "#2b2d31" },
+  topadora: { deck: [1.12, -0.95], side: [0.62, 0.45, -0.2], exh: [0.9, 0.6], seat: [0, 0.62, -0.3, 0.8], lamps: [[0.4, 0.55, 1.15, 0.14]], paint: "#f5b301", rim: "#d9531e" },
   triciclo: { deck: [0.78, -0.82], side: [0.5, 0.35, -0.55], exh: [0.18, -0.95], seat: [0, 0.42, 0.1, 0.7], lamps: [[0, 0.5, 0.95, 0.14]], paint: "#e8553d", rim: "#f3ead2" },
   murcielago: { deck: [0.6, -1.1], side: [0.5, 0.3, -0.2], exh: [0.38, -1.5], seat: [0, 0.36, -0.05, 0.7], lamps: [[0.3, 0.2, 1.46, 0.1]], paint: "#262a33", rim: "#ff7a1a" },
   misterio: { deck: [1.14, -0.95], side: [0.56, 0.55, -0.1], exh: [0.2, -1.15], seat: [0, 0.5, 0.2, 0.7], lamps: [[0.4, 0.34, 1.26, 0.16]], paint: "#7fd6b8", rim: "#f3ead2" },
@@ -139,7 +139,7 @@ export function carModel(kind: CarKind, o: CarOpts = {}): CarModel {
     else if (kind === "helado") for (const [x, z] of [[-0.62, 0.78], [0.62, 0.78], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
     else if (kind === "combi") for (const [x, z] of [[-0.62, 0.75], [0.62, 0.75], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
     else if (kind === "hover") for (const [x, z] of HOVER_W) ws.push({ pos: [x, 0, z], d: 0.3, w: 0.2 });
-    else if (kind === "topadora") for (const z of [-0.7, -0.25, 0.25, 0.7]) for (const x of [-0.78, 0.78]) ws.push({ pos: [x, 0.02, z], d: 0.4, w: 0.36, steer: false });
+    else if (kind === "topadora") for (const z of [-0.56, 0.56]) for (const x of [-0.78, 0.78]) ws.push({ pos: [x, 0.28, z], d: 0.85, w: 0.36, steer: false }); // 4 ruedas grandes de tacos; solo visual (la física usa CARS_SIZE)
     else if (kind === "triciclo") for (const [x, z, d] of TRI_W) ws.push({ pos: [x, 0, z], d, w: 0.26 });
     else if (kind === "murcielago") for (const [x, z] of [[-0.62, 0.95], [0.62, 0.95], [-0.65, -0.9], [0.65, -0.9]]) ws.push({ pos: [x, 0, z], d: z < 0 ? 0.7 : 0.58, w: z < 0 ? 0.4 : 0.3 });
     else if (kind === "misterio") for (const [x, z] of [[-0.62, 0.8], [0.62, 0.8], [-0.62, -0.75], [0.62, -0.75]]) ws.push({ pos: [x, 0, z], d: 0.62, w: 0.3 });
@@ -1087,54 +1087,84 @@ export function pilotParts(id: string): B.Mesh[] {
     ];
   }
   if (id === "osito") {
-    const fur = M.matte("#a8764a"), lt = M.matte("#d9b98c");
+    // peluche marrón: cabeza grande, orejas, casco crema con rayas naranjas, antiparras y bufanda
+    const fur = M.matte("#9a6a3e"), lt = M.matte("#d9b98c"), cream = M.plastic("#e8dcc0"), or = M.matte("#e0701f"), brass = M.metal("#7a5a38"), dk = M.plastic("#1a1008");
     return [
-      sph(0.25, fur, [0, 0.2, 0], [1, 1.1, 1]), sph(0.14, lt, [0, 0.19, 0.17], [1, 1.1, 0.4]), ...arms(fur),
-      sph(0.2, fur, [0, 0.43, 0]), sph(0.07, fur, [0.15, 0.58, 0]), sph(0.07, fur, [-0.15, 0.58, 0]), sph(0.08, lt, [0, 0.4, 0.17], [1, 0.7, 0.8]),
-      sph(0.035, M.plastic("#111"), [0.07, 0.47, 0.17], undefined, 4), sph(0.035, M.plastic("#111"), [-0.07, 0.47, 0.17], undefined, 4),
+      sph(0.27, fur, [0, 0.19, 0], [1, 1.1, 1]), sph(0.14, lt, [0, 0.18, 0.17], [1, 1.1, 0.4]), ...arms(fur),
+      sph(0.3, fur, [0, 0.46, 0]), sph(0.12, fur, [0.17, 0.6, -0.02]), sph(0.12, fur, [-0.17, 0.6, -0.02]), sph(0.06, lt, [0.17, 0.6, 0.02], [1, 1, 0.5]), sph(0.06, lt, [-0.17, 0.6, 0.02], [1, 1, 0.5]),
+      sph(0.13, lt, [0, 0.41, 0.15], [1, 0.8, 0.8]), sph(0.045, dk, [0, 0.43, 0.22], undefined, 4),
+      sph(0.05, dk, [0.075, 0.48, 0.14], undefined, 4), sph(0.05, dk, [-0.075, 0.48, 0.14], undefined, 4),
+      sph(0.33, cream, [0, 0.54, -0.02], [1, 0.62, 1]), box(0.06, 0.02, 0.3, or, [0, 0.64, -0.02]), box(0.06, 0.02, 0.28, or, [0.1, 0.62, -0.02], [0, 0, -0.35]), box(0.06, 0.02, 0.28, or, [-0.1, 0.62, -0.02], [0, 0, 0.35]),
+      tor(0.12, 0.03, brass, [0.075, 0.59, 0.12], [1.2, 0, 0], 10), tor(0.12, 0.03, brass, [-0.075, 0.59, 0.12], [1.2, 0, 0], 10),
+      sph(0.1, M.glow("#6f8896"), [0.075, 0.59, 0.12], [1, 0.4, 1]), sph(0.1, M.glow("#6f8896"), [-0.075, 0.59, 0.12], [1, 0.4, 1]),
+      tor(0.27, 0.07, or, [0, 0.31, 0.01], undefined, 10), box(0.1, 0.02, 0.26, or, [-0.13, 0.28, -0.2], [0.2, 0.3, 0]),
     ];
   }
   if (id === "mecanica") {
-    const ov = M.matte("#2f6db5"), skin = M.matte("#f1d3b3");
+    // overol azul, pañuelo rojo con moño, rodete castaño y llave inglesa grande a la espalda
+    const ov = M.matte("#3f74b8"), skin = M.matte("#f1c9a5"), hair = M.matte("#6b4226"), red = M.matte("#c0392b"), gl = M.matte("#5a3a22"), steel = M.metal("#aab0b8");
     return [
-      cyl(0.19, 0.25, 0.28, ov, [0, 0.14, 0], undefined, 8), ...arms(skin), box(0.03, 0.03, 0.3, M.metal("#9ca3af"), [0.17, 0.22, 0.22]),
-      sph(0.19, skin, [0, 0.38, 0]), sph(0.21, M.matte("#e0a030"), [0, 0.46, -0.02], [1, 0.55, 1]), cyl(0.22, 0.22, 0.03, M.matte("#e0a030"), [0, 0.44, -0.02], undefined, 10),
-      sph(0.035, M.plastic("#111"), [0.05, 0.4, 0.17], undefined, 4), sph(0.035, M.plastic("#111"), [-0.05, 0.4, 0.17], undefined, 4),
+      cyl(0.2, 0.26, 0.28, ov, [0, 0.14, 0], undefined, 8), box(0.14, 0.14, 0.03, M.matte("#f4f1ea"), [0, 0.2, 0.1]), ...arms(skin),
+      sph(0.075, gl, [0.13, 0.22, 0.23], undefined, 5), sph(0.075, gl, [-0.13, 0.22, 0.23], undefined, 5),
+      sph(0.3, skin, [0, 0.41, 0.01]), sph(0.33, hair, [0, 0.46, -0.04], [1, 0.8, 0.95]), sph(0.17, hair, [0, 0.64, -0.08]),
+      sph(0.06, M.plastic("#4a2a14"), [0.075, 0.42, 0.14], [1, 1.2, 0.6], 5), sph(0.06, M.plastic("#4a2a14"), [-0.075, 0.42, 0.14], [1, 1.2, 0.6], 5),
+      tor(0.31, 0.05, red, [0, 0.52, -0.01], undefined, 10), sph(0.07, red, [0.09, 0.6, 0.0], [1.3, 1, 0.8], 5), sph(0.07, red, [0.19, 0.64, 0.0], [1.6, 0.7, 0.8], 5),
+      box(0.05, 0.38, 0.03, steel, [-0.2, 0.42, -0.14], [0, 0, 0.25]), tor(0.14, 0.04, steel, [-0.28, 0.63, -0.14], [Math.PI / 2, 0, 0.25], 10), box(0.12, 0.12, 0.08, M.matte("#7a4a2a"), [-0.15, 0.22, -0.14]),
     ];
   }
   if (id === "cocinero") {
-    const wh = M.matte("#f4f1ea"), skin = M.matte("#f1d3b3");
+    // gorro alto blanco, bigote, pañuelo rojo y cucharón en alto
+    const wh = M.matte("#ece6d6"), skin = M.matte("#e8b48c"), br = M.matte("#4a2c18"), red = M.matte("#c0392b"), gl = M.matte("#5a3a22");
     return [
-      cyl(0.19, 0.25, 0.28, wh, [0, 0.14, 0], undefined, 8), ...arms(skin),
-      sph(0.19, skin, [0, 0.38, 0]), cyl(0.17, 0.17, 0.2, wh, [0, 0.58, 0], undefined, 8), sph(0.2, wh, [0, 0.7, 0], [1, 0.7, 1]),
-      box(0.14, 0.03, 0.02, M.matte("#3a2a1a"), [0, 0.34, 0.18]),
-      sph(0.035, M.plastic("#111"), [0.05, 0.41, 0.17], undefined, 4), sph(0.035, M.plastic("#111"), [-0.05, 0.41, 0.17], undefined, 4),
+      cyl(0.21, 0.27, 0.28, wh, [0, 0.14, 0], undefined, 8), ...arms(wh),
+      sph(0.075, gl, [0.13, 0.22, 0.23], undefined, 5), sph(0.075, gl, [-0.13, 0.22, 0.23], undefined, 5),
+      sph(0.3, skin, [0, 0.42, 0.01]), sph(0.09, M.matte("#e29a7a"), [0, 0.41, 0.15]),
+      sph(0.09, br, [0.065, 0.36, 0.15], [1.6, 0.6, 0.8], 6), sph(0.09, br, [-0.065, 0.36, 0.15], [1.6, 0.6, 0.8], 6),
+      sph(0.04, M.plastic("#111"), [0.075, 0.48, 0.14], [1, 1.3, 0.6], 4), sph(0.04, M.plastic("#111"), [-0.075, 0.48, 0.14], [1, 1.3, 0.6], 4),
+      cyl(0.27, 0.27, 0.07, wh, [0, 0.58, 0], undefined, 10), cyl(0.3, 0.26, 0.22, wh, [0, 0.7, 0], undefined, 10), sph(0.32, wh, [0, 0.82, 0], [1, 0.6, 1]),
+      tor(0.28, 0.05, red, [0, 0.3, 0.01], undefined, 10), box(0.08, 0.08, 0.02, red, [0, 0.24, 0.15], [0, 0, 0.78]),
+      box(0.04, 0.3, 0.04, M.metal("#8d8d8d"), [0.2, 0.38, 0.14], [0.2, 0, -0.15]), sph(0.2, M.metal("#8d8d8d"), [0.23, 0.6, 0.12], [1, 0.45, 1], 8),
     ];
   }
   if (id === "mago") {
-    const rob = M.matte("#5b3a8c"), skin = M.matte("#f1d3b3");
+    // mago de cartón: cajas marrones, capa y sombrero cónico azul con estrellas amarillas, varita
+    const card = M.matte("#b98d57"), dkc = M.matte("#8a6238"), navy = M.matte("#3d4a8a"), gold = M.matte("#e0b030"), tape = M.matte("#d8c79a");
     return [
-      cyl(0.17, 0.27, 0.3, rob, [0, 0.15, 0], undefined, 8), ...arms(skin),
-      sph(0.19, skin, [0, 0.4, 0]), cyl(0, 0.17, 0.4, rob, [0, 0.67, 0], undefined, 8), cyl(0.26, 0.26, 0.03, rob, [0, 0.49, 0], undefined, 10),
-      sph(0.04, M.glow("#e0a030"), [0.05, 0.7, 0.14], undefined, 4), box(0.16, 0.05, 0.04, M.matte("#eee"), [0, 0.33, 0.17]),
-      sph(0.035, M.plastic("#111"), [0.05, 0.42, 0.17], undefined, 4), sph(0.035, M.plastic("#111"), [-0.05, 0.42, 0.17], undefined, 4),
+      box(0.3, 0.28, 0.22, navy, [0, 0.14, 0]), box(0.34, 0.08, 0.04, navy, [0, 0.27, -0.12], [0.3, 0, 0]), ...arms(card),
+      box(0.09, 0.09, 0.09, tape, [0.13, 0.22, 0.23]), box(0.09, 0.09, 0.09, tape, [-0.13, 0.22, 0.23]),
+      box(0.3, 0.28, 0.28, card, [0, 0.42, 0]), box(0.05, 0.07, 0.02, M.plastic("#111"), [0.07, 0.43, 0.145]), box(0.05, 0.07, 0.02, M.plastic("#111"), [-0.07, 0.43, 0.145]),
+      box(0.07, 0.04, 0.02, M.matte("#d98a7a"), [0.12, 0.36, 0.145]), box(0.07, 0.04, 0.02, M.matte("#d98a7a"), [-0.12, 0.36, 0.145]),
+      box(0.12, 0.08, 0.04, M.matte("#6b4226"), [0.08, 0.57, 0.13], [0, 0, 0.3]), box(0.12, 0.08, 0.04, M.matte("#6b4226"), [-0.08, 0.57, 0.13], [0, 0, -0.3]),
+      cyl(0.56, 0.56, 0.03, card, [0, 0.58, 0], undefined, 10), cyl(0.04, 0.38, 0.42, navy, [0, 0.8, 0], undefined, 8), cyl(0.02, 0.1, 0.16, navy, [-0.06, 1.0, -0.02], [0.2, 0, 0.5], 6),
+      cyl(0.11, 0.11, 0.01, gold, [0, 0.76, 0.17], [Math.PI / 2 - 0.3, 0, 0], 5), cyl(0.08, 0.08, 0.01, gold, [0.12, 0.9, 0.09], [Math.PI / 2 - 0.3, 0, 0], 5), box(0.1, 0.03, 0.1, tape, [0.1, 0.6, 0.15], [0, 0.3, 0.3]),
+      cyl(0.03, 0.03, 0.55, dkc, [0.24, 0.4, -0.14], [0, 0, 0.2], 5), cyl(0.12, 0.12, 0.02, gold, [0.31, 0.7, -0.14], [Math.PI / 2, 0, 0], 5),
     ];
   }
   if (id === "fantasma") {
-    const sh = M.matte("#f2f2f5");
+    // sábana blanca con ojos recortados, antiparras de cuero en la frente y guantes
+    const sh = M.matte("#efe9dc"), br = M.metal("#7a4a2a"), gl = M.matte("#5a3a22");
     return [
-      cyl(0.16, 0.3, 0.42, sh, [0, 0.21, 0], undefined, 10), sph(0.21, sh, [0, 0.45, 0]),
-      sph(0.045, M.plastic("#111"), [0.07, 0.47, 0.17], [1, 1.4, 0.6], 4), sph(0.045, M.plastic("#111"), [-0.07, 0.47, 0.17], [1, 1.4, 0.6], 4),
-      sph(0.035, M.plastic("#111"), [0, 0.38, 0.19], [1, 1.5, 0.6], 4),
+      cyl(0.26, 0.46, 0.4, sh, [0, 0.2, 0], undefined, 12), sph(0.34, sh, [0, 0.47, 0]),
+      sph(0.075, M.plastic("#0a0a0a"), [0.085, 0.45, 0.14], [1, 1.7, 0.6], 6), sph(0.075, M.plastic("#0a0a0a"), [-0.085, 0.45, 0.14], [1, 1.7, 0.6], 6),
+      sph(0.035, M.plastic("#0a0a0a"), [-0.1, 0.22, 0.2], [1, 1, 0.5], 4), sph(0.03, M.plastic("#0a0a0a"), [0.12, 0.12, 0.2], [1, 1, 0.5], 4),
+      tor(0.34, 0.03, br, [0, 0.58, 0], [0.15, 0, 0], 12),
+      tor(0.15, 0.04, br, [0.09, 0.6, 0.13], [1.15, 0, 0], 10), tor(0.15, 0.04, br, [-0.09, 0.6, 0.13], [1.15, 0, 0], 10),
+      sph(0.13, M.plastic("#15181c"), [0.09, 0.6, 0.13], [1, 0.4, 1], 8), sph(0.13, M.plastic("#15181c"), [-0.09, 0.6, 0.13], [1, 0.4, 1], 8),
       box(0.07, 0.07, 0.2, sh, [0.17, 0.25, 0.1], [0.35, 0, 0]), box(0.07, 0.07, 0.2, sh, [-0.17, 0.25, 0.1], [0.35, 0, 0]),
+      sph(0.09, gl, [0.15, 0.2, 0.24], undefined, 5), sph(0.09, gl, [-0.15, 0.2, 0.24], undefined, 5),
     ];
   }
   if (id === "doble") {
-    const jk = M.matte("#2b2d31"), skin = M.matte("#c98a56");
+    // casco blanco con estrellas rojas y visor oscuro, traje rojo y blanco
+    const wh = M.plastic("#ece4d0"), red = M.plastic("#c0392b"), dark = M.plastic("#0c0d10"), rim = M.metal("#6a5f52");
     return [
-      box(0.28, 0.26, 0.16, jk, [0, 0.14, 0]), box(0.1, 0.26, 0.17, M.plastic("#c0392b"), [0, 0.14, 0]), ...arms(M.matte("#2b2d31")),
-      sph(0.19, skin, [0, 0.38, 0]), sph(0.2, M.matte("#3a2a1a"), [0, 0.44, -0.02], [1, 0.5, 1]),
-      box(0.22, 0.06, 0.04, M.glow("#222"), [0, 0.41, 0.17]),
+      cyl(0.22, 0.26, 0.28, red, [0, 0.14, 0], undefined, 8), box(0.1, 0.28, 0.02, wh, [0, 0.14, 0.12]), ...arms(red),
+      box(0.075, 0.075, 0.04, wh, [0.13, 0.2, 0.2], [0.35, 0, 0]), box(0.075, 0.075, 0.04, wh, [-0.13, 0.2, 0.2], [0.35, 0, 0]),
+      sph(0.09, red, [0.13, 0.22, 0.24], undefined, 5), sph(0.09, red, [-0.13, 0.22, 0.24], undefined, 5),
+      sph(0.38, wh, [0, 0.5, 0]), box(0.08, 0.02, 0.34, red, [0, 0.69, 0]),
+      cyl(0.1, 0.1, 0.01, red, [0.18, 0.58, 0.0], [0, 0, Math.PI / 2], 5), cyl(0.1, 0.1, 0.01, red, [-0.18, 0.58, 0.0], [0, 0, Math.PI / 2], 5),
+      box(0.3, 0.12, 0.1, rim, [0, 0.52, 0.15]), box(0.27, 0.09, 0.1, dark, [0, 0.52, 0.2]),
+      sph(0.17, wh, [0, 0.38, 0.14], [1.2, 0.7, 0.8], 8),
     ];
   }
   // soldadito de plástico verde: todo de un color, casco con ala
