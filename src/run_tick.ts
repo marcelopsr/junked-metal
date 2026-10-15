@@ -66,6 +66,7 @@ export interface RunTickContext {
 let T!: RunTickContext;
 export function initRunTick(x: RunTickContext) { T = x; }
 let touchIFrame = 0;
+let lastRamHs = -99; // run.time del último hit-stop por embestida (tope hitstop_embestida_cada_s)
 const teleOn = new WeakSet<Enemy>(); // enemigos con telegráfico visible el cuadro anterior (flanco de subida = sonido)
 
 export function tickEnemies(F: Frame, dt: number): boolean {
@@ -174,7 +175,7 @@ export function tickEnemies(F: Frame, dt: number): boolean {
         damage(e, dmg, dir.scale(rel * 0.8).addInPlace(upv(e.pos, rel * 0.2)), true);
         FX.sparks(e.pos.add(upv(e.pos, 0.5)));
         SFX.ram(rel);
-        if (rel > R.embestida_vel_min * R.hitstop_embestida_x) hitstop((rel - R.embestida_vel_min * R.hitstop_embestida_x) / 10);
+        if (rel > R.embestida_vel_min * R.hitstop_embestida_x && Math.abs(run.time - lastRamHs) >= R.hitstop_embestida_cada_s) { lastRamHs = run.time; hitstop((rel - R.embestida_vel_min * R.hitstop_embestida_x) / 10); }
         if ((e.def.boss || e.elite || e.def.mass > 50) && rel > 3.5) {
           const pan = panTo(c.pos, e.pos, T.camYaw); // luna: en el marco local del auto
           SFX.bodyThud(rel, pan);

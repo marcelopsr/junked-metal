@@ -135,7 +135,7 @@ export function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
     const k = innerWidth / c.engine.getRenderWidth();
     if (sp.z < 1) damageNumber(sp.x * k, sp.y * k, dmg, crit);
   }
-  if (cs.src !== "embestida" && (dmg / e.maxHp >= R.hitstop_umbral_vida || e.def.boss && dmg >= 20 || crit && e.elite)) hitstop(dmg / e.maxHp / (R.hitstop_umbral_vida * 2)); // la embestida lo dispara en run_tick
+  if (cs.src !== "embestida" && (dmg / e.maxHp >= R.hitstop_umbral_vida && e.maxHp >= R.hitstop_vida_min || e.def.boss && dmg >= 20)) hitstop(dmg / e.maxHp / (R.hitstop_umbral_vida * 2)); // la embestida lo dispara en run_tick
   // Impacto: destello, chispas, pedazos y squash del bicho; la sacudida de cámara depende del arma
   if (dmg >= 4 && !c.simulating) c.addShake(impact(e.node, e.pos.add(upv(e.pos, e.def.size[1] * 0.5)), e.def.color, Math.max(e.def.size[0], e.def.size[2]) * (e.def.scale ?? 1), cs.src, crit, !!e.def.boss));
   if (knock && !e.def.boss) e.body.applyImpulse(knock.scale(e.def.mass), e.pos);
@@ -191,7 +191,7 @@ export function kill(e: Enemy) {
   }
   SFX.kill(s);
   FX.death(e.pos.add(upv(e.pos, 0.5)), e.def.boss);
-  if (e.def.boss || e.elite) { hitstop(e.def.boss ? 1 : 0); if (e.def.boss && !c.simulating) FX.flash(e.pos.add(upv(e.pos, e.def.size[1] * 0.5)), 14); } // destello de jefe (burst del pool)
+  if (e.def.boss || e.elite) { if (e.def.boss) hitstop(1); if (e.def.boss && !c.simulating) FX.flash(e.pos.add(upv(e.pos, e.def.size[1] * 0.5)), 14); } // destello de jefe (burst del pool)
   debris(e.pos, e.def.color, e.def.boss ? 30 : e.kind === "hormiga" ? 4 : 7, e.def.boss ? 14 : 6, e.def.scale ?? (e.def.boss ? 3 : 1));
   if (!c.simulating) debris(e.pos, CONFETI[Math.floor(Math.random() * CONFETI.length)], e.def.boss ? 14 : 3, e.def.boss ? 12 : 7, e.def.boss ? 1.2 : 0.5); // confeti de color: cada baja se ve festiva
   const juice = !c.simulating && !e.def.boss;

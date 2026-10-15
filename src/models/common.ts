@@ -189,10 +189,10 @@ const mudTex = () => canvasTex("mud", 256, (g, n) => { // goma negra con barro s
 const MINI_RUBBER = () => pbr("minirubber2", { color: "#ffffff", rough: 0.9, tex: mudTex() });
 export function wheel(d: number, w: number, rim: string, style = "") {
   const around = (n: number, f: (a: number) => B.Mesh) => Array.from({ length: n }, (_, k) => f((k * Math.PI * 2) / n));
-  if (style === "mini") { d *= 1.08; w *= 1.15; } // ruedas RC de las láminas: más gordas (solo visual; la física usa su propio radio)
+  if (style === "mini") w *= 1.15; // ruedas RC de las láminas: más anchas (el diámetro no crece: la física apoya la rueda en d/2 y los tacos no pueden pasar de ahí)
   if (style === "mini") { // ref17: goma de bloques en dos hileras alternadas (silueta redonda), aro fino de color, llanta negra de 6 rayos, maza metálica
     const ring = pbr("mini" + rim, { color: rim, rough: 0.35, coat: 0.4 }), blk = pbr("miniwheelblk", { color: "#1c1c1c", rough: 0.5 });
-    const row = (x: number, off: number) => around(14, (a) => box(w * 0.4, d * 0.06, d * 0.1, MINI_RUBBER(), [x, Math.sin(a + off) * d * 0.5, Math.cos(a + off) * d * 0.5], [a + off, 0, 0])); // sobresalen 0,05·d
+    const row = (x: number, off: number) => around(14, (a) => box(w * 0.4, d * 0.06, d * 0.1, MINI_RUBBER(), [x, Math.sin(a + off) * d * 0.45, Math.cos(a + off) * d * 0.45], [a + off, 0, 0])); // punta a d/2 (alto radial 0,1·d centrado en 0,45·d)
     // Relieve de barro: grumos bajos y alargados (esferas de 4 segmentos aplanadas) en las ranuras entre tacos, pocos abajo en el flanco y una franja de polvo mate en su borde; generador local fijo
     let s = 7;
     const r = () => ((s = (s * 16807) % 2147483647) / 2147483647), mud = [pbr("minimud1", { color: "#5e4a38", rough: 1 }), pbr("minimud2", { color: "#4a3a2c", rough: 1 })];
@@ -206,7 +206,7 @@ export function wheel(d: number, w: number, rim: string, style = "") {
     ];
     return merge("wheel", [
       ...mudLumps,
-      cyl(d, d, w, MINI_RUBBER(), [0, 0, 0], [0, 0, Math.PI / 2], 24),
+      cyl(d * 0.92, d * 0.92, w, MINI_RUBBER(), [0, 0, 0], [0, 0, Math.PI / 2], 24), // núcleo bajo los tacos: la silueta llega a d/2 solo en las puntas
       ...row(-w * 0.24, 0), ...row(w * 0.24, Math.PI / 14),
       cyl(d * 0.7, d * 0.7, w * 1.06, ring, [0, 0, 0], [0, 0, Math.PI / 2], 18), // aro fino de color
       cyl(d * 0.63, d * 0.63, w * 1.1, M.matte("#0c0c0e"), [0, 0, 0], [0, 0, Math.PI / 2], 18), // fondo entre rayos
@@ -217,10 +217,10 @@ export function wheel(d: number, w: number, rim: string, style = "") {
   if (style === "fold") return merge("wheel", foldWheel(d, w, rim)); // vertical slice Folded (?folded2)
   const lisa = style === "lisa", W = lisa ? w * 1.25 : w;
   return merge("wheel", [
-    cyl(d, d, W, M.rubber(), [0, 0, 0], [0, 0, Math.PI / 2], 16),
+    cyl(d * (style === "todoterreno" ? 0.83 : style === "oruga" ? 0.91 : 1), d * (style === "todoterreno" ? 0.83 : style === "oruga" ? 0.91 : 1), W, M.rubber(), [0, 0, 0], [0, 0, Math.PI / 2], 16), // con tacos el núcleo se achica: las puntas quedan a d/2
     ...(lisa ? [] : [-1, 1].map((sd) => tor(d * 0.98, w * 0.35, M.rubber(), [sd * w * 0.3, 0, 0], [0, 0, Math.PI / 2], 16))),
-    ...(style === "todoterreno" ? around(10, (a) => box(w * 1.2, d * 0.12, d * 0.17, M.rubber(), [0, Math.sin(a) * d * 0.5, Math.cos(a) * d * 0.5], [a, 0, 0])) : []),
-    ...(style === "oruga" ? around(14, (a) => box(w * 1.1, d * 0.06, d * 0.09, M.rubber(), [0, Math.sin(a) * d * 0.5, Math.cos(a) * d * 0.5], [a, 0, 0])) : []),
+    ...(style === "todoterreno" ? around(10, (a) => box(w * 1.2, d * 0.12, d * 0.17, M.rubber(), [0, Math.sin(a) * d * 0.415, Math.cos(a) * d * 0.415], [a, 0, 0])) : []),
+    ...(style === "oruga" ? around(14, (a) => box(w * 1.1, d * 0.06, d * 0.09, M.rubber(), [0, Math.sin(a) * d * 0.455, Math.cos(a) * d * 0.455], [a, 0, 0])) : []),
     cyl(d * 0.62, d * 0.62, W * 1.04, M.metal(style === "rayos" ? "#e5e7eb" : rim), [0, 0, 0], [0, 0, Math.PI / 2], 20),
     cyl(d * 0.52, d * 0.52, W * 1.1, M.plastic("#f0f2f5"), [0, 0, 0], [0, 0, Math.PI / 2], 20), // banda blanca toy
     cyl(d * 0.46, d * 0.46, W * 1.12, M.matte("#0a0b0e"), [0, 0, 0], [0, 0, Math.PI / 2], 20),

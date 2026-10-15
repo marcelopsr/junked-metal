@@ -357,7 +357,7 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
           camerinoHeal: Math.round(encMeter.heal),
           imanScrap: Math.round(encMeter.iman),
           cablesDmg: Math.round(ctx.dmgBy["zona cables"] ?? 0),
-          // hit-stop no corre en sim (combat.ts hitstop: `if (c.simulating) return` antes de contar): siempre 0 acá
+          // hit-stop en sim solo cuenta (combat.ts hitstop: no congela); mide golpes grandes, jefes y embestidas
           hitstopPerMin: +((((globalThis as any).__hs?.n ?? 0) - encMeter.hs0) / Math.max(1 / 60, (ctx.time + ctx.encPrior) / 60)).toFixed(1),
         };
       },
