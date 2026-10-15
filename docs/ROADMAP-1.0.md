@@ -49,3 +49,4 @@ Una expedición ENCORE completa, de punta a punta, que una persona nueva puede j
 | 2026-10-15 | Alcance 1.0 congelado = lo existente a nivel lámina + criaturas nuevas de las refs (bicho taladro ref296, escorpión-cangrejo ref278, variantes ref173) + objetos ENCORE nuevos (cofre especial ref313, terminal de pactos, TV del Director en escena) + hovercraft (ref242) como auto comprable |
 | 2026-10-15 | Versiones: package.json 0.9.0-dev, un tag por hito, publicar solo al cerrar hito con OK del usuario. Commit local de respaldo 712c788 (refs de imágenes sin versionar: 636 MB) |
 | 2026-10-15 | Celular de referencia: Android gama media (~2022), 30 fps en preset Bajo en partida llena |
+| 2026-10-15 | 6 pilotos nuevos entran a la 1.0 (12 → 18): osito, mecánica, cocinero, mago de cartón, fantasma, doble de riesgo |

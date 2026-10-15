@@ -44,6 +44,10 @@ describe("pilotStats", () => {
       expect(s.dmg).toBeCloseTo(p.dano_mult); expect(s.maxHp).toBeCloseTo(p.vida_mas); expect(s.speedMul).toBeCloseTo(p.velocidad_mult); expect(s.xp).toBeCloseTo(p.xp_mult);
     }
   });
+  it("todas las filas de pilotos tienen entrada en PILOTS y viceversa", () => {
+    expect(Object.keys(PILOTS).sort()).toEqual(Object.keys(BAL.pilotos).sort());
+    for (const id of ["osito", "mecanica", "cocinero", "mago", "fantasma", "doble"]) expect(PILOTS[id as PilotId]).toBeDefined();
+  });
   it("un piloto desconocido cae en el soldadito (guardado viejo)", () => {
     expect(pilotStats(passiveStats({}, none), "inexistente" as PilotId).dmg).toBeCloseTo(BAL.pilotos.soldadito.dano_mult);
   });

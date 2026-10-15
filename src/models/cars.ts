@@ -1085,6 +1085,57 @@ export function pilotParts(id: string): B.Mesh[] {
       sph(0.035, M.plastic("#111"), [0.05, 0.4, 0.17], undefined, 4), sph(0.035, M.plastic("#111"), [-0.05, 0.4, 0.17], undefined, 4),
     ];
   }
+  if (id === "osito") {
+    const fur = M.matte("#a8764a"), lt = M.matte("#d9b98c");
+    return [
+      sph(0.25, fur, [0, 0.2, 0], [1, 1.1, 1]), sph(0.14, lt, [0, 0.19, 0.17], [1, 1.1, 0.4]), ...arms(fur),
+      sph(0.2, fur, [0, 0.43, 0]), sph(0.07, fur, [0.15, 0.58, 0]), sph(0.07, fur, [-0.15, 0.58, 0]), sph(0.08, lt, [0, 0.4, 0.17], [1, 0.7, 0.8]),
+      sph(0.035, M.plastic("#111"), [0.07, 0.47, 0.17], undefined, 4), sph(0.035, M.plastic("#111"), [-0.07, 0.47, 0.17], undefined, 4),
+    ];
+  }
+  if (id === "mecanica") {
+    const ov = M.matte("#2f6db5"), skin = M.matte("#f1d3b3");
+    return [
+      cyl(0.19, 0.25, 0.28, ov, [0, 0.14, 0], undefined, 8), ...arms(skin), box(0.03, 0.03, 0.3, M.metal("#9ca3af"), [0.17, 0.22, 0.22]),
+      sph(0.19, skin, [0, 0.38, 0]), sph(0.21, M.matte("#e0a030"), [0, 0.46, -0.02], [1, 0.55, 1]), cyl(0.22, 0.22, 0.03, M.matte("#e0a030"), [0, 0.44, -0.02], undefined, 10),
+      sph(0.035, M.plastic("#111"), [0.05, 0.4, 0.17], undefined, 4), sph(0.035, M.plastic("#111"), [-0.05, 0.4, 0.17], undefined, 4),
+    ];
+  }
+  if (id === "cocinero") {
+    const wh = M.matte("#f4f1ea"), skin = M.matte("#f1d3b3");
+    return [
+      cyl(0.19, 0.25, 0.28, wh, [0, 0.14, 0], undefined, 8), ...arms(skin),
+      sph(0.19, skin, [0, 0.38, 0]), cyl(0.17, 0.17, 0.2, wh, [0, 0.58, 0], undefined, 8), sph(0.2, wh, [0, 0.7, 0], [1, 0.7, 1]),
+      box(0.14, 0.03, 0.02, M.matte("#3a2a1a"), [0, 0.34, 0.18]),
+      sph(0.035, M.plastic("#111"), [0.05, 0.41, 0.17], undefined, 4), sph(0.035, M.plastic("#111"), [-0.05, 0.41, 0.17], undefined, 4),
+    ];
+  }
+  if (id === "mago") {
+    const rob = M.matte("#5b3a8c"), skin = M.matte("#f1d3b3");
+    return [
+      cyl(0.17, 0.27, 0.3, rob, [0, 0.15, 0], undefined, 8), ...arms(skin),
+      sph(0.19, skin, [0, 0.4, 0]), cyl(0, 0.17, 0.4, rob, [0, 0.67, 0], undefined, 8), cyl(0.26, 0.26, 0.03, rob, [0, 0.49, 0], undefined, 10),
+      sph(0.04, M.glow("#e0a030"), [0.05, 0.7, 0.14], undefined, 4), box(0.16, 0.05, 0.04, M.matte("#eee"), [0, 0.33, 0.17]),
+      sph(0.035, M.plastic("#111"), [0.05, 0.42, 0.17], undefined, 4), sph(0.035, M.plastic("#111"), [-0.05, 0.42, 0.17], undefined, 4),
+    ];
+  }
+  if (id === "fantasma") {
+    const sh = M.matte("#f2f2f5");
+    return [
+      cyl(0.16, 0.3, 0.42, sh, [0, 0.21, 0], undefined, 10), sph(0.21, sh, [0, 0.45, 0]),
+      sph(0.045, M.plastic("#111"), [0.07, 0.47, 0.17], [1, 1.4, 0.6], 4), sph(0.045, M.plastic("#111"), [-0.07, 0.47, 0.17], [1, 1.4, 0.6], 4),
+      sph(0.035, M.plastic("#111"), [0, 0.38, 0.19], [1, 1.5, 0.6], 4),
+      box(0.07, 0.07, 0.2, sh, [0.17, 0.25, 0.1], [0.35, 0, 0]), box(0.07, 0.07, 0.2, sh, [-0.17, 0.25, 0.1], [0.35, 0, 0]),
+    ];
+  }
+  if (id === "doble") {
+    const jk = M.matte("#2b2d31"), skin = M.matte("#c98a56");
+    return [
+      box(0.28, 0.26, 0.16, jk, [0, 0.14, 0]), box(0.1, 0.26, 0.17, M.plastic("#c0392b"), [0, 0.14, 0]), ...arms(M.matte("#2b2d31")),
+      sph(0.19, skin, [0, 0.38, 0]), sph(0.2, M.matte("#3a2a1a"), [0, 0.44, -0.02], [1, 0.5, 1]),
+      box(0.22, 0.06, 0.04, M.glow("#222"), [0, 0.41, 0.17]),
+    ];
+  }
   // soldadito de plástico verde: todo de un color, casco con ala
   const army = M.plastic("#55642c"), face = M.matte("#3d4a22");
   return [

@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, rbox, sph, tor } from "../models";
 import { canvasTex, M, pbr, shadows } from "../render";
-import { HALF, bare, floor, occluders, scene, stat } from "./common";
+import { HALF, bare, decal, floor, occluders, scene, stat } from "./common";
 import { clear, int, rocks, toyRamps } from "../world_layout";
 
 type V3 = [number, number, number];
@@ -19,6 +19,16 @@ const cobbleTex = () => canvasTex(512, (c, s) => {
       c.fillStyle = "rgba(255,255,255,0.10)"; c.fillRect(x + ox + 2, j * w + 2, w - 4, 3); // filo de luz arriba
       c.fillStyle = "rgba(0,0,0,0.14)"; c.fillRect(x + ox + 2, j * w + w - 5, w - 4, 3);
     }
+  }
+});
+
+// Adoquín gris claro de las veredas (ref300/ref133): grises #a9a6a0/#8f8c86 (algo más fríos para compensar el sol cálido) con juntas oscuras, semilla fija.
+const sidewalkTex = () => canvasTex(512, (c, s) => {
+  const r = lcg(19), n = 12, w = s / n, tones = ["#a3a4a6", "#8a8b8e", "#9a9b9d", "#acadaf", "#929395"];
+  c.fillStyle = "#4f5054"; c.fillRect(0, 0, s, s);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const x = i * w + (j % 2 ? w / 2 : 0) - w / 2;
+    for (const ox of [0, s]) { c.fillStyle = tones[Math.floor(r() * tones.length)]; c.fillRect(x + ox + 2, j * w + 2, w - 4, w - 4); c.fillStyle = "rgba(255,255,255,0.12)"; c.fillRect(x + ox + 2, j * w + 2, w - 4, 3); }
   }
 });
 
@@ -50,7 +60,7 @@ const TA = 14, TC = 7, TB = 8; // metros por tile: asfalto, adoquín, ladrillo
 const RW = 18, RING = 45;
 const onRoad = (x: number, z: number, m = 0) => { const a = Math.abs(x), b = Math.abs(z), h = RW / 2 + m; return a < h || b < h || (Math.abs(a - RING) < h && b < RING + h) || (Math.abs(b - RING) < h && a < RING + h); };
 function roads() {
-  const parts: B.Mesh[] = [], asphalt: B.Mesh[] = [], asph = tmat("c-asfalto", "#ffffff", 0.9), patchM = M.matte("#26282c"), side = tmat("c-adoquin", "#ffffff"), line = M.matte("#FAFAFA"), red = M.matte("#E53935"), wh = M.matte("#FAFAFA");
+  const parts: B.Mesh[] = [], asphalt: B.Mesh[] = [], asph = tmat("c-asfalto", "#ffffff", 0.9), patchM = M.matte("#26282c"), side = pbr("ciu-vereda", { color: "#ffffff", rough: 0.9, metal: 0, tex: sidewalkTex() }), line = M.matte("#FAFAFA"), red = M.matte("#E53935"), wh = M.matte("#FAFAFA");
   const L = HALF - 4, strips: [number, number, number, number][] = [[0, 0, L * 2, RW], [0, 0, RW, L * 2]]; // cx, cz, largo X, largo Z
   for (const k of [-RING, RING]) strips.push([0, k, (RING + RW / 2) * 2, RW], [k, 0, RW, (RING + RW / 2) * 2]);
   const inRoad = (x: number, z: number) => strips.some(([qx, qz, qw, qd]) => Math.abs(x - qx) < qw / 2 - 0.3 && Math.abs(z - qz) < qd / 2 - 0.3);
@@ -177,6 +187,19 @@ function town() {
       }
     }
   }
+  // Fila corta de fachadas bajas (1-2 pisos) a ~30 u de la salida, dentro de las manzanas libres (x,z entre 14 y 31: no cortan calles ni veredas); miran a la salida.
+  { const q = lcg(47), D = 6;
+    for (const [sx, sz, hs] of [[1, -1, [6, 12]], [-1, 1, [12, 6]]] as [number, number, number[]][]) {
+      let t = 15.5;
+      hs.forEach((h, i) => {
+        const w = 7.2 + q() * 0.6, cz = sz * 27.5, cx = sx * (t + w / 2);
+        const P = (u: number, y: number, v: number): V3 => [cx + sx * u, y, cz + sz * v]; // v hacia afuera; el frente (-d/2) mira a la salida
+        house(P, 0, w, h, D, i % 2 ? tmat("c-ladrillo", brickC[i]) : M.matte(wall[i]), i + sx + 3);
+        collider(cx, cz, w, h, D, 0); bare.push({ x: cx, z: cz, r: w / 2 + 4 });
+        t += w + 1;
+      });
+    }
+  }
   // Arco de ladrillo con faroles sobre la calle norte-sur, entre la salida y el anillo (ref273). Pasable: solo los pilares tienen colisionador.
   const AZ = -28, AR = 7, AY = 8, brick = tmat("c-ladrillo", "#b5562f");
   for (const sg of [-1, 1]) {
@@ -224,6 +247,41 @@ export function cityLayout() {
   toyRamps(int(2, 4), [0, 1, 2]);
   rocks(int(8, 16));
   const r = lcg(23), parts: B.Mesh[] = [];
+  { // Desagüe con rejilla y charco con hojas secas (ref Charcos): decal de agua oscura con brillo de cielo; textura de semilla fija.
+    const PX = 24, PZ = 22, o = lcg(613), N = 256, t = new B.DynamicTexture("charcoCiudadTex", N, scene, true), c = t.getContext() as unknown as CanvasRenderingContext2D;
+    c.clearRect(0, 0, N, N);
+    for (let i = 0; i < 8; i++) { const bx = N / 2 + (o() - 0.5) * 110, by = N / 2 + (o() - 0.5) * 70, rr = 40 + o() * 34, g = c.createRadialGradient(bx, by, 0, bx, by, rr); g.addColorStop(0, "rgba(10,16,24,0.96)"); g.addColorStop(0.75, "rgba(14,22,32,0.9)"); g.addColorStop(1, "rgba(14,22,32,0)"); c.fillStyle = g; c.fillRect(bx - rr, by - rr, rr * 2, rr * 2); }
+    c.globalCompositeOperation = "source-atop";
+    c.fillStyle = "rgba(205,228,248,0.55)"; c.beginPath(); c.ellipse(N / 2 - 20, N / 2 - 18, 50, 12, -0.2, 0, 6.2832); c.fill(); // brillo de cielo
+    c.strokeStyle = "rgba(40,36,32,0.8)"; c.lineWidth = 7; c.beginPath(); c.ellipse(N / 2, N / 2, 112, 66, 0, 0, 6.2832); c.stroke(); // borde húmedo
+    for (let i = 0; i < 26; i++) { c.fillStyle = ["#9a5a22", "#b5762f", "#7a4a1c", "#c9a03a"][i % 4]; c.beginPath(); c.ellipse(N / 2 + (o() - 0.5) * 150, N / 2 + (o() - 0.5) * 90, 7 + o() * 6, 3.5 + o() * 3, o() * 3.14, 0, 6.2832); c.fill(); } // hojas secas
+    t.update(); t.hasAlpha = true;
+    const m = pbr("ciuCharco" + scene.uniqueId, { color: "#ffffff", rough: 0.08, metal: 0.4, tex: t }) as B.PBRMaterial;
+    m.useAlphaFromAlbedoTexture = true; m.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+    decal("charcoCiudad", 13, 9, PX, PZ, m, 0.06).isPickable = false;
+    const gr = M.metal("#25302b"), gp = M.matte("#17191c"); // rejilla de desagüe en el borde del charco
+    parts.push(box(4, 0.14, 2.4, gr, [PX - 5, 0.08, PZ + 1.2]), box(3.5, 0.16, 1.9, gp, [PX - 5, 0.09, PZ + 1.2]));
+    for (let u = -1.5; u <= 1.5; u += 0.5) parts.push(box(0.14, 0.2, 2, gr, [PX - 5 + u, 0.12, PZ + 1.2]));
+    bare.push({ x: PX, z: PZ, r: 8 });
+  }
+  { // Gradas de hormigón con butacas rojas/azules y baranda de alambre (ref Gradas); colisión en el bloque, mira a la salida.
+    const GX = -28, GZ = -28, W = 16, D = 9, TN = 4, TD = D / TN, TH = 1.5, ry = Math.atan2(GX, GZ) , cs = Math.cos(ry), sn = Math.sin(ry);
+    const at = (a: number, y: number, v: number): V3 => [GX + a * cs + v * sn, y, GZ - a * sn + v * cs], R: V3 = [0, ry, 0];
+    const conc = M.matte("#a9a59d"), concD = M.matte("#8c8880"), seatR = M.plastic("#E53935"), seatB = M.plastic("#2f5f9c"), wire = M.metal("#9aa0a6"), post = M.metal("#25302b");
+    for (let k = 0; k < TN; k++) {
+      const v = -D / 2 + TD * (k + 0.5), h = TH * (k + 1);
+      parts.push(box(W, h, TD, k % 2 ? conc : concD, at(0, h / 2, v), R), box(W + 0.4, 0.2, TD + 0.1, conc, at(0, h + 0.1, v), R));
+      for (let u = -W / 2 + 0.8; u < W / 2; u += 1.25) parts.push(box(0.85, 0.12, 0.8, ((u + W) / 1.25 | 0) % 2 ? seatB : seatR, at(u, h + 0.3, v - 0.2), R), box(0.85, 0.55, 0.12, ((u + W) / 1.25 | 0) % 2 ? seatB : seatR, at(u, h + 0.6, v + 0.25), R));
+    }
+    const top = TH * TN + 0.2;
+    for (const sg of [-1, 1]) for (let k = 0; k < TN; k++) parts.push(box(0.2, 1.1, 0.2, post, at(sg * W / 2, TH * (k + 1) + 0.75, -D / 2 + TD * (k + 0.5)), R)); // postes laterales siguiendo la escalinata
+    for (let u = -W / 2; u <= W / 2 + 0.1; u += 2) parts.push(box(0.14, 1.2, 0.14, post, at(u, 0.6 + 0, -D / 2 - 0.15), R)); // frente bajo
+    for (const y of [0.45, 0.8, 1.15]) parts.push(box(W, 0.05, 0.05, wire, at(0, y, -D / 2 - 0.15), R)); // alambre al frente
+    for (let u = -W / 2; u <= W / 2 + 0.1; u += 2.7) parts.push(box(0.14, 1.4, 0.14, post, at(u, top + 0.7, D / 2 - 0.1), R)); // baranda del fondo
+    for (const y of [0.45, 0.9, 1.35]) parts.push(box(W, 0.05, 0.05, wire, at(0, top + y, D / 2 - 0.1), R));
+    stat(box(W, TH * TN, D, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [GX, (TH * TN) / 2, GZ, ry]).isVisible = false;
+    bare.push({ x: GX, z: GZ, r: W / 2 + 4 });
+  }
   block(parts, 78, 72, 30, 32, 26, "#d9c7a0"); block(parts, -76, -70, 28, 26, 28, "#b5562f"); block(parts, 80, -74, 24, 22, 24, "#c9784a");
   const iron = M.metal("#25302b"), stone = M.matte("#8a8580"), wood = M.matte("#8a5232"), orange = M.plastic("#FF6F1F"), white = M.plastic("#FAFAFA"), glow = M.glow("#ffcf8a");
   const leaf = M.matte("#4f9a3a"), brick = M.matte("#b5562f"), blue = M.plastic("#2f5f9c"), yellow = M.plastic("#FBC02D");

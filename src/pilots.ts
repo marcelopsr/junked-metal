@@ -5,7 +5,7 @@ import { WEAPONS, type PStats, type WeaponId } from "./weapons";
 import { BAL } from "./balance";
 import type { AbilityId } from "./abilities";
 
-export type PilotId = "soldadito" | "muneca" | "robot" | "dino" | "figura" | "abuela" | "astronauta" | "dinogoma" | "rusa" | "pirata" | "caballero" | "bombero";
+export type PilotId = "soldadito" | "muneca" | "robot" | "dino" | "figura" | "abuela" | "astronauta" | "dinogoma" | "rusa" | "pirata" | "caballero" | "bombero" | "osito" | "mecanica" | "cocinero" | "mago" | "fantasma" | "doble";
 type Rec = { ach: string[] }; // logros del guardado (achievements.ts)
 // Modificadores de cada piloto: columnas de la tabla pilotos de balance.json (neutros: multiplicadores en 1 y sumas en 0)
 const modOf = (id: PilotId) => (st: PStats) => {
@@ -42,6 +42,18 @@ export const PILOTS: Record<PilotId, { name: string; pros: string[]; con: string
     mod: modOf("caballero") },
   bombero: { name: "El Bombero Sin Manguera", pros: ["Armas 8% más rápidas", "Regenera +0,5 vida/s", "+5% velocidad"], con: "Sin ventajas de vida", cost: BAL.pilotos.bombero.precio, lore: "Perdió la manguera en una mudanza. Apaga los problemas a bengalazos.", start: BAL.pilotos.bombero.arma_inicial as WeaponId, abil: BAL.pilotos.bombero.habilidad as AbilityId, abilTxt: BAL.pilotos.bombero.habilidad_txt,
     mod: modOf("bombero") },
+  osito: { name: "El Osito Prestado", pros: ["+60 vida", "+10% peso al embestir"], con: "-10% velocidad", cost: BAL.pilotos.osito.precio, lore: "Cosido a mano por una abuela y prestado sin permiso. Aguanta todo, menos que lo suelten.", start: BAL.pilotos.osito.arma_inicial as WeaponId, abil: BAL.pilotos.osito.habilidad as AbilityId, abilTxt: BAL.pilotos.osito.habilidad_txt,
+    mod: modOf("osito") },
+  mecanica: { name: "La Mecánica Sin Taller", pros: ["Regenera +1,5 vida/s", "Arranca con Tuercas"], con: "-10 vida máxima", cost: BAL.pilotos.mecanica.precio, lore: "Le quitaron el taller, no la llave inglesa. Arregla el auto mientras lo destroza.", start: BAL.pilotos.mecanica.arma_inicial as WeaponId, abil: BAL.pilotos.mecanica.habilidad as AbilityId, abilTxt: BAL.pilotos.mecanica.habilidad_txt,
+    mod: modOf("mecanica") },
+  cocinero: { name: "El Cocinero de Tornillos", pros: ["+60% imán", "Arranca con Chapitas"], con: "-10 vida máxima", cost: BAL.pilotos.cocinero.precio, lore: "Cree que los tornillos son fideos. Los junta con una cuchara gigante.", start: BAL.pilotos.cocinero.arma_inicial as WeaponId, abil: BAL.pilotos.cocinero.habilidad as AbilityId, abilTxt: BAL.pilotos.cocinero.habilidad_txt,
+    mod: modOf("cocinero") },
+  mago: { name: "El Mago de Cartón", pros: ["+15% daño", "Arranca con Confeti"], con: "-15 vida máxima y armas 8% más lentas", cost: BAL.pilotos.mago.precio, lore: "Su truco estrella es hacer desaparecer el sueldo. El confeti no explota, pero casi.", start: BAL.pilotos.mago.arma_inicial as WeaponId, abil: BAL.pilotos.mago.habilidad as AbilityId, abilTxt: BAL.pilotos.mago.habilidad_txt,
+    mod: modOf("mago") },
+  fantasma: { name: "El Fantasma de Sábana", pros: ["+10% velocidad", "+10% blindaje", "Arranca con Burbujas"], con: "-20 vida máxima", cost: BAL.pilotos.fantasma.precio, lore: "Una sábana con dos agujeros y mucho rencor. Los golpes le pasan de largo, casi siempre.", start: BAL.pilotos.fantasma.arma_inicial as WeaponId, abil: BAL.pilotos.fantasma.habilidad as AbilityId, abilTxt: BAL.pilotos.fantasma.habilidad_txt,
+    mod: modOf("fantasma") },
+  doble: { name: "El Doble de Riesgo", pros: ["+15% daño", "+25% XP", "Arranca con Cohete"], con: "Recibe 10% más daño", cost: BAL.pilotos.doble.precio, lore: "Hace las escenas peligrosas por otros. Cuanto más arriesga, más rápido aprende.", start: BAL.pilotos.doble.arma_inicial as WeaponId, abil: BAL.pilotos.doble.habilidad as AbilityId, abilTxt: BAL.pilotos.doble.habilidad_txt,
+    mod: modOf("doble") },
 };
 
 export const pilotStats = (st: PStats, id: PilotId) => { (PILOTS[id] ?? PILOTS.soldadito).mod(st); return st; };

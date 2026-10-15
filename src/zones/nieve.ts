@@ -135,6 +135,33 @@ export function snowLayout() {
   const AA = Math.PI / 2, SA = 0.8, spots: [number, number, number][] = [[...roadPt(AA), 11], [...roadPt(SA), 13]];
   for (const [x, z, r] of spots) bare.push({ x, z, r });
   const nearSpot = (x: number, z: number, m = 0) => spots.some(([sx, sz, sr]) => Math.hypot(x - sx, z - sz) < sr + m);
+  // Huellas que los pinos no tapan: tribuna-mirador (-44,4) y lago (52,8), además del arco y el cobertizo.
+  const noPine = (x: number, z: number) => Math.hypot(x + 44, z - 4) < 19 || Math.hypot(x - 52, z - 8) < 15 || nearSpot(x, z, 4);
+  // Lago congelado chico (ref301/ref305): disco de hielo azul claro brillante, pasable (sin colisión), con aro de nieve.
+  { const LX = 52, LZ = 8, ice = pbr("nieveHielo", { color: "#bfe3f5", rough: 0.1, metal: 0.3, emissive: "#4a6a85" }), crack = M.glow("#e8f6ff"), o = ((s) => () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296))(8801);
+    const d = B.MeshBuilder.CreateDisc("lagoHielo", { radius: 1, tessellation: 28 }, scene); d.rotation.x = Math.PI / 2; d.scaling.set(8.5, 6.5, 1); d.position.set(LX, 0.1, LZ); d.material = ice; deco.push(d);
+    for (let i = 0; i < 16; i++) { const a = (i / 16) * 6.2832, k = 0.9 + o() * 0.2; deco.push(sph(2, whiteM(), [LX + Math.cos(a) * 8.8 * k, 0.1, LZ + Math.sin(a) * 6.8 * k], [1.5 + o(), 0.55 + o() * 0.3, 1.5 + o()])); }
+    for (const [cx, cz, l, ry] of [[-2, 0.5, 5, 0.3], [1.5, -1.5, 4, -0.6], [2, 2, 3.4, 1.1]]) deco.push(box(l, 0.02, 0.09, crack, [LX + cx, 0.12, LZ + cz], [0, ry, 0]));
+    bare.push({ x: LX, z: LZ, r: 11 });
+  }
+  // Tribuna-mirador de madera con techo nevado a ~46 u: deck a 4,5 u, gradas, baranda y escalera; colisión en las 4 patas (se pasa por debajo).
+  { const TX = -44, TZ = 4, wd = M.matte(WOOD), wd2 = M.matte("#5a3a22"), roofS = M.glow("#c9d6e8") /* ponytail: emisivo como el techo de la cabaña */, ang = Math.atan2(4.5, 11);
+    deco.push(box(7, 0.4, 12, wd, [TX, 4.5, TZ]), box(7.4, 0.3, 12.4, wd2, [TX, 4.2, TZ]));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      deco.push(box(0.9, 9.2, 0.9, wd2, [TX + sx * 3, 4.6, TZ + sz * 5.5]), box(1.3, 0.4, 1.3, whiteM(), [TX + sx * 3, 9.3, TZ + sz * 5.5]));
+      stat(box(0.9, 4.6, 0.9, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [TX + sx * 3, 2.3, TZ + sz * 5.5]).isVisible = false;
+    }
+    for (const sx of [-1, 1]) deco.push(box(0.3, 0.3, 11.5, wd, [TX + sx * 3, 2.2, TZ]), box(0.25, 0.25, Math.hypot(11, 4.5), wd, [TX + sx * 3, 2.3, TZ], [ang, 0, 0]), box(0.25, 0.25, Math.hypot(11, 4.5), wd, [TX + sx * 3, 2.3, TZ], [-ang, 0, 0]));
+    for (const y of [5.2, 6.4, 7.6, 8.8]) deco.push(box(0.4, 1, 12, wd, [TX - 3, y, TZ])); // respaldo de tablones
+    for (const [bx, by] of [[-1.7, 4.95], [-0.2, 4.75]]) deco.push(box(1.1, 0.35, 10.4, wd2, [TX + bx, by, TZ]));
+    for (const u of [-5.5, -3.3, -1.1, 1.1, 3.3, 5.5]) deco.push(box(0.14, 1.2, 0.14, wd2, [TX + 3.3, 5.3, TZ + u])); // baranda del frente
+    for (const y of [5.5, 6.0]) deco.push(box(0.1, 0.1, 11, wd2, [TX + 3.3, y, TZ]));
+    for (const sg of [-1, 1]) deco.push(box(0.5, 0.35, 13.2, wd2, [TX + sg * 1.95, 9.55 + 0.0, TZ], [0, 0, sg * -0.5]), box(4.6, 0.6, 13.4, roofS, [TX + sg * 2.1, 10.0, TZ], [0, 0, sg * -0.5]));
+    deco.push(box(1.1, 0.8, 13.4, roofS, [TX, 11.2, TZ]));
+    const SN = 9; for (let k = 0; k < SN; k++) deco.push(box(2.4, 0.14, 0.8, wd, [TX + 0.4, 0.5 * (SN - k) - 0.07, TZ + 6.6 + k * 0.8])); // escalera por el extremo +z
+    for (const sx of [-1, 1]) deco.push(box(0.12, 0.12, Math.hypot(7.2, 4.5), wd2, [TX + 0.4 + sx * 1.2, 2.9, TZ + 9.6], [Math.atan2(4.5, 7.2), 0, 0]));
+    bare.push({ x: TX, z: TZ + 3, r: 12 });
+  }
   // Bordillo continuo de bloques rojo/blanco bajos a ambos lados del camino (decorativo: sin colisión, el auto cruza sin trabarse)
   // bloques chicos (~3 u) con gorrito de nieve, repartidos por largo de arco sobre la curva real
   for (const side of [-1, 1]) {
@@ -162,7 +189,7 @@ export function snowLayout() {
   grove.forEach(([x, z, ry]) => cabin(x, z, ry));
   const pines2: B.Mesh[] = [];
   for (const [gx, gz] of [[-40, 44], [-62, 20], [38, -56], [60, -28], [24, 52], [-8, 64], [-34, -48], [55, 40], [-58, -20]]) for (let i = 0; i < 4; i++) {
-    const x = gx + (lr() - 0.5) * 16, z = gz + (lr() - 0.5) * 16; pine(x, z, 1 + lr() * 0.8, pines2);
+    const x = gx + (lr() - 0.5) * 16, z = gz + (lr() - 0.5) * 16, ps = 1 + lr() * 0.8; if (noPine(x, z)) continue; pine(x, z, ps, pines2);
     stat(cyl(2, 2.4, 3, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.CYLINDER, {}, [x, 1.5, z]).isVisible = false; bare.push({ x, z, r: 4 });
   }
   if (pines2.length) { const m = merge("nievePinares", pines2); m.isPickable = false; shadows.addShadowCaster(m); }
@@ -185,7 +212,7 @@ export function snowLayout() {
   for (let a = 0; a < 6.2832; a += 0.07) for (const side of [1, -1]) {
     if (r2() < (side > 0 ? 0.25 : 0.7)) continue;
     const off = side * (ROAD_W / 2 + 4 + r2() * (side > 0 ? 8 : 3)), [x, z] = roadPt(a + (r2() - 0.5) * 0.04, off);
-    if (grove.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 14) || Math.hypot(x, z) < 22 || nearSpot(x, z, 3)) continue;
+    if (grove.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 14) || Math.hypot(x, z) < 22 || nearSpot(x, z, 3) || noPine(x, z)) continue;
     pine(x, z, (side > 0 ? 0.9 : 0.7) + r2() * 0.5, dark, "#1f3d26");
     stat(cyl(2, 2.4, 3, solid, [0, 0, 0]), B.PhysicsShapeType.CYLINDER, {}, [x, 1.5, z]).isVisible = false; bare.push({ x, z, r: 4 });
   }

@@ -268,7 +268,10 @@ function paint(f: Face, i: number) {
   const h = heightAt(_vd), r = MOON.R + h;
   f.pos[o] = CENTER.x + _vd.x * r; f.pos[o + 1] = CENTER.y + _vd.y * r; f.pos[o + 2] = CENTER.z + _vd.z * r;
   normalAt(_vd, _vn); f.nor[o] = _vn.x; f.nor[o + 1] = _vn.y; f.nor[o + 2] = _vn.z;
-  const g = shade(_vd.x, _vd.y, _vd.z, h);
+  // Dunas: bandas suaves de claro/oscuro (ondulación fingida en el color, la geometría y la física no cambian), solo del lado del Sol
+  const sunK = B.Scalar.Clamp((_vd.x * SUN_DIR.x + _vd.y * SUN_DIR.y + _vd.z * SUN_DIR.z - 0.05) * 4, 0, 1);
+  const dune = 0.5 + 0.5 * Math.sin(_vd.x * 33 + _vd.z * 21 + Math.sin(_vd.y * 11 + _vd.x * 7) * 1.8), rip = Math.sin(_vd.x * 90 - _vd.z * 60 + dune * 4) * 0.5;
+  const g = shade(_vd.x, _vd.y, _vd.z, h) * (1 + sunK * ((dune - 0.5) * 0.32 + rip * 0.07));
   // Manchas grandes crema/lila (mares de juguete) y fondo de cráter frío: así el suelo se despega de las rocas rojas y de la niebla durazno
   const m = 0.5 + 0.5 * Math.sin(_vd.x * 6.1 + Math.sin(_vd.z * 4.3) * 1.7) * Math.sin(_vd.y * 5.3 + _vd.z * 3.1), cool = h < -0.5 ? 1 : B.Scalar.Clamp((m - 0.45) * 3, 0, 1);
   f.col[i * 4] = g * B.Scalar.Lerp(1, 0.6, cool); f.col[i * 4 + 1] = g * B.Scalar.Lerp(0.84, 0.62, cool); f.col[i * 4 + 2] = g * B.Scalar.Lerp(0.62, 0.92, cool); f.col[i * 4 + 3] = 1;
@@ -511,6 +514,61 @@ export function moonBuild(s: B.Scene, low: boolean) {
   put(kit.tires, 14 * lowK, 11, 90); put(kit.jerseyR, 12 * lowK, 10, 90); put(kit.jerseyY, 12 * lowK, 10, 90); put(kit.chevron, 9 * lowK, 14, 100, 0, under(strip("kitStripM", "#4a0a36", 3.4, 2.4), 1.4, 0.9)); put(kit.arch, 7 * lowK, 16, 100, 0, under(strip("kitStripC", "#06404f", 5.6, 2.8), 1.8, 1.1));
   put(pud, 40 * lowK, 9, 110); put(pudB, 30 * lowK, 9, 110); // charcos sueltos
   put(kit.tower, 9 * lowK, 22, 120); for (const b of kit.box) put(b, 5 * lowK, 24, 110); put(kit.bollard, 60 * lowK, 9, 100);
+  // ---- Kit de referencia ref290 (semilla propia, sin rng()): DÍA = arco de roca pasable, toldo con mesa y cajas, huellas de rueda; NOCHE = grúa pórtico, pilas altas y túnel de contenedores.
+  // Solo en su lado (día dot > 0,1; noche dot < -0,1). Colisión únicamente en pilares y paredes (cajas ocultas / esferas estáticas, con la pose puesta antes del cuerpo).
+  const gp = (x: number, z: number) => new B.Vector3(x / MOON.R, 1, z / MOON.R).normalize(); // punto del suelo a x, z metros de la salida (como los bordillos)
+  const yawFor = (d: B.Vector3, h: B.Vector3) => { const q = B.Quaternion.FromUnitVectorsToRef(Y, d, new B.Quaternion()); return Math.atan2(B.Vector3.Dot(h, B.Vector3.Right().applyRotationQuaternion(q)), B.Vector3.Dot(h, B.Vector3.Forward().applyRotationQuaternion(q))); };
+  const spawnAt = (tpl: ReturnType<typeof template>, d: B.Vector3, yaw: number, s = 1) => { const m = tpl.createInstance("kit"); m.isPickable = false; m.receiveShadows = true; sol(d, 0, yaw, s).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position); return m; };
+  const wall = (d: B.Vector3, yaw: number, w: number, h: number, l: number, ox: number, oz: number) => { // colisionador de caja oculto, pose antes del PhysicsAggregate
+    const b = B.MeshBuilder.CreateBox("kitWall", { width: w, height: h, depth: l }, scene), M = sol(d, 0, yaw);
+    b.isVisible = false; b.isPickable = false; b.position = B.Vector3.TransformCoordinates(new B.Vector3(ox, h / 2, oz), M); M.decompose(undefined, (b.rotationQuaternion = new B.Quaternion()));
+    new B.PhysicsAggregate(b, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.5 }, scene);
+  };
+  const dayAt = (d: B.Vector3) => B.Vector3.Dot(d, SUN_DIR) > 0.1 && heightAt(d) > -0.5, nightAt = (d: B.Vector3) => B.Vector3.Dot(d, SUN_DIR) < -0.1 && heightAt(d) > -0.5;
+  {
+    const tm = pbr("moonTrack", { color: "#8a5230", rough: 1 }), track = template("moonTrack", () => [rbox(0.24, 0.03, 1.0, 0, tm, [0, 0.015, 0])]);
+    const lona = pbr("moonLona", { color: "#7e8f94", rough: 0.9 }), wd = kk("#7a5230", 0.8), crY = kk("#d9a62a", 0.65), crB = kk("#2a5db0", 0.65), crR = kk("#c8402e", 0.65);
+    const toldo = template("moonToldo", () => [...[-2, 2].flatMap((x) => [-1.4, 1.4].map((z) => cyl(0.12, 0.12, 2.4, wd, [x, 1.2, z]))), rbox(4.8, 0.07, 2.2, 0.03, lona, [0, 2.6, -0.98], [-0.2, 0, 0]), rbox(4.8, 0.07, 2.2, 0.03, lona, [0, 2.6, 0.98], [0.2, 0, 0]),
+      rbox(2.2, 0.1, 0.9, 0.03, wd, [0, 0.9, -0.3]), ...[-1, 1].flatMap((x) => [-0.6, 0].map((z) => cyl(0.08, 0.08, 0.9, wd, [x, 0.45, z]))), rbox(0.45, 0.3, 0.4, 0.04, crR, [0.5, 1.1, -0.3]), cyl(0.28, 0.28, 0.3, crB, [-0.5, 1.1, -0.3]),
+      rbox(0.7, 0.6, 0.7, 0.05, crY, [1.5, 0.3, 0.4]), rbox(0.6, 0.5, 0.6, 0.05, crB, [-1.5, 0.25, 0.5]), rbox(0.5, 0.5, 0.5, 0.05, crY, [-1.5, 0.75, 0.5]), cyl(0.5, 0.5, 0.8, crB, [-1.0, 0.4, -1.1]), rbox(0.6, 0.6, 0.6, 0.05, crR, [1.2, 0.3, -1.1])]);
+    const pil = template("moonPillar", () => [rbox(1.0, 0.5, 0.95, 0.08, sR, [0, 0.13, 0]), rbox(0.9, 0.4, 0.9, 0.08, sC, [0, 0.58, 0]), rbox(0.95, 0.5, 0.95, 0.08, sO, [0, 1.03, 0])]);
+    const lintel = template("moonLintel", () => [rbox(4.2, 0.55, 1.0, 0.1, sO, [0, 0, 0]), rbox(3.6, 0.3, 0.9, 0.08, sC, [0, 0.4, 0]), rbox(2.6, 0.3, 0.8, 0.08, sR, [0, 0.66, 0]), rbox(0.7, 0.4, 0.9, 0.08, sR, [-1.75, -0.45, 0], [0, 0, 0.5]), rbox(0.7, 0.4, 0.9, 0.08, sR, [1.75, -0.45, 0], [0, 0, -0.5])]);
+    // huellas de rueda: dos hileras de rayas que serpentean desde la salida, bajo el arco y hasta el toldo
+    for (let z = 3; z < 50; z += 1.5) for (const sx of [-0.7, 0.7]) {
+      const cx = 2.5 * Math.sin(z / 10), d = gp(cx + sx, z);
+      if (dayAt(d)) spawnAt(track, d, Math.atan(0.25 * Math.cos(z / 10)));
+    }
+    const ad = gp(0, 48), ay = 0, sz = 2.4; // arco de roca: dos pilares con colisión y un dintel sin ella; el auto pasa por el hueco de ~4,5 m
+    if (dayAt(ad)) {
+      for (const sx of [-1.45, 1.45]) {
+        const d = gp(sx * sz, 48), k: Rock = { m: pil.createInstance("pilar"), d, sz, body: null! }, m = k.m;
+        seat(k); m.scaling.setAll(sz); m.rotationQuaternion = B.Quaternion.FromUnitVectorsToRef(Y, d, new B.Quaternion()).multiply(B.Quaternion.RotationAxis(Y, ay));
+        k.body = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: 0, radius: sz * 0.5, friction: 0.5 }, scene).body; rocks.push(k); m.receiveShadows = true; m.isPickable = false;
+      }
+      const m = lintel.createInstance("dintel"); m.isPickable = false; m.receiveShadows = true; sol(ad, 1.58, ay, sz).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position);
+    }
+    const td = gp(-17, 30); if (dayAt(td)) spawnAt(toldo, td, 0.5, 1.5);
+  }
+  {
+    const orange = pbr("moonCraneOr", { color: "#e8791c", rough: 0.55, emissive: "#4a2208" }), gW = glowM("#fff3c0"), gR = glowM("#ff3a2a"), dark = kk("#23262c", 0.7);
+    const crane = template("kitCrane", () => [...[-4.2, 4.2].flatMap((x) => [-2.4, 2.4].map((z) => rbox(0.7, 8, 0.7, 0.06, orange, [x, 4, z]))), ...[-4.2, 4.2].map((x) => rbox(0.6, 0.4, 5.4, 0.05, dark, [x, 0.3, 0])), ...[-4.2, 4.2].map((x) => rbox(0.8, 0.8, 5.8, 0.06, orange, [x, 8.2, 0])),
+      ...[-2.4, 2.4].map((z) => rbox(9.6, 0.7, 0.8, 0.06, orange, [0, 8.2, z])), rbox(1.0, 0.9, 17, 0.06, orange, [0, 9.2, 4.5]), ...[0, 1, 2, 3, 4, 5, 6].map((i) => rbox(1.06, 0.3, 0.25, 0.02, white, [0, 9.2, -3.4 + i * 2.4])),
+      rbox(2.4, 1.4, 2.6, 0.08, orange, [0, 10.4, -1.8]), rbox(1.8, 1.2, 2, 0.07, steel, [0, 8.1, 7]), gl(1.2, 0.3, 0.05, gC, [0, 8.2, 8.02]), rbox(0.1, 3.6, 0.1, 0.01, dark, [0, 6.2, 7]), rbox(2.6, 0.3, 1.0, 0.04, steel, [0, 4.2, 7]),
+      ...[-4.2, 4.2].flatMap((x) => [-2.4, 2.4].map((z) => gl(0.45, 0.3, 0.45, gW, [x, 8.75, z]))), gl(4, 0.15, 0.15, gW, [0, 9.0, -3.2]), gl(0.35, 0.35, 0.35, gR, [0, 9.8, 13]), gl(0.35, 0.35, 0.35, gR, [0, 11.3, -3]), gl(0.1, 2.0, 0.1, gY, [-4.2, 5, 2.8]), gl(0.1, 2.0, 0.1, gY, [4.2, 5, 2.8])]);
+    const cols = ["#b8322a", "#2a4a8a", "#c9a227", "#2e7a5a", "#d8d2c4", "#a8322e", "#3a6a9a"], dim = (c: string) => "#" + [1, 3, 5].map((k) => Math.round(parseInt(c.slice(k, k + 2), 16) * 0.22).toString(16).padStart(2, "0")).join(""), cont = (i: number) => { const c = cols[i % cols.length]; return pbr("moonKitC" + c, { color: c, rough: 0.65, emissive: dim(c) }); }; // brillo propio tenue: sin él las pilas se pierden en el negro (ref290: contenedores bien leídos de noche)
+    const stack = (n: number, off: number) => template("kitStack" + n + off, () => [0, 1].flatMap((c) => Array.from({ length: n }, (_, l) => { const x = (((c * 5 + l * 3 + off) % 5) - 2) * 0.12; return [rbox(4.4, 1.9, 1.9, 0.08, cont(c * 3 + l + off), [x, 0.95 + l * 1.9, c * 2.0]), ...[-1.7, 0, 1.7].map((r) => rbox(0.1, 1.8, 2.0, 0.02, steel, [x + r, 0.95 + l * 1.9, c * 2.0]))]; }).flat()));
+    const tun = template("kitTunnel", () => [-1, 1].flatMap((sx) => [rbox(1.9, 3.8, 6, 0.08, cont(sx > 0 ? 4 : 0), [sx * 2.95, 1.9, 0]), ...[-2.5, -0.8, 0.9, 2.6].map((z) => rbox(2.0, 3.7, 0.1, 0.02, steel, [sx * 2.95, 1.9, z])), gl(0.08, 0.1, 5.8, gM, [sx * 1.97, 0.5, 0]), gl(0.08, 0.1, 5.8, gM, [sx * 1.97, 3.4, 0]), gl(0.12, 3.8, 0.12, gM, [sx * 2.0, 1.9, 3.1]), gl(0.12, 3.8, 0.12, gM, [sx * 2.0, 1.9, -3.1])])
+      .concat([rbox(7.8, 0.5, 6.2, 0.08, steel, [0, 4.05, 0]), gl(0.1, 0.1, 5.8, gC, [-1.0, 3.75, 0]), gl(0.1, 0.1, 5.8, gC, [1.0, 3.75, 0]), gl(4.2, 0.12, 0.12, gM, [0, 3.78, 3.1]), gl(4.2, 0.12, 0.12, gM, [0, 3.78, -3.1])]));
+    const DC2 = DARK_DIR, fwd = (d: B.Vector3) => SUN_DIR.subtract(d.scale(B.Vector3.Dot(SUN_DIR, d))).normalize(); // hacia donde mira el auto al llegar (hacia el Sol)
+    const t0 = fwd(DC2), a0 = Math.atan2(B.Vector3.Dot(t0, dk2), B.Vector3.Dot(t0, dk1));
+    const night = (tpl: ReturnType<typeof template>, w: number, a: number, yawAdd = 0) => { const d = arcPos(w, a0 + a); if (nightAt(d)) { spawnAt(tpl, d, yawFor(d, fwd(d)) + yawAdd); return d; } return null; };
+    const td = arcPos(20, a0), ty = yawFor(td, fwd(td)); // túnel de contenedores justo delante del auto, abierto en su sentido de marcha; paredes con colisión
+    if (nightAt(td)) { spawnAt(tun, td, ty); for (const sx of [-2.95, 2.95]) wall(td, ty, 1.9, 3.8, 6, sx, 0); }
+    // grúas pórtico (de lado, vistas desde la ruta) y pilas altas al fondo (3-5 contenedores de alto)
+    for (const [w, a, ya] of [[44, 0.28, 1.57], [58, -0.35, 1.57], [70, 0.05, 1.57]] as const) { const d = night(crane, w, a, ya); if (d) { const yw = yawFor(d, fwd(d)) + ya; for (const sx of [-4.2, 4.2]) for (const sz2 of [-2.4, 2.4]) wall(d, yw, 0.8, 8, 0.8, sx, sz2); } }
+    let si = 0;
+    for (let i = 0; i < 26; i++) { const w = 34 + kr() * 48, a = (kr() * 2 - 1) * 0.9; if (Math.abs(a) < 0.12 && w < 40) continue; night(stack(3 + (si % 3), si % 5), w, a, (kr() - 0.5) * 0.9 + (si % 2 ? 1.57 : 0)); si++; }
+  }
   // Cielo: estrellas fijas en el mundo (al dar la vuelta a la luna, giran), Tierra, Sol y una estrella fugaz de vez en cuando.
   // Todo dentro de la esfera del cielo de render.ts (radio 600, infiniteDistance): más lejos lo taparía
   const ns = low ? 500 : 900, sp: number[] = [], scol: number[] = [], si: number[] = [];

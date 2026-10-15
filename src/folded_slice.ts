@@ -79,6 +79,10 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     G.bend([0, 0.84, -1.18], [0, 0.84, -0.04], 0.03, FOLD.bare()); // costura
     ell(add, rust, [0, 0.52, 0.12], [0.5, 0.6, 0.5], 10, 0.5); // pronoto abombado
     G.tube([[0, 0.66, 0.9], [0, 0.78, 1.22], [0, 0.98, 1.34], [0, 1.16, 1.2]], 0.045, dkr); // cuerno curvo corto, color élitro oscuro
+    for (const s of [-1, 1]) { // cara: ojos grandes con brasa al frente y mandíbulas en pinza bajo el pronoto
+      G.sph(0.26, FOLD.painted("#0c0a0a", 0.2, 71), [s * 0.3, 0.6, 0.92]); G.sph(0.14, eye, [s * 0.33, 0.62, 1.07]);
+      G.tube([[s * 0.16, 0.4, 0.95], [s * 0.34, 0.32, 1.28], [s * 0.1, 0.3, 1.5]], 0.06, FOLD.bare());
+    }
   } else {
     ell(add, body, [0, 0.46, -0.72], [0.8, 0.74, 1.05], 9); // gáster bulboso (BODY)
     for (const [z, d] of [[-0.45, 0.62], [-0.7, 0.72], [-0.95, 0.66]] as const) along(G, d, d, 0.04, plate, [0, 0.46, z], 8); // segmentos de bronce
@@ -119,7 +123,7 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     const knee = P(0.36, 0.2, 0), foot = P(0.78, -0.44, 0.04);
     G.box(0.2, 0.2, 0.2, bronze, P(-0.04, 0, 0)); // cadera metida en el cuerpo
     strut(P(-0.02, 0, 0), knee, 0.12, 0.14, leg); G.box(0.15, 0.15, 0.15, bronze, knee);
-    strut(knee, foot, 0.085, 0.1, leg); G.box(0.16, 0.06, 0.18, FOLD.rubber(), [foot[0], foot[1] + 0.02, foot[2]]);
+    strut(knee, foot, 0.085, 0.1, leg); G.sph(0.15, FOLD.rubber(), [foot[0], foot[1] + 0.03, foot[2]]); // pie: bola de goma que abraza la punta de la tibia
   }
   return done(2.5, o.k / vis);
 }
@@ -174,14 +178,14 @@ export function mothWing(side: 1 | -1) {
   const { G, done, strut } = kit();
   const s = side, skin = FOLD.painted("#edc79a", 0.75, 73), skin2 = FOLD.painted("#d9a574", 0.8, 74), cream = FOLD.painted("#b04a22", 0.8, 75), core = FOLD.painted("#5a2412", 0.7, 76), spar = FOLD.painted("#5a2e1c", 0.6, 77);
   G.cyl(0.06, 0.16, FOLD.bare(), [0, 0, 0], [Math.PI / 2, 0, 0], 6); // bisagra pegada al tórax
-  G.box(0.86, 0.012, 0.44, skin, [s * 0.55, 0.01, 0.04], [0, s * 0.18, 0]); // ala anterior
-  G.box(0.36, 0.012, 0.3, skin2, [s * 0.98, 0.01, -0.06], [0, s * 0.5, 0]); // punta plegada
-  G.box(0.58, 0.012, 0.36, skin2, [s * 0.42, -0.012, -0.28], [0, -s * 0.25, 0]); // ala posterior
-  strut([0, 0.02, 0.02], [s * 1.12, 0.02, 0.0], 0.03, 0.028, spar); // larguero de ataque
-  for (const [x, z] of [[0.7, -0.22], [0.9, 0.12], [0.6, -0.42]]) strut([s * 0.08, 0.018, 0], [s * x, 0.018, z], 0.014, 0.014, spar); // nervios
-  for (const x of [0.3, 0.55, 1.0]) for (const y of [0.0185, -0.0125]) G.box(0.07, 0.012, 0.4, cream, [s * x, y, 0.02 - x * 0.1], [0, s * 0.18, 0]); // bandas crema
-  G.box(0.1, 0.012, 0.3, cream, [s * 0.55, -0.0125, -0.28]);
-  for (const y of [0.0185, -0.0125]) { G.cyl(0.3, 0.012, cream, [s * 0.74, y, -0.04], undefined, 12); G.cyl(0.15, 0.014, core, [s * 0.74, y + Math.sign(y) * 0.001, -0.04], undefined, 12); } // anillo ocular crema, centro marrón oscuro
+  G.box(0.6, 0.012, 0.44, skin, [s * 0.385, 0.01, 0.04], [0, s * 0.126, 0]); // ala anterior
+  G.box(0.25, 0.012, 0.3, skin2, [s * 0.686, 0.01, -0.06], [0, s * 0.35, 0]); // punta plegada
+  G.box(0.4, 0.012, 0.36, skin2, [s * 0.294, -0.012, -0.28], [0, -s * 0.175, 0]); // ala posterior
+  strut([0, 0.02, 0.02], [s * 0.784, 0.02, 0.0], 0.03, 0.028, spar); // larguero de ataque
+  for (const [x, z] of [[0.7, -0.22], [0.9, 0.12], [0.6, -0.42]]) strut([s * 0.056, 0.018, 0], [s * x, 0.018, z], 0.014, 0.014, spar); // nervios
+  for (const x of [0.3, 0.55, 1.0]) for (const y of [0.0185, -0.0125]) G.box(0.07, 0.012, 0.4, cream, [s * x, y, 0.02 - x * 0.1], [0, s * 0.126, 0]); // bandas crema
+  G.box(0.1, 0.012, 0.3, cream, [s * 0.385, -0.0125, -0.28]);
+  for (const y of [0.0185, -0.0125]) { G.cyl(0.24, 0.012, cream, [s * 0.518, y, -0.04], undefined, 12); G.cyl(0.12, 0.014, core, [s * 0.518, y + Math.sign(y) * 0.001, -0.04], undefined, 12); } // anillo ocular crema, centro marrón oscuro
   return done();
 }
 
@@ -477,6 +481,9 @@ export function aspiradoraBody() {
   G.grate([0, 1.6, -2.3], undefined, 2.4, 0.5, 4, steel); // salida de aire
   G.box(3.6, 0.38, 0.55, dark, [0, 0.32, 3.05]); // barra de sensores
   for (const s of [-1, 1]) { G.cyl(0.62, 0.12, steel, [s * 1.05, 0.88, 3.08], [Math.PI / 2, 0, 0], 10); G.cyl(0.5, 0.2, red, [s * 1.05, 0.88, 3.14], [Math.PI / 2, 0, 0], 10); G.decal([s * 2.4, 1.1, 2.0], [0.3, s * 2.4, 0], "voltaje", 0.9); }
+  G.box(3.4, 0.7, 0.5, dark, [0, 1.12, 2.55], [-0.35, 0, 0]); // visor oscuro al frente (cara)
+  for (const s of [-1, 1]) { G.cyl(1.0, 0.18, steel, [s * 0.95, 1.2, 2.78], [Math.PI / 2 - 0.35, 0, 0], 12); G.cyl(0.75, 0.22, FOLD.emissive("#ffb020"), [s * 0.95, 1.2, 2.86], [Math.PI / 2 - 0.35, 0, 0], 12); } // ojos
+  G.grate([0, 0.5, 3.32], undefined, 2.6, 0.3, 5, steel); // boca: rejilla del paragolpes
   G.rivets([-2.6, 1.0, -2.9], [2.6, 1.0, -2.9], 9, [0, 0.3, -1]);
   [-1, 1].forEach((s, i) => { // cepillos
     bone(i + 1);
@@ -503,13 +510,17 @@ export function cortacercosBody() {
   G.tube([[0, 1.6, -1.15], [0, 2.9, -0.95], [0, 2.9, -0.35], [0, 1.4, -0.3]], 0.16, dark); // mango en D
   G.tube([[0, 1.75, -4.25], [0, 2.85, -4.85], [0, 2.55, -5.35], [0, 1.35, -5.05]], 0.22, dark); // manija trasera
   G.box(2.0, 1.0, 0.2, dark, [0, 1.9, -1.2]); G.grate([0, 1.2, -1.22], [0, Math.PI, 0], 1.6, 0.5, 4, steel); // frente: cara oscura con parrilla
-  for (const s of [-1, 1]) { G.cyl(0.7, 0.2, steel, [s * 0.62, 1.95, -1.3], [Math.PI / 2, 0, 0], 10); G.cyl(0.5, 0.25, FOLD.emissive("#ff8a1a"), [s * 0.62, 1.95, -1.36], [Math.PI / 2, 0, 0], 10); }
-  G.box(0.85, 0.28, 5.9, steel, [0, 0.92, 2.75]); // espada
-  G.box(0.55, 0.22, 5.5, FOLD.painted("#6b7280", 0.8, 173), [0, 0.78, 2.75]);
-  G.trimStrip([0, 1.07, 0.3], [Math.PI / 2, 0, 0], 0.84, 0.6, "hazard", 0.02);
+  for (const s of [-1, 1]) { G.cyl(0.85, 0.2, steel, [s * 0.62, 1.95, -1.3], [Math.PI / 2, 0, 0], 10); G.cyl(0.65, 0.25, FOLD.emissive("#ff8a1a"), [s * 0.62, 1.95, -1.36], [Math.PI / 2, 0, 0], 10); }
+  for (const s of [-1, 1]) { // dos espadas (ref271), más cortas que el motor para que la ficha entre en cuadro
+    G.box(0.7, 0.28, 3.4, steel, [s * 0.8, 0.92, 0.5]); G.box(0.42, 0.22, 3.1, FOLD.painted("#6b7280", 0.8, 173), [s * 0.8, 0.78, 0.5]);
+  }
+  G.trimStrip([0, 1.07, -1.0], [Math.PI / 2, 0, 0], 2.2, 0.5, "hazard", 0.02);
+  for (const s of [-1, 1]) for (const z of [-1.5, -2.75, -4.0]) { // patas de insecto: fémur, rodilla y tibia al piso
+    strut([s * 1.3, 1.0, z], [s * 2.1, 1.6, z + 0.3], 0.2, 0.2, orange); G.sph(0.3, steel, [s * 2.1, 1.6, z + 0.3]); strut([s * 2.1, 1.6, z + 0.3], [s * 2.9, 0.15, z + 0.55], 0.16, 0.16, dark);
+  }
   G.tube([[0, 0.92, -4.25], [0, 0.28, -4.95], [0.75, 0.08, -5.65]], 0.16, dark); // cable
   bone(1);
-  for (let i = 0; i < 8; i++) for (const s of [-1, 1]) G.box(0.42, 0.18, 0.28, steel, [s * 0.52, 0.92, -0.15 + i * 0.72], [0, s * 0.4, 0]); // dientes
+  for (let i = 0; i < 5; i++) for (const c of [-1, 1]) for (const s of [-1, 1]) G.box(0.36, 0.18, 0.28, steel, [c * 0.8 + s * 0.44, 0.92, -0.15 + i * 0.7], [0, s * 0.4, 0]); // dientes de las dos espadas
   bone(0);
   return done(8, BOSS_S.cortacercos);
 }

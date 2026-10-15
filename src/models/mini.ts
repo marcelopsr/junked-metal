@@ -21,7 +21,7 @@ export const ARCH: Record<string, Arch> = {
 export const MINI_COLORS: Record<string, [string, string]> = {
   buggy: [PAL.rojo, PAL.amarillo], monster: [PAL.azul, PAL.naranja], formula: [PAL.amarillo, PAL.rojo], tanque: ["#F2B705", "#F2B705"],
   carrera: [PAL.naranja, PAL.azul], axel: [PAL.morado, PAL.amarillo], helado: [CREMA, "#F06292"], combi: [PAL.verde, PAL.blanco],
-  hover: [PAL.azul, PAL.morado], topadora: [PAL.amarillo, PAL.naranja], triciclo: ["#1F8A8A", PAL.naranja], murcielago: ["#5B3A9A", "#C8793A"],
+  hover: ["#D9A21B", "#3C322B"], topadora: [PAL.amarillo, PAL.naranja], triciclo: ["#1F8A8A", PAL.naranja], murcielago: ["#5B3A9A", "#C8793A"],
   misterio: ["#8BC34A", "#26C6DA"], clasico: [PAL.rojo, CREMA], jeep: [PAL.verde, PAL.naranja], moto: [PAL.azul, CREMA], monopatin: ["#E8654F", "#2AA6A6"],
 };
 const toy = (c: string) => pbr("mini" + c, { color: c, rough: 0.35, coat: 0.4 }); // plástico pintado: rugosidad 0,35, sin metal
@@ -116,10 +116,13 @@ export function miniHull(kind: string, paint: B.Material, accent: string, lamp: 
       bar(van ? H * 1.1 : H * 0.94, Lc * 0.28, Wd * 0.7);
     }
   } else { // toy
-    if (kind === "hover") {
-      add(rbox(Wd * 1.2, 0.16, Lc * 0.96, 0.07, blk, [0, 0.02, 0]), rbox(Wd, H * 0.46, Lc * 0.84, 0.16, paint, [0, H * 0.36, 0]), rbox(Wd * 0.7, 0.05, Lc * 0.62, 0.02, wht, [0, H * 0.6, 0]),
-        sph(0.55, glass, [0, H * 0.74, Lc * 0.14], [1, 0.7, 1.3], 6), tor(0.95, 0.06, blk, [0, 0.95, -Lc * 0.4], [Math.PI / 2, 0, 0], 12),
-        box(0.9, 0.04, 0.12, acc, [0, 0.95, -Lc * 0.4], [0, 0, 0.5]), box(0.9, 0.04, 0.12, acc, [0, 0.95, -Lc * 0.4], [0, 0, -0.5]), ...[-1, 1].map((s) => cyl(0.07, 0.07, 0.7, blk, [s * 0.45, 0.62, -Lc * 0.4], undefined, 6)));
+    if (kind === "hover") { // ref242: faldón inflable negro, casco amarillo, cabina de vidrio, ventilador trasero en jaula, turbinas laterales
+      add(rbox(sw * 0.98, 0.22, Lc * 1.0, 0.11, toy("#26221e"), [0, 0.06, 0]), rbox(Wd, H * 0.46, Lc * 0.84, 0.16, paint, [0, H * 0.38, 0]), rbox(Wd * 0.7, 0.05, Lc * 0.62, 0.02, blk, [0, H * 0.62, 0]),
+        sph(0.55, glass, [0, H * 0.76, Lc * 0.1], [1, 0.7, 1.3], 6),
+        ...[-1, 1].flatMap((s) => [tor(0.5, 0.07, acc, [s * (Wd * 0.5 + 0.12), 0.3, Lc * 0.22], undefined, 12), cyl(0.12, 0.12, 0.12, blk, [s * (Wd * 0.5 + 0.12), 0.3, Lc * 0.22], undefined, 6)]), // turbinas laterales
+        tor(0.95, 0.06, blk, [0, 0.95, -Lc * 0.4], [Math.PI / 2, 0, 0], 12), tor(0.95, 0.04, acc, [0, 0.95, -Lc * 0.4 - 0.12], [Math.PI / 2, 0, 0], 12), cyl(0.12, 0.12, 0.2, blk, [0, 0.95, -Lc * 0.4], [Math.PI / 2, 0, 0], 8),
+        box(0.9, 0.04, 0.12, acc, [0, 0.95, -Lc * 0.4], [0, 0, 0.5]), box(0.9, 0.04, 0.12, acc, [0, 0.95, -Lc * 0.4], [0, 0, -0.5]), box(0.9, 0.04, 0.12, acc, [0, 0.95, -Lc * 0.4], [0, 0, 1.5]),
+        ...[-1, 1].map((s) => cyl(0.07, 0.07, 0.7, blk, [s * 0.45, 0.62, -Lc * 0.4], undefined, 6)));
       bar(H * 0.62, Lc * 0.36, Wd * 0.6);
     } else if (kind === "triciclo") {
       add(rbox(0.6, H * 0.34, Lc * 0.6, 0.12, paint, [0, H * 0.38, Lc * 0.14]), rbox(Wd * 1.1, H * 0.5, 0.8, 0.1, toy(CREMA), [0, H * 0.55, -0.6]), rbox(Wd * 1.14, 0.06, 0.86, 0.03, acc, [0, H * 0.82, -0.6]),

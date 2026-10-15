@@ -352,3 +352,48 @@ Objetos de sistemas ENCORE (ChatGPT, `assets-src/imagegen-production/encore-v1/r
 | ref320 | prop | Máquina de tienda | tienda |
 | ref321 | escena | Iluminación del garaje (batch-10 mini-worlds) | garaje/taller |
 | ref322 | escena | Escenas por condición de pista (batch-10 mini-worlds) | biomas, clima |
+
+## Tanda 2026-10-15b (ref323-ref360, imagegen encore-v1)
+
+Importadas con `node scripts/imagegen.mjs --importar` (origen en `_origen_imagegen.tsv`; prompt de cada una en `assets-src/imagegen-production/encore-v1/jobs/<nombre>.json`). Clasificación por nombre de job: `arma-*` = íconos/modelos de armas; `encore-material-*` = texturas candidatas; `encore-decal-*` = decals; `piloto-*` = pilotos nuevos; resto = objetos ENCORE.
+
+| Ref | Job |
+|---|---|
+| ref323 | encore-ensambladora |
+| ref324 | encore-rele-lunar |
+| ref325 | encore-bateria-run |
+| ref326 | encore-camara-director |
+| ref327 | encore-bobina-cable |
+| ref328 | encore-compuerta-lunar |
+| ref329 | encore-baliza-rescate |
+| ref330 | encore-caja-transmision |
+| ref331 | encore-material-regolito |
+| ref332 | encore-material-chapa-marfil |
+| ref333 | encore-material-chapa-burdeos |
+| ref334 | encore-material-metal-oxidado |
+| ref335 | encore-material-madera-plató |
+| ref336 | encore-decal-huellas-rc |
+| ref337 | encore-decal-aceite |
+| ref338 | encore-decal-flecha-ruta |
+| ref339 | encore-decal-anillo-activacion |
+| ref340 | arma-gomitas |
+| ref341 | arma-clips |
+| ref342 | arma-chispero |
+| ref343 | arma-petardos |
+| ref344 | arma-tesla |
+| ref345 | arma-lanza |
+| ref346 | arma-agua |
+| ref347 | arma-yoyo |
+| ref348 | arma-bengalas |
+| ref349 | arma-regla |
+| ref350 | arma-helado |
+| ref351 | arma-bocina |
+| ref352 | arma-trompo |
+| ref353 | arma-tuercas |
+| ref354 | arma-bobinas |
+| ref355 | arma-ventilador |
+| ref356 | arma-canicas |
+| ref357 | arma-burbujas |
+| ref358 | arma-matamoscas |
+| ref359 | arma-dardos |
+| ref360 | piloto-osito |

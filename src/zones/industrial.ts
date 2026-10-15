@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, rbox, tor } from "../models";
 import { M, pbr, shadows } from "../render";
-import { HALF, bare, floor, occluders, scene, stat } from "./common";
+import { HALF, bare, decal, floor, occluders, scene, stat } from "./common";
 import { clear, int, rocks, toyRamps } from "../world_layout";
 
 type V3 = [number, number, number];
@@ -117,6 +117,46 @@ export function industrialLayout() {
   // Pórtico de largada (z=28) y túnel de contenedores (z=46) sobre el carril norte: se reservan antes del reparto y se arman al final (el reparto usa el mismo generador).
   const GZ = 28, TZ = 46;
   bare.push({ x: 0, z: GZ, r: 10 }, { x: 0, z: TZ, r: 12 });
+  // Charco de aceite iridiscente (ref Charcos) junto a dos grupos de tambores: decal oscuro brillante, tinte arcoíris tenue en textura de semilla fija.
+  { const PX = 24, PZ = 26, o = lcg(907), N = 256;
+    const t = new B.DynamicTexture("aceiteTex", N, scene, true), c = t.getContext() as unknown as CanvasRenderingContext2D;
+    c.clearRect(0, 0, N, N);
+    for (let i = 0; i < 9; i++) { const bx = N / 2 + (o() - 0.5) * 120, by = N / 2 + (o() - 0.5) * 80, rr = 40 + o() * 36, g = c.createRadialGradient(bx, by, 0, bx, by, rr); g.addColorStop(0, "rgba(10,11,14,0.96)"); g.addColorStop(0.7, "rgba(14,15,18,0.9)"); g.addColorStop(1, "rgba(14,15,18,0)"); c.fillStyle = g; c.fillRect(bx - rr, by - rr, rr * 2, rr * 2); }
+    c.globalCompositeOperation = "source-atop";
+    for (let i = 0; i < 6; i++) { const hx = N / 2 + (o() - 0.5) * 110, hy = N / 2 + (o() - 0.5) * 70, rr = 36 + o() * 34, g = c.createRadialGradient(hx, hy, 0, hx, hy, rr); g.addColorStop(0, `hsla(${(i * 62 + 170) % 360},75%,60%,0.5)`); g.addColorStop(1, "rgba(0,0,0,0)"); c.fillStyle = g; c.fillRect(hx - rr, hy - rr, rr * 2, rr * 2); }
+    t.update(); t.hasAlpha = true;
+    const m = pbr("indAceite" + scene.uniqueId, { color: "#ffffff", rough: 0.1, metal: 0.55, tex: t }) as B.PBRMaterial;
+    m.useAlphaFromAlbedoTexture = true; m.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+    decal("aceiteCharco", 13, 10, PX, PZ, m, 0.06).isPickable = false;
+    bare.push({ x: PX, z: PZ, r: 8 });
+    put(3, PX + 7, PZ + 1, 0.4); put(3, PX - 3.5, PZ + 7, 1.2);
+  }
+  // Plataforma de reticulado con escalera amarilla y baranda (ref Gradas), a ~55 u de la salida. Colisión solo en las 4 patas: se pasa por debajo.
+  { const PX = -38, PZ = 38, H = 5, W = 14, D = 8, at = (a: number, y: number, b: number): V3 => [PX + a, y, PZ + b];
+    parts.push(box(W, 0.35, D, blk, at(0, H, 0)), box(W + 0.4, 0.3, 0.3, yel, at(0, H - 0.3, D / 2)), box(W + 0.4, 0.3, 0.3, yel, at(0, H - 0.3, -D / 2)));
+    for (let u = -W / 2 + 0.5; u < W / 2; u += 1) parts.push(box(0.12, 0.08, D - 0.4, yel, at(u, H + 0.2, 0))); // rejilla
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const lx = sx * (W / 2 - 0.5), lz = sz * (D / 2 - 0.5);
+      parts.push(box(0.9, H, 0.9, yel, at(lx, H / 2, lz)), box(1.8, 0.4, 1.8, conc, at(lx, 0.2, lz)));
+      stat(box(0.9, H, 0.9, M.matte("#000"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [PX + lx, H / 2, PZ + lz]).isVisible = false;
+    }
+    for (const sz of [-1, 1]) { // arriostres en X a lo largo de ambas caras largas
+      const bz = sz * (D / 2 - 0.5), len = Math.hypot(W - 1, H - 1), an = Math.atan2(H - 1, W - 1);
+      parts.push(box(len, 0.22, 0.22, blk, at(0, H / 2, bz), [0, 0, an]), box(len, 0.22, 0.22, blk, at(0, H / 2, bz), [0, 0, -an]));
+    }
+    for (const sx of [-1, 1]) parts.push(box(0.22, 0.22, D - 1, blk, at(sx * (W / 2 - 0.5), 1.6, 0)));
+    for (const sz of [-1, 1]) { // baranda en dos lados largos y fondo; el lado +x queda abierto para la escalera
+      for (let u = -W / 2 + 0.3; u <= W / 2 - 0.2; u += 2.3) parts.push(box(0.14, 1.3, 0.14, yel, at(u, H + 0.85, sz * (D / 2 - 0.15))));
+      for (const y of [1.0, 1.5]) parts.push(box(W - 0.4, 0.1, 0.1, yel, at(0, H + y, sz * (D / 2 - 0.15))));
+    }
+    for (let v = -D / 2 + 0.3; v <= D / 2 - 0.2; v += 1.8) parts.push(box(0.14, 1.3, 0.14, yel, at(-W / 2 + 0.15, H + 0.85, v)));
+    for (const y of [1.0, 1.5]) parts.push(box(0.1, 0.1, D - 0.4, yel, at(-W / 2 + 0.15, H + y, 0)));
+    const SN = 12, run = 0.85, rise = H / SN; // escalera por el extremo +x: peldaños amarillos, zancas y pasamanos
+    for (let k = 0; k < SN; k++) parts.push(box(run, 0.12, 2.2, yel, at(W / 2 + run * (SN - k - 0.5), rise * (k + 1) - 0.06 + 0.0, -1.2)), box(run * 0.9, rise - 0.06, 0.1, blk, at(W / 2 + run * (SN - k - 0.5), rise * (k + 0.5), -1.2)));
+    const sl = Math.hypot(run * SN, H), sa = Math.atan2(H, run * SN);
+    for (const sz of [-1, 1]) { const z = -1.2 + sz * 1.1; parts.push(box(sl, 0.3, 0.12, blk, at(W / 2 + run * SN / 2, H / 2, z), [0, 0, -sa]), box(sl, 0.1, 0.1, yel, at(W / 2 + run * SN / 2, H / 2 + 1.1, z), [0, 0, -sa])); }
+    bare.push({ x: PX + 4, z: PZ, r: 14 });
+  }
   // Anillo cercano denso (15-45 u de la salida) + dispersión. Salida (0,0) libre: clear() deja 18 u.
   const K = [0, 1, 0, 3, 2, 3, 4, 5, 0, 6, 1, 3];
   let n = 0;
