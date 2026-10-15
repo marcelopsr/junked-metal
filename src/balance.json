@@ -313,6 +313,7 @@
     {"id":"formacion_hormigas_seg","valor":60,"descripcion":"Una hormiga más en la columna cada tantos segundos"},
     {"id":"formacion_escolta","valor":4,"descripcion":"Autitos a fricción que escoltan al escarabajo"},
     {"id":"formacion_vel","valor":1.2,"descripcion":"Multiplicador de velocidad de los seguidores de una formación"},
+    {"id":"primera_calma_s","valor":20,"descripcion":"Primera expedición del guardado: segundos iniciales sin enemigos para aprender a mover el auto (0 = sin arranque tranquilo)"},
     {"id":"enjambre_primero_base","valor":90,"descripcion":"Segundos fijos antes del primer enjambre"},
     {"id":"enjambre_primero_mult","valor":0.5,"descripcion":"El primer enjambre llega a base + este factor × el intervalo de la semilla"},
     {"id":"enjambre_cada_min","valor":45,"descripcion":"Segundos mínimos entre enjambres (la semilla suma al azar hasta el rango)"},

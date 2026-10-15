@@ -15,6 +15,7 @@ import { carModel } from "./models";
 import { photoOn, photoApply } from "./photo-mode";
 import { evFog } from "./moon_events";
 import { ambient, tickRain } from "./fx";
+import { boostFov } from "./run_drive";
 import { HOLE, LOOK, setDof, setLamp, shadows } from "./render";
 import { underRoof, zoneDust } from "./world";
 import { rainSfx } from "./sfx";
@@ -80,6 +81,7 @@ function moonCam(car: Car, dt: number, follow: boolean) {
 const shot = (scr: string) => (c.engine.getAspectRatio(c.cam) < 1 && SHOTS[scr + "_v"]) || SHOTS[scr] || SHOTS.main; // _v: encuadre de celular vertical
 let previewKey = "", previewR = 0;
 
+let fovK = 0; // grados de FOV extra por turbo / mini-turbo (run_drive.boostFov)
 export function cameraTick(dt: number) {
   HOLE.r = 0; // se enciende abajo solo en partida con auto (modos archivados lo dejaban activo)
   const k = 1 - Math.exp(-5 * dt);
@@ -121,7 +123,8 @@ export function cameraTick(dt: number) {
       const a = Math.random() * Math.PI * 2, r = 6 + Math.random() * 22;
       ambient("fly", new B.Vector3(c.lead.car.pos.x + Math.cos(a) * r, 0.5 + Math.random() * 2.5, c.lead.car.pos.z + Math.sin(a) * r));
     }
-    c.cam.fov = (save.fov * Math.PI) / 180 * DIORAMA_FOV; // Campo de visión (Configuración → Imagen): solo en partida; los encuadres de los menús usan el de fábrica
+    fovK += (boostFov() - fovK) * (1 - Math.exp(-(boostFov() > fovK ? 18 : 6) * dt)); // sube rápido, baja suave
+    c.cam.fov = ((save.fov + fovK) * Math.PI) / 180 * DIORAMA_FOV; // Campo de visión (Configuración → Imagen): solo en partida; los encuadres de los menús usan el de fábrica
     const back = MOON.on ? W(Math.sin(yaw), 0, Math.cos(yaw), c.lead.car.pos) : new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw)); // luna: c.camYaw es del marco local del auto
     // Bajo la mesa la cámara baja y se acerca (roofK suaviza entrar y salir); afuera vuelve al zoom del usuario
     roofK += ((underRoof(c.lead.car.pos) ? 1 : 0) - roofK) * (1 - Math.exp(-3 * dt));

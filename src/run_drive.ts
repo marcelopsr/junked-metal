@@ -48,7 +48,9 @@ export interface RunDriveContext {
 }
 let D!: RunDriveContext;
 export function initRunDrive(x: RunDriveContext) { D = x; }
-let dustT = 0, skidT = 0, smokeT = 0, smashCd = 0;
+let dustT = 0, skidT = 0, smokeT = 0, smashCd = 0, driftHold = 0, miniT = 0, wasBoosting = false;
+/** Grados extra de campo de visión que pide el turbo (4) o el mini-turbo (2,5); lo suaviza camera_rig. */
+export const boostFov = () => (wasBoosting ? 4 : miniT > 0 ? 2.5 : 0); // mini-turbo: segundos de derrape sostenido, impulso restante, turbo del cuadro anterior
 const YARD_PULSES = [225, 345] as const;
 const _moveF = new B.Vector3(), _moveR = new B.Vector3(), _moveWant = new B.Vector3(), _moveFwd = new B.Vector3(), _spawnOff = new B.Vector3(), _ahead = new B.Vector3();
 
@@ -101,11 +103,14 @@ export function tickDrive(F: Frame, dt: number) {
   const ariete = F.ariete = D.weapons.some((w) => w.id === "lanza" && w.evolved);
   const boosting = F.boosting = input.boost && D.lead.boost > R.turbo_umbral && throttle >= 0;
   D.lampBoost = boosting;
+  if (boosting && !wasBoosting && !D.simulating) SFX.boostSurge();
+  wasBoosting = boosting;
+  if (miniT > 0) miniT -= dt;
   run.boostSec = boosting ? run.boostSec + dt : 0;
   D.lead.boost = boosting ? D.lead.boost - R.turbo_gasto * D.st.boostUse * dt : Math.min(100, D.lead.boost + D.st.boostRegen * dt);
-  const maxSpeed = c.def.speed * D.st.speedMul * (boosting ? R.turbo_vel : 1) * (run.abil === "turbo" && run.abilOn > 0 ? R.turbo_hab_vel : 1);
+  const maxSpeed = c.def.speed * D.st.speedMul * (boosting ? R.turbo_vel : 1) * (run.abil === "turbo" && run.abilOn > 0 ? R.turbo_hab_vel : 1) * (miniT > 0 ? R.mini_turbo_vel : 1);
   const r = F.r = drive(c.body, c.root, dt, {
-    throttle: boosting ? 1 : throttle, steer, speed: maxSpeed,
+    throttle: boosting || miniT > 0 ? 1 : throttle, steer, speed: maxSpeed,
     accel: c.def.accel * (boosting ? R.turbo_acel : 1),
     turn: c.def.turn * (input.drift ? R.derrape_giro : 1),
     grip: (() => {
@@ -145,6 +150,12 @@ export function tickDrive(F: Frame, dt: number) {
     }
     if (run.airT >= 0.5 && !run.airHit) D.trick(Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? "SALTO LIMPIO" : "SALTO", Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? R.combo_salto_limpio : R.combo_salto);
     run.airT = 0; run.airHit = false;
+    const drifting = input.drift && Math.hypot(r.fs, r.ls) > 6;
+    if (!drifting && driftHold >= R.mini_turbo_min_s) { // soltar un derrape largo: tirón corto (ponytail: un solo nivel, sin carga por tramos como kart.ts)
+      miniT = R.mini_turbo_s;
+      if (!D.simulating) { SFX.miniTurbo(); const rear = c.pos.add(c.root.forward.scale(-1.1)); FX.sparks(rear.add(upv(rear, 0.3)), 14); FX.dust(rear); }
+    }
+    driftHold = drifting ? driftHold + dt : 0;
     run.driftT = input.drift && Math.hypot(r.fs, r.ls) > 6 ? run.driftT + dt : 0; // velocidad total: derrapando casi toda va de costado
     if (run.driftT >= R.combo_derrape_s) { run.driftT = 0; D.trick("DERRAPE LARGO", R.combo_derrape); }
   } else run.airT += dt;
