@@ -13,6 +13,9 @@ const GROUPS = (e: Save["encore"]): { title: string; ach: AchId; prize: string; 
     cards: [...SECRETS.map((x) => ({ name: x.name, sub: x.lore, seen: e.secrets.includes(x.id), hint: x.how })), ...INT_IDS.map((i) => ({ name: INT_TXT[i].name, sub: INT_TXT[i].line, seen: e.seenInts.includes(i), hint: "Sin presenciar" }))] },
 ];
 
+/** Grupos recién completos (sin logro todavía): los entrega encore_run.ts al registrar un visto. */
+export const cartelDone = (save: Save) => GROUPS(save.encore).filter((g) => !save.ach.includes(g.ach) && g.cards.every((c) => c.seen));
+
 /** Dibuja la pantalla; devuelve true si completó un grupo nuevo (el llamador guarda). */
 export function renderCartelera(save: Save): boolean {
   const gs = GROUPS(save.encore), root = document.getElementById("cartGrupos")!;

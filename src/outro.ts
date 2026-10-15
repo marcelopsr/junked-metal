@@ -1,4 +1,5 @@
 import * as B from "@babylonjs/core";
+import { cartelDone } from "./menu/cartelera";
 import { ACH, type AchId } from "./achievements";
 import { fmt, openOver, persist, reset, today, type RunRec, type Save } from "./menu";
 import type { Profile } from "./run";
@@ -185,6 +186,7 @@ export function endRun(win: boolean, why: string) {
       E2.lastCause = win ? "" : topHit;
       if (encBetter) E2.best = { loop: ctx.erun.loop, stage: ctx.erun.stage, t: Math.floor(ctx.time) };
       for (const id of ctx.erun.found) if (!E2.secrets.includes(id)) E2.secrets.push(id);
+      for (const g of cartelDone(ctx.save)) grant(g.ach); // Cartelera: un secreto nuevo puede cerrar BAMBALINAS (sale en los logros de resultados)
     } else if (!ctx.bank) {
       S.runs++;
       if (win) S.wins++;
