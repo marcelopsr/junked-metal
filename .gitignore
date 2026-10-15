@@ -45,3 +45,13 @@ assets-src/musica/
 
 # Informes de npm run verificar
 .verificar/
+
+# Material local que no va al repo público
+assets-src/ref-rcrace/
+.ux-*/
+undefined/
+2/
+.vitest/
+.e2e/
+.shots/
+.verificar/

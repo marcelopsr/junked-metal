@@ -87,7 +87,7 @@ const pasos = [
   ["prod: telemetry 401", () => http(`https://${HOST}/api/telemetry`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }, 401)],
   ...(msg ? [["commit + push", () => {
     if (!sinNov) novedades();
-    sh("git", ["add", "-A"]);
+    sh("git", ["add", "-u"]); sh("git", ["add", "--", ".publicado", "portada/novedades.json"]); // ponytail: solo lo versionado y lo que escribe publicar; nunca archivos sueltos (-A subió capturas y referencias al repo público)
     sh("git", ["commit", "-m", `${msg}\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`]);
     sh("git", ["push", "origin"]);
   }]] : []),
