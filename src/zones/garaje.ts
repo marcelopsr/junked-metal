@@ -1,4 +1,5 @@
 import * as B from "@babylonjs/core";
+import { manchas } from "./manchas";
 import { box, cyl, merge, rbox, tor, tube } from "../models";
 import { M, pbr, shadows } from "../render";
 import { rng } from "../rng";
@@ -100,7 +101,7 @@ export function garageLayout() {
   const q = ((s) => () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296))(53);
   const tin = M.matte("#f0d9a8"), tinD = M.matte("#23272e"), yel = M.matte("#f4efe6"), rub = M.rubber(), steel = M.metal("#8f969e");
   const props: B.Mesh[] = [];
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < 27; i++) {
     const x = (q() - 0.5) * 60 + 4, z = -26 + q() * 34;
     if (Math.hypot(x, z) < 7) continue; // no sobre el auto de salida
     const k = i % 3;
@@ -112,7 +113,8 @@ export function garageLayout() {
   const pm = merge("gdecor", props); shadows.addShadowCaster(pm); pm.receiveShadows = true;
   const sd = tex("oilSoft", () => { const t = new B.DynamicTexture("oilSoft", 64, scene, false), c = t.getContext() as unknown as CanvasRenderingContext2D, g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, "rgba(12,7,3,1)"); g.addColorStop(0.6, "rgba(12,7,3,0.75)"); g.addColorStop(1, "rgba(20,12,6,0)"); c.fillStyle = g; c.fillRect(0, 0, 64, 64); t.update(); t.hasAlpha = true; return t; });
   const soft = pbr("oilSoft", { color: "#ffffff", rough: 0.4, tex: sd }); soft.useAlphaFromAlbedoTexture = true; soft.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
-  for (let i = 0; i < 16; i++) { const w = 7 + q() * 8; decal("oilSoft", w, w * (0.6 + q() * 0.4), (q() - 0.5) * 56 + 2, -24 + q() * 34, soft, 0.04).rotation.y = q() * 3; }
+  manchas("manchaGaraje", 61, [-30, 34, -26, 8], [{ color: "#efe3c8", alpha: 0.65, n: 24, w: [5, 10] }, { color: "#1a120c", alpha: 0.75, n: 18, w: [5, 9] }], 0.05); // polvo claro y mugre sobre el cemento (sin colisión)
+  for (let i = 0; i < 30; i++) { const w = 7 + q() * 8; decal("oilSoft", w, w * (0.6 + q() * 0.4), (q() - 0.5) * 56 + 2, -24 + q() * 34, soft, 0.04).rotation.y = q() * 3; }
 }
 
 // Parpadeo del tubo: baja luz y emisivo en ráfagas cortas. Solo visual (Math.random); se apaga con "calma".

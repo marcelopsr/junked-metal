@@ -1,4 +1,5 @@
 import * as B from "@babylonjs/core";
+import { manchas } from "./manchas";
 type V3 = [number, number, number];
 import { box, cyl, merge, sph } from "../models";
 import { M, canvasTex, pbr, shadows } from "../render";
@@ -76,8 +77,9 @@ const snowTex = () => {
 
 export function snowBuild() {
   // Nieve lisa (ref33a): base casi blanca con ondulaciones azuladas muy suaves; el contraste lo ponen los surcos y las sombras, no el grano.
-  floor("nieveLisa", "#ffffff", () => snowTex(), 0.85, "concrete", 26);
+  floor("nieveLisa", "#c3cddb", () => snowTex(), 0.85, "concrete", 26);
   ruts();
+  manchas("manchaNieve", 17, [-26, 26, -22, 8], [{ color: "#1f2f50", alpha: 0.8, n: 50, w: [5, 11] }], 0.2); // sombras azuladas y huellas oscuras sobre la nieve (sin colisión)
   // Borde: bloques de plástico rojo/blanco con gorro de nieve cada tanto, alineados con los cuatro lados.
   const red = M.plastic(RED), wht = M.plastic(WHITE), cap = whiteM(), blocks: B.Mesh[] = [], fence: B.Mesh[] = [], trees: B.Mesh[] = [];
   const L = HALF * 2 + 4, BL = 4.4, N = Math.round(L / BL);

@@ -1,4 +1,5 @@
 import * as B from "@babylonjs/core";
+import { manchas } from "./manchas";
 import { box, cyl, merge, rbox } from "../models";
 type V3 = [number, number, number];
 import { M, pbr, shadows } from "../render";
@@ -73,7 +74,8 @@ function shedContrast() {
   const wet = pbr("galponMancha" + scene.uniqueId, { color: "#ffffff", rough: 0.2, metal: 0.3, tex: t }) as B.PBRMaterial;
   if (wet.albedoTexture !== t) t.dispose(); // material cacheado: la textura nueva sobra
   wet.useAlphaFromAlbedoTexture = true; wet.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
-  for (let i = 0; i < 38; i++) { const a = o() * 6.283, d = 5 + o() * 36, w = 7 + o() * 11; decal("galponMan" + i, w, w * (0.6 + o() * 0.4), Math.cos(a) * d, Math.sin(a) * d, wet, 0.07 + i * 0.001).isPickable = false; }
+  for (let i = 0; i < 60; i++) { const a = o() * 6.283, d = 5 + o() * 36, w = 7 + o() * 11; decal("galponMan" + i, w, w * (0.6 + o() * 0.4), Math.cos(a) * d, Math.sin(a) * d, wet, 0.07 + i * 0.001).isPickable = false; }
+  manchas("manchaGalpon", 71, [-34, 34, -34, 20], [{ color: "#d9c79a", alpha: 0.75, n: 30, w: [5, 10] }], 0.12); // pintura gastada clara sobre la chapa
   // Cinta de peligro amarilla/negra: dos pasillos que cruzan cerca de la salida (el piso sigue libre, son marcas planas de 1,2 m)
   const yel = toy("#FBC02D", 0.6), blk = toy("#16181b", 0.7), wht = toy("#F2F0E6", 0.6), parts: B.Mesh[] = [];
   for (const x of [-9, 9]) for (let z = -70; z < 48; z += 2.4) parts.push(box(1.2, 0.08, 2.4, ((z + 70) / 2.4 | 0) % 2 ? blk : yel, [x, 0.1, z + 1.2]));
