@@ -428,14 +428,16 @@ export function reyPose(_v: number, walk: number, atk: number) {
 /** Tarántula: cefalotórax de chapa con placa, abdomen en prisma con faja naranja y placa dorsal, quelíceros de acero, racimo de ojos. Huesos: 0 cuerpo, 1 abdomen. */
 export function tarantulaBody() {
   const { G, done, strut, bone, add } = kit();
-  const hair = FOLD.painted("#2a1a14", 0.85, 141), dark = FOLD.painted("#2a1a14", 0.8, 142), band = FOLD.painted("#a8461a", 0.85, 143), eye = FOLD.emissive("#d8300e"), tip = FOLD.painted("#d8661e", 0.85, 144);
+  // Juguete: plástico peludo mate (pelo), plástico barnizado oscuro, faja naranja; ojos emisivos con el patrón de los aliens (sin niebla, intensidad 2)
+  const hair = toy("tarH", "#3a2418", { rough: 0.8, metal: 0, coat: 0.1 }), dark = toy("tarD", "#2a1a14", { rough: 0.55, metal: 0 }), band = toy("tarB", "#c8561e", { rough: 0.45, metal: 0 }), tip = toy("tarT", "#e8782a", { rough: 0.5, metal: 0 }), steel = toySteel();
+  const eye = pbr("tarOjo", { color: "#a01808", emissive: "#ff3a14", rough: 0.3 }); eye.fogEnabled = false; eye.emissiveIntensity = 2;
   G.box(1.0, 0.5, 1.1, dark, [0, 0.5, 0.32]); // cefalotórax
   ell(add, hair, [0, 0.74, 0.3], [0.96, 0.4, 1.0], 8, 0.5); // cúpula del cefalotórax bajo el pelo
   for (let i = 0; i < 40; i++) { const a = i * 2.4, r = 0.18 + 0.4 * ((i * 0.618) % 1), x = Math.cos(a) * r * 0.9, z = 0.3 + Math.sin(a) * r; tuft(G, i % 3 ? hair : dark, i % 2 ? tip : undefined, [x, 0.8 + (0.4 - r * 0.3) * 0.3, z], [x * 0.4, 0.6, (z - 0.3) * 0.4 - 0.9], 0.1, 0.14); } // mechones del cefalotórax
   for (const s of [-1, 1]) G.bend([s * 0.5, 0.75, -0.2], [s * 0.5, 0.75, 0.86], 0.04, dark);
-  along(G, 0.24, 0.28, 0.3, FOLD.dark(), [0, 0.55, -0.32]); // cintura
+  along(G, 0.24, 0.28, 0.3, dark, [0, 0.55, -0.32]); // cintura
   for (const s of [-1, 1]) {
-    strut([s * 0.18, 0.42, 0.86], [s * 0.16, 0.16, 1.08], 0.14, 0.16, FOLD.bare()); // quelícero
+    strut([s * 0.18, 0.42, 0.86], [s * 0.16, 0.16, 1.08], 0.14, 0.16, steel); // quelícero
     strut([s * 0.36, 0.42, 0.8], [s * 0.42, 0.3, 1.22], 0.1, 0.1, dark); // pedipalpo
   }
   for (const [x, y, z, sz] of [[0.14, 0.84, 0.74, 0.1], [-0.14, 0.84, 0.74, 0.1], [0.3, 0.78, 0.66, 0.07], [-0.3, 0.78, 0.66, 0.07], [0, 0.88, 0.62, 0.06]]) G.box(sz, sz, sz, eye, [x, y, z]);
@@ -444,13 +446,13 @@ export function tarantulaBody() {
   const AY = 1.0; // abdomen alzado (como en ref171) para que asome por encima del cefalotórax en la ficha
   ell(add, hair, [0, AY, cz], [R[0] * 2, R[1] * 2, R[2] * 2], 10);
   for (const t of [-0.55, 0.0, 0.5]) { const k = Math.sqrt(1 - t * t) * 1.03; G.cyl(R[0] * 2 * k, 0.13, band, [0, AY, cz + R[2] * t], [Math.PI / 2, 0, 0], 10, R[0] * 2 * k); } // fajas
-  G.decal([0, AY + R[1] * 1.0, cz + 0.05], [Math.PI / 2 - 0.05, 0, 0], "calavera", 0.55);
+  ell(add, tip, [0, AY + R[1] * 0.97, cz + 0.05], [0.5, 0.05, 0.62], 8); // mancha dorsal de pintura (la calavera de atlas Folded no entra al juguete)
   for (let i = 0; i < 80; i++) { // mechones cortos y anchos, echados hacia atrás: espiral sobre la mitad de arriba y los flancos, oscuros con punta naranja
     const u = -0.95 + 1.9 * ((i * 0.618) % 1), ph = Math.PI * 0.08 + ((i * 0.37) % 1) * Math.PI * 0.84, k = Math.sqrt(1 - u * u);
     const n: V3 = [Math.cos(ph) * k, Math.sin(ph) * k, u], p: V3 = [n[0] * R[0] * 0.94, AY + n[1] * R[1] * 0.94, cz + n[2] * R[2] * 0.94];
     for (const sx of [-1, 1]) tuft(G, i % 3 ? hair : dark, i % 2 ? tip : undefined, [p[0] * sx, p[1], p[2]], [n[0] * sx * 0.4, n[1] * 0.5, n[2] * 0.3 - 0.9], 0.11, 0.16);
   }
-  G.cyl(0.24, 0.2, FOLD.dark(), [0, 0.62, -2.0], [Math.PI / 2, 0, 0], 6); // hileras
+  G.cyl(0.24, 0.2, dark, [0, 0.62, -2.0], [Math.PI / 2, 0, 0], 6); // hileras
   bone(0);
   return done(5, BOSS_S.tarantula);
 }
@@ -493,24 +495,27 @@ export function cortadoraPose(_v: number, walk: number, atk: number) {
 /** Aspiradora robot: disco de chapa con paragolpes de goma, domo, torreta con faro, sensores y 2 cepillos laterales que giran (huesos 1-2). */
 export function aspiradoraBody() {
   const { G, done, bone } = kit();
-  const shell = FOLD.painted("#a4a8ae", 0.95, 161), orange = FOLD.painted("#b8602a", 0.95, 163), dark = FOLD.dark(), steel = FOLD.bare(), red = FOLD.emissive("#ff2a1a");
-  G.cyl(6.45, 0.45, FOLD.rubber(), [0, 0.48, 0], undefined, 16); // paragolpes
+  // Juguete: casco de plástico gris perla barnizado, paragolpes de goma, pintura naranja saltada, luces emisivas (sin niebla, intensidad 2)
+  const shell = toy("aspC", "#b4b8be", { rough: 0.45, metal: 0.1, coat: 0.4 }), orange = toy("aspO", "#d0702a", { rough: 0.5, metal: 0 }), dark = toyDark(), steel = toySteel(), rubber = toyRubber();
+  const glow = (n: string, c: string, e: string) => { const m = pbr(n, { color: c, emissive: e, rough: 0.3 }); m.fogEnabled = false; m.emissiveIntensity = 2; return m; };
+  const red = glow("aspRoj", "#a01808", "#ff2a1a"), amber = glow("aspAmb", "#a86a10", "#ffb020");
+  G.cyl(6.45, 0.45, rubber, [0, 0.48, 0], undefined, 16); // paragolpes
   G.cyl(6.15, 0.75, shell, [0, 0.62, 0], undefined, 16, 6.45); // casco
   G.cyl(3.0, 0.5, shell, [0, 1.25, 0], undefined, 12, 4.2); // domo
   G.cyl(5.4, 0.16, orange, [0, 1.04, 0], undefined, 16);
-  for (const [x, z] of [[-1.8, -1.2], [1.6, 1.4], [0.4, -2.4]]) G.cyl(1.2, 0.04, orange, [x, 1.5, z], undefined, 8); // óxido naranja
+  for (const [x, z] of [[-1.8, -1.2], [1.6, 1.4], [0.4, -2.4]]) G.cyl(1.2, 0.04, orange, [x, 1.5, z], undefined, 8); // pintura naranja saltada
   G.cyl(1.5, 0.3, dark, [0, 1.62, 0], undefined, 12); G.cyl(1.0, 0.35, red, [0, 1.9, 0], undefined, 12); // botón rojo central
-  G.grate([0, 1.6, -2.3], undefined, 2.4, 0.5, 4, steel); // salida de aire
+  for (let i = 0; i < 4; i++) G.box(2.4, 0.08, 0.1, steel, [0, 1.6, -2.45 + i * 0.16]); // salida de aire: lamas de acero
   G.box(3.6, 0.38, 0.55, dark, [0, 0.32, 3.05]); // barra de sensores
-  for (const s of [-1, 1]) { G.cyl(0.62, 0.12, steel, [s * 1.05, 0.88, 3.08], [Math.PI / 2, 0, 0], 10); G.cyl(0.5, 0.2, red, [s * 1.05, 0.88, 3.14], [Math.PI / 2, 0, 0], 10); G.decal([s * 2.4, 1.1, 2.0], [0.3, s * 2.4, 0], "voltaje", 0.9); }
+  for (const s of [-1, 1]) { G.cyl(0.62, 0.12, steel, [s * 1.05, 0.88, 3.08], [Math.PI / 2, 0, 0], 10); G.cyl(0.5, 0.2, red, [s * 1.05, 0.88, 3.14], [Math.PI / 2, 0, 0], 10); G.box(0.7, 0.7, 0.05, amber, [s * 2.4, 1.1, 2.0], [0.3, s * 2.4, 0]); } // sensores y rombo de aviso (en vez del decal de atlas)
   G.box(3.4, 0.7, 0.5, dark, [0, 1.12, 2.55], [-0.35, 0, 0]); // visor oscuro al frente (cara)
-  for (const s of [-1, 1]) { G.cyl(1.0, 0.18, steel, [s * 0.95, 1.2, 2.78], [Math.PI / 2 - 0.35, 0, 0], 12); G.cyl(0.75, 0.22, FOLD.emissive("#ffb020"), [s * 0.95, 1.2, 2.86], [Math.PI / 2 - 0.35, 0, 0], 12); } // ojos
-  G.grate([0, 0.5, 3.32], undefined, 2.6, 0.3, 5, steel); // boca: rejilla del paragolpes
-  G.rivets([-2.6, 1.0, -2.9], [2.6, 1.0, -2.9], 9, [0, 0.3, -1]);
+  for (const s of [-1, 1]) { G.cyl(1.0, 0.18, steel, [s * 0.95, 1.2, 2.78], [Math.PI / 2 - 0.35, 0, 0], 12); G.cyl(0.75, 0.22, amber, [s * 0.95, 1.2, 2.86], [Math.PI / 2 - 0.35, 0, 0], 12); } // ojos
+  for (let i = 0; i < 5; i++) G.box(0.1, 0.3, 0.08, steel, [-1.0 + i * 0.5, 0.5, 3.32]); // boca: rejilla del paragolpes
+  for (let i = 0; i < 9; i++) G.sph(0.09, steel, [-2.6 + i * 0.65, 1.0, -2.9]); // remaches de juguete: esferas de acero
   [-1, 1].forEach((s, i) => { // cepillos
     bone(i + 1);
     G.cyl(0.4, 0.3, steel, [s * 2.75, 0.3, 2.45], undefined, 6);
-    for (let k = 0; k < 3; k++) { const a = (k / 3) * Math.PI * 2; G.box(0.16, 0.08, 1.9, FOLD.plastic("#9ca3af"), [s * 2.75 + Math.sin(a) * 0.9, 0.18, 2.45 + Math.cos(a) * 0.9], [0, a, 0]); }
+    for (let k = 0; k < 3; k++) { const a = (k / 3) * Math.PI * 2; G.box(0.16, 0.08, 1.9, toyC("#9ca3af", 0.7, 0), [s * 2.75 + Math.sin(a) * 0.9, 0.18, 2.45 + Math.cos(a) * 0.9], [0, a, 0]); }
   });
   bone(0);
   return done(8, BOSS_S.aspiradora);
