@@ -42,3 +42,6 @@ src-tauri/gen/
 
 # Originales de música (245 MB); lo publicado está en public/music
 assets-src/musica/
+
+# Informes de npm run verificar
+.verificar/
