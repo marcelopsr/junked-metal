@@ -296,6 +296,9 @@ export function cityLayout() {
     (at, ry) => ({ w: 4.4, d: 2.2, h: 2.8, parts: [rbox(4.4, 1.2, 2.2, 0.2, brick, at(0, 0.6, 0), [0, ry, 0]), rbox(4.6, 0.3, 2.4, 0.1, stone, at(0, 1.3, 0), [0, ry, 0]), ...[-1.4, 0, 1.4].map((x) => sph(1.1, leaf, at(x, 1.9, 0), [1, 0.9, 1], 5)), sph(0.3, yellow, at(0.4, 2.7, 0.2)), sph(0.3, M.plastic("#e53935"), at(-1.2, 2.6, -0.2))] }), // macetero
     (at, ry) => ({ w: 3.6, d: 2, h: 1.8, parts: [box(3.6, 0.5, 2, orange, at(0, 0.9, 0), [0, ry, 0]), box(3.6, 0.5, 2, white, at(0, 1.5, 0), [0, ry, 0]), ...[-1.4, 1.4].map((x) => box(0.3, 1.6, 0.3, iron, at(x, 0.8, 0)))] }), // valla
     (at) => ({ w: 3, d: 3, h: 2.6, parts: [tor(2.4, 0.35, M.metal("#3a3f45"), at(0, 0.7, 0), [Math.PI / 2, 0, 0], 12), tor(2.4, 0.35, M.metal("#3a3f45"), at(0, 0.7, 1.1), [Math.PI / 2, 0, 0], 12)] }), // neumático-bolardo
+    (at) => ({ w: 1.8, d: 1.8, h: 2.4, parts: [cyl(0.9, 0.75, 2.2, M.matte("#1c2226"), at(0, 1.1, 0), undefined, 10), cyl(1, 1, 0.3, M.matte("#2e353a"), at(0, 2.3, 0), undefined, 10)] }), // tacho oscuro (volumen negro de composición)
+    (at, ry) => ({ w: 3, d: 3, h: 3.8, parts: [box(2.6, 1.6, 2.6, M.matte("#2b2218"), at(0, 0.8, 0), [0, ry, 0]), box(2.2, 1.5, 2.2, M.matte("#352a1d"), at(0.1, 2.35, 0), [0, ry + 0.2, 0]), box(1.6, 1.3, 1.6, M.matte("#2b2218"), at(-0.1, 3.7, 0), [0, ry - 0.2, 0])] }), // pila de cajas oscuras
+    (at) => ({ w: 1, d: 1, h: 2, parts: [cyl(0.4, 0.45, 1.9, M.matte("#17191c"), at(0, 0.95, 0), undefined, 8), cyl(0.46, 0.46, 0.3, white, at(0, 1.5, 0), undefined, 8)] }), // bolardo negro con banda blanca
   ];
   const put = (k: number, x: number, z: number, ry: number) => {
     const c = Math.cos(ry), s = Math.sin(ry);
@@ -308,6 +311,31 @@ export function cityLayout() {
   for (let i = 0; i < 130; i++) {
     const a = r() * 6.283, d = i < 70 ? 20 + r() * 30 : 30 + r() * 100, x = Math.cos(a) * d, z = Math.sin(a) * d, k = i % 8;
     if (clear(x, z, 3.5, 10) && !onRoad(x, z, 2)) put(k, x, z, r() * 6.283);
+  }
+  // Contraste de composición (meta 0,19): pintura blanca (bordes, líneas de pare, flechas), manchas húmedas oscuras y tachos/bolardos negros en las veredas junto a la salida. Todo sin colisión salvo los tachos, que quedan en la vereda (calle libre de 18 u).
+  { const wp = M.matte("#F2F0E6"), ring = M.matte("#d6d3ca"), dk = M.matte("#14161a"), o = lcg(613), N = 256, t = new B.DynamicTexture("manchaCiudadTex", N, scene, true), c = t.getContext() as unknown as CanvasRenderingContext2D;
+    c.clearRect(0, 0, N, N);
+    for (let i = 0; i < 11; i++) { const bx = N / 2 + (o() - 0.5) * 110, by = N / 2 + (o() - 0.5) * 80, rr = 30 + o() * 40, g = c.createRadialGradient(bx, by, 0, bx, by, rr); g.addColorStop(0, "rgba(42,44,48,0.9)"); g.addColorStop(0.55, "rgba(36,38,42,0.8)"); g.addColorStop(1, "rgba(36,38,42,0)"); c.fillStyle = g; c.fillRect(bx - rr, by - rr, rr * 2, rr * 2); }
+    t.update(); t.hasAlpha = true;
+    const wet = pbr("ciuMancha" + scene.uniqueId, { color: "#ffffff", rough: 0.15, metal: 0.45, tex: t }) as B.PBRMaterial;
+    if (wet.albedoTexture !== t) t.dispose(); // material cacheado: la textura nueva sobra
+    wet.useAlphaFromAlbedoTexture = true; wet.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+    for (let i = 0; i < 12; i++) { const arm = i % 4, d = 10 + o() * 26, v = (i % 8 < 4 ? 1 : -1) * (5.8 + o() * 2), w = 2.6 + o() * 2.4, sg = i < 6 ? 1 : -1, [x, z] = arm % 2 ? [sg * d, v] : [v, sg * d]; decal("manchaCiu" + i, w, w * (0.6 + o() * 0.4), x, z, wet, 0.17 + i * 0.001).isPickable = false; }
+    const Y = 0.1, flat = (w: number, d: number, x: number, z: number, m: B.Material, ry = 0) => parts.push(box(w, 0.06, d, m, [x, Y + 0.04, z], [0, ry, 0]));
+    for (const sg of [-1, 1]) for (const sg2 of [-1, 1]) {
+      flat(21, 0.4, sg * 25.5, sg2 * 8.3, wp); flat(0.4, 21, sg2 * 8.3, sg * 25.5, wp); // líneas de borde blancas continuas
+      flat(0.7, 8, sg * 16.8, sg2 * 4.4, wp); flat(8, 0.7, sg2 * 4.4, sg * 16.8, wp); // líneas de pare
+      for (const q of [20, 29]) { // flechas pintadas (cabeza en V + fuste)
+        for (const [x, z, a] of [[sg * q, sg2 * 4.4, sg2 > 0 ? 0 : Math.PI], [sg2 * 4.4, sg * q, sg2 > 0 ? -Math.PI / 2 : Math.PI / 2]] as V3[]) {
+          const co = Math.cos(a), si = Math.sin(a), at = (u: number, v: number): [number, number] => [x + u * co + v * si, z - u * si + v * co];
+          flat(5, 0.8, ...at(0, 0), wp, a); flat(2.6, 0.7, ...at(1.9, 1), wp, a + 0.75); flat(2.6, 0.7, ...at(1.9, -1), wp, a - 0.75);
+        }
+      }
+      const mh = [sg * 14.5, sg2 * 5.5]; parts.push(cyl(1.1, 1.1, 0.06, dk, [mh[0], Y + 0.04, mh[1]], undefined, 14), cyl(1.4, 1.4, 0.04, M.matte("#3a3f45"), [mh[0], Y + 0.03, mh[1]], undefined, 14)); // alcantarillas
+    }
+    for (let k = 0; k < 14; k++) { const a = (k / 14) * 6.283; flat(0.6, 2, Math.cos(a) * 6.6, Math.sin(a) * 6.6, ring, -a); }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) put(9, sx * 12.4, sz * 12.4, 0.3 * sx * sz); // pilas de cajas oscuras en las esquinas de vereda junto a la salida
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const [d, k] of [[17, 10], [20.5, 8], [24, 8], [32, 10]] as [number, number][]) { put(k, sx * 12.8, sz * d, 0); put(k, sz * d, sx * 12.8, 0); }
   }
   // Faroles y bancos sobre las veredas, a ambos lados de las calles (ref31a/ref133)
   for (let t = -HALF + 20, k = 0; t < HALF - 10; t += 26, k++) for (const [x, z, ry] of [[12.5, t, -Math.PI / 2], [-12.5, t + 13, Math.PI / 2], [t, 12.5, Math.PI], [t + 13, -12.5, 0], [RING + 12.5, t * 0.7, -Math.PI / 2], [-RING - 12.5, t * 0.7 + 9, Math.PI / 2]] as V3[]) if (Math.hypot(x, z) > 16 && Math.abs(x) < HALF - 8 && Math.abs(z) < HALF - 8) put(k % 3 ? 0 : 1, x, z, ry);
