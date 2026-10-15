@@ -93,7 +93,13 @@ for (const k of Object.keys(CARS) as CarKind[]) if (!save.cars.includes(k)) save
 for (const k of Object.keys(ZONES)) if (!save.unlocked.includes("zone:" + k)) save.unlocked.push("zone:" + k);
 // ponytail: PRUEBAS libera todo para probar sin jugar (armas, habilidades, menús completos, tornillos de sobra); poner en false al cerrar la etapa de pruebas
 export const PRUEBAS = true;
-if (PRUEBAS) { if (save.scrap < 99999) save.scrap = 99999; for (const k of Object.keys(ABILITIES) as AbilityId[]) if (!save.abilLv[k]) save.abilLv[k] = 1; }
+// Reversible: antes de liberar se guarda aparte lo original (tornillos y habilidades); con PRUEBAS en false se restaura y se borra la copia
+{ const K = "rcfight_antes_pruebas";
+  try {
+    if (PRUEBAS) { if (!localStorage.getItem(K)) localStorage.setItem(K, JSON.stringify({ scrap: save.scrap, abilLv: save.abilLv }));
+      if (save.scrap < 99999) save.scrap = 99999; for (const k of Object.keys(ABILITIES) as AbilityId[]) if (!save.abilLv[k]) save.abilLv[k] = 1; }
+    else { const o = JSON.parse(localStorage.getItem(K) ?? "null"); if (o) { save.scrap = o.scrap; save.abilLv = o.abilLv; localStorage.removeItem(K); } }
+  } catch { /* sin almacenamiento: PRUEBAS sigue aplicando en memoria */ if (PRUEBAS) save.scrap = Math.max(save.scrap, 99999); } }
 // Instalación nueva: "Reducir parpadeos" parte activado si el sistema pide menos movimiento (quien ya tiene guardado conserva su elección)
 try { if (localStorage.getItem("rcfight2") === null) save.calm = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { /* sin almacenamiento */ }
 // Solo en la Mac del autor (localhost): ?tornillos=N fija los tornillos del guardado y se limpia de la dirección. La versión publicada no lo atiende.
