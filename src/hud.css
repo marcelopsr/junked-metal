@@ -114,8 +114,8 @@
 #encAsk.pact .encBtns kbd { margin: 6px 0 0; }
 #encAsk.pact .encBtns button.primary { color: var(--jm-texto); font-size: 15px; background: linear-gradient(180deg, #2b3442, var(--jm-panel) 55%, #161c25); outline: 1px solid var(--jm-borde); outline-offset: -4px; } /* QA final: las dos ofertas valen lo mismo; el relleno verde dejaba ilegibles VENTAJA/COSTO y sus términos */
 #encAsk.pact .encBtns span i { display: inline-grid; place-items: center; width: 14px; height: 14px; margin-right: 6px; vertical-align: 1px; font: 700 13px/1 var(--hf); font-style: normal; color: #101215; }
-#encAsk.pact .encBtns .pg i { background: #7dffb0; border-radius: 50%; } /* H6: ventaja = círculo con +, costo = cuadrado con −: se distinguen sin color (daltonismo) */
-#encAsk.pact .encBtns .pc i { background: var(--jm-rojo-txt, #ff7b6b); border-radius: 1px; }
+#encAsk.pact .encBtns .pg i { background: var(--jm-verde, #7dffb0); border-radius: 50%; } /* H6: ventaja = círculo con +, costo = cuadrado con −: se distinguen sin color (daltonismo) */
+#encAsk.pact .encBtns .pc i { background: var(--cost, #ff7b6b); border-radius: 1px; }
 #encC { width: 100%; min-height: 44px; margin-top: 8px; touch-action: manipulation; }
 #encC.hidden { display: none; }
 @media (max-width: 520px), (orientation: landscape) and (max-height: 500px) { /* celular (vertical y apaisado): las dos opciones lado a lado y compactas, para que RECHAZAR quede arriba de los controles táctiles */
@@ -397,6 +397,7 @@ body.calm #threat i { animation: none; }
   /* 2026-10-15: abajo quedaba pegado a SALTO/TURBO (zona del pulgar): sube a la franja bajo el reloj, a la izquierda de PAUSA/CAM (x > 340 px) */
   #banner { top: calc(max(10px, env(safe-area-inset-top)) + 132px * var(--hud-scale)); bottom: auto; left: 8px; translate: none; transform-origin: 0 0; max-width: calc(100vw - 96px * var(--hud-scale)); padding: 3px 10px 4px; }
   #hud:has(#bossbar:not(.hidden)) ~ #banner { top: calc(max(10px, env(safe-area-inset-top)) + 196px * var(--hud-scale)); bottom: auto; }
+  #hud:has(#encAsk:not(.hidden)) ~ #banner { top: max(8px, env(safe-area-inset-top)); } /* con una decisión abierta (y 64+) el aviso le tapaba el título: sube sobre la tira de señal mientras dura */
   #banner .rxh { display: none; }
   body #banner.evt-warn #bannerTxt, body #banner.evt-now #bannerTxt, body #banner:not(.evt-warn):not(.evt-now) #bannerTxt { font-size: 13px; }
   #bannerIco .ico { width: 16px; height: 16px; }

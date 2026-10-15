@@ -4,7 +4,7 @@ import "@fontsource/silkscreen/700.css";
 import "./style.css";
 import "./hud.css";
 import { beastIcon, icon, PERK_ICON, uiIconUrl } from "./icons";
-import { isTouch, KEYS } from "./input";
+import { btnChip, ctl, isTouch, KEYS } from "./input";
 
 const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram", "cdr"] as const;
 import { LIVE, WEAPONS, type Offer, type WeaponId } from "./weapons";
@@ -409,12 +409,12 @@ export function hudEnc(d: { tag: [string, string, boolean]; pacts: { tag: string
   txt("encTitle", a.title);
   txt("encS", a.left > 0 ? `${Math.ceil(a.left)} S` : "");
   bar("encBar", a.frac * 100);
-  const kb = (k: string) => (isTouch ? "" : ` <kbd>${k}</kbd>`);
+  const kb = (k: string, b: number) => (isTouch || ctl === "touch" ? "" : ctl === "pad" ? ` ${btnChip(b)}` : ` <kbd>${k}</kbd>`); // H12: en táctil nada, con mando la cruceta (main.ts: izq/der/abajo)
   a.opts.forEach((o, i) => {
     const b = $(i ? "encB" : "encA");
-    if (ch("encO" + i, o ?? "")) { b.classList.toggle("hidden", !o); b.innerHTML = o ? `${a.pacts ? pactHtml(a.pacts[i]) : o}${kb(i ? "X" : "Z")}` : ""; }
+    if (ch("encO" + i, o ?? "")) { b.classList.toggle("hidden", !o); b.innerHTML = o ? `${a.pacts ? pactHtml(a.pacts[i]) : o}${kb(i ? "X" : "Z", i ? 15 : 14)}` : ""; }
   });
-  if (ch("encRj", a.reject ?? "")) { const c = $("encC"); c.classList.toggle("hidden", !a.reject); c.innerHTML = a.reject ? `${a.reject}${kb("V")}` : ""; }
+  if (ch("encRj", a.reject ?? "")) { const c = $("encC"); c.classList.toggle("hidden", !a.reject); c.innerHTML = a.reject ? `${a.reject}${kb("V", 13)}` : ""; }
 }
 
 // ---------- Aviso de radio: entra con interferencia y el texto se va tecleando ----------
