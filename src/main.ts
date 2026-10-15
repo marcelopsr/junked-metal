@@ -4,6 +4,7 @@ import { BARRIO_LOGRO, BARRIO_NOMBRE, barrioCompleto, metasStep, type MetaEv } f
 import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, medalla, MEDALLA, newCh } from "./free_challenges";
 import { bestUpdate, newTrick, nutNear, nutsCount, roam, trickLive, trickStep, NUT_N } from "./free_tricks";
 import { spawnNuts } from "./free_nuts";
+import { SECRETOS, SECRETOS_N, secretoNear, secretosCount } from "./free_secrets";
 import { hudHurt, scrapNumber, hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
@@ -409,6 +410,15 @@ function libreTricks(dt: number, grounded: boolean) {
     const n = nutsCount(s.tuercas); hudTuercas(n, NUT_N, true);
     if (n >= NUT_N) { FREE.nutAll(); grant("tuercas"); } // desbloquea la pintura Dorado tuerca (garaje, colores de logro)
     persist(); libreMeta({ k: "tuercas", bits: s.tuercas });
+  }
+  const j = secretoNear(s.secretos, c.pos.x, c.pos.y, c.pos.z); // secretos escondidos (free_secrets.ts): se descubren manejando hasta ellos
+  if (j >= 0) {
+    s.secretos = s.secretos.slice(0, j) + "1" + s.secretos.slice(j + 1);
+    const todos = secretosCount(s.secretos) === SECRETOS_N;
+    FREE.nut(); FX.sparks(c.pos.add(new B.Vector3(0, 0.8, 0)), 16);
+    hudMeta("SECRETO", todos ? "TUERCA ESPECIAL · NUEVA PINTURA EN EL GARAJE" : `${SECRETOS[j].nombre} · ${secretosCount(s.secretos)}/${SECRETOS_N}`);
+    if (todos) { FREE.nutAll(); grant("secretos"); } // tuerca especial: desbloquea la pintura Platino secreto (garaje, colores de logro)
+    persist();
   }
 }
 function libreHud(dt: number, grounded: boolean) {

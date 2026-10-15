@@ -12,7 +12,7 @@ let { $, focusSel, peek, persist, renderGarage, save, shownCar, tabsHtml } = {} 
 const A = (rows: string[]) => rows.join("");
 export const LOCKED_PAINTS: Record<string, [string, string]> = { // color -> [logro, nombre]
   "#39ff14": ["chispazo", "Verde cortocircuito"], "#ff2d95": ["globos", "Magenta cumpleaños"], "#7a1f1f": ["rey", "Burdeos real"],
-  "#e8d9a8": ["tarantula", "Hueso de inquilina"], "#0a2a6b": ["encore_final", "Azul telón"], "#ffd23f": ["diez", "Amarillo horas extra"], "#ffb400": ["tuercas", "Dorado tuerca"],
+  "#e8d9a8": ["tarantula", "Hueso de inquilina"], "#0a2a6b": ["encore_final", "Azul telón"], "#ffd23f": ["diez", "Amarillo horas extra"], "#ffb400": ["tuercas", "Dorado tuerca"], "#a7b4c2": ["secretos", "Platino secreto"],
   "#9b5de5": ["cartel_escenarios", "Violeta telón"], "#ff6f61": ["cartel_pactos", "Coral taquilla"], "#7fe0c3": ["cartel_funcion", "Menta camerino"], // premios de la Cartelera de ENCORE (menu/cartelera.ts)
   "#00e5ff": ["barrio_skate", "Cian skatepark"], "#3ddc84": ["barrio_parque", "Verde césped"], "#1e90ff": ["barrio_acuatico", "Azul pileta"], // premios de los objetivos de barrio del Paseo libre (free_goals.ts)
   "#f4f8ff": ["barrio_nieve", "Blanco nevado"], "#ff7a00": ["barrio_obstaculos", "Naranja cono"],

@@ -116,6 +116,11 @@ export const PASEO: PaseoLeg[] = [
   { id: "loma oeste", at: [-238, 1, -170], yaw: Math.PI, wp: [[-238, -196], [-238, -225]], secs: 7 },
   { id: "carril B", at: [258, 1, -185], yaw: -E, wp: [[130, -185]], secs: 17 },
   { id: "carril C", at: [190, 1, -230], yaw: E, wp: [[258, -230]], secs: 8 },
+  // Secretos (free_secrets.ts): llegan manejando desde la salida, sin teletransporte al lugar
+  { id: "secreto cueva", at: [178, 1, 212], yaw: 0, wp: [[178, 246]], secs: 9 },
+  { id: "secreto túnel", at: [-262, 1, 222], yaw: E, wp: [[-225, 222]], secs: 7 },
+  { id: "secreto claro", at: [-5, 1, -158], yaw: -E, wp: [[-45, -158]], secs: 6 },
+  { id: "secreto azotea", at: [80, 1, -120], yaw: 0, wp: [[80, -40]], secs: 10 },
 ];
 let legI = -1, legT = 0, legW = 0;
 export const paseoReset = () => { legI = -1; legT = 0; legW = 0; };

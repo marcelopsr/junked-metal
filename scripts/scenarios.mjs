@@ -446,6 +446,12 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
   { id: "acuatico", act: libreAt(152, 130) },
   { id: "nieve", act: libreAt(-150, -100, Math.PI) },
   { id: "obstaculos", act: libreAt(160, -140, Math.PI / 2) }, // sobre el carril A, mirando al este: antes (150, -100) mostraba solo suelo y el circuito quedaba lejos
+  // Secretos (src/free_secrets.ts): una vista a ~25 m de cada entrada
+  { id: "secreto-cueva", perf: false, act: libreAt(178, 218, 0) },
+  { id: "secreto-tunel", perf: false, act: libreAt(-262, 222, Math.PI / 2) },
+  { id: "secreto-claro", perf: false, act: libreAt(-10, -158, -Math.PI / 2) },
+  { id: "secreto-azotea", perf: false, act: libreAt(80, -80, 0) },
+  { id: "secreto-hallazgo", perf: false, act: async (p) => { await libreAt(178, 246, 0)(p); await p.waitForTimeout(450); } }, // adentro de la cueva: cartel SECRETO; la pausa de abajo muestra SECRETOS 1/4
   { id: "tuerca", perf: false, act: libreAt(26, 28, 0.322) }, // tuerca dorada sobre el trampolín del atajo noreste, a ~20 m al frente (34, 3,5, 46)
   // Cartel de ayuda y botón táctil GIRO: el auto se suelta a 14 m (cae ~1,5 s) y se captura al poco de despegar, con el aviso de una sola vez
   { id: "aire", perf: false, act: async (p) => { await libreAt(-150, 130)(p); await p.evaluate(async () => { (await import("/src/menu.ts")).save.libre.aviso = false; }); // el cartel sale una sola vez: las caídas de libreAt ya lo gastaron
