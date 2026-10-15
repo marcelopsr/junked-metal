@@ -266,7 +266,7 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
     const tr = $("xp").parentElement!; tr.classList.remove("pulse"); void tr.offsetWidth; tr.classList.add("pulse");
   }
   const prevLv = memo.lvN as number | undefined;
-  const lvTxt = `NV ${pad(d.level, 2)}${d.pending ? ` +${d.pending}` : ""}`;
+  const lvTxt = `NV ${pad(d.level - (d.pending ?? 0), 2)}${d.pending ? ` +${d.pending}` : ""}`; // nivel ya elegido + los que faltan elegir: coincide con el «Nivel N» de la carta
   if (ch("lvlTxt", lvTxt)) $("lvl").textContent = lvTxt;
   const isMile = d.level % 10 === 0 && d.level > 0;
   if (ch("lvMile", +isMile)) $("lvl").classList.toggle("milestone", isMile);
@@ -368,7 +368,9 @@ export function hudBoss(name: string | null, pct = 1, kind?: string, enraged = f
 // ---------- ENCORE: contador de escenario y ventana de decisión (encore.ts) ----------
 /** null = Supervivencia: todo oculto. tag = [prefijo, texto, numerado]; ask = ventana abierta con sus dos botones (null = sin botón) y lo que queda. */
 type EncAsk = { title: string; opts: [string | null, string | null]; left: number; frac: number; pacts?: [PactView, PactView]; reject?: string };
-const pactHtml = (p: PactView) => `<b>${p.name}</b><small>VENTAJA</small>${p.gain.map((t) => `<span class="pg"><i aria-hidden="true">+</i>${t}</span>`).join("")}<small>COSTO</small>${p.cost.map((t) => `<span class="pc"><i aria-hidden="true">−</i>${t}</span>`).join("")}${p.afin ? `<small>ARMAS AFINES</small><span class="pg"><i aria-hidden="true">+</i>${p.afin.map((w) => WEAPONS[w as WeaponId].name.toUpperCase()).join(" · ")}</span>` : ""}<em>${p.dur}</em>`;
+/** La duración sola («PRÓXIMO ESCENARIO») se leía como rótulo sin valor: se dice cuánto dura. */
+const durLbl = (d: string) => (d === "PRÓXIMO ESCENARIO" ? "SOLO EL PRÓXIMO ESCENARIO" : d === "RESTO DE LA RUN" ? "HASTA EL FINAL DE LA EXPEDICIÓN" : `DURA ${d}`);
+const pactHtml = (p: PactView) => `<b>${p.name}</b><small>VENTAJA</small>${p.gain.map((t) => `<span class="pg"><i aria-hidden="true">+</i>${t}</span>`).join("")}<small>COSTO</small>${p.cost.map((t) => `<span class="pc"><i aria-hidden="true">−</i>${t}</span>`).join("")}${p.afin ? `<small>ARMAS AFINES</small><span class="pg"><i aria-hidden="true">+</i>${p.afin.map((w) => WEAPONS[w as WeaponId].name.toUpperCase()).join(" · ")}</span>` : ""}<em>${durLbl(p.dur)}</em>`;
 /** ENCORE para 2 (R7a): vida del otro jugador; down = fuera hasta el próximo escenario. */
 export function hudMate(d: { n: string; hp: number; max: number; down: boolean } | null) {
   if (ch("mateOn", !!d)) $("mateHp").classList.toggle("hidden", !d);
@@ -403,7 +405,8 @@ export function hudEnc(d: { tag: [string, string, boolean]; pacts: { tag: string
   if (ch("encAskOn", !!a)) $("encAsk").classList.toggle("hidden", !a);
   if (!a) return;
   if (ch("encPact", !!a.pacts)) $("encAsk").classList.toggle("pact", !!a.pacts);
-  txt("encTitle", a.title); txt("encS", a.left > 0 ? `${Math.ceil(a.left)} S` : "");
+  if (ch("encRoute", a.title === "ELIJAN EL DESTINO")) $("encAsk").classList.toggle("route", a.title === "ELIJAN EL DESTINO");
+  txt("encTitle", a.title === "ELIJAN EL DESTINO" ? "ELEGIR DESTINO" : a.title); // impersonal: vale para 1 o 2 jugadores txt("encS", a.left > 0 ? `${Math.ceil(a.left)} S` : "");
   bar("encBar", a.frac * 100);
   const kb = (k: string) => (isTouch ? "" : ` <kbd>${k}</kbd>`);
   a.opts.forEach((o, i) => {
