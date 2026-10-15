@@ -460,6 +460,10 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
 const escena = (z) => async (p) => {
   await wait(p, () => window.__enc?.info?.() && window.__info().state === "play");
   await p.evaluate(async (z) => {
+    // Determinismo de la medición: Math.random sembrado por escena (texturas canvas, rocas, parpadeos) y "calm" apaga el parpadeo del tubo del garaje (usa performance.now, no el tick)
+    let sd = 0; for (const ch of z) sd = (sd * 31 + ch.charCodeAt(0)) >>> 0;
+    Math.random = () => ((sd = (Math.imul(sd, 1664525) + 1013904223) >>> 0) / 4294967296);
+    document.body.classList.add("calm");
     window.__god();
     const W = await import("/src/world.ts"), M = await import("/src/moon.ts"), R = await import("/src/encore_run.ts"), G = await import("/src/moon_goals.ts"), V = window.__carObj().root.position.constructor; // Vector3 de Babylon sin resolver el paquete desde la página
     const luna = z.startsWith("luna");
