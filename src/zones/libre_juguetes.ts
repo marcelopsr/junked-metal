@@ -1,9 +1,11 @@
 import * as B from "@babylonjs/core";
 import { PhysicsShape, PhysicsShapeBox, PhysicsShapeCylinder, PhysicsShapeSphere } from "@babylonjs/core/Physics/v2/physicsShape.js"; // fuera del barril bjs.ts (compartido, solo del orquestador)
+import { PhysicsMaterialCombineMode } from "@babylonjs/core/Physics/v2/physicsMaterial.js";
 import { PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin.js";
 import { box, cyl, merge, sph } from "../models";
 import { M, pbr, shadows } from "../render";
 import { FREE } from "../sfx";
+import { hudCartel } from "../ui";
 import { decal, scene, stat, undo } from "./common";
 import type { Barrio } from "./libre";
 
@@ -13,8 +15,8 @@ import type { Barrio } from "./libre";
 // Reseteo: un juguete fuera de su sitio vuelve a él si la cámara se aleja a más de 90 m o si lleva 20 s sin verse (revisión cada 0,5 s). Generador local: no hay azar (todo fijo).
 // Libres: spawn del auto (0,-20), atajos NE/SE (bot de paseo: (24,16)->(34,46) y (20,-20)->(41,-41)), farolas de la plaza (r 34) y el cartel (10,10). Pose ANTES del PhysicsBody.
 
-type Kind = { src: B.Mesh; shape: PhysicsShape; mass: number; inertia: B.Vector3; snd: 0 | 1 | 2 };
-type Toy = { m: B.InstancedMesh; body: B.PhysicsBody; x: number; y: number; z: number; ry: number; off: number; tp: number };
+type Kind = { src: B.Mesh; shape: PhysicsShape; mass: number; inertia: B.Vector3; snd: 0 | 1 | 2; tint?: B.Color4 };
+type Toy = { k: Kind; m: B.InstancedMesh; body: B.PhysicsBody; x: number; y: number; z: number; ry: number; off: number; tp: number };
 
 function build(_cx: number, _cz: number) {  const orange = M.plastic("#f97316"), white = M.plastic("#f4efe2"), red = M.plastic("#e53935"), blue = M.plastic("#1e66d0");
   const src = (n: string, parts: B.Mesh[]) => { const m = merge(n, parts); m.position.y = -500; m.isPickable = false; shadows.addShadowCaster(m); return m; };
@@ -35,19 +37,21 @@ function build(_cx: number, _cz: number) {  const orange = M.plastic("#f97316"),
     shape: sh(new PhysicsShapeSphere(Z0, d / 2, scene), 0.6), mass, inertia: new B.Vector3(1, 1, 1).scale(0.4 * mass * (d / 2) ** 2), snd: 1 });
   const beach = ball("juguPelotaA", 1.8, blue, 0.08), soccer = ball("juguPelotaF", 1.6, M.plastic("#f4efe2"), 0.06), beachB = ball("juguPelotaB", 2, red, 0.1);
   const BS = 0.8, blockShape = sh(new PhysicsShapeBox(Z0, B.Quaternion.Identity(), new B.Vector3(BS, BS, BS), scene), 0, 0.9); // pilas estables: sin rebote y con rozamiento alto
-  const blocks = ["#e53935", "#1e66d0", "#f2c230", "#43a047"].map((c, i): Kind => { const mt = M.plastic(c);
-    return { src: src("juguBloque" + i, [box(BS, BS, BS, mt, [0, 0, 0]), cyl(0.3, 0.3, 0.12, mt, [-0.2, BS / 2 + 0.05, -0.2], undefined, 8), cyl(0.3, 0.3, 0.12, mt, [0.2, BS / 2 + 0.05, -0.2], undefined, 8), cyl(0.3, 0.3, 0.12, mt, [-0.2, BS / 2 + 0.05, 0.2], undefined, 8), cyl(0.3, 0.3, 0.12, mt, [0.2, BS / 2 + 0.05, 0.2], undefined, 8)]),
-      shape: blockShape, mass: 0.3, inertia: iBox(0.3, BS, BS, BS), snd: 2 }; });
-  const CS = 1.1, wood = pbr("juguCaja", { color: "#c8964f", rough: 0.7 }), woodD = pbr("juguCajaB", { color: "#7a5426", rough: 0.8 });
+  // Una sola fuente blanca; el color va por instancia (multiplica el color de vértice: 4 dibujos menos que una fuente por color)
+  const bsrc = src("juguBloque", [box(BS, BS, BS, M.plastic("#ffffff"), [0, 0, 0]), ...[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([i, j]) => cyl(0.3, 0.3, 0.12, M.plastic("#ffffff"), [i * 0.2, BS / 2 + 0.05, j * 0.2], undefined, 8))]);
+  bsrc.registerInstancedBuffer("color", 4);
+  const blocks = ["#e53935", "#1e66d0", "#f2c230", "#43a047"].map((c): Kind => ({ src: bsrc, shape: blockShape, mass: 0.3, inertia: iBox(0.3, BS, BS, BS), snd: 2, tint: B.Color3.FromHexString(c).toLinearSpace().toColor4(1) }));
+  const CS = 1.1, wood = pbr("juguCaja", { color: "#c8964f", rough: 0.7 }), woodD = pbr("juguCajaB", { color: "#7a5426", rough: 0.7 });
   const crate: Kind = { src: src("juguCaja", [box(CS, CS, CS, wood, [0, 0, 0]), box(CS + 0.04, 0.14, CS + 0.04, woodD, [0, CS / 2 - 0.07, 0]), box(CS + 0.04, 0.14, CS + 0.04, woodD, [0, -CS / 2 + 0.07, 0]), box(0.14, CS + 0.04, CS + 0.04, woodD, [CS / 2 - 0.07, 0, 0]), box(0.14, CS + 0.04, CS + 0.04, woodD, [-CS / 2 + 0.07, 0, 0])]),
     shape: sh(new PhysicsShapeBox(Z0, B.Quaternion.Identity(), new B.Vector3(CS, CS, CS), scene), 0, 0.9), mass: 0.4, inertia: iBox(0.4, CS, CS, CS), snd: 2 };
-  const kinds = [cone, pin, beach, soccer, beachB, crate, ...blocks];
+  const kinds = new Set([cone, pin, beach, soccer, beachB, crate, ...blocks].map((k) => k.src));
 
   // --- Instancias (la pose se da a la malla ANTES de crear el cuerpo)
   const toys: Toy[] = [];
   let n = 0;
   const put = (k: Kind, x: number, y: number, z: number, ry = 0) => {
     const m = k.src.createInstance("jug" + n++);
+    if (k.tint) m.instancedBuffers.color = k.tint;
     m.position.set(x, y, z); m.rotationQuaternion = B.Quaternion.FromEulerAngles(0, ry, 0); m.isPickable = false; m.receiveShadows = true;
     const body = new B.PhysicsBody(m, B.PhysicsMotionType.DYNAMIC, false, scene);
     body.shape = k.shape;
@@ -56,7 +60,7 @@ function build(_cx: number, _cz: number) {  const orange = M.plastic("#f97316"),
     body.setCollisionCallbackEnabled(true);
     const s = k.snd;
     body.getCollisionObservable().add((e) => { if (e.type === PhysicsEventType.COLLISION_STARTED && e.impulse > 0.02) FREE.toy(s); });
-    toys.push({ m, body, x, y, z, ry, off: 0, tp: 0 });
+    toys.push({ k, m, body, x, y, z, ry, off: 0, tp: 0 });
   };
 
   // Pista de bolos al oeste (x -24, z -14..14): tablón claro, canaletas oscuras, tope al fondo; el auto entra desde el sur (-z) y los pinos van en triángulo
@@ -68,12 +72,19 @@ function build(_cx: number, _cz: number) {  const orange = M.plastic("#f97316"),
 
   // Arco de fútbol al este (boca al oeste, 7 m): postes, travesaño, red de fondo y laterales; pelota delante
   const post = M.plastic("#f4efe2"), net = pbr("juguRed", { color: "#dfe6ea", rough: 1, alpha: 0.35 });
-  for (const s of [-1, 1]) {
-    stat(box(0.3, 2.5, 0.3, post, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [30, 1.25, s * 3.6]);
-    stat(box(5, 2.4, 0.08, net, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [32.5, 1.2, s * 3.6]);
-  }
-  stat(box(0.3, 0.3, 7.5, post, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [30, 2.5, 0]);
-  stat(box(0.08, 2.4, 7.2, net, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [35, 1.2, 0]);
+  const soft = (m: B.Mesh) => { m.physicsBody!.shape!.material = { friction: 1, restitution: 0, restitutionCombine: PhysicsMaterialCombineMode.MINIMUM }; return m; }; // red acolchada: gana el menor rebote, no devuelve la pelota
+  // Colliders invisibles + UNA malla visual fusionada (postes opacos + red translúcida = 2 dibujos en vez de 6)
+  const parts: B.Mesh[] = [];
+  const arco = (w: number, h: number, d: number, isNet: boolean, x: number, y: number, z: number, visual = true) => {
+    const c = stat(box(w, h, d, isNet ? net : post, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, y, z]); c.isVisible = false;
+    if (isNet) soft(c);
+    if (visual) { const v = box(w, h, d, isNet ? net : post, [x, y, z]); parts.push(v); }
+  };
+  for (const s of [-1, 1]) { arco(0.3, 2.5, 0.3, false, 30, 1.25, s * 3.6); arco(5, 2.4, 0.08, true, 32.5, 1.2, s * 3.6); }
+  arco(0.3, 0.3, 7.5, false, 30, 2.5, 0); arco(0.08, 2.4, 7.2, true, 35, 1.2, 0);
+  arco(0.3, 2.4, 7.2, true, 35.2, 1.2, 0, false); // respaldo grueso: la pelota rápida no atraviesa la red
+  const arcoM = merge("juguArco", parts); arcoM.isPickable = false; shadows.addShadowCaster(arcoM);
+  undo.push(() => arcoM.dispose());
   put(soccer, 21, 0.8, 0);
 
   // Conos en hilera al sur (z -26) y dos pelotas grandes al norte
@@ -88,12 +99,31 @@ function build(_cx: number, _cz: number) {  const orange = M.plastic("#f97316"),
   pyr(() => crate, CS, 22, -11, Math.PI / 2);
 
   // Reseteo: cada 0,5 s revisa los desplazados (> 0,8 m del sitio o volcados/caídos)
-  let acc = 0;
-  const q = new B.Quaternion();
+  const pins = toys.filter((t) => t.k === pin), ball0 = toys.find((t) => t.k === soccer)!;
+  let acc = 0, clock = 0, pinsN = 0, pinsT0 = 0, golT = 0, golIn = false;
+  const reset = (t: Toy) => {
+    t.off = 0; t.m.position.set(t.x, t.y, t.z); B.Quaternion.RotationYawPitchRollToRef(t.ry, 0, 0, q); t.m.rotationQuaternion!.copyFrom(q);
+    t.body.setLinearVelocity(Z0); t.body.setAngularVelocity(Z0);
+    t.body.setPrestepType(B.PhysicsPrestepType.TELEPORT); t.tp = 3;
+  };
+  const q = new B.Quaternion(), v = new B.Vector3();
   const obs = scene.onBeforeRenderObservable.add(() => {
+    // Gol (cada cuadro): la pelota dentro de la boca se frena fuerte (red acolchada) y a los 4 s vuelve al punto
+    const bp = ball0.m.position, inGol = bp.x > 30.4 && bp.x < 35 && Math.abs(bp.z) < 3.5 && bp.y < 2.4;
+    if (inGol) { ball0.body.getLinearVelocityToRef(v); ball0.body.setLinearVelocity(v.scaleInPlace(0.85)); }
+    if (inGol && !golIn) { hudCartel("GOL"); FREE.nutAll(); golT = clock; }
+    golIn = inGol;
     for (const t of toys) if (t.tp > 0 && --t.tp === 0) t.body.setPrestepType(B.PhysicsPrestepType.DISABLED); // vuelve a que la física mande
     if ((acc += scene.getEngine().getDeltaTime() / 1000) < 0.5) return;
-    const dt = acc; acc = 0;
+    const dt = acc; acc = 0; clock += dt;
+    // Marcador: pino volteado = inclinado o corrido > 0,6 m; CHUZA = los 10 caen a los 4 s del primero
+    const down = pins.reduce((c, t) => c + ((t.m.rotationQuaternion!.x ** 2 + t.m.rotationQuaternion!.z ** 2 > 0.07 || (t.m.position.x - t.x) ** 2 + (t.m.position.z - t.z) ** 2 > 0.36 ? 1 : 0)), 0);
+    if (down !== pinsN) {
+      if (pinsN === 0) pinsT0 = clock;
+      pinsN = down;
+      if (down === 10 && clock - pinsT0 <= 4) { hudCartel("CHUZA"); FREE.nutAll(); } else if (down > 0) { hudCartel(`PINOS ${down}/10`); FREE.sign(); }
+    }
+    if (golT && clock - golT > 4) { golT = 0; reset(ball0); }
     const cam = scene.activeCamera; if (!cam) return;
     const cp = cam.globalPosition;
     for (const t of toys) {
@@ -101,13 +131,11 @@ function build(_cx: number, _cz: number) {  const orange = M.plastic("#f97316"),
       if ((p.x - t.x) ** 2 + (p.z - t.z) ** 2 + (p.y - t.y) ** 2 < 0.64 && Math.abs(p.y - t.y) < 0.3) { t.off = 0; continue; }
       t.off = cam.isInFrustum(t.m) ? 0 : t.off + dt;
       if (t.off > 20 || (cp.x - t.x) ** 2 + (cp.z - t.z) ** 2 > 90 * 90) {
-        t.off = 0; t.m.position.set(t.x, t.y, t.z); B.Quaternion.RotationYawPitchRollToRef(t.ry, 0, 0, q); t.m.rotationQuaternion!.copyFrom(q);
-        t.body.setLinearVelocity(Z0); t.body.setAngularVelocity(Z0);
-        t.body.setPrestepType(B.PhysicsPrestepType.TELEPORT); t.tp = 3;
+        reset(t);
       }
     }
   });
-  undo.push(() => { scene.onBeforeRenderObservable.remove(obs); for (const t of toys) t.body.dispose(); for (const s of shapes) s.dispose(); for (const k of kinds) k.src.dispose(); });
+  undo.push(() => { scene.onBeforeRenderObservable.remove(obs); for (const t of toys) t.body.dispose(); for (const s of shapes) s.dispose(); for (const k of kinds) k.dispose(); });
 }
 
 // ponytail: reseteo por distancia/tiempo fuera de cámara y sin sonido por velocidad; techo ~42 cuerpos. Si hacen falta más, partirlos por zonas y activarlos solo con la cámara cerca.
