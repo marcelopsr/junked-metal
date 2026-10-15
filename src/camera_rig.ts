@@ -81,6 +81,7 @@ const shot = (scr: string) => (c.engine.getAspectRatio(c.cam) < 1 && SHOTS[scr +
 let previewKey = "", previewR = 0;
 
 export function cameraTick(dt: number) {
+  HOLE.r = 0; // se enciende abajo solo en partida con auto (modos archivados lo dejaban activo)
   const k = 1 - Math.exp(-5 * dt);
   if (c.state === "race" || c.state === "duel" || c.state === "match3") {
     // carrera / demolición manejan cámara en su módulo
@@ -159,7 +160,7 @@ export function cameraTick(dt: number) {
       const e = c.engine, w = e.getRenderWidth(), h = e.getRenderHeight(), car = c.lead.car.pos;
       const p = B.Vector3.Project(car, B.Matrix.IdentityReadOnly, c.scene.getTransformMatrix(), c.cam.viewport.toGlobal(w, h));
       const d = B.Vector3.Distance(c.cam.position, car);
-      HOLE.x = p.x; HOLE.y = e.isWebGPU ? p.y : h - p.y; HOLE.r = (h * 2.2) / (d * Math.tan(c.cam.fov / 2));
+      HOLE.x = p.x; HOLE.y = e.isWebGPU ? p.y : h - p.y; HOLE.r = (h * 2.2) / (2 * d * Math.tan(c.cam.fov / 2)); // 2,2 m de radio en el mundo
       HOLE.cam.copyFrom(c.cam.position); HOLE.d = d; HOLE.h = car.y + 0.8;
     } else HOLE.r = 0;
     // Profundidad de campo de maqueta: foco en el auto, medido sobre el eje de la cámara (igual que en los menús)

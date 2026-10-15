@@ -223,15 +223,15 @@ function gardenKit(put: Put) {
   put(gate, -58, -8, Math.PI / 2, 4.6, 11, 7, 1.6);
   // 7. Volúmenes oscuros bajos cerca de la salida: macetas de terracota, arbustos oscuros, regadera, manguera enrollada, tronco y piedra (siluetas oscuras, pasillos > 6 m entre sí)
   const iron = JP("#24282d", 0.6), terra = JP("#B5603A", 0.7), rim = JP("#9a4f2e", 0.7), soil = JP("#2a190d", 1), leaf = [JP("#1b4a1c", 0.7), JP("#245a24", 0.7)];
-  const bigPot = [cyl(2.2, 1.5, 2.2, terra, [0, 1.1, 0], undefined, 12), cyl(2.5, 2.4, 0.5, rim, [0, 2.2, 0], undefined, 12), cyl(2.1, 2.1, 0.1, soil, [0, 2.4, 0], undefined, 12),
+  const bigPot = () => [cyl(2.2, 1.5, 2.2, terra, [0, 1.1, 0], undefined, 12), cyl(2.5, 2.4, 0.5, rim, [0, 2.2, 0], undefined, 12), cyl(2.1, 2.1, 0.1, soil, [0, 2.4, 0], undefined, 12),
     ...Array.from({ length: 9 }, (_, k) => { const a = k * 0.7, L = 2.8 + (k % 3) * 0.5, t = 0.8 + (k % 2) * 0.35; return box(0.9, 0.12, L, leaf[k % 2], [Math.sin(a) * L * 0.5 * Math.cos(t), 2.5 + L * 0.5 * Math.sin(t), Math.cos(a) * L * 0.5 * Math.cos(t)], [-t, a, 0]); })];
-  put(bigPot, 14, 12, 0, 2.6, 4.8, 2.6, 4.8);
-  put(bigPot, -13, -4, 0.5, 2.6, 4.8, 2.6, 4.8);
-  const bush = [sph(3.4, JP("#123a14", 0.8), [0, 2.4, 0], [1.4, 0.9, 1.1], 5), sph(2.4, JP("#1b4a1c", 0.8), [-2.2, 1.8, 1], [1, 0.9, 1], 5), sph(2.2, JP("#0f3012", 0.8), [2.4, 1.7, -0.8], [1, 0.9, 1], 5)];
-  put(bush, 8, 25, 0.3, 4.5, 8, 4, 6);
-  put(bush, -8, 10, -0.4, 4.5, 8, 4, 6);
-  put(bush, 24, 20, 0.6, 4.5, 8, 4, 6);
-  put(bush, -32, 16, 0.9, 4.5, 8, 4, 6);
+  put(bigPot(), 14, 12, 0, 2.6, 4.8, 2.6, 4.8);
+  put(bigPot(), -13, -4, 0.5, 2.6, 4.8, 2.6, 4.8);
+  const bush = () => [sph(3.4, JP("#123a14", 0.8), [0, 2.4, 0], [1.4, 0.9, 1.1], 5), sph(2.4, JP("#1b4a1c", 0.8), [-2.2, 1.8, 1], [1, 0.9, 1], 5), sph(2.2, JP("#0f3012", 0.8), [2.4, 1.7, -0.8], [1, 0.9, 1], 5)];
+  put(bush(), 8, 25, 0.3, 4.5, 8, 4, 6);
+  put(bush(), -8, 10, -0.4, 4.5, 8, 4, 6);
+  put(bush(), 24, 20, 0.6, 4.5, 8, 4, 6);
+  put(bush(), -32, 16, 0.9, 4.5, 8, 4, 6);
   put([...[0, 1, 2].map((k) => tor(5 - k * 0.9, 0.55, iron, [0, 0.55 + k * 0.6, 0], undefined, 14)), tube([[3, 0.5, 0], [5, 0.5, 2], [8, 0.4, 3.5]], 0.45, iron)], -2, 24, 0.3, 5, 10, 2.2, 10);
   put([rbox(7, 2.4, 2.6, 0.5, JP("#3a2412", 0.9), [0, 1.2, 0], [0, 0, 0.08]), cyl(1.1, 1.1, 0.12, JP("#6a4a2a", 0.9), [3.5, 1.2, 0], [0, 0, Math.PI / 2], 10), sph(2, JP("#3a3d42", 0.9), [-5, 1, 2.4], [1.3, 0.7, 1], 5)], 8, -16, 0.9, 4.5, 8, 2.4, 3);
 }
