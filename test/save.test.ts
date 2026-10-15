@@ -1,4 +1,5 @@
 // Guardado: parseSave (src/savefmt.ts) valida y migra lo que sale de localStorage / de un archivo importado.
+import { fantasmaEnc } from "../src/free_challenges";
 import { describe, expect, it } from "vitest";
 import { parseSave, type SaveDeps } from "../src/savefmt";
 import type { Save } from "../src/menu";
@@ -141,7 +142,7 @@ describe("parseSave", () => {
     expect(load({ encore: { seenPacts: "x" } }).encore.seenPacts).toEqual([]);
   });
   it("Paseo libre: un guardado viejo sin bloque libre migra a vacío; lo inválido se descarta", () => {
-    const vacio = { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, metas: [], secretos: "0000" };
+    const vacio = { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, ghost: true, fantasma: { obs: "", skate: "", nieve: "" }, metas: [], secretos: "0000" };
     expect(load({}).libre).toEqual(vacio);
     expect(load({ libre: { metas: ["skate_bowl", "skate_bowl", "inventada", 3] } }).libre.metas).toEqual(["skate_bowl"]); // objetivos de barrio: ids conocidos, sin repetir
     expect(load({ libre: { metas: "skate_bowl" } }).libre.metas).toEqual([]);
@@ -151,6 +152,9 @@ describe("parseSave", () => {
     expect(load({ libre: { aviso: true } }).libre.aviso).toBe(true); expect(load({ libre: { aviso: "si" } }).libre.aviso).toBe(false); // cartel del giro aéreo: una sola vez
     expect(load({ libre: { secretos: "0110" } }).libre.secretos).toBe("0110"); // secretos: 4 bits; cualquier otra cosa vuelve a vacío
     expect(load({ libre: { secretos: "01" } }).libre.secretos).toBe("0000"); expect(load({ libre: { secretos: 3 } }).libre.secretos).toBe("0000");
+    const f = fantasmaEnc(Array.from({ length: 5 }, (_, i) => [i, 0, 0, 0, 0, 0, 1, 0]));
+    expect(load({ libre: { fantasma: { obs: f, skate: "!!corrupto", nieve: "AAAA" }, ghost: false } }).libre).toMatchObject({ fantasma: { obs: f, skate: "", nieve: "" }, ghost: false }); // fantasma: válido se conserva, corrupto o de largo raro se descarta
+    expect(load({ libre: { fantasma: { obs: "A".repeat(30000) } } }).libre.fantasma.obs).toBe("");
     expect(load({ libre: 5 }).libre).toEqual(vacio);
   });
 });

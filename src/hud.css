@@ -597,6 +597,7 @@ body.calm #antic, body.calm #signal .h-track.pulse { animation: none !important;
 #desafio b { display: block; font-weight: 400; font-size: 16px; letter-spacing: .1em; color: #aab0ba; }
 #desafio i { display: block; font-style: normal; font-size: 44px; line-height: 1; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
 #desafio small { display: block; font-size: 16px; letter-spacing: .08em; color: #ffc21a; }
+#desafio u { display: block; text-decoration: none; font-size: 26px; line-height: 1.1; letter-spacing: .06em; font-variant-numeric: tabular-nums; } #desafio u.ok { color: var(--ok); } #desafio u.low { color: var(--low); } /* diferencia contra el fantasma */
 /* Objetivo de barrio cumplido (free_goals.ts): panel con filo amarillo, arriba a la izquierda bajo el contador de tuercas */
 #meta { position: absolute; left: 12px; top: 62px; display: none; max-width: 300px; padding: 6px 14px 4px; background: #1a1d22; border-left: 3px solid #ffc21a; color: #fff; font-family: "Bebas Neue", sans-serif; text-transform: uppercase; pointer-events: none; }
 #meta.show { display: block; animation: trucoIn .18s cubic-bezier(0, 0, .2, 1); }

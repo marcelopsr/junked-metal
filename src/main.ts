@@ -1,7 +1,8 @@
 import { tut, tutEnd, tutOffers, tutOn, tutStart } from "./tutorial";
 import { hudDesafio, hudAire, hudAviso, hudSpinBtn, hudLibreOff, hudMeta, hudTruco, hudTuercas } from "./ui";
 import { BARRIO_LOGRO, BARRIO_NOMBRE, barrioCompleto, metasStep, type MetaEv } from "./free_goals";
-import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, medalla, MEDALLA, newCh } from "./free_challenges";
+import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, medalla, MEDALLA, newCh, fantasmaAt, fantasmaCp, fantasmaDec, fantasmaEnc, fmtDif, FANTASMA_DT, type ChEvent, type Muestra } from "./free_challenges";
+import { ghostOn, ghostOff, ghostPose } from "./free_ghost";
 import { bestUpdate, newTrick, nutNear, nutsCount, roam, trickLive, trickStep, NUT_N } from "./free_tricks";
 import { spawnNuts } from "./free_nuts";
 import { SECRETOS, SECRETOS_N, secretoNear, secretosCount } from "./free_secrets";
@@ -221,7 +222,7 @@ let preview: B.Mesh | null = null;
 
 function clearRun() {
   libre = false; $("hud").classList.remove("libre"); clearTimeout(libreCartelT); $("barrio").classList.add("hidden");
-  roam.on = false; roam.extra = roam.air = 0; libreNuts?.dispose(); libreNuts = null; hudLibreOff();
+  ghostStop(); roam.on = false; roam.extra = roam.air = 0; libreNuts?.dispose(); libreNuts = null; hudLibreOff();
   Object.assign(run, freshRun()); resetDrive();
   mateClear();
   encClear(); GOAL_IO.tele = false; GOAL_IO.half = 0;
@@ -359,20 +360,42 @@ function libreMeta(ev: MetaEv) {
   if (fin) grant(BARRIO_LOGRO[b]);
 }
 /** Desafíos de Paseo libre: arco de inicio -> reloj/puntaje en el HUD -> récord en save.libre.desafio. */
+// Fantasma del récord: grabación del intento en curso (rec) y reproducción del guardado (gRows, gCp = segundos del fantasma en cada punto de control y la meta)
+let rec: Muestra[] = [], gRows: Muestra[] | null = null, gCp: number[] = [], gDif = { txt: "", ok: true };
+const ghostStop = () => { gRows = null; gDif.txt = ""; ghostOff(); };
+function libreGhost(e: ChEvent) {
+  const d = libreCh.d, c = lead.car!;
+  if (e?.kind === "inicio") {
+    ghostStop(); rec = [];
+    gRows = save.libre.ghost ? fantasmaDec(save.libre.fantasma[e.d.id]) : null;
+    if (gRows) { gCp = fantasmaCp(e.d, gRows); ghostOn(scene, libreKind, carOpts()); }
+  }
+  if (!d) { if (!gRows) return; ghostStop(); return; } // terminó o falló: el fantasma desaparece
+  for (; rec.length * FANTASMA_DT <= libreCh.t; ) { const q = c.root.rotationQuaternion; rec.push([c.pos.x, c.pos.y, c.pos.z, q?.x ?? 0, q?.y ?? 0, q?.z ?? 0, q?.w ?? 1, libreCh.pts]); }
+  if (!gRows) return;
+  const g = fantasmaAt(gRows, libreCh.t);
+  ghostPose(g);
+  if (d.tipo === "puntos") { const v = libreCh.pts - g[7]; gDif = { txt: fmtDif("puntos", v), ok: v >= 0 }; }
+  else if (e?.kind === "punto" && gCp[libreCh.cp - 1] >= 0) { const v = libreCh.t - gCp[libreCh.cp - 1]; gDif = { txt: fmtDif("tiempo", v), ok: v <= 0 }; }
+}
 function libreChallenge(dt: number) {
-  const p = lead.car!.pos, best = save.libre.desafio, e = chStep(libreCh, dt, p.x, p.z, best);
+  const p = lead.car!.pos, best = save.libre.desafio, gPrev = gRows, gLast = best[libreCh.d?.id ?? "obs"] / 1000, gPts = gRows?.[gRows.length - 1][7] ?? 0; // el fantasma que se vencía (su tiempo es el récord anterior), antes de que el nuevo lo reemplace
+  const e = chStep(libreCh, dt, p.x, p.z, best);
+  libreGhost(e);
   if (e?.kind === "inicio" || e?.kind === "punto") { SFX.pickup(); chFinT = 0; }
   if (e && e.kind !== "inicio" && e.kind !== "punto") {
     SFX.pickup(); chFinT = 5; persist();
     const med = e.kind === "fin" ? medalla(e.d.id, e.d.tipo === "tiempo" ? e.ms : e.pts) : 0, medTxt = med ? `MEDALLA DE ${MEDALLA[med]}` : "";
+    const dif = e.kind === "fin" && gPrev ? (e.d.tipo === "tiempo" ? (gLast >= 0 ? fmtDif("tiempo", e.ms / 1000 - gLast) : "") : fmtDif("puntos", e.pts - gPts)) : "";
+    if (e.kind === "fin" && e.record) { const q = lead.car!.root.rotationQuaternion; rec.push([p.x, p.y, p.z, q?.x ?? 0, q?.y ?? 0, q?.z ?? 0, q?.w ?? 1, e.pts]); save.libre.fantasma[e.d.id] = fantasmaEnc(rec); } // la última muestra es la meta
     chMsg = e.kind === "fallo" ? { title: e.d.nombre, big: "TIEMPO AGOTADO", sub: "" }
-      : { title: e.d.nombre, big: e.d.tipo === "tiempo" ? fmtMs(e.ms) : `${e.pts} PTS`, sub: [medTxt, e.record ? "NUEVO RÉCORD" : `RÉCORD ${fmtMarca(e.d, best[e.d.id])}`].filter(Boolean).join(" · ") };
+      : { title: e.d.nombre, big: e.d.tipo === "tiempo" ? fmtMs(e.ms) : `${e.pts} PTS`, sub: [medTxt, dif && `${dif} VS FANTASMA`, e.record ? "NUEVO RÉCORD" : `RÉCORD ${fmtMarca(e.d, best[e.d.id])}`].filter(Boolean).join(" · ") };
     if (e.record || med) FX.sparks(p.add(new B.Vector3(0, 0.8, 0)), 16);
     if (e.kind === "fin") libreMeta({ k: "fin", d: e.d.id, medalla: med });
   }
   const d = libreCh.d, ob = chObjetivo(libreCh);
   // Contrarreloj: la línea de abajo guía al próximo punto de control (o la meta) con su distancia; trucos: récord
-  if (d) { chFinT = 0; const left = Math.max(0, d.limite - libreCh.t); hudDesafio(d.nombre, d.tipo === "tiempo" ? fmtMs(Math.round(libreCh.t * 1000)) : `${libreCh.pts} PTS · ${Math.ceil(left)} S`, ob ? `${ob.i < ob.n ? `PUNTO ${ob.i + 1}/${ob.n}` : "META"} · ${Math.round(Math.hypot(ob.x - p.x, ob.z - p.z))} M` : `RÉCORD ${fmtMarca(d, best[d.id])}`); }
+  if (d) { chFinT = 0; const left = Math.max(0, d.limite - libreCh.t); hudDesafio(d.nombre, d.tipo === "tiempo" ? fmtMs(Math.round(libreCh.t * 1000)) : `${libreCh.pts} PTS · ${Math.ceil(left)} S`, ob ? `${ob.i < ob.n ? `PUNTO ${ob.i + 1}/${ob.n}` : "META"} · ${Math.round(Math.hypot(ob.x - p.x, ob.z - p.z))} M` : `RÉCORD ${fmtMarca(d, best[d.id])}`, false, gRows ? gDif : undefined); }
   else if (chFinT > 0 && (chFinT -= dt) > 0) hudDesafio(chMsg.title, chMsg.big, chMsg.sub, true);
   else hudDesafio("");
 }
