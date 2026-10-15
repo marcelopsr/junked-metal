@@ -495,7 +495,6 @@ function renderMain() {
   const nuevo = !save.encore.runs; // hasta terminar la primera expedición, Jugar es lo único que compite en el menú
   for (const id of ["dailyBtn", "weeklyBtn"]) $(id).classList.toggle("hidden", nuevo);
   document.querySelector<HTMLElement>('#scr-main [data-go="modes"]')!.classList.toggle("hidden", nuevo);
-  $("libreBtn").classList.toggle("hidden", nuevo); // Paseo libre: tras la primera expedición
 }
 // Paseo libre: todos los autos están disponibles en este modo (no toca save.cars ni save.car); la elección vive en peek.car, que main.ts lee y limpia al largar
 function renderLibre() {
