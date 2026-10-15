@@ -25,6 +25,7 @@ import { ACH, type AchId } from "./achievements";
 import { ABILITIES, abilCd, abilK, CURSES, type AbilityId, type CurseId } from "./abilities";
 import { setModoTranquilo, type Elite } from "./run";
 import { CAM_MODES, CAM_NAMES, parseSave } from "./savefmt";
+import { renderCartelera } from "./menu/cartelera";
 import { PACTS, SECRETS, VARIANTS } from "./encore";
 import { leaderboard, salas } from "./net";
 
@@ -66,7 +67,7 @@ export type Save = {
   ach: AchId[];
   ability: AbilityId; curses: CurseId[]; endless: number; // habilidad activa elegida, maldiciones de la próxima partida y récord del modo sin fin (s)
   abilLv: Partial<Record<AbilityId, number>>; weapon: WeaponId; // nivel de cada habilidad (Taller) y arma inicial elegida en el garaje (Arsenal)
-  encore: { best: { loop: number; stage: number; t: number }; wins: number; runs: number; lastLoop: number; lastCause: string; secrets: string[]; tips: string[]; seenPacts: string[]; seenVariants: string[] }; // ENCORE: mejor expedición (vuelta, escenario, segundos), ganadas, partidas y la última derrota (vuelta y causa, "" = sin derrota; memoria del Director); aparte de Supervivencia
+  encore: { best: { loop: number; stage: number; t: number }; wins: number; runs: number; lastLoop: number; lastCause: string; secrets: string[]; tips: string[]; seenPacts: string[]; seenVariants: string[]; seenInts: string[] }; // ENCORE: mejor expedición (vuelta, escenario, segundos), ganadas, partidas y la última derrota (vuelta y causa, "" = sin derrota; memoria del Director); aparte de Supervivencia
   m3: { stars: Record<string, number>; best: Record<string, number>; tools: Record<string, number> }; // Junket Crush: estrellas y récord por nivel, herramientas guardadas
   libre: { best: { aire: number; giro: number; vuelta: number; salto: number; combo: number }; desafio: { obs: number; skate: number; nieve: number }; tuercas: string; aviso: boolean; metas: string[] }; // Paseo libre: récords de trucos (aire en ms, giro en grados, vuelta en cantidad, truco y combo en puntos) y 24 tuercas doradas ("1" = juntada)
 };
@@ -84,7 +85,7 @@ export const DEFAULT: Save = {
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
-  encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] },
+  encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [], seenInts: [] },
   m3: { stars: {}, best: {}, tools: {} },
   libre: { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, metas: [] },
 };
@@ -269,7 +270,7 @@ function renderCodex() {
   fill("cdxVar", [...va.map((v): [string, string] => [v.name, v.line]), ...miss(VARIANTS.length - va.length)]);
 }
 initAccount({ $, fmt, today: () => today(), dailySeed: () => dailySeed(), go: (s) => go(s), current: () => current(), back: () => back(), kitStripHtml: () => kitStripHtml(), daily: () => save.daily });
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "match3" | "play" | "modes" | "encore" | "codex" | "cuenta" | "weekly" | "libre";
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "match3" | "play" | "modes" | "encore" | "codex" | "cartelera" | "cuenta" | "weekly" | "libre";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -292,6 +293,7 @@ function show() {
   if (s === "libre") renderLibre();
   if (s === "play") renderPlay();
   if (s === "encore") { renderEncP(); carLbl(); const e = save.encore; $("encRec").textContent = e.runs ? `Mejor expedición: vuelta ${e.best.loop + 1}, escenario ${e.best.stage + 1} · ${fmt(e.best.t)} · ${e.wins} ${e.wins === 1 ? "ganada" : "ganadas"} de ${e.runs}` : "Sin expediciones registradas todavía."; $("encSec").innerHTML = SECRETS.filter((x) => e.secrets.includes(x.id)).map((x) => `<li><b>${x.name}</b> · ${x.lore}</li>`).join("") || `<li>Secretos del Director: ${SECRETS.length} sin descubrir.</li>`; } // Contenido 3: secretos descubiertos (textos propios, sin HTML del guardado)
+  if (s === "cartelera" && renderCartelera(save)) persist();
   if (s === "codex") { renderCodex(); renderMyStats(); }
   if (s === "cuenta") renderAcct();
   if (s === "encore") void leaderboard().then((rows) => { const box = $("encLb"), ol = $("encLbList"); box.classList.toggle("hidden", !rows?.length); ol.replaceChildren(...(rows ?? []).slice(0, 10).map((r) => { const li = document.createElement("li"); li.textContent = `${r.name} · vuelta ${r.loop + 1}, escenario ${r.stage + 1} · ${fmt(r.t)}`; return li; })); });

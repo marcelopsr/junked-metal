@@ -2,6 +2,7 @@
 // y los tests (test/save.test.ts) lo prueban solo. Un guardado viejo, editado a mano o importado nunca debe romper el arranque ni el render.
 import type { Save } from "./menu";
 import { PACTS, SECRET_IDS, TIP_IDS, VARIANTS } from "./encore";
+import { INT_IDS } from "./encore_events";
 import { META_IDS } from "./free_goals";
 
 /** Lo que `sanitize` necesita saber del juego: qué ids son válidos y cómo validar calcos y presets. */
@@ -114,7 +115,7 @@ export function parseSave(raw: string | null, D: Save, deps: SaveDeps): Save {
     s.encore = { best: { loop: ni(eb?.loop), stage: ni(eb?.stage), t: ni(eb?.t) }, wins: ni(s.encore?.wins), runs: ni(s.encore?.runs), lastLoop: ec ? ni(s.encore?.lastLoop) : 0, lastCause: ec,
       secrets: Array.isArray(s.encore?.secrets) ? [...new Set((s.encore.secrets as unknown[]).filter((x): x is string => typeof x === "string" && SECRET_IDS.includes(x)))] : [],
       tips: Array.isArray(s.encore?.tips) ? [...new Set((s.encore.tips as unknown[]).filter((x): x is string => typeof x === "string" && TIP_IDS.includes(x)))] : [],
-      seenPacts: ids(s.encore?.seenPacts, PACTS.map((p) => p.id)), seenVariants: ids(s.encore?.seenVariants, VARIANTS.map((v) => v.name)) }; // primera partida guiada: solo ids conocidos // Contenido 3: solo ids conocidos, sin repetir
+      seenPacts: ids(s.encore?.seenPacts, PACTS.map((p) => p.id)), seenVariants: ids(s.encore?.seenVariants, VARIANTS.map((v) => v.name)), seenInts: ids(s.encore?.seenInts, INT_IDS) }; // seenInts: interrupciones del Director vistas (Cartelera) // primera partida guiada: solo ids conocidos // Contenido 3: solo ids conocidos, sin repetir
     // Paseo libre: récords enteros no negativos y 24 bits de tuercas (cualquier otra cosa vuelve a vacío)
     const lb = s.libre?.best;
     s.libre = { best: { aire: ni(lb?.aire), giro: ni(lb?.giro), vuelta: ni(lb?.vuelta), salto: ni(lb?.salto), combo: ni(lb?.combo) }, desafio: { obs: ni(s.libre?.desafio?.obs), skate: ni(s.libre?.desafio?.skate), nieve: ni(s.libre?.desafio?.nieve) }, tuercas: typeof s.libre?.tuercas === "string" && /^[01]{24}$/.test(s.libre.tuercas) ? s.libre.tuercas : "0".repeat(24), aviso: s.libre?.aviso === true, metas: ids(s.libre?.metas, META_IDS) }; // metas: objetivos de barrio hechos (free_goals.ts), solo ids conocidos
