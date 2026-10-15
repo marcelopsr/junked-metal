@@ -9,6 +9,7 @@ import { keyHit, padsConnected, pollPlayer, type PlayerCtl } from "./input";
 import { box, cyl, merge, pilotParts, sph, type CarKind, type CarOpts } from "./models";
 import { applyClimate, canvasTex, M, pbr, setSplit, setLamp, shadows, surface } from "./render";
 import { rng, seedRng } from "./rng";
+import { radio } from "./radio";
 import { engineSfx, engineStop, music, SFX } from "./sfx";
 import { buildGrass, buildLayout, clearLayout, setZone, zoneClimate } from "./world";
 import { DUSK } from "./run";
@@ -933,7 +934,7 @@ function hud() {
 }
 
 function showResults() {
-  resultsOn = true; music("menu"); SFX.finish();
+  resultsOn = true; music("menu"); radio.prefer("menu"); SFX.finish();
   const order = mode === "battle" ? [...racers].sort((a, b) => battleScore(b) - battleScore(a)) : [...racers].sort((a, b) => (a.fin || 1e9) - (b.fin || 1e9) || prog(b) - prog(a));
   order.forEach((r, i) => { r.place = i + 1; cup[r.id] = (cup[r.id] ?? 0) + POINTS[i]; });
   const maxCup = raceCfg.cup && mode === "race" ? Math.max(...racers.map((r) => cup[r.id] ?? 0)) : -1;

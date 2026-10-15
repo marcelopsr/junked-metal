@@ -78,7 +78,7 @@ Reglas que mandan:
 
 **HUD y menús:** `kit.css` se carga última y pisa los estilos de vidrio de `style.css`, `menu.css` y `hud.css` (los encabezados de esos archivos todavía dicen "vidrio" o "terminal": están desactualizados, manda `kit.css`). Panel = chapa oscura (gradiente opaco ~.96) con borde naranja de 3px, tornillos en las cuatro esquinas, sombra interior; botones de chapa pintada (verde `.primary`, amarillo `.warn`, rojo `.danger`); pestañas activas amarillas; tarjetas seleccionadas con filo amarillo. Barras sin esquinas redondeadas.
 
-**Modos:** Supervivencia (principal), Carrera, Junket Crush (match-3) y Demolición comparten esta dirección; Carrera, Junket Crush y Demolición siguen en desarrollo y no dan tornillos ni logros (ver HANDOFF §5).
+**Modos:** Supervivencia (principal), Carrera, Junket Crush (match-3) comparten esta dirección; Carrera y Junket Crush siguen en desarrollo y no dan tornillos ni logros (ver HANDOFF §5).
 
 #### Personajes, mundo y combate (vigente)
 

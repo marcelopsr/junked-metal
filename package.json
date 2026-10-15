@@ -30,7 +30,6 @@
     "perf:cel": "node scripts/perf-cel.mjs",
     "e2e": "node scripts/e2e.mjs",
     "publicar": "node scripts/publicar.mjs",
-    "playtest:duel": "node scripts/duel-playtest.mjs",
     "test:net": "node scripts/net-test.mjs",
     "test:restart": "node scripts/test-restart.mjs",
     "test:down": "node scripts/test-restart.mjs down",

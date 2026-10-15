@@ -151,7 +151,7 @@ export const uiIcon = (id: string, size = 24, plate = false) => {
 export const uiIconUrl = (id: string) => `url("data:image/svg+xml,${encodeURIComponent(uiIcon(id).replace(' class="ico jm-ico"', ' xmlns="http://www.w3.org/2000/svg"'))}")`;
 /** Botones fijos del HTML que llevan ícono, por data-go / data-act. */
 export const UI_BTN_ICON: Record<string, string> = {
-  play: "jugar", daily: "nivel", weekly: "nivel", race: "vehiculo", duel: "armas", match3: "arcade", garage: "garaje", shop: "taller", bestiary: "bestiario",
+  play: "jugar", daily: "nivel", weekly: "nivel", race: "vehiculo", match3: "arcade", garage: "garaje", shop: "taller", bestiary: "bestiario",
   config: "ajustes", credits: "info", back: "atras", quit: "inicio", resume: "jugar", controls: "ajustes",
 };
 

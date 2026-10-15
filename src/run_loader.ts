@@ -1,4 +1,4 @@
-// Carga de la partida y de los modos (extraído de main.ts, Paso 7): tareas pesadas de la cola de loading.ts + loaders perezosos de carrera/duelo/match-3.
+// Carga de la partida y de los modos (extraído de main.ts, Paso 7): tareas pesadas de la cola de loading.ts + loaders perezosos de carrera/match-3.
 import * as B from "@babylonjs/core";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
 import { GLB, glbProgress, loadGlbs } from "./glb";
@@ -17,7 +17,7 @@ const $ = (id: string) => document.getElementById(id)!;
 
 export interface RunLoaderContext {
   scene: B.Scene; cam: B.FreeCamera;
-  getState: () => string; setState: (s: "race" | "duel" | "match3") => void; zoneFor: (d: boolean) => string;
+  getState: () => string; setState: (s: "race" | "match3") => void; zoneFor: (d: boolean) => string;
   setZone: (z: string, b: boolean) => void; showWorld: (v: boolean) => void;
   tpls: (() => unknown)[]; // plantillas que define main.ts (gema, pila, imán, baba)
   onExitMode: () => void;
@@ -73,20 +73,17 @@ export async function loadKart() {
   if (!kartM) { const m = await import("./kart"); m.initKart({ scene: c.scene, cam: c.cam, onExit: c.onExitMode, load: (label, zone, go) => { void launch([worldTask(() => zone), T_EFECTOS], label, go, () => afterFrames(2), true); } }); kartM = m; } // la luz del menú la pone menuTick
 }
 
-// Duelo y match-3 se cargan al entrar (chunks aparte): la portada no los necesita
-export let duelM: typeof import("./duel") | null = null, m3M: typeof import("./match3") | null = null;
+// Match-3 se carga al entrar (chunk aparte): la portada no lo necesita
+export let m3M: typeof import("./match3") | null = null;
 const modeOpts = () => ({ scene: c.scene, cam: c.cam, onExit: c.onExitMode });
-export async function loadDuel() {
-  if (!duelM) { const m = await import("./duel"); m.initDuel(modeOpts()); duelM = m; if (import.meta.env.DEV) Object.assign(window, { __duel: m.duelDev }); }
-}
 export async function loadMatch3() {
   if (!m3M) { const m = await import("./match3"); m.initMatch3(modeOpts()); m3M = m; if (import.meta.env.DEV) Object.assign(window, { __match3: m.match3Dev }); }
 }
-// Al pasar el mouse / tocar el botón de un modo se baja su chunk (solo el import: el init sigue en loadKart/loadDuel/loadMatch3 al entrar)
-const PRE: Record<string, () => Promise<unknown>> = { race: () => import("./kart"), duel: () => import("./duel"), match3: () => import("./match3") };
+// Al pasar el mouse / tocar el botón de un modo se baja su chunk (solo el import: el init sigue en loadKart/loadMatch3 al entrar)
+const PRE: Record<string, () => Promise<unknown>> = { race: () => import("./kart"), match3: () => import("./match3") };
 export function prefetchMode(e: Event) {
   const t = (e.target as Element | null)?.closest?.("[data-go],[data-act]") as HTMLElement | null;
-  const id = t?.dataset.go ?? ({ duelgo: "duel", match3go: "match3" } as Record<string, string>)[t?.dataset.act ?? ""] ?? t?.dataset.act;
+  const id = t?.dataset.go ?? ({ match3go: "match3" } as Record<string, string>)[t?.dataset.act ?? ""] ?? t?.dataset.act;
   if (id && PRE[id]) void PRE[id]().catch(() => {});
 }
 export function launchRun(d = false, enc = false, n = 0, then?: () => void, wk = false) {
@@ -106,17 +103,6 @@ function enterRace(battle: boolean) {
   $("hud").classList.add("hidden");
   kartM!.setRaceCar(save.car);
   if (battle) kartM!.startBattle(); else kartM!.startRace();
-}
-function enterDuel() {
-  initAudio(); c.clearRun(); menuOff();
-  c.setState("duel"); reset(null);
-  $("hud").classList.add("hidden");
-  document.getElementById("touch")?.classList.add("hidden");
-  duelM!.startDuel();
-}
-export function goDuel() {
-  initAudio();
-  void loadDuel().then(() => launch([T_EFECTOS], "Preparando demolición", () => enterDuel(), () => afterFrames(2)));
 }
 /** Free Roam: sin bichos ni plantillas de partida (no hay enemigos); solo autos, el mapa `libre` y los efectos. Lo llama el botón del menú principal. */
 export function goLibre() {

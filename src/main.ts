@@ -10,7 +10,7 @@ import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, i
 import { activePad, btnName, camCycle, coopCtl, coopSkip, ctl, input, isTouch, keyHit, KEYS, KEYS2, padPressed, pads, padSnap, pb, pollInput, pollMate, pollPad, RACE, setupTouch } from "./input";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
 import { GLB, glbFootprint, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
-import { initRunLoader, runTasks, loaderOk, T_BICHOS, T_EFECTOS, worldTask, afterFrames, launchRun, prefetchMode, goRace, goDuel, goMatch3, goLibre, kartM, duelM, m3M } from "./run_loader";
+import { initRunLoader, runTasks, loaderOk, T_BICHOS, T_EFECTOS, worldTask, afterFrames, launchRun, prefetchMode, goRace, goMatch3, goLibre, kartM, m3M } from "./run_loader";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
 import { CAM_MODES, CAM_NAMES, type CamMode } from "./savefmt";
@@ -47,7 +47,7 @@ import { wormForce, wormHeadTpl, wormOut } from "./moon_worm";
 import { CAR_YAW, carSpot, menuFov, menuOff, menuTick, SHOTS } from "./menuscene";
 import { beastTick, PED_H, setupBeastCam } from "./bestiary_preview";
 import { raceCfg, TRACKS } from "./kart_cfg";
-import "./duel.css"; import "./match3.css"; import "./race.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css (race.css solo se importa acá)
+import "./match3.css"; import "./race.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css (race.css solo se importa acá)
 import { initRunTick, tickEnemies, tickWeapons, tickPickups, type Frame, type Spit } from "./run_tick";
 import { initRunDrive, tickWeather, tickAbility, tickDrive, tickRam, tickSpawner, tickYardEvents, tickVitals } from "./run_drive";
 import { initCameraRig, cameraTick, camReset, CAMS } from "./camera_rig";
@@ -101,7 +101,7 @@ initHud();
 
 // ---------- Estado de la partida ----------
 
-let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" | "duel" | "match3" | "net" = "menu"; // net: cliente online (R6b), dibuja los snapshots del anfitrión sin simular
+let state: "menu" | "play" | "level" | "pause" | "over" | "outro" | "race" | "match3" | "net" = "menu"; // net: cliente online (R6b), dibuja los snapshots del anfitrión sin simular
 // R6a: estado por jugador (docs/ENCORE/R0/R6_RED.md §4). players[0] = J1; `lead` = el que guía: maneja la cámara `cam` con sus modos, el input global
 // y las armas de verdad (`weapons`); los otros llevan copias montadas en su auto. car === null = caído (vuelve en el próximo escenario).
 // Compartidos (como antes): XP, nivel, armas, pasivas, tornillos y pactos.
@@ -541,7 +541,6 @@ function toMenu() {
   tutEnd();
   netEnd();
   if (LAB.on) { LAB.on = false; god = false; }
-  if (duelM?.duelActive()) duelM.exitDuel();
   if (m3M?.match3Active()) m3M.exitMatch3();
   engineStop(); music("menu"); radio.prefer("menu");
   persist(); // bestiario visto en la partida abandonada
@@ -589,7 +588,6 @@ initRunLoader({ scene, cam, getState: () => state, setState: (s) => { state = s;
   clearRun, startRun, startLibre,
   setRun: { encore: (v) => { encore = v; }, coop: (v) => { coop = v; }, dailyInfo: (v) => { dailyInfo = v; }, weeklyInfo: (v) => { weeklyInfo = v; }, weeklyOn: (v) => { weeklyOn = v; } } });
 preload(runTasks(() => zoneFor(false)), () => state === "menu");
-if (import.meta.env.DEV && /[?&]duel\b/.test(location.search)) setTimeout(() => goDuel(), 1500);
 if (import.meta.env.DEV && /[?&]match3\b/.test(location.search)) setTimeout(() => goMatch3(), 1500);
 if (import.meta.env.DEV) { Object.assign(window, { __libre: goLibre }); if (/[?&]libre\b/.test(location.search)) setTimeout(() => goLibre(), 1500); } // dev: __libre() o ?libre arrancan Free Roam
 // ponytail: el banco Folded (`?folded`, solo dev) reusa el estado "match3" (cámara libre, sin auto); un estado propio si crece
@@ -610,7 +608,7 @@ boot("Armando el menú", 0.9);
 void afterFrames(2).then(() => { void bootEnd(); startPreload(900); });
 initPhoto({ scene, canvas, inPause: () => state === "pause", onShot: () => grant("foto") });
 for (const ev of ['pointerover', 'touchstart', 'focusin']) document.addEventListener(ev, prefetchMode, { passive: true, capture: true });
-initMenu({ scene, play: launchRun, weekly: () => launchRun(false, false, 0, undefined, true), resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), duel: goDuel, match3: goMatch3 });
+initMenu({ scene, play: launchRun, weekly: () => launchRun(false, false, 0, undefined, true), resume, quit: toMenu, pause, endless: goEndless, race: () => goRace(), battle: () => goRace(true), match3: goMatch3 });
 music("menu"); radio.play(); radio.prefer("menu"); // suena cuando haya primer gesto (initAudio)
 // Intro de 4 cuadros: solo con ?intro (cualquier tecla la salta)
 if (/[?&]intro\b/.test(location.search)) playIntro(); // T53: ya no sale sola; solo con ?intro o desde Créditos → Ver intro
@@ -853,7 +851,6 @@ scene.onBeforeRenderObservable.add(() => {
   else if (state === "outro") outroTick(dt);
   else if (state === "over" && rp.on) rpPlay(dt);
   else if (state === "race") { const k = kartM!; if (padPressed(pb("pause"))) k.racePause(); if (padPressed(pb("ok"))) k.raceClick(); if (padPressed(pb("cam"))) camCycle(); if (padPressed(14)) k.racePadMenu(-1); if (padPressed(15)) k.racePadMenu(1); k.raceTick(dt); }
-  else if (state === "duel") duelM!.duelTick(dt);
   else if (state === "match3") { if (padPressed(pb("pause"))) m3M?.match3PauseToggle(); m3M?.match3Tick(dt); }
   else if (state === "net") { // R6c: el cliente online navega cartas (netLv) y pactos/rutas/votos con el mando; el anfitrión valida el turno
     netClientTick(); updateHud(dt);
@@ -879,7 +876,7 @@ scene.onBeforeRenderObservable.add(() => {
   }
   if (getNet()?.host && (state === "play" || state === "level")) netSnap(dt);
   tickFx(dt * ts);
-  uiTick(dt, state === "play" || state === "duel" || state === "match3");
+  uiTick(dt, state === "play" || state === "match3");
   if (save.fps && (fpsT -= dt) <= 0) { // estadísticas: fps y ms de los cuadros dibujados (no los del navegador), resolución interna real y escala o modo FSR
     fpsT = 0.5;
     const g = gfxInfo();
@@ -952,7 +949,7 @@ if (import.meta.env.DEV) {
       get abilOn() { return run.abilOn; }, useAbility,
       get worldK() { return run.worldK; }, get driveMul() { return run.driveMul; },
       input, startRun, toMenu, resume, goEndless, applyCommand, update, tickFx,
-      get duelM() { return duelM; }, get m3M() { return m3M; },
+      get m3M() { return m3M; },
       $, fmt, hd, at,
     })
   );

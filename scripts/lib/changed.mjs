@@ -13,7 +13,6 @@ const MAP = [
   [/kart|race\.css/, ["carrera", "carrera2j"]],
   [/aliens/, ["luna", "luna_aliens"]],
   [/moon/, ["luna"]],
-  [/duel/, ["duel", "duel_menu"]],
   [/match3/, ["match3", "match3_menu"]],
   [/folded/, ["folded", "folded2", "folded2_jefes"]],
   [/art_lab|art-lab/, []],

@@ -8,6 +8,7 @@ import { applyClimate, setDark } from "./render";
 import { showWorld } from "./world";
 import { buildArcade, M3C, type Arcade } from "./match3_scene";
 import { music, SFX } from "./sfx";
+import { radio } from "./radio";
 import { DUSK } from "./run";
 import { LEVELS } from "./match3_levels";
 import {
@@ -936,7 +937,7 @@ export function startMatch3(seed = 20261007) {
   placePauseBtn();
   document.body.classList.add("match3-play");
   document.getElementById("touch")?.classList.add("match3-only", "hidden");
-  music("menu");
+  music("menu"); radio.prefer("menu");
   const canvas = D.scene.getEngine().getRenderingCanvas() as HTMLCanvasElement;
   canvas.style.touchAction = "none";
   canvas.addEventListener("pointerdown", onPointerDown, { passive: false });

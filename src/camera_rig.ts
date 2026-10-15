@@ -85,8 +85,8 @@ let fovK = 0; // grados de FOV extra por turbo / mini-turbo (run_drive.boostFov)
 export function cameraTick(dt: number) {
   HOLE.r = 0; // se enciende abajo solo en partida con auto (modos archivados lo dejaban activo)
   const k = 1 - Math.exp(-5 * dt);
-  if (c.state === "race" || c.state === "duel" || c.state === "match3") {
-    // carrera / demolición manejan cámara en su módulo
+  if (c.state === "race" || c.state === "match3") {
+    // carrera / match-3 manejan cámara en su módulo
   } else if (c.lead.car) {
     const cm = CAMS[save.camMode];
     if (MOON.on) moonCam(c.lead.car, dt, cm.yaw === undefined && !input.move && c.state === "play");
@@ -215,7 +215,7 @@ export function cameraTick(dt: number) {
   }
   c.shake = Math.max(0, c.shake - dt * 2);
   const s = save.shake ? c.shake * c.shake * 0.8 : 0;
-  if (c.state !== "race" && c.state !== "duel" && c.state !== "match3") {
+  if (c.state !== "race" &&c.state !== "match3") {
     const tgt = c.camTarget.add(new B.Vector3((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, 0));
     if (MOON.on && c.lead.car) { // luna: el "arriba" de la cámara es la vertical del lugar (setTarget usa siempre +Y): rotación propia
       B.Matrix.LookAtLHToRef(c.cam.position, tgt, c.camUp, _camM); _camM.invert();

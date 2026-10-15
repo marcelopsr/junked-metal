@@ -100,17 +100,6 @@ describe("balance supervivencia", () => {
   });
 });
 
-describe("moveCell fabricación", () => {
-  it("reubica un bloque si el destino es válido", async () => {
-    const { emptyBuild, placeCell, moveCell } = await import("../src/duel_build");
-    let b = placeCell(emptyBuild(), { x: 0, y: 0, z: 0, rot: 0, blockId: "chapa" })!;
-    const seat = placeCell(b, { x: 0, y: 1, z: 0, rot: 0, blockId: "asiento_rc" })!;
-    b = placeCell(seat, { x: 1, y: 1, z: 0, rot: 0, blockId: "chapa" })!;
-    const moved = moveCell(b, 1, 1, 0, -1, 1, 0);
-    expect(moved?.cells.some((c) => c.x === -1 && c.z === 0 && c.blockId === "chapa")).toBe(true);
-  });
-});
-
 describe("El Doble de Riesgo", () => {
   const dmg = () => pilotStats({ ...passiveStats({}, none) }, "doble").dmg;
   it("fuera de ENCORE (sin expedición) el bonus por pactos vale 0", () => {

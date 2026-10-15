@@ -158,7 +158,6 @@ export interface DevHooksContext {
   applyCommand: (pid: number, cmd: any) => void;
   update: (dt: number) => void;
   tickFx: (dt: number) => void;
-  duelM?: any;
   m3M?: any;
 
   $: (id: string) => HTMLElement;
@@ -599,9 +598,7 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
         if (e.def.boss) e.hp = 0;
       }),
     __info: () =>
-      ctx.state === "duel"
-        ? { state: ctx.state, ...ctx.duelM!.duelDev.info(), fps: ctx.engine.getFps() }
-        : ctx.state === "match3"
+      ctx.state === "match3"
           ? { state: ctx.state, ...ctx.m3M?.match3Dev.info(), fps: ctx.engine.getFps() }
           : {
               state: ctx.state,

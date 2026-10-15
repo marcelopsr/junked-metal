@@ -79,19 +79,10 @@ kbd { display: inline-block; min-width: 22px; padding: 2px 6px; margin-right: 3p
 
 /* Táctil */
 #touch { position: fixed; inset: 0; pointer-events: none; }
-/* Demolición pelea: reutilizar stick + ARMA; sin turbo/derrape/cámara del survivor */
-body.duel-fight #tDrift,
-body.duel-fight #tJump,
-body.duel-fight #tBoost,
-body.duel-fight #tCam { display: none !important; }
 /* Match-3 arcade: solo pausa táctil; el tablero usa touch-action en el canvas */
 body.match3-play #touch.match3-only > :not(#tPause) { display: none !important; }
 body.match3-play #touch.match3-only #tPause { display: block !important; pointer-events: auto; }
 body.match3-play { touch-action: none; }
-body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px; bottom: 170px; }
-@media (orientation: portrait) {
-  body.duel-fight #tAbil { right: 24px; bottom: 170px; }
-}
 /* Con menú o cartas abiertas los controles táctiles no se ven ni roban toques (#touch va después en el DOM).
    Excepción: en la pantalla de pausa queda el botón «II» para reanudar. */
 #levelup:not(.hidden) ~ #touch, #outro:not(.hidden) ~ #touch, body:has(#race.podium) #touch, #fe:not(.hidden) ~ #touch > :not(#tPause), #fe:not(.hidden):not(:has(#scr-pause.on)) ~ #touch #tPause { display: none; }

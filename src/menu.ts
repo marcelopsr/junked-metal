@@ -206,7 +206,7 @@ function renderRace() {
 }
 
 // ---------- Ajustes ----------
-type Api = { scene: Scene; play(daily?: boolean, encore?: boolean): void; weekly(): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; duel(): void; match3(): void };
+type Api = { scene: Scene; play(daily?: boolean, encore?: boolean): void; weekly(): void; resume(): void; quit(): void; pause(): void; endless(): void; race(): void; battle(): void; match3(): void };
 let api: Api;
 
 export function applySettings() {
@@ -256,7 +256,7 @@ function renderCodex() {
   fill("cdxVar", [...va.map((v): [string, string] => [v.name, v.line]), ...miss(VARIANTS.length - va.length)]);
 }
 initAccount({ $, fmt, today: () => today(), dailySeed: () => dailySeed(), go: (s) => go(s), current: () => current(), back: () => back(), kitStripHtml: () => kitStripHtml(), daily: () => save.daily });
-export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "duel" | "match3" | "play" | "modes" | "encore" | "codex" | "cuenta" | "weekly";
+export type Scr = "title" | "main" | "garage" | "shop" | "config" | "bestiary" | "beast" | "credits" | "daily" | "pause" | "over" | "race" | "match3" | "play" | "modes" | "encore" | "codex" | "cuenta" | "weekly";
 const stack: Scr[] = [];
 const ret = new Map<Scr, HTMLElement>(); // foco a recuperar al volver
 export const current = () => stack.at(-1) ?? null;
@@ -1267,7 +1267,6 @@ export function initMenu(a: Api) {
     else if (d.rctrack !== undefined) { raceCfg.cup = false; raceCfg.track = +d.rctrack as 0 | 1 | 2; saveRaceCfg(); renderRace(); }
     else if (d.act === "race") api.race();
     else if (d.act === "battle") api.battle();
-    else if (d.act === "duelgo") api.duel();
     else if (d.act === "match3go") api.match3();
     else if (d.act === "play" || d.act === "playgo") api.play();
     else if (d.act === "encorego") api.play(false, true);
