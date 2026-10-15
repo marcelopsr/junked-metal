@@ -1478,9 +1478,97 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
 
 ---
 
+## 2026-10-13 · Pulido visual de grúa y tambores (ciclo local)
+
+- La grúa Folded combina la chapa mostaza compartida con marcos amarillos del atlas; conserva UV, plantilla, instancias y colisión.
+- Los dos aros de acero de cada tambor sobresalen de la silueta y se leen sobre la pintura. Solo cambió la plantilla visual; los cilindros físicos y el balance siguen iguales.
+- Capturas cercanas verificadas en PC y celular: `.shots/actual/{pc,cel}-{crane,drum}-polish.png`. TypeScript, 178 tests y build pasaron. Las capturas usaron el servidor PM2 de este checkout en `:5278`; `rc-test` en `:5174` sirve otro checkout.
+- Cierre local sin publicación.
+
+---
+
+## 2026-10-13 · Integración del patio, tapas y encuadre móvil (ciclo local)
+
+- La mancha de tierra de la zona de chatarra se extiende sobre la berma existente para evitar que aparezca como una franja aislada. El terreno físico no cambió.
+- Las tapas de los tambores ganaron aro exterior, placa y junta alrededor del tapón dentro de la plantilla compartida.
+- La cámara vertical del bestiario acerca solo la grúa; PC y los demás enemigos mantienen su encuadre. Capturas PC/cel y pruebas en `docs/VISUAL_CYCLE_SCRAP_DRUM_CRANE.md`.
+- Cierre local sin publicación.
+
+---
+
+## 2026-10-13 · Aceite de garaje, cajas de chatarra y lectura por clima (ciclo local)
+
+- Suavizada la integración del decal de aceite con alfa `0.84`; flejes de `crateDetail()` aclarados a `#59636a` para separarlos de la madera.
+- Noche, niebla y farol revisados en capturas lejanas PC/cel; no hizo falta cambiar iluminación, terreno, layout ni colisiones.
+- TSC, 178 pruebas, build y graphify pasaron. Capturas finales en `.shots/actual/` y detalles en `docs/VISUAL_CYCLE_GARAGE_OIL_CRATES_CLIMATES.md`.
+- Cierre local sin publicación.
+
+---
+
+## 2026-10-13 · Restos del patio y sombras del garaje (ciclo local)
+
+- Tres decals de restos reubicados al perímetro de cajas/bidones y ampliados moderadamente; se conserva el conjunto de props y sus colisiones.
+- Las capturas enfocadas PC/cel muestran sombras distinguibles del banco y estanterías sobre el cemento; no se cambió la iluminación ni los materiales del garaje.
+- Evidencia y límites en `docs/VISUAL_CYCLE_PATIO_DEBRIS_GARAGE_SHADOWS.md`; capturas finales en `.shots/actual/` sin errores de consola.
+- Cierre local sin publicación.
+
+---
+
+## 2026-10-13 · Lectura de neumáticos y tablero del garaje (ciclo local)
+
+- Se aclaró moderadamente el material compartido de la pila de neumáticos del patio; el garaje mantiene su tinte propio y el mapeo, las mallas y colisiones siguen iguales.
+- Se elevó el contraste de las herramientas del tablero con sus materiales existentes, sin mover ni remodelar las piezas.
+- Capturas normales/cercanas PC/cel y límites documentados en `docs/VISUAL_CYCLE_TIRE_STACK_TOOLBOARD.md`.
+- Cierre local sin publicación.
+
+---
+
+## 2026-10-13 · Rampa oxidada y bicicleta del garaje (ciclo local)
+
+- La rampa de chatarra ganó un tono de chapa oxidada más claro para distinguirla de la tierra; mantiene geometría y colisión.
+- El caucho de la bicicleta ahora se separa mejor de la pared en noche y niebla, conservando cuadro, forma y ubicación.
+- Se compararon noche, niebla y farol con 36 capturas PC/cel normales y cercanas; detalle y límites en `docs/VISUAL_CYCLE_RUST_RAMP_BIKE.md`.
+- Cierre local sin publicación.
+
+---
+
+## 2026-10-14 · Plancha de chatarra y estantería del garaje (ciclo local)
+
+- La inspección confirmó que la plancha conserva desgaste y borde legibles en noche, niebla y farol, por lo que se mantuvo intacta.
+- Se aclararon moderadamente niveles y cajas de la estantería para separarlos mejor de la pared; no cambió la distribución ni el bloque de colisión.
+- Comparación base/final con 48 capturas PC/cel normales y cercanas en los tres climas; ficha en `docs/VISUAL_CYCLE_SCRAP_PLATE_GARAGE_SHELF.md`.
+- Cierre local sin publicación.
+
+---
+
+## 2026-10-14 · Huerta del patio y auto sobre caballetes (ciclo local)
+
+- La huerta conserva sus hileras, cantidad de hojas, ubicación y terreno; las hojas alternan cuatro tonos verdes cercanos para distinguir mejor los surcos.
+- Los neumáticos del auto sobre caballetes del garaje usan caucho algo más claro; el Folded, la ubicación y las colisiones se conservan. El auto de calle mantiene su material original.
+- Por decisión del usuario, no se generaron capturas; se verificó con TypeScript, pruebas, build y graphify.
+- Ficha: `docs/VISUAL_CYCLE_HUERTA_CAR_STANDS.md`. Cierre local sin publicación.
+
+---
+
+## 2026-10-14 · Textura de hojas y caucho con banda (ciclo local)
+
+- Se generaron localmente una textura de hojas pixeladas con cuatro tonos y nervaduras, y caucho con dibujo de banda y hombros polvorientos. Ambas se integraron al material fusionado de la huerta y al atlas Folded del auto sobre caballetes.
+- La hoja conceptual se generó desde los mismos píxeles de las texturas; no se capturó gameplay. Fuentes, metadatos y artefactos en `assets-src/procedural-textures/v1/`.
+- Conserva geometría, distribución, posiciones y colisiones. Ficha de ciclo: `docs/VISUAL_CYCLE_LEAF_TREAD_TEXTURES.md`.
+- Cierre local sin publicación.
+
+---
+
+## 2026-10-14 · Tierra generada, calcos de inspección y bandeja Folded (ciclo local)
+
+- Se generó una textura pixelada de tierra con terrones y residuos vegetales, compartida por la huerta y la zona de chatarra; el relieve y las colisiones permanecen iguales.
+- Se integró un atlas transparente de calcos aparte, conservando el atlas Folded previo, y se creó una bandeja magnética Folded con tornillos para el banco del garaje. La bandeja es decorativa y no suma colisión.
+- Fuentes, hojas de contacto y ficha: `assets-src/generated/2026-10-14/` y `docs/VISUAL_CYCLE_SOIL_INSPECTION_TRAY.md`. Por pedido del usuario no se capturó gameplay; TypeScript, 178 pruebas y build pasaron.
+- Cierre local con commit y push a `origin/master`, conforme a las reglas del repo.
+
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Ciclo #41 (Modularización de `main.ts` con `src/net_client.ts`, `src/coop.ts` y `src/outro.ts`).
+- **Último trabajo completado:** textura de tierra, calcos de inspección y bandeja Folded (2026-10-14). Ver `docs/VISUAL_CYCLE_SOIL_INSPECTION_TRAY.md`.
 - **Invariantes activas:** Metodología E2E con hasta 2 subagentes en paralelo, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

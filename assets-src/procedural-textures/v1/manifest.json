@@ -1,0 +1,16 @@
+{
+  "generator": "pixels.mjs (determinista, Canvas/PNG sin diffusion)",
+  "textures": [
+    {
+      "file": "huerta-hojas-folded.png",
+      "size": "128x32",
+      "layout": "4 celdas de 32x32 con tonos de hoja y nervaduras"
+    },
+    {
+      "file": "caucho-tread-folded.png",
+      "size": "64x64",
+      "layout": "banda en chevrón, canales y hombros con polvo; base #4b4b46"
+    }
+  ],
+  "contactSheet": "hoja-contacto.png"
+}

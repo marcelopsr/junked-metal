@@ -195,9 +195,20 @@ export function patioBuild() {
   // Surcos: lomos de tierra medio enterrados (radio 1,5, asoman 0,5): hacen saltar al auto pero se suben de costado
   for (let r = 0; r < 4; r++) stat(cyl(3, 3, 40, dirtMat, [50, -1, 35 + r * 7], [0, 0, Math.PI / 2], 10), B.PhysicsShapeType.CYLINDER);
   const crops: B.Mesh[] = [];
+  const cropTex = tex("gardenCropLeaves", () => {
+    const t = new B.DynamicTexture("gardenCropLeaves", { width: 128, height: 32 }, scene, false, B.Texture.NEAREST_SAMPLINGMODE);
+    (t.getContext() as unknown as CanvasRenderingContext2D).putImageData(new ImageData(cropLeafPixels(), 128, 32), 0, 0);
+    t.update(false); t.wrapU = t.wrapV = B.Texture.CLAMP_ADDRESSMODE; return t;
+  });
+  const cropMat = pbr("gardenCropLeaves", { color: "#ffffff", rough: 0.9, tex: cropTex });
   for (let r = 0; r < 4; r++) for (let i = 0; i < 7; i++) {
     const x = 34 + i * 5.3, z = 35 + r * 7;
-    for (let k = 0; k < 4; k++) { const l = sph(1.4, M.matte("#3f8f2f"), [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4); l.rotation.y = k * 1.6; crops.push(l); }
+    for (let k = 0; k < 4; k++) {
+      const l = sph(1.4, cropMat, [x + Math.cos(k * 1.6) * 0.7, 1, z + Math.sin(k * 1.6) * 0.7], [1, 0.35, 1.8], 4);
+      const uv = l.getVerticesData(B.VertexBuffer.UVKind)!;
+      for (let j = 0; j < uv.length; j += 2) { uv[j] = 0.01 + ((r + i + k) % 4) * 0.25 + uv[j] * 0.23; uv[j + 1] = 0.04 + uv[j + 1] * 0.92; }
+      l.setVerticesData(B.VertexBuffer.UVKind, uv); l.rotation.y = k * 1.6; crops.push(l);
+    }
   }
   shadows.addShadowCaster(merge("huerta", crops)); // 112 hojas sueltas = 112 dibujos por pasada; fusionadas, una
 
@@ -231,8 +242,8 @@ export function patioBuild() {
     mat.bumpTexture = dirtT.nrm; mat.bumpTexture.level = 0.8;
     mat.lightmapTexture = soilTone; mat.useLightmapAsShadowmap = true;
   }
-  decal("scrapSoilTransition", 54, 44, -48, 20, grassEarthMat, 0.015);
-  const scrapZone = decal("scrapZone", 46, 36, -48, 20, scrapGroundMat, 0.025);
+  decal("scrapSoilTransition", 54, 52, -48, 20, grassEarthMat, 0.015);
+  const scrapZone = decal("scrapZone", 46, 46, -48, 20, scrapGroundMat, 0.025);
   // UV2 en coordenadas del patio: el tono coincide donde dos parches se superponen.
   for (const ground of [dirt, soilPaths, scrapZone]) {
     const positions = ground.getVerticesData(B.VertexBuffer.PositionKind)!;
@@ -254,7 +265,16 @@ export function patioBuild() {
   tracks.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
   decal("patioTireMarks", 14, 25, -12, 7, tracks, 0.03).rotation.y = 0.87;
   decal("patioTireMarksFar", 15, 23, 25, 35, tracks, 0.03).rotation.y = 1.16;
-  decal("scrapZoneTireMarks", 21, 22, -48, 20, tracks, 0.03).rotation.y = 2.1;
+  const scrapTracks = B.MeshBuilder.CreateGround("scrapZoneTireMarks", { width: 21, height: 22, subdivisions: 8 }, scene);
+  scrapTracks.position.set(-48, 0.03, 20); scrapTracks.rotation.y = 2.1;
+  scrapTracks.material = tracks; scrapTracks.receiveShadows = true; scrapTracks.hasVertexAlpha = true;
+  const marksPos = scrapTracks.getVerticesData(B.VertexBuffer.PositionKind)!;
+  const marksColor: number[] = [];
+  for (let i = 0; i < marksPos.length; i += 3) {
+    const z = marksPos[i + 2];
+    marksColor.push(1, 1, 1, Math.min(1, (11 - Math.abs(z)) / 4));
+  }
+  scrapTracks.setVerticesData(B.VertexBuffer.ColorKind, marksColor);
   decal("workshopTireMarks", 12, 18, -4, -5, tracks, 0.035).rotation.y = -0.49;
   bare.push({ x: -48, z: 20, r: 23 });
   // Berm/lomo de tierra y escombros en el flanco norte de la zona
@@ -270,8 +290,12 @@ export function patioBuild() {
   const capMat = toy("#FBC02D"), trimMat = toy("#E53935", 0.4);
   const capTpl = template("drumCap", () => [
     cyl(3.18, 3.18, 0.025, capMat, [0, 0, 0], undefined, 16),
-    tor(3.08, 0.055, trimMat, [0, 0.025, 0], undefined, 16),
+    tor(3.08, 0.1, trimMat, [0, 0.025, 0], undefined, 16),
+    box(0.62, 0.035, 0.48, trimMat, [0.55, 0.04, -0.3], [0, 0.3, 0]),
     cyl(0.24, 0.24, 0.08, trimMat, [0.55, 0.05, -0.3], undefined, 8),
+    tor(0.44, 0.07, trimMat, [0.55, 0.09, -0.3], undefined, 8),
+    tor(3.25, 0.18, trimMat, [0, -1.2, 0], undefined, 16),
+    tor(3.25, 0.18, trimMat, [0, -3.6, 0], undefined, 16),
   ]);
   for (const [x, z] of [[-41, 27.5], [-45.5, 32]]) { // (-42, 30) dejaba ~1 m contra el lomo (-48, 34): el auto (1,6 m) se encajaba (sim 2026-10-14)
     const drum = registerHeavyProp(stat(cyl(3.2, 3.2, 4.8, toy("#E53935"), [x, 2.4, z], undefined, 16), B.PhysicsShapeType.CYLINDER, { friction: 0.6 }), "drum");

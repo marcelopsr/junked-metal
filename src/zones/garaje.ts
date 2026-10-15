@@ -13,6 +13,7 @@ export function garageBuild() {
   oilTex.hasAlpha = true;
   const oil = pbr("oilStain", { color: "#ffffff", rough: 0.65, tex: oilTex });
   oil.useAlphaFromAlbedoTexture = true;
+  oil.alpha = 0.84;
   oil.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
   for (const [x, z, w, h, ry] of [[30, 20, 2.8, 1.5, 0], [26, -18, 2.2, 1.3, 0.7], [-40, -55, 2.5, 1.4, -0.5], [-10, 40, 2, 1.2, 1.2]]) decal("oilStain", w, h, x, z, oil, 0.025).rotation.y = ry;
   const tracksTex = tex("tireMarks", () => new B.Texture("./images/decals/tire-marks.webp", scene));
@@ -37,7 +38,9 @@ export function garageBuild() {
   ]);
   shadows.addShadowCaster(bench);
   occluders.push(bench);
-  const tools = [box(3, 14, 0.6, M.matte("#2b2f36"), [-62, 32, -HALF + 0.6]), box(10, 2, 0.6, M.matte("#2b2f36"), [-50, 36, -HALF + 0.6]), box(2, 12, 0.6, M.matte("#8a1810"), [-40, 30, -HALF + 0.6]), tor(6, 1, M.matte("#2b2f36"), [-30, 33, -HALF + 0.6], [Math.PI / 2, 0, 0], 12)];
+  const tray = merge("garagePartsTray", partsTray());
+  shadows.addShadowCaster(tray);
+  const tools = [box(3, 14, 0.6, M.matte("#82909a"), [-62, 32, -HALF + 0.6]), box(10, 2, 0.6, M.matte("#82909a"), [-50, 36, -HALF + 0.6]), box(2, 12, 0.6, M.matte("#c65a43"), [-40, 30, -HALF + 0.6]), tor(6, 1, M.matte("#82909a"), [-30, 33, -HALF + 0.6], [Math.PI / 2, 0, 0], 12)];
   merge("pegboard", [box(50, 24, 0.5, M.matte("#b89a6a"), [-45, 32, -HALF + 0.3]), ...tools]);
   // Tubos fluorescentes: uno sobre el banco y dos en el techo. Parpadean (luz del sol del clima TUBO + emisivo)
   const tubeM = pbr("tubo", { color: "#eafff4", rough: 0.4, emissive: "#d8f5ea" });
@@ -48,18 +51,18 @@ export function garageBuild() {
   flicker(tubeM);
   // Estantería metálica con cajas y latas
   const parts: B.Mesh[] = [];
-  for (const [x, z] of [[20.5, -HALF + 1], [55.5, -HALF + 1], [20.5, -HALF + 10], [55.5, -HALF + 10]]) parts.push(box(1, 46, 1, M.metal("#7a8088"), [x, 23, z]));
+  for (const [x, z] of [[20.5, -HALF + 1], [55.5, -HALF + 1], [20.5, -HALF + 10], [55.5, -HALF + 10]]) parts.push(box(1, 46, 1, M.metal("#91989f"), [x, 23, z]));
   for (const y of [2, 14, 26, 38]) {
-    parts.push(box(36, 0.8, 10, M.metal("#8a9098"), [38, y, -HALF + 5.5]));
-    for (let x = 22; x < 52;) { const w = 5 + rng() * 6, h = 4 + rng() * 6; parts.push(box(w, h, 7, M.matte(["#b08850", "#9a7444", "#c49a64"][int(0, 2)]), [x + w / 2, y + 0.4 + h / 2, -HALF + 5.5])); x += w + 1 + rng() * 2; }
+    parts.push(box(36, 0.8, 10, M.metal("#a4aab0"), [38, y, -HALF + 5.5]));
+    for (let x = 22; x < 52;) { const w = 5 + rng() * 6, h = 4 + rng() * 6; parts.push(box(w, h, 7, M.matte(["#c19b66", "#b38a56", "#d2ae78"][int(0, 2)]), [x + w / 2, y + 0.4 + h / 2, -HALF + 5.5])); x += w + 1 + rng() * 2; }
   }
   const shelf = merge("shelf", parts);
   shadows.addShadowCaster(shelf);
   occluders.push(shelf);
   stat(box(36, 46, 10, band, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [38, 23, -HALF + 5.5]).isVisible = false;
   // Bicicleta apoyada en la pared izquierda
-  const frame = M.metal("#2a6fdb"), bp: B.Mesh[] = [];
-  for (const wz of [-20, 20]) bp.push(tor(28, 1.4, M.rubber(), [0, 14, wz], [0, 0, Math.PI / 2], 24), cyl(0.5, 0.5, 26, M.metal("#9aa0a6"), [0, 14, wz], [Math.PI / 2, 0, 0], 4));
+  const frame = M.metal("#2a6fdb"), bikeTire = pbr("bikeTire", { color: "#3f454a", rough: 0.96 }), bp: B.Mesh[] = [];
+  for (const wz of [-20, 20]) bp.push(tor(28, 1.4, bikeTire, [0, 14, wz], [0, 0, Math.PI / 2], 24), cyl(0.5, 0.5, 26, M.metal("#9aa0a6"), [0, 14, wz], [Math.PI / 2, 0, 0], 4));
   bp.push(tube([[0, 14, -20], [0, 16, -2], [0, 30, 4], [0, 30, 16], [0, 14, 20]], 0.8, frame), tube([[0, 16, -2], [0, 30, 16]], 0.8, frame), tube([[0, 30, 4], [0, 34, 2]], 0.6, frame));
   bp.push(box(4, 1.4, 8, M.matte("#1a1a1a"), [0, 35, 2]), cyl(0.8, 0.8, 16, M.metal("#9aa0a6"), [0, 36, 18], [0, 0, Math.PI / 2], 6));
   const bike = merge("bike", bp);
@@ -68,7 +71,19 @@ export function garageBuild() {
   occluders.push(bike);
   stat(box(6, 34, 46, band, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [-76, 17, 40]).isVisible = false;
   // Pila de cubiertas con material PBR y normales
-  stat(merge("tires", [0, 1, 2, 3].map((i) => tor(16, 5.5, tireStackM(), [0, 2.75 + i * 5.3, 0], undefined, 18))), B.PhysicsShapeType.CYLINDER, {}, [-68, 0, -50]);
+  const baseTire = tireStackM();
+  const garageTire = pbr("garageTireStack", {
+    color: "#bfc3c1", rough: 0.96, metal: 0, emissive: "#040404",
+    tex: baseTire.albedoTexture as B.Texture, bump: baseTire.bumpTexture as B.Texture,
+  });
+  const tires = [0, 1, 2, 3].map((i) => {
+    const tire = tor(16, 5.5, garageTire, [0, 2.75 + i * 5.3, 0], undefined, 18);
+    const uv = tire.getVerticesData(B.VertexBuffer.UVKind)!;
+    for (let k = 0; k < uv.length; k += 2) uv[k] *= 4;
+    tire.setVerticesData(B.VertexBuffer.UVKind, uv);
+    return tire;
+  });
+  stat(merge("tires", tires), B.PhysicsShapeType.CYLINDER, {}, [-68, 0, -50]);
   // El auto de la casa, en caballetes: abajo es zona techada
   realCar(30, 0, 0, 9, true, "#E53935");
 }

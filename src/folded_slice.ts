@@ -41,6 +41,35 @@ export function kit() {
   };
   return { G, parts, done, strut, bone, add };
 }
+/** Bandeja magnética de tornillería para el banco; pieza ambiental, sin física. */
+export function partsTray() {
+  const { G, parts, done } = kit();
+  const steel = FOLD.bare(), interior = FOLD.dark(), rim = FOLD.painted("#72533b", 0.78, 93);
+  // Chapa plegada con pestañas bajas y esquinas remachadas.
+  G.box(8, 0.16, 5.4, interior, [0, 0.08, 0]);
+  G.box(8, 0.72, 0.16, steel, [0, 0.48, -2.62]);
+  G.box(8, 0.72, 0.16, steel, [0, 0.48, 2.62]);
+  G.box(0.16, 0.72, 5.1, steel, [-3.92, 0.48, 0]);
+  G.box(0.16, 0.72, 5.1, steel, [3.92, 0.48, 0]);
+  for (const x of [-3.92, 3.92]) for (const z of [-2.62, 2.62]) {
+    G.cyl(0.2, 0.12, rim, [x, 0.66, z], undefined, 6);
+    G.rivets([x, 0.48, z], [x, 0.48, z], 1, [0, 0, 1]);
+  }
+  // Un par de tornillos, tuercas y arandelas visibles en el fondo.
+  G.cyl(0.48, 0.18, steel, [-1.7, 0.28, -0.7], [0, 0.3, 0.55], 6, 0.34);
+  G.cyl(0.2, 0.72, rim, [-1.7, 0.28, -0.7], [0, 0.3, 0.55], 6, 0.2);
+  G.cyl(0.42, 0.16, rim, [1.5, 0.22, 0.9], undefined, 6);
+  G.cyl(0.48, 0.14, steel, [2.4, 0.22, -0.8], undefined, 6);
+  G.cyl(0.18, 0.66, steel, [2.4, 0.22, -0.8], [0.1, 0.4, 0.6], 6, 0.18);
+  // Calco de inspección del atlas generado, aplicado al frente de la bandeja.
+  const sticker = B.MeshBuilder.CreatePlane("inspectionSticker", { width: 0.65, height: 0.65 }, sc());
+  const uv = sticker.getVerticesData(B.VertexBuffer.UVKind)!;
+  for (let i = 0; i < uv.length; i += 2) { uv[i] = 0.25 + uv[i] * 0.25; uv[i + 1] = 2 / 3 + uv[i + 1] / 3; }
+  sticker.setVerticesData(B.VertexBuffer.UVKind, uv); sticker.position.set(0, 0.48, -2.711); sticker.rotation.y = Math.PI;
+  sticker.material = FOLD.inspectionDecals(); sticker.metadata = { bone: 0 }; parts.push(sticker);
+  for (const p of done()) p.position.set(p.position.x - 50, p.position.y + 18.62, p.position.z - 92);
+  return parts;
+}
 export const along = (G: GeoKit, d1: number, d2: number, len: number, m: B.Material, p: V3, tess = 6) => G.cyl(d1, len, m, p, [Math.PI / 2, 0, 0], tess, d2); // prisma a lo largo de z (d1 adelante)
 
 // ---------- Hormiga: gáster hexagonal con placa, cintura, tórax con lomo atornillado, cabeza con mandíbulas de acero ----------
@@ -357,7 +386,7 @@ export function fencePanel() {
 // ---------- Prop: detalle de caja de chapa (unidad 1×1×1 centrada; se escala al tamaño de la caja, que sigue siendo el colisionador) ----------
 export function crateDetail() {
   const { G, done } = kit();
-  const strap = FOLD.painted("#424d53", 0.32, 111), lip = FOLD.painted("#293238", 0.28, 112);
+  const strap = FOLD.painted("#59636a", 0.32, 111), lip = FOLD.painted("#293238", 0.28, 112);
   for (const y of [-0.38, 0.38]) G.box(1.03, 0.07, 1.03, strap, [0, y, 0]); // flejes
   for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) G.box(0.06, 1.02, 0.06, lip, [x * 0.5, 0, z * 0.5]); // cantoneras
   for (const s of [-1, 1]) {
@@ -545,7 +574,7 @@ export function gruaBody() {
     G.box(0.11, 0.1, 1.18, orange, [s * 1.18, 2.79, 0.47]); G.box(0.11, 0.1, 1.18, FOLD.rust(), [s * 1.18, 0.96, 0.47]);
   }
   G.box(2.2, 0.1, 1.1, FOLD.rust(), [0, 0.82, 0.43]); // piso oxidado: los premios apoyan dentro del gabinete
-  for (const [x, y, c] of [[-0.65, 1.35, "#cf7770"], [0, 1.22, "#d0ad72"], [0.65, 1.38, "#e8cb42"]] as [number, number, string][]) {
+  for (const [x, y, c] of [[-0.65, 1.35, "#f0a6a0"], [0, 1.22, "#a9d6d0"], [0.65, 1.38, "#f6de78"]] as [number, number, string][]) {
     G.sph(0.52, FOLD.plastic(c), [x, y, 0.65]); G.box(0.22, 0.34, 0.28, FOLD.plastic(c), [x, y - 0.28, 0.65]);
     G.sph(0.07, FOLD.dark(), [x - 0.12, y + 0.02, 0.9]); G.sph(0.07, FOLD.dark(), [x + 0.12, y + 0.02, 0.9]);
   }
@@ -1102,7 +1131,7 @@ export function gnomeFold() {
   return done(25);
 }
 /** Auto real oxidado en caballetes (1 u ≈ 4,5 cm). Paneles de chapa con óxido, vidrios oscuros, ópticas emisivas. */
-export function realCarFold(lift: number, paint: string) {
+export function realCarFold(lift: number, paint: string, tireColor: string = PAL.goma) {
   const { G, done } = kit();
   const pm = FOLD.painted(paint, 0.25, 291), dark = FOLD.dark(), glass = FOLD.dark(), hub = Math.max(7, lift + 1);
   G.box(40, 13, 96, pm, [0, lift + 6.5, 0]); G.box(36, 11, 50, pm, [0, lift + 18.5, -4]);

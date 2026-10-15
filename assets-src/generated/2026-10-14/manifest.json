@@ -1,0 +1,11 @@
+{
+  "date": "2026-10-14",
+  "generator": "OpenAI ImageGen",
+  "cycle": "Soil texture, inspection decals, Folded parts tray",
+  "assets": [
+    { "source": "soil-source.png", "runtime": "public/textures/soil-clods-generated.webp", "use": "Shared albedo for garden soil and scrap-yard ground decals" },
+    { "source": "inspection-decals.png", "runtime": "public/images/decals/inspection-atlas.webp", "use": "Transparent 4x3 atlas, first cell applied to the new tray" },
+    { "source": "contact-sheet-cycle.png", "use": "Generated contact sheet for soil, decals, and tray concept" },
+    { "source": "parts-tray-contact-sheet.png", "use": "Generated three-view prop contact sheet" }
+  ]
+}

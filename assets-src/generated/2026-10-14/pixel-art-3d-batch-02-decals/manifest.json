@@ -1,0 +1,22 @@
+{
+  "batch": "pixel-art-3d-batch-02-decals",
+  "date": "2026-10-14",
+  "generator": "OpenAI ImageGen; extracted with sharp, nearest-neighbor reduction, lossless WebP",
+  "status": "transparent decal candidates; not integrated into active gameplay",
+  "sourceAtlas": "atlas/yard-decals-4x2.png",
+  "sourceSize": "1774x887 RGBA",
+  "runtimeCandidate": "256x256 transparent PNG and lossless WebP per decal",
+  "alpha": "verified: every extracted decal has both transparent and opaque pixels",
+  "tileability": "not applicable; each texture is a standalone overlay",
+  "decals": [
+    { "file": "oil-splat", "possibleConsumer": "src/zones/garaje.ts oil stain" },
+    { "file": "tire-skids", "possibleConsumer": "src/zones/garaje.ts tire marks; patio track decals" },
+    { "file": "dry-leaf-cluster", "possibleConsumer": "src/zones/patio.ts dry-leaf decals" },
+    { "file": "scrap-shards", "possibleConsumer": "src/zones/patio.ts small-scrap decals" },
+    { "file": "rust-drips", "possibleConsumer": "corrugated steel props and seams" },
+    { "file": "chipped-paint-scuff", "possibleConsumer": "RC body and painted props" },
+    { "file": "mud-splatter", "possibleConsumer": "soil, wheels, and ground contact areas" },
+    { "file": "hazard-stripe", "possibleConsumer": "ramps and hazard trim" }
+  ],
+  "notIncluded": ["UV/material integration", "model geometry", "gameplay changes", "active texture replacement"]
+}

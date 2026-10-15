@@ -1,0 +1,112 @@
+{
+  "batch": "pixel-art-3d-batch-01",
+  "date": "2026-10-14",
+  "generator": "OpenAI ImageGen; atlas tiles extracted with sharp and reduced with nearest-neighbor",
+  "status": "candidate materials; not integrated into active gameplay",
+  "styleReference": "user-provided pixel-art 3D texture atlas, warm earthy palette, chunky pixels",
+  "runtimeCandidate": "256x256 lossless WebP per material",
+  "tileability": "not yet validated in a repeated 3D surface",
+  "atlases": [
+    {
+      "file": "atlases/01-yard-ground-wood-tire.png",
+      "materials": [
+        "leaf-litter",
+        "soil-clods",
+        "tire-tread",
+        "weathered-planks"
+      ]
+    },
+    {
+      "file": "atlases/02-grass-garden-patio-brick.png",
+      "materials": [
+        "backyard-grass",
+        "furrowed-garden-earth",
+        "cracked-patio-concrete",
+        "terracotta-brick"
+      ]
+    },
+    {
+      "file": "atlases/03-garage-metal-concrete.png",
+      "materials": [
+        "oil-stained-concrete",
+        "corrugated-rust-steel",
+        "chipped-teal-metal",
+        "cracked-plaster"
+      ]
+    },
+    {
+      "file": "atlases/04-creature-materials.png",
+      "materials": [
+        "brown-chitin",
+        "olive-chitin",
+        "amber-chitin",
+        "short-fur"
+      ]
+    },
+    {
+      "file": "atlases/05-rc-vehicle-materials.png",
+      "materials": [
+        "orange-rc-paint",
+        "teal-rc-paint",
+        "tire-sidewall",
+        "smoked-window-plastic"
+      ]
+    }
+  ],
+  "tileMap": {
+    "leaf-litter": "src/zones/patio.ts dry leaf decals",
+    "soil-clods": "src/zones/patio.ts compacted garden earth",
+    "tire-tread": "src/zones/garaje.ts tire stack; vehicle wheel materials",
+    "weathered-planks": "src/zones/common.ts woodM and plankTpl",
+    "backyard-grass": "src/render.ts TEX.grassMacro / src/world.ts floor",
+    "furrowed-garden-earth": "src/zones/patio.ts dirtMat and pathMat",
+    "cracked-patio-concrete": "src/render.ts TEX.tiles and SURF.concrete",
+    "terracotta-brick": "src/render.ts brick and src/world.ts brickWalls",
+    "oil-stained-concrete": "src/zones/garaje.ts oilTex and patio concrete",
+    "corrugated-rust-steel": "src/folded.ts FOLD.rust and rusty world props",
+    "chipped-teal-metal": "vehicle paint variants and painted garage props",
+    "cracked-plaster": "src/world.ts house and garage wall surfaces",
+    "brown-chitin": "insect enemy materials",
+    "olive-chitin": "beetle and green insect materials",
+    "amber-chitin": "ant, moth, and boss material variants",
+    "short-fur": "dog and cat materials",
+    "orange-rc-paint": "player RC body paint",
+    "teal-rc-paint": "player RC body color variants",
+    "tire-sidewall": "player RC and yard vehicle wheels",
+    "smoked-window-plastic": "vehicle cab and yard car windows"
+  },
+  "notIncluded": [
+    "new 3D meshes, rigs, animation, collision meshes, or UV layouts",
+    "normal, roughness, metallic, emissive, or opacity maps",
+    "decals, signs, HUD icons, menu illustrations, or bestiary portraits",
+    "active runtime wiring or changes to the current art direction"
+  ],
+  "contactSheet": "contact-sheet.png",
+  "nextBatches": [
+    {
+      "batch": "03",
+      "scope": "modelos 3D de los ocho autos RC, ruedas y pilotos; UV para los atlas de materiales",
+      "preserve": "manejo, escala, colisiones, personalización y datos de Carrera"
+    },
+    {
+      "batch": "04",
+      "scope": "modelos 3D de insectos, máquinas, mascotas y jefes; UV y variantes de material",
+      "preserve": "IA, rigs/VAT, animaciones, escala y contratos de colisión"
+    },
+    {
+      "batch": "05",
+      "scope": "mundo y props 3D: casa, garaje, vegetación, cajas, bidones, herramientas, rampas, auto real y rompibles",
+      "preserve": "layout, física y destrucción"
+    },
+    {
+      "batch": "06",
+      "scope": "recursos 2D todavía visibles: retratos, pilotos, cartas/evoluciones, intro y fondos de menú",
+      "preserve": "identidad y legibilidad de la interfaz"
+    },
+    {
+      "batch": "07",
+      "scope": "prueba integrada de cámara, luz, materiales y render pixel-art 3D HD",
+      "gate": "comparar PC/celular antes de sustituir los recursos activos"
+    }
+  ]
+}
