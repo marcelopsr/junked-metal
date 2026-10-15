@@ -3,7 +3,7 @@ type V3 = [number, number, number];
 import { box, cyl, merge, sph, tor } from "../models";
 import { M, pbr, shadows, TEX } from "../render";
 import { rng } from "../rng";
-import { HALF, bare, floor, occluders, scene, skin, stat } from "./common";
+import { HALF, bare, decal, floor, occluders, scene, skin, stat } from "./common";
 import { ball, freeSpot, giantTools, int, paintCans, piles, puddles, toyRamps } from "../world_layout";
 
 // Tablones oscuros, paredes de chapa, vigas bajas y juguetes gigantes rotos como obstáculos. Mismo tamaño y reglas que el galpón (salida (0, 0) libre).
@@ -11,6 +11,35 @@ export function atticBuild() {
   floor("r53madera", "#ffffff", () => { const x = new B.Texture("./textures/r53-madera-gastada.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; }, 0.75, "concrete", 6);
   const paint = M.matte("#c98a4a"), band = M.matte("#795548");
   for (const [x, z, w, d] of [[0, -HALF - 1, HALF * 2 + 4, 2], [HALF + 1, 0, 2, HALF * 2 + 4], [-HALF - 1, 0, 2, HALF * 2 + 4], [0, HALF + 1, HALF * 2 + 4, 2]]) occluders.push(merge("gwall", [box(w, 56, d, paint, [x, 28, z]), box(w + 0.6, 5, d + 0.6, band, [x, 2.5, z])]));
+  atticContrast();
+}
+
+// Contraste de composición (recetas de industrial/ciudad): manchas oscuras orgánicas de borde suave (una textura radial compartida), cinta de enmascarar clara en los tablones y libros oscuros que proyectan sombra.
+// Generador local fijo: no toca rng() del layout.
+const lcg = (s: number) => () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+function atticContrast() {
+  const N = 256, t = new B.DynamicTexture("desvanManchaTex", N, scene, true), c = t.getContext() as unknown as CanvasRenderingContext2D, q = lcg(5), o = lcg(613);
+  c.clearRect(0, 0, N, N);
+  for (let i = 0; i < 11; i++) { const bx = N / 2 + (q() - 0.5) * 110, by = N / 2 + (q() - 0.5) * 80, rr = 30 + q() * 40, g = c.createRadialGradient(bx, by, 0, bx, by, rr); g.addColorStop(0, "rgba(14,8,6,0.95)"); g.addColorStop(0.55, "rgba(16,9,7,0.8)"); g.addColorStop(1, "rgba(16,9,7,0)"); c.fillStyle = g; c.fillRect(bx - rr, by - rr, rr * 2, rr * 2); }
+  t.update(); t.hasAlpha = true;
+  const ink = pbr("desvanMancha" + scene.uniqueId, { color: "#ffffff", rough: 0.5, metal: 0, tex: t }) as B.PBRMaterial;
+  if (ink.albedoTexture !== t) t.dispose(); // material cacheado: la textura nueva sobra
+  ink.useAlphaFromAlbedoTexture = true; ink.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  for (let i = 0; i < 38; i++) { const a = o() * 6.283, d = 5 + o() * 36, w = 7 + o() * 11; decal("desvanMan" + i, w, w * (0.6 + o() * 0.4), Math.cos(a) * d, Math.sin(a) * d, ink, 0.07 + i * 0.001).isPickable = false; }
+  // Cinta de enmascarar crema (dos rectas y una cruz junto a la salida) y círculos de tiza: marcas planas, el piso sigue libre
+  const tape = M.matte("#F1E6C8"), blue = M.matte("#42A5F5"), parts: B.Mesh[] = [];
+  for (const x of [-9, 9]) for (let z = -70; z < 48; z += 6) parts.push(box(1.4, 0.08, 6, ((z + 70) / 6 | 0) % 2 ? M.matte("#17181c") : tape, [x, 0.1, z + 3]));
+  for (let x = -60; x < 60; x += 6) parts.push(box(4, 0.08, 0.9, tape, [x + 2, 0.1, -26]));
+  for (const sg of [-1, 1]) for (let k = -3; k <= 3; k++) parts.push(box(0.8, 0.08, 5, k % 2 ? blue : tape, [sg * 22 + k * 1.5, 0.1, 10])); // rayuela
+  const m = merge("desvanCinta", parts); m.isPickable = false; m.receiveShadows = true;
+  // Libros y bloques oscuros cerca de la salida (lados y fondo, pasillos de 18+ m): sombra larga sobre el tablón
+  const dk = M.plastic("#1d2433"), dk2 = M.plastic("#2a1a22"), books: B.Mesh[] = [];
+  for (const [x, z, ry] of [[-24, -4, 0.5], [26, -8, -0.2], [5, -50, 0.6], [-12, -52, 0.1], [-17, -16, 0.3], [18, -34, -0.4], [-30, -40, 0.8], [14, 28, 0.1]]) {
+    books.push(box(7, 1.6, 5, dk, [x, 0.8, z], [0, ry, 0]), box(6.4, 1.6, 4.6, dk2, [x + 0.3, 2.4, z], [0, ry + 0.2, 0]), box(5.6, 1.6, 4.2, dk, [x, 4, z], [0, ry - 0.15, 0]));
+    stat(box(7, 5.6, 5.4, dk, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, 2.8, z, ry]).isVisible = false;
+    bare.push({ x, z, r: 6 });
+  }
+  const bm = merge("desvanLibros", books); bm.isPickable = false; shadows.addShadowCaster(bm); bm.receiveShadows = true;
 }
 
 // Props de juguete a escala del auto (2-3 u): una malla fusionada por zona y colisionadores invisibles (uno por prop) en el área central. Sin tapar la salida (freeSpot deja 18 u libres).

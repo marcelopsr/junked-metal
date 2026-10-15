@@ -59,6 +59,36 @@ export function shedBuild() {
   for (const sx of [-1, 1]) for (const sz2 of [-1, 1]) stat(box(1.8, th - 1.2, 1.8, leg, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [tx + sx * (tw / 2 - 1.5), (th - 1.2) / 2, tz + sz2 * (td / 2 - 1.5)]).isVisible = false;
   ramp(toy("#FB8C00"), tx + tw / 2 + 28, tz, -Math.PI / 2, 9, 28, th, 0, 0, 0, [slopeBoard(9.4, 28, th, wood)]);
   for (const dx of [-12, 0, 12]) bare.push({ x: tx + dx, z: tz, r: 16 }); // para la IA, los cofres y el teleportador: la mesa es un obstáculo
+  shedContrast();
+}
+
+// Contraste de composición (recetas de industrial/ciudad): manchas oscuras orgánicas con borde suave (una textura radial compartida), cinta clara de taller en el piso y volúmenes oscuros que proyectan sombra.
+// Generador local fijo: no toca rng() del layout.
+const lcg = (s: number) => () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+function shedContrast() {
+  const N = 256, t = new B.DynamicTexture("galponManchaTex", N, scene, true), c = t.getContext() as unknown as CanvasRenderingContext2D, q = lcg(5), o = lcg(613);
+  c.clearRect(0, 0, N, N);
+  for (let i = 0; i < 11; i++) { const bx = N / 2 + (q() - 0.5) * 110, by = N / 2 + (q() - 0.5) * 80, rr = 30 + q() * 40, g = c.createRadialGradient(bx, by, 0, bx, by, rr); g.addColorStop(0, "rgba(6,7,9,0.97)"); g.addColorStop(0.55, "rgba(8,9,12,0.85)"); g.addColorStop(1, "rgba(8,9,12,0)"); c.fillStyle = g; c.fillRect(bx - rr, by - rr, rr * 2, rr * 2); }
+  t.update(); t.hasAlpha = true;
+  const wet = pbr("galponMancha" + scene.uniqueId, { color: "#ffffff", rough: 0.2, metal: 0.3, tex: t }) as B.PBRMaterial;
+  if (wet.albedoTexture !== t) t.dispose(); // material cacheado: la textura nueva sobra
+  wet.useAlphaFromAlbedoTexture = true; wet.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
+  for (let i = 0; i < 38; i++) { const a = o() * 6.283, d = 5 + o() * 36, w = 7 + o() * 11; decal("galponMan" + i, w, w * (0.6 + o() * 0.4), Math.cos(a) * d, Math.sin(a) * d, wet, 0.07 + i * 0.001).isPickable = false; }
+  // Cinta de peligro amarilla/negra: dos pasillos que cruzan cerca de la salida (el piso sigue libre, son marcas planas de 1,2 m)
+  const yel = toy("#FBC02D", 0.6), blk = toy("#16181b", 0.7), wht = toy("#F2F0E6", 0.6), parts: B.Mesh[] = [];
+  for (const x of [-9, 9]) for (let z = -70; z < 48; z += 2.4) parts.push(box(1.2, 0.08, 2.4, ((z + 70) / 2.4 | 0) % 2 ? blk : yel, [x, 0.1, z + 1.2]));
+  for (let x = -60; x < 60; x += 2.4) parts.push(box(2.4, 0.08, 1.2, ((x + 60) / 2.4 | 0) % 2 ? blk : yel, [x + 1.2, 0.1, -26]));
+  for (let z = -62; z < 40; z += 6) parts.push(box(0.5, 0.08, 3, wht, [0, 0.1, z])); // línea central discontinua
+  for (const sg of [-1, 1]) for (let k = -3; k <= 3; k++) parts.push(box(0.9, 0.08, 6, wht, [sg * 22 + k * 1.5, 0.1, 10])); // cebra
+  const tape = merge("galponCinta", parts); tape.isPickable = false; tape.receiveShadows = true;
+  // Volúmenes oscuros cerca de la salida (lados y fondo, pasillos de 18+ m): sombra larga contra el piso de chapa
+  const dk = toy("#1b1d22", 0.5), drums: B.Mesh[] = [];
+  for (const [x, z, h] of [[-24, -4, 5], [26, -8, 6], [5, -50, 6], [-12, -52, 4], [-17, -16, 6], [18, -34, 7], [-30, -40, 5], [14, 28, 4]]) {
+    drums.push(cyl(3.2, 3.2, h, dk, [x, h / 2, z], undefined, 14), cyl(3.3, 3.3, 0.4, toy("#FBC02D", 0.5), [x, h * 0.7, z], undefined, 14));
+    stat(box(6.4, h, 6.4, dk, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x, h / 2, z]).isVisible = false;
+    bare.push({ x, z, r: 6 });
+  }
+  const dm = merge("galponTambores", drums); dm.isPickable = false; shadows.addShadowCaster(dm); dm.receiveShadows = true;
 }
 
 /** Industrial de juguete sobre los estantes del fondo: contenedores apilados, tambores de colores y dos grúas torre. Solo visual: sin colisión, sin rng(). */
