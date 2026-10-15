@@ -110,6 +110,14 @@ export function garageLayout() {
         : [tor(1.2, 0.5, rub, [x, 0.5, z], undefined, 12), tor(1.2, 0.5, rub, [x + 0.1, 1.5, z], undefined, 12)]; // neumáticos apilados
     props.push(...g);
   }
+  // Altas luces puntuales: latas blancas, carteles claros y tubos encendidos bajos (emisivo, sin colisión)
+  const lit = pbr("gLuz", { color: "#fff6dc", rough: 0.5, emissive: "#fff0c8" }), can = M.matte("#fbf8ee");
+  for (let i = 0; i < 9; i++) {
+    const x = (q() - 0.5) * 56 + 4, z = -24 + q() * 32; if (Math.hypot(x, z) < 8) continue;
+    if (i % 3 === 0) props.push(box(2.4, 0.25, 0.25, lit, [x, 0.2, z], [0, q() * 3, 0]));
+    else if (i % 3 === 1) props.push(box(2.2, 1.4, 0.2, lit, [x, 0.75, z], [-0.25, q() * 3, 0]), box(0.2, 0.7, 0.2, steel, [x, 0.35, z]));
+    else props.push(cyl(0.7, 0.7, 1.4, can, [x, 0.7, z], undefined, 10));
+  }
   const pm = merge("gdecor", props); shadows.addShadowCaster(pm); pm.receiveShadows = true;
   const sd = tex("oilSoft", () => { const t = new B.DynamicTexture("oilSoft", 64, scene, false), c = t.getContext() as unknown as CanvasRenderingContext2D, g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, "rgba(12,7,3,1)"); g.addColorStop(0.6, "rgba(12,7,3,0.75)"); g.addColorStop(1, "rgba(20,12,6,0)"); c.fillStyle = g; c.fillRect(0, 0, 64, 64); t.update(); t.hasAlpha = true; return t; });
   const soft = pbr("oilSoft", { color: "#ffffff", rough: 0.4, tex: sd }); soft.useAlphaFromAlbedoTexture = true; soft.transparencyMode = B.Material.MATERIAL_ALPHABLEND;

@@ -77,7 +77,7 @@ const snowTex = () => {
 
 export function snowBuild() {
   // Nieve lisa (ref33a): base casi blanca con ondulaciones azuladas muy suaves; el contraste lo ponen los surcos y las sombras, no el grano.
-  floor("nieveLisa", "#c3cddb", () => snowTex(), 0.85, "concrete", 26);
+  floor("nieveLisa", "#b4bfd0", () => snowTex(), 0.85, "concrete", 26);
   ruts();
   manchas("manchaNieve", 17, [-26, 26, -22, 8], [{ color: "#1f2f50", alpha: 0.8, n: 50, w: [5, 11] }], 0.2); // sombras azuladas y huellas oscuras sobre la nieve (sin colisión)
   // Borde: bloques de plástico rojo/blanco con gorro de nieve cada tanto, alineados con los cuatro lados.
@@ -212,6 +212,15 @@ export function snowLayout() {
     if (k % 3 === 0) mound(x, z, 2.2, 0.7, deco, false);
     else { deco.push(box(2.6, 1.3, 1.3, M.plastic(k % 2 ? RED : WHITE), [x, 0.65, z], [0, ry, 0]), box(2.6, 1.3, 1.3, M.plastic(k % 2 ? WHITE : RED), [x + Math.cos(ry) * 2.7, 0.65, z - Math.sin(ry) * 2.7], [0, ry, 0]), sph(2, whiteM(), [x, 1.3, z], [1.3, 0.3, 0.7])); stat(box(5.3, 1.2, 1.4, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x + Math.cos(ry) * 1.35, 0.6, z - Math.sin(ry) * 1.35, ry]).isVisible = false; bare.push({ x, z, r: 4 }); }
   });
+  // Volúmenes oscuros bajos en el encuadre de la salida (rocas, tocones, travesaños), sin colisión, generador local
+  { const o = ((s) => () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296))(4417), gd = M.matte("#2b2c33"), wd = M.matte("#3a2616");
+    for (let i = 0; i < 22; i++) {
+      const x = (o() - 0.5) * 56, z = -22 + o() * 46; if (Math.hypot(x, z) < 8 || roadDist(x, z) < ROAD_W / 2 + 2 || nearSpot(x, z, 3)) continue;
+      const k = i % 3;
+      if (k === 0) deco.push(sph(2, gd, [x, 0.3, z], [1.6 + o(), 0.9 + o() * 0.5, 1.4 + o()]));
+      else if (k === 1) deco.push(cyl(0.9, 1.1, 1.1, wd, [x, 0.55, z], undefined, 8), cyl(0.8, 0.8, 0.1, M.matte("#8a6a44"), [x, 1.12, z], undefined, 8));
+      else deco.push(box(4.4, 0.45, 0.4, wd, [x, 0.9, z], [0, o() * 3, 0]), box(0.5, 1.5, 0.5, wd, [x, 0.75, z]));
+    } }
   // Arte 0.95 (saturación 0,15-0,36): trineos de colores saturados con patines oscuros, sin colisión (el auto los cruza), a 10-30 u de la salida
   ([[7, -10, 0.3, "#1E88E5"], [-8, -18, -0.5, "#FBC02D"], [9, -28, 0.8, "#2E9E4F"], [-10, -6, 1.2, "#FB8C00"], [-7, -30, 0.2, "#E53935"]] as const).forEach(([x, z, ry, c]) => {
     if (roadDist(x, z) < ROAD_W / 2 + 3 || nearSpot(x, z)) return;

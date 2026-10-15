@@ -180,6 +180,13 @@ export function shedLayout() {
   }
   scatterProps("galponProps", int(10, 14), shedProp);
   nearProps("galponCerca", shedNear);
+  // Acentos para el encuadre angosto del cel: tarimas oscuras y latas/conos claros a 5-9 u del eje (sin colisión, generador local)
+  { const o = lcg(917), acc: B.Mesh[] = [];
+    for (let i = 0; i < 18; i++) {
+      const x = (i % 2 ? 1 : -1) * (3.2 + o() * 2.6), z = -11 + (i / 18) * 30 + o() * 2; if (Math.hypot(x, z) < 5) continue;
+      if (i % 3) acc.push(box(4, 1.6, 3, toy("#14120f"), [x, 0.55, z], [0, o() * 3, 0])); else acc.push(cyl(1.4, 1.4, 2.4, toy("#FAFAFA"), [x, 1.2, z], undefined, 10), cyl(1.45, 1.45, 0.4, toy(RED), [x, 2.2, z], undefined, 10));
+    }
+    const m = merge("galponAcentos", acc); m.isPickable = false; shadows.addShadowCaster(m); }
   giantTools();
   paintCans(int(5, 8));
   piles(int(2, 3), ["#E53935", "#FBC02D", "#42A5F5"], (c) => toy(c), 3, true);
