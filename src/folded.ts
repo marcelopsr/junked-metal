@@ -4,7 +4,6 @@
 import * as B from "@babylonjs/core";
 import { lcg, PAL, wornCanvas, wornTex } from "./kit3d";
 import { snapMat } from "./render";
-import { tireTreadPixels } from "../assets-src/procedural-textures/v1/pixels.mjs";
 
 /** Folded 2.5D activo en todo el juego (antes bandera `?folded2`). Los GLB viejos y los procedurales previos quedan sin usar (ASSET_INVENTORY).
  *  ponytail: constante en vez de borrar las ramas viejas de models.ts/world.ts/glb.ts; borrarlas cuando no se necesite comparar. */
@@ -76,10 +75,6 @@ export function toTile(m: B.Mesh, t: number) {
 }
 /** Biblioteca de materiales. `wear` 0..1: pintura saltada en bordes y mugre; sobre 0,4 el óxido avanza desde esquinas y el borde de apoyo. */
 export const FOLD = {
-  drumPaint: () => once("drumPaint", (m) => {
-    m.albedoTexture = new B.Texture("./textures/props/prop-rusty-drum-folded-v2.webp", sc(), true, false, B.Texture.NEAREST_SAMPLINGMODE);
-    m.roughness = 0.84; m.metallic = 0.3;
-  }),
   painted: (c: string, wear = 0.6, seed = 11) => once(`p${c}|${wear}|${seed}`, (m) => {
     const edgeRust = Math.max(0, wear - 0.4) / 0.6;
     const t = wornTex(sc(), seed, c, null, 64, wear, edgeRust, true); // escamas Folded legibles en el atlas, sin alterar los materiales viejos del taller
@@ -127,13 +122,6 @@ export const FOLD = {
       }
     }) };
   }),
-  treadRubber: (color: string = PAL.goma) => once(`treadRubber${color}`, (m) => {
-    m.albedoColor = B.Color3.White(); m.roughness = 1; m.metallic = 1;
-    m.metadata = { tile: () => tile(`treadRubber${color}`, (a, o, _e, x, y) => {
-      a.putImageData(new ImageData(tireTreadPixels(color), TS, TS), x, y);
-      o.fillStyle = orm(0.96, 0); o.fillRect(x, y, TS, TS);
-    }) };
-  }),
   /** Quitina: oscura, lisa y con brillo (rugosidad baja), filo más oscuro y mate en los cantos; sin desgaste de chapa. */
   chitin: (c: string) => once("ch" + c, (m) => {
     m.albedoColor = B.Color3.FromHexString(c).toLinearSpace(); m.roughness = 0.3; m.metallic = 0.15;
@@ -172,12 +160,6 @@ export const FOLD = {
   decal: () => once("decal", (m) => {
     m.albedoTexture = decalTex(); m.useAlphaFromAlbedoTexture = true; m.transparencyMode = B.PBRMaterial.PBRMATERIAL_ALPHATEST;
     m.roughness = 0.75; m.metallic = 0; m.zOffset = -2;
-  }),
-  /** Atlas generado de calcomanías de inspección; separado para conservar las celdas Folded existentes. */
-  inspectionDecals: () => once("inspectionDecals", (m) => {
-    const t = new B.Texture("./images/decals/inspection-atlas.webp", sc(), true, false, B.Texture.NEAREST_SAMPLINGMODE);
-    t.hasAlpha = true; m.albedoColor = B.Color3.White(); m.albedoTexture = t; m.useAlphaFromAlbedoTexture = true;
-    m.transparencyMode = B.PBRMaterial.PBRMATERIAL_ALPHATEST; m.roughness = 0.82; m.metallic = 0;
   }),
 };
 /** Chapas para utilería del mundo (tonos de las láminas, un punto apagados para no competir con enemigos). */
