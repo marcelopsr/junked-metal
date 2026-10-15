@@ -500,8 +500,10 @@ export const dailySeed = () => Number(today().replaceAll("-", ""));
 // Maldiciones: +30% tornillos cada una (se suman). El desafío diario las ignora.
 const CURSE_SETS: CurseId[][] = [[], ["horda"], ["sinrep"], ["horda", "sinrep"]];
 const curseTxt = () => save.curses.length ? `${save.curses.length > 1 ? "Maldiciones" : "Maldición"} · ${save.curses.map((c) => `${CURSES[c].name} (${CURSES[c].short})`).join(" y ")} · +${save.curses.length * 30}% tornillos` : "Maldiciones · Ninguna";
+/** Tornillos con punto de miles siempre (de-DE agrupa también 4 cifras; es-ES no): mismo formato en menú, Taller y Garaje. */
+const tor = (n: number) => n.toLocaleString("de-DE");
 function renderMain() {
-  $("mainInfo").textContent = `${save.scrap} tornillos · récord ${fmt(save.best)}`;
+  $("mainInfo").textContent = `${tor(save.scrap)} tornillos${save.best ? ` · récord ${fmt(save.best)}` : ""}`; // sin récord no se muestra «0:00»
   const b = save.daily.day === today() ? save.daily.best : 0;
   $("dailyRec").textContent = b ? fmt(b) : ""; // el texto va en <span>/<small>: tocar el botón entero borraría su ícono
   if (save.endless) $("mainInfo").textContent += ` · sin fin +${fmt(save.endless)}`;
@@ -713,7 +715,7 @@ const SLOT_LABELS: Record<string, string> = {
 };
 function renderShop() {
   if (stab !== "piezas" && current() === "shop") peek.part = undefined;
-  $("bank").textContent = `${save.scrap.toLocaleString("es-ES")} tornillos`;
+  $("bank").textContent = `${tor(save.scrap)} tornillos`;
   $("stabs").innerHTML = tabsHtml(STABS, stab, "stab");
   const allItems = shopItems();
   const ok = (i: ShopItem) => i.cost !== undefined && i.cost <= save.scrap;
@@ -782,7 +784,7 @@ export function renderGarage() {
   const rallyPkgTag = hasOffroad ? '<span class="rally-pkg">PAQUETE OFF-ROAD</span>' : "";
   const hasAwd = Boolean(save.car === "monster" || save.car === "tanque" || (save.car as string) === "pickup");
   const awdPkgTag = hasAwd ? '<span class="all-wheel">TRACCIÓN TOTAL</span>' : "";
-  $("bankG").innerHTML = `${save.scrap.toLocaleString("es-ES")} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span> <span class="parts-pct">${pctParts}% TALLER</span>${aeroPkgTag}${rallyPkgTag}${awdPkgTag} <span class="paints-pct">${ownedPaints}/${PAINTS.length} PINTURAS</span>`;
+  $("bankG").innerHTML = `${tor(save.scrap)} tornillos <span class="car-tally">${ownedCars}/${Object.keys(CARS).length} AUTOS</span> <span class="parts-pct">${pctParts}% TALLER</span>${aeroPkgTag}${rallyPkgTag}${awdPkgTag} <span class="paints-pct">${ownedPaints}/${PAINTS.length} PINTURAS</span>`;
   $("gtabs").innerHTML = tabsHtml(GTABS, gtab, "gtab");
   $("paint").classList.toggle("hidden", gtab !== "pintura");
   $("cars").classList.toggle("hidden", gtab === "pintura");
@@ -793,7 +795,7 @@ export function renderGarage() {
     $("cars").innerHTML = (Object.keys(CARS) as CarKind[]).map((k) => {
       const c = CARS[k];
       const won = save.ach.includes(("gana_" + k) as AchId);
-      const vicTag = owns("car:" + k) ? (won ? '<span class="car-vic won">★ VICTORIA REGISTRADA</span>' : '<span class="car-vic pending">PENDIENTE DE VICTORIA</span>') : "";
+      const vicTag = owns("car:" + k) ? (won ? '<span class="car-vic won">★ VICTORIA REGISTRADA</span>' : '<span class="car-vic pending">SIN VICTORIAS: GANAR UNA EXPEDICIÓN CON ESTE AUTO</span>') : "";
       const isArmored = k === "tanque" || k === "monster" || k === "combi" || k === "topadora" || k === "misterio" || k === "murcielago";
       const armorTag = isArmored ? '<span class="armor-badge">CHASIS REFORZADO</span>' : "";
       const isHeavy = c.hp >= 250;
@@ -1214,7 +1216,7 @@ export function openOver(r: { win: boolean; why: string; time: number; kills: nu
   $("overEncT").classList.toggle("hidden", !r.enc); $("overEnc").classList.toggle("hidden", !r.enc);
   $("overEnc").innerHTML = (r.enc ?? []).map(([a, b]) => `<li><span>${a}</span><b>${b}</b></li>`).join(""); // ENCORE: reporte de la expedición
   $("overRepeat").textContent = "Repetir";
-  $("overRec").classList.toggle("hidden", !r.record);
+  $("overRec").classList.toggle("hidden", !r.record || r.time < 60); // una partida de segundos no merece sello de récord
   $("overShop").classList.toggle("hidden", !canBuy());
   const rows = Object.entries(r.dmg).sort((a, b) => b[1] - a[1]), top = rows[0]?.[1] || 1;
   const name = (id: string) => (id in WEAPONS ? WEAPONS[id as WeaponId].name : id in ABILITIES ? ABILITIES[id as AbilityId].name : id[0].toUpperCase() + id.slice(1));
@@ -1277,7 +1279,7 @@ export function initMenu(a: Api) {
   api = a;
   // Íconos de la familia de interfaz en los botones fijos (solo presentación: no cambia texto ni acción)
   for (const b of document.querySelectorAll<HTMLButtonElement>("#fe button[data-go], #fe button[data-act]")) {
-    const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k] ?? (k === "playmenu" || k === "playgo" || k === "encorego" || k === "encore" ? "jugar" : undefined);
+    const k = b.dataset.go ?? b.dataset.act!, id = UI_BTN_ICON[k] ?? (k === "modes" ? "arcade" : undefined) ?? (k === "playmenu" || k === "playgo" || k === "encorego" || k === "encore" ? "jugar" : undefined);
     if (id && !b.classList.contains("lnk") && (!b.classList.contains("primary") || /^(play|playmenu|playgo|encore|encorego|resume|race|daily)$/.test(k))) b.insertAdjacentHTML("afterbegin", uiIcon(id, 22, !b.classList.contains("primary")));
   }
   $("tPause").innerHTML = uiIcon("pausa", 26);

@@ -132,9 +132,12 @@
 @media (orientation: portrait) and (max-width: 520px) {
   #encAsk, #encAsk.pact { top: calc(max(10px, env(safe-area-inset-top)) + 54px); left: 8px; translate: none; transform-origin: 0 0; width: calc((100vw - 60px) / var(--hud-scale)); z-index: 5; }
   #encAsk .encBtns button { min-height: 44px; }
+  #encAsk.route .encBtns em { display: none; } /* destino: siempre vale solo el próximo escenario; ahorra un renglón por opción */
   #encAsk.pact .encBtns small { display: none; } /* VENTAJA/COSTO: en vertical lo dicen las marcas + / − (forma y color); así el panel no baja hasta el auto */
 }
 @media (pointer: coarse) { #encAsk kbd { display: none; } } /* sin teclado: las teclas Z/X/V no aplican */
+/* Carta en celular: 1fr = minmax(auto, 1fr) dejaba que la evolución larga empujara la columna fuera del borde */
+@media (orientation: portrait) and (max-width: 720px) { body #levelup .offer { grid-template-columns: 56px minmax(0, 1fr); } body #levelup .offer > * { min-width: 0; } }
 /* Primera expedición: carta sugerida en la primera subida de nivel (progression.ts), pegatina roja ladeada */
 .offer .rec { position: absolute; top: -10px; right: -8px; z-index: 2; padding: 4px 8px 3px; font: 700 12px/1 var(--jm-titulo, var(--hf)); letter-spacing: .1em; color: #fff; background: #c62828; border: 2px solid #fff; rotate: 4deg; font-style: normal; box-shadow: 0 3px 0 #000a; pointer-events: none; animation: rec-in .22s cubic-bezier(.2, 1.6, .4, 1) .35s both; }
 @media (orientation: portrait) and (max-width: 720px) { .offer .rec { top: 6px; right: 8px; } }
@@ -510,6 +513,8 @@ body:has(#encAsk:not(.hidden)) #dirSub { display: none; } /* con cualquier ofert
   #encAsk.pact .encBtns small, #encAsk.pact .encBtns em { display: none; }
   body:has(#encAsk.pact:not(.hidden)) #dirSub { display: none; }
 }
+/* Celular vertical: a 43vh (o abajo) caía justo sobre el auto; sube a la franja libre bajo el reloj (el aviso de radio en vertical va abajo) */
+@media (orientation: portrait) and (max-width: 720px) { #dirSub { bottom: auto !important; /* gana a los bottom de arriba (controles, #hint) */ top: calc(max(10px, env(safe-area-inset-top)) + 122px * var(--hud-scale)); transform-origin: 50% 0; max-width: calc(100vw - 120px); } }
 body.calm #dirSub { animation: none !important; }
 
 /* ENCORE para 2 (R7a): vida del otro jugador, compacta, sobre la línea de la pantalla dividida */

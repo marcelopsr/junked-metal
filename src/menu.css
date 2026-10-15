@@ -59,7 +59,7 @@ body.calm .bindnote, body.calm .stamp, body.calm .offer .art svg, body.calm #bms
 .carc .wsyn b { display: inline; margin: 0; font-size: inherit; color: var(--lcd-ink); }
 .car-vic { display: inline-block; font: 700 11px/1 var(--hf); letter-spacing: .08em; padding: 3px 6px; border-radius: 3px; margin-bottom: 6px; width: fit-content; }
 .car-vic.won { background: rgba(255, 210, 74, .18); color: var(--jm-amarillo2, #ffd24a); border: 1px solid rgba(255, 210, 74, .5); }
-.car-vic.pending { background: rgba(255, 255, 255, .06); color: var(--lcd-ink-dim, #8a99a8); border: 1px solid rgba(255, 255, 255, .15); }
+.car-vic.pending { background: none; color: var(--lcd-ink-dim, #8a99a8); border: 0; padding-inline: 0; white-space: normal; line-height: 1.2; } /* texto de objetivo, no botón apagado */
 .vet-badge { display: inline-block; font: 800 10px/1 var(--hf); letter-spacing: .08em; padding: 2px 6px; border-radius: 3px; background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); border: 1px solid color-mix(in srgb, var(--good) 45%, transparent); margin-bottom: 4px; width: fit-content; }
 .armor-badge { display: inline-block; font: 800 10px/1 var(--hf); letter-spacing: .08em; padding: 2px 6px; border-radius: 3px; background: rgba(56, 189, 248, .18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, .45); margin-bottom: 4px; margin-left: 4px; width: fit-content; }
 .heavy-armor { margin-top: 4px; margin-left: 4px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #94a3b8; background: rgba(148, 163, 184, .15); border: 1px solid rgba(148, 163, 184, .4); border-radius: 3px; letter-spacing: .06em; }
@@ -408,6 +408,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #opts .row { display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; padding: 8px 12px; background: var(--shell); border: 1px solid var(--line); font: 400 17px/1.1 var(--data); text-transform: none; letter-spacing: .02em; color: var(--txt); box-shadow: none; text-align: left; }
 #opts .row b { color: var(--lcd-ink); font-weight: 400; white-space: nowrap; }
 #opts .row select { margin: 0; }
+@media (max-width: 700px) { #opts .row { flex-wrap: wrap; row-gap: 6px; } #opts .row .lb { flex: 1 1 200px; } #opts .row select { margin-left: auto; } } /* celular: si el selector no entra al lado, baja y la explicación usa todo el ancho (Escalado quedaba en 90 px) */
 #opts .row input[type=range] { width: min(200px, 34vw); accent-color: var(--lcd-ink); margin-left: auto; }
 #opts .row output { min-width: 56px; text-align: right; color: var(--lcd-ink); font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: .02em; }
 .note { color: var(--txt); font-size: 15px; text-align: left; padding: 6px 10px; background: #050605e6; } /* franja oscura: se lee sobre la escena */
@@ -492,10 +493,12 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #scr-over .overGrid .card ul { list-style: none; margin: 0; padding: 6px 10px; width: 100%; display: flex; flex-direction: column; gap: 5px; }
 .kv li { display: flex; justify-content: space-between; font-size: 17px; }
 .kv li span { color: var(--dim); }
-#overEnc li { gap: 2px 10px; flex-wrap: wrap; } #overEnc li span { flex: none; } #overEnc li b { flex: 1 1 11em; white-space: normal; text-align: right; } /* QA final 2: pactos y rutas largos se salían del panel */
+#overEnc li { gap: 2px 10px; flex-wrap: wrap; } #overEnc li span { flex: none; } #overEnc li b { flex: 1 1 auto; white-space: normal; text-align: right; } /* QA final 2: pactos y rutas largos se salían del panel */
 #scr-over .overGrid .polaroid { flex: 0 1 220px; margin: 0; justify-content: center; }
 #scr-over .overGrid .polaroid img { rotate: -1.5deg; border-radius: var(--jm-r, 3px); border: 2px solid var(--jm-chapa, #3b424b); image-rendering: auto; box-shadow: 0 10px 24px rgba(0, 0, 0, .55); }
 #scr-over .overGrid .polaroid::before { display: none; }
+/* Acciones fijas abajo: Repetir/Continuar se ve sin scroll en 720 px de alto y en celular */
+#scr-over > nav.list.row3 { position: sticky; bottom: 0; z-index: 3; padding: 8px 6px max(8px, env(safe-area-inset-bottom)); background: linear-gradient(180deg, transparent, rgba(16, 18, 21, .92) 22%); width: 100%; }
 @media (max-width: 700px) {
   #scr-over { gap: 5px; }
   #scr-over .brand.small { font-size: 28px; }
@@ -505,7 +508,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   #scr-over .kit.stats li { padding: 4px 3px; }
   #scr-over .kit.stats li span { font-size: 10.5px; }
   #scr-over .kit.stats li b { font-size: 19px !important; }
-  #scr-over .overGrid { display: grid; grid-template-columns: minmax(0, 1fr) 168px; /* minmax: un reporte largo (ENCORE) no ensancha la columna ni empuja la foto fuera del panel */ gap: 6px; align-items: start; }
+  #scr-over .overGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; align-items: start; } /* una columna: las estadísticas a lo ancho (al lado de la foto quedaban en 190 px con rótulos partidos) */
   #scr-over .overGrid .card { max-width: none; width: 100%; padding: 6px 8px; gap: 3px; }
   #scr-over .overGrid .card:first-child { grid-column: 1 / -1; }
   #scr-over .overGrid .card .sect { margin-top: 2px; font-size: 11px; }
@@ -513,7 +516,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   #overHurt { margin-top: 4px; }
   #fe #overDmg li, #fe #overHurt li { font-size: 13px; grid-template-columns: 136px 1fr 40px; gap: 6px; padding: 1px 0; }
   .kv li { font-size: 13px; padding: 1px 0; }
-  #scr-over .overGrid .polaroid { width: 168px; margin: 0; gap: 4px; align-self: center; padding-inline: 3px; box-sizing: border-box; } /* la foto girada -1,5 grados sobresalía ~2px */
+  #scr-over .overGrid .polaroid { width: 168px; margin: 0 auto; gap: 4px; align-self: center; padding-inline: 3px; box-sizing: border-box; } /* la foto girada -1,5 grados sobresalía ~2px */
   #scr-over .overGrid .polaroid img { max-width: 100%; }
   #scr-over .overGrid .polaroid button { min-height: 32px; padding: 4px 8px; font-size: 11px; }
   #scr-over .foot { font-size: 12px; }
@@ -546,10 +549,8 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 #dailyBtn .bs { margin-left: auto; font: 700 13px/1 var(--jm-titulo); letter-spacing: .06em; color: var(--jm-amarillo2); }
 #dailyBtn:focus .bs { color: var(--jm-fondo); }
 #dailyBtn .bs:empty { display: none; }
-/* Más modos: sin ícono propio (los de los modos viven adentro); flecha a la derecha y el texto alineado con el de los botones con ícono */
-#scr-main .mainGrid button.more.wide::before { display: none; }
-#scr-main .mainGrid button.more.wide { display: flex; align-items: center; padding-left: 42px; }
-@media (orientation: portrait) and (max-width: 1100px) { #scr-main .mainGrid button.more.wide { padding-left: 52px; } } /* kit.css da 20 px de relleno a los botones en celular vertical */
+/* Más modos: ícono de máquina de juegos (menu.ts) y flecha a la derecha */
+#scr-main .mainGrid button.more.wide { display: flex; align-items: center; }
 #scr-main .mainGrid button.more.wide::after { content: "\203A"; margin-left: auto; font-size: 24px; line-height: .6; color: var(--jm-amarillo2); }
 #scr-main .mainGrid button.more.wide:focus::after { color: var(--jm-fondo); }
 #scr-main .mainGrid button.hidden { display: none !important; } /* desafíos y Más modos ocultos hasta la primera expedición terminada */
@@ -774,9 +775,10 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tSpin, #tPause, #t
 /* Celular: pestañas, filtros y grilla de 2 columnas en Taller */
 @media (max-width: 700px) {
   #scr-shop.on { gap: 8px; }
-  #stabs, #sfilt { gap: 4px; max-width: 100%; }
-  #stabs .tab, #sfilt .tab { padding: 6px 9px; font-size: 11px; letter-spacing: .06em; min-height: 34px; }
-  #shop { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 4px; max-height: 46vh; }
+  #stabs, #sfilt { gap: 4px; max-width: 100%; flex-wrap: nowrap; overflow: auto hidden; justify-content: flex-start; scrollbar-width: none; padding-bottom: 2px; } /* una fila por grupo con desplazamiento lateral: eran 4 filas antes del primer producto */
+  #stabs .tab, #sfilt .tab { flex: none; padding: 6px 9px; font-size: 11px; letter-spacing: .06em; min-height: 44px; }
+  #scr-shop .shop-banner { display: none; } /* la foto de banda empujaba la grilla ~70 px más abajo */
+  #shop { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 4px; max-height: 58vh; }
   #shop .perk { padding: 7px 9px; font-size: 12.5px; }
   #shop .perk b { font-size: 14px; }
   /* franja de información fija bajo la grilla (no flota): separada y con borde de corte difuminado para indicar scroll */
@@ -874,7 +876,7 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tSpin, #tPause, #t
 #scr-libre .list > .foot { grid-column: 1 / -1; text-align: center; margin: 0; }
 #scr-pause .libreKit { display: none; flex-direction: column; align-items: center; gap: 8px; }
 #scr-pause.libre .libreKit { display: flex; max-height: calc(100dvh - 230px); overflow-y: auto; padding-right: 6px; } /* con récords y objetivos no entra en pantalla: se desplaza y los botones quedan a la vista */
-@media (max-width: 700px) { #scr-pause.libre .libreKit { max-height: calc(100dvh - 330px); } }
+@media (max-width: 700px) { #scr-pause.libre .libreKit { max-height: calc(100dvh - 440px); } } /* título, Seguir..Salir y la radio a la vista; lo demás se desplaza */
 #libreRec, #libreTrucos, #libreMetas { display: flex; flex-direction: column; gap: 4px; width: 100%; }
 #libreMetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px 10px; align-items: start; }
 #libreTrucosD summary { list-style: none; text-align: center; } #libreTrucosD[open] #libreTrucos { margin-top: 4px; }
@@ -891,4 +893,4 @@ body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tSpin, #tPause, #t
 #scr-pause.libre .kit4 { display: none; }
 #libreLuz { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 #libreLuz button { min-height: 44px; padding: 0 14px; }
-#libreLuz button[aria-pressed="true"] { background: var(--jm-rojo); color: #fff; }
+#libreLuz button[aria-pressed="true"] { background: var(--jm-fondo, #101215); color: var(--jm-amarillo2, #FFD166); box-shadow: inset 0 0 0 2px var(--jm-amarillo, #FFB400); } /* opción marcada en amarillo: el rojo de pegatina queda solo para Seguir */
