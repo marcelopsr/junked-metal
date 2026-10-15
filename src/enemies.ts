@@ -63,7 +63,7 @@ export const DEF: Record<Kind, Def> = {
   muneco: { name: "EL MUÑECO DE VENTRÍLOCUO", ...stats("muneco"), size: [2.4, 5, 2.4], boss: true, color: "#b91c1c" }, // minijefe del desván (ai/muneco.ts)
   limpiafondos: { name: "EL LIMPIAFONDOS", ...stats("limpiafondos"), size: [4.2, 1.8, 4.6], boss: true, color: "#0e7490" }, // minijefe de la pileta (ai/limpiafondos.ts)
   falso: { name: "Muñeco falso", ...stats("falso"), size: [1.6, 3.4, 1.6], color: "#b91c1c" }, // copia del muñeco al enojarse (se deshace solo)
-  grua: { name: "LA GRÚA DE FERIA", ...stats("grua"), size: [3.4, 5, 5.2], boss: true, color: "#c2410c" },
+  grua: { name: "LA GRÚA DE FERIA", ...stats("grua"), size: [4.8, 5.4, 4.8], boss: true, color: "#c2410c" },
   gusano: { name: "GUSANO LUNAR", ...stats("gusano"), size: [2.2, 2.2, 2.4], boss: true, color: "#2f4f56" }, // jefe final de la luna (moon_worm.ts)
   cortacercos: { name: "EL CORTACERCOS ELÉCTRICO", ...stats("cortacercos"), size: [3, 2.4, 9], boss: true, color: "#e0a030" },
   caja: { name: "LA CAJA DE MÚSICA ROTA", ...stats("caja"), size: [5.6, 6.4, 5.6], boss: true, color: "#b45309" }, // jefe final del desván (ai/caja.ts)

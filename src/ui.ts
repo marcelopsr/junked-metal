@@ -10,7 +10,7 @@ const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram",
 import { LIVE, WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
 import { SFX } from "./sfx";
-import { toScreen } from "./combat";
+import { toScreen } from "./screen_proj";
 import { EngineStore } from "@babylonjs/core/Engines/engineStore.js";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import type { PactView } from "./encore";

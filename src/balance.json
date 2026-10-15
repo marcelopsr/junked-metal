@@ -407,7 +407,7 @@
     {"id":"derrape_giro","valor":1.4,"descripcion":"Derrape: multiplicador de giro"},
     {"id":"embestida_vel_min","valor":5,"descripcion":"Velocidad mínima (m/s) hacia el enemigo para que cuente como embestida"},
     {"id":"embestida_recarga_s","valor":0.3,"descripcion":"Segundos entre embestidas al mismo enemigo"},
-    {"id":"hitstop_umbral_vida","valor":0.35,"descripcion":"Hit-stop: fracción de la vida máxima del bicho que debe quitar un golpe para congelar el juego"},
+    {"id":"hitstop_umbral_vida","valor":0.6,"descripcion":"Hit-stop: fracción de la vida máxima del bicho que debe quitar un golpe para congelar el juego"},
     {"id":"hitstop_min_ms","valor":25,"descripcion":"Hit-stop: milisegundos del golpe mínimo que lo dispara"},
     {"id":"hitstop_max_ms","valor":40,"descripcion":"Hit-stop: milisegundos del golpe máximo (embestida fuerte, jefe)"},
     {"id":"hitstop_tope","valor":0.2,"descripcion":"Hit-stop: tope global de segundos congelados por segundo de juego (la horda no lo traba)"},
