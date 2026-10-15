@@ -454,5 +454,25 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
   { id: "salir", perf: false, act: async (p) => { await p.dispatchEvent('[data-act="luz:4"]', "click"); await p.dispatchEvent('[data-act="quit"]', "click"); await wait(p, () => document.querySelector("#scr-main.on")); await p.waitForTimeout(150); } },
 ] });
 
+// Auditoría de arte 0.95 (docs/ROADMAP-1.0.md, contraste 0,19-0,23 con scripts/ref_measure.py): una captura por escena de ENCORE en la cámara de juego,
+// con el auto quieto en la salida (0, y, 0) mirando a -z (como encScene), sin enemigos ni HUD. Las zonas planas se arman con setZone (sin pasar por el sorteo de zoneOf);
+// la Luna de día es la salida (ARRIVE.salida) y la de noche la llegada "oscuro" (DARK_DIR, mirando al Sol).
+const escena = (z) => async (p) => {
+  await wait(p, () => window.__enc?.info?.() && window.__info().state === "play");
+  await p.evaluate(async (z) => {
+    window.__god();
+    const W = await import("/src/world.ts"), M = await import("/src/moon.ts"), R = await import("/src/encore_run.ts"), V = window.__carObj().root.position.constructor; // Vector3 de Babylon sin resolver el paquete desde la página
+    const luna = z.startsWith("luna");
+    if (luna) window.__enc.jump(0, 1); else { M.setMoon(false); W.setZone(z, false); }
+    window.__killAll();
+    if (luna) R.moonPlace(z === "luna-noche" ? M.DARK_DIR : V.Up(), z === "luna-noche" ? M.SUN_DIR : new V(0, 0, 1));
+    else R.carPlace(new V(0, window.__carObj().def.size[1] / 2 + 0.3, 0), new V(0, 0, -1));
+  }, z);
+  await tick(p, 90);
+  await p.evaluate(() => { window.__killAll(); for (const e of document.querySelectorAll("body *")) if (e.tagName !== "CANVAS" && !e.querySelector("canvas")) e.style.visibility = "hidden"; });
+  await tick(p, 2); await p.waitForTimeout(150);
+};
+sessions.push({ id: "escenas", query: "?mute&seed=3&encore", vps: ["pc", "cel"], shots: ["patio", "jardin", "garaje", "galpon", "desvan", "pileta", "cocina", "bosque", "nieve", "ciudad", "industrial", "luna-dia", "luna-noche"].map((z) => ({ id: z, perf: false, act: escena(z) })) });
+
 sessions.push(encoreSession(1), encoreSession(2), encoreSession(4));
 export { tick, info };
