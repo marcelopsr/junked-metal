@@ -6,7 +6,9 @@ graphify-out/.graphify_*
 
 # Herramientas internas: nunca publicar
 graphify-out/
-.claude/
+.claude/*
+!.claude/agents/
+!.claude/estudio/
 CLAUDE.md
 .gitattributes
 logs/
