@@ -41,6 +41,9 @@ export const ACH = {
   barrio_acuatico: { name: "Sin flotador", txt: "Completa todos los objetivos del Parque acuático en el Paseo libre. Regala la pintura Azul pileta" },
   barrio_nieve: { name: "Cima y bajada", txt: "Completa todos los objetivos del Bosque nevado en el Paseo libre. Regala la pintura Blanco nevado" },
   barrio_obstaculos: { name: "Cartón y carrera", txt: "Completa todos los objetivos del Circuito de obstáculos en el Paseo libre. Regala la pintura Naranja cono" },
+  cartel_escenarios: { name: "Cartelera de escenarios", txt: "Juega todos los escenarios de ENCORE. Regala la pintura Violeta telón" },
+  cartel_pactos: { name: "Cartelera de pactos", txt: "Firma todos los pactos de ENCORE. Regala la pintura Coral taquilla" },
+  cartel_funcion: { name: "Cartelera de bambalinas", txt: "Descubre los cuatro secretos y las cuatro interrupciones del Director. Regala la pintura Menta camerino" },
   diario: { name: "Atrapado en la rutina", txt: "Gana un desafío diario", scrap: BAL.ritmo.logro_diario_tornillos },
 } as const satisfies Record<string, { name: string; txt: string; reward?: string; scrap?: number }>;
 export type AchId = keyof typeof ACH;

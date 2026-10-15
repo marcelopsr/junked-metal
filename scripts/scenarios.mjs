@@ -17,6 +17,7 @@ const toMain = async (p) => {
   for (let i = 0; i < 6 && !(await p.$("#scr-main.on")); i++) { await p.keyboard.press("Escape"); await p.waitForTimeout(60); }
   await wait(p, () => document.querySelector("#scr-main.on"));
 };
+const cart = async (p) => { await p.dispatchEvent('#scr-encore [data-go="cartelera"]', "click"); await wait(p, () => document.querySelector("#scr-cartelera.on")); await p.waitForTimeout(150); };
 const view = (name) => async (p) => { await toMain(p); await p.dispatchEvent(`#scr-main [data-go="${name}"]`, "click"); await wait(p, (n) => document.querySelector(`#scr-${n}.on`), name); await p.waitForTimeout(150); };
 // La pantalla de carga solo se ve unos instantes al arrancar: se muestra a mano con un avance y un consejo fijos para fijar su diseño
 const carga = async (p) => p.evaluate(() => {
@@ -67,7 +68,9 @@ export const sessions = [
     { id: "garaje-vista-previa", act: async (p) => { await p.evaluate(() => window.__cfg({ cars: ["buggy"] })); /* menu.ts desbloquea todos los autos al cargar: se bloquea el tanque para tener la vista previa */ await view("garage")(p); await p.focus('.carc.locked[data-k="tanque"]'); await p.waitForTimeout(400); } },
     { id: "taller", act: view("shop") },
     // Con runs===0 «Jugar» va directo a largar (menu.ts): para ver la pantalla ENCORE hay que simular una expedición ya jugada
-    { id: "encore", act: async (p) => { await p.evaluate(() => window.__cfg({ encore: { best: { loop: 0, stage: 2, t: 400 }, wins: 1, runs: 3, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] } })); await view("encore")(p); } },
+    { id: "encore", act: async (p) => { await p.evaluate(() => window.__cfg({ encore: { best: { loop: 0, stage: 2, t: 400 }, wins: 1, runs: 3, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [], seenInts: [] } })); await view("encore")(p); } },
+    { id: "cartelera-vacia", act: async (p) => { await view("encore")(p); await cart(p); } },
+    { id: "cartelera-progreso", act: async (p) => { await p.evaluate(() => window.__cfg({ encore: { best: { loop: 0, stage: 2, t: 400 }, wins: 1, runs: 3, lastLoop: 0, lastCause: "", secrets: ["aplausos", "eco"], tips: [], seenPacts: ["ensayo", "garantia", "patrocinio", "maquillaje"], seenVariants: ["ENSAYO DE MEDIANOCHE"], seenInts: ["luces", "corte"] } })); await view("encore")(p); await cart(p); } },
     // "Cómo se juega" y el grupo Online desplegados (el foco queda en Largar al entrar)
     { id: "encore-abierto", act: async (p) => { await p.evaluate(() => document.querySelectorAll("#scr-encore .how, #scr-encore #netGrp").forEach((d) => { d.open = true; })); await p.waitForTimeout(150); } },
     { id: "config", act: view("config") },

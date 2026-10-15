@@ -77,6 +77,7 @@ const iPt = (r: number) => { const c = cx.lead.car!.pos, a = iLcg() * Math.PI * 
 const iIo: IV.Io = {
   warn: (id) => { if (cx.simulating) return; const t = IV.INT_TXT[id]; E.dirPush(dirq, t.line, 5); banner(`PELIGRO · ${t.name}`, 2.5, { tone: "warn", tag: "DIRECTOR" }); SPACE.interrupt("aviso"); },
   start: (id) => {
+    if (!cx.simulating && !save.encore.seenInts.includes(id)) { save.encore.seenInts.push(id); persist(); } // Cartelera: interrupción vista
     const c = cx.lead.car!.pos, n = BAL.interrupciones[id].valor;
     if (id === "corte") for (let i = 0; i < n; i++) cx.dropPickup(spawnPoint(c, 30, 40), "cofre");
     if (id === "sangre") iKind = pickWeighted(spawnTable(cx.time + paceS, cx.profile.plague));

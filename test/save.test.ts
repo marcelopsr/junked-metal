@@ -124,10 +124,10 @@ describe("parseSave", () => {
     expect(load({ paint: "#aabbcc", trim: "#112233", rim: "#445566" })).toMatchObject({ paint: "#aabbcc", trim: "#112233", rim: "#445566" });
   });
   it("ENCORE: récord propio con round-trip, default y descarte de basura", () => {
-    const e = { best: { loop: 1, stage: 2, t: 345 }, wins: 2, runs: 5, lastLoop: 1, lastCause: "bombardeo", secrets: ["audiencia"], tips: ["start"], seenPacts: ["ensayo"], seenVariants: ["EL LADO OSCURO"] };
+    const e = { best: { loop: 1, stage: 2, t: 345 }, wins: 2, runs: 5, lastLoop: 1, lastCause: "bombardeo", secrets: ["audiencia"], tips: ["start"], seenPacts: ["ensayo"], seenVariants: ["EL LADO OSCURO"], seenInts: ["corte"] };
     expect(load(JSON.stringify(load({ encore: e }))).encore).toEqual(e);
-    expect(load({}).encore).toEqual({ best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] });
-    expect(load({ encore: { best: { loop: -1, stage: "x", t: 1.5 }, wins: null, runs: 3 } }).encore).toEqual({ best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 3, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] });
+    expect(load({}).encore).toEqual({ best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [], seenInts: [] });
+    expect(load({ encore: { best: { loop: -1, stage: "x", t: 1.5 }, wins: null, runs: 3 } }).encore).toEqual({ best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 3, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [], seenInts: [] });
     // R3: la causa se sanea (va a pantalla) y sin causa no hay vuelta; guardados anteriores sin los campos cargan limpios
     expect(load({ encore: { runs: 1, lastLoop: 4, lastCause: "<b>x</b> bombardeo" + "y".repeat(80) } }).encore).toMatchObject({ lastLoop: 4, lastCause: "bxb bombardeo" + "y".repeat(27) });
     expect(load({ encore: { runs: 1, lastLoop: 4, lastCause: 7 } }).encore).toMatchObject({ lastLoop: 0, lastCause: "", secrets: [], tips: [] });
@@ -137,7 +137,7 @@ describe("parseSave", () => {
     expect(load({ encore: { secrets: "aplausos" } }).encore.secrets).toEqual([]);
     expect(load({ encore: { tips: ["start", "start", "x", 3, "vote"] } }).encore.tips).toEqual(["start", "vote"]); // avisos de la primera partida: ids conocidos, sin repetir
     expect(load({ encore: { tips: "start" } }).encore.tips).toEqual([]);
-    expect(load({ encore: { seenPacts: ["garantia", "garantia", "<x>", 3], seenVariants: ["LA TARIMA", "nada"] } }).encore).toMatchObject({ seenPacts: ["garantia"], seenVariants: ["LA TARIMA"] }); // Codex: ids conocidos, sin repetir
+    expect(load({ encore: { seenPacts: ["garantia", "garantia", "<x>", 3], seenVariants: ["LA TARIMA", "nada"], seenInts: ["luces", "luces", "x"] } }).encore).toMatchObject({ seenPacts: ["garantia"], seenVariants: ["LA TARIMA"], seenInts: ["luces"] }); // Codex: ids conocidos, sin repetir
     expect(load({ encore: { seenPacts: "x" } }).encore.seenPacts).toEqual([]);
   });
   it("Paseo libre: un guardado viejo sin bloque libre migra a vacío; lo inválido se descarta", () => {
