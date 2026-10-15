@@ -143,7 +143,7 @@ export function flatten(m: B.Mesh, keep: B.Material[] = []) {
 const templates = new Map<string, B.Mesh>();
 export function template(name: string, build: () => B.Mesh[], scale = 1) {
   let t = templates.get(name);
-  if (!t) {
+  if (!t || t.isDisposed()) { // setZone libera las mallas del mundo al rearmar: una maestra destruida se reconstruye
     tessK = scale;
     try { t = merge(name, build()); } finally { tessK = 1; }
     if (scale !== 1) { t.scaling.setAll(scale); t.bakeCurrentTransformIntoVertices(); }
