@@ -4,9 +4,8 @@
 //      node scripts/imagegen.mjs [--proveedor ...] --nuevo <id> "<sujeto en inglés>" [categoria]   crea el job con el prompt base y lo genera
 //      node scripts/imagegen.mjs --importar   copia los PNG nuevos de raw/ a assets-src/ref-rcrace/refN.png (dedupe 16×16)
 // Opciones: --concurrencia N (default 8)  --fit cover|contain|exact  --quitar-fondo (remove_background)  --referencia <archivo> (repetible; usa /v1/images/edits)
-//           --cupo (GET /v1/images/quota y sale). fit/quitar-fondo/referencia también se leen del job (fit, remove_background, references[]).
+//           --size WxH (la salida mide exacto eso)  --cupo (GET /v1/images/quota y sale). fit/quitar-fondo/referencia también se leen del job (fit, remove_background, references[]).
 // Proveedores: gpt (ChatGPT, respeta fondo transparente, ~60 s), gemini (~17 s, sin transparencia: fondo gris y aviso), auto (Capataz decide; con transparencia va a gpt).
-// Opciones: --size WxH (la salida mide exacto eso) · --fit cover|contain|exact (cover por defecto) · --sin-fondo (remove_background: Capataz quita el fondo; sirve con gemini).
 // Clave: primera línea de ~/.capataz/clientes/rc_fight.key (solo imágenes/video/modelos). Los jobs se generan en paralelo: Capataz rota cuentas.
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -31,6 +30,7 @@ const flag = (nombre) => { const i = args.indexOf(nombre); if (i >= 0) args.spli
 const prov = opt("--proveedor") ?? "auto";
 const concurrencia = Math.max(1, Number(opt("--concurrencia") ?? 8) || 8);
 const fitCli = opt("--fit");
+const sizeCli = opt("--size");
 const quitarCli = flag("--quitar-fondo");
 const verCupo = flag("--cupo");
 const refsCli = opt("--referencia", true);
@@ -81,10 +81,10 @@ async function pedir(ruta, mkInit, id) {
 function generar(job, id) {
   const prompt = job.tool_arguments?.prompt ?? job.prompt;
   const transparente = !!job.tool_arguments?.transparent_background;
-  const fit = fitCli ?? job.fit;
+  const fit = fitCli ?? job.fit, size = sizeCli ?? job.size;
   const quitar = quitarCli || job.remove_background;
   const refs = refsCli.length ? refsCli : job.references ?? [];
-  const campos = { model: MODELO[prov], prompt, n: 1, output_format: "png", background: transparente ? "transparent" : "opaque", ...(fit && { fit }), ...(quitar && { remove_background: true }) };
+  const campos = { model: MODELO[prov], prompt, n: 1, output_format: "png", background: transparente ? "transparent" : "opaque", ...(fit && { fit }), ...(size && { size }), ...(quitar && { remove_background: true }) };
   if (!refs.length) return pedir("generations", () => ({ headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify(campos) }), id);
   return pedir("edits", () => { // multipart estilo OpenAI: image[] repetido + campos
     const f = new FormData();
