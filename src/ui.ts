@@ -597,13 +597,17 @@ export function hudTruco(name: string, pts: number, mult: number, clean: boolean
 }
 /** Contador mientras el auto está en el aire ("" lo oculta). */
 export function hudAire(t: string) { const e = libreEl("aire"); if (e.textContent !== t) e.textContent = t; e.classList.toggle("show", !!t); }
+/** Cartel de ayuda en el aire (una sola vez; "" lo oculta). */
+export function hudAviso(t: string) { const e = libreEl("avisoAire"); if (e.textContent !== t) e.textContent = t; e.classList.toggle("show", !!t); }
+/** Botón táctil GIRO: solo en el aire. */
+export const hudSpinBtn = (on: boolean) => document.getElementById("tSpin")?.classList.toggle("show", on);
 /** Tuercas juntadas / total; `flash` hace saltar el contador al juntar una. */
 export function hudTuercas(n: number, total: number, flash = false) {
   const e = libreEl("tuercas"); e.textContent = `TUERCAS ${n}/${total}`; e.classList.toggle("full", n >= total);
   if (flash) { e.classList.remove("pop"); void e.offsetWidth; e.classList.add("pop"); }
 }
 /** Limpia lo de Paseo libre al salir del modo. */
-export function hudLibreOff() { clearTimeout(trucoT); for (const id of ["truco", "aire", "tuercas"]) document.getElementById(id)?.remove(); }
+export function hudLibreOff() { clearTimeout(trucoT); hudSpinBtn(false); for (const id of ["truco", "aire", "avisoAire", "tuercas"]) document.getElementById(id)?.remove(); }
 
 // ---------- Racha de bajas: se corta a los 2 s sin matar; crece y tiembla con la racha ----------
 const COMBO = ["RACHA", "BUEN RITMO", "A FONDO", "SOBRECARGA"];

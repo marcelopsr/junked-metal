@@ -66,7 +66,7 @@ export type Save = {
   abilLv: Partial<Record<AbilityId, number>>; weapon: WeaponId; // nivel de cada habilidad (Taller) y arma inicial elegida en el garaje (Arsenal)
   encore: { best: { loop: number; stage: number; t: number }; wins: number; runs: number; lastLoop: number; lastCause: string; secrets: string[]; tips: string[]; seenPacts: string[]; seenVariants: string[] }; // ENCORE: mejor expedición (vuelta, escenario, segundos), ganadas, partidas y la última derrota (vuelta y causa, "" = sin derrota; memoria del Director); aparte de Supervivencia
   m3: { stars: Record<string, number>; best: Record<string, number>; tools: Record<string, number> }; // Junket Crush: estrellas y récord por nivel, herramientas guardadas
-  libre: { best: { aire: number; giro: number; vuelta: number; salto: number; combo: number }; tuercas: string }; // Paseo libre: récords de trucos (aire en ms, giro en grados, vuelta en cantidad, truco y combo en puntos) y 24 tuercas doradas ("1" = juntada)
+  libre: { best: { aire: number; giro: number; vuelta: number; salto: number; combo: number }; tuercas: string; aviso: boolean }; // Paseo libre: récords de trucos (aire en ms, giro en grados, vuelta en cantidad, truco y combo en puntos) y 24 tuercas doradas ("1" = juntada)
 };
 // Escala de render de fábrica: apunta a ~1080 px de alto en compu y ~720 en táctil (100% = nativa del dispositivo; en pantallas densas sale menos de 100%)
 const SCALE0 = Math.min(1, Math.max(0.5, Math.round(((isTouch ? 720 : 1080) / (innerHeight * (devicePixelRatio || 1))) * 20) / 20));
@@ -84,7 +84,7 @@ export const DEFAULT: Save = {
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
   encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 0, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] },
   m3: { stars: {}, best: {}, tools: {} },
-  libre: { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, tuercas: "0".repeat(24) },
+  libre: { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, tuercas: "0".repeat(24), aviso: false },
 };
 // La validación y migración viven en savefmt.ts (sin DOM, con tests); acá solo se le pasa lo que depende del juego
 export const save: Save = parseSave((() => { try { return localStorage.getItem("rcfight2"); } catch { return null; } })(), DEFAULT, { abilities: ABILITIES, weapons: ARSENAL, curses: CURSES, kinds: Object.keys(DEF), zones: ZONES, isTouch, validDecal, presetOf, presets: PRESETS });
@@ -337,11 +337,11 @@ export function controlsGuide(then: () => void = () => {}, mini = false) {
   const k = (a: Action) => `<kbd>${esc(keyName(KEYS[a][0]))}</kbd>`, p = (a: PadAct) => btnChip(pb(a));
   const rows: [string, string][] = ctl === "pad" ? [
     ...(PAD.mode === "stick" ? [["Mover", `Stick ${PAD.stick === "left" ? "izquierdo" : "derecho"}, hacia donde ir`]] : [["Acelerar", p("accel")], ["Frenar", p("brake")], ["Girar", `Stick ${PAD.stick === "left" ? "izquierdo" : "derecho"}`]]) as [string, string][],
-    ["Turbo", p("boost")], ["Derrape", p("drift")], ["Salto", p("jump")], ["Habilidad", p("ability")], ["Pausa", p("pause")],
+    ["Turbo", p("boost")], ["Derrape", p("drift")], ["Salto", p("jump")], ["Habilidad", p("ability")], ["Pausa", p("pause")], ["Girar en el aire (Paseo libre)", p("spin")],
   ] : ctl === "touch" ? [
-    ["Mover", "Stick de la pantalla"], ["Turbo, derrape, salto y habilidad", "Botones de la pantalla"], ["Pausa", "Botón II"],
+    ["Mover", "Stick de la pantalla"], ["Turbo, derrape, salto y habilidad", "Botones de la pantalla"], ["Pausa", "Botón II"], ["Girar en el aire (Paseo libre)", "Botón GIRO, solo en el aire"],
   ] : [
-    ["Mover", k("up") + k("left") + k("down") + k("right")], ["Turbo", k("boost")], ["Derrape", k("drift")], ["Salto", k("jump")], ["Habilidad", k("ability")], ["Pausa", k("pause")],
+    ["Mover", k("up") + k("left") + k("down") + k("right")], ["Turbo", k("boost")], ["Derrape", k("drift")], ["Salto", k("jump")], ["Habilidad", k("ability")], ["Pausa", k("pause")], ["Girar en el aire (Paseo libre)", k("spin")],
   ];
   // mini (primera vez): solo lo de mover (táctil: más los botones) y que las armas disparan solas
   const mov = ctl === "touch" ? 2 : ctl === "pad" && PAD.mode !== "stick" ? 3 : 1;
@@ -936,7 +936,7 @@ export const TABS: Record<string, { name: string; rows: Row[] }> = {
     ["Teclado", "sect"],
     ["Dos teclas por acción: principal y alternativa. Los menús siguen con flechas, Enter y Esc; la rueda del mouse también hace zoom.", "note"],
     ["Acelerar", "bind", "k.up"], ["Frenar / atrás", "bind", "k.down"], ["Girar izquierda", "bind", "k.left"], ["Girar derecha", "bind", "k.right"],
-    ["Turbo", "bind", "k.boost"], ["Derrape", "bind", "k.drift"], ["Salto", "bind", "k.jump"], ["Habilidad", "bind", "k.ability"], ["Cambiar cámara", "bind", "k.cam"], ["Re-sortear cartas", "bind", "k.reroll"],
+    ["Turbo", "bind", "k.boost"], ["Derrape", "bind", "k.drift"], ["Salto", "bind", "k.jump"], ["Habilidad", "bind", "k.ability"], ["Cambiar cámara", "bind", "k.cam"], ["Girar en el aire (Paseo libre)", "bind", "k.spin"], ["Re-sortear cartas", "bind", "k.reroll"],
     ["Pausa", "bind", "k.pause"], ["Sonido", "bind", "k.mute"], ["Acercar", "bind", "k.zoomIn"], ["Alejar", "bind", "k.zoomOut"],
     ["Restablecer teclado", "btn", "reset:keys"],
     ["Joystick", "sect"],
@@ -945,7 +945,7 @@ export const TABS: Record<string, { name: string; rows: Row[] }> = {
     ["Invertir eje horizontal", "tog", "pad.invX"], ["Invertir eje vertical", "tog", "pad.invY"],
     ["Zona muerta del stick", "range", "pad.dead", 0.05, 0.4, 0.01, "%"], ["Sensibilidad del stick", "range", "pad.sens", 0.5, 2, 0.05, "x"], ["Vibración", "tog", "rumble"],
     ["Acelerar", "bind", "p.accel"], ["Frenar", "bind", "p.brake"], ["Turbo", "bind", "p.boost"], ["Derrape", "bind", "p.drift"], ["Salto", "bind", "p.jump"], ["Habilidad", "bind", "p.ability"],
-    ["Re-sortear cartas", "bind", "p.reroll"], ["Cambiar cámara", "bind", "p.cam"], ["Pausa", "bind", "p.pause"], ["Menú: aceptar", "bind", "p.ok"], ["Menú: volver", "bind", "p.back"],
+    ["Girar en el aire (Paseo libre)", "bind", "p.spin"], ["Re-sortear cartas", "bind", "p.reroll"], ["Cambiar cámara", "bind", "p.cam"], ["Pausa", "bind", "p.pause"], ["Menú: aceptar", "bind", "p.ok"], ["Menú: volver", "bind", "p.back"],
     ["Restablecer joystick", "btn", "reset:pad"],
     ["Probar control", "sect"],
     ["", "padtest"],
@@ -1154,6 +1154,7 @@ export function openPauseLibre(luz: number) {
   sc.classList.add("libre");
   $("libreLuz").innerHTML = LUZ.map((n, i) => `<button data-act="luz:${i}" aria-pressed="false">${n}</button>`).join("");
   paintLuz(luz);
+  $("libreAire").innerHTML = ctl === "touch" ? "En el aire aparece el botón GIRO: mantenerlo da una vuelta." : `En el aire, mantener ${ctl === "pad" ? btnChip(pb("spin")) : `<kbd>${esc(keyName(KEYS.spin[0]))}</kbd>`} da una vuelta (con Frenar, hacia atrás). También sirve soltar y volver a acelerar.`;
   $("pauseSeed").textContent = `${CARS[peek.car ?? save.car].name} · Paseo libre`;
   $("quitTxt").textContent = "Salir al menú";
   $("photoBtn").classList.toggle("hidden", isTouch); $("pauseHint").classList.toggle("hidden", isTouch); // táctil: sin tecla F ni Esc/M; el botón de pausa del HUD ya sigue

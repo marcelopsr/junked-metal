@@ -6,7 +6,7 @@ export const input = { throttle: 0, steer: 0, boost: false, drift: false, abilit
 // Los menús siguen con flechas, Enter y Esc fijos.
 export const KEYS0 = {
   up: ["KeyW", "ArrowUp"], down: ["KeyS", "ArrowDown"], left: ["KeyA", "ArrowLeft"], right: ["KeyD", "ArrowRight"],
-  boost: ["Space", ""], drift: ["ShiftLeft", "ShiftRight"], jump: ["KeyF", ""], ability: ["KeyE", ""], cam: ["KeyC", ""], reroll: ["KeyR", ""],
+  boost: ["Space", ""], drift: ["ShiftLeft", "ShiftRight"], jump: ["KeyF", ""], ability: ["KeyE", ""], cam: ["KeyC", ""], spin: ["KeyQ", ""], reroll: ["KeyR", ""],
   pause: ["Escape", "KeyP"], mute: ["KeyM", ""], zoomIn: ["Equal", "NumpadAdd"], zoomOut: ["Minus", "NumpadSubtract"],
 } satisfies Record<string, [string, string]>;
 export type Action = keyof typeof KEYS0;
@@ -17,7 +17,7 @@ export const keyHit = (a: Action, code: string) => KEYS[a].includes(code);
 // Joystick (mapeo estándar del navegador: 0 abajo, 1 derecha, 2 izquierda, 3 arriba, 4/5 hombros, 6/7 gatillos, 8 select/view, 9 start/menu,
 // 10/11 sticks presionados, 12-15 cruceta, 16 guía). Un botón por acción; -1 = sin asignar.
 // Cambiar cámara va en View/Select (8): en el juego estaba libre.
-export const PADB0 = { accel: [7], brake: [6], boost: [0], drift: [1], ability: [2], jump: [4], reroll: [3], cam: [8], pause: [9], ok: [0], back: [1] };
+export const PADB0 = { accel: [7], brake: [6], boost: [0], drift: [1], ability: [2], jump: [4], spin: [5], reroll: [3], cam: [8], pause: [9], ok: [0], back: [1] };
 export type PadAct = keyof typeof PADB0;
 // mode: "trig" = gatillos aceleran/frenan y el stick gira; "stick" = el stick apunta hacia dónde ir
 export const PAD0 = { dead: 0.15, sens: 1, invX: false, invY: false, stick: "left" as "left" | "right", mode: "trig" as "trig" | "stick", btn: PADB0 as Record<PadAct, number[]> };
@@ -70,7 +70,7 @@ addEventListener("keydown", (e) => { keys.add(e.code); if (keyHit("jump", e.code
 addEventListener("keyup", (e) => keys.delete(e.code));
 addEventListener("blur", () => keys.clear());
 
-const touch = { x: 0, y: 0, boost: false, drift: false, ability: false };
+const touch = { x: 0, y: 0, boost: false, drift: false, ability: false, spin: false };
 export const isTouch = matchMedia("(pointer: coarse)").matches;
 
 // Último control usado: los textos de ayuda se adaptan (menu.ts escucha el evento "ctl" en window)
@@ -102,7 +102,7 @@ export function setupTouch(onPinch?: (k: number) => void) {
   const end = (e: PointerEvent) => { if (e.pointerId !== id) return; id = -1; touch.x = touch.y = 0; knob.style.transform = ""; };
   zone.addEventListener("pointerup", end);
   zone.addEventListener("pointercancel", end);
-  const hold = (elId: string, k: "boost" | "drift" | "ability") => {
+  const hold = (elId: string, k: "boost" | "drift" | "ability" | "spin") => {
     const el = document.getElementById(elId)!;
     el.addEventListener("pointerdown", () => (touch[k] = true));
     for (const ev of ["pointerup", "pointercancel", "pointerleave"]) el.addEventListener(ev, () => (touch[k] = false));
@@ -110,6 +110,7 @@ export function setupTouch(onPinch?: (k: number) => void) {
   hold("tBoost", "boost");
   hold("tDrift", "drift");
   hold("tAbil", "ability");
+  hold("tSpin", "spin");
   document.getElementById("tJump")!.addEventListener("pointerdown", (e) => { e.preventDefault(); jumpPulse = true; });
   // Pellizco de dos dedos sobre el juego = zoom
   const cv = document.getElementById("c")!, pts = new Map<number, [number, number]>();
@@ -181,6 +182,8 @@ const dz = (v: number) => (Math.abs(v) < PAD.dead ? 0 : Math.max(-1, Math.min(1,
 export const stickXY = (gp: Gamepad) => { const i = PAD.stick === "right" ? 2 : 0; return [dz(gp.axes[i] ?? 0) * (PAD.invX ? -1 : 1), dz(gp.axes[i + 1] ?? 0) * (PAD.invY ? -1 : 1)]; };
 const bv = (gp: Gamepad, i: number) => (i < 0 ? 0 : gp.buttons[i]?.value || +!!gp.buttons[i]?.pressed);
 
+/** Girar en el aire (Paseo libre): tecla, botón del joystick o botón táctil mantenido. */
+export const spinHeld = () => { const gp = activePad(); return KEYS.spin.some((x) => keys.has(x)) || touch.spin || (!!gp && bv(gp, pb("spin")) > 0.5); };
 /** Botones de acción de un joystick sobre `o` (mapeo de ENCORE/Supervivencia, PAD). mode "trig": gatillos y giro; "stick": dirección en pantalla. */
 function padInto(o: typeof input, gp: Gamepad, mode: typeof PAD.mode) {
   const b = (i: number) => +!!gp.buttons[i]?.pressed, on = (a: PadAct) => bv(gp, pb(a)) > 0.5;

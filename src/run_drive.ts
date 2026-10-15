@@ -7,7 +7,7 @@ import { FX, fxSpeed, mark } from "./fx";
 import { SFX, engineSfx } from "./sfx";
 import { drive } from "./car";
 import type { Car } from "./car";
-import { input } from "./input";
+import { input, spinHeld } from "./input";
 import { cs, damage, dropGems, dropPickup, explode, smashed } from "./combat";
 import { endRun, grant, hitAt } from "./outro";
 import { banner, hudBoss, radioBoss, radioEvent, dirSub } from "./ui";
@@ -111,9 +111,10 @@ function libreDrive(c: Car, r: ReturnType<typeof drive>, steer: number, throttle
     body.setLinearVelocity(_w.set(v.x, 6, v.z));
     return;
   }
-  if (r.grounded || roam.air < 0.15 || (!steer && !throttle)) return; // roam.air: la rampa empinada hace parpadear "grounded"; el control entra tras 0,15 s de vuelo real
+  const spin = spinHeld();
+  if (r.grounded || roam.air < 0.15 || (!steer && !throttle && !spin)) return; // roam.air: la rampa empinada hace parpadear "grounded"; el control entra tras 0,15 s de vuelo real
   const w = body.getAngularVelocity();
-  const wU = steer ? steer * R.libre_giro_aire : B.Vector3.Dot(w, up), wR = throttle && roam.arm && roam.air > R.libre_cabeceo_espera_s ? throttle * R.libre_cabeceo_aire : B.Vector3.Dot(w, rt), wF = B.Vector3.Dot(w, fw);
+  const wU = steer ? steer * R.libre_giro_aire : B.Vector3.Dot(w, up), wR = spin ? (throttle < 0 ? -1 : 1) * R.libre_cabeceo_aire : throttle && roam.arm && roam.air > R.libre_cabeceo_espera_s ? throttle * R.libre_cabeceo_aire : B.Vector3.Dot(w, rt), wF = B.Vector3.Dot(w, fw);
   _w.set(up.x * wU + rt.x * wR + fw.x * wF, up.y * wU + rt.y * wR + fw.y * wF, up.z * wU + rt.z * wR + fw.z * wF);
   body.setAngularVelocity(_w);
 }

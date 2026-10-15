@@ -444,6 +444,9 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
   { id: "nieve", act: libreAt(-150, -100, Math.PI) },
   { id: "obstaculos", act: libreAt(160, -140, Math.PI / 2) }, // sobre el carril A, mirando al este: antes (150, -100) mostraba solo suelo y el circuito quedaba lejos
   { id: "tuerca", perf: false, act: libreAt(26, 28, 0.322) }, // tuerca dorada sobre el trampolín del atajo noreste, a ~20 m al frente (34, 3,5, 46)
+  // Cartel de ayuda y botón táctil GIRO: el auto se suelta a 14 m (cae ~1,5 s) y se captura al poco de despegar, con el aviso de una sola vez
+  { id: "aire", perf: false, act: async (p) => { await libreAt(-150, 130)(p); await p.evaluate(async () => { (await import("/src/menu.ts")).save.libre.aviso = false; }); // el cartel sale una sola vez: las caídas de libreAt ya lo gastaron
+    await p.evaluate(() => { const c = window.__carObj(); c.body.disablePreStep = false; c.root.position.y = 14; c.body.setLinearVelocity({ x: 0, y: 0, z: 0 }); }); await tick(p, 40); await p.evaluate(() => { window.__carObj().body.disablePreStep = true; }); await p.waitForTimeout(200); } },
   // Cartel de truco y contador de tuercas: se disparan con las funciones del HUD (el truco real depende de la física; eso lo prueba la sonda de la tanda E6)
   { id: "truco", perf: false, act: async (p) => { await libreAt(-150, 130)(p); await p.evaluate(async () => { const u = await import("/src/ui.ts"); u.hudTruco("GIRO 360 + VUELTA", 640, 2, true, "RÉCORD"); u.hudTuercas(7, 24); }); await p.waitForTimeout(450); } },
   { id: "pausa", perf: false, act: async (p) => { await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },

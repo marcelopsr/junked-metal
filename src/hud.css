@@ -560,7 +560,7 @@ body.calm #antic, body.calm #signal .h-track.pulse { animation: none !important;
 }
 
 /* Paseo libre: solo radar (barrios) y cartel del barrio; el resto de la telemetría no aplica */
-#hud.libre > :not(#radar, #barrio, #truco, #aire, #tuercas) { display: none; }
+#hud.libre > :not(#radar, #barrio, #truco, #aire, #avisoAire, #tuercas) { display: none; }
 #barrio { position: absolute; left: 50%; top: max(14px, env(safe-area-inset-top)); translate: -50% 0; padding: 8px 18px 6px; background: var(--jm-rojo); color: #fff; font: 400 28px/1 "Bebas Neue", sans-serif; letter-spacing: .08em; text-transform: uppercase; border-radius: 4px; box-shadow: 0 3px 0 #000; transform: rotate(-1.5deg); pointer-events: none; }
 #barrio.show { animation: barrioIn .2s cubic-bezier(0, 0, .2, 1); } /* main.ts lo oculta a los 3 s */
 @keyframes barrioIn { from { opacity: 0; transform: translateY(-10px) rotate(-1.5deg); } }
@@ -577,6 +577,9 @@ body.calm #antic, body.calm #signal .h-track.pulse { animation: none !important;
 @keyframes trucoIn { from { opacity: 0; transform: scale(1.35) rotate(-2deg); } }
 #aire { left: 50%; top: 76px; translate: -50% 0; display: none; font-size: 26px; letter-spacing: .08em; color: #fff; text-shadow: 0 2px 0 #000, 0 0 6px #000; }
 #aire.show { display: block; }
+/* Cartel de ayuda del giro aéreo: pegatina roja, una sola vez */
+#avisoAire { position: absolute; left: 50%; top: 116px; translate: -50% 0; display: none; padding: 6px 16px 4px; background: var(--jm-rojo); color: #fff; font-size: 24px; letter-spacing: .08em; white-space: nowrap; border-radius: 4px; box-shadow: 0 3px 0 #000; transform: rotate(-2deg); pointer-events: none; font-family: "Bebas Neue", sans-serif; text-transform: uppercase; }
+#avisoAire.show { display: block; animation: trucoIn .18s cubic-bezier(0, 0, .2, 1); }
 #tuercas { left: 12px; top: max(14px, env(safe-area-inset-top)); padding: 6px 12px 4px; background: #1a1d22; border-left: 3px solid var(--jm-rojo); color: #ffc21a; font-size: 24px; letter-spacing: .08em; }
 #tuercas.full { background: #ffc21a; color: #1a1d22; }
 #tuercas.pop { animation: tuercaPop .22s cubic-bezier(0, 0, .2, 1); }

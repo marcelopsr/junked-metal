@@ -1,5 +1,5 @@
 import { tut, tutEnd, tutOffers, tutOn, tutStart } from "./tutorial";
-import { hudAire, hudLibreOff, hudTruco, hudTuercas } from "./ui";
+import { hudAire, hudAviso, hudSpinBtn, hudLibreOff, hudTruco, hudTuercas } from "./ui";
 import { bestUpdate, newTrick, nutNear, nutsCount, roam, trickLive, trickStep, NUT_N } from "./free_tricks";
 import { spawnNuts } from "./free_nuts";
 import { hudHurt, scrapNumber, hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
@@ -345,7 +345,7 @@ function libreLight() {
   const x = (libreT / LUZ_TRAMO_S) % LUZ_CICLO.length, i = Math.floor(x), f = x - i;
   applyClimate(mixClimate(climaId(LUZ_CICLO[i]), climaId(LUZ_CICLO[(i + 1) % LUZ_CICLO.length]), f * f * (3 - 2 * f)));
 }
-let libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick();
+let avisoT = 0, libreNuts: ReturnType<typeof spawnNuts> | null = null, libreTrick = newTrick();
 /** Trucos (aire, giros, vueltas, aterrizaje, combo) y tuercas doradas; `grounded` sale de drive(). */
 function libreTricks(dt: number, grounded: boolean) {
   const c = lead.car!, body = c.body, w = body.getAngularVelocity(), up = c.root.up, fw = c.root.forward, rt = c.root.right, s = save.libre;
@@ -353,6 +353,10 @@ function libreTricks(dt: number, grounded: boolean) {
   const end = trickStep(libreTrick, dt, grounded, wU, Math.hypot(wF, wR), up.y);
   roam.air = libreTrick.air; // lo lee libreDrive (control en el aire)
   hudAire(grounded ? "" : trickLive(libreTrick));
+  hudSpinBtn(!grounded && roam.air > 0.15);
+  if (!s.aviso && !grounded && roam.air > 0.4) { s.aviso = true; avisoT = 3.5; persist(); } // una sola vez en la vida del guardado
+  avisoT = grounded ? 0 : Math.max(0, avisoT - dt);
+  hudAviso(avisoT > 0 ? `EN EL AIRE: ${ctl === "touch" ? "BOTÓN GIRO" : ctl === "pad" ? btnName(pb("spin")) : keyName(KEYS.spin[0])} PARA GIRAR` : "");
   if (end) {
     const up2 = bestUpdate(s.best, end), rec = up2.includes("salto") || up2.includes("combo") ? "RÉCORD" : "";
     hudTruco(end.name, end.pts, end.mult, end.clean, rec);

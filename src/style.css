@@ -100,6 +100,9 @@ body.match3-play { touch-action: none; }
 @media (orientation: portrait) and (pointer: coarse) { #tJump, #tDrift { width: 72px; height: 72px; opacity: .72; } }
 /* Habilidad: más chica, sobre TURBO (apaisado) o a su izquierda (vertical, donde DERRAPE ocupa el lugar de arriba).
    --cd (main.ts) oscurece la parte que falta enfriar */
+/* GIRO (Paseo libre): solo visible en el aire; 72 px, encima del stick */
+#tSpin { position: absolute; pointer-events: auto; display: none; left: 56px; bottom: 300px; width: 72px; height: 72px; padding: 0; border-radius: 50%; font-size: 13px; font-weight: 700; letter-spacing: .08em; color: #fff; background: var(--jm-rojo); border: 2px solid #000; box-shadow: 0 3px 0 #000; scale: var(--touch-scale, 1); transform-origin: left bottom; }
+#tSpin.show { display: block; }
 #tAbil { position: absolute; pointer-events: auto; border-radius: 50%; width: 64px; height: 64px; padding: 0; font-size: 10px; scale: var(--touch-scale, 1); transform-origin: right bottom;
   right: 34px; bottom: calc(170px + 84px * var(--touch-scale, 1) + 14px); color: var(--lcd-ink); border-color: var(--lcd-ink);
   background: conic-gradient(#000c calc(var(--cd, 0) * 360deg), #10170d 0); }
@@ -119,6 +122,7 @@ body.match3-play { touch-action: none; }
    (SALTO sobre TURBO, HAB sobre DERRAPE) y el stick baja para dejar libres reloj y racha a la izquierda */
 @media (orientation: landscape) and (max-height: 500px) {
   #stickBase { bottom: 56px; }
+  #tSpin { bottom: 210px; }
   #tBoost { bottom: 110px; }
   #tDrift { bottom: 90px; }
   #tJump { bottom: calc(110px + 84px * var(--touch-scale, 1) + 8px); }
