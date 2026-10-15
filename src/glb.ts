@@ -67,7 +67,7 @@ let settled = 0; // GLB ya resueltos (cargados o fallidos): progreso real de la 
 export const glbProgress = () => settled / Object.keys(GLB).length;
 export function loadGlbs(scene: B.Scene) {
   const all = Promise.all((Object.keys(GLB) as Kind[]).map((k) => load(scene, k).catch((e) => console.error(`GLB ${k}: no cargó models/${GLB[k]!.file}.glb; ese bicho no se puede crear`, e)).finally(() => settled++)));
-  const late = new Promise<void>((r) => setTimeout(() => { const f = (Object.keys(GLB) as Kind[]).filter((k) => !tpls.has(k)); if (f.length) console.error("GLB: tardan más de 8 s, el juego arranca sin", f); r(); }, 8000));
+  const late = new Promise<void>((r) => setTimeout(() => { const f = (Object.keys(GLB) as Kind[]).filter((k) => !tpls.has(k)); if (f.length) console.warn("GLB: tardan más de 8 s, el juego arranca sin", f); r(); }, 8000));
   return Promise.race([all, late]);
 }
 

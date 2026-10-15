@@ -579,7 +579,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
     const warmPool = (scene.getMaterialByName("moonWarmPoolMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("moonWarmPoolMat", scene);
     warmPool.emissiveTexture?.dispose();
     const wt = new B.DynamicTexture("moonWarmTex", 64, scene, false), wc = wt.getContext() as unknown as CanvasRenderingContext2D, wg = wc.createRadialGradient(32, 32, 0, 32, 32, 32);
-    wg.addColorStop(0, "rgba(255,170,70,0.85)"); wg.addColorStop(0.5, "rgba(255,150,60,0.4)"); wg.addColorStop(1, "rgba(255,140,50,0)"); wc.fillStyle = wg; wc.fillRect(0, 0, 64, 64); wt.update(); wt.hasAlpha = true;
+    wg.addColorStop(0, "rgba(255,205,120,1)"); wg.addColorStop(0.5, "rgba(255,160,64,0.55)"); wg.addColorStop(1, "rgba(255,140,50,0)"); wc.fillStyle = wg; wc.fillRect(0, 0, 64, 64); wt.update(); wt.hasAlpha = true;
     warmPool.emissiveTexture = warmPool.opacityTexture = wt; warmPool.diffuseColor = B.Color3.Black(); warmPool.specularColor = B.Color3.Black(); warmPool.disableLighting = true; warmPool.alphaMode = B.Constants.ALPHA_ADD; warmPool.fogEnabled = false; warmPool.backFaceCulling = false;
     const lampPool = B.MeshBuilder.CreateGround("kitLampPool", { width: 2, height: 2 }, scene); lampPool.material = warmPool; lampPool.isVisible = false; lampPool.isPickable = false; // base de las instancias; radio 1 m
     const lamp = template("kitLamp", () => [cyl(0.07, 0.1, 1.5, steel, [0, 0.75, 0]), sph(0.34, amber, [0, 1.65, 0], undefined, 5)]);
@@ -593,7 +593,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
         if (pool) { const f = lampPool.createInstance("kitLampPool"); f.isPickable = false; sol(d, 0.05, yaw).decompose(f.scaling, (f.rotationQuaternion = new B.Quaternion()), f.position); f.scaling.set(pool, 1, pool); }
       }
     };
-    place(lamp, 34 * lowK, 6, 38, () => 1.5, 2.5); // farol 1,5x; pozo de radio 2,5 m
+    place(lamp, 34 * lowK, 6, 38, () => 1.5, 2.8); // farol 1,5x; pozo de radio 2,8 m (más grande se leía como lava)
     place(rockB, 65 * lowK, 5, 50, () => 1.4 + lr() * 2.4);
   }
   // Cielo: estrellas fijas en el mundo (al dar la vuelta a la luna, giran), Tierra, Sol y una estrella fugaz de vez en cuando.
@@ -680,7 +680,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
 
 // ---------- Cada cuadro: niebla según el lado (sol / sombra) y estrellas fugaces ----------
 const FOG_LIT = B.Color3.FromHexString("#f2b27a"), FOG_DARK = B.Color3.FromHexString("#0c0a1c"); // día: desierto cálido; noche: azul-violeta neón
-const NIGHT_TINT = new B.Color3(0.38, 0.4, 0.44); // asfalto mojado oscuro (ref33b, medios ~#1c1f26)
+const NIGHT_TINT = new B.Color3(0.2, 0.22, 0.26); // asfalto mojado oscuro (ref33b, medios ~#1c1f26)
 const SKY_NIGHT = ["#5a1a8a", "#14082a", "#04020a", "#010004"], NEON_FLOOR = B.Color3.FromHexString("#060709"); // emisivo lineal: con exposición y tonemap #0a0612 pintaba todo el piso lavanda (~90 % del violeta)
 let fadeT = 0;
 const nightBase = new Map<B.Light, { base: number; set: number }>();
@@ -695,7 +695,7 @@ export function moonTick(dt: number, car: B.Vector3, cam: B.Camera) {
   for (const L of [scene.getLightByName("sun"), scene.getLightByName("hemi")]) {
     if (!L) continue;
     const b = nightBase.get(L); if (!b || L.intensity !== b.set) nightBase.set(L, { base: L.intensity, set: L.intensity });
-    const nb = nightBase.get(L)!; nb.set = L.intensity = nb.base * (1 - neonK * (L.name === "sun" ? 0.85 : 0.5));
+    const nb = nightBase.get(L)!; nb.set = L.intensity = nb.base * (1 - neonK * (L.name === "sun" ? 0.7 : 0.85)); // luna más dura, casi sin relleno ambiente (contraste de noche)
   }
   city.visibility = neonK; city.isVisible = neonK > 0.02;
   if (city.isVisible) {

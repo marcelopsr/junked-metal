@@ -36,7 +36,8 @@ await pool(Number(arg("par", "3")), seeds.flatMap((seed) => vps.map((vp) => ({ s
     runs0 = (await saved()).runs ?? 0;
     if (runs0 !== 0) return "el e2e espera un guardado limpio (runs " + runs0 + ")";
     const vis = (sel) => ev((s) => { const e = document.querySelector(s); return !!e && getComputedStyle(e).display !== "none"; }, sel);
-    if (await vis("#dailyBtn") || await vis("#weeklyBtn") || await vis('#scr-main [data-go="modes"]')) return "desafíos o Más modos visibles antes de la primera expedición";
+    const pruebas = await ev(async () => (await import("/src/menu.ts")).PRUEBAS === true); // PRUEBAS libera el menú: no se exige menú limpio
+    if (!pruebas && (await vis("#dailyBtn") || await vis("#weeklyBtn") || await vis('#scr-main [data-go="modes"]'))) return "desafíos o Más modos visibles antes de la primera expedición";
     await p.dispatchEvent('#scr-main [data-go="encore"]', "click"); await tick(4);
     if (!(await p.waitForSelector("#ctlg:not(.hidden)", { timeout: 3000 }).catch(() => null))) return "Jugar no abrió la guía mínima directo";
     if (await p.$("#scr-encore.on")) return "apareció la pantalla ENCORE en la primera vez";

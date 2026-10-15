@@ -97,7 +97,8 @@ function show(s: Slot) {
   const m = (s.m ??= (() => { const t = tpl(s.d.id); shadows.removeShadowCaster(t); const i = t.createInstance("zona_" + s.d.id); i.isPickable = false; return i; })());
   m.setEnabled(true);
   const k = s.st === "warn" ? 0.2 + 0.8 * (1 - s.t / R.zona_aviso_s) : 1; // el aro crece durante el aviso
-  m.position.set(s.x, (ctx?.floorY?.(s.x, s.z) ?? 0) + 0.12 + (MOON.on ? (s.d.radio * s.d.radio) / (2 * MOON.R) : 0), s.z); // luna: patio: el relieve fino del suelo se comía la alfombra con 0,04; luna: además el piso se curva (flecha r²/2R) m.scaling.set(s.d.radio * k, 1, s.d.radio * k);
+  m.position.set(s.x, (ctx?.floorY?.(s.x, s.z) ?? 0) + 0.12 + (MOON.on ? (s.d.radio * s.d.radio) / (2 * MOON.R) : 0), s.z); // luna: patio: el relieve fino del suelo se comía la alfombra con 0,04; luna: además el piso se curva (flecha r²/2R)
+  m.scaling.set(s.d.radio * k, 1, s.d.radio * k);
   if (MOON.on) { m.rotation.set(0, 0, 0); orient(m); } // luna: la normal de la esfera; sin esto el disco queda inclinado y semienterrado
 }
 
