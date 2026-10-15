@@ -1,0 +1,230 @@
+{
+  "title": "Junked Metal Encore — Survivor, batch 02",
+  "version": 1,
+  "created": "2026-10-15",
+  "style_source": "docs/ART_DIRECTION.md",
+  "kind": "concept_reference",
+  "assets": [
+    {
+      "file": "01_garage_opening.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Giant garage starting arena: stained concrete, car on jack stands, tool bench, oil patches, cardboard ramps, tire stacks, overhead tube light; broad central lane and side loops for swarms."
+    },
+    {
+      "file": "02_garage_props.png",
+      "category": "modular_prop_sheet",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Catalog sheet with six isolated garage encounter props in separate equal cells: jack stand, toolbox, stack of used tires, paint can, cardboard ramp, hanging extension cable; same scale, clear shapes, no labels."
+    },
+    {
+      "file": "03_moon_crater_route.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Lunar arena from elevated isometric viewpoint: crater rim paths, shallow pits, tiny stage truss, one dark-side pocket, bright sunward overlook, toy rocket landing landmark and wide combat clearing."
+    },
+    {
+      "file": "04_moon_scrap_rain.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Lunar survivor encounter under falling scrap: harmless readable debris silhouettes crossing sky, tiny RC buggy threading through crater lanes, far teleporter rocket, dramatic but playable center space."
+    },
+    {
+      "file": "05_garden_night_variant.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Backyard garden at blue twilight while retaining warm practical lights: sprinkler arcs, giant flower pots, fence shadows, raised beds, grass lanes, yellow buggy pursued by small toy-scale insects."
+    },
+    {
+      "file": "06_pool_boss_arena.png",
+      "category": "encounter_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Top-down three-quarter view of empty pool boss arena: visibly stepped shallow and deep sections, ramp, stairs, broken diving board, dry leaves, drain robot threat at bottom, clear escape route."
+    },
+    {
+      "file": "07_prop_warehouse_layout.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Elevated isometric view of giant theatrical prop warehouse: broad stained-concrete combat floor, towering shelves, work table, crates, fairground crane claw overhead, two side loops and open center."
+    },
+    {
+      "file": "08_crane_boss.png",
+      "category": "encounter_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Close concept of fairground crane claw miniboss in prop warehouse, gigantic rusty toy-like claw suspended above small RC buggy, clearly readable danger shadow on concrete, escape lanes between stacked boxes."
+    },
+    {
+      "file": "09_attic_route.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Elevated isometric view of broken-toy attic survivor arena: warped floorboards, giant toy chest, rocking horse, paper airplane, loose winding keys, crawl tunnel under shelves, broad central route."
+    },
+    {
+      "file": "10_clown_encounter.png",
+      "category": "encounter_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Broken clown toy miniboss in giant attic, patched painted plastic and cloth, red yarn hair, bulky mechanical hands, tiny RC buggy fleeing past giant toy chest and slanted wooden ramps, clearly readable boss silhouette."
+    },
+    {
+      "file": "11_kitchen_counter.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Elevated isometric view of giant kitchen combat arena: checkerboard floor, L-shaped counters, oven and refrigerator, table legs making corridors, crumbs, utensils and tea towel ramps, clear open combat square."
+    },
+    {
+      "file": "12_kitchen_table.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Low-angle miniature RC encounter beneath giant kitchen table: chair-leg maze, hanging tablecloth, overturned mug, rolling peas, toy buggy escaping vacuum cleaner threat, readable exits to checkerboard floor."
+    },
+    {
+      "file": "13_backyard_patio.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Wide backyard patio survivor arena: cracked paving, hose loops, barbecue, lawn edge, flower pots and low brick planters, doghouse landmark, multiple looping buggy routes under warm afternoon light."
+    },
+    {
+      "file": "14_forest_toy.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Miniature toy-forest arena beyond backyard: chunky pine trees, moss-covered rocks, fallen log bridge, small creek, dirt tire tracks, insect swarm at distance, clear combat clearing."
+    },
+    {
+      "file": "15_snow_route.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Miniature snow stage: wheel ruts, pine clusters, ice patches, red-and-white barrier blocks, timber cabin and gentle ramp, tiny RC buggy drifting on a readable path in warm low winter sun."
+    },
+    {
+      "file": "16_mini_city.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Miniature city block survivor arena: cobblestone streets, toy-like houses, narrow alleys, small square, construction barriers, boxes and drain tunnel; wide central fight area and multiple escape routes."
+    },
+    {
+      "file": "17_industrial_yard.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Industrial yard survivor arena: stained concrete with dirt patches, shipping containers, steel drums, yellow-black curb, little gantry, broad paths and side cover, warm late-day atmosphere."
+    },
+    {
+      "file": "18_modular_obstacles.png",
+      "category": "modular_prop_sheet",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Clean six-panel concept sheet of reusable arena obstacles in equal cells: red-white road barrier, stacked used tires, wood pallet ramp, rusty drum, cardboard tunnel, toy traffic cone; consistent scale and materials, no labels."
+    },
+    {
+      "file": "19_enemy_swarm.png",
+      "category": "encounter_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Action view of survivor combat readability: small yellow RC buggy encircled by a controlled swarm of giant ants, beetles and toy robots in open backyard patio, clear safe gap for evasive driving, a few distinct particle trails, no gore."
+    },
+    {
+      "file": "20_stage_departure.png",
+      "category": "arena_concept",
+      "pixel_dimensions": [
+        1536,
+        1024
+      ],
+      "logical_dimensions": "RC toy scale reference; rebuild dimensions from zone geometry",
+      "status": "concept_only",
+      "prompt": "Junked Metal Encore Survivor mode concept art. Miniature RC toy diorama, warm cinematic sunset light, painted stylized PBR materials, beveled chunky low-poly silhouettes, macro photography and tilt-shift depth of field, clear traversable gameplay layout, yellow off-road RC buggy with black roll cage for scale. No text, no logos, no UI, no watermark. Cinematic end-of-stage moment: tiny yellow RC buggy driving up the ramp into a red-and-white toy rocket teleporter in the backyard arena, defeated hazards behind, warm sunset, clear portal glow and landmark silhouette, no victory text."
+    }
+  ],
+  "integration": "Use each PNG as art direction for existing Survivor Encore zones, props, enemies and teleporter beats. Rebuild geometry and painted PBR materials in the game; these are not tileable textures, 3D models or engine-ready sprites. Preserve broad combat lanes and current procedural microvariation. Generated staging details are exploratory and do not define gameplay rules."
+}
