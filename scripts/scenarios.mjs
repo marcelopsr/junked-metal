@@ -63,7 +63,7 @@ export const sessions = [
     { id: "carga", act: carga, perf: false },
     { id: "portada", act: sinCarga },
     { id: "principal", act: async (p) => { await p.dispatchEvent("#scr-title", "click"); await wait(p, () => document.querySelector("#scr-main.on")); await tick(p, 180); await p.waitForTimeout(150); } }, // 180 cuadros: la cámara termina de viajar desde la portada
-    { id: "garaje", act: view("garage") },
+    { id: "garaje", act: async (p) => { await view("garage")(p); await tick(p, 40); } }, // espera el fundido de entrada de la escena (con 3 cuadros la exposición estaba al 16 %)
     { id: "garaje-vista-previa", act: async (p) => { await p.evaluate(() => window.__cfg({ cars: ["buggy"] })); /* menu.ts desbloquea todos los autos al cargar: se bloquea el tanque para tener la vista previa */ await view("garage")(p); await p.focus('.carc.locked[data-k="tanque"]'); await p.waitForTimeout(400); } },
     { id: "taller", act: view("shop") },
     { id: "encore", act: view("encore") },

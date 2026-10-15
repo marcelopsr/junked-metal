@@ -38,3 +38,18 @@ describe("balance de los comunes nuevos", () => {
     }
   });
 });
+
+describe("blindaje frontal compartido", () => {
+  it("escudero y cangrejo tienen placa; de frente entra ATK.escudo_blindaje y por la espalda daño completo", async () => {
+    // combat.ts toca el DOM y no carga en Node: se comprueba el texto
+    const { readFileSync } = await import("node:fs");
+    const m = /FRONT_ARMOR[^=]*= new Set\(\[([^\]]*)\]\)/.exec(readFileSync("src/combat.ts", "utf8"));
+    expect(m?.[1].match(/"(\w+)"/g)).toEqual(['"escudo"', '"cangrejo"']);
+    expect(readFileSync("src/combat.ts", "utf8")).toContain("FRONT_ARMOR.has(e.kind)");
+    const { ATK } = await import("../scripts/oleadas.mjs");
+    const fwd = { x: 0, z: 1 }, pos = { x: 0, z: 0 }, cos = ATK.escudo_frente_cos;
+    const hit = (from: { x: number; z: number }) => 100 * (inFront(fwd, pos, from, cos) ? ATK.escudo_blindaje : 1);
+    expect(hit({ x: 0, z: 10 })).toBeCloseTo(100 * ATK.escudo_blindaje);
+    expect(hit({ x: 0, z: -10 })).toBe(100);
+  });
+});

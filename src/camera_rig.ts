@@ -134,7 +134,9 @@ export function cameraTick(dt: number) {
     // Persecución baja en teléfono: pantalla chica, se aleja y sube algo más (vertical, más: el ancho visible es poco) y mira menos adelante
     const cm2 = save.camMode === "baja" && isTouch ? (c.engine.getAspectRatio(c.cam) < 1 ? { back: 14, up: 9, look: 1 } : { back: 9.5, up: 5.5, look: 5 }) : cm;
     const lab = c.lab.on && save.camMode === "actual", P = CAMS.actual;
-    const gb = B.Scalar.Lerp(lab ? c.lab.back : cm2.back, P.back, roofK), gl = B.Scalar.Lerp(cm2.look, P.look, roofK);
+    // Celular vertical: mirar un poco detrás del auto lo sube en pantalla, por encima de los botones táctiles (SALTO y DERRAPE lo tapaban)
+    const tl = isTouch && !c.lab.on && c.engine.getAspectRatio(c.cam) < 1 ? 4 : 0;
+    const gb = B.Scalar.Lerp(lab ? c.lab.back : cm2.back, P.back, roofK), gl = B.Scalar.Lerp(cm2.look, P.look, roofK) - tl;
     let gu = B.Scalar.Lerp(lab ? c.lab.up : cm2.up, P.up, roofK);
     const zm = (c.lab.on ? 1 : save.zoom) * DIORAMA_DIST * outroZ * (save.camMode === "dinamica" ? dynK : 1) * (MOON.on ? 0.82 : 1), zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
     gu *= zu;

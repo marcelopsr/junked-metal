@@ -24,8 +24,8 @@ const cobbleTex = () => canvasTex(512, (c, s) => {
 
 // Adoquín gris claro de las veredas (ref300/ref133): grises #a9a6a0/#8f8c86 (algo más fríos para compensar el sol cálido) con juntas oscuras, semilla fija.
 const sidewalkTex = () => canvasTex(512, (c, s) => {
-  const r = lcg(19), n = 12, w = s / n, tones = ["#a3a4a6", "#8a8b8e", "#9a9b9d", "#acadaf", "#929395"];
-  c.fillStyle = "#4f5054"; c.fillRect(0, 0, s, s);
+  const r = lcg(19), n = 12, w = s / n, tones = ["#9ba3ad", "#818994", "#929aa5", "#a5adb8", "#89919c"];
+  c.fillStyle = "#464b54"; c.fillRect(0, 0, s, s);
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
     const x = i * w + (j % 2 ? w / 2 : 0) - w / 2;
     for (const ox of [0, s]) { c.fillStyle = tones[Math.floor(r() * tones.length)]; c.fillRect(x + ox + 2, j * w + 2, w - 4, w - 4); c.fillStyle = "rgba(255,255,255,0.12)"; c.fillRect(x + ox + 2, j * w + 2, w - 4, 3); }
@@ -60,7 +60,7 @@ const TA = 14, TC = 7, TB = 8; // metros por tile: asfalto, adoquín, ladrillo
 const RW = 18, RING = 45;
 const onRoad = (x: number, z: number, m = 0) => { const a = Math.abs(x), b = Math.abs(z), h = RW / 2 + m; return a < h || b < h || (Math.abs(a - RING) < h && b < RING + h) || (Math.abs(b - RING) < h && a < RING + h); };
 function roads() {
-  const parts: B.Mesh[] = [], asphalt: B.Mesh[] = [], asph = tmat("c-asfalto", "#ffffff", 0.9), patchM = M.matte("#26282c"), side = pbr("ciu-vereda", { color: "#ffffff", rough: 0.9, metal: 0, tex: scene.getMaterialByName("ciu-vereda") ? undefined : sidewalkTex() }), line = M.matte("#FAFAFA"), red = M.matte("#E53935"), wh = M.matte("#FAFAFA");
+  const parts: B.Mesh[] = [], asphalt: B.Mesh[] = [], asph = tmat("c-asfalto", "#ffffff", 0.9), patchM = M.matte("#26282c"), side = pbr("ciu-vereda", { color: "#dfe8ff", rough: 0.9, metal: 0, tex: scene.getMaterialByName("ciu-vereda") ? undefined : sidewalkTex() }), line = M.matte("#FAFAFA"), red = M.matte("#E53935"), wh = M.matte("#FAFAFA");
   const L = HALF - 4, strips: [number, number, number, number][] = [[0, 0, L * 2, RW], [0, 0, RW, L * 2]]; // cx, cz, largo X, largo Z
   for (const k of [-RING, RING]) strips.push([0, k, (RING + RW / 2) * 2, RW], [k, 0, RW, (RING + RW / 2) * 2]);
   const inRoad = (x: number, z: number) => strips.some(([qx, qz, qw, qd]) => Math.abs(x - qx) < qw / 2 - 0.3 && Math.abs(z - qz) < qd / 2 - 0.3);
@@ -252,7 +252,7 @@ export function cityLayout() {
     c.clearRect(0, 0, N, N);
     for (let i = 0; i < 8; i++) { const bx = N / 2 + (o() - 0.5) * 110, by = N / 2 + (o() - 0.5) * 70, rr = 40 + o() * 34, g = c.createRadialGradient(bx, by, 0, bx, by, rr); g.addColorStop(0, "rgba(10,16,24,0.96)"); g.addColorStop(0.75, "rgba(14,22,32,0.9)"); g.addColorStop(1, "rgba(14,22,32,0)"); c.fillStyle = g; c.fillRect(bx - rr, by - rr, rr * 2, rr * 2); }
     c.globalCompositeOperation = "source-atop";
-    c.fillStyle = "rgba(205,228,248,0.55)"; c.beginPath(); c.ellipse(N / 2 - 20, N / 2 - 18, 50, 12, -0.2, 0, 6.2832); c.fill(); // brillo de cielo
+    c.fillStyle = "rgba(150,196,236,0.7)"; c.beginPath(); c.ellipse(N / 2, N / 2 - 4, 92, 38, -0.1, 0, 6.2832); c.fill(); c.fillStyle = "rgba(225,240,252,0.85)"; c.beginPath(); c.ellipse(N / 2 - 20, N / 2 - 18, 50, 12, -0.2, 0, 6.2832); c.fill(); // reflejo de cielo azul y brillo
     c.strokeStyle = "rgba(40,36,32,0.8)"; c.lineWidth = 7; c.beginPath(); c.ellipse(N / 2, N / 2, 112, 66, 0, 0, 6.2832); c.stroke(); // borde húmedo
     for (let i = 0; i < 26; i++) { c.fillStyle = ["#9a5a22", "#b5762f", "#7a4a1c", "#c9a03a"][i % 4]; c.beginPath(); c.ellipse(N / 2 + (o() - 0.5) * 150, N / 2 + (o() - 0.5) * 90, 7 + o() * 6, 3.5 + o() * 3, o() * 3.14, 0, 6.2832); c.fill(); } // hojas secas
     t.update(); t.hasAlpha = true;

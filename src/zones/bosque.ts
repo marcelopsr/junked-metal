@@ -16,13 +16,13 @@ const PINE = ["#2f5a2a", "#3f7a32", "#35682d"], MOSS = "#5a7a30", TRUNK = "#6b44
 // Tierra rojiza con agujas de pino (trazos finos naranja/marrón) y guijarros: 512 px, mosaico por macro 14 u.
 const dirtTex = () => canvasTex(512, (c, s) => {
   const r = rnd(53);
-  c.fillStyle = "#4e3828"; c.fillRect(0, 0, s, s);
-  for (let i = 0; i < 70; i++) { c.fillStyle = ["#3a2c1e", "#4a5a2a", "#6b5238", "#2f3a1e"][i % 4]; c.globalAlpha = 0.3 + r() * 0.3; c.beginPath(); c.ellipse(r() * s, r() * s, 14 + r() * 40, 10 + r() * 30, r() * 3, 0, 6.3); c.fill(); } // manchas de humus y musgo
-  for (let i = 0; i < 6000; i++) { c.fillStyle = ["#4a3624", "#7a5a3a", "#3a2a1c", "#5e4228"][i % 4]; c.globalAlpha = 0.25 + r() * 0.35; c.fillRect(r() * s, r() * s, 2 + r() * 4, 2 + r() * 4); }
+  c.fillStyle = "#2e1f18"; c.fillRect(0, 0, s, s);
+  for (let i = 0; i < 70; i++) { c.fillStyle = ["#26190f", "#34421e", "#4a3424", "#1f2a14"][i % 4]; c.globalAlpha = 0.3 + r() * 0.3; c.beginPath(); c.ellipse(r() * s, r() * s, 14 + r() * 40, 10 + r() * 30, r() * 3, 0, 6.3); c.fill(); } // manchas de humus y musgo
+  for (let i = 0; i < 6000; i++) { c.fillStyle = ["#34231a", "#5a3a28", "#2a1a12", "#47301f"][i % 4]; c.globalAlpha = 0.25 + r() * 0.35; c.fillRect(r() * s, r() * s, 2 + r() * 4, 2 + r() * 4); }
   c.lineCap = "round";
   for (let i = 0; i < 2600; i++) { // agujas: trazos de 6-14 px, cualquier ángulo, se repiten en el borde para que el mosaico cierre
     const x = r() * s, y = r() * s, a = r() * 6.3, l = 6 + r() * 8;
-    c.strokeStyle = ["#a0683a", "#8a5428", "#b07a40", "#4a3020"][i % 4]; c.globalAlpha = 0.5 + r() * 0.35; c.lineWidth = 1 + r();
+    c.strokeStyle = ["#6e3a26", "#5a2e1e", "#7a4630", "#3a2218"][i % 4]; c.globalAlpha = 0.5 + r() * 0.35; c.lineWidth = 1 + r();
     for (const [ox, oy] of [[0, 0], [s, 0], [-s, 0], [0, s], [0, -s]]) { c.beginPath(); c.moveTo(x + ox, y + oy); c.lineTo(x + ox + Math.cos(a) * l, y + oy + Math.sin(a) * l); c.stroke(); }
   }
   c.globalAlpha = 1;
@@ -230,6 +230,7 @@ const waterMat = (name: string, alpha: number, emis: string, tex = rippleTex()) 
   return m;
 };
 
+let fallObs: B.Nullable<B.Observer<B.Scene>> = null;
 function forestWater() {
   const r = rnd(4417), parts: B.Mesh[] = [], wood = M.matte(TRUNK), dkw = M.matte("#4e3018"), plank = [M.matte("#a8794a"), M.matte("#966a3e")], moss = M.matte(MOSS);
   // Lecho de piedritas y agua encima (cintas a ras del piso, sin colisión).
@@ -277,7 +278,14 @@ function forestWater() {
     stat(box(8, 7, 6, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [p.x + SD[0] * 8, 3.5, p.z + SD[1] * 8, ry]).isVisible = false;
     const fm = waterMat("cascada", 0.8, "#2c3c42", rippleTex("#b4cdd6", "#f4fbfc", "#6f98a8")); (fm.albedoTexture as B.Texture).uScale = 1.5; (fm.albedoTexture as B.Texture).vScale = 3;
     const fall = box(8.4, 7.6, 0.18, fm, [p.x + SD[0] * 3.0, 3.8, p.z + SD[1] * 3.0], [0, ry, 0]); fall.receiveShadows = false; fall.isPickable = false;
-    const foam = sph(2.6, waterMat("espuma", 0.9, "#9fb4b4", rippleTex("#e8f0ee", "#ffffff", "#b4c8c8")), [p.x + SD[0] * 1.8, 0.12, p.z + SD[1] * 1.8], [1.7, 0.12, 1.3], 8); foam.isPickable = false;
+    // Espuma: disco plano con alfa radial (borde difuso, no un disco nítido).
+    const ft = canvasTex(128, (c, n) => { const g = c.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2); g.addColorStop(0, "rgba(240,247,245,0.95)"); g.addColorStop(0.55, "rgba(225,236,234,0.7)"); g.addColorStop(1, "rgba(215,228,226,0)"); c.fillStyle = g; c.fillRect(0, 0, n, n); for (let i = 0; i < 40; i++) { c.fillStyle = "rgba(255,255,255,0.35)"; c.beginPath(); c.arc(n / 2 + (Math.sin(i * 7.1) * 0.4) * n, n / 2 + (Math.cos(i * 3.3) * 0.4) * n, 3 + (i % 4) * 2, 0, 6.3); c.fill(); } });
+    ft.hasAlpha = true; const fom = waterMat("espuma", 1, "#9fb4b4", ft); fom.useAlphaFromAlbedoTexture = true;
+    const foam = B.MeshBuilder.CreateDisc("cascadaEspuma", { radius: 4.6, tessellation: 24 }, scene); foam.material = fom; foam.rotation.x = Math.PI / 2; foam.scaling.set(1.7, 1.3, 1); foam.rotation.y = ry; foam.position.set(p.x + SD[0] * 1.8, 0.14, p.z + SD[1] * 1.8); foam.isPickable = false;
+    // Agua en movimiento: la textura corre en V; un solo observer, se quita y se re-registra al rearmar.
+    fallObs && scene.onBeforeRenderObservable.remove(fallObs);
+    const ftex = fm.albedoTexture as B.Texture, wtex = scene.getMaterialByName("arroyoAgua")?.getActiveTextures()[0] as B.Texture | undefined;
+    fallObs = scene.onBeforeRenderObservable.add(() => { if (!ftex.getInternalTexture()) { scene.onBeforeRenderObservable.remove(fallObs); fallObs = null; return; } const dt = scene.getEngine().getDeltaTime() / 1000; ftex.vOffset -= dt * 0.9; if (wtex) wtex.vOffset -= dt * 0.05; });
     bare.push({ x: p.x + SD[0] * 3, z: p.z + SD[1] * 3, r: 10 });
   }
   { const m = merge("forestStream", parts); m.isPickable = false; shadows.addShadowCaster(m); }

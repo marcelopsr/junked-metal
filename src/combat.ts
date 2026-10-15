@@ -101,12 +101,14 @@ export const toScreen = (p: B.Vector3) => B.Vector3.Project(p, B.Matrix.Identity
 // Daño infligido por fuente (pantalla de resultados): cs.src = arma que está actuando
 export const dmgOut: Record<string, number> = {};
 export const cs = { src: "" }; // arma/fuente que está actuando (antes `cs.src` en main.ts)
+/** Enemigos con blindaje frontal (mismos números ATK.escudo_*): hay que rodearlos. */
+export const FRONT_ARMOR: ReadonlySet<string> = new Set(["escudo", "cangrejo"]);
 export function damage(e: Enemy, dmg: number, knock?: B.Vector3, crit = false) {
   dmg *= LIVE.dmg * (e.paint > 0 ? BAL.armasExtra.pintura_vuln : 1); // Calcomanía de llamas (bono a velocidad máxima) y Lata de pintura
   if (e.kind === "gusano" && !wormOut(e)) return; // gusano lunar: enterrado no recibe daño
   if (hitShip(e, dmg)) return; // luna: las naves son blancos de las armas (moon_ships.ts shipTargets)
   if (c.lead.car && isAlien(e.kind)) { const k = armorMul(e, c.lead.car.pos); if (k < 1) { dmg *= k; if (e.kind === "tanque" && !c.simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } } // tanque alien (aliens.ts): placa frontal y escudo del curandero
-  if (e.kind === "escudo" && c.lead.car && inFront(e.node.forward, e.pos, c.lead.car.pos, ATK.escudo_frente_cos)) { dmg *= ATK.escudo_blindaje; if (!c.simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } // escudero: placa frontal (ponytail: el origen es el auto, como armorMul; techo: pasar el origen real del golpe)
+  if (FRONT_ARMOR.has(e.kind) && c.lead.car && inFront(e.node.forward, e.pos, c.lead.car.pos, ATK.escudo_frente_cos)) { dmg *= ATK.escudo_blindaje; if (!c.simulating) FX.sparks(e.pos.add(upv(e.pos, 0.6))); } // escudero y cangrejo: placa frontal (ponytail: el origen es el auto, como armorMul; techo: pasar el origen real del golpe)
   if (cs.src) {
     const eff = Math.min(dmg, Math.max(0, e.hp));
     dmgOut[cs.src] = (dmgOut[cs.src] ?? 0) + eff;
