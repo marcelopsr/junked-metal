@@ -14,7 +14,7 @@ import { showWorld } from "./world";
 type V3 = [number, number, number];
 type SetId = "shelf" | "bench" | "clean";
 type Clim = Parameters<typeof applyClimate>[0];
-type Lamp = { spot: V3; to: V3; glow: V3; spotI: number; glowI: number; cone: number };
+type Lamp = { spot: V3; to: V3; glow: V3; spotI: number; glowI: number; cone: number; col?: string; gcol?: string; exp?: number }; // col/gcol/exp: color del foco, color del aro (contorno) y exponente del borde del cono
 type Cam = { pos: V3; target: V3; fov?: number };
 /** Utilería de una sección: pieza del kit (kit3d.ts), tamaño `u`, dónde y cómo; `v` = variación (color de la chapa o id del cartel); `anim` = animación ambiental. */
 type Prop = { kit: KitId; u: number; at: V3; rot?: V3; v?: string; anim?: "swing" | "spin" };
@@ -58,7 +58,9 @@ export const SCENES: Record<string, MenuScene> = {
     ] },
   beast: { set: "shelf", cam: { pos: [0, 3, 8], target: [0, 1, 0] } }, // main.ts recalcula SHOTS.beast según el bicho
   credits: { set: "shelf", cam: { pos: [10, 3.2, 15], target: [4, 10.5, -60] } },
-  garage: { set: "bench", clim: { sunI: 0.5, hemiI: 0.22, amb: "#7a5a3c", exposure: 1.7 }, lamp: { spotI: 55, cone: 0.5, glowI: 1.2 }, cam: { pos: [2, 4, 11], target: [-2.2, 2.2, 1] }, camV: { pos: [2.6, 3.8, 14], target: [0, -2.8, 1] }, car: [0, 0.9, 1], // 0.9 = tope de la peana (stand): a y=0 el auto quedaba enterrado en ella
+  garage: { set: "bench", clim: { sunI: 0.5, hemiI: 0.07, amb: "#55524e", ground: "#2a2928", sunColor: "#e6e1d8", exposure: 1.7 },
+    // ref321: foco blanco-cálido con borde suave (exp alto) y contorno frío desde atrás-arriba (el `glow` pasa a luz de contorno)
+    lamp: { spotI: 130, cone: 0.58, col: "#fff2e0", exp: 30, glow: [-1.5, 6, -5], glowI: 26, gcol: "#a9c8ff" }, cam: { pos: [2, 4, 11], target: [-2.2, 2.2, 1] }, camV: { pos: [2.6, 3.8, 14], target: [0, -2.8, 1] }, car: [0, 0.9, 1], // 0.9 = tope de la peana (stand): a y=0 el auto quedaba enterrado en ella
     props: [
       { kit: "toolbox", u: 3.4, at: [-9, 0, -7], rot: [0, 0.3, 0] }, { kit: "crate", u: 4, at: [13, 0, -12.5], rot: [0, 0.15, 0] },
       { kit: "sign", u: 6, at: [-1, 9.5, -16.2], v: "playfix" },
@@ -182,19 +184,19 @@ function shelfBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
 }
 
 function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
-  const peach = W("#c08650"), wood = wornMat("#b07a4a", "#5c3a24", 19), woodD = wornMat("#8c5a32", null, 27), metal = M.metal("#cfd3dc");
+  const peach = W("#c08650"), wood = wornMat("#5c5248", "#33291f", 19), woodD = wornMat("#4a4036", null, 27), metal = M.metal("#cfd3dc");
   // paleta de juguete (ref8): madera, rojo #E53935, amarillo #FBC02D, azul #42A5F5; el negro mate queda para detalles
-  const fDark = wornMat("#4a2f1d", null, 23), fTeal = wornMat("#42A5F5", null, 41), fOrange = wornMat(M3C.naranja, null, 11), fYellow = wornMat("#FBC02D", null, 37), fRed = wornMat("#E53935", null, 31);
+  const fDark = wornMat("#4a2f1d", null, 23), fTeal = wornMat("#42A5F5", null, 41), fOrange = wornMat(M3C.naranja, null, 11), fYellow = wornMat("#FBC02D", null, 37), fRed = wornMat("#E53935", null, 31), fStand = wornMat("#1c1e22", null, 29);
   const fDrawers = [fOrange, fTeal, fYellow, fRed, fTeal, fOrange, fYellow, fRed, fTeal];
   // Texturas que repiten distinto a lo ancho y a lo alto: agujeros del tablero perforado y grilla de la base de corte
   const tx = (c0: string, draw: (c: CanvasRenderingContext2D, s: number) => void, u: number, v: number) => { const t = canvasTex(64, (c, s) => { c.fillStyle = c0; c.fillRect(0, 0, s, s); draw(c, s); }); t.uScale = u; t.vScale = v; return t; };
   // tablones verticales de madera cálida: junta oscura a la izquierda y vetas; la base de corte pasa a tablas claras
-  const peg = pbr("pegboard", { color: "#8a7a6a", rough: 0.9, tex: tx("#B07A4A", (c, s) => { c.fillStyle = "#8C5A32"; c.fillRect(0, 0, s * 0.07, s); c.fillStyle = "#9a6538"; for (const x of [0.3, 0.55, 0.8]) c.fillRect(s * x, 0, 2, s); c.fillStyle = "#5c3a24"; c.fillRect(s * 0.4, s * 0.2, 3, 3); }, 34, 2) });
+  const peg = pbr("pegboard", { color: "#8a7a6a", rough: 0.9, tex: tx("#7d7468", (c, s) => { c.fillStyle = "#5e564d"; c.fillRect(0, 0, s * 0.07, s); c.fillStyle = "#6c6358"; for (const x of [0.3, 0.55, 0.8]) c.fillRect(s * x, 0, 2, s); c.fillStyle = "#3e3730"; c.fillRect(s * 0.4, s * 0.2, 3, 3); }, 34, 2) });
   const mat = pbr("cutmat", { color: "#ffffff", rough: 0.85, tex: tx("#151a19", (c, s) => { c.strokeStyle = "#2a3a34"; c.lineWidth = 2; c.strokeRect(0, 0, s, s); }, 16, 11) });
   // Cuarto: piso, techo, pared con el tablero perforado, laterales
   // garaje de noche (ref321): piso de hormigón con manchas, paredes oscuras para que la luz de taller recorte al auto
-  const conc = pbr("gConcrete", { color: "#8a8580", rough: 0.9, tex: (() => { const t = new B.Texture("./textures/c-hormigon-grietas.webp", lamp.getScene()); t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE; t.uScale = 6; t.vScale = 5; return t; })() });
-  const dark = W("#2a211b"), stain = M.matte("#0c0a09");
+  const conc = pbr("gConcrete", { color: "#4a4846", rough: 0.9, tex: (() => { const t = new B.Texture("./textures/c-hormigon-grietas.webp", lamp.getScene()); t.wrapU = t.wrapV = B.Texture.WRAP_ADDRESSMODE; t.uScale = 6; t.vScale = 5; return t; })() });
+  const dark = W("#1b1a19"), stain = M.matte("#0c0a09");
   const room = [
     box(180, 1, 140, conc, [0, -30.5, 0]), box(180, 2, 140, W("#1a1412"), [0, 50, 0]),
     box(180, 82, 2, dark, [0, 10, -18]), box(2, 82, 140, dark, [-70, 10, 0]), box(2, 82, 140, dark, [70, 10, 0]),
@@ -212,9 +214,9 @@ function benchBuild(low: boolean): [B.Mesh[], B.Mesh[]] {
   ];
   // Peana de calibración / soporte de pits (Pit Stand) y cargador inteligente LiPo digital con puertos XT60
   const stand = [ // caballete rojo (ref8): base ancha, dos patas inclinadas, travesaño y franja amarilla; el tope sigue en y = 0.9
-    box(3.4, 0.25, 4.6, fRed, [0, 0.12, 1]),
-    box(0.35, 0.8, 3.8, fRed, [-1.15, 0.5, 1], [0, 0, 0.18]), box(0.35, 0.8, 3.8, fRed, [1.15, 0.5, 1], [0, 0, -0.18]),
-    box(2.7, 0.18, 4, fRed, [0, 0.84, 1]), box(2.2, 0.06, 0.4, fYellow, [0, 0.95, 2.9]),
+    box(3.4, 0.25, 4.6, fStand, [0, 0.12, 1]),
+    box(0.35, 0.8, 3.8, fStand, [-1.15, 0.5, 1], [0, 0, 0.18]), box(0.35, 0.8, 3.8, fStand, [1.15, 0.5, 1], [0, 0, -0.18]),
+    box(2.7, 0.18, 4, fStand, [0, 0.84, 1]), box(2.7, 0.2, 0.12, fRed, [0, 0.84, 3.05]), // filo rojo: el rojo queda de acento box(2.2, 0.06, 0.4, fYellow, [0, 0.95, 2.9]),
     box(2.6, 0.08, 0.6, M.rubber(), [0, 0.94, -0.6]), box(2.6, 0.08, 0.6, M.rubber(), [0, 0.94, 2.6]),
   ];
   const charger = [
@@ -1114,7 +1116,7 @@ function cleanBuild(): [B.Mesh[], B.Mesh[]] {
 }
 
 let curSet: SetId | null = null, curSec = "", fade = 1, moteT = 0, clock = 0;
-const WARM = B.Color3.FromHexString("#ffc890");
+const WARM = B.Color3.FromHexString("#ffc890"), GLOW = B.Color3.FromHexString("#ff8a3d");
 const builtSet: Partial<Record<SetId, B.Mesh[]>> = {};
 const builtSec: Record<string, { stat: B.Mesh[]; anim: { m: B.Mesh; a: "swing" | "spin"; ph: number }[] }> = {};
 function buildSet(id: SetId, low: boolean) {
@@ -1165,7 +1167,7 @@ export function menuTick(scr: string, cam: B.Camera, focus: B.Vector3, dt: numbe
   lamp.getScene().imageProcessingConfiguration.exposure = exp * LOOK.exposure * (0.15 + 0.85 * fade * fade);
   lamp.position.copyFrom(spot); to.subtractToRef(spot, lamp.direction).normalize();
   lamp.intensity = L.spotI; lamp.angle = L.cone; glow.position.copyFrom(v3(o, L.glow)); glow.intensity = L.glowI;
-  lamp.diffuse.copyFrom(WARM); // carModel pinta el foco con el faro del auto de muestra: en el menú manda la lámpara
+  lamp.diffuse.copyFrom(L.col ? B.Color3.FromHexString(L.col) : WARM); lamp.exponent = L.exp ?? 8; glow.diffuse.copyFrom(L.gcol ? B.Color3.FromHexString(L.gcol) : GLOW); // carModel pinta el foco con el faro del auto de muestra: en el menú manda la lámpara
   setDof(Math.max(1, B.Vector3.Dot(focus.subtract(cam.position), cam.getDirection(B.Axis.Z))), sc.dof ?? set.dof); // el desenfoque mide profundidad sobre el eje de la cámara, no distancia
   for (const x of builtSec[k].anim) { if (x.a === "swing") x.m.rotation.z = Math.sin(clock * 0.9 + x.ph) * 0.06; else x.m.rotation.y += dt * 0.5; }
   // Polvo que flota en el haz de la lámpara

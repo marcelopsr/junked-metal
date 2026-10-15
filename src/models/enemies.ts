@@ -27,7 +27,7 @@ const rivMat = () => M.metal("#aeb4bd");
 const rivets = (c: V3, hx: number, hy: number, ax: "z" | "x" | "y" = "z", d = 0.08): B.Mesh[] =>
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => sph(d, rivMat(), ax === "z" ? [c[0] + a * hx, c[1] + b * hy, c[2]] : ax === "x" ? [c[0], c[1] + b * hy, c[2] + a * hx] : [c[0] + a * hx, c[1], c[2] + b * hy], undefined, 4));
 // Ojo de vidrio con brasa ámbar (sin el blanco quemado de M.glow).
-const amberEye = () => pbr("ambarOjo2", { color: "#ff8a1a", emissive: "#b26112", rough: 0.3 });
+const amberEye = () => pbr("ambarOjo4", { color: "#e0600c", emissive: "#4a1e04", rough: 0.55 });
 // Escala una lista de piezas (posición y tamaño) respecto del origen: acorta un modelo sin tocar cada coordenada.
 const shrink = (a: B.Mesh[], k: number) => a.map((m) => { m.position.scaleInPlace(k); m.scaling.scaleInPlace(k); return m; });
 // Placas finas pegadas a la superficie de un elipsoide (centro c, radios r): [azimut desde +z hacia +x, elevación]. Dan relieve donde worn() casi no se ve (esferas). Caja fina en z, orientada a la normal.
