@@ -32,7 +32,7 @@ export { zoneTick } from "./zones/jardin";
 const TUBO: Climate = { id: "tubo", name: "TUBO FLUORESCENTE", sun: [0.4, -1, 0.3], sunColor: "#dff2e6", sunI: 3, hemiI: 1.2, sky: ["#0b0d0d", "#121615", "#161b1a", "#0b0d0d"], exposure: 1.1, fog: 0.005, ramp: ["#0c1214", "#4a6a62", "#eef6e8"] };
 // ponytail: precios provisorios (Taller → Zonas), a calibrar con el balance de tornillos
 export const ZONE_COST = { garaje: precio("zona_garaje"), jardin: precio("zona_jardin"), desvan: precio("zona_desvan"), pileta: precio("zona_pileta"), cocina: precio("zona_cocina"), bosque: precio("zona_bosque"), nieve: precio("zona_nieve"), ciudad: precio("zona_ciudad"), industrial: precio("zona_industrial") }; // curva de precios: como un auto o algo más (menu.ts, Taller)
-const ZONES_BASE: Record<Exclude<ZoneId, "galpon" | "desvan" | "pileta" | "cocina" | "bosque" | "nieve" | "ciudad" | "industrial">, Zone> = {
+const ZONES_BASE: Record<Exclude<ZoneId, "galpon" | "desvan" | "pileta" | "cocina" | "bosque" | "nieve" | "ciudad" | "industrial" | "libre">, Zone> = {
   patio: { name: "Patio trasero", short: "Patio", desc: "Pileta, mesa de jardín y una huerta abandonada junto con los buenos propósitos.", half: 160, cost: 0, grass: 1, grassH: 1,
     rects: [[0, -30, 24, 17], [50, 45, 21, 16], [-48, 20, 24, 18]],
     roof: (p) => Math.abs(p.x) < 17 && Math.abs(p.z + 30) < 15 && p.y < 16, // tapa de la mesa: 34x30 en (0,-30), a 16 de alto
@@ -55,6 +55,11 @@ ZONES.galpon = { name: "Galpón de utilería", short: "Galpón", desc: "Cemento 
   roof: (p) => Math.abs(p.x - TABLE.x) < TABLE.w / 2 - 2 && Math.abs(p.z - TABLE.z) < TABLE.d / 2 - 2 && p.y < TABLE.h - 3,
   build: shedBuild, layout: shedLayout };
 Object.defineProperty(ZONES, "galpon", { enumerable: false });
+// Free Roam: 600x600 m, sin pasto ni enemigos. No enumerable (no es zona elegible ni comprable). El build vive en un chunk aparte: loadLibre() lo baja antes de armar la zona.
+let libreB: (() => void) | null = null;
+export const loadLibre = async () => { libreB ??= (await import("./zones/libre")).libreBuild; };
+ZONES.libre = { name: "Free Roam", short: "Libre", desc: "Un mapa grande para pasear sin enemigos ni reloj.", half: 300, cost: 0, grass: 0, grassH: 1, rects: [], climate: ENCORE_DUSK, build: () => libreB!(), layout: () => {} };
+Object.defineProperty(ZONES, "libre", { enumerable: false });
 // Desván de los juguetes rotos: zona comprable (Taller → Zonas) y variante de ENCORE.
 ZONES.desvan = { name: "Desván de los juguetes rotos", short: "Desván", desc: "Tablones torcidos, un baúl del tamaño de un auto y juguetes que ya nadie arregla.", half: 140, cost: ZONE_COST.desvan, grass: 0, grassH: 1,
   rects: [], build: atticBuild, layout: atticLayout };
@@ -90,7 +95,7 @@ export function floorAt(x: number, z: number): Floor {
   if (zoneId === "desvan" || zoneId === "cocina") return "baldosa"; // tablones: el sonido de madera/baldosa, sin tierra ni pasto
   if (zoneId === "pileta") return x > PIT.x0 && x < PIT.x1 && Math.abs(z) < PIT.z1 ? "baldosa" : "tierra"; // azulejo dentro del pozo, cemento en la explanada
   if (zoneId === "luna" || zoneId === "bosque" || zoneId === "nieve") return "tierra";
-  if (zoneId === "ciudad" || zoneId === "industrial") return "cemento";
+  if (zoneId === "ciudad" || zoneId === "industrial" || zoneId === "libre") return "cemento";
   if (zoneId === "jardin") return z < -HALF + 16 || Math.abs(x - 12) < 4 ? "baldosa" : "pasto"; // vereda y camino de lajas
   if (Math.abs(x) < 24 && Math.abs(z + 30) < 17) return "baldosa";
   if (Math.abs(x + 48) < 24 && Math.abs(z - 20) < 18) return "tierra";

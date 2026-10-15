@@ -6,7 +6,7 @@ import { idle, launch, type Task } from "./loading";
 import { dirtyWaterTemplate, enemyTemplate, LEGS, legTemplate, nutTemplate, wingTemplate } from "./models";
 import { DEF, type Kind } from "./enemies";
 import { wormHeadTpl } from "./moon_worm";
-import { worldReady } from "./world";
+import { loadLibre, worldReady } from "./world";
 import { TRACKS, raceCfg } from "./kart_cfg";
 import { initAudio } from "./sfx";
 import { menuOff } from "./menuscene";
@@ -21,7 +21,7 @@ export interface RunLoaderContext {
   setZone: (z: string, b: boolean) => void; showWorld: (v: boolean) => void;
   tpls: (() => unknown)[]; // plantillas que define main.ts (gema, pila, imán, baba)
   onExitMode: () => void;
-  clearRun: () => void; startRun: (daily: boolean) => void;
+  clearRun: () => void; startRun: (daily: boolean) => void; startLibre: () => void;
   setRun: { encore: (v: boolean) => void; coop: (v: number) => void; dailyInfo: (v: { date: string; seed: number } | null) => void; weeklyInfo: (v: { week: string; seed: number; regla: string } | null) => void; weeklyOn: (v: boolean) => void };
 }
 let c!: RunLoaderContext;
@@ -117,6 +117,12 @@ function enterDuel() {
 export function goDuel() {
   initAudio();
   void loadDuel().then(() => launch([T_EFECTOS], "Preparando demolición", () => enterDuel(), () => afterFrames(2)));
+}
+/** Free Roam: sin bichos ni plantillas de partida (no hay enemigos); solo autos, el mapa `libre` y los efectos. Lo llama el botón del menú principal. */
+export function goLibre() {
+  c.setRun.encore(false); c.setRun.coop(1); c.setRun.dailyInfo(null); c.setRun.weeklyInfo(null); c.setRun.weeklyOn(false);
+  initAudio();
+  void loadLibre().then(() => launch([T_AUTOS, worldTask(() => "libre"), T_EFECTOS], "Encendiendo el auto", () => c.startLibre(), () => afterFrames(2)));
 }
 function enterMatch3() {
   initAudio(); c.clearRun(); menuOff();

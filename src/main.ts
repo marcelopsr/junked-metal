@@ -9,7 +9,7 @@ import { ambient, burst, clearFx, contactShadows, corpse, debris, FX, fxSpeed, i
 import { activePad, btnName, camCycle, coopCtl, coopSkip, ctl, input, isTouch, keyHit, KEYS, KEYS2, padPressed, pads, padSnap, pb, pollInput, pollMate, pollPad, RACE, setupTouch } from "./input";
 import { carGlbProgress, loadCarGlbs } from "./carGlb";
 import { GLB, glbFootprint, glbProgress, glbStats, glbTpl, loadGlbs } from "./glb";
-import { initRunLoader, runTasks, loaderOk, T_BICHOS, T_EFECTOS, worldTask, afterFrames, launchRun, prefetchMode, goRace, goDuel, goMatch3, kartM, duelM, m3M } from "./run_loader";
+import { initRunLoader, runTasks, loaderOk, T_BICHOS, T_EFECTOS, worldTask, afterFrames, launchRun, prefetchMode, goRace, goDuel, goMatch3, goLibre, kartM, duelM, m3M } from "./run_loader";
 import { boot, bootEnd, ensure, ensureAll, idle, launch, preload, startPreload, times, type Task } from "./loading";
 import { carModel, cyl, enemyTemplate, initModels, LEGS, legTemplate, nutTemplate as nutTpl, sph, template, wingTemplate } from "./models";
 import { CAM_MODES, CAM_NAMES, type CamMode } from "./savefmt";
@@ -212,6 +212,7 @@ function recompute() {
 let preview: B.Mesh | null = null;
 
 function clearRun() {
+  libre = false;
   Object.assign(run, freshRun());
   mateClear();
   encClear(); GOAL_IO.tele = false; GOAL_IO.half = 0;
@@ -324,6 +325,36 @@ function startRun(d = false) {
 }
 let hintOn = false;
 const HINT_S = 7;
+
+// ---------- Free Roam (goLibre en run_loader.ts) ----------
+// ponytail: Free Roam reusa el estado "play" con este flag (cámara, pausa, modo foto y cartas ya funcionan); update() solo maneja, sin reloj, bichos ni derrota. Techo: un estado propio si el modo necesita su propia cámara o pausa.
+let libre = false;
+function startLibre() {
+  initAudio(); music("run", 0); musicS = "run";
+  if (!simulating) track("run_start", { mode: "libre", car: save.car });
+  menuOff();
+  clearRun(); // deja libre = false y la luz de la zona (ya armada como "libre")
+  libre = true;
+  setZone("libre"); setMoon(false);
+  run.runSeed = 20261015; seedRng(run.runSeed); // el mapa es fijo; la semilla solo define el perfil que lee la cámara
+  profile = makeProfile(run.runSeed);
+  profile.climate = zoneClimate() ?? profile.climate;
+  cycleS = -1;
+  buildLayout();
+  lead.car = new Car(scene, save.car, carOpts());
+  setScoop(save.car === "helado"); setEngineKind(save.car);
+  lead.maxHp = lead.car.def.hp;
+  recompute();
+  lead.hp = lead.maxHp; lead.boost = 100;
+  wasGrounded = true; coyoteT = 0; hintOn = false;
+  camYaw = 0; camReset(); resetOutroState(); fxSpeed(1); camH.set(0, 0, 1); camUp.set(0, 1, 0);
+  state = "play";
+  scene.physicsEnabled = false;
+  reset(null);
+  $("levelup").classList.add("hidden");
+  $("hud").classList.add("hidden"); // HUD mínimo: sin vida, XP ni reloj (el de libre lo hace otro encargo)
+  $("hint").classList.add("hidden");
+}
 
 // R6a: toda decisión de un jugador entra por acá (la costura para la red: el anfitrión aplicará los comandos de cada participante).
 // Hoy los menús y botones son locales y las mandan como el que guía; la compra en la máquina, como quien la activó.
@@ -552,11 +583,12 @@ addEventListener("keydown", (e) => {
 initRunLoader({ scene, cam, getState: () => state, setState: (s) => { state = s; }, zoneFor, setZone, showWorld,
   tpls: [() => gemTpl(1), () => gemTpl(5), () => gemTpl(20), pilaTpl, imanTpl, spitTpl],
   onExitMode: () => { state = "menu"; music("menu"); reset("main"); },
-  clearRun, startRun,
+  clearRun, startRun, startLibre,
   setRun: { encore: (v) => { encore = v; }, coop: (v) => { coop = v; }, dailyInfo: (v) => { dailyInfo = v; }, weeklyInfo: (v) => { weeklyInfo = v; }, weeklyOn: (v) => { weeklyOn = v; } } });
 preload(runTasks(() => zoneFor(false)), () => state === "menu");
 if (import.meta.env.DEV && /[?&]duel\b/.test(location.search)) setTimeout(() => goDuel(), 1500);
 if (import.meta.env.DEV && /[?&]match3\b/.test(location.search)) setTimeout(() => goMatch3(), 1500);
+if (import.meta.env.DEV) { Object.assign(window, { __libre: goLibre }); if (/[?&]libre\b/.test(location.search)) setTimeout(() => goLibre(), 1500); } // dev: __libre() o ?libre arrancan Free Roam
 // ponytail: el banco Folded (`?folded`, solo dev) reusa el estado "match3" (cámara libre, sin auto); un estado propio si crece
 if (import.meta.env.DEV && /[?&]folded\b/.test(location.search)) setTimeout(() => void launch([], "Banco Folded", () => {
   clearRun(); menuOff(); showWorld(false); state = "match3"; reset(null); $("hud").classList.add("hidden");
@@ -644,6 +676,7 @@ initRunDrive({
 
 function update(dt: number) {
   const c = lead.car!;
+  if (libre) { tickDrive({ c } as Frame, dt); return; } // Free Roam: solo manejo (sin reloj, spawner, armas ni vitales)
   run.time += dt;
   if (erun) { encApply(E.tick(erun, dt)); const d = E.dirTick(dirq, dt); if (d) { dirSub(d, E.ENC.dirShowS); if (!simulating && !LAB.on) SFX.radio((Object.values(E.TIPS) as string[]).includes(d)); } } // ENCORE: aterriza el teleportador, vencen las ventanas de decisión y votación
   const calm = erun?.phase === "vote" || erun?.phase === "final", tp = run.time + paceS, hordeK = run.horde * pfx.spawn; // calm: sin apariciones (solo el jefe del FINAL ACT); tp: reloj de dificultad
