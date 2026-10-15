@@ -27,7 +27,8 @@ const rivMat = () => M.metal("#aeb4bd");
 const rivets = (c: V3, hx: number, hy: number, ax: "z" | "x" | "y" = "z", d = 0.08): B.Mesh[] =>
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => sph(d, rivMat(), ax === "z" ? [c[0] + a * hx, c[1] + b * hy, c[2]] : ax === "x" ? [c[0], c[1] + b * hy, c[2] + a * hx] : [c[0] + a * hx, c[1], c[2] + b * hy], undefined, 4));
 // Ojo de vidrio con brasa ámbar (sin el blanco quemado de M.glow).
-const amberEye = () => pbr("ambarOjo4", { color: "#e0600c", emissive: "#4a1e04", rough: 0.55 });
+// Mate como eyeMatte de aliens.ts (rugosidad alta, sin metal: no hay especular que queme el centro amarillo); el color lo da el emisivo.
+const amberEye = () => pbr("ambarOjo5", { color: "#6a1a08", emissive: "#d8420c", rough: 0.95, metal: 0 });
 // Escala una lista de piezas (posición y tamaño) respecto del origen: acorta un modelo sin tocar cada coordenada.
 const shrink = (a: B.Mesh[], k: number) => a.map((m) => { m.position.scaleInPlace(k); m.scaling.scaleInPlace(k); return m; });
 // Placas finas pegadas a la superficie de un elipsoide (centro c, radios r): [azimut desde +z hacia +x, elevación]. Dan relieve donde worn() casi no se ve (esferas). Caja fina en z, orientada a la normal.
@@ -336,8 +337,11 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         box(0.26, 0.24, 0.5, br, [0, 0.56, -1.6], [-0.25, 0, 0]),
         box(0.84, 0.6, 0.55, br, [0, 0.62, 0.52]), box(0.92, 0.34, 0.7, g, [0, 1.0, 0.52], [0.12, 0, 0]), // tórax y silla (pronoto)
         box(0.62, 0.66, 0.62, g, [0, 0.74, 1.12], [0.1, 0, 0]), box(0.5, 0.36, 0.1, plate, [0, 0.55, 1.45]), // cabeza y placa de cara
-        ...rivets([0, 1.18, 0.5], 0.3, 0.2, "y", 0.06),
+        ...rivets([0, 1.18, 0.5], 0.3, 0.2, "y", 0.06), ...rivets([0, 0.84, 1.44], 0.2, 0.18, "z", 0.045), ...rivets([0, 0.62, 0.8], 0.3, 0.2, "z", 0.05), // remaches de pronoto, cara y tórax
         ...[-1, 1].flatMap((s) => [
+          ...[[0.68, 1.3, -0.62], [0.78, 1.05, -1.05]].map(([x, y, z]) => sph(0.1, br, [s * x, y, z], undefined, 4)), // remaches en el fémur
+          cyl(0.14, 0.14, 0.34, br, [s * 0.74, 1.8, -1.05], [0, 0, Math.PI / 2], 6), cyl(0.14, 0.14, 0.4, br, [s * 0.5, 0.72, -0.2], [0, 0, Math.PI / 2], 6), // tuercas en rodilla y cadera
+          box(0.3, 0.02, 0.5, plate, [s * 0.3, 1.075, -0.4], [0, 0, -s * 0.1]), box(0.18, 0.02, 0.3, plate, [s * 0.34, 1.075, -1.0], [0, 0, -s * 0.1]), // óxido saltado en los élitros
           box(0.12, 0.5, 0.7, g, [s * 0.46, 0.78, 0.52], [0, 0, s * 0.2]),
           box(0.5, 0.05, 1.7, g, [s * 0.3, 1.04, -0.65], [0, 0, -s * 0.1]), box(0.04, 0.04, 1.6, br, [s * 0.18, 1.08, -0.65]), box(0.04, 0.04, 1.5, br, [s * 0.42, 1.08, -0.65]), // élitros con nervios
           sph(0.5, eye, [s * 0.38, 0.86, 1.14], [0.8, 1, 1], 6), sph(0.2, core, [s * 0.46, 0.86, 1.3], undefined, 5), tor(0.52, 0.07, br, [s * 0.42, 0.86, 1.14], [0, 0, Math.PI / 2], 8), // ojo de vidrio con aro de bronce
@@ -381,9 +385,9 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         ...[-1, 1].flatMap((s) => Array.from({ length: 9 }, (_, i) => sph(0.36, i % 2 ? foot : b, [s * 0.66, 0.13, -1.7 + i * 0.44], [1, 0.45, 1.1], 4))), // falda ondulada
         sph(2, b, [0, 0.4, -0.35], [0.56, 0.3, 1.75], 10), sph(0.95, b, [0, 0.5, 1.45], [0.8, 0.75, 1.1], 8), // cuerpo largo y cabeza levantada
         ...plates([0, 0.4, -0.35], [0.56, 0.3, 1.75], [[0.3, 0.9], [-0.3, 0.9], [0.2, 0.9], [3.0, 0.8], [-3.0, 0.8], [3.14, 0.4], [1.3, 0.8], [-1.3, 0.8]], [shell, rim, foot], 0.36, 0.5),
-        cyl(1.5, 1.5, 0.85, shell, [0, 0.98, -0.2], [0, 0, Math.PI / 2], 9), // caparazón (disco de costado)
-        ...[-1, 1].flatMap((s) => [tor(1.45, 0.2, rim, [s * 0.44, 0.98, -0.2], [0, 0, Math.PI / 2], 9), tor(0.95, 0.17, rim, [s * 0.46, 0.98, -0.2], [0, 0, Math.PI / 2], 8), tor(0.5, 0.14, rim, [s * 0.47, 0.98, -0.2], [0, 0, Math.PI / 2], 6)]), // espiral
-        cyl(0.24, 0.24, 1.0, rim, [0, 0.98, -0.2], [0, 0, Math.PI / 2], 6),
+        sph(2, shell, [0, 0.6, -0.3], [0.72, 0.66, 1.15], 10), // joroba (ref267: domo sobre el lomo, no un disco)
+        tube(Array.from({ length: 40 }, (_, k): V3 => { const t = k / 39, a = t * 3 * Math.PI * 2, rr = 1 - 0.92 * t; return [0.745 * rr * Math.cos(a), 0.6 + 0.68 * Math.sqrt(1 - rr * rr), -0.3 + 1.18 * rr * Math.sin(a)]; }), 0.07, rim), // espiral de chapa sobre la joroba
+        ...rivets([0, 0.8, -0.3], 0.45, 0.7, "y", 0.05),
         ...[-1, 1].flatMap((s) => [
           cyl(0.07, 0.12, 0.9, dark, [s * 0.28, 1.15, 1.7], [0.3, 0, -s * 0.18], 5), sph(0.28, eye, [s * 0.36, 1.58, 1.83], undefined, 5), sph(0.12, pupil, [s * 0.37, 1.62, 1.97], undefined, 4), // tallo ocular
           cyl(0.04, 0.08, 0.4, dark, [s * 0.34, 0.5, 1.98], [1.1, 0, -s * 0.2], 4),
@@ -392,11 +396,13 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
     }
     // Comunes de ritmo medio: juguetes de chatarra de colores vivos (ver docs/ART_DIRECTION.md); frente = +Z
     if (kind === "kamikaze") { // bomba de caricatura con patas de resorte y mecha encendida
-      const body = worn("#b4401e"), band = M.matte("#2b2220"), fuse = M.glow("#ffd24a"), amber = amberEye();
+      const body = worn("#b4401e"), band = M.matte("#2b2220"), fuse = M.glow("#ffd24a"), amber = amberEye(), cream = worn("#d8c49a");
       return [
         sph(0.9, body, [0, 0.55, 0], [1, 0.95, 1.1], 10), tor(0.95, 0.08, band, [0, 0.55, 0], [Math.PI / 2, 0, 0], 12),
+        ...plates([0, 0.55, 0], [0.45, 0.43, 0.5], [[1.2, 0.55], [-1.2, 0.55], [0.4, 1.0], [-0.5, 0.95], [2.6, 0.5], [-2.6, 0.5], [3.14, 0.9], [1.0, -0.55], [-1.0, -0.55], [0, -0.75]], [cream, body], 0.22, 0.18), // parches crema y placas (ref283)
+        ...rivets([0, 0.94, 0.12], 0.2, 0.14, "y", 0.035),
         cyl(0.18, 0.22, 0.2, band, [0, 1.04, -0.05], undefined, 8), tube([[0, 1.1, -0.05], [0.12, 1.35, -0.12], [0.02, 1.55, -0.05]], 0.03, band), sph(0.2, fuse, [0.02, 1.58, -0.05], undefined, 5),
-        sph(0.2, amber, [0.22, 0.7, 0.5], undefined, 5), sph(0.2, amber, [-0.22, 0.7, 0.5], undefined, 5), ...rivets([0, 0.55, 0.8], 0.5, 0.35, "z", 0.06),
+        sph(0.2, amber, [0.22, 0.7, 0.5], undefined, 5), sph(0.2, amber, [-0.22, 0.7, 0.5], undefined, 5), ...rivets([0, 0.36, 0.46], 0.25, 0.08, "z", 0.04),
         sph(0.09, band, [0.22, 0.7, 0.62], undefined, 4), sph(0.09, band, [-0.22, 0.7, 0.62], undefined, 4),
         ...[-1, 1].map((x) => tube([[x * 0.3, 0.2, 0.1], [x * 0.38, 0.1, 0.25], [x * 0.3, 0, 0.4]], 0.06, band)),
       ];
