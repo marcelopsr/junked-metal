@@ -232,6 +232,9 @@ function gardenKit(put: Put) {
   put(bush(), -8, 10, -0.4, 4.5, 8, 4, 6);
   put(bush(), 24, 20, 0.6, 4.5, 8, 4, 6);
   put(bush(), -32, 16, 0.9, 4.5, 8, 4, 6);
+  put(bush(), -10, -4, 0.2, 4.5, 8, 4, 6); // primer plano izquierdo del cuadro (cámara de juego en 0,-18): silueta oscura grande en el pasto vacío
+  put(bush(), 4, -10, 0.5, 4.5, 8, 4, 6); // abajo al centro-derecha, sobre pasto
+  put(bush(), -17, 3, -0.7, 4.5, 8, 4, 6); // izquierda media (en cuadro: a z=3 el cuadro cubre x de -14 a 14 aprox.)
   put([...[0, 1, 2].map((k) => tor(5 - k * 0.9, 0.55, iron, [0, 0.55 + k * 0.6, 0], undefined, 14)), tube([[3, 0.5, 0], [5, 0.5, 2], [8, 0.4, 3.5]], 0.45, iron)], -2, 24, 0.3, 5, 10, 2.2, 10);
   put([rbox(7, 2.4, 2.6, 0.5, JP("#3a2412", 0.9), [0, 1.2, 0], [0, 0, 0.08]), cyl(1.1, 1.1, 0.12, JP("#6a4a2a", 0.9), [3.5, 1.2, 0], [0, 0, Math.PI / 2], 10), sph(2, JP("#3a3d42", 0.9), [-5, 1, 2.4], [1.3, 0.7, 1], 5)], 8, -16, 0.9, 4.5, 8, 2.4, 3);
 }

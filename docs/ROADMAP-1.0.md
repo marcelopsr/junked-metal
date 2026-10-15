@@ -57,3 +57,5 @@ Una expedición ENCORE completa, de punta a punta, que una persona nueva puede j
 | 2026-10-15 | Balance 1.0: sobrevivir 10 min con el bot en 40-55 % de las semillas (la curva actual); solo se corrigen picos injustos |
 | 2026-10-15 | Fuera de 1.0 (lista 1.1): online/ranking semanal sin pulir, habilidades activas nuevas de pilotos. Seguridad del servidor H6-H9 entra en 0.99 |
 | 2026-10-15 | Retratos de pilotos generados = arte final; sus modelos 3D se rehacen siguiendo esas imágenes |
+| 2026-10-15 | Sensación (SENSACION-0.93.md): mini-turbo chico al soltar un derrape largo; hitstop 25-40 ms con tope en golpes fuertes/embestida/élite/jefe; anticipación de 200-250 ms antes de las cartas de nivel y cofre |
+| 2026-10-15 | Accesibilidad: flecha discreta en el borde para ataques fuera de cámara (siempre); rayado amarillo y negro = peligro como regla de arte general; sacudida sigue prefers-reduced-motion; modo daltónico entra en la 1.0 |
