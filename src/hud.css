@@ -514,3 +514,21 @@ body.calm #dirSub { animation: none !important; }
 @media (pointer: coarse), (max-width: 720px) { .tut-skip { top: calc(max(10px, env(safe-area-inset-top)) + 66px); right: 8px; min-height: 44px; } }
 @media (max-width: 520px) { .sig-dbm, .sig-snr, .sig-pkt, .rx-div { display: none; } } /* celular: telemetría de radio (dBm, SNR, RX) fuera del HUD */
 body.photo #fe, body.photo #banner { display: none !important; } /* modo foto: el velo de la pausa (#fe, fondo 0.72) oscurecía la escena */
+
+/* ---------- Sensación (E2): viñeta de daño, pulso de XP, "+N" de tornillos, destello de anticipación. Solo opacity/transform ---------- */
+#vig { position: fixed; inset: 0; z-index: 7; pointer-events: none; opacity: 0; transition: opacity .2s ease-out; background: radial-gradient(ellipse at center, transparent 55%, rgba(229, 57, 53, .6) 100%); }
+#vig.on { opacity: var(--a, .5); transition: none; }
+#xp { transform-origin: left; }
+#signal .h-track.pulse { animation: xp-pulse .12s ease-out; transform-origin: left center; }
+@keyframes xp-pulse { 0% { transform: scale(1.06); } 100% { transform: scale(1); } }
+#dmg span.scrap { font-size: 22px; color: var(--jm-naranja, #fb8c00); -webkit-text-stroke: 4px #1a1d22; text-shadow: 0 3px 0 #1a1d22; }
+#antic { position: fixed; inset: 0; z-index: 8; pointer-events: none; opacity: 0; }
+#antic.nivel { background: radial-gradient(circle at center, rgba(66, 165, 245, .55), transparent 65%); animation: antic .23s ease-out; }
+#antic.cofre { background: radial-gradient(circle at center, rgba(251, 192, 45, .6), transparent 65%); animation: antic .23s ease-out; }
+@keyframes antic { 0% { opacity: 0; } 35% { opacity: 1; } 100% { opacity: 0; } }
+body.calm #vig { transition: none; background: none; box-shadow: inset 0 0 0 6px rgba(229, 57, 53, .6); } /* "Reducir parpadeos": borde fijo, sin degradado pulsante */
+body.calm #antic, body.calm #signal .h-track.pulse { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  #vig { transition: none; }
+  #antic, #signal .h-track.pulse { animation: none !important; }
+}

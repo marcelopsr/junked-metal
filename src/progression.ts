@@ -3,7 +3,7 @@ import { run } from "./run_state";
 import { BAL, xpNeed } from "./balance";
 import { save, keyName } from "./menu";
 import { SFX, engineStop } from "./sfx";
-import { banner, showOffers } from "./ui";
+import { banner, hudAntic, showOffers } from "./ui";
 import { btnName, isTouch, KEYS, pb } from "./input";
 import { tut, tutOffers } from "./tutorial";
 import { ACH, type AchId } from "./achievements";
@@ -18,6 +18,7 @@ import type { Enemy } from "./enemies";
 import type { Cmd } from "./main";
 
 const R = BAL.ritmo;
+const ANTICIPA_MS = 230; // ponytail: constante de sensación (decisión de producto 200-250 ms); a balance.json si se afina
 const $ = (id: string) => document.getElementById(id)!;
 
 // Progresión: XP, subida de nivel, cartas (ofertas, re-sorteo, elección) y cofres. Estado de partida: `run`; el resto entra por initProgression.
@@ -81,7 +82,9 @@ export function openOffers(list: Offer[], title: string, keep = false) {
   c.scene.physicsEnabled = false;
   c.setOffers(list);
   c.setOfferSel(0);
-  SFX.levelUp();
+  const chest = title.startsWith("Cofre");
+  if (!keep && !c.simulating) { chest ? SFX.cofre() : SFX.levelUp(); hudAntic(chest ? "cofre" : "nivel"); } // anticipación: destello + sonido, las cartas entran ANTICIPA_MS después
+  else if (!c.simulating) SFX.levelUp();
   engineStop();
   const car = c.lead.car!;
   let near = 0, bossNear = false;
@@ -93,7 +96,9 @@ export function openOffers(list: Offer[], title: string, keep = false) {
   const threat = bossNear ? "boss" : near ? "near" : "";
   const sub = bossNear ? "Jefe en radio corto" : near ? `${near} contacto${near === 1 ? "" : "s"} en radio` : "";
   const show = () => showOffers(title, list, 0, (i) => (mine ? c.applyCommand(cardBy, { k: "card", i }) : show()), previewOffer, mine ? sub : `Elige J${cardBy}`, mine ? threat : "");
-  show();
+  // El mundo ya está congelado (estado "level"); solo se retrasa el panel. Sin retraso al re-sortear, en sim ni en el lab.
+  if (keep || c.simulating || c.lab.on) show();
+  else setTimeout(() => { if (c.state === "level" && c.offers === list) show(); }, ANTICIPA_MS);
   run.offerTitle = title;
   const frac = c.lead.hp / c.lead.maxHp;
   $("luHpFill").style.transform = `scaleX(${frac})`;

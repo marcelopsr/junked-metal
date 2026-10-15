@@ -385,6 +385,12 @@ export const SFX = {
   },
   pickup: () => gate("pickup", 12) && (tone("triangle", 520, 1040, 0.12, 0.15), tone("triangle", 780, 1560, 0.12, 0.1, 0.06)),
   levelUp: () => [523, 659, 784, 1047].forEach((f, i) => tone("square", f, f, 0.12, 0.07, i * 0.07)),
+  // Cofre: crujido de tapa + levelUp una octava abajo y en tono ámbar (triangle, más cálido que el cuadrado del nivel)
+  cofre: () => {
+    hiss("highpass", 3000, 900, 0.12, 0.14);
+    tone("sawtooth", 180, 90, 0.1, 0.08);
+    [262, 330, 392, 523].forEach((f, i) => tone("triangle", f, f, 0.14, 0.09, 0.05 + i * 0.07));
+  },
   boss: () => {
     // Rugido sordo grave
     tone("sawtooth", 70, 40, 1.2, 0.3);

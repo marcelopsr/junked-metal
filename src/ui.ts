@@ -53,6 +53,7 @@ let currentSag = 0;
 let lastSagTime = 0;
 let lastRfChirp = 0;
 let lastLipoWarn = 0;
+let lastXpPulse = 0;
 export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: number; need: number; level: number; pending?: number; time: number; kills: number; kmh: number; maxKmh: number; shield?: boolean; boostActive?: boolean; distCenter?: number; heat?: number }) {
   const now = performance.now();
   const p = Math.max(0, d.hp / d.maxHp);
@@ -254,6 +255,12 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("boostFull", +(d.boost >= 100))) $("boost").classList.toggle("full", d.boost >= 100);
   hudTurbo(d.boost / 100);
   bar("xp", Math.min(1, d.xp / d.need) * 100);
+  const prevXp = memo.xpN as number | undefined;
+  memo.xpN = d.xp;
+  if (prevXp !== undefined && d.xp > prevXp && now - lastXpPulse > 80) { // pulso de la barra al recoger (freno de 80 ms)
+    lastXpPulse = now;
+    const tr = $("xp").parentElement!; tr.classList.remove("pulse"); void tr.offsetWidth; tr.classList.add("pulse");
+  }
   const prevLv = memo.lvN as number | undefined;
   const lvTxt = `NV ${pad(d.level, 2)}${d.pending ? ` +${d.pending}` : ""}`;
   if (ch("lvlTxt", lvTxt)) $("lvl").textContent = lvTxt;
@@ -276,6 +283,27 @@ export function hudUpdate(d: { hp: number; maxHp: number; boost: number; xp: num
   if (ch("spdTop", +(s >= 0.9))) (document.getElementById("spd") ?? $("txr")).classList.toggle("top", s >= 0.9);
   if (ch("blaze", +(s >= 0.95))) $("txr").classList.toggle("blazing", s >= 0.95);
   txt("kmh", String(Math.round(Math.abs(d.kmh))));
+}
+
+// Capas de efecto sobre la pantalla (DOM, solo opacity): viñeta de daño y destello de anticipación. Se crean al primer uso.
+function layer(id: string) {
+  return document.getElementById(id) ?? document.body.appendChild(Object.assign(document.createElement("div"), { id }));
+}
+let vigTimer = 0;
+/** Viñeta roja de 200 ms al recibir daño. frac = daño / vida máxima (0-1); más daño, borde más intenso. Con calm queda un borde fijo y tenue (sin transición). */
+export function hudHurt(frac: number) {
+  const v = layer("vig");
+  v.style.setProperty("--a", String(Math.min(1, 0.35 + frac * 3).toFixed(2)));
+  v.classList.add("on");
+  clearTimeout(vigTimer);
+  vigTimer = window.setTimeout(() => v.classList.remove("on"), 200);
+}
+/** Destello de anticipación (≈230 ms) antes de las cartas: "nivel" cian, "cofre" ámbar. */
+export function hudAntic(kind: "nivel" | "cofre") {
+  const a = layer("antic");
+  a.className = "";
+  void a.offsetWidth;
+  a.className = kind;
 }
 
 let glitchTimer = 0;
@@ -661,13 +689,20 @@ export function uiTick(dt: number, live = true) {
 type Num = { e: HTMLSpanElement; x: number; y: number; vy: number; life: number };
 const nums: Num[] = [];
 const free: HTMLSpanElement[] = [];
-export function damageNumber(x: number, y: number, v: number, crit: boolean) {
+function pushNum(text: string, cls: string, x: number, y: number) {
   if (nums.length > 60) return;
   const e = free.pop() ?? $("dmg").appendChild(document.createElement("span"));
-  e.textContent = `${Math.round(v)}${crit ? "!" : ""}`;
-  e.className = crit ? "crit" : "";
+  e.textContent = text;
+  e.className = cls;
   e.style.display = "";
   nums.push({ e, x: x + (Math.random() - 0.5) * 20, y, vy: -90 - Math.random() * 40, life: 0.7 });
+}
+export function damageNumber(x: number, y: number, v: number, crit: boolean) {
+  pushNum(`${Math.round(v)}${crit ? "!" : ""}`, crit ? "crit" : "", x, y);
+}
+/** "+N" de tornillos al recoger. Sin coordenadas sale sobre el auto (centro, algo arriba), como el resto de los números. */
+export function scrapNumber(n: number, x = innerWidth / 2, y = innerHeight * 0.4) {
+  pushNum(`+${Math.round(n)}`, "scrap", x, y);
 }
 function tickNumbers(dt: number) {
   for (let i = nums.length - 1; i >= 0; i--) {
