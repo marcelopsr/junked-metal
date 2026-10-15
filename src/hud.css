@@ -568,12 +568,12 @@ body.calm #antic, body.calm #signal .h-track.pulse { animation: none !important;
 @media (max-width: 700px) { #barrio { left: 8px; translate: 0; max-width: calc(100vw - 130px); font-size: 22px; } } /* celular: a la izquierda del radar */
 /* Paseo libre: cartel de truco (pegatina roja), contador en vuelo y tuercas doradas; bajo el cartel del barrio para no tapar al auto */
 #truco, #aire, #tuercas { position: absolute; pointer-events: none; font-family: "Bebas Neue", sans-serif; text-transform: uppercase; }
-#truco { left: 50%; top: 76px; translate: -50% 0; display: none; padding: 8px 20px 6px; background: var(--jm-rojo); color: #fff; border-radius: 4px; box-shadow: 0 3px 0 #000; text-align: center; transform: rotate(-2deg); }
+#truco { left: 50%; bottom: 96px; translate: -50% 0; display: none; padding: 5px 14px 3px; background: var(--jm-rojo); color: #fff; border-radius: 4px; box-shadow: 0 3px 0 #000; text-align: center; transform: rotate(-2deg); }
 #truco.show { display: block; animation: trucoIn .18s cubic-bezier(0, 0, .2, 1); }
-#truco b { display: block; font-weight: 400; font-size: 34px; line-height: 1; letter-spacing: .06em; }
-#truco i { display: block; font-style: normal; font-size: 26px; line-height: 1.1; color: #ffd84d; }
-#truco small { display: block; font-size: 18px; letter-spacing: .1em; }
-#truco.sucio { background: #3a3d44; color: #aab0ba; } #truco.sucio i { color: #aab0ba; font-size: 18px; }
+#truco b { display: block; font-weight: 400; font-size: 24px; line-height: 1; letter-spacing: .06em; }
+#truco i { display: block; font-style: normal; font-size: 20px; line-height: 1.1; color: #ffd84d; }
+#truco small { display: block; font-size: 14px; letter-spacing: .1em; }
+#truco.sucio { background: #3a3d44; color: #aab0ba; } #truco.sucio i { color: #aab0ba; font-size: 14px; }
 @keyframes trucoIn { from { opacity: 0; transform: scale(1.35) rotate(-2deg); } }
 #aire { left: 50%; top: 76px; translate: -50% 0; display: none; font-size: 26px; letter-spacing: .08em; color: #fff; text-shadow: 0 2px 0 #000, 0 0 6px #000; }
 #aire.show { display: block; }
@@ -593,5 +593,5 @@ body.calm #antic, body.calm #signal .h-track.pulse { animation: none !important;
 #desafio.fin { background: var(--jm-rojo); transform: rotate(-2deg); box-shadow: 0 3px 0 #000; } #desafio.fin b, #desafio.fin small { color: #fff; }
 @media (max-width: 700px) { #desafio { top: 100px; right: auto; left: 8px; min-width: 0; padding: 4px 8px 3px; text-align: left; } #desafio b { display: none; } #desafio i { font-size: 28px; } #desafio small { font-size: 13px; } }
 @media (prefers-reduced-motion: reduce) { #truco.show, #tuercas.pop { animation: none; } }
-@media (max-width: 700px) { #tuercas { top: 62px; left: 8px; font-size: 20px; } #truco { top: 100px; } #truco b { font-size: 26px; } #aire { top: 100px; font-size: 22px; } }
+@media (max-width: 700px) { #tuercas { top: 62px; left: 8px; font-size: 20px; } #truco { bottom: auto; top: 150px; } #truco b { font-size: 20px; } #aire { top: 100px; font-size: 22px; } }
 #hud.libre #radar::after { display: none; } /* sin "▲ BASE": en Paseo libre no hay centro al que volver */

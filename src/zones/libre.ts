@@ -54,12 +54,12 @@ export function libreBuild() {
   // Plaza central (r 40): losa cálida, fuente baja, 6 faroles y cartel de barrios (una placa de color por barrio, sin texto)
   const disc = B.MeshBuilder.CreateDisc("plaza", { radius: 40, tessellation: 48 }, scene);
   disc.rotation.x = Math.PI / 2; disc.position.y = 0.035; uvm(disc, 80, 80, TP); disc.material = plazaTx; plazaTx.zOffset = -3; disc.receiveShadows = true;
-  const blue = pbr("libreAgua", { color: "#4fc3f7", rough: 0.15 }), lamp = pbr("libreFarol", { color: "#fff3c0", rough: 0.3, emissive: "#ffd98a" }), dark = pbr("librePoste", { color: "#23262b", rough: 0.6 }), deco: B.Mesh[] = [];
+  const blue = pbr("libreAgua", { color: "#4fc3f7", rough: 0.15 }), lamp = pbr("libreFarol", { color: "#e8d9a8", rough: 0.4, emissive: "#8a6a30" }), dark = pbr("librePoste", { color: "#23262b", rough: 0.6 }), deco: B.Mesh[] = [];
   deco.push(cyl(11.2, 12, 0.7, tile, [0, 0.35, 0], undefined, 24), cyl(9, 9, 0.12, blue, [0, 0.76, 0], undefined, 24), cyl(1, 1.4, 2.6, tile, [0, 1.3, 0], undefined, 12));
   hidden(stat(cyl(12, 12, 0.8, tile, [0, 0, 0], undefined, 12), B.PhysicsShapeType.CYLINDER, {}, [0, 0.4, 0]));
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2 + 0.52, x = Math.cos(a) * 34, z = Math.sin(a) * 34;
-    deco.push(cyl(0.3, 0.4, 7, dark, [x, 3.5, z]), cyl(1.1, 1.1, 1.1, lamp, [x, 7.2, z], undefined, 10));
+    deco.push(cyl(0.3, 0.4, 7, dark, [x, 3.5, z]), cyl(0.6, 0.6, 0.7, lamp, [x, 7.1, z], undefined, 10));
     hidden(stat(cyl(0.8, 0.8, 3, tile, [0, 0, 0]), B.PhysicsShapeType.CYLINDER, {}, [x, 1.5, z]));
   }
   deco.push(cyl(0.3, 0.3, 6, dark, [10, 3, 10]));

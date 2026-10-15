@@ -14,7 +14,8 @@ import { CARS, type Car } from "./car";
 import { carModel } from "./models";
 import { photoOn, photoApply } from "./photo-mode";
 import { evFog } from "./moon_events";
-import { ambient, tickRain } from "./fx";
+import { ambient, burst, tickRain } from "./fx";
+import { roam } from "./free_tricks";
 import { boostFov } from "./run_drive";
 import { HOLE, LOOK, setDof, setLamp, shadows } from "./render";
 import { underRoof, zoneDust } from "./world";
@@ -54,7 +55,7 @@ export interface CameraContext {
 let c!: CameraContext;
 export function initCameraRig(x: CameraContext) { c = x; }
 const _camM = new B.Matrix();
-let roofK = 0, dynK = 1, moteT = 0, flyT = 0;
+let roofK = 0, dynK = 1, moteT = 0, flyT = 0, speedK = 0, zoomK = 0, windT = 0, prevAir = 0, libreK = 0; // Paseo libre: FOV por velocidad, zum al caer, estelas, mezcla hacia la cámara alta
 export const camReset = () => { dynK = 1; };
 
 // Modos de cámara de partida (Configuración → Juego, se alternan con Cambiar cámara). back/up = metros detrás y arriba (por el zoom del usuario),
@@ -124,7 +125,19 @@ export function cameraTick(dt: number) {
       ambient("fly", new B.Vector3(c.lead.car.pos.x + Math.cos(a) * r, 0.5 + Math.random() * 2.5, c.lead.car.pos.z + Math.sin(a) * r));
     }
     fovK += (boostFov() - fovK) * (1 - Math.exp(-(boostFov() > fovK ? 18 : 6) * dt)); // sube rápido, baja suave
-    c.cam.fov = ((save.fov + fovK) * Math.PI) / 180 * DIORAMA_FOV; // Campo de visión (Configuración → Imagen): solo en partida; los encuadres de los menús usan el de fábrica
+    // Paseo libre (solo roam.on): FOV abierto con la velocidad (hasta +6° desde 18 m/s), zum corto al caer de un salto, estelas de viento; calm lo apaga todo salvo la cámara alta
+    libreK += ((roam.on && c.state === "play" ? 1 : 0) - libreK) * (1 - Math.exp(-3 * dt));
+    const spd = roam.on ? c.lead.car.body.getLinearVelocity().length() : 0;
+    speedK += ((save.calm ? 0 : B.Scalar.Clamp((spd - 18) / 12, 0, 1)) - speedK) * (1 - Math.exp(-3 * dt));
+    if (roam.on && prevAir > 0.5 && roam.air < 0.1 && !save.calm) zoomK = 1; // aterrizó tras un vuelo largo
+    prevAir = roam.air; zoomK = Math.max(0, zoomK - dt * 2.5);
+    if (roam.on && !save.calm && !c.simulating && spd > 22 && (windT -= dt) <= 0) {
+      windT = 0.05; const f = c.lead.car.root.forward, a = Math.random() * 6.283, r = 4 + Math.random() * 3;
+      burst(c.lead.car.pos.add(new B.Vector3(f.x * 6 + Math.cos(a) * r, 1 + Math.random() * 3.5, f.z * 6 + Math.sin(a) * r)), { n: 1, color: "#ffffff", size: [0.04, 0.09], power: [0, 0], life: [0.25, 0.4], gravity: 0 });
+    }
+    fovK += speedK * 6 - zoomK * 3;
+    c.cam.fov = ((save.fov + fovK) * Math.PI) / 180 * DIORAMA_FOV;
+    fovK -= speedK * 6 - zoomK * 3; // fovK es el filtro del turbo: el extra de libre no se acumula // Campo de visión (Configuración → Imagen): solo en partida; los encuadres de los menús usan el de fábrica
     const back = MOON.on ? W(Math.sin(yaw), 0, Math.cos(yaw), c.lead.car.pos) : new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw)); // luna: c.camYaw es del marco local del auto
     // Bajo la mesa la cámara baja y se acerca (roofK suaviza entrar y salir); afuera vuelve al zoom del usuario
     roofK += ((underRoof(c.lead.car.pos) ? 1 : 0) - roofK) * (1 - Math.exp(-3 * dt));
@@ -140,10 +153,10 @@ export function cameraTick(dt: number) {
     const lab = c.lab.on && save.camMode === "actual", P = CAMS.actual;
     // Celular vertical: mirar un poco detrás del auto lo sube en pantalla, por encima de los botones táctiles (SALTO y DERRAPE lo tapaban)
     const tl = isTouch && !c.lab.on && c.state === "play" && save.camMode !== "cenital" && c.engine.getAspectRatio(c.cam) < 1 ? 4 : 0; // solo en juego y fuera de la cenital; bajo techo se funde igual que el resto
-    const gb = B.Scalar.Lerp(lab ? c.lab.back : cm2.back, P.back, roofK), gl = B.Scalar.Lerp(cm2.look - tl, P.look, roofK);
+    const gb = B.Scalar.Lerp(lab ? c.lab.back : cm2.back, P.back, roofK), gl = B.Scalar.Lerp(cm2.look - tl + 7 * libreK, P.look, roofK);
     let gu = B.Scalar.Lerp(lab ? c.lab.up : cm2.up, P.up, roofK);
-    const zm = (c.lab.on ? 1 : save.zoom) * DIORAMA_DIST * outroZ * (save.camMode === "dinamica" ? dynK : 1) * (MOON.on ? 0.82 : 1), zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
-    gu *= zu;
+    const zm = (c.lab.on ? 1 : save.zoom) * DIORAMA_DIST * (1 + 0.5 * libreK) * outroZ * (save.camMode === "dinamica" ? dynK : 1) * (MOON.on ? 0.82 : 1), zb = B.Scalar.Lerp(zm, 0.7, roofK), zu = B.Scalar.Lerp(zm, 0.4, roofK);
+    gu *= zu * (1 + 0.3 * libreK); // Paseo libre: más alta y lejana para ver horizonte y próximo salto
     if (save.camMode === "cenital") { // la esquina del cuadro (a ras del piso) no pasa del anillo de aparición menos 3 m, con cualquier zoom, FOV y aspecto
       const th = Math.tan(c.cam.fov / 2), asp = c.engine.getAspectRatio(c.cam);
       gu = Math.min(gu * (asp < 1 ? 1.8 : 1), (R.spawn_anillo_min - 3) / Math.hypot(th, th * asp));
@@ -169,7 +182,7 @@ export function cameraTick(dt: number) {
     // Profundidad de campo de maqueta: foco en el auto, medido sobre el eje de la cámara (igual que en los menús)
     if (c.low) setDof(0); else {
       const fwd = c.camTarget.subtract(c.cam.position).normalize(), fd = Math.max(1, B.Vector3.Dot(c.lead.car.pos.subtract(c.cam.position), fwd));
-      const k = LOOK.dof * B.Scalar.Clamp((DOF_OFF - fd) / (DOF_OFF - DOF_FULL), 0, 1); // cámara alta/lejos: el desenfoque se apaga (a 45 m o menos pleno, a 90 m o más nada)
+      const k = LOOK.dof * (1 - 0.6 * libreK) * B.Scalar.Clamp((DOF_OFF - fd) / (DOF_OFF - DOF_FULL), 0, 1); // cámara alta/lejos: el desenfoque se apaga (a 45 m o menos pleno, a 90 m o más nada)
       if (k < 0.02) setDof(0); else setDof(fd, k);
     }
   } else {
