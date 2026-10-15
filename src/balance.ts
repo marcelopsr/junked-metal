@@ -21,13 +21,8 @@ export const BAL = {
   pilotos: tab("pilotos", raw.pilotos),
   precios: tab("precios", raw.precios),
   plagas: raw.plagas,
-  duelo: lista("duelo", raw.duelo),
-  dueloBloques: tab("duelo_bloques", raw.duelo_bloques),
-  dueloChasis: tab("duelo_chasis", raw.duelo_chasis),
-  dueloRuedas: tab("duelo_ruedas", raw.duelo_ruedas),
-  dueloArmas: tab("duelo_armas", raw.duelo_armas),
-  dueloRival: tab("duelo_rival", raw.duelo_rival),
   pactosZonas: tab("pactos_zonas", raw.pactos_zonas),
+  pactos: tab("pactos", raw.pactos),
 };
 
 // Precio de cada nivel de una mejora (el largo es el nivel máximo): las columnas nivel1..nivel10 en 0 no existen

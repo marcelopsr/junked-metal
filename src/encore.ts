@@ -3,6 +3,7 @@
 // Decisiones de diseño: D-005 (cuatro escenarios por ciclo), D-025 (teleportador), D-031 (votación ENCORE! / FINAL ACT), D-029 (jefe final fijo), pactos (docs/ENCORE/01_DESIGN/08_PACTS.md).
 
 import type { Kind } from "./enemies";
+import { BAL } from "./balance";
 
 export const ENC = {
   // ponytail: todos los valores son provisorios y sin playtest (docs/ENCORE/R0/R1_SLICE.md); se afinan con el playbook "Que duela quedarse".
@@ -184,26 +185,33 @@ export function bossDown(r: Run): Ev | null {
 export type Fx = { dmg: number; speed: number; maxHp: number; xp: number; scrap: number; spawn: number; taken: number; regen: number };
 export type Pact = { id: string; name: string; tag: string; stages: number; gain: Partial<Fx> & { heal?: number }; cost: Partial<Fx> & { heal?: number }; secret?: string; zona?: [string, "gain" | "cost"] }; // zona: línea de la carta que nombra la zona del piso (src/pact_zones.ts) y de qué lado cae
 // ponytail: valores provisorios y sin playtest; el voto de equipo, el secreto y los pactos QUICK del diseño necesitan cooperativo y quedan fuera.
-export const PACTS: Pact[] = [
-  { id: "garantia", name: "SALUD EN GARANTÍA", tag: "GARANTÍA", stages: Infinity, gain: { dmg: 1.35 }, cost: { maxHp: 0.7 } },
-  { id: "sorpresa", name: "PRODUCCIÓN SORPRESA", tag: "SORPRESA", stages: 2, gain: { xp: 1.5 }, cost: { spawn: 1.3 }, zona: ["ZONA FOCO EN EL PISO: XP x2", "gain"] },
-  { id: "chatarra", name: "DOBLE O CHATARRA", tag: "CHATARRA", stages: Infinity, gain: { scrap: 1.5 }, cost: { spawn: 1.25 } },
-  { id: "patrocinio", name: "PATROCINIO DEFECTUOSO", tag: "PATROCINIO", stages: 2, gain: { speed: 1.2 }, cost: { taken: 1.25 }, zona: ["ZONA CABLES PELADOS EN EL PISO: DAÑAN", "cost"] },
-  { id: "maquillaje", name: "RETOQUE DE MAQUILLAJE", tag: "RETOQUE", stages: 2, gain: { heal: 0.6 }, cost: { dmg: 0.8 }, zona: ["ZONA CAMERINO EN EL PISO: CURA", "gain"] },
-  { id: "ensayo", name: "ENSAYO GENERAL", tag: "ENSAYO", stages: 2, gain: { dmg: 1.15, speed: 1.15 }, cost: { taken: 1.2 } },
-  { id: "entradas", name: "ENTRADAS AGOTADAS", tag: "ENTRADAS", stages: Infinity, gain: { xp: 1.25, scrap: 1.25 }, cost: { maxHp: 0.8, spawn: 1.15 } },
-  { id: "blindaje", name: "CAMERINO BLINDADO", tag: "BLINDAJE", stages: 2, gain: { maxHp: 1.3 }, cost: { speed: 0.85 }, zona: ["ZONA PEGAMENTO EN EL PISO: FRENA", "cost"] },
-  { id: "seguro", name: "SEGURO DE ESCENA", tag: "SEGURO", stages: 2, gain: { regen: 1, taken: 0.85 }, cost: { dmg: 0.85 } },
-  { id: "nocturno", name: "PROGRAMA NOCTURNO", tag: "NOCTURNO", stages: 1, gain: { regen: 2 }, cost: { spawn: 1.4 }, zona: ["ZONA TRAMPILLA EN EL PISO: ESCUPE ENEMIGOS", "cost"] },
-  { id: "cobro", name: "COBRO AL FINAL", tag: "COBRO", stages: 2, gain: { scrap: 1.6 }, cost: { xp: 0.75 }, zona: ["ZONA IMÁN EN EL PISO: ATRAE TORNILLOS", "gain"] },
-  { id: "bis", name: "¿UN BIS?", tag: "BIS", stages: 3, gain: { dmg: 1.25, xp: 1.25 }, cost: { spawn: 1.35 } },
-  { id: "permanencia", name: "CLÁUSULA DE PERMANENCIA", tag: "PERMANENCIA", stages: Infinity, gain: { regen: 1, maxHp: 1.2 }, cost: { taken: 1.2, scrap: 0.85 } },
+type PactTxt = Omit<Pact, "stages" | "gain" | "cost">;
+// Números de la tabla `pactos` de balance.json: columnas g_<efecto> (ventaja) y c_<efecto> (costo); el valor neutro (1, o 0 en regen/heal) = el pacto no lo toca.
+const pactNums = (t: PactTxt): Pact => {
+  const row = BAL.pactos[t.id] as unknown as Record<string, number>;
+  const side = (s: string) => Object.fromEntries(["dmg", "speed", "maxHp", "xp", "scrap", "spawn", "taken", "regen", "heal"].map((k) => [k, row[`${s}_${k}`]]).filter(([k, v]) => v !== (k === "regen" || k === "heal" ? 0 : 1)));
+  return { ...t, stages: row.etapas || Infinity, gain: side("g"), cost: side("c") };
+};
+export const PACTS: Pact[] = ([
+  { id: "garantia", name: "SALUD EN GARANTÍA", tag: "GARANTÍA" },
+  { id: "sorpresa", name: "PRODUCCIÓN SORPRESA", tag: "SORPRESA", zona: [`ZONA FOCO EN EL PISO: XP x${BAL.pactosZonas.foco.valor}`, "gain"] },
+  { id: "chatarra", name: "DOBLE O CHATARRA", tag: "CHATARRA" },
+  { id: "patrocinio", name: "PATROCINIO DEFECTUOSO", tag: "PATROCINIO", zona: ["ZONA CABLES PELADOS EN EL PISO: DAÑAN", "cost"] },
+  { id: "maquillaje", name: "RETOQUE DE MAQUILLAJE", tag: "RETOQUE", zona: ["ZONA CAMERINO EN EL PISO: CURA", "gain"] },
+  { id: "ensayo", name: "ENSAYO GENERAL", tag: "ENSAYO" },
+  { id: "entradas", name: "ENTRADAS AGOTADAS", tag: "ENTRADAS" },
+  { id: "blindaje", name: "CAMERINO BLINDADO", tag: "BLINDAJE", zona: ["ZONA PEGAMENTO EN EL PISO: FRENA", "cost"] },
+  { id: "seguro", name: "SEGURO DE ESCENA", tag: "SEGURO" },
+  { id: "nocturno", name: "PROGRAMA NOCTURNO", tag: "NOCTURNO", zona: ["ZONA TRAMPILLA EN EL PISO: ESCUPE ENEMIGOS", "cost"] },
+  { id: "cobro", name: "COBRO AL FINAL", tag: "COBRO", zona: ["ZONA IMÁN EN EL PISO: ATRAE TORNILLOS", "gain"] },
+  { id: "bis", name: "¿UN BIS?", tag: "BIS" },
+  { id: "permanencia", name: "CLÁUSULA DE PERMANENCIA", tag: "PERMANENCIA" },
   // Pactos del Director: uno por secreto del perfil, solo se ofrecen con ese secreto descubierto (más fuertes que los comunes; el costo habla del arco).
-  { id: "aplausos", name: "APLAUSOS ENLATADOS", tag: "APLAUSOS", stages: 2, gain: { dmg: 1.5 }, cost: { xp: 0.7 }, secret: "aplausos" }, // la ovación no tiene cable: nadie aprende nada de ella
-  { id: "audiencia", name: "PÚBLICO FANTASMA", tag: "PÚBLICO", stages: 2, gain: { xp: 1.6, scrap: 1.4 }, cost: { maxHp: 0.75 }, secret: "audiencia" }, // cero espectadores: el aforo se paga con carrocería
-  { id: "eco", name: "TOMA REPETIDA", tag: "TOMA", stages: 2, gain: { regen: 2, dmg: 1.2 }, cost: { spawn: 1.4 }, secret: "eco" }, // la escena se repite, y los enemigos con ella
-  { id: "bambalinas", name: "SEÑAL IMPOSIBLE", tag: "SEÑAL", stages: 2, gain: { speed: 1.3, dmg: 1.25 }, cost: { taken: 1.35 }, secret: "bambalinas" }, // llega de donde no hay emisor, y golpea igual
-];
+  { id: "aplausos", name: "APLAUSOS ENLATADOS", tag: "APLAUSOS", secret: "aplausos" }, // la ovación no tiene cable: nadie aprende nada de ella
+  { id: "audiencia", name: "PÚBLICO FANTASMA", tag: "PÚBLICO", secret: "audiencia" }, // cero espectadores: el aforo se paga con carrocería
+  { id: "eco", name: "TOMA REPETIDA", tag: "TOMA", secret: "eco" }, // la escena se repite, y los enemigos con ella
+  { id: "bambalinas", name: "SEÑAL IMPOSIBLE", tag: "SEÑAL", secret: "bambalinas" }, // llega de donde no hay emisor, y golpea igual
+] as PactTxt[]).map(pactNums);
 export const pactOf = (id: string): Pact => PACTS.find((p) => p.id === id)!;
 export const NO_FX: Fx = { dmg: 1, speed: 1, maxHp: 1, xp: 1, scrap: 1, spawn: 1, taken: 1, regen: 0 };
 const FX_KEYS = Object.keys(NO_FX) as (keyof Fx)[];
