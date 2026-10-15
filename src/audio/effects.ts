@@ -628,6 +628,7 @@ export const FREE = {
   bounce: () => gate("f-bo", 4) && (tone("sine", 160, 700, 0.22, 0.1), tone("triangle", 320, 1400, 0.18, 0.04, 0.02)), // boing
   slide: () => gate("f-sl", 3) && hiss("bandpass", 1500, 1100, 0.4, 0.035), // se llama en cada cuadro mientras desliza: la compuerta arma el loop
   ice: () => gate("f-ice", 3) && (hiss("highpass", 5200, 4200, 0.4, 0.03), tone("sine", 2400, 2300, 0.3, 0.012)),
+  toy: (k: 0 | 1 | 2) => gate("f-toy" + k, 8) && (k === 0 ? (tone("triangle", 900, 500, 0.08, 0.05), hiss("bandpass", 2400, 1800, 0.05, 0.03)) : k === 1 ? tone("sine", 220, 120, 0.16, 0.07) : (tone("square", 300, 180, 0.05, 0.04), hiss("bandpass", 1200, 700, 0.07, 0.04))), // golpe de juguete: plástico, pelota, madera/bloque
   sign: () => gate("f-sg", 1) && [660, 880].forEach((f, i) => tone("triangle", f, f, 0.12, 0.05, i * 0.1)),
 };
 let lavaG: GainNode | null = null, shipN: { g: GainNode; f: BiquadFilterNode; o: OscillatorNode[]; p: StereoPannerNode } | null = null;
