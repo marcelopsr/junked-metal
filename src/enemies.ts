@@ -89,6 +89,11 @@ export const BEAST_PORTRAITS: Partial<Record<Kind, string>> = {
   aspiradora: "./images/beasts/beast-aspiradora.webp",
   cortacercos: "./images/beasts/beast-cortacercos.webp",
   caja: "./images/beasts/beast-caja.webp",
+  brincador: "./images/beasts/beast-brincador.webp",
+  cohete: "./images/beasts/beast-cohete.webp",
+  cria: "./images/beasts/beast-cria.webp",
+  curandero: "./images/beasts/beast-curandero.webp",
+  divisor: "./images/beasts/beast-divisor.webp",
 };
 
 export const ROAR = ATK.fase2_rugido_s; // segundos que un jefe ruge, quieto, al entrar en fase 2

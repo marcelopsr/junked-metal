@@ -1,0 +1,7 @@
+{
+  "source": "capataz-imagegen",
+  "model": "gemini-3.1-flash-image",
+  "prompt": "Front-facing character card portrait of a splitter blob bug, pink segmented toy creature with a visible seam down the middle ready to split in two. Premium miniature toy creature, chunky beveled low-poly shapes, painted pixel clusters, chipped paint showing grey metal, rivets. Dead-centre frontal view, subject fills about 70 percent of a square frame, same camera height. Plain dark charcoal blue-grey backdrop (#1a1d22) with a soft warm rim light from the upper left and a faint red edge glow. No text, no letters, no logos, no frame, no border, no watermark.",
+  "date": "2026-10-15T15:28:20.854Z",
+  "final_output": "public/images/beasts/beast-divisor.webp"
+}
