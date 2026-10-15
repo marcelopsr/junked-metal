@@ -1,0 +1,582 @@
+{
+ "intro": true,
+ "novedadesVistas": "2026-10-01",
+ "scrap": 7420,
+ "best": 2210,
+ "perm": {
+  "hp": 6,
+  "dmg": 5,
+  "spd": 3,
+  "mag": 2,
+  "reroll": 1,
+  "cards": 1,
+  "extra": 0,
+  "revive": 1,
+  "xp": 4,
+  "arm": 2,
+  "reg": 1,
+  "tur": 0,
+  "ram": 1,
+  "cdr": 2
+ },
+ "cars": [
+  "buggy",
+  "monster",
+  "helado",
+  "tanque"
+ ],
+ "car": "tanque",
+ "pilot": "robot",
+ "unlocked": [
+  "zone:patio",
+  "zone:garaje",
+  "zone:jardin",
+  "arma:clips",
+  "arma:chispero",
+  "arma:agua",
+  "arma:yoyo"
+ ],
+ "kit": {
+  "wing": "serie",
+  "decal": "nada",
+  "lamp": "calido",
+  "exhaust": "nada",
+  "bumper": "nada",
+  "tires": "serie",
+  "acc": "nada"
+ },
+ "paint": "",
+ "trim": "",
+ "rim": "",
+ "finish": "",
+ "zoom": 1.35,
+ "camMode": "actual",
+ "mute": false,
+ "vol": {
+  "master": 1,
+  "sfx": 1,
+  "engine": 1,
+  "music": 0.7
+ },
+ "lookv": 6,
+ "shake": true,
+ "fps": false,
+ "hudSolid": false,
+ "hint": true,
+ "gfxv": 2,
+ "gpu": "webgl",
+ "scaler": "fsr",
+ "scale": 0.75,
+ "fsr": "equilibrado",
+ "aa": "fxaa",
+ "sharpen": 0.4,
+ "preset": "alto",
+ "shadowQ": "high",
+ "detail": "alto",
+ "texRes": 512,
+ "aniso": 8,
+ "bloom": true,
+ "fpsCap": 60,
+ "menuFps": 60,
+ "fov": 49,
+ "bright": 1,
+ "gamma": 1,
+ "keys": {
+  "up": [
+   "KeyW",
+   "ArrowUp"
+  ],
+  "down": [
+   "KeyS",
+   "ArrowDown"
+  ],
+  "left": [
+   "KeyA",
+   "ArrowLeft"
+  ],
+  "right": [
+   "KeyD",
+   "ArrowRight"
+  ],
+  "boost": [
+   "Space",
+   ""
+  ],
+  "drift": [
+   "ShiftLeft",
+   "ShiftRight"
+  ],
+  "jump": [
+   "KeyF",
+   ""
+  ],
+  "ability": [
+   "KeyE",
+   ""
+  ],
+  "cam": [
+   "KeyC",
+   ""
+  ],
+  "spin": [
+   "KeyQ",
+   ""
+  ],
+  "reroll": [
+   "KeyR",
+   ""
+  ],
+  "pause": [
+   "Escape",
+   "KeyP"
+  ],
+  "mute": [
+   "KeyM",
+   ""
+  ],
+  "zoomIn": [
+   "Equal",
+   "NumpadAdd"
+  ],
+  "zoomOut": [
+   "Minus",
+   "NumpadSubtract"
+  ]
+ },
+ "pad": {
+  "dead": 0.2,
+  "sens": 1.3,
+  "invX": false,
+  "invY": true,
+  "stick": "left",
+  "mode": "stick",
+  "btn": {
+   "accel": [
+    7
+   ],
+   "brake": [
+    6
+   ],
+   "boost": [
+    0
+   ],
+   "drift": [
+    1
+   ],
+   "ability": [
+    2
+   ],
+   "jump": [
+    4
+   ],
+   "spin": [
+    5
+   ],
+   "reroll": [
+    3
+   ],
+   "cam": [
+    8
+   ],
+   "pause": [
+    9
+   ],
+   "ok": [
+    0
+   ],
+   "back": [
+    1
+   ]
+  }
+ },
+ "race": {
+  "kb1": {
+   "up": [
+    "KeyW",
+    ""
+   ],
+   "down": [
+    "KeyS",
+    ""
+   ],
+   "left": [
+    "KeyA",
+    ""
+   ],
+   "right": [
+    "KeyD",
+    ""
+   ],
+   "drift": [
+    "Space",
+    "ShiftLeft"
+   ],
+   "item": [
+    "KeyE",
+    "KeyQ"
+   ]
+  },
+  "kb2": {
+   "up": [
+    "ArrowUp",
+    ""
+   ],
+   "down": [
+    "ArrowDown",
+    ""
+   ],
+   "left": [
+    "ArrowLeft",
+    ""
+   ],
+   "right": [
+    "ArrowRight",
+    ""
+   ],
+   "drift": [
+    "ShiftRight",
+    "Period"
+   ],
+   "item": [
+    "Enter",
+    "Comma"
+   ]
+  },
+  "pad": {
+   "accel": [
+    7,
+    0
+   ],
+   "brake": [
+    6,
+    1
+   ],
+   "drift": [
+    5,
+    2
+   ],
+   "item": [
+    3,
+    4
+   ]
+  }
+ },
+ "tlay": {
+  "v": {
+   "stick": {
+    "x": 0.2,
+    "y": 0.8,
+    "s": 1.2
+   }
+  },
+  "h": {}
+ },
+ "profiles": [
+  {
+   "name": "Joystick sala",
+   "keys": {
+    "up": [
+     "KeyW",
+     "ArrowUp"
+    ],
+    "down": [
+     "KeyS",
+     "ArrowDown"
+    ],
+    "left": [
+     "KeyA",
+     "ArrowLeft"
+    ],
+    "right": [
+     "KeyD",
+     "ArrowRight"
+    ],
+    "boost": [
+     "Space",
+     ""
+    ],
+    "drift": [
+     "ShiftLeft",
+     "ShiftRight"
+    ],
+    "jump": [
+     "KeyF",
+     ""
+    ],
+    "ability": [
+     "KeyE",
+     ""
+    ],
+    "cam": [
+     "KeyC",
+     ""
+    ],
+    "spin": [
+     "KeyQ",
+     ""
+    ],
+    "reroll": [
+     "KeyR",
+     ""
+    ],
+    "pause": [
+     "Escape",
+     "KeyP"
+    ],
+    "mute": [
+     "KeyM",
+     ""
+    ],
+    "zoomIn": [
+     "Equal",
+     "NumpadAdd"
+    ],
+    "zoomOut": [
+     "Minus",
+     "NumpadSubtract"
+    ]
+   },
+   "pad": {
+    "dead": 0.2,
+    "sens": 1.3,
+    "invX": false,
+    "invY": true,
+    "stick": "left",
+    "mode": "stick",
+    "btn": {
+     "accel": [
+      7
+     ],
+     "brake": [
+      6
+     ],
+     "boost": [
+      0
+     ],
+     "drift": [
+      1
+     ],
+     "ability": [
+      2
+     ],
+     "jump": [
+      4
+     ],
+     "spin": [
+      5
+     ],
+     "reroll": [
+      3
+     ],
+     "cam": [
+      8
+     ],
+     "pause": [
+      9
+     ],
+     "ok": [
+      0
+     ],
+     "back": [
+      1
+     ]
+    }
+   },
+   "race": {
+    "kb1": {
+     "up": [
+      "KeyW",
+      ""
+     ],
+     "down": [
+      "KeyS",
+      ""
+     ],
+     "left": [
+      "KeyA",
+      ""
+     ],
+     "right": [
+      "KeyD",
+      ""
+     ],
+     "drift": [
+      "Space",
+      "ShiftLeft"
+     ],
+     "item": [
+      "KeyE",
+      "KeyQ"
+     ]
+    },
+    "kb2": {
+     "up": [
+      "ArrowUp",
+      ""
+     ],
+     "down": [
+      "ArrowDown",
+      ""
+     ],
+     "left": [
+      "ArrowLeft",
+      ""
+     ],
+     "right": [
+      "ArrowRight",
+      ""
+     ],
+     "drift": [
+      "ShiftRight",
+      "Period"
+     ],
+     "item": [
+      "Enter",
+      "Comma"
+     ]
+    },
+    "pad": {
+     "accel": [
+      7,
+      0
+     ],
+     "brake": [
+      6,
+      1
+     ],
+     "drift": [
+      5,
+      2
+     ],
+     "item": [
+      3,
+      4
+     ]
+    }
+   },
+   "tlay": {
+    "v": {},
+    "h": {}
+   },
+   "touch": 1
+  },
+  null,
+  null
+ ],
+ "rumble": false,
+ "touch": 1.1,
+ "hud": 1.2,
+ "calm": true,
+ "dmgNums": true,
+ "tranquilo": true,
+ "tutorialHecho": true,
+ "controlesVistos": true,
+ "decals": [
+  "7777",
+  "decal:x",
+  ""
+ ],
+ "decalSel": 1,
+ "stats": {
+  "runs": 30,
+  "wins": 5,
+  "time": 21000,
+  "dist": 120000,
+  "dmg": {
+   "yoyo": 20000
+  },
+  "zone": {
+   "patio": {
+    "t": 8000,
+    "kills": 3000
+   },
+   "jardin": {
+    "t": 5000,
+    "kills": 1500
+   }
+  }
+ },
+ "seen": [
+  "hormiga",
+  "gato",
+  "polilla"
+ ],
+ "slain": {
+  "hormiga": 3000,
+  "gato": 200,
+  "polilla": 90
+ },
+ "beast": {
+  "gato": {
+   "first": "2026-09-30",
+   "hurt": 1200,
+   "by": {
+    "yoyo": 900
+   },
+   "zones": [
+    "patio",
+    "jardin"
+   ]
+  }
+ },
+ "runs": [
+  {
+   "t": 900,
+   "kills": 700,
+   "lv": 15,
+   "seed": 11,
+   "win": true
+  }
+ ],
+ "daily": {
+  "day": "",
+  "best": 0
+ },
+ "zone": "jardin",
+ "ach": [
+  "gana_buggy",
+  "gana_monster"
+ ],
+ "ability": "lenta",
+ "curses": [
+  "horda",
+  "sinrep"
+ ],
+ "endless": 612,
+ "abilLv": {
+  "bombardeo": 3,
+  "escudo": 2,
+  "emp": 1
+ },
+ "weapon": "yoyo",
+ "encore": {
+  "best": {
+   "loop": 3,
+   "stage": 4,
+   "t": 1800
+  },
+  "wins": 1,
+  "runs": 9,
+  "lastLoop": 3,
+  "lastCause": "Se acabó la nafta",
+  "secrets": [],
+  "tips": [],
+  "seenPacts": [],
+  "seenVariants": []
+ },
+ "m3": {
+  "stars": {
+   "1": 3,
+   "2": 3,
+   "3": 3,
+   "4": 2
+  },
+  "best": {
+   "1": 6000,
+   "4": 3000
+  },
+  "tools": {
+   "martillo": 3
+  }
+ }
+}

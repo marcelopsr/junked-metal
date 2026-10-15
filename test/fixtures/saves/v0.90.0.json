@@ -1,0 +1,363 @@
+{
+ "intro": true,
+ "novedadesVistas": "",
+ "scrap": 840,
+ "best": 412,
+ "perm": {
+  "hp": 2,
+  "dmg": 1,
+  "spd": 0,
+  "mag": 0,
+  "reroll": 0,
+  "cards": 0,
+  "extra": 0,
+  "revive": 0,
+  "xp": 0,
+  "arm": 0,
+  "reg": 0,
+  "tur": 0,
+  "ram": 0,
+  "cdr": 0
+ },
+ "cars": [
+  "buggy",
+  "monster"
+ ],
+ "car": "monster",
+ "pilot": "soldadito",
+ "unlocked": [
+  "zone:patio",
+  "arma:clips"
+ ],
+ "kit": {
+  "wing": "serie",
+  "decal": "nada",
+  "lamp": "calido",
+  "exhaust": "nada",
+  "bumper": "nada",
+  "tires": "serie",
+  "acc": "nada"
+ },
+ "paint": "#d62828",
+ "trim": "",
+ "rim": "",
+ "finish": "",
+ "zoom": 1.35,
+ "camMode": "actual",
+ "mute": true,
+ "vol": {
+  "master": 1,
+  "sfx": 1,
+  "engine": 1,
+  "music": 0.7
+ },
+ "lookv": 6,
+ "shake": true,
+ "fps": false,
+ "hudSolid": false,
+ "hint": true,
+ "gfxv": 2,
+ "gpu": "webgl",
+ "scaler": "simple",
+ "scale": 0.75,
+ "fsr": "calidad",
+ "aa": "none",
+ "sharpen": 0,
+ "preset": "medio",
+ "shadowQ": "mid",
+ "detail": "medio",
+ "texRes": 256,
+ "aniso": 4,
+ "bloom": true,
+ "fpsCap": 0,
+ "menuFps": 60,
+ "fov": 49,
+ "bright": 1,
+ "gamma": 1,
+ "keys": {
+  "up": [
+   "KeyW",
+   "ArrowUp"
+  ],
+  "down": [
+   "KeyS",
+   "ArrowDown"
+  ],
+  "left": [
+   "KeyA",
+   "ArrowLeft"
+  ],
+  "right": [
+   "KeyD",
+   "ArrowRight"
+  ],
+  "boost": [
+   "Space",
+   ""
+  ],
+  "drift": [
+   "ShiftLeft",
+   "ShiftRight"
+  ],
+  "jump": [
+   "KeyF",
+   ""
+  ],
+  "ability": [
+   "KeyE",
+   ""
+  ],
+  "cam": [
+   "KeyC",
+   ""
+  ],
+  "spin": [
+   "KeyQ",
+   ""
+  ],
+  "reroll": [
+   "KeyR",
+   ""
+  ],
+  "pause": [
+   "Escape",
+   "KeyP"
+  ],
+  "mute": [
+   "KeyM",
+   ""
+  ],
+  "zoomIn": [
+   "Equal",
+   "NumpadAdd"
+  ],
+  "zoomOut": [
+   "Minus",
+   "NumpadSubtract"
+  ]
+ },
+ "pad": {
+  "dead": 0.15,
+  "sens": 1,
+  "invX": false,
+  "invY": false,
+  "stick": "left",
+  "mode": "trig",
+  "btn": {
+   "accel": [
+    7
+   ],
+   "brake": [
+    6
+   ],
+   "boost": [
+    0
+   ],
+   "drift": [
+    1
+   ],
+   "ability": [
+    2
+   ],
+   "jump": [
+    4
+   ],
+   "spin": [
+    5
+   ],
+   "reroll": [
+    3
+   ],
+   "cam": [
+    8
+   ],
+   "pause": [
+    9
+   ],
+   "ok": [
+    0
+   ],
+   "back": [
+    1
+   ]
+  }
+ },
+ "race": {
+  "kb1": {
+   "up": [
+    "KeyW",
+    ""
+   ],
+   "down": [
+    "KeyS",
+    ""
+   ],
+   "left": [
+    "KeyA",
+    ""
+   ],
+   "right": [
+    "KeyD",
+    ""
+   ],
+   "drift": [
+    "Space",
+    "ShiftLeft"
+   ],
+   "item": [
+    "KeyE",
+    "KeyQ"
+   ]
+  },
+  "kb2": {
+   "up": [
+    "ArrowUp",
+    ""
+   ],
+   "down": [
+    "ArrowDown",
+    ""
+   ],
+   "left": [
+    "ArrowLeft",
+    ""
+   ],
+   "right": [
+    "ArrowRight",
+    ""
+   ],
+   "drift": [
+    "ShiftRight",
+    "Period"
+   ],
+   "item": [
+    "Enter",
+    "Comma"
+   ]
+  },
+  "pad": {
+   "accel": [
+    7,
+    0
+   ],
+   "brake": [
+    6,
+    1
+   ],
+   "drift": [
+    5,
+    2
+   ],
+   "item": [
+    3,
+    4
+   ]
+  }
+ },
+ "tlay": {
+  "v": {},
+  "h": {}
+ },
+ "profiles": [
+  null,
+  null,
+  null
+ ],
+ "rumble": true,
+ "touch": 1,
+ "hud": 1,
+ "calm": false,
+ "dmgNums": true,
+ "tranquilo": false,
+ "tutorialHecho": true,
+ "controlesVistos": true,
+ "decals": [
+  "",
+  "",
+  ""
+ ],
+ "decalSel": -1,
+ "stats": {
+  "runs": 3,
+  "wins": 0,
+  "time": 904,
+  "dist": 5120,
+  "dmg": {
+   "gomitas": 900,
+   "clips": 400
+  },
+  "zone": {
+   "patio": {
+    "t": 904,
+    "kills": 160
+   }
+  }
+ },
+ "seen": [
+  "hormiga",
+  "escupidora"
+ ],
+ "slain": {
+  "hormiga": 120,
+  "escupidora": 14
+ },
+ "beast": {
+  "hormiga": {
+   "first": "2026-09-20",
+   "hurt": 300,
+   "by": {
+    "gomitas": 250
+   },
+   "zones": [
+    "patio"
+   ]
+  }
+ },
+ "runs": [
+  {
+   "t": 301,
+   "kills": 140,
+   "lv": 6,
+   "seed": 7,
+   "win": false
+  }
+ ],
+ "daily": {
+  "day": "",
+  "best": 0
+ },
+ "zone": "patio",
+ "ach": [],
+ "ability": "bombardeo",
+ "curses": [],
+ "endless": 0,
+ "abilLv": {},
+ "weapon": "clips",
+ "encore": {
+  "best": {
+   "loop": 1,
+   "stage": 2,
+   "t": 380
+  },
+  "wins": 0,
+  "runs": 1,
+  "lastLoop": 0,
+  "lastCause": "",
+  "secrets": [],
+  "tips": [],
+  "seenPacts": [],
+  "seenVariants": []
+ },
+ "m3": {
+  "stars": {
+   "1": 3,
+   "2": 2
+  },
+  "best": {
+   "1": 4200
+  },
+  "tools": {
+   "martillo": 1
+  }
+ }
+}

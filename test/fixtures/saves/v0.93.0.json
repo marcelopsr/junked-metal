@@ -1,0 +1,375 @@
+{
+ "intro": true,
+ "novedadesVistas": "2026-10-08",
+ "scrap": 12900,
+ "best": 3050,
+ "perm": {
+  "hp": 8,
+  "dmg": 7,
+  "spd": 4,
+  "mag": 3,
+  "reroll": 2,
+  "cards": 2,
+  "extra": 1,
+  "revive": 2,
+  "xp": 6,
+  "arm": 3,
+  "reg": 2,
+  "tur": 1,
+  "ram": 2,
+  "cdr": 3
+ },
+ "cars": [
+  "buggy",
+  "monster",
+  "helado",
+  "tanque",
+  "formula"
+ ],
+ "car": "formula",
+ "pilot": "dino",
+ "unlocked": [
+  "zone:patio",
+  "zone:garaje",
+  "zone:jardin",
+  "zone:luna",
+  "arma:clips",
+  "arma:chispero",
+  "arma:agua",
+  "arma:yoyo",
+  "arma:regla"
+ ],
+ "kit": {
+  "wing": "serie",
+  "decal": "nada",
+  "lamp": "calido",
+  "exhaust": "nada",
+  "bumper": "nada",
+  "tires": "serie",
+  "acc": "nada"
+ },
+ "paint": "",
+ "trim": "",
+ "rim": "",
+ "finish": "finish:perla",
+ "zoom": 1.35,
+ "camMode": "actual",
+ "mute": false,
+ "vol": {
+  "master": 1,
+  "sfx": 1,
+  "engine": 1,
+  "music": 0.7
+ },
+ "lookv": 6,
+ "shake": false,
+ "fps": false,
+ "hudSolid": false,
+ "hint": true,
+ "gfxv": 2,
+ "gpu": "webgl",
+ "scaler": "simple",
+ "scale": 0.75,
+ "fsr": "calidad",
+ "aa": "none",
+ "sharpen": 0,
+ "preset": "medio",
+ "shadowQ": "mid",
+ "detail": "medio",
+ "texRes": 256,
+ "aniso": 4,
+ "bloom": true,
+ "fpsCap": 0,
+ "menuFps": 30,
+ "fov": 49,
+ "bright": 1.1,
+ "gamma": 0.9,
+ "keys": {
+  "up": [
+   "KeyW",
+   "ArrowUp"
+  ],
+  "down": [
+   "KeyS",
+   "ArrowDown"
+  ],
+  "left": [
+   "KeyA",
+   "ArrowLeft"
+  ],
+  "right": [
+   "KeyD",
+   "ArrowRight"
+  ],
+  "boost": [
+   "Space",
+   ""
+  ],
+  "drift": [
+   "ShiftLeft",
+   "ShiftRight"
+  ],
+  "jump": [
+   "KeyF",
+   ""
+  ],
+  "ability": [
+   "KeyE",
+   ""
+  ],
+  "cam": [
+   "KeyC",
+   ""
+  ],
+  "spin": [
+   "KeyQ",
+   ""
+  ],
+  "reroll": [
+   "KeyR",
+   ""
+  ],
+  "pause": [
+   "Escape",
+   "KeyP"
+  ],
+  "mute": [
+   "KeyM",
+   ""
+  ],
+  "zoomIn": [
+   "Equal",
+   "NumpadAdd"
+  ],
+  "zoomOut": [
+   "Minus",
+   "NumpadSubtract"
+  ]
+ },
+ "pad": {
+  "dead": 0.15,
+  "sens": 1,
+  "invX": false,
+  "invY": false,
+  "stick": "left",
+  "mode": "trig",
+  "btn": {
+   "accel": [
+    7
+   ],
+   "brake": [
+    6
+   ],
+   "boost": [
+    0
+   ],
+   "drift": [
+    1
+   ],
+   "ability": [
+    2
+   ],
+   "jump": [
+    4
+   ],
+   "spin": [
+    5
+   ],
+   "reroll": [
+    3
+   ],
+   "cam": [
+    8
+   ],
+   "pause": [
+    9
+   ],
+   "ok": [
+    0
+   ],
+   "back": [
+    1
+   ]
+  }
+ },
+ "race": {
+  "kb1": {
+   "up": [
+    "KeyW",
+    ""
+   ],
+   "down": [
+    "KeyS",
+    ""
+   ],
+   "left": [
+    "KeyA",
+    ""
+   ],
+   "right": [
+    "KeyD",
+    ""
+   ],
+   "drift": [
+    "Space",
+    "ShiftLeft"
+   ],
+   "item": [
+    "KeyE",
+    "KeyQ"
+   ]
+  },
+  "kb2": {
+   "up": [
+    "ArrowUp",
+    ""
+   ],
+   "down": [
+    "ArrowDown",
+    ""
+   ],
+   "left": [
+    "ArrowLeft",
+    ""
+   ],
+   "right": [
+    "ArrowRight",
+    ""
+   ],
+   "drift": [
+    "ShiftRight",
+    "Period"
+   ],
+   "item": [
+    "Enter",
+    "Comma"
+   ]
+  },
+  "pad": {
+   "accel": [
+    7,
+    0
+   ],
+   "brake": [
+    6,
+    1
+   ],
+   "drift": [
+    5,
+    2
+   ],
+   "item": [
+    3,
+    4
+   ]
+  }
+ },
+ "tlay": {
+  "v": {},
+  "h": {}
+ },
+ "profiles": [
+  null,
+  null,
+  null
+ ],
+ "rumble": true,
+ "touch": 1,
+ "hud": 1,
+ "calm": false,
+ "dmgNums": false,
+ "tranquilo": false,
+ "tutorialHecho": true,
+ "controlesVistos": true,
+ "decals": [
+  "",
+  "",
+  ""
+ ],
+ "decalSel": -1,
+ "stats": {
+  "runs": 52,
+  "wins": 12,
+  "time": 40000,
+  "dist": 260000,
+  "dmg": {
+   "regla": 41000,
+   "yoyo": 20000
+  },
+  "zone": {
+   "luna": {
+    "t": 6000,
+    "kills": 2000
+   }
+  }
+ },
+ "seen": [],
+ "slain": {
+  "hormiga": 6000,
+  "tarantula": 40
+ },
+ "beast": {},
+ "runs": [
+  {
+   "t": 1200,
+   "kills": 1300,
+   "lv": 20,
+   "seed": 21,
+   "win": true
+  }
+ ],
+ "daily": {
+  "day": "",
+  "best": 0
+ },
+ "zone": "luna",
+ "ach": [
+  "gana_buggy",
+  "gana_monster",
+  "gana_formula"
+ ],
+ "ability": "turbo",
+ "curses": [],
+ "endless": 900,
+ "abilLv": {
+  "bombardeo": 4,
+  "escudo": 3,
+  "emp": 2,
+  "lenta": 1,
+  "turbo": 2
+ },
+ "weapon": "regla",
+ "encore": {
+  "best": {
+   "loop": 4,
+   "stage": 5,
+   "t": 2600
+  },
+  "wins": 3,
+  "runs": 21,
+  "lastLoop": 4,
+  "lastCause": "Jefe final",
+  "secrets": [],
+  "tips": [],
+  "seenPacts": [],
+  "seenVariants": []
+ },
+ "m3": {
+  "stars": {
+   "1": 3,
+   "2": 3,
+   "3": 3,
+   "4": 3,
+   "5": 2
+  },
+  "best": {
+   "1": 6500,
+   "5": 3900
+  },
+  "tools": {
+   "martillo": 3,
+   "bomba": 2
+  }
+ },
+ "cb": true
+}
