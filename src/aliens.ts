@@ -3,8 +3,7 @@
 // (procedurales con caminata horneada: glb.ts los trata como un bicho Folded más) y su IA; enemies.ts y glb.ts solo los registran.
 // Los 8: enjambre, tirador de onda, saltador lunar, emboscador de cráter, flotante, tanque, explosivo y curandero. Solo aparecen en la luna (spawnTable).
 import * as B from "@babylonjs/core";
-import { FOLD } from "./folded";
-import { along, kit, piv } from "./folded_slice";
+import { along, kit, piv, toy } from "./folded_slice";
 import { pbr, shadows } from "./render";
 import { cyl, template, tor, sph, hazardMat } from "./models";
 import { BAL } from "./balance";
@@ -25,8 +24,13 @@ const GREEN = "#7dff5a", CYAN = "#3ff2ff";
 const glow = (c: string) => { const m = pbr("alienGlow" + c, { color: c, rough: 0.3, emissive: c }); m.fogEnabled = false; m.emissiveIntensity = 2; return m; };
 // Paleta de chapa gastada (ref169/171/173): óxido de casco, crema saltada de placas, bronce de articulaciones, rojo de pintura; la luz alien solo vive en ojos
 // (eye) y en lo que el juego lee por color: núcleo y mecha del explosivo, reactor del tanque, rayo/onda (glow verde/cian).
-const hull = () => FOLD.painted("#8a3a1e", 0.85, 81), plate = () => FOLD.painted("#c9b48a", 0.8, 82), shell = () => FOLD.painted("#4a2a18", 0.7, 86);
-const bronze = () => FOLD.painted("#a8803c", 0.6, 87), olive = () => FOLD.painted("#5b6130", 0.8, 85), red = () => FOLD.painted("#c42a14", 0.7, 88);
+// Diorama de juguete (toy de folded_slice.ts): plástico y metal pintado liso. FOLD local = los mismos nombres que usaban los cuerpos, ahora con material toy.
+const FOLD = {
+  dark: () => toy("alOscuro", "#26211f", { rough: 0.7 }), bare: () => toy("alAcero", "#8a8782", { rough: 0.4, metal: 0.8 }),
+  painted: (c: string, _w?: number, _s?: number) => toy("alP" + c, c, { rough: 0.5, metal: 0.25 }),
+};
+const hull = () => toy("alCasco", "#b0482a", { rough: 0.5, metal: 0.3 }), plate = () => toy("alPlaca", "#d8c69a", { rough: 0.55 }), shell = () => toy("alCaparazon", "#5a3520", { rough: 0.6, metal: 0.2 });
+const bronze = () => toy("alLaton", "#c0923f", { rough: 0.4, metal: 0.8 }), olive = () => toy("alOliva", "#6e7a38", { rough: 0.55, metal: 0.2 }), red = () => toy("alRojo", "#d4321a", { rough: 0.5 });
 const eye = () => { const m = pbr("alienOjo", { color: "#a82a10", emissive: "#ff4a1a", rough: 0.3 }); m.fogEnabled = false; m.emissiveIntensity = 2; return m; };
 // Ojo mate de enjambre y saltador: sin brillo especular (la ficha lo lavaba a amarillo pálido), emisivo rojo-naranja moderado
 const eyeMatte = () => { const m = pbr("alienOjoMate", { color: "#6a1a08", emissive: "#e0400c", rough: 0.95, metal: 0 }); m.fogEnabled = false; m.emissiveIntensity = 1.1; return m; };
@@ -70,7 +74,6 @@ function swarmBody() {
     const n = Math.hypot(dx, dy, dz);
     G.cyl(0.01, 0.2, plate(), [dx / n * 0.3, 0.34 + dy / n * 0.3, dz / n * 0.3], [Math.asin(dz / n), 0, -Math.asin(dx / n)], 5, 0.07);
   }
-  G.rivets([-0.2, 0.3, 0.22], [0.2, 0.3, 0.22], 4, [0, 0, 1]);
   legs(K, SW_HIPS, [0.2, 0.12, 0], [0.4, -0.28, 0.02], 0.045, 1);
   return K.done(1.4);
 }
@@ -83,7 +86,6 @@ function shooterBody() {
   const K = kit(), { G, bone } = K, g = eye(), br = bronze();
   along(G, 0.62, 0.5, 0.62, hull(), [0, 0.62, 0]);
   along(G, 0.68, 0.68, 0.06, br, [0, 0.62, 0.08]); // faja de bronce
-  G.rivets([-0.24, 0.8, 0.31], [0.24, 0.8, 0.31], 5, [0, 0, 1]);
   G.plate([0, 0.94, -0.02], [Math.PI / 2, 0, 0], 0.36, 0.44, plate());
   G.cyl(0.3, 0.2, shell(), [0, 0.3, 0], undefined, 6, 0.12); // panza
   for (const s of [-1, 1]) G.box(0.1, 0.06, 0.04, g, [s * 0.12, 0.7, 0.31]); // ojos
@@ -113,7 +115,6 @@ function jumperBody() {
   G.sph(0.25, sh, [0, 0.8, 0.27]); // cuenca oscura
   G.sph(0.21, g, [0, 0.8, 0.33]); // ojo grande
   G.sph(0.09, FOLD.dark(), [0, 0.8, 0.52]); // pupila
-  G.rivets([-0.22, 0.6, 0.3], [0.22, 0.6, 0.3], 4, [0, 0.3, 1]);
   const coil = (a: V3, z: number) => { // resorte en hélice (6 vueltas, 4 tramos por vuelta) desde la panza (a[1] = tope) hasta el plato de pie
     const N = 24, R = 0.075, pt = (k: number): V3 => { const t = k / N, an = t * 6 * Math.PI * 2; return [a[0] + R * Math.cos(an), a[1] + (0.04 - a[1]) * t, a[2] + z * t + R * Math.sin(an)]; };
     G.cyl(0.2, 0.04, br, [a[0], a[1], a[2]], undefined, 8, 0.2); // tapa de bronce pegada a la esfera
@@ -142,8 +143,6 @@ function ambushBody() {
   const K = kit(), { G, strut, bone } = K, g = eye(), lid = FOLD.painted("#6b6a2e", 0.8, 83);
   G.box(1.05, 0.3, 1.0, hull(), [0, 0.38, 0]);
   G.box(1.3, 0.08, 1.2, lid, [0, 0.56, -0.02]); // tapa (se confunde con el regolito)
-  for (const x of [-0.3, 0.3]) G.bend([x, 0.61, -0.55], [x, 0.61, 0.5], 0.03, lid);
-  G.rivets([-0.6, 0.6, 0.56], [0.6, 0.6, 0.56], 7, [0, 0, 1]);
   G.box(0.7, 0.07, 0.04, FOLD.dark(), [0, 0.36, 0.51]); // boca
   for (const [x, z, h, t] of [[-0.55, 0.3, 0.6, 0.35], [0.55, 0.3, 0.7, -0.35], [-0.35, -0.5, 0.8, 0.2], [0.4, -0.5, 0.55, -0.2], [0, -0.6, 0.65, 0]]) G.cyl(0.01, h, plate(), [x, 0.56 + h / 2, z], [0.15, 0, t], 5, 0.18); // estacas de roca (ref169)
   for (const [x, y] of [[-0.18, 0.47], [0.18, 0.47], [0, 0.5]]) G.sph(0.1, g, [x, y, 0.5]); // ojos
@@ -201,8 +200,6 @@ function tankBody() {
   G.box(1.2, 0.08, 1.3, plate(), [0, 0.95, -0.12]); // techo
   G.box(1.56, 1.0, 0.16, armor, [0, 0.62, 0.8], [-0.3, 0, 0]); // placa frontal: tapa todo el frente
   for (const s of [-1, 1]) G.box(0.14, 0.82, 0.5, armor, [s * 0.74, 0.62, 0.6], [0, -s * 0.35, 0]); // alas de la placa
-  G.rivets([-0.62, 1.04, 0.69], [0.62, 1.04, 0.69], 8, [0, 0.3, 1]);
-  G.rivets([-0.62, 0.22, 0.95], [0.62, 0.22, 0.95], 8, [0, 0.3, 1]);
   for (const s of [-1, 1]) G.box(0.16, 0.1, 0.05, g, [s * 0.22, 0.76, 0.88], [-0.3, 0, 0]); // ojos de la mirilla
   for (const s of [-1, 1]) { // orugas de juguete (ref287): bloque de goma con tacos y ruedas guía de bronce
     G.box(0.3, 0.46, 1.9, FOLD.dark(), [s * 0.96, 0.3, -0.05]);
@@ -226,7 +223,6 @@ function bomberBody() {
   for (const [y, w] of [[0.36, 0.56], [0.56, 0.74], [0.76, 0.56]]) G.cyl(w, 0.1, bronze(), [0, y, 0], undefined, 8); // aros de flejes de la jaula
   for (let i = 0; i < 4; i++) { const a = (i * Math.PI) / 2 + Math.PI / 4; G.box(0.06, 0.5, 0.06, plate(), [Math.sin(a) * 0.31, 0.56, Math.cos(a) * 0.31]); } // barrotes
   G.cyl(0.07, 0.3, FOLD.dark(), [0, 0.94, 0], undefined, 6);
-  G.rivets([-0.3, 0.36, 0.42], [0.3, 0.36, 0.42], 4, [0, 0, 1]);
   G.sph(0.15, ember(), [0, 1.12, 0]); // baliza
   for (const s of [-1, 1]) G.sph(0.07, eye(), [s * 0.12, 0.6, 0.4]); // ojos
   legs(K, EX_HIPS, [0.18, 0.1, 0], [0.36, -0.3, 0.02], 0.045, 1);
@@ -247,7 +243,6 @@ function healerBody() {
   G.cyl(0.56, 0.14, plate(), [0, 0.5, 0], undefined, 6);
   G.box(0.3, 0.3, 0.04, plate(), [0, 0.92, 0.3]); // botiquín crema (ref171)
   G.box(0.2, 0.06, 0.03, red(), [0, 0.92, 0.33]); G.box(0.06, 0.2, 0.03, red(), [0, 0.92, 0.33]); // cruz roja
-  G.rivets([-0.12, 0.8, 0.31], [0.12, 1.04, 0.31], 4, [0, 0, 1]);
   for (const s of [-1, 1]) G.tube([[s * 0.12, 1.2, -0.05], [s * 0.3, 1.5, -0.1], [s * 0.34, 1.72, -0.12]], 0.02, FOLD.dark()); // antenas
   bone(5);
   G.cyl(0.18, 0.2, FOLD.dark(), [0, 1.26, 0], undefined, 6);

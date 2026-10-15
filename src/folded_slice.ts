@@ -5,6 +5,7 @@
 import * as B from "@babylonjs/core";
 import { FOLD, foldAtlas, foldTile, geoKit, toTile, type GeoKit } from "./folded";
 import { PAL } from "./kit3d";
+import { pbr } from "./render";
 import { genome, original, type Genome } from "./car_genes";
 
 type V3 = [number, number, number];
@@ -55,6 +56,11 @@ const BUGS: Record<string, Bug> = {
   escarabajo: { color: "#4c5024", k: 1.6, eye: "#ff7a1a", seed: 67, look: "beetle" },
 };
 // Paleta de chapa gastada de las láminas (ref169/171): óxido, bronce de articulaciones, crema de la pintura saltada, oliva.
+/** Plástico/metal pintado de juguete (diorama Encore, como toy() de moon_goals.ts): color liso con barniz suave, sin chapa plegada. */
+export const toy = (n: string, color: string, o: { rough?: number; metal?: number; glow?: boolean; coat?: number } = {}) => {
+  const m = pbr("toy" + n, { color, rough: o.rough ?? 0.55, metal: o.metal ?? 0.15, coat: o.coat ?? 0.25, ...(o.glow ? { emissive: color } : {}) });
+  if (o.glow) m.emissiveIntensity = 2; return m;
+};
 const CREAM = "#e8d4a8", BRONZE = "#94642c", RUSTD = "#5a2a18";
 const ell = (add: (m: B.Mesh, mat: B.Material) => B.Mesh, m: B.Material, p: V3, s: V3, seg = 8, slice = 1) => { // elipsoide (o cúpula con slice 0.5) de chapa
   const e = B.MeshBuilder.CreateSphere("p", { diameter: 1, segments: seg, slice }, sc());
@@ -216,24 +222,23 @@ export function mothWing(side: 1 | -1) {
 const ROBOT_K = 1.22, SH = 0.9;
 export function robotBody() {
   const { G, done, strut, bone } = kit();
-  const tin = FOLD.painted("#8e5a34", 0.95, 81), gold = FOLD.painted("#94642c", 0.6, 83), dark = FOLD.painted("#2e2622", 0.9, 82), steel = FOLD.bare(), lamp = FOLD.emissive("#ff9a20");
+  const tin = toy("rbHojalata", "#b8683a", { rough: 0.5, metal: 0.35 }), gold = toy("rbLaton", "#c89a3c", { rough: 0.4, metal: 0.8 }), dark = toy("rbOscuro", "#2e2a28", { rough: 0.7 }), steel = toy("rbAcero", "#8a8782", { rough: 0.4, metal: 0.8 }), lamp = toy("rbOjo", "#ffb02a", { glow: true }), rubber = toy("rbGoma", "#1f1d1c", { rough: 0.9, metal: 0, coat: 0 }), chip = toy("rbLasca", "#b9b2a6", { rough: 0.5, metal: 0.7 }), hz = toy("rbAviso", "#e8b020", { rough: 0.5 });
   for (const s of [-1, 1]) {
     bone(s < 0 ? 1 : 2);
-    G.box(0.28, 0.1, 0.42, dark, [s * 0.22, 0.06, 0.04]); G.box(0.29, 0.025, 0.43, FOLD.rubber(), [s * 0.22, 0.012, 0.04]); // pies
+    G.box(0.28, 0.1, 0.42, dark, [s * 0.22, 0.06, 0.04]); G.box(0.29, 0.025, 0.43, rubber, [s * 0.22, 0.012, 0.04]); // pies
     G.cyl(0.12, 0.24, steel, [s * 0.22, 0.22, 0], undefined, 6); // tobillo
   }
   bone(0);
   G.box(0.62, 0.1, 0.38, dark, [0, 0.36, 0]); // pelvis
   for (const s of [-1, 1]) G.box(0.3, 0.03, 0.44, gold, [s * 0.22, 0.12, 0.04]); // remate dorado de los pies
-  G.trimStrip([0, 0.44, 0.262], [0, Math.PI, 0], 0.78, 0.07, "hazard", 0.02);
+  G.box(0.78, 0.07, 0.02, hz, [0, 0.44, 0.26]); // franja de aviso
   G.box(0.8, 0.56, 0.5, tin, [0, 0.72, 0]); // torso (BODY)
   for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) G.box(0.04, 0.56, 0.04, gold, [x * 0.4, 0.72, z * 0.25]); // aristas doradas
   for (const s of [-1, 1]) G.box(0.82, 0.03, 0.04, gold, [0, 1.0, s * 0.25]);
-  for (const [x, z] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) G.bend([x * 0.4, 0.46, z * 0.25], [x * 0.4, 0.98, z * 0.25], 0.025, tin);
-  G.grate([0, 0.62, 0.255], [0, Math.PI, 0], 0.42, 0.18, 4, gold); // rejilla dorada del pecho
+  for (const [x, z] of [[-1, 1], [1, -1]]) G.box(0.07, 0.05, 0.06, chip, [x * 0.38, 0.99, z * 0.25]); // pintura saltada en los cantos
+  for (let i = 0; i < 4; i++) G.box(0.42, 0.025, 0.03, gold, [0, 0.54 + i * 0.05, 0.265]); // rejilla dorada del pecho
   G.decal([0, 0.86, 0.255], [0, Math.PI, 0], "numero", 0.2); // número (IDENTITY)
   G.plate([0, 0.6, -0.255], undefined, 0.26, 0.26, dark); // placa de la llave (la llave gira aparte)
-  G.rivets([-0.36, 0.98, 0.255], [0.36, 0.98, 0.255], 7, [0, 0, 1]); G.rivets([-0.36, 0.98, -0.255], [0.36, 0.98, -0.255], 7, [0, 0, -1]);
   for (const s of [-1, 1]) { // brazos
     G.cyl(0.12, 0.08, steel, [s * 0.44, SH, 0], [0, 0, Math.PI / 2], 6);
     bone(s < 0 ? 3 : 4);
@@ -243,13 +248,12 @@ export function robotBody() {
   }
   G.cyl(0.14, 0.08, steel, [0, 1.04, 0], undefined, 6); // cuello
   G.box(0.46, 0.3, 0.36, tin, [0, 1.22, 0.01]); // cabeza
-  G.box(0.3, 0.05, 0.02, FOLD.dark(), [0, 1.14, 0.19]); // boca
+  G.box(0.3, 0.05, 0.02, dark, [0, 1.14, 0.19]); // boca
   for (const s of [-1, 1]) G.cyl(0.13, 0.03, lamp, [s * 0.11, 1.24, 0.205], [Math.PI / 2, 0, 0], 10); // ojos redondos emisivos
-  G.rivets([-0.18, 1.35, 0.19], [0.18, 1.35, 0.19], 3, [0, 0, 1]);
   G.box(0.5, 0.05, 0.4, gold, [0, 1.38, 0.01]); // tapa dorada
   G.cyl(0.14, 0.05, gold, [0, 1.43, 0.01], undefined, 8); // base dorada de la luz
   for (const s of [-1, 1]) { G.cyl(0.11, 0.05, gold, [s * 0.11, 1.24, 0.19], [Math.PI / 2, 0, 0], 8); G.box(0.04, 0.2, 0.04, gold, [s * 0.24, 0.98, 0.2]); } // aros dorados de los ojos y remates del torso
-  G.tube([[0.1, 1.4, 0], [0.12, 1.58, -0.02]], 0.012, steel); G.box(0.05, 0.05, 0.05, FOLD.emissive("#e02020"), [0.12, 1.6, -0.02]);
+  G.tube([[0.1, 1.4, 0], [0.12, 1.58, -0.02]], 0.012, steel); G.box(0.05, 0.05, 0.05, toy("rbLuz", "#e02020", { glow: true }), [0.12, 1.6, -0.02]);
   return done(2, ROBOT_K);
 }
 /** Paso de juguete a cuerda: pies que avanzan y se levantan alternados, brazos en contra; al atacar levanta los brazos. */
@@ -266,19 +270,17 @@ const FR_W: V3[] = [[-0.42, 0.24, 0.55], [0.42, 0.24, 0.55], [-0.42, 0.24, -0.55
 const FR_K = 1.3; // largo del GLB viejo (2,6 m): escala calibrada con glbStats/bounding box, el colisionador no cambia
 export function frictionBody() {
   const { G, done, strut, bone } = kit();
-  const orange = FOLD.painted("#8a2616", 0.9, 121), cream = FOLD.painted(CREAM, 0.9, 122), bronze = FOLD.painted(BRONZE, 0.6, 123), dark = FOLD.dark(), steel = FOLD.bare();
+  const orange = toy("frNaranja", "#d8531c", { rough: 0.45, coat: 0.4 }), cream = toy("frCrema", "#eadbb4", { rough: 0.6 }), bronze = toy("frLaton", "#c89a3c", { rough: 0.4, metal: 0.8 }), dark = toy("frOscuro", "#2a2624", { rough: 0.7 }), steel = toy("frAcero", "#8a8782", { rough: 0.4, metal: 0.8 }), glass = toy("frVidrio", "#9fd0e0", { rough: 0.1, metal: 0.1 }), lamp = toy("frFaro", "#ffc050", { glow: true });
   G.box(0.7, 0.06, 1.5, dark, [0, 0.16, 0]); // chasis
   G.box(0.8, 0.22, 1.7, orange, [0, 0.3, 0]); // carrocería
-  for (const s of [-1, 1]) G.bend([s * 0.4, 0.41, -0.85], [s * 0.4, 0.41, 0.85], 0.025, orange);
   G.box(0.66, 0.2, 0.7, orange, [0, 0.5, -0.12]); // cabina
-  G.box(0.56, 0.16, 0.03, FOLD.glass(), [0, 0.52, 0.25], [-0.5, 0, 0]); // parabrisas
+  G.box(0.56, 0.16, 0.03, glass, [0, 0.52, 0.25], [-0.5, 0, 0]); // parabrisas
   G.box(0.6, 0.04, 0.16, orange, [0, 0.52, -0.84]); for (const s of [-1, 1]) G.box(0.03, 0.14, 0.08, dark, [s * 0.26, 0.46, -0.84]); // alerón
   for (const x of [-0.14, 0.14]) { G.box(0.1, 0.012, 1.62, cream, [x, 0.412, 0], undefined); G.box(0.1, 0.012, 0.5, cream, [x, 0.612, -0.12]); } // franjas crema saltadas
-  G.rivets([-0.36, 0.42, -0.7], [-0.36, 0.42, 0.7], 6, [0, 1, 0]); G.rivets([0.36, 0.42, -0.7], [0.36, 0.42, 0.7], 6, [0, 1, 0]);
   for (const sx of [-1, 1]) { for (const z of [-0.42, 0.18]) { strut([sx * 0.32, 0.55, z], [sx * 0.32, 0.92, z], 0.045, 0.045, bronze); } strut([sx * 0.32, 0.92, -0.42], [sx * 0.32, 0.92, 0.18], 0.045, 0.045, bronze); } // jaula antivuelco
   for (const z of [-0.42, 0.18]) strut([-0.32, 0.92, z], [0.32, 0.92, z], 0.045, 0.045, bronze);
   strut([-0.38, 0.24, 0.9], [0.38, 0.24, 0.9], 0.06, 0.06, steel); // paragolpes
-  for (const s of [-1, 1]) G.box(0.12, 0.08, 0.03, FOLD.emissive("#ffb040"), [s * 0.26, 0.32, 0.86]);
+  for (const s of [-1, 1]) G.box(0.12, 0.08, 0.03, lamp, [s * 0.26, 0.32, 0.86]);
   G.box(0.08, 0.08, 0.2, steel, [0.3, 0.2, -0.88]); // escape
   FR_W.forEach((p, i) => { bone(i + 1); G.wheel(p, undefined, 0.54, 0.26); });
   return done(2, FR_K);
