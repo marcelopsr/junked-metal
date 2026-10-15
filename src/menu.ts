@@ -1,5 +1,6 @@
 // Front-end: título, menú principal, garaje, taller, configuración, bestiario, créditos, pausa y resultados.
 // Una sola pila de pantallas dentro de #fe; teclado, gamepad y mouse mueven el mismo foco.
+import { hazardPalette } from "./models";
 import "./menu.css";
 import "./aviso";
 import { novedades } from "./novedades";
@@ -222,7 +223,7 @@ export function applySettings() {
   root.setProperty("--touch-scale", String(save.touch));
   applyTouchLayouts(save.tlay, save.touch);
   document.body.classList.toggle("calm", save.calm);
-  document.body.classList.toggle("cb", save.cb);
+  document.body.classList.toggle("cb", save.cb); hazardPalette(save.cb);
   setModoTranquilo(!!save.tranquilo);
 }
 export const commit = () => { save.preset = presetOf(save); persist(); saveRaceCfg(); applySettings(); };

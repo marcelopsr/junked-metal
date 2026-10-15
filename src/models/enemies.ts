@@ -605,12 +605,24 @@ export function hazardMat() {
   m.emissiveTexture = tex; m.fogEnabled = false;
   return m;
 }
+// Relleno rojo de los avisos de peligro; cambia en vivo con el modo daltónico (bermellón Okabe-Ito). Estado de módulo: los materiales creados después lo respetan.
+const HAZ_FILLS = ["teleFill", "teleFillArc", "lunaAvisoArea"];
+let hazCb = false;
+export function hazardFill(m: B.PBRMaterial) {
+  m.albedoColor = B.Color3.FromHexString(hazCb ? "#D55E00" : "#ff2a1a").toLinearSpace();
+  m.emissiveColor = B.Color3.FromHexString(hazCb ? "#8a3d00" : m.name === "teleFillArc" ? "#c01808" : m.name === "lunaAvisoArea" ? "#b01a10" : "#a01008");
+  return m;
+}
+export function hazardPalette(cb: boolean) {
+  hazCb = cb;
+  for (const n of HAZ_FILLS) { const m = scene.getMaterialByName(n); if (m) hazardFill(m as B.PBRMaterial); }
+}
 // Telegráfico de ataque enemigo en el piso (rojo = amenaza): aro rayado + disco tenue, radio 1, se escala por instancia
 export function teleTemplate() {
   const t = template("tele", () => {
     const d = B.MeshBuilder.CreateDisc("p", { radius: 1, tessellation: 28 }, scene);
     d.rotation.x = Math.PI / 2;
-    d.material = pbr("teleFill", { color: "#ff2a1a", rough: 1, emissive: "#a01008", alpha: 0.22 });
+    d.material = hazardFill(pbr("teleFill", { color: "#ff2a1a", rough: 1, emissive: "#a01008", alpha: 0.22 }));
     const band = tor(2, 0.16, hazardMat(), [0, 0.03, 0], undefined, 28);
     band.scaling.y = 0.6; band.bakeCurrentTransformIntoVertices(); // banda plana en el piso
     return [d, band];
@@ -624,7 +636,7 @@ export function sectorTemplate() {
     const d = B.MeshBuilder.CreateDisc("p", { radius: 1, tessellation: 24, arc: 1 / 3 }, scene);
     d.rotation.z = Math.PI / 6; d.bakeCurrentTransformIntoVertices(); // arco de 30° a 150°: centro en +y
     d.rotation.x = Math.PI / 2; d.bakeCurrentTransformIntoVertices(); // acostado: centro en +z
-    d.material = pbr("teleFillArc", { color: "#ff2a1a", rough: 1, emissive: "#c01808", alpha: 0.28 });
+    d.material = hazardFill(pbr("teleFillArc", { color: "#ff2a1a", rough: 1, emissive: "#c01808", alpha: 0.28 }));
     const edge: V3[] = [[0, 0.02, 0], ...Array.from({ length: 13 }, (_, i) => { const a = -Math.PI / 3 + (i * Math.PI) / 18; return [Math.sin(a), 0.02, Math.cos(a)] as V3; }), [0, 0.02, 0]];
     return [d, tube(edge, 0.07, hazardMat()), tor(1.88, 0.07, hazardMat(), [0, 0.02, 0], [Math.PI / 2, 0, 0], 20)];
   });

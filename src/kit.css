@@ -9,7 +9,7 @@
    Componentes = clases .jm-* y, para no tocar el HTML de cada pantalla, las mismas reglas aplicadas a los selectores existentes. */
 
 /* Modo daltónico (Okabe-Ito): vida/ventaja en azul, bajo/costo en naranja */
-body.cb { --jm-verde: #56B4E9; --ok: #56B4E9; --low: #E69F00; --cost: #E69F00; --good: #56B4E9; --warn: #E69F00; }
+body.cb { --jm-verde: #56B4E9; --ok: #56B4E9; --low: #CC79A7; --cost: #CC79A7; --good: #56B4E9; --warn: #CC79A7; } /* rosado Okabe-Ito: el naranja #E69F00 se confundía con el amarillo del rayado de peligro */
 
 /* ---------- Tokens: copia de PAL/M3C en src/kit3d.ts (fuente única de la paleta; si cambia un HEX, cambiarlo en los dos) ---------- */
 :root {
