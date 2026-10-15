@@ -11,6 +11,7 @@ import { makeProfile, type Profile } from "./run";
 import { seedRng } from "./rng";
 import { track } from "./net";
 import { persist, save } from "./menu";
+import { cartelDone } from "./menu/cartelera";
 import { getNet } from "./net_client";
 import { grant, setHitAt, setStageHurt, stageHurt } from "./outro";
 import { alignYaw, CENTER, deform, EARTH_DIR, hflat, MOON, moonCar, onFloor, ringAt, setMoon, SUN_DIR, teleport, upAt, yawOf } from "./moon";
@@ -81,7 +82,7 @@ const iPt = (r: number) => { const c = cx.lead.car!.pos, a = iLcg() * Math.PI * 
 const iIo: IV.Io = {
   warn: (id) => { if (cx.simulating) return; const t = IV.INT_TXT[id]; E.dirPush(dirq, t.line, 9); dirq.cool = 0; /* prioridad máxima y sin esperar el hueco: la frase sale ya y no queda detrás de otra */ banner(`PELIGRO · ${t.name}`, 2.5, { tone: "warn", tag: "DIRECTOR" }); SPACE.interrupt("aviso"); },
   start: (id) => {
-    if (!cx.simulating && !save.encore.seenInts.includes(id)) { save.encore.seenInts.push(id); persist(); } // Cartelera: interrupción vista
+    if (!cx.simulating && !save.encore.seenInts.includes(id)) { save.encore.seenInts.push(id); cartel(); persist(); } // Cartelera: interrupción vista
     const c = cx.lead.car!.pos, n = BAL.interrupciones[id].valor;
     if (id === "corte") for (let i = 0; i < n; i++) cx.dropPickup(spawnPoint(c, 30, 40), "cofre");
     if (id === "sangre") iKind = pickWeighted(spawnTable(cx.time + paceS, cx.profile.plague));
@@ -123,6 +124,8 @@ function interruptStep() {
 export function encRecompute(g: number) { if (erun) { encExtra += E.scrapExtra(g, encG, pfx.scrap); encG = g; } pfx = zoned(E.pactFx(erun)); }
 
 // ---------- ENCORE (encore.ts): escenarios encadenados con teleportador, votación y FINAL ACT ----------
+/** Cartelera: entrega el premio del grupo apenas se registra el último afiche (grant ya filtra sim/lab/god). */
+export function cartel() { for (const g of cartelDone(save)) { grant(g.ach); if (save.ach.includes(g.ach)) banner("CARTELERA: GRUPO COMPLETO · PINTURA NUEVA", 2.5); } }
 /** Frase del Director por el aviso de radio. */
 export const tip = (id: keyof typeof E.TIPS) => { if (cx.simulating || cx.LAB.on) return; const t = E.tipOnce(save.encore, id); if (t) { E.dirPush(dirq, t, 3); persist(); } }; // primera partida guiada: cada aviso sale una sola vez en la vida del guardado
 export const say = (id: E.LineId, txt = E.line(id, erun!, save.encore)) => E.dirPush(dirq, txt, E.dirPri(id)); // cola propia (encore.ts): no se pisa con la radio ni entre frases
@@ -136,7 +139,7 @@ export function encPlan() {
 /** Escenario nuevo con el mismo auto, armas, nivel, XP y vida: borra lo del anterior y lo rearma con la semilla derivada (cx.runSeed, escenario). */
 export function encEnter() {
   const r = erun!;
-  const v0 = E.variantOf(r); if (v0 && !save.encore.seenVariants.includes(v0.name)) { save.encore.seenVariants.push(v0.name); persist(); } // Codex: destino jugado
+  const v0 = E.variantOf(r); if (v0 && !save.encore.seenVariants.includes(v0.name)) { save.encore.seenVariants.push(v0.name); cartel(); persist(); } // Codex: destino jugado
   cx.guestE = null; cx.ovT = 0;
   evReset(); shipsClear(); goalsClear(); skyClear();
   for (const e of cx.enemies) { e.hp = -1e9; e.dispose(); } // hp negativo: las armas con blanco fijo (trompo) lo sueltan
@@ -224,7 +227,7 @@ export function encApply(ev: E.Ev | null) {
   if (erun) { erun.solo = cx.players.length < 2; if (E.decisionOpen(erun)) document.getElementById("hint")?.classList.add("hidden"); } // la guía de controles no tapa el pie de una oferta o decisión abierta
   if (erun && cx.lead.car) interruptStep();
   if (!ev || !erun) return;
-  if (ev === "pact_offer" && erun.offer) { if (!cx.simulating && !cx.LAB.on && !save.encore.seenPacts.length) erun.hold = true; const n = erun.offer.filter((id) => !save.encore.seenPacts.includes(id)); if (n.length) { save.encore.seenPacts.push(...n); persist(); } } // Codex: pactos vistos
+  if (ev === "pact_offer" && erun.offer) { if (!cx.simulating && !cx.LAB.on && !save.encore.seenPacts.length) erun.hold = true; const n = erun.offer.filter((id) => !save.encore.seenPacts.includes(id)); if (n.length) { save.encore.seenPacts.push(...n); cartel(); persist(); } } // Codex: pactos vistos
   if (!cx.simulating && !cx.LAB.on) { // telemetría ENCORE (datos chicos; tipos [a-z_])
     const r = erun, base = { stage: r.stage, loop: r.loop };
     if (ev === "pact_offer") pactOff = r.offer ? r.offer.join("+") : "";

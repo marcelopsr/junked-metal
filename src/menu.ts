@@ -310,6 +310,7 @@ function show() {
   fe.classList.remove("zap"); void fe.offsetWidth; fe.classList.add("zap");
   SFX.static();
   const f = ret.get(s);
+  if (s === "cartelera") { $("scr-cartelera").scrollTop = 0; return document.querySelector<HTMLElement>('#scr-cartelera [data-act="back"]')?.focus({ preventScroll: true }); } // abre arriba (título a la vista); Volver con foco pero sin bajar la pantalla
   (f && f.isConnected && f.offsetParent ? f : (s === "encore" ? document.querySelector<HTMLElement>('#scr-encore [data-act="encorego"]') : null) ?? focusables()[0])?.focus({ preventScroll: false }); // ENCORE: Largar primero aunque "Cómo se juega" (summary) esté antes en el orden
 }
 export function go(s: Scr) {
