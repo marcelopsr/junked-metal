@@ -50,7 +50,7 @@ body.calm .bindnote, body.calm .stamp, body.calm .offer .art svg, body.calm #bms
 .carc .stc { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .carc .stc > span:first-child { display: flex; justify-content: space-between; align-items: baseline; gap: 3px; white-space: nowrap; overflow: hidden; }
 .carc .stc em { font-style: normal; font-weight: 700; color: var(--lcd-ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
-#fe .carc .stc .cdlt { display: inline; margin: 0 0 0 2px; font: 700 11px/1 var(--data); font-style: normal; letter-spacing: 0; } #fe .carc .stc .cdlt.up { color: #22c55e; } #fe .carc .stc .cdlt.dn { color: #f59e0b; }
+#fe .carc .stc .cdlt { display: inline; margin: 0 0 0 2px; font: 700 11px/1 var(--data); font-style: normal; letter-spacing: 0; } #fe .carc .stc .cdlt.up { color: var(--good); } #fe .carc .stc .cdlt.dn { color: var(--warn); }
 @media (max-width: 520px) { .side .carc .st { gap: 4px; } .carc .stc > span:first-child { font-size: 9.5px; letter-spacing: 0; gap: 1px; } #fe .carc .stc .cdlt { font-size: 9px; margin-left: 1px; } }
 .stb { display: block; width: 100%; height: 6px; background: var(--panel); border: 1px solid var(--line); align-self: center; }
 .stb > i, .carc .st .stb > i { display: block; height: 100%; margin: 0; background: var(--sig); }
@@ -60,7 +60,7 @@ body.calm .bindnote, body.calm .stamp, body.calm .offer .art svg, body.calm #bms
 .car-vic { display: inline-block; font: 700 11px/1 var(--hf); letter-spacing: .08em; padding: 3px 6px; border-radius: 3px; margin-bottom: 6px; width: fit-content; }
 .car-vic.won { background: rgba(255, 210, 74, .18); color: var(--jm-amarillo2, #ffd24a); border: 1px solid rgba(255, 210, 74, .5); }
 .car-vic.pending { background: rgba(255, 255, 255, .06); color: var(--lcd-ink-dim, #8a99a8); border: 1px solid rgba(255, 255, 255, .15); }
-.vet-badge { display: inline-block; font: 800 10px/1 var(--hf); letter-spacing: .08em; padding: 2px 6px; border-radius: 3px; background: rgba(34, 197, 94, .18); color: #22c55e; border: 1px solid rgba(34, 197, 94, .45); margin-bottom: 4px; width: fit-content; }
+.vet-badge { display: inline-block; font: 800 10px/1 var(--hf); letter-spacing: .08em; padding: 2px 6px; border-radius: 3px; background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); border: 1px solid color-mix(in srgb, var(--good) 45%, transparent); margin-bottom: 4px; width: fit-content; }
 .armor-badge { display: inline-block; font: 800 10px/1 var(--hf); letter-spacing: .08em; padding: 2px 6px; border-radius: 3px; background: rgba(56, 189, 248, .18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, .45); margin-bottom: 4px; margin-left: 4px; width: fit-content; }
 .heavy-armor { margin-top: 4px; margin-left: 4px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #94a3b8; background: rgba(148, 163, 184, .15); border: 1px solid rgba(148, 163, 184, .4); border-radius: 3px; letter-spacing: .06em; }
 .light-frame { margin-top: 4px; margin-left: 4px; display: inline-block; padding: 2px 6px; font: 700 10px/1 var(--hf); color: #38bdf8; background: rgba(56, 189, 248, .15); border: 1px solid rgba(56, 189, 248, .4); border-radius: 3px; letter-spacing: .06em; }
@@ -345,7 +345,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .carc.perk .sfx { font: 600 12px/1.2 var(--data); color: var(--jm-amarillo2, #ffd24a); font-variant-numeric: tabular-nums; margin-top: 2px; }
 #shop .perk.no { opacity: 1; } /* no alcanza: conserva contraste de chapa oscura y permite enfocar para ver la vista previa */
 .slot-badge { display: inline-block; padding: 2px 5px; font: 700 9px/1 var(--hf); color: #38bdf8; background: rgba(56, 189, 248, .12); border: 1px solid rgba(56, 189, 248, .3); border-radius: 3px; letter-spacing: .06em; margin-bottom: 4px; vertical-align: middle; }
-.slot-badge.mounted { color: #22c55e; background: rgba(34, 197, 94, .15); border-color: rgba(34, 197, 94, .4); }
+.slot-badge.mounted { color: var(--good); background: color-mix(in srgb, var(--good) 15%, transparent); border-color: color-mix(in srgb, var(--good) 40%, transparent); }
 .bought-pulse { animation: part-mounted .6s ease-out; }
 #shop .carc.perk[data-buy^="part:"] { cursor: pointer; }
 #shop .carc.perk[data-buy^="part:"]:hover {
@@ -353,14 +353,14 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   background: rgba(18, 26, 36, .96);
 }
 #shop .carc.perk[data-buy^="part:"]:hover:has(.slot-badge.mounted) {
-  border-color: rgba(34, 197, 94, .55);
+  border-color: color-mix(in srgb, var(--good) 55%, transparent);
 }
 #shop .carc.perk[data-buy^="part:"]:active { border-color: #38bdf8; }
-.perk.active-part { border-color: rgba(34, 197, 94, .45); }
+.perk.active-part { border-color: color-mix(in srgb, var(--good) 45%, transparent); }
 .mount-hint { font-size: 11px; letter-spacing: .04em; color: var(--jm-texto2, #9ca3af); }
-.mount-hint.on { color: #22c55e; font-weight: 700; }
+.mount-hint.on { color: var(--good); font-weight: 700; }
 @keyframes part-mounted {
-  0% { box-shadow: 0 0 16px rgba(34, 197, 94, .8); border-color: #22c55e; }
+  0% { box-shadow: 0 0 16px color-mix(in srgb, var(--good) 80%, transparent); border-color: var(--good); }
   100% { box-shadow: none; }
 }
 #sfilt .tab { font-size: 12px; }
@@ -378,7 +378,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .ficha.logro.locked b { letter-spacing: .04em; }
 .achProg { margin-top: 5px; display: flex; flex-direction: column; gap: 3px; font: 600 12px/1.15 var(--jm-titulo); color: var(--jm-texto2); }
 .achProg b { display: inline; margin: 0; font: 700 12px/1 var(--jm-titulo); color: var(--jm-amarillo2); letter-spacing: .02em; }
-.ficha.logro .price .ach-ok { color: #22c55e; font-weight: 800; letter-spacing: .04em; }
+.ficha.logro .price .ach-ok { color: var(--good); font-weight: 800; letter-spacing: .04em; }
 .sello { position: absolute; top: 10px; right: 8px; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 50%;
   border: 3px double var(--turbo); color: var(--turbo); font: 400 8px/1 var(--display); letter-spacing: 0; rotate: -14deg;
   box-shadow: inset 0 0 0 3px #0000, inset 0 0 0 4px var(--turbo); opacity: .9; animation: stamp .35s cubic-bezier(.2, 1.6, .4, 1) both;
@@ -607,7 +607,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .rmedal.m2 { background: linear-gradient(180deg, #f1f5f9 0%, #94a3b8 100%); color: #0f172a; border-color: #ffffff; box-shadow: 0 0 6px rgba(203, 213, 225, .35), inset 0 1px 0 #fff; text-shadow: 0 1px 0 rgba(255, 255, 255, .4); }
 .rmedal.m1 { background: linear-gradient(180deg, #fb923c 0%, #b45309 100%); color: #2a1100; border-color: #fed7aa; box-shadow: 0 0 6px rgba(217, 119, 6, .35), inset 0 1px 0 #ffedd5; text-shadow: 0 1px 0 rgba(255, 255, 255, .25); }
 .rcGoals { display: flex; justify-content: space-between; gap: 4px; font: 600 11.5px/1.1 var(--jm-titulo); letter-spacing: .03em; color: var(--jm-texto2); font-variant-numeric: tabular-nums; border-top: 1px dashed var(--jm-borde); padding-top: 4px; }
-.rcGoals .mg { color: var(--jm-amarillo2); } .rcGoals .ms { color: #cbd5e1; } .rcGoals .mb { color: #f59e0b; }
+.rcGoals .mg { color: var(--jm-amarillo2); } .rcGoals .ms { color: #cbd5e1; } .rcGoals .mb { color: var(--warn); }
 
 #fe #rcHelp { width: min(560px, 94vw); padding: 5px 10px; font-size: 13.5px; color: var(--jm-texto2); background: rgba(11, 15, 20, .88); border: 1px solid var(--jm-borde); border-radius: var(--jm-r); text-shadow: none; text-align: center; }
 @media (max-width: 640px) {
@@ -636,7 +636,7 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
 .bname { flex: 1; min-width: 0; text-align: center; }
 .bname small { display: block; color: var(--dim); font-size: 14px; letter-spacing: .14em; text-transform: uppercase; }
 .bname b { display: block; font-size: clamp(20px, 2.4vw, 28px); letter-spacing: .06em; text-transform: uppercase; color: #fff; }
-#bpanel .bname .b-reg { font-style: normal; font-weight: 700; color: var(--dim); } #bpanel .bname .b-reg.ok { color: #22c55e; }
+#bpanel .bname .b-reg { font-style: normal; font-weight: 700; color: var(--dim); } #bpanel .bname .b-reg.ok { color: var(--good); }
 #bpanel .bname b.wi { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .bnav { min-width: 48px; min-height: 48px; padding: 0; font-size: 22px; }
 .bctl .slot { justify-content: flex-start; }

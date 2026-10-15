@@ -8,6 +8,9 @@
    Se carga ÚLTIMA (import en main.ts): pisa los estilos de vidrio de style.css/menu.css/hud.css sin tocar la lógica.
    Componentes = clases .jm-* y, para no tocar el HTML de cada pantalla, las mismas reglas aplicadas a los selectores existentes. */
 
+/* Modo daltónico (Okabe-Ito): vida/ventaja en azul, bajo/costo en naranja */
+body.cb { --jm-verde: #56B4E9; --ok: #56B4E9; --low: #E69F00; --cost: #E69F00; --good: #56B4E9; --warn: #E69F00; }
+
 /* ---------- Tokens: copia de PAL/M3C en src/kit3d.ts (fuente única de la paleta; si cambia un HEX, cambiarlo en los dos) ---------- */
 :root {
   --jm-amarillo: #FBC02D; --jm-amarillo2: #FFD54F; --jm-naranja: #FB8C00; --jm-rojo: #E53935; --jm-cian: #42A5F5; --jm-verde: #66BB6A; --jm-morado: #8E24AA;
@@ -20,6 +23,7 @@
   --jm-sombra: 0 14px 40px rgba(0, 0, 0, .6);
   /* los tokens viejos apuntan al kit: lo que todavía use var(--turbo) o var(--lcd-ink) queda en la paleta */
   --turbo: var(--jm-amarillo); --lcd-ink: var(--jm-amarillo2); --sig: var(--jm-cian); --ok: var(--jm-verde); --low: var(--jm-rojo);
+  --cost: #ff8a80; --good: #22c55e; --warn: #f59e0b;
   --shell: var(--jm-fondo2); --panel: var(--jm-panel); --line: var(--jm-borde); --dim: var(--jm-texto2); --txt: var(--jm-texto); --lcd: var(--jm-fondo);
 }
 
@@ -340,7 +344,7 @@ select { font: 700 14px/1 var(--jm-titulo); letter-spacing: .04em; min-height: 3
 #encAsk.pact .encBtns small { font: 500 11px/1.1 var(--jm-texto-f); letter-spacing: .08em; text-transform: uppercase; }
 #encAsk.pact .encBtns span { font: 500 14px/1.25 var(--jm-texto-f); letter-spacing: 0; text-transform: none; overflow-wrap: anywhere; }
 #encAsk.pact .encBtns em { font: 500 12px/1.2 var(--jm-texto-f); letter-spacing: 0; text-transform: none; }
-#encAsk.pact .encBtns .pg { color: var(--jm-verde); } #encAsk.pact .encBtns .pc { color: #ff8a80; }
+#encAsk.pact .encBtns .pg { color: var(--jm-verde); } #encAsk.pact .encBtns .pc { color: var(--cost, #ff8a80); }
 #encAsk.pact .encBtns button.primary { rotate: none; border: 2px solid var(--jm-amarillo); color: var(--jm-texto); background: var(--jm-panel); text-shadow: none; box-shadow: 0 3px 0 #000; }
 #encPacts i { font-size: 14px; letter-spacing: .06em; border-color: var(--jm-borde); }
 #encBar { background: var(--jm-amarillo); }

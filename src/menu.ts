@@ -55,7 +55,7 @@ export type Save = {
   // Controles (input.ts): teclas [principal, alternativa], joystick, carrera, disposición táctil y 3 perfiles con nombre (null = vacío)
   keys: Record<Action, string[]>; pad: typeof PAD0; race: { kb1: Binds<string>; kb2: Binds<string>; pad: Binds<number> }; tlay: TLays; rumble: boolean; touch: number;
   profiles: (Profile | null)[];
-  hud: number; calm: boolean; dmgNums: boolean; tranquilo: boolean; tutorialHecho: boolean; controlesVistos: boolean;
+  hud: number; calm: boolean; cb: boolean; dmgNums: boolean; tranquilo: boolean; tutorialHecho: boolean; controlesVistos: boolean;
   decals: string[]; decalSel: number; // calcos del capó: 3 diseños ("" = vacío, si no, DECAL_N² dígitos) y el aplicado (-1 = ninguno)
   stats: Stats;
   seen: Kind[]; slain: Partial<Record<Kind, number>>; beast: Partial<Record<Kind, BeastRec>>; runs: RunRec[]; daily: { day: string; best: number }; zone: ZoneId;
@@ -75,7 +75,7 @@ export const DEFAULT: Save = {
   mute: false, vol: { master: 1, sfx: 1, engine: 1, music: 0.7 }, lookv: 6, shake: !reduceMotion, fps: false, hudSolid: false, hint: true,
   gfxv: 2, gpu: "webgl", scaler: "simple", scale: SCALE0, fsr: "calidad", aa: isTouch ? "fxaa" : "none", sharpen: 0, preset: "medio", ...PRESETS.medio, fpsCap: 0, menuFps: isTouch ? 30 : 60, fov: 49, bright: 1, gamma: 1,
   keys: structuredClone(KEYS0), pad: structuredClone(PAD0), race: structuredClone(RACE0), tlay: { v: {}, h: {} }, profiles: [null, null, null], rumble: true, touch: 1, hud: 1,
-  calm: reduceMotion, dmgNums: true, tranquilo: false, tutorialHecho: false, controlesVistos: false,
+  calm: reduceMotion, cb: false, dmgNums: true, tranquilo: false, tutorialHecho: false, controlesVistos: false,
   decals: ["", "", ""], decalSel: -1, stats: { runs: 0, wins: 0, time: 0, dist: 0, dmg: {}, zone: {} },
   seen: [], slain: {}, beast: {}, runs: [], daily: { day: "", best: 0 }, zone: "patio", ach: [],
   ability: "bombardeo", curses: [], endless: 0, abilLv: {}, weapon: "gomitas",
@@ -222,13 +222,14 @@ export function applySettings() {
   root.setProperty("--touch-scale", String(save.touch));
   applyTouchLayouts(save.tlay, save.touch);
   document.body.classList.toggle("calm", save.calm);
+  document.body.classList.toggle("cb", save.cb);
   setModoTranquilo(!!save.tranquilo);
 }
 export const commit = () => { save.preset = presetOf(save); persist(); saveRaceCfg(); applySettings(); };
 /** Vuelve las opciones (imagen, audio, controles, accesibilidad) a los valores de fábrica; el progreso no se toca. */
 function resetCfg() {
   const D = structuredClone(DEFAULT);
-  Object.assign(save, { gpu: D.gpu, scaler: D.scaler, scale: D.scale, fsr: D.fsr, aa: D.aa, sharpen: D.sharpen, preset: D.preset, shadowQ: D.shadowQ, detail: D.detail, texRes: D.texRes, aniso: D.aniso, fpsCap: D.fpsCap, menuFps: D.menuFps, fov: D.fov, bright: D.bright, gamma: D.gamma, bloom: D.bloom, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, camMode: D.camMode, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: D.keys, race: D.race, tlay: D.tlay });
+  Object.assign(save, { gpu: D.gpu, scaler: D.scaler, scale: D.scale, fsr: D.fsr, aa: D.aa, sharpen: D.sharpen, preset: D.preset, shadowQ: D.shadowQ, detail: D.detail, texRes: D.texRes, aniso: D.aniso, fpsCap: D.fpsCap, menuFps: D.menuFps, fov: D.fov, bright: D.bright, gamma: D.gamma, bloom: D.bloom, fps: D.fps, hudSolid: D.hudSolid, hint: D.hint, zoom: D.zoom, camMode: D.camMode, shake: D.shake, vol: D.vol, hud: D.hud, calm: D.calm, cb: D.cb, dmgNums: D.dmgNums, pad: D.pad, rumble: D.rumble, touch: D.touch, mute: D.mute, keys: D.keys, race: D.race, tlay: D.tlay });
   commit();
 }
 
@@ -854,6 +855,7 @@ const DESC: Record<string, string> = {
   hud: "Escala de todo el HUD (barras, reloj, radar).",
   hudSolid: "Fondo casi opaco en el HUD para leerlo mejor sobre pasto claro.",
   calm: "Quita parpadeos, destellos y sacudidas que molestan.",
+  cb: "Cambia los colores de vida, pactos y peligros por otros que se distinguen con daltonismo.",
   tranquilo: "Modo Tranquilo: se recibe la mitad del daño y los bichos tienen 70% de vida (los jefes no).",
   "pad.dead": "Cuánto hay que mover el stick antes de que cuente.",
   "pad.sens": "Qué tan rápido responde el stick.",
@@ -944,7 +946,7 @@ export const TABS: Record<string, { name: string; rows: Row[] }> = {
     ["Lectura", "sect"],
     ["Tamaño del HUD", "range", "hud", 0.8, 1.5, 0.05, "x"], ["HUD con fondo sólido", "tog", "hudSolid"], ["Números de daño", "tog", "dmgNums"],
     ["Movimiento", "sect"],
-    ["Modo Tranquilo", "tog", "tranquilo"], ["Reducir parpadeos y destellos", "tog", "calm"], ["Temblor de pantalla", "tog", "shake"],
+    ["Modo Tranquilo", "tog", "tranquilo"], ["Reducir parpadeos y destellos", "tog", "calm"], ["Modo daltónico", "tog", "cb"], ["Temblor de pantalla", "tog", "shake"],
   ] },
   data: { name: "Datos", rows: [
     ["El progreso se guarda en este navegador. Un archivo de respaldo permite llevarlo a otro dispositivo.", "note"],
