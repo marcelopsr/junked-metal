@@ -770,7 +770,7 @@
     {"id":"nave_rayo_radio","valor":3.2,"descripcion":"Luna: radio (m) del rayo de la abductora"},
     {"id":"nave_rayo_dura_s","valor":2.2,"descripcion":"Luna: segundos que dura el rayo encendido"},
     {"id":"nave_rayo_altura","valor":3.5,"descripcion":"Luna: altura (m) hasta la que el rayo levanta al auto"},
-    {"id":"nave_rayo_dano_s","valor":20,"descripcion":"Luna: daño por segundo dentro del rayo"},
+    {"id":"nave_rayo_dano_s","valor":15,"descripcion":"Luna: daño por segundo dentro del rayo"},
     {"id":"nave_caza_vida","valor":2000,"descripcion":"Luna: vida del caza rápido (minijefe)"},
     {"id":"nave_caza_vel","valor":24,"descripcion":"Luna: velocidad (m/s) de las pasadas del caza"},
     {"id":"nave_caza_disparo_cada_s","valor":0.3,"descripcion":"Luna: segundos entre disparos del caza en una pasada"},

@@ -432,7 +432,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
   }
   peb.thinInstanceSetBuffer("matrix", mats, 16, true); peb.thinInstanceRefreshBoundingInfo(); peb.isPickable = false; peb.receiveShadows = true; // chicas: sin sombra propia
   // Relieve del suelo (ref31b/ref77): piedritas facetadas, matas secas y rocas rojas facetadas. Semilla propia; sin colisión salvo las rocas grandes
-  const gr = rngFrom(0x5a9d1e), poly = (name: string, type: number, x: number, y: number, z: number, mat: B.Material) => { const p = B.MeshBuilder.CreatePolyhedron(name, { type, sizeX: x, sizeY: y, sizeZ: z }, scene); p.material = mat; return p; };
+  let gr = rngFrom(0x5a9d1e); const poly = (name: string, type: number, x: number, y: number, z: number, mat: B.Material) => { const p = B.MeshBuilder.CreatePolyhedron(name, { type, sizeX: x, sizeY: y, sizeZ: z }, scene); p.material = mat; return p; };
   const ground = (near: number, minD = 6) => { // near: fracción cerca de la salida (6-45 m); el resto, repartido por toda la luna
     for (;;) {
       const d = gr() < near ? ((w, a) => new B.Vector3(Math.sin(w) * Math.cos(a), Math.cos(w), Math.sin(w) * Math.sin(a)))((minD + gr() * (45 - minD)) / MOON.R, gr() * 6.3) : new B.Vector3(gr() * 2 - 1, gr() * 2 - 1, gr() * 2 - 1).normalize();
@@ -452,6 +452,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
     const stone = poly("moonStone" + c, 3, 0.5, 0.32, 0.42, pbr("moonStone" + c, { color: c, rough: 0.9 })); // 0,1-0,5 m de tamaño
     thin(stone, low ? n >> 1 : n, 0.6, () => { const s = 0.2 + gr() ** 2 * 0.9; return new B.Vector3(s * (0.8 + gr() * 0.5), s * (0.6 + gr() * 0.5), s * (0.8 + gr() * 0.5)); }, 0.1);
   }
+  const grFis = gr; gr = rngFrom(0x77d1); // decorado sin colisión con generador propio: gr (rocas con colisión y matas) consume lo mismo que antes de af846df
   { // Variedad de suelo del lado iluminado: rocas oscuras (siluetas) y cráteres de sombra con degradé suave. Misma semilla gr de arriba; sin colisión (planos o muy bajos). ponytail: techo ~300 instancias; cráteres solo cerca de la salida
     const dark = poly("moonDarkRock", 2, 0.5, 0.36, 0.45, pbr("moonDarkRock", { color: "#3a1f14", rough: 0.9 }));
     thin(dark, low ? 60 : 130, 0.85, () => { const s = 0.5 + gr() ** 2 * 1.3; return new B.Vector3(s * (0.8 + gr() * 0.5), s * (0.6 + gr() * 0.6), s * (0.8 + gr() * 0.5)); }, 0.1);
@@ -476,6 +477,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
     const rim = poly("moonRim", 2, 0.5, 0.3, 0.42, pbr("moonRim", { color: "#e6c9a0", rough: 0.85 }));
     thin(rim, low ? 180 : 300, 0.95, () => { const s = 0.3 + gr() * 0.6; return new B.Vector3(s * (0.8 + gr() * 0.5), s * 0.7, s * (0.8 + gr() * 0.5)); }, 0.1);
   }
+  gr = grFis;
   for (const [c, n] of [["#a8954a", 70], ["#7d6b35", 55]] as const) { // mata seca: 4 hojas finas abiertas en abanico
     const mat = pbr("moonScrub" + c, { color: c, rough: 0.9 }), leaves = [0, 1, 2, 3].map((k) => { const l = poly("hoja", 1, 0.03, 0.22, 0.03, mat); l.scaling.set(1, 1, 1); l.position.set(Math.cos(k * 1.57) * 0.1, 0.2, Math.sin(k * 1.57) * 0.1); l.rotation.set(Math.sin(k * 1.57) * 0.5, 0, -Math.cos(k * 1.57) * 0.5); return l; });
     const t = B.Mesh.MergeMeshes(leaves, true, true)!; t.name = "moonScrub" + c; t.material = mat;
