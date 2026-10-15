@@ -2,7 +2,6 @@ import * as B from "@babylonjs/core";
 import { box, template } from "./models";
 import { G, M, pbr, TEX, wetGround } from "./render";
 import { RAIN } from "./run";
-import { FOLD, FOLDED_SLICE } from "./folded";
 import { alt, at, grav, MOON, onFloor, orient, toWorld, upAt } from "./moon";
 import { heavyProps } from "./zones/common";
 
@@ -171,9 +170,7 @@ export function tireFriction(p: B.Vector3, n = 10) {
 // ---------- Restos con física simple (sin Havok: son decorativos) ----------
 type Chunk = { m: B.InstancedMesh; v: B.Vector3; av: B.Vector3; life: number };
 const chunks: Chunk[] = [];
-const chunkTpl = (c: string) => template("chunk" + c, () => (FOLDED_SLICE
-  ? [box(0.34, 0.06, 0.26, FOLD.painted(c, 0.75, 401), [0, 0, 0]), box(0.11, 0.09, 0.11, FOLD.bare(), [0.06, 0.03, 0])]
-  : [box(0.3, 0.14, 0.24, M.plastic(c), [0, 0, 0])]));
+const chunkTpl = (c: string) => template("chunk" + c, () => [box(0.3, 0.14, 0.24, M.plastic(c), [0, 0, 0])]); // pedazo de plástico de juguete (retiro Folded)
 
 export function debris(pos: B.Vector3, color: string, n: number, power = 6, size = 1) {
   const tpl = chunkTpl(color);
