@@ -101,7 +101,7 @@ export function miniHull(kind: string, paint: B.Material, accent: string, lamp: 
     }
   } else if (arch === "truck") {
     if (kind === "tanque" || kind === "topadora") {
-      for (const s of [-1, 1]) track(s * Math.max(xm, 0.72), 0.34, 0.05, Lc * 0.92);
+      if (kind === "tanque") for (const s of [-1, 1]) track(s * Math.max(xm, 0.72), 0.34, 0.05, Lc * 0.92);
       if (kind === "tanque") add(rbox(Wd, H * 0.4, Lc * 0.78, 0.1, paint, [0, H * 0.34, 0]), rbox(Wd * 0.78, H * 0.3, Lc * 0.34, 0.14, paint, [0, H * 0.68, -Lc * 0.06]),
         cyl(0.2, 0.2, Lc * 0.46, blk, [0, H * 0.72, Lc * 0.28], [Math.PI / 2, 0, 0], 8), cyl(0.28, 0.28, 0.1, acc, [0, H * 0.72, Lc * 0.5], [Math.PI / 2, 0, 0], 8));
       // la topadora se arma en «Rasgos»
@@ -156,18 +156,18 @@ export function miniHull(kind: string, paint: B.Material, accent: string, lamp: 
       ...[-1, 1].flatMap((s) => [tor(0.36, 0.07, chrome, [s * Wd * 0.34, y, front + 0.04], [rx, 0, 0]), // faros redondos con aro
         tube([[s * Wd * 0.4, top + 0.5, -Lc * 0.14 - 0.1], [s * Wd * 0.4, top + 0.4, Lc * 0.1 - 0.1]], 0.035, acc)]), // jaula antivuelco: largueros
       cyl(0.8, 0.8, 0.24, blk, [0, lift + H * 0.55, -front - 0.22], [rx, 0, 0], 12), cyl(0.42, 0.42, 0.26, acc, [0, lift + H * 0.55, -front - 0.22], [rx, 0, 0], 8)); // rueda de auxilio atrás
-  } else if (kind === "clasico") { // cupé de los años 50: guardabarros bulbosos, habitáculo alto atrás, parrilla y paragolpes cromados, faros redondos sobre los guardabarros
+  } else if (kind === "clasico") { // cupé de los años 50: carrocería continua, guardabarros alargados, habitáculo alto atrás, parrilla y paragolpes cromados, faros redondos sobre los guardabarros
     const gl = glow;
-    add(rbox(Wd, H * 0.4, Lc * 0.7, 0.12, paint, [0, H * 0.33, -Lc * 0.07]), rbox(Wd * 1.05, H * 0.2, Lc * 0.56, 0.08, cr, [0, H * 0.2, -Lc * 0.04]), // carrocería y faldón crema
-      rbox(Wd * 0.66, H * 0.36, Lc * 0.36, 0.14, paint, [0, H * 0.46, Lc * 0.3], [0.1, 0, 0]), // capó largo
-      rbox(Wd * 0.8, H * 0.42, Lc * 0.42, 0.16, glass, [0, H * 0.74, -Lc * 0.12]), rbox(Wd * 0.84, H * 0.18, Lc * 0.46, 0.07, paint, [0, H * 0.96, -Lc * 0.12]), // habitáculo y techo abombado
-      rbox(Wd * 0.8, H * 0.36, Lc * 0.26, 0.14, paint, [0, H * 0.46, -Lc * 0.4], [-0.15, 0, 0]), // baúl
-      ...[-1, 1].flatMap((s) => [-1, 1].map((f) => box(0.06, H * 0.4, 0.06, paint, [s * Wd * 0.4, H * 0.72, -Lc * 0.12 + f * Lc * 0.2]))), // parantes
+    add(rbox(Wd * 1.04, H * 0.32, Lc * 0.84, 0.1, cr, [0, H * 0.18, -0.02]), rbox(Wd * 0.98, H * 0.28, Lc * 0.86, 0.11, paint, [0, H * 0.42, -0.02]), // cuerpo continuo: faldón crema abajo, cintura de color arriba
+      rbox(Wd * 0.82, H * 0.2, Lc * 0.3, 0.09, paint, [0, H * 0.58, Lc * 0.3], [0.08, 0, 0]), rbox(Wd * 0.84, H * 0.2, Lc * 0.24, 0.09, paint, [0, H * 0.56, -Lc * 0.38], [-0.1, 0, 0]), // capó largo y baúl unidos a la cintura
+      rbox(Wd * 0.8, H * 0.36, Lc * 0.36, 0.12, glass, [0, H * 0.76, -Lc * 0.1]), rbox(Wd * 0.84, 0.08, Lc * 0.34, 0.05, paint, [0, H * 0.95, -Lc * 0.1]), rbox(Wd * 0.74, H * 0.34, 0.05, 0.02, glass, [0, H * 0.74, Lc * 0.1], [-0.55, 0, 0]), // habitáculo, techo y parabrisas inclinado
+      ...[-1, 1].map((s) => box(0.02, 0.025, Lc * 0.8, chrome, [s * (Wd * 0.52 + 0.01), H * 0.34, -0.02]))); // filete cromado de la cintura
+    for (const w of ws) add(rbox(w.w + 0.22, 0.3, w.pos[2] > 0 ? Lc * 0.3 : Lc * 0.36, 0.14, paint, [w.pos[0], 0.22, w.pos[2] + (w.pos[2] > 0 ? 0.04 : -0.04)], [w.pos[2] > 0 ? 0.12 : -0.1, 0, 0])); // guardabarros alargados que nacen del cuerpo
+    add(...[-1, 1].flatMap((s) => [-1, 1].map((f) => box(0.06, H * 0.4, 0.06, paint, [s * Wd * 0.4, H * 0.72, -Lc * 0.12 + f * Lc * 0.2]))), // parantes
       rbox(Wd * 0.5, H * 0.62, 0.1, 0.05, chrome, [0, H * 0.4, front + 0.04]), ...[-2, -1, 0, 1, 2].map((i) => box(0.03, H * 0.5, 0.03, blk, [i * Wd * 0.08, H * 0.4, front + 0.1])), // parrilla alta
       rbox(Wd * 1.2, 0.1, 0.1, 0.04, chrome, [0, 0.1, front + 0.2]), rbox(Wd * 1.1, 0.1, 0.1, 0.04, chrome, [0, 0.1, -front - 0.14]), // paragolpes
       ...[-1, 1].flatMap((s) => [box(0.07, H * 0.34, 0.08, chrome, [s * Wd * 0.3, 0.14, front + 0.2]), box(0.16, 0.04, Lc * 0.4, blk, [s * (Wd / 2 + 0.05), 0.1, 0]), // topes y estribos
         tor(0.36, 0.06, chrome, [s * Wd * 0.62, H * 0.6, front + 0.2], [rx, 0, 0]), sph(0.26, gl, [s * Wd * 0.62, H * 0.6, front + 0.24], undefined, 6)]), box(0.04, 0.03, Lc * 0.3, chrome, [0, H * 0.64, Lc * 0.3])); // faros redondos con aro y filete cromado del capó
-    for (const w of ws) { const f = w.pos[2] > 0; add(sph(1, paint, [w.pos[0], w.d * 0.5, w.pos[2] + (f ? 0.04 : -0.02)], [w.w * 1.45, w.d * 0.72, w.d * (f ? 1.5 : 1.55)], 10)); } // guardabarros bulbosos de color
   } else if (kind === "misterio") {
     const flower = (s: number, y: number, z: number, r: number) => {
       const x = s * (Wd / 2 + 0.03);
@@ -187,16 +187,16 @@ export function miniHull(kind: string, paint: B.Material, accent: string, lamp: 
     const sx = Wd * 0.5 + 0.22;
     for (const s of [-1, 1]) for (let i = 0; i < 6; i++) add(box(0.5, 0.04, Lc * 0.4 / 6, i % 2 ? wht : acc, [s * sx, H * 0.98, -Lc * 0.28 + (i - 2.5) * Lc * 0.4 / 6], [0, 0, -s * 0.35])); // toldo rayado rosa y blanco
   } else if (kind === "topadora") { // cargadora: pala ancha delante con dientes, brazos y pistones, cabina con jaula y faros de techo, motor atrás
-    const steel = toy("#6E7276"), zp = Lc * 0.55, bw = (tx + 0.17) * 2 + 0.25; // pala más ancha que las orugas: se lee desde atrás
-    for (const s of [-1, 1]) add(...[-1, 1].map((f) => cyl(0.5, 0.5, 0.34, blk, [s * tx, 0.08, f * Lc * 0.46], [0, 0, rx], 10)), // ruedas guía de las orugas
-      ...[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((i) => box(0.38, 0.05, 0.08, acc, [s * tx, 0.3, i * Lc * 0.1])), // tacos de oruga
-      rbox(0.14, 0.18, 1.3, 0.04, paint, [s * (tx - 0.26), 0.4, Lc * 0.28], [0.19, 0, 0]), cyl(0.14, 0.14, 0.8, paint, [s * (tx - 0.38), 0.66, Lc * 0.2], [rx + 0.25, 0, 0], 8), cyl(0.07, 0.07, 0.95, chrome, [s * (tx - 0.38), 0.62, Lc * 0.28], [rx + 0.25, 0, 0], 6), // brazo, pistón y vástago
-      box(0.1, 0.75, 0.9, paint, [s * (bw / 2 - 0.05), 0.2, zp + 0.4])); // lateral de la pala
+    const steel = toy("#6E7276"), zp = Lc * 0.47, bw = 2.0, az = Lc * 0.28, wr = 0.46, wy = 0.28; // pala 0,5 u por delante del casco; ruedas grandes de tacos sobre los ejes
+    for (const s of [-1, 1]) add(...[-1, 1].flatMap((f) => [cyl(wr, wr, 0.46, blk, [s * (tx + 0.08), wy, f * az], [0, 0, rx], 12), cyl(wr * 0.62, wr * 0.62, 0.5, acc, [s * (tx + 0.08), wy, f * az], [0, 0, rx], 10), cyl(wr * 0.4, wr * 0.4, 0.54, blk, [s * (tx + 0.08), wy, f * az], [0, 0, rx], 6), // neumático, llanta de color y cubo
+        ...Array.from({ length: 12 }, (_, k) => { const a = k * Math.PI / 6; return box(0.4, 0.09, 0.12, blk, [s * (tx + 0.08), wy + Math.sin(a) * (wr + 0.01), f * az + Math.cos(a) * (wr + 0.01)], [rx - a, 0, 0]); })]), // tacos
+      rbox(0.14, 0.18, 1.0, 0.04, paint, [s * (tx - 0.26), 0.4, Lc * 0.3], [0.12, 0, 0]), cyl(0.12, 0.12, 0.6, paint, [s * (tx - 0.38), 0.62, Lc * 0.22], [rx + 0.25, 0, 0], 8), cyl(0.06, 0.06, 0.7, chrome, [s * (tx - 0.38), 0.6, Lc * 0.3], [rx + 0.25, 0, 0], 6), // brazo, pistón y vástago
+      box(0.1, 0.6, 0.6, paint, [s * (bw / 2 - 0.05), 0.15, zp + 0.2])); // lateral de la pala
     add(rbox(Wd * 0.8, H * 0.28, Lc * 0.62, 0.1, paint, [0, H * 0.28, -Lc * 0.06]), rbox(Wd * 0.82, H * 0.42, Lc * 0.34, 0.12, paint, [0, H * 0.46, -Lc * 0.36]), box(Wd * 0.5, 0.16, 0.03, blk, [0, H * 0.5, -Lc * 0.54]), // casco y capó del motor
       rbox(Wd * 0.8, H * 0.42, Lc * 0.32, 0.1, glass, [0, H * 0.78, -Lc * 0.02]), box(Wd * 0.8, 0.07, Lc * 0.34, paint, [0, H * 0.96, -Lc * 0.02]), // cabina y techo
       ...[-1, 1].flatMap((s) => [-1, 1].map((f) => box(0.07, H * 0.46, 0.07, blk, [s * Wd * 0.42, H * 0.78, -Lc * 0.02 + f * Lc * 0.16])).concat([box(0.2, 0.12, 0.12, blk, [s * Wd * 0.28, H * 1.03, Lc * 0.1]), box(0.14, 0.07, 0.03, glow, [s * Wd * 0.28, H * 1.03, Lc * 0.1 + 0.07])])), // parantes y faros de techo
-      box(bw, 0.07, 0.9, steel, [0, -0.12, zp + 0.4]), rbox(bw, H * 0.8, 0.12, 0.05, paint, [0, 0.3, zp - 0.02], [-0.2, 0, 0]), rbox(bw, 0.14, 0.16, 0.05, paint, [0, -0.05, zp + 0.85]), // piso, respaldo y labio de la pala
-      ...[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((i) => box(0.14, 0.1, 0.24, blk, [i * bw * 0.105, -0.12, zp + 1.0]))); // dientes de la pala
+      box(bw, 0.07, 0.5, steel, [0, -0.12, zp + 0.2]), rbox(bw, 0.5, 0.12, 0.05, paint, [0, 0.12, zp - 0.02], [-0.2, 0, 0]), rbox(bw, 0.14, 0.12, 0.05, paint, [0, -0.05, zp + 0.43]), // piso, respaldo y labio de la pala
+      ...[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((i) => box(0.14, 0.1, 0.14, blk, [i * bw * 0.105, -0.12, zp + 0.5]))); // dientes de la pala
   } else if (kind === "tanque") {
     for (const s of [-1, 1]) for (let i = 0; i < 5; i++) { const d = i % 4 ? 0.34 : 0.44; add(cyl(d, d, 0.05, acc, [s * (tx + 0.19), 0.05, (i - 2) * Lc * 0.19], [0, 0, rx], 10)); } // ruedas amarillas de las orugas
     add(rbox(Wd * 0.6, H * 0.2, Lc * 0.3, 0.1, acc, [0, H * 0.9, -Lc * 0.06]), cyl(0.3, 0.3, Lc * 0.46, blk, [0, H * 0.72, Lc * 0.34], [rx, 0, 0], 8), cyl(Wd * 0.7, Wd * 0.7, 0.08, blk, [0, H * 0.5, -Lc * 0.06], undefined, 12), cyl(0.34, 0.34, 0.14, blk, [0, H * 0.72, Lc * 0.14], [rx, 0, 0], 8), cyl(0.3, 0.3, 0.2, acc, [0, H * 0.72, Lc * 0.56], [rx, 0, 0], 8)); // aro de la torreta, mantelete y freno del cañón
