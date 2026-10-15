@@ -48,9 +48,9 @@ export const along = (G: GeoKit, d1: number, d2: number, len: number, m: B.Mater
 // Huesos (VAT de glb.ts): 0 cuerpo, 1..6 patas (cadera i, lado +1/-1), 7 antenas. `vis`: escala que glb.ts le da al nodo (GLB.visual).
 const ANT_COLOR = "#6e3520";
 // Diorama de juguete: plástico pintado y metal pintado (pbr plano; merge/flatten los pasa a color de vértice, sin atlas Folded). Pintura saltada = parches crema/acero.
-const toy = (c: string, rough = 0.5, metal = 0.1) => pbr(`jm${c}|${rough}|${metal}`, { color: c, rough, metal });
+const toyC = (c: string, rough = 0.5, metal = 0.1) => pbr(`jm${c}|${rough}|${metal}`, { color: c, rough, metal });
 const toyGlow = (c: string) => pbr("jmg" + c, { color: c, rough: 0.4, emissive: c });
-const toySteel = () => toy("#a4a9ae", 0.4, 0.8), toyDark = () => toy("#2a2623", 0.7, 0), toyRubber = () => toy("#1c1917", 0.92, 0);
+const toySteel = () => toyC("#a4a9ae", 0.4, 0.8), toyDark = () => toyC("#2a2623", 0.7, 0), toyRubber = () => toyC("#1c1917", 0.92, 0);
 const ANT_HIPS: [V3, number][] = [[[0.2, 0.46, 0.3], 0.65], [[0.22, 0.46, 0.14], 0], [[0.2, 0.46, -0.02], -0.65]];
 /** Insectos de 6 patas (hormiga, escupidora, escarabajo): mismo esqueleto y caminata; cambian color, tamaño (k) y la pieza de identidad. */
 type Bug = { color: string; k: number; eye: string; seed: number; look: "ant" | "spit" | "beetle" };
@@ -93,13 +93,13 @@ const elytra = (G: GeoKit, add: (m: B.Mesh, mat: B.Material) => B.Mesh, mats: B.
 };
 export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
   const { G, done, strut, bone, add } = kit();
-  const body = toy(o.color, 0.42, 0.05), plate = toy(BRONZE, 0.6, 0.55), cream = toy(CREAM, 0.7, 0), eye = toyGlow(o.eye), bronze = toy(BRONZE, 0.45, 0.8), dkr = toy(RUSTD, 0.6, 0.2);
+  const body = toyC(o.color, 0.42, 0.05), plate = toyC(BRONZE, 0.6, 0.55), cream = toyC(CREAM, 0.7, 0), eye = toyGlow(o.eye), bronze = toyC(BRONZE, 0.45, 0.8), dkr = toyC(RUSTD, 0.6, 0.2);
   if (o.look === "beetle") { // domo de élitros: dos cúpulas de plástico pintado (oliva / óxido) con nervios, costura, pronoto abombado y cuerno curvo (IDENTITY)
-    const olive = toy("#505624", 0.4, 0.05), rust = toy("#7a3a1c", 0.4, 0.05);
+    const olive = toyC("#505624", 0.4, 0.05), rust = toyC("#7a3a1c", 0.4, 0.05);
     along(G, 0.6, 0.78, 0.9, dkr, [0, 0.4, -0.6]);
     for (const s of [-1, 1]) {
       ell(add, dkr, [s * 0.26, 0.48, -0.6], [0.54, 0.9, 1.26], 8, 0.5); // base oscura bajo las placas
-      elytra(G, add, s < 0 ? [olive, toy("#5e6430", 0.4, 0.05)] : [rust, toy("#8e4a24", 0.4, 0.05)], bronze, [s * 0.26, 0.5, -0.6], [0.28, 0.475, 0.65]); // placas segmentadas con nervios
+      elytra(G, add, s < 0 ? [olive, toyC("#5e6430", 0.4, 0.05)] : [rust, toyC("#8e4a24", 0.4, 0.05)], bronze, [s * 0.26, 0.5, -0.6], [0.28, 0.475, 0.65]); // placas segmentadas con nervios
       rib(G, bronze, -0.28, 0.26, 0.3, [s * 0.26, 0.5]); rib(G, bronze, -0.9, 0.22, 0.24, [s * 0.26, 0.5]);
       G.box(0.2, 0.012, 0.3, cream, [s * 0.34, 0.9, -0.55], [0, 0, s * 0.35]); // parche de pintura saltada
     }
@@ -115,7 +115,7 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     G.plate([0, 0.83, -0.72], [Math.PI / 2, 0, 0], 0.3, 0.5, cream); // placa del lomo pintada en crema (PANELS)
   }
   if (o.look === "spit") { // globo de ácido enjaulado por flejes, con goteo en la tobera (IDENTITY)
-    G.sph(0.58, toy("#7e9a1a", 0.25, 0), [0, 0.96, -0.78]); // vidrio de juguete con ácido
+    G.sph(0.58, toyC("#7e9a1a", 0.25, 0), [0, 0.96, -0.78]); // vidrio de juguete con ácido
     for (const [y, d] of [[0.96, 0.64], [0.82, 0.52], [1.1, 0.5]] as const) G.cyl(d, 0.05, bronze, [0, y, -0.78], undefined, 8);
     G.tube(Array.from({ length: 9 }, (_, i) => { const a = (Math.PI * i) / 8; return [0, 0.96 + Math.sin(a) * 0.31, -0.78 + Math.cos(a) * 0.31] as V3; }), 0.025, bronze);
     G.cyl(0.14, 0.08, bronze, [0, 1.28, -0.78], undefined, 6);
@@ -132,7 +132,7 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     G.box(0.5, 0.08, 0.4, plate, [0, 0.79, 0.7], [-0.18, 0, 0]); // visera
   }
   for (const s of [-1, 1]) {
-    G.sph(0.22, toy("#0c0a0a", 0.2, 0), [s * 0.28, 0.62, 0.8]); G.sph(0.1, eye, [s * 0.34, 0.64, 0.9]); // ojo de vidrio con brasa
+    G.sph(0.22, toyC("#0c0a0a", 0.2, 0), [s * 0.28, 0.62, 0.8]); G.sph(0.1, eye, [s * 0.34, 0.64, 0.9]); // ojo de vidrio con brasa
     strut([s * 0.12, 0.44, 0.9], [s * 0.05, 0.36, 1.22], 0.07, 0.06, toySteel()); // mandíbula
     G.box(0.06, 0.06, 0.12, toySteel(), [s * 0.01, 0.36, 1.24], [0, -s * 0.9, 0]);
     bone(7);
@@ -141,7 +141,7 @@ export function antBody(vis = 1, o: Bug = BUGS.hormiga) {
     bone(0);
   }
   // Patas: fémur, rodilla de bronce, tibia y pie de goma, cada una en su hueso (caminata horneada: 300 hormigas cuestan lo mismo que una)
-  const leg = toy(o.color, 0.5, 0.3); // pata de metal pintado
+  const leg = toyC(o.color, 0.5, 0.3); // pata de metal pintado
   let b = 1;
   for (const [[hx, hy, hz], yaw] of ANT_HIPS) for (const s of [1, -1]) {
     bone(b++);
@@ -173,7 +173,7 @@ export function antPose(vis: number, walk: number, atk: number, kk = 1) {
 const MOTH = "#a8602c"; // pelo óxido (ref127/266); alas crema
 export function mothBody(vis = 1) {
   const { G, done, strut, bone } = kit();
-  const fur = toy(MOTH, 0.7, 0), band = toy("#5a2e1a", 0.5, 0.1), eye = toy("#0c0a0a", 0.2, 0), glint = toyGlow("#ff8a2a"), cream = toy("#edc79a", 0.6, 0);
+  const fur = toyC(MOTH, 0.7, 0), band = toyC("#5a2e1a", 0.5, 0.1), eye = toyC("#0c0a0a", 0.2, 0), glint = toyGlow("#ff8a2a"), cream = toyC("#edc79a", 0.6, 0);
   along(G, 0.3, 0.34, 0.36, fur, [0, 0.42, -0.02], 8); // tórax
   G.cyl(0.42, 0.07, cream, [0, 0.42, 0.16], [Math.PI / 2, 0, 0], 8); // collar crema
   bone(1);
@@ -201,7 +201,7 @@ export function mothPose(vis: number, walk: number, atk: number) {
 /** Ala de polilla (bisagra en el origen, hacia +x·side): chapa fina de 12 mm con larguero, nervios y ocelo; gira en z en enemies.ts. */
 export function mothWing(side: 1 | -1) {
   const { G, done, strut } = kit();
-  const s = side * 0.85, skin = toy("#edc79a", 0.55, 0), skin2 = toy("#d9a574", 0.6, 0), cream = toy("#b04a22", 0.55, 0), core = toy("#5a2412", 0.6, 0), spar = toy("#5a2e1c", 0.5, 0.2);
+  const s = side * 0.85, skin = toyC("#edc79a", 0.55, 0), skin2 = toyC("#d9a574", 0.6, 0), cream = toyC("#b04a22", 0.55, 0), core = toyC("#5a2412", 0.6, 0), spar = toyC("#5a2e1c", 0.5, 0.2);
   G.cyl(0.06, 0.16, toySteel(), [0, 0, 0], [Math.PI / 2, 0, 0], 6); // bisagra pegada al tórax
   G.box(0.51, 0.012, 0.44, skin, [s * 0.385, 0.01, 0.04], [0, s * 0.126, 0]); // ala anterior
   G.box(0.21, 0.012, 0.3, skin2, [s * 0.686, 0.01, -0.06], [0, s * 0.35, 0]); // punta plegada
@@ -617,18 +617,18 @@ const LEG_PAL: Record<string, [string, string, string?]> = { "#3c4450": ["#8a542
 /** Pata articulada Folded (rey, tarántula): fémur y tibia de perfil, rodilla de bisagra emisiva, tobillo y pie de goma. Misma geometría que la vieja (LEGS). */
 export function foldLeg(L: { hips: [number, number, number][]; len: number; r: number; color: string; knee?: string }) {
   const { G, done, strut } = kit();
-  const pal = LEG_PAL[L.color], hy = L.hips[0][1], leg = toy(pal?.[0] ?? L.color, 0.5, 0.3), steel = pal ? toy(BRONZE, 0.45, 0.8) : toySteel(), knee: V3 = [L.len * 0.48, L.len * 0.32, 0], foot: V3 = [L.len * 0.98, -hy + 0.02, 0.06];
+  const pal = LEG_PAL[L.color], hy = L.hips[0][1], leg = toyC(pal?.[0] ?? L.color, 0.5, 0.3), steel = pal ? toyC(BRONZE, 0.45, 0.8) : toySteel(), knee: V3 = [L.len * 0.48, L.len * 0.32, 0], foot: V3 = [L.len * 0.98, -hy + 0.02, 0.06];
   G.cyl(L.r * 2.4, L.r * 2.4, steel, [-L.r * 0.4, 0, 0], [0, 0, Math.PI / 2], 6); // rótula hacia el caparazón
   G.box(L.r * 2.3, L.r * 2.3, L.r * 2.3, steel, [0, 0, 0]);
   const tar = L.color === "#4a3228"; // tarántula: pata arqueada de 3 segmentos (fémur alto, tibia, metatarso) con codo marcado
   const mid: V3 = [L.len * 0.78, L.len * 0.22, 0], top: V3 = [L.len * 0.34, L.len * 0.66, 0];
-  if (tar) { strut([0, 0, 0], top, L.r * 1.9, L.r * 2.3, leg); strut(top, mid, L.r * 1.6, L.r * 1.9, leg); strut(mid, foot, L.r * 1.25, L.r * 1.5, leg); const elbow = toy("#c4601a", 0.5, 0.1); G.sph(L.r * 2.5, elbow, top); G.sph(L.r * 2.0, elbow, mid); } // codos naranja mate
+  if (tar) { strut([0, 0, 0], top, L.r * 1.9, L.r * 2.3, leg); strut(top, mid, L.r * 1.6, L.r * 1.9, leg); strut(mid, foot, L.r * 1.25, L.r * 1.5, leg); const elbow = toyC("#c4601a", 0.5, 0.1); G.sph(L.r * 2.5, elbow, top); G.sph(L.r * 2.0, elbow, mid); } // codos naranja mate
   else { strut([0, 0, 0], knee, L.r * 1.75, L.r * 2.15, leg); strut(knee, foot, L.r * 1.35, L.r * 1.65, leg); }
-  if (!tar) G.cyl(L.r * 2.1, L.r * 2.4, pal ? toy(pal[1], 0.45, 0.8) : L.knee ? toyGlow(L.knee) : steel, knee, [Math.PI / 2, 0, 0], 6); // rodilla
+  if (!tar) G.cyl(L.r * 2.1, L.r * 2.4, pal ? toyC(pal[1], 0.45, 0.8) : L.knee ? toyGlow(L.knee) : steel, knee, [Math.PI / 2, 0, 0], 6); // rodilla
   if (tar) { // pelaje: mechones en 4 direcciones a lo largo de los 3 segmentos, oscuros con punta naranja
-    const fur = toy(pal[0], 0.75, 0), tp = toy("#d8661e", 0.75, 0), segs: [V3, V3][] = [[[0, 0, 0], top], [top, mid], [mid, foot]];
+    const fur = toyC(pal[0], 0.75, 0), tp = toyC("#d8661e", 0.75, 0), segs: [V3, V3][] = [[[0, 0, 0], top], [top, mid], [mid, foot]];
     segs.forEach(([a, b], si) => { for (let k = 0; k < 3; k++) { const t = 0.2 + k * 0.3, q: V3 = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 0], f = new B.Vector3(b[0] - a[0], b[1] - a[1], 0).normalize(); for (const d of [[0, 1, 0], [0, 0.6, 1], [0, 0.6, -1]] as V3[]) tuft(G, fur, (k + si) % 2 ? tp : undefined, [q[0], q[1] + L.r * 0.6, d[2] * L.r * 0.7], [d[0] + f.x * 1.5, d[1] + f.y * 1.5, d[2] * 0.6], L.r * 1.15, L.r * 2.0); } });
-  } else if (pal) for (const t of [0.3, 0.62, 0.84]) { const a = new B.Vector3(...knee), f = new B.Vector3(...foot), q = B.Vector3.Lerp(a, f, t); G.box(L.r * 1.9, L.r * 1.9, L.r * 1.4, pal[2] ? toy(pal[2], 0.55, 0.1) : leg, [q.x, q.y, q.z], [0, 0, 0.9]); } // bandas / segmentos de la tibia
+  } else if (pal) for (const t of [0.3, 0.62, 0.84]) { const a = new B.Vector3(...knee), f = new B.Vector3(...foot), q = B.Vector3.Lerp(a, f, t); G.box(L.r * 1.9, L.r * 1.9, L.r * 1.4, pal[2] ? toyC(pal[2], 0.55, 0.1) : leg, [q.x, q.y, q.z], [0, 0, 0.9]); } // bandas / segmentos de la tibia
   G.cyl(L.r * 1.6, L.r * 1.9, steel, [foot[0], foot[1] + L.r * 0.72, foot[2]], [Math.PI / 2, 0, 0], 6); // tobillo
   G.box(L.r * 2.7, L.r * 0.9, L.r * 2.5, toyRubber(), [foot[0], foot[1] + L.r * 0.42, foot[2]]);
   return done(3);
