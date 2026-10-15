@@ -259,6 +259,8 @@ function tickFighter(s: Ship, dt: number, car: Car) { // pasadas rasantes: apunt
 }
 
 /** Partida nueva / fin: limpia naves y proyectiles y reinicia la agenda de la nodriza. */
+/** ENCORE: sin nodriza en este escenario (true) o con la agenda normal (false); llamar tras shipsClear. */
+export const motherOff = (off: boolean) => { if (off) nextMother = Infinity; };
 export function shipsClear() {
   for (let i = ships.length - 1; i >= 0; i--) destroy(ships[i], i);
   for (const p of shots) { p.m.dispose(); p.tele.dispose(); }

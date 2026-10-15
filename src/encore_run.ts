@@ -17,7 +17,7 @@ import { grant, setHitAt, setStageHurt, stageHurt } from "./outro";
 import { alignYaw, CENTER, deform, EARTH_DIR, hflat, MOON, moonCar, onFloor, ringAt, setMoon, SUN_DIR, teleport, upAt, yawOf } from "./moon";
 import { evPace, evReset, evShow } from "./moon_events";
 import { GOAL_IO, goalBlips, goalsClear, rocketLand, shopPlan, spotsPlan } from "./moon_goals";
-import { shipFor, shipsClear } from "./moon_ships";
+import { motherOff, shipFor, shipsClear } from "./moon_ships";
 import { skyClear, skyPace } from "./moon_sky";
 import { mateRevive, type Player } from "./coop";
 import * as IV from "./encore_events";
@@ -134,6 +134,7 @@ export function encPlan() {
   const r = erun!, calm = r.phase === "vote" || r.phase === "final";
   cx.finalKind = E.finalOf(r.seed); // R5: jefe secreto sorteado por la semilla de la run; en ENCORE solo el jefe del FINAL ACT cierra la partida (el gusano lunar no sale)
   cx.RUN_BOSSES = r.phase === "final" ? [[E.ENC.bossIntroS, cx.finalKind]] : calm || (r.loop === 0 && E.sceneIdx(r) < BAL.ritmo.naves_desde_escenario) ? [] : [[E.ENC.miniS, cx.profile.minis[0]]];
+  motherOff(!calm && r.loop === 0 && E.sceneIdx(r) === 0); // el primer escenario de la expedición no trae nodriza
   if (calm) { cx.swarmT = cx.chestT = cx.ballT = Infinity; cx.profile.elites = []; }
 }
 /** Escenario nuevo con el mismo auto, armas, nivel, XP y vida: borra lo del anterior y lo rearma con la semilla derivada (cx.runSeed, escenario). */
