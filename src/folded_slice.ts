@@ -3,7 +3,7 @@
 // colisión, IA, instancias y pivots de patas/alas/llave no cambian. Remaches y tornillos se hornean como cilindros (bake) porque
 // una plantilla no puede llevar thin instances.
 import * as B from "@babylonjs/core";
-import { FOLD, foldAtlas, foldTile, geoKit, toTile, type GeoKit } from "./folded";
+import { geoKit, type GeoKit } from "./folded";
 import { PAL } from "./kit3d";
 import { pbr } from "./render";
 import { genome, original, type Genome } from "./car_genes";
@@ -16,18 +16,45 @@ export function kit() {
   const parts: B.Mesh[] = [];
   let cur = 0; // hueso de las piezas que se agregan (VAT de glb.ts: 0 = cuerpo)
   const add = (m: B.Mesh, mat: B.Material) => {
-    const t = foldTile(mat);
-    if (t !== undefined) { toTile(m, t); mat = foldAtlas(); }
     m.material = mat; m.metadata = { bone: cur }; parts.push(m); return m;
   };
-  const G = geoKit(sc(), add);
+  const G0 = geoKit(sc(), add);
+  // Piezas de juguete en lugar de las del trim/calcos/maza del viejo kit (que llevaban atlas Folded).
+  const at = (p: V3, r?: V3) => { const n = new B.TransformNode("k", sc()); n.position.set(...p); if (r) n.rotation.set(...r); n.computeWorldMatrix(true); return n; };
+  const G = {
+    ...G0,
+    wheel: (p: V3, r: V3 | undefined, d: number, w: number) => { // cubierta de goma, llanta de acero, maza oscura y 5 tornillitos de acero (eje en x)
+      const n = at(p, r), q = B.Quaternion.FromEulerAngles(0, 0, Math.PI / 2);
+      for (const [dd, h, m, t] of [[d, w, toyRubber(), 12], [d * 0.62, w * 1.04, toySteel(), 10], [d * 0.25, w * 1.2, toyDark(), 6]] as const) { const c = G0.cyl(dd, h, m, [0, 0, 0], undefined, t); c.rotationQuaternion = q.clone(); c.parent = n; c.computeWorldMatrix(true); c.setParent(null); }
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; for (const s of [-1, 1]) G0.box(w * 0.08, d * 0.07, d * 0.07, toySteel(), [s * w * 0.52, Math.cos(a) * d * 0.18, Math.sin(a) * d * 0.18], undefined, n); }
+      n.dispose();
+    },
+    grate: (p: V3, r: V3 | undefined, w: number, h: number, count: number, m: B.Material) => { // marco y listones de juguete (mira a -z)
+      const n = at(p, r);
+      for (const s of [-1, 1]) { G0.box(0.02, h, 0.03, m, [s * w / 2, 0, 0], undefined, n); G0.box(w + 0.02, 0.02, 0.03, m, [0, s * h / 2, 0], undefined, n); }
+      for (let i = 0; i < count; i++) G0.box(w, 0.012, 0.025, toyDark(), [0, -h / 2 + (h * (i + 0.5)) / count, 0], [0.5, 0, 0], n);
+      n.dispose();
+    },
+    trimStrip: (p: V3, r: V3 | undefined, len: number, h: number, row: string, t = 0.01) => { // franja pintada: peligro = amarilla con tacos negros, resto = acero
+      const n = at(p, r), hz = row === "hazard";
+      G0.box(len, h, t, hz ? toyC("#f5b91b", 0.6, 0.1) : toySteel(), [0, 0, 0], undefined, n);
+      if (hz) for (let x = -len / 2 + h; x < len / 2 - h * 0.4; x += h * 2) G0.box(h * 0.7, h, t * 1.2, toyDark(), [x, 0, 0], [0, 0, 0.6], n);
+      n.dispose();
+    },
+    decal: (p: V3, r: V3 | undefined, id: string, s: number) => { // placa pintada (número, aviso, flecha...) en lugar del calco
+      const n = at(p, r);
+      G0.box(s * 0.8, s * 0.8, 0.006, toyC(id === "warning" || id === "flecha" ? "#f5b91b" : id === "numero" ? "#f3ead2" : "#c9bd9a", 0.6, 0), [0, 0, -0.003], undefined, n);
+      if (id === "numero") G0.box(s * 0.12, s * 0.5, 0.008, toyDark(), [0, 0, -0.005], undefined, n);
+      n.dispose();
+    },
+  } as unknown as GeoKit;
   const marks: [number, number, number][] = [[0, 0, 0]]; // desde qué remache/tornillo rige cada hueso (los de la maza giran con su rueda)
   const bone = (i: number) => { cur = i; marks.push([G.rivetM.length, G.boltM.length, i]); };
   const done = (k = 1, s = 1) => {
     ([[G.rivetM, 0.016, 0.008, 0], [G.boltM, 0.022, 0.012, 1]] as const).forEach(([list, d, h, col]) => list.forEach((M, i) => {
       cur = marks.filter((m) => m[col] <= i).at(-1)![2];
       const c = B.MeshBuilder.CreateCylinder("p", { diameterTop: d * 0.8 * k, diameterBottom: d * k, height: h * k, tessellation: 6 }, sc());
-      c.bakeTransformIntoVertices(M); add(c, FOLD.bolt());
+      c.bakeTransformIntoVertices(M); add(c, toySteel());
     }));
     if (s !== 1) for (const p of parts) { p.computeWorldMatrix(true); p.bakeCurrentTransformIntoVertices(); p.scaling.setAll(s); }
     return parts;
@@ -49,8 +76,15 @@ export const along = (G: GeoKit, d1: number, d2: number, len: number, m: B.Mater
 const ANT_COLOR = "#6e3520";
 // Diorama de juguete: plástico pintado y metal pintado (pbr plano; merge/flatten los pasa a color de vértice, sin atlas Folded). Pintura saltada = parches crema/acero.
 const toyC = (c: string, rough = 0.5, metal = 0.1) => pbr(`jm${c}|${rough}|${metal}`, { color: c, rough, metal });
-const toyGlow = (c: string) => pbr("jmg" + c, { color: c, rough: 0.4, emissive: c });
+const toyGlow = (c: string) => { const m = pbr("jmg" + c, { color: c, rough: 0.4, emissive: c }); m.fogEnabled = false; return m; }; // sin fogEnabled=false el emisivo desaparece al hornear
 const toySteel = () => toyC("#a4a9ae", 0.4, 0.8), toyDark = () => toyC("#2a2623", 0.7, 0), toyRubber = () => toyC("#1c1917", 0.92, 0);
+/** Material de juguete con los nombres del viejo FOLD (sin atlas, sin chapa plegada): lo usan todos los cuerpos, autos y props de este archivo. */
+const FOLD = {
+  painted: (c: string, _wear?: number, _seed?: number) => toyC(c, 0.5, 0.15), bare: () => toySteel(), dark: () => toyDark(), rubber: () => toyRubber(),
+  rust: () => toyC("#7a4524", 0.8, 0.2), plastic: (c: string) => toyC(c, 0.55, 0), emissive: (c: string) => toyGlow(c),
+  screen: (c = "#3ff2ff") => { const m = pbr("jms" + c, { color: "#05080b", rough: 0.15, emissive: c }); m.fogEnabled = false; return m; },
+  glass: () => pbr("jmglass", { color: "#2c4d5a", rough: 0.15, alpha: 0.45 }),
+};
 const ANT_HIPS: [V3, number][] = [[[0.2, 0.46, 0.3], 0.65], [[0.22, 0.46, 0.14], 0], [[0.2, 0.46, -0.02], -0.65]];
 /** Insectos de 6 patas (hormiga, escupidora, escarabajo): mismo esqueleto y caminata; cambian color, tamaño (k) y la pieza de identidad. */
 type Bug = { color: string; k: number; eye: string; seed: number; look: "ant" | "spit" | "beetle" };
