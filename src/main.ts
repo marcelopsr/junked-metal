@@ -1,5 +1,5 @@
 import { tut, tutEnd, tutOffers, tutOn, tutStart } from "./tutorial";
-import { hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
+import { hudHurt, scrapNumber, hudMate, hudQuad, banner, bannerClear, damageNumber, hudAbility, hudArrows, hudBoss, hudDrive, hudEnc, hudJump, hudSlots, hudKill, hudRadar, hudUpdate, hudWorkshop, initHud, pickOffer, dirSub, radioBoss, radioEvent, selectOffer, showOffers, uiTick } from "./ui";
 import * as B from "@babylonjs/core";
 import havokWasm from "@babylonjs/havok/lib/esm/HavokPhysics.wasm?url";
 import { Car, CARS, drive, setCarPassive } from "./car";
@@ -487,7 +487,7 @@ initOutro({
   get bossKills() { return run.bossKills; },
   setWorldK: (k) => (run.worldK = k),
   resetAbil: () => { run.abilOn = run.bombs = 0; },
-  addRunScrap: (s) => (run.runScrap += s),
+  addRunScrap: (s) => { if (!simulating && s >= 1) scrapNumber(Math.round(s)); return (run.runScrap += s); },
   banner: (t, s) => banner(t, s),
   launchRun: (d, netOnline, n, then) => launchRun(d, netOnline, n, then),
   toMenu: () => toMenu(),
@@ -707,6 +707,7 @@ function hurt(n: number, continuous = false, src = "?", by?: Kind) {
   recordHit(run.time);
   dmgBy[src] = (dmgBy[src] ?? 0) + n * (1 - st.armor);
   lead.hp -= n * (1 - st.armor);
+  if (!simulating && n > 0) hudHurt(Math.min(1, (n * (1 - st.armor)) / Math.max(1, lead.maxHp) * (continuous ? 3 : 1))); // viñeta roja (contacto continuo: golpes chicos, se ve igual)
   if (!simulating && lead.car && !save.calm) { FX.sparks(lead.car.pos.add(upv(lead.car.pos, 0.5))); if (!continuous) debris(lead.car.pos, save.paint || "#d62828", 2, 5, 0.5); } // chispas (y pedazos de pintura en los golpes fuertes) al recibir daño
   if (!continuous) {
     shake = Math.max(shake, 0.5);
