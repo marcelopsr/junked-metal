@@ -517,4 +517,21 @@ const escena = (z) => async (p) => {
 sessions.push({ id: "escenas", query: "?mute&seed=3&encore", vps: ["pc", "cel"], shots: ["patio", "jardin", "garaje", "galpon", "desvan", "pileta", "cocina", "bosque", "nieve", "ciudad", "industrial", "luna-dia", "luna-noche"].map((z) => ({ id: z, perf: false, act: escena(z) })) });
 
 sessions.push(encoreSession(1), encoreSession(2), encoreSession(4));
+
+// Modo daltónico (body.cb, Okabe-Ito): Configuración → Accesibilidad, HUD con vida baja + aviso de peligro y carta de pacto.
+// La vida baja se fuerza con las clases del HUD (sin __tick después: el loop la recalcula); prueba el CSS, no la lógica de vida.
+const cbOn = (p) => p.evaluate(() => window.__cfg({ cb: true }));
+sessions.push({ id: "daltonico", query: "?mute&seed=3", shots: [
+  { id: "config", perf: false, act: async (p) => { await cbOn(p); await view("config")(p); await p.dispatchEvent('[data-tab="a11y"]', "click");
+    await p.evaluate(() => document.querySelector('[data-tog="cb"]')?.scrollIntoView({ block: "center" })); await p.waitForTimeout(150); } },
+] }, { id: "daltonico_enc", query: "?mute&encore&seed=58", shots: [
+  { id: "hud-bajo", perf: false, act: async (p) => { await wait(p, () => window.__enc?.info()); await cbOn(p); await p.evaluate(() => { window.__god(); window.__sim(25); }); await tick(p, 45);
+    await p.evaluate(async () => { (await import("/src/ui.ts")).banner("PELIGRO · LLUVIA DE TORNILLOS", 9, { tone: "warn", tag: "DIRECTOR" }); }); await tick(p, 40);
+    await p.evaluate(() => { document.getElementById("txl").classList.add("low"); document.getElementById("hud").classList.add("low"); [...document.getElementById("lipo").children].forEach((c, i) => c.style.setProperty("--p", i ? "0%" : "60%")); }); await p.waitForTimeout(150); } },
+  { id: "pacto", perf: false, act: async (p) => { await p.evaluate(() => { const e = window.__enc; e.land(); e.board(); if (e.info().phase === "overload") e.tick(30); if (e.info().phase === "guest") window.__killBoss(); }); await tick(p, 20); await p.evaluate(() => window.__enc.pick(1)); await tick(p, 20);
+    // H12 (sonda): en táctil no hay teclas Z/X/V y las opciones miden >= 44 px de alto; en compu las teclas se ven
+    const m = await p.evaluate(() => ({ touch: matchMedia("(pointer: coarse)").matches, kbd: [...document.querySelectorAll("#encAsk kbd")].map((k) => k.getBoundingClientRect().width), btn: ["encA", "encB", "encC"].map((id) => document.getElementById(id)).filter((b) => !b.classList.contains("hidden")).map((b) => Math.round(b.getBoundingClientRect().height)) }));
+    console.log("H12", JSON.stringify(m));
+    if (m.touch ? m.kbd.some((w) => w > 0) || m.btn.some((h) => h < 44) : !m.kbd.some((w) => w > 0)) throw new Error("H12: " + JSON.stringify(m)); } },
+] });
 export { tick, info };
