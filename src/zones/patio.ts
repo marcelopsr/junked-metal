@@ -4,6 +4,7 @@ import { M, pbr, shadows, surface, TEX } from "../render";
 import { rng } from "../rng";
 import { HALF, bare, crateFold, decal, floor, leafM, lowQ, occluders, plankTpl, registerHeavyProp, scene, stat, tex } from "./common";
 import { toyHouse, toyTree } from "../models/props_rc";
+import { manchas } from "./manchas";
 import { ball, brickWalls, gnomes, hose, int, jumpScrap, piles, plankBridge, planterAlley, pots, puddles, ramp, rocks, toyRamps, toyScatter, wateringCan } from "../world_layout";
 
 // Texturas de tierra únicas (los materiales pbr() se cachean por clave y conservan la primera): rearmar la zona las reusa en vez de crear otras sin liberar.
@@ -146,6 +147,12 @@ export function patioBuild() {
   }
   merge("patioLeafDecals", leafDecals, [leaves]);
   decal("patio", 48, 34, 0, -30, surface(pbr("tiles", { color: "#ffffff", rough: 0.6, tex: tex("tiles", TEX.tiles) }), "concrete", 28, 0.7));
+  // Variación de gran escala: manchas de aceite y tierra oscura, parches de pasto sombrío y claros de polvo; juntas finas sobre la tierra.
+  manchas("manchaPatio", 37, [-60, 75, -35, 65], [
+    { color: "#150e08", alpha: 1, n: 26, w: [6, 14] }, { color: "#4a2f1a", alpha: 0.95, n: 22, w: [9, 18] },
+    { color: "#0e2a0a", alpha: 0.9, n: 14, w: [10, 20] }, { color: "#f3d6a0", alpha: 0.9, n: 16, w: [8, 16] },
+    { color: "#2a1a10", alpha: 0.9, n: 8, w: [0.7, 1.1], largo: 24, rot: 0.2 },
+  ], 0.04);
 
   // Huerta: tierra compactada y gravilla con bordes fundidos al césped
   const edgeMask = soilEdgeMask();

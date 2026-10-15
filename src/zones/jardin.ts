@@ -4,6 +4,7 @@ import { M, pbr, shadows, TEX } from "../render";
 import { rng } from "../rng";
 import { HALF, bare, decal, floor, house, leafM, occluders, onClear, realCar, scene, stat, tex, tree, woodM } from "./common";
 import { ball, freeSpot, gnomes, hose, int, pots, puddles, ramp, rocks, slopeBoard, toyRamps, wateringCan } from "../world_layout";
+import { manchas } from "./manchas";
 
 /** Pasto del jardin (mismo tratamiento que el patio): manchas grandes de verdes calidos + briznas. Semilla propia, sin rng(). ponytail: manchas a mano en canvas (no tileables al pixel), el macro 45 las repite lejos. */
 function lawnTexture() {
@@ -32,6 +33,11 @@ export function frontBuild() {
   // Franjas de corte del césped
   const mow = pbr("mow", { color: "#0c260a", rough: 0.9, alpha: 0.3 }); // bandas OSCURAS (arte 0.95: contraste por composición); las claras con alpha 0.08 el sol HDR las volvía pálidas de borde duro hasta el horizonte
   for (let i = 0; i < 12; i += 2) decal("mow", HALF * 2, (HALF * 2) / 12, 0, -HALF + ((i + 0.5) * HALF * 2) / 12, mow, 0.015);
+  // Variación de gran escala: parches de pasto muy oscuro, tierra pelada y caminos de tierra (largo/ancho 4-5, a distintos ángulos).
+  manchas("manchaJardin", 23, [-30, 30, -25, 30], [
+    { color: "#071806", alpha: 1, n: 14, w: [10, 22] }, { color: "#a9c85a", alpha: 0.45, n: 10, w: [6, 12] },
+    { color: "#d9a766", alpha: 1, n: 5, w: [5, 7], largo: 5, rot: 0.5 }, { color: "#d9a766", alpha: 0.99, n: 4, w: [5, 7], largo: 5, rot: -1 },
+  ], 0.03);
   // Vereda (baldosas), cordón y calle: la calle es el límite (pared física en z = -HALF)
   const vt = tex("vereda", TEX.tiles);
   const vereda = decal("vereda", HALF * 2 + 60, 16, 0, -HALF + 8, pbr("vereda", { color: "#ffffff", rough: 0.85, tex: vt }), 0.03);
