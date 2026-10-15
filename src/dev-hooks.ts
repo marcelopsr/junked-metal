@@ -18,6 +18,7 @@ import { goalForce, rocketForce } from "./moon_goals";
 import { ALIENS } from "./aliens";
 import { CLIMATES } from "./run";
 import { PRESETS as PRESETS_DEV, presetOf, gfxInfo } from "./render";
+import { NUT_N, nutsCount, roam } from "./free_tricks";
 
 export type DuelTeam = {
   level: number;
@@ -282,6 +283,26 @@ export async function initDevHooks(ctx: DevHooksContext): Promise<void> {
   const botP = Promise.all([import("./devbot"), devReady()]).then(([m]) => {
     Object.assign(window, {
       __bot: m.bot,
+      // Free Roam: recorre barrios y junta tuercas con el bot de paseo (devbot.ts). Reanuda donde quedó; `__paseo(s, true)` empieza de cero. Cada llamada corta a ~35 s reales.
+      __paseo: (secs = 60, reset = false) => {
+        if (!roam.on || ctx.state !== "play") return "Paseo libre apagado: usar __libre() o ?libre";
+        const w0 = performance.now(), pe = ctx.scene.getPhysicsEngine() as unknown as { _step(d: number): void }, dt = 1 / 60;
+        if (reset) m.paseoReset();
+        ctx.setSimulating(true);
+        let f = 0, go = true;
+        for (; go && f < secs * 60 && performance.now() - w0 < 35000; f++) {
+          const c = ctx.lead.car!;
+          c.root.computeWorldMatrix(true);
+          go = m.paseoStep(c, ctx.input as never, roam.air, dt, (x, y, z, yaw) => ctx.carPlace(new B.Vector3(x, y, z), new B.Vector3(Math.sin(yaw), 0, Math.cos(yaw)))); // carPlace(p, aim): aim es una dirección, no un punto
+          if (!go) break;
+          ctx.update(dt);
+          pe._step(dt);
+          ctx.tickFx(dt);
+        }
+        ctx.setSimulating(false);
+        const n = nutsCount(ctx.save.libre.tuercas), L = m.paseoLeg();
+        return `${go ? "en marcha" : "recorrido completo"} · tramo ${Math.min(L + 1, m.PASEO.length)}/${m.PASEO.length}${m.PASEO[L] ? ` (${m.PASEO[L].id})` : ""} · tuercas ${n}/${NUT_N} · ${((f / 60)).toFixed(0)} s de juego en ${((performance.now() - w0) / 1000).toFixed(1)} s reales`;
+      },
       __sim: (secs: number, dt = 1 / 60) => {
         const w0 = performance.now(),
           end = ctx.time + secs;

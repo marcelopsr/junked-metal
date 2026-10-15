@@ -467,7 +467,7 @@
     {"id":"libre_combo_tope","valor":3,"descripcion":"Paseo libre: multiplicador máximo del combo"},
     {"id":"libre_limpio_up","valor":0.7,"descripcion":"Paseo libre: cuánto debe apuntar hacia arriba el auto al aterrizar para que sea limpio (1 = recto)"},
     {"id":"libre_giro_aire","valor":6,"descripcion":"Paseo libre: velocidad de giro en el aire al dirigir (rad/s)"},
-    {"id":"libre_cabeceo_aire","valor":4,"descripcion":"Paseo libre: velocidad de cabeceo en el aire al acelerar o frenar (rad/s)"},
+    {"id":"libre_cabeceo_aire","valor":5.5,"descripcion":"Paseo libre: velocidad de cabeceo en el aire al acelerar o frenar (rad/s)"},
     {"id":"libre_agarre_hielo","valor":0.15,"descripcion":"Paseo libre: fracción del agarre lateral sobre el lago congelado"},
     {"id":"libre_vel_bajada","valor":22,"descripcion":"Paseo libre: velocidad máxima ganada al bajar una pendiente (m/s)"},
     {"id":"libre_acel_bajada","valor":1.2,"descripcion":"Paseo libre: cuánta velocidad extra se gana por cada m/s de descenso y por segundo"},

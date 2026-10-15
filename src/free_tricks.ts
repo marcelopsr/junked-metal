@@ -60,20 +60,22 @@ export function bestUpdate(b: LibreBest, t: TrickEnd) {
 }
 
 // ---------- Tuercas doradas ----------
-/** 24 tuercas fijas [x, y, z, radio extra]: las del aire piden un salto bien hecho (radio mayor), el resto, llegar. y = centro de la tuerca. */
+/** 24 tuercas fijas [x, y, z, radio extra]: cada una exige algo, ninguna se junta pasando por el suelo abierto (sondas de Free Roam, ver informe).
+ *  Radio de recogida = libre_radio_tuerca + extra. y = centro de la tuerca: sobre las que van encima de una pieza, 2-2,5 m más que el auto parado en ella (el suelo queda fuera de alcance);
+ *  las de aire llevan extra para tolerar la trayectoria (megarrampa) o menos (mini-rampa: trayectoria angosta). Las de bowl y pileta (y 1,4) solo se alcanzan bajando adentro. */
 export const NUTS: [number, number, number, number?][] = [
-  // calles y plaza
-  [0, 1.4, 38], [270, 1.4, 0], [-270, 1.4, 0],
-  // parque: sobre el puente del laguito
-  [130, 1.6, 51],
-  // skatepark: bowl grande, bowl chico, funbox, aire sobre el borde del half-pipe, aire de la megarrampa
-  [-110, 1.4, 105], [-45, 1.4, 140], [-207, 2.6, 90], [-150, 10, 224, 1.5], [-216, 12, 150, 1.5],
-  // acuático: meseta de la torre, pileta grande, pileta vacía, aire sobre el trampolín, piletas bajas
-  [226, 12.5, 152], [120, 1.4, 175], [80, 1.4, 232], [100, 6.5, 120, 1.5], [186, 1.4, 140],
-  // nieve: cima del mirador, cima de loma, aire entre lomas, centro del lago, final de la pista
-  [-105, 12, -218], [-212, 5.5, -168], [-217, 6, -150, 1.5], [-195, 1.4, -70], [-198, 1.4, -104],
-  // circuito: largada, loma del carril A, aire del salto 1 y del salto 2, meta
-  [140, 1.4, -140], [216, 2.6, -140], [162, 4, -230, 1.5], [220, 5.5, -230, 1.5], [246, 1.4, -230],
+  // plaza: sobre el trampolín de los atajos noreste y sureste (hay que subirlo)
+  [34, 3.5, 46], [41.45, 3.5, -41.45],
+  // parque: cruzar el puente del laguito y la plataforma de cada tobogán
+  [130, 2.9, 51], [177.1, 4.65, 65], [190.9, 4.65, 37],
+  // skatepark: bowl grande, bowl chico, aire de la megarrampa, aire de la mini-rampa norte, cubierta del half-pipe, mesa de aterrizaje de la megarrampa
+  [-110, 1.4, 105], [-45, 1.4, 140], [-216, 12, 150, 1.5], [-250, 3.2, 68, -1.5], [-150, 9.6, 230], [-179, 7.7, 150],
+  // acuático: meseta de la torre, tobogán rojo a media bajada, tobogán amarillo casi al final, pileta vacía, pileta grande
+  [226, 12.5, 152], [207.9, 8.15, 189.1], [225.5, 4.1, 219.9], [80, 1.4, 232], [120, 1.4, 175],
+  // nieve: cima del mirador, cima de la loma alta, cima de la loma del oeste, tramo final de la pista (tercera lomita)
+  [-105, 12.4, -218], [-212, 5.5, -168], [-238, 5.3, -196], [-157.5, 4.8, -128.1],
+  // circuito: sobre el balancín, dentro del túnel, sobre el puente angosto, en la mesa del salto 2
+  [224, 4.2, -185], [160, 3, -185], [191, 4.6, -185], [225, 3.75, -230],
 ];
 export const NUT_N = NUTS.length;
 export const nutsOk = (bits: string) => /^[01]{24}$/.test(bits);

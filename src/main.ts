@@ -53,7 +53,7 @@ import { beastTick, PED_H, setupBeastCam } from "./bestiary_preview";
 import { raceCfg, TRACKS } from "./kart_cfg";
 import "./match3.css"; import "./race.css"; // hojas de los modos de carga perezosa: estáticas para quedar ANTES de kit.css (race.css solo se importa acá)
 import { initRunTick, tickEnemies, tickWeapons, tickPickups, type Frame, type Spit } from "./run_tick";
-import { initRunDrive, tickWeather, tickAbility, tickDrive, tickRam, tickSpawner, tickYardEvents, tickVitals } from "./run_drive";
+import { initRunDrive, resetDrive, tickWeather, tickAbility, tickDrive, tickRam, tickSpawner, tickYardEvents, tickVitals } from "./run_drive";
 import { initCameraRig, cameraTick, camReset, CAMS } from "./camera_rig";
 import { initPhoto, photoOn, photoApply } from "./photo-mode";
 import "./kit.css"; // kit de UI compartido: se carga después de todas las hojas (ver src/kit.css)
@@ -219,7 +219,7 @@ let preview: B.Mesh | null = null;
 function clearRun() {
   libre = false; $("hud").classList.remove("libre"); clearTimeout(libreCartelT); $("barrio").classList.add("hidden");
   roam.on = false; roam.extra = roam.air = 0; libreNuts?.dispose(); libreNuts = null; hudLibreOff();
-  Object.assign(run, freshRun());
+  Object.assign(run, freshRun()); resetDrive();
   mateClear();
   encClear(); GOAL_IO.tele = false; GOAL_IO.half = 0;
   setMoon(false); // la luna se enciende solo en una partida de Supervivencia en la luna (startRun)

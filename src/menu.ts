@@ -1156,12 +1156,14 @@ export function openPauseLibre(luz: number) {
   paintLuz(luz);
   $("pauseSeed").textContent = `${CARS[peek.car ?? save.car].name} · Paseo libre`;
   $("quitTxt").textContent = "Salir al menú";
+  $("photoBtn").classList.toggle("hidden", isTouch); $("pauseHint").classList.toggle("hidden", isTouch); // táctil: sin tecla F ni Esc/M; el botón de pausa del HUD ya sigue
   const foot = sc.querySelector(".foot")!;
   if (!sc.querySelector(".radiobox")) foot.insertAdjacentHTML("beforebegin", radioBox()); else radioPaint();
   reset("pause");
 }
 export function openPause(k: Kit) {
   $("scr-pause").classList.remove("libre");
+  $("photoBtn").classList.remove("hidden"); $("pauseHint").classList.remove("hidden");
   $("quitTxt").textContent = "Abandonar";
   $("kitW").innerHTML = k.weapons.map((w) => {
     const def = WEAPONS[w.id], ev = def.evo, hasP = k.passives.some((p) => p.id === ev);

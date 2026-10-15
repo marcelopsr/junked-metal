@@ -436,14 +436,14 @@ const libreAt = (x, z, yaw = 0) => async (p) => {
 };
 sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
   { id: "menu-boton", perf: false, act: async (p) => { await p.evaluate(() => window.__cfg({ controlesVistos: true, encore: { best: { loop: 0, stage: 0, t: 0 }, wins: 0, runs: 1, lastLoop: 0, lastCause: "", secrets: [], tips: [], seenPacts: [], seenVariants: [] } })); await toMain(p); await p.waitForTimeout(150); } },
-  { id: "menu-auto", perf: false, act: async (p) => { await view("libre")(p); await p.dispatchEvent('[data-act="lcar"]', "click"); await tick(p, 40); await p.waitForTimeout(150); } },
+  { id: "menu-auto", perf: false, act: async (p) => { await view("modes")(p); await p.dispatchEvent('#scr-modes [data-go="libre"]', "click"); await wait(p, () => document.querySelector("#scr-libre.on")); await p.waitForTimeout(150); await p.dispatchEvent('[data-act="lcar"]', "click"); await tick(p, 40); await p.waitForTimeout(150); } },
   { id: "centro", act: async (p) => { await p.dispatchEvent('[data-act="libregow"]', "click"); await wait(p, () => window.__info?.().state === "play"); await libreAt(0, -20)(p); } },
   { id: "skate", act: libreAt(-150, 130) },
   { id: "parque", act: libreAt(130, 20) },
   { id: "acuatico", act: libreAt(152, 130) },
   { id: "nieve", act: libreAt(-150, -100, Math.PI) },
-  { id: "obstaculos", act: libreAt(150, -100, Math.PI) },
-  { id: "tuerca", perf: false, act: libreAt(0, 24) }, // tuerca dorada a 14 m al frente (0, 1,4, 38)
+  { id: "obstaculos", act: libreAt(160, -140, Math.PI / 2) }, // sobre el carril A, mirando al este: antes (150, -100) mostraba solo suelo y el circuito quedaba lejos
+  { id: "tuerca", perf: false, act: libreAt(26, 28, 0.322) }, // tuerca dorada sobre el trampolín del atajo noreste, a ~20 m al frente (34, 3,5, 46)
   // Cartel de truco y contador de tuercas: se disparan con las funciones del HUD (el truco real depende de la física; eso lo prueba la sonda de la tanda E6)
   { id: "truco", perf: false, act: async (p) => { await libreAt(-150, 130)(p); await p.evaluate(async () => { const u = await import("/src/ui.ts"); u.hudTruco("GIRO 360 + VUELTA", 640, 2, true, "RÉCORD"); u.hudTuercas(7, 24); }); await p.waitForTimeout(450); } },
   { id: "pausa", perf: false, act: async (p) => { await p.keyboard.press("Escape"); await wait(p, () => document.querySelector("#scr-pause.on")); await p.waitForTimeout(200); } },

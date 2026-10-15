@@ -51,7 +51,9 @@ let D!: RunDriveContext;
 export function initRunDrive(x: RunDriveContext) { D = x; }
 let dustT = 0, skidT = 0, smokeT = 0, smashCd = 0, driftHold = 0, miniT = 0, wasBoosting = false;
 /** Grados extra de campo de visión que pide el turbo (4) o el mini-turbo (2,5); lo suaviza camera_rig. */
-export const boostFov = () => (wasBoosting ? 4 : miniT > 0 ? 2.5 : 0); // mini-turbo: segundos de derrape sostenido, impulso restante, turbo del cuadro anterior
+/** Reinicia el mini-turbo y el turbo del cuadro anterior: sin esto se arrastran a la partida siguiente (clearRun). */
+export const resetDrive = () => { driftHold = miniT = 0; wasBoosting = false; };
+export const boostFov =() => (wasBoosting ? 4 : miniT > 0 ? 2.5 : 0); // mini-turbo: segundos de derrape sostenido, impulso restante, turbo del cuadro anterior
 const YARD_PULSES = [225, 345] as const;
 const _moveF = new B.Vector3(), _moveR = new B.Vector3(), _moveWant = new B.Vector3(), _moveFwd = new B.Vector3(), _spawnOff = new B.Vector3(), _ahead = new B.Vector3();
 

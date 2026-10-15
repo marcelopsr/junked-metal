@@ -87,6 +87,54 @@ export function botSteer(c: { pos: P; root: { forward: P }; body: { getLinearVel
   return { throttle: 1, steer: Math.max(-1, Math.min(1, d * 3)), boost: escaping || (Math.abs(d) < 0.35 && (!!boss?.ram || Math.sin(c.pos.x * 0.3 + c.pos.z * 0.2) > 0.4)) };
 }
 
+// ---------- Bot de Paseo libre (hook dev __paseo en dev-hooks.ts) ----------
+// Recorre los barrios por tramos: cada uno coloca el auto en una salida y lo lleva por puntos hasta pasar por la(s) tuerca(s) que exige. Suelta el acelerador en el aire (si no, cabecea y cae de techo).
+// ponytail: salidas y puntos medidos con sondas (15 m/s, auto base; cada tuerca se junta con 2 trayectorias); si cambia NUTS o la geometría de un barrio, rehacer el tramo. Techo: planificar con el mapa de alturas.
+type PaseoLeg = { id: string; at: [number, number, number]; yaw: number; wp: [number, number][]; secs: number };
+const SL0: [number, number][] = [[213, 154], [213, 166], [212, 178], [208, 189], [202, 200], [197, 210], [196, 222], [196, 234], [196, 246]]; // tobogán rojo, eje
+const SL1: [number, number][] = [[226, 154], [226, 166], [223, 178], [219, 189], [218, 200], [222, 212], [226, 223], [227, 235], [227, 247]]; // tobogán amarillo, eje
+const PISTA: [number, number][] = [[-105, -226], [-103, -214], [-104, -202], [-113, -195], [-124, -192], [-136, -188], [-147, -183], [-157, -177], [-167, -170], [-171, -160], [-163, -152], [-153, -144], [-152, -134], [-161, -126], [-171, -119], [-181, -113], [-192, -108], [-199, -99], [-196, -92]]; // pista nevada, de la meseta al lago
+const E = Math.PI / 2;
+export const PASEO: PaseoLeg[] = [
+  { id: "plaza NE", at: [24, 1, 16], yaw: 0.322, wp: [[34, 46], [40, 75]], secs: 5 },
+  { id: "plaza SE", at: [20, 1, -20], yaw: 2.356, wp: [[41.5, -41.5], [65, -65]], secs: 5 },
+  { id: "puente", at: [130, 1, 15], yaw: 0, wp: [[130, 51], [130, 80]], secs: 6 },
+  { id: "tobogán A", at: [150, 1, 65], yaw: E, wp: [[177, 65], [205, 65]], secs: 5 },
+  { id: "tobogán B", at: [222, 1, 37], yaw: -E, wp: [[191, 37], [165, 37]], secs: 5 },
+  { id: "bowl grande", at: [-58, 1, 105], yaw: -E, wp: [[-110, 105], [-160, 105]], secs: 6 },
+  { id: "bowl chico", at: [-10, 1, 140], yaw: -E, wp: [[-45, 140], [-80, 140]], secs: 6 },
+  { id: "megarrampa", at: [-285, 1, 150], yaw: E, wp: [[-210, 150], [-150, 150]], secs: 9 },
+  { id: "mini-rampa", at: [-250, 1, 30], yaw: 0, wp: [[-250, 68], [-250, 100]], secs: 5 },
+  { id: "half-pipe", at: [-150, 1, 266], yaw: Math.PI, wp: [[-150, 230], [-150, 215]], secs: 7 },
+  { id: "torre", at: [226, 1, 70], yaw: 0, wp: [[226, 152]], secs: 12 },
+  { id: "tobogán rojo", at: [213, 12.4, 148], yaw: 0, wp: SL0, secs: 14 },
+  { id: "tobogán amarillo", at: [226, 12.4, 148], yaw: 0, wp: SL1, secs: 14 },
+  { id: "pileta vacía", at: [120, 1, 232], yaw: -E, wp: [[80, 232], [40, 232]], secs: 5 },
+  { id: "pileta grande", at: [80, 1, 175], yaw: E, wp: [[120, 175], [160, 175]], secs: 5 },
+  { id: "pista", at: [-105, 11.1, -224], yaw: 0, wp: PISTA, secs: 32 },
+  { id: "loma alta", at: [-212, 1, -200], yaw: 0, wp: [[-212, -168], [-212, -140]], secs: 7 },
+  { id: "loma oeste", at: [-238, 1, -170], yaw: Math.PI, wp: [[-238, -196], [-238, -225]], secs: 7 },
+  { id: "carril B", at: [258, 1, -185], yaw: -E, wp: [[130, -185]], secs: 17 },
+  { id: "carril C", at: [190, 1, -230], yaw: E, wp: [[258, -230]], secs: 8 },
+];
+let legI = -1, legT = 0, legW = 0;
+export const paseoReset = () => { legI = -1; legT = 0; legW = 0; };
+export const paseoLeg = () => legI;
+/** Un cuadro del bot de paseo. place(x, y, z, yaw) coloca el auto al empezar cada tramo. Devuelve false al terminar todos. */
+export function paseoStep(c: { pos: P; root: { forward: P } }, inp: { throttle: number; steer: number; boost: boolean; drift: boolean; move: boolean; jump: boolean }, air: number, dt: number, place: (x: number, y: number, z: number, yaw: number) => void) {
+  if (legI >= PASEO.length) return false;
+  if (legI < 0 || legT >= PASEO[legI].secs) {
+    if (++legI >= PASEO.length) return false;
+    const L = PASEO[legI]; legT = legW = 0; place(...L.at, L.yaw);
+    return true;
+  }
+  const L = PASEO[legI]; legT += dt;
+  while (legW < L.wp.length - 1 && Math.hypot(L.wp[legW][0] - c.pos.x, L.wp[legW][1] - c.pos.z) < 5) legW++;
+  const t = L.wp[legW], a = Math.atan2(t[0] - c.pos.x, t[1] - c.pos.z) - Math.atan2(c.root.forward.x, c.root.forward.z), d = Math.atan2(Math.sin(a), Math.cos(a));
+  Object.assign(inp, { throttle: air > 0.05 ? 0 : 1, steer: Math.abs(d) < 0.06 ? 0 : Math.max(-1, Math.min(1, d * 3)), boost: false, drift: false, move: false, jump: false });
+  return true;
+}
+
 export async function bot(secs: number) {
   const w = window as unknown as W;
   const key = (k: string, d: boolean) => dispatchEvent(new KeyboardEvent(d ? "keydown" : "keyup", { code: k }));

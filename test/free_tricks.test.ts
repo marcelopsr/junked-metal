@@ -59,4 +59,10 @@ describe("tuercas doradas", () => {
     expect(nutNear(bits, x + 40, y, z)).toBe(-1);
     expect(nutsCount("1".repeat(10) + "0".repeat(14))).toBe(10);
   });
+  it("cada una exige algo: las demás quedan fuera del alcance vertical del auto a ras de suelo", () => {
+    // Auto en el suelo: centro a 0,35 m. Con (y - 0,35) >= radio, ningún punto del suelo abierto la junta. Las de la lista dependen de una pieza que ocupa el suelo debajo
+    // (medido con sondas y mapa de alturas: el suelo libre más cercano queda a > 4,3 m): 0-1 trampolín, 2 puente, 13 tobogán, 20 balancín, 21 túnel, 23 mesa; 5, 6, 14, 15: dentro de bowl o pileta.
+    const bajas = NUTS.flatMap((n, i) => (n[1] - 0.35 < R.libre_radio_tuerca + (n[3] ?? 0) ? [i] : []));
+    expect(bajas).toEqual([0, 1, 2, 5, 6, 13, 14, 15, 20, 21, 23]);
+  });
 });

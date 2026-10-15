@@ -20,18 +20,24 @@ const ZA = -140, ZB = -185, ZC = -230, X0 = 132, X1 = 258;
 
 function build(_cx: number, _cz: number) {
   const rnd = lcg(150151);
-  const kraft = pbr("obsCarton", { color: "#ffffff", rough: 0.9, tex: tex("libreCarton", () => { const x = new B.Texture("./textures/g-libre-carton.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; }) }), paper = pbr("obsPapel", { color: "#e8e2d0", rough: 0.8 }), blue = pbr("obsRio", { color: "#4aa3d8", rough: 0.4 });
+  const cartonTex = tex("libreCarton", () => { const x = new B.Texture("./textures/g-libre-carton.webp", scene); x.wrapU = x.wrapV = B.Texture.WRAP_ADDRESSMODE; return x; });
+  const kraft = pbr("obsCarton", { color: "#ffffff", rough: 0.9, tex: cartonTex }), kraftOsc = pbr("obsCartonOsc", { color: "#5c4631", rough: 0.95, tex: cartonTex }), paper = pbr("obsPapel", { color: "#e8e2d0", rough: 0.8 }), blue = pbr("obsRio", { color: "#4aa3d8", rough: 0.4 });
   const hole = pbr("obsHueco", { color: "#1b1d22", rough: 1 }), orange = M.plastic("#f97316"), wood = pbr("obsMadera", { color: "#d8a04a", rough: 0.6 });
-  const invis = M.matte("#000"), deco: B.Mesh[] = [];
+  const invis = M.matte("#000"), edge = M.matte("#24160b"), deco: B.Mesh[] = [];
 
   // Carriles pintados (sin colisión) y conectores en las puntas
   // UV por metros (1 repetición = 8 m): los carriles y las esquinas comparten material con tamaños distintos
   const card = (g: B.Mesh, w: number, h: number) => { g.setVerticesData(B.VertexBuffer.UVKind, (g.getVerticesData(B.VertexBuffer.UVKind) as number[]).map((v, i) => v * (i % 2 ? h : w) / 8)); return g; };
   const lane = (x0: number, x1: number, z: number) => card(decal("obsCarril", x1 - x0, 12, (x0 + x1) / 2, z, kraft, 0.03), x1 - x0, 12);
+  // Tablero de cartón oscuro bajo todo el barrio (x 128..257, z -250..-110): los carriles claros se leen sobre él (contraste de la captura 0,11 -> ver informe)
+  card(decal("obsTablero", 129, 140, 192.5, -180, kraftOsc, 0.02), 129, 140); kraftOsc.zOffset = -1; // zOffset menos negativo que los carriles (-2): quedan por encima
   lane(X0, X1, ZA); lane(X0, X1, ZB); lane(X0, X1, ZC);
   card(decal("obsEsqE", 12, 57, 252, (ZA + ZB) / 2, kraft, 0.03), 12, 57);
   card(decal("obsEsqO", 12, 57, 138, (ZB + ZC) / 2, kraft, 0.03), 12, 57);
-  for (const z of [ZA, ZB, ZC]) for (const s of [-1, 1]) for (let x = X0 + 2; x < X1; x += 8) deco.push(box(4, 0.02, 0.35, paper, [x + 2, 0.06, z + s * 5.7])); // cinta de borde discontinua
+  for (const z of [ZA, ZB, ZC]) for (const s of [-1, 1]) {
+    for (let x = X0 + 2; x < X1; x += 8) deco.push(box(4, 0.02, 0.35, paper, [x + 2, 0.06, z + s * 5.7])); // cinta de borde discontinua
+    deco.push(box(X1 - X0, 0.02, 0.5, edge, [(X0 + X1) / 2, 0.055, z + s * 6.25])); // borde oscuro continuo: el carril se lee de lejos
+  }
 
   // Largada (verde, carril A) y meta (damero, carril C): línea pintada + dos postes de ladrillo con banderola a 5 m
   const gate = (x: number, z: number, flag: B.Material, checker: boolean) => {
