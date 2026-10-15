@@ -202,7 +202,7 @@ export const sessions = [
     { id: "canicas", act: async (p) => {
       await wait(p, () => window.__enc?.info());
       await wait(p, () => window.__info?.().state === "play");
-      const setup = await p.evaluate(() => { window.__god(); const evo = window.__enc.evo("canicas"); return { evo, chest: window.__enc.shop("cofre") }; });
+      const setup = await p.evaluate(() => { window.__god(); window.__time(30); /* pasa el arranque tranquilo (primera_calma_s = 20): sin eso los cofres no avanzan */ const evo = window.__enc.evo("canicas"); return { evo, chest: window.__enc.shop("cofre") }; });
       if (setup.evo !== "evo" || !setup.chest) throw new Error(`evo-cards setup: ${JSON.stringify(setup)}`);
       await tick(p, 120);
       await wait(p, () => !document.getElementById("levelup").classList.contains("hidden"));
