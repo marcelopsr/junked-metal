@@ -70,6 +70,7 @@ async function pedir(ruta, mkInit, id) {
     const aviso = j.capataz?.warnings;
     if (r.ok) { if (aviso?.length) console.warn(`  [${id}] AVISO: ${aviso.join("; ")}`); return { png: Buffer.from(j.data[0].b64_json, "base64"), meta: j.capataz }; }
     const code = j.error?.code ?? j.error?.message ?? "";
+    if (r.status === 429 && code === "sin_cupo") throw new Error(`429 sin_cupo: el proveedor no tiene cupo por horas (Retry-After ${r.headers.get("retry-after") ?? "?"} s); usar --proveedor gpt o esperar`); // no reintentar en bucle
     if (r.status === 429 && intento < 5) { const s = Number(r.headers.get("retry-after")) || 20; console.warn(`  [${id}] 429 ${code}: reintento en ${s} s`); await dormir(s); continue; }
     if ((r.status === 502 || r.status === 504) && intento < 1) { console.warn(`  [${id}] ${r.status} ${code}: reintento`); await dormir(5); continue; }
     if (r.status === 404 || (r.status === 400 && /param|unknown|unsupported|fit|remove_background|image/i.test(`${code} ${j.error?.message ?? ""} ${j.error?.param ?? ""}`)))
