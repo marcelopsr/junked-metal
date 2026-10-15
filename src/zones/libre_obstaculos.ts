@@ -68,6 +68,8 @@ function build(_cx: number, _cz: number) {
     const bx = 224, th = 0.2, len = 10, tilt = (10 * Math.PI) / 180, py = (len / 2) * Math.sin(tilt) + (th / 2) * Math.cos(tilt);
     const base = hidden(stat(box(1.6, py - 0.2, 1.6, invis, [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [bx, (py - 0.2) / 2, ZB, W]));
     deco.push(box(2.4, py - 0.2, 2.4, pbr("obsLadrilloAz", { color: "#1e66d0", rough: 0.5 }), [bx, (py - 0.2) / 2, ZB]));
+    for (const s of [-1, 1]) deco.push(box(1.4, py + 0.2, 0.8, pbr("obsLadrilloAz", { color: "#1e66d0", rough: 0.5 }), [bx, (py + 0.2) / 2, ZB + s * 2.6])); // soportes laterales del pivote (visuales; el eje descansa en ellos)
+    deco.push(cyl(0.5, 0.5, 5.2, M.metal("#9aa0a8"), [bx, py - 0.15, ZB], [Math.PI / 2, 0, 0], 12)); // eje del pivote a la vista (visual, sobresale 0,6 m a cada lado del tablón)
     const pl = box(4, th, len, wood, [bx, py, ZB]);
     pl.rotationQuaternion = B.Quaternion.FromEulerAngles(-tilt, W, 0); // entrada (-z local = este) abajo
     const agg = new B.PhysicsAggregate(pl, B.PhysicsShapeType.BOX, { mass: 0.5, friction: 0.7, restitution: 0 }, scene);

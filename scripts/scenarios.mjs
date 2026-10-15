@@ -447,6 +447,8 @@ sessions.push({ id: "libre", query: "?mute&seed=3", shots: [
   { id: "nieve", act: libreAt(-150, -100, Math.PI) },
   { id: "obstaculos", act: libreAt(160, -140, Math.PI / 2) }, // sobre el carril A, mirando al este: antes (150, -100) mostraba solo suelo y el circuito quedaba lejos
   // Secretos (src/free_secrets.ts): una vista a ~25 m de cada entrada
+  { id: "obs-control", perf: false, act: libreAt(236, -172, Math.PI / 2) }, // aros de control tenues junto al carril S (CP1 en 250,-162)
+  { id: "obs-balancin", perf: false, act: libreAt(238, -185, -Math.PI / 2) }, // el balancín (224, -185) con eje a la vista, mirando al oeste
   { id: "secreto-cueva", perf: false, act: libreAt(178, 218, 0) },
   { id: "secreto-tunel", perf: false, act: libreAt(-262, 222, Math.PI / 2) },
   { id: "secreto-claro", perf: false, act: libreAt(-10, -158, -Math.PI / 2) },
