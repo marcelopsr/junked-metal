@@ -272,6 +272,8 @@
     {"id":"llamas","nombre":"Calcomanía de llamas","base":0,"por_nivel":0.05,"base2":0.1,"por_nivel2":0}
   ],
   "ritmo": [
+    {"id":"encore_vida_mul","valor":1.2,"descripcion":"ENCORE: multiplicador de la vida máxima del auto en las expediciones (1 = sin cambio; no afecta otros modos)"},
+    {"id":"naves_desde_escenario","valor":1,"descripcion":"ENCORE: índice del primer escenario (de la primera vuelta) que trae nave minijefe; antes, el escenario no tiene minijefe"},
     {"id":"doble_dano_por_pacto","valor":0.05,"descripcion":"El Doble de Riesgo: fracción de daño extra por cada pacto activo de la expedición ENCORE (fuera de ENCORE vale 0)"},
     {"id":"doble_pactos_tope","valor":4,"descripcion":"El Doble de Riesgo: máximo de pactos que cuentan para su bonus de daño"},
     {"id":"ruta_solo_s","valor":8,"descripcion":"ENCORE: segundos para elegir destino cuando juega una sola persona (con más jugadores vale encore.ts routeS); al elegir, la decisión se cierra al instante"},

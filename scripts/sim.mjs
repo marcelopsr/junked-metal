@@ -29,7 +29,7 @@ async function run(job, browser) {
     if (a.encore) { // expedición ENCORE: __encBot corre ~30 s reales por llamada; se encadena hasta que muere o gana
       let r;
       do r = await page.evaluate((o) => window.__encBot(o), { encores: Number(a.encores), players: job.players, follow: a.follow, pacts: a.pacts === "all" ? "all" : a.pacts?.split(","), stay: a.stay && Number(a.stay), route: a.route }); while (!r.done && r.real > 0);
-      return { ...job, ...r };
+      return { ...job, ...r, dano_recibido: JSON.parse(await page.evaluate(() => window.__dmg())) };
     }
     if (job.kind) {
       if (!a.json) process.stderr.write(`[Duelo ${job.kind} · Semilla ${job.seed}] Simulando combate contra jefe...\n`);

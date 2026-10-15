@@ -120,7 +120,7 @@ function interruptStep() {
   if (ip.plan) IV.step(ip.plan, ip.st, r.stageT, dt, iIo, r.phase !== "stage" || E.decisionOpen(r));
 }
 /** recompute: liquida lo ganado con el efecto que se va y toma el de los pactos activos. */
-export function encRecompute(g: number) { if (erun) { encExtra += E.scrapExtra(g, encG, pfx.scrap); encG = g; } pfx = zoned(E.pactFx(erun)); }
+export function encRecompute(g: number) { if (erun) { encExtra += E.scrapExtra(g, encG, pfx.scrap); encG = g; } const f = zoned(E.pactFx(erun)), vm = BAL.ritmo.encore_vida_mul; pfx = erun && vm !== 1 ? { ...f, maxHp: f.maxHp * vm } : f; } // ritmo.encore_vida_mul: vida máxima del auto solo en ENCORE
 
 // ---------- ENCORE (encore.ts): escenarios encadenados con teleportador, votación y FINAL ACT ----------
 /** Frase del Director por el aviso de radio. */
@@ -130,7 +130,7 @@ export const say = (id: E.LineId, txt = E.line(id, erun!, save.encore)) => E.dir
 export function encPlan() {
   const r = erun!, calm = r.phase === "vote" || r.phase === "final";
   cx.finalKind = E.finalOf(r.seed); // R5: jefe secreto sorteado por la semilla de la run; en ENCORE solo el jefe del FINAL ACT cierra la partida (el gusano lunar no sale)
-  cx.RUN_BOSSES = r.phase === "final" ? [[E.ENC.bossIntroS, cx.finalKind]] : calm ? [] : [[E.ENC.miniS, cx.profile.minis[0]]];
+  cx.RUN_BOSSES = r.phase === "final" ? [[E.ENC.bossIntroS, cx.finalKind]] : calm || (r.loop === 0 && E.sceneIdx(r) < BAL.ritmo.naves_desde_escenario) ? [] : [[E.ENC.miniS, cx.profile.minis[0]]];
   if (calm) { cx.swarmT = cx.chestT = cx.ballT = Infinity; cx.profile.elites = []; }
 }
 /** Escenario nuevo con el mismo auto, armas, nivel, XP y vida: borra lo del anterior y lo rearma con la semilla derivada (cx.runSeed, escenario). */
