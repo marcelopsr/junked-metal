@@ -6,6 +6,7 @@
 // Opciones: --concurrencia N (default 8)  --fit cover|contain|exact  --quitar-fondo (remove_background)  --referencia <archivo> (repetible; usa /v1/images/edits)
 //           --cupo (GET /v1/images/quota y sale). fit/quitar-fondo/referencia también se leen del job (fit, remove_background, references[]).
 // Proveedores: gpt (ChatGPT, respeta fondo transparente, ~60 s), gemini (~17 s, sin transparencia: fondo gris y aviso), auto (Capataz decide; con transparencia va a gpt).
+// Opciones: --size WxH (la salida mide exacto eso) · --fit cover|contain|exact (cover por defecto) · --sin-fondo (remove_background: Capataz quita el fondo; sirve con gemini).
 // Clave: primera línea de ~/.capataz/clientes/rc_fight.key (solo imágenes/video/modelos). Los jobs se generan en paralelo: Capataz rota cuentas.
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
