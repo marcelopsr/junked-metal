@@ -197,6 +197,15 @@ export function forestLayout() {
   for (let i = 0; i < 300; i++) { const p = spot(1, 19, i < 160 ? 55 : 125); if (!p || (lowQ && i & 1)) continue; ferns.push(...fern(r, p[0], p[1], 1.6 + r() * 1.8)); if (i % 3 === 0) ferns.push(...rock(r, p[0] + 1.5, p[1] + 1, 0.5 + r() * 0.5, r() * 6)); }
   { const c = rnd(8803), dk = M.matte("#150d08"), pale = M.matte("#e6d5aa"); // contraste: hojarasca muy oscura y piedritas/flores claras planas cerca del auto (sin colisión)
     for (let i = 0; i < 220; i++) { const p = spot(1, 10, 45); if (!p) continue; const dark = i % 2 === 0, s = dark ? 3 + c() * 3 : 1 + c() * 0.9; ferns.push(sph(s, dark ? dk : pale, [p[0], dark ? 0.04 : 0.1, p[1]], [1.3, 0.05, 1], 7)); } }
+  { const a = rnd(6107), PALE = ["#e2d6b8", "#d4c7a4", "#ece0c2"], dk = M.matte("#150d08"), cut = M.matte("#c89a62"); // encuadre de juego: acentos claros (piedras, tocones cortados) y manchas oscuras de sotobosque pegados al borde del camino, sin colisión
+    for (let z = -26; z <= 30; z += 4.5) for (const sd of [-1, 1]) {
+      const [nx, nz] = (([tx, tz]) => [-tz, tx])(PAT(z)), d = 9.8 + a() * 4, x = PX(z) + nx * sd * d, zz = z + nz * sd * d;
+      if (inStream(x, zz, 3) || Math.hypot(x - 15.2, zz - 30) < 12) continue;
+      const k = Math.floor(a() * 3);
+      if (k === 0) ferns.push(...rock(a, x, zz, 0.9 + a() * 0.8, a() * 6, PALE));
+      else if (k === 1) { const s = 0.8 + a() * 0.5; ferns.push(cyl(s * 1.6, s * 2, s * 1.2, M.matte(TRUNK), [x, s * 0.6, zz], undefined, 8), cyl(s * 1.45, s * 1.45, 0.06, cut, [x, s * 1.22, zz], undefined, 8)); }
+      else ferns.push(sph(2.5 + a() * 1.5, dk, [x + nx * sd * 2.5, 0.04, zz + nz * sd * 2.5], [1.3, 0.05, 1], 7));
+    } }
   for (const [n, parts] of [["forestDeco", deco], ["forestMatas", ferns]] as [string, B.Mesh[]][]) { if (!parts.length) continue; const m = merge(n, parts); m.isPickable = false; shadows.addShadowCaster(m); }
 }
 
