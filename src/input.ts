@@ -130,9 +130,9 @@ export function setupTouch(onPinch?: (k: number) => void) {
 // ---------- Disposición táctil (Configuración → Editar controles táctiles) ----------
 // Cada control guardado = centro en fracción de la pantalla (x, y) y escala propia (s, se multiplica por el tamaño general).
 // Una disposición por orientación: v = vertical, h = apaisado (TLays); se aplica la de la orientación actual.
-export type TCtl = "stick" | "boost" | "drift" | "jump" | "abil" | "pause" | "cam";
+export type TCtl = "stick" | "boost" | "drift" | "jump" | "abil" | "spin" | "pause" | "cam";
 export type TLay = Partial<Record<TCtl, { x: number; y: number; s: number }>>;
-export const TCTLS: Record<TCtl, string> = { stick: "stickBase", boost: "tBoost", drift: "tDrift", jump: "tJump", abil: "tAbil", pause: "tPause", cam: "tCam" };
+export const TCTLS: Record<TCtl, string> = { stick: "stickBase", boost: "tBoost", drift: "tDrift", jump: "tJump", abil: "tAbil", spin: "tSpin", pause: "tPause", cam: "tCam" };
 export type TLays = { v: TLay; h: TLay };
 const portrait = matchMedia("(orientation: portrait)");
 export const orient = () => (portrait.matches ? "v" : "h");

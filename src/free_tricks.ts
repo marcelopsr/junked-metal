@@ -5,7 +5,7 @@ import { BAL } from "./balance";
 const R = BAL.ritmo;
 
 /** Estado del Paseo libre que comparten main.ts y run_drive.ts: no toca ENCORE (on = false fuera del modo). */
-export const roam = { on: false, hielo: null as { cx: number; cz: number; rx: number; rz: number } | null, extra: 0, air: 0, vol: 0, tramp: 0, fix: 0, dir: 1, ts: 0, arm: false };
+export const roam = { on: false, hielo: null as { cx: number; cz: number; rx: number; rz: number } | null, extra: 0, air: 0, vol: 0, tramp: 0, fix: 0, dir: 1, ts: 0, arm: false, flip: 0 };
 /** Trampolines del acuático [x, z] (libre_acuatico.ts los dibuja): plataforma de 5 m de radio y 0,5 m de alto; run_drive.ts les da el rebote. */
 export const TRAMPS: [number, number][] = [[100, 120], [142, 114], [168, 152]];
 /** Dentro de la elipse del lago congelado (libre_nieve.ts: lagoHielo). */

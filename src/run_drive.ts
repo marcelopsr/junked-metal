@@ -87,7 +87,13 @@ export function tickAbility(F: Frame, dt: number) {
   if (MOON.on && !calm) lunaEv(wdt, run.time, carPs, Math.max(c.def.size[0], c.def.size[2]) / 2, D.camYaw); // luna: lluvia de meteoritos y erupciones (moon_events.ts)
 }
 
-const _w = new B.Vector3();
+const _w = new B.Vector3(), _rf = new B.Vector3(), _rt = new B.Vector3(), _ray = new B.PhysicsRaycastResult();
+/** Distancia del centro del auto al piso (rayo largo hacia abajo); 99 si no hay. */
+function groundGap(c: Car) {
+  _rf.copyFrom(c.root.position); _rt.copyFrom(_rf); _rt.y -= R.libre_aterriza_m + 1;
+  (c.root.getScene().getPhysicsEngine() as B.PhysicsEngineV2).raycastToRef(_rf, _rt, _ray, { ignoreBody: c.body });
+  return _ray.hasHit ? _rf.y - _ray.hitPointWorld.y : 99;
+}
 /** Paseo libre: control en el aire (dirigir gira, acelerar/frenar cabecea; sin tecla se conserva el giro que traía) y velocidad ganada al bajar pendientes hasta libre_vel_bajada. */
 function libreDrive(c: Car, r: ReturnType<typeof drive>, steer: number, throttle: number, dt: number, base: number) {
   const body = c.body, v = body.getLinearVelocity();
@@ -114,7 +120,12 @@ function libreDrive(c: Car, r: ReturnType<typeof drive>, steer: number, throttle
   const spin = spinHeld();
   if (r.grounded || roam.air < 0.15 || (!steer && !throttle && !spin)) return; // roam.air: la rampa empinada hace parpadear "grounded"; el control entra tras 0,15 s de vuelo real
   const w = body.getAngularVelocity();
-  const wU = steer ? steer * R.libre_giro_aire : B.Vector3.Dot(w, up), wR = spin ? (throttle < 0 ? -1 : 1) * R.libre_cabeceo_aire : throttle && roam.arm && roam.air > R.libre_cabeceo_espera_s ? throttle * R.libre_cabeceo_aire : B.Vector3.Dot(w, rt), wF = B.Vector3.Dot(w, fw);
+  const wU = steer ? steer * R.libre_giro_aire : B.Vector3.Dot(w, up); let wR = spin ? (throttle < 0 ? -1 : 1) * R.libre_cabeceo_aire : throttle && roam.arm && roam.air > R.libre_cabeceo_espera_s ? throttle * R.libre_cabeceo_aire : B.Vector3.Dot(w, rt), wF = B.Vector3.Dot(w, fw);
+  if (spin && v.y < 0 && !MOON.on) { // aterrizaje: cerca del piso y bajando se amortigua el cabeceo; con la vuelta casi completa se nivela a ruedas (ponytail: no en la luna; techo: rayo único al centro)
+    const e = Math.atan2(fw.y, up.y); // ángulo al nivel más cercano (-pi..pi); positivo = nariz arriba (+wR baja la nariz)
+    const gap = groundGap(c);
+    if (gap < R.libre_aterriza_m) wR = roam.flip * 57.2958 >= R.libre_vuelta_asiste_deg ? B.Scalar.Clamp(e * 10, -R.libre_cabeceo_aire, R.libre_cabeceo_aire) : wR * Math.max(0, gap / R.libre_aterriza_m - 0.2);
+  }
   _w.set(up.x * wU + rt.x * wR + fw.x * wF, up.y * wU + rt.y * wR + fw.y * wF, up.z * wU + rt.z * wR + fw.z * wF);
   body.setAngularVelocity(_w);
 }

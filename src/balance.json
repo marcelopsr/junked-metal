@@ -467,6 +467,8 @@
     {"id":"libre_combo_tope","valor":3,"descripcion":"Paseo libre: multiplicador máximo del combo"},
     {"id":"libre_limpio_up","valor":0.7,"descripcion":"Paseo libre: cuánto debe apuntar hacia arriba el auto al aterrizar para que sea limpio (1 = recto)"},
     {"id":"libre_giro_aire","valor":6,"descripcion":"Paseo libre: velocidad de giro en el aire al dirigir (rad/s)"},
+    {"id":"libre_aterriza_m","valor":4,"descripcion":"Paseo libre: altura (m) sobre el piso bajo la cual, bajando con la tecla de giro, el cabeceo se amortigua"},
+    {"id":"libre_vuelta_asiste_deg","valor":300,"descripcion":"Paseo libre: grados de vuelta desde los que el auto, cerca del piso, se nivela a ruedas (con menos solo se frena el giro)"},
     {"id":"libre_cabeceo_espera_s","valor":0.5,"descripcion":"Paseo libre: segundos de aire real antes de que acelerar o frenar cabecee (las caídas cortas aterrizan de ruedas)"},
     {"id":"libre_volcado_s","valor":1,"descripcion":"Paseo libre: segundos volcado en el piso antes de que el auto se enderece solo con un salto suave"},
     {"id":"libre_rebote_tramp","valor":14,"descripcion":"Paseo libre: impulso vertical (m/s) al pisar un trampolín del acuático (ápice ~4,5 m sobre el piso con la gravedad del juego)"},

@@ -100,6 +100,10 @@ describe("parseSave", () => {
     expect(s.race).toEqual({ kb1: { up: ["KeyI", "KeyK"], drift: ["Space", "ShiftLeft"] }, kb2: { up: ["ArrowUp", ""] }, pad: { accel: [5, -1] } });
     expect(s.tlay).toEqual({ v: { boost: { x: 1, y: 0.3, s: 2 } }, h: {} }); expect(load({ pad: { mode: "mix" } }).pad.mode).toBe("trig"); // Mixto se quitó expect(s.touch).toBe(0.7);
   });
+  it("la disposición táctil conserva el botón de giro y los guardados viejos (sin spin) quedan con el del CSS", () => {
+    expect(load({ tlay: { v: { spin: { x: 0.2, y: 5, s: 1 } }, h: {} } }).tlay).toEqual({ v: { spin: { x: 0.2, y: 1, s: 1 } }, h: {} });
+    expect(load({ tlay: { v: { boost: { x: 0.5, y: 0.5, s: 1 } }, h: {} } }).tlay.v).not.toHaveProperty("spin");
+  });
   it("perfiles: siempre tres ranuras, nombre acotado y controles validados como los de la partida", () => {
     const s = load({ profiles: [{ name: "  Sillón con nombre muy largo de verdad  ", keys: { up: "KeyO" }, touch: 1.2 }, "x", { name: "" }, { name: "cuarto" }] });
     expect(s.profiles).toHaveLength(3);

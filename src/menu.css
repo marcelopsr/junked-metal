@@ -730,8 +730,9 @@ body.tedit #fe { visibility: hidden; }
 body.tedit #touch > * { display: block !important; }
 body.tedit #touch > #tJump { display: grid !important; }
 body.tedit #stickZone { outline: 1px dashed #ffffff44; }
-body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam) { outline: 2px dashed var(--turbo); outline-offset: 3px; touch-action: none; }
-body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tPause, #tCam)::after { content: ""; position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px; background: var(--turbo); }
+body.tedit #tSpin { display: block; } /* oculto fuera del aire: en el editor se muestra para poder moverlo */
+body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tSpin, #tPause, #tCam) { outline: 2px dashed var(--turbo); outline-offset: 3px; touch-action: none; }
+body.tedit :is(#stickBase, #tBoost, #tDrift, #tJump, #tAbil, #tSpin, #tPause, #tCam)::after { content: ""; position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px; background: var(--turbo); }
 @media (max-width: 500px) { #opts .row.prof .lb { display: none; } #opts .row.prof input { flex: 1 1 auto; } }
 
 /* Legibilidad sobre la escena 3D: contorno oscuro (4 sombras duras + halo) en todo texto que va directo sobre el fondo

@@ -351,7 +351,7 @@ function libreTricks(dt: number, grounded: boolean) {
   const c = lead.car!, body = c.body, w = body.getAngularVelocity(), up = c.root.up, fw = c.root.forward, rt = c.root.right, s = save.libre;
   const wU = Math.abs(B.Vector3.Dot(w, up)), wF = B.Vector3.Dot(w, fw), wR = B.Vector3.Dot(w, rt);
   const end = trickStep(libreTrick, dt, grounded, wU, Math.hypot(wF, wR), up.y);
-  roam.air = libreTrick.air; // lo lee libreDrive (control en el aire)
+  roam.flip = libreTrick.flip; roam.air = libreTrick.air; // lo lee libreDrive (control en el aire)
   hudAire(grounded ? "" : trickLive(libreTrick));
   hudSpinBtn(!grounded && roam.air > 0.15);
   if (!s.aviso && !grounded && roam.air > 0.4) { s.aviso = true; avisoT = 3.5; persist(); } // una sola vez en la vida del guardado
