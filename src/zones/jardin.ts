@@ -15,7 +15,7 @@ function lawnTexture() {
   for (let i = 0; i < 90; i++) blot(r() * n, r() * n, 40 + r() * 90, pal[(r() * pal.length) | 0], 0.22);
   // Manchas de pasto alto oscuro y parches de tierra pelada: rompen el verde liso (contraste por composición)
   for (let i = 0; i < 22; i++) { const x = r() * n, y = r() * n, rad = 60 + r() * 90; for (let k = 0; k < 5; k++) blot(x + (r() - 0.5) * rad, y + (r() - 0.5) * rad, rad * (0.4 + r() * 0.4), "#10300b", 0.45); }
-  for (let i = 0; i < 8; i++) { const x = r() * n, y = r() * n, rad = 30 + r() * 40; for (let k = 0; k < 6; k++) { const ox = (r() - 0.5) * rad * 1.6, oy = (r() - 0.5) * rad * 1.6, q = rad * (0.35 + r() * 0.4); blot(x + ox, y + oy, q * 1.2, "#3b2414", 0.5); blot(x + ox, y + oy, q, r() < 0.5 ? "#8a5a3a" : "#b98254", 0.65); } }
+  for (let i = 0; i < 14; i++) { const x = r() * n, y = r() * n, rad = 36 + r() * 46; for (let k = 0; k < 6; k++) { const ox = (r() - 0.5) * rad * 1.6, oy = (r() - 0.5) * rad * 1.6, q = rad * (0.35 + r() * 0.4); { const a = r() * 3.14, ry = q * (0.45 + r() * 0.4); for (const [k2, col, al] of [[1.35, "#3b2414", 0.18], [1.12, "#4d2c17", 0.3], [0.9, r() < 0.5 ? "#7a3f22" : "#6a3519", 0.95]] as const) { c.globalAlpha = al; c.fillStyle = col; c.beginPath(); c.ellipse(x + ox, y + oy, q * 1.5 * k2, ry * k2, a, 0, 7); c.fill(); } } } }
   c.lineCap = "round";
   const cols = ["#1d4614", "#2d5a1c", "#3f7a28", "#2d5a1c", "#4E8A2E", "#7fae3c"];
   for (let i = 0; i < 24000; i++) {
@@ -50,13 +50,14 @@ export function frontBuild() {
   cityBlocks(toy);
   realCar(-50, -HALF - 20, Math.PI / 2, 4, false, "#2f4f7a"); // estacionado en la calle (solo se ve)
   // Camino de lajas a la puerta
-  const stone = pbr("stone", { color: "#ffffff", rough: 0.9, tex: tex("stone", TEX.stone), emissive: "#4a443a" }); // lajas claras: la luz alta del cuadro
-  for (let z = -HALF + 20; z < HALF - 6; z += 9) { const d = B.MeshBuilder.CreateDisc("laja", { radius: 4.4, tessellation: 7 }, scene); d.rotation.set(Math.PI / 2, rng() * 6, 0); d.position.set(12 + (rng() - 0.5) * 2, 0.03, z); d.material = stone; d.receiveShadows = true; }
+  const stone = pbr("stone", { color: "#cfc8b8", rough: 0.9, tex: tex("stone", TEX.stone), emissive: "#4a443a" }); // lajas gris piedra claro (no blanco quemado) con junta oscura
+  const joint = pbr("laja-junta", { color: "#2e2a26", rough: 1 });
+  for (let z = -HALF + 20; z < HALF - 6; z += 9) { const d = B.MeshBuilder.CreateDisc("laja", { radius: 4.4, tessellation: 7 }, scene); d.rotation.set(Math.PI / 2, rng() * 6, 0); d.position.set(12 + (rng() - 0.5) * 2, 0.03, z); d.material = stone; d.receiveShadows = true; const j = B.MeshBuilder.CreateDisc("junta", { radius: 4.75, tessellation: 7 }, scene); j.rotation.copyFrom(d.rotation); j.position.set(d.position.x, 0.022, z); j.material = joint; j.receiveShadows = true; }
   house();
   // Ligustros a los costados
   for (const sx of [-1, 1]) {
-    const hp = [box(7, 11, HALF * 2 + 10, leafM("#2f6b2a", 40), [sx * (HALF + 3.5), 5.5, 0])];
-    for (let z = -HALF; z < HALF; z += 7) hp.push(sph(8 + rng() * 3, leafM(rng() < 0.5 ? "#2f6b2a" : "#3a7a32"), [sx * (HALF + 3.5), 11, z], [1, 0.6, 1], 6));
+    const hp = [box(7, 15, HALF * 2 + 10, leafM("#2f6b2a", 40), [sx * (HALF + 3.5), 7.5, 0])];
+    for (let z = -HALF; z < HALF; z += 7) hp.push(sph(8 + rng() * 3, leafM(rng() < 0.5 ? "#2f6b2a" : "#3a7a32"), [sx * (HALF + 3.5), 15, z], [1, 0.6, 1], 6));
     const hedge = merge("hedge", hp);
     shadows.addShadowCaster(hedge);
     occluders.push(hedge);
@@ -220,11 +221,17 @@ function gardenKit(put: Put) {
     ...[1.6, 3.8].map((y) => box(1, 0.3, 0.3, hinge, [-0.9, y, 0.6])), box(0.5, 0.9, 0.3, hinge, [0.9, 2.6, 0.6]),
     ...[0, 1, 2, 3, 4, 5, 6].map((k) => sph(0.55, JP(k % 2 ? "#3F8F2F" : "#66BB6A", 0.6), [-4.9 + Math.sin(k) * 0.4, 0.8 + k * 0.7, 0.9], [1, 1, 0.8], 4))];
   put(gate, -58, -8, Math.PI / 2, 4.6, 11, 7, 1.6);
-  // 7. Volúmenes oscuros bajos cerca de la salida: macetas de hierro, regadera, manguera enrollada, tronco y piedra (siluetas oscuras, pasillos > 6 m entre sí)
-  const iron = JP("#24282d", 0.6), soil = JP("#2a190d", 1), darkG = JP("#1b4a1c", 0.7);
-  const bigPot = [cyl(2.2, 1.6, 3.2, iron, [0, 1.6, 0], undefined, 10), tor(4.4, 0.3, iron, [0, 3.2, 0], undefined, 10), cyl(1.9, 1.9, 0.2, soil, [0, 3.1, 0], undefined, 10), ...[0, 1, 2, 3, 4].map((k) => sph(1.3, darkG, [Math.cos(k * 1.3) * 0.9, 3.9 + (k % 2) * 0.4, Math.sin(k * 1.3) * 0.9], [1, 1.1, 1], 4))];
-  put(bigPot, 14, 12, 0, 2.6, 4.4, 4, 4.4);
-  put(bigPot, -13, -4, 0.5, 2.6, 4.4, 4, 4.4);
+  // 7. Volúmenes oscuros bajos cerca de la salida: macetas de terracota, arbustos oscuros, regadera, manguera enrollada, tronco y piedra (siluetas oscuras, pasillos > 6 m entre sí)
+  const iron = JP("#24282d", 0.6), terra = JP("#B5603A", 0.7), rim = JP("#9a4f2e", 0.7), soil = JP("#2a190d", 1), leaf = [JP("#1b4a1c", 0.7), JP("#245a24", 0.7)];
+  const bigPot = [cyl(2.2, 1.5, 2.2, terra, [0, 1.1, 0], undefined, 12), cyl(2.5, 2.4, 0.5, rim, [0, 2.2, 0], undefined, 12), cyl(2.1, 2.1, 0.1, soil, [0, 2.4, 0], undefined, 12),
+    ...Array.from({ length: 9 }, (_, k) => { const a = k * 0.7, L = 2.8 + (k % 3) * 0.5, t = 0.8 + (k % 2) * 0.35; return box(0.9, 0.12, L, leaf[k % 2], [Math.sin(a) * L * 0.5 * Math.cos(t), 2.5 + L * 0.5 * Math.sin(t), Math.cos(a) * L * 0.5 * Math.cos(t)], [-t, a, 0]); })];
+  put(bigPot, 14, 12, 0, 2.6, 4.8, 2.6, 4.8);
+  put(bigPot, -13, -4, 0.5, 2.6, 4.8, 2.6, 4.8);
+  const bush = [sph(3.4, JP("#123a14", 0.8), [0, 2.4, 0], [1.4, 0.9, 1.1], 5), sph(2.4, JP("#1b4a1c", 0.8), [-2.2, 1.8, 1], [1, 0.9, 1], 5), sph(2.2, JP("#0f3012", 0.8), [2.4, 1.7, -0.8], [1, 0.9, 1], 5)];
+  put(bush, 8, 25, 0.3, 4.5, 8, 4, 6);
+  put(bush, -8, 10, -0.4, 4.5, 8, 4, 6);
+  put(bush, 24, 20, 0.6, 4.5, 8, 4, 6);
+  put(bush, -32, 16, 0.9, 4.5, 8, 4, 6);
   put([...[0, 1, 2].map((k) => tor(5 - k * 0.9, 0.55, iron, [0, 0.55 + k * 0.6, 0], undefined, 14)), tube([[3, 0.5, 0], [5, 0.5, 2], [8, 0.4, 3.5]], 0.45, iron)], -2, 24, 0.3, 5, 10, 2.2, 10);
   put([rbox(7, 2.4, 2.6, 0.5, JP("#3a2412", 0.9), [0, 1.2, 0], [0, 0, 0.08]), cyl(1.1, 1.1, 0.12, JP("#6a4a2a", 0.9), [3.5, 1.2, 0], [0, 0, Math.PI / 2], 10), sph(2, JP("#3a3d42", 0.9), [-5, 1, 2.4], [1.3, 0.7, 1], 5)], 8, -16, 0.9, 4.5, 8, 2.4, 3);
 }
