@@ -457,7 +457,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
     cm.opacityTexture?.dispose(); // el material se reusa entre armados: libera el degradé anterior
     const ct = new B.DynamicTexture("moonCraterTex", 64, scene, false), cc = ct.getContext() as unknown as CanvasRenderingContext2D, cg = cc.createRadialGradient(32, 32, 0, 32, 32, 32);
     cg.addColorStop(0, "rgba(255,255,255,0.8)"); cg.addColorStop(0.7, "rgba(255,255,255,0.55)"); cg.addColorStop(0.88, "rgba(255,255,255,0.1)"); cg.addColorStop(1, "rgba(255,255,255,0)"); cc.fillStyle = cg; cc.fillRect(0, 0, 64, 64); ct.update(); ct.hasAlpha = true;
-    cm.opacityTexture = ct; cm.diffuseColor = new B.Color3(0.16, 0.07, 0.04); cm.specularColor = B.Color3.Black(); cm.fogEnabled = true; cm.backFaceCulling = false; cm.zOffset = -2;
+    cm.opacityTexture = ct; cm.disableLighting = true; cm.diffuseColor = new B.Color3(0.07, 0.06, 0.055); cm.specularColor = B.Color3.Black(); cm.fogEnabled = true; cm.backFaceCulling = false; cm.zOffset = -2;
     const crater = B.MeshBuilder.CreateGround("moonCrater", { width: 2, height: 2 }, scene); crater.material = cm;
     thin(crater, low ? 14 : 30, 1, () => { const s = 2.5 + gr() * 4; return new B.Vector3(s, 1, s * (0.7 + gr() * 0.3)); }, 0.03);
   }
