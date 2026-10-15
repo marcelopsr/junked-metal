@@ -1,0 +1,377 @@
+{
+ "intro": true,
+ "novedadesVistas": "",
+ "scrap": 3150,
+ "best": 980,
+ "perm": {
+  "hp": 4,
+  "dmg": 3,
+  "spd": 2,
+  "mag": 1,
+  "reroll": 0,
+  "cards": 0,
+  "extra": 0,
+  "revive": 0,
+  "xp": 2,
+  "arm": 0,
+  "reg": 0,
+  "tur": 0,
+  "ram": 0,
+  "cdr": 0
+ },
+ "cars": [
+  "buggy",
+  "monster",
+  "helado"
+ ],
+ "car": "helado",
+ "pilot": "muneca",
+ "unlocked": [
+  "zone:patio",
+  "zone:garaje",
+  "arma:clips",
+  "arma:chispero",
+  "arma:agua"
+ ],
+ "kit": {
+  "wing": "serie",
+  "decal": "nada",
+  "lamp": "calido",
+  "exhaust": "nada",
+  "bumper": "nada",
+  "tires": "serie",
+  "acc": "nada"
+ },
+ "paint": "#1d3557",
+ "trim": "#f1faee",
+ "rim": "#e63946",
+ "finish": "",
+ "zoom": 1.35,
+ "camMode": "iso",
+ "mute": false,
+ "vol": {
+  "master": 0.8,
+  "sfx": 1,
+  "engine": 0.5,
+  "music": 0.3
+ },
+ "lookv": 6,
+ "shake": true,
+ "fps": false,
+ "hudSolid": false,
+ "hint": true,
+ "gfxv": 2,
+ "gpu": "webgl",
+ "scaler": "simple",
+ "scale": 0.9,
+ "fsr": "calidad",
+ "aa": "none",
+ "sharpen": 0,
+ "preset": "medio",
+ "shadowQ": "mid",
+ "detail": "medio",
+ "texRes": 256,
+ "aniso": 4,
+ "bloom": true,
+ "fpsCap": 0,
+ "menuFps": 60,
+ "fov": 55,
+ "bright": 1,
+ "gamma": 1,
+ "keys": {
+  "up": [
+   "KeyW",
+   "ArrowUp"
+  ],
+  "down": [
+   "KeyS",
+   "ArrowDown"
+  ],
+  "left": [
+   "KeyA",
+   "ArrowLeft"
+  ],
+  "right": [
+   "KeyD",
+   "ArrowRight"
+  ],
+  "boost": [
+   "ShiftLeft",
+   ""
+  ],
+  "drift": [
+   "ShiftLeft",
+   "ShiftRight"
+  ],
+  "jump": [
+   "KeyF",
+   ""
+  ],
+  "ability": [
+   "KeyE",
+   ""
+  ],
+  "cam": [
+   "KeyC",
+   ""
+  ],
+  "spin": [
+   "KeyQ",
+   ""
+  ],
+  "reroll": [
+   "KeyR",
+   ""
+  ],
+  "pause": [
+   "Escape",
+   "KeyP"
+  ],
+  "mute": [
+   "KeyM",
+   ""
+  ],
+  "zoomIn": [
+   "Equal",
+   "NumpadAdd"
+  ],
+  "zoomOut": [
+   "Minus",
+   "NumpadSubtract"
+  ]
+ },
+ "pad": {
+  "dead": 0.15,
+  "sens": 1,
+  "invX": false,
+  "invY": false,
+  "stick": "left",
+  "mode": "trig",
+  "btn": {
+   "accel": [
+    7
+   ],
+   "brake": [
+    6
+   ],
+   "boost": [
+    0
+   ],
+   "drift": [
+    1
+   ],
+   "ability": [
+    2
+   ],
+   "jump": [
+    4
+   ],
+   "spin": [
+    5
+   ],
+   "reroll": [
+    3
+   ],
+   "cam": [
+    8
+   ],
+   "pause": [
+    9
+   ],
+   "ok": [
+    0
+   ],
+   "back": [
+    1
+   ]
+  }
+ },
+ "race": {
+  "kb1": {
+   "up": [
+    "KeyW",
+    ""
+   ],
+   "down": [
+    "KeyS",
+    ""
+   ],
+   "left": [
+    "KeyA",
+    ""
+   ],
+   "right": [
+    "KeyD",
+    ""
+   ],
+   "drift": [
+    "Space",
+    "ShiftLeft"
+   ],
+   "item": [
+    "KeyE",
+    "KeyQ"
+   ]
+  },
+  "kb2": {
+   "up": [
+    "ArrowUp",
+    ""
+   ],
+   "down": [
+    "ArrowDown",
+    ""
+   ],
+   "left": [
+    "ArrowLeft",
+    ""
+   ],
+   "right": [
+    "ArrowRight",
+    ""
+   ],
+   "drift": [
+    "ShiftRight",
+    "Period"
+   ],
+   "item": [
+    "Enter",
+    "Comma"
+   ]
+  },
+  "pad": {
+   "accel": [
+    7,
+    0
+   ],
+   "brake": [
+    6,
+    1
+   ],
+   "drift": [
+    5,
+    2
+   ],
+   "item": [
+    3,
+    4
+   ]
+  }
+ },
+ "tlay": {
+  "v": {},
+  "h": {}
+ },
+ "profiles": [
+  null,
+  null,
+  null
+ ],
+ "rumble": true,
+ "touch": 1,
+ "hud": 1,
+ "calm": false,
+ "dmgNums": true,
+ "tranquilo": false,
+ "tutorialHecho": true,
+ "controlesVistos": true,
+ "decals": [
+  "1234",
+  "",
+  "5678"
+ ],
+ "decalSel": 0,
+ "stats": {
+  "runs": 11,
+  "wins": 1,
+  "time": 5400,
+  "dist": 31000,
+  "dmg": {
+   "gomitas": 5000,
+   "chispero": 7300
+  },
+  "zone": {
+   "patio": {
+    "t": 3000,
+    "kills": 900
+   },
+   "garaje": {
+    "t": 2400,
+    "kills": 700
+   }
+  }
+ },
+ "seen": [
+  "hormiga",
+  "gato"
+ ],
+ "slain": {
+  "hormiga": 900,
+  "gato": 40
+ },
+ "beast": {},
+ "runs": [
+  {
+   "t": 600,
+   "kills": 400,
+   "lv": 12,
+   "seed": 3,
+   "win": true
+  },
+  {
+   "t": 200,
+   "kills": 80,
+   "lv": 4,
+   "seed": 9,
+   "win": false
+  }
+ ],
+ "daily": {
+  "day": "2026-09-28",
+  "best": 1500
+ },
+ "zone": "garaje",
+ "ach": [
+  "gana_buggy"
+ ],
+ "ability": "escudo",
+ "curses": [
+  "horda"
+ ],
+ "endless": 340,
+ "abilLv": {
+  "bombardeo": 2,
+  "escudo": 1
+ },
+ "weapon": "chispero",
+ "encore": {
+  "best": {
+   "loop": 2,
+   "stage": 3,
+   "t": 1100
+  },
+  "wins": 0,
+  "runs": 3,
+  "lastLoop": 2,
+  "lastCause": "Aplastado por el gato",
+  "secrets": [],
+  "tips": [],
+  "seenPacts": [],
+  "seenVariants": []
+ },
+ "m3": {
+  "stars": {
+   "1": 3,
+   "2": 3,
+   "3": 1
+  },
+  "best": {
+   "1": 5000,
+   "2": 4100
+  },
+  "tools": {
+   "martillo": 2,
+   "bomba": 1
+  }
+ }
+}
