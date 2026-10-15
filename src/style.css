@@ -105,6 +105,8 @@ body.duel-fight #tAbil { width: 84px; height: 84px; font-size: 11px; right: 24px
 #tJump { right: 24px; bottom: 268px; display: grid; place-content: center; justify-items: center; gap: 2px; font-weight: 700; letter-spacing: .08em; color: var(--jm-texto); border: 2px solid var(--jm-naranja);
   background: conic-gradient(#000c calc(var(--cd, 0) * 360deg), var(--jm-fondo2) 0); }
 @media (orientation: portrait) { #tJump { right: calc(24px + 84px * var(--touch-scale, 1) + 16px); bottom: calc(170px + 84px * var(--touch-scale, 1) + 14px); } } /* vertical: a la izquierda de DERRAPE (antes caía justo encima y lo tapaba) */
+/* Vertical táctil: SALTO y DERRAPE más chicos y translúcidos para no tapar al auto (la cámara queda como está) */
+@media (orientation: portrait) and (pointer: coarse) { #tJump, #tDrift { width: 72px; height: 72px; opacity: .72; } }
 /* Habilidad: más chica, sobre TURBO (apaisado) o a su izquierda (vertical, donde DERRAPE ocupa el lugar de arriba).
    --cd (main.ts) oscurece la parte que falta enfriar */
 #tAbil { position: absolute; pointer-events: auto; border-radius: 50%; width: 64px; height: 64px; padding: 0; font-size: 10px; scale: var(--touch-scale, 1); transform-origin: right bottom;

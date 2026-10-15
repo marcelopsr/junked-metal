@@ -424,6 +424,31 @@ export function enemyTemplate(kind: string, scale = 1): B.Mesh {
         ...[-1, 1].map((x) => tube([[x * 0.35, 0.6, 0.3], [x * 0.5, 0.35, 0.5], [x * 0.5, 0.04, 0.6]], 0.06, d)),
       ];
     }
+    if (kind === "taladro") { // ref296: bicho taladro, casco naranja gastado con bulbo cian arriba, visor lima al frente y taladro cónico apuntando a +z
+      const o = worn("#d98a1f"), steel = M.metal("#5a5e66"), dark = M.matte("#2a2724"), cyan = M.glow("#3fe8f0"), lime = M.glow("#a8f03c");
+      return [
+        box(1.3, 0.55, 1.4, o, [0, 0.7, 0]), box(1.0, 0.3, 1.1, o, [0, 1.05, -0.05]), box(1.5, 0.3, 0.7, dark, [0, 0.55, 0.1]), // casco: panza, tapa, faja oscura
+        box(0.9, 0.12, 0.12, lime, [0, 0.62, 0.72]), sph(0.62, cyan, [0, 1.22, -0.05], [1, 0.8, 1], 8), tor(0.8, 0.12, steel, [0, 1.2, -0.05], [Math.PI / 2, 0, 0], 8), // visor y bulbo
+        ...rivets([0, 1.2, 0.3], 0.5, 0.45, "y", 0.07),
+        cyl(0.5, 0.5, 0.35, steel, [0, 0.72, 0.85], [Math.PI / 2, 0, 0], 8), cyl(0.36, 0.5, 0.4, o, [0, 0.72, 1.15], [Math.PI / 2, 0, 0], 8), cyl(0.04, 0.36, 0.95, steel, [0, 0.72, 1.7], [Math.PI / 2, 0, 0], 8), // taladro: base, ensanche y punta
+        tor(0.5, 0.05, dark, [0, 0.72, 1.4], [0, Math.PI / 2, 0], 8),
+        ...[-1, 1].flatMap((x) => [0.45, -0.35].flatMap((z) => [
+          tube([[x * 0.65, 0.55, z], [x * 1.05, 0.7, z + 0.1], [x * 1.2, 0.3, z + 0.2]], 0.1, o), sph(0.26, steel, [x * 0.68, 0.55, z], undefined, 6), cyl(0.0, 0.14, 0.4, steel, [x * 1.2, 0.18, z + 0.2], [Math.PI, 0, 0], 5), // pata con rodilla y garra
+        ])),
+      ];
+    }
+    if (kind === "cangrejo") { // ref278: escorpión-cangrejo de roca gris con vetas de óxido, dos pinzas, ojos verdes y cola con bulbo cian (frente = +Z)
+      const rock = worn("#7d8087"), rust = worn("#b85a24"), dark = M.matte("#2a2826"), steel = M.metal("#4a4d52"), eye = M.glow("#5cf06a"), cyan = M.glow("#3fe8f0");
+      return [
+        sph(2.1, rock, [0, 0.62, -0.1], [0.82, 0.38, 0.95], 8), ...plates([0, 0.62, -0.1], [0.86, 0.4, 1.0], [[0.3, 0.9], [-0.4, 0.9], [1.4, 0.6], [-1.4, 0.6], [3.0, 0.7], [2.5, 0.4], [-2.5, 0.4]], [rust, rock, rock], 0.55, 0.45), // caparazón de roca con placas
+        box(1.2, 0.35, 0.5, dark, [0, 0.4, 0.8]), sph(0.2, eye, [0.25, 0.48, 1.08], undefined, 5), sph(0.2, eye, [-0.25, 0.48, 1.08], undefined, 5), ...rivets([0, 0.42, 1.06], 0.5, 0.12, "z", 0.05),
+        ...[-1, 1].flatMap((x) => [
+          tube([[x * 0.6, 0.5, 0.7], [x * 0.95, 0.5, 1.0], [x * 0.85, 0.5, 1.4]], 0.13, steel), box(0.62, 0.4, 0.8, rust, [x * 0.85, 0.5, 1.85]), box(0.22, 0.3, 0.55, rock, [x * 0.58, 0.5, 2.2], [0, -x * 0.35, 0]), box(0.2, 0.28, 0.5, rock, [x * 1.1, 0.5, 2.2], [0, x * 0.2, 0]), // brazo, palma y dedos de la pinza
+          ...[0.0, -0.8].map((z) => tube([[x * 0.8, 0.45, z], [x * 1.3, 0.55, z - 0.05], [x * 1.45, 0.0, z]], 0.1, steel)), // patas
+        ]),
+        tube([[0, 0.9, -0.9], [0, 1.4, -1.3], [0, 1.9, -1.0], [0, 1.85, -0.55]], 0.1, steel), cyl(0.18, 0.1, 0.25, rust, [0, 1.75, -0.45], undefined, 6), sph(0.3, cyan, [0, 1.62, -0.42], undefined, 6), // cola con bulbo cian
+      ];
+    }
     if (kind === "francotirador") { // ref286: robot violeta de pose de tiro, sombrero ancho con franja crema, visor con ojo rojo, rifle largo con mira (apunta a +z)
       const p = worn("#7a3fc0"), cream = worn("#d6ccaa"), bronze = M.metal("#a8803c"), dark = M.matte("#26262b"), steel = M.metal("#3a3a40"), red = M.glow("#ff2a1a");
       return shrink([

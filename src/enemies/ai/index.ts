@@ -46,4 +46,6 @@ export const AI: Partial<Record<Kind, Think>> = {
   brincador: brincadorAI,
   francotirador: francotiradorAI,
   ladron: ladronAI,
+  taladro: escarabajoAI, // embiste como el escarabajo (la lógica no depende del modelo)
+  cangrejo: escudoAI, // blindado lento que gira despacio
 };

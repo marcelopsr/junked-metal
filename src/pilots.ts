@@ -49,7 +49,7 @@ export const PILOTS: Record<PilotId, { name: string; pros: string[]; con: string
     mod: modOf("osito") },
   mecanica: { name: "La Mecánica Sin Taller", pros: ["Regenera +1,5 vida/s", "Arranca con Tuercas"], con: "-10 vida máxima", cost: BAL.pilotos.mecanica.precio, lore: "Le quitaron el taller, no la llave inglesa. Arregla el auto mientras lo destroza.", start: BAL.pilotos.mecanica.arma_inicial as WeaponId, abil: BAL.pilotos.mecanica.habilidad as AbilityId, abilTxt: BAL.pilotos.mecanica.habilidad_txt,
     mod: modOf("mecanica") },
-  cocinero: { name: "El Cocinero de Tornillos", pros: ["+60% imán", "Arranca con Chapitas"], con: "-10 vida máxima", cost: BAL.pilotos.cocinero.precio, lore: "Cree que los tornillos son fideos. Los junta con una cuchara gigante.", start: BAL.pilotos.cocinero.arma_inicial as WeaponId, abil: BAL.pilotos.cocinero.habilidad as AbilityId, abilTxt: BAL.pilotos.cocinero.habilidad_txt,
+  cocinero: { name: "El Cocinero de Tornillos", pros: ["+60% imán", "Arranca con Chapitas"], con: "Sin ventajas de combate", cost: BAL.pilotos.cocinero.precio, lore: "Cree que los tornillos son fideos. Los junta con una cuchara gigante.", start: BAL.pilotos.cocinero.arma_inicial as WeaponId, abil: BAL.pilotos.cocinero.habilidad as AbilityId, abilTxt: BAL.pilotos.cocinero.habilidad_txt,
     mod: modOf("cocinero") },
   mago: { name: "El Mago de Cartón", pros: ["+15% daño", "Arranca con Confeti"], con: "-15 vida máxima y armas 8% más lentas", cost: BAL.pilotos.mago.precio, lore: "Su truco estrella es hacer desaparecer el sueldo. El confeti no explota, pero casi.", start: BAL.pilotos.mago.arma_inicial as WeaponId, abil: BAL.pilotos.mago.habilidad as AbilityId, abilTxt: BAL.pilotos.mago.habilidad_txt,
     mod: modOf("mago") },

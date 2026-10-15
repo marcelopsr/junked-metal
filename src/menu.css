@@ -661,6 +661,19 @@ button.carc { font: inherit; font-size: 13px; letter-spacing: 0; text-transform:
   #scr-beast.on { grid-template-columns: 1fr; grid-template-rows: 38vh 1fr; padding: 10px; gap: 8px; }
   #bpanel { padding: 10px 12px; gap: 8px; }
   .bctl .slot > span { min-width: 0; width: 100%; }
+  /* Ficha en celular: encabezado en 2 líneas (el retrato sobra: el ícono ya va junto al nombre), Volver sin partirse y barra inferior separada del texto */
+  .bhead { gap: 6px; }
+  .bhead-portrait { display: none; }
+  .bnav { min-width: 40px; min-height: 40px; font-size: 18px; }
+  .bname small { font-size: 12px; letter-spacing: .06em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bname b { font-size: 22px; white-space: nowrap; }
+  .bfoot { flex: none; padding-top: 6px; border-top: 1px solid var(--jm-borde); }
+  .bfoot .hint { font-size: 12px; letter-spacing: .02em; }
+  .bfoot button { flex: none; white-space: nowrap; min-width: 92px; padding: 10px 14px; }
+  /* Garaje: aire entre título, banco y las etiquetas de abajo */
+  #scr-garage .otitle { padding-bottom: 6px; }
+  #scr-garage .sect { padding-bottom: 10px; }
+  #bankG { margin-top: 6px; }
 }
 @media (max-height: 500px) { #scr-beast.on { padding: 8px; } #bpanel { padding: 8px 12px; gap: 6px; } }
 

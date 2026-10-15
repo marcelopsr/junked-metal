@@ -44,7 +44,7 @@ export const BUILDS = {
 };
 
 // ---------- Zonas y plagas (replican spawnTable, run.ts PLAGUES, zones/cocina.ts, aliens.ts) ----------
-const PATIO = ["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", "grillo", "mosca", "babosa", "kamikaze", "escudo", "brincador", "francotirador", "divisor", "ladron"];
+const PATIO = ["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", "grillo", "mosca", "babosa", "kamikaze", "escudo", "brincador", "francotirador", "divisor", "ladron", "taladro", "cangrejo"];
 const ALIENS = ["enjambre", "tirador", "saltador", "emboscador", "flotante", "tanque", "explosivo", "curandero"];
 export const KITCHEN_SPAWN = { hormiga: 1.6, mosca: 1.8, babosa: 1.4, polilla: 1.3, escarabajo: 1.3, robot: 0.5, friccion: 0.6, brincador: 1.5, divisor: 1.4, ladron: 1.3 };
 const BASE6 = ["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla"];

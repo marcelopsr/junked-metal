@@ -1,7 +1,7 @@
 import * as B from "@babylonjs/core";
 import { box, cyl, merge, sph } from "../models";
 import { M, canvasTex, shadows } from "../render";
-import { HALF, bare, decal, floor, occluders, scene, stat } from "./common";
+import { HALF, bare, decal, floor, lowQ, occluders, scene, stat } from "./common";
 import { clear, int, rocks, toyRamps } from "../world_layout";
 
 // Bioma Bosque (docs/art_direction/visual_reference_register.md, «Kits por bioma»; ref143/ref38/ref28a): suelo de tierra con agujas de pino,
@@ -105,6 +105,7 @@ export function forestBuild() {
     const off = HALF + 6 + row * 9 + r() * 4, p = k + (r() - 0.5) * 3, h = 16 + r() * 14 + row * 4;
     const px = side === 0 ? off : side === 2 ? -off : p, pz = side === 1 ? off : side === 3 ? -off : p;
     if (Math.hypot(px - FALL.x, pz - FALL.z) < 30) continue; // no tapar la cascada (r() ya se consumió: el resto no cambia)
+    if (lowQ && row === 1) continue; // lowQ: sin la fila lejana de pinos (solo decorado, sin colisión)
     trees.push(...pine(r, side === 0 ? off : side === 2 ? -off : p, side === 1 ? off : side === 3 ? -off : p, h));
   }
   // Camino de tierra oscura (decal), bloques rojo/blanco bajos y neumáticos sueltos (decorativos, sin colisión), arco de troncos con faroles y tronco-túnel.
@@ -193,7 +194,7 @@ export function forestLayout() {
   // Hongos al pie de algunos tocones.
   for (let i = 0; i < 12; i++) { const p = spot(2, 20, 60); if (p) deco.push(...mush(p[0], p[1], 0.7 + g() * 0.5), ...mush(p[0] + 1.1, p[1] + 0.6, 0.5)); }
   // Matas y piedritas sin colisión: densidad alta de props bajos alrededor del auto y del resto del patio.
-  for (let i = 0; i < 300; i++) { const p = spot(1, 19, i < 160 ? 55 : 125); if (!p) continue; ferns.push(...fern(r, p[0], p[1], 1.6 + r() * 1.8)); if (i % 3 === 0) ferns.push(...rock(r, p[0] + 1.5, p[1] + 1, 0.5 + r() * 0.5, r() * 6)); }
+  for (let i = 0; i < 300; i++) { const p = spot(1, 19, i < 160 ? 55 : 125); if (!p || (lowQ && i & 1)) continue; ferns.push(...fern(r, p[0], p[1], 1.6 + r() * 1.8)); if (i % 3 === 0) ferns.push(...rock(r, p[0] + 1.5, p[1] + 1, 0.5 + r() * 0.5, r() * 6)); }
   for (const [n, parts] of [["forestDeco", deco], ["forestMatas", ferns]] as [string, B.Mesh[]][]) { if (!parts.length) continue; const m = merge(n, parts); m.isPickable = false; shadows.addShadowCaster(m); }
 }
 

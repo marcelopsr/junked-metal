@@ -2,7 +2,7 @@ import * as B from "@babylonjs/core";
 import { box, cyl, merge, rbox, sph, template, tor } from "../models";
 import { M, pbr, shadows, surface, TEX } from "../render";
 import { rng } from "../rng";
-import { HALF, bare, crateFold, decal, floor, leafM, occluders, plankTpl, registerHeavyProp, scene, stat, tex } from "./common";
+import { HALF, bare, crateFold, decal, floor, leafM, lowQ, occluders, plankTpl, registerHeavyProp, scene, stat, tex } from "./common";
 import { toyHouse, toyTree } from "../models/props_rc";
 import { ball, brickWalls, gnomes, hose, int, jumpScrap, piles, plankBridge, planterAlley, pots, puddles, ramp, rocks, toyRamps, toyScatter, wateringCan } from "../world_layout";
 
@@ -358,7 +358,7 @@ function piedritasYMatas(toy: (c: string, rough?: number) => B.Material, grassPa
   // Piedritas: 3 colores = 3 mallas (3 dibujos), poliedro de 4 segmentos achatado
   const rocks = ["#B08A68", "#6E4A33", "#C9A27A"].map((c) => ({ m: sph(1, toy(c, 0.95), [0, 0, 0], [1, 0.6, 1], 4), mats: [] as number[] }));
   for (let i = 0; i < 700; i++) onPath((x, z) => {
-    if (!ok(x, z)) return;
+    if (!ok(x, z) || (lowQ && i & 1)) return; // lowQ: mitad de piedritas (decorado sin colisión)
     const d = 0.14 + Math.pow(r(), 1.2) * 0.4, ar = 0.7 + r() * 0.7; // más chicas que grandes
     put(rocks[Math.floor(r() * 3)].mats, x, d * 0.2, z, r() * 6.3, d * ar, d * (0.6 + r() * 0.5), d / ar, (r() - 0.5) * 0.6);
   }, (w) => (r() - 0.5) * w * 1.15);
@@ -371,7 +371,7 @@ function piedritasYMatas(toy: (c: string, rough?: number) => B.Material, grassPa
   const flY = merge("flowerY", [disc("#FBC02D", 0.34, 0.5)]), flW = merge("flowerW", [disc("#FAFAFA", 0.4, 0.5), disc("#FBC02D", 0.16, 0.53)]);
   const tm: number[] = [], fy: number[] = [], fw: number[] = [];
   for (let i = 0; i < 300; i++) onPath((x, z) => {
-    if (!ok(x, z)) return;
+    if (!ok(x, z) || (lowQ && i & 1)) return; // lowQ: mitad de matas y flores
     const k = 0.9 + r() * 0.9;
     put(tm, x, 0, z, r() * 6.3, k, 0.8 + r() * 0.7, k);
     if (r() < 0.4) put(r() < 0.5 ? fy : fw, x + (r() - 0.5) * 0.2, 0, z + (r() - 0.5) * 0.2, r() * 6.3, 1, 1, 1);
@@ -382,7 +382,8 @@ function piedritasYMatas(toy: (c: string, rough?: number) => B.Material, grassPa
   for (let i = 0, n = 0; i < 4000 && n < 800; i++) {
     const x = (r() * 2 - 1) * HALF * 0.85, z = (r() * 2 - 1) * HALF * 0.85, k = 1.7 + r() * 1.5, f = r(), j = r() * 6.3;
     if (!ok(x, z) || inPath(x, z, 2.5) || (Math.abs(x) < 27 && Math.abs(z + 30) < 20) || away.some(([ax, az, ar]) => Math.hypot(x - ax, z - az) < ar)) continue;
-    n++; put(tm, x, 0, z, j, k, 0.9 + r() * 0.7, k);
+    n++; if (lowQ && n & 1) continue; // lowQ: mitad de las matas de las islas
+    put(tm, x, 0, z, j, k, 0.9 + r() * 0.7, k);
     if (f < 0.6) for (let q2 = 0; q2 < 3; q2++) put(r() < 0.5 ? fy : fw, x + (r() - 0.5) * k, 0, z + (r() - 0.5) * k, r() * 6.3, 1.2, 1.2, 1.2);
   }
   instances(tuft, tm); instances(flY, fy); instances(flW, fw);

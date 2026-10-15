@@ -342,6 +342,7 @@
 /* ---------- Pantallas chicas y táctiles ---------- */
 @media (pointer: coarse), (max-width: 720px) {
   #signal { width: min(200px, 50vw); }
+  #signal { background: #262c35; border-color: #6b7686; } /* de noche el panel oscuro se perdía contra el fondo */
   #lcd { top: calc(max(10px, env(safe-area-inset-top)) + 54px); } #timer { font-size: 26px; }
   #banner { top: calc(max(10px, env(safe-area-inset-top)) + 78px); }
   #combo { left: 8px; right: auto; transform-origin: 0 0; align-items: flex-start; text-align: left; top: calc(max(10px, env(safe-area-inset-top)) + 100px); } #combo b { font-size: 36px; }

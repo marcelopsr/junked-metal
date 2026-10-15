@@ -10,7 +10,7 @@ const info = (p) => p.evaluate(() => window.__info());
 
 // Todos los bichos del bestiario (el yaw inicial por bicho vive en src/menu/beast_sheet.ts; el arrastre de 1 px solo frena el giro lento).
 // Depuración: FK="hormiga@0.785,rey" (bicho@giro en rad sobre el yaw inicial) captura solo esas fichas.
-const KINDS_FICHA = ["hormiga","escupidora","friccion","robot","polilla","escarabajo","grillo","mosca","babosa","fuego","cohete","enjambre","tirador","saltador","emboscador","flotante","tanque","explosivo","curandero","kamikaze","escudo","brincador","francotirador","divisor","cria","ladron","rey","cortadora","tarantula","perro","gato","aspiradora","proyector","payaso","muneco","limpiafondos","falso","grua","gusano","cortacercos","caja"];
+const KINDS_FICHA = ["hormiga","escupidora","friccion","robot","polilla","escarabajo","grillo","mosca","babosa","fuego","cohete","enjambre","tirador","saltador","emboscador","flotante","tanque","explosivo","curandero","kamikaze","escudo","brincador","francotirador","divisor","cria","ladron","taladro","cangrejo","rey","cortadora","tarantula","perro","gato","aspiradora","proyector","payaso","muneco","limpiafondos","falso","grua","gusano","cortacercos","caja"];
 
 // ---------- menús ----------
 const toMain = async (p) => {

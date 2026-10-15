@@ -2,7 +2,7 @@ import * as B from "@babylonjs/core";
 type V3 = [number, number, number];
 import { box, cyl, merge, sph } from "../models";
 import { M, canvasTex, pbr, shadows } from "../render";
-import { HALF, bare, decal, floor, occluders, scene, stat } from "./common";
+import { HALF, bare, decal, floor, lowQ, occluders, scene, stat } from "./common";
 import { freeSpot, int, rocks, toyRamps } from "../world_layout";
 
 // Bioma Nieve (docs/art_direction/visual_reference_register.md, «Kits por bioma»; ref33a, ref51, ref146): nieve con surcos de ruedas,
@@ -95,7 +95,8 @@ export function snowBuild() {
     // pinos afuera: dos hileras, escala variable
     for (let r = 0; r < 2; r++) for (let u = -L / 2 + 4; u < L / 2; u += 9 + lr() * 5) {
       const d = HALF + 14 + r * 14 + lr() * 8, s = 1.2 + lr() * 1.1;
-      pine(horiz ? u + lr() * 3 : sgn * d, horiz ? sgn * d : u + lr() * 3, s, trees);
+      const px = horiz ? u + lr() * 3 : sgn * d, pz = horiz ? sgn * d : u + lr() * 3; // lr() se consume igual con lowQ
+      if (!(lowQ && r === 1)) pine(px, pz, s, trees); // lowQ: sin la hilera lejana (solo decorado)
     }
   }
   for (const [n, parts] of [["nieveBordes", blocks], ["nieveCerco", fence], ["nievePinos", trees]] as const) { const m = merge(n, parts as B.Mesh[]); m.isPickable = false; shadows.addShadowCaster(m); occluders.push(m); }

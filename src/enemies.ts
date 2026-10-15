@@ -11,7 +11,7 @@ import { AI } from "./enemies/ai";
 import { DOG_RAM } from "./enemies/ai/util";
 import { WORM_AI, wormDispose, wormHeadTpl } from "./moon_worm";
 
-export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "caja" | "proyector" | "grua" | "payaso" | "muneco" | "limpiafondos" | "falso" | "fuego" | "cohete" | "gusano" | "grillo" | "mosca" | "babosa" | "kamikaze" | "escudo" | "brincador" | "francotirador" | "divisor" | "cria" | "ladron" | Alien;
+export type Kind = "hormiga" | "escupidora" | "friccion" | "robot" | "escarabajo" | "rey" | "cortadora" | "perro" | "gato" | "polilla" | "tarantula" | "aspiradora" | "cortacercos" | "caja" | "proyector" | "grua" | "payaso" | "muneco" | "limpiafondos" | "falso" | "fuego" | "cohete" | "gusano" | "grillo" | "mosca" | "babosa" | "kamikaze" | "escudo" | "brincador" | "francotirador" | "divisor" | "cria" | "ladron" | "taladro" | "cangrejo" | Alien;
 
 type Def = { name: string; hp: number; speed: number; dmg: number; size: [number, number, number]; mass: number; xp: number; boss?: boolean; final?: boolean; scale?: number; color: string };
 const ATK = BAL.ataques;
@@ -50,6 +50,8 @@ export const DEF: Record<Kind, Def> = {
   divisor: { name: "Divisor", ...stats("divisor"), size: [1.4, 1.1, 1.4], color: "#e04aa8" },
   cria: { name: "Cría de divisor", ...stats("cria"), size: [0.7, 0.55, 0.7], scale: 0.5, color: "#e04aa8" },
   ladron: { name: "Ladrón de tuercas", ...stats("ladron"), size: [0.9, 1, 1.1], color: "#f2c230" },
+  taladro: { name: "Bicho taladro", ...stats("taladro"), size: [1.4, 1.0, 2.0], color: "#d98a1f" },
+  cangrejo: { name: "Escorpión-cangrejo", ...stats("cangrejo"), size: [1.8, 1.0, 2.2], color: "#7d8087" },
   rey: { name: "ESCARABAJO REY", ...stats("rey"), size: [6, 3.8, 8], boss: true, scale: 3.5, color: "#d4a017" },
   cortadora: { name: "CORTADORA DE CÉSPED", ...stats("cortadora"), size: [7, 4.5, 6.4], boss: true, color: "#dc2626" },
   tarantula: { name: "TARÁNTULA", ...stats("tarantula"), size: [6, 2.6, 6.5], boss: true, scale: 3, color: "#7a55a8" },
@@ -597,7 +599,7 @@ export class Enemy {
 // La plaga de la partida multiplica pesos y puede adelantar la llegada (minuto) de cada tipo
 export function spawnTable(t: number, plague?: { mult: Partial<Record<Kind, number>>; from: Partial<Record<Kind, number>> }): [Kind, number][] {
   const m = t / 60;
-  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", ...(MOON.on ? ALIENS : ["grillo", "mosca", "babosa", "kamikaze", "escudo", "brincador", "francotirador", "divisor", "ladron"])] as Kind[]).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
+  const base = (["hormiga", "friccion", "escupidora", "robot", "escarabajo", "polilla", ...(MOON.on ? ALIENS : ["grillo", "mosca", "babosa", "kamikaze", "escudo", "brincador", "francotirador", "divisor", "ladron", "taladro", "cangrejo"])] as Kind[]).map((k): [Kind, number, number] => { const e = BAL.enemigos[k]; return [k, e.aparece_min, e.peso_base + m * e.peso_por_min]; });
   return base.filter(([k, from]) => m >= (plague?.from[k] ?? from)).map(([k, , w]) => [k, w * (plague?.mult[k] ?? 1)]);
 }
 
