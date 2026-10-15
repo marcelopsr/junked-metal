@@ -364,6 +364,11 @@
 @media (orientation: portrait) and (max-width: 720px) {
   #txl { left: auto; right: calc(8px + 96px * var(--hud-scale) + 6px); translate: none; transform-origin: 100% 100%; width: min(250px, calc((100vw - 200px) / var(--hud-scale))); }
   #hpTxt { white-space: nowrap; }
+  /* aviso de radio/Director: la cámara táctil sube el auto (y~185-255) y el aviso lo tapaba; baja a la banda libre sobre el panel de vida, compacto y sin cabecera */
+  #banner, #hud:has(#bossbar:not(.hidden)) ~ #banner { top: auto; bottom: calc(max(8px, env(safe-area-inset-bottom)) + 134px * var(--hud-scale)); transform-origin: 50% 100%; max-width: 92vw; padding: 3px 10px 4px; }
+  #banner .rxh { display: none; }
+  body #banner.evt-warn #bannerTxt, body #banner.evt-now #bannerTxt, body #banner:not(.evt-warn):not(.evt-now) #bannerTxt { font-size: 13px; }
+  #bannerIco .ico { width: 16px; height: 16px; }
 }
 /* Celular apaisado: el aviso de radio sube a una franja arriba, entre progreso (izq.) y II/CAM/radar (der.); centrado tapaba el auto */
 @media (orientation: landscape) and (max-height: 500px) {
