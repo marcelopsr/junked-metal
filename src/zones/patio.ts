@@ -6,7 +6,10 @@ import { HALF, bare, crateFold, decal, floor, leafM, lowQ, occluders, plankTpl, 
 import { toyHouse, toyTree } from "../models/props_rc";
 import { ball, brickWalls, gnomes, hose, int, jumpScrap, piles, plankBridge, planterAlley, pots, puddles, ramp, rocks, toyRamps, toyScatter, wateringCan } from "../world_layout";
 
-function soilEdgeMask() {
+// Texturas de tierra únicas (los materiales pbr() se cachean por clave y conservan la primera): rearmar la zona las reusa en vez de crear otras sin liberar.
+let edgeMaskT: B.DynamicTexture | undefined, dirtT: ReturnType<typeof dirtTextures> | undefined, soilToneT: B.DynamicTexture | undefined;
+const soilEdgeMask = () => (edgeMaskT ??= makeEdgeMask());
+function makeEdgeMask() {
   const t = new B.DynamicTexture("soilEdgeMask", 128, scene, false);
   const c = t.getContext() as unknown as CanvasRenderingContext2D;
   c.fillStyle = "#000"; c.fillRect(0, 0, 128, 128);
@@ -146,9 +149,9 @@ export function patioBuild() {
 
   // Huerta: tierra compactada y gravilla con bordes fundidos al césped
   const edgeMask = soilEdgeMask();
-  const dirtT = dirtTextures(), compactedTex = dirtT.alb;
+  const dirtT_ = (dirtT ??= dirtTextures()), compactedTex = dirtT_.alb;
   compactedTex.uScale = 5; compactedTex.vScale = 4;
-  dirtT.nrm.uScale = 5; dirtT.nrm.vScale = 4;
+  dirtT_.nrm.uScale = 5; dirtT_.nrm.vScale = 4;
   const dirtMat = surface(
     pbr("dirt", {
       color: "#ffffff",
@@ -216,19 +219,21 @@ export function patioBuild() {
   scrapGroundMat.opacityTexture = edgeMask;
   scrapGroundMat.alphaCutOff = 0.02;
   scrapGroundMat.transparencyMode = B.Material.MATERIAL_ALPHATESTANDBLEND;
-  const soilTone = new B.DynamicTexture("soilTone", 128, scene, false);
-  const tone = soilTone.getContext() as unknown as CanvasRenderingContext2D;
-  tone.fillStyle = "#fff"; tone.fillRect(0, 0, 128, 128);
-  for (const [x, y, r, shade] of [[24, 35, 48, 0.1], [98, 90, 55, 0.12], [85, 16, 32, 0.06]]) {
-    const g = tone.createRadialGradient(x, y, 0, x, y, r);
-    g.addColorStop(0, `rgba(0,0,0,${shade})`); g.addColorStop(1, "rgba(0,0,0,0)");
-    tone.fillStyle = g; tone.fillRect(0, 0, 128, 128);
-  }
-  soilTone.update(); soilTone.gammaSpace = false;
-  soilTone.wrapU = soilTone.wrapV = B.Texture.CLAMP_ADDRESSMODE;
-  soilTone.coordinatesIndex = 1;
+  const soilTone = (soilToneT ??= (() => {
+    const t = new B.DynamicTexture("soilTone", 128, scene, false), tone = t.getContext() as unknown as CanvasRenderingContext2D;
+    tone.fillStyle = "#fff"; tone.fillRect(0, 0, 128, 128);
+    for (const [x, y, r, shade] of [[24, 35, 48, 0.1], [98, 90, 55, 0.12], [85, 16, 32, 0.06]]) {
+      const g = tone.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, `rgba(0,0,0,${shade})`); g.addColorStop(1, "rgba(0,0,0,0)");
+      tone.fillStyle = g; tone.fillRect(0, 0, 128, 128);
+    }
+    t.update(); t.gammaSpace = false;
+    t.wrapU = t.wrapV = B.Texture.CLAMP_ADDRESSMODE;
+    t.coordinatesIndex = 1;
+    return t;
+  })());
   for (const mat of [dirtGroundMat, pathMat, scrapGroundMat]) {
-    mat.bumpTexture = dirtT.nrm; mat.bumpTexture.level = 0.8;
+    mat.bumpTexture = dirtT_.nrm; mat.bumpTexture.level = 0.8;
     mat.lightmapTexture = soilTone; mat.useLightmapAsShadowmap = true;
   }
   decal("scrapSoilTransition", 54, 44, -48, 20, grassEarthMat, 0.015);

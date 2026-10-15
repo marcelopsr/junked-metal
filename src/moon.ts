@@ -603,6 +603,7 @@ export function moonBuild(s: B.Scene, low: boolean) {
   const glowTex = (stops: [number, string][]) => { const t = new B.DynamicTexture("halo", 64, scene, false); const c = t.getContext() as unknown as CanvasRenderingContext2D, g = c.createRadialGradient(32, 32, 0, 32, 32, 32); for (const [k, col] of stops) g.addColorStop(k, col); c.fillStyle = g; c.fillRect(0, 0, 64, 64); t.update(); t.hasAlpha = true; return t; };
   const disc = (name: string, size: number, at: B.Vector3, stops: [number, string][]) => {
     const m = B.MeshBuilder.CreatePlane(name, { size }, scene), mm = skyMat(name + "Mat");
+    mm.emissiveTexture?.dispose(); // el material se reusa entre armados: libera el halo anterior
     mm.emissiveTexture = mm.opacityTexture = glowTex(stops); mm.diffuseColor = B.Color3.Black(); mm.alphaMode = B.Constants.ALPHA_ADD;
     m.material = mm; m.position.copyFrom(at); m.billboardMode = B.Mesh.BILLBOARDMODE_ALL; m.infiniteDistance = true; m.alwaysSelectAsActiveMesh = true; m.isPickable = false; m.applyFog = false;
     return m;

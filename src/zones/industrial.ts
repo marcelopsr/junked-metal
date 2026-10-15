@@ -51,7 +51,9 @@ export function industrialBuild() {
     const wet = pbr("indMancha" + scene.uniqueId, { color: "#ffffff", rough: 0.15, metal: 0.45, tex: t }) as B.PBRMaterial;
     if (wet.albedoTexture !== t) t.dispose(); // material cacheado: la textura nueva sobra
     wet.useAlphaFromAlbedoTexture = true; wet.transparencyMode = B.Material.MATERIAL_ALPHABLEND;
-    for (let i = 0; i < 14; i++) { const a = o2() * 6.283, d = 12 + o2() * 26, w = 3 + o2() * 6; decal("mancha" + i, w, w * (0.6 + o2() * 0.4), Math.cos(a) * d, Math.sin(a) * d, wet, 0.05 + i * 0.001).isPickable = false; }
+    const spots: B.Mesh[] = [];
+    for (let i = 0; i < 14; i++) { const a = o2() * 6.283, d = 12 + o2() * 26, w = 3 + o2() * 6; spots.push(decal("mancha" + i, w, w * (0.6 + o2() * 0.4), Math.cos(a) * d, Math.sin(a) * d, wet, 0.05 + i * 0.001)); }
+    merge("manchasAceite", spots, [wet]).isPickable = false; // 14 dibujos -> 1
   }
   for (const sg of [-1, 1]) { // cebra de peatones a ambos lados de la salida + líneas de borde blancas
     for (let k = -3; k <= 3; k++) { parts.push(box(0.9, 0.1, 6, wht, [k * 1.5, 0.08, sg * 15])); parts.push(box(6, 0.1, 0.9, wht, [sg * 15, 0.08, k * 1.5])); }
