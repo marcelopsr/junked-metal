@@ -82,6 +82,9 @@ ZONES.bosque = { name: "El bosque de pinos", short: "Bosque", desc: "Pinos de ju
 ZONES.nieve = { name: "La pista nevada", short: "Nieve", desc: "Nieve con huellas, bloques rojo y blanco y un cerco que no frena a nadie.", half: 140, cost: ZONE_COST.nieve, grass: 0, grassH: 1, rects: [], build: snowBuild, climate: SNOW, layout: snowLayout };
 ZONES.ciudad = { name: "La ciudad en miniatura", short: "Ciudad", desc: "Adoquines, cordones de piedra y edificios de bloques que miran sin intervenir.", half: 140, cost: ZONE_COST.ciudad, grass: 0, grassH: 1, rects: [], build: cityBuild, climate: CITY, layout: cityLayout };
 ZONES.industrial = { name: "El polígono industrial", short: "Industrial", desc: "Hormigón con tierra, cordón amarillo y negro, contenedores y tambores.", half: 140, cost: ZONE_COST.industrial, grass: 0, grassH: 1, rects: [], build: industrialBuild, climate: INDUSTRIAL, layout: industrialLayout };
+// Contraste 0.95: jardín y pileta (césped/cemento planos) con sombras más hondas que el atardecer base
+ZONES.jardin.climate = BIOME("jardin", "JARDÍN AL ATARDECER", { exposure: 1.4, ramp: ["#1a0e0a", "#9a6040", "#ffe4b0"] });
+ZONES.pileta.climate = BIOME("pileta", "PILETA AL ATARDECER", { exposure: 1.4, ramp: ["#1a0e0a", "#9a6040", "#ffe4b0"] });
 setZ(ZONES.patio, "patio");
 /** Luz fija de la zona (garaje) o undefined: la partida sigue el ciclo de la semilla. */
 // ponytail: import dinámico para no cerrar el ciclo world ↔ encore_run (falla con "ZONES before initialization"); techo: si encore_run dejara de exportar `erun`, pasar el flag por un setter.
