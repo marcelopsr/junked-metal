@@ -73,7 +73,7 @@ function dirtTextures(n = 512) {
   }
   const H = new Float32Array(n * n);
   for (let i = 0; i < H.length; i++) H[i] = h[i] * 0.8 + grit[i] * 0.2 + stone[i] * 1.1;
-  const pal: [number, string][] = [[0, "#5a2e18"], [0.25, "#8a4a2a"], [0.5, "#B5603A"], [0.75, "#D98A55"], [1, "#F0B57A"]]; // ref23: tierra rojiza clara al sol (con #24140B de base no había luces en cuadro)
+  const pal: [number, string][] = [[0, "#6e3720"], [0.25, "#a45e38"], [0.5, "#cc7a4a"], [0.75, "#e8a06a"], [1, "#fbd0a0"]]; // arte 0.95: levantada (la tierra en sombra daba L 0,28) // ref23: tierra rojiza clara al sol (con #24140B de base no había luces en cuadro)
   const sx = 1.5, lx = -0.55, ly = -0.55; // luz desde arriba-izquierda
   const alb = makeTex("patioDirt", n, px => {
     for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {

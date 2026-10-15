@@ -210,6 +210,11 @@ export function snowLayout() {
     if (k % 3 === 0) mound(x, z, 2.2, 0.7, deco, false);
     else { deco.push(box(2.6, 1.3, 1.3, M.plastic(k % 2 ? RED : WHITE), [x, 0.65, z], [0, ry, 0]), box(2.6, 1.3, 1.3, M.plastic(k % 2 ? WHITE : RED), [x + Math.cos(ry) * 2.7, 0.65, z - Math.sin(ry) * 2.7], [0, ry, 0]), sph(2, whiteM(), [x, 1.3, z], [1.3, 0.3, 0.7])); stat(box(5.3, 1.2, 1.4, M.matte("#9E9E9E"), [0, 0, 0]), B.PhysicsShapeType.BOX, {}, [x + Math.cos(ry) * 1.35, 0.6, z - Math.sin(ry) * 1.35, ry]).isVisible = false; bare.push({ x, z, r: 4 }); }
   });
+  // Arte 0.95 (saturación 0,15-0,36): trineos de colores saturados con patines oscuros, sin colisión (el auto los cruza), a 10-30 u de la salida
+  ([[7, -10, 0.3, "#1E88E5"], [-8, -18, -0.5, "#FBC02D"], [9, -28, 0.8, "#2E9E4F"], [-10, -6, 1.2, "#FB8C00"], [-7, -30, 0.2, "#E53935"]] as const).forEach(([x, z, ry, c]) => {
+    if (roadDist(x, z) < ROAD_W / 2 + 3 || nearSpot(x, z)) return;
+    deco.push(box(3.4, 0.35, 1.5, M.plastic(c), [x, 0.4, z], [0, ry, 0]), box(3.8, 0.2, 0.2, M.matte("#1b1d22"), [x, 0.12, z + 0.6], [0, ry, 0]), box(3.8, 0.2, 0.2, M.matte("#1b1d22"), [x, 0.12, z - 0.6], [0, ry, 0]));
+  });
   // Contraste por composición: pinos verde oscuro densos a 4-12 u del borde (con colisionador), cerco oscuro y barreras chevron en las curvas. Generador propio (no toca lr() ni rng()).
   let s2 = 77; const r2 = () => { s2 = (s2 * 1664525 + 1013904223) >>> 0; return s2 / 4294967296; };
   const dark: B.Mesh[] = [], solid = M.matte("#9E9E9E"), fenceW = M.matte("#4a2e1a");
