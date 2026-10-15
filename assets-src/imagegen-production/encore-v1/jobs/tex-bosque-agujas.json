@@ -1,0 +1,19 @@
+{
+  "id": "tex-bosque-agujas",
+  "name": "tex-bosque-agujas",
+  "category": "texturas",
+  "state": "imagegen-generated",
+  "prompt": "forest floor of dark reddish-brown soil with pine needles, twigs and moss. Seamless tileable top-down ground texture, flat even lighting, no perspective, no objects, miniature diorama scale, painted pixel clusters",
+  "tool_arguments": {
+    "prompt": "forest floor of dark reddish-brown soil with pine needles, twigs and moss. Seamless tileable top-down ground texture, flat even lighting, no perspective, no objects, miniature diorama scale, painted pixel clusters",
+    "transparent_background": false
+  },
+  "output": "raw/tex-bosque-agujas.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 11515,
+    "at": "2026-10-15T12:06:43.733Z"
+  }
+}

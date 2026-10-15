@@ -1,0 +1,310 @@
+[
+ {
+  "vp": "pc",
+  "name": "portada",
+  "n": 17,
+  "s": "JUNKED METAL | JUNKED METAL | Un auto de juguete, diez minutos y ninguna cobertura médica. | PRESIONA CUALQUIER TECLA"
+ },
+ {
+  "vp": "pc",
+  "name": "menu",
+  "n": 21,
+  "s": "JUNKED METAL | JUNKED METAL | Jugar | Desafío diario | Desafío semanal | Más modos | Auto | Garaje | Taller | Chatarroteca | Configuración | Créditos | 2000 tornillos · récord 0:00"
+ },
+ {
+  "vp": "pc",
+  "name": "encore",
+  "n": 127,
+  "s": "ENCORE | ENCORE | Expedición por escenarios con amenaza creciente: sobrevivir, mejorar el auto y decidir cuándo avanzar. | Cómo se juega | Escenario: | una zona con enemigos; termina cuando se abre el teleportador. | Teleportador: | el portal de salida. Quedarse da tiempo para mejorar el auto, pero la amenaza sube; entrar lleva al escenario siguiente. | Director: | el sistema del juego que elige los enemigos y las sorpresas, y recuerda la última derrota. | ¡ENCORE! | es la votación del público tras el cuarto escenario: otra vuelta, más difícil. | FINAL ACT | es la otra opción de la votación: el jefe final del show, que cierra la expedición. | Sin expediciones registradas todavía. | Secretos "
+ },
+ {
+  "vp": "pc",
+  "name": "guia-controles",
+  "n": 165,
+  "s": "ENCORE | Controles | Mover | W | A | S | D | Turbo | ESPACIO | Derrape | SHIFT IZQ | Salto | F | Habilidad | E | Pausa | ESC | Las armas disparan solas: al auto le toca moverse, juntar tuercas y esquivar. Esta guía queda en Configuración, pestaña Controles. | Entendido | ENCORE | Expedición por escenarios con amenaza creciente: sobrevivir, mejorar el auto y decidir cuándo avanzar. | Cómo se juega | Escenario: | una zona con enemigos; termina cuando se abre el teleportador. | Teleportador: | el portal de salida. Quedarse da tiempo para mejorar el auto, pero la amenaza sube; entrar lleva al escenario siguiente. | Director: | el sistema del juego que elige los enemigos y las sorpresas, y recuer"
+ },
+ {
+  "vp": "pc",
+  "name": "t0",
+  "n": 64,
+  "s": "JUNKED METAL | Encendiendo el auto | 100% | Consejo | Las flechas del borde de la pantalla señalan jefes y cofres que quedaron fuera de vista. Mirar para otro lado no los hace desaparecer. | -42 dBm | SNR:36dB | RX:A | ▌▌▌▌ | NV 01 | 00:00 | 0000 | BAJAS | ESCENARIO | 1/4 | 12.6V | 160 / 160 | PETARDOS | LISTO · E | SALTO | LISTO · F | 0 | KM/H | DIRECTOR | EL TELÓN SUBE. EL SEGURO DE VIDA, EN CAMBIO, BAJÓ."
+ },
+ {
+  "vp": "pc",
+  "name": "t1-5s-director",
+  "n": 33,
+  "s": "-42 dBm | SNR:36dB | RX:B | ▌▌▌▌ | NV 01 | 00:01 | 0000 | BAJAS | ESCENARIO | 1/4 | 12.6V | 160 / 160 | PETARDOS | LISTO · E | SALTO | LISTO · F | 2 | KM/H | DIRECTOR | EL TELÓN SUBE. EL SEGURO DE VIDA, EN CAMBIO, BAJÓ."
+ },
+ {
+  "vp": "pc",
+  "name": "t6s",
+  "n": 48,
+  "s": "-43 dBm | SNR:35dB | RX:A | ▌▌▌▌ | NV 01 | 00:05 | 0000 | BAJAS | ESCENARIO | 1/4 | 12.6V | 160 / 160 | PETARDOS | LISTO · E | SALTO | LISTO · F | 2 | KM/H | DIRECTOR | PRIMERA EXPEDICIÓN: CADA ESCENARIO TERMINA EN UN TELEPORTADOR. ANTES DE SUBIR, QUEDARSE DA MÁS TIEMPO PARA JUNTAR; AVANZAR CAMBIA DE ESCENARIO Y SUBE LA DIFICULTAD."
+ },
+ {
+  "vp": "pc",
+  "name": "tras-bot",
+  "n": 38,
+  "s": "-59 dBm | SNR:25dB | RX:A | ▌▌▌▌ | NV 01 | 00:13 | 0001 | BAJAS | ESCENARIO | 1/4 | 12.4V | 160 / 160 | PETARDOS | LISTO · E | SALTO | LISTO · F | 74 | KM/H | DIRECTOR | ALGO EN LA PRODUCCIÓN TIENE HAMBRE DE POLVO. NO PREGUNTEN POR QUÉ ESTÁ TAN LIMPIO."
+ },
+ {
+  "vp": "pc",
+  "name": "tele-aterriza",
+  "n": 22,
+  "s": "-61 dBm | SNR:24dB | RX:B | ▌▌▌ | NV 01 | 00:14 | 0001 | BAJAS | ESCENARIO | 1/4 | 12.6V | 160 / 160 | PETARDOS | LISTO · E | SALTO | LISTO · F | 25 | KM/H"
+ },
+ {
+  "vp": "pc",
+  "name": "a-bordo",
+  "n": 34,
+  "s": "-61 dBm | SNR:24dB | RX:B | ▌▌▌ | NV 01 | 00:14 | 0001 | BAJAS | ESCENARIO | 1/4 | SOBRECARGA · AGUANTEN LA CARGA | 25 S | 12.6V | 160 / 160 | PETARDOS | LISTO · E | SALTO | LISTO · F | 15 | KM/H | RADAR | 72.410 MHZ | CH 07 | ENJAMBRE&"
+ },
+ {
+  "vp": "pc",
+  "name": "decision-tele",
+  "n": 55,
+  "s": "-62 dBm | SNR:24dB | RX:A | ▌▌▌ | NV 01 | 00:15 | 0001 | BAJAS | ESCENARIO | 1/4 | TELEPORTADOR LISTO | 20 S | QUEDARSE · COFRE EXTRA Y +10% TORNILLOS | Z | AVANZAR | X | 12.6V | 160 / 160 | PETARDOS | LISTO · E | SALTO | LISTO · F | 6 | KM/H | 9 | RADAR | 72.410 MHZ | CH 07 | ENJAMBRE · OLEADA CER\\ | DIRECTOR | CARGA AL LÍMITE. SI EXPLOTA, SERÁ UN GRAN NÚMERO FINAL."
+ },
+ {
+  "vp": "pc",
+  "name": "escenario2",
+  "n": 74,
+  "s": "-62 dBm | SNR:24dB | RX:A | ▌▌▌ | NV 01 | 00:16 | 0001 | BAJAS | ESCENARIO | 1/4 | PACTO DEL DIRECTOR | 14 S | PRODUCCIÓN SORPRESA | VENTAJA | +50% XP | COSTO | +30% ENEMIGOS | PRÓXIMOS 2 ESCENARIOS | Z | CAMERINO BLINDADO | VENTAJA | +30% VIDA MÁXIMA | COSTO | -15% VELOCIDAD | PRÓXIMOS 2 ESCENARIOS | X | RECHAZAR | V | 12.6V | 160 / 160 | PETARDOS | LISTO · E | SALTO | LISTO · F | 0 | KM/H | 9 | RADAR | 72.410 MHZ | CH 07 | ENJAMBRE · OLEADA CERRADA | DIRECTOR | CARGA AL LÍMITE. SI EXPLOTA, SERÁ UN GRAN NÚMERO FINAL."
+ },
+ {
+  "vp": "pc",
+  "name": "pacto",
+  "n": 74,
+  "s": "-62 dBm | SNR:24dB | RX:A | ▌▌▌ | NV 01 | 00:16 | 0001 | BAJAS | ESCENARIO | 1/4 | PACTO DEL DIRECTOR | 14 S | PRODUCCIÓN SORPRESA | VENTAJA | +50% XP | COSTO | +30% ENEMIGOS | PRÓXIMOS 2 ESCENARIOS | Z | CAMERINO BLINDADO | VENTAJA | +30% VIDA MÁXIMA | COSTO | -15% VELOCIDAD | PRÓXIMOS 2 ESCENARIOS | X | RECHAZAR | V | 12.6V | 160 / 160 | PETARDOS | LISTO · E | SALTO | LISTO · F | 0 | KM/H | 9 | RADAR | 72.410 MHZ | CH 07 | ENJAMBRE · OLEADA CERRADA | DIRECTOR | CARGA AL LÍMITE. SI EXPLOTA, SERÁ UN GRAN NÚMERO FINAL."
+ },
+ {
+  "vp": "pc",
+  "info": {
+   "seed": 58,
+   "loop": 0,
+   "stage": 0,
+   "phase": "pact",
+   "stageT": 150.67666666666722,
+   "timer": 13.833333333333275,
+   "landed": true,
+   "stayT": 0,
+   "stays": 0,
+   "pacts": [],
+   "offer": [
+    "sorpresa",
+    "blindaje"
+   ],
+   "routes": null,
+   "route": null,
+   "guest": null,
+   "taken": [],
+   "went": [],
+   "lp": {
+    "off": 1,
+    "yes": 0,
+    "bold": 0
+   },
+   "stayN": 0,
+   "known": [],
+   "found": [],
+   "variant": "LA TARIMA",
+   "pace": 0,
+   "time": 16.3,
+   "prior": 0,
+   "enemies": 26,
+   "tag": [
+    "ESCENARIO ",
+    "1/4",
+    true
+   ],
+   "ask": {
+    "title": "PACTO DEL DIRECTOR",
+    "opts": [
+     "PRODUCCIÓN SORPRESA",
+     "CAMERINO BLINDADO"
+    ],
+    "total": 15,
+    "pacts": [
+     {
+      "special": false,
+      "name": "PRODUCCIÓN SORPRESA",
+      "gain": [
+       "+50% XP"
+      ],
+      "cost": [
+       "+30% ENEMIGOS"
+      ],
+      "dur": "PRÓXIMOS 2 ESCENARIOS"
+     },
+     {
+      "special": false,
+      "name": "CAMERINO BLINDADO",
+      "gain": [
+       "+30% VIDA MÁXIMA"
+      ],
+      "cost": [
+       "-15% VELOCIDAD"
+      ],
+      "dur": "PRÓXIMOS 2 ESCENARIOS"
+     }
+    ],
+    "reject": "RECHAZAR"
+   },
+   "boss": null
+  }
+ },
+ {
+  "vp": "cel",
+  "name": "portada",
+  "n": 17,
+  "s": "JUNKED METAL | JUNKED METAL | Un auto de juguete, diez minutos y ninguna cobertura médica. | TOCA LA PANTALLA"
+ },
+ {
+  "vp": "cel",
+  "name": "menu",
+  "n": 21,
+  "s": "JUNKED METAL | JUNKED METAL | Jugar | Desafío diario | Desafío semanal | Más modos | Auto | Garaje | Taller | Chatarroteca | Configuración | Créditos | 2000 tornillos · récord 0:00"
+ },
+ {
+  "vp": "cel",
+  "name": "encore",
+  "n": 125,
+  "s": "ENCORE | ENCORE | Expedición por escenarios con amenaza creciente: sobrevivir, mejorar el auto y decidir cuándo avanzar. | Cómo se juega | Escenario: | una zona con enemigos; termina cuando se abre el teleportador. | Teleportador: | el portal de salida. Quedarse da tiempo para mejorar el auto, pero la amenaza sube; entrar lleva al escenario siguiente. | Director: | el sistema del juego que elige los enemigos y las sorpresas, y recuerda la última derrota. | ¡ENCORE! | es la votación del público tras el cuarto escenario: otra vuelta, más difícil. | FINAL ACT | es la otra opción de la votación: el jefe final del show, que cierra la expedición. | Sin expediciones registradas todavía. | Secretos "
+ },
+ {
+  "vp": "cel",
+  "name": "guia-controles",
+  "n": 163,
+  "s": "ENCORE | Controles | Mover | W | A | S | D | Turbo | ESPACIO | Derrape | SHIFT IZQ | Salto | F | Habilidad | E | Pausa | ESC | Las armas disparan solas: al auto le toca moverse, juntar tuercas y esquivar. Esta guía queda en Configuración, pestaña Controles. | Entendido | ENCORE | Expedición por escenarios con amenaza creciente: sobrevivir, mejorar el auto y decidir cuándo avanzar. | Cómo se juega | Escenario: | una zona con enemigos; termina cuando se abre el teleportador. | Teleportador: | el portal de salida. Quedarse da tiempo para mejorar el auto, pero la amenaza sube; entrar lleva al escenario siguiente. | Director: | el sistema del juego que elige los enemigos y las sorpresas, y recuer"
+ },
+ {
+  "vp": "cel",
+  "name": "t0",
+  "n": 60,
+  "s": "JUNKED METAL | Encendiendo el auto | 100% | Consejo | Las flechas del borde de la pantalla señalan jefes y cofres que quedaron fuera de vista. Mirar para otro lado no los hace desaparecer. | ▌▌▌▌ | NV 01 | 00:00 | 0000 | BAJAS | 1/4 | 12.6V | 160 / 160 | PETARDOS | LISTO | 0 | KM/H | DIRECTOR | EL TELÓN SUBE. EL SEGURO DE VIDA, EN CAMBIO, BAJÓ. | DERRAPE | SALTO | TURBO | HAB | CAM"
+ },
+ {
+  "vp": "cel",
+  "name": "t1-5s-director",
+  "n": 29,
+  "s": "▌▌▌▌ | NV 01 | 00:01 | 0000 | BAJAS | 1/4 | 12.6V | 160 / 160 | PETARDOS | LISTO | 2 | KM/H | DIRECTOR | EL TELÓN SUBE. EL SEGURO DE VIDA, EN CAMBIO, BAJÓ. | DERRAPE | SALTO | TURBO | HAB | CAM"
+ },
+ {
+  "vp": "cel",
+  "name": "t6s",
+  "n": 44,
+  "s": "▌▌▌▌ | NV 01 | 00:05 | 0000 | BAJAS | 1/4 | 12.6V | 160 / 160 | PETARDOS | LISTO | 2 | KM/H | DIRECTOR | PRIMERA EXPEDICIÓN: CADA ESCENARIO TERMINA EN UN TELEPORTADOR. ANTES DE SUBIR, QUEDARSE DA MÁS TIEMPO PARA JUNTAR; AVANZAR CAMBIA DE ESCENARIO Y SUBE LA DIFICULTAD. | DERRAPE | SALTO | TURBO | HAB | CAM"
+ },
+ {
+  "vp": "cel",
+  "name": "tras-bot",
+  "n": 34,
+  "s": "▌▌▌▌ | NV 01 | 00:13 | 0000 | BAJAS | 1/4 | 12.3V | 160 / 160 | PETARDOS | LISTO | 78 | KM/H | DIRECTOR | ALGO EN LA PRODUCCIÓN TIENE HAMBRE DE POLVO. NO PREGUNTEN POR QUÉ ESTÁ TAN LIMPIO. | DERRAPE | SALTO | TURBO | HAB | CAM"
+ },
+ {
+  "vp": "cel",
+  "name": "tele-aterriza",
+  "n": 18,
+  "s": "▌▌▌ | NV 01 | 00:14 | 0000 | BAJAS | 1/4 | 12.5V | 160 / 160 | PETARDOS | LISTO | 28 | KM/H | DERRAPE | SALTO | TURBO | HAB | CAM"
+ },
+ {
+  "vp": "cel",
+  "name": "a-bordo",
+  "n": 25,
+  "s": "▌▌▌ | NV 01 | 00:14 | 0000 | BAJAS | 1/4 | SOBRECARGA · AGUANTEN LA CARGA | 25 S | 12.6V | 160 / 160 | PETARDOS | LISTO | 16 | KM/H | ENJAMBRE@ | DERRAPE | SALTO | TURBO | HAB | CAM"
+ },
+ {
+  "vp": "cel",
+  "name": "decision-tele",
+  "n": 33,
+  "s": "▌▌▌ | NV 01 | 00:15 | 0000 | BAJAS | 1/4 | TELEPORTADOR LISTO | 20 S | QUEDARSE · COFRE EXTRA Y +10% TORNILLOS | AVANZAR | 12.6V | 160 / 160 | PETARDOS | LISTO | 6 | KM/H | 9 | ENJAMBRE · OLEADA CER@ | DERRAPE | SALTO | TURBO | HAB | CAM"
+ },
+ {
+  "vp": "cel",
+  "name": "escenario2",
+  "n": 51,
+  "s": "▌▌▌ | NV 01 | 00:16 | 0000 | BAJAS | 1/4 | PACTO DEL DIRECTOR | 14 S | PRODUCCIÓN SORPRESA | VENTAJA | +50% XP | COSTO | +30% ENEMIGOS | PRÓXIMOS 2 ESCENARIOS | CAMERINO BLINDADO | VENTAJA | +30% VIDA MÁXIMA | COSTO | -15% VELOCIDAD | PRÓXIMOS 2 ESCENARIOS | RECHAZAR | 12.6V | 160 / 160 | PETARDOS | LISTO | 0 | KM/H | 9 | ENJAMBRE · OLEADA CERRADA | DERRAPE | SALTO | TURBO | HAB | CAM"
+ },
+ {
+  "vp": "cel",
+  "name": "pacto",
+  "n": 51,
+  "s": "▌▌▌ | NV 01 | 00:16 | 0000 | BAJAS | 1/4 | PACTO DEL DIRECTOR | 14 S | PRODUCCIÓN SORPRESA | VENTAJA | +50% XP | COSTO | +30% ENEMIGOS | PRÓXIMOS 2 ESCENARIOS | CAMERINO BLINDADO | VENTAJA | +30% VIDA MÁXIMA | COSTO | -15% VELOCIDAD | PRÓXIMOS 2 ESCENARIOS | RECHAZAR | 12.6V | 160 / 160 | PETARDOS | LISTO | 0 | KM/H | 9 | ENJAMBRE · OLEADA CERRADA | DERRAPE | SALTO | TURBO | HAB | CAM"
+ },
+ {
+  "vp": "cel",
+  "info": {
+   "seed": 58,
+   "loop": 0,
+   "stage": 0,
+   "phase": "pact",
+   "stageT": 150.67666666666722,
+   "timer": 13.833333333333275,
+   "landed": true,
+   "stayT": 0,
+   "stays": 0,
+   "pacts": [],
+   "offer": [
+    "sorpresa",
+    "blindaje"
+   ],
+   "routes": null,
+   "route": null,
+   "guest": null,
+   "taken": [],
+   "went": [],
+   "lp": {
+    "off": 1,
+    "yes": 0,
+    "bold": 0
+   },
+   "stayN": 0,
+   "known": [],
+   "found": [],
+   "variant": "LA TARIMA",
+   "pace": 0,
+   "time": 16.3,
+   "prior": 0,
+   "enemies": 27,
+   "tag": [
+    "ESCENARIO ",
+    "1/4",
+    true
+   ],
+   "ask": {
+    "title": "PACTO DEL DIRECTOR",
+    "opts": [
+     "PRODUCCIÓN SORPRESA",
+     "CAMERINO BLINDADO"
+    ],
+    "total": 15,
+    "pacts": [
+     {
+      "special": false,
+      "name": "PRODUCCIÓN SORPRESA",
+      "gain": [
+       "+50% XP"
+      ],
+      "cost": [
+       "+30% ENEMIGOS"
+      ],
+      "dur": "PRÓXIMOS 2 ESCENARIOS"
+     },
+     {
+      "special": false,
+      "name": "CAMERINO BLINDADO",
+      "gain": [
+       "+30% VIDA MÁXIMA"
+      ],
+      "cost": [
+       "-15% VELOCIDAD"
+      ],
+      "dur": "PRÓXIMOS 2 ESCENARIOS"
+     }
+    ],
+    "reject": "RECHAZAR"
+   },
+   "boss": null
+  }
+ }
+]

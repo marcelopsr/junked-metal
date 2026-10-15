@@ -1,0 +1,19 @@
+{
+  "id": "tex-nieve-huellas",
+  "name": "tex-nieve-huellas",
+  "category": "texturas",
+  "state": "imagegen-generated",
+  "prompt": "packed snow with tire tracks and footprints, cool blue-grey shadows. Seamless tileable top-down ground texture, flat even lighting, no perspective, no objects, miniature diorama scale, painted pixel clusters",
+  "tool_arguments": {
+    "prompt": "packed snow with tire tracks and footprints, cool blue-grey shadows. Seamless tileable top-down ground texture, flat even lighting, no perspective, no objects, miniature diorama scale, painted pixel clusters",
+    "transparent_background": false
+  },
+  "output": "raw/tex-nieve-huellas.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 12000,
+    "at": "2026-10-15T05:38:35.173Z"
+  }
+}

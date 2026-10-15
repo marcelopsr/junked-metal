@@ -1,0 +1,17 @@
+{
+  "id": "piloto-mago-g",
+  "name": "piloto-mago-g",
+  "category": "pilotos",
+  "state": "imagegen-generated",
+  "subject": "A small cardboard wizard figure with taped cardboard hat with paper stars and a cardboard wand, small toy figure driving a tiny rusty RC kart",
+  "prompt": "Use case: stylized-concept. Junked Metal ENCORE asset candidate. Premium real 3D miniature toy, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear with chipped paint showing grey metal, rivets, rich material separation and tactile detail. Handcrafted miniature diorama direction, retroindustrial theatrical salvage character. Subject: A small cardboard wizard figure with taped cardboard hat with paper stars and a cardboard wand, small toy figure driving a tiny rusty RC kart. Single complete isolated object in three-quarter front view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. Crisp detailed game art reference, not a screenshot.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE asset candidate. Premium real 3D miniature toy, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear with chipped paint showing grey metal, rivets, rich material separation and tactile detail. Handcrafted miniature diorama direction, retroindustrial theatrical salvage character. Subject: A small cardboard wizard figure with taped cardboard hat with paper stars and a cardboard wand, small toy figure driving a tiny rusty RC kart. Single complete isolated object in three-quarter front view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. Crisp detailed game art reference, not a screenshot.",
+    "transparent_background": true
+  },
+  "output": "raw/piloto-mago-g.png",
+  "last_generation": {
+    "method": "capataz gemini-3.1-flash-image",
+    "at": "2026-10-15T04:11:51.532Z"
+  }
+}

@@ -1,0 +1,32 @@
+name: Pedido a Capataz (ForgeBridge)
+description: Pedile trabajo a Capataz. Solo se procesan issues del dueño de la cuenta.
+title: "[capataz] "
+labels: ["capataz"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Capataz lee este issue cuando Marce corre `./capatazctl forge revisar --real`.
+        ANALYZE, ASK, GENERATE, REPORT, RECOMMEND y ANSWER se resuelven solos; IMPLEMENT, REVIEW, VALIDATE y DELEGATE
+        esperan un comentario exacto `/aprobar` del dueño (o `/cancelar`). No pegues secretos: el texto es público para el repo.
+  - type: textarea
+    id: pedido
+    attributes:
+      label: Pedido
+      description: Un único bloque ```capataz con JSON (protocolo v1). Reemplazá `dueño/repo` por este repo.
+      value: |
+        ```capataz
+        {
+          "version": 1,
+          "de": "dueño/repo",
+          "para": "dueño/repo",
+          "tipo": "ANALYZE",
+          "objetivo": "Qué necesitás, en una o dos frases",
+          "contexto": "Archivos, enlaces o antecedentes",
+          "restricciones": [],
+          "criterios": [],
+          "prioridad": "media"
+        }
+        ```
+    validations:
+      required: true

@@ -1,0 +1,19 @@
+{
+  "id": "tex-neon-asfalto",
+  "name": "tex-neon-asfalto",
+  "category": "texturas",
+  "state": "imagegen-generated",
+  "prompt": "wet dark asphalt at night with puddles reflecting magenta and cyan neon. Seamless tileable top-down ground texture, flat even lighting, no perspective, no objects, miniature diorama scale, painted pixel clusters",
+  "tool_arguments": {
+    "prompt": "wet dark asphalt at night with puddles reflecting magenta and cyan neon. Seamless tileable top-down ground texture, flat even lighting, no perspective, no objects, miniature diorama scale, painted pixel clusters",
+    "transparent_background": false
+  },
+  "output": "raw/tex-neon-asfalto.png",
+  "last_generation": {
+    "method": "capataz /v1/images/generations",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-image",
+    "ms": 13590,
+    "at": "2026-10-15T05:38:36.759Z"
+  }
+}

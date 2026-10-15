@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "repo": "marcelopsr/junked-metal",
+  "descripcion": "Junked Metal",
+  "stack": [
+    "node",
+    "pm2",
+    "tauri",
+    "typescript",
+    "vite",
+    "vitest"
+  ],
+  "capacidades": [
+    "analisis-codigo",
+    "build",
+    "node",
+    "pm2",
+    "pruebas",
+    "tauri",
+    "typescript",
+    "vite",
+    "vitest"
+  ],
+  "acepta": [
+    "ANALYZE",
+    "ASK",
+    "REPORT",
+    "RECOMMEND",
+    "ANSWER",
+    "GENERATE",
+    "REVIEW",
+    "IMPLEMENT"
+  ],
+  "revisado": false
+}

@@ -1,0 +1,17 @@
+{
+  "id": "piloto-doble",
+  "name": "piloto-doble",
+  "category": "pilotos",
+  "state": "imagegen-generated",
+  "subject": "A small toy stunt double figure in a scuffed red and white stunt jumpsuit with stars, crash helmet, theatrical, small toy figure driving a tiny rusty RC kart, sitting pose, hands on steering wheel",
+  "prompt": "Use case: stylized-concept. Junked Metal ENCORE asset candidate. Premium real 3D miniature toy, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear with chipped paint showing grey metal, rivets, rich material separation and tactile detail. Handcrafted miniature diorama direction, retroindustrial theatrical salvage character. Subject: A small toy stunt double figure in a scuffed red and white stunt jumpsuit with stars, crash helmet, theatrical, small toy figure driving a tiny rusty RC kart, sitting pose, hands on steering wheel. Single complete isolated object in three-quarter front view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. Crisp detailed game art reference, not a screenshot.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal ENCORE asset candidate. Premium real 3D miniature toy, softly beveled low-poly geometry, deliberate painted pixel clusters, localized edge wear with chipped paint showing grey metal, rivets, rich material separation and tactile detail. Handcrafted miniature diorama direction, retroindustrial theatrical salvage character. Subject: A small toy stunt double figure in a scuffed red and white stunt jumpsuit with stars, crash helmet, theatrical, small toy figure driving a tiny rusty RC kart, sitting pose, hands on steering wheel. Single complete isolated object in three-quarter front view, entire silhouette occupies at most 75 percent of canvas, generous transparent margins. Restrained neutral studio lighting. True transparent background; no backdrop, halo, ground, collage, card frame, logos, letters or watermark. Crisp detailed game art reference, not a screenshot.",
+    "transparent_background": true
+  },
+  "output": "raw/piloto-doble.png",
+  "last_generation": {
+    "method": "codex exec image_generation",
+    "at": "2026-10-15T04:15:57.461Z"
+  }
+}
