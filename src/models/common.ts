@@ -146,9 +146,20 @@ const templates = new Map<string, B.Mesh>();
 // (en celular la ficha del muñeco, el falso y el limpiafondos quedaban solo con el carrete). Se limpian las dos marcas antes de cada cuadro.
 // ponytail: toca campos internos de Babylon 9; revisar si se actualiza el motor (o si Babylon corrige Mesh.render).
 const extra = new Set<B.Mesh>(); // fuentes de instancias que no pasan por template() (bichos horneados a VAT en glb.ts)
-const unstick = () => { for (const t of [...templates.values(), ...extra]) { const i = (t as unknown as { _internalAbstractMeshDataInfo: { _isActive: boolean; _isActiveIntermediate: boolean } })._internalAbstractMeshDataInfo; i._isActive = i._isActiveIntermediate = false; } };
+// Se registra UNA vez (unstickOn) sin importar qué fuente llegue primero; las liberadas se sueltan; si el campo interno no existe en el motor, no hace nada.
+// ponytail: si Babylon renombra `_internalAbstractMeshDataInfo`, el arreglo se apaga en silencio (las instancias vuelven a fallar en celular).
+type Info = { _isActive: boolean; _isActiveIntermediate: boolean };
+let unstickOn = false;
+const unstick = () => {
+  for (const t of extra) if (t.isDisposed()) extra.delete(t);
+  for (const t of [...templates.values(), ...extra]) {
+    const i = (t as unknown as { _internalAbstractMeshDataInfo?: Info })._internalAbstractMeshDataInfo;
+    if (i) i._isActive = i._isActiveIntermediate = false;
+  }
+};
+const unstickHook = (m: B.Mesh) => { if (!unstickOn) { unstickOn = true; m.getScene().onBeforeRenderObservable.add(unstick); } };
 export function unstickSource(m: B.Mesh) {
-  if (!templates.size && !extra.size) m.getScene().onBeforeRenderObservable.add(unstick);
+  unstickHook(m);
   extra.add(m);
 }
 export function template(name: string, build: () => B.Mesh[], scale = 1) {
@@ -159,7 +170,7 @@ export function template(name: string, build: () => B.Mesh[], scale = 1) {
     if (scale !== 1) { t.scaling.setAll(scale); t.bakeCurrentTransformIntoVertices(); }
     t.position.y = -500; // la fuente queda escondida; se dibujan las instancias
     shadows.addShadowCaster(t);
-    if (!templates.size) t.getScene().onBeforeRenderObservable.add(unstick);
+    unstickHook(t);
     templates.set(name, t);
   }
   return t;

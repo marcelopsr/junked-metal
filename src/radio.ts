@@ -60,8 +60,12 @@ function wire() {
     const el = new Audio(); el.preload = "none";
     const g = ctx!.createGain(); g.gain.value = 0;
     ctx!.createMediaElementSource(el).connect(g).connect(duckG!);
-    el.addEventListener("playing", () => musicUnder(true)); // suena la radio: la sintetizada se apaga
+    let tm = 0; // red trabada (stalled/waiting) más de 2 s o pausa no pedida: vuelve la sintetizada hasta que reanude
+    const back = () => { if (!tm) tm = window.setTimeout(() => { tm = 0; musicUnder(false); }, 2000); };
+    el.addEventListener("playing", () => { clearTimeout(tm); tm = 0; musicUnder(true); }); // suena la radio: la sintetizada se apaga
     el.addEventListener("error", () => musicUnder(false));  // no cargó: queda la sintetizada de respaldo
+    el.addEventListener("stalled", back); el.addEventListener("waiting", back);
+    el.addEventListener("pause", () => { if (want && !el.ended && els?.[a].el === el) back(); });
     return { el, g };
   });
   els.forEach((e, i) => e.el.addEventListener("ended", () => { if (i === a) next(); }));

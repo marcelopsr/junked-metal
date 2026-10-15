@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BAL } from "../src/balance";
-import { INT_IDS, INT_TXT, newSt, planOf, step, type Io } from "../src/encore_events";
+import { dropRng, INT_IDS, INT_TXT, newSt, planOf, step, type Io } from "../src/encore_events";
 
 describe("interrupción del Director", () => {
   it("el sorteo es determinista, cae en la ventana y respeta la calma de la primera vez", () => {
@@ -25,4 +25,9 @@ describe("interrupción del Director", () => {
     expect(l2).toEqual(["e"]);
   });
   it("las frases no usan voseo", () => { for (const t of Object.values(INT_TXT)) expect(t.line + t.name).not.toMatch(/\b(vos|tenés|elegí)\b/i); });
+  it("la lluvia de utilería repite la secuencia con la misma clave y cambia con otra", () => {
+    const seq = (a: number, b: number, c: number) => { const u = dropRng(a, b, c); return [u(), u(), u(), u()]; };
+    expect(seq(5, 1, 2)).toEqual(seq(5, 1, 2));
+    expect(seq(5, 1, 2)).not.toEqual(seq(5, 1, 3));
+  });
 });

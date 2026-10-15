@@ -18,6 +18,8 @@ export const newSt = (): St => ({ w: false, s: false, e: false, acc: 0 });
 export interface Io { warn(id: IntId): void; start(id: IntId): void; frame(id: IntId, dt: number, k: number): void; pulse(id: IntId): void; end(id: IntId): void }
 
 const R = () => BAL.ritmo;
+/** Generador de la lluvia de utilería: misma (semilla, vuelta, escenario) = misma secuencia de posiciones. */
+export const dropRng = (seed: number, loop: number, stage: number) => lcg((seed * 6007 + loop * 211 + stage * 31 + 7) % 2147483646 + 1);
 /** Sorteo por semilla de la expedición, vuelta y escenario (generador local `lcg`: no toca el rng() de la partida). null = sin interrupción. */
 export function planOf(seed: number, loop: number, stage: number, luna: boolean, quiet: boolean): Plan | null {
   if (quiet) return null;

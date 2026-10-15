@@ -10,7 +10,7 @@ import { decal, scene, stat, undo } from "./common";
 import type { Barrio } from "./libre";
 
 // Free Roam, juguetes con física en la PLAZA (r 40, fuente r 12): pista de bolos al oeste (10 pinos), arco de fútbol al este con pelota, conos en hilera,
-// pelotas grandes, una pirámide y una torre de bloques de construcción, cajas apiladas. Cuerpos Havok dinámicos y livianos (masa 0,03-0,12 contra 1 del buggy: el auto los empuja sin frenarse).
+// pelotas grandes, una pirámide y una torre de bloques de construcción, cajas apiladas. Cuerpos Havok dinámicos y livianos (masas reales 0,05-0,4 contra 1 del buggy: el auto los empuja sin frenarse).
 // Una fuente fusionada por tipo + instancias, UN solo PhysicsShape por tipo compartido, 42 cuerpos como tope. Se duermen solos (Havok) al quedar quietos.
 // Reseteo: un juguete fuera de su sitio vuelve a él si la cámara se aleja a más de 90 m o si lleva 20 s sin verse (revisión cada 0,5 s). Generador local: no hay azar (todo fijo).
 // Libres: spawn del auto (0,-20), atajos NE/SE (bot de paseo: (24,16)->(34,46) y (20,-20)->(41,-41)), farolas de la plaza (r 34) y el cartel (10,10). Pose ANTES del PhysicsBody.
