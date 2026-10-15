@@ -141,7 +141,7 @@ describe("parseSave", () => {
     expect(load({ encore: { seenPacts: "x" } }).encore.seenPacts).toEqual([]);
   });
   it("Paseo libre: un guardado viejo sin bloque libre migra a vacío; lo inválido se descarta", () => {
-    const vacio = { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, metas: [] };
+    const vacio = { best: { aire: 0, giro: 0, vuelta: 0, salto: 0, combo: 0 }, desafio: { obs: 0, skate: 0, nieve: 0 }, tuercas: "0".repeat(24), aviso: false, metas: [], secretos: "0000" };
     expect(load({}).libre).toEqual(vacio);
     expect(load({ libre: { metas: ["skate_bowl", "skate_bowl", "inventada", 3] } }).libre.metas).toEqual(["skate_bowl"]); // objetivos de barrio: ids conocidos, sin repetir
     expect(load({ libre: { metas: "skate_bowl" } }).libre.metas).toEqual([]);
@@ -149,6 +149,8 @@ describe("parseSave", () => {
     expect(load({ libre: { best: { vuelta: 3 }, tuercas: "1".repeat(24) } }).libre).toEqual({ ...vacio, best: { ...vacio.best, vuelta: 3 }, tuercas: "1".repeat(24) });
     expect(load({ libre: { desafio: { obs: 61234, skate: -5, nieve: "x" } } }).libre.desafio).toEqual({ obs: 61234, skate: 0, nieve: 0 }); // récords de desafíos: enteros no negativos
     expect(load({ libre: { aviso: true } }).libre.aviso).toBe(true); expect(load({ libre: { aviso: "si" } }).libre.aviso).toBe(false); // cartel del giro aéreo: una sola vez
+    expect(load({ libre: { secretos: "0110" } }).libre.secretos).toBe("0110"); // secretos: 4 bits; cualquier otra cosa vuelve a vacío
+    expect(load({ libre: { secretos: "01" } }).libre.secretos).toBe("0000"); expect(load({ libre: { secretos: 3 } }).libre.secretos).toBe("0000");
     expect(load({ libre: 5 }).libre).toEqual(vacio);
   });
 });

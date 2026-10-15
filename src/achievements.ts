@@ -36,6 +36,7 @@ export const ACH = {
   babosa: { name: "Babosa a la sal", txt: "Mata 25 babosas en total. Con una pizca alcanza", scrap: BAL.ritmo.logro_gato_tornillos },
   sinfin: { name: "Sin fin, sin descanso", txt: "Sobrevive 15 minutos en el modo sin fin", scrap: BAL.ritmo.logro_gato_tornillos },
   tuercas: { name: "Ferretería completa", txt: "Junta las 24 tuercas doradas del Paseo libre. Regala la pintura Dorado tuerca" },
+  secretos: { name: "Mapa del tesoro", txt: "Descubre los cuatro secretos del Paseo libre y gana la tuerca especial. Regala la pintura Platino secreto" },
   barrio_skate: { name: "Dueño del skatepark", txt: "Completa todos los objetivos del Skatepark en el Paseo libre. Regala la pintura Cian skatepark" },
   barrio_parque: { name: "Vecino del parque", txt: "Completa todos los objetivos del Parque en el Paseo libre. Regala la pintura Verde césped" },
   barrio_acuatico: { name: "Sin flotador", txt: "Completa todos los objetivos del Parque acuático en el Paseo libre. Regala la pintura Azul pileta" },
