@@ -53,7 +53,7 @@ export function levelOffers(ws: Weapon[], ps: Partial<Record<PassiveId, number>>
   const out = pool.slice(0, n);
   const fu = fusionOffer(ws);
   if (fu) out[0] = fu; // si hay fusión disponible, siempre es la primera carta
-  while (out.length < n) out.push({ kind: "heal", id: "heal", title: "Reparación", icon: "heal", desc: "Recupera 40 de vida. Cinta aislante y buenos deseos" });
+  while (out.length < n) out.push({ kind: "heal", id: "heal", title: "Reparación", icon: "heal", desc: `Recupera ${BAL.ritmo.carta_reparacion} de vida. Cinta aislante y buenos deseos` });
   return out;
 }
 

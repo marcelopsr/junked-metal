@@ -10,6 +10,7 @@ const WSHOP_KEYS = ["hp", "dmg", "spd", "mag", "xp", "arm", "reg", "tur", "ram",
 import { LIVE, WEAPONS, type Offer, type WeaponId } from "./weapons";
 import { HALF } from "./world";
 import { SFX } from "./sfx";
+import { BAL } from "./balance";
 import { toScreen } from "./screen_proj";
 import { EngineStore } from "@babylonjs/core/Engines/engineStore.js";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
@@ -802,7 +803,7 @@ const rarity = (o: Offer) => (o.kind === "evo" ? "evo" : o.kind === "fusion" ? "
 const kindLabel = (o: Offer) => (
   o.kind === "evo" ? "Evolución" :
   o.kind === "fusion" ? "Fusión" :
-  o.kind === "heal" ? "Reparación · +35% vida" :
+  o.kind === "heal" ? `Reparación · +${BAL.ritmo.carta_reparacion} vida` :
   o.lv === 1 ? (o.kind === "weapon" ? "Arma · NUEVA" : "Pieza · NUEVA") :
   `${o.kind === "weapon" ? "Arma" : "Pieza"} · NV ${(o.lv ?? 2) - 1} → NV ${o.lv}${o.lv === 5 && o.syn?.ready ? " · ¡EVO LISTA!" : o.lv === 5 ? " · MÁX" : ""}`
 );
