@@ -1,0 +1,48 @@
+{
+  "id": "arma-petardos",
+  "category": "weapons",
+  "state": "imagegen-generated",
+  "priority": 2,
+  "method": "built-in imagegen; one call per resource",
+  "subject": "One small firecracker, exaggerated miniature silhouette readable as an upgrade icon",
+  "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE weapon upgrade asset. Premium handcrafted genuine 3D miniature, softly beveled low-poly forms with crisp deliberate painted pixel clusters, tactile material-specific detail, beautiful readable silhouette and localized edge wear. Subject: One small firecracker, exaggerated miniature silhouette readable as an upgrade icon. Single complete isolated object centered at 70 percent canvas size, generous empty margins on every side. Three-quarter view, restrained studio lighting. True transparent background. No ground, shadow plane, glow halo, letters, logo, UI, collage or extra props. Warm playful salvaged workshop aesthetic; toy scale. Crisp pixel-painted surfaces, not smooth generic plastic.",
+  "tool_arguments": {
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE weapon upgrade asset. Premium handcrafted genuine 3D miniature, softly beveled low-poly forms with crisp deliberate painted pixel clusters, tactile material-specific detail, beautiful readable silhouette and localized edge wear. Subject: One small firecracker, exaggerated miniature silhouette readable as an upgrade icon. Single complete isolated object centered at 70 percent canvas size, generous empty margins on every side. Three-quarter view, restrained studio lighting. True transparent background. No ground, shadow plane, glow halo, letters, logo, UI, collage or extra props. Warm playful salvaged workshop aesthetic; toy scale. Crisp pixel-painted surfaces, not smooth generic plastic.",
+    "transparent_background": true
+  },
+  "output": "raw/arma-petardos.png",
+  "format": "original PNG from ImageGen; preserve original bytes",
+  "preferred_aspect": "1:1",
+  "intended_use": "isolated reference/icon candidate; requires separate mesh reconstruction",
+  "checks": [
+    "single subject",
+    "real alpha",
+    "complete silhouette",
+    "no collage"
+  ],
+  "procedural": {
+    "state": "reconstruction-pending",
+    "source": null,
+    "requirements": [
+      "mesh/UV must be real for 3D use",
+      "preserve gameplay scale and collision contracts",
+      "do not call generated image a deterministic recipe"
+    ]
+  },
+  "source_job": "/Users/msalas/Documents/Devs/Varios/rc_fight/assets-src/imagegen-production/v1/jobs/weapons/arma-petardos.json",
+  "name": "Petardos",
+  "batch": "batch-014",
+  "design_source": "docs/ENCORE/02_NARRATIVE/03_ART_AUDIO_DIRECTION.md",
+  "review": "RAW visually inspected; alpha halos require cleanup; gameplay integration pending",
+  "candidate": {
+    "path": "raw/arma-petardos.png",
+    "sha256": "690a75e4d5da7115f7c0eb71ac9f16823548cb8dc0c5b18c121182dfde8a0569",
+    "review": "RAW visually inspected; alpha halos require cleanup; gameplay integration pending"
+  },
+  "last_generation": {
+    "method": "built-in imagegen",
+    "prompt": "Use case: stylized-concept. Junked Metal Survivor ENCORE weapon upgrade asset. Premium handcrafted genuine 3D miniature, softly beveled low-poly forms with crisp deliberate painted pixel clusters, tactile material-specific detail, beautiful readable silhouette and localized edge wear. Subject: One small firecracker, exaggerated miniature silhouette readable as an upgrade icon. Single complete isolated object centered at 70 percent canvas size, generous empty margins on every side. Three-quarter view, restrained studio lighting. True transparent background. No ground, shadow plane, glow halo, letters, logo, UI, collage or extra props. Warm playful salvaged workshop aesthetic; toy scale. Crisp pixel-painted surfaces, not smooth generic plastic.",
+    "batch": "batch-014",
+    "original_path": "/Users/msalas/.codex/generated_images/01a137a6-eec9-7aa0-9701-59c423476137/exec-9b30eaf0-3f3a-465b-8708-5fd493c0653e.png"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "direction": "3D miniature with painted pixel detail for Junked Metal ENCORE",
-  "generated_count": 30,
+  "generated_count": 50,
   "jobs": [
     {
       "id": "encore-director-tv",
@@ -182,10 +182,131 @@
       "job": "jobs/encore-decal-anillo-activacion.json",
       "output": "raw/encore-decal-anillo-activacion.png",
       "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-gomitas",
+      "job": "jobs/arma-gomitas.json",
+      "output": "raw/arma-gomitas.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-clips",
+      "job": "jobs/arma-clips.json",
+      "output": "raw/arma-clips.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-chispero",
+      "job": "jobs/arma-chispero.json",
+      "output": "raw/arma-chispero.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-petardos",
+      "job": "jobs/arma-petardos.json",
+      "output": "raw/arma-petardos.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-tesla",
+      "job": "jobs/arma-tesla.json",
+      "output": "raw/arma-tesla.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-lanza",
+      "job": "jobs/arma-lanza.json",
+      "output": "raw/arma-lanza.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-agua",
+      "job": "jobs/arma-agua.json",
+      "output": "raw/arma-agua.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-yoyo",
+      "job": "jobs/arma-yoyo.json",
+      "output": "raw/arma-yoyo.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-bengalas",
+      "job": "jobs/arma-bengalas.json",
+      "output": "raw/arma-bengalas.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-regla",
+      "job": "jobs/arma-regla.json",
+      "output": "raw/arma-regla.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-helado",
+      "job": "jobs/arma-helado.json",
+      "output": "raw/arma-helado.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-bocina",
+      "job": "jobs/arma-bocina.json",
+      "output": "raw/arma-bocina.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-trompo",
+      "job": "jobs/arma-trompo.json",
+      "output": "raw/arma-trompo.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-tuercas",
+      "job": "jobs/arma-tuercas.json",
+      "output": "raw/arma-tuercas.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-bobinas",
+      "job": "jobs/arma-bobinas.json",
+      "output": "raw/arma-bobinas.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-ventilador",
+      "job": "jobs/arma-ventilador.json",
+      "output": "raw/arma-ventilador.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-canicas",
+      "job": "jobs/arma-canicas.json",
+      "output": "raw/arma-canicas.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-burbujas",
+      "job": "jobs/arma-burbujas.json",
+      "output": "raw/arma-burbujas.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-matamoscas",
+      "job": "jobs/arma-matamoscas.json",
+      "output": "raw/arma-matamoscas.png",
+      "state": "imagegen-generated"
+    },
+    {
+      "id": "arma-dardos",
+      "job": "jobs/arma-dardos.json",
+      "output": "raw/arma-dardos.png",
+      "state": "imagegen-generated"
     }
   ],
   "batches": [
     "batch-012",
-    "batch-013"
+    "batch-013",
+    "batch-014"
   ]
 }

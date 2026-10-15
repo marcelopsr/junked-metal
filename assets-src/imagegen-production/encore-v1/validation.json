@@ -1,5 +1,5 @@
 {
-  "count": 30,
+  "count": 50,
   "records": [
     {
       "id": "encore-director-tv",
@@ -209,6 +209,146 @@
       "width": 1263,
       "height": 1246,
       "sha256": "f8900412f6ef000731525c0265f8574daed85dfddb576f5b63dac26d53b79870",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-gomitas",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "475b1e112005719043ed55d0f55db72601ccf780327e46a5ba5d7271be4d81f1",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-clips",
+      "width": 1484,
+      "height": 1060,
+      "sha256": "52bfb6a1dfd2b5d59164b0cfa17af454215b5e31c64278a72aa8265798d1bfb6",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-chispero",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "6bfdd0b15b58b93cfe0f188939547af44c07672f453cf425f726184ad6e67c26",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-petardos",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "690a75e4d5da7115f7c0eb71ac9f16823548cb8dc0c5b18c121182dfde8a0569",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-tesla",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "729ef7e3a9f005334831212afda2923165bfc6300d44096acfaafda2e707daad",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-lanza",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "0d81e84a87bed217f698094dbf2955c56d4d4d31e7b148354b8ce0cb6e158caf",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-agua",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "fcd62f8eec2c431db026ecc23bbc25edd54008391351ee222c3c62c6c90a6b73",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-yoyo",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "1b1c079769e348ccbf93c08ac44f17f3d2a77645d0808360a29247705d28ee5b",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-bengalas",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "78737144848020deeddd1f49e3417243b251ac16039e1e2c3597aeb136709ec7",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-regla",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "a9e1ec6d98c1060861ba497a23fd1d1b0450f2dffbcc907830fdba13491016d1",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-helado",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "66d79c76ceb25b5c61330f01be0edbe28edbc893c8b955326b7bb7e20ffe17b5",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-bocina",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "5eb261582a5fbda36e507fbd8a74746f9f0af27a3e203fcb046b2dab58c01753",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-trompo",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "92a3cb6284f06b724b49c99169a84cad54c66c19b676110e1df5da15152acea9",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-tuercas",
+      "width": 1355,
+      "height": 1161,
+      "sha256": "950461a4ef82e628c1130ce4c3033f5d2630be1b1159351bae1423c2ae57e074",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-bobinas",
+      "width": 1374,
+      "height": 1145,
+      "sha256": "18128899b409eff333cee98b5f21ea6389effe426f30986bab4bca84872afcde",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-ventilador",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "b5738fac786fb02676a0f52858c8b0aa163d4ab6783c297b759627a1dc31a35a",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-canicas",
+      "width": 1270,
+      "height": 1239,
+      "sha256": "d8780ec5ca58571318c5ff25491a1e005adb08b0e0c0f3658f981cca05869a79",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-burbujas",
+      "width": 1312,
+      "height": 1199,
+      "sha256": "ce36288504d9efa49f4274eb321b837ef5cd4d40a59344f05d025c80bc3f18b6",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-matamoscas",
+      "width": 1374,
+      "height": 1145,
+      "sha256": "fd6c9b505f03c7e4e6bb01137c5f62219d55dde4e901c732043fed2a5afc9100",
+      "realAlpha": true
+    },
+    {
+      "id": "arma-dardos",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "eddd5280491f05f2f27e51ac89b82734bf4bd3780d7dd63af51adbd6fc5e2961",
       "realAlpha": true
     }
   ]

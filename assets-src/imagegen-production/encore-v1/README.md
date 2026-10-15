@@ -21,3 +21,7 @@ Los 116 PNG anteriores permanecen en `/Users/msalas/Documents/Devs/Varios/rc_fig
 ## Catálogo actual
 
 30 PNG: [tanda 012](BATCH_012.md), [tanda 013](BATCH_013.md). La tanda 013 agrega ocho objetos, ocho materiales y cuatro decals. Los materiales son base color candidatos; repetición sin costuras y PBR no verificados. Los decals pueden requerir limpieza de halos semitransparentes antes de integrarse.
+
+## Tanda 014
+
+Catálogo actual: **50 PNG independientes**. [Tanda 014](BATCH_014.md): veinte armas pendientes del listado original, continuadas en este checkout con su procedencia registrada. Generación con ImageGen integrado; reconstrucción procedural e integración pendientes.
