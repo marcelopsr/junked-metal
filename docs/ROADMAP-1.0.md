@@ -70,3 +70,4 @@ Una expedición ENCORE completa, de punta a punta, que una persona nueva puede j
 | 2026-10-15 | La estación melancólica se llama «Radio Óxido y Fritanga» |
 | 2026-10-15 | Demolición archivado: rama y tag `archivo/demolicion` (GitHub); se quita de master. Carrera y Junked Crush siguen en el repo como hasta ahora |
 | 2026-10-15 | Radio y música sintetizada conviven (la sintetizada como capa baja en partida); música a 64 kbps |
+| 2026-10-15 | PRUEBAS (todo liberado, 99 999 tornillos) también va en la versión publicada, para que prueben todo |
