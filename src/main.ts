@@ -28,7 +28,7 @@ import { run, freshRun } from "./run_state";
 import { ABILITIES, abilCd as abilCdOf, abilK, type AbilityId } from "./abilities";
 import { PILOTS, pilotStats, setPactCount, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
-import { applyClimate, gfxInfo, glitchHit, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setSplit, setupRender, shadows, G } from "./render";
+import { applyClimate, gfxInfo, glitchHit, warpFlash, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setSplit, setupRender, shadows, G } from "./render";
 import { escapeReset, evoOffer, fuse, LIVE, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
 import { setDrawDist, buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, heavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick, type ZoneId } from "./world";
 import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, danoRecibido, type Profile } from "./run";
@@ -653,6 +653,9 @@ initWorldProgression({
   },
   banner: (t, s, o) => banner(t, s, o),
   glitchHit: () => glitchHit(),
+  addShake: (v) => { shake = Math.max(shake, v); },
+  warpFx: (pos) => FX.warpJump(pos),
+  warpFlash: () => warpFlash(),
 });
 initOutro({
   save,

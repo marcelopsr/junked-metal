@@ -87,6 +87,9 @@ export interface WorldProgressionContext {
   readonly playWarpSfx: () => void;
   readonly banner: (txt: string, secs?: number, opts?: { tag?: string; ico?: string; tone?: "warn" | "now" }) => void;
   readonly glitchHit: () => void;
+  readonly addShake?: (v: number) => void;
+  readonly warpFx?: (pos: B.Vector3) => void;
+  readonly warpFlash?: () => void;
 }
 
 let ctx!: WorldProgressionContext;
@@ -176,6 +179,9 @@ export function executeWorldJump(nextStageIdx: number) {
   vortexAlertGiven = false;
 
   const car = ctx.getCar();
+  if (car && !ctx.isSimulating()) {
+    ctx.warpFx?.(car.pos.clone());
+  }
 
   // Limpiar enemigos comunes de la zona anterior
   const enemies = ctx.getEnemies();
@@ -189,11 +195,11 @@ export function executeWorldJump(nextStageIdx: number) {
   ctx.clearGems();
   ctx.clearPickups();
 
-  // Transición de física / luna
+  // Transición de física / luna (con microgravedad auténtica de 17.5 m/s² en la luna)
   const wasMoon = MOON.on;
   const isNowMoon = nextStage.zoneId === "luna";
   if (wasMoon && !isNowMoon) setMoon(false);
-  if (!wasMoon && isNowMoon) setMoon(true);
+  if (!wasMoon && isNowMoon) setMoon(true, true);
 
   // Reconstruir el mundo con la nueva zona (preservando el auto del jugador)
   setZone(nextStage.zoneId, true);
@@ -216,6 +222,9 @@ export function executeWorldJump(nextStageIdx: number) {
     car.body.setLinearVelocity(B.Vector3.Zero());
     car.body.setAngularVelocity(B.Vector3.Zero());
     teleport(car.body);
+    if (!ctx.isSimulating()) {
+      ctx.warpFx?.(car.pos.clone());
+    }
   }
 
   // Resetear cámara
@@ -223,7 +232,11 @@ export function executeWorldJump(nextStageIdx: number) {
 
   // Efectos audiovisuales del salto cuántico
   ctx.playWarpSfx();
-  if (!ctx.isSimulating()) ctx.glitchHit();
+  if (!ctx.isSimulating()) {
+    ctx.warpFlash?.();
+    ctx.glitchHit();
+    ctx.addShake?.(1.4);
+  }
 
   // Banners de telemetría en español impersonal
   if (nextStage.isBossArena) {

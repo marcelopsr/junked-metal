@@ -1576,18 +1576,25 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
 - **Telemetría de Vórtice en HUD (`src/ui.ts`, `src/hud_tick.ts`, `src/hud.css`, `index.html`):**
   - Módulo de cabina `#vortexTelem` ubicado bajo el radar, con reloj de cuenta regresiva digital, barra de colapso porcentual y metadatos en tiempo real (distancia en metros y nombre del bioma destino).
   - Alerta visual `.urgent` con pulso ámbar/rojo al restar menos de 5 segundos para el colapso dimensional.
+- **Hipersalto Dimensional Cinemático (`src/world_progression.ts`, `src/render.ts`, `src/fx.ts`):**
+  - Efecto cinemático de compresión espacial: destello cuántico cian (`warpFlash()` en `src/render.ts`), estallido dual de partículas cuánticas antes y después del salto (`FX.warpJump(p)` en `src/fx.ts`), sacudida sísmica de cámara (`addShake(1.4)`) y audio de vacío espacial.
+- **Microgravedad Lunar Ajustada (`src/moon.ts`, `src/run_drive.ts`, `src/fx.ts`):**
+  - Calibración de gravedad lunar reducida a 17.5 m/s² (30% más de sustentación aérea sin flotación descontrolada, mayor margen de combos para trucos y saltos limpios).
+  - Efecto de polvo de regolito lunar gris (`FX.regolithDust`) al aterrizar y en derrapes con turbo sobre la superficie de la Luna.
+  - Restablecimiento automático y estricto de la gravedad terrestre estándar (25 m/s²) al transicionar a biomas terrestres o al limpiar la partida.
 - **Validación con evidencia:**
   - `npx tsc --noEmit -p .` (0 errores).
-  - `npm test`: 40 suites / 269 pruebas unitarias pasando (incluyendo `test/world_progression.test.ts`).
+  - `npm test`: 40 suites / 270 pruebas unitarias pasando (100%).
   - `npm run sim -- --seeds 1,2 --secs 300` (100% determinista, 0 atascos).
-  - `npm run build`: bundle de producción Vite completado sin errores.
-  - `graphify update .`: grafo de conocimiento sincronizado con 7954 nodos y 20481 aristas.
+  - `npm run build`: bundle de producción Vite completado en 892 ms.
+  - `graphify update .`: grafo de conocimiento sincronizado con 7956 nodos y 20486 aristas.
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Odisea Multi-Mundo en Supervivencia (4 Saltos de Mundo + Salto al Jefe del Mundo), Luna Pura sin neón y Telemetría del Vórtice en el HUD (2026-10-19).
+- **Último trabajo completado:** Hipersalto Dimensional Cinemático y Microgravedad Lunar Auténtica (2026-10-19).
 - **Invariantes activas:** Metodología E2E, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
+
 
 
 

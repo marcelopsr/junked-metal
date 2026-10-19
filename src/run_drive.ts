@@ -194,7 +194,7 @@ export function tickDrive(F: Frame, dt: number) {
     const landing = !D.wasGrounded && run.airT >= 0.12;
     if (landing && !D.simulating) {
       const land = c.pos.add(c.root.forward.scale(-0.6));
-      FX.dust(land);
+      if (MOON.on) FX.regolithDust(land); else FX.dust(land);
       if (run.airT > 0.55) D.shake = Math.max(D.shake, Math.min(0.45, 0.12 + run.airT * 0.25));
     }
     if (run.airT >= 0.5 && !run.airHit) D.trick(Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? "SALTO LIMPIO" : "SALTO", Math.abs(r.ls) < 3 && Math.abs(r.fs) > 5 ? R.combo_salto_limpio : R.combo_salto);
@@ -237,7 +237,7 @@ export function tickDrive(F: Frame, dt: number) {
     FX.smoke(p, D.lead.hp < D.lead.maxHp * 0.25);
     if (D.lead.hp < D.lead.maxHp * 0.25 && Math.random() < 0.3) FX.sparks(p);
   }
-  if ((dustT -= dt) <= 0 && r.grounded && (Math.abs(r.ls) > 3 || boosting)) { dustT = 0.05; const rear = c.pos.add(c.root.forward.scale(-1.1)); FX.dust(rear); if (boosting) FX.sparks(rear.add(upv(rear, 0.3))); }
+  if ((dustT -= dt) <= 0 && r.grounded && (Math.abs(r.ls) > 3 || boosting)) { dustT = 0.05; const rear = c.pos.add(c.root.forward.scale(-1.1)); if (MOON.on) FX.regolithDust(rear); else FX.dust(rear); if (boosting) FX.sparks(rear.add(upv(rear, 0.3))); }
   if (run.boostSec > 1.5 && (D.motorFxT -= dt) <= 0) {
     D.motorFxT = 0.08;
     const motorPos = c.pos.add(c.root.forward.scale(-0.45)).addInPlace(new B.Vector3(0, 0.35, 0));

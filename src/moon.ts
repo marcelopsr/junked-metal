@@ -238,9 +238,13 @@ export function initMoon(scene: B.Scene) {
     }
   };
 }
-/** Luna encendida: Havok sin gravedad (la pone el paso de arriba). Lo llama main.ts al largar y al limpiar la partida. */
-export function setMoon(on: boolean) {
-  if (on === MOON.on || !pe) { MOON.on = on && !!pe; return; }
+/** Luna encendida: Havok sin gravedad (la pone el paso de arriba). Microgravedad ajustada (17.5 m/s² = 30% más de sustentación). */
+export function setMoon(on: boolean, microgravity = true) {
+  MOON.g = on && microgravity ? 17.5 : 25;
+  if (on === MOON.on || !pe) {
+    MOON.on = on && !!pe;
+    return;
+  }
   MOON.on = on;
   if (on) { saved.copyFrom(pe.gravity); pe.setGravity(B.Vector3.Zero()); } else pe.setGravity(saved.clone());
   if (!on) carUps = new WeakMap();

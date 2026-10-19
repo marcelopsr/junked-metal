@@ -84,6 +84,10 @@ export function burst(pos: B.Vector3, o: BurstOpts) {
 }
 
 export const FX = {
+  warpJump: (p: B.Vector3) => {
+    burst(p, { n: 40, color: "#00C2FF", color2: "#ffffff", size: [0.25, 0.65], power: [9, 20], life: [0.3, 0.6], gravity: 0 });
+    burst(p, { n: 20, color: "#38bdf8", color2: "#6366f1", size: [0.15, 0.4], power: [5, 12], life: [0.35, 0.75], gravity: -2 });
+  },
   hit: (p: B.Vector3, crit = false) => burst(p, { n: crit ? 14 : 6, color: crit ? "#ffd24a" : "#ffe08a", color2: crit ? "#ff4d00" : undefined, size: crit ? [0.16, 0.38] : [0.1, 0.25], power: crit ? [5, 11] : [3, 7], life: [0.15, 0.35] }),
   death: (p: B.Vector3, big = false) => burst(p, { n: big ? 80 : 14, color: "#ffb347", color2: "#ff5a36", size: big ? [0.6, 1.6] : [0.2, 0.5], power: big ? [8, 18] : [3, 8], life: [0.3, 0.7] }),
   explosion: (p: B.Vector3, r: number) => {
@@ -92,6 +96,7 @@ export const FX = {
   },
   dust: (p: B.Vector3) => burst(p, { n: 2, color: "#cdbd9c", // tierra levantada (derrape, aterrizaje): blanco puro se leía como vapor
  size: [0.3, 0.7], power: [0.5, 1.5], life: [0.4, 0.8], gravity: 1, add: false }),
+  regolithDust: (p: B.Vector3) => burst(p, { n: 4, color: "#848991", color2: "#b0b4bc", size: [0.25, 0.55], power: [0.5, 1.4], life: [0.45, 0.9], gravity: -0.5, add: false }),
   land: (p: B.Vector3, hard = false) => burst(p, { n: hard ? 8 : 4, color: "#cdbd9c", size: [0.35, hard ? 1.0 : 0.65], power: [1, hard ? 3.5 : 2], life: [0.3, 0.6], gravity: 0.5, add: false }),
   skid: (p: B.Vector3, hard = false) => { FX.dust(p); if (hard) burst(p, { n: 4, color: "#ffd27a", color2: "#ff9138", size: [0.06, 0.16], power: [2, 6], life: [0.15, 0.3], gravity: -15 }); },
   shock: (p: B.Vector3) => burst(p, { n: 8, color: "#5be7ff", color2: "#a855f7", size: [0.08, 0.22], power: [3, 8], life: [0.12, 0.28], gravity: -5 }),

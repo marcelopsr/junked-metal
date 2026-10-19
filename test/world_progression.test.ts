@@ -85,4 +85,12 @@ describe("Progresión de Saltos de Mundo (Supervivencia)", () => {
     const routeB = buildProgressionStages(98765, "patio", "cortacercos");
     expect(routeA).toEqual(routeB);
   });
+
+  it("la microgravedad lunar reduce la gravedad a 17.5 m/s² y se restablece a 25 al salir", async () => {
+    const { MOON, setMoon } = await import("../src/moon");
+    setMoon(true, true);
+    expect(MOON.g).toBe(17.5);
+    setMoon(false);
+    expect(MOON.g).toBe(25);
+  });
 });

@@ -195,17 +195,20 @@ export function look(p: Partial<typeof LOOK>) {
 }
 
 // El faro y el resplandor siguen al auto
-let flare = 0, lampK = 1, hurtK = 0;
-const glowBase = B.Color3.FromHexString("#ff8a3d"), HURT_C = B.Color3.FromHexString("#ff2418");
+let flare = 0, lampK = 1, hurtK = 0, warpK = 0;
+const glowBase = B.Color3.FromHexString("#ff8a3d"), HURT_C = B.Color3.FromHexString("#ff2418"), WARP_C = B.Color3.FromHexString("#00C2FF");
 export function setLamp(pos: B.Vector3, fwd: B.Vector3, boost = false, dt = 0, up?: B.Vector3) { // up: vertical del lugar (luna); sin él, +Y
   // Turbo: el faro destella y abre el cono; vuelve suave al soltar
   flare += ((boost ? 1 : 0) - flare) * Math.min(1, dt * (boost ? 14 : 4));
   lamp.intensity = LOOK.lampI * lampK * (1 + flare * 1.2);
   lamp.angle = LOOK.cone + flare * 0.45;
-  // Golpe recibido (glitchHit): el resplandor sobre el auto destella rojo y se apaga en ~0,2 s. Se suma a lampK para que se vea también de día.
+  // Resplandor de daño (rojo) e hipersalto cuántico (cian)
+  warpK = Math.max(0, warpK - dt * 4.5);
   hurtK = Math.max(0, hurtK - dt * 5);
-  glow.intensity = LOOK.glowI * (lampK + hurtK * 1.6);
-  B.Color3.LerpToRef(glowBase, HURT_C, hurtK, glow.diffuse);
+  const flashK = Math.max(hurtK, warpK);
+  glow.intensity = LOOK.glowI * (lampK + flashK * 2.2);
+  const targetCol = warpK > hurtK ? WARP_C : HURT_C;
+  B.Color3.LerpToRef(glowBase, targetCol, Math.min(1, flashK), glow.diffuse);
   if (up) { // luna: el faro sigue la vertical del lugar
     lamp.position.copyFrom(up).scaleInPlace(1.2).addInPlace(pos);
     lamp.direction.copyFrom(fwd).subtractInPlace(up.scale(B.Vector3.Dot(fwd, up) + 0.28)).normalize();
@@ -246,6 +249,9 @@ export function setDof(focus: number, k = 0.7) {
 
 /** Daño recibido: destello rojo breve del resplandor del auto (lo apaga setLamp). main.ts no lo llama en modo calmo ni en simulación. */
 export function glitchHit() { hurtK = 1; }
+
+/** Salto cuántico dimensional: destello cian intenso en el resplandor del auto. */
+export function warpFlash() { warpK = 1.6; }
 
 /** Apagón: escala la luna y el ambiente (1 = normal, 0 = negro; el faro no se toca). */
 export function setDark(k: number) {
