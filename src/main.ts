@@ -673,6 +673,12 @@ initWorldProgression({
     banner("¡ALIJO DIMENSIONAL OBTENIDO! · COFRE Y REPARACIÓN GANADOS", 4, { tag: "ALIJO", ico: "cofre", tone: "now" });
   },
   moonAmbience: (on: boolean) => moonAmbience(on),
+  onEnemyPulverized: (pos, xp) => {
+    dropGems(pos, xp);
+    run.kills++;
+    run.runScrap += 1;
+    SFX.hit();
+  },
 });
 initOutro({
   save,

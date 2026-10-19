@@ -1,6 +1,6 @@
 import * as B from "@babylonjs/core";
 import { ZONES, type ZoneId, setZone, spawnPoint } from "./world";
-import { MOON, setMoon, hd, ringAt, teleport } from "./moon";
+import { MOON, setMoon, hd, ringAt, teleport, hflat } from "./moon";
 import { run } from "./run_state";
 import { Car } from "./car";
 import type { Kind } from "./enemies";
@@ -93,6 +93,7 @@ export interface WorldProgressionContext {
   readonly rewardProactiveJump?: () => void;
   readonly setZone?: (zoneId: ZoneId, rebuild?: boolean) => void;
   readonly moonAmbience?: (on: boolean) => void;
+  readonly onEnemyPulverized?: (pos: B.Vector3, xp: number) => void;
 }
 
 let ctx!: WorldProgressionContext;
@@ -299,12 +300,70 @@ export function tickWorldProgression(dt: number) {
     }
   }
 
-  // 2. Animar vórtice visual
-  if (vortexMesh && vortexPos) {
-    vortexMesh.rotation.y += dt * 3.5;
-    vortexMesh.rotation.x = Math.sin(t * 3) * 0.2;
-    if (vortexBeam) {
-      vortexBeam.scaling.x = vortexBeam.scaling.z = 1 + Math.sin(t * 6) * 0.12;
+  // 2. Animar vórtice visual y física de succión gravitatoria
+  if (vortexPos) {
+    const timeLeft = stage.endTime - t;
+    const isUrgent = timeLeft <= 10.0 && timeLeft > 0;
+    const urgency = isUrgent ? 1 - Math.max(0, timeLeft) / 10.0 : 0; // 0..1
+
+    if (vortexMesh) {
+      vortexMesh.rotation.y += dt * (3.5 + urgency * 7.0);
+      vortexMesh.rotation.x = Math.sin(t * 3) * (0.2 + urgency * 0.15);
+      if (vortexBeam) {
+        vortexBeam.scaling.x = vortexBeam.scaling.z = 1 + Math.sin(t * (6 + urgency * 10)) * (0.12 + urgency * 0.25);
+      }
+    }
+
+    // Succión gravitatoria física en los últimos 10 segundos antes del colapso
+    if (isUrgent) {
+      const R_SUCTION = 14.0;
+
+      // Atracción sobre el auto del jugador
+      const carDist = MOON.on ? hd(car.pos, vortexPos) : Math.hypot(car.pos.x - vortexPos.x, car.pos.z - vortexPos.z);
+      if (carDist < R_SUCTION && car.body) {
+        const carPullForce = (1 - carDist / R_SUCTION) * urgency * 8.5; // m/s²
+        const carDir = vortexPos.subtract(car.pos).normalize();
+        if (MOON.on) hflat(carDir, car.pos);
+        const vCar = car.body.getLinearVelocity?.();
+        if (vCar) {
+          car.body.setLinearVelocity(vCar.add(carDir.scale(carPullForce * dt)));
+        }
+      }
+
+      // Succión y pulverización cuántica de enemigos comunes
+      const enemies = ctx.getEnemies();
+      let changed = false;
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        if (e.def.boss) continue; // Los jefes son masivos e inmunes a la succión ordinaria
+
+        const eDist = MOON.on ? hd(e.pos, vortexPos) : Math.hypot(e.pos.x - vortexPos.x, e.pos.z - vortexPos.z);
+        if (eDist < R_SUCTION) {
+          if (eDist < 2.5) {
+            // Pulverización cuántica al tocar el ojo del vórtice
+            const p = e.pos.clone();
+            const xp = e.def.xp;
+            e.dispose();
+            enemies.splice(i, 1);
+            changed = true;
+            ctx.onEnemyPulverized?.(p, xp);
+            if (!ctx.isSimulating()) {
+              ctx.warpFx?.(p);
+            }
+          } else if (e.body) {
+            const pullForce = (1 - eDist / R_SUCTION) * urgency * 16.0;
+            const eDir = vortexPos.subtract(e.pos).normalize();
+            if (MOON.on) hflat(eDir, e.pos);
+            const vE = e.body.getLinearVelocity?.();
+            if (vE) {
+              e.body.setLinearVelocity(vE.add(eDir.scale(pullForce * dt)));
+            }
+          }
+        }
+      }
+      if (changed) {
+        ctx.setEnemies(enemies);
+      }
     }
 
     // 3. Colisión interactiva: el auto atraviesa el vórtice

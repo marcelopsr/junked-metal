@@ -1598,16 +1598,24 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
     - Lecho de **estática de radio de 2.4 GHz y telemetría de cabina**: generador de ruido filtrado en paso de banda (3600 Hz, Q=1.2) con modulación suave de portadora (LFO 1.4 Hz) simulando el enlace RF espacial.
     - Superficie de suelo `"regolito"` añadida a `Floor` y a `FLOORS` en efectos de sonido (`[180, 0.45, 0.012, 0.55]`), generando un rumor amortiguado de rodamiento sobre polvo lunar fino.
     - Transición acústica automatizada y simétrica: activada al ingresar a la etapa lunar (Mundo 3), y restaurada limpiamente a 22.000 Hz (audio terrestre transparente) al saltar a la siguiente zona o al reiniciar la partida.
+- **Succión Gravitatoria del Vórtice y Pulverización Cuántica (`src/world_progression.ts`, `src/main.ts`):**
+  - Implementada física activa de atracción gravitatoria en los últimos 10 segundos antes del colapso del vórtice dimensional (`timeLeft <= 10.0`):
+    - Aceleración angular visual del toroide cuántico proporcional a la urgencia y distorsión electromagnética del haz lumínico.
+    - Fuerza de succión física sobre el auto del jugador dentro de un radio de 14 metros (hasta 8.5 m/s²), permitiendo dejarse arrastrar hacia el centro para saltar o acelerar con nitro para escapar.
+    - Fuerza de atracción física sobre enemigos comunes hacia el vórtice (hasta 16.0 m/s²).
+    - **Pulverización cuántica**: los enemigos comunes que tocan el centro del vórtice (`d < 2.5 m`) son desintegrados instantáneamente con destello cuántico `FX.warpJump`, sumando bajas (`run.kills++`), créditos de tornillos (`run.runScrap++`), soltando gemas de XP (`dropGems`) y emitiendo sonido de impacto (`SFX.hit()`), permitiendo al jugador utilizar el vórtice tácticamente como trampa masiva para despejar la horda.
+    - Los jefes permanecen inmunes a la succión física.
+    - La lógica física y de colisión se desacopló de la existencia de mallas visuales para mantener un funcionamiento idéntico en simulaciones headless (`npm run sim`).
 - **Validación con evidencia:**
   - `npx tsc --noEmit -p .` (0 errores).
-  - `npm test`: 40 suites / 272 pruebas unitarias pasando (100%).
+  - `npm test`: 40 suites / 273 pruebas unitarias pasando (100%).
   - `npm run sim -- --seeds 1,2 --secs 180` (100% determinista, 0 atascos).
-  - `npm run build`: bundle de producción Vite completado en 948 ms.
-  - `graphify update .`: grafo de conocimiento sincronizado con 7957 nodos y 20495 aristas.
+  - `npm run build`: bundle de producción Vite completado en 897 ms.
+  - `graphify update .`: grafo de conocimiento sincronizado con 7957 nodos y 20502 aristas.
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Acústica de Vacío Lunar (Filtro paso-bajo sordo en SFX a 580 Hz y motor a 680 Hz, estática de radio de 2.4 GHz en telemetría y piso de regolito) en la Odisea Multi-Mundo con Luna Pura (2026-10-19).
+- **Último trabajo completado:** Succión Gravitatoria del Vórtice y Pulverización Cuántica de Enemigos Comunes en los últimos 10s (2026-10-19).
 - **Invariantes activas:** Metodología E2E, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

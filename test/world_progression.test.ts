@@ -173,4 +173,88 @@ describe("Progresión de Saltos de Mundo (Supervivencia)", () => {
     clearWorldProgression();
     expect(moonAmbienceMock).toHaveBeenCalledWith(false);
   });
+
+  it("la succión gravitatoria atrae al auto y pulveriza a enemigos comunes cercanos durante los últimos 10s", async () => {
+    const { initWorldProgression, startWorldProgression, tickWorldProgression, getVortexPosition } = await import("../src/world_progression");
+    const { run } = await import("../src/run_state");
+    const B = await import("@babylonjs/core");
+
+    const pulverizeMock = vi.fn();
+    const enemyDispose = vi.fn();
+    let enemyList: any[] = [
+      {
+        pos: new B.Vector3(20, 0, 20), // Lejos: d ~ 28.2 (fuera de los 14m)
+        def: { boss: false, xp: 3 },
+        body: { getLinearVelocity: () => new B.Vector3(0, 0, 0), setLinearVelocity: vi.fn() },
+        dispose: vi.fn(),
+      },
+      {
+        pos: new B.Vector3(1, 0, 1), // Dentro del ojo del vórtice (d < 2.5)
+        def: { boss: false, xp: 10 },
+        body: { getLinearVelocity: () => new B.Vector3(0, 0, 0), setLinearVelocity: vi.fn() },
+        dispose: enemyDispose,
+      },
+      {
+        pos: new B.Vector3(1.2, 0, 1.2), // Jefe dentro del radio: debe ser inmune
+        def: { boss: true, xp: 100 },
+        body: { getLinearVelocity: () => new B.Vector3(0, 0, 0), setLinearVelocity: vi.fn() },
+        dispose: vi.fn(),
+      },
+    ];
+
+    const carSetVel = vi.fn();
+    const mockCar = {
+      pos: new B.Vector3(6, 0, 6), // Dentro de los 14m de succión
+      body: { getLinearVelocity: () => new B.Vector3(0, 0, 0), setLinearVelocity: carSetVel },
+    };
+
+    initWorldProgression({
+      scene: { isDisposed: false } as any,
+      getCar: () => mockCar as any,
+      getEnemies: () => enemyList,
+      setEnemies: (e) => { enemyList = e; },
+      getWeapons: () => [],
+      getProfile: () => ({ climate: {} } as any),
+      applyClimate: vi.fn(),
+      zoneClimate: () => undefined,
+      setZone: vi.fn(),
+      isSimulating: () => true,
+      isErun: () => false,
+      isLibre: () => false,
+      isLab: () => false,
+      camReset: vi.fn(),
+      clearSpits: vi.fn(),
+      clearGems: vi.fn(),
+      clearPickups: vi.fn(),
+      playWarpSfx: vi.fn(),
+      banner: vi.fn(),
+      glitchHit: vi.fn(),
+      onEnemyPulverized: pulverizeMock,
+    });
+
+    startWorldProgression(1, "patio", "perro");
+
+    // Abrir vórtice en el segundo 95 (vortexTime es 90, endTime es 110)
+    run.time = 95;
+    tickWorldProgression(0.1);
+    const vPos = getVortexPosition();
+    expect(vPos).not.toBeNull();
+
+    // Colocar el vórtice en (0, 0, 0) para evaluar distancias exactas
+    vPos!.set(0, 0, 0);
+
+    // Al segundo 105 (restan 5s <= 10s: succión y pulverización activas)
+    run.time = 105;
+    tickWorldProgression(0.1);
+
+    // 1. El auto debe haber recibido aceleración de succión
+    expect(carSetVel).toHaveBeenCalled();
+
+    // 2. El enemigo común dentro del ojo (1, 0, 1) debe haber sido pulverizado
+    expect(enemyDispose).toHaveBeenCalledTimes(1);
+    expect(pulverizeMock).toHaveBeenCalledWith(expect.any(Object), 10);
+
+    // 3. El jefe debe seguir vivo en la lista
+    expect(enemyList.some((e) => e.def.boss)).toBe(true);
+  });
 });
