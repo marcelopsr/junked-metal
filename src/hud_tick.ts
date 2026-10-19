@@ -1,5 +1,5 @@
 import * as B from "@babylonjs/core";
-import { hudMate, hudQuad, hudAbility, hudArrows, hudEnc, hudJump, hudSlots, hudRadar, hudUpdate, hudVortex } from "./ui";
+import { hudMate, hudQuad, hudAbility, hudArrows, hudEnc, hudJump, hudSlots, hudRadar, hudUpdate, hudVortex, hudWorldRoute } from "./ui";
 import { ctl, btnName, pb, KEYS } from "./input";
 import { ABIL_ICON, keyName, save } from "./menu";
 import { run } from "./run_state";
@@ -8,7 +8,7 @@ import { BAL, xpNeed } from "./balance";
 import { debris, FX } from "./fx";
 import * as E from "./encore";
 import { erun, encPrior } from "./encore_run"; import { goalBlips } from "./moon_goals";
-import { getVortexPosition, getVortexInfo } from "./world_progression";
+import { getVortexPosition, getVortexInfo, getWorldRouteSummary } from "./world_progression";
 import { MOON, hd, rel, yawOf } from "./moon";
 import type { PassiveId, Weapon } from "./weapons";
 import type { Player } from "./coop";
@@ -90,4 +90,5 @@ export function updateHud(dt: number) {
   hudAbility(ABILITIES[run.abil].short, ctl === "pad" ? btnName(pb("ability")) : keyName(KEYS.ability[0]), 1 - Math.max(0, run.abilCd) / abilCdOf(run.abil, run.abilLv), run.abilOn > 0, ABIL_ICON[run.abil], Math.max(0, run.abilCd));
   if (!c.simulating) hudJump(run.jumpCd <= 0 ? 1 : 1 - run.jumpCd / R.salto_cd_s);
   hudVortex(getVortexInfo());
+  hudWorldRoute(getWorldRouteSummary());
 }

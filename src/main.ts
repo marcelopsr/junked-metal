@@ -49,7 +49,7 @@ import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, f
 import * as E from "./encore";
 import { initEncoreRun, erun, encPrior, paceS, pfx, dirq, encExtra, encG, encLog, setErun, setEncPrior, encClear, encRecompute, encApply, encSecrets, encPick, votes, encVote, encPlan, encScene, minorShip, minorMini, moonPlace, carPlace, tip, say, calmFirst, zoneMagnet } from "./encore_run";
 import { initWorldProgression, startWorldProgression, clearWorldProgression, tickWorldProgression } from "./world_progression";
-import { hudVortex } from "./ui";
+import { hudVortex, hudWorldRoute } from "./ui";
 import { COOP, chestsLeft, chestsOpened, shopAt, shopDev, goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset, spotsPlan } from "./moon_goals";
 import { skyClear, skyInfo, skyLaunch, skyPace, skyTick } from "./moon_sky";
 import { aplicarRegla } from "./weekly";
@@ -230,6 +230,7 @@ function clearRun() {
   mateClear();
   clearWorldProgression();
   hudVortex(null);
+  hudWorldRoute(null);
   encClear(); GOAL_IO.tele = false; GOAL_IO.half = 0;
   setMoon(false); // la luna se enciende solo en una partida de Supervivencia en la luna (startRun)
   evReset(); // luna: meteoritos, erupciones, tinte rojo y ambiente (moon_events.ts)

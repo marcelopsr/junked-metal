@@ -16,6 +16,7 @@ import { EngineStore } from "@babylonjs/core/Engines/engineStore.js";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector.js";
 import type { PactView } from "./encore";
 import { BEAST_PORTRAITS, type Kind } from "./enemies";
+import type { WorldRouteSummary } from "./world_progression";
 
 const $ = (id: string) => (document.getElementById(id) ?? (id === "jump" ? document.getElementById("jumpRow") : null))!;
 const el = <T extends HTMLElement = HTMLElement>(id: string) => $(id) as T;
@@ -767,6 +768,80 @@ export function hudVortex(info: { timeLeft: number; totalTime: number; distance:
   txt("vxDest", info.nextZoneName);
 }
 
+// ---------- Cartografía Táctica de Saltos de Mundo (Ruta Dimensional) ----------
+const ZONE_SIGLAS: Record<string, string> = {
+  patio: "PAT",
+  ciudad: "CIU",
+  luna: "LUN",
+  bosque: "BOS",
+  industrial: "IND",
+};
+
+let lastRouteKey = "";
+export function hudWorldRoute(summary: WorldRouteSummary | null) {
+  const rEl = $("worldRoute");
+  if (!rEl) return;
+  if (!summary) {
+    if (ch("wrOn", 0)) rEl.classList.add("hidden");
+    return;
+  }
+  if (ch("wrOn", 1)) rEl.classList.remove("hidden");
+  if (ch("wrVx", +summary.vortexActive)) rEl.classList.toggle("vortex-open", summary.vortexActive);
+
+  // Status de cabecera
+  const statusTxt = summary.currentStageIdx >= summary.totalStages - 1
+    ? "ARENA DEL JEFE"
+    : `MUNDO ${summary.currentStageIdx + 1} / ${summary.totalStages - 1}`;
+  txt("wrStatus", statusTxt);
+
+  // Estructura de nodos DOM (memoizada para evitar recalcular HTML en cada frame)
+  const routeKey = `${summary.currentStageIdx}:${summary.nodes.length}:${+summary.vortexActive}`;
+  if (routeKey !== lastRouteKey) {
+    lastRouteKey = routeKey;
+    const nodesEl = $("wrNodes");
+    if (nodesEl) {
+      nodesEl.innerHTML = summary.nodes.map((n, idx) => {
+        const isLast = idx === summary.nodes.length - 1;
+        const sigla = n.isBossArena ? "JEFE" : (ZONE_SIGLAS[n.zoneId] ?? n.zoneId.slice(0, 3).toUpperCase());
+        const classes = [
+          "wr-node",
+          n.isPassed ? "passed" : "",
+          n.isCurrent ? "active" : "",
+          !n.isPassed && !n.isCurrent ? "locked" : "",
+          n.zoneId === "luna" ? "moon" : "",
+          n.isBossArena ? "boss" : "",
+        ].filter(Boolean).join(" ");
+
+        const nodeHtml = `<span class="${classes}" title="${n.zoneName}">${sigla}</span>`;
+        if (isLast) return nodeHtml;
+
+        const isLinkActive = idx === summary.currentStageIdx && summary.vortexActive;
+        const isLinkPassed = idx < summary.currentStageIdx;
+        const linkClasses = [
+          "wr-link",
+          isLinkPassed ? "passed" : "",
+          isLinkActive ? "pulsing" : "",
+        ].filter(Boolean).join(" ");
+
+        return `${nodeHtml}<i class="${linkClasses}"></i>`;
+      }).join("");
+    }
+  }
+
+  // Textos del pie (zona actual y cuenta regresiva al vórtice / cierre)
+  txt("wrZone", summary.currentZoneName.toUpperCase());
+
+  let jumpTxt = "";
+  if (summary.currentStageIdx >= summary.totalStages - 1) {
+    jumpTxt = "BATALLA FINAL";
+  } else if (summary.vortexActive) {
+    jumpTxt = `VÓRTICE: ${Math.ceil(summary.timeToEnd)}s`;
+  } else {
+    jumpTxt = `VÓRTICE EN ${Math.ceil(summary.timeToVortex)}s`;
+  }
+  txt("wrJump", jumpTxt);
+}
+
 export function uiTick(dt: number, live = true) {
   tickBanner(dt);
   if (dirLeft > 0 && (dirLeft -= dt) <= 0) $("dirSub").classList.add("hidden");
@@ -858,7 +933,7 @@ function tickThreats(dt: number) {
     e.style.transform = `translate(${cx + dx * t}px, ${cy + dy * t}px) rotate(${Math.atan2(dy, dx)}rad)`;
   });
 }
-if (import.meta.env.DEV) (window as unknown as { __threat: (x: number, z: number) => void }).__threat = (x, z) => threatAt(new Vector3(x, 0, z), 30); // dev: scripts/scenarios.mjs (flecha-peligro)
+if (import.meta.env.DEV && typeof window !== "undefined") (window as unknown as { __threat: (x: number, z: number) => void }).__threat = (x, z) => threatAt(new Vector3(x, 0, z), 30); // dev: scripts/scenarios.mjs (flecha-peligro)
 
 // ---------- Cartas de mejora ----------
 const rarity = (o: Offer) => (o.kind === "evo" ? "evo" : o.kind === "fusion" ? "fusion" : o.lv === 5 ? "epica" : o.kind === "weapon" && o.lv === 1 ? "rara" : "comun");
@@ -957,11 +1032,11 @@ export function pickOffer(i: number) {
   const cb = pickCb;
   setTimeout(() => { $("levelup").classList.add("hidden"); cb(i); }, 380);
 }
-$("offers").addEventListener("mouseover", (e) => {
+$("offers")?.addEventListener?.("mouseover", (e) => {
   const c = (e.target as HTMLElement).closest(".offer") as HTMLElement | null;
   if (c && !busy) selectOffer(+c.dataset.i!);
 });
-$("offers").addEventListener("click", (e) => {
+$("offers")?.addEventListener?.("click", (e) => {
   const c = (e.target as HTMLElement).closest(".offer") as HTMLElement | null;
   if (c) pickOffer(+c.dataset.i!);
 });

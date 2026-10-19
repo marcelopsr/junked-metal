@@ -7,6 +7,8 @@ vi.stubGlobal("document", {
   getElementById: vi.fn(() => ({
     classList: { toggle: vi.fn(), add: vi.fn(), remove: vi.fn(), contains: vi.fn() },
     style: { setProperty: vi.fn() },
+    addEventListener: vi.fn(),
+    querySelectorAll: vi.fn(() => []),
   })),
   createElement: vi.fn(() => ({
     getContext: vi.fn(() => ({
@@ -318,5 +320,55 @@ describe("Progresión de Saltos de Mundo (Supervivencia)", () => {
 
     // Se debe haber ejecutado daño en área de meteoritos
     expect(damageMock).toHaveBeenCalled();
+  });
+
+  it("proporciona la Cartografía Táctica de Saltos de Mundo completa y consistente con los 6 nodos", async () => {
+    const { startWorldProgression, clearWorldProgression, executeWorldJump, getWorldRouteSummary } = await import("../src/world_progression");
+    const { run } = await import("../src/run_state");
+    const { hudWorldRoute } = await import("../src/ui");
+
+    // Sin progresión iniciada debe devolver null
+    clearWorldProgression();
+    expect(getWorldRouteSummary()).toBeNull();
+
+    // Iniciar progresión
+    startWorldProgression(100, "patio", "perro");
+    run.time = 15;
+
+    const summary0 = getWorldRouteSummary();
+    expect(summary0).not.toBeNull();
+    expect(summary0!.totalStages).toBe(6);
+    expect(summary0!.currentStageIdx).toBe(0);
+    expect(summary0!.nodes).toHaveLength(6);
+
+    // Nodo 0: Actual (Patio)
+    expect(summary0!.nodes[0].isCurrent).toBe(true);
+    expect(summary0!.nodes[0].isPassed).toBe(false);
+    expect(summary0!.nodes[0].zoneId).toBe("patio");
+
+    // Nodo 2: Debe ser siempre la Luna
+    expect(summary0!.nodes[2].zoneId).toBe("luna");
+    expect(summary0!.nodes[2].isCurrent).toBe(false);
+    expect(summary0!.nodes[2].isPassed).toBe(false);
+
+    // Nodo 5: Debe ser la arena de jefe
+    expect(summary0!.nodes[5].isBossArena).toBe(true);
+
+    // Simular salto cuántico al Mundo 3 (Luna, stage 2)
+    executeWorldJump(2, true);
+    run.time = 240;
+
+    const summaryMoon = getWorldRouteSummary();
+    expect(summaryMoon).not.toBeNull();
+    expect(summaryMoon!.currentStageIdx).toBe(2);
+    expect(summaryMoon!.nodes[0].isPassed).toBe(true);
+    expect(summaryMoon!.nodes[1].isPassed).toBe(true);
+    expect(summaryMoon!.nodes[2].isCurrent).toBe(true);
+    expect(summaryMoon!.nodes[2].zoneId).toBe("luna");
+    expect(summaryMoon!.currentZoneName).toContain("Luna");
+
+    // Debe tolerar la invocación de hudWorldRoute tanto con datos como con null
+    expect(() => hudWorldRoute(summaryMoon)).not.toThrow();
+    expect(() => hudWorldRoute(null)).not.toThrow();
   });
 });

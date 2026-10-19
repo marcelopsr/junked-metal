@@ -1619,16 +1619,26 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
     - **Bosque · Ráfagas de Viento Cruzado:**
       - Banner diegético: `BARÓMETRO · RÁFAGAS DE VIENTO · FUERZA CRUZADA EN EL CHASIS`.
       - Ráfagas oscilantes basadas en ondas sinusoidales compuestas en `src/run_drive.ts` que ejercen un empuje lateral continuo sobre el cuerpo del auto, exigiendo correcciones de dirección al maniobrar.
+- **Cartografía Táctica de Saltos en el HUD (`#worldRoute`, `src/world_progression.ts`, `src/ui.ts`, `src/hud_tick.ts`, `src/main.ts`, `index.html`, `src/hud.css`):**
+  - Implementado panel de telemetría de chapa oscura (`#worldRoute`) que cartografía en tiempo real la ruta de los 5 mundos y la arena final:
+    - **Cabecera técnica:** Rótulo diegético `ENLACE DIMENSIONAL` con contador dinámico `MUNDO X / 5` o `ARENA DEL JEFE`.
+    - **Gráfica de nodos secuenciales:** 6 cápsulas interconectadas con siglas de bioma (`PAT`, `CIU`, `LUN`, `BOS`, `IND`, `JEFE`):
+      - Nodos completados (`.passed`): borde verde atenuado y fondo sutil.
+      - Nodo actual (`.active`): pulso iluminado en cian/ámbar con escala destacada.
+      - Luna pura (`.moon`): distintivo plateado en gris titanio/regolito, sin neón.
+      - Arena del jefe (`.boss`): distintivo de máxima alerta.
+    - **Enlace cuántico activo (`.wr-link.pulsing`):** el conector hacia el siguiente salto parpadea en cian de alta frecuencia durante la apertura del vórtice dimensional.
+    - **Pie de telemetría:** nombre del bioma en mayúsculas (`wrZone`) y cuenta regresiva al vórtice (`wrJump`), e.g. `VÓRTICE EN 42s`, `¡VÓRTICE ACTIVO! · 15s` o `BATALLA FINAL`.
+    - Adaptación responsiva completa en móviles (`max-width: 700px`) con escala compacta de 198px y soporte para `prefers-reduced-motion`.
 - **Validación con evidencia:**
   - `npx tsc --noEmit -p .` (0 errores).
-  - `npm test`: 40 suites / 274 pruebas unitarias pasando (100%).
-  - `npm run sim -- --seeds 1,2 --secs 180` (100% determinista, 0 atascos).
-  - `npm run build`: bundle de producción Vite completado exitosamente.
-  - `graphify update .`: grafo de conocimiento sincronizado con 7957 nodos y 20506 aristas.
+  - `npm test`: 40 suites / 275 pruebas unitarias pasando (100%).
+  - `npm run build`: bundle de producción Vite completado exitosamente en 6.40s.
+  - `graphify update .`: grafo de conocimiento sincronizado con 7962 nodos y 20528 aristas.
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Anomalías Ambientales por Mundo: Micrometeoritos que deforman cráteres en la Luna, Asfalto Resbaladizo en Ciudad y Vientos Cruzados en Bosque (2026-10-19).
+- **Último trabajo completado:** Cartografía Táctica de Saltos en el HUD (`#worldRoute` con 6 nodos, enlaces cuánticos pulsantes y telemetría de etapa viva) (2026-10-19).
 - **Invariantes activas:** Metodología E2E, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

@@ -14,10 +14,10 @@
   50% { transform: translate(-2px, 1px); }
   100% { transform: translate(0, 0); }
 }
-#signal, #lcd, #wshop, #bossbar, #combo, #drv, #radar, #txl, #txr, #slots, #hint { position: absolute; scale: var(--hud-scale); }
+#signal, #lcd, #worldRoute, #wshop, #bossbar, #combo, #drv, #radar, #txl, #txr, #slots, #hint { position: absolute; scale: var(--hud-scale); }
 
 /* ---------- Piezas comunes ---------- */
-.h-panel, #lcd, #lvl, #banner { color: var(--g-txt); } /* placa de chapa: kit.css */
+.h-panel, #lcd, #worldRoute, #lvl, #banner { color: var(--g-txt); } /* placa de chapa: kit.css */
 .h-panel { padding: 10px 12px; }
 .h-tape, .h-ptitle { display: none; } /* rótulos de la versión terminal: ya no se usan, quedan en el HTML */
 .h-g::before { display: none; }
@@ -286,6 +286,159 @@ body.calm .offer .rec { animation: none; }
   #vortexTelem { width: 92px; padding: 4px 6px; top: calc(max(10px, env(safe-area-inset-top)) + 98px); }
   #vortexTelem .vx-head b { font-size: 13px; }
   #vortexTelem .vx-meta { font-size: 9px; }
+}
+
+/* ---------- Cartografía Táctica de Saltos de Mundo (#worldRoute) ---------- */
+#worldRoute {
+  top: calc(max(10px, env(safe-area-inset-top)) + 104px);
+  left: 14px;
+  width: 236px;
+  background: var(--jm-panel, #1F2937);
+  border: 1px solid rgba(255, 255, 255, .15);
+  border-left: 3px solid var(--jm-cian, #00C2FF);
+  border-radius: 4px;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .45);
+  font-family: var(--hf, "Rajdhani", sans-serif);
+  pointer-events: none;
+  z-index: 8;
+  transition: border-color .2s;
+}
+#worldRoute.hidden { display: none !important; }
+#worldRoute.vortex-open {
+  border-color: var(--jm-cian, #00C2FF);
+  box-shadow: 0 0 12px rgba(0, 194, 255, .35);
+}
+#worldRoute .wr-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--jm-cian, #00C2FF);
+  letter-spacing: .06em;
+}
+#worldRoute .wr-head b {
+  color: #fff;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+#worldRoute .wr-nodes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  margin: 3px 0;
+}
+#worldRoute .wr-node {
+  width: 28px;
+  height: 20px;
+  background: rgba(0, 0, 0, .45);
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--jm-texto-dim, #9CA3AF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: .04em;
+  transition: all .2s;
+}
+#worldRoute .wr-node.passed {
+  border-color: rgba(34, 197, 94, .45);
+  color: #86efac;
+  background: rgba(34, 197, 94, .12);
+}
+#worldRoute .wr-node.active {
+  border-color: var(--jm-cian, #00C2FF);
+  color: #fff;
+  background: rgba(0, 194, 255, .22);
+  box-shadow: 0 0 8px rgba(0, 194, 255, .4);
+  transform: scale(1.06);
+}
+#worldRoute .wr-node.moon {
+  border-color: rgba(226, 232, 240, .35);
+  color: #e2e8f0;
+}
+#worldRoute .wr-node.moon.active {
+  border-color: #f1f5f9;
+  background: rgba(241, 245, 249, .2);
+  box-shadow: 0 0 8px rgba(241, 245, 249, .35);
+}
+#worldRoute .wr-node.boss {
+  border-color: rgba(255, 145, 56, .5);
+  color: #fed7aa;
+}
+#worldRoute .wr-node.boss.active {
+  border-color: var(--jm-rojo, #FF3B2E);
+  color: #fff;
+  background: rgba(255, 59, 46, .28);
+  box-shadow: 0 0 10px rgba(255, 59, 46, .5);
+}
+#worldRoute .wr-link {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, .12);
+  margin: 0 1px;
+}
+#worldRoute .wr-link.passed {
+  background: rgba(34, 197, 94, .5);
+}
+#worldRoute .wr-link.pulsing {
+  background: var(--jm-cian, #00C2FF);
+  box-shadow: 0 0 6px var(--jm-cian, #00C2FF);
+  animation: wrLinkPulse .4s steps(2) infinite alternate;
+}
+@keyframes wrLinkPulse {
+  0% { opacity: .4; }
+  100% { opacity: 1; }
+}
+#worldRoute .wr-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--jm-texto-dim, #9CA3AF);
+}
+#worldRoute .wr-zone {
+  color: #ffd24a;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+#worldRoute .wr-jump {
+  color: var(--jm-cian, #00C2FF);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+@media (max-width: 700px) {
+  #worldRoute {
+    width: 198px;
+    padding: 4px 6px;
+    top: calc(max(10px, env(safe-area-inset-top)) + 92px);
+    left: 8px;
+  }
+  #worldRoute .wr-node {
+    width: 23px;
+    height: 17px;
+    font-size: 9px;
+  }
+  #worldRoute .wr-head {
+    font-size: 9px;
+  }
+  #worldRoute .wr-head b {
+    font-size: 11px;
+  }
+  #worldRoute .wr-foot {
+    font-size: 8.5px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #worldRoute .wr-link.pulsing { animation: none; opacity: 1; }
 }
 
 /* ---------- Estado del auto: vida, turbo, habilidad (abajo-centro) ---------- */

@@ -451,3 +451,57 @@ export function getVortexInfo(): VortexInfo | null {
     jumpNum: stage.jumpNum,
   };
 }
+
+export interface WorldRouteNode {
+  readonly stage: number;
+  readonly jumpNum: number;
+  readonly zoneId: ZoneId;
+  readonly zoneName: string;
+  readonly isBossArena?: boolean;
+  readonly startTime: number;
+  readonly vortexTime: number;
+  readonly endTime: number;
+  readonly isPassed: boolean;
+  readonly isCurrent: boolean;
+}
+
+export interface WorldRouteSummary {
+  readonly currentStageIdx: number;
+  readonly totalStages: number;
+  readonly nodes: WorldRouteNode[];
+  readonly currentZoneName: string;
+  readonly nextZoneName: string;
+  readonly vortexActive: boolean;
+  readonly timeToVortex: number;
+  readonly timeToEnd: number;
+}
+
+/** Devuelve el resumen cartográfico completo de la ruta de saltos para el HUD. */
+export function getWorldRouteSummary(): WorldRouteSummary | null {
+  if (!currentStages || currentStages.length === 0) return null;
+  const curr = currentStages[currentStageIdx];
+  if (!curr) return null;
+  const next = currentStages[currentStageIdx + 1];
+  const t = run.time;
+  return {
+    currentStageIdx,
+    totalStages: currentStages.length,
+    nodes: currentStages.map((s, idx) => ({
+      stage: s.stage,
+      jumpNum: s.jumpNum,
+      zoneId: s.zoneId,
+      zoneName: s.zoneName,
+      isBossArena: s.isBossArena,
+      startTime: s.startTime,
+      vortexTime: s.vortexTime,
+      endTime: s.endTime,
+      isPassed: idx < currentStageIdx,
+      isCurrent: idx === currentStageIdx,
+    })),
+    currentZoneName: curr.zoneName,
+    nextZoneName: next ? (next.isBossArena ? "ARENA FINAL" : next.zoneName) : "ARENA FINAL",
+    vortexActive: vortexPos !== null,
+    timeToVortex: Math.max(0, curr.vortexTime - t),
+    timeToEnd: Math.max(0, curr.endTime - t),
+  };
+}
