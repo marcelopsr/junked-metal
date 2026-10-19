@@ -274,9 +274,10 @@ function paint(f: Face, i: number) {
   // Zonas de regolito claro/oscuro a gran escala (decenas de metros), solo del lado del Sol
   const zone = Math.sin(_vd.x * 14 + Math.sin(_vd.z * 9) * 1.4) * Math.sin(_vd.z * 13 + _vd.y * 5) * 1.3 + 0.5 * Math.sin(_vd.x * 31 - _vd.z * 23);
   const g = shade(_vd.x, _vd.y, _vd.z, h) * (1 + sunK * ((dune - 0.5) * 0.32 + rip * 0.07 + B.Scalar.Clamp(zone, -1, 1) * 0.5));
-  // Manchas grandes crema/lila (mares de juguete) y fondo de cráter frío: así el suelo se despega de las rocas rojas y de la niebla durazno
-  const m = 0.5 + 0.5 * Math.sin(_vd.x * 6.1 + Math.sin(_vd.z * 4.3) * 1.7) * Math.sin(_vd.y * 5.3 + _vd.z * 3.1), cool = h < -0.5 ? 1 : B.Scalar.Clamp((m - 0.45) * 3, 0, 1);
-  f.col[i * 4] = g * B.Scalar.Lerp(1, 0.6, cool); f.col[i * 4 + 1] = g * B.Scalar.Lerp(0.84, 0.62, cool); f.col[i * 4 + 2] = g * B.Scalar.Lerp(0.62, 0.92, cool); f.col[i * 4 + 3] = 1;
+  // Regolito lunar: mares oscuros de basalto y tierras altas de anortosita gris clara
+  const m = 0.5 + 0.5 * Math.sin(_vd.x * 6.1 + Math.sin(_vd.z * 4.3) * 1.7) * Math.sin(_vd.y * 5.3 + _vd.z * 3.1), basin = h < -0.5 ? 0.75 : B.Scalar.Clamp((m - 0.45) * 2, 0, 1);
+  const tone = g * B.Scalar.Lerp(0.92, 0.7, basin);
+  f.col[i * 4] = tone; f.col[i * 4 + 1] = tone * 0.99; f.col[i * 4 + 2] = tone * 1.02; f.col[i * 4 + 3] = 1;
 }
 /** Rehace solo los vértices al alcance de una deformación (sin reconstruir la esfera). */
 function remesh(dn: Dent) {
@@ -305,12 +306,9 @@ export function deform(p: B.Vector3, r: number, depth: number) {
 export function moonReset() { const old = dents.splice(0); for (const dn of old) remesh(dn); }
 
 let groundTex: B.Texture | undefined; // la textura del suelo se dibuja una sola vez (pbr() guarda el material por nombre)
-const neon: B.Mesh[] = []; let neonK = 1;
-let curbW: B.Material | null = null, fillL: B.PointLight | null = null; // bordillo blanco con emisivo tenue y luz fría de relleno sobre el auto (solo de noche)
 let stars: B.Mesh, shoot: B.LinesMesh, shootT = 4, shootLife = 0;
 const shootA = new B.Vector3(), shootB = new B.Vector3();
-let asphalt: B.Texture | undefined, soilTex: B.BaseTexture | null = null, wasNight = false;
-let earth: B.Mesh, city: B.Mesh, groundM: B.PBRMaterial;
+let earth: B.Mesh, groundM: B.PBRMaterial;
 /** Arma la luna (lo fijo, con la semilla del mundo): esfera de 6 caras, cráteres, rocas, estrellas, Tierra y Sol. */
 export function moonBuild(s: B.Scene, low: boolean) {
   scene = s;
@@ -322,15 +320,14 @@ export function moonBuild(s: B.Scene, low: boolean) {
     if (MOON.R * Math.acos(d.y) < 16 + r) continue;
     fixed.push(mkDent(d, r, dep));
   }
-  // Suelo: textura de regolito (gris con granos) + mapa de detalle de tierra; el color grande lo ponen los vértices
+  // Suelo: textura de regolito lunar (gris con micro-cráteres y granos) + mapa de detalle; el color grande lo ponen los vértices
   const N = low ? 52 : 76, rep = 10;
-  asphalt ??= new B.Texture("./textures/r53-asfalto-mojado.webp", scene); asphalt.wrapU = asphalt.wrapV = B.Texture.WRAP_ADDRESSMODE; asphalt.uScale = asphalt.vScale = 18;
-  const mat = groundM = surface(pbr("moonGround", { color: "#ffffff", rough: 0.85, tex: groundTex ??= canvasTex(256, (c, z) => {
-    c.fillStyle = "#d9985e"; c.fillRect(0, 0, z, z);
-    for (let i = 0; i < 9000; i++) { c.fillStyle = ["#c98550", "#e6b27a", "#b4683c", "#d99a62"][i % 4]; c.globalAlpha = 0.18 + Math.random() * 0.3; c.fillRect(Math.random() * z, Math.random() * z, 1 + Math.random() * 3, 1 + Math.random() * 3); }
-    for (let i = 0; i < 40; i++) { const x = Math.random() * z, y = Math.random() * z, r = 2 + Math.random() * 7; c.globalAlpha = 0.25; c.strokeStyle = "#b9824a"; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke(); } // micro-cráteres
-    for (let i = 0; i < 260; i++) { const x = Math.random() * z, y = Math.random() * z, r = 1 + Math.random() * 3.2; c.globalAlpha = 0.1 + Math.random() * 0.1; c.fillStyle = i % 3 ? "#9a5a34" : "#e6b27a"; c.beginPath(); c.ellipse(x, y, r * 1.3, r, Math.random() * 3, 0, 7); c.fill(); } // grumos y piedritas: poco contraste
-    for (let i = 0; i < 6; i++) { const x = Math.random() * z, y = Math.random() * z; c.globalAlpha = 0.09; c.fillStyle = "#a8743f"; for (let k = 0; k < 6; k++) { c.beginPath(); c.ellipse(x + k * 5, y + (k % 2) * 3, 1.6, 2.6, 0.4, 0, 7); c.fill(); } } // huellas: hileras de hoyitos
+  const mat = groundM = surface(pbr("moonGround", { color: "#ffffff", rough: 0.88, tex: groundTex ??= canvasTex(256, (c, z) => {
+    c.fillStyle = "#6e737a"; c.fillRect(0, 0, z, z);
+    for (let i = 0; i < 9000; i++) { c.fillStyle = ["#565a61", "#848991", "#484b52", "#989ea6"][i % 4]; c.globalAlpha = 0.18 + Math.random() * 0.3; c.fillRect(Math.random() * z, Math.random() * z, 1 + Math.random() * 3, 1 + Math.random() * 3); }
+    for (let i = 0; i < 40; i++) { const x = Math.random() * z, y = Math.random() * z, r = 2 + Math.random() * 7; c.globalAlpha = 0.28; c.strokeStyle = "#383b40"; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y, r, 0, 7); c.stroke(); } // micro-cráteres
+    for (let i = 0; i < 260; i++) { const x = Math.random() * z, y = Math.random() * z, r = 1 + Math.random() * 3.2; c.globalAlpha = 0.12 + Math.random() * 0.1; c.fillStyle = i % 3 ? "#44474d" : "#8e949c"; c.beginPath(); c.ellipse(x, y, r * 1.3, r, Math.random() * 3, 0, 7); c.fill(); } // grumos y fragmentos
+    for (let i = 0; i < 6; i++) { const x = Math.random() * z, y = Math.random() * z; c.globalAlpha = 0.1; c.fillStyle = "#4a4e54"; for (let k = 0; k < 6; k++) { c.beginPath(); c.ellipse(x + k * 5, y + (k % 2) * 3, 1.6, 2.6, 0.4, 0, 7); c.fill(); } } // marcas y hoyitos
     c.globalAlpha = 1;
   }, rep) }), "soil", rep * 6, 0.8);
   for (const [n, u, v] of AXES) {
@@ -354,10 +351,9 @@ export function moonBuild(s: B.Scene, low: boolean) {
     f.m.material = mat; f.m.receiveShadows = true; f.m.isPickable = false;
     faces.push(f);
   }
-  // Rocas: unas grandes con colisionador (estático, pose antes del cuerpo) y muchas piedritas (thin instances, solo visuales)
-  const rockM = pbr("moonRock", { color: "#c4553a", rough: 0.7 });
-  // Mesetas y hoodoos de juguete en estratos naranja / rojo óxido / crema (las láminas, panel DESIERTO); mismo colisionador esférico de siempre
-  const [sO, sR, sC] = [pbr("moonStrO", { color: "#D17844", rough: 0.8 }), pbr("moonStrR", { color: "#B5532E", rough: 0.8 }), pbr("moonStrC", { color: "#EEA86A", rough: 0.8 })];
+  // Rocas lunares: basalto y anortosita en estratos grises oscuros y claros; colisionador esférico estático
+  const rockM = pbr("moonRock", { color: "#454950", rough: 0.75 });
+  const [sO, sR, sC] = [pbr("moonStrO", { color: "#4f545c", rough: 0.8 }), pbr("moonStrR", { color: "#393c42", rough: 0.8 }), pbr("moonStrC", { color: "#7a808a", rough: 0.8 })];
   const rockTpls = [
     template("moonMesa", () => [cyl(0.78, 1.1, 0.34, sR, [0, -0.4, 0]), cyl(0.82, 0.82, 0.26, sC, [0, -0.1, 0]), rbox(0.9, 0.3, 0.9, 0.08, sO, [0, 0.18, 0]), cyl(0.7, 0.74, 0.2, sR, [0, 0.43, 0]), cyl(0.66, 0.66, 0.12, sC, [0, 0.59, 0])]),
     template("moonHoodoo", () => [cyl(0.5, 0.95, 0.3, sR, [0, -0.4, 0]), cyl(0.42, 0.42, 0.3, sC, [0, -0.1, 0]), cyl(0.36, 0.4, 0.28, sO, [0, 0.19, 0]), cyl(0.3, 0.34, 0.24, sR, [0, 0.45, 0]), rbox(0.62, 0.2, 0.62, 0.07, sC, [0, 0.67, 0]), rbox(0.5, 0.1, 0.5, 0.04, sO, [0, 0.82, 0])]),
@@ -386,46 +382,12 @@ export function moonBuild(s: B.Scene, low: boolean) {
     k.body = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: 0, radius: sz * 0.5, friction: 0.5 }, scene).body;
     rocks.push(k); m.receiveShadows = true;
   }
-  // Decoración del desierto con semilla propia (no gasta rng() de la partida): cactus de juguete y bordillos rojo y blanco desde la salida
-  const dr = rngFrom(0xcac705), sol = (d: B.Vector3, up: number, yaw: number, s = 1) => B.Matrix.ComposeToRef(new B.Vector3(s, s, s), B.Quaternion.FromUnitVectorsToRef(Y, d, new B.Quaternion()).multiply(B.Quaternion.RotationAxis(Y, yaw)), d.scale(radiusAt(d) + up * s).addInPlace(CENTER), new B.Matrix());
-  const grn = pbr("moonCactus", { color: "#3f9a4a", rough: 0.75 });
-  const cactus = template("moonCactus", () => [cyl(0.24, 0.3, 1.2, grn, [0, 0.6, 0]), sph(0.24, grn, [0, 1.2, 0], undefined, 4), cyl(0.14, 0.14, 0.36, grn, [0.3, 0.55, 0], [0, 0, Math.PI / 2]), cyl(0.12, 0.14, 0.5, grn, [0.46, 0.78, 0]), sph(0.12, grn, [0.46, 1.03, 0], undefined, 4), cyl(0.14, 0.14, 0.3, grn, [-0.27, 0.8, 0], [0, 0, Math.PI / 2]), cyl(0.12, 0.14, 0.42, grn, [-0.42, 0.99, 0]), sph(0.12, grn, [-0.42, 1.2, 0], undefined, 4)]);
-  for (let i = 0, n = 0; n < 16 && i < 200; i++) {
-    const near = n < 9, a = dr() * 6.3, w = (near ? 14 + dr() * 28 : 0) / MOON.R; // los primeros 9 cerca de la salida: se ven desde el arranque
-    const d = near ? new B.Vector3(Math.sin(w) * Math.cos(a), Math.cos(w), Math.sin(w) * Math.sin(a)) : new B.Vector3(dr() * 2 - 1, dr() * 2 - 1, dr() * 2 - 1).normalize(), sc = 1.1 + dr() * 0.9, yaw = dr() * 6.3;
-    if (MOON.R * Math.acos(d.y) < 12 || heightAt(d) < -0.6) continue;
-    const m = cactus.createInstance("cactus"); m.isPickable = false; m.receiveShadows = true; n++;
-    sol(d, 0, yaw, sc).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position);
-  }
-  const kR = pbr("moonCurbR", { color: "#d8362b", rough: 0.6 }), kW = pbr("moonCurbW", { color: "#f4efe6", rough: 0.6, emissive: "#000000" }); curbW = kW;
-  const curb = template("moonCurb", () => [rbox(0.6, 0.2, 0.9, 0.05, kR, [0, 0.1, -0.45]), rbox(0.6, 0.2, 0.9, 0.05, kW, [0, 0.1, 0.45])]);
-  for (const sx of [-6, 6]) for (let j = 0; j < 12; j++) { // dos hileras paralelas a la ruta inicial (+z), siguiendo la curva
-    const d = new B.Vector3(sx / MOON.R, 1, (4 + j * 1.8) / MOON.R).normalize(), m = curb.createInstance("bordillo");
-    m.isPickable = false; m.receiveShadows = true;
-    sol(d, 0, 0).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position);
-  }
-  // Neón: postes-cartel emisivos (instancias fusionadas, una malla por color); el GlowLayer los hace brillar. Solo de noche (moonTick).
-  neon.length = 0;
-  const nr = rngFrom(0x6e30); // semilla fija propia: capturas comparables sin gastar el rng() de la partida
-  for (const [col, n] of [["#ff2bd6", 1], ["#19e6ff", 2], ["#ff2a2a", 3]] as const) {
-    const m = B.MeshBuilder.CreateBox("moonNeon", { width: 0.3, height: 3, depth: 0.3 }, scene), mm = pbr("moonNeon" + col, { color: col, rough: 0.4, emissive: col });
-    mm.fogEnabled = false; m.material = mm; m.isPickable = false;
-    const nb = low ? 8 : 18, nm = new Float32Array(nb * 16);
-    for (let i = 0; i < nb; i++) {
-      const d = new B.Vector3(nr() * 2 - 1, nr() * 2 - 1, nr() * 2 - 1).normalize();
-      if (MOON.R * Math.acos(d.y) < 32 || heightAt(d) < -0.6) { d.set(Math.sin(i * 12.9 + n), 0.35 + (i % 5) * 0.12, Math.cos(i * 7.7 + n)).normalize(); } // cerca de la salida no hay carteles
-      const q = B.Quaternion.FromUnitVectorsToRef(Y, d, new B.Quaternion()).multiply(B.Quaternion.RotationAxis(Y, nr() * 6.3));
-      const sy = 0.7 + nr() * 0.6; // 2,1-3,9 m de alto, poste de 0,3 m
-      B.Matrix.ComposeToRef(new B.Vector3(1, sy, 1), q, d.scale(radiusAt(d) + 1.5 * sy - 0.1).addInPlace(CENTER), B.Matrix.Identity()).copyToArray(nm, i * 16);
-    }
-    m.thinInstanceSetBuffer("matrix", nm, 16, true); m.thinInstanceRefreshBoundingInfo(); m.alwaysSelectAsActiveMesh = true;
-    neon.push(m);
-  }
-  const peb = B.MeshBuilder.CreatePolyhedron("moonPebble", { type: 3, sizeX: 0.46, sizeY: 0.22, sizeZ: 0.38 }, scene); // icosaedro achatado: 20 triángulos por piedrita
-  peb.material = pbr("moonPebbleSand", { color: "#c98e5a", rough: 0.9 }); // arena: poco contraste con el suelo
+  // Piedritas de regolito (thin instances, solo visuales): escala baja sobre el suelo
+  const peb = B.MeshBuilder.CreatePolyhedron("moonPebble", { type: 3, sizeX: 0.46, sizeY: 0.22, sizeZ: 0.38 }, scene); // icosaedro achatado
+  peb.material = pbr("moonPebbleSand", { color: "#61656c", rough: 0.9 }); // fragmentos de roca lunar
   const np = low ? 900 : 2200, mats = new Float32Array(np * 16), q = new B.Quaternion(), mx = new B.Matrix(), sc = new B.Vector3(), pp = new B.Vector3();
   for (let i = 0; i < np; i++) {
-    const d = new B.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1).normalize(), s = 0.4 + Math.random() ** 2 * 1.0; // tope 1,4: sin colisión, más grandes engañan como obstáculos: escala de juguete junto al auto; sin colisión, siguen bajas (alto ≤ 0,5 m)
+    const d = new B.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1).normalize(), s = 0.4 + Math.random() ** 2 * 1.0;
     B.Quaternion.FromUnitVectorsToRef(Y, d, q).multiplyInPlace(B.Quaternion.RotationAxis(Y, Math.random() * 6.3));
     pp.copyFrom(d).scaleInPlace(radiusAt(d) + s * 0.1).addInPlace(CENTER); sc.setAll(s);
     B.Matrix.ComposeToRef(sc, q, pp, mx); mx.copyToArray(mats, i * 16);
@@ -448,199 +410,56 @@ export function moonBuild(s: B.Scene, low: boolean) {
     }
     m.thinInstanceSetBuffer("matrix", buf, 16, true); m.thinInstanceRefreshBoundingInfo(); m.alwaysSelectAsActiveMesh = true; m.isPickable = false; m.receiveShadows = true;
   };
-  for (const [c, n] of [["#9a5a34", 280], ["#c98550", 300], ["#7a4a2e", 200]] as const) {
-    const stone = poly("moonStone" + c, 3, 0.5, 0.32, 0.42, pbr("moonStone" + c, { color: c, rough: 0.9 })); // 0,1-0,5 m de tamaño
+  for (const [c, n] of [["#3a3d42", 280], ["#52565e", 300], ["#2d2f34", 200]] as const) {
+    const stone = poly("moonStone" + c, 3, 0.5, 0.32, 0.42, pbr("moonStone" + c, { color: c, rough: 0.9 })); // fragmentos de roca lunar
     thin(stone, low ? n >> 1 : n, 0.6, () => { const s = 0.2 + gr() ** 2 * 0.9; return new B.Vector3(s * (0.8 + gr() * 0.5), s * (0.6 + gr() * 0.5), s * (0.8 + gr() * 0.5)); }, 0.1);
   }
-  const grFis = gr; gr = rngFrom(0x77d1); // decorado sin colisión con generador propio: gr (rocas con colisión y matas) consume lo mismo que antes de af846df
-  { // Variedad de suelo del lado iluminado: rocas oscuras (siluetas) y cráteres de sombra con degradé suave. Misma semilla gr de arriba; sin colisión (planos o muy bajos). ponytail: techo ~300 instancias; cráteres solo cerca de la salida
-    const dark = poly("moonDarkRock", 2, 0.5, 0.36, 0.45, pbr("moonDarkRock", { color: "#3a1f14", rough: 0.9 }));
+  const grFis = gr; gr = rngFrom(0x77d1);
+  { // Variedad de regolito: rocas oscuras de basalto y cráteres con degradé suave
+    const dark = poly("moonDarkRock", 2, 0.5, 0.36, 0.45, pbr("moonDarkRock", { color: "#222428", rough: 0.9 }));
     thin(dark, low ? 60 : 130, 0.85, () => { const s = 0.5 + gr() ** 2 * 1.3; return new B.Vector3(s * (0.8 + gr() * 0.5), s * (0.6 + gr() * 0.6), s * (0.8 + gr() * 0.5)); }, 0.1);
     const cm = (scene.getMaterialByName("moonCraterMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("moonCraterMat", scene);
-    cm.opacityTexture?.dispose(); // el material se reusa entre armados: libera el degradé anterior
+    cm.opacityTexture?.dispose();
     const ct = new B.DynamicTexture("moonCraterTex", 64, scene, false), cc = ct.getContext() as unknown as CanvasRenderingContext2D, cg = cc.createRadialGradient(32, 32, 0, 32, 32, 32);
-    cg.addColorStop(0, "rgba(255,255,255,0.8)"); cg.addColorStop(0.7, "rgba(255,255,255,0.55)"); cg.addColorStop(0.88, "rgba(255,255,255,0.1)"); cg.addColorStop(1, "rgba(255,255,255,0)"); cc.fillStyle = cg; cc.fillRect(0, 0, 64, 64); ct.update(); ct.hasAlpha = true;
-    cm.opacityTexture = ct; cm.disableLighting = true; cm.diffuseColor = new B.Color3(0.07, 0.06, 0.055); cm.specularColor = B.Color3.Black(); cm.fogEnabled = true; cm.backFaceCulling = false; cm.zOffset = -2;
+    cg.addColorStop(0, "rgba(255,255,255,0.85)"); cg.addColorStop(0.7, "rgba(255,255,255,0.5)"); cg.addColorStop(0.88, "rgba(255,255,255,0.1)"); cg.addColorStop(1, "rgba(255,255,255,0)"); cc.fillStyle = cg; cc.fillRect(0, 0, 64, 64); ct.update(); ct.hasAlpha = true;
+    cm.opacityTexture = ct; cm.disableLighting = true; cm.diffuseColor = new B.Color3(0.04, 0.04, 0.045); cm.specularColor = B.Color3.Black(); cm.fogEnabled = true; cm.backFaceCulling = false; cm.zOffset = -2;
     const crater = B.MeshBuilder.CreateGround("moonCrater", { width: 2, height: 2 }, scene); crater.material = cm;
     thin(crater, low ? 14 : 30, 1, () => { const s = 2.5 + gr() * 4; return new B.Vector3(s, 1, s * (0.7 + gr() * 0.3)); }, 0.03);
-    // Manchas grandes: regolito oscuro (6-13 m) y claro tipo ceniza cremosa (8-16 m), mismo degradé; sin colisión
+    // Manchas de regolito: basalto oscuro y eyecta clara de anortosita
     const bm = (scene.getMaterialByName("moonPatchDarkMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("moonPatchDarkMat", scene), lm = (scene.getMaterialByName("moonPatchLightMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("moonPatchLightMat", scene);
-    for (const [m, c, o] of [[bm, new B.Color3(0.1, 0.045, 0.025), 0.95], [lm, new B.Color3(1, 0.78, 0.45), 0.18]] as const) { m.opacityTexture = ct; m.disableLighting = true; m.emissiveColor = c; m.diffuseColor = B.Color3.Black(); m.specularColor = B.Color3.Black(); m.alpha = o; m.fogEnabled = m === bm; m.backFaceCulling = false; m.zOffset = -3; }
+    for (const [m, c, o] of [[bm, new B.Color3(0.06, 0.06, 0.07), 0.95], [lm, new B.Color3(0.85, 0.88, 0.92), 0.22]] as const) { m.opacityTexture = ct; m.disableLighting = true; m.emissiveColor = c; m.diffuseColor = B.Color3.Black(); m.specularColor = B.Color3.Black(); m.alpha = o; m.fogEnabled = m === bm; m.backFaceCulling = false; m.zOffset = -3; }
     const patchD = B.MeshBuilder.CreateGround("moonPatchD", { width: 2, height: 2 }, scene), patchL = B.MeshBuilder.CreateGround("moonPatchL", { width: 2, height: 2 }, scene); patchD.material = bm; patchL.material = lm;
     thin(patchD, low ? 22 : 50, 0.9, () => { const s = 6 + gr() * 7; return new B.Vector3(s, 1, s * (0.5 + gr() * 0.4)); }, 0.04);
     thin(patchL, low ? 3 : 6, 0.9, () => { const s = 8 + gr() * 6; return new B.Vector3(s, 1, s * (0.5 + gr() * 0.4)); }, 0.035);
-    // Día: piezas oscuras altas (monolitos y antenas de juguete) que proyectan sombra larga y piedras claras de borde de cráter. Misma semilla gr, sin colisión.
-    const mono = B.MeshBuilder.CreateBox("moonMono", { size: 1 }, scene); mono.material = pbr("moonMono", { color: "#1d120e", rough: 0.85 });
-    thin(mono, low ? 16 : 26, 0.95, () => new B.Vector3(0.9 + gr() * 0.9, 3 + gr() * 3, 0.9 + gr() * 0.9), 0.5, 16); // mín. 16 m: uno cerca tapaba al auto
-    const ant = B.MeshBuilder.CreateCylinder("moonAnt", { diameterTop: 0.04, diameterBottom: 0.14, height: 1, tessellation: 5 }, scene); ant.material = pbr("moonAnt", { color: "#15110f", rough: 0.7 });
+    // Monolitos de impacto y bloques de anortosita en los bordes de cráteres
+    const mono = B.MeshBuilder.CreateBox("moonMono", { size: 1 }, scene); mono.material = pbr("moonMono", { color: "#24262a", rough: 0.85 });
+    thin(mono, low ? 16 : 26, 0.95, () => new B.Vector3(0.9 + gr() * 0.9, 3 + gr() * 3, 0.9 + gr() * 0.9), 0.5, 16);
+    const ant = B.MeshBuilder.CreateCylinder("moonAnt", { diameterTop: 0.04, diameterBottom: 0.14, height: 1, tessellation: 5 }, scene); ant.material = pbr("moonAnt", { color: "#191a1d", rough: 0.7 });
     thin(ant, low ? 26 : 40, 0.95, () => new B.Vector3(1, 3 + gr() * 3, 1), 0.5, 12);
-    const rim = poly("moonRim", 2, 0.5, 0.3, 0.42, pbr("moonRim", { color: "#e6c9a0", rough: 0.85 }));
+    const rim = poly("moonRim", 2, 0.5, 0.3, 0.42, pbr("moonRim", { color: "#9297a0", rough: 0.85 }));
     thin(rim, low ? 180 : 300, 0.95, () => { const s = 0.3 + gr() * 0.6; return new B.Vector3(s * (0.8 + gr() * 0.5), s * 0.7, s * (0.8 + gr() * 0.5)); }, 0.1);
-    // Escenografía a mano junto a la salida (sin rng, sin colisión): rocas facetadas medianas, resto de cohete y torre de juguete; proyectan sombra larga y dejan libre el carril del auto (|x| ≥ 5)
-    const rkR = pbr("moonRocketR", { color: "#c4352a", rough: 0.5 }), rkW = pbr("moonRocketW", { color: "#efe8da", rough: 0.55 }), rkG = pbr("moonRocketG", { color: "#6a6f78", rough: 0.4, metal: 0.5 });
-    const dk = template("moonDecoRock", () => [poly("dr", 2, 0.55, 0.45, 0.5, pbr("moonDecoRock", { color: "#160a06", rough: 0.9 }))]);
-    const pl = template("moonDecoPale", () => [poly("dp", 2, 0.5, 0.3, 0.42, pbr("moonDecoPale", { color: "#fff0d0", rough: 0.8, emissive: "#3a3020" }))]);
-    const rocket = template("moonRocketWreck", () => [cyl(0.5, 0.5, 0.5, rkW, [0, 0.25, 0]), cyl(0.5, 0.5, 0.18, rkR, [0, 0.59, 0]), cyl(0.04, 0.5, 0.55, rkR, [0, 0.95, 0]), rbox(0.08, 0.34, 0.4, 0.02, rkR, [0.4, 0.17, 0]), rbox(0.4, 0.34, 0.08, 0.02, rkR, [0, 0.17, 0.4]), rbox(0.1, 0.34, 0.4, 0.02, rkR, [-0.4, 0.17, 0])]);
-    const tower = template("moonToyTower", () => [rbox(0.08, 1.8, 0.08, 0.02, rkG, [0.22, 0.9, 0.22]), rbox(0.08, 1.8, 0.08, 0.02, rkG, [-0.22, 0.9, 0.22]), rbox(0.08, 1.8, 0.08, 0.02, rkG, [0.22, 0.9, -0.22]), rbox(0.08, 1.8, 0.08, 0.02, rkG, [-0.22, 0.9, -0.22]), rbox(0.6, 0.06, 0.6, 0.02, rkR, [0, 0.9, 0]), rbox(0.5, 0.2, 0.5, 0.04, rkW, [0, 1.9, 0]), cyl(0.02, 0.03, 1.3, rkG, [0, 2.65, 0])]);
+    // Rocas facetadas basálticas y eyecta clara junto a la salida
+    const sol = (d: B.Vector3, up: number, yaw: number, s = 1) => B.Matrix.ComposeToRef(new B.Vector3(s, s, s), B.Quaternion.FromUnitVectorsToRef(Y, d, new B.Quaternion()).multiply(B.Quaternion.RotationAxis(Y, yaw)), d.scale(radiusAt(d) + up * s).addInPlace(CENTER), new B.Matrix());
+    const dk = template("moonDecoRock", () => [poly("dr", 2, 0.55, 0.45, 0.5, pbr("moonDecoRock", { color: "#1a1b1e", rough: 0.9 }))]);
+    const pl = template("moonDecoPale", () => [poly("dp", 2, 0.5, 0.3, 0.42, pbr("moonDecoPale", { color: "#d0d4dc", rough: 0.8, emissive: "#222428" }))]);
     const put = (t: B.Mesh, x: number, z: number, s: number, yaw: number, up: number) => { const m = t.createInstance("deco"), d = new B.Vector3(x / MOON.R, 1, z / MOON.R).normalize(); m.isPickable = false; m.receiveShadows = true; sol(d, up, yaw, s).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position); };
     for (const [x, z, s, y] of [[-9, 5, 2.4, 0.4], [11.5, 8, 2.8, 2], [-12.5, 14, 3, 4], [14, 20, 3.4, 1], [-17, 8, 3.2, 3], [-5, 8, 1.5, 1.3]] as const) put(dk, x, z, s, y, 0.15);
     for (const [x, z, s, y] of [[-7.2, 4, 1.2, 1], [-10.5, 7, 0.9, 2], [9.2, 6.2, 1.2, 3], [13.4, 10, 0.9, 5], [-10.5, 13, 1.1, 0], [-14.5, 16, 0.9, 2], [12.5, 18, 1.1, 4], [-14, 5, 1, 1], [8, 11, 0.8, 2], [-3.8, 5.5, 0.7, 2], [-5.8, 6.2, 0.9, 0.5], [-2.6, 10.5, 0.6, 3]] as const) put(pl, x, z, s, y, 0.1);
-    for (const [cx, cz, r] of [[9, 14, 5.5], [-7, 6, 4.5]] as const) { // bordes de cráter iluminados: anillo de piedras pálidas con el piso interior oscuro
+    for (const [cx, cz, r] of [[9, 14, 5.5], [-7, 6, 4.5]] as const) {
       const g = B.MeshBuilder.CreateGround("decoPool", { width: 2, height: 2 }, scene), dd = new B.Vector3(cx / MOON.R, 1, cz / MOON.R).normalize(); g.material = bm; g.isPickable = false;
       g.rotationQuaternion = B.Quaternion.FromUnitVectorsToRef(Y, dd, new B.Quaternion()); g.scaling.set(r * 0.8, 1, r * 0.6); g.position.copyFrom(dd).scaleInPlace(radiusAt(dd) + 0.05).addInPlace(CENTER);
       for (let i = 0; i < 12; i++) { const an = i * 0.52 + cx; put(pl, cx + Math.cos(an) * r * 1.1, cz + Math.sin(an) * r * 0.8, 0.8 + (i % 3) * 0.4, i, 0.1); }
     }
-    put(rocket, 7.6, 3.5, 1.8, 0.5, 0); put(tower, -7, 11, 1.5, 0.3, 0);
   }
   gr = grFis;
-  for (const [c, n] of [["#a8954a", 70], ["#7d6b35", 55]] as const) { // mata seca: 4 hojas finas abiertas en abanico
-    const mat = pbr("moonScrub" + c, { color: c, rough: 0.9 }), leaves = [0, 1, 2, 3].map((k) => { const l = poly("hoja", 1, 0.03, 0.22, 0.03, mat); l.scaling.set(1, 1, 1); l.position.set(Math.cos(k * 1.57) * 0.1, 0.2, Math.sin(k * 1.57) * 0.1); l.rotation.set(Math.sin(k * 1.57) * 0.5, 0, -Math.cos(k * 1.57) * 0.5); return l; });
-    const t = B.Mesh.MergeMeshes(leaves, true, true)!; t.name = "moonScrub" + c; t.material = mat;
-    thin(t, low ? n >> 1 : n, 0.5, () => { const s = 0.8 + gr() * 1.0; return new B.Vector3(s, s * (0.8 + gr() * 0.6), s); }, 0);
-  }
-  const bigMat = pbr("moonBigRock", { color: "#b5452f", rough: 0.75 });
+  const bigMat = pbr("moonBigRock", { color: "#303338", rough: 0.8 });
   const bigTpl = [template("moonFacetA", () => [poly("fa", 2, 0.55, 0.42, 0.5, bigMat)]), template("moonFacetB", () => [poly("fb", 1, 0.6, 0.5, 0.55, bigMat)])];
-  for (let i = 0; i < 8; i++) { // 1-3 de tamaño, con el mismo colisionador esférico que las mesetas
+  for (let i = 0; i < 8; i++) {
     const d = ground(0.6), sz = (1 + gr() * 2) * 1.6, k: Rock = { m: bigTpl[i % 2].createInstance("rocaF"), d, sz, body: null! }, m = k.m;
     seat(k); m.scaling.set(sz, sz * 0.9, sz);
     m.rotationQuaternion = B.Quaternion.FromUnitVectorsToRef(Y, d, new B.Quaternion()).multiply(B.Quaternion.RotationAxis(Y, gr() * 6.3));
     k.body = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: 0, radius: sz * 0.5, friction: 0.5 }, scene).body;
     rocks.push(k); m.receiveShadows = true;
-  }
-  // Kit neón del lado oscuro (ref147/ref52/ref33b): neumáticos en hilera, bloques, chevrons, arcos, torres de luz y contenedores, solo en el hemisferio sin Sol
-  // y alrededor del punto de llegada de las variantes "oscuro" (encore.ts). Semilla propia (no gasta rng()); sin colisión, como los cactus.
-  // ponytail: decorativo sin colisionador; si hace falta chocar con ellos, sumar un SPHERE estático como en las mesetas.
-  const kr = rngFrom(0x4e0a1c), glowM = (c: string) => { const m = pbr("moonKit" + c, { color: c, rough: 0.4, emissive: c }); m.fogEnabled = false; return m; };
-  const kk = (c: string, r = 0.7, metal = 0) => pbr("moonKit" + c + r, { color: c, rough: r, metal });
-  const [gM, gC, gY] = [glowM("#ff2fb4"), glowM("#20e0ff"), glowM("#ffd23a")], steel = kk("#3c4048", 0.55, 0.4), conc = kk("#4a4d56", 0.85), tire = kk("#16181d", 0.8);
-  const hazY = kk("#e0a91c", 0.7), hazK = kk("#181a1e", 0.7), red = kk("#d8362b", 0.6), white = kk("#e9e6e0", 0.6);
-  const gl = (w: number, h: number, d: number, m: B.Material, pos: [number, number, number], rot?: [number, number, number]) => rbox(w, h, d, 0.02, m, pos, rot);
-  const chev = (x: number, m: B.Material) => [gl(0.7, 0.17, 0.05, m, [x, 0.24, 0.1], [0, 0, -0.85]), gl(0.7, 0.17, 0.05, m, [x, -0.24, 0.1], [0, 0, 0.85])];
-  const kit = {
-    tires: template("kitTires", () => [rbox(5.4, 0.3, 1.5, 0.06, conc, [0, 0.15, 0]), gl(5, 0.06, 0.08, gM, [0, 0.12, 0.78]), gl(5, 0.06, 0.08, gC, [0, 0.12, -0.78]),
-      ...[0, 1, 2, 3].flatMap((i) => [0, 1, 2].map((k) => cyl(0.95, 0.95, 0.4, tire, [-1.9 + i * 1.27, 0.5 + k * 0.4, 0]))), ...[0, 1, 2, 3].map((i) => cyl(0.55, 0.55, 0.04, i % 2 ? gC : gM, [-1.9 + i * 1.27, 1.72, 0])), gl(0.22, 0.22, 0.22, gM, [2.5, 0.41, 0.6])]),
-    jerseyR: template("kitJerseyR", () => [0, 1, 2, 3].map((i) => rbox(1.15, 0.75, 0.5, 0.07, i % 2 ? white : red, [-1.8 + i * 1.2, 0.38, 0])).concat([gl(4.6, 0.05, 0.05, gC, [0, 0.8, 0.27]), gl(0.2, 0.2, 0.2, gM, [2.3, 0.85, 0])])),
-    jerseyY: template("kitJerseyY", () => [0, 1, 2, 3, 4, 5].map((i) => rbox(0.78, 0.75, 0.5, 0.07, i % 2 ? hazK : hazY, [-2 + i * 0.8, 0.38, 0])).concat([gl(0.2, 0.2, 0.2, gC, [-2.2, 0.85, 0])])),
-    chevron: template("kitChevron", () => [rbox(0.22, 2.1, 0.22, 0.04, steel, [-1.5, 1.05, 0]), rbox(0.22, 2.1, 0.22, 0.04, steel, [1.5, 1.05, 0]), rbox(3.2, 1.35, 0.14, 0.05, steel, [0, 1.55, 0]), gl(3.0, 0.05, 0.03, gM, [0, 2.2, 0.09]), gl(3.0, 0.05, 0.03, gM, [0, 0.9, 0.09]),
-      ...chev(-0.8, gC).map((m) => { m.position.y += 1.55; return m; }), ...chev(0, gC).map((m) => { m.position.y += 1.55; return m; }), ...chev(0.8, gM).map((m) => { m.position.y += 1.55; return m; }),
-      rbox(1.3, 0.75, 0.9, 0.07, hazY, [-1.3, 0.38, 0]), rbox(1.3, 0.75, 0.9, 0.07, hazK, [1.3, 0.38, 0])]),
-    arch: template("kitArch", () => [rbox(0.6, 3.6, 0.6, 0.06, steel, [-2.6, 1.8, 0]), rbox(0.6, 3.6, 0.6, 0.06, steel, [2.6, 1.8, 0]), rbox(6.0, 0.6, 0.6, 0.06, steel, [0, 3.7, 0]),
-      gl(5, 0.14, 0.14, gM, [0, 3.7, 0.34]), gl(5, 0.14, 0.14, gM, [0, 3.7, -0.34]), gl(0.1, 3.0, 0.1, gM, [-2.25, 1.9, 0.2]), gl(0.1, 3.0, 0.1, gM, [2.25, 1.9, 0.2]), gl(0.1, 3.0, 0.1, gM, [-2.25, 1.9, -0.2]), gl(0.1, 3.0, 0.1, gM, [2.25, 1.9, -0.2]),
-      rbox(1.2, 0.7, 1.0, 0.07, hazY, [-2.6, 0.35, 0.9]), rbox(1.2, 0.7, 1.0, 0.07, hazK, [2.6, 0.35, 0.9]), gl(0.22, 0.22, 0.22, gC, [-2.6, 0.82, 0.9]), gl(0.22, 0.22, 0.22, gM, [2.6, 0.82, 0.9])]),
-    tower: template("kitTower", () => [rbox(1.0, 0.8, 1.0, 0.07, steel, [0, 0.4, 0]), gl(0.5, 0.12, 0.05, gC, [0, 0.55, 0.52]), cyl(0.2, 0.3, 7, steel, [0, 4.3, 0]), rbox(2.0, 0.28, 0.7, 0.06, steel, [0, 7.9, 0]), gl(1.8, 0.1, 0.55, gC, [0, 7.72, 0]), gl(1.8, 0.06, 0.06, gM, [0, 7.4, 0.3])]),
-    box: [["#2a4a8a", gM], ["#a8322e", gC], ["#c9a227", gM]].map(([c, g], i) => template("kitBox" + i, () => [rbox(4.4, 1.9, 1.9, 0.08, kk(c as string, 0.65), [0, 0.95, 0]), ...[-1.7, -0.85, 0, 0.85, 1.7].map((x) => rbox(0.1, 1.8, 2.0, 0.02, steel, [x, 0.95, 0])), gl(4.2, 0.06, 0.06, g as B.Material, [0, 1.92, 0.96])])),
-    bollard: template("kitBollard", () => [rbox(0.34, 0.55, 0.34, 0.05, steel, [0, 0.28, 0]), gl(0.24, 0.24, 0.24, gC, [0, 0.67, 0])]),
-  };
-  const DC = DARK_DIR, dk1 = B.Vector3.Cross(DC, Y).normalize(), dk2 = B.Vector3.Cross(DC, dk1);
-  const arcPos = (w: number, a: number) => { const t = w / MOON.R; return DC.scale(Math.cos(t)).addInPlace(dk1.scale(Math.cos(a) * Math.sin(t))).addInPlace(dk2.scale(Math.sin(a) * Math.sin(t))); };
-  // Franjas de luz bajo arcos/chevrons y charcos oscuros brillantes (ref147/ref290: asfalto mojado que devuelve el neón); misma pose que el kit, sin colisión
-  const dimM = (c: string) => { const m = pbr("moonStrip" + c, { color: "#000000", rough: 0.5, emissive: c }); m.fogEnabled = false; return m; };
-  const pudM = pbr("moonPuddle", { color: "#04050a", rough: 0.05, metal: 0.2, emissive: "#c040f0" }), pudC = pbr("moonPuddleC", { color: "#04050a", rough: 0.05, metal: 0.2, emissive: "#20d0f0" });
-  const poolM = pbr("moonPool", { color: "#000000", rough: 0.5, emissive: "#e4eeff" }); poolM.fogEnabled = false; // pozo de luz fría de farola
-  const strip = (nm: string, c: string, w: number, d: number) => template(nm, () => [rbox(w, 0.02, d, 0.01, dimM(c), [0, 0.03, 0])]);
-  const pool = template("kitPool", () => [cyl(1, 1, 0.02, poolM, [0, 0.03, 0])]), pud = template("kitPud", () => [cyl(1, 1, 0.03, pudM, [0, 0.02, 0])]), pudB = template("kitPudC", () => [cyl(1, 1, 0.03, pudC, [0, 0.02, 0])]);
-  const put = (tpl: ReturnType<typeof template>, n: number, w0: number, w1: number, up = 0, extra?: (d: B.Vector3, yaw: number, up: number) => void) => {
-    for (let i = 0; i < n; i++) {
-      const d = arcPos(w0 + kr() * (w1 - w0), kr() * 6.3), yaw = kr() * 6.3, ht = heightAt(d);
-      if (B.Vector3.Dot(d, SUN_DIR) > -0.1 || ht < -0.5 || MOON.R * Math.acos(d.y) < 14) continue; // solo lado oscuro, fuera de cráteres hondos y lejos de la salida
-      const m = tpl.createInstance("kit"); m.isPickable = false; m.receiveShadows = true;
-      sol(d, up, yaw).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position);
-      extra?.(d, yaw, up);
-    }
-  };
-  const under = (tpl: ReturnType<typeof template>, sx: number, sz: number) => (d: B.Vector3, yaw: number, up: number) => { // franja + charco delante del arco/chevron
-    const f = tpl.createInstance("kitStrip"); f.isPickable = false; sol(d, up, yaw).decompose(f.scaling, (f.rotationQuaternion = new B.Quaternion()), f.position);
-    const p = (kr() < 0.5 ? pud : pudB).createInstance("kitPuddle"); p.isPickable = false;
-    sol(d, up, yaw).decompose(p.scaling, (p.rotationQuaternion = new B.Quaternion()), p.position); p.scaling.set(sx * (1 + kr()), 1, sz * (1 + kr()));
-    p.position.addInPlace(B.Vector3.TransformNormal(new B.Vector3(kr() * 2 - 1, 0, 1.8 + kr()), sol(d, up, yaw)));
-  };
-  const lowK = low ? 0.6 : 1;
-  put(kit.tires, 8 * lowK, 11, 45); put(kit.jerseyR, 6 * lowK, 10, 45); put(kit.jerseyY, 6 * lowK, 10, 45); put(kit.chevron, 4 * lowK, 14, 50, 0, under(strip("kitStripM", "#ff30c0", 5.4, 4.2), 1.4, 0.9)); put(kit.arch, 3 * lowK, 16, 50, 0, under(strip("kitStripC", "#20e0ff", 8.4, 4.8), 1.8, 1.1)); put(kit.bollard, 30 * lowK, 9, 50); put(kit.box[0], 3 * lowK, 24, 55); // cluster cerca de la llegada
-  put(kit.tires, 14 * lowK, 11, 90); put(kit.jerseyR, 12 * lowK, 10, 90); put(kit.jerseyY, 12 * lowK, 10, 90); put(kit.chevron, 9 * lowK, 14, 100, 0, under(strip("kitStripM", "#ff30c0", 5.4, 4.2), 1.4, 0.9)); put(kit.arch, 7 * lowK, 16, 100, 0, under(strip("kitStripC", "#20e0ff", 8.4, 4.8), 1.8, 1.1));
-  put(pud, 40 * lowK, 9, 110); put(pudB, 30 * lowK, 9, 110); // charcos sueltos
-  put(kit.tower, 9 * lowK, 22, 120, 0, (d, yaw, up) => { const f = pool.createInstance("kitPool"); f.isPickable = false; sol(d, up, yaw).decompose(f.scaling, (f.rotationQuaternion = new B.Quaternion()), f.position); f.scaling.set(5.5, 1, 5.5); }); put(kit.tower, 5 * lowK, 14, 40, 0, (d, yaw, up) => { const f = pool.createInstance("kitPool"); f.isPickable = false; sol(d, up, yaw).decompose(f.scaling, (f.rotationQuaternion = new B.Quaternion()), f.position); f.scaling.set(5.5, 1, 5.5); }); for (const b of kit.box) put(b, 5 * lowK, 24, 110); put(kit.bollard, 60 * lowK, 9, 100);
-  // ---- Kit de referencia ref290 (semilla propia, sin rng()): DÍA = arco de roca pasable, toldo con mesa y cajas, huellas de rueda; NOCHE = grúa pórtico, pilas altas y túnel de contenedores.
-  // Solo en su lado (día dot > 0,1; noche dot < -0,1). Colisión únicamente en pilares y paredes (cajas ocultas / esferas estáticas, con la pose puesta antes del cuerpo).
-  const gp = (x: number, z: number) => new B.Vector3(x / MOON.R, 1, z / MOON.R).normalize(); // punto del suelo a x, z metros de la salida (como los bordillos)
-  const yawFor = (d: B.Vector3, h: B.Vector3) => { const q = B.Quaternion.FromUnitVectorsToRef(Y, d, new B.Quaternion()); return Math.atan2(B.Vector3.Dot(h, B.Vector3.Right().applyRotationQuaternion(q)), B.Vector3.Dot(h, B.Vector3.Forward().applyRotationQuaternion(q))); };
-  const spawnAt = (tpl: ReturnType<typeof template>, d: B.Vector3, yaw: number, s = 1) => { const m = tpl.createInstance("kit"); m.isPickable = false; m.receiveShadows = true; sol(d, 0, yaw, s).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position); return m; };
-  const wall = (d: B.Vector3, yaw: number, w: number, h: number, l: number, ox: number, oz: number) => { // colisionador de caja oculto, pose antes del PhysicsAggregate
-    const b = B.MeshBuilder.CreateBox("kitWall", { width: w, height: h, depth: l }, scene), M = sol(d, 0, yaw);
-    b.isVisible = false; b.isPickable = false; b.position = B.Vector3.TransformCoordinates(new B.Vector3(ox, h / 2, oz), M); M.decompose(undefined, (b.rotationQuaternion = new B.Quaternion()));
-    new B.PhysicsAggregate(b, B.PhysicsShapeType.BOX, { mass: 0, friction: 0.5 }, scene);
-  };
-  const dayAt = (d: B.Vector3) => B.Vector3.Dot(d, SUN_DIR) > 0.1 && heightAt(d) > -0.5, nightAt = (d: B.Vector3) => B.Vector3.Dot(d, SUN_DIR) < -0.1 && heightAt(d) > -0.5;
-  {
-    const tm = pbr("moonTrack", { color: "#8a5230", rough: 1 }), track = template("moonTrack", () => [rbox(0.24, 0.03, 1.0, 0, tm, [0, 0.015, 0])]);
-    const lona = pbr("moonLona", { color: "#7e8f94", rough: 0.9 }), wd = kk("#7a5230", 0.8), crY = kk("#d9a62a", 0.65), crB = kk("#2a5db0", 0.65), crR = kk("#c8402e", 0.65);
-    const toldo = template("moonToldo", () => [...[-2, 2].flatMap((x) => [-1.4, 1.4].map((z) => cyl(0.12, 0.12, 2.4, wd, [x, 1.2, z]))), rbox(4.8, 0.07, 2.2, 0.03, lona, [0, 2.6, -0.98], [-0.2, 0, 0]), rbox(4.8, 0.07, 2.2, 0.03, lona, [0, 2.6, 0.98], [0.2, 0, 0]),
-      rbox(2.2, 0.1, 0.9, 0.03, wd, [0, 0.9, -0.3]), ...[-1, 1].flatMap((x) => [-0.6, 0].map((z) => cyl(0.08, 0.08, 0.9, wd, [x, 0.45, z]))), rbox(0.45, 0.3, 0.4, 0.04, crR, [0.5, 1.1, -0.3]), cyl(0.28, 0.28, 0.3, crB, [-0.5, 1.1, -0.3]),
-      rbox(0.7, 0.6, 0.7, 0.05, crY, [1.5, 0.3, 0.4]), rbox(0.6, 0.5, 0.6, 0.05, crB, [-1.5, 0.25, 0.5]), rbox(0.5, 0.5, 0.5, 0.05, crY, [-1.5, 0.75, 0.5]), cyl(0.5, 0.5, 0.8, crB, [-1.0, 0.4, -1.1]), rbox(0.6, 0.6, 0.6, 0.05, crR, [1.2, 0.3, -1.1])]);
-    const pil = template("moonPillar", () => [rbox(1.0, 0.5, 0.95, 0.08, sR, [0, 0.13, 0]), rbox(0.9, 0.4, 0.9, 0.08, sC, [0, 0.58, 0]), rbox(0.95, 0.5, 0.95, 0.08, sO, [0, 1.03, 0])]);
-    const lintel = template("moonLintel", () => [rbox(4.2, 0.55, 1.0, 0.1, sO, [0, 0, 0]), rbox(3.6, 0.3, 0.9, 0.08, sC, [0, 0.4, 0]), rbox(2.6, 0.3, 0.8, 0.08, sR, [0, 0.66, 0]), rbox(0.7, 0.4, 0.9, 0.08, sR, [-1.75, -0.45, 0], [0, 0, 0.5]), rbox(0.7, 0.4, 0.9, 0.08, sR, [1.75, -0.45, 0], [0, 0, -0.5])]);
-    // huellas de rueda: dos hileras de rayas que serpentean desde la salida, bajo el arco y hasta el toldo
-    for (let z = 3; z < 50; z += 1.5) for (const sx of [-0.7, 0.7]) {
-      const cx = 2.5 * Math.sin(z / 10), d = gp(cx + sx, z);
-      if (dayAt(d)) spawnAt(track, d, Math.atan(0.25 * Math.cos(z / 10)));
-    }
-    const ad = gp(0, 48), ay = 0, sz = 2.4; // arco de roca: dos pilares con colisión y un dintel sin ella; el auto pasa por el hueco de ~4,5 m
-    if (dayAt(ad)) {
-      for (const sx of [-1.45, 1.45]) {
-        const d = gp(sx * sz, 48), k: Rock = { m: pil.createInstance("pilar"), d, sz, body: null! }, m = k.m;
-        seat(k); m.scaling.setAll(sz); m.rotationQuaternion = B.Quaternion.FromUnitVectorsToRef(Y, d, new B.Quaternion()).multiply(B.Quaternion.RotationAxis(Y, ay));
-        k.body = new B.PhysicsAggregate(m, B.PhysicsShapeType.SPHERE, { mass: 0, radius: sz * 0.5, friction: 0.5 }, scene).body; rocks.push(k); m.receiveShadows = true; m.isPickable = false;
-      }
-      const m = lintel.createInstance("dintel"); m.isPickable = false; m.receiveShadows = true; sol(ad, 1.58, ay, sz).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position);
-    }
-    const td = gp(-17, 30); if (dayAt(td)) spawnAt(toldo, td, 0.5, 1.5);
-  }
-  {
-    const orange = pbr("moonCraneOr", { color: "#e8791c", rough: 0.55, emissive: "#4a2208" }), gW = glowM("#fff3c0"), gR = glowM("#ff3a2a"), dark = kk("#23262c", 0.7);
-    const crane = template("kitCrane", () => [...[-4.2, 4.2].flatMap((x) => [-2.4, 2.4].map((z) => rbox(0.7, 8, 0.7, 0.06, orange, [x, 4, z]))), ...[-4.2, 4.2].map((x) => rbox(0.6, 0.4, 5.4, 0.05, dark, [x, 0.3, 0])), ...[-4.2, 4.2].map((x) => rbox(0.8, 0.8, 5.8, 0.06, orange, [x, 8.2, 0])),
-      ...[-2.4, 2.4].map((z) => rbox(9.6, 0.7, 0.8, 0.06, orange, [0, 8.2, z])), rbox(1.0, 0.9, 17, 0.06, orange, [0, 9.2, 4.5]), ...[0, 1, 2, 3, 4, 5, 6].map((i) => rbox(1.06, 0.3, 0.25, 0.02, white, [0, 9.2, -3.4 + i * 2.4])),
-      rbox(2.4, 1.4, 2.6, 0.08, orange, [0, 10.4, -1.8]), rbox(1.8, 1.2, 2, 0.07, steel, [0, 8.1, 7]), gl(1.2, 0.3, 0.05, gC, [0, 8.2, 8.02]), rbox(0.1, 3.6, 0.1, 0.01, dark, [0, 6.2, 7]), rbox(2.6, 0.3, 1.0, 0.04, steel, [0, 4.2, 7]),
-      ...[-4.2, 4.2].flatMap((x) => [-2.4, 2.4].map((z) => gl(0.45, 0.3, 0.45, gW, [x, 8.75, z]))), gl(4, 0.15, 0.15, gW, [0, 9.0, -3.2]), gl(0.35, 0.35, 0.35, gR, [0, 9.8, 13]), gl(0.35, 0.35, 0.35, gR, [0, 11.3, -3]), gl(0.1, 2.0, 0.1, gY, [-4.2, 5, 2.8]), gl(0.1, 2.0, 0.1, gY, [4.2, 5, 2.8])]);
-    const cols = ["#b8322a", "#2a4a8a", "#c9a227", "#2e7a5a", "#d8d2c4", "#a8322e", "#3a6a9a"], dim = (c: string) => "#" + [1, 3, 5].map((k) => Math.round(parseInt(c.slice(k, k + 2), 16) * 0.22).toString(16).padStart(2, "0")).join(""), cont = (i: number) => { const c = cols[i % cols.length]; return pbr("moonKitC" + c, { color: c, rough: 0.65, emissive: dim(c) }); }; // brillo propio tenue: sin él las pilas se pierden en el negro (ref290: contenedores bien leídos de noche)
-    const stack = (n: number, off: number) => template("kitStack" + n + off, () => [0, 1].flatMap((c) => Array.from({ length: n }, (_, l) => { const x = (((c * 5 + l * 3 + off) % 5) - 2) * 0.12; return [rbox(4.4, 1.9, 1.9, 0.08, cont(c * 3 + l + off), [x, 0.95 + l * 1.9, c * 2.0]), ...[-1.7, 0, 1.7].map((r) => rbox(0.1, 1.8, 2.0, 0.02, steel, [x + r, 0.95 + l * 1.9, c * 2.0]))]; }).flat()));
-    const tun = template("kitTunnel", () => [-1, 1].flatMap((sx) => [rbox(1.9, 3.8, 6, 0.08, cont(sx > 0 ? 4 : 0), [sx * 2.95, 1.9, 0]), ...[-2.5, -0.8, 0.9, 2.6].map((z) => rbox(2.0, 3.7, 0.1, 0.02, steel, [sx * 2.95, 1.9, z])), gl(0.08, 0.1, 5.8, gM, [sx * 1.97, 0.5, 0]), gl(0.08, 0.1, 5.8, gM, [sx * 1.97, 3.4, 0]), gl(0.12, 3.8, 0.12, gM, [sx * 2.0, 1.9, 3.1]), gl(0.12, 3.8, 0.12, gM, [sx * 2.0, 1.9, -3.1])])
-      .concat([rbox(7.8, 0.5, 6.2, 0.08, steel, [0, 4.05, 0]), gl(0.1, 0.1, 5.8, gC, [-1.0, 3.75, 0]), gl(0.1, 0.1, 5.8, gC, [1.0, 3.75, 0]), gl(4.2, 0.12, 0.12, gM, [0, 3.78, 3.1]), gl(4.2, 0.12, 0.12, gM, [0, 3.78, -3.1])]));
-    const DC2 = DARK_DIR, fwd = (d: B.Vector3) => SUN_DIR.subtract(d.scale(B.Vector3.Dot(SUN_DIR, d))).normalize(); // hacia donde mira el auto al llegar (hacia el Sol)
-    const t0 = fwd(DC2), a0 = Math.atan2(B.Vector3.Dot(t0, dk2), B.Vector3.Dot(t0, dk1));
-    const night = (tpl: ReturnType<typeof template>, w: number, a: number, yawAdd = 0) => { const d = arcPos(w, a0 + a); if (nightAt(d)) { spawnAt(tpl, d, yawFor(d, fwd(d)) + yawAdd); return d; } return null; };
-    const td = arcPos(20, a0), ty = yawFor(td, fwd(td)); // túnel de contenedores justo delante del auto, abierto en su sentido de marcha; paredes con colisión
-    if (nightAt(td)) { spawnAt(tun, td, ty); for (const sx of [-2.95, 2.95]) wall(td, ty, 1.9, 3.8, 6, sx, 0); }
-    // grúas pórtico (de lado, vistas desde la ruta) y pilas altas al fondo (3-5 contenedores de alto)
-    for (const [w, a, ya] of [[44, 0.28, 1.57], [58, -0.35, 1.57], [70, 0.05, 1.57]] as const) { const d = night(crane, w, a, ya); if (d) { const yw = yawFor(d, fwd(d)) + ya; for (const sx of [-4.2, 4.2]) for (const sz2 of [-2.4, 2.4]) wall(d, yw, 0.8, 8, 0.8, sx, sz2); } }
-    let si = 0;
-    for (let i = 0; i < 26; i++) { const w = 34 + kr() * 48, a = (kr() * 2 - 1) * 0.9; if (Math.abs(a) < 0.12 && w < 40) continue; night(stack(3 + (si % 3), si % 5), w, a, (kr() - 0.5) * 0.9 + (si % 2 ? 1.57 : 0)); si++; }
-  }
-  // Contraste de la noche: faroles ámbar de juguete con pozo de luz cálida en el piso y rocas basálticas casi negras (siluetas) alrededor de la llegada.
-  // Semilla propia (lr), instancias de 3 plantillas fusionadas, sin colisión. ponytail: decorativo; si hace falta chocar, sumar SPHERE estático como las mesetas.
-  {
-    const lr = rngFrom(0x1a3b5c), amber = glowM("#ffb347"), basalt = pbr("moonBasalt", { color: "#0c0d11", rough: 0.9 });
-    // Pozo de luz: degradé radial ámbar (alfa 0,55 al centro, 0 en el borde), aditivo; textura nueva por armado, la anterior se libera
-    const warmPool = (scene.getMaterialByName("moonWarmPoolMat") as B.StandardMaterial | null) ?? new B.StandardMaterial("moonWarmPoolMat", scene);
-    warmPool.emissiveTexture?.dispose();
-    const wt = new B.DynamicTexture("moonWarmTex", 64, scene, false), wc = wt.getContext() as unknown as CanvasRenderingContext2D, wg = wc.createRadialGradient(32, 32, 0, 32, 32, 32);
-    wg.addColorStop(0, "rgba(255,205,120,1)"); wg.addColorStop(0.5, "rgba(255,160,64,0.55)"); wg.addColorStop(1, "rgba(255,140,50,0)"); wc.fillStyle = wg; wc.fillRect(0, 0, 64, 64); wt.update(); wt.hasAlpha = true;
-    warmPool.emissiveTexture = warmPool.opacityTexture = wt; warmPool.diffuseColor = B.Color3.Black(); warmPool.specularColor = B.Color3.Black(); warmPool.disableLighting = true; warmPool.alphaMode = B.Constants.ALPHA_ADD; warmPool.fogEnabled = false; warmPool.backFaceCulling = false;
-    const lampPool = B.MeshBuilder.CreateGround("kitLampPool", { width: 2, height: 2 }, scene); lampPool.material = warmPool; lampPool.isVisible = false; lampPool.isPickable = false; // base de las instancias; radio 1 m
-    const lamp = template("kitLamp", () => [cyl(0.07, 0.1, 1.5, steel, [0, 0.75, 0]), sph(0.34, amber, [0, 1.65, 0], undefined, 5)]);
-    const rockB = template("moonBasalt", () => [poly("ba", 2, 0.6, 0.5, 0.55, basalt)]);
-    const place = (tpl: ReturnType<typeof template>, n: number, w0: number, w1: number, scale: (i: number) => number, pool = 0) => {
-      for (let i = 0; i < n; i++) {
-        const d = arcPos(w0 + lr() * (w1 - w0), lr() * 6.3), yaw = lr() * 6.3, s = scale(i);
-        if (B.Vector3.Dot(d, SUN_DIR) > -0.1 || heightAt(d) < -0.5 || MOON.R * Math.acos(d.y) < 12) continue;
-        const m = tpl.createInstance("kit"); m.isPickable = false; m.receiveShadows = true;
-        sol(d, 0, yaw, s).decompose(m.scaling, (m.rotationQuaternion = new B.Quaternion()), m.position);
-        if (pool) { const f = lampPool.createInstance("kitLampPool"); f.isPickable = false; sol(d, 0.05, yaw).decompose(f.scaling, (f.rotationQuaternion = new B.Quaternion()), f.position); f.scaling.set(pool, 1, pool); }
-      }
-    };
-    place(lamp, 34 * lowK, 6, 38, () => 1.5, 2.8); // farol 1,5x; pozo de radio 2,8 m (más grande se leía como lava)
-    place(rockB, 65 * lowK, 22, 55, () => 1.2 + lr() * 1.6); // lejos de la salida: cerca de la cámara angosta del celular tapaban el piso y bajaban la luminancia
-    // Acentos claros puntuales: rocas de ceniza pálida (lilas) que atrapan la luz de los neones y rompen el suelo oscuro
-    const ash = template("moonAsh", () => [poly("as", 1, 0.5, 0.4, 0.45, pbr("moonAsh", { color: "#b8b0d0", rough: 0.8, emissive: "#4a4470" }))]);
-    place(ash, 90, 4, 26, () => 0.5 + lr() * 0.9); // sin lowK: en celular son el acento que sostiene el contraste
   }
   // Cielo: estrellas fijas en el mundo (al dar la vuelta a la luna, giran), Tierra, Sol y una estrella fugaz de vez en cuando.
   // Todo dentro de la esfera del cielo de render.ts (radio 600, infiniteDistance): más lejos lo taparía
@@ -701,70 +520,27 @@ export function moonBuild(s: B.Scene, low: boolean) {
   const ring = B.MeshBuilder.CreateTorus("saturnRing", { diameter: 84, thickness: 22, tessellation: 48 }, scene), rm = skyMat("saturnRingMat");
   rm.emissiveColor = B.Color3.FromHexString("#b9a27a"); rm.diffuseColor = B.Color3.Black(); rm.alpha = 0.75;
   ring.material = rm; ring.scaling.y = 0.04; ring.parent = sat; ring.isPickable = false; ring.applyFog = false; ring.alwaysSelectAsActiveMesh = true;
-  // Ciudad de juguete en el horizonte (solo de noche): una caja con thin instances en anillo, sin luz ni niebla ni colisión.
-  // Color de pared por instancia (vColor tiñe el difuso con disableLighting); ventanitas = textura emisiva. moonTick la orienta al "arriba" del auto.
-  city = B.MeshBuilder.CreateBox("moonCity", { size: 1 }, scene);
-  const cM = skyMat("moonCityMat"); cM.diffuseColor = B.Color3.White(); cM.backFaceCulling = true;
-  cM.emissiveTexture ??= canvasTex(64, (c, z) => {
-    c.fillStyle = "#000"; c.fillRect(0, 0, z, z);
-    for (let y = 3; y < z - 6; y += 10) for (let x = 3; x < z - 5; x += 8) if (Math.random() < 0.6) { c.fillStyle = ["#ffd27a", "#FBC02D", "#FB8C00", "#fff3d6", "#7af0ff"][(x * 3 + y) % 5]; c.fillRect(x, y, 5, 6); } // ventanas grandes y cálidas: se leen a 470 m
-  });
-  cM.emissiveTexture.level = 1.8;
-  city.material = cM;
-  const nc = low ? 40 : 70, cmat = new Float32Array(nc * 16), ccol = new Float32Array(nc * 4), WALL = ["#3a1f5c", "#1f3a5c", "#5c1f3f", "#2a2a48", "#4a2350"];
-  for (let i = 0; i < nc; i++) {
-    const a = (i / nc) * Math.PI * 2 + nr() * 0.05, h = 10 + nr() * 12, w = 7 + nr() * 6; // base en 0: moonTick la baja al borde de la luna según la cámara
-    B.Matrix.ComposeToRef(new B.Vector3(w, h, w), B.Quaternion.RotationAxis(Y, -a), new B.Vector3(Math.cos(a) * 470, h / 2, Math.sin(a) * 470), mx).copyToArray(cmat, i * 16);
-    const wc = B.Color3.FromHexString(WALL[i % WALL.length]); ccol.set([wc.r, wc.g, wc.b, 1], i * 4);
-  }
-  city.thinInstanceSetBuffer("matrix", cmat, 16, true); city.thinInstanceSetBuffer("color", ccol, 4, true);
-  city.rotationQuaternion = new B.Quaternion(); city.infiniteDistance = true; city.alwaysSelectAsActiveMesh = true; city.isPickable = false; city.applyFog = false;
   shoot = B.MeshBuilder.CreateLines("shoot", { points: [shootA, shootB], colors: [new B.Color4(1, 1, 1, 1), new B.Color4(0.6, 0.8, 1, 0)], updatable: true, useVertexAlpha: true }, scene);
   shoot.infiniteDistance = true; shoot.alwaysSelectAsActiveMesh = true; shoot.isPickable = false; shoot.applyFog = false; shoot.isVisible = false;
   if (shoot.material) shoot.material.fogEnabled = false;
 }
 
-// ---------- Cada cuadro: niebla según el lado (sol / sombra) y estrellas fugaces ----------
-const FOG_LIT = B.Color3.FromHexString("#f2b27a"), FOG_DARK = B.Color3.FromHexString("#0c0a1c"); // día: desierto cálido; noche: azul-violeta neón
-const NIGHT_TINT = new B.Color3(0.2, 0.22, 0.26); // asfalto mojado oscuro (ref33b, medios ~#1c1f26)
-const SKY_NIGHT = ["#5a1a8a", "#14082a", "#04020a", "#010004"], NEON_FLOOR = B.Color3.FromHexString("#060709"); // emisivo lineal: con exposición y tonemap #0a0612 pintaba todo el piso lavanda (~90 % del violeta)
+// ---------- Cada cuadro: vacío cósmico, estrellas nítidas y estrellas fugaces ----------
+const FOG_SPACE = new B.Color3(0.005, 0.005, 0.01);
+const SKY_SPACE: [string, string, string, string] = ["#000003", "#010206", "#03040a", "#000002"];
 let fadeT = 0;
-const nightBase = new Map<B.Light, { base: number; set: number }>();
 export function moonTick(dt: number, car: B.Vector3, cam: B.Camera) {
-  // Lado del Sol: niebla rala y gris; del otro lado, cerrada y negra (de los bichos se ven las luces)
-  const s = B.Scalar.Clamp(B.Vector3.Dot(dirOf(car), SUN_DIR) * 1.6 + 0.35, 0, 1);
-  scene.fogDensity = B.Scalar.Lerp(0.02, 0.0022, s); // día: poca niebla para que se lean estratos y cactus (0,006 lavaba todo a durazno)
-  neonK = 1 - s; for (const n of neon) n.visibility = neonK; stars.visibility = neonK; // neón y estrellas solo de noche
-  B.Color3.LerpToRef(FOG_DARK, FOG_LIT, s, scene.fogColor);
-  skyBlend(SKY_NIGHT, LUNA_CLIMATE.sky, s); // cielo: violeta profundo de noche, crepúsculo cálido de día
-  // Sol y hemisferio siguen pintando cálido rocas y mesetas: de noche se bajan (base = lo que dejó applyClimate)
-  for (const L of [scene.getLightByName("sun"), scene.getLightByName("hemi")]) {
-    if (!L) continue;
-    const b = nightBase.get(L); if (!b || L.intensity !== b.set) nightBase.set(L, { base: L.intensity, set: L.intensity });
-    const nb = nightBase.get(L)!; nb.set = L.intensity = nb.base * (1 - neonK * (L.name === "sun" ? 0.7 : 0.85)); // luna más dura, casi sin relleno ambiente (contraste de noche)
-  }
-  city.visibility = neonK; city.isVisible = neonK > 0.02;
-  if (city.isVisible) {
-    const up = dirOf(cam.globalPosition), dip = Math.acos(Math.min(1, MOON.R / Math.max(MOON.R, B.Vector3.Distance(cam.globalPosition, CENTER)))); // "arriba" y caída del borde vistos desde la cámara (no el auto: con la cámara alta difieren ~15°)
-    B.Quaternion.FromUnitVectorsToRef(Y, up, city.rotationQuaternion!);
-    city.scaling.set(Math.cos(dip), 1, Math.cos(dip)); // el anillo queda a 470 m sobre la visual del borde (dentro del maxZ)
-    city.position.copyFrom(up).scaleInPlace(-470 * Math.sin(dip) - 6); // base al ras del borde (el relieve tapa el pie): skyline chico con cualquier cámara
-  }
-  // "Reflejo" del neón en el suelo: solo un emisivo magenta tenue (costo cero; un espejo/SSR duplicaría el render)
-  B.Color3.LerpToRef(B.Color3.BlackReadOnly, NEON_FLOOR, neonK, groundM.emissiveColor);
-  // Piso de asfalto mojado de noche (ref33b): se cambia la textura al cruzar al lado oscuro (una recompilación) y el tinte frío compensa el color cálido de los vértices
-  if (curbW) (curbW as B.PBRMaterial).emissiveColor.set(0.35 * neonK, 0.35 * neonK, 0.38 * neonK);
-  if (!fillL) { fillL = new B.PointLight("moonFill", B.Vector3.Zero(), scene); fillL.diffuse = new B.Color3(0.45, 0.65, 1); fillL.range = 18; }
-  fillL.setEnabled(neonK > 0.02); fillL.intensity = 40 * neonK; fillL.position.copyFrom(car).addInPlace(dirOf(car).scale(5));
-  const night = neonK > 0.5;
-  if (night !== wasNight) { wasNight = night; soilTex ??= groundM.albedoTexture; groundM.albedoTexture = night ? asphalt! : soilTex; groundM.roughness = night ? 0.3 : 0.85; groundM.environmentIntensity = night ? 0.9 : 1; groundM.detailMap.diffuseBlendLevel = night ? 0.15 : 0.72; }
-  B.Color3.LerpToRef(new B.Color3(1, 1, 1), NIGHT_TINT, neonK, groundM.albedoColor);
+  // Vacío del espacio: sin dispersión atmosférica, cielo negro cósmico y estrellas visibles en todo ángulo
+  scene.fogDensity = 0.0001;
+  scene.fogColor.copyFrom(FOG_SPACE);
+  if (stars) stars.visibility = 1;
+  skyBlend(SKY_SPACE, LUNA_CLIMATE.sky, 1);
   // Estrella fugaz: cada 3-9 s cruza una parte del cielo que la cámara ve
   if ((shootT -= dt) <= 0 && shootLife <= 0) {
     shootT = 3 + Math.random() * 6; shootLife = 0.7;
     const f = cam.getDirection(B.Axis.Z), r = cam.getDirection(B.Axis.X), u = cam.getDirection(B.Axis.Y);
     shootA.copyFrom(f).addInPlace(u.scale(0.25 + Math.random() * 0.25)).addInPlace(r.scale((Math.random() - 0.5) * 1.2)).normalize();
-    shootB.copyFrom(r).scaleInPlace(Math.random() < 0.5 ? -1 : 1).addInPlace(u.scale(-0.4)).normalize(); // hacia dónde va
+    shootB.copyFrom(r).scaleInPlace(Math.random() < 0.5 ? -1 : 1).addInPlace(u.scale(-0.4)).normalize();
   }
   if (shootLife > 0) {
     shootLife -= dt;
@@ -823,9 +599,9 @@ export function enemyLights(node: B.AbstractMesh, kind: string, size: [number, n
   shadows.removeShadowCaster(t);
   const m = t.createInstance("luces");
   m.parent = node; m.position.setAll(0); m.isPickable = false;
-  m.scaling.setAll(1 / (node.scaling.x || 1)); // jefes GLB escalados (glb.ts): las luces van en metros reales
+  m.scaling.setAll(1 / (node.scaling.x || 1));
   return m;
 }
 
-/** Clima fijo de la luna (la niebla la ajusta moonTick cada cuadro). */
-export const LUNA_CLIMATE = { id: "luna", name: "LUNA", sun: [-SUN_DIR.x, -SUN_DIR.y, -SUN_DIR.z] as [number, number, number], sunColor: "#ffe2b0", sunI: 8, hemiI: 0.08, sky: ["#4a90d9", "#8cc0ee", "#f6dcb0", "#c9a070"] as [string, string, string, string], exposure: 1.55, fog: 0.02, day: true, ramp: ["#2a1630", "#b8613a", "#fff3d6"] as [string, string, string], amb: "#9aa6d8", ground: "#a85a3a" } satisfies Climate & { amb: string; ground: string };
+/** Clima auténtico de la luna: sol blanco directo y cosmos negro sin atmósfera ni neón. */
+export const LUNA_CLIMATE = { id: "luna", name: "LUNA", sun: [-SUN_DIR.x, -SUN_DIR.y, -SUN_DIR.z] as [number, number, number], sunColor: "#ffffff", sunI: 7.2, hemiI: 0.04, sky: ["#000003", "#010206", "#03040a", "#000002"] as [string, string, string, string], exposure: 1.35, fog: 0.0001, day: true, ramp: ["#040507", "#44474e", "#d0d4dc"] as [string, string, string], amb: "#808898", ground: "#686c72" } satisfies Climate & { amb: string; ground: string };

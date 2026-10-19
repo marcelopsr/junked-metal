@@ -8,6 +8,7 @@ import { BAL, xpNeed } from "./balance";
 import { debris, FX } from "./fx";
 import * as E from "./encore";
 import { erun, encPrior } from "./encore_run"; import { goalBlips } from "./moon_goals";
+import { getVortexPosition } from "./world_progression";
 import { MOON, hd, rel, yawOf } from "./moon";
 import type { PassiveId, Weapon } from "./weapons";
 import type { Player } from "./coop";
@@ -42,9 +43,14 @@ let hudT = 0, hudSlotF = 0, lastKmh = 0, lastMaxKmh = 80;
 export const setKmh = (k: number, max: number) => { lastKmh = k; lastMaxKmh = max; };
 export function updateHud(dt: number) {
   if (!c.low || (hudSlotF++ & 1) === 0) hudSlots(c.weapons.map((w) => ({ id: w.id, lv: w.lv, evolved: w.evolved, cd: w.cdFrac })), (Object.entries(run.passives) as [PassiveId, number][]).map(([id, lv]) => ({ id, lv })));
-  // Flechas hacia jefes y cofres fuera de pantalla
+  // Flechas hacia jefes, cofres y vórtices dimensionales fuera de pantalla
   const W = c.engine.getRenderWidth(), H = c.engine.getRenderHeight(), k = innerWidth / W, out: { x: number; y: number; kind: "jefe" | "cofre"; dist?: number }[] = [];
-  const targets: [B.Vector3, "jefe" | "cofre"][] = [...c.enemies.filter((e) => e.def.boss).map((e) => [e.pos, "jefe"] as [B.Vector3, "jefe"]), ...c.pickups.filter((p) => p.type === "cofre").map((p) => [p.m.position, "cofre"] as [B.Vector3, "cofre"])];
+  const vPos = getVortexPosition();
+  const targets: [B.Vector3, "jefe" | "cofre"][] = [
+    ...c.enemies.filter((e) => e.def.boss).map((e) => [e.pos, "jefe"] as [B.Vector3, "jefe"]),
+    ...c.pickups.filter((p) => p.type === "cofre").map((p) => [p.m.position, "cofre"] as [B.Vector3, "cofre"]),
+    ...(vPos ? [[vPos, "cofre"] as [B.Vector3, "jefe" | "cofre"]] : []),
+  ];
   for (const [p, kind] of targets) {
     const sp = c.toScreen(p);
     let x = sp.x, y = sp.y;
@@ -58,11 +64,13 @@ export function updateHud(dt: number) {
   const xz = MOON.on ? (p: B.Vector3) => rel(p, c.lead.car!.pos) : (p: B.Vector3) => ({ x: p.x, z: p.z });
   const gemBlips = c.gems.length <= 40 ? c.gems.map((g) => ({ ...xz(g.m.position), kind: "gema" as const })) : [];
   const recBlips = c.pickups.length <= 24 ? c.pickups.filter((p) => p.type !== "cofre").map((p) => ({ ...xz(p.m.position), kind: "rec" as const })) : [];
+  const vortexBlip = vPos ? [{ ...xz(vPos), kind: "obj" as const }] : [];
   hudRadar(
     MOON.on ? { x: 0, z: 0, yaw: yawOf(c.lead.car!.root.forward, c.lead.car!.pos), up: c.camYaw } : { x: c.lead.car!.pos.x, z: c.lead.car!.pos.z, yaw: Math.atan2(c.lead.car!.root.forward.x, c.lead.car!.root.forward.z), up: c.camYaw },
     [...c.enemies.map((e) => ({ ...xz(e.pos), kind: e.def.boss ? ("jefe" as const) : e.elite ? ("elite" as const) : ("enemigo" as const) })),
      ...c.pickups.filter((p) => p.type === "cofre").map((p) => ({ ...xz(p.m.position), kind: "cofre" as const })),
      ...(MOON.on || erun ? goalBlips().map((p) => ({ ...xz(p), kind: "obj" as const })) : []),
+     ...vortexBlip,
      ...gemBlips, ...recBlips]);
   // Daño visible: pintura gastada y piezas que saltan al cruzar 50% y 25%
   const frac = Math.max(0, c.lead.hp / c.lead.maxHp);

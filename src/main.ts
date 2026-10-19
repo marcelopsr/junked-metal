@@ -30,7 +30,7 @@ import { PILOTS, pilotStats, setPactCount, startWeapons } from "./pilots";
 import { ACH, type AchId } from "./achievements";
 import { applyClimate, gfxInfo, glitchHit, PRESETS as PRESETS_DEV, presetOf, look, M, pbr, setDark, setLamp, setSplit, setupRender, shadows, G } from "./render";
 import { escapeReset, evoOffer, fuse, LIVE, levelOffers, makeWeapon, mountFor, passiveStats, setScoop, WEAPONS, type Ctx, type Offer, type PassiveId, type PStats, type Weapon, type WeaponId } from "./weapons";
-import { setDrawDist, buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, heavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick } from "./world";
+import { setDrawDist, buildLayout, floorAt, HALF, initWorld, hitBreakables, hitHeavyProps, heavyProps, obstacles, occluders, setWind, setZone, showWorld, spawnPoint, underRoof, worldReady, ZONES, zoneClimate, zoneDust, zoneId, zoneTick, type ZoneId } from "./world";
 import { CLIMATES, DUSK, ESCAPE_WIN, FINAL_WIN, makeProfile, mixClimate, nightfall, RAIN, danoRecibido, type Profile } from "./run";
 import { newSeed, rng, seedRng } from "./rng";
 import { daily as fetchDaily, weekly as fetchWeekly, track, type Msg, type Net } from "./net";
@@ -48,6 +48,7 @@ import { hitShip, SHIP_IO, SHIP_NAME, shipBar, shipFor, shipsClear, shipSpawn, s
 import { alignYaw, alt, at, deform, moonCar, teleport, EARTH_DIR, enemyLights, flatL, FOOT, ROLL, grav, hd, hflat, initMoon, LUNA, MOON, moonTick, onFloor, orient, rad, rel, ringAt, setMoon, skyVisible, SUN_DIR, toLocal, upAt, upv, W, advance, yawOf, below } from "./moon";
 import * as E from "./encore";
 import { initEncoreRun, erun, encPrior, paceS, pfx, dirq, encExtra, encG, encLog, setErun, setEncPrior, encClear, encRecompute, encApply, encSecrets, encPick, votes, encVote, encPlan, encScene, minorShip, minorMini, moonPlace, carPlace, tip, say, calmFirst, zoneMagnet } from "./encore_run";
+import { initWorldProgression, startWorldProgression, clearWorldProgression, tickWorldProgression } from "./world_progression";
 import { COOP, chestsLeft, chestsOpened, shopAt, shopDev, goalBar, goalBlips, goalForce, goalsClear, goalStats, goalsTick, GOAL_IO, rocketForce, rocketLand, shopPlan, shopReset, spotsPlan } from "./moon_goals";
 import { skyClear, skyInfo, skyLaunch, skyPace, skyTick } from "./moon_sky";
 import { aplicarRegla } from "./weekly";
@@ -226,6 +227,7 @@ function clearRun() {
   ghostStop(); roam.on = false; roam.extra = roam.air = 0; roam.slow = 1; libreSlow = newSlow(); libreNuts?.dispose(); libreNuts = null; hudLibreOff();
   Object.assign(run, freshRun()); resetDrive();
   mateClear();
+  clearWorldProgression();
   encClear(); GOAL_IO.tele = false; GOAL_IO.half = 0;
   setMoon(false); // la luna se enciende solo en una partida de Supervivencia en la luna (startRun)
   evReset(); // luna: meteoritos, erupciones, tinte rojo y ambiente (moon_events.ts)
@@ -283,7 +285,12 @@ function startRun(d = false) {
   if (MOON.on) profile.rainAt = Infinity; // en la luna no llueve
   cycleS = -1;
   buildLayout();
-  RUN_BOSSES = [[R.jefe1_s, profile.minis[0]], [R.jefe2_s, profile.minis[1]], [R.jefe_final_s, MOON.on ? "gusano" : profile.final]]; // luna: el jefe final es el gusano lunar (moon_worm.ts)
+  if (!encore && !daily) {
+    startWorldProgression(run.runSeed, (zoneId in ZONES ? zoneId : "patio") as ZoneId, profile.final);
+    RUN_BOSSES = [[170, profile.minis[0]], [400, profile.minis[1]], [575, profile.final]];
+  } else {
+    RUN_BOSSES = [[R.jefe1_s, profile.minis[0]], [R.jefe2_s, profile.minis[1]], [R.jefe_final_s, MOON.on ? "gusano" : profile.final]]; // luna: el jefe final es el gusano lunar (moon_worm.ts)
+  }
   run.finalKind = RUN_BOSSES[RUN_BOSSES.length - 1][1]; // jefe final: vencerlo gana la partida
   // ponytail: maldiciones ocultas por ahora (decisión del usuario); volver a `daily ? [] : save.curses` y mostrar #curseBtn para reactivarlas
   const curses: typeof save.curses = [];
@@ -620,6 +627,31 @@ initHudTick({
   get lastHpFrac() { return lastHpFrac; }, setLastHpFrac: (f) => (lastHpFrac = f),
   toScreen: (p) => toScreen(p),
 });
+initWorldProgression({
+  scene,
+  getCar: () => lead.car,
+  getEnemies: () => enemies,
+  setEnemies: (e) => { enemies = e; },
+  getWeapons: () => weapons,
+  getProfile: () => profile,
+  applyClimate: (c) => applyClimate(c),
+  zoneClimate: () => zoneClimate(),
+  isSimulating: () => simulating,
+  isErun: () => Boolean(erun),
+  isLibre: () => libre,
+  isLab: () => LAB.on,
+  camReset: () => { camYaw = 0; camReset(); },
+  clearSpits: () => { for (const sp of spits) sp.m.dispose(); spits = []; },
+  clearGems: () => { for (const g of gems) g.m.dispose(); gems = []; },
+  clearPickups: () => { for (const p of pickups) p.m.dispose(); pickups = []; },
+  playWarpSfx: () => {
+    SFX.accept();
+    SFX.boss();
+    if (SPACE.rumble) SPACE.rumble(0, undefined, 1.5, 0.35);
+  },
+  banner: (t, s, o) => banner(t, s, o),
+  glitchHit: () => glitchHit(),
+});
 initOutro({
   save,
   get erun() { return erun; },
@@ -832,6 +864,7 @@ function update(dt: number) {
   tickSpawner(F, dt);
   if (tickEnemies(F, dt) || tickWeapons(F, dt) || tickPickups(F, dt)) return;
   tickYardEvents(F, dt);
+  tickWorldProgression(dt);
   tickVitals(F, dt);
 }
 
