@@ -1606,16 +1606,29 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
     - **Pulverización cuántica**: los enemigos comunes que tocan el centro del vórtice (`d < 2.5 m`) son desintegrados instantáneamente con destello cuántico `FX.warpJump`, sumando bajas (`run.kills++`), créditos de tornillos (`run.runScrap++`), soltando gemas de XP (`dropGems`) y emitiendo sonido de impacto (`SFX.hit()`), permitiendo al jugador utilizar el vórtice tácticamente como trampa masiva para despejar la horda.
     - Los jefes permanecen inmunes a la succión física.
     - La lógica física y de colisión se desacopló de la existencia de mallas visuales para mantener un funcionamiento idéntico en simulaciones headless (`npm run sim`).
+- **Anomalías Ambientales por Mundo (`src/world_progression.ts`, `src/run_drive.ts`, `src/main.ts`, `src/moon.ts`):**
+  - Implementadas condiciones y peligros ambientales dinámicos por bioma con avisos diegéticos en HUD:
+    - **Luna (Mundo 3) · Lluvia de Micrometeoritos en Tiempo Real:**
+      - Al saltar a la Luna, se emite el banner diegético: `RADAR · MICROMETEORITOS ACTIVOS · EVITE ZONAS DE IMPACTO`.
+      - Durante la estancia lunar (entre `t = startTime + 10` y `vortexTime - 4`), impactan micrometeoritos periódicamente cada 4.5–7.5 segundos en un radio de 6 a 32 metros alrededor del auto.
+      - **Deformación física del terreno en vivo:** cada impacto invoca `deform(pos, r, depth)` sobre la esfera lunar de Havok, hundiendo la geometría analítica del suelo y recalculando los vértices de colisión locales (`remesh`), alterando los desniveles y creando hoyos físicos permanentes.
+      - **Efectos y daño:** el meteorito genera cráteres humeantes (`craterHumeante()`), escombros incandescentes (`debris()`), una sacudida sísmica de cámara (`addShake(0.8)`), inflige daño de 120 puntos a enemigos en un radio de 5.5 metros y sacude o daña al auto con 22 de daño si se encuentra a menos de 2.8 metros del impacto.
+    - **Ciudad e Industrial · Asfalto Resbaladizo:**
+      - Banner de alerta de telemetría: `TELEMETRÍA · ASFALTO RESBALADIZO · TRACCIÓN DISMINUIDA`.
+      - El factor de fricción/agarre se reduce a `0.65` en `src/run_drive.ts`, incrementando la inercia lateral y multiplicando la fluidez y alcance de los derrapes.
+    - **Bosque · Ráfagas de Viento Cruzado:**
+      - Banner diegético: `BARÓMETRO · RÁFAGAS DE VIENTO · FUERZA CRUZADA EN EL CHASIS`.
+      - Ráfagas oscilantes basadas en ondas sinusoidales compuestas en `src/run_drive.ts` que ejercen un empuje lateral continuo sobre el cuerpo del auto, exigiendo correcciones de dirección al maniobrar.
 - **Validación con evidencia:**
   - `npx tsc --noEmit -p .` (0 errores).
-  - `npm test`: 40 suites / 273 pruebas unitarias pasando (100%).
+  - `npm test`: 40 suites / 274 pruebas unitarias pasando (100%).
   - `npm run sim -- --seeds 1,2 --secs 180` (100% determinista, 0 atascos).
-  - `npm run build`: bundle de producción Vite completado en 897 ms.
-  - `graphify update .`: grafo de conocimiento sincronizado con 7957 nodos y 20502 aristas.
+  - `npm run build`: bundle de producción Vite completado exitosamente.
+  - `graphify update .`: grafo de conocimiento sincronizado con 7957 nodos y 20506 aristas.
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Succión Gravitatoria del Vórtice y Pulverización Cuántica de Enemigos Comunes en los últimos 10s (2026-10-19).
+- **Último trabajo completado:** Anomalías Ambientales por Mundo: Micrometeoritos que deforman cráteres en la Luna, Asfalto Resbaladizo en Ciudad y Vientos Cruzados en Bosque (2026-10-19).
 - **Invariantes activas:** Metodología E2E, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

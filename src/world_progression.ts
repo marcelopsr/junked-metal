@@ -1,6 +1,6 @@
 import * as B from "@babylonjs/core";
 import { ZONES, type ZoneId, setZone, spawnPoint } from "./world";
-import { MOON, setMoon, hd, ringAt, teleport, hflat } from "./moon";
+import { MOON, setMoon, hd, ringAt, teleport, hflat, deform } from "./moon";
 import { run } from "./run_state";
 import { Car } from "./car";
 import type { Kind } from "./enemies";
@@ -94,6 +94,9 @@ export interface WorldProgressionContext {
   readonly setZone?: (zoneId: ZoneId, rebuild?: boolean) => void;
   readonly moonAmbience?: (on: boolean) => void;
   readonly onEnemyPulverized?: (pos: B.Vector3, xp: number) => void;
+  readonly hurtCar?: (dmg: number, src: string) => void;
+  readonly damageEnemies?: (pos: B.Vector3, radius: number, dmg: number) => void;
+  readonly meteorImpactFx?: (pos: B.Vector3) => void;
 }
 
 let ctx!: WorldProgressionContext;
@@ -107,6 +110,7 @@ let vortexBeam: B.Mesh | null = null;
 let vortexPos: B.Vector3 | null = null;
 let vortexAlertGiven = false;
 let jumpInProgress = false;
+let meteorTimer = 3.0;
 
 /** Inicia la progresión de saltos de mundo para la partida actual. */
 export function startWorldProgression(seed: number, startZone: ZoneId, bossKind: Kind) {
@@ -115,6 +119,7 @@ export function startWorldProgression(seed: number, startZone: ZoneId, bossKind:
   currentStageIdx = 0;
   vortexAlertGiven = false;
   jumpInProgress = false;
+  meteorTimer = 3.0;
 }
 
 /** Limpia recursos de la progresión (vórtice, mallas, estado). */
@@ -124,6 +129,7 @@ export function clearWorldProgression() {
   vortexPos = null;
   vortexAlertGiven = false;
   jumpInProgress = false;
+  meteorTimer = 3.0;
   if (currentStages[currentStageIdx]?.zoneId === "luna" || MOON.on) {
     setMoon(false);
     ctx?.moonAmbience?.(false);
@@ -228,16 +234,20 @@ export function executeWorldJump(nextStageIdx: number, proactive = false) {
   if (car) {
     if (isNowMoon) {
       car.pos.set(0, MOON.R + 1.2, 0);
-      car.root.position.copyFrom(car.pos);
-      car.root.rotationQuaternion = B.Quaternion.Identity();
+      if (car.root) {
+        car.root.position.copyFrom(car.pos);
+        car.root.rotationQuaternion = B.Quaternion.Identity();
+      }
     } else {
       car.pos.set(0, 1.2, 0);
-      car.root.position.copyFrom(car.pos);
-      car.root.rotationQuaternion = B.Quaternion.Identity();
+      if (car.root) {
+        car.root.position.copyFrom(car.pos);
+        car.root.rotationQuaternion = B.Quaternion.Identity();
+      }
     }
-    car.body.setLinearVelocity(B.Vector3.Zero());
-    car.body.setAngularVelocity(B.Vector3.Zero());
-    teleport(car.body);
+    car.body?.setLinearVelocity?.(B.Vector3.Zero());
+    car.body?.setAngularVelocity?.(B.Vector3.Zero());
+    if (car.body && typeof (car.body as any).getPrestepType === "function") teleport(car.body);
     if (!ctx.isSimulating()) {
       ctx.warpFx?.(car.pos.clone());
     }
@@ -267,6 +277,16 @@ export function executeWorldJump(nextStageIdx: number, proactive = false) {
     ctx.banner(`SALTO DE MUNDO ${nextStage.jumpNum}/4 · ${nextStage.zoneName.toUpperCase()}`, 3.5, { tag: "VÓRTICE", ico: "jefe", tone: "now" });
   }
 
+  // Banners diegéticos de anomalías ambientales por mundo
+  if (nextStage.zoneId === "luna") {
+    ctx.banner("RADAR · MICROMETEORITOS ACTIVOS · CRÁTERES DINÁMICOS", 4, { tag: "ANOMALÍA", ico: "senal", tone: "warn" });
+  } else if (nextStage.zoneId === "ciudad" || nextStage.zoneId === "industrial") {
+    ctx.banner("TELEMETRÍA · ASFALTO RESBALADIZO · DERRAPE Y AGARRE REDUCIDO", 4, { tag: "ANOMALÍA", ico: "senal", tone: "warn" });
+  } else if (nextStage.zoneId === "bosque") {
+    ctx.banner("METEOROLOGÍA · RÁFAGAS DE VIENTO CRUZADO EN BOSQUE", 4, { tag: "ANOMALÍA", ico: "senal", tone: "warn" });
+  }
+
+  meteorTimer = 3.0;
   jumpInProgress = false;
 }
 
@@ -279,6 +299,26 @@ export function tickWorldProgression(dt: number) {
   const t = run.time;
   const car = ctx.getCar();
   if (!car) return;
+
+  // 1. Lluvia de micrometeoritos en la Luna (Anomalía Lunar activa)
+  if (stage.zoneId === "luna" && t >= stage.startTime + 10 && t <= stage.vortexTime - 4) {
+    meteorTimer -= dt;
+    if (meteorTimer <= 0) {
+      meteorTimer = 2.8 + Math.random() * 2.2;
+      const targetPos = ringAt(car.pos, Math.random() * Math.PI * 2, 6 + Math.random() * 16, 0);
+      deform(targetPos, 3.2, 0.75); // Deforma la superficie física y visual de la luna
+      ctx.damageEnemies?.(targetPos, 5.5, 60);
+
+      const carD = hd(car.pos, targetPos);
+      if (carD < 2.8) {
+        ctx.hurtCar?.(14, "meteorito");
+        ctx.addShake?.(0.65);
+      }
+      if (!ctx.isSimulating()) {
+        ctx.meteorImpactFx?.(targetPos);
+      }
+    }
+  }
 
   // 1. Abrir vórtice dimensional
   if (t >= stage.vortexTime && !vortexPos) {

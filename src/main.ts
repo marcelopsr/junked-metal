@@ -1,5 +1,5 @@
 import { tut, tutEnd, tutOffers, tutOn, tutStart } from "./tutorial";
-import { hudDesafio, hudAire, hudAviso, hudSpinBtn, hudLibreOff, hudMeta, hudTruco, hudTuercas } from "./ui";
+import { hudDesafio, hudAire, hudAviso, hudSpinBtn, hudLibreOff, hudMeta, hudTruco, hudTuercas, threatAt } from "./ui";
 import { BARRIO_LOGRO, BARRIO_NOMBRE, barrioCompleto, metasStep, type MetaEv } from "./free_goals";
 import { chObjetivo, chStep, chTruco, DESAFIOS, fmtMarca, fmtMs, medalla, MEDALLA, newCh, fantasmaAt, fantasmaDif, fantasmaDec, fantasmaEnc, fmtDif, FANTASMA_DT, type ChEvent, type Muestra } from "./free_challenges";
 import { controlMarks } from "./zones/libre_control";
@@ -678,6 +678,20 @@ initWorldProgression({
     run.kills++;
     run.runScrap += 1;
     SFX.hit();
+  },
+  hurtCar: (n, src) => hurt(n, false, src),
+  damageEnemies: (p, r, dmg) => {
+    for (const e of enemies) {
+      if (B.Vector3.Distance(e.pos, p) < r + e.radius) {
+        damage(e, dmg, e.pos.subtract(p).normalize().scale(6));
+      }
+    }
+  },
+  meteorImpactFx: (p) => {
+    craterHumeante(p, 3.2, true);
+    debris(p, "#7b7c80", 8, 9, 0.9);
+    FX.explosion(p, 2.0);
+    threatAt(p, 1.2);
   },
 });
 initOutro({

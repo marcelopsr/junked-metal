@@ -257,4 +257,66 @@ describe("Progresión de Saltos de Mundo (Supervivencia)", () => {
     // 3. El jefe debe seguir vivo en la lista
     expect(enemyList.some((e) => e.def.boss)).toBe(true);
   });
+
+  it("activa avisos de anomalías por mundo y genera micrometeoritos con cráteres en la Luna", async () => {
+    const { initWorldProgression, startWorldProgression, executeWorldJump, tickWorldProgression } = await import("../src/world_progression");
+    const { run } = await import("../src/run_state");
+    const B = await import("@babylonjs/core");
+
+    const bannerMock = vi.fn();
+    const damageMock = vi.fn();
+
+    const mockCar = {
+      pos: new B.Vector3(0, 0, 0),
+      root: { position: { copyFrom: vi.fn() }, rotationQuaternion: null },
+      body: {
+        getLinearVelocity: () => new B.Vector3(0, 0, 0),
+        setLinearVelocity: vi.fn(),
+        setAngularVelocity: vi.fn(),
+        getPrestepType: vi.fn(),
+        setPrestepType: vi.fn(),
+        transformNode: {},
+      },
+    };
+
+    initWorldProgression({
+      scene: { isDisposed: false } as any,
+      getCar: () => mockCar as any,
+      getEnemies: () => [],
+      setEnemies: vi.fn(),
+      getWeapons: () => [],
+      getProfile: () => ({ climate: {} } as any),
+      applyClimate: vi.fn(),
+      zoneClimate: () => undefined,
+      setZone: vi.fn(),
+      isSimulating: () => true,
+      isErun: () => false,
+      isLibre: () => false,
+      isLab: () => false,
+      camReset: vi.fn(),
+      clearSpits: vi.fn(),
+      clearGems: vi.fn(),
+      clearPickups: vi.fn(),
+      playWarpSfx: vi.fn(),
+      banner: bannerMock,
+      glitchHit: vi.fn(),
+      damageEnemies: damageMock,
+    });
+
+    startWorldProgression(1, "patio", "perro");
+
+    // Salto al Mundo 3 (Etapa 2: Luna)
+    executeWorldJump(2, true);
+    expect(bannerMock).toHaveBeenCalledWith(expect.stringContaining("MICROMETEORITOS"), expect.any(Number), expect.any(Object));
+
+    // Tiempo dentro del rango de lluvia de micrometeoritos en la luna (entre startTime+10 y vortexTime-4: ej. t = 260)
+    run.time = 260;
+    // Avanzar varios cuadros para que expire el meteorTimer
+    for (let i = 0; i < 40; i++) {
+      tickWorldProgression(0.1);
+    }
+
+    // Se debe haber ejecutado daño en área de meteoritos
+    expect(damageMock).toHaveBeenCalled();
+  });
 });

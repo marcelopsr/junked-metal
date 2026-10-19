@@ -164,6 +164,7 @@ export function tickDrive(F: Frame, dt: number) {
       let g = (input.drift ? R.derrape_agarre : c.def.grip) * (1 - (1 - RAIN.grip) * D.rainK);
       if (!input.drift && D.rainK > 0) g *= 1 + R.lluvia_control * (1 - D.rainK);
       if (roam.on && enHielo(c.pos.x, c.pos.z)) g *= R.libre_agarre_hielo; // lago congelado
+      if (zoneId === "ciudad" || zoneId === "industrial") g *= 0.65; // asfalto resbaladizo con aceite
       return g;
     })(),
   });
@@ -186,6 +187,10 @@ export function tickDrive(F: Frame, dt: number) {
   }
   if (D.yardPulseT > 0) D.yardPulseT = Math.max(0, D.yardPulseT - dt);
   { const zp = zoneTick(dt, c.pos, D.yardPulseT > 0); if (zp) c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(zp)); } // aspersores del jardín
+  if (zoneId === "bosque") {
+    const windPush = new B.Vector3(Math.cos(run.time * 0.8) * 2.5 * dt, 0, Math.sin(run.time * 0.4) * 1.2 * dt);
+    c.body.setLinearVelocity(c.body.getLinearVelocity().addInPlace(windPush));
+  }
   engineSfx(Math.min(1, Math.abs(r.fs) / (c.def.speed * R.turbo_vel)), throttle, boosting, input.drift, floorAt(c.pos.x, c.pos.z));
   if (c.kind === "helado" && (D.jingleT -= dt) <= 0) { SFX.jingle(); D.jingleT = 16; }
   run.runDist += Math.abs(r.fs) * dt;

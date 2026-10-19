@@ -188,6 +188,7 @@ let pe: B.PhysicsEngineV2, saved = new B.Vector3(0, -25, 0);
 let plugin: B.HavokPlugin;
 /** Lleva el cuerpo de Havok a la pose de su nodo (los cuerpos tienen disablePreStep: sin cambiar el tipo, setPhysicsBodyTransformation no hace nada). */
 export function teleport(b: B.PhysicsBody) {
+  if (!plugin || !b?.getPrestepType) return;
   const t = b.getPrestepType();
   b.setPrestepType(B.PhysicsPrestepType.TELEPORT);
   plugin.setPhysicsBodyTransformation(b, b.transformNode);
