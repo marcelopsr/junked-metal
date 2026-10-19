@@ -1590,16 +1590,24 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
     - Aparición de un Cofre Dimensional resplandeciente (`dropPickup(..., "cofre")`) 4.5 metros frente a la trompa del auto con estela cuántica `FX.warpJump`.
     - Banner diegético de telemetría: `¡ALIJO DIMENSIONAL OBTENIDO! · COFRE Y REPARACIÓN GANADOS` y fanfarria de audio (`SFX.cofre()`).
   - Si el salto es forzado por colapso del tiempo (`t >= stage.endTime`), se ejecuta como salto de emergencia sin el Alijo Dimensional.
+- **Acústica de Vacío Lunar y Estática de Telemetría 2.4 GHz (`src/audio/context.ts`, `src/audio/ambience.ts`, `src/audio/effects.ts`, `src/world.ts`, `src/world_progression.ts`, `src/main.ts`):**
+  - Implementado modelo acústico de vacío cósmico auténtico para la etapa de la Luna:
+    - Sin atmósfera, las ondas sonoras aéreas no se propagan; los sonidos se perciben únicamente por vibración y conducción ósea/mecánica a través del chasis metálico del vehículo RC.
+    - `fxLP` (pasabajos de efectos y colisiones) baja a 580 Hz al entrar a la Luna, transformando disparos, impactos y explosiones en golpes sordos y secos con resonancia interna de metal.
+    - `engLP` (nuevo nodo pasabajos dedicado al bus del motor en `context.ts`) filtra el motor a 680 Hz en la Luna, convirtiendo el chillido en un zumbido grave y mecánico que resuena dentro del chasis.
+    - Lecho de **estática de radio de 2.4 GHz y telemetría de cabina**: generador de ruido filtrado en paso de banda (3600 Hz, Q=1.2) con modulación suave de portadora (LFO 1.4 Hz) simulando el enlace RF espacial.
+    - Superficie de suelo `"regolito"` añadida a `Floor` y a `FLOORS` en efectos de sonido (`[180, 0.45, 0.012, 0.55]`), generando un rumor amortiguado de rodamiento sobre polvo lunar fino.
+    - Transición acústica automatizada y simétrica: activada al ingresar a la etapa lunar (Mundo 3), y restaurada limpiamente a 22.000 Hz (audio terrestre transparente) al saltar a la siguiente zona o al reiniciar la partida.
 - **Validación con evidencia:**
   - `npx tsc --noEmit -p .` (0 errores).
-  - `npm test`: 40 suites / 271 pruebas unitarias pasando (100%).
-  - `npm run sim -- --seeds 1,2 --secs 300` (100% determinista, 0 atascos).
-  - `npm run build`: bundle de producción Vite completado en 954 ms.
-  - `graphify update .`: grafo de conocimiento sincronizado con 7956 nodos y 20492 aristas.
+  - `npm test`: 40 suites / 272 pruebas unitarias pasando (100%).
+  - `npm run sim -- --seeds 1,2 --secs 180` (100% determinista, 0 atascos).
+  - `npm run build`: bundle de producción Vite completado en 948 ms.
+  - `graphify update .`: grafo de conocimiento sincronizado con 7957 nodos y 20495 aristas.
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Alijo Dimensional por Salto Proactivo (Cofre dimensional, reparación +40%, turbo al 100%, +60 tornillos y banner diegético) tras los 4 Saltos de Mundo con Luna Pura (2026-10-19).
+- **Último trabajo completado:** Acústica de Vacío Lunar (Filtro paso-bajo sordo en SFX a 580 Hz y motor a 680 Hz, estática de radio de 2.4 GHz en telemetría y piso de regolito) en la Odisea Multi-Mundo con Luna Pura (2026-10-19).
 - **Invariantes activas:** Metodología E2E, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

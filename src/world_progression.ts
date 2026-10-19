@@ -92,6 +92,7 @@ export interface WorldProgressionContext {
   readonly warpFlash?: () => void;
   readonly rewardProactiveJump?: () => void;
   readonly setZone?: (zoneId: ZoneId, rebuild?: boolean) => void;
+  readonly moonAmbience?: (on: boolean) => void;
 }
 
 let ctx!: WorldProgressionContext;
@@ -122,6 +123,10 @@ export function clearWorldProgression() {
   vortexPos = null;
   vortexAlertGiven = false;
   jumpInProgress = false;
+  if (currentStages[currentStageIdx]?.zoneId === "luna" || MOON.on) {
+    setMoon(false);
+    ctx?.moonAmbience?.(false);
+  }
   currentStages = [];
   currentStageIdx = 0;
 }
@@ -171,6 +176,7 @@ function createVortexEntity(pos: B.Vector3) {
 export function executeWorldJump(nextStageIdx: number, proactive = false) {
   if (jumpInProgress || nextStageIdx >= currentStages.length) return;
   jumpInProgress = true;
+  const prevStage = currentStages[currentStageIdx];
   const nextStage = currentStages[nextStageIdx];
   currentStageIdx = nextStageIdx;
 
@@ -197,11 +203,17 @@ export function executeWorldJump(nextStageIdx: number, proactive = false) {
   ctx.clearGems();
   ctx.clearPickups();
 
-  // Transición de física / luna (con microgravedad auténtica de 17.5 m/s² en la luna)
-  const wasMoon = MOON.on;
+  // Transición de física / luna (con microgravedad auténtica de 17.5 m/s² y acústica de vacío en la luna)
+  const wasMoon = prevStage ? prevStage.zoneId === "luna" : MOON.on;
   const isNowMoon = nextStage.zoneId === "luna";
-  if (wasMoon && !isNowMoon) setMoon(false);
-  if (!wasMoon && isNowMoon) setMoon(true, true);
+  if (wasMoon && !isNowMoon) {
+    setMoon(false);
+    ctx.moonAmbience?.(false);
+  }
+  if (!wasMoon && isNowMoon) {
+    setMoon(true, true);
+    ctx.moonAmbience?.(true);
+  }
 
   // Reconstruir el mundo con la nueva zona (preservando el auto del jugador)
   if (ctx.setZone) ctx.setZone(nextStage.zoneId, true);

@@ -66,6 +66,8 @@ const FLOORS: Record<string, [number, number, number, number]> = {
   tierra: [320, 0.5, 0.022, 0.8], // rumor grave
   baldosa: [2200, 1.4, 0.010, 1.05], // traqueteo fino
   cemento: [1500, 2.5, 0.008, 1.1], // siseo
+  regolito: [180, 0.45, 0.012, 0.55], // rumor apagado en vacío / polvo lunar
+  luna: [180, 0.45, 0.012, 0.55],
 };
 let steadyT = 0, avg = 0, lastThr = 0, lastT = 0;
 // Llamar cada frame: el tono sigue a la velocidad (poco), el volumen al acelerador y baja solo si nada cambia

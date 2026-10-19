@@ -1,5 +1,5 @@
 // Ambientes: lluvia, luna y escenarios ENCORE.
-import { ctx, fxBus, fxLP, noise, duck, onInit, onLevel } from "./context";
+import { ctx, fxBus, fxLP, engLP, noise, duck, onInit, onLevel } from "./context";
 // Lluvia: ruido filtrado en bucle por el canal de efectos (respeta volumen y mute); k 0..1, 0 = silencio
 let rainG: GainNode | null = null;
 export function rainSfx(k: number) {
@@ -21,15 +21,29 @@ let ambG: GainNode | null = null;
 export function moonAmbience(on: boolean) {
   if (!ctx) return;
   const t = ctx.currentTime;
-  fxLP.frequency.setTargetAtTime(on ? 2400 : 22000, t, 0.4);
+  // Vacío cósmico lunar: sin aire, las ondas sonoras no se propagan; los sonidos se transmiten por vibración del chasis (corte sordo a 580/680 Hz)
+  fxLP.frequency.setTargetAtTime(on ? 580 : 22000, t, 0.4);
+  engLP?.frequency.setTargetAtTime(on ? 680 : 22000, t, 0.4);
   if (on && !ambG) {
     ambG = ctx.createGain(); ambG.gain.value = 0; ambG.connect(fxBus);
     const mix = ctx.createGain(); mix.gain.value = 0.7; mix.connect(ambG);
+    // Subgrave cósmico: batido lento de resonancia estructural
     for (const [f, v] of [[41, 0.5], [41.8, 0.5], [82.3, 0.18], [123, 0.08]]) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = f; g.gain.value = v; o.connect(g).connect(mix); o.start(); } // dos senos casi iguales: el batido lento es el "zumbido"
     const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.08; lg.gain.value = 0.25; lfo.connect(lg).connect(mix.gain); lfo.start(); // respira cada ~12 s
     const n = ctx.createBufferSource(), lp = ctx.createBiquadFilter(), ng = ctx.createGain(); n.buffer = noise; n.loop = true; lp.type = "lowpass"; lp.frequency.value = 90; ng.gain.value = 0.4; n.connect(lp).connect(ng).connect(mix); n.start();
+    // Estática de radio y telemetría de 2.4 GHz en cabina/receptor RC
+    const rf = ctx.createBufferSource(), rfb = ctx.createBiquadFilter(), rfg = ctx.createGain();
+    rf.buffer = noise; rf.loop = true;
+    rfb.type = "bandpass"; rfb.frequency.value = 3600; rfb.Q.value = 1.2;
+    rfg.gain.value = 0.032;
+    const rfLfo = ctx.createOscillator(), rfLfoG = ctx.createGain();
+    rfLfo.frequency.value = 1.4; rfLfoG.gain.value = 0.012;
+    rfLfo.connect(rfLfoG).connect(rfg.gain);
+    rfLfo.start();
+    rf.connect(rfb).connect(rfg).connect(mix);
+    rf.start();
   }
-  ambG?.gain.setTargetAtTime(on ? 0.1 : 0, t, on ? 1.5 : 0.4);
+  ambG?.gain.setTargetAtTime(on ? 0.12 : 0, t, on ? 1.5 : 0.4);
 }
 // Ambiente propio de cada escenario ENCORE (zona + variante): zumbido de utilería, viento, grillos y estática de show, en bucle por el canal de efectos
 // (respeta volumen de efectos y ?mute). Al cambiar de id, crossfade de 2 s; null o pausa lo apagan.

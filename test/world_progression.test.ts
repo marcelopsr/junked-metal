@@ -130,4 +130,47 @@ describe("Progresión de Saltos de Mundo (Supervivencia)", () => {
     expect(rewardMock).toHaveBeenCalledTimes(1);
     expect(bannerMock).toHaveBeenCalledWith(expect.stringContaining("COLAPSO"), expect.any(Number), expect.any(Object));
   });
+
+  it("activa la acústica lunar moonAmbience(true) al entrar a la Luna y la apaga al salir", async () => {
+    const { initWorldProgression, startWorldProgression, executeWorldJump, clearWorldProgression } = await import("../src/world_progression");
+    const moonAmbienceMock = vi.fn();
+    initWorldProgression({
+      scene: {} as any,
+      getCar: () => null,
+      getEnemies: () => [],
+      setEnemies: vi.fn(),
+      getWeapons: () => [],
+      getProfile: () => ({ climate: {} } as any),
+      applyClimate: vi.fn(),
+      zoneClimate: () => undefined,
+      setZone: vi.fn(),
+      isSimulating: () => true,
+      isErun: () => false,
+      isLibre: () => false,
+      isLab: () => false,
+      camReset: vi.fn(),
+      clearSpits: vi.fn(),
+      clearGems: vi.fn(),
+      clearPickups: vi.fn(),
+      playWarpSfx: vi.fn(),
+      banner: vi.fn(),
+      glitchHit: vi.fn(),
+      moonAmbience: moonAmbienceMock,
+    });
+
+    startWorldProgression(10, "patio", "perro");
+    // Etapa 2 es la Luna
+    executeWorldJump(2, true);
+    expect(moonAmbienceMock).toHaveBeenCalledWith(true);
+
+    // Salto a Etapa 3 (fuera de la Luna)
+    executeWorldJump(3, true);
+    expect(moonAmbienceMock).toHaveBeenCalledWith(false);
+
+    // Volver a entrar a la luna y resetear progresión
+    executeWorldJump(2, true);
+    expect(moonAmbienceMock).toHaveBeenCalledWith(true);
+    clearWorldProgression();
+    expect(moonAmbienceMock).toHaveBeenCalledWith(false);
+  });
 });

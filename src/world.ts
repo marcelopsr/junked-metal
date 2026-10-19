@@ -91,12 +91,13 @@ let erunNow: () => unknown = () => null;
 void import("./encore_run").then((m) => { erunNow = () => m.erun; });
 export const zoneClimate = () => Z.climate ?? (erunNow() ? ENCORE_DUSK : undefined); // ENCORE: atardecer cálido fijo en las zonas sin luz propia (patio, jardín, galpón, desván, pileta); la luna y la cocina traen la suya
 /** Piso bajo un punto (ruido de ruedas en sfx.ts). Copia a mano los decals de cada build: si se mueven, actualizar acá. */
-export type Floor = "pasto" | "baldosa" | "tierra" | "cemento";
+export type Floor = "pasto" | "baldosa" | "tierra" | "cemento" | "regolito";
 export function floorAt(x: number, z: number): Floor {
   if (zoneId === "garaje" || zoneId === "galpon") return "cemento";
   if (zoneId === "desvan" || zoneId === "cocina") return "baldosa"; // tablones: el sonido de madera/baldosa, sin tierra ni pasto
   if (zoneId === "pileta") return x > PIT.x0 && x < PIT.x1 && Math.abs(z) < PIT.z1 ? "baldosa" : "tierra"; // azulejo dentro del pozo, cemento en la explanada
-  if (zoneId === "luna" || zoneId === "bosque" || zoneId === "nieve") return "tierra";
+  if (zoneId === "luna") return "regolito";
+  if (zoneId === "bosque" || zoneId === "nieve") return "tierra";
   if (zoneId === "ciudad" || zoneId === "industrial" || zoneId === "libre") return "cemento";
   if (zoneId === "jardin") return z < -HALF + 16 || Math.abs(x - 12) < 4 ? "baldosa" : "pasto"; // vereda y camino de lajas
   if (Math.abs(x) < 24 && Math.abs(z + 30) < 17) return "baldosa";
