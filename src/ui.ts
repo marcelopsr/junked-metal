@@ -740,6 +740,33 @@ function drawRadar() {
   g.restore();
 }
 
+// ---------- Telemetría de Vórtice Dimensional (cuenta regresiva, distancia y destino) ----------
+export function hudVortex(info: { timeLeft: number; totalTime: number; distance: number; nextZoneName: string; isUrgent: boolean; jumpNum?: number } | null) {
+  const vEl = $("vortexTelem");
+  if (!vEl) return;
+  if (!info) {
+    if (ch("vxOn", 0)) vEl.classList.add("hidden");
+    return;
+  }
+  if (ch("vxOn", 1)) vEl.classList.remove("hidden");
+  if (ch("vxUrg", +info.isUrgent)) vEl.classList.toggle("urgent", info.isUrgent);
+
+  const tS = `${info.timeLeft.toFixed(1)} S`;
+  txt("vxTimer", tS);
+
+  const pct = Math.max(0, Math.min(100, (info.timeLeft / Math.max(0.1, info.totalTime)) * 100));
+  const pctRound = Math.round(pct * 10) / 10;
+  if (ch("vxBar", pctRound)) {
+    const barEl = $("vxBar");
+    if (barEl) barEl.style.width = `${pctRound}%`;
+  }
+
+  const dS = `${Math.round(info.distance)} M`;
+  txt("vxDist", dS);
+
+  txt("vxDest", info.nextZoneName);
+}
+
 export function uiTick(dt: number, live = true) {
   tickBanner(dt);
   if (dirLeft > 0 && (dirLeft -= dt) <= 0) $("dirSub").classList.add("hidden");

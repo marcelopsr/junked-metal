@@ -1573,19 +1573,22 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
   - Ruta determinista derivada de la semilla: Mundo 1 (0–110 s), Mundo 2 (110–230 s con Minijefe 1 a 170 s), Mundo 3 — Luna Pura (230–350 s), Mundo 4 (350–470 s con Minijefe 2 a 400 s), Mundo 5 (470–560 s) y Arena del Jefe del Mundo (560–600 s+ con Jefe Final a 575 s).
   - Vórtice dimensional 3D interactivo: anillo de energía cuántica + haz vertical cilíndrico en el mundo 20 s antes del salto, visible en radar (`kind: "obj"`) y con flecha de telemetría fuera de pantalla. Cruce interactivo al embestirlo o arrastre automático al expirar el tiempo.
   - Preservación completa del estado del jugador (vida, armas, evoluciones, nivel, pasivas, XP y tornillos) con limpieza sin fugas de enemigos comunes y proyectiles.
+- **Telemetría de Vórtice en HUD (`src/ui.ts`, `src/hud_tick.ts`, `src/hud.css`, `index.html`):**
+  - Módulo de cabina `#vortexTelem` ubicado bajo el radar, con reloj de cuenta regresiva digital, barra de colapso porcentual y metadatos en tiempo real (distancia en metros y nombre del bioma destino).
+  - Alerta visual `.urgent` con pulso ámbar/rojo al restar menos de 5 segundos para el colapso dimensional.
 - **Validación con evidencia:**
   - `npx tsc --noEmit -p .` (0 errores).
   - `npm test`: 40 suites / 269 pruebas unitarias pasando (incluyendo `test/world_progression.test.ts`).
   - `npm run sim -- --seeds 1,2 --secs 300` (100% determinista, 0 atascos).
-  - `npm run shots -- --changed`: 209 capturas visuales aprobadas.
-  - `npm run build`: bundle de producción Vite completado en 886 ms.
-  - `graphify update .`: grafo de conocimiento sincronizado.
+  - `npm run build`: bundle de producción Vite completado sin errores.
+  - `graphify update .`: grafo de conocimiento sincronizado con 7954 nodos y 20481 aristas.
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Odisea Multi-Mundo en Supervivencia (4 Saltos de Mundo + Salto al Jefe del Mundo) y Luna Pura sin neón (2026-10-19). Documentación en `docs/WORLD_JUMPS_PLAN.md` y `docs/PRODUCT_EVOLUTION.md`.
+- **Último trabajo completado:** Odisea Multi-Mundo en Supervivencia (4 Saltos de Mundo + Salto al Jefe del Mundo), Luna Pura sin neón y Telemetría del Vórtice en el HUD (2026-10-19).
 - **Invariantes activas:** Metodología E2E, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
+
 
 
 

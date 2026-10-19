@@ -210,6 +210,84 @@ body.calm .offer .rec { animation: none; }
 @keyframes failPulse { 0% { opacity: 1; } 50% { opacity: .3; } 100% { opacity: 1; } }
 #radarC { display: block; width: calc(64px * var(--rs)); aspect-ratio: 1; image-rendering: pixelated; border-radius: 50%; background: rgba(8, 16, 12, .6); }
 
+/* ---------- Telemetría de Vórtice Dimensional (bajo el radar) ---------- */
+#vortexTelem {
+  position: absolute;
+  top: calc(max(10px, env(safe-area-inset-top)) + 104px);
+  right: 14px;
+  width: 104px;
+  background: var(--jm-panel, #1F2937);
+  border: 2px solid var(--jm-cian, #00C2FF);
+  border-radius: 4px;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-shadow: 0 0 10px rgba(0, 194, 255, .3);
+  font-family: var(--hf, "Rajdhani", sans-serif);
+  pointer-events: none;
+  z-index: 8;
+}
+#vortexTelem.hidden { display: none !important; }
+#vortexTelem .vx-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--jm-cian, #00C2FF);
+  letter-spacing: .05em;
+}
+#vortexTelem .vx-head b {
+  font-size: 15px;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+#vortexTelem .vx-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(0, 0, 0, .5);
+  border-radius: 2px;
+  overflow: hidden;
+}
+#vortexTelem .vx-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--jm-cian, #00C2FF), #38d9a9);
+  width: 100%;
+  transition: width .1s linear;
+}
+#vortexTelem.urgent {
+  border-color: #ff9138;
+  box-shadow: 0 0 14px rgba(255, 145, 56, .45);
+  animation: vxUrgentPulse .4s steps(2) infinite alternate;
+}
+#vortexTelem.urgent .vx-bar {
+  background: linear-gradient(90deg, #ff9138, #ff3b2e);
+}
+#vortexTelem.urgent .vx-head {
+  color: #ff9138;
+}
+@keyframes vxUrgentPulse {
+  0% { opacity: .85; }
+  100% { opacity: 1; filter: brightness(1.2); }
+}
+#vortexTelem .vx-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--jm-texto-dim, #9CA3AF);
+  letter-spacing: .04em;
+}
+#vortexTelem .vx-dist {
+  color: #ffb347;
+}
+@media (max-width: 700px) {
+  #vortexTelem { width: 92px; padding: 4px 6px; top: calc(max(10px, env(safe-area-inset-top)) + 98px); }
+  #vortexTelem .vx-head b { font-size: 13px; }
+  #vortexTelem .vx-meta { font-size: 9px; }
+}
+
 /* ---------- Estado del auto: vida, turbo, habilidad (abajo-centro) ---------- */
 #txl { left: 50%; translate: -50% 0; bottom: max(14px, env(safe-area-inset-bottom)); transform-origin: 50% 100%; width: min(300px, 70vw); padding: 10px 16px 10px 40px; display: flex; flex-direction: column; gap: 7px; }
 #txl .h-read { order: -1; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin: 0; }

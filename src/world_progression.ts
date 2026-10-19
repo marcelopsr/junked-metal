@@ -287,3 +287,34 @@ export function tickWorldProgression(dt: number) {
     executeWorldJump(currentStageIdx + 1);
   }
 }
+
+export interface VortexInfo {
+  open: boolean;
+  timeLeft: number;
+  totalTime: number;
+  distance: number;
+  nextZoneName: string;
+  isUrgent: boolean;
+  jumpNum: number;
+}
+
+/** Devuelve la telemetría viva del vórtice dimensional (tiempo restante, distancia y destino). */
+export function getVortexInfo(): VortexInfo | null {
+  if (!vortexPos || currentStageIdx >= currentStages.length) return null;
+  const stage = currentStages[currentStageIdx];
+  const nextStage = currentStages[currentStageIdx + 1];
+  if (!stage) return null;
+  const car = ctx?.getCar();
+  const d = car ? (MOON.on ? hd(car.pos, vortexPos) : Math.hypot(car.pos.x - vortexPos.x, car.pos.z - vortexPos.z)) : 999;
+  const total = stage.endTime - stage.vortexTime;
+  const left = Math.max(0, stage.endTime - run.time);
+  return {
+    open: true,
+    timeLeft: left,
+    totalTime: total > 0 ? total : 20,
+    distance: Math.round(d),
+    nextZoneName: nextStage ? (nextStage.isBossArena ? "ARENA FINAL" : nextStage.zoneName.toUpperCase()) : "FINAL",
+    isUrgent: left <= 5.0,
+    jumpNum: stage.jumpNum,
+  };
+}
