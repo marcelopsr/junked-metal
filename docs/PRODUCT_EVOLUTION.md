@@ -1582,16 +1582,24 @@ Trabajo ejecutado bajo metodología E2E y paralelización con 2 subagentes:
   - Calibración de gravedad lunar reducida a 17.5 m/s² (30% más de sustentación aérea sin flotación descontrolada, mayor margen de combos para trucos y saltos limpios).
   - Efecto de polvo de regolito lunar gris (`FX.regolithDust`) al aterrizar y en derrapes con turbo sobre la superficie de la Luna.
   - Restablecimiento automático y estricto de la gravedad terrestre estándar (25 m/s²) al transicionar a biomas terrestres o al limpiar la partida.
+- **Alijo Dimensional por Salto Proactivo (`src/world_progression.ts`, `src/main.ts`):**
+  - Al embestir voluntariamente el vórtice dimensional antes de que colapse (`proactive = true` a menos de 5.0m), el jugador es recompensado al aterrizar en el nuevo mundo:
+    - Reparación de blindaje del auto (+40% de vida máxima).
+    - Recarga completa del nitro/turbo al 100%.
+    - Bonificación de +60 tornillos de chatarra (`run.runScrap`).
+    - Aparición de un Cofre Dimensional resplandeciente (`dropPickup(..., "cofre")`) 4.5 metros frente a la trompa del auto con estela cuántica `FX.warpJump`.
+    - Banner diegético de telemetría: `¡ALIJO DIMENSIONAL OBTENIDO! · COFRE Y REPARACIÓN GANADOS` y fanfarria de audio (`SFX.cofre()`).
+  - Si el salto es forzado por colapso del tiempo (`t >= stage.endTime`), se ejecuta como salto de emergencia sin el Alijo Dimensional.
 - **Validación con evidencia:**
   - `npx tsc --noEmit -p .` (0 errores).
-  - `npm test`: 40 suites / 270 pruebas unitarias pasando (100%).
+  - `npm test`: 40 suites / 271 pruebas unitarias pasando (100%).
   - `npm run sim -- --seeds 1,2 --secs 300` (100% determinista, 0 atascos).
-  - `npm run build`: bundle de producción Vite completado en 892 ms.
-  - `graphify update .`: grafo de conocimiento sincronizado con 7956 nodos y 20486 aristas.
+  - `npm run build`: bundle de producción Vite completado en 954 ms.
+  - `graphify update .`: grafo de conocimiento sincronizado con 7956 nodos y 20492 aristas.
 
 ## 4. Checkpoint de Sesión y Continuidad
 
-- **Último trabajo completado:** Hipersalto Dimensional Cinemático y Microgravedad Lunar Auténtica (2026-10-19).
+- **Último trabajo completado:** Alijo Dimensional por Salto Proactivo (Cofre dimensional, reparación +40%, turbo al 100%, +60 tornillos y banner diegético) tras los 4 Saltos de Mundo con Luna Pura (2026-10-19).
 - **Invariantes activas:** Metodología E2E, Gemini Flash Only, español neutro impersonal, estilo Folded 2.5D y paleta `--jm-*`, preguntas exclusivamente mediante `ask_question`.
 - **Siguiente paso:** Nuevo ciclo de descubrimiento con recomendaciones priorizadas de producto.
 

@@ -93,4 +93,41 @@ describe("Progresión de Saltos de Mundo (Supervivencia)", () => {
     setMoon(false);
     expect(MOON.g).toBe(25);
   });
+
+  it("el salto proactivo otorga el Alijo Dimensional y el salto de emergencia no", async () => {
+    const { initWorldProgression, startWorldProgression, executeWorldJump } = await import("../src/world_progression");
+    const rewardMock = vi.fn();
+    const bannerMock = vi.fn();
+    initWorldProgression({
+      scene: {} as any,
+      getCar: () => null,
+      getEnemies: () => [],
+      setEnemies: vi.fn(),
+      getWeapons: () => [],
+      getProfile: () => ({ climate: {} } as any),
+      applyClimate: vi.fn(),
+      zoneClimate: () => undefined,
+      setZone: vi.fn(),
+      isSimulating: () => true,
+      isErun: () => false,
+      isLibre: () => false,
+      isLab: () => false,
+      camReset: vi.fn(),
+      clearSpits: vi.fn(),
+      clearGems: vi.fn(),
+      clearPickups: vi.fn(),
+      playWarpSfx: vi.fn(),
+      banner: bannerMock,
+      glitchHit: vi.fn(),
+      rewardProactiveJump: rewardMock,
+    });
+
+    startWorldProgression(10, "patio", "perro");
+    executeWorldJump(1, true);
+    expect(rewardMock).toHaveBeenCalledTimes(1);
+
+    executeWorldJump(2, false);
+    expect(rewardMock).toHaveBeenCalledTimes(1);
+    expect(bannerMock).toHaveBeenCalledWith(expect.stringContaining("COLAPSO"), expect.any(Number), expect.any(Object));
+  });
 });

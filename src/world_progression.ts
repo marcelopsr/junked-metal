@@ -90,6 +90,8 @@ export interface WorldProgressionContext {
   readonly addShake?: (v: number) => void;
   readonly warpFx?: (pos: B.Vector3) => void;
   readonly warpFlash?: () => void;
+  readonly rewardProactiveJump?: () => void;
+  readonly setZone?: (zoneId: ZoneId, rebuild?: boolean) => void;
 }
 
 let ctx!: WorldProgressionContext;
@@ -165,8 +167,8 @@ function createVortexEntity(pos: B.Vector3) {
   vortexBeam = beam;
 }
 
-/** Ejecuta la transición de Salto de Mundo. */
-export function executeWorldJump(nextStageIdx: number) {
+/** Ejecuta la transición de Salto de Mundo. Proactive = true otorga el Alijo Dimensional. */
+export function executeWorldJump(nextStageIdx: number, proactive = false) {
   if (jumpInProgress || nextStageIdx >= currentStages.length) return;
   jumpInProgress = true;
   const nextStage = currentStages[nextStageIdx];
@@ -202,7 +204,8 @@ export function executeWorldJump(nextStageIdx: number) {
   if (!wasMoon && isNowMoon) setMoon(true, true);
 
   // Reconstruir el mundo con la nueva zona (preservando el auto del jugador)
-  setZone(nextStage.zoneId, true);
+  if (ctx.setZone) ctx.setZone(nextStage.zoneId, true);
+  else setZone(nextStage.zoneId, true);
 
   // Clima de la nueva zona
   const zc = ctx.zoneClimate();
@@ -238,7 +241,13 @@ export function executeWorldJump(nextStageIdx: number) {
     ctx.addShake?.(1.4);
   }
 
-  // Banners de telemetría en español impersonal
+  // Banners de telemetría y recompensas en español impersonal
+  if (proactive) {
+    ctx.rewardProactiveJump?.();
+  } else {
+    ctx.banner("COLAPSO DIMENSIONAL · SALTO DE EMERGENCIA", 3, { tag: "VÓRTICE", ico: "jefe", tone: "warn" });
+  }
+
   if (nextStage.isBossArena) {
     ctx.banner(`¡SALTO AL JEFE DEL MUNDO! · ARENA FINAL`, 4, { tag: "VÓRTICE", ico: "jefe", tone: "now" });
   } else {
@@ -289,15 +298,15 @@ export function tickWorldProgression(dt: number) {
     // 3. Colisión interactiva: el auto atraviesa el vórtice
     const d = MOON.on ? hd(car.pos, vortexPos) : Math.hypot(car.pos.x - vortexPos.x, car.pos.z - vortexPos.z);
     if (d < 5.0) {
-      // Salto interactivo exitoso
-      executeWorldJump(currentStageIdx + 1);
+      // Salto interactivo exitoso (otorga Alijo Dimensional)
+      executeWorldJump(currentStageIdx + 1, true);
       return;
     }
   }
 
-  // 4. Salto automático si expira el tiempo límite de la etapa
+  // 4. Salto automático si expira el tiempo límite de la etapa (salto forzado de emergencia)
   if (t >= stage.endTime) {
-    executeWorldJump(currentStageIdx + 1);
+    executeWorldJump(currentStageIdx + 1, false);
   }
 }
 

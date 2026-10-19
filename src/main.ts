@@ -638,6 +638,7 @@ initWorldProgression({
   getProfile: () => profile,
   applyClimate: (c) => applyClimate(c),
   zoneClimate: () => zoneClimate(),
+  setZone: (z, r) => setZone(z, r),
   isSimulating: () => simulating,
   isErun: () => Boolean(erun),
   isLibre: () => libre,
@@ -656,6 +657,21 @@ initWorldProgression({
   addShake: (v) => { shake = Math.max(shake, v); },
   warpFx: (pos) => FX.warpJump(pos),
   warpFlash: () => warpFlash(),
+  rewardProactiveJump: () => {
+    lead.hp = Math.min(lead.maxHp, lead.hp + lead.maxHp * 0.4);
+    lead.boost = 100;
+    run.runScrap += 60;
+    SFX.pickup();
+    SFX.cofre();
+    if (lead.car) {
+      const dropP = MOON.on
+        ? onFloor(at(lead.car.pos, 0, 0, 4.5), 0.3)
+        : lead.car.pos.add(new B.Vector3(0, 0, 4.5));
+      dropPickup(dropP, "cofre");
+      FX.warpJump(dropP);
+    }
+    banner("¡ALIJO DIMENSIONAL OBTENIDO! · COFRE Y REPARACIÓN GANADOS", 4, { tag: "ALIJO", ico: "cofre", tone: "now" });
+  },
 });
 initOutro({
   save,
