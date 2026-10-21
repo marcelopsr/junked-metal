@@ -17,7 +17,6 @@
 | --- | --- |
 | [AME_MASTER_PROMPT.md](AME_MASTER_PROMPT.md) | Master Prompt Universal AME |
 | [ART_DIRECTION.md](ART_DIRECTION.md) | Junked Metal |
-| [ASSET_INVENTORY.md](ASSET_INVENTORY.md) | Inventario histórico de arte (Folded 2.5D, fase A) |
 | [ATTRIBUTIONS.md](ATTRIBUTIONS.md) | Atribuciones |
 | [AUDITORIA-accesibilidad-menus.md](AUDITORIA-accesibilidad-menus.md) | Auditoría de accesibilidad de los menús (T29) |
 | [AUDITORIA-main-weapons.md](AUDITORIA-main-weapons.md) | Auditoría T28: `src/main.ts` (2546 l) y `src/weapons.ts` (869 l) |
@@ -27,9 +26,6 @@
 | [HARNESS.md](HARNESS.md) | Junked Metal: harness, arquitectura y metodología |
 | [LUNA.md](LUNA.md) | Mapa Luna (Survivor) |
 | [ROADMAP-1.0.md](ROADMAP-1.0.md) | Roadmap a Junked Metal Encore 1.0.0 (borrador 2026-10-15) |
-| [VISUAL_MODELS_OLEADA1_GLB.md](VISUAL_MODELS_OLEADA1_GLB.md) | Oleada 1 |
-| [VISUAL_MODELS_UPGRADE_PLAN.md](VISUAL_MODELS_UPGRADE_PLAN.md) | Upgrade visual de modelos 3D |
-| [VISUAL_QUALITY.md](VISUAL_QUALITY.md) | Calidad visual |
 | [WORLD_JUMPS_PLAN.md](WORLD_JUMPS_PLAN.md) | Supervivencia |
 
 ## ENCORE/
@@ -139,4 +135,4 @@
 | Carpeta | Qué hay |
 | --- | --- |
 | [archivo/harness-viejo/](archivo/harness-viejo/README.md) | 5 archivos |
-| [archivo/planes/](archivo/planes/README.md) | 26 archivos |
+| [archivo/planes/](archivo/planes/README.md) | 30 archivos |

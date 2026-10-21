@@ -1,6 +1,6 @@
 # Inventario histórico de arte (Folded 2.5D, fase A) — 2026-10-07
 
-> Este inventario describe el estado Folded histórico y sus decisiones de implementación. El inventario vigente de recursos pendientes bajo Pixel Art 3D HD está en [PIXEL_ART_3D_ASSET_BIBLE.md](./archivo/planes/PIXEL_ART_3D_ASSET_BIBLE.md); no usar las clases A–F de abajo para decidir la dirección nueva.
+> Este inventario describe el estado Folded histórico y sus decisiones de implementación. El inventario vigente de recursos pendientes bajo Pixel Art 3D HD está en [PIXEL_ART_3D_ASSET_BIBLE.md](./PIXEL_ART_3D_ASSET_BIBLE.md); no usar las clases A–F de abajo para decidir la dirección nueva.
 
 Clases: **A** mantener · **B** nuevo material (FOLD) · **C** simplificar · **D** reconstruir Folded · **E** reemplazar por procedural-modular (geoKit) · **F** solo colisión.
 Nada se borra: los `.blend` quedan para proporciones, colisión, esqueleto, animación y transición. Sistema base: `src/folded.ts` (+ paleta `PAL` en `src/kit3d.ts`).

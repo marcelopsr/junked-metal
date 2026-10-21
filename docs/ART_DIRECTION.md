@@ -119,7 +119,7 @@ Los climas nocturnos siguen en `CLIMATES` solo para el lab. El faro del auto que
 **Qué es:** mundo 3D completo construido como papercraft y fabricado como chatarra industrial: superficies simples plegadas y
 ensambladas (chapa, perfiles, remaches) cuya riqueza sale del material, la textura procedural, los trims, los calcos y la luz.
 No es papel, cartón, foam ni sprites. Orden de diseño: silueta → material → color → detalle. Referencia: el gabinete de
-Junket Crush (`src/match3_scene.ts`) y las láminas de `docs/images/`. Inventario y clases A–F: `docs/ASSET_INVENTORY.md`.
+Junket Crush (`src/match3_scene.ts`) y las láminas de `docs/images/`. Inventario y clases A–F: `docs/archivo/planes/ASSET_INVENTORY.md` (histórico).
 
 **Regla 360°:** enemigos, criaturas, vehículos, destructibles, cajas, barriles, máquinas y props cercanos son volumen real
 (frente, atrás, lados, arriba, grosor, uniones). Planos solo en partículas, humo, vegetación lejana, fondo, y planos

@@ -1,6 +1,7 @@
 #!/bin/sh
 # SessionStart: arranque en frío automático (rama, tablero, handoff, worktrees). Lo que imprime entra como contexto.
 cd "$(dirname "$0")/../.." || exit 0
+sid=$(python3 -c 'import json,sys;print(json.load(sys.stdin).get("session_id","x")[:8])' 2>/dev/null); git rev-parse HEAD > "${TMPDIR:-/tmp}/rcfight-head-${sid:-x}" 2>/dev/null
 echo "## Arranque en frío (hook SessionStart)"
 echo "Rama: $(git rev-parse --abbrev-ref HEAD 2>/dev/null) · HEAD: $(git log -1 --format='%h %s' 2>/dev/null)"
 n=$(git status --short 2>/dev/null | grep -vc '^?? assets-src/'); [ "$n" -gt 0 ] && echo "Árbol: $n cambios sin commitear (git status)"

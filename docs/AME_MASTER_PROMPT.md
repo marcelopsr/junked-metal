@@ -1,5 +1,7 @@
 # Master Prompt Universal AME
 
+> Fuente completa de la filosofía. Lo que este repo adoptó de AME está resumido en `CLAUDE.md` (Criterios AME) y en `docs/traspaso/trabajo/`; ante conflicto mandan esos. Las plantillas 17.2 (encargo) y 17.3 (handoff) viven en `.claude/trabajo/ARRANQUE.md`.
+
 **Adaptive Modular Engineering · Ingeniería Modular Adaptativa**
 Versión integral 1.0 · 12 de octubre de 2026 · Español
 

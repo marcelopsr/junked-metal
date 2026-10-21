@@ -23,3 +23,8 @@ Planes y fichas de la era Megabonk + Folded y de las oleadas de modelos. El esti
 ## Quedaron fuera del archivo
 
 No estaban en la lista del encargo y siguen en `docs/`: `LUNA.md` (decisiones de las fases del mapa Luna, que sigue en `src/moon*.ts`), `VISUAL_MODELS_*`, `VISUAL_QUALITY.md` y `WORLD_JUMPS_PLAN.md`.
+| [ASSET_INVENTORY.md](ASSET_INVENTORY.md) | Inventario de arte Folded 2.5D (2026-10-07) | superado | Estilo vigente Junked Metal Encore (ADR 0003) |
+| [VISUAL_MODELS_UPGRADE_PLAN.md](VISUAL_MODELS_UPGRADE_PLAN.md) | Plan maestro de upgrade de modelos 3D (oleadas GLB) | parcial, superado | Oleadas 1c y 2 integradas; el runtime es procedural salvo jefes GLB; estilo cambió (ADR 0003) |
+| [VISUAL_MODELS_OLEADA1_GLB.md](VISUAL_MODELS_OLEADA1_GLB.md) | Encargos GLB de la oleada 1 | hecho | commits 5b636a0, 1e08b75 |
+| [VISUAL_QUALITY.md](VISUAL_QUALITY.md) | Registro acumulativo de evaluaciones visuales (1262 líneas, notas 1-10) | historial | Hoy la medida es `scripts/ref_measure.py` contra el registro de referencias |
+
