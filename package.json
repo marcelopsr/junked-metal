@@ -53,7 +53,9 @@
     "doctor:fix": "node scripts/doctor.mjs --fix",
     "verificar": "node scripts/verificar.mjs",
     "check": "tsc --noEmit -p . & a=$!; vitest run --changed --passWithNoTests & b=$!; node scripts/shots.mjs --changed & c=$!; wait $a && wait $b && wait $c",
-    "app": "npx -y @tauri-apps/cli@2 build && rm -rf \"/Applications/Junked Metal Nativo.app\" && cp -R \"src-tauri/target/release/bundle/macos/Junked Metal.app\" \"/Applications/Junked Metal Nativo.app\""
+    "app": "npx -y @tauri-apps/cli@2 build && rm -rf \"/Applications/Junked Metal Nativo.app\" && cp -R \"src-tauri/target/release/bundle/macos/Junked Metal.app\" \"/Applications/Junked Metal Nativo.app\"",
+    "todos": "node scripts/todos.mjs",
+    "docs:check": "node scripts/docs-check.mjs"
   },
   "keywords": [],
   "type": "module",

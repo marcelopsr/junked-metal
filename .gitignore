@@ -9,6 +9,9 @@ graphify-out/
 .claude/*
 !.claude/agents/
 !.claude/estudio/
+!.claude/settings.json
+!.claude/hooks/
+!.claude/rules/
 CLAUDE.md
 .gitattributes
 logs/
