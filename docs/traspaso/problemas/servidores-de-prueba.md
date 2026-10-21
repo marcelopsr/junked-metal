@@ -1,0 +1,16 @@
+# Problemas: servidores de prueba y herramientas headless
+
+Diseño y mediciones: [PRUEBAS-infra](../../../.claude/trabajo/PRUEBAS-infra.md). Reglas de uso: [`CLAUDE.md`](../../../CLAUDE.md) (Herramientas de prueba) y `.claude/rules/pruebas-herramientas.md`. Resumen de la herramienta: [hecho/herramientas.md](../hecho/herramientas.md).
+
+- **`shots --only menu` no termina en 20 minutos.** Causa: abrazo mortal de candados; un `test:restart` exclusivo esperaba a que el lector soltara su archivo y el lector esperaba al exclusivo. Arreglo: candado lector/escritor con latido cada 10 s; sin latido en 45 s o más viejo que `RC_LOCK_TTL` (20 min) se da por colgado y se libera; `RC_WAIT_MAX` (15 min) topa la espera; `test:restart` espera como mucho `RC_EXCL_WAIT` (3 min) y suelta la marca. Liberar a mano: `npm run test:unlock` (`-- --force` solo como último recurso).
+- **Un `test:restart` congela a todos los agentes.** Causa: un solo `rc-test` para 6-8 agentes. Arreglo: grupo de 6 servidores (`rc-test` y `rc-test-2..6`); cada proceso alquila uno libre con `launch()` (`pickServer`); `RC_SRV=3` fuerza uno; `test:restart` pasó a «asegurar que están arriba» y solo reinicia un servidor colgado de verdad si nadie lo alquila.
+- **Se probó código viejo.** Causa: el servidor tardaba en tomar cambios y no había aviso. Arreglo: Vite con watcher activo y HMR apagado; cada corrida carga la página de cero y toma el código actual. No hay sello de «servidor viejo»: basta correr de nuevo. Nadie reinicia `rc-test*` con `pm2`.
+- **Código ajeno a medio hacer en las pruebas.** Causa: todos los servidores del grupo sirven el mismo árbol. Arreglo: un worktree por agente con su servidor (`rc-test-<carpeta>`, puerto 5200-5299 por ruta).
+- **Worktree sin `node_modules`.** Arreglo: `npm run test:restart` crea el symlink y levanta su servidor; `test:down` al cerrar borra solo el de ese worktree y `test:restart` limpia los de worktrees que ya no existen.
+- **`--par 3` casi no acelera `sim` (137 s a 129 s con 20 semillas).** Causa: los trabajos compartían un navegador y un Vite; el cuello es la carga en frío. Arreglo: `scripts/lib/pool.mjs` abre un Chromium por trabajador.
+- **«GLB: tardan más de 8 s» cuenta como error de consola.** Causa: servidor saturado por arranques paralelos. Arreglo: el mensaje pasó a `console.warn` (`src/glb.ts`). No es un fallo del juego.
+- **HMR recarga la página a cada rato en :5173.** Causa: otro agente editando los mismos archivos. Arreglo: probar en `rc-test` (sin HMR) o en un Vite aparte con `hmr: false` y `cacheDir` propio.
+- **El navegador roba el foco o dispara el aviso de compartir pantalla.** Arreglo: todo headless por línea de comandos, nada con ventana; máximo 3 pruebas a la vez.
+- **El `e2e` de la primera vez falla en cascada con `PRUEBAS = true`.** Causa: `menu.ts` muestra desafíos y Más modos desde el inicio y el e2e aborta el paso. Arreglo: `scripts/e2e.mjs` importa `PRUEBAS` del módulo real y no exige menú limpio si está activa. Fuente: [QA-0.94](../../../.claude/trabajo/archivo/QA-0.94.md) H1.
+- **`sim` corre una semilla 0 sin avisar.** Causa: `--seeds 21,...,40,` con coma final se toma como 0. Anotado en QA-semilla19; evitar la coma final.
+- **Un «atasco» o error del e2e que no se reproduce.** Verificar primero el árbol actual: QA-0.95 no logró reproducir el fallo con 3 semillas; la puerta pide 5.

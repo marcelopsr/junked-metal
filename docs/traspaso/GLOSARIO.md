@@ -1,0 +1,52 @@
+# Glosario
+
+Términos propios del proyecto, en orden alfabético. Cada uno apunta a donde vive. Contexto general: [CLAUDE.md](../../CLAUDE.md); decisiones: [ADR](../decisiones/README.md).
+
+- **AME**: criterios de ingeniería adoptados (presupuesto de complejidad, evidencia honesta). [AME_MASTER_PROMPT](../AME_MASTER_PROMPT.md), [ADR 0010](../decisiones/0010-orquestar-ponytail-ame.md).
+- **ART_DIRECTION**: dirección de arte vigente (Junked Metal Encore). [ART_DIRECTION](../ART_DIRECTION.md).
+- **barrio**: zona del Paseo libre (parque, skate, nieve, acuático). [zones/](../../src/zones/).
+- **bot**: piloto automático de pruebas y balance. [devbot.ts](../../src/devbot.ts).
+- **candado**: lector/escritor con latido por servidor de prueba. [pruebas-herramientas](../../.claude/rules/pruebas-herramientas.md).
+- **cartelera**: afiches de escenarios, pactos y secretos de ENCORE. [cartelera.ts](../../src/menu/cartelera.ts).
+- **clima**: condición de la partida definida por la semilla (noche, niebla, farol, madrugada). [run.ts](../../src/run.ts).
+- **codex**: bestiario/colección de lo visto en el menú. [menu.ts](../../src/menu.ts).
+- **Director**: sistema que interrumpe el escenario ENCORE con eventos. [encore_events.ts](../../src/encore_events.ts).
+- **e2e**: expedición completa con el bot en headless. `npm run e2e`, [scripts/e2e.mjs](../../scripts/e2e.mjs).
+- **encargo**: tarea autocontenida para un subagente. [ARRANQUE](../../.claude/trabajo/ARRANQUE.md).
+- **ENCORE**: modo principal, expediciones por escenarios. [encore.ts](../../src/encore.ts), [ADR 0001](../decisiones/0001-encore-modo-principal.md).
+- **evolución**: arma fusionada con una pasiva. [weapons/fusion.ts](../../src/weapons/fusion.ts).
+- **expedición**: una carrera de escenarios de ENCORE. [encore.ts](../../src/encore.ts).
+- **fantasma**: repetición de la mejor vuelta del Paseo libre. [free_ghost.ts](../../src/free_ghost.ts).
+- **genes/evo**: geometría evolucionable de los autos. [EVO_VEHICULOS](../EVO_VEHICULOS.md), [car_genes.ts](../../src/car_genes.ts).
+- **graphify**: grafo de conocimiento del código (`graphify query`). [CLAUDE.md](../../CLAUDE.md).
+- **HUD de telemetría**: radar, racha y avisos de radio en partida. [ui.ts](../../src/ui.ts), [hud.css](../../src/hud.css).
+- **interrupción**: evento del Director (luces, utilería, corte, sangre). [encore_events.ts](../../src/encore_events.ts).
+- **lab**: escena congelada para iterar el look (`?lab`). [CLAUDE.md](../../CLAUDE.md).
+- **licencia**: acceso al juego online por login/invitación. [server/README](../../server/README.md).
+- **minijefe**: jefe intermedio, su orden sale de la semilla. [run.ts](../../src/run.ts).
+- **orquestar**: metodología de reparto con subagentes. [METODOLOGIA-EQUIPO](../../.claude/trabajo/METODOLOGIA-EQUIPO.md).
+- **pacto**: ventaja con costo elegida en ENCORE, dibujada en el piso. [pact_zones.ts](../../src/pact_zones.ts).
+- **Paseo libre**: modo de exploración con trucos, tuercas y secretos. [FREEROAM-diseno](../../.claude/trabajo/FREEROAM-diseno.md).
+- **pasiva**: mejora permanente sin ataque propio. [weapons/passives.ts](../../src/weapons/passives.ts).
+- **perf**: medición de ms/cuadro, draws y memoria. `npm run perf`, [CLAUDE.md](../../CLAUDE.md).
+- **piloto**: personaje con ventaja propia. [pilots.ts](../../src/pilots.ts).
+- **plaga**: enemigo temático de la partida, por semilla. [balance.json](../../src/balance.json).
+- **polaroid**: foto de resultados al cerrar la partida. [replay.ts](../../src/replay.ts).
+- **ponytail**: escalera YAGNI para escribir el mínimo código. [CLAUDE.md](../../CLAUDE.md).
+- **puerta**: nivel de verificación antes de publicar. [verificar.mjs](../../scripts/verificar.mjs).
+- **radio**: música global con 4 estaciones. [radio.ts](../../src/radio.ts).
+- **rc-test**: servidor pm2 de pruebas (:5174, grupo de 6). [ADR 0008](../decisiones/0008-pruebas-headless-pm2.md).
+- **ref_measure**: medición de imágenes de referencia. [scripts/ref_measure.py](../../scripts/ref_measure.py), [registro](../art_direction/visual_reference_register.md).
+- **repo vivo**: método de documentación y TODOs en el repo. [todos/FORMATO](../todos/FORMATO.md), [ADR 0017](../decisiones/0017-todos-un-archivo.md).
+- **secreto**: logro oculto del Paseo libre (4, bits en `save.libre`). [free_secrets.ts](../../src/free_secrets.ts).
+- **semilla**: número que fija clima, plaga, patio y ritmo. [ADR 0005](../decisiones/0005-determinismo-rng.md), [rng.ts](../../src/rng.ts).
+- **shots**: capturas de pantalla comparables. `npm run shots`, [scenarios.mjs](../../scripts/scenarios.mjs).
+- **sim**: partidas rápidas del bot sin dibujar. `npm run sim`, [CLAUDE.md](../../CLAUDE.md).
+- **tanda**: lote de cambios probado una sola vez al final. [ADR 0009](../decisiones/0009-verificacion-proporcional.md).
+- **telemetría**: eventos enviados a la VPS con `track()`. [net.ts](../../src/net.ts), [server/README](../../server/README.md).
+- **TODO**: un archivo por tarea, que es el encargo. [todos/README](../todos/README.md).
+- **truco**: maniobra puntuable del Paseo libre. [free_tricks.ts](../../src/free_tricks.ts).
+- **tuerca**: coleccionable del Paseo libre. [free_nuts.ts](../../src/free_nuts.ts).
+- **verificar**: comando único de verificación por nivel. `npm run verificar`, [verificar.mjs](../../scripts/verificar.mjs).
+- **worktree**: copia de trabajo git con su propio servidor de pruebas. [CLAUDE.md](../../CLAUDE.md).
+- **Worker/Access**: Cloudflare Worker y Access que dan el login online. [server/README](../../server/README.md).

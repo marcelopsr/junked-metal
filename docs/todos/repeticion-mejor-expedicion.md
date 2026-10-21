@@ -1,12 +1,11 @@
 ---
 titulo: Repetición de la mejor expedición
-estado: pregunta
+estado: elegida
 area: juego
 prioridad: media
 origen: pendiente
 desde: 2026-10-21
 viejo_id: T39
-motivo: Hay un wip en la rama worktree-agent-a7022662f82c8e51a: decidir si se retoma o se descarta
 ---
 
 ## Qué y por qué
@@ -20,4 +19,5 @@ Volver a ver la mejor expedición desde la misma semilla.
 - `npm run verificar -- --nivel tanda` + misma semilla reproduce; e2e.
 
 ## Notas
+Decisión 2026-10-21: retomar desde el wip. Partir de la rama `worktree-agent-a7022662f82c8e51a` (1afafd8), rebasear sobre master (main.ts cambió mucho) y terminar.
 Worktree `.claude/worktrees/agent-a7022662f82c8e51a` (commit 1afafd8).

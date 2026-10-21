@@ -1,0 +1,16 @@
+# Hecho: Supervivencia y otros modos
+
+Estado de los modos que no son ENCORE ni Paseo libre. ENCORE es el principal ([ADR 0001](../../decisiones/0001-encore-modo-principal.md)); el resto sigue la política de [ADR 0002](../../decisiones/0002-modos-archivados.md).
+
+## Fichas
+
+- **Supervivencia (patio).** El modo original: horda contra reloj en el patio de 200x200. Estado de partida en `src/run.ts`, `src/run_state.ts`, bucle en `src/run_drive.ts` y `src/run_tick.ts`, spawner y jefes en `src/main.ts`. Madurez: usable, archivado como modo secundario. Prueba: `npm run sim -- --seeds 1,2,3 --secs 600`. Crítica: 5 de 10 vivas (meta 40-55 %); muertes entre 6:30 y 8:00 con jefe y ácido ([supervivencia-muertes-jefe-acido](../../todos/supervivencia-muertes-jefe-acido.md)). Planes históricos: [SURVIVAL_EXPERIENCE_PLAN](../../SURVIVAL_EXPERIENCE_PLAN.md); la identidad de build quedó descartada por el usuario.
+- **Luna.** Esfera con gravedad radial, Sol y Tierra que lanzan fuego y cohetes, nave nodriza y naves menores, meteoritos, erupciones y terreno deformable. `src/moon.ts`, `moon_sky.ts`, `moon_events.ts`, `moon_ships.ts`, `moon_goals.ts`, `moon_worm.ts`. Es el primer escenario de ENCORE (LA TARIMA) y el final. Madurez: usable. Prueba: `test/moon.test.ts`, `test/moon_events.test.ts`. Diseño: [`docs/LUNA.md`](../../LUNA.md). Abiertos: [luna-dia-rocas](../../todos/luna-dia-rocas.md), [luna-noche-contraste](../../todos/luna-noche-contraste.md).
+- **Junked Crush (Match-3).** Campaña de 10 niveles con mapa, estrellas y herramientas. `src/match3.ts`, `match3_logic.ts`, `match3_levels.ts`, `match3_scene.ts`, `match3_draw.ts`, `match3.css`. Madurez: congelado (solo recibe cambios compartidos). Prueba: `test/match3.test.ts`; `test/match3_balance.lento.test.ts` corre con `npm run test:lento`. Doc: [`docs/MATCH3_ARCADE.md`](../../MATCH3_ARCADE.md). QA-0.95 solo corrió capturas, no una partida de lógica.
+- **Carrera (kart).** Circuito en el patio, 10 corredores, objetos, derrape con mini-turbo, copa de 3, 2 jugadores solo en compu. `src/kart.ts`, `src/kart_cfg.ts`, `src/race.css`. Madurez: congelado (archivado). Prueba: `?race` y `__race.auto()` en dev. Crítica: [QA-0.95](../../../.claude/trabajo/archivo/QA-0.95.md) H1 y H2, ver [problemas/balance-y-bot.md](../problemas/balance-y-bot.md).
+- **Demolición (duelo).** Archivada fuera de master, en la rama y tag `archivo/demolicion`. Plan de retiro en `.claude/trabajo/ARCHIVO-demolicion.md`; el TODO [quitar-demolicion-de-master](../../todos/quitar-demolicion-de-master.md) sigue abierto. En `run_loader.ts` ya no se carga el duelo. Se conserva `MODE_NM.duel` y no se borran claves de `localStorage`.
+- **Modo robots y Folded.** `src/folded*.ts` queda como banco de dev (`?folded`), no es un estilo vigente. Retiro: `.claude/trabajo/archivo/FOLDED-retiro.md`. El spec del modo robots ([SPEC-modo-robots](../../../.claude/trabajo/archivo/SPEC-modo-robots.md)) no se confirmó en el código si llegó a implementarse (no hay archivo de modo robots en `src/`).
+
+## Regla común
+
+Los modos laterales no dan tornillos ni logros de Supervivencia (decisión del 2026-10-08, ver [HANDOFF-PROYECTOS](../../HANDOFF-PROYECTOS.md) sección 5). Los hooks `__*` solo existen en dev.

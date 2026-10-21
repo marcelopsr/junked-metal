@@ -11,7 +11,7 @@ import { generar, leer } from './todos.mjs';
 
 const RAIZ = fileURLToPath(new URL('..', import.meta.url));
 const BASE = join(RAIZ, 'docs');
-const CARPETAS = ['todos', 'decisiones', 'plantillas'];
+const CARPETAS = ['traspaso', 'todos', 'decisiones', 'plantillas'];
 const TABLERO = join(BASE, 'todos/README.md');
 const LIMITE = 80;
 

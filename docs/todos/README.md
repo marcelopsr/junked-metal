@@ -2,27 +2,27 @@
 
 > Generado por `npm run todos` — no editar a mano. Formato: [FORMATO.md](FORMATO.md).
 
-idea: 45 · pregunta: 4 · elegida: 2 · en-curso: 0 · en-lote: 0 · hecha: 0 · descartada: 1
+idea: 45 · pregunta: 1 · elegida: 5 · en-curso: 0 · en-lote: 0 · hecha: 0 · descartada: 1
 
 ## En curso (0)
 
 _Nada._
 
-## Preguntas para el dueño (4)
+## Preguntas para el dueño (1)
 
 | TODO | área | prioridad | pregunta |
 | --- | --- | --- | --- |
-| [Paseo libre: hielo solo visual y bajadas sin gravedad](libre-hielo-y-pendientes.md) | juego | media | Decidir si en las bajadas se suma gravedad (drive() pisa la velocidad a 15 m/s) |
 | [Remitente de mail real (activa notify)](mail-real-notificaciones.md) | server | baja | Necesita credenciales SMTP del dueño |
-| [Pileta: el bot muere dentro del pozo a los 56-68 s](pileta-bot-muere-pozo.md) | juego | media | ¿El pozo es trampa para el bot (devbot.ts) o para el jugador? |
-| [Repetición de la mejor expedición](repeticion-mejor-expedicion.md) | juego | media | Hay un wip en la rama worktree-agent-a7022662f82c8e51a: decidir si se retoma o se descarta |
 
-## Elegidas por prioridad (2)
+## Elegidas por prioridad (5)
 
 | TODO | área | prioridad |
 | --- | --- | --- |
+| [Paseo libre: hielo solo visual y bajadas sin gravedad](libre-hielo-y-pendientes.md) | juego | media |
 | [Números de PACTS a balance.json](pacts-a-balance-json.md) | juego | media |
+| [Pileta: el bot muere dentro del pozo a los 56-68 s](pileta-bot-muere-pozo.md) | juego | media |
 | [Quitar Demolición de master](quitar-demolicion-de-master.md) | juego | media |
+| [Repetición de la mejor expedición](repeticion-mejor-expedicion.md) | juego | media |
 
 ## En lote (0)
 

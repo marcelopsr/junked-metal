@@ -1,0 +1,14 @@
+# Problemas: capturas, diff y medición
+
+Herramientas: [hecho/herramientas.md](../hecho/herramientas.md). Registro de referencias: [`docs/art_direction/visual_reference_register.md`](../../art_direction/visual_reference_register.md).
+
+- **Dos corridas de `shots` difieren 5-10 % de píxeles.** Causa: el tiempo real mueve la escena entre cuadros. Arreglo: `freeze` en `scripts/lib/browser.mjs` detiene el bucle de dibujo, fija 1/60 s por cuadro y dibuja con `__tick(n)`; tolerancia del diff 1 % (`tol` por shot; la carrera usa 8 % por el `Math.random` de `kart.ts`).
+- **El diff marca cambios que no son del cambio actual.** Causa: referencias en `.shots/ref/` desactualizadas. Arreglo: `shots -- --update` acepta lo capturado, solo tras mirar las PNG; un cambio de `EARTH_ZONES` (de 2 a 6 zonas) cambia el escenario de una misma semilla y obliga a renovar. Abierto: [shots-diff-pieles-patio](../../todos/shots-diff-pieles-patio.md).
+- **`--changed` omite una sesión que sí cambió.** Causa: el mapa archivo a sesión (`scripts/lib/changed.mjs`) es a mano; un archivo mal mapeado da un falso «sin cambios». Arreglo: `verificar --nivel puerta` ignora la cache.
+- **La captura no muestra el incidente.** Causa: se toma al final de cada tanda de 6 s con el bucle congelado; el HUD marca 00:00 y el auto casi no aparece. Regla: la captura ilustra, la prueba es la traza numérica ([QA-0.92](../../../.claude/trabajo/archivo/QA-0.92.md)).
+- **Contraste medido distinto en cada corrida.** Causa: con el bot el cuadro varía y la medida es ruido; el decorado plano casi no mueve la métrica. Arreglo: escenarios de `shots` con el auto en posición fija. Abierto: [contraste-medir-posicion-fija](../../todos/contraste-medir-posicion-fija.md). Meta: 0,19-0,23 con `scripts/ref_measure.py`.
+- **Falso positivo de «luz neutra pero contraste bajo».** La luz ya era neutra; faltaba composición (siluetas oscuras cerca de la cámara, menos losa lisa). Ver [visual.md](visual.md).
+- **`shots` de celular muestra «Q PARA GIRAR» en el Paseo libre.** Causa probable: los shots mueven el auto con teclas simuladas y `ctl` pasa a `keys`. Es un artefacto de la prueba (hipótesis, sin confirmar en aparato real).
+- **El e2e pasaba verde sin cubrir la calma de 20 s.** Causa: el paso solo comprobaba `phase === "route"` y `__enc.land()` salta los 150 s del teleportador, con el OVERLOAD ya forzando enjambres. Falta una comprobación de 0 enemigos en 20 s reales (QA-0.93, hallazgo C).
+- **Referencias de imágenes sin versionar (636 MB).** Decisión del 2026-10-15: commit local de respaldo y refs fuera del repo; ver [ROADMAP-1.0](../../ROADMAP-1.0.md) sección 5.
+- **El perf del escenario `partida` parece alto (~254 draws).** No es cuello de botella: es modo god; `partida_llena` mide ~168. Ver [HANDOFF-PROYECTOS](../../HANDOFF-PROYECTOS.md) sección 4.

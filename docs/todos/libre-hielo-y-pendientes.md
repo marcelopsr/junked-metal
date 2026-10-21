@@ -1,11 +1,10 @@
 ---
 titulo: Paseo libre: hielo solo visual y bajadas sin gravedad
-estado: pregunta
+estado: elegida
 area: juego
 prioridad: media
 origen: pendiente
 desde: 2026-10-21
-motivo: Decidir si en las bajadas se suma gravedad (drive() pisa la velocidad a 15 m/s)
 ---
 
 ## Qué y por qué
@@ -19,4 +18,5 @@ Hielo del lago de nieve es solo visual (lagoHielo exportado; bajar o.grip ×0,15
 - `npm run verificar -- --nivel tanda` + shots por barrio + bot.
 
 ## Notas
+Decisión 2026-10-21: sí, gravedad en bajadas: el tope de velocidad crece con la pendiente hacia abajo (hasta ~22 m/s) y el hielo del lago baja el agarre ×0,15. Sim idéntica en modos de combate (patio plano no cambia).
 Migrado del TABLERO.md viejo (`.claude/trabajo/archivo/TABLERO-2026-10.md`).
