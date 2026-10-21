@@ -19,5 +19,5 @@ Volver a jugar (o ver) la mejor expedición desde la misma semilla. «Mejor» = 
 - `npm run verificar -- --nivel tanda`; `npm run sim -- --encore --seeds N` dos veces con la expedición guardada y comparar que el puntaje final sea idéntico; `npm test` (savefmt) y e2e pc 1 semilla.
 
 ## Notas
-Decisión 2026-10-21: retomar desde el wip de la rama `worktree-agent-a7022662f82c8e51a` (1afafd8, toca 9 archivos, 347 commits detrás de master). Cómo: worktree nuevo desde master, `git cherry-pick 1afafd8` (o aplicar el diff), resolver conflictos; NO tocar ni rebasear el worktree viejo (el orquestador lo borra al integrar). Sin git destructivo.
+Decisión 2026-10-21: retomar desde el wip de la rama `worktree-agent-a7022662f82c8e51a` (`1afafd8` + `f123ad7` con lo que estaba sin commitear; toca 9 archivos, ~350 commits detrás de master; el worktree ya se cerró). Cómo: worktree nuevo desde master, `git cherry-pick 1afafd8 f123ad7` (o aplicar el diff), resolver conflictos; NO tocar ni rebasear el worktree viejo (el orquestador lo borra al integrar). Sin git destructivo.
 Worktree `.claude/worktrees/agent-a7022662f82c8e51a` (commit 1afafd8).
