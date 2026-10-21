@@ -62,7 +62,9 @@
       "mcp__Claude_Browser__tabs_context",
       "mcp__claude_ai_Claude_Docs__read",
       "Bash(npm run harness:check*)",
-      "Bash(npm run docs:index*)"
+      "Bash(npm run docs:index*)",
+      "Bash(npm run limpiar*)",
+      "Bash(node scripts/limpiar.mjs*)"
     ],
     "deny": [
       "Bash(pm2 restart rc-test*)",
@@ -87,6 +89,16 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-edit.sh",
             "timeout": 5
           }
         ]
@@ -197,6 +209,18 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-end.sh",
             "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/subagent-stop.sh",
+            "timeout": 15
           }
         ]
       }

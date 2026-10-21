@@ -12,6 +12,8 @@ Este archivo es la entrada única para agentes que no son Claude Code. Todo lo q
 
 ## Lo que no cambia según la herramienta
 
+Resumen; la fuente única de las reglas de cierre de un encargo es `docs/plantillas/pie-encargo.md`.
+
 - Textos del juego en español neutro impersonal, sin voseo. Conversación en español.
 - Todo número de balance en `src/balance.json`; todo lo que decide la partida usa `rng()`, nunca `Math.random`.
 - Pruebas headless con los servidores pm2 (`rc-test` :5174): **nadie reinicia `rc-test*`**, nadie levanta servidores ni abre puertos propios, nadie abre el juego en un navegador con foco para verificar. Verificación: `npm run verificar -- --nivel rapido|tanda` una vez al final de la tanda.

@@ -18,10 +18,6 @@ Metodología `orquestar` (skill versionada en `.claude/skills/orquestar/`): la s
 
 ## Reglas que todo encargo repite
 
-- Nada de `git checkout/restore/stash/reset` (el hook lo bloquea igual): el árbol tiene cambios de otras tandas.
-- Nadie reinicia `rc-test*`; nada de servidores ni puertos propios; todo headless.
-- Textos del juego neutros e impersonales; nada de emojis; números en `balance.json`.
-- Todos los cambios de la tanda y UNA verificación al final (`npm run verificar -- --nivel tanda`).
-- Informe final: implementado, verificado (comando y resultado), observado, pendiente, bloqueos.
+Viven en un solo lugar: [../../plantillas/pie-encargo.md](../../plantillas/pie-encargo.md) (lo agregan `npm run todos -- encargo` y el hook SubagentStart). Si cambia una regla, se cambia ahí.
 
 Plantillas largas: [../../plantillas/contrato-delegacion.md](../../plantillas/contrato-delegacion.md) y [../../plantillas/handoff-sesion.md](../../plantillas/handoff-sesion.md).

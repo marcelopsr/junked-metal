@@ -16,7 +16,7 @@ const hook = (nombre, entrada, env = {}) => spawnSync("sh", [join(RAIZ, ".claude
 let settings = {};
 try { settings = JSON.parse(readFileSync(join(RAIZ, ".claude/settings.json"), "utf8")); } catch (e) { mal.push(`settings.json inválido: ${e.message}`); }
 const hooks = settings.hooks ?? {};
-for (const ev of ["PreToolUse", "PostToolUse", "Stop", "PreCompact", "SessionStart", "SubagentStart"]) ok(Array.isArray(hooks[ev]) && hooks[ev].length, `settings.json: falta el hook ${ev}`);
+for (const ev of ["PreToolUse", "PostToolUse", "Stop", "PreCompact", "SessionStart", "SubagentStart", "SubagentStop", "UserPromptSubmit", "SessionEnd"]) ok(Array.isArray(hooks[ev]) && hooks[ev].length, `settings.json: falta el hook ${ev}`);
 for (const ev of Object.values(hooks)) for (const m of ev) for (const h of m.hooks ?? []) {
   const f = (h.command.match(/\.claude\/hooks\/([\w-]+\.sh)/) ?? [])[1];
   ok(f && existsSync(join(RAIZ, ".claude/hooks", f)), `settings.json: hook ${h.command} no existe`);
@@ -39,6 +39,12 @@ r = hook("stop-verificar.sh", { stop_hook_active: true }); ok(r.status === 0 && 
 r = hook("tsc-post.sh", { tool_input: { file_path: "docs/x.md" } }); ok(r.status === 0, "tsc-post.sh no debe correr para .md");
 r = hook("balance-check.sh", { tool_input: { file_path: "src/a.ts" } }); ok(r.status === 0, "balance-check.sh no debe correr fuera de balance.json");
 r = hook("todos-post.sh", { tool_input: { file_path: "src/a.ts" } }); ok(r.status === 0, "todos-post.sh no debe correr fuera de docs/todos");
+
+// 4b. guard-edit
+for (const f of ["docs/todos/README.md", "docs/README.md", ".claude/settings.json", "/x/.claude/hooks/guard.sh"]) { const r = hook("guard-edit.sh", { tool_input: { file_path: f } }, { CLAUDE_HARNESS_EDIT: "" }); ok(r.status === 2, `guard-edit deja editar: ${f}`); }
+for (const f of ["docs/todos/foo.md", "src/main.ts", ".claude/rules/havok.md"]) { const r = hook("guard-edit.sh", { tool_input: { file_path: f } }); ok(r.status === 0, `guard-edit bloquea de más: ${f}`); }
+r = hook("subagent-stop.sh", {}); ok(r.status === 0, "subagent-stop.sh falla sin transcript");
+for (const f of ["scripts/git-hooks/pre-push", "scripts/limpiar.mjs"]) ok(existsSync(join(RAIZ, f)), `falta ${f}`);
 
 // 5. reglas: frontmatter paths que matchean archivos reales
 const tracked = execFileSync("git", ["ls-files"], { cwd: RAIZ, encoding: "utf8" }).split("\n");

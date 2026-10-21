@@ -11,11 +11,13 @@ Lo que antes era solo texto en `CLAUDE.md` ahora lo aplica el harness (`.claude/
 | `balance-check.sh` | tras Edit/Write de `src/balance.json` | Corre `balance:check`; avisa solo si falla. |
 | `session-start.sh` | al abrir sesión | Inyecta rama, árbol, worktrees, tablero y handoff (arranque en frío). |
 | `subagent-start.sh` | al lanzar un subagente | Inyecta el pie de encargo (`docs/plantillas/pie-encargo.md`) como `additionalContext`. |
+| `guard-edit.sh` | antes de Edit/Write | Bloquea editar a mano `docs/todos/README.md` y `docs/README.md` (generados) y la configuración del harness (`settings.json`, `hooks/`) salvo `CLAUDE_HARNESS_EDIT=1` en la sesión del orquestador. |
+| `subagent-stop.sh` | al terminar un subagente | Guarda su informe final en `.claude/trabajo/informes/<fecha>-<id>.md` (evidencia aunque el chat se compacte). |
 | `precompact-handoff.sh` | antes de compactar contexto | Escribe `.claude/trabajo/HANDOFF-auto.md` con rama, árbol, diff y el Pendiente del último verificar. |
 
 ## Pre-commit de git (`scripts/git-hooks/pre-commit`, `npm run hooks:install`)
 
-Frena el commit si lo staged trae archivos de credenciales o un token conocido (OpenAI, Anthropic, AWS, GitHub, Slack, Google, Cloudflare, `JM_SECRET`); si toca `docs/`, regenera el tablero y corre `docs:check`. `npm run harness:check` prueba todo el harness en 2 s (lo corren `verificar --nivel rapido` y el CI).
+Frena el commit si lo staged trae archivos de credenciales o un token conocido (OpenAI, Anthropic, AWS, GitHub, Slack, Google, Cloudflare, `JM_SECRET`); si toca `docs/`, regenera el tablero y corre `docs:check`. El pre-push corre `harness:check`, `docs:check`, `todos.check` y `tsc` antes de subir (lo mismo que el CI primero). `npm run harness:check` prueba todo el harness en 2 s (lo corren `verificar --nivel rapido` y el CI). `npm run limpiar` (`-- --dias 7 --seco`) borra capturas, perf, e2e e informes viejos, poda worktrees y lista ramas sin integrar.
 
 ## Permisos
 

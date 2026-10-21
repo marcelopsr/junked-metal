@@ -1,0 +1,10 @@
+#!/bin/sh
+# pre-push: antes de subir corre lo que el CI va a correr primero (harness:check, docs:check, todos.check, tsc).
+# Nunca más CI rojo por algo que se podía ver en local. Instalar: npm run hooks:install.
+cd "$(git rev-parse --show-toplevel)" || exit 0
+[ -d node_modules ] || exit 0
+node scripts/harness-check.mjs || { echo "pre-push: harness:check falló"; exit 1; }
+node scripts/docs-check.mjs || { echo "pre-push: docs:check falló"; exit 1; }
+node scripts/todos.check.mjs >/dev/null || { echo "pre-push: todos.check falló"; exit 1; }
+[ -x node_modules/.bin/tsc ] && { node_modules/.bin/tsc --noEmit -p . || { echo "pre-push: tsc falló"; exit 1; }; }
+exit 0
