@@ -1,93 +1,31 @@
-# Junked Metal — Harness Antigravity (Gemini Only)
+# Junked Metal: harness para Gemini / Antigravity
 
-Roguelite 3D de supervivencia y modos arcade con autos RC en un patio gigante (`marcelopsr/junked-metal`).
-**Stack:** Babylon.js 9 (fachada `src/bjs.ts`) + física Havok WASM + TypeScript 7 (`strict`) + Vite 8 + Vitest 5 + Playwright (Chromium headless sobre GPU Metal).
+Leer primero `AGENTS.md` (entrada única para todo agente) y seguir sus enlaces: `docs/traspaso/INDICE.md`, `docs/traspaso/trabajo/otros-agentes.md`, `.claude/rules/`. Este archivo solo agrega lo propio de Gemini.
 
----
+## Modelo y alcance
 
-## 1. Principio Fundamental: GEMINI ONLY & Aislamiento
+- **Solo modelos Gemini** para trabajo principal, revisiones y subagentes (`invoke_subagent` con `inherit`, `flash_lite`, `flash` o `pro`); no delegar en otros proveedores sin autorización del dueño (decisión del 2026-10-10).
+- Routing de razonamiento sin pedir permiso: Flash Low para ediciones localizadas y docs; Flash Medium (predeterminado) para features, UI y tests; Flash High o Pro para arquitectura, Havok, rendimiento WebGL, `balance.json` o `savefmt.ts`.
+- `.claude/`, `CLAUDE.md` y `~/.claude/` son del sistema de Claude: se pueden **leer** como referencia (`.claude/rules/` es documentación), nunca modificar. Los hooks de Claude no corren acá: las reglas que ellos aplican solas (no reiniciar `rc-test*`, sin git destructivo, verificar al cerrar) hay que cumplirlas a mano.
+- Permitido: cualquier script de `package.json`, `npx tsc`, `git` local (add, commit, worktree, log, diff), `graphify`, el navegador headless de las herramientas contra `:5173`, `:5174` y los `52xx` de worktrees. Prohibido: `git push`, borrar datos, levantar servidores fuera de pm2.
 
-**Alcance aclarado por el usuario (2026-10-10):** Gemini Only es la configuración nativa actual de este harness, no una exclusividad del repositorio. El equipo puede aportar y reutilizar recursos con todas las herramientas y modelos que el usuario elija; sus elecciones explícitas prevalecen. `docs/SPECIALISTS_ECOSYSTEM.md` permite trabajo autónomo o un orquestador temporal por tanda, sin roles fijos por proveedor. No cambiar la configuración de otra sesión por iniciativa propia.
+## Equivalencias
 
-- **Exclusivamente modelos Gemini:** Todo el trabajo principal, revisiones y subagentes (`invoke_subagent` con `inherit`, `flash_lite`, `flash` o `pro`) deben ejecutarse únicamente con modelos Gemini. Prohibido usar o delegar en Claude, Sonnet, Opus, OpenAI, GPT, Codex u otros proveedores sin autorización explícita del usuario.
-- **Aislamiento total respecto a Claude:** `.claude/`, `CLAUDE.md` y `~/.claude/` pertenecen a un sistema independiente. **Prohibido modificarlos, migrarlos o depender de ellos.**
-- **Routing dinámico de razonamiento (sin pedir permiso):**
-  - **Gemini Flash — Low:** búsquedas puntuales, ediciones localizadas, CSS simple, renombrados, documentación, comandos conocidos.
-  - **Gemini Flash — Medium (predeterminado):** desarrollo normal de features, UI/HUD, lógica de modos (`main.ts`, `duel.ts`, `kart.ts`, `match3.ts`), tests en Vitest, refactors acotados.
-  - **Gemini Flash — High:** arquitectura, colisiones/física Havok compleja, bugs persistentes, cuellos de botella de rendimiento WebGL, cambios en esquema de `balance.json` o migraciones de `savefmt.ts`, features transversales y verificación final de cambios sensibles.
+| Claude Code | Gemini / Antigravity |
+| --- | --- |
+| AskUserQuestion | `ask_question` (opción múltiple, recomendada primera; nunca preguntas sueltas en texto) |
+| Subagentes `*-bajo` con el TODO como encargo | `invoke_subagent` con el texto de `npm run todos encargo <slug>` |
+| Hooks (`guard`, `tsc-post`, `stop-verificar`) | Disciplina manual: `npx tsc --noEmit -p .` tras editar, `npm run verificar` al cerrar |
+| Memoria personal | `docs/traspaso/memoria/` (ya está en el repo) |
 
----
+## Skills de Antigravity (`.agents/skills/`)
 
-## 2. Reglas de Colaboración y Operación
+Cargar solo las proporcionales a la tarea: `codebase-discovery` (graphify), `implementation-strategy`, `frontend-design` (dentro de `docs/ART_DIRECTION.md` vigente, no del estilo viejo), `data-and-balance`, `testing`, `browser-verification` (headless), `code-review`, `security-review`, `performance-review`, `final-verification`. Flujo chico: implementación → `final-verification`. Flujo grande: discovery → strategy → implementación → testing → browser-verification → code-review → final-verification.
 
-**Autonomía autorizada (2026-10-10):** Gemini puede elegir tareas, ejecutar, verificar, integrar y cerrar ciclos dentro del alcance autorizado sin esperar a Codex. Codex puede revisar después; su revisión no es requisito de cierre ni continuidad. Leer `docs/VISUAL_SESSION_COORDINATION.md` para reservas temporales y handoffs; los encargos visuales propuestos no limitan otras líneas ya autorizadas ni crean propiedad permanente por proveedor.
+## Cierre de cada tarea
 
-1. **Preguntar antes de decidir diseño o balance:** Usa `ask_question` (opción múltiple, recomendada primero) para dudas reales de diseño, balance, precios o textos visibles. No hagas preguntas sueltas en texto plano.
-2. **Idioma:** Conversación en español. **Textos del juego:** español neutro e impersonal (*"Presiona"*, *"Sobrevive"*, *"El auto quedó destrozado"*); prohibido el voseo (*"Apretá"*, *"querés"*) y el tuteo (*"tu/te"*).
-3. **Grafo primero (`graphify`):** Antes de usar `grep` masivo o leer archivos enteros (`main.ts` y `menu.ts` superan los 100 KB), consulta `graphify query`, `graphify path` o `graphify explain`, o revisa `graphify-out/wiki/index.md`. Tras modificar código, ejecuta `graphify update .`.
-4. **Escalera Ponytail (YAGNI):** Reusar lo que ya existe → plataforma/stdlib → dependencia instalada → mínimo código nuevo. Atajos deliberados llevan comentario `// ponytail: <techo>`.
-5. **Trabajo en tanda y prueba única:** Aplica todos los cambios de la tanda primero y ejecuta la verificación una sola vez al final.
-   **Verificar en proporción al cambio** (filosofía del usuario, 2026-10-10; vale para TODA prueba): no revisar toda la casa cada vez. Siempre `npx tsc --noEmit -p .` (barato); lógica: `npx vitest run --changed --passWithNoTests`, y `npm test` entero solo antes de commit/push; visual: `npm run shots -- --changed` (elige sesiones por `git diff`, mapa en `scripts/lib/changed.mjs`); `perf -- --changed` solo si el cambio puede costar rendimiento; balance/jugabilidad: `sim` con 1-2 semillas; `npm run build` solo antes de push o si tocaste config, imports dinámicos o assets. Docs y herramientas sin efecto en el juego: lo mínimo. Suites completas (todas las capturas, perf entero, muchas semillas) solo para renovar referencias, antes de una publicación grande o si el usuario lo pide.
-6. **Servidores `pm2` compartidos (nunca levantar servidores propios):**
-   - `rc-dev` (`:5173`, HMR para el usuario), `rc-test` (`:5174`, sin HMR para pruebas headless: ejecutar `npm run test:restart` tras tocar código: espera a que nadie esté midiendo; nunca `pm2 restart rc-test` directo. En un git worktree el mismo comando levanta su propio `rc-test-<carpeta>`; `npm run test:down` al cerrar y `npm run test:ls` para ver servidores y candados), `rc-demo` (`:4173`, build).
+Nunca cerrar solo con «implementación completada»: evidencia (`npm run verificar`), estado del TODO (`npm run todos estado <slug> en-lote|hecha`), `docs/traspaso/HANDOFF.md` al día y, con `ask_question`, 2-4 propuestas para seguir (ver `docs/traspaso/memoria/cerrar-con-propuestas.md`). El registro de producto que antes vivía en `docs/PRODUCT_EVOLUTION.md` ahora es `docs/todos/` + `docs/decisiones/`.
 
----
+## Evolución de la geometría de los autos (relevo del 2026-10-13)
 
-## 3. Sistema de Agent Skills (`.agents/skills/`)
-
-Carga únicamente las skills proporcionales a la tarea (Progressive Disclosure):
-
-| Skill | Cuándo activarla |
-|---|---|
-| `codebase-discovery` | Explorar arquitectura, modos (`main`, `duel`, `kart`, `match3`), flujo de datos o dependencias con `graphify`. |
-| `implementation-strategy` | Planificar features nuevas o cambios que crucen módulos (`docs/*_PLAN.md`), evaluar riesgos y aplicar YAGNI. |
-| `frontend-design` | Diseñar o editar HUD/menús de chapa oscura (`kit.css`, `--jm-*`, `Rajdhani`), gabinete Junket Crush, íconos SVG o CSS responsive (`docs/ART_DIRECTION.md`). |
-| `data-and-balance` | Modificar `src/balance.json`, `src/balance.ts`, scripts de planilla (`balance:*`) o migraciones/sanitización en `src/savefmt.ts`. |
-| `testing` | Escribir o ejecutar tests unitarios en Vitest (`npm test`), simulaciones deterministas (`npm run sim`) o playtests (`playtest:duel`). |
-| `browser-verification` | Verificar visualmente o en navegador headless (`npm run shots`, modo `?lab`, `?duel`, `?race`, `?match3`, PC y celular). |
-| `code-review` | Revisar diffs buscando bugs reales, trampas de Havok/Babylon, rupturas de determinismo, regresiones o deuda Ponytail. |
-| `security-review` | Auditar sanitización de guardados (`savefmt.ts`), `innerHTML`/XSS, importador TSV, rutas relativas de Pages o dependencias. |
-| `performance-review` | Optimizar FPS/draw calls, instanciación (`template()`), pools (`fx.ts`), loops de `update()`, fachada `bjs.ts` o correr `npm run perf`. |
-| `final-verification` | Cierre con evidencia (`tsc --noEmit`, `npm test`, `npm run build`, pruebas headless, `graphify update .`, limpieza del diff) y disparo del ciclo de descubrimiento. |
-
-### Flujo Proporcional
-- **Cambio pequeño/localizado:** `Implementation` → `final-verification` (`tsc`, `test`, `build`) → `New Discovery`.
-- **Feature o cambio transversal:** `codebase-discovery` → `implementation-strategy` → `Implementation` (+ `frontend-design` / `data-and-balance`) → `testing` → `browser-verification` → `code-review` (+ `performance-review` / `security-review` si aplica) → `final-verification` → `New Discovery`.
-
----
-
-## 4. Loop Permanente de Evolución de Producto (Recursive Discovery Loop)
-
-**Regla esencial:** *Después de completar y validar una tarea, el agente debe revisar el estado actualizado del producto, identificar oportunidades genuinamente nuevas, presentar recomendaciones priorizadas y solicitar la siguiente decisión del usuario, manteniendo el contexto persistente.*
-
-```text
-EXPLORE → UNDERSTAND → DISCOVER → IMAGINE → PROPOSE → DISCUSS → DECIDE → IMPLEMENT → VALIDATE → REFINE → DOCUMENT → LEARN → NEW DISCOVERY ↺
-```
-
-1. **El final de una tarea inicia el siguiente descubrimiento:** Nunca cierres una entrega solo con *"Implementación completada"*. Tras validar con evidencia (`final-verification`), actualiza el registro persistente en [`docs/PRODUCT_EVOLUTION.md`](./docs/PRODUCT_EVOLUTION.md) (estado de módulos, decisiones aprobadas/descartadas, backlog y checkpoint de sesión).
-2. **Perspectiva renovada por ciclo:** Alterna lentes según el estado del producto (Calidad/Impeccable, Experiencia UX/UI, Integración Folded 2.5D, Simplificación/YAGNI, Rendimiento, Funcionalidades, Arquitectura, Producto). Evita repetir propuestas ya descartadas o inventar defectos artificiales.
-3. **Propuestas y criterio propio (2 a 4 opciones):** Para cada oportunidad detalla brevemente *qué es, qué problema resuelve, qué valor aporta, complejidad estimada y por qué conviene desarrollarla*. Emite siempre una **recomendación fundamentada** (impacto, valor, coherencia, riesgo, reutilización) y consulta al usuario mediante `ask_question` cómo desea continuar (elegir una, combinar, modificar, descartar, explorar otra lente o delegar).
-
-
----
-
-## Evolución de la geometría de los autos (relevo de Claude, 2026-10-13)
-
-**Autorización explícita del usuario (2026-10-13), prevalece sobre las restricciones de arriba para esta línea de trabajo:**
-- Gemini trabaja con **autonomía total**, al mismo nivel que Claude: elegir, ejecutar, verificar, exportar, commitear y seguir en ciclos
-  sin pedir permiso para cada paso.
-- Puede **leer** cualquier archivo del repo, incluidos `CLAUDE.md`, `.claude/` y `docs/`, como referencia (no modificarlos). Los
-  archivos `docs/evo-colab/*`, `docs/EVO_VEHICULOS.md`, `src/car_genes.*`, `src/evo_probe.ts`, `scripts/evo*` son suyos para editar.
-- Puede correr **cualquier script de `package.json`** (`npm run evo`, `test:restart`, `test:down`, `test:ls`, `shots`, `perf`, `sim`,
-  `test`, `build`) y `npx tsc`, `git` local (add, commit, worktree, log, diff) y `graphify`. `npm run test:restart` es la forma
-  autorizada de reiniciar `rc-test` (usa pm2 por dentro: está permitido).
-- Puede abrir el navegador (headless de las herramientas o el de Antigravity) contra `http://localhost:5173`, `:5174` y los
-  puertos `52xx` de los worktrees.
-- Puede lanzar subagentes Gemini en paralelo (por ejemplo, evaluadores visuales independientes) cuando acorten el camino.
-- Lo único que sigue prohibido: `git push`, borrar datos del usuario, modificar `.claude/` o `CLAUDE.md`, levantar servidores
-  sueltos fuera de pm2.
-
-Línea de trabajo autorizada por el usuario para seguir con Gemini a su ritmo. Antes de tocar nada leer, en orden:
-`docs/evo-colab/RELEVO-gemini.md` (estado, próximos pasos y ciclo paso a paso), `docs/EVO_VEHICULOS.md` (sistema, criterios,
-lecciones) y `docs/evo-colab/PROTOCOLO.md` + `plantillas/` (evaluaciones y relevos en .md, compartidos con Claude y ChatGPT).
-Herramienta: `npm run evo` (sin dependencias nuevas; usa `rc-test` como todo lo demás). Un commit local por ciclo, sin push.
+Línea autorizada con autonomía total para Gemini: leer `docs/evo-colab/RELEVO-gemini.md`, `docs/EVO_VEHICULOS.md`, `docs/evo-colab/PROTOCOLO.md` y `plantillas/`. Archivos propios: `docs/evo-colab/*`, `docs/EVO_VEHICULOS.md`, `src/car_genes.*`, `src/evo_probe.ts`, `scripts/evo*`. Herramienta: `npm run evo`. Un commit local por ciclo, sin push.

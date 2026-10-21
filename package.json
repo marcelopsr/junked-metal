@@ -55,7 +55,8 @@
     "check": "tsc --noEmit -p . & a=$!; vitest run --changed --passWithNoTests & b=$!; node scripts/shots.mjs --changed & c=$!; wait $a && wait $b && wait $c",
     "app": "npx -y @tauri-apps/cli@2 build && rm -rf \"/Applications/Junked Metal Nativo.app\" && cp -R \"src-tauri/target/release/bundle/macos/Junked Metal.app\" \"/Applications/Junked Metal Nativo.app\"",
     "todos": "node scripts/todos.mjs",
-    "docs:check": "node scripts/docs-check.mjs"
+    "docs:check": "node scripts/docs-check.mjs",
+    "hooks:install": "cp scripts/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit"
   },
   "keywords": [],
   "type": "module",

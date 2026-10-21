@@ -108,32 +108,22 @@ El archivo maestro es **`CLAUDE.md`** (raíz): Claude lo lee al arrancar. Resume
 - Textos del juego en español neutro impersonal ("Presiona", no "Presioná").
 - Para cambiar la identidad de tu versión, empezar por ese archivo, `DESIGN.md` y `PRODUCT.md`.
 
-## 6. Qué hay en el zip y qué en git
+## 6. Qué viaja en git
 
-El repo público (`marcelopsr/junked-metal`) **no** versiona las herramientas internas: `CLAUDE.md`, `.claude/`, `graphify-out/`. El zip sí las trae.
+Desde 2026-10-21 el harness está versionado en el repo público: `.claude/settings.json` (permisos y hooks), `.claude/hooks/`, `.claude/rules/`, `.claude/skills/` (orquestar, repo-vivo, encargar, cerrar-tanda), `.claude/agents/` (estudio-*, sonnet-bajo, opus-bajo, revisor, interprete) y toda la documentación de traspaso (`docs/traspaso/`, `docs/todos/`, `docs/decisiones/`). `CLAUDE.md` sigue sin versionar (lo reemplazan `AGENTS.md` + `docs/traspaso/INDICE.md` para cualquier agente); `graphify-out/` y `.claude/trabajo/` tampoco.
 
-| Carpeta / archivo | Qué es |
-|---|---|
-| `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` | Instrucciones del proyecto para Claude / otros agentes |
-| `.claude/settings.json`, `launch.json` | Plugin ponytail habilitado, permisos, preview |
-| `.claude/trabajo/` | Arranque, tablero, handoffs, encargos, specs |
-| `graphify-out/` | Grafo de conocimiento del código (`graph.json`, `GRAPH_REPORT.md`, wiki) |
-| `docs/` | Dirección de arte, AME, planes, auditorías, handoffs |
-| `_claude_kit/skills/` | Skills de usuario que usa la metodología: `orquestar`, `graphify` |
-| `_claude_kit/agents/` | Definiciones de subagentes (`opus-medio`, `sonnet-bajo`, `revisor`, `interprete`…) |
-| `_claude_kit/memory/` | Memoria persistente de Claude sobre este proyecto (preferencias y decisiones) |
+No incluidos (se regeneran): `node_modules/`, `dist/`, `.shots/`, `.perf/`, `.e2e/`, `.verificar/`, `logs/`, `.claude/worktrees/`, credenciales `.env*.local`.
 
-No incluidos (se regeneran): `node_modules/`, `dist/`, `.shots/`, `.perf/`, `.e2e/`, `logs/`, `.claude/worktrees/`, `scratch/`, credenciales `.env*.local`.
-
-### Instalar el kit de Claude en otra máquina
+### Instalar en otra máquina
 
 ```bash
-cp -R _claude_kit/skills/* ~/.claude/skills/
-cp -R _claude_kit/agents/* ~/.claude/agents/
-pip install graphifyy && graphify update .   # o seguir ~/.claude/skills/graphify/SKILL.md
+npm install && npx playwright install chromium
+pip install graphifyy && graphify update .
+npm run hooks:install          # pre-commit: tablero + docs:check
+cp -R .claude/skills/* ~/.claude/skills/   # opcional: skills también a nivel usuario
 ```
 
-La memoria es opcional: copiarla a `~/.claude/projects/<ruta-del-proyecto-con-guiones>/memory/` si se quiere que Claude arranque con el mismo contexto. El plugin ponytail se instala solo al abrir el proyecto (marketplace declarado en `.claude/settings.json`).
+La memoria del dueño ya viene curada en `docs/traspaso/memoria/`; no hace falta copiar la memoria personal de Claude. El plugin ponytail se instala solo al abrir el proyecto (marketplace declarado en `.claude/settings.json`).
 
 ## 7. Hacer tu propia versión
 

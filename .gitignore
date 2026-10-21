@@ -12,6 +12,7 @@ graphify-out/
 !.claude/settings.json
 !.claude/hooks/
 !.claude/rules/
+!.claude/skills/
 CLAUDE.md
 .gitattributes
 logs/

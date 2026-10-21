@@ -1,0 +1,8 @@
+#!/bin/sh
+# pre-commit: regenera el tablero de TODOs y revisa la documentación; si está rota, el commit no entra.
+# Instalar: npm run hooks:install (copia este archivo a .git/hooks/pre-commit; graphify usa post-commit, no choca).
+cd "$(git rev-parse --show-toplevel)" || exit 0
+git diff --cached --name-only | grep -qE '^docs/(todos|traspaso|decisiones|plantillas)/' || exit 0
+npm run -s todos >/dev/null || { echo "pre-commit: npm run todos falló (cabecera de un TODO inválida)"; exit 1; }
+git add docs/todos/README.md
+npm run -s docs:check || { echo "pre-commit: documentación rota (enlaces o > 80 líneas); arreglar y volver a commitear"; exit 1; }

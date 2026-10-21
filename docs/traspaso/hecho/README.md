@@ -15,6 +15,7 @@ Estado tomado del código al 2026-10-21 (`package.json` 0.97.0-dev). La madurez 
 | [presentacion.md](presentacion.md) | Render, FX, audio, radio, HUD, menús, intro, replay, PWA |
 | [online.md](online.md) | Login, telemetría, récords, salas PeerJS, panel admin, licencias, monitoreo, respaldo, portada |
 | [herramientas.md](herramientas.md) | shots, sim, perf, e2e, evo, verificar, publicar, balance xlsx, graphify, pm2 |
+| [laboratorio-arte-3d.md](laboratorio-arte-3d.md) | Rama experimental exp/arte-3d: laboratorio de estilos, kit voxel, estilizador de Blender (worktree cerrado 2026-10-21) |
 
 Otras entradas del traspaso: [problemas](../problemas/README.md) (síntoma, causa, arreglo).
 

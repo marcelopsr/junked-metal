@@ -4,11 +4,11 @@ Estado al cerrar la última sesión larga. Se reescribe entero, no se acumula. L
 
 ## 2026-10-21
 
-**Objetivo vigente:** harness montado (hooks, reglas por tema, permisos, TODOs repo-vivo, traspaso); seguir con la cola de TODOs elegidos.
+**Objetivo vigente:** harness montado y portable (hooks de sesión, kit versionado en `.claude/`, `AGENTS.md`/`GEMINI.md` como entrada para otros agentes, CI con docs:check, skills `/encargar` y `/cerrar-tanda`); seguir con la cola de TODOs elegidos.
 
-**Rama y árbol:** `master` en `550ad6f` (commit del harness) más la documentación de traspaso sin commitear. Sin cambios en `src/`. Hay PNG nuevos sin versionar en `assets-src/imagegen-production/encore-v1/raw/` (referencias de ChatGPT pendientes de registrar en `docs/art_direction/visual_reference_register.md`).
+**Rama y árbol:** `master` en `550ad6f` (commit del harness) más traspaso y harness de sesión. Sin cambios en `src/`. Hay PNG nuevos sin versionar en `assets-src/imagegen-production/encore-v1/raw/` (referencias de ChatGPT pendientes de registrar en `docs/art_direction/visual_reference_register.md`).
 
-**Worktrees vivos:** `.claude/worktrees/agent-a7022662f82c8e51a` (rama `worktree-agent-a7022662f82c8e51a`, wip de la repetición de la mejor expedición, 1afafd8) y `.claude/worktrees/arte-3d` (rama `exp/arte-3d`). Las otras 25 ramas `worktree-agent-*` ya integradas se borraron.
+**Worktrees vivos:** `.claude/worktrees/agent-a7022662f82c8e51a` (rama `worktree-agent-a7022662f82c8e51a`, wip de la repetición de la mejor expedición, 1afafd8) (único). El worktree `arte-3d` se cerró (rama `exp/arte-3d` conservada; ficha en `hecho/laboratorio-arte-3d.md`); las 25 ramas `worktree-agent-*` ya integradas se borraron.
 
 **Elegidas (ver [tablero](../todos/README.md)):** repetición de la mejor expedición (retomar desde el wip, rebasear), gravedad en bajadas + hielo en Paseo libre, enseñar al bot a salir del pozo de la pileta, quitar Demolición de master, mover PACTS a balance.json.
 

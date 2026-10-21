@@ -2,7 +2,7 @@
 
 > Generado por `npm run todos` — no editar a mano. Formato: [FORMATO.md](FORMATO.md).
 
-idea: 45 · pregunta: 1 · elegida: 5 · en-curso: 0 · en-lote: 0 · hecha: 0 · descartada: 1
+idea: 47 · pregunta: 1 · elegida: 5 · en-curso: 0 · en-lote: 0 · hecha: 0 · descartada: 1
 
 ## En curso (0)
 
@@ -28,7 +28,7 @@ _Nada._
 
 _Nada._
 
-## Ideas (45)
+## Ideas (47)
 
 | TODO | área | prioridad |
 | --- | --- | --- |
@@ -70,6 +70,8 @@ _Nada._
 | [Pilotos con habilidad activa propia](pilotos-habilidad-activa.md) | juego | media |
 | [Proyector cae más rápido que la tarántula](proyector-cae-rapido.md) | juego | baja |
 | [Ranking semanal ENCORE con pieza exclusiva](ranking-semanal.md) | server | media |
+| [Registrar las referencias nuevas de ChatGPT (encore-v1/raw)](registrar-referencias-chatgpt.md) | arte | media |
+| [Rescatar el estilizador de Blender y el kit voxel de exp/arte-3d](rescatar-estilizador-y-kit-voxel.md) | arte | baja |
 | [Revisor v0.93: menores](revisor-093-menores.md) | juego | baja |
 | [Riel de la grúa (carril y carga) en partida real](riel-grua-en-partida.md) | juego | baja |
 | [Selector de auto y color en ENCORE online](selector-auto-online.md) | juego | baja |
