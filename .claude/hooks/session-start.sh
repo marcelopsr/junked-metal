@@ -12,5 +12,8 @@ if [ -f docs/todos/README.md ]; then
   awk '/^## (En curso|Preguntas para el dueño|Elegidas por prioridad)/{p=1} /^## (En lote|Ideas)/{p=0} p' docs/todos/README.md | grep -E '^\| \[|^## ' | sed 's/^## /- /' | head -25
 fi
 [ -f docs/traspaso/HANDOFF.md ] && { echo; echo "### Handoff (docs/traspaso/HANDOFF.md)"; sed -n '/^## /,$p' docs/traspaso/HANDOFF.md | head -22; }
-[ -n "$(find .claude/trabajo -maxdepth 1 -name HANDOFF-auto.md -mtime -2 2>/dev/null)" ] && echo "Hay .claude/trabajo/HANDOFF-auto.md (dejado por PreCompact): leerlo si la sesión anterior se cortó."
+if [ -f .claude/trabajo/HANDOFF-auto.md ]; then
+  ha=$(sed -n 's/.*HEAD: \([0-9a-f]\{7\}\).*/\1/p' .claude/trabajo/HANDOFF-auto.md | head -1); hn=$(git rev-parse --short=7 HEAD 2>/dev/null); fh=$(sed -n '1s/.*— //p' .claude/trabajo/HANDOFF-auto.md)
+  if [ -n "$ha" ] && [ "$ha" = "$hn" ]; then echo "HANDOFF-auto.md ($fh) es del HEAD actual: la sesión anterior se cortó a mitad de algo; leerlo (.claude/trabajo/HANDOFF-auto.md)."; else echo "HANDOFF-auto.md ($fh, HEAD $ha) es más viejo que el HEAD actual ($hn): ignorarlo."; fi
+fi
 echo; echo "Protocolo: docs/traspaso/INDICE.md. Decir en 3 líneas dónde quedamos y qué sigue; preguntas solo con AskUserQuestion."

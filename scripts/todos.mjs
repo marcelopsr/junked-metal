@@ -125,7 +125,10 @@ function main() {
     const pie = PIE.find(existsSync);
     console.log(`# ${t.cab.titulo}\n${t.cuerpo.trim()}\n\n${pie ? readFileSync(pie, 'utf8').trim() : ''}`);
     return;
-  } else if (cmd) throw new Error(`comando desconocido: ${cmd}`);
+  } else if (cmd === '--help' || cmd === '-h' || cmd === 'help') {
+    console.log('uso: node scripts/todos.mjs                      regenera docs/todos/README.md y valida cabeceras\n     node scripts/todos.mjs estado <slug> <estado> [--rama r] [--cuenta c]\n     node scripts/todos.mjs tomar <slug> --cuenta c --rama r\n     node scripts/todos.mjs encargo <slug>          imprime el encargo (cuerpo + pie)\nestados: ' + OK.estado.join(' | ') + '\n(con npm: npm run todos -- <comando>)');
+    return;
+  } else if (cmd) throw new Error(`comando desconocido: ${cmd} (ver --help)`);
   writeFileSync(`${DIR}README.md`, `${generar()}\n`);
   console.log('tablero generado: docs/todos/README.md');
 }

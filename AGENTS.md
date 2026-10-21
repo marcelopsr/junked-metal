@@ -16,7 +16,8 @@ Este archivo es la entrada única para agentes que no son Claude Code. Todo lo q
 - Todo número de balance en `src/balance.json`; todo lo que decide la partida usa `rng()`, nunca `Math.random`.
 - Pruebas headless con los servidores pm2 (`rc-test` :5174): **nadie reinicia `rc-test*`**, nadie levanta servidores ni abre puertos propios, nadie abre el juego en un navegador con foco para verificar. Verificación: `npm run verificar -- --nivel rapido|tanda` una vez al final de la tanda.
 - Nada de `git checkout/restore/stash/reset` sobre archivos: el árbol tiene trabajo de otros. Sin `git push` salvo pedido del dueño.
+- Sin hook SessionStart (otra herramienta), comparar `git log -1` con lo que dice `docs/traspaso/HANDOFF.md`: el handoff no repite el HEAD a propósito. Un worktree vivo que no es tuyo (`git worktree list`) no se toca: su TODO dice `tomado_por` y `rama`.
 - Decisiones de producto, balance o textos visibles se preguntan al dueño antes (opción múltiple, recomendada primera); problemas ajenos se anotan como TODO nuevo en `docs/todos/`, no se arreglan de paso.
-- Entender con `graphify query` antes de grep masivo; construir con la escalera ponytail (YAGNI, reusar, mínimo código).
+- Entender con `graphify query` antes de grep masivo (si `graphify` no está instalado: `graphify-out/wiki/index.md` o grep); construir con la escalera ponytail (YAGNI, reusar, mínimo código).
 
 En otra máquina: `npm install`, `npx playwright install chromium`, `npm run hooks:install` (pre-commit) y `npm run harness:check`. Para Gemini/Antigravity hay además `GEMINI.md` (modelo y skills de `.agents/skills/`). Para Claude Code manda `CLAUDE.md` (no versionado) más los hooks de `.claude/`.

@@ -11,7 +11,7 @@ desde: 2026-10-21
 Los números de los pactos están escritos en `src/encore.ts` (~187-205); moverlos a `balance.json` (regla del repo).
 
 ## Alcance
-- Toca: encore.ts, balance.json, scripts/balance-xlsx.mjs (DESC).
+- Toca: encore.ts, scripts/balance-xlsx.mjs (DESC). `balance.json`: el agente propone las filas en el informe y las integra el orquestador (archivo compartido).
 - No toca: nada fuera de eso sin coordinar con el orquestador.
 
 ## Cómo verificar

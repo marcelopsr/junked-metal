@@ -1,6 +1,6 @@
 # Encargos y orquestación
 
-Metodología `orquestar` (skill de usuario `~/.claude/skills/orquestar`): la sesión principal entiende, reparte, integra y verifica; los agentes construyen con un encargo autocontenido. Guía del repo: `.claude/trabajo/ARRANQUE.md`.
+Metodología `orquestar` (skill versionada en `.claude/skills/orquestar/`): la sesión principal entiende, reparte, integra y verifica; los agentes construyen con un encargo autocontenido. Guía del repo: `.claude/trabajo/ARRANQUE.md`.
 
 ## Quién hace qué
 
