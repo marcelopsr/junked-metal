@@ -12,5 +12,5 @@ if [ -f docs/todos/README.md ]; then
   awk '/^## (En curso|Preguntas para el dueño|Elegidas por prioridad)/{p=1} /^## (En lote|Ideas)/{p=0} p' docs/todos/README.md | grep -E '^\| \[|^## ' | sed 's/^## /- /' | head -25
 fi
 [ -f docs/traspaso/HANDOFF.md ] && { echo; echo "### Handoff (docs/traspaso/HANDOFF.md)"; sed -n '/^## /,$p' docs/traspaso/HANDOFF.md | head -22; }
-[ -f .claude/trabajo/HANDOFF-auto.md ] && echo "Hay .claude/trabajo/HANDOFF-auto.md (dejado por PreCompact): leerlo si la sesión anterior se cortó."
+[ -n "$(find .claude/trabajo -maxdepth 1 -name HANDOFF-auto.md -mtime -2 2>/dev/null)" ] && echo "Hay .claude/trabajo/HANDOFF-auto.md (dejado por PreCompact): leerlo si la sesión anterior se cortó."
 echo; echo "Protocolo: docs/traspaso/INDICE.md. Decir en 3 líneas dónde quedamos y qué sigue; preguntas solo con AskUserQuestion."

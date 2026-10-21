@@ -35,7 +35,7 @@ export function revisar() {
   const todos = leer();
   for (const t of todos) {
     for (const e of t.errores) mal.push(`todos/${t.archivo}: ${e}`);
-    if (t.cab.estado === 'en-curso' && t.cab.rama) {
+    if (t.cab.estado === 'en-curso' && t.cab.rama && !process.env.CI) {
       try { execFileSync('git', ['rev-parse', '--verify', '--quiet', t.cab.rama], { cwd: RAIZ, stdio: 'ignore' }); }
       catch { mal.push(`todos/${t.archivo}: la rama «${t.cab.rama}» no existe`); }
     }

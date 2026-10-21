@@ -8,7 +8,7 @@ Filosofía del dueño: **probar en proporción al cambio** y **una sola vez al f
 
 | Nivel | Qué corre | Cuándo |
 | --- | --- | --- |
-| `rapido` | tsc, vitest `--changed`, docs:check | lógica sin efecto visual; antes de un commit chico |
+| `rapido` | tsc, vitest `--changed`, docs:check, harness:check | lógica sin efecto visual; antes de un commit chico |
 | `tanda` | rapido + `shots --changed` + sim 2 semillas (si el diff toca balance o jugabilidad) + e2e pc 1 semilla (si toca `src/`) | al cerrar la tanda de un encargo |
 | `puerta` | tsc, test:todo, balance:check, build, e2e pc y cel ×5, sim ENCORE 20 semillas, shots pc y cel completos | solo el orquestador, antes de una versión o de publicar |
 

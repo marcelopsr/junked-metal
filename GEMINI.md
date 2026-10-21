@@ -7,7 +7,7 @@ Leer primero `AGENTS.md` (entrada única para todo agente) y seguir sus enlaces:
 - **Solo modelos Gemini** para trabajo principal, revisiones y subagentes (`invoke_subagent` con `inherit`, `flash_lite`, `flash` o `pro`); no delegar en otros proveedores sin autorización del dueño (decisión del 2026-10-10).
 - Routing de razonamiento sin pedir permiso: Flash Low para ediciones localizadas y docs; Flash Medium (predeterminado) para features, UI y tests; Flash High o Pro para arquitectura, Havok, rendimiento WebGL, `balance.json` o `savefmt.ts`.
 - `.claude/`, `CLAUDE.md` y `~/.claude/` son del sistema de Claude: se pueden **leer** como referencia (`.claude/rules/` es documentación), nunca modificar. Los hooks de Claude no corren acá: las reglas que ellos aplican solas (no reiniciar `rc-test*`, sin git destructivo, verificar al cerrar) hay que cumplirlas a mano.
-- Permitido: cualquier script de `package.json`, `npx tsc`, `git` local (add, commit, worktree, log, diff), `graphify`, el navegador headless de las herramientas contra `:5173`, `:5174` y los `52xx` de worktrees. Prohibido: `git push`, borrar datos, levantar servidores fuera de pm2.
+- Permitido: los scripts de `package.json` salvo los que publican o tocan servidores (`publicar`, `dev`, `demo`, `demo:refresh`, `pm2:*`, `test:unlock -- --force`), `npx tsc`, `git` local (add, commit, worktree, log, diff), `graphify`, el navegador headless de las herramientas contra `:5173`, `:5174` y los `52xx` de worktrees. Prohibido: `git push`, borrar datos, levantar servidores fuera de pm2.
 
 ## Equivalencias
 

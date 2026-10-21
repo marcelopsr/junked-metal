@@ -7,7 +7,7 @@ staged=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$staged" ] && exit 0
 
 # 1. secretos
-if printf '%s\n' "$staged" | grep -qE '(^|/)\.env[^/]*\.local$|(^|/)\.env$|\.pem$|\.key$|id_(rsa|ed25519)$'; then
+if printf '%s\n' "$staged" | grep -qE '(^|/)\.env([.][^/]*)?$|\.pem$|\.key$|id_(rsa|ed25519)$'; then
   echo "pre-commit: hay archivos de credenciales en el commit:"; printf '%s\n' "$staged" | grep -E '\.env|\.pem$|\.key$|id_(rsa|ed25519)$'; exit 1
 fi
 pat='sk-(live|proj|ant)-[A-Za-z0-9_-]{16,}|AKIA[0-9A-Z]{16}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|xox[baprs]-[A-Za-z0-9-]{20,}|AIza[0-9A-Za-z_-]{30,}|(CF|CLOUDFLARE)_API_TOKEN=[A-Za-z0-9_-]{20,}|JM_SECRET=[A-Za-z0-9]{12,}|EXCHANGE_SECRET=[A-Za-z0-9]{12,}'

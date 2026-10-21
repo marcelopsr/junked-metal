@@ -1,7 +1,7 @@
 #!/bin/sh
 # PreCompact: deja un handoff mínimo con el estado del árbol antes de perder contexto.
 cd "$(dirname "$0")/../.." || exit 0
-out=.claude/trabajo/HANDOFF-auto.md
+mkdir -p .claude/trabajo; out=.claude/trabajo/HANDOFF-auto.md
 ult=$(ls -t .verificar/*.md 2>/dev/null | head -1)
 {
   echo "# Handoff automático (PreCompact) — $(date '+%Y-%m-%d %H:%M')"

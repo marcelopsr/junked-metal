@@ -22,7 +22,7 @@ El dueño alterna herramientas cuando se queda sin tokens. Todo lo durable vive 
 
 ## Lo que todo agente puede y no puede
 
-- Puede: leer todo el repo (incluido `.claude/`), correr cualquier script de `package.json`, `git` local (add, commit, worktree, log, diff), `graphify`, el navegador headless de las herramientas.
+- Puede: leer todo el repo (incluido `.claude/`), correr los scripts de `package.json` salvo `publicar`, `dev`, `demo*`, `pm2:*` y `test:unlock -- --force`, `git` local (add, commit, worktree, log, diff), `graphify`, el navegador headless de las herramientas.
 - No puede: editar `.claude/settings.json`, `.claude/hooks/` ni `CLAUDE.md`; `git push`; reiniciar o parar `rc-test*`; levantar servidores fuera de pm2; abrir el juego con foco para verificar.
 - Al cerrar: estado del TODO (`npm run todos -- estado <slug> …`), `HANDOFF.md` al día, `npm run docs:check`, y propuestas para seguir.
 

@@ -12,7 +12,7 @@ Metodología `orquestar` (skill de usuario `~/.claude/skills/orquestar`): la ses
 ## El TODO es el encargo
 
 1. `npm run todos -- tomar <slug> --cuenta mac --rama <rama>` (falla si otra cuenta lo tiene).
-2. `npm run todos -- encargo <slug>` imprime cuerpo + pie de cierre (`.claude/trabajo/pie-encargo.md`): se pega tal cual al agente.
+2. `npm run todos -- encargo <slug>` imprime cuerpo + pie de cierre (`docs/plantillas/pie-encargo.md`): se pega tal cual al agente.
 3. El cuerpo trae qué y por qué, alcance (toca / no toca), cómo verificar. Si falta algo, se completa el TODO antes de lanzar, no en el chat del agente.
 4. Decisiones de diseño que aparezcan a mitad de camino: el agente propone opciones y no las aplica; se preguntan al dueño.
 
@@ -24,4 +24,4 @@ Metodología `orquestar` (skill de usuario `~/.claude/skills/orquestar`): la ses
 - Todos los cambios de la tanda y UNA verificación al final (`npm run verificar -- --nivel tanda`).
 - Informe final: implementado, verificado (comando y resultado), observado, pendiente, bloqueos.
 
-Plantillas largas (contrato de delegación y handoff AME 17.2/17.3): `.claude/trabajo/ARRANQUE.md`.
+Plantillas largas: [../../plantillas/contrato-delegacion.md](../../plantillas/contrato-delegacion.md) y [../../plantillas/handoff-sesion.md](../../plantillas/handoff-sesion.md).

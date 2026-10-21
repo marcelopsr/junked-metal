@@ -5,7 +5,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const DIR = process.env.TODOS_DIR ?? fileURLToPath(new URL('../docs/todos/', import.meta.url)); // TODOS_DIR: la prueba trabaja sobre una copia
-const PIE = [fileURLToPath(new URL('../.claude/trabajo/pie-encargo.md', import.meta.url)), fileURLToPath(new URL('../docs/plantillas/pie-encargo.md', import.meta.url))];
+const PIE = [fileURLToPath(new URL('../docs/plantillas/pie-encargo.md', import.meta.url))];
 const OK = {
   estado: ['idea', 'pregunta', 'elegida', 'en-curso', 'en-lote', 'hecha', 'descartada'],
   area: ['juego', 'arte', 'server', 'portada', 'infra', 'docs'],
@@ -116,7 +116,7 @@ function main() {
     if (fl.cuenta && !CUENTAS.includes(fl.cuenta)) throw new Error(`cuenta inválida: ${fl.cuenta}`);
     if (cmd === 'tomar' && (!fl.cuenta || !fl.rama)) throw new Error('tomar exige --cuenta y --rama');
     const act = leer().find((t) => t.slug === slug)?.cab;
-    if (cmd === 'tomar' && act?.estado === 'en-curso' && act.tomado_por && act.tomado_por !== fl.cuenta) throw new Error(`${slug} ya está en-curso con ${act.tomado_por} (rama ${act.rama})`);
+    if (cmd === 'tomar' && act?.estado === 'en-curso' && act.rama && (act.tomado_por !== fl.cuenta || act.rama !== fl.rama)) throw new Error(`${slug} ya está en-curso con ${act.tomado_por} (rama ${act.rama}); si es tuyo, repetir con la misma --rama`);
     cambiar(slug, { estado, ...(fl.rama && { rama: fl.rama }), ...(fl.cuenta && { tomado_por: fl.cuenta }) });
   } else if (cmd === 'encargo') {
     const { pos } = flags(resto, []);

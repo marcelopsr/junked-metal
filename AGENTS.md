@@ -19,4 +19,4 @@ Este archivo es la entrada única para agentes que no son Claude Code. Todo lo q
 - Decisiones de producto, balance o textos visibles se preguntan al dueño antes (opción múltiple, recomendada primera); problemas ajenos se anotan como TODO nuevo en `docs/todos/`, no se arreglan de paso.
 - Entender con `graphify query` antes de grep masivo; construir con la escalera ponytail (YAGNI, reusar, mínimo código).
 
-Para Gemini/Antigravity hay además `GEMINI.md` (modelo y skills de `.agents/skills/`). Para Claude Code manda `CLAUDE.md` (no versionado) más los hooks de `.claude/`.
+En otra máquina: `npm install`, `npx playwright install chromium`, `npm run hooks:install` (pre-commit) y `npm run harness:check`. Para Gemini/Antigravity hay además `GEMINI.md` (modelo y skills de `.agents/skills/`). Para Claude Code manda `CLAUDE.md` (no versionado) más los hooks de `.claude/`.

@@ -12,6 +12,7 @@ paths:
   - "src/encore_run.ts"
   - "src/bjs.ts"
   - "src/models/**"
+  - "src/main.ts"
 ---
 
 # Trampas de Havok (ya nos mordieron)
