@@ -16,4 +16,4 @@ Estado al cerrar la última sesión larga. Se reescribe entero, no se acumula. L
 
 **Verificación:** `harness:check` (60 casos del guard, 11 hooks), `todos.check`, `docs:check`, CI de GitHub en verde (`revisar.yml`), revisor independiente y ensayo de relevo en frío aplicados. No se corrió nada que toque el juego (no hubo cambios en `src/`).
 
-**Siguiente acción concreta:** encargar los 5 TODOs elegidos con `/encargar`, de a 3 con archivos disjuntos. `main.ts` y `balance.json` los integra el orquestador: el agente de repetición trabaja en encore.ts/outro.ts/net.ts/rng.ts y entrega el parche de main.ts aparte; igual Demolición (main.ts) y PACTS (balance.json). Antes de encargar la repetición, preguntar al dueño dónde va el botón (ver el TODO).
+**Siguiente acción concreta:** encargar los 5 TODOs elegidos con `/encargar`, de a 3 con archivos disjuntos. `main.ts` y `balance.json` los integra el orquestador: el agente de repetición trabaja en encore.ts/outro.ts/net.ts/rng.ts y entrega el parche de main.ts aparte; igual Demolición (main.ts) y PACTS (balance.json). La repetición ya tiene decisión de producto (botón en resultados y cartelera): lista para encargar.

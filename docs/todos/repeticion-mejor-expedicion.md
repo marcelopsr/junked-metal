@@ -9,10 +9,10 @@ viejo_id: T39
 ---
 
 ## Qué y por qué
-Volver a jugar (o ver) la mejor expedición desde la misma semilla. «Mejor» = la expedición con mayor puntaje final en `Save` (hoy no se guarda nada de ella: hay que guardar semilla, auto, piloto y pactos elegidos al cerrar una expedición con récord). Dónde se dispara: botón «Repetir la mejor» en la pantalla de resultados de ENCORE (texto y lugar a confirmar con el dueño antes de encargar: es decisión de producto).
+Volver a jugar (o ver) la mejor expedición desde la misma semilla. «Mejor» = la expedición con mayor puntaje final en `Save` (hoy no se guarda nada de ella: hay que guardar semilla, auto, piloto y pactos elegidos al cerrar una expedición con récord). Dónde se dispara (decidido por el dueño 2026-10-21): botón «Repetir la mejor» en la pantalla de resultados de ENCORE y en la cartelera (afiche del récord). Repetir = jugarla de nuevo con esa configuración fija.
 
 ## Alcance
-- Toca: encore.ts, outro.ts, net.ts, rng.ts, savefmt.ts (migración del guardado si suma campos). `main.ts` solo las líneas del wip: el agente entrega ese parche aparte y lo integra el orquestador.
+- Toca: encore.ts, outro.ts, net.ts, rng.ts, savefmt.ts, menu/cartelera.ts (migración del guardado si suma campos). `main.ts` solo las líneas del wip: el agente entrega ese parche aparte y lo integra el orquestador.
 - No toca: nada fuera de eso sin coordinar con el orquestador.
 
 ## Cómo verificar
