@@ -18,7 +18,7 @@ Dirección de arte vigente: [`docs/ART_DIRECTION.md`](../../ART_DIRECTION.md) (J
 - **Replay y polaroid.** Cámara lenta de cierre y foto de resultados. `src/replay.ts`, `src/outro.ts`. Madurez: usable.
 - **Carga y consejos.** `src/loading.ts`, `src/load.css`, `src/tutorial.ts`. Madurez: estable.
 - **PWA.** `public/manifest.webmanifest` (con `crossorigin="use-credentials"` en `index.html`) y `public/sw.js` (red primero, el redirect de Access no se guarda). Instalable desde el Worker; prueba en aparato real pendiente ([instalar-app-real](../../todos/instalar-app-real.md)). App nativa con Tauri en `src-tauri/` (`npm run app`).
-- **Modelos e instancias.** `src/models.ts` (fachada) y `src/models/*.ts`, `glb.ts`, `carGlb.ts`; bichos como instancias de plantillas, nunca mallas sueltas por entidad. Planes históricos: [LOD_AND_INSTANCING_PLAN](../../LOD_AND_INSTANCING_PLAN.md).
+- **Modelos e instancias.** `src/models.ts` (fachada) y `src/models/*.ts`, `glb.ts`, `carGlb.ts`; bichos como instancias de plantillas, nunca mallas sueltas por entidad. Planes históricos: [LOD_AND_INSTANCING_PLAN](../../archivo/planes/LOD_AND_INSTANCING_PLAN.md).
 
 ## Cómo se prueba
 

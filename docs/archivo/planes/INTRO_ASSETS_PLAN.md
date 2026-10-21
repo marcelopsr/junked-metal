@@ -16,20 +16,20 @@ Responsabilidad: ilustraciones, texturas, modelos y puesta en escena visual. La 
 
 ## Estado real investigado
 
-- Dirección vigente: [`ART_DIRECTION.md`](ART_DIRECTION.md), día + mundo Folded de metal plegado, paleta industrial, materiales gastados y Rajdhani. La noche de la intro es una excepción conservada por la guía y ratificada por el usuario.
-- Intro efectiva: [`src/intro.ts`](../src/intro.ts), canvas 192×108 sin imágenes externas; cuatro escenas de 5 / 5 / 5,2 / 4,4 segundos, total **19,6 segundos**. La historia vigente en código es la liga del patio, no la casa que apaga sus luces descrita en un apartado antiguo de la guía.
-- Presentación: [`src/intro.css`](../src/intro.css), escena 16:9, subtítulos y logo fuera del dibujo. `playIntro`, teclado, toque, gamepad y modo calmo deben conservarse en una futura integración. [`src/main.ts`](../src/main.ts) ofrece `?intro`; la reproducción automática efectiva ocurre en cargas sin `mute`/`lab`, aunque comentarios antiguos describen solo el primer arranque.
+- Dirección vigente: [`ART_DIRECTION.md`](../../ART_DIRECTION.md), día + mundo Folded de metal plegado, paleta industrial, materiales gastados y Rajdhani. La noche de la intro es una excepción conservada por la guía y ratificada por el usuario.
+- Intro efectiva: [`src/intro.ts`](../../../src/intro.ts), canvas 192×108 sin imágenes externas; cuatro escenas de 5 / 5 / 5,2 / 4,4 segundos, total **19,6 segundos**. La historia vigente en código es la liga del patio, no la casa que apaga sus luces descrita en un apartado antiguo de la guía.
+- Presentación: [`src/intro.css`](../../../src/intro.css), escena 16:9, subtítulos y logo fuera del dibujo. `playIntro`, teclado, toque, gamepad y modo calmo deben conservarse en una futura integración. [`src/main.ts`](../../../src/main.ts) ofrece `?intro`; la reproducción automática efectiva ocurre en cargas sin `mute`/`lab`, aunque comentarios antiguos describen solo el primer arranque.
 - Capturas nuevas: cuatro escenas en `.shots/investigacion-arte/intro-{cartel,rivales,auto,cierre}.png`, contra pm2 `rc-test` :5174, Chromium headless con Metal y audio desactivado. Navegador cerrado al terminar; sin errores `pageerror`. No hay aún escenario de intro en `scripts/scenarios.mjs`.
 - Capturas existentes de portada, Junket Crush y Carrera revisadas como contexto; no constituyen validación nueva de esos modos.
-- Modelos activos: `FOLDED_SLICE = true` en [`src/folded.ts`](../src/folded.ts); `PROC`, `PETS` y `carHull` en `src/folded_slice.ts`. `src/carGlb.ts` omite cargar los GLB de autos en este estado; `src/glb.ts` hornea las plantillas Folded. Retocar únicamente los `.blend`/GLB antiguos no cambia los modelos activos.
-- Ya existen materiales, atlas, calcos, utilería y geometría reutilizables en `folded.ts` y `kit3d.ts`. Inventario anterior: [`ASSET_INVENTORY.md`](ASSET_INVENTORY.md).
+- Modelos activos: `FOLDED_SLICE = true` en [`src/folded.ts`](../../../src/folded.ts); `PROC`, `PETS` y `carHull` en `src/folded_slice.ts`. `src/carGlb.ts` omite cargar los GLB de autos en este estado; `src/glb.ts` hornea las plantillas Folded. Retocar únicamente los `.blend`/GLB antiguos no cambia los modelos activos.
+- Ya existen materiales, atlas, calcos, utilería y geometría reutilizables en `folded.ts` y `kit3d.ts`. Inventario anterior: [`ASSET_INVENTORY.md`](../../ASSET_INVENTORY.md).
 - Blender local confirmado por CLI: **5.2.2 LTS**, `/Applications/Blender.app`. Hay scripts editables de construcción/exportación en `assets-src/`. No se produjo todavía ningún modelo nuevo.
 
 ## Muestra producida
 
-![Storyboard conceptual, cuatro escenas](images/intro-storyboard-v1.png)
+![Storyboard conceptual, cuatro escenas](../../images/intro-storyboard-v1.png)
 
-Archivo: [`intro-storyboard-v1.png`](images/intro-storyboard-v1.png). Generado con la herramienta integrada `image_gen`, usando las cuatro capturas nuevas de la intro y la captura existente del buggy en portada. Prompt exacto: [`intro-storyboard-v1.prompt.txt`](images/intro-storyboard-v1.prompt.txt).
+Archivo: [`intro-storyboard-v1.png`](../../images/intro-storyboard-v1.png). Generado con la herramienta integrada `image_gen`, usando las cuatro capturas nuevas de la intro y la captura existente del buggy en portada. Prompt exacto: [`intro-storyboard-v1.prompt.txt`](../../images/intro-storyboard-v1.prompt.txt).
 
 La lámina propone composición, luz, profundidad y materiales. **Es una imagen conceptual: no contiene geometría 3D, capas independientes ni animación.** Las formas y materiales generados deben ajustarse a los modelos canónicos durante la producción.
 
@@ -43,7 +43,7 @@ Límites visibles antes de convertirla en recursos finales:
 
 ## Producción propuesta de la intro
 
-**Producción entregada:** [`assets-src/intro/cinematic-v1/README.md`](../assets-src/intro/cinematic-v1/README.md). Cuatro fondos cinematográficos activos, cinco personajes con transparencia y un cartel independiente sin texto; prompts exactos, inventario de medidas y comprobaciones incluidos. Se conserva además el fondo original de tres focos: once PNG fuente, diez activos. [Vista del montaje](../assets-src/intro/cinematic-v1/preview.png) y [montaje local editable](../assets-src/intro/cinematic-v1/index.html). Las imágenes se produjeron por separado con `image_gen`, no recortando la lámina. Son capas para composición 2D: personajes en una pose; luces y vegetación horneadas en cada fondo. No se produjeron capas de parallax, geometría 3D ni animación de ruedas.
+**Producción entregada:** [`assets-src/intro/cinematic-v1/README.md`](../../../assets-src/intro/cinematic-v1/README.md). Cuatro fondos cinematográficos activos, cinco personajes con transparencia y un cartel independiente sin texto; prompts exactos, inventario de medidas y comprobaciones incluidos. Se conserva además el fondo original de tres focos: once PNG fuente, diez activos. [Vista del montaje](../../../assets-src/intro/cinematic-v1/preview.png) y [montaje local editable](../../../assets-src/intro/cinematic-v1/index.html). Las imágenes se produjeron por separado con `image_gen`, no recortando la lámina. Son capas para composición 2D: personajes en una pose; luces y vegetación horneadas en cada fondo. No se produjeron capas de parallax, geometría 3D ni animación de ruedas.
 
 | Momento existente | Mejora visual | Recursos a producir | Movimiento propuesto |
 |---|---|---|---|

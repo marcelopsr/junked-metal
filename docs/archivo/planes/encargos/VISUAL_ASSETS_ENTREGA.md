@@ -1,6 +1,6 @@
 # Entrega — upgrade visual modelos 3D (2026-10-07)
 
-Referencias: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../VISUAL_MODELS_UPGRADE_PLAN.md), [`ART_DIRECTION.md`](../ART_DIRECTION.md), [`OLEADA2_BLENDER_ART.md`](./OLEADA2_BLENDER_ART.md).
+Referencias: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../../../VISUAL_MODELS_UPGRADE_PLAN.md), [`ART_DIRECTION.md`](../../../ART_DIRECTION.md), [`OLEADA2_BLENDER_ART.md`](./OLEADA2_BLENDER_ART.md).
 
 ## Dirección artística aplicada
 

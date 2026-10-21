@@ -1,6 +1,6 @@
 // Verificación por niveles, un solo comando para todos los agentes. Uso:
 //   npm run verificar -- --nivel rapido|tanda|puerta [--seco]
-//   rapido: tsc + vitest --changed + docs:check
+//   rapido: tsc + vitest --changed + docs:check + harness:check
 //   tanda:  rapido + shots --changed (caché por hash) + sim 2 semillas (si el diff toca balance/lógica) + e2e pc 1 semilla (si toca src/)
 //   puerta: tsc, test:todo, balance:check, build, e2e pc,cel x5, sim --encore 20 semillas, shots pc y cel completos
 // Cada fase corre sus pasos en paralelo (las herramientas con navegador toman SU servidor del grupo y usan --par propio); si una fase falla, no arranca la siguiente.
@@ -28,7 +28,7 @@ const S = (id, [cmd, args]) => ({ id, cmd, args });
 const seeds20 = Array.from({ length: 20 }, (_, i) => i + 1).join(",");
 const fases = [];
 const omit = []; // pasos que el nivel no corre y por qué
-fases.push([S("tsc", ["npx", ["tsc", "--noEmit", "-p", "."]]), nivel === "puerta" ? S("test:todo", npm("test:todo")) : S("vitest", ["npx", ["vitest", "run", "--changed", "--passWithNoTests"]]), S("docs:check", npm("docs:check"))]);
+fases.push([S("tsc", ["npx", ["tsc", "--noEmit", "-p", "."]]), nivel === "puerta" ? S("test:todo", npm("test:todo")) : S("vitest", ["npx", ["vitest", "run", "--changed", "--passWithNoTests"]]), S("docs:check", npm("docs:check")), S("harness:check", npm("harness:check"))]);
 if (nivel === "puerta") {
   fases[0].push(S("balance:check", npm("balance:check")));
   fases.push([S("build", npm("build"))]);

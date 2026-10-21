@@ -1,6 +1,6 @@
 # Git sin destruir el trabajo de otros
 
-Prohibido en encargos y en la sesión: `git checkout` de archivos, `git restore`, `git stash`, reset duro, `git clean`. Para revertir lo propio: copiar el archivo al scratchpad antes de tocarlo y volver a copiarlo. Commits locales con mensaje `tipo(área): qué`; push solo cuando el dueño lo pide o al publicar.
+Prohibido en encargos y en la sesión: `git checkout` de archivos, `git restore`, `git stash`, reset duro, `git clean`. Para revertir lo propio: copiar el archivo al scratchpad antes de tocarlo y volver a copiarlo. Commits locales con mensaje `tipo(área): qué`; push solo cuando el dueño lo pide o al publicar: el guard bloquea `git push` salvo que el comando lleve `# push-ok`, marcador que solo pone el orquestador en la sesión donde el dueño lo pidió.
 
 **Why:** 2026-10-14 un agente hizo `git checkout src/moon.ts` creyendo que no había otros cambios y borró el trabajo de la Luna de dos sesiones (se salvó por una copia casual).
 

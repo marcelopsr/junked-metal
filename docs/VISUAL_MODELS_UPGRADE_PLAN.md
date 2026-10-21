@@ -4,7 +4,7 @@ Estado: **Aprobado (§8 cerrado 2026-10-07). Oleada 1: refinar 5 GLB en `assets-
 
 Fecha: 2026-10-07 · Pedido: mejora visual de todos los modelos usados en juego con **oleadas paralelas multiagente**.
 
-Referencias obligatorias: [`docs/ART_DIRECTION.md`](./ART_DIRECTION.md), [`CLAUDE.md`](../CLAUDE.md) (instancing, Havok, pruebas), contrato GLB en [`src/glb.ts`](../src/glb.ts).
+Referencias obligatorias: [`docs/ART_DIRECTION.md`](ART_DIRECTION.md), [`CLAUDE.md`](../CLAUDE.md) (instancing, Havok, pruebas), contrato GLB en [`src/glb.ts`](../src/glb.ts).
 
 ---
 
@@ -204,7 +204,7 @@ Usar **hasta 4 preguntas × 4 opciones**; opción **(Recomendado)** primero. Mar
 |----------|----------|
 | Fidelidad (≈ P3) | **Mismo low-poly, pulido** (+10–20 % tris, silueta legible). |
 | Alcance criaturas | **Todos los enemigos aún sin paso Blender** (8 procedurales §2.1) **+** refinar/importar los **5 GLB** existentes (`assets-src/`). |
-| Pipeline | **Mallas externas open source (glTF) o refinar GLB**; no solo código procedural. Catálogo: [`docs/OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md) (2026-10-07). |
+| Pipeline | **Mallas externas open source (glTF) o refinar GLB**; no solo código procedural. Catálogo: [`docs/OPEN_SOURCE_ASSETS_SURVEY.md`](./archivo/planes/OPEN_SOURCE_ASSETS_SURVEY.md) (2026-10-07). |
 | Verificación | **Impeccable** por criatura/oleada (+ shots lab/bestiario y perf según §6). |
 
 | P4 colisión | **Solo visual** — `DEF.size` y `GLB.scale` fijos; modelo ajustado en Blender a la caja actual. |
@@ -258,14 +258,14 @@ Usar **hasta 4 preguntas × 4 opciones**; opción **(Recomendado)** primero. Mar
 | Aprobado por usuario | **Sí** (toolbox 2026-10-07) |
 | Checklist §8 | **Cerrado** |
 | Fase 0 (`models.ts`) | **Diferida** — no bloquea oleada 1 GLB; valorar antes de oleada 4 (8 autos en paralelo). |
-| Próximo paso | **Oleada 1c + 2 cerradas** (`5b636a0`, `dc5f1e5`, `8156093`): 5 GLB esculpidos en `public/models/`, 8× `proc2/` en Blender (`OLEADA2_PROCEDURAL_BLENDER.md`), 8 hulls auto (`OLEADA2_CARS_BLENDER.md` / `carGlb.ts`). **Siguiente:** oleada **2b** — publicar `*_raw.glb` → `public/models/` + `glb.ts` para los 8 procedurales; piloto GLB; `shots --diff` con refs actualizadas. Inventario vivo: [`encargos/OLEADA2_BLENDER_ART.md`](./encargos/OLEADA2_BLENDER_ART.md). |
+| Próximo paso | **Oleada 1c + 2 cerradas** (`5b636a0`, `dc5f1e5`, `8156093`): 5 GLB esculpidos en `public/models/`, 8× `proc2/` en Blender (`OLEADA2_PROCEDURAL_BLENDER.md`), 8 hulls auto (`OLEADA2_CARS_BLENDER.md` / `carGlb.ts`). **Siguiente:** oleada **2b** — publicar `*_raw.glb` → `public/models/` + `glb.ts` para los 8 procedurales; piloto GLB; `shots --diff` con refs actualizadas. Inventario vivo: [`encargos/OLEADA2_BLENDER_ART.md`](./archivo/planes/encargos/OLEADA2_BLENDER_ART.md). |
 
 ---
 
 ## 10. Referencias rápidas
 
-- Encuesta OSS: [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md) (licencias, top 5, mapeo por `Kind`).
-- Oleada 1 GLB (encargos A–E): [`VISUAL_MODELS_OLEADA1_GLB.md`](./VISUAL_MODELS_OLEADA1_GLB.md).
+- Encuesta OSS: [`OPEN_SOURCE_ASSETS_SURVEY.md`](./archivo/planes/OPEN_SOURCE_ASSETS_SURVEY.md) (licencias, top 5, mapeo por `Kind`).
+- Oleada 1 GLB (encargos A–E): [`VISUAL_MODELS_OLEADA1_GLB.md`](VISUAL_MODELS_OLEADA1_GLB.md).
 - Graphify: nodos `models.ts`, `glb.ts`, `enemyTemplate`, `carModel`, `template()` (`graphify query "procedural models enemies glb"`).
 - Blender / export: `assets-src/README` implícito en comentarios de `glb.ts` y scripts por carpeta.
 - Regresión duelo (no mezclar con supervivencia salvo shots globales): `npm run shots -- --only duel --diff`.

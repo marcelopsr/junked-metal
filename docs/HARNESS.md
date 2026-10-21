@@ -100,7 +100,7 @@ El archivo maestro es **`CLAUDE.md`** (raíz): Claude lo lee al arrancar. Resume
 4. **Criterios AME** (`docs/AME_MASTER_PROMPT.md`): 0 dependencias/servicios/abstracciones nuevas por defecto; listar todo lo que un cambio alcanza antes de editar; extracciones de a una responsabilidad; al cerrar separar *implementado / verificado / observado / pendiente / hipótesis*.
 5. **Decisiones del usuario** con la herramienta AskUserQuestion (hasta 4 preguntas × 4 opciones, recomendada primero). Sin preguntar si no hay dudas reales.
 6. **Tablero:** `docs/todos/` (un archivo por TODO, método repo-vivo; `npm run todos` genera `docs/todos/README.md`; `npm run todos -- encargo <slug>` imprime el encargo). Problemas ajenos se anotan ahí como TODO, no se arreglan de paso. Reglas por tema en `.claude/rules/` y guardarraíles en `.claude/hooks/` (ver `.claude/settings.json`).
-7. **Cierre de sesión:** actualizar `docs/HANDOFF-PROYECTOS.md` §5 con lo hecho y lo abierto.
+7. **Cierre de sesión:** actualizar `docs/traspaso/HANDOFF.md` con lo hecho y lo abierto.
 
 ### Dirección de arte y textos
 

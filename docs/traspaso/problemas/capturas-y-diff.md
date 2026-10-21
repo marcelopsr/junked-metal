@@ -11,4 +11,4 @@ Herramientas: [hecho/herramientas.md](../hecho/herramientas.md). Registro de ref
 - **`shots` de celular muestra «Q PARA GIRAR» en el Paseo libre.** Causa probable: los shots mueven el auto con teclas simuladas y `ctl` pasa a `keys`. Es un artefacto de la prueba (hipótesis, sin confirmar en aparato real).
 - **El e2e pasaba verde sin cubrir la calma de 20 s.** Causa: el paso solo comprobaba `phase === "route"` y `__enc.land()` salta los 150 s del teleportador, con el OVERLOAD ya forzando enjambres. Falta una comprobación de 0 enemigos en 20 s reales (QA-0.93, hallazgo C).
 - **Referencias de imágenes sin versionar (636 MB).** Decisión del 2026-10-15: commit local de respaldo y refs fuera del repo; ver [ROADMAP-1.0](../../ROADMAP-1.0.md) sección 5.
-- **El perf del escenario `partida` parece alto (~254 draws).** No es cuello de botella: es modo god; `partida_llena` mide ~168. Ver [HANDOFF-PROYECTOS](../../HANDOFF-PROYECTOS.md) sección 4.
+- **El perf del escenario `partida` parece alto (~254 draws).** No es cuello de botella: es modo god; `partida_llena` mide ~168. Ver [HANDOFF-PROYECTOS](../../archivo/harness-viejo/HANDOFF-PROYECTOS.md) sección 4.

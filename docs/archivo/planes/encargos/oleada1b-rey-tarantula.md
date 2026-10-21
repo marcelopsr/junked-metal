@@ -1,6 +1,6 @@
 # Encargo oleada 1b — Rey + tarántula (`src/models.ts`)
 
-Fecha: 2026-10-07 · Plan: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../VISUAL_MODELS_UPGRADE_PLAN.md) § Oleada 3 (pack procedural minijefes).
+Fecha: 2026-10-07 · Plan: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../../../VISUAL_MODELS_UPGRADE_PLAN.md) § Oleada 3 (pack procedural minijefes).
 
 **Estado** (2026-10-07): **cerrado** — siluetas y patas en `enemyTemplate` + `LEGS` / `legTemplate` (solo `rey`, `tarantula`). `tsc` OK. Shots lab/jefes → integrador.
 

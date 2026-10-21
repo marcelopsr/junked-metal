@@ -9,8 +9,8 @@
 **Referencias obligatorias (solo lectura):**
 
 - Siluetas y escala: [`docs/OPEN_SOURCE_ASSETS_SURVEY.md`](../OPEN_SOURCE_ASSETS_SURVEY.md) § friccion / § robot (Kenney Toy Car Kit, Kenney Robot Pack).
-- Plan maestro: [`docs/VISUAL_MODELS_UPGRADE_PLAN.md`](../VISUAL_MODELS_UPGRADE_PLAN.md) §2.1 (procedural, instancing).
-- Emisivos: [`docs/ART_DIRECTION.md`](../ART_DIRECTION.md) (faros `#fff4d0`, robot `#facc15`).
+- Plan maestro: [`docs/VISUAL_MODELS_UPGRADE_PLAN.md`](../../../VISUAL_MODELS_UPGRADE_PLAN.md) §2.1 (procedural, instancing).
+- Emisivos: [`docs/ART_DIRECTION.md`](../../../ART_DIRECTION.md) (faros `#fff4d0`, robot `#facc15`).
 - Colisión fija: `DEF.friccion.size` `[0.9, 0.6, 1.6]`, `DEF.robot.size` `[1.2, 1.7, 1.0]` en `enemies.ts`.
 
 ---

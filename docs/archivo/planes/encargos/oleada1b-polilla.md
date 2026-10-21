@@ -1,6 +1,6 @@
 # Encargo oleada 1b — Polilla (procedural en `src/models.ts`)
 
-Fecha: 2026-10-07 · Oleada **1b** bestiario · Plan: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../VISUAL_MODELS_UPGRADE_PLAN.md) § Oleada 2 (polilla + `wingTemplate`).
+Fecha: 2026-10-07 · Oleada **1b** bestiario · Plan: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../../../VISUAL_MODELS_UPGRADE_PLAN.md) § Oleada 2 (polilla + `wingTemplate`).
 
 **Estado:** aplicado en código procedural (sin GLB). Sin commit en este encargo.
 
@@ -15,7 +15,7 @@ Fecha: 2026-10-07 · Oleada **1b** bestiario · Plan: [`VISUAL_MODELS_UPGRADE_PL
 
 ## Objetivo de diseño
 
-Silueta **legible a distancia de lab** (`?lab` fila de enemigos): alas más anchas que el cuerpo, ojos lavanda con bloom (charco de muerte y goo `#c9a0ff` en `main.ts`). Dirección: [`ART_DIRECTION.md`](../ART_DIRECTION.md) — low-poly creíble, emisivos como identidad, sin terror.
+Silueta **legible a distancia de lab** (`?lab` fila de enemigos): alas más anchas que el cuerpo, ojos lavanda con bloom (charco de muerte y goo `#c9a0ff` en `main.ts`). Dirección: [`ART_DIRECTION.md`](../../../ART_DIRECTION.md) — low-poly creíble, emisivos como identidad, sin terror.
 
 ## Cambios realizados
 

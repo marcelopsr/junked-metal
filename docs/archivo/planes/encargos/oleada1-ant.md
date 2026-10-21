@@ -10,10 +10,10 @@
 
 **Referencias obligatorias (solo lectura):**
 
-- Contrato VAT / materiales / animaciones: [`src/glb.ts`](../../src/glb.ts) (comentario L6–25, `WALK`/`ATTACK` L34).
-- Dirección de arte: [`docs/ART_DIRECTION.md`](../ART_DIRECTION.md) (emisivos, enemigos § Personajes, Megabonk día).
-- Plan maestro: [`docs/VISUAL_MODELS_UPGRADE_PLAN.md`](../VISUAL_MODELS_UPGRADE_PLAN.md) §2.1, §4 oleada 1, §5 criterios, §8 P3 (+10–20 % tris).
-- Licencia base: [`assets-src/ant/LICENSE.txt`](../../assets-src/ant/LICENSE.txt) (CC0 OpenGameArt, mujtaba-io).
+- Contrato VAT / materiales / animaciones: [`src/glb.ts`](../../../../src/glb.ts) (comentario L6–25, `WALK`/`ATTACK` L34).
+- Dirección de arte: [`docs/ART_DIRECTION.md`](../../../ART_DIRECTION.md) (emisivos, enemigos § Personajes, Megabonk día).
+- Plan maestro: [`docs/VISUAL_MODELS_UPGRADE_PLAN.md`](../../../VISUAL_MODELS_UPGRADE_PLAN.md) §2.1, §4 oleada 1, §5 criterios, §8 P3 (+10–20 % tris).
+- Licencia base: [`assets-src/ant/LICENSE.txt`](../../../../assets-src/ant/LICENSE.txt) (CC0 OpenGameArt, mujtaba-io).
 
 ---
 

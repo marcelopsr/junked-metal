@@ -1,6 +1,6 @@
 # Inventario visual — estado 2026-10-07
 
-Fuente de verdad detallada: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../VISUAL_MODELS_UPGRADE_PLAN.md) §2 · Arte Blender: [`OLEADA2_BLENDER_ART.md`](./OLEADA2_BLENDER_ART.md).
+Fuente de verdad detallada: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../../../VISUAL_MODELS_UPGRADE_PLAN.md) §2 · Arte Blender: [`OLEADA2_BLENDER_ART.md`](./OLEADA2_BLENDER_ART.md).
 
 ## Resumen ejecutivo
 
@@ -11,7 +11,7 @@ Fuente de verdad detallada: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../VISUAL_MODELS_U
 | Autos (8 `CarKind`) | `cars/*.glb` (hull) | `assets-src/cars/<id>/` | `carGlb.ts` + piezas `carModel()` |
 | Piloto | — | pendiente | `pilotParts` procedural |
 
-**Dirección:** [`ART_DIRECTION.md`](../ART_DIRECTION.md) — low-poly Megabonk, emisivos por tipo, colisión `DEF.size` fija.
+**Dirección:** [`ART_DIRECTION.md`](../../../ART_DIRECTION.md) — low-poly Megabonk, emisivos por tipo, colisión `DEF.size` fija.
 
 ## 13 `Kind` — checklist
 

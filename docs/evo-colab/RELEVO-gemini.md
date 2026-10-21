@@ -1,6 +1,6 @@
 # Relevo para la flota de vehículos (2026-10-13, actualizado por Gemini)
 
-Reglas generales del repo: `GEMINI.md` (raíz). Problemas ajenos a esta tarea: anotarlos en `docs/PRODUCT_EVOLUTION.md`, no arreglarlos de paso.
+Reglas generales del repo: `GEMINI.md` (raíz). Problemas ajenos a esta tarea: anotarlos como TODO en `docs/todos/`, no arreglarlos de paso.
 Al terminar una tanda, dejar un relevo nuevo con `plantillas/RELEVO.md` y una línea en `BITACORA.md` (así Claude o ChatGPT retoman).
 
 ## Estado

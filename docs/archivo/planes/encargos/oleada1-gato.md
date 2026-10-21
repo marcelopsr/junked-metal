@@ -3,7 +3,7 @@
 **Agente:** un solo ámbito de escritura: `assets-src/gato/*` y salida `public/models/gato.glb`.  
 **No tocar:** `src/` (incl. `glb.ts`, `enemies.ts`, `models.ts`), otras carpetas `assets-src/`, `assets-src/cuadrupedo.py` / `bicho.py` salvo acuerdo con integrador.
 
-Referencias: [`docs/VISUAL_MODELS_OLEADA1_GLB.md`](../VISUAL_MODELS_OLEADA1_GLB.md) (encargo E), [`docs/ART_DIRECTION.md`](../ART_DIRECTION.md), contrato GLB en [`src/glb.ts`](../../src/glb.ts).
+Referencias: [`docs/VISUAL_MODELS_OLEADA1_GLB.md`](../../../VISUAL_MODELS_OLEADA1_GLB.md) (encargo E), [`docs/ART_DIRECTION.md`](../../../ART_DIRECTION.md), contrato GLB en [`src/glb.ts`](../../../../src/glb.ts).
 
 **Estado** [Malla gato oleada 1](75e6485e-122b-4bd5-be52-0f7fee934b99) (2026-10-07): **cerrado** — oleada **1b visible** (2026-10-07): rayas/cola §1b, **6904** tris GLB; `spin` min Y **-0.17** sin cambio; `SEQ` intacto. Renders en `assets-src/gato/renders/`. Integrador: shots.
 

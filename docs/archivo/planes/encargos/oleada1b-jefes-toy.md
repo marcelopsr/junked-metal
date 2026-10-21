@@ -9,8 +9,8 @@
 **Referencias (lectura):**
 
 - [`docs/OPEN_SOURCE_ASSETS_SURVEY.md`](../OPEN_SOURCE_ASSETS_SURVEY.md) — siluetas objetivo por jefe.
-- [`docs/ART_DIRECTION.md`](../ART_DIRECTION.md) — rojo = amenaza enemiga (ojos, telegrafías, tuercas).
-- [`docs/VISUAL_MODELS_UPGRADE_PLAN.md`](../VISUAL_MODELS_UPGRADE_PLAN.md) — split toy procedural vs plaga GLB.
+- [`docs/ART_DIRECTION.md`](../../../ART_DIRECTION.md) — rojo = amenaza enemiga (ojos, telegrafías, tuercas).
+- [`docs/VISUAL_MODELS_UPGRADE_PLAN.md`](../../../VISUAL_MODELS_UPGRADE_PLAN.md) — split toy procedural vs plaga GLB.
 
 ---
 

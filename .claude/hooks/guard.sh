@@ -9,6 +9,7 @@ echo "$cmd" | grep -Eq '(^|[;&|][[:space:]]*)git[[:space:]]+(restore|stash|clean
 echo "$cmd" | grep -Eq 'git[[:space:]]+reset[[:space:]]+(--hard|--merge)' && bloquear "git reset --hard/--merge destruye cambios locales."
 echo "$cmd" | grep -Eq 'git[[:space:]]+checkout[[:space:]]+(--|\.|-f|[^[:space:]]+[[:space:]]+--[[:space:]])' && bloquear "git checkout de archivos descarta cambios locales (cambiar de rama con un nombre solo sí vale)."
 echo "$cmd" | grep -Eq 'git[[:space:]]+push.*(--force|-f([[:space:]]|$))' && bloquear "push forzado."
+echo "$cmd" | grep -Eq '(^|[;&|][[:space:]]*)git[[:space:]]+push' && ! echo "$cmd" | grep -q 'push-ok' && bloquear "git push solo cuando el dueño lo pidió en esta sesión: agregar el marcador «# push-ok» al comando (solo el orquestador, nunca un subagente)."
 echo "$cmd" | grep -Eq '(pkill|killall)[[:space:]].*(vite|pm2|node)' && bloquear "no matar servidores a mano: los maneja pm2."
 echo "$cmd" | grep -Eq 'rm[[:space:]]+-[a-zA-Z]*r[a-zA-Z]*f?[[:space:]]+' && ! echo "$cmd" | grep -Eq 'rm[[:space:]]+-[a-zA-Z]*[[:space:]]+(\./)?(\.shots|\.perf|\.e2e|\.verificar|\.evo|dist|node_modules|scratch|/private/tmp|/tmp)' && bloquear "rm -rf solo sobre .shots/.perf/.e2e/.verificar/.evo/dist/node_modules/scratch/tmp."
 exit 0

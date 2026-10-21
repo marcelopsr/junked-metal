@@ -22,4 +22,5 @@ jobs:
       - run: npm run balance:check
       - run: npm run docs:check
       - run: node scripts/todos.check.mjs
+      - run: npm run harness:check
       - run: npm run build

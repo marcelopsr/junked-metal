@@ -8,7 +8,7 @@ Estado vigente en [CLAUDE.md](../../../CLAUDE.md) (primer párrafo); si discrepa
 | Supervivencia | Vigente (base de la partida) | `main.ts`, `run*.ts`, `combat.ts`, `weapons/`, `enemies/` |
 | Paseo libre | Vigente | `zones/libre*.ts`, `free_*.ts` (lógica pura con pruebas), meta en `save.libre` |
 | Luna | Vigente | `moon*.ts`; plan en [../../LUNA.md](../../LUNA.md) |
-| Junked Crush (match-3) | Congelado: solo recibe cambios compartidos | `match3*.ts`, `match3_logic.ts`, `match3_levels.ts`; plan en [../../MATCH3_ARCADE.md](../../MATCH3_ARCADE.md) |
+| Junked Crush (match-3) | Congelado: solo recibe cambios compartidos | `match3*.ts`, `match3_logic.ts`, `match3_levels.ts`; plan en [../../MATCH3_ARCADE.md](../../archivo/planes/MATCH3_ARCADE.md) |
 | Carrera (kart) | Archivada | `kart.ts`, `kart_cfg.ts`, `race.css`; dev con `?race` |
 | Demolición | Archivada en la rama `archivo/demolicion` (fuera de master) | [../../../.claude/trabajo/ARCHIVO-demolicion.md](../../../.claude/trabajo/ARCHIVO-demolicion.md) |
 

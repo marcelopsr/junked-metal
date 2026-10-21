@@ -2,7 +2,7 @@
 
 Estado: **mallas en Blender** (2026-10-07), versionadas en `dc5f1e5`. Agente: [Esculpir 8 enemigos procedural](30b962b3-bcf4-4440-a240-c2733cd9754c). Runtime sigue en `enemyTemplate()` (`src/models.ts`) hasta oleada 2b (`public/models/` + VAT estático).
 
-Plan maestro: [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md) · Encuesta OSS: [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md) · Arte: [`ART_DIRECTION.md`](./ART_DIRECTION.md).
+Plan maestro: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../../VISUAL_MODELS_UPGRADE_PLAN.md) · Encuesta OSS: [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md) · Arte: [`ART_DIRECTION.md`](../../ART_DIRECTION.md).
 
 ---
 
@@ -57,7 +57,7 @@ Repetir por `kind`; registrar en `src/glb.ts` y quitar rama de `enemyTemplate` (
 
 ## Contrato GLB (futuro)
 
-Igual que [`VISUAL_MODELS_OLEADA1_GLB.md`](./VISUAL_MODELS_OLEADA1_GLB.md):
+Igual que [`VISUAL_MODELS_OLEADA1_GLB.md`](../../VISUAL_MODELS_OLEADA1_GLB.md):
 
 - Orientación Blender: Z arriba, cabeza hacia **+Y**; pies en **y = 0** (el script ajusta `min_y`).
 - Materiales: `Body` (tinte `DEF.color` en runtime), `Eye*` / `Lamp` emisivos; resto conserva albedo del GLB.

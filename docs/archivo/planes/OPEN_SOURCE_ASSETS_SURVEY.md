@@ -1,6 +1,6 @@
 # Survey de assets open source (glTF/GLB) — Junked Metal
 
-Fecha: 2026-10-07 · Relacionado: [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md), [`ART_DIRECTION.md`](./ART_DIRECTION.md).
+Fecha: 2026-10-07 · Relacionado: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../../VISUAL_MODELS_UPGRADE_PLAN.md), [`ART_DIRECTION.md`](../../ART_DIRECTION.md).
 
 ## Criterios de inclusión
 
@@ -180,7 +180,7 @@ Referencias en `models.ts` (`pilotParts`: muneca, robot, dino, figura, soldadito
 | hormiga | OpenGameArt ant (mujtaba-io) + `export_clean.py` | CC0 (`assets-src/ant/LICENSE.txt`) |
 | escupidora, escarabajo, perro, gato | Procedural Blender (`bicho.py` / `cuadrupedo.py`) | Autoría del repo |
 
-Detalle de refinamiento: [`VISUAL_MODELS_OLEADA1_GLB.md`](./VISUAL_MODELS_OLEADA1_GLB.md).
+Detalle de refinamiento: [`VISUAL_MODELS_OLEADA1_GLB.md`](../../VISUAL_MODELS_OLEADA1_GLB.md).
 
 ---
 

@@ -24,7 +24,7 @@ Cargar solo las proporcionales a la tarea: `codebase-discovery` (graphify), `imp
 
 ## Cierre de cada tarea
 
-Nunca cerrar solo con «implementación completada»: evidencia (`npm run verificar`), estado del TODO (`npm run todos -- estado <slug> en-lote|hecha`), `docs/traspaso/HANDOFF.md` al día y, con `ask_question`, 2-4 propuestas para seguir (ver `docs/traspaso/memoria/cerrar-con-propuestas.md`). El registro de producto que antes vivía en `docs/PRODUCT_EVOLUTION.md` ahora es `docs/todos/` + `docs/decisiones/`.
+Nunca cerrar solo con «implementación completada»: evidencia (`npm run verificar`), estado del TODO (`npm run todos -- estado <slug> en-lote|hecha`), `docs/traspaso/HANDOFF.md` al día y, con `ask_question`, 2-4 propuestas para seguir (ver `docs/traspaso/memoria/cerrar-con-propuestas.md`). El registro de producto que antes vivía en `docs/archivo/harness-viejo/PRODUCT_EVOLUTION.md` ahora es `docs/todos/` + `docs/decisiones/`.
 
 ## Evolución de la geometría de los autos (relevo del 2026-10-13)
 

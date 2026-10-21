@@ -1,6 +1,6 @@
 # Encargo oleada 1 — Escarabajo (`assets-src/escarabajo/`)
 
-Fecha: 2026-10-07 · Agente **C** de [`VISUAL_MODELS_OLEADA1_GLB.md`](../VISUAL_MODELS_OLEADA1_GLB.md) · Plan maestro: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../VISUAL_MODELS_UPGRADE_PLAN.md) § Oleada 1.
+Fecha: 2026-10-07 · Agente **C** de [`VISUAL_MODELS_OLEADA1_GLB.md`](../../../VISUAL_MODELS_OLEADA1_GLB.md) · Plan maestro: [`VISUAL_MODELS_UPGRADE_PLAN.md`](../../../VISUAL_MODELS_UPGRADE_PLAN.md) § Oleada 1.
 
 **Estado** [Malla escarabajo oleada 1](4bd208b7-339a-4c9a-8575-351b042cd47f) (2026-10-07): **cerrado** — cambios en `escarabajo.py` (silueta, walk, embestida frames 8–12 / clave 10), cuerno **curvo**, **1328** tris, GLB publicado. Sin `glb.ts`. Shots/`__glbStats` → integrador.
 
@@ -32,7 +32,7 @@ Fecha: 2026-10-07 · Agente **C** de [`VISUAL_MODELS_OLEADA1_GLB.md`](../VISUAL_
 
 ## Contrato VAT / GLB (obligatorio)
 
-Fuente de verdad en código: comentario cabecera de [`src/glb.ts`](../../src/glb.ts) y export en [`assets-src/bicho.py`](../../assets-src/bicho.py) (`export()`).
+Fuente de verdad en código: comentario cabecera de [`src/glb.ts`](../../../../src/glb.ts) y export en [`assets-src/bicho.py`](../../../../assets-src/bicho.py) (`export()`).
 
 ### Geometría y esqueleto
 

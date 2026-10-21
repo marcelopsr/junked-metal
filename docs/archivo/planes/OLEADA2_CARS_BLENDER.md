@@ -2,7 +2,7 @@
 
 Estado: **pasada 2 (juguete RC)** 8× `CarKind` en `assets-src/cars/<id>/` · runtime: `src/carGlb.ts` + fallback procedural en `carModel()`. Blockout: 624–796 tris/hull; pasada 2: **652–888** tris (+4–14 % vs blockout): paragolpes `bumper_bar`, ventanas/trim, piloto con visor `Glass`.
 
-Referencias: [`ART_DIRECTION.md`](./ART_DIRECTION.md) (juguete RC, noche, low-poly legible), [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md) §2.2, `CARS` / `ANCH` en `src/models.ts` y `src/car.ts`.
+Referencias: [`ART_DIRECTION.md`](../../ART_DIRECTION.md) (juguete RC, noche, low-poly legible), [`VISUAL_MODELS_UPGRADE_PLAN.md`](../../VISUAL_MODELS_UPGRADE_PLAN.md) §2.2, `CARS` / `ANCH` en `src/models.ts` y `src/car.ts`.
 
 ## Política (cerrada con oleada 1)
 

@@ -1,9 +1,9 @@
 # Oleada 1 — Encargos GLB (5 carpetas en paralelo)
 
-Estado: **oleada 1c cerrada** (`5b636a0`, `1e08b75`) — 5 GLB + procedural + 8 `carModel`; detalle [`OLEADA1C_FULL.md`](./encargos/OLEADA1C_FULL.md). **UX:** preview 3D en grilla bestiario (pendiente). **Impeccable** / lab shots opcional.  
-Plan maestro: [`VISUAL_MODELS_UPGRADE_PLAN.md`](./VISUAL_MODELS_UPGRADE_PLAN.md) · Encuesta OSS: [`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md) · Arte: [`ART_DIRECTION.md`](./ART_DIRECTION.md).
+Estado: **oleada 1c cerrada** (`5b636a0`, `1e08b75`) — 5 GLB + procedural + 8 `carModel`; detalle [`OLEADA1C_FULL.md`](./archivo/planes/encargos/OLEADA1C_FULL.md). **UX:** preview 3D en grilla bestiario (pendiente). **Impeccable** / lab shots opcional.  
+Plan maestro: [`VISUAL_MODELS_UPGRADE_PLAN.md`](VISUAL_MODELS_UPGRADE_PLAN.md) · Encuesta OSS: [`OPEN_SOURCE_ASSETS_SURVEY.md`](./archivo/planes/OPEN_SOURCE_ASSETS_SURVEY.md) · Arte: [`ART_DIRECTION.md`](ART_DIRECTION.md).
 
-**Encargos por carpeta (detalle operativo):** [`encargos/oleada1-ant.md`](./encargos/oleada1-ant.md) · [`oleada1-escupidora.md`](./encargos/oleada1-escupidora.md) · [`oleada1-escarabajo.md`](./encargos/oleada1-escarabajo.md) · [`oleada1-perro.md`](./encargos/oleada1-perro.md) · [`oleada1-gato.md`](./encargos/oleada1-gato.md).
+**Encargos por carpeta (detalle operativo):** [`encargos/oleada1-ant.md`](./archivo/planes/encargos/oleada1-ant.md) · [`oleada1-escupidora.md`](./archivo/planes/encargos/oleada1-escupidora.md) · [`oleada1-escarabajo.md`](./archivo/planes/encargos/oleada1-escarabajo.md) · [`oleada1-perro.md`](./archivo/planes/encargos/oleada1-perro.md) · [`oleada1-gato.md`](./archivo/planes/encargos/oleada1-gato.md).
 
 **Política de producto (cerrada):** solo geometría y materiales; **no** cambiar `DEF[kind].size` ni `GLB[kind].scale` en `src/glb.ts` / `src/enemies.ts` sin integrador. Ajustar silueta en Blender para que quepa en la caja de colisión Havok existente.
 
@@ -95,7 +95,7 @@ Con `scale: 2`, el mesh debe leerse dentro de semiejes **0.9 × 0.6 × 1.7** (an
 8. Checklist de validación (abajo).
 
 ### Referencia OSS (opcional)
-Kenney Cube Pets abeja/ladybug solo como **referencia de silueta**; mantener pipeline VAT actual ([`OPEN_SOURCE_ASSETS_SURVEY.md`](./OPEN_SOURCE_ASSETS_SURVEY.md) § hormiga).
+Kenney Cube Pets abeja/ladybug solo como **referencia de silueta**; mantener pipeline VAT actual ([`OPEN_SOURCE_ASSETS_SURVEY.md`](./archivo/planes/OPEN_SOURCE_ASSETS_SURVEY.md) § hormiga).
 
 ---
 
@@ -200,7 +200,7 @@ Semiejes **3.2 × 8 × 8** — jefe alto; alinear pies en y=0 y salto `jump_slam
 6. Checklist; shots **lab → jefes** y ficha bestiario `perro`.
 
 ### Referencia OSS
-Quaternius Ultimate Animated Animals / Kenney Cube Pets puppy ([survey](./OPEN_SOURCE_ASSETS_SURVEY.md)) solo si se rehace malla; mantener nombres de clips.
+Quaternius Ultimate Animated Animals / Kenney Cube Pets puppy ([survey](./archivo/planes/OPEN_SOURCE_ASSETS_SURVEY.md)) solo si se rehace malla; mantener nombres de clips.
 
 ---
 

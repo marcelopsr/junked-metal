@@ -2,7 +2,7 @@
 
 > Generado por `npm run todos` — no editar a mano. Formato: [FORMATO.md](FORMATO.md).
 
-idea: 47 · pregunta: 1 · elegida: 5 · en-curso: 0 · en-lote: 0 · hecha: 0 · descartada: 1
+idea: 49 · pregunta: 1 · elegida: 5 · en-curso: 0 · en-lote: 0 · hecha: 0 · descartada: 1
 
 ## En curso (0)
 
@@ -28,7 +28,7 @@ _Nada._
 
 _Nada._
 
-## Ideas (47)
+## Ideas (49)
 
 | TODO | área | prioridad |
 | --- | --- | --- |
@@ -68,6 +68,8 @@ _Nada._
 | [Zonas: relleno ámbar del pegamento se pierde en la arena de la luna](pegamento-ambar-luna.md) | arte | baja |
 | [Rendimiento compu/celu tras la tanda](perf-tras-tanda.md) | juego | media |
 | [Pilotos con habilidad activa propia](pilotos-habilidad-activa.md) | juego | media |
+| [Subir balance.xlsx a Drive como referencia](planilla-balance-en-drive.md) | docs | baja |
+| [Arranque automático de pm2 al prender la Mac](pm2-arranque-automatico.md) | infra | baja |
 | [Proyector cae más rápido que la tarántula](proyector-cae-rapido.md) | juego | baja |
 | [Ranking semanal ENCORE con pieza exclusiva](ranking-semanal.md) | server | media |
 | [Registrar las referencias nuevas de ChatGPT (encore-v1/raw)](registrar-referencias-chatgpt.md) | arte | media |

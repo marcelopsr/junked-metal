@@ -18,5 +18,5 @@
 - [../hecho/](../hecho/README.md) si cambió lo que existe; [../problemas/](../problemas/README.md) si algo se rompió y se arregló.
 - `docs/decisiones/` si el dueño decidió algo; [../memoria/](../memoria/README.md) si dio una regla.
 - `docs/ART_DIRECTION.md` y el registro de referencias si cambió el arte.
-- `docs/HANDOFF-PROYECTOS.md` §5 y [../HANDOFF.md](../HANDOFF.md) al cerrar sesión.
+- [../HANDOFF.md](../HANDOFF.md) al cerrar sesión.
 - `graphify update .` lo hace el hook de git en cada commit; docs → `/graphify --update`.

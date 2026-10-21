@@ -9,26 +9,26 @@ El dueño no ejecuta ninguna herramienta: Claude orquesta todo, en frío (sesió
 - **Al arrancar en frío:** leer [HANDOFF.md](HANDOFF.md), correr `npm run todos` y mirar el tablero ([../todos/README.md](../todos/README.md)), `git log -5` y los agentes o worktrees vivos. Después, en 3 líneas: dónde quedamos y qué sigue.
 - **Al encargar un TODO:** `npm run todos -- tomar <slug> --cuenta mac --rama <rama>` y `npm run todos -- encargo <slug>`, que va como prompt del agente (esfuerzo bajo, archivos disjuntos).
 - **Al terminar un agente:** `npm run todos -- estado <slug> en-lote`, integrar o encolar, y proponer los siguientes TODOs con AskUserQuestion.
-- **Al integrar en master:** los TODOs del lote pasan a `hecha`; si cambia lo que existe, actualizar [hecho/](hecho/README.md).
-- **Ideas nuevas, hallazgos o decisiones del dueño:** un TODO nuevo ([../plantillas/todo.md](../plantillas/todo.md), `origen: hallazgo` si apareció de paso) o un ADR en [../decisiones/](../decisiones/README.md); una regla nueva del dueño va a [memoria/](memoria/README.md).
+- **Al integrar en master:** los TODOs del lote pasan a `hecha`; si cambia lo que existe, actualizar [hecho/](./hecho/README.md).
+- **Ideas nuevas, hallazgos o decisiones del dueño:** un TODO nuevo ([../plantillas/todo.md](../plantillas/todo.md), `origen: hallazgo` si apareció de paso) o un ADR en [../decisiones/](../decisiones/README.md); una regla nueva del dueño va a [memoria/](./memoria/README.md).
 - **Al cerrar una sesión larga:** actualizar `HANDOFF.md` y correr `npm run docs:check`.
 
 ## Empezar
 
 1. [HANDOFF.md](HANDOFF.md): estado al día, en curso y próximo paso.
-2. [trabajo/](trabajo/README.md): cómo se trabaja (encargos, verificación, servidores, integración, reglas del dueño).
+2. [trabajo/](./trabajo/README.md): cómo se trabaja (encargos, verificación, servidores, integración, reglas del dueño).
 
 ## Según lo que necesite
 
 | Necesito… | Ir a |
 | --- | --- |
-| encontrar dónde está algo, en el repo o en el juego | [guia/](guia/README.md) |
-| hacer una tarea paso a paso | [manual/](manual/README.md) |
-| saber qué quiere y qué no quiere el dueño | [memoria/](memoria/README.md) |
-| arreglar algo que se rompió o ya nos mordió | [problemas/](problemas/README.md) |
+| encontrar dónde está algo, en el repo o en el juego | [guia/](./guia/README.md) |
+| hacer una tarea paso a paso | [manual/](./manual/README.md) |
+| saber qué quiere y qué no quiere el dueño | [memoria/](./memoria/README.md) |
+| arreglar algo que se rompió o ya nos mordió | [problemas/](./problemas/README.md) |
 | entender una palabra del proyecto | [GLOSARIO.md](GLOSARIO.md) |
 | entender por qué algo es así | [../decisiones/](../decisiones/README.md) |
-| saber qué ya existe y cómo quedó | [hecho/](hecho/README.md) |
+| saber qué ya existe y cómo quedó | [hecho/](./hecho/README.md) |
 | ver qué hay para hacer y quién tomó qué | [../todos/README.md](../todos/README.md) |
 | la hoja de ruta a 1.0 | [../ROADMAP-1.0.md](../ROADMAP-1.0.md) |
 | la dirección de arte vigente | [../ART_DIRECTION.md](../ART_DIRECTION.md) |

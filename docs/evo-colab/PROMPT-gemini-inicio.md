@@ -36,7 +36,7 @@ AUTORIZACIÓN: tenés autonomía total en este repo para esta línea de trabajo,
    - no hacer push;
    - no tocar .claude/ ni CLAUDE.md;
    - no declarar mejoras sin verificarlas; separar lo implementado, lo verificado (con qué comando) y lo pendiente;
-   - los problemas ajenos se anotan en docs/PRODUCT_EVOLUTION.md, no se arreglan de paso;
+   - los problemas ajenos se anotan como TODO en docs/todos/, no se arreglan de paso;
    - al terminar una tanda larga, dejar un relevo nuevo con plantillas/RELEVO.md, para que Claude o ChatGPT puedan retomar.
 
 5. Primer ciclo: el paso 1 del RELEVO (segunda ronda del helado, sembrada con la corrida 20261013-2030-s1). Ejecutalo, evaluá, cerrá el ciclo y haceme la primera pregunta con las 3 opciones de selección múltiple.

@@ -1,8 +1,21 @@
 #!/bin/sh
-# pre-commit: regenera el tablero de TODOs y revisa la documentación; si está rota, el commit no entra.
+# pre-commit: (1) frena si lo staged trae secretos o archivos .env*.local (el repo es público);
+# (2) si el commit toca documentación, regenera el tablero de TODOs y corre docs:check.
 # Instalar: npm run hooks:install (copia este archivo a .git/hooks/pre-commit; graphify usa post-commit, no choca).
 cd "$(git rev-parse --show-toplevel)" || exit 0
-git diff --cached --name-only | grep -qE '^docs/(todos|traspaso|decisiones|plantillas)/' || exit 0
-npm run -s todos >/dev/null || { echo "pre-commit: npm run todos falló (cabecera de un TODO inválida)"; exit 1; }
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+# 1. secretos
+if printf '%s\n' "$staged" | grep -qE '(^|/)\.env[^/]*\.local$|(^|/)\.env$|\.pem$|\.key$|id_(rsa|ed25519)$'; then
+  echo "pre-commit: hay archivos de credenciales en el commit:"; printf '%s\n' "$staged" | grep -E '\.env|\.pem$|\.key$|id_(rsa|ed25519)$'; exit 1
+fi
+pat='sk-(live|proj|ant)-[A-Za-z0-9_-]{16,}|AKIA[0-9A-Z]{16}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|xox[baprs]-[A-Za-z0-9-]{20,}|AIza[0-9A-Za-z_-]{30,}|(CF|CLOUDFLARE)_API_TOKEN=[A-Za-z0-9_-]{20,}|JM_SECRET=[A-Za-z0-9]{12,}|EXCHANGE_SECRET=[A-Za-z0-9]{12,}'
+hit=$(git diff --cached -U0 --diff-filter=ACMR -- . ':!package-lock.json' ':!*.png' ':!*.jpg' ':!*.m4a' ':!*.glb' | grep -E '^\+' | grep -nE "$pat" | head -5)
+if [ -n "$hit" ]; then echo "pre-commit: parece haber una clave o token en el diff (si es un ejemplo falso, cambiarlo por XXXX):"; echo "$hit" | cut -c1-160; exit 1; fi
+
+# 2. documentación
+printf '%s\n' "$staged" | grep -qE '^docs/(todos|traspaso|decisiones|plantillas)/' || exit 0
+node scripts/todos.mjs >/dev/null || { echo "pre-commit: node scripts/todos.mjs falló (cabecera de un TODO inválida)"; exit 1; }
 git add docs/todos/README.md
-npm run -s docs:check || { echo "pre-commit: documentación rota (enlaces o > 80 líneas); arreglar y volver a commitear"; exit 1; }
+node scripts/docs-check.mjs || { echo "pre-commit: documentación rota (enlaces o > 80 líneas); arreglar y volver a commitear"; exit 1; }
