@@ -16,4 +16,4 @@ Estado al cerrar la última sesión larga. Se reescribe entero, no se acumula. L
 
 **Verificación:** `npm run todos`, `todos.check`, `docs:check` y `verificar --nivel rapido --seco` en verde; el guard de hooks probado con 11 comandos. No se corrió nada que toque el juego (no hubo cambios en `src/`).
 
-**Siguiente acción concreta:** encargar los 5 TODOs elegidos de a 3 en paralelo (archivos disjuntos: repetición toca main.ts y encore.ts; Demolición toca menu.ts, kit.css, main.ts: no van juntos), cada uno con `npm run todos encargo <slug>`.
+**Siguiente acción concreta:** encargar los 5 TODOs elegidos de a 3 en paralelo (archivos disjuntos: repetición toca main.ts y encore.ts; Demolición toca menu.ts, kit.css, main.ts: no van juntos), cada uno con `npm run todos -- encargo <slug>`.

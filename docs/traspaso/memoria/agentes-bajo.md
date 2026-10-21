@@ -4,4 +4,4 @@ Todo trabajo delegado va a agentes de esfuerzo bajo (`sonnet-bajo` construye, `o
 
 **Why:** baja el costo del loop sin perder calidad (2026-10-14/15): el razonamiento lo pone el encargo, no el modelo. Antes (2026-10-04) había pedido solo `opus-bajo`; el equipo quedó lento con muchos navegadores y Vite por encargo.
 
-**How to apply:** encargos largos y precisos (contexto, archivos, trampas conocidas, pasos, meta medible, verificación, formato de entrega) salidos de `npm run todos encargo <slug>`; si una tarea parece grande, partirla, no subir de modelo. Ver [probar-una-vez.md](probar-una-vez.md).
+**How to apply:** encargos largos y precisos (contexto, archivos, trampas conocidas, pasos, meta medible, verificación, formato de entrega) salidos de `npm run todos -- encargo <slug>`; si una tarea parece grande, partirla, no subir de modelo. Ver [probar-una-vez.md](probar-una-vez.md).

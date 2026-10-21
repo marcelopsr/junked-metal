@@ -2,7 +2,7 @@
 
 Objetivo: dejar el estado legible para la próxima sesión.
 
-1. `npm run todos estado <slug> <estado>` por cada TODO que cambió (`en-lote`, `hecha`, `descartada` con `motivo`).
+1. `npm run todos -- estado <slug> <estado>` por cada TODO que cambió (`en-lote`, `hecha`, `descartada` con `motivo`).
 2. Actualizar la sección 5 de [../../HANDOFF-PROYECTOS.md](../../HANDOFF-PROYECTOS.md) con lo hecho y lo abierto (plantilla 17.3 en [../../../.claude/trabajo/ARRANQUE.md](../../../.claude/trabajo/ARRANQUE.md)).
 3. En worktree: `npm run test:down`.
 4. `npm run docs:check` (enlaces, cabeceras, tope de 80 líneas).

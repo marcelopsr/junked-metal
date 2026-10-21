@@ -14,7 +14,7 @@ Leer primero `AGENTS.md` (entrada única para todo agente) y seguir sus enlaces:
 | Claude Code | Gemini / Antigravity |
 | --- | --- |
 | AskUserQuestion | `ask_question` (opción múltiple, recomendada primera; nunca preguntas sueltas en texto) |
-| Subagentes `*-bajo` con el TODO como encargo | `invoke_subagent` con el texto de `npm run todos encargo <slug>` |
+| Subagentes `*-bajo` con el TODO como encargo | `invoke_subagent` con el texto de `npm run todos -- encargo <slug>` |
 | Hooks (`guard`, `tsc-post`, `stop-verificar`) | Disciplina manual: `npx tsc --noEmit -p .` tras editar, `npm run verificar` al cerrar |
 | Memoria personal | `docs/traspaso/memoria/` (ya está en el repo) |
 
@@ -24,7 +24,7 @@ Cargar solo las proporcionales a la tarea: `codebase-discovery` (graphify), `imp
 
 ## Cierre de cada tarea
 
-Nunca cerrar solo con «implementación completada»: evidencia (`npm run verificar`), estado del TODO (`npm run todos estado <slug> en-lote|hecha`), `docs/traspaso/HANDOFF.md` al día y, con `ask_question`, 2-4 propuestas para seguir (ver `docs/traspaso/memoria/cerrar-con-propuestas.md`). El registro de producto que antes vivía en `docs/PRODUCT_EVOLUTION.md` ahora es `docs/todos/` + `docs/decisiones/`.
+Nunca cerrar solo con «implementación completada»: evidencia (`npm run verificar`), estado del TODO (`npm run todos -- estado <slug> en-lote|hecha`), `docs/traspaso/HANDOFF.md` al día y, con `ask_question`, 2-4 propuestas para seguir (ver `docs/traspaso/memoria/cerrar-con-propuestas.md`). El registro de producto que antes vivía en `docs/PRODUCT_EVOLUTION.md` ahora es `docs/todos/` + `docs/decisiones/`.
 
 ## Evolución de la geometría de los autos (relevo del 2026-10-13)
 

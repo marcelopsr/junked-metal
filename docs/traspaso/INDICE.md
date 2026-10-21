@@ -7,8 +7,8 @@ Punto de entrada para cualquier cuenta o sesión de Claude que continúe Junked 
 El dueño no ejecuta ninguna herramienta: Claude orquesta todo, en frío (sesión nueva) o en caliente. Nunca pedirle que corra un comando; correrlo y contarle el resultado.
 
 - **Al arrancar en frío:** leer [HANDOFF.md](HANDOFF.md), correr `npm run todos` y mirar el tablero ([../todos/README.md](../todos/README.md)), `git log -5` y los agentes o worktrees vivos. Después, en 3 líneas: dónde quedamos y qué sigue.
-- **Al encargar un TODO:** `npm run todos tomar <slug> --cuenta mac --rama <rama>` y `npm run todos encargo <slug>`, que va como prompt del agente (esfuerzo bajo, archivos disjuntos).
-- **Al terminar un agente:** `npm run todos estado <slug> en-lote`, integrar o encolar, y proponer los siguientes TODOs con AskUserQuestion.
+- **Al encargar un TODO:** `npm run todos -- tomar <slug> --cuenta mac --rama <rama>` y `npm run todos -- encargo <slug>`, que va como prompt del agente (esfuerzo bajo, archivos disjuntos).
+- **Al terminar un agente:** `npm run todos -- estado <slug> en-lote`, integrar o encolar, y proponer los siguientes TODOs con AskUserQuestion.
 - **Al integrar en master:** los TODOs del lote pasan a `hecha`; si cambia lo que existe, actualizar [hecho/](hecho/README.md).
 - **Ideas nuevas, hallazgos o decisiones del dueño:** un TODO nuevo ([../plantillas/todo.md](../plantillas/todo.md), `origen: hallazgo` si apareció de paso) o un ADR en [../decisiones/](../decisiones/README.md); una regla nueva del dueño va a [memoria/](memoria/README.md).
 - **Al cerrar una sesión larga:** actualizar `HANDOFF.md` y correr `npm run docs:check`.

@@ -11,8 +11,8 @@ Metodología `orquestar` (skill de usuario `~/.claude/skills/orquestar`): la ses
 
 ## El TODO es el encargo
 
-1. `npm run todos tomar <slug> --cuenta mac --rama <rama>` (falla si otra cuenta lo tiene).
-2. `npm run todos encargo <slug>` imprime cuerpo + pie de cierre (`.claude/trabajo/pie-encargo.md`): se pega tal cual al agente.
+1. `npm run todos -- tomar <slug> --cuenta mac --rama <rama>` (falla si otra cuenta lo tiene).
+2. `npm run todos -- encargo <slug>` imprime cuerpo + pie de cierre (`.claude/trabajo/pie-encargo.md`): se pega tal cual al agente.
 3. El cuerpo trae qué y por qué, alcance (toca / no toca), cómo verificar. Si falta algo, se completa el TODO antes de lanzar, no en el chat del agente.
 4. Decisiones de diseño que aparezcan a mitad de camino: el agente propone opciones y no las aplica; se preguntan al dueño.
 

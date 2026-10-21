@@ -3,7 +3,7 @@
 ## De la rama del agente a master
 
 1. El agente termina con `npm run verificar -- --nivel tanda` en verde y su informe.
-2. La sesión principal revisa el diff (y `estudio-revisor` si la tanda es delicada), lo integra en master (`git merge` desde el worktree o aplica el diff) y marca `npm run todos estado <slug> en-lote` o `hecha`.
+2. La sesión principal revisa el diff (y `estudio-revisor` si la tanda es delicada), lo integra en master (`git merge` desde el worktree o aplica el diff) y marca `npm run todos -- estado <slug> en-lote` o `hecha`.
 3. Varios agentes a la vez: cada uno en archivos disjuntos; los compartidos los integra la sesión principal, de a uno.
 4. `npm run verificar -- --nivel rapido` tras integrar; `tanda` si se juntaron varias ramas.
 5. Commit local con mensaje `tipo(área): qué` (feat, fix, chore, docs). Push solo cuando el dueño lo pide o al publicar.

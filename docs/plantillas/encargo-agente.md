@@ -1,8 +1,8 @@
 # Encargo a un agente
 
-El encargo sale de un TODO: `npm run todos encargo <slug>` imprime el cuerpo del TODO más el pie de cierre (`.claude/trabajo/pie-encargo.md`). Se pega tal cual al agente (esfuerzo bajo por defecto, modelo según `~/.claude/skills/orquestar`).
+El encargo sale de un TODO: `npm run todos -- encargo <slug>` imprime el cuerpo del TODO más el pie de cierre (`.claude/trabajo/pie-encargo.md`). Se pega tal cual al agente (esfuerzo bajo por defecto, modelo según `~/.claude/skills/orquestar`).
 
-Antes: `npm run todos tomar <slug> --cuenta mac --rama <rama>`. Al integrar: `npm run todos estado <slug> en-lote` y después `hecha`.
+Antes: `npm run todos -- tomar <slug> --cuenta mac --rama <rama>`. Al integrar: `npm run todos -- estado <slug> en-lote` y después `hecha`.
 
 ## Qué debe tener el cuerpo del TODO
 - **Qué y por qué**: qué ve el jugador y qué problema resuelve; dirección de arte (`docs/ART_DIRECTION.md`) si es visual.
